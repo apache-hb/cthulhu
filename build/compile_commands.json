@@ -1,0 +1,14 @@
+[
+  {
+    "directory": "C:\\Users\\ehb56\\OneDrive\\Documents\\GitHub\\cthulhulang\\build",
+    "command": "cl \"-Ictu@sta\" \"-I.\" \"-I..\" \"/MDd\" \"/nologo\" \"/showIncludes\" \"/W2\" \"/ZI\" \"/Ob0\" \"/Od\" \"/RTC1\" \"/Fdctu@sta\\\\common_lexer.c.pdb\" /Foctu@sta/common_lexer.c.obj /c ../common/lexer.c",
+    "file": "../common/lexer.c",
+    "output": "ctu@sta/common_lexer.c.obj"
+  },
+  {
+    "directory": "C:\\Users\\ehb56\\OneDrive\\Documents\\GitHub\\cthulhulang\\build",
+    "command": "cl \"-Ictu@sta\" \"-I.\" \"-I..\" \"/MDd\" \"/nologo\" \"/showIncludes\" \"/W2\" \"/ZI\" \"/Ob0\" \"/Od\" \"/RTC1\" \"/Fdctu@sta\\\\common_parser.c.pdb\" /Foctu@sta/common_parser.c.obj /c ../common/parser.c",
+    "file": "../common/parser.c",
+    "output": "ctu@sta/common_parser.c.obj"
+  }
+]
