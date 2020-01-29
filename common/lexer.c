@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <assert.h>
+#include <stdio.h>
 
 typedef struct {
     const char* keyword;
@@ -38,9 +39,48 @@ static token_t make_keyword(lexer_t* self)
         }
     }
 
-    tok.type = string;
+    tok.type = ident;
     tok.str = strdup(self->buf);
+    printf("%s\n", self->buf);
     return tok;
+}
+
+
+static const keyword_pair_t operatorpairs[] = {
+    { "=", op_assign },
+    { "+", op_add },
+    { "+=", op_addeq },
+    { "-", op_sub },
+    { "-=", op_subeq },
+    { "/", op_div },
+    { "/=", op_diveq },
+    { "*", op_mul },
+    { "*=", op_muleq },
+    { "%", op_mod },
+    { "%=", op_modeq }
+};
+
+static const size_t operator_len = sizeof(operatorpairs) / sizeof(keyword_pair_t);
+
+static token_t make_operator(lexer_t* self)
+{
+    token_t tok;
+    tok.col = self->col - self->buf_cursor;
+    tok.row = self->row;
+
+    for(int i = 0; i < operator_len; i++)
+    {
+        if(strcmp(self->buf, operatorpairs[i].keyword) == 0)
+        {
+            tok.type = keyword;
+            tok.key = operatorpairs[i].key;
+            return tok;
+        }
+    }
+
+    // todo: error handling
+    puts("invalid operator");
+    exit(1);
 }
 
 static token_t make_string(lexer_t* self)
@@ -59,30 +99,15 @@ void token_free(token_t tok)
         free(tok.str);
 }
 
-lexer_t* lexer_alloc(file_t* file)
-{
-    lexer_t* lex = malloc(sizeof(lexer_t));
-    
-    lex->col = 0;
-    lex->row = 0;
-    lex->file = file;
-    lex->cursor = 0;
-    lex->buf = malloc(sizeof(char) * 2048);
-    lex->buf_cursor = 0;
-    lex->buf[lex->buf_cursor] = '\0';
-
-    return lex;
-}
-
 void lexer_free(lexer_t* self)
 {
-    self->file->close(self->file);
+    self->file->close(self->file->data);
     free(self);
 }
 
 static char nextc(lexer_t* self)
 {
-    char c = self->file->next(self->file);
+    char c = self->file->next(self->file->data);
     
     while(isspace(c))
     {
@@ -96,7 +121,7 @@ static char nextc(lexer_t* self)
             self->col++;
         }
 
-        c = self->file->next(self->file);
+        c = self->file->next(self->file->data);
     }
 
     return c;
@@ -104,7 +129,7 @@ static char nextc(lexer_t* self)
 
 static char peekc(lexer_t* self)
 {
-    return self->file->peek(self->file);
+    return self->file->peek(self->file->data);
 }
 
 static void pushc(lexer_t* self, char c)
@@ -121,7 +146,7 @@ static void clear_buf(lexer_t* self)
     self->buf_cursor = 0;
 }
 
-token_t lexer_next(lexer_t* self)
+static token_t lexer_parse(lexer_t* self)
 {
     token_t tok;
     char c = nextc(self);
@@ -139,11 +164,12 @@ token_t lexer_next(lexer_t* self)
     }
     else if(c == '#')
     {
-        while(nextc(self) != '#');
+        while(nextc(self) != '\n') {}
         return lexer_next(self);
     }
     else if(isalpha(c) || c == '_')
     {
+        pushc(self, c);
         for(;;)
         {
             c = peekc(self);
@@ -153,12 +179,10 @@ token_t lexer_next(lexer_t* self)
             }
             else
             {
+                tok = make_keyword(self);
                 break;
             }
         }
-
-        tok = make_keyword(self);
-        goto end;
     }
     else if(isdigit(c))
     {
@@ -186,23 +210,54 @@ token_t lexer_next(lexer_t* self)
             }
             else
             {
+                tok = make_string(self);
                 break;
             }
         }
-
-        tok = make_string(self);
-        goto end;
     }
     else
     {
-        
+        pushc(self, c);
+        for(;;)
+        {
+            c = peekc(self);
+            if(isspace(c) || isalnum(c))
+            {
+                pushc(self, nextc(self));
+            }
+            else
+            {
+                tok = make_operator(self);
+                break;
+            }
+        }
     }
 
-
-end:
-    token_t temp = self->tok;
-    self->tok = tok;
     tok.cursor = cur;
+    return tok;
+}
+
+lexer_t* lexer_alloc(file_t* file)
+{
+    lexer_t* lex = malloc(sizeof(lexer_t));
+    
+    lex->col = 0;
+    lex->row = 0;
+    lex->file = file;
+    lex->cursor = 0;
+    lex->buf = malloc(sizeof(char) * 2048);
+    lex->buf_cursor = 0;
+    lex->buf[lex->buf_cursor] = '\0';
+
+    lex->tok = lexer_parse(lex);
+
+    return lex;
+}
+
+token_t lexer_next(lexer_t* self)
+{
+    token_t temp = self->tok;
+    self->tok = lexer_parse(self);
     return temp;
 }
 

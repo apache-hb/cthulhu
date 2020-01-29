@@ -14,6 +14,24 @@ typedef enum {
     kw_while = 4,
     kw_switch = 5,
     kw_case = 6,
+
+    op_assign = 7,
+    
+    op_add = 8,
+    op_addeq = 9,
+    
+    op_sub = 10,
+    op_subeq = 11,
+
+    op_div = 12,
+    op_diveq = 13,
+
+    op_mul = 14,
+    op_muleq = 15,
+
+    op_mod = 16,
+    op_modeq = 17
+
 } keyword_t;
 
 typedef enum {
@@ -22,7 +40,8 @@ typedef enum {
     integer = 2,
     floating = 3,
     keyword = 4,
-    eof = 5
+    ident = 5,
+    eof = 6
 } token_type_t;
 
 typedef struct {
