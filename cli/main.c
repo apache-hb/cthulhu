@@ -40,11 +40,7 @@ int main(int argc, char** argv)
 
     lexer_t* lex = lexer_alloc(&file);
 
-    token_t tok;
-    
-    tok = lexer_next(lex);
-    printf("1 = %d\n", tok.type);
+    parser_t* parse = parser_alloc(lex);
 
-    tok = lexer_next(lex);
-    printf("2 = %d\n", tok.type);
+    node_t* ast = parser_generate_ast(parse);
 }

@@ -1,9 +1,35 @@
-# struct
-using x = {
-    a: i32,
-    b: u64,
-    c: [char:12]
-}
+#"empty struct"
+using a = {}
 
-# tuple
-using y = ([char:64], u64)
+#"empty tuple"
+using b = ()
+
+#"type alias"
+using c = u8
+
+#"type alias to custom type"
+using d = c
+
+#"fixed size array alias"
+using e = [char:8]
+
+#"tuple type"
+using f = (u8, u8)
+
+#"struct type"
+using g = { a: u64, b: i64 }
+
+#"nested tuple"
+using h = (u8, (char, u128))
+
+#"nested struct"
+using i = { a: u64, b: { a: char, b: u8 } }
+
+#"nested types"
+using j = { a: u64, b: (u64, u64) }
+
+#"custom tuple array type"
+using k = [(u64, u64):64]
+
+#"custom struct array type"
+using l = [{ a: u64, b:u64 }:64]

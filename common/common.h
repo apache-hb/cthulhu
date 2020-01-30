@@ -180,30 +180,86 @@ token_t lexer_peek(lexer_t* self);
 typedef enum {
     scope_decl = 0,
     func_decl = 1,
+    type_decl = 2,
 } expr_type_t;
 
 typedef enum {
     // structure type
     structure = 0,
+    
     // enumeration type
     enumeration = 1,
+    
     // tuple type
     tuple = 2,
+    
     // array type
     array = 3,
+    
     // builtin type
     builtin = 4,
+
     // pointer to type
     pointer = 5,
+
+    // delayed type lookup so forward declares arent need
+    delayed = 6,
 } typeof_type_t;
 
 typedef enum {
-    
+
+    // unsigned char
+    _u8 = 0,
+
+    // unsigned short
+    _u16 = 1,
+
+    // unsigned int
+    _u32 = 2,
+
+    // unsigned long long
+    _u64 = 3,
+
+    // __m128i
+    _u128 = 4,
+
+    // signed char
+    _i8 = 5,
+
+    // signed short
+    _i16 = 6,
+
+    // signed int
+    _i32 = 7,
+
+    // signed long long
+    _i64 = 8,
+
+    // __m128i
+    _i128 = 9,
+
+    // bool
+    _bool = 10,
+
+    // float
+    _f32 = 11,
+
+    // double
+    _f64 = 12,
+
+    // a void* equivilent
+    _any = 13,
+
+    // char
+    _char = 14,
 } builtin_t;
+
+struct type_t;
+struct node_t;
 
 typedef struct {
     char* name;
-    type_t* type;
+    struct type_t* type;
     int constness;
 } struct_field_t;
 
@@ -216,7 +272,7 @@ typedef struct {
         struct {
             int field_count;
             union {
-                type_t* tuple_fields;
+                struct type_t* tuple_fields;
                 struct_field_t* struct_fields;
             };
         };
@@ -228,11 +284,11 @@ typedef struct {
         struct {
             // length of the array
             int array_length;
-            type_t* array_of;
+            struct type_t* array_of;
         };
 
         // pointer type
-        type_t* points_to;
+        struct type_t* points_to;
     };
 } type_t;
 
@@ -255,13 +311,13 @@ typedef struct {
         // namespace/scope expression
         struct {
             char* scope_name;
-            node_t* content;
+            struct node_t* content;
         };
 
         // type decl
         struct {
             char* type_name;
-            type_t type;
+            struct type_t* type;
         };
     };
 } node_t;

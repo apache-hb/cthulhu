@@ -1,0 +1,28 @@
+scope a {
+
+}
+
+scope b {
+    scope c {
+        
+    }
+}
+
+scope d {
+    scope e {
+
+    }
+
+    scope f {
+
+    }
+}
+
+def func(v: u64) -> u64 {
+    val b: u64
+    scope {
+        val c: u64 = v * 50
+        b = c * 20
+    }
+    return b
+}

@@ -52,9 +52,49 @@ static char* next_ident(parser_t* self)
     return tok.str;
 }
 
-static node_t* parse_body(parser_t* self);
+static type_t* delayed_type()
+{
+    type_t* t = malloc(sizeof(type_t));
+    t->type = delayed;
+    return t;
+}
 
-static node_t* parse_scope(parser_t* self)
+static struct node_t* parse_body(parser_t* self);
+
+static struct node_t* parse_type(parser_t* self)
+{
+    token_t tok = nexttok(self);
+    // if the keyword is {} then its a struct
+    // if its () its a tuple
+    // if its a [] then its an array
+    // otherwise its a typename
+
+    if(tok.type == keyword)
+    {
+
+    }
+    else
+    {
+        // is a typename
+        node_t* node = malloc(sizeof(node_t));
+        node->node_type = type_decl;
+        // TODO
+        node->type_name = parse_type_name(tok);
+    }
+    return NULL;
+}
+
+static struct node_t* parse_func(parser_t* self)
+{
+    return NULL;
+}
+
+static struct node_t* parse_using(parser_t* self)
+{
+    return NULL;
+}
+
+static struct node_t* parse_scope(parser_t* self)
 {
     node_t* node = malloc(sizeof(node_t));
     node->node_type = scope_decl;
@@ -62,24 +102,29 @@ static node_t* parse_scope(parser_t* self)
 
     expect(self, op_openscope);
 
-    node->content - parse_body(self);
+    node->content = parse_body(self);
 
     expect(self, op_closescope);
 
-    return node;
+    return (struct node_t*)node;
 }
 
-static node_t* parse_body(parser_t* self)
+static struct node_t* parse_body(parser_t* self)
 {
     keyword_t tok = next_keyword(self);
     switch(tok)
     {
         case kw_def:
+            return parse_func(self);
         case kw_scope:
+            return parse_scope(self);
         case kw_using:
+            return parse_using(self);
         default:
+            printf("oh no\n");
             break;
     }
+    return NULL;
 }
 
 node_t* parser_generate_ast(parser_t* self)
