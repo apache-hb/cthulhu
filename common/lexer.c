@@ -41,23 +41,68 @@ static token_t make_keyword(lexer_t* self)
 
     tok.type = ident;
     tok.str = strdup(self->buf);
-    printf("%s\n", self->buf);
     return tok;
 }
 
 
 static const keyword_pair_t operatorpairs[] = {
     { "=", op_assign },
+    
+    { "==", op_eq },
+    { "!=", op_neq },
+
+    { "!", op_not },
+    { "&&", op_and },
+    { "||", op_or },
+
     { "+", op_add },
     { "+=", op_addeq },
+    
     { "-", op_sub },
     { "-=", op_subeq },
+    
     { "/", op_div },
     { "/=", op_diveq },
+    
     { "*", op_mul },
     { "*=", op_muleq },
+    
     { "%", op_mod },
-    { "%=", op_modeq }
+    { "%=", op_modeq },
+
+    { "|", op_bitor },
+    { "|=", op_bitoreq },
+
+    { "&", op_bitand },
+    { "&=", op_bitandeq },
+
+    { "<<", op_shl },
+    { "<<=", op_shleq },
+
+    { ">>", op_shr },
+    { ">>=", op_shreq },
+
+    { "^", op_bitxor },
+    { "^=", op_bitxoreq },
+
+    { "~", op_bitnot },
+    { "~=", op_bitnoteq },
+
+    { ">", op_gt },
+    { ">=", op_gte },
+    { "<", op_lt },
+    { "<=", op_lte },
+
+    { "::", op_sep },
+    { "(", op_openarg },
+    { ")", op_closearg },
+    { "{", op_openscope },
+    { "}", op_closescope },
+    { "[", op_openarr },
+    { "]", op_closearr },
+    { ",", op_comma },
+    { "->", op_arrow },
+    { ":", op_colon }
 };
 
 static const size_t operator_len = sizeof(operatorpairs) / sizeof(keyword_pair_t);
@@ -79,6 +124,7 @@ static token_t make_operator(lexer_t* self)
     }
 
     // todo: error handling
+    printf("%s\n", self->buf);
     puts("invalid operator");
     exit(1);
 }
@@ -156,17 +202,20 @@ static token_t lexer_parse(lexer_t* self)
     // first letter of keyword
     uint64_t cur = self->cursor;
 
-    if(c == '\0')
+    // check for eof
+    if(c == '\0' || c == -1)
     {
         token_t tok;
         tok.type = eof;
         return tok;
     }
+    // our comments take the form of # text \n
     else if(c == '#')
     {
         while(nextc(self) != '\n') {}
         return lexer_next(self);
     }
+    // identifiers and keywords can be [a-zA-Z]_ and can contain numbers
     else if(isalpha(c) || c == '_')
     {
         pushc(self, c);
@@ -184,6 +233,7 @@ static token_t lexer_parse(lexer_t* self)
             }
         }
     }
+    // parse numbers
     else if(isdigit(c))
     {
         for(;;)
@@ -198,6 +248,7 @@ static token_t lexer_parse(lexer_t* self)
             }
         }
     }
+    // parse strings, all strings can be multiline
     else if(c == '"')
     {
         for(;;)
@@ -215,8 +266,10 @@ static token_t lexer_parse(lexer_t* self)
             }
         }
     }
+    // is probably an operator if we get here, or broken
     else
     {
+        printf("c = '%x'\n", c);
         pushc(self, c);
         for(;;)
         {

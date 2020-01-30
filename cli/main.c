@@ -42,16 +42,9 @@ int main(int argc, char** argv)
 
     token_t tok;
     
-    for(;;) 
-    { 
-        tok = lexer_next(lex);
-        printf("%d\n", tok.type);
-        
-        if(tok.type == eof)
-            break;
-        
-        token_free(tok);
-    }
+    tok = lexer_next(lex);
+    printf("1 = %d\n", tok.type);
 
-    // TODO
+    tok = lexer_next(lex);
+    printf("2 = %d\n", tok.type);
 }

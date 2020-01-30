@@ -4,34 +4,104 @@
 #include <stdio.h>
 #include <stdint.h>
 
+/*
+quick grammar
+
+functions are
+
+def name(arg1: type1, arg2: type2) -> type3 {
+    body
+}
+
+scopes are 
+
+scope name {
+    anything
+}
+
+variables are
+
+let name: type
+let name: type = expr
+let name = expr
+
+var name: type
+var name: type = expr
+var name = expr
+
+*/
+
 // all keywords
 // if you update this make sure to update lexer.c to reflect new keywords
 typedef enum {
-    kw_for = 0,
-    kw_if = 1,
-    kw_else = 2,
-    kw_def = 3,
-    kw_while = 4,
-    kw_switch = 5,
-    kw_case = 6,
+    kw_for = 0, // for
+    kw_if = 1, // if
+    kw_else = 2, // else
+    kw_def = 3, // def
+    kw_while = 4, // while
+    kw_switch = 5, // switch
+    kw_case = 6, // case
 
-    op_assign = 7,
+    op_assign = 7, // =
     
-    op_add = 8,
-    op_addeq = 9,
+    op_add = 8, // +
+    op_addeq = 9, // +=
     
-    op_sub = 10,
-    op_subeq = 11,
+    op_sub = 10, // -
+    op_subeq = 11, // -=
 
-    op_div = 12,
-    op_diveq = 13,
+    op_div = 12, // /
+    op_diveq = 13, // /=
 
-    op_mul = 14,
-    op_muleq = 15,
+    op_mul = 14, // *
+    op_muleq = 15, // *=
 
-    op_mod = 16,
-    op_modeq = 17
+    op_mod = 16, // %
+    op_modeq = 17, // %=
 
+    op_bitor = 18, // |
+    op_bitoreq = 19, // |=
+
+    op_bitand = 20, // &
+    op_bitandeq = 21, // &=
+
+    op_shl = 22, // <<
+    op_shleq = 23, // <<=
+    
+    op_shr = 24, // >>
+    op_shreq = 25, // >>=
+
+    op_bitxor = 26, // ^
+    op_bitxoreq = 27, // ^=
+
+    op_bitnot = 28, // ~
+    op_bitnoteq = 29, // ~=
+
+    op_eq = 30, // ==
+    op_neq = 31, // !=
+
+    op_not = 32, // !
+    op_and = 33, // &&
+    op_or = 34, // ||
+    
+    op_sep = 35, // ::
+    op_openarg = 36, // (
+    op_closearg = 37, // )
+    op_openscope = 38, // {
+    op_closescope = 39, // }
+    op_openarr = 40, // [
+    op_closearr = 41, // ]
+    op_comma = 42, // ,
+    op_arrow = 43, // ->
+    op_colon = 44, // :
+
+    op_gt = 45, // >
+    op_gte = 46, // >=
+    op_lt = 47, // <
+    op_lte = 48, // <=
+
+    kw_scope = 49, // scope
+    kw_return = 50, // return
 } keyword_t;
 
 typedef enum {
@@ -105,5 +175,35 @@ void lexer_free(lexer_t* self);
 
 token_t lexer_next(lexer_t* self);
 token_t lexer_peek(lexer_t* self);
+
+typedef struct {
+
+} expr_t;
+
+typedef struct {
+    // name of the variable
+    char* name;
+    // is the variable const
+    bool constness;
+
+    // expression assigning to this variable
+    expr_t* expr;
+} var_decl_t;
+
+typedef struct {
+    node_t* lhs;
+    node_t* rhs;
+    keyword_t op;
+} node_t;
+
+typedef struct {
+    node_t* root;
+    lexer_t* source;
+} parser_t;
+
+parser_t* parser_alloc(lexer_t* lex);
+void parser_free(parser_t* self);
+
+node_t* parser_generate_ast(parser_t* self);
 
 #endif // COMMON_H
