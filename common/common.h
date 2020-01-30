@@ -102,6 +102,7 @@ typedef enum {
 
     kw_scope = 49, // scope
     kw_return = 50, // return
+    kw_using = 51, // using
 } keyword_t;
 
 typedef enum {
@@ -176,28 +177,96 @@ void lexer_free(lexer_t* self);
 token_t lexer_next(lexer_t* self);
 token_t lexer_peek(lexer_t* self);
 
-typedef struct {
+typedef enum {
+    scope_decl = 0,
+    func_decl = 1,
+} expr_type_t;
 
-} expr_t;
+typedef enum {
+    // structure type
+    structure = 0,
+    // enumeration type
+    enumeration = 1,
+    // tuple type
+    tuple = 2,
+    // array type
+    array = 3,
+    // builtin type
+    builtin = 4,
+    // pointer to type
+    pointer = 5,
+} typeof_type_t;
+
+typedef enum {
+    
+} builtin_t;
 
 typedef struct {
-    // name of the variable
     char* name;
-    // is the variable const
-    bool constness;
-
-    // expression assigning to this variable
-    expr_t* expr;
-} var_decl_t;
+    type_t* type;
+    int constness;
+} struct_field_t;
 
 typedef struct {
-    node_t* lhs;
-    node_t* rhs;
-    keyword_t op;
+    typeof_type_t type;
+
+    union {
+
+        // struct or tuple type
+        struct {
+            int field_count;
+            union {
+                type_t* tuple_fields;
+                struct_field_t* struct_fields;
+            };
+        };
+
+        // builtin type
+        builtin_t* builtin_type;
+
+        // array type
+        struct {
+            // length of the array
+            int array_length;
+            type_t* array_of;
+        };
+
+        // pointer type
+        type_t* points_to;
+    };
+} type_t;
+
+typedef struct {
+    char* name;
+    type_t* typeof;
+    int constness;
+} arg_pair_t;
+
+typedef struct {
+    int arg_count;
+    char** arg_names;
+} args_t;
+
+typedef struct {
+    expr_type_t node_type;
+
+    union {
+
+        // namespace/scope expression
+        struct {
+            char* scope_name;
+            node_t* content;
+        };
+
+        // type decl
+        struct {
+            char* type_name;
+            type_t type;
+        };
+    };
 } node_t;
 
 typedef struct {
-    node_t* root;
     lexer_t* source;
 } parser_t;
 

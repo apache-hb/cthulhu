@@ -1,0 +1,9 @@
+# struct
+using x = {
+    a: i32,
+    b: u64,
+    c: [char:12]
+}
+
+# tuple
+using y = ([char:64], u64)
