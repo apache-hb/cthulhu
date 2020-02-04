@@ -185,10 +185,36 @@ token_t lexer_peek(lexer_t* self);
 
 typedef enum {
     name_decl = 0,
+
+    // tuple, struct, func_sig, union, enum, typed_enum, typed_union name
     type_decl = 1,
+
+    // ()
     tuple_decl = 2,
+
+    // {}
     struct_decl = 3,
+
+    // &()
     func_sig_decl = 4,
+
+    // union
+    union_decl = 5,
+
+    // enum 
+    enum_decl = 6,
+
+    // enum: T
+    typed_enum_decl = 7,
+
+    // enum union
+    typed_union_decl = 8,
+
+    // { (ident: type)... }
+    struct_body_decl = 9,
+
+    // ( types... )
+    type_list_decl = 10,
 } node_type_t;
 
 typedef struct node_tag_t {
@@ -198,43 +224,31 @@ typedef struct node_tag_t {
         // name_decl
         char* name;
 
-        // type_decl
+        // type_decl, struct_decl, union_decl
         struct {
             // the name of the type
-            node_t* type_name;
+            struct node_tag_t* type_name;
 
             // can be either a tuple, struct, array or type signature
-            node_t* type_data;
+            struct node_tag_t* type_data;
         };
 
-        // struct_decl
+        // tuple_body, struct_body
         struct {
-            // number of struct fields
-            int struct_field_count;
+            // number of tuple/struct fields
+            int field_count;
 
-            // array of struct field names
-            node_t* field_name;
-
-            // array of struct field types
-            node_t* field_type;
-        };
-
-        // tuple_decl
-        struct {
-            // number of tuple fields
-            int tuple_field_count;
-
-            // array of tuple field types
-            node_t* fields;
+            // array of tuple field types or struct name:type pairs
+            struct node_tag_t* fields;
         };
 
         // func_sig_decl
         struct {
             // pointer to a tuple of all the arguments
-            node_t* args;
+            struct node_tag_t* args;
 
             // pointer to the return type
-            node_t* return_type;
+            struct node_tag_t* return_type;
         };
     };
 } node_t;

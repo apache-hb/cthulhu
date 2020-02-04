@@ -17,7 +17,7 @@ void parser_free(parser_t* self)
     free(self);
 }
 
-static token_t nexttok(parser_t* self)
+static token_t next_tok(parser_t* self)
 {
     return lexer_next(self->source);
 }
@@ -53,7 +53,7 @@ void node_free(node_t* self)
 
 static keyword_t next_keyword(parser_t* self)
 {
-    token_t tok = lexer_next(self);
+    token_t tok = next_tok(self);
     if(tok.type != keyword)
     {
         // TODO: proper handling
@@ -67,9 +67,22 @@ static keyword_t next_keyword(parser_t* self)
     return key;
 }
 
+static keyword_t peek_keyword(parser_t* self)
+{
+    token_t tok = lexer_peek(self->source);
+    if(tok.type != keyword)
+    {
+        // TODO
+        printf("expected keyword got %d instead\n", tok.type);
+        exit(9);
+    }
+
+    return tok.key;
+}
+
 static char* next_ident(parser_t* self)
 {
-    token_t tok = lexer_next(self);
+    token_t tok = next_tok(self);
     if(tok.type != ident)
     {
         printf("expected ident got %d instead\n", tok.type);
@@ -84,6 +97,8 @@ static char* next_ident(parser_t* self)
 ///               type parsing
 ///////////////////////////////////////////////////
 
+static node_t* parse_type_decl(parser_t* self);
+
 // type-name: ident
 static node_t* parse_type_name(parser_t* self)
 {
@@ -92,16 +107,16 @@ static node_t* parse_type_name(parser_t* self)
     return node;
 }
 
-// named-type-list-decl: ident `:` type-decl [`,` named-type-list-decl] [`,`]
+// named-type-list-decl: ident `:` type-decl [`,` named-type-list-decl]
 static node_t* parse_named_type_list_decl(parser_t* self)
 {
-
+    
 }
 
-// type-list-decl: type-decl [`,` type-list-decl] [`,`]
+// type-list-decl: type-decl [`,` type-list-decl]
 static node_t* parse_type_list_decl(parser_t* self)
 {
-
+    
 }
 
 // func-type-decl: `&(` [type-list-decl] `)` `->` type-decl
@@ -128,10 +143,29 @@ static node_t* parse_tuple_decl(parser_t* self)
 // struct-decl: `{` [named-type-list-decl] `}`
 static node_t* parse_struct_decl(parser_t* self)
 {
+    int count = 0;
+    node_t* node = make_node(struct_body_decl);
 
+    node_t* fields = malloc(sizeof(node_t));
+
+    for(;;)
+    {
+        token_t tok = next_tok(self);
+        if(tok.type != ident)
+            goto end;
+
+        node_t* pair = parse_named_type_list_decl(self);
+
+        memcpy(fields + (count * sizeof(node_t)), )
+    }
+
+end: node->field_count = count;
+    node->fields
 }
 
-// typed-union-body-decl: ident `->` type-decl [`,` typed-union-body-decl] [`,`]
+#if 0
+
+// typed-union-body-decl: ident `->` type-decl [`,` typed-union-body-decl]
 static node_t* parse_typed_union_body(parser_t* self)
 {
 
@@ -143,34 +177,33 @@ static node_t* parse_typed_union_decl(parser_t* self)
 
 }
 
-// enum-body-decl: ident (`:` number) [`,` enum-body-decl] [`,`]
+// enum-body-decl: ident (`:` number) [`,` enum-body-decl]
 static node_t* parse_enum_body_decl(parser_t* self)
 {
 
 }
 
-// union-decl: `union` (tuple-decl | struct-decl)
+#endif
+
+// union-decl: `union` ((tuple-decl | struct-decl) | `enum` [`:` type-decl] typed-union-decl)
 static node_t* parse_union_decl(parser_t* self)
 {
-
+    
 }
 
-// enum-decl: `enum` (`union` typed-union-decl | (enum-body-decl))
+// enum-decl: `enum` [`:` type-decl] enum-body-decl
 static node_t* parse_enum_decl(parser_t* self)
 {
-    keyword_t key = next_keyword(self);
-    if(key == kw_union)
-    {
-        return parse_typed_union_decl(self);
-    }
-    else if(key == op_openscope)
-    {
-        // is a normal enum
-    }
-    else
-    {
-        // error
-    }
+    // when parsing an enum we need to be aware that enums can have any of
+    //  1. a backing type for defining values
+    //      - this defaults to u32
+    //      - can be any type with a well defined type size
+    //      - in reality this means anything aside from optinal types
+    //  2. key value pairs for each field
+    //      - a key val pair can have any constant expression
+    //      - `name: 0` is just as valid as `name: (1 << 0)` or `name: (constant_value + 5)`
+    //      - we have to be able to account for all this
+    //
 }
 
 
@@ -183,16 +216,65 @@ key_func_pair_t type_table[] = {
     { kw_union, parse_union_decl }
 };
 
-static const type_table_len = sizeof(type_table) / sizeof(key_func_pair_t);
+static const int type_table_len = sizeof(type_table) / sizeof(key_func_pair_t);
 
 
 // type-decl: (struct-decl | tuple-decl | array-decl | func-type-decl | enum-decl | union-decl | type-name)[`?` | `*`]
 static node_t* parse_type_decl(parser_t* self)
 {
-    token_t tok = lexer_peek(self);
+    // the type alias syntax is pretty extensive
+    // we need to account for
+    // 1. structs
+    //  - these are declared with `{` `}`
+    //  - each field is a type mapped to a name
+    //
+    // 2. tuples
+    //  - these are declared with `(` `)`
+    //  - each field is a type, no name is required
+    //
+    // 3. arrays
+    //  - these are declared with `[` `]`
+    //  - arrays must always have their size declared at compile time
+    //    unless the data is also declared at compile time
+    //
+    // 4. function signatures
+    //  - these are declared with `&(` type-decl... `)` `->` type-decl 
+    //  - the args are a tuple of types
+    //
+    // 5. enums
+    //  - these enums are backed by a type
+    //  - the default backing type is u32 on 32 bit and u64 on 64 bit
+    //  - the backing type can be any type with a well defined size
+    //    this means that any type can be used as a backing type
+    //    not that you should actually do that.
+    //
+    // 6. unions
+    //  - the size of the union is the size of the largest type in the union
+    //
+    // 7. typesafe union
+    //  - a typesafe union is an enum with data associated to each enum value
+    //  - the size of a typesafe union is the size of the union + the size of the enum
+    //
+    // 8. optional values
+    //  - this is any type-decl followed by `?`
+    //  - the size of this is garunteed to be the size of the type 
+    //    rounded up to the nearest multiple of 4 on 32 bit systems
+    //    and rounded up to 8 on 64 bit systems
+    //
+    // 9. pointers
+    //  - this is any type-decl followed by `*`
+    //  - all pointers are implicityly optional due to `null`
+    //  - on 32 bit systems this will be 4 bytes wide
+    //  - on 64 bit systems this will be 8 bytes wide
+    //
+
+    // first token will be either a ident for a typename alias
+    // or a keyword for either a struct, tuple, array, enum or union decl
+    token_t tok = lexer_peek(self->source);
+
+    // if it is an ident then it must be a typename
     if(tok.type == ident)
     {
-        // must be a type-name
         return parse_type_name(self);
     }
     else if(tok.type == keyword)
@@ -203,7 +285,7 @@ static node_t* parse_type_decl(parser_t* self)
             if(type_table[i].key == tok.key)
             {
                 // skip the peek'd keyword
-                token_free(lexer_next(self));
+                token_free(next_tok(self));
                 // then parse
                 return type_table[i].func(self);
             }
@@ -220,7 +302,7 @@ static node_t* parse_type_decl(parser_t* self)
 // using-decl: `using` [ident `=` type-decl | `scope` dotted-name | `module` dotted-name]
 static node_t* parse_using_decl(parser_t* self)
 {
-    token_t tok = lexer_next(self);
+    token_t tok = next_tok(self);
 
     if(tok.type == keyword)
     {
@@ -281,7 +363,7 @@ static key_func_pair_t body_table[] = {
     { kw_var, parse_var_decl }
 };
 
-static const body_table_len = sizeof(body_table) / sizeof(key_func_pair_t);
+static const int body_table_len = sizeof(body_table) / sizeof(key_func_pair_t);
 
 // body-decl: (using-decl | func-decl | var-decl)+
 static node_t* parse_body(parser_t* self)
