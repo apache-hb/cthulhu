@@ -107,6 +107,8 @@ typedef enum {
     kw_var = 53, // var
 
     op_func = 54, // &(
+    kw_enum = 55, // enum
+    kw_union = 56, // union
 } keyword_t;
 
 typedef enum {

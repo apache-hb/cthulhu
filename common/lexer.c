@@ -23,7 +23,9 @@ static const keyword_pair_t keypairs[] = {
     { "return", kw_return },
     { "using", kw_using },
     { "val", kw_val },
-    { "var", kw_var }
+    { "var", kw_var },
+    { "union", kw_union },
+    { "enum", kw_enum }
 };
 
 static const size_t keypair_len = sizeof(keypairs) / sizeof(keyword_pair_t);

@@ -43,6 +43,7 @@ static node_t* str_node(char* str)
 
 void node_free(node_t* self)
 {
+    // TODO: theres going to be more stuff here
     free(self);
 }
 
@@ -130,22 +131,90 @@ static node_t* parse_struct_decl(parser_t* self)
 
 }
 
+// typed-union-body-decl: ident `->` type-decl [`,` typed-union-body-decl] [`,`]
+static node_t* parse_typed_union_body(parser_t* self)
+{
+
+}
+
+// typed-union-decl: `{` [typed-union-body-decl] `}`
+static node_t* parse_typed_union_decl(parser_t* self)
+{
+
+}
+
+// enum-body-decl: ident (`:` number) [`,` enum-body-decl] [`,`]
+static node_t* parse_enum_body_decl(parser_t* self)
+{
+
+}
+
+// union-decl: `union` (tuple-decl | struct-decl)
+static node_t* parse_union_decl(parser_t* self)
+{
+
+}
+
+// enum-decl: `enum` (`union` typed-union-decl | (enum-body-decl))
+static node_t* parse_enum_decl(parser_t* self)
+{
+    keyword_t key = next_keyword(self);
+    if(key == kw_union)
+    {
+        return parse_typed_union_decl(self);
+    }
+    else if(key == op_openscope)
+    {
+        // is a normal enum
+    }
+    else
+    {
+        // error
+    }
+}
+
+
 key_func_pair_t type_table[] = {
     { op_openscope, parse_struct_decl },
     { op_openarg, parse_tuple_decl },
     { op_openarr, parse_array_decl },
-    { op_func, parse_func_type_decl }
+    { op_func, parse_func_type_decl },
+    { kw_enum, parse_enum_decl },
+    { kw_union, parse_union_decl }
 };
 
 static const type_table_len = sizeof(type_table) / sizeof(key_func_pair_t);
 
 
-// type-decl: (struct-decl | tuple-decl | array-decl | func-type-decl | type-name)[`?` | `*`]
+// type-decl: (struct-decl | tuple-decl | array-decl | func-type-decl | enum-decl | union-decl | type-name)[`?` | `*`]
 static node_t* parse_type_decl(parser_t* self)
 {
-    node_t* node;
+    token_t tok = lexer_peek(self);
+    if(tok.type == ident)
+    {
+        // must be a type-name
+        return parse_type_name(self);
+    }
+    else if(tok.type == keyword)
+    {
+        // must be either struct-decl tuple-decl array-decl func-type-decl enum-decl or union-decl
+        for(int i = 0; i < type_table_len; i++)
+        {
+            if(type_table[i].key == tok.key)
+            {
+                // skip the peek'd keyword
+                token_free(lexer_next(self));
+                // then parse
+                return type_table[i].func(self);
+            }
+        }
 
-
+        // if we get here it was an invalid keyword
+    }
+    else
+    {
+        // error here
+    }
 }
 
 // using-decl: `using` [ident `=` type-decl | `scope` dotted-name | `module` dotted-name]

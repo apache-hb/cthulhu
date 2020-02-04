@@ -39,3 +39,24 @@ using p = u64?;
 
 #"pointer type"
 using q = u64*;
+
+#"enum type"
+using r = enum {
+    a: 0,
+    b: 1,
+    c: 2
+}
+
+#"typesafe union"
+using s = enum union {
+    a -> u64
+    b -> (u32, u32)
+    c -> [char:8]
+}
+
+#"union type"
+using t = union {
+    a: u64,
+    b: u32,
+    c: (u64, u64)
+}
