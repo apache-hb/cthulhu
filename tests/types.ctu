@@ -33,3 +33,9 @@ using k = [(u64, u64):64]
 
 #"custom struct array type"
 using l = [{ a: u64, b:u64 }:64]
+
+#"optional type"
+using p = u64?;
+
+#"pointer type"
+using q = u64*;

@@ -103,6 +103,10 @@ typedef enum {
     kw_scope = 49, // scope
     kw_return = 50, // return
     kw_using = 51, // using
+    kw_val = 52, // val
+    kw_var = 53, // var
+
+    op_func = 54, // &(
 } keyword_t;
 
 typedef enum {
@@ -178,149 +182,62 @@ token_t lexer_next(lexer_t* self);
 token_t lexer_peek(lexer_t* self);
 
 typedef enum {
-    scope_decl = 0,
-    func_decl = 1,
-    type_decl = 2,
-} expr_type_t;
+    name_decl = 0,
+    type_decl = 1,
+    tuple_decl = 2,
+    struct_decl = 3,
+    func_sig_decl = 4,
+} node_type_t;
 
-typedef enum {
-    // structure type
-    structure = 0,
-    
-    // enumeration type
-    enumeration = 1,
-    
-    // tuple type
-    tuple = 2,
-    
-    // array type
-    array = 3,
-    
-    // builtin type
-    builtin = 4,
-
-    // pointer to type
-    pointer = 5,
-
-    // delayed type lookup so forward declares arent need
-    delayed = 6,
-} typeof_type_t;
-
-typedef enum {
-
-    // unsigned char
-    _u8 = 0,
-
-    // unsigned short
-    _u16 = 1,
-
-    // unsigned int
-    _u32 = 2,
-
-    // unsigned long long
-    _u64 = 3,
-
-    // __m128i
-    _u128 = 4,
-
-    // signed char
-    _i8 = 5,
-
-    // signed short
-    _i16 = 6,
-
-    // signed int
-    _i32 = 7,
-
-    // signed long long
-    _i64 = 8,
-
-    // __m128i
-    _i128 = 9,
-
-    // bool
-    _bool = 10,
-
-    // float
-    _f32 = 11,
-
-    // double
-    _f64 = 12,
-
-    // a void* equivilent
-    _any = 13,
-
-    // char
-    _char = 14,
-} builtin_t;
-
-struct type_t;
-struct node_t;
-
-typedef struct {
-    char* name;
-    struct type_t* type;
-    int constness;
-} struct_field_t;
-
-typedef struct {
-    typeof_type_t type;
+typedef struct node_tag_t {
+    node_type_t node_type;
 
     union {
+        // name_decl
+        char* name;
 
-        // struct or tuple type
+        // type_decl
         struct {
-            int field_count;
-            union {
-                struct type_t* tuple_fields;
-                struct_field_t* struct_fields;
-            };
+            // the name of the type
+            node_t* type_name;
+
+            // can be either a tuple, struct, array or type signature
+            node_t* type_data;
         };
 
-        // builtin type
-        builtin_t* builtin_type;
-
-        // array type
+        // struct_decl
         struct {
-            // length of the array
-            int array_length;
-            struct type_t* array_of;
+            // number of struct fields
+            int struct_field_count;
+
+            // array of struct field names
+            node_t* field_name;
+
+            // array of struct field types
+            node_t* field_type;
         };
 
-        // pointer type
-        struct type_t* points_to;
-    };
-} type_t;
-
-typedef struct {
-    char* name;
-    type_t* typeof;
-    int constness;
-} arg_pair_t;
-
-typedef struct {
-    int arg_count;
-    char** arg_names;
-} args_t;
-
-typedef struct {
-    expr_type_t node_type;
-
-    union {
-
-        // namespace/scope expression
+        // tuple_decl
         struct {
-            char* scope_name;
-            struct node_t* content;
+            // number of tuple fields
+            int tuple_field_count;
+
+            // array of tuple field types
+            node_t* fields;
         };
 
-        // type decl
+        // func_sig_decl
         struct {
-            char* type_name;
-            struct type_t* type;
+            // pointer to a tuple of all the arguments
+            node_t* args;
+
+            // pointer to the return type
+            node_t* return_type;
         };
     };
 } node_t;
+
+void node_free(node_t* self);
 
 typedef struct {
     lexer_t* source;

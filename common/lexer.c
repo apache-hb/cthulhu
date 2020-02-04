@@ -18,7 +18,12 @@ static const keyword_pair_t keypairs[] = {
     { "else", kw_else },
     { "def", kw_def },
     { "switch", kw_switch },
-    { "case", kw_case }
+    { "case", kw_case },
+    { "scope", kw_scope },
+    { "return", kw_return },
+    { "using", kw_using },
+    { "val", kw_val },
+    { "var", kw_var }
 };
 
 static const size_t keypair_len = sizeof(keypairs) / sizeof(keyword_pair_t);
@@ -102,7 +107,9 @@ static const keyword_pair_t operatorpairs[] = {
     { "]", op_closearr },
     { ",", op_comma },
     { "->", op_arrow },
-    { ":", op_colon }
+    { ":", op_colon },
+
+    { "&(", op_func }
 };
 
 static const size_t operator_len = sizeof(operatorpairs) / sizeof(keyword_pair_t);
