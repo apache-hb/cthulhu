@@ -209,8 +209,12 @@ typedef enum {
 
     array_decl = 10,
 
-    enum_decl = 11,
-    typed_enum_decl = 12,
+    enum_decl,
+    enum_field_decl,
+    typed_enum_decl,
+
+    union_decl,
+    union_tuple_decl,
 
     expr_add, // op + op
     expr_addeq, // op += op
@@ -261,12 +265,6 @@ typedef struct node_tag_t {
             struct node_tag_t* type;
         } using_type_decl;
 
-        // type_name_decl
-        struct {
-            // name of a type
-            struct node_tag_t* name;
-        } type_name_decl;
-
         struct {
             // the underlying type
             struct node_tag_t* data;
@@ -311,6 +309,32 @@ typedef struct node_tag_t {
             // expression for array size, NULL if array is unsized
             struct node_tag_t* size;
         } array_decl;
+
+        struct {
+            // underlying type
+            struct node_tag_t* backing;
+
+            // number of name:type pairs
+            int field_count;
+            struct node_tag_t* fields;
+        } typed_enum_decl;
+
+        struct {
+            // number of name:type pairs
+            int field_count;
+            struct node_tag_t* fields;
+        } union_decl;
+
+        struct {
+            int count;
+            char** names;
+        } enum_decl;
+
+        struct {
+            // name:expr pairs
+            int count;
+            struct node_tag_t* fields;
+        } valued_enum_decl;
 
         ////////////////////////////////////
         ///       expression stuff

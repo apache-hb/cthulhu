@@ -30,16 +30,6 @@ static const keyword_pair_t keypairs[] = {
 
 static const size_t keypair_len = sizeof(keypairs) / sizeof(keyword_pair_t);
 
-static token_t make_string(lexer_t* self)
-{
-    token_t tok;
-    tok.col = self->col - self->buf_cursor;
-    tok.row = self->row;
-    tok.type = string;
-    tok.str = strdup(self->buf);
-    return tok;
-}
-
 void token_free(token_t tok)
 {
     if(tok.type == string)
@@ -116,11 +106,6 @@ static token_t lexer_parse(lexer_t* self)
     char c = nextc(self);
 
     clear_buf(self);
-
-    // first letter of keyword
-    uint64_t cur = self->cursor;
-
-    keyword_t hint = kw_none;
 
     switch(c)
     {

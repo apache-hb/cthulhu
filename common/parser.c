@@ -190,7 +190,7 @@ static node_t* parse_named_type_list_decl(parser_t* self)
         printf(", ");
     }
 
-    next_tok(self);
+    // expect_keyword(self, op_closearg);
 
     node_t* node = make_node(named_type_list_decl);
 
@@ -225,6 +225,8 @@ static node_t* parse_type_list_decl(parser_t* self)
         printf(", ");
     }
 
+    expect_keyword(self, op_closearg);
+
     node_t* node = make_node(type_list_decl);
     node->type_list_decl.count = stack.top;
     node->type_list_decl.types = realloc(stack.nodes, sizeof(node_t) * stack.top);
@@ -256,6 +258,7 @@ static node_t* parse_array_decl(parser_t* self)
     }
     else
     {
+        printf(":");
         next_tok(self);
         node->array_decl.size = parse_expr(self);
     }
@@ -266,28 +269,51 @@ static node_t* parse_array_decl(parser_t* self)
     return node;
 }
 
-
-// typed-union-body-decl: ident `->` type-decl [`,` typed-union-body-decl]
-static node_t* parse_typed_union_body(parser_t* self)
+static node_t* parse_enum_prelude_decl(parser_t* self)
 {
+    printf("enum");
+    keyword_t key = peek_keyword(self);
 
-}
+    if(key == op_colon)
+    {
+        printf(": ");
+        next_keyword(self);
+        return parse_type_decl(self);
+    }
 
-// typed-union-decl: `{` [typed-union-body-decl] `}`
-static node_t* parse_typed_union_decl(parser_t* self)
-{
-
+    return NULL;
 }
 
 // enum-body-decl: ident (`:` number) [`,` enum-body-decl]
 static node_t* parse_enum_body_decl(parser_t* self)
 {
+    node_t* node = make_node(enum_decl);
+    node_stack_t nodes = { 0, malloc(sizeof(node_t) * 16) };
+    for(;;)
+    {
+        token_t tok = next_tok(self);
+        if(tok.type != ident)
+        {
+            break;
+        }
 
-}
+        node_t* pair = make_node(enum_field_decl);
+        pair->field_decl.name = tok.str;
 
-static node_t* parse_enum_prelude_decl(parser_t* self)
-{
-    
+        expect_keyword(self, op_colon);
+
+        pair->field_decl.type = parse_expr(self);
+
+        node_stack_push(&nodes, pair);
+
+        if(peek_keyword(self) != op_comma)
+        {
+            next_tok(self);
+            break;
+        }
+    }
+
+    return node;
 }
 
 // enum-decl: enum-prelude enum-body-decl
@@ -303,27 +329,137 @@ static node_t* parse_enum_decl(parser_t* self)
     //      - `name: 0` is just as valid as `name: (1 << 0)` or `name: (constant_value + 5)`
     //      - we have to be able to account for all this
     //
+
+    node_t* node = make_node(enum_decl);
+    node->typed_enum_decl.backing = parse_enum_prelude_decl(self);
+
+    keyword_t key = next_keyword(self);
+
+    if(key == op_openarg)
+    {
+        printf("(");
+        name_stack_t stack = { 0, malloc(sizeof(char*) * 16) };
+
+        for(;;)
+        {
+            token_t tok = next_tok(self);
+            if(tok.type != ident)
+            {
+                printf(")");
+                break;
+            }
+            printf("%s", tok.str);
+            name_stack_push(&stack, tok.str);
+
+            // next_tok(self);
+
+            if(peek_keyword(self) == op_comma)
+            {
+                printf(", ");
+                next_tok(self);
+                continue;
+            }
+        }
+
+        node->typed_enum_decl.field_count = stack.top;
+        node->typed_enum_decl.fields = realloc(stack.names, sizeof(char*) * stack.top);
+    }
+    else if(key == op_openscope)
+    {
+        printf("{");
+
+        node_t* node = parse_enum_body_decl(self);
+        node->node_type = union_decl;
+
+        printf("}");
+    }
+
+    return node;
+}
+
+static node_t* parse_typed_enum_field_decl(parser_t* self)
+{
+    node_t* field = make_node(field_decl);
+
+    field->field_decl.name = next_ident(self);
+    printf("%s ", field->field_decl.name);
+
+    expect_keyword(self, op_arrow);
+    printf("-> ");
+
+    field->field_decl.type = parse_type_decl(self);
+
+    return field;
 }
 
 // union-decl: `union` ((type-list-decl | struct-decl) | `enum` [`:` type-decl] typed-union-decl)
 static node_t* parse_union_decl(parser_t* self)
 {
-    keyword_t key = peek_keyword(self);
+    printf("union ");
+    keyword_t key = next_keyword(self);
     if(key == kw_enum)
     {
-        // enum
+        node_t* node = make_node(typed_enum_decl);
+        node_t* backing = parse_enum_prelude_decl(self);
+
+        key = next_keyword(self);
+
+        if(key != op_openscope)
+        {
+            // TODO: this
+            printf("error\n");
+        }
+
+        node_stack_t stack = { 0, malloc(sizeof(node_t) * 16) };
+
+        printf(" { ");
+
+        for(;;)
+        {
+            if(peek_keyword(self) == op_closescope)
+            {
+                next_tok(self);
+                break;
+            }
+
+            node_stack_push(&stack, parse_typed_enum_field_decl(self));
+
+            if(next_keyword(self) != op_comma)
+            {
+                break;
+            }
+
+            printf(", ");
+        }
+
+        printf(" }");
+
+        node->typed_enum_decl.backing = backing;
+        node->typed_enum_decl.field_count = stack.top;
+        node->typed_enum_decl.fields = realloc(stack.nodes, sizeof(node_t) * stack.top);
+        return node;
     }
     else if(key == op_openscope)
     {
-        // struct-decl
+        printf("{ ");
+        node_t* fields = parse_named_type_list_decl(self);
+        fields->node_type = union_decl;
+        expect_keyword(self, op_closescope);
+        printf(" }");
+        return fields;
     }
     else if(key == op_openarg)
     {
-        // type-list-decl
+        printf("( ");
+        node_t* fields = parse_type_list_decl(self);
+        fields->node_type = union_tuple_decl;
+        // expect_keyword(self, op_closearg);
+        printf(" )");
+        return fields;
     }
     else
     {
-
+        // ERROR
     }
 }
 
@@ -410,7 +546,9 @@ static node_t* parse_type_decl(parser_t* self)
 
             // array-decl
         case op_openarr:
+            printf("[");
             node->type_decl.data = parse_array_decl(self);
+            printf("]");
             break;
 
             // union-decl

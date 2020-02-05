@@ -1,0 +1,2 @@
+using a1 = enum (a, b)
+using a2 = enum: u64 (a, b)
