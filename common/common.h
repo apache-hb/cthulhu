@@ -75,7 +75,6 @@ typedef enum {
     op_bitxoreq = 27, // ^=
 
     op_bitnot = 28, // ~
-    op_bitnoteq = 29, // ~=
 
     op_eq = 30, // ==
     op_neq = 31, // !=
@@ -103,12 +102,16 @@ typedef enum {
     kw_scope = 49, // scope
     kw_return = 50, // return
     kw_using = 51, // using
-    kw_val = 52, // val
+    kw_let = 52, // let
     kw_var = 53, // var
 
     op_func = 54, // &(
     kw_enum = 55, // enum
     kw_union = 56, // union
+
+    op_question = 57, // ?
+
+    kw_none = 0xFF
 } keyword_t;
 
 typedef enum {
@@ -118,7 +121,7 @@ typedef enum {
     floating = 3,
     keyword = 4,
     ident = 5,
-    eof = 6
+    eof = 6,
 } token_type_t;
 
 typedef struct {
@@ -184,72 +187,174 @@ token_t lexer_next(lexer_t* self);
 token_t lexer_peek(lexer_t* self);
 
 typedef enum {
-    name_decl = 0,
+    using_type_decl = 0,
 
-    // tuple, struct, func_sig, union, enum, typed_enum, typed_union name
-    type_decl = 1,
+    scope_decl = 1,
 
-    // ()
-    tuple_decl = 2,
+    dotted_name_decl = 2,
 
-    // {}
-    struct_decl = 3,
+    body_decl = 3,
 
-    // &()
-    func_sig_decl = 4,
+    type_name_decl = 4,
 
-    // union
-    union_decl = 5,
+    type_decl = 5,
 
-    // enum 
-    enum_decl = 6,
+    field_decl = 6,
 
-    // enum: T
-    typed_enum_decl = 7,
+    named_type_list_decl = 7,
 
-    // enum union
-    typed_union_decl = 8,
+    type_list_decl = 8,
 
-    // { (ident: type)... }
-    struct_body_decl = 9,
+    func_sig_decl = 9,
 
-    // ( types... )
-    type_list_decl = 10,
+    array_decl = 10,
+
+    enum_decl = 11,
+    typed_enum_decl = 12,
+
+    expr_add, // op + op
+    expr_addeq, // op += op
+    expr_sub, // op - op
+    expr_subeq, // op -= op
+
+    expr_not, // !op
+    expr_neg, // -op
+    expr_pos, // +op
+
+    expr_mul, // op * op
+    expr_muleq, // op *= op
+    expr_div, // op / op
+    expr_diveq, // op /= op
+    expr_mod, // op % op
+    expr_modeq, // op %= op
+
+    expr_bitand, // op & op
+    expr_bitandeq, // op &= op
+
+    expr_ref, // & op
+    expr_deref, // * op
+
+    expr_bitor, // op | op
+    expr_bitoreq, // op |= op
+    
+    expr_bitxor, // op ^ op
+    expr_bitxoreq, // op ^= op
+
+    expr_bitnot, // ~op
+
 } node_type_t;
 
 typedef struct node_tag_t {
     node_type_t node_type;
 
     union {
-        // name_decl
-        char* name;
+        /////////////////////////////////////
+        ///             types
+        /////////////////////////////////////
 
-        // type_decl, struct_decl, union_decl
+        // using_type_decl
         struct {
-            // the name of the type
-            struct node_tag_t* type_name;
+            // name of the type
+            char* name;
 
-            // can be either a tuple, struct, array or type signature
-            struct node_tag_t* type_data;
-        };
+            // the type of the type
+            struct node_tag_t* type;
+        } using_type_decl;
 
-        // tuple_body, struct_body
+        // type_name_decl
         struct {
-            // number of tuple/struct fields
-            int field_count;
+            // name of a type
+            struct node_tag_t* name;
+        } type_name_decl;
 
-            // array of tuple field types or struct name:type pairs
-            struct node_tag_t* fields;
-        };
-
-        // func_sig_decl
         struct {
-            // pointer to a tuple of all the arguments
+            // the underlying type
+            struct node_tag_t* data;
+
+            // is the type a pointer
+            int pointer;
+        } type_decl;
+
+        struct {
+            // number of fields
+            int count;
+            
+            // array of name:type pairs
+            struct node_tag_t* types;
+        } named_type_list_decl;
+
+        struct {
+            // name of the field
+            char* name;
+
+            // type of the field
+            struct node_tag_t* type;
+        } field_decl;
+
+        struct {
+            // length of type list
+            int count;
+
+            // array of types
+            struct node_tag_t* types;
+        } type_list_decl;
+
+        struct {
+            // the arguments of the function
             struct node_tag_t* args;
+            struct node_tag_t* ret_type;
+        } func_sig_decl;
 
-            // pointer to the return type
-            struct node_tag_t* return_type;
-        };
+        struct {
+            struct node_tag_t* type;
+
+            // expression for array size, NULL if array is unsized
+            struct node_tag_t* size;
+        } array_decl;
+
+        ////////////////////////////////////
+        ///       expression stuff
+        ////////////////////////////////////
+
+        struct {
+            struct node_tag_t* lhs;
+            struct node_tag_t* rhs;
+        } binop_expr;
+
+        struct {
+            struct node_tag_t* op;
+        } unary_expr;
+
+        ////////////////////////////////////
+        ///         scoping stuff
+        ////////////////////////////////////
+
+        // scope_decl
+        struct {
+            // name of the scope
+            struct node_tag_t* name;
+
+            // decls inside the scope
+            struct node_tag_t* decls;
+        } scope_decl;
+
+        // scope_name_decl
+        struct {
+            // number of parts in the name
+            int count;
+
+            // array of parts in the name
+            char** parts;
+        } dotted_name_decl;
+
+        // body_decl
+        struct {
+            // number of decls in body
+            int count;
+
+            // array of count decls
+            struct node_tag_t* decls;
+        } body_decl;
     };
 } node_t;
 
@@ -263,5 +368,21 @@ parser_t* parser_alloc(lexer_t* lex);
 void parser_free(parser_t* self);
 
 node_t* parser_generate_ast(parser_t* self);
+
+typedef struct {
+    int top;
+    char** names;
+} name_stack_t;
+
+void name_stack_push(name_stack_t* self, char* name);
+char* name_stack_pop(name_stack_t* self);
+
+typedef struct {
+    int top;
+    node_t** nodes;
+} node_stack_t;
+
+void node_stack_push(node_stack_t* self, node_t* node);
+node_t* node_stack_pop(node_stack_t* self);
 
 #endif // COMMON_H

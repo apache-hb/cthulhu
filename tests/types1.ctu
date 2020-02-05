@@ -1,0 +1,7 @@
+using i = u64::a
+
+using j = u32
+
+#comment
+
+using d = u8

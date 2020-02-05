@@ -22,6 +22,11 @@ static token_t next_tok(parser_t* self)
     return lexer_next(self->source);
 }
 
+static token_t peek_tok(parser_t* self)
+{
+    return lexer_peek(self->source);
+}
+
 typedef struct {
     keyword_t key;
     node_t*(*func)(parser_t*);
@@ -31,13 +36,6 @@ static node_t* make_node(node_type_t type)
 {
     node_t* node = malloc(sizeof(node_t));
     node->node_type = type;
-    return node;
-}
-
-static node_t* str_node(char* str)
-{
-    node_t* node = make_node(name_decl);
-    node->name = str;
     return node;
 }
 
@@ -67,15 +65,22 @@ static keyword_t next_keyword(parser_t* self)
     return key;
 }
 
+static void expect_keyword(parser_t* self, keyword_t key)
+{
+    keyword_t k = next_keyword(self);
+    if(k != key)
+    {
+        printf("expected %d got %d\n", key, k);
+        exit(11);
+    }
+}
+
 static keyword_t peek_keyword(parser_t* self)
 {
-    token_t tok = lexer_peek(self->source);
+    token_t tok = peek_tok(self);
+
     if(tok.type != keyword)
-    {
-        // TODO
-        printf("expected keyword got %d instead\n", tok.type);
-        exit(9);
-    }
+        return kw_none;
 
     return tok.key;
 }
@@ -93,77 +98,174 @@ static char* next_ident(parser_t* self)
     return str;
 }
 
+// forward declares
+static node_t* parse_type_decl(parser_t* self);
+static node_t* parse_body(parser_t* self);
+
+///////////////////////////////////////////////////
+///               expr parsing
+///////////////////////////////////////////////////
+
+static node_t* parse_expr(parser_t* self)
+{
+
+}
+
 ///////////////////////////////////////////////////
 ///               type parsing
 ///////////////////////////////////////////////////
 
-static node_t* parse_type_decl(parser_t* self);
-
-// type-name: ident
-static node_t* parse_type_name(parser_t* self)
+// dotted-name-decl: ident [`::` dotted-name-decl]
+static node_t* parse_dotted_name_decl(parser_t* self)
 {
-    node_t* node = make_node(name_decl);
-    node->name = next_ident(self);
+    name_stack_t names = { 0, malloc(sizeof(char*) * 16) };
+
+    int count = 0;
+    for(;;)
+    {
+        // ident
+        char* name = next_ident(self);
+        name_stack_push(&names, name);
+        count++;
+        printf("%s", name);
+
+        // `::` scope-name-decl
+        if(peek_keyword(self) != op_sep)
+        {
+            break;
+        }
+        next_keyword(self);
+        printf("::");
+    }
+
+    node_t* node = make_node(dotted_name_decl);
+
+    node->dotted_name_decl.count = count;
+    node->dotted_name_decl.parts = realloc(names.names, sizeof(char*) * count);
+
     return node;
+}
+
+
+// name: dotted-name
+static node_t* parse_type_name_decl(parser_t* self)
+{
+    return parse_dotted_name_decl(self);
 }
 
 // named-type-list-decl: ident `:` type-decl [`,` named-type-list-decl]
 static node_t* parse_named_type_list_decl(parser_t* self)
 {
-    
+    // TODO: this needs to resize itself
+    node_stack_t stack = { 0, malloc(sizeof(node_t) * 64) };
+
+    for(;;)
+    {
+        // [`,` named-type-list-decl]
+        token_t tok = peek_tok(self);
+        if(tok.type != ident)
+        {
+            break;
+        }
+
+        node_t* node = make_node(field_decl);
+
+        // ident
+        node->field_decl.name = next_ident(self);
+        printf("%s", node->field_decl.name);
+
+        // `:`
+        expect_keyword(self, op_colon);
+        printf(": ");
+
+        node->field_decl.type = parse_type_decl(self);
+
+        node_stack_push(&stack, node);
+
+        if(peek_keyword(self) != op_comma)
+        {
+            break;
+        }
+        next_tok(self);
+        printf(", ");
+    }
+
+    next_tok(self);
+
+    node_t* node = make_node(named_type_list_decl);
+
+    node->named_type_list_decl.count = stack.top;
+    node->named_type_list_decl.types = realloc(stack.nodes, sizeof(node_t) * stack.top);
+
+    return node;
 }
 
 // type-list-decl: type-decl [`,` type-list-decl]
 static node_t* parse_type_list_decl(parser_t* self)
 {
-    
+    // TODO: this needs to resize itself
+    node_stack_t stack = { 0, malloc(sizeof(node_t) * 64) };
+
+    for(;;)
+    {
+        if(peek_keyword(self) == op_closearg)
+        {
+            break;
+        }
+        // type-decl
+        node_stack_push(&stack, parse_type_decl(self));
+
+        // [`,` type-list-decl]
+        if(peek_keyword(self) != op_comma)
+        {
+            break;
+        }
+
+        next_tok(self);
+        printf(", ");
+    }
+
+    node_t* node = make_node(type_list_decl);
+    node->type_list_decl.count = stack.top;
+    node->type_list_decl.types = realloc(stack.nodes, sizeof(node_t) * stack.top);
+    return node;
 }
 
 // func-type-decl: `&(` [type-list-decl] `)` `->` type-decl
 static node_t* parse_func_type_decl(parser_t* self)
 {
+    node_t* node = make_node(func_sig_decl);
 
+    node->func_sig_decl.args = parse_type_list_decl(self);
+    expect_keyword(self, op_arrow);
+    node->func_sig_decl.ret_type = parse_type_decl(self);
+
+    return node;
 }
 
-// array-decl: `[` type-decl `:` number `]`
+// array-decl: `[` type-decl [`:` number] `]`
 // assert(number > 0)
 static node_t* parse_array_decl(parser_t* self)
 {
+    node_t* node = make_node(array_decl);
+    node->array_decl.type = parse_type_decl(self);
 
-}
-
-
-// tuple-decl: `(` [type-list-decl] `)`
-static node_t* parse_tuple_decl(parser_t* self)
-{
-
-}
-
-
-// struct-decl: `{` [named-type-list-decl] `}`
-static node_t* parse_struct_decl(parser_t* self)
-{
-    int count = 0;
-    node_t* node = make_node(struct_body_decl);
-
-    node_t* fields = malloc(sizeof(node_t));
-
-    for(;;)
+    if(peek_keyword(self) != op_colon)
     {
-        token_t tok = next_tok(self);
-        if(tok.type != ident)
-            goto end;
-
-        node_t* pair = parse_named_type_list_decl(self);
-
-        memcpy(fields + (count * sizeof(node_t)), )
+        node->array_decl.size = NULL;
+    }
+    else
+    {
+        next_tok(self);
+        node->array_decl.size = parse_expr(self);
     }
 
-end: node->field_count = count;
-    node->fields
+    // skip the `]`
+    next_tok(self);
+
+    return node;
 }
 
-#if 0
 
 // typed-union-body-decl: ident `->` type-decl [`,` typed-union-body-decl]
 static node_t* parse_typed_union_body(parser_t* self)
@@ -183,15 +285,12 @@ static node_t* parse_enum_body_decl(parser_t* self)
 
 }
 
-#endif
-
-// union-decl: `union` ((tuple-decl | struct-decl) | `enum` [`:` type-decl] typed-union-decl)
-static node_t* parse_union_decl(parser_t* self)
+static node_t* parse_enum_prelude_decl(parser_t* self)
 {
     
 }
 
-// enum-decl: `enum` [`:` type-decl] enum-body-decl
+// enum-decl: enum-prelude enum-body-decl
 static node_t* parse_enum_decl(parser_t* self)
 {
     // when parsing an enum we need to be aware that enums can have any of
@@ -206,20 +305,29 @@ static node_t* parse_enum_decl(parser_t* self)
     //
 }
 
+// union-decl: `union` ((type-list-decl | struct-decl) | `enum` [`:` type-decl] typed-union-decl)
+static node_t* parse_union_decl(parser_t* self)
+{
+    keyword_t key = peek_keyword(self);
+    if(key == kw_enum)
+    {
+        // enum
+    }
+    else if(key == op_openscope)
+    {
+        // struct-decl
+    }
+    else if(key == op_openarg)
+    {
+        // type-list-decl
+    }
+    else
+    {
 
-key_func_pair_t type_table[] = {
-    { op_openscope, parse_struct_decl },
-    { op_openarg, parse_tuple_decl },
-    { op_openarr, parse_array_decl },
-    { op_func, parse_func_type_decl },
-    { kw_enum, parse_enum_decl },
-    { kw_union, parse_union_decl }
-};
+    }
+}
 
-static const int type_table_len = sizeof(type_table) / sizeof(key_func_pair_t);
-
-
-// type-decl: (struct-decl | tuple-decl | array-decl | func-type-decl | enum-decl | union-decl | type-name)[`?` | `*`]
+// type-decl: (struct-decl | union-decl | array-decl | func-type-decl | enum-decl | union-decl | type-name)[`*`]
 static node_t* parse_type_decl(parser_t* self)
 {
     // the type alias syntax is pretty extensive
@@ -268,81 +376,117 @@ static node_t* parse_type_decl(parser_t* self)
     //  - on 64 bit systems this will be 8 bytes wide
     //
 
-    // first token will be either a ident for a typename alias
-    // or a keyword for either a struct, tuple, array, enum or union decl
-    token_t tok = lexer_peek(self->source);
+    token_t tok = peek_tok(self);
 
-    // if it is an ident then it must be a typename
+    node_t* node = make_node(type_decl);
+
     if(tok.type == ident)
     {
-        return parse_type_name(self);
+        // type-name
+        node->type_decl.data = parse_type_name_decl(self);
     }
     else if(tok.type == keyword)
     {
-        // must be either struct-decl tuple-decl array-decl func-type-decl enum-decl or union-decl
-        for(int i = 0; i < type_table_len; i++)
-        {
-            if(type_table[i].key == tok.key)
-            {
-                // skip the peek'd keyword
-                token_free(next_tok(self));
-                // then parse
-                return type_table[i].func(self);
-            }
-        }
+        next_tok(self);
+        // (struct-decl | type-list-decl | array-decl | func-type-decl | enum-decl | union-decl)
 
-        // if we get here it was an invalid keyword
+        node = make_node(type_decl);
+
+        switch(tok.key)
+        {
+            // struct-decl
+        case op_openscope:
+            printf("{ ");
+            node->type_decl.data = parse_named_type_list_decl(self);
+            printf(" }\n");
+            break;
+
+            // type-list-decl
+        case op_openarg:
+            printf("(");
+            node->type_decl.data = parse_type_list_decl(self);
+            printf(")");
+            break;
+
+            // array-decl
+        case op_openarr:
+            node->type_decl.data = parse_array_decl(self);
+            break;
+
+            // union-decl
+        case kw_union:
+            node->type_decl.data = parse_union_decl(self);
+            break;
+
+            // enum-decl
+        case kw_enum:
+            node->type_decl.data = parse_enum_decl(self);
+            break;
+
+            // error
+        default:
+            printf("unexpected type keyword\n");
+            break;
+        }
     }
     else
     {
-        // error here
+        // error
     }
+
+    keyword_t key = peek_keyword(self);
+    
+    // [`*`]
+    node->type_decl.pointer = key == op_mul;
+
+    return node;
 }
 
 // using-decl: `using` [ident `=` type-decl | `scope` dotted-name | `module` dotted-name]
 static node_t* parse_using_decl(parser_t* self)
 {
+    printf("\nusing ");
     token_t tok = next_tok(self);
 
-    if(tok.type == keyword)
+    node_t* node = NULL;
+
+    if(tok.type == ident)
     {
-        // must be either `scope` or `module`
+        printf("%s ", tok.str);
+        node = make_node(using_type_decl);
+
+        // ident
+        node->using_type_decl.name = tok.str;
+
+        // `=`
+        expect_keyword(self, op_assign);
+        printf("= ");
+
+        // type-decl
+        node->using_type_decl.type = parse_type_decl(self);
     }
-    else if(tok.type == ident)
+    else if(tok.type == keyword)
     {
-        // must be a type declaration
-        node_t* node = make_node(type_decl);
-        node->type_name = str_node(next_ident(self));
-        
-        keyword_t key = next_keyword(self);
-        if(key != op_assign)
-        {
-            printf("expected `=` got %d instead\n", key);
-            exit(8);
-        }
 
-        node->type_data = parse_type_decl(self);
-
-        return node;
     }
     else
     {
         // error
-        printf("invalid using structure\n");
-        exit(7);
     }
+
+    return node;
 }
 
 ////////////////////////////////////////////////////
 ///             variable parsing
 ///////////////////////////////////////////////////
 
-static node_t* parse_val_decl(parser_t* self)
+static node_t* parse_var_decl(parser_t* self)
 {
 
 }
 
-static node_t* parse_var_decl(parser_t* self)
+static node_t* parse_let_decl(parser_t* self)
 {
 
 }
@@ -356,33 +500,103 @@ static node_t* parse_func_decl(parser_t* self)
 
 }
 
-static key_func_pair_t body_table[] = {
+////////////////////////////////////////////////////
+///             scope parsing
+////////////////////////////////////////////////////
+
+// scope-decl: `scope` dotted-name-decl `{` [body-decl] `}`
+static node_t* parse_scope_decl(parser_t* self)
+{
+    printf("scope ");
+    node_t* node = make_node(scope_decl);
+
+    // scope-name-decl
+    node->scope_decl.name = parse_dotted_name_decl(self);
+
+    // [body-decl]
+    node->scope_decl.decls = parse_body(self);
+    return node;
+}
+
+static const key_func_pair_t body_table[] = {
     { kw_using, parse_using_decl },
     { kw_def, parse_func_decl },
-    { kw_val, parse_val_decl },
-    { kw_var, parse_var_decl }
+    { kw_let, parse_let_decl },
+    { kw_var, parse_var_decl },
+    { kw_scope, parse_scope_decl }
 };
 
 static const int body_table_len = sizeof(body_table) / sizeof(key_func_pair_t);
 
-// body-decl: (using-decl | func-decl | var-decl)+
+// body-decl: [using-decl | func-decl | var-decl | val-decl | scope-decl] [body-decl]
 static node_t* parse_body(parser_t* self)
 {
-    keyword_t key = next_keyword(self);
-    
-    for(int i = 0; i < body_table_len; i++)
+    node_t* node = make_node(body_decl);
+
+    // TODO: maybe this needs to be bigger
+    node_stack_t nodes = { 0, malloc(sizeof(node_t*) * 128) };
+
+    for(;;)
     {
-        if(body_table[i].key == key)
+        token_t tok = next_tok(self);
+
+        if(tok.type == eof)
         {
-            return body_table[i].func(self);
+            break;
         }
+
+        if(tok.type != keyword)
+        {
+            // TODO: errors
+            printf("\nexpected keyword got %d instead %s\n", tok.type, tok.str);
+            exit(9);
+        }
+
+        for(int i = 0; i < body_table_len; i++)
+        {
+            if(body_table[i].key == tok.key)
+            {
+                // [using-decl | func-decl | var-decl | val-decl | scope-decl]
+                node_stack_push(&nodes, body_table[i].func(self));
+
+                // [body-decl]
+                goto loop_again;
+            }
+        }
+
+        printf("unexpected toplevel keyword %d\n", tok.key);
+        exit(10);
+
+    loop_again:continue;
     }
 
-    // TODO: error here
-    return NULL;
+    node->body_decl.count = nodes.top;
+    node->body_decl.decls = realloc(nodes.nodes, sizeof(node_t*) * nodes.top);
+
+    return node;
 }
 
 node_t* parser_generate_ast(parser_t* self)
 {
-    return NULL;
+    return parse_body(self);
+}
+
+void name_stack_push(name_stack_t* self, char* name)
+{
+    self->names[self->top++] = name;
+}
+
+char* name_stack_pop(name_stack_t* self)
+{
+    return self->names[self->top--];
+}
+
+void node_stack_push(node_stack_t* self, node_t* node)
+{
+    self->nodes[self->top++] = node;
+}
+
+node_t* node_stack_pop(node_stack_t* self)
+{
+    return self->nodes[self->top--];
 }

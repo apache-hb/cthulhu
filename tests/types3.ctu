@@ -1,0 +1,4 @@
+using t1 = ()
+using t2 = (u64)
+using t3 = (u64, u32)
+using t4 = (u64, (u64, u32))

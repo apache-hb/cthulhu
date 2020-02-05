@@ -2,7 +2,8 @@
 
 char next_file(void* f)
 {
-    return fgetc(f);    
+    char c = fgetc(f);    
+    return c;
 }
 
 char peek_file(void* f)

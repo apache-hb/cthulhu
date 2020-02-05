@@ -22,121 +22,13 @@ static const keyword_pair_t keypairs[] = {
     { "scope", kw_scope },
     { "return", kw_return },
     { "using", kw_using },
-    { "val", kw_val },
+    { "val", kw_let },
     { "var", kw_var },
     { "union", kw_union },
     { "enum", kw_enum }
 };
 
 static const size_t keypair_len = sizeof(keypairs) / sizeof(keyword_pair_t);
-
-static token_t make_keyword(lexer_t* self)
-{
-    token_t tok;
-    tok.col = self->col - self->buf_cursor;
-    tok.row = self->row;
-
-    for(int i = 0; i < keypair_len; i++)
-    {
-        if(strcmp(self->buf, keypairs[i].keyword) == 0)
-        {
-            tok.type = keyword;
-            tok.key = keypairs[i].key;
-            return tok;
-        }
-    }
-
-    tok.type = ident;
-    tok.str = strdup(self->buf);
-    return tok;
-}
-
-
-static const keyword_pair_t operatorpairs[] = {
-    { "=", op_assign },
-    
-    { "==", op_eq },
-    { "!=", op_neq },
-
-    { "!", op_not },
-    { "&&", op_and },
-    { "||", op_or },
-
-    { "+", op_add },
-    { "+=", op_addeq },
-    
-    { "-", op_sub },
-    { "-=", op_subeq },
-    
-    { "/", op_div },
-    { "/=", op_diveq },
-    
-    { "*", op_mul },
-    { "*=", op_muleq },
-    
-    { "%", op_mod },
-    { "%=", op_modeq },
-
-    { "|", op_bitor },
-    { "|=", op_bitoreq },
-
-    { "&", op_bitand },
-    { "&=", op_bitandeq },
-
-    { "<<", op_shl },
-    { "<<=", op_shleq },
-
-    { ">>", op_shr },
-    { ">>=", op_shreq },
-
-    { "^", op_bitxor },
-    { "^=", op_bitxoreq },
-
-    { "~", op_bitnot },
-    { "~=", op_bitnoteq },
-
-    { ">", op_gt },
-    { ">=", op_gte },
-    { "<", op_lt },
-    { "<=", op_lte },
-
-    { "::", op_sep },
-    { "(", op_openarg },
-    { ")", op_closearg },
-    { "{", op_openscope },
-    { "}", op_closescope },
-    { "[", op_openarr },
-    { "]", op_closearr },
-    { ",", op_comma },
-    { "->", op_arrow },
-    { ":", op_colon },
-
-    { "&(", op_func }
-};
-
-static const size_t operator_len = sizeof(operatorpairs) / sizeof(keyword_pair_t);
-
-static token_t make_operator(lexer_t* self)
-{
-    token_t tok;
-    tok.col = self->col - self->buf_cursor;
-    tok.row = self->row;
-
-    for(int i = 0; i < operator_len; i++)
-    {
-        if(strcmp(self->buf, operatorpairs[i].keyword) == 0)
-        {
-            tok.type = keyword;
-            tok.key = operatorpairs[i].key;
-            return tok;
-        }
-    }
-
-    // todo: error handling
-    printf("%s\n", self->buf);
-    puts("invalid operator");
-    exit(1);
-}
 
 static token_t make_string(lexer_t* self)
 {
@@ -158,6 +50,23 @@ void lexer_free(lexer_t* self)
 {
     self->file->close(self->file->data);
     free(self);
+}
+
+static char next(lexer_t* self)
+{
+    char c = self->file->next(self->file->data);
+    
+    if(c == '\n')
+    {
+        self->col = 0;
+        self->row++;
+    }
+    else
+    {
+        self->col++;
+    }
+
+    return c;
 }
 
 static char nextc(lexer_t* self)
@@ -203,7 +112,7 @@ static void clear_buf(lexer_t* self)
 
 static token_t lexer_parse(lexer_t* self)
 {
-    token_t tok;
+    token_t tok = { keyword };
     char c = nextc(self);
 
     clear_buf(self);
@@ -211,91 +120,229 @@ static token_t lexer_parse(lexer_t* self)
     // first letter of keyword
     uint64_t cur = self->cursor;
 
-    // check for eof
-    if(c == '\0' || c == -1)
+    keyword_t hint = kw_none;
+
+    switch(c)
     {
-        token_t tok;
+        // handle eof
+    case -1: case '\0':
         tok.type = eof;
         return tok;
-    }
-    // our comments take the form of # text \n
-    else if(c == '#')
-    {
-        while(nextc(self) != '\n') {}
-        return lexer_next(self);
-    }
-    // identifiers and keywords can be [a-zA-Z]_ and can contain numbers
-    else if(isalpha(c) || c == '_')
-    {
-        pushc(self, c);
-        for(;;)
+
+        // skip comments
+    case '#':
+        while((c = next(self)))
         {
-            c = peekc(self);
-            if(isalnum(c) || c == '_')
+            if(c == '\n')
             {
-                pushc(self, nextc(self));
-            }
-            else
-            {
-                tok = make_keyword(self);
                 break;
             }
-        }
-    }
-    // parse numbers
-    else if(isdigit(c))
-    {
-        for(;;)
-        {
-            pushc(self, c);
-
-            c = peekc(self);
-
-            if(isdigit(c) || c == '.')
+            else if(c == -1 || c == '\0')
             {
-                pushc(self, nextc(self));
+                tok.type = eof;
+                return tok;
             }
         }
-    }
-    // parse strings, all strings can be multiline
-    else if(c == '"')
-    {
-        for(;;)
-        {
-            c = nextc(self);
+        return lexer_parse(self);
 
-            if(c != '"')
+        // strings
+    case '"':
+        while((c = next(self)))
+        {
+            if(c == '"')
+            {
+                tok.type = string;
+                tok.str = strdup(self->buf);
+                return tok;
+            }
+            else
             {
                 pushc(self, c);
             }
-            else
-            {
-                tok = make_string(self);
-                break;
-            }
         }
-    }
-    // is probably an operator if we get here, or broken
-    else
-    {
-        printf("c = '%x'\n", c);
-        pushc(self, c);
-        for(;;)
+
+    case '=':
+        tok.key = peekc(self) == '=' ? op_eq : op_assign, next(self);
+        return tok;
+
+    case '+':
+        tok.key = peekc(self) == '=' ? op_addeq : op_add, next(self);
+        return tok;
+
+    case '-':
+        switch(peekc(self))
         {
-            c = peekc(self);
-            if(isspace(c) || isalnum(c))
+        case '=':
+            tok.key = op_subeq;
+            break;
+        case '>':
+            tok.key = op_arrow;
+            break;
+        default:
+            tok.key = op_sub;
+            return tok;
+        }
+        next(self);
+        return tok;
+
+    case '/':
+        tok.key = peekc(self) == '=' ? op_diveq : op_div, next(self);
+        return tok;
+
+    case '*':
+        tok.key = peekc(self) == '=' ? op_muleq : op_mul, next(self);
+        return tok;
+
+    case '%':
+        tok.key = peekc(self) == '=' ? op_modeq : op_mod, next(self);
+        return tok;
+
+    case '|':
+        switch(peekc(self))
+        {
+        case '|':
+            tok.key = op_or;
+            break;
+        case '=':
+            tok.key = op_bitor;
+            break;
+        default:
+            tok.key = op_or;
+            break;
+        }
+        return tok;
+    
+    case '&':
+        switch(peekc(self))
+        {
+        case '(':
+            tok.key = op_func;
+            break;
+        case '&':
+            tok.key = op_and;
+            break;
+        case '=':
+            tok.key = op_bitandeq;
+            break;
+        default:
+            tok.key = op_bitand;
+            break;
+        }
+        return tok;
+
+    case '^':
+        tok.key = peekc(self) == '=' ? op_bitxoreq : op_bitxor, next(self);
+        return tok;
+
+    case '~':
+        tok.key = op_bitnot;
+        return tok;
+
+    case '!':
+        tok.key = peekc(self) == '=' ? op_neq : op_not, next(self);
+        return tok;
+
+    case ':':
+        tok.key = peekc(self) == ':' ? op_sep : op_colon, next(self);
+        return tok;
+
+    case '(':
+        tok.key = op_openarg;
+        return tok;
+
+    case ')':
+        tok.key = op_closearg;
+        return tok;
+
+    case '{':
+        tok.key = op_openscope;
+        return tok;
+
+    case '}':
+        tok.key = op_closescope;
+        return tok;
+
+    case '[':
+        tok.key = op_openarr;
+        return tok;
+
+    case ']':
+        tok.key = op_closescope;
+        return tok;
+
+    case ',':
+        tok.key = op_comma;
+        return tok;
+
+    case '>':
+        switch(peekc(self))
+        {
+        case '=':
+            tok.key = op_gte;
+            break;
+        case '>':
+            next(self);
+            tok.key = peekc(self) == '=' ? op_shreq : op_shr;
+            break;
+        default:
+            tok.key = op_gt;
+            return tok;
+        }
+        next(self);
+        return tok;
+    case '<':
+        switch(peekc(self))
+        {
+        case '=':
+            tok.key = op_lte;
+            break;
+        case '<':
+            next(self);
+            tok.key = peekc(self) == '=' ? op_shleq : op_shl;
+            break;
+        default:
+            tok.key = op_lt;
+            return tok;
+        }
+        next(self);
+        return tok;
+
+        // numbers
+    case '0': case '1': case '2': case '3':
+    case '4': case '5': case '6': case '7':
+    case '8': case '9':
+        // TODO: parse numbers
+        break;
+
+    default:
+        pushc(self, c);
+        while((c = peekc(self)))
+        {
+            if(isalnum(c) || c == '_')
             {
-                pushc(self, nextc(self));
+                pushc(self, next(self));
             }
             else
             {
-                tok = make_operator(self);
-                break;
+                for(int i = 0; i < keypair_len; i++)
+                {
+                    if(strcmp(keypairs[i].keyword, self->buf) == 0)
+                    {
+                        tok.key = keypairs[i].key;
+                        return tok;
+                    }
+                }
+
+                tok.type = ident;
+                tok.str = strdup(self->buf);
+                return tok;
             }
         }
+        
+        // parse idents and text keywords
+        break;
     }
 
-    tok.cursor = cur;
     return tok;
 }
 
