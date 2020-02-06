@@ -1,5 +1,151 @@
 #include "common.h"
 
+#include <stdlib.h>
+
+parser_t parser_alloc(lexer_t lex)
+{
+    parser_t parse = {
+        .lex = lex
+    };
+    
+    return parse;
+}
+
+void parser_free(parser_t* self)
+{
+    lexer_free(&self->lex);
+}
+
+static inline token_t nextt(parser_t* self)
+{
+    return lexer_next(&self->lex);
+}
+
+static inline token_t peekt(parser_t* self)
+{
+    return lexer_peek(&self->lex);
+}
+
+static keyword_e next_key(parser_t* self)
+{
+    token_t tok = nextt(self);
+    
+    if(tok.type != tt_keyword)
+    {
+        // ERROR
+    }
+
+    return tok.key;
+}
+
+static keyword_e peek_key(parser_t* self)
+{
+    token_t tok = peekt(self);
+    return tok.type == tt_keyword ? tok.key : op_none;
+}
+
+static char* next_ident(parser_t* self)
+{
+    token_t tok = nextt(self);
+    if(tok.type != tt_ident)
+    {
+        // ERROR
+    }
+
+    return tok.str;
+}
+
+static char* peek_ident(parser_t* self)
+{
+    token_t tok = peekt(self);
+    return tok.type == tt_ident ? tok.str : 0;
+}
+
+static void expect_key(parser_t* self, keyword_e key)
+{
+    if(next_key(self) != key)
+    {
+        // error
+    }
+}
+
+static node_t* make_node(node_type_e type)
+{
+    node_t* node = malloc(sizeof(node_t));
+    node->type = type;
+    return node;
+}
+
+static dotted_name_t parse_dotted_name(parser_t* self)
+{
+    char** names = malloc(sizeof(char*) * 16);
+    int count = 0;
+
+    for(;;)
+    {
+        names[count++] = next_ident(self);
+        
+        if(peek_key(self) != op_sep)
+        {
+            break;
+        }
+
+        expect_key(self, op_sep);
+    }
+
+    dotted_name_t name = {
+        .num = count,
+        .parts = realloc(names, sizeof(char*) * count)
+    };
+
+    return name;
+}
+
+static module_t parse_module(parser_t* self)
+{
+    module_t mod = {
+        .path = parse_dotted_name(self)
+    };
+
+    return mod;
+}
+
+static import_t parse_import(parser_t* self)
+{
+    import_t imp = {
+        .path = parse_dotted_name(self)
+    };
+
+    return imp;
+}
+
+toplevel_t parser_ast(parser_t* self)
+{
+    keyword_e key = next_key(self);
+
+    toplevel_t top;
+
+    // [`module` dotted-name]
+    if(key == kw_module)
+    {
+        top.mod = parse_module(self);
+        key = next_key(self);
+    }
+
+    // [`import` dotted-name]+
+    while(key == kw_import)
+    {
+        int count = 0;
+        import_t* imports = malloc(sizeof(import_t) * 16);
+
+        imports[count++] = parse_import(self);
+
+        key = next_key(self);
+    }
+
+    
+}
+
 #if 0
 
 #include <stdlib.h>

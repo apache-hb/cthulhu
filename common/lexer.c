@@ -79,6 +79,7 @@ typedef struct { const char* name; keyword_e key; } keypair_t;
 static const keypair_t keypairs[] = {
     { "using", kw_using },
     { "module", kw_module },
+    { "import", kw_import },
     { "scope", kw_scope },
     { "def", kw_def },
     { "return", kw_return },
@@ -312,6 +313,18 @@ token_t lexer_parse(lexer_t* self)
     default:
         return make_keyword(self, c);
     }
+}
+
+token_t lexer_next(lexer_t* self)
+{
+    token_t temp = self->tok;
+    self->tok = lexer_parse(self);
+    return temp;
+}
+
+token_t lexer_peek(lexer_t* self)
+{
+    return self->tok;
 }
 
 lexer_t lexer_alloc(file_t file)

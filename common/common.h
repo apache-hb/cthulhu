@@ -18,9 +18,12 @@ typedef struct {
 } file_t;
 
 typedef enum {
+    op_none, // nothing
+
     // top level keywords
     kw_using, // using
     kw_module, // module
+    kw_import, // import
     kw_scope, // scope
     kw_def, // def
 
@@ -144,11 +147,64 @@ typedef struct {
     token_t tok;
 } lexer_t;
 
-lexer_t lexer_alloc(file_t self);
+lexer_t lexer_alloc(file_t file);
 void lexer_free(lexer_t* self);
 
 token_t lexer_next(lexer_t* self);
 token_t lexer_peek(lexer_t* self);
+
+typedef struct {
+    lexer_t lex;
+} parser_t;
+
+parser_t parser_alloc(lexer_t lex);
+void parser_free(parser_t* self);
+
+struct node_t;
+
+typedef enum {
+    nt_module,
+    nt_import,
+} node_type_e;
+
+typedef struct {
+    int num;
+    char** parts;
+} dotted_name_t;
+
+typedef struct {
+    dotted_name_t path;
+} module_t;
+
+typedef struct {
+    dotted_name_t path;
+} import_t;
+
+typedef struct {
+    dotted_name_t path;
+} export_module_t;
+
+typedef struct {
+    module_t mod;
+
+    int nimports;
+    import_t* imports;
+
+    int nbody;
+
+} toplevel_t;
+
+typedef struct {
+    node_type_e type;
+
+    union {
+        module_t module_decl;
+        import_t import_decl;
+        export_module_t export_module_decl;
+    };
+} node_t;
+
+toplevel_t parser_ast(parser_t* self);
 
 #if 0
 

@@ -117,8 +117,8 @@ scope: `scope` dotted-name `{` body `}`
 
 module: `module` dotted-name
 
-imports: `using` `module` dotted-name [imports]
+import: `import` dotted-name
 
-body: [`export`] (using | scope) [body]
+body: [`export`] (using | scope | func)
 
-toplevel: [module] [imports] [body]
+toplevel: [module] [export+] [import+] [body+]
