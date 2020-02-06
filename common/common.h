@@ -1,6 +1,156 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <stdint.h>
+
+typedef struct {
+    // data pointer
+    void* data;
+
+    // get the next charater
+    int(*next)(void*);
+
+    // peek the next character
+    int(*peek)(void*);
+
+    // cleanup the data
+    void(*close)(void*);
+} file_t;
+
+typedef enum {
+    // top level keywords
+    kw_using, // using
+    kw_module, // module
+    kw_scope, // scope
+    kw_def, // def
+
+    // decl keywords
+    kw_return, // return
+    kw_let, // let
+    kw_var, // var
+    kw_while, // while
+    kw_for, // for
+
+    // expr keywords
+    kw_match, // match
+    kw_if, // if
+    kw_else, // else
+
+    // type keywords
+    kw_union, // union
+    kw_enum, // enum
+
+    // ops
+    op_bitand, // &
+    op_bitandeq, // &=
+
+    op_bitor, // |
+    op_bitoreq, // |=
+
+    op_bitxor, // ^
+    op_bitxoreq, // ^=
+
+    op_bitnot, // ~
+
+    op_shl, // <<
+    op_shleq, // <<=
+
+    op_shr, // >>
+    op_shreq, // >>=
+
+    op_and, // &&
+    op_or, // ||
+    op_eq, // ==
+    op_neq,  // !=
+
+    op_gt, // >
+    op_gte, // >=
+
+    op_lt, // <
+    op_lte, // <=
+
+    op_not, // !
+
+    op_add, // +
+    op_addeq, // +=
+
+    op_sub, // -
+    op_subeq, // -=
+
+    op_mul, // *
+    op_muleq, // *=
+
+    op_div, // /
+    op_diveq, // /=
+
+    op_mod, // %
+    op_modeq, // %=
+
+    op_openarg, // (
+    op_closearg, // )
+
+    op_openscope, // {
+    op_closescope, // }
+
+    op_openarr, // [
+    op_closearr, // ]
+
+    op_assign, // =
+    op_sep, // ::
+    op_colon, // :
+    op_arrow, // ->
+    op_func, // &(
+} keyword_e;
+
+typedef enum {
+    tt_str = (1 << 0),
+    tt_ident = (1 << 1),
+    tt_char = (1 << 2),
+    tt_keyword = (1 << 3),
+    tt_int = (1 << 4),
+    tt_float = (1 << 5),
+    tt_eof = (1 << 6),
+} token_type_e;
+
+typedef struct {
+    token_type_e type;
+
+    union {
+        // string or ident
+        char* str;
+
+        // floating point type
+        double flt;
+
+        // number type
+        int64_t num;
+
+        // keyword
+        keyword_e key;
+
+        // letter
+        char letter;
+    };
+} token_t;
+
+void token_free(token_t* self);
+
+typedef struct {
+    file_t file;
+    int top;
+    char* buf;
+
+    token_t tok;
+} lexer_t;
+
+lexer_t lexer_alloc(file_t self);
+void lexer_free(lexer_t* self);
+
+token_t lexer_next(lexer_t* self);
+token_t lexer_peek(lexer_t* self);
+
+#if 0
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -408,5 +558,7 @@ typedef struct {
 
 void node_stack_push(node_stack_t* self, node_t* node);
 node_t* node_stack_pop(node_stack_t* self);
+
+#endif 
 
 #endif // COMMON_H

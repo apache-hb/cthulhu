@@ -1,5 +1,7 @@
 #include "common.h"
 
+#if 0
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -738,3 +740,5 @@ node_t* node_stack_pop(node_stack_t* self)
 {
     return self->nodes[self->top--];
 }
+
+#endif

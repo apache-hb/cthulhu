@@ -1,5 +1,9 @@
 #include "common/common.h"
 
+int main(int argc, char** argv) {}
+
+#if 0
+
 char next_file(void* f)
 {
     char c = fgetc(f);    
@@ -45,3 +49,5 @@ int main(int argc, char** argv)
 
     node_t* ast = parser_generate_ast(parse);
 }
+
+#endif

@@ -3,6 +3,222 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+
+void token_free(token_t* self)
+{
+    if(self->type & (tt_str | tt_ident))
+        free(self->str);
+}
+
+int nextc(lexer_t* self)
+{
+    return self->file.next(self->file.data);
+}
+
+int peekc(lexer_t* self)
+{
+    return self->file.peek(self->file.data);
+}
+
+void push(lexer_t* self, char c)
+{
+    self->buf[self->top++] = c;
+}   
+
+void clear(lexer_t* self)
+{
+    self->top = 0;
+}
+
+inline token_t make_eof()
+{
+    token_t tok = { .type = tt_eof };
+    return tok;
+}
+
+inline token_t make_string(lexer_t* self)
+{
+    int c = nextc(self);
+    while(c != '"')
+    {
+        push(self, c);
+        c = nextc(self);
+    }
+
+    token_t tok = {
+        .type = tt_str,
+        .str = strdup(self->buf)
+    };
+
+    return tok;
+}
+
+inline token_t make_char(lexer_t* self)
+{
+    token_t tok = {
+        .type = tt_char,
+        .letter = nextc(self)
+    };
+
+    nextc(self);
+
+    return tok;
+}
+
+inline token_t make_number(lexer_t* self, int c)
+{
+    token_t tok = {
+        .type = tt_int
+    };
+
+    return tok;
+}
+
+typedef struct { const char* name; keyword_e key; } keypair_t;
+
+static const keypair_t keypairs[] = {
+    { "using", kw_using },
+    { "module", kw_module },
+    { "scope", kw_scope },
+    { "def", kw_def },
+    { "return", kw_return },
+    { "let", kw_let },
+    { "var", kw_var },
+    { "while", kw_while },
+    { "for", kw_for },
+    { "match", kw_match },
+    { "if", kw_else },
+    { "else", kw_else },
+    { "union", kw_union },
+    { "enum", kw_enum }
+};
+
+static const size_t keypair_len = sizeof(keypairs) / sizeof(keypair_t);
+
+inline token_t make_keyword(lexer_t* self, int c)
+{
+    push(self, c);
+    c = peekc(self);
+    while(isalnum(c) || c == '_')
+    {
+        push(self, nextc(self));
+        c = peekc(self);
+    }
+
+    for(int i = 0; i < keypair_len; i++)
+    {
+        if(strcmp(self->buf, keypairs[i].name) == 0)
+        {
+            token_t tok = {
+                .type = tt_keyword,
+                .key = keypairs[i].key
+            };
+
+            return tok;
+        }
+    }
+
+    token_t tok = {
+        .type = tt_ident,
+        .str = strdup(self->buf)
+    };
+
+    return tok;
+}
+
+token_t lexer_parse(lexer_t* self)
+{
+    clear(self);
+    int c = nextc(self);
+
+    while(isspace(c))
+        c = nextc(self);
+
+    if(c == '#')
+        while(c != '\n')
+            c = nextc(self);
+
+    token_t tok = {
+        .type = tt_keyword
+    };
+
+    switch(c)
+    {
+        // handle EOF
+    case '\0': case -1:
+        return make_eof();
+
+        // handle string
+    case '"':
+        return make_string(self);
+
+        // handle character
+    case '\'':
+        return make_char(self);
+
+        // operators
+    case '=':
+        tok.key = peekc(self) == '=' ? op_eq : op_assign, nextc(self);
+        return tok;
+        
+    case '!':
+
+    case '~':
+    case ',':
+
+    case '+':
+    case '-':
+    case '/':
+    case '*':
+    case '%':
+    
+    case '|':
+    case '&':
+    case '^':
+    
+    case '(':
+    case ')':
+    case '{':
+    case '}':
+    case '[':
+    case ']':
+
+    case '<':
+    case '>':
+
+        // handle numbers
+    case '0': case '1': case '2': case '3': case '4':
+    case '5': case '6': case '7': case '8': case '9':
+        return make_number(self, c);
+
+    default:
+        return make_keyword(self, c);
+    }
+}
+
+lexer_t lexer_alloc(file_t file)
+{
+    lexer_t lex = {
+        .file = file,
+        .top = 0,
+        // TODO: make this configurable
+        .buf = malloc(sizeof(int) * 512)
+    };
+
+    return lex;
+}
+
+void lexer_free(lexer_t* self)
+{
+    free(self->buf);
+    self->file.close(self->file.data);
+}
+
+#if 0
+
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include <assert.h>
 #include <stdio.h>
 
@@ -359,3 +575,5 @@ token_t lexer_peek(lexer_t* self)
 {
     return self->tok;
 }
+
+#endif
