@@ -100,6 +100,7 @@ typedef enum {
     op_colon, // :
     op_arrow, // ->
     op_func, // &(
+    op_comma, // ,
 } keyword_e;
 
 typedef enum {

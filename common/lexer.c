@@ -162,30 +162,148 @@ token_t lexer_parse(lexer_t* self)
         return tok;
         
     case '!':
+        tok.key = peekc(self) == '=' ? nextc(self), op_neq : op_not;
+        return tok;
 
     case '~':
+        tok.key = op_bitnot;
+        return tok;
+
     case ',':
+        tok.key = op_comma;
+        return tok;
 
     case '+':
+        tok.key = peekc(self) == '=' ? nextc(self), op_addeq : op_add;
+        return tok;
+
+    case ':':
+        tok.key = peekc(self) == ':' ? nextc(self), op_sep : op_colon;
+        return tok;
+
     case '-':
+        switch(peekc(self))
+        {
+        case '=':
+            tok.key = op_subeq;
+            break;
+        case '>':
+            tok.key = op_arrow;
+            break;
+        default:
+            tok.key = op_sub;
+            return tok;
+        }
+        nextc(self);
+        return tok;
+
     case '/':
+        tok.key = peekc(self) == '=' ? nextc(self), op_diveq : op_div;
+        return tok;
+
     case '*':
+        tok.key = peekc(self) == '=' ? nextc(self), op_muleq : op_mul;
+        return tok;
+
     case '%':
-    
+        tok.key = peekc(self) == '=' ? nextc(self), op_modeq: op_mod;
+        return tok;
+
     case '|':
+        switch(peekc(self))
+        {
+        case '|':
+            tok.key = op_or;
+            break;
+        case '=':
+            tok.key = op_bitoreq;
+            break;
+        default:
+            tok.key = op_bitor;
+            return tok;
+        }
+        nextc(self);
+        return tok;
+
     case '&':
+        switch(peekc(self))
+        {
+        case '&':
+            tok.key = op_and;
+            break;
+        case '=':
+            tok.key = op_bitandeq;
+            break;
+        case '(':
+            tok.key = op_func;
+            break;
+        default:
+            tok.key = op_bitand;
+            return tok;
+        }
+        nextc(self);
+        return tok;
+
     case '^':
+        tok.key = peekc(self) == '=' ? nextc(self), op_bitxoreq : op_bitxor;
+        return tok;
     
     case '(':
+        tok.key = op_openarg;
+        return tok;
+
     case ')':
+        tok.key = op_closearg;
+        return tok;
+
     case '{':
+        tok.key = op_openscope;
+        return tok;
+
     case '}':
+        tok.key = op_closescope;
+        return tok;
+
     case '[':
+        tok.key = op_openarr;
+        return tok;
+
     case ']':
+        tok.key = op_closearr;
+        return tok;
 
     case '<':
+        switch(peekc(self))
+        {
+        case '<':
+            nextc(self);
+            tok.key = peekc(self) == '=' ? nextc(self), op_shleq : op_shl;
+            return tok;
+        case '=':
+            tok.key = op_lte;
+            break;
+        default:
+            tok.key = op_lt;
+            return tok;
+        }
+        nextc(self);
+        return tok;
     case '>':
-
+        switch(peekc(self))
+        {
+        case '>':
+            nextc(self);
+            tok.key = peekc(self) == '=' ? nextc(self), op_shreq : op_shr;
+            return tok;
+        case '=':
+            tok.key = op_gte;
+            break;
+        default:
+            tok.key = op_gt;
+            return tok;
+        }
+        nextc(self);
+        return tok;
         // handle numbers
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
