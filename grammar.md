@@ -106,7 +106,9 @@ decl: return-decl | let-decl | var-decl | while-decl | for-decl | func
 
 func-body: [expr+]
 
-func: `def` ident `(` [name-type-list] `)` `->` type `{` func-body `}`
+func: [special+] `def` ident `(` [name-type-list] `)` `->` type `{` func-body `}`
+
+special: `@` func-call-expr
 
 # top level declarations
 type: enum | union | struct | tuple | array | signature | typename [`*`]
@@ -117,7 +119,7 @@ scope: `scope` dotted-name `{` body `}`
 
 module: `module` dotted-name
 
-import: `import` dotted-name
+import: `import` (dotted-name | special)
 
 body: (using | scope | func)
 

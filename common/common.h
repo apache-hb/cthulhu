@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+// lexing
+
 typedef struct {
     // data pointer
     void* data;
@@ -153,6 +155,8 @@ void lexer_free(lexer_t* self);
 token_t lexer_next(lexer_t* self);
 token_t lexer_peek(lexer_t* self);
 
+// ast generation
+
 typedef struct {
     lexer_t lex;
 } parser_t;
@@ -160,42 +164,8 @@ typedef struct {
 parser_t parser_alloc(lexer_t lex);
 void parser_free(parser_t* self);
 
-typedef enum {
-    et_binary,
-    et_unary,
-    et_call,
-    et_index,
-} expr_type_e;
-
-typedef struct expr_tag_t {
-    expr_type_e type;
-
-    union {
-        // unary op
-        struct {
-            keyword_e op;
-            struct expr_tag_t* expr;
-        };
-
-        // binary op
-        struct {
-            keyword_e op;
-            struct expr_tag_t* lhs;
-            struct expr_tag_t* rhs;
-        };
-
-        // func call
-        struct {
-
-            int nargs;
-            char** names;
-            struct expr_tag_t* args;
-        };
-    };
-} expr_t;
-
 typedef struct {
-    int num;
+    int nparts;
     char** parts;
 } dotted_name_t;
 
@@ -205,105 +175,34 @@ typedef struct {
 
 typedef struct {
     dotted_name_t path;
+    // special_t* special; // TODO
 } import_t;
 
-typedef enum {
-    tt_tuple,
-    tt_struct,
-    tt_enum,
-    tt_union,
-    tt_safe_union,
-    tt_typename,
-    tt_array,
-    tt_func,
-} type_type_e;
+typedef struct {
+    int nimports;
+    import_t* imports;
+} imports_t;
 
 typedef struct {
-    int nfields;
-    char** names;
-    struct type_t* fields;
-} struct_t;
-
-typedef struct {
-    int nfields;
-    struct type_t* fields;
-} tuple_t;
-
-typedef struct {
-    struct type_t* backing;
-} enum_t;
-
-typedef struct {
-
-    // if NULL then the union is unsafe
-    struct type_t* backing;
-
-    // number of fields
-    int nfields;
-
-    // NULL if tuple declared
-    char** names;
-
-    // NULL if backing is NULL
-    expr_t* values;
-
-    // the types of the fields
-    struct type_t* types;
-} union_t;
-
-typedef struct {
-    tuple_t args;
-    struct type_t* ret;
-} func_t;
-
-
-typedef struct {
-    type_type_e type;
-    int is_ptr;
-
-    union {
-        enum_t _enum;
-        tuple_t _tuple;
-        struct_t _struct;
-        func_t _func;
-    };
-} type_t;
-
-typedef struct {
-    char* name;
-    type_t type;
-} using_t;
-
-typedef struct {
-    dotted_name_t path;
-} scope_t;
-
-typedef enum {
-    bt_scope,
-    bt_using,
-    bt_func,
-} body_type_e;
-
-typedef struct {
-    body_type_e type;
-    int do_export;
-
-    union {
-
-    };
+    int todo;
 } body_t;
 
 typedef struct {
-    module_t mod;
+    // NULL if there is no module decl
+    module_t* module_name;
 
-    int nimports;
-    import_t* imports;
+    // NULL if there are no imports
+    imports_t* imports;
 
-    int nbody;
-
+    // NULL if the body is empty
+    body_t* body;
 } toplevel_t;
 
 toplevel_t parser_ast(parser_t* self);
+
+// code generation
+
+// TODO
 
 #if 0
 
