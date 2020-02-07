@@ -69,13 +69,6 @@ static void expect_key(parser_t* self, keyword_e key)
     }
 }
 
-static node_t* make_node(node_type_e type)
-{
-    node_t* node = malloc(sizeof(node_t));
-    node->type = type;
-    return node;
-}
-
 static dotted_name_t parse_dotted_name(parser_t* self)
 {
     char** names = malloc(sizeof(char*) * 16);

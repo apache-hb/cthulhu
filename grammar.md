@@ -119,6 +119,6 @@ module: `module` dotted-name
 
 import: `import` dotted-name
 
-body: [`export`] (using | scope | func)
+body: (using | scope | func)
 
-toplevel: [module] [export+] [import+] [body+]
+toplevel: [module] [import+] [body+]

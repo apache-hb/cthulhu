@@ -160,12 +160,39 @@ typedef struct {
 parser_t parser_alloc(lexer_t lex);
 void parser_free(parser_t* self);
 
-struct node_t;
-
 typedef enum {
-    nt_module,
-    nt_import,
-} node_type_e;
+    et_binary,
+    et_unary,
+    et_call,
+    et_index,
+} expr_type_e;
+
+typedef struct expr_tag_t {
+    expr_type_e type;
+
+    union {
+        // unary op
+        struct {
+            keyword_e op;
+            struct expr_tag_t* expr;
+        };
+
+        // binary op
+        struct {
+            keyword_e op;
+            struct expr_tag_t* lhs;
+            struct expr_tag_t* rhs;
+        };
+
+        // func call
+        struct {
+
+            int nargs;
+            char** names;
+            struct expr_tag_t* args;
+        };
+    };
+} expr_t;
 
 typedef struct {
     int num;
@@ -180,9 +207,91 @@ typedef struct {
     dotted_name_t path;
 } import_t;
 
+typedef enum {
+    tt_tuple,
+    tt_struct,
+    tt_enum,
+    tt_union,
+    tt_safe_union,
+    tt_typename,
+    tt_array,
+    tt_func,
+} type_type_e;
+
+typedef struct {
+    int nfields;
+    char** names;
+    struct type_t* fields;
+} struct_t;
+
+typedef struct {
+    int nfields;
+    struct type_t* fields;
+} tuple_t;
+
+typedef struct {
+    struct type_t* backing;
+} enum_t;
+
+typedef struct {
+
+    // if NULL then the union is unsafe
+    struct type_t* backing;
+
+    // number of fields
+    int nfields;
+
+    // NULL if tuple declared
+    char** names;
+
+    // NULL if backing is NULL
+    expr_t* values;
+
+    // the types of the fields
+    struct type_t* types;
+} union_t;
+
+typedef struct {
+    tuple_t args;
+    struct type_t* ret;
+} func_t;
+
+
+typedef struct {
+    type_type_e type;
+    int is_ptr;
+
+    union {
+        enum_t _enum;
+        tuple_t _tuple;
+        struct_t _struct;
+        func_t _func;
+    };
+} type_t;
+
+typedef struct {
+    char* name;
+    type_t type;
+} using_t;
+
 typedef struct {
     dotted_name_t path;
-} export_module_t;
+} scope_t;
+
+typedef enum {
+    bt_scope,
+    bt_using,
+    bt_func,
+} body_type_e;
+
+typedef struct {
+    body_type_e type;
+    int do_export;
+
+    union {
+
+    };
+} body_t;
 
 typedef struct {
     module_t mod;
@@ -193,16 +302,6 @@ typedef struct {
     int nbody;
 
 } toplevel_t;
-
-typedef struct {
-    node_type_e type;
-
-    union {
-        module_t module_decl;
-        import_t import_decl;
-        export_module_t export_module_decl;
-    };
-} node_t;
 
 toplevel_t parser_ast(parser_t* self);
 
