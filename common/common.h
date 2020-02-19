@@ -17,7 +17,7 @@ typedef struct {
 
     // cleanup the data
     void(*close)(void*);
-} file_t;
+} ctu_file;
 
 typedef enum {
     op_none, // nothing
@@ -26,7 +26,6 @@ typedef enum {
     kw_using, // using
     kw_module, // module
     kw_import, // import
-    kw_scope, // scope
     kw_def, // def
 
     // decl keywords
@@ -137,68 +136,109 @@ typedef struct {
         // letter
         char letter;
     };
-} token_t;
+} ctu_token;
 
-void token_free(token_t* self);
+void token_free(ctu_token* self);
 
 typedef struct {
-    file_t file;
+    ctu_file file;
     int top;
     char* buf;
 
-    token_t tok;
-} lexer_t;
+    ctu_token tok;
+} ctu_lexer;
 
-lexer_t lexer_alloc(file_t file);
-void lexer_free(lexer_t* self);
+ctu_lexer lexer_alloc(ctu_file file);
+void lexer_free(ctu_lexer* self);
 
-token_t lexer_next(lexer_t* self);
-token_t lexer_peek(lexer_t* self);
+ctu_token lexer_next(ctu_lexer* self);
+ctu_token lexer_peek(ctu_lexer* self);
 
 // ast generation
 
 typedef struct {
-    lexer_t lex;
-} parser_t;
+    ctu_lexer lex;
+} ctu_parser;
 
-parser_t parser_alloc(lexer_t lex);
-void parser_free(parser_t* self);
+ctu_parser parser_alloc(ctu_lexer lex);
+void parser_free(ctu_parser* self);
 
-typedef struct {
-    int nparts;
-    char** parts;
-} dotted_name_t;
+typedef enum {
+    nt_toplevel,
+    nt_module_decl,
+    nt_import_decl,
+    nt_body_decl,
 
-typedef struct {
-    dotted_name_t path;
-} module_t;
+    nt_dotted_name_decl,
 
-typedef struct {
-    dotted_name_t path;
-    // special_t* special; // TODO
-} import_t;
+    nt_using_decl,
+    nt_struct_decl,
+    nt_array_decl,
+    nt_tuple_decl,
+    nt_typename_decl,
+} node_type_e;
 
-typedef struct {
-    int nimports;
-    import_t* imports;
-} imports_t;
+// we use the last bit of the count field 
+// to check if its a pointer
+#define PTR_FLAG (1 << 31)
 
-typedef struct {
-    int todo;
-} body_t;
+typedef struct tag_ctu_node {
+    node_type_e type;
 
-typedef struct {
-    // NULL if there is no module decl
-    module_t* module_name;
+    union {
 
-    // NULL if there are no imports
-    imports_t* imports;
+        // anything that needs a length stored
+        struct {
+            // number of tuple/struct fields
+            // array length, length of body
+            // number of imports
+            // length of dotted name
+            int count;
 
-    // NULL if the body is empty
-    body_t* body;
-} toplevel_t;
+            union {
 
-toplevel_t parser_ast(parser_t* self);
+                // dotted-name-decl
+                char** parts;
+
+                // array-decl
+                struct tag_ctu_node* arrtype;
+
+                // struct-decl
+                struct {
+                    char** names;
+
+                    // tuple-decl
+                    struct tag_ctu_node** fields;
+                };
+
+                // body
+                struct tag_ctu_node** decls;
+
+                // imports
+                struct tag_ctu_node** imports;
+            };
+        };
+
+        // typename-decl
+        // module-decl
+        struct tag_ctu_node* path;
+
+        // using-decl
+        struct {
+            char* name;
+            struct tag_ctu_node* typedecl;
+        };
+
+        // toplevel-decl
+        struct {
+            struct tag_ctu_node* module_decl;
+            struct tag_ctu_node* import_decls;
+            struct tag_ctu_node* body_decls;
+        };
+    };
+} ctu_node;
+
+ctu_node* parser_ast(ctu_parser* self);
 
 // code generation
 

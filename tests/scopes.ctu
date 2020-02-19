@@ -1,3 +1,9 @@
-using module b
+module a::b::c
 
-using scope a
+import x::y::z
+import a::b::c
+
+using name = ()
+using name2 = (int)
+using name3 = (int, float)
+using name4 = (int, float, double)
