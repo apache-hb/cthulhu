@@ -271,7 +271,7 @@ static ctu_node* parse_body_decls(ctu_parser* self)
 
     // TODO: arbitrary size
     node->count = 0;
-    node->decls = malloc(sizeof(ctu_node) * 64);
+    node->decls = malloc(sizeof(ctu_node*) * 64);
 
     for(;;)
     {
