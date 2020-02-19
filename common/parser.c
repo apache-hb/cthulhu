@@ -40,6 +40,8 @@ static keyword_e next_key(ctu_parser* self)
 
     if(tok.type != tt_keyword)
     {
+        printf("oh no %d\n", tok.type);
+        exit(5);
         // ERROR
     }
 
@@ -227,7 +229,9 @@ static ctu_node* parse_type_decl(ctu_parser* self)
         switch(tok.type)
         {
         case op_openarg:
+            printf("(");
             node = parse_tuple_decl(self);
+            printf(")\n");
             break;
         case op_openscope:
             node = parse_struct_decl(self);
@@ -252,6 +256,7 @@ static ctu_node* parse_using_decl(ctu_parser* self)
     ctu_node* node = make_node(nt_using_decl);
 
     node->name = next_ident(self);
+    printf("%s\n", node->name);
 
     expect_key(self, op_assign);
 
@@ -276,6 +281,8 @@ static ctu_node* parse_body_decls(ctu_parser* self)
     for(;;)
     {
         keyword_e key = next_key(self);
+
+        printf("key %d\n", key);
 
         // handle eof
         if(key == op_none)
