@@ -4,6 +4,13 @@ import x::y::z
 import a::b::c
 
 using name = ()
-using name2 = (int)
+using name2 = (int2)
 using name3 = (int, float)
 using name4 = (int, float, double)
+
+using name5 = enum (a, b, c)
+using name6 = variant {
+    a -> str,
+    b -> int,
+    c -> float
+}

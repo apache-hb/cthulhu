@@ -1,16 +1,13 @@
-project('cthulhu', 'c',
+project('cthulhu', 'cpp',
     default_options : [
-        'c_std=c11'
+        'cpp_std=c++17'
     ]
 )
 
-sources = [
-    'common/lexer.c',
-    'common/parser.c'
-]
+ctu_dep = declare_dependency(
+    include_directories : include_directories('.')
+)
 
-common = static_library('ctu', sources)
-
-cli = executable('ctu', 'cli/main.c', 
-    link_with : common
+cli = executable('cli', 'cli/cli.cpp',
+    dependencies : ctu_dep
 )
