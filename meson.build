@@ -4,7 +4,10 @@ project('cthulhu', 'cpp',
     ]
 )
 
+libctu = static_library('ctu', 'ctulang/ctulang.cpp')
+
 ctu_dep = declare_dependency(
+    link_with : libctu,
     include_directories : include_directories('.')
 )
 

@@ -45,7 +45,8 @@ type-decl: struct-decl  |
            alias-decl   |
            array-decl   |
            ptr-decl     |
-           ref-decl
+           ref-decl     |
+           attribute-decl type-decl
 
 using-decl: `using` ident `=` type-decl
 
@@ -117,7 +118,8 @@ stmt: while-stmt    |
       var-stmt      |
       return-stmt   |
       break-stmt    |
-      continue-stmt
+      continue-stmt |
+      attribute-decl stmt
 
 func-body: expr | 
            stmt | 
@@ -129,8 +131,19 @@ func-args-decl: ident `:` type-decl [`,` (func-args-decl | func-args-default-dec
 
 func-decl: `def` ident `(` [func-args-decl] `)` `->` type-decl func-body
 
+attribute-call-args-named-decl: ident `=` expr [`,` attribute-call-args-named-decl]
+
+attribute-call-args-decl: expr [`,` (attribute-call-args-decl | attribute-call-args-named-decl)]
+
+attribute-args-decl: `(` [attribute-call-args-decl] `)`
+
+attribute-body-decl: dotted-name-decl [attribute-args-decl]
+
+attribute-decl: `[[` attribute-body-decl `]]`
+
 body-decl: using-decl |
-           func-decl
+           func-decl  |
+           attribute-decl func-decl
 
 import-decl: `import` dotted-name-decl
 
