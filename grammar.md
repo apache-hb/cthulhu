@@ -25,27 +25,17 @@ struct-body-decl: ident `:` type-decl [`,` struct-body-decl]
 struct-decl: `{` [struct-body-decl] `}`
 
 
-tuple-body-decl: type-decl [`,` type-body-decl]
-
-tuple-decl: `(` [tuple-body-decl] `)`
-
-
-
 array-decl: `[` type-decl `:` expr `]`
 
 
 ptr-decl: type-decl `*`
 
-ref-decl: type-decl `&`
-
 type-decl: struct-decl  |
-           tuple-decl   |
            variant-decl |
            enum-decl    |
            alias-decl   |
            array-decl   |
            ptr-decl     |
-           ref-decl     |
            attribute-decl type-decl
 
 using-decl: `using` ident `=` type-decl
@@ -87,14 +77,23 @@ unary-expr: unary-op expr
 
 binary-expr: expr binary-op expr
 
-expr: const-expr  |
-      branch-expr |
-      switch-expr |
-      as-expr     |
-      is-expr     |
-      in-expr     |
-      unary-expr  |
-      binary-expr |
+access-expr: expr [`.` ident]
+
+ptr-access-expr: expr [`->` ident]
+
+name-expr: ident
+
+expr: const-expr      |
+      branch-expr     |
+      switch-expr     |
+      as-expr         |
+      is-expr         |
+      in-expr         |
+      unary-expr      |
+      binary-expr     |
+      access-expr     |
+      ptr-access-expr |
+      name-expr       |
       `(` expr `)`
 
 while-stmt: `while` expr func-body

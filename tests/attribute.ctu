@@ -1,0 +1,13 @@
+# will be tightly packed
+using data = [[packed]] {
+    v1: int,
+    v2: int,
+    v3: int
+}
+
+// will be tightly packed then padded to fill 16 bytes
+using data2 = [[packed(16)]] {
+    v1: int,
+    v2: int,
+    v3: int
+}

@@ -1,0 +1,10 @@
+def main(argc: int, argv: str*) -> int {
+    var a: int
+
+    [[asm(x86_64, modifies = eax)]] {
+        mov eax, {argc}
+        mov {a}, eax
+    }
+
+    return a
+}

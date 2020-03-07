@@ -41,14 +41,11 @@ namespace ctu
         token_type type;
         data_type data;
 
-        // the line this token appears on
-        uint_fast64_t line;
-
-        // the column this token starts on
-        uint_fast64_t col;
-
         // the length of the token
         int length() const;
+
+        keyword key() const { return type == token_type::keyword ? std::get<keyword>(data) : keyword::kinvalid; }
+        std::string ident() const { return type == token_type::ident ? std::get<std::string>(data) : ""; }
     };
 
     struct lexer
@@ -70,7 +67,7 @@ namespace ctu
         token lex_alpha(int c);
         token lex_symbol(int c);
         token lex_string();
-        char lex_char();
+        char lex_char(bool* end);
 
         int getc();
         int peekc();
@@ -84,21 +81,68 @@ namespace ctu
         uint_fast64_t pos = 0;
     };
 
-    struct errordata
+    namespace ast
     {
-        std::istream* source;
-        std::string filename;
+        using path = std::vector<std::string>;
 
-        uint_fast64_t pos;
-        uint_fast64_t line;
-        uint_fast64_t col;
-        uint_fast64_t len;
+        struct expr {};
 
-        std::string message;
-        char prefix;
-        int id;
+        struct attribute
+        {
+            path name;
+
+            std::vector<expr> positional;
+            std::map<std::string, expr> args;
+        };
+
+        struct type 
+        {
+            std::vector<attribute> attribs;
+        };
+
+        struct func 
+        {
+            std::vector<attribute> attribs;
+        };
+
+        struct typetable
+        {
+            type* get(std::size_t id)
+            {
+                return types[id];
+            }
+
+            std::vector<type*> types;
+
+            ~typetable()
+            {
+                for(auto* type : types)
+                    delete type;
+            }
+        };
+
+        struct functable
+        {
+            func* get(const std::string& name)
+            {
+                return funcs[name];
+            }
+
+            std::map<std::string, func*> funcs;
+
+            ~functable()
+            {
+                for(auto [key, val] : funcs)
+                    delete val;
+            }
+        };
+
+        struct ast
+        {
+            path mod;
+            std::vector<path> imports;
+        };
     };
 
-    [[noreturn]]
-    void error(const errordata& data);
+    ast::ast parse(lexer lex, ast::typetable* types, ast::functable* funcs);
 }
