@@ -1,16 +1,10 @@
-project('cthulhu', 'cpp',
-    default_options : [
-        'cpp_std=c++17'
-    ]
-)
+project('cthulhu', 'c', default_options : [ 'c_std=c89' ])
 
-libctu = static_library('ctu', 'ctulang/ctulang.cpp')
+libctu = static_library('ctu', [ 
+    'ctulang/ctu.c',
+    'thirdparty/vec/vec.c'
+])
 
-ctu_dep = declare_dependency(
-    link_with : libctu,
-    include_directories : include_directories('.')
-)
-
-cli = executable('cli', 'cli/cli.cpp',
-    dependencies : ctu_dep
+cli = executable('cli', 'cli/cli.c',
+    link_with : libctu
 )

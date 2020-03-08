@@ -10,9 +10,9 @@
 #   define ASM_KEYWORD(...)
 #endif
 
-// assembly keywords (x86_64 only supported for now)
+/* assembly keywords (x86_64 only supported for now) */
 
-// all registers
+/* asm registers */
 ASM_KEYWORD(_eax, "rax")
 ASM_KEYWORD(_ebx, "rbx")
 ASM_KEYWORD(_ecx, "rcx")
@@ -31,7 +31,7 @@ ASM_KEYWORD(_r13, "r13")
 ASM_KEYWORD(_r14, "r14")
 ASM_KEYWORD(_r15, "r15")
 
-// instructions
+/* asm instructions */
 ASM_KEYWORD(_mov, "mov")
 ASM_KEYWORD(_jmp, "jmp")
 ASM_KEYWORD(_call, "call")
@@ -145,7 +145,7 @@ KEYWORD(knull, "null")
 KEYWORD(ktrue, "true")
 KEYWORD(kfalse, "false")
 
-// reserved keywords
+/* reserved keywords */
 
 KEYWORD(ksome, "some")
 KEYWORD(knone, "none")
