@@ -109,18 +109,15 @@ OPERATOR(kaddeq, "+=")
 OPERATOR(ksub, "-")
 OPERATOR(ksubeq, "-=")
 
-
 OPERATOR(kor, "||")
 OPERATOR(kand, "&&")
 
-KEYWORD(kusing, "using")
+KEYWORD(ktype, "type")
+
 KEYWORD(kstruct, "struct")
 KEYWORD(kvariant, "variant")
 KEYWORD(kenum, "enum")
 KEYWORD(kunion, "union")
-
-KEYWORD(kimport, "import")
-KEYWORD(kmodule, "module")
 
 KEYWORD(kif, "if")
 KEYWORD(kelse, "else")
@@ -147,6 +144,10 @@ KEYWORD(kfalse, "false")
 
 /* reserved keywords */
 
+KEYWORD(kimport, "import")
+KEYWORD(kmodule, "module")
+KEYWORD(kusing, "using")
+
 KEYWORD(ksome, "some")
 KEYWORD(knone, "none")
 KEYWORD(kwhere, "where")
@@ -158,7 +159,6 @@ KEYWORD(knew, "new")
 KEYWORD(kdelete, "delete")
 KEYWORD(kcast, "cast")
 KEYWORD(ktemplate, "template")
-KEYWORD(ktype, "type")
 KEYWORD(kself, "self")
 KEYWORD(kthis, "this")
 KEYWORD(ksuper, "super")
