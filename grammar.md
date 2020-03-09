@@ -1,15 +1,9 @@
 dotted-name-decl: ident [`::` dotted-name-decl]
 
 
-plain-enum-body: ident [`,` plain-enum-body]
+enum-body: ident `=` expr [`,` plain-enum-body]
 
-plain-enum-decl: `(` plain-enum-body `)`
-
-valued-enum-body: ident `:` expr [`,` valued-enum-body]
-
-valued-enum-decl: `{` valued-enum-body `}`
-
-enum-decl: `enum` (plain-enum-decl | valued-enum-decl)
+enum-decl: `enum` `{` [enum-body] `}`
 
 
 alias-decl: dotted-name-decl
@@ -28,7 +22,7 @@ struct-decl: `{` [struct-body-decl] `}`
 array-decl: `[` type-decl `:` expr `]`
 
 
-ptr-decl: type-decl `*`
+ptr-decl: `*` type-decl 
 
 type-decl: struct-decl  |
            variant-decl |

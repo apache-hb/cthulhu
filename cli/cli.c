@@ -50,7 +50,6 @@ int main(int argc, const char** argv)
     while(i < 20)
     {
         ctu_token tok = ctu_lexer_next(&lex);
-        ctu_print_token(tok);
         ctu_free_token(tok);
         i++;
     }
