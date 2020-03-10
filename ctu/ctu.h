@@ -215,6 +215,8 @@ namespace ctu
         std::istream* in;
     };
 
+    struct Expr {};
+
     struct Type
     {
         virtual ~Type() {}
@@ -269,7 +271,11 @@ namespace ctu
 
     struct Struct : Type
     {
-        std::map<std::string, Type> fields;
+        Struct(std::map<std::string, std::shared_ptr<Type>> f)
+            : fields(f)
+        {}
+
+        std::map<std::string, std::shared_ptr<Type>> fields;
 
         virtual std::string to_string() const override { return "Struct()"; }
     };
@@ -281,9 +287,16 @@ namespace ctu
         virtual std::string to_string() const override { return "Tuple()"; }
     };
 
+    struct Enum : Type
+    {
+        std::shared_ptr<Type> backing;
+
+        std::map<std::string, Expr> fields;
+    };
+
     struct Union : Type
     {
-        std::map<std::string, Type> fields;
+        std::map<std::string, std::shared_ptr<Type>> fields;
 
         virtual std::string to_string() const override { return "Union()"; }
     };
@@ -291,13 +304,17 @@ namespace ctu
     struct Variant : Type
     {
         std::shared_ptr<Type> backing;
-        std::map<std::string, Type> fields;
+        std::map<std::string, std::shared_ptr<Type>> fields;
 
         virtual std::string to_string() const override { return "Variant()"; }
     };
 
     struct Ptr : Type
     {
+        Ptr(std::shared_ptr<Type> t)
+            : to(t)
+        {}
+
         std::shared_ptr<Type> to;
 
         virtual std::string to_string() const override { return "Ptr()"; }
@@ -312,6 +329,12 @@ namespace ctu
         std::string name;
 
         virtual std::string to_string() const override { return "Name()"; }
+    };
+
+    struct Array : Type
+    {
+        std::shared_ptr<Type> of;
+        std::shared_ptr<Expr> size;
     };
 
     struct Func
@@ -329,10 +352,19 @@ namespace ctu
 
     private:
 
+        std::shared_ptr<Struct> parse_struct();
+        std::shared_ptr<Tuple> parse_tuple();
+        std::shared_ptr<Union> parse_union();
+        std::shared_ptr<Enum> parse_enum();
+        std::shared_ptr<Variant> parse_variant();
+        std::shared_ptr<Ptr> parse_ptr();
+        std::shared_ptr<Array> parse_array();
+        std::shared_ptr<Name> parse_name();
+
         std::shared_ptr<Type> type();
 
         template<typename T>
-        std::shared_ptr<T> expect()
+        std::shared_ptr<T> next()
         {
             auto tok = lex->next();
 
@@ -341,7 +373,15 @@ namespace ctu
                 // error
             }
 
-            return tok;
+            return std::static_pointer_cast<T>(tok);
+        }
+
+        void expect(Keyword k)
+        {
+            if(next<Key>()->key != k)
+            {
+                // error
+            }
         }
 
         Lexer* lex;
