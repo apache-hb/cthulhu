@@ -26,6 +26,11 @@ enum = `enum` [`:` type] `{` [enum-body] `}`
 ptr = `*` type
 
 
+array = `[` type `:` expr `]`
+
+
 typename = ident
 
-type = struct | tuple | union | variant | enum | ptr | typename
+type = struct | tuple | union | variant | enum | ptr | array | typename
+
+typedef = `type` `=` type

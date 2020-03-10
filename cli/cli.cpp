@@ -6,6 +6,7 @@ int main(int argc, const char** argv)
 {
     std::cout << ">> ";
     ctu::Lexer lex = { &std::cin };
+    ctu::Parser parse = { &lex };
 
     for(;;)
     {
