@@ -1,10 +1,8 @@
-project('cthulhu', 'c', default_options : [ 'c_std=c89' ])
+project('cthulhu', 'cpp', default_options : [ 'cpp_std=c++17' ])
 
-libctu = static_library('ctu', [ 
-    'ctulang/ctu.c',
-    'thirdparty/vec/vec.c'
+libctu = static_library('ctu', [
+    'ctu/lexer.cpp',
+    'ctu/parser.cpp'
 ])
 
-cli = executable('cli', 'cli/cli.c',
-    link_with : libctu
-)
+cli = executable('ctu', 'cli/cli.cpp', link_with : libctu)

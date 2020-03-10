@@ -77,33 +77,49 @@ typedef struct {
 } ctu_parser;
 
 typedef enum {
-    ctu_et_binary, // ~expr, !expr, -expr
-    ctu_et_unary, // expr - expr, expr * expr
-    ctu_et_cast, // expr as typename
-    ctu_et_call, // expr(expr...)
-    ctu_et_access, // expr.expr...
+    ctu_et_binary, /* ~expr, !expr, -expr */
+    ctu_et_unary, /* expr - expr, expr * expr */
+    ctu_et_cast, /* expr as typename */
+    ctu_et_call, /* expr(expr...) */
+    ctu_et_access /* expr.expr... */
 } ctu_expr_type;
 
 typedef struct ctu_expr_tag {
     ctu_expr_type type;
 
     union {
+        /* binary expr */
         struct {
             ctu_keyword b_op;
             struct ctu_expr_tag* b_lhs;
             struct ctu_expr_tag* b_rhs;
         };
 
+        /* unary expr */
         struct {
             ctu_keyword u_op;
             struct ctu_expr_tag* u_expr;
         };
 
+        /* cast expr */
         struct {
-            struct ctu_expr_tag* c_expr;
+            struct ctu_expr_tag* cs_expr;
             /* TODO: type to cast to */
+        };
+
+        /* call expr */
+        struct {
+            struct ctu_expr_tag* cl_expr;
+            struct ctu_expr_vec* cl_args;
+        };
+
+        /* access expr */
+        struct {
+            struct ctu_expr_vec* ac_vec;
         };
     };  
 } ctu_expr;
+
+typedef vec_t(ctu_expr) ctu_expr_vec;
 
 #endif /* CTU_H */

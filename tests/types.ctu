@@ -1,78 +1,44 @@
-#"empty struct"
-using a = {}
 
-#"empty tuple"
-using b = ()
-
-#"type alias"
-using c = u8
-
-#"type alias to custom type"
-using d = c
-
-#"fixed size array alias"
-using e = [char:8]
-
-#"tuple type"
-using f = (u8, u8)
-
-#"struct type"
-using g = { a: u64, b: i64 }
-
-#"nested tuple"
-using h = (u8, (char, u128))
-
-#"nested struct"
-using i = { a: u64, b: { a: char, b: u8 } }
-
-#"nested types"
-using j = { a: u64, b: (u64, u64) }
-
-#"custom tuple array type"
-using k = [(u64, u64):64]
-
-#"custom struct array type"
-using l = [{ a: u64, b:u64 }:64]
-
-#"optional type"
-using p = u64?;
-
-#"pointer type"
-using q = u64*;
-
-#"enum type"
-using r = enum {
-    a: 0,
-    b: 1,
-    c: 2
+# variant type
+type v = variant {
+    x => int,
+    y => float,
+    z => { x: int, y: bool }
 }
 
-#"typesafe union"
-using s = union enum {
-    a -> u64
-    b -> (u32, u32, u32)
-    c -> [char:8]
+# backed variant type
+type vb = variant: u32 {
+    a => bool,
+    b => float,
+    c => { x: u32, y: i64 }
 }
 
-#"union type"
-using t = union {
-    a: u64,
+# enum type
+type e = enum {
+    x := 5,
+    y := 1
+}
+
+# backed enum type
+type eb = enum: u32 {
+    a := 0,
+    b := 1,
+    c := 2
+}
+
+# struct type
+type s = {
+    a: u32,
     b: u32,
-    c: (u64, u64)
+    c: u32,
+    d: u32
 }
 
-#"union tuple"
-using u = union (u64, u32, (u128, u64))
+# tuple type
+type t = (bool, u32, u64)
 
-#"sized enum"
-using v = enum: u64 {
-    a: (1 << 0),
-    b: (1 << 1),
-    c: (1 << 2)
-}
+# union type
+type us = union { a: u32, b: u64 }
 
-#"sized typesafe union"
-using w = union enum: u64 {
-    a -> (u64),
-    b -> (u64, u64)
-}
+# pointer type
+type p = *u64

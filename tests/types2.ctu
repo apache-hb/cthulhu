@@ -1,7 +1,0 @@
-using i = {}
-
-using i2 = { name: u64 }
-
-using i3 = { name: {} }
-
-using i4 = { name: u64, age: u64, id: u32 }

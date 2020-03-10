@@ -1,0 +1,7 @@
+def main(argc: int, argv: **char) -> int {
+    return match argc {
+        1 => 0,
+        2 || 3 || 4 => 1,
+        else => -1
+    }
+}

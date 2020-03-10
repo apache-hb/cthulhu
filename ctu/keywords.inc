@@ -10,6 +10,10 @@
 #   define ASM_KEYWORD(...)
 #endif
 
+#ifndef RES_KEYWORD
+#   define RES_KEYWORD(...)
+#endif
+
 /* assembly keywords (x86_64 only supported for now) */
 
 /* asm registers */
@@ -57,14 +61,9 @@ OPERATOR(karrow, "->")
 OPERATOR(kassign, ":=")
 
 OPERATOR(kcolon, ":")
-OPERATOR(kcolon2, ":")
 
 OPERATOR(kcomma, ",")
 OPERATOR(kdot, ".")
-
-OPERATOR(kquestion, "?")
-
-OPERATOR(kat, "@")
 
 OPERATOR(knot, "!")
 OPERATOR(kbitnot, "~")
@@ -85,7 +84,7 @@ OPERATOR(kshleq, "<<=")
 OPERATOR(kshr, ">>")
 OPERATOR(kshreq, ">>=")
 
-OPERATOR(keq, "=")
+OPERATOR(keq, "==")
 OPERATOR(kneq, "!=")
 
 OPERATOR(kgt, ">")
@@ -114,7 +113,6 @@ OPERATOR(kand, "&&")
 
 KEYWORD(ktype, "type")
 
-KEYWORD(kstruct, "struct")
 KEYWORD(kvariant, "variant")
 KEYWORD(kenum, "enum")
 KEYWORD(kunion, "union")
@@ -144,47 +142,45 @@ KEYWORD(kfalse, "false")
 
 /* reserved keywords */
 
-KEYWORD(kimport, "import")
-KEYWORD(kmodule, "module")
-KEYWORD(kusing, "using")
+RES_KEYWORD(kimport, "import")
+RES_KEYWORD(kmodule, "module")
+RES_KEYWORD(kusing, "using")
 
-KEYWORD(ksome, "some")
-KEYWORD(knone, "none")
-KEYWORD(kwhere, "where")
-KEYWORD(kwhen, "when")
-KEYWORD(kinline, "inline")
-KEYWORD(knoinline, "noinline")
+RES_KEYWORD(ksome, "some")
+RES_KEYWORD(knone, "none")
+RES_KEYWORD(kwhere, "where")
+RES_KEYWORD(kwhen, "when")
+RES_KEYWORD(kstruct, "struct")
 
-KEYWORD(knew, "new")
-KEYWORD(kdelete, "delete")
-KEYWORD(kcast, "cast")
-KEYWORD(ktemplate, "template")
-KEYWORD(kself, "self")
-KEYWORD(kthis, "this")
-KEYWORD(ksuper, "super")
+RES_KEYWORD(knew, "new")
+RES_KEYWORD(kdelete, "delete")
+RES_KEYWORD(ktemplate, "template")
+RES_KEYWORD(kself, "self")
+RES_KEYWORD(kthis, "this")
+RES_KEYWORD(ksuper, "super")
 
-KEYWORD(kclass, "class")
-KEYWORD(kconst, "const")
-KEYWORD(kfriend, "friend")
-KEYWORD(kexport, "export")
-KEYWORD(kextern, "extern")
-KEYWORD(kexplicit, "explicit")
-KEYWORD(katomic, "atomic")
-KEYWORD(ksynchronized, "synchronized")
-KEYWORD(ksync, "sync")
-KEYWORD(kmutable, "mutable")
-KEYWORD(koperator, "operator")
-KEYWORD(kinit, "init")
-KEYWORD(kdeinit, "deinit")
-KEYWORD(knamespace, "namespace")
-KEYWORD(kscope, "scope")
-KEYWORD(kconcept, "concept")
-KEYWORD(krequires, "requires")
-KEYWORD(kstatic, "static")
-KEYWORD(kfinal, "final")
-KEYWORD(kasync, "async")
-KEYWORD(kawait, "await")
-KEYWORD(kyield, "yield")
+RES_KEYWORD(kclass, "class")
+RES_KEYWORD(kconst, "const")
+RES_KEYWORD(kfriend, "friend")
+RES_KEYWORD(kexport, "export")
+RES_KEYWORD(kextern, "extern")
+RES_KEYWORD(kexplicit, "explicit")
+RES_KEYWORD(katomic, "atomic")
+RES_KEYWORD(ksynchronized, "synchronized")
+RES_KEYWORD(ksync, "sync")
+RES_KEYWORD(kmutable, "mutable")
+RES_KEYWORD(koperator, "operator")
+RES_KEYWORD(kinit, "init")
+RES_KEYWORD(kdeinit, "deinit")
+RES_KEYWORD(knamespace, "namespace")
+RES_KEYWORD(kscope, "scope")
+RES_KEYWORD(kconcept, "concept")
+RES_KEYWORD(krequires, "requires")
+RES_KEYWORD(kstatic, "static")
+RES_KEYWORD(kfinal, "final")
+RES_KEYWORD(kasync, "async")
+RES_KEYWORD(kawait, "await")
+RES_KEYWORD(kyield, "yield")
 
 
 #ifdef OPERATOR
@@ -197,4 +193,8 @@ KEYWORD(kyield, "yield")
 
 #ifdef ASM_KEYWORD
 #   undef ASM_KEYWORD
+#endif
+
+#ifdef RES_KEYWORD
+#   undef RES_KEYWORD
 #endif
