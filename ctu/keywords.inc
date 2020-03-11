@@ -58,6 +58,7 @@ OPERATOR(klbrace, "{")
 OPERATOR(krbrace, "}")
 
 OPERATOR(karrow, "->")
+OPERATOR(kbigarrow, "=>")
 OPERATOR(kassign, ":=")
 
 OPERATOR(kcolon, ":")

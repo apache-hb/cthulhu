@@ -2,14 +2,14 @@
 
 namespace ctu
 {
-    std::shared_ptr<Token> Lexer::next()
+    Token Lexer::next()
     {
         auto temp = tok;
         tok = parse();
         return temp;
     }
 
-    std::shared_ptr<Token> Lexer::peek()
+    Token Lexer::peek()
     {
         return tok;
     }
@@ -35,7 +35,7 @@ namespace ctu
         case ')':
             return Keyword::krparen;
         case '-':
-            return eatc('=') ? Keyword::ksubeq : Keyword::ksub;
+            return eatc('=') ? Keyword::ksubeq : eatc('>') ? Keyword::karrow : Keyword::ksub;
         case '+':
             return eatc('=') ? Keyword::kaddeq : Keyword::kadd;
         case '[':
@@ -75,6 +75,7 @@ namespace ctu
         case '=':
             // `==` is valid but `=` is not
             if(eatc('=')) return Keyword::keq;
+            if(eatc('>')) return Keyword::kbigarrow;
             // fallthrough
         default:
             // invalid symbol
@@ -88,7 +89,7 @@ namespace ctu
 #include "keywords.inc"
     };
 
-    std::shared_ptr<Token> Lexer::alpha(int c)
+    Token Lexer::alpha(int c)
     {
         std::string buffer;
         buffer += c;
@@ -104,9 +105,9 @@ namespace ctu
 
         for(auto& [name, key] : keys)
             if(name == buffer)
-                return std::make_shared<Key>(key);
+                return Key(key);
 
-        return std::make_shared<Ident>(buffer);
+        return Ident(buffer);
     }
 
     int Lexer::nextc()
@@ -132,32 +133,32 @@ namespace ctu
         return false;
     }
 
-    std::shared_ptr<Token> Lexer::hex()
+    Token Lexer::hex()
     {
         std::string buffer;
         while(isxdigit(peekc()))
             buffer += nextc();
 
         if(buffer.empty())
-            return std::make_shared<Invalid>("empty hex number");
+            return Invalid("empty hex number");
 
-        return std::make_shared<Int>(std::stoull(buffer, nullptr, 16));
+        return Int(std::stoull(buffer, nullptr, 16));
     }
 
-    std::shared_ptr<Token> Lexer::binary()
+    Token Lexer::binary()
     {
         std::string buffer;
         while(peekc() == '0' || peekc() == '1')
             buffer += nextc();
 
         if(buffer.empty())
-            return std::make_shared<Invalid>("empty binary number");
+            return Invalid("empty binary number");
 
-        return std::make_shared<Int>(std::stoull(buffer, nullptr, 2));
+        return Int(std::stoull(buffer, nullptr, 2));
         
     }
 
-    std::shared_ptr<Token> Lexer::number(int c)
+    Token Lexer::number(int c)
     {
         if(c == '0')
         {
@@ -170,7 +171,7 @@ namespace ctu
             case 'b':
                 return binary();
             default:
-                return std::make_shared<Invalid>("invalid number encoding (numbers cannot start with 0)");
+                return Invalid("invalid number encoding (numbers cannot start with 0)");
             }
         }
 
@@ -185,7 +186,7 @@ namespace ctu
             if(i == '.')
             {
                 if(isfloat)
-                    return std::make_shared<Invalid>("invalid number encoding (floats cannot have multiple decimal places)");
+                    return Invalid("invalid number encoding (floats cannot have multiple decimal places)");
 
                 isfloat = true;
             }
@@ -193,9 +194,9 @@ namespace ctu
         }
 
         if(isfloat)
-            return std::make_shared<Float>(std::stod(buffer));
+            return Float(std::stod(buffer));
         else
-            return std::make_shared<Int>(std::stoull(buffer));
+            return Int(std::stoull(buffer));
     }
 
     char Lexer::getchar(bool* b)
@@ -253,7 +254,7 @@ namespace ctu
         return i;
     }
 
-    std::shared_ptr<Token> Lexer::parse()
+    Token Lexer::parse()
     {
         int i = nextc();
 
@@ -277,15 +278,15 @@ namespace ctu
         }
         else if(i == '"')
         {
-            return std::make_shared<String>(str());
+            return str();
         }
         else if(i == '\'')
         {
-            return std::make_shared<Char>(ch());
+            return ch();
         }
         else 
         {
-            return std::make_shared<Key>(symbol(i));
+            return symbol(i);
         }
     }
 }
