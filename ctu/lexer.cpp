@@ -284,6 +284,10 @@ namespace ctu
         {
             return ch();
         }
+        else if(i == EOF)
+        {
+            return Eof();
+        }
         else 
         {
             return symbol(i);

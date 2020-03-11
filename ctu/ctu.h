@@ -74,7 +74,9 @@ namespace ctu
         std::string reason;
     };
 
-    using Token = std::variant<Key, Ident, Int, Float, String, Char, Invalid>;
+    struct Eof { };
+
+    using Token = std::variant<Key, Ident, Int, Float, String, Char, Invalid, Eof>;
 
     struct FilePos
     {
@@ -134,23 +136,73 @@ namespace ctu
         std::istream* in;
     };
 
-    struct Expr
-    {
+    // type = struct | tuple | union | variant | enum | ptr | array | typename | builtin
+    struct Type { };
 
+    // struct = `{` [struct-body] `}`
+    struct Struct : Type
+    {
+        // struct-body = ident `:` type [`,` struct-body]
+        std::map<std::string, Type> fields;
     };
 
-    struct UnaryExpr : Expr
+    // tuple = `(` [tuple-body] `)`
+    struct Tuple : Type
     {
-        Keyword op;
-        Expr expr;
+        // tuple-body = type [`,` tuple-body]
+        std::vector<Type> fields;
     };
 
-    struct BinaryExpr : Expr
+    enum class BuiltinType
     {
-        Keyword op;
-        Expr lhs;
-        Expr rhs;
+        u8,
+        u16,
+        u32,
+        u64,
+        u128,
+        i8,
+        i16,
+        i32,
+        i64,
+        i128,
+        b,
+        udefault,
+        idefault,
+        f32,
+        f64,
     };
+
+    struct Builtin : Type
+    {
+        BuiltinType type;
+    };
+
+    struct Func
+    {
+        std::string name;
+
+        std::map<std::string, Type> args;
+        Type ret;
+
+        // TODO: body
+    };
+
+    // typedef = `type` ident `=` type
+    struct TypeDef
+    {
+        std::string name;
+        Type type;
+    };
+
+    struct Global
+    {
+        std::string name;
+        // TODO: value
+    };
+
+    using Body = std::variant<Func, TypeDef, Global>;
+
+    using AST = std::vector<Body>;
 
     struct Parser
     {
@@ -158,7 +210,34 @@ namespace ctu
             : lex(l)
         {}
 
+        AST parse();
+
     private:
+        Type type();
+        std::map<std::string, Type> func_args();
+        Func func();
+        TypeDef typedecl();
+        Global global();
+
+        template<typename T>
+        T next()
+        {
+            auto tok = lex->next();
+            if(auto t = std::get_if<T>(&tok))
+            {
+                return *t;
+            }
+
+            // error
+        }
+
+        void expect(Keyword k)
+        {
+            if(next<Key>().key != k)
+            {
+                // error
+            }
+        }
 
         Lexer* lex;
     };
