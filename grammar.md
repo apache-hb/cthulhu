@@ -9,10 +9,10 @@ tuple-decl: `(` [tuple-body] `)`
 union-decl: `union` struct-decl
 
 variant-body: ident `=>` typedecl [`,` variant-body]
-variant-decl: `variant` `{` [variant-body] `}`
+variant-decl: `variant` [`:` builtin-decl] `{` [variant-body] `}`
 
 enum-body: ident `:=` expr [`,` enum-body]
-enum-decl: `enum` `{` [enum-body] `}`
+enum-decl: `enum` [`:` builtin-decl] `{` [enum-body] `}`
 
 array-decl: `[` typedecl `:` expr `]`
 
@@ -37,7 +37,7 @@ typedecl: struct-decl  |
           builtin-decl |
           typename-decl
 
-typedef: `type` ident `=` typedecl
+typedef: `type` ident `:=` typedecl
 
 assign-stmt: expr `:=` expr
 
@@ -56,12 +56,16 @@ for-stmt: `for` ident `:` expr stmt
 
 stmt: expr | if-stmt | match-stmt | for-stmt | while-stmt | assign-stmt | `{` [stmt+] `}`
 
-func-body: `{` [stmt+] `}` | `=` expr
+func-body: `{` [stmt+] `}` | `:=` expr
 
 funcdef: `def` ident `(` [func-args] `)` `->` typedecl func-body
 
-body: typedef | funcdef
+scopedef: `scope` dotted-name `{` [body+] `}`
 
-preamble: 
+body: typedef | funcdef | scopedef
+
+import: `import` dotted-name
+
+preamble: import+
 
 file: [preamble] [body+]

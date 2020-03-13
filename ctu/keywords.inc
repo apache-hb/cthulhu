@@ -12,6 +12,10 @@
 
 /* all keywords */
 
+/* module keywords */
+KEY(kimport, "import")
+KEY(kscope, "scope")
+
 /* type keywords */
 KEY(ktype, "type")
 KEY(kvariant, "variant")
@@ -115,6 +119,8 @@ OP(kdot, ".")
 OP(kcomma, ",")
 OP(kquestion, "?")
 
+OP(kfuncsig, "&(")
+
 OP(karrow, "->")
 OP(kbigarrow, "=>")
 
@@ -132,7 +138,6 @@ RES(ksynchronized, "synchronized")
 RES(knamespace, "namespace")
 RES(kextern, "extern")
 RES(kmodule, "module")
-RES(kimport, "import")
 RES(kinclude, "include")
 RES(kexport, "export")
 RES(kdefault, "default")

@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 #include "keywords.h"
-#include "utils/string/buffer.h"
 
 #include "utils/vec/vec.h"
 #include "utils/map/map.h"
@@ -25,7 +24,7 @@ typedef struct {
 typedef int ctu_tok_type;
 
 typedef struct {
-    buffer_t* file;
+    vec_char_t* file;
 
     /* the real distance to the line the token is on */
     size_t distance;
@@ -67,7 +66,7 @@ void ctu_token_delete(ctu_token);
 
 typedef struct {
     ctu_file file;
-    buffer_t* buffer;
+    vec_char_t buffer;
     ctu_token tok;
     int ch;
 
@@ -84,10 +83,10 @@ ctu_token ctu_lexer_peek(ctu_lexer*);
 
 typedef struct {
     ctu_lexer* lex;
+    int preamble;
 } ctu_parser;
 
-ctu_parser ctu_parser_new(ctu_lexer);
-void ctu_parser_delete(ctu_parser);
+ctu_parser ctu_parser_new(ctu_lexer*);
 
 typedef enum {
     nt_dotted,
@@ -100,7 +99,11 @@ typedef enum {
     nt_ptr,
     nt_funcsig,
     nt_builtin,
-    nt_typename
+    nt_typename,
+    nt_typedef,
+    nt_funcdef,
+    nt_import,
+    nt_scopedef
 } ctu_node_type;
 
 typedef enum {
@@ -126,6 +129,9 @@ typedef struct ctu_node_tag {
     ctu_node_type type;
 
     union {
+        /* NT_IMPORT */
+        vec_str_t i_path;
+
         /* NT_DOTTED */
         vec_str_t d_name;
 
@@ -161,10 +167,21 @@ typedef struct ctu_node_tag {
 
         /* NT_TYPENAME */
         vec_str_t t_name;
+
+        /* NT_TYPEDEF */
+        struct {
+            /* type name */
+            char* td_name;
+
+            /* type */
+            struct ctu_node_tag* td_type;
+        };
     };
 } ctu_node;
 
 void ctu_node_free(ctu_node node);
+
+ctu_node ctu_parser_next(ctu_parser* parse);
 
 typedef map_t(ctu_node) ctu_node_map;
 

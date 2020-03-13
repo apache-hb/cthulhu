@@ -5,7 +5,6 @@ project('ctulang', 'c',
 sources = [
     'ctu/ctu.c',
     'ctu/keyword.c',
-    'utils/string/buffer.c',
     'utils/vec/vec.c',
     'utils/map/map.c'
 ]

@@ -16,5 +16,8 @@ int main(int argc, const char** argv)
 
     ctu_lexer lex = ctu_lexer_new(file);
 
+    ctu_token tok = ctu_lexer_next(&lex);
+    printf("%d\n", tok.type);
+
     return 0;
 }
