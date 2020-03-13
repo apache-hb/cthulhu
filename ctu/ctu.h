@@ -145,8 +145,11 @@ typedef struct ctu_node_tag {
         struct ctu_node_map* u_fields;
 
         /* NT_VARIANT */
-        struct ctu_node_map* v_fields;
-
+        struct {
+            struct ctu_node_tag* v_backing;
+            struct ctu_node_map* v_fields;
+        };
+        
         /* NT_ENUM */
         struct ctu_node_map* e_fields;
 

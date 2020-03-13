@@ -482,7 +482,7 @@ static int eatk(ctu_parser* parse, ctu_keyword key)
     return 0;
 }
 
-static ctu_token nextk(ctu_parser* parse)
+static ctu_keyword nextk(ctu_parser* parse)
 {
     ctu_token tok = nextt(parse);
     if(tok.type != TOK_KEY)
@@ -490,7 +490,7 @@ static ctu_token nextk(ctu_parser* parse)
         /* error */
     }
 
-    return tok;
+    return tok.keyword;
 }
 
 static ctu_token nexti(ctu_parser* parse)
@@ -511,6 +511,13 @@ static void expectk(ctu_parser* parse, ctu_keyword key)
     {
         /* error */
     }
+}
+
+static ctu_node* make_node(ctu_node_type type)
+{
+    ctu_node* node = malloc(sizeof(ctu_node));
+    node->type = type;
+    return node;
 }
 
 static vec_str_t dotted_name(ctu_parser* parse)
@@ -541,11 +548,72 @@ static ctu_node parse_import(ctu_parser* parse)
     return node;
 }
 
+
+#define BUILTIN(name, type) if(strcmp(tok.string, name) == 0) { ctu_node* node = make_node(nt_builtin); node->b_type = type; return node; }
+
+static ctu_node* parse_builtin(ctu_parser* parse)
+{
+    ctu_token tok = nexti(parse);
+    BUILTIN("u8", u8)
+    BUILTIN("u16", u16)
+    BUILTIN("u32", u32)
+    BUILTIN("u64", u64)
+    BUILTIN("i8", i8)
+    BUILTIN("i16", i16)
+    BUILTIN("i32", i32)
+    BUILTIN("i64", i64)
+    BUILTIN("bool", _bool)
+    BUILTIN("void", _void)
+    BUILTIN("f32", f32)
+    BUILTIN("f64", f64)
+    BUILTIN("c8", c8)
+
+    ctu_node* node = make_node(nt_typename);
+    node->t_name = tok.string;
+    return node;
+}
+
+static ctu_node* parse_struct(ctu_parser* parse)
+{
+    
+}
+
+static ctu_node* parse_tuple(ctu_parser* parse)
+{
+
+}
+
+static ctu_node* parse_array(ctu_parser* parse)
+{
+    
+}
+
+static ctu_node* parse_enum(ctu_parser* parse)
+{
+    
+}
+
+static ctu_node* parse_variant(ctu_parser* parse)
+{
+    ctu_node* node = make_node(nt_variant);
+    ctu_keyword key = nextk(parse);
+    if(key == kcolon)
+    {
+        node->v_backing = parse_builtin(parse);
+    }
+}
+
+static ctu_node* parse_union(ctu_parser* parse)
+{
+    
+}
+
 static ctu_node* parse_type(ctu_parser* parse)
 {
-    ctu_token tok = nextt(parse);
+    ctu_token tok = peekt(parse);
     if(tok.type == TOK_IDENT)
     {
+        ctu_token_delete(nextt(parse));
         /* either typename or builtin */
         switch(tok.keyword)
         {
