@@ -1,93 +1,67 @@
-## type grammar
+dotted-name: ident [`::` dotted-name]
 
-struct-body = ident `:` type [`,` struct-body]
+struct-body: ident `:` typedecl [`,` struct-body]
+struct-decl: `{` [struct-body] `}`
 
-struct = `{` [struct-body] `}`
+tuple-body: typedecl [`,` tuple-body]
+tuple-decl: `(` [tuple-body] `)`
 
+union-decl: `union` struct-decl
 
-tuple-body = type [`,` tuple-body]
+variant-body: ident `=>` typedecl [`,` variant-body]
+variant-decl: `variant` `{` [variant-body] `}`
 
-tuple = `(` [tuple-body] `)`
+enum-body: ident `:=` expr [`,` enum-body]
+enum-decl: `enum` `{` [enum-body] `}`
 
+array-decl: `[` typedecl `:` expr `]`
 
-union = `union` struct
+ptr-decl: `*` typedecl
 
+funcsig-decl: `&(` [tuple-body] `)` `->` typedecl
 
-variant-body = ident `=>` type [`,` variant-body]
+builtin-decl: `u8` | `u16` | `u32` | `u64` |
+              `i8` | `i16` | `i32` | `i64` |
+              `c8` | `bool` | `void`
 
-variant = `variant` [`:` type] `{` [variant-body] `}`
+typename-decl: dotted-name
 
+typedecl: struct-decl  | 
+          tuple-decl   |
+          union-decl   |
+          varaint-decl |
+          enum-decl    |
+          array-decl   |
+          ptr-decl     |
+          funcsig-decl |
+          builtin-decl |
+          typename-decl
 
-enum-body = ident `:=` expr [`,` enum-body]
+typedef: `type` ident `=` typedecl
 
-enum = `enum` [`:` type] `{` [enum-body] `}`
-
-
-ptr = `*` type
-
-
-array = `[` type `:` expr `]`
-
-
-typename = ident
-
-builtin = `u8`   |
-          `u16`  |
-          `u32`  |
-          `u64`  |
-          `u128` |
-          `i8`   |
-          `i16`  |
-          `i32`  |
-          `i64`  |
-          `i128` |
-          `f32`  |
-          `f64`  |
-          `c8`   |
-          `c16`  |
-          `c32`  |
-          `uint` |
-          `int`  |
-          `bool` |
-          `void` |
-
-type = struct | tuple | union | variant | enum | ptr | array | typename | builtin
-
-typedef = `type` ident `=` type
+assign-stmt: expr `:=` expr
 
 
-global = `let` ident [`:` type] `=` expr
+match-body: expr `->` expr [`,` match-body]
+match-else: `else` `->` expr
+match-stmt: `match` expr `{` [match-body] [match-else] `}`
 
-bin-op = `!` | `~` | `-` | `+`
+while-stmt: `while` expr stmt
 
-unary-op = todo
+elif-stmt: `else` `if` expr stmt [elif-stmt]
+else-stmt: `else` stmt
+if-stmt: `if` expr stmt [elif-stmt] [else-stmt]
 
-dotted-name = ident [`::` dotted-name]
+for-stmt: `for` ident `:` expr stmt
 
-access = ident [`:` dotted-name]
+stmt: expr | if-stmt | match-stmt | for-stmt | while-stmt | assign-stmt | `{` [stmt+] `}`
 
-expr = binary | unary | ternary | dotted-name | access
+func-body: `{` [stmt+] `}` | `=` expr
 
-binary = bin-op expr
+funcdef: `def` ident `(` [func-args] `)` `->` typedecl func-body
 
-unary = expr unary-op expr
+body: typedef | funcdef
 
-ternary = expr `?` expr `:` expr
+preamble: 
 
-var = `var` ident `:` type [`=` expr] |
-      `var` ident `=` expr
-
-let = `let` ident `:` type [`=` expr] |
-      `let` ident `=` expr
-
-return = `return` expr
-
-stmt = expr | let | var | return
-
-func-body-decl = `{` [stmt+] `}` | `=` expr
-
-func = `def` ident `(` [func-args] `)` `->` type func-body-decl
-
-body = typedef | func | global
-
-ast = [body+]
+file: [preamble] [body+]

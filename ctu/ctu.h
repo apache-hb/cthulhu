@@ -1,244 +1,171 @@
-#pragma once
+#ifndef CTU
+#define CTU
 
-#include <istream>
-#include <string>
-#include <memory>
-#include <map>
-#include <variant>
-#include <vector>
+#include <stdint.h>
 
 #include "keywords.h"
+#include "utils/string/buffer.h"
 
-namespace ctu
-{
-    struct Key
-    {
-        Key(Keyword k)
-            : key(k)
-        {}
+#include "utils/vec/vec.h"
+#include "utils/map/map.h"
 
-        Keyword key;
+typedef struct {
+    void* handle;
+    int(*next)(void*);
+} ctu_file;
+
+#define TOK_EOF 0
+#define TOK_IDENT 1
+#define TOK_STRING 2
+#define TOK_KEY 3
+#define TOK_INT 4
+#define TOK_FLOAT 5
+#define TOK_CHAR 6
+
+typedef int ctu_tok_type;
+
+typedef struct {
+    buffer_t* file;
+
+    /* the real distance to the line the token is on */
+    size_t distance;
+    
+    /* the column of the first token character */
+    size_t col;
+
+    /* the line the token is on */
+    size_t line;
+} ctu_position;
+
+typedef struct {
+    ctu_tok_type type;
+
+    ctu_position pos;
+
+    /* length of the token */
+    size_t length;
+
+    union {
+        /* TOK_IDENT || TOK_STRING */
+        char* string;
+
+        /* TOK_KEY */
+        ctu_keyword keyword;
+
+        /* TOK_INT */
+        int64_t integer;
+
+        /* TOK_FLOAT */
+        double number;
+
+        /* TOK_CHAR */
+        int ch;
     };
+} ctu_token;
 
-    struct Ident
-    {
-        Ident(std::string i)
-            : ident(i)
-        {}
+void ctu_token_delete(ctu_token);
 
-        std::string ident;
+typedef struct {
+    ctu_file file;
+    buffer_t* buffer;
+    ctu_token tok;
+    int ch;
+
+    size_t line;
+    size_t col;
+    size_t distance;
+} ctu_lexer;
+
+ctu_lexer ctu_lexer_new(ctu_file);
+void ctu_lexer_delete(ctu_lexer*);
+
+ctu_token ctu_lexer_next(ctu_lexer*);
+ctu_token ctu_lexer_peek(ctu_lexer*);
+
+typedef struct {
+    ctu_lexer* lex;
+} ctu_parser;
+
+ctu_parser ctu_parser_new(ctu_lexer);
+void ctu_parser_delete(ctu_parser);
+
+typedef enum {
+    nt_dotted,
+    nt_struct,
+    nt_tuple,
+    nt_union,
+    nt_variant,
+    nt_enum,
+    nt_array,
+    nt_ptr,
+    nt_funcsig,
+    nt_builtin,
+    nt_typename
+} ctu_node_type;
+
+typedef enum {
+    u8,
+    u16,
+    u32,
+    u64,
+    i8,
+    i16,
+    i32,
+    i64,
+    f32,
+    f64,
+    c8,
+    _bool,
+    _void,
+
+} ctu_builtin;
+
+typedef vec_t(struct ctu_node) ctu_node_vec;
+
+typedef struct ctu_node_tag {
+    ctu_node_type type;
+
+    union {
+        /* NT_DOTTED */
+        vec_str_t d_name;
+
+        /* NT_STRUCT */
+        struct ctu_node_map* s_fields;
+
+        /* NT_TUPLE */
+        ctu_node_vec t_fields;
+
+        /* NT_UNION */
+        struct ctu_node_map* u_fields;
+
+        /* NT_VARIANT */
+        struct ctu_node_map* v_fields;
+
+        /* NT_ENUM */
+        struct ctu_node_map* e_fields;
+
+        /* NT_PTR */
+        struct ctu_node_tag* p_type;
+
+        /* NT_FUNCSIG */
+        struct {
+            /* argument types */
+            ctu_node_vec f_args;
+
+            /* return type */
+            struct ctu_node_tag* f_return;
+        };
+
+        /* NT_BUILTIN */
+        ctu_builtin b_type;
+
+        /* NT_TYPENAME */
+        vec_str_t t_name;
     };
+} ctu_node;
 
-    struct Int
-    {
-        Int(uint_fast64_t n)
-            : num(n)
-        {}
+void ctu_node_free(ctu_node node);
 
-        uint_fast64_t num;
-    };
+typedef map_t(ctu_node) ctu_node_map;
 
-    struct Float
-    {
-        Float(double d)
-            : num(d)
-        {}
-
-        double num;
-    };
-
-    struct String
-    {
-        String(std::string buf)
-            : str(buf)
-        {}
-
-        std::string str;
-    };
-
-    struct Char
-    {
-        Char(char l)
-            : c(l)
-        {}
-
-        char c;
-    };
-
-    struct Invalid
-    {
-        Invalid(std::string r)
-            : reason(r)
-        {}
-
-        std::string reason;
-    };
-
-    struct Eof { };
-
-    using Token = std::variant<Key, Ident, Int, Float, String, Char, Invalid, Eof>;
-
-    struct FilePos
-    {
-        // line number
-        uint_fast64_t line;
-
-        // column number
-        uint_fast64_t col;
-
-        // distance into file
-        uint_fast64_t dist;
-
-        // the associated file
-        std::istream* file;
-    };
-
-    struct Lexer
-    {
-        Lexer() = delete;
-        Lexer(Lexer&) = delete;
-        Lexer(Lexer&&) = delete;
-        Lexer(std::istream* input)
-            : in(input)
-        {
-            tok = parse();
-        }
-        
-        Token next();
-        Token peek();
-    private:
-
-        int skip_whitespace(int i);
-
-        Token parse();
-
-        Keyword symbol(int c);
-
-        Token alpha(int c);
-
-        Token number(int c);
-
-        String str();
-
-        Char ch();
-
-        char getchar(bool* b);
-
-        Token hex();
-        Token binary();
-
-        Token tok = Invalid("nop");
-
-        int nextc();
-        int peekc();
-        bool eatc(int c);
-
-        std::istream* in;
-    };
-
-    // type = struct | tuple | union | variant | enum | ptr | array | typename | builtin
-    struct Type { };
-
-    // struct = `{` [struct-body] `}`
-    struct Struct : Type
-    {
-        // struct-body = ident `:` type [`,` struct-body]
-        std::map<std::string, Type> fields;
-    };
-
-    // tuple = `(` [tuple-body] `)`
-    struct Tuple : Type
-    {
-        // tuple-body = type [`,` tuple-body]
-        std::vector<Type> fields;
-    };
-
-    enum class BuiltinType
-    {
-        u8,
-        u16,
-        u32,
-        u64,
-        u128,
-        i8,
-        i16,
-        i32,
-        i64,
-        i128,
-        b,
-        udefault,
-        idefault,
-        f32,
-        f64,
-    };
-
-    struct Builtin : Type
-    {
-        BuiltinType type;
-    };
-
-    struct Func
-    {
-        std::string name;
-
-        std::map<std::string, Type> args;
-        Type ret;
-
-        // TODO: body
-    };
-
-    // typedef = `type` ident `=` type
-    struct TypeDef
-    {
-        std::string name;
-        Type type;
-    };
-
-    struct Global
-    {
-        std::string name;
-        // TODO: value
-    };
-
-    using Body = std::variant<Func, TypeDef, Global>;
-
-    using AST = std::vector<Body>;
-
-    struct Parser
-    {
-        Parser(Lexer* l)
-            : lex(l)
-        {}
-
-        AST parse();
-
-    private:
-        Type type();
-        std::map<std::string, Type> func_args();
-        Func func();
-        TypeDef typedecl();
-        Global global();
-
-        template<typename T>
-        T next()
-        {
-            auto tok = lex->next();
-            if(auto t = std::get_if<T>(&tok))
-            {
-                return *t;
-            }
-
-            // error
-        }
-
-        void expect(Keyword k)
-        {
-            if(next<Key>().key != k)
-            {
-                // error
-            }
-        }
-
-        Lexer* lex;
-    };
-}
+#endif /* CTU */

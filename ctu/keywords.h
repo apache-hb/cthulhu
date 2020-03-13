@@ -1,14 +1,15 @@
-#pragma once
+#ifndef KEYWORDS
+#define KEYWORDS
 
-namespace ctu
-{
-    enum class Keyword
-    {
-#define KEYWORD(id, str) id,
-#define OPERATOR(id, str) id,
-#define ASM_KEYWORD(id, str) id,
-#define RES_KEYWORD(id, str) id,
+#define KEY(id, _) id,
+#define OP(id, _) id,
+#define RES(id, _) id,
 
+typedef enum {
+    kinvalid = 0,
 #include "keywords.inc"
-    };
-}
+} ctu_keyword;
+
+const char* ctu_keyword_str(ctu_keyword);
+
+#endif /* KEYWORDS */
