@@ -50,5 +50,6 @@
         "token.h": "c",
         "token-fwd.h": "c",
         "stdlib.h": "c"
-    }
+    },
+    "python.pythonPath": "/usr/bin/python3.8"
 }
