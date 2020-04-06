@@ -1,5 +1,123 @@
-from rply import ParserGenerator, LexerGenerator
+from libctu.lex import lexer
+from libctu.parse import parser
+import libctu.ast as ast
 
+lg = lexer()
+pg = parser()
+
+@pg.production('program : toplevel')
+@pg.production('program : toplevel program')
+def program(p):
+    return [p[0]] if len(p) == 1 else [p[0]] + p[1]
+
+@pg.production('toplevel : typedef-decl')
+@pg.production('toplevel : func-decl')
+def toplevel(p):
+    return p[0]
+
+
+@pg.production('func-decl : DEF IDENT func-args func-return func-outer-body')
+@pg.production('func-decl : DEF IDENT func-args func-outer-body')
+@pg.production('func-decl : DEF IDENT func-return func-outer-body')
+@pg.production('func-decl : DEF IDENT func-outer-body')
+def func_decl(p):
+    pass
+
+@pg.production('func-outer-body : ASSIGN')
+@pg.production('func-outer-body : LBRACE RBRACE')
+def func_body(p):
+    pass
+
+@pg.production('func-return : ARROW type-decl')
+def func_return(p):
+    pass
+
+@pg.production('func-args : LPAREN func-args-body RPAREN')
+@pg.production('func-args : LPAREN RPAREN')
+def func_args(p):
+    pass
+
+@pg.production('func-args-body : IDENT COLON type-decl')
+@pg.production('func-args-body : IDENT COLON type-decl COMMA func-args-body')
+def func_args_body(p):
+    pass
+
+
+@pg.production('typedef-decl : TYPE IDENT ASSIGN type-decl')
+def typedef_decl(p):
+    return ast.Typedef(name = p[1].getstr(), t = p[3])
+
+@pg.production('type-decl : struct-decl')
+@pg.production('type-decl : tuple-decl')
+@pg.production('type-decl : ptr-decl')
+@pg.production('type-decl : builtin-decl')
+def type_decl(p):
+    return p[0]
+
+@pg.production('ptr-decl : MUL type-decl')
+def ptr_decl(p):
+    return ast.Ptr(p[1])
+
+@pg.production('builtin-decl : IDENT')
+def builtin_decl(p):
+    return ast.Builtin(p[0].getstr())
+
+
+@pg.production('tuple-decl : LPAREN tuple-body RPAREN')
+@pg.production('tuple-decl : LPAREN RPAREN')
+def tuple_decl(p):
+    return p[1] if len(p) == 3 else ast.Tuple()
+
+@pg.production('tuple-body : type-decl')
+@pg.production('tuple-body : type-decl COMMA tuple-body')
+def tuple_body(p):
+    if len(p) == 1:
+        return ast.Tuple([p[0]])
+    else:
+        return ast.Tuple([p[0]] + p[2])
+
+
+
+
+
+@pg.production('struct-decl : LBRACE struct-body RBRACE')
+@pg.production('struct-decl : LBRACE RBRACE')
+def struct_decl(p):
+    return p[1] if len(p) == 3 else ast.Struct()
+
+@pg.production('struct-body : IDENT COLON type-decl')
+@pg.production('struct-body : IDENT COLON type-decl COMMA struct-body')
+def struct_body(p):
+    field = ast.Struct({ p[0].getstr(): p[2] })
+    if len(p) == 5:
+        field.update(p[4])
+
+    return field
+
+@pg.error
+def error(tok):
+    raise ValueError(f'unexpected token {tok}')
+
+lex = lg.build()
+parse = pg.build()
+
+tree = parse.parse(lex.lex('''
+type s := { a: int, b: float, c: *int }
+type t := (int, float, *double)
+
+def main(argc: int, argv: **char) => int :=
+def main() => void :=
+def main() {}
+def main => u32 {}
+def main :=
+def foo => void :=
+'''
+))
+
+for each in tree:
+    print(each)
+
+'''
 lg = LexerGenerator()
 
 lg.add('ADD', r'\+')
@@ -75,28 +193,11 @@ lg.add('CONTINUE', r'continue')
 lg.add('COLON2', r'::')
 lg.add('COLON', r':')
 lg.add('COMMA', r',')
+lg.add('DOT', r'\.')
 
 lg.add('TRUE', r'true')
 lg.add('FALSE', r'false')
 lg.add('NULL', r'null')
-
-
-lg.add('U8', r'u8')
-lg.add('U16', r'u16')
-lg.add('U32', r'u32')
-lg.add('U64', r'u64')
-
-lg.add('I8', r'i8')
-lg.add('I16', r'i16')
-lg.add('I32', r'i32')
-lg.add('I64', r'i64')
-
-lg.add('F32', r'f32')
-lg.add('F64', r'f64')
-
-lg.add('BOOL', r'bool')
-lg.add('VOID', r'void')
-lg.add('CHAR', r'char')
 
 lg.add('IDENT', r'[_a-zA-Z]([_a-zA-Z0-9]*)')
 
@@ -119,12 +220,10 @@ pg = ParserGenerator([
 
     'IMPORT', 'TYPE', 'VARIANT', 'ENUM', 'UNION', 'DEF', 'VAR', 'LET',
     'RETURN', 'FOR', 'WHILE', 'MATCH', 'BREAK', 'CONTINUE',
-    'COLON2', 'COLON', 'COMMA',
+    'COLON2', 'COLON', 'COMMA', 'DOT',
 
     'TRUE', 'FALSE', 'NULL',
 
-    'U8', 'U16', 'U32', 'U64', 'I8', 'I16', 'I32', 'I64',
-    'F32', 'F64', 'BOOL', 'VOID', 'CHAR',
 
     'IDENT'
     ],
@@ -237,7 +336,6 @@ def typedef_decl(p):
 @pg.production('type-decl : variant-decl')
 @pg.production('type-decl : union-decl')
 @pg.production('type-decl : enum-decl')
-@pg.production('type-decl : builtin')
 @pg.production('type-decl : path')
 def type_decl(p):
     return p[0]
@@ -288,22 +386,6 @@ def union_decl(p):
         return Union(p[2])
     else:
         return Union([])
-
-@pg.production('builtin : U8')
-@pg.production('builtin : U16')
-@pg.production('builtin : U32')
-@pg.production('builtin : U64')
-@pg.production('builtin : I8')
-@pg.production('builtin : I16')
-@pg.production('builtin : I32')
-@pg.production('builtin : I64')
-@pg.production('builtin : F32')
-@pg.production('builtin : F64')
-@pg.production('builtin : BOOL')
-@pg.production('builtin : VOID')
-@pg.production('builtin : CHAR')
-def builtin(p):
-    return Builtin(p[0].getstr())
 
 @pg.production('ptr-decl : MUL type-decl')
 def ptr_decl(p):
@@ -416,14 +498,22 @@ def error(token):
 lex = lg.build()
 parse = pg.build()
 
-ast = parse.parse(lex.lex('''
+ast = parse.parse(lex.lex('
 type x := ()
 type y := {}
 type thing := u8
 type v := variant {}
 type u := union {}
 type e := enum { name := 0 }
-'''))
+'))
 
 for each in ast:
     print(each)
+'''
+
+'''
+def main() => int {
+    return 5
+}
+
+'''
