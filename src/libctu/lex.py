@@ -54,11 +54,14 @@ def lexer() -> LexerGenerator:
     lg.add('ASSIGN', r':=')
 
     lg.add('ARROW', r'=>')
+    lg.add('PTR', r'\->')
 
     lg.add('COLON2', r'::')
     lg.add('COLON', r':')
     lg.add('COMMA', r',')
     lg.add('DOT', r'\.')
+
+    lg.add('QUESTION', r'\?')
 
     lg.add('LPAREN', r'\(')
     lg.add('RPAREN', r'\)')
@@ -86,7 +89,7 @@ def lexer() -> LexerGenerator:
     lg.add('MATCH', r'match')
     lg.add('BREAK', r'break')
     lg.add('CONTINUE', r'continue')
-
+    lg.add('AS', r'as')
 
     lg.add('TRUE', r'true')
     lg.add('FALSE', r'false')
@@ -96,6 +99,9 @@ def lexer() -> LexerGenerator:
     lg.add('HEX', r'0x[0-9a-fA-F]+')
     lg.add('BIN', r'0b[0-1]+')
     lg.add('NUM', r'[\d.]+')
+
+    lg.add('CHAR', r'\'.\'')
+    lg.add('STRING', r'\"(.+?)\"')
 
     lg.add('IDENT', r'[_a-zA-Z]([_a-zA-Z0-9]*)')
 
