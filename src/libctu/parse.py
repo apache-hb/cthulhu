@@ -26,7 +26,6 @@ def parser() -> ParserGenerator:
         'TRUE', 'FALSE', 'NULL', 'IDENT'
     ],
     precedence=[
-        ('left', ['IMPORT', 'DEF', 'TYPE', 'ARROW']),
         ('left', ['COMMA']),
         ('right', ['QUESTION', 'COLON', 'ADDEQ', 'SUBEQ', 'MULEQ', 'DIVEQ', 'MODEQ', 'SHLEQ', 'SHREQ', 'BITANDEQ', 'BITXOREQ', 'BITOREQ']),
         ('left', ['AND', 'OR']),
