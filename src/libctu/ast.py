@@ -29,7 +29,11 @@ class Builtin(str):
 
 class Union(dict):
     def __str__(self):
-        return f'union {super(Struct, self).__str__()}'
+        ret = 'union {'
+        for key, val in self.items():
+            ret += f'{key} {val};'
+        ret += '}'
+        return ret
 
 class Ptr:
     def __str__(self):
@@ -44,6 +48,14 @@ class Enum(dict):
         self.backing = backing
 
 class Variant(dict):
+    def __str__(self):
+        ret = 'union {'
+        for key, val in self.items():
+            ret += f'{val} {key};'
+        ret += '}'
+        
+        return ret
+
     def __init__(self, backing = Builtin('u32'), *args, **kwargs):
         super(Variant, self).__init__(*args, **kwargs)
         self.backing = backing

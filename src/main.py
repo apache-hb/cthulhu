@@ -43,16 +43,22 @@ def func_args_body(p):
     pass
 
 
+
+
 @pg.production('typedef-decl : TYPE IDENT ASSIGN type-decl')
 def typedef_decl(p):
     return ast.Typedef(name = p[1].getstr(), t = p[3])
 
+
 @pg.production('type-decl : struct-decl')
 @pg.production('type-decl : tuple-decl')
+@pg.production('type-decl : union-decl')
+@pg.production('type-decl : variant-decl')
 @pg.production('type-decl : ptr-decl')
 @pg.production('type-decl : builtin-decl')
 def type_decl(p):
     return p[0]
+
 
 @pg.production('ptr-decl : MUL type-decl')
 def ptr_decl(p):
@@ -61,6 +67,28 @@ def ptr_decl(p):
 @pg.production('builtin-decl : IDENT')
 def builtin_decl(p):
     return ast.Builtin(p[0].getstr())
+
+
+
+@pg.production('variant-decl : VARIANT LBRACE variant-body RBRACE')
+@pg.production('variant-decl : VARIANT LBRACE RBRACE')
+def variant_decl(p):
+    return p[2] if len(p) == 4 else ast.Variant()
+
+@pg.production('variant-body : IDENT ARROW type-decl')
+@pg.production('variant-body : IDENT ARROW type-decl COMMA variant-body')
+def variant_body(p):
+    ret = ast.Variant({ p[0].getstr(): p[2] })
+    if len(p) == 5:
+        ret.update(p[4])
+
+    return ret
+
+
+@pg.production('union-decl : UNION LBRACE struct-body RBRACE')
+@pg.production('union-decl : UNION LBRACE RBRACE')
+def union_decl(p):
+    return ast.Union(p[2]) if len(p) == 4 else ast.Union()
 
 
 @pg.production('tuple-decl : LPAREN tuple-body RPAREN')
@@ -83,12 +111,12 @@ def tuple_body(p):
 @pg.production('struct-decl : LBRACE struct-body RBRACE')
 @pg.production('struct-decl : LBRACE RBRACE')
 def struct_decl(p):
-    return p[1] if len(p) == 3 else ast.Struct()
+    return ast.Struct(p[1]) if len(p) == 3 else ast.Struct()
 
 @pg.production('struct-body : IDENT COLON type-decl')
 @pg.production('struct-body : IDENT COLON type-decl COMMA struct-body')
 def struct_body(p):
-    field = ast.Struct({ p[0].getstr(): p[2] })
+    field = { p[0].getstr(): p[2] }
     if len(p) == 5:
         field.update(p[4])
 
@@ -104,12 +132,18 @@ parse = pg.build()
 tree = parse.parse(lex.lex('''
 type s := { a: int, b: float, c: *int }
 type t := (int, float, *double)
+type u := union { a: float }
+type v := variant { 
+    c => float
+}
 
 def main(argc: int, argv: **char) => int :=
-def main() => void :=
-def main() {}
-def main => u32 {}
+def main() => int :=
+def main() => int {}
+def main => int :=
+def main => int {}
 def main :=
+def main {}
 def foo => void :=
 '''
 ))
