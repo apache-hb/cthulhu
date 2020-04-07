@@ -83,6 +83,8 @@ def lexer() -> LexerGenerator:
     lg.add('LET', r'let')
 
     lg.add('DEF', r'def')
+    lg.add('IF', r'if')
+    lg.add('ELSE', r'else')
     lg.add('RETURN', r'return')
     lg.add('FOR', r'for')
     lg.add('WHILE', r'while')
@@ -107,5 +109,8 @@ def lexer() -> LexerGenerator:
 
     # ignore whitespace
     lg.ignore(r'\s+')
+
+    # ignore comments
+    lg.ignore(r'#.*')
 
     return lg

@@ -16,7 +16,7 @@ def parser() -> ParserGenerator:
         'ASSIGN', 'ARROW', 'PTR',
         'LPAREN', 'RPAREN', 'LBRACE', 'RBRACE', 'LSQUARE', 'RSQUARE',
 
-        'IMPORT', 'TYPE', 'VARIANT', 'ENUM', 'UNION',
+        'IMPORT', 'TYPE', 'VARIANT', 'ENUM', 'UNION', 'IF', 'ELSE',
         'DEF', 'VAR', 'LET', 'RETURN', 'FOR', 'WHILE',
         'MATCH', 'FOR', 'WHILE', 'BREAK', 'CONTINUE', 'AS',
         'COLON2', 'COLON', 'COMMA', 'DOT', 'QUESTION',
