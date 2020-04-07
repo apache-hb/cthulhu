@@ -1,0 +1,3 @@
+sources += [
+    'src/main.cpp'
+]
