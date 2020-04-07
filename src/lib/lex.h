@@ -69,9 +69,18 @@ namespace ctu
             case '?':
             case '/':
             case '0':
-                if(in->peek() == 'x') {}
-                else if(in->peek() == 'b') {}
-                else {}
+                if(in->peek() == 'x') 
+                {
+                    in->next();
+                }
+                else if(in->peek() == 'b') 
+                {
+                    in->peek();
+                }
+                else 
+                {
+                    // error
+                }
             case '1': case '2': case '3':
             case '4': case '5': case '6':
             case '8': case '9':
