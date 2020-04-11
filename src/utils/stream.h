@@ -8,6 +8,7 @@ namespace ctu
 {
     struct stream
     {
+        virtual ~stream() {}
         virtual uint8_t next() = 0;
         virtual uint8_t peek() const = 0;
 
@@ -16,37 +17,39 @@ namespace ctu
 
     struct fstream : stream
     {
-        fstream(FILE* f)
+        fstream(std::FILE* f)
             : file(f)
         {}
 
         virtual uint8_t next() override 
         {
-            return fgetc(file);
+            return std::fgetc(file);
         }
         
         virtual uint8_t peek() const override 
         {
-            auto c = fgetc(file);
-            ungetc(c, file);
+            auto c = std::fgetc(file);
+            std::ungetc(c, file);
             return c;
         }
 
         virtual std::string range(uint32_t start, uint32_t len) override 
         {
-            auto pos = ftell(file);
-            fseek(file, start, SEEK_SET);
+            auto pos = std::ftell(file);
+            std::fseek(file, start, SEEK_SET);
 
             char* chars = (char*)alloca(len);
-            fread(chars, 1, len, file);
+            std::fread(chars, 1, len, file);
 
-            fseek(file, pos, SEEK_SET);
+            std::fseek(file, pos, SEEK_SET);
 
             return std::string(chars, len);
         }
 
+        virtual ~fstream() override { std::fclose(file); }
+
     private:
-        FILE* file;
+        std::FILE* file;
     };
 
     struct sstream : stream
@@ -57,12 +60,18 @@ namespace ctu
         {}
 
         virtual uint8_t next() override 
-        {
+        {   
+            if(idx >= str->size())
+                return '\0';
+                
             return str->at(idx++);
         }
         
         virtual uint8_t peek() const override 
         {
+            if(idx >= str->size())
+                return '\0';
+
             return str->at(idx);
         }
 
@@ -70,6 +79,9 @@ namespace ctu
         {
             return std::string(&str->at(start), len);
         }
+
+        virtual ~sstream() override { }
+
     private:
         std::string* str;
         int idx;

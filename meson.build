@@ -1,6 +1,6 @@
 project('ctu', ['cpp'],
     default_options : [
-        'cpp_str=gnu++17'
+        'cpp_std=c++17'
     ]
 )
 
