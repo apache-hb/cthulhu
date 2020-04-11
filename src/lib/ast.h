@@ -1,113 +1,162 @@
 #pragma once
 
+#include "utils/stream.h"
+
+#include <variant>
 #include <vector>
-#include <string>
 
 namespace ctu::ast
 {
     struct Node
     {
-        
+
     };
 
-    struct Ident : Node
+    // [[packed]] type-decl
+    // [[packed(num)]] type-decl
+    struct Packed
     {
-        Ident(std::string n)
-            : name(n)
-        {}
+        uint32_t width;
+    };
 
+    // [[align(num)]] type-decl
+    struct Align
+    {
+        uint32_t align;
+    };
+
+    // [[segment(name)]]
+    // func-decl
+
+    // [[segment(name)]]
+    // var-decl
+
+    // [[segment(name)]] {
+    //     body-decls
+    // }
+    struct Segment
+    {
         std::string name;
     };
 
-    struct Name : Node
+    // [[origin(vaddr)]]
+    // func-decl
+
+    // [[origin(vaddr)]]
+    // var-decl
+
+    // [[origin(vaddr)]] {
+    //     body-decls
+    // }
+    struct Origin
     {
-        std::vector<Ident*> path;
+        uint64_t origin;
     };
 
+    // [[target(id)]]
+    // func-decl
 
+    // [[target(id)]] {
+    //     body-decls
+    // }
+    enum class Target
+    {
+        I8086,
+        X86,
+        X64
+    };
+
+    // [[interrupt(target)]] 
+    // func-decl
+    struct Interrupt { Target target; };
+
+    // [[syscall(target)]]
+    // func-decl
+    struct SysCall { Target target; };
+
+    // [[noreturn]]
+    // func-decl
+    struct NoReturn { };
+
+    // [[inline(never)]]
+    // func-decl
+
+    // [[inline(always)]]
+    // func-decl
+
+    // [[inline(default)]]
+    // func-decl
+
+    // [[inline]]
+    // func-decl
+    enum class Inline
+    {
+        // function is never inlined
+        Never,
+        // function is always inlined
+        Always,
+        // function is inlined when the compiler thinks it will help
+        Needed,
+    };
+
+    using AttributeData = std::variant<
+        Packed,
+        Align,
+        Segment,
+        Origin,
+        Target,
+        Interrupt,
+        SysCall,
+        Inline,
+        NoReturn
+    >;
+
+    struct Attribute : Node
+    {
+        AttributeData attrib;
+    };
+
+    
     struct Expr : Node
     {
 
     };
 
-    struct Attribute
+
+    struct Type : Node
     {
-        Name* path;
+        std::vector<Attribute> attributes;
     };
 
-#pragma region Types
 
-    struct Type
+    // @sizeof(type-decl)
+    struct SizeOf
     {
-        std::vector<Attribute*> attribs;
-    };
-
-    struct Field 
-    {
-        char* name;
-        Type* type;
-    };
-
-    struct Struct :  Type
-    {
-        int count;
-        Field* fields;
-    };
-
-    struct Tuple : Type
-    {
-        int count;
-        Type* fields;
-    };
-
-    struct Entry 
-    {
-        char* name;
-        Expr* value;
-    };
-
-    struct Enum : Type
-    {
-        int count;
-        Entry* fields;
-    };
-
-    struct Variant : Type
-    {
-        int count;
-        Field* fields;
-    };
-
-#pragma endregion Types
-
-#pragma region Constructs
-
-    struct Import
-    {
-        Name* path;
-        Ident* alias;
-    };
-
-    struct TypeDef : Node
-    {
-        Ident* name;
-        Type* type;
-    };
-
-#pragma endregion Constructs
-
-    struct TopLevel
-    {
-        int count;
-        Node* fields;
-    };
-
-    struct Program
-    {
-        Program(std::vector<Import*> i)
-            : imports(i)
-        {}
         
-        std::vector<Import*> imports;
+    };
+
+    // @asm { asm-decls }
+    struct Asm
+    {
+
+    };
+
+    // @cast<type-decl>(expr)
+    struct Cast
+    {
+
+    };
+
+    // @local var-decl
+    struct Local
+    {
+
+    };
+
+
+
+    struct Builtin : Expr
+    {
+        
     };
 }

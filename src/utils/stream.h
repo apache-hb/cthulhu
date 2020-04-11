@@ -6,18 +6,25 @@
 
 namespace ctu
 {
-    struct stream
+    struct FilePos
     {
-        virtual ~stream() {}
+        uint64_t pos;
+        uint64_t line;
+        uint64_t col;
+    };
+
+    struct Stream
+    {
+        virtual ~Stream() {}
         virtual uint8_t next() = 0;
         virtual uint8_t peek() const = 0;
 
         virtual std::string range(uint32_t start, uint32_t len) = 0;
     };
 
-    struct fstream : stream
+    struct FStream : Stream
     {
-        fstream(std::FILE* f)
+        FStream(std::FILE* f)
             : file(f)
         {}
 
@@ -46,15 +53,15 @@ namespace ctu
             return std::string(chars, len);
         }
 
-        virtual ~fstream() override { std::fclose(file); }
+        virtual ~FStream() override { std::fclose(file); }
 
     private:
         std::FILE* file;
     };
 
-    struct sstream : stream
+    struct SStream : Stream
     {
-        sstream(std::string* s)
+        SStream(std::string* s)
             : str(s)
             , idx(0)
         {}
@@ -80,7 +87,7 @@ namespace ctu
             return std::string(&str->at(start), len);
         }
 
-        virtual ~sstream() override { }
+        virtual ~SStream() override { }
 
     private:
         std::string* str;
