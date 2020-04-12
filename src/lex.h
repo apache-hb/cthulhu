@@ -22,7 +22,15 @@ typedef enum {
     KeywordLSquare,
     KeywordRSquare,
 
-    KeywordBuiltin
+    KeywordLParen,
+    KeywordRParen,
+
+    KeywordLBrace,
+    KeywordRBrace,
+
+    KeywordAssign,
+    KeywordBuiltin,
+    KeywordArrow
 } Keyword;
 
 typedef enum {
