@@ -1,16 +1,9 @@
-project('ctu', ['cpp'],
+project('ctulang', 'c',
     default_options : [
-        'cpp_std=c++17'
+        'c_std=c89'
     ]
 )
 
-sources = []
-incs = []
-args = []
+sources = [ 'src/main.c' ]
 
-subdir('src')
-
-ctu = executable('ctu', sources,
-    include_directories : incs,
-    cpp_args : args
-)
+ctu = executable('ctu', sources)
