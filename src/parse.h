@@ -14,10 +14,14 @@ typedef enum {
     NodeTypeStruct,
     NodeTypeUnion,
     NodeTypeEnum,
+    NodeTypeArray,
+    NodeTypeVariant,
+    NodeTypeName,
     NodeTypeAttribute,
     NodeTypeBuiltinType,
     NodeTypeBuiltinFunction,
-    NodeTypeFunction
+    NodeTypeFunction,
+    NodeTypeFunctionArgs
 } NodeType;
 
 typedef enum {
@@ -67,6 +71,10 @@ typedef struct Node {
     NodeType type;
 
     union {
+        struct {
+            char* name;
+        } Name;
+
         struct {
             int fields;
             char* names;
@@ -148,6 +156,101 @@ Node* NewNode(NodeType type)
     return node;
 }
 
+void Expect(Parser* parser, Keyword key)
+{
+    Token tok = LexerNext(parser->lex);
+    if(tok.type == TokenTypeKeyword && tok.data.keyword == key)
+    {
+        TokenFree(tok);
+    }
+    else
+    {
+        printf("invalid keyword\n");
+        exit(500);
+    }
+}
+
+Node* TryParseAttribs(Parser* parser, Token* tok)
+{
+    // TODO: implement
+    if(tok->type == TokenTypeKeyword && tok->data.keyword == KeywordBuiltin)
+    {
+        return NULL;
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+Node* ParseType(Parser* parser)
+{
+    Token tok = LexerNext(parser->lex);
+
+    if(tok.type == TokenTypeIdent)
+    {
+        Node* type = NewNode(NodeTypeName);
+        type->Name.name = tok.data.ident;
+        return type;
+    }
+    else if(tok.type == TokenTypeKeyword)
+    {
+        Node* attribs = TryParseAttribs(parser, &tok);
+        if(tok.data.keyword == KeywordLSquare)
+        {
+            return ParseArray(parser);
+        }
+        else if(tok.data.keyword == KeywordLBrace)
+        {
+            return ParseStruct(parser);
+        }
+        else if(tok.data.keyword == KeywordEnum)
+        {
+            return ParseEnum(parser);
+        }
+        else if(tok.data.keyword == KeywordUnion)
+        {
+            return ParseEnum(parser);
+        }
+        else if(tok.data.keyword == KeywordVariant)
+        {
+            return ParseVariant(parser);
+        }
+        else
+        {
+            // oh no
+        }
+    }
+    else
+    {
+        // error
+    }
+}
+
+Node* ParseFuncArgs(Parser* parser, Token* tok)
+{
+    *tok = LexerNext(parser->lex);
+
+    if(tok->type == TokenTypeKeyword && tok->data.keyword == KeywordRParen)
+    {
+        // empty function args
+        return NULL;
+    }
+
+    Node* args = NewNode(NodeTypeFunctionArgs);
+
+    char* names[64];
+    Node* types[64];
+    int i = 0;
+
+    while(tok->type == TokenTypeIdent)
+    {
+        names[i] = tok->data.ident;
+        Expect(parser, KeywordColon);
+        types[i] = ParseType(parser);
+    }
+}
+
 Node* ParseDef(Parser* parser)
 {
     Token tok = LexerNext(parser->lex);
@@ -167,15 +270,32 @@ Node* ParseDef(Parser* parser)
         return NULL;
     }
 
-    switch(tok.data.keyword)
+    if(tok.data.keyword == KeywordLParen)
     {
-    case KeywordLParen:
-    case KeywordAssign:
-    case KeywordArrow:
-    case KeywordLBrace:
-    default:
-        // error
-        return NULL;
+        func->Function.args = ParseFuncArgs(parser, &tok);
+    }
+    else
+    {
+        func->Function.args = NULL;
+    }
+
+    if(tok.data.keyword == KeywordArrow)
+    {
+
+    }
+    else
+    {
+        func->Function.ret = NULL;
+    }
+
+    if(tok.data.keyword == KeywordLBrace)
+    {
+
+    }
+
+    if(tok.data.keyword == KeywordAssign)
+    {
+
     }
 }
 

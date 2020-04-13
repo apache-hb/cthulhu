@@ -17,8 +17,10 @@ typedef enum {
     KeywordType,
     KeywordDef,
 
-    KeywordLSquare2,
-    KeywordRSquare2,
+    KeywordEnum,
+    KeywordUnion,
+    KeywordVariant,
+
     KeywordLSquare,
     KeywordRSquare,
 
@@ -30,7 +32,11 @@ typedef enum {
 
     KeywordAssign,
     KeywordBuiltin,
-    KeywordArrow
+    KeywordArrow,
+    KeywordColon,
+
+    KeywordSub,
+    KeywordSubEq
 } Keyword;
 
 typedef enum {
@@ -153,6 +159,10 @@ Token KeyOrIdent(FilePos pos, Lexer* lex)
         return NewKeyword(pos, KeywordType);
     else if(strcmp(lex->buffer, "import") == 0)
         return NewKeyword(pos, KeywordImport);
+    else if(strcmp(lex->buffer, "enum") == 0)
+        return NewKeyword(pos, KeywordEnum);
+    else if(strcmp(lex->buffer, "variant") == 0)
+        return NewKeyword(pos, KeywordVariant);
     else
         return NewIdent(pos, strdup(lex->buffer));
 }
@@ -162,11 +172,34 @@ Token Symbol(FilePos pos, Lexer* lex, int c)
     switch(c)
     {
     case '[':
-        return NewKeyword(pos, FileConsume(lex, '[') ? KeywordLSquare2 : KeywordLSquare);
+        return NewKeyword(pos, KeywordLSquare);
     case ']':
-        return NewKeyword(pos, FileConsume(lex, ']') ? KeywordRSquare2 : KeywordRSquare);
+        return NewKeyword(pos, KeywordRSquare);
+    case '(':
+        return NewKeyword(pos, KeywordRParen);
+    case ')':
+        return NewKeyword(pos, KeywordLParen);
+    case '{':
+        return NewKeyword(pos, KeywordLBrace);
+    case '}':
+        return NewKeyword(pos, KeywordRBrace);
     case '@':
         return NewKeyword(pos, KeywordBuiltin);
+    case ':':
+        return NewKeyword(pos, FileConsume(lex, '=') ? KeywordAssign : KeywordColon);
+    case '-':
+        if(FileConsume(lex, '>'))
+        {
+            return NewKeyword(pos, KeywordArrow);
+        }
+        else if(FileConsume(lex, '='))
+        {
+            return NewKeyword(pos, KeywordSubEq);
+        }
+        else
+        {
+            return NewKeyword(pos, KeywordSub);
+        }
     default:
         break;
     }
