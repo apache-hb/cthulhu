@@ -189,9 +189,7 @@ Node* ParseType(Parser* parser)
 
     if(tok.type == TokenTypeIdent)
     {
-        Node* type = NewNode(NodeTypeName);
-        type->Name.name = tok.data.ident;
-        return type;
+        return ParseName(parser);
     }
     else if(tok.type == TokenTypeKeyword)
     {
