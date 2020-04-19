@@ -47,7 +47,8 @@ typedef enum {
     TokenTypeChar = 3,
     TokenTypeInt = 4,
     TokenTypeFloat = 5,
-    TokenTypeEOF = 6
+    TokenTypeEOF = 6,
+    TokenTypeInvalid
 } TokenType;
 
 typedef union {
@@ -64,6 +65,12 @@ typedef struct {
     TokenType type;
     TokenData data;
 } Token;
+
+int IsValidToken(Token tok)
+{
+    return tok.type != TokenTypeInvalid;
+}
+
 
 int FileNext(Lexer* lex)
 {
@@ -131,6 +138,13 @@ int FileSkipComment(Lexer* lex)
 NEW_TOKEN(NewKeyword, Keyword, keyword, TokenTypeKeyword)
 NEW_TOKEN(NewIdent, char*, ident, TokenTypeIdent)
 NEW_TOKEN(NewInt, int64_t, integer, TokenTypeInt)
+
+Token InvalidToken()
+{
+    Token tok;
+    tok.type = TokenTypeInvalid;
+    return tok;
+}
 
 Token NewEOF(FilePos pos)
 {
@@ -353,6 +367,9 @@ void PrintToken(Token tok, FILE* out)
         break;
     case TokenTypeEOF:
         fprintf(out, "Token(EOF)\n");
+        break;
+    case TokenTypeInvalid:
+        fprintf(out, "Invalid\n");
         break;
     }
 }

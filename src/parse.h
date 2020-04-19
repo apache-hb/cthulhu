@@ -5,14 +5,14 @@
 typedef struct {
     Lexer* lex;
     /* extra token used sometimes when parsing */
-    Token* tok;
+    Token tok;
 } Parser;
 
 Parser NewParser(Lexer* lex)
 {
     Parser out;
     out.lex = lex;
-    out.tok = NULL;
+    out.tok = InvalidToken();
     return out;
 }
 
@@ -267,7 +267,7 @@ void ParseDottedName(Parser* parser, vec_str_t* vec)
         tok = NextKeyword(parser);
         if(tok.data.keyword != KeywordColon)
         {
-            *parser->tok = tok;
+            parser->tok = tok;
             break;
         }
     }
@@ -284,10 +284,10 @@ Node* ParseImport(Parser* parser)
     Node* node = NewNode(NodeTypeImportDecl);
     ParseDottedName(parser, &node->importDecl.path);
 
-    if(parser->tok->data.keyword == KeywordArrow)
+    if(parser->tok.data.keyword == KeywordArrow)
     {
         node->importDecl.alias = NextIdent(parser).data.ident;
-        parser->tok = NULL;
+        parser->tok = InvalidToken();
     }
     else
     {
@@ -300,10 +300,10 @@ Node* ParseImport(Parser* parser)
 Node* ParserNext(Parser* parser)
 {
     Token tok;
-    if(!!parser->tok)
+    if(IsValidToken(parser->tok))
     {
-        tok = *parser->tok;
-        parser->tok = NULL;
+        tok = parser->tok;
+        parser->tok = InvalidToken();
         if(tok.type != TokenTypeKeyword)
         {
             printf("invalid lookahead token\n");

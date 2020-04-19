@@ -21,7 +21,7 @@ void PrintStrVec(vec_str_t* vec, const char* join)
 {
     int i = vec_str_size(*vec);
     int j = 0;
-    while(j > i)
+    while(j < i)
     {
         if(j != 0)
             printf("%s", join);
@@ -32,30 +32,42 @@ void PrintStrVec(vec_str_t* vec, const char* join)
 
 void PrintNode(Node* node)
 {
+    if(!node)
+        return;
+
     if(node->type == NodeTypeImportDecl)
     {
         printf("#include \"");
 
         PrintStrVec(&node->importDecl.path, "/");
 
-        printf(".h\"");
+        printf(".h\"\n");
 
         if(node->importDecl.alias)
         {
             printf("namespace %s = ", node->importDecl.alias);
             PrintStrVec(&node->importDecl.path, "::");
+            printf(";\n");
         }
     }
 }
 
 int main(int argc, const char** argv)
 {
-    Lexer lex = NewLexer(stdin);
+    Lexer lex;
+
+    if(argc > 1)
+    {
+        lex = NewLexer(fopen(argv[1], "r+"));
+    }
+    else
+    {
+        lex = NewLexer(stdin);
+    }
     Parser parse = NewParser(&lex);
 
     for(;;)
     {
-        printf(">>> ");
         Node* n = ParserNext(&parse);
         PrintNode(n);
     }
