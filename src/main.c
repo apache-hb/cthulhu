@@ -17,6 +17,37 @@ char* strdup(const char* str)
 #include "lex.h"
 #include "parse.h"
 
+void PrintStrVec(vec_str_t* vec, const char* join)
+{
+    int i = vec_str_size(*vec);
+    int j = 0;
+    while(j > i)
+    {
+        if(j != 0)
+            printf("%s", join);
+
+        printf("%s", vec_str_get(*vec, j++));
+    }
+}
+
+void PrintNode(Node* node)
+{
+    if(node->type == NodeTypeImportDecl)
+    {
+        printf("#include \"");
+
+        PrintStrVec(&node->importDecl.path, "/");
+
+        printf(".h\"");
+
+        if(node->importDecl.alias)
+        {
+            printf("namespace %s = ", node->importDecl.alias);
+            PrintStrVec(&node->importDecl.path, "::");
+        }
+    }
+}
+
 int main(int argc, const char** argv)
 {
     Lexer lex = NewLexer(stdin);
@@ -25,9 +56,8 @@ int main(int argc, const char** argv)
     for(;;)
     {
         printf(">>> ");
-        Token tok = LexerNext(&lex);
-        PrintToken(tok, stdout);
-        TokenFree(tok);
+        Node* n = ParserNext(&parse);
+        PrintNode(n);
     }
 
     return 0;

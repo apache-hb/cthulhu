@@ -13,6 +13,7 @@ typedef struct {
 } Lexer;
 
 typedef enum {
+    KeywordNone,
     KeywordImport,
     KeywordType,
     KeywordDef,
@@ -201,7 +202,7 @@ Token Symbol(FilePos pos, Lexer* lex, int c)
             return NewKeyword(pos, KeywordSub);
         }
     default:
-        break;
+        return NewKeyword(pos, KeywordNone);
     }
 }
 
@@ -274,7 +275,7 @@ Token LexerNext(Lexer* lex)
         }
         else
         {
-            
+            exit(400);
         }
     }
     else if(isdigit(c))
@@ -297,11 +298,11 @@ Token LexerNext(Lexer* lex)
     }
     else if(c == '"')
     {
-
+        exit(400);
     }
     else if(c == '\'')
     {
-
+        exit(400);
     }
     else if(c == '\0')
     {

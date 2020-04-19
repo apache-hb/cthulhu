@@ -1,151 +1,250 @@
+#define VECTOR_TYPE char*
+#define VECTOR_NAME str
+#include "vector.h"
+
 typedef struct {
     Lexer* lex;
+    /* extra token used sometimes when parsing */
+    Token* tok;
 } Parser;
 
 Parser NewParser(Lexer* lex)
 {
     Parser out;
     out.lex = lex;
+    out.tok = NULL;
     return out;
 }
 
-
 typedef enum {
+    /*
+    // name
+    //  : Ident ('::' name)?
+    //  ;
+    //
+    */
+    NodeTypeDottedName,
+
+    /*
+    // importDecl 
+    //  : 'import' name ('->' Ident)?
+    //  ;
+    //
+    */
+    NodeTypeImportDecl,
+
+    /*
+    // typeDecl
+    //  : typeAttribute+ typeDeclBody
+    //  ;
+    //
+    // typeDeclBody
+    //  : structDecl
+    //  | tupleDecl
+    //  | unionDecl
+    //  | enumDecl
+    //  | arrayDecl
+    //  | variantDecl
+    //  | nameDecl
+    //  ;
+    //
+
+    // structDecl
+    //  : '{' structBody? '}'
+    //  ;
+    //
+    // structBody
+    //  : Ident ':' typeDecl (',' structBody)?
+    //  ;
+    //
+    */
     NodeTypeStruct,
+
+    /*
+    // tupleDecl
+    //  : '(' tupleBody? ')'
+    //  ;
+    //
+    // tupleBody
+    //  : typeDecl (',' tupleBody)?
+    //  ;
+    //
+    */
+    NodeTypeTuple,
+
+    /*
+    // unionDecl
+    //  : 'union' '{' unionBody? '}'
+    //  ;
+    //
+    // unionBody
+    //  : Ident ':' typeDecl (',' unionBody)?
+    //  ;
+    //
+    */
     NodeTypeUnion,
+
+    /*
+    // enumDecl
+    //  : 'enum' enumBacking? '{' enumBody? '}'
+    //  ;
+    //
+    // enumBacking
+    //  : ':' typeDecl
+    //  ;
+    //
+    // enumBody
+    //  : Ident ':=' expr
+    //  ;
+    //
+    */
     NodeTypeEnum,
+
+    /*
+    // arrayDecl
+    //  : '[' typeDecl ':' expr? ']'
+    //  ;
+    */
     NodeTypeArray,
+
+    /*
+    // variantDecl
+    //  : 'variant' variantTypeBacking? '{' variantBody? '}'
+    //  ;
+    //
+    // variantTypeBacking
+    //  : ':' typeDecl
+    //  ;
+    //
+    // variantBody
+    //  : Ident variantBodyBacking? '->' typeDecl (',' variantBody)
+    //  ;
+    //
+    // variantBodyBacking
+    //  : ':' expr
+    //  ;
+    //
+    */
     NodeTypeVariant,
+
+    /*
+    // nameDecl
+    //  : name
+    //  ;
+    //
+    */
     NodeTypeName,
-    NodeTypeAttribute,
-    NodeTypeBuiltinType,
-    NodeTypeBuiltinFunction,
-    NodeTypeFunction,
-    NodeTypeFunctionArgs
+
+    /*
+    // typeDef
+    //  : 'type' Ident ':=' typeDecl
+    //  ;
+    //
+    */
+    NodeTypeTypeDef,
+
+    /*
+    // typeAttribute
+    //  : '@' typeAttributeBody
+    //  ;
+    //
+    // typeAttributeBody
+    //  | attributePacked
+    //  | attributeAlign
+    //  ;
+
+    // attributePacked
+    //  : 'packed' '(' expr ')'
+    //  ;
+    //
+    // NodeTypeAttributePacked,
+
+    // attributeAlign
+    //  : 'align' '(' expr ')'
+    //  ;
+    //
+    // NodeTypeAttributeAlign,
+    */
 } NodeType;
 
-typedef enum {
-    BuiltinTypeU8,
-    BuiltinTypeU16,
-    BuiltinTypeU32,
-    BuiltinTypeU64,
-    BuiltinTypeI8,
-    BuiltinTypeI16,
-    BuiltinTypeI32,
-    BuiltinTypeI64,
-    BuiltinTypeStr,
-    BuiltinTypeBool,
-    BuiltinTypeC8
-} BuiltinType;
+Token NextKeyword(Parser* parser)
+{
+    Token tok = LexerNext(parser->lex);
 
-typedef enum {
-    BuiltinFunctionSizeof,
-    BuiltinFunctionCast,
-    BuiltinFunctionLocal,
-    BuiltinFunctionAsm
-} BuiltinFunction;
+    if(tok.type != TokenTypeKeyword)
+    {
+        printf("expected keyword\n");
+        exit(500);
+    }
 
-typedef enum {
-    AttributeTypePacked,
-    AttributeTypeAlign,
-    AttributeTypeOrigin,
-    AttributeTypeNoReturn,
-    AttributeTypeTarget,
-    AttributeTypeDeprecated,
-    AttributeTypeInline
-} AttributeType;
+    return tok;
+}
 
-typedef enum {
-    I8086,
-    X86,
-    X64
-} TargetPlatform;
+Token NextIdent(Parser* parser)
+{
+    Token tok = LexerNext(parser->lex);
 
-typedef enum {
-    InlineAlways,
-    InlineNever,
-    InlineAuto
-} InlineBehaviour;
+    if(tok.type != TokenTypeIdent)
+    {
+        printf("expected ident\n");
+        exit(500);
+    }
+    
+    return tok;
+}
+
+void ExpectKeyword(Parser* parser, Keyword key)
+{
+    Token tok = NextKeyword(parser);
+    if(tok.data.keyword != key)
+    {
+        printf("incorrect keyword found\n");
+        exit(500);
+    }
+}
 
 typedef struct Node {
     NodeType type;
 
     union {
         struct {
-            char* name;
-        } Name;
+            struct Node* width;
+        } packedAttribute;
 
         struct {
-            int fields;
-            char* names;
-            struct Node* types;
-        } Struct;
+            struct Node* align;
+        } alignAttribute;
 
         struct {
-            int fields;
-            char* names;
-            struct Node* types;
-        } Union;
+            vec_str_t path;
+            char* alias;
+        } importDecl;
 
         struct {
-            int fields;
-            struct Node* backing;
-            char* names;
-            struct Node* values;
-        } Enum;
+            int attribCount;
+            struct Node* attribs;
 
-        struct {
-            BuiltinType type;
             union {
-                InlineBehaviour behaviour;
-                TargetPlatform target;
+                struct {
+                    vec_str_t names;
+                    struct Node* types;
+                } structDecl;
 
-                // deprecated message
-                char* message;
+                struct {
+                    int count;
+                    struct Node* types;
+                } tupleDecl;
 
-                // align to 
-                int alignment;
-
-                // pack to
-                int width;
-
-                // origin
-                int vaddr;
+                struct {
+                    vec_str_t parts;
+                } nameDecl;
             };
-            
-            int decls;
-            struct Node* body;
-        } BuiltinT;
+        } typeDecl;
 
-        struct {
-            BuiltinFunction func;
-        } BuiltinF;
-
-        struct {
-            AttributeType type;
-        } Attribute;
-
-        struct {
-            int count;
-            char* names;
-
-            // type of argument
-            struct Node* types;
-
-            // default values
-            struct Node* values;
-        } FunctionArguments;
-
-        struct {
-            // name of function
+        struct { 
             char* name;
-
-            // function arguments
-            struct Node* args;
-
-            // function return type, NULL if deduced
-            struct Node* ret;
-        } Function;
+            struct Node* typeDecl;
+        } typeDef;
     };
 } Node;
 
@@ -156,168 +255,75 @@ Node* NewNode(NodeType type)
     return node;
 }
 
-void Expect(Parser* parser, Keyword key)
+void ParseDottedName(Parser* parser, vec_str_t* vec)
 {
-    Token tok = LexerNext(parser->lex);
-    if(tok.type == TokenTypeKeyword && tok.data.keyword == key)
+    vec_str_init(*vec);
+
+    for(;;)
     {
-        TokenFree(tok);
-    }
-    else
-    {
-        printf("invalid keyword\n");
-        exit(500);
+        Token tok = NextIdent(parser);
+        vec_str_append(*vec, tok.data.ident);
+
+        tok = NextKeyword(parser);
+        if(tok.data.keyword != KeywordColon)
+        {
+            *parser->tok = tok;
+            break;
+        }
     }
 }
 
-Node* TryParseAttribs(Parser* parser, Token* tok)
+Node* ParseTypeDef(Parser* parser)
 {
-    // TODO: implement
-    if(tok->type == TokenTypeKeyword && tok->data.keyword == KeywordBuiltin)
-    {
-        return NULL;
-    }
-    else
-    {
-        return NULL;
-    }
+    /* TODO: all this */
+    return NULL;
 }
 
-Node* ParseType(Parser* parser)
+Node* ParseImport(Parser* parser)
 {
-    Token tok = LexerNext(parser->lex);
+    Node* node = NewNode(NodeTypeImportDecl);
+    ParseDottedName(parser, &node->importDecl.path);
 
-    if(tok.type == TokenTypeIdent)
+    if(parser->tok->data.keyword == KeywordArrow)
     {
-        return ParseName(parser);
-    }
-    else if(tok.type == TokenTypeKeyword)
-    {
-        Node* attribs = TryParseAttribs(parser, &tok);
-        if(tok.data.keyword == KeywordLSquare)
-        {
-            return ParseArray(parser);
-        }
-        else if(tok.data.keyword == KeywordLBrace)
-        {
-            return ParseStruct(parser);
-        }
-        else if(tok.data.keyword == KeywordEnum)
-        {
-            return ParseEnum(parser);
-        }
-        else if(tok.data.keyword == KeywordUnion)
-        {
-            return ParseEnum(parser);
-        }
-        else if(tok.data.keyword == KeywordVariant)
-        {
-            return ParseVariant(parser);
-        }
-        else
-        {
-            // oh no
-        }
+        node->importDecl.alias = NextIdent(parser).data.ident;
+        parser->tok = NULL;
     }
     else
     {
-        // error
-    }
-}
-
-Node* ParseFuncArgs(Parser* parser, Token* tok)
-{
-    *tok = LexerNext(parser->lex);
-
-    if(tok->type == TokenTypeKeyword && tok->data.keyword == KeywordRParen)
-    {
-        // empty function args
-        return NULL;
+        node->importDecl.alias = NULL;
     }
 
-    Node* args = NewNode(NodeTypeFunctionArgs);
-
-    char* names[64];
-    Node* types[64];
-    int i = 0;
-
-    while(tok->type == TokenTypeIdent)
-    {
-        names[i] = tok->data.ident;
-        Expect(parser, KeywordColon);
-        types[i] = ParseType(parser);
-    }
-}
-
-Node* ParseDef(Parser* parser)
-{
-    Token tok = LexerNext(parser->lex);
-    if(tok.type != TokenTypeIdent)
-    {
-        // error
-        return NULL;
-    }
-
-    Node* func = NewNode(NodeTypeFunction);
-    func->Function.name = tok.data.ident;
-
-    tok = LexerNext(parser->lex);
-    if(tok.type != TokenTypeKeyword)
-    {
-        // error
-        return NULL;
-    }
-
-    if(tok.data.keyword == KeywordLParen)
-    {
-        func->Function.args = ParseFuncArgs(parser, &tok);
-    }
-    else
-    {
-        func->Function.args = NULL;
-    }
-
-    if(tok.data.keyword == KeywordArrow)
-    {
-
-    }
-    else
-    {
-        func->Function.ret = NULL;
-    }
-
-    if(tok.data.keyword == KeywordLBrace)
-    {
-
-    }
-
-    if(tok.data.keyword == KeywordAssign)
-    {
-
-    }
+    return node;
 }
 
 Node* ParserNext(Parser* parser)
 {
-    Token tok = LexerNext(parser->lex);
-    if(tok.type == TokenTypeKeyword)
+    Token tok;
+    if(!!parser->tok)
     {
-        switch(tok.data.keyword)
+        tok = *parser->tok;
+        parser->tok = NULL;
+        if(tok.type != TokenTypeKeyword)
         {
-        case KeywordLSquare2:
-        case KeywordBuiltin:
-        case KeywordImport:
-        case KeywordDef:
-            return ParseDef(parser);
-        case KeywordType:
-        default:
-            return NULL;
-            break;
+            printf("invalid lookahead token\n");
+            exit(500);
         }
     }
     else
     {
-        // error
+        tok = NextKeyword(parser);
+    }
+
+    switch(tok.data.keyword)
+    {
+    case KeywordImport:
+        return ParseImport(parser);
+    case KeywordType:
+        return ParseTypeDef(parser);
+        break;
+    default:
         return NULL;
+        break;
     }
 }
