@@ -167,9 +167,28 @@ typedef enum {
     */
 } NodeType;
 
+Token NextToken(Parser* parser)
+{
+    Token tok;
+
+    if(IsValidToken(parser->tok))
+    {
+        tok = parser->tok;
+        parser->tok = InvalidToken();
+    }
+    else
+    {
+        tok = LexerNext(parser->lex);
+    }
+
+    return tok;
+}
+
 Token NextKeyword(Parser* parser)
 {
-    Token tok = LexerNext(parser->lex);
+    Token tok;
+    
+    tok = NextToken(parser);
 
     if(tok.type != TokenTypeKeyword)
     {
@@ -182,7 +201,7 @@ Token NextKeyword(Parser* parser)
 
 Token NextIdent(Parser* parser)
 {
-    Token tok = LexerNext(parser->lex);
+    Token tok = NextToken(parser);
 
     if(tok.type != TokenTypeIdent)
     {
@@ -198,11 +217,24 @@ void ExpectKeyword(Parser* parser, Keyword key)
     Token tok = NextKeyword(parser);
     if(tok.data.keyword != key)
     {
-        printf("incorrect keyword found\n");
+        printf("incorrect keyword found %d\n", tok.data.keyword);
         exit(500);
     }
 }
 
+int ConsumeKeyword(Parser* parser, Keyword key)
+{
+    Token tok;
+    
+    tok = parser->tok;
+    if(tok.type == TokenTypeKeyword && tok.data.keyword == key)
+    {
+        parser->tok = InvalidToken();
+        return 1;
+    }
+
+    return 0;
+}
 
 struct NodeVec;
 
@@ -326,6 +358,8 @@ Node* ParseTupleDecl(Parser* parser)
 
     Token tok;
 
+    printf(")");
+
     fields = malloc(sizeof(NodeVec));
     NodeVecInit(fields, ParseTypeDecl(parser));
 
@@ -344,6 +378,8 @@ Node* ParseTupleDecl(Parser* parser)
     out->data.type.typeDecl.tupleDecl.fields = fields->vec;
     out->data.type.typeDecl.tupleDecl.count = fields->i;
 
+    printf(")");
+
     return out;
 }
 
@@ -353,6 +389,7 @@ Node* ParseStructDecl(Parser* parser)
     NodeVec* nodes;
     Node* out;
     char* name;
+    Token tok;
 
     printf("{");
 
@@ -368,17 +405,22 @@ Node* ParseStructDecl(Parser* parser)
 
     while(1)
     {
-        if(NextKeyword(parser).data.keyword != KeywordComma)
+        tok = NextKeyword(parser);
+        if(tok.data.keyword != KeywordComma)
         {
+            parser->tok = tok;
             break;
         }
-        printf(",\n");
+
+        printf(", ");
         name = NextIdent(parser).data.ident;
         printf("%s: ", name);
         vec_str_append(names, name);
         ExpectKeyword(parser, KeywordColon);
         NodeVecAppend(nodes, ParseTypeDecl(parser));
     }
+
+    ExpectKeyword(parser, KeywordRBrace);
 
     out = NewNode(NodeTypeStruct);
     
@@ -439,7 +481,7 @@ Node* ParseTypeDecl(Parser* parser)
     Node* type;
     Token tok;
 
-    tok = LexerNext(parser->lex);
+    tok = NextToken(parser);
 
     if(tok.type == TokenTypeIdent)
     {
@@ -450,6 +492,7 @@ Node* ParseTypeDecl(Parser* parser)
     }
     else if(tok.type == TokenTypeKeyword)
     {
+        printf("key ");
         switch(tok.data.keyword)
         {
         case KeywordLParen:
@@ -487,6 +530,7 @@ Node* ParseTypeDef(Parser* parser)
     node = NewNode(NodeTypeTypeDef);
     node->data.typeDef.name = name;
     node->data.typeDef.typeDecl = type;
+    printf("\n");
 
     return node;
 }
@@ -498,7 +542,7 @@ Node* ParseImport(Parser* parser)
     node = NewNode(NodeTypeImportDecl);
     ParseDottedName(parser, &node->data.importDecl.path, NULL);
 
-    if(parser->tok.data.keyword == KeywordArrow)
+    if(ConsumeKeyword(parser, KeywordArrow))
     {
         node->data.importDecl.alias = NextIdent(parser).data.ident;
         printf(" -> %s\n", node->data.importDecl.alias);
@@ -517,10 +561,8 @@ Node* ParserNext(Parser* parser)
 {
     Token tok;
 
-    printf("here 4 %p %d\n", (void*)parser, parser->tok.type);
     if(IsValidToken(parser->tok))
     {
-        printf("here 5\n");
         tok = parser->tok;
         parser->tok = InvalidToken();
         if(tok.type != TokenTypeKeyword)
@@ -533,8 +575,6 @@ Node* ParserNext(Parser* parser)
     {
         tok = NextKeyword(parser);
     }
-
-    printf("here 3\n");
 
     switch(tok.data.keyword)
     {

@@ -57,7 +57,6 @@ int main(int argc, const char** argv)
     Lexer lex;
     Parser parse;
 
-
     if(argc > 1)
     {
         lex = NewLexer(fopen(argv[1], "r+"));
@@ -69,12 +68,9 @@ int main(int argc, const char** argv)
     
     parse = NewParser(&lex);
 
-    printf("here\n");
-
     for(;;)
     {
         ParserNext(&parse);
-        printf("here 2\n");
     }
 
     return 0;
