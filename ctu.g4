@@ -37,7 +37,7 @@ funcProto
     ;
 
 arrayDecl
-    : '[' typeDecl (':' expr)? ']'
+    : '[' typeDecl ':' expr ']'
     ;
 
 enumDecl

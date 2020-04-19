@@ -1,6 +1,8 @@
 project('ctulang', 'c',
     default_options : [
-        'c_std=c89'
+        'c_std=c89',
+        'werror=true',
+        'warning_level=3'
     ]
 )
 

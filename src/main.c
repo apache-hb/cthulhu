@@ -39,14 +39,14 @@ void PrintNode(Node* node)
     {
         printf("#include \"");
 
-        PrintStrVec(&node->importDecl.path, "/");
+        PrintStrVec(&node->data.importDecl.path, "/");
 
         printf(".h\"\n");
 
-        if(node->importDecl.alias)
+        if(node->data.importDecl.alias)
         {
-            printf("namespace %s = ", node->importDecl.alias);
-            PrintStrVec(&node->importDecl.path, "::");
+            printf("namespace %s = ", node->data.importDecl.alias);
+            PrintStrVec(&node->data.importDecl.path, "::");
             printf(";\n");
         }
     }
@@ -55,6 +55,8 @@ void PrintNode(Node* node)
 int main(int argc, const char** argv)
 {
     Lexer lex;
+    Parser parse;
+
 
     if(argc > 1)
     {
@@ -64,12 +66,15 @@ int main(int argc, const char** argv)
     {
         lex = NewLexer(stdin);
     }
-    Parser parse = NewParser(&lex);
+    
+    parse = NewParser(&lex);
+
+    printf("here\n");
 
     for(;;)
     {
-        Node* n = ParserNext(&parse);
-        PrintNode(n);
+        ParserNext(&parse);
+        printf("here 2\n");
     }
 
     return 0;

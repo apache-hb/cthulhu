@@ -35,6 +35,7 @@ typedef enum {
     KeywordBuiltin,
     KeywordArrow,
     KeywordColon,
+    KeywordComma,
 
     KeywordSub,
     KeywordSubEq
@@ -48,7 +49,7 @@ typedef enum {
     TokenTypeInt = 4,
     TokenTypeFloat = 5,
     TokenTypeEOF = 6,
-    TokenTypeInvalid
+    TokenTypeInvalid = 7
 } TokenType;
 
 typedef union {
@@ -215,6 +216,8 @@ Token Symbol(FilePos pos, Lexer* lex, int c)
         {
             return NewKeyword(pos, KeywordSub);
         }
+    case ',':
+        return NewKeyword(pos, KeywordComma);
     default:
         return NewKeyword(pos, KeywordNone);
     }
@@ -222,10 +225,13 @@ Token Symbol(FilePos pos, Lexer* lex, int c)
 
 Token LexerNext(Lexer* lex)
 {
+    FilePos here;
+    int c;
+
     BufferReset(lex);
 
-    FilePos here = lex->pos;
-    int c = FileSkipWhitespace(lex);
+    here = lex->pos;
+    c = FileSkipWhitespace(lex);
 
     while(c == '#')
         c = FileSkipComment(lex);

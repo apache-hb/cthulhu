@@ -59,7 +59,7 @@ static __inline VECTOR_TYPE VECTOR_POP(VECTOR vec) {
   return vec[0].arr[vec[0].size--];
 }
 
-static __inline void VECTOR_DEL(VECTOR vec, int i) {
+static __inline void VECTOR_DEL(VECTOR vec, size_t i) {
   if (i == vec[0].size) {
     VECTOR_POP(vec);
   } else {
