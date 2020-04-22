@@ -22,22 +22,11 @@ typeDef
     ;
 
 typeDecl
-    : structDecl
-    | tupleDecl
-    | unionDecl
-    | variantDecl
-    | enumDecl
-    | arrayDecl
-    | typeName
-    | funcProto
+    : (structDecl | tupleDecl | unionDecl | variantDecl | enumDecl | typeName | funcProto) ('[' expr ']' | '*')?
     ;
 
 funcProto
     : '&(' typeList? ')' funcReturn?
-    ;
-
-arrayDecl
-    : '[' typeDecl ':' expr ']'
     ;
 
 enumDecl

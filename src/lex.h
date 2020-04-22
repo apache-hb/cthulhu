@@ -36,9 +36,19 @@ typedef enum {
     KeywordArrow,
     KeywordColon,
     KeywordComma,
+    KeywordDot,
+
+    KeywordNot,
+    KeywordBitNot,
+
+    KeywordNEq,
+    KeywordEq,
 
     KeywordSub,
     KeywordSubEq,
+
+    KeywordAdd,
+    KeywordAddEq,
 
     KeywordMul,
     KeywordMulEq
@@ -219,6 +229,23 @@ Token Symbol(FilePos pos, Lexer* lex, int c)
         {
             return NewKeyword(pos, KeywordSub);
         }
+    case '=':
+        if(FileConsume(lex, '='))
+        {
+            return NewKeyword(pos, KeywordEq);
+        }
+        else
+        {
+            return NewKeyword(pos, KeywordNone);
+        }
+    case '.':
+        return NewKeyword(pos, KeywordDot);
+    case '~':
+        return NewKeyword(pos, KeywordBitNot);
+    case '!':
+        return NewKeyword(pos, FileConsume(lex, '=') ? KeywordNEq : KeywordNot);
+    case '+':
+        return NewKeyword(pos, FileConsume(lex, '=') ? KeywordAddEq : KeywordAdd);
     case ',':
         return NewKeyword(pos, KeywordComma);
     case '*':

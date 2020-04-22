@@ -70,6 +70,14 @@ static __inline void VECTOR_DEL(VECTOR vec, size_t i) {
   }
 }
 
+static __inline void VECTOR_FOREACH(VECTOR vec, void(*func)(VECTOR_TYPE)) {
+  size_t i;
+  i = 0;
+  while(i < vec[0].size) {
+    func(vec[0].arr[i++]);
+  }
+}
+
 static __inline size_t VECTOR_SIZE(VECTOR vec) {
   return vec[0].size;
 }
@@ -88,3 +96,4 @@ static __inline size_t VECTOR_SIZE(VECTOR vec) {
 #undef VECTOR_SIZE
 #undef VECTOR_APPEND
 #undef VECTOR_PREFIX
+#undef VECTOR_FOREACH

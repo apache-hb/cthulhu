@@ -17,56 +17,33 @@ char* strdup(const char* str)
 #include "lex.h"
 #include "parse.h"
 
-void PrintStrVec(vec_str_t* vec, const char* join)
+#include "args.h"
+
+typedef struct {
+    vec_str_struct imports;
+    vec_str_struct aliases;
+
+    vec_str_struct types;
+} OutputContext;
+
+void FormatNode(OutputContext* ctx, Node* node)
 {
-    int i = vec_str_size(*vec);
-    int j = 0;
-    while(j < i)
-    {
-        if(j != 0)
-            printf("%s", join);
-
-        printf("%s", vec_str_get(*vec, j++));
-    }
-}
-
-void PrintNode(Node* node)
-{
-    int i;
-
-    if(node->type == NodeTypeImportDecl)
-    {
-        printf("#include \"");
-
-        PrintStrVec(&node->data.importDecl.path, "/");
-
-        printf(".h\"\n");
-
-        if(node->data.importDecl.alias)
-        {
-            printf("namespace %s = ", node->data.importDecl.alias);
-            PrintStrVec(&node->data.importDecl.path, "::");
-            printf(";\n");
-        }
-    }
-    else if(node->type == NodeTypeTypeDef)
-    {
-        PrintNode(node->data.typeDef.typeDecl);
-    }
-    else if(node->type == NodeTypeStruct)
-    {
-
-    }
+    (void)ctx;
+    (void)node;
 }
 
 int main(int argc, const char** argv)
 {
     Lexer lex;
     Parser parse;
+    OutputContext ctx;
+    ArgData args;
+
+    args = ArgParse(argc, argv);
 
     if(argc > 1)
     {
-        lex = NewLexer(fopen(argv[1], "r+"));
+        lex = NewLexer(fopen(args.sources.arr[0], "r+"));
     }
     else
     {
@@ -75,13 +52,17 @@ int main(int argc, const char** argv)
     
     parse = NewParser(&lex);
 
+    vec_str_init(&ctx.imports);
+    vec_str_init(&ctx.aliases);
+    vec_str_init(&ctx.types);
+
     for(;;)
     {
         Node* node = ParserNext(&parse);
         if(!node)
             break;
 
-        PrintNode(node);
+        FormatNode(&ctx, node);
     }
 
     return 0;

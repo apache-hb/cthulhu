@@ -3,11 +3,15 @@ import x86:intrin
 import ctu:intrin->cc
 import lib
 
+type a := @nullable int*
+
 type s := { a: int, b: float }
 
 type t := (int, int)
 
 type u := union { x: int, y: (int, int) }
+
+type any := void*
 
 type i := int
 type j := u32
