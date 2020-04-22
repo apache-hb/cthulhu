@@ -38,7 +38,10 @@ typedef enum {
     KeywordComma,
 
     KeywordSub,
-    KeywordSubEq
+    KeywordSubEq,
+
+    KeywordMul,
+    KeywordMulEq
 } Keyword;
 
 typedef enum {
@@ -77,7 +80,7 @@ int FileNext(Lexer* lex)
 {
     int c = lex->lookahead;
     lex->lookahead = fgetc(lex->file);
-    
+
     lex->pos.pos += 1;
     if(c == '\n')
     {
@@ -118,10 +121,8 @@ int FileSkipWhitespace(Lexer* lex)
     return c;
 }
 
-int FileSkipComment(Lexer* lex)
+int FileSkipComment(Lexer* lex, int c)
 {
-    int c = FileNext(lex);
-
     while(c != '\n')
         c = FileNext(lex);
 
@@ -179,6 +180,8 @@ Token KeyOrIdent(FilePos pos, Lexer* lex)
         return NewKeyword(pos, KeywordEnum);
     else if(strcmp(lex->buffer, "variant") == 0)
         return NewKeyword(pos, KeywordVariant);
+    else if(strcmp(lex->buffer, "union") == 0)
+        return NewKeyword(pos, KeywordUnion);
     else
         return NewIdent(pos, strdup(lex->buffer));
 }
@@ -192,9 +195,9 @@ Token Symbol(FilePos pos, Lexer* lex, int c)
     case ']':
         return NewKeyword(pos, KeywordRSquare);
     case '(':
-        return NewKeyword(pos, KeywordRParen);
-    case ')':
         return NewKeyword(pos, KeywordLParen);
+    case ')':
+        return NewKeyword(pos, KeywordRParen);
     case '{':
         return NewKeyword(pos, KeywordLBrace);
     case '}':
@@ -218,6 +221,8 @@ Token Symbol(FilePos pos, Lexer* lex, int c)
         }
     case ',':
         return NewKeyword(pos, KeywordComma);
+    case '*':
+        return NewKeyword(pos, FileConsume(lex, '=') ? KeywordMulEq : KeywordMul);
     default:
         return NewKeyword(pos, KeywordNone);
     }
@@ -234,7 +239,7 @@ Token LexerNext(Lexer* lex)
     c = FileSkipWhitespace(lex);
 
     while(c == '#')
-        c = FileSkipComment(lex);
+        c = FileSkipComment(lex, c);
 
     if(isalpha(c) || c == '_')
     {

@@ -27,6 +27,7 @@
 #define VECTOR_DEL     VECTOR_MAKE_STR(del)
 #define VECTOR_SIZE    VECTOR_MAKE_STR(size)
 #define VECTOR_APPEND  VECTOR_MAKE_STR(append)
+#define VECTOR_FOREACH VECTOR_MAKE_STR(foreach)
 
 typedef struct {
   VECTOR_TYPE *arr;

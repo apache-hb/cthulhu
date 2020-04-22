@@ -32,8 +32,7 @@ void PrintStrVec(vec_str_t* vec, const char* join)
 
 void PrintNode(Node* node)
 {
-    if(!node)
-        return;
+    int i;
 
     if(node->type == NodeTypeImportDecl)
     {
@@ -49,6 +48,14 @@ void PrintNode(Node* node)
             PrintStrVec(&node->data.importDecl.path, "::");
             printf(";\n");
         }
+    }
+    else if(node->type == NodeTypeTypeDef)
+    {
+        PrintNode(node->data.typeDef.typeDecl);
+    }
+    else if(node->type == NodeTypeStruct)
+    {
+
     }
 }
 
@@ -70,7 +77,11 @@ int main(int argc, const char** argv)
 
     for(;;)
     {
-        ParserNext(&parse);
+        Node* node = ParserNext(&parse);
+        if(!node)
+            break;
+
+        PrintNode(node);
     }
 
     return 0;
