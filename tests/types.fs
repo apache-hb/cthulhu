@@ -22,7 +22,6 @@ type VkBool32 := u32
 def VK_TRUE := VkBool32(1)
 def VK_FALSE := VkBool32(0)
 
-
 type VkResult := enum: i32 {
     Success := 0,
     NotReady := 1,
@@ -37,3 +36,25 @@ type VkResult := enum: i32 {
     ErrorDeviceList := -4,
     ErrorMemoryMapFailed := -5
 }
+
+type VkInstance := void*
+type VkFlags := u32
+
+type VkImageCreateFlags := enum: VkFlags {
+    SparseBinding := 0x00000001,
+    SparseResidency := 0x00000002,
+    SpareAliased := 0x00000004
+}
+
+type VkInstanceCreateInfo := {
+    next: void*,
+    layerCount: u32,
+    enabledLayers: char**,
+    extensionCount: u32,
+    enabledExtensions: char**
+}
+
+def main(argc: int, argv: char**) -> int := argc
+
+def arr := [5, 6, 7, 8]
+def id := -i

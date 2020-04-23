@@ -225,7 +225,10 @@ typedef enum {
     NodeTypeAccessExpr,
 
     NodeTypeFuncDecl,
-    NodeTypeFuncArgs
+    NodeTypeFuncArgs,
+    NodeTypeFuncCall,
+
+    NodeTypeIntExpr
 
 } NodeType;
 
@@ -290,10 +293,18 @@ int ConsumeKeyword(Parser* parser, Keyword key)
     Token tok;
     
     tok = parser->tok;
+    
+    if(!IsValidToken(parser->tok))
+        tok = NextToken(parser);
+
     if(tok.type == TokenTypeKeyword && tok.data.keyword == key)
     {
         parser->tok = InvalidToken();
         return 1;
+    }
+    else
+    {
+        parser->tok = tok;
     }
 
     return 0;
@@ -412,6 +423,11 @@ typedef struct Node {
             struct {
                 vec_node_struct fields;
             } tupleInit;
+
+            struct {
+                struct Node* func;
+                vec_node_struct args;
+            } call;
         } expr;
 
         struct {
@@ -565,6 +581,29 @@ Node* ParseAccess(Parser* parser, Node* lhs, Keyword op)
     return out;
 }
 
+Node* ParseCall(Parser* parser, Node* lhs)
+{
+    Node* out;
+    vec_node_t args;
+
+    vec_node_init(args);
+    out = NewNode(NodeTypeFuncCall);
+
+    if(!ConsumeKeyword(parser, KeywordRParen))
+    {
+        do {
+            vec_node_append(args, ParseExpr(parser));
+        } while(ConsumeKeyword(parser, KeywordComma));
+
+        ExpectKeyword(parser, KeywordRParen);
+    }
+
+    out->data.expr.call.func = lhs;
+    out->data.expr.call.args = args[0];
+
+    return out;
+}
+
 Node* ParseExpr(Parser* parser)
 {
     Node* out;
@@ -621,7 +660,8 @@ Node* ParseExpr(Parser* parser)
     }
     else if(tok.type == TokenTypeInt)
     {
-
+        out = NewNode(NodeTypeIntExpr);
+        out->data.expr.integer.val = tok.data.integer;
     }
     else if(tok.type == TokenTypeFloat)
     {
@@ -629,14 +669,14 @@ Node* ParseExpr(Parser* parser)
     }
     else
     {
-        out = NULL;
+        return NULL;
     }
 
     while(1)
     {
         if(ConsumeKeyword(parser, KeywordLParen))
         {
-            
+            out = ParseCall(parser, out);
             /* expr(expr...) */
         }
         else if(ConsumeKeyword(parser, KeywordColon))
@@ -653,6 +693,10 @@ Node* ParseExpr(Parser* parser)
         {
             out = ParseAccess(parser, out, KeywordArrow);
             /* expr->expr */
+        }
+        else
+        {
+            break;
         }
     }
 
@@ -981,6 +1025,8 @@ Node* ParseTypeDecl(Parser* parser)
         }
     }
 
+    out->data.type.attribs = attribs[0];
+
     return out;
 }
 
@@ -1045,6 +1091,8 @@ Node* ParseFuncArgs(Parser* parser)
             ExpectKeyword(parser, KeywordColon);
             vec_node_append(args, ParseTypeDecl(parser));
         } while(ConsumeKeyword(parser, KeywordComma));
+
+        ExpectKeyword(parser, KeywordRParen);
     }
 
     out = NewNode(NodeTypeFuncArgs);
@@ -1093,7 +1141,11 @@ Node* ParseFuncDef(Parser* parser)
 
     out = NewNode(NodeTypeFuncDecl);
     out->data.funcDecl.args = args;
-    out
+    out->data.funcDecl.ret = ret;
+    out->data.funcDecl.body = body;
+    out->data.funcDecl.name = tok.data.ident;
+
+    return out;
 }
 
 Node* ParserNext(Parser* parser)

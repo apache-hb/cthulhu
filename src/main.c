@@ -16,27 +16,47 @@ char* strdup(const char* str)
 
 #include "lex.h"
 #include "parse.h"
+#include "writer.h"
 
 #include "args.h"
 
-typedef struct {
-    vec_str_struct imports;
-    vec_str_struct aliases;
-
-    vec_str_struct types;
-} OutputContext;
-
-void FormatNode(OutputContext* ctx, Node* node)
+void FormatFuncDecl(Node* node)
 {
-    (void)ctx;
-    (void)node;
+    printf("func %s\n", node->data.funcDecl.name);
+}
+
+void FormatTypeDef(Node* node)
+{
+    printf("type %s\n", node->data.typeDef.name);
+}
+
+void FormatImportDecl(Node* node)
+{
+    printf("import %s\n", node->data.importDecl.alias);
+}
+
+void FormatNode(Node* node)
+{
+    switch(node->type)
+    {
+    case NodeTypeFuncDecl:
+        FormatFuncDecl(node);
+        break;
+    case NodeTypeTypeDef:
+        FormatTypeDef(node);
+        break;
+    case NodeTypeImportDecl:
+        FormatImportDecl(node);
+        break;
+    default:
+        break;
+    }
 }
 
 int main(int argc, const char** argv)
 {
     Lexer lex;
     Parser parse;
-    OutputContext ctx;
     ArgData args;
 
     args = ArgParse(argc, argv);
@@ -52,17 +72,14 @@ int main(int argc, const char** argv)
     
     parse = NewParser(&lex);
 
-    vec_str_init(&ctx.imports);
-    vec_str_init(&ctx.aliases);
-    vec_str_init(&ctx.types);
-
     for(;;)
     {
         Node* node = ParserNext(&parse);
+        printf("%p - ", (void*)node);
         if(!node)
             break;
 
-        FormatNode(&ctx, node);
+        FormatNode(node);
     }
 
     return 0;
