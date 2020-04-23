@@ -325,8 +325,13 @@ Token LexerNext(Lexer* lex)
 
             return NewInt(here, strtol(lex->buffer, NULL, 2));
         }
+        else if(!isdigit(FilePeek(lex)) && FilePeek(lex) != '.')
+        {
+            return NewInt(here, 0);
+        }
         else
         {
+            printf("oh no\n");
             exit(400);
         }
     }
