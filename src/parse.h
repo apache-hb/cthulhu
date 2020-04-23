@@ -876,7 +876,7 @@ Node* ParseVariantDecl(Parser* parser)
             vec_node_append(values, NULL);
         }
 
-        ExpectKeyword(parser, KeywordArrow);
+        ExpectKeyword(parser, KeywordBigArrow);
 
         vec_node_append(fields, ParseTypeDecl(parser));
 

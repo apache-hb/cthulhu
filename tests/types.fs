@@ -54,6 +54,14 @@ type VkInstanceCreateInfo := {
     enabledExtensions: char**
 }
 
+# use => instead of -> in variants to avoid some really bad 
+# ambiguity in expression parsing
+type va := variant {
+    a: 0 => int,
+    b: 5 => (int, float),
+    c: 10 => { lo: u32, hi: u32 }
+}
+
 def main(argc: int, argv: char**) -> int := argc
 
 def arr := [5, 6, 7, 8]
