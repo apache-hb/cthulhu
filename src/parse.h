@@ -215,7 +215,17 @@ typedef enum {
     //  : dotted_name
     //  ;
     */
-    NodeTypeNameExpr
+    NodeTypeNameExpr,
+
+    NodeTypeArrayInitExpr,
+    NodeTypeTupleInitExpr,
+    NodeTypeStructInitExpr,
+
+
+    NodeTypeAccessExpr,
+
+    NodeTypeFuncDecl,
+    NodeTypeFuncArgs
 
 } NodeType;
 
@@ -382,14 +392,39 @@ typedef struct Node {
 
             struct {
                 Keyword op;
-                struct Node* name;
-                struct Node* field;
+                struct Node* lhs;
+                struct Node* rhs;
             } access;
 
             struct {
                 char* name;
             } ident;
+
+            struct {
+                vec_node_struct nodes;
+            } arrayInit;
+
+            struct {
+                vec_str_struct names;
+                vec_node_struct values;
+            } structInit;
+
+            struct {
+                vec_node_struct fields;
+            } tupleInit;
         } expr;
+
+        struct {
+            char* name;
+            struct Node* args;
+            struct Node* ret;
+            struct Node* body;
+        } funcDecl;
+
+        struct {
+            vec_str_struct names;
+            vec_node_struct args;
+        } funcArgs;
 
         struct { 
             char* name;
@@ -449,6 +484,87 @@ vec_str_struct ParseNameExpr(Parser* parser)
 
 Node* ParseTypeDecl(Parser* parser);
 
+Node* ParseExpr(Parser* parser);
+
+Node* ParseTupleInit(Parser* parser)
+{
+    Node* out;
+    vec_node_t values;
+
+    out = NewNode(NodeTypeTupleInitExpr);
+
+    vec_node_init(values);
+
+    do {
+        vec_node_append(values, ParseExpr(parser));
+    } while(ConsumeKeyword(parser, KeywordComma));
+
+    ExpectKeyword(parser, KeywordRParen);
+
+    out->data.expr.tupleInit.fields = values[0];
+
+    return out;
+}
+
+Node* ParseStructInit(Parser* parser)
+{
+    Node* out;
+    vec_str_t names;
+    vec_node_t values;
+    Token tok;
+
+    out = NewNode(NodeTypeStructInitExpr);
+    vec_node_init(values);
+    vec_str_init(names);
+
+    do {
+        tok = NextIdent(parser);
+        vec_str_append(names, tok.data.ident);
+
+        ExpectKeyword(parser, KeywordAssign);
+
+        vec_node_append(values, ParseExpr(parser));
+    } while(ConsumeKeyword(parser, KeywordComma));
+
+    ExpectKeyword(parser, KeywordRBrace);
+
+    out->data.expr.structInit.names = names[0];
+    out->data.expr.structInit.values = values[0];
+
+    return out;
+}
+
+Node* ParseArrayInit(Parser* parser)
+{
+    Node* out;
+    vec_node_t values;
+    
+    out = NewNode(NodeTypeArrayInitExpr);
+    vec_node_init(values);
+
+    do {
+        vec_node_append(values, ParseExpr(parser));
+    } while(ConsumeKeyword(parser, KeywordComma));
+
+    ExpectKeyword(parser, KeywordRSquare);
+
+    out->data.expr.arrayInit.nodes = values[0];
+
+    return out;
+}
+
+Node* ParseAccess(Parser* parser, Node* lhs, Keyword op)
+{
+    Node* out;
+
+    out = NewNode(NodeTypeAccessExpr);
+    out->data.expr.access.op = op;
+    out->data.expr.access.lhs = lhs;
+    out->data.expr.access.rhs = ParseExpr(parser);
+
+    return out;
+}
+
 Node* ParseExpr(Parser* parser)
 {
     Node* out;
@@ -475,15 +591,15 @@ Node* ParseExpr(Parser* parser)
         }
         else if(tok.data.keyword == KeywordLParen)
         {
-            /* (expr...) */
+            out = ParseTupleInit(parser);
         }
         else if(tok.data.keyword == KeywordLBrace)
         {
-            /* { ident: expr ... } */
+            out = ParseStructInit(parser);
         }
         else if(tok.data.keyword == KeywordLSquare)
         {
-            /* [ expr... ] */
+            out = ParseArrayInit(parser);
         }
         else
         {
@@ -520,18 +636,22 @@ Node* ParseExpr(Parser* parser)
     {
         if(ConsumeKeyword(parser, KeywordLParen))
         {
+            
             /* expr(expr...) */
         }
         else if(ConsumeKeyword(parser, KeywordColon))
         {
+            out = ParseAccess(parser, out, KeywordColon);
             /* name:expr */
         }   
         else if(ConsumeKeyword(parser, KeywordDot))
         {
+            out = ParseAccess(parser, out, KeywordDot);
             /* expr.expr */
         }
         else if(ConsumeKeyword(parser, KeywordArrow))
         {
+            out = ParseAccess(parser, out, KeywordArrow);
             /* expr->expr */
         }
     }
@@ -901,6 +1021,81 @@ Node* ParseImport(Parser* parser)
     return node;
 }
 
+Node* ParseFuncBody(Parser* parser)
+{
+    ExpectKeyword(parser, KeywordLBrace);
+
+    ExpectKeyword(parser, KeywordRBrace);
+
+    return NULL;
+}
+
+Node* ParseFuncArgs(Parser* parser)
+{
+    Node* out;
+    vec_str_t names;
+    vec_node_t args;
+    vec_node_init(args);
+    vec_str_init(names);
+
+    if(!ConsumeKeyword(parser, KeywordRParen))
+    {
+        do {
+            vec_str_append(names, NextIdent(parser).data.ident);
+            ExpectKeyword(parser, KeywordColon);
+            vec_node_append(args, ParseTypeDecl(parser));
+        } while(ConsumeKeyword(parser, KeywordComma));
+    }
+
+    out = NewNode(NodeTypeFuncArgs);
+    out->data.funcArgs.args = args[0];
+    out->data.funcArgs.names = names[0];
+
+    return out;
+}
+
+Node* ParseFuncDef(Parser* parser)
+{
+    Token tok;
+    Node* out;
+    Node* args;
+    Node* ret;
+    Node* body;
+
+    tok = NextIdent(parser);
+
+    if(ConsumeKeyword(parser, KeywordLParen))
+    {
+        args = ParseFuncArgs(parser);
+    }
+    else
+    {
+        args = NULL;
+    }
+
+    if(ConsumeKeyword(parser, KeywordArrow))
+    {
+        ret = ParseTypeDecl(parser);
+    }
+    else
+    {
+        ret = NULL;
+    }
+
+    if(ConsumeKeyword(parser, KeywordAssign))
+    {
+        body = ParseExpr(parser);
+    }
+    else
+    {
+        body = ParseFuncBody(parser);
+    }
+
+    out = NewNode(NodeTypeFuncDecl);
+    out->data.funcDecl.args = args;
+    out
+}
+
 Node* ParserNext(Parser* parser)
 {
     Token tok;
@@ -928,10 +1123,10 @@ Node* ParserNext(Parser* parser)
             return ParseImport(parser);
         case KeywordType:
             return ParseTypeDef(parser);
-            break;
+        case KeywordDef:
+            return ParseFuncDef(parser);
         default:
             return NULL;
-            break;
         }
     }
     else
