@@ -34,6 +34,7 @@ typedef enum {
     KeywordAssign,
     KeywordBuiltin,
     KeywordArrow,
+    KeywordBigArrow,
     KeywordColon,
     KeywordComma,
     KeywordDot,
@@ -136,6 +137,8 @@ int FileSkipComment(Lexer* lex, int c)
     while(c != '\n')
         c = FileNext(lex);
 
+    c = FileSkipWhitespace(lex);
+
     return c;
 }
 
@@ -233,6 +236,10 @@ Token Symbol(FilePos pos, Lexer* lex, int c)
         if(FileConsume(lex, '='))
         {
             return NewKeyword(pos, KeywordEq);
+        }
+        else if(FileConsume(lex, '>'))
+        {
+            return NewKeyword(pos, KeywordBigArrow);
         }
         else
         {
