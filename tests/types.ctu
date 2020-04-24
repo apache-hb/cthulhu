@@ -59,10 +59,13 @@ type VkInstanceCreateInfo := {
 type va := variant {
     a: 0 => int,
     b: 5 => (int, float),
-    c: 10 => { lo: u32, hi: u32 }
+    c: 10 => { lo: u32, hi: u32 },
+    d => enum { x := 0, y := 1 }
 }
 
 def main(argc: int, argv: char**) -> int := argc
 
 def arr := [5, 6, 7, 8]
 def id := -i
+
+let x: mutable int* := malloc(@size(int))
