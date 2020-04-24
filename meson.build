@@ -8,4 +8,8 @@ project('ctulang', 'c',
 
 sources = [ 'src/main.c' ]
 
-ctu = executable('ctu', sources)
+incs = include_directories('src')
+
+ctu = executable('ctu', sources,
+    include_directories : incs
+)

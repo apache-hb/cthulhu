@@ -17,6 +17,8 @@ typedef enum {
     KeywordImport,
     KeywordType,
     KeywordDef,
+    KeywordLet,
+    KeywordMut,
 
     KeywordEnum,
     KeywordUnion,
@@ -38,6 +40,7 @@ typedef enum {
     KeywordColon,
     KeywordComma,
     KeywordDot,
+    KeywordQuestion,
 
     KeywordNot,
     KeywordBitNot,
@@ -195,6 +198,10 @@ Token KeyOrIdent(FilePos pos, Lexer* lex)
         return NewKeyword(pos, KeywordVariant);
     else if(strcmp(lex->buffer, "union") == 0)
         return NewKeyword(pos, KeywordUnion);
+    else if(strcmp(lex->buffer, "let") == 0)
+        return NewKeyword(pos, KeywordLet);
+    else if(strcmp(lex->buffer, "mutable") == 0)
+        return NewKeyword(pos, KeywordMut);
     else
         return NewIdent(pos, strdup(lex->buffer));
 }
@@ -257,6 +264,8 @@ Token Symbol(FilePos pos, Lexer* lex, int c)
         return NewKeyword(pos, KeywordComma);
     case '*':
         return NewKeyword(pos, FileConsume(lex, '=') ? KeywordMulEq : KeywordMul);
+    case '?':
+        return NewKeyword(pos, KeywordQuestion);
     default:
         return NewKeyword(pos, KeywordNone);
     }

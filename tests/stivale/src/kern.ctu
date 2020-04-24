@@ -1,0 +1,19 @@
+import stivale
+
+let stack: byte[4096] := []
+
+let header: stivale:header := {
+    stack := stack
+}
+
+def kmain @noreturn @naked {
+    let vga := 0xB8000 as u16*
+    let msg := "hello world"
+
+    for i : @len(msg) {
+        let each: u16 = msg[i] | 7 << 8
+        vga[i] = each
+    }
+
+    while true {}
+}

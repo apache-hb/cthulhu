@@ -20,6 +20,7 @@ char* strdup(const char* str)
 
 #include "args.h"
 
+#if 0
 void FormatFuncDecl(Node* node)
 {
     printf("func %s\n", node->data.funcDecl.name);
@@ -52,6 +53,7 @@ void FormatNode(Node* node)
         break;
     }
 }
+#endif
 
 int main(int argc, const char** argv)
 {
@@ -69,7 +71,11 @@ int main(int argc, const char** argv)
     {
         lex = NewLexer(stdin);
     }
-    
+
+    (void)parse;
+    (void)lex;
+
+#if 0    
     parse = NewParser(&lex);
 
     for(;;)
@@ -81,6 +87,7 @@ int main(int argc, const char** argv)
 
         FormatNode(node);
     }
+#endif
 
     return 0;
 }

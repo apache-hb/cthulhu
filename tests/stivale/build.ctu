@@ -1,0 +1,16 @@
+import build
+import filesystem -> fs
+
+@entry(build)
+def bmain -> build:build {
+    let builder: build:build := {
+        ldscript := ldscript,
+        sources := [ fs:get("src/kern.ctu") ],
+        args := build:args()
+                    .output("kern.elf")
+                    .target(build:target:x64)
+                    .freestanding(true)
+    }
+
+    return builder
+}
