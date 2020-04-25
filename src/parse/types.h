@@ -1,28 +1,3 @@
-#define LOOP_UNTIL(parser, end, delim, body) \
-    if(!ConsumeKeyword(parser, end)) \
-    { do { body; } while(ConsumeKeyword(parser, delim)); ExpectKeyword(parser, end); }
-
-
-KeyNode MakePair(char* key, Node* val)
-{
-    KeyNode pair;
-    pair.key = key;
-    pair.node = val;
-    return pair;
-}
-
-KeyValType MakeKeyValType(char* key, Node* val, Node* type)
-{
-    KeyValType kvt;
-
-    kvt.key = key;
-    kvt.value = val;
-    kvt.type = type;
-
-    return kvt;
-}
-
-
 Node* ParseTypeName(Parser* parser)
 {
     Node* out;

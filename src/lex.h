@@ -2,14 +2,18 @@ typedef struct {
     uint64_t pos;
     uint64_t line;
     uint64_t col;
+
+    char pad[4];
 } FilePos;
 
 typedef struct {
     FilePos pos;
     FILE* file;
-    char lookahead;
-    char buffer[1024];
     int index;
+    char buffer[1024];
+    char lookahead;
+
+    char pad[3];
 } Lexer;
 
 typedef enum {
@@ -84,16 +88,16 @@ typedef struct {
     TokenData data;
 } Token;
 
-int IsValidToken(Token tok)
+static int IsValidToken(Token tok)
 {
     return tok.type != TokenTypeInvalid;
 }
 
 
-int FileNext(Lexer* lex)
+static char FileNext(Lexer* lex)
 {
-    int c = lex->lookahead;
-    lex->lookahead = fgetc(lex->file);
+    char c = lex->lookahead;
+    lex->lookahead = (char)fgetc(lex->file);
 
     lex->pos.pos += 1;
     if(c == '\n')
@@ -109,12 +113,12 @@ int FileNext(Lexer* lex)
     return c;
 }
 
-int FilePeek(Lexer* lex)
+static char FilePeek(Lexer* lex)
 {
     return lex->lookahead;
 }
 
-int FileConsume(Lexer* lex, int c)
+static int FileConsume(Lexer* lex, int c)
 {
     if(FilePeek(lex) == c)
     {
@@ -125,9 +129,9 @@ int FileConsume(Lexer* lex, int c)
     return 0;
 }
 
-int FileSkipWhitespace(Lexer* lex)
+static char FileSkipWhitespace(Lexer* lex)
 {
-    int c = FileNext(lex);
+    char c = FileNext(lex);
 
     while(isspace(c))
         c = FileNext(lex);
@@ -135,7 +139,7 @@ int FileSkipWhitespace(Lexer* lex)
     return c;
 }
 
-int FileSkipComment(Lexer* lex, int c)
+static char FileSkipComment(Lexer* lex, char c)
 {
     while(c != '\n')
         c = FileNext(lex);
@@ -145,7 +149,7 @@ int FileSkipComment(Lexer* lex, int c)
     return c;
 }
 
-#define NEW_TOKEN(name, typ, field, val) Token name(FilePos pos, typ data) { \
+#define NEW_TOKEN(name, typ, field, val) static Token name(FilePos pos, typ data) { \
     Token tok; \
     tok.data.field = data; \
     tok.type = val; \
@@ -157,14 +161,14 @@ NEW_TOKEN(NewKeyword, Keyword, keyword, TokenTypeKeyword)
 NEW_TOKEN(NewIdent, char*, ident, TokenTypeIdent)
 NEW_TOKEN(NewInt, int64_t, integer, TokenTypeInt)
 
-Token InvalidToken()
+static Token InvalidToken()
 {
     Token tok;
     tok.type = TokenTypeInvalid;
     return tok;
 }
 
-Token NewEOF(FilePos pos)
+static Token NewEOF(FilePos pos)
 {
     Token tok;
     tok.type = TokenTypeEOF;
@@ -172,19 +176,19 @@ Token NewEOF(FilePos pos)
     return tok;
 }
 
-void BufferAdd(Lexer* lex, char c)
+static void BufferAdd(Lexer* lex, char c)
 {
     lex->buffer[lex->index++] = c;
     lex->buffer[lex->index] = '\0';
 }
 
-void BufferReset(Lexer* lex)
+static void BufferReset(Lexer* lex)
 {
     lex->buffer[0] = '\0';
     lex->index = 0;
 }
 
-Token KeyOrIdent(FilePos pos, Lexer* lex)
+static Token KeyOrIdent(FilePos pos, Lexer* lex)
 {
     if(strcmp(lex->buffer, "def") == 0)
         return NewKeyword(pos, KeywordDef);
@@ -206,7 +210,7 @@ Token KeyOrIdent(FilePos pos, Lexer* lex)
         return NewIdent(pos, strdup(lex->buffer));
 }
 
-Token Symbol(FilePos pos, Lexer* lex, int c)
+static Token Symbol(FilePos pos, Lexer* lex, char c)
 {
     switch(c)
     {
@@ -271,10 +275,10 @@ Token Symbol(FilePos pos, Lexer* lex, int c)
     }
 }
 
-Token LexerNext(Lexer* lex)
+static Token LexerNext(Lexer* lex)
 {
     FilePos here;
-    int c;
+    char c;
 
     BufferReset(lex);
 
@@ -387,7 +391,7 @@ Token LexerNext(Lexer* lex)
     }
 }
 
-Lexer NewLexer(FILE* file)
+static Lexer NewLexer(FILE* file)
 {
     Lexer lex;
     
@@ -402,7 +406,7 @@ Lexer NewLexer(FILE* file)
     return lex;
 }
 
-void PrintToken(Token tok, FILE* out)
+static void PrintToken(Token tok, FILE* out)
 {
     switch(tok.type)
     {
@@ -433,7 +437,7 @@ void PrintToken(Token tok, FILE* out)
     }
 }
 
-void TokenFree(Token tok)
+static void TokenFree(Token tok)
 {
     if(tok.type == TokenTypeIdent)
         free(tok.data.ident);
