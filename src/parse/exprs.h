@@ -21,7 +21,7 @@ Node* ParseNameExpr(Parser* parser)
     return out;
 }
 
-Node* ParseTernearyExpr(Parser* parser, Node* cond)
+Node* ParseTernaryExpr(Parser* parser, Node* cond)
 {
     Node* out;
     out = NewNode(NodeTypeTernaryExpr);
@@ -92,36 +92,87 @@ Node* ParseScopeExpr(Parser* parser, Node* expr)
 {
     Node* out;
 
+    out = NewNode(NodeTypeScope);
+    out->data.scopeExpr.lhs = expr;
+    out->data.scopeExpr.rhs = ParseExpr(parser);
+
+    return out;
 }
 
 Node* ParseAccessExpr(Parser* parser, Node* expr)
 {
+    Node* out;
 
+    out = NewNode(NodeTypeAccessExpr);
+    out->data.accessExpr.lhs = expr;
+    out->data.accessExpr.rhs = ParseExpr(parser);
+
+    return out;
 }
 
 Node* ParseDerefExpr(Parser* parser, Node* expr)
 {
+    Node* out;
 
-}
+    out = NewNode(NodeTypeDerefExpr);
+    out->data.accessExpr.lhs = expr;
+    out->data.accessExpr.rhs = ParseExpr(parser);
 
-Node* ParseSubscriptExpr(Parser* parser, Node* expr)
-{
-
+    return out;
 }
 
 Node* ParseCallExpr(Parser* parser, Node* expr)
 {
+    Node* out;
+    vec_keynode_t fields;
+    char* name;
 
+    vec_keynode_init(fields);
+
+    LOOP_UNTIL(parser, KeywordRParen, KeywordComma, {
+        name = ConsumeIdent(parser);
+        if(name)
+        {
+            ExpectKeyword(parser, KeywordAssign);
+        }
+        
+        vec_keynode_append(fields, MakePair(
+            name, ParseExpr(parser)
+        ));
+    });
+
+    out = NewNode(NodeTypeCallExpr);
+    out->data.callExpr.expr = expr;
+    out->data.callExpr.args = fields[0];
+
+    return out;
 }
 
 Node* ParseBuildExpr(Parser* parser, Node* expr)
 {
+    Node* out;
+    vec_keynode_t fields;
+    char* name;
 
-}
+    vec_keynode_init(fields);
 
-Node* ParseTernaryExpr(Parser* parser, Node* expr)
-{
+    LOOP_UNTIL(parser, KeywordRBrace, KeywordComma, {
+        name = ConsumeIdent(parser);
+        if(name)
+        {
+            ExpectKeyword(parser, KeywordAssign);
+        }
 
+        vec_keynode_append(fields, MakePair(
+            name, ParseExpr(parser)
+        ));
+    });
+
+    out = NewNode(NodeTypeBuildExpr);
+    out->data.buildExpr.expr = expr;
+    out->data.buildExpr.args = fields[0];
+
+    return out;
 }
 
 Node* ParseExpr(Parser* parser)

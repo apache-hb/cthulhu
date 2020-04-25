@@ -4,9 +4,9 @@
 #include <ctype.h>
 #include <string.h>
 
-char* strdup(const char* str)
+static char* strdup(const char* str)
 {
-    int n = strlen(str) + 1;
+    size_t n = strlen(str) + 1;
     char* out = malloc(n);
     if(out)
         memcpy(out, str, n);

@@ -1,2 +1,2 @@
 project('ctulang', 'c', default_options : [ 'c_std=c89', 'werror=true', 'warning_level=3' ])
-ctu = executable('ctu', 'src/main.c', include_directories : include_directories('src'))
+ctu = executable('ctu', 'src/main.c', include_directories : include_directories('src'), c_args : [ '-Weverything' ])

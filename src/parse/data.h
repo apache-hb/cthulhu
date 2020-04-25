@@ -334,7 +334,10 @@ typedef enum {
     NodeTypeBool,
     NodeTypeNull,
     NodeTypeStr,
-    NodeTypeChar
+    NodeTypeChar,
+
+    NodeTypeDerefExpr,
+    NodeTypeBuildExpr
 } NodeType;
 
 typedef struct Node {
@@ -401,9 +404,9 @@ typedef struct Node {
         } ternaryExpr;
 
         struct {
-            vec_node_struct args;
+            vec_keynode_struct args;
             struct Node* expr;
-        } callExpr;
+        } callExpr, buildExpr;
 
         struct {
             struct Node* expr;
@@ -423,6 +426,10 @@ typedef struct Node {
         void* nullExpr;
         char* nameExpr;
 
+        struct {
+            struct Node* lhs;
+            struct Node* rhs;
+        } scopeExpr, accessExpr, derefExpr;
     } data;
 } Node;
 
@@ -525,4 +532,44 @@ int ConsumeKeyword(Parser* parser, Keyword key)
     }
 
     return 0;
+}
+
+char* ConsumeIdent(Parser* parser)
+{
+    Token tok;
+
+    tok = parser->tok;
+    if(!IsValidToken(parser->tok))
+        tok = NextToken(parser);
+
+    if(tok.type == TokenTypeIdent)
+    {
+        parser->tok = InvalidToken();
+        return tok.data.ident;
+    }
+    else
+    {
+        parser->tok = tok;
+    }
+
+    return NULL;
+}
+
+KeyNode MakePair(char* key, Node* val)
+{
+    KeyNode pair;
+    pair.key = key;
+    pair.node = val;
+    return pair;
+}
+
+KeyValType MakeKeyValType(char* key, Node* val, Node* type)
+{
+    KeyValType kvt;
+
+    kvt.key = key;
+    kvt.value = val;
+    kvt.type = type;
+
+    return kvt;
 }
