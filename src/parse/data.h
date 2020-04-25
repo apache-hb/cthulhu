@@ -241,6 +241,8 @@ typedef enum {
     */
     NodeTypeNameExpr,
 
+    NodeTypeUnaryExpr,
+
     /*
     // accessExpr
     //  : (('.' | '->' | ':') expr)?

@@ -1,6 +1,12 @@
 Node* ParseUnaryExpr(Parser* parser)
 {
     Node* out;
+    Token tok;
+
+    tok = NextKeyword(parser);
+    out = NewNode(NodeTypeUnaryExpr);
+    out->data.unaryExpr.op = tok.data.keyword;
+    out->data.unaryExpr.operand = ParseExpr(parser);
 
     return out;
 }
@@ -15,7 +21,7 @@ Node* ParseNameExpr(Parser* parser)
     return out;
 }
 
-Node* ParseTerneryExpr(Parser* parser, Node* cond)
+Node* ParseTernearyExpr(Parser* parser, Node* cond)
 {
     Node* out;
     out = NewNode(NodeTypeTernaryExpr);
@@ -40,6 +46,82 @@ Node* ParseSubscriptExpr(Parser* parser, Node* expr)
     ExpectKeyword(parser, KeywordRSquare);
 
     return out;
+}
+
+Node* ParseIntExpr(Parser* parser)
+{
+    Node* out;
+
+    out = NewNode(NodeTypeInt);
+    out->data.intExpr = NextToken(parser).data.integer;
+
+    return out;
+}
+
+Node* ParseFloatExpr(Parser* parser)
+{
+    Node* out;
+
+    out = NewNode(NodeTypeFloat);
+    out->data.floatExpr = NextToken(parser).data.number;
+
+    return out;
+}
+
+Node* ParseStringExpr(Parser* parser)
+{
+    Node* out;
+
+    out = NewNode(NodeTypeStr);
+    out->data.stringExpr = NextToken(parser).data.string;
+
+    return out;
+}
+
+Node* ParseCharExpr(Parser* parser)
+{
+    Node* out;
+
+    out = NewNode(NodeTypeChar);
+    out->data.charExpr = NextToken(parser).data.letter;
+
+    return out;
+}
+
+Node* ParseScopeExpr(Parser* parser, Node* expr)
+{
+    Node* out;
+
+}
+
+Node* ParseAccessExpr(Parser* parser, Node* expr)
+{
+
+}
+
+Node* ParseDerefExpr(Parser* parser, Node* expr)
+{
+
+}
+
+Node* ParseSubscriptExpr(Parser* parser, Node* expr)
+{
+
+}
+
+Node* ParseCallExpr(Parser* parser, Node* expr)
+{
+
+}
+
+Node* ParseBuildExpr(Parser* parser, Node* expr)
+{
+
+}
+
+Node* ParseTernaryExpr(Parser* parser, Node* expr)
+{
+
 }
 
 Node* ParseExpr(Parser* parser)
@@ -78,31 +160,31 @@ Node* ParseExpr(Parser* parser)
     {
         if(ConsumeKeyword(parser, KeywordColon))
         {
-
+            out = ParseScopeExpr(parser, out);
         }
         else if(ConsumeKeyword(parser, KeywordDot))
         {
-
+            out = ParseAccessExpr(parser, out);
         }
         else if(ConsumeKeyword(parser, KeywordArrow))
         {
-
+            out = ParseDerefExpr(parser, out);
         }
         else if(ConsumeKeyword(parser, KeywordLSquare))
         {
-
+            out = ParseSubscriptExpr(parser, out);
         }
         else if(ConsumeKeyword(parser, KeywordLParen))
         {
-
+            out = ParseCallExpr(parser, out);
         }
         else if(ConsumeKeyword(parser, KeywordLBrace))
         {
-
+            out = ParseBuildExpr(parser, out);
         }
         else if(ConsumeKeyword(parser, KeywordQuestion))
         {
-            out = ParseTerneryExpr(parser, out);
+            out = ParseTernaryExpr(parser, out);
         }
         else
         {
