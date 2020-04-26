@@ -2,8 +2,6 @@ typedef struct {
     uint64_t pos;
     uint64_t line;
     uint64_t col;
-
-    char pad[4];
 } FilePos;
 
 typedef struct {
@@ -12,8 +10,6 @@ typedef struct {
     int index;
     char buffer[1024];
     char lookahead;
-
-    char pad[3];
 } Lexer;
 
 typedef enum {
@@ -271,6 +267,7 @@ static Token Symbol(FilePos pos, Lexer* lex, char c)
     case '?':
         return NewKeyword(pos, KeywordQuestion);
     default:
+        printf("%c is not a valid keyword\n", c);
         return NewKeyword(pos, KeywordNone);
     }
 }
@@ -437,6 +434,7 @@ static void PrintToken(Token tok, FILE* out)
     }
 }
 
+#if 0
 static void TokenFree(Token tok)
 {
     if(tok.type == TokenTypeIdent)
@@ -444,3 +442,4 @@ static void TokenFree(Token tok)
     else if(tok.type == TokenTypeString)
         free(tok.data.string);
 }
+#endif

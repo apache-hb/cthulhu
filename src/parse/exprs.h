@@ -1,4 +1,4 @@
-Node* ParseUnaryExpr(Parser* parser)
+static Node* ParseUnaryExpr(Parser* parser)
 {
     Node* out;
     Token tok;
@@ -11,7 +11,7 @@ Node* ParseUnaryExpr(Parser* parser)
     return out;
 }
 
-Node* ParseNameExpr(Parser* parser)
+static Node* ParseNameExpr(Parser* parser)
 {
     Node* out;
 
@@ -21,7 +21,7 @@ Node* ParseNameExpr(Parser* parser)
     return out;
 }
 
-Node* ParseTernaryExpr(Parser* parser, Node* cond)
+static Node* ParseTernaryExpr(Parser* parser, Node* cond)
 {
     Node* out;
     out = NewNode(NodeTypeTernaryExpr);
@@ -35,7 +35,7 @@ Node* ParseTernaryExpr(Parser* parser, Node* cond)
     return out;
 }
 
-Node* ParseSubscriptExpr(Parser* parser, Node* expr)
+static Node* ParseSubscriptExpr(Parser* parser, Node* expr)
 {
     Node* out;
 
@@ -48,7 +48,7 @@ Node* ParseSubscriptExpr(Parser* parser, Node* expr)
     return out;
 }
 
-Node* ParseIntExpr(Parser* parser)
+static Node* ParseIntExpr(Parser* parser)
 {
     Node* out;
 
@@ -58,7 +58,7 @@ Node* ParseIntExpr(Parser* parser)
     return out;
 }
 
-Node* ParseFloatExpr(Parser* parser)
+static Node* ParseFloatExpr(Parser* parser)
 {
     Node* out;
 
@@ -68,7 +68,7 @@ Node* ParseFloatExpr(Parser* parser)
     return out;
 }
 
-Node* ParseStringExpr(Parser* parser)
+static Node* ParseStringExpr(Parser* parser)
 {
     Node* out;
 
@@ -78,7 +78,7 @@ Node* ParseStringExpr(Parser* parser)
     return out;
 }
 
-Node* ParseCharExpr(Parser* parser)
+static Node* ParseCharExpr(Parser* parser)
 {
     Node* out;
 
@@ -88,7 +88,7 @@ Node* ParseCharExpr(Parser* parser)
     return out;
 }
 
-Node* ParseScopeExpr(Parser* parser, Node* expr)
+static Node* ParseScopeExpr(Parser* parser, Node* expr)
 {
     Node* out;
 
@@ -99,7 +99,7 @@ Node* ParseScopeExpr(Parser* parser, Node* expr)
     return out;
 }
 
-Node* ParseAccessExpr(Parser* parser, Node* expr)
+static Node* ParseAccessExpr(Parser* parser, Node* expr)
 {
     Node* out;
 
@@ -110,7 +110,7 @@ Node* ParseAccessExpr(Parser* parser, Node* expr)
     return out;
 }
 
-Node* ParseDerefExpr(Parser* parser, Node* expr)
+static Node* ParseDerefExpr(Parser* parser, Node* expr)
 {
     Node* out;
 
@@ -121,7 +121,7 @@ Node* ParseDerefExpr(Parser* parser, Node* expr)
     return out;
 }
 
-Node* ParseCallExpr(Parser* parser, Node* expr)
+static Node* ParseCallExpr(Parser* parser, Node* expr)
 {
     Node* out;
     vec_keynode_t fields;
@@ -139,7 +139,7 @@ Node* ParseCallExpr(Parser* parser, Node* expr)
         vec_keynode_append(fields, MakePair(
             name, ParseExpr(parser)
         ));
-    });
+    })
 
     out = NewNode(NodeTypeCallExpr);
     out->data.callExpr.expr = expr;
@@ -148,7 +148,7 @@ Node* ParseCallExpr(Parser* parser, Node* expr)
     return out;
 }
 
-Node* ParseBuildExpr(Parser* parser, Node* expr)
+static Node* ParseBuildExpr(Parser* parser, Node* expr)
 {
     Node* out;
     vec_keynode_t fields;
@@ -166,7 +166,7 @@ Node* ParseBuildExpr(Parser* parser, Node* expr)
         vec_keynode_append(fields, MakePair(
             name, ParseExpr(parser)
         ));
-    });
+    })
 
     out = NewNode(NodeTypeBuildExpr);
     out->data.buildExpr.expr = expr;
