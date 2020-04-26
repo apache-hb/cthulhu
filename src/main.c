@@ -75,7 +75,6 @@ int main(int argc, const char** argv)
     (void)parse;
     (void)lex;
 
-#if 0    
     parse = NewParser(&lex);
 
     for(;;)
@@ -87,7 +86,6 @@ int main(int argc, const char** argv)
 
         FormatNode(node);
     }
-#endif
 
     return 0;
 }

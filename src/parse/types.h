@@ -1,4 +1,4 @@
-Node* ParseTypeName(Parser* parser)
+static Node* ParseTypeName(Parser* parser)
 {
     Node* out;
     Token tok;
@@ -17,9 +17,7 @@ Node* ParseTypeName(Parser* parser)
     return out;
 }
 
-
-
-Node* ParseAlignAttrib(Parser* parser)
+static Node* ParseAlignAttrib(Parser* parser)
 {
     Node* out;
 
@@ -33,7 +31,7 @@ Node* ParseAlignAttrib(Parser* parser)
     return out;
 }
 
-Node* ParsePackedAttrib(Parser* parser)
+static Node* ParsePackedAttrib(Parser* parser)
 {
     Node* out;
 
@@ -47,7 +45,7 @@ Node* ParsePackedAttrib(Parser* parser)
     return out;
 }
 
-Node* ParseTypeAttrib(Parser* parser)
+static Node* ParseTypeAttrib(Parser* parser)
 {
     Node* out;
     Token tok;
@@ -70,7 +68,7 @@ Node* ParseTypeAttrib(Parser* parser)
     return out;
 }
 
-Node* MakePtr(Node* type)
+static Node* MakePtr(Node* type)
 {
     Node* out;
 
@@ -80,7 +78,7 @@ Node* MakePtr(Node* type)
     return out;
 }
 
-Node* MakeArray(Parser* parser, Node* type)
+static Node* MakeArray(Parser* parser, Node* type)
 {
     Node* out;
 
@@ -93,7 +91,7 @@ Node* MakeArray(Parser* parser, Node* type)
     return out;
 }
 
-Node* ParseStructDecl(Parser* parser)
+static Node* ParseStructDecl(Parser* parser)
 {
     Node* out;
     Node* type;
@@ -114,7 +112,7 @@ Node* ParseStructDecl(Parser* parser)
         pair.node = type;
 
         vec_keynode_append(fields, pair);
-    });
+    })
 
     out = NewNode(NodeTypeStructDecl);
     out->data.typeDecl.data.structDecl = fields[0];
@@ -122,7 +120,7 @@ Node* ParseStructDecl(Parser* parser)
     return out;
 }
 
-Node* ParseTupleDecl(Parser* parser)
+static Node* ParseTupleDecl(Parser* parser)
 {
     Node* out;
     vec_node_t fields;
@@ -131,7 +129,7 @@ Node* ParseTupleDecl(Parser* parser)
 
     LOOP_UNTIL(parser, KeywordRParen, KeywordComma, {
         vec_node_append(fields, ParseTypeDecl(parser));
-    });
+    })
 
     out = NewNode(NodeTypeTupleDecl);
     out->data.typeDecl.data.tupleDecl = fields[0];
@@ -139,7 +137,7 @@ Node* ParseTupleDecl(Parser* parser)
     return out;
 }
 
-Node* ParseUnionDecl(Parser* parser)
+static Node* ParseUnionDecl(Parser* parser)
 {
     Node* out;
     ExpectKeyword(parser, KeywordLParen);
@@ -152,7 +150,7 @@ Node* ParseUnionDecl(Parser* parser)
     return out;
 }
 
-Node* ParseEnumDecl(Parser* parser)
+static Node* ParseEnumDecl(Parser* parser)
 {
     Node* out;
     Node* backing;
@@ -168,7 +166,7 @@ Node* ParseEnumDecl(Parser* parser)
             NextIdent(parser).data.ident,
             ConsumeKeyword(parser, KeywordAssign) ? ParseExpr(parser) : NULL
         ));
-    });
+    })
 
     out = NewNode(NodeTypeEnumDecl);
     out->data.typeDecl.data.enumDecl.backing = backing;
@@ -177,7 +175,7 @@ Node* ParseEnumDecl(Parser* parser)
     return out;
 }
 
-Node* ParseVariantDecl(Parser* parser)
+static Node* ParseVariantDecl(Parser* parser)
 {
     Node* out;
     Node* backing;
@@ -207,7 +205,7 @@ Node* ParseVariantDecl(Parser* parser)
             val,
             type
         ));
-    });
+    })
 
 
 

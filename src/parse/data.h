@@ -430,6 +430,23 @@ typedef struct Node {
             struct Node* lhs;
             struct Node* rhs;
         } scopeExpr, accessExpr, derefExpr;
+
+        struct {
+            vec_str_struct path;
+            char* alias;
+        } importDecl;
+
+        struct {
+            char* name;
+            struct Node* type;
+        } typeDef;
+
+        struct {
+            char* name;
+            struct Node* ret;
+            struct Node* body;
+            vec_keynode_struct args;
+        } funcDef;
     } data;
 } Node;
 

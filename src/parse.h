@@ -3,6 +3,96 @@
 #include "parse/exprs.h"
 #include "parse/types.h"
 
+Node* ParseImport(Parser* parser)
+{
+    Node* out;
+    vec_str_t path;
+    char* alias;
+
+    vec_str_init(path);
+
+    do {
+        vec_str_append(path, NextIdent(parser).data.ident);
+    } while(ConsumeKeyword(parser, KeywordColon));
+
+    alias = ConsumeKeyword(parser, KeywordArrow) ? NextIdent(parser).data.ident : NULL;
+
+    out = NewNode(NodeTypeImportDecl);
+    out->data.importDecl.path = path[0];
+    out->data.importDecl.alias = alias;
+
+    return out;
+}
+
+Node* ParseTypeDef(Parser* parser)
+{
+    Node* out;
+    char* name;
+    Node* type;
+
+    name = NextIdent(parser).data.ident;
+    ExpectKeyword(parser, KeywordAssign);
+
+    type = ParseTypeDecl(parser);
+
+    out = NewNode(NodeTypeTypeDef);
+
+    out->data.typeDef.name = name;
+    out->data.typeDef.type = type;
+
+    return out;
+}
+
+Node* ParseFuncDef(Parser* parser)
+{
+    Node* out;
+    char* name;
+    vec_keynode_t args;
+    Node* ret;
+    Node* body;
+
+    out = NewNode(NodeTypeFuncDef);
+}
+
+Node* ParserNext(Parser* parser)
+{
+    Token tok;
+
+    if(IsValidToken(parser->tok))
+    {
+        tok = parser->tok;
+        parser->tok = InvalidToken();
+        if(tok.type != TokenTypeKeyword)
+        {
+            printf("invalid lookahead token\n");
+            exit(500);
+        }
+    }
+    else
+    {
+        tok = NextToken(parser);
+    }
+
+    if(tok.type == TokenTypeKeyword)
+    {
+        switch(tok.data.keyword)
+        {
+        case KeywordImport:
+            return ParseImport(parser);
+        case KeywordType:
+            return ParseTypeDef(parser);
+        case KeywordDef:
+            return ParseFuncDef(parser);
+        default:
+            return NULL;
+        }
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
 #if 0
 
 
