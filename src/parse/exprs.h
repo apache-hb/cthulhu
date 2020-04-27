@@ -245,3 +245,10 @@ Node* ParseExpr(Parser* parser)
 
     return out;
 }
+
+Node* ParseFuncBody(Parser* parser)
+{
+    /* TODO */
+    (void)parser;
+    return NULL;    
+}

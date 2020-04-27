@@ -84,7 +84,9 @@ int main(int argc, const char** argv)
         if(!node)
             break;
 
-        FormatNode(node);
+        /* FormatNode(node); */
+        /* properly free node */
+        free(node);
     }
 
     return 0;
