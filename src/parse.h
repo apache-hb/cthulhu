@@ -47,11 +47,38 @@ Node* ParseFuncDef(Parser* parser)
 {
     Node* out;
     char* name;
+    Token tok;
     vec_keynode_t args;
     Node* ret;
     Node* body;
 
+    vec_keynode_init(args);
+
+    name = NextIdent(parser).data.ident;
+
+    if(ConsumeKeyword(parser, KeywordLParen))
+    {
+        LOOP_UNTIL(parser, KeywordRParen, KeywordComma, {
+            tok = NextIdent(parser);
+            ExpectKeyword(parser, KeywordColon);
+            vec_keynode_append(args, MakePair(
+                tok.data.ident,
+                ParseTypeDecl(parser)
+            ));
+        })
+    }
+
+    ret = ConsumeKeyword(parser, KeywordArrow) ? ParseTypeDecl(parser) : NULL;
+
+    body = ConsumeKeyword(parser, KeywordAssign) ? ParseFuncBody(parser) : ParseExpr(parser);
+
     out = NewNode(NodeTypeFuncDef);
+    out->data.funcDef.ret = ret;
+    out->data.funcDef.name = name;
+    out->data.funcDef.body = body;
+    out->data.funcDef.args = args[0];
+
+    return out;
 }
 
 Node* ParserNext(Parser* parser)
