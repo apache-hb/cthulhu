@@ -18,7 +18,6 @@ typedef enum {
     KeywordType,
     KeywordDef,
     KeywordLet,
-    KeywordMut,
     KeywordReturn,
     
     KeywordEnum,
@@ -201,8 +200,8 @@ static Token KeyOrIdent(FilePos pos, Lexer* lex)
         return NewKeyword(pos, KeywordUnion);
     else if(strcmp(lex->buffer, "let") == 0)
         return NewKeyword(pos, KeywordLet);
-    else if(strcmp(lex->buffer, "mutable") == 0)
-        return NewKeyword(pos, KeywordMut);
+    else if(strcmp(lex->buffer, "return") == 0)
+        return NewKeyword(pos, KeywordReturn);
     else
         return NewIdent(pos, strdup(lex->buffer));
 }
