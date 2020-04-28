@@ -85,37 +85,17 @@ Node* ParserNext(Parser* parser)
 {
     Token tok;
 
-    if(IsValidToken(parser->tok))
-    {
-        tok = parser->tok;
-        parser->tok = InvalidToken();
-        if(tok.type != TokenTypeKeyword)
-        {
-            printf("invalid lookahead token\n");
-            exit(500);
-        }
-    }
-    else
-    {
-        tok = NextToken(parser);
-    }
+    tok = NextKeyword(parser);
 
-    if(tok.type == TokenTypeKeyword)
+    switch(tok.data.keyword)
     {
-        switch(tok.data.keyword)
-        {
-        case KeywordImport:
-            return ParseImport(parser);
-        case KeywordType:
-            return ParseTypeDef(parser);
-        case KeywordDef:
-            return ParseFuncDef(parser);
-        default:
-            return NULL;
-        }
-    }
-    else
-    {
+    case KeywordImport:
+        return ParseImport(parser);
+    case KeywordType:
+        return ParseTypeDef(parser);
+    case KeywordDef:
+        return ParseFuncDef(parser);
+    default:
         return NULL;
     }
 }
