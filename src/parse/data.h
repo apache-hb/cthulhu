@@ -337,7 +337,9 @@ typedef enum {
     NodeTypeChar,
 
     NodeTypeDerefExpr,
-    NodeTypeBuildExpr
+    NodeTypeBuildExpr,
+
+    NodeTypeReturnStmt
 } NodeType;
 
 typedef struct Node {
@@ -447,6 +449,12 @@ typedef struct Node {
             struct Node* body;
             vec_keynode_struct args;
         } funcDef;
+
+        struct {
+            vec_node_struct stmts;
+        } funcBody;
+
+        struct Node* returnStmt;
     } data;
 } Node;
 

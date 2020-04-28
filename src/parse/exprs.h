@@ -4,6 +4,15 @@ static Node* ParseUnaryExpr(Parser* parser)
     Token tok;
 
     tok = NextKeyword(parser);
+
+    if(tok.data.keyword == KeywordBuiltin)
+    {
+        out = ParseBuiltinExpr(parser);
+    }
+    else if(tok.data.keyword == KeywordLParen)
+    {
+        out = ParseParenExpr(parser);
+    }
     out = NewNode(NodeTypeUnaryExpr);
     out->data.unaryExpr.op = tok.data.keyword;
     out->data.unaryExpr.operand = ParseExpr(parser);
@@ -246,9 +255,39 @@ Node* ParseExpr(Parser* parser)
     return out;
 }
 
+Node* ParseStmt(Parser* parser)
+{
+    Node* out;
+    Token tok;
+    vec_node_t body;
+
+    tok = NextToken(parser);
+
+    if(tok.type == TokenTypeKeyword)
+    {
+        if(tok.data.keyword == KeywordLBrace)
+        {
+            vec_node_init(body);
+
+            CONSUME_UNTIL(parser, KeywordRBrace, {
+                vec_node_append(body, ParseStmt(parser));
+            })
+        }
+        else if(tok.data.keyword == KeywordReturn)
+        {
+            out = NewNode(NodeTypeReturnStmt);
+            out->data.returnStmt = ParseExpr(parser);
+            return out;
+        }
+    }
+
+    out = ParseExpr(parser);
+    return out;
+}
+
 Node* ParseFuncBody(Parser* parser)
 {
-    /* TODO */
-    (void)parser;
+    Node* out;
+    vec_node_t nodes;
     return NULL;    
 }

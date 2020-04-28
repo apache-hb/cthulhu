@@ -19,7 +19,8 @@ typedef enum {
     KeywordDef,
     KeywordLet,
     KeywordMut,
-
+    KeywordReturn,
+    
     KeywordEnum,
     KeywordUnion,
     KeywordVariant,
