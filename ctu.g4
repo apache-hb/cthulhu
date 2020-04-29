@@ -39,6 +39,7 @@ bitnotKw : '~' ;
 
 mulKw : '*' ;
 divKw : '/' ;
+modKw : '%' ;
 questionKw : '?' ;
 
 WS : [ \n\r\t]+ -> skip ;
@@ -47,10 +48,34 @@ ident
     : NONDIGIT (NONDIGIT | DIGIT)*
     ;
 
+constant
+    : string
+    ;
+
 string
     : '"' (ESCAPE | ~('\'' | '\\' | '\n' | '\r') ) '"'
     ;
 
+integer
+    : hexDigit
+    | decimalDigit
+    | binaryDigit
+    ;
+
+hexDigit
+    : '0x' HEXDIGIT+
+    ;
+
+binaryDigit
+    : '0b' BINDIGIT+
+    ;
+
+decimalDigit
+    : DIGIT+
+    ;
+
+BINDIGIT : [0-1] ;
+HEXDIGIT : [0-9a-fA-F] ;
 DIGIT : [0-9] ;
 NONDIGIT : [a-zA-Z_] ;
 ESCAPE : '\\' ('\'' | '\\') ;
@@ -74,8 +99,12 @@ unaryOp
     | mulKw
     ;
 
-exprBody
-    : ident
+binaryOp
+    : addKw
+    | subKw
+    | mulKw
+    | divKw
+    | modKw
     ;
 
 scopeExpr
@@ -91,13 +120,12 @@ accessExpr
     ;
 
 expr
-    : exprBody
-    | exprBody accessExpr
-    | exprBody derefExpr
-    | exprBody scopeExpr
+    : (ident | constant)
     | unaryOp expr
-    | exprBody assignKw expr
-    | exprBody questionKw expr colonKw expr
+    | expr scopeExpr
+    | expr derefExpr
+    | expr accessExpr
+    | expr binaryOp expr
     ;
 
 
@@ -145,7 +173,64 @@ stmt
     | ifStmt
     | matchStmt
     | expr
+    | asm
     | lbraceKw stmt* rbraceKw
+    ;
+
+asm
+    : atKw 'asm' (lparenKw ('I8086' | 'X86' | 'X86_64') rparenKw)? asmBody
+    ;
+
+asmBody
+    : lbraceKw asmExpr* rbraceKw
+    ;
+
+asmExpr
+    : asmMov
+    | asmXor
+    | asmCmp
+    | asmJmp
+    | asmCall
+    | asmRet
+    ;
+
+asmRegister
+    : 'ah'
+    | 'al'
+    | 'ax'
+    | 'eax'
+    | 'rax'
+    ;
+
+asmPart
+    : asmRegister
+    | lsquareKw asmRegister rsquareKw
+    | lsquareKw integer rsquareKw
+    | lbraceKw expr rbraceKw
+    ;
+
+asmMov
+    : 'mov' asmPart commaKw asmPart
+    ;
+
+asmXor
+    : 'xor' asmPart commaKw asmPart
+    ;
+
+asmCmp
+    : 'cmp' asmPart commaKw asmPart
+    ;
+
+asmJmp
+    : 'jmp' asmPart
+    ;
+
+asmCall
+    : 'call' asmPart
+    ;
+
+asmRet
+    : 'ret'
     ;
 
 funcdefBody
