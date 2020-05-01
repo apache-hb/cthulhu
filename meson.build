@@ -12,9 +12,3 @@ project('ctulang', ['c', 'cpp'],
 ctu = executable('ctu', 'src/main.c', 
     include_directories : include_directories('src')
 )
-
-fmt = subproject('fmt')
-
-ctp = executable('ctp', 'cppsrc/main.cpp',
-    include_directories : include_directories('cppsrc')
-)
