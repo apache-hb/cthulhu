@@ -311,6 +311,10 @@ Node* ParseTypeAttribute(Parser* parser)
         out = NewNode(NodeTypeAlign);
         out->data._align = expr;
     }
+    else
+    {
+        out = NULL;
+    }
     
     return out;
 }
@@ -515,7 +519,7 @@ Node* ParseProgram(Parser* parser)
         ExpectIdent(parser, "name");
         ExpectKeyword(parser, KeywordLParen);
         name = ExpectToken(parser, TokenTypeString).data.string;
-        ExpectToken(parser, KeywordRParen);
+        ExpectKeyword(parser, KeywordRParen);
     }
     else
     {
@@ -543,5 +547,5 @@ Node* ParseProgram(Parser* parser)
     out->data._program.imports = imports[0];
     out->data._program.body = body[0];
 
-    return NULL;
+    return out;
 }
