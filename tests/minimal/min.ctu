@@ -1,0 +1,24 @@
+# looking at what other syntax could look like
+
+
+# i smell visual basic
+# but easy and quick to parse
+type x struct
+    a int
+    b float
+    c struct
+        d int
+        e tuple
+            int
+            int
+        end
+    end
+end
+
+type v variant : u32
+    a int
+    b : 5 tuple 
+        float 
+        float 
+    end
+end
