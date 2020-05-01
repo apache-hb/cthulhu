@@ -535,12 +535,14 @@ Node* ParseProgram(Parser* parser)
         vec_node_append(imports, import);
     }
 
-    do
+    while(1)
     {
         part = ParseBody(parser);
+        if(!part)
+            break;
+
         vec_node_append(body, part);
     }
-    while(part);
 
     out = NewNode(NodeTypeProgram);
     out->data._program.name = name;

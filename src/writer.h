@@ -8,25 +8,35 @@ typedef struct {
 #define WRITE(ctx, fmt, ...) fprintf(ctx->out, fmt, __VA_ARGS__)
 #define PUT(ctx, fmt) fprintf(ctx->out, fmt)
 
+Writer* NewWriter() 
+{
+    Writer* w = malloc(sizeof(Writer));
+
+    return w;
+}
+
+void WriterDump(Writer* ctx)
+{
+    
+}
+
 void PrintImport(Writer* ctx, Node* node)
 {
     TEXPECT(node, NodeTypeImport);
 
-    PUT(ctx, "#include \"");
+    PUT(ctx, "import ");
     
     for(size_t i = 0; i < node->data._import.path.size; i++)
     {
         if(i != 0)
-            PUT(ctx, "/");
+            PUT(ctx, ":");
 
         WRITE(ctx, "%s", node->data._import.path.arr[i]);
     }
 
-    PUT(ctx, ".h\"");
-
     if(node->data._import.alias)
     {
-        WRITE(ctx, " // as %s", node->data._import.alias);
+        WRITE(ctx, " -> %s", node->data._import.alias);
     }
 
     PUT(ctx, "\n");
@@ -39,7 +49,9 @@ void PrintType(Writer* ctx, Node* node)
 
     if(node->type == NodeTypeStruct)
     {
-        
+        PUT(ctx, "{ ");
+
+        PUT(ctx, " }");
     }
     else if(node->type == NodeTypeTuple)
     {
@@ -71,7 +83,11 @@ void PrintTypedef(Writer* ctx, Node* node)
 {
     TEXPECT(node, NodeTypeTypedef);
 
+    WRITE(ctx, "type %s := ", node->data._typedef.name);
+
     PrintType(ctx, node->data._typedef.type);
+
+
 }
 
 void PrintBody(Writer* ctx, Node* node)
