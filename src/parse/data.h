@@ -16,470 +16,103 @@ typedef struct { char* key; void* value; void* type; } KeyValType;
 #define VECTOR_NAME keyvaltype
 #include "vector.h"
 
+#define REPEAT(parser, end, delim, body) \
+    if(!ConsumeKeyword(parser, end)) \
+    { do { body; } while(ConsumeKeyword(parser, delim)); ExpectKeyword(parser, end); }
+
+
+typedef struct {
+    Lexer* lex;
+
+    Token tok;
+} Parser;
+
+Parser NewParser(Lexer* lex)
+{
+    Parser ret;
+
+    ret.lex = lex;
+    ret.tok = InvalidToken();
+
+    return ret;
+}
+
+
 typedef enum {
-    
-    /*
-    // programDecl
-    //  : importDecl* programBody*
-    //  ;
-    //
-    // programBody
-    //  : typeDef 
-    //  | funcDef
-    //  | varDef
-    //  ;
-    */
-    NodeTypeProgramDecl,
+    /* toplevel statements */
+    NodeTypeProgram,
+    NodeTypeImport,
+    NodeTypeTypedef,
 
+    /* attributes */
+    NodeTypePacked,
+    NodeTypeAlign,
 
+    /* types */
+    NodeTypeName,
+    NodeTypeStruct,
+    NodeTypeTuple,
+    NodeTypeUnion,
+    NodeTypeEnum,
+    NodeTypeVariant,
+    NodeTypePtr,
+    NodeTypeArray,
 
-
-    /*
-    //  _              _                _
-    // | |_ ___  _ __ | | _____   _____| |
-    // | __/ _ \| '_ \| |/ _ \ \ / / _ \ |
-    // | || (_) | |_) | |  __/\ V /  __/ |
-    //  \__\___/| .__/|_|\___| \_/ \___|_|
-    //          |_|
-    */
-
-    /*
-    // importDecl
-    //  : 'import' scope ('->' ident)?
-    //  ;
-    //
-    */
-    NodeTypeImportDecl,
-
-    /*
-    // typeDef
-    //  : 'type' ident ':=' typeDecl
-    //  ;
-    //
-    */
-    NodeTypeTypeDef,
-
-    /*
-    // funcDef
-    //  : funcDefAttrib* 'def' ident funcArgs? funcReturn? funcOuterBody
-    //  ;
-    */
-    NodeTypeFuncDef,
-
-    /*
-    // funcDefAttrib
-    //  : externAttrib 
-    //  | entryAttrib
-    //  ;
-    */
-    NodeTypeFuncDefAttrib,
-
-    /*
-    // varDef
-    //  : 'let' ident (':' typeDecl)? `:=` expr
-    //  | 'let' ident ':' typeDecl (':=' expr)?
-    //  ;
-    */
-   NodeTypeVarDef,
-
-
-
-
-    /*
-    //        _   _        _ _           _
-    //   __ _| |_| |_ _ __(_) |__  _   _| |_ ___  ___
-    //  / _` | __| __| '__| | '_ \| | | | __/ _ \/ __|
-    // | (_| | |_| |_| |  | | |_) | |_| | ||  __/\__ \
-    //  \__,_|\__|\__|_|  |_|_.__/ \__,_|\__\___||___/
-    */
-
-   /*
-   // entryAttrib
-   //   : 'entry' '(' scope ')'
-   //   ;
-   //
-   */
-   NodeTypeAttribEntry,
-
-   /*
-   // attributeExtern
-   //   : 'extern' '(' externOption? ')'
-   //   ;
-   //
-   // externOption
-   //   : 'C'
-   //   ;
-   */
-   NodeTypeAttribExtern,
-
-
-
-
-
-    /*
-    // scope
-    //  : ident (':' scope)?
-    //  ;
-    */
-    NodeTypeScope,
-
-
-    /*
-    // typeDecl
-    //  : typeAttrib* typeBody ('[' expr ']' | '*')*
-    //  ;
-    //
-    // typeBody
-    //  : structDecl 
-    //  | tupleDecl 
-    //  | nameDecl 
-    //  | enumDecl 
-    //  | variantDecl
-    //  ;
-    //
-    // namedTypeList
-    //  : ident ':' typeDecl (',' namedTypeList)?
-    //  ;
-    //
-    // typeList
-    //  : typeDecl (',' typeList)?
-    //  ;
-    //
-    // backingDecl
-    //  : ':' typeDecl
-    //  ;
-    */
-
-    /*
-    // structDecl
-    //   : '{' namedTypeList? '}'
-    //   ;
-    */
-    NodeTypeStructDecl,
-
-    /*
-    // tupleDecl
-    //  : '(' typeList? ')'
-    //  ;
-    */
-    NodeTypeTupleDecl,
-    
-    /*
-    // nameDecl
-    //  : scope
-    //  ;
-    */
-    NodeTypeNameDecl,
-
-    /*
-    // unionDecl
-    //  : 'union' structDecl
-    //  ;
-    */
-    NodeTypeUnionDecl,
-
-    /* 
-    // enumDecl
-    //  : 'enum' backingDecl? '{' enumBody? '}'
-    //  ;
-    //
-    // enumBody
-    //  : ident (':=' expr)? (',' enumBody)?
-    //  ;
-    */
-    NodeTypeEnumDecl,
-
-    /*
-    // variantDecl
-    //  : 'variant' backingDecl? '{' variantBody? '}'
-    //  ;
-    //
-    // variantBody
-    //  : ident (':' expr)? '=>' typeDecl (',' variantBody)?
-    //  ;
-    */
-    NodeTypeVariantDecl,
-
-
-    NodeTypeArrayDecl,
-    NodeTypePtrDecl,
-
-    NodeTypeAttribAlign,
-    NodeTypeAttribPacked,
-
-    /*
-    // expr
-    //  : exprBody (accessExpr | subscriptExpr | castExpr | ternaryExpr)?
-    //  ;
-    //
-    // exprBody
-    //  : structInitExpr
-    //  | tupleInitExpr
-    //  | arrayInitExpr
-    //  | variantInitExpr
-    //  | callExpr
-    //  | unaryExpr
-    //  | binaryExpr
-    //  | ternaryExpr
-    //  | branchExpr
-    //  | matchExpr
-    //  | boolExpr
-    //  | intExpr
-    //  | floatExpr
-    //  | strExpr
-    //  | charExpr
-    //  | nullExpr
-    //  ;
-    //
-    // namedExprList
-    //  : expr ':=' expr (',' namedExprList)?
-    //  ;
-    //
-    // exprList
-    //  : expr (',' exprList)?
-    //  ;
-    */
-    NodeTypeNameExpr,
-
-    NodeTypeUnaryExpr,
-
-    /*
-    // accessExpr
-    //  : (('.' | '->' | ':') expr)?
-    //  ;
-    */
-   NodeTypeAccessExpr,
-
-   /*
-   // callExpr
-   //   : expr '(' callBody? ')'
-   //   ;
-   //
-   // callBody
-   //   : expr (',' callBody)?
-   //   ;
-   */
-    NodeTypeCallExpr,
-
-    /*
-    // subscriptExpr
-    //  : '[' expr ']'
-    //  ;
-    */
-    NodeTypeSubscriptExpr,
-
-    /*
-    // structInitExpr
-    //  : '{' namedExprList? '}'
-    //  ;
-    */
-    NodeTypeStructInitExpr,
-
-    /*
-    // arrayInitExpr
-    //  : '[' exprList? ']'
-    //  ;
-    */
-    NodeTypeArrayInitExpr,
-
-    /*
-    // tupleInitExpr
-    //  : '(' exprList? ')'
-    //  ;
-    */
-    NodeTypeTupleInitExpr,
-
-    /*
-    // castExpr
-    //  : 'as' typeDecl
-    //  ;
-    */
-    NodeTypeCastExpr,
-
-    /*
-    // ternaryExpr
-    //  : '?' expr ':' expr
-    //  ;
-    */
-    NodeTypeTernaryExpr,
-
-    /*
-    // intExpr
-    //  : int
-    //  ;
-    //
-    // floatExpr
-    //  : float
-    //  ;
-    //
-    // boolExpr
-    //  : 'true'
-    //  | 'false'
-    //  ;
-    //
-    // nullExpr
-    //  : 'null'
-    //  ;
-    //
-    // strExpr
-    //  : string
-    //  ;
-    //
-    // charExpr
-    //  : char
-    //  ;
-    */
+    NodeTypeUnary,
+    NodeTypeBinary,
+    NodeTypeIdent,
     NodeTypeInt,
-    NodeTypeFloat,
-    NodeTypeBool,
-    NodeTypeNull,
-    NodeTypeStr,
-    NodeTypeChar,
-
-    NodeTypeDerefExpr,
-    NodeTypeBuildExpr,
-
-    NodeTypeReturnStmt
+    NodeTypeTupleInit,
+    NodeTypeStructInit,
+    NodeTypeArrayInit
 } NodeType;
 
 typedef struct Node {
     NodeType type;
 
     union {
-        struct Node* attribPacked;
-        struct Node* attribAlign;
+        struct { vec_str_struct path; char* alias; } _import;
+        struct { char* name; struct Node* type; } _typedef;
+        struct { char* name; vec_node_struct imports; vec_node_struct body; } _program;
+    
+        struct Node* _packed;
+        struct Node* _align;
+
+        struct { Keyword op; struct Node* expr; } _unary;
+        struct { Keyword op; struct Node* lhs; struct Node* rhs; } _binary;
+
+        vec_node_struct _scope;
+
+        vec_node_struct _tuple;
+        vec_node_struct _array;
+        vec_keynode_struct _struct;
+
+        char* _ident;
+        int64_t _int;
 
         struct {
             vec_node_struct attribs;
-            
+
             union {
-                /* map of field name to field type */
-                vec_keynode_struct structDecl;
-                vec_keynode_struct unionDecl;
-
-
-                /* array of types */
-                vec_node_struct tupleDecl;
-                vec_str_struct nameDecl;
-
-                /* pointer to a type */
-                struct Node* ptrDecl;
-                
-                /* fixed size array */
-                struct {
-                    struct Node* size;
-                    struct Node* type;
-                } arrayDecl;
-
-                /* map of field name to field value */
-                struct {
-                    struct Node* backing;
-                    vec_keynode_struct fields;
-                } enumDecl;
-
-                /* map of field name to field value and field type */
-                struct {
-                    struct Node* backing;
-                    vec_keyvaltype_struct fields;
-                } variantDecl;
-            } data;
-        } typeDecl;
-
-        vec_node_struct tupleExpr;
-        vec_node_struct arrayExpr;
-        vec_keynode_struct structExpr;
-        struct {
-            Keyword op;
-            struct Node* operand;
-        } unaryExpr;
-
-        struct {
-            Keyword op;
-            struct Node* lhs;
-            struct Node* rhs;
-        } binaryExpr;
-
-        struct {
-            struct Node* cond;
-            struct Node* truthy;
-            struct Node* falsey;
-        } ternaryExpr;
-
-        struct {
-            vec_keynode_struct args;
-            struct Node* expr;
-        } callExpr, buildExpr;
-
-        struct {
-            struct Node* expr;
-            struct Node* type;
-        } castExpr;
-
-        struct {
-            struct Node* expr;
-            struct Node* index;
-        } subscriptExpr;
-
-        int64_t intExpr;
-        double floatExpr;
-        char* stringExpr;
-        char charExpr;
-        int boolExpr;
-        void* nullExpr;
-        char* nameExpr;
-
-        struct {
-            struct Node* lhs;
-            struct Node* rhs;
-        } scopeExpr, accessExpr, derefExpr;
-
-        struct {
-            vec_str_struct path;
-            char* alias;
-        } importDecl;
-
-        struct {
-            char* name;
-            struct Node* type;
-        } typeDef;
-
-        struct {
-            char* name;
-            struct Node* ret;
-            struct Node* body;
-            vec_keynode_struct args;
-        } funcDef;
-
-        struct {
-            vec_node_struct stmts;
-        } funcBody;
-
-        struct Node* returnStmt;
+                vec_str_struct _name;
+                vec_keynode_struct _struct;
+                vec_node_struct _tuple;
+                vec_keynode_struct _union;
+                vec_keynode_struct _enum;
+                vec_keyvaltype_struct _variant;
+                struct Node* _ptr;
+                struct { struct Node* type; struct Node* size; } _array;
+            };
+        } type;
     } data;
 } Node;
 
 Node* NewNode(NodeType type)
 {
-    Node* out;
-    out = malloc(sizeof(Node));
+    Node* out = malloc(sizeof(Node));
     out->type = type;
     return out;
 }
-
-typedef struct {
-    Lexer* lex;
-    /* extra token used sometimes when parsing */
-    Token tok;
-} Parser;
-
-Parser NewParser(Lexer* lex)
-{
-    Parser out;
-    out.lex = lex;
-    out.tok = InvalidToken();
-    return out;
-}
-
 
 Token NextToken(Parser* parser)
 {
@@ -559,6 +192,19 @@ int ConsumeKeyword(Parser* parser, Keyword key)
     return 0;
 }
 
+void ExpectIdent(Parser* parser, const char* ident)
+{
+    Token tok;
+
+    tok = NextIdent(parser);
+
+    if(strcmp(tok.data.ident, ident))
+    {
+        printf("expecting ident %s\n", ident);
+        exit(500);
+    }
+}
+
 char* ConsumeIdent(Parser* parser)
 {
     Token tok;
@@ -578,6 +224,35 @@ char* ConsumeIdent(Parser* parser)
     }
 
     return NULL;
+}
+
+Token ExpectToken(Parser* parser, TokenType type)
+{
+    Token tok;
+    tok = NextToken(parser);
+
+    if(tok.type != type)
+    {
+        printf("incorrect token type\n");
+        exit(500);
+    }
+
+    return tok;
+}
+
+Token PeekToken(Parser* parser, TokenType type)
+{
+    Token tok;
+
+    tok = NextToken(parser);
+
+    if(tok.type != type)
+    {
+        parser->tok = tok;
+        tok = InvalidToken();
+    }
+
+    return tok;
 }
 
 KeyNode MakePair(char* key, Node* val)

@@ -267,7 +267,7 @@ static Token Symbol(FilePos pos, Lexer* lex, char c)
     case '?':
         return NewKeyword(pos, KeywordQuestion);
     default:
-        printf("%c is not a valid keyword\n", c);
+        printf("%c %x is not a valid keyword {%lu:%lu}\n", c, c, pos.col, pos.line);
         return NewKeyword(pos, KeywordNone);
     }
 }
@@ -284,6 +284,9 @@ static Token LexerNext(Lexer* lex)
 
     while(c == '#')
         c = FileSkipComment(lex, c);
+
+    if(c == EOF)
+        return NewEOF(here);
 
     if(isalpha(c) || c == '_')
     {

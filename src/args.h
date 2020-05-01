@@ -146,8 +146,7 @@ ArgData ArgParse(int argc, const char** argv)
         }
         else if(data.target == TargetLangLLVM)
         {
-            /* TODO: what is the file extension for llvm bytecode? */
-            data.out = "exec.x";
+            data.out = "exec.ll";
         }
     }
 
