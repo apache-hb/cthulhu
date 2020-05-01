@@ -1,2 +1,4 @@
-import x:y:z
+import x:y:z -> x
 import adghas
+
+type i := int
