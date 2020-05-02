@@ -40,6 +40,7 @@ int main(int argc, const char** argv)
     parse = NewParser(&lex);
 
     Writer w;
+    w.i = 0;
 
     Node* prog = ParseProgram(&parse);
     PrintProgram(&w, prog);
