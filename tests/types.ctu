@@ -1,4 +1,20 @@
-import x:y:z -> x
-import adghas
-
 type i := int
+type v := void*
+
+type t := (int, int)
+
+type x := {
+    a: int,
+    b: (int, float)
+}
+
+type e := enum {
+    x,
+    y,
+    z
+}
+
+type u := union {
+    a: uint64_t,
+    b: { a: int, b: int }
+}
