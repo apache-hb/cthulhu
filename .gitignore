@@ -1,4 +1,5 @@
 .vscode/*
 .vscode
 [b|B]uild
+lbuild
 .antlr

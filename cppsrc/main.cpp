@@ -5,9 +5,13 @@
 int main(int argc, char** argv)
 {
     Lexer lex(fopen(argv[argc-1], "r"));
+    Parser parse(lex);
 
-    for(int i = 0; i < 5; i++) {
-        auto tok = lex.next();
-        printf("%s\n", tok.str());
+    auto tree = parse.program();
+
+    for(auto path : tree.deps) {
+        for(auto part : path.parts) {
+            printf("%s:", part.c_str());
+        }
     }
 }

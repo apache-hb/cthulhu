@@ -10,6 +10,10 @@ struct Node {
 };
 
 struct Import : Node {
+    Import(std::vector<std::string> p)
+        : parts(p)
+    { }
+    
     std::vector<std::string> parts;
     std::optional<std::string> alias;
 };
