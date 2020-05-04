@@ -10,11 +10,13 @@ struct FilePos {
 
 struct Token {
     enum {
-        IDENT,
-        KEY,
-        END,
-        INVALID
+        IDENT = 0,
+        KEY = 1,
+        END = 2,
+        INVALID = 3
     } type;
+
+    using type_t = decltype(type);
 
     virtual const char* str() const { 
         switch(type) {
@@ -27,6 +29,18 @@ struct Token {
         return "Unknown";
     }
 
+    template<typename T>
+    bool is() const { printf("t %d", this->type); return this->type == T::self; }
+
+    template<typename T>
+    T* as() { 
+        if(is<T>()) {
+            return static_cast<T*>(this);
+        } else {
+            return nullptr;
+        }
+    }
+
     FilePos pos;
 
     virtual ~Token() {}
@@ -36,6 +50,10 @@ struct Token {
 };
 
 struct Ident : Token {
+    static constexpr Token::type_t self = Token::IDENT;
+
+    Ident() : Token(Token::IDENT) { }
+
     std::string ident;
     Ident(std::string i)
         : Token(Token::IDENT)
@@ -45,7 +63,19 @@ struct Ident : Token {
 
 struct Key : Token {
     enum {
+        TYPE,
+        DEF,
+        IMPORT,
+
+        ASSIGN,
         COLON,
+        EQ,
+        NEQ,
+        NOT,
+
+        SUB,
+
+        ARROW,
 
         LBRACE,
         RBRACE,
@@ -60,19 +90,28 @@ struct Key : Token {
         SEMICOLON // cannot be ignored by the parser
     } key;
 
-    Key(decltype(key) k) 
+    static constexpr Token::type_t self = Token::KEY;
+
+    using key_t = decltype(key);
+
+    Key() : Token(Token::KEY) {}
+
+    Key(key_t k) 
         : Token(Token::KEY)
         , key(k)
     { }
 };
 
 struct End : Token {
+    static constexpr Token::type_t self = Token::END;
     End() : Token(Token::END) { }
 };
 
 struct Invalid : Token {
+    static constexpr Token::type_t self = Token::INVALID;
+
     std::string reason;
-    Invalid(std::string r)
+    Invalid(std::string r = "internal parser error")
         : Token(Token::INVALID)
         , reason(r)
     { }
@@ -90,42 +129,56 @@ struct Lexer {
     }
 
     Token parse() {
-        auto c = skip_whitespace();
+        auto c = get();
+        while(isspace(c) || c == '#') {
+            if(c == '\n') {
+                return Key(Key::NEWLINE);
+            } else if(c == '#') {
+                while(c != '\n') {
+                    c = get();
+                }
+                return Key(Key::NEWLINE);
+            }
 
-        while(c == '#') {
-            c = skip_comment();
+            c = get();
         }
 
-        here = pos;
-
+        
         if(c == EOF) {
             return End();
         } else if(isalpha(c) || c == '_') {
-            
+            std::string buf = {c};
+            while(isalnum(peek()) || peek() == '_')
+                buf += get();
+
+            if(buf == "type") {
+                return Key(Key::TYPE);
+            } else if(buf == "def") {
+                return Key(Key::DEF);
+            } else if(buf == "import") {
+                return Key(Key::IMPORT);
+            } else {
+                return Ident(buf);
+            }
+        } else if(isdigit(c)) {
+            // numbers
+        } else {
+            switch(c) {
+            case ':': return consume('=') ? Key(Key::ASSIGN) : Key(Key::COLON);
+            case ';': return Key(Key::SEMICOLON);
+            case '=': if(consume('=')) return Key(Key::EQ); else return Invalid("assign with := not =");
+            case '!': return consume('=') ? Key(Key::NEQ) : Key(Key::NOT);
+            case '-': return consume('>') ? Key(Key::ARROW) : Key(Key::SUB);
+            default: return Invalid("invalid symbol");
+            }
         }
 
-        return Invalid("hmm yes");
-    }
-
-    char skip_comment() {
-        auto c = get();
-        while(c != '\n')
-            c = get();
-
-        c = skip_whitespace();
-        return c;
-    }
-
-    char skip_whitespace() {
-        auto c = get();
-        while(isspace(c))
-            c = get();
-
-        return c;
+        return Invalid("cant get here");
     }
 
     char get() {
-        auto c = fgetc(file);
+        auto c = ahead;
+        ahead = fgetc(file);
 
         pos.dist++;
         if(c == '\n') {
@@ -137,6 +190,20 @@ struct Lexer {
 
         return c;
     }
+
+    char peek() {
+        return ahead;
+    }
+
+    bool consume(char c) {
+        if(peek() == c) {
+            get();
+            return true;
+        }
+        return false;
+    }
+
+    char ahead = ' ';
 
     FilePos here = { 0, 0, 0 };
     FilePos pos = { 0, 0, 0 };

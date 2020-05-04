@@ -1,7 +1,7 @@
+import x:y:z
+
 type i := int
 type v := void*
-
-type t := (int, int)
 
 type x := {
     a: int,
