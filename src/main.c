@@ -4,7 +4,6 @@
 #include <ctype.h>
 #include <string.h>
 
-#if 0
 static char* strdup(const char* str)
 {
     size_t n = strlen(str) + 1;
@@ -14,7 +13,6 @@ static char* strdup(const char* str)
     
     return out;
 }
-#endif
 
 #include "lex.h"
 #include "parse.h"
