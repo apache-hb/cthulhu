@@ -1,20 +1,27 @@
-import x:y:z
-
-type i := int
-type v := void*
-
-type x := {
-    a: int,
-    b: (int, float)
+type s := {
+    i: int
+    b: float
+    c: char[4]
 }
 
 type e := enum {
-    x,
-    y,
-    z
+    a := 1,
+    b := 2,
+    c := 3,
+    d := 4,
+    e := 5
 }
 
 type u := union {
-    a: uint64_t,
-    b: { a: int, b: int }
+    a: int,
+    b: float,
+    c: char*
 }
+
+type v := variant {
+    a => int,
+    b => float
+}
+
+type cstr := char*
+type c256 := char[256]
