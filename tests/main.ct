@@ -1,0 +1,19 @@
+include sys:io
+
+def main {
+    fizzbuzz(100)
+}
+
+def fizzbuzz(n: u32) {
+    for i : range<u32>(n) {
+        if i % 15 == 0 {
+            io:print("fizzbuzz\n")
+        } else if i % 3 == 0 {
+            io:print("fizz\n")
+        } else if i % 5 == 0 {
+            io:print("buzz\n")
+        } else {
+            io:print("{u32}", i)
+        }
+    }
+}
