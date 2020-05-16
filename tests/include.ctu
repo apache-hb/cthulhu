@@ -1,7 +1,0 @@
-include std
-include ui
-include std:fs
-include std:math
-include sys:apple:metal -> mtl
-include sys:win32:d3d12 -> dx12
-include sys:linux:vulkan -> vk
