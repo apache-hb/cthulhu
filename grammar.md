@@ -3,18 +3,23 @@ include: `include` ident (`::` ident)*
 linebreak: `\n` | `;`
 
 struct-field: ident `:` type linebreak
-struct: `struct` `{` struct-field* `}`
+struct: `{` struct-field* `}`
 
 union-field: ident `:` type linebreak
 union: `union` `{` union-field* `}`
 
+enum-field: ident `:=` expr linebreak
+enum: `enum` (`:` type)? `{` enum-field* `}`
+
+variant-field: ident (`:` expr)? `=>` type
+variant: `variant` (`:` type)? `{` variant-field* `}`
 
 type-list: type (`,` type)*
 funcptr: `def` `(` type-list* `)` `->` type
 
 name: `ident` (`::` ident)*
 
-type: struct | union | funcptr | name
+type: struct | union | variant | enum | funcptr | name
 
 typedef: `type` ident `:=` type linebreak
 
