@@ -1,19 +1,54 @@
-include sys:io
+include sys::io
 
-def main {
-    fizzbuzz(100)
+// namespaces
+type f := io::file
+
+// unions
+type un := union {
+    a: i32;
+    b: u32;
+    c: u8[4];
 }
 
-def fizzbuzz(n: u32) {
-    for i : range<u32>(n) {
-        if i % 15 == 0 {
-            io:print("fizzbuzz\n")
-        } else if i % 3 == 0 {
-            io:print("fizz\n")
-        } else if i % 5 == 0 {
-            io:print("buzz\n")
-        } else {
-            io:print("{u32}", i)
-        }
-    }
+// structs
+type st := struct {
+    a: u32;
+    b: u32;
+    c: u8[4];
+}
+
+// function pointer
+type fn := def(i32, i32) -> i32
+
+// functions
+// arguments are optional
+def foo() -> i32 { return 5 }
+
+def foo -> i32 { return 5 }
+
+// as is the return type
+def foo { return 5 }
+
+// single line function syntax
+def foo := 5
+
+def foo(i: i32) -> i32 := i
+
+// default values
+def foo(i: i32 := 0) -> i32 := i
+
+type pair := struct {
+    a: u32;
+    b: u32;
+}
+
+def test {
+    let vec := [
+        [0] := 5,
+        [1] := 10,
+        [2, 4, 6] := 12,
+        [7:10] := 15
+    ]
+
+    let vec2 := [ 0, 1, 2, 3 ]
 }

@@ -1,103 +1,88 @@
-#include <string>
-#include <vector>
-#include <optional>
 #include <variant>
+#include <string>
+#include <memory>
 
-using Path = std::vector<std::string>;
+enum class Keyword {
+    DEF, // def
+    INCLUDE, // include
+    TYPE, // type
+    STRUCT, // struct
+    UNION, // union
 
-struct Include {
-    Path path;
-    std::optional<std::string> alias;
+    ASSIGN, // :=
+    COLON, // :
+    COLON2, // ::
+
+    NEWLINE, // \n
+    SEMICOLON, // ;
+
+    COMMA, // ,
+
+    LPAREN, // (
+    RPAREN, // )
+
+    LBRACE, // {
+    RBRACE, // }
+
+    LSQUARE, // [
+    RSQUARE // ]
 };
 
-struct Program {
-    std::vector<Include> includes;
+struct File {
+    FILE* handle;
+    const char* name;
 };
 
-struct SourcePos {
-    struct Lexer* source;
-    uint64_t dist;
+struct FilePos {
     uint64_t line;
     uint64_t col;
+    uint64_t dist;
+    std::shared_ptr<File> file;
 };
-
-typedef enum {
-    TYPE,
-    DEF,
-    INCLUDE,
-
-    SEMICOLON,
-    NEWLINE
-} Keyword;
 
 struct Token {
     enum {
-        KEY,
         IDENT,
-        END
+        KEYWORD,
+        STRING,
+        END,
     } type;
 
     std::variant<
-        std::string,
-        Keyword
+        std::string, // ident | string
+        Keyword // keyword
     > data;
+
+    FilePos pos;
+
+    static Token ident(std::string&& str) {
+        return Token{IDENT, str};
+    }
+
+    static Token keyword(Keyword key) {
+        return Token{KEYWORD, key};
+    }
+
+    static Token string(std::string&& str) {
+        return Token{STRING, str};
+    }
+
+    static Token end() {
+        return Token{END};
+    }
+
+    Token at(FilePos p) {
+        pos = p;
+        return *this;
+    }
 };
 
 struct Lexer {
-    FILE* in;
-    const char* name;
-    SourcePos pos = { this, 0, 0, 0 };
-    char peekc = ' ';
-
     Token next() {
-        char c = get();
-        if(c == EOF) {
-            return Token{Token::END};
-        } else if(isalpha(c) || c == '_') {
-            std::string buffer = {c};
-            while(isalnum(peek()) || peek() == '_') {
-                buffer += get();
-            }
-            return Token{Token::IDENT, buffer};
-        } else {
-            switch(c) {
-            case ';': return Token{Token::KEY, Keyword::SEMICOLON};
-            }
-        }
-    }
-
-    bool consume(char c) {
-        if(peek() == c) {
-            get();
-            return true;
-        }
-        return false;
-    }
-
-    char get() {
-        char c = peekc;
-        peekc = fgetc(in);
-        if(c == '\n') {
-            pos.col = 0;
-            pos.line += 1;
-        } else {
-            pos.col += 1;
-        }
-        pos.dist += 1;
-        return c;
-    }
-
-    char peek() {
-        return peekc;
+        return Token::end().at({ 0, 0, 0, nullptr });
     }
 };
 
-struct Parser {
-    Program parse() {
-
-    }
-};
-
-int main(int argc, char** argv) {
-
+int main(int argc, const char** argv) {
+    
 }
