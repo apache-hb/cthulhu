@@ -1,51 +1,52 @@
-include: `include` ident (`::` ident)*
+path: ident (`::` ident)*
 
-linebreak: `\n` | `;`
-
-struct-field: ident `:` type linebreak
-struct: `{` struct-field* `}`
-
-union-field: ident `:` type linebreak
-union: `union` `{` union-field* `}`
-
-enum-field: ident `:=` expr linebreak
-enum: `enum` (`:` type)? `{` enum-field* `}`
-
-variant-field: ident (`:` expr)? `=>` type
-variant: `variant` (`:` type)? `{` variant-field* `}`
+include: `include` path (`->` ident)?
 
 type-list: type (`,` type)*
-funcptr: `def` `(` type-list* `)` `->` type
 
-name: `ident` (`::` ident)*
+const: `const` `<` type `>`
+pointer: type `*`
+reference: type `&`
+array: type `[` expr `]`
+funcptr: `def` `(` type-list? `)` `->` type
 
-type: struct | union | variant | enum | funcptr | name
+struct-field: ident `:` type
+struct: `struct` `{` struct-field* `}`
 
-typedef: `type` ident `:=` type linebreak
+union-field: ident `:` type
+union: `union` `{` union-field* `}`
 
-arg-list-val: ident `:` type `:=` expr (`,` arg-list-val)
-arg-list: ident `:` type (`,` arg-list) | arg-list-val
-func-args: `(` arg-list `)`
+enum-field: ident `:=` expr
+enum: `enum` (`:` type)? `{` enum-field* `}`
+
+any-field: ident `:` type
+any: `any` `{` any-field* `}`
+
+type: const | pointer | reference | array | path | struct | union | enum | any | funcptr
+
+typedef: `type` ident `:=` type
+
+arg-val-list: ident `:` type `:=` expr (`,` arg-val-list)?
+arg-list: ident `:` type (`,` arg-list)? | arg-val-list
+func-args: `(` arg-list? `)`
 
 func-return: `->` type
 
 
-struct-init: `{` `}`
+branch-stmt: `if` expr stmt (`else` `if` expr stmt)* (`else` stmt)?
 
-array-init-body: expr (`,` expr)* 
-array-init: `[` array-init-body `]`
+var-stmt: `var` ident `:` type (`:=` expr)? |
+          `var` ident `:=` expr
 
-struct-init-body: expr (`,` expr)*
-named-init-body: ident `:=` expr (`,` ident `:=` expr)*
-struct-init: `{` (struct-init-body | named-init-body)? `}`
+for-stmt: `for` ident `:` expr stmt
 
-const-expr: int-expr | char-expr | str-expr | float-expr
-expr: const-expr | struct-init | array-init
-stmt: expr
+while-stmt: `while` expr stmt
 
-func-body: `:=` expr | `{` stmt* `}`
+stmt: expr | `{` stmt* `}` | var-stmt | branch-stmt | for-stmt | while-stmt
 
-funcdef: `def` ident func-args? func-return? func-body linebreak
+func-body: `{` stmt* `}` | `:=` expr
+
+funcdef: `def` ident func-args? func-return? func-body
 
 body: typedef | funcdef
 
