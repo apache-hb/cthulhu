@@ -8,6 +8,8 @@ project('ctulang', 'cpp',
     ]
 )
 
-ctu = executable('ctu', 'src/main.cpp', 
+compiler = executable('ctc', 'src/main.cpp')
+
+test('sstream1', executable('sstream1', 'src/tests/sstream.cpp',
     include_directories : include_directories('src')
-)
+))
