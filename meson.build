@@ -8,4 +8,12 @@ project('ctulang', 'c',
     ]
 )
 
-compiler = executable('ctc', )
+source = [
+    'src/keywords.c',
+    'src/stream.c',
+    'src/lexer.c',
+    'src/utils.c',
+    'src/main.c'
+]
+
+compiler = executable('ctc', source)

@@ -6,6 +6,10 @@
 #   define OP(id, str)
 #endif
 
+#ifndef ASM
+#   define ASM(id, str)
+#endif
+
 // toplevel keywords
 KEY(DEF, "def")
 KEY(INCLUDE, "include")
