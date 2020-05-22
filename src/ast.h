@@ -27,11 +27,21 @@ typedef enum {
     _UNARY,
     _BINARY,
     _TERNARY,
-    _LIST
+    _LIST,
+    LET_STMT,
+    _NAME
 } stmt_type;
 
-typedef struct {
+typedef struct stmt_t {
     stmt_type type;
+
+    union {
+        struct {
+            char* name;
+            struct type_t* type;
+            struct stmt_t* init;
+        } _var;
+    } data;
 } stmt_t;
 
 typedef enum {
@@ -82,7 +92,7 @@ typedef struct type_t {
 
         struct {
             struct type_t* of;
-            expr_t* size;
+            stmt_t* size;
         } _array;
 
         struct type_t* _ptr;

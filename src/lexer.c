@@ -93,6 +93,13 @@ static token_t keyword_or_ident(char* ident)
     return tok;
 }
 
+static token_t make_tok(int i)
+{
+    token_t out;
+    out.type = i;
+    return out;
+}
+
 token_t lexer_next(lexer_t* self)
 {
     int c = skip_whitespace(self);
@@ -130,6 +137,66 @@ token_t lexer_next(lexer_t* self)
         }
 
         tok = keyword_or_ident(self->buffer);
+    }
+    else if(isdigit(c))
+    {
+        int flt = 0;
+        buffer_wipe(self);
+        buffer_push(self, c);
+        for(;;)
+        {
+            c = stream_peek(&self->source);
+            if(isdigit(c) || c == '.')
+            {
+                if(c == '.')
+                    flt = 1;
+
+                buffer_push(self, stream_next(&self->source));
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        if(flt)
+        {
+            double d = strtod(self->buffer, NULL);
+            tok = make_tok(FLOAT);
+            tok.data.num = d;
+        }
+        else
+        {
+            uint64_t n = strtoull(self->buffer, NULL, 10);
+            tok = make_tok(INT);
+            tok.data._int = n;
+        }
+    }
+    else if(c == '"')
+    {
+        buffer_wipe(self);
+        buffer_push(self, c);
+
+        for(;;)
+        {
+            c = stream_next(&self->source);
+            if(c == '"')
+            {
+                break;
+            }
+            else
+            {
+                buffer_push(self, c);
+            }
+        }
+
+        tok = make_tok(STRING);
+        tok.data.str = strdup(self->buffer);
+    }
+    else if(c == '\'')
+    {
+        tok = make_tok(CHAR);
+        tok.data._char = stream_next(&self->source);
     }
     else
     {

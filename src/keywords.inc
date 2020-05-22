@@ -14,6 +14,7 @@
 KEY(DEF, "def")
 KEY(INCLUDE, "include")
 KEY(TYPE, "type")
+KEY(VAR, "var")
 
 // type keywords
 KEY(STRUCT, "struct")
