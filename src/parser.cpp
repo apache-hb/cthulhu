@@ -101,7 +101,13 @@ static type_t* make_type(typetype t)
     return out;
 }
 
-static expr_t* parse_expr(parser_t* self)
+static stmt_t* parse_expr(parser_t* self)
+{
+    (void)self;
+    return NULL;
+}
+
+static stmt_t* parse_stmt(parser_t* self)
 {
     (void)self;
     return NULL;
@@ -452,6 +458,65 @@ static typepair_t parse_typedef(parser_t* self)
     return pair;
 }
 
+funcpair_t parse_funcdef(parser_t* self)
+{
+    char* name = expect_ident(self);
+
+    vec<typepair_t> args;
+
+    if(parser_consume(self, LPAREN))
+    {
+        for(;;)
+        {
+            char* arg_name = expect_ident(self);
+            expect_key(self, COLON);
+            type_t* arg_type = parse_type(self);
+
+            args.push_back({ arg_name, arg_type });
+
+            if(!parser_consume(self, RPAREN))
+            {
+                expect_key(self, COMMA);
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    func_t* out = (func_t*)malloc(sizeof(func_t));
+
+    if(parser_consume(self, ARROW))
+    {
+        type_t* ret = parse_type(self);
+        out->ret = ret;
+    }
+    else
+    {
+        out->ret = NULL;
+    }
+
+    if(parser_consume(self, ASSIGN))
+    {
+        out->body = parse_expr(self);
+    }
+    else
+    {
+        expect_key(self, RBRACE);
+        out->body = parse_stmt(self);
+        expect_key(self, LBRACE);
+    }
+
+    out->args = args;
+
+    funcpair_t funcpair;
+    funcpair.name = name;
+    funcpair.func = out;
+
+    return funcpair;
+}
+
 ast_t produce_ast(parser_t* self)
 {
     vec<include_t> includes;
@@ -464,6 +529,7 @@ ast_t produce_ast(parser_t* self)
     }
 
     map<char*, type_t*> types;
+    map<char*, func_t*> funcs;
 
     for(;;)
     {
@@ -471,6 +537,11 @@ ast_t produce_ast(parser_t* self)
         {
             typepair_t type = parse_typedef(self);
             types[type.name] = type.type;
+        }
+        else if(parser_consume(self, DEF))
+        {
+            funcpair_t func = parse_funcdef(self);
+            funcs[func.name] = func.func;
         }
         else
         {
