@@ -6,17 +6,17 @@
 
 typedef struct {
     enum {
-        KEYWORD,
-        IDENT,
+        KEYWORD = 0,
+        IDENT = 1,
 
         // error token
-        ERROR,
+        ERROR = 2,
 
         // end of file token
-        END,
+        END = 3,
 
         // invalid token, used by the parser for optional lookahead
-        INVALID
+        INVALID = 4
     } type;
 
     streampos_t pos;
@@ -27,5 +27,7 @@ typedef struct {
         char* error;
     } data;
 } token_t;
+
+char* token_to_string(token_t tok);
 
 #endif // TOKEN_H

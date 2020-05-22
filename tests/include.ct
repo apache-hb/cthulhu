@@ -1,2 +1,5 @@
 include x::y::z
 include a::b::c -> d
+include c::d::e
+include x
+include y -> z
