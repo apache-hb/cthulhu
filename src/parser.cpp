@@ -103,13 +103,86 @@ static type_t* make_type(typetype t)
 
 static stmt_t* parse_expr(parser_t* self)
 {
-    (void)self;
+    token_t tok = parser_next(self);
+    if(tok.type == token_t::IDENT)
+    {
+        // name
+    }
+    else if(tok.type == token_t::KEYWORD)
+    {
+
+    }
+    else if(tok.type == token_t::FLOAT)
+    {
+
+    }
+    else if(tok.type == token_t::INT)
+    {
+
+    }
+    else if(tok.type == token_t::STRING)
+    {
+
+    }
+    else if(tok.type == token_t::CHAR)
+    {
+
+    }
+    else
+    {
+
+    }
+
     return NULL;
+}
+
+static stmt_t* make_stmt(stmt_type i)
+{
+    stmt_t* out = (stmt_t*)malloc(sizeof(stmt_t));
+    out->type = i;
+    return out;
+}
+
+static stmt_t* parse_var(parser_t* self)
+{
+    char* name = expect_ident(self);
+
+    stmt_t* stmt = make_stmt(LET_STMT);
+
+    if(parser_consume(self, COLON))
+    {
+        type_t* type = parse_type(self);
+        stmt->data._var.type = type;
+    }
+    else
+    {
+        stmt->data._var.type = NULL;
+    }
+
+    stmt->data._var.name = name;
+
+    if(parser_consume(self, ASSIGN))
+    {
+        stmt->data._var.init = parse_expr(self);
+    }
+    else
+    {
+        stmt->data._var.init = NULL;
+    }
+
+    return stmt;
 }
 
 static stmt_t* parse_stmt(parser_t* self)
 {
-    (void)self;
+    token_t tok = parser_next(self);
+    if(tok.type == token_t::KEYWORD)
+    {
+        if(tok.data.key == VAR)
+        {
+            return parse_var(self);
+        }
+    }
     return NULL;
 }
 

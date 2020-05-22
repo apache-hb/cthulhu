@@ -16,7 +16,12 @@ typedef struct {
         END = 3,
 
         // invalid token, used by the parser for optional lookahead
-        INVALID = 4
+        INVALID = 4,
+
+        STRING = 5,
+        FLOAT = 6,
+        INT = 7,
+        CHAR = 8
     } type;
 
     streampos_t pos;
@@ -25,6 +30,10 @@ typedef struct {
         keyword key;
         char* ident;
         char* error;
+        uint64_t _int;
+        char _char;
+        double num;
+        char* str;
     } data;
 } token_t;
 
