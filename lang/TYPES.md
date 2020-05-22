@@ -139,6 +139,5 @@ type example := u8[4]
 * i32
 * i64
 * void
-* bool
 * f32
 * f64

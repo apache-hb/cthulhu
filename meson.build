@@ -1,4 +1,4 @@
-project('ctulang', 'c', 
+project('ctulang', ['c', 'cpp'], 
     version : '0.5.0',
     license : 'Apache 2.0',
     default_options : [ 
@@ -13,7 +13,9 @@ source = [
     'src/stream.c',
     'src/lexer.c',
     'src/utils.c',
-    'src/main.c'
+    'src/token.c',
+    'src/parser.cpp',
+    'src/main.cpp'
 ]
 
 compiler = executable('ctc', source)
