@@ -15,13 +15,24 @@ typedef struct {
 } include_t;
 
 typedef struct {
-    void* TODO;
-} expr_t;
-
-typedef struct {
     char* name;
     struct type_t* type;
 } typepair_t;
+
+typedef enum {
+    _ASSIGN,
+    _FOR,
+    _WHILE,
+    _BRANCH,
+    _UNARY,
+    _BINARY,
+    _TERNARY,
+    _LIST
+} stmt_type;
+
+typedef struct {
+    stmt_type type;
+} stmt_t;
 
 typedef enum {
     _I8,
@@ -60,7 +71,7 @@ typedef struct type_t {
         struct {
             struct type_t* backing;
             
-            map<char*, expr_t> fields;
+            map<char*, stmt_t> fields;
         } _enum;
 
         map<char*, type_t*> _union;
@@ -92,8 +103,21 @@ typedef struct type_t {
 } type_t;
 
 typedef struct {
+    vec<typepair_t> args;
+    type_t* ret;
+    stmt_t* body;
+} func_t;
+
+typedef struct {
+    char* name;
+    func_t* func;
+    stmt_t* body;
+} funcpair_t;
+
+typedef struct {
     vec<include_t> deps;
     map<char*, type_t*> types;
+    map<char*, func_t*> funcs;
 } ast_t;
 
 #endif // AST_H
