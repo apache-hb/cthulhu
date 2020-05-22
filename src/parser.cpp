@@ -101,12 +101,22 @@ static type_t* make_type(typetype t)
     return out;
 }
 
+static stmt_t* parse_name(char* ident, parser_t* self)
+{
+    vec<char*> out = { ident };
+    while(parser_consume(self, COLON2))
+    {
+        out.push_back(expect_ident(self));
+    }
+}
+
 static stmt_t* parse_expr(parser_t* self)
 {
     token_t tok = parser_next(self);
     if(tok.type == token_t::IDENT)
     {
         // name
+        return parse_name(tok.data.ident, self);
     }
     else if(tok.type == token_t::KEYWORD)
     {
