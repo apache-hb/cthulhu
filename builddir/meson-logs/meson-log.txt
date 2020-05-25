@@ -1,0 +1,11 @@
+Build started at 2020-05-24T23:44:35.744027
+Main binary: C:\Program Files\Meson\meson.exe
+Build Options: -Dbuildtype=debug
+Python system: Windows
+The Meson build system
+Version: 0.53.0
+Source dir: c:\Users\ehb56\OneDrive\Documents\GitHub\cthulhulang
+Build dir: c:\Users\ehb56\OneDrive\Documents\GitHub\cthulhulang\builddir
+Build type: native build
+
+ERROR: No statements in code.

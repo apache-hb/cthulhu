@@ -1,13 +1,14 @@
-#include "parser.h"
+#include "AST/Types.h"
 
-#include <stdio.h>
-
-int main(int argc, const char** argv)
+int main(int argc, char** argv)
 {
-    (void)argc;
-    (void)argv;
-    stream_t in = stream_fopen(argv[1]);
-    lexer_t lex = lexer_new(in);
-    parser_t parser = parser_new(lex);
-    ast_t ast = produce_ast(&parser);
+    auto* t1 = new AST::BuiltinType(AST::Builtin::F64);
+    auto* t2 = new AST::BuiltinType(AST::Builtin::U8);
+    auto* t3 = new AST::BuiltinType(AST::Builtin::I32);
+
+    auto* un = new AST::UnionType({
+        { "a", t1 },
+        { "b", t2 },
+        { "c", t3 }
+    });
 }
