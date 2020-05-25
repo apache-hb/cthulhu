@@ -166,6 +166,64 @@ namespace AST
     };
 
     struct StructType : Type {
+        StructType(vector<pair<string, Type*>> f)
+            : fields(f)
+        { }
 
+        virtual ~StructType() override { }
+
+        vector<pair<string, Type*>> fields;
+
+        virtual size_t size() const override {
+            size_t out = 0;
+            for(auto& each : fields) {
+                out += each.second->size();
+            }
+            return out;
+        }
+
+        virtual string str() const override {
+            string out = "struct {\n";
+            for(auto& [name, type] : fields) {
+                out += "    " + type->str() + " " + name + ";\n";
+            }
+            out += "}\n";
+
+            return out;
+        }
+    };
+
+    struct VariantType : Type {
+        VariantType(map<string, Type*> f)
+            : fields(f)
+        { }
+
+        virtual ~VariantType() override { }
+
+        map<string, Type*> fields;
+
+        virtual size_t size() const override {
+            size_t out = 0;
+            for(auto& pair : fields) {
+                if(pair.second->size() > out)
+                    out = pair.second->size();
+            }
+            // TODO: configurable backing
+            return out + 4;
+        }
+
+        virtual string str() const override {
+            string out = "variant {\n";
+            for(auto& [name, type] : fields) {
+                out += "    " + type->str() + " " + name + ";\n";
+            }
+            out += "}\n";
+            return out;
+        }
+    };
+
+    struct TemplateType : Type {
+        vector<pair<string, Type*>> params;
+        Type* of;
     };
 }
