@@ -1,94 +1,122 @@
-path: ident (`::` ident)*
-type-list: type (`,` type)*
-name-type-list: ident `:` type (`,` ident `:` type)*
+# Grammar
 
-include: `include` path
+digit:
+    0-9
 
-const: `const` `<` type `>`
-array: type `[` expr `]`
-pointer: type `*`
-reference: type `&`
-closure: `(` type-list? `)` `->` type
+nodigit:
+    a-zA-Z_
 
-struct-field: ident `:` type
-struct: `struct` `{` struct-field* `}`
+ident:
+    nodigit
+    digit
 
-union-field: ident `:` type
-union: `union` `{` union-field* `}`
+identifier:
+    nodigit ident*
 
-enum-field: ident `:=` expr
-enum: `enum` (`:` type)? `{` enum-field* `}`
+## Literals
 
-any-field: ident `=>` type
-any: `any` `{` any-field* `}`
+decimal-literal-digit:
+    0-9
 
-type: const | array | pointer | reference | struct | union | enum | any | path | closure
-
-typedef: `type` ident `:=` type
-
-unary-op: `+` | `-` | `!` | `~` | `*` | `&`
-binary-op: 
-    `+` | `+=` | `-` | `-=` |
-    `*` | `*=` | `/` | `/=` |
-    `%` | `%=` | `&` | `&=` |
-    `|` | `|=` | `^` | `^=` |
-    `<` | `<=` | `>` | `>=` |
-    `==` | `!=` | `<<` | `<<=` |
-    `>>` | `>>=` | `||` | `&&`
-
-expr-list: expr (`,` expr)*
-
-struct-init-body: ident `:=` expr (`,` ident `:=` expr)*
-
-unary-expr: unary-op expr
-paren-expr: `(` expr `)`
-subscript-expr: expr `[` expr `]`
-cast-expr: expr `as` type
-deref-expr: expr `->` ident
-access-expr: expr `.` ident
-scope-expr: ident `::` expr
-binary-expr: expr binary-op expr
-ternary-expr: expr `?` expr `:` expr
-call-expr: expr `(` expr-list? `)`
-lambda-expr: `(` name-type-list? `)` func-return? func-body
-array-init-expr: `[` expr-list? `]`
-struct-init-expr: `{` expr-list? `}` | `{` struct-init-body? `}`
-
-expr: 
-    unary-expr | paren-expr | subscript-expr | 
-    cast-expr | deref-expr | access-expr | 
-    scope-expr | binary-expr | ternary-expr | 
-    call-expr | lambda-expr | array-init-expr | 
-    struct-init-expr
-
-var-name: ident (`:` type)
-var-name-list: var-name (`,` var-name)*
-
-let-body: var-name | `(` var-name-list `)`
-let-stmt: `let` let-body `:=` expr
-
-assign-stmt: expr `:=` expr
-return-stmt: `return` expr
-branch-stmt: `if` expr stmt (`else` `if` expr stmt)* (`else` stmt)?
-
-for-stmt: `for` ident `:` expr stmt
-while-stmt: `while` expr stmt
-
-break-stmt: `break`
-continue-stmt: `continue`
-
-stmt-body: (let-stmt | assign-stmt | return-stmt | branch-stmt | expr | for-stmt | while-stmt | break-stmt | continue-stmt) `;`
-
-stmt: `{` stmt-body* `}`
+decimal-integer-literal:
+    decimal-literal-digit*
 
 
+octal-literal-digit:
+    0-7
 
-func-body: `:=` expr | stmt
-func-args: `(` name-type-list? `)`
-func-return: `->` type
+octal-integer-literal:
+    `0o` octal-literal-digit*
 
-funcdef: `def` ident func-args? func-return? func-body
 
-body: funcdef | typedef
+hexadecimal-literal-digit:
+    0-9
+    a-f
+    A-F
 
-program: include* body*
+hexadecimal-integer-literal:
+    `0x` hexadecimal-literal-digit*
+
+
+binary-literal-digit:
+    0-1
+
+binary-integer-literal:
+    `0b` binary-literal-digit*
+
+integer-literal-body:
+    decimal-integer-literal
+    octal-integer-literal
+    hexadecimal-integer-literal
+    binary-integer-literal
+
+integer-literal-suffix:
+    `u`
+    `ul`
+    `U`
+    `UL`
+    `s`
+    `sl`
+    `S`
+    `SL`
+
+integer-literal:
+    integer-literal-body integer-literal-suffix?
+
+
+floating-literal-suffix:
+    `f`
+    `F`
+    `d`
+    `D`
+
+floating-literal-const:
+    digit+ `.` digit*
+
+floating-literal-expr:
+    `e` digit+
+    `E` digit+
+
+floating-literal:
+    floating-literal-const floating-literal-exp? floating-literal-suffix?
+
+s-char:
+
+d-char:
+
+raw-char:
+
+s-char-sequence:
+    s-char+
+
+d-char-sequence:
+    d-char+
+
+raw-char-sequence:
+    raw-char+
+
+raw-string:
+    `"` d-char-sequence? `(` raw-char-sequence? `)` d-char-sequence? `"`
+
+
+string-literal:
+    encoding-prefix? `"` s-char-sequence? `"`
+    encoding-prefix? `R` raw-string
+
+character-literal:
+
+
+boolean-literal:
+    `true`
+    `false`
+
+pointer-literal:
+    `null`
+
+literal:
+    floating-literal
+    integer-literal
+    character-literal
+    string-literal
+    boolean-literal
+    pointer-literal
