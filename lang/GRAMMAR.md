@@ -1,122 +1,93 @@
 # Grammar
 
-digit:
-    0-9
+ident-list: ident (`,` ident)*
 
-nodigit:
-    a-zA-Z_
-
-ident:
-    nodigit
-    digit
-
-identifier:
-    nodigit ident*
-
-## Literals
-
-decimal-literal-digit:
-    0-9
-
-decimal-integer-literal:
-    decimal-literal-digit*
+path: ident (`::` ident)*
 
 
-octal-literal-digit:
-    0-7
 
-octal-integer-literal:
-    `0o` octal-literal-digit*
+import-args: `...` | ident-list
+import-decl: `import` path `(` import-args `)` `;`
 
 
-hexadecimal-literal-digit:
-    0-9
-    a-f
-    A-F
+packed-attrib: `@` `packed` (`(` expr`)`)?
+align-attrib: `@` `align` `(` expr `)`
+attrib: packed-attrib | align-attrib | flags-attrib
 
-hexadecimal-integer-literal:
-    `0x` hexadecimal-literal-digit*
+builtin:
+    `u8` | `u16` | `u32` | `u64` |
+    `i8` | `i16` | `i32` | `i64` |
+    `f32` | `f64` | `void` |
+    `isize` | `usize` |
+    `c8` | `c16` | `c32` |
+    `int` | `uint`
 
+pointer: type `*`
 
-binary-literal-digit:
-    0-1
+const: `const` `(` type `)`
 
-binary-integer-literal:
-    `0b` binary-literal-digit*
+array: type `[` expr `]`
 
-integer-literal-body:
-    decimal-integer-literal
-    octal-integer-literal
-    hexadecimal-integer-literal
-    binary-integer-literal
+typename: path
 
-integer-literal-suffix:
-    `u`
-    `ul`
-    `U`
-    `UL`
-    `s`
-    `sl`
-    `S`
-    `SL`
+struct-attrib: packed-attrib | align-attrib
+struct-body: ident `:` type `;`
+struct-decl: `struct` `{` struct-body* `}`
+struct: attrib* struct-decl
 
-integer-literal:
-    integer-literal-body integer-literal-suffix?
+enum-field: ident `:=` expr `,`
+enum-decl: `enum` (`:` type)? `{` enum-field* `}`
+enum: attrib* enum-decl
 
+union-field: ident `:` type `;`
+union-decl: `union` `{` union-field* `}`
+union: attrib* union-decl
 
-floating-literal-suffix:
-    `f`
-    `F`
-    `d`
-    `D`
+funcptr-args: type (`,` type)*
+funcptr: attrib* `def` `(` funcptr-args? `)` `->` type
 
-floating-literal-const:
-    digit+ `.` digit*
+variant-field: ident (`:` expr)? `=>` type `;`
+variant: attrib* `variant` (`:` type)? `{` variant-field* `}`
 
-floating-literal-expr:
-    `e` digit+
-    `E` digit+
+type:
+    builtin | pointer | const |
+    array | typename | struct |
+    enum | union | funcptr |
+    variant
 
-floating-literal:
-    floating-literal-const floating-literal-exp? floating-literal-suffix?
-
-s-char:
-
-d-char:
-
-raw-char:
-
-s-char-sequence:
-    s-char+
-
-d-char-sequence:
-    d-char+
-
-raw-char-sequence:
-    raw-char+
-
-raw-string:
-    `"` d-char-sequence? `(` raw-char-sequence? `)` d-char-sequence? `"`
+type-decl: `type` ident `:=` type `;`
 
 
-string-literal:
-    encoding-prefix? `"` s-char-sequence? `"`
-    encoding-prefix? `R` raw-string
+func-args-body: ident `:` type (`,` func-args-body)?
+func-args: `(` func-args-body? `)`
 
-character-literal:
+func-ret: `->` type
 
+func-body: `:=` expr | stmt-list
 
-boolean-literal:
-    `true`
-    `false`
+func: `def` ident func-args? func-ret? func-body
+func-decl: attrib* func
 
-pointer-literal:
-    `null`
+var-decl: `var` ident (`:` type)? `:=` expr `;`
 
-literal:
-    floating-literal
-    integer-literal
-    character-literal
-    string-literal
-    boolean-literal
-    pointer-literal
+body-decl: type-decl | func-decl | var-decl
+
+subscript: expr `[` expr `]`
+
+deref: `*` expr
+
+ref: `&` expr
+
+access: expr `.` ident
+
+indirect: expr `->` ident
+
+expr: literal | subscript | deref | ref | access | indirect
+
+stmt-list: `{` stmt* `}`
+
+return-stmt: `return` expr `;`
+
+stmt: var-decl | stmt-list | return-stmt
+
+unit: import-decl* body-decl*
