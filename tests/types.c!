@@ -1,6 +1,0 @@
-type usize := u64
-type ssize := i64
-
-type example1 := struct {
-    name: u64
-}

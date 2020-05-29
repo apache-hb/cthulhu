@@ -1,7 +1,6 @@
 .vscode/*
 .vscode
-[b|B]uild
-lbuild
+*build*
 .antlr
 *.class
 # Ignore Gradle project-specific cache directory

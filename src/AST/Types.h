@@ -1,229 +1,193 @@
 #pragma once
 
-#include <vector>
-#include <string>
-#include <map>
-#include <cstdint>
-#include <algorithm>
+#if 0
 
-namespace AST
-{
-    using namespace std;
+#include <stdint.h>
 
-    struct Type {
-        virtual ~Type() {}
-        virtual size_t size() const = 0;
+typedef enum {
+    CT_EXPR_INT_LITERAL,
+    CT_EXPR_FLOAT_LITERAL,
+    CT_EXPR_NULL_LITERAL,
+    CT_EXPR_CHAR_LITERAL,
+    CT_EXPR_STRING_LITERAL,
+    CT_EXPR_TYPE_UNARY,
+    CT_EXPR_TYPE_BINARY,
+    CT_EXPR_TYPE_TERNARY,
+    CT_EXPR_TYPE_SUBSCRIPT
+} CtExprType;
 
-        virtual string str() const = 0;
-    };
+typedef enum {
+    CT_UNARY_OP_ADD,
+    CT_UNARY_OP_SUB,
+    CT_UNARY_OP_NOT,
+    CT_UNARY_OP_FLIP
+} CtUnaryOp;
 
-    struct MutableType : Type {
-        MutableType(Type* o)
-            : of(o)
-        { }
+typedef enum {
+    CT_BINARY_OP_ADD,
+    CT_BINARY_OP_ADDEQ,
+    CT_BINARY_OP_SUB,
+    CT_BINARY_OP_SUBEQ,
+    CT_BINARY_OP_DIV,
+    CT_BINARY_OP_DIVEQ,
+    CT_BINARY_OP_MUL,
+    CT_BINARY_OP_MULEQ,
+    CT_BINARY_OP_MOD,
+    CT_BINARY_OP_MODEQ,
 
-        virtual ~MutableType() override { }
+    CT_BINARY_OP_XOR,
+    CT_BINARY_OP_XOREQ,
 
-        Type* of;
+    CT_BINARY_OP_SHL,
+    CT_BINARY_OP_SHLEQ,
 
-        virtual size_t size() const override { return of->size(); }
+    CT_BINARY_OP_SHR,
+    CT_BINARY_OP_SHREQ,
 
-        virtual string str() const override { return "mut(" + of->str() + ")"; }
-    };
+    CT_BINARY_OP_BITAND,
+    CT_BINARY_OP_BITANDEQ,
 
-    struct PointerType : Type {
-        PointerType(Type* t)
-            : to(t)
-        { }
+    CT_BINARY_OP_BITOR,
+    CT_BINARY_OP_BITOREQ,
 
-        virtual ~PointerType() override { }
+    CT_BINARY_OP_AND,
+    CT_BINARY_OP_OR,
 
-        Type* to;
+    CT_BINARY_OP_EQ,
+    CT_BINARY_OP_NEQ
+} CtBinaryOp;
 
-        // TODO: support pointers and segmentation
-        virtual size_t size() const override { return 8; }
+typedef struct {
+    CtUnaryOp op;
+    struct CtExpr *expr;
+} CtUnaryExpr;
 
-        virtual string str() const override { return to->str() + "*"; }
-    };
+typedef struct {
+    CtBinaryOp op;
+    struct CtExpr *lhs;
+    struct CtExpr *rhs;
+} CtBinaryExpr;
 
-    enum class Builtin {
-        U8,
-        U16,
-        U32,
-        U64,
-        I8,
-        I16,
-        I32,
-        I64,
-        F32,
-        F64,
-        VOID
-    };
+typedef struct {
+    struct CtExpr *cond;
+    struct CtExpr *truthy;
+    struct CtExpr *falsey;
+} CtTernaryExpr;
 
-    struct BuiltinType : Type {
-        BuiltinType(Builtin b)
-            : type(b)
-        { }
+typedef struct {
+    struct CtExpr *expr;
+    struct CtExpr *index;
+} CtSubscriptExpr;
 
-        virtual ~BuiltinType() override { }
+typedef union {
+    uint64_t integer;
+    double number;
+    uint8_t character;
+    char *string;
 
-        Builtin type;
+    CtUnaryExpr unary;
+    CtBinaryExpr binary;
+    CtTernaryExpr ternary;
+    CtSubscriptExpr subscript;
+} CtExprBody;
 
-        virtual size_t size() const override {
-            switch(type) {
-            case Builtin::U8: return 1;
-            case Builtin::U16: return 2;
-            case Builtin::U32: return 4;
-            case Builtin::U64: return 8;
-            case Builtin::I8: return 1;
-            case Builtin::I16: return 2;
-            case Builtin::I32: return 4;
-            case Builtin::I64: return 8;
-            case Builtin::F32: return 4;
-            case Builtin::F64: return 8;
-            case Builtin::VOID: return 0;
-            default: return -1;
-            }
-        }
+typedef struct {
+    CtExprType type;
+    CtExprBody expr;
+} CtExpr;
 
-        virtual string str() const override {
-            switch(type) {
-            case Builtin::U8: return "u8";
-            case Builtin::U16: return "u16";
-            case Builtin::U32: return "u32";
-            case Builtin::U64: return "u64";
-            case Builtin::I8: return "i8";
-            case Builtin::I16: return "i16";
-            case Builtin::I32: return "i32";
-            case Builtin::I64: return "i64";
-            case Builtin::F32: return "f32";
-            case Builtin::F64: return "f64";
-            case Builtin::VOID: return "void";
-            default: return "err";
-            }
-        }
-    };
+typedef enum {
+    CT_BUILTIN_TYPE_U8,
+    CT_BUILTIN_TYPE_U16,
+    CT_BUILTIN_TYPE_U32,
+    CT_BUILTIN_TYPE_U64,
+    CT_BUILTIN_TYPE_I8,
+    CT_BUILTIN_TYPE_I16,
+    CT_BUILTIN_TYPE_I32,
+    CT_BUILTIN_TYPE_I64,
+    CT_BUILTIN_TYPE_F32,
+    CT_BUILTIN_TYPE_F64,
+    CT_BUILTIN_TYPE_VOID
+} CtBuiltinType;
 
-    struct FunctionType : Type {
-        FunctionType(vector<Type*> a, Type* r)
-            : args(a)
-            , ret(r)
-        { }
+typedef enum {
+    CT_TYPE_BUILTIN,
+    CT_TYPE_CONST,
+    CT_TYPE_POINTER,
+    CT_TYPE_REFERENCE,
+    CT_TYPE_UNIQUE,
+    CT_TYPE_STRUCT,
+    CT_TYPE_UNION,
+    CT_TYPE_VARIANT,
+    CT_TYPE_ENUM,
+    CT_TYPE_ARRAY,
+    CT_TYPE_CLOSURE
+} CtTypeType;
 
-        virtual ~FunctionType() override { }
+typedef struct {
+    int fields;
+    char *names;
+    struct CtType *fields;
+} CtStruct;
 
-        vector<Type*> args;
-        Type* ret;
+typedef struct {
+    int fields;
+    char *names;
+    struct CtType *fields;
+} CtUnion;
 
-        // TODO: captures will change the size of the object
-        virtual size_t size() const override { return 8; }
+typedef struct {
+    struct CtType *backing;
 
-        virtual string str() const override {
-            string out = ret->str() + "(";
+    int fields;
+    char *names;
+    struct CtType *fields;
+    struct CtExpr *exprs;
+} CtVariant;
 
-            for(size_t i = 0; i < args.size(); i++) {
-                if(i != 0)
-                    out += ", ";
-                out += args[i]->str();
-            }
-            out += ")";
+typedef struct {
+    struct CtType *backing;
 
-            return out;
-        }
-    };
+    int fields;
+    char *names;
+    struct CtExpr *values;
+} CtEnum;
 
-    struct UnionType : Type {
-        UnionType(map<string, Type*> f)
-            : fields(f)
-        { }
+typedef struct {
+    struct CtType *type;
+    struct CtExpr *size;
+} CtArray;
 
-        virtual ~UnionType() override { }
+typedef struct {
+    struct CtType *result;
 
-        map<string, Type*> fields;
+    int count;
+    struct CtType *args;
+} CtClosure;
 
-        virtual size_t size() const override {
-            size_t out = 0;
-            for(const auto& pair : fields) {
-                auto type = pair.second;
-                if(type->size() > out)
-                    out = type->size();
-            }
-            return out;
-        }
+typedef union {
+    CtBuiltinType _builtin;
+    struct CtType *_const;
+    struct CtType *_ptr;
+    struct CtType *_ref;
+    struct CtType *_unique;
 
-        virtual string str() const override {
-            string out = "union {\n";
+    CtStruct _struct;
+    CtUnion _union;
+    CtVariant _variant;
+    CtEnum _enum;
+    CtArray _array;
+    CtClosure _closure;
+} CtTypeBody;
 
-            for(auto& [name, type] : fields) {
-                // TODO: proper indents
-                out += "    " + type->str() + " " + name + ";\n";
-            }
+typedef struct {
+    CtTypeType type;
+    CtTypeBody data;
+} CtType;
 
-            out += "}";
+typedef struct {
+    int count;
+    char *path;
+} CtPath;
 
-            return out;
-        }
-    };
-
-    struct StructType : Type {
-        StructType(vector<pair<string, Type*>> f)
-            : fields(f)
-        { }
-
-        virtual ~StructType() override { }
-
-        vector<pair<string, Type*>> fields;
-
-        virtual size_t size() const override {
-            size_t out = 0;
-            for(auto& each : fields) {
-                out += each.second->size();
-            }
-            return out;
-        }
-
-        virtual string str() const override {
-            string out = "struct {\n";
-            for(auto& [name, type] : fields) {
-                out += "    " + type->str() + " " + name + ";\n";
-            }
-            out += "}\n";
-
-            return out;
-        }
-    };
-
-    struct VariantType : Type {
-        VariantType(map<string, Type*> f)
-            : fields(f)
-        { }
-
-        virtual ~VariantType() override { }
-
-        map<string, Type*> fields;
-
-        virtual size_t size() const override {
-            size_t out = 0;
-            for(auto& pair : fields) {
-                if(pair.second->size() > out)
-                    out = pair.second->size();
-            }
-            // TODO: configurable backing
-            return out + 4;
-        }
-
-        virtual string str() const override {
-            string out = "variant {\n";
-            for(auto& [name, type] : fields) {
-                out += "    " + type->str() + " " + name + ";\n";
-            }
-            out += "}\n";
-            return out;
-        }
-    };
-
-    struct TemplateType : Type {
-        vector<pair<string, Type*>> params;
-        Type* of;
-    };
-}
+#endif

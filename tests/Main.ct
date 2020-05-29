@@ -1,0 +1,54 @@
+import arch::x86_64(gdt, gdt_ptr, idt);
+import arch::x86_64::mmu(...);
+import arch::intrin(cpuid);
+import arch::types(ufast8, uleast8, ufast64, ifast64);
+import arch::types(v128i, v128f, v128d);
+
+type i128 := i8[16];
+type str := const(char)*;
+type any := void*;
+
+type a := b::c::d;
+
+type ex := @packed struct {
+    a: int;
+    b: int;
+};
+
+type ex2 := @packed(8) struct {
+    a: int;
+    b: int;
+};
+
+type cache := @align(64) struct {
+    data: u8[64];
+};
+
+type stuff := enum {
+    a := 5;
+    b := 6;
+    c := 7;
+};
+
+type stuff2 := enum: u32 {
+    a := 5;
+    b := 6;
+};
+
+type ptr := def(int) -> int;
+
+type u := union {
+    a: int;
+    b: u8[4];
+    c: const(char)*;
+};
+
+type v := variant {
+    a => int;
+    b => usize;
+};
+
+type v2 := variant: u32 {
+    a: 5 => int;
+    b: 10 => usize;
+};
