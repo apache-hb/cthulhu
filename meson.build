@@ -1,11 +1,13 @@
 project('ctulang', 'cpp',
     default_options : [
-        'cpp_std=c++17'
+        'cpp_std=c++17',
+        'warning_level=3',
+        'werror=true'
     ]
 )
 
 sources = [
-    'src/Main.cpp'
+    'src/main.cpp'
 ]
 
 cfc = executable('ctc', sources)
