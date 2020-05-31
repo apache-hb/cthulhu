@@ -150,6 +150,27 @@ namespace ct
                 case ']': return Token::key(Keyword::RSQUARE);
                 case '{': return Token::key(Keyword::LBRACE);
                 case '}': return Token::key(Keyword::RBRACE);
+                case ':':
+                    if (consume('='))
+                        return Token::key(Keyword::ASSIGN);
+                    else if (consume(':'))
+                        return Token::key(Keyword::COLON2);
+                    else 
+                        return Token::key(Keyword::COLON);
+                case '.':
+                    if (consume('.'))
+                        if (consume('.'))
+                            return Token::key(Keyword::ELLIPSIS);
+                        else 
+                            return Token::key(Keyword::DOT2);
+                    else
+                        return Token::key(Keyword::DOT);
+                case ';':
+                    return Token::key(Keyword::SEMICOLON);
+                case ',':
+                    return Token::key(Keyword::SEMICOLON);
+                case '@':
+                    return Token::key(Keyword::AT);
                 default:
                     break;
                 }

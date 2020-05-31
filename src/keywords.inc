@@ -44,6 +44,17 @@ OP(RSQUARE, "]")
 OP(LBRACE, "{")
 OP(RBRACE, "}")
 
+OP(SEMICOLON, ";")
+OP(AT, "@")
+OP(COLON, ":")
+OP(COLON2, "::")
+OP(ASSIGN, ":=")
+
+OP(COMMA, ",")
+OP(DOT, ".")
+OP(DOT2, "..")
+OP(ELLIPSIS, "...")
+
 OP(DIV, "/")
 OP(DIVEQ, "/=")
 
