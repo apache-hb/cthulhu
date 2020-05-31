@@ -4,51 +4,62 @@ import arch::intrin(cpuid);
 import arch::types(ufast8, uleast8, ufast64, ifast64);
 import arch::types(v128i, v128f, v128d);
 
-type i128 := i8[16];
-type str := const(char)*;
-type any := void*;
+import os::gui(...);
+import std::fmt(format);
 
-type a := b::c::d;
 
-type ex := @packed struct {
-    a: int;
-    b: int;
-};
+@entry(CLI)
+def cmain(int argc, const(char)** argv): int {
+    if argc == 1 {
+        return -1;
+    } else {
+        return argc;
+    }
+}
 
-type ex2 := @packed(8) struct {
-    a: int;
-    b: int;
-};
+enum thing {
+    a := 0;
+    b := 1;
+    c := 2;
+}
 
-type cache := @align(64) struct {
-    data: u8[64];
-};
+enum thing2: u64 {
+    a := 10;
+    b := 20;
+}
 
-type stuff := enum {
-    a := 5;
-    b := 6;
-    c := 7;
-};
+type handle := void(State*);
 
-type stuff2 := enum: u32 {
-    a := 5;
-    b := 6;
-};
+struct State {
+    uint clicks;
+    handle callback;
+}
 
-type ptr := def(int) -> int;
+object Thing1 {
+    f32 data;
+}
 
-type u := union {
-    a: int;
-    b: u8[4];
-    c: const(char)*;
-};
+object Thingy : Thing1 {
+    type Self = Thingy;
 
-type v := variant {
-    a => int;
-    b => usize;
-};
+    uint a;
+    f32 b;
 
-type v2 := variant: u32 {
-    a: 5 => int;
-    b: 10 => usize;
-};
+    operator+=(Thingy other): Self {
+        a += other.a;
+        return self;
+    }
+}
+
+@entry(GUI)
+def gmain {
+    var state := State(0, { ctx =>
+        ctx->clicks += 1;
+        Popup::new(format("clicked button {} times", ctx->clicks));
+    });
+
+    return Window::new<State>("window", state) {
+        Button::new("click")
+            += { ctx => ctx->callback(ctx); }
+    };
+}
