@@ -1,14 +1,24 @@
-#include "lexer.h"
+#include "parser.h"
 
 int main(int argc, char **argv)
 {
     (void)argc;
     ct::Lexer lex(fopen(argv[1], "rt"));
 
-    ct::Token tok;
-    do
+    ct::Parser parser{lex};
+
+    auto thing = parser.parse();
+    (void)thing;
+
+    for (auto each : thing.imports)
     {
-        tok = lex.next();
-        printf("%d\n", tok.type);
-    } while (tok.type != ct::Token::END);
+        printf("import ");
+        int i = 0;
+        for (auto part : each.path)
+        {
+            if (i++ != 0)
+                printf("::");
+            printf("%s", part.c_str());
+        }
+    }
 }

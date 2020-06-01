@@ -55,7 +55,23 @@ namespace ct
         {
             return Token{FLOAT, d};
         }
+
+        static Token invalid()
+        {
+            return Token{INVALID, UINT64_C(0)};
+        }
     };
+
+    const char* to_string(Keyword key)
+    {
+        switch (key)
+        {
+#define KEY(id, str) case Keyword::id: return str;
+#define OP(id, str) case Keyword::id: return str;
+#include "keywords.inc"
+        default: return "uhhh";
+        }
+    }
 
     Token keyword(std::string&& str)
     {
@@ -81,15 +97,20 @@ namespace ct
             // skip comments
             while (c == '/')
             {
+                // single line comments
                 if (consume('/'))
                 {
-                    c = skip([](char c) { return c != '\n'; });
+                    // skip until the line end
+                    skip([](char c) { return c != '\n'; });
+                    // then get the next non-whitespace character
+                    c = skip([](char c) { return isspace(c); });
                 }
                 else if (consume('*'))
                 {
                     int depth = 1;
-                    while ((c = getc()))
+                    while (depth)
                     {
+                        c = getc();
                         if (c == '/' && consume('*'))
                         {
                             depth++;
@@ -99,6 +120,7 @@ namespace ct
                             depth--;
                         }
                     }
+                    c = skip([](char c) { return isspace(c); });
                 }
                 else
                 {
@@ -153,24 +175,52 @@ namespace ct
                 case ':':
                     if (consume('='))
                         return Token::key(Keyword::ASSIGN);
-                    else if (consume(':'))
-                        return Token::key(Keyword::COLON2);
-                    else 
-                        return Token::key(Keyword::COLON);
+                    else
+                        return Token::key(consume(':') ? Keyword::COLON2 : Keyword::COLON);
                 case '.':
                     if (consume('.'))
-                        if (consume('.'))
-                            return Token::key(Keyword::ELLIPSIS);
-                        else 
-                            return Token::key(Keyword::DOT2);
+                        return Token::key(consume('.') ? Keyword::ELLIPSIS : Keyword::DOT2);
                     else
                         return Token::key(Keyword::DOT);
-                case ';':
-                    return Token::key(Keyword::SEMICOLON);
-                case ',':
-                    return Token::key(Keyword::SEMICOLON);
-                case '@':
-                    return Token::key(Keyword::AT);
+                case ';': return Token::key(Keyword::SEMICOLON);
+                case ',': return Token::key(Keyword::SEMICOLON);
+                case '@': return Token::key(Keyword::AT);
+#define KEY_EQ(C, E1, E2) case C: return Token::key(consume('=') ? Keyword::E1 : Keyword::E2)
+                KEY_EQ('+', ADDEQ, ADD);
+                KEY_EQ('-', SUBEQ, SUB);
+                KEY_EQ('*', MULEQ, MUL);
+                KEY_EQ('%', MODEQ, MOD);
+                KEY_EQ('^', XOREQ, XOR);
+                case '&':
+                    if (consume('&'))
+                        return Token::key(Keyword::AND);
+                    else
+                        return Token::key(consume('=') ? Keyword::BANDEQ : Keyword::BAND);
+                case '|':
+                    if (consume('|'))
+                        return Token::key(Keyword::OR);
+                    else
+                        return Token::key(consume('=') ? Keyword::BOREQ : Keyword::BOR);
+                case '!': return Token::key(consume('=') ? Keyword::NEQ : Keyword::NOT);
+                case '=':
+                    if (consume('='))
+                        return Token::key(Keyword::EQ);
+                    else { break; }
+                        // error
+                case '~': return Token::key(Keyword::BNOT);
+                case '<':
+                    if (consume('<'))
+                        return Token::key(consume('=') ? Keyword::SHLEQ : Keyword::SHL);
+                    else
+                        return Token::key(consume('=') ? Keyword::LTE : Keyword::LT);
+                case '>':
+                    if (consume('>'))
+                        return Token::key(consume('=') ? Keyword::SHREQ : Keyword::SHR);
+                    else
+                        return Token::key(consume('=') ? Keyword::GTE : Keyword::GT);
+
+                case '?':
+                    return Token::key(Keyword::QUESTION);
                 default:
                     break;
                 }
