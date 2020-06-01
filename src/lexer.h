@@ -73,6 +73,19 @@ namespace ct
         }
     }
 
+
+    std::string to_string(Token tok)
+    {
+        switch (tok.type)
+        {
+        case Token::IDENT: return "Ident(" + std::get<std::string>(tok.data) + ")";
+        case Token::KEYWORD: return std::string("Keyword(") + to_string(std::get<Keyword>(tok.data)) + ")";
+        case Token::INVALID: return "Invalid()";
+        case Token::END: return "End()";
+        default: return "Other()";
+        }
+    }
+
     Token keyword(std::string&& str)
     {
         switch (crc32(str))
@@ -183,7 +196,7 @@ namespace ct
                     else
                         return Token::key(Keyword::DOT);
                 case ';': return Token::key(Keyword::SEMICOLON);
-                case ',': return Token::key(Keyword::SEMICOLON);
+                case ',': return Token::key(Keyword::COMMA);
                 case '@': return Token::key(Keyword::AT);
 #define KEY_EQ(C, E1, E2) case C: return Token::key(consume('=') ? Keyword::E1 : Keyword::E2)
                 KEY_EQ('+', ADDEQ, ADD);
