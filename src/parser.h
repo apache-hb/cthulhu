@@ -40,17 +40,24 @@ namespace ct
                 expect(Keyword::SEMICOLON);
             }
 
-            return { imports };
+            std::vector<ast::Body> body = {};
+            while (true)
+            {
+
+            }
+
+            return { imports, body };
         }
 
         bool consume(Keyword key)
         {
             Token tok = next();
-            printf("here %d\n", (int)key);
             if (tok.type == Token::KEYWORD && std::get<Keyword>(tok.data) == key)
             {
+                printf("yes\n");
                 return true;
             }
+            printf("no %d\n", tok.type);
             ahead = tok;
             return false;
         }
@@ -58,10 +65,9 @@ namespace ct
         void expect(Keyword key)
         {
             Token tok = next();
-            printf("aaa %s\n", to_string(key));
             if (tok.type != Token::KEYWORD || std::get<Keyword>(tok.data) != key)
             {
-                printf("oh no\n");
+                printf("oh no %d %s\n", tok.type, to_string(std::get<Keyword>(tok.data)));
                 std::exit(-2);
             }
         }
@@ -79,10 +85,10 @@ namespace ct
         Token next()
         {
             Token tok = ahead;
+            ahead = Token::invalid();
             if (tok.type == Token::INVALID)
                 tok = lex.next();
 
-            ahead = Token::invalid();
             return tok;
         }
 

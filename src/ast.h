@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <variant>
 
 namespace ct::ast
 {
@@ -13,8 +14,26 @@ namespace ct::ast
         std::vector<std::string> deps;
     };
 
+    struct Struct
+    {
+
+    };
+
+    struct Var
+    {
+
+    };
+
+    struct Func
+    {
+
+    };
+
+    using Body = std::variant<Struct, Var, Func>;
+
     struct Program
     {
         std::vector<Import> imports;
+        std::vector<Body> body;
     };
 }
