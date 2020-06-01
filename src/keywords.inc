@@ -16,6 +16,7 @@ KEY(TYPE, "type")
 KEY(DEF, "def")
 KEY(TEMPLATE, "template")
 KEY(OPERATOR, "operator")
+KEY(VAR, "var")
 
 // type keywords
 KEY(STRUCT, "struct")
@@ -46,6 +47,7 @@ OP(RBRACE, "}")
 
 OP(SEMICOLON, ";")
 OP(AT, "@")
+OP(QUESTION, "?")
 OP(COLON, ":")
 OP(COLON2, "::")
 OP(ASSIGN, ":=")
@@ -55,8 +57,50 @@ OP(DOT, ".")
 OP(DOT2, "..")
 OP(ELLIPSIS, "...")
 
+OP(ADD, "+")
+OP(ADDEQ, "+=")
+
+OP(SUB, "-")
+OP(SUBEQ, "-=")
+
+OP(MUL, "*")
+OP(MULEQ, "*=")
+
 OP(DIV, "/")
 OP(DIVEQ, "/=")
+
+OP(MOD, "%")
+OP(MODEQ, "%=")
+
+OP(NOT, "!")
+OP(EQ, "==")
+OP(NEQ, "!=")
+
+OP(LT, "<")
+OP(LTE, "<=")
+
+OP(GT, ">")
+OP(GTE, ">=")
+
+OP(AND, "&&")
+OP(OR, "||")
+
+OP(BNOT, "~")
+
+OP(BAND, "&")
+OP(BANDEQ, "&=")
+
+OP(BOR, "|")
+OP(BOREQ, "|=")
+
+OP(XOR, "^")
+OP(XOREQ, "^=")
+
+OP(SHL, "<<")
+OP(SHLEQ, "<<=")
+
+OP(SHR, ">>")
+OP(SHREQ, ">>=")
 
 // assembly instructions
 ASM(PUSH, "push")

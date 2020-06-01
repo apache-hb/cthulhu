@@ -7,9 +7,10 @@ import arch::types(v128i, v128f, v128d);
 import os::gui(...);
 import std::fmt(format);
 
-
+// comments
 @entry(CLI)
 def cmain(int argc, const(char)** argv): int {
+    /* more comments */
     if argc == 1 {
         return -1;
     } else {
