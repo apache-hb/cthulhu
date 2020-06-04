@@ -7,60 +7,9 @@ import arch::types(v128i, v128f, v128d);
 import os::gui(...);
 import std::fmt(format);
 
-// comments
-@entry(CLI)
-def cmain(int argc, const(char)** argv): int {
-    /* more comments */
-    if argc == 1 {
-        return -1;
-    } else {
-        return argc;
-    }
-}
+type uint64_t = u64;
 
-enum thing {
-    a := 0;
-    b := 1;
-    c := 2;
-}
-
-enum thing2: u64 {
-    a := 10;
-    b := 20;
-}
-
-type handle := void(State*);
-
-struct State {
-    uint clicks;
-    handle callback;
-}
-
-object Thing1 {
-    f32 data;
-}
-
-object Thingy : Thing1 {
-    type Self = Thingy;
-
-    uint a;
-    f32 b;
-
-    operator+=(Thingy other): Self {
-        a += other.a;
-        return self;
-    }
-}
-
-@entry(GUI)
-def gmain {
-    var state := State(0, { ctx =>
-        ctx->clicks += 1;
-        Popup::new(format("clicked button {} times", ctx->clicks));
-    });
-
-    return Window::new<State>("window", state) {
-        Button::new("click")
-            += { ctx => ctx->callback(ctx); }
-    };
+struct Name {
+    u64 id;
+    char* name;
 }
