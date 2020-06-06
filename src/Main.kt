@@ -4,6 +4,7 @@ enum class Keyword {
     TYPE,
     STRUCT,
     IMPORT,
+    MUT,
 
     LPAREN,
     RPAREN,
@@ -15,6 +16,11 @@ enum class Keyword {
     COMMA,
     DOT,
     SEMICOLON,
+
+    ASSIGN,
+    EQ,
+    NEQ,
+    NOT,
 
     AT, // @
 
@@ -64,6 +70,7 @@ class Lexer(var stream: FileInputStream) {
             "type" -> Key(Keyword.TYPE)
             "struct" -> Key(Keyword.STRUCT)
             "import" -> Key(Keyword.IMPORT)
+            "mut" -> Key(Keyword.MUT)
             else -> Ident(name)
         }
     }
@@ -93,6 +100,8 @@ class Lexer(var stream: FileInputStream) {
             ',' -> Key(Keyword.COMMA)
             '.' -> Key(Keyword.DOT)
             ';' -> Key(Keyword.SEMICOLON)
+            '=' -> Key(if (consume('=')) Keyword.EQ else Keyword.ASSIGN)
+            '!' -> Key(if (consume('=')) Keyword.NEQ else Keyword.NOT)
             ':' -> Key(if (consume(':')) Keyword.COLON2 else Keyword.COLON)
             '+' -> Key(if (consume('=')) Keyword.ADDEQ else Keyword.ADD)
             '-' -> Key(if (consume('=')) Keyword.SUBEQ else Keyword.SUB)
@@ -133,6 +142,30 @@ open class Expr : Node()
 class Intrin(val name: List<String>, val args: List<Expr>) : Node()
 class Import(val path: List<String>, val exports: List<String>) : Node()
 
+open class Type : Node()
+class Mut(val of: Type) : Type()
+class TypeName(val name: List<String>) : Type()
+
+enum class BuiltinType {
+    U8,
+    U16,
+    U32,
+    U64,
+    I8,
+    I16,
+    I32,
+    I64,
+    F32,
+    F64,
+    UINT,
+    INT,
+    BOOL,
+    VOID
+}
+class Builtin(val type: BuiltinType) : Type()
+class Ptr(val to: Type) : Type()
+class ArrayType(val of: Type, val size: Expr) : Type()
+
 class Parser(val lex: Lexer) {
     var ahead: Token? = null
 
@@ -146,7 +179,7 @@ class Parser(val lex: Lexer) {
         return tok
     }
 
-    private fun ident(): String? {
+    private fun ident(): String {
         val tok = next()
 
         assert(tok is Ident)
@@ -172,9 +205,9 @@ class Parser(val lex: Lexer) {
     }
 
     fun qualId(): List<String> {
-        var buf = mutableListOf(ident()!!)
+        var buf = mutableListOf(ident())
         while (consume(Keyword.COLON2))
-            buf.add(ident()!!)
+            buf.add(ident())
 
         return buf
     }
@@ -189,10 +222,10 @@ class Parser(val lex: Lexer) {
     fun importArgs(): List<String> {
         fun argBody(): List<String> {
             var buf = mutableListOf<String>()
-            buf.add(ident()!!)
+            buf.add(ident())
 
             while (consume(Keyword.COMMA))
-                buf.add(ident()!!)
+                buf.add(ident())
 
             return buf
         }
@@ -213,6 +246,69 @@ class Parser(val lex: Lexer) {
             Import(qualId(), importArgs())
         else
             null
+    }
+
+    fun parseExpr(): Expr {
+        // TODO: all this
+        return Expr()
+    }
+
+    fun parseType(): Type {
+        fun possiblyBuiltin(name: List<String>): Type {
+            return when (name[0]) {
+                "u8" -> Builtin(BuiltinType.U8)
+                "u16" -> Builtin(BuiltinType.U16)
+                "u32" -> Builtin(BuiltinType.U32)
+                "u64" -> Builtin(BuiltinType.U64)
+                "i8" -> Builtin(BuiltinType.I8)
+                "i16" -> Builtin(BuiltinType.I16)
+                "i32" -> Builtin(BuiltinType.I32)
+                "i64" -> Builtin(BuiltinType.I64)
+                "f32" -> Builtin(BuiltinType.F32)
+                "f64" -> Builtin(BuiltinType.F64)
+                "int" -> Builtin(BuiltinType.INT)
+                "uint" -> Builtin(BuiltinType.UINT)
+                "bool" -> Builtin(BuiltinType.BOOL)
+                "void" -> Builtin(BuiltinType.VOID)
+                else -> TypeName(name)
+            }
+        }
+
+        var out: Type
+
+        if (consume(Keyword.MUT)) {
+            expectKey(Keyword.LPAREN)
+            out = Mut(parseType())
+            expectKey(Keyword.RPAREN)
+        } else {
+            val id = qualId()
+            out = if (id.size == 1) possiblyBuiltin(id) else TypeName(id)
+        }
+
+        while (true) {
+            if (consume(Keyword.MUL)) {
+                out = Ptr(out)
+            } else if (consume(Keyword.LSQUARE)) {
+                val size = parseExpr()
+                expectKey(Keyword.RSQUARE)
+                out = ArrayType(out, size)
+            } else {
+                break
+            }
+        }
+
+        return out
+    }
+
+    fun parseAlias(): Pair<String, Type>? {
+        if (consume(Keyword.TYPE)) {
+            val name = ident()
+            expectKey(Keyword.ASSIGN)
+            val type = parseType()
+            return Pair(name, type)
+        } else {
+            return null
+        }
     }
 }
 
