@@ -22,6 +22,12 @@ enum class Keyword {
     NEQ,
     NOT,
 
+    BITNOT,
+    BITAND,
+    BITANDEQ,
+    BITOR,
+    BITOREQ,
+
     AT, // @
 
     COLON, // :
@@ -48,10 +54,13 @@ open class Token()
 class Str(val str: String) : Token()
 class Key(val key: Keyword) : Token()
 class Ident(val id: String) : Token()
+class IntTok(val num: Long) : Token()
+class Num(val num: Double) : Token()
 class End() : Token()
 class Err(val msg: String) : Token()
 
 fun Char.isIdent(): Boolean = this in 'a'..'z' || this in 'A'..'Z' || this == '_'
+fun Char.isXDigit(): Boolean = this in '0'..'9' || this in 'a'..'z' || this in 'A'..'Z'
 
 class Lexer(var stream: FileInputStream) {
     private var ahead: Int = stream.read()
@@ -83,6 +92,25 @@ class Lexer(var stream: FileInputStream) {
         return n
     }
 
+    private fun parseNumber(num: String): Num {
+        var buf = collect(read()) { it in '0'..'9' || it == '.' }
+        return Num(0.0)
+    }
+
+    private fun parseHex(): IntTok {
+        var buf = collect(read()) { it.isXDigit() }
+        return IntTok(Integer.parseInt(buf, 16))
+    }
+
+    private fun parseBin(): IntTok {
+        var buf = collect(read()) { it in '0'..'1' }
+        return IntTok(Long(buf, 2))
+    }
+
+    private fun parseString(): Str {
+
+    }
+
     fun next(): Token {
         var n = skip({ it.toChar().isWhitespace() })
 
@@ -91,6 +119,14 @@ class Lexer(var stream: FileInputStream) {
 
         return when (val c = n.toChar()) {
             in 'a'..'z', in 'A'..'Z', '_' -> parseIdent(collect(c, { it.isIdent() || it in '0'..'9' }))
+            in '1'..'9' -> parseNumber(collect(c, { it.isDigit() }))
+            '0' -> {
+                if (consume('x') || consume('X')) parseHex()
+                else if (consume('b') || consume('B')) parseBin()
+                else if (consume('.')) parseFloat()
+                else Err("integer literals may not begin with 0")
+            }
+            '"' -> parseString()
             '(' -> Key(Keyword.LPAREN)
             ')' -> Key(Keyword.RPAREN)
             '[' -> Key(Keyword.LSQUARE)
@@ -107,7 +143,7 @@ class Lexer(var stream: FileInputStream) {
             '-' -> Key(if (consume('=')) Keyword.SUBEQ else Keyword.SUB)
             '*' -> Key(if (consume('=')) Keyword.MULEQ else Keyword.MUL)
             '%' -> Key(if (consume('=')) Keyword.MODEQ else Keyword.MOD)
-            else -> Err("invalid char ${c}")
+            else -> Err("invalid char $c")
         }
     }
 
@@ -139,6 +175,9 @@ open class Node()
 
 open class Expr : Node()
 
+class Unary(val op: Keyword, val expr: Expr) : Expr()
+class IntLit(val v: Long) : Expr()
+
 class Intrin(val name: List<String>, val args: List<Expr>) : Node()
 class Import(val path: List<String>, val exports: List<String>) : Node()
 
@@ -165,6 +204,8 @@ enum class BuiltinType {
 class Builtin(val type: BuiltinType) : Type()
 class Ptr(val to: Type) : Type()
 class ArrayType(val of: Type, val size: Expr) : Type()
+
+class Struct(val fields: List<Pair<Type, String>>, val attribs: List<Intrin>) : Type()
 
 class Parser(val lex: Lexer) {
     var ahead: Token? = null
@@ -204,6 +245,16 @@ class Parser(val lex: Lexer) {
         assert((tok as Key).key == key)
     }
 
+    private fun peek(pred: (Token) -> Boolean): Token? {
+        val tok = next()
+
+        if (pred(tok))
+            return tok
+
+        ahead = tok
+        return null
+    }
+
     fun qualId(): List<String> {
         var buf = mutableListOf(ident())
         while (consume(Keyword.COLON2))
@@ -212,11 +263,20 @@ class Parser(val lex: Lexer) {
         return buf
     }
 
-    fun intrin(): Intrin? {
-        return if (consume(Keyword.AT))
-            Intrin(qualId(), listOf())
-        else
-            null
+    fun intrins(): List<Intrin> {
+        if (consume(Keyword.AT)) {
+            if (consume(Keyword.LSQUARE)) {
+                val items = mutableListOf(Intrin(qualId(), listOf()))
+                while (consume(Keyword.COMMA)) {
+                    items.add(Intrin(qualId(), listOf()))
+                }
+                expectKey(Keyword.RSQUARE)
+                return items
+            }
+            return listOf(Intrin(qualId(), listOf()))
+        } else {
+            return listOf<Intrin>()
+        }
     }
 
     fun importArgs(): List<String> {
@@ -249,6 +309,11 @@ class Parser(val lex: Lexer) {
     }
 
     fun parseExpr(): Expr {
+        val pre = peek({ it is Key })
+        if (pre != null) {
+            return Unary((pre as Key).key, parseExpr())
+        }
+
         // TODO: all this
         return Expr()
     }
@@ -305,10 +370,30 @@ class Parser(val lex: Lexer) {
             val name = ident()
             expectKey(Keyword.ASSIGN)
             val type = parseType()
+            expectKey(Keyword.SEMICOLON)
             return Pair(name, type)
         } else {
             return null
         }
+    }
+
+    fun parseStruct(): Pair<String, Struct>? {
+        val attribs = intrins()
+        if (consume(Keyword.STRUCT)) {
+            val name = ident()
+            expectKey(Keyword.LPAREN)
+
+            var fields = mutableListOf<Pair<Type, String>>()
+
+            while (!consume(Keyword.RPAREN)) {
+                fields.add(Pair(parseType(), ident()))
+                expectKey(Keyword.SEMICOLON)
+            }
+
+            return Pair(name, Struct(fields.toList(), attribs))
+        }
+
+        return null
     }
 }
 
@@ -321,4 +406,13 @@ fun main(args: Array<String>) {
     println(decl)
     val decl2 = parse.parseImport()
     println(decl2)
+
+    val decl3 = parse.parseAlias()
+    println(decl3)
+
+    val decl4 = parse.parseAlias()
+    println(decl4)
+
+    val decl5 = parse.parseStruct()
+    println(decl5)
 }
