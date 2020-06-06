@@ -6,34 +6,13 @@
 
 namespace ct::ast
 {
-    using Path = std::vector<std::string>;
-
-    struct Import
-    {
-        Path path;
-        std::vector<std::string> deps;
-    };
-
-    struct Struct
+    struct Node
     {
 
     };
 
-    struct Var
+    struct Id : Node
     {
-
-    };
-
-    struct Func
-    {
-
-    };
-
-    using Body = std::variant<Struct, Var, Func>;
-
-    struct Program
-    {
-        std::vector<Import> imports;
-        std::vector<Body> body;
+        std::string content;
     };
 }

@@ -1,117 +1,62 @@
 grammar cthulhu;
 
-unit
-    : importdecl* bodydecl* EOF
-    ;
-
-importdecl
-    : 'import' QualId '(' importspec ')' ';'
-    ;
-
-importspec
-    : '...'
-    | Ident (',' Ident)*
-    ;
-
-bodydecl
-    : aliasdecl 
-    | structdecl
-    | funcdecl
-    ;
-
-structfield
-    : type Ident ';'
-    ;
-
 structdecl
-    : 'struct' Ident '{' structfield* '}'
+    : intrin* 'struct' ident '{' (intrin* type ident ';')* '}'
+    ;
+
+intrinargs
+    :
+    ;
+
+intrin
+    : '@' qual_ident '(' intrinargs? ')'
     ;
 
 aliasdecl
-    : 'type' Ident '=' type ';'
+    : 'type' ident '=' type ';'
+    ;
+
+
+
+
+expr
+    : qual_ident
+    | intrin
+    | unaryop expr
+    | expr binaryop expr
+    | expr '[' expr ']'
+    | expr '.' expr
+    | expr '->' expr
+    | expr '(' (expr (',' expr)*)? ')'
+    | expr '?' expr? ':' expr
+    ;
+
+type
+    : qual_ident
+    | builtin
+    | type '*'
+    | type '[' expr ']'
     ;
 
 builtin
     : 'u8' | 'u16' | 'u32' | 'u64'
     | 'i8' | 'i16' | 'i32' | 'i64'
-    | 'int' | 'uint' | 'isize' | 'usize'
     | 'f32' | 'f64' | 'void' | 'bool'
+    | 'int' | 'uint'
     ;
 
-typelist
-    : type (',' type)*
+qual_ident
+    : ident ('::' ident)*
     ;
 
-type
-    : builtin
-    | type '*'
-    | type '(' typelist? ')'
-    | QualId
-    ;
-
-// todo
-binaryop
-    : '+' | '+='
-    ;
-
-unaryop
-    : '+' | '-' | '&' | '*' | '~' | '!'
-    ;
-
-expr
-    : QualId
-    | expr binaryop expr
-    | unaryop expr
-    ;
-
-returnstmt
-    : 'return' expr ';'
-    ;
-
-stmt
-    : returnstmt
-    | stmtlist
-    ;
-
-stmtlist
-    : '{' stmt* '}'
-    ;
-
-argdecl
-    : type Ident (',' type Ident)*
-    ;
-
-funcargs
-    : '(' argdecl? ')'
-    ;
-
-funcret
-    : ':' type
-    ;
-
-funcbody
-    : '=' expr
-    | stmtlist
-    ;
-
-funcdecl
-    : 'def' Ident funcargs? funcret? funcbody
-    ;
-
-QualId
-    : Ident ('::' Ident)*
-    ;
-
-Ident
+ident
     : LETTER (LETTER | DIGIT)*
     ;
 
-fragment
-LETTER
+fragment LETTER
     : [a-zA-Z_]
     ;
 
-fragment
-DIGIT
+fragment DIGIT
     : [0-9]
     ;
