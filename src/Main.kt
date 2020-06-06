@@ -92,23 +92,31 @@ class Lexer(var stream: FileInputStream) {
         return n
     }
 
-    private fun parseNumber(num: String): Num {
-        var buf = collect(read()) { it in '0'..'9' || it == '.' }
-        return Num(0.0)
+    private fun parseNumber(num: String): Token {
+        var buf = collect(read().toChar()) { it in '0'..'9' || it == '.' }
+        if ('.' in buf) {
+            return Num(0.0)
+        } else {
+            return IntTok(0)
+        }
     }
 
     private fun parseHex(): IntTok {
-        var buf = collect(read()) { it.isXDigit() }
-        return IntTok(Integer.parseInt(buf, 16))
+        var buf = collect(read().toChar()) { it.isXDigit() }
+        return IntTok(Integer.parseInt(buf, 16).toLong())
     }
 
     private fun parseBin(): IntTok {
-        var buf = collect(read()) { it in '0'..'1' }
-        return IntTok(Long(buf, 2))
+        var buf = collect(read().toChar()) { it in '0'..'1' }
+        return IntTok(Integer.parseInt(buf, 2).toLong())
     }
 
     private fun parseString(): Str {
+        return Str("")
+    }
 
+    private fun parseFloat(): Num {
+        return Num(0.0)
     }
 
     fun next(): Token {
