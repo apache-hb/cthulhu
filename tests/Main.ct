@@ -1,15 +1,40 @@
-import arch::x86_64(gdt, gdt_ptr, idt);
-import arch::x86_64::mmu(...);
-import arch::intrin(cpuid);
-import arch::types(ufast8, uleast8, ufast64, ifast64);
-import arch::types(v128i, v128f, v128d);
+import std::algo(*);
+import std::algo(strlen);
 
-import os::gui(...);
-import std::fmt(format);
+type qword = u64;
+type dword = u32;
 
-type uint64_t = u64;
+@[extern("C"), packed(1)]
+struct StivaleHeader {
+    qword stack;
+    dword mode;
+    dword width;
+    dword height;
+    dword depth;
+}
 
-struct Name {
-    u64 id;
-    char* name;
+// sanity check the size of the header
+@assert(@size(StivaleHeader) == 24);
+
+@[section(".bss"), extern("C")]
+var initstack: u8[4096];
+
+@[section(".stivalehdr"), extern("C")]
+var stivalehdr = StivaleHeader(
+    stack = initstack + @size(initstack)
+);
+
+@[extern("C"), noreturn, mangle("_start")]
+def _start -> void {
+    // text to write to vga buffer
+    let text = "hello world";
+    let vga = as<mut(u16)*>(0xB8000);
+
+    // write the text to vga
+    for idx : @strlen(text) {
+        /*    ^ try to evalulate the strings length at compile time */
+        vga[idx] = text[idx];
+    }
+
+    while true {}
 }

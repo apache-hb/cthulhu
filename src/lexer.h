@@ -78,11 +78,16 @@ namespace ct
     {
         switch (tok.type)
         {
-        case Token::IDENT: return "Ident(" + std::get<std::string>(tok.data) + ")";
-        case Token::KEYWORD: return std::string("Keyword(") + to_string(std::get<Keyword>(tok.data)) + ")";
-        case Token::INVALID: return "Invalid()";
-        case Token::END: return "End()";
-        default: return "Other()";
+        case Token::IDENT:
+            return "Ident(" + std::get<std::string>(tok.data) + ")";
+        case Token::KEYWORD:
+            return std::string("Keyword(") + to_string(std::get<Keyword>(tok.data)) + ")";
+        case Token::INVALID:
+            return "Invalid()";
+        case Token::END:
+            return "End()";
+        default:
+            return "Other()";
         }
     }
 
@@ -186,15 +191,9 @@ namespace ct
                 case '{': return Token::key(Keyword::LBRACE);
                 case '}': return Token::key(Keyword::RBRACE);
                 case ':':
-                    if (consume('='))
-                        return Token::key(Keyword::ASSIGN);
-                    else
-                        return Token::key(consume(':') ? Keyword::COLON2 : Keyword::COLON);
+                    return Token::key(consume('=') ? Keyword::ASSIGN : (consume(':') ? Keyword::COLON2 : Keyword::COLON));
                 case '.':
-                    if (consume('.'))
-                        return Token::key(consume('.') ? Keyword::ELLIPSIS : Keyword::DOT2);
-                    else
-                        return Token::key(Keyword::DOT);
+                    return Token::key(consume('.') ? (consume('.') ? Keyword::ELLIPSIS : Keyword::DOT2) : Keyword::DOT);
                 case ';': return Token::key(Keyword::SEMICOLON);
                 case ',': return Token::key(Keyword::COMMA);
                 case '@': return Token::key(Keyword::AT);
@@ -205,15 +204,9 @@ namespace ct
                 KEY_EQ('%', MODEQ, MOD);
                 KEY_EQ('^', XOREQ, XOR);
                 case '&':
-                    if (consume('&'))
-                        return Token::key(Keyword::AND);
-                    else
-                        return Token::key(consume('=') ? Keyword::BANDEQ : Keyword::BAND);
+                    return Token::key(consume('&') ? Keyword::AND : (consume('=') ? Keyword::BANDEQ : Keyword::BAND));
                 case '|':
-                    if (consume('|'))
-                        return Token::key(Keyword::OR);
-                    else
-                        return Token::key(consume('=') ? Keyword::BOREQ : Keyword::BOR);
+                    return Token::key(consume('|') ? Keyword::OR : (consume('=') ? Keyword::BOREQ : Keyword::BOR));
                 case '!': return Token::key(consume('=') ? Keyword::NEQ : Keyword::NOT);
                 case '=':
                     if (consume('='))
@@ -232,8 +225,7 @@ namespace ct
                     else
                         return Token::key(consume('=') ? Keyword::GTE : Keyword::GT);
 
-                case '?':
-                    return Token::key(Keyword::QUESTION);
+                case '?': return Token::key(Keyword::QUESTION);
                 default:
                     break;
                 }
