@@ -16,15 +16,14 @@ struct StivaleHeader {
 // sanity check the size of the header
 @assert(@size(StivaleHeader) == 24);
 
-@[section(".bss"), extern("C")]
 var initstack: u8[4096];
 
-@[section(".stivalehdr"), extern("C")]
+@section(".stivalehdr")
 var stivalehdr = StivaleHeader(
     stack = initstack + @size(initstack)
 );
 
-@[extern("C"), noreturn, mangle("_start")]
+@[extern("C"), noreturn]
 def _start -> void {
     // text to write to vga buffer
     let text = "hello world";
