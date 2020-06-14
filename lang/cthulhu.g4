@@ -1,60 +1,139 @@
 grammar cthulhu;
 
-structdecl
-    : intrin* 'struct' ident '{' (intrin* type ident ';')* '}'
+unit
+    : importDecl* bodyDecl* EOF
     ;
 
-intrinargs
+name
+    : Ident (Colon2 Ident)*
+    ;
+
+list
+    : Ident (Comma Ident)*
+    ;
+
+importSpec
+    : LParen (Mul | list) RParen
+    ;
+
+importDecl
+    : Import name importSpec SColon
+    ;
+
+bodyDecl
     :
     ;
 
-intrin
-    : '@' qual_ident '(' intrinargs? ')'
+
+// declarations
+Import : 'import' ;
+Type : 'type' ;
+Struct : 'struct' ;
+Union : 'union' ;
+Enum : 'enum' ;
+Def : 'def' ;
+Let : 'let' ;
+Var : 'var' ;
+
+// control flow
+If : 'if' ;
+Else : 'else' ;
+While : 'while' ;
+Do : 'do' ;
+For : 'for' ;
+Switch : 'switch' ;
+Case : 'case' ;
+Continue : 'continue' ;
+Break : 'break' ;
+Match : 'match' ;
+Default : 'default' ;
+Return : 'return' ;
+Cast : 'cast' ;
+
+// types
+Mut : 'mut' ;
+Char : 'char' ;
+UChar : 'uchar' ;
+Short : 'short' ;
+UShort : 'ushort' ;
+Int : 'int' ;
+UInt : 'uint' ;
+Long : 'long' ;
+ULong : 'ulong' ;
+Float : 'float' ;
+Double : 'double' ;
+LDouble : 'ldouble' ;
+Bool : 'bool' ;
+Void : 'void' ;
+
+LParen : '(' ;
+RParen : ')' ;
+
+Comma : ',' ;
+Dot : '.' ;
+At : '@' ;
+Assign : '=' ;
+
+Colon : ':' ;
+Colon2 : '::' ;
+SColon : ';' ;
+
+Mul : '*' ;
+MulEq : '*=' ;
+
+
+
+
+
+
+
+
+String
+    : '"' '"'
     ;
 
-aliasdecl
-    : 'type' ident '=' type ';'
+Char
+    : '\'' '\''
     ;
 
-
-
-
-expr
-    : qual_ident
-    | intrin
-    | unaryop expr
-    | expr binaryop expr
-    | expr '[' expr ']'
-    | expr '.' expr
-    | expr '->' expr
-    | expr '(' (expr (',' expr)*)? ')'
-    | expr '?' expr? ':' expr
+Int10
+    : NUMBER+
     ;
 
-type
-    : qual_ident
-    | builtin
-    | type '*'
-    | type '[' expr ']'
+Int2
+    : ('0b' | '0B') BIN+
     ;
 
-builtin
-    : 'u8' | 'u16' | 'u32' | 'u64'
-    | 'i8' | 'i16' | 'i32' | 'i64'
-    | 'f32' | 'f64' | 'void' | 'bool'
-    | 'int' | 'uint'
+Int8
+    : ('0o' | '0O') OCT+
     ;
 
-qual_ident
-    : ident ('::' ident)*
+Int16
+    : ('0x' | '0X') HEX+
     ;
 
-ident
+Ident
     : LETTER (LETTER | DIGIT)*
     ;
 
 fragment LETTER
     : [a-zA-Z_]
+    ;
+
+fragment BIN
+    : [01_]
+    ;
+
+fragment OCT
+    : [0-7_]
+    ;
+
+fragment HEX
+    : [0-9a-fA-F_]
+    ;
+
+fragment NUMBER
+    : [0-9_]
     ;
 
 fragment DIGIT
