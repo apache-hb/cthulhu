@@ -11,7 +11,67 @@ namespace ct {
 
     enum class Keyword {
         IMPORT,
-        TYPE
+        TYPE,
+        DEF,
+
+        ADD,
+        ADDEQ,
+
+        SUB,
+        SUBEQ,
+
+        MUL,
+        MULEQ,
+
+        DIV,
+        DIVEQ,
+
+        MOD,
+        MODEQ,
+
+        BITAND,
+        BITANDEQ,
+
+        BITOR,
+        BITOREQ,
+
+        BITXOR,
+        BITXOREQ,
+
+        SHL,
+        SHLEQ,
+
+        SHR,
+        SHREQ,
+
+        AND,
+        OR,
+
+        LSQUARE,
+        RSQUARE,
+
+        LPAREN,
+        RPAREN,
+
+        LBRACE,
+        RBRACE,
+
+        GT,
+        GTE,
+
+        LT,
+        LTE,
+
+        EQ,
+        NEQ,
+
+        NOT,
+        ASSIGN,
+
+        AT,
+        COMMA,
+        DOT,
+        QUESTION
     };
 
     struct Token {
@@ -53,6 +113,7 @@ namespace ct {
             switch (crc32(buf)) {
             case crc32("import"): return Token(Token::key, Keyword::IMPORT);
             case crc32("type"): return Token(Token::key, Keyword::TYPE);
+            case crc32("def"): return Token(Token::key, Keyword::DEF);
             default:
                 return Token(Token::ident, std::move(buf));
             }
@@ -64,28 +125,28 @@ namespace ct {
 
         Token symbol(char c) {
             switch (c) {
-            case '+':
-            case '-':
-            case '/':
-            case '*':
-            case '%':
-            case '&':
-            case '|':
-            case '[':
-            case ']':
-            case '{':
-            case '}':
-            case '(':
-            case ')':
-            case '!':
-            case '=':
-            case '@':
-            case ',':
-            case '.':
-            case '?':
-            case '<':
-            case '>':
-            case '^':
+            case '+': return Token(Token::key, consume('=') ? Keyword::ADDEQ : Keyword::ADD);
+            case '-': return Token(Token::key, consume('=') ? Keyword::SUBEQ : Keyword::SUB);
+            case '/': return Token(Token::key, consume('=') ? Keyword::DIVEQ : Keyword::DIV);
+            case '*': return Token(Token::key, consume('=') ? Keyword::MULEQ : Keyword::MUL);
+            case '%': return Token(Token::key, consume('=') ? Keyword::MODEQ : Keyword::MOD);
+            case '^': return Token(Token::key, consume('=') ? Keyword::BITXOREQ : Keyword::BITXOR);
+            case '&': return Token(Token::key, consume('&') ? Keyword::AND : consume('=') ? Keyword::BITANDEQ : Keyword::BITAND);
+            case '|': return Token(Token::key, consume('|') ? Keyword::OR : consume('=') ? Keyword::BITOREQ : Keyword::BITOR);
+            case '[': return Token(Token::key, Keyword::LSQUARE);
+            case ']': return Token(Token::key, Keyword::RSQUARE);
+            case '{': return Token(Token::key, Keyword::LBRACE);
+            case '}': return Token(Token::key, Keyword::RBRACE);
+            case '(': return Token(Token::key, Keyword::LPAREN);
+            case ')': return Token(Token::key, Keyword::RPAREN);
+            case '!': return Token(Token::key, consume('=') ? Keyword::NEQ : Keyword::NOT);
+            case '=': return Token(Token::key, consume('=') ? Keyword::EQ : Keyword::ASSIGN);
+            case '@': return Token(Token::key, Keyword::AT);
+            case ',': return Token(Token::key, Keyword::COMMA);
+            case '.': return Token(Token::key, Keyword::DOT);
+            case '?': return Token(Token::key, Keyword::QUESTION);
+            case '<': return Token(Token::key, consume('<') ? consume('=') ? Keyword::SHLEQ : Keyword::SHL : consume('=') ? Keyword::GTE : Keyword::GT);
+            case '>': return Token(Token::key, consume('>') ? consume('=') ? Keyword::SHREQ : Keyword::SHR : consume('=') ? Keyword::LTE : Keyword::LT);
             default:
                 // oh no
             }
