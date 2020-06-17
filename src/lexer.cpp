@@ -10,6 +10,7 @@
 namespace ct {
     bool isident1(int c) { return isalpha(c) || c == '_'; }
     bool isident2(int c) { return isalnum(c) || c == '_'; }
+    bool isnumber(int c) { return isdigit(c) || c == '.'; }
 
     enum class CollectResult {
         keep,
@@ -18,70 +19,20 @@ namespace ct {
     };
 
     enum class Keyword {
-        IMPORT,
-        TYPE,
-        DEF,
-
-        ADD,
-        ADDEQ,
-
-        SUB,
-        SUBEQ,
-
-        MUL,
-        MULEQ,
-
-        DIV,
-        DIVEQ,
-
-        MOD,
-        MODEQ,
-
-        BITAND,
-        BITANDEQ,
-
-        BITOR,
-        BITOREQ,
-
-        BITXOR,
-        BITXOREQ,
-
-        SHL,
-        SHLEQ,
-
-        SHR,
-        SHREQ,
-
-        AND,
-        OR,
-
-        LSQUARE,
-        RSQUARE,
-
-        LPAREN,
-        RPAREN,
-
-        LBRACE,
-        RBRACE,
-
-        GT,
-        GTE,
-
-        LT,
-        LTE,
-
-        EQ,
-        NEQ,
-
-        NOT,
-        ASSIGN,
-
-        AT,
-        HASH,
-        COMMA,
-        DOT,
-        QUESTION
+#define KEY(id, str) id,
+#define OP(id, str) id,
+#include "keywords.inc"
+        INVALID
     };
+
+    const char* str(Keyword key) {
+        switch (key) {
+#define KEY(id, str) case Keyword::id: return str;
+#define OP(id, str) case Keyword::id: return str;
+#include "keywords.inc"
+        default: return "Invalid";
+        }
+    }
 
     struct Token {
         enum { eof, ident, string, key, integer, number, character } type;
@@ -91,7 +42,7 @@ namespace ct {
 
         Token(type_t t)
             : type(t)
-            , data(0ULL)
+            , data(Keyword::INVALID)
         { }
 
         template<typename T>
@@ -99,42 +50,94 @@ namespace ct {
             : type(t)
             , data(d)
         { }
+
+        bool is(type_t t) const {
+            return type == t;
+        }
+
+        std::string str() const {
+            using namespace std::string_literals;
+            switch (type) {
+            case ident: return "Ident(" + std::get<std::string>(data) + ")";
+            case key: return "Key('"s + ct::str(std::get<Keyword>(data)) + "')";
+            case eof: return "EOF";
+            case integer: return "Int(" + std::to_string(std::get<unsigned long long>(data)) + ")";
+            case number: return "Float(" + std::to_string(std::get<double>(data)) + ")";
+            default: return "Error";
+            }
+        }
     };
 
+    template<typename I>
     struct Lexer {
+        template<typename... T>
+        Lexer(T &&... args)
+            : source(args...)
+        {
+            ahead = source.get();
+        }
+
         Token next() {
-            auto c = skip([](auto c) { return isspace(c); });
+            auto c = skip_comments();
 
             if (c == EOF) {
                 return Token(Token::eof);
+                // TODO: string literals and char literals
             } else if (isident1(c)) {
                 return ident(c);
             } else if (isdigit(c)) {
                 return number(c);
-            } else if (c == '"') {
-                // string
-            } else if (c == '\'') {
-                // character
             } else {
                 return symbol(c);
             }
         }
 
     private:
+        int skip_comments() {
+            int c = skip([](auto c) {
+                return isspace(c);
+            });
+
+            while (c == '/') {
+                if (consume('*')) {
+                    // multiline comment
+                    int depth = 1;
+                    c = skip([&](char c) {
+                        if (c == '/' && consume('*')) {
+                            depth++;
+                        } else if (c == '*' && consume('/')) {
+                            depth--;
+                        }
+
+                        return depth != 0;
+                    });
+                } else if (consume('/')) {
+                    // single line comment
+                    c = skip([](char c) {
+                        return c == '\n';
+                    });
+                } else {
+                    // not a comment
+                    break;
+                }
+            }
+
+            return c;
+        }
+
         Token ident(char c) {
             std::string buf = collect(c, isident2);
 
             switch (crc32(buf)) {
-            case crc32("import"): return Token(Token::key, Keyword::IMPORT);
-            case crc32("type"): return Token(Token::key, Keyword::TYPE);
-            case crc32("def"): return Token(Token::key, Keyword::DEF);
+#define KEY(id, str) case crc32(str): return Token(Token::key, Keyword::id);
+#include "keywords.inc"
             default: return Token(Token::ident, std::move(buf));
             }
         }
 
         Token parse_hex() {
             auto hex = collect([](char c) {
-                if (isxdigit(c)) 
+                if (isxdigit(c))
                     return CollectResult::keep;
                 else if (c == '_')
                     return CollectResult::skip;
@@ -164,7 +167,7 @@ namespace ct {
 
         Token parse_oct() {
             auto oct = collect([](char c) {
-                if ('0' <= c && c >= '7') 
+                if ('0' <= c && c >= '7')
                     return CollectResult::keep;
                 else if (c == '_')
                     return CollectResult::skip;
@@ -178,16 +181,14 @@ namespace ct {
         }
 
         Token number0() {
-            if (consume_any('x', 'X')) {
+            if (consume('x')) {
                 return parse_hex();
-            } else if (consume_any('b', 'B')) {
+            } else if (consume('b')) {
                 return parse_bin();
-            } else if (consume_any('o', 'O')) {
+            } else if (consume('o')) {
                 return parse_oct();
             } else {
-                printf("TODO\n");
-                std::exit(2);
-                // oh no
+                return parse_number('0');
             }
         }
 
@@ -238,7 +239,7 @@ namespace ct {
             case '(': return Token(Token::key, Keyword::LPAREN);
             case ')': return Token(Token::key, Keyword::RPAREN);
             case '!': return Token(Token::key, consume('=') ? Keyword::NEQ : Keyword::NOT);
-            case '=': return Token(Token::key, consume('=') ? Keyword::EQ : Keyword::ASSIGN);
+            case '=': return Token(Token::key, consume('=') ? Keyword::EQ : Keyword::INVALID);
             case '@': return Token(Token::key, Keyword::AT);
             case ',': return Token(Token::key, Keyword::COMMA);
             case '.': return Token(Token::key, Keyword::DOT);
@@ -246,9 +247,11 @@ namespace ct {
             case '<': return Token(Token::key, consume('<') ? consume('=') ? Keyword::SHLEQ : Keyword::SHL : consume('=') ? Keyword::GTE : Keyword::GT);
             case '>': return Token(Token::key, consume('>') ? consume('=') ? Keyword::SHREQ : Keyword::SHR : consume('=') ? Keyword::LTE : Keyword::LT);
             case '#': return Token(Token::key, Keyword::HASH);
+            case ':': return Token(Token::key, consume(':') ? Keyword::COLON2 : consume('=') ? Keyword::ASSIGN : Keyword::COLON);
+            case ';': return Token(Token::key, Keyword::SEMICOLON);
             default:
                 // TODO: handle this
-                printf("TODO 2\n");
+                printf("TODO 2 %c\n", c);
                 std::exit(1);
                 break;
                 // oh no
@@ -258,13 +261,13 @@ namespace ct {
         template<typename F>
         std::string collect(char c, F&& filter) {
             std::string out = {c};
-            
+
             using res_t = std::result_of_t<F(char)>;
             if constexpr (std::is_same_v<bool, res_t>) {
                 while (filter(peek()))
                     out += read();
             } else {
-                while (true) { 
+                while (true) {
                     auto res = filter(peek());
                     if (res == CollectResult::keep) {
                         out += read();
@@ -282,8 +285,8 @@ namespace ct {
         template<typename F>
         std::string collect(F&& filter) {
             std::string out;
-            
-            while (true) { 
+
+            while (true) {
                 auto res = filter(peek());
                 if (res == CollectResult::keep) {
                     out += read();
@@ -297,7 +300,7 @@ namespace ct {
             return out;
         }
 
-        std::istream source;
+        I source;
         int ahead;
 
         int read() {
@@ -315,15 +318,6 @@ namespace ct {
                 read();
                 return true;
             }
-            return false;
-        }
-
-        template<typename... T>
-        bool consume_any(T... chars) {
-            for (char c : {chars...}) 
-                if (consume(c))
-                    return true;
-            
             return false;
         }
 
