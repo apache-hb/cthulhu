@@ -1,39 +1,40 @@
-import std::algo(*);
-import std::algo(strlen);
+import std::mem(copy, move);
+import std::ranges(*);
+import compiler::hints(elf, inline, likley);
 
-type qword = u64;
-type dword = u32;
+@[elf::section(".bss")]
+let x := 500;
+let y := 0600;
+let z := 0;
+let z := 0x500;
+let y := 0x500;
+let b := 0b0001;
+let B := 0b101;
+let o := 0o777;
 
-@[extern("C"), packed(1)]
-struct StivaleHeader {
-    qword stack;
-    dword mode;
-    dword width;
-    dword height;
-    dword depth;
+@[inline(never)]
+def thing(bool b) {
+
+    @[likley]
+    if b {
+        let a = 500;
+    } else {
+        let b = "aaaa";
+    }
 }
 
-// sanity check the size of the header
-@assert(@size(StivaleHeader) == 24);
+@[async]
+def func(int i) {
+    var x = 0;
 
-var initstack: u8[4096];
+    for (var y : range<int>(i))
+        x += y;
 
-@section(".stivalehdr")
-var stivalehdr = StivaleHeader(
-    stack = initstack + @size(initstack)
-);
+    return x;
+}
 
-@[extern("C"), noreturn]
-def _start -> void {
-    // text to write to vga buffer
-    let text = "hello world";
-    let vga = as<mut(u16)*>(0xB8000);
+void example() {
+    let x = func(9999);
 
-    // write the text to vga
-    for idx : @strlen(text) {
-        /*    ^ try to evalulate the strings length at compile time */
-        vga[idx] = text[idx];
-    }
-
-    while true {}
+    let y = #await x;
 }
