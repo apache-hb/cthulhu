@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <array>
+#include <optional>
 #include <type_traits>
 
 #include "hash.h"
@@ -38,7 +39,7 @@ namespace ct {
         enum { eof, ident, string, key, integer, number, character } type;
         using type_t = decltype(type);
 
-        std::variant<unsigned long long, std::string, Keyword, double> data;
+        std::variant<unsigned long long, std::string, std::u32string, Keyword, double, char32_t> data;
 
         Token(type_t t)
             : type(t)
@@ -83,6 +84,23 @@ namespace ct {
             if (c == EOF) {
                 return Token(Token::eof);
                 // TODO: string literals and char literals
+            } else if (c == '"') {
+                return plain_string();
+            } else if (c == '\'') {
+                return char_token();
+            } else if (c == 'u') {
+                if (consume('8')) {
+                    if (consume('"')) {
+                        return parse_utf8();
+                    }
+                    return Token(Token::ident, "u8");
+                }
+                return ident('u');
+            } else if (c == 'R') {
+                if (consume('"')) {
+                    return raw_string();
+                }
+                return ident('R');
             } else if (isident1(c)) {
                 return ident(c);
             } else if (isdigit(c)) {
@@ -93,6 +111,79 @@ namespace ct {
         }
 
     private:
+        Token raw_string() {
+            if (!consume('(')) {
+                return Token(Token::string, std::u32string(nullptr));
+            }
+
+            std::u32string buf;
+            while (true) {
+                auto c = read();
+                if (c == ')' && consume('"'))
+                    break;
+
+                buf += c;
+            }
+
+            return Token(Token::string, buf);
+        }
+
+        std::optional<char32_t> read_char() {
+            auto c = read();
+            if (c == '"') {
+                return std::nullopt;
+            }
+
+            if (c == '\\') {
+                switch (read()) {
+                case '"': return '"';
+                case 'n': return '\n';
+                case 'x': 
+                case 'u': break;
+                }
+            }
+
+            return c;
+        }
+
+        Token parse_utf8() {
+            std::u32string buf;
+
+            while (true) {
+                auto c = read_char();
+                if (!c.has_value()) 
+                    break;
+
+                buf += c.value();
+            }
+
+            return Token(Token::string, buf);
+        }
+
+        Token plain_string() {
+            std::u32string buf;
+
+            while (true) {
+                auto c = read_char();
+                if (!c.has_value())
+                    break;
+
+                buf += c.value();
+            }
+
+            return Token(Token::string, buf);
+        }
+
+        Token char_token() {
+            auto c = read_char();
+            if (!consume('\'')) {
+                // error
+                printf("closing ' missing \n");
+                std::exit(500);
+            }
+            return Token(Token::character, c.value());
+        }
+
         int skip_comments() {
             int c = skip([](auto c) {
                 return isspace(c);
@@ -113,9 +204,12 @@ namespace ct {
                     });
                 } else if (consume('/')) {
                     // single line comment
-                    c = skip([](char c) {
-                        return c == '\n';
-                    });
+                    while (peek() != '\n') 
+                        c = read();
+
+                    // then skip more whitespace
+                    while (isspace(c))
+                        c = read();
                 } else {
                     // not a comment
                     break;
