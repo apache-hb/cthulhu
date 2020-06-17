@@ -26,15 +26,15 @@ def thing(bool b) {
 
     @[likley]
     if b {
-        let a = 500;
+        let a := 5__00;
     } else {
-        let b = "aaaa";
+        let b := "aaaa";
     }
 }
 
 @[async]
 def func(int i) {
-    var x = 0;
+    var x := 0;
 
     for (var y : range<int>(i))
         x += y;
@@ -43,7 +43,7 @@ def func(int i) {
 }
 
 void example() {
-    let x = func(9999);
+    let x := func(9999);
 
-    let y = #await x;
+    let y := #await x;
 }

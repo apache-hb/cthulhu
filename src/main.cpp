@@ -1,14 +1,27 @@
-#include "lexer.cpp"
+#include "parser.cpp"
 
 #include <fstream>
 
 int main(int argc, const char **argv) {
     (void)argc;
-    ct::Lexer<std::ifstream> lex(argv[1]);
+    using iflexer = ct::Lexer<std::ifstream>;
+    ct::Parser<iflexer> parser(argv[1]);
 
-    ct::Token tok = lex.next();
-    while (!tok.is(ct::Token::eof)) {
-        printf ("%s\n", tok.str().c_str());
-        tok = lex.next();
+    auto prog = parser.parse_program();
+
+    for (auto each : prog.imports) {
+        printf("import ");
+        for (auto part : each.path) {
+            printf("%s ", part.c_str());
+        }
+        printf("(");
+        if (each.items.empty()) {
+            printf("*");
+        } else {
+            for (auto part : each.items) {
+                printf("%s ", part.c_str());
+            }
+        }
+        printf(");\n");
     }
 }

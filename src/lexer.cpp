@@ -36,7 +36,7 @@ namespace ct {
     }
 
     struct Token {
-        enum { eof, ident, string, key, integer, number, character } type;
+        enum { eof, ident, string, key, integer, number, character, invalid } type;
         using type_t = decltype(type);
 
         std::variant<unsigned long long, std::string, std::u32string, Keyword, double, char32_t> data;
@@ -54,6 +54,15 @@ namespace ct {
 
         bool is(type_t t) const {
             return type == t;
+        }
+
+        template<typename T>
+        bool is(type_t t, T val) const {
+            if (is(t)) {
+                return std::get<T>(data) == val;
+            }
+
+            return false;
         }
 
         std::string str() const {
@@ -129,15 +138,18 @@ namespace ct {
         }
 
         char32_t oct_escape() {
-
+            printf("TODO: oct escape");
+            return 0;
         }
 
         char32_t hex_escape() {
-
+            printf("TODO: hex escape\n");
+            return 0;
         }
 
         char32_t unicode_escape() {
-
+            printf("TODO: unicode escape\n");
+            return 0;
         }
 
         std::optional<char32_t> read_char() {
@@ -189,7 +201,7 @@ namespace ct {
 
             while (true) {
                 auto c = read_char();
-                if (!c.has_value()) 
+                if (!c.has_value())
                     break;
 
                 buf += c.value();
@@ -242,7 +254,7 @@ namespace ct {
                     });
                 } else if (consume('/')) {
                     // single line comment
-                    while (peek() != '\n') 
+                    while (peek() != '\n')
                         c = read();
 
                     // then skip more whitespace
