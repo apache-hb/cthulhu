@@ -128,18 +128,56 @@ namespace ct {
             return Token(Token::string, buf);
         }
 
+        char32_t oct_escape() {
+
+        }
+
+        char32_t hex_escape() {
+
+        }
+
+        char32_t unicode_escape() {
+
+        }
+
         std::optional<char32_t> read_char() {
             auto c = read();
+            if (c == '\n') {
+                // newlines in strings are not a thing we allow
+                printf("no newlines in strings\n");
+                return '\n';
+            }
+
             if (c == '"') {
                 return std::nullopt;
             }
 
             if (c == '\\') {
-                switch (read()) {
-                case '"': return '"';
+                c = read();
+                switch (c) {
+                case 'a': return '\a';
+                case 'b': return '\b';
+                case 'f': return '\f';
                 case 'n': return '\n';
-                case 'x': 
-                case 'u': break;
+                case 'r': return '\r';
+                case 't': return '\t';
+                // what even is a vertical tab?
+                case 'v': return '\v';
+                case '\'': return '\'';
+                case '"': return '"';
+                // octal escape
+                case 'o':
+                    return oct_escape();
+                // hex escape
+                case 'x':
+                    return hex_escape();
+                // unicode escape
+                case 'u':
+                    return unicode_escape();
+                // invalid escape
+                default:
+                    printf("invalid escape char %c\n", c);
+                    return c;
                 }
             }
 
