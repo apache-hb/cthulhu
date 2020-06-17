@@ -1,7 +1,16 @@
+// comment 2
+// aaaa
+   // asjdjas
+//sjkfd
 import std::mem(copy, move);
 import std::ranges(*);
 import compiler::hints(elf, inline, likley);
 
+/* thing */
+
+/* /* nested */ */
+
+// comment
 @[elf::section(".bss")]
 let x := 500;
 let y := 0600;
