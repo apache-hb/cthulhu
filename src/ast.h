@@ -3,72 +3,59 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <variant>
+#include <optional>
+#include <memory>
+
+using str = std::string;
+
+template<typename T>
+using unique = std::unique_ptr<T>;
+
+template<typename T>
+using shared = std::shared_ptr<T>;
+
+template<typename T>
+using vec = std::vector<T>;
 
 namespace ct::ast {
     using namespace std;
 
-    struct Import {
-        vector<string> path;
-        vector<string> items;
+    struct Node {
+
     };
 
-    struct Type { };
+    enum class CallConv {
+        // windows x64
+        win64,
 
-    struct Builtin : Type {
-        enum {
-            // well defined sizes
-            U8,
-            U16,
-            U32,
-            U64,
-            I8,
-            I16,
-            I32,
-            I64,
-            F32,
-            F64,
-            VOID,
+        // system v amd64
+        sysv64,
 
-            // undefined sizes
-            BOOL,
-            CHAR,
-            UCHAR,
-            SHORT,
-            USHORT,
-            INT,
-            UINT,
-            LONG,
-            ULONG,
-            FLOAT,
-            DOUBLE,
-            ISIZE,
-            USIZE
-        } type;
+        // cdecl
+        externc,
 
-        using type_t = decltype(type);
-        constexpr Builtin(type_t t)
-            : type(t)
-        { }
+        // let the codegen do whatever it thinks its fastest
+        internal
     };
 
-    struct Name : Type {
-        using data_t = std::vector<std::string>;
-        Name(data_t d)
-            : path(d)
-        { }
-        data_t path;
+    struct Function : Node {
+        CallConv conv;
     };
 
-    struct Struct : Type {
-        vector<pair<string, Type*>> fields;
+    struct Type : Node {
+
     };
 
-    struct Body {
-        map<string, Type*> types;
+    struct Stmt : Node {
+
     };
 
-    struct Program {
-        vector<Import> imports;
-        Body body;
+    struct StmtList : Stmt {
+        vec<Stmt*> stmts;
+    };
+
+    struct Expr : Stmt {
+
     };
 }

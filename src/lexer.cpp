@@ -26,7 +26,7 @@ namespace ct {
         INVALID
     };
 
-    const char* str(Keyword key) {
+    const char* kstr(Keyword key) {
         switch (key) {
 #define KEY(id, str) case Keyword::id: return str;
 #define OP(id, str) case Keyword::id: return str;
@@ -69,7 +69,7 @@ namespace ct {
             using namespace std::string_literals;
             switch (type) {
             case ident: return "Ident(" + std::get<std::string>(data) + ")";
-            case key: return "Key('"s + ct::str(std::get<Keyword>(data)) + "')";
+            case key: return "Key('"s + ct::kstr(std::get<Keyword>(data)) + "')";
             case eof: return "EOF";
             case integer: return "Int(" + std::to_string(std::get<unsigned long long>(data)) + ")";
             case number: return "Float(" + std::to_string(std::get<double>(data)) + ")";
