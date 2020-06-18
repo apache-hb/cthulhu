@@ -35,9 +35,20 @@ namespace ct {
         }
     }
 
+    template<typename T>
+    struct SourcePos {
+        T* source;
+        uint64_t dist;
+        int col;
+        int line;
+    };
+
+    template<typename I>
     struct Token {
         enum { eof, ident, string, key, integer, number, character, invalid } type;
         using type_t = decltype(type);
+
+        SourcePos<I> pos;
 
         std::variant<unsigned long long, std::string, std::u32string, Keyword, double, char32_t> data;
 
@@ -85,44 +96,55 @@ namespace ct {
             : source(args...)
         {
             ahead = source.get();
+            pos = { &source, 0, 0, 0 };
         }
 
-        Token next() {
+        using Tok = Token<I>;
+
+        Tok next() {
             auto c = skip_comments();
 
+            Tok out;
+            auto here = pos;
+
             if (c == EOF) {
-                return Token(Token::eof);
-                // TODO: string literals and char literals
+                out = Tok(Tok::eof);
             } else if (c == '"') {
-                return plain_string();
+                out = plain_string();
             } else if (c == '\'') {
-                return char_token();
+                out =  char_token();
             } else if (c == 'u') {
                 if (consume('8')) {
                     if (consume('"')) {
-                        return parse_utf8();
+                        out = parse_utf8();
+                    } else {
+                        out = Tok(Tok::ident, "u8");
                     }
-                    return Token(Token::ident, "u8");
+                } else {
+                    out = ident('u');
                 }
-                return ident('u');
             } else if (c == 'R') {
                 if (consume('"')) {
-                    return raw_string();
+                    out = raw_string();
+                } else {
+                    out = ident('R');
                 }
-                return ident('R');
             } else if (isident1(c)) {
-                return ident(c);
+                out = ident(c);
             } else if (isdigit(c)) {
-                return number(c);
+                out = number(c);
             } else {
-                return symbol(c);
+                out = symbol(c);
             }
+
+            out.pos = here;
+            return out;
         }
 
     private:
-        Token raw_string() {
+        Tok raw_string() {
             if (!consume('(')) {
-                return Token(Token::string, std::u32string(nullptr));
+                return Tok(Tok::string, std::u32string(nullptr));
             }
 
             std::u32string buf;
@@ -134,7 +156,7 @@ namespace ct {
                 buf += c;
             }
 
-            return Token(Token::string, buf);
+            return Tok(Tok::string, buf);
         }
 
         char32_t oct_escape() {
@@ -196,7 +218,7 @@ namespace ct {
             return c;
         }
 
-        Token parse_utf8() {
+        Tok parse_utf8() {
             std::u32string buf;
 
             while (true) {
@@ -207,10 +229,10 @@ namespace ct {
                 buf += c.value();
             }
 
-            return Token(Token::string, buf);
+            return Tok(Tok::string, buf);
         }
 
-        Token plain_string() {
+        Tok plain_string() {
             std::u32string buf;
 
             while (true) {
@@ -221,17 +243,17 @@ namespace ct {
                 buf += c.value();
             }
 
-            return Token(Token::string, buf);
+            return Tok(Tok::string, buf);
         }
 
-        Token char_token() {
+        Tok char_token() {
             auto c = read_char();
             if (!consume('\'')) {
                 // error
                 printf("closing ' missing \n");
                 std::exit(500);
             }
-            return Token(Token::character, c.value());
+            return Tok(Tok::character, c.value());
         }
 
         int skip_comments() {
@@ -269,17 +291,17 @@ namespace ct {
             return c;
         }
 
-        Token ident(char c) {
+        Tok ident(char c) {
             std::string buf = collect(c, isident2);
 
             switch (crc32(buf)) {
-#define KEY(id, str) case crc32(str): return Token(Token::key, Keyword::id);
+#define KEY(id, str) case crc32(str): return Tok(Tok::key, Keyword::id);
 #include "keywords.inc"
-            default: return Token(Token::ident, std::move(buf));
+            default: return Tok(Tok::ident, std::move(buf));
             }
         }
 
-        Token parse_hex() {
+        Tok parse_hex() {
             auto hex = collect([](char c) {
                 if (isxdigit(c))
                     return CollectResult::keep;
@@ -291,10 +313,10 @@ namespace ct {
 
             auto val = std::stoull(hex, nullptr, 16);
 
-            return Token(Token::integer, val);
+            return Tok(Tok::integer, val);
         }
 
-        Token parse_bin() {
+        Tok parse_bin() {
             auto bin = collect([](char c) {
                 if (c == '0' || c == '1')
                     return CollectResult::keep;
@@ -306,10 +328,10 @@ namespace ct {
 
             auto val = std::stoull(bin, nullptr, 2);
 
-            return Token(Token::integer, val);
+            return Tok(Tok::integer, val);
         }
 
-        Token parse_oct() {
+        Tok parse_oct() {
             auto oct = collect([](char c) {
                 if ('0' <= c && c >= '7')
                     return CollectResult::keep;
@@ -321,10 +343,10 @@ namespace ct {
 
             auto val = std::stoull(oct, nullptr, 8);
 
-            return Token(Token::integer, val);
+            return Tok(Tok::integer, val);
         }
 
-        Token number0() {
+        Tok number0() {
             if (consume('x')) {
                 return parse_hex();
             } else if (consume('b')) {
@@ -336,7 +358,7 @@ namespace ct {
             }
         }
 
-        Token parse_number(char c) {
+        Tok parse_number(char c) {
             bool decimal = false;
             auto num = collect(c, [&decimal](char c) {
                 if (c == '.') {
@@ -352,13 +374,13 @@ namespace ct {
             });
 
             if (decimal) {
-                return Token(Token::number, std::stod(num));
+                return Tok(Tok::number, std::stod(num));
             } else {
-                return Token(Token::integer, std::stoull(num));
+                return Tok(Tok::integer, std::stoull(num));
             }
         }
 
-        Token number(char c) {
+        Tok number(char c) {
             if (c == '0') {
                 return number0();
             } else {
@@ -366,33 +388,33 @@ namespace ct {
             }
         }
 
-        Token symbol(char c) {
+        Tok symbol(char c) {
             switch (c) {
-            case '+': return Token(Token::key, consume('=') ? Keyword::ADDEQ : Keyword::ADD);
-            case '-': return Token(Token::key, consume('=') ? Keyword::SUBEQ : Keyword::SUB);
-            case '/': return Token(Token::key, consume('=') ? Keyword::DIVEQ : Keyword::DIV);
-            case '*': return Token(Token::key, consume('=') ? Keyword::MULEQ : Keyword::MUL);
-            case '%': return Token(Token::key, consume('=') ? Keyword::MODEQ : Keyword::MOD);
-            case '^': return Token(Token::key, consume('=') ? Keyword::BITXOREQ : Keyword::BITXOR);
-            case '&': return Token(Token::key, consume('&') ? Keyword::AND : consume('=') ? Keyword::BITANDEQ : Keyword::BITAND);
-            case '|': return Token(Token::key, consume('|') ? Keyword::OR : consume('=') ? Keyword::BITOREQ : Keyword::BITOR);
-            case '[': return Token(Token::key, Keyword::LSQUARE);
-            case ']': return Token(Token::key, Keyword::RSQUARE);
-            case '{': return Token(Token::key, Keyword::LBRACE);
-            case '}': return Token(Token::key, Keyword::RBRACE);
-            case '(': return Token(Token::key, Keyword::LPAREN);
-            case ')': return Token(Token::key, Keyword::RPAREN);
-            case '!': return Token(Token::key, consume('=') ? Keyword::NEQ : Keyword::NOT);
-            case '=': return Token(Token::key, consume('=') ? Keyword::EQ : Keyword::INVALID);
-            case '@': return Token(Token::key, Keyword::AT);
-            case ',': return Token(Token::key, Keyword::COMMA);
-            case '.': return Token(Token::key, Keyword::DOT);
-            case '?': return Token(Token::key, Keyword::QUESTION);
-            case '<': return Token(Token::key, consume('<') ? consume('=') ? Keyword::SHLEQ : Keyword::SHL : consume('=') ? Keyword::GTE : Keyword::GT);
-            case '>': return Token(Token::key, consume('>') ? consume('=') ? Keyword::SHREQ : Keyword::SHR : consume('=') ? Keyword::LTE : Keyword::LT);
-            case '#': return Token(Token::key, Keyword::HASH);
-            case ':': return Token(Token::key, consume(':') ? Keyword::COLON2 : consume('=') ? Keyword::ASSIGN : Keyword::COLON);
-            case ';': return Token(Token::key, Keyword::SEMICOLON);
+            case '+': return Tok(Tok::key, consume('=') ? Keyword::ADDEQ : Keyword::ADD);
+            case '-': return Tok(Tok::key, consume('=') ? Keyword::SUBEQ : Keyword::SUB);
+            case '/': return Tok(Tok::key, consume('=') ? Keyword::DIVEQ : Keyword::DIV);
+            case '*': return Tok(Tok::key, consume('=') ? Keyword::MULEQ : Keyword::MUL);
+            case '%': return Tok(Tok::key, consume('=') ? Keyword::MODEQ : Keyword::MOD);
+            case '^': return Tok(Tok::key, consume('=') ? Keyword::BITXOREQ : Keyword::BITXOR);
+            case '&': return Tok(Tok::key, consume('&') ? Keyword::AND : consume('=') ? Keyword::BITANDEQ : Keyword::BITAND);
+            case '|': return Tok(Tok::key, consume('|') ? Keyword::OR : consume('=') ? Keyword::BITOREQ : Keyword::BITOR);
+            case '[': return Tok(Tok::key, Keyword::LSQUARE);
+            case ']': return Tok(Tok::key, Keyword::RSQUARE);
+            case '{': return Tok(Tok::key, Keyword::LBRACE);
+            case '}': return Tok(Tok::key, Keyword::RBRACE);
+            case '(': return Tok(Tok::key, Keyword::LPAREN);
+            case ')': return Tok(Tok::key, Keyword::RPAREN);
+            case '!': return Tok(Tok::key, consume('=') ? Keyword::NEQ : Keyword::NOT);
+            case '=': return Tok(Tok::key, consume('=') ? Keyword::EQ : Keyword::INVALID);
+            case '@': return Tok(Tok::key, Keyword::AT);
+            case ',': return Tok(Tok::key, Keyword::COMMA);
+            case '.': return Tok(Tok::key, Keyword::DOT);
+            case '?': return Tok(Tok::key, Keyword::QUESTION);
+            case '<': return Tok(Tok::key, consume('<') ? consume('=') ? Keyword::SHLEQ : Keyword::SHL : consume('=') ? Keyword::GTE : Keyword::GT);
+            case '>': return Tok(Tok::key, consume('>') ? consume('=') ? Keyword::SHREQ : Keyword::SHR : consume('=') ? Keyword::LTE : Keyword::LT);
+            case '#': return Tok(Tok::key, Keyword::HASH);
+            case ':': return Tok(Tok::key, consume(':') ? Keyword::COLON2 : consume('=') ? Keyword::ASSIGN : Keyword::COLON);
+            case ';': return Tok(Tok::key, Keyword::SEMICOLON);
             default:
                 // TODO: handle this
                 printf("TODO 2 %c\n", c);
@@ -450,6 +472,16 @@ namespace ct {
         int read() {
             int temp = ahead;
             ahead = source.get();
+
+            pos.dist++;
+
+            if (temp == '\n') {
+                pos.col = 0;
+                pos.line++;
+            } else {
+                pos.col++;
+            }
+            
             return temp;
         }
 
@@ -473,5 +505,7 @@ namespace ct {
 
             return c;
         }
+
+        SourcePos<I> pos;
     };
 }

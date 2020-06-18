@@ -7,6 +7,6 @@
 int main(int argc, const char **argv) {
     (void)argc;
     (void)argv;
-    //using iflexer = ct::Lexer<std::ifstream>;
-    //ct::Parser<iflexer> parser(argv[1]);
+    using iflexer = ct::Lexer<std::ifstream>;
+    iflexer lex(argv[1]);
 }
