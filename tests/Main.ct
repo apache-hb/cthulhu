@@ -10,40 +10,4 @@ import compiler::hints(elf, inline, likley);
 
 /* /* nested */ */
 
-// comment
-@[elf::section(".bss")]
-let x := 500;
-let y := 0600;
-let z := 0;
-let z := 0x500;
-let y := 0x500;
-let b := 0b0001;
-let B := 0b101;
-let o := 0o777;
-
-@[inline(never)]
-def thing(bool b) {
-
-    @[likley]
-    if b {
-        let a := 5__00;
-    } else {
-        let b := "aaaa";
-    }
-}
-
-@[async]
-def func(int i) {
-    var x := 0;
-
-    for (var y : range<int>(i))
-        x += y;
-
-    return x;
-}
-
-void example() {
-    let x := func(9999);
-
-    let y := #await x;
-}
+type x := int;
