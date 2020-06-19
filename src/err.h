@@ -9,7 +9,7 @@ namespace ct::err {
         bool success = true;
 
         void fatal(std::string msg) {
-            
+            success = false;
         }
     };
 }

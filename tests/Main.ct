@@ -11,3 +11,15 @@ import compiler::hints(elf, inline, likley);
 /* /* nested */ */
 
 type x := int;
+
+let x := "aaaaa";
+
+let r := R"(
+    aaaaaa
+)";
+
+// hmm yes spicy utf8
+// 象形文字 in comments
+let u := u8"象形文字";
+
+/* /* /* 象形文字象形文字 */ */ */

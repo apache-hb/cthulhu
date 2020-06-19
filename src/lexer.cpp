@@ -5,6 +5,8 @@
 #include <array>
 #include <optional>
 #include <type_traits>
+#include <sstream>
+#include <string.h>
 
 #include "hash.h"
 
@@ -35,22 +37,43 @@ namespace ct {
         }
     }
 
-    template<typename T>
     struct SourcePos {
-        T* source;
+        std::string_view name;
+        std::istream *source;
         uint64_t dist;
         int col;
         int line;
+
+        std::string full_line() const {
+            auto h = source->tellg();
+
+            std::string buf;
+
+            source->seekg(dist - col - 1);
+
+            while (true) {
+                int c = source->get();
+                if (c == '\n')
+                    break;
+
+                buf += c;
+            }
+
+            source->seekg(h);
+
+            return buf;
+        }
     };
 
-    template<typename I>
     struct Token {
         enum { eof, ident, string, key, integer, number, character, invalid } type;
         using type_t = decltype(type);
 
-        SourcePos<I> pos;
+        SourcePos pos;
 
-        std::variant<unsigned long long, std::string, std::u32string, Keyword, double, char32_t> data;
+        // TODO: figure out a not stupid way of handling strings and stuff
+        // probably just make everything utf-8 because that seems easy enough
+        std::variant<unsigned long long, std::string, Keyword, double, char> data;
 
         Token(type_t t)
             : type(t)
@@ -84,27 +107,59 @@ namespace ct {
             case eof: return "EOF";
             case integer: return "Int(" + std::to_string(std::get<unsigned long long>(data)) + ")";
             case number: return "Float(" + std::to_string(std::get<double>(data)) + ")";
+            case string: return "String(\"" + std::get<std::string>(data) + "\")";
             default: return "Error";
             }
         }
-    };
 
-    template<typename I>
-    struct Lexer {
-        template<typename... T>
-        Lexer(T &&... args)
-            : source(args...)
-        {
-            ahead = source.get();
-            pos = { &source, 0, 0, 0 };
+        size_t len() const {
+            switch (type) {
+            case string:
+                // TODO: hack
+                return std::get<std::string>(data).size() + 2;
+            case ident:
+                return std::get<std::string>(data).size();
+            case key:
+                return strlen(kstr(std::get<Keyword>(data)));
+            default: return 0;
+            }
         }
 
-        using Tok = Token<I>;
+        std::string underline(std::string_view msg = "") const {
+            std::ostringstream os;
+
+            os  << msg << "\n"
+                << " --> " << pos.name << ":" << pos.line << ":" << pos.col << "\n"
+                << " |\n"
+                << " |" << pos.full_line() << "\n"
+                << " |" << std::string(pos.col - 1, ' ') << std::string(len(), '^') << "\n";
+
+            return os.str();
+        }
+    };
+
+    struct Lexer {
+        Lexer(std::istream *in, std::string_view name = "<unnamed>")
+            : source(in)
+        {
+            ahead = source->get();
+            pos = { name, source, 1, 0, 0 };
+
+            if (ahead == '\n') {
+                pos.col = 0;
+                pos.line = 1;
+            } else {
+                pos.col = 1;
+                pos.line = 0;
+            }
+        }
+
+        using Tok = Token;
 
         Tok next() {
             auto c = skip_comments();
 
-            Tok out;
+            Tok out = Tok(Tok::invalid);
             auto here = pos;
 
             if (c == EOF) {
@@ -144,10 +199,10 @@ namespace ct {
     private:
         Tok raw_string() {
             if (!consume('(')) {
-                return Tok(Tok::string, std::u32string(nullptr));
+                return Tok(Tok::string, std::string(nullptr));
             }
 
-            std::u32string buf;
+            std::string buf;
             while (true) {
                 auto c = read();
                 if (c == ')' && consume('"'))
@@ -159,22 +214,22 @@ namespace ct {
             return Tok(Tok::string, buf);
         }
 
-        char32_t oct_escape() {
+        char oct_escape() {
             printf("TODO: oct escape");
             return 0;
         }
 
-        char32_t hex_escape() {
+        char hex_escape() {
             printf("TODO: hex escape\n");
             return 0;
         }
 
-        char32_t unicode_escape() {
+        char unicode_escape() {
             printf("TODO: unicode escape\n");
             return 0;
         }
 
-        std::optional<char32_t> read_char() {
+        std::optional<char> read_char() {
             auto c = read();
             if (c == '\n') {
                 // newlines in strings are not a thing we allow
@@ -219,7 +274,7 @@ namespace ct {
         }
 
         Tok parse_utf8() {
-            std::u32string buf;
+            std::string buf;
 
             while (true) {
                 auto c = read_char();
@@ -233,7 +288,7 @@ namespace ct {
         }
 
         Tok plain_string() {
-            std::u32string buf;
+            std::string buf;
 
             while (true) {
                 auto c = read_char();
@@ -265,15 +320,20 @@ namespace ct {
                 if (consume('*')) {
                     // multiline comment
                     int depth = 1;
-                    c = skip([&](char c) {
+
+                    while (depth != 0) {
+                        c = read();
                         if (c == '/' && consume('*')) {
                             depth++;
                         } else if (c == '*' && consume('/')) {
                             depth--;
                         }
+                    }
 
-                        return depth != 0;
-                    });
+                    c = read();
+
+                    while (isspace(c))
+                        c = read();
                 } else if (consume('/')) {
                     // single line comment
                     while (peek() != '\n')
@@ -466,12 +526,12 @@ namespace ct {
             return out;
         }
 
-        I source;
+        std::istream *source;
         int ahead;
 
         int read() {
             int temp = ahead;
-            ahead = source.get();
+            ahead = source->get();
 
             pos.dist++;
 
@@ -481,7 +541,7 @@ namespace ct {
             } else {
                 pos.col++;
             }
-            
+
             return temp;
         }
 
@@ -506,6 +566,6 @@ namespace ct {
             return c;
         }
 
-        SourcePos<I> pos;
+        SourcePos pos;
     };
 }

@@ -7,6 +7,12 @@
 int main(int argc, const char **argv) {
     (void)argc;
     (void)argv;
-    using iflexer = ct::Lexer<std::ifstream>;
-    iflexer lex(argv[1]);
+    ct::Lexer lex(new std::ifstream(argv[1]), argv[1]);
+
+    while (true) {
+        auto tok = lex.next();
+        printf("%s", tok.underline("haha yes " + tok.str()).c_str());
+        if (tok.type == ct::Token::eof)
+            break;
+    }
 }
