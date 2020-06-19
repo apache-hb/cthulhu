@@ -9,4 +9,9 @@ namespace ct {
         { }
         O out;
     };
+
+    template<typename O>
+    struct X86 : Gen<O> {
+
+    };
 }
