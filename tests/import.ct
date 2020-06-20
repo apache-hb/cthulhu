@@ -1,0 +1,10 @@
+import compiler::hints(unused);
+
+def num2(num: int) = 5 * num;
+
+def main(argc: int, argv: *str): int {
+    @[unused] argv;
+
+    var v = num(argc);
+    return v + 10;
+}

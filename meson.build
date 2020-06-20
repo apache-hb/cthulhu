@@ -10,4 +10,4 @@ sources = [
     'src/main.cpp'
 ]
 
-cfc = executable('ctc', sources)
+ctc = executable('ctc', sources)
