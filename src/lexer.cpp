@@ -168,16 +168,6 @@ namespace ct {
                 out = plain_string();
             } else if (c == '\'') {
                 out =  char_token();
-            } else if (c == 'u') {
-                if (consume('8')) {
-                    if (consume('"')) {
-                        out = parse_utf8();
-                    } else {
-                        out = Tok(Tok::ident, "u8");
-                    }
-                } else {
-                    out = ident('u');
-                }
             } else if (c == 'R') {
                 if (consume('"')) {
                     out = raw_string();
@@ -271,20 +261,6 @@ namespace ct {
             }
 
             return c;
-        }
-
-        Tok parse_utf8() {
-            std::string buf;
-
-            while (true) {
-                auto c = read_char();
-                if (!c.has_value())
-                    break;
-
-                buf += c.value();
-            }
-
-            return Tok(Tok::string, buf);
         }
 
         Tok plain_string() {
