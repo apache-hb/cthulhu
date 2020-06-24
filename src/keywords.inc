@@ -87,6 +87,6 @@ OP(COLON, ":")
 OP(COLON2, "::")
 OP(SEMICOLON, ";")
 
-
 #undef KEY
 #undef OP
+#undef SYMBOL

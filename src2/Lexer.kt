@@ -49,12 +49,42 @@ class Lexer(var stream: FileInputStream) {
         return bld.toString()
     }
 
+    private fun skipSpace(): Int {
+        var n = skip({ it.toChar().isWhitespace() })
+
+        while (n.toChar() == '/') {
+            if (consume('/')) {
+                while (n.toChar() != '\n')
+                    n = read()
+            } else if (consume('*')) {
+                var depth = 1
+
+                while (depth != 0) {
+                    n = read()
+                    if (n.toChar() == '/' && consume('*')) {
+                        depth += 1
+                    } else if (n.toChar() == '*' && consume('/')) {
+                        depth -= 1
+                    }
+                }
+            } else {
+                break
+            }
+
+            while (n.toChar().isWhitespace())
+                n = read()
+        }
+
+        return n
+    }
+
     fun next(): Token {
         // our lexer skips all whitespace without exception
+        // and also comments
         // being whitespace sensitive is not a fun time
-        val n = skip({ it.toChar().isWhitespace() })
+        val n = skipSpace()
 
-        // if we reach the end of the file then skip
+        // if we reach the end of the file then return
         if (n == -1)
             return Eof()
 
@@ -66,26 +96,10 @@ class Lexer(var stream: FileInputStream) {
         fun ident(c: Char)
             = when (val it = collect(c, { it.isLetterOrDigit() || it == '_' })) {
                 "import" -> Key(Keyword.IMPORT)
-                "let" -> Key(Keyword.LET)
                 "var" -> Key(Keyword.VAR)
                 "def" -> Key(Keyword.DEF)
-                "type" -> Key(Keyword.TYPE)
+                "alias" -> Key(Keyword.ALIAS)
                 "struct" -> Key(Keyword.STRUCT)
-                "union" -> Key(Keyword.UNION)
-                "enum" -> Key(Keyword.ENUM)
-                "if" -> Key(Keyword.IF)
-                "else" -> Key(Keyword.ELSE)
-                "do" -> Key(Keyword.DO)
-                "while" -> Key(Keyword.WHILE)
-                "for" -> Key(Keyword.FOR)
-                "switch" -> Key(Keyword.SWITCH)
-                "case" -> Key(Keyword.CASE)
-                "break" -> Key(Keyword.BREAK)
-                "default" -> Key(Keyword.DEFAULT)
-                "match" -> Key(Keyword.MATCH)
-                "return" -> Key(Keyword.RETURN)
-                "cast" -> Key(Keyword.CAST)
-                "continue" -> Key(Keyword.CONTINUE)
                 else -> Ident(it)
             }
 
@@ -98,6 +112,16 @@ class Lexer(var stream: FileInputStream) {
             ':' -> key(':', Keyword.COLON2, Keyword.COLON)
             '!' -> key('=', Keyword.NEQ, Keyword.NOT)
             '=' -> key('=', Keyword.EQ, Keyword.ASSIGN)
+            ',' -> Key(Keyword.COMMA)
+            '.' -> Key(Keyword.DOT)
+            ';' -> Key(Keyword.SEMICOLON)
+            '(' -> Key(Keyword.LPAREN)
+            ')' -> Key(Keyword.RPAREN)
+            '{' -> Key(Keyword.LBRACE)
+            '}' -> Key(Keyword.RBRACE)
+            '[' -> Key(Keyword.LSQUARE)
+            ']' -> Key(Keyword.RSQUARE)
+            '@' -> Key(Keyword.AT)
             in 'a'..'z', in 'A'..'Z', '_' -> ident(c)
             else -> Err("invalid character $c")
         }
