@@ -65,15 +65,25 @@ namespace ct {
         }
     };
 
+    using u64 = unsigned long long;
+
     struct Token {
-        enum { eof, ident, string, key, integer, number, character, invalid } type;
+        enum {
+            ident, // std::string
+            string, // std::string
+            key, // Keyword
+            integer, // u64
+            character, // u64
+            eof, // std::monostate
+            invalid // std::monostate
+        } type;
         using type_t = decltype(type);
 
         SourcePos pos;
 
         // TODO: figure out a not stupid way of handling strings and stuff
         // probably just make everything utf-8 because that seems easy enough
-        std::variant<unsigned long long, std::string, Keyword, double, char> data;
+        std::variant<u64, std::string, Keyword, std::monostate> data;
 
         Token(type_t t)
             : type(t)
@@ -105,8 +115,7 @@ namespace ct {
             case ident: return "Ident(" + std::get<std::string>(data) + ")";
             case key: return "Key('"s + ct::kstr(std::get<Keyword>(data)) + "')";
             case eof: return "EOF";
-            case integer: return "Int(" + std::to_string(std::get<unsigned long long>(data)) + ")";
-            case number: return "Float(" + std::to_string(std::get<double>(data)) + ")";
+            case integer: return "Int(" + std::to_string(std::get<u64>(data)) + ")";
             case string: return "String(\"" + std::get<std::string>(data) + "\")";
             default: return "Error";
             }
@@ -395,12 +404,8 @@ namespace ct {
         }
 
         Tok parse_number(char c) {
-            bool decimal = false;
-            auto num = collect(c, [&decimal](char c) {
-                if (c == '.') {
-                    decimal = true;
-                    return CollectResult::keep;
-                } else if (isdigit(c)) {
+            auto num = collect(c, [](char c) {
+                if (isdigit(c)) {
                     return CollectResult::keep;
                 } else if (c == '_') {
                     return CollectResult::skip;
@@ -409,11 +414,7 @@ namespace ct {
                 }
             });
 
-            if (decimal) {
-                return Tok(Tok::number, std::stod(num));
-            } else {
-                return Tok(Tok::integer, std::stoull(num));
-            }
+            return Tok(Tok::integer, std::stoull(num));
         }
 
         Tok number(char c) {
