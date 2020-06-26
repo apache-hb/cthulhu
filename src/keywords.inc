@@ -7,22 +7,10 @@
 #endif
 
 KEY(IMPORT, "import")
-KEY(TYPE, "type")
 KEY(DEF, "def")
+KEY(ALIAS, "alias")
 KEY(STRUCT, "struct")
-KEY(UNION, "union")
-KEY(ENUM, "enum")
 KEY(VAR, "var")
-KEY(LET, "let")
-
-KEY(IF, "if")
-KEY(ELSE, "else")
-KEY(WHILE, "while")
-KEY(FOR, "for")
-KEY(SWITCH, "switch")
-KEY(CASE, "case")
-KEY(MATCH, "match")
-KEY(RETURN, "return")
 
 OP(ADD, "+")
 OP(ADDEQ, "+=")
@@ -76,10 +64,9 @@ OP(EQ, "==")
 OP(NEQ, "!=")
 
 OP(NOT, "!")
-OP(ASSIGN, ":=")
+OP(ASSIGN, "=")
 
 OP(AT, "@")
-OP(HASH, "#")
 OP(COMMA, ",")
 OP(DOT, ".")
 OP(QUESTION, "?")
@@ -89,4 +76,3 @@ OP(SEMICOLON, ";")
 
 #undef KEY
 #undef OP
-#undef SYMBOL
