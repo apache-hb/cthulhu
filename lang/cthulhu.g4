@@ -1,14 +1,40 @@
 grammar cthulhu;
 
-body : alias;
+unit : importDecl* bodyDecl* ;
 
-struct_field : IDENT ':' type ';' ;
-struct : 'struct' IDENT '{' struct_field* '}' ;
+bodyDecl : aliasDecl | structDecl | unionDecl | funcDecl;
 
-alias : 'alias' IDENT '=' type ';' ;
+importDecl : 'import' path '(' (importSpec | '*') ')' ;
+importSpec : IDENT (',' IDENT)* ;
 
-name : IDENT ('::' IDENT)* ;
-type : name | type ('*' | '[' ']');
+fieldDecl : IDENT ':' type ';' ;
+enumBacking : ':' type ;
+enumField : IDENT ('=' expr)? ;
+enumFields : enumField (',' enumField)* ;
+
+structDecl : 'struct' IDENT '{' fieldDecl* '}' ;
+unionDecl : 'union' IDENT '{' fieldDecl* '}' ;
+enumDecl : 'enum' IDENT enumBacking? '{' enumFields '}' ;
+aliasDecl : 'alias' IDENT '=' type ';' ;
+
+funcDecl : 'def' IDENT funcArgs? funcRet? funcBody ;
+
+funcBody : '=' expr | stmtList | ';' ;
+
+funcRet : '->' type ;
+
+funcArgs : '(' funcArgsBody? ')' ;
+funcArgsBody : funcArg (',' funcArg)* ;
+funcArg : IDENT ':' type ;
+
+type : IDENT | '*' type | 'def' '(' closureArgs? ')' '->' type | '[' expr ']' type;
+closureArgs : type (',' type)* ;
+
+expr : 'a' ;
+stmt : expr | stmtList ;
+stmtList : '{' stmt* '}' ;
+
+path : IDENT ('::' IDENT)* ;
 
 WS : [ \t\r\n]+ -> skip;
 COMMENT : '//' (~[\n])* ;
