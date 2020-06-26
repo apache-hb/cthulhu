@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <sstream>
 #include <string.h>
+#include <iostream>
 
 #include "hash.h"
 
@@ -45,7 +46,9 @@ namespace ct {
         int line;
 
         std::string full_line() const {
+            printf("aaa");
             auto h = source->tellg();
+            std::cout << h;
 
             std::string buf;
 
@@ -87,7 +90,7 @@ namespace ct {
 
         Token(type_t t)
             : type(t)
-            , data(Keyword::INVALID)
+            , data(std::monostate())
         { }
 
         template<typename T>
@@ -136,6 +139,7 @@ namespace ct {
 
         std::string underline(std::string_view msg = "") const {
             std::ostringstream os;
+            printf("aaaa");
 
             os  << msg << "\n"
                 << " --> " << pos.name << ":" << pos.line << ":" << pos.col << "\n"
@@ -442,15 +446,14 @@ namespace ct {
             case '(': return Tok(Tok::key, Keyword::LPAREN);
             case ')': return Tok(Tok::key, Keyword::RPAREN);
             case '!': return Tok(Tok::key, consume('=') ? Keyword::NEQ : Keyword::NOT);
-            case '=': return Tok(Tok::key, consume('=') ? Keyword::EQ : Keyword::INVALID);
+            case '=': return Tok(Tok::key, consume('=') ? Keyword::EQ : Keyword::ASSIGN);
             case '@': return Tok(Tok::key, Keyword::AT);
             case ',': return Tok(Tok::key, Keyword::COMMA);
             case '.': return Tok(Tok::key, Keyword::DOT);
             case '?': return Tok(Tok::key, Keyword::QUESTION);
             case '<': return Tok(Tok::key, consume('<') ? consume('=') ? Keyword::SHLEQ : Keyword::SHL : consume('=') ? Keyword::GTE : Keyword::GT);
             case '>': return Tok(Tok::key, consume('>') ? consume('=') ? Keyword::SHREQ : Keyword::SHR : consume('=') ? Keyword::LTE : Keyword::LT);
-            case '#': return Tok(Tok::key, Keyword::HASH);
-            case ':': return Tok(Tok::key, consume(':') ? Keyword::COLON2 : consume('=') ? Keyword::ASSIGN : Keyword::COLON);
+            case ':': return Tok(Tok::key, consume(':') ? Keyword::COLON2 : Keyword::COLON);
             case ';': return Tok(Tok::key, Keyword::SEMICOLON);
             default:
                 // TODO: handle this

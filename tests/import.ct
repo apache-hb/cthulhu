@@ -1,10 +1,12 @@
-import compiler::hints(unused);
+import lang::hints(unused);
 
-def num2(num: int) = 5 * num;
-
-def main(argc: int, argv: *str): int {
-    @[unused] argv;
-
-    var v = num(argc);
-    return v + 10;
+struct StivaleHeader {
+    stack: u64;
+    flags: u16;
+    fb_width: u16;
+    fb_height: u16;
+    fb_bpp: u16;
+    entry: u64;
 }
+
+alias thing = u16;
