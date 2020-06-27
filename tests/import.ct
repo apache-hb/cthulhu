@@ -1,12 +1,9 @@
-import lang::hints(unused);
-
-struct StivaleHeader {
-    stack: u64;
-    flags: u16;
-    fb_width: u16;
-    fb_height: u16;
-    fb_bpp: u16;
-    entry: u64;
-}
-
-alias thing = u16;
+def main;
+def main();
+def main = 5;
+def main { return 5; }
+def main() { return 5; }
+def main -> i32 = 5;
+def main() -> i32 = 5;
+def main() -> i32 { return 5; }
+def main -> i32 { return 5; }

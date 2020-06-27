@@ -1,45 +1,48 @@
 grammar cthulhu;
 
-unit : importDecl* bodyDecl* ;
 
-bodyDecl : aliasDecl | structDecl | unionDecl | funcDecl;
 
-importDecl : 'import' path '(' (importSpec | '*') ')' ;
-importSpec : IDENT (',' IDENT)* ;
+DEF : 'def' ;
+ALIAS : 'alias' ;
+STRUCT : 'struct' ;
+UNION : 'union' ;
+OBJECT : 'object' ;
+VAR : 'var' ;
+GENERIC : 'generic' ;
+TYPE : 'type' ;
 
-fieldDecl : IDENT ':' type ';' ;
-enumBacking : ':' type ;
-enumField : IDENT ('=' expr)? ;
-enumFields : enumField (',' enumField)* ;
+Ident : (Alpha | '_') (Alpha | Digit | '_')* ;
 
-structDecl : 'struct' IDENT '{' fieldDecl* '}' ;
-unionDecl : 'union' IDENT '{' fieldDecl* '}' ;
-enumDecl : 'enum' IDENT enumBacking? '{' enumFields '}' ;
-aliasDecl : 'alias' IDENT '=' type ';' ;
+Literal
+    : CharLiteral
+    | StringLiteral
+    | IntLiteral
+    ;
 
-funcDecl : 'def' IDENT funcArgs? funcRet? funcBody ;
+fragment CharLiteral : '\'' Char '\'' ;
+fragment Char : (StringEscape | .) ;
 
-funcBody : '=' expr | stmtList | ';' ;
+fragment StringLiteral : ShortString | LongString ;
+fragment ShortString : '"' (StringEscape | ~[\\\r\n\f"] )* '"';
+fragment StringEscape : '\\' . ;
+fragment LongString : '"""' (StringEscape | .)*? '"""';
 
-funcRet : '->' type ;
+fragment IntLiteral : (IntConst10 | IntConst2 | IntConst8 | IntConst16) NumSuffix? ;
+fragment NumSuffix : ([uU] | [iI]) ('8' | '16' | '32' | '64') ;
 
-funcArgs : '(' funcArgsBody? ')' ;
-funcArgsBody : funcArg (',' funcArg)* ;
-funcArg : IDENT ':' type ;
+fragment IntConst10 : Digit+ ;
+fragment IntConst2 : '0b' BinDigit+ ;
+fragment IntConst8 : '0o' OctDigit+ ;
+fragment IntConst16 : '0x' HexDigit+ ;
 
-type : IDENT | '*' type | 'def' '(' closureArgs? ')' '->' type | '[' expr ']' type;
-closureArgs : type (',' type)* ;
+fragment Digit : [0-9] ;
+fragment BinDigit : [01_] ;
+fragment OctDigit : [0-7_] ;
+fragment HexDigit : [0-9a-fA-F_] ;
+fragment Alpha : [a-zA-Z] ;
 
-expr : 'a' ;
-stmt : expr | stmtList ;
-stmtList : '{' stmt* '}' ;
+Whitespace : [ \t\r\n]+ -> skip ;
 
-path : IDENT ('::' IDENT)* ;
+BlockComment : '/*' (BlockComment |. )*? '*/' -> skip ;
 
-WS : [ \t\r\n]+ -> skip;
-COMMENT : '//' (~[\n])* ;
-
-fragment DIGIT : [0-9] ;
-fragment ALPHA : [a-zA-Z] ;
-
-IDENT : (ALPHA | DIGIT | '_')+ ;
+LineComment : '//' ~[\r\n]* -> skip ;
