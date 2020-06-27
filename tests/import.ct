@@ -6,7 +6,8 @@ alias VkInstance = *void;
 
 alias VkVersion = u32;
 
-def vkMakeVersion(major: u32, minor: u32, patch: u32) -> VkVersion 
+@pure
+def vkMakeVersion(major: u32, minor: u32, patch: u32) -> VkVersion
     = (major << 22) | (minor << 12) | patch;
 
 enum VkStructureType : u32 {
@@ -43,15 +44,15 @@ enum VkResult : i32 {
     Timeout = 2
 }
 
-alias PFN_vkFreeFunction = @[cdecl] def(*void, *void) -> void;
+alias PFN_vkFreeFunction = @cdecl def(*void, *void) -> void;
 
 @[cstruct]
 struct VkAllocationCallbacks {
     pUserData: *void;
 }
 
-@[cdecl, extern]
-def vkCreateInstance(
+@[cdecl, extern("vkCreateInstance")]
+def createInstance(
     pCreateInfo: *VkInstanceCreateInfo,
     pApplocator: *VkAllocationCallbacks,
     pInstance: *VkInstance
