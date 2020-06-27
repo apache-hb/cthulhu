@@ -82,6 +82,16 @@ namespace ct {
         } type;
         using type_t = decltype(type);
 
+        template<type_t T> struct underlying { using type = void; };
+
+        template<> struct underlying<ident> { using type = std::string; };
+        template<> struct underlying<string> { using type = std::string; };
+        template<> struct underlying<key> { using type = Keyword; };
+        template<> struct underlying<integer> { using type = u64; };
+        template<> struct underlying<character> { using type = u64; };
+        template<> struct underlying<eof> { using type = std::monostate; };
+        template<> struct underlying<invalid> { using type = std::monostate; };
+
         SourcePos pos;
 
         // TODO: figure out a not stupid way of handling strings and stuff

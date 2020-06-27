@@ -1,9 +1,58 @@
-def main;
-def main();
-def main = 5;
-def main { return 5; }
-def main() { return 5; }
-def main -> i32 = 5;
-def main() -> i32 = 5;
-def main() -> i32 { return 5; }
-def main -> i32 { return 5; }
+import lang::interop(extern, cdecl, cstruct, cstr);
+import lang::traits;
+import lang::utils(coerce);
+
+alias VkInstance = *void;
+
+alias VkVersion = u32;
+
+def vkMakeVersion(major: u32, minor: u32, patch: u32) -> VkVersion 
+    = (major << 22) | (minor << 12) | patch;
+
+enum VkStructureType : u32 {
+    ApplicationInfo = 0,
+    InstanceCreateInfo = 1
+}
+
+@[cstruct]
+struct VkApplicationInfo {
+    sType: VkStructureType;
+    pNext: *void;
+    pApplicationName: cstr;
+    applicationVersion: VkVersion;
+    pEngineName: cstr;
+    engineVersion: VkVersion;
+    apiVersion: VkVersion;
+}
+
+@[cstruct]
+struct VkInstanceCreateInfo {
+    sType: VkStructureType;
+    pNext: *void;
+    flags: VkInstanceFlags;
+    pApplicationInfo: *VkApplicationInfo;
+    enabledLayerCount: u32;
+    ppEnabledLayerNames: *cstr;
+    enabledExtensionCount: u32;
+    ppEnabledExtensionNames: *cstr;
+}
+
+enum VkResult : i32 {
+    Success = 0,
+    NotReady = 1,
+    Timeout = 2
+}
+
+alias PFN_vkFreeFunction = @[cdecl] def(*void, *void) -> void;
+
+@[cstruct]
+struct VkAllocationCallbacks {
+    pUserData: *void;
+}
+
+@[cdecl, extern]
+def vkCreateInstance(
+    pCreateInfo: *VkInstanceCreateInfo,
+    pApplocator: *VkAllocationCallbacks,
+    pInstance: *VkInstance
+) -> VkResult;

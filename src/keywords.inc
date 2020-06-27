@@ -6,11 +6,8 @@
 #   define OP(id, str)
 #endif
 
-KEY(IMPORT, "import")
 KEY(DEF, "def")
 KEY(ALIAS, "alias")
-KEY(STRUCT, "struct")
-KEY(VAR, "var")
 
 OP(ADD, "+")
 OP(ADDEQ, "+=")
