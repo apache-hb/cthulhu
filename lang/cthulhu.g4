@@ -16,7 +16,9 @@ structDecl : decorator* 'struct' ID '{' structField* '}' ;
 
 aliasDecl : 'alias' ID '=' type NL ;
 
-type : '&'? typebody | '*' type | decorator type | '[' (expr | 'var') ']' type ;
+type : '&'? typebody | '*' type | decorator type | '[' (expr | 'var') ']' type | 'def' '(' types? ')' '->' type;
+
+types : type (',' type)* ;
 
 typebody : path ;
 
