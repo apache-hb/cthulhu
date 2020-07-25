@@ -653,12 +653,79 @@ static int pConsume(CtState *self, CtKey key)
     return 0;
 }
 
+static CtASTArray nodes(size_t size)
+{
+    CtASTArray arr;
+    arr.nodes = CT_MALLOC(sizeof(CtAST) * size);
+    arr.len = 0;
+    arr.alloc = size;
+    return arr;
+}
+
+static void addNode(CtASTArray *self, CtAST *node)
+{
+    if (self->alloc <= self->len + 1)
+    {
+        self->alloc += 4;
+        self->nodes = CT_REALLOC(self->nodes, sizeof(CtAST) * self->alloc);
+    }
+
+    self->nodes[self->len++] = *node;
+}
+
+static CtASTArray pCollect(CtState *self, CtAST*(*func)(CtState*), CtKey sep)
+{
+    CtASTArray out = nodes(4);
+    do {
+        addNode(&out, func(self));
+    } while (pConsume(self, sep));
+
+    return out;
+}
+
+static CtASTArray pUntil(CtState *self, CtAST*(*func)(CtState*), CtKey sep, CtKey end)
+{
+    CtASTArray out = nodes(4);
+    while (1)
+    {
+        addNode(&out, func(self));
+        if (!pConsume(self, sep))
+            break;
+    }
+
+    pExpect(self, end);
+    return out;
+}
+
 static CtAST *ast(CtASTKind type)
 {
     CtAST *out = CT_MALLOC(sizeof(CtAST));
     out->type = type;
     return out;
 }
+
+static CtAST *astTok(CtASTKind type, CtToken tok)
+{
+    CtAST *out = CT_MALLOC(sizeof(CtAST));
+    out->type = type;
+    out->tok = tok;
+    return out;
+}
+
+
+static CtAST *pIdent(CtState *self)
+{
+    CtToken tok = pNext(self);
+    if (tok.type != TK_IDENT)
+    {
+        self->perr.type = ERR_UNEXPECTED_TOK;
+        self->perr.tok = tok;
+        return NULL;
+    }
+
+    return astTok(AK_IDENT, tok);
+}
+
 
 typedef enum {
     OP_ERROR = 0,
@@ -710,6 +777,8 @@ static OpPrec prec(CtToken tok)
 #define IS_UNARY(key) (key == K_ADD || key == K_SUB || key == K_BITNOT || key == K_NOT || key == K_BITAND || key == K_MUL)
 
 static CtAST *pExpr(CtState *self);
+static CtAST *pType(CtState *self);
+static CtAST *pQuals(CtState *self);
 
 static CtAST *pPrimary(CtState *self)
 {
@@ -736,6 +805,11 @@ static CtAST *pPrimary(CtState *self)
             if(!pExpect(self, K_RPAREN))
                 self->perr.type = ERR_MISSING_BRACE;
         }
+    }
+    else if (tok.type == TK_IDENT)
+    {
+        self->tok = tok;
+        node = pQuals(self);
     }
 
     return node;
@@ -802,6 +876,58 @@ static CtAST *pBinary(CtState *self, OpPrec mprec)
 static CtAST *pExpr(CtState *self)
 {
     return pBinary(self, OP_ASSIGN);
+}
+
+
+static CtAST *pQual(CtState *self)
+{
+    CtAST *qual = ast(AK_QUAL);
+    qual->data.qual.name = pIdent(self);
+    return qual;
+}
+
+static CtAST *pQuals(CtState *self)
+{
+    CtAST *type = ast(AK_QUALS);
+    type->data.quals = pCollect(self, pQual, K_COLON2);
+    return type;
+}
+
+static CtAST *pType(CtState *self)
+{
+    CtToken tok = pNext(self);
+    CtAST *type = NULL;
+    
+    if (tok.type == TK_KEY)
+    {
+        switch (tok.data.key)
+        {
+        case K_MUL:
+            type = astTok(AK_PTR, tok);
+            type->data.ptr = pType(self);
+            break;
+        case K_LPAREN:
+            type = astTok(AK_CLOSURE, tok);
+            type->data.closure.args = pUntil(self, pType, K_COMMA, K_RPAREN);
+            type->data.closure.result = pConsume(self, K_ARROW) ? pType(self) : NULL;
+            break;
+        case K_LSQUARE:
+            type = astTok(AK_ARRAY, tok);
+            type->data.array.type = pType(self);
+            type->data.array.size = pConsume(self, K_COLON) ? pExpr(self) : NULL;
+            pExpect(self, K_RSQUARE);
+            break;
+        default:
+            break;
+        }
+    }
+    else if (tok.type == TK_IDENT)
+    {
+        self->tok = tok;
+        type = pQuals(self);
+    }
+
+    return type;
 }
 
 static CtAST *pStmt(CtState *self)
