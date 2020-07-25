@@ -1,58 +1,196 @@
 grammar cthulhu;
 
-unit : importDecl* bodyDecl* ;
+param : (':' Ident '=')? type ;
 
-importDecl : 'import' path importSpec? NL ;
-
-importSpec : '(' ID (',' ID)* ')' ;
-
-bodyDecl : aliasDecl | structDecl | varDecl ;
-
-varDecl : decorator* 'var' ID (':' type | ':' type '=' expr | '=' expr) NL ;
-
-structField : decorator* ID ':' type NL ;
-
-structDecl : decorator* 'struct' ID '{' structField* '}' ;
-
-aliasDecl : 'alias' ID '=' type NL ;
-
-type : '&'? typebody | '*' type | decorator type | '[' (expr | 'var') ']' type | 'def' '(' types? ')' '->' type;
+qual : Ident ('!<' param (',' param)* '>')? ;
+quals : qual ('::' qual)* ;
 
 types : type (',' type)* ;
 
-typebody : path ;
+type
+    : '&' type
+    | '*' type
+    | '[' type (':' expr)? ']'
+    | 'def' ('(' types? ')')? ('->' type)?
+    | quals
+    ;
 
-path : ID ('::' ID)* ;
+expr : assign ;
 
-decorator : '@' decoratorItem | '@' '[' decoratorItem (',' decoratorItem)* ']' ;
+assign : ternary (('=' | '+=' | '-=' | '/=' | '%=' | '^=' | '&=' | '|=' | '<<=' | '>>=') ternary)* ;
+ternary : logic ('?' ternary? ':' ternary)? ;
+logic : equality (('&&' | '||') equality)* ;
+equality : compare (('==' | '!=') compare)* ;
+compare : bitwise (('<' | '<=' | '>' | '>=') bitwise)* ;
+bitwise : bitshift (('^' | '&' | '|') bitshift)* ;
+bitshift : math (('<<' | '>>') math)* ;
+math : mul (('+' | '-') mul)* ;
+mul : prefix (('*' | '/' | '%') prefix)* ;
 
-decoratorItem : path ('(' args? ')')? ;
+prefix : ('+' | '-' | '~' | '!' | '&' | '*')? postfix ;
 
-args : expr (',' expr)* ;
+postfix
+    : primary
+    | postfix '[' expr ']'
+    | postfix '(' args? ')'
+    | postfix '.' Ident
+    | postfix '->' Ident
+    ;
 
-unary : ('+' | '-' | '*' | '&' | '!' | '~') expr ;
+primary
+    : '(' expr ')'
+    | init
+    | quals init?
+    | IntLiteral
+    | CharLiteral
+    | StringLiteral
+    ;
 
-binop : '+' | '-' | '*' | '&' | '/' | '|' | '%' | '^' | '.' | '->' ;
+arg : ('[' (expr | 'else') ']' '=')? expr ;
+args : arg (',' arg)* ;
 
-initBody : initItem (',' initItem)* ;
+init : '{' args? '}' ;
 
-initItem : '[' expr ']' '=' expr ;
+/*
+unit : include* body* EOF ;
 
-expr : (path | NUMBER | STR | CHAR | unary | '(' expr ')') ((binop expr) | '?' expr ':' expr | '(' args ')')? | path? '{' initBody '}' ;
+include : 'import' path symbols? SEMI ;
+symbols : '(' items ')' ;
 
-NL : ';' ;
+attrib : path call? ;
+attribs : '@' '[' attrib (',' attrib)* ']' ;
+
+builtinBody : '{' /* the contents of builtinBody are IDB  '}' ;
+builtin : '@' path call? builtinBody? ;
+
+body : function | alias | var | struct | union | enum | object | builtin ;
+
+bound : path ;
+bounds : bound ('+' bound)* ;
+templateArg : Ident (':' bounds)? ('=' type)? ;
+template : '!<' templateArg (',' templateArg)* '>' ;
+
+field : attrib* Ident ':' type ;
+
+objectField : function | alias | var | builtin ;
+
+implements : '(' path (',' path)* ')' ;
+object : attribs* 'object' template? implements? '{' objectField* '}' ;
+
+enumFieldData : Ident ':' type ;
+enumData : '{' enumFieldData (',' enumFieldData)* '}' ;
+enumField : Ident enumData? ('=' expr)? ;
+enumBody : enumField (',' enumField)* ;
+enum : attribs* 'enum' Ident template? (':' type)? '{' enumBody? '}' ;
+union : attribs* 'union' Ident template? '{' field* '}' ;
+struct : attribs* 'struct' Ident template? '{' field* '}' ;
+
+varName : Ident (':' type) ;
+varNames : varName | '[' varName (',' varName)* ']' ;
+
+var : attribs* 'var' varNames ('=' expr)? SEMI ;
+
+alias : attribs* 'alias' Ident '=' type SEMI ;
+
+parameter : Ident ':' type ('=' expr)? ;
+parameterBody : parameter (',' parameter)* ;
+parameters : '(' parameterBody? ')' ;
+result : '->' type ;
+
+functionBody : SEMI | '=' expr SEMI | stmts ;
+captures : ':' '[' ('=' | '&' | expr (',' expr)*) ']' ;
+function : attribs* 'def' Ident? parameters? captures? result? functionBody ;
+
+type : attribs* (ptr | ref | quals | array | signature) ;
+
+ptr : '*' ptr ;
+ref : '&' quals ;
+array : '[' type (':' expr)? ']' ;
+
+tparam : type | ':' Ident '=' type ;
+qual : Ident ('!<' tparam (',' tparam)* '>')? ;
+quals : qual ('::' qual)* ;
+
+types : type (',' type)* ;
+typelist : '(' types? ')' ;
+signature : 'def' typelist? result? ;
 
 
-NUMBER : HEX | BIN | OCT | NUM ;
-HEX : '0x' [0-9a-fA-F_]+ ;
-BIN : '0b' [01_]+ ;
-OCT : '0o' [0-7_]+ ;
+expr : assign ;
 
-STR : '"' .*? '"' ;
-CHAR : '\'' . '\'' ;
+assign : ternary (('=' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=' | '&=' | '|=' | '<<=' | '>>=') ternary)* ;
+ternary : logic ('?' primary ':' ternary)? ;
+logic : equality (('&&' | '||') equality)* ;
+equality : compare (('==' | '!=') compare)* ;
+compare : bitwise (('<=' | '<' | '>=' | '>') bitwise)* ;
+bitwise : bitshift (('^' | '&' | '|') bitshift)* ;
+bitshift : arithmatic (('<<' | '>>') arithmatic)* ;
+arithmatic : multiplicative (('+' | '-') multiplicative)* ;
+multiplicative : unary (('*' | '/' | '%') unary)* ;
+unary : ('+' | '-' | '~' | '!')? postfix ;
 
-// no leading zeros aside from the number 0
-NUM : '0' | [1-9][0-9_]* ;
+postfix
+    : primary
+    | postfix '[' expr ']'
+    | postfix call
+    | postfix '.' Ident
+    | postfix '->' Ident
+    ;
 
-ID : [a-zA-Z_][a-zA-Z0-9_]* ;
-WS : [ \t\r\n]+ -> skip;
+primary
+    : IntLiteral
+    | StringLiteral
+    | CharLiteral
+    | function
+    | coerce
+    | quals init?
+    | init
+    | '(' expr ')'
+    ;
+
+initArg : expr | '[' (expr | 'else') ']' '=' expr ;
+initArgs : initArg (',' initArg)* ;
+init : '{' initArgs? '}' ;
+
+arg : expr | '[' Ident ']' '=' expr ;
+callArgs : arg (',' arg)* ;
+call : '(' callArgs? ')' ;
+
+coerce : 'coerce' '!<' type '>' '(' expr ')' ;
+
+stmt : stmts | expr | var | return | alias | for | while | if | branch | builtin | 'break' SEMI | 'continue' SEMI | SEMI ;
+
+if : 'if' '(' expr ')' stmt ('else' 'if' '(' expr ')' stmt)* ('else' stmt)? ;
+while : 'while' '(' expr ')' stmt ;
+
+branch : 'branch' '(' expr ')' '{' branches* '}' ;
+branches : case '=>' stmt ;
+case : expr destructure? ;
+destructure : '{' Ident (',' Ident)* '}' ;
+
+forBody : var? SEMI expr? SEMI expr? | varNames '<<' expr ;
+for : 'for' '(' forBody ')' stmt ;
+
+return : 'return' expr? SEMI ;
+
+stmts : '{' stmt* '}' ;
+
+items : Ident (',' Ident)* ;
+path : Ident ('::' Ident)* ;
+
+SEMI : ';' ;
+*/
+IntLiteral : (Base2 | Base10 | Base16) Ident? ;
+StringLiteral : SingleString | MultiString ;
+CharLiteral : '\'' Letter '\'' ;
+
+Ident : [a-zA-Z_][a-zA-Z0-9_]* ;
+
+fragment SingleString : '"' Letter* '"' ;
+fragment MultiString : 'R"' .*? '"' ;
+
+fragment Letter : '\\' ['"ntv0\\] | ~[\\\r\n] ;
+
+fragment Base2 : '0b' [01]+ ;
+fragment Base10 : [0-9]+ ;
+fragment Base16 : '0x' [0-9a-fA-F]+ ;
