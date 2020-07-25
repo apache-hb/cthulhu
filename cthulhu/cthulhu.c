@@ -640,6 +640,19 @@ static int pExpect(CtState *self, CtKey key)
     return 1;
 }
 
+static int pConsume(CtState *self, CtKey key)
+{
+    CtToken tok = pNext(self);
+
+    if (tok.type == TK_KEY && tok.data.key == key)
+    {
+        return 1;
+    }
+
+    self->tok = tok;
+    return 0;
+}
+
 static CtAST *ast(CtASTKind type)
 {
     CtAST *out = CT_MALLOC(sizeof(CtAST));
@@ -737,6 +750,11 @@ static CtAST *binop(CtAST *lhs, CtAST *rhs, CtToken tok)
     return node;
 }
 
+static int assoc(OpPrec prec)
+{
+    return prec != OP_ASSIGN;
+}
+
 static CtAST *pBinary(CtState *self, OpPrec mprec)
 {
     CtAST *lhs = pPrimary(self);
@@ -748,13 +766,34 @@ static CtAST *pBinary(CtState *self, OpPrec mprec)
             break;
 
         CtToken op = pNext(self);
+        OpPrec nprec = prec(op);
 
-        CtAST *rhs = pBinary(self, prec(op) + 1);
+        CtAST *rhs;
 
-        if (!rhs)
-            return NULL;
+        if (nprec == OP_TERNARY)
+        {
+            rhs = ast(AK_TERNARY);
+            rhs->data.ternary.cond = lhs;
 
-        lhs = binop(lhs, rhs, op);
+            if (pConsume(self, K_COLON))
+            {
+                rhs->data.ternary.yes = lhs;
+                rhs->data.ternary.no = pExpr(self);
+            }
+            else
+            {
+                rhs->data.ternary.yes = pExpr(self);
+                pExpect(self, K_COLON);
+                rhs->data.ternary.no = pExpr(self);
+            }
+
+            lhs = rhs;
+        }
+        else
+        {
+            rhs = pBinary(self, nprec + assoc(nprec));
+            lhs = binop(lhs, rhs, op);
+        }
     }
 
     return lhs;

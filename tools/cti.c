@@ -227,6 +227,15 @@ static void pnode(CtAST *node)
         pnode(node->data.expr);
         printf(")");
         break;
+    case AK_TERNARY:
+        printf("(");
+        pnode(node->data.ternary.cond);
+        printf(" ? ");
+        pnode(node->data.ternary.yes);
+        printf(" : ");
+        pnode(node->data.ternary.no);
+        printf(")");
+        break;
     default:
         printf("ERROR");
         break;
@@ -244,10 +253,12 @@ int main(void)
         CtAST *node = pStmt(&state);
         if (!errors(&state))
         {
-            pnode(node);
-            printf("\n");
+            if (!node)
+                printf("failed to parse statement");
+            else
+                pnode(node);
+            printf("\n>>> ");
         }
-        printf(">>> ");
     }
 
     (void)ptok;
