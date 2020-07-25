@@ -1,13 +1,9 @@
-project('ctulang', 'cpp',
+project('cthulhu', 'c',
     default_options : [
-        'cpp_std=c++17',
-        'warning_level=3',
-        'werror=true'
+        'c_std=c99',
+        'werror=true',
+        'warning_level=3'
     ]
 )
 
-sources = [
-    'src/main.cpp'
-]
-
-ctc = executable('ctc', sources)
+cti = executable('cti', 'tools/cti.c')
