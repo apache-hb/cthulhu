@@ -12,11 +12,10 @@ static int isident2(int c) { return isalnum(c) || c == '_'; }
 
 static CtBuffer bufferNew(size_t size)
 {
-    CtBuffer self = {
-        .ptr = CT_MALLOC(size),
-        .len = 0,
-        .alloc = size
-    };
+    CtBuffer self;
+    self.ptr = CT_MALLOC(size);
+    self.len = 0;
+    self.alloc = size;
 
     return self;
 }
@@ -29,7 +28,7 @@ static void bufferPush(CtBuffer *self, int c)
         self->ptr = CT_REALLOC(self->ptr, self->alloc);
     }
 
-    self->ptr[self->len++] = c;
+    self->ptr[self->len++] = (char)c;
     self->ptr[self->len] = 0;
 }
 
@@ -358,7 +357,7 @@ static void lexBase16(CtState *self, CtToken *tok)
 {
     size_t out = 0;
     LEX_COLLECT(16, c, isxdigit(c), {
-        uint8_t n = c;
+        uint8_t n = (uint8_t)c;
         size_t v = ((n & 0xF) + (n >> 6)) | ((n >> 3) & 0x8);
         out = (out << 4) | v;
     })
