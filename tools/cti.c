@@ -67,10 +67,10 @@ static void num(CtToken tok)
         bin(tok.data.digit.num);
         break;
     case BASE10:
-        printf("%lu", tok.data.digit.num);
+        printf("%zu", tok.data.digit.num);
         break;
     case BASE16:
-        printf("0x%lx", tok.data.digit.num);
+        printf("0x%zx", tok.data.digit.num);
         break;
     }
 
@@ -80,7 +80,7 @@ static void num(CtToken tok)
 
 static void letter(CtToken tok)
 {
-    printf("%lu", tok.data.letter);
+    printf("%zu", tok.data.letter);
 }
 
 static void string(CtToken tok)
@@ -98,7 +98,9 @@ static void string(CtToken tok)
         default: putc(c, stdout); break;
         }
     }
-    printf(")");
+
+    if (tok.data.str.multiline)
+        printf(")");
 }
 
 static void wtok(CtToken tok)
@@ -126,7 +128,7 @@ static void underline(size_t indent, size_t num)
 static void ptok(CtToken tok)
 {
     size_t begin = tok.pos.dist - tok.pos.col;
-    printf("%s [%lu:%lu]: ", tok.pos.source->name, tok.pos.line, tok.pos.col);
+    printf("%s [%zu:%zu]: ", tok.pos.source->name, tok.pos.line, tok.pos.col);
     wtok(tok);
     printf("\n | \n");
     printf(" | ");
