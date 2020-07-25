@@ -250,6 +250,15 @@ static void pnode(CtAST *node)
     case AK_QUAL:
         pnode(node->data.qual.name);
         break;
+    case AK_STMTS:
+        printf("{ ");
+        for (size_t i = 0; i < node->data.stmts.len; i++)
+        {
+            pnode(&node->data.stmts.nodes[i]);
+            printf("; ");
+        }
+        printf("}");
+        break;
     default:
         printf("ERROR");
         break;

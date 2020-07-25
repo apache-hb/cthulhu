@@ -932,8 +932,29 @@ static CtAST *pType(CtState *self)
 
 static CtAST *pStmt(CtState *self)
 {
-    CtAST *node = pExpr(self);
-    pExpect(self, K_SEMI);
+    CtAST *node;
+    if (pConsume(self, K_LBRACE))
+    {
+        node = ast(AK_STMTS);
+
+        node->data.stmts = nodes(4);
+
+        while (1)
+        {
+            CtAST *expr = pStmt(self);
+            if (!expr)
+                break;
+            addNode(&node->data.stmts, expr);
+        }
+
+        pExpect(self, K_RBRACE);
+    }
+    else
+    {
+        node = pExpr(self);
+        if (node)
+            pExpect(self, K_SEMI);
+    }
 
     if (self->perr.type != ERR_NONE)
         report(self, &self->perr);
