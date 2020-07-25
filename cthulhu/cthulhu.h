@@ -119,7 +119,7 @@ typedef struct {
 
 typedef enum {
     AK_IDENT,
-    
+
     AK_BINARY,
     AK_UNARY,
     AK_TERNARY,
@@ -129,7 +129,9 @@ typedef enum {
     AK_CLOSURE,
     AK_ARRAY,
     AK_QUAL,
-    AK_QUALS
+    AK_QUALS,
+
+    AK_STMTS
 } CtASTKind;
 
 typedef struct {
@@ -173,6 +175,8 @@ typedef struct CtAST {
             CtASTArray args;
             struct CtAST *result;
         } closure;
+
+        CtASTArray stmts;
     } data;
 } CtAST;
 
