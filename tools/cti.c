@@ -221,6 +221,12 @@ static void pnode(CtAST *node)
     case AK_LITERAL:
         pliteral(node);
         break;
+    case AK_UNARY:
+        printf("(");
+        key(node->tok);
+        pnode(node->data.expr);
+        printf(")");
+        break;
     default:
         printf("ERROR");
         break;
