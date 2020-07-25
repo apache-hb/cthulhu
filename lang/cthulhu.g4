@@ -11,7 +11,7 @@ type
     : '&' type
     | '*' type
     | '[' type (':' expr)? ']'
-    | 'def' ('(' types? ')')? ('->' type)?
+    | '(' types? ')' ('->' type)?
     | quals
     ;
 

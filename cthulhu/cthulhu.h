@@ -117,6 +117,7 @@ typedef struct {
 typedef enum {
     AK_BINARY,
     AK_UNARY,
+    AK_TERNARY,
     AK_LITERAL
 } CtASTKind;
 
@@ -129,6 +130,12 @@ typedef struct CtAST {
             struct CtAST *lhs;
             struct CtAST *rhs;
         } binary;
+        struct {
+            struct CtAST *cond;
+            struct CtAST *yes;
+            struct CtAST *no;
+        } ternary;
+
         struct CtAST *expr;
     } data;
 } CtAST;
