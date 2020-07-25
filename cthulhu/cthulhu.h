@@ -101,7 +101,10 @@ typedef enum {
     ERR_UNEXPECTED_KEY,
 
     /* missing closing ) */
-    ERR_MISSING_BRACE
+    ERR_MISSING_BRACE,
+
+    /* unexpected token type */
+    ERR_UNEXPECTED_TOK
 } CtErrorKind;
 
 typedef struct {
@@ -115,11 +118,25 @@ typedef struct {
 
 
 typedef enum {
+    AK_IDENT,
+    
     AK_BINARY,
     AK_UNARY,
     AK_TERNARY,
-    AK_LITERAL
+    AK_LITERAL,
+
+    AK_PTR,
+    AK_CLOSURE,
+    AK_ARRAY,
+    AK_QUAL,
+    AK_QUALS
 } CtASTKind;
+
+typedef struct {
+    struct CtAST *nodes;
+    size_t len;
+    size_t alloc;
+} CtASTArray;
 
 typedef struct CtAST {
     CtASTKind type;
@@ -130,6 +147,7 @@ typedef struct CtAST {
             struct CtAST *lhs;
             struct CtAST *rhs;
         } binary;
+        
         struct {
             struct CtAST *cond;
             struct CtAST *yes;
@@ -137,6 +155,24 @@ typedef struct CtAST {
         } ternary;
 
         struct CtAST *expr;
+
+        struct CtAST *ptr;
+
+        struct {
+            struct CtAST *type;
+            struct CtAST *size;
+        } array;
+
+        CtASTArray quals;
+
+        struct {
+            struct CtAST *name;
+        } qual;
+
+        struct {
+            CtASTArray args;
+            struct CtAST *result;
+        } closure;
     } data;
 } CtAST;
 

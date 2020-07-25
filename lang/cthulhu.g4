@@ -8,11 +8,10 @@ quals : qual ('::' qual)* ;
 types : type (',' type)* ;
 
 type
-    : '&' type
+    : quals
     | '*' type
     | '[' type (':' expr)? ']'
     | '(' types? ')' ('->' type)?
-    | quals
     ;
 
 expr : assign ;

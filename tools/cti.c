@@ -236,6 +236,20 @@ static void pnode(CtAST *node)
         pnode(node->data.ternary.no);
         printf(")");
         break;
+    case AK_IDENT:
+        ident(node->tok);
+        break;
+    case AK_QUALS:
+        for (size_t i = 0; i < node->data.quals.len; i++)
+        {
+            if (i)
+                printf("::");
+            pnode(&node->data.quals.nodes[i]);
+        }
+        break;
+    case AK_QUAL:
+        pnode(node->data.qual.name);
+        break;
     default:
         printf("ERROR");
         break;
