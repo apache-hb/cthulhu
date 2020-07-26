@@ -55,7 +55,7 @@ typedef struct {
         TK_CHAR,
         TK_END,
 
-        TK_LOOKAHEAD
+        TK_INVALID
     } type;
 
     union {
@@ -118,18 +118,27 @@ typedef struct {
 
 
 typedef enum {
+    AK_OTHER,
     AK_IDENT,
 
     AK_BINARY,
     AK_UNARY,
     AK_TERNARY,
     AK_LITERAL,
+    AK_INIT,
+    AK_ARG,
+    AK_NAME,
+    AK_CALL,
+    AK_SUB,
+    AK_ACCESS,
+    AK_DEREF,
 
     AK_PTR,
     AK_CLOSURE,
     AK_ARRAY,
     AK_QUAL,
     AK_QUALS,
+    AK_PARAM,
 
     AK_STMTS
 } CtASTKind;
@@ -149,7 +158,7 @@ typedef struct CtAST {
             struct CtAST *lhs;
             struct CtAST *rhs;
         } binary;
-        
+
         struct {
             struct CtAST *cond;
             struct CtAST *yes;
@@ -169,7 +178,13 @@ typedef struct CtAST {
 
         struct {
             struct CtAST *name;
+            CtASTArray params;
         } qual;
+
+        struct {
+            struct CtAST *name;
+            struct CtAST *type;
+        } param;
 
         struct {
             CtASTArray args;
@@ -177,6 +192,38 @@ typedef struct CtAST {
         } closure;
 
         CtASTArray stmts;
+
+        CtASTArray args;
+
+        struct {
+            struct CtAST *field;
+            struct CtAST *expr;
+        } arg;
+
+        struct {
+            struct CtAST *name;
+            struct CtAST *init;
+        } name;
+
+        struct {
+            struct CtAST *expr;
+            CtASTArray args;
+        } call;
+
+        struct {
+            struct CtAST *expr;
+            struct CtAST *index;
+        } sub;
+
+        struct {
+            struct CtAST *expr;
+            struct CtAST *field;
+        } access;
+
+        struct {
+            struct CtAST *expr;
+            struct CtAST *field;
+        } deref;
     } data;
 } CtAST;
 
@@ -211,6 +258,9 @@ typedef struct CtState {
 
     /* parsing state */
     CtToken tok;
+
+    /* constants */
+    CtAST *empty;
 } CtState;
 
 void ctStateNew(
