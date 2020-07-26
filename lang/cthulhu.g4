@@ -1,5 +1,7 @@
 grammar cthulhu;
 
+interp : stmt* EOF ;
+
 argdecl : Ident ':' type ('=' expr)? ;
 argdecls : argdecl (',' argdecl)* ;
 

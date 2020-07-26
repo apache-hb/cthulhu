@@ -1,55 +1,18 @@
-# Prerequisites
-*.d
+*
+!*/
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+# keep source files
+!*.c
+!*.h
+!*.inc
 
-# Linker output
-*.ilk
-*.map
-*.exp
+# keep the grammar
+!*.g4
 
-# Precompiled Headers
-*.gch
-*.pch
+# keep buildfile and docs
+!meson.build
+!LICENSE
+!*.md
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-.antlr/
+# ignore anything related to building
 *build*/
-*.json
