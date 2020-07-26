@@ -815,11 +815,19 @@ static CtAST *pArgDecl(CtState *self)
     return arg;
 }
 
+static CtAST *pCapture(CtState *self)
+{
+    CtAST *node = ast(AK_CAPTURE);
+    node->data.capture.ref = pConsume(self, K_BITAND);
+    node->data.capture.symbol = pQuals(self);
+    return node;
+}
+
 static CtAST *pFunc(CtState *self)
 {
     CtAST *func = ast(AK_FUNC);
     CtToken tok = pPeek(self);
-    
+
     if (tok.type == TK_IDENT)
     {
         func->data.func.name = astTok(AK_IDENT, pNext(self));
@@ -837,6 +845,16 @@ static CtAST *pFunc(CtState *self)
     else
     {
         func->data.func.args.len = 0;
+    }
+
+    if (pConsume(self, K_COLON))
+    {
+        pExpect(self, K_LSQUARE);
+        func->data.func.captures = pUntil(self, pCapture, K_COMMA, K_RSQUARE);
+    }
+    else
+    {
+        func->data.func.captures.len = 0;
     }
 
     func->data.func.result = pConsume(self, K_PTR) ? pType(self) : NULL;
@@ -898,7 +916,7 @@ static CtAST *pPrimary(CtState *self)
         self->tok = tok;
         node = ast(AK_NAME);
         node->data.name.name = pType(self);
-        node->data.name.init = pConsume(self, K_COLON) ? pInit(self) : NULL;
+        node->data.name.init = pConsume(self, K_LBRACE) ? pInit(self) : NULL;
     }
 
     if (!node)

@@ -9,6 +9,8 @@
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
+CtState state;
+
 static int next(void *ptr) { return fgetc(ptr); }
 
 static void range(CtView view, CtBuffer src)
@@ -282,7 +284,7 @@ static void pnode(CtAST *node)
         printf("}");
         break;
     case AK_OTHER:
-        if (node == node->tok.pos.source->empty)
+        if (node == state.empty)
             printf(";");
         else
             printf("EMPTY");
@@ -300,9 +302,8 @@ static void pnode(CtAST *node)
     case AK_ARG:
         if (node->data.arg.field)
         {
-            // TODO: how get empty node
             printf("[");
-            if (node->data.arg.field)
+            if (node->data.arg.field == state.empty)
                 printf("else");
             else
                 pnode(node->data.arg.field);
@@ -310,8 +311,80 @@ static void pnode(CtAST *node)
         }
         pnode(node->data.arg.expr);
         break;
+    case AK_FUNC:
+        printf("def ");
+        if (node->data.func.name)
+            pnode(node->data.func.name);
+        printf("(");
+        for (size_t i = 0; i < node->data.func.args.len; i++)
+        {
+            if (i)
+                printf(", ");
+            pnode(&node->data.func.args.nodes[i]);
+        }
+        printf(")");
+
+        if (node->data.func.captures.len)
+        {
+            printf(": [");
+
+            for (size_t i = 0; i < node->data.func.captures.len; i++)
+            {
+                if (i)
+                    printf(", ");
+                pnode(&node->data.func.captures.nodes[i]);
+            }
+
+            printf("] ");
+        }
+
+        if (node->data.func.result)
+        {
+            printf("-> ");
+            pnode(node->data.func.result);
+        }
+
+        if (node->data.func.body)
+        {
+            if (node->data.func.body->type == AK_STMTS)
+            {
+                pnode(node->data.func.body);
+            }
+            else
+            {
+                printf(" = ");
+                pnode(node->data.func.body);
+            }
+        }
+        break;
+    case AK_CAPTURE:
+        if (node->data.capture.ref)
+            printf("&");
+        pnode(node->data.capture.symbol);
+        break;
+    case AK_ARGDECL:
+        pnode(node->data.argdecl.name);
+        if (node->data.argdecl.type)
+        {
+            printf(": ");
+            pnode(node->data.argdecl.type);
+        }
+        if (node->data.argdecl.init)
+        {
+            printf(" = ");
+            pnode(node->data.argdecl.init);
+        }
+        break;
+    case AK_NAME:
+        pnode(node->data.name.name);
+        if (node->data.name.init)
+        {
+            printf(" ");
+            pnode(node->data.name.init);
+        }
+        break;
     default:
-        printf("ERROR");
+        printf("ERROR %d", node->type);
         break;
     }
 }
@@ -319,7 +392,6 @@ static void pnode(CtAST *node)
 int main(void)
 {
     printf(">>> ");
-    CtState state;
     ctStateNew(&state, stdin, next, "stdin", 20);
 
     while (1)

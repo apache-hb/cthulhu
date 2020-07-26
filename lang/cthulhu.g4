@@ -5,7 +5,11 @@ interp : stmt* EOF ;
 argdecl : Ident ':' type ('=' expr)? ;
 argdecls : argdecl (',' argdecl)* ;
 
-func : 'def' Ident? ('(' argdecls? ')')? ('->' type)? funcbody ;
+
+capture : '&'? quals ;
+captures : '[' capture (',' capture)* ']' ;
+
+func : 'def' Ident? ('(' argdecls? ')')? (':' captures)? ('->' type)? funcbody ;
 
 funcbody : ';' | '=' expr | stmts ;
 
