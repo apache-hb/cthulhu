@@ -142,7 +142,8 @@ typedef enum {
 
     AK_STMTS,
     AK_FUNC,
-    AK_ARGDECL
+    AK_ARGDECL,
+    AK_CAPTURE
 } CtASTKind;
 
 typedef struct {
@@ -236,9 +237,15 @@ typedef struct CtAST {
         struct {
             struct CtAST *name;
             CtASTArray args;
+            CtASTArray captures;
             struct CtAST *result;
             struct CtAST *body;
         } func;
+
+        struct {
+            struct CtAST *symbol;
+            int ref;
+        } capture;
     } data;
 } CtAST;
 
