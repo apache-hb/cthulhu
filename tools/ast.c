@@ -287,6 +287,29 @@ static void pnode(CtAST *node)
         else
             printf("EMPTY");
         break;
+    case AK_INIT:
+        printf("{ ");
+        for (size_t i = 0; i < node->data.args.len; i++)
+        {
+            if (i)
+                printf(", ");
+            pnode(&node->data.args.nodes[i]);
+        }
+        printf(" }");
+        break;
+    case AK_ARG:
+        if (node->data.arg.field)
+        {
+            // TODO: how get empty node
+            printf("[");
+            if (node->data.arg.field)
+                printf("else");
+            else
+                pnode(node->data.arg.field);
+            printf("] = ");
+        }
+        pnode(node->data.arg.expr);
+        break;
     default:
         printf("ERROR");
         break;

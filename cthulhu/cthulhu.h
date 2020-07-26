@@ -140,7 +140,9 @@ typedef enum {
     AK_QUALS,
     AK_PARAM,
 
-    AK_STMTS
+    AK_STMTS,
+    AK_FUNC,
+    AK_ARGDECL
 } CtASTKind;
 
 typedef struct {
@@ -224,6 +226,19 @@ typedef struct CtAST {
             struct CtAST *expr;
             struct CtAST *field;
         } deref;
+
+        struct {
+            struct CtAST *name;
+            struct CtAST *type;
+            struct CtAST *init;
+        } argdecl;
+
+        struct {
+            struct CtAST *name;
+            CtASTArray args;
+            struct CtAST *result;
+            struct CtAST *body;
+        } func;
     } data;
 } CtAST;
 
@@ -270,5 +285,11 @@ void ctStateNew(
     const char *name,
     size_t max_errs
 );
+
+/* interpreter style parsing. TODO: lots of callbacks for this one */
+CtAST *ctParseInterp(CtState *self);
+
+/* traditional parsing. TODO: also callbacks needed */
+CtAST *ctParse(CtState *self);
 
 #endif /* CTHULHU_H */
