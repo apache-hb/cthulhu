@@ -597,6 +597,7 @@ static CtToken lexToken(CtState *self)
 
     if (self->lerr.type != ERR_NONE)
     {
+        tok.type = TK_INVALID;
         self->lerr.len = self->len;
         self->lerr.pos = start;
         report(self, &self->lerr);
@@ -609,14 +610,12 @@ static CtToken pNext(CtState *self)
 {
     CtToken tok = self->tok;
 
-    if (tok.type == TK_LOOKAHEAD)
+    while (tok.type == TK_INVALID)
     {
         tok = lexToken(self);
     }
-    else
-    {
-        self->tok.type = TK_LOOKAHEAD;
-    }
+
+    self->tok.type = TK_INVALID;
 
     return tok;
 }
@@ -712,7 +711,6 @@ static CtAST *astTok(CtASTKind type, CtToken tok)
     return out;
 }
 
-
 static CtAST *pIdent(CtState *self)
 {
     CtToken tok = pNext(self);
@@ -725,7 +723,6 @@ static CtAST *pIdent(CtState *self)
 
     return astTok(AK_IDENT, tok);
 }
-
 
 typedef enum {
     OP_ERROR = 0,
@@ -777,8 +774,35 @@ static OpPrec prec(CtToken tok)
 #define IS_UNARY(key) (key == K_ADD || key == K_SUB || key == K_BITNOT || key == K_NOT || key == K_BITAND || key == K_MUL)
 
 static CtAST *pExpr(CtState *self);
-static CtAST *pType(CtState *self);
 static CtAST *pQuals(CtState *self);
+static CtAST *pType(CtState *self);
+
+static CtAST *pArg(CtState *self)
+{
+    CtAST *arg = ast(AK_ARG);
+    if (pConsume(self, K_LSQUARE))
+    {
+        arg->data.arg.field = pConsume(self, K_ELSE) ? self->empty : pExpr(self);
+        pExpect(self, K_RSQUARE);
+        pExpect(self, K_ASSIGN);
+    }
+    else
+    {
+        arg->data.arg.field = NULL;
+    }
+
+    arg->data.arg.expr = pExpr(self);
+
+    return arg;
+}
+
+static CtAST *pInit(CtState *self)
+{
+    CtAST *init = ast(AK_INIT);
+    init->data.args = pCollect(self, pArg, K_COMMA);
+    pExpect(self, K_RBRACE);
+    return init;
+}
 
 static CtAST *pPrimary(CtState *self)
 {
@@ -805,11 +829,59 @@ static CtAST *pPrimary(CtState *self)
             if(!pExpect(self, K_RPAREN))
                 self->perr.type = ERR_MISSING_BRACE;
         }
+        else if (tok.data.key == K_LBRACE)
+        {
+            pNext(self);
+            node = pInit(self);
+        }
     }
     else if (tok.type == TK_IDENT)
     {
         self->tok = tok;
-        node = pQuals(self);
+        node = ast(AK_NAME);
+        node->data.name.name = pType(self);
+        node->data.name.init = pConsume(self, K_COLON) ? pInit(self) : NULL;
+    }
+
+    if (!node)
+        return NULL;
+
+    while (1)
+    {
+        if (pConsume(self, K_LPAREN))
+        {
+            CtAST *call = ast(AK_CALL);
+            call->data.call.expr = node;
+            call->data.call.args = pCollect(self, pArg, K_COMMA);
+            pExpect(self, K_RPAREN);
+            node = call;
+        }
+        else if (pConsume(self, K_LSQUARE))
+        {
+            CtAST *sub = ast(AK_SUB);
+            sub->data.sub.expr = node;
+            sub->data.sub.index = pExpr(self);
+            pExpect(self, K_RSQUARE);
+            node = sub;
+        }
+        else if (pConsume(self, K_DOT))
+        {
+            CtAST *access = ast(AK_ACCESS);
+            access->data.access.expr = node;
+            access->data.access.field = pIdent(self);
+            node = access;
+        }
+        else if (pConsume(self, K_PTR))
+        {
+            CtAST *deref = ast(AK_DEREF);
+            deref->data.deref.expr = node;
+            deref->data.deref.field = pIdent(self);
+            node = deref;
+        }
+        else
+        {
+            break;
+        }
     }
 
     return node;
@@ -879,10 +951,34 @@ static CtAST *pExpr(CtState *self)
 }
 
 
+static CtAST *pParam(CtState *self)
+{
+    CtAST *param = ast(AK_PARAM);
+
+    if (pConsume(self, K_COLON))
+    {
+        param->data.param.name = pIdent(self);
+        pExpect(self, K_ASSIGN);
+    }
+    else
+    {
+        param->data.param.name = NULL;
+    }
+
+    param->data.param.type = pType(self);
+
+    return param;
+}
+
 static CtAST *pQual(CtState *self)
 {
     CtAST *qual = ast(AK_QUAL);
     qual->data.qual.name = pIdent(self);
+    if (pConsume(self, K_TBEGIN))
+    {
+        qual->data.qual.params = pCollect(self, pParam, K_COMMA);
+        pExpect(self, K_TEND);
+    }
     return qual;
 }
 
@@ -897,7 +993,7 @@ static CtAST *pType(CtState *self)
 {
     CtToken tok = pNext(self);
     CtAST *type = NULL;
-    
+
     if (tok.type == TK_KEY)
     {
         switch (tok.data.key)
@@ -933,7 +1029,13 @@ static CtAST *pType(CtState *self)
 static CtAST *pStmt(CtState *self)
 {
     CtAST *node;
-    if (pConsume(self, K_LBRACE))
+
+    node = pExpr(self);
+    if (node)
+    {
+        pExpect(self, K_SEMI);
+    }
+    else if (pConsume(self, K_LBRACE))
     {
         node = ast(AK_STMTS);
 
@@ -949,15 +1051,15 @@ static CtAST *pStmt(CtState *self)
 
         pExpect(self, K_RBRACE);
     }
-    else
+    else if (pConsume(self, K_SEMI))
     {
-        node = pExpr(self);
-        if (node)
-            pExpect(self, K_SEMI);
+        /* empty statement */
+        node = self->empty;
     }
 
     if (self->perr.type != ERR_NONE)
         report(self, &self->perr);
+
     return node;
 }
 
@@ -995,5 +1097,7 @@ void ctStateNew(
     self->max_errs = max_errs;
     self->err_idx = 0;
 
-    self->tok.type = TK_LOOKAHEAD;
+    self->tok.type = TK_INVALID;
+    self->empty = ast(AK_OTHER);
+    self->empty->tok.pos.source = self;
 }

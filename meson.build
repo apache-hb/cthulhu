@@ -6,4 +6,4 @@ project('cthulhu', 'c',
     ]
 )
 
-cti = executable('cti', 'tools/cti.c')
+ast = executable('ast', 'tools/ast.c')

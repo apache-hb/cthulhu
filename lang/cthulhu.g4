@@ -1,5 +1,16 @@
 grammar cthulhu;
 
+argdecl : Ident ':' type ('=' expr)? ;
+argdecls : argdecl (',' argdecl)* ;
+
+func : 'def' Ident? ('(' argdecls? ')')? ('->' type)? funcbody ;
+
+funcbody : ';' | '=' expr | stmts ;
+
+stmts : '{' stmt* '}' ;
+
+stmt : expr ;
+
 param : (':' Ident '=')? type ;
 
 qual : Ident ('!<' param (',' param)* '>')? ;
@@ -7,11 +18,12 @@ quals : qual ('::' qual)* ;
 
 types : type (',' type)* ;
 
+ptr : '*' type ;
+arr : '[' type (':' expr)? ']' ;
+closure : '(' types? ')' ('->' type)? ;
+
 type
-    : quals
-    | '*' type
-    | '[' type (':' expr)? ']'
-    | '(' types? ')' ('->' type)?
+    : (quals | ptr | arr | closure)
     ;
 
 expr : assign ;
@@ -34,15 +46,16 @@ postfix
     | postfix '(' args? ')'
     | postfix '.' Ident
     | postfix '->' Ident
+    | init
+    | quals init?
     ;
 
 primary
     : '(' expr ')'
-    | init
-    | quals init?
     | IntLiteral
     | CharLiteral
     | StringLiteral
+    | func
     ;
 
 arg : ('[' (expr | 'else') ']' '=')? expr ;
