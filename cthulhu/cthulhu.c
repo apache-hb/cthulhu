@@ -162,7 +162,7 @@ static void lexSymbol(CtState *self, CtToken *tok, int c)
     case '!':
         if (lexConsume(self, '<'))
         {
-            self->depth++;
+            self->ldepth++;
             tok->data.key = K_TBEGIN;
         }
         else
@@ -172,9 +172,9 @@ static void lexSymbol(CtState *self, CtToken *tok, int c)
         break;
 
     case '>':
-        if (self->depth)
+        if (self->ldepth)
         {
-            self->depth--;
+            self->ldepth--;
             tok->data.key = K_TEND;
         }
         else if (lexConsume(self, '>'))
@@ -685,14 +685,13 @@ static CtASTArray pCollect(CtState *self, CtAST*(*func)(CtState*), CtKey sep)
 static CtASTArray pUntil(CtState *self, CtAST*(*func)(CtState*), CtKey sep, CtKey end)
 {
     CtASTArray out = nodes(4);
-    while (1)
+    if (!pConsume(self, end))
     {
-        addNode(&out, func(self));
-        if (!pConsume(self, sep))
-            break;
+        do addNode(&out, func(self));
+        while (pConsume(self, sep));
+        pExpect(self, end);
     }
 
-    pExpect(self, end);
     return out;
 }
 
@@ -806,12 +805,14 @@ static CtAST *pInit(CtState *self)
     return init;
 }
 
-static CtAST *pArgDecl(CtState *self)
+static CtAST *pArgDecl(CtState *self, int *defaulted)
 {
     CtAST *arg = ast(AK_ARGDECL);
     arg->data.argdecl.name = pIdent(self);
     arg->data.argdecl.type = pConsume(self, K_COLON) ? pType(self) : NULL;
     arg->data.argdecl.init = pConsume(self, K_ASSIGN) ? pExpr(self) : NULL;
+
+    *defaulted = arg->data.argdecl.init != NULL;
     return arg;
 }
 
@@ -837,10 +838,31 @@ static CtAST *pFunc(CtState *self)
         func->data.func.name = NULL;
     }
 
+    if (self->pdepth == 0 && !func->data.func.name)
+    {
+        self->perr.type = ERR_MISSING_NAME;
+    }
+
     if (pConsume(self, K_LPAREN))
     {
-        func->data.func.args = pCollect(self, pArgDecl, K_COMMA);
-        pExpect(self, K_RPAREN);
+        func->data.func.args = nodes(4);
+        int defaulted = 0;
+        int next_defaulted = 0;
+        if (!pConsume(self, K_RPAREN))
+        {
+            do {
+                CtAST *arg = pArgDecl(self, &defaulted);
+                addNode(&func->data.func.args, arg);
+
+                /* make sure defaulted args dont have positional args after them */
+                if (defaulted)
+                    next_defaulted = 1;
+
+                if (next_defaulted && !defaulted)
+                    self->perr.type = ERR_DEFAULT_ARG;
+            } while (pConsume(self, K_COMMA));
+            pExpect(self, K_RPAREN);
+        }
     }
     else
     {
@@ -859,7 +881,7 @@ static CtAST *pFunc(CtState *self)
 
     func->data.func.result = pConsume(self, K_PTR) ? pType(self) : NULL;
 
-    if (pConsume(self, K_ASSIGN))
+    if (pConsume(self, K_ARROW))
     {
         func->data.func.body = pExpr(self);
     }
@@ -873,6 +895,45 @@ static CtAST *pFunc(CtState *self)
     }
 
     return func;
+}
+
+static CtAST *pBuiltin(CtState *self)
+{
+    CtAST *name = pQuals(self);
+    CtASTArray args;
+
+    /* TODO: how to parse arguments to give to custom parser callback */
+    if (pConsume(self, K_LPAREN))
+    {
+        args = pUntil(self, pArg, K_COMMA, K_RPAREN);
+    }
+    else
+    {
+        args.len = 0;
+    }
+
+    void *body;
+
+    if (pConsume(self, K_LBRACE))
+    {
+        self->pbuiltin = 1;
+        /* custom parser callback */
+
+
+
+        self->pbuiltin = 0;
+    }
+    else
+    {
+        body = NULL;
+    }
+
+    CtAST *builtin = ast(AK_BUILTIN);
+    builtin->data.builtin.name = name;
+    builtin->data.builtin.args = args;
+    builtin->data.builtin.body = body;
+
+    return builtin;
 }
 
 static CtAST *pPrimary(CtState *self)
@@ -910,6 +971,15 @@ static CtAST *pPrimary(CtState *self)
             pNext(self);
             node = pFunc(self);
         }
+        else if (tok.data.key == K_AT)
+        {
+            /* compiler builtin */
+            if (self->pbuiltin)
+                self->perr.type = ERR_NESTED_BUILTIN;
+
+            pNext(self);
+            node = pBuiltin(self);
+        }
     }
     else if (tok.type == TK_IDENT)
     {
@@ -928,8 +998,7 @@ static CtAST *pPrimary(CtState *self)
         {
             CtAST *call = ast(AK_CALL);
             call->data.call.expr = node;
-            call->data.call.args = pCollect(self, pArg, K_COMMA);
-            pExpect(self, K_RPAREN);
+            call->data.call.args = pUntil(self, pArg, K_COMMA, K_RPAREN);
             node = call;
         }
         else if (pConsume(self, K_LSQUARE))
@@ -1108,6 +1177,8 @@ static CtAST *pStmts(CtState *self)
 
     node->data.stmts = nodes(4);
 
+    self->pdepth++;
+
     while (1)
     {
         CtAST *expr = pStmt(self);
@@ -1117,6 +1188,8 @@ static CtAST *pStmts(CtState *self)
     }
 
     pExpect(self, K_RBRACE);
+
+    self->pdepth--;
 
     return node;
 }
@@ -1149,16 +1222,13 @@ static CtAST *pStmt(CtState *self)
 
 void ctStateNew(
     CtState *self,
-    void *stream,
-    CtNextFunc next,
-    const char *name,
-    size_t max_errs
+    CtStateInfo info
 )
 {
-    self->stream = stream;
-    self->next = next;
-    self->ahead = next(stream);
-    self->name = name;
+    self->stream = info.stream;
+    self->next = info.next;
+    self->ahead = info.next(info.stream);
+    self->name = info.name;
 
     self->source = bufferNew(0x1000);
     self->strings = bufferNew(0x1000);
@@ -1168,18 +1238,27 @@ void ctStateNew(
     self->pos.col = 0;
     self->pos.line = 0;
 
+    self->ldepth = 0;
+    self->pdepth = 0;
+    self->pbuiltin = 0;
+
     self->flags = LF_DEFAULT;
 
     self->lerr.type = ERR_NONE;
     self->perr.type = ERR_NONE;
 
-    self->errs = CT_MALLOC(sizeof(CtError) * max_errs);
-    self->max_errs = max_errs;
+    self->errs = info.errs;
+    self->max_errs = info.max_errs;
     self->err_idx = 0;
 
     self->tok.type = TK_INVALID;
     self->empty = ast(AK_OTHER);
     self->empty->tok.pos.source = self;
+}
+
+void ctAddFlag(CtState *self, CtLexerFlag flag)
+{
+    self->flags |= flag;
 }
 
 CtAST *ctParseInterp(CtState *self)
@@ -1195,4 +1274,11 @@ CtAST *ctParse(CtState *self)
         report(self, &self->perr);
 
     return node;
+}
+
+int ctValidate(CtState *self, CtAST *node)
+{
+    (void)self;
+    (void)node;
+    return 1;
 }

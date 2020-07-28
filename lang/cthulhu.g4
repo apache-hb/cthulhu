@@ -2,16 +2,17 @@ grammar cthulhu;
 
 interp : stmt* EOF ;
 
+builtin : '@' quals ('(' args ')')? ('{' /* this can be anything */ '}')? ;
+
 argdecl : Ident ':' type ('=' expr)? ;
 argdecls : argdecl (',' argdecl)* ;
-
 
 capture : '&'? quals ;
 captures : '[' capture (',' capture)* ']' ;
 
 func : 'def' Ident? ('(' argdecls? ')')? (':' captures)? ('->' type)? funcbody ;
 
-funcbody : ';' | '=' expr | stmts ;
+funcbody : '=>' expr | stmts ;
 
 stmts : '{' stmt* '}' ;
 
@@ -62,6 +63,7 @@ primary
     | CharLiteral
     | StringLiteral
     | func
+    | builtin
     ;
 
 arg : ('[' (expr | 'else') ']' '=')? expr ;
