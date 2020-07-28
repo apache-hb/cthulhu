@@ -335,12 +335,12 @@ static void pnode(CtAST *node)
                 pnode(&node->data.func.captures.nodes[i]);
             }
 
-            printf("] ");
+            printf("]");
         }
 
         if (node->data.func.result)
         {
-            printf("-> ");
+            printf(" -> ");
             pnode(node->data.func.result);
         }
 
@@ -352,7 +352,7 @@ static void pnode(CtAST *node)
             }
             else
             {
-                printf(" = ");
+                printf("=> ");
                 pnode(node->data.func.body);
             }
         }
@@ -383,6 +383,20 @@ static void pnode(CtAST *node)
             pnode(node->data.name.init);
         }
         break;
+    case AK_CALL:
+        printf("(");
+        pnode(node->data.call.expr);
+        printf(")");
+
+        printf("(");
+        for (size_t i = 0; i < node->data.call.args.len; i++)
+        {
+            if (i)
+                printf(", ");
+            pnode(&node->data.call.args.nodes[i]);
+        }
+        printf(")");
+        break;
     default:
         printf("ERROR %d", node->type);
         break;
@@ -391,12 +405,23 @@ static void pnode(CtAST *node)
 
 int main(void)
 {
+    CtStateInfo info;
+
+    info.stream = stdin;
+    info.next = next;
+    info.name = "stdin";
+
+    CtError errs[20];
+    info.errs = errs;
+    info.max_errs = 20;
+
     printf(">>> ");
-    ctStateNew(&state, stdin, next, "stdin", 20);
+    ctStateNew(&state, info);
 
     while (1)
     {
-        CtAST *node = pStmt(&state);
+        CtAST *node = ctParse(&state);
+        ctValidate(&state, node);
         if (!errors(&state))
         {
             if (!node)

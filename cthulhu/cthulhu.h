@@ -104,7 +104,19 @@ typedef enum {
     ERR_MISSING_BRACE,
 
     /* unexpected token type */
-    ERR_UNEXPECTED_TOK
+    ERR_UNEXPECTED_TOK,
+
+    /* a positional argument declared after an argument with default init */
+    ERR_DEFAULT_ARG,
+
+    /* toplevel functions need to be named */
+    ERR_MISSING_NAME,
+
+    /* toplevel function arguments need to be explicitly typed */
+    ERR_MISSING_TYPE,
+
+    /* nested builtins with custom parsing are not allowed */
+    ERR_NESTED_BUILTIN
 } CtErrorKind;
 
 typedef struct {
@@ -132,6 +144,7 @@ typedef enum {
     AK_SUB,
     AK_ACCESS,
     AK_DEREF,
+    AK_BUILTIN,
 
     AK_PTR,
     AK_CLOSURE,
@@ -246,8 +259,22 @@ typedef struct CtAST {
             struct CtAST *symbol;
             int ref;
         } capture;
+
+        struct {
+            struct CtAST *name;
+            CtASTArray args;
+
+            /* custom data goes here */
+            void *body;
+        } builtin;
     } data;
 } CtAST;
+
+typedef enum {
+#define FLAG(name, bit) name = (1 << bit),
+#include "keys.inc"
+    LF_DEFAULT = LF_CORE
+} CtLexerFlag;
 
 typedef struct CtState {
     /* stream state */
@@ -262,13 +289,16 @@ typedef struct CtState {
     size_t len;
     CtBuffer strings;
 
-    enum {
-#define FLAG(name, bit) name = (1 << bit),
-#include "keys.inc"
-        LF_DEFAULT = LF_CORE
-    } flags;
+    CtLexerFlag flags;
 
-    int depth;
+    /* lexer depth for template parsing */
+    int ldepth;
+
+    /* parser depth for expressions */
+    int pdepth;
+
+    /* we dont allow nested builtins so keep track of if we are currently parsing a builtin */
+    int pbuiltin;
 
     /* error handling state */
     CtError lerr;
@@ -285,18 +315,29 @@ typedef struct CtState {
     CtAST *empty;
 } CtState;
 
+typedef struct {
+    void *stream;
+    CtNextFunc next;
+    const char *name;
+
+    size_t max_errs;
+    CtError *errs;
+} CtStateInfo;
+
 void ctStateNew(
     CtState *self,
-    void *stream,
-    CtNextFunc next,
-    const char *name,
-    size_t max_errs
+    CtStateInfo info
 );
+
+void ctAddFlag(CtState *self, CtLexerFlag flag);
 
 /* interpreter style parsing. TODO: lots of callbacks for this one */
 CtAST *ctParseInterp(CtState *self);
 
 /* traditional parsing. TODO: also callbacks needed */
 CtAST *ctParse(CtState *self);
+
+/* validate an ast given the current state */
+int ctValidate(CtState *self, CtAST *node);
 
 #endif /* CTHULHU_H */
