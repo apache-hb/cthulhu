@@ -672,12 +672,15 @@ static void addNode(CtASTArray *self, CtAST *node)
     self->nodes[self->len++] = *node;
 }
 
-static CtASTArray pCollect(CtState *self, CtAST*(*func)(CtState*), CtKey sep)
+static CtASTArray pCollect(CtState *self, CtAST*(*func)(CtState*), CtKey sep, CtKey end)
 {
     CtASTArray out = nodes(4);
     do {
         addNode(&out, func(self));
     } while (pConsume(self, sep));
+
+    if (end != K_INVALID)
+        pExpect(self, end);
 
     return out;
 }
@@ -800,8 +803,7 @@ static CtAST *pArg(CtState *self)
 static CtAST *pInit(CtState *self)
 {
     CtAST *init = ast(AK_INIT);
-    init->data.args = pCollect(self, pArg, K_COMMA);
-    pExpect(self, K_RBRACE);
+    init->data.args = pCollect(self, pArg, K_COMMA, K_RBRACE);
     return init;
 }
 
@@ -917,9 +919,9 @@ static CtAST *pBuiltin(CtState *self)
     if (pConsume(self, K_LBRACE))
     {
         self->pbuiltin = 1;
-        /* custom parser callback */
+        /* TODO: custom parser callback */
 
-
+        body = NULL;
 
         self->pbuiltin = 0;
     }
@@ -1121,8 +1123,7 @@ static CtAST *pQual(CtState *self)
     qual->data.qual.name = pIdent(self);
     if (pConsume(self, K_TBEGIN))
     {
-        qual->data.qual.params = pCollect(self, pParam, K_COMMA);
-        pExpect(self, K_TEND);
+        qual->data.qual.params = pCollect(self, pParam, K_COMMA, K_TEND);
     }
     return qual;
 }
@@ -1130,7 +1131,7 @@ static CtAST *pQual(CtState *self)
 static CtAST *pQuals(CtState *self)
 {
     CtAST *type = ast(AK_QUALS);
-    type->data.quals = pCollect(self, pQual, K_COLON2);
+    type->data.quals = pCollect(self, pQual, K_COLON2, K_INVALID);
     return type;
 }
 
@@ -1216,6 +1217,23 @@ static CtAST *pStmt(CtState *self)
     return node;
 }
 
+CtAST *pImport(CtState *self)
+{
+    CtAST *node = ast(AK_IMPORT);
+    node->data.include.path = pCollect(self, pIdent, K_COLON2, K_INVALID);
+    if (pConsume(self, K_LPAREN))
+    {
+        node->data.include.items = pCollect(self, pIdent, K_COMMA, K_RPAREN);
+    }
+    else
+    {
+        node->data.include.items.len = 0;
+    }
+    pExpect(self, K_SEMI);
+
+    return node;
+}
+
 /**
  * public api
  */
@@ -1278,7 +1296,5 @@ CtAST *ctParse(CtState *self)
 
 int ctValidate(CtState *self, CtAST *node)
 {
-    (void)self;
-    (void)node;
     return 1;
 }

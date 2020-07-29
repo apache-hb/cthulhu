@@ -156,7 +156,9 @@ typedef enum {
     AK_STMTS,
     AK_FUNC,
     AK_ARGDECL,
-    AK_CAPTURE
+    AK_CAPTURE,
+
+    AK_IMPORT
 } CtASTKind;
 
 typedef struct {
@@ -267,6 +269,11 @@ typedef struct CtAST {
             /* custom data goes here */
             void *body;
         } builtin;
+
+        struct {
+            CtASTArray path;
+            CtASTArray items;
+        } include;
     } data;
 } CtAST;
 
