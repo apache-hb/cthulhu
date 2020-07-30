@@ -10,7 +10,10 @@
 #   define FLAG(name, bit)
 #endif
 
+/* core keywords and symbols */
 FLAG(LF_CORE, 1)
+
+/* assembly specific keywords */
 FLAG(LF_ASM, 2)
 
 /* declaration keywords */
@@ -22,6 +25,7 @@ KEY(K_ENUM, "enum", LF_CORE)
 KEY(K_UNION, "union", LF_CORE)
 KEY(K_OBJECT, "object", LF_CORE)
 KEY(K_VAR, "var", LF_CORE)
+KEY(K_LET, "let", LF_CORE)
 KEY(K_TRAIT, "trait", LF_CORE)
 
 /* control keywords */

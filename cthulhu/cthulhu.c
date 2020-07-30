@@ -780,6 +780,77 @@ static CtAST *pQuals(CtState *self);
 static CtAST *pType(CtState *self);
 static CtAST *pStmts(CtState *self);
 static CtAST *pStmt(CtState *self);
+static CtAST *pBuiltin(CtState *self);
+static CtAST *pArg(CtState *self);
+static CtASTArray takeAttribs(CtState *self);
+
+typedef struct {
+    /* were any attribs parsed */
+    int any;
+    /* otherwise the builtin that was parsed */
+    CtAST *node;
+} AttribsOr;
+
+static CtAST *pAttrib(CtState *self)
+{
+    CtASTArray path = pCollect(self, pIdent, K_COLON2, K_INVALID);
+    CtASTArray args;
+    if (pConsume(self, K_LPAREN))
+    {
+        args = pUntil(self, pArg, K_COMMA, K_RPAREN);
+    }
+    else
+    {
+        args.len = 0;
+    }
+
+    CtAST *node = ast(AK_ATTRIB);
+    node->data.attrib.path = path;
+    node->data.attrib.args = args;
+
+    return node;
+}
+
+static AttribsOr pAttribs(CtState *self, int allow_builtin)
+{
+    AttribsOr out;
+    out.any = 0;
+
+    /* attrib or builtin */
+    while (pConsume(self, K_AT))
+    {
+        /* is an attrib */
+        if (pConsume(self, K_LSQUARE))
+        {
+            out.any = 1;
+            do addNode(&self->attribs, pAttrib(self));
+            while (pConsume(self, K_COMMA));
+            pExpect(self, K_RSQUARE);
+        }
+        else if (allow_builtin)
+        {
+            out.any = 0;
+            /* is a builtin */
+            out.node = pBuiltin(self);
+            out.node->data.builtin.attribs = takeAttribs(self);
+            break;
+        }
+        else
+        {
+            self->perr.type = ERR_UNEXPECTED_BUILTIN;
+            break;
+        }
+    }
+
+    return out;
+}
+
+static CtASTArray takeAttribs(CtState *self)
+{
+    CtASTArray temp = self->attribs;
+    self->attribs = nodes(4);
+    return temp;
+}
 
 static CtAST *pArg(CtState *self)
 {
@@ -896,6 +967,8 @@ static CtAST *pFunc(CtState *self)
         func->data.func.body = NULL;
     }
 
+    func->data.func.attribs = takeAttribs(self);
+
     return func;
 }
 
@@ -938,10 +1011,29 @@ static CtAST *pBuiltin(CtState *self)
     return builtin;
 }
 
+static CtAST *pCoerce(CtState *self)
+{
+    pExpect(self, K_TBEGIN);
+    CtAST *type = pType(self);
+    pExpect(self, K_TEND);
+    pExpect(self, K_LPAREN);
+    CtAST *body = pExpr(self);
+    pExpect(self, K_RPAREN);
+
+    CtAST *node = ast(AK_COERCE);
+    node->data.coerce.type = type;
+    node->data.coerce.expr = body;
+    return node;
+}
+
 static CtAST *pPrimary(CtState *self)
 {
     CtToken tok = pPeek(self);
     CtAST *node = NULL;
+    AttribsOr attribs = pAttribs(self, 0);
+
+    if (attribs.any)
+        goto parse_func;
 
     if (tok.type == TK_CHAR || tok.type == TK_INT || tok.type == TK_STRING)
     {
@@ -970,6 +1062,7 @@ static CtAST *pPrimary(CtState *self)
         }
         else if (tok.data.key == K_DEF)
         {
+        parse_func:
             pNext(self);
             node = pFunc(self);
         }
@@ -981,6 +1074,11 @@ static CtAST *pPrimary(CtState *self)
 
             pNext(self);
             node = pBuiltin(self);
+        }
+        else if (tok.data.key == K_COERCE)
+        {
+            pNext(self);
+            node = pCoerce(self);
         }
     }
     else if (tok.type == TK_IDENT)
@@ -1234,6 +1332,73 @@ CtAST *pImport(CtState *self)
     return node;
 }
 
+CtAST *pAlias(CtState *self)
+{
+    CtAST *node = ast(AK_ALIAS);
+    node->data.alias.name = pIdent(self);
+    pExpect(self, K_ASSIGN);
+    node->data.alias.body = pType(self);
+    node->data.alias.attribs = takeAttribs(self);
+    return node;
+}
+
+CtAST *pBody(CtState *self)
+{
+    CtAST *node = NULL;
+    AttribsOr attribs = pAttribs(self, 1);
+    if (attribs.node)
+    {
+        node = attribs.node;
+        goto done_builtin;
+    }
+
+    if (pConsume(self, K_DEF))
+    {
+        node = pFunc(self);
+
+        /* TODO: technically the grammar is wrong so fix that at some point */
+        if (node->data.func.body == NULL || node->data.func.body->type != AK_STMTS)
+            pExpect(self, K_SEMI);
+    }
+    else if (pConsume(self, K_ALIAS))
+    {
+        node = pAlias(self);
+        pExpect(self, K_SEMI);
+    }
+    else if (pConsume(self, K_AT))
+    {
+        node = pBuiltin(self);
+    done_builtin:
+        /* TODO: again, this is a slight hack of the grammar */
+        if (node->data.builtin.body == NULL)
+            pExpect(self, K_SEMI);
+    }
+
+    return node;
+}
+
+CtAST *pUnit(CtState *self)
+{
+    CtAST *unit = ast(AK_UNIT);
+    unit->data.unit.imports = nodes(4);
+    while (pConsume(self, K_IMPORT))
+    {
+        addNode(&unit->data.unit.imports, pImport(self));
+        pExpect(self, K_SEMI);
+    }
+
+    unit->data.unit.body = nodes(4);
+    while (1)
+    {
+        CtAST *node = pBody(self);
+        if (!node)
+            break;
+        addNode(&unit->data.unit.body, node);
+    }
+
+    return unit;
+}
+
 /**
  * public api
  */
@@ -1272,6 +1437,7 @@ void ctStateNew(
     self->tok.type = TK_INVALID;
     self->empty = ast(AK_OTHER);
     self->empty->tok.pos.source = self;
+    self->attribs = nodes(4);
 }
 
 void ctAddFlag(CtState *self, CtLexerFlag flag)
@@ -1296,5 +1462,7 @@ CtAST *ctParse(CtState *self)
 
 int ctValidate(CtState *self, CtAST *node)
 {
+    (void)self;
+    (void)node;
     return 1;
 }

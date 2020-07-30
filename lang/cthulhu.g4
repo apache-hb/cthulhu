@@ -2,7 +2,19 @@ grammar cthulhu;
 
 interp : stmt* EOF ;
 
+unit : include* body* EOF ;
+
+include : 'import' Ident ('::' Ident)* ('(' Ident (',' Ident)* ')') ;
+
+/* TODO: the ';' is technically wrong */
+body : (attribs* builtin | func | alias) ';' ;
+
+alias : attribs* 'alias' Ident '=' type ;
+
 builtin : '@' quals ('(' args ')')? ('{' /* this can be anything */ '}')? ;
+
+attrib : Ident ('::' Ident)* ('(' args? ')')? ;
+attribs : '@' '[' attrib (',' attrib)* ']' ;
 
 argdecl : Ident ':' type ('=' expr)? ;
 argdecls : argdecl (',' argdecl)* ;
@@ -10,13 +22,13 @@ argdecls : argdecl (',' argdecl)* ;
 capture : '&'? quals ;
 captures : '[' capture (',' capture)* ']' ;
 
-func : 'def' Ident? ('(' argdecls? ')')? (':' captures)? ('->' type)? funcbody ;
+func : attribs* 'def' Ident? ('(' argdecls? ')')? (':' captures)? ('->' type)? funcbody ;
 
 funcbody : '=>' expr | stmts ;
 
 stmts : '{' stmt* '}' ;
 
-stmt : expr ;
+stmt : (expr | alias) ';' | stmts ;
 
 param : (':' Ident '=')? type ;
 
@@ -29,9 +41,7 @@ ptr : '*' type ;
 arr : '[' type (':' expr)? ']' ;
 closure : '(' types? ')' ('->' type)? ;
 
-type
-    : (quals | ptr | arr | closure)
-    ;
+type : quals | ptr | arr | attribs* closure ;
 
 expr : assign ;
 
@@ -57,12 +67,15 @@ postfix
     | quals init?
     ;
 
+coerce : 'coerce' '!<' type '>' '(' expr ')' ;
+
 primary
     : '(' expr ')'
     | IntLiteral
     | CharLiteral
     | StringLiteral
     | func
+    | coerce
     | builtin
     ;
 
