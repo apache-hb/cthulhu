@@ -46,17 +46,19 @@ typedef struct {
     CtView suffix;
 } CtDigit;
 
-typedef struct {
-    enum {
-        TK_IDENT,
-        TK_KEY,
-        TK_INT,
-        TK_STRING,
-        TK_CHAR,
-        TK_END,
+typedef enum {
+    TK_IDENT,
+    TK_KEY,
+    TK_INT,
+    TK_STRING,
+    TK_CHAR,
+    TK_END,
 
-        TK_INVALID
-    } type;
+    TK_INVALID
+} CtTokenKind;
+
+typedef struct {
+    CtTokenKind type;
 
     union {
         CtView ident;
@@ -116,7 +118,10 @@ typedef enum {
     ERR_MISSING_TYPE,
 
     /* nested builtins with custom parsing are not allowed */
-    ERR_NESTED_BUILTIN
+    ERR_NESTED_BUILTIN,
+
+    /* builtin appeared where it shouldnt */
+    ERR_UNEXPECTED_BUILTIN
 } CtErrorKind;
 
 typedef struct {
@@ -145,6 +150,7 @@ typedef enum {
     AK_ACCESS,
     AK_DEREF,
     AK_BUILTIN,
+    AK_COERCE,
 
     AK_PTR,
     AK_CLOSURE,
@@ -158,7 +164,10 @@ typedef enum {
     AK_ARGDECL,
     AK_CAPTURE,
 
-    AK_IMPORT
+    AK_IMPORT,
+    AK_ALIAS,
+    AK_ATTRIB,
+    AK_UNIT
 } CtASTKind;
 
 typedef struct {
@@ -250,6 +259,8 @@ typedef struct CtAST {
         } argdecl;
 
         struct {
+            CtASTArray attribs;
+
             struct CtAST *name;
             CtASTArray args;
             CtASTArray captures;
@@ -263,6 +274,8 @@ typedef struct CtAST {
         } capture;
 
         struct {
+            CtASTArray attribs;
+
             struct CtAST *name;
             CtASTArray args;
 
@@ -274,6 +287,28 @@ typedef struct CtAST {
             CtASTArray path;
             CtASTArray items;
         } include;
+
+        struct {
+            struct CtAST *type;
+            struct CtAST *expr;
+        } coerce;
+
+        struct {
+            CtASTArray attribs;
+
+            struct CtAST *name;
+            struct CtAST *body;
+        } alias;
+
+        struct {
+            CtASTArray path;
+            CtASTArray args;
+        } attrib;
+
+        struct {
+            CtASTArray imports;
+            CtASTArray body;
+        } unit;
     } data;
 } CtAST;
 
@@ -317,6 +352,7 @@ typedef struct CtState {
 
     /* parsing state */
     CtToken tok;
+    CtASTArray attribs;
 
     /* constants */
     CtAST *empty;
