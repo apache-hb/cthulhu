@@ -181,6 +181,7 @@ static int errors(CtState *self)
     int ret = 0;
     for (size_t i = 0; i < self->err_idx; i++)
     {
+        printf("here\n");
         ret = 1;
         error(self->errs[i]);
     }
@@ -422,26 +423,19 @@ int main(void)
     {
         CtAST *node = ctParse(&state);
         ctValidate(&state, node);
-        if (!errors(&state))
+        if (errors(&state) != 0)
         {
+            printf("here\n");
             if (!node)
+            {
                 printf("failed to parse statement");
+                break;
+            }
             else
+            {
                 pnode(node);
+            }
             printf("\n>>> ");
         }
     }
-
-    (void)ptok;
-
-    /*for (;;)
-    {
-        CtToken tok = lexToken(&state);
-
-        if (!errors(&state))
-            ptok(tok);
-
-        if (tok.type == TK_END)
-            break;
-    }*/
 }

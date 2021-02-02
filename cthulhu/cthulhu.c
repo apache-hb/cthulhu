@@ -1223,6 +1223,10 @@ static CtAST *pQual(CtState *self)
     {
         qual->data.qual.params = pCollect(self, pParam, K_COMMA, K_TEND);
     }
+    else
+    {
+        qual->data.qual.params.len = 0;
+    }
     return qual;
 }
 
@@ -1360,7 +1364,7 @@ CtAST *pBody(CtState *self)
         if (node->data.func.body == NULL || node->data.func.body->type != AK_STMTS)
             pExpect(self, K_SEMI);
     }
-    else if (pConsume(self, K_ALIAS))
+    else if (pConsume(self, K_USING))
     {
         node = pAlias(self);
         pExpect(self, K_SEMI);
