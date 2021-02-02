@@ -1,229 +1,140 @@
 grammar cthulhu;
 
-interp : stmt* EOF ;
+/* expressions */
 
-unit : include* body* EOF ;
+expr : 'a' ;
 
-include : 'import' Ident ('::' Ident)* ('(' Ident (',' Ident)* ')') ;
+decl : expr ';' ;
 
-/* TODO: the ';' is technically wrong */
-body : (attribs* builtin | func | alias) ';' ;
 
-alias : attribs* 'alias' Ident '=' type ;
 
-builtin : '@' quals ('(' args ')')? ('{' /* this can be anything */ '}')? ;
+/* template stuff */
+type_param_decl : '!<' type_param (',' type_param)* '>' ;
 
-attrib : Ident ('::' Ident)* ('(' args? ')')? ;
-attribs : '@' '[' attrib (',' attrib)* ']' ;
+type_param : Ident ':' qual_type ;
 
-argdecl : Ident ':' type ('=' expr)? ;
-argdecls : argdecl (',' argdecl)* ;
 
-capture : '&'? quals ;
-captures : '[' capture (',' capture)* ']' ;
 
-func : attribs* 'def' Ident? ('(' argdecls? ')')? (':' captures)? ('->' type)? funcbody ;
 
-funcbody : '=>' expr | stmts ;
+/* used for declaring a function */
 
-stmts : '{' stmt* '}' ;
+func_decl : 'def' Ident generic_func_body ;
 
-stmt : (expr | alias) ';' | stmts ;
+func_impl_decl : 'def' Ident ('::' Ident)* generic_func_body ;
 
-param : (':' Ident '=')? type ;
+generic_func_body : type_param_decl? func_args? func_result? (func_body_short | func_body) ;
 
-qual : Ident ('!<' param (',' param)* '>')? ;
-quals : qual ('::' qual)* ;
+func_args : '(' func_args_body ')' ;
 
-types : type (',' type)* ;
+func_args_body : func_arg (',' func_args_body)? | default_func_args_body ;
 
-ptr : '*' type ;
-arr : '[' type (':' expr)? ']' ;
-closure : '(' types? ')' ('->' type)? ;
+default_func_args_body : default_func_arg (',' default_func_args_body)? ;
 
-type : quals | ptr | arr | attribs* closure ;
+func_arg : Ident ':' type ;
 
-expr : assign ;
+default_func_arg : Ident ':' type '=' expr ;
 
-assign : ternary (('=' | '+=' | '-=' | '/=' | '%=' | '^=' | '&=' | '|=' | '<<=' | '>>=') ternary)* ;
-ternary : logic ('?' ternary? ':' ternary)? ;
-logic : equality (('&&' | '||') equality)* ;
-equality : compare (('==' | '!=') compare)* ;
-compare : bitwise (('<' | '<=' | '>' | '>=') bitwise)* ;
-bitwise : bitshift (('^' | '&' | '|') bitshift)* ;
-bitshift : math (('<<' | '>>') math)* ;
-math : mul (('+' | '-') mul)* ;
-mul : prefix (('*' | '/' | '%') prefix)* ;
+func_result : '->' type ;
 
-prefix : ('+' | '-' | '~' | '!' | '&' | '*')? postfix ;
+func_body_short : '=' expr ';' ;
+func_body : '{' decl* '}' ;
 
-postfix
-    : primary
-    | postfix '[' expr ']'
-    | postfix '(' args? ')'
-    | postfix '.' Ident
-    | postfix '->' Ident
-    | init
-    | quals init?
-    ;
 
-coerce : 'coerce' '!<' type '>' '(' expr ')' ;
 
-primary
-    : '(' expr ')'
-    | IntLiteral
-    | CharLiteral
-    | StringLiteral
-    | func
-    | coerce
-    | builtin
-    ;
 
-arg : ('[' (expr | 'else') ']' '=')? expr ;
-args : arg (',' arg)* ;
+/* used for declaring a variable */
 
-init : '{' args? '}' ;
+let_decl : 'let' Ident (let_no_init | let_init) ';' ;
 
-/*
-unit : include* body* EOF ;
+let_no_init : ':' type ;
 
-include : 'import' path symbols? SEMI ;
-symbols : '(' items ')' ;
+let_init : let_no_init? '=' expr ;
 
-attrib : path call? ;
-attribs : '@' '[' attrib (',' attrib)* ']' ;
 
-builtinBody : '{' /* the contents of builtinBody are IDB  '}' ;
-builtin : '@' path call? builtinBody? ;
+var_decl : 'var' Ident (var_no_init | var_init) ';' ;
 
-body : function | alias | var | struct | union | enum | object | builtin ;
+var_no_init : ':' non_var_type ;
 
-bound : path ;
-bounds : bound ('+' bound)* ;
-templateArg : Ident (':' bounds)? ('=' type)? ;
-template : '!<' templateArg (',' templateArg)* '>' ;
-
-field : attrib* Ident ':' type ;
+var_init : var_no_init? '=' expr ;
 
-objectField : function | alias | var | builtin ;
 
-implements : '(' path (',' path)* ')' ;
-object : attribs* 'object' template? implements? '{' objectField* '}' ;
 
-enumFieldData : Ident ':' type ;
-enumData : '{' enumFieldData (',' enumFieldData)* '}' ;
-enumField : Ident enumData? ('=' expr)? ;
-enumBody : enumField (',' enumField)* ;
-enum : attribs* 'enum' Ident template? (':' type)? '{' enumBody? '}' ;
-union : attribs* 'union' Ident template? '{' field* '}' ;
-struct : attribs* 'struct' Ident template? '{' field* '}' ;
+/* used for declaring a type */
 
-varName : Ident (':' type) ;
-varNames : varName | '[' varName (',' varName)* ']' ;
+type_decl : struct_decl | union_decl | enum_decl | alias_decl ;
 
-var : attribs* 'var' varNames ('=' expr)? SEMI ;
+inherit_decl : ':' inherit_body ;
 
-alias : attribs* 'alias' Ident '=' type SEMI ;
+inherit_body : inherit_item | '(' inherit_item_list ')' ;
 
-parameter : Ident ':' type ('=' expr)? ;
-parameterBody : parameter (',' parameter)* ;
-parameters : '(' parameterBody? ')' ;
-result : '->' type ;
+inherit_item_list : inherit_item (',' inherit_item)? ;
 
-functionBody : SEMI | '=' expr SEMI | stmts ;
-captures : ':' '[' ('=' | '&' | expr (',' expr)*) ']' ;
-function : attribs* 'def' Ident? parameters? captures? result? functionBody ;
+inherit_item : Ident '=' type ;
 
-type : attribs* (ptr | ref | quals | array | signature) ;
+struct_decl : 'struct' Ident type_param_decl? inherit_decl? '{' struct_body '}' ;
 
-ptr : '*' ptr ;
-ref : '&' quals ;
-array : '[' type (':' expr)? ']' ;
+union_decl : 'union' Ident type_param_decl? inherit_decl? '{' union_body '}' ;
 
-tparam : type | ':' Ident '=' type ;
-qual : Ident ('!<' tparam (',' tparam)* '>')? ;
-quals : qual ('::' qual)* ;
+enum_decl : 'enum' Ident type_param_decl? inherit_decl? '{' enum_body '}' ;
 
-types : type (',' type)* ;
-typelist : '(' types? ')' ;
-signature : 'def' typelist? result? ;
+tagged_enum_decl : 'enum' 'union' Ident type_param_decl? inherit_decl? '{' tagged_enum_body '}' ;
 
+alias_decl : 'using' Ident '=' type ;
 
-expr : assign ;
+struct_body : (let_decl | var_decl | func_impl_decl | alias_decl)* ;
+union_body : (let_decl | var_decl | func_impl_decl | alias_decl)* ;
+enum_body : enum_fields (func_impl_decl | alias_decl)* ;
 
-assign : ternary (('=' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=' | '&=' | '|=' | '<<=' | '>>=') ternary)* ;
-ternary : logic ('?' primary ':' ternary)? ;
-logic : equality (('&&' | '||') equality)* ;
-equality : compare (('==' | '!=') compare)* ;
-compare : bitwise (('<=' | '<' | '>=' | '>') bitwise)* ;
-bitwise : bitshift (('^' | '&' | '|') bitshift)* ;
-bitshift : arithmatic (('<<' | '>>') arithmatic)* ;
-arithmatic : multiplicative (('+' | '-') multiplicative)* ;
-multiplicative : unary (('*' | '/' | '%') unary)* ;
-unary : ('+' | '-' | '~' | '!')? postfix ;
+tagged_enum_body : tagged_enum_field (',' tagged_enum_body)? | init_tagged_enum_fields ;
 
-postfix
-    : primary
-    | postfix '[' expr ']'
-    | postfix call
-    | postfix '.' Ident
-    | postfix '->' Ident
-    ;
+tagged_enum_field : Ident tagged_enum_field_body ;
 
-primary
-    : IntLiteral
-    | StringLiteral
-    | CharLiteral
-    | function
-    | coerce
-    | quals init?
-    | init
-    | '(' expr ')'
-    ;
+init_tagged_enum_fields : init_tagged_enum_field (',' init_tagged_enum_fields)? ;
 
-initArg : expr | '[' (expr | 'else') ']' '=' expr ;
-initArgs : initArg (',' initArg)* ;
-init : '{' initArgs? '}' ;
+init_tagged_enum_field : Ident tagged_enum_field_body '=' expr ;
 
-arg : expr | '[' Ident ']' '=' expr ;
-callArgs : arg (',' arg)* ;
-call : '(' callArgs? ')' ;
+tagged_enum_field_body : '{' (tagged_enum_item (',' tagged_enum_item)*)? '}' ;
 
-coerce : 'coerce' '!<' type '>' '(' expr ')' ;
+tagged_enum_item : Ident ':' type ;
 
-stmt : stmts | expr | var | return | alias | for | while | if | branch | builtin | 'break' SEMI | 'continue' SEMI | SEMI ;
+enum_fields : enum_field (',' enum_fields)? | init_enum_fields ;
 
-if : 'if' '(' expr ')' stmt ('else' 'if' '(' expr ')' stmt)* ('else' stmt)? ;
-while : 'while' '(' expr ')' stmt ;
+init_enum_fields : init_enum_field (',' init_enum_fields)? ;
 
-branch : 'branch' '(' expr ')' '{' branches* '}' ;
-branches : case '=>' stmt ;
-case : expr destructure? ;
-destructure : '{' Ident (',' Ident)* '}' ;
+enum_field : Ident ;
 
-forBody : var? SEMI expr? SEMI expr? | varNames '<<' expr ;
-for : 'for' '(' forBody ')' stmt ;
+init_enum_field : Ident '=' expr ;
 
-return : 'return' expr? SEMI ;
 
-stmts : '{' stmt* '}' ;
 
-items : Ident (',' Ident)* ;
-path : Ident ('::' Ident)* ;
+/* used for naming a type */
+type : ptr_type | ref_type | name_type | qual_type | var_type ;
 
-SEMI : ';' ;
-*/
-IntLiteral : (Base2 | Base10 | Base16) Ident? ;
-StringLiteral : SingleString | MultiString ;
-CharLiteral : '\'' Letter '\'' ;
+non_ref_type : ptr_type | qual_type | name_type ;
+non_ref_ptr_type : qual_type | name_type ;
+non_var_type : ptr_type | ref_type | name_type | qual_type ;
 
-Ident : [a-zA-Z_][a-zA-Z0-9_]* ;
+/* ptrs to refs are banned */
+ptr_type : '*' non_ref_type ;
 
-fragment SingleString : '"' Letter* '"' ;
-fragment MultiString : 'R"' .*? '"' ;
+/* refs to refs and refs to ptrs are banned */
+ref_type : '&' non_ref_ptr_type ;
 
-fragment Letter : '\\' ['"ntv0\\] | ~[\\\r\n] ;
+/* nested var(var(type)) makes no sense */
+var_type : 'var' '(' non_var_type ')' ;
 
-fragment Base2 : '0b' [01]+ ;
-fragment Base10 : [0-9]+ ;
-fragment Base16 : '0x' [0-9a-fA-F]+ ;
+name_type : Ident type_args? ;
+
+qual_type : name_type ('::' qual_type)? ;
+
+type_args : '!<' type_arg_body '>' ;
+
+type_arg_body : type_arg (',' type_arg_body)? | named_type_arg_body ;
+
+type_arg : type ;
+
+named_type_arg_body : named_type_arg (',' named_type_arg_body)? ;
+
+named_type_arg : Ident '=' type ;
+
+Ident : [a-zA-Z_][a-zA-Z0-9_]*;

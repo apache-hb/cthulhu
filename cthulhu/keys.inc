@@ -19,14 +19,12 @@ FLAG(LF_ASM, 2)
 /* declaration keywords */
 KEY(K_IMPORT, "import", LF_CORE)
 KEY(K_DEF, "def", LF_CORE)
-KEY(K_ALIAS, "alias", LF_CORE)
 KEY(K_STRUCT, "struct", LF_CORE)
 KEY(K_ENUM, "enum", LF_CORE)
 KEY(K_UNION, "union", LF_CORE)
-KEY(K_OBJECT, "object", LF_CORE)
 KEY(K_VAR, "var", LF_CORE)
 KEY(K_LET, "let", LF_CORE)
-KEY(K_TRAIT, "trait", LF_CORE)
+KEY(K_USING, "using", LF_CORE)
 
 /* control keywords */
 KEY(K_IF, "if", LF_CORE)
