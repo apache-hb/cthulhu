@@ -4,7 +4,35 @@ grammar cthulhu;
 
 expr : 'a' ;
 
-decl : expr ';' ;
+decl : compound_decl | return_decl | while_decl | for_decl | with_decl | branch_decl | match_decl | alias_decl | func_decl | expr ';' ;
+
+compound_decl : '{' decl* '}' ;
+
+return_decl : 'return' expr? ';' ;
+
+while_decl : 'while' '(' expr ')' decl ;
+
+for_decl : 'for' '(' (let_decl | var_decl) '<|' expr ')' decl ;
+
+with_decl : 'with' '(' (let_decl | var_decl) ')' decl ;
+
+branch_decl : 'if' '(' expr ')' decl ;
+
+match_decl : 'switch' '(' expr ')' match_body ;
+
+match_body : 'a' ;
+
+
+
+path : Ident ('::' Ident)* ;
+
+call_args : '(' call_args_body? ')' ;
+
+call_args_body : expr (',' call_args_body) | named_call_args_body ;
+
+named_call_args_body : named_call_arg (',' named_type_arg)* ;
+
+named_call_arg : '.' Ident '=' expr ;
 
 
 
@@ -12,6 +40,13 @@ decl : expr ';' ;
 type_param_decl : '!<' type_param (',' type_param)* '>' ;
 
 type_param : Ident ':' qual_type ;
+
+
+decorator : '@' (decorator_body | '[' decorator_body (',' decorator_body)* ']') ;
+
+decorator_body : path call_args? ;
+
+intrinsic : path call_args? '!' expr ;
 
 
 
@@ -56,6 +91,7 @@ var_decl : 'var' Ident (var_no_init | var_init) ';' ;
 var_no_init : ':' non_var_type ;
 
 var_init : var_no_init? '=' expr ;
+
 
 
 
