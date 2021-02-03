@@ -1,8 +1,42 @@
 grammar cthulhu;
 
+unit : expr ;
+
 /* expressions */
 
-expr : 'a' ;
+expr : assign ;
+
+assign : ternary (('=' | '+=' | '-=' | '/=' | '%=' | '^=' | '&=' | '|=' | '<<=' | '>>=') ternary)* ;
+ternary : logic ('?' ternary? ':' ternary)? ;
+logic : equality (('&&' | '||') equality)* ;
+equality : compare (('==' | '!=') compare)* ;
+compare : bitwise (('<' | '<=' | '>' | '>=') bitwise)* ;
+bitwise : bitshift (('^' | '&' | '|') bitshift)* ;
+bitshift : math (('<<' | '>>') math)* ;
+math : mul (('+' | '-') mul)* ;
+mul : prefix (('*' | '/' | '%') prefix)* ;
+
+prefix : ('+' | '-' | '~' | '!' | '&' | '*')? postfix ;
+
+postfix
+    : primary
+    | postfix '[' expr ']'
+    | postfix '(' call_args_body? ')'
+    | postfix '.' Ident
+    | postfix '->' Ident
+    ;
+
+coerce : 'coerce' '!<' type '>' '(' expr ')' ;
+
+primary
+    : '(' expr ')'
+    | IntLiteral
+    | CharLiteral
+    | StringLiteral
+    | coerce
+    | qual_type
+    ;
+
 
 decl : compound_decl | return_decl | while_decl | for_decl | with_decl | branch_decl | match_decl | alias_decl | func_decl | expr ';' ;
 
@@ -18,9 +52,14 @@ with_decl : 'with' '(' (let_decl | var_decl) ')' decl ;
 
 branch_decl : 'if' '(' expr ')' decl ;
 
-match_decl : 'switch' '(' expr ')' match_body ;
+match_decl : 'switch' '(' expr ')' '{' match_body '}' ;
 
-match_body : 'a' ;
+match_body : match_case* match_else ;
+
+match_case : 'case' expr '=>' decl ;
+
+match_else : 'else' '=>' decl ;
+
 
 
 
@@ -53,7 +92,7 @@ intrinsic : path call_args? '!' expr ;
 
 /* used for declaring a function */
 
-func_decl : 'def' Ident generic_func_body ;
+func_decl : decorator* 'def' Ident generic_func_body ;
 
 func_impl_decl : 'def' Ident ('::' Ident)* generic_func_body ;
 
@@ -97,7 +136,7 @@ var_init : var_no_init? '=' expr ;
 
 /* used for declaring a type */
 
-type_decl : struct_decl | union_decl | enum_decl | alias_decl ;
+type_decl : decorator* (struct_decl | union_decl | enum_decl | alias_decl) ;
 
 inherit_decl : ':' inherit_body ;
 
@@ -173,4 +212,18 @@ named_type_arg_body : named_type_arg (',' named_type_arg_body)? ;
 
 named_type_arg : Ident '=' type ;
 
-Ident : [a-zA-Z_][a-zA-Z0-9_]*;
+
+IntLiteral : (Base2 | Base10 | Base16) Ident? ;
+StringLiteral : SingleString | MultiString ;
+CharLiteral : '\'' Letter '\'' ;
+
+Ident : [a-zA-Z_][a-zA-Z0-9_]* ;
+
+fragment SingleString : '"' Letter* '"' ;
+fragment MultiString : 'R"' .*? '"' ;
+
+fragment Letter : '\\' ['"ntv0\\] | ~[\\\r\n] ;
+
+fragment Base2 : '0b' [01]+ ;
+fragment Base10 : [0-9]+ ;
+fragment Base16 : '0x' [0-9a-fA-F]+ ;

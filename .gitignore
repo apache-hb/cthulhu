@@ -8,6 +8,8 @@
 
 # keep the grammar
 !*.g4
+!*.egt
+!*.grm
 
 # keep buildfile and docs
 !meson.build
