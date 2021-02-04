@@ -1,0 +1,56 @@
+enum union unbased {
+    first,
+    second { a: int },
+    third { a: *int, b: *int }
+}
+
+enum union based : (super = int) {
+    first = 0,
+    second { a: int } = 1,
+    third { a: *int, b: *int } = 2
+}
+
+enum union based2 : (lhs = int, rhs = bool) {
+    first = { 0, true },
+    second { a: int } = { 1, false },
+    third { a: *int, b: *int } = { 2, false }
+}
+
+struct interface {
+    virtual def release() -> void;
+    virtual def capture() -> void;
+}
+
+struct impl : virtual (super = interface) {
+    def super::release() -> void {
+
+    }
+
+    def super::capture() -> void {
+
+    }
+}
+
+# func is only generated once and requires param to have a vptr
+def func(virtual param: *interface) -> void {
+    param->capture();
+    param->release();
+}
+
+# void func(interface* param) {
+#     param->capture();
+#     param->release();
+# }
+
+# func2 is generated for each usage and does not require param to have a vptr
+def func2(static param: *interface) -> void {
+    param->capture();
+    param->release();
+}
+
+# template<typename T>
+# void func2(T* param) {
+#      static_assert(std::is_base_of<T, interface>::value);
+#      param->capture();
+#      param->release();
+# }

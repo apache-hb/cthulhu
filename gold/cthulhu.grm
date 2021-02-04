@@ -8,12 +8,14 @@
            |
 
 <Import> ::= 'using' <Import Path> ';'
-          | 'using' <Import Path> '(' <Import Items> ')' ';'
-          | 'using' <Import Path> '(' '...' ')' ';'
+          | 'using' <Import Path> '(' <Import Unit> ')' ';'
           
 <Import Path> ::= Ident
                | Ident '::' <Import Path>
                
+<Import Unit> ::= <Import Items> 
+                | '...'
+
 <Import Items> ::= Ident
                 | Ident ',' <Import Items>
                 

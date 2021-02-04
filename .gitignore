@@ -5,11 +5,13 @@
 !*.c
 !*.h
 !*.inc
+!*.ct
 
 # keep the grammar
 !*.g4
 !*.egt
 !*.grm
+!*.ebnf
 
 # keep buildfile and docs
 !meson.build
