@@ -1,386 +1,328 @@
-#ifndef CTHULHU_H
-#define CTHULHU_H
+#pragma once
 
-#include <stdint.h>
-#include <stddef.h>
+#include <string>
+#include <vector>
+#include <cstddef>
+#include <istream>
 
-typedef int(*CtNextFunc)(void*);
+namespace lex {
+    using size_t = std::size_t;
+    
+    struct Range {
+        size_t offset;
+        size_t length;
+        size_t column;
+        size_t line;
+    };
 
-typedef struct {
-    char *ptr;
-    size_t len;
-    size_t alloc;
-} CtBuffer;
+#define ASSERT_TYPE(type) if (!is(type)) { err = "incorrect token type"; return false; }
 
-typedef struct {
-    struct CtState *source;
-    size_t dist;
-    size_t col;
-    size_t line;
-} CtOffset;
+    struct Token {
+        enum Type { STRING, IDENT, KEYWORD, INT, CHAR, END };
 
-typedef enum {
-#define KEY(id, str, flags) id,
+        virtual ~Token() { }
+
+        // return a string for debugging
+        virtual std::string repr() const = 0;
+
+        // return a pretty string
+        virtual std::string string() const = 0;
+
+        virtual bool validate(std::string& err) const { 
+            err = "Token directly instanciated";
+            return false;
+        }
+
+        bool is(Type other) const { return type == other; }
+
+    protected:
+        Token(Type in) : type(in), range({}) { }
+
+        friend struct Lexer;
+
+    private:
+        Type type;
+        Range range;
+    };
+
+    struct String : Token {
+        String(std::string s) : Token(Token::STRING), str(s) { }
+
+        virtual ~String() override { }
+        virtual std::string repr() const override { return "String(" + str + ")"; }
+        virtual std::string string() const override { return "\"" + str + "\""; }
+
+        virtual bool validate(std::string& err) const override { 
+            ASSERT_TYPE(Token::STRING);
+            return true; 
+        }
+
+    private:
+        std::string str;
+    };
+
+    struct Ident : Token {
+        Ident(std::string name) : Token(Token::IDENT), id(name) { }
+
+        virtual ~Ident() override { }
+        virtual std::string repr() const override { return "Ident(" + id + ")"; }
+        virtual std::string string() const override { return id; }
+
+        virtual bool validate(std::string& err) const override {
+            ASSERT_TYPE(Token::IDENT);
+            if (id.empty()) {
+                err = "ident is empty";
+                return false;
+            } else {
+                return true; 
+            }
+        }
+
+    private:
+        std::string id;
+    };
+
+    struct Keyword : Token {
+        enum Key : int { 
+            INVALID,
+#define KEY(id, str) id,
 #define OP(id, str) id,
 #include "keys.inc"
-
-    K_INVALID
-} CtKey;
-
-typedef struct {
-    size_t offset;
-    size_t len;
-} CtView;
-
-typedef struct {
-    size_t offset;
-    size_t len;
-
-    /* TODO: optimize this */
-    int multiline;
-} CtString;
-
-typedef struct {
-    enum { BASE2, BASE10, BASE16 } enc;
-    size_t num;
-    CtView suffix;
-} CtDigit;
-
-typedef enum {
-    TK_IDENT,
-    TK_KEY,
-    TK_INT,
-    TK_STRING,
-    TK_CHAR,
-    TK_END,
-
-    TK_INVALID
-} CtTokenKind;
-
-typedef struct {
-    CtTokenKind type;
-
-    union {
-        CtView ident;
-        CtString str;
-        size_t letter;
-        CtKey key;
-        CtDigit digit;
-    } data;
-
-    CtOffset pos;
-    size_t len;
-} CtToken;
-
-typedef enum {
-    ERR_NONE = 0,
-
-    /* non-fatal */
-
-    /* integer literal was too large to fit into max size */
-    ERR_OVERFLOW,
-
-    /* invalid escape sequence in string/char literal */
-    ERR_INVALID_ESCAPE,
-
-    /* a linebreak was found inside a single line string */
-    ERR_STRING_LINEBREAK,
-
-
-
-    /* fatal */
-
-    /* invalid character found while lexing */
-    ERR_INVALID_SYMBOL,
-
-    /* the EOF was found while lexing a string */
-    ERR_STRING_EOF,
-
-    /* the closing ' was missing while parsing a char literal */
-    ERR_CHAR_CLOSING,
-
-    /* an unexpected keyword was encountered while parsing */
-    ERR_UNEXPECTED_KEY,
-
-    /* missing closing ) */
-    ERR_MISSING_BRACE,
-
-    /* unexpected token type */
-    ERR_UNEXPECTED_TOK,
-
-    /* a positional argument declared after an argument with default init */
-    ERR_DEFAULT_ARG,
-
-    /* toplevel functions need to be named */
-    ERR_MISSING_NAME,
-
-    /* toplevel function arguments need to be explicitly typed */
-    ERR_MISSING_TYPE,
-
-    /* nested builtins with custom parsing are not allowed */
-    ERR_NESTED_BUILTIN,
-
-    /* builtin appeared where it shouldnt */
-    ERR_UNEXPECTED_BUILTIN
-} CtErrorKind;
-
-typedef struct {
-    CtErrorKind type;
-    CtOffset pos;
-    size_t len;
-
-    /* associated token */
-    CtToken tok;
-} CtError;
-
-
-typedef enum {
-    AK_OTHER,
-    AK_IDENT,
-
-    AK_BINARY,
-    AK_UNARY,
-    AK_TERNARY,
-    AK_LITERAL,
-    AK_INIT,
-    AK_ARG,
-    AK_NAME,
-    AK_CALL,
-    AK_SUB,
-    AK_ACCESS,
-    AK_DEREF,
-    AK_BUILTIN,
-    AK_COERCE,
-
-    AK_PTR,
-    AK_CLOSURE,
-    AK_ARRAY,
-    AK_QUAL,
-    AK_QUALS,
-    AK_PARAM,
-
-    AK_STMTS,
-    AK_FUNC,
-    AK_ARGDECL,
-    AK_CAPTURE,
-
-    AK_IMPORT,
-    AK_ALIAS,
-    AK_ATTRIB,
-    AK_UNIT
-} CtASTKind;
-
-typedef struct {
-    struct CtAST *nodes;
-    size_t len;
-    size_t alloc;
-} CtASTArray;
-
-typedef struct CtAST {
-    CtASTKind type;
-    CtToken tok;
-
-    union {
-        struct {
-            struct CtAST *lhs;
-            struct CtAST *rhs;
-        } binary;
-
-        struct {
-            struct CtAST *cond;
-            struct CtAST *yes;
-            struct CtAST *no;
-        } ternary;
-
-        struct CtAST *expr;
-
-        struct CtAST *ptr;
-
-        struct {
-            struct CtAST *type;
-            struct CtAST *size;
-        } array;
-
-        CtASTArray quals;
-
-        struct {
-            struct CtAST *name;
-            CtASTArray params;
-        } qual;
-
-        struct {
-            struct CtAST *name;
-            struct CtAST *type;
-        } param;
-
-        struct {
-            CtASTArray args;
-            struct CtAST *result;
-        } closure;
-
-        CtASTArray stmts;
-
-        CtASTArray args;
-
-        struct {
-            struct CtAST *field;
-            struct CtAST *expr;
-        } arg;
-
-        struct {
-            struct CtAST *name;
-            struct CtAST *init;
-        } name;
-
-        struct {
-            struct CtAST *expr;
-            CtASTArray args;
-        } call;
-
-        struct {
-            struct CtAST *expr;
-            struct CtAST *index;
-        } sub;
-
-        struct {
-            struct CtAST *expr;
-            struct CtAST *field;
-        } access;
-
-        struct {
-            struct CtAST *expr;
-            struct CtAST *field;
-        } deref;
-
-        struct {
-            struct CtAST *name;
-            struct CtAST *type;
-            struct CtAST *init;
-        } argdecl;
-
-        struct {
-            CtASTArray attribs;
-
-            struct CtAST *name;
-            CtASTArray args;
-            CtASTArray captures;
-            struct CtAST *result;
-            struct CtAST *body;
-        } func;
-
-        struct {
-            struct CtAST *symbol;
-            int ref;
-        } capture;
-
-        struct {
-            CtASTArray attribs;
-
-            struct CtAST *name;
-            CtASTArray args;
-
-            /* custom data goes here */
-            void *body;
-        } builtin;
-
-        struct {
-            CtASTArray path;
-            CtASTArray items;
-        } include;
-
-        struct {
-            struct CtAST *type;
-            struct CtAST *expr;
-        } coerce;
-
-        struct {
-            CtASTArray attribs;
-
-            struct CtAST *name;
-            struct CtAST *body;
-        } alias;
-
-        struct {
-            CtASTArray path;
-            CtASTArray args;
-        } attrib;
-
-        struct {
-            CtASTArray imports;
-            CtASTArray body;
-        } unit;
-    } data;
-} CtAST;
-
-typedef enum {
-#define FLAG(name, bit) name = (1 << bit),
+        };
+        Keyword(Key k) : Token(Token::KEYWORD), key(k) { }
+
+        static std::string str(Key k) {
+#define KEY(id, str) case id: return str;
+#define OP(id, str) case id: return str;
+            switch (k) {
 #include "keys.inc"
-    LF_DEFAULT = LF_CORE
-} CtLexerFlag;
+                default: 
+                    return "InvalidKey(" + std::to_string((int)k) + ")";
+            }
+        }
 
-typedef struct CtState {
-    /* stream state */
-    const char *name;
-    void *stream;
-    CtNextFunc next;
-    int ahead;
-    CtBuffer source;
+        virtual ~Keyword() override { }
+        virtual std::string repr() const override { return "Key(" + str(key) + ")"; }
+        virtual std::string string() const override { return str(key); }
 
-    /* lexing state */
-    CtOffset pos;
-    size_t len;
-    CtBuffer strings;
+        virtual bool validate(std::string& err) const override { 
+            ASSERT_TYPE(Token::KEYWORD);
+            if (key == INVALID) {
+                err = "keyword was invalid";
+                return true;
+            } else {
+                return false; 
+            }
+        }
 
-    CtLexerFlag flags;
+    private:
+        Key key;
+    };
 
-    /* lexer depth for template parsing */
-    int ldepth;
+    struct Int : Token {
+        Int(size_t num) : Token(Token::INT), n(num) { }
 
-    /* parser depth for expressions */
-    int pdepth;
+        virtual ~Int() override { }
+        virtual std::string repr() const override { return "Int(" + std::to_string(n) + ")"; }
+        virtual std::string string() const override { return std::to_string(n); }
 
-    /* we dont allow nested builtins so keep track of if we are currently parsing a builtin */
-    int pbuiltin;
+        virtual bool validate(std::string& err) const override { 
+            ASSERT_TYPE(Token::INT);
+            return true; 
+        }
 
-    /* error handling state */
-    CtError lerr;
-    CtError perr;
+    private:
+        size_t n;
+    };
 
-    CtError *errs;
-    size_t err_idx;
-    size_t max_errs;
+    struct Char : Token {
+        Char(size_t code) : Token(Token::CHAR), c(code) { }
 
-    /* parsing state */
-    CtToken tok;
-    CtASTArray attribs;
+        virtual ~Char() override { }
+        virtual std::string repr() const override { return "Char(" + std::to_string(c) + ")"; }
+        virtual std::string string() const override { return std::to_string(c); }
 
-    /* constants */
-    CtAST *empty;
-} CtState;
+        virtual bool validate(std::string& err) const override { 
+            ASSERT_TYPE(Token::CHAR);
+            return true; 
+        }
 
-typedef struct {
-    void *stream;
-    CtNextFunc next;
-    const char *name;
+    private:
+        size_t c;
+    };
 
-    size_t max_errs;
-    CtError *errs;
-} CtStateInfo;
+    struct End : Token {
+        End() : Token(Token::END) { }
 
-void ctStateNew(
-    CtState *self,
-    CtStateInfo info
-);
+        virtual ~End() override { }
+        virtual std::string repr() const override { return "End"; }
+        virtual std::string string() const override { return "\0"; }
 
-void ctAddFlag(CtState *self, CtLexerFlag flag);
+        virtual bool validate(std::string& err) const override { 
+            ASSERT_TYPE(Token::END);
+            return true; 
+        }
+    };
 
-/* interpreter style parsing. TODO: lots of callbacks for this one */
-CtAST *ctParseInterp(CtState *self);
+    struct Lexer {
+        Lexer(std::istream *source) 
+            : here({})
+            , in(source) 
+        { }
 
-/* traditional parsing. TODO: also callbacks needed */
-CtAST *ctParse(CtState *self);
+        Token* read() {
+            int c = skip();
+            auto start = here;
+            Token* out;
 
-/* validate an ast given the current state */
-int ctValidate(CtState *self, CtAST *node);
+            if (isident1(c)) {
+                out = ident(c);
+            } else if (c == '0') {
+                out = digit0();
+            } else if (isdigit(c)) {
+                out = digit(c);
+            } else {
+                out = symbol(c);
+            }
 
-#endif /* CTHULHU_H */
+            start.length = here.offset - start.offset;
+            out->range = start;
+
+            return out;
+        }
+
+    private:
+        Token* ident(int c) {
+            std::string str = {(char)c};
+            while (isident2(peek())) {
+                str.push_back((char)next());
+            }
+
+            return nullptr;
+        }
+
+        Token* digit0() {
+            return nullptr;
+        }
+
+        Token* digit(int c) {
+            std::string str = {(char)c};
+            
+            while (isdigit(peek())) {
+                str.push_back((char)next());
+            }
+
+            return nullptr;
+        }
+
+        Token* symbol(int c) {
+            switch (c) {
+            case '(':
+            default: return nullptr;
+            }
+            return nullptr;
+        }
+
+        static bool isident1(int c) {
+            return isalpha(c) || c == '_';
+        }
+
+        static bool isident2(int c) {
+            return isalnum(c) || c == '_';
+        }
+
+        int skip() {
+            int c = next();
+            
+            while (isspace(c)) {
+                c = next();
+            }
+
+            return c;
+        }
+
+        int next() {
+            int c = in->get();
+            if (c == '\n') {
+                here.line += 1;
+                here.column = 0;
+            } else {
+                here.column += 1;
+            }
+
+            here.offset += 1;
+
+            return c;
+        }
+
+        int peek() {
+            return in->peek();
+        }
+        
+        Range here;
+        std::string buf;
+        std::istream* in;
+    };
+}
+
+namespace ast {
+    struct Node {
+        // the token that produced this node
+        lex::Token* parent;
+
+        virtual std::string repr() const { 
+            return "Node(" + parent->repr() + ")"; 
+        }
+        
+        virtual bool validate(std::string& err) const {
+            if (parent == nullptr) {
+                err = "parent token is null";
+                return false;
+            }
+
+            return parent->validate(err);
+        }
+    };
+
+    struct Ident : Node {
+        virtual std::string repr() const override { 
+            return "Ident(" + parent->repr() + ")"; 
+        }
+    };
+
+    struct Path : Node {
+        std::vector<Node*> parts;
+
+        virtual std::string repr() const override { 
+            std::string out = "Path(";
+            for (size_t i = 0; i < parts.size(); i++) {
+                if (i != 0) {
+                    out += ", ";
+                }
+                out += parts[i]->repr();
+            }
+            out += ")";
+
+            return out;
+        }
+
+        virtual bool validate(std::string& err) const override {
+            if (parts.empty()) {
+                err = "path is empty";
+                return false;
+            }
+
+            for (Node* node : parts) {
+                if (!node->validate(err)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    };
+}
+
+struct Parser {
+
+};

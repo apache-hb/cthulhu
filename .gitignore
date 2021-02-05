@@ -3,6 +3,7 @@
 
 # keep source files
 !*.c
+!*.cpp
 !*.h
 !*.inc
 !*.ct
