@@ -4,6 +4,8 @@
 #include <vector>
 #include <cstddef>
 #include <istream>
+#include <limits>
+#include <unordered_map>
 
 namespace lex {
     using size_t = std::size_t;
@@ -171,78 +173,212 @@ namespace lex {
         { }
 
         Token* read() {
-            int c = skip();
+            char c = skip(iswhite);
             auto start = here;
-            Token* out;
+            Token* tok;
 
             if (isident1(c)) {
-                out = ident(c);
+                tok = get<Token*>(collect(c, isident2),
+                    [](auto k) { return new Keyword(k); },
+                    [](auto id) { return new Ident(id); }
+                );
             } else if (c == '0') {
-                out = digit0();
+                tok = digit0();
             } else if (isdigit(c)) {
-                out = digit(c);
+                tok = base10(c);
             } else {
-                out = symbol(c);
+                tok = symbol(c);
             }
 
             start.length = here.offset - start.offset;
-            out->range = start;
+            tok->range = start;
 
-            return out;
+            return tok;
         }
 
     private:
-        Token* ident(int c) {
-            std::string str = {(char)c};
-            while (isident2(peek())) {
-                str.push_back((char)next());
-            }
-
-            return nullptr;
-        }
-
         Token* digit0() {
-            return nullptr;
-        }
-
-        Token* digit(int c) {
-            std::string str = {(char)c};
-            
-            while (isdigit(peek())) {
-                str.push_back((char)next());
+            switch (next()) {
+            case 'x': return base16();
+            case 'b': return base2();
             }
-
             return nullptr;
         }
 
-        Token* symbol(int c) {
+        Token* base16() {
+            return nullptr;
+        }
+
+        Token* base2() {
+            return nullptr;
+        }
+
+        Token* base10(char c) {
+            (void)c;
+            return nullptr;
+        }
+
+        Token* symbol(char c) {
             switch (c) {
-            case '(':
-            default: return nullptr;
+            case '(': return new Keyword(Keyword::LPAREN);
+            case ')': return new Keyword(Keyword::RPAREN);
+            case '[': return new Keyword(Keyword::LSQUARE);
+            case ']': return new Keyword(Keyword::RSQUARE);
+            case '{': return new Keyword(Keyword::LBRACE);
+            case '}': return new Keyword(Keyword::RBRACE);
+            case '@': return new Keyword(Keyword::AT);
+            case ',': return new Keyword(Keyword::COMMA);
+            
+            case '<': {
+                if (eat('<')) {
+                    return new Keyword(eat('=') ? Keyword::SHLEQ : Keyword::SHL);
+                }
+
+                return new Keyword(eat('=') ? Keyword::LTE : Keyword::LT);
             }
-            return nullptr;
+
+            case '>': {
+                if (depth > 0) {
+                    depth--;
+                    return new Keyword(Keyword::END);
+                }
+
+                if (eat('>')) {
+                    return new Keyword(eat('=') ? Keyword::SHREQ : Keyword::SHR);
+                }
+
+                return new Keyword(eat('=') ? Keyword::GTE : Keyword::GT);
+            }
+
+            case '!': {
+                if (eat('<')) {
+                    depth++;
+                    return new Keyword(Keyword::BEGIN);
+                }
+
+                return new Keyword(eat('=') ? Keyword::NEQ : Keyword::NOT);
+            }
+
+            case '=': {
+                return new Keyword(eat('=') ? Keyword::EQ : Keyword::ASSIGN);
+            }
+
+            case '&': {
+                if (eat('&')) {
+                    return new Keyword(Keyword::AND);
+                } else {
+                    return new Keyword(eat('=') ? Keyword::BITANDEQ : Keyword::BITAND);
+                }
+            }
+
+            case '|': {
+                if (eat('|')) {
+                    return new Keyword(Keyword::OR);
+                } else {
+                    return new Keyword(eat('=') ? Keyword::BITOREQ : Keyword::BITOR);
+                }
+            }
+
+            case '^': return new Keyword(eat('=') ? Keyword::BITXOREQ : Keyword::BITXOR);
+            case '~': return new Keyword(Keyword::BITNOT);
+            case '+': return new Keyword(eat('=') ? Keyword::ADDEQ : Keyword::ADD);
+            case '-': {
+                if (eat('>')) {
+                    return new Keyword(Keyword::ARROW);
+                }
+                return new Keyword(eat('=') ? Keyword::SUBEQ : Keyword::SUB);
+            }
+            case '*': return new Keyword(eat('=') ? Keyword::MULEQ : Keyword::MUL);
+            case '/': return new Keyword(eat('=') ? Keyword::DIVEQ : Keyword::DIV);
+            case '%': return new Keyword(eat('=') ? Keyword::MODEQ : Keyword::MOD);
+            case ':': return new Keyword(eat(':') ? Keyword::COLON2 : Keyword::COLON);
+            case ';': return new Keyword(Keyword::SEMI);
+
+            case '.': {
+                if (eat('.')) {
+                    if (eat('.')) {
+                        return new Keyword(Keyword::DOT3);
+                    }
+
+                    return new Keyword(Keyword::DOT2);
+                }
+
+                return new Keyword(Keyword::DOT);
+            }
+            default:
+                return nullptr;
+            }
         }
 
-        static bool isident1(int c) {
+        static bool isident1(char c) {
             return isalpha(c) || c == '_';
         }
 
-        static bool isident2(int c) {
+        static bool isident2(char c) {
             return isalnum(c) || c == '_';
         }
 
-        int skip() {
-            int c = next();
+        static bool iswhite(char c) {
+            return isspace(c);
+        }
+
+        static inline std::unordered_map<std::string, Keyword::Key> keys = {
+#define KEY(id, str) { str, Keyword::id },
+#include "keys.inc"
+        };
+
+        bool eat(char c) {
+            if (peek() == c) {
+                next();
+                return true;
+            }
+            return false;
+        }
+
+        template<typename T, typename F1, typename F2>
+        T get(std::string id, F1&& f1, F2&& f2) {
+            auto iter = keys.find(id);
+            if (iter != keys.end()) {
+                return f1(iter->second);
+            } else {
+                return f2(id);
+            }
+        }
+
+        template<typename F>
+        std::string collect(char c, F&& func) {
+            std::string str = {c};
             
-            while (isspace(c)) {
+            while (func(peek())) {
+                str += next();
+            }
+
+            return str;
+        }
+
+        template<typename F>
+        char skip(F&& func) {
+            char c = next();
+            
+            while (func(c)) {
                 c = next();
             }
 
             return c;
         }
 
-        int next() {
+        using limit = std::numeric_limits<char>;
+
+        static void verify_range(int c) {
+            if (limit::min() > c || c > limit::max()) {
+                throw std::out_of_range("c was out of range");
+            }
+        }
+
+        char next() {
             int c = in->get();
+            verify_range(c);
+
             if (c == '\n') {
                 here.line += 1;
                 here.column = 0;
@@ -252,16 +388,19 @@ namespace lex {
 
             here.offset += 1;
 
-            return c;
+            return (char)c;
         }
 
-        int peek() {
-            return in->peek();
+        char peek() {
+            int c = in->peek();
+            verify_range(c);
+            return (char)c;
         }
         
         Range here;
         std::string buf;
         std::istream* in;
+        int depth = 0;
     };
 }
 
@@ -269,6 +408,8 @@ namespace ast {
     struct Node {
         // the token that produced this node
         lex::Token* parent;
+
+        Node(lex::Token* tok) : parent(tok) { }
 
         virtual std::string repr() const { 
             return "Node(" + parent->repr() + ")"; 
@@ -285,44 +426,102 @@ namespace ast {
     };
 
     struct Ident : Node {
-        virtual std::string repr() const override { 
-            return "Ident(" + parent->repr() + ")"; 
-        }
+
     };
 
-    struct Path : Node {
-        std::vector<Node*> parts;
+    struct Type : Node {
 
-        virtual std::string repr() const override { 
-            std::string out = "Path(";
-            for (size_t i = 0; i < parts.size(); i++) {
-                if (i != 0) {
-                    out += ", ";
-                }
-                out += parts[i]->repr();
-            }
-            out += ")";
+    };
 
-            return out;
-        }
+    struct RefType : Type {
+        Type* to;
+    };
 
-        virtual bool validate(std::string& err) const override {
-            if (parts.empty()) {
-                err = "path is empty";
-                return false;
-            }
+    struct PtrType : Type {
+        Type* to;
+    };
 
-            for (Node* node : parts) {
-                if (!node->validate(err)) {
-                    return false;
-                }
-            }
+    struct VarType : Type {
+        Type* to;
+    };
 
-            return true;
-        }
+    struct NameType : Type {
+        Ident* name;
+    };
+
+    struct QualType : Type {
+        NameType* body;
     };
 }
 
 struct Parser {
 
+private:
+    ast::Node* parseInclude() {
+
+    }
+
+    ast::Node* parseIncludePath() {
+
+    }
+
+    ast::Node* parseIncludeBody() {
+
+    }
+
+    ast::Node* parseIncludeItems() {
+
+    }
+
+    ast::Node* parseToplevel() {
+
+    }
+    
+    ast::Node* parseAlias() {
+
+    }
+
+    ast::Node* parseType() {
+
+    }
+
+    ast::Node* parsePtrType() {
+
+    }
+
+    ast::Node* parseRefType() {
+
+    }
+
+    ast::Node* parseVarType() {
+
+    }
+
+    ast::Node* parseNonRefPtrType() {
+
+    }
+
+    ast::Node* parseNonRefType() {
+
+    }
+
+    ast::Node* parseNonVarType() {
+
+    }
+
+    ast::Node* parseNonRefVarType() {
+
+    }
+
+    ast::Node* parseQualType() {
+
+    }
+
+    ast::Node* parseNameType() {
+
+    }
+
+    ast::Node* parseIdent() {
+
+    }
 };
