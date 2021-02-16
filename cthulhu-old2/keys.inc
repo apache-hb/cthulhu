@@ -6,6 +6,10 @@
 #   define OP(id, str)
 #endif
 
+#ifndef X86
+#   define X86(id, str)
+#endif
+
 KEY(DEF, "def")
 KEY(STRUCT, "struct")
 KEY(UNION, "union")
@@ -24,10 +28,13 @@ KEY(CASE, "case")
 
 KEY(VIRTUAL, "virtual")
 KEY(STATIC, "static")
+KEY(FINAL, "final")
 KEY(ASM, "asm")
 KEY(VOLATILE, "volatile")
 KEY(OVERRIDE, "override")
 KEY(CAST, "cast")
+
+
 
 OP(LPAREN, "(")
 OP(RPAREN, ")")
@@ -88,5 +95,7 @@ OP(BITXOR, "^")
 OP(BITXOREQ, "^=")
 OP(BITNOT, "~")
 
+
 #undef KEY
 #undef OP
+#undef X86
