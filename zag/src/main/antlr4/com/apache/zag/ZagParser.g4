@@ -105,6 +105,9 @@ stmt : expr | braceStmt | withStmt | whileStmt | returnStmt | branchStmt | let |
 braceStmt : LBRACE stmt* RBRACE ;
 withStmt : WITH LPAREN expr RPAREN stmt elseStmt? ;
 whileStmt : WHILE LPAREN expr RPAREN stmt ;
+forStmt : FOR LPAREN (forLoop | forRange) RPAREN stmt ;
+forLoop : VAR ;
+forRange : (var | let) DOT2 expr ;
 returnStmt : RETURN expr? SEMI ;
 branchStmt : ifStmt elifStmt* elseStmt* ;
 ifStmt : IF LPAREN expr RPAREN stmt ;

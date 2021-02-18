@@ -2,7 +2,6 @@ package com.apache.zag;
 
 import org.antlr.v4.runtime.*;
 
-import com.apache.zag.*;
 import com.apache.zag.ZagParser.RootContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,7 +12,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Unit test for simple App.
  */
-public class AppTest {
+public class ParseTest {
     private static void compiles(String str) {
         CharStream stream = CharStreams.fromString(str);
         ZagLexer lexer = new ZagLexer(stream);
