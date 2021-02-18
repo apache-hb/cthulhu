@@ -8,4 +8,3 @@ project('cthulhu', 'cpp',
 
 cthulhu = library('cthulhu', 'cthulhu/cthulhu.cpp')
 
-#ast = executable('ast', 'tools/ast.c')

@@ -2,6 +2,7 @@
 #define CTHULHU_H
 
 #include <stddef.h>
+#include <string>
 
 typedef enum TokenType {
     INVALID,
@@ -13,7 +14,10 @@ typedef enum TokenType {
 } TokenType;
 
 typedef enum Keyword {
-    K_INVALID
+    K_INVALID,
+#define KEY(id, str) id,
+#define OP(id, str) id,
+#include "keys.inc"
 } Keyword;
 
 typedef union TokenData {
@@ -38,9 +42,10 @@ typedef struct Token {
 } Token;
 
 typedef enum Error {
-    ERR_NONE,
-    ERR_BAD_ALLOC,
-    ERR_BAD_CHAR
+    ERR_NONE, // no error
+    ERR_BAD_ALLOC, // allocation failed
+    ERR_BAD_CHAR, // invalid char code
+    ERR_INVALID_SYMBOL // invalid symbol, but valid char code
 } Error;
 
 struct Stream {
@@ -65,12 +70,58 @@ private:
     char skip();
     char next();
     char peek();
+    bool eat(char c);
+
+    std::string collect(char c, bool(*func)(char));
 
     Token ident(char c);
-    Token symbol(char c);
+    Keyword symbol(char c);
+    Token digit(char c);
 
     Stream *source;
     SourceRange here;
+};
+
+struct Node {
+
+};
+
+struct Type : Node {
+
+};
+
+struct PtrType : Type {
+
+};
+
+struct NameType : Type {
+
+};
+
+struct QualType : Type {
+
+};
+
+struct Parser {
+
+    Node* parse() {
+        return nullptr;
+    }
+
+    Node* type() {
+
+    }
+
+    Token next() {
+
+    }
+
+    Token peek() {
+        
+    }
+
+    Token tok = { INVALID };
+    Lexer *source;
 };
 
 #endif /* CTHULHU_H */

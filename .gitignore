@@ -7,6 +7,7 @@
 !*.h
 !*.inc
 !*.ct
+!*.java
 
 # keep the grammar
 !*.g4
@@ -21,3 +22,4 @@
 
 # ignore anything related to building
 *build*/
+target/

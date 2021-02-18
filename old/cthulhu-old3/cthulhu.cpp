@@ -1,5 +1,6 @@
 #include "cthulhu.h"
 
+#include <unordered_map>
 #include <ctype.h>
 
 static void validateCode(int c)
@@ -20,7 +21,7 @@ Stream::Stream(void *handle, int(*get)(void*))
 
 char Stream::peek()
 {
-    return ahead;
+    return (char)ahead;
 }
 
 char Stream::next()
@@ -30,7 +31,7 @@ char Stream::next()
 
     validateCode(ahead);
     
-    return c;
+    return (char)c;
 }
 
 bool Stream::eat(char c)
@@ -69,9 +70,14 @@ Token Lexer::lex()
     {
         tok = ident(c);
     }
+    else if (isdigit(c))
+    {
+        tok = digit(c);
+    }
     else
     {
-        tok = symbol(c);
+        tok.type = KEYWORD;
+        tok.data.key = symbol(c);
     }
 
 
@@ -81,14 +87,55 @@ Token Lexer::lex()
     return tok;
 }
 
-Token Lexer::ident(char c)
+std::string Lexer::collect(char c, bool(*func)(char))
 {
+    std::string out = {c};
+    
+    while (func(peek()))
+    {
+        out.push_back(next());
+    }
 
+    return out;
 }
 
-Token Lexer::symbol(char c)
+Token Lexer::digit(char c)
 {
-    
+    std::string n = collect(c, [](auto c) -> bool { return isdigit(c); });
+
+    return { INT, { .num = stoull(n) } };
+}
+
+static const std::unordered_map<std::string, Keyword> keys = {
+#define KEY(id, str) { str, id },
+#include "keys.inc"
+};
+
+Token Lexer::ident(char c)
+{
+    std::string id = collect(c, isident2);
+
+    auto iter = keys.find(id);
+    if (iter != keys.end()) {
+        return { KEYWORD, { .key = iter->second } };
+    } else {
+        return { IDENT, { .ident = _strdup(id.c_str()) } };
+    }
+}
+
+Keyword Lexer::symbol(char c)
+{
+    switch (c)
+    {
+    case '[': return K_LSQUARE;
+    case ']': return K_RSQUARE;
+    case '{': return K_LBRACE;
+    case '}': return K_RBRACE;
+    case '(': return K_LPAREN;
+    case ')': return K_RPAREN;
+    default:
+        throw ERR_INVALID_SYMBOL;
+    }
 }
 
 char Lexer::skip()
