@@ -2,7 +2,7 @@ parser grammar ZagParser;
 
 options { tokenVocab=ZagLexer; }
 
-root: include* (alias | struct | union | enumerate | function)* EOF ;
+root: include* (alias | struct | union | enumerate | function | variable)* EOF ;
 
 /* decorators */
 decorate : AT expr | AT LSQUARE expr (COMMA expr)* RSQUARE ;
@@ -13,9 +13,7 @@ path : ID (COLON2 ID)* ;
 modules : LPAREN DOT3 RPAREN | LPAREN ID (COMMA ID)* RPAREN ;
 
 /* types */
-type : mutable | immutable ;
-immutable : (pointer | array | qualified) closure? ;
-mutable : VAR LPAREN immutable RPAREN ;
+type : (pointer | array | qualified) closure* ;
 closure : LPAREN types? RPAREN ;
 types : type (COMMA type)* ;
 pointer : MUL type ;
@@ -37,13 +35,12 @@ items : item (COMMA item)* ;
 item : ID (ASSIGN expr)? ;
 
 fields : (field SEMI)* ;
-field : (function | var | let | alias) ;
+field : (function | variable | alias) ;
 
 /* variables */
-var : VAR names ASSIGN expr SEMI ;
-let : LET names ASSIGN expr SEMI ;
-
-names : ID | LSQUARE ID (COMMA ID)* RSQUARE ;
+variable : (VAR | LET) names (ASSIGN expr)? SEMI ;
+names : var | LSQUARE var (COMMA var)* RSQUARE ;
+var : ID (COLON type)? ;
 
 /* functions */
 function : decorate* DEF ID params? result? body ;
@@ -101,13 +98,13 @@ cast : CAST BEGIN type END LPAREN expr RPAREN ;
 args : expr (COMMA expr)* ;
 
 /* statements */
-stmt : expr | braceStmt | withStmt | whileStmt | returnStmt | branchStmt | let | var ;
+stmt : expr | braceStmt | withStmt | whileStmt | returnStmt | branchStmt | variable ;
 braceStmt : LBRACE stmt* RBRACE ;
 withStmt : WITH LPAREN expr RPAREN stmt elseStmt? ;
 whileStmt : WHILE LPAREN expr RPAREN stmt ;
 forStmt : FOR LPAREN (forLoop | forRange) RPAREN stmt ;
-forLoop : VAR ;
-forRange : (var | let) DOT2 expr ;
+forLoop : variable? SEMI expr? SEMI expr? ;
+forRange : variable DOT2 expr ;
 returnStmt : RETURN expr? SEMI ;
 branchStmt : ifStmt elifStmt* elseStmt* ;
 ifStmt : IF LPAREN expr RPAREN stmt ;

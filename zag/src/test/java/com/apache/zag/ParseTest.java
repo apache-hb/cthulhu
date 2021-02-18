@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
  * Unit test for simple App.
  */
 public class ParseTest {
+    /*
     private static void compiles(String str) {
         CharStream stream = CharStreams.fromString(str);
         ZagLexer lexer = new ZagLexer(stream);
@@ -44,11 +45,13 @@ public class ParseTest {
         compiles("using path::to::items(left, right, up, down);");
     }
 
+    @DisplayName("alias a pointer type")
     @Test
     public void shouldParsePointer() {
         compiles("using a = *b;");
     }
 
+    @DisplayName("alias an unbounded array")
     @Test
     public void shouldParseArray() {
         compiles("using a = [int];");
@@ -181,5 +184,5 @@ public class ParseTest {
             let x = unwrap! func(10);
         }
         """);
-    }
+    }*/
 }

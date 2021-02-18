@@ -1,5 +1,5 @@
 package com.apache.zag.ast;
 
-public class Node {
+public class Decl extends Node {
     
 }
