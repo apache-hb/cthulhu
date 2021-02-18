@@ -1,0 +1,22 @@
+
+struct ELF64Header {
+    using Half = u16;
+    using Word = u32;
+    using Addr = u64;
+    using Off = u64;
+
+    var ident: [u8:16];
+    var type: Half;
+    var version: Word;
+    var entry: Addr;
+    var phoff: Off;
+    var shoff: Off;
+    var eflags: Word;
+    var ehsize: Half;
+    var phentsize: Half;
+    var phnum: Half;
+    var shentsize: Half;
+    var shnum: Half;
+    var shstrndx: Half;
+}
+

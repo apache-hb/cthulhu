@@ -1,6 +1,10 @@
 #ifndef CTHULHU_H
 #define CTHULHU_H
 
+#include <d3d12.h>
+#include <unknwn.h>
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 
