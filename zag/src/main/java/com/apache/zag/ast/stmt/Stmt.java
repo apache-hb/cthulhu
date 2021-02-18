@@ -1,7 +1,7 @@
 package com.apache.zag.ast.stmt;
 
-import com.apache.zag.ast.expr.Expr;
+import com.apache.zag.ast.Node;
 
-public class Stmt extends Expr {
-    
+public class Stmt extends Node {
+
 }

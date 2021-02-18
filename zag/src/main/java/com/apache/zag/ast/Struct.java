@@ -1,5 +1,8 @@
 package com.apache.zag.ast;
 
-public class Struct extends Node {
-    
+import java.util.List;
+
+public class Struct extends Decl {
+    List<Decorator> attribs;
+    List<Decl> inherits;
 }

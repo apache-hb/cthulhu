@@ -85,11 +85,16 @@ LTE : '<=';
 GT : END ;
 GTE : '>=' ;
 
-INT : [0-9]+ ;
+INT : [0-9]+ SUFFIX? ;
 STRING : '"' LETTER* '"' ;
 CHAR : '\'' ~['\\\r\n] '\'';
 
 fragment LETTER : '\\' ['"ntv0\\] | ~[\\\r\n] ;
+fragment SUFFIX : ID ;
+fragment BASE_ID : [a-zA-Z_][a-zA-Z0-9_]* ;
 
-ID : [a-zA-Z_][a-zA-Z0-9_]* ;
+ID : BASE_ID | ASM_OP ;
+ASM_ID : BASE_ID ;
 WS : [ \t\r\n]+ -> channel(HIDDEN) ;
+
+ASM_OP : 'mov' | 'xor' | 'lea' | 'push' | 'pop' ;

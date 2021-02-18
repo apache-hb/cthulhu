@@ -19,6 +19,7 @@
 !meson.build
 !LICENSE
 !*.md
+!*.xml
 
 # ignore anything related to building
 *build*/

@@ -1,5 +1,7 @@
 package com.apache.zag.ast;
 
-public class Union extends Node {
-    
+import java.util.List;
+
+public class Union extends Decl {
+    List<Decl> inherits;
 }
