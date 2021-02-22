@@ -74,6 +74,7 @@ namespace cthulhu {
         Stream stream;
         Location here;
         utf8::string text;
+        int depth;
     };
 
     struct Token {
@@ -93,8 +94,10 @@ namespace cthulhu {
 
     struct Key : Token {
 #define KEY(id, _) id,
+#define OP(id, _) id,
         enum Word { 
 #include "keys.inc"
+            INVALID
         } key;
 
         Key(Word word);
@@ -123,6 +126,8 @@ namespace cthulhu {
 
     struct End : Token {
         End() { }
+
+        bool operator==(const End&) const { return true; }
     };
 
     struct Error : Token {

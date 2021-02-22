@@ -96,6 +96,7 @@ namespace cthulhu {
         : stream(stream)
         , here(Location(this, 0, 0, 0))
         , text(u8"")
+        , depth(0)
     { }
 
     utf8::string Lexer::slice(Range* range) {
@@ -210,8 +211,76 @@ namespace cthulhu {
             }
             token = new String(str);
         } else {
-            // symbol
-            token = nullptr;
+            Key::Word key = Key::INVALID;
+
+            switch (c) {
+            case '[':
+                key = Key::LSQUARE;
+                break;
+
+            case ']':
+                key = Key::RSQUARE;
+                break;
+
+            case '(':
+                key = Key::LPAREN;
+                break;
+
+            case ')':
+                key = Key::RPAREN;
+                break;
+
+            case '{':
+                key = Key::LBRACE;
+                break;
+
+            case '}':
+                key = Key::RBRACE;
+                break;
+
+            case '!':
+                if (eat('<')) {
+                    depth++;
+                    key = Key::BEGIN;
+                } else {
+                    key = eat('=') ? Key::NEQ : Key::NOT;
+                }
+                break;
+            
+            case '<':
+                if (eat('<')) {
+                    key = eat('=') ? Key::SHLEQ : Key::SHL;
+                } else {
+                    key = eat('=') ? Key::LTE : Key::LT;
+                }
+                break;
+
+            case '>':
+                if (depth > 0) {
+                    depth--;
+                    key = Key::END;
+                } else {
+                    if (eat('>')) {
+                        key = eat('=') ? Key::SHREQ : Key::SHR;
+                    } else {
+                        key = eat('=') ? Key::GTE : Key::GT;
+                    }
+                }
+                break;
+
+            case '+': 
+                key = eat('=') ? Key::ADDEQ : Key::ADD;
+                break;
+
+            case '=':
+                key = eat('=') ? Key::EQ : Key::ASSIGN;
+                break;
+
+            default:
+                break;
+            }
+
+            token = new Key(key);
         }
 
         token->range = start.to(here);
