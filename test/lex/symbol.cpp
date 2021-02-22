@@ -12,7 +12,7 @@ int main() {
     lex->expect<cthulhu::Key>(cthulhu::Key::RSQUARE);
     lex->expect<cthulhu::Key>(cthulhu::Key::BEGIN);
     lex->expect<cthulhu::Key>(cthulhu::Key::END);
-    lex->expect<cthulhu::Key>(cthulhu::Key::LT);
+    lex->expect<cthulhu::Key>(cthulhu::Key::GT);
     lex->expect<cthulhu::Key>(cthulhu::Key::BEGIN);
     lex->expect<cthulhu::Key>(cthulhu::Key::BEGIN);
     lex->expect<cthulhu::Key>(cthulhu::Key::END);

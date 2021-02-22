@@ -20,6 +20,9 @@ OP(AT, "@")
 OP(ADD, "+")
 OP(ADDEQ, "+=")
 
+OP(MUL, "*")
+OP(MULEQ, "*=")
+
 OP(BEGIN, "!<")
 OP(END, ">")
 
@@ -39,9 +42,13 @@ OP(SHREQ, ">>=")
 OP(NOT, "!")
 
 OP(ASSIGN, "=")
+OP(COMMA, ",")
 OP(DOT, ".")
 OP(DOT2, "..")
 OP(DOT3, "...")
+
+OP(COLON, ":")
+OP(COLON2, "::")
 
 #undef KEY
 #undef OP

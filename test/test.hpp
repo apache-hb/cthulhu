@@ -4,7 +4,8 @@
 
 #include <exception>
 
-#define ASSERT(expr) if (!(expr)) { throw new std::runtime_error("ASSERT: " #expr "\n"); }
+#define ASSERT(expr) if (!(expr)) { printf("ASSERT: " #expr "\n"); exit(1); }
+#define ASSERT_TYPE(expr, T) if (auto* res = (expr); dynamic_cast<T*>(res) == nullptr) { printf("ASSERT: expected type %s but was %s", typeid(T).name(), typeid(*res).name()); exit(1); }
 
 namespace cthulhu {
     struct StringStreamHandle : StreamHandle {

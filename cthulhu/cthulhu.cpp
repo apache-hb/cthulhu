@@ -238,6 +238,14 @@ namespace cthulhu {
                 key = Key::RBRACE;
                 break;
 
+            case '.':
+                key = eat('.') ? (eat('.') ? Key::DOT3 : Key::DOT2) : Key::DOT;
+                break;
+
+            case ',':
+                key = Key::COMMA;
+                break;
+
             case '!':
                 if (eat('<')) {
                     depth++;
@@ -347,5 +355,83 @@ namespace cthulhu {
 
     bool String::operator==(const String& other) const {
         return str == other.str;
+    }
+
+
+    Parser::Parser(Lexer* lexer)
+        : lexer(lexer)
+        , ahead(nullptr)
+    { }
+
+    ///
+    /// parsing logic
+    ///
+
+    Type* Parser::type() {
+        Type* out;
+
+        if (Key* ptr = eat<Key>(Key::MUL); ptr) {
+            out = new Pointer(type());
+        } else if (Key* arr = eat<Key>(Key::LSQUARE); arr) {
+            out = new Array(type(), eat<Key>(Key::COLON) == nullptr ? nullptr : expr());
+        } else {
+            out = qualified();
+        }
+
+        while (eat<Key>(Key::LPAREN) != nullptr) {
+            out = new Closure(out, gather<Type>(Key::COMMA, Key::RPAREN, [](Parser* self) {
+                return self->type();
+            }));
+        }
+
+        return out;
+    }
+
+    Expr* Parser::expr() {
+        return nullptr;
+    }
+
+    Name* Parser::name() {
+        Name* name = new Name(expect<Ident>());
+
+        if (eat<Key>(Key::BEGIN) != nullptr) {
+            name->params = collect<Type>(Key::COMMA, [](Parser* self) { 
+                return self->type(); 
+            });
+            expect<Key>(Key::END);
+        }
+
+        return name;
+    }
+
+    Qualified* Parser::qualified() {
+        return new Qualified(collect<Name>(Key::COLON2, [](Parser* self) { 
+            return self->name(); 
+        }));
+    }
+
+    ///
+    /// parsing helper functions
+    /// 
+
+    Token* Parser::next() {
+        Token* token;
+        
+        if (ahead != nullptr) {
+            token = ahead;
+            ahead = nullptr;
+        } else {
+            token = lexer->read();
+        }
+
+        return token;
+    }
+
+    Token* Parser::peek() {
+        if (ahead == nullptr) {
+            ahead = lexer->read();
+        }
+
+        return ahead;
     }
 }
