@@ -1,0 +1,82 @@
+Build started at 2021-02-21T19:06:34.063593
+Main binary: C:\Program Files\Meson\meson.exe
+Build Options: 
+Python system: Windows
+The Meson build system
+Version: 0.56.2
+Source dir: C:\Users\ehb56\OneDrive\Documents\GitHub\ctulang
+Build dir: C:\Users\ehb56\OneDrive\Documents\GitHub\ctulang\wbuild
+Build type: native build
+Project name: cthulhu
+Project version: undefined
+None of 'CXX' are defined in the environment, not changing global flags.
+None of 'CXXFLAGS' are defined in the environment, not changing global flags.
+None of 'LDFLAGS' are defined in the environment, not changing global flags.
+None of 'CPPFLAGS' are defined in the environment, not changing global flags.
+None of 'CXX_LD' are defined in the environment, not changing global flags.
+Sanity testing C++ compiler: cl
+Is cross compiler: False.
+None of 'CXX_LD' are defined in the environment, not changing global flags.
+Sanity check compiler command line: cl C:\Users\ehb56\OneDrive\Documents\GitHub\ctulang\wbuild\meson-private\sanitycheckcpp.cc /FeC:\Users\ehb56\OneDrive\Documents\GitHub\ctulang\wbuild\meson-private\sanitycheckcpp.exe /MDd /nologo /showIncludes /link
+Sanity check compile stdout:
+sanitycheckcpp.cc
+
+-----
+Sanity check compile stderr:
+
+-----
+Running test binary command: C:\Users\ehb56\OneDrive\Documents\GitHub\ctulang\wbuild\meson-private\sanitycheckcpp.exe
+C++ compiler for the host machine: cl (msvc 19.27.29111 "Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29111 for x64")
+C++ linker for the host machine: link link 14.27.29111.0
+None of 'AR' are defined in the environment, not changing global flags.
+None of 'CXX' are defined in the environment, not changing global flags.
+None of 'CXXFLAGS' are defined in the environment, not changing global flags.
+None of 'LDFLAGS' are defined in the environment, not changing global flags.
+None of 'CPPFLAGS' are defined in the environment, not changing global flags.
+None of 'CXX_LD' are defined in the environment, not changing global flags.
+Sanity testing C++ compiler: cl
+Is cross compiler: False.
+None of 'CXX_LD' are defined in the environment, not changing global flags.
+Sanity check compiler command line: cl C:\Users\ehb56\OneDrive\Documents\GitHub\ctulang\wbuild\meson-private\sanitycheckcpp.cc /FeC:\Users\ehb56\OneDrive\Documents\GitHub\ctulang\wbuild\meson-private\sanitycheckcpp.exe /MDd /nologo /showIncludes /link
+Sanity check compile stdout:
+sanitycheckcpp.cc
+
+-----
+Sanity check compile stderr:
+
+-----
+Running test binary command: C:\Users\ehb56\OneDrive\Documents\GitHub\ctulang\wbuild\meson-private\sanitycheckcpp.exe
+C++ compiler for the build machine: cl (msvc 19.27.29111 "Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29111 for x64")
+C++ linker for the build machine: link link 14.27.29111.0
+None of 'AR' are defined in the environment, not changing global flags.
+Build machine cpu family: x86_64
+Build machine cpu: x86_64
+Host machine cpu family: x86_64
+Host machine cpu: x86_64
+Target machine cpu family: x86_64
+Target machine cpu: x86_64
+
+Executing subproject utf8 method meson 
+
+Project name: utf8
+Project version: undefined
+C++ compiler for the host machine: cl (msvc 19.27.29111 "Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29111 for x64")
+C++ linker for the host machine: link link 14.27.29111.0
+C++ compiler for the build machine: cl (msvc 19.27.29111 "Microsoft (R) C/C++ Optimizing Compiler Version 19.27.29111 for x64")
+C++ linker for the build machine: link link 14.27.29111.0
+Build targets in project: 0
+Subproject utf8 finished.
+
+Adding test "ident"
+Adding test "int"
+Adding test "string"
+Build targets in project: 4
+
+cthulhu undefined
+
+  Subprojects
+    utf8: YES
+
+Found ninja-1.10.2 at "C:\Program Files\Meson\ninja.EXE"
+None of 'STRIP' are defined in the environment, not changing global flags.
+None of 'STRIP' are defined in the environment, not changing global flags.
