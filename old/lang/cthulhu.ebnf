@@ -1,7 +1,0 @@
-unit = { import }, { toplevel } ;
-
-import = "using", path, [ import-items ], ";" ;
-
-import-items = items | "..." ;
-
-items = ident | ident, ",", items ;

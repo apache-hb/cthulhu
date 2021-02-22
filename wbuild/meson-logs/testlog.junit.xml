@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites tests="3" errors="0" failures="0"><testsuite name="cthulhu" tests="3" errors="0" failures="0" skipped="0"><testcase name="ident" classname="ident" /><testcase name="int" classname="int" /><testcase name="string" classname="string" /></testsuite></testsuites>
