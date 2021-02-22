@@ -2,7 +2,9 @@
 
 #include "cthulhu.hpp"
 
-#define ASSERT(expr) if (!(expr)) { printf("ASSERT: " #expr "\n"); exit(1); }
+#include <exception>
+
+#define ASSERT(expr) if (!(expr)) { throw new std::runtime_error("ASSERT: " #expr "\n"); }
 
 namespace cthulhu {
     struct StringStreamHandle : StreamHandle {

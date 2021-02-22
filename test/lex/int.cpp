@@ -7,4 +7,5 @@ int main() {
     lex->expect<cthulhu::Int>(0x100);
     lex->expect<cthulhu::Int>(0b1100);
     lex->expect<cthulhu::Int>(25, u8"u");
+    lex->expect<cthulhu::End>();
 }
