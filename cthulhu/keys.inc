@@ -8,6 +8,7 @@
 
 KEY(USING, "using")
 KEY(SCOPE, "scope")
+KEY(COERCE, "coerce")
 
 OP(LPAREN, "(")
 OP(RPAREN, ")")
@@ -20,14 +21,26 @@ OP(AT, "@")
 OP(ADD, "+")
 OP(ADDEQ, "+=")
 
+OP(SUB, "-")
+OP(SUBEQ, "-=")
+
 OP(MUL, "*")
 OP(MULEQ, "*=")
+
+OP(DIV, "/")
+OP(DIVEQ, "/=")
+
+OP(MOD, "%")
+OP(MODEQ, "%=")
 
 OP(BEGIN, "!<")
 OP(END, ">")
 
 OP(EQ, "==")
 OP(NEQ, "!=")
+
+OP(AND, "&&")
+OP(OR, "||")
 
 OP(GT, ">")
 OP(GTE, ">=")
@@ -39,6 +52,17 @@ OP(SHLEQ, "<<=")
 OP(SHR, ">>")
 OP(SHREQ, ">>=")
 
+OP(BITAND, "&")
+OP(BITANDEQ, "&=")
+
+OP(BITOR, "|")
+OP(BITOREQ, "|=")
+
+OP(XOR, "^")
+OP(XOREQ, "^=")
+
+OP(FLIP, "~")
+
 OP(NOT, "!")
 
 OP(ASSIGN, "=")
@@ -49,6 +73,9 @@ OP(DOT3, "...")
 
 OP(COLON, ":")
 OP(COLON2, "::")
+
+OP(QUESTION, "?")
+OP(ELVIS, "?:")
 
 #undef KEY
 #undef OP

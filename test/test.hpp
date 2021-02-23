@@ -40,7 +40,7 @@ namespace cthulhu {
         { }
 
         template<typename T, typename... A>
-        void expect(A&&... args) {
+        T* expect(A&&... args) {
             Token* token = read();
             ASSERT(token != nullptr);
 
@@ -48,6 +48,8 @@ namespace cthulhu {
             ASSERT(as != nullptr);
 
             ASSERT(*as == T(args...));
+
+            return as;
         }
     };
 
