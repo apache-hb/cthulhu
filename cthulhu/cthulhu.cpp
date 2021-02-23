@@ -92,15 +92,34 @@ namespace cthulhu {
     /// lexing
     ///
 
-    Lexer::Lexer(Stream stream)
-        : stream(stream)
-        , here(Location(this, 0, 0, 0))
-        , text(u8"")
-        , depth(0)
-    { }
-
     utf8::string Lexer::slice(Range* range) {
         return text.substr(range->offset, range->length);
+    }
+
+    utf8::string Lexer::line(size_t it) {
+        size_t offset = it;
+        while (true) {
+            if (offset <= 0)
+                break;
+
+            if (newline(text[offset]))
+                break;
+
+            offset--;
+        }
+
+        size_t length = 0;
+        while (true) {
+            if (offset + length >= text.length())
+                break;
+
+            if (newline(text[offset + length]))
+                break;
+
+            length++;
+        }
+
+        return text.substr(offset, std::min(length, text.length()));
     }
 
     char32_t Lexer::skip() {
@@ -115,7 +134,10 @@ namespace cthulhu {
 
     char32_t Lexer::next() {
         char32_t c = stream.next();
-        text += c;
+
+        if (c == END) {
+            return END;
+        }
 
         if (newline(c)) {
             here.line++;
@@ -125,6 +147,8 @@ namespace cthulhu {
         }
 
         here.offset++;
+
+        text += c;
 
         return c;
     }
@@ -140,6 +164,17 @@ namespace cthulhu {
         }
 
         return false;
+    }
+
+    char32_t Lexer::escape() {
+        char32_t c = next();
+        if (c == '"') {
+            return END;
+        } else if (c == '\\') {
+            return next();
+        } else {
+            return c;
+        } 
     }
 
     utf8::string Lexer::collect(char32_t start, bool(*filter)(char32_t)) {
@@ -163,6 +198,7 @@ namespace cthulhu {
     Token* Lexer::read() {
         char32_t c = skip();
         Location start = here;
+        start.offset--;
         Token* token = nullptr;
 
         if (c == END) {
@@ -200,16 +236,19 @@ namespace cthulhu {
         } else if (c == '"') {
             utf8::string str;
             while (true) {
-                c = next();
-                if (c == '"') {
+                c = escape();
+                if (c == END) {
                     break;
-                } else if (c == '\\') {
-                    str += next();
                 } else {
                     str += c;
                 }
             }
             token = new String(str);
+        } else if (c == '\'') {
+            c = escape();
+            c = c == END ? '"' : c;
+            next(); // skip the '
+            token = new Char(c);
         } else {
             Key::Word key = Key::INVALID;
 
@@ -280,8 +319,44 @@ namespace cthulhu {
                 key = eat('=') ? Key::ADDEQ : Key::ADD;
                 break;
 
+            case '-':
+                key = eat('=') ? Key::SUBEQ : Key::SUB;
+                break;
+
+            case '*':
+                key = eat('=') ? Key::MULEQ : Key::MUL;
+                break;
+
+            case '/':
+                key = eat('=') ? Key::DIVEQ : Key::DIV;
+                break;
+
+            case '%':
+                key = eat('=') ? Key::MODEQ : Key::MOD;
+                break;
+
+            case '|':
+                key = eat('|') ? Key::OR : eat('=') ? Key::BITOREQ : Key::BITOR;
+                break;
+
+            case '&':
+                key = eat('&') ? Key::AND : eat('=') ? Key::BITANDEQ : Key::BITAND;
+                break;
+
+            case '?':
+                key = eat(':') ? Key::ELVIS : Key::QUESTION;
+                break;
+
+            case '^':
+                key = eat('=') ? Key::XOREQ : Key::XOR;
+                break;
+
             case '=':
                 key = eat('=') ? Key::EQ : Key::ASSIGN;
+                break;
+
+            case '~':
+                key = Key::FLIP;
                 break;
 
             default:
@@ -316,72 +391,35 @@ namespace cthulhu {
         , length(length)
     { }
 
-
-
-    Ident::Ident(utf8::string id) 
-        : ident(id) 
-    { }
-
-    bool Ident::operator==(const Ident& other) const {
-        return ident == other.ident;
-    }
-
-
-
-    Key::Key(Key::Word word) 
-        : key(word)
-    { }
-
-    bool Key::operator==(const Key& other) const {
-        return key == other.key;
-    }
-
-
-
-    Int::Int(size_t num, utf8::string str)
-        : num(num)
-        , suffix(str)
-    { }
-
-    bool Int::operator==(const Int& other) const {
-        return num == other.num && suffix == other.suffix;
-    }
-
-
-
-    String::String(utf8::string str)
-        : str(str)
-    { }
-
-    bool String::operator==(const String& other) const {
-        return str == other.str;
-    }
-
-
-    Parser::Parser(Lexer* lexer)
-        : lexer(lexer)
-        , ahead(nullptr)
-    { }
-
     ///
     /// parsing logic
     ///
 
     Type* Parser::type() {
-        Type* out;
+        Type* out = nullptr;
 
-        if (Key* ptr = eat<Key>(Key::MUL); ptr) {
-            out = new Pointer(type());
-        } else if (Key* arr = eat<Key>(Key::LSQUARE); arr) {
-            out = new Array(type(), eat<Key>(Key::COLON) == nullptr ? nullptr : expr());
+        if (Key* mul = eat<Key>(Key::MUL); mul) {
+            out = new Pointer(mul, type());
         } else {
-            out = qualified();
+            out = qual();
         }
 
-        while (eat<Key>(Key::LPAREN) != nullptr) {
-            out = new Closure(out, gather<Type>(Key::COMMA, Key::RPAREN, [](Parser* self) {
-                return self->type();
-            }));
+        while (true) {
+            if (Key* lparen = eat<Key>(Key::LPAREN); lparen) {
+                vector<Type*> args = gather<Type>(Key::COMMA, Key::RPAREN, [](Parser* self) {
+                    return self->type();
+                });
+                out = new Closure(out, args);
+            } else if (Key* lsquare = eat<Key>(Key::LSQUARE); lsquare) {
+                if (Key* rsquare = eat<Key>(Key::RSQUARE); rsquare) {
+                    out = new Array(lsquare, rsquare, out);
+                } else {
+                    Expr* size = expr();
+                    out = new Array(lsquare, expect<Key>(Key::RSQUARE), out, size);
+                }
+            } else {
+                break;
+            }
         }
 
         return out;
@@ -392,22 +430,29 @@ namespace cthulhu {
     }
 
     Name* Parser::name() {
-        Name* name = new Name(expect<Ident>());
-
-        if (eat<Key>(Key::BEGIN) != nullptr) {
-            name->params = collect<Type>(Key::COMMA, [](Parser* self) { 
-                return self->type(); 
+        printf("name\n");
+        Ident* id = expect<Ident>();
+        printf("done\n");
+        if (Key* begin = eat<Key>(Key::BEGIN); begin) {
+            vector<Type*> params = collect<Type>(Key::COMMA, [](Parser* self) {
+                return self->type();
             });
-            expect<Key>(Key::END);
-        }
+            Key* end = expect<Key>(Key::END);
 
-        return name;
+            return new Name(id, begin, end, params);
+        } else {
+            return new Name(id);
+        }
     }
 
-    Qualified* Parser::qualified() {
-        return new Qualified(collect<Name>(Key::COLON2, [](Parser* self) { 
-            return self->name(); 
-        }));
+    Qual* Parser::qual() {
+        vector<Name*> names;
+        
+        do {
+            names.push_back(name());
+        } while (eat<Key>(Key::COLON2) != nullptr);
+
+        return new Qual(names);
     }
 
     ///
@@ -422,7 +467,7 @@ namespace cthulhu {
             ahead = nullptr;
         } else {
             token = lexer->read();
-        }
+        }   
 
         return token;
     }
