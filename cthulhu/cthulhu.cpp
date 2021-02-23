@@ -430,9 +430,7 @@ namespace cthulhu {
     }
 
     Name* Parser::name() {
-        printf("name\n");
         Ident* id = expect<Ident>();
-        printf("done\n");
         if (Key* begin = eat<Key>(Key::BEGIN); begin) {
             vector<Type*> params = collect<Type>(Key::COMMA, [](Parser* self) {
                 return self->type();
@@ -446,13 +444,9 @@ namespace cthulhu {
     }
 
     Qual* Parser::qual() {
-        vector<Name*> names;
-        
-        do {
-            names.push_back(name());
-        } while (eat<Key>(Key::COLON2) != nullptr);
-
-        return new Qual(names);
+        return new Qual(collect<Name>(Key::COLON2, [](Parser* self) {
+            return self->name();
+        }));
     }
 
     ///

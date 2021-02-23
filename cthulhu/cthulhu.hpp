@@ -459,6 +459,16 @@ namespace cthulhu {
 
         Type* type;
         Expr* size = nullptr;
+
+        virtual utf8::string repr() const override {
+            utf8::string out = "Array(of=" + type->repr();
+
+            if (size) {
+                out += ",size=" + size->repr();
+            }
+
+            return out + ")";
+        }
     };
 
     struct Closure : Type {
@@ -544,7 +554,6 @@ namespace cthulhu {
 
             do {
                 out.push_back(func(this)); 
-                printf("collect\n");
             } while (eat<Key>(sep) != nullptr);
 
             return out;
@@ -554,12 +563,11 @@ namespace cthulhu {
         vector<T*> gather(Key::Word sep, Key::Word until, T*(*func)(Parser*)) {
             vector<T*> out;
 
-            while (true) {
+            while (eat<Key>(until) == nullptr) {
+                out.push_back(func(this));
+
                 if (eat<Key>(until) == nullptr) {
-                    out.push_back(func(this));
-                    if (eat<Key>(until) == nullptr) {
-                        expect<Key>(sep);
-                    }
+                    expect<Key>(sep);
                 } else {
                     break;
                 }
