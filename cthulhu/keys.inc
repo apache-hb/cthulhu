@@ -75,7 +75,6 @@ OP(COLON, ":")
 OP(COLON2, "::")
 
 OP(QUESTION, "?")
-OP(ELVIS, "?:")
 
 #undef KEY
 #undef OP
