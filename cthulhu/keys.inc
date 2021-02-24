@@ -8,6 +8,8 @@
 
 KEY(USING, "using")
 KEY(SCOPE, "scope")
+KEY(LET, "let")
+KEY(VAR, "var")
 KEY(COERCE, "coerce")
 
 OP(LPAREN, "(")
@@ -17,6 +19,7 @@ OP(RSQUARE, "]")
 OP(LBRACE, "{")
 OP(RBRACE, "}")
 OP(AT, "@")
+OP(SEMI, ";")
 
 OP(ADD, "+")
 OP(ADDEQ, "+=")
@@ -70,6 +73,7 @@ OP(COMMA, ",")
 OP(DOT, ".")
 OP(DOT2, "..")
 OP(DOT3, "...")
+OP(ARROW, "->")
 
 OP(COLON, ":")
 OP(COLON2, "::")

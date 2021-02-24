@@ -324,7 +324,7 @@ namespace cthulhu {
                 break;
 
             case '-':
-                key = eat('=') ? Key::SUBEQ : Key::SUB;
+                key = eat('>') ? Key::ARROW : eat('=') ? Key::SUBEQ : Key::SUB;
                 break;
 
             case '*':
@@ -365,6 +365,10 @@ namespace cthulhu {
 
             case ':':
                 key = eat(':') ? Key::COLON2 : Key::COLON;
+                break;
+
+            case ';':
+                key = Key::SEMI;
                 break;
 
             default:
@@ -410,7 +414,6 @@ namespace cthulhu {
             out = new Pointer(type());
         } else if (Key* lsquare = eat<Key>(Key::LSQUARE); lsquare) {
             out = array();
-            expect<Key>(Key::RSQUARE);
         } else {
             out = qual();
         }
@@ -426,7 +429,15 @@ namespace cthulhu {
     }
 
     Array* Parser::array() {
-        return new Array(type(), eat<Key>(Key::COLON) ? expr() : nullptr);
+        Array* out;
+        Type* it = type();
+        if (Key* colon = eat<Key>(Key::COLON); colon) {
+            out = new Array(it, expr());
+        } else {
+            out = new Array(it, nullptr);
+        }
+        expect<Key>(Key::RSQUARE);
+        return out;
     }
 
     enum Prec : int {
@@ -579,6 +590,23 @@ namespace cthulhu {
             node = nullptr;
         }
 
+        while (true) {
+            if (Key* lsquare = eat<Key>(Key::LSQUARE); lsquare) {
+                node = new Subscript(node, expr());
+                expect<Key>(Key::RSQUARE);
+            } else if (Key* lparen = eat<Key>(Key::LPAREN); lparen) {
+                node = new Call(node, gather<Expr>(Key::COMMA, Key::RPAREN, [](Parser* self) {
+                    return self->expr();
+                }));
+            } else if (Key* dot = eat<Key>(Key::DOT); dot) {
+                node = new Dot(node, expect<Ident>(), false);
+            } else if (Key* arrow = eat<Key>(Key::ARROW); arrow) {
+                node = new Dot(node, expect<Ident>(), true);
+            } else {
+                break;
+            }
+        }
+
         return node;
     }
 
@@ -600,6 +628,71 @@ namespace cthulhu {
         return new Qual(collect<Name>(Key::COLON2, [](Parser* self) {
             return self->name();
         }));
+    }
+
+    Decl* Parser::include() {
+        expect<Key>(Key::USING);
+        vector<Ident*> path = collect<Ident>(Key::COLON2, [](Parser* self) {
+            return self->expect<Ident>();
+        });
+        Decl* out;
+        if (eat<Key>(Key::ASSIGN)) {
+            // actually an alias
+            out = new Alias(path[0], type());
+        } else if (eat<Key>(Key::LPAREN)) {
+            if (eat<Key>(Key::DOT3)) {
+                out = new Import(path, {});
+                expect<Key>(Key::RPAREN);
+            } else {
+                out = new Import(path, gather<Ident>(Key::COMMA, Key::RPAREN, [](Parser* self) {
+                    return self->expect<Ident>();
+                }));
+            }
+        } else {
+            out = new Import(path);
+        }
+
+        expect<Key>(Key::SEMI);
+        return out;
+    }
+
+    Decl* Parser::decl() {
+        if (Key* a = eat<Key>(Key::USING); a) {
+            return alias();
+        } else if (Key* l = eat<Key>(Key::LET); l) {
+            return var();
+        } else {
+            return nullptr;
+        }
+    }
+
+    Alias* Parser::alias() {
+        Ident* name = expect<Ident>();
+        expect<Key>(Key::ASSIGN);
+        Type* it = type();
+        expect<Key>(Key::SEMI);
+
+        return new Alias(name, it);
+    }
+
+    Var* Parser::var() {
+        vector<VarName*> names;
+        if (eat<Key>(Key::LSQUARE)) {
+            names = gather<VarName>(Key::COMMA, Key::RSQUARE, [](Parser* self) {
+                return self->varName();
+            });
+        } else {
+            names = { varName() };
+        }
+
+        Var* out = new Var(names, eat<Key>(Key::ASSIGN) ? expr() : nullptr);
+        expect<Key>(Key::SEMI);
+        return out;
+    }
+
+    VarName* Parser::varName() {
+        Ident* n = expect<Ident>();
+        return new VarName(n, eat<Key>(Key::COLON) ? type() : nullptr);
     }
 
     ///
