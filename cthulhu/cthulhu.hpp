@@ -220,6 +220,9 @@ namespace cthulhu {
             return out;
         }
 
+        uint64_t get() const { return num; }
+        utf8::string suf() const { return suffix; }
+
     private:
         uint64_t num;
         utf8::string suffix;
@@ -264,64 +267,85 @@ namespace cthulhu {
         }
     };
 
-    struct Error : Token {
-        
-    };
-
     struct Node {
-        Node(vector<Token*> tokens)
-            : tokens(tokens)
-        { }
-
         virtual ~Node() { }
 
-        virtual utf8::string repr() const {
-            utf8::string out = "Node(";
-
-            for (size_t i = 0; i < tokens.size(); i++) {
-                if (i) {
-                    out += ",";
-                }
-                out += tokens[i]->repr();
-            }
-
-            out += ")";
-
-            return out;
-        }
-
-        vector<Token*> tokens;
+        virtual utf8::string repr() const { return u8"Node()"; }
     };
 
     struct Expr : Node {
-        Expr(vector<Token*> tokens)
-            : Node(tokens)
-        { }
+
     };
 
     struct IntConst : Expr {
-        size_t val;
+        Int* num;
+
+        IntConst(Int* i)
+            : num(i)
+        { }
+
+        virtual utf8::string repr() const override { 
+            utf8::string out = "Int(";
+            out += std::to_string(num->get());
+            out += num->suf();
+            return out + ")";
+        }
     };
 
     struct StrConst : Expr {
         utf8::string val;
+
+        virtual utf8::string repr() const override { 
+            utf8::string out = "String(\"";
+            out += val;
+            return out + "\")";
+        }
     };
 
     struct BoolConst : Expr {
         bool val;
+
+        virtual utf8::string repr() const override { 
+            utf8::string out = "Bool(";
+            out += std::to_string(val);
+            return out + ")";
+        }
     };
 
     struct CharConst : Expr {
         char32_t val;
+
+        virtual utf8::string repr() const override { 
+            utf8::string out = "Char(";
+            out += val;
+            return out + ")";
+        }
     };
 
-    struct Coerce : Expr {
-        Type* type;
-        Expr* expr;
+    struct Ternary : Expr {
+        Expr* cond;
+        Expr* lhs;
+        Expr* rhs;
+
+        Ternary(Expr* cond, Expr* lhs, Expr* rhs)
+            : cond(cond)
+            , lhs(lhs)
+            , rhs(rhs)
+        { }
+
+        virtual utf8::string repr() const override { 
+            utf8::string out = "Ternary(cond=" + cond->repr();
+            if (lhs) {
+                out += ",lhs=" + lhs->repr();
+            }
+            out += ",rhs=" + rhs->repr() + ")";
+            return out;
+        }
     };
 
     struct Unary : Expr {
         enum Op {
+            INVALID,
             NOT, // !
             FLIP, // ~
             POS, // + 
@@ -333,15 +357,28 @@ namespace cthulhu {
         Op op;
         Expr* expr;
 
-        Unary(Token* tok, Op op, Expr* expr)
-            : Expr({ tok })
-            , op(op)
+        Unary(Op op, Expr* expr)
+            : op(op)
             , expr(expr)
         { }
+
+        virtual utf8::string repr() const override { 
+            utf8::string out = "Unary(op=";
+            switch (op) {
+            case NOT: out += "!"; break;
+            case FLIP: out += "~"; break;
+            case POS: out += "+"; break;
+            case NEG: out += "-"; break;
+            case DEREF: out += "*"; break;
+            case REF: out += "&"; break;
+            }
+            return out + ",expr=" + expr->repr() + ")";
+        }
     };
 
     struct Binary : Expr {
         enum Op {
+            INVALID,
             ADD, // +
             SUB, // -
             MUL, // *
@@ -366,30 +403,49 @@ namespace cthulhu {
         Expr* lhs;
         Expr* rhs;
 
-        Binary(Token* tok, Op op, Expr* lhs, Expr* rhs)
-            : Expr({ tok })
-            , op(op)
+        Binary(Op op, Expr* lhs, Expr* rhs)
+            : op(op)
             , lhs(lhs)
             , rhs(rhs)
         { }
+
+        virtual utf8::string repr() const override { 
+            utf8::string out = "Binary(op=";
+            switch (op) {
+            case ADD: out += "+"; break;
+            case SUB: out += "-"; break;
+            case MUL: out += "*"; break;
+            case DIV: out += "/"; break;
+            case MOD: out += "%"; break;
+            case BITAND: out += "&"; break;
+            case BITOR: out += "|"; break;
+            case BITXOR: out += "^"; break;
+            case AND: out += "&&"; break;
+            case OR: out += "||"; break;
+            case SHL: out += "<<"; break;
+            case SHR: out += ">>"; break;
+            case LT: out += "<"; break;
+            case LTE: out += "<="; break;
+            case GT: out += ">"; break;
+            case GTE: out += ">="; break;
+            case EQ: out += "=="; break;
+            case NEQ: out += "!="; break;
+            }
+            return out + ",lhs=" + lhs->repr() + ",rhs=" + rhs->repr() + ")";
+        }
     };
 
-
     struct Type : Node {
-        Type(vector<Token*> tokens)
-            : Node(tokens)
-        { }
+
     };
 
     struct Name : Type {
         Name(Ident* tok)
-            : Type({ tok })
-            , name(tok->get())
+            : name(tok->get())
         { }
 
-        Name(Ident* tok, Token* begin, Token* end, vector<Type*> params)
-            : Type({ tok, begin, end })
-            , params(params)
+        Name(Ident* tok, vector<Type*> params)
+            : params(params)
             , name(tok->get())
         { }
 
@@ -398,7 +454,7 @@ namespace cthulhu {
         utf8::string name;
 
         virtual utf8::string repr() const override {
-            utf8::string out = "Name(name=" + name;
+            utf8::string out = "Name(" + name;
 
             if (!params.empty()) {
                 out += ",params=(";
@@ -417,8 +473,7 @@ namespace cthulhu {
 
     struct Qual : Type {
         Qual(vector<Name*> names)
-            : Type({})
-            , names(names)
+            : names(names)
         { }
 
         vector<Name*> names;
@@ -438,9 +493,8 @@ namespace cthulhu {
     };
 
     struct Pointer : Type {
-        Pointer(Token* token, Type* type)
-            : Type({ token })
-            , type(type)
+        Pointer(Type* type)
+            : type(type)
         { }
 
         Type* type;
@@ -451,9 +505,8 @@ namespace cthulhu {
     };
 
     struct Array : Type {
-        Array(Token* lsquare, Token* rsquare, Type* type, Expr* size = nullptr)
-            : Type({ lsquare, rsquare })
-            , type(type)
+        Array(Type* type, Expr* size)
+            : type(type)
             , size(size)
         { }
 
@@ -476,8 +529,7 @@ namespace cthulhu {
         vector<Type*> params;
 
         Closure(Type* type, vector<Type*> params)
-            : Type({})
-            , type(type)
+            : type(type)
             , params(params)
         { }
 
@@ -499,16 +551,43 @@ namespace cthulhu {
         }
     };
 
+    struct Coerce : Expr {
+        Type* type;
+        Expr* expr;
+
+        Coerce(Type* type, Expr* expr)
+            : type(type)
+            , expr(expr)
+        { }
+
+        virtual utf8::string repr() const override { 
+            utf8::string out = "Coerce(";
+            out += type->repr() + "," + expr->repr();
+            return out + ")";
+        }
+    };
+
+    struct NameExpr : Expr {
+        Qual* name;
+
+        NameExpr(Qual* qual)
+            : name(qual)
+        { }
+    };
+
     struct Parser {
         Parser(Lexer* lexer)
             : lexer(lexer)
         { }
 
         Type* type();
-        Expr* expr();
-
+        Array* array();
         Name* name();
         Qual* qual();
+
+        Expr* expr();
+        Expr* binary(int mprec);
+        Expr* primary();
 
         template<typename T, typename... A>
         T* eat(A&&... args) {

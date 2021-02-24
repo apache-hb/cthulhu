@@ -247,7 +247,11 @@ namespace cthulhu {
         } else if (c == '\'') {
             c = escape();
             c = c == END ? '"' : c;
-            next(); // skip the '
+            
+            if (next() != '\'') {
+                throw new std::runtime_error("expected ' after char literal");
+            }
+
             token = new Char(c);
         } else {
             Key::Word key = Key::INVALID;
@@ -344,7 +348,7 @@ namespace cthulhu {
                 break;
 
             case '?':
-                key = eat(':') ? Key::ELVIS : Key::QUESTION;
+                key = Key::QUESTION;
                 break;
 
             case '^':
@@ -357,6 +361,10 @@ namespace cthulhu {
 
             case '~':
                 key = Key::FLIP;
+                break;
+
+            case ':':
+                key = eat(':') ? Key::COLON2 : Key::COLON;
                 break;
 
             default:
@@ -399,34 +407,179 @@ namespace cthulhu {
         Type* out = nullptr;
 
         if (Key* mul = eat<Key>(Key::MUL); mul) {
-            out = new Pointer(mul, type());
+            out = new Pointer(type());
+        } else if (Key* lsquare = eat<Key>(Key::LSQUARE); lsquare) {
+            out = array();
+            expect<Key>(Key::RSQUARE);
         } else {
             out = qual();
         }
 
-        while (true) {
-            if (Key* lparen = eat<Key>(Key::LPAREN); lparen) {
-                vector<Type*> args = gather<Type>(Key::COMMA, Key::RPAREN, [](Parser* self) {
-                    return self->type();
-                });
-                out = new Closure(out, args);
-            } else if (Key* lsquare = eat<Key>(Key::LSQUARE); lsquare) {
-                if (Key* rsquare = eat<Key>(Key::RSQUARE); rsquare) {
-                    out = new Array(lsquare, rsquare, out);
-                } else {
-                    Expr* size = expr();
-                    out = new Array(lsquare, expect<Key>(Key::RSQUARE), out, size);
-                }
-            } else {
-                break;
-            }
+        while (eat<Key>(Key::LPAREN)) {
+            vector<Type*> args = gather<Type>(Key::COMMA, Key::RPAREN, [](Parser* self) {
+                return self->type();
+            });
+            out = new Closure(out, args);
         }
 
         return out;
     }
 
+    Array* Parser::array() {
+        return new Array(type(), eat<Key>(Key::COLON) ? expr() : nullptr);
+    }
+
+    enum Prec : int {
+        P_NONE = 0,
+
+        P_ASSIGN,
+        P_TERNARY,
+        P_LOGIC,
+        P_EQUAL,
+        P_COMPARE,
+        P_BITS,
+        P_SHIFT,
+        P_MATH,
+        P_MUL
+    };
+
+    int prec(Key* word) {
+        if (word == nullptr)
+            return P_NONE;
+
+        switch (word->key) {
+        case Key::ADD: case Key::SUB:
+            return P_MATH;
+        case Key::MUL: case Key::DIV: case Key::MOD:
+            return P_MUL;
+        case Key::EQ: case Key::NEQ:
+            return P_EQUAL;
+        case Key::AND: case Key::OR:
+            return P_LOGIC;
+        case Key::GT: case Key::GTE: case Key::LT: case Key::LTE:
+            return P_COMPARE;
+        case Key::SHL: case Key::SHR:
+            return P_SHIFT;
+        case Key::BITAND: case Key::BITOR: case Key::XOR:
+            return P_BITS;
+        case Key::QUESTION:
+            return P_TERNARY;
+        default: 
+            return P_NONE;
+        }
+    }
+
+    Unary::Op unop(Key* key) {
+        if (key == nullptr)
+            return Unary::INVALID;
+
+        switch (key->key) {
+        case Key::NOT: return Unary::NOT;
+        case Key::FLIP: return Unary::FLIP;
+        case Key::ADD: return Unary::POS;
+        case Key::SUB: return Unary::NEG;
+        case Key::MUL: return Unary::DEREF;
+        case Key::BITAND: return Unary::REF;
+        default: return Unary::INVALID;
+        }
+    }
+
+    Binary::Op binop(Key* key) {
+        if (key == nullptr)
+            return Binary::INVALID;
+
+        switch (key->key) {
+        case Key::ADD: return Binary::ADD;
+        case Key::SUB: return Binary::SUB;
+        case Key::MUL: return Binary::MUL;
+        case Key::DIV: return Binary::DIV;
+        case Key::MOD: return Binary::MOD;
+        case Key::BITAND: return Binary::BITAND;
+        case Key::BITOR: return Binary::BITOR;
+        case Key::XOR: return Binary::BITXOR;
+        case Key::AND: return Binary::AND;
+        case Key::OR: return Binary::OR;
+        case Key::SHL: return Binary::SHL;
+        case Key::SHR: return Binary::SHR;
+        case Key::LT: return Binary::LT;
+        case Key::LTE: return Binary::LTE;
+        case Key::GT: return Binary::GT;
+        case Key::GTE: return Binary::GTE;
+        case Key::EQ: return Binary::EQ;
+        case Key::NEQ: return Binary::NEQ;
+        default: return Binary::INVALID;
+        }
+    }
+
+    int assoc(int prec) {
+        return prec != P_ASSIGN;
+    }
+
     Expr* Parser::expr() {
-        return nullptr;
+        return binary(P_ASSIGN);
+    }
+
+    Expr* Parser::binary(int mprec) {
+        Expr* lhs = primary();
+
+        while (true) {
+            Token* tok = peek();
+            Key* key = dynamic_cast<Key*>(tok);
+
+            int nprec = prec(key);
+            if (nprec == P_NONE || nprec < mprec)
+                break;
+
+            next();
+
+            Expr* rhs;
+
+            if (nprec == P_TERNARY) {
+                if (eat<Key>(Key::COLON)) {
+                    rhs = new Ternary(lhs, nullptr, expr());
+                } else {
+                    Expr* it = expr();
+                    expect<Key>(Key::COLON);
+                    lhs = new Ternary(lhs, it, expr());
+                }
+            } else {
+                rhs = binary(nprec + assoc(nprec));
+                lhs = new Binary(binop(key), lhs, rhs);
+            }
+        }
+
+        return lhs;
+    }
+
+    Expr* Parser::primary() {
+        Expr* node;
+
+        if (Key* key = eat<Key>()) {
+            if (Unary::Op op = unop(key); op != Unary::INVALID) {
+                node = new Unary(op, primary());
+            } else if (key->key == Key::LPAREN) {
+                node = expr();
+                expect<Key>(Key::RPAREN);
+            } else if (key->key == Key::COERCE) {
+                expect<Key>(Key::BEGIN);
+                Type* to = type();
+                expect<Key>(Key::END);
+                expect<Key>(Key::LPAREN);
+                Expr* it = expr();
+                expect<Key>(Key::RPAREN);
+                node = new Coerce(to, it);
+            } else {
+                node = nullptr;
+            }
+        } else if (dynamic_cast<Ident*>(peek())) {
+            node = new NameExpr(qual());
+        } else if (Int* i = eat<Int>(); i) {
+            node = new IntConst(i);
+        } else {
+            node = nullptr;
+        }
+
+        return node;
     }
 
     Name* Parser::name() {
@@ -435,9 +588,9 @@ namespace cthulhu {
             vector<Type*> params = collect<Type>(Key::COMMA, [](Parser* self) {
                 return self->type();
             });
-            Key* end = expect<Key>(Key::END);
+            expect<Key>(Key::END);
 
-            return new Name(id, begin, end, params);
+            return new Name(id, params);
         } else {
             return new Name(id);
         }
