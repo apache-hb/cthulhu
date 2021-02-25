@@ -5,6 +5,10 @@
 
 #include "nodes.hpp"
 
+//
+// main lexer and stream interface
+//
+
 namespace cthulhu {
     static constexpr char32_t END = char32_t(-1);
 

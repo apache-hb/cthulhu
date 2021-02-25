@@ -19,7 +19,8 @@ endif
 
 src = [
     'cthulhu/cthulhu.cpp',
-    'cthulhu/nodes.cpp'
+    'cthulhu/nodes.cpp',
+    'cthulhu/ir.cpp'
 ]
 
 cthulhu = library('ctu', src, 

@@ -7,7 +7,6 @@
 #endif
 
 KEY(USING, "using")
-KEY(SCOPE, "scope")
 KEY(LET, "let")
 KEY(VAR, "var")
 KEY(COERCE, "coerce")

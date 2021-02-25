@@ -716,6 +716,18 @@ namespace cthulhu {
             return v;
         } 
 
+        if (Struct* s = struct_(); s) {
+            return s;
+        }
+
+        if (Union* u = union_(); u) {
+            return u;
+        }
+
+        if (Function* f = function(); f) {
+            return f;
+        }
+
         return nullptr;
     }
 
@@ -786,7 +798,20 @@ namespace cthulhu {
             return nullptr;
         }
 
-        return nullptr;
+        Ident* name = expect<Ident>();
+
+        expect<Key>(Key::LBRACE);
+
+        vector<Decl*> body;
+        Decl* it = decl();
+        while (it != nullptr) {
+            body.push_back(it);
+            it = decl();
+        }
+
+        expect<Key>(Key::RBRACE);
+
+        return new Union(name, body);
     }
 
     Decl* Parser::enum_() {
@@ -798,6 +823,83 @@ namespace cthulhu {
             // tagged union
         }
 
+        return nullptr;
+    }
+
+    Function* Parser::function() {
+        if (!eat<Key>(Key::DEF)) {
+            return nullptr;
+        }
+
+        Qual* name = qual();
+        vector<FunctionArg*> args;
+        if (eat<Key>(Key::LPAREN)) {
+            args = gather<FunctionArg>(Key::COMMA, Key::RPAREN, [](Parser* self) {
+                return self->funcArg();
+            });
+        }
+
+        Type* result = eat<Key>(Key::COLON) ? type() : nullptr;
+
+        Node* body = nullptr;
+
+        if (eat<Key>(Key::SEMI)) {
+            body = nullptr;
+        } else if (eat<Key>(Key::ASSIGN)) {
+            body = expr();
+            expect<Key>(Key::SEMI);
+        } else if (eat<Key>(Key::LPAREN)) {
+            // TODO: statements
+        }
+
+        return new Function(name, args, result, body);
+    }
+
+    FunctionArg* Parser::funcArg() {
+        Ident* name = expect<Ident>();
+        expect<Key>(Key::COLON);
+        Type* t = type();
+
+        return new FunctionArg(name, t, eat<Key>(Key::ASSIGN) ? expr() : nullptr);
+    }
+
+    Template* Parser::template_() {
+        if (!eat<Key>(Key::TEMPLATE)) {
+            return nullptr;
+        }
+
+        expect<Key>(Key::BEGIN);
+        vector<TemplateParam*> params = collect<TemplateParam>(Key::COMMA, [](Parser* self) {
+            return self->templateParam();
+        });
+        expect<Key>(Key::END);
+
+        Decl* body = decl();
+
+        return new Template(body, params);
+    }
+
+    TemplateParam* Parser::templateParam() {
+        Ident* name = expect<Ident>();
+        vector<Qual*> limits;
+        if (eat<Key>(Key::COLON)) {
+            limits = collect<Qual>(Key::ADD, [](Parser* self) {
+                return self->qual();
+            });
+        }
+
+        return new TemplateParam(name, limits);
+    }
+
+    Decorated* Parser::decorators() {
+        if (!eat<Key>(Key::AT)) {
+            return nullptr;
+        }
+
+        return nullptr;
+    }
+
+    Decorator* Parser::decorator() {
         return nullptr;
     }
 

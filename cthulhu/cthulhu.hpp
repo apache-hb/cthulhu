@@ -5,6 +5,10 @@
 #include "lexer.hpp"
 #include "ast.hpp"
 
+//
+// main parser class
+//
+
 namespace cthulhu {
     struct Parser {
         Parser(Lexer* lexer)
@@ -29,9 +33,16 @@ namespace cthulhu {
         VarName* varName();
         FunctionParam* funcParam();
 
+        Function* function();
+        FunctionArg* funcArg();
+
         Struct* struct_();
         Union* union_();
         Decl* enum_();
+        Template* template_();
+        TemplateParam* templateParam();
+        Decorated* decorators();
+        Decorator* decorator();
 
         template<typename T, typename... A>
         T* eat(A&&... args) {

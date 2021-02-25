@@ -13,6 +13,16 @@ int main() {
         let len = str.length();
 
         let slice: span!<char> = str.slice(0, 5);
+
+        struct Name {
+            var yes: int;
+        }
+
+        union Name {
+            
+        }
+
+        def fib(n: int): int = (n == 0 || n == 1) ? n : fib(n - 1) + fib(n - 2);
     )");
     auto parse = cthulhu::Parser(lex);
 

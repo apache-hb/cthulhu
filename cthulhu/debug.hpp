@@ -3,10 +3,14 @@
 #include <tinyutf8/tinyutf8.h>
 #include <vector>
 
+//
+// code for printing the ast for debugging
+//
+
+namespace utf8 = tiny_utf8;
+
 namespace cthulhu {
     using namespace std;
-
-    namespace utf8 = tiny_utf8;
 
     struct Printer {
         int depth = 0;
