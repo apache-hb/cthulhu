@@ -1,0 +1,770 @@
+#pragma once
+
+#include "nodes.hpp"
+
+namespace cthulhu {
+    using namespace std;
+
+    struct Expr;
+    struct Type;
+    struct Qual;
+    struct Decl;
+
+    struct Node {
+        virtual ~Node() { }
+
+        virtual void visit(Printer* out) const = 0;
+    };
+
+    struct Stmt : Node {
+
+    };
+
+    struct Compound : Stmt {
+        vector<Stmt*> items;
+    };
+
+    struct While : Stmt {
+        Expr* cond;
+        Stmt* body;
+    };
+
+    struct Return : Stmt {
+        Expr* expr;
+    };
+
+    struct With : Stmt {
+        Decl* init;
+        Stmt* body;
+    };
+
+    // for (var i .. range(0, 10))
+    struct ForRange : Stmt {
+        Decl* name;
+        Expr* iter;
+        Stmt* body;
+    };
+
+    // for (var i = 0; i < 10; i += 1)
+    struct ForLoop : Stmt {
+        Decl* init;
+        Expr* check;
+        Expr* next;
+        Stmt* body;
+    };
+
+    struct Expr : Stmt {
+
+    };
+
+    struct IntConst : Expr {
+        Int* num;
+
+        IntConst(Int* i)
+            : num(i)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- int");
+            out->enter([&] {
+                out->write("- value");
+                out->enter([&] {
+                    out->write(std::to_string(num->get()));
+                });
+                if (!num->suf().empty()) {
+                    out->write("- suffix");
+                    out->enter([&] {
+                        out->write(num->suf());
+                    });
+                }
+            });
+        }
+    };
+
+    struct StrConst : Expr {
+        String* val;
+
+        StrConst(String* val)
+            : val(val)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- string");
+            out->enter([&] {
+                out->write(val->get());
+            });
+        }
+    };
+
+    struct BoolConst : Expr {
+        Key* val;
+
+        BoolConst(Key* key)
+            : val(key)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- bool");
+            out->enter([&] {
+                out->write(val->key == Key::TRUE ? "true" : "false");
+            });
+        }
+    };
+
+    struct CharConst : Expr {
+        Char* val;
+
+        CharConst(Char* val)
+            : val(val)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- char");
+            out->enter([&] {
+                out->write(utf8::string(val->get()));
+            });
+        }
+    };
+
+    struct Ternary : Expr {
+        Expr* cond;
+        Expr* lhs;
+        Expr* rhs;
+
+        Ternary(Expr* cond, Expr* lhs, Expr* rhs)
+            : cond(cond)
+            , lhs(lhs)
+            , rhs(rhs)
+        { }
+
+        virtual void visit(Printer* out) const override  {
+            out->write("- ternary");
+            out->enter([&] {
+                out->write("- condition");
+                out->enter([&] {
+                    cond->visit(out);
+                });
+                
+                if (lhs) {
+                    out->write("- true");
+                    out->enter([&] {
+                        lhs->visit(out);
+                    });
+                }
+
+                out->write("- false");
+                out->enter([&] {
+                    rhs->visit(out);
+                });
+            });
+        }
+    };
+
+    struct Subscript : Expr {
+        Expr* expr;
+        Expr* index;
+
+        Subscript(Expr* expr, Expr* index)
+            : expr(expr)
+            , index(index)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- subscript");
+            out->enter([&] {
+                out->write("- expr");
+                out->enter([&] {
+                    expr->visit(out);
+                });
+
+                out->write("- index");
+                out->enter([&] {
+                    index->visit(out);
+                });
+            });
+        }
+    };
+
+    struct Unary : Expr {
+        enum Op {
+            INVALID,
+            NOT, // !
+            FLIP, // ~
+            POS, // + 
+            NEG, // -
+            DEREF, // *
+            REF // &
+        };
+
+        Op op;
+        Expr* expr;
+
+        Unary(Op op, Expr* expr)
+            : op(op)
+            , expr(expr)
+        { }
+
+        const char* str() const { 
+            switch (op) {
+            case NOT: return "NOT";
+            case FLIP: return "FLIP";
+            case POS: return "POS";
+            case NEG: return "NEG";
+            case DEREF: return "DEREF";
+            case REF: return "REF";
+            default: return "INVALID";
+            }
+        }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- unary");
+            out->enter([&] {
+                out->write("- op");
+                out->enter([&] {
+                    out->write(str());
+                });
+            });
+        }
+    };
+
+    struct Binary : Expr {
+        enum Op {
+            INVALID,
+            ADD, // +
+            SUB, // -
+            MUL, // *
+            DIV, // /
+            MOD, // %
+            BITAND, // &
+            BITOR, // |
+            BITXOR, // ^
+            AND, // &&
+            OR, // ||
+            SHL, // <<
+            SHR, // >>
+            LT, // <
+            LTE, // <=
+            GT, // >
+            GTE, // >=
+            EQ, // ==
+            NEQ, // !=
+            MACRO // !
+        };
+
+        Op op;
+        Expr* lhs;
+        Expr* rhs;
+
+        Binary(Op op, Expr* lhs, Expr* rhs)
+            : op(op)
+            , lhs(lhs)
+            , rhs(rhs)
+        { }
+
+        const char* str() const { 
+            switch (op) {
+            case ADD: return "ADD";
+            case SUB: return "SUB";
+            case MUL: return "MUL";
+            case DIV: return "DIV";
+            case MOD: return "MOD";
+            case BITAND: return "BITAND";
+            case BITOR: return "BITOR";
+            case BITXOR: return "XOR";
+            case AND: return "AND";
+            case OR: return "OR";
+            case SHL: return "SHL";
+            case SHR: return "SHR";
+            case LT: return "LT";
+            case LTE: return "LTE";
+            case GT: return "GT";
+            case GTE: return "GTE";
+            case EQ: return "EQ";
+            case NEQ: return "NEQ";
+            case MACRO: return "MACRO";
+            default: return "INVALID";
+            }
+        }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- binary");
+            out->enter([&] {
+                out->write("- op");
+                out->enter([&] {
+                    out->write(str());
+                });
+                out->write("- lhs");
+                out->enter([&] {
+                    lhs->visit(out);
+                });
+                out->write("- rhs");
+                out->enter([&] {
+                    rhs->visit(out);
+                });
+            });
+        }
+    };
+
+    struct Type : Node {
+
+    };
+
+    struct Name : Type {
+        Name(Ident* tok)
+            : name(tok)
+        { }
+
+        Name(Ident* tok, vector<Type*> params)
+            : params(params)
+            , name(tok)
+        { }
+
+        vector<Type*> params;
+
+        Ident* name;
+
+        virtual void visit(Printer* out) const override {
+            out->write("- name");
+            out->enter([&] {
+                out->write(name->get());
+                
+                if (!params.empty()) {
+                    out->write("- params");
+                    out->enter([&] {
+                        for (Type* type : params) {
+                            type->visit(out);
+                        }
+                    });
+                }
+            });
+        }
+    };
+
+    struct Qual : Type {
+        Qual(vector<Name*> names)
+            : names(names)
+        { }
+
+        vector<Name*> names;
+        
+        virtual void visit(Printer* out) const override {
+            out->write("- qual");
+            out->enter([&] {
+                for (Name* name : names) {
+                    name->visit(out);
+                }
+            });
+        }
+    };
+
+    struct Pointer : Type {
+        Pointer(Type* type)
+            : type(type)
+        { }
+
+        Type* type;
+
+        virtual void visit(Printer* out) const override {
+            out->write("- pointer");
+            out->enter([&] {
+                type->visit(out);
+            });
+        }
+    };
+
+    struct Array : Type {
+        Array(Type* type, Expr* size)
+            : type(type)
+            , size(size)
+        { }
+
+        Type* type;
+        Expr* size;
+
+        virtual void visit(Printer* out) const override {
+            out->write("- array");
+            out->enter([&] {
+                out->write("- type");
+                out->enter([&] {
+                    type->visit(out);
+                });
+
+                if (size) {
+                    out->write("- size");
+                    out->enter([&] {
+                        size->visit(out);
+                    });
+                }
+            });
+        }
+    };
+
+    struct Closure : Type {
+        Type* type;
+        vector<Type*> params;
+
+        Closure(Type* type, vector<Type*> params)
+            : type(type)
+            , params(params)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- closure");
+            out->enter([&] {
+                out->write("- result");
+                out->enter([&] {
+                    type->visit(out);
+                });
+
+                out->write("- args");
+                out->enter([&] {
+                    for (Type* type : params) {
+                        type->visit(out);
+                    }
+                });
+            });
+        }
+    };
+
+    struct Coerce : Expr {
+        Type* type;
+        Expr* expr;
+
+        Coerce(Type* type, Expr* expr)
+            : type(type)
+            , expr(expr)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- coerce");
+            out->enter([&] {
+                out->write("- type");
+                out->enter([&] {
+                    type->visit(out);
+                });
+                out->write("- expr");
+                out->enter([&] {
+                    expr->visit(out);
+                });
+            });
+        }
+    };
+
+    struct NameExpr : Expr {
+        Qual* name;
+
+        NameExpr(Qual* qual)
+            : name(qual)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- name");
+            out->enter([&] {
+                name->visit(out);
+            });
+        }
+    };
+
+    struct FunctionParam : Node {
+        Ident* key;
+        Expr* expr;
+
+        FunctionParam(Ident* key, Expr* expr)
+            : key(key)
+            , expr(expr)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- param");
+            out->enter([&] {
+                if (key) {
+                    out->write("- key");
+                    out->enter([&] {
+                        out->write(key->get());
+                    });
+                }
+
+                out->write("- expr");
+                out->enter([&] {
+                    expr->visit(out);
+                });
+            });
+        }
+    };
+
+    struct Call : Expr {
+        Expr* expr;
+        vector<FunctionParam*> args;
+
+        Call(Expr* expr, vector<FunctionParam*> args)
+            : expr(expr)
+            , args(args)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- call");
+            out->enter([&] {
+                out->write("- function");
+                out->enter([&] {
+                    expr->visit(out);
+                });
+
+                out->write("- args");
+                out->enter([&] {
+                    for (FunctionParam* arg : args) {
+                        arg->visit(out);
+                    }
+                });
+            });
+        }
+    };
+
+    struct Dot : Expr {
+        Expr* lhs;
+        Ident* name;
+        bool ptr;
+
+        Dot(Expr* lhs, Ident* name, bool ptr)
+            : lhs(lhs)
+            , name(name)
+            , ptr(ptr)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- dot");
+            out->enter([&] {
+                out->write("- expr");
+                out->enter([&] {
+                    lhs->visit(out);
+                });
+                out->write("- field");
+                out->enter([&] {
+                    out->write(name->get());
+                });
+                out->write("- indirect");
+                out->enter([&] {
+                    out->write(ptr ? "true" : "false");
+                });
+            });
+        }
+    };
+
+    struct Decl : Node {
+
+    };
+
+    struct Import : Decl {
+        vector<Ident*> path;
+        vector<Ident*> items;
+        bool block;
+
+        Import(vector<Ident*> path)
+            : path(path)
+            , items({})
+            , block(true)
+        { }
+
+        Import(vector<Ident*> path, vector<Ident*> items)
+            : path(path)
+            , items(items)
+            , block(false)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- import");
+            out->enter([&] {
+                out->write("- path");
+                out->enter([&] {
+                    for (Ident* ident : path) {
+                        out->write(ident->get());
+                    }
+                });
+
+                if (block) {
+                    out->write("- block");
+                } else {
+                    out->write("- items");
+                    out->enter([&] {
+                        if (items.empty()) {
+                            out->write("...");
+                        } else {
+                            for (Ident* ident : items) {
+                                out->write(ident->get());
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    };
+
+    struct Alias : Decl {
+        Ident* name;
+        Type* type;
+
+        Alias(Ident* name, Type* type)
+            : name(name)
+            , type(type)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- alias");
+            out->enter([&] {
+                out->write("- name");
+                out->enter([&] {
+                    out->write(name->get());
+                });
+                out->write("- type");
+                out->enter([&] {
+                    type->visit(out);
+                });
+            });
+        }
+    };
+
+    struct VarName : Decl {
+        Ident* name;
+        Type* type;
+
+        VarName(Ident* name, Type* type)
+            : name(name)
+            , type(type)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- name");
+            out->enter([&] {
+                out->write(name->get());
+            });
+
+            if (type) {
+                out->write("- type");
+                out->enter([&] {
+                    type->visit(out);
+                });
+            }
+        }
+    };
+
+    struct Var : Decl {
+        vector<VarName*> names;
+        Expr* expr;
+        bool mut;
+
+        Var(vector<VarName*> names, Expr* expr, bool mut)
+            : names(names)
+            , expr(expr)
+            , mut(mut)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- variable");
+            out->enter([&] {
+                out->write("- mutable");
+                out->enter([&] {
+                    out->write(mut ? "true" : "false");
+                });
+                
+                out->write("- names");
+                out->enter([&] {
+                    for (VarName* name : names) {
+                        name->visit(out);
+                    }
+                });
+
+                if (expr) {
+                    out->write("- init");
+                    out->enter([&] {
+                        expr->visit(out);
+                    });
+                }
+            });
+        }
+    };
+
+    struct Decorator : Decl {
+        Qual* name;
+        vector<FunctionParam*> params;
+    };
+
+    struct Decorated : Decl {
+        vector<Decorator*> decorators;
+        Decl* item;
+    };
+
+    struct FunctionArg : Node {
+        Ident* name;
+        Type* type;
+        Expr* init;
+    };
+
+    struct Function : Decl {
+        Ident* name;
+        Qual* parent;
+        vector<FunctionArg*> args;
+        Type* result;
+        Node* body;
+    };
+
+    struct Struct : Decl {
+        Ident* name;
+        vector<Decl*> fields;
+
+        Struct(Ident* name, vector<Decl*> fields)
+            : name(name)
+            , fields(fields)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- struct");
+            out->enter([&] {
+                out->write(name->get());
+            });
+        }
+    };
+
+    struct Union : Decl {
+        vector<Decl*> fields;
+    };
+
+    struct Enum : Decl {
+        vector<Decl*> fields;
+    };
+
+    struct TaggedEnum : Decl {
+        vector<Decl*> fields;
+    };
+
+    struct TemplateParam : Node {
+        Ident* name;
+        vector<Qual*> constraints;
+    };
+
+    struct Template : Decl {
+        Decl* of;
+        vector<TemplateParam*> params;
+    };
+
+    struct Unit : Node {
+        vector<Import*> includes;
+        vector<Decl*> decls;
+
+        Unit(vector<Import*> includes, vector<Decl*> decls)
+            : includes(includes)
+            , decls(decls)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- unit");
+            out->enter([&] {
+                for (Import* include : includes) {
+                    include->visit(out);
+                }
+
+                for (Decl* decl : decls) {
+                    decl->visit(out);
+                }
+            });
+        }
+    };
+}

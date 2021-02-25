@@ -407,6 +407,35 @@ namespace cthulhu {
     /// parsing logic
     ///
 
+    Unit* Parser::unit() {
+        vector<Import*> includes;
+        vector<Decl*> decls;
+
+        while (true) {
+            Decl* it = include();
+            if (!it) {
+                break;
+            }
+
+            if (dynamic_cast<Alias*>(it)) {
+                decls.push_back(it);
+                break;
+            } else {
+                includes.push_back(dynamic_cast<Import*>(it));
+            }
+        }
+
+        while (true) {
+            Decl* d = decl();
+            if (!d) {
+                break;
+            }
+            decls.push_back(d);
+        }
+
+        return new Unit(includes, decls);
+    }
+
     Type* Parser::type() {
         Type* out = nullptr;
 
@@ -444,6 +473,7 @@ namespace cthulhu {
         P_NONE = 0,
 
         P_ASSIGN,
+        P_MACRO,
         P_TERNARY,
         P_LOGIC,
         P_EQUAL,
@@ -475,6 +505,8 @@ namespace cthulhu {
             return P_BITS;
         case Key::QUESTION:
             return P_TERNARY;
+        case Key::NOT:
+            return P_MACRO;
         default: 
             return P_NONE;
         }
@@ -518,6 +550,7 @@ namespace cthulhu {
         case Key::GTE: return Binary::GTE;
         case Key::EQ: return Binary::EQ;
         case Key::NEQ: return Binary::NEQ;
+        case Key::NOT: return Binary::MACRO;
         default: return Binary::INVALID;
         }
     }
@@ -562,6 +595,16 @@ namespace cthulhu {
         return lhs;
     }
 
+    FunctionParam* Parser::funcParam() {
+        if (eat<Key>(Key::DOT)) {
+            Ident* key = expect<Ident>();
+            expect<Key>(Key::ASSIGN);
+            return new FunctionParam(key, expr());
+        } else {
+            return new FunctionParam(nullptr, expr());
+        }
+    }
+
     Expr* Parser::primary() {
         Expr* node;
 
@@ -579,6 +622,8 @@ namespace cthulhu {
                 Expr* it = expr();
                 expect<Key>(Key::RPAREN);
                 node = new Coerce(to, it);
+            } else if (key->key == Key::TRUE || key->key == Key::FALSE) {
+                node = new BoolConst(key);
             } else {
                 node = nullptr;
             }
@@ -586,6 +631,10 @@ namespace cthulhu {
             node = new NameExpr(qual());
         } else if (Int* i = eat<Int>(); i) {
             node = new IntConst(i);
+        } else if (String* s = eat<String>(); s) {
+            node = new StrConst(s);
+        } else if (Char* c = eat<Char>(); c) {
+            node = new CharConst(c);
         } else {
             node = nullptr;
         }
@@ -595,8 +644,8 @@ namespace cthulhu {
                 node = new Subscript(node, expr());
                 expect<Key>(Key::RSQUARE);
             } else if (Key* lparen = eat<Key>(Key::LPAREN); lparen) {
-                node = new Call(node, gather<Expr>(Key::COMMA, Key::RPAREN, [](Parser* self) {
-                    return self->expr();
+                node = new Call(node, gather<FunctionParam>(Key::COMMA, Key::RPAREN, [](Parser* self) {
+                    return self->funcParam();
                 }));
             } else if (Key* dot = eat<Key>(Key::DOT); dot) {
                 node = new Dot(node, expect<Ident>(), false);
@@ -631,7 +680,9 @@ namespace cthulhu {
     }
 
     Decl* Parser::include() {
-        expect<Key>(Key::USING);
+        if (!eat<Key>(Key::USING)) {
+            return nullptr;
+        }
         vector<Ident*> path = collect<Ident>(Key::COLON2, [](Parser* self) {
             return self->expect<Ident>();
         });
@@ -657,16 +708,21 @@ namespace cthulhu {
     }
 
     Decl* Parser::decl() {
-        if (Key* a = eat<Key>(Key::USING); a) {
-            return alias();
-        } else if (Key* l = eat<Key>(Key::LET); l) {
-            return var();
-        } else {
-            return nullptr;
-        }
+        if (Alias* a = alias(); a) {
+            return a;
+        } 
+
+        if (Var* v = var(); v) {
+            return v;
+        } 
+
+        return nullptr;
     }
 
     Alias* Parser::alias() {
+        if (!eat<Key>(Key::USING)) {
+            return nullptr;
+        }
         Ident* name = expect<Ident>();
         expect<Key>(Key::ASSIGN);
         Type* it = type();
@@ -676,6 +732,15 @@ namespace cthulhu {
     }
 
     Var* Parser::var() {
+        bool mut;
+        if (eat<Key>(Key::LET)) {
+            mut = false;
+        } else if (eat<Key>(Key::VAR)) {
+            mut = true;
+        } else {
+            return nullptr;
+        }
+
         vector<VarName*> names;
         if (eat<Key>(Key::LSQUARE)) {
             names = gather<VarName>(Key::COMMA, Key::RSQUARE, [](Parser* self) {
@@ -685,7 +750,7 @@ namespace cthulhu {
             names = { varName() };
         }
 
-        Var* out = new Var(names, eat<Key>(Key::ASSIGN) ? expr() : nullptr);
+        Var* out = new Var(names, eat<Key>(Key::ASSIGN) ? expr() : nullptr, mut);
         expect<Key>(Key::SEMI);
         return out;
     }
@@ -693,6 +758,47 @@ namespace cthulhu {
     VarName* Parser::varName() {
         Ident* n = expect<Ident>();
         return new VarName(n, eat<Key>(Key::COLON) ? type() : nullptr);
+    }
+
+    Struct* Parser::struct_() {
+        if (!eat<Key>(Key::STRUCT)) {
+            return nullptr;
+        }
+
+        Ident* name = expect<Ident>();
+
+        expect<Key>(Key::LBRACE);
+
+        vector<Decl*> body;
+        Decl* it = decl();
+        while (it != nullptr) {
+            body.push_back(it);
+            it = decl();
+        }
+
+        expect<Key>(Key::RBRACE);
+
+        return new Struct(name, body);
+    }
+
+    Union* Parser::union_() {
+        if (!eat<Key>(Key::UNION)) {
+            return nullptr;
+        }
+
+        return nullptr;
+    }
+
+    Decl* Parser::enum_() {
+        if (!eat<Key>(Key::ENUM)) {
+            return nullptr;
+        }
+
+        if (eat<Key>(Key::UNION)) {
+            // tagged union
+        }
+
+        return nullptr;
     }
 
     ///
