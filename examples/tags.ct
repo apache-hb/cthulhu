@@ -1,0 +1,32 @@
+enum Error {
+    OK,
+    YES,
+    NO
+
+    def str: *char {
+        if (*self == OK) {
+            return "ok";
+        } else if (*self == YES) {
+            return "yes";
+        } else if (*self == NO) {
+            return "no";
+        } else {
+            return "invalid";
+        }
+    }
+}
+
+enum union Message {
+    OK { name: *char },
+    FAIL { err: Error }
+
+    def str: *char {
+        if (*self == OK) {
+            return self->name;
+        } else if (*self == FAIL) {
+            return self->err.str();
+        } else {
+            return "invalid";
+        }
+    }
+}

@@ -17,7 +17,12 @@ if meson.get_compiler('cpp').get_id() == 'msvc'
     args += [ '/wd4244', '/wd4127', '/wd4996' ]
 endif
 
-cthulhu = library('ctu', 'cthulhu/cthulhu.cpp', 
+src = [
+    'cthulhu/cthulhu.cpp',
+    'cthulhu/nodes.cpp'
+]
+
+cthulhu = library('ctu', src, 
     dependencies : deps,
     cpp_args : args
 )
