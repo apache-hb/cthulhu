@@ -19,12 +19,12 @@ namespace cthulhu::ir {
     // and all dependencies
     // is this a slow way of managing stuff? yeah probably
     // but this compiler is for self hosting, not for being good
+    struct Function {
+
+    };
+    
     struct Unit {
         
-    };
-
-    struct Type {
-
     };
 
     Unit validate(cthulhu::Unit* root, Unit(*include)(vector<utf8::string>));

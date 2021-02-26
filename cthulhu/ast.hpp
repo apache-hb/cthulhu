@@ -26,35 +26,19 @@ namespace cthulhu {
 
     struct Compound : Stmt {
         vector<Stmt*> items;
-    };
 
-    struct While : Stmt {
-        Expr* cond;
-        Stmt* body;
-    };
+        Compound(vector<Stmt*> stmts)
+            : items(stmts)
+        { }
 
-    struct Return : Stmt {
-        Expr* expr;
-    };
-
-    struct With : Stmt {
-        Decl* init;
-        Stmt* body;
-    };
-
-    // for (var i .. range(0, 10))
-    struct ForRange : Stmt {
-        Decl* name;
-        Expr* iter;
-        Stmt* body;
-    };
-
-    // for (var i = 0; i < 10; i += 1)
-    struct ForLoop : Stmt {
-        Decl* init;
-        Expr* check;
-        Expr* next;
-        Stmt* body;
+        virtual void visit(Printer* out) const override {
+            out->write("- compound");
+            out->enter([&] {
+                for (Stmt* stmt : items) {
+                    stmt->visit(out);
+                }
+            });
+        }
     };
 
     struct Expr : Stmt {
@@ -234,6 +218,16 @@ namespace cthulhu {
     struct Binary : Expr {
         enum Op {
             INVALID,
+            ADDEQ, // +=
+            SUBEQ, // -=
+            DIVEQ, // /=
+            MULEQ, // *=
+            MODEQ, // %=
+            BITANDEQ, // &=
+            BITOREQ, // |=
+            BITXOREQ, // ^=
+            SHLEQ, // <<=
+            SHREQ, // >>=
             ADD, // +
             SUB, // -
             MUL, // *
@@ -267,6 +261,16 @@ namespace cthulhu {
 
         const char* str() const { 
             switch (op) {
+            case ADDEQ: return "ADDEQ";
+            case SUBEQ: return "SUBEQ";
+            case DIVEQ: return "DIVEQ";
+            case MULEQ: return "MULEQ";
+            case MODEQ: return "MODEQ";
+            case BITANDEQ: return "BITANDEQ";
+            case BITOREQ: return "BITOREQ";
+            case BITXOREQ: return "BITXOREQ";
+            case SHLEQ: return "SHLEQ";
+            case SHREQ: return "SHREQ";
             case ADD: return "ADD";
             case SUB: return "SUB";
             case MUL: return "MUL";
@@ -551,6 +555,103 @@ namespace cthulhu {
                 });
             });
         }
+    };
+
+    struct Return : Stmt {
+        Expr* expr;
+
+        Return(Expr* expr)
+            : expr(expr)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- return");
+            if (expr) {
+                out->enter([&] {
+                    expr->visit(out);
+                });
+            }
+        }
+    };
+    
+    struct While : Stmt {
+        Expr* cond;
+        Stmt* body;
+
+        While(Expr* cond, Stmt* body)
+            : cond(cond)
+            , body(body)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- while");
+            out->enter([&] {
+                out->write("- cond");
+                out->enter([&] {
+                    cond->visit(out);
+                });
+                out->write("- body");
+                out->enter([&] {
+                    body->visit(out);
+                });
+            });
+        }
+    };
+
+    // for (var i .. range(0, 10))
+    struct ForRange : Stmt {
+        Decl* name;
+        Expr* iter;
+        Stmt* body;
+    };
+
+    // for (var i = 0; i < 10; i += 1)
+    struct ForLoop : Stmt {
+        Decl* init;
+        Expr* check;
+        Expr* next;
+        Stmt* body;
+    };
+
+    struct If : Stmt {
+        struct Branch {
+            Expr* cond;
+            Stmt* body;
+        };
+
+        vector<Branch> branches;
+
+        If(vector<Branch> branches)
+            : branches(branches)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- branch");
+            out->enter([&] {
+                for (Branch branch : branches) {
+                    if (branch.cond) {
+                        out->write("- if");
+                        out->enter([&] {
+                            branch.cond->visit(out);
+                        });
+                    } else {
+                        out->write("- else");
+                    }
+                    out->enter([&] {
+                        branch.body->visit(out);
+                    });
+                }
+            });
+        }
+    };
+
+    struct Switch : Stmt {
+        struct Case {
+            Expr* expr;
+            Stmt* body;
+        };
+
+        vector<Case> cases;
     };
 
     struct Decl : Node {

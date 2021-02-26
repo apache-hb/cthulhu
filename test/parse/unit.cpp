@@ -5,6 +5,7 @@ int main() {
         using std::mem(stack);
         using std::atomic(...);
 
+        # hello
         using atomic_unit = atomic!<uint>;
 
         let counter = atomic_uint(0);
