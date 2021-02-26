@@ -5,3 +5,4 @@ test('symbol', executable('symbol', 'lex/symbol.cpp', cpp_args : args, dependenc
 
 test('type', executable('type', 'parse/type.cpp', cpp_args : args, dependencies : ctu))
 test('unit', executable('unit', 'parse/unit.cpp', cpp_args : args, dependencies : ctu))
+test('full', executable('full', 'parse/full.cpp', cpp_args : args, dependencies : ctu))

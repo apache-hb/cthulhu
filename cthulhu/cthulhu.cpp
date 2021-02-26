@@ -125,8 +125,16 @@ namespace cthulhu {
     char32_t Lexer::skip() {
         char32_t c = next();
 
-        while (whitespace(c)) {
-            c = next();
+        while (true) {
+            if (c == '#') {
+                while (c != '\n') {
+                    c = next();
+                }
+            } else if (!whitespace(c)) {
+                break;
+            } else {
+                c = next();
+            }
         }
 
         return c;
@@ -489,6 +497,11 @@ namespace cthulhu {
             return P_NONE;
 
         switch (word->key) {
+        case Key::ADDEQ: case Key::SUBEQ: case Key::DIVEQ: 
+        case Key::MODEQ: case Key::MULEQ: case Key::BITANDEQ:
+        case Key::BITOREQ: case Key::XOREQ: case Key::SHLEQ:
+        case Key::SHREQ:
+            return P_ASSIGN;
         case Key::ADD: case Key::SUB:
             return P_MATH;
         case Key::MUL: case Key::DIV: case Key::MOD:
@@ -532,6 +545,16 @@ namespace cthulhu {
             return Binary::INVALID;
 
         switch (key->key) {
+        case Key::ADDEQ: return Binary::ADDEQ;
+        case Key::SUBEQ: return Binary::SUBEQ;
+        case Key::DIVEQ: return Binary::DIVEQ;
+        case Key::MULEQ: return Binary::MULEQ;
+        case Key::MODEQ: return Binary::MODEQ;
+        case Key::BITANDEQ: return Binary::BITANDEQ;
+        case Key::BITOREQ: return Binary::BITOREQ;
+        case Key::XOREQ: return Binary::BITXOREQ;
+        case Key::SHLEQ: return Binary::SHLEQ;
+        case Key::SHREQ: return Binary::SHREQ;
         case Key::ADD: return Binary::ADD;
         case Key::SUB: return Binary::SUB;
         case Key::MUL: return Binary::MUL;
@@ -637,6 +660,10 @@ namespace cthulhu {
             node = new CharConst(c);
         } else {
             node = nullptr;
+        }
+
+        if (node == nullptr) {
+            return nullptr;
         }
 
         while (true) {
@@ -841,18 +868,134 @@ namespace cthulhu {
 
         Type* result = eat<Key>(Key::COLON) ? type() : nullptr;
 
-        Node* body = nullptr;
+        Node* body;
 
         if (eat<Key>(Key::SEMI)) {
             body = nullptr;
         } else if (eat<Key>(Key::ASSIGN)) {
             body = expr();
             expect<Key>(Key::SEMI);
-        } else if (eat<Key>(Key::LPAREN)) {
-            // TODO: statements
+        } else {
+            body = compound();
+
+            if (body == nullptr) {
+                printf("malformed function\n");
+                exit(1);
+            }
         }
 
         return new Function(name, args, result, body);
+    }
+
+    Stmt* Parser::stmt() {
+        if (Stmt* s = compound(); s) {
+            return s;
+        }  
+
+        if (Stmt* s = while_(); s) {
+            return s;
+        }
+
+        if (Stmt* s = return_(); s) {
+            return s;
+        }
+
+        if (Stmt* s = for_(); s) {
+            return s;
+        }
+
+        if (Stmt* s = if_(); s) {
+            return s;
+        }
+
+        if (Stmt* s = switch_(); s) {
+            return s;
+        }
+
+        return expr();
+    }
+
+    Stmt* Parser::compound() {
+        if (!eat<Key>(Key::LBRACE)) {
+            return nullptr;
+        } 
+
+        vector<Stmt*> stmts;
+
+        while (!eat<Key>(Key::RBRACE)) {
+            Stmt* s = stmt();
+            if (!s) {
+                expect<Key>(Key::RBRACE);
+                break;
+            }
+            stmts.push_back(s);
+        }
+
+        return new Compound(stmts);
+    }
+
+    Stmt* Parser::while_() {
+        if (!eat<Key>(Key::WHILE)) {
+            return nullptr;
+        }  
+
+        expect<Key>(Key::LPAREN);
+        Expr* cond = expr();
+        expect<Key>(Key::RPAREN);
+        Stmt* body = stmt();
+
+        return new While(cond, body);
+    }
+
+    Stmt* Parser::return_() {
+        if (!eat<Key>(Key::RETURN)) {
+            return nullptr;
+        }
+
+        Expr* it = expr();
+        expect<Key>(Key::SEMI);
+
+        return new Return(it);
+    }
+
+    Stmt* Parser::for_() {
+        return nullptr;    
+    }
+
+    Stmt* Parser::if_() {
+        if (!eat<Key>(Key::IF)) {
+            return nullptr;
+        }
+
+        expect<Key>(Key::LPAREN);
+        Expr* cond = expr();
+        expect<Key>(Key::RPAREN);
+        Stmt* body = stmt();
+
+        vector<If::Branch> branches;
+
+        branches.push_back({ cond, body });
+
+        while (eat<Key>(Key::ELSE)) {
+            if (eat<Key>(Key::IF)) {
+                expect<Key>(Key::LPAREN);
+                cond = expr();
+                expect<Key>(Key::RPAREN);
+                body = stmt();
+
+                branches.push_back({ cond, body });
+            } else {
+                body = stmt();
+                branches.push_back({ nullptr, body });
+                break;
+            }
+        }
+
+        return new If(branches);
+    }
+
+    Stmt* Parser::switch_() {
+        return nullptr;    
     }
 
     FunctionArg* Parser::funcArg() {

@@ -1,0 +1,81 @@
+- unit
+  - struct something
+    - fields
+      - function
+        - name
+          - qual
+            - name
+              new
+        - args
+          - arg i
+            - type
+              - qual
+                - name
+                  int
+        - result
+          - qual
+            - name
+              type
+        - body
+          - compound
+            - branch
+              - if
+                - binary
+                  - op
+                    GT
+                  - lhs
+                    - name
+                      - qual
+                        - name
+                          i
+                  - rhs
+                    - int
+                      - value
+                        100
+                - compound
+              - if
+                - binary
+                  - op
+                    EQ
+                  - lhs
+                    - name
+                      - qual
+                        - name
+                          i
+                  - rhs
+                    - int
+                      - value
+                        200
+                - compound
+              - if
+                - binary
+                  - op
+                    EQ
+                  - lhs
+                    - binary
+                      - op
+                        MOD
+                      - lhs
+                        - name
+                          - qual
+                            - name
+                              i
+                      - rhs
+                        - int
+                          - value
+                            10
+                  - rhs
+                    - int
+                      - value
+                        2
+                - compound
+              - else
+                - compound
+            - return
+              - call
+                - function
+                  - name
+                    - qual
+                      - name
+                        hello
+                - args

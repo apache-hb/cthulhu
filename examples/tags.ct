@@ -1,32 +1,19 @@
-enum Error {
-    OK,
-    YES,
-    NO
+# hello world
+# here are some comments
+# using a::b::c(a, b, c);
 
-    def str: *char {
-        if (*self == OK) {
-            return "ok";
-        } else if (*self == YES) {
-            return "yes";
-        } else if (*self == NO) {
-            return "no";
+struct something {
+    def new(i: int): type {
+        if (i > 100) {
+
+        } else if (i == 200) {
+
+        } else if (i % 10 == 2) {
+
         } else {
-            return "invalid";
+            
         }
-    }
-}
-
-enum union Message {
-    OK { name: *char },
-    FAIL { err: Error }
-
-    def str: *char {
-        if (*self == OK) {
-            return self->name;
-        } else if (*self == FAIL) {
-            return self->err.str();
-        } else {
-            return "invalid";
-        }
+        
+        return hello();
     }
 }

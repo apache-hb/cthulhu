@@ -36,6 +36,14 @@ namespace cthulhu {
         Function* function();
         FunctionArg* funcArg();
 
+        Stmt* stmt();
+        Stmt* compound();
+        Stmt* while_();
+        Stmt* return_();
+        Stmt* for_();
+        Stmt* if_();
+        Stmt* switch_();
+
         Struct* struct_();
         Union* union_();
         Decl* enum_();
