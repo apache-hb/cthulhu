@@ -1,19 +1,23 @@
-# hello world
-# here are some comments
-# using a::b::c(a, b, c);
+using ext::hlsl(float2, float3, float4, float4x4, mul);
 
-struct something {
-    def new(i: int): type {
-        if (i > 100) {
-
-        } else if (i == 200) {
-
-        } else if (i % 10 == 2) {
-
-        } else {
-            
-        }
-        
-        return hello();
-    }
+@[cbuffer, register(b0)]
+struct cb0 {
+    var worldViewProj: float4x4;
 }
+
+struct VSInput {
+    @name(POSITION) var position: float3;
+    @name(NORMAL) var normal: float3;
+    @name(TEXCOORD0) var uv: float2;
+    @name(TANGENT) var tangent: float3;
+}
+
+struct PSInput {
+    @name(SV_POSITION) var position: float4;
+    @name(TEXCOORD0) var uv: float2;
+}
+
+def VSMain(input: VSInput): PSInput = PSInput(
+    .position = mul(float4(input.position, 1.f), cb0::worldViewProj), 
+    .uv = input.uv
+);

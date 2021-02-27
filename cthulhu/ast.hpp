@@ -790,11 +790,54 @@ namespace cthulhu {
     struct Decorator : Decl {
         Qual* name;
         vector<FunctionParam*> params;
+
+        Decorator(Qual* name, vector<FunctionParam*> params)
+            : name(name)
+            , params(params)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- decorator");
+            out->enter([&] {
+                out->write("- name");
+                out->enter([&] {
+                    name->visit(out);
+                });
+
+                out->enter([&] {
+                    out->write("- params");
+                    out->enter([&] {
+                        for (FunctionParam* param : params) {
+                            param->visit(out);
+                        }
+                    });
+                });
+            });
+        }
     };
 
     struct Decorated : Decl {
         vector<Decorator*> decorators;
         Decl* item;
+
+        Decorated(vector<Decorator*> decorators, Decl* item)
+            : decorators(decorators)
+            , item(item)
+        { }
+
+        virtual void visit(Printer* out) const override {
+            out->write("- decorated");
+            out->enter([&] {
+                for (Decorator* decorator : decorators) {
+                    decorator->visit(out);
+                }
+
+                out->write("- decl");
+                out->enter([&] {
+                    item->visit(out);
+                });
+            });
+        }
     };
 
     struct FunctionArg : Node {

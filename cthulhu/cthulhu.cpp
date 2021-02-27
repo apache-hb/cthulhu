@@ -265,6 +265,10 @@ namespace cthulhu {
             Key::Word key = Key::INVALID;
 
             switch (c) {
+            case '@':
+                key = Key::AT;
+                break;
+                
             case '[':
                 key = Key::LSQUARE;
                 break;
@@ -735,6 +739,10 @@ namespace cthulhu {
     }
 
     Decl* Parser::decl() {
+        if (Decorated* d = decorators(); d) {
+            return d;
+        }
+
         if (Alias* a = alias(); a) {
             return a;
         } 
@@ -1035,15 +1043,36 @@ namespace cthulhu {
     }
 
     Decorated* Parser::decorators() {
-        if (!eat<Key>(Key::AT)) {
-            return nullptr;
+        bool found = false;
+
+        vector<Decorator*> decorators;
+
+        while (eat<Key>(Key::AT)) {
+            found = true;
+
+            if (eat<Key>(Key::LSQUARE)) {
+                do {
+                    decorators.push_back(decorator());
+                } while (eat<Key>(Key::COMMA));
+                expect<Key>(Key::RSQUARE);
+            } else {
+                decorators.push_back(decorator());
+            }
         }
 
-        return nullptr;
+        return found ? new Decorated(decorators, decl()) : nullptr;
     }
 
     Decorator* Parser::decorator() {
-        return nullptr;
+        Qual* name = qual();
+        vector<FunctionParam*> params;
+        if (Key* lparen = eat<Key>(Key::LPAREN); lparen) {
+            params = gather<FunctionParam>(Key::COMMA, Key::RPAREN, [](Parser* self) {
+                return self->funcParam();
+            });
+        }
+
+        return new Decorator(name, params);
     }
 
     ///
