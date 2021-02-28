@@ -55,10 +55,7 @@ namespace cthulhu {
         virtual void visit(Printer* out) const override {
             out->write("- int");
             out->enter([&] {
-                out->write("- value");
-                out->enter([&] {
-                    out->write(std::to_string(num->get()));
-                });
+                out->write("- value `" + std::to_string(num->get()) + "`");
                 if (!num->suf().empty()) {
                     out->write("- suffix");
                     out->enter([&] {
@@ -77,10 +74,7 @@ namespace cthulhu {
         { }
 
         virtual void visit(Printer* out) const override {
-            out->write("- string");
-            out->enter([&] {
-                out->write(val->get());
-            });
+            out->write("- string \"" + val->get() + "\"");
         }
     };
 
@@ -92,10 +86,7 @@ namespace cthulhu {
         { }
 
         virtual void visit(Printer* out) const override {
-            out->write("- bool");
-            out->enter([&] {
-                out->write(val->key == Key::TRUE ? "true" : "false");
-            });
+            out->write(val->key == Key::TRUE ? "- bool `true`" : "- bool `false`");
         }
     };
 
@@ -107,10 +98,7 @@ namespace cthulhu {
         { }
 
         virtual void visit(Printer* out) const override {
-            out->write("- char");
-            out->enter([&] {
-                out->write(utf8::string(val->get()));
-            });
+            out->write("- char `" + utf8::string(val->get()) + "`");
         }
     };
 
@@ -192,7 +180,7 @@ namespace cthulhu {
             , expr(expr)
         { }
 
-        const char* str() const { 
+        utf8::string str() const { 
             switch (op) {
             case NOT: return "NOT";
             case FLIP: return "FLIP";
@@ -205,11 +193,10 @@ namespace cthulhu {
         }
 
         virtual void visit(Printer* out) const override {
-            out->write("- unary");
+            out->write("- unary `" + str() + "`");
             out->enter([&] {
-                out->write("- op");
                 out->enter([&] {
-                    out->write(str());
+                    expr->visit(out);
                 });
             });
         }
@@ -259,7 +246,7 @@ namespace cthulhu {
             , rhs(rhs)
         { }
 
-        const char* str() const { 
+        utf8::string str() const { 
             switch (op) {
             case ADDEQ: return "ADDEQ";
             case SUBEQ: return "SUBEQ";
@@ -297,10 +284,7 @@ namespace cthulhu {
         virtual void visit(Printer* out) const override {
             out->write("- binary");
             out->enter([&] {
-                out->write("- op");
-                out->enter([&] {
-                    out->write(str());
-                });
+                out->write("- op `" + str() + "`");
                 out->write("- lhs");
                 out->enter([&] {
                     lhs->visit(out);
@@ -332,10 +316,8 @@ namespace cthulhu {
         Ident* name;
 
         virtual void visit(Printer* out) const override {
-            out->write("- name");
+            out->write("- name `" + name->get() + "`");
             out->enter([&] {
-                out->write(name->get());
-                
                 if (!params.empty()) {
                     out->write("- params");
                     out->enter([&] {
@@ -816,12 +798,17 @@ namespace cthulhu {
         }
     };
 
-    struct Decorated : Decl {
+    template<typename T>
+    struct Decorated : T {
         vector<Decorator*> decorators;
-        Decl* item;
 
-        Decorated(vector<Decorator*> decorators, Decl* item)
-            : decorators(decorators)
+        // this is a stupid hack that doubles memory usage
+        // but it works so whatever
+        T* item;
+
+        Decorated(vector<Decorator*> decorators, T* item)
+            : T(*item)
+            , decorators(decorators)
             , item(item)
         { }
 
@@ -832,7 +819,7 @@ namespace cthulhu {
                     decorator->visit(out);
                 }
 
-                out->write("- decl");
+                out->write("- body");
                 out->enter([&] {
                     item->visit(out);
                 });
@@ -852,7 +839,7 @@ namespace cthulhu {
         { }
 
         virtual void visit(Printer* out) const override {
-            out->write("- arg " + name->get());
+            out->write("- arg `" + name->get() + "`");
             out->enter([&] {
                 out->write("- type");
                 out->enter([&] {
@@ -890,7 +877,7 @@ namespace cthulhu {
                 });
                 out->write("- args");
                 out->enter([&] {
-                    for (FunctionArg* arg : args) {
+                    for (auto* arg : args) {
                         arg->visit(out);
                     }
                 });
@@ -952,8 +939,19 @@ namespace cthulhu {
         }
     };
 
+    struct EnumField : Decl {
+        Ident* name;
+        Expr* value;
+    };
+
     struct Enum : Decl {
         vector<Decl*> fields;
+    };
+
+    struct TaggedEnumField : Decl {
+        Ident* name;
+        vector<Decl*> fields;
+        Expr* value;
     };
 
     struct TaggedEnum : Decl {

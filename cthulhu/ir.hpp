@@ -22,9 +22,14 @@ namespace cthulhu::ir {
     struct Function {
 
     };
+
+    struct Type {
+        utf8::string name;
+    };
     
     struct Unit {
-        
+        utf8::string name;
+        vector<Type*> types;
     };
 
     Unit validate(cthulhu::Unit* root, Unit(*include)(vector<utf8::string>));

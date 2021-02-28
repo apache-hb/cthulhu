@@ -49,7 +49,7 @@ namespace cthulhu {
         Decl* enum_();
         Template* template_();
         TemplateParam* templateParam();
-        Decorated* decorators();
+
         Decorator* decorator();
 
         template<typename T, typename... A>
@@ -90,23 +90,23 @@ namespace cthulhu {
         Token* next();
         Token* peek();
 
-        template<typename T>
-        vector<T*> collect(Key::Word sep, T*(*func)(Parser*)) {
+        template<typename T, typename F>
+        vector<T*> collect(Key::Word sep, F&& func) {
             vector<T*> out;
 
             do {
-                out.push_back(func(this)); 
+                out.push_back(func()); 
             } while (eat<Key>(sep) != nullptr);
 
             return out;
         }
 
-        template<typename T>
-        vector<T*> gather(Key::Word sep, Key::Word until, T*(*func)(Parser*)) {
+        template<typename T, typename F>
+        vector<T*> gather(Key::Word sep, Key::Word until, F&& func) {
             vector<T*> out;
 
             while (eat<Key>(until) == nullptr) {
-                out.push_back(func(this));
+                out.push_back(func());
 
                 if (eat<Key>(until) == nullptr) {
                     expect<Key>(sep);
@@ -116,6 +116,32 @@ namespace cthulhu {
             }
 
             return out;
+        }
+
+        template<typename T, typename F>
+        T* decorators(F&& func) {
+            bool found = false;
+
+            vector<Decorator*> decorators;
+
+            while (eat<Key>(Key::AT)) {
+                found = true;
+
+                if (eat<Key>(Key::LSQUARE)) {
+                    do {
+                        decorators.push_back(decorator());
+                    } while (eat<Key>(Key::COMMA));
+                    expect<Key>(Key::RSQUARE);
+                } else {
+                    decorators.push_back(decorator());
+                }
+            }
+
+            if (!found) {
+                return nullptr;
+            }
+
+            return new Decorated<T>(decorators, func());
         }
 
         Lexer* lexer;
