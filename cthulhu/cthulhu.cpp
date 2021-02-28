@@ -449,7 +449,7 @@ namespace cthulhu {
     }
 
     Type* Parser::type() {
-        Type* out = nullptr;
+        Type* out = decorators<Type>([this]{ return type(); });
 
         if (Key* mul = eat<Key>(Key::MUL); mul) {
             out = new Pointer(type());
@@ -460,9 +460,7 @@ namespace cthulhu {
         }
 
         while (eat<Key>(Key::LPAREN)) {
-            vector<Type*> args = gather<Type>(Key::COMMA, Key::RPAREN, [](Parser* self) {
-                return self->type();
-            });
+            vector<Type*> args = gather<Type>(Key::COMMA, Key::RPAREN, [this] { return type(); });
             out = new Closure(out, args);
         }
 
@@ -675,9 +673,7 @@ namespace cthulhu {
                 node = new Subscript(node, expr());
                 expect<Key>(Key::RSQUARE);
             } else if (Key* lparen = eat<Key>(Key::LPAREN); lparen) {
-                node = new Call(node, gather<FunctionParam>(Key::COMMA, Key::RPAREN, [](Parser* self) {
-                    return self->funcParam();
-                }));
+                node = new Call(node, gather<FunctionParam>(Key::COMMA, Key::RPAREN, [this] { return funcParam(); }));
             } else if (Key* dot = eat<Key>(Key::DOT); dot) {
                 node = new Dot(node, expect<Ident>(), false);
             } else if (Key* arrow = eat<Key>(Key::ARROW); arrow) {
@@ -693,9 +689,7 @@ namespace cthulhu {
     Name* Parser::name() {
         Ident* id = expect<Ident>();
         if (Key* begin = eat<Key>(Key::BEGIN); begin) {
-            vector<Type*> params = collect<Type>(Key::COMMA, [](Parser* self) {
-                return self->type();
-            });
+            vector<Type*> params = collect<Type>(Key::COMMA, [this] { return type(); });
             expect<Key>(Key::END);
 
             return new Name(id, params);
@@ -705,18 +699,14 @@ namespace cthulhu {
     }
 
     Qual* Parser::qual() {
-        return new Qual(collect<Name>(Key::COLON2, [](Parser* self) {
-            return self->name();
-        }));
+        return new Qual(collect<Name>(Key::COLON2, [this] { return name(); }));
     }
 
     Decl* Parser::include() {
         if (!eat<Key>(Key::USING)) {
             return nullptr;
         }
-        vector<Ident*> path = collect<Ident>(Key::COLON2, [](Parser* self) {
-            return self->expect<Ident>();
-        });
+        vector<Ident*> path = collect<Ident>(Key::COLON2, [this] { return expect<Ident>(); });
         Decl* out;
         if (eat<Key>(Key::ASSIGN)) {
             // actually an alias
@@ -726,9 +716,7 @@ namespace cthulhu {
                 out = new Import(path, {});
                 expect<Key>(Key::RPAREN);
             } else {
-                out = new Import(path, gather<Ident>(Key::COMMA, Key::RPAREN, [](Parser* self) {
-                    return self->expect<Ident>();
-                }));
+                out = new Import(path, gather<Ident>(Key::COMMA, Key::RPAREN, [this] { return expect<Ident>(); }));
             }
         } else {
             out = new Import(path);
@@ -739,7 +727,7 @@ namespace cthulhu {
     }
 
     Decl* Parser::decl() {
-        if (Decorated* d = decorators(); d) {
+        if (Decl* d = decorators<Decl>([this]{ return decl(); }); d) {
             return d;
         }
 
@@ -790,9 +778,7 @@ namespace cthulhu {
 
         vector<VarName*> names;
         if (eat<Key>(Key::LSQUARE)) {
-            names = gather<VarName>(Key::COMMA, Key::RSQUARE, [](Parser* self) {
-                return self->varName();
-            });
+            names = gather<VarName>(Key::COMMA, Key::RSQUARE, [this] { return varName(); });
         } else {
             names = { varName() };
         }
@@ -869,9 +855,7 @@ namespace cthulhu {
         Qual* name = qual();
         vector<FunctionArg*> args;
         if (eat<Key>(Key::LPAREN)) {
-            args = gather<FunctionArg>(Key::COMMA, Key::RPAREN, [](Parser* self) {
-                return self->funcArg();
-            });
+            args = gather<FunctionArg>(Key::COMMA, Key::RPAREN, [this] { return funcArg(); });
         }
 
         Type* result = eat<Key>(Key::COLON) ? type() : nullptr;
@@ -1007,6 +991,10 @@ namespace cthulhu {
     }
 
     FunctionArg* Parser::funcArg() {
+        if (auto* self = decorators<FunctionArg>([this] { return funcArg(); }); self) {
+            return self;
+        }
+
         Ident* name = expect<Ident>();
         expect<Key>(Key::COLON);
         Type* t = type();
@@ -1020,9 +1008,9 @@ namespace cthulhu {
         }
 
         expect<Key>(Key::BEGIN);
-        vector<TemplateParam*> params = collect<TemplateParam>(Key::COMMA, [](Parser* self) {
-            return self->templateParam();
-        });
+
+        vector<TemplateParam*> params = collect<TemplateParam>(Key::COMMA, [this] { return templateParam(); });
+
         expect<Key>(Key::END);
 
         Decl* body = decl();
@@ -1034,42 +1022,17 @@ namespace cthulhu {
         Ident* name = expect<Ident>();
         vector<Qual*> limits;
         if (eat<Key>(Key::COLON)) {
-            limits = collect<Qual>(Key::ADD, [](Parser* self) {
-                return self->qual();
-            });
+            limits = collect<Qual>(Key::ADD, [this] { return qual(); });
         }
 
         return new TemplateParam(name, limits);
-    }
-
-    Decorated* Parser::decorators() {
-        bool found = false;
-
-        vector<Decorator*> decorators;
-
-        while (eat<Key>(Key::AT)) {
-            found = true;
-
-            if (eat<Key>(Key::LSQUARE)) {
-                do {
-                    decorators.push_back(decorator());
-                } while (eat<Key>(Key::COMMA));
-                expect<Key>(Key::RSQUARE);
-            } else {
-                decorators.push_back(decorator());
-            }
-        }
-
-        return found ? new Decorated(decorators, decl()) : nullptr;
     }
 
     Decorator* Parser::decorator() {
         Qual* name = qual();
         vector<FunctionParam*> params;
         if (Key* lparen = eat<Key>(Key::LPAREN); lparen) {
-            params = gather<FunctionParam>(Key::COMMA, Key::RPAREN, [](Parser* self) {
-                return self->funcParam();
-            });
+            params = gather<FunctionParam>(Key::COMMA, Key::RPAREN, [this] { return funcParam(); });
         }
 
         return new Decorator(name, params);
