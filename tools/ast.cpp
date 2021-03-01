@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     auto file = FileStreamHandle(argv[1]);
     auto lexer = cthulhu::Lexer(&file);
     auto parser = cthulhu::Parser(&lexer);
-    auto* unit = parser.unit();
+    auto* unit = parser.parseUnit();
 
     cthulhu::Printer printer;
     unit->visit(&printer);

@@ -1,0 +1,11 @@
+using name;
+using first::second;
+using part(...);
+using left::right(...);
+using some(name);
+using other(one, two);
+
+using x = y;
+
+# may not include after first non-include statement
+using hello(world);
