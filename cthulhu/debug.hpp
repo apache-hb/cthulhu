@@ -23,6 +23,12 @@ namespace cthulhu {
             depth--;
         }
 
+        template<typename F>
+        void section(utf8::string str, F&& func) {
+            write(str);
+            enter(func);
+        }
+
         void write(utf8::string str) {
             buffer += utf8::string(depth * 2, ' ');
             buffer += str;

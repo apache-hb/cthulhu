@@ -419,6 +419,238 @@ namespace cthulhu {
     /// parsing logic
     ///
 
+    Unit* Parser::parseUnit() {
+        auto* includes = new List<Include>();
+        auto* decls = new List<Decl>();
+
+        while (true) {
+            if (auto* include = parseInclude(); include) {
+                if (auto* alias = dynamic_cast<Alias*>(include); alias) {
+                    decls->add(new Decl(nullptr, nullptr, alias));
+                    break;
+                } else {
+                    includes->add(dynamic_cast<Include*>(include));
+                }
+            } else {
+                break;
+            }
+        }
+
+        while (true) {
+            if (auto* decl = parseDecl(); decl) {
+                decls->add(decl);
+                printf("decl\n");
+            } else {
+                break;
+            }
+        }
+
+        return new Unit(includes, decls);
+    }
+
+    Node* Parser::parseInclude() {
+        if (!eat<Key>(Key::USING)) {
+            return nullptr;
+        }
+
+        Node* out;
+
+        auto* path = parseSome<Id>(Key::COLON2, [&] { return parseIdent(); });
+        
+        if (eat<Key>(Key::ASSIGN)) {
+            auto* type = parseType();
+            out = new Alias(path->get(0), type);
+        } else {
+            Path* items;
+            
+            if (eat<Key>(Key::LPAREN)) {
+                items = eat<Key>(Key::DOT3) ? new Path() : parseSome<Id>(Key::COMMA, [&] { return parseIdent(); });
+                expect<Key>(Key::RPAREN);
+            } else {
+                items = nullptr;
+            }
+
+            out = new Include(path, items);
+        }
+
+        expect<Key>(Key::SEMI);
+
+        return out;
+    }
+
+    Decl* Parser::parseDecl() {
+        auto* decorators = parseDecorators();
+        auto* generics = parseTemplate();
+        auto* base = parseBaseDecl();
+
+        if (decorators == nullptr && generics == nullptr && base == nullptr) {
+            return nullptr;
+        }
+
+        return new Decl(decorators, generics, base);
+    }
+
+    TemplateItems* Parser::parseTemplate() {
+        if (!eat<Key>(Key::TEMPLATE)) {
+            return nullptr;
+        }
+
+        expect<Key>(Key::BEGIN);
+        auto* params = parseSome<TemplateItem>(Key::COMMA, [&] { return parseTemplateItem(); });
+        expect<Key>(Key::END);
+
+        return params;
+    }
+
+    TemplateItem* Parser::parseTemplateItem() {
+        auto* name = parseIdent();
+        auto* limits = eat<Key>(Key::COLON) 
+            ? parseSome<Qualified>(Key::ADD, [&] { return parseQualified(); })
+            : nullptr;
+
+        return new TemplateItem(name, limits);
+    }
+
+    BaseDecl* Parser::parseBaseDecl() {
+        if (auto* alias = parseAlias(); alias) {
+            return alias;
+        }
+
+        return nullptr;
+    }
+
+    Alias* Parser::parseAlias() {
+        if (!eat<Key>(Key::USING)) {
+            return nullptr;
+        }
+
+        auto* name = parseIdent();
+        expect<Key>(Key::ASSIGN);
+        auto* type = parseType();
+        expect<Key>(Key::SEMI);
+        return new Alias(name, type);
+    }
+
+    Id* Parser::parseIdent() {
+        return new Id(expect<Ident>());
+    }
+
+    Type* Parser::parseType() {
+        auto* decorators = parseDecorators();
+        auto* type = parseBaseType();
+
+        return new Type(decorators, type);
+    }
+
+    BaseType* Parser::parseBaseType() {
+        if (auto* pointer = parsePointer(); pointer) {
+            return pointer;
+        }
+
+        if (auto* array = parseArray(); array) {
+            return array;
+        }
+
+        if (auto* closure = parseClosure(); closure) {
+            return closure;
+        }
+
+        if (auto* qual = parseQualified(); qual) {
+            return qual;
+        }
+
+        printf("invalid type\n");
+        exit(1);
+    }
+
+    Qualified* Parser::parseQualified() {
+        auto* parts = parseSome<Name>(Key::COLON2, [&] { return parseName(); });
+
+        return new Qualified(parts);
+    }
+
+    Pointer* Parser::parsePointer() {
+        if (!eat<Key>(Key::MUL)) {
+            return nullptr;
+        }
+
+        return new Pointer(parseBaseType());
+    }
+
+    Array* Parser::parseArray() {
+        if (!eat<Key>(Key::LSQUARE)) {
+            return nullptr;
+        }
+
+        auto* type = parseBaseType();
+        auto* size = eat<Key>(Key::COLON) ? parseExpr() : nullptr;
+
+        expect<Key>(Key::RSQUARE);
+
+        return new Array(type, size);
+    }
+
+    Closure* Parser::parseClosure() {
+        if (!eat<Key>(Key::LPAREN)) {
+            return nullptr;
+        }
+
+        List<BaseType>* args;
+        if (!eat<Key>(Key::RPAREN)) {
+            args = parseSome<BaseType>(Key::COMMA, [&] { return parseBaseType(); });
+            expect<Key>(Key::RPAREN);
+        } else {
+            args = nullptr;
+        }
+
+        auto* result = eat<Key>(Key::COLON) ? parseBaseType() : nullptr;
+
+        return new Closure(result, args);
+    }
+
+    Name* Parser::parseName() {
+        auto* name = parseIdent();
+
+        auto* params = parseArguments<BaseType>(Key::BEGIN, Key::END, [&] { return parseBaseType(); });
+
+        return new Name(name, params);
+    }
+    
+    Decorators* Parser::parseDecorators() {
+        auto* out = new Decorators();
+
+        bool found = false;
+
+        while (eat<Key>(Key::AT)) {
+            found = true;
+            if (eat<Key>(Key::LSQUARE)) {
+                do out->add(parseDecorator()); while (eat<Key>(Key::COMMA));
+                expect<Key>(Key::RSQUARE);
+            } else {
+                out->add(parseDecorator());
+            }
+        }
+
+        if (!found) {
+            return nullptr;
+        }
+
+        return out;
+    }
+
+    Decorator* Parser::parseDecorator() {
+        auto* name = parseSome<Id>(Key::COLON2, [&] { return parseIdent(); });
+        auto* args = parseArguments<Expr>(Key::LPAREN, Key::RPAREN, [&] { return parseExpr(); });
+    
+        return new Decorator(name, args);
+    }
+
+    Expr* Parser::parseExpr() {
+        return nullptr;
+    }
+
+#if 0
+
     Unit* Parser::unit() {
         vector<Import*> includes;
         vector<Decl*> decls;
@@ -835,13 +1067,22 @@ namespace cthulhu {
         return new Union(name, body);
     }
 
+    Decl* Parser::tagged() {
+        Ident* name = expect<Ident>();
+
+        expect<Key>(Key::LBRACE);
+
+        expect<Key>(Key::RBRACE);
+        return nullptr;
+    }
+
     Decl* Parser::enum_() {
         if (!eat<Key>(Key::ENUM)) {
             return nullptr;
         }
 
         if (eat<Key>(Key::UNION)) {
-            // tagged union
+            return tagged();
         }
 
         return nullptr;
@@ -884,6 +1125,10 @@ namespace cthulhu {
             return s;
         }  
 
+        if (Stmt* s = with_(); s) {
+            return s;
+        }
+
         if (Stmt* s = while_(); s) {
             return s;
         }
@@ -905,6 +1150,20 @@ namespace cthulhu {
         }
 
         return expr();
+    }
+
+    Stmt* Parser::with_() {
+        if (!eat<Key>(Key::WITH)) {
+            return nullptr;
+        }
+
+        expect<Key>(Key::LPAREN);
+        Stmt* init = stmt();
+        expect<Key>(Key::RPAREN);
+
+        Stmt* body = stmt();
+
+        return new With(init, body);
     }
 
     Stmt* Parser::compound() {
@@ -1037,6 +1296,8 @@ namespace cthulhu {
 
         return new Decorator(name, params);
     }
+
+#endif
 
     ///
     /// parsing helper functions

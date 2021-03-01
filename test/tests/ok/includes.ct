@@ -1,0 +1,18 @@
+using name;
+using first::second;
+using part(...);
+using left::right(...);
+using some(name);
+using other(one, two);
+
+using a = [a];
+using b = name;
+using c = name::name;
+using d = name!<a>;
+using e = name!<.a = a>;
+using f = name!<a>::name;
+using g = name!<.a = a>::name;
+using d = name!<a>::name!<b>;
+using x = (): a;
+using d = (a): a;
+using g = (a, b, c): [a];

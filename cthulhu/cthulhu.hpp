@@ -15,42 +15,29 @@ namespace cthulhu {
             : lexer(lexer)
         { }
 
-        Unit* unit();
+        Unit* parseUnit();
+        Node* parseInclude();
+        Id* parseIdent();
+        
+        Decl* parseDecl();
+        TemplateItems* parseTemplate();
+        TemplateItem* parseTemplateItem();
+        BaseDecl* parseBaseDecl();
 
-        Type* type();
-        Array* array();
-        Name* name();
-        Qual* qual();
+        Alias* parseAlias();
 
-        Expr* expr();
-        Expr* binary(int mprec);
-        Expr* primary();
+        Type* parseType();
+        BaseType* parseBaseType();
+        Qualified* parseQualified();
+        Pointer* parsePointer();
+        Array* parseArray();
+        Closure* parseClosure();
+        Name* parseName();
 
-        Decl* include();
-        Decl* decl();
-        Alias* alias();
-        Var* var();
-        VarName* varName();
-        FunctionParam* funcParam();
+        Expr* parseExpr();
 
-        Function* function();
-        FunctionArg* funcArg();
-
-        Stmt* stmt();
-        Stmt* compound();
-        Stmt* while_();
-        Stmt* return_();
-        Stmt* for_();
-        Stmt* if_();
-        Stmt* switch_();
-
-        Struct* struct_();
-        Union* union_();
-        Decl* enum_();
-        Template* template_();
-        TemplateParam* templateParam();
-
-        Decorator* decorator();
+        Decorators* parseDecorators();
+        Decorator* parseDecorator();
 
         template<typename T, typename... A>
         T* eat(A&&... args) {
@@ -90,34 +77,77 @@ namespace cthulhu {
         Token* next();
         Token* peek();
 
+        // parse one or more `T` seperated by `sep`
         template<typename T, typename F>
-        vector<T*> collect(Key::Word sep, F&& func) {
-            vector<T*> out;
+        List<T>* parseSome(Key::Word sep, F&& func) {
+            auto* list = new List<T>();
 
-            do {
-                out.push_back(func()); 
-            } while (eat<Key>(sep) != nullptr);
+            do list->add(func()); while (eat<Key>(sep));
 
-            return out;
+            return list;
         }
 
+        // parse none or more `T`
         template<typename T, typename F>
-        vector<T*> gather(Key::Word sep, Key::Word until, F&& func) {
-            vector<T*> out;
+        List<T>* parseMany(F&& func) {
+            auto* list = new List<T>();
 
-            while (eat<Key>(until) == nullptr) {
-                out.push_back(func());
-
-                if (eat<Key>(until) == nullptr) {
-                    expect<Key>(sep);
-                } else {
+            while (true) {
+                if (auto* node = func(); !node) {
                     break;
+                } else {
+                    list->add(node);
                 }
             }
 
-            return out;
+            return list;
         }
 
+        // parse none or more `T` seperated by `sep`
+        template<typename T, typename F>
+        List<T>* parseMany(Key::Word sep, F&& func) {
+            auto* list = new List<T>();
+
+            while (true) {
+                if (auto* node = func(); !node) {
+                    break;
+                } else {
+                    list->add(node);
+                }
+                expect<Key>(sep);
+            }
+
+            return list;
+        }
+
+        template<typename T, typename F>
+        Arguments<T>* parseArguments(Key::Word start, Key::Word end, F&& func) {
+            if (!eat<Key>(start)) {
+                return nullptr;
+            }
+
+            auto* args = new Arguments<T>();
+
+            do {
+                Id* name;
+                if (eat<Key>(Key::DOT)) {
+                    name = parseIdent();
+                    expect<Key>(Key::ASSIGN);
+                } else {
+                    name = nullptr;
+                }
+
+                T* arg = func();
+
+                args->add(new Argument(name, arg));
+            } while (eat<Key>(Key::COMMA));
+
+            expect<Key>(end);
+
+            return args;
+        }
+
+#if 0
         template<typename T, typename F>
         T* decorators(F&& func) {
             bool found = false;
@@ -143,6 +173,7 @@ namespace cthulhu {
 
             return new Decorated<T>(decorators, func());
         }
+#endif
 
         Lexer* lexer;
         Token* ahead = nullptr;

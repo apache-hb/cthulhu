@@ -1,110 +1,260 @@
 # Grammar
 
-unit : includes toplevel EOF ;
-
+unit : includes decls EOF 
 
 ## Includes
 
-includes : include* ;
+includes : include*
 
-include : `using` include-path include-items? SEMI ;
+include : `using` path include-items? `;` 
 
-include-path : path ;
+include-items : `(` include-list `)`
 
-include-items : `(` include-spec `)` ;
-
-include-spec : `...` | ident-list ;
-
-ident-list : ident (`,` ident)* ;
+include-list : `...` | list
 
 ## Decls
 
-toplevel : toplevel-item* ;
+decls : decl* 
 
-toplevel-item : decorator* (alias-decl | variable-decl) ;
+decl : decorator* template? base-decl 
 
-decorator : `@` `[` decorator-bodys `]` | `@` decorator-body ;
+base-decl : alias-decl | struct-decl | union-decl | enum-decl | function-decl | (single-variable-decl `;`)
 
-decorator-bodys : decorator-body (`,` decorator-body)* ;
+## Aliases
 
-decorator-body : qualified-type decorator-args? ;
+alias-decl : `using` ident `=` type `;`
 
-decorator-args : `(` argument-list `)` ;
 
-argument-list : expr (`,` argument-list)? | named-argument-list ;
+## Structs
 
-named-argument-list : `.` ident `=` expr (`,` named-argument-list)? ;
+struct-decl : `struct` ident inherits? struct-body
 
-alias-decl : `using` ident `=` type `;` ;
+struct-body : `{` struct-items? `}`
 
-variable-decl : `var` variable-names variable-assign? `;` ;
+struct-items : struct-item (`,` struct-item)*
 
-variable-names : variable-name | `[` variable-name (`,` variable-name)* `]` ;
+struct-item : ident `:` type (`=` expr)?
 
-variable-name : ident (`:` type)? ;
+inherits : single-inherit | `(` inherit-list `)`
 
-variable-assign : `=` expr ;
+inherit-list : inherit (`,` inherit)*
 
-## Types
+inherit : ident `=` type
 
-type : (pointer-type | array-type | qualified-type) closure-type* ;
+single-inherit : `:` type
 
-pointer-type : `*` type ;
+## Unions
 
-qualified-type : type-name (`::` type-name)* ;
+union-decl : `union` ident inherits? union-body
 
-type-name : ident type-params? ;
+union-body : `{` union-items? `}`
 
-type-params : `!<` type-list `>` ;
+union-items : union-item (`,` union-item)* 
 
-closure-type : `(` type-list? `)` ;
+union-item : ident `:` type
 
-array-type : `[` type (`:` expr)? `]` ;
+## Enums
 
-type-list : type (`,` type)* ;
+enum-decl : `enum` (tagged-enum | simple-enum)
+
+tagged-enum : `union` ident single-inherit? tagged-enum-body
+
+simple-enum : ident single-inherit? simple-enum-body
+
+tagged-enum-body : `{` tagged-enum-items? `}` 
+
+tagged-enum-items : tagged-enum-item (`,` tagged-enum-item)*
+
+tagged-enum-item : ident struct-body? (`=` expr)?
+
+simple-enum-body : `{` simple-enum-items `}`
+
+simple-enum-items : simple-enum-item (`,` simple-enum-item)*
+
+simple-enum-item : ident (`=` expr)?
+
+## Functions
+
+function-decl : `def` function-name function-params? function-result? function-body
+
+function-params : `(` function-param-body `)`
+
+function-param-body : function-param (`,` function-param-body) | default-function-params
+
+default-function-params : default-function-param (`,` default-function-param)*
+
+function-param : ident `:` type
+
+default-function-param : ident `:` type `=` expr
+
+function-result : `:` type
+
+function-body : compound | `=` expr `;` | `;`
+
+## Variables
+
+any-variable-decl : variable-start (decomposing-var-name | simple-var-name) var-init?
+
+single-variable-body : variable-start simple-var-name
+
+decomposing-var-decl : variable-start decomposing-var-name
+
+single-variable-decl : variable-start simple-var-name var-init? `;`
+
+variable-start : `var` | `let`
+
+decomposing-var-name : `[` simple-var-name (`,` simple-var-name)* `]`
+
+simple-var-name : ident (`:` type)? 
+
+var-init : `=` expr 
+
+## Decorators
+
+decorator : `@` decorator-list
+
+decorator-list : decorator-body | `[` decorator-body (`,` decorator-body)* `]`
+
+decorator-body : path decorator-args?
+
+decorator-args : `(` function-args `)`
+
+
+## Templates
+
+template : `template` `!<` template-items `>`
+
+template-items : template-item (`,` template-item)*
+
+template-item : ident template-limits?
+
+template-limits : qualified (`+` qualified)*
+
+## Statements
+
+stmt : compound | return | any-variable-decl `;` | while | branch | with | for | switch | expr `;` | `break` | `continue`
+
+single-stmt : any-variable-decl
+
+compound : `{` stmt* `}`
+
+return : `return` expr? `;`
+
+branch : if else-if* else?
+
+if : `if` condition stmt
+
+else-if : `else` `if` condition stmt
+
+else : `else` stmt
+
+with : `with` condition stmt
+
+while : `while` condition stmt
+
+for : `for` (for-range | for-loop) stmt
+
+for-range : `(` decomposing-var-decl `..` expr `)`
+
+for-loop : `(` any-variable-decl? `;` expr? `;` expr? `)`
+
+switch : `switch` condition switch-body
+
+switch-body : switch-case* switch-else?
+
+switch-case : `case` case-label stmt
+
+switch-else : `else` `:` stmt
+
+case-label : (expr | expr `..` expr) `:`
+
+condition : `(` condition-body `)`
+
+condition-body : single-stmt `;` expr | single-stmt | expr
 
 ## Expressions
 
-expr : ternary-expr ;
+expr : ternary-expr
 
-ternary-expr : logic-expr (`?` ternary-expr? `:` ternary-expr)* ;
+ternary-expr : assign-expr (`?` ternary-expr `:` ternary-expr)*
 
-logic-expr : equality-expr ((`&&` | `||`) logic-expr)* ;
+assign-expr : logic-expr ((`=` | `+=` | `-=` | `/=` | `*=` | `%=` | `<<=` `>>=` | `|=` | `&=` | `^=`) assign-expr)* 
 
-equality-expr : compare-expr ((`==` | `!=`) equality-expr)* ;
+logic-expr : equality-expr ((`&&` | `||`) logic-expr)*
 
-compare-expr : bitwise-expr ((`<` | `<=` | `>` | `>=`) compare-expr)* ;
+equality-expr : compare-expr ((`==` | `!=`) equality-expr)*
 
-bitwise-expr : bitshift-expr ((`^` | `&` | `|`) bitwise-expr)* ;
+compare-expr : bitwise-expr ((`<` | `<=` | `>` | `>=`) compare-expr)*
 
-bitshift-expr : math-expr ((`<<` | `>>`) bitshift-expr)* ;
+bitwise-expr : bitshift-expr ((`^` | `&` | `|`) bitwise-expr)*
 
-math-expr : mul-expr ((`+` | `-`) math-expr)* ;
+bitshift-expr : math-expr ((`<<` | `>>`) bitshift-expr)*
 
-mul-expr : unary-expr ((`*` | `/` | `%`) mul-expr)* ;
+math-expr : mul-expr ((`+` | `-`) math-expr)*
 
-unary-expr : (`+` | `-` | `~` | `!` | `&` | `*`)? postfix-expr ;
+mul-expr : unary-expr ((`*` | `/` | `%`) mul-expr)*
 
-postfix-expr : primary-expr | postfix-expr `[` expr `]` | postfix-expr `(` argument-list? `)` | postfix-expr `.` ident | postfix `->` ident ;
+unary-expr : (`+` | `-` | `~` | `!` | `&` | `*`)? postfix-expr
 
-coerce-expr : `coerce` `!<` type `>` `(` expr `)` ;
+primary : `(` expr `)` | int | char | string | coerce
 
-primary-expr : `(` expr `)` | int | char | string | coerce-expr ;
+postfix : primary | postfix `[` expr `]` | postfix `(` function-args? `)` | postfix `.` ident | postfix `->` ident
 
-## Primitives
+coerce : `coerce` `!<` type `>` `(` expr `)`
 
-ident : [a-zA-Z_][a-zA-Z0-9_]* ;
+function-args : function-arg (`,` function-args) | named-function-args
 
-int : base2 | base10 | base16 ;
+function-arg : expr
 
-base2 : `0b` [01]+ ;
+named-function-args : named-function-arg (`,` named-function-arg)*
 
-base10 : [0-9]+ ;
+named-function-arg : `.` ident `=` expr
 
-base16 : `0x` [0-9a-fA-F]+ ;
 
-char : `'` letter `'` ;
+## Types
 
-string : `"` letter* `"` ;
+type : decorator* base-type
 
-letter : `\` ['"ntv0\\] | ~[\\\r\n] ;
+base-type : pointer | array | closure | qualified
+
+closure : `(` types? `)` (`:` type)?
+
+types : type (`,` type)* 
+
+pointer : `*` base-type
+
+array : `[` base-type (`:` expr)? `]`
+
+qualified : name (`::` name)*
+
+name : ident (`!<` type-args `>`)?
+
+type-args : type-arg (`,` type-args) | named-type-args
+
+type-arg : type
+
+named-type-args : named-type-arg (`,` named-type-arg)*
+
+named-type-arg : `.` ident `=` type
+
+## Basic
+
+path : ident (`::` ident)*
+
+list : ident (`,` ident)*
+
+ident : [a-zA-Z_][a-zA-Z0-9_]* 
+
+int : base2 | base10 | base16
+
+base2 : `0b` [01]+
+
+base10 : [0-9]+
+
+base16 : `0x` [0-9a-fA-F]+
+
+char : `'` letter `'`
+
+string : `"` letter* `"`
+
+letter : `\` ['"ntv0\\] | ~[\\\r\n]

@@ -1,6 +1,7 @@
 #include "test.hpp"
 
 int main() {
+    /*
     auto* lex = cthulhu::string(u8R"(
         # hello world
         # here are some comments
@@ -26,8 +27,8 @@ int main() {
 
     cthulhu::Printer printer;
 
-    auto* unit = parse.unit();
+    auto* unit = parse.parseUnit();
     unit->visit(&printer);
 
-    puts(printer.buffer.c_str());
+    puts(printer.buffer.c_str());*/
 }
