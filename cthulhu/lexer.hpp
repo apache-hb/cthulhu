@@ -7,15 +7,55 @@
 
 namespace cthulhu {
     struct Lexer {
-        Lexer(Stream stream, utf8::string name);
+        Lexer(Stream stream, const utf8::string& name);
 
         Token read();
 
     private:
-        c32 next();
+        // get the next char from the strea
+        // if `end` is true then throw an exception
+        // if the EOF is reached
+        c32 next(bool end = false);
+
+        // peek the next char in the stream without moving the
+        // read head
         c32 peek();
+        
+        // skip whitespace and comments until the next
+        // non whitespace character is found
         c32 skip();
+
+        // if a `c` is the next character in the stream
+        // then consume it and return true,
+        // otherwise do nothing and return false
         bool eat(c32 c);
+
+        // collect characters into a string and break when func returns false
+        template<typename F>
+        utf8::string collect(c32 first, F&& func) {
+            utf8::string out = first == END ? "" : utf8::string(first);
+            while (func(peek())) {
+                out += next();
+            }
+            return out;
+        }
+
+        // returns either a raw string, an ident, or a keyword
+        Token ident(const Range& start, c32 first);
+
+        // collect a raw string
+        const utf8::string* rstring();
+
+        // collect a single line string
+        const utf8::string* string();
+
+        // decode a character in a string and place it 
+        // in `out`, return true if the string lexing should continue
+        // false if the end of the string has been reached
+        bool encode(utf8::string* out);
+
+        // create a token and set its range properly
+        Token token(const Range& start, Token::Type type, TokenData data);
 
         // out source stream
         Stream stream;
@@ -24,7 +64,7 @@ namespace cthulhu {
         Range here;
 
         // name of the lexer
-        utf8::string name;
+        const utf8::string& name;
 
         // all currently read text
         utf8::string text;

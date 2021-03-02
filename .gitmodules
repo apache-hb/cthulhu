@@ -1,3 +1,6 @@
 [submodule "subprojects/utf8/utf8"]
 	path = subprojects/utf8/utf8
 	url = https://github.com/DuffsDevice/tiny-utf8
+[submodule "subprojects/fmt/fmt"]
+	path = subprojects/fmt/fmt
+	url = https://github.com/fmtlib/fmt
