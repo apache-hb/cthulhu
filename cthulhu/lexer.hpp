@@ -1,75 +1,38 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
-
-#include "nodes.hpp"
-
-//
-// main lexer and stream interface
-//
+#include "stream.hpp"
+#include "token.hpp"
+#include "pool.hpp"
+#include "fwd.hpp"
 
 namespace cthulhu {
-    static constexpr char32_t END = char32_t(-1);
-
-    struct StreamHandle {
-        virtual ~StreamHandle() {}
-        virtual char32_t next() = 0;
-    };
-
-    struct Stream {
-        Stream(StreamHandle* handle);
-
-        char32_t next();
-        char32_t peek();
-    private:
-        StreamHandle* handle;
-        char32_t lookahead;
-    };
-
-    struct Location {
-        Lexer* lexer;
-        size_t offset;
-        size_t line;
-        size_t column;
-
-        Location(Lexer* lexer, size_t offset, size_t line, size_t column);
-
-        Range* to(Location other);
-    };
-
-    struct Range : Location {
-        size_t length;
-
-        Range(Lexer* lexer, size_t offset, size_t line, size_t column, size_t length);
-    };
-
     struct Lexer {
-        Lexer(Stream stream, utf8::string name = u8"input")
-            : name(name)
-            , stream(stream)
-            , here(Location(this, 0, 0, 0))
-        { }
+        Lexer(Stream stream, utf8::string name);
 
-        Token* read();
-
-        utf8::string slice(Range* range);
-        utf8::string line(size_t it);
-
-        const utf8::string name;
+        Token read();
 
     private:
-        utf8::string collect(char32_t start, bool(*filter)(char32_t));
+        c32 next();
+        c32 peek();
+        c32 skip();
+        bool eat(c32 c);
 
-        char32_t skip();
-        char32_t next();
-        char32_t peek();
-        char32_t escape();
-        bool eat(char32_t c);
-
+        // out source stream
         Stream stream;
-        Location here;
-        utf8::string text = "";
-        int depth = 0;
+
+        // our current position
+        Range here;
+
+        // name of the lexer
+        utf8::string name;
+
+        // all currently read text
+        utf8::string text;
+
+        // all strings that have been lexed
+        StringPool strings;
+
+        // all idents that have been lexed
+        StringPool idents;
     };
 }
