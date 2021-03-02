@@ -1,11 +1,27 @@
 
-test('util-pool', executable('util-pool', 'util/pool.cpp', cpp_args : args, dependencies : ctu))
+util = [ 
+    # sanity checks
+    'util/pool', 'util/sstream', 
+    # file streams
+    'util/fstream/empty', 'util/fstream/hello'
+]
 
-#test('ident', executable('ident', 'lex/ident.cpp', cpp_args : args, dependencies : ctu))
-#test('int', executable('int', 'lex/int.cpp', cpp_args : args, dependencies : ctu))
-#test('string', executable('string', 'lex/string.cpp', cpp_args : args, dependencies : ctu))
-#test('symbol', executable('symbol', 'lex/symbol.cpp', cpp_args : args, dependencies : ctu))
-#
-#test('type', executable('type', 'parse/type.cpp', cpp_args : args, dependencies : ctu))
-#test('unit', executable('unit', 'parse/unit.cpp', cpp_args : args, dependencies : ctu))
-#test('full', executable('full', 'parse/full.cpp', cpp_args : args, dependencies : ctu))
+lex = [
+    # sanity checks
+    'lex/end', 'lex/ident', 'lex/intern', 'lex/key',
+
+    # raw strings
+    'lex/rstring1', 'lex/rstring2', 
+    
+    # TODO: this test is bugged due to https://github.com/DuffsDevice/tiny-utf8/issues/58
+    # leave it disabled until thats resolved
+    # 'lex/rstring3'
+]
+
+tests = util + lex
+
+foreach name : tests
+    tname = '.'.join(name.split('/'))
+    exe = executable(tname, name + '.cpp', cpp_args : args, dependencies : ctu)
+    test(tname, exe, workdir : meson.current_source_dir())
+endforeach

@@ -7,7 +7,11 @@
 namespace cthulhu {
     struct Range {
         Range(Lexer* lexer);
+        Range(Lexer* lexer, size_t offset, size_t line, size_t column, size_t length);
 
+        Range to(const Range& end) const;
+
+        Lexer* source() const;
     private:
         Lexer* lexer;
         size_t offset;
@@ -17,7 +21,16 @@ namespace cthulhu {
     };
 
     enum struct Key {
+#define KEY(id, _) id,
+#define OP(id, _) id,
+#include "keys.inc"
+    };
 
+    union TokenData {
+        Key key;
+        const utf8::string* ident;
+        const utf8::string* string;
+        c32 letter;
     };
 
     struct Token {
@@ -30,45 +43,19 @@ namespace cthulhu {
             END
         };
 
-        bool is(Type other) const;
+        Token(Range where, Type type, TokenData data);
 
-        Token();
+        bool is(Type other) const;
+        bool operator==(const Token& other) const;
+        bool operator!=(const Token& other) const;
+
+        Key key() const;
+        const utf8::string* ident() const;
+        const utf8::string* string() const;
 
     private:
-        struct Ident {
-            utf8::string ident;
-        };
-
-        struct String {
-            utf8::string prefix;
-            utf8::string str;
-        };
-
-        struct Int {
-            utf8::string suffix;
-        };
-
-        struct Char {
-            c32 c;
-        };
-
-        struct Keyword {
-            Key key;
-        };
-
-        union Data {
-            Data();
-            ~Data();
-
-            Ident id;
-            String str;
-            Int num;
-            Char c;
-            Key key;
-        };
-
         Range where;
         Type type;
-        Data data;
+        TokenData data;
     };
 }
