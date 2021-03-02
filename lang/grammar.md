@@ -1,10 +1,8 @@
 # Grammar
 
-unit : includes decls EOF 
+unit : include* decl* EOF 
 
 ## Includes
-
-includes : include*
 
 include : `using` path include-items? `;` 
 
@@ -13,8 +11,6 @@ include-items : `(` include-list `)`
 include-list : `...` | list
 
 ## Decls
-
-decls : decl* 
 
 decl : decorator* template? base-decl 
 
@@ -213,35 +209,21 @@ named-function-arg : `.` ident `=` expr
 
 ## Types
 
-type : decorator* base-type
+type : pointer | closure | array | qualified
 
-base-type : pointer | array | closure | qualified
+pointer : `*` type
 
-closure : `(` types? `)` (`:` type)?
+closure : `(` types? `)` `->` type
 
-types : type (`,` type)* 
-
-pointer : `*` base-type
-
-array : `[` base-type (`:` expr)? `]`
+array : `[` type (`:` expr)? `]`
 
 qualified : name (`::` name)*
 
-name : ident (`!<` type-args `>`)?
+types : type (`,` type)* 
 
-type-args : type-arg (`,` type-args) | named-type-args
-
-type-arg : type
-
-named-type-args : named-type-arg (`,` named-type-arg)*
-
-named-type-arg : `.` ident `=` type
+name : ident (`!<` types `>`)?
 
 ## Basic
-
-path : ident (`::` ident)*
-
-list : ident (`,` ident)*
 
 ident : [a-zA-Z_][a-zA-Z0-9_]* 
 

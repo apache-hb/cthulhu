@@ -14,13 +14,14 @@ inc = [ 'cthulhu' ]
 args = []
 
 if meson.get_compiler('cpp').get_id() == 'msvc'
-    args += [ '/wd4244', '/wd4127', '/wd4996' ]
+    args += [ '/wd4244', '/wd4127' ]
 endif
 
-src = [
-    'cthulhu/cthulhu.cpp',
-    'cthulhu/nodes.cpp',
-    'cthulhu/ir.cpp'
+src = [ 
+    'cthulhu/token.cpp', 
+    'cthulhu/lexer.cpp', 
+    'cthulhu/stream.cpp',
+    'cthulhu/pool.cpp'
 ]
 
 cthulhu = library('ctu', src, 
@@ -34,5 +35,5 @@ ctu = declare_dependency(
     dependencies : deps
 )
 
-subdir('tools')
+#subdir('tools')
 subdir('test')
