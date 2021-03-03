@@ -16,6 +16,9 @@ lex = [
     # TODO: this test is bugged due to https://github.com/DuffsDevice/tiny-utf8/issues/58
     # leave it disabled until thats resolved
     # 'lex/rstring3'
+
+    # diagnostic messages
+    'lex/diagnostic1', 'lex/diagnostic2'
 ]
 
 tests = util + lex

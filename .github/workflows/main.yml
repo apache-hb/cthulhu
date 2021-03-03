@@ -20,7 +20,8 @@ jobs:
           
     steps:
       - uses: actions/checkout@master
-      - uses: textbook/git-checkout-submodule-action@master
+        with:
+          submodules: 'true'
       - uses: ashutoshvarma/setup-ninja@master
       - uses: actions/setup-python@v1
       - uses: BSFishy/meson-build@v1.0.2

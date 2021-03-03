@@ -1,6 +1,8 @@
 #include "token.hpp"
 #include "error.hpp"
 
+#include <fmt/core.h>
+
 namespace cthulhu {
     Range::Range(Lexer* lexer)
         : lexer(lexer)
