@@ -13,12 +13,14 @@ jobs:
     strategy:
       matrix:
         config: 
-          - { name: "windows msvc", os: windows-latest, cc: "cl", cxx: "cl", options: "-Dcpp_std=c++latest" }
-          - { name: "linux gcc", os: ubuntu-latest, cc: "gcc", cxx: "g++", options: "-Dcpp_std=c++2a" }
-          - { name: "linux clang", os: ubuntu-latest, cc: "clang", cxx: "clang++", options: "-Dcpp_std=c++2a" }
-          - { name: "macos clang", os: macos-latest, cc: "clang", cxx: "clang++", options: "-Dcpp_std=c++2a" }
+          - { name: "windows-msvc", os: windows-latest, cc: "cl", cxx: "cl", options: "-Dcpp_std=c++latest" }
+          - { name: "linux-gcc", os: ubuntu-latest, cc: "gcc", cxx: "g++", options: "-Dcpp_std=c++2a" }
+          - { name: "linux-clang", os: ubuntu-latest, cc: "clang", cxx: "clang++", options: "-Dcpp_std=c++2a" }
+          - { name: "macos-clang", os: macos-latest, cc: "clang", cxx: "clang++", options: "-Dcpp_std=c++2a" }
           
     steps:
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: matrix.config.os == 'windows-msvc'
       - uses: actions/checkout@master
         with:
           submodules: 'true'
