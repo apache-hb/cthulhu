@@ -6,11 +6,21 @@
 using namespace cthulhu;
 
 struct FileStream : StreamHandle {
+#ifdef _WIN32
+    FileStream(const char* path, bool check = true) { 
+        errno_t err = fopen_s(&file, path, "r, css=UTF-8");
+        if (check) {
+            ASSERT(err == 0);
+            ASSERT(file != nullptr);
+        }
+    }
+#else
     FileStream(const char* path, bool check = true): file(fopen(path, "r")) { 
         if (check) {
             ASSERT(file != nullptr);
         }
     }
+#endif
 
     ~FileStream() {
         fclose(file);
