@@ -24,6 +24,9 @@ namespace cthulhu {
 
         // get a diagnostic
         std::optional<Diagnostic> diagnostic();
+
+        // format a diagnostic into a pretty string
+        utf8::string format(const Diagnostic& diag) const;
     private:
         // get the next char from the strea
         // if `end` is true then throw an exception

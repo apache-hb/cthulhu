@@ -24,10 +24,6 @@ namespace cthulhu {
         return Range(lexer, offset, line, column, end.offset - offset);
     }
 
-    Lexer* Range::source() const {
-        return lexer;
-    }
-
     bool Token::is(Token::Type other) const { 
         return type == other; 
     }
@@ -60,7 +56,7 @@ namespace cthulhu {
         }
     }
 
-#define CHECK_TYPE(type) if (!is(type)) { throw LexerError(where.source(), LexerError::CAST); }
+#define CHECK_TYPE(type) if (!is(type)) { throw LexerError(where.lexer, LexerError::CAST); }
 
     Key Token::key() const {
         CHECK_TYPE(Token::KEY);
