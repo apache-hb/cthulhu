@@ -2,6 +2,7 @@
 #include "error.hpp"
 
 #include <fmt/core.h>
+#include <unordered_map>
 
 namespace {
     bool whitespace(c32 c) {
