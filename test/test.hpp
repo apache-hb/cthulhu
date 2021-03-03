@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdexcept>
 
-#define ASSERT(expr) if (!(expr)) { throw std::logic_error(#expr); exit(1); }
+#define ASSERT(expr) if (!(expr)) { throw std::logic_error(#expr); }
 
 template<typename T, typename F>
 void except(F&& func) {
