@@ -2,7 +2,6 @@ project('cthulhu', 'cpp',
     default_options : [
         'werror=true',
         'warning_level=3',
-        'cpp_std=c++2a',
         'default_library=static'
     ]
 )

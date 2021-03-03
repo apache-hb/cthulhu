@@ -5,12 +5,25 @@
 #include "pool.hpp"
 #include "fwd.hpp"
 
+#include <string>
+#include <optional>
+#include <queue>
+
 namespace cthulhu {
+    struct Diagnostic {
+        Diagnostic(Range range, std::string message);
+
+        Range range;
+        std::string message;
+    };
+
     struct Lexer {
         Lexer(Stream stream, const utf8::string& name);
 
         Token read();
 
+        // get a diagnostic
+        std::optional<Diagnostic> diagnostic();
     private:
         // get the next char from the strea
         // if `end` is true then throw an exception
@@ -54,8 +67,21 @@ namespace cthulhu {
         // false if the end of the string has been reached
         bool encode(utf8::string* out);
 
+        // integer encoding
+        enum Base {
+            BASE2, // 0b101010
+            BASE10, // 1234567890
+            BASE16 // 0x1234567890abcdef
+        };
+
+        // encode an integer escape into a string
+        void encodeInt(utf8::string* out, Base base);
+
         // create a token and set its range properly
         Token token(const Range& start, Token::Type type, TokenData data);
+
+        // add a warning to the message queue
+        void warn(const Range& range, const std::string& message);
 
         // out source stream
         Stream stream;
@@ -74,5 +100,8 @@ namespace cthulhu {
 
         // all idents that have been lexed
         StringPool idents;
+
+        // lexing diagnostic messages
+        std::queue<Diagnostic> messages;
     };
 }

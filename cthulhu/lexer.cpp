@@ -1,6 +1,8 @@
 #include "lexer.hpp"
 #include "error.hpp"
 
+#include <fmt/core.h>
+
 namespace {
     bool whitespace(c32 c) {
         switch (c) {
@@ -75,6 +77,11 @@ namespace {
 }
 
 namespace cthulhu {
+    Diagnostic::Diagnostic(Range range, std::string message)
+        : range(range)
+        , message(message)
+    { }
+
     Lexer::Lexer(Stream stream, const utf8::string& name)
         : stream(stream)
         , here(this)
@@ -192,7 +199,25 @@ namespace cthulhu {
 
         // string escapes
         if (c == '\\') {
-
+            c = next();
+            switch (c) {
+            case 'a': out->push_back('\a'); break;
+            case 'b': out->push_back('\b'); break;
+            case 'f': out->push_back('\f'); break;
+            case 'n': out->push_back('\n'); break;
+            case 'r': out->push_back('\r'); break;
+            case 't': out->push_back('\t'); break;
+            case 'v': out->push_back('\v'); break;
+            case '"': out->push_back('\"'); break;
+            case '\'': out->push_back('\''); break;
+            case '\\': out->push_back('\\'); break;
+            case 'x': encodeInt(out, BASE16); break;
+            case 'd': encodeInt(out, BASE10); break;
+            default: 
+                out->push_back(c);
+                warn(here, "invalid character escape");
+                break;
+            }
         } else {
             out->push_back(c);
         }
@@ -200,9 +225,35 @@ namespace cthulhu {
         return true;
     }
 
+    void Lexer::encodeInt(utf8::string* out, Base base) {
+        if (base == BASE10) {
+            while (isdigit(peek())) {
+                uint8_t num = next() - '0';
+                if (isdigit(peek())) {
+                    num += next() - '0';
+                }
+                out->push_back(num);
+            }
+        } else if (base == BASE16) {
+            while (isxdigit(peek())) {
+                uint8_t num = next() - '0';
+                if (isxdigit(peek())) {
+                    num += next() - '0';
+                }
+                out->push_back(num);
+            }
+        } else {
+            // TODO: issue diagnostic
+        }
+    }
+
     Token Lexer::token(const Range& start, Token::Type type, TokenData data) {
         auto range = start.to(here);
         return Token(range, type, data);
+    }
+
+    void Lexer::warn(const Range& range, const std::string& message) {
+        messages.emplace(range, message);
     }
 
     Token Lexer::read() {
@@ -219,5 +270,15 @@ namespace cthulhu {
         }
 
         throw LexerError(this, LexerError::CHAR);
+    }
+
+    std::optional<Diagnostic> Lexer::diagnostic() {
+        if (messages.empty()) {
+            return std::nullopt;
+        }
+
+        auto last = messages.back();
+        messages.pop();
+        return last;
     }
 }

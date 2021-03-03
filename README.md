@@ -1,9 +1,23 @@
 # Cthulhu
 Probably better than javascript
 
-### Building
+## Building
+
+### Windows
 ```sh
-meson build
+meson build -Dcpp_std=c++latest
+ninja -C build
+```
+
+### Clang++
+```sh
+meson build -Dcpp_std=c++2a
+ninja -C build
+```
+
+### G++
+```sh
+meson build -Dcpp_std=c++2a
 ninja -C build
 ```
 
