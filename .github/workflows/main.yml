@@ -28,3 +28,4 @@ jobs:
         with:
           action: test
           setup-options: ${{ matrix.config.options }}
+          meson-version: 0.56.2
