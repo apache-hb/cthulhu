@@ -165,17 +165,12 @@ namespace cthulhu {
         next();
 
         while (true) {
-            c32 c = next(true);
-
-            printf("%d ", (int)c);
-            str += c;
+            str += next(true);
 
             if (str.ends_with(limit)) {
                 break;
             }
         }
-
-        printf("\n%ld\n", limit.length());
 
         // return the string with the trailing characters sliced off
         auto out = str.substr(0, str.length() - limit.length());
