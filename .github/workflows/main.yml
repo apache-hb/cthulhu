@@ -1,0 +1,29 @@
+name: Build & Test
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config: 
+          - { name: "windows msvc", os: windows-latest, cc: "cl", cxx: "cl" }
+          - { name: "linux gcc", os: ubuntu-latest, cc: "gcc", cxx: "g++" }
+          - { name: "linux clang", os: ubuntu-latest, cc: "clang", cxx: "clang++" }
+          - { name: "macos clang", os: macos-latest, cc: "clang", cxx: "clang++" }
+          
+    steps:
+      - uses: actions/checkout@master
+      - uses: textbook/git-checkout-submodule-action@master
+      - uses: ashutoshvarma/setup-ninja@master
+      - uses: actions/setup-python@v1
+      - uses: BSFishy/meson-build@v1.0.2
+        with:
+          action: test
+        
