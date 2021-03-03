@@ -13,10 +13,10 @@ jobs:
     strategy:
       matrix:
         config: 
-          - { name: "windows msvc", os: windows-latest, cc: "cl", cxx: "cl" }
-          - { name: "linux gcc", os: ubuntu-latest, cc: "gcc", cxx: "g++" }
-          - { name: "linux clang", os: ubuntu-latest, cc: "clang", cxx: "clang++" }
-          - { name: "macos clang", os: macos-latest, cc: "clang", cxx: "clang++" }
+          - { name: "windows msvc", os: windows-latest, cc: "cl", cxx: "cl", options: "-Dcpp_std=c++latest" }
+          - { name: "linux gcc", os: ubuntu-latest, cc: "gcc", cxx: "g++", options: "-Dcpp_std=c++2a" }
+          - { name: "linux clang", os: ubuntu-latest, cc: "clang", cxx: "clang++", options: "-Dcpp_std=c++2a" }
+          - { name: "macos clang", os: macos-latest, cc: "clang", cxx: "clang++", options: "-Dcpp_std=c++2a" }
           
     steps:
       - uses: actions/checkout@master
@@ -27,4 +27,4 @@ jobs:
       - uses: BSFishy/meson-build@v1.0.2
         with:
           action: test
-        
+          setup-options: ${{ matrix.config.options }}
