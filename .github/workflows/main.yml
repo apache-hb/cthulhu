@@ -20,7 +20,7 @@ jobs:
           
     steps:
       - uses: ilammy/msvc-dev-cmd@v1
-        if: matrix.config.os == 'windows-msvc'
+        if: ${{ matrix.config.os }} == 'windows-msvc'
       - uses: actions/checkout@master
         with:
           submodules: 'true'
