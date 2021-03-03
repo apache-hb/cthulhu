@@ -24,10 +24,6 @@ struct TestLexer : Lexer {
 
     Token expectString(const utf8::string& str) {
         auto token = expect(Token::STRING);
-        fprintf(stderr, "%s", token.string()->c_str());
-        fprintf(stderr, "a %ld\n", token.string()->size());
-        fprintf(stderr, "%s", str.c_str());
-        fprintf(stderr, "b %ld\n", str.size());
         ASSERT(*token.string() == str);
         return token;
     }
