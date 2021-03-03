@@ -11,8 +11,6 @@ namespace cthulhu {
 
         Range to(const Range& end) const;
 
-        Lexer* source() const;
-    private:
         Lexer* lexer;
         size_t offset;
         size_t line;

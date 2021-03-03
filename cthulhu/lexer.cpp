@@ -282,4 +282,8 @@ namespace cthulhu {
         messages.pop();
         return last;
     }
+
+    utf8::string Lexer::format(const Diagnostic& diag) const {
+        return fmt::format("[{}:{}]: {}\n--> {}", diag.range.line, diag.range.column, name.c_str(), diag.message);
+    }
 }
