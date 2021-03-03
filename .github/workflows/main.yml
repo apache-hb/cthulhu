@@ -31,3 +31,6 @@ jobs:
           action: test
           setup-options: ${{ matrix.config.options }}
           meson-version: 0.56.2
+        env:
+          CC: ${{ matrix.config.cc }}
+          CXX: ${{ matrix.config.cxx }}
