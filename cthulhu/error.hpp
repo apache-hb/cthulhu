@@ -18,6 +18,8 @@ namespace cthulhu {
         LexerError(Lexer* lexer, Type type);
 
         const char* what() const noexcept;
+
+        utf8::string format() const;
     private:
         Lexer* lexer;
         Type type;

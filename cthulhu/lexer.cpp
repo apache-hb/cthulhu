@@ -286,4 +286,8 @@ namespace cthulhu {
     utf8::string Lexer::format(const Diagnostic& diag) const {
         return fmt::format("[{}:{}]: {}\n--> {}", diag.range.line, diag.range.column, name.c_str(), diag.message);
     }
+
+    const utf8::string& Lexer::file() const {
+        return name;
+    }
 }

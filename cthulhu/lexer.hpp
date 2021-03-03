@@ -27,6 +27,9 @@ namespace cthulhu {
 
         // format a diagnostic into a pretty string
         utf8::string format(const Diagnostic& diag) const;
+
+        // get file name
+        const utf8::string& file() const;
     private:
         // get the next char from the strea
         // if `end` is true then throw an exception

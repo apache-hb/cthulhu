@@ -1,4 +1,5 @@
 #include "error.hpp"
+#include "lexer.hpp"
 
 namespace cthulhu {
     LexerError::LexerError(Lexer* lexer, LexerError::Type type)
@@ -12,5 +13,9 @@ namespace cthulhu {
         case LexerError::CHAR: return "invalid char";
         default: return "unknown";
         }
+    }
+
+    utf8::string LexerError::format() const {
+        return lexer->file();
     }
 }
