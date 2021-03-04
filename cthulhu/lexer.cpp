@@ -329,13 +329,10 @@ namespace cthulhu {
                 case '\'': out = out * 10 + '\''; break;
                 case '\\': out = out * 10 + '\\'; break;
                 case 'x': {
-                    fprintf(stderr, "hex\n");
                     out = out * 16 + next() - '0';
                     while (isxdigit(peek())) {
-                        fprintf(stderr, "peek: %d %d\n", out, peek() - '0');
                         out = out * 16 + next() - '0';
                     }
-                    fprintf(stderr, "temp %d\n", out);
                     break;
                 }
                 case 'd': {
@@ -374,8 +371,8 @@ namespace cthulhu {
             auto* str = string();
             return token(start, Token::STRING, { .string = str });
         } else if (c == '\'') {
-            c32 c = encodeChar();
-            return token(start, Token::CHAR, { .letter = c });
+            c32 letter = encodeChar();
+            return token(start, Token::CHAR, { .letter = letter });
         } else {
             Key key = symbol(c);
             return token(start, Token::KEY, { .key = key });

@@ -30,7 +30,6 @@ struct TestLexer : Lexer {
 
     Token expectChar(c32 c) {
         auto token = expect(Token::CHAR);
-        fprintf(stderr, "%d %d\n", (int)token.letter(), (int)c);
         ASSERT(token.letter() == c);
         return token;
     }
