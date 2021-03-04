@@ -115,5 +115,8 @@ namespace cthulhu {
 
         // lexing diagnostic messages
         std::queue<Diagnostic> messages;
+
+        // template depth
+        int depth;
     };
 }

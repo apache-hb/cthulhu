@@ -9,6 +9,42 @@
 
 KEY(USING, "using")
 
+OP(LPAREN, "(")
+OP(RPAREN, ")")
+OP(LSQUARE, "[")
+OP(RSQUARE, "]")
+OP(LBRACE, "{")
+OP(RBRACE, "}")
+
+OP(COMMA, ",")
+OP(DOT, ".")
+OP(DOT2, "..")
+OP(DOT3, "...")
+OP(QUESTION, "?")
+OP(AT, "@")
+
+OP(COLON, ":")
+OP(COLON2, "::")
+
+OP(ADD, "+")
+OP(ADDEQ, "+=")
+
+OP(NOT, "!")
+OP(NEQ, "!=")
+
+OP(BEGIN, "!<")
+OP(END, ">")
+
+OP(SHL, "<<")
+OP(SHLEQ, "<<=")
+OP(SHR, ">>")
+OP(SHREQ, ">>=")
+
+OP(LT, "<")
+OP(LTE, "<=")
+OP(GT, ">")
+OP(GTE, ">=")
+
 /*
 KEY(LET, "let")
 KEY(VAR, "var")
