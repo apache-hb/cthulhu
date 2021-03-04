@@ -260,6 +260,8 @@ namespace cthulhu {
         case '}': return Key::RBRACE;
         case '@': return Key::AT;
         case '?': return Key::QUESTION;
+        case ',': return Key::COMMA;
+        case '~': return Key::FLIP;
         case ':': return eat(':') ? Key::COLON2 : Key::COLON;
         case '.': {
             if (eat('.')) {
@@ -270,7 +272,6 @@ namespace cthulhu {
             }
             return Key::DOT;
         }
-        case ',': return Key::COMMA;
         case '!': {
             if (eat('<')) {
                 depth++;
@@ -300,7 +301,31 @@ namespace cthulhu {
         }
         
         case '+': return eat('=') ? Key::ADDEQ : Key::ADD;
-
+        case '-': {
+            if (eat('>')) {
+                return Key::ARROW;
+            } else {
+                return eat('=') ? Key::SUBEQ : Key::SUB;
+            }
+        }
+        case '/': return eat('=') ? Key::DIVEQ : Key::DIV;
+        case '*': return eat('=') ? Key::MULEQ : Key::MUL;
+        case '%': return eat('=') ? Key::MODEQ : Key::MOD;
+        case '^': return eat('=') ? Key::XOREQ : Key::XOR;
+        case '&': {
+            if (eat('&')) {
+                return Key::AND;
+            } else {
+                return eat('=') ? Key::BITANDEQ : Key::BITAND;
+            }
+        }
+        case '|': {
+            if (eat('|')) {
+                return Key::OR;
+            } else {
+                return eat('=') ? Key::BITOREQ : Key::BITOR;
+            }
+        }
         default:
             throw LexerError(this, LexerError::CHAR);
         }

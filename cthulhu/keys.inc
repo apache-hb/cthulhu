@@ -22,6 +22,8 @@ OP(DOT2, "..")
 OP(DOT3, "...")
 OP(QUESTION, "?")
 OP(AT, "@")
+OP(NOT, "!")
+OP(ARROW, "->")
 
 OP(COLON, ":")
 OP(COLON2, "::")
@@ -29,16 +31,42 @@ OP(COLON2, "::")
 OP(ADD, "+")
 OP(ADDEQ, "+=")
 
-OP(NOT, "!")
-OP(NEQ, "!=")
+OP(SUB, "-")
+OP(SUBEQ, "-=")
+
+OP(MUL, "*")
+OP(MULEQ, "*=")
+
+OP(DIV, "/")
+OP(DIVEQ, "/=")
+
+OP(MOD, "%")
+OP(MODEQ, "%=")
 
 OP(BEGIN, "!<")
 OP(END, ">")
+
+OP(EQ, "==")
+OP(NEQ, "!=")
+
+OP(AND, "&&")
+OP(OR, "||")
 
 OP(SHL, "<<")
 OP(SHLEQ, "<<=")
 OP(SHR, ">>")
 OP(SHREQ, ">>=")
+
+OP(BITAND, "&")
+OP(BITANDEQ, "&=")
+
+OP(BITOR, "|")
+OP(BITOREQ, "|=")
+
+OP(XOR, "^")
+OP(XOREQ, "^=")
+
+OP(FLIP, "~")
 
 OP(LT, "<")
 OP(LTE, "<=")
