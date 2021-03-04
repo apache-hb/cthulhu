@@ -2,9 +2,12 @@
 #include "tlexer.hpp"
 
 int main() {
-    auto stream = FileStream("data/rstring3.txt");
+    auto stream = StringStream(R"(
+        "hello world"
+    )");
     auto lexer = TestLexer(&stream);
 
-    lexer.expectString("\nhello world\n");
+    lexer.expectString("hello world");
+
     lexer.expect(Token::END);
 }

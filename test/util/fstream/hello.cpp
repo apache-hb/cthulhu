@@ -1,7 +1,7 @@
 #include "tstream.hpp"
 
 int main() {
-    auto handle = FileStream("data/hello.txt");
+    auto handle = FileStream("data/plain/hello.txt");
     auto stream = Stream(&handle);
 
     ASSERT(stream.peek() == 'h');

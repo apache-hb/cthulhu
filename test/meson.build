@@ -8,17 +8,25 @@ util = [
 
 lex = [
     # sanity checks
-    'lex/end', 'lex/ident', 'lex/intern', 'lex/key',
+    'lex/end', 'lex/ident', 'lex/key',
 
     # raw strings
-    'lex/rstring1', 'lex/rstring2', 
+    'lex/strings/rstring1', 'lex/strings/rstring2',
     
+    # single line strings
+    'lex/strings/string1', 'lex/strings/encode',
+
+    # string interning
+    'lex/intern/idents', 'lex/intern/mixed', 'lex/intern/strings',
+
     # TODO: this test is bugged due to https://github.com/DuffsDevice/tiny-utf8/issues/58
     # leave it disabled until thats resolved
     # 'lex/rstring3'
 
     # diagnostic messages
-    'lex/diagnostic1', 'lex/diagnostic2'
+    'lex/diagnostic1', 'lex/diagnostic2',
+
+    'lex/chars/char'
 ]
 
 tests = util + lex

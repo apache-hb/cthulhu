@@ -50,6 +50,7 @@ namespace cthulhu {
         Key key() const;
         const utf8::string* ident() const;
         const utf8::string* string() const;
+        c32 letter() const;
 
     private:
         Range where;

@@ -2,7 +2,7 @@
 #include "tlexer.hpp"
 
 int main() {
-    auto stream = FileStream("data/rstring1.txt");
+    auto stream = FileStream("data/plain/rstring1.txt");
     auto lexer = TestLexer(&stream);
 
     lexer.expectString("hello world");

@@ -89,6 +89,12 @@ namespace cthulhu {
         // add a warning to the message queue
         void warn(const Range& range, const std::string& message);
 
+        // read char literal
+        c32 encodeChar();
+
+        // lex a symbol/keyword
+        Key symbol(c32 c);
+
         // out source stream
         Stream stream;
 
