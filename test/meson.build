@@ -26,7 +26,7 @@ lex = [
     # diagnostic messages
     'lex/diagnostic1', 'lex/diagnostic2',
 
-    'lex/chars/char'
+    'lex/chars/char', 'lex/symbols'
 ]
 
 tests = util + lex

@@ -87,6 +87,7 @@ namespace cthulhu {
         : stream(stream)
         , here(this)
         , name(name)
+        , depth(0)
     { }
 
     c32 Lexer::next(bool end) {
@@ -251,17 +252,55 @@ namespace cthulhu {
 
     Key Lexer::symbol(c32 c) {
         switch (c) {
-        case '(':
-        case ')':
-        case '[':
-        case ']':
-        case '{':
-        case '}':
-        case '@':
-        case '?':
-        case ':':
-        case '.':
-        case ',':
+        case '(': return Key::LPAREN;
+        case ')': return Key::RPAREN;
+        case '[': return Key::LSQUARE;
+        case ']': return Key::RSQUARE;
+        case '{': return Key::LBRACE;
+        case '}': return Key::RBRACE;
+        case '@': return Key::AT;
+        case '?': return Key::QUESTION;
+        case ':': return eat(':') ? Key::COLON2 : Key::COLON;
+        case '.': {
+            if (eat('.')) {
+                if (eat('.')) {
+                    return Key::DOT3;
+                }
+                return Key::DOT2;
+            }
+            return Key::DOT;
+        }
+        case ',': return Key::COMMA;
+        case '!': {
+            if (eat('<')) {
+                depth++;
+                return Key::BEGIN;
+            } else if (eat('=')) {
+                return Key::NEQ;
+            } else {
+                return Key::NOT;
+            }
+        }
+        case '<': {
+            if (eat('<')) {
+                return eat('=') ? Key::SHLEQ : Key::SHL;
+            } else {
+                return eat('=') ? Key::LTE : Key::LT;
+            }
+        }
+        case '>': {
+            if (depth > 0) {
+                depth--;
+                return Key::END;
+            } else if (eat('>')) {
+                return eat('=') ? Key::SHREQ : Key::SHR;
+            } else {
+                return eat('=') ? Key::GTE : Key::GT;
+            }
+        }
+        
+        case '+': return eat('=') ? Key::ADDEQ : Key::ADD;
+
         default:
             throw LexerError(this, LexerError::CHAR);
         }
