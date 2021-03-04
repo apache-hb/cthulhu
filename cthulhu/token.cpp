@@ -41,6 +41,7 @@ namespace cthulhu {
 
         switch (type) {
         case Token::IDENT: return data.ident == other.data.ident;
+        case Token::STRING: return data.string == other.data.string;
         default: throw std::runtime_error("unreachable");
         }
     }
@@ -52,6 +53,7 @@ namespace cthulhu {
 
         switch (type) {
         case Token::IDENT: return data.ident != other.data.ident;
+        case Token::STRING: return data.string != other.data.string;
         default: throw std::runtime_error("unreachable");
         }
     }
@@ -74,5 +76,11 @@ namespace cthulhu {
         CHECK_TYPE(Token::STRING);
 
         return data.string;
+    }
+
+    c32 Token::letter() const {
+        CHECK_TYPE(Token::CHAR);
+
+        return data.letter;
     }
 }

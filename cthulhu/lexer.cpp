@@ -239,6 +239,7 @@ namespace cthulhu {
                 out->push_back(num);
             }
         } else {
+            throw LexerError(this, LexerError::END);
             // TODO: issue diagnostic
         }
     }
@@ -246,6 +247,76 @@ namespace cthulhu {
     Token Lexer::token(const Range& start, Token::Type type, TokenData data) {
         auto range = start.to(here);
         return Token(range, type, data);
+    }
+
+    Key Lexer::symbol(c32 c) {
+        switch (c) {
+        case '(':
+        case ')':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+        case '@':
+        case '?':
+        case ':':
+        case '.':
+        case ',':
+        default:
+            throw LexerError(this, LexerError::CHAR);
+        }
+    }
+
+#define PARSE_NUM(v, i, check) 
+
+    c32 Lexer::encodeChar() {
+        c32 out = 0;
+
+        for (;;) {
+            c32 c = next(true);
+            if (c == '\'') {
+                break;
+            } else if (c == '\\') {
+                c = next();
+                switch (c) {
+                case 'a': out = out * 10 + '\a'; break;
+                case 'b': out = out * 10 + '\b'; break;
+                case 'f': out = out * 10 + '\f'; break;
+                case 'n': out = out * 10 + '\n'; break;
+                case 'r': out = out * 10 + '\r'; break;
+                case 't': out = out * 10 + '\t'; break;
+                case 'v': out = out * 10 + '\v'; break;
+                case '"': out = out * 10 + '\"'; break;
+                case '\'': out = out * 10 + '\''; break;
+                case '\\': out = out * 10 + '\\'; break;
+                case 'x': {
+                    fprintf(stderr, "hex\n");
+                    out = out * 16 + next() - '0';
+                    while (isxdigit(peek())) {
+                        fprintf(stderr, "peek: %d %d\n", out, peek() - '0');
+                        out = out * 16 + next() - '0';
+                    }
+                    fprintf(stderr, "temp %d\n", out);
+                    break;
+                }
+                case 'd': {
+                    out = out * 10 + next() - '0';
+                    while (isdigit(peek())) {
+                        out = out * 10 + next() - '0';
+                    }
+                    break;
+                }
+                default: 
+                    out = out * 10 + c;
+                    warn(here, "invalid character escape in char"); 
+                    break;
+                }
+            } else {
+                out = out * 10 + c;
+            }
+        }
+
+        return out;
     }
 
     void Lexer::warn(const Range& range, const std::string& message) {
@@ -263,9 +334,13 @@ namespace cthulhu {
         } else if (c == '"') {
             auto* str = string();
             return token(start, Token::STRING, { .string = str });
+        } else if (c == '\'') {
+            c32 c = encodeChar();
+            return token(start, Token::CHAR, { .letter = c });
+        } else {
+            Key key = symbol(c);
+            return token(start, Token::KEY, { .key = key });
         }
-
-        throw LexerError(this, LexerError::CHAR);
     }
 
     std::optional<Diagnostic> Lexer::diagnostic() {
