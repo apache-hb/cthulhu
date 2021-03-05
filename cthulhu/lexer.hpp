@@ -59,6 +59,24 @@ namespace cthulhu {
             return out;
         }
 
+        template<typename F>
+        size_t collectNumber(size_t base, c32 first, F&& ok, c32(*func)(c32)) {
+            size_t out = first != END ? first - '0' : 0;
+            
+            while (true) {
+                c32 c = peek();
+                if (c == '_') {
+                    next();
+                } else if (ok(c)) {
+                    out = (out * base) + func(next());
+                } else {
+                    break;
+                }
+            }
+
+            return out;
+        }
+
         // returns either a raw string, an ident, or a keyword
         Token ident(const Range& start, c32 first);
 
@@ -67,6 +85,9 @@ namespace cthulhu {
 
         // collect a single line string
         const utf8::string* string();
+
+        // lex a number and suffix
+        Number digit(c32 c);
 
         // decode a character in a string and place it 
         // in `out`, return true if the string lexing should continue
@@ -90,7 +111,7 @@ namespace cthulhu {
         void warn(const Range& range, const std::string& message);
 
         // read char literal
-        c32 encodeChar();
+        uint32_t encodeChar();
 
         // lex a symbol/keyword
         Key symbol(c32 c);

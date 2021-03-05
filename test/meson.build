@@ -27,7 +27,10 @@ lex = [
     'lex/diagnostic1', 'lex/diagnostic2',
 
     'lex/chars/char', 'lex/symbols/symbols', 'lex/symbols/dots',
-    'lex/symbols/templates'
+    'lex/symbols/templates',
+
+    'lex/numbers/base2', 'lex/numbers/base10', 'lex/numbers/base16', 
+    'lex/numbers/mixed', 'lex/numbers/suffix'
 ]
 
 tests = util + lex

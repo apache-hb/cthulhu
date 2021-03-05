@@ -70,6 +70,24 @@ namespace {
         return isalnum(c) || c == '_';
     }
 
+    bool isbinary(c32 c) {
+        return c == '0' || c == '1';
+    }
+
+    bool isdecimal(c32 c) {
+        return isdigit(c);
+    }
+
+    c32 hextoint(c32 code) {
+        if (code >= '0' && code <= '9') {
+            return code - '0';
+        } else if (code >= 'a' && code <= 'f') {
+            return code - 'a' + 10;
+        } else {
+            return code - 'A' + 10;
+        }
+    }
+
     const std::unordered_map<utf8::string, cthulhu::Key> keywords = {
 #define OP(id, str) { str, cthulhu::Key::id },
 #define KEY(id, str) { str, cthulhu::Key::id },
@@ -233,9 +251,9 @@ namespace cthulhu {
             }
         } else if (base == BASE16) {
             while (isxdigit(peek())) {
-                uint8_t num = next() - '0';
+                uint8_t num = (uint8_t)hextoint(next());
                 if (isxdigit(peek())) {
-                    num += next() - '0';
+                    num += (uint8_t)hextoint(next());
                 }
                 out->push_back(num);
             }
@@ -331,10 +349,8 @@ namespace cthulhu {
         }
     }
 
-#define PARSE_NUM(v, i, check) 
-
-    c32 Lexer::encodeChar() {
-        c32 out = 0;
+    uint32_t Lexer::encodeChar() {
+        uint32_t out = 0;
 
         for (;;) {
             c32 c = next(true);
@@ -354,9 +370,9 @@ namespace cthulhu {
                 case '\'': out = out * 10 + '\''; break;
                 case '\\': out = out * 10 + '\\'; break;
                 case 'x': {
-                    out = out * 16 + next() - '0';
+                    out = (out * 16) + hextoint(next());
                     while (isxdigit(peek())) {
-                        out = out * 16 + next() - '0';
+                        out = (out * 16) + hextoint(next());
                     }
                     break;
                 }
@@ -384,6 +400,24 @@ namespace cthulhu {
         messages.emplace(range, message);
     }
 
+    Number Lexer::digit(c32 c) {
+        size_t out = 0;
+
+        if (c == '0' && eat('x')) {
+            out = collectNumber(16, END, isxdigit, hextoint);
+        } else if (c == '0' && eat('b')) {
+            out = collectNumber(2, END, isbinary, [](c32 c) { return c - '0'; });
+        } else {
+            out = collectNumber(10, c, isdecimal, [](c32 c) { return c - '0'; });
+        }
+
+        auto* suffix = isident1(peek())
+            ? idents.intern(collect(next(), isident2))
+            : nullptr;
+
+        return { out, suffix };
+    }
+
     Token Lexer::read() {
         c32 c = skip();
         auto start = here;
@@ -398,6 +432,9 @@ namespace cthulhu {
         } else if (c == '\'') {
             c32 letter = encodeChar();
             return token(start, Token::CHAR, { .letter = letter });
+        } else if (isdigit(c)) {
+            Number num = digit(c);
+            return token(start, Token::INT, { .digit = num });
         } else {
             Key key = symbol(c);
             return token(start, Token::KEY, { .key = key });
