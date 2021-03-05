@@ -88,6 +88,10 @@ namespace {
         }
     }
 
+    c32 numtoint(c32 code) {
+        return code - '0';
+    }
+
     const std::unordered_map<utf8::string, cthulhu::Key> keywords = {
 #define OP(id, str) { str, cthulhu::Key::id },
 #define KEY(id, str) { str, cthulhu::Key::id },
@@ -406,9 +410,9 @@ namespace cthulhu {
         if (c == '0' && eat('x')) {
             out = collectNumber(16, END, isxdigit, hextoint);
         } else if (c == '0' && eat('b')) {
-            out = collectNumber(2, END, isbinary, [](c32 c) { return c - '0'; });
+            out = collectNumber(2, END, isbinary, numtoint);
         } else {
-            out = collectNumber(10, c, isdecimal, [](c32 c) { return c - '0'; });
+            out = collectNumber(10, c, isdecimal, numtoint);
         }
 
         auto* suffix = isident1(peek())
