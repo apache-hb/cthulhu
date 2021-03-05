@@ -30,6 +30,7 @@ struct TestLexer : Lexer {
 
     Token expectChar(c32 c) {
         auto token = expect(Token::CHAR);
+        fprintf(stderr, "%d %d\n", (int)token.letter(), (int)c);
         ASSERT(token.letter() == c);
         return token;
     }
@@ -37,6 +38,17 @@ struct TestLexer : Lexer {
     Token expectKey(Key key) {
         auto token = expect(Token::KEY);
         ASSERT(token.key() == key);
+        return token;
+    }
+
+    Token expectNumber(size_t num, const utf8::string& suffix = "") {
+        auto token = expect(Token::INT);
+        auto data = token.number();
+        fprintf(stderr, "%zu %zu\n", data.number, num);
+        ASSERT(data.number == num);
+        if (!suffix.empty()) {
+            ASSERT(*data.suffix == suffix);
+        }
         return token;
     }
 };

@@ -6,6 +6,7 @@
 
 namespace cthulhu {
     struct Range {
+        Range();
         Range(Lexer* lexer);
         Range(Lexer* lexer, size_t offset, size_t line, size_t column, size_t length);
 
@@ -24,11 +25,18 @@ namespace cthulhu {
 #include "keys.inc"
     };
 
+    struct Number {
+        Number(size_t num, const utf8::string* suf);
+        size_t number;
+        const utf8::string* suffix;
+    };
+
     union TokenData {
         Key key;
         const utf8::string* ident;
         const utf8::string* string;
         c32 letter;
+        Number digit;
     };
 
     struct Token {
@@ -38,9 +46,11 @@ namespace cthulhu {
             STRING,
             INT,
             CHAR,
-            END
+            END,
+            INVALID
         };
 
+        Token();
         Token(Range where, Type type, TokenData data);
 
         bool is(Type other) const;
@@ -50,7 +60,9 @@ namespace cthulhu {
         Key key() const;
         const utf8::string* ident() const;
         const utf8::string* string() const;
+        Number number() const;
         c32 letter() const;
+        bool valid() const;
 
     private:
         Range where;

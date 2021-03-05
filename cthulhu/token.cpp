@@ -4,6 +4,8 @@
 #include <fmt/core.h>
 
 namespace cthulhu {
+    Range::Range() : Range(nullptr) { }
+
     Range::Range(Lexer* lexer)
         : lexer(lexer)
         , offset(0)
@@ -27,6 +29,16 @@ namespace cthulhu {
     bool Token::is(Token::Type other) const { 
         return type == other; 
     }
+
+    Number::Number(size_t num, const utf8::string* suf) 
+        : number(num)
+        , suffix(suf)
+    { }
+
+    Token::Token() 
+        : type(Token::INVALID)
+        , data({}) 
+    { }
 
     Token::Token(Range where, Type type, TokenData data) 
         : where(where)
@@ -82,5 +94,15 @@ namespace cthulhu {
         CHECK_TYPE(Token::CHAR);
 
         return data.letter;
+    }
+
+    Number Token::number() const {
+        CHECK_TYPE(Token::INT);
+        
+        return data.digit;
+    }
+
+    bool Token::valid() const {
+        return type != Token::INVALID;
     }
 }
