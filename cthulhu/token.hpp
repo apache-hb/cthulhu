@@ -20,6 +20,7 @@ namespace cthulhu {
     };
 
     enum struct Key {
+        INVALID,
 #define KEY(id, _) id,
 #define OP(id, _) id,
 #include "keys.inc"
@@ -51,11 +52,14 @@ namespace cthulhu {
         };
 
         Token();
+        Token(Type type, TokenData data);
         Token(Range where, Type type, TokenData data);
 
         bool is(Type other) const;
         bool operator==(const Token& other) const;
         bool operator!=(const Token& other) const;
+        bool equals(const Token& other) const;
+        operator bool() const { return valid(); }
 
         Key key() const;
         const utf8::string* ident() const;
@@ -63,7 +67,6 @@ namespace cthulhu {
         Number number() const;
         c32 letter() const;
         bool valid() const;
-
     private:
         Range where;
         Type type;

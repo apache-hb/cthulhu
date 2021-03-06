@@ -54,7 +54,9 @@ named-function-arg : `.` ident `=` expr
 
 ## Types
 
-type : pointer | closure | array | qualified
+type : pointer | closure | array | qualified | mutable
+
+mutable : var type
 
 pointer : `*` type
 
@@ -87,6 +89,8 @@ string : `"` letter* `"`
 letter : `\` ['"ntv0\\] | ~[\\\r\n]
 
 ## Keywords
+
+var : `var`
 
 using : `using`
 

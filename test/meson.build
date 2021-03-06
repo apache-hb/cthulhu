@@ -8,7 +8,10 @@ util = [
 
 lex = [
     # sanity checks
-    'lex/end', 'lex/ident', 'lex/key',
+    'lex/end', 'lex/ident', 
+    
+    # keywords
+    'lex/keys/key', 'lex/keys/all',
 
     # raw strings
     'lex/strings/rstring1', 'lex/strings/rstring2',
@@ -27,13 +30,19 @@ lex = [
     'lex/diagnostic1', 'lex/diagnostic2',
 
     'lex/chars/char', 'lex/symbols/symbols', 'lex/symbols/dots',
-    'lex/symbols/templates',
+    'lex/symbols/templates', 'lex/symbols/all',
 
     'lex/numbers/base2', 'lex/numbers/base10', 'lex/numbers/base16', 
     'lex/numbers/mixed', 'lex/numbers/suffix'
 ]
 
-tests = util + lex
+parse = [
+    'parse/types/name', 'parse/types/qual', 'parse/types/pointer',
+    'parse/types/var1', 'parse/types/var2',
+    'parse/types/closure1', 'parse/types/closure2'
+]
+
+tests = util + lex + parse
 
 foreach name : tests
     tname = '.'.join(name.split('/'))

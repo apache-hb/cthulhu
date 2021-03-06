@@ -22,7 +22,8 @@ src = [
     'cthulhu/lexer.cpp', 
     'cthulhu/stream.cpp',
     'cthulhu/pool.cpp',
-    'cthulhu/error.cpp'
+    'cthulhu/parser.cpp',
+    'cthulhu/ast.cpp'
 ]
 
 cthulhu = library('ctu', src, 

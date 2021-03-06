@@ -1,7 +1,7 @@
 #pragma once
 
-#include <lexer.hpp>
 #include "test.hpp"
+#include <lexer.hpp>
 
 using namespace cthulhu;
 

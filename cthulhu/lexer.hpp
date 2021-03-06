@@ -30,7 +30,8 @@ namespace cthulhu {
 
         // get file name
         const utf8::string& file() const;
-    private:
+    
+    //private:
         // get the next char from the strea
         // if `end` is true then throw an exception
         // if the EOF is reached
