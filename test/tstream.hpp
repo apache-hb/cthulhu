@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stream.hpp>
 #include "test.hpp"
+#include <stream.hpp>
 
 using namespace cthulhu;
 

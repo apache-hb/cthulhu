@@ -1,5 +1,4 @@
 #include "lexer.hpp"
-#include "error.hpp"
 
 #include <fmt/core.h>
 #include <unordered_map>
@@ -117,7 +116,7 @@ namespace cthulhu {
 
         if (c == END) {
             if (end) {
-                throw LexerError(this, LexerError::END);
+                throw std::runtime_error("unexpected EOF");
             }
 
             return END;
@@ -262,8 +261,7 @@ namespace cthulhu {
                 out->push_back(num);
             }
         } else {
-            throw LexerError(this, LexerError::END);
-            // TODO: issue diagnostic
+            throw std::runtime_error("unreachable");
         }
     }
 
@@ -285,6 +283,7 @@ namespace cthulhu {
         case ',': return Key::COMMA;
         case '~': return Key::FLIP;
         case ':': return eat(':') ? Key::COLON2 : Key::COLON;
+        case '=': return eat('=') ? Key::EQ : Key::ASSIGN;
         case '.': {
             if (eat('.')) {
                 if (eat('.')) {
@@ -349,7 +348,7 @@ namespace cthulhu {
             }
         }
         default:
-            throw LexerError(this, LexerError::CHAR);
+            throw std::runtime_error(fmt::format("invalid char {}", (char)c));
         }
     }
 

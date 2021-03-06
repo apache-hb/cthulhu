@@ -1,5 +1,4 @@
 #include "token.hpp"
-#include "error.hpp"
 
 #include <fmt/core.h>
 
@@ -35,9 +34,11 @@ namespace cthulhu {
         , suffix(suf)
     { }
 
-    Token::Token() 
-        : type(Token::INVALID)
-        , data({}) 
+    Token::Token() : Token(Token::INVALID, {}) { }
+
+    Token::Token(Type type, TokenData data)
+        : type(type)
+        , data(data)
     { }
 
     Token::Token(Range where, Type type, TokenData data) 
@@ -47,6 +48,14 @@ namespace cthulhu {
     { }
 
     bool Token::operator==(const Token& other) const {
+        return equals(other);
+    }
+
+    bool Token::operator!=(const Token& other) const {
+        return !equals(other);
+    }
+
+    bool Token::equals(const Token& other) const {
         if (type != other.type) {
             return false;
         }
@@ -58,19 +67,7 @@ namespace cthulhu {
         }
     }
 
-    bool Token::operator!=(const Token& other) const {
-        if (type != other.type) {
-            return true;
-        }
-
-        switch (type) {
-        case Token::IDENT: return data.ident != other.data.ident;
-        case Token::STRING: return data.string != other.data.string;
-        default: throw std::runtime_error("unreachable");
-        }
-    }
-
-#define CHECK_TYPE(type) if (!is(type)) { throw LexerError(where.lexer, LexerError::CAST); }
+#define CHECK_TYPE(type) if (!is(type)) { throw std::runtime_error("incorrect token type"); }
 
     Key Token::key() const {
         CHECK_TYPE(Token::KEY);
