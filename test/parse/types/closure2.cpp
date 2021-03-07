@@ -10,7 +10,7 @@ int main() {
     vec<ptr<NameType>> names = {
         MAKE<NameType>(
             MAKE<Ident>(
-                Token(Token::IDENT, { .ident = lexer.idents.intern("void") })
+                lexer.ident("void")
             )
         )
     };
@@ -18,7 +18,7 @@ int main() {
     vec<ptr<NameType>> ints = {
         MAKE<NameType>(
             MAKE<Ident>(
-                Token(Token::IDENT, { .ident = lexer.idents.intern("int") })
+                lexer.ident("int")
             )
         )
     };

@@ -39,7 +39,10 @@ lex = [
 parse = [
     'parse/types/name', 'parse/types/qual', 'parse/types/pointer',
     'parse/types/var1', 'parse/types/var2',
-    'parse/types/closure1', 'parse/types/closure2'
+    'parse/types/closure1', 'parse/types/closure2',
+    'parse/types/array1', 'parse/types/array2',
+
+    'parse/expr/bool'
 ]
 
 tests = util + lex + parse

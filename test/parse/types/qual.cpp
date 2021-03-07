@@ -10,12 +10,12 @@ int main() {
     vec<ptr<NameType>> names = {
         MAKE<NameType>(
             MAKE<Ident>(
-                Token(Token::IDENT, { .ident = lexer.idents.intern("name") })
+                lexer.ident("name")
             )
         ),
         MAKE<NameType>(
             MAKE<Ident>(
-                Token(Token::IDENT, { .ident = lexer.idents.intern("name2") })
+                lexer.ident("name2")
             )
         )
     };

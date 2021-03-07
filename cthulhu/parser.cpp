@@ -1,7 +1,7 @@
 #include "parser.hpp"
 #include "lexer.hpp"
 
-#define START(key) if (!eat(Token::KEY, Key::key)) { return nullptr; }
+#define START(key) if (!eatKey(Key::key)) { return nullptr; }
 #define TRY(expr) if (auto it = (expr); it) { return it; }
 
 namespace {
@@ -50,6 +50,15 @@ namespace {
     int associate(int other) {
         return other != P_LOGIC;
     }
+
+    bool validUnary(Key key) {
+        return key == Key::ADD 
+            || key == Key::SUB 
+            || key == Key::MUL 
+            || key == Key::BITAND 
+            || key == Key::NOT
+            || key == Key::FLIP;
+    }
 }
 
 namespace cthulhu {
@@ -88,7 +97,7 @@ namespace cthulhu {
         START(LSQUARE);
 
         auto type = parseType();
-        auto size = eat(Token::KEY, Key::COLON) ? parseExpr() : nullptr;
+        auto size = eatKey(Key::COLON) ? parseExpr() : nullptr;
 
         expect(Token::KEY, Key::RSQUARE);
 
@@ -159,7 +168,93 @@ namespace cthulhu {
     }
 
     ptr<ast::Expr> Parser::parsePrimaryExpr() {
-        return nullptr;
+        Token token = next();
+
+        ptr<ast::Expr> expr;
+
+        if (token.is(Token::KEY)) {
+            if (validUnary(token.key())) {
+                expr = MAKE<ast::UnaryExpr>(token, parsePrimaryExpr());
+            } else if (token.key() == Key::LPAREN) {
+                expr = parseExpr();
+                expect(Token::KEY, Key::RPAREN);
+            } else if (token.key() == Key::COERCE) {
+                expect(Token::KEY, Key::BEGIN);
+                auto type = parseType();
+                expect(Token::KEY, Key::END);
+                expect(Token::KEY, Key::LPAREN);
+                auto body = parseExpr();
+                expect(Token::KEY, Key::RPAREN);
+                expr = MAKE<ast::CoerceExpr>(type, body);
+            } else if (token.key() == Key::TRUE || token.key() == Key::FALSE) {
+                expr = MAKE<ast::BoolExpr>(token.key() == Key::TRUE);
+            }
+        } else if (token.is(Token::IDENT)) {
+            ahead = token;
+            auto name = parseQualifiedType();
+            expr = MAKE<ast::NameExpr>(name);
+        } else if (token.is(Token::INT)) {
+            expr = MAKE<ast::IntExpr>(token.number());
+        } else if (token.is(Token::STRING)) {
+            expr = MAKE<ast::StringExpr>(token.string());
+        } else if (token.is(Token::CHAR)) {
+            expr = MAKE<ast::CharExpr>(token.letter());
+        }
+
+        if (!expr) {
+            ahead = token;
+            return nullptr;
+        }
+
+        while (true) {
+            if (eatKey(Key::LSQUARE)) {
+                auto index = parseExpr();
+                expect(Token::KEY, Key::RSQUARE);
+                expr = MAKE<ast::SubscriptExpr>(expr, index);
+            } else if (eatKey(Key::LPAREN)) {
+                auto args = parseCallArgs();
+                expr = MAKE<ast::CallExpr>(expr, args);
+            } else if (eatKey(Key::DOT)) {
+                expr = MAKE<ast::AccessExpr>(expr, MAKE<ast::Ident>(eat(Token::IDENT)), false);
+            } else if (eatKey(Key::ARROW)) {
+                expr = MAKE<ast::AccessExpr>(expr, MAKE<ast::Ident>(eat(Token::IDENT)), true);
+            } else {
+                break;
+            }
+        }
+
+        return expr;
+    }
+
+    vec<ptr<ast::CallArg>> Parser::parseCallArgs() {
+        bool name = false;
+        vec<ptr<ast::CallArg>> args;
+
+        while (true) {
+            if (eatKey(Key::RPAREN)) {
+                break;
+            }
+
+            if (eatKey(Key::DOT)) {
+                name = true;
+                auto key = MAKE<ast::Ident>(expect(Token::IDENT));
+                expect(Token::KEY, Key::ASSIGN);
+                auto body = parseExpr();
+                args.push_back(MAKE<ast::CallArg>(key, body));
+            } else {
+                if (name) {
+                    throw std::runtime_error("unnamed arg after named arg");
+                }
+                auto body = parseExpr();
+                args.push_back(MAKE<ast::CallArg>(nullptr, body));
+            }
+
+            if (!eatKey(Key::RPAREN)) {
+                expect(Token::KEY, Key::COMMA);
+            }
+        }
+
+        return args;
     }
 
     //
@@ -190,6 +285,10 @@ namespace cthulhu {
         }
 
         return token;
+    }
+
+    bool Parser::eatKey(Key key) {
+        return eat(Token::KEY, key);
     }
 
     Token Parser::next() {

@@ -12,9 +12,7 @@ include-list : `...` | list
 
 ## Declarations
 
-decl : assert-decl
-
-assert-decl : assert (ident | string) `:` expr `;`
+decl : lol
 
 ## Expressions
 
@@ -97,3 +95,7 @@ using : `using`
 coerce : `coerce`
 
 assert : `assert`
+
+static : `static`
+
+virtual : `virtual`

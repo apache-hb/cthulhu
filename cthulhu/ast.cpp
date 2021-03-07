@@ -22,12 +22,57 @@ namespace {
         return true;
     }
 
-    ast::UnaryExpr::UnaryOp unop(Token) {
-        return {};
+    template<typename T>
+    bool pequals(ptr<T> lhs, ptr<T> rhs) {
+        if (lhs != nullptr && rhs != nullptr) {
+            return lhs->equals(rhs);
+        } else {
+            return !!lhs == !!rhs;
+        }
     }
 
-    ast::BinaryExpr::BinaryOp binop(Token) {
-        return {};
+    bool sequals(const utf8::string* lhs, const utf8::string* rhs) {
+        if (lhs != nullptr && rhs != nullptr) {
+            return *lhs == *rhs;
+        } else {
+            return !!lhs == !!rhs;
+        }
+    }
+
+    ast::UnaryExpr::UnaryOp unop(Token token) {
+        switch (token.key()) {
+        case Key::ADD: return ast::UnaryExpr::POS;
+        case Key::SUB: return ast::UnaryExpr::NEG;
+        case Key::BITAND: return ast::UnaryExpr::REF;
+        case Key::MUL: return ast::UnaryExpr::DEREF;
+        case Key::FLIP: return ast::UnaryExpr::FLIP;
+        case Key::NOT: return ast::UnaryExpr::NOT;
+        default: throw std::runtime_error("invalid unary op");
+        }
+    }
+
+    ast::BinaryExpr::BinaryOp binop(Token token) {
+        switch (token.key()) {
+        case Key::ADD: return ast::BinaryExpr::ADD;
+        case Key::SUB: return ast::BinaryExpr::SUB;
+        case Key::MUL: return ast::BinaryExpr::MUL;
+        case Key::MOD: return ast::BinaryExpr::MOD;
+        case Key::DIV: return ast::BinaryExpr::DIV;
+        case Key::BITAND: return ast::BinaryExpr::BITAND;
+        case Key::BITOR: return ast::BinaryExpr::BITOR;
+        case Key::XOR: return ast::BinaryExpr::XOR;
+        case Key::AND: return ast::BinaryExpr::AND;
+        case Key::OR: return ast::BinaryExpr::OR;
+        case Key::SHL: return ast::BinaryExpr::SHL;
+        case Key::SHR: return ast::BinaryExpr::SHR;
+        case Key::LT: return ast::BinaryExpr::LT;
+        case Key::LTE: return ast::BinaryExpr::LTE;
+        case Key::GT: return ast::BinaryExpr::GT;
+        case Key::GTE: return ast::BinaryExpr::GTE;
+        case Key::EQ: return ast::BinaryExpr::EQ;
+        case Key::NEQ: return ast::BinaryExpr::NEQ;
+        default: throw std::runtime_error("invalid binary op");
+        }
     }
 }
 
@@ -75,13 +120,7 @@ namespace cthulhu::ast {
 
     bool ArrayType::equals(const ptr<Node> other) const {
         if (auto o = SELF<ArrayType>(other); o) {
-            if (!size) {
-                if (o->size) {
-                    return false;
-                }
-            }
-
-            return type->equals(o->type) && size->equals(o->size);
+            return type->equals(o->type) && pequals(size, o->size);
         }
 
         return false;
@@ -154,5 +193,107 @@ namespace cthulhu::ast {
     bool TernaryExpr::equals(const ptr<Node> other) const {
         (void)other;
         return false;
+    }
+
+    StringExpr::StringExpr(const utf8::string* string) 
+        : string(string)
+    { }
+    
+    bool StringExpr::equals(const ptr<Node> other) const {
+        (void)other;
+        throw std::runtime_error("unimplemented");
+    }
+
+    IntExpr::IntExpr(const Number& number) 
+        : number(number)
+    { }
+    
+    bool IntExpr::equals(const ptr<Node> other) const {
+        if (auto o = SELF<IntExpr>(other); o) {
+            return number.number == o->number.number && sequals(number.suffix, o->number.suffix);
+        }
+
+        return false;
+    }
+
+    BoolExpr::BoolExpr(bool val) 
+        : val(val)
+    { }
+    
+    bool BoolExpr::equals(const ptr<Node> other) const {
+        if (auto o = SELF<BoolExpr>(other); o) {
+            return val == o->val;
+        }
+        
+        return false;
+    }
+
+    CharExpr::CharExpr(c32 letter) 
+        : letter(letter)
+    { }
+    
+    bool CharExpr::equals(const ptr<Node> other) const {
+        (void)other;
+        throw std::runtime_error("unimplemented");
+    }
+
+    NameExpr::NameExpr(ptr<QualifiedType> name) 
+        : name(name)
+    { }
+    
+    bool NameExpr::equals(const ptr<Node> other) const {
+        (void)other;
+        throw std::runtime_error("unimplemented");
+    }
+
+    CoerceExpr::CoerceExpr(ptr<Type> type, ptr<Expr> expr) 
+        : type(type)
+        , expr(expr)
+    { }
+    
+    bool CoerceExpr::equals(const ptr<Node> other) const {
+        (void)other;
+        throw std::runtime_error("unimplemented");
+    }
+
+    SubscriptExpr::SubscriptExpr(ptr<Expr> expr, ptr<Expr> index) 
+        : expr(expr)
+        , index(index)
+    { }
+    
+    bool SubscriptExpr::equals(const ptr<Node> other) const {
+        (void)other;
+        throw std::runtime_error("unimplemented");
+    }
+
+    AccessExpr::AccessExpr(ptr<Expr> body, ptr<Ident> field, bool indirect) 
+        : body(body)
+        , field(field)
+        , indirect(indirect)
+    { }
+    
+    bool AccessExpr::equals(const ptr<Node> other) const {
+        (void)other;
+        throw std::runtime_error("unimplemented");
+    }
+
+    CallArg::CallArg(ptr<Ident> name, ptr<Expr> expr) 
+        : name(name)
+        , expr(expr)
+    { }
+    
+    bool CallArg::equals(const ptr<Node> other) const {
+        (void)other;
+        throw std::runtime_error("unimplemented");
+    }
+
+    CallExpr::CallExpr(ptr<Expr> func, vec<ptr<CallArg>> args) 
+        : func(func)
+        , args(args)
+    { }
+
+    bool CallExpr::equals(const ptr<Node> other) const {
+        (void)other;
+        throw std::runtime_error("unimplemented");
     }
 }

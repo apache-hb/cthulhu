@@ -18,7 +18,7 @@ namespace cthulhu {
     };
 
     struct Lexer {
-        Lexer(Stream stream, const utf8::string& name);
+        Lexer(Stream stream, const utf8::string& name, ptr<StringPool> idents = nullptr, ptr<StringPool> strings = nullptr);
 
         Token read();
 
@@ -31,7 +31,7 @@ namespace cthulhu {
         // get file name
         const utf8::string& file() const;
     
-    //private:
+    protected:
         // get the next char from the strea
         // if `end` is true then throw an exception
         // if the EOF is reached
@@ -129,11 +129,11 @@ namespace cthulhu {
         // all currently read text
         utf8::string text;
 
-        // all strings that have been lexed
-        StringPool strings;
-
         // all idents that have been lexed
-        StringPool idents;
+        ptr<StringPool> idents;
+
+        // all strings that have been lexed
+        ptr<StringPool> strings;
 
         // lexing diagnostic messages
         std::queue<Diagnostic> messages;
