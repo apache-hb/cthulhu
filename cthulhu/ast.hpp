@@ -112,7 +112,12 @@ namespace cthulhu::ast {
         virtual bool equals(const ptr<Node> other) const override;
 
         enum UnaryOp {
-
+            NOT,
+            FLIP,
+            POS,
+            NEG,
+            DEREF,
+            REF
         };
 
     private:
@@ -127,7 +132,24 @@ namespace cthulhu::ast {
         virtual bool equals(const ptr<Node> other) const override;
 
         enum BinaryOp {
-
+            ADD,
+            SUB,
+            MUL,
+            MOD,
+            DIV,
+            BITAND,
+            BITOR,
+            XOR,
+            AND,
+            OR,
+            SHL,
+            SHR,
+            LT,
+            LTE,
+            GT,
+            GTE,
+            EQ,
+            NEQ
         };
 
     private:
@@ -148,42 +170,101 @@ namespace cthulhu::ast {
     };
 
     struct StringExpr : Expr {
+        StringExpr(const utf8::string* string);
+        virtual ~StringExpr() override { }
 
+        virtual bool equals(const ptr<Node> other) const override;
+
+    private:
+        const utf8::string* string;
     };
 
     struct IntExpr : Expr {
+        IntExpr(const Number& number);
+        virtual ~IntExpr() override { }
 
+        virtual bool equals(const ptr<Node> other) const override;
+
+    private:
+        Number number;
     };
 
     struct BoolExpr : Expr {
+        BoolExpr(bool val);
+        virtual ~BoolExpr() override { }
 
+        virtual bool equals(const ptr<Node> other) const override;
+
+    private:
+        bool val;
     };
 
     struct CharExpr : Expr {
+        CharExpr(c32 letter);
+        virtual ~CharExpr() override { }
 
+        virtual bool equals(const ptr<Node> other) const override;
+
+    private:
+        c32 letter;
     };
 
+    struct NameExpr : Expr {
+        NameExpr(ptr<QualifiedType> name);
+        virtual ~NameExpr() override { }
+
+        virtual bool equals(const ptr<Node> other) const override;
+    private:
+        ptr<QualifiedType> name;
+    };
+    
     struct CoerceExpr : Expr {
+        CoerceExpr(ptr<Type> type, ptr<Expr> expr);
+        virtual ~CoerceExpr() override { }
+
+        virtual bool equals(const ptr<Node> other) const override;
+    private:
         ptr<Type> type;
         ptr<Expr> expr;
     };
 
     struct SubscriptExpr : Expr {
+        SubscriptExpr(ptr<Expr> expr, ptr<Expr> index);
+        virtual ~SubscriptExpr() override { }
+
+        virtual bool equals(const ptr<Node> other) const override;
+    private:
         ptr<Expr> expr;
         ptr<Expr> index;
     };
 
     struct AccessExpr : Expr {
+        AccessExpr(ptr<Expr> body, ptr<Ident> field, bool indirect);
+        virtual ~AccessExpr() override { }
+
+        virtual bool equals(const ptr<Node> other) const override;
+    private:
         ptr<Expr> body;
         ptr<Ident> field;
+        bool indirect;
     };
 
     struct CallArg : Node {
+        CallArg(ptr<Ident> name, ptr<Expr> expr);
+        virtual ~CallArg() override { }
+
+        virtual bool equals(const ptr<Node> other) const override;
+    private:
         ptr<Ident> name;
         ptr<Expr> expr;
     };
 
     struct CallExpr : Expr {
+        CallExpr(ptr<Expr> func, vec<ptr<CallArg>> args);
+        virtual ~CallExpr() override { }
+
+        virtual bool equals(const ptr<Node> other) const override;
+    private:
         ptr<Expr> func;
         vec<ptr<CallArg>> args;
     };

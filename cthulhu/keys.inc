@@ -10,6 +10,7 @@ KEY(USING, "using")
 KEY(VAR, "var")
 KEY(TRUE, "true")
 KEY(FALSE, "false")
+KEY(COERCE, "coerce")
 
 OP(LPAREN, "(")
 OP(RPAREN, ")")

@@ -20,12 +20,15 @@ namespace cthulhu {
         ptr<ast::Expr> parseBinaryExpr(int precedence);
         ptr<ast::Expr> parsePrimaryExpr();
 
+        vec<ptr<ast::CallArg>> parseCallArgs();
+
     private:
         Token next();
         Token peek();
 
         Token eat(Token::Type type, Key key = Key::INVALID);
         Token expect(Token::Type type, Key key = Key::INVALID);
+        bool eatKey(Key key);
 
         template<typename T, typename F>
         vec<ptr<T>> collect(Key sep, F&& func, bool once = true) {

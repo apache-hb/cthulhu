@@ -51,4 +51,8 @@ struct TestLexer : Lexer {
         }
         return token;
     }
+
+    Token ident(const utf8::string& id) {
+        return Token(Token::IDENT, { .ident = idents->intern(id) });
+    }
 };

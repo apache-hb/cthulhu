@@ -104,10 +104,15 @@ namespace cthulhu {
         , message(message)
     { }
 
-    Lexer::Lexer(Stream stream, const utf8::string& name)
+    Lexer::Lexer(Stream stream, 
+                 const utf8::string& name, 
+                 ptr<StringPool> idents, 
+                 ptr<StringPool> strings)
         : stream(stream)
         , here(this)
         , name(name)
+        , idents(!!idents ? idents : MAKE<StringPool>())
+        , strings(!!strings ? strings : MAKE<StringPool>())
         , depth(0)
     { }
 
@@ -173,7 +178,7 @@ namespace cthulhu {
             return token(start, Token::KEY, { .key = search->second });
         } else {
             // otherwise its an identifier
-            return token(start, Token::IDENT, { .ident = idents.intern(ident) });
+            return token(start, Token::IDENT, { .ident = idents->intern(ident) });
         }
     }
 
@@ -196,7 +201,7 @@ namespace cthulhu {
 
         // return the string with the trailing characters sliced off
         auto out = str.substr(0, str.length() - limit.length());
-        return strings.intern(out);
+        return strings->intern(out);
     }
 
     const utf8::string* Lexer::string() {
@@ -204,7 +209,7 @@ namespace cthulhu {
 
         while (encode(&out));
 
-        return strings.intern(out);
+        return strings->intern(out);
     }
 
     bool Lexer::encode(utf8::string* out) {
@@ -415,7 +420,7 @@ namespace cthulhu {
         }
 
         auto* suffix = isident1(peek())
-            ? idents.intern(collect(next(), isident2))
+            ? idents->intern(collect(next(), isident2))
             : nullptr;
 
         return { out, suffix };
