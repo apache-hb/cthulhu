@@ -15,7 +15,16 @@ struct TestParser : Parser {
         ptr<ast::Node> temp = func();
         ASSERT(temp);
         ASSERT(node);
-        ASSERT(temp->equals(node));
+        if (!temp->equals(node)) {
+            Printer lhs;
+            Printer rhs;
+            temp->visit(&lhs);
+            node->visit(&rhs);
+
+            fprintf(stderr, "expected:\n%s\n", rhs.buffer.c_str());
+            fprintf(stderr, "actual:\n%s\n", lhs.buffer.c_str());
+            exit(1);
+        }
     }
 
 private:

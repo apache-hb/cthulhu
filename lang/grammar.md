@@ -12,7 +12,19 @@ include-list : `...` | list
 
 ## Declarations
 
-decl : lol
+decl : attribute* alias-decl
+
+alias-decl : using ident `=` type `;`
+
+attribute : `@` attribute-body
+
+attribute-body : `[` attribute-items `]` | attribute-item
+
+attribute-items : attribute-item (`,` attribute-item)*
+
+attribute-item : path attribute-args?
+
+attribute-args : `(` function-args `)`
 
 ## Expressions
 

@@ -2,8 +2,6 @@
 
 #include <type_traits>
 
-#define SELF std::dynamic_pointer_cast
-
 namespace {
     using namespace cthulhu;
 
@@ -28,50 +26,6 @@ namespace {
             return lhs->equals(rhs);
         } else {
             return !!lhs == !!rhs;
-        }
-    }
-
-    bool sequals(const utf8::string* lhs, const utf8::string* rhs) {
-        if (lhs != nullptr && rhs != nullptr) {
-            return *lhs == *rhs;
-        } else {
-            return !!lhs == !!rhs;
-        }
-    }
-
-    ast::UnaryExpr::UnaryOp unop(Token token) {
-        switch (token.key()) {
-        case Key::ADD: return ast::UnaryExpr::POS;
-        case Key::SUB: return ast::UnaryExpr::NEG;
-        case Key::BITAND: return ast::UnaryExpr::REF;
-        case Key::MUL: return ast::UnaryExpr::DEREF;
-        case Key::FLIP: return ast::UnaryExpr::FLIP;
-        case Key::NOT: return ast::UnaryExpr::NOT;
-        default: throw std::runtime_error("invalid unary op");
-        }
-    }
-
-    ast::BinaryExpr::BinaryOp binop(Token token) {
-        switch (token.key()) {
-        case Key::ADD: return ast::BinaryExpr::ADD;
-        case Key::SUB: return ast::BinaryExpr::SUB;
-        case Key::MUL: return ast::BinaryExpr::MUL;
-        case Key::MOD: return ast::BinaryExpr::MOD;
-        case Key::DIV: return ast::BinaryExpr::DIV;
-        case Key::BITAND: return ast::BinaryExpr::BITAND;
-        case Key::BITOR: return ast::BinaryExpr::BITOR;
-        case Key::XOR: return ast::BinaryExpr::XOR;
-        case Key::AND: return ast::BinaryExpr::AND;
-        case Key::OR: return ast::BinaryExpr::OR;
-        case Key::SHL: return ast::BinaryExpr::SHL;
-        case Key::SHR: return ast::BinaryExpr::SHR;
-        case Key::LT: return ast::BinaryExpr::LT;
-        case Key::LTE: return ast::BinaryExpr::LTE;
-        case Key::GT: return ast::BinaryExpr::GT;
-        case Key::GTE: return ast::BinaryExpr::GTE;
-        case Key::EQ: return ast::BinaryExpr::EQ;
-        case Key::NEQ: return ast::BinaryExpr::NEQ;
-        default: throw std::runtime_error("invalid binary op");
         }
     }
 }
@@ -163,24 +117,30 @@ namespace cthulhu::ast {
         return false;
     }
 
-    UnaryExpr::UnaryExpr(Token op, ptr<Expr> expr) 
-        : op(unop(op))
+    UnaryExpr::UnaryExpr(UnaryOp op, ptr<Expr> expr) 
+        : op(op)
         , expr(expr)
     { }
 
     bool UnaryExpr::equals(const ptr<Node> other) const {
-        (void)other;
+        if (auto o = SELF<UnaryExpr>(other); o) {
+            return op == o->op && expr->equals(o->expr);
+        }
+
         return false;
     }
 
-    BinaryExpr::BinaryExpr(Token op, ptr<Expr> lhs, ptr<Expr> rhs) 
-        : op(binop(op))
+    BinaryExpr::BinaryExpr(BinaryOp op, ptr<Expr> lhs, ptr<Expr> rhs) 
+        : op(op)
         , lhs(lhs)
         , rhs(rhs)
     { }
 
     bool BinaryExpr::equals(const ptr<Node> other) const {
-        (void)other;
+        if (auto o = SELF<BinaryExpr>(other); o) {
+            return op == o->op && lhs->equals(o->lhs) && rhs->equals(o->rhs);
+        }
+
         return false;
     }
 
@@ -200,8 +160,10 @@ namespace cthulhu::ast {
     { }
     
     bool StringExpr::equals(const ptr<Node> other) const {
-        (void)other;
-        throw std::runtime_error("unimplemented");
+        if (auto o = SELF<StringExpr>(other); o) {
+            return string == o->string;
+        }
+        return false;
     }
 
     IntExpr::IntExpr(const Number& number) 
@@ -210,7 +172,7 @@ namespace cthulhu::ast {
     
     bool IntExpr::equals(const ptr<Node> other) const {
         if (auto o = SELF<IntExpr>(other); o) {
-            return number.number == o->number.number && sequals(number.suffix, o->number.suffix);
+            return number.number == o->number.number && number.suffix == o->number.suffix;
         }
 
         return false;
@@ -296,4 +258,30 @@ namespace cthulhu::ast {
         (void)other;
         throw std::runtime_error("unimplemented");
     }
+
+    Attribute::Attribute(vec<ptr<Ident>> path, vec<ptr<CallArg>> args)
+        : path(path)
+        , args(args)
+    { }
+
+    Attributes::Attributes(vec<ptr<Attribute>> attributes, ptr<Decl> decl)
+        : attributes(attributes)
+        , decl(decl)
+    { }
+
+    Alias::Alias(ptr<Ident> name, ptr<Type> type)
+        : name(name)
+        , type(type)
+    { }
+
+    Import::Import(vec<ptr<Ident>> path, bool wildcard, vec<ptr<Ident>> items)
+        : path(path)
+        , items(items)
+        , wildcard(wildcard)
+    { }
+
+    Unit::Unit(vec<ptr<Import>> imports, vec<ptr<Decl>> decls)
+        : imports(imports)
+        , decls(decls)
+    { }
 }

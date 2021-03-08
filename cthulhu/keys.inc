@@ -19,6 +19,7 @@ OP(RSQUARE, "]")
 OP(LBRACE, "{")
 OP(RBRACE, "}")
 
+OP(SEMI, ";")
 OP(COMMA, ",")
 OP(DOT, ".")
 OP(DOT2, "..")

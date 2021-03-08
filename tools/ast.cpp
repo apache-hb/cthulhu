@@ -1,33 +1,34 @@
-#include "cthulhu.hpp"
+#include "lexer.hpp"
+#include "parser.hpp"
 
-struct FileStreamHandle : cthulhu::StreamHandle {
-    FileStreamHandle(const char* path)
-        : fd(fopen(path, "r"))
-    { }
+#include <fstream>
 
-    virtual char32_t next() override {
-        return fgetc(fd);
-    }
-
-    FILE* fd;
-};
+#include "test/tstream.hpp"
 
 int main(int argc, char** argv) {
-    if (argc < 2) {
-        printf("ast <in> <out>\n");
+    if (argc < 1) {
+        printf("ast <in> [out]\n");
         exit(1);
     }
     
-    auto file = FileStreamHandle(argv[1]);
-    auto lexer = cthulhu::Lexer(&file);
-    auto parser = cthulhu::Parser(&lexer);
-    auto* unit = parser.parseUnit();
+    FileStream stream{argv[1]};
+    Lexer lexer{&stream, argv[1]};
+    Parser parser{&lexer};
+    auto unit = parser.parseUnit();
 
-    cthulhu::Printer printer;
-    unit->visit(&printer);
+    if (!unit) {
+        printf("failed to parse file\n");
+        exit(1);
+    }
 
-    auto out = fopen(argv[2], "w");
-    fwrite(printer.buffer.c_str(), printer.buffer.size(), 1, out);
-    fclose(out);
-    printf("dumped ast to %s\n", argv[2]);
+    ast::Printer out;
+    unit->visit(&out);
+
+    if (argc > 2) {
+        std::fstream f(argv[2]);
+        f << out.buffer;
+        f.close();
+    } else {
+        puts(out.buffer.c_str());
+    }
 }

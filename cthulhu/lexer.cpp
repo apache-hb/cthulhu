@@ -352,6 +352,7 @@ namespace cthulhu {
                 return eat('=') ? Key::BITOREQ : Key::BITOR;
             }
         }
+        case ';': return Key::SEMI;
         default:
             throw std::runtime_error(fmt::format("invalid char {}", (char)c));
         }
