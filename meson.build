@@ -37,5 +37,5 @@ ctu = declare_dependency(
     dependencies : deps
 )
 
-#subdir('tools')
+subdir('tools')
 subdir('test')

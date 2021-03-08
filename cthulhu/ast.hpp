@@ -3,9 +3,27 @@
 #include "token.hpp"
 
 namespace cthulhu::ast {
+    struct Printer {
+        void write(const utf8::string& text) {
+            buffer += utf8::string(depth * 2, ' ') + text + "\n";
+        }
+
+        template<typename F>
+        void section(const utf8::string& name, F&& func) {
+            write(name);
+            depth++;
+            func();
+            depth--;
+        }
+    
+        utf8::string buffer = "";
+        int depth = 0;
+    };
+
     struct Node {
         virtual ~Node() { }
-        virtual bool equals(const ptr<Node> other) const = 0;
+        virtual bool equals(const ptr<Node>) const { throw std::runtime_error("unimplemented"); }
+        virtual void visit(Printer*) const { throw std::runtime_error("unimplemented"); }
     };
 
     struct Ident : Node {
@@ -15,12 +33,18 @@ namespace cthulhu::ast {
 
         virtual bool equals(const ptr<Node> other) const override;
 
+        virtual void visit(Printer* out) const override {
+            out->write("- ident `" + *token.ident() + "`");
+        }
+
     private:
         Token token;
     };
 
     struct Type : Node { };
-    struct Expr : Node { };
+    struct Stmt : Node { };
+    struct Expr : Stmt { };
+    struct Decl : Node { };
 
 
     ///
@@ -106,12 +130,8 @@ namespace cthulhu::ast {
     ///
 
     struct UnaryExpr : Expr {
-        UnaryExpr(Token op, ptr<Expr> expr);
-        virtual ~UnaryExpr() override { }
-
-        virtual bool equals(const ptr<Node> other) const override;
-
         enum UnaryOp {
+            INVALID,
             NOT,
             FLIP,
             POS,
@@ -120,18 +140,37 @@ namespace cthulhu::ast {
             REF
         };
 
+        UnaryExpr(UnaryOp op, ptr<Expr> expr);
+        virtual ~UnaryExpr() override { }
+
+        virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section(utf8::string("- unary ") + str(), [&] {
+                expr->visit(out);
+            });
+        }
+
     private:
+        const char* str() const {
+            switch (op) {
+            case NOT: return "NOT";
+            case FLIP: return "FLIP";
+            case POS: return "POS";
+            case NEG: return "NEG";
+            case DEREF: return "DEREF";
+            case REF: return "REF";
+            default: return "INVALID";
+            }
+        }
+
         UnaryOp op;
         ptr<Expr> expr;
     };
 
     struct BinaryExpr : Expr {
-        BinaryExpr(Token op, ptr<Expr> lhs, ptr<Expr> rhs);
-        virtual ~BinaryExpr() override { }
-
-        virtual bool equals(const ptr<Node> other) const override;
-
         enum BinaryOp {
+            INVALID,
             ADD,
             SUB,
             MUL,
@@ -152,7 +191,43 @@ namespace cthulhu::ast {
             NEQ
         };
 
+        BinaryExpr(BinaryOp op, ptr<Expr> lhs, ptr<Expr> rhs);
+        virtual ~BinaryExpr() override { }
+
+        virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section(utf8::string("- binary `") + str() + "`", [&] {
+                lhs->visit(out);
+                rhs->visit(out);
+            });
+        }
+
     private:
+        const char* str() const {
+            switch (op) {
+            case ADD: return "ADD";
+            case SUB: return "SUB";
+            case MUL: return "MUL";
+            case MOD: return "MOD";
+            case DIV: return "DIV";
+            case BITAND: return "BITAND";
+            case BITOR: return "BITOR";
+            case XOR: return "XOR";
+            case AND: return "AND";
+            case OR: return "OR";
+            case SHL: return "SHL";
+            case SHR: return "SHR";
+            case LT: return "LT";
+            case LTE: return "LTE";
+            case GT: return "GT";
+            case GTE: return "GTE";
+            case EQ: return "EQ";
+            case NEQ: return "NEQ";
+            default: return "INVALID";
+            }
+        }
+
         BinaryOp op;
         ptr<Expr> lhs;
         ptr<Expr> rhs;
@@ -185,6 +260,10 @@ namespace cthulhu::ast {
 
         virtual bool equals(const ptr<Node> other) const override;
 
+        virtual void visit(Printer* out) const override {
+            out->write("- int `" + std::to_string(number.number) + "`");
+        }
+
     private:
         Number number;
     };
@@ -194,6 +273,10 @@ namespace cthulhu::ast {
         virtual ~BoolExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->write(val ? "- bool `true`" : "- bool `false`");
+        }
 
     private:
         bool val;
@@ -267,5 +350,100 @@ namespace cthulhu::ast {
     private:
         ptr<Expr> func;
         vec<ptr<CallArg>> args;
+    };
+
+
+
+    //
+    // toplevel declarations
+    //
+
+    struct Attribute : Decl {
+        Attribute(vec<ptr<Ident>> path, vec<ptr<CallArg>> args = vec<ptr<CallArg>>());
+    private:
+        vec<ptr<Ident>> path;
+        vec<ptr<CallArg>> args;
+    };
+
+    struct Attributes : Decl {
+        Attributes(vec<ptr<Attribute>> attributes, ptr<Decl> decl);
+    private:
+        vec<ptr<Attribute>> attributes;
+        ptr<Decl> decl;
+    };
+
+    struct Alias : Decl {
+        Alias(ptr<Ident> name, ptr<Type> type);
+    private:
+        ptr<Ident> name;
+        ptr<Type> type;
+    };
+
+    struct Record : Decl {
+
+    };
+
+    struct Union : Decl {
+
+    };
+
+    struct Enum : Decl {
+
+    };
+
+    struct Variant : Decl {
+
+    };
+
+    struct Import : Node {
+        Import(vec<ptr<Ident>> path, bool wildcard, vec<ptr<Ident>> items = vec<ptr<Ident>>());
+
+        virtual void visit(Printer* out) const override {
+            out->section("- import", [&] {
+                out->section("- path", [&] {
+                    for (auto it : path) 
+                        it->visit(out);
+                });
+
+                if (wildcard) {
+                    out->write("- wildcard");
+                } else if (items.empty()) {
+                    out->section("- items", [&] {
+                        out->write("...");
+                    });
+                } else {
+                    out->section("- items", [&] {
+                        for (auto it : items)
+                            it->visit(out);
+                    });
+                }
+            });
+        }
+
+    private:
+        vec<ptr<Ident>> path;
+        vec<ptr<Ident>> items;
+        bool wildcard;
+    };
+
+    struct Unit : Node {
+        Unit(vec<ptr<Import>> imports, vec<ptr<Decl>> decls);
+        
+        virtual void visit(Printer* out) const override {
+            out->section("- unit", [&] {
+                out->section("- imports `" + std::to_string(imports.size()) + "`", [&] {
+                    for (auto it : imports) 
+                        it->visit(out);
+                });
+                out->section("- decls `" + std::to_string(decls.size()) + "`", [&] {
+                    for (auto it : decls)
+                        it->visit(out);
+                });
+            });
+        }
+
+    private:
+        vec<ptr<Import>> imports;
+        vec<ptr<Decl>> decls;
     };
 }

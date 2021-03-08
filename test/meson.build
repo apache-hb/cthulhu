@@ -42,7 +42,10 @@ parse = [
     'parse/types/closure1', 'parse/types/closure2',
     'parse/types/array1', 'parse/types/array2',
 
-    'parse/expr/bool'
+    'parse/expr/bool', 'parse/expr/int',
+    'parse/expr/unary', 'parse/expr/binary',
+
+    'parse/expr/call1', 'parse/expr/call2', 'parse/expr/call3'
 ]
 
 tests = util + lex + parse

@@ -8,6 +8,17 @@ namespace cthulhu {
     struct Parser {
         Parser(Lexer* lexer);
 
+        ptr<ast::Unit> parseUnit();
+        ptr<ast::Node> parseImport();
+
+        ptr<ast::Decl> parseDecl();
+        ptr<ast::Alias> parseAlias();
+        ptr<ast::Record> parseRecord();
+        ptr<ast::Union> parseUnion();
+        ptr<ast::Enum> parseEnum();
+        ptr<ast::Variant> parseVariant();
+        ptr<ast::Attributes> parseAttributes();
+
         ptr<ast::Type> parseType();
         ptr<ast::PointerType> parsePointerType();
         ptr<ast::MutableType> parseMutableType();
@@ -20,7 +31,9 @@ namespace cthulhu {
         ptr<ast::Expr> parseBinaryExpr(int precedence);
         ptr<ast::Expr> parsePrimaryExpr();
 
-        vec<ptr<ast::CallArg>> parseCallArgs();
+        ptr<ast::Attribute> parseAttribute();
+        vec<ptr<ast::CallArg>> parseCallArgs(bool empty = true);
+        ptr<ast::Ident> parseIdent();
 
     private:
         Token next();

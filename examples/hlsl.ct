@@ -1,18 +1,18 @@
 using ext::hlsl(float2, float3, float4, float4x4, mul);
 
 @[cbuffer, register(b0)]
-struct cb0 {
+record cb0 {
     var worldViewProj: float4x4;
 }
 
-struct VSInput {
+record VSInput {
     @name(POSITION) var position: float3;
     @name(NORMAL) var normal: float3;
     @name(TEXCOORD0) var uv: float2;
     @name(TANGENT) var tangent: float3;
 }
 
-struct PSInput {
+record PSInput {
     @name(SV_POSITION) var position: float4;
     @name(TEXCOORD0) var uv: float2;
 }

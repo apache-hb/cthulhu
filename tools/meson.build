@@ -1,4 +1,5 @@
 executable('ast', 'ast.cpp',
     cpp_args : args, 
-    dependencies : ctu
+    dependencies : ctu,
+    include_directories : '..'
 )

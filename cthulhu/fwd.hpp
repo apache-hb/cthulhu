@@ -15,6 +15,7 @@ template<typename T>
 using ptr = std::shared_ptr<T>;
 
 #define MAKE std::make_shared
+#define SELF std::dynamic_pointer_cast
 
 namespace cthulhu {
     struct Stream;
