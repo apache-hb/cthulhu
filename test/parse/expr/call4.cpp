@@ -3,7 +3,7 @@
 #include "tparse.hpp"
 
 int main() {
-    auto stream = StringStream("name(name, .name = name)");
+    auto stream = StringStream("name(.name = name)");
     auto lexer = TestLexer(&stream);
     auto parse = TestParser(&lexer);
 
@@ -22,12 +22,6 @@ int main() {
                 MAKE<QualifiedType>(names)
             ),
             vec<ptr<CallArg>>({
-                MAKE<CallArg>(
-                    nullptr,
-                    MAKE<NameExpr>(
-                        MAKE<QualifiedType>(names)
-                    )
-                ),
                 MAKE<CallArg>(
                     MAKE<Ident>(lexer.ident("name")),
                     MAKE<NameExpr>(

@@ -15,9 +15,7 @@ namespace cthulhu {
         ptr<ast::Alias> parseAlias();
         ptr<ast::Record> parseRecord();
         ptr<ast::Union> parseUnion();
-        ptr<ast::Enum> parseEnum();
         ptr<ast::Variant> parseVariant();
-        ptr<ast::Attributes> parseAttributes();
 
         ptr<ast::Type> parseType();
         ptr<ast::PointerType> parsePointerType();
@@ -31,7 +29,6 @@ namespace cthulhu {
         ptr<ast::Expr> parseBinaryExpr(int precedence);
         ptr<ast::Expr> parsePrimaryExpr();
 
-        ptr<ast::Attribute> parseAttribute();
         vec<ptr<ast::CallArg>> parseCallArgs(bool empty = true);
         ptr<ast::Ident> parseIdent();
 
@@ -59,7 +56,7 @@ namespace cthulhu {
                         break;
                     }
 
-                    if (!eat(Token::KEY, sep)) {
+                    if (sep != Key::INVALID && !eat(Token::KEY, sep)) {
                         break;
                     }
                 }

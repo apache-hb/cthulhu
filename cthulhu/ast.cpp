@@ -195,38 +195,34 @@ namespace cthulhu::ast {
     { }
     
     bool CharExpr::equals(const ptr<Node> other) const {
-        (void)other;
-        throw std::runtime_error("unimplemented");
+        if (auto o = SELF<CharExpr>(other); o) {
+            return letter == o->letter;
+        }
+        
+        return false;
     }
 
     NameExpr::NameExpr(ptr<QualifiedType> name) 
         : name(name)
     { }
-    
+
     bool NameExpr::equals(const ptr<Node> other) const {
-        (void)other;
-        throw std::runtime_error("unimplemented");
+        if (auto o = SELF<NameExpr>(other); o) {
+            return name->equals(o->name);
+        }
+        
+        return false;
     }
 
     CoerceExpr::CoerceExpr(ptr<Type> type, ptr<Expr> expr) 
         : type(type)
         , expr(expr)
     { }
-    
-    bool CoerceExpr::equals(const ptr<Node> other) const {
-        (void)other;
-        throw std::runtime_error("unimplemented");
-    }
 
     SubscriptExpr::SubscriptExpr(ptr<Expr> expr, ptr<Expr> index) 
         : expr(expr)
         , index(index)
     { }
-    
-    bool SubscriptExpr::equals(const ptr<Node> other) const {
-        (void)other;
-        throw std::runtime_error("unimplemented");
-    }
 
     AccessExpr::AccessExpr(ptr<Expr> body, ptr<Ident> field, bool indirect) 
         : body(body)
@@ -234,19 +230,17 @@ namespace cthulhu::ast {
         , indirect(indirect)
     { }
     
-    bool AccessExpr::equals(const ptr<Node> other) const {
-        (void)other;
-        throw std::runtime_error("unimplemented");
-    }
-
     CallArg::CallArg(ptr<Ident> name, ptr<Expr> expr) 
         : name(name)
         , expr(expr)
     { }
     
     bool CallArg::equals(const ptr<Node> other) const {
-        (void)other;
-        throw std::runtime_error("unimplemented");
+        if (auto o = SELF<CallArg>(other); o) {
+            return pequals(name, o->name) && expr->equals(o->expr);
+        }
+        
+        return false;
     }
 
     CallExpr::CallExpr(ptr<Expr> func, vec<ptr<CallArg>> args) 
@@ -255,19 +249,12 @@ namespace cthulhu::ast {
     { }
 
     bool CallExpr::equals(const ptr<Node> other) const {
-        (void)other;
-        throw std::runtime_error("unimplemented");
+        if (auto o = SELF<CallExpr>(other); o) {
+            return func->equals(o->func) && vequals(args, o->args);
+        }
+
+        return false;
     }
-
-    Attribute::Attribute(vec<ptr<Ident>> path, vec<ptr<CallArg>> args)
-        : path(path)
-        , args(args)
-    { }
-
-    Attributes::Attributes(vec<ptr<Attribute>> attributes, ptr<Decl> decl)
-        : attributes(attributes)
-        , decl(decl)
-    { }
 
     Alias::Alias(ptr<Ident> name, ptr<Type> type)
         : name(name)

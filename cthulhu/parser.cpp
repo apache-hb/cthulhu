@@ -106,11 +106,9 @@ namespace cthulhu {
     //
 
     ptr<ast::Decl> Parser::parseDecl() {
-        TRY(parseAttributes());
         TRY(parseAlias());
         TRY(parseRecord());
         TRY(parseUnion());
-        TRY(parseEnum());
         TRY(parseVariant());
         
         return nullptr;
@@ -121,53 +119,15 @@ namespace cthulhu {
     }
 
     ptr<ast::Record> Parser::parseRecord() {
-        return nullptr;   
+        return nullptr;
     }
 
     ptr<ast::Union> Parser::parseUnion() {
         return nullptr;   
     }
 
-    ptr<ast::Enum> Parser::parseEnum() {
-        return nullptr;   
-    }
-
     ptr<ast::Variant> Parser::parseVariant() {
         return nullptr;   
-    }
-
-    ptr<ast::Attributes> Parser::parseAttributes() {
-        if (!eatKey(Key::AT)) {
-            return nullptr;
-        }
-        
-        vec<ptr<ast::Attribute>> attributes;
-        while (true) {
-            if (eatKey(Key::LSQUARE)) {
-                do { attributes.push_back(parseAttribute()); } while (eatKey(Key::COMMA));
-                expect(Token::KEY, Key::RSQUARE);
-            } else {
-                attributes.push_back(parseAttribute());
-            }
-
-            if (!eatKey(Key::AT)) {
-                break;
-            }
-        }
-
-        auto decl = parseDecl();
-
-        return MAKE<ast::Attributes>(attributes, decl);
-    }
-
-    ptr<ast::Attribute> Parser::parseAttribute() {
-        auto name = collect<ast::Ident>(Key::COLON2, [&] { return parseIdent(); });
-        if (eatKey(Key::LPAREN)) {
-            auto args = parseCallArgs(false);
-            return MAKE<ast::Attribute>(name, args);
-        } else {
-            return MAKE<ast::Attribute>(name);
-        }
     }
 
     ptr<ast::Node> Parser::parseImport() {
@@ -395,11 +355,11 @@ namespace cthulhu {
         bool name = false;
         vec<ptr<ast::CallArg>> args;
 
-        while (true) {
-            if (empty && eatKey(Key::RPAREN)) {
-                break;
-            }
+        if (empty && eatKey(Key::RPAREN)) {
+            return args;
+        }
 
+        while (true) {
             if (eatKey(Key::DOT)) {
                 name = true;
                 auto key = parseIdent();
@@ -415,7 +375,9 @@ namespace cthulhu {
                 args.push_back(MAKE<ast::CallArg>(nullptr, body));
             }
 
-            if (!eatKey(Key::RPAREN)) {
+            if (eatKey(Key::RPAREN)) {
+                break;
+            } else {
                 expect(Token::KEY, Key::COMMA);
             }
         }
