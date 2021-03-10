@@ -45,7 +45,8 @@ parse = [
     'parse/expr/bool', 'parse/expr/int',
     'parse/expr/unary', 'parse/expr/binary',
 
-    'parse/expr/call1', 'parse/expr/call2', 'parse/expr/call3'
+    'parse/expr/call1', 'parse/expr/call2', 'parse/expr/call3',
+    'parse/expr/call4'
 ]
 
 tests = util + lex + parse

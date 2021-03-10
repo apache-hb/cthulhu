@@ -1,4 +1,0 @@
-@extern("main")
-def main(argc: int, argv: **char): int {
-    return argc * 2;
-}

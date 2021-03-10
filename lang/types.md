@@ -38,3 +38,7 @@
 
 ### Closures
 `(types) -> type` is a pointer to a function that returns `type` and takes `types` as arguments
+
+## Strings
+* `utf` is a type that will always be large enough to represent a unicode code point
+* `str` is an immutable sequence of valid utf code points encoded as utf8

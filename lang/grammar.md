@@ -12,9 +12,81 @@ include-list : `...` | list
 
 ## Declarations
 
-decl : attribute* alias-decl
+decl : attribute* decl-body
+
+decl-body : alias-decl | record-decl | variant-decl | union-decl | trait-decl | extend-decl
+
+## Aliases
 
 alias-decl : using ident `=` type `;`
+
+## Records
+
+record-decl : record ident `{` record-field* `}`
+
+record-field : basic-field `;`
+
+## Unions
+
+union-decl : union ident `{` union-field* `}`
+
+union-field : basic-field `;`
+
+## Traits
+
+trait-decl : trait ident trait-requires? `{` func-decl* `}`
+
+trait-requires : requires requires-body
+
+requires-body : qualified | `(` qualified (`,` qualified)* `)`
+
+## Extensions
+
+extend-decl : extend qualified extend-with? extend-body
+
+extend-with : with qualified
+
+extend-body : `{` <!-- TODO: --> `}`
+
+## Variants
+
+variant-decl : variant ident `{` variant-case* `}`
+
+variant-case : case ident variant-case-body? `;`
+
+variant-case-body : `(` variant-field (`,` variant-field)* `)`
+
+variant-field : basic-field
+
+## Generic fields
+
+basic-field : ident `:` type bitrange?
+
+<!-- TODO: bitrange syntax needs work -->
+
+bitrange : `[` expr `..` expr `]`
+
+## Statements
+
+stmt : assign-stmt | branch-stmt | compound-stmt | while-stmt
+
+while-stmt : while `(` condition `)` stmt else-stmt?
+
+assign-stmt : expr `=` expr `;`
+
+compound-stmt : `{` stmt* `}`
+
+branch-stmt : if-stmt elif-stmt* else-stmt?
+
+if-stmt : if `(` condition `)` stmt
+
+elif-stmt : else if `(` condition `)` stmt
+
+else-stmt : else stmt
+ 
+condition : expr | var-decl-body (`;` expr)?
+
+## Attributes
 
 attribute : `@` attribute-body
 
@@ -50,7 +122,7 @@ unary-expr : (`+` | `-` | `~` | `!` | `&` | `*`)? postfix-expr
 
 primary-expr : `(` expr `)` | int | char | string | coerce-expr
 
-postfix-expr : primary-expr | postfix-expr `[` expr `]` | postfix-expr `(` function-args? `)` | postfix-expr `.` ident | postfix-expr `->` ident
+postfix-expr : primary-expr | postfix-expr `[` expr `]` | postfix-expr `(` function-args? `)` | postfix-expr `.` ident | postfix-expr `->` ident | primary-expr
 
 coerce-expr : coerce `!<` type `>` `(` expr `)`
 
@@ -76,7 +148,7 @@ array : `[` type (`:` expr)? `]`
 
 qualified : name (`::` name)*
 
-name : ident (`!<` types `>`)?
+name : ident
 
 types : type (`,` type)* 
 
@@ -106,8 +178,30 @@ using : `using`
 
 coerce : `coerce`
 
-assert : `assert`
+record : `record`
 
-static : `static`
+union : `union`
 
-virtual : `virtual`
+variant : `variant`
+
+trait : `trait`
+
+extend : `extend`
+
+with : `with`
+
+requires : `requires`
+
+always : `always`
+
+input : `input`
+
+output : `output`
+
+case : `case`
+
+if : `if`
+
+else : `else`
+
+while : `while`

@@ -22,8 +22,8 @@ namespace cthulhu::ast {
 
     struct Node {
         virtual ~Node() { }
-        virtual bool equals(const ptr<Node>) const { throw std::runtime_error("unimplemented"); }
-        virtual void visit(Printer*) const { throw std::runtime_error("unimplemented"); }
+        virtual bool equals(const ptr<Node>) const { throw std::runtime_error("unimplemented equals"); }
+        virtual void visit(Printer*) const { throw std::runtime_error("unimplemented visit"); }
     };
 
     struct Ident : Node {
@@ -109,6 +109,10 @@ namespace cthulhu::ast {
 
         virtual bool equals(const ptr<Node> other) const override;
 
+        virtual void visit(Printer* out) const override {
+            name->visit(out);
+        }
+
     private:
         ptr<Ident> name;
     };
@@ -119,6 +123,12 @@ namespace cthulhu::ast {
 
         virtual bool equals(const ptr<Node> other) const override;
 
+        virtual void visit(Printer* out) const override {
+            out->section("- qual `" + std::to_string(names.size()) + "`", [&] {
+                for (auto name : names)
+                    name->visit(out);
+            });
+        }
     private:
         vec<ptr<NameType>> names;
     };
@@ -297,6 +307,12 @@ namespace cthulhu::ast {
         virtual ~NameExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section("- name", [&] {
+                name->visit(out);
+            });
+        }
     private:
         ptr<QualifiedType> name;
     };
@@ -304,8 +320,6 @@ namespace cthulhu::ast {
     struct CoerceExpr : Expr {
         CoerceExpr(ptr<Type> type, ptr<Expr> expr);
         virtual ~CoerceExpr() override { }
-
-        virtual bool equals(const ptr<Node> other) const override;
     private:
         ptr<Type> type;
         ptr<Expr> expr;
@@ -314,8 +328,6 @@ namespace cthulhu::ast {
     struct SubscriptExpr : Expr {
         SubscriptExpr(ptr<Expr> expr, ptr<Expr> index);
         virtual ~SubscriptExpr() override { }
-
-        virtual bool equals(const ptr<Node> other) const override;
     private:
         ptr<Expr> expr;
         ptr<Expr> index;
@@ -324,8 +336,6 @@ namespace cthulhu::ast {
     struct AccessExpr : Expr {
         AccessExpr(ptr<Expr> body, ptr<Ident> field, bool indirect);
         virtual ~AccessExpr() override { }
-
-        virtual bool equals(const ptr<Node> other) const override;
     private:
         ptr<Expr> body;
         ptr<Ident> field;
@@ -337,6 +347,15 @@ namespace cthulhu::ast {
         virtual ~CallArg() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section("- arg", [&] {
+                if (name)
+                    name->visit(out);
+                expr->visit(out);
+            });
+        }
+
     private:
         ptr<Ident> name;
         ptr<Expr> expr;
@@ -347,6 +366,16 @@ namespace cthulhu::ast {
         virtual ~CallExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section("- call", [&] {
+                func->visit(out);
+                out->section("- args", [&] {
+                    for (auto arg : args)
+                        arg->visit(out);
+                });
+            });
+        }
     private:
         ptr<Expr> func;
         vec<ptr<CallArg>> args;
@@ -358,22 +387,9 @@ namespace cthulhu::ast {
     // toplevel declarations
     //
 
-    struct Attribute : Decl {
-        Attribute(vec<ptr<Ident>> path, vec<ptr<CallArg>> args = vec<ptr<CallArg>>());
-    private:
-        vec<ptr<Ident>> path;
-        vec<ptr<CallArg>> args;
-    };
-
-    struct Attributes : Decl {
-        Attributes(vec<ptr<Attribute>> attributes, ptr<Decl> decl);
-    private:
-        vec<ptr<Attribute>> attributes;
-        ptr<Decl> decl;
-    };
-
     struct Alias : Decl {
         Alias(ptr<Ident> name, ptr<Type> type);
+
     private:
         ptr<Ident> name;
         ptr<Type> type;
@@ -387,13 +403,91 @@ namespace cthulhu::ast {
 
     };
 
-    struct Enum : Decl {
+    struct Variant : Decl {
 
+    };
+
+    struct Trait : Decl {
+
+    };
+
+    struct Extend : Decl {
+
+    };
+
+    /*
+    struct Var : Decl {
+    private:
+        ptr<Ident> name;
+        ptr<Type> type;
+        ptr<Expr> init;
+    };
+
+    struct Alias : Decl {
+        Alias(ptr<Ident> name, ptr<Type> type);
+
+        virtual void visit(Printer* out) const override {
+            out->section("- alias", [&] {
+                name->visit(out);
+                type->visit(out);
+            });
+        }
+    private:
+        ptr<Ident> name;
+        ptr<Type> type;
+    };
+
+    struct Record : Decl {
+        Record(ptr<Ident> name, vec<ptr<Decl>> items);
+
+        virtual void visit(Printer* out) const override {
+            out->section("- record", [&] {
+                name->visit(out);
+                out->section("- fields", [&] {
+                    for (auto item : items)
+                        item->visit(out);
+                });
+            });
+        }
+
+    private:
+        ptr<Ident> name;
+        vec<ptr<Decl>> items;
+    };
+
+
+
+    struct Union : Decl {
+
+    private:
+        ptr<Ident> name;
+        vec<ptr<Decl>> items;
+    };
+
+
+    struct Field : Node {
+        Field(ptr<Ident> name, ptr<Type> type);
+    
+    private:
+        ptr<Ident> name;
+        ptr<Type> type;
+    };
+
+    struct Case : Decl {
+        Case(ptr<Ident> name, ptr<Expr> expr, vec<ptr<Field>> fields);
+    private:
+        ptr<Ident> name;
+        ptr<Expr> expr;
+        vec<ptr<Field>> fields;
     };
 
     struct Variant : Decl {
 
-    };
+    private:
+        ptr<Ident> name;
+        ptr<Type> type;
+        vec<ptr<Decl>> fields;
+    };*/
 
     struct Import : Node {
         Import(vec<ptr<Ident>> path, bool wildcard, vec<ptr<Ident>> items = vec<ptr<Ident>>());
