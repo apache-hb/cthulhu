@@ -7,7 +7,6 @@
 #endif
 
 KEY(USING, "using")
-KEY(VAR, "var")
 KEY(TRUE, "true")
 KEY(FALSE, "false")
 KEY(COERCE, "coerce")
@@ -16,6 +15,8 @@ KEY(UNION, "union")
 KEY(VARIANT, "variant")
 KEY(CASE, "case")
 KEY(DEF, "def")
+KEY(LET, "let")
+KEY(VAR, "var")
 
 OP(LPAREN, "(")
 OP(RPAREN, ")")

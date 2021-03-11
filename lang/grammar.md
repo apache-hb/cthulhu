@@ -12,11 +12,17 @@ include-list : `...` | list
 
 ## Declarations
 
-decl : decorated-decl | alias-decl | record-decl | variant-decl | union-decl
+decl : decorated-decl | alias-decl | record-decl | variant-decl | union-decl | var-decl
 
 ## Aliases
 
 alias-decl : using ident `=` type `;`
+
+## Variables
+
+var-decl : (var | let) var-names (`=` expr) `;`
+
+var-names : basic-field | `[` basic-field (`,` basic-field)* `]`
 
 ## Records
 
@@ -42,7 +48,7 @@ variant-field : basic-field
 
 ## Generic fields
 
-basic-field : ident `:` type bitrange?
+basic-field : ident `:` type
 
 <!-- TODO: bitrange syntax needs work -->
 

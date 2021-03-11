@@ -302,6 +302,9 @@ namespace cthulhu::ast {
     
     struct CoerceExpr : Expr {
         CoerceExpr(ptr<Type> type, ptr<Expr> expr);
+
+        virtual bool equals(const ptr<Node> other) const override;
+
     private:
         ptr<Type> type;
         ptr<Expr> expr;
@@ -309,6 +312,9 @@ namespace cthulhu::ast {
 
     struct SubscriptExpr : Expr {
         SubscriptExpr(ptr<Expr> expr, ptr<Expr> index);
+
+        virtual bool equals(const ptr<Node> other) const override;
+
     private:
         ptr<Expr> expr;
         ptr<Expr> index;
@@ -316,6 +322,19 @@ namespace cthulhu::ast {
 
     struct AccessExpr : Expr {
         AccessExpr(ptr<Expr> body, ptr<Ident> field, bool indirect);
+
+        virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section("- access", [&] {
+                body->visit(out);
+                field->visit(out);
+                if (indirect) {
+                    out->write("- indirect");
+                }
+            });
+        }
+
     private:
         ptr<Expr> body;
         ptr<Ident> field;
@@ -399,11 +418,35 @@ namespace cthulhu::ast {
         ptr<Type> type;
     };
 
-    struct Var : Decl {
-        Var(vec<ptr<Field>> names, ptr<Expr> init);
+    struct VarName : Node {
+        VarName(ptr<Ident> name, ptr<Type> type);
     private:
-        vec<ptr<Field>> names;
+        ptr<Ident> name;
+        ptr<Type> type;
+    };
+
+    struct Var : Decl {
+        Var(vec<ptr<VarName>> names, ptr<Expr> init, bool mut);
+
+        virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section("- var", [&] {
+                if (mut) {
+                    out->write("- mutable");
+                }
+
+                for (auto field : names)
+                    field->visit(out);
+
+                init->visit(out);
+            });
+        }
+
+    private:
+        vec<ptr<VarName>> names;
         ptr<Expr> init;
+        bool mut;
     };
 
     struct Record : Decl {

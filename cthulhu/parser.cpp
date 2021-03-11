@@ -110,6 +110,7 @@ namespace cthulhu {
         TRY(parseRecord());
         TRY(parseUnion());
         TRY(parseVariant());
+        TRY(parseVariable());
         TRY(parseDecorated());
         
         return nullptr;
@@ -173,6 +174,42 @@ namespace cthulhu {
         expect(Token::KEY, Key::RBRACE);
 
         return MAKE<ast::Variant>(name, parent, cases);
+    }
+
+    ptr<ast::Var> Parser::parseVariable(bool semi) {
+        bool mut;
+        if (eatKey(Key::LET)) {
+            mut = false;
+        } else if (eatKey(Key::VAR)) {
+            mut = true;
+        } else {
+            return nullptr;
+        }
+
+        auto names = parseVarNames();
+        auto init = eatKey(Key::ASSIGN) ? parseExpr() : nullptr;
+
+        if (semi) {
+            expect(Token::KEY, Key::SEMI);
+        }
+
+        return MAKE<ast::Var>(names, init, mut);
+    }
+
+    vec<ptr<ast::VarName>> Parser::parseVarNames() {
+        if (eatKey(Key::LSQUARE)) {
+            auto out = collect<ast::VarName>(Key::COMMA, [&] { return parseVarName(); }, true);
+            expect(Token::KEY, Key::RSQUARE);
+            return out;
+        } else {
+            return vec<ptr<ast::VarName>>({ parseVarName() });
+        }
+    }
+
+    ptr<ast::VarName> Parser::parseVarName() {
+        auto name = parseIdent();
+        auto type = eatKey(Key::COLON) ? parseType() : nullptr;
+        return MAKE<ast::VarName>(name, type);
     }
 
     ptr<ast::Field> Parser::parseField(bool semi) {

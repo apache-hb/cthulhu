@@ -196,6 +196,7 @@ namespace cthulhu::ast {
     
     bool CharExpr::equals(const ptr<Node> other) const {
         if (auto o = SELF<CharExpr>(other); o) {
+            fprintf(stderr, "%d %d\n", letter, o->letter);
             return letter == o->letter;
         }
         
@@ -219,10 +220,26 @@ namespace cthulhu::ast {
         , expr(expr)
     { }
 
+    bool CoerceExpr::equals(const ptr<Node> other) const {
+        if (auto o = SELF<CoerceExpr>(other); o) {
+            return type->equals(o->type) && expr->equals(o->expr);
+        }
+        
+        return false;
+    }
+
     SubscriptExpr::SubscriptExpr(ptr<Expr> expr, ptr<Expr> index) 
         : expr(expr)
         , index(index)
     { }
+
+    bool SubscriptExpr::equals(const ptr<Node> other) const {
+        if (auto o = SELF<SubscriptExpr>(other); o) {
+            return expr->equals(o->expr) && index->equals(o->index);
+        }
+        
+        return false;
+    }
 
     AccessExpr::AccessExpr(ptr<Expr> body, ptr<Ident> field, bool indirect) 
         : body(body)
@@ -230,6 +247,14 @@ namespace cthulhu::ast {
         , indirect(indirect)
     { }
     
+    bool AccessExpr::equals(const ptr<Node> other) const {
+        if (auto o = SELF<AccessExpr>(other); o) {
+            return body->equals(o->body) && field->equals(o->field) && indirect == o->indirect;
+        }
+        
+        return false;
+    }
+
     CallArg::CallArg(ptr<Ident> name, ptr<Expr> expr) 
         : name(name)
         , expr(expr)
@@ -277,6 +302,25 @@ namespace cthulhu::ast {
     bool Field::equals(const ptr<Node> other) const {
         if (auto o = SELF<Field>(other); o) {
             return name->equals(o->name) && type->equals(o->type);
+        }
+
+        return false;
+    }
+
+    VarName::VarName(ptr<Ident> name, ptr<Type> type)
+        : name(name)
+        , type(type)
+    { }
+
+    Var::Var(vec<ptr<VarName>> names, ptr<Expr> init, bool mut)
+        : names(names)
+        , init(init)
+        , mut(mut)
+    { }
+
+    bool Var::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Var>(other); o) {
+            return vequals(names, o->names) && pequals(init, o->init) && mut == o->mut;
         }
 
         return false;
