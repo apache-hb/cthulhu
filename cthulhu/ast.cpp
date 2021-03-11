@@ -341,10 +341,26 @@ namespace cthulhu::ast {
         , args(args)
     { }
 
+    bool Attribute::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Attribute>(other); o) {
+            return name->equals(o->name) && vequals(args, o->args);
+        }
+
+        return false;
+    }
+
     Decorated::Decorated(vec<ptr<Attribute>> attribs, ptr<Decl> decl)
         : attribs(attribs)
         , decl(decl)
     { }
+
+    bool Decorated::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Decorated>(other); o) {
+            return vequals(attribs, o->attribs) && decl->equals(o->decl);
+        }
+
+        return false;
+    }
 
     Import::Import(vec<ptr<Ident>> path, bool wildcard, vec<ptr<Ident>> items)
         : path(path)

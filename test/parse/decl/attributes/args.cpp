@@ -4,8 +4,7 @@
 
 int main() {
     auto stream = StringStream(R"(
-        @attribute1
-        @attribute2
+        @name(argument)
         using num = int;
     )");
     auto lexer = TestLexer(&stream);
@@ -16,12 +15,13 @@ int main() {
         MAKE<Decorated>(
             vec<ptr<Attribute>>({
                 MAKE<Attribute>(
-                    parse.qualified({ "attribute1" }),
-                    vec<ptr<CallArg>>()
-                ),
-                MAKE<Attribute>(
-                    parse.qualified({ "attribute2" }),
-                    vec<ptr<CallArg>>()
+                    parse.qualified({ "name" }),
+                    vec<ptr<CallArg>>({
+                        MAKE<CallArg>(
+                            nullptr,
+                            MAKE<NameExpr>(parse.qualified({ "argument" }))
+                        )
+                    })
                 )
             }),
             MAKE<Alias>(

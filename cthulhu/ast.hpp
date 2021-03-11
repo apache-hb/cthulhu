@@ -42,7 +42,7 @@ namespace cthulhu::ast {
     struct Type : Node { };
     struct Stmt : Node { };
     struct Expr : Stmt { };
-    struct Decl : Node { };
+    struct Decl : Stmt { };
 
 
     ///
@@ -399,6 +399,13 @@ namespace cthulhu::ast {
         ptr<Type> type;
     };
 
+    struct Var : Decl {
+        Var(vec<ptr<Field>> names, ptr<Expr> init);
+    private:
+        vec<ptr<Field>> names;
+        ptr<Expr> init;
+    };
+
     struct Record : Decl {
         Record(ptr<Ident> name, vec<ptr<Field>> fields);
 
@@ -454,6 +461,8 @@ namespace cthulhu::ast {
     struct Attribute : Node {
         Attribute(ptr<QualifiedType> name, vec<ptr<CallArg>> args);
 
+        virtual bool equals(const ptr<Node> other) const override;
+
     private:
         ptr<QualifiedType> name;
         vec<ptr<CallArg>> args;
@@ -462,12 +471,26 @@ namespace cthulhu::ast {
     struct Decorated : Decl {
         Decorated(vec<ptr<Attribute>> attribs, ptr<Decl> decl);
 
+        virtual bool equals(const ptr<Node> other) const override;
+
     private:
         // technically the grammar states that this should be recursive
         // but thats a pain in the ass to model sanely so we flatten out
         // attributes in the parser automatically
         vec<ptr<Attribute>> attribs;
         ptr<Decl> decl;
+    };
+
+    //
+    // statements
+    //
+
+    struct Compound : Stmt {
+
+    };
+
+    struct Return : Stmt {
+
     };
 
     struct Import : Node {
