@@ -1,0 +1,26 @@
+# x86 boot sector
+
+@[noreturn, naked, arch(i8086)]
+def panic(@reg(si) msg: str) {
+    # print out the message using int 0x10, ah 0x0E
+
+    # set ah to 0x0E for the rest of this function
+    asm!(ah) = 0x0E;
+
+    # set `al` to the character we want to print
+    # if `asm!(al) == 0` then the loop exits
+    for (asm!(al) .. msg) asm! {
+        int 0x10
+    }
+
+    # loop forever
+    while (true) asm! {
+        cli
+        hlt
+    }
+}
+
+@[stackless, noreturn, naked, arch(i8086)]
+def boot16 {
+    panic("hello world");
+}
