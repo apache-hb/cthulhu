@@ -46,7 +46,19 @@ parse = [
     'parse/expr/unary', 'parse/expr/binary',
 
     'parse/expr/call1', 'parse/expr/call2', 'parse/expr/call3',
-    'parse/expr/call4'
+    'parse/expr/call4',
+
+    'parse/decl/alias/alias',
+
+    'parse/decl/record/empty', 'parse/decl/record/field', 
+    'parse/decl/record/fields',
+
+    'parse/decl/union/empty', 'parse/decl/union/field',
+    'parse/decl/union/fields',
+
+    'parse/decl/variant/data', 'parse/decl/variant/datainit',
+    'parse/decl/variant/empty', 'parse/decl/variant/enum',
+    'parse/decl/variant/init', 'parse/decl/variant/mixed',
 ]
 
 tests = util + lex + parse

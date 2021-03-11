@@ -16,6 +16,7 @@ namespace cthulhu {
         ptr<ast::Record> parseRecord();
         ptr<ast::Union> parseUnion();
         ptr<ast::Variant> parseVariant();
+        ptr<ast::Decorated> parseDecorated();
 
         ptr<ast::Type> parseType();
         ptr<ast::PointerType> parsePointerType();
@@ -29,6 +30,9 @@ namespace cthulhu {
         ptr<ast::Expr> parseBinaryExpr(int precedence);
         ptr<ast::Expr> parsePrimaryExpr();
 
+        ptr<ast::Attribute> parseAttribute();
+        ptr<ast::Field> parseField(bool semi);
+        ptr<ast::Case> parseCase();
         vec<ptr<ast::CallArg>> parseCallArgs(bool empty = true);
         ptr<ast::Ident> parseIdent();
 

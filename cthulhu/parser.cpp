@@ -110,24 +110,136 @@ namespace cthulhu {
         TRY(parseRecord());
         TRY(parseUnion());
         TRY(parseVariant());
+        TRY(parseDecorated());
         
         return nullptr;
     }
 
     ptr<ast::Alias> Parser::parseAlias() {
-        return nullptr;   
+        if (!eatKey(Key::USING)) {
+            return nullptr;
+        }
+
+        auto name = parseIdent();
+
+        expect(Token::KEY, Key::ASSIGN);
+
+        auto type = parseType();
+
+        expect(Token::KEY, Key::SEMI);
+
+        return MAKE<ast::Alias>(name, type);
     }
 
     ptr<ast::Record> Parser::parseRecord() {
-        return nullptr;
+        if (!eatKey(Key::RECORD)) {
+            return nullptr;
+        }
+
+        auto name = parseIdent();
+
+        expect(Token::KEY, Key::LBRACE);
+        auto fields = collect<ast::Field>(Key::INVALID, [&] { return parseField(true); }, false);
+        expect(Token::KEY, Key::RBRACE);
+
+        return MAKE<ast::Record>(name, fields);
     }
 
     ptr<ast::Union> Parser::parseUnion() {
-        return nullptr;   
+        if (!eatKey(Key::UNION)) {
+            return nullptr;
+        }
+
+        auto name = parseIdent();
+
+        expect(Token::KEY, Key::LBRACE);
+        auto fields = collect<ast::Field>(Key::INVALID, [&] { return parseField(true); }, false);
+        expect(Token::KEY, Key::RBRACE);
+
+        return MAKE<ast::Union>(name, fields);
     }
 
     ptr<ast::Variant> Parser::parseVariant() {
-        return nullptr;   
+        if (!eatKey(Key::VARIANT)) {
+            return nullptr;
+        }
+
+        auto name = parseIdent();
+
+        auto parent = eatKey(Key::COLON) ? parseQualifiedType() : nullptr;
+
+        expect(Token::KEY, Key::LBRACE);
+        auto cases = collect<ast::Case>(Key::INVALID, [&] { return parseCase(); }, false);
+        expect(Token::KEY, Key::RBRACE);
+
+        return MAKE<ast::Variant>(name, parent, cases);
+    }
+
+    ptr<ast::Field> Parser::parseField(bool semi) {
+        if (auto name = parseIdent(); name) {
+            expect(Token::KEY, Key::COLON);
+            auto type = parseType();
+            
+            if (semi) {
+                expect(Token::KEY, Key::SEMI);
+            }
+
+            return MAKE<ast::Field>(name, type);
+        } else {
+            return nullptr;
+        }
+    }
+
+    ptr<ast::Case> Parser::parseCase() {
+        if (!eatKey(Key::CASE)) {
+            return nullptr;
+        }
+
+        auto name = parseIdent();
+        vec<ptr<ast::Field>> fields;
+        if (eatKey(Key::LPAREN)) {
+            fields = collect<ast::Field>(Key::COMMA, [&] { return parseField(false); }, true);
+            expect(Token::KEY, Key::RPAREN);
+        }
+
+        auto init = eatKey(Key::ASSIGN) ? parseExpr() : nullptr;
+
+        expect(Token::KEY, Key::SEMI);
+
+        return MAKE<ast::Case>(name, init, fields);
+    }
+
+    ptr<ast::Decorated> Parser::parseDecorated() {
+        if (!eatKey(Key::AT)) {
+            return nullptr;
+        }
+
+        vec<ptr<ast::Attribute>> attribs;
+        do {
+            if (eatKey(Key::LSQUARE)) {
+                do {
+                    attribs.push_back(parseAttribute());
+                } while (eatKey(Key::COMMA));
+                expect(Token::KEY, Key::RSQUARE);
+            } else {
+                attribs.push_back(parseAttribute());
+            }
+        } while (eatKey(Key::AT));
+
+        auto decl = parseDecl();
+
+        return MAKE<ast::Decorated>(attribs, decl);
+    }
+
+    ptr<ast::Attribute> Parser::parseAttribute() {
+        auto name = parseQualifiedType();
+
+        vec<ptr<ast::CallArg>> args;
+        if (eatKey(Key::LPAREN)) {
+            args = parseCallArgs();
+        }
+
+        return MAKE<ast::Attribute>(name, args);
     }
 
     ptr<ast::Node> Parser::parseImport() {
