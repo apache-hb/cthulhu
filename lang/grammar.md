@@ -12,9 +12,7 @@ include-list : `...` | list
 
 ## Declarations
 
-decl : attribute* decl-body
-
-decl-body : alias-decl | record-decl | variant-decl | union-decl | trait-decl | extend-decl
+decl : decorated-decl | alias-decl | record-decl | variant-decl | union-decl
 
 ## Aliases
 
@@ -32,25 +30,9 @@ union-decl : union ident `{` union-field* `}`
 
 union-field : basic-field `;`
 
-## Traits
-
-trait-decl : trait ident trait-requires? `{` func-decl* `}`
-
-trait-requires : requires requires-body
-
-requires-body : qualified | `(` qualified (`,` qualified)* `)`
-
-## Extensions
-
-extend-decl : extend qualified extend-with? extend-body
-
-extend-with : with qualified
-
-extend-body : `{` <!-- TODO: --> `}`
-
 ## Variants
 
-variant-decl : variant ident `{` variant-case* `}`
+variant-decl : variant ident (`:` qualified)? `{` variant-case* `}`
 
 variant-case : case ident variant-case-body? `;`
 
@@ -87,6 +69,8 @@ else-stmt : else stmt
 condition : expr | var-decl-body (`;` expr)?
 
 ## Attributes
+
+decorated-decl : attribute decl
 
 attribute : `@` attribute-body
 
@@ -191,12 +175,6 @@ extend : `extend`
 with : `with`
 
 requires : `requires`
-
-always : `always`
-
-input : `input`
-
-output : `output`
 
 case : `case`
 

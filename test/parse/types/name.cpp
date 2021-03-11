@@ -7,17 +7,9 @@ int main() {
     auto lexer = TestLexer(&stream);
     auto parse = TestParser(&lexer);
 
-    vec<ptr<NameType>> names = {
-        MAKE<NameType>(
-            MAKE<Ident>(
-                lexer.ident("name")
-            )
-        )
-    };
-
     parse.expect(
         [&]{ return parse.parseType(); }, 
-        MAKE<QualifiedType>(names)
+        parse.qualified({ "name" })
     );
 
     parse.finish();

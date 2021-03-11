@@ -29,8 +29,6 @@ namespace cthulhu::ast {
     struct Ident : Node {
         Ident(Token ident);
 
-        virtual ~Ident() override { }
-
         virtual bool equals(const ptr<Node> other) const override;
 
         virtual void visit(Printer* out) const override {
@@ -53,7 +51,6 @@ namespace cthulhu::ast {
 
     struct PointerType : Type {
         PointerType(ptr<Type> type);
-        virtual ~PointerType() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -63,7 +60,6 @@ namespace cthulhu::ast {
 
     struct ReferenceType : Type {
         ReferenceType(ptr<Type> type);
-        virtual ~ReferenceType() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -73,7 +69,6 @@ namespace cthulhu::ast {
 
     struct MutableType : Type {
         MutableType(ptr<Type> type);
-        virtual ~MutableType() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
     
@@ -83,7 +78,6 @@ namespace cthulhu::ast {
 
     struct ArrayType : Type {
         ArrayType(ptr<Type> type, ptr<Expr> size);
-        virtual ~ArrayType() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -94,7 +88,6 @@ namespace cthulhu::ast {
 
     struct ClosureType : Type {
         ClosureType(vec<ptr<Type>> args, ptr<Type> result);
-        virtual ~ClosureType() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -105,7 +98,6 @@ namespace cthulhu::ast {
 
     struct NameType : Type {
         NameType(ptr<Ident> name);
-        virtual ~NameType() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -119,7 +111,6 @@ namespace cthulhu::ast {
 
     struct QualifiedType : Type {
         QualifiedType(vec<ptr<NameType>> names);
-        virtual ~QualifiedType() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -151,7 +142,6 @@ namespace cthulhu::ast {
         };
 
         UnaryExpr(UnaryOp op, ptr<Expr> expr);
-        virtual ~UnaryExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -202,7 +192,6 @@ namespace cthulhu::ast {
         };
 
         BinaryExpr(BinaryOp op, ptr<Expr> lhs, ptr<Expr> rhs);
-        virtual ~BinaryExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -245,7 +234,6 @@ namespace cthulhu::ast {
 
     struct TernaryExpr : Expr {
         TernaryExpr(ptr<Expr> cond, ptr<Expr> yes, ptr<Expr> no);
-        virtual ~TernaryExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
     private:
@@ -256,7 +244,6 @@ namespace cthulhu::ast {
 
     struct StringExpr : Expr {
         StringExpr(const utf8::string* string);
-        virtual ~StringExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -266,7 +253,6 @@ namespace cthulhu::ast {
 
     struct IntExpr : Expr {
         IntExpr(const Number& number);
-        virtual ~IntExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -280,7 +266,6 @@ namespace cthulhu::ast {
 
     struct BoolExpr : Expr {
         BoolExpr(bool val);
-        virtual ~BoolExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -294,7 +279,6 @@ namespace cthulhu::ast {
 
     struct CharExpr : Expr {
         CharExpr(c32 letter);
-        virtual ~CharExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -304,7 +288,6 @@ namespace cthulhu::ast {
 
     struct NameExpr : Expr {
         NameExpr(ptr<QualifiedType> name);
-        virtual ~NameExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -319,7 +302,6 @@ namespace cthulhu::ast {
     
     struct CoerceExpr : Expr {
         CoerceExpr(ptr<Type> type, ptr<Expr> expr);
-        virtual ~CoerceExpr() override { }
     private:
         ptr<Type> type;
         ptr<Expr> expr;
@@ -327,7 +309,6 @@ namespace cthulhu::ast {
 
     struct SubscriptExpr : Expr {
         SubscriptExpr(ptr<Expr> expr, ptr<Expr> index);
-        virtual ~SubscriptExpr() override { }
     private:
         ptr<Expr> expr;
         ptr<Expr> index;
@@ -335,7 +316,6 @@ namespace cthulhu::ast {
 
     struct AccessExpr : Expr {
         AccessExpr(ptr<Expr> body, ptr<Ident> field, bool indirect);
-        virtual ~AccessExpr() override { }
     private:
         ptr<Expr> body;
         ptr<Ident> field;
@@ -344,7 +324,6 @@ namespace cthulhu::ast {
 
     struct CallArg : Node {
         CallArg(ptr<Ident> name, ptr<Expr> expr);
-        virtual ~CallArg() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -363,7 +342,6 @@ namespace cthulhu::ast {
 
     struct CallExpr : Expr {
         CallExpr(ptr<Expr> func, vec<ptr<CallArg>> args);
-        virtual ~CallExpr() override { }
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -390,41 +368,7 @@ namespace cthulhu::ast {
     struct Alias : Decl {
         Alias(ptr<Ident> name, ptr<Type> type);
 
-    private:
-        ptr<Ident> name;
-        ptr<Type> type;
-    };
-
-    struct Record : Decl {
-
-    };
-
-    struct Union : Decl {
-
-    };
-
-    struct Variant : Decl {
-
-    };
-
-    struct Trait : Decl {
-
-    };
-
-    struct Extend : Decl {
-
-    };
-
-    /*
-    struct Var : Decl {
-    private:
-        ptr<Ident> name;
-        ptr<Type> type;
-        ptr<Expr> init;
-    };
-
-    struct Alias : Decl {
-        Alias(ptr<Ident> name, ptr<Type> type);
+        virtual bool equals(const ptr<Node> other) const override;
 
         virtual void visit(Printer* out) const override {
             out->section("- alias", [&] {
@@ -432,62 +376,99 @@ namespace cthulhu::ast {
                 type->visit(out);
             });
         }
+
+    private:
+        ptr<Ident> name;
+        ptr<Type> type;
+    };
+
+    struct Field : Node {
+        Field(ptr<Ident> name, ptr<Type> type);
+
+        virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section("- field", [&] {
+                name->visit(out);
+                type->visit(out);
+            });
+        }
+
     private:
         ptr<Ident> name;
         ptr<Type> type;
     };
 
     struct Record : Decl {
-        Record(ptr<Ident> name, vec<ptr<Decl>> items);
+        Record(ptr<Ident> name, vec<ptr<Field>> fields);
+
+        virtual bool equals(const ptr<Node> other) const override;
 
         virtual void visit(Printer* out) const override {
             out->section("- record", [&] {
                 name->visit(out);
                 out->section("- fields", [&] {
-                    for (auto item : items)
-                        item->visit(out);
+                    for (auto field : fields)
+                        field->visit(out);
                 });
             });
         }
 
     private:
         ptr<Ident> name;
-        vec<ptr<Decl>> items;
+        vec<ptr<Field>> fields;
     };
-
-
 
     struct Union : Decl {
+        Union(ptr<Ident> name, vec<ptr<Field>> fields);
+
+        virtual bool equals(const ptr<Node> other) const override;
 
     private:
         ptr<Ident> name;
-        vec<ptr<Decl>> items;
+        vec<ptr<Field>> fields;
     };
 
+    struct Case : Node {
+        Case(ptr<Ident> name, ptr<Expr> value, vec<ptr<Field>> fields);
 
-    struct Field : Node {
-        Field(ptr<Ident> name, ptr<Type> type);
-    
+        virtual bool equals(const ptr<Node> other) const override;
+
     private:
         ptr<Ident> name;
-        ptr<Type> type;
-    };
-
-    struct Case : Decl {
-        Case(ptr<Ident> name, ptr<Expr> expr, vec<ptr<Field>> fields);
-    private:
-        ptr<Ident> name;
-        ptr<Expr> expr;
+        ptr<Expr> value;
         vec<ptr<Field>> fields;
     };
 
     struct Variant : Decl {
+        Variant(ptr<Ident> name, ptr<QualifiedType> parent, vec<ptr<Case>> cases);
+
+        virtual bool equals(const ptr<Node> other) const override;
 
     private:
         ptr<Ident> name;
-        ptr<Type> type;
-        vec<ptr<Decl>> fields;
-    };*/
+        ptr<QualifiedType> parent;
+        vec<ptr<Case>> cases;
+    };
+
+    struct Attribute : Node {
+        Attribute(ptr<QualifiedType> name, vec<ptr<CallArg>> args);
+
+    private:
+        ptr<QualifiedType> name;
+        vec<ptr<CallArg>> args;
+    };
+
+    struct Decorated : Decl {
+        Decorated(vec<ptr<Attribute>> attribs, ptr<Decl> decl);
+
+    private:
+        // technically the grammar states that this should be recursive
+        // but thats a pain in the ass to model sanely so we flatten out
+        // attributes in the parser automatically
+        vec<ptr<Attribute>> attribs;
+        ptr<Decl> decl;
+    };
 
     struct Import : Node {
         Import(vec<ptr<Ident>> path, bool wildcard, vec<ptr<Ident>> items = vec<ptr<Ident>>());

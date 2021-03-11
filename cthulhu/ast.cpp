@@ -261,6 +261,91 @@ namespace cthulhu::ast {
         , type(type)
     { }
 
+    bool Alias::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Alias>(other); o) {
+            return name->equals(o->name) && type->equals(o->type);
+        }
+
+        return false;
+    }
+
+    Field::Field(ptr<Ident> name, ptr<Type> type)
+        : name(name)
+        , type(type)
+    { }
+
+    bool Field::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Field>(other); o) {
+            return name->equals(o->name) && type->equals(o->type);
+        }
+
+        return false;
+    }
+
+    Record::Record(ptr<Ident> name, vec<ptr<Field>> fields)
+        : name(name)
+        , fields(fields)
+    { }
+
+    bool Record::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Record>(other); o) {
+            return name->equals(o->name) && vequals(fields, o->fields);
+        }
+
+        return false;
+    }
+
+    Union::Union(ptr<Ident> name, vec<ptr<Field>> fields)
+        : name(name)
+        , fields(fields)
+    { }
+
+    bool Union::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Union>(other); o) {
+            return name->equals(o->name) && vequals(fields, o->fields);
+        }
+
+        return false;
+    }
+
+    Case::Case(ptr<Ident> name, ptr<Expr> value, vec<ptr<Field>> fields)
+        : name(name)
+        , value(value)
+        , fields(fields)
+    { }
+
+    bool Case::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Case>(other); o) {
+            return name->equals(o->name) && pequals(value, o->value) && vequals(fields, o->fields);
+        }
+
+        return false;
+    }
+
+    Variant::Variant(ptr<Ident> name, ptr<QualifiedType> parent, vec<ptr<Case>> cases)
+        : name(name)
+        , parent(parent)
+        , cases(cases)
+    { }
+
+    bool Variant::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Variant>(other); o) {
+            return name->equals(o->name) && pequals(parent, o->parent) && vequals(cases, o->cases);
+        }
+
+        return false;
+    }
+
+    Attribute::Attribute(ptr<QualifiedType> name, vec<ptr<CallArg>> args)
+        : name(name)
+        , args(args)
+    { }
+
+    Decorated::Decorated(vec<ptr<Attribute>> attribs, ptr<Decl> decl)
+        : attribs(attribs)
+        , decl(decl)
+    { }
+
     Import::Import(vec<ptr<Ident>> path, bool wildcard, vec<ptr<Ident>> items)
         : path(path)
         , items(items)
