@@ -59,6 +59,11 @@ parse = [
     'parse/decl/variant/data', 'parse/decl/variant/datainit',
     'parse/decl/variant/empty', 'parse/decl/variant/enum',
     'parse/decl/variant/init', 'parse/decl/variant/mixed',
+
+    'parse/decl/attributes/args', 'parse/decl/attributes/lots',
+    'parse/decl/attributes/many', 'parse/decl/attributes/mixed',
+    'parse/decl/attributes/moreargs', 'parse/decl/attributes/multiple',
+    'parse/decl/attributes/single'
 ]
 
 tests = util + lex + parse
