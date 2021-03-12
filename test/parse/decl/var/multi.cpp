@@ -11,7 +11,23 @@ int main() {
 
     parse.expect(
         [&]{ return parse.parseDecl(); }, 
-        nullptr
+        MAKE<Var>(
+            vec<ptr<VarName>>({
+                MAKE<VarName>(
+                    MAKE<Ident>(lexer.ident("lhs")),
+                    nullptr
+                ),
+                MAKE<VarName>(
+                    MAKE<Ident>(lexer.ident("rhs")),
+                    nullptr
+                )
+            }),
+            MAKE<CallExpr>(
+                MAKE<NameExpr>(parse.qualified({ "expr" })),
+                vec<ptr<CallArg>>()
+            ),
+            true
+        )
     );
 
     parse.finish();

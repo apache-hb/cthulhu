@@ -11,7 +11,16 @@ int main() {
 
     parse.expect(
         [&]{ return parse.parseDecl(); }, 
-        nullptr
+        MAKE<Var>(
+            vec<ptr<VarName>>({
+                MAKE<VarName>(
+                    MAKE<Ident>(lexer.ident("x")),
+                    nullptr
+                )
+            }),
+            MAKE<IntExpr>(Number(10, nullptr)),
+            true
+        )
     );
 
     parse.finish();
