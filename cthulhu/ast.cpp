@@ -311,6 +311,14 @@ namespace cthulhu::ast {
         , type(type)
     { }
 
+    bool VarName::equals(const ptr<Node> other) const {
+        if (auto o = SELF<VarName>(other); o) {
+            return name->equals(o->name) && pequals(type, o->type);
+        }
+
+        return false;
+    }
+
     Var::Var(vec<ptr<VarName>> names, ptr<Expr> init, bool mut)
         : names(names)
         , init(init)

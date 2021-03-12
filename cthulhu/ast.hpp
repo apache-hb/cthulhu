@@ -420,6 +420,8 @@ namespace cthulhu::ast {
 
     struct VarName : Node {
         VarName(ptr<Ident> name, ptr<Type> type);
+
+        virtual bool equals(const ptr<Node> other) const override;
     private:
         ptr<Ident> name;
         ptr<Type> type;
