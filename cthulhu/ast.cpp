@@ -196,7 +196,6 @@ namespace cthulhu::ast {
     
     bool CharExpr::equals(const ptr<Node> other) const {
         if (auto o = SELF<CharExpr>(other); o) {
-            fprintf(stderr, "%d %d\n", letter, o->letter);
             return letter == o->letter;
         }
         
