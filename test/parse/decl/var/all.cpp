@@ -5,6 +5,7 @@
 int main() {
     auto stream = StringStream(R"(
         let a: int = 10;
+        
     )");
     auto lexer = TestLexer(&stream);
     auto parse = TestParser(&lexer);
