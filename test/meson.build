@@ -22,9 +22,7 @@ lex = [
     # string interning
     'lex/intern/idents', 'lex/intern/mixed', 'lex/intern/strings',
 
-    # TODO: this test is bugged due to https://github.com/DuffsDevice/tiny-utf8/issues/58
-    # leave it disabled until thats resolved
-    # 'lex/rstring3'
+    'lex/strings/rstring3',
 
     # diagnostic messages
     'lex/diagnostic1', 'lex/diagnostic2',

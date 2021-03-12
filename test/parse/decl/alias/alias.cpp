@@ -5,6 +5,7 @@
 int main() {
     auto stream = StringStream(R"(
         using num = int;
+        
     )");
     auto lexer = TestLexer(&stream);
     auto parse = TestParser(&lexer);
