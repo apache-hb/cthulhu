@@ -503,6 +503,21 @@ namespace cthulhu::ast {
         vec<ptr<Case>> cases;
     };
 
+    struct Param : Node {
+        ptr<Ident> name;
+        ptr<Type> type;
+        ptr<Expr> init;
+    };
+
+    struct Function : Decl {
+
+    private:
+        ptr<Ident> name;
+        vec<ptr<Param>> params;
+        ptr<Type> result;
+        ptr<Stmt> body;
+    };
+
     struct Attribute : Node {
         Attribute(ptr<QualifiedType> name, vec<ptr<CallArg>> args);
 
@@ -531,11 +546,73 @@ namespace cthulhu::ast {
     //
 
     struct Compound : Stmt {
+        Compound(vec<ptr<Stmt>> stmts);
+    private:
+        vec<ptr<Stmt>> stmts;
+    };
 
+    struct Condition : Node {
+
+    private:
+        ptr<Stmt> init;
+        ptr<Expr> body;
+    };
+
+    struct If : Node {
+        ptr<Condition> cond;
+        ptr<Stmt> body;
+    };
+
+    struct Branch : Stmt {
+        vec<ptr<If>> branches;
+    };
+
+    struct With : Stmt {
+        ptr<Expr> init;
+        ptr<Stmt> body;
+    };
+
+    struct Assign : Stmt {
+        enum Op {
+            ASSIGN,
+            ADDEQ,
+            SUBEQ,
+            DIVEQ,
+            MODEQ,
+            SHLEQ,
+            SHREQ,
+            XOREQ,
+            OREQ,
+            ANDEQ
+        };
+
+        Assign(Op op, ptr<Expr> body, ptr<Expr> value);
+
+    private:
+        const char* str() const {
+            switch (op) {
+            case ASSIGN: return "ASSIGN";
+            case ADDEQ: return "ADDEQ";
+            case SUBEQ: return "SUBEQ";
+            case DIVEQ: return "DIVEQ";
+            case MODEQ: return "MODEQ";
+            case SHLEQ: return "SHLEQ";
+            case SHREQ: return "SHREQ";
+            case XOREQ: return "XOREQ";
+            case OREQ: return "OREQ";
+            case ANDEQ: return "ANDEQ";
+            default: return "INVALID";
+            }
+        }
+        Op op;
+        ptr<Expr> body;
+        ptr<Expr> value;
     };
 
     struct Return : Stmt {
-
+        Return(ptr<Expr> expr);
+    private:
+        ptr<Expr> expr;
     };
 
     struct Import : Node {
