@@ -78,7 +78,12 @@ parse = [
 
     'parse/stmt/returnempty', 'parse/stmt/returnexpr',
     'parse/stmt/compound', 'parse/stmt/assign',
-    'parse/stmt/while', 'parse/stmt/whileelse'
+    'parse/stmt/while', 'parse/stmt/whileelse',
+
+    'parse/stmt/if', 'parse/stmt/else', 
+    'parse/stmt/elif', 'parse/stmt/elifelse', 
+
+    'parse/unit/fib'
 ]
 
 tests = util + lex + parse

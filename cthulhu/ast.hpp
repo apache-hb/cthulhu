@@ -5,7 +5,10 @@
 namespace cthulhu::ast {
     struct Printer {
         void write(const utf8::string& text) {
-            buffer += utf8::string(depth * 2, ' ') + text + "\n";
+            buffer += utf8::string(depth * 2, ' ') + text;
+            if (feed) {
+                buffer += "\n";
+            }
         }
 
         template<typename F>
@@ -16,6 +19,7 @@ namespace cthulhu::ast {
             depth--;
         }
     
+        bool feed = true;
         utf8::string buffer = "";
         int depth = 0;
     };
@@ -24,6 +28,7 @@ namespace cthulhu::ast {
         virtual ~Node() { }
         virtual bool equals(const ptr<Node>) const { throw std::runtime_error("unimplemented equals"); }
         virtual void visit(Printer*) const { throw std::runtime_error("unimplemented visit"); }
+        virtual void emit(Printer*) const { throw std::runtime_error("unimplemented emit"); }
     };
 
     struct Ident : Node {
@@ -33,6 +38,10 @@ namespace cthulhu::ast {
 
         virtual void visit(Printer* out) const override {
             out->write("- ident `" + *token.ident() + "`");
+        }
+
+        virtual void emit(Printer* out) const override {
+            out->write(*token.ident());
         }
 
     private:
@@ -54,14 +63,10 @@ namespace cthulhu::ast {
 
         virtual bool equals(const ptr<Node> other) const override;
 
-    private:
-        ptr<Type> type;
-    };
-
-    struct ReferenceType : Type {
-        ReferenceType(ptr<Type> type);
-
-        virtual bool equals(const ptr<Node> other) const override;
+        virtual void emit(Printer* out) const override {
+            type->emit(out);
+            out->write("*");
+        }
 
     private:
         ptr<Type> type;
@@ -72,6 +77,11 @@ namespace cthulhu::ast {
 
         virtual bool equals(const ptr<Node> other) const override;
     
+        virtual void emit(Printer* out) const override {
+            // dont care about const for now
+            type->emit(out);
+        }
+
     private:
         ptr<Type> type;
     };
@@ -80,6 +90,12 @@ namespace cthulhu::ast {
         ArrayType(ptr<Type> type, ptr<Expr> size);
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        // TODO: dont ignore array sizes
+        virtual void emit(Printer* out) const override {
+            type->emit(out);
+            out->write("*");
+        }
 
     private:
         ptr<Type> type;
@@ -90,6 +106,17 @@ namespace cthulhu::ast {
         ClosureType(vec<ptr<Type>> args, ptr<Type> result);
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void emit(Printer* out) const override {
+            result->emit(out);
+            out->write("(*)(");
+            for (size_t i = 0; i < args.size(); i++) {
+                if (i) {
+                    out->write(",");
+                }
+                args[i]->emit(out);
+            }
+        }
 
     private:
         vec<ptr<Type>> args;
@@ -103,6 +130,10 @@ namespace cthulhu::ast {
 
         virtual void visit(Printer* out) const override {
             name->visit(out);
+        }
+
+        virtual void emit(Printer* out) const override {
+            name->emit(out);
         }
 
     private:
@@ -120,7 +151,12 @@ namespace cthulhu::ast {
                     name->visit(out);
             });
         }
-    private:
+
+        // TODO: lol
+        virtual void emit(Printer* out) const override {
+            names[0]->emit(out);
+        }
+    //private:
         vec<ptr<NameType>> names;
     };
 
@@ -149,6 +185,21 @@ namespace cthulhu::ast {
             out->section(utf8::string("- unary ") + str(), [&] {
                 expr->visit(out);
             });
+        }
+
+        virtual void emit(Printer* out) const override {
+            out->write("(");
+            switch (op) {
+                case NOT: out->write("!"); break;
+                case FLIP: out->write("~"); break;
+                case POS: out->write("+"); break;
+                case NEG: out->write("-"); break;
+                case DEREF: out->write("*"); break;
+                case REF: out->write("&"); break;
+                default: throw std::runtime_error("invalid unary op");
+            }
+            expr->emit(out);
+            out->write(")");
         }
 
     private:
@@ -202,6 +253,34 @@ namespace cthulhu::ast {
             });
         }
 
+        virtual void emit(Printer* out) const override {
+            out->write("(");
+            lhs->emit(out);
+            switch (op) {
+            case ADD: out->write("+"); break;
+            case SUB: out->write("-"); break;
+            case MUL: out->write("*"); break;
+            case MOD: out->write("%"); break;
+            case DIV: out->write("/"); break;
+            case BITAND: out->write("&"); break;
+            case BITOR: out->write("|"); break;
+            case XOR: out->write("^"); break;
+            case AND: out->write("&&"); break;
+            case OR: out->write("||"); break;
+            case SHL: out->write("<<"); break;
+            case SHR: out->write(">>"); break;
+            case LT: out->write("<"); break;
+            case LTE: out->write("<="); break;
+            case GT: out->write(">"); break;
+            case GTE: out->write(">="); break;
+            case EQ: out->write("=="); break;
+            case NEQ: out->write("!="); break;
+            default: throw std::runtime_error("invalid binary op");
+            }
+            rhs->emit(out);
+            out->write(")");
+        }
+
     private:
         const char* str() const {
             switch (op) {
@@ -236,16 +315,47 @@ namespace cthulhu::ast {
         TernaryExpr(ptr<Expr> cond, ptr<Expr> yes, ptr<Expr> no);
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void emit(Printer* out) const override {
+            if (!yes) {
+                throw std::runtime_error("elvis operator unimplemented");
+            }
+
+            cond->emit(out);
+            out->write("?");
+            yes->emit(out);
+            out->write(":");
+            no->emit(out);
+        }
     private:
         ptr<Expr> cond;
         ptr<Expr> yes;
         ptr<Expr> no;
     };
 
+    inline void replaceAll(utf8::string &s, const utf8::string &search, const utf8::string &replace ) {
+        for (size_t pos = 0; ; pos += replace.length()) {
+            pos = s.find(search, pos);
+            if (pos == utf8::string::npos) 
+                break;
+
+            s.erase(pos, search.length());
+            s.insert(pos, replace);
+        }
+    }
+
     struct StringExpr : Expr {
         StringExpr(const utf8::string* string);
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void emit(Printer* out) const override {
+            auto temp = *string;
+            replaceAll(temp, "\n", "\\n");
+            out->write("\"");
+            out->write(temp);
+            out->write("\"");
+        }
 
     private:
         const utf8::string* string;
@@ -258,6 +368,13 @@ namespace cthulhu::ast {
 
         virtual void visit(Printer* out) const override {
             out->write("- int `" + std::to_string(number.number) + "`");
+        }
+
+        virtual void emit(Printer* out) const override {
+            out->write(std::to_string(number.number));
+            if (number.suffix) {
+                out->write(*number.suffix);
+            }
         }
 
     private:
@@ -273,6 +390,10 @@ namespace cthulhu::ast {
             out->write(val ? "- bool `true`" : "- bool `false`");
         }
 
+        virtual void emit(Printer* out) const override {
+            out->write(val ? "1" : "0");
+        }
+
     private:
         bool val;
     };
@@ -281,6 +402,10 @@ namespace cthulhu::ast {
         CharExpr(c32 letter);
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void emit(Printer* out) const override {
+            out->write(std::to_string(letter));
+        }
 
     private:
         c32 letter;
@@ -296,6 +421,12 @@ namespace cthulhu::ast {
                 name->visit(out);
             });
         }
+
+        // TODO: oh god
+        virtual void emit(Printer* out) const override {
+            name->names[0]->emit(out);
+        }
+
     private:
         ptr<QualifiedType> name;
     };
@@ -304,6 +435,14 @@ namespace cthulhu::ast {
         CoerceExpr(ptr<Type> type, ptr<Expr> expr);
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void emit(Printer* out) const override {
+            out->write("((");
+            type->emit(out);
+            out->write(")");
+            expr->emit(out);
+            out->write(")");
+        }
 
     private:
         ptr<Type> type;
@@ -314,6 +453,14 @@ namespace cthulhu::ast {
         SubscriptExpr(ptr<Expr> expr, ptr<Expr> index);
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void emit(Printer* out) const override {
+            out->write("(");
+            expr->emit(out);
+            out->write("[");
+            index->emit(out);
+            out->write("])");
+        }
 
     private:
         ptr<Expr> expr;
@@ -335,6 +482,14 @@ namespace cthulhu::ast {
             });
         }
 
+        virtual void emit(Printer* out) const override {
+            out->write("(");
+            body->emit(out);
+            out->write(indirect ? "->" : ".");
+            field->emit(out);
+            out->write(")");
+        }
+
     private:
         ptr<Expr> body;
         ptr<Ident> field;
@@ -352,6 +507,10 @@ namespace cthulhu::ast {
                     name->visit(out);
                 expr->visit(out);
             });
+        }
+
+        virtual void emit(Printer* out) const override {
+            expr->emit(out);
         }
 
     private:
@@ -372,6 +531,19 @@ namespace cthulhu::ast {
                         arg->visit(out);
                 });
             });
+        }
+
+        virtual void emit(Printer* out) const override {
+            out->write("(");
+            func->emit(out);
+            out->write("(");
+            for (size_t i = 0; i < args.size(); i++) {
+                if (i) {
+                    out->write(", ");
+                }
+                args[i]->emit(out);
+            }
+            out->write("))");
         }
     private:
         ptr<Expr> func;
@@ -396,6 +568,13 @@ namespace cthulhu::ast {
             });
         }
 
+        virtual void emit(Printer* out) const override {
+            out->write("typedef ");
+            type->emit(out);
+            name->emit(out);
+            out->write(";");
+        }
+
     private:
         ptr<Ident> name;
         ptr<Type> type;
@@ -411,6 +590,13 @@ namespace cthulhu::ast {
                 name->visit(out);
                 type->visit(out);
             });
+        }
+
+        virtual void emit(Printer* out) const override {
+            type->emit(out);
+            out->write(" ");
+            name->emit(out);
+            out->write(";\n");
         }
 
     private:
@@ -466,6 +652,17 @@ namespace cthulhu::ast {
             });
         }
 
+        virtual void emit(Printer* out) const override {
+            out->write("struct ");
+            name->emit(out);
+            out->write("{\n");
+
+            for (auto field : fields)
+                field->emit(out);
+
+            out->write("}\n");
+        }
+
     private:
         ptr<Ident> name;
         vec<ptr<Field>> fields;
@@ -475,6 +672,17 @@ namespace cthulhu::ast {
         Union(ptr<Ident> name, vec<ptr<Field>> fields);
 
         virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void emit(Printer* out) const override {
+            out->write("union ");
+            name->emit(out);
+            out->write("{\n");
+
+            for (auto field : fields)
+                field->emit(out);
+
+            out->write("}\n");
+        }
 
     private:
         ptr<Ident> name;
@@ -517,6 +725,13 @@ namespace cthulhu::ast {
                 }
             });
         }
+
+        virtual void emit(Printer* out) const override {
+            type->emit(out);
+            out->write(" ");
+            name->emit(out);
+        }
+
     private:
         ptr<Ident> name;
         ptr<Type> type;
@@ -542,6 +757,35 @@ namespace cthulhu::ast {
                     body->visit(out);
                 }
             });
+        }
+
+        virtual void emit(Printer* out) const override {
+            result->emit(out);
+            out->write(" ");
+            name->emit(out);
+            out->write("(");
+            for (size_t i = 0; i < params.size(); i++) {
+                if (i) {
+                    out->write(", ");
+                }
+                params[i]->emit(out);
+            }
+            out->write(")\n");
+
+            if (!body) {
+                out->write(";");
+                return;
+            }
+
+            out->write("{");
+            if (auto expr = SELF<Expr>(body); expr) {
+                out->write("return ");
+                expr->emit(out);
+                out->write(";");
+            } else {
+                body->emit(out);
+            }
+            out->write("}\n");
         }
     private:
         ptr<Ident> name;
@@ -589,22 +833,34 @@ namespace cthulhu::ast {
             });
         }
 
+        virtual void emit(Printer* out) const override {
+            out->write("{");
+            for (auto stmt : stmts) {
+                stmt->emit(out);
+                out->write(";\n");
+            }
+            out->write("}");
+        }
+
     private:
         vec<ptr<Stmt>> stmts;
     };
 
     struct If : Node {
+        If(ptr<Expr> cond, ptr<Stmt> body);
+
+        virtual bool equals(const ptr<Node> other) const override;
+    private:
         ptr<Expr> cond;
         ptr<Stmt> body;
     };
 
     struct Branch : Stmt {
-        vec<ptr<If>> branches;
-    };
+        Branch(vec<ptr<If>> branches);
 
-    struct With : Stmt {
-        ptr<Expr> init;
-        ptr<Stmt> body;
+        virtual bool equals(const ptr<Node> other) const override;
+    private:
+        vec<ptr<If>> branches;
     };
 
     struct While : Stmt {
@@ -715,6 +971,12 @@ namespace cthulhu::ast {
             });
         }
 
+        virtual void emit(Printer* out) const override {
+            out->write("#include <");
+            path[0]->emit(out);
+            out->write(".h>");
+        }
+
     private:
         vec<ptr<Ident>> path;
         vec<ptr<Ident>> items;
@@ -735,6 +997,19 @@ namespace cthulhu::ast {
                         it->visit(out);
                 });
             });
+        }
+
+        virtual void emit(Printer* out) const override {
+            out->write("#ifndef UNIT_H\n#define UNIT_H\n");
+            for (auto include : imports) {
+                include->emit(out);
+                out->write("\n");
+            }
+
+            for (auto decl : decls)
+                decl->emit(out);
+
+            out->write("#endif\n");
         }
 
     private:
