@@ -504,13 +504,45 @@ namespace cthulhu::ast {
     };
 
     struct Param : Node {
+        Param(ptr<Ident> name, ptr<Type> type, ptr<Expr> init);
+    
+        virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section("- param", [&] {
+                name->visit(out);
+                type->visit(out);
+                if (init) {
+                    init->visit(out);
+                }
+            });
+        }
+    private:
         ptr<Ident> name;
         ptr<Type> type;
         ptr<Expr> init;
     };
 
     struct Function : Decl {
+        Function(ptr<Ident> name, vec<ptr<Param>> params, ptr<Type> result, ptr<Stmt> body);
+    
+        virtual bool equals(const ptr<Node> other) const override;
 
+        virtual void visit(Printer* out) const override {
+            out->section("- function", [&] {
+                name->visit(out);
+                for (auto param : params)
+                    param->visit(out);
+
+                if (result) {
+                    result->visit(out);
+                }
+
+                if (body) {
+                    body->visit(out);
+                }
+            });
+        }
     private:
         ptr<Ident> name;
         vec<ptr<Param>> params;
@@ -547,19 +579,22 @@ namespace cthulhu::ast {
 
     struct Compound : Stmt {
         Compound(vec<ptr<Stmt>> stmts);
+
+        virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section("- compound", [&] {
+                for (auto stmt : stmts)
+                    stmt->visit(out);
+            });
+        }
+
     private:
         vec<ptr<Stmt>> stmts;
     };
 
-    struct Condition : Node {
-
-    private:
-        ptr<Stmt> init;
-        ptr<Expr> body;
-    };
-
     struct If : Node {
-        ptr<Condition> cond;
+        ptr<Expr> cond;
         ptr<Stmt> body;
     };
 
@@ -572,13 +607,34 @@ namespace cthulhu::ast {
         ptr<Stmt> body;
     };
 
+    struct While : Stmt {
+        While(ptr<Expr> cond, ptr<Stmt> body, ptr<Stmt> other);
+
+        virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section("- while", [&] {
+                cond->visit(out);
+                body->visit(out);
+                if (other)
+                    other->visit(out);
+            });
+        }
+    private:
+        ptr<Expr> cond;
+        ptr<Stmt> body;
+        ptr<Stmt> other;
+    };
+
     struct Assign : Stmt {
         enum Op {
+            INVALID,
             ASSIGN,
             ADDEQ,
             SUBEQ,
             DIVEQ,
             MODEQ,
+            MULEQ,
             SHLEQ,
             SHREQ,
             XOREQ,
@@ -587,6 +643,16 @@ namespace cthulhu::ast {
         };
 
         Assign(Op op, ptr<Expr> body, ptr<Expr> value);
+
+        virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section("- assign", [&] {
+                out->write(str());
+                body->visit(out);
+                value->visit(out);
+            });
+        }
 
     private:
         const char* str() const {
@@ -611,6 +677,15 @@ namespace cthulhu::ast {
 
     struct Return : Stmt {
         Return(ptr<Expr> expr);
+
+        virtual bool equals(const ptr<Node> other) const override;
+
+        virtual void visit(Printer* out) const override {
+            out->section("- return", [&] {
+                if (expr)
+                    expr->visit(out);
+            });
+        }
     private:
         ptr<Expr> expr;
     };
