@@ -12,7 +12,7 @@ include-list : `...` | list
 
 ## Declarations
 
-decl : decorated-decl | alias-decl | record-decl | variant-decl | union-decl | var-decl
+decl : decorated-decl | alias-decl | record-decl | variant-decl | union-decl | var-decl | func-decl
 
 ## Aliases
 
@@ -20,9 +20,15 @@ alias-decl : using ident `=` type `;`
 
 ## Variables
 
-var-decl : (var | let) var-names (`=` expr) `;`
+var-decl : var-decl-body `;`
 
-var-names : basic-field | `[` basic-field (`,` basic-field)* `]`
+var-decl-body : (var | let) var-names (`=` expr)
+
+var-names : var-fields | var-match
+
+var-match : qualified `(` ident (`,` ident)* `)`
+
+var-fields : basic-field | `[` basic-field (`,` basic-field)* `]`
 
 ## Records
 
@@ -50,15 +56,29 @@ variant-field : basic-field
 
 basic-field : ident `:` type
 
-<!-- TODO: bitrange syntax needs work -->
+## Functions
 
-bitrange : `[` expr `..` expr `]`
+func-decl : def ident func-params? func-result? func-body
+
+func-body : `;` | `=` expr `;` | compound-stmt
+
+func-result : `:` type
+
+func-params : `(` param-items? `)`
+
+param-items : param (`,` param-items) | default-params
+
+default-params : default-param (`,` default-param)*
+
+param : ident `:` type
+
+default-param : param `=` expr
 
 ## Statements
 
 stmt : assign-stmt | branch-stmt | compound-stmt | while-stmt
 
-while-stmt : while `(` condition `)` stmt else-stmt?
+while-stmt : while condition compound-stmt else-stmt?
 
 assign-stmt : expr `=` expr `;`
 
@@ -66,13 +86,13 @@ compound-stmt : `{` stmt* `}`
 
 branch-stmt : if-stmt elif-stmt* else-stmt?
 
-if-stmt : if `(` condition `)` stmt
+if-stmt : if condition compound-stmt
 
-elif-stmt : else if `(` condition `)` stmt
+elif-stmt : else if condition compound-stmt
 
-else-stmt : else stmt
- 
-condition : expr | var-decl-body (`;` expr)?
+else-stmt : else compound-stmt
+
+condition : expr | var-decl-body
 
 ## Attributes
 

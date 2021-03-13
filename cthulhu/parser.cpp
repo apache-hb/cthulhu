@@ -94,6 +94,27 @@ namespace {
         default: return ast::BinaryExpr::INVALID;
         }
     }
+
+    ast::Assign::Op assop(Token token) {
+        if (!token.is(Token::KEY)) {
+            return ast::Assign::INVALID;
+        }
+
+        switch (token.key()) {
+        case Key::ASSIGN: return ast::Assign::ASSIGN;
+        case Key::ADDEQ: return ast::Assign::ADDEQ;
+        case Key::SUBEQ: return ast::Assign::SUBEQ;
+        case Key::DIVEQ: return ast::Assign::DIVEQ;
+        case Key::MODEQ: return ast::Assign::MODEQ;
+        case Key::MULEQ: return ast::Assign::MULEQ;
+        case Key::SHLEQ: return ast::Assign::SHLEQ;
+        case Key::SHREQ: return ast::Assign::SHREQ;
+        case Key::BITOREQ: return ast::Assign::OREQ;
+        case Key::BITANDEQ: return ast::Assign::ANDEQ;
+        case Key::XOREQ: return ast::Assign::XOREQ;
+        default: return ast::Assign::INVALID;
+        }
+    }
 }
 
 namespace cthulhu {
@@ -111,6 +132,7 @@ namespace cthulhu {
         TRY(parseUnion());
         TRY(parseVariant());
         TRY(parseVariable());
+        TRY(parseFunction());
         TRY(parseDecorated());
         
         return nullptr;
@@ -194,6 +216,69 @@ namespace cthulhu {
         }
 
         return MAKE<ast::Var>(names, init, mut);
+    }
+
+    ptr<ast::Function> Parser::parseFunction() {
+        if (!eatKey(Key::DEF)) {
+            return nullptr;
+        }
+
+        auto name = parseIdent();
+        vec<ptr<ast::Param>> params;
+        if (eatKey(Key::LPAREN)) {
+            params = parseFunctionParams();
+        }
+
+        auto result = eatKey(Key::COLON) ? parseType() : nullptr;
+
+        ptr<ast::Stmt> body;
+
+        if (eatKey(Key::SEMI)) {
+            body = nullptr;
+        } else if (eatKey(Key::ASSIGN)) {
+            body = parseExpr();
+            expect(Token::KEY, Key::SEMI);
+        } else {
+            body = parseCompound();
+        }
+
+        return MAKE<ast::Function>(name, params, result, body);
+    }
+
+    vec<ptr<ast::Param>> Parser::parseFunctionParams() {
+        bool init = false;
+
+        vec<ptr<ast::Param>> params;
+        while (true) {
+            if (eatKey(Key::RPAREN)) {
+                break;
+            }
+
+            auto name = parseIdent();
+            expect(Token::KEY, Key::COLON);
+            auto type = parseType();
+
+            ptr<ast::Expr> val = nullptr;
+
+            if (eatKey(Key::ASSIGN)) {
+                init = true;
+                val = parseExpr();
+            } else {
+                if (init) {
+                    throw std::runtime_error("uninitialized parameter after default initialized parameter");
+                }
+            }
+
+            params.push_back(MAKE<ast::Param>(name, type, val));
+
+            if (eatKey(Key::RPAREN)) {
+                break;
+            } else {
+                expect(Token::KEY, Key::COMMA);
+            }
+        }
+
+        return params;
     }
 
     vec<ptr<ast::VarName>> Parser::parseVarNames() {
@@ -337,6 +422,85 @@ namespace cthulhu {
         }
 
         return MAKE<ast::Unit>(imports, decls);
+    }
+
+    //
+    // stmt parsing
+    // 
+
+    ptr<ast::Stmt> Parser::parseStmt() {
+        TRY(parseCompound());
+        TRY(parseReturn());
+        TRY(parseVariable(true));
+        TRY(parseFunction());
+        TRY(parseWhile());
+
+        auto expr = parseExpr();
+
+        if (!expr) {
+            return nullptr;
+        }
+
+        if (auto op = assop(peek()); op != ast::Assign::INVALID) {
+            next();
+            auto val = parseExpr();
+            expect(Token::KEY, Key::SEMI);
+
+            return MAKE<ast::Assign>(op, expr, val);
+        } else {
+            return expr;
+        }
+    }
+
+    ptr<ast::Return> Parser::parseReturn() {
+        if (!eatKey(Key::RETURN)) {
+            return nullptr;
+        }
+
+        if (eatKey(Key::SEMI)) {
+            return MAKE<ast::Return>(nullptr);
+        } else {
+            auto expr = parseExpr();
+            expect(Token::KEY, Key::SEMI);
+            return MAKE<ast::Return>(expr);
+        }
+    }
+
+    ptr<ast::While> Parser::parseWhile() {
+        if (!eatKey(Key::WHILE)) {
+            return nullptr;
+        }
+
+        auto cond = parseExpr();
+
+        auto body = parseCompound();
+
+        ptr<ast::Stmt> other;
+        if (eatKey(Key::ELSE)) {
+            other = parseCompound();
+        }
+
+        return MAKE<ast::While>(cond, body, other);
+    }
+
+    ptr<ast::Compound> Parser::parseCompound() {
+        if (!eatKey(Key::LBRACE)) {
+            return nullptr;
+        }
+
+        vec<ptr<ast::Stmt>> stmts;
+
+        while (true) {
+            if (auto stmt = parseStmt(); stmt) {
+                stmts.push_back(stmt);
+            } else {
+                break;
+            }
+        }
+
+        expect(Token::KEY, Key::RBRACE);
+
+        return MAKE<ast::Compound>(stmts);
     }
 
     //

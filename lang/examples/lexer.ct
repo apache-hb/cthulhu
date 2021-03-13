@@ -1,0 +1,38 @@
+using std::core(String);
+
+variant Keyword {
+    case USING;
+    case TRUE;
+    case FALSE;
+    case COERCE;
+    case RECORD;
+    case UNION;
+    case VARIANT;
+    case CASE;
+    case DEF;
+    case LET;
+    case VAR;
+    case RETURN;
+    case WHILE;
+    case IF;
+    case ELSE;
+}
+
+variant TokenData {
+    case IDENT(name: String);
+    case KEY(key: Keyword);
+    case STRING(str: String);
+    case INT(num: usize, suffix: String);
+    case CHAR(letter: utf);
+    case END;
+}
+
+record Range {
+    offset: usize;
+    length: usize;
+}
+
+record Token {
+    data: TokenData;
+    range: Range;
+}

@@ -387,6 +387,35 @@ namespace cthulhu::ast {
         return false;
     }
 
+    Param::Param(ptr<Ident> name, ptr<Type> type, ptr<Expr> init)
+        : name(name)
+        , type(type)
+        , init(init)
+    { }
+
+    bool Param::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Param>(other); o) {
+            return name->equals(o->name) && type->equals(o->type) && pequals(init, o->init);
+        }
+
+        return false;
+    }
+
+    Function::Function(ptr<Ident> name, vec<ptr<Param>> params, ptr<Type> result, ptr<Stmt> body)
+        : name(name)
+        , params(params)
+        , result(result)
+        , body(body)
+    { }
+
+    bool Function::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Function>(other); o) {
+            return name->equals(o->name) && vequals(params, o->params) && pequals(result, o->result) && pequals(body, o->body);
+        }
+
+        return false;
+    }
+
     Attribute::Attribute(ptr<QualifiedType> name, vec<ptr<CallArg>> args)
         : name(name)
         , args(args)
@@ -408,6 +437,58 @@ namespace cthulhu::ast {
     bool Decorated::equals(const ptr<Node> other) const {
         if (auto o = SELF<Decorated>(other); o) {
             return vequals(attribs, o->attribs) && decl->equals(o->decl);
+        }
+
+        return false;
+    }
+
+    Compound::Compound(vec<ptr<Stmt>> stmts)
+        : stmts(stmts)
+    { }
+
+    bool Compound::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Compound>(other); o) {
+            return vequals(stmts, o->stmts);
+        }
+
+        return false;
+    }
+
+    Return::Return(ptr<Expr> expr)
+        : expr(expr)
+    { }
+
+    bool Return::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Return>(other); o) {
+            return pequals(expr, o->expr);
+        }
+
+        return false;
+    }
+
+    While::While(ptr<Expr> cond, ptr<Stmt> body, ptr<Stmt> other)
+        : cond(cond)
+        , body(body)
+        , other(other)
+    { }
+
+    bool While::equals(const ptr<Node> other2) const {
+        if (auto o = SELF<While>(other2); o) {
+            return cond->equals(o->cond) && body->equals(o->body) && pequals(this->other, o->other);
+        }
+
+        return false;
+    }
+
+    Assign::Assign(Op op, ptr<Expr> body, ptr<Expr> value)
+        : op(op)
+        , body(body)
+        , value(value)
+    { }
+
+    bool Assign::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Assign>(other); o) {
+            return op == o->op && body->equals(o->body) && value->equals(o->value);
         }
 
         return false;

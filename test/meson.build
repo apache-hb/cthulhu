@@ -69,7 +69,16 @@ parse = [
 
     'parse/decl/var/all', 'parse/decl/var/mixed',
     'parse/decl/var/multi', 'parse/decl/var/single',
-    'parse/decl/var/multitype', 'parse/decl/var/noinit'
+    'parse/decl/var/multitype', 'parse/decl/var/noinit',
+
+    'parse/decl/funcs/stub', 'parse/decl/funcs/result',
+    'parse/decl/funcs/arg', 'parse/decl/funcs/args', 
+    'parse/decl/funcs/body', 'parse/decl/funcs/defaults', 
+    'parse/decl/funcs/expr',
+
+    'parse/stmt/returnempty', 'parse/stmt/returnexpr',
+    'parse/stmt/compound', 'parse/stmt/assign',
+    'parse/stmt/while', 'parse/stmt/whileelse'
 ]
 
 tests = util + lex + parse
