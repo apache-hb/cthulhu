@@ -30,3 +30,15 @@ with valgrind
 ```
 meson test --wrap='valgrind -q --leak-check=full --error-exitcode=1'
 ```
+
+## Source
+- cthulhu
+  - reduced cthulhu compiler written in C++
+- test
+  - unit tests for the C++ compiler
+- lang
+  - language specification
+- tools
+  - tools for debugging the C++ compiler and language introspection
+- cthulhu-ct
+  - full cthulhu compiler written in reduced cthulhu that the C++ compiler can manage

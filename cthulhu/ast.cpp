@@ -480,6 +480,31 @@ namespace cthulhu::ast {
         return false;
     }
 
+    If::If(ptr<Expr> cond, ptr<Stmt> body)
+        : cond(cond)
+        , body(body)
+    { }
+
+    bool If::equals(const ptr<Node> other) const {
+        if (auto o = SELF<If>(other); o) {
+            return pequals(cond, o->cond) && body->equals(o->body);
+        }
+
+        return false;
+    }
+
+    Branch::Branch(vec<ptr<If>> branches)
+        : branches(branches)
+    { }
+
+    bool Branch::equals(const ptr<Node> other) const {
+        if (auto o = SELF<Branch>(other); o) {
+            return vequals(branches, o->branches);
+        }
+
+        return false;
+    }
+
     Assign::Assign(Op op, ptr<Expr> body, ptr<Expr> value)
         : op(op)
         , body(body)

@@ -23,6 +23,7 @@ namespace cthulhu {
         ptr<ast::Stmt> parseStmt();
         ptr<ast::Return> parseReturn();
         ptr<ast::While> parseWhile();
+        ptr<ast::Branch> parseBranch();
         ptr<ast::Compound> parseCompound();
 
         ptr<ast::Type> parseType();

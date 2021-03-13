@@ -434,6 +434,7 @@ namespace cthulhu {
         TRY(parseVariable(true));
         TRY(parseFunction());
         TRY(parseWhile());
+        TRY(parseBranch());
 
         auto expr = parseExpr();
 
@@ -448,8 +449,40 @@ namespace cthulhu {
 
             return MAKE<ast::Assign>(op, expr, val);
         } else {
+            expect(Token::KEY, Key::SEMI);
             return expr;
         }
+    }
+
+    ptr<ast::Branch> Parser::parseBranch() {
+        if (!eatKey(Key::IF)) {
+            return nullptr;
+        }
+
+        vec<ptr<ast::If>> branches;
+
+        auto cond = parseExpr();
+        auto body = parseCompound();
+
+        branches.push_back(MAKE<ast::If>(cond, body));
+
+        while (true) {
+            if (eatKey(Key::ELSE)) {
+                if (eatKey(Key::IF)) {
+                    cond = parseExpr();
+                    body = parseCompound();
+                    branches.push_back(MAKE<ast::If>(cond, body));
+                } else {
+                    body = parseCompound();
+                    branches.push_back(MAKE<ast::If>(nullptr, body));
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+
+        return MAKE<ast::Branch>(branches);
     }
 
     ptr<ast::Return> Parser::parseReturn() {
@@ -656,6 +689,11 @@ namespace cthulhu {
                 expr = MAKE<ast::AccessExpr>(expr, parseIdent(), false);
             } else if (eatKey(Key::ARROW)) {
                 expr = MAKE<ast::AccessExpr>(expr, parseIdent(), true);
+            } else if (eatKey(Key::QUESTION)) {
+                auto yes = parseExpr();
+                expect(Token::KEY, Key::COLON);
+                auto no = parseExpr();
+                expr = MAKE<ast::TernaryExpr>(expr, yes, no);
             } else {
                 break;
             }
@@ -730,6 +768,25 @@ namespace cthulhu {
         auto token = eat(type, key);
 
         if (!token.valid()) {
+            if (type == Token::KEY) {
+#define OP(id, str) case Key::id: fprintf(stderr, "expected keyword: %s\n", str); break;
+#define KEY(id, str) case Key::id: fprintf(stderr, "expected keyword: %s\n", str); break;
+                switch (key) {
+#include "keys.inc"
+                default: fprintf(stderr, "keyword: invalid\n"); break;
+                }
+            }
+
+            fprintf(stderr, "got");
+            if (ahead.is(Token::KEY)) {
+                #define OP(id, str) case Key::id: fprintf(stderr, "keyword: %s\n", str); break;
+#define KEY(id, str) case Key::id: fprintf(stderr, "keyword: %s\n", str); break;
+                switch (ahead.key()) {
+#include "keys.inc"
+                default: fprintf(stderr, "keyword: invalid\n"); break;
+                }
+                fprintf(stderr, "instead\n");
+            }
             throw std::runtime_error("unexpected token");
         }
 

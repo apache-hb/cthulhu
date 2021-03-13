@@ -3,3 +3,9 @@ executable('ast', 'ast.cpp',
     dependencies : ctu,
     include_directories : '..'
 )
+
+executable('ctc', 'ctc.cpp',
+    cpp_args : args,
+    dependencies : ctu,
+    include_directories : '..'
+)
