@@ -18,7 +18,7 @@
 | 10         |        `^`        |                `Bitwise xor`                | left to right |
 | 11         |       `\|`        |                `Bitwise or`                 | left to right |
 | 12         |       `&&`        |                `Logical and`                | left to right |
-| 13         |       `||`        |                `Logical or`                 | left to right |
+| 13         |      `\|\|`       |                `Logical or`                 | left to right |
 | 14         |       `?:`        |                  `Ternary`                  | right to left |
 
 ## Function call expressions
@@ -27,6 +27,9 @@ function calls can be invoked on any expression that evaluates to a `closure` ty
 * named parameters may only be used when invoking functions without indirection
 * after a named parameter is used no additional positional parameters may be used
 * invoking a `closure` may only be done with positional parameters, in addition default arguments will not be provided as this information is erased when taking a reference to a function
+  * named arguments appear as `.ident = expr`
+  * positional arguments appear as `expr`
+  * expressions are evaluated in the order they are declared at the callsite. not the order they are declared at the function definition
 
 ## ASM expressions
 
