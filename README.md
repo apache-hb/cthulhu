@@ -34,6 +34,8 @@ meson test --wrap='valgrind -q --leak-check=full --error-exitcode=1'
 ## Source
 - cthulhu
   - reduced cthulhu compiler written in C++
+- cthulhu2
+  - the second iteration of the cthulhu compiler
 - test
   - unit tests for the C++ compiler
 - lang
