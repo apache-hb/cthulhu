@@ -24,6 +24,7 @@
 * `void`, `bool`
 
 * `void` does not have a size
+* `void` may not be assigned to a variable
 * `bool` does not have a defined size and may be `true` or `false`
 * expressions may implicity evaluation to `bool` if they result in an integer type
   * `0` evaluates to `false`
