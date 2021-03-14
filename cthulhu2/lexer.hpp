@@ -1,12 +1,17 @@
 #pragma once
 
 #include "token.hpp"
+#include "util.hpp"
 
 namespace cthulhu {
+    constexpr char32_t END = 0;
+    
     struct Lexer {
         Lexer(std::span<char32_t> text);
 
         std::span<char32_t> slice(size_t offset, size_t length) const;
+
+        Result<Token, Error> read();
     private:
         char32_t next();
         char32_t peek();
