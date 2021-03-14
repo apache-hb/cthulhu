@@ -1,9 +1,0 @@
-using std::io;
-
-def main(argc: int, argv: [[char]]): int {
-    io::printf("argc: %d", argc);
-
-    for (let i .. range(argc)) {
-        io::printf("argv[%d]: %s\n", i, argv[i]);
-    }
-}

@@ -1,4 +1,4 @@
-project('cthulhu', 'cpp',
+project('cthulhu', [ 'cpp', 'java' ],
     default_options : [
         'werror=true',
         'warning_level=3',
