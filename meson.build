@@ -1,4 +1,4 @@
-project('cthulhu', [ 'cpp', 'java' ],
+project('cthulhu', 'cpp',
     default_options : [
         'werror=true',
         'warning_level=3',
@@ -35,6 +35,22 @@ ctu = declare_dependency(
     include_directories : inc, 
     link_with : cthulhu, 
     dependencies : deps
+)
+
+src2 = [
+    'cthulhu2/stream.cpp',
+    'cthulhu2/lexer.cpp',
+    'cthulhu2/token.cpp'
+]
+
+cthulhu2 = library('ctu2', src2,
+    dependencies : fmt
+)
+
+ctu2 = declare_dependency(
+    include_directories : 'cthulhu2',
+    link_with : cthulhu2,
+    dependencies : fmt
 )
 
 subdir('tools')
