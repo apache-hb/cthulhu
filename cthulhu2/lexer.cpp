@@ -24,6 +24,43 @@ Token Lexer::read() {
     }
 }
 
+std::string Lexer::lines(size_t first, size_t length) {
+    size_t len = length;
+    size_t front = first;
+
+    // backtrack to the start of this line
+    while (front > 0 && text[front] != '\n') {
+        front--;
+        len++;
+    }
+
+    // find the end of this current line
+    while (front + len < text.length() && text[front + len] != '\n') {
+        len++;
+    }
+
+    return text.substr(front, len);
+}
+
+Location Lexer::location(size_t first) {
+    size_t line = 1;
+    size_t column = 0;
+    size_t front = 0;
+
+    // now figure out where we are on this line
+    while (front < first && front < text.length()) {
+        char c = text[front++];
+        if (c == '\n') {
+            line++;
+            column = 0;
+        } else {
+            column++;
+        }
+    }
+
+    return { line, column };
+}
+
 char Lexer::skip() {
     char c = next();
     

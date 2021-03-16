@@ -11,6 +11,11 @@ struct Range {
     size_t length;
 };
 
+struct Location {
+    size_t line;
+    size_t column;
+};
+
 enum struct Key {
     INVALID
 };
@@ -54,6 +59,9 @@ struct Token {
 
     // the original text of this token
     std::string text();
+
+    // underline the text and handle multiple lines
+    std::string pretty(bool underline = true);
 
     Range range;
     Type type;

@@ -11,6 +11,11 @@ struct Lexer {
 
     Token read();
 
+    // collect the full line text for whatever line is at offset to whatever line
+    // offset + length ends on
+    std::string lines(size_t first, size_t length);
+    Location location(size_t first);
+
     char skip();
     char next();
     char peek();
