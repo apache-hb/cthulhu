@@ -40,7 +40,8 @@ ctu = declare_dependency(
 src2 = [
     'cthulhu2/stream.cpp',
     'cthulhu2/lexer.cpp',
-    'cthulhu2/token.cpp'
+    'cthulhu2/token.cpp',
+    'cthulhu2/util.cpp'
 ]
 
 cthulhu2 = library('ctu2', src2,

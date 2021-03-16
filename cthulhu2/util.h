@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include <string>
+
 template<typename T, typename E>
 struct Result {
     union Data {
@@ -25,3 +28,7 @@ private:
     bool ok;
     Data data;
 };
+
+std::vector<std::string> split(const std::string& str, const std::string& sep);
+std::string join(const std::vector<std::string>& strings, const std::string& sep);
+std::string trim(const std::string& str, const std::string& delim);
