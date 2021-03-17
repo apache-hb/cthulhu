@@ -1,5 +1,9 @@
 #include "util.h"
 
+const std::string* Pool::intern(const std::string& id) {
+    return &*pool.insert(id).first;
+}
+
 std::vector<std::string> split(const std::string& str, const std::string& sep) {
     std::string temp = str;
     std::vector<std::string> out;

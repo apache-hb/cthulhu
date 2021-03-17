@@ -17,7 +17,11 @@ struct Location {
 };
 
 enum struct Key {
-    INVALID
+    INVALID,
+#define KEY(id, str) id,
+#define ASM(id, str) id,
+#define OP(id, str) id,
+#include "keys.inc"
 };
 
 struct Int {
@@ -27,18 +31,22 @@ struct Int {
 
 struct Token {
     enum Type {
-        IDENT,
-        KEY,
-        STRING,
-        CHAR,
-        INT,
-        END
+        IDENT, // identifier
+        KEY, // keyword
+        STRING, // string literal
+        CHAR, // char literal
+        INT, // integer literal
+        END, // end of file
+
+        ERROR,
+        ERROR_STRING_EOF, // string wasnt terminated
+        ERROR_STRING_LINE, // newline found in string
     };
 
     union Data {
-        std::string* ident;
+        const std::string* ident;
         Key key;
-        std::string* string;
+        const std::string* string;
         std::string* letter;
         Int number;
     };
@@ -48,7 +56,7 @@ struct Token {
         , type(END)
     { }
 
-    Token(Range range, Type type, Data data)
+    Token(Range range, Type type, Data data = {})
         : range(range)
         , type(type)
         , data(data)
@@ -61,7 +69,10 @@ struct Token {
     std::string text();
 
     // underline the text and handle multiple lines
-    std::string pretty(bool underline = true);
+    std::string pretty(bool underline = true, bool colour = true);
+
+    // is this token an error token
+    bool error() const;
 
     Range range;
     Type type;
