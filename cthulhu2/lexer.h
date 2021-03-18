@@ -19,6 +19,7 @@ struct Lexer {
     Token ident(char c);
     Token string();
     Token rstring();
+    Token number(char c);
     Token symbol(char c);
 
     char skip();

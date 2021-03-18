@@ -2,6 +2,7 @@
 #include "lexer.h"
 #include "util.h"
 
+#include <algorithm>
 #include <fmt/format.h>
 
 namespace {
@@ -25,17 +26,34 @@ namespace {
 #define ANSI_COLOUR_WHITE   "\x1b[97m"
 #define ANSI_COLOUR_RESET   "\x1b[0m"
 
+#define ANSI_COLOUR_BOLD    "\x1b[1m"
+
 std::string Token::repr() {
     switch (type) {
-    case Token::IDENT: return fmt::format("{}@ident({})", (void*)data.ident, *data.ident);
-    case Token::KEY: return fmt::format("key({})", ::repr(data.key));
-    case Token::STRING: return fmt::format("{}@string(`{}`)", (void*)data.string, *data.string);
+    case Token::IDENT: 
+        return fmt::format("{}@ident({})", (void*)data.ident, *data.ident);
+    case Token::KEY: 
+        return fmt::format("key({})", ::repr(data.key));
+    case Token::STRING: 
+        return fmt::format("{}@string(`{}`)", (void*)data.string, *data.string);
     case Token::CHAR: return "char";
-    case Token::INT: return "int";
+    case Token::INT: 
+        if (data.number.suffix) {
+            return fmt::format("{}@int({}, {})", 
+                (void*)data.number.suffix, 
+                data.number.number, 
+                *data.number.suffix
+            );
+        } else {
+            return fmt::format("int({})", data.number.number);
+        }
     case Token::END: return "eof";
     
     case Token::ERROR_STRING_EOF: return "unterminated string";
     case Token::ERROR_STRING_LINE: return "newline in string";
+    case Token::ERROR_INVALID_ESCAPE: return "invalid escape sequence";
+    case Token::ERROR_LEADING_ZERO: return "leading zero in integer";
+    case Token::ERROR_INT_OVERFLOW: return "integer literal was too large";
     default: return "invalid";
     }
 }
@@ -44,7 +62,7 @@ std::string Token::text() {
     return range.lexer->text.substr(range.offset, range.length);
 }
 
-std::string Token::pretty(bool underline, bool colour) {
+std::string Token::pretty(bool underline, bool colour, const std::string& message) {
     auto where = range.lexer->location(range.offset);
 
     auto desc = repr();
@@ -78,17 +96,47 @@ std::string Token::pretty(bool underline, bool colour) {
 
     auto lines = split(reduced, "\n");
 
-    auto text = join(lines, "\n" + std::string(len, ' ') + "| ");
+    std::string src;
+    size_t length = range.length;
 
-    auto src = line + " > " + text;
+    len = std::to_string(where.line + lines.size()).length() + 2;
+    pad = "\n" + std::string(len, ' ') + "|";
+
+    switch (lines.size()) {
+    case 1:
+        src = line + " > " + join(lines, "\n" + std::string(len, ' ') + "| ");
+        break;
+    case 2: case 3: {
+        size_t i = where.line;
+        for (const auto& each : lines) {
+            if (i != where.line) {
+                src += "\n ";
+            }
+            src += std::to_string(i++) + " > " + each;
+        }
+        length = std::max_element(lines.begin(), lines.end(), [](auto& lhs, auto& rhs) { return lhs.length() > rhs.length(); })->length();
+        break;
+    }
+    default: {
+        length = std::max_element(lines.begin(), lines.end(), [](auto& lhs, auto& rhs) { return lhs.length() < rhs.length(); })->length();
+        auto& first = lines[0];
+        auto& last = lines[lines.size() - 1];
+        auto end = std::to_string(where.line + lines.size());
+        src += std::string(end.length() - line.length(), ' ') + line + " > " + first + "\n";
+        src += std::string(len - 1, ' ') + "...\n ";
+        src += end + " > " + last;
+        break;
+    }
+    }
+
     if (colour) {
-        src = ANSI_COLOUR_WHITE + src + ANSI_COLOUR_RESET;
+        src = ANSI_COLOUR_BOLD ANSI_COLOUR_WHITE + src + ANSI_COLOUR_RESET;
     }
 
     auto result = header + pad + "\n " + src + pad;
 
-    if (underline) {
-        result += std::string(where.column + 1, ' ') + ANSI_COLOUR_CYAN + std::string(range.length, '^') + ANSI_COLOUR_RESET + pad;
+    if (underline && length) {
+        result += std::string(where.column + 1, ' ') + ANSI_COLOUR_CYAN + std::string(length, '^') + ANSI_COLOUR_RESET + " " + message + pad;
     }
 
     return result;

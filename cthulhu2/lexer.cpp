@@ -11,6 +11,18 @@ namespace {
         return isalnum(c) || c == '_';
     }
 
+    bool xdigit(char c) {
+        return isxdigit(c);
+    }
+
+    bool digit(char c) {
+        return isdigit(c);
+    }
+
+    bool bdigit(char c) {
+        return c == '0' || c == '1';
+    }
+
     KeyMap CORE = {
 #define KEY(id, str) { str, Key::id },
 #include "keys.inc"
@@ -38,9 +50,44 @@ Token Lexer::read() {
         return string();
     } else if (ident1(c)) {
         return ident(c);
+    } else if (isdigit(c)) {
+        return number(c);
     } else {
         return symbol(c);
     }
+}
+
+Token Lexer::number(char c) {
+    int base;
+    std::string str;
+    const std::string* suffix;
+
+    if (c == '0' && eat('x')) {
+        str = collect(0, xdigit);
+        base = 16;
+    } else if (c == '0' && eat('b')) {
+        str = collect(0, bdigit);
+        base = 2;
+    } else if (c == '0' && isdigit(peek())) {
+        return Token(here(), Token::ERROR_LEADING_ZERO);
+    } else {
+        str = collect(c, digit);
+        base = 10;
+    }
+
+    if (ident1(peek())) {
+        suffix = pool.intern(collect(next(), ident2));    
+    } else {
+        suffix = nullptr;
+    }
+
+    size_t num = std::strtoull(str.c_str(), nullptr, base);
+    
+    if (errno == ERANGE) {
+        return Token(here(), Token::ERROR_INT_OVERFLOW);
+    }
+
+    return Token(here(), Token::INT, { .number = { num, suffix } });
 }
 
 Token Lexer::ident(char c) {
@@ -95,8 +142,6 @@ Token Lexer::rstring() {
     // collect the string delimiter
     auto delim = ")" + collect(0, [](char c) { return c != '('; }) + '"';
 
-    std::cout << delim << std::endl;
-
     if (!eat('(')) {
         return Token(here(), Token::ERROR_STRING_EOF);
     }
@@ -128,6 +173,25 @@ Token Lexer::string() {
             return Token(here(), Token::ERROR_STRING_LINE);
         } else if (c == 0) {
             return Token(here(), Token::ERROR_STRING_EOF);
+        } else if (c == '\\') {
+            char n = next();
+            switch (n) {
+            case 'a': str += '\a'; break;
+            case 'b': str += '\b'; break;
+            case 't': str += '\t'; break;
+            case 'n': str += '\n'; break;
+            case 'v': str += '\v'; break;
+            case 'f': str += '\f'; break;
+            case 'r': str += '\r'; break;
+            case '"': str += '\"'; break;
+            case '\'': str += '\''; break;
+            case '\\': str += '\\'; break;
+            case 'x': 
+            case 'd': 
+            case '0': str += '\0'; break;
+            default:
+                return Token(here(), Token::ERROR_INVALID_ESCAPE);
+            }
         }
 
         str += c;

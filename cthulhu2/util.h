@@ -39,3 +39,4 @@ struct Result {
 std::vector<std::string> split(const std::string& str, const std::string& sep);
 std::string join(const std::vector<std::string>& strings, const std::string& sep);
 std::string trim(const std::string& str, const std::string& delim);
+std::string replace(const std::string& str, const std::string& old, const std::string& with);
