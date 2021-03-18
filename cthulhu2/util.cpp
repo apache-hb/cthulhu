@@ -38,3 +38,13 @@ std::string trim(const std::string& str, const std::string& delim) {
     }
     return out;
 }
+
+std::string replace(const std::string& str, const std::string& old, const std::string& with) {
+    std::string out = str;
+    size_t pos = 0;
+    while ((pos = out.find(old, pos)) != std::string::npos) {
+        out.replace(pos, old.length(), with);
+        pos += with.length();
+    }
+    return out;
+}

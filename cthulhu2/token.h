@@ -26,7 +26,7 @@ enum struct Key {
 
 struct Int {
     size_t number;
-    std::string* suffix;
+    const std::string* suffix;
 };
 
 struct Token {
@@ -41,6 +41,9 @@ struct Token {
         ERROR,
         ERROR_STRING_EOF, // string wasnt terminated
         ERROR_STRING_LINE, // newline found in string
+        ERROR_INVALID_ESCAPE, // invalid escaped character in string
+        ERROR_LEADING_ZERO, // an integer literal started with a 0
+        ERROR_INT_OVERFLOW, // integer literal was too large
     };
 
     union Data {
@@ -69,7 +72,7 @@ struct Token {
     std::string text();
 
     // underline the text and handle multiple lines
-    std::string pretty(bool underline = true, bool colour = true);
+    std::string pretty(bool underline = true, bool colour = true, const std::string& message = "");
 
     // is this token an error token
     bool error() const;
