@@ -1,7 +1,7 @@
 #include "pool.hpp"
 
 namespace cthulhu {
-    const utf8::string* StringPool::intern(const utf8::string& string) {
+    const str* StringPool::intern(const str& string) {
         return &*data.insert(string).first;
     }
 }

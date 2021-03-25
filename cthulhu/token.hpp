@@ -27,16 +27,16 @@ namespace cthulhu {
     };
 
     struct Number {
-        Number(size_t num, const utf8::string* suf);
+        Number(size_t num, const str* suf);
         size_t number;
-        const utf8::string* suffix;
+        const str* suffix;
     };
 
     union TokenData {
         Key key;
-        const utf8::string* ident;
-        const utf8::string* string;
-        c32 letter;
+        const str* ident;
+        const str* string;
+        char32_t letter;
         Number digit;
     };
 
@@ -62,10 +62,10 @@ namespace cthulhu {
         operator bool() const { return valid(); }
 
         Key key() const;
-        const utf8::string* ident() const;
-        const utf8::string* string() const;
+        const str* ident() const;
+        const str* string() const;
         Number number() const;
-        c32 letter() const;
+        char32_t letter() const;
         bool valid() const;
     private:
         Range where;

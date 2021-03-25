@@ -29,7 +29,7 @@ namespace cthulhu {
         return type == other; 
     }
 
-    Number::Number(size_t num, const utf8::string* suf) 
+    Number::Number(size_t num, const str* suf) 
         : number(num)
         , suffix(suf)
     { }
@@ -75,19 +75,19 @@ namespace cthulhu {
         return data.key;
     }
 
-    const utf8::string* Token::ident() const {
+    const str* Token::ident() const {
         CHECK_TYPE(Token::IDENT);
 
         return data.ident;
     }
 
-    const utf8::string* Token::string() const {
+    const str* Token::string() const {
         CHECK_TYPE(Token::STRING);
 
         return data.string;
     }
 
-    c32 Token::letter() const {
+    char32_t Token::letter() const {
         CHECK_TYPE(Token::CHAR);
 
         return data.letter;

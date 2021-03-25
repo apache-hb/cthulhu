@@ -18,7 +18,12 @@ namespace cthulhu {
     };
 
     struct Lexer {
-        Lexer(Stream stream, const utf8::string& name, ptr<StringPool> idents = nullptr, ptr<StringPool> strings = nullptr);
+        Lexer(
+            Stream stream, 
+            const str& name = "unnamed",
+            ptr<StringPool> idents = MAKE<StringPool>(), 
+            ptr<StringPool> strings = MAKE<StringPool>()
+        );
 
         Token read();
 
@@ -26,10 +31,10 @@ namespace cthulhu {
         std::optional<Diagnostic> diagnostic();
 
         // format a diagnostic into a pretty string
-        utf8::string format(const Diagnostic& diag) const;
+        str format(const Diagnostic& diag) const;
 
         // get file name
-        const utf8::string& file() const;
+        const str& file() const;
     
     protected:
         // get the next char from the strea
@@ -52,8 +57,8 @@ namespace cthulhu {
 
         // collect characters into a string and break when func returns false
         template<typename F>
-        utf8::string collect(c32 first, F&& func) {
-            utf8::string out = first == END ? "" : utf8::string(first);
+        str collect(c32 first, F&& func) {
+            str out = first == END ? "" : str(1, first);
             while (func(peek())) {
                 out += next();
             }
@@ -82,10 +87,10 @@ namespace cthulhu {
         Token ident(const Range& start, c32 first);
 
         // collect a raw string
-        const utf8::string* rstring();
+        const str* rstring();
 
         // collect a single line string
-        const utf8::string* string();
+        const str* string();
 
         // lex a number and suffix
         Number digit(c32 c);
@@ -93,7 +98,7 @@ namespace cthulhu {
         // decode a character in a string and place it 
         // in `out`, return true if the string lexing should continue
         // false if the end of the string has been reached
-        bool encode(utf8::string* out);
+        bool encode(str* out);
 
         // integer encoding
         enum Base {
@@ -103,7 +108,7 @@ namespace cthulhu {
         };
 
         // encode an integer escape into a string
-        void encodeInt(utf8::string* out, Base base);
+        void encodeInt(str* out, Base base);
 
         // create a token and set its range properly
         Token token(const Range& start, Token::Type type, TokenData data);
@@ -124,10 +129,10 @@ namespace cthulhu {
         Range here;
 
         // name of the lexer
-        const utf8::string& name;
+        const str& name;
 
         // all currently read text
-        utf8::string text;
+        str text;
 
         // all idents that have been lexed
         ptr<StringPool> idents;

@@ -16,9 +16,9 @@ namespace {
         case 0x001E:
         case 0x001F:
         case 0x0020:
-        case 0x0085:
-        case 0x00A0:
-        case 0x1680:
+        //case 0x0085:
+        //case 0x00A0:
+        /*case 0x1680:
         case 0x2000:
         case 0x2001:
         case 0x2002:
@@ -34,7 +34,7 @@ namespace {
         case 0x2029:
         case 0x202F:
         case 0x205F:
-        case 0x3000:
+        case 0x3000:*/
             return true;
 
         default:
@@ -51,9 +51,9 @@ namespace {
         case 0x001C:
         case 0x001D:
         case 0x001E:
-        case 0x0085:
-        case 0x2028:
-        case 0x2029:
+        //case 0x0085:
+        //case 0x2028:
+        //case 0x2029:
             return true;
 
         default:
@@ -91,7 +91,7 @@ namespace {
         return code - '0';
     }
 
-    const std::unordered_map<utf8::string, cthulhu::Key> keywords = {
+    const std::unordered_map<str, cthulhu::Key> keywords = {
 #define OP(id, str) { str, cthulhu::Key::id },
 #define KEY(id, str) { str, cthulhu::Key::id },
 #include "keys.inc"
@@ -105,14 +105,14 @@ namespace cthulhu {
     { }
 
     Lexer::Lexer(Stream stream, 
-                 const utf8::string& name, 
+                 const str& name, 
                  ptr<StringPool> idents, 
                  ptr<StringPool> strings)
         : stream(stream)
         , here(this)
         , name(name)
-        , idents(!!idents ? idents : MAKE<StringPool>())
-        , strings(!!strings ? strings : MAKE<StringPool>())
+        , idents(idents)
+        , strings(strings)
         , depth(0)
     { }
 
@@ -182,37 +182,37 @@ namespace cthulhu {
         }
     }
 
-    const utf8::string* Lexer::rstring() {
-        utf8::string str;
+    const str* Lexer::rstring() {
+        str it;
         
         // collect the prefix that this raw string will be limited by
-        utf8::string limit = ")" + collect(END, [](c32 c) { return c != '('; }) + '"';
+        str limit = ")" + collect(END, [](c32 c) { return c != '('; }) + '"';
         
         // discard the leading `(`
         next();
 
         while (true) {
-            str += next(true);
+            it += next(true);
 
-            if (str.ends_with(limit)) {
+            if (it.ends_with(limit)) {
                 break;
             }
         }
 
         // return the string with the trailing characters sliced off
-        auto out = str.substr(0, str.length() - limit.length());
+        auto out = it.substr(0, it.length() - limit.length());
         return strings->intern(out);
     }
 
-    const utf8::string* Lexer::string() {
-        utf8::string out;
+    const str* Lexer::string() {
+        str out;
 
         while (encode(&out));
 
         return strings->intern(out);
     }
 
-    bool Lexer::encode(utf8::string* out) {
+    bool Lexer::encode(str* out) {
         c32 c = next();
     
         if (c == '"') {
@@ -248,7 +248,7 @@ namespace cthulhu {
         return true;
     }
 
-    void Lexer::encodeInt(utf8::string* out, Base base) {
+    void Lexer::encodeInt(str* out, Base base) {
         if (base == BASE10) {
             while (isdigit(peek())) {
                 uint8_t num = next() - '0';
@@ -439,7 +439,7 @@ namespace cthulhu {
             auto* str = string();
             return token(start, Token::STRING, { .string = str });
         } else if (c == '\'') {
-            c32 letter = encodeChar();
+            char32_t letter = encodeChar();
             return token(start, Token::CHAR, { .letter = letter });
         } else if (isdigit(c)) {
             Number num = digit(c);
@@ -460,11 +460,11 @@ namespace cthulhu {
         return last;
     }
 
-    utf8::string Lexer::format(const Diagnostic& diag) const {
-        return fmt::format("[{}:{}]: {}\n--> {}", diag.range.line, diag.range.column, name.c_str(), diag.message);
+    str Lexer::format(const Diagnostic& diag) const {
+        return fmt::format("[{}:{}]: {}\n--> {}", diag.range.line, diag.range.column, name, diag.message);
     }
 
-    const utf8::string& Lexer::file() const {
+    const str& Lexer::file() const {
         return name;
     }
 }
