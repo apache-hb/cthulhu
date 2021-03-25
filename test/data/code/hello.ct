@@ -1,0 +1,18 @@
+using std(...);
+
+def main: void {
+    io::puts("hello world");
+
+    exit(0);
+}
+
+# how should we go about casting?
+var i = 10;
+var i1 = i as bool;
+var i2 = cast!<bool>(x);
+var i3 = x cast bool;
+var i4 = i <- bool;
+var i5 = i : bool;
+var i6 = cast(bool)i;
+var i7 = (bool)i;
+var i8 = bool(i);
