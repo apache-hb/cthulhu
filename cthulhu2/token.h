@@ -53,6 +53,39 @@ enum Key : int {
     TRUE = TYPE_CORE | OP(3),
     FALSE = TYPE_CORE | OP(4),
     ASM = TYPE_CORE | OP(5),
+    IF = TYPE_CORE | OP(6),
+    ELSE = TYPE_CORE | OP(7),
+    WHILE = TYPE_CORE | OP(8),
+    FOR = TYPE_CORE | OP(9),
+    BREAK = TYPE_CORE | OP(10),
+    CONTINUE = TYPE_CORE | OP(11),
+    RETURN = TYPE_CORE | OP(12),
+    SWITCH = TYPE_CORE | OP(13),
+    CASE = TYPE_CORE | OP(14),
+    CAST = TYPE_CORE | OP(15),
+    VAR = TYPE_CORE | OP(16),
+    LET, // reserved
+    UNION = TYPE_CORE | OP(18),
+    FINAL, // reserved
+
+    COLON,
+    COLON2,
+    LBRACE,
+    RBRACE,
+    LPAREN,
+    RPAREN,
+    LSQUARE,
+    RSQUARE,
+    SEMI,
+    DOT,
+    DOT2,
+    DOT3,
+    ASSIGN,
+    COMMA,
+    AT,
+    ARROW,
+
+    BITNOT, // ~
 
     // template operators
     BEGIN = TYPE_CORE | OP(64),
@@ -134,13 +167,14 @@ struct Token {
         ERROR_LEADING_ZERO, // an integer literal started with a 0
         ERROR_INT_OVERFLOW, // integer literal was too large
         ERROR_UNRECOGNIZED_CHAR, // unrecognized character in stream
+        ERROR_CHAR_OVERFLOW, // character literal was too large
     };
 
     union Data {
         const std::string* ident;
         Key key;
         const std::string* string;
-        std::string* letter;
+        const std::string* letters;
         Int number;
     };
 

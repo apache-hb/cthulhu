@@ -24,12 +24,20 @@ std::string to_repr(Key key) {
 
 const char* to_string(Key key) {
     switch (key) {
-    case INVALID: return "invalid";
     case RECORD: return "record";
     case VARIANT: return "variant";
     case TRUE: return "true";
     case FALSE: return "false";
     case ASM: return "asm";
+    case IF: return "if";
+    case ELSE: return "else";
+    case WHILE: return "while";
+    case FOR: return "for";
+    case BREAK: return "break";
+    case CONTINUE: return "continue";
+    case RETURN: return "return";
+    case SWITCH: return "switch";
+    case CASE: return "case";
 
     case NOT: return "!";
     case TERNARY: return "?";
@@ -73,6 +81,7 @@ const char* to_string(Key key) {
     case _ADD: return "add";
     case _XOR: return "xor";
 
+    case INVALID: return "invalid";
     default: return "unknown";
     }
 }
@@ -96,7 +105,8 @@ std::string Token::repr() {
         return fmt::format("key{}", to_repr(data.key));
     case Token::STRING: 
         return fmt::format("{}@string(`{}`)", (void*)data.string, *data.string);
-    case Token::CHAR: return "char";
+    case Token::CHAR: 
+        return fmt::format("{}@char(`{}`)", (void*)data.letters, *data.letters);
     case Token::INT: 
         if (data.number.suffix) {
             return fmt::format("{}@int({}, {})", 
@@ -107,13 +117,19 @@ std::string Token::repr() {
         } else {
             return fmt::format("int({})", data.number.number);
         }
-    case Token::END: return "eof";
+    case Token::END: 
+        return "eof";
     
-    case Token::ERROR_STRING_EOF: return "unterminated string";
-    case Token::ERROR_STRING_LINE: return "newline in string";
-    case Token::ERROR_INVALID_ESCAPE: return "invalid escape sequence";
-    case Token::ERROR_LEADING_ZERO: return "leading zero in integer";
-    case Token::ERROR_INT_OVERFLOW: return "integer literal was too large";
+    case Token::ERROR_STRING_EOF: 
+        return "unterminated string";
+    case Token::ERROR_STRING_LINE: 
+        return "newline in string literal";
+    case Token::ERROR_INVALID_ESCAPE: 
+        return "invalid escape sequence";
+    case Token::ERROR_LEADING_ZERO: 
+        return "leading zero in integer";
+    case Token::ERROR_INT_OVERFLOW: 
+        return "integer literal was too large";
     case Token::ERROR_UNRECOGNIZED_CHAR: {
         auto src = text();
         if (src.length() > 1) {
@@ -122,7 +138,11 @@ std::string Token::repr() {
             return fmt::format("unrecognized character `{}` in text", src);
         }
     }
-    default: return "invalid";
+    case Token::ERROR_CHAR_OVERFLOW:
+        return "character literal was too large";
+
+    default: 
+        return "invalid";
     }
 }
 
@@ -156,18 +176,16 @@ std::string Token::pretty(bool underline, const std::string& message) {
     std::string header;
     
     if (lines.size() > 1) {
-        header = fmt::format("{}:{}:{}..{}:{}\n --> {}", 
-            range.lexer->name,
+        header = fmt::format("{}\n --> {}:{}:{}..{}:{}", 
+            desc, range.lexer->name,
             where.line, where.column,
-            tail.line, tail.column,
-            desc
+            tail.line, tail.column
         );
     } else {
-        header = fmt::format("{}:({}:{}..{})\n --> {}", 
-            range.lexer->name,
+        header = fmt::format("{}\n --> {}:{}:{}..{}", 
+            desc, range.lexer->name,
             where.line, where.column,
-            range.length + where.column,
-            desc
+            range.length + where.column
         );
     }
 
@@ -193,7 +211,7 @@ std::string Token::pretty(bool underline, const std::string& message) {
         size_t i = where.line;
         for (const auto& each : lines) {
             if (i != where.line) {
-                src += "\n ";
+                src += "\n " ANSI_COLOUR_BOLD ANSI_COLOUR_WHITE;
             }
             src += std::to_string(i++) + arrow + each;
         }

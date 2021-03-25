@@ -20,8 +20,24 @@ struct Lexer {
     Token ident(char c);
     Token string();
     Token rstring();
+    Token letter();
     Token number(char c);
     Token symbol(char c);
+
+    enum Base {
+        BASE10,
+        BASE16
+    };
+
+    void encode(std::string* out, Base base);
+    
+    struct StringResult {
+        Token::Type error;
+        Range range;
+        const std::string* string;
+    };
+
+    StringResult letters(char end);
 
     char skip();
     char next();

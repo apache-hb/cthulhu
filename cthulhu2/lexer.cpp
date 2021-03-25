@@ -23,12 +23,36 @@ namespace {
         return c == '0' || c == '1';
     }
 
+    char hextoint(char code) {
+        if (code >= '0' && code <= '9') {
+            return code - '0';
+        } else if (code >= 'a' && code <= 'f') {
+            return code - 'a' + 10;
+        } else {
+            return code - 'A' + 10;
+        }
+    }
+
+    char numtoint(char code) {
+        return code - '0';
+    }
+
     KeyMap CORE = {
         { "record", RECORD },
         { "variant", VARIANT },
         { "asm", ASM },
         { "true", TRUE },
-        { "false", FALSE }
+        { "false", FALSE },
+        { "if", IF },
+        { "else", ELSE },
+        { "while", WHILE },
+        { "for", FOR },
+        { "break", BREAK },
+        { "continue", CONTINUE },
+        { "return", RETURN },
+        { "switch", SWITCH },
+        { "case", CASE },
+        { "cast", CAST }
     };
 
     KeyMap ASM = {
@@ -58,6 +82,11 @@ Token Lexer::read() {
         auto type = out.type;
         auto range = out.range;
 
+        // theres a few cases we dont want to collect
+        if (type == Token::ERROR_STRING_LINE) {
+            return out;
+        }
+
         // collect all errors of the same type together
         // and merge their ranges
         while (true) {
@@ -81,6 +110,9 @@ Token Lexer::grab() {
 
     if (c == 0) {
         return Token(here());
+    } else if (c == '\'') {
+        // character literal
+        out = letter();
     } else if (c == 'R') {
         out = rstring();
     } else if (c == '"') {
@@ -94,6 +126,56 @@ Token Lexer::grab() {
     }
 
     return out;
+}
+
+Token Lexer::letter() {
+    auto l = letters('\'');
+
+    return Token(l.range, l.error >= Token::ERROR ? l.error : Token::CHAR, { .letters = l.string });
+}
+
+Lexer::StringResult Lexer::letters(char end) {
+    std::string str;
+
+    while (true) {
+        char c = next();
+        
+        if (c == end) {
+            break;
+        } else if (c == '\n') {
+            return { Token::ERROR_STRING_LINE, here(), nullptr };
+        } else if (c == 0) {
+            return { Token::ERROR_STRING_EOF, here(), nullptr };
+        } else if (c == '\\') {
+            char n = next();
+            switch (n) {
+            case 'a': str += '\a'; break;
+            case 'b': str += '\b'; break;
+            case 't': str += '\t'; break;
+            case 'n': str += '\n'; break;
+            case 'v': str += '\v'; break;
+            case 'f': str += '\f'; break;
+            case 'r': str += '\r'; break;
+            case '"': str += '\"'; break;
+            case '\'': str += '\''; break;
+            case '\\': str += '\\'; break;
+            case 'x': encode(&str, BASE16); break;
+            case 'd': encode(&str, BASE10); break;
+            case '0': str += '\0'; break;
+            default: {
+                auto start = here();
+                // simple, but eat until the end of the string
+                while (next() != end);
+                
+                return { Token::ERROR_INVALID_ESCAPE, start, nullptr };
+            }
+            }
+        } else {
+            str += c;
+        }
+    }
+
+    return { Token::MONOSTATE, here(), pool.intern(str) };
 }
 
 Token Lexer::number(char c) {
@@ -144,6 +226,9 @@ Token Lexer::symbol(char c) {
     switch (c) {
     case '+': return Token(here(), Token::KEY, { .key = eat('=') ? ADDEQ : ADD });
     case '-': return Token(here(), Token::KEY, { .key = eat('=') ? SUBEQ : SUB });
+    case '/':
+    case '*':
+    case '%':
     case '!': {
         if (eat('<')) {
             depth++;
@@ -169,6 +254,15 @@ Token Lexer::symbol(char c) {
             return Token(here(), Token::KEY, { .key = eat('=') ? Key::LTE : Key::LT });
         }
     }
+    case ':':
+    case '(':
+    case ')':
+    case '{':
+    case '}':
+    case '[':
+    case ']':
+    case '.':
+    case ',':
     default: return Token(here(), Token::ERROR_UNRECOGNIZED_CHAR);
     }
 }
@@ -201,42 +295,29 @@ Token Lexer::rstring() {
 }
 
 Token Lexer::string() {
-    std::string str;
+    auto str = letters('"');
 
-    while (true) {
-        char c = next();
-        
-        if (c == '"') {
-            break;
-        } else if (c == '\n') {
-            return Token(here(), Token::ERROR_STRING_LINE);
-        } else if (c == 0) {
-            return Token(here(), Token::ERROR_STRING_EOF);
-        } else if (c == '\\') {
-            char n = next();
-            switch (n) {
-            case 'a': str += '\a'; break;
-            case 'b': str += '\b'; break;
-            case 't': str += '\t'; break;
-            case 'n': str += '\n'; break;
-            case 'v': str += '\v'; break;
-            case 'f': str += '\f'; break;
-            case 'r': str += '\r'; break;
-            case '"': str += '\"'; break;
-            case '\'': str += '\''; break;
-            case '\\': str += '\\'; break;
-            case 'x': 
-            case 'd': 
-            case '0': str += '\0'; break;
-            default:
-                return Token(here(), Token::ERROR_INVALID_ESCAPE);
+    return Token(str.range, str.error >= Token::ERROR ? str.error : Token::STRING, { .string = str.string });
+}
+
+void Lexer::encode(std::string* out, Lexer::Base base) {
+    if (base == Lexer::BASE10) {
+        while (isdigit(peek())) {
+            uint8_t num = numtoint(next());
+            if (isdigit(peek())) {
+                num = (num * 10) + numtoint(next());
             }
-        } else {
-            str += c;
+            out->push_back(num);
+        }
+    } else {
+        while (isxdigit(peek())) {
+            uint8_t num = hextoint(next());
+            if (isxdigit(peek())) {
+                num = (num * 16) + hextoint(next());
+            }
+            out->push_back(num);
         }
     }
-
-    return Token(here(), Token::STRING, { .string = pool.intern(str) });
 }
 
 std::string Lexer::lines(size_t first, size_t length) {
