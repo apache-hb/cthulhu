@@ -1,4 +1,3 @@
 *build/
 .vscode/
-subprojects/utf8/utf8/
 *.ast

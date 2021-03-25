@@ -35,7 +35,7 @@ private:
 };
 
 struct StringStream : StreamHandle {
-    StringStream(const utf8::string& data)
+    StringStream(const str& data)
         : data(data)
         , offset(0)
     { }
@@ -49,6 +49,6 @@ struct StringStream : StreamHandle {
     }
 
 private:
-    utf8::string data;
+    str data;
     size_t offset;
 };

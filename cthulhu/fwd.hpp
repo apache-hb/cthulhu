@@ -1,12 +1,14 @@
 #pragma once
 
-#include <tinyutf8/tinyutf8.h>
+#//include <tinyutf8/tinyutf8.h>
 #include <vector>
 #include <memory>
 
-namespace utf8 = tiny_utf8;
+//namespace utf8 = tiny_utf8;
 
-using c32 = char32_t;
+using c32 = char;
+
+using str = std::string;
 
 template<typename T>
 using vec = std::vector<T>;

@@ -6,16 +6,11 @@ project('cthulhu', 'cpp',
     ]
 )
 
-utf8 = subproject('utf8').get_variable('utf8')
 fmt = subproject('fmt').get_variable('fmt')
 
-deps = [ utf8, fmt ]
 inc = [ 'cthulhu' ]
+deps = [ fmt ]
 args = []
-
-if meson.get_compiler('cpp').get_id() == 'msvc'
-    args += [ '/wd4244', '/wd4127' ]
-endif
 
 src = [ 
     'cthulhu/token.cpp', 

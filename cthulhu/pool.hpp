@@ -6,9 +6,9 @@
 
 namespace cthulhu {
     struct StringPool {
-        const utf8::string* intern(const utf8::string& string);
+        const str* intern(const str& string);
         
     private:
-        std::unordered_set<utf8::string> data;
+        std::unordered_set<str> data;
     };
 }

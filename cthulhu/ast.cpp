@@ -155,7 +155,7 @@ namespace cthulhu::ast {
         return false;
     }
 
-    StringExpr::StringExpr(const utf8::string* string) 
+    StringExpr::StringExpr(const str* string) 
         : string(string)
     { }
     

@@ -4,15 +4,15 @@
 
 namespace cthulhu::ast {
     struct Printer {
-        void write(const utf8::string& text) {
-            buffer += utf8::string(depth * 2, ' ') + text;
+        void write(const str& text) {
+            buffer += str(depth * 2, ' ') + text;
             if (feed) {
                 buffer += "\n";
             }
         }
 
         template<typename F>
-        void section(const utf8::string& name, F&& func) {
+        void section(const str& name, F&& func) {
             write(name);
             depth++;
             func();
@@ -20,7 +20,7 @@ namespace cthulhu::ast {
         }
     
         bool feed = true;
-        utf8::string buffer = "";
+        str buffer = "";
         int depth = 0;
     };
 
@@ -182,7 +182,7 @@ namespace cthulhu::ast {
         virtual bool equals(const ptr<Node> other) const override;
 
         virtual void visit(Printer* out) const override {
-            out->section(utf8::string("- unary ") + str(), [&] {
+            out->section(str("- unary ") + get(), [&] {
                 expr->visit(out);
             });
         }
@@ -203,7 +203,7 @@ namespace cthulhu::ast {
         }
 
     private:
-        const char* str() const {
+        const char* get() const {
             switch (op) {
             case NOT: return "NOT";
             case FLIP: return "FLIP";
@@ -247,7 +247,7 @@ namespace cthulhu::ast {
         virtual bool equals(const ptr<Node> other) const override;
 
         virtual void visit(Printer* out) const override {
-            out->section(utf8::string("- binary `") + str() + "`", [&] {
+            out->section(str("- binary `") + get() + "`", [&] {
                 lhs->visit(out);
                 rhs->visit(out);
             });
@@ -282,7 +282,7 @@ namespace cthulhu::ast {
         }
 
     private:
-        const char* str() const {
+        const char* get() const {
             switch (op) {
             case ADD: return "ADD";
             case SUB: return "SUB";
@@ -333,10 +333,10 @@ namespace cthulhu::ast {
         ptr<Expr> no;
     };
 
-    inline void replaceAll(utf8::string &s, const utf8::string &search, const utf8::string &replace ) {
+    inline void replaceAll(str &s, const str &search, const str &replace ) {
         for (size_t pos = 0; ; pos += replace.length()) {
             pos = s.find(search, pos);
-            if (pos == utf8::string::npos) 
+            if (pos == str::npos) 
                 break;
 
             s.erase(pos, search.length());
@@ -345,7 +345,7 @@ namespace cthulhu::ast {
     }
 
     struct StringExpr : Expr {
-        StringExpr(const utf8::string* string);
+        StringExpr(const str* string);
 
         virtual bool equals(const ptr<Node> other) const override;
 
@@ -358,7 +358,7 @@ namespace cthulhu::ast {
         }
 
     private:
-        const utf8::string* string;
+        const str* string;
     };
 
     struct IntExpr : Expr {

@@ -27,7 +27,7 @@ struct TestParser : Parser {
         }
     }
 
-    ptr<QualifiedType> qualified(vec<utf8::string> names) const {
+    ptr<QualifiedType> qualified(vec<str> names) const {
         vec<ptr<NameType>> parts;
         for (auto name : names) {
             parts.push_back(MAKE<NameType>(MAKE<Ident>(lex->ident(name))));
