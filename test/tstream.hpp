@@ -27,7 +27,7 @@ struct FileStream : StreamHandle {
     }
 
     virtual c32 next() override {
-        return fgetc(file);
+        return (c32)fgetc(file);
     }
 
 private:

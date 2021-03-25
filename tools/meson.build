@@ -15,3 +15,12 @@ executable('tokenize', 'tokenize.cpp',
     dependencies : ctu2,
     include_directories : '..'
 )
+
+imgui = subproject('imgui').get_variable('imgui_dep')
+
+executable('tokenize-gui', 'tokenize-gui.cpp',
+    cpp_args : args,
+    dependencies : [ ctu2, imgui ],
+    include_directories : '..',
+    link_args : 'd3d11.lib'
+)

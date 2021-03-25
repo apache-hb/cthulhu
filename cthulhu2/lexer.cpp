@@ -51,8 +51,7 @@ namespace {
         { "continue", CONTINUE },
         { "return", RETURN },
         { "switch", SWITCH },
-        { "case", CASE },
-        { "cast", CAST }
+        { "case", CASE }
     };
 
     KeyMap ASM = {
@@ -61,10 +60,11 @@ namespace {
     };
 }
 
-Lexer::Lexer(StreamHandle* handle, std::string name)
+Lexer::Lexer(StreamHandle* handle, std::string name, Pool* pool)
     : stream(handle)
     , keys(&CORE)
     , name(name)
+    , pool(pool)
 { }
 
 Token Lexer::read() {
@@ -163,11 +163,11 @@ Lexer::StringResult Lexer::letters(char end) {
             case 'd': encode(&str, BASE10); break;
             case '0': str += '\0'; break;
             default: {
-                auto start = here();
+                auto front = here();
                 // simple, but eat until the end of the string
                 while (next() != end);
                 
-                return { Token::ERROR_INVALID_ESCAPE, start, nullptr };
+                return { Token::ERROR_INVALID_ESCAPE, front, nullptr };
             }
             }
         } else {
@@ -175,7 +175,7 @@ Lexer::StringResult Lexer::letters(char end) {
         }
     }
 
-    return { Token::MONOSTATE, here(), pool.intern(str) };
+    return { Token::MONOSTATE, here(), pool->intern(str) };
 }
 
 Token Lexer::number(char c) {
@@ -197,7 +197,7 @@ Token Lexer::number(char c) {
     }
 
     if (ident1(peek())) {
-        suffix = pool.intern(collect(next(), ident2));    
+        suffix = pool->intern(collect(next(), ident2));    
     } else {
         suffix = nullptr;
     }
@@ -218,7 +218,7 @@ Token Lexer::ident(char c) {
     if (iter != keys->end()) {
         return Token(here(), Token::KEY, { .key = iter->second });
     } else {
-        return Token(here(), Token::IDENT, { .ident = pool.intern(id) });
+        return Token(here(), Token::IDENT, { .ident = pool->intern(id) });
     }
 }
 
@@ -291,7 +291,7 @@ Token Lexer::rstring() {
 
     str = str.substr(0, str.size() - delim.length());
 
-    return Token(here(), Token::STRING, { .string = pool.intern(str) });
+    return Token(here(), Token::STRING, { .string = pool->intern(str) });
 }
 
 Token Lexer::string() {
@@ -360,8 +360,17 @@ Location Lexer::location(size_t first) {
 char Lexer::skip() {
     char c = next();
     
-    while (isspace(c)) {
-        c = next();
+    while (true) {
+        if (isspace(c)) {
+            c = next();
+        } else if (c == '#') {
+            while (c != '\n') {
+                c = next();
+            }
+            return skip();
+        } else {
+            break;
+        }
     }
 
     start = offset - 1;

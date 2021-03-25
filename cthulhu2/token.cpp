@@ -150,10 +150,41 @@ std::string Token::text() {
     return range.lexer->text.substr(range.offset, range.length);
 }
 
+std::string Token::where(bool name) {
+    auto head = range.lexer->location(range.offset);
+    auto tail = range.lexer->location(range.offset + range.length);
+
+    std::string lines;
+
+    // if this token spans multiple lines then include
+    // line1:col1..lineN:colN
+    // otherwise format as
+    // line:col1..colN
+    if (tail.line > head.line) {
+        lines = fmt::format("{}:{}..{}:{}",
+            head.line, head.column,
+            tail.line, tail.column
+        );
+    } else {
+        lines = fmt::format("{}:{}..{}",
+            head.line, head.column,
+            tail.column
+        );
+    }
+
+    // if we want the filename then push it on the front
+    if (name) {
+        lines = range.lexer->name + ":" + lines;
+    }
+
+    return lines;
+}
+
 #define RED_CHEVRON ANSI_COLOUR_RED ANSI_COLOUR_BOLD " > " ANSI_COLOUR_RESET
 #define RED_ELIPSIS ANSI_COLOUR_RED ANSI_COLOUR_BOLD "...\n" ANSI_COLOUR_RESET
 
 std::string Token::pretty(bool underline, const std::string& message) {
+    // TODO: refactor this stuff to use `Token::where`
     auto where = range.lexer->location(range.offset);
     auto tail = range.lexer->location(range.offset + range.length);
 

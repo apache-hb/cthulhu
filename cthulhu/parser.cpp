@@ -669,7 +669,7 @@ namespace cthulhu {
         } else if (token.is(Token::STRING)) {
             expr = MAKE<ast::StringExpr>(token.string());
         } else if (token.is(Token::CHAR)) {
-            expr = MAKE<ast::CharExpr>(token.letter());
+            expr = MAKE<ast::CharExpr>((c32)token.letter());
         }
 
         if (!expr) {

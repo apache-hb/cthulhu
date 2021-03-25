@@ -5,9 +5,9 @@
 #include <cthulhu2/lexer.h>
 
 int main(int argc, const char** argv) {
-    std::cout << ">>> " << std::flush;
     std::string name;
     FILE* file;
+    Pool pool;
     
     if (argc > 1) {
         name = argv[1];
@@ -17,8 +17,10 @@ int main(int argc, const char** argv) {
         file = stdin;
     }
 
+    std::cout << ">>> " << std::flush;
+
     auto handle = FileStream(file);
-    auto lexer = Lexer(&handle, name);
+    auto lexer = Lexer(&handle, name, &pool);
 
     while (true) {
         auto token = lexer.read();
