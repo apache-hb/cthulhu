@@ -7,7 +7,7 @@
 using KeyMap = std::unordered_map<std::string, Key>;
 
 struct Lexer {
-    Lexer(StreamHandle* handle, std::string name = "unnamed");
+    Lexer(StreamHandle* handle, std::string name = "unnamed", Pool* pool = nullptr);
 
     Token read();
     Token grab();
@@ -51,7 +51,7 @@ struct Lexer {
     size_t start = 0;
     size_t offset = 0;
     Stream stream;
-    Pool pool;
+    Pool* pool;
     KeyMap* keys;
     std::string name;
     std::string text;

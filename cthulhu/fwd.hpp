@@ -1,8 +1,10 @@
 #pragma once
 
-#//include <tinyutf8/tinyutf8.h>
+//include <tinyutf8/tinyutf8.h>
 #include <vector>
 #include <memory>
+#include <string>
+#include <stdexcept>
 
 //namespace utf8 = tiny_utf8;
 

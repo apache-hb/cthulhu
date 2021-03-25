@@ -1,7 +1,9 @@
 #pragma once
 
-#include <stddef.h>
+#include <cstddef>
 #include <string>
+
+using size_t = std::size_t;
 
 struct Lexer;
 
@@ -62,7 +64,6 @@ enum Key : int {
     RETURN = TYPE_CORE | OP(12),
     SWITCH = TYPE_CORE | OP(13),
     CASE = TYPE_CORE | OP(14),
-    CAST = TYPE_CORE | OP(15),
     VAR = TYPE_CORE | OP(16),
     LET, // reserved
     UNION = TYPE_CORE | OP(18),
@@ -199,6 +200,10 @@ struct Token {
 
     // the original text of this token
     std::string text();
+
+    // pretty print the source location
+    // @param name include the file name
+    std::string where(bool name);
 
     // underline the text and handle multiple lines
     std::string pretty(bool underline = true, const std::string& message = "");

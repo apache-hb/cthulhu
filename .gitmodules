@@ -2,3 +2,6 @@
 	path = subprojects/fmt/fmt
 	url = https://github.com/fmtlib/fmt
 	shallow = true
+[submodule "subprojects/imgui/imgui"]
+	path = subprojects/imgui/imgui
+	url = https://github.com/ocornut/imgui
