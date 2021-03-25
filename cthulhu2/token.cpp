@@ -5,15 +5,75 @@
 #include <algorithm>
 #include <fmt/format.h>
 
-namespace {
-    const char* repr(Key key) {
-        switch (key) {
-#define KEY(id, str) case Key::id: return #id ": " str;
-#define ASM(id, str) case Key::id: return #id ": " str;
-#define OP(id, str) case Key::id: return #id ": " str;
-#include "keys.inc"
-        default: return "invalid";
-        }
+std::string to_repr(Key key) {
+    auto type = TYPE(key);
+    auto precedence = PRECEDENCE(key);
+
+    std::string out = "(type=";
+
+    switch (type) {
+    case TYPE_CORE: out += "core-type"; break;
+    case TYPE_ASM: out += "asm-type"; break;
+    default: out += "invalid-type"; break;
+    }
+
+    out += fmt::format(",precedence={},key={})", std::to_string(precedence), to_string(key));
+
+    return out;
+}
+
+const char* to_string(Key key) {
+    switch (key) {
+    case INVALID: return "invalid";
+    case RECORD: return "record";
+    case VARIANT: return "variant";
+    case TRUE: return "true";
+    case FALSE: return "false";
+    case ASM: return "asm";
+
+    case NOT: return "!";
+    case TERNARY: return "?";
+
+    case MUL: return "*";
+    case MOD: return "%";
+    case DIV: return "/";
+
+    case ADD: return "+";
+    case SUB: return "-";
+
+    case SHL: return "<<";
+    case SHR: return ">>";
+
+    case BITAND: return "&";
+    case BITOR: return "|";
+    case BITXOR: return "^";
+
+    case GT: return "<";
+    case GTE: return "<=";
+    case LT: return ">";
+    case LTE: return ">=";
+
+    case EQ: return "==";
+    case NEQ: return "!=";
+
+    case MULEQ: return "*=";
+    case MODEQ: return "%=";
+    case DIVEQ: return "/=";
+    
+    case ADDEQ: return "+=";
+    case SUBEQ: return "-=";
+
+    case SHLEQ: return "<<=";
+    case SHREQ: return ">>=";
+    
+    case BITANDEQ: return "&=";
+    case BITOREQ: return "|=";
+    case BITXOREQ: return "^=";
+
+    case _ADD: return "add";
+    case _XOR: return "xor";
+
+    default: return "unknown";
     }
 }
 
@@ -33,7 +93,7 @@ std::string Token::repr() {
     case Token::IDENT: 
         return fmt::format("{}@ident({})", (void*)data.ident, *data.ident);
     case Token::KEY: 
-        return fmt::format("key({})", ::repr(data.key));
+        return fmt::format("key{}", to_repr(data.key));
     case Token::STRING: 
         return fmt::format("{}@string(`{}`)", (void*)data.string, *data.string);
     case Token::CHAR: return "char";
@@ -54,6 +114,14 @@ std::string Token::repr() {
     case Token::ERROR_INVALID_ESCAPE: return "invalid escape sequence";
     case Token::ERROR_LEADING_ZERO: return "leading zero in integer";
     case Token::ERROR_INT_OVERFLOW: return "integer literal was too large";
+    case Token::ERROR_UNRECOGNIZED_CHAR: {
+        auto src = text();
+        if (src.length() > 1) {
+            return fmt::format("unrecognized characters `{}` in text", replace(src, "\n", ""));
+        } else {
+            return fmt::format("unrecognized character `{}` in text", src);
+        }
+    }
     default: return "invalid";
     }
 }
@@ -62,25 +130,46 @@ std::string Token::text() {
     return range.lexer->text.substr(range.offset, range.length);
 }
 
-std::string Token::pretty(bool underline, bool colour, const std::string& message) {
+#define RED_CHEVRON ANSI_COLOUR_RED ANSI_COLOUR_BOLD " > " ANSI_COLOUR_RESET
+#define RED_ELIPSIS ANSI_COLOUR_RED ANSI_COLOUR_BOLD "...\n" ANSI_COLOUR_RESET
+
+std::string Token::pretty(bool underline, const std::string& message) {
     auto where = range.lexer->location(range.offset);
+    auto tail = range.lexer->location(range.offset + range.length);
 
     auto desc = repr();
 
+    const char* arrow = ANSI_COLOUR_BOLD " > " ANSI_COLOUR_RESET;
+    const char* elipsis = ANSI_COLOUR_BOLD "...\n" ANSI_COLOUR_RESET;
+
     if (error()) {
-        if (colour) {
-            desc = ANSI_COLOUR_RED "error: " ANSI_COLOUR_RESET + desc;
-        } else {
-            desc = "error: " + desc;
-        }
+        desc = ANSI_COLOUR_RED "error: " ANSI_COLOUR_RESET + desc;
+
+        arrow = RED_CHEVRON;
+        elipsis = RED_ELIPSIS;
     }
 
-    auto header = fmt::format("{}:{}:{}\n --> {}", 
-        range.lexer->name,
-        where.line, 
-        where.column,
-        desc
-    );
+    auto source = range.lexer->lines(range.offset, range.length); 
+    auto reduced = trim(source, "\n");
+    auto lines = split(reduced, "\n");
+
+    std::string header;
+    
+    if (lines.size() > 1) {
+        header = fmt::format("{}:{}:{}..{}:{}\n --> {}", 
+            range.lexer->name,
+            where.line, where.column,
+            tail.line, tail.column,
+            desc
+        );
+    } else {
+        header = fmt::format("{}:({}:{}..{})\n --> {}", 
+            range.lexer->name,
+            where.line, where.column,
+            range.length + where.column,
+            desc
+        );
+    }
 
     auto line = std::to_string(where.line);
     auto len = line.length() + 2;
@@ -90,12 +179,6 @@ std::string Token::pretty(bool underline, bool colour, const std::string& messag
         return header + pad + "\n" ANSI_COLOUR_WHITE " " + line + " > <EOF>" ANSI_COLOUR_RESET + pad;
     }
 
-    auto source = range.lexer->lines(range.offset, range.length); 
-
-    auto reduced = trim(source, "\n");
-
-    auto lines = split(reduced, "\n");
-
     std::string src;
     size_t length = range.length;
 
@@ -104,7 +187,7 @@ std::string Token::pretty(bool underline, bool colour, const std::string& messag
 
     switch (lines.size()) {
     case 1:
-        src = line + " > " + join(lines, "\n" + std::string(len, ' ') + "| ");
+        src = line + arrow + lines[0];
         break;
     case 2: case 3: {
         size_t i = where.line;
@@ -112,7 +195,7 @@ std::string Token::pretty(bool underline, bool colour, const std::string& messag
             if (i != where.line) {
                 src += "\n ";
             }
-            src += std::to_string(i++) + " > " + each;
+            src += std::to_string(i++) + arrow + each;
         }
         length = std::max_element(lines.begin(), lines.end(), [](auto& lhs, auto& rhs) { return lhs.length() > rhs.length(); })->length();
         break;
@@ -122,16 +205,14 @@ std::string Token::pretty(bool underline, bool colour, const std::string& messag
         auto& first = lines[0];
         auto& last = lines[lines.size() - 1];
         auto end = std::to_string(where.line + lines.size());
-        src += std::string(end.length() - line.length(), ' ') + line + " > " + first + "\n";
-        src += std::string(len - 1, ' ') + "...\n ";
-        src += end + " > " + last;
+        src += std::string(end.length() - line.length(), ' ') + line + arrow + first + "\n";
+        src += std::string(len - 1, ' ') + elipsis + ANSI_COLOUR_BOLD;
+        src += ' ' + end + arrow + last;
         break;
     }
     }
 
-    if (colour) {
-        src = ANSI_COLOUR_BOLD ANSI_COLOUR_WHITE + src + ANSI_COLOUR_RESET;
-    }
+    src = ANSI_COLOUR_BOLD ANSI_COLOUR_WHITE + src + ANSI_COLOUR_RESET;
 
     auto result = header + pad + "\n " + src + pad;
 
@@ -139,7 +220,7 @@ std::string Token::pretty(bool underline, bool colour, const std::string& messag
         result += std::string(where.column + 1, ' ') + ANSI_COLOUR_CYAN + std::string(length, '^') + ANSI_COLOUR_RESET + " " + message + pad;
     }
 
-    return result;
+    return result + ANSI_COLOUR_RESET;
 }
 
 bool Token::error() const {
