@@ -10,6 +10,7 @@ struct Lexer {
     Lexer(StreamHandle* handle, std::string name = "unnamed");
 
     Token read();
+    Token grab();
 
     // collect the full line text for whatever line is at offset to whatever line
     // offset + length ends on
@@ -38,4 +39,7 @@ struct Lexer {
     KeyMap* keys;
     std::string name;
     std::string text;
+
+    // we save this token for error handling
+    Token saved;
 };

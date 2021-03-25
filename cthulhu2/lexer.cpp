@@ -24,13 +24,16 @@ namespace {
     }
 
     KeyMap CORE = {
-#define KEY(id, str) { str, Key::id },
-#include "keys.inc"
+        { "record", RECORD },
+        { "variant", VARIANT },
+        { "asm", ASM },
+        { "true", TRUE },
+        { "false", FALSE }
     };
 
     KeyMap ASM = {
-#define ASM(id, str) { str, Key::id },
-#include "keys.inc"
+        { "add", _ADD },
+        { "xor", _XOR }
     };
 }
 
@@ -41,20 +44,56 @@ Lexer::Lexer(StreamHandle* handle, std::string name)
 { }
 
 Token Lexer::read() {
+    // if we have a saved token we recover from error handling here
+    if (saved.type != Token::MONOSTATE) {
+        auto out = saved;
+        saved.type = Token::MONOSTATE;
+        return out;
+    }
+
+    auto out = grab();
+
+    // if we find an error
+    if (out.error()) {
+        auto type = out.type;
+        auto range = out.range;
+
+        // collect all errors of the same type together
+        // and merge their ranges
+        while (true) {
+            range.length = offset - range.offset;
+            auto next = grab();
+            if (next.type != type) {
+                saved = next;
+                break;
+            }
+        }
+
+        return Token(range, type);
+    }
+
+    return out;
+}
+
+Token Lexer::grab() {
     char c = skip();
+    Token out;
+
     if (c == 0) {
         return Token(here());
     } else if (c == 'R') {
-        return rstring();
+        out = rstring();
     } else if (c == '"') {
-        return string();
+        out = string();
     } else if (ident1(c)) {
-        return ident(c);
+        out = ident(c);
     } else if (isdigit(c)) {
-        return number(c);
+        out = number(c);
     } else {
-        return symbol(c);
+        out = symbol(c);
     }
+
+    return out;
 }
 
 Token Lexer::number(char c) {
@@ -103,8 +142,8 @@ Token Lexer::ident(char c) {
 
 Token Lexer::symbol(char c) {
     switch (c) {
-    case '+': return Token(here(), Token::KEY, { .key = eat('=') ? Key::ADDEQ : Key::ADD });
-    case '-': return Token(here(), Token::KEY, { .key = eat('=') ? Key::SUBEQ : Key::SUB });
+    case '+': return Token(here(), Token::KEY, { .key = eat('=') ? ADDEQ : ADD });
+    case '-': return Token(here(), Token::KEY, { .key = eat('=') ? SUBEQ : SUB });
     case '!': {
         if (eat('<')) {
             depth++;
@@ -130,7 +169,7 @@ Token Lexer::symbol(char c) {
             return Token(here(), Token::KEY, { .key = eat('=') ? Key::LTE : Key::LT });
         }
     }
-    default: return Token(here());
+    default: return Token(here(), Token::ERROR_UNRECOGNIZED_CHAR);
     }
 }
 
@@ -192,9 +231,9 @@ Token Lexer::string() {
             default:
                 return Token(here(), Token::ERROR_INVALID_ESCAPE);
             }
+        } else {
+            str += c;
         }
-
-        str += c;
     }
 
     return Token(here(), Token::STRING, { .string = pool.intern(str) });
