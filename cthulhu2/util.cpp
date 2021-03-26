@@ -1,6 +1,6 @@
 #include "util.h"
 
-const std::string* Pool::intern(const std::string& id) {
+Ident Pool::intern(const std::string& id) {
     return &*pool.insert(id).first;
 }
 

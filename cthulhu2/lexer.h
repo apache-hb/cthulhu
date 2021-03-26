@@ -34,7 +34,7 @@ struct Lexer {
     struct StringResult {
         Token::Type error;
         Range range;
-        const std::string* string;
+        Ident string;
     };
 
     StringResult letters(char end);

@@ -26,4 +26,11 @@ if target_machine.system() == 'windows'
         include_directories : '..',
         link_args : 'd3d11.lib'
     )
+
+    executable('parse-gui', 'parse-gui.cpp',
+        cpp_args : args,
+        dependencies : [ ctu2, imgui ],
+        include_directories : '..',
+        link_args : 'd3d11.lib'
+    )
 endif
