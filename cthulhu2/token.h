@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <string>
 
+#include "util.h"
+
 using size_t = std::size_t;
 
 struct Lexer;
@@ -152,7 +154,7 @@ const char* to_string(Key key);
 
 struct Int {
     size_t number;
-    const std::string* suffix;
+    Ident suffix;
 };
 
 struct Token {
@@ -177,10 +179,10 @@ struct Token {
     };
 
     union Data {
-        const std::string* ident;
+        Ident ident;
         Key key;
-        const std::string* string;
-        const std::string* letters;
+        Ident string;
+        Ident letters;
         Int number;
     };
 

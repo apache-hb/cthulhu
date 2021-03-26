@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iterator>
 #include <cthulhu2/lexer.h>
+#include <cthulhu2/parse.h>
 
 // stop our VARIANT clashing with windows headers
 #define VARIANT MS_VARIANT
@@ -23,6 +24,12 @@ void CleanupDeviceD3D();
 void CreateRenderTarget();
 void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+void idents(const std::vector<Ident>& all) {
+    for (size_t i = 0; i < all.size(); i++) {
+        ImGui::Text("%s", all[i]->c_str());
+    }
+}
 
 int main(int argc, const char** argv) {
     std::string text;
@@ -84,31 +91,32 @@ int main(int argc, const char** argv) {
 
         auto str = TextStream(source);
         auto lex = Lexer(&str, "input", &pool);
+        auto parse = Parser(&lex);
 
-        ImGui::Begin("Tokens");
-        auto flags = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedSame;
-        if (ImGui::BeginTable("tokens", 3, flags)) {
-            while (true) {
-                auto token = lex.read();
-                auto pretty = token.pretty();
-                auto where = token.where(false);
-                auto type = token.repr();
-                auto src = token.text();
+        ImGui::Begin("Tree");
 
-                ImGui::Text("%s", where.c_str());
-                ImGui::TableNextColumn();
-                ImGui::Text("%s", type.c_str());
-                ImGui::TableNextColumn();
-                ImGui::Text("%s", src.c_str());
-                ImGui::TableNextRow();
+        try {
+            auto unit = parse.unit();
+            
+            if (ImGui::TreeNode("unit")) {
+                
+                for (size_t i = 0; i < unit->imports.size(); i++) {
+                    auto node = unit->imports[i];
+                    if (ImGui::TreeNode((void*)i, "import")) {
+                        
+                        idents(node->path);
 
-                if (token.type == Token::END) {
-                    break;
+                        ImGui::TreePop();
+                    }
                 }
+                
+                ImGui::TreePop();
             }
 
-            ImGui::EndTable();
+        } catch (Error error) {
+            ImGui::Text("failed to parse %s", error.token.repr().c_str());
         }
+        
         ImGui::End();
 
         ImGui::Render();

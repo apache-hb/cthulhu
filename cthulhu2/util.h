@@ -6,8 +6,10 @@
 #include <unordered_map>
 #include <unordered_set>
 
+using Ident = const std::string*;
+
 struct Pool {
-    const std::string* intern(const std::string& id);
+    Ident intern(const std::string& id);
     std::unordered_set<std::string> pool;
 };
 

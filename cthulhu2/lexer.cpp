@@ -183,7 +183,7 @@ Lexer::StringResult Lexer::letters(char end) {
 Token Lexer::number(char c) {
     int base;
     std::string str;
-    const std::string* suffix;
+    Ident suffix;
 
     if (c == '0' && eat('x')) {
         str = collect(0, xdigit);
