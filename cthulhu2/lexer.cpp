@@ -51,7 +51,9 @@ namespace {
         { "continue", CONTINUE },
         { "return", RETURN },
         { "switch", SWITCH },
-        { "case", CASE }
+        { "case", CASE },
+        { "using", USING },
+        { "union", UNION }
     };
 
     KeyMap ASM = {
@@ -226,9 +228,9 @@ Token Lexer::symbol(char c) {
     switch (c) {
     case '+': return Token(here(), Token::KEY, { .key = eat('=') ? ADDEQ : ADD });
     case '-': return Token(here(), Token::KEY, { .key = eat('=') ? SUBEQ : SUB });
-    case '/':
-    case '*':
-    case '%':
+    case '/': return Token(here(), Token::KEY, { .key = eat('=') ? DIVEQ : DIV });
+    case '*': return Token(here(), Token::KEY, { .key = eat('=') ? MULEQ : MUL });
+    case '%': return Token(here(), Token::KEY, { .key = eat('=') ? MODEQ : MOD });
     case '!': {
         if (eat('<')) {
             depth++;
@@ -254,15 +256,25 @@ Token Lexer::symbol(char c) {
             return Token(here(), Token::KEY, { .key = eat('=') ? Key::LTE : Key::LT });
         }
     }
-    case ':':
-    case '(':
-    case ')':
-    case '{':
-    case '}':
-    case '[':
-    case ']':
-    case '.':
-    case ',':
+    case ':': return Token(here(), Token::KEY, { .key = eat(':') ? COLON2 : COLON });
+    case '(': return Token(here(), Token::KEY, { .key = LPAREN });
+    case ')': return Token(here(), Token::KEY, { .key = RPAREN });
+    case '{': return Token(here(), Token::KEY, { .key = LBRACE });
+    case '}': return Token(here(), Token::KEY, { .key = RBRACE });
+    case '[': return Token(here(), Token::KEY, { .key = LSQUARE });
+    case ']': return Token(here(), Token::KEY, { .key = RSQUARE });
+    case '@': return Token(here(), Token::KEY, { .key = AT });
+    case ';': return Token(here(), Token::KEY, { .key = SEMI });
+    case '=': return Token(here(), Token::KEY, { .key = eat('=') ? EQ : ASSIGN });
+    case '.': {
+        if (eat('.')) {
+            return Token(here(), Token::KEY, { .key = eat('.') ? DOT3 : DOT2 });
+        } else {
+            return Token(here(), Token::KEY, { .key = DOT });
+        }
+    }
+    case '~': return Token(here(), Token::KEY, { .key = BITNOT });
+    case ',': return Token(here(), Token::KEY, { .key = COMMA });
     default: return Token(here(), Token::ERROR_UNRECOGNIZED_CHAR);
     }
 }

@@ -38,6 +38,8 @@ const char* to_string(Key key) {
     case RETURN: return "return";
     case SWITCH: return "switch";
     case CASE: return "case";
+    case USING: return "using";
+    case UNION: return "union";
 
     case NOT: return "!";
     case TERNARY: return "?";
@@ -150,9 +152,14 @@ std::string Token::text() {
     return range.lexer->text.substr(range.offset, range.length);
 }
 
-std::string Token::where(bool name) {
+std::string Token::where(bool name, Location* first, Location* last) {
     auto head = range.lexer->location(range.offset);
     auto tail = range.lexer->location(range.offset + range.length);
+
+    if (first && last) {
+        *first = head;
+        *last = tail;
+    }
 
     std::string lines;
 
@@ -183,42 +190,27 @@ std::string Token::where(bool name) {
 #define RED_CHEVRON ANSI_COLOUR_RED ANSI_COLOUR_BOLD " > " ANSI_COLOUR_RESET
 #define RED_ELIPSIS ANSI_COLOUR_RED ANSI_COLOUR_BOLD "...\n" ANSI_COLOUR_RESET
 
-std::string Token::pretty(bool underline, const std::string& message) {
-    // TODO: refactor this stuff to use `Token::where`
-    auto where = range.lexer->location(range.offset);
-    auto tail = range.lexer->location(range.offset + range.length);
+#define RED(str) ANSI_COLOUR_RED ANSI_COLOUR_BOLD str ANSI_COLOUR_RESET
+#define WHITE(str) ANSI_COLOUR_WHITE ANSI_COLOUR_BOLD str ANSI_COLOUR_RESET
 
+std::string Token::pretty(bool underline, const std::string& message) {
+    Location where, tail;
+    const char* arrow = WHITE(" > ");
+    const char* elipsis = WHITE("...\n");
+
+    auto header = this->where(true, &where, &tail);
     auto desc = repr();
 
-    const char* arrow = ANSI_COLOUR_BOLD " > " ANSI_COLOUR_RESET;
-    const char* elipsis = ANSI_COLOUR_BOLD "...\n" ANSI_COLOUR_RESET;
 
     if (error()) {
-        desc = ANSI_COLOUR_RED "error: " ANSI_COLOUR_RESET + desc;
-
-        arrow = RED_CHEVRON;
-        elipsis = RED_ELIPSIS;
+        desc = RED("error: ") + desc;
+        arrow = RED(" > ");
+        elipsis = RED("...\n");
     }
 
     auto source = range.lexer->lines(range.offset, range.length); 
     auto reduced = trim(source, "\n");
     auto lines = split(reduced, "\n");
-
-    std::string header;
-    
-    if (lines.size() > 1) {
-        header = fmt::format("{}\n --> {}:{}:{}..{}:{}", 
-            desc, range.lexer->name,
-            where.line, where.column,
-            tail.line, tail.column
-        );
-    } else {
-        header = fmt::format("{}\n --> {}:{}:{}..{}", 
-            desc, range.lexer->name,
-            where.line, where.column,
-            range.length + where.column
-        );
-    }
 
     auto line = std::to_string(where.line);
     auto len = line.length() + 2;

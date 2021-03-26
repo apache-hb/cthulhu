@@ -68,6 +68,7 @@ enum Key : int {
     LET, // reserved
     UNION = TYPE_CORE | OP(18),
     FINAL, // reserved
+    USING = TYPE_CORE | OP(20),
 
     COLON,
     COLON2,
@@ -203,7 +204,13 @@ struct Token {
 
     // pretty print the source location
     // @param name include the file name
-    std::string where(bool name);
+    // @param head the start of the token
+    // @param tail the end of the token
+    std::string where(
+        bool name, 
+        Location* head = nullptr, 
+        Location* tail = nullptr
+    );
 
     // underline the text and handle multiple lines
     std::string pretty(bool underline = true, const std::string& message = "");
