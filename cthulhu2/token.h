@@ -39,12 +39,16 @@ struct Location {
 // extract the type of the keyword
 #define TYPE(key) (key & 0x0000FF00)
 
+#define FLAG_UNARY (1 << 24)
+#define FLAG_BINARY (1 << 25)
+#define FLAG_TERNARY (1 << 26)
+
 // 0x00_00_00_00
 //   ^^ ^^ ^^ ^^
 //   |  |  |  unique per category
 //   |  |  category of the keyword
 //   |  precendence when needed
-//   unused
+//   flags
 //
 enum Key : int {
     INVALID = 0,
@@ -94,34 +98,34 @@ enum Key : int {
     END = TYPE_CORE | OP(65),
 
     // core unary operators
-    NOT = TYPE_CORE | OP(66), // !
-    TERNARY = TYPE_CORE | OP(67), // ?
+    NOT = FLAG_UNARY | TYPE_CORE | OP(66), // !
+    TERNARY = FLAG_TERNARY | TYPE_CORE | OP(67), // ?
 
     // core binary operators
-    MUL = TYPE_CORE | MULTIPLICATIVE_OP | OP(0),
-    MOD = TYPE_CORE | MULTIPLICATIVE_OP | OP(1),
-    DIV = TYPE_CORE | MULTIPLICATIVE_OP | OP(2),
+    MUL = FLAG_UNARY | FLAG_BINARY | TYPE_CORE | MULTIPLICATIVE_OP | OP(0),
+    MOD = FLAG_BINARY | TYPE_CORE | MULTIPLICATIVE_OP | OP(1),
+    DIV = FLAG_BINARY | TYPE_CORE | MULTIPLICATIVE_OP | OP(2),
 
-    ADD = TYPE_CORE | MATHEMATICAL_OP | OP(1),
-    SUB = TYPE_CORE | MATHEMATICAL_OP | OP(2),
+    ADD = FLAG_UNARY | FLAG_BINARY | TYPE_CORE | MATHEMATICAL_OP | OP(1),
+    SUB = FLAG_UNARY | FLAG_BINARY | TYPE_CORE | MATHEMATICAL_OP | OP(2),
 
-    SHL = TYPE_CORE | BITSHIFT_OP | OP(1),
-    SHR = TYPE_CORE | BITSHIFT_OP | OP(2),
+    SHL = FLAG_BINARY | TYPE_CORE | BITSHIFT_OP | OP(1),
+    SHR = FLAG_BINARY | TYPE_CORE | BITSHIFT_OP | OP(2),
 
-    BITAND = TYPE_CORE | BITWISE_OP | OP(1),
-    BITOR = TYPE_CORE | BITWISE_OP | OP(2),
-    BITXOR = TYPE_CORE | BITWISE_OP | OP(3),
+    BITAND = FLAG_UNARY | FLAG_BINARY | TYPE_CORE | BITWISE_OP | OP(1),
+    BITOR = FLAG_BINARY | TYPE_CORE | BITWISE_OP | OP(2),
+    BITXOR = FLAG_BINARY | TYPE_CORE | BITWISE_OP | OP(3),
 
-    GT = TYPE_CORE | COMPARISON_OP | OP(1),
-    GTE = TYPE_CORE | COMPARISON_OP | OP(2),
-    LT = TYPE_CORE | COMPARISON_OP | OP(3),
-    LTE = TYPE_CORE | COMPARISON_OP | OP(4),
+    GT = FLAG_BINARY | TYPE_CORE | COMPARISON_OP | OP(1),
+    GTE = FLAG_BINARY | TYPE_CORE | COMPARISON_OP | OP(2),
+    LT = FLAG_BINARY | TYPE_CORE | COMPARISON_OP | OP(3),
+    LTE = FLAG_BINARY | TYPE_CORE | COMPARISON_OP | OP(4),
 
-    EQ = TYPE_CORE | EQUALITY_OP | OP(1),
-    NEQ = TYPE_CORE | EQUALITY_OP | OP(2),
+    EQ = FLAG_BINARY | TYPE_CORE | EQUALITY_OP | OP(1),
+    NEQ = FLAG_BINARY | TYPE_CORE | EQUALITY_OP | OP(2),
 
-    AND = TYPE_CORE | LOGICAL_OP | OP(1),
-    OR = TYPE_CORE | LOGICAL_OP | OP(2),
+    AND = FLAG_BINARY | TYPE_CORE | LOGICAL_OP | OP(1),
+    OR = FLAG_BINARY | TYPE_CORE | LOGICAL_OP | OP(2),
 
     // core statement operators
     MULEQ = TYPE_CORE | INVALID_OP | OP(128),
