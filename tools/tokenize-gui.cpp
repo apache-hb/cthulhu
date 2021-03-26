@@ -86,10 +86,6 @@ int main(int argc, const char** argv) {
         ImGui::Begin("Tokens");
         auto flags = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_None | ImGuiTableFlags_SizingFixedSame;
         if (ImGui::BeginTable("tokens", 3, flags)) {
-            ImGui::Text("where");
-            ImGui::Text("what");
-            ImGui::Text("text");
-
             while (true) {
                 auto token = lex.read();
                 auto pretty = token.pretty();
@@ -97,11 +93,11 @@ int main(int argc, const char** argv) {
                 auto type = token.repr();
                 auto src = token.text();
 
-                ImGui::Text(where.c_str());
+                ImGui::Text("%s", where.c_str());
                 ImGui::TableNextColumn();
-                ImGui::Text(type.c_str());
+                ImGui::Text("%s", type.c_str());
                 ImGui::TableNextColumn();
-                ImGui::Text(src.c_str());
+                ImGui::Text("%s", src.c_str());
                 ImGui::TableNextRow();
 
                 if (token.type == Token::END) {
