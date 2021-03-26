@@ -64,9 +64,9 @@ namespace {
 
 Lexer::Lexer(StreamHandle* handle, std::string name, Pool* pool)
     : stream(handle)
+    , pool(pool)
     , keys(&CORE)
     , name(name)
-    , pool(pool)
 { }
 
 Token Lexer::read() {
