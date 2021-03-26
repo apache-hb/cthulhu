@@ -130,11 +130,9 @@ mul-expr : unary-expr ((`*` | `/` | `%`) mul-expr)*
 
 unary-expr : (`+` | `-` | `~` | `!` | `&` | `*`)? postfix-expr
 
-primary-expr : `(` expr `)` | int | char | string | coerce-expr
+primary-expr : `(` expr `)` | int | char | string
 
-postfix-expr : primary-expr | postfix-expr `[` expr `]` | postfix-expr `(` function-args? `)` | postfix-expr `.` ident | postfix-expr `->` ident | primary-expr
-
-coerce-expr : coerce `!<` type `>` `(` expr `)`
+postfix-expr : primary-expr | postfix-expr `[` expr `]` | postfix-expr `(` function-args? `)` | postfix-expr `.` ident | postfix-expr `->` ident | primary-expr | primary-expr `:` type
 
 function-args : function-arg (`,` function-args) | named-function-args
 
