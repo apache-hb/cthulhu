@@ -13,6 +13,7 @@ private:
 
 struct stream {
     struct handle {
+        virtual ~handle() { }
         virtual char next() = 0;
     };
 
