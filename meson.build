@@ -50,5 +50,14 @@ ctu2 = declare_dependency(
     dependencies : fmt
 )
 
+src3 = [ 'cthulhu3/cthulhu.cpp' ]
+
+cthulhu3 = library('ctu3', src3, dependencies : fmt)
+ctu3 = declare_dependency(
+    include_directories : 'cthulhu3',
+    link_with : cthulhu3,
+    dependencies : fmt
+)
+
 subdir('tools')
 subdir('test')
