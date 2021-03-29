@@ -30,38 +30,6 @@ int main(int argc, const char** argv) {
 
 
         ImGui::Begin("tree");
-        
-        try {
-            auto* it = parser.unit();
-            if (ImGui::TreeNode("unit")) {
-                for (auto* inc : it->includes) {
-                    if (ImGui::TreeNode("include")) {
-
-                        if (ImGui::TreeNode("path")) {
-                            for (auto* part : inc->path) {
-                                ImGui::Text("%s", part->id->c_str());
-                            }
-                            ImGui::TreePop();
-                        }
-
-                        if (ImGui::TreeNode("items")) {
-                            for (auto* part : inc->path) {
-                                ImGui::Text("%s", part->id->c_str());
-                            }
-                            ImGui::TreePop();
-                        }
-
-                        ImGui::TreePop();
-                    }
-                }
-
-                ImGui::TreePop();
-            }
-
-        } catch (cthulhu::error* error) {
-            ImGui::Text("failed to parse");
-            delete error;
-        }
 
         ImGui::End();
 

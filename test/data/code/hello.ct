@@ -16,3 +16,9 @@ var i5 = i : bool;
 var i6 = cast(bool)i;
 var i7 = (bool)i;
 var i8 = bool(i);
+
+record a {
+    b: int;
+    c: float;
+    d: string;
+}
