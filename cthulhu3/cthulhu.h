@@ -245,13 +245,79 @@ struct Stmt : Node { };
 struct Decl : Stmt { };
 struct Expr : Stmt { };
 struct Type : Node { };
-struct Ident : Node { };
 
-struct Name : Node {
+struct Ident : Node { 
+    text id;
+};
+
+struct Pointer : Type {
+    Type* type;
+};
+
+struct Array : Type {
+    Type* type;
+    Expr* size;
+};
+
+struct Name : Type {
+    Ident* name;
+};
+
+struct Qualified : Type {
+    std::vector<Name*> parts;
+};
+
+struct Field : Node { 
     Ident* name;
     Type* type;
 };
 
+struct Unary : Expr {
+    key op;
+    Expr* expr;
+};
+
+struct Binary : Expr {
+    key op;
+    Expr* lhs;
+    Expr* rhs;
+};
+
+struct Ternary : Expr {
+    Expr* cond;
+    Expr* lhs;
+    Expr* rhs;
+};
+
+struct Access : Expr {
+    Expr* expr;
+    Ident* field;
+};
+
+struct Indirect : Expr {
+    Expr* expr;
+    Ident* field;
+};
+
+struct Subscript : Expr {
+    Expr* expr;
+    Expr* index;
+};
+
+struct Argument : Node {
+    Ident* name;
+    Expr* expr;
+};
+
+struct Call : Expr {
+    Expr* func;
+    std::vector<Argument*> args;
+};
+
+// var x = expr
+// var x: type = expr
+// var [x, y] = expr
+// var [x: type, y: type] = expr
 struct Value : Stmt {
     std::vector<Name*> names;
     Expr* expr;
@@ -290,11 +356,6 @@ struct MultiInclude : Include {
 };
 
 struct Alias : Node { 
-    Ident* name;
-    Type* type;
-};
-
-struct Field : Node { 
     Ident* name;
     Type* type;
 };
