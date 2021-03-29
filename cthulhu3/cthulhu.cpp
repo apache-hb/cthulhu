@@ -341,41 +341,6 @@ parser::~parser() {
     }
 }
 
-ast::unit* parser::unit() {
-    std::vector<ast::include*> includes;
-
-    while (true) {
-        if (auto* node = include(); node) {
-            includes.push_back((ast::include*)node);
-        } else {
-            break;
-        }
-    }
-
-    return make<ast::unit>(includes);
-}
-
-ast::node* parser::include() {
-    if (!eat(key::USING).valid()) {
-        return nullptr;
-    }
-
-    auto path = collect<ast::ident>(key::COLON2, [&] { return ident(); });
-
-    expect(key::LPAREN);
-
-    auto items = collect<ast::ident>(key::COMMA, [&] { return ident(); });
-
-    expect(key::RPAREN);
-    expect(key::SEMI);
-
-    return make<ast::include>(path, items);
-}
-
-ast::ident* parser::ident() {
-    return make<ast::ident>(expect(token::IDENT).data.id);
-}
-
 token parser::expect(token::kind type) {
     auto it = peek();
 

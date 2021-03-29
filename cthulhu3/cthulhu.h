@@ -237,60 +237,110 @@ private:
 
 namespace ast {
 
-struct node {
-    virtual ~node() { }
+// we break style here because stuff like return is a keyword in C++
+
+struct Node { };
+
+struct Stmt : Node { };
+struct Decl : Stmt { };
+struct Expr : Stmt { };
+struct Type : Node { };
+struct Ident : Node { };
+
+struct Name : Node {
+    Ident* name;
+    Type* type;
 };
 
-#define NODE(name, ...) struct name : node { virtual ~name() override { } __VA_ARGS__ }
-
-NODE(ident, 
-    ident(text id) : id(id) { }
-
-    text id;
-);
-
-
-NODE(include,
-    include(std::vector<ident*> path, std::vector<ident*> items)
-        : path(path)
-        , items(items)
-    { }
-
-    std::vector<ident*> path;
-    std::vector<ident*> items;
-);
-
-NODE(unit,
-    unit(std::vector<include*> includes)
-        : includes(includes)
-    { }
-
-    std::vector<include*> includes;
-);
-
-}
-
-namespace ast2 {
-
-struct node { 
-
+struct Value : Stmt {
+    std::vector<Name*> names;
+    Expr* expr;
 };
 
-struct ident : node {
-
+struct Compound : Stmt {
+    std::vector<Stmt*> body;
 };
 
-struct include : node {
+struct Return : Stmt {
+    Expr* expr;
+};
+
+struct While : Stmt {
+    Ident* label;
+    Expr* cond;
+    Stmt* body;
+};
+
+struct Break : Stmt { 
+    Ident* label;
+};
+
+struct Continue : Stmt { 
 
 };
 
-struct alias : node {
-
+// using path;
+struct Include : Node { 
+    std::vector<Ident*> path;
 };
 
-struct unit : node {
-    std::vector<include*> includes;
-    std::vector<alias*> aliases;
+// using path(items);
+struct MultiInclude : Include { 
+    std::vector<Ident*> items;
+};
+
+struct Alias : Node { 
+    Ident* name;
+    Type* type;
+};
+
+struct Field : Node { 
+    Ident* name;
+    Type* type;
+};
+
+struct Record : Decl { 
+    Ident* name;
+    std::vector<Field*> fields;
+};
+
+struct Union : Decl { 
+    Ident* name;
+    std::vector<Field*> fields;
+};
+
+struct Case : Node { 
+    Ident* name;
+    Expr* value;
+    std::vector<Field*> fields;
+};
+
+struct Variant : Decl { 
+    Ident* name;
+    Type* parent;
+    std::vector<Case*> cases;
+};
+
+struct Param : Node {
+    Ident* name;
+    Type* type;
+    Expr* value;
+};
+
+struct Function : Decl { 
+    Ident* name;
+    std::vector<Param*> params;
+    Type* result;
+};
+
+// def name(args): type = expr;
+struct SingleFunction : Function {
+    Expr* expr;
+};
+
+// def name(args): type { body }
+struct CompoundFunction : Function {
+    Compound* body;
 };
 
 }
@@ -324,9 +374,6 @@ struct parser {
     parser(lexer* source);
     ~parser();
 
-    ast::unit* unit();
-    ast::node* include();
-    ast::ident* ident();
 private:
     template<typename T, typename F>
     std::vector<T*> collect(key sep, F&& func) {
@@ -355,7 +402,7 @@ private:
         return out;
     }
 
-    std::vector<ast::node*> nodes;
+    std::vector<ast::Node*> nodes;
 };
 
 }
