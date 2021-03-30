@@ -250,65 +250,83 @@ struct Ident : Node {
     text id;
 };
 
+// *type
 struct Pointer : Type {
     Type* type;
 };
 
+// [type]
+// [type:expr]
 struct Array : Type {
     Type* type;
     Expr* size;
 };
 
+// name
 struct Name : Type {
     Ident* name;
 };
 
+// name
+// name::name
 struct Qualified : Type {
     std::vector<Name*> parts;
 };
 
+// name: type
 struct Field : Node { 
     Ident* name;
     Type* type;
 };
 
+// op expr
 struct Unary : Expr {
     key op;
     Expr* expr;
 };
 
+// expr op expr
 struct Binary : Expr {
     key op;
     Expr* lhs;
     Expr* rhs;
 };
 
+// expr ? expr : expr
+// expr ?: expr
 struct Ternary : Expr {
     Expr* cond;
     Expr* lhs;
     Expr* rhs;
 };
 
+// expr.field
 struct Access : Expr {
     Expr* expr;
     Ident* field;
 };
 
+// expr->field
 struct Indirect : Expr {
     Expr* expr;
     Ident* field;
 };
 
+// expr[expr]
 struct Subscript : Expr {
     Expr* expr;
     Expr* index;
 };
 
+// expr
+// .name = expr
 struct Argument : Node {
     Ident* name;
     Expr* expr;
 };
 
+// func()
+// func(args)
 struct Call : Expr {
     Expr* func;
     std::vector<Argument*> args;
@@ -323,24 +341,34 @@ struct Value : Stmt {
     Expr* expr;
 };
 
+// { stmt* }
 struct Compound : Stmt {
     std::vector<Stmt*> body;
 };
 
+// return;
+// return expr;
 struct Return : Stmt {
     Expr* expr;
 };
 
+// while cond compound
+// while (cond) stmt
+// while :label cond compound
+// while :label (cond) stmt
 struct While : Stmt {
     Ident* label;
     Expr* cond;
     Stmt* body;
 };
 
+// break;
+// break label;
 struct Break : Stmt { 
     Ident* label;
 };
 
+// continue
 struct Continue : Stmt { 
 
 };
@@ -350,59 +378,82 @@ struct Include : Node {
     std::vector<Ident*> path;
 };
 
+// using path(...);
 // using path(items);
 struct MultiInclude : Include { 
     std::vector<Ident*> items;
 };
 
+// using name = type;
 struct Alias : Node { 
     Ident* name;
     Type* type;
 };
 
+// record name { field* }
 struct Record : Decl { 
     Ident* name;
     std::vector<Field*> fields;
 };
 
+// union name { field* }
 struct Union : Decl { 
     Ident* name;
     std::vector<Field*> fields;
 };
 
+// case name
+// case name = expr
+// case name(fields)
+// case name(fields) = expr
 struct Case : Node { 
     Ident* name;
     Expr* value;
     std::vector<Field*> fields;
 };
 
+// variant ident { case* }
+// variant ident : type { case* }
 struct Variant : Decl { 
     Ident* name;
     Type* parent;
     std::vector<Case*> cases;
 };
 
+// name: type
+// name: type = expr
 struct Param : Node {
     Ident* name;
     Type* type;
     Expr* value;
 };
 
+// def name;
+// def name: type;
+// def name(args);
+// def name(args): type;
 struct Function : Decl { 
     Ident* name;
     std::vector<Param*> params;
     Type* result;
 };
 
-// def name(args): type = expr;
+// function = expr;
 struct SingleFunction : Function {
     Expr* expr;
 };
 
-// def name(args): type { body }
+// function compound
 struct CompoundFunction : Function {
     Compound* body;
 };
+
+struct Unit : Node {
+    std::vector<Include*> includes;
+    std::vector<Decl*> decls;
+};
+
+Node* parse(const std::string& source);
 
 }
 

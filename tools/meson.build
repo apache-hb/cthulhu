@@ -45,3 +45,8 @@ executable('tree-gui', 'tree-gui.cpp',
     dependencies : [ ctu3, imgui ],
     link_args : 'd3d11.lib'
 )
+
+executable('ast-peglib', 'ast.cpp',
+    dependencies : [ fmt, peglib ],
+    cpp_args : args
+)
