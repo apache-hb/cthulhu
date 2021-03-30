@@ -52,11 +52,23 @@ ctu2 = declare_dependency(
 
 src3 = [ 'cthulhu3/cthulhu.cpp' ]
 
-cthulhu3 = library('ctu3', src3, dependencies : fmt)
+peglib = subproject('peglib').get_variable('peglib_dep')
+
+args = []
+
+if meson.get_compiler('cpp').get_id() == 'msvc'
+    args += [ '/Zc:__cplusplus', '/wd4702' ]
+endif
+
+cthulhu3 = library('ctu3', src3, 
+    dependencies : [ fmt, peglib ],
+    cpp_args : args
+)
+
 ctu3 = declare_dependency(
     include_directories : 'cthulhu3',
     link_with : cthulhu3,
-    dependencies : fmt
+    dependencies : [ fmt, peglib ]
 )
 
 subdir('tools')

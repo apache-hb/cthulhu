@@ -1,6 +1,48 @@
 using std(...);
+using stx::vk(vkInstance, VkInstanceCreateInfo);
+
+using x = y;
 
 def main: void {
+    var info = VkApplicationInfo(
+        .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+        .pApplicationName = "Hello Vulkan",
+        .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+        .pEngineName = "No Engine",
+        .engineVersion = VK_MAKE_VERSION(1, 0, 0),
+        .apiVersion = VK_API_VERSION_1_0
+    );
+
+    var create = VkInstanceCreateInfo(
+        .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+        .pApplicationInfo = &info
+    );
+
+    var instance: VkInstance;
+
+    if var err = vkCreateInstance(&create, null, &instance) #when err != VK_SUCCESS 
+    {
+        io::print(fmt("vkCreateInstance {}", err));
+        exit(1);
+    }
+
+    for i .. range(25) {
+    
+    }
+    
+    for ([idx, val] .. zip(range(25), range(25))) 
+        num += idx;
+    
+    #var x = eval! 10 ?: 1;
+
+    asm { 
+        mov rax, 25
+        mov rbx, $(x)
+        mov [0xB8000], 'a' | 7 << 8
+        syscall
+        int 0x80
+    }
+
     io::puts("hello world");
 
     exit(0);
@@ -8,14 +50,14 @@ def main: void {
 
 # how should we go about casting?
 var i = 10;
-var i1 = i as bool;
-var i2 = cast!<bool>(x);
-var i3 = x cast bool;
-var i4 = i <- bool;
-var i5 = i : bool;
-var i6 = cast(bool)i;
-var i7 = (bool)i;
-var i8 = bool(i);
+#var i1 = i as bool;
+#var i2 = cast!<bool>(x);
+#var i3 = x cast bool;
+#var i4 = i <- bool;
+#var i5 = i : bool;
+#var i6 = cast(bool)i;
+#var i7 = (bool)i;
+#var i8 = bool(i);
 
 record a {
     b: int;
