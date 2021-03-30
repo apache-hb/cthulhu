@@ -1,8 +1,9 @@
 using std(...);
 using stx::vk(vkInstance, VkInstanceCreateInfo);
 
-using x = y;
+using x = @yes y;
 
+@[entry("wWinMain"), abi(win64)]
 def main: void {
     var info = VkApplicationInfo(
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -27,6 +28,10 @@ def main: void {
 
     for i .. range(25) {
     
+    }
+    
+    with (var file = unwrap! open("file")) {
+        file.write("hello");
     }
     
     for ([idx, val] .. zip(range(25), range(25))) 
