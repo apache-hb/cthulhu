@@ -15,32 +15,33 @@ auto grammar = R"(
     items   <- '(' (LIST(ident, ',') / '...') ')'
 
     # toplevel declarations
-    decl    <- alias / variant / union / record / func / var ';' 
+    decl        <- attribs* (alias / variant / union / record / func / var ';')
 
-    alias   <- 'using' ident '=' type ';'
-    union   <- 'union' ident '{' fields '}'
-    record  <- 'record' ident '{' fields '}'
-    variant <- 'variant' ident (':' type)? '{' case* '}'
-    func    <- 'def' ident params? result? body
-    result  <- ':' type
-    params  <- '(' LIST(field, ',')? ')'
-    body    <- ';' / '=' expr ';' / compound
-    var     <- 'var' names init?
-    names   <- ident '(' LIST(ident, ',') ')' / name / '[' LIST(name, ',') ']'
-    name    <- ident (':' type)?
-    init    <- '=' expr
+    attribs     <- '@' attrib / '@' '[' LIST(attrib, ',') ']'
+    attrib      <- qualified call?
+
+    alias       <- 'using' ident '=' type ';'
+    union       <- 'union' ident '{' fields '}'
+    record      <- 'record' ident '{' fields '}'
+    variant     <- 'variant' ident (':' type)? '{' case* '}'
+    func        <- 'def' ident ('(' params? ')')? result? body
+    result      <- ':' type
+    params      <- field init? (',' params)? 
+    body        <- ';' / '=' expr ';' / compound
+    var         <- 'var' names init?
+    names       <- ident '(' LIST(ident, ',') ')' / name / '[' LIST(name, ',') ']'
+    name        <- ident (':' type)?
+    init        <- OP('=') expr
 
     # tagged union syntax
     case    <- 'case' ident data? ('=' expr)? ';'
     data    <- '(' LIST(field, ',') ')'
 
-
     field   <- ident ':' type
     fields  <- (field ';')*
 
-
     # type syntax
-    type        <- pointer / array / closure / qualified
+    type        <- attribs* (pointer / array / closure / qualified)
 
     array       <- '[' type (':' expr)? ']'
     pointer     <- '*' type
@@ -49,7 +50,7 @@ auto grammar = R"(
 
     # statements
 
-    stmt        <- compound / return / break / continue / while / if / guard / expr ';' / switch / assign / for / asm
+    stmt        <- compound / return / break / continue / while / if / guard / expr ';' / switch / assign / for / asm / with
     for         <- 'for' range else?
     range       <- '(' names '..' expr ')' stmt / names '..' expr compound
     while       <- 'while' label? cond else?
@@ -61,7 +62,8 @@ auto grammar = R"(
     elif        <- 'else' 'if' cond
     else        <- 'else' stmt
     label       <- ':' ident
-    cond        <- expr compound / '(' expr ')' stmt / 'var' names '=' expr condition? compound
+    cond        <- expr compound / '(' expr ')' stmt / first condition? compound / '(' first ')' stmt
+    first       <- 'var' names '=' expr
     guard       <- var compound? ';'
     switch      <- 'switch' match
     match       <- expr '{' branches '}' / '(' expr ')' branches / 'var' names '=' expr condition? '{' branches '}'
@@ -70,15 +72,18 @@ auto grammar = R"(
     default     <- 'else' ':' stmt*
     assign      <- expr asop expr ';'
     condition   <- 'when' expr
+    with        <- 'with' cond
 
     asop        <- < '=' / '+=' / '-=' / '/=' / '*=' / '%=' / '&=' / '|=' / '^=' / '<<=' / '>>=' >
 
     asm     <- 'asm' '{' opcode* '}'
-    opcode  <- ident LIST(operand, ',')?
+    opcode  <- ident (LIST(operand, ',')? ';' / ':')
     operand <- (expr / '[' expr ']' / '$' '(' expr ')')
 
+    expr <- OP(bexpr)
+
     # expressions
-    expr    <- prefix (binop prefix)* {
+    bexpr    <- prefix (binop prefix)* {
                 precedence
                     L !
                     L || &&
@@ -106,16 +111,16 @@ auto grammar = R"(
         
     unop   <- < '!' / '+' / '-' / '*' / '&' >
 
-    atom <- < (number / qualified / 'true' / 'false' / string/ OP('(') expr OP(')')) postfix* > spacing
+    atom <- (number / qualified / 'true' / 'false' / string/ OP('(') expr OP(')')) postfix*
 
-    prefix  <- atom / OP(unop) prefix / '{' args? '}'
-    postfix <- '[' expr ']' / OP('.') ident / OP('->') ident / OP('(') args? OP(')') / ternary
+    prefix  <- atom / OP(unop) prefix / '{' LIST(arg, ',')? '}'
+    postfix <- '[' expr ']' / OP('.') ident / OP('->') ident / call / ternary / 'as' type
+    call    <- OP('(') LIST(arg, ',')? OP(')')
     ternary <- OP('?') expr? OP(':') expr
-    args    <- expr (OP(',') args)? / named
-    named   <- OP('.') ident OP('=') expr (OP(',') named)?
+    arg     <-  expr / '.' ident '=' expr
 
     # basic blocks
-    number  <- < (base2 / base10 / base16) ident? >
+    number  <- < (base2 / base10 / base16) ident? > ~spacing
 
     base10  <- < [0-9]+ >
     base2   <- < '0b' [01]+ >
@@ -124,7 +129,7 @@ auto grammar = R"(
     string  <- < ['] (!['] char)* ['] / ["] (!["] char)* ["] >
     char    <- '\\' [nrt'"\[\]\\] / !'\\' .
 
-    ident   <- < [a-zA-Z_][a-zA-Z0-9_]* > spacing
+    ident   <- < [a-zA-Z_][a-zA-Z0-9_]* > ~spacing
 
     %whitespace <- spacing
 
@@ -133,7 +138,7 @@ auto grammar = R"(
     comment     <- '#' (!line .)* line?
     line        <- [\r\n]+
 
-    OP(I)       <- I spacing
+    OP(I)       <- I ~spacing
     LIST(I, D)  <- I (D I)*
 )";
 

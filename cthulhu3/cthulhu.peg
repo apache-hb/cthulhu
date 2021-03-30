@@ -103,12 +103,11 @@ unop   <- < '!' / '+' / '-' / '*' / '&' >
 
 atom <- (number / qualified / 'true' / 'false' / string/ OP('(') expr OP(')')) postfix*
 
-prefix  <- atom / OP(unop) prefix / '{' args? '}'
+prefix  <- atom / OP(unop) prefix / '{' LIST(arg, ',')? '}'
 postfix <- '[' expr ']' / OP('.') ident / OP('->') ident / call / ternary / 'as' type
-call    <- OP('(') args? OP(')')
+call    <- OP('(') LIST(arg, ',')? OP(')')
 ternary <- OP('?') expr? OP(':') expr
-args    <- expr (OP(',') args)? / named
-named   <- OP('.') ident OP('=') expr (OP(',') named)?
+arg     <-  expr / '.' ident '=' expr
 
 # basic blocks
 number  <- < (base2 / base10 / base16) ident? > ~spacing
