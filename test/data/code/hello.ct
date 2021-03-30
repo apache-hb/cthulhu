@@ -20,8 +20,7 @@ def main: void {
 
     var instance: VkInstance;
 
-    if var err = vkCreateInstance(&create, null, &instance) #when err != VK_SUCCESS 
-    {
+    if var err = vkCreateInstance(&create, null, &instance) when err != VK_SUCCESS {
         io::print(fmt("vkCreateInstance {}", err));
         exit(1);
     }
@@ -33,34 +32,23 @@ def main: void {
     for ([idx, val] .. zip(range(25), range(25))) 
         num += idx;
     
-    #var x = eval! 10 ?: 1;
+    var x = eval! 10 ?: 1;
 
     asm { 
-        mov rax, 25
-        mov rbx, $(x)
-        mov [0xB8000], 'a' | 7 << 8
-        syscall
-        int 0x80
+        mov rax, 25;
+        mov rbx, $(x);
+        mov [0xB8000], 'a' | 7 << 8;
+    here:
+        syscall;
+        int 0x80;
+        jmp here;
     }
-
-    io::puts("hello world");
-
-    exit(0);
 }
 
-# how should we go about casting?
-var i = 10;
-#var i1 = i as bool;
-#var i2 = cast!<bool>(x);
-#var i3 = x cast bool;
-#var i4 = i <- bool;
-#var i5 = i : bool;
-#var i6 = cast(bool)i;
-#var i7 = (bool)i;
-#var i8 = bool(i);
+def name(): type {
 
-record a {
-    b: int;
-    c: float;
-    d: string;
 }
+
+def name(a: int) = 5;
+
+def name(a: int = 5, a: bool);
