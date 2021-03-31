@@ -57,7 +57,7 @@ peglib = subproject('peglib').get_variable('peglib_dep')
 args = []
 
 if meson.get_compiler('cpp').get_id() == 'msvc'
-    args += [ '/Zc:__cplusplus', '/wd4702' ]
+    args += [ '/Zc:__cplusplus' ]
 endif
 
 cthulhu3 = library('ctu3', src3, 

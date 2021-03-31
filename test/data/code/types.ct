@@ -1,0 +1,13 @@
+record Name {
+
+}
+
+union Name2 {
+
+}
+
+variant Name3 : int {
+    case CASE1;
+    case CASE2(field: Name);
+    case CASE3(field: Name2) = 10;
+}
