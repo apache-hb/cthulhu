@@ -15,7 +15,7 @@ import  <- 'using' LIST(ident, '::') items? ';' { no_ast_opt }
 items   <- '(' (LIST(ident, ',') / '...') ')'
 
 # toplevel declarations
-decl        <- attribs* (alias / variant / union / record / func / var ';' / trait) / extend
+decl        <- attribs* (alias / variant / union / record / func / var ';' / trait) / extend { no_ast_opt }
 
 attribs     <- '@' attrib / '@' '[' LIST(attrib, ',') ']'
 attrib      <- qualified call?
@@ -152,38 +152,6 @@ LIST(I, D)  <- I (D I)*
 //using CtAst = AstBase<CTContext>;
 using CtAst = Ast;
 
-void validate(const CtAst& ast) {
-    (void)ast; // TODO: i dont know to write a compiler
-}
-
-void join_nodes(stringstream& ss, const vector<shared_ptr<CtAst>>& nodes) {
-    for (size_t i = 0; i < nodes.size(); i++) {
-        if (nodes[i]->tag != "ident"_)
-            break;
-
-        if (i) ss << "/";
-
-        ss << nodes[i]->token_to_string();
-    }
-}
-
-string emit_c(const shared_ptr<CtAst> unit) {
-    stringstream ss;
-    
-    cout << "nodes " << unit->nodes.size() << endl;
-    for (auto& include : unit->nodes) {
-        cout << include->name << endl;
-        if (include->tag == "import"_) {
-            cout << "include" << endl;
-            ss << "#include <";
-            join_nodes(ss, include->nodes);
-            ss << ".h>" << endl;
-        }
-    }
-
-    return ss.str();
-}
-
 bool dump_tree = false;
 
 int main(int argc, const char** argv) {
@@ -228,8 +196,6 @@ int main(int argc, const char** argv) {
         cout << ast_to_s<CtAst>(ast) << endl;
 
     try {
-        validate(*ast);
-        cout << emit_c(ast) << endl;
     } catch (const runtime_error& e) {
         cerr << e.what() << endl;
         return 1;
