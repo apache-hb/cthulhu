@@ -1,11 +1,11 @@
 unit    <- import* decl*
 
 # import syntax
-import  <- 'using' LIST(ident, '::') items? ';'
+import  <- 'using' LIST(ident, '::') items? ';' { no_ast_opt }
 items   <- '(' (LIST(ident, ',') / '...') ')'
 
 # toplevel declarations
-decl        <- attribs* (alias / variant / union / record / func / var ';')
+decl        <- attribs* (alias / variant / union / record / func / var ';' / trait) / extend
 
 attribs     <- '@' attrib / '@' '[' LIST(attrib, ',') ']'
 attrib      <- qualified call?
@@ -14,6 +14,9 @@ alias       <- 'using' ident '=' type ';'
 union       <- 'union' ident '{' fields '}'
 record      <- 'record' ident '{' fields '}'
 variant     <- 'variant' ident (':' type)? '{' case* '}'
+trait       <- 'trait' ident (':' type)? '{' method* '}'
+method      <- attribs* (func / alias)
+extend      <- 'extend' type 'with' ident '{' method* '}'
 func        <- 'def' ident ('(' params? ')')? result? body
 result      <- ':' type
 params      <- field init? (',' params)? 
@@ -91,10 +94,12 @@ binop    <- < '+' !'='
             / '*' !'=' 
             / '/' !'=' 
             / '%' !'=' 
-            / '&' !'='
-            / '|' !'='
+            / '&&'
+            / '||'
+            / '&' !('=' / '&')
+            / '|' !('=' / '|')
             / '!=' / '!'
-            / '==' / '&&' / '||' 
+            / '==' 
             / '<<' !'=' 
             / '>>' !'=' / '<=' / '>=' / '<' / '>'
         >
