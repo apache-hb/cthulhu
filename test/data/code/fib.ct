@@ -9,3 +9,15 @@ def main(argc: int, argv: **char): int {
 
     return 0;
 }
+
+record a {
+
+}
+
+record b {
+
+}
+
+record c {
+
+}
