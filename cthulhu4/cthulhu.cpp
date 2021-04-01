@@ -76,41 +76,42 @@ auto grammar = R"(
 
     asop        <- < '=' / '+=' / '-=' / '/=' / '*=' / '%=' / '&=' / '|=' / '^=' / '<<=' / '>>=' >
 
-    asm     <- 'asm' '{' opcode* '}'
-    opcode  <- ident (LIST(operand, ',')? ';' / ':')
-    operand <- (expr / '[' expr ']' / '$' '(' expr ')')
+    asm         <- 'asm' '{' opcode* '}'
+    opcode      <- ident (LIST(operand, ',')? ';' / ':')
+    operand     <- soperand (':' soperand)?
+    soperand    <- expr / '[' expr ']' / '.' expr
 
     expr <- OP(bexpr)
 
     # expressions
     bexpr    <- prefix (binop prefix)* {
-                precedence
-                    L !
-                    L || &&
-                    L & |
-                    L ^
-                    L == !=
-                    L < <= > >=
-                    L << >>
-                    L + -
-                    L / % *
-            }
+            precedence
+                L !
+                L || &&
+                L & |
+                L ^
+                L == !=
+                L < <= > >=
+                L << >>
+                L + -
+                L / % *
+        }
 
     binop    <- < '+' !'=' 
-                / '-' !'=' 
-                / '*' !'=' 
-                / '/' !'=' 
-                / '%' !'=' 
-                / '&&'
-                / '||'
-                / '&' !('=' / '&')
-                / '|' !('=' / '|')
-                / '!=' / '!'
-                / '==' 
-                / '<<' !'=' 
-                / '>>' !'=' / '<=' / '>=' / '<' / '>'
-            >
-        
+            / '-' !'=' 
+            / '*' !'=' 
+            / '/' !'=' 
+            / '%' !'=' 
+            / '&&'
+            / '||'
+            / '&' !('=' / '&')
+            / '|' !('=' / '|')
+            / '!=' / '!'
+            / '==' 
+            / '<<' !'=' 
+            / '>>' !'=' / '<=' / '>=' / '<' / '>'
+        >
+
     unop   <- < '!' / '+' / '-' / '*' / '&' >
 
     atom <- (number / qualified / 'true' / 'false' / string/ OP('(') expr OP(')')) postfix*
