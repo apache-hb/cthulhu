@@ -20,7 +20,7 @@ auto grammar = R"(
     alias       <- 'using' ident '=' type ';'
     union       <- 'union' ident '{' fields '}'
     record      <- 'record' ident '{' fields '}'
-    variant     <- 'variant' ident (':' type)? '{' case* '}'
+    variant     <- 'variant' ident (':' type)? '{' LIST(case, ',')? '}'
     trait       <- 'trait' ident (':' type)? '{' method* '}'
     method      <- attribs* (func / alias)
     extend      <- 'extend' type 'with' ident '{' method* '}'
@@ -34,7 +34,7 @@ auto grammar = R"(
     init        <- OP('=') expr
 
     # tagged union syntax
-    case    <- 'case' ident data? ('=' expr)? ';'
+    case    <- ident data? ('=' expr)?
     data    <- '(' LIST(field, ',') ')'
 
     field   <- attribs* ident ':' type
