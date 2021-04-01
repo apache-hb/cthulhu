@@ -46,6 +46,6 @@ if target_machine.system() == 'windows'
 endif
 
 executable('ast-peglib', 'ast.cpp',
-    dependencies : [ fmt, peglib ],
+    dependencies : ctu4,
     cpp_args : args
 )
