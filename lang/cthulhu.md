@@ -11,7 +11,5 @@
 
 * [prelude](./prelude.md)
 * [types](./types.md)
-* [modules](./modules.md)
-* [expressions](./expressions.md)
-* [semantics](./semantics.md)
-* [grammar](./grammar.md)
+* [errors](./errors.md)
+
