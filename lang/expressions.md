@@ -43,9 +43,3 @@ function calls can be invoked on any expression that evaluates to a `closure` ty
   * instructions are destination first then source
   * variable substitution is performed with `$name`. i.e. `asm! { mov rax, $num }`
   * block expressions evaluate to `void`
-
-### Based expressions
-
-* `based` expressions appear in the form of `expr:expr`
-* `based` expressions may only be assigned to `asm!(seg:reg)` expressions
-* `based` expressions may not be assigned to variables and have no type
