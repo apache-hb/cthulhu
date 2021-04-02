@@ -9,7 +9,8 @@ auto grammar = R"(
 
     # import syntax
     import  <- 'using' LIST(ident, '::') items? ';' { no_ast_opt }
-    items   <- '(' (LIST(ident, ',') / '...') ')'
+    items   <- '(' (LIST(include, ',') / '...') ')' { no_ast_opt }
+    include <- ident ('as' ident)?
 
     # toplevel declarations
     decl        <- attribs* (alias / variant / union / record / func / var ';') { no_ast_opt }
@@ -145,6 +146,7 @@ auto grammar = R"(
     ident   <- < [a-zA-Z_][a-zA-Z0-9_]* / '$' > ~spacing
 
     %whitespace <- spacing
+    %word       <- ident
 
     spacing     <- (comment / space)*
     space       <- [ \t\r\n]
@@ -166,6 +168,15 @@ cthulhu::Unit create_unit(const shared_ptr<Ast> ast) {
         if (node->tag != "import"_)
             continue;
         
+        vector<string> path;
+        for (auto& id : node->nodes) {
+            if (id->tag != "ident"_)
+                continue;
+
+            path.push_back(id->token_to_string());
+        }
+
+        fmt::print("using {}\n", fmt::join(path, "/"));
         // collect all imports
     }
 
@@ -203,7 +214,7 @@ namespace cthulhu {
 
         ast = parser.optimize_ast(ast);
 
-        std::cout << ast_to_s(ast) << std::endl;
+        //std::cout << ast_to_s(ast) << std::endl;
 
         return create_unit(ast);
     }
