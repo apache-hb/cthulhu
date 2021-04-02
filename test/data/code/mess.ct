@@ -1,4 +1,7 @@
-using stdio(printf);
+using stdio(printf as println);
+using a::b::c;
+using a::b(...);
+using a(c);
 
 def fib(i: int): int = (i == 0 || i == 1) ? i : fib(i - 1)  + fib(i - 2);
 
