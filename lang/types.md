@@ -42,10 +42,11 @@
 `(types) -> type` is a pointer to a function that returns `type` and takes `types` as arguments
 
 ## Strings
-* `utf` is a type that will always be large enough to represent any valid unicode code point
-* `str` is an immutable sequence of valid unicode code points encoded as utf8
+* `str` is an immutable sequence of valid unicode extended grapheme sequences (EGCs)
 
 ## User defined types
+
+Ignored fields are all named `$` and cannot be accessed in any way
 
 ### Records
 
@@ -53,6 +54,7 @@
 * fields in a record may be reordered
 * only the last field in a record may be an unbounded array
 * the size of a record may be larger than the sum of its field sizes
+* a record may have 0 or more ignored fields
 
 ### Unions
 
@@ -61,10 +63,35 @@
 * reading from an unset field is undefined behaviour
 * the size of a `union` is will be the size of the largest field
 * any field in a union may be an unbounded array
+* unions may not have ignored fields
 
 ### Variants
 
-`variant` types are enumerations with optional associated data
+`variant` types are sum types
 * setting a field invalidates the contents of all other fields
 * reading from a field must be checked to prevent undefined behaviour
 * the size of a variant may be larger than the largest field
+* variant options must not be ignored, but contained fields may contain ignored fields
+
+## Bitfields
+
+* `record`, `union`, and `variants` fields may all be bitfields
+* a bitfield must be 1 or more bits long
+* bitfields composed of more than 1 bit or bitranges will be concatonated
+* loading and storing to bitfields is platform defined behaviour
+* a bitfield may not be larger in bits than its underlying type
+* bitfields in `union`s may overlap
+* bitfields in `record`s and `variant`s may not overlap
+* the size of a bitfield must be determinable at compile time
+
+## Error polymorphic variants
+
+Error types are an anonymous sum type of a result value and a polymorphic variant of all possible error types that a function may return.
+
+`type!` types are equivilent to `type!void` and are either `type` or nothing
+`!type` types are equivilent to `void!type` and are either `void` or an error
+* an error is a sum type expressed as `ok!err` or `ok!(A / B)`
+* an error type will be reduced to its smallest set of types such that `(A / A / B)` is equal to `(A / B)`
+* an error types ordering does not affect its equality such that `(A / B)` is equal to `(B / A)`
+* an error type will always be flattened such that `((A / B) / C)` is equal to `(A / B / C)`
+* the left hand side may not be a polymorphic variant

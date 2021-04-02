@@ -12,24 +12,23 @@ auto grammar = R"(
     items   <- '(' (LIST(ident, ',') / '...') ')'
 
     # toplevel declarations
-    decl        <- attribs* (alias / variant / union / record / func / var ';' / trait) / extend { no_ast_opt }
+    decl        <- attribs* (alias / variant / union / record / func / var ';') { no_ast_opt }
 
     attribs     <- '@' attrib / '@' '[' LIST(attrib, ',') ']'
     attrib      <- qualified call?
 
-    alias       <- 'using' ident '=' type ';'
-    union       <- 'union' ident '{' fields '}'
-    record      <- 'record' ident '{' fields '}'
+    alias       <- 'using' ident generics? '=' type ';'
+    union       <- 'union' ident '{' fields? '}'
+    record      <- 'record' ident '{' fields? '}'
     variant     <- 'variant' ident (':' type)? '{' LIST(case, ',')? '}'
-    trait       <- 'trait' ident (':' type)? '{' method* '}'
-    method      <- attribs* (func / alias)
-    extend      <- 'extend' type 'with' ident '{' method* '}'
-    func        <- 'def' ident ('(' params? ')')? result? body
+    func        <- 'def' ident generics? fparams? result? body
+    fparams     <- '(' params? ')'
     result      <- ':' type
+    generics    <- '<' LIST(ident, ',') '>'
     params      <- field init? (',' params)? 
     body        <- ';' / '=' expr ';' / compound
     var         <- 'var' names init?
-    names       <- ident '(' LIST(ident, ',') ')' / name / '[' LIST(name, ',') ']'
+    names       <- qualified '(' LIST(ident, ',') ')' / name / '[' LIST(name, ',') ']'
     name        <- ident (':' type)?
     init        <- OP('=') expr
 
@@ -37,11 +36,17 @@ auto grammar = R"(
     case    <- ident data? ('=' expr)?
     data    <- '(' LIST(field, ',') ')'
 
-    field   <- attribs* ident ':' type
-    fields  <- (field ';')*
+    field       <- attribs* ident ':' type bitfield?
+    bitfield    <- '[' LIST(bitrange, ',') ']'
+    bitrange    <- expr ('..' expr)?
+    fields      <- LIST(field, ',')
 
     # type syntax
-    type        <- attribs* (pointer / array / closure / qualified)
+    type        <- attribs* (basictype error? / error)
+
+    basictype   <- (pointer / array / closure / qualified)
+    error       <- '!' (type / sum)
+    sum         <- '(' LIST(type, '/') ')'
 
     array       <- '[' type (':' expr)? ']'
     pointer     <- '*' type
@@ -50,7 +55,7 @@ auto grammar = R"(
 
     # statements
 
-    stmt        <- compound / return / break / continue / while / if / guard / expr ';' / switch / assign / for / asm / with
+    stmt        <- compound / return / break / continue / while / if / guard / expr ';' / switch / assign / for / asm / raise
     for         <- 'for' range else?
     range       <- '(' names '..' expr ')' stmt / names '..' expr compound
     while       <- 'while' label? cond else?
@@ -68,11 +73,11 @@ auto grammar = R"(
     switch      <- 'switch' match
     match       <- expr '{' branches '}' / '(' expr ')' branches / 'var' names '=' expr condition? '{' branches '}'
     branches    <- branch* default?
-    branch      <- 'case' expr ':' stmt*
+    branch      <- expr ':' stmt*
     default     <- 'else' ':' stmt*
     assign      <- expr asop expr ';'
     condition   <- 'when' expr
-    with        <- 'with' cond
+    raise       <- 'raise' expr ';'
 
     asop        <- < '=' / '+=' / '-=' / '/=' / '*=' / '%=' / '&=' / '|=' / '^=' / '<<=' / '>>=' >
 
@@ -114,13 +119,18 @@ auto grammar = R"(
 
     unop   <- < '!' / '+' / '-' / '*' / '&' >
 
-    atom <- (number / qualified / 'true' / 'false' / string/ OP('(') expr OP(')')) postfix*
+    atom <- 'try'? (number / qualified / 'true' / 'false' / string / OP('(') expr OP(')') / lambda) postfix*
 
     prefix  <- atom / OP(unop) prefix / '{' LIST(arg, ',')? '}'
     postfix <- '[' expr ']' / OP('.') ident / OP('->') ident / call / ternary / 'as' type
     call    <- OP('(') LIST(arg, ',')? OP(')')
     ternary <- OP('?') expr? OP(':') expr
     arg     <-  expr / '.' ident '=' expr
+    lambda  <- '[' captures? ']' fparams? lresult? lbody
+    captures    <- LIST(capture, ',')
+    capture     <- '&'? qualified
+    lresult     <- '->' type
+    lbody       <- expr / compound
 
     # basic blocks
     number  <- < (base2 / base10 / base16) ident? > ~spacing

@@ -5,9 +5,8 @@
 | Precedence |     Operator      |                 Description                 | Associativity |
 | :--------- | :---------------: | :-----------------------------------------: | ------------: |
 | 1          |       `::`        |             `Scope resolution`              | left to right |
-| 2          |        `:`        |             `Based expression`              | left to right |
-| 3          |       `()`        |               `Function call`               | right to Left |
-| 3          |       `[]`        |                 `Subscript`                 | right to left |
+| 2          |       `()`        |               `Function call`               | right to Left |
+| 2          |       `[]`        |                 `Subscript`                 | right to left |
 | 3          |     `.` `->`      |               `Member access`               | right to left |
 | 4          |    `*` `/` `%`    |   `Multiplication`, `Division`, `Modulo`    | left to right |
 | 5          |      `+` `-`      |          `Addition`, `Subtraction`          | left to right |
