@@ -6,164 +6,179 @@
 #include <fmt/format.h>
 
 namespace {
-auto grammar = R"(
-    unit    <- import* decl* { no_ast_opt }
+    auto grammar = R"(
+        unit    <- import* decl* { no_ast_opt }
 
-    # import syntax
-    import  <- 'using' LIST(ident, '::') (items / ialias ';' / ';') { no_ast_opt }
-    items   <- '(' (LIST(include, ',') / '...') ')' ';' { no_ast_opt }
-    include <- ident ialias?
-    ialias  <- 'as' ident
+        # import syntax
+        import  <- 'using' LIST(ident, '::') (items / ialias ';' / ';') { no_ast_opt }
+        items   <- '(' (LIST(include, ',') / '...') ')' ';' { no_ast_opt }
+        include <- ident ialias?
+        ialias  <- 'as' ident
 
-    # toplevel declarations
-    decl        <- attribs* (alias / variant / union / record / func / var ';') { no_ast_opt }
+        # toplevel declarations
+        decl        <- attribs* (alias / variant / union / record / func / var ';') { no_ast_opt }
 
-    attribs     <- '@' attrib / '@' '[' LIST(attrib, ',') ']'
-    attrib      <- qualified call?
+        attribs     <- '@' attrib / '@' '[' LIST(attrib, ',') ']'
+        attrib      <- qualified call?
 
-    alias       <- 'using' ident generics? '=' type ';'
-    union       <- 'union' ident generics? '{' fields? '}' { no_ast_opt }
-    record      <- 'record' ident generics? '{' fields? '}' { no_ast_opt }
-    variant     <- 'variant' ident generics? (':' type)? '{' LIST(case, ',')? '}' { no_ast_opt }
-    func        <- 'def' ident generics? fparams? result? body { no_ast_opt }
-    fparams     <- '(' params? ')'
-    result      <- ':' type
-    generics    <- '<' LIST(generic, ',') '>'
-    generic     <- ident requires? tparam?
-    requires    <- ':' LIST(qualified, '+')
-    tparam      <- '=' type
-    params      <- param init? (',' params)? 
-    param       <- attribs* ident ':' (type / '...')
-    body        <- ';' / '=' expr ';' / compound
-    var         <- 'var' names init?
-    names       <- qualified '(' LIST(ident, ',') ')' / name / '[' LIST(name, ',') ']'
-    name        <- ident (':' type)?
-    init        <- OP('=') expr
+        alias       <- 'using' ident generics? '=' type ';'
+        union       <- 'union' ident generics? '{' fields? '}' { no_ast_opt }
+        record      <- 'record' ident generics? '{' fields? '}' { no_ast_opt }
+        variant     <- 'variant' ident generics? (':' type)? '{' LIST(case, ',')? '}' { no_ast_opt }
+        func        <- 'def' ident generics? fparams? result? body { no_ast_opt }
+        fparams     <- '(' params? ')'
+        result      <- ':' type
+        generics    <- '<' LIST(generic, ',') '>'
+        generic     <- ident requires? tparam?
+        requires    <- ':' LIST(qualified, '+')
+        tparam      <- '=' type
+        params      <- param init? (',' params)? 
+        param       <- attribs* ident ':' (type / '...')
+        body        <- ';' / '=' expr ';' / compound
+        var         <- 'var' names init?
+        names       <- qualified '(' LIST(ident, ',') ')' / name / '[' LIST(name, ',') ']'
+        name        <- ident (':' type)?
+        init        <- OP('=') expr
 
-    # tagged union syntax
-    case    <- ident data? ('=' expr)?
-    data    <- '(' LIST(field, ',') ')'
+        # tagged union syntax
+        case    <- ident data? ('=' expr)?
+        data    <- '(' LIST(field, ',') ')'
 
-    field       <- attribs* ident ':' type bitfield?
-    bitfield    <- '[' LIST(bitrange, ',') ']'
-    bitrange    <- expr ('..' expr)?
-    fields      <- LIST(field, ',') { no_ast_opt }
+        field       <- attribs* ident ':' type bitfield?
+        bitfield    <- '[' LIST(bitrange, ',') ']'
+        bitrange    <- expr ('..' expr)?
+        fields      <- LIST(field, ',') { no_ast_opt }
 
-    # type syntax
-    type        <- attribs* (basictype error? / error)
+        # type syntax
+        type        <- attribs* (basictype error? / error)
 
-    basictype   <- (pointer / array / closure / qualified / mutable)
-    error       <- '!' (type / sum)?
-    sum         <- '(' LIST(type, '/') ')'
+        basictype   <- (pointer / array / closure / qualified / mutable)
+        error       <- '!' (type / sum)?
+        sum         <- '(' LIST(type, '/') ')'
 
-    mutable     <- 'var' type
-    array       <- '[' type (':' expr)? ']'
-    pointer     <- '*' type { no_ast_opt }
-    closure     <- '(' LIST(type, ',')? ')' '->' type
-    qualified   <- LIST(ident, '::')
+        mutable     <- 'var' type
+        array       <- '[' type (':' expr)? ']'
+        pointer     <- '*' type { no_ast_opt }
+        closure     <- '(' LIST(type, ',')? ')' '->' type
+        qualified   <- LIST(ident, '::')
 
-    # statements
+        # statements
 
-    stmt        <- compound / return / break / continue / while / if / guard / expr ';' / switch / assign / for / asm / raise
-    for         <- 'for' range else?
-    range       <- '(' names '..' expr ')' stmt / names '..' expr compound
-    while       <- 'while' label? cond else?
-    continue    <- 'continue' ';'
-    break       <- 'break' ident? ';'
-    return      <- 'return' expr? ';'
-    compound    <- '{' stmt* '}'
-    if          <- 'if' cond elif* else?
-    elif        <- 'else' 'if' cond
-    else        <- 'else' stmt
-    label       <- ':' ident
-    cond        <- expr compound / '(' expr ')' stmt / first condition? compound / '(' first ')' stmt
-    first       <- 'var' names '=' expr
-    guard       <- var compound? ';'
-    switch      <- 'switch' match
-    match       <- expr '{' branches '}' / '(' expr ')' branches / 'var' names '=' expr condition? '{' branches '}'
-    branches    <- branch* default?
-    branch      <- expr ':' stmt*
-    default     <- 'else' ':' stmt*
-    assign      <- expr asop expr ';'
-    condition   <- 'when' expr
-    raise       <- 'raise' expr ';'
+        stmt        <- compound / return / break / continue / while / if / guard / expr ';' / switch / assign / for / asm / raise
+        for         <- 'for' range else?
+        range       <- '(' names '..' expr ')' stmt / names '..' expr compound
+        while       <- 'while' label? cond else?
+        continue    <- 'continue' ';'
+        break       <- 'break' ident? ';'
+        return      <- 'return' expr? ';'
+        compound    <- '{' stmt* '}'
+        if          <- 'if' cond elif* else?
+        elif        <- 'else' 'if' cond
+        else        <- 'else' stmt
+        label       <- ':' ident
+        cond        <- expr compound / '(' expr ')' stmt / first condition? compound / '(' first ')' stmt
+        first       <- 'var' names '=' expr
+        guard       <- var compound? ';'
+        switch      <- 'switch' match
+        match       <- expr '{' branches '}' / '(' expr ')' branches / 'var' names '=' expr condition? '{' branches '}'
+        branches    <- branch* default?
+        branch      <- expr ':' stmt*
+        default     <- 'else' ':' stmt*
+        assign      <- expr asop expr ';'
+        condition   <- 'when' expr
+        raise       <- 'raise' expr ';'
 
-    asop        <- < '=' / '+=' / '-=' / '/=' / '*=' / '%=' / '&=' / '|=' / '^=' / '<<=' / '>>=' >
+        asop        <- < '=' / '+=' / '-=' / '/=' / '*=' / '%=' / '&=' / '|=' / '^=' / '<<=' / '>>=' >
 
-    asm         <- 'asm' '{' opcode* '}'
-    opcode      <- ident (LIST(operand, ',')? ';' / ':')
-    operand     <- soperand (':' soperand)?
-    soperand    <- expr / '[' expr ']' / '.' expr
+        asm         <- 'asm' '{' opcode* '}'
+        opcode      <- ident (LIST(operand, ',')? ';' / ':')
+        operand     <- soperand (':' soperand)?
+        soperand    <- expr / '[' expr ']' / '.' expr
 
-    expr <- OP(bexpr)
+        expr <- OP(bexpr)
 
-    # expressions
-    bexpr    <- prefix (binop prefix)* {
-            precedence
-                L !
-                L || &&
-                L & |
-                L ^
-                L == !=
-                L < <= > >=
-                L << >>
-                L + -
-                L / % *
-        }
+        # expressions
+        bexpr    <- prefix (binop prefix)* {
+                precedence
+                    L !
+                    L || &&
+                    L & |
+                    L ^
+                    L == !=
+                    L < <= > >=
+                    L << >>
+                    L + -
+                    L / % *
+            }
 
-    binop    <- < '+' !'=' 
-            / '-' !'=' 
-            / '*' !'=' 
-            / '/' !'=' 
-            / '%' !'=' 
-            / '&&'
-            / '||'
-            / '&' !('=' / '&')
-            / '|' !('=' / '|')
-            / '!=' / '!'
-            / '==' 
-            / '<<' !'=' 
-            / '>>' !'=' / '<=' / '>=' / '<' / '>'
-        >
+        binop    <- < '+' !'=' 
+                / '-' !'=' 
+                / '*' !'=' 
+                / '/' !'=' 
+                / '%' !'=' 
+                / '&&'
+                / '||'
+                / '&' !('=' / '&')
+                / '|' !('=' / '|')
+                / '!=' / '!'
+                / '==' 
+                / '<<' !'=' 
+                / '>>' !'=' / '<=' / '>=' / '<' / '>'
+            >
 
-    unop   <- < '!' / '+' / '-' / '*' / '&' >
+        unop   <- < '!' / '+' / '-' / '*' / '&' >
 
-    atom <- 'try'? (number / qualified / 'true' / 'false' / string / OP('(') expr OP(')') / lambda) postfix*
+        atom <- 'try'? (number / qualified / 'true' / 'false' / string / OP('(') expr OP(')') / lambda) postfix*
 
-    prefix  <- atom / OP(unop) prefix / '{' LIST(arg, ',')? '}'
-    postfix <- '[' expr ']' / OP('.') ident / OP('->') ident / call / ternary / 'as' type
-    call    <- OP('(') LIST(arg, ',')? OP(')')
-    ternary <- OP('?') expr? OP(':') expr
-    arg     <-  expr / '.' ident '=' expr
-    lambda  <- '[' LIST(capture, ',')? ']' fparams? lresult? lbody
-    capture     <- '&'? qualified
-    lresult     <- '->' type
-    lbody       <- expr / compound
+        prefix  <- atom / OP(unop) prefix / '{' LIST(arg, ',')? '}'
+        postfix <- '[' expr ']' / OP('.') ident / OP('->') ident / call / ternary / 'as' type
+        call    <- OP('(') LIST(arg, ',')? OP(')')
+        ternary <- OP('?') expr? OP(':') expr
+        arg     <-  expr / '.' ident '=' expr
+        lambda  <- '[' LIST(capture, ',')? ']' fparams? lresult? lbody
+        capture     <- '&'? qualified
+        lresult     <- '->' type
+        lbody       <- expr / compound
 
-    # basic blocks
-    number  <- < (base2 / base10 / base16) ident? > ~spacing
+        # basic blocks
+        number  <- < (base2 / base10 / base16) ident? > ~spacing
 
-    base10  <- < [0-9]+ >
-    base2   <- < '0b' [01]+ >
-    base16  <- < '0x' [0-9a-fA-F]+ >
+        base10  <- < [0-9]+ >
+        base2   <- < '0b' [01]+ >
+        base16  <- < '0x' [0-9a-fA-F]+ >
 
-    string  <- < ['] CHARS([']) ['] / '"""' CHARS(["""]) '"""' / ["] CHARS(["]) ["] >
-    CHARS(D)    <- (!D char)*
-    char    <- '\\' [nrt'"\[\]\\] / !'\\' .
+        string  <- < ['] CHARS([']) ['] / '"""' CHARS(["""]) '"""' / ["] CHARS(["]) ["] >
+        CHARS(D)    <- (!D char)*
+        char    <- '\\' [nrt'"\[\]\\] / !'\\' .
 
-    ident   <- < 'R' !'"' / [a-zA-Z_][a-zA-Z0-9_]* / '$' > ~spacing
+        ident   <- < 'R' !'"' / [a-zA-Z_][a-zA-Z0-9_]* / '$' > ~spacing
 
-    %whitespace <- spacing
-    %word       <- ident
+        %whitespace <- spacing
+        %word       <- ident
 
-    spacing     <- (comment / space)*
-    space       <- [ \t\r\n]
-    comment     <- '#' (!line .)* line?
-    line        <- [\r\n]+
+        spacing     <- (comment / space)*
+        space       <- [ \t\r\n]
+        comment     <- '#' (!line .)* line?
+        line        <- [\r\n]+
 
-    OP(I)       <- I ~spacing
-    LIST(I, D)  <- I (D I)*
-)";
+        OP(I)       <- I ~spacing
+        LIST(I, D)  <- I (D I)*
+    )";
+
+    // all compiled units
+    std::unordered_set<std::shared_ptr<cthulhu::Context>> units;
+
+    // all include directories
+    std::vector<fs::path> dirs = {
+        fs::current_path(),
+        fs::current_path()/"lib"
+    };
+
+    // client provided handles
+    cthulhu::Handles* handles;
+
+    // our global parser instance
+    peg::parser parse;
 }
 
 namespace cthulhu {
@@ -171,34 +186,27 @@ namespace cthulhu {
 using namespace peg;
 using namespace peg::udl;
 
-Handles* handles;
-parser parser;
-
 void init(Handles* h) {
     handles = h;
 
-    parser.log = [](auto line, auto col, const auto& msg) {
+    parse.log = [](auto line, auto col, const auto& msg) {
         fmt::print("{}:{}: {}\n", line, col, msg);
     };
 
-    if (!parser.load_grammar(grammar)) {
+    if (!parse.load_grammar(grammar)) {
         throw std::runtime_error("failed to load grammar");
     }
 
-    parser.enable_packrat_parsing();
-    parser.enable_ast();
+    parse.enable_packrat_parsing();
+    parse.enable_ast();
 }
 
-Context::Context(fs::path here, std::string source, std::shared_ptr<Context> wrap) {
-    path = here;
-    text = source;
-    parent = wrap;
-
-    if (!parser.parse(text, tree)) {
+Context::Context(fs::path path, std::string source) : path(path), text(source) {
+    if (!parse.parse(text, tree)) {
         throw std::runtime_error(fmt::format("failed to parse source `{}`", path.string()));
     }
 
-    tree = parser.optimize_ast(tree);
+    tree = parse.optimize_ast(tree);
 }
 
 void Context::process() {
@@ -210,53 +218,52 @@ void Context::process() {
     }
 }
 
-fs::path Context::where() const {
-    return path.parent_path();
-}
-
-std::shared_ptr<Context> Context::glob(const fs::path& name) {
-    std::cout << "glob: " << name << " path: " << path << std::endl;
-
-    if (path == name) {
-        std::cout << "self" << std::endl;
-        return shared_from_this();
-    }
-
-    if (!parent) {
-        return nullptr;
-    }
-
-    return parent->glob(name);
-}
-
 void Context::include(std::shared_ptr<peg::Ast> ast) {
-    auto mod = search(ast);
-}
-
-std::shared_ptr<Context> Context::search(std::shared_ptr<peg::Ast> ast) {
     fs::path where;
-
     for (auto node : ast->nodes) {
         if (node->tag != "ident"_)
             break;
-
+        
         where /= node->token;
     }
 
-    where.replace_extension("ct");
+    Context::open(where, path.parent_path());
+}
 
-    if (auto mod = glob(fs::absolute(where)); mod) {
+std::shared_ptr<Context> Context::open(const fs::path& path, const fs::path& cwd) {
+    auto read = [](fs::path it) {
+        it.replace_extension("ct");
+        for (auto unit : units) {
+            if (unit->path == it) {
+                return unit;
+            }
+        }
+
+        if (auto text = handles->open(it); text) {
+            auto mod = std::make_shared<Context>(it, text.value());
+            units.insert(mod);
+            mod->process();
+            return mod;
+        }
+
+        return std::shared_ptr<Context>();
+    };
+
+    // first search relative to `cwd`
+    auto relative = cwd/path;
+    if (auto mod = read(relative); mod) {
         return mod;
     }
 
-    return compile(where, shared_from_this());
-}
+    // then search in the include directories
+    for (const auto& dir : dirs) {
+        auto where = dir/path;
+        if (auto mod = read(where); mod) {
+            return mod;
+        }
+    }
 
-std::shared_ptr<Context> compile(fs::path file, std::shared_ptr<Context> parent) {
-    auto data = handles->open(parent ? parent->where() : fs::path(), file).value();
-    auto ctx = std::make_shared<Context>(data.absolute, data.text, parent);
-    ctx->process();
-    return ctx;
+    throw std::runtime_error(fmt::format("failed to import `{}`", path.string()));
 }
 
 }
