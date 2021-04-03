@@ -10,9 +10,10 @@ auto grammar = R"(
     unit    <- import* decl*
 
     # import syntax
-    import  <- 'using' LIST(ident, '::') items? ';' { no_ast_opt }
+    import  <- 'using' LIST(ident, '::') (ialias? / items?) ';' { no_ast_opt }
     items   <- '(' (LIST(include, ',') / '...') ')' { no_ast_opt }
-    include <- ident ('as' ident)?
+    include <- ident ialias?
+    ialias  <- 'as' ident
 
     # toplevel declarations
     decl        <- attribs* (alias / variant / union / record / func / var ';') { no_ast_opt }

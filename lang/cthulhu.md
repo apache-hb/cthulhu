@@ -10,6 +10,7 @@
 ## Specification
 
 * [prelude](./prelude.md)
+* [modules](./modules.md)
 * [types](./types.md)
 * [errors](./errors.md)
 

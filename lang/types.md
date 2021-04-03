@@ -46,7 +46,7 @@
 
 ## User defined types
 
-Ignored fields are all named `$` and cannot be accessed in any way
+Ignored fields are all named `$` and cannot be accessed.
 
 ### Records
 
