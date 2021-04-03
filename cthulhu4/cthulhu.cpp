@@ -7,11 +7,11 @@
 
 namespace {
 auto grammar = R"(
-    unit    <- import* decl*
+    unit    <- import* decl* { no_ast_opt }
 
     # import syntax
-    import  <- 'using' LIST(ident, '::') (ialias? / items?) ';' { no_ast_opt }
-    items   <- '(' (LIST(include, ',') / '...') ')' { no_ast_opt }
+    import  <- 'using' LIST(ident, '::') (items / ialias ';' / ';') { no_ast_opt }
+    items   <- '(' (LIST(include, ',') / '...') ')' ';' { no_ast_opt }
     include <- ident ialias?
     ialias  <- 'as' ident
 
@@ -176,6 +176,7 @@ parser parser;
 
 void init(Handles* h) {
     handles = h;
+
     parser.log = [](auto line, auto col, const auto& msg) {
         fmt::print("{}:{}: {}\n", line, col, msg);
     };
@@ -188,16 +189,20 @@ void init(Handles* h) {
     parser.enable_ast();
 }
 
-Context::Context(const std::filesystem::path& name) : name(name), source(handles->open(name)) {
-    if (!parser.parse(source, tree)) {
-        throw std::runtime_error("failed to parse source");
+Context::Context(fs::path here, std::string source, std::shared_ptr<Context> wrap) {
+    path = here;
+    text = source;
+    parent = wrap;
+
+    if (!parser.parse(text, tree)) {
+        throw std::runtime_error(fmt::format("failed to parse source `{}`", path.string()));
     }
 
     tree = parser.optimize_ast(tree);
 }
 
-void Context::compile() {
-    for (auto& node : tree->nodes) {
+void Context::process() {
+    for (auto node : tree->nodes) {
         if (node->tag != "import"_)
             continue;
 
@@ -205,40 +210,53 @@ void Context::compile() {
     }
 }
 
-void Context::include(const std::shared_ptr<peg::Ast> ast) {
-    std::filesystem::path path;
-    
-    for (auto& part : ast->nodes) {
-        if (part->tag != "ident"_)
-            continue;
-
-        path /= part->token;
-    }
-
-    std::cout << ast_to_s(ast) << std::endl;
-
-    auto mod = open(path);
-
-    auto last = ast->nodes.back();
-    if (last->tag == "items"_) {
-        if (last->tag->nodes.size() == 0) {
-            // expose all symbols in this module
-        }
-
-        for (auto& item : last->nodes) {
-            (void)item;
-        }
-    }
+fs::path Context::where() const {
+    return path.parent_path();
 }
 
-std::shared_ptr<Context> Context::open(const std::filesystem::path& path) {
-    for (auto context : includes) {
-        if (context->name == path) {
-            return context;
-        }
+std::shared_ptr<Context> Context::glob(const fs::path& name) {
+    std::cout << "glob: " << name << " path: " << path << std::endl;
+
+    if (path == name) {
+        std::cout << "self" << std::endl;
+        return shared_from_this();
     }
 
-    return std::make_shared<Context>(path);
+    if (!parent) {
+        return nullptr;
+    }
+
+    return parent->glob(name);
+}
+
+void Context::include(std::shared_ptr<peg::Ast> ast) {
+    auto mod = search(ast);
+}
+
+std::shared_ptr<Context> Context::search(std::shared_ptr<peg::Ast> ast) {
+    fs::path where;
+
+    for (auto node : ast->nodes) {
+        if (node->tag != "ident"_)
+            break;
+
+        where /= node->token;
+    }
+
+    where.replace_extension("ct");
+
+    if (auto mod = glob(fs::absolute(where)); mod) {
+        return mod;
+    }
+
+    return compile(where, shared_from_this());
+}
+
+std::shared_ptr<Context> compile(fs::path file, std::shared_ptr<Context> parent) {
+    auto data = handles->open(parent ? parent->where() : fs::path(), file).value();
+    auto ctx = std::make_shared<Context>(data.absolute, data.text, parent);
+    ctx->process();
+    return ctx;
 }
 
 }

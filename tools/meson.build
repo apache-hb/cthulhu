@@ -28,16 +28,6 @@ if target_machine.system() == 'windows'
         include_directories : '..',
         link_args : 'd3d11.lib'
     )
-
-    executable('tokens-gui', 'tokens-gui.cpp',
-        dependencies : [ ctu3, imgui ],
-        link_args : 'd3d11.lib'
-    )
-
-    executable('tree-gui', 'tree-gui.cpp',
-        dependencies : [ ctu3, imgui ],
-        link_args : 'd3d11.lib'
-    )
 endif
 
 executable('ctc', 'ctc.cpp', dependencies : ctu4)
