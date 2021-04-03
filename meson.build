@@ -50,19 +50,7 @@ ctu2 = declare_dependency(
     dependencies : fmt
 )
 
-src3 = [ 'cthulhu3/cthulhu.cpp' ]
-
 peg = subproject('peglib').get_variable('peglib_dep')
-
-cthulhu3 = library('ctu3', src3, 
-    dependencies : [ fmt, peg ]
-)
-
-ctu3 = declare_dependency(
-    include_directories : 'cthulhu3',
-    link_with : cthulhu3,
-    dependencies : [ fmt, peg ]
-)
 
 src4 = [ 'cthulhu4/cthulhu.cpp' ]
 

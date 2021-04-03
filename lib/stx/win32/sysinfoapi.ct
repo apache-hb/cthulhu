@@ -1,0 +1,32 @@
+using base(DWORD);
+
+@layout(msabi)
+union SYSTEM_INFO_DUMMUNIONNAME {
+    dwOemId: DWORD,
+    DUMMYSTRUCTNAME: SYSTEM_INFO_DUMMSTRUCTNAME
+}
+
+@layout(msabi)
+record SYSTEM_INFO_DUMMSTRUCTNAME {
+    wProcessorArchitecture: WORD,
+    $: WORD
+}
+
+@layout(msabi)
+record SYSTEM_INFO {
+    DUMMUNIONNAME: SYSTEM_INFO_DUMMUNIONNAME,
+    dwPageSize: DWORD,
+    lpMinimumApplicationAddress: LPVOID,
+    lpMaximumApplicationAddress: LPVOID,
+    dwActiveProcessorMask: DWORD_PTR,
+    dwNumberOfProcessors: DWORD,
+    dwProcessorType: DWORD,
+    dwAllocationGranularity: DWORD,
+    wProcessorLevel: WORD,
+    wProcessorRevision: WORD
+}
+
+using LPSYSTEM_INFO = *SYSTEM_INFO;
+
+@extern(.mangle = "GetNativeSystemInfo", .call = C)
+def GetNativeSystemInfo(lpSystemInfo: LPSYSTEM_INFO);

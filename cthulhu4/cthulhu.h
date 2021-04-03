@@ -5,50 +5,68 @@
 #include <vector>
 #include <memory>
 #include <filesystem>
+#include <optional>
+#include <unordered_set>
 #include <peglib.h>
 
+namespace fs = std::filesystem;
+
 namespace cthulhu {
+    struct File {
+        fs::path absolute;
+        std::string text;
+    };
+
     struct Handles {
         virtual ~Handles() { }
-        virtual std::string open(const std::filesystem::path& path) = 0;
+
+        // open a file and read in its source text
+        // return std::nullopt if file doesnt exist
+        // @param root: the path of the current module trying to import another module
+        // @param path: the path of the file to try and open relative to root
+        virtual std::optional<File> open(const fs::path& root, const fs::path& path) = 0;
     };
 
     // init the global compiler state
     void init(Handles* handles);
 
-    struct Symbol {
-        enum Type {
-            SCALAR, /* builtin types like char, int, bool, str, void, etc */
-            DEFER, /* order independent lookup */
-            RECORD, UNION, VARIANT,
-            POINTER, ARRAY,
-        } type;
-
-        Symbol(Type kind)
-            : type(kind)
-        { }
-    };
-
     struct Context : std::enable_shared_from_this<Context> {
-        Context(const std::filesystem::path& name);
+        // create a new compilation unit
+        // @param file: the file to compile
+        // @param parent: the compilation unit that is importing this one
+        Context(fs::path path, std::string text, std::shared_ptr<Context> parent);
 
-        void compile();
+        // perform compilation on this unit
+        void process();
+
+        // the folder this unit is in
+        fs::path where() const;
 
     private:
-        // name of the file being compiled
-        std::filesystem::path name;
-        // the source code of the file
-        std::string source;
+        // the name of this compilation unit
+        fs::path path;
+
+        // the source text
+        std::string text;
+
+        // all modules that include this module
+        std::shared_ptr<Context> parent;
+
+        std::shared_ptr<Context> glob(const fs::path& name);
+
         // the ast from the source code
         std::shared_ptr<peg::Ast> tree;
 
-        // include
-        void include(const std::shared_ptr<peg::Ast> ast);
 
-        // open a context or grab it from cache
-        std::shared_ptr<Context> open(const std::filesystem::path& path);
+        // handle an include decl
+        void include(std::shared_ptr<peg::Ast> ast);
 
-        // all included modules
-        std::vector<std::shared_ptr<Context>> includes;
+        // search and include a submodule
+        std::shared_ptr<Context> search(std::shared_ptr<peg::Ast> ast);
     };
+
+    // compile a compilation unit and all its submodules
+    // @param file: the file to compile
+    // @param parent: the module that is including this module
+    std::shared_ptr<Context> compile(fs::path file, std::shared_ptr<Context> parent = nullptr);
 }

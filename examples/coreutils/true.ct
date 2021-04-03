@@ -2,22 +2,15 @@ using std::rt::stdio(puts);
 using std::rt::env;
 using std::rt(exit);
 
-using std(String);
-
-var help = String::margin("""
-    |Usage: true [ignored command line arguments]
-    |or: true OPTION
-    |   Exit with a status code indicating success.    
-""");
-
-def usage {
-    puts(help);
-    exit(0);
-}
+var help = """
+Usage: true [ignored command line arguments]
+or: true OPTION
+   Exit with a status code indicating success.    
+""";
 
 def main {
-    if var args = env::args() when args.size() == 2 {
-        usage();
+    if env::args().size() == 2 {
+        puts(help);
     }
 
     exit(0);

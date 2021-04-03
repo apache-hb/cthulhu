@@ -3,15 +3,41 @@
 #include <iostream>
 #include <fmt/core.h>
 
+using Paths = std::vector<fs::path>;
+
 struct DefaultHandles : cthulhu::Handles {
     virtual ~DefaultHandles() { }
 
-    virtual std::string open(const std::filesystem::path& path) override {
-        if (std::ifstream in(path); !in.fail()) {
-            return std::string(std::istreambuf_iterator<char>{in}, {});
-        } 
+    DefaultHandles(Paths dirs) : dirs(dirs) { }
 
-        throw std::runtime_error(fmt::format("failed to open `{}`", path.string()));
+    Paths dirs;
+
+    virtual std::optional<cthulhu::File> open(const fs::path& root, const fs::path& path) override {
+        auto read = [](const fs::path& path) {
+            auto search = fs::absolute(path);
+            std::optional<cthulhu::File> file;
+            
+            if (std::ifstream in(search); !in.fail()) {
+                file = { search, std::string(std::istreambuf_iterator<char>{in}, {}) };
+            }
+            
+            return file;
+        };
+
+        // first search all include directories
+        for (const auto& dir : dirs) {
+            if (auto result = read(dir/path); result) {
+                return result;
+            }
+        }
+
+        // then try and read relative to the current file
+        if (auto result = read(root/path); result) {
+            return result;
+        }
+
+        // then try the absolute path last
+        return read(path);
     }
 };
 
@@ -21,15 +47,19 @@ int main(int argc, const char** argv) {
         return 1;
     }
 
-    DefaultHandles handles;
+    std::vector<fs::path> includes = { 
+        fs::current_path(), // include the cwd
+        fs::current_path()/"lib" // include the standard library
+    };
+
+    DefaultHandles handles(includes);
 
     try {
         cthulhu::init(&handles);
 
-        auto ctx = std::make_shared<cthulhu::Context>(argv[1]);
-        ctx->compile();
+        auto ctx = cthulhu::compile(argv[1]);
 
-    } catch (const std::runtime_error& error) {
+    } catch (const std::exception& error) {
         std::cerr << error.what() << std::endl;
         return 1;
     }
