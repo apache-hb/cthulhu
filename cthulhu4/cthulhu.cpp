@@ -1,7 +1,9 @@
 #include "cthulhu.h"
 
+#include <iostream>
+#include <fstream>
+
 #include <fmt/format.h>
-#include <peglib.h>
 
 namespace {
 auto grammar = R"(
@@ -19,14 +21,18 @@ auto grammar = R"(
     attrib      <- qualified call?
 
     alias       <- 'using' ident generics? '=' type ';'
-    union       <- 'union' ident '{' fields? '}'
-    record      <- 'record' ident '{' fields? '}'
-    variant     <- 'variant' ident (':' type)? '{' LIST(case, ',')? '}'
-    func        <- 'def' ident generics? fparams? result? body
+    union       <- 'union' ident generics? '{' fields? '}' { no_ast_opt }
+    record      <- 'record' ident generics? '{' fields? '}' { no_ast_opt }
+    variant     <- 'variant' ident generics? (':' type)? '{' LIST(case, ',')? '}' { no_ast_opt }
+    func        <- 'def' ident generics? fparams? result? body { no_ast_opt }
     fparams     <- '(' params? ')'
     result      <- ':' type
-    generics    <- '<' LIST(ident, ',') '>'
-    params      <- field init? (',' params)? 
+    generics    <- '<' LIST(generic, ',') '>'
+    generic     <- ident requires? tparam?
+    requires    <- ':' LIST(qualified, '+')
+    tparam      <- '=' type
+    params      <- param init? (',' params)? 
+    param       <- attribs* ident ':' (type / '...')
     body        <- ';' / '=' expr ';' / compound
     var         <- 'var' names init?
     names       <- qualified '(' LIST(ident, ',') ')' / name / '[' LIST(name, ',') ']'
@@ -40,17 +46,18 @@ auto grammar = R"(
     field       <- attribs* ident ':' type bitfield?
     bitfield    <- '[' LIST(bitrange, ',') ']'
     bitrange    <- expr ('..' expr)?
-    fields      <- LIST(field, ',')
+    fields      <- LIST(field, ',') { no_ast_opt }
 
     # type syntax
     type        <- attribs* (basictype error? / error)
 
-    basictype   <- (pointer / array / closure / qualified)
-    error       <- '!' (type / sum)
+    basictype   <- (pointer / array / closure / qualified / mutable)
+    error       <- '!' (type / sum)?
     sum         <- '(' LIST(type, '/') ')'
 
+    mutable     <- 'var' type
     array       <- '[' type (':' expr)? ']'
-    pointer     <- '*' type
+    pointer     <- '*' type { no_ast_opt }
     closure     <- '(' LIST(type, ',')? ')' '->' type
     qualified   <- LIST(ident, '::')
 
@@ -127,8 +134,7 @@ auto grammar = R"(
     call    <- OP('(') LIST(arg, ',')? OP(')')
     ternary <- OP('?') expr? OP(':') expr
     arg     <-  expr / '.' ident '=' expr
-    lambda  <- '[' captures? ']' fparams? lresult? lbody
-    captures    <- LIST(capture, ',')
+    lambda  <- '[' LIST(capture, ',')? ']' fparams? lresult? lbody
     capture     <- '&'? qualified
     lresult     <- '->' type
     lbody       <- expr / compound
@@ -140,10 +146,11 @@ auto grammar = R"(
     base2   <- < '0b' [01]+ >
     base16  <- < '0x' [0-9a-fA-F]+ >
 
-    string  <- < ['] (!['] char)* ['] / ["] (!["] char)* ["] >
+    string  <- < ['] CHARS([']) ['] / '"""' CHARS(["""]) '"""' / ["] CHARS(["]) ["] >
+    CHARS(D)    <- (!D char)*
     char    <- '\\' [nrt'"\[\]\\] / !'\\' .
 
-    ident   <- < [a-zA-Z_][a-zA-Z0-9_]* / '$' > ~spacing
+    ident   <- < 'R' !'"' / [a-zA-Z_][a-zA-Z0-9_]* / '$' > ~spacing
 
     %whitespace <- spacing
     %word       <- ident
@@ -156,66 +163,81 @@ auto grammar = R"(
     OP(I)       <- I ~spacing
     LIST(I, D)  <- I (D I)*
 )";
-
-using namespace std;
-using namespace peg;
-using namespace peg::udl;
-
-cthulhu::Unit create_unit(const shared_ptr<Ast> ast) {
-    cthulhu::Unit out;
-
-    for (auto& node : ast->nodes) {
-        if (node->tag != "import"_)
-            continue;
-        
-        vector<string> path;
-        for (auto& id : node->nodes) {
-            if (id->tag != "ident"_)
-                continue;
-
-            path.push_back(id->token_to_string());
-        }
-
-        fmt::print("using {}\n", fmt::join(path, "/"));
-        // collect all imports
-    }
-
-    for (auto& node : ast->nodes) {
-        if (node->tag != "decl"_)
-            continue;
-
-        // first phase lookup
-    }
-
-    return out;
-}
-
 }
 
 namespace cthulhu {
-    Unit parse(const std::string& source) {
-        peg::parser parser;
 
-        parser.log = [](auto line, auto col, const auto& msg) {
-            fmt::print("{}:{}: {}\n", line, col, msg);
-        };
+using namespace peg;
+using namespace peg::udl;
 
-        if (!parser.load_grammar(grammar)) {
-            throw runtime_error(fmt::format("failed to load grammar"));
-        }
+Handles* handles;
+parser parser;
 
-        parser.enable_packrat_parsing();
-        parser.enable_ast();
+void init(Handles* h) {
+    handles = h;
+    parser.log = [](auto line, auto col, const auto& msg) {
+        fmt::print("{}:{}: {}\n", line, col, msg);
+    };
 
-        shared_ptr<Ast> ast;
-        if (!parser.parse(source, ast)) {
-            throw runtime_error(fmt::format("failed to parse source"));
-        }
-
-        ast = parser.optimize_ast(ast);
-
-        //std::cout << ast_to_s(ast) << std::endl;
-
-        return create_unit(ast);
+    if (!parser.load_grammar(grammar)) {
+        throw std::runtime_error("failed to load grammar");
     }
+
+    parser.enable_packrat_parsing();
+    parser.enable_ast();
+}
+
+Context::Context(const std::filesystem::path& name) : name(name), source(handles->open(name)) {
+    if (!parser.parse(source, tree)) {
+        throw std::runtime_error("failed to parse source");
+    }
+
+    tree = parser.optimize_ast(tree);
+}
+
+void Context::compile() {
+    for (auto& node : tree->nodes) {
+        if (node->tag != "import"_)
+            continue;
+
+        include(node);
+    }
+}
+
+void Context::include(const std::shared_ptr<peg::Ast> ast) {
+    std::filesystem::path path;
+    
+    for (auto& part : ast->nodes) {
+        if (part->tag != "ident"_)
+            continue;
+
+        path /= part->token;
+    }
+
+    std::cout << ast_to_s(ast) << std::endl;
+
+    auto mod = open(path);
+
+    auto last = ast->nodes.back();
+    if (last->tag == "items"_) {
+        if (last->tag->nodes.size() == 0) {
+            // expose all symbols in this module
+        }
+
+        for (auto& item : last->nodes) {
+            (void)item;
+        }
+    }
+}
+
+std::shared_ptr<Context> Context::open(const std::filesystem::path& path) {
+    for (auto context : includes) {
+        if (context->name == path) {
+            return context;
+        }
+    }
+
+    return std::make_shared<Context>(path);
+}
+
 }

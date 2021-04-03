@@ -1,29 +1,54 @@
 #pragma once
 
 #include <string>
+#include <map>
+#include <vector>
+#include <memory>
+#include <filesystem>
+#include <peglib.h>
 
 namespace cthulhu {
-    struct Record {
-
+    struct Handles {
+        virtual ~Handles() { }
+        virtual std::string open(const std::filesystem::path& path) = 0;
     };
 
-    struct Unit {
+    // init the global compiler state
+    void init(Handles* handles);
 
+    struct Symbol {
+        enum Type {
+            SCALAR, /* builtin types like char, int, bool, str, void, etc */
+            DEFER, /* order independent lookup */
+            RECORD, UNION, VARIANT,
+            POINTER, ARRAY,
+        } type;
+
+        Symbol(Type kind)
+            : type(kind)
+        { }
     };
 
-    // parse source text into a possibly invalid ast
-    Unit parse(const std::string& source);
+    struct Context : std::enable_shared_from_this<Context> {
+        Context(const std::filesystem::path& name);
 
-    // name resolution
-    inline void resolve_names(Unit* unit) { (void)unit; }
+        void compile();
 
-    // type resolution
-    inline void resolve_types(Unit* unit) { (void)unit; }
+    private:
+        // name of the file being compiled
+        std::filesystem::path name;
+        // the source code of the file
+        std::string source;
+        // the ast from the source code
+        std::shared_ptr<peg::Ast> tree;
 
-    // do some optimizing of the AST
-    // just constant folding for now
-    inline void optimize_ast(Unit* unit) { (void)unit; }
+        // include
+        void include(const std::shared_ptr<peg::Ast> ast);
 
-    // emit code 
-    inline void emit(Unit* unit) { (void)unit; }
+        // open a context or grab it from cache
+        std::shared_ptr<Context> open(const std::filesystem::path& path);
+
+        // all included modules
+        std::vector<std::shared_ptr<Context>> includes;
+    };
 }

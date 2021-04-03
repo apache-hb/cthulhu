@@ -54,15 +54,8 @@ src3 = [ 'cthulhu3/cthulhu.cpp' ]
 
 peg = subproject('peglib').get_variable('peglib_dep')
 
-args = []
-
-if meson.get_compiler('cpp').get_id() == 'msvc'
-    args += [ '/Zc:__cplusplus' ]
-endif
-
 cthulhu3 = library('ctu3', src3, 
-    dependencies : [ fmt, peg ],
-    cpp_args : args
+    dependencies : [ fmt, peg ]
 )
 
 ctu3 = declare_dependency(
@@ -74,8 +67,7 @@ ctu3 = declare_dependency(
 src4 = [ 'cthulhu4/cthulhu.cpp' ]
 
 cthulhu4 = library('ctu4', src4,
-    dependencies : [ fmt, peg ],
-    cpp_args : args
+    dependencies : [ fmt, peg ]
 )
 
 ctu4 = declare_dependency(

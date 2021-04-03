@@ -1,17 +1,14 @@
 executable('ast', 'legacy/ast.cpp',
-    cpp_args : args, 
     dependencies : ctu,
     include_directories : '..'
 )
 
-executable('ctc', 'legacy/ctc.cpp',
-    cpp_args : args,
-    dependencies : ctu,
-    include_directories : '..'
-)
+#executable('ctc', 'legacy/ctc.cpp',
+#    dependencies : ctu,
+#    include_directories : '..'
+#)
 
 executable('tokenize', 'legacy2/tokenize.cpp',
-    cpp_args : args,
     dependencies : ctu2,
     include_directories : '..'
 )
@@ -21,14 +18,12 @@ if target_machine.system() == 'windows'
     imgui = subproject('imgui').get_variable('imgui_dep')
 
     executable('tokenize-gui', 'legacy2/tokenize-gui.cpp',
-        cpp_args : args,
         dependencies : [ ctu2, imgui ],
         include_directories : '..',
         link_args : 'd3d11.lib'
     )
 
     executable('parse-gui', 'legacy2/parse-gui.cpp',
-        cpp_args : args,
         dependencies : [ ctu2, imgui ],
         include_directories : '..',
         link_args : 'd3d11.lib'
@@ -45,7 +40,4 @@ if target_machine.system() == 'windows'
     )
 endif
 
-executable('ast-peglib', 'ast.cpp',
-    dependencies : ctu4,
-    cpp_args : args
-)
+executable('ctc', 'ctc.cpp', dependencies : ctu4)
