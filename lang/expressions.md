@@ -32,13 +32,12 @@ function calls can be invoked on any expression that evaluates to a `closure` ty
 
 ## ASM expressions
 
-`asm!` expressions allow users to embed assembly instructions directly into functions
-* assembly expressions in the form of `asm!(reg)` evaluate to the current value of `reg` with a type relevant to `reg`
+`asm` expressions allow users to embed assembly instructions directly into functions
+* assembly expressions in the form of `asm(reg)` evaluate to the current value of `reg` with a type relevant to `reg`
   * assigning to this expression will preserve its value for the remainder of the current scope.
   * assigning from this expression will leave its value unchanged.
-  * `asm!(reg)` expressions may also appear in the format of `asm!(seg:reg)` on platforms where segmentation is available.
-    * assigning to `asm!(seg:reg)` requires a `based` expression
-* assembly expressions in the form of `asm! {}` may contain an list of valid assembly opcodes
+  * `asm(reg)` expressions may also appear in the format of `asm!(seg:reg)` on platforms where segmentation is available.
+* assembly expressions in the form of `asm {}` may contain an list of valid assembly opcodes
   * valid opcodes change depending on target platform
   * instructions are destination first then source
   * variable substitution is performed with `$name`. i.e. `asm! { mov rax, $num }`

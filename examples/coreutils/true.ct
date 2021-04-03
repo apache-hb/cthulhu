@@ -1,0 +1,21 @@
+using std::rt::stdio(puts);
+using std::rt::env;
+using std::rt(exit);
+
+def usage {
+    puts(R"(
+        |Usage: true [ignored command line arguments]
+        |or: true OPTION
+        |   Exit with a status code indicating success.    
+    )");
+
+    exit(0);
+}
+
+def main {
+    var args = env::args();
+    if args.size() == 2 {
+
+    }
+    exit(0);
+}

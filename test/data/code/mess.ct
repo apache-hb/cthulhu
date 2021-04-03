@@ -1,14 +1,15 @@
-using stdio(printf as println);
+using std::prelude(...);
+using std::rt::stdio(fopen, fclose, fread, fwrite);
 using a::b::c;
 using a::b(...);
-using a(c);
+using a(c, d, e);
 
 def fib(i: int): int = (i == 0 || i == 1) ? i : fib(i - 1)  + fib(i - 2);
 
 def main(argc: int, argv: **char): int {
     var result: int = fib(10);
 
-    printf("fib(10) = %d\n", result);
+    println("fib(10) = %d\n", result);
 
     return 0;
     
@@ -21,11 +22,11 @@ record a {
 }
 
 record b {
-
+    it: *b
 }
 
 @yes
-record a {
+record c {
 
 }
 
@@ -43,7 +44,7 @@ def stuff<T, E1, E2>(b: bool, func1: () -> T!E1, func2: () -> T!E2): T!(E1 / E2)
     return func2();
 }
 
-def main {
+def main2 {
     stuff(true, 
         [a, b, c](a: int) -> str!(int / bool) { return "hello"; }, 
         [&f] -> str!float { raise float(5); }
@@ -56,7 +57,7 @@ record vaddr {
     page_table_offset: u64[12..20],
     page_directory_offset: u64[21..29],
     page_directory_pointer_offset: u64[30..38],
-    page_map_leve4_offset: u64[39..47],
+    page_map_level4_offset: u64[39..47],
     $: u64[48..63]
 }
 

@@ -5,6 +5,9 @@
 #include <cthulhu.h>
 
 int main(int argc, const char** argv) {
+    (void)argc;
+    (void)argv;
+    /*
     if (argc < 2) {
         std::cerr << argv[0] << " <file> " << std::endl;
         return 1;
@@ -14,7 +17,7 @@ int main(int argc, const char** argv) {
     auto text = std::string(std::istreambuf_iterator<char>{in}, {});
 
     try {
-        auto unit = cthulhu::parse(text);
+        auto unit = cthulhu::parseo(text);
 
         resolve_names(&unit);
         resolve_types(&unit);
@@ -23,5 +26,5 @@ int main(int argc, const char** argv) {
     } catch (const std::runtime_error& error) {
         std::cerr << error.what() << std::endl;
         return 1;
-    }
+    }*/
 }
