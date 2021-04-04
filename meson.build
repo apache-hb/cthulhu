@@ -6,63 +6,17 @@ project('cthulhu', 'cpp',
     ]
 )
 
-fmt = subproject('fmt').get_variable('fmt')
+fmt = subproject('fmt').get_variable('dep')
+peg = subproject('peglib').get_variable('dep')
 
-inc = [ 'cthulhu' ]
-deps = [ fmt ]
-args = []
+deps = [ fmt, peg ]
 
-src = [ 
-    'cthulhu/token.cpp', 
-    'cthulhu/lexer.cpp', 
-    'cthulhu/stream.cpp',
-    'cthulhu/pool.cpp',
-    'cthulhu/parser.cpp',
-    'cthulhu/ast.cpp'
-]
-
-cthulhu = library('ctu', src, 
-    dependencies : deps,
-    cpp_args : args
-)
+cthulhu = library('ctu4', 'cthulhu/cthulhu.cpp', dependencies : deps)
 
 ctu = declare_dependency(
-    include_directories : inc, 
-    link_with : cthulhu, 
+    include_directories : 'cthulhu', 
+    link_with : cthulhu,
     dependencies : deps
 )
 
-src2 = [
-    'cthulhu2/stream.cpp',
-    'cthulhu2/lexer.cpp',
-    'cthulhu2/token.cpp',
-    'cthulhu2/util.cpp',
-    'cthulhu2/parse.cpp'
-]
-
-cthulhu2 = library('ctu2', src2,
-    dependencies : fmt
-)
-
-ctu2 = declare_dependency(
-    include_directories : 'cthulhu2',
-    link_with : cthulhu2,
-    dependencies : fmt
-)
-
-peg = subproject('peglib').get_variable('peglib_dep')
-
-src4 = [ 'cthulhu4/cthulhu.cpp' ]
-
-cthulhu4 = library('ctu4', src4,
-    dependencies : [ fmt, peg ]
-)
-
-ctu4 = declare_dependency(
-    include_directories : 'cthulhu4',
-    link_with : cthulhu4,
-    dependencies : [ fmt, peg ]
-)
-
 subdir('tools')
-subdir('test')

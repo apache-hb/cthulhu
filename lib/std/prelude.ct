@@ -1,9 +1,0 @@
-using i8 = char;
-using i16 = short;
-using i32 = int;
-using i64 = long;
-
-using u8 = uchar;
-using u16 = ushort;
-using u32 = uint;
-using u64 = ulong;
