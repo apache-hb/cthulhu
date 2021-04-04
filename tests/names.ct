@@ -1,0 +1,17 @@
+record a {
+    field: b
+}
+
+record b {
+    field: x
+}
+
+record y {
+    field: b
+}
+
+using x = y;
+
+record z {
+    field: z
+}

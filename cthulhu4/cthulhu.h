@@ -14,67 +14,36 @@ namespace fs = std::filesystem;
 namespace cthulhu {
     struct Context;
 
-    struct Handles {
-        virtual ~Handles() { }
-
-        // open a file and read in its source text
-        // return std::nullopt if file doesn't exist
-        // @param path: the path of the file to try and open
-        virtual std::optional<std::string> open(const fs::path& path) = 0;
-    };
-
     // init the global compiler state
-    void init(Handles* handles);
+    void init();
 
-    struct Symbol : std::enable_shared_from_this<Symbol> {
-        enum Type {
-            BUILTIN, // builtin types
-            DEFER // order independent lookup
-        } type;
+    enum struct SymbolType {
+        DEFER, // order independent lookup
+        DEFINE, // defined symbol
+    };
 
+    struct Symbol {
+        SymbolType type;
+        SymbolData data;
         std::string name;
-
-        Symbol(Type type, std::string name)
-            : type(type)
-            , name(name)
-        { }
     };
 
-    struct Include {
-        // the name the context was imported with
-        std::vector<std::string> name;
-
-        // all symbols exposed from this include
-        std::vector<std::string> items;
-
-        // the context itself
-        std::shared_ptr<Context> context;
-
-        std::shared_ptr<Symbol> lookup(const std::string& name);
-    };
-
-    struct Context : std::enable_shared_from_this<Context> {
-        static std::shared_ptr<Context> open(const fs::path& path, const fs::path& cwd = fs::path());
-
+    struct Context {
         // create a new compilation unit
-        Context(fs::path name, std::string source);
+        Context(std::string source);
 
-    private:
-        // process just the include decls
-        void includes();
-        void include(const fs::path& path, const std::vector<std::string>& items);
-
-        // resolve all types
+        // resolve names
         void resolve();
 
-        // register a type
-        std::shared_ptr<Symbol> add(std::shared_ptr<Symbol> symbol);
+    private:
+        // define a symbol
+        void define(const std::string& name);
 
-        // lookup a type
-        std::shared_ptr<Symbol> lookup(const std::string& path);
+        // defer a symbol
+        void defer(const std::string& name);
 
-        // the name of this compilation unit
-        fs::path name;
+        // check if a symbol is already defined
+        bool lookup(const std::string& name);
 
         // the source text of this compilation unit
         std::string text;
@@ -82,10 +51,11 @@ namespace cthulhu {
         // the ast from the source code
         std::shared_ptr<peg::Ast> tree;
 
-        // all submodules this module directly depends on
-        std::vector<Include> submodules;
-
         // all symbols declared in this context
-        std::vector<std::shared_ptr<Symbol>> symbols;
+        // start off with just builtin types
+        std::vector<Symbol> symbols = {
+            { SymbolType::DEFINE, "int" },
+            { SymbolType::DEFINE, "void" }
+        };
     };
 }
