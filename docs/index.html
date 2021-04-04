@@ -104,43 +104,7 @@
                         <li>
                             <h3>grammar<div class="term">[basic.grammar]</div></h3>
                             <div class="grammar">
-unit    <- decl* !.
-
-decl    <- alias / struct
-alias   <- using ident assign type semi
-struct  <- record ident lbrace LIST(field) rbrace
-
-field   <- ident colon type
-
-type    <- pointer / mutable / closure / ident
-pointer <- mul type
-mutable <- var lparen type rparen
-closure <- lparen LIST(type) rparen arrow type
-
-lbrace  <- '{'
-rbrace  <- '}'
-lparen  <- '('
-rparen  <- ')'
-assign  <- '='
-semi    <- ';'
-colon   <- ':'
-mul     <- '*'
-arrow   <- '->'
-comma   <- ','
-
-using   <- 'using'
-record  <- 'record'
-var     <- 'var'
-
-keyword <- using / record / var
-
-ident   <- !keyword ([a-zA-Z_][a-zA-Z0-9_]* / '$') spacing
-spacing <- (space / comment)*
-space   <- [ \t\r\n]
-comment <- '#' (!newline .)* newline?
-newline <- [\r\n]+
-
-LIST(R) <- R (comma R)*
+                                omitted until stable
                             </div>
                         </li>
                     </ol>
