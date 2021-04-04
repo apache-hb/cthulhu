@@ -1,0 +1,14 @@
+using c = b;
+using b = a;
+using a = i;
+using i = int;
+using x = void;
+
+record yes {
+    a: int,
+    b: no
+}
+
+record no {
+    a: void
+}
