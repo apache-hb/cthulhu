@@ -10,8 +10,8 @@ namespace {
         unit    <- import* decl* { no_ast_opt }
 
         # import syntax
-        import  <- USING LIST(ident, COLON2) items? SEMI { no_ast_opt }
-        items   <- '(' (CSV(ident) / DOT3) ')'  { no_ast_opt }
+        import  <- USING LIST(ident, COLON2) items SEMI { no_ast_opt }
+        items   <- LPAREN CSV(ident) RPAREN  { no_ast_opt }
 
         # toplevel declarations
         decl        <- attribs* (alias / variant / union / record / func / var SEMI) { no_ast_opt }
@@ -173,6 +173,8 @@ namespace {
         ~NEQ        <- '!='
         ~NOT        <- '!' !'='
         ~AT         <- '@'
+        ~LPAREN     <- '('
+        ~RPAREN     <- ')'
 
         ident   <- !KEYWORD < [a-zA-Z_][a-zA-Z0-9_]* / '$' > 
 
@@ -200,16 +202,26 @@ namespace {
     std::unordered_set<std::shared_ptr<Context>> units;
 
     // create a builtin symbol
-    /*std::shared_ptr<Symbol> builtin(const std::string& name) {
-        return std::make_shared<Symbol>(Symbol::SCALAR, name);
+    std::shared_ptr<Symbol> builtin(const std::string& name) {
+        return std::make_shared<Symbol>(Symbol::BUILTIN, name);
+    }
+
+    std::shared_ptr<Symbol> defer(const std::string& name) { 
+        return std::make_shared<Symbol>(Symbol::DEFER, name);
     }
 
     // all builtin types
     std::unordered_set<std::shared_ptr<Symbol>> builtins = {
-        builtin("char"), builtin("short"), builtin("int"), builtin("long"), builtin("isize"),
-        builtin("uchar"), builtin("ushort"), builtin("uint"), builtin("ulong"), builtin("usize"),
+        // basic integer types
+        builtin("char"), builtin("uchar"), 
+        builtin("short"), builtin("ushort"),
+        builtin("int"), builtin("uint"),
+        builtin("long"), builtin("ulong"),
+        builtin("isize"), builtin("usize"),
+
+        // special types
         builtin("void"), builtin("bool"), builtin("str")
-    };*/
+    };
 
     // all include directories
     std::vector<fs::path> dirs = {
@@ -261,16 +273,10 @@ void Context::includes() {
     };
 
     auto items = [](std::shared_ptr<Ast> ast) {
-        std::optional<std::vector<std::string>> out;
+        std::vector<std::string> out;
 
-        if (ast->tag == "items"_) {
-            std::vector<std::string> all;
-
-            for (auto item : ast->nodes) {
-                all.push_back(item->token_to_string());
-            }
-
-            out = all;
+        for (auto item : ast->nodes) {
+            out.push_back(item->token_to_string());
         }
 
         return out;
@@ -287,7 +293,7 @@ void Context::includes() {
     }
 }
 
-void Context::include(const fs::path& path, const std::optional<std::vector<std::string>>& items) {
+void Context::include(const fs::path& path, const std::vector<std::string>& items) {
     auto mod = Context::open(path, name.parent_path());
 
     std::vector<std::string> vec;
@@ -296,6 +302,32 @@ void Context::include(const fs::path& path, const std::optional<std::vector<std:
     }
 
     submodules.push_back({ vec, items, mod });
+}
+
+void Context::resolve() {
+    for (auto node : tree->nodes) {
+        if (node->tag != "decl"_)
+            continue;
+
+        
+    }
+}
+
+std::shared_ptr<Symbol> Context::add(std::shared_ptr<Symbol> symbol) {
+    symbols.push_back(symbol);
+    return symbol;
+}
+
+std::shared_ptr<Symbol> Context::lookup(const std::string& path) { 
+    // search all builtin types
+    for (auto builtin : builtins) {
+        if (builtin->name == path) {
+            return builtin;
+        }
+    }
+
+    // TODO: the rest of the lookup steps
+    return add(defer(path));
 }
 
 std::shared_ptr<Context> Context::open(const fs::path& path, const fs::path& cwd) {
