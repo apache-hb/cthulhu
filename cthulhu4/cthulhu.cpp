@@ -10,10 +10,8 @@ namespace {
         unit    <- import* decl* { no_ast_opt }
 
         # import syntax
-        import  <- 'using' LIST(ident, '::') (items / ialias ';' / ';') { no_ast_opt }
-        items   <- '(' (LIST(include, ',') / '...') ')' ';' { no_ast_opt }
-        include <- ident ialias?
-        ialias  <- 'as' ident
+        import  <- ~USING LIST(ident, COLON2) items? ~SEMI { no_ast_opt }
+        items   <- '(' (LIST(ident, COMMA) / '...') ')'  { no_ast_opt }
 
         # toplevel declarations
         decl        <- attribs* (alias / variant / union / record / func / var ';') { no_ast_opt }
@@ -21,17 +19,13 @@ namespace {
         attribs     <- '@' attrib / '@' '[' LIST(attrib, ',') ']'
         attrib      <- qualified call?
 
-        alias       <- 'using' ident generics? '=' type ';'
-        union       <- 'union' ident generics? '{' fields? '}' { no_ast_opt }
-        record      <- 'record' ident generics? '{' fields? '}' { no_ast_opt }
-        variant     <- 'variant' ident generics? (':' type)? '{' LIST(case, ',')? '}' { no_ast_opt }
-        func        <- 'def' ident generics? fparams? result? body { no_ast_opt }
+        alias       <- USING ident '=' type ';'
+        union       <- UNION ident '{' fields? '}' { no_ast_opt }
+        record      <- RECORD ident '{' fields? '}' { no_ast_opt }
+        variant     <- 'variant' ident (':' type)? '{' LIST(case, ',')? '}' { no_ast_opt }
+        func        <- 'def' ident fparams? result? body { no_ast_opt }
         fparams     <- '(' params? ')'
         result      <- ':' type
-        generics    <- '<' LIST(generic, ',') '>'
-        generic     <- ident requires? tparam?
-        requires    <- ':' LIST(qualified, '+')
-        tparam      <- '=' type
         params      <- param init? (',' params)? 
         param       <- attribs* ident ':' (type / '...')
         body        <- ';' / '=' expr ';' / compound
@@ -151,7 +145,19 @@ namespace {
         CHARS(D)    <- (!D char)*
         char    <- '\\' [nrt'"\[\]\\] / !'\\' .
 
-        ident   <- < 'R' !'"' / [a-zA-Z_][a-zA-Z0-9_]* / '$' > ~spacing
+        # keywords
+        RECORD  <- 'record'
+        UNION   <- 'union'
+        USING   <- 'using'
+
+        KEYWORD <- RECORD / UNION / USING
+
+        # symbols
+        SEMI    <- ';'
+        COMMA   <- ','
+        COLON2  <- '::'
+
+        ident   <- !KEYWORD < [a-zA-Z_][a-zA-Z0-9_]* / '$' > ~spacing
 
         %whitespace <- spacing
         %word       <- ident
@@ -162,11 +168,30 @@ namespace {
         line        <- [\r\n]+
 
         OP(I)       <- I ~spacing
-        LIST(I, D)  <- I (D I)*
+        LIST(I, D)  <- I (~D I)*
     )";
+}
 
+namespace cthulhu {
+
+using namespace peg;
+using namespace peg::udl;
+
+namespace {
     // all compiled units
-    std::unordered_set<std::shared_ptr<cthulhu::Context>> units;
+    std::unordered_set<std::shared_ptr<Context>> units;
+
+    // create a builtin symbol
+    /*std::shared_ptr<Symbol> builtin(const std::string& name) {
+        return std::make_shared<Symbol>(Symbol::SCALAR, name);
+    }
+
+    // all builtin types
+    std::unordered_set<std::shared_ptr<Symbol>> builtins = {
+        builtin("char"), builtin("short"), builtin("int"), builtin("long"), builtin("isize"),
+        builtin("uchar"), builtin("ushort"), builtin("uint"), builtin("ulong"), builtin("usize"),
+        builtin("void"), builtin("bool"), builtin("str")
+    };*/
 
     // all include directories
     std::vector<fs::path> dirs = {
@@ -175,16 +200,11 @@ namespace {
     };
 
     // client provided handles
-    cthulhu::Handles* handles;
+    Handles* handles;
 
     // our global parser instance
     peg::parser parse;
 }
-
-namespace cthulhu {
-
-using namespace peg;
-using namespace peg::udl;
 
 void init(Handles* h) {
     handles = h;
@@ -201,40 +221,71 @@ void init(Handles* h) {
     parse.enable_ast();
 }
 
-Context::Context(fs::path path, std::string source) : path(path), text(source) {
+Context::Context(fs::path name, std::string source) : name(name), text(source) {
     if (!parse.parse(text, tree)) {
-        throw std::runtime_error(fmt::format("failed to parse source `{}`", path.string()));
+        throw std::runtime_error(fmt::format("failed to parse source `{}`", name.string()));
     }
 
     tree = parse.optimize_ast(tree);
 }
 
-void Context::process() {
+void Context::includes() {
+    auto path = [](std::shared_ptr<Ast> ast) {
+        fs::path where;
+        for (auto part : ast->nodes) {
+            if (part->tag != "ident"_)
+                break;
+            
+            where /= part->token;
+        }
+
+        return where;
+    };
+
+    auto items = [](std::shared_ptr<Ast> ast) {
+        std::optional<std::vector<std::string>> out;
+
+        if (ast->tag == "items"_) {
+            std::vector<std::string> all;
+
+            for (auto item : ast->nodes) {
+                all.push_back(item->token_to_string());
+            }
+
+            out = all;
+        }
+
+        return out;
+    };
+
     for (auto node : tree->nodes) {
         if (node->tag != "import"_)
             continue;
 
-        include(node);
+        auto body = path(node);
+        auto list = items(node->nodes.back());
+
+        include(body, list);
     }
 }
 
-void Context::include(std::shared_ptr<peg::Ast> ast) {
-    fs::path where;
-    for (auto node : ast->nodes) {
-        if (node->tag != "ident"_)
-            break;
-        
-        where /= node->token;
+void Context::include(const fs::path& path, const std::optional<std::vector<std::string>>& items) {
+    auto mod = Context::open(path, name.parent_path());
+
+    std::vector<std::string> vec;
+    for (const auto& part : path) {
+        vec.push_back(part.string());
     }
 
-    Context::open(where, path.parent_path());
+    submodules.push_back({ vec, items, mod });
 }
 
 std::shared_ptr<Context> Context::open(const fs::path& path, const fs::path& cwd) {
     auto read = [](fs::path it) {
         it.replace_extension("ct");
+
         for (auto unit : units) {
-            if (unit->path == it) {
+            if (unit->name == it) {
                 return unit;
             }
         }
@@ -242,7 +293,7 @@ std::shared_ptr<Context> Context::open(const fs::path& path, const fs::path& cwd
         if (auto text = handles->open(it); text) {
             auto mod = std::make_shared<Context>(it, text.value());
             units.insert(mod);
-            mod->process();
+            mod->includes();
             return mod;
         }
 

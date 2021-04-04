@@ -1,6 +1,4 @@
-using std::rt::stdio(puts);
-using std::rt::env;
-using std::rt(exit);
+using stdrt(stdio, env, exit);
 
 var help = """
 Usage: true [ignored command line arguments]
@@ -10,7 +8,7 @@ or: true OPTION
 
 def main {
     if env::args().size() == 2 {
-        puts(help);
+        stdio::puts(help);
     }
 
     exit(0);

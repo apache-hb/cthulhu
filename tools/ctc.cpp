@@ -37,4 +37,6 @@ int main(int argc, const char** argv) {
         std::cerr << error.what() << std::endl;
         return 1;
     }
+
+    std::cout << "done" << std::endl;
 }
