@@ -1,5 +1,0 @@
-using b;
-
-using x = y;
-using y = z;
-using z = int;

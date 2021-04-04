@@ -24,7 +24,6 @@ namespace cthulhu {
 
     struct Symbol {
         SymbolType type;
-        SymbolData data;
         std::string name;
     };
 
