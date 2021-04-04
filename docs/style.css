@@ -2,6 +2,10 @@
 
 body { 
     font-family: 'Fira Code', monospace;
+    display: block;
+}
+
+.wrapper {
     display: flex;
 }
 
@@ -21,6 +25,24 @@ body {
     width: 100%;
 }
 
-.example-code {
-    width: 100%;
+.specification {
+    margin: 5% 10% 0% 10%;
+}
+
+.specification > h1 {
+    text-align: center;
+}
+
+.content {
+    text-align: left;
+}
+
+.term {
+    float: right;
+    font-weight: bold;
+}
+
+.grammar {
+    white-space: pre-wrap;
+    text-align: left;
 }

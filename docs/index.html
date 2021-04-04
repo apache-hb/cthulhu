@@ -9,19 +9,143 @@
     </head> 
 
     <body>
-        <div class="header">
-            <div>Cthulhu</div>
-            <img src="https://www.pinclipart.com/picdir/big/111-1118481_cthulhu-png-transparent-cute-cthulhu-clipart.png" alt="logo"/>
-            <div class="subtext">Soon</div>
+        <div class="wrapper">
+            <div class="header">
+                <div>Cthulhu</div>
+                <img src="https://www.pinclipart.com/picdir/big/111-1118481_cthulhu-png-transparent-cute-cthulhu-clipart.png" alt="logo"/>
+                <div class="subtext">Soon</div>
+            </div>
+
+            <ul>
+                <li>Writing freestanding code should be easy</li>
+                <li>Interacting with platform details should be easy</li>
+                <li>Spend more time reading specifications than writing implementations</li>
+            </ul>
         </div>
 
-        <ul>
-            <li>Writing freestanding code should be easy</li>
-            <li>Interacting with platform details should be easy</li>
-            <li>Spend more time reading specifications than writing implementations</li>
-        </ul>
+        <div class="specification">
+            <h1>Working Draft, Standard for Programming Language Cthulhu</h1>
+            
+            <h2>
+                table of contents
+                <ol class="content">
+                    <li><a href="#scope">scope</a></li>
+                    <li><a href="#references">references</a></li>
+                    <li><a href="#terms">terms and definitions</a></li>
+                    <li><a href="#basic">basics</a></li>
+                </lo>
+            </h2>
 
-        <!-- TODO: add code examples and links to docs and stuff -->
-        <!-- also probably add the compiler in here as well with emscripten -->
+            <ol>
+                <li>
+                    <h2 class="section" id="scope">
+                        scope
+                        <div class="term">[scope]</div>
+                    </h2>
+                    <ol>
+                        <li>this document specifies requirements for implementations of the cthulhu programming language.</li>
+                    </ol>
+                </li>
+
+                <li>
+                    <h2 class="section" id="references">
+                        references
+                        <div class="term">[references]</div>
+                    </h2>
+                    <ol>
+                        <li>Ford, Bryan. Parsing Expression Grammars: A Recognition-Based Syntactic Foundation.<div id="references-grammar" class="term">[references.grammar]</div></li>
+                    </ol>
+                </li>
+
+                <li>
+                    <h2 class="section" id="terms">
+                        terms and definitions
+                        <div class="term">[terms]</div>
+                    </h2>
+                    <ol>
+                        <li>
+                            <h3>undefined behavior<div class="term">[terms.undefined]</div></h3>
+                            behavior for which this document imposes no requirements.
+                        
+                            <h3>unspecified behavior<div class="term">[terms.unspecified]</div></h3>
+                            behavior, for a well-formed program construct and correct data, that depends on implementation.
+                            
+                            <h3>abstract machine<div class="term">[terms.abstract]</div></h3>
+                            the semantic descriptions in this document define a parameterized nondeterministic abstract machine.
+                            this document places no requirement on the structure of conforming implementations.
+                            in particular, then need not copy or emulate the structure of the abstract machine.
+                            rather, conforming implementations are required to emulate only the observable behavior of the abstract machine as described in <a href="#terms-observable">[intro.terms.observable]</a>
+
+                            <h3>observable behavior<div id="terms-observable" class="term">[terms.observable]</div></h3>
+                            TODO
+
+                            <h3>well-formed program<div class="term">[terms.formed]</div></h3>
+                            cthulhu program constructed according to the syntax rules, and diagnosable semantic rules.
+                        </li>
+                    </ol>
+                </li>
+
+                <li>
+                    <h2 class="section" id="basics">
+                        basics
+                        <div class="term">[basic]</div>
+                    </h2>
+
+                    <ol>
+                        <li>
+                            <h3>implementation compliance<div class="term">[basic.compliance]</div></h3>
+                            TODO
+                        </li>
+                        <li>
+                            <h3>syntax notation<div class="term">[basic.syntax]</div></h3>
+                            the syntax notation used in this document is described in <a href="#references-grammar">[references.grammar]</a>
+                        </li>
+
+                        <li>
+                            <h3>grammar<div class="term">[basic.grammar]</div></h3>
+                            <div class="grammar">
+unit    <- decl* !.
+
+decl    <- alias / struct
+alias   <- using ident assign type semi
+struct  <- record ident lbrace LIST(field) rbrace
+
+field   <- ident colon type
+
+type    <- pointer / mutable / closure / ident
+pointer <- mul type
+mutable <- var lparen type rparen
+closure <- lparen LIST(type) rparen arrow type
+
+lbrace  <- '{'
+rbrace  <- '}'
+lparen  <- '('
+rparen  <- ')'
+assign  <- '='
+semi    <- ';'
+colon   <- ':'
+mul     <- '*'
+arrow   <- '->'
+comma   <- ','
+
+using   <- 'using'
+record  <- 'record'
+var     <- 'var'
+
+keyword <- using / record / var
+
+ident   <- !keyword ([a-zA-Z_][a-zA-Z0-9_]* / '$') spacing
+spacing <- (space / comment)*
+space   <- [ \t\r\n]
+comment <- '#' (!newline .)* newline?
+newline <- [\r\n]+
+
+LIST(R) <- R (comma R)*
+                            </div>
+                        </li>
+                    </ol>
+                </li>
+            </ol>
+        </div>
     </body>
 </html>
