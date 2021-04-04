@@ -200,39 +200,45 @@ using namespace peg::udl;
 namespace {
     // grammar consumed by cpp-peglib
     auto grammar = R"(
-        # toplevel unit
-        unit    <- decl+ { no_ast_opt }
+        unit    <- decl* !.
 
-        # declarations
-        decl    <- using / record
-        using   <- USING ident ASSIGN type SEMI
-        record  <- RECORD ident LBRACE fields RBRACE { no_ast_opt }
+        decl    <- alias / struct
+        alias   <- using ident assign type semi
+        struct  <- record ident lbrace LIST(field) rbrace
 
-        fields  <- field (COMMA field)* { no_ast_opt }
-        field   <- ident COLON type
+        field   <- ident colon type
 
-        # types
-        type    <- ident
+        type    <- pointer / mutable / closure / ident
+        pointer <- mul type
+        mutable <- var lparen type rparen
+        closure <- lparen LIST(type) rparen arrow type
 
-        # basic blocks
+        ~lbrace  <- '{'
+        ~rbrace  <- '}'
+        ~lparen  <- '('
+        ~rparen  <- ')'
+        ~assign  <- '='
+        ~semi    <- ';'
+        ~colon   <- ':'
+        ~mul     <- '*'
+        ~arrow   <- '->'
+        ~comma   <- ','
 
-        ident   <- !KEYWORD < [a-zA-Z_][a-zA-Z0-9_]* >
+        ~using   <- 'using'
+        ~record  <- 'record'
+        ~var     <- 'var'
 
-        %whitespace <- [ \t\r\n]*
+        keyword <- using / record / var
 
-        # keywords
-        ~USING      <- 'using'
-        ~RECORD     <- 'record'
+        %whitespace <- spacing
 
-        KEYWORD <- USING / RECORD
+        ident   <- !keyword < [a-zA-Z_][a-zA-Z0-9_]* / '$' >
+        ~spacing <- (space / comment)*
+        space   <- [ \t\r\n]
+        comment <- '#' (!newline .)* newline?
+        newline <- [\r\n]+
 
-        # operators
-        ~ASSIGN <- '='
-        ~SEMI   <- ';'
-        ~LBRACE <- '{'
-        ~RBRACE <- '}'
-        ~COLON  <- ':'
-        ~COMMA  <- ','
+        LIST(R) <- R (comma R)*
     )";
 
     // our global parser instance
