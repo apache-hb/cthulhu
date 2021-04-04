@@ -1,5 +1,5 @@
 # Cthulhu
-Probably better than javascript
+Probably better than javascript [docs](https://apache-hb.github.io/ctulang/)
 
 ## Building
 
