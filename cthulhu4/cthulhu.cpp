@@ -6,12 +6,12 @@
 #include <fmt/format.h>
 
 namespace {
-    auto grammar = R"(
-        unit    <- import* decl* { no_ast_opt }
+    auto grammar2 = R"(
+        unit    <- decl* { no_ast_opt }
 
         # import syntax
-        import  <- USING LIST(ident, COLON2) items SEMI { no_ast_opt }
-        items   <- LPAREN CSV(ident) RPAREN  { no_ast_opt }
+        # import  <- USING LIST(ident, COLON2) items SEMI { no_ast_opt }
+        # items   <- LPAREN CSV(ident) RPAREN  { no_ast_opt }
 
         # toplevel declarations
         decl        <- attribs* (alias / variant / union / record / func / var SEMI) { no_ast_opt }
@@ -198,173 +198,146 @@ using namespace peg;
 using namespace peg::udl;
 
 namespace {
-    // all compiled units
-    std::unordered_set<std::shared_ptr<Context>> units;
+    // grammar consumed by cpp-peglib
+    auto grammar = R"(
+        # toplevel unit
+        unit    <- decl+ { no_ast_opt }
 
-    // create a builtin symbol
-    std::shared_ptr<Symbol> builtin(const std::string& name) {
-        return std::make_shared<Symbol>(Symbol::BUILTIN, name);
-    }
+        # declarations
+        decl    <- using / record
+        using   <- USING ident ASSIGN type SEMI
+        record  <- RECORD ident LBRACE fields RBRACE { no_ast_opt }
 
-    std::shared_ptr<Symbol> defer(const std::string& name) { 
-        return std::make_shared<Symbol>(Symbol::DEFER, name);
-    }
+        fields  <- field (COMMA field)* { no_ast_opt }
+        field   <- ident COLON type
 
-    // all builtin types
-    std::unordered_set<std::shared_ptr<Symbol>> builtins = {
-        // basic integer types
-        builtin("char"), builtin("uchar"), 
-        builtin("short"), builtin("ushort"),
-        builtin("int"), builtin("uint"),
-        builtin("long"), builtin("ulong"),
-        builtin("isize"), builtin("usize"),
+        # types
+        type    <- ident
 
-        // special types
-        builtin("void"), builtin("bool"), builtin("str")
-    };
+        # basic blocks
 
-    // all include directories
-    std::vector<fs::path> dirs = {
-        fs::current_path(),
-        fs::current_path()/"lib"
-    };
+        ident   <- !KEYWORD < [a-zA-Z_][a-zA-Z0-9_]* >
 
-    // client provided handles
-    Handles* handles;
+        %whitespace <- [ \t\r\n]*
+
+        # keywords
+        ~USING      <- 'using'
+        ~RECORD     <- 'record'
+
+        KEYWORD <- USING / RECORD
+
+        # operators
+        ~ASSIGN <- '='
+        ~SEMI   <- ';'
+        ~LBRACE <- '{'
+        ~RBRACE <- '}'
+        ~COLON  <- ':'
+        ~COMMA  <- ','
+    )";
 
     // our global parser instance
-    peg::parser parse;
+    peg::parser parser;
 }
 
-void init(Handles* h) {
-    handles = h;
-
-    parse.log = [](auto line, auto col, const auto& msg) {
+void init() {
+    parser.log = [](auto line, auto col, const auto& msg) {
         fmt::print("{}:{}: {}\n", line, col, msg);
     };
 
-    if (!parse.load_grammar(grammar)) {
+    if (!parser.load_grammar(grammar)) {
         throw std::runtime_error("failed to load grammar");
     }
 
-    parse.enable_packrat_parsing();
-    parse.enable_ast();
+    parser.enable_packrat_parsing();
+    parser.enable_ast();
 }
 
-Context::Context(fs::path name, std::string source) : name(name), text(source) {
-    if (!parse.parse(text, tree)) {
-        throw std::runtime_error(fmt::format("failed to parse source `{}`", name.string()));
+Context::Context(std::string source) : text(source) {
+    if (!parser.parse(text, tree)) {
+        throw std::runtime_error("failed to parse source");
     }
 
-    tree = parse.optimize_ast(tree);
-}
-
-void Context::includes() {
-    auto path = [](std::shared_ptr<Ast> ast) {
-        fs::path where;
-        for (auto part : ast->nodes) {
-            if (part->tag != "ident"_)
-                break;
-            
-            where /= part->token;
-        }
-
-        return where;
-    };
-
-    auto items = [](std::shared_ptr<Ast> ast) {
-        std::vector<std::string> out;
-
-        for (auto item : ast->nodes) {
-            out.push_back(item->token_to_string());
-        }
-
-        return out;
-    };
-
-    for (auto node : tree->nodes) {
-        if (node->tag != "import"_)
-            continue;
-
-        auto body = path(node);
-        auto list = items(node->nodes.back());
-
-        include(body, list);
-    }
-}
-
-void Context::include(const fs::path& path, const std::vector<std::string>& items) {
-    auto mod = Context::open(path, name.parent_path());
-
-    std::vector<std::string> vec;
-    for (const auto& part : path) {
-        vec.push_back(part.string());
-    }
-
-    submodules.push_back({ vec, items, mod });
+    tree = parser.optimize_ast(tree);
 }
 
 void Context::resolve() {
-    for (auto node : tree->nodes) {
-        if (node->tag != "decl"_)
-            continue;
+    auto decl = [&](std::shared_ptr<Ast> ast) {
+        // all fields in this type decl
+        auto fields = ast->nodes[1]->nodes;
 
-        
-    }
-}
+        for (auto field : fields) {
+            // the name and type of the field
+            auto fname = field->nodes[0]->token_to_string();
+            auto ftype = field->nodes[1]->token_to_string();
 
-std::shared_ptr<Symbol> Context::add(std::shared_ptr<Symbol> symbol) {
-    symbols.push_back(symbol);
-    return symbol;
-}
-
-std::shared_ptr<Symbol> Context::lookup(const std::string& path) { 
-    // search all builtin types
-    for (auto builtin : builtins) {
-        if (builtin->name == path) {
-            return builtin;
+            // defer looking up the type of the field
+            // for the second phase
+            defer(ftype);
         }
-    }
-
-    // TODO: the rest of the lookup steps
-    return add(defer(path));
-}
-
-std::shared_ptr<Context> Context::open(const fs::path& path, const fs::path& cwd) {
-    auto read = [](fs::path it) {
-        it.replace_extension("ct");
-
-        for (auto unit : units) {
-            if (unit->name == it) {
-                return unit;
-            }
-        }
-
-        if (auto text = handles->open(it); text) {
-            auto mod = std::make_shared<Context>(it, text.value());
-            units.insert(mod);
-            mod->includes();
-            return mod;
-        }
-
-        return std::shared_ptr<Context>();
     };
 
-    // first search relative to `cwd`
-    auto relative = cwd/path;
-    if (auto mod = read(relative); mod) {
-        return mod;
+    auto alias = [&](std::shared_ptr<Ast> ast) {
+        auto type = ast->nodes[1]->token_to_string();
+        defer(type);
+    };
+
+    auto parse = [&](std::shared_ptr<Ast> ast) {
+        // the name of this type decl
+        auto name = ast->nodes[0]->token_to_string();
+
+        if (ast->tag == "using"_) {
+            alias(ast);
+        } else {
+            decl(ast);  
+        }
+
+        // define this decl for the second phase
+        define(name);
+    };
+
+    // add all decls to the symbol table
+    for (auto node : tree->nodes) {
+        parse(node);
     }
 
-    // then search in the include directories
-    for (const auto& dir : dirs) {
-        auto where = dir/path;
-        if (auto mod = read(where); mod) {
-            return mod;
+    for (const auto& symbol : symbols) {
+        if (symbol.type == SymbolType::DEFER) {
+            throw std::runtime_error(fmt::format("failed to resolve symbol `{}`", symbol.name));
+        }
+    }
+}
+
+void Context::define(const std::string& name) {
+    // if the symbol has already been deferred then replace it
+    for (auto& symbol : symbols) {
+        if (symbol.name == name) {
+            if (symbol.type == SymbolType::DEFINE) {
+                throw std::runtime_error(fmt::format("symbol `{}` was already defined", name));
+            }
+            
+            symbol.type = SymbolType::DEFINE;
+            return;
         }
     }
 
-    throw std::runtime_error(fmt::format("failed to import `{}`", path.string()));
+    // otherwise define this symbol
+    symbols.push_back({ SymbolType::DEFINE, name });
+}
+
+void Context::defer(const std::string& name) {
+    if (!lookup(name)) {
+        symbols.push_back({ SymbolType::DEFER, name });
+    }
+}
+
+bool Context::lookup(const std::string& name) {
+    for (const auto& symbol : symbols) {
+        if (symbol.name == name) {
+            return symbol.type == SymbolType::DEFINE;
+        }
+    }
+
+    return false;
 }
 
 }

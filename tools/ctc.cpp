@@ -4,39 +4,34 @@
 #include <unordered_map>
 #include <fmt/core.h>
 
-using paths = std::vector<fs::path>;
-
-struct DefaultHandles : cthulhu::Handles {
-    virtual ~DefaultHandles() { }
-
-    virtual std::optional<std::string> open(const fs::path& path) override {
-        std::optional<std::string> file;
-        
-        if (std::ifstream in(path); !in.fail()) {
-            file = std::string(std::istreambuf_iterator<char>{in}, {});
-        }
-
-        return file;
-    }
-};
-
 int main(int argc, const char** argv) {
     if (argc < 2) {
         std::cerr << argv[0] << ": no source files provided" << std::endl;
         return 1;
     }
 
-    DefaultHandles handles;
+    auto path = argv[1];
 
-    try {
-        cthulhu::init(&handles);
+    if (std::ifstream in(path); !in.fail()) {
+        auto text = std::string(std::istreambuf_iterator<char>{in}, {});
+        
+        try {
+            cthulhu::init();
 
-        auto ctx = cthulhu::Context::open(argv[1]);
+            auto ctx = std::make_shared<cthulhu::Context>(text);
 
-    } catch (const std::exception& error) {
-        std::cerr << error.what() << std::endl;
+            std::cout << "parsed file: " << path << std::endl;
+
+            ctx->resolve();
+
+            std::cout << "resolved types" << std::endl;
+
+        } catch (const std::exception& error) {
+            std::cerr << error.what() << std::endl;
+            return 1;
+        }
+    } else {
+        std::cerr << "failed to open: " << path << std::endl;
         return 1;
     }
-
-    std::cout << "done" << std::endl;
 }
