@@ -10,7 +10,7 @@ namespace {
         unit    <- import* decl* { no_ast_opt }
 
         # import syntax
-        import  <- ~USING LIST(ident, COLON2) items? ~SEMI { no_ast_opt }
+        import  <- USING LIST(ident, COLON2) items? SEMI { no_ast_opt }
         items   <- '(' (LIST(ident, COMMA) / '...') ')'  { no_ast_opt }
 
         # toplevel declarations
@@ -146,18 +146,18 @@ namespace {
         char    <- '\\' [nrt'"\[\]\\] / !'\\' .
 
         # keywords
-        RECORD  <- 'record'
-        UNION   <- 'union'
-        USING   <- 'using'
+        ~RECORD  <- 'record'
+        ~UNION   <- 'union'
+        ~USING   <- 'using'
 
         KEYWORD <- RECORD / UNION / USING
 
         # symbols
-        SEMI    <- ';'
-        COMMA   <- ','
-        COLON2  <- '::'
+        ~SEMI    <- ';'
+        ~COMMA   <- ','
+        ~COLON2  <- '::'
 
-        ident   <- !KEYWORD < [a-zA-Z_][a-zA-Z0-9_]* / '$' > ~spacing
+        ident   <- !KEYWORD < [a-zA-Z_][a-zA-Z0-9_]* / '$' > 
 
         %whitespace <- spacing
         %word       <- ident
@@ -168,7 +168,7 @@ namespace {
         line        <- [\r\n]+
 
         OP(I)       <- I ~spacing
-        LIST(I, D)  <- I (~D I)*
+        LIST(I, D)  <- I (D I)*
     )";
 }
 
