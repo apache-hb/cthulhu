@@ -11,28 +11,27 @@ namespace {
 
         # import syntax
         import  <- USING LIST(ident, COLON2) items? SEMI { no_ast_opt }
-        items   <- '(' (LIST(ident, COMMA) / '...') ')'  { no_ast_opt }
+        items   <- '(' (CSV(ident) / DOT3) ')'  { no_ast_opt }
 
         # toplevel declarations
-        decl        <- attribs* (alias / variant / union / record / func / var ';') { no_ast_opt }
+        decl        <- attribs* (alias / variant / union / record / func / var SEMI) { no_ast_opt }
 
-        attribs     <- '@' attrib / '@' '[' LIST(attrib, ',') ']'
+        attribs     <- AT (attrib / '[' CSV(attrib) ']')
         attrib      <- qualified call?
 
-        alias       <- USING ident '=' type ';'
+        alias       <- USING ident '=' type SEMI
         union       <- UNION ident '{' fields? '}' { no_ast_opt }
         record      <- RECORD ident '{' fields? '}' { no_ast_opt }
-        variant     <- 'variant' ident (':' type)? '{' LIST(case, ',')? '}' { no_ast_opt }
-        func        <- 'def' ident fparams? result? body { no_ast_opt }
-        fparams     <- '(' params? ')'
-        result      <- ':' type
-        params      <- param init? (',' params)? 
-        param       <- attribs* ident ':' (type / '...')
-        body        <- ';' / '=' expr ';' / compound
-        var         <- 'var' names init?
-        names       <- qualified '(' LIST(ident, ',') ')' / name / '[' LIST(name, ',') ']'
-        name        <- ident (':' type)?
-        init        <- OP('=') expr
+        variant     <- VARIANT ident result? '{' CSV(case)? '}' { no_ast_opt }
+        func        <- DEF ident fparams? result? body { no_ast_opt }
+        fparams     <- '(' CSV(param)? ')'
+        result      <- COLON type
+        param       <- attribs* ident COLON (type / DOT3) init?
+        body        <- (ASSIGN expr)? SEMI / compound
+        var         <- VAR names init?
+        names       <- qualified '(' CSV(ident) ')' / name / '[' CSV(name) ']'
+        name        <- ident (COLON type)?
+        init        <- ASSIGN expr
 
         # tagged union syntax
         case    <- ident data? ('=' expr)?
@@ -40,14 +39,14 @@ namespace {
 
         field       <- attribs* ident ':' type bitfield?
         bitfield    <- '[' LIST(bitrange, ',') ']'
-        bitrange    <- expr ('..' expr)?
+        bitrange    <- expr (DOT2 expr)?
         fields      <- LIST(field, ',') { no_ast_opt }
 
         # type syntax
         type        <- attribs* (basictype error? / error)
 
         basictype   <- (pointer / array / closure / qualified / mutable)
-        error       <- '!' (type / sum)?
+        error       <- NOT (type / sum)?
         sum         <- '(' LIST(type, '/') ')'
 
         mutable     <- 'var' type
@@ -60,7 +59,7 @@ namespace {
 
         stmt        <- compound / return / break / continue / while / if / guard / expr ';' / switch / assign / for / asm / raise
         for         <- 'for' range else?
-        range       <- '(' names '..' expr ')' stmt / names '..' expr compound
+        range       <- '(' names DOT2 expr ')' stmt / names DOT2 expr compound
         while       <- 'while' label? cond else?
         continue    <- 'continue' ';'
         break       <- 'break' ident? ';'
@@ -87,18 +86,18 @@ namespace {
         asm         <- 'asm' '{' opcode* '}'
         opcode      <- ident (LIST(operand, ',')? ';' / ':')
         operand     <- soperand (':' soperand)?
-        soperand    <- expr / '[' expr ']' / '.' expr
+        soperand    <- expr / '[' expr ']' / DOT expr
 
         expr <- OP(bexpr)
 
         # expressions
         bexpr    <- prefix (binop prefix)* {
                 precedence
-                    L !
+                    L NOT
                     L || &&
                     L & |
                     L ^
-                    L == !=
+                    L EQ NEQ
                     L < <= > >=
                     L << >>
                     L + -
@@ -114,8 +113,8 @@ namespace {
                 / '||'
                 / '&' !('=' / '&')
                 / '|' !('=' / '|')
-                / '!=' / '!'
-                / '==' 
+                / NEQ / NOT
+                / EQ
                 / '<<' !'=' 
                 / '>>' !'=' / '<=' / '>=' / '<' / '>'
             >
@@ -125,11 +124,11 @@ namespace {
         atom <- 'try'? (number / qualified / 'true' / 'false' / string / OP('(') expr OP(')') / lambda) postfix*
 
         prefix  <- atom / OP(unop) prefix / '{' LIST(arg, ',')? '}'
-        postfix <- '[' expr ']' / OP('.') ident / OP('->') ident / call / ternary / 'as' type
+        postfix <- '[' expr ']' / DOT ident / OP('->') ident / call / ternary / 'as' type
         call    <- OP('(') LIST(arg, ',')? OP(')')
         ternary <- OP('?') expr? OP(':') expr
-        arg     <-  expr / '.' ident '=' expr
-        lambda  <- '[' LIST(capture, ',')? ']' fparams? lresult? lbody
+        arg     <-  (DOT ident ASSIGN)? expr
+        lambda  <- '[' CSV(capture)? ']' fparams? lresult? lbody
         capture     <- '&'? qualified
         lresult     <- '->' type
         lbody       <- expr / compound
@@ -146,16 +145,34 @@ namespace {
         char    <- '\\' [nrt'"\[\]\\] / !'\\' .
 
         # keywords
-        ~RECORD  <- 'record'
-        ~UNION   <- 'union'
-        ~USING   <- 'using'
+        ~RECORD     <- 'record'
+        ~UNION      <- 'union'
+        ~USING      <- 'using'
+        ~DEF        <- 'def'
+        ~VARIANT    <- 'variant'
+        ~VAR        <- 'var'
 
-        KEYWORD <- RECORD / UNION / USING
+        # reserved keywords
+        ~LET        <- 'let'
+        ~FINAL      <- 'final'
+        ~COMPILE    <- 'compile'
+
+        KEYWORD <- RECORD / UNION / USING / DEF / VARIANT / VAR
+                    / LET / FINAL / COMPILE
 
         # symbols
-        ~SEMI    <- ';'
-        ~COMMA   <- ','
-        ~COLON2  <- '::'
+        ~SEMI       <- ';'
+        ~COMMA      <- ','
+        ~COLON      <- ':' !':'
+        ~COLON2     <- '::'
+        ~DOT        <- '.' !'.'
+        ~DOT2       <- '..' !'.'
+        ~DOT3       <- '...'
+        ~ASSIGN     <- '=' !'='
+        ~EQ         <- '=='
+        ~NEQ        <- '!='
+        ~NOT        <- '!' !'='
+        ~AT         <- '@'
 
         ident   <- !KEYWORD < [a-zA-Z_][a-zA-Z0-9_]* / '$' > 
 
@@ -169,6 +186,7 @@ namespace {
 
         OP(I)       <- I ~spacing
         LIST(I, D)  <- I (D I)*
+        CSV(I)      <- LIST(I, COMMA)
     )";
 }
 
