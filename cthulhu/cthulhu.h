@@ -124,7 +124,7 @@ namespace cthulhu {
         void add(NamedType* other);
 
         // find a type
-        Type* get(const TypeName& name);
+        NamedType* get(const TypeName& name);
 
         // all types in the current compilation unit
         std::vector<NamedType*> types = {

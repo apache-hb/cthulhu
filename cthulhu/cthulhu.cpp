@@ -189,7 +189,7 @@ void Context::add(NamedType* other) {
     types.push_back(other);
 }
 
-Type* Context::get(const TypeName& name) {
+NamedType* Context::get(const TypeName& name) {
     for (auto& type : types) {
         if (type->name == name) {
             return type;
