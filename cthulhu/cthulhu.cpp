@@ -182,6 +182,7 @@ void Context::add(NamedType* other) {
                 panic("multiple definitions of `{}`", type->name);
             }
             type = other;
+            return;
         }
     }
 
