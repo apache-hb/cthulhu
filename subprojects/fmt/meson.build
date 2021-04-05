@@ -5,7 +5,7 @@ incs = [ 'fmt/include' ]
 args = [ '-DFMT_SUPPRESS_MSC_WARNING=1' ]
 
 if target_machine.system() == 'windows'
-    args += '/wd4702'
+    args += '/wd4127'
 endif
 
 libfmt = library('fmt', [ 'fmt/src/format.cc', 'fmt/src/os.cc' ],
