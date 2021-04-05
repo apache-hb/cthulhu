@@ -12,10 +12,13 @@ namespace {
     auto grammar = R"(
         unit    <- decl* !. { no_ast_opt }
 
-        decl    <- alias / struct
-        alias   <- using ident assign type semi
-        struct  <- record ident lbrace LIST(field) rbrace
+        decl    <- alias / struct / union / variant
+        alias   <- USING ident assign type semi
+        struct  <- RECORD ident lbrace LIST(field) rbrace
+        union   <- UNION ident lbrace LIST(field) rbrace
+        variant <- VARIANT ident (colon type)? lbrace LIST(case) rbrace
 
+        case    <- ident (lparen LIST(field) rparen)?
         field   <- ident colon type
 
         type    <- pointer / ident
@@ -24,6 +27,8 @@ namespace {
         # operators
         ~lbrace  <- '{'
         ~rbrace  <- '}'
+        ~lparen  <- '('
+        ~rparen  <- ')'
         ~assign  <- '='
         ~semi    <- ';'
         ~colon   <- ':'
@@ -31,13 +36,15 @@ namespace {
         ~comma   <- ','
 
         # keywords
-        ~using   <- 'using'
-        ~record  <- 'record'
+        ~USING   <- 'using'
+        ~RECORD  <- 'record'
+        ~UNION   <- 'union' 
+        ~VARIANT <- 'variant'
 
         # reserved keywords
-        ~compile    <- 'compile'
+        ~COMPILE    <- 'compile'
 
-        keyword <- using / record / compile
+        keyword <- USING / RECORD / UNION / VARIANT / COMPILE
 
         %whitespace <- spacing
 
@@ -105,6 +112,34 @@ TypeSize RecordType::size(Context* ctx) const {
     });
 }
 
+TypeSize UnionType::size(Context* ctx) const {
+    return ctx->enter(this, true, false, [&] {
+        TypeSize length = 0;
+
+        for (const auto& [_, type] : fields) {
+            length = std::max(length, type->size(ctx));
+        }
+
+        return length;
+    });
+}
+
+TypeSize VariantType::size(Context* ctx) const {
+    return ctx->enter(this, true, false, [&] {
+        TypeSize length = 0;
+
+        for (const auto& [_, fields] : cases) {
+            TypeSize sum = 0;
+            for (const auto& field : fields) {
+                sum += field.type->size(ctx);
+            }
+            length = std::max(length, sum);
+        }
+
+        return length + parent->size(ctx);
+    });
+}
+
 Context::Context(std::string source) : text(source) {
     if (!parser.parse(text, tree)) {
         panic("failed to parse source");
@@ -123,6 +158,9 @@ void Context::resolve() {
             break;
         case "alias"_:
             add(alias(node));
+            break;
+        case "union"_:
+            add(union_(node));
             break;
         default:
             panic("unrecognized node `{}`", node->name);
@@ -152,6 +190,20 @@ RecordType* Context::record(std::shared_ptr<Ast> ast) {
     }
 
     return new RecordType(name, fields);
+}
+
+UnionType* Context::union_(std::shared_ptr<peg::Ast> ast) {
+    auto name = ast->nodes[0]->token_to_string();
+
+    TypeFields fields;
+    for (auto node : ast->nodes) {
+        if (node->tag != "field"_)
+            continue;
+
+        fields.push_back(field(node));
+    }
+
+    return new UnionType(name, fields);
 }
 
 AliasType* Context::alias(std::shared_ptr<peg::Ast> ast) {

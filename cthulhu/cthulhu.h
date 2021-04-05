@@ -102,6 +102,39 @@ namespace cthulhu {
         { }
     };
 
+    struct UnionType : NamedType {
+        virtual ~UnionType() = default;
+        virtual TypeSize size(Context* ctx) const override;
+
+        TypeFields fields;
+
+        UnionType(TypeName name, TypeFields fields)
+            : NamedType(name)
+            , fields(fields)
+        { }
+    };
+
+    struct VariantCase {
+        TypeName name;
+        TypeFields fields;
+    };
+
+    using VariantCases = std::vector<VariantCase>;
+
+    struct VariantType : NamedType {
+        virtual ~VariantType() = default;
+        virtual TypeSize size(Context* ctx) const override;
+
+        Type* parent;
+        VariantCases cases;
+
+        VariantType(TypeName name, Type* parent, VariantCases cases)
+            : NamedType(name)
+            , parent(parent)
+            , cases(cases)
+        { }
+    };
+
     struct Context {
         // create a new compilation unit
         Context(std::string source);
@@ -117,6 +150,7 @@ namespace cthulhu {
         // also performs checks for recursion
         void resolve();
         RecordType* record(std::shared_ptr<peg::Ast> ast);
+        UnionType* union_(std::shared_ptr<peg::Ast> ast);
         AliasType* alias(std::shared_ptr<peg::Ast> ast);
 
         Field field(std::shared_ptr<peg::Ast> ast);

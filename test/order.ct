@@ -4,6 +4,11 @@ using a = i;
 using i = int;
 using x = void;
 
+union any {
+    something: b,
+    other: *any
+}
+
 record first {
     b: *first
 }
