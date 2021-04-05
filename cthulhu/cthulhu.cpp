@@ -89,13 +89,12 @@ TypeSize PointerType::size(Context* ctx) const {
     });
 }
 
-TypeSize BuiltinType::size(Context*) const{
+TypeSize BuiltinType::size(Context*) const {
     return self;
 }
 
 TypeSize AliasType::size(Context* ctx) const{
     return ctx->enter(this, false, false, [&] {
-        std::cout << "here: " << name << std::endl;
         return type->size(ctx);
     });
 }
