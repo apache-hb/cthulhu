@@ -6,9 +6,6 @@ namespace cthulhu {
     struct Context;
     struct NamedType;
 
-    // init the global compiler state
-    void init();
-
     using TypeName = std::string;
     using TypeSize = size_t;
 
@@ -134,6 +131,9 @@ namespace cthulhu {
             , cases(cases)
         { }
     };
+
+    // init the global compiler state
+    void init();
 
     struct Context {
         // create a new compilation unit
