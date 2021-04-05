@@ -4,6 +4,7 @@
 
 namespace cthulhu {
     struct Context;
+    struct NamedType;
 
     // init the global compiler state
     void init();
@@ -19,12 +20,14 @@ namespace cthulhu {
     struct Type {
         virtual ~Type() = default;
         virtual TypeSize size(Context* ctx) const = 0;
+        virtual const NamedType* chase(Context* ctx) const = 0;
         virtual bool resolved() const { return true; }
     };
 
     struct PointerType : Type {
         virtual ~PointerType() = default;
         virtual TypeSize size(Context* ctx) const override;
+        virtual const NamedType* chase(Context* ctx) const override { return type->chase(ctx); }
 
         Type* type;
 
@@ -35,6 +38,8 @@ namespace cthulhu {
 
     struct NamedType : Type {
         virtual ~NamedType() = default;
+        virtual const NamedType* chase(Context*) const override { return this; }
+        
         TypeName name;
 
         NamedType(TypeName name) : name(name) { }
@@ -135,17 +140,22 @@ namespace cthulhu {
 
 
         template<typename F>
-        TypeSize enter(const NamedType* type, F&& func) {
-            push(type);
+        TypeSize enter(const NamedType* type, bool complete, F&& func) {
+            push(type, complete);
             TypeSize size = func();
             pop();
             return size;
         }
 
-        void push(const NamedType* type);
+        void push(const NamedType* type, bool complete);
         void pop();
 
+        struct Frame {
+            const NamedType* type;
+            bool complete;
+        };
+
         // used for detecting recursive types
-        std::vector<const NamedType*> stack;
+        std::vector<Frame> stack;
     };
 }
