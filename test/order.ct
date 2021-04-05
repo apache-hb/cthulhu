@@ -4,22 +4,21 @@ using a = i;
 using i = int;
 using x = void;
 
-record yes {
-    a: int,
-    b: *yes
+record first {
+    b: *first
 }
 
-record no {
-    a: void
+record second {
+    a: second
 }
+
+# should be rejected
+using x1 = x2;
+using x2 = x3;
+using x3 = x1;
 
 # should be rejected
 # but currently isnt
 using t1 = t2;
 using t2 = t3;
 using t3 = *t1;
-
-# should be rejected
-using x1 = x2;
-using x2 = x3;
-using x3 = x1;
