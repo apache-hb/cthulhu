@@ -6,9 +6,11 @@ using x = void;
 
 record yes {
     a: int,
-    b: no
+    b: *yes
 }
 
 record no {
     a: void
 }
+
+using thing = thing;
