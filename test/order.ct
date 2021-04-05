@@ -13,4 +13,6 @@ record no {
     a: void
 }
 
-using thing = thing;
+using t1 = t2;
+using t2 = t3;
+using t3 = *t1;
