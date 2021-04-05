@@ -17,21 +17,24 @@ namespace cthulhu {
 
     // all types inherit from this type
     struct Type {
+        virtual ~Type() = default;
         virtual TypeSize size(Context* ctx) const = 0;
         virtual bool resolved() const { return true; }
     };
 
     struct PointerType : Type {
+        virtual ~PointerType() = default;
+        virtual TypeSize size(Context* ctx) const override;
+
         Type* type;
 
         PointerType(Type* type)
             : type(type)
         { }
-
-        virtual TypeSize size(Context* ctx) const override;
     };
 
     struct NamedType : Type {
+        virtual ~NamedType() = default;
         TypeName name;
 
         NamedType(TypeName name) : name(name) { }
@@ -39,36 +42,39 @@ namespace cthulhu {
 
     // a type that has yet to be resolved
     struct SentinelType : NamedType { 
+        virtual ~SentinelType() = default;
+        virtual TypeSize size(Context* ctx) const override;
+        virtual bool resolved() const override { return false; }
+
         SentinelType(TypeName name)
             : NamedType(name)
         { }
-
-        virtual TypeSize size(Context* ctx) const override;
-        virtual bool resolved() const override { return false; }
     };
 
     // a builtin type such as int or void
     struct BuiltinType : NamedType { 
+        virtual ~BuiltinType() = default;
+        virtual TypeSize size(Context* ctx) const override;
+
         TypeSize self;
 
         BuiltinType(TypeName name, TypeSize size)
             : NamedType(name)
             , self(size)
         { }
-
-        virtual TypeSize size(Context* ctx) const override;
     };
 
     // an alias of one type to another type
     struct AliasType : NamedType {
+        virtual ~AliasType() = default;
+        virtual TypeSize size(Context* ctx) const override;
+
         Type* type;
 
         AliasType(TypeName name, Type* type)
             : NamedType(name)
             , type(type)
         { }
-
-        virtual TypeSize size(Context* ctx) const override;
     };
 
     struct Field {
@@ -80,14 +86,15 @@ namespace cthulhu {
 
     // a record composed of other types
     struct RecordType : NamedType { 
+        virtual ~RecordType() = default;
+        virtual TypeSize size(Context* ctx) const override;
+
         TypeFields fields;
 
         RecordType(TypeName name, TypeFields fields)
             : NamedType(name)
             , fields(fields)
         { }
-
-        virtual TypeSize size(Context* ctx) const override;
     };
 
     struct Context {
