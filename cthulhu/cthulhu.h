@@ -140,19 +140,22 @@ namespace cthulhu {
 
 
         template<typename F>
-        TypeSize enter(const NamedType* type, bool complete, F&& func) {
-            push(type, complete);
+        TypeSize enter(const NamedType* type, bool allow, bool opaque, F&& func) {
+            push(type, allow, opaque);
             TypeSize size = func();
             pop();
             return size;
         }
 
-        void push(const NamedType* type, bool complete);
+        // @param type: the type being pushed
+        // @param allow: does this type allow itself to be nested
+        // @param opaque: is the type being pushed an opaque type
+        void push(const NamedType* type, bool allow, bool opauqe);
         void pop();
 
         struct Frame {
             const NamedType* type;
-            bool complete;
+            bool nesting;
         };
 
         // used for detecting recursive types

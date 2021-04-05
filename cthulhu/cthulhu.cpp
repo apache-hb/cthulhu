@@ -77,7 +77,7 @@ TypeSize SentinelType::size(Context* ctx) const {
 }
 
 TypeSize PointerType::size(Context* ctx) const {
-    return ctx->enter(chase(ctx), true, [&] {
+    return ctx->enter(chase(ctx), false, true, [&] {
         return target::PTR;
     });
 }
@@ -87,14 +87,14 @@ TypeSize BuiltinType::size(Context*) const{
 }
 
 TypeSize AliasType::size(Context* ctx) const{
-    return ctx->enter(this, false, [&] {
+    return ctx->enter(this, false, false, [&] {
         std::cout << "here: " << name << std::endl;
         return type->size(ctx);
     });
 }
 
 TypeSize RecordType::size(Context* ctx) const {
-    return ctx->enter(this, true, [&] {
+    return ctx->enter(this, true, false, [&] {
         TypeSize length = 0;
 
         for (const auto& [_, type] : fields) {
@@ -207,14 +207,17 @@ NamedType* Context::get(const TypeName& name) {
 
 // recursion testing
 
-void Context::push(const NamedType* type, bool complete) {
+void Context::push(const NamedType* type, bool allow, bool opaque) {
     for (const auto& frame : stack) {
-        if (frame.type->name == type->name && !frame.complete) {
+        if (frame.type->name == type->name) {
+            if (opaque && frame.nesting)
+                break;
+
             panic("recursive type `{}` detected", type->name);
         }
     }
 
-    stack.push_back({ type, complete });
+    stack.push_back({ type, allow });
 }
 
 void Context::pop() {
