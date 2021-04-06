@@ -6,16 +6,16 @@ using namespace peg;
 using namespace peg::udl;
 
 namespace target {
-    IntType* CHAR = new IntType("char", 1, true);
-    IntType* SHORT = new IntType("short", 2, true);
-    IntType* INT = new IntType("int", 4, true);
-    IntType* LONG = new IntType("long", 8, true);
-    IntType* SIZE = new IntType("isize", 8, true);
-    IntType* UCHAR = new IntType("uchar", 1, false);
-    IntType* USHORT = new IntType("ushort", 2, false);
-    IntType* UINT = new IntType("uint", 4, false);
-    IntType* ULONG = new IntType("ulong", 8, false);
-    IntType* USIZE = new IntType("usize", 8, false);
+    IntType* CHAR = new IntType("char");
+    IntType* SHORT = new IntType("short");
+    IntType* INT = new IntType("int");
+    IntType* LONG = new IntType("long");
+    IntType* SIZE = new IntType("isize");
+    IntType* UCHAR = new IntType("uchar");
+    IntType* USHORT = new IntType("ushort");
+    IntType* UINT = new IntType("uint");
+    IntType* ULONG = new IntType("ulong");
+    IntType* USIZE = new IntType("usize");
     BoolType* BOOL = new BoolType();
     VoidType* VOID = new VoidType();
     NamedType* VARIANT = INT;
@@ -32,11 +32,12 @@ namespace {
     auto grammar = R"(
         unit    <- decl* !. { no_ast_opt }
 
-        decl    <- alias / struct / union / variant
-        alias   <- USING ident assign type semi
-        struct  <- RECORD ident lbrace LIST(field) rbrace
-        union   <- UNION ident lbrace LIST(field) rbrace
-        variant <- VARIANT ident (colon type)? lbrace cases rbrace
+        decl        <- alias / struct / union / variant / function
+        alias       <- USING ident assign type semi
+        struct      <- RECORD ident lbrace LIST(field) rbrace
+        union       <- UNION ident lbrace LIST(field) rbrace
+        variant     <- VARIANT ident (colon type)? lbrace cases rbrace
+        function    <- DEF ident colon type semi
 
         cases   <- LIST(case) { no_ast_opt }
         case    <- ident (lparen LIST(field) rparen)? { no_ast_opt }
@@ -64,11 +65,12 @@ namespace {
         ~RECORD  <- 'record' spacing
         ~UNION   <- 'union' spacing
         ~VARIANT <- 'variant' spacing
+        ~DEF     <- 'def' spacing
 
         # reserved keywords
         ~COMPILE    <- 'compile' spacing
 
-        keyword <- USING / RECORD / UNION / VARIANT / COMPILE
+        keyword <- USING / RECORD / UNION / VARIANT / DEF / COMPILE
 
         ident   <- !keyword < [a-zA-Z_][a-zA-Z0-9_]* / '$' > spacing
         ~spacing <- (space / comment)*
@@ -96,97 +98,72 @@ void init() {
     parser.enable_ast();
 }
 
-void Context::resolve() {
+void Context::sema() {
     for (auto* type : types) {
-        if (!type->resolved()) {
-            panic("unresolved type `{}`", type->name);
+        type->sema(this);
+    }
+}
+
+void PointerType::sema(Context* ctx) const {
+    ctx->enter(chase(ctx), false, true, [&] { });
+}
+
+void ClosureType::sema(Context* ctx) const {
+    ctx->enter(this, false, true, [&] { 
+        for (auto* arg : args) {
+            arg->sema(ctx);
         }
-
-        // TODO: segregate builtin types so we dont
-        // redundantly check their sizes
-        if (type->chase(this) != target::VOID)
-            type->size(this);
-    }
-}
-
-TypeSize SentinelType::size(Context* ctx) const {
-    return ctx->get(name)->size(ctx);
-}
-
-TypeSize PointerType::size(Context* ctx) const {
-    return ctx->enter(chase(ctx), false, true, [&] {
-        return target::PTR;
+        result->sema(ctx);
     });
 }
 
-TypeSize ClosureType::size(Context* ctx) const {
-    for (auto* arg : args) {
-        ctx->enter(arg->chase(ctx), false, true, [&] {
-            return 0;
-        });
+void SentinelType::sema(Context* ctx) const {
+    if (auto self = ctx->get(name); self != this) {
+        return self->sema(ctx);
+    } else {
+        panic("unresolved type `{}`", name);
     }
-
-    return ctx->enter(result->chase(ctx), false, true, [&] {
-        return target::PTR;
-    });
 }
 
-TypeSize IntType::size(Context*) const {
-    return self;
-}
-
-TypeSize VoidType::size(Context*) const {
-    panic("size of type is dependant on void");
-}
-
-TypeSize BoolType::size(Context*) const {
-    return target::B;
-}
-
-TypeSize AliasType::size(Context* ctx) const {
+void AliasType::sema(Context* ctx) const {
     return ctx->enter(this, false, false, [&] {
-        return type->size(ctx);
+        return type->sema(ctx);
     });
 }
 
-TypeSize RecordType::size(Context* ctx) const {
-    return ctx->enter(this, true, false, [&] {
-        TypeSize length = 0;
-
-        for (const auto& [_, type] : fields) {
-            length += type->size(ctx);
-        }
-
-        return length;
+void RecordType::sema(Context* ctx) const {
+    ctx->enter(this, true, false, [&] {
+        fields.sema(ctx);
     });
 }
 
-TypeSize UnionType::size(Context* ctx) const {
-    return ctx->enter(this, true, false, [&] {
-        TypeSize length = 0;
-
-        for (const auto& [_, type] : fields) {
-            length = std::max(length, type->size(ctx));
-        }
-
-        return length;
+void UnionType::sema(Context* ctx) const {
+    ctx->enter(this, true, false, [&] {
+        fields.sema(ctx);
     });
 }
 
-TypeSize VariantType::size(Context* ctx) const {
-    return ctx->enter(this, true, false, [&] {
-        TypeSize length = 0;
-
+void VariantType::sema(Context* ctx) const {
+    ctx->enter(this, true, false, [&] {
         for (const auto& [_, fields] : cases) {
-            TypeSize sum = 0;
-            for (const auto& field : fields) {
-                sum += field.type->size(ctx);
-            }
-            length = std::max(length, sum);
+            fields.sema(ctx);
         }
-
-        return length + parent->size(ctx);
+        parent->sema(ctx);
     });
+}
+
+void FunctionType::sema(Context* ctx) const {
+    signature->sema(ctx);
+}
+
+void TypeFields::sema(Context* ctx) const {
+    for (const auto& [name, type] : *this) {
+        std::cout << name << std::endl;
+        if (type->unit()) {
+            panic("field `{}` is a unit type", name);
+        }
+        type->sema(ctx);
+    }
 }
 
 Context::Context(std::string source) : text(source) {
@@ -240,13 +217,13 @@ NamedType* Context::get(const TypeName& name) {
 
 // recursion testing
 
-void Context::push(const NamedType* type, bool allow, bool opaque) {
+void Context::push(const Type* type, bool allow, bool opaque) {
     for (const auto& frame : stack) {
-        if (frame.type->name == type->name) {
+        if (frame.type == type) {
             if (opaque && frame.nesting)
                 break;
 
-            panic("recursive type `{}` detected", type->name);
+            panic("recursive type detected");
         }
     }
 

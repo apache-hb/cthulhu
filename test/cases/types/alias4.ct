@@ -1,0 +1,7 @@
+using a = b;
+using b = c;
+using c = *void;
+
+record x {
+    field: c
+}

@@ -1,4 +1,9 @@
 types = [
+    [ 'types.alias1', true ],
+    [ 'types.alias2', false ],
+    [ 'types.alias3', false ],
+    [ 'types.alias4', true ],
+
     [ 'types.recurse1', false ],
     [ 'types.recurse2', true ],
     [ 'types.recurse3', false ],
@@ -14,8 +19,7 @@ types = [
 
     [ 'types.define1', false ],
     [ 'types.define2', false ],
-    # TODO: this test will pass when sema is more developed
-    # [ 'types.define3', true ],
+    [ 'types.define3', true ],
     [ 'types.define4', true ],
 
     [ 'types.field1', false ],
@@ -26,7 +30,13 @@ types = [
     [ 'types.closure3', false ]
 ]
 
-tests = types
+funcs = [
+    [ 'funcs.func1', true ],
+    [ 'funcs.func2', true ],
+    [ 'funcs.func3', false ]
+]
+
+tests = types + funcs
 
 foreach item : tests
     name = item[0]
