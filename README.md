@@ -8,6 +8,10 @@ Probably better than javascript
 
 ## Building
 
+Build `ctc` into `build/tools/ctc`
+
+Run with `ctc file.ct`
+
 ### MSVC
 
 ```sh
@@ -25,8 +29,8 @@ ninja -C build
 ### Testing
 
 ```sh
-# plain texting
-ninja test
+# plain testing
+ninja -C build test
 # with valgrind 
 meson test --wrap='valgrind -q --leak-check=full --error-exitcode=1'
 ```
