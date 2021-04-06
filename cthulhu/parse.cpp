@@ -25,7 +25,7 @@ void VariantCases::add(const VariantCase& field) {
     push_back(field);
 }
 
-void Context::resolve() {
+void Context::parse() {
     for (auto node : tree->nodes) {
         switch (node->tag) {
         case "struct"_:
@@ -43,17 +43,6 @@ void Context::resolve() {
         default:
             panic("unrecognized node `{}`", node->name);
         }
-    }
-
-    for (auto* type : types) {
-        if (!type->resolved()) {
-            panic("unresolved type `{}`", type->name);
-        }
-
-        // TODO: segregate builtin types so we dont
-        // redundantly check their sizes
-        if (type->chase(this) != target::VOID)
-            type->size(this);
     }
 }
 

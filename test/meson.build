@@ -32,7 +32,7 @@ foreach item : tests
     name = item[0]
     pass = item[1]
 
-    path = 'cases/' + '/'.join(name.split('.')) + '.ct'
+    path = meson.current_source_dir() / 'cases' / '/'.join(name.split('.')) + '.ct'
 
-    test(name, ctc, args : [ path ], should_fail : not pass, workdir : meson.current_source_dir())
+    test(name, ctc, args : [ path ], should_fail : not pass)
 endforeach

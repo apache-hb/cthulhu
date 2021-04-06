@@ -88,6 +88,19 @@ void init() {
     parser.enable_ast();
 }
 
+void Context::resolve() {
+    for (auto* type : types) {
+        if (!type->resolved()) {
+            panic("unresolved type `{}`", type->name);
+        }
+
+        // TODO: segregate builtin types so we dont
+        // redundantly check their sizes
+        if (type->chase(this) != target::VOID)
+            type->size(this);
+    }
+}
+
 TypeSize SentinelType::size(Context* ctx) const {
     return ctx->get(name)->size(ctx);
 }

@@ -214,6 +214,7 @@ namespace cthulhu {
         // the ast from the source code
         std::shared_ptr<peg::Ast> tree;
 
+        void parse();
 
 
         // resolve all types in the current compilation unit
