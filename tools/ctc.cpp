@@ -20,6 +20,8 @@ int main(int argc, const char** argv) {
 
             auto ctx = std::make_shared<cthulhu::Context>(text);
 
+            ctx->parse();
+
             std::cout << "parsed file: " << path << std::endl;
 
             ctx->resolve();
