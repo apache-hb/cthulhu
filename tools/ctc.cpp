@@ -24,9 +24,11 @@ int main(int argc, const char** argv) {
 
             std::cout << "parsed file: " << path << std::endl;
 
-            ctx->resolve();
+            ctx->sema();
 
-            std::cout << "resolved types" << std::endl;
+            std::cout << "validated program" << std::endl;
+
+            ctx->emit();
 
         } catch (const std::exception& error) {
             std::cerr << error.what() << std::endl;

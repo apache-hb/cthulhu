@@ -13,7 +13,8 @@ deps = [ fmt, peg ]
 
 src = [
     'cthulhu/cthulhu.cpp',
-    'cthulhu/parse.cpp'
+    'cthulhu/parse.cpp',
+    'cthulhu/emit.cpp'
 ]
 
 cthulhu = library('ctu', src, dependencies : deps)

@@ -40,10 +40,21 @@ void Context::parse() {
         case "variant"_:
             add(variant(node));
             break;
+        case "function"_:
+            add(function(node));
+            break;
         default:
             panic("unrecognized node `{}`", node->name);
         }
     }
+}
+
+FunctionType* Context::function(std::shared_ptr<peg::Ast> ast) {
+    auto name = ast->nodes[0]->token_to_string();
+
+    auto result = type(ast->nodes[1]);
+
+    return new FunctionType(name, new ClosureType({}, result));
 }
 
 RecordType* Context::record(std::shared_ptr<Ast> ast) {

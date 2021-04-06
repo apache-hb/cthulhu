@@ -16,22 +16,27 @@ namespace cthulhu {
     using TypeSize = size_t;
 
     // all types inherit from this type
-    struct Type {
-        virtual ~Type() = default;
+    struct Node {
+        virtual ~Node() = default;
 
-        /* get the size of this type, returns UNSIZED if the type has an infinite size */
-        virtual TypeSize size(Context* ctx) const = 0;
+        /* make sure this type is semantically valid */
+        virtual void sema(Context* ctx) const = 0;
 
         /* chase this type to get its nested name, used for recursion checks */
         virtual const NamedType* chase(Context* ctx) const = 0;
 
         /* is this type is fully resolved */
         virtual bool resolved() const { return true; }
+
+        /* is a unit type */
+        virtual bool unit() const { return false; }
     };
 
-    struct PointerType : Type {
+    using Type = Node;
+
+    struct PointerType : Node {
         virtual ~PointerType() = default;
-        virtual TypeSize size(Context* ctx) const override;
+        virtual void sema(Context* ctx) const override;
         virtual const NamedType* chase(Context* ctx) const override { return type->chase(ctx); }
 
         Type* type;
@@ -43,9 +48,9 @@ namespace cthulhu {
 
     using Types = std::vector<Type*>;
 
-    struct ClosureType : Type {
+    struct ClosureType : Node {
         virtual ~ClosureType() = default;
-        virtual TypeSize size(Context* ctx) const override;
+        virtual void sema(Context* ctx) const override;
         virtual const NamedType* chase(Context*) const override {
             panic("chasing closure type");
         }
@@ -59,7 +64,7 @@ namespace cthulhu {
         { }
     };
 
-    struct NamedType : Type {
+    struct NamedType : Node {
         virtual ~NamedType() = default;
         virtual const NamedType* chase(Context*) const override { return this; }
         
@@ -71,7 +76,7 @@ namespace cthulhu {
     // a type that has yet to be resolved
     struct SentinelType : NamedType { 
         virtual ~SentinelType() = default;
-        virtual TypeSize size(Context* ctx) const override;
+        virtual void sema(Context*) const override;
         virtual bool resolved() const override { return false; }
 
         SentinelType(TypeName name)
@@ -81,24 +86,17 @@ namespace cthulhu {
 
     struct IntType : NamedType {
         virtual ~IntType() = default;
-        virtual TypeSize size(Context* ctx) const override;
+        virtual void sema(Context*) const override { }
 
-        /* our size */
-        TypeSize self;
-
-        /* true if signed, else unsigned */
-        bool sign;
-
-        IntType(TypeName name, TypeSize size, bool sign)
+        IntType(TypeName name)
             : NamedType(name)
-            , self(size)
-            , sign(sign)
         { }
     };
 
     struct VoidType : NamedType {
         virtual ~VoidType() = default;
-        virtual TypeSize size(Context* ctx) const override;
+        virtual void sema(Context*) const override { }
+        virtual bool unit() const { return true; }
 
         VoidType() 
             : NamedType("void")
@@ -107,7 +105,7 @@ namespace cthulhu {
 
     struct BoolType : NamedType {
         virtual ~BoolType() = default;
-        virtual TypeSize size(Context* ctx) const override;
+        virtual void sema(Context*) const override { }
 
         BoolType()
             : NamedType("bool")
@@ -117,7 +115,8 @@ namespace cthulhu {
     // an alias of one type to another type
     struct AliasType : NamedType {
         virtual ~AliasType() = default;
-        virtual TypeSize size(Context* ctx) const override;
+        virtual void sema(Context* ctx) const override;
+        virtual bool unit() const { return type->unit(); }
 
         Type* type;
 
@@ -134,12 +133,13 @@ namespace cthulhu {
 
     struct TypeFields : std::vector<Field> {
         void add(const Field& field);
+        void sema(Context* ctx) const;
     };
 
     // a record composed of other types
     struct RecordType : NamedType { 
         virtual ~RecordType() = default;
-        virtual TypeSize size(Context* ctx) const override;
+        virtual void sema(Context* ctx) const override;
 
         TypeFields fields;
 
@@ -151,7 +151,7 @@ namespace cthulhu {
 
     struct UnionType : NamedType {
         virtual ~UnionType() = default;
-        virtual TypeSize size(Context* ctx) const override;
+        virtual void sema(Context* ctx) const override;
 
         TypeFields fields;
 
@@ -172,7 +172,7 @@ namespace cthulhu {
 
     struct VariantType : NamedType {
         virtual ~VariantType() = default;
-        virtual TypeSize size(Context* ctx) const override;
+        virtual void sema(Context* ctx) const override;
 
         Type* parent;
         VariantCases cases;
@@ -184,8 +184,23 @@ namespace cthulhu {
         { }
     };
 
+    struct FunctionType : NamedType {
+        virtual ~FunctionType() = default;
+        virtual void sema(Context* ctx) const override;
+
+        ClosureType* signature;
+
+        FunctionType(TypeName name, ClosureType* signature)
+            : NamedType(name)
+            , signature(signature)
+        { }
+    };
+
     namespace target {
+        // size of a pointer
         constexpr TypeSize PTR = 8;
+
+        // default size of a boolean
         constexpr TypeSize B = 1;
 
         extern IntType* CHAR;
@@ -220,10 +235,16 @@ namespace cthulhu {
 
         void parse();
 
+        // perform semantic analysis
+        // and generate IR
+        void sema();
+
+        // emit IR as assembly
+        void emit();
 
         // resolve all types in the current compilation unit
         // also performs checks for recursion
-        void resolve();
+        FunctionType* function(std::shared_ptr<peg::Ast> ast);
         RecordType* record(std::shared_ptr<peg::Ast> ast);
         UnionType* union_(std::shared_ptr<peg::Ast> ast);
         AliasType* alias(std::shared_ptr<peg::Ast> ast);
@@ -232,7 +253,6 @@ namespace cthulhu {
         VariantCase vcase(std::shared_ptr<peg::Ast> ast);
         Field field(std::shared_ptr<peg::Ast> ast);
         Type* type(std::shared_ptr<peg::Ast> ast);
-
 
         // register a named type
         // if a sentinal type with the same name is found
@@ -246,21 +266,20 @@ namespace cthulhu {
         std::vector<NamedType*> types;
 
         template<typename F>
-        TypeSize enter(const NamedType* type, bool allow, bool opaque, F&& func) {
+        void enter(const Type* type, bool allow, bool opaque, F&& func) {
             push(type, allow, opaque);
-            TypeSize size = func();
+            func();
             pop();
-            return size;
         }
 
         // @param type: the type being pushed
         // @param allow: does this type allow itself to be nested
         // @param opaque: is the type being pushed an opaque type
-        void push(const NamedType* type, bool allow, bool opauqe);
+        void push(const Type* type, bool allow, bool opauqe);
         void pop();
 
         struct Frame {
-            const NamedType* type;
+            const Type* type;
             bool nesting;
         };
 
