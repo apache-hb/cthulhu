@@ -10,7 +10,12 @@ types = [
     [ 'types.variant2', true ],
     [ 'types.variant3', true ],
     [ 'types.variant4', true ],
-    [ 'types.variant5', false ]
+    [ 'types.variant5', false ],
+
+    [ 'types.define1', false ],
+    [ 'types.define2', false ],
+
+    [ 'types.field1', false ],
 ]
 
 tests = types
