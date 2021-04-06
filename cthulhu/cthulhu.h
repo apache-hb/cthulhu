@@ -192,14 +192,18 @@ namespace cthulhu {
         extern IntType* SHORT;
         extern IntType* INT;
         extern IntType* LONG;
+        extern IntType* SIZE;
         extern IntType* UCHAR;
         extern IntType* USHORT;
         extern IntType* UINT;
         extern IntType* ULONG;
+        extern IntType* USIZE;
         extern BoolType* BOOL;
         extern VoidType* VOID;
 
         extern NamedType* VARIANT;
+
+        extern std::vector<NamedType*> BUILTINS;
     }
 
     // init the global compiler state
@@ -238,14 +242,8 @@ namespace cthulhu {
         // find a type
         NamedType* get(const TypeName& name);
 
-        // all types in the current compilation unit
-        std::vector<NamedType*> types = {
-            target::CHAR, target::SHORT, target::INT, target::LONG,
-            target::UCHAR, target::USHORT, target::UINT, target::ULONG,
-            target::VOID, target::BOOL
-        };
-
-
+        // all user defined types in the current compilation unit
+        std::vector<NamedType*> types;
 
         template<typename F>
         TypeSize enter(const NamedType* type, bool allow, bool opaque, F&& func) {

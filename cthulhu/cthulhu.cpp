@@ -10,13 +10,21 @@ namespace target {
     IntType* SHORT = new IntType("short", 2, true);
     IntType* INT = new IntType("int", 4, true);
     IntType* LONG = new IntType("long", 8, true);
+    IntType* SIZE = new IntType("isize", 8, true);
     IntType* UCHAR = new IntType("uchar", 1, false);
     IntType* USHORT = new IntType("ushort", 2, false);
     IntType* UINT = new IntType("uint", 4, false);
     IntType* ULONG = new IntType("ulong", 8, false);
+    IntType* USIZE = new IntType("usize", 8, false);
     BoolType* BOOL = new BoolType();
     VoidType* VOID = new VoidType();
     NamedType* VARIANT = INT;
+
+    std::vector<NamedType*> BUILTINS = {
+        CHAR, SHORT, INT, LONG, SIZE,
+        UCHAR, USHORT, UINT, ULONG, USIZE,
+        VOID, BOOL
+    };
 }
 
 namespace {
@@ -192,6 +200,12 @@ Context::Context(std::string source) : text(source) {
 }
 
 void Context::add(NamedType* other) {
+    for (auto* type : target::BUILTINS) {
+        if (type->name == other->name) {
+            panic("`{}` is a builtin type and may not be redefined", type->name);
+        }
+    }
+
     for (auto& type : types) {
         if (type->name == other->name) {
             if (type->resolved()) {
@@ -206,6 +220,12 @@ void Context::add(NamedType* other) {
 }
 
 NamedType* Context::get(const TypeName& name) {
+    for (auto* type : target::BUILTINS) {
+        if (type->name == name) {
+            return type;
+        }
+    }
+
     for (auto& type : types) {
         if (type->name == name) {
             return type;
