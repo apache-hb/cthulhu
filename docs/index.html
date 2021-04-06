@@ -32,6 +32,7 @@
                     <li><a href="#references">references</a></li>
                     <li><a href="#terms">terms and definitions</a></li>
                     <li><a href="#basic">basics</a></li>
+                    <li><a href="#types">types</a></li>
                 </lo>
             </h2>
 
@@ -52,7 +53,12 @@
                         <div class="term">[references]</div>
                     </h2>
                     <ol>
-                        <li>Ford, Bryan. Parsing Expression Grammars: A Recognition-Based Syntactic Foundation.<div id="references-grammar" class="term">[references.grammar]</div></li>
+                        <li>
+                            <a href="https://bford.info/pub/lang/peg.pdf" target="_blank">Bryan. Parsing Expression Grammars: A Recognition-Based Syntactic Foundation.</a><div id="references-grammar" class="term">[references.grammar]</div>
+                        </li>
+                        <li>
+                            <a href="https://home.cs.colorado.edu/~bec/courses/csci5535/reading/cardelli-typesystems.pdf" target="_blank">Cardelli, Luca. Type Systems</a><div id="references-proof" class="term">[references.proof]</div>
+                        </li>
                     </ol>
                 </li>
 
@@ -73,7 +79,7 @@
                             the semantic descriptions in this document define a parameterized nondeterministic abstract machine.
                             this document places no requirement on the structure of conforming implementations.
                             in particular, then need not copy or emulate the structure of the abstract machine.
-                            rather, conforming implementations are required to emulate only the observable behavior of the abstract machine as described in <a href="#terms-observable">[intro.terms.observable]</a>
+                            rather, conforming implementations are required to emulate only the observable behavior of the abstract machine as described in <a href="#terms-observable">[terms.observable]</a>
 
                             <h3>observable behavior<div id="terms-observable" class="term">[terms.observable]</div></h3>
                             TODO
@@ -95,14 +101,33 @@
                             <h3>implementation compliance<div class="term">[basic.compliance]</div></h3>
                             TODO
                         </li>
+                        
                         <li>
                             <h3>syntax notation<div class="term">[basic.syntax]</div></h3>
                             the syntax notation used in this document is described in <a href="#references-grammar">[references.grammar]</a>
                         </li>
 
                         <li>
+                            <h3>proof notation<div class="term">[basic.proof]</div></h3>
+                            this proof notation used in this document is described in <a href="#references-proof">[references.proof]</a>
+                        </li>
+
+                        <li>
                             <h3>grammar<div class="term">[basic.grammar]</div></h3>
                             <div class="grammar">omitted until stable</div>
+                        </li>
+                    </ol>
+                </li>
+
+                <li>
+                    <h2 class="section" id="types">
+                        types
+                        <div class="term">[types]</div>
+                    </h2>
+
+                    <ol>
+                        <li>
+                            <h3>scalar types<div class="term">[types.scalar]</div></h3>
                         </li>
                     </ol>
                 </li>

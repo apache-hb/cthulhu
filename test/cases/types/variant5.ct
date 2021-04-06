@@ -1,0 +1,4 @@
+variant name : int {
+    one(one: name),
+    two
+}

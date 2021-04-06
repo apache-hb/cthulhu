@@ -20,3 +20,4 @@ ctu = declare_dependency(
 )
 
 subdir('tools')
+subdir('test')

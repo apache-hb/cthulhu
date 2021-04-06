@@ -1,1 +1,1 @@
-executable('ctc', 'ctc.cpp', dependencies : ctu)
+ctc = executable('ctc', 'ctc.cpp', dependencies : ctu)
