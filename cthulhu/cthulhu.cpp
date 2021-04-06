@@ -7,6 +7,20 @@ namespace cthulhu {
 using namespace peg;
 using namespace peg::udl;
 
+namespace target {
+    IntType* CHAR = new IntType("char", 1, true);
+    IntType* SHORT = new IntType("short", 2, true);
+    IntType* INT = new IntType("int", 4, true);
+    IntType* LONG = new IntType("long", 8, true);
+    IntType* UCHAR = new IntType("uchar", 1, false);
+    IntType* USHORT = new IntType("ushort", 2, false);
+    IntType* UINT = new IntType("uint", 4, false);
+    IntType* ULONG = new IntType("ulong", 8, false);
+    BoolType* BOOL = new BoolType();
+    VoidType* VOID = new VoidType();
+    NamedType* VARIANT = INT;
+}
+
 namespace {
     // grammar consumed by cpp-peglib
     auto grammar = R"(
@@ -16,39 +30,38 @@ namespace {
         alias   <- USING ident assign type semi
         struct  <- RECORD ident lbrace LIST(field) rbrace
         union   <- UNION ident lbrace LIST(field) rbrace
-        variant <- VARIANT ident (colon type)? lbrace LIST(case) rbrace
+        variant <- VARIANT ident (colon type)? lbrace cases rbrace
 
-        case    <- ident (lparen LIST(field) rparen)?
+        cases   <- LIST(case) { no_ast_opt }
+        case    <- ident (lparen LIST(field) rparen)? { no_ast_opt }
         field   <- ident colon type
 
         type    <- pointer / ident
         pointer <- mul type { no_ast_opt }
 
         # operators
-        ~lbrace  <- '{'
-        ~rbrace  <- '}'
-        ~lparen  <- '('
-        ~rparen  <- ')'
-        ~assign  <- '='
-        ~semi    <- ';'
-        ~colon   <- ':'
-        ~mul     <- '*'
-        ~comma   <- ','
+        ~lbrace  <- '{' spacing
+        ~rbrace  <- '}' spacing
+        ~lparen  <- '(' spacing
+        ~rparen  <- ')' spacing
+        ~assign  <- '=' spacing
+        ~semi    <- ';' spacing
+        ~colon   <- ':' spacing
+        ~mul     <- '*' spacing
+        ~comma   <- ',' spacing
 
         # keywords
-        ~USING   <- 'using'
-        ~RECORD  <- 'record'
-        ~UNION   <- 'union' 
-        ~VARIANT <- 'variant'
+        ~USING   <- 'using' spacing
+        ~RECORD  <- 'record' spacing
+        ~UNION   <- 'union' spacing
+        ~VARIANT <- 'variant' spacing
 
         # reserved keywords
-        ~COMPILE    <- 'compile'
+        ~COMPILE    <- 'compile' spacing
 
         keyword <- USING / RECORD / UNION / VARIANT / COMPILE
 
-        %whitespace <- spacing
-
-        ident   <- !keyword < [a-zA-Z_][a-zA-Z0-9_]* / '$' >
+        ident   <- !keyword < [a-zA-Z_][a-zA-Z0-9_]* / '$' > spacing
         ~spacing <- (space / comment)*
         space   <- [ \t\r\n]
         comment <- '#' (!newline .)* newline?
@@ -89,11 +102,19 @@ TypeSize PointerType::size(Context* ctx) const {
     });
 }
 
-TypeSize BuiltinType::size(Context*) const {
+TypeSize IntType::size(Context*) const {
     return self;
 }
 
-TypeSize AliasType::size(Context* ctx) const{
+TypeSize VoidType::size(Context*) const {
+    panic("size of type is dependant on void");
+}
+
+TypeSize BoolType::size(Context*) const {
+    return target::B;
+}
+
+TypeSize AliasType::size(Context* ctx) const {
     return ctx->enter(this, false, false, [&] {
         return type->size(ctx);
     });
@@ -161,6 +182,9 @@ void Context::resolve() {
         case "union"_:
             add(union_(node));
             break;
+        case "variant"_:
+            add(variant(node));
+            break;
         default:
             panic("unrecognized node `{}`", node->name);
         }
@@ -171,9 +195,10 @@ void Context::resolve() {
             panic("unresolved type `{}`", type->name);
         }
 
-        auto size = type->size(this);
-
-        std::cout << "resolved: " << type->name << " size: " << size << std::endl;
+        // TODO: segregate builtin types so we dont
+        // redundantly check their sizes
+        if (type != target::VOID)
+            type->size(this);
     }
 }
 
@@ -210,6 +235,36 @@ AliasType* Context::alias(std::shared_ptr<peg::Ast> ast) {
     auto other = type(ast->nodes[1]);
 
     return new AliasType(name, other);
+}
+
+VariantType* Context::variant(std::shared_ptr<peg::Ast> ast) {
+    auto name = ast->nodes[0]->token_to_string();
+
+    auto parent = ast->nodes.size() > 2
+        ? type(ast->nodes[1])
+        : target::VARIANT;
+    VariantCases cases;
+
+    auto nodes = ast->nodes.back()->nodes;
+    for (auto node : nodes) {
+        cases.push_back(vcase(node));
+    }
+
+    return new VariantType(name, parent, cases);
+}
+
+VariantCase Context::vcase(std::shared_ptr<peg::Ast> ast) {
+    auto name = ast->nodes[0]->token_to_string();
+    TypeFields fields;
+
+    for (auto node : ast->nodes) {
+        if (node->tag != "field"_)
+            continue;
+
+        fields.push_back(field(node));
+    }
+
+    return { name, fields };
 }
 
 Field Context::field(std::shared_ptr<peg::Ast> ast) {
@@ -267,6 +322,8 @@ void Context::push(const NamedType* type, bool allow, bool opaque) {
             panic("recursive type `{}` detected", type->name);
         }
     }
+
+    std::cout << "push: " << type->name << std::endl;
 
     stack.push_back({ type, allow });
 }

@@ -9,15 +9,17 @@ namespace cthulhu {
     using TypeName = std::string;
     using TypeSize = size_t;
 
-    namespace target {
-        constexpr TypeSize PTR = 8;
-    }
-
     // all types inherit from this type
     struct Type {
         virtual ~Type() = default;
+
+        /* get the size of this type, returns UNSIZED if the type has an infinite size */
         virtual TypeSize size(Context* ctx) const = 0;
+
+        /* chase this type to get its nested name, used for recursion checks */
         virtual const NamedType* chase(Context* ctx) const = 0;
+
+        /* is this type is fully resolved */
         virtual bool resolved() const { return true; }
     };
 
@@ -53,16 +55,38 @@ namespace cthulhu {
         { }
     };
 
-    // a builtin type such as int or void
-    struct BuiltinType : NamedType { 
-        virtual ~BuiltinType() = default;
+    struct IntType : NamedType {
+        virtual ~IntType() = default;
         virtual TypeSize size(Context* ctx) const override;
 
+        /* our size */
         TypeSize self;
 
-        BuiltinType(TypeName name, TypeSize size)
+        /* true if signed, else unsigned */
+        bool sign;
+
+        IntType(TypeName name, TypeSize size, bool sign)
             : NamedType(name)
             , self(size)
+            , sign(sign)
+        { }
+    };
+
+    struct VoidType : NamedType {
+        virtual ~VoidType() = default;
+        virtual TypeSize size(Context* ctx) const override;
+
+        VoidType() 
+            : NamedType("void")
+        { }
+    };
+
+    struct BoolType : NamedType {
+        virtual ~BoolType() = default;
+        virtual TypeSize size(Context* ctx) const override;
+
+        BoolType()
+            : NamedType("bool")
         { }
     };
 
@@ -132,6 +156,24 @@ namespace cthulhu {
         { }
     };
 
+    namespace target {
+        constexpr TypeSize PTR = 8;
+        constexpr TypeSize B = 1;
+
+        extern IntType* CHAR;
+        extern IntType* SHORT;
+        extern IntType* INT;
+        extern IntType* LONG;
+        extern IntType* UCHAR;
+        extern IntType* USHORT;
+        extern IntType* UINT;
+        extern IntType* ULONG;
+        extern BoolType* BOOL;
+        extern VoidType* VOID;
+
+        extern NamedType* VARIANT;
+    }
+
     // init the global compiler state
     void init();
 
@@ -152,7 +194,9 @@ namespace cthulhu {
         RecordType* record(std::shared_ptr<peg::Ast> ast);
         UnionType* union_(std::shared_ptr<peg::Ast> ast);
         AliasType* alias(std::shared_ptr<peg::Ast> ast);
+        VariantType* variant(std::shared_ptr<peg::Ast> ast);
 
+        VariantCase vcase(std::shared_ptr<peg::Ast> ast);
         Field field(std::shared_ptr<peg::Ast> ast);
         Type* type(std::shared_ptr<peg::Ast> ast);
 
@@ -167,8 +211,9 @@ namespace cthulhu {
 
         // all types in the current compilation unit
         std::vector<NamedType*> types = {
-            new BuiltinType("int", 4),
-            new BuiltinType("void", 0)
+            target::CHAR, target::SHORT, target::INT, target::LONG,
+            target::UCHAR, target::USHORT, target::UINT, target::ULONG,
+            target::VOID, target::BOOL
         };
 
 
