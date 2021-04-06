@@ -1,0 +1,4 @@
+record a {
+    a: int,
+    a: int
+}

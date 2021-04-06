@@ -108,7 +108,9 @@ namespace cthulhu {
         Type* type;
     };
 
-    using TypeFields = std::vector<Field>;
+    struct TypeFields : std::vector<Field> {
+        void add(const Field& field);
+    };
 
     // a record composed of other types
     struct RecordType : NamedType { 
@@ -140,7 +142,9 @@ namespace cthulhu {
         TypeFields fields;
     };
 
-    using VariantCases = std::vector<VariantCase>;
+    struct VariantCases : std::vector<VariantCase> {
+        void add(const VariantCase& item);
+    };
 
     struct VariantType : NamedType {
         virtual ~VariantType() = default;

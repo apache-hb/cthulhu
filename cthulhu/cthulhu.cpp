@@ -92,6 +92,27 @@ void init() {
     parser.enable_ast();
 }
 
+void TypeFields::add(const Field& field) {
+    for (auto& elem : *this) {
+        if (elem.name == field.name) {
+            panic("field `{}` already defined", field.name);
+        }
+    }
+
+    push_back(field);
+}
+
+
+void VariantCases::add(const VariantCase& field) {
+    for (auto& elem : *this) {
+        if (elem.name == field.name) {
+            panic("variant case `{}` already defined", field.name);
+        }
+    }
+
+    push_back(field);
+}
+
 TypeSize SentinelType::size(Context* ctx) const {
     return ctx->get(name)->size(ctx);
 }
@@ -210,7 +231,7 @@ RecordType* Context::record(std::shared_ptr<Ast> ast) {
         if (node->tag != "field"_)
             continue;
 
-        fields.push_back(field(node));
+        fields.add(field(node));
     }
 
     return new RecordType(name, fields);
@@ -224,7 +245,7 @@ UnionType* Context::union_(std::shared_ptr<peg::Ast> ast) {
         if (node->tag != "field"_)
             continue;
 
-        fields.push_back(field(node));
+        fields.add(field(node));
     }
 
     return new UnionType(name, fields);
@@ -247,7 +268,7 @@ VariantType* Context::variant(std::shared_ptr<peg::Ast> ast) {
 
     auto nodes = ast->nodes.back()->nodes;
     for (auto node : nodes) {
-        cases.push_back(vcase(node));
+        cases.add(vcase(node));
     }
 
     return new VariantType(name, parent, cases);
@@ -261,7 +282,7 @@ VariantCase Context::vcase(std::shared_ptr<peg::Ast> ast) {
         if (node->tag != "field"_)
             continue;
 
-        fields.push_back(field(node));
+        fields.add(field(node));
     }
 
     return { name, fields };
