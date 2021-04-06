@@ -217,8 +217,6 @@ void Context::push(const NamedType* type, bool allow, bool opaque) {
         }
     }
 
-    std::cout << "push: " << type->name << std::endl;
-
     stack.push_back({ type, allow });
 }
 
