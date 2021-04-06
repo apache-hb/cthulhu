@@ -11,7 +11,12 @@ peg = subproject('peglib').get_variable('dep')
 
 deps = [ fmt, peg ]
 
-cthulhu = library('ctu', 'cthulhu/cthulhu.cpp', dependencies : deps)
+src = [
+    'cthulhu/cthulhu.cpp',
+    'cthulhu/parse.cpp'
+]
+
+cthulhu = library('ctu', src, dependencies : deps)
 
 ctu = declare_dependency(
     include_directories : 'cthulhu', 
