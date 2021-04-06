@@ -41,6 +41,24 @@ namespace cthulhu {
         { }
     };
 
+    using Types = std::vector<Type*>;
+
+    struct ClosureType : Type {
+        virtual ~ClosureType() = default;
+        virtual TypeSize size(Context* ctx) const override;
+        virtual const NamedType* chase(Context*) const override {
+            panic("chasing closure type");
+        }
+
+        Types args;
+        Type* result;
+
+        ClosureType(Types args, Type* result)
+            : args(args)
+            , result(result)
+        { }
+    };
+
     struct NamedType : Type {
         virtual ~NamedType() = default;
         virtual const NamedType* chase(Context*) const override { return this; }

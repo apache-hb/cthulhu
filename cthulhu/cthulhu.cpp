@@ -34,8 +34,10 @@ namespace {
         case    <- ident (lparen LIST(field) rparen)? { no_ast_opt }
         field   <- ident colon type
 
-        type    <- pointer / ident
+        type    <- pointer / closure / ident
+        closure <- lparen types rparen arrow type
         pointer <- mul type { no_ast_opt }
+        types   <- LIST(type) { no_ast_opt }
 
         # operators
         ~lbrace  <- '{' spacing
@@ -47,6 +49,7 @@ namespace {
         ~colon   <- ':' spacing
         ~mul     <- '*' spacing
         ~comma   <- ',' spacing
+        ~arrow   <- '->' spacing
 
         # keywords
         ~USING   <- 'using' spacing
@@ -91,6 +94,18 @@ TypeSize SentinelType::size(Context* ctx) const {
 
 TypeSize PointerType::size(Context* ctx) const {
     return ctx->enter(chase(ctx), false, true, [&] {
+        return target::PTR;
+    });
+}
+
+TypeSize ClosureType::size(Context* ctx) const {
+    for (auto* arg : args) {
+        ctx->enter(arg->chase(ctx), false, true, [&] {
+            return 0;
+        });
+    }
+
+    return ctx->enter(result->chase(ctx), false, true, [&] {
         return target::PTR;
     });
 }

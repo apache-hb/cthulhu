@@ -14,12 +14,16 @@ types = [
 
     [ 'types.define1', false ],
     [ 'types.define2', false ],
-    # TODO: this test will pass once sema is further developed
+    # TODO: this test will pass when sema is more developed
     # [ 'types.define3', true ],
     [ 'types.define4', true ],
 
     [ 'types.field1', false ],
     [ 'types.field2', false ],
+
+    [ 'types.closure1', true ],
+    [ 'types.closure2', false ],
+    [ 'types.closure3', false ]
 ]
 
 tests = types

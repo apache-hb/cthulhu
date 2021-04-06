@@ -52,7 +52,7 @@ void Context::resolve() {
 
         // TODO: segregate builtin types so we dont
         // redundantly check their sizes
-        if (type != target::VOID)
+        if (type->chase(this) != target::VOID)
             type->size(this);
     }
 }
@@ -127,9 +127,19 @@ Field Context::field(std::shared_ptr<peg::Ast> ast) {
 }
 
 Type* Context::type(std::shared_ptr<peg::Ast> ast) {
+    auto collect = [&](std::shared_ptr<peg::Ast> node) {
+        Types out;
+        for (auto it : node->nodes) {
+            out.push_back(type(it));
+        }
+        return out;
+    };
+
     switch (ast->tag) {
     case "pointer"_:
         return new PointerType(type(ast->nodes[0]));
+    case "closure"_:
+        return new ClosureType(collect(ast->nodes[0]), type(ast->nodes[1]));
     case "ident"_:
         return get(ast->token_to_string());
     default:
