@@ -36,29 +36,80 @@ namespace {
         alias       <- USING ident assign type semi
         struct      <- RECORD ident lbrace LIST(field) rbrace
         union       <- UNION ident lbrace LIST(field) rbrace
-        variant     <- VARIANT ident (colon type)? lbrace cases rbrace
-        function    <- DEF ident colon type semi
+        variant     <- VARIANT ident tail? lbrace cases rbrace
+        function    <- DEF ident params? tail? body { no_ast_opt }
+        body        <- (assign expr)? semi / compound
+
+        params      <- lparen LIST(param)? rparen { no_ast_opt }
+        param       <- ident tail
 
         cases   <- LIST(case) { no_ast_opt }
         case    <- ident (lparen LIST(field) rparen)? { no_ast_opt }
-        field   <- ident colon type
+        field   <- ident tail
+
+        tail    <- colon type
 
         type    <- pointer / closure / ident
         closure <- lparen types rparen arrow type
         pointer <- mul type { no_ast_opt }
         types   <- LIST(type) { no_ast_opt }
 
+        # statements
+        stmt        <- compound / expr semi
+        compound    <- lbrace LIST(stmt)? rbrace
+
+        # expressions
+        expr    <- atom (binop atom)* {
+            precedence
+                L or and
+                L bitor bitand
+                L xor
+                L eq neq
+                L gt gte lt lte
+                L shl shr
+                L add sub
+                L div mod mul
+        }
+
+        binop   <- < 
+            add / sub / mod / mul / div / 
+            shl / shr / 
+            gt / gte / lt / lte / 
+            eq / neq / xor / bitor / bitand / 
+            or / and 
+        >
+
+        atom    <- ident
+
         # operators
         ~lbrace  <- '{' spacing
         ~rbrace  <- '}' spacing
         ~lparen  <- '(' spacing
         ~rparen  <- ')' spacing
-        ~assign  <- '=' spacing
+        ~assign  <- '=' !'=' spacing
         ~semi    <- ';' spacing
         ~colon   <- ':' spacing
-        ~mul     <- '*' spacing
         ~comma   <- ',' spacing
         ~arrow   <- '->' spacing
+
+        ~add    <- '+' spacing
+        ~sub    <- '-' spacing
+        ~mod    <- '%' spacing
+        ~mul    <- '*' spacing
+        ~div    <- '/' spacing
+        ~shl    <- '<<' spacing
+        ~shr    <- '>>' spacing
+        ~gt     <- '<' !'=' spacing
+        ~gte    <- '<=' spacing
+        ~lt     <- '>' !'=' spacing
+        ~lte    <- '>=' spacing
+        ~eq     <- '==' spacing
+        ~neq    <- '!=' spacing
+        ~bitor  <- '|' !'|' spacing
+        ~bitand <- '&' !'&' spacing
+        ~or     <- '||' spacing
+        ~and    <- '&&' spacing
+        ~xor    <- '^' spacing
 
         # keywords
         ~USING   <- 'using' spacing
@@ -72,14 +123,39 @@ namespace {
 
         keyword <- USING / RECORD / UNION / VARIANT / DEF / COMPILE
 
-        ident   <- !keyword < [a-zA-Z_][a-zA-Z0-9_]* / '$' > spacing
-        ~spacing <- (space / comment)*
+        ident   <- !keyword < [a-zA-Z_][a-zA-Z0-9_]* / '$' > spacing*
+        ~spacing <- (space / comment)
         space   <- [ \t\r\n]
         comment <- '#' (!newline .)* newline?
         newline <- [\r\n]+
 
         LIST(R) <- R (comma R)*
     )";
+
+#if 0
+unit    <- COMPILE ident* eof
+
+
+
+# reserved keywords
+COMPILE <- 'compile' skip
+
+KEYWORD <- COMPILE
+
+# an identifier is any sequence of [a-zA-Z_][a-zA-Z0-9_] or a single $
+# that is *not* a keyword
+ident   <- !KEYWORD < [a-zA-Z_][a-zA-Z0-9_]* / '$' > skip
+#word    <- !KEYWORD < [a-zA-Z_][a-zA-Z0-9_]* > skip
+
+# whitespace handling
+~comment <- '#' (!line .)* line?
+~line    <- [\r\n]
+~blank   <- [ \t]
+~space   <- blank / comment
+~skip    <- ![a-zA-Z_] space / eof
+~eof     <- !.
+
+#endif
 
     // our global parser instance
     peg::parser parser;
@@ -153,7 +229,10 @@ void VariantType::sema(Context* ctx) const {
 }
 
 void FunctionType::sema(Context* ctx) const {
-    signature->sema(ctx);
+    ctx->enter(this, false, true, [&] {
+        args.sema(ctx);
+        result->sema(ctx);
+    });
 }
 
 void TypeFields::sema(Context* ctx) const {
@@ -223,7 +302,7 @@ void Context::push(const Type* type, bool allow, bool opaque) {
             if (opaque && frame.nesting)
                 break;
 
-            panic("recursive type detected");
+            panic("recursive `{}` type detected", type->str());
         }
     }
 

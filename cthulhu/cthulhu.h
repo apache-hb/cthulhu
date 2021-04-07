@@ -25,6 +25,9 @@ namespace cthulhu {
         /* chase this type to get its nested name, used for recursion checks */
         virtual const NamedType* chase(Context* ctx) const = 0;
 
+        /* get the name of this node */
+        virtual TypeName str() const = 0;
+
         /* is this type is fully resolved */
         virtual bool resolved() const { return true; }
 
@@ -37,6 +40,7 @@ namespace cthulhu {
     struct PointerType : Node {
         virtual ~PointerType() = default;
         virtual void sema(Context* ctx) const override;
+        virtual TypeName str() const override { return "*" + type->str(); }
         virtual const NamedType* chase(Context* ctx) const override { return type->chase(ctx); }
 
         Type* type;
@@ -51,6 +55,7 @@ namespace cthulhu {
     struct ClosureType : Node {
         virtual ~ClosureType() = default;
         virtual void sema(Context* ctx) const override;
+        virtual TypeName str() const override { return "closure"; }
         virtual const NamedType* chase(Context*) const override {
             panic("chasing closure type");
         }
@@ -67,7 +72,8 @@ namespace cthulhu {
     struct NamedType : Node {
         virtual ~NamedType() = default;
         virtual const NamedType* chase(Context*) const override { return this; }
-        
+        virtual TypeName str() const override { return name; }
+
         TypeName name;
 
         NamedType(TypeName name) : name(name) { }
@@ -184,15 +190,27 @@ namespace cthulhu {
         { }
     };
 
+    struct Stmt {
+        virtual ~Stmt() = default;
+    };
+
+    struct Return : Stmt {
+        virtual ~Return() = default;
+    };
+
     struct FunctionType : NamedType {
         virtual ~FunctionType() = default;
         virtual void sema(Context* ctx) const override;
 
-        ClosureType* signature;
+        TypeFields args;
+        Type* result;
+        Stmt* body;
 
-        FunctionType(TypeName name, ClosureType* signature)
+        FunctionType(TypeName name, TypeFields args, Type* result, Stmt* body)
             : NamedType(name)
-            , signature(signature)
+            , args(args)
+            , result(result)
+            , body(body)
         { }
     };
 
@@ -245,6 +263,7 @@ namespace cthulhu {
         // resolve all types in the current compilation unit
         // also performs checks for recursion
         FunctionType* function(std::shared_ptr<peg::Ast> ast);
+        Stmt* body(std::shared_ptr<peg::Ast> ast);
         RecordType* record(std::shared_ptr<peg::Ast> ast);
         UnionType* union_(std::shared_ptr<peg::Ast> ast);
         AliasType* alias(std::shared_ptr<peg::Ast> ast);
