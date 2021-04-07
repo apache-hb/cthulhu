@@ -132,30 +132,62 @@ namespace {
         LIST(R) <- R (comma R)*
     )";
 
-#if 0
-unit    <- COMPILE ident* eof
+/*
+unit    <- decl* eof
 
 
+# toplevel decls
+decl    <- struct / variant / alias 
+
+struct  <- RECORD ident lbrace LIST(field) rbrace
+variant <- VARIANT ident lbrace LIST(case) rbrace
+alias   <- USING ident assign type
+
+case    <- ident fields?
+fields  <- lparen LIST(field) rparen
+field   <- ident colon type
+
+# types
+type    <- ident / pointer
+pointer <- mul type
+
+# symbols
+~lbrace <- '{' space
+~rbrace <- '}' space
+~lparen <- '(' space
+~rparen <- ')' space
+~colon  <- ':' space
+~comma  <- ',' space
+~assign <- '=' ![=] space
+
+# operators
+~mul    <- '*' space
+
+# keywords
+~USING      <- 'using' skip
+~RECORD     <- 'record' skip
+~VARIANT    <- 'variant' skip
 
 # reserved keywords
-COMPILE <- 'compile' skip
+~COMPILE <- 'compile' skip
 
-KEYWORD <- COMPILE
+KEYWORD <- USING / RECORD / VARIANT / COMPILE
 
 # an identifier is any sequence of [a-zA-Z_][a-zA-Z0-9_] or a single $
 # that is *not* a keyword
 ident   <- !KEYWORD < [a-zA-Z_][a-zA-Z0-9_]* / '$' > skip
-#word    <- !KEYWORD < [a-zA-Z_][a-zA-Z0-9_]* > skip
+
+# macros
+LIST(I) <- I (comma I)*
 
 # whitespace handling
 ~comment <- '#' (!line .)* line?
 ~line    <- [\r\n]
 ~blank   <- [ \t]
-~space   <- blank / comment
-~skip    <- ![a-zA-Z_] space / eof
+~space   <- (blank / line / comment)*
+~skip    <- ![a-zA-Z_] space
 ~eof     <- !.
-
-#endif
+*/
 
     // our global parser instance
     peg::parser parser;
