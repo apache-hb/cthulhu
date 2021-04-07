@@ -50,11 +50,40 @@ void Context::parse() {
 }
 
 FunctionType* Context::function(std::shared_ptr<peg::Ast> ast) {
+    std::cout << ast_to_s(ast) << std::endl;
+
     auto name = ast->nodes[0]->token_to_string();
 
-    auto result = type(ast->nodes[1]);
+    TypeFields fields;
+    Type* result = target::VOID;
+    
+    auto res = ast->nodes[ast->nodes.size() - 2];
+    if (res->tag != "params"_ && ast->nodes.size() > 2) {
+        result = type(res);
+    }
 
-    return new FunctionType(name, new ClosureType({}, result));
+    for (auto node : ast->nodes) {
+        if (node->tag == "params"_) {
+            for (auto each : ast->nodes[1]->nodes) {
+                auto arg = each->nodes[0]->token_to_string();
+                auto kind = type(each->nodes[1]);
+
+                fields.add({ arg, kind });
+            }
+            break;
+        }
+    }
+
+    auto stmt = body(ast->nodes.back());
+
+    return new FunctionType(name, fields, result, stmt);
+}
+
+Stmt* Context::body(std::shared_ptr<peg::Ast> ast) {
+    if (ast->tag == "compound"_) {
+        return nullptr;
+    }
+    return nullptr;
 }
 
 RecordType* Context::record(std::shared_ptr<Ast> ast) {

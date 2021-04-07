@@ -33,7 +33,13 @@ types = [
 funcs = [
     [ 'funcs.func1', true ],
     [ 'funcs.func2', true ],
-    [ 'funcs.func3', false ]
+    [ 'funcs.func3', false ],
+    [ 'funcs.func4', true ],
+    [ 'funcs.func5', true ],
+    [ 'funcs.func6', true ],
+    [ 'funcs.func7', true ],
+    [ 'funcs.func8', true ],
+    [ 'funcs.func9', true ],
 ]
 
 tests = types + funcs
