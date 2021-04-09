@@ -12,7 +12,7 @@ peg = subproject('peglib').get_variable('dep')
 deps = [ fmt, peg ]
 
 src = [
-    'cthulhu/cthulhu.cpp',
+    'cthulhu/sema.cpp',
     'cthulhu/parse.cpp',
     'cthulhu/emit.cpp'
 ]

@@ -1,4 +1,4 @@
-#include <cthulhu.h>
+//#include <cthulhu.h>
 #include <fstream>
 #include <iostream>
 #include <unordered_map>
@@ -10,6 +10,7 @@ int main(int argc, const char** argv) {
         return 1;
     }
 
+    /*
     auto path = argv[1];
 
     if (std::ifstream in(path); !in.fail()) {
@@ -37,5 +38,5 @@ int main(int argc, const char** argv) {
     } else {
         std::cerr << "failed to open: " << path << std::endl;
         return 1;
-    }
+    }*/
 }

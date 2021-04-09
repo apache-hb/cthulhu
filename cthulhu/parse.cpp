@@ -5,175 +5,158 @@ namespace cthulhu {
 using namespace peg;
 using namespace peg::udl;
 
-void TypeFields::add(const Field& field) {
-    for (auto& elem : *this) {
-        if (elem.name == field.name) {
-            panic("field `{}` already defined", field.name);
+namespace {
+    // grammar consumed by cpp-peglib
+    auto grammar = R"(
+        unit    <- decl+ eof { no_ast_opt }
+
+        # toplevel decls
+        decl    <- struct / alias / function / variable 
+
+        struct  <- RECORD ident lbrace LIST(field) rbrace { no_ast_opt }
+        alias   <- USING ident assign type semi { no_ast_opt }
+
+        case    <- ident fields? { no_ast_opt }
+        fields  <- lparen LIST(field) rparen { no_ast_opt }
+        field   <- ident colon type { no_ast_opt }
+
+        variable    <- VAR ident colon type assign expr semi { no_ast_opt }
+
+        function    <- DEF ident params colon type body { no_ast_opt }
+
+        params      <- lparen LIST(field) rparen { no_ast_opt }
+        body        <- semi / compound { no_ast_opt }
+
+        # statements
+
+        stmt    <- compound / expr assign expr semi / expr semi / return / variable { no_ast_opt }
+
+        compound    <- lbrace stmt* rbrace { no_ast_opt }
+        return      <- RETURN expr? semi { no_ast_opt }
+
+        # expressions
+
+        expr    <- suffix (bin suffix)* {
+            precedence
+                L * / %
+                L + -
+                L << >>
+                L < <= > >=
+                L == !=
+                L & | ^
+                L && ||
         }
-    }
 
-    push_back(field);
+        bin   <- < add / sub / mul / div / mod / shl / shr / lte / gte / lt / gt / eq / neq / and / or / xor / bitand / bitor >
+        un   <- < add / sub / bitand / mul / not / flip >
+
+        suffix  <- atom (call / subscript)*
+
+        call    <- lparen LIST(expr)? rparen
+        subscript   <- lsquare expr rsquare
+
+        atom    <- number / ident / lparen expr rparen / mul expr / un expr
+
+        # types
+        type    <- ident / pointer { no_ast_opt }
+        pointer <- mul type { no_ast_opt }
+
+        # symbols
+        ~lbrace <- '{'
+        ~rbrace <- '}'
+        ~lparen <- '('
+        ~rparen <- ')'
+        ~lsquare    <- '['
+        ~rsquare    <- ']'
+        ~colon  <- ':'
+        ~comma  <- ','
+        ~semi   <- ';'
+        ~assign <- '='
+
+        # operators
+        ~add    <- '+'
+        ~sub    <- '-'
+        ~mul    <- '*'
+        ~div    <- '/'
+        ~mod    <- '%'
+        ~shl    <- '<<'
+        ~shr    <- '>>'
+        ~gte    <- '>='
+        ~lte    <- '<='
+        ~gt     <- '>'
+        ~lt     <- '<'
+        ~eq     <- '=='
+        ~neq    <- '!='
+        ~and    <- '&&'
+        ~or     <- '||'
+        ~xor    <- '^'
+        ~bitand <- '&'
+        ~bitor  <- '|'
+        ~not    <- '!'
+        ~flip   <- '~'
+
+        # keywords
+        ~USING      <- < 'using' skip >
+        ~RECORD     <- < 'record' skip >
+        ~DEF        <- < 'def' skip >
+        ~RETURN     <- < 'return' skip >
+        ~VAR        <- < 'var' skip >
+
+        # reserved keywords
+        ~COMPILE <- 'compile' skip
+
+        KEYWORD <- USING / RECORD / DEF / RETURN / VAR / COMPILE
+
+        # an identifier is any sequence of [a-zA-Z_][a-zA-Z0-9_] or a single $
+        # that is *not* a keyword
+        ident   <- < !KEYWORD [a-zA-Z_][a-zA-Z0-9_]* / '$' > 
+
+        number  <-  (base16 / base2 / base10) ident?
+
+        base2   <- < '0b' [01]+ >
+        base16  <- < '0x' [0-9a-fA-F]+ >
+        base10  <- < [0-9]+ >
+
+        %whitespace <- space*
+
+        # macros
+        LIST(I) <- I (comma I)*
+
+        # whitespace handling
+        ~comment <- '#' (!line .)* line?
+        ~line    <- [\r\n]
+        ~blank   <- [ \t]
+        ~space   <- (blank / line / comment)
+        ~skip    <- ![a-zA-Z_] space
+        ~eof     <- !.
+    )";
+
+    // our global parser instance
+    peg::parser parser;
 }
 
-void VariantCases::add(const VariantCase& field) {
-    for (auto& elem : *this) {
-        if (elem.name == field.name) {
-            panic("variant case `{}` already defined", field.name);
-        }
-    }
-
-    push_back(field);
-}
-
-void Context::parse() {
-    for (auto node : tree->nodes) {
-        switch (node->tag) {
-        case "struct"_:
-            add(record(node));
-            break;
-        case "alias"_:
-            add(alias(node));
-            break;
-        case "union"_:
-            add(union_(node));
-            break;
-        case "variant"_:
-            add(variant(node));
-            break;
-        case "function"_:
-            add(function(node));
-            break;
-        default:
-            panic("unrecognized node `{}`", node->name);
-        }
-    }
-}
-
-FunctionType* Context::function(std::shared_ptr<peg::Ast> ast) {
-    std::cout << ast_to_s(ast) << std::endl;
-
-    auto name = ast->nodes[0]->token_to_string();
-
-    TypeFields fields;
-    Type* result = target::VOID;
-    
-    auto res = ast->nodes[ast->nodes.size() - 2];
-    if (res->tag != "params"_ && ast->nodes.size() > 2) {
-        result = type(res);
-    }
-
-    for (auto node : ast->nodes) {
-        if (node->tag == "params"_) {
-            for (auto each : ast->nodes[1]->nodes) {
-                auto arg = each->nodes[0]->token_to_string();
-                auto kind = type(each->nodes[1]);
-
-                fields.add({ arg, kind });
-            }
-            break;
-        }
-    }
-
-    auto stmt = body(ast->nodes.back());
-
-    return new FunctionType(name, fields, result, stmt);
-}
-
-Stmt* Context::body(std::shared_ptr<peg::Ast> ast) {
-    if (ast->tag == "compound"_) {
-        return nullptr;
-    }
-    return nullptr;
-}
-
-RecordType* Context::record(std::shared_ptr<Ast> ast) {
-    auto name = ast->nodes[0]->token_to_string();
-
-    TypeFields fields;
-    for (auto node : ast->nodes) {
-        if (node->tag != "field"_)
-            continue;
-
-        fields.add(field(node));
-    }
-
-    return new RecordType(name, fields);
-}
-
-UnionType* Context::union_(std::shared_ptr<peg::Ast> ast) {
-    auto name = ast->nodes[0]->token_to_string();
-
-    TypeFields fields;
-    for (auto node : ast->nodes) {
-        if (node->tag != "field"_)
-            continue;
-
-        fields.add(field(node));
-    }
-
-    return new UnionType(name, fields);
-}
-
-AliasType* Context::alias(std::shared_ptr<peg::Ast> ast) {
-    auto name = ast->nodes[0]->token_to_string();
-    auto other = type(ast->nodes[1]);
-
-    return new AliasType(name, other);
-}
-
-VariantType* Context::variant(std::shared_ptr<peg::Ast> ast) {
-    auto name = ast->nodes[0]->token_to_string();
-
-    auto parent = ast->nodes.size() > 2
-        ? type(ast->nodes[1])
-        : target::VARIANT;
-    VariantCases cases;
-
-    auto nodes = ast->nodes.back()->nodes;
-    for (auto node : nodes) {
-        cases.add(vcase(node));
-    }
-
-    return new VariantType(name, parent, cases);
-}
-
-VariantCase Context::vcase(std::shared_ptr<peg::Ast> ast) {
-    auto name = ast->nodes[0]->token_to_string();
-    TypeFields fields;
-
-    for (auto node : ast->nodes) {
-        if (node->tag != "field"_)
-            continue;
-
-        fields.add(field(node));
-    }
-
-    return { name, fields };
-}
-
-Field Context::field(std::shared_ptr<peg::Ast> ast) {
-    return { ast->nodes[0]->token_to_string(), type(ast->nodes[1]) };
-}
-
-Type* Context::type(std::shared_ptr<peg::Ast> ast) {
-    auto collect = [&](std::shared_ptr<peg::Ast> node) {
-        Types out;
-        for (auto it : node->nodes) {
-            out.push_back(type(it));
-        }
-        return out;
+void init() {
+    parser.log = [](auto line, auto col, const auto& msg) {
+        fmt::print("{}:{}: {}\n", line, col, msg);
     };
 
-    switch (ast->tag) {
-    case "pointer"_:
-        return new PointerType(type(ast->nodes[0]));
-    case "closure"_:
-        return new ClosureType(collect(ast->nodes[0]), type(ast->nodes[1]));
-    case "ident"_:
-        return get(ast->token_to_string());
-    default:
-        panic("unknown type `{}`", ast->name);
+    if (!parser.load_grammar(grammar)) {
+        panic("failed to load grammar");
     }
+
+    parser.enable_packrat_parsing();
+    parser.enable_ast();
 }
+
+Context::Context(std::string source): text(source) {
+    if (!parser.parse(text, tree)) {
+        panic("failed to parse source");
+    }
+
+    tree = parser.optimize_ast(tree);
+
+    std::cout << ast_to_s(tree) << std::endl;
+}
+
 
 }
