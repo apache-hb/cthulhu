@@ -16,8 +16,6 @@ namespace {
         struct  <- RECORD ident lbrace LIST(field) rbrace { no_ast_opt }
         alias   <- USING ident assign type semi { no_ast_opt }
 
-        case    <- ident fields? { no_ast_opt }
-        fields  <- lparen LIST(field) rparen { no_ast_opt }
         field   <- ident colon type { no_ast_opt }
 
         variable    <- VAR ident colon type assign expr semi { no_ast_opt }
@@ -55,7 +53,7 @@ namespace {
         call    <- lparen LIST(expr)? rparen
         subscript   <- lsquare expr rsquare
 
-        atom    <- number / ident / lparen expr rparen / mul expr / un expr
+        atom    <- number / string / ident / lparen expr rparen / mul expr / un expr
 
         # types
         type    <- ident / pointer { no_ast_opt }
@@ -113,6 +111,10 @@ namespace {
 
         number  <-  (base16 / base2 / base10) ident?
 
+        string  <- < '"' (!["] char)* '"' >
+
+        char    <- !'\\' . / '\\' [nrt'"\[\]\\]
+
         base2   <- < '0b' [01]+ >
         base16  <- < '0x' [0-9a-fA-F]+ >
         base10  <- < [0-9]+ >
@@ -148,7 +150,7 @@ void init() {
     parser.enable_ast();
 }
 
-Context::Context(std::string source): text(source) {
+Builder::Builder(std::string source): text(source) {
     if (!parser.parse(text, tree)) {
         panic("failed to parse source");
     }
@@ -158,5 +160,8 @@ Context::Context(std::string source): text(source) {
     std::cout << ast_to_s(tree) << std::endl;
 }
 
+std::shared_ptr<ast::Unit> Builder::build(Context*) {
+    panic("TODO: parse tree into ast");
+}
 
 }
