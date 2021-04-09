@@ -11,11 +11,12 @@ namespace {
         unit    <- decl+ eof { no_ast_opt }
 
         # toplevel decls
-        decl    <- struct / alias / function / variable 
+        decl    <- record / alias / function / variable 
 
-        struct  <- RECORD ident lbrace LIST(field) rbrace { no_ast_opt }
+        record  <- RECORD ident lbrace fields rbrace { no_ast_opt }
         alias   <- USING ident assign type semi { no_ast_opt }
 
+        fields  <- LIST(field) { no_ast_opt }
         field   <- ident colon type { no_ast_opt }
 
         variable    <- VAR ident colon type assign expr semi { no_ast_opt }
@@ -56,8 +57,9 @@ namespace {
         atom    <- number / string / ident / lparen expr rparen / mul expr / un expr
 
         # types
-        type    <- ident / pointer { no_ast_opt }
-        pointer <- mul type { no_ast_opt }
+        type    <- ident / pointer / array { no_ast_opt }
+        pointer <- mul type
+        array   <- lsquare type (colon expr)? rsquare { no_ast_opt }
 
         # symbols
         ~lbrace <- '{'
@@ -109,14 +111,14 @@ namespace {
         # that is *not* a keyword
         ident   <- < !KEYWORD [a-zA-Z_][a-zA-Z0-9_]* / '$' > 
 
-        number  <-  (base16 / base2 / base10) ident?
+        number  <-  (base16 / base2 / base10) ident? { no_ast_opt }
 
         string  <- < '"' (!["] char)* '"' >
 
         char    <- !'\\' . / '\\' [nrt'"\[\]\\]
 
-        base2   <- < '0b' [01]+ >
-        base16  <- < '0x' [0-9a-fA-F]+ >
+        base2   <- '0b' < [01]+ >
+        base16  <- '0x' < [0-9a-fA-F]+ >
         base10  <- < [0-9]+ >
 
         %whitespace <- space*
@@ -156,12 +158,107 @@ Builder::Builder(std::string source): text(source) {
     }
 
     tree = parser.optimize_ast(tree);
-
-    std::cout << ast_to_s(tree) << std::endl;
 }
 
-std::shared_ptr<ast::Unit> Builder::build(Context*) {
-    panic("TODO: parse tree into ast");
+void Builder::build(Context* ctx) {
+    for (auto node : tree->nodes) {
+        switch (node->tag) {
+        case "record"_:
+            buildRecord(ctx, node);
+            break;
+        default:
+            panic("TODO: unknown tag `{}`", node->name);
+        }
+    }
+}
+
+void Builder::buildRecord(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "record"_);
+
+    std::cout << ast_to_s(ast) << std::endl;
+    
+    auto name = ast->nodes[0]->token_to_string();
+    auto fields = buildFields(ctx, ast->nodes[1]);
+
+    ctx->add(std::make_shared<ast::RecordType>(name, fields));
+}
+
+ast::Fields Builder::buildFields(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "fields"_);
+
+    ast::Fields fields;
+
+    for (auto node : ast->nodes) {
+        auto name = node->nodes[0]->token_to_string();
+        auto type = buildType(ctx, node->nodes[1]);
+
+        fields.add(name, type);
+    }
+
+    return fields;
+}
+
+std::shared_ptr<ast::Type> Builder::buildType(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "type"_);
+
+    switch (ast->choice) {
+    case 0: // ident
+        return ctx->get(ast->nodes[0]->token_to_string());
+    case 1: // pointer
+        return std::make_shared<ast::PointerType>(buildType(ctx, ast->nodes[0]));
+    case 2: // array
+        return buildArray(ctx, ast->nodes[0]);
+    default:
+        panic("unknown type ast `{}`", ast->name);
+    }
+}
+
+std::shared_ptr<ast::ArrayType> Builder::buildArray(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "array"_);
+
+    auto type = buildType(ctx, ast->nodes[0]);
+    auto size = ast->nodes.size() > 1 ? buildExpr(ctx, ast->nodes[1]) : nullptr;
+
+    return std::make_shared<ast::ArrayType>(type, size);
+}
+
+std::shared_ptr<ast::Expr> Builder::buildExpr(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    switch (ast->tag) {
+    case "number"_:
+        return buildNumber(ctx, ast);
+    case "expr"_:
+        return buildBinary(ctx, ast);
+    default:
+        panic("unknown expr `{}`", ast->name);
+    }
+}
+
+std::shared_ptr<ast::Binary> Builder::buildBinary(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "expr"_);
+
+    auto lhs = buildExpr(ctx, ast->nodes[0]);
+    auto rhs = buildExpr(ctx, ast->nodes[2]);
+    //auto op = ast->nodes[1]->token_to_string();
+
+    return std::make_shared<ast::Binary>(ast::BinaryOp::ADD, lhs, rhs);
+}
+
+std::shared_ptr<ast::IntLiteral> Builder::buildNumber(Context*, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "number"_);
+
+    auto suffix = ast->nodes.size() > 1 ? ast->nodes[1]->token_to_string() : "";
+    auto number = ast->nodes[0]->token_to_string();
+    int base = 0;
+
+    switch (ast->nodes[0]->tag) {
+    case "base2"_: base = 2; break;
+    case "base10"_: base = 10; break;
+    case "base16"_: base = 16; break;
+    default:
+        panic("unknown number `{}`", ast->nodes[0]->name);
+    }
+
+    return std::make_shared<ast::IntLiteral>(number, base, suffix);
 }
 
 }
