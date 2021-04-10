@@ -23,6 +23,14 @@ namespace cthulhu {
         visitor->visit(as<ast::RecordType>());
     }
 
+    void ast::AliasType::visit(const std::shared_ptr<Visitor> visitor) const {
+        visitor->visit(as<ast::AliasType>());
+    }
+
+    void ast::SentinelType::visit(const std::shared_ptr<Visitor> visitor) const {
+        visitor->visit(as<ast::SentinelType>());
+    }
+
     void ast::PointerType::visit(const std::shared_ptr<Visitor> visitor) const {
         visitor->visit(as<ast::PointerType>());
     }
@@ -45,51 +53,6 @@ namespace cthulhu {
 
     void ast::Binary::visit(const std::shared_ptr<Visitor> visitor) const {
         visitor->visit(as<ast::Binary>());
-    }
-
-    /* semantic validation */
-    void ast::PointerType::sema(Context* ctx) const {
-        ctx->enter(root(ctx), false, true, [] { });
-    }
-
-    void ast::ArrayType::sema(Context*) const {
-        /* literals should always be valid */
-    }
-
-    void ast::RecordType::sema(Context*) const {
-        /* literals should always be valid */
-    }
-
-    void ast::SentinelType::sema(Context* ctx) const {
-        if (auto self = ctx->get(name); self != this) { 
-            return self->sema(ctx);
-        } else {
-            panic("unresolved type `{}`", name);
-        }
-    }
-
-    void ast::BuiltinType::sema(Context*) const {
-        /* builtin types should always be valid */
-    }
-
-    void ast::Literal::sema(Context*) const {
-        /* literals should always be valid */
-    }
-
-    void ast::IntLiteral::sema(Context*) const {
-        /* literals should always be valid */
-        /* TODO: check scope for suffix */
-    }
-
-
-    std::shared_ptr<ast::Type> ast::IntLiteral::type(Context* ctx) const {
-        /* TODO: support stuff like `u` and `ul` */
-        return ctx->get(suffix.empty() ? "int" : suffix);
-    }
-
-    std::shared_ptr<ast::Type> ast::Binary::type(Context* ctx) const {
-        /* TODO: assert that both sides have the same type */
-        return lhs->type(ctx);
     }
 
     void Context::add(std::shared_ptr<ast::NamedType> type) {

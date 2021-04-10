@@ -24,9 +24,6 @@ namespace cthulhu {
             /* visit this node */
             virtual void visit(std::shared_ptr<Visitor> visitor) const = 0;
 
-            /* ensure node is correct */
-            virtual void sema(Context* ctx) const = 0;
-
             template<typename T>
             std::shared_ptr<const T> as() const {
                 return std::dynamic_pointer_cast<const T>(shared_from_this());
@@ -40,21 +37,6 @@ namespace cthulhu {
 
         struct Type: Node {
             virtual ~Type() = default;
-
-            /* types resolve to themselves, aside from aliases and sentinels */
-            virtual std::shared_ptr<const Type> resolve(Context*) const { 
-                return as<Type>();
-            }
-
-            /* is this type a void type */
-            virtual bool unit(Context*) const { 
-                return false; 
-            }
-
-            virtual std::shared_ptr<const NamedType> root(Context* ctx) const = 0;
-
-            /* is this type a scalar type */
-            virtual bool scalar() const { return false; }
         };
 
         struct Stmt: Node {
@@ -67,23 +49,12 @@ namespace cthulhu {
 
         struct Expr: Stmt {
             virtual ~Expr() = default;
-
-            /* can this expression be constant evaluated */
-            virtual bool constant() const { return false; }
-
-            virtual std::shared_ptr<Type> type(Context* ctx) const = 0;
         };
 
         // types
 
         struct PointerType: Type {
             virtual ~PointerType() = default;
-
-            virtual void sema(Context*) const override;
-
-            virtual std::shared_ptr<const NamedType> root(Context* ctx) const override {
-                return type->root(ctx);
-            }
 
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
 
@@ -97,12 +68,6 @@ namespace cthulhu {
 
         struct ArrayType: Type {
             virtual ~ArrayType() = default;
-
-            virtual void sema(Context* ctx) const override;
-
-            virtual std::shared_ptr<const NamedType> root(Context* ctx) const override {
-                return type->root(ctx);
-            }
 
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
 
@@ -123,15 +88,11 @@ namespace cthulhu {
         struct NamedType: Type {
             virtual ~NamedType() = default;
 
+            virtual bool resolved() const { return true; }
+
             NamedType(std::string name)
                 : name(name)
             { }
-
-            virtual std::shared_ptr<const NamedType> root(Context*) const override {
-                return as<NamedType>();
-            }
-
-            virtual bool resolved() const { return true; }
 
             std::string name;
         };
@@ -147,8 +108,6 @@ namespace cthulhu {
 
         struct RecordType: NamedType {
             virtual ~RecordType() = default;
-
-            virtual void sema(Context* ctx) const override;
 
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
 
@@ -172,13 +131,7 @@ namespace cthulhu {
         struct AliasType: NamedType {
             virtual ~AliasType() = default;
 
-            virtual std::shared_ptr<const Type> resolve(Context*) const override { 
-                panic("TODO: recursion checking `{}`", name);
-            }
-
-            virtual bool unit(Context* ctx) const override { 
-                return resolve(ctx)->unit(ctx);
-            }
+            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
 
             AliasType(std::string name, std::shared_ptr<Type> type)
                 : NamedType(name)
@@ -192,17 +145,9 @@ namespace cthulhu {
         struct SentinelType: NamedType {
             virtual ~SentinelType() = default;
 
-            virtual std::shared_ptr<const Type> resolve(Context*) const override { 
-                panic("TODO: order independant lookup `{}`", name);
-            }
-
-            virtual void sema(Context*) const override;
-
             virtual bool resolved() const { return false; }
 
-            virtual void visit(std::shared_ptr<Visitor>) const override {
-                panic("a sentinel type `{}` was visited", name);
-            }
+            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
 
             SentinelType(std::string name)
                 : NamedType(name)
@@ -211,8 +156,6 @@ namespace cthulhu {
 
         struct BuiltinType: NamedType {
             virtual ~BuiltinType() = default;
-
-            virtual void sema(Context*) const override;
 
             BuiltinType(std::string name)
                 : NamedType(name)
@@ -223,10 +166,6 @@ namespace cthulhu {
             virtual ~ScalarType() = default;
 
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
-
-            virtual bool scalar() const override { 
-                return true; 
-            }
 
             ScalarType(std::string name, int width, bool sign)
                 : BuiltinType(name) 
@@ -257,11 +196,6 @@ namespace cthulhu {
 
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
 
-            /* void is always a unit type */
-            virtual bool unit(Context*) const override { 
-                return true; 
-            }
-
             VoidType()
                 : BuiltinType("void") 
             { }
@@ -280,9 +214,6 @@ namespace cthulhu {
 
         struct Unary: Expr {
             virtual ~Unary() = default;
-            virtual bool constant() const override { return expr->constant(); }
-
-            virtual void sema(Context* ctx) const override;
 
         private:
             UnaryOp op;
@@ -296,14 +227,7 @@ namespace cthulhu {
         struct Binary: Expr {
             virtual ~Binary() = default;
 
-            virtual bool constant() const override { 
-                return lhs->constant() && rhs->constant();
-            }
-
-            virtual void sema(Context* ctx) const override;
-
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
-            virtual std::shared_ptr<Type> type(Context* ctx) const override;
 
             Binary(BinaryOp op, std::shared_ptr<Expr> lhs, std::shared_ptr<Expr> rhs)
                 : op(op)
@@ -319,18 +243,12 @@ namespace cthulhu {
 
         struct Literal: Expr {
             virtual ~Literal() = default;
-            virtual bool constant() const override { return true; }
-            virtual void sema(Context*) const override;
         };
 
         struct IntLiteral: Literal {
             virtual ~IntLiteral() = default;
 
-            virtual void sema(Context*) const override;
-
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
-
-            virtual std::shared_ptr<Type> type(Context* ctx) const override;
 
             IntLiteral(std::string digit, int base, std::string suffix)
                 : suffix(suffix)
@@ -371,7 +289,8 @@ namespace cthulhu {
         virtual ~Visitor() = default;
 
         virtual void visit(const std::shared_ptr<const ast::RecordType> node) = 0;
-
+        virtual void visit(const std::shared_ptr<const ast::AliasType> node) = 0;
+        virtual void visit(const std::shared_ptr<const ast::SentinelType> node) = 0;
         virtual void visit(const std::shared_ptr<const ast::PointerType> node) = 0;
         virtual void visit(const std::shared_ptr<const ast::ArrayType> node) = 0;
         virtual void visit(const std::shared_ptr<const ast::ScalarType> node) = 0;
@@ -390,12 +309,6 @@ namespace cthulhu {
         // if the type isnt found then a sentinel type is added
         // which allows for order independant lookup
         std::shared_ptr<ast::NamedType> get(std::string name);
-
-        void dbg() {
-            for (auto type : types) {
-                type->sema(this);
-            }
-        }
 
         struct Frame {
             std::shared_ptr<ast::Type> type;
