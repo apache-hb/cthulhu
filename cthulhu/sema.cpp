@@ -1,61 +1,74 @@
 #include "cthulhu.h"
 
 namespace cthulhu {
-    void ast::Fields::add(std::string name, std::shared_ptr<ast::Type> type) {
-        if (name != "$") {
-            for (auto [id, _] : *this) {
-                if (id == name) {
-                    panic("duplicate field `{}` in fields", name);
+    namespace ast {
+        void Fields::add(std::string name, Type* type) {
+            if (name != "$") {
+                for (auto [id, _] : *this) {
+                    if (id == name) {
+                        panic("duplicate field `{}` in fields", name);
+                    }
                 }
+            }
+
+            push_back({ name, type });
+        }
+
+        void Fields::sema(Context* ctx) {
+            for (auto [name, type] : *this) {
+                if (type->unit()) {
+                    panic("field `{}` is void", name);
+                }
+                type->sema(ctx);
             }
         }
 
-        push_back({ name, type });
+        void PointerType::sema(Context* ctx) {
+            auto base = root(ctx);
+            ctx->enter(base, false, true, [&] { });
+        }
+
+        void ArrayType::sema(Context* ctx) {
+            auto base = root(ctx);
+            ctx->enter(base, false, true, [&] {
+                type->sema(ctx);
+            });
+
+            if (size) {
+                if (!size->constant()) {
+                    panic("size of array must be a constant expression");
+                }
+                // TODO: get type of expression
+                /*if (!size->constant()) {
+                    panic("size of array must be a constant expression");
+                } */
+            }
+        }
+
+        void RecordType::sema(Context* ctx) {
+            ctx->enter(this, true, false, [&] {
+                fields.sema(ctx);
+            });
+        }
+
+        void AliasType::sema(Context* ctx) {
+            ctx->enter(this, false, false, [&] {
+                type->sema(ctx);
+            });
+        }
+
+        void SentinelType::sema(Context* ctx) {
+            auto self = ctx->get(name);
+
+            if (self->resolved()) {
+                self->sema(ctx);
+            } else {
+                panic("unresolved type `{}`", name);
+            }
+        }
     }
 
-    /* visitors */
-
-    void ast::ArrayType::visit(const std::shared_ptr<Visitor> visitor) const {
-        visitor->visit(as<ast::ArrayType>());
-    }
-
-    void ast::RecordType::visit(const std::shared_ptr<Visitor> visitor) const {
-        visitor->visit(as<ast::RecordType>());
-    }
-
-    void ast::AliasType::visit(const std::shared_ptr<Visitor> visitor) const {
-        visitor->visit(as<ast::AliasType>());
-    }
-
-    void ast::SentinelType::visit(const std::shared_ptr<Visitor> visitor) const {
-        visitor->visit(as<ast::SentinelType>());
-    }
-
-    void ast::PointerType::visit(const std::shared_ptr<Visitor> visitor) const {
-        visitor->visit(as<ast::PointerType>());
-    }
-
-    void ast::ScalarType::visit(const std::shared_ptr<Visitor> visitor) const {
-        visitor->visit(as<ast::ScalarType>());
-    }
-
-    void ast::BoolType::visit(const std::shared_ptr<Visitor> visitor) const {
-        visitor->visit(as<ast::BoolType>());
-    }
-
-    void ast::VoidType::visit(const std::shared_ptr<Visitor> visitor) const {
-        visitor->visit(as<ast::VoidType>());
-    }
-
-    void ast::IntLiteral::visit(const std::shared_ptr<Visitor> visitor) const {
-        visitor->visit(as<ast::IntLiteral>());
-    }
-
-    void ast::Binary::visit(const std::shared_ptr<Visitor> visitor) const {
-        visitor->visit(as<ast::Binary>());
-    }
-
-    void Context::add(std::shared_ptr<ast::NamedType> type) {
+    void Context::add(ast::NamedType* type) {
         if (type->name == "$") {
             panic("type names may not be discarded");
         }
@@ -82,7 +95,7 @@ namespace cthulhu {
         types.push_back(type);
     }
 
-    std::shared_ptr<ast::NamedType> Context::get(std::string name) {
+    ast::NamedType* Context::get(std::string name) {
         for (auto builtin : builtins) {
             if (builtin->name == name) {
                 return builtin;
@@ -95,7 +108,7 @@ namespace cthulhu {
             }
         }
 
-        auto sentinel = std::make_shared<ast::SentinelType>(name);
+        auto sentinel = new ast::SentinelType(name);
         types.push_back(sentinel);
         return sentinel;
     }
