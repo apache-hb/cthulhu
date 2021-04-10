@@ -27,7 +27,15 @@ types = [
 
     [ 'types.closure1', true ],
     [ 'types.closure2', false ],
-    [ 'types.closure3', false ]
+    [ 'types.closure3', false ],
+
+    [ 'types.array1', true ],
+    [ 'types.array2', true ],
+    [ 'types.array3', false ],
+    [ 'types.array4', false ],
+    [ 'types.array5', false ],
+    [ 'types.array6', false ],
+    [ 'types.array7', false ],
 ]
 
 funcs = [

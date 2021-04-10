@@ -98,6 +98,7 @@ namespace {
         # keywords
         ~USING      <- < 'using' skip >
         ~RECORD     <- < 'record' skip >
+        ~VARIANT    <- < 'variant' skip >
         ~DEF        <- < 'def' skip >
         ~RETURN     <- < 'return' skip >
         ~VAR        <- < 'var' skip >
@@ -106,7 +107,7 @@ namespace {
         ~COMPILE <- 'compile' skip
         ~REQUIRES   <- 'requires' skip
 
-        KEYWORD <- USING / RECORD / DEF / RETURN / VAR / COMPILE / REQUIRES
+        KEYWORD <- USING / RECORD / DEF / RETURN / VARIANT / VAR / COMPILE / REQUIRES
 
         # an identifier is any sequence of [a-zA-Z_][a-zA-Z0-9_] or a single $
         # that is *not* a keyword
@@ -174,6 +175,10 @@ void Builder::build(Context* ctx) {
             panic("TODO: unknown tag `{}`", node->name);
         }
     }
+
+    for (auto type : ctx->types) {
+        type->sema(ctx);
+    }
 }
 
 void Builder::buildRecord(Context* ctx, std::shared_ptr<peg::Ast> ast) {
@@ -182,7 +187,7 @@ void Builder::buildRecord(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     auto name = ast->nodes[0]->token_to_string();
     auto fields = buildFields(ctx, ast->nodes[1]);
 
-    ctx->add(std::make_shared<ast::RecordType>(name, fields));
+    ctx->add(new ast::RecordType(name, fields));
 }
 
 void Builder::buildAlias(Context* ctx, std::shared_ptr<peg::Ast> ast) {
@@ -191,7 +196,7 @@ void Builder::buildAlias(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     auto name = ast->nodes[0]->token_to_string();
     auto type = buildType(ctx, ast->nodes[1]);
 
-    ctx->add(std::make_shared<ast::AliasType>(name, type));
+    ctx->add(new ast::AliasType(name, type));
 }
 
 ast::Fields Builder::buildFields(Context* ctx, std::shared_ptr<peg::Ast> ast) {
@@ -209,14 +214,14 @@ ast::Fields Builder::buildFields(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     return fields;
 }
 
-std::shared_ptr<ast::Type> Builder::buildType(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+ast::Type* Builder::buildType(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ASSERT(ast->tag == "type"_);
 
     switch (ast->choice) {
     case 0: // ident
         return ctx->get(ast->nodes[0]->token_to_string());
     case 1: // pointer
-        return std::make_shared<ast::PointerType>(buildType(ctx, ast->nodes[0]));
+        return new ast::PointerType(buildType(ctx, ast->nodes[0]));
     case 2: // array
         return buildArray(ctx, ast->nodes[0]);
     default:
@@ -224,16 +229,16 @@ std::shared_ptr<ast::Type> Builder::buildType(Context* ctx, std::shared_ptr<peg:
     }
 }
 
-std::shared_ptr<ast::ArrayType> Builder::buildArray(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+ast::ArrayType* Builder::buildArray(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ASSERT(ast->tag == "array"_);
 
     auto type = buildType(ctx, ast->nodes[0]);
     auto size = ast->nodes.size() > 1 ? buildExpr(ctx, ast->nodes[1]) : nullptr;
 
-    return std::make_shared<ast::ArrayType>(type, size);
+    return new ast::ArrayType(type, size);
 }
 
-std::shared_ptr<ast::Expr> Builder::buildExpr(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+ast::Expr* Builder::buildExpr(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     switch (ast->tag) {
     case "number"_:
         return buildNumber(ctx, ast);
@@ -244,17 +249,17 @@ std::shared_ptr<ast::Expr> Builder::buildExpr(Context* ctx, std::shared_ptr<peg:
     }
 }
 
-std::shared_ptr<ast::Binary> Builder::buildBinary(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+ast::Binary* Builder::buildBinary(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ASSERT(ast->tag == "expr"_);
 
     auto lhs = buildExpr(ctx, ast->nodes[0]);
     auto rhs = buildExpr(ctx, ast->nodes[2]);
     //auto op = ast->nodes[1]->token_to_string();
 
-    return std::make_shared<ast::Binary>(ast::BinaryOp::ADD, lhs, rhs);
+    return new ast::Binary(ast::BinaryOp::ADD, lhs, rhs);
 }
 
-std::shared_ptr<ast::IntLiteral> Builder::buildNumber(Context*, std::shared_ptr<peg::Ast> ast) {
+ast::IntLiteral* Builder::buildNumber(Context*, std::shared_ptr<peg::Ast> ast) {
     ASSERT(ast->tag == "number"_);
 
     auto suffix = ast->nodes.size() > 1 ? ast->nodes[1]->token_to_string() : "";
@@ -269,7 +274,7 @@ std::shared_ptr<ast::IntLiteral> Builder::buildNumber(Context*, std::shared_ptr<
         panic("unknown number `{}`", ast->nodes[0]->name);
     }
 
-    return std::make_shared<ast::IntLiteral>(number, base, suffix);
+    return new ast::IntLiteral(number, base, suffix);
 }
 
 }

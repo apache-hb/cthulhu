@@ -14,7 +14,8 @@ deps = [ fmt, peg ]
 src = [
     'cthulhu/sema.cpp',
     'cthulhu/parse.cpp',
-    'cthulhu/emit.cpp'
+    'cthulhu/emit.cpp',
+    'cthulhu/visit.cpp'
 ]
 
 cthulhu = library('ctu', src, dependencies : deps)

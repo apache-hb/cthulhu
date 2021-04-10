@@ -18,15 +18,19 @@ namespace cthulhu {
         struct NamedType;
 
         // basic nodes
-        struct Node: std::enable_shared_from_this<Node> {
+        struct Node {
             virtual ~Node() = default;
 
             /* visit this node */
-            virtual void visit(std::shared_ptr<Visitor> visitor) const = 0;
+            virtual void visit(Visitor* visitor) = 0;
+
+            virtual void sema(Context*) {
+                panic("unimplemented sema");
+            }
 
             template<typename T>
-            std::shared_ptr<const T> as() const {
-                return std::dynamic_pointer_cast<const T>(shared_from_this());
+            T* as() {
+                return dynamic_cast<T>(this);
             }
 
             template<typename T>
@@ -37,6 +41,11 @@ namespace cthulhu {
 
         struct Type: Node {
             virtual ~Type() = default;
+
+            virtual Type* root(Context*) { return this; }
+            virtual bool resolved() const { return true; }
+            virtual bool unit() const { return false; }
+            virtual bool scalar() const { return false; }
         };
 
         struct Stmt: Node {
@@ -49,6 +58,8 @@ namespace cthulhu {
 
         struct Expr: Stmt {
             virtual ~Expr() = default;
+
+            virtual bool constant() const { return false; }
         };
 
         // types
@@ -56,29 +67,31 @@ namespace cthulhu {
         struct PointerType: Type {
             virtual ~PointerType() = default;
 
-            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
+            virtual void visit(Visitor* visitor) override;
+            virtual Type* root(Context* ctx) { return type->root(ctx); }
+            virtual void sema(Context* ctx) override;
 
-            PointerType(std::shared_ptr<Type> type)
+            PointerType(Type* type)
                 : type(type)
             { }
 
-        private:
-            std::shared_ptr<Type> type;
+            Type* type;
         };
 
         struct ArrayType: Type {
             virtual ~ArrayType() = default;
 
-            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
+            virtual void visit(Visitor* visitor) override;
+            virtual Type* root(Context* ctx) { return type->root(ctx); }
+            virtual void sema(Context* ctx) override;
 
-            ArrayType(std::shared_ptr<Type> type, std::shared_ptr<Expr> size)
+            ArrayType(Type* type, Expr* size)
                 : type(type)
                 , size(size)
             { }
 
-        private:
-            std::shared_ptr<Type> type;
-            std::shared_ptr<Expr> size;
+            Type* type;
+            Expr* size;
         };
 
         struct ClosureType: Type {
@@ -87,8 +100,6 @@ namespace cthulhu {
 
         struct NamedType: Type {
             virtual ~NamedType() = default;
-
-            virtual bool resolved() const { return true; }
 
             NamedType(std::string name)
                 : name(name)
@@ -99,24 +110,25 @@ namespace cthulhu {
 
         struct Field {
             std::string name;
-            std::shared_ptr<Type> type;
+            Type* type;
         };
 
         struct Fields: std::vector<Field> {
-            void add(std::string name, std::shared_ptr<Type> type);
+            void add(std::string name, Type* type);
+            void sema(Context* ctx);
         };
 
         struct RecordType: NamedType {
             virtual ~RecordType() = default;
 
-            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
+            virtual void visit(Visitor* visitor) override;
+            virtual void sema(Context* ctx) override;
 
             RecordType(std::string name, Fields fields)
                 : NamedType(name)
                 , fields(fields)
             { }
 
-        private:
             Fields fields;
         };
 
@@ -131,23 +143,25 @@ namespace cthulhu {
         struct AliasType: NamedType {
             virtual ~AliasType() = default;
 
-            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
+            virtual void visit(Visitor* visitor) override;
+            virtual void sema(Context* ctx) override;
+            virtual bool unit() const override { return type->unit(); }
 
-            AliasType(std::string name, std::shared_ptr<Type> type)
+            AliasType(std::string name, Type* type)
                 : NamedType(name)
                 , type(type)
             { }
 
         private:
-            std::shared_ptr<Type> type;
+            Type* type;
         };
 
         struct SentinelType: NamedType {
             virtual ~SentinelType() = default;
 
-            virtual bool resolved() const { return false; }
-
-            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
+            virtual void visit(Visitor* visitor) override;
+            virtual void sema(Context* ctx) override;
+            virtual bool resolved() const override { return false; }
 
             SentinelType(std::string name)
                 : NamedType(name)
@@ -157,6 +171,10 @@ namespace cthulhu {
         struct BuiltinType: NamedType {
             virtual ~BuiltinType() = default;
 
+            virtual void sema(Context*) override { 
+                /* builtin types should always be valid */
+            }
+
             BuiltinType(std::string name)
                 : NamedType(name)
             { }
@@ -165,7 +183,8 @@ namespace cthulhu {
         struct ScalarType: BuiltinType {
             virtual ~ScalarType() = default;
 
-            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
+            virtual void visit(Visitor* visitor) override;
+            virtual bool scalar() const override { return true; }
 
             ScalarType(std::string name, int width, bool sign)
                 : BuiltinType(name) 
@@ -184,7 +203,7 @@ namespace cthulhu {
         struct BoolType: BuiltinType {
             virtual ~BoolType() = default;
 
-            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
+            virtual void visit(Visitor* visitor) override;
 
             BoolType()
                 : BuiltinType("bool") 
@@ -194,7 +213,8 @@ namespace cthulhu {
         struct VoidType: BuiltinType {
             virtual ~VoidType() = default;
 
-            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
+            virtual void visit(Visitor* visitor) override;
+            virtual bool unit() const override { return true; }
 
             VoidType()
                 : BuiltinType("void") 
@@ -217,7 +237,7 @@ namespace cthulhu {
 
         private:
             UnaryOp op;
-            std::shared_ptr<Expr> expr;
+            Expr* expr;
         };
 
         enum struct BinaryOp {
@@ -242,9 +262,9 @@ namespace cthulhu {
         struct Binary: Expr {
             virtual ~Binary() = default;
 
-            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
+            virtual void visit(Visitor* visitor) override;
 
-            Binary(BinaryOp op, std::shared_ptr<Expr> lhs, std::shared_ptr<Expr> rhs)
+            Binary(BinaryOp op, Expr* lhs, Expr* rhs)
                 : op(op)
                 , lhs(lhs)
                 , rhs(rhs)
@@ -252,18 +272,20 @@ namespace cthulhu {
 
         private:
             BinaryOp op;
-            std::shared_ptr<Expr> lhs;
-            std::shared_ptr<Expr> rhs;
+            Expr* lhs;
+            Expr* rhs;
         };
 
         struct Literal: Expr {
             virtual ~Literal() = default;
+
+            virtual bool constant() const override { return true; }
         };
 
         struct IntLiteral: Literal {
             virtual ~IntLiteral() = default;
 
-            virtual void visit(std::shared_ptr<Visitor> visitor) const override;
+            virtual void visit(Visitor* visitor) override;
 
             IntLiteral(std::string digit, int base, std::string suffix)
                 : suffix(suffix)
@@ -300,38 +322,42 @@ namespace cthulhu {
         };
     }
 
-    struct Visitor: std::enable_shared_from_this<Visitor> {
+    struct Visitor {
         virtual ~Visitor() = default;
 
-        virtual void visit(const std::shared_ptr<const ast::RecordType> node) = 0;
-        virtual void visit(const std::shared_ptr<const ast::AliasType> node) = 0;
-        virtual void visit(const std::shared_ptr<const ast::SentinelType> node) = 0;
-        virtual void visit(const std::shared_ptr<const ast::PointerType> node) = 0;
-        virtual void visit(const std::shared_ptr<const ast::ArrayType> node) = 0;
-        virtual void visit(const std::shared_ptr<const ast::ScalarType> node) = 0;
-        virtual void visit(const std::shared_ptr<const ast::BoolType> node) = 0;
-        virtual void visit(const std::shared_ptr<const ast::VoidType> node) = 0;
-
-        virtual void visit(const std::shared_ptr<const ast::IntLiteral> node) = 0;
-        virtual void visit(const std::shared_ptr<const ast::Binary> node) = 0;
+        virtual void visit(ast::RecordType* node) = 0;
+        virtual void visit(ast::AliasType* node) = 0;
+        virtual void visit(ast::SentinelType* node) = 0;
+        virtual void visit(ast::PointerType* node) = 0;
+        virtual void visit(ast::ArrayType* node) = 0;
+        virtual void visit(ast::ScalarType* node) = 0;
+        virtual void visit(ast::BoolType* node) = 0;
+        virtual void visit(ast::VoidType* node) = 0;
+        virtual void visit(ast::IntLiteral* node) = 0;
+        virtual void visit(ast::Binary* node) = 0;
     };
 
     struct Context {
         // add a user defined type
-        void add(std::shared_ptr<ast::NamedType> type);
+        void add(ast::NamedType* type);
 
         // try and get a type
         // if the type isnt found then a sentinel type is added
         // which allows for order independant lookup
-        std::shared_ptr<ast::NamedType> get(std::string name);
+        ast::NamedType* get(std::string name);
 
         struct Frame {
-            std::shared_ptr<ast::Type> type;
+            ast::Type* type;
             bool nesting;
         };
 
+        // used for resolving types safely to prevent stack overflows
+        // `type` is the type that generated this frame
+        // `nesting` is true when this type can nest inside itself
+        // `opaque` is true when uhhhh
+        //          TODO: what does opaque do?
         template<typename F>
-        void enter(std::shared_ptr<ast::Type> type, bool nesting, bool opaque, F&& func) {
+        void enter(ast::Type* type, bool nesting, bool opaque, F&& func) {
             for (const auto& frame : stack) {
                 if (frame.type == type) {
                     if (opaque && frame.nesting)
@@ -346,15 +372,14 @@ namespace cthulhu {
             stack.pop_back();
         }
 
-    protected:
         // semantic validation stack
-        std::vector<std::shared_ptr<ast::Type>> stack;
+        std::vector<Frame> stack;
 
         // all named types
-        std::vector<std::shared_ptr<ast::NamedType>> types;
+        std::vector<ast::NamedType*> types;
 
         // all builtin types
-        std::vector<std::shared_ptr<ast::NamedType>> builtins;
+        std::vector<ast::NamedType*> builtins;
     };
 
     // init the global compiler state
@@ -364,6 +389,9 @@ namespace cthulhu {
         // create a new compilation unit
         Builder(std::string source);
 
+        // parse in a source file
+        // and semantically validate it
+        // `ctx` will contain a valid program ast
         void build(Context* ctx);
 
     private:
@@ -374,11 +402,11 @@ namespace cthulhu {
         void buildAlias(Context* ctx, std::shared_ptr<peg::Ast> ast);
 
         ast::Fields buildFields(Context* ctx, std::shared_ptr<peg::Ast> ast);
-        std::shared_ptr<ast::Type> buildType(Context* ctx, std::shared_ptr<peg::Ast> ast);
-        std::shared_ptr<ast::ArrayType> buildArray(Context* ctx, std::shared_ptr<peg::Ast> ast);
+        ast::Type* buildType(Context* ctx, std::shared_ptr<peg::Ast> ast);
+        ast::ArrayType* buildArray(Context* ctx, std::shared_ptr<peg::Ast> ast);
     
-        std::shared_ptr<ast::Expr> buildExpr(Context* ctx, std::shared_ptr<peg::Ast> ast);
-        std::shared_ptr<ast::Binary> buildBinary(Context* ctx, std::shared_ptr<peg::Ast> ast);
-        std::shared_ptr<ast::IntLiteral> buildNumber(Context* ctx, std::shared_ptr<peg::Ast> ast);
+        ast::Expr* buildExpr(Context* ctx, std::shared_ptr<peg::Ast> ast);
+        ast::Binary* buildBinary(Context* ctx, std::shared_ptr<peg::Ast> ast);
+        ast::IntLiteral* buildNumber(Context* ctx, std::shared_ptr<peg::Ast> ast);
     };
 }
