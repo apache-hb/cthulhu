@@ -221,7 +221,22 @@ namespace cthulhu {
         };
 
         enum struct BinaryOp {
-            ADD
+            ADD, // expr + expr
+            SUB, // expr - expr
+            DIV, // expr / expr
+            MOD, // expr % expr
+            MUL, // expr * expr
+            AND, // expr && expr
+            OR, // expr || expr
+            XOR, // expr ^ expr
+            BITAND, // expr & expr
+            BITOR, // expr | expr
+            SHL, // expr << expr
+            SHR, // expr >> expr
+            GT, // expr > expr
+            GTE, // expr >= expr
+            LT, // expr < expr
+            LTE // expr <= expr
         };
 
         struct Binary: Expr {
