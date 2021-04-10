@@ -36,7 +36,7 @@ int main() {
 
         auto source = Builder(R"(
             record a { field: *void, $: int, $: int } 
-            record b { field: [int:4 + 4char] }
+            record b { field: [int:4 + 4] }
         )");
 
         source.build(&ctx);

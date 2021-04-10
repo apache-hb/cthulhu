@@ -15,6 +15,8 @@ namespace cthulhu {
     struct Context;
 
     namespace ast {
+        struct NamedType;
+
         // basic nodes
         struct Node: std::enable_shared_from_this<Node> {
             virtual ~Node() = default;
@@ -49,6 +51,8 @@ namespace cthulhu {
                 return false; 
             }
 
+            virtual std::shared_ptr<const NamedType> root(Context* ctx) const = 0;
+
             /* is this type a scalar type */
             virtual bool scalar() const { return false; }
         };
@@ -75,8 +79,10 @@ namespace cthulhu {
         struct PointerType: Type {
             virtual ~PointerType() = default;
 
-            virtual void sema(Context*) const override { 
-                /* pointers are always valid for now */
+            virtual void sema(Context*) const override;
+
+            virtual std::shared_ptr<const NamedType> root(Context* ctx) const override {
+                return type->root(ctx);
             }
 
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
@@ -92,20 +98,10 @@ namespace cthulhu {
         struct ArrayType: Type {
             virtual ~ArrayType() = default;
 
-            virtual void sema(Context* ctx) const override { 
-                type->sema(ctx);
+            virtual void sema(Context* ctx) const override;
 
-                if (type->unit(ctx)) {
-                    panic("array type may not be a unit type");
-                }
-
-                if (size) {
-                    size->sema(ctx);
-                    
-                    if (!size->type(ctx)->scalar() && size->constant()) {
-                        panic("array size must evaluate to a constant scalar");
-                    }
-                }
+            virtual std::shared_ptr<const NamedType> root(Context* ctx) const override {
+                return type->root(ctx);
             }
 
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
@@ -131,6 +127,10 @@ namespace cthulhu {
                 : name(name)
             { }
 
+            virtual std::shared_ptr<const NamedType> root(Context*) const override {
+                return as<NamedType>();
+            }
+
             virtual bool resolved() const { return true; }
 
             std::string name;
@@ -148,15 +148,7 @@ namespace cthulhu {
         struct RecordType: NamedType {
             virtual ~RecordType() = default;
 
-            virtual void sema(Context* ctx) const override { 
-                for (const auto& [field, type] : fields) {
-                    if (type->unit(ctx)) {
-                        panic("record field `{}` was a unit type", field);
-                    }
-
-                    type->sema(ctx);
-                }
-            }
+            virtual void sema(Context* ctx) const override;
 
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
 
@@ -204,9 +196,7 @@ namespace cthulhu {
                 panic("TODO: order independant lookup `{}`", name);
             }
 
-            virtual void sema(Context*) const override {
-                panic("TODO: unresolved sentinel type `{}`", name);
-            }
+            virtual void sema(Context*) const override;
 
             virtual bool resolved() const { return false; }
 
@@ -222,9 +212,7 @@ namespace cthulhu {
         struct BuiltinType: NamedType {
             virtual ~BuiltinType() = default;
 
-            virtual void sema(Context*) const override { 
-                /* builtin types are always semantically valid */
-            }
+            virtual void sema(Context*) const override;
 
             BuiltinType(std::string name)
                 : NamedType(name)
@@ -294,11 +282,7 @@ namespace cthulhu {
             virtual ~Unary() = default;
             virtual bool constant() const override { return expr->constant(); }
 
-            virtual void sema(Context* ctx) const override { 
-                if (op == UnaryOp::DEREF && !expr->type(ctx)->resolve(ctx)->is<PointerType>()) {
-                    panic("cannot dereference a type that isnt a pointer");
-                }
-            }
+            virtual void sema(Context* ctx) const override;
 
         private:
             UnaryOp op;
@@ -316,11 +300,7 @@ namespace cthulhu {
                 return lhs->constant() && rhs->constant();
             }
 
-            virtual void sema(Context* ctx) const override { 
-                if (lhs->type(ctx) != rhs->type(ctx)) {
-                    panic("binary operands had mismatching types");
-                }
-            }
+            virtual void sema(Context* ctx) const override;
 
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
             virtual std::shared_ptr<Type> type(Context* ctx) const override;
@@ -340,19 +320,13 @@ namespace cthulhu {
         struct Literal: Expr {
             virtual ~Literal() = default;
             virtual bool constant() const override { return true; }
-            virtual void sema(Context*) const override { 
-                /* a literal will always be semantically valid */ 
-            }
+            virtual void sema(Context*) const override;
         };
 
         struct IntLiteral: Literal {
             virtual ~IntLiteral() = default;
 
-            virtual void sema(Context*) const override { 
-                if (!suffix.empty()) {
-                    /* TODO: check that value fits into suffix type */
-                }
-            }
+            virtual void sema(Context*) const override;
 
             virtual void visit(std::shared_ptr<Visitor> visitor) const override;
 
@@ -423,7 +397,31 @@ namespace cthulhu {
             }
         }
 
+        struct Frame {
+            std::shared_ptr<ast::Type> type;
+            bool nesting;
+        };
+
+        template<typename F>
+        void enter(std::shared_ptr<ast::Type> type, bool nesting, bool opaque, F&& func) {
+            for (const auto& frame : stack) {
+                if (frame.type == type) {
+                    if (opaque && frame.nesting)
+                        break;
+
+                    panic("recursive type detected");
+                }
+            }
+            
+            stack.push_back({ type, nesting });
+            func();
+            stack.pop_back();
+        }
+
     protected:
+        // semantic validation stack
+        std::vector<std::shared_ptr<ast::Type>> stack;
+
         // all named types
         std::vector<std::shared_ptr<ast::NamedType>> types;
 
@@ -445,6 +443,7 @@ namespace cthulhu {
         std::shared_ptr<peg::Ast> tree;
 
         void buildRecord(Context* ctx, std::shared_ptr<peg::Ast> ast);
+        void buildAlias(Context* ctx, std::shared_ptr<peg::Ast> ast);
 
         ast::Fields buildFields(Context* ctx, std::shared_ptr<peg::Ast> ast);
         std::shared_ptr<ast::Type> buildType(Context* ctx, std::shared_ptr<peg::Ast> ast);

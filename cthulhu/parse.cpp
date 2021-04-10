@@ -104,8 +104,9 @@ namespace {
 
         # reserved keywords
         ~COMPILE <- 'compile' skip
+        ~REQUIRES   <- 'requires' skip
 
-        KEYWORD <- USING / RECORD / DEF / RETURN / VAR / COMPILE
+        KEYWORD <- USING / RECORD / DEF / RETURN / VAR / COMPILE / REQUIRES
 
         # an identifier is any sequence of [a-zA-Z_][a-zA-Z0-9_] or a single $
         # that is *not* a keyword
@@ -166,6 +167,9 @@ void Builder::build(Context* ctx) {
         case "record"_:
             buildRecord(ctx, node);
             break;
+        case "alias"_:
+            buildAlias(ctx, node);
+            break;
         default:
             panic("TODO: unknown tag `{}`", node->name);
         }
@@ -175,12 +179,19 @@ void Builder::build(Context* ctx) {
 void Builder::buildRecord(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ASSERT(ast->tag == "record"_);
 
-    std::cout << ast_to_s(ast) << std::endl;
-    
     auto name = ast->nodes[0]->token_to_string();
     auto fields = buildFields(ctx, ast->nodes[1]);
 
     ctx->add(std::make_shared<ast::RecordType>(name, fields));
+}
+
+void Builder::buildAlias(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "alias"_);
+
+    auto name = ast->nodes[0]->token_to_string();
+    auto type = buildType(ctx, ast->nodes[1]);
+
+    ctx->add(std::make_shared<ast::AliasType>(name, type));
 }
 
 ast::Fields Builder::buildFields(Context* ctx, std::shared_ptr<peg::Ast> ast) {
