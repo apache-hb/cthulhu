@@ -53,26 +53,33 @@ struct C: Visitor {
     std::stringstream defs;
     std::stringstream types;
     std::stringstream funcs;
-    bool def = true;
+    
+    // true when emiting a defition, false when emmiting a field
+    bool emit_def = true;
+
+    // 0 when emitting a toplevel field, >0 during nesting
+    int depth = 0;
+
+    std::string fname;
 
     virtual void visit(ast::RecordType* node) override {
         auto name = node->name + "_struct";
 
-        if (def) {
-            def = false;
+        if (emit_def) {
+            emit_def = false;
             defs << "struct " << name << ";" << std::endl;
 
             types << "struct " << name << " {" << std::endl;
             
             for (auto [id, type] : node->fields) {
+                fname = id;
                 type->visit(this);
-                types << " " << id << ";" << std::endl;
             }
 
             types << "};" << std::endl; 
-            def = true;
+            emit_def = true;
         } else {
-            types << "struct " << name;
+            emit_field(types, "struct " + name);
         }
     }
 
@@ -86,17 +93,26 @@ struct C: Visitor {
         return true;
     }
 
+    void emit_field(std::stringstream& ss, std::string name) {
+        if (depth == 0) {
+            ss << name << " " << fname << ";" << std::endl;
+        } else {
+            ss << name;
+        }
+    }
+
     virtual void visit(ast::SumType* node) override {
-        if (def) {
-            def = false;
+        if (emit_def) {
+            emit_def = false;
 
             if (is_enum(node)) {
-                defs << "enum " << node->name << "_enum" << ";" << std::endl;
+                auto name = node->name + "_enum";
+                defs << "enum " << name << ";" << std::endl;
                 types << "typedef enum {" << std::endl;
                 for (auto item : node->cases) {
-                    types << node->name << item.name << "," << std::endl;
+                    types << name << item.name << "," << std::endl;
                 }
-                types << "} " << node->name << "_enum" << ";" << std::endl;
+                types << "} " << name << ";" << std::endl;
             } else {
                 auto tag = node->name + "_tag";
                 auto data = node->name + "_data";
@@ -123,8 +139,8 @@ struct C: Visitor {
                         types << "struct " << node->name << "_" << id << "{" << std::endl;
 
                         for (auto [name, type] : fields) {
+                            fname = name;
                             type->visit(this);
-                            types << " " << name << ";" << std::endl;
                         }
 
                         types << "};" << std::endl;
@@ -153,35 +169,60 @@ struct C: Visitor {
                 types << "} " << node->name << ";" << std::endl;
             }
 
-            def = true;
+            emit_def = true;
         } else {
             if (is_enum(node)) {
-                types << "enum " << node->name << "_enum";
+                emit_field(types, "enum " + node->name + "_enum");
             } else {
-                types << "struct " << node->name << "_variant";
+                emit_field(types, "struct " + node->name + "_variant");
             }
         }
     }
 
     virtual void visit(ast::AliasType* node) override {
-        if (def)
+        if (emit_def)
             return;
         node->type->visit(this);
     }
 
     virtual void visit(ast::SentinelType* node) override {
-        if (def)
+        if (emit_def)
             return;
         ctx->get(node->name)->visit(this);
     }
 
     virtual void visit(ast::PointerType* node) override {
+        depth++;
         node->type->visit(this);
-        types << "*";
+        depth--;
+        emit_field(types, "*");
     }
 
-    virtual void visit(ast::ClosureType*) override {
+    virtual void visit(ast::ClosureType* node) override {
+        depth++;
+        node->result->visit(this);
+        depth--;
+        if (depth == 0) {
+            types << "(*" << fname << ")";
+        } else {
+            types << "(*)";
+        }
 
+        types << "(";
+
+        for (size_t i = 0; i < node->args.size(); i++) {
+            if (i)
+                types << ", ";
+            depth++;
+            node->args[i]->visit(this);
+            depth--;
+        }
+
+        types << ")";
+
+        if (depth == 0) {
+            types << ";" << std::endl;
+        }
     }
 
     virtual void visit(ast::ArrayType*) override {
@@ -189,15 +230,15 @@ struct C: Visitor {
     }
 
     virtual void visit(ast::ScalarType* node) override {
-        types << node->name;
+        emit_field(types, node->name);
     }
 
     virtual void visit(ast::BoolType*) override {
-        types << "int";
+        emit_field(types, "int");
     }
 
     virtual void visit(ast::VoidType*) override {
-        types << "void";
+        emit_field(types, "void");
     }
 
     virtual void visit(ast::IntLiteral*) override {

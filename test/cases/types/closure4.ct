@@ -1,0 +1,7 @@
+record a {
+    field: () -> void
+}
+
+record b {
+    field: ((int) -> int) -> int
+}
