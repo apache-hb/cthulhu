@@ -54,6 +54,8 @@ struct C: Visitor {
     std::stringstream types;
     std::stringstream funcs;
     
+    std::stringstream* current;
+
     // true when emiting a defition, false when emmiting a field
     bool emit_def = true;
 
@@ -225,8 +227,19 @@ struct C: Visitor {
         }
     }
 
-    virtual void visit(ast::ArrayType*) override {
-
+    virtual void visit(ast::ArrayType* node) override {
+        depth++;
+        node->type->visit(this);
+        depth--;
+        if (node->size) {
+            types << "[";
+            depth++;
+            node->size->visit(this);
+            depth--;
+            types << "]";
+        } else {
+            types << "[]";
+        }
     }
 
     virtual void visit(ast::ScalarType* node) override {
@@ -241,12 +254,32 @@ struct C: Visitor {
         emit_field(types, "void");
     }
 
-    virtual void visit(ast::IntLiteral*) override {
-
+    virtual void visit(ast::IntLiteral* node) override {
+        types << node->value;
     }
 
-    virtual void visit(ast::Binary*) override {
-
+    virtual void visit(ast::Binary* node) override {
+        node->lhs->visit(this);
+        switch (node->op) {
+        case ast::BinaryOp::ADD: types << "+"; break;
+        case ast::BinaryOp::SUB: types << "-"; break;
+        case ast::BinaryOp::DIV: types << "/"; break;
+        case ast::BinaryOp::MOD: types << "%"; break;
+        case ast::BinaryOp::MUL: types << "*"; break;
+        case ast::BinaryOp::AND: types << "&&"; break;
+        case ast::BinaryOp::OR: types << "||"; break;
+        case ast::BinaryOp::XOR: types << "^"; break;
+        case ast::BinaryOp::BITAND: types << "&"; break;
+        case ast::BinaryOp::BITOR: types << "|"; break;
+        case ast::BinaryOp::SHL: types << "<<"; break;
+        case ast::BinaryOp::SHR: types << ">>"; break;
+        case ast::BinaryOp::GT: types << ">"; break;
+        case ast::BinaryOp::GTE: types << ">="; break;
+        case ast::BinaryOp::LT: types << "<"; break;
+        case ast::BinaryOp::LTE: types << "<="; break;
+        default: panic("invalid binary op");
+        }
+        node->rhs->visit(this);
     }
 };
 

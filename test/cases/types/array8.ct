@@ -1,0 +1,4 @@
+record a {
+    field1: [int],
+    field2: int
+}

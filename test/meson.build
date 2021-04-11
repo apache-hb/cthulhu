@@ -44,6 +44,9 @@ types = [
     [ 'types.array5', false ],
     [ 'types.array6', false ],
     [ 'types.array7', false ],
+    [ 'types.array8', false ],
+    [ 'types.array9', true ],
+    [ 'types.array10', true ],
 ]
 
 funcs = [
