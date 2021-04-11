@@ -60,6 +60,7 @@ namespace cthulhu {
             virtual ~Expr() = default;
 
             virtual bool constant() const { return false; }
+            virtual Type* type(Context* ctx) = 0;
         };
 
         // types
@@ -94,8 +95,23 @@ namespace cthulhu {
             Expr* size;
         };
 
+        struct Types: std::vector<Type*> {
+            void sema(Context* ctx);
+        };
+
         struct ClosureType: Type {
             virtual ~ClosureType() = default;
+
+            virtual void visit(Visitor* visitor) override;
+            virtual void sema(Context* ctx) override;
+
+            ClosureType(Types args, Type* result)
+                : args(args)
+                , result(result)
+            { }
+
+            Types args;
+            Type* result;
         };
 
         struct NamedType: Type {
@@ -136,8 +152,30 @@ namespace cthulhu {
             virtual ~UnionType() = default;
         };
 
+        struct Case {
+            std::string name;
+            Fields fields;
+        };
+
+        struct Cases: std::vector<Case> {
+            void add(std::string name, Fields entry);
+            void sema(Context* ctx);
+        };
+
         struct SumType: NamedType {
             virtual ~SumType() = default;
+
+            virtual void visit(Visitor* visitor) override;
+            virtual void sema(Context* ctx) override;
+
+            SumType(std::string name, Type* parent, Cases cases)
+                : NamedType(name)
+                , parent(parent)
+                , cases(cases)
+            { }
+
+            Type* parent;
+            Cases cases;
         };
 
         struct AliasType: NamedType {
@@ -235,6 +273,10 @@ namespace cthulhu {
         struct Unary: Expr {
             virtual ~Unary() = default;
 
+            virtual bool constant() const override { 
+                return expr->constant(); 
+            }
+
         private:
             UnaryOp op;
             Expr* expr;
@@ -263,6 +305,12 @@ namespace cthulhu {
             virtual ~Binary() = default;
 
             virtual void visit(Visitor* visitor) override;
+            virtual bool constant() const override { 
+                return lhs->constant() && rhs->constant(); 
+            }
+
+            virtual void sema(Context* ctx) override;
+            virtual Type* type(Context* ctx) override;
 
             Binary(BinaryOp op, Expr* lhs, Expr* rhs)
                 : op(op)
@@ -280,6 +328,9 @@ namespace cthulhu {
             virtual ~Literal() = default;
 
             virtual bool constant() const override { return true; }
+            virtual void sema(Context*) override { 
+                /* literals should always be valid */
+            }
         };
 
         struct IntLiteral: Literal {
@@ -295,6 +346,9 @@ namespace cthulhu {
                     panic("`{}` was out of range", digit);
                 }
             }
+
+            virtual Type* type(Context* ctx) override;
+            virtual void sema(Context* ctx) override;
 
         private:
             std::string suffix;
@@ -326,9 +380,11 @@ namespace cthulhu {
         virtual ~Visitor() = default;
 
         virtual void visit(ast::RecordType* node) = 0;
+        virtual void visit(ast::SumType* node) = 0;
         virtual void visit(ast::AliasType* node) = 0;
         virtual void visit(ast::SentinelType* node) = 0;
         virtual void visit(ast::PointerType* node) = 0;
+        virtual void visit(ast::ClosureType* node) = 0;
         virtual void visit(ast::ArrayType* node) = 0;
         virtual void visit(ast::ScalarType* node) = 0;
         virtual void visit(ast::BoolType* node) = 0;
@@ -400,11 +456,14 @@ namespace cthulhu {
 
         void buildRecord(Context* ctx, std::shared_ptr<peg::Ast> ast);
         void buildAlias(Context* ctx, std::shared_ptr<peg::Ast> ast);
+        void buildVariant(Context* ctx, std::shared_ptr<peg::Ast> ast);
 
+        ast::Cases buildCases(Context* ctx, std::shared_ptr<peg::Ast> ast);
         ast::Fields buildFields(Context* ctx, std::shared_ptr<peg::Ast> ast);
         ast::Type* buildType(Context* ctx, std::shared_ptr<peg::Ast> ast);
         ast::ArrayType* buildArray(Context* ctx, std::shared_ptr<peg::Ast> ast);
-    
+        ast::ClosureType* buildClosure(Context* ctx, std::shared_ptr<peg::Ast> ast);
+
         ast::Expr* buildExpr(Context* ctx, std::shared_ptr<peg::Ast> ast);
         ast::Binary* buildBinary(Context* ctx, std::shared_ptr<peg::Ast> ast);
         ast::IntLiteral* buildNumber(Context* ctx, std::shared_ptr<peg::Ast> ast);

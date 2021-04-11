@@ -8,6 +8,7 @@ types = [
     [ 'types.recurse2', true ],
     [ 'types.recurse3', false ],
     [ 'types.recurse4', false ],
+    [ 'types.recurse5', false ],
 
     [ 'types.order1', true ],
 
@@ -16,6 +17,7 @@ types = [
     [ 'types.variant3', true ],
     [ 'types.variant4', true ],
     [ 'types.variant5', false ],
+    [ 'types.variant6', false ],
 
     [ 'types.define1', false ],
     [ 'types.define2', false ],

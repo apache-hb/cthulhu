@@ -1,0 +1,4 @@
+variant a : void {
+    a,
+    b
+}
