@@ -318,7 +318,6 @@ namespace cthulhu {
                 , rhs(rhs)
             { }
 
-        private:
             BinaryOp op;
             Expr* lhs;
             Expr* rhs;
@@ -350,7 +349,6 @@ namespace cthulhu {
             virtual Type* type(Context* ctx) override;
             virtual void sema(Context* ctx) override;
 
-        private:
             std::string suffix;
             uint64_t value;
         };
