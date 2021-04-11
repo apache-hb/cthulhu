@@ -11,20 +11,25 @@ namespace {
         unit    <- decl+ eof { no_ast_opt }
 
         # toplevel decls
-        decl    <- record / alias / function / variable 
+        decl    <- record / alias / variant / function / variable 
 
         record  <- RECORD ident lbrace fields rbrace { no_ast_opt }
         alias   <- USING ident assign type semi { no_ast_opt }
+        variant <- VARIANT ident (colon type)? lbrace cases rbrace { no_ast_opt }
+
+        cases   <- LIST(case) { no_ast_opt }
+        case    <- ident (lparen fields rparen)? { no_ast_opt }
 
         fields  <- LIST(field) { no_ast_opt }
         field   <- ident colon type { no_ast_opt }
 
         variable    <- VAR ident colon type assign expr semi { no_ast_opt }
 
-        function    <- DEF ident params colon type body { no_ast_opt }
+        function    <- DEF ident params? (colon type)? body { no_ast_opt }
 
-        params      <- lparen LIST(field) rparen { no_ast_opt }
-        body        <- semi / compound { no_ast_opt }
+        params      <- lparen LIST(param)? rparen { no_ast_opt }
+        param       <- ident colon type (assign expr)? { no_ast_opt }
+        body        <- semi / compound / assign expr semi { no_ast_opt }
 
         # statements
 
@@ -57,9 +62,11 @@ namespace {
         atom    <- number / string / ident / lparen expr rparen / mul expr / un expr
 
         # types
-        type    <- ident / pointer / array { no_ast_opt }
+        type    <- ident / pointer / array / closure { no_ast_opt }
         pointer <- mul type
         array   <- lsquare type (colon expr)? rsquare { no_ast_opt }
+        closure <- lparen types? rparen arrow type { no_ast_opt }
+        types   <- LIST(type) { no_ast_opt }
 
         # symbols
         ~lbrace <- '{'
@@ -72,6 +79,7 @@ namespace {
         ~comma  <- ','
         ~semi   <- ';'
         ~assign <- '='
+        ~arrow  <- '->'
 
         # operators
         ~add    <- '+'
@@ -171,6 +179,9 @@ void Builder::build(Context* ctx) {
         case "alias"_:
             buildAlias(ctx, node);
             break;
+        case "variant"_:
+            buildVariant(ctx, node);
+            break;
         default:
             panic("TODO: unknown tag `{}`", node->name);
         }
@@ -199,6 +210,35 @@ void Builder::buildAlias(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ctx->add(new ast::AliasType(name, type));
 }
 
+void Builder::buildVariant(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "variant"_);
+
+    auto name = ast->nodes[0]->token_to_string();
+    auto parent = ast->nodes.size() > 2 ? buildType(ctx, ast->nodes[1]) : nullptr;
+    auto cases = buildCases(ctx, ast->nodes.back());
+
+    ctx->add(new ast::SumType(name, parent, cases));
+}
+
+ast::Cases Builder::buildCases(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "cases"_);
+
+    ast::Cases cases;
+
+    for (auto node : ast->nodes) {
+        auto name = node->nodes[0]->token_to_string();
+
+        ast::Fields fields;
+        if (node->nodes.size() > 1) {
+            fields = buildFields(ctx, node->nodes[1]);
+        }
+
+        cases.add(name, fields);
+    }
+
+    return cases;
+}
+
 ast::Fields Builder::buildFields(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ASSERT(ast->tag == "fields"_);
 
@@ -224,7 +264,10 @@ ast::Type* Builder::buildType(Context* ctx, std::shared_ptr<peg::Ast> ast) {
         return new ast::PointerType(buildType(ctx, ast->nodes[0]));
     case 2: // array
         return buildArray(ctx, ast->nodes[0]);
+    case 3: // closure
+        return buildClosure(ctx, ast->nodes[0]);
     default:
+        std::cout << ast_to_s(ast) << std::endl;
         panic("unknown type ast `{}`", ast->name);
     }
 }
@@ -236,6 +279,19 @@ ast::ArrayType* Builder::buildArray(Context* ctx, std::shared_ptr<peg::Ast> ast)
     auto size = ast->nodes.size() > 1 ? buildExpr(ctx, ast->nodes[1]) : nullptr;
 
     return new ast::ArrayType(type, size);
+}
+
+ast::ClosureType* Builder::buildClosure(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    ast::Types types;
+    auto result = buildType(ctx, ast->nodes.back());
+
+    if (ast->nodes.size() > 1) {
+        for (auto node : ast->nodes[0]->nodes) {
+            types.push_back(buildType(ctx, node));
+        }
+    }
+
+    return new ast::ClosureType(types, result);
 }
 
 ast::Expr* Builder::buildExpr(Context* ctx, std::shared_ptr<peg::Ast> ast) {

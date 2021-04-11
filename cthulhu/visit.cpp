@@ -13,11 +13,19 @@ namespace cthulhu::ast {
         visitor->visit(this);
     }
 
+    void SumType::visit(Visitor* visitor) {
+        visitor->visit(this);
+    }
+
     void SentinelType::visit(Visitor* visitor) {
         visitor->visit(this);
     }
 
     void PointerType::visit(Visitor* visitor) {
+        visitor->visit(this);
+    }
+
+    void ClosureType::visit(Visitor* visitor) {
         visitor->visit(this);
     }
 
