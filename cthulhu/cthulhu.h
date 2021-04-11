@@ -44,7 +44,7 @@ namespace cthulhu {
 
             virtual Type* root(Context*) { return this; }
             virtual bool resolved() const { return true; }
-            virtual bool unit() const { return false; }
+            virtual bool unit(Context*) const { return false; }
             virtual bool scalar() const { return false; }
         };
 
@@ -183,7 +183,7 @@ namespace cthulhu {
 
             virtual void visit(Visitor* visitor) override;
             virtual void sema(Context* ctx) override;
-            virtual bool unit() const override { return type->unit(); }
+            virtual bool unit(Context* ctx) const override { return type->unit(ctx); }
 
             AliasType(std::string name, Type* type)
                 : NamedType(name)
@@ -200,6 +200,7 @@ namespace cthulhu {
             virtual void visit(Visitor* visitor) override;
             virtual void sema(Context* ctx) override;
             virtual bool resolved() const override { return false; }
+            virtual bool unit(Context* ctx) const override;
 
             SentinelType(std::string name)
                 : NamedType(name)
@@ -252,7 +253,7 @@ namespace cthulhu {
             virtual ~VoidType() = default;
 
             virtual void visit(Visitor* visitor) override;
-            virtual bool unit() const override { return true; }
+            virtual bool unit(Context*) const override { return true; }
 
             VoidType()
                 : BuiltinType("void") 
