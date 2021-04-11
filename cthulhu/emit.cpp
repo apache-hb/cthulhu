@@ -1,5 +1,7 @@
 #include "cthulhu.h"
 
-namespace cthulhu {
+#include <sstream>
 
+namespace cthulhu {
+    using namespace ast;
 }

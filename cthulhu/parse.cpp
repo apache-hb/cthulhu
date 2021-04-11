@@ -182,6 +182,9 @@ void Builder::build(Context* ctx) {
         case "variant"_:
             buildVariant(ctx, node);
             break;
+        /*case "function"_:
+            buildFunction(ctx, node);
+            break;*/
         default:
             panic("TODO: unknown tag `{}`", node->name);
         }
@@ -214,11 +217,26 @@ void Builder::buildVariant(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ASSERT(ast->tag == "variant"_);
 
     auto name = ast->nodes[0]->token_to_string();
-    auto parent = ast->nodes.size() > 2 ? buildType(ctx, ast->nodes[1]) : nullptr;
+    auto parent = ast->nodes.size() > 2 ? buildType(ctx, ast->nodes[1]) : ctx->get("int");
     auto cases = buildCases(ctx, ast->nodes.back());
 
     ctx->add(new ast::SumType(name, parent, cases));
 }
+
+/*
+void Builder::buildFunction(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "function"_);
+
+    auto name = ast->nodes[0]->token_to_string();
+    auto params = ast->nodes[1]->tag == "params"_ ? buildParams(ctx, ast->nodes[1]) : {};
+    auto result = ast->nodes[ast->nodes.size() - 1]->tag == "type"_ 
+        ? buildType(ctx, ast->nodes[ast->nodes.size() - 1]) 
+        : ctx->get("void");
+    auto body = buildBody(ctx, ast->nodes.back());
+
+    std::cout << ast_to_s(ast) << std::endl;
+}
+*/
 
 ast::Cases Builder::buildCases(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ASSERT(ast->tag == "cases"_);

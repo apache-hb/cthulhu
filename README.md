@@ -41,3 +41,7 @@ meson test --wrap='valgrind -q --leak-check=full --error-exitcode=1'
   - core cthulhu compiler
 - docs
   - language specification and documentation
+
+## Licensing
+
+This project is licensed under [AGPL3](./LICENSE).
