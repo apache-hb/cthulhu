@@ -1,0 +1,5 @@
+variant a : v {
+    field
+}
+
+using v = void;

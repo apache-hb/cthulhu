@@ -16,7 +16,7 @@ namespace cthulhu {
 
         void Fields::sema(Context* ctx) {
             for (auto [name, type] : *this) {
-                if (type->unit()) {
+                if (type->unit(ctx)) {
                     panic("field `{}` is void", name);
                 }
                 type->sema(ctx);
@@ -93,7 +93,7 @@ namespace cthulhu {
 
         void SumType::sema(Context* ctx) {
             if (parent) {
-                if (parent->unit()) {
+                if (parent->unit(ctx)) {
                     panic("variant `{}` may not extend unit type", name);
                 }
 
@@ -115,6 +115,10 @@ namespace cthulhu {
             } else {
                 panic("unresolved type `{}`", name);
             }
+        }
+
+        bool SentinelType::unit(Context* ctx) const {
+            return ctx->get(name)->unit(ctx);
         }
 
         void Binary::sema(Context* ctx) {

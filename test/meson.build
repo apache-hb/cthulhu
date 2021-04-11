@@ -18,6 +18,9 @@ types = [
     [ 'types.variant4', true ],
     [ 'types.variant5', false ],
     [ 'types.variant6', false ],
+    [ 'types.variant7', false ],
+    [ 'types.variant8', true ],
+    [ 'types.variant9', false ],
 
     [ 'types.define1', false ],
     [ 'types.define2', false ],
