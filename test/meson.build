@@ -4,6 +4,8 @@ types = [
     [ 'types.alias3', false ],
     [ 'types.alias4', true ],
 
+    [ 'types.pointer1', true ],
+
     [ 'types.recurse1', false ],
     [ 'types.recurse2', true ],
     [ 'types.recurse3', false ],
@@ -33,6 +35,7 @@ types = [
     [ 'types.closure1', true ],
     [ 'types.closure2', false ],
     [ 'types.closure3', false ],
+    [ 'types.closure4', true ],
 
     [ 'types.array1', true ],
     [ 'types.array2', true ],
