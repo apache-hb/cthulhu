@@ -30,11 +30,11 @@ namespace cthulhu {
 
             template<typename T>
             T* as() {
-                return dynamic_cast<T>(this);
+                return dynamic_cast<T*>(this);
             }
 
             template<typename T>
-            bool is() const {
+            bool is() {
                 return as<T>() != nullptr;
             }
         };
@@ -190,7 +190,6 @@ namespace cthulhu {
                 , type(type)
             { }
 
-        private:
             Type* type;
         };
 
@@ -458,6 +457,7 @@ namespace cthulhu {
         void buildRecord(Context* ctx, std::shared_ptr<peg::Ast> ast);
         void buildAlias(Context* ctx, std::shared_ptr<peg::Ast> ast);
         void buildVariant(Context* ctx, std::shared_ptr<peg::Ast> ast);
+        //void buildFunction(Context* ctx, std::shared_ptr<peg::Ast> ast);
 
         ast::Cases buildCases(Context* ctx, std::shared_ptr<peg::Ast> ast);
         ast::Fields buildFields(Context* ctx, std::shared_ptr<peg::Ast> ast);
