@@ -14,12 +14,24 @@ namespace cthulhu {
             push_back({ name, type });
         }
 
-        void Fields::sema(Context* ctx) {
+        void Fields::sema(Context* ctx, bool record) {
+            bool bounded = true;
             for (auto [name, type] : *this) {
                 if (type->unit(ctx)) {
                     panic("field `{}` is void", name);
                 }
                 type->sema(ctx);
+
+                if (record) {
+                    if (type->unsized()) {
+                        bounded = false;
+                        continue;
+                    }
+
+                    if (!bounded) {
+                        panic("field `{}` with unbounded size must be last element of record", name);
+                    }
+                }
             }
         }
 
@@ -56,7 +68,7 @@ namespace cthulhu {
 
         void ArrayType::sema(Context* ctx) {
             auto base = root(ctx);
-            ctx->enter(base, false, true, [&] {
+            ctx->enter(base, true, true, [&] {
                 type->sema(ctx);
             });
 
@@ -81,7 +93,7 @@ namespace cthulhu {
 
         void RecordType::sema(Context* ctx) {
             ctx->enter(this, true, false, [&] {
-                fields.sema(ctx);
+                fields.sema(ctx, true);
             });
         }
 
@@ -141,6 +153,25 @@ namespace cthulhu {
         Type* IntLiteral::type(Context* ctx) {
             return ctx->get(suffix.empty() ? "int" : suffix);
         }
+
+        void Function::sema(Context* ctx) {
+            result->sema(ctx);
+            // TODO:
+        }
+    }
+
+    void Context::add(ast::Function* func) {
+        if (func->name == "$") {
+            panic("function names may not be discarded");
+        }
+
+        for (auto& fun : funcs) {
+            if (fun->name == func->name) {
+                panic("multiple definitions of function `{}`", func->name);
+            }
+        }
+
+        funcs.push_back(func);
     }
 
     void Context::add(ast::NamedType* type) {

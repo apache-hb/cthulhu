@@ -61,7 +61,7 @@ funcs = [
     [ 'funcs.func9', true ],
 ]
 
-tests = types #+ funcs
+tests = types + funcs
 
 foreach item : tests
     name = item[0]

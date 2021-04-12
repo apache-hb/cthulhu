@@ -46,6 +46,7 @@ namespace cthulhu {
             virtual bool resolved() const { return true; }
             virtual bool unit(Context*) const { return false; }
             virtual bool scalar() const { return false; }
+            virtual bool unsized() const { return false; }
         };
 
         struct Stmt: Node {
@@ -61,6 +62,14 @@ namespace cthulhu {
 
             virtual bool constant() const { return false; }
             virtual Type* type(Context* ctx) = 0;
+        };
+
+        // stmts
+
+        struct Compound: Stmt {
+            virtual ~Compound() = default;
+
+            std::vector<Stmt*> stmts;
         };
 
         // types
@@ -84,6 +93,7 @@ namespace cthulhu {
 
             virtual void visit(Visitor* visitor) override;
             virtual Type* root(Context* ctx) { return type->root(ctx); }
+            virtual bool unsized() const override { return size == nullptr; }
             virtual void sema(Context* ctx) override;
 
             ArrayType(Type* type, Expr* size)
@@ -131,7 +141,7 @@ namespace cthulhu {
 
         struct Fields: std::vector<Field> {
             void add(std::string name, Type* type);
-            void sema(Context* ctx);
+            void sema(Context* ctx, bool record = false);
         };
 
         struct RecordType: NamedType {
@@ -367,6 +377,53 @@ namespace cthulhu {
             std::string value;
         };
 
+        // functions
+
+        struct Param {
+            std::string name;
+            Type* type;
+            Expr* init;
+        };
+
+        struct Params: std::vector<Param*> {
+            void add(std::string name, Type* type, Expr* init);
+        };
+
+        struct Function: Node {
+            virtual ~Function() = default;
+
+            virtual void visit(Visitor* visitor) override;
+            virtual void sema(Context* ctx) override;
+
+            Function(std::string name, Params params, Type* result)
+                : name(name)
+                , params(params)
+                , result(result)
+            { }
+
+            std::string name;
+            Params params;
+            Type* result;
+        };
+
+        struct SimpleFunction: Function {
+            virtual ~SimpleFunction() = default;
+
+            virtual void visit(Visitor* visitor) override;
+            virtual void sema(Context* ctx) override;
+
+            Expr* body;
+        };
+
+        struct ComplexFunction: Function {
+            virtual ~ComplexFunction() = default;
+
+            virtual void visit(Visitor* visitor) override;
+            virtual void sema(Context* ctx) override;
+
+            Compound* body;
+        };
+
         // top level constructs
 
         struct Import: Node {
@@ -389,11 +446,15 @@ namespace cthulhu {
         virtual void visit(ast::VoidType* node) = 0;
         virtual void visit(ast::IntLiteral* node) = 0;
         virtual void visit(ast::Binary* node) = 0;
+        virtual void visit(ast::Function* node) = 0;
     };
 
     struct Context {
         // add a user defined type
         void add(ast::NamedType* type);
+
+        // add a user defined function
+        void add(ast::Function* func);
 
         // try and get a type
         // if the type isnt found then a sentinel type is added
@@ -434,6 +495,9 @@ namespace cthulhu {
 
         // all builtin types
         std::vector<ast::NamedType*> builtins;
+
+        // all functions
+        std::vector<ast::Function*> funcs;
     };
 
     // init the global compiler state
@@ -455,7 +519,7 @@ namespace cthulhu {
         void buildRecord(Context* ctx, std::shared_ptr<peg::Ast> ast);
         void buildAlias(Context* ctx, std::shared_ptr<peg::Ast> ast);
         void buildVariant(Context* ctx, std::shared_ptr<peg::Ast> ast);
-        //void buildFunction(Context* ctx, std::shared_ptr<peg::Ast> ast);
+        void buildFunction(Context* ctx, std::shared_ptr<peg::Ast> ast);
 
         ast::Cases buildCases(Context* ctx, std::shared_ptr<peg::Ast> ast);
         ast::Fields buildFields(Context* ctx, std::shared_ptr<peg::Ast> ast);

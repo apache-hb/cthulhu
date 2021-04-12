@@ -281,6 +281,10 @@ struct C: Visitor {
         }
         node->rhs->visit(this);
     }
+
+    virtual void visit(ast::Function*) override {
+    
+    }
 };
 
 int main(int argc, const char** argv) {
