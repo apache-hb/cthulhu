@@ -182,9 +182,9 @@ void Builder::build(Context* ctx) {
         case "variant"_:
             buildVariant(ctx, node);
             break;
-        /*case "function"_:
+        case "function"_:
             buildFunction(ctx, node);
-            break;*/
+            break;
         default:
             panic("TODO: unknown tag `{}`", node->name);
         }
@@ -223,20 +223,29 @@ void Builder::buildVariant(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ctx->add(new ast::SumType(name, parent, cases));
 }
 
-/*
 void Builder::buildFunction(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ASSERT(ast->tag == "function"_);
 
     auto name = ast->nodes[0]->token_to_string();
-    auto params = ast->nodes[1]->tag == "params"_ ? buildParams(ctx, ast->nodes[1]) : {};
-    auto result = ast->nodes[ast->nodes.size() - 1]->tag == "type"_ 
-        ? buildType(ctx, ast->nodes[ast->nodes.size() - 1]) 
+    //auto params = ast->nodes[1]->tag == "params"_ ? buildParams(ctx, ast->nodes[1]) : {};
+    auto result = ast->nodes[ast->nodes.size() - 2]->tag == "type"_ 
+        ? buildType(ctx, ast->nodes[ast->nodes.size() - 2]) 
         : ctx->get("void");
-    auto body = buildBody(ctx, ast->nodes.back());
+    auto last = ast->nodes.back();
+    //auto body = buildBody(ctx, ast->nodes.back());
 
     std::cout << ast_to_s(ast) << std::endl;
+
+    switch (last->choice) {
+    case 0: // empty
+    case 1: // complex
+    case 2: // simple
+        ctx->add(new ast::Function(name, {}, result));
+        break;
+    default:
+        panic("unknown function body `{}`", last->name);
+    }
 }
-*/
 
 ast::Cases Builder::buildCases(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ASSERT(ast->tag == "cases"_);

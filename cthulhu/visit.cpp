@@ -48,4 +48,8 @@ namespace cthulhu::ast {
     void Binary::visit(Visitor* visitor) {
         visitor->visit(this);
     }
+
+    void Function::visit(Visitor* visitor) {
+        visitor->visit(this);
+    }
 }
