@@ -45,11 +45,27 @@ namespace cthulhu::ast {
         visitor->visit(this);
     }
 
+    void BoolLiteral::visit(Visitor* visitor) {
+        visitor->visit(this);
+    }
+
+    void Name::visit(Visitor* visitor) {
+        visitor->visit(this);
+    }
+
     void Binary::visit(Visitor* visitor) {
         visitor->visit(this);
     }
 
     void Function::visit(Visitor* visitor) {
+        visitor->visit(this);
+    }
+
+    void SimpleFunction::visit(Visitor* visitor) {
+        visitor->visit(this);
+    }
+
+    void ComplexFunction::visit(Visitor* visitor) {
         visitor->visit(this);
     }
 }

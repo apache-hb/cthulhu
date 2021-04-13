@@ -42,3 +42,7 @@ body {
     white-space: pre-wrap;
     text-align: left;
 }
+
+table {
+    border: 1px solid;
+}

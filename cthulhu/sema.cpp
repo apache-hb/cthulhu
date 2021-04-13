@@ -77,10 +77,9 @@ namespace cthulhu {
                 if (!size->constant()) {
                     panic("size of array must be a constant expression");
                 }
-                // TODO: get type of expression
-                /*if (!size->constant()) {
-                    panic("size of array must be a constant expression");
-                } */
+                if (!size->type(ctx)->scalar()) {
+                    panic("size of array must be a scalar value");
+                }
             }
         }
 
@@ -154,9 +153,49 @@ namespace cthulhu {
             return ctx->get(suffix.empty() ? "int" : suffix);
         }
 
+        Type* BoolLiteral::type(Context* ctx) {
+            return ctx->get("bool");
+        }
+
+        void Name::sema(Context*) {
+            // TODO:
+            panic("TODO: name sema");
+        }
+
+        bool Name::constant() const {
+            panic("TODO: name constant");
+        }
+
+        Type* Name::type(Context*) {
+            // TODO:
+            panic("TODO: resolve name");
+        }
+
         void Function::sema(Context* ctx) {
             result->sema(ctx);
-            // TODO:
+            bool defs = false;
+            for (auto [id, type, init] : params) {
+                type->sema(ctx);
+                if (init) {
+                    init->sema(ctx);
+                    defs = true;
+                } else {
+                    if (defs) {
+                        panic("parameter `{}` was not default initialized after a default initialized parameter", id);
+                    }
+                }
+                if (type->unit(ctx)) {
+                    panic("parameter `{}` for function `{}` has a unit type", id, name);
+                }
+            }
+        }
+
+        void SimpleFunction::sema(Context* ctx) {
+            Function::sema(ctx);
+        }
+
+        void ComplexFunction::sema(Context* ctx) {
+            Function::sema(ctx);
         }
     }
 

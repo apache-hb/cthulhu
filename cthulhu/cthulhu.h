@@ -333,6 +333,20 @@ namespace cthulhu {
             Expr* rhs;
         };
 
+        struct Name: Expr {
+            virtual ~Name() = default;
+            virtual void visit(Visitor* visitor) override;
+            virtual bool constant() const override;
+            virtual void sema(Context* ctx) override;
+            virtual Type* type(Context* ctx) override;
+
+            Name(std::string name)
+                : name(name)
+            { }
+
+            std::string name;
+        };
+
         struct Literal: Expr {
             virtual ~Literal() = default;
 
@@ -366,6 +380,13 @@ namespace cthulhu {
         struct BoolLiteral: Literal {
             virtual ~BoolLiteral() = default;
 
+            virtual void visit(Visitor* visitor) override;
+            virtual Type* type(Context* ctx) override;
+
+            BoolLiteral(bool value)
+                : value(value)
+            { }
+
         private:
             bool value;
         };
@@ -377,6 +398,19 @@ namespace cthulhu {
             std::string value;
         };
 
+        // variables
+
+        struct Var: Decl {
+            virtual ~Var() = default;
+
+            virtual void visit(Visitor* visitor) override;
+            virtual void sema(Context* ctx) override;
+
+            std::string name;
+            Type* type;
+            Expr* init;
+        };
+
         // functions
 
         struct Param {
@@ -385,7 +419,7 @@ namespace cthulhu {
             Expr* init;
         };
 
-        struct Params: std::vector<Param*> {
+        struct Params: std::vector<Param> {
             void add(std::string name, Type* type, Expr* init);
         };
 
@@ -412,6 +446,11 @@ namespace cthulhu {
             virtual void visit(Visitor* visitor) override;
             virtual void sema(Context* ctx) override;
 
+            SimpleFunction(std::string name, Params params, Type* result, Expr* body)
+                : Function(name, params, result)
+                , body(body)
+            { }
+
             Expr* body;
         };
 
@@ -420,6 +459,11 @@ namespace cthulhu {
 
             virtual void visit(Visitor* visitor) override;
             virtual void sema(Context* ctx) override;
+
+            ComplexFunction(std::string name, Params params, Type* result, Compound* body)
+                : Function(name, params, result)
+                , body(body)
+            { }
 
             Compound* body;
         };
@@ -445,13 +489,20 @@ namespace cthulhu {
         virtual void visit(ast::BoolType* node) = 0;
         virtual void visit(ast::VoidType* node) = 0;
         virtual void visit(ast::IntLiteral* node) = 0;
+        virtual void visit(ast::BoolLiteral* node) = 0;
         virtual void visit(ast::Binary* node) = 0;
+        virtual void visit(ast::Name* node) = 0;
         virtual void visit(ast::Function* node) = 0;
+        virtual void visit(ast::SimpleFunction* node) = 0;
+        virtual void visit(ast::ComplexFunction* node) = 0;
     };
 
     struct Context {
         // add a user defined type
         void add(ast::NamedType* type);
+
+        // add a global variable
+        void add(ast::Var* var);
 
         // add a user defined function
         void add(ast::Function* func);
@@ -498,6 +549,9 @@ namespace cthulhu {
 
         // all functions
         std::vector<ast::Function*> funcs;
+
+        // all variables
+        std::vector<ast::Var*> vars;
     };
 
     // init the global compiler state
@@ -521,6 +575,8 @@ namespace cthulhu {
         void buildVariant(Context* ctx, std::shared_ptr<peg::Ast> ast);
         void buildFunction(Context* ctx, std::shared_ptr<peg::Ast> ast);
 
+        ast::Params buildParams(Context* ctx, std::shared_ptr<peg::Ast> ast);
+
         ast::Cases buildCases(Context* ctx, std::shared_ptr<peg::Ast> ast);
         ast::Fields buildFields(Context* ctx, std::shared_ptr<peg::Ast> ast);
         ast::Type* buildType(Context* ctx, std::shared_ptr<peg::Ast> ast);
@@ -530,5 +586,8 @@ namespace cthulhu {
         ast::Expr* buildExpr(Context* ctx, std::shared_ptr<peg::Ast> ast);
         ast::Binary* buildBinary(Context* ctx, std::shared_ptr<peg::Ast> ast);
         ast::IntLiteral* buildNumber(Context* ctx, std::shared_ptr<peg::Ast> ast);
+        ast::Expr* buildName(Context* ctx, std::shared_ptr<peg::Ast> ast);
+
+        ast::Compound* buildCompound(Context* ctx, std::shared_ptr<peg::Ast> ast);
     };
 }
