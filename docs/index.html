@@ -128,6 +128,59 @@
                     <ol>
                         <li>
                             <h3>scalar types<div class="term">[types.scalar]</div></h3>
+                            <ol>
+                                <li>
+                                    there are four standard signed scalar types. `char`, `short`, `int`, and `long`.
+                                </li>
+                                <li>
+                                    there are four standard unsigned scalar types. `uchar`, `ushort`, `uint`, and `ulong`.
+                                </li>
+                                <li>
+                                    each signed scalar type can represent at least the inclusive range of -2^(N-1) to 2^(N-1)-1.
+                                    each unsigned scalar type can represent at least the inclusive range of 0 to 2^(N).
+                                    N is the width of the type
+                                    <table style="margin: 0px auto;">
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Width (in bits)</th>
+                                        </tr>
+                                        <tr>
+                                            <td>char & uchar</td>
+                                            <td>8</td>
+                                        </tr>
+                                        <tr>
+                                            <td>short & ushort</td>
+                                            <td>16</td>
+                                        </tr>
+                                        <tr>
+                                            <td>int & uint</td>
+                                            <td>32</td>
+                                        </tr>
+                                        <tr>
+                                            <td>long & ulong</td>
+                                            <td>64</td>
+                                        </tr>
+                                    </table>
+                                </li>
+                                <li>
+                                    scalar overflow and underflow is undefined
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>boolean type<div class="term">[types.boolean]</div></h3>
+                            <ol>
+                                <li>
+                                    the `bool` type has a size of at least 1 bit and valid values of `true` and `false`.
+                                </li>
+                                <li>
+                                    all scalar types are convertable to `bool` and convert to `false` when equal to 0, all other values evaluate to `true`
+                                </li>
+                            </ol>
+                        </li>
+                        <li>
+                            <h3>void type<div class="term">[types.void]</div></h3>
+                            the `void` type has no size and is not convertable from or to any type
                         </li>
                     </ol>
                 </li>

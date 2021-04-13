@@ -285,6 +285,45 @@ struct C: Visitor {
     virtual void visit(ast::Function*) override {
     
     }
+
+    virtual void visit(ast::SimpleFunction*) override {
+    
+    }
+
+    virtual void visit(ast::ComplexFunction*) override {
+    
+    }
+
+    virtual void visit(ast::BoolLiteral*) override { }
+
+    virtual void visit(ast::Name*) override { }
+};
+
+struct C2: Visitor {
+    std::stringstream defs;
+    std::stringstream types;
+    std::stringstream funcs;
+
+    std::ostream& out;
+    Context* ctx;
+
+    virtual void visit(ast::RecordType*) override { }
+    virtual void visit(ast::SumType*) override { }
+    virtual void visit(ast::AliasType*) override { }
+    virtual void visit(ast::SentinelType*) override { }
+    virtual void visit(ast::PointerType*) override { }
+    virtual void visit(ast::ClosureType*) override { }
+    virtual void visit(ast::ArrayType*) override { }
+    virtual void visit(ast::ScalarType*) override { }
+    virtual void visit(ast::BoolType*) override { }
+    virtual void visit(ast::VoidType*) override { }
+    virtual void visit(ast::IntLiteral*) override { }
+    virtual void visit(ast::BoolLiteral*) override { }
+    virtual void visit(ast::Binary*) override { }
+    virtual void visit(ast::Name*) override { }
+    virtual void visit(ast::Function*) override { }
+    virtual void visit(ast::SimpleFunction*) override { }
+    virtual void visit(ast::ComplexFunction*) override { }
 };
 
 int main(int argc, const char** argv) {

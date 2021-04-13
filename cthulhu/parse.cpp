@@ -59,7 +59,7 @@ namespace {
         call    <- lparen LIST(expr)? rparen
         subscript   <- lsquare expr rsquare
 
-        atom    <- number / string / ident / lparen expr rparen / mul expr / un expr
+        atom    <- number / string / ident / lparen expr rparen / mul expr / un expr / TRUE / FALSE
 
         # types
         type    <- ident / pointer / array / closure { no_ast_opt }
@@ -110,12 +110,14 @@ namespace {
         ~DEF        <- < 'def' skip >
         ~RETURN     <- < 'return' skip >
         ~VAR        <- < 'var' skip >
+        ~TRUE       <- < 'true' skip >
+        ~FALSE      <- < 'false' skip >
 
         # reserved keywords
         ~COMPILE <- 'compile' skip
         ~REQUIRES   <- 'requires' skip
 
-        KEYWORD <- USING / RECORD / DEF / RETURN / VARIANT / VAR / COMPILE / REQUIRES
+        KEYWORD <- USING / RECORD / DEF / RETURN / VARIANT / VAR / TRUE / FALSE / COMPILE / REQUIRES
 
         # an identifier is any sequence of [a-zA-Z_][a-zA-Z0-9_] or a single $
         # that is *not* a keyword
@@ -227,24 +229,47 @@ void Builder::buildFunction(Context* ctx, std::shared_ptr<peg::Ast> ast) {
     ASSERT(ast->tag == "function"_);
 
     auto name = ast->nodes[0]->token_to_string();
-    //auto params = ast->nodes[1]->tag == "params"_ ? buildParams(ctx, ast->nodes[1]) : {};
+    auto params = ast->nodes[1]->tag == "params"_ 
+        ? buildParams(ctx, ast->nodes[1]) 
+        : ast::Params({});
     auto result = ast->nodes[ast->nodes.size() - 2]->tag == "type"_ 
         ? buildType(ctx, ast->nodes[ast->nodes.size() - 2]) 
         : ctx->get("void");
     auto last = ast->nodes.back();
-    //auto body = buildBody(ctx, ast->nodes.back());
 
     std::cout << ast_to_s(ast) << std::endl;
 
     switch (last->choice) {
     case 0: // empty
+        ctx->add(new ast::Function(name, params, result));
+        break;
     case 1: // complex
+        ctx->add(new ast::ComplexFunction(name, params, result, buildCompound(ctx, last->nodes[0])));
+        break;
     case 2: // simple
-        ctx->add(new ast::Function(name, {}, result));
+        ctx->add(new ast::SimpleFunction(name, params, result, buildExpr(ctx, last->nodes[0])));
         break;
     default:
         panic("unknown function body `{}`", last->name);
     }
+}
+
+ast::Params Builder::buildParams(Context*, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "params"_);
+
+    std::cout << ast_to_s(ast) << std::endl;
+
+    ast::Params params;
+
+    return params;
+}
+
+ast::Compound* Builder::buildCompound(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "compound"_);
+
+    (void)ctx;
+
+    return nullptr;
 }
 
 ast::Cases Builder::buildCases(Context* ctx, std::shared_ptr<peg::Ast> ast) {
@@ -322,14 +347,33 @@ ast::ClosureType* Builder::buildClosure(Context* ctx, std::shared_ptr<peg::Ast> 
 }
 
 ast::Expr* Builder::buildExpr(Context* ctx, std::shared_ptr<peg::Ast> ast) {
+    std::cout << ast_to_s(ast) << std::endl;
     switch (ast->tag) {
     case "number"_:
         return buildNumber(ctx, ast);
     case "expr"_:
         return buildBinary(ctx, ast);
+    case "ident"_:
+        return buildName(ctx, ast);
     default:
         panic("unknown expr `{}`", ast->name);
     }
+}
+
+ast::Expr* Builder::buildName(Context*, std::shared_ptr<peg::Ast> ast) {
+    ASSERT(ast->tag == "ident"_);
+
+    auto name = ast->token_to_string();
+
+    if (name == "true") {
+        return new ast::BoolLiteral(true);
+    } else if (name == "false") {
+        return new ast::BoolLiteral(false);
+    } else {
+        return new ast::Name(name);
+    }
+
+    return nullptr;
 }
 
 ast::Binary* Builder::buildBinary(Context* ctx, std::shared_ptr<peg::Ast> ast) {
