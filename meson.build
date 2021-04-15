@@ -26,5 +26,15 @@ ctu = declare_dependency(
     dependencies : deps
 )
 
+cthulhu2 = library('ctu2', 'cthulhu2/parse.cpp',
+    dependencies : deps
+)
+
+ctu2 = declare_dependency(
+    include_directories : 'cthulhu2',
+    link_with : cthulhu2,
+    dependencies : deps
+)
+
 subdir('tools')
 subdir('test')
