@@ -1,0 +1,3 @@
+def x = 10;
+def y = x + 10;
+def z = x + y;
