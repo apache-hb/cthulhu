@@ -79,8 +79,6 @@ namespace p {
 
     void def(C*, A a) {
         TAG("def"_);
-        std::cout << ast_to_s(a) << std::endl;
-
         auto name = ident(a->nodes[0]);
     }
 
