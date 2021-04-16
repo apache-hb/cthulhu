@@ -26,7 +26,12 @@ ctu = declare_dependency(
     dependencies : deps
 )
 
-cthulhu2 = library('ctu2', 'cthulhu2/parse.cpp',
+src2 = [
+    'cthulhu2/parse.cpp',
+    'cthulhu2/ssa.cpp'
+]
+
+cthulhu2 = library('ctu2', src2,
     dependencies : deps
 )
 

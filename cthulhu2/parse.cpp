@@ -12,13 +12,17 @@ def     <- DEF ident ASSIGN expr SEMI
 
 expr    <- atom (binop atom)* {
     precedence
-        L * / %
         L + -
+        L * / %
 }
 
 binop   <- < '+' / '-' / '*' / '/' / '%' >
 
-atom    <- number / ident / LPAREN expr RPAREN
+atom    <- (number / ident / LPAREN expr RPAREN) postfix* { no_ast_opt }
+
+postfix <- call / ternary
+ternary <- '?' expr ':' expr
+call    <- '(' ')' 
 
 # operators
 ~ASSIGN <- '='
@@ -64,7 +68,7 @@ void ctu::init() {
     reader.enable_ast();
 }
 
-#define TAG(id) if (a->tag != id) { panic("expected ast tag " #id " but got `{}` instead", a->name); }
+#define TAG(id) if (a->tag != id) { std::cout << ast_to_s(a) << std::endl; panic("expected ast tag " #id " but got `{}` instead", a->name); }
 
 namespace p {
     using namespace ctu;
@@ -72,19 +76,103 @@ namespace p {
     using C = ctu::Context;
     using A = std::shared_ptr<peg::Ast>;
 
-    std::string ident(A a) {
+    std::string ident(C*, A a) {
         TAG("ident"_);
         return a->token_to_string();
     }
 
-    void def(C*, A a) {
-        TAG("def"_);
-        auto name = ident(a->nodes[0]);
+    Literal* number(C*, A a) {
+        TAG("number"_);
+
+        return new Literal(a->token_to_number<size_t>());
     }
 
-    void decl(C* c, A a) {
+    Expr* expr(C* c, A a);
+
+    Binary::Op binop(C*, A a) {
+        TAG("binop"_);
+
+        auto tok = a->token;
+
+        if (tok == "+") {
+            return Binary::ADD;
+        } else if (tok == "-") {
+            return Binary::SUB;
+        } else if (tok == "/") {
+            return Binary::DIV;
+        } else if (tok == "*") {
+            return Binary::MUL;
+        } else if (tok == "%") {
+            return Binary::REM;
+        }
+
+        panic("unknown binop `{}`", tok);
+    }
+
+    Binary* binary(C* c, A a) {
+        TAG("expr"_);
+
+        auto op = binop(c, a->nodes[1]);
+        auto lhs = expr(c, a->nodes[0]);
+        auto rhs = expr(c, a->nodes[2]);
+
+        return new Binary(op, lhs, rhs);
+    }
+
+    Name* name(C* c, A a) {
+        return new Name(ident(c, a));
+    }
+
+    Expr* atom(C* c, A a) {
+        auto front = [c](A a) -> Expr* {
+            switch (a->tag) {
+            case "number"_: return number(c, a);
+            case "ident"_: return name(c, a);
+            case "expr"_: return expr(c, a);
+            default: panic("unknown expr `{}``", a->name);
+            }
+        };
+
+        auto it = front(a->nodes[0]);
+
+        for (size_t i = 1; i < a->nodes.size(); i++) {
+            auto node = a->nodes[i];
+
+            switch (node->original_choice) {
+            case 0: 
+                it = new Call(it); 
+                break;
+            case 1: 
+                it = new Ternary(it, expr(c, node->nodes[0]), expr(c, node->nodes[1]));
+                break;
+            default:
+                panic("unknown postfix `{}`", node->name);
+            }
+        }
+
+        return it;
+    }
+
+    Expr* expr(C* c, A a) {
+        if (a->tag == "expr"_) {
+            return binary(c, a);
+        } else {
+            return atom(c, a);
+        }
+    }
+
+    Function* def(C* c, A a) {
+        TAG("def"_);
+        
+        auto name = ident(c, a->nodes[0]);
+        auto body = expr(c, a->nodes[1]);
+
+        return new Function(name, body);
+    }
+
+    Decl* decl(C* c, A a) {
         switch (a->choice) {
-        case 0: def(c, a); break;
+        case 0: return def(c, a);
         default: panic("unknown node `{}`", a->name);
         }
     }
@@ -92,7 +180,7 @@ namespace p {
     void unit(C* c, A a) {
         TAG("unit"_);
         for (auto node : a->nodes) {
-            decl(c, node);
+            c->add(decl(c, node));
         }
     }
 }
