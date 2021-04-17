@@ -17,6 +17,7 @@ namespace ctu {
         virtual void visit(struct Name*) { }
         virtual void visit(struct Ternary*) { }
         virtual void visit(struct Function*) { }
+        virtual void visit(struct Context*) { }
     };
 
     struct Node {
@@ -209,6 +210,8 @@ namespace ctu {
         size_t find(std::string name) {
             return globals.get(name)->index;
         }
+
+        void visit(Visitor* it) { it->visit(this); }
 
         Symbols<Decl> globals;
     };

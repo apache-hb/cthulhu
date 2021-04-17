@@ -59,6 +59,8 @@ struct SSA: Visitor {
     std::map<size_t, ssa::Step*> labels;
 };
 
+
+
 int main(int argc, const char** argv) {
     if (argc < 2) {
         std::cerr << argv[0] << ": no source files provided" << std::endl;
@@ -78,10 +80,9 @@ int main(int argc, const char** argv) {
 
             SSA visit(&state, &ctx);
 
-            for (auto step : state.steps) {
-                if (!step) continue;
+            state.apply([](auto step) {
                 fmt::print(step->debug());
-            }
+            });
 
             int iter = 0;
 
@@ -93,10 +94,9 @@ int main(int argc, const char** argv) {
 
             fmt::print("-- reduced `{}` times --\n", iter);
 
-            for (auto step : state.steps) {
-                if (!step) continue;
+            state.apply([](auto step) {
                 fmt::print(step->debug());
-            }
+            });
 
         } catch (const std::exception& error) {
             std::cerr << error.what() << std::endl;

@@ -3,7 +3,7 @@
 namespace ctu::ssa {
     // constant folding
     Operand opfold(State* state, Operand op) {
-        if (op.imm) {
+        if (op.imm()) {
             return op;
         }
 
@@ -15,11 +15,11 @@ namespace ctu::ssa {
         }
 
         if (auto* val = dynamic_cast<Value*>(step); val) {
-            return Operand(val->value, true);
+            return Operand(val->value, Operand::IMM);
         } else if (auto* func = dynamic_cast<Label*>(step); func) {
             return opfold(state, func->result);
         } else {
-            return Operand(op.value);
+            return Operand(op.value, Operand::RESOLVED);
         }
     }
 
@@ -28,7 +28,7 @@ namespace ctu::ssa {
         lhs = opfold(state, lhs);
         rhs = opfold(state, rhs);
 
-        if (lhs.imm && rhs.imm) {
+        if (lhs.imm() && rhs.imm()) {
             switch (op) {
             case BinOp::ADD: 
                 state->update(index, state->make<Value>(index, lhs.value + rhs.value)); 
@@ -59,7 +59,7 @@ namespace ctu::ssa {
     void Call::fold(State* state) { 
         if (!foldable()) return;
         func = opfold(state, func);
-        if (func.imm) {
+        if (func.imm()) {
             state->update(index, state->make<Value>(index, func.value));
         }
     }
@@ -70,14 +70,14 @@ namespace ctu::ssa {
         cond = opfold(state, cond);
         yes = opfold(state, yes);
         no = opfold(state, no);
-        if (cond.imm) {
+        if (cond.imm()) {
             state->update(index, state->make<Value>(index, cond.value ? yes.value : no.value));
         }
     }
 
     // dead code removal
     void opreduce(State* state, Operand op) {
-        if (!op.imm) {
+        if (!op.imm()) {
             state->used[op.value]++;
         }
     }
