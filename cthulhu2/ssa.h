@@ -4,17 +4,35 @@
 
 namespace ctu::ssa {
     struct Operand {
-        Operand(size_t reg, bool imm = false)
-            : imm(imm)
-            , value(reg)
+        enum Flags : int {
+            RESOLVED = (1 << 0),
+            IMM = (1 << 1)
+        };
+
+        Operand(size_t reg, int flags = 0)
+            : value(reg)
+            , flags(flags)
         { }
 
         std::string debug() const {
-            return fmt::format(imm ? "${}" : "%{}", value);
+            return fmt::format(imm() ? "${}" : "%{}", value);
         }
 
-        bool imm;
+        bool resolved() const { return flags & RESOLVED; }
+        bool imm() const { return flags & IMM; }
+        
+        void resolve(size_t idx) { 
+            value = idx;
+            flags |= RESOLVED; 
+        }
+
+        void set(size_t val) { 
+            value = val;
+            flags |= IMM;
+        }
+
         size_t value;
+        int flags;
     };
 
     struct Step {
@@ -194,27 +212,22 @@ namespace ctu::ssa {
         // constant folding
         void fold() {
             dirty = false;
-            for (auto* step : steps) {
-                if (!step) continue;
-                step->fold(this);
-            }
+            apply([&](auto step) { 
+                step->fold(this); 
+            });
         }
 
         // dead code elimination
         void reduce() {
             dirty = false;
             used = {};
-            for (auto step : steps) {
-                if (!step) continue;
-                step->reduce(this);
-            }
+            apply([&](auto step) { step->reduce(this); });
 
-            for (auto step : steps) {
-                if (!step) continue;
-                if (used[step->index] > 0) continue;
+            apply([&](auto step) { 
+                if (used[step->index] > 0) return;
 
                 update(step->index, nullptr);
-            }
+            });
         }
 
         void update(size_t index, Step* step) {
@@ -222,6 +235,14 @@ namespace ctu::ssa {
             steps[index] = step;
             delete temp;
             dirty = true;
+        }
+
+        template<typename F>
+        void apply(F&& func) {
+            for (auto step : steps) {
+                if (!step) continue;
+                func(step);
+            }
         }
 
         bool dirty = false;
