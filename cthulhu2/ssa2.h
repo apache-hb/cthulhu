@@ -74,7 +74,7 @@ namespace ctu::ssa2 {
 
     };
 
-    // control flow branch
+    // control flow branch, can also be used as a jmp when cond is an immediate truthy value
     // reg = br cond label
     struct Branch: Step {
         Operand cond;
