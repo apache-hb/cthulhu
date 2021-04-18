@@ -1,4 +1,129 @@
 #include <cthulhu.h>
+#include <tac.h>
+#include <fstream>
+
+using namespace ctu;
+
+struct TAC: Visitor {
+    TAC(ctu::Context* ctx)
+        : ctx(ctx) 
+    { }
+
+    virtual void visit(Literal* node) override { 
+        node->index = unit.step<tac::Value>(tac::imm(node->value))->index;
+    }
+
+    virtual void visit(Binary* node) override { 
+        node->lhs->visit(this);
+        node->rhs->visit(this);
+        node->index = unit.step<tac::Binary>(node->lhs->index, node->rhs->index, node->op)->index;
+    }
+
+    virtual void visit(Unary* node) override { 
+        node->expr->visit(this);
+        node->index = unit.step<tac::Unary>(node->expr->index, node->op)->index;
+    }
+
+    virtual void visit(Call* node) override { 
+        node->body->visit(this);
+        node->index = unit.step<tac::Call>(node->body->index)->index;
+    }
+
+    virtual void visit(Name* node) override { 
+        node->index = ctx->find(node->name);
+    }
+
+    virtual void visit(Ternary* node) override { 
+        node->cond->visit(this);
+
+        auto out = unit.step<tac::Value>(tac::stub());
+
+        auto check = unit.step<tac::Branch>(node->cond->index, tac::stub());
+        auto branch = unit.step<tac::Jump>(tac::stub());
+
+        auto yes_begin = unit.step<tac::Label>();
+        node->yes->visit(this);
+        unit.step<tac::Value>(tac::reg(node->yes->index));
+        auto yes_end = unit.step<tac::Jump>(tac::stub());
+
+        auto no_begin = unit.step<tac::Label>();
+        node->no->visit(this);
+        unit.step<tac::Value>(tac::reg(node->no->index));
+        auto no_end = unit.step<tac::Jump>(tac::stub());
+
+        auto escape = unit.step<tac::Label>();
+
+        yes_end->label = escape->index;
+        no_end->label = escape->index;
+        check->label = yes_begin->index;
+        branch->label = no_begin->index;
+
+        node->index = out->index;
+    }
+
+    virtual void visit(Function* node) override {
+        node->index = unit.step<tac::Label>()->index;
+        node->expr->visit(this);
+        unit.step<tac::Return>(node->expr->index);
+    }
+
+    virtual void visit(Context* node) override {
+        for (auto global : node->globals) {
+            global->visit(this);
+        }
+    }
+
+    tac::Unit get() { 
+        ctx->visit(this);
+        return unit; 
+    }
+
+private:
+    ctu::Context* ctx;
+    tac::Unit unit;
+    std::map<std::string, size_t> labels;
+};
+
+int main(int argc, const char** argv) {
+    if (argc < 2) {
+        std::cerr << argv[0] << ": no source files provided" << std::endl;
+        return 1;
+    }
+
+    std::string path = argv[1];
+
+    if (std::ifstream in(path); !in.fail()) {
+        auto text = std::string(std::istreambuf_iterator<char>{in}, {});
+        
+        try {
+            ctu::init();
+
+            ctu::Context ctx = ctu::parse(text);
+
+            for (auto node : ctx.globals) {
+                std::cout << node->debug() << std::endl;
+            }
+
+            TAC visitor(&ctx);
+
+            auto unit = visitor.get();
+
+            for (auto step : unit.steps) {
+                std::cout << step->debug() << std::endl;
+            }
+
+        } catch (const std::exception& error) {
+            std::cerr << error.what() << std::endl;
+            return 1;
+        }
+    } else {
+        std::cerr << "failed to open: " << path << std::endl;
+        return 1;
+    }
+}
+
+#if 0
+#include <cthulhu.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -364,3 +489,4 @@ int main(int argc, const char** argv) {
         return 1;
     }
 }
+#endif

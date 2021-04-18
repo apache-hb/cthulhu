@@ -11,6 +11,7 @@ namespace ctu::x86 {
         kind type;
         uint8_t scale;
         uint8_t base;
+        uint64_t value;
     };
 
     namespace prefix {

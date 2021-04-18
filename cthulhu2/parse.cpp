@@ -10,14 +10,16 @@ unit    <- decl+ eof { no_ast_opt }
 decl    <- def
 def     <- DEF ident ASSIGN expr SEMI
 
-expr    <- atom (binop atom)* {
+expr    <- unary (binop unary)* {
     precedence
         L + -
         L * / %
 }
 
 binop   <- < '+' / '-' / '*' / '/' / '%' >
+unop    <- < '+' / '-' / '*' / '&' / '!' / '~' >
 
+unary   <- atom / unop expr
 atom    <- (number / ident / LPAREN expr RPAREN) postfix* { no_ast_opt }
 
 postfix <- call / ternary
@@ -88,6 +90,7 @@ namespace p {
     }
 
     Expr* expr(C* c, A a);
+    Expr* atom(C* c, A a);
 
     Binary::Op binop(C*, A a) {
         TAG("binop"_);
@@ -109,6 +112,28 @@ namespace p {
         panic("unknown binop `{}`", tok);
     }
 
+    Unary::Op unop(C*, A a) {
+        TAG("unop"_);
+
+        auto tok = a->token;
+
+        if (tok == "+") {
+            return Unary::POS;
+        } else if (tok == "-") {
+            return Unary::NEG;
+        } else if (tok == "*") {
+            return Unary::DEREF;
+        } else if (tok == "&") {
+            return Unary::REF;
+        } else if (tok == "!") {
+            return Unary::NOT;
+        } else if (tok == "~") {
+            return Unary::FLIP;
+        }
+
+        panic("unknown unop `{}`", tok);
+    }
+
     Binary* binary(C* c, A a) {
         TAG("expr"_);
 
@@ -123,12 +148,20 @@ namespace p {
         return new Name(ident(c, a));
     }
 
+    Expr* unary(C* c, A a) {
+        TAG("unary"_);
+        auto op = unop(c, a->nodes[0]);
+        auto body = expr(c, a->nodes[1]);
+        return new Unary(op, body);
+    }
+
     Expr* atom(C* c, A a) {
         auto front = [c](A a) -> Expr* {
             switch (a->tag) {
             case "number"_: return number(c, a);
             case "ident"_: return name(c, a);
             case "expr"_: return expr(c, a);
+            case "unop"_: return unary(c, a);
             default: panic("unknown expr `{}``", a->name);
             }
         };
@@ -154,10 +187,10 @@ namespace p {
     }
 
     Expr* expr(C* c, A a) {
-        if (a->tag == "expr"_) {
-            return binary(c, a);
-        } else {
-            return atom(c, a);
+        switch (a->tag) {
+        case "expr"_: return binary(c, a);
+        case "unary"_: return unary(c, a);
+        default: return atom(c, a);
         }
     }
 
