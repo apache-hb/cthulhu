@@ -24,11 +24,12 @@ atom    <- (number / ident / LPAREN expr RPAREN) postfix* { no_ast_opt }
 
 postfix <- call / ternary
 ternary <- '?' expr ':' expr
-call    <- '(' ')' 
+call    <- '(' LIST(expr)? ')' 
 
 # operators
 ~ASSIGN <- '='
 ~SEMI   <- ';'
+~COMMA  <- ','
 ~LPAREN <- '('
 ~RPAREN <- ')'
 
@@ -38,6 +39,8 @@ call    <- '(' ')'
 
 # identifiers cannot be keywords
 ident   <- !KW < [a-zA-Z_][a-zA-Z0-9_]* / '$' >
+
+LIST(R) <- R (COMMA R)* { no_ast_opt }
 
 # numbers
 number  <- < [0-9]+ >
@@ -166,6 +169,15 @@ namespace p {
             }
         };
 
+        auto call = [c](auto body, A a) {
+            std::vector<Expr*> args;
+            for (auto node : a->nodes) {
+                args.push_back(expr(c, node));
+            }
+
+            return new Call(body, args);
+        };
+
         auto it = front(a->nodes[0]);
 
         for (size_t i = 1; i < a->nodes.size(); i++) {
@@ -173,7 +185,7 @@ namespace p {
 
             switch (node->original_choice) {
             case 0: 
-                it = new Call(it); 
+                it = call(it, node);
                 break;
             case 1: 
                 it = new Ternary(it, expr(c, node->nodes[0]), expr(c, node->nodes[1]));

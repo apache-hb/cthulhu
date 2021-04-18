@@ -138,14 +138,25 @@ namespace ctu::tac {
         virtual ~Call() = default;
 
         virtual std::string debug() const override {
-            return fmt::format("    %{} = call {}", index, func.debug());
+            std::vector<std::string> strs;
+            for (auto op : args) {
+                strs.push_back(op.debug());
+            }
+
+            return fmt::format("    %{} = call {} ({})", 
+                index, 
+                func.debug(),
+                fmt::join(strs, ", ")
+            );
         }
 
-        Call(Operand func)
+        Call(Operand func, std::vector<Operand> args)
             : func(func)
+            , args(args)
         { }
 
         Operand func;
+        std::vector<Operand> args;
     };
 
     struct Return: Step {
