@@ -48,12 +48,12 @@ struct TAC: Visitor {
 
         auto yes_begin = unit.step<tac::Label>();
         node->yes->visit(this);
-        unit.step<tac::Value>(tac::reg(node->yes->index));
+        unit.step<tac::Value>(tac::reg(node->yes->index))->index = out->index;
         auto yes_end = unit.step<tac::Jump>(tac::stub());
 
         auto no_begin = unit.step<tac::Label>();
         node->no->visit(this);
-        unit.step<tac::Value>(tac::reg(node->no->index));
+        unit.step<tac::Value>(tac::reg(node->no->index))->index = out->index;
         auto no_end = unit.step<tac::Jump>(tac::stub());
 
         auto escape = unit.step<tac::Label>();
