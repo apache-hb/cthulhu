@@ -84,8 +84,8 @@ namespace ctu {
 
         virtual std::string debug() const override {
             return fmt::format("({} {} {})", 
-                lhs->debug(), 
                 binop(op), 
+                lhs->debug(), 
                 rhs->debug()
             );
         }
@@ -137,15 +137,24 @@ namespace ctu {
         virtual ~Call() = default;
         virtual void visit(Visitor* it) override { it->visit(this); }
 
-        Call(Expr* body)
+        Call(Expr* body, std::vector<Expr*> args)
             : body(body)
+            , args(args)
         { }
 
         virtual std::string debug() const override {
-            return fmt::format("(call {})", body->debug());
+            std::vector<std::string> strs;
+            for (auto arg : args) {
+                strs.push_back(arg->debug());
+            }
+            if (strs.empty())
+                return fmt::format("({})", body->debug());
+            else 
+                return fmt::format("({} {})", body->debug(), fmt::join(strs, " "));
         }
 
         Expr* body;
+        std::vector<Expr*> args;
     };
 
     struct Name: Expr {
@@ -168,7 +177,7 @@ namespace ctu {
         virtual void visit(Visitor* it) override { it->visit(this); }
 
         virtual std::string debug() const override {
-            return fmt::format("({} ? {} : {})", 
+            return fmt::format("(if {} {} {})", 
                 cond->debug(),
                 yes->debug(),
                 no->debug()
@@ -212,7 +221,7 @@ namespace ctu {
         virtual void visit(Visitor* it) override { it->visit(this); }
         
         virtual std::string debug() const override {
-            return fmt::format("def {} = {}", name, expr->debug());
+            return fmt::format("(defun {} () {})", name, expr->debug());
         }
 
         Function(std::string name, Expr* expr)

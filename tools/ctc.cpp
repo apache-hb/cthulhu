@@ -26,7 +26,12 @@ struct TAC: Visitor {
 
     virtual void visit(Call* node) override { 
         node->body->visit(this);
-        node->index = unit.step<tac::Call>(node->body->index)->index;
+        std::vector<tac::Operand> args;
+        for (auto each : node->args) {
+            each->visit(this);
+            args.push_back(each->index);
+        }
+        node->index = unit.step<tac::Call>(node->body->index, args)->index;
     }
 
     virtual void visit(Name* node) override { 
