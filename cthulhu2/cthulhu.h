@@ -13,6 +13,7 @@ namespace ctu {
         virtual ~Visitor() = default;
         virtual void visit(struct Literal*) { }
         virtual void visit(struct Binary*) { }
+        virtual void visit(struct Unary*) { }
         virtual void visit(struct Call*) { }
         virtual void visit(struct Name*) { }
         virtual void visit(struct Ternary*) { }
@@ -24,6 +25,7 @@ namespace ctu {
         virtual ~Node() = default;
 
         virtual void visit(Visitor* it) = 0;
+        virtual std::string debug() const = 0;
 
         size_t index;
     };
@@ -56,11 +58,11 @@ namespace ctu {
         virtual void visit(Visitor* it) override { it->visit(this); }
 
         enum Op {
-            ADD,
-            SUB,
-            DIV,
-            MUL,
-            REM
+            ADD, // expr + expr
+            SUB, // expr - expr
+            DIV, // expr / expr
+            MUL, // expr * expr
+            REM // expr % expr
         };
 
         static constexpr const char* binop(Op it) {
@@ -93,6 +95,44 @@ namespace ctu {
         Expr* rhs;
     };
 
+    struct Unary: Expr {
+        virtual ~Unary() = default;
+        virtual void visit(Visitor* it) override { it->visit(this); }
+
+        enum Op {
+            POS, // +expr
+            NEG, // -expr
+            REF, // &expr
+            DEREF, // *expr
+            NOT, // !expr
+            FLIP // ~expr
+        };
+
+        static constexpr const char* unop(Op it) {
+            switch (it) {
+            case POS: return "pos";
+            case NEG: return "neg";
+            case REF: return "ref";
+            case DEREF: return "deref";
+            case NOT: return "not";
+            case FLIP: return "flip";
+            default: panic("unknown unop");
+            }
+        }
+
+        virtual std::string debug() const override {
+            return fmt::format("({} {})", unop(op), expr->debug());
+        }
+
+        Unary(Op op, Expr* expr)
+            : op(op)
+            , expr(expr)
+        { }
+
+        Op op;
+        Expr* expr;
+    };
+
     struct Call: Expr {
         virtual ~Call() = default;
         virtual void visit(Visitor* it) override { it->visit(this); }
@@ -102,7 +142,7 @@ namespace ctu {
         { }
 
         virtual std::string debug() const override {
-            return fmt::format("({}())", body->debug());
+            return fmt::format("(call {})", body->debug());
         }
 
         Expr* body;
@@ -170,6 +210,10 @@ namespace ctu {
     struct Function: Decl {
         virtual ~Function() = default;
         virtual void visit(Visitor* it) override { it->visit(this); }
+        
+        virtual std::string debug() const override {
+            return fmt::format("def {} = {}", name, expr->debug());
+        }
 
         Function(std::string name, Expr* expr)
             : Decl(name)
