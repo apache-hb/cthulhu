@@ -61,10 +61,10 @@ struct TAC: Visitor {
         node->index = out->index;
     }
 
-    virtual void visit(Function* node) override {
+    virtual void visit(LinearFunction* node) override {
         node->index = unit.step<tac::Label>()->index;
-        node->expr->visit(this);
-        unit.step<tac::Return>(node->expr->index);
+        node->body->visit(this);
+        unit.step<tac::Return>(node->body->index);
     }
 
     virtual void visit(Context* node) override {
