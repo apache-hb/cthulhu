@@ -17,8 +17,10 @@ namespace ctu {
         virtual void visit(struct Call*) { }
         virtual void visit(struct Name*) { }
         virtual void visit(struct Ternary*) { }
-        virtual void visit(struct Function*) { }
-        virtual void visit(struct TypeName*) { }
+        virtual void visit(struct EmptyFunction*) { }
+        virtual void visit(struct LinearFunction*) { }
+        virtual void visit(struct BlockFunction*) { }
+        virtual void visit(struct Sentinel*) { }
         virtual void visit(struct Context*) { }
     };
 
@@ -35,27 +37,35 @@ namespace ctu {
         virtual ~Type() = default;
     };
 
-    struct TypeName: Type {
-        virtual ~TypeName() = default;
+    struct Named: Type {
+        virtual ~Named() = default;
 
-        virtual void visit(Visitor* it) override { it->visit(this); }
-        virtual std::string debug() const override {
-            return name;
-        }
-
-        TypeName(std::string name)
+        Named(std::string name)
             : name(name)
         { }
 
         std::string name;
     };
 
-    struct Expr: Node {
-        virtual ~Expr() = default;
+    struct Sentinel: Named {
+        virtual ~Sentinel() = default;
+        virtual void visit(Visitor* it) override { it->visit(this); }
 
-        virtual std::string debug() const { 
-            return "expr"; 
-        } 
+        Sentinel(std::string name)
+            : Named(name)
+        { }
+
+        virtual std::string debug() const override {
+            return fmt::format("(sentinel {})", name);
+        }
+    };
+
+    struct Stmt: Node {
+        virtual ~Stmt() = default;
+    };
+
+    struct Expr: Stmt {
+        virtual ~Expr() = default;
     };
 
     struct Literal: Expr {
@@ -224,6 +234,12 @@ namespace ctu {
         Expr* no;
     };
 
+    struct Compound: Stmt {
+        virtual ~Compound() = default;
+
+        std::vector<Stmt*> stmts;
+    };
+
     struct Symbol: Node {
         virtual ~Symbol() = default;
 
@@ -254,6 +270,19 @@ namespace ctu {
 
     struct Function: Decl {
         virtual ~Function() = default;
+
+        Function(std::string name, Params params, Type* result)
+            : Decl(name)
+            , params(params)
+            , result(result)
+        { }
+
+        Params params;
+        Type* result;
+    };
+
+    struct EmptyFunction: Function {
+        virtual ~EmptyFunction() = default;
         virtual void visit(Visitor* it) override { it->visit(this); }
         
         virtual std::string debug() const override {
@@ -261,19 +290,52 @@ namespace ctu {
             for (auto [id, type] : params) {
                 args.push_back(fmt::format("({} {})", id, type->debug()));
             }
-            return fmt::format("(defun {} {} ({}) {})", name, result->debug(), fmt::join(args, " "), expr->debug());
+            return fmt::format("(extern {} {} ({}))", name, result->debug(), fmt::join(args, " "));
         }
 
-        Function(std::string name, Params params, Type* result, Expr* expr)
-            : Decl(name)
-            , params(params)
-            , result(result)
-            , expr(expr)
+        EmptyFunction(std::string name, Params params, Type* result)
+            : Function(name, params, result)
+        { }
+    };
+
+    struct LinearFunction: Function {
+        virtual ~LinearFunction() = default;
+        virtual void visit(Visitor* it) override { it->visit(this); }
+        
+        virtual std::string debug() const override {
+            std::vector<std::string> args;
+            for (auto [id, type] : params) {
+                args.push_back(fmt::format("({} {})", id, type->debug()));
+            }
+            return fmt::format("(defun {} {} ({}) {})", name, result->debug(), fmt::join(args, " "), body->debug());
+        }
+
+        LinearFunction(std::string name, Params params, Type* result, Expr* body)
+            : Function(name, params, result)
+            , body(body)
         { }
 
-        Params params;
-        Type* result;
-        Expr* expr;
+        Expr* body;
+    };
+
+    struct BlockFunction: Function {
+        virtual ~BlockFunction() = default;
+        virtual void visit(Visitor* it) override { it->visit(this); }
+        
+        virtual std::string debug() const override {
+            std::vector<std::string> args;
+            for (auto [id, type] : params) {
+                args.push_back(fmt::format("({} {})", id, type->debug()));
+            }
+            return fmt::format("(defun {} {} ({}) {})", name, result->debug(), fmt::join(args, " "), body->debug());
+        }
+
+        BlockFunction(std::string name, Params params, Type* result, Expr* body)
+            : Function(name, params, result)
+            , body(body)
+        { }
+
+        Expr* body;
     };
 
     template<typename T>
