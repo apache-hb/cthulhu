@@ -101,23 +101,22 @@ namespace p {
         return new Literal(a->token_to_number<size_t>());
     }
 
-    Type* type(C*, A a) {
+    Type* type(A a) {
         return new Sentinel(ident(a));
     }
 
-    Expr* expr(C* c, A a);
-    Binary* binary(C* c, A a);
-    Expr* body(C* c, A a);
+    Expr* expr(A a);
+    Binary* binary(A a);
+    Expr* body(A a);
 
-    Ternary* ternary(C* c, A a) {
-        std::cout << a->line << ":" << a->column << std::endl << ast_to_s(a) << std::endl;
-        auto cond = body(c, a->nodes[0]);
-        auto yes = expr(c, a->nodes[1]);
-        auto no = expr(c, a->nodes[2]);
+    Ternary* ternary(A a) {
+        auto cond = body(a->nodes[0]);
+        auto yes = expr(a->nodes[1]);
+        auto no = expr(a->nodes[2]);
         return new Ternary(cond, yes, no);
     }
 
-    Unary* unary(C* c, A a) {
+    Unary* unary(A a) {
         TAG("unary"_);
 
         auto op = [](auto node) -> Unary::Op {
@@ -138,12 +137,12 @@ namespace p {
             }
         };
 
-        auto it = expr(c, a->nodes[1]);
+        auto it = expr(a->nodes[1]);
 
         return new Unary(op(a->nodes[0]), it);
     }
 
-    Binary* binary(C* c, A a) {
+    Binary* binary(A a) {
         TAG("binary"_);
 
         auto op = [](auto node) -> Binary::Op {
@@ -170,24 +169,22 @@ namespace p {
             }
         };
 
-        std::cout << ast_to_s(a) << std::endl;
-
-        auto lhs = body(c, a->nodes[0]);
-        auto rhs = body(c, a->nodes[2]);
+        auto lhs = body(a->nodes[0]);
+        auto rhs = body(a->nodes[2]);
         auto o = op(a->nodes[1]);
 
         return new Binary(o, lhs, rhs);
     }
 
-    Expr* atom(C* c, A a) {
+    Expr* atom(A a) {
         TAG("atom"_);
 
-        Expr* out = body(c, a->nodes[0]);
+        Expr* out = body(a->nodes[0]);
 
         for (size_t i = 1; i < a->nodes.size(); i++) {
             std::vector<Expr*> args;
             for (auto node : a->nodes[i]->nodes) {
-                args.push_back(expr(c, node));
+                args.push_back(expr(node));
             }
             out = new Call(out, args);
         }
@@ -195,32 +192,32 @@ namespace p {
         return out;
     }
 
-    Name* name(C*, A a) {
+    Name* name(A a) {
         return new Name(ident(a));
     }
 
-    Expr* body(C* c, A a) {
+    Expr* body(A a) {
         switch (a->tag) {
         case "number"_: return number(a);
-        case "unary"_: return unary(c, a);
-        case "binary"_: return binary(c, a);
-        case "atom"_: return atom(c, a);
-        case "ident"_: return name(c, a);
+        case "unary"_: return unary(a);
+        case "binary"_: return binary(a);
+        case "atom"_: return atom(a);
+        case "ident"_: return name(a);
         default: 
             panic("unknown body `{}`", a->name);
         }
     }
 
-    Expr* expr(C* c, A a) {
+    Expr* expr(A a) {
         switch (a->original_choice) {
-        case 0: return ternary(c, a);
-        case 1: return body(c, a);
+        case 0: return ternary(a);
+        case 1: return body(a);
         default: 
             panic("unkonwn expr `{}`", a->name);
         }
     }
 
-    Function* def(C* c, A a) {
+    Function* def(A a) {
         TAG("def"_);
         auto name = ident(a->nodes[0]);
 
@@ -233,7 +230,7 @@ namespace p {
 
             for (auto each : node->nodes) {
                 auto id = ident(each->nodes[0]);
-                auto it = type(c, each->nodes[1]);
+                auto it = type(each->nodes[1]);
 
                 out.push_back({ id, it });
             }
@@ -242,8 +239,9 @@ namespace p {
         }(a->nodes[1]);
 
         auto result = [=](auto node) -> Type* {
-            if (node->tag == "type"_) {
-                return type(c, node);
+            std::cout << node->name << std::endl;
+            if (node->tag == "type"_ || node->tag == "ident"_) {
+                return type(node);
             } else {
                 return new Sentinel("void");
             }
@@ -251,18 +249,16 @@ namespace p {
 
         auto last = a->nodes.back();
 
-        std::cout << name << std::endl;
-
         switch (last->original_choice) {
         case 0: return new EmptyFunction(name, args, result);
-        case 1: return new LinearFunction(name, args, result, expr(c, last->nodes[0]));
+        case 1: return new LinearFunction(name, args, result, expr(last->nodes[0]));
         default: panic("unknown function body `{}`", last->name);
         }
     }
 
-    Decl* decl(C* c, A a) {
+    Decl* decl(A a) {
         switch (a->choice) {
-        case 0: return def(c, a);
+        case 0: return def(a);
         default: panic("unknown decl `{}`", a->name);
         }
     }
@@ -270,7 +266,7 @@ namespace p {
     void unit(C* c, A a) {
         TAG("unit"_);
         for (auto node : a->nodes) {
-            c->add(decl(c, node));
+            c->add(decl(node));
         }
     }
 }
