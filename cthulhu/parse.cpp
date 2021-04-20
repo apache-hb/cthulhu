@@ -8,18 +8,18 @@ auto grammar = R"(
 unit    <- decl+ eof { no_ast_opt }
 
 decl    <- def
-def     <- DEF ident args? result? func
+def     <- DEF ident args? result? func { no_ast_opt }
 
-func    <- ';' / '=' expr ';' / '{' '}'
+func    <- ';' / '=' expr ';' / '{' '}' { no_ast_opt }
 
 result  <- COLON type
 
 args    <- LPAREN LIST(arg)? RPAREN { no_ast_opt }
 arg     <- ident COLON type
 
-expr    <- body '?' expr ':' expr / body
+expr    <- binary '?' expr ':' expr / binary
 
-body    <- unary (binop unary)* {
+binary    <- unary (binop unary)* {
     precedence
         L <= < > >=
         L + -
@@ -29,10 +29,10 @@ body    <- unary (binop unary)* {
 binop   <- < '+' / '-' / '*' / '/' / '%' / '<=' / '<' / '>=' / '>' >
 unop    <- < '+' / '-' / '*' / '&' / '!' / '~' >
 
-unary   <- unop expr / atom
-atom    <- (number / ident / LPAREN expr RPAREN) call*
+unary   <- unop expr / atom 
+atom    <- (number / ident / LPAREN expr RPAREN) call* { no_ast_opt }
 
-call    <- LPAREN LIST(expr)? RPAREN
+call    <- LPAREN LIST(expr)? RPAREN { no_ast_opt }
 
 type    <- ident
 
@@ -105,8 +105,119 @@ namespace p {
         return new Sentinel(ident(a));
     }
 
-    Expr* expr(C*, A) {
-        return nullptr;
+    Expr* expr(C* c, A a);
+    Binary* binary(C* c, A a);
+    Expr* body(C* c, A a);
+
+    Ternary* ternary(C* c, A a) {
+        std::cout << a->line << ":" << a->column << std::endl << ast_to_s(a) << std::endl;
+        auto cond = body(c, a->nodes[0]);
+        auto yes = expr(c, a->nodes[1]);
+        auto no = expr(c, a->nodes[2]);
+        return new Ternary(cond, yes, no);
+    }
+
+    Unary* unary(C* c, A a) {
+        TAG("unary"_);
+
+        auto op = [](auto node) -> Unary::Op {
+            if (node->token == "-") {
+                return Unary::NEG;
+            } else if (node->token == "+") {
+                return Unary::POS;
+            } else if (node->token == "&") {
+                return Unary::REF;
+            } else if (node->token == "*") {
+                return Unary::DEREF;
+            } else if (node->token == "!") {
+                return Unary::NOT;
+            } else if (node->token == "~") {
+                return Unary::FLIP;
+            } else {
+                panic("unknown unary op `{}`", node->token);
+            }
+        };
+
+        auto it = expr(c, a->nodes[1]);
+
+        return new Unary(op(a->nodes[0]), it);
+    }
+
+    Binary* binary(C* c, A a) {
+        TAG("binary"_);
+
+        auto op = [](auto node) -> Binary::Op {
+            if (node->token == "+") {
+                return Binary::ADD;
+            } else if (node->token == "-") {
+                return Binary::SUB;
+            } else if (node->token == "/") {
+                return Binary::DIV;
+            } else if (node->token == "*") {
+                return Binary::MUL;
+            } else if (node->token == "%") {
+                return Binary::REM;
+            } else if (node->token == "<") {
+                return Binary::LT;
+            } else if (node->token == "<=") {
+                return Binary::LTE;
+            } else if (node->token == ">") {
+                return Binary::GT;
+            } else if (node->token == ">=") {
+                return Binary::GTE;
+            } else {
+                panic("unknown binary op `{}`", node->token);
+            }
+        };
+
+        std::cout << ast_to_s(a) << std::endl;
+
+        auto lhs = body(c, a->nodes[0]);
+        auto rhs = body(c, a->nodes[2]);
+        auto o = op(a->nodes[1]);
+
+        return new Binary(o, lhs, rhs);
+    }
+
+    Expr* atom(C* c, A a) {
+        TAG("atom"_);
+
+        Expr* out = body(c, a->nodes[0]);
+
+        for (size_t i = 1; i < a->nodes.size(); i++) {
+            std::vector<Expr*> args;
+            for (auto node : a->nodes[i]->nodes) {
+                args.push_back(expr(c, node));
+            }
+            out = new Call(out, args);
+        }
+
+        return out;
+    }
+
+    Name* name(C*, A a) {
+        return new Name(ident(a));
+    }
+
+    Expr* body(C* c, A a) {
+        switch (a->tag) {
+        case "number"_: return number(a);
+        case "unary"_: return unary(c, a);
+        case "binary"_: return binary(c, a);
+        case "atom"_: return atom(c, a);
+        case "ident"_: return name(c, a);
+        default: 
+            panic("unknown body `{}`", a->name);
+        }
+    }
+
+    Expr* expr(C* c, A a) {
+        switch (a->original_choice) {
+        case 0: return ternary(c, a);
+        case 1: return body(c, a);
+        default: 
+            panic("unkonwn expr `{}`", a->name);
+        }
     }
 
     Function* def(C* c, A a) {
@@ -140,9 +251,11 @@ namespace p {
 
         auto last = a->nodes.back();
 
+        std::cout << name << std::endl;
+
         switch (last->original_choice) {
         case 0: return new EmptyFunction(name, args, result);
-        case 1: return new LinearFunction(name, args, result, expr(c, a));
+        case 1: return new LinearFunction(name, args, result, expr(c, last->nodes[0]));
         default: panic("unknown function body `{}`", last->name);
         }
     }
