@@ -239,7 +239,9 @@ namespace p {
         }(a->nodes[1]);
 
         auto result = [=](auto node) -> Type* {
-            std::cout << node->name << std::endl;
+            if (a->nodes.size() == 2) {
+                return new Sentinel("void");
+            }
             if (node->tag == "type"_ || node->tag == "ident"_) {
                 return type(node);
             } else {

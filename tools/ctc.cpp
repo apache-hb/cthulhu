@@ -99,6 +99,7 @@ int main(int argc, const char** argv) {
             ctu::init();
 
             ctu::Context ctx = ctu::parse(text);
+            ctu::fixup(&ctx);
 
             for (auto node : ctx.globals) {
                 std::cout << node->debug() << std::endl;
