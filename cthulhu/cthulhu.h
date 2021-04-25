@@ -20,6 +20,9 @@ namespace ctu {
         virtual void visit(struct EmptyFunction*) { }
         virtual void visit(struct LinearFunction*) { }
         virtual void visit(struct BlockFunction*) { }
+        virtual void visit(struct Scalar*) { }
+        virtual void visit(struct Bool*) { }
+        virtual void visit(struct Void*) { }
         virtual void visit(struct Sentinel*) { }
         virtual void visit(struct Context*) { }
     };
@@ -31,33 +34,6 @@ namespace ctu {
         virtual std::string debug() const = 0;
 
         size_t index;
-    };
-
-    struct Type: Node {
-        virtual ~Type() = default;
-    };
-
-    struct Named: Type {
-        virtual ~Named() = default;
-
-        Named(std::string name)
-            : name(name)
-        { }
-
-        std::string name;
-    };
-
-    struct Sentinel: Named {
-        virtual ~Sentinel() = default;
-        virtual void visit(Visitor* it) override { it->visit(this); }
-
-        Sentinel(std::string name)
-            : Named(name)
-        { }
-
-        virtual std::string debug() const override {
-            return fmt::format("(sentinel {})", name);
-        }
     };
 
     struct Stmt: Node {
@@ -240,25 +216,82 @@ namespace ctu {
         std::vector<Stmt*> stmts;
     };
 
-    struct Symbol: Node {
-        virtual ~Symbol() = default;
+    struct Type: Node {
+        virtual ~Type() = default;
+        virtual Type* resolve(struct Context*) { return this; }
+    };
 
-    protected:
-        Symbol(std::string name)
+    struct Decl: Type {
+        virtual ~Decl() = default;
+
+        Decl(std::string name)
             : name(name)
         { }
 
-    public:
         std::string name;
     };
 
-    struct Decl: Symbol {
-        virtual ~Decl() = default;
+    struct Pointer: Type {
+        virtual ~Pointer() = default;
 
-    protected:
-        Decl(std::string name)
-            : Symbol(name)
+        Type* type;
+    };
+
+    struct Builtin: Decl {
+        virtual ~Builtin() = default;
+
+        Builtin(std::string name)
+            : Decl(name)
         { }
+    };
+
+    struct Scalar: Builtin {
+        virtual ~Scalar() = default;
+        virtual void visit(Visitor* it) override { it->visit(this); }
+
+        Scalar(std::string name)
+            : Builtin(name)
+        { }
+
+        virtual std::string debug() const override {
+            return fmt::format("(scalar {})", name);
+        }
+    };
+
+    struct Void: Builtin {
+        virtual ~Void() = default;
+        virtual void visit(Visitor* it) override { it->visit(this); }
+
+        Void(): Builtin("void") { }
+
+        virtual std::string debug() const override {
+            return "void";
+        }
+    };
+
+    struct Bool: Builtin {
+        virtual ~Bool() = default;
+        virtual void visit(Visitor* it) override { it->visit(this); }
+
+        Bool(): Builtin("bool") { }
+
+        virtual std::string debug() const override {
+            return "bool";
+        }
+    };
+
+    struct Sentinel: Decl {
+        virtual ~Sentinel() = default;
+        virtual void visit(Visitor* it) override { it->visit(this); }
+        virtual Type* resolve(struct Context*) override;
+
+        Sentinel(std::string name)
+            : Decl(name)
+        { }
+
+        virtual std::string debug() const override {
+            return fmt::format("(sentinel {})", name);
+        }
     };
 
     struct Param {
@@ -339,7 +372,7 @@ namespace ctu {
     };
 
     template<typename T>
-    struct Symbols: std::vector<Symbol*> {
+    struct Symbols: std::vector<Decl*> {
         void add(T* it) {
             for (auto& symbol : *this) {
                 if (symbol->name == it->name) {
@@ -373,8 +406,15 @@ namespace ctu {
         void visit(Visitor* it) { it->visit(this); }
 
         Symbols<Decl> globals;
+
+        std::vector<Decl*> types = {
+            new Void(),
+            new Bool(),
+            new Scalar("int")
+        };
     };
 
     void init();
     Context parse(std::string source);
+    void fixup(Context* ctx);
 }

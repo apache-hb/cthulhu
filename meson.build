@@ -27,5 +27,17 @@ ctu = declare_dependency(
     dependencies : deps
 )
 
+src2 = [
+    'cthulhu2/ast.cpp'
+]
+
+cthulhu2 = library('ctu2', src2, dependencies : deps)
+
+ctu2 = declare_dependency(
+    include_directories : 'cthulhu2',
+    link_with : cthulhu2,
+    dependencies : deps
+)
+
 subdir('tools')
 #subdir('test')
