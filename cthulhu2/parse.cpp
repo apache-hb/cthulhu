@@ -68,13 +68,48 @@ number  <- < [0-9]+ >
 ~eof        <- !.
 )";
 
+#define TAG(id) if (node->tag != id) { std::cout << ast_to_s(node) << std::endl; panic("expected ast tag " #id " but got `{}` instead", node->name); }
+
 namespace {
+    using namespace ctu;
+    using namespace peg;
+    using namespace peg::udl;
+
     using A = std::shared_ptr<peg::Ast>;
     using C = ctu::Context;
 
-    void unit(C*, A node) {
+    std::string ident(A node) {
+        TAG("ident"_);
+        return node->token_to_string();
+    }
+
+    Type* type(C* ctx, A node) {
+        auto id = ident(node);
+
+        if (auto it = ctx->get(id); it != nullptr) {
+            return it;
+        } else {
+            return new Sentinel(id);
+        }
+    }
+
+    Function* function(C* ctx, A node) {
+        TAG("def"_);
+
+        auto name = ident(node->nodes[0]);
+        Params params;
+        auto result = type(ctx, node->nodes[2]);
+
+        return new Function(name, params, result);
+    }
+
+    void unit(C* ctx, A node) {
+        std::cout << ast_to_s(node) << std::endl;
         for (auto each : node->nodes) {
-            std::cout << ast_to_s(each) << std::endl;
+            switch (each->original_choice) {
+            case 0: ctx->define(function(ctx, each)); break;
+            default: ctu::panic("unknown decl `{}`", each->name);
+            }
         }
     }
 }
