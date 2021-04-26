@@ -1,13 +1,16 @@
 #pragma once
 
-#include <string>
 #include <vector>
+#include <string>
 
-namespace ctu::ast {
+namespace ctu {
     struct Context;
 
     struct Node {
         virtual ~Node() = default;
+
+        virtual std::string debug() const = 0;
+        virtual void visit(Context* ctx) = 0;
     };
 
     // all the type related stuff
@@ -15,6 +18,23 @@ namespace ctu::ast {
     struct Type: Node {
         virtual ~Type() = default;
         virtual Type* resolve(Context*) { return this; }
+    };
+
+    struct Stmt: Node {
+        virtual ~Stmt() = default;
+    };
+
+    struct Compound: Stmt {
+        virtual ~Compound() = default;
+
+        std::vector<Stmt*> stmts;
+    };
+
+    // an expression is a statement that can evaluate to a value
+    struct Expr: Stmt {
+        virtual ~Expr() = default;
+
+        virtual Type* typeof(Context*) = 0;
     };
 
     // all symbols have an associated type
@@ -110,4 +130,6 @@ namespace ctu::ast {
 
         std::vector<Scope> scopes;
     };
+
+    Context parse(const std::string& source);
 }
