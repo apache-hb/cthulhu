@@ -25,6 +25,10 @@ namespace ctu {
         return this;
     }
 
+    std::string Pointer::debug() const {
+        return fmt::format("(ptr {})", type->debug());
+    }
+
     Type* Function::resolve(Context* ctx) {
         result = result->resolve(ctx);
         for (auto& param : params) {
@@ -35,7 +39,7 @@ namespace ctu {
     }
 
     std::string Function::debug() const {
-        return fmt::format("(def {})", name);
+        return fmt::format("(def {} {})", name, result->debug());
     }
 
     void Scope::define(Symbol* symbol) {
