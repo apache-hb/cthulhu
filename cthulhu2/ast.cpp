@@ -19,6 +19,15 @@ namespace ctu {
         return fmt::format("(sentinel {})", name);
     }
 
+    Type* Builtin::resolve(Context*) {
+        return this;
+    }
+
+    std::string Builtin::debug() const {
+        return fmt::format("(builtin {})", name);
+    }
+
+
     Type* Pointer::resolve(Context* ctx) {
         type = type->resolve(ctx);
         
