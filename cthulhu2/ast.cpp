@@ -2,7 +2,7 @@
 
 #include "cthulhu.h"
 
-namespace ctu::ast {
+namespace ctu {
     Type* Record::resolve(Context* ctx) {
         for (auto& field : fields) {
             field.type = field.type->resolve(ctx);
@@ -12,7 +12,7 @@ namespace ctu::ast {
     }
 
     Type* Sentinel::resolve(Context* ctx) {
-        return ctx->get(name);
+        return ctx->get(name)->resolve(ctx);
     }
 
     Type* Pointer::resolve(Context* ctx) {
