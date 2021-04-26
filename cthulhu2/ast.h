@@ -49,6 +49,8 @@ namespace ctu {
 
     struct Builtin: Symbol {
         virtual ~Builtin() = default;
+        virtual Type* resolve(Context* ctx) override;
+        virtual std::string debug() const override;
 
         Builtin(std::string name)
             : Symbol(name)
@@ -137,5 +139,5 @@ namespace ctu {
         std::vector<Scope> scopes = { {} };
     };
 
-    Context parse(const std::string& source);
+    Context parse(const std::string& source, std::vector<Symbol*> symbols);
 }

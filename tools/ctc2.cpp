@@ -19,7 +19,9 @@ int main(int argc, const char** argv) {
         try {
             ctu::init();
 
-            ctu::Context ctx = ctu::parse(text);
+            ctu::Context ctx = ctu::parse(text, {
+                new ctu::Builtin("int")
+            });
 
             for (auto scope : ctx.scopes) {
                 for (auto symbol : scope.symbols) {

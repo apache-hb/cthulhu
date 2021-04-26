@@ -134,7 +134,7 @@ namespace ctu {
         reader.enable_ast();
     }
 
-    Context parse(const std::string& source) {
+    Context parse(const std::string& source, std::vector<Symbol*> symbols) {
         std::shared_ptr<Ast> ast;
         if (!reader.parse(source, ast)) {
             panic("failed to parse source");
@@ -143,6 +143,9 @@ namespace ctu {
         ast = reader.optimize_ast(ast);
 
         Context ctx;
+        for (auto each : symbols)
+            ctx.define(each);
+            
         unit(&ctx, ast);
 
         return ctx;
