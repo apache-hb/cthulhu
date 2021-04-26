@@ -9,11 +9,9 @@ auto grammar = R"(
 unit    <- decl+ eof { no_ast_opt }
 
 decl    <- def
-def     <- DEF ident args result func { no_ast_opt }
+def     <- DEF ident args COLON type func { no_ast_opt }
 
 func    <- ';' / '=' expr ';' / '{' '}' { no_ast_opt }
-
-result  <- COLON type
 
 args    <- LPAREN LIST(arg)? RPAREN { no_ast_opt }
 arg     <- ident COLON type
@@ -35,7 +33,7 @@ atom    <- (number / ident / LPAREN expr RPAREN) call* { no_ast_opt }
 
 call    <- LPAREN LIST(expr)? RPAREN { no_ast_opt }
 
-type    <- ident
+type    <- '*' type / ident { no_ast_opt }
 
 # operators
 ~COLON      <- ':'
@@ -84,12 +82,18 @@ namespace {
     }
 
     Type* type(C* ctx, A node) {
-        auto id = ident(node);
+        if (node->original_choice == 0) {
+            return new Pointer(type(ctx, node->nodes[0]));
+        } else if (node->original_choice == 1) {
+            auto id = ident(node->nodes[0]);
 
-        if (auto it = ctx->get(id); it != nullptr) {
-            return it;
+            if (auto it = ctx->get(id); it != nullptr) {
+                return it;
+            } else {
+                return new Sentinel(id);
+            }
         } else {
-            return new Sentinel(id);
+            ctu::panic("unknown type choice `{}`", node->name);
         }
     }
 

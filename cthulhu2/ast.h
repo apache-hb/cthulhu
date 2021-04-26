@@ -88,6 +88,7 @@ namespace ctu {
     struct Pointer: Type {
         virtual ~Pointer() = default;
         virtual Type* resolve(Context* ctx) override;
+        virtual std::string debug() const override;
 
         Pointer(Type* type)
             : type(type)
