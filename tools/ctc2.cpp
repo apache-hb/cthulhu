@@ -21,8 +21,10 @@ int main(int argc, const char** argv) {
 
             ctu::Context ctx = ctu::parse(text);
 
-            for (auto symbol : ctx.symbols) {
-                std::cout << "-   " << symbol->debug() << std::endl;
+            for (auto scope : ctx.scopes) {
+                for (auto symbol : scope.symbols) {
+                    std::cout << symbol->debug() << std::endl;
+                }
             }
         } catch (const std::exception& error) {
             std::cerr << error.what() << std::endl;

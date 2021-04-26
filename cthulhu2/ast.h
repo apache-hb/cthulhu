@@ -10,7 +10,6 @@ namespace ctu {
         virtual ~Node() = default;
 
         virtual std::string debug() const = 0;
-        virtual void visit(Context* ctx) = 0;
     };
 
     // all the type related stuff
@@ -79,6 +78,11 @@ namespace ctu {
     struct Sentinel: Symbol {
         virtual ~Sentinel() = default;
         virtual Type* resolve(Context* ctx) override;
+        virtual std::string debug() const override;
+
+        Sentinel(std::string name)
+            : Symbol(name)
+        { }
     };
 
     struct Pointer: Type {
@@ -103,6 +107,7 @@ namespace ctu {
     struct Function: Symbol {
         virtual ~Function() = default;
         virtual Type* resolve(Context* ctx) override;
+        virtual std::string debug() const override;
 
         Function(std::string name, Params params, Type* result)
             : Symbol(name)
@@ -128,7 +133,7 @@ namespace ctu {
         void push();
         void pop();
 
-        std::vector<Scope> scopes;
+        std::vector<Scope> scopes = { {} };
     };
 
     Context parse(const std::string& source);

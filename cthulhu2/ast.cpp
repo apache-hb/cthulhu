@@ -15,6 +15,10 @@ namespace ctu {
         return ctx->get(name)->resolve(ctx);
     }
 
+    std::string Sentinel::debug() const {
+        return fmt::format("(sentinel {})", name);
+    }
+
     Type* Pointer::resolve(Context* ctx) {
         type = type->resolve(ctx);
         
@@ -28,6 +32,10 @@ namespace ctu {
         }
         
         return this;
+    }
+
+    std::string Function::debug() const {
+        return fmt::format("(def {})", name);
     }
 
     void Scope::define(Symbol* symbol) {
@@ -65,7 +73,7 @@ namespace ctu {
             }
         }
 
-        ctu::panic("`{}` not defined", name);
+        return nullptr;
     }
 
     void Context::push() {
