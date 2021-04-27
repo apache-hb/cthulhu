@@ -6,16 +6,6 @@
 using namespace peg;
 
 auto grammar = R"(
-unit    <- decl+ eof { no_ast_opt }
-
-decl    <- def
-def     <- DEF ident args COLON type func { no_ast_opt }
-
-func    <- ';' / '=' expr ';' / '{' '}' { no_ast_opt }
-
-args    <- LPAREN LIST(arg)? RPAREN { no_ast_opt }
-arg     <- ident COLON type
-
 expr    <- binary '?' expr ':' expr / binary
 
 binary    <- unary (binop unary)* {
@@ -29,94 +19,43 @@ binop   <- < '+' / '-' / '*' / '/' / '%' / '<=' / '<' / '>=' / '>' >
 unop    <- < '+' / '-' / '*' / '&' / '!' / '~' >
 
 unary   <- unop expr / atom 
-atom    <- (number / ident / LPAREN expr RPAREN) call* { no_ast_opt }
+atom    <- (number / boolean / ident / LPAREN expr RPAREN) call*
 
-call    <- LPAREN LIST(expr)? RPAREN { no_ast_opt }
+call    <- LPAREN LIST(expr)? RPAREN
 
-type    <- '*' type / ident { no_ast_opt }
+type    <- '*' type / ident
 
 # operators
-~COLON      <- ':'
 ~COMMA      <- ','
 ~LPAREN     <- '('
 ~RPAREN     <- ')'
 
 # keywords
-~DEF        <- < 'def' skip >
-~KW         <- DEF
 
 # identifiers cannot be keywords
-ident   <- !KW < [a-zA-Z_][a-zA-Z0-9_]* / '$' >
+ident   <- < [a-zA-Z_][a-zA-Z0-9_]* / '$' >
 
-LIST(R) <- R (COMMA R)* { no_ast_opt }
+LIST(R) <- R (COMMA R)*
 
 # numbers
 number  <- < [0-9]+ >
+boolean <- < 'true' / 'false' >
 
 # cpp-peglib extensions
 %whitespace <- space*
 
 # whitespace and comment handling
-~skip       <- ![a-zA-Z_] space
 ~space      <- blank / line / lcomment / mcomment
 ~blank      <- [ \t]
 ~line       <- [\r\n]
 ~lcomment   <- '//' (!line .)* line?
 ~mcomment   <- '/*' (mcomment / !'*/' .)* '*/'
-~eof        <- !.
+
 )";
 
 #define TAG(id) if (node->tag != id) { std::cout << ast_to_s(node) << std::endl; panic("expected ast tag " #id " but got `{}` instead", node->name); }
 
-namespace {
-    using namespace ctu;
-    using namespace peg;
-    using namespace peg::udl;
-
-    using A = std::shared_ptr<peg::Ast>;
-    using C = ctu::Context;
-
-    std::string ident(A node) {
-        TAG("ident"_);
-        return node->token_to_string();
-    }
-
-    Type* type(C* ctx, A node) {
-        if (node->original_choice == 0) {
-            return new Pointer(type(ctx, node->nodes[0]));
-        } else if (node->original_choice == 1) {
-            auto id = ident(node->nodes[0]);
-
-            if (auto it = ctx->get(id); it != nullptr) {
-                return it;
-            } else {
-                return new Sentinel(id);
-            }
-        } else {
-            ctu::panic("unknown type choice `{}`", node->name);
-        }
-    }
-
-    Function* function(C* ctx, A node) {
-        TAG("def"_);
-
-        auto name = ident(node->nodes[0]);
-        Params params;
-        auto result = type(ctx, node->nodes[2]);
-
-        return new Function(name, params, result);
-    }
-
-    void unit(C* ctx, A node) {
-        std::cout << ast_to_s(node) << std::endl;
-        for (auto each : node->nodes) {
-            switch (each->original_choice) {
-            case 0: ctx->define(function(ctx, each)); break;
-            default: ctu::panic("unknown decl `{}`", each->name);
-            }
-        }
-    }
-}
+using namespace std;
 
 namespace ctu {
     peg::parser reader;
@@ -130,24 +69,107 @@ namespace ctu {
             panic("failed to load grammar");
         }
 
+        reader["number"] = [](const peg::SemanticValues& vs) -> Expr* {
+            fmt::print("number\n");
+            return new IntLiteral(vs.token_to_number<size_t>());
+        };
+
+        reader["boolean"] = [](const peg::SemanticValues& vs) -> Expr* {
+            fmt::print("boolean\n");
+            return new BoolLiteral(vs.choice() == 0);
+        };
+
+        reader["binop"] = [](const peg::SemanticValues& vs) -> Binary::Op {
+            fmt::print("binop\n");
+            if (vs.sv() == "+") {
+                return Binary::ADD;
+            } else if (vs.sv() == "-") {
+                return Binary::SUB;
+            } else if (vs.sv() == "/") {
+                return Binary::DIV;
+            } else if (vs.sv() == "*") {
+                return Binary::MUL;
+            } else if (vs.sv() == "%") {
+                return Binary::REM;
+            } else {
+                panic("unknown binop `{}`", vs.sv());
+            }
+        };
+
+        reader["binary"] = [](const peg::SemanticValues& vs) -> Expr* {
+            fmt::print("binary\n");
+            Expr* out = any_cast<Expr*>(vs[0]);
+            if (vs.size() > 1) {
+                auto op = any_cast<Binary::Op>(vs[1]);
+                auto other = any_cast<Expr*>(vs[2]);
+
+                out = new Binary(op, out, other);
+            }
+            return out;
+        };
+
+        reader["unop"] = [](const peg::SemanticValues& vs) -> Unary::Op {
+            fmt::print("unop\n");
+            if (vs.sv() == "+") {
+                return Unary::POS;
+            } else if (vs.sv() == "-") {
+                return Unary::NEG;
+            } else if (vs.sv() == "&") {
+                return Unary::REF;
+            } else if (vs.sv() == "*") {
+                return Unary::DEREF;
+            } else if (vs.sv() == "!") {
+                return Unary::NOT;
+            } else if (vs.sv() == "~") {
+                return Unary::FLIP;
+            } else {
+                panic("unknown unop `{}`", vs.sv());
+            }
+        };
+
+        reader["unary"] = [](const peg::SemanticValues& sv) -> Expr* {
+            fmt::print("unary\n");
+            if (sv.choice() == 1) {
+                return any_cast<Expr*>(sv[0]);
+            } else {
+                auto op = any_cast<Unary::Op>(sv[0]);
+                auto expr = any_cast<Expr*>(sv[1]);
+                return new Unary(op, expr);
+            }
+        };
+
+        reader["call"] = [](const peg::SemanticValues& vs) -> Args {
+            fmt::print("call\n");
+            Args out;
+            for (auto node : vs) {
+                out.push_back(any_cast<Expr*>(node));
+            }
+            return out;
+        };
+
+        reader["atom"] = [](const peg::SemanticValues& vs) -> Expr* {
+            fmt::print("atom {}\n", vs.sv());
+            Expr* out = any_cast<Expr*>(vs[0]);
+
+            for (size_t i = 1; i < vs.size(); i++) {
+                out = new Call(out, any_cast<Args>(vs[i]));
+            }
+
+            return out;
+        };
+
         reader.enable_packrat_parsing();
         reader.enable_ast();
     }
 
     Context parse(const std::string& source, std::vector<Symbol*> symbols) {
-        std::shared_ptr<Ast> ast;
-        if (!reader.parse(source, ast)) {
+        Node* node;
+        if (!reader.parse(source, node)) {
             panic("failed to parse source");
         }
 
-        ast = reader.optimize_ast(ast);
+        std::cout << node->debug() << std::endl;
 
-        Context ctx;
-        for (auto each : symbols)
-            ctx.define(each);
-            
-        unit(&ctx, ast);
-
-        return ctx;
+        return {};
     }
 }
