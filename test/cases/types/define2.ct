@@ -1,3 +1,0 @@
-record char {
-    field: int
-}

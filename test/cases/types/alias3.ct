@@ -1,5 +1,0 @@
-using v = void;
-
-record a {
-    field: v
-}
