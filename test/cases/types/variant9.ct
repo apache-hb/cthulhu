@@ -1,7 +1,0 @@
-variant a : x {
-    field
-}
-
-using x = y;
-using y = z;
-using z = x;

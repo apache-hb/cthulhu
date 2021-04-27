@@ -1,6 +1,0 @@
-[submodule "subprojects/fmt/fmt"]
-	path = subprojects/fmt/fmt
-	url = https://github.com/fmtlib/fmt
-[submodule "subprojects/peglib/cpp-peglib"]
-	path = subprojects/peglib/cpp-peglib
-	url = https://github.com/yhirose/cpp-peglib

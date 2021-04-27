@@ -1,3 +1,0 @@
-record a {
-    field: [[int:10 + 10]:20]
-}

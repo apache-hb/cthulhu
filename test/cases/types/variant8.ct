@@ -1,5 +1,0 @@
-variant a : v {
-    field
-}
-
-using v = int;

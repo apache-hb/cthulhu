@@ -1,7 +1,0 @@
-record a {
-    field: *b
-}
-
-record b {
-    field: *a
-}
