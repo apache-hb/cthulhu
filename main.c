@@ -23,12 +23,12 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    int number = atoi(argv[1]);
+    long long number = atoll(argv[1]);
 
     fprintf(output,
         ".globl main\n"
         "main:\n"
-        "mov $%d, %%rax\n"
+        "mov $%lld, %%rax\n"
         "ret\n",
         number
     );
