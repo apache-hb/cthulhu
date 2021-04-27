@@ -12,7 +12,13 @@ namespace ctu {
     }
 
     Type* Sentinel::resolve(Context* ctx) {
-        return ctx->get(name)->resolve(ctx);
+        auto it = ctx->get(name);
+        
+        if (it == nullptr) {
+            ctu::panic("unresolved type `{}`", name);
+        }
+
+        return it->resolve(ctx);
     }
 
     std::string Sentinel::debug() const {
@@ -26,7 +32,6 @@ namespace ctu {
     std::string Builtin::debug() const {
         return fmt::format("(builtin {})", name);
     }
-
 
     Type* Pointer::resolve(Context* ctx) {
         type = type->resolve(ctx);
@@ -49,6 +54,31 @@ namespace ctu {
 
     std::string Function::debug() const {
         return fmt::format("(def {} {})", name, result->debug());
+    }
+
+    std::string SimpleFunction::debug() const {
+        return fmt::format("(def {} {} {})", name, result->debug(), expr->debug());
+    }
+
+    std::string IntLiteral::debug() const {
+        return fmt::format("(int {})", value);
+    }
+
+    std::string BoolLiteral::debug() const {
+        return fmt::format("(bool {})", value);
+    }
+
+
+    std::string Binary::debug() const {
+        return fmt::format("({} {} {})", str(op), lhs->debug(), rhs->debug());
+    }
+
+    std::string Unary::debug() const {
+        return fmt::format("({} {})", str(op), expr->debug());
+    }
+
+    std::string Call::debug() const {
+        return fmt::format("(call {})", body->debug());
     }
 
     void Scope::define(Symbol* symbol) {

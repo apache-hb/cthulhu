@@ -20,7 +20,8 @@ int main(int argc, const char** argv) {
             ctu::init();
 
             ctu::Context ctx = ctu::parse(text, {
-                new ctu::Builtin("int")
+                new ctu::Builtin("int"),
+                new ctu::Builtin("bool")
             });
 
             for (auto scope : ctx.scopes) {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cthulhu.h"
 #include <vector>
 #include <string>
 
@@ -32,8 +33,111 @@ namespace ctu {
     // an expression is a statement that can evaluate to a value
     struct Expr: Stmt {
         virtual ~Expr() = default;
+    };
 
-        virtual Type* typeof(Context*) = 0;
+    struct IntLiteral: Expr {
+        virtual ~IntLiteral() = default;
+        virtual std::string debug() const override;
+
+        IntLiteral(size_t value)
+            : value(value)
+        { }
+
+        size_t value;
+    };
+
+    struct BoolLiteral: Expr {
+        virtual ~BoolLiteral() = default;
+        virtual std::string debug() const override;
+
+        BoolLiteral(bool value)
+            : value(value)
+        { }
+
+        bool value;
+    };
+
+    struct Binary: Expr {
+        virtual ~Binary() = default;
+        virtual std::string debug() const override;
+
+        enum Op {
+            ADD,
+            SUB,
+            DIV,
+            MUL,
+            REM
+        };
+
+        Binary(Op op, Expr* lhs, Expr* rhs)
+            : op(op)
+            , lhs(lhs)
+            , rhs(rhs)
+        { }
+
+        Op op;
+        Expr* lhs;
+        Expr* rhs;
+    };
+
+    struct Unary: Expr {
+        virtual ~Unary() = default;
+        virtual std::string debug() const override;
+
+        enum Op {
+            POS,
+            NEG,
+            REF,
+            DEREF,
+            NOT,
+            FLIP
+        };
+
+        Unary(Op op, Expr* expr)
+            : op(op)
+            , expr(expr)
+        { }
+
+        Op op;
+        Expr* expr;
+    };
+
+    constexpr const char* str(Unary::Op op) {
+        switch (op) {
+        case Unary::POS: return "pos";
+        case Unary::NEG: return "neg";
+        case Unary::REF: return "ref";
+        case Unary::DEREF: return "deref";
+        case Unary::NOT: return "not";
+        case Unary::FLIP: return "flip";
+        default: panic("unknown unop");
+        }
+    }
+
+    constexpr const char* str(Binary::Op op) {
+        switch (op) {
+        case Binary::ADD: return "add";
+        case Binary::SUB: return "sub";
+        case Binary::DIV: return "div";
+        case Binary::MUL: return "mul";
+        case Binary::REM: return "rem";
+        default: panic("unknown binop");
+        }
+    }
+
+    using Args = std::vector<Expr*>;
+
+    struct Call: Expr {
+        virtual ~Call() = default;
+        virtual std::string debug() const override;
+
+        Call(Expr* body, Args args)
+            : body(body)
+            , args(args)
+        { }
+        
+        Expr* body;
+        Args args;
     };
 
     // all symbols have an associated type
@@ -120,6 +224,18 @@ namespace ctu {
 
         Params params;
         Type* result;
+    };
+
+    struct SimpleFunction: Function {
+        virtual ~SimpleFunction() = default;
+        virtual std::string debug() const override;
+
+        SimpleFunction(std::string name, Params params, Type* result, Expr* expr)
+            : Function(name, params, result)
+            , expr(expr)
+        { }
+
+        Expr* expr;
     };
 
     struct Scope {

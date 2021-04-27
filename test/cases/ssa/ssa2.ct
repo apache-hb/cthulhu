@@ -1,1 +1,4 @@
-def main(): int;
+5 + 6
+#def main(): *int;
+#def main2(): int = 10;
+#def main3(): bool = true;
