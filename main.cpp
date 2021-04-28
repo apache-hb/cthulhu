@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 int compile(FILE *out, char *source) {
     int line = 0;
@@ -45,43 +46,46 @@ int compile(FILE *out, char *source) {
     return 0;
 }
 
+void help(const char* name) {
+    fprintf(stderr, 
+        "%s: invalid number of arguments\n"
+        "   <expr>\n"
+        "   -h: display this message\n"
+        "   -o: output file name\n", 
+        name
+    );
+    exit(0);
+}
+
 int main(int argc, char **argv) {
-    FILE *output = stdout;
-    const char *name = "stdout";
+    FILE *output;
     const char *self = argv[0];
     char *source;
     int result = 0;
 
     if (argc < 2) {
-        fprintf(stderr, 
-            "%s: invalid number of arguments\n"
-            "   %s <number>\n"
-            "   %s <number> <file>\n", 
-            self, self, self
-        );
-        return 1;
+        help(self);
     }
 
     source = argv[1];
 
-    if (argc >= 3) {
-        name = argv[2];
-        output = fopen(argv[2], "w");
-    }
+    output = fopen("temp.s", "w");
 
     if (output == NULL) {
-        fprintf(stderr, "failed to open output file `%s`\n", name);
+        fprintf(stderr, "failed to open output file\n");
         return 1;
     }
 
     result = compile(output, source);
 
     if (result != 0) {
-        if (output != stdout) {
-            fclose(output);
-            remove(name);
-        }
+        return result;   
     }
 
-    return result;
+    fclose(output);
+
+    system("as temp.s -o temp.o");
+    system("ld temp.o -o a.out");
+
+    remove("temp.s");
 }
