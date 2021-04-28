@@ -1,12 +1,61 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <ctype.h>
+
+struct token {
+    enum { DIGIT, OP, END } type;
+    enum op_t { ADD, SUB };
+
+    union {
+        long digit;
+        op_t op;
+    } data;
+};
+
+struct lexer {
+    char* text;
+
+    char next() {
+        char c = *text;
+        if (c != 0) {
+            text++;
+        }
+        return c;
+    }
+
+    char peek() {
+        return *(text + 1);
+    }
+
+    char skip() {
+        char c = next();
+
+        while (isspace(c) && c != 0)
+            c = next();
+
+        return c;
+    }
+
+    token read() {
+        char c = skip();
+
+        if (c == '+') {
+            return { token::OP, { token::ADD } };
+        } else if (c == '-') {
+            return { token::OP, { token::SUB } };
+        } else if (isdigit(c)) {
+            return { token::DIGIT, { strtol(text - 1, &text, 10) } };
+        } else if (c == 0 || c == -1) {
+            return { token::END, {} };
+        } else {
+            fprintf(stderr, "unknown character `%c`\n", c);
+            exit(1);
+        }
+    }
+};
 
 int compile(FILE *out, char *source) {
-    int line = 0;
-    int col = 0;
-    char c;
-
     /* emit prelude */
     fprintf(out,
         ".globl _start\n"
@@ -14,27 +63,26 @@ int compile(FILE *out, char *source) {
         "_start:\n"
     );
 
-    fprintf(out, "  mov $%ld, %%rdi\n", strtol(source, &source, 10));
+    lexer lex = { source };
 
-    while ((c = *source++)) {
-        line++;
-        switch (c) {
-        case '+':
-            fprintf(out, "  add $%ld, %%rdi\n", strtol(source, &source, 10));
+    token c = lex.read();
+
+    fprintf(out, "  mov $%ld, %%rdi\n", c.data.digit);
+
+    while (c.type != token::END) {
+        token o = lex.read();
+        c = lex.read();
+
+        switch (o.data.op) {
+        case token::ADD:
+            fprintf(out, "  add $%ld, %%rdi\n", c.data.digit);
             break;
-        case '-':
-            fprintf(out, "  sub $%ld, %%rdi\n", strtol(source, &source, 10));
+        case token::SUB:
+            fprintf(out, "  sub $%ld, %%rdi\n", c.data.digit);
             break;
-        case ' ': case '\t': case '\r':
-            /* skip whitespace */
-            continue;
-        case '\n':
-            line = 0;
-            col++;
-            continue;
         default:
-            fprintf(stderr, "unexpected character `%c` at %d:%d \n", c, line, col);
-            return 1;
+            fprintf(stderr, "unknown token\n");
+            exit(1);
         }
     }
 
@@ -54,7 +102,8 @@ void help(const char* name) {
         "   -o: output file name\n", 
         name
     );
-    exit(0);
+
+    exit(1);
 }
 
 int main(int argc, char **argv) {
@@ -77,15 +126,15 @@ int main(int argc, char **argv) {
     }
 
     result = compile(output, source);
+    fclose(output);
 
     if (result != 0) {
         return result;   
     }
 
-    fclose(output);
-
     system("as temp.s -o temp.o");
     system("ld temp.o -o a.out");
 
     remove("temp.s");
+    remove("temp.o");
 }
