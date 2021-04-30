@@ -16,7 +16,7 @@
 
 [ \r\n\t] ;
 [0-9]+ { yylval.digit = atoll(yytext); return DIGIT; }
-[a-zA-Z_][a-zA-Z0-9_]* { yylval.ident = yytext; return IDENT; }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval.ident = strdup(yytext); return IDENT; }
 ";" { return SEMI; }
 "+" { return ADD; }
 "-" { return SUB; }
@@ -27,6 +27,6 @@
 ")" { return RPAREN; }
 "{" { return LBRACE; }
 "}" { return RBRACE; }
-. { fprintf(stderr, "unknown character `%c`\n", yytext[0]); return SEMI; }
+. { fprintf(stderr, "unknown characters `%s`\n", yytext); return SEMI; }
 
 %%
