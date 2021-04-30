@@ -1,15 +1,23 @@
-project('ctu', 'cpp',
+project('ctu', [ 'c', 'cpp' ],
     default_options : [
-        'cpp_std=c++latest',
-        'warning_level=3',
+        'c_std=gnu99',
+        'cpp_std=gnu++11',
+        'warning_level=2',
         'werror=true'
     ]
 )
 
-src = [
-    'src/main.cpp', 
-    'src/lexer.cpp', 
-    'src/stream.cpp'
-]
+lex = custom_target('lex',
+    command : [ find_program('flex'), '@INPUT@' ],
+    input : 'src/cthulhu.l',
+    output : [ 'lex.yy.c' ]
+)
 
-executable('ctc', src)
+parse = custom_target('parse',
+    command : [ find_program('bison'), '-d', '@INPUT@' ],
+    input : 'src/cthulhu.y',
+    output : [ 'cthulhu.tab.c', 'cthulhu.tab.h' ],
+    depends : lex
+)
+
+executable('cthulhu', parse, lex)
