@@ -14,9 +14,9 @@ lex = custom_target('lex',
 )
 
 parse = custom_target('parse',
-    command : [ find_program('bison'), '-d', '@INPUT@' ],
+    command : [ find_program('bison'), '-d', '@INPUT@', '-o', 'cthulhu.tab.cpp' ],
     input : 'src/cthulhu.y',
-    output : [ 'cthulhu.tab.c', 'cthulhu.tab.h' ],
+    output : [ 'cthulhu.tab.cpp', 'cthulhu.tab.hpp' ],
     depends : lex
 )
 
