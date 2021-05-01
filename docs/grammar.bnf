@@ -1,0 +1,41 @@
+unit: decl
+    | decl unit
+    ;
+
+decl: func-decl
+    ;
+
+func-decl: 'def' ident stmt
+    ;
+
+stmt: '{' stmt-list '}'
+    | expr ';'
+    ;
+
+stmt-list:
+    | stmt stmt-list
+    ;
+
+expr: digit
+    | expr '+' expr
+    | expr '-' expr
+    | expr '*' expr
+    | expr '/' expr
+    | expr '%' expr
+    | '(' expr ')'
+    | '+' expr
+    | '-' expr
+    | expr '(' ')'
+    | expr '(' expr-list ')'
+    | expr '?' expr ':' expr
+    ;
+
+expr-list: expr
+    | expr ',' expr-list
+    ;
+
+digit: [0-9]+ 
+    ;
+
+ident: [a-zA-Z_][a-zA-Z0-9_]* 
+    ;
