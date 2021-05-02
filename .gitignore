@@ -2,6 +2,7 @@
 !*/
 build/
 !*.cpp
+!*.c
 !*.build
 !*.h
 !*.y
