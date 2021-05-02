@@ -25,8 +25,8 @@ int yyerror();
 
 /* tokens from flex */
 %token<text>
-    DIGIT
-    IDENT
+    DIGIT "integer literal"
+    IDENT "identifier"
 
 /* keywords */
 %token
@@ -51,7 +51,7 @@ int yyerror();
     QUESTION "?"
     COLON ":"
     DOT "."
-    END
+    END 0 "end of file"
 
 %type<node> primary call postfix unary multiplicative additive conditional expr
 
