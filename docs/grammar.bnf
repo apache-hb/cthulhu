@@ -2,36 +2,33 @@ unit: decl
     | decl unit
     ;
 
-decl: func-decl
+decl: func
     ;
 
-func-decl: 'def' ident stmt
+func: DEF IDENT stmt
     ;
 
-stmt: '{' stmt-list '}'
-    | expr ';'
+stmt: LBRACE stmts RBRACE
+    | expr SEMI
     ;
 
-stmt-list:
-    | stmt stmt-list
+stmts:
+    | stmt stmts
     ;
 
-expr: digit
-    | expr '+' expr
-    | expr '-' expr
-    | expr '*' expr
-    | expr '/' expr
-    | expr '%' expr
-    | '(' expr ')'
-    | '+' expr
-    | '-' expr
-    | expr '(' ')'
-    | expr '(' expr-list ')'
-    | expr '?' expr ':' expr
+expr: primary
+    | expr ADD expr
+    | expr SUB expr
+    | expr DIV expr
+    | expr MUL expr
+    | expr REM expr
+    | expr QUESTION expr COLON expr
     ;
 
-expr-list: expr
-    | expr ',' expr-list
+primary: DIGIT
+    | ADD expr
+    | SUB expr
+    | LPAREN expr RPAREN
     ;
 
 digit: [0-9]+ 
