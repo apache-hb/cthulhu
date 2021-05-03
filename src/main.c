@@ -1,6 +1,7 @@
 #include "ast.h"
 #include "bison.h"
 #include "flex.h"
+#include "sema.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,15 +12,21 @@ int main(int argc, const char **argv) {
         return 1;
     }
     
-    FILE* file = stdin; //fopen(argv[1], "r");
+    FILE* file = fopen(argv[1], "r");
     void *scanner;
+    node_t *ast;
 
     yylex_init(&scanner);
     yyset_in(file, scanner);
 
-    int err = yyparse(scanner);
+    int err = yyparse(scanner, &ast);
 
     yylex_destroy(scanner);
+
+    dump_node(ast);
+    printf("\n");
+
+    sema(ast);
 
     return err;
 }
