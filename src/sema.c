@@ -17,6 +17,20 @@ name_equals(node_t *node, char *name)
     return 0;
 }
 
+static int
+types_equal(node_t *lhs, node_t *rhs)
+{
+    if (lhs == rhs) {
+        return 1;
+    }
+
+    if ((lhs->kind | rhs->kind) == NODE_BUILTIN_TYPE) {
+        return strcmp(lhs->name, rhs->name) == 0;
+    }
+
+    return 0;
+}
+
 static node_t*
 lookup_name(state_t *self, char *name)
 {
@@ -114,23 +128,17 @@ sema_func(state_t *self, node_t *func)
 static node_t*
 sema_var(state_t *self, node_t *var)
 {
-    node_t *init = resolve_type(self, var->decl.var.init);
-    
-    printf("var %s %s\n", var->decl.name, init->decl.name);
+    node_t *init_type = resolve_type(self, var->decl.var.init);
 
-    if (init->decl.var.type == NULL) {
+    if (var->decl.var.type == NULL) {
         printf("inferring\n");
-        init->decl.var.type = init;
+        var->decl.var.type = init_type;
     } else {
-        printf("resolving %p\n", init->decl.var.type);
-        RESOLVE_TYPE(self, init->decl.var.type);
+        printf("resolving\n");
+        RESOLVE_TYPE(self, var->decl.var.type);
     }
-
-    printf("var %s\n", var->decl.name);
-    dump_node(init->decl.var.type);
-    printf("\n");
     
-    if (init->decl.var.type != init) {
+    if (!types_equal(var->decl.var.type, init_type)) {
         ERRF(self, "var `%s` has incompatible type and initializer\n", var->decl.name);
     }
 
