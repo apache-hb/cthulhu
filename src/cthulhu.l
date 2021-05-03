@@ -13,6 +13,7 @@
 [ \r\n\t] ;
 [0-9]+ { yylval->text = strdup(yytext); return DIGIT; }
 "def" { return DEF; }
+"return" { return RETURN; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 ";" { return SEMI; }
 "+" { return ADD; }
@@ -22,6 +23,7 @@
 "%" { return REM; }
 "?" { return QUESTION; }
 ":" { return COLON; }
+"," { return COMMA; }
 "(" { return LPAREN; }
 ")" { return RPAREN; }
 "{" { return LBRACE; }

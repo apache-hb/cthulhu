@@ -4,6 +4,7 @@
 %define parse.error verbose // these messages are still awful but better than nothing
 %lex-param { void *scanner }
 %parse-param { void *scanner }
+%parse-param { struct node_t **node }
 %define api.pure full
 
 %{
@@ -21,6 +22,7 @@ int yyerror();
 %union {
     char *text;
     struct node_t *node;
+    struct nodes_t *nodes;
 }
 
 /* tokens from flex */
@@ -31,6 +33,7 @@ int yyerror();
 /* keywords */
 %token
     DEF "def"
+    RETURN "return"
 
 /* math ops */
 %token 
@@ -53,44 +56,53 @@ int yyerror();
     DOT "."
     END 0 "end of file"
 
-%type<node> primary call postfix unary multiplicative additive conditional expr
+%type<node> 
+    primary call postfix unary multiplicative additive conditional expr 
+    decl func stmt type
+
+%type<nodes>
+    exprs stmts decls
 
 %start unit
 
 %%
 
-unit: decls END
+unit: decls END { *node = new_compound($1); }
     ;
 
-decls: decl
-    | decl decls
+decls: decl { $$ = new_node_list($1); }
+    | decls decl { $$ = node_append($1, $2); }
     ;
 
-decl: func
+decl: func { $$ = $1; }
     ;
 
-func: DEF IDENT stmt
+func: DEF IDENT[name] stmt[body] { $$ = new_func($name, NULL, $body); }
+    | DEF IDENT[name] COLON type[res] stmt[body] { $$ = new_func($name, $res, $body); }
     ;
 
-stmt: LBRACE stmts RBRACE
-    | expr SEMI { dump_node($1); printf("\n"); }
+stmt: LBRACE stmts RBRACE { $$ = new_compound($2); }
+    | expr SEMI { $$ = $1; }
+    | RETURN SEMI { $$ = new_return(NULL); }
+    | RETURN expr SEMI { $$ = new_return($2); }
     ;
 
-stmts: %empty
-    | stmt stmts
+stmts: %empty { $$ = empty_node_list(); }
+    | stmts stmt { $$ = node_append($1, $2); }
     ;
 
 primary: DIGIT { $$ = new_digit($1); }
+    | IDENT { $$ = new_name($1); }
     | LPAREN expr[it] RPAREN { $$ = $it; }
     ;
 
-call: postfix LPAREN RPAREN
-    | postfix LPAREN exprs RPAREN
+call: postfix LPAREN RPAREN { $$ = new_call($1, empty_node_list()); }
+    | postfix LPAREN exprs[args] RPAREN { $$ = new_call($1, $args); }
     ;
 
 postfix: primary { $$ = $1; }
     //| postfix DOT IDENT
-    | call
+    | call { $$ = $1; }
     ;
 
 unary: postfix { $$ = $1; }
@@ -116,8 +128,12 @@ conditional: additive { $$ = $1; }
 expr: conditional { $$ = $1; }
     ;
 
-exprs: expr
-    | expr COMMA exprs
+exprs: expr { $$ = new_node_list($1); }
+    | exprs COMMA expr[it] { $$ = node_append($1, $it); }
+    ;
+
+type: IDENT { $$ = new_typename($1); }
+    | MUL type { $$ = new_pointer($2); }
     ;
 
 %%
