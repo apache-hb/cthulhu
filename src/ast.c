@@ -105,12 +105,22 @@ new_return(node_t *expr)
 }
 
 node_t*
-new_func(char *name, node_t *result, node_t *body)
+new_func(char *name, nodes_t *params, node_t *result, node_t *body)
 {
     node_t *node = new_node(NODE_FUNC);
     node->func.name = name;
+    node->func.params = params;
     node->func.result = result;
     node->func.body = body;
+    return node;
+}
+
+node_t*
+new_param(char *name, node_t *type)
+{
+    node_t *node = new_node(NODE_PARAM);
+    node->param.name = name;
+    node->param.type = type;
     return node;
 }
 
@@ -204,7 +214,9 @@ dump_node(node_t *node)
         printf(")");
         break;
     case NODE_FUNC:
-        printf("(def %s ", node->func.name);
+        printf("(def %s (", node->func.name);
+        dump_nodes(node->func.params);
+        printf(") ");
         if (node->func.result) {
             dump_node(node->func.result);
             printf(" ");
@@ -235,6 +247,11 @@ dump_node(node_t *node)
     case NODE_POINTER:
         printf("(ptr ");
         dump_node(node->type);
+        printf(")");
+        break;
+    case NODE_PARAM:
+        printf("(%s ", node->param.name);
+        dump_node(node->param.type);
         printf(")");
         break;
     }

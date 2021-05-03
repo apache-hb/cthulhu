@@ -18,7 +18,8 @@ typedef enum {
     NODE_NAME,
     NODE_RETURN,
     NODE_TYPENAME,
-    NODE_POINTER
+    NODE_POINTER,
+    NODE_PARAM
 } node_kind_t;
 
 typedef enum {
@@ -71,9 +72,15 @@ typedef struct node_t {
 
         struct func_t {
             char *name;
+            nodes_t *params;
             node_t *result;
             node_t *body;
         } func;
+
+        struct param_t {
+            char *name;
+            node_t *type;
+        } param;
 
         node_t *expr;
         node_t *type;
@@ -106,7 +113,10 @@ node_t*
 new_call(node_t *body, nodes_t *args);
 
 node_t*
-new_func(char *name, node_t *result, node_t *body);
+new_func(char *name, nodes_t *params, node_t *result, node_t *body);
+
+node_t*
+new_param(char *name, node_t *type);
 
 node_t*
 new_return(node_t *expr);
