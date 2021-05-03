@@ -19,7 +19,9 @@ typedef enum {
     NODE_RETURN,
     NODE_TYPENAME,
     NODE_POINTER,
-    NODE_PARAM
+    NODE_PARAM,
+    NODE_BUILTIN_TYPE,
+    NODE_VAR
 } node_kind_t;
 
 typedef enum {
@@ -48,6 +50,27 @@ typedef struct node_t {
         char *digit;
         char *name;
 
+        struct decl_t {
+            char *name;
+
+            union {
+                struct func_t {
+                    nodes_t *params;
+                    node_t *result;
+                    node_t *body;
+                } func;
+
+                struct param_t {
+                    node_t *type;
+                } param;
+
+                struct var_t {
+                    node_t *type;
+                    node_t *init;
+                } var;
+            };
+        } decl;
+
         struct unary_t {
             unary_op_t op;
             node_t *expr;
@@ -70,18 +93,6 @@ typedef struct node_t {
             nodes_t *args;
         } call;
 
-        struct func_t {
-            char *name;
-            nodes_t *params;
-            node_t *result;
-            node_t *body;
-        } func;
-
-        struct param_t {
-            char *name;
-            node_t *type;
-        } param;
-
         node_t *expr;
         node_t *type;
         nodes_t *compound;
@@ -89,7 +100,7 @@ typedef struct node_t {
 } node_t;
 
 nodes_t*
-empty_node_list();
+empty_node_list(void);
 
 nodes_t*
 new_node_list(node_t *init);
@@ -128,6 +139,12 @@ node_t*
 new_typename(char *name);
 
 node_t*
+new_builtin_type(const char *name);
+
+node_t*
+new_var(char *name, node_t *type, node_t *init);
+
+node_t*
 new_pointer(node_t *type);
 
 node_t*
@@ -135,5 +152,11 @@ new_compound(nodes_t *nodes);
 
 void
 dump_node(node_t *node);
+
+int
+node_is_decl(node_t *node);
+
+int
+node_is_type(node_t *node);
 
 #endif /* AST_H */
