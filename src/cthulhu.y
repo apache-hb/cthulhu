@@ -4,8 +4,7 @@
 %define parse.error verbose // these messages are still awful but better than nothing
 %define api.pure full
 %lex-param { void *scanner }
-%parse-param { void *scanner }
-%parse-param { struct node_t **node }
+%parse-param { void *scanner } { struct node_t **node }
 %locations
 
 %{
@@ -34,6 +33,7 @@ int yyerror();
 /* keywords */
 %token
     DEF "def"
+    VAR "var"
     RETURN "return"
 
 /* math ops */
@@ -55,11 +55,12 @@ int yyerror();
     QUESTION "?"
     COLON ":"
     DOT "."
+    ASSIGN "="
     END 0 "end of file"
 
 %type<node> 
     primary call postfix unary multiplicative additive conditional expr 
-    decl func stmt type param
+    decl func stmt type param result var
 
 %type<nodes>
     exprs stmts decls params fparams
@@ -76,12 +77,17 @@ decls: decl { $$ = new_node_list($1); }
     ;
 
 decl: func { $$ = $1; }
+    | var { $$ = $1; }
     ;
 
-func: DEF IDENT[name] stmt[body] { $$ = new_func($name, empty_node_list(), NULL, $body); }
-    | DEF IDENT[name] COLON type[res] stmt[body] { $$ = new_func($name, empty_node_list(), $res, $body); }
-    | DEF IDENT[name] fparams[args] stmt[body] { $$ = new_func($name, $args, NULL, $body); }
-    | DEF IDENT[name] fparams[args] COLON type[res] stmt[body] { $$ = new_func($name, $args, $res, $body); }
+var: VAR IDENT[name] result[it] ASSIGN expr[init] SEMI { $$ = new_var($name, $it, $init); }
+    ;
+
+func: DEF IDENT[name] fparams[args] result[res] stmt[body] { $$ = new_func($name, $args, $res, $body); }
+    ;
+
+result: %empty { $$ = NULL; } 
+    | COLON type { $$ = $2; }
     ;
 
 fparams: LPAREN RPAREN { $$ = empty_node_list(); }
@@ -99,6 +105,7 @@ stmt: LBRACE stmts RBRACE { $$ = new_compound($2); }
     | expr SEMI { $$ = $1; }
     | RETURN SEMI { $$ = new_return(NULL); }
     | RETURN expr SEMI { $$ = new_return($2); }
+    | var
     ;
 
 stmts: %empty { $$ = empty_node_list(); }

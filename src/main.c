@@ -23,10 +23,35 @@ int main(int argc, const char **argv) {
 
     yylex_destroy(scanner);
 
+    if (err) {
+        return err;
+    }
+
     dump_node(ast);
     printf("\n");
 
-    sema(ast);
+    state_t state;
+
+    state.inttype = new_builtin_type("int");
+    state.voidtype = new_builtin_type("void");
+    state.booltype = new_builtin_type("bool");
+
+    nodes_t *types = empty_node_list();
+    types = node_append(types, state.inttype);
+    types = node_append(types, state.voidtype);
+    types = node_append(types, state.booltype);
+
+    state.decls = types;
+
+    sema(&state, ast);
+
+    if (state.errors > 0) {
+        fprintf(stderr, "%d compilation error(s), aborting\n", state.errors);
+        return 1;
+    }
+
+    dump_node(ast);
+    printf("\n");
 
     return err;
 }

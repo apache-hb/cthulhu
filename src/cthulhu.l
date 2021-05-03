@@ -25,6 +25,7 @@
 [0-9]+ { yylval->text = strdup(yytext); return DIGIT; }
 "def" { return DEF; }
 "return" { return RETURN; }
+"var" { return VAR; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 ";" { return SEMI; }
 "+" { return ADD; }
@@ -35,6 +36,7 @@
 "?" { return QUESTION; }
 ":" { return COLON; }
 "," { return COMMA; }
+"=" { return ASSIGN; }
 "(" { return LPAREN; }
 ")" { return RPAREN; }
 "{" { return LBRACE; }

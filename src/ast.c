@@ -13,6 +13,14 @@ new_node(node_kind_t kind)
     return node;
 }
 
+static node_t*
+new_decl(node_kind_t kind, char *name)
+{
+    node_t *node = new_node(kind);
+    node->decl.name = name;
+    return node;
+}
+
 static nodes_t*
 new_nodes(size_t size)
 {
@@ -24,7 +32,7 @@ new_nodes(size_t size)
 }
 
 nodes_t*
-empty_node_list()
+empty_node_list(void)
 {
     nodes_t *nodes = new_nodes(4);
     return nodes;
@@ -107,20 +115,18 @@ new_return(node_t *expr)
 node_t*
 new_func(char *name, nodes_t *params, node_t *result, node_t *body)
 {
-    node_t *node = new_node(NODE_FUNC);
-    node->func.name = name;
-    node->func.params = params;
-    node->func.result = result;
-    node->func.body = body;
+    node_t *node = new_decl(NODE_FUNC, name);
+    node->decl.func.params = params;
+    node->decl.func.result = result;
+    node->decl.func.body = body;
     return node;
 }
 
 node_t*
 new_param(char *name, node_t *type)
 {
-    node_t *node = new_node(NODE_PARAM);
-    node->param.name = name;
-    node->param.type = type;
+    node_t *node = new_decl(NODE_PARAM, name);
+    node->decl.param.type = type;
     return node;
 }
 
@@ -135,8 +141,24 @@ new_name(char *name)
 node_t*
 new_typename(char *name)
 {
-    node_t *node = new_node(NODE_TYPENAME);
-    node->name = name;
+    node_t *node = new_decl(NODE_TYPENAME, name);
+    return node;
+}
+
+node_t*
+new_builtin_type(const char *name)
+{
+    return new_decl(NODE_BUILTIN_TYPE, strdup(name));
+}
+
+node_t*
+new_var(char *name, node_t *type, node_t *init)
+{
+    node_t *node = new_decl(NODE_VAR, name);
+    node->decl.var.type = type;
+    node->decl.var.init = init;
+
+    printf("%s %p %p\n", name, type, init);
     return node;
 }
 
@@ -214,14 +236,14 @@ dump_node(node_t *node)
         printf(")");
         break;
     case NODE_FUNC:
-        printf("(def %s (", node->func.name);
-        dump_nodes(node->func.params);
+        printf("(def %s (", node->decl.name);
+        dump_nodes(node->decl.func.params);
         printf(") ");
-        if (node->func.result) {
-            dump_node(node->func.result);
+        if (node->decl.func.result) {
+            dump_node(node->decl.func.result);
             printf(" ");
         }
-        dump_node(node->func.body);
+        dump_node(node->decl.func.body);
         printf(")");
         break;
     case NODE_COMPOUND:
@@ -242,7 +264,7 @@ dump_node(node_t *node)
         }
         break;
     case NODE_TYPENAME:
-        printf("%s", node->name);
+        printf("(typename %s)", node->name);
         break;
     case NODE_POINTER:
         printf("(ptr ");
@@ -250,9 +272,43 @@ dump_node(node_t *node)
         printf(")");
         break;
     case NODE_PARAM:
-        printf("(%s ", node->param.name);
-        dump_node(node->param.type);
+        printf("(%s ", node->decl.name);
+        dump_node(node->decl.param.type);
         printf(")");
         break;
+    case NODE_BUILTIN_TYPE:
+        printf("%s", node->decl.name);
+        break;
+    case NODE_VAR:
+        printf("(var %s ", node->decl.name);
+        if (node->decl.var.type) {
+            dump_node(node->decl.var.type);
+            printf(" ");
+        }
+        dump_node(node->decl.var.init);
+        printf(")");
+        break;
+    }
+}
+
+int
+node_is_decl(node_t *node)
+{
+    switch (node->kind) {
+    case NODE_FUNC: case NODE_BUILTIN_TYPE:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+int
+node_is_type(node_t *node)
+{
+    switch (node->kind) {
+    case NODE_BUILTIN_TYPE:
+        return 1;
+    default:
+        return 0;
     }
 }
