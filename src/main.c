@@ -31,8 +31,9 @@ int main(int argc, const char **argv) {
     return err;
 }
 
-int yyerror(yyscan_t scan, const char *msg) {
+int yyerror(YYLTYPE *loc, yyscan_t scan, node_t **node, const char *msg) {
     (void)scan;
-    fprintf(stderr, "error: %s\n", msg);
+    (void)node;
+    fprintf(stderr, "error[%d:%d]: %s\n", loc->first_line, loc->first_column, msg);
     return 1;
 }

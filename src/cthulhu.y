@@ -2,10 +2,11 @@
 %defines "bison.h"
 
 %define parse.error verbose // these messages are still awful but better than nothing
+%define api.pure full
 %lex-param { void *scanner }
 %parse-param { void *scanner }
 %parse-param { struct node_t **node }
-%define api.pure full
+%locations
 
 %{
 #include <stdio.h>
@@ -58,10 +59,10 @@ int yyerror();
 
 %type<node> 
     primary call postfix unary multiplicative additive conditional expr 
-    decl func stmt type
+    decl func stmt type param
 
 %type<nodes>
-    exprs stmts decls
+    exprs stmts decls params fparams
 
 %start unit
 
@@ -77,8 +78,21 @@ decls: decl { $$ = new_node_list($1); }
 decl: func { $$ = $1; }
     ;
 
-func: DEF IDENT[name] stmt[body] { $$ = new_func($name, NULL, $body); }
-    | DEF IDENT[name] COLON type[res] stmt[body] { $$ = new_func($name, $res, $body); }
+func: DEF IDENT[name] stmt[body] { $$ = new_func($name, empty_node_list(), NULL, $body); }
+    | DEF IDENT[name] COLON type[res] stmt[body] { $$ = new_func($name, empty_node_list(), $res, $body); }
+    | DEF IDENT[name] fparams[args] stmt[body] { $$ = new_func($name, $args, NULL, $body); }
+    | DEF IDENT[name] fparams[args] COLON type[res] stmt[body] { $$ = new_func($name, $args, $res, $body); }
+    ;
+
+fparams: LPAREN RPAREN { $$ = empty_node_list(); }
+    | LPAREN params RPAREN { $$ = $2; }
+    ;
+
+params: param { $$ = new_node_list($1); }
+    | params COMMA param { $$ = node_append($1, $3); }
+    ;
+
+param: IDENT COLON type { $$ = new_param($1, $3); }
     ;
 
 stmt: LBRACE stmts RBRACE { $$ = new_compound($2); }
