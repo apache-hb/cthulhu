@@ -157,8 +157,6 @@ new_var(char *name, node_t *type, node_t *init)
     node_t *node = new_decl(NODE_VAR, name);
     node->decl.var.type = type;
     node->decl.var.init = init;
-
-    printf("%s %p %p\n", name, type, init);
     return node;
 }
 
@@ -175,6 +173,15 @@ new_compound(nodes_t *nodes)
 {
     node_t *node = new_node(NODE_COMPOUND);
     node->compound = nodes;
+    return node;
+}
+
+node_t*
+new_closure(nodes_t *args, node_t *result)
+{
+    node_t *node = new_node(NODE_CLOSURE);
+    node->closure.args = args;
+    node->closure.result = result;
     return node;
 }
 
@@ -288,6 +295,12 @@ dump_node(node_t *node)
         dump_node(node->decl.var.init);
         printf(")");
         break;
+    case NODE_CLOSURE:
+        printf("(closure ");
+        dump_node(node->closure.result);
+        printf(" (");
+        dump_nodes(node->closure.args);
+        printf(")");
     }
 }
 
@@ -295,7 +308,8 @@ int
 node_is_decl(node_t *node)
 {
     switch (node->kind) {
-    case NODE_FUNC: case NODE_BUILTIN_TYPE:
+    case NODE_FUNC: case NODE_BUILTIN_TYPE: case NODE_VAR:
+    case NODE_PARAM:
         return 1;
     default:
         return 0;

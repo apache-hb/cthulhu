@@ -56,6 +56,7 @@ int yyerror();
     COLON ":"
     DOT "."
     ASSIGN "="
+    ARROW "->"
     END 0 "end of file"
 
 %type<node> 
@@ -63,7 +64,7 @@ int yyerror();
     decl func stmt type param result var
 
 %type<nodes>
-    exprs stmts decls params fparams
+    exprs stmts decls params fparams types
 
 %start unit
 
@@ -155,6 +156,12 @@ exprs: expr { $$ = new_node_list($1); }
 
 type: IDENT { $$ = new_typename($1); }
     | MUL type { $$ = new_pointer($2); }
+    | LPAREN types[args] RPAREN ARROW type[res] { $$ = new_closure($args, $res); }
+    | LPAREN RPAREN ARROW type[res] { $$ = new_closure(empty_node_list(), $res); }
+    ;
+
+types: type { $$ = new_node_list($1); }
+    | types COMMA type[it] { $$ = node_append($1, $it); }
     ;
 
 %%

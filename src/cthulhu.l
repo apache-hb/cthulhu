@@ -41,6 +41,7 @@
 ")" { return RPAREN; }
 "{" { return LBRACE; }
 "}" { return RBRACE; }
+"->" { return ARROW; }
 <<EOF>> { return END; }
 . { fprintf(stderr, "unknown characters `%s`\n", yytext); }
 
