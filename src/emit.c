@@ -43,6 +43,13 @@ void emit_stmt(node_t *stmt)
         emit_stmt(stmt->binary.rhs);
         printf(")");
         break;
+    case NODE_UNARY:
+        switch (stmt->unary.op) {
+        case UNARY_ABS: printf("abs("); emit_stmt(stmt->unary.expr); printf(")"); break;
+        case UNARY_NEG: printf("("); emit_stmt(stmt->unary.expr); printf(" * -1)"); break;
+        default: printf("unknown unop\n"); break;
+        }
+        break;
     case NODE_CALL:
         emit_stmt(stmt->call.body);
         printf("(");
