@@ -2,6 +2,7 @@
 #include "bison.h"
 #include "flex.h"
 #include "sema.h"
+#include "emit.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -52,6 +53,8 @@ int main(int argc, const char **argv) {
 
     dump_node(ast);
     printf("\n");
+
+    emit(ast);
 
     return err;
 }

@@ -35,6 +35,8 @@ int yyerror();
     DEF "def"
     VAR "var"
     RETURN "return"
+    BOOL_TRUE "true"
+    BOOL_FALSE "false"
 
 /* math ops */
 %token 
