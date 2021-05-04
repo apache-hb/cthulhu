@@ -21,7 +21,8 @@ typedef enum {
     NODE_POINTER,
     NODE_PARAM,
     NODE_BUILTIN_TYPE,
-    NODE_VAR
+    NODE_VAR,
+    NODE_CLOSURE
 } node_kind_t;
 
 typedef enum {
@@ -93,6 +94,11 @@ typedef struct node_t {
             nodes_t *args;
         } call;
 
+        struct closure_t {
+            node_t *result;
+            nodes_t *args;
+        } closure;
+
         node_t *expr;
         node_t *type;
         nodes_t *compound;
@@ -149,6 +155,9 @@ new_pointer(node_t *type);
 
 node_t*
 new_compound(nodes_t *nodes);
+
+node_t*
+new_closure(nodes_t *args, node_t *result);
 
 void
 dump_node(node_t *node);
