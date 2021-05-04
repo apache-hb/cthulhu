@@ -26,6 +26,8 @@
 "def" { return DEF; }
 "return" { return RETURN; }
 "var" { return VAR; }
+"true" { return BOOL_TRUE; }
+"false" { return BOOL_FALSE; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 ";" { return SEMI; }
 "+" { return ADD; }

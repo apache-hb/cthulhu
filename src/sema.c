@@ -67,6 +67,10 @@ types_equal(node_t *lhs, node_t *rhs)
         return 1;
     }
 
+    if (lhs == NULL || lhs == NULL) {
+        return 0;
+    } 
+
     if ((lhs->kind | rhs->kind) == NODE_BUILTIN_TYPE) {
         return strcmp(lhs->name, rhs->name) == 0;
     }
