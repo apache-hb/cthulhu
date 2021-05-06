@@ -762,6 +762,10 @@ sema_stmt(state_t *self, node_t *stmt)
         return sema_assign(self, stmt);
     case NODE_RETURN:
         return sema_return(self, stmt);
+    case NODE_CALL: case NODE_UNARY: case NODE_BINARY:
+    case NODE_TERNARY:
+        typeof_expr(self, stmt);
+        return stmt;
     default:
         ERRF(self, "sema_stmt unknown kind %d\n", stmt->kind);
         return stmt;
