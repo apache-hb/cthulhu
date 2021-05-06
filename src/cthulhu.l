@@ -28,6 +28,9 @@
 "var" { return VAR; }
 "true" { return BOOL_TRUE; }
 "false" { return BOOL_FALSE; }
+"export" { return OPEN; }
+"final" { return FINAL; }
+\"(\\.|[^"\\])*\" { yylval->text = strdup(yytext); return STRING; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 ";" { return SEMI; }
 "+" { return ADD; }
@@ -43,6 +46,8 @@
 ")" { return RPAREN; }
 "{" { return LBRACE; }
 "}" { return RBRACE; }
+"&" { return BITAND; }
+"!" { return NOT; }
 "->" { return ARROW; }
 <<EOF>> { return END; }
 . { fprintf(stderr, "unknown characters `%s`\n", yytext); }

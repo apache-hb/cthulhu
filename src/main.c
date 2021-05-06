@@ -33,14 +33,16 @@ int main(int argc, const char **argv) {
 
     state_t state;
 
-    state.inttype = new_builtin_type("int");
-    state.voidtype = new_builtin_type("void");
-    state.booltype = new_builtin_type("bool");
+    state.inttype = new_builtin_type("int", 4, S_SIGNED);
+    state.voidtype = new_builtin_type("void", 0, S_SIGNED);
+    state.booltype = new_builtin_type("bool", 0, S_SIGNED);
+    state.chartype = new_builtin_type("char", 1, S_SIGNED);
 
     nodes_t *types = empty_node_list();
     types = node_append(types, state.inttype);
     types = node_append(types, state.voidtype);
     types = node_append(types, state.booltype);
+    types = node_append(types, state.chartype);
 
     state.decls = types;
 

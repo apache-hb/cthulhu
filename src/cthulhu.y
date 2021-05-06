@@ -23,18 +23,22 @@ int yyerror();
     char *text;
     struct node_t *node;
     struct nodes_t *nodes;
+    int cond;
 }
 
 /* tokens from flex */
 %token<text>
     DIGIT "integer literal"
     IDENT "identifier"
+    STRING "string literal"
 
 /* keywords */
 %token
     DEF "def"
     VAR "var"
     RETURN "return"
+    OPEN "open"
+    FINAL "final"
     BOOL_TRUE "true"
     BOOL_FALSE "false"
 
@@ -46,6 +50,8 @@ int yyerror();
     MUL "*"
     DIV "/"
     REM "%"
+    BITAND "&"
+    NOT "!"
 
 /* language ops */
 %token
@@ -56,14 +62,13 @@ int yyerror();
     COMMA ","
     QUESTION "?"
     COLON ":"
-    DOT "."
     ASSIGN "="
     ARROW "->"
     END 0 "end of file"
 
 %type<node> 
     primary call postfix unary multiplicative additive conditional expr 
-    decl func stmt type param result var
+    decl func stmt type param result var compound declb
 
 %type<nodes>
     exprs stmts decls params fparams types
@@ -79,14 +84,19 @@ decls: decl { $$ = new_node_list($1); }
     | decls decl { $$ = node_append($1, $2); }
     ;
 
-decl: func { $$ = $1; }
+decl: declb { $$ = $1; }
+    //| OPEN declb { $$ = add_export($2); }
+    ;
+
+declb: func { $$ = $1; }
     | var { $$ = $1; }
     ;
 
 var: VAR IDENT[name] result[it] ASSIGN expr[init] SEMI { $$ = new_var($name, $it, $init); }
+    | VAR IDENT[name] COLON type[it] SEMI { $$ = new_var($name, $it, NULL); }
     ;
 
-func: DEF IDENT[name] fparams[args] result[res] stmt[body] { $$ = new_func($name, $args, $res, $body); }
+func: DEF IDENT[name] fparams[args] result[res] compound[body] { $$ = new_func($name, $args, $res, $body); }
     ;
 
 result: %empty { $$ = NULL; } 
@@ -104,11 +114,15 @@ params: param { $$ = new_node_list($1); }
 param: IDENT COLON type { $$ = new_param($1, $3); }
     ;
 
-stmt: LBRACE stmts RBRACE { $$ = new_compound($2); }
+stmt: compound { $$ = $1; }
+    | expr ASSIGN expr SEMI { $$ = new_assign($1, $3); }
     | expr SEMI { $$ = $1; }
     | RETURN SEMI { $$ = new_return(NULL); }
     | RETURN expr SEMI { $$ = new_return($2); }
     | var
+    ;
+
+compound: LBRACE stmts RBRACE { $$ = new_compound($2); }
     ;
 
 stmts: %empty { $$ = empty_node_list(); }
@@ -116,8 +130,11 @@ stmts: %empty { $$ = empty_node_list(); }
     ;
 
 primary: DIGIT { $$ = new_digit($1); }
+    | BOOL_TRUE { $$ = new_bool(1); }
+    | BOOL_FALSE { $$ = new_bool(0); }
     | IDENT { $$ = new_name($1); }
     | LPAREN expr[it] RPAREN { $$ = $it; }
+    | STRING { $$ = new_string($1); }
     ;
 
 call: postfix LPAREN RPAREN { $$ = new_call($1, empty_node_list()); }
@@ -132,6 +149,9 @@ postfix: primary { $$ = $1; }
 unary: postfix { $$ = $1; }
     | ADD unary { $$ = new_unary(UNARY_ABS, $2); }
     | SUB unary { $$ = new_unary(UNARY_NEG, $2); }
+    | BITAND unary { $$ = new_unary(UNARY_REF, $2); }
+    | MUL unary { $$ = new_unary(UNARY_DEREF, $2); }
+    | NOT unary { $$ = new_unary(UNARY_NOT, $2); }
     ;
 
 multiplicative: unary { $$ = $1; }

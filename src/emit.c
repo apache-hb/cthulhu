@@ -2,14 +2,28 @@
 
 #include <stdio.h>
 
-void emit_type(node_t *type)
+static void 
+emit_stmt(node_t *stmt);
+
+static void 
+emit_type(node_t *type)
 {
-    if (type->kind == NODE_BUILTIN_TYPE) {
+    switch (type->kind) {
+    case NODE_BUILTIN_TYPE:
         printf("%s", type->name);
+        break;
+    case NODE_POINTER:
+        emit_type(type->type);
+        printf("*");
+        break;
+    default:
+        printf("unknown type %d\n", type->kind);
+        break;
     }
 }
 
-void emit_stmt(node_t *stmt)
+static void 
+emit_stmt(node_t *stmt)
 {
     size_t i = 0;
     switch (stmt->kind) {
@@ -47,8 +61,20 @@ void emit_stmt(node_t *stmt)
         switch (stmt->unary.op) {
         case UNARY_ABS: printf("abs("); emit_stmt(stmt->unary.expr); printf(")"); break;
         case UNARY_NEG: printf("("); emit_stmt(stmt->unary.expr); printf(" * -1)"); break;
+        case UNARY_DEREF: printf("(*"); emit_stmt(stmt->unary.expr); printf(")"); break;
+        case UNARY_REF: printf("(&"); emit_stmt(stmt->unary.expr); printf(")"); break;
+        case UNARY_NOT: printf("(!"); emit_stmt(stmt->unary.expr); printf(")"); break;
         default: printf("unknown unop\n"); break;
         }
+        break;
+    case NODE_TERNARY:
+        printf("(");
+        emit_stmt(stmt->ternary.cond);
+        printf("?");
+        emit_stmt(stmt->ternary.yes);
+        printf(":");
+        emit_stmt(stmt->ternary.no);
+        printf(")");
         break;
     case NODE_CALL:
         emit_stmt(stmt->call.body);
@@ -74,18 +100,31 @@ void emit_stmt(node_t *stmt)
     case NODE_NAME:
         printf("%s", stmt->name);
         break;
+    case NODE_ASSIGN:
+        emit_stmt(stmt->assign.old);
+        printf(" = ");
+        emit_stmt(stmt->assign.expr);
+        break;
+    case NODE_BOOL:
+        printf("%d", stmt->boolean);
+        break;
+    case NODE_STRING:
+        printf("%s", stmt->text);
+        break;
     default:
         printf("unknown node\n");
     }
 }
 
-void emit_param(node_t *decl)
+static void 
+emit_param(node_t *decl)
 {
-    emit_type(decl->decl.param.type);
+    emit_type(decl->decl.param);
     printf(" %s", decl->decl.name);
 }
 
-void emit_func(node_t *func)
+static void 
+emit_func(node_t *func)
 {
     emit_type(func->decl.func.result);
     printf(" %s(", func->decl.name);
@@ -103,22 +142,19 @@ void emit_func(node_t *func)
     }
     printf(")");
 
-    printf("{");
-
     emit_stmt(func->decl.func.body);
-
-    if (func->decl.func.body->kind != NODE_COMPOUND) {
-        printf(";");
-    }
-
-    printf("}");
 }
 
-void emit_decl(node_t *decl)
+static void 
+emit_decl(node_t *decl)
 {
     switch (decl->kind) {
     case NODE_FUNC: 
         emit_func(decl);
+        break;
+    case NODE_VAR:
+        emit_stmt(decl);
+        printf(";");
         break;
     default:
         printf("unknown decl to emit\n");
@@ -127,7 +163,8 @@ void emit_decl(node_t *decl)
     printf("\n");
 }
 
-void emit(node_t *prog)
+void 
+emit(node_t *prog)
 {
     for (size_t i = 0; i < prog->compound->length; i++) {
         emit_decl(prog->compound->data + i);

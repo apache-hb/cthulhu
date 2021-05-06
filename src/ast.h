@@ -22,12 +22,18 @@ typedef enum {
     NODE_PARAM,
     NODE_BUILTIN_TYPE,
     NODE_VAR,
-    NODE_CLOSURE
+    NODE_CLOSURE,
+    NODE_ASSIGN,
+    NODE_BOOL,
+    NODE_STRING
 } node_kind_t;
 
 typedef enum {
     UNARY_ABS,
-    UNARY_NEG
+    UNARY_NEG,
+    UNARY_REF,
+    UNARY_DEREF,
+    UNARY_NOT
 } unary_op_t;
 
 typedef enum {
@@ -38,6 +44,11 @@ typedef enum {
     BINARY_REM
 } binary_op_t;
 
+typedef enum {
+    S_SIGNED,
+    S_UNSIGNED
+} sign_t;
+
 typedef struct nodes_t {
     size_t length;
     size_t size;
@@ -45,11 +56,14 @@ typedef struct nodes_t {
 } nodes_t;
 
 typedef struct node_t {
+    /* the kind of this node */
     node_kind_t kind;
 
     union {
         char *digit;
         char *name;
+        char *text;
+        int boolean;
 
         struct decl_t {
             char *name;
@@ -61,9 +75,8 @@ typedef struct node_t {
                     node_t *body;
                 } func;
 
-                struct param_t {
-                    node_t *type;
-                } param;
+                /* param type */
+                node_t *param;
 
                 struct var_t {
                     node_t *type;
@@ -71,6 +84,22 @@ typedef struct node_t {
                 } var;
             };
         } decl;
+
+        /* builtin type */
+        struct builtin_t {
+            char *name;
+            int width;
+            sign_t sign;
+        } builtin;
+
+        /* function signature */
+        struct closure_t {
+            nodes_t *args;
+            node_t *result;
+        } closure;
+
+        /* pointer */
+        node_t *type;
 
         struct unary_t {
             unary_op_t op;
@@ -94,13 +123,12 @@ typedef struct node_t {
             nodes_t *args;
         } call;
 
-        struct closure_t {
-            node_t *result;
-            nodes_t *args;
-        } closure;
+        struct assign_t {
+            node_t *old;
+            node_t *expr;
+        } assign;
 
         node_t *expr;
-        node_t *type;
         nodes_t *compound;
     };
 } node_t;
@@ -145,10 +173,22 @@ node_t*
 new_typename(char *name);
 
 node_t*
-new_builtin_type(const char *name);
+new_builtin_type(const char *name, int width, sign_t sign);
 
 node_t*
 new_var(char *name, node_t *type, node_t *init);
+
+node_t*
+new_string(char *text);
+
+node_t*
+new_assign(node_t *old, node_t *it);
+
+node_t*
+new_bool(int val);
+
+node_t*
+new_array(node_t *type, node_t *size);
 
 node_t*
 new_pointer(node_t *type);
