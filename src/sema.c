@@ -578,6 +578,22 @@ static node_t*
 flatten_type(state_t *self, node_t *type);
 
 static node_t*
+typeof_func(state_t *self, node_t *node)
+{
+    node_t *res = flatten_type(self, node->decl.func.result);
+    nodes_t *args = empty_node_list();
+
+    for (size_t i = 0; i < node->decl.func.params->length; i++) {
+        args = node_append(args, (node->decl.func.params->data + i)->decl.param);
+    }
+
+    return new_closure(args, res);
+}
+
+static node_t*
+sema_func(state_t *self, node_t *decl);
+
+static node_t*
 typeof_decl(state_t *self, node_t *decl)
 {
     node_t *node;
@@ -585,6 +601,9 @@ typeof_decl(state_t *self, node_t *decl)
     case NODE_VAR:
         node = sema_var(self, decl);
         return node->decl.var.type;
+    case NODE_FUNC:
+        node = sema_func(self, decl);
+        return typeof_func(self, node);
     case NODE_PARAM:
         node = flatten_type(self, decl->decl.param);
         decl->decl.param = node;
@@ -629,6 +648,14 @@ typeof_expr(state_t *self, node_t *expr)
         }
 
         return lhs;
+    case NODE_CALL:
+        node = typeof_expr(self, expr->call.body);
+        if (node->kind != NODE_CLOSURE) {
+            ERR(self, "cannot invoke non-closure type\n");
+            return node;
+        }
+
+        return flatten_type(self, node->closure.result);
     default:
         ERRF(self, "typeof_expr unknown kind %d\n", expr->kind);
         return NULL;
@@ -744,7 +771,7 @@ sema_stmt(state_t *self, node_t *stmt)
 #define RESOLVE(state, node) node = flatten_type(state, node)
 
 static node_t*
-sema_global_func(state_t *self, node_t *decl)
+sema_func(state_t *self, node_t *decl)
 {
     state_t nest = new_state(self);
 
@@ -770,7 +797,7 @@ sema_decl(state_t *self, node_t *decl)
 {
     switch (decl->kind) {
     case NODE_FUNC: 
-        return sema_global_func(self, decl);
+        return sema_func(self, decl);
     case NODE_VAR:
         return sema_var(self, decl);
     default:
