@@ -1,0 +1,7 @@
+def empty1() {
+
+}
+
+def empty2() {
+    empty1();
+}

@@ -1,0 +1,7 @@
+def a(i: int) {
+
+}
+
+def b() {
+    var x = a(1);
+}

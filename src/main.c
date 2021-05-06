@@ -7,13 +7,37 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+int dump_ast = 0,
+    dump_sema = 0,
+    dump_ir = 0;
+
 int main(int argc, const char **argv) {
     if (argc < 2) {
         fprintf(stderr, "%s: provide input file\n", argv[0]);
         return 1;
     }
+
+    FILE* file;
     
-    FILE* file = fopen(argv[1], "r");
+    for (int i = 1; i < argc; i++) {
+        const char *arg = argv[i];
+
+        if (strcmp(arg, "--dump-ast") == 0) {
+            dump_ast = 1;
+        } else if (strcmp(arg, "--dump-sema") == 0) {
+            dump_sema = 1;
+        } else if (strcmp(arg, "--dump-ir") == 0) {
+            dump_ir = 1;
+        } else {
+            file = fopen(arg, "r");
+
+            if (!file) {
+                fprintf(stderr, "failed to open source file `%s`\n", arg);
+                return 1;
+            }
+        }  
+    }
+
     void *scanner;
     node_t *ast;
 
@@ -28,15 +52,17 @@ int main(int argc, const char **argv) {
         return err;
     }
 
-    dump_node(ast);
-    printf("\n");
+    if (dump_ast) {
+        dump_node(ast);
+        printf("\n");
+    }
 
     state_t state;
 
-    state.inttype = new_builtin_type("int", 4, S_SIGNED);
-    state.voidtype = new_builtin_type("void", 0, S_SIGNED);
-    state.booltype = new_builtin_type("bool", 0, S_SIGNED);
-    state.chartype = new_builtin_type("char", 1, S_SIGNED);
+    state.inttype = new_builtin_type("int");
+    state.voidtype = new_builtin_type("void");
+    state.booltype = new_builtin_type("bool");
+    state.chartype = new_builtin_type("char");
 
     nodes_t *types = empty_node_list();
     types = node_append(types, state.inttype);
@@ -53,8 +79,10 @@ int main(int argc, const char **argv) {
         return 1;
     }
 
-    dump_node(ast);
-    printf("\n");
+    if (dump_sema) {
+        dump_node(ast);
+        printf("\n");
+    }
 
     emit(ast);
 

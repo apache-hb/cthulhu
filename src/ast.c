@@ -10,6 +10,7 @@ new_node(node_kind_t kind)
 {
     node_t *node = malloc(sizeof(node_t));
     node->kind = kind;
+    node->mut = 0;
     return node;
 }
 
@@ -56,6 +57,31 @@ node_append(nodes_t *self, node_t *node)
     memcpy(self->data + self->length, node, sizeof(node_t));
     self->length += 1;
     return self;
+}
+
+nodes_t*
+node_replace(nodes_t *self, size_t idx, node_t *node)
+{
+    memcpy(self->data + idx, node, sizeof(node_t));
+    return self;
+}
+
+node_t*
+set_exported(node_t *decl, int exported)
+{
+    switch (decl->kind) {
+    case NODE_FUNC:
+        decl->decl.func.exported = exported;
+        break;
+    case NODE_VAR:
+        decl->decl.var.exported = exported;
+        break;
+    default:
+        fprintf(stderr, "set_exported(%d) unknown kind\n", decl->kind);
+        break;
+    }
+
+    return decl;
 }
 
 node_t*
@@ -116,6 +142,7 @@ node_t*
 new_func(char *name, nodes_t *params, node_t *result, node_t *body)
 {
     node_t *node = new_decl(NODE_FUNC, name);
+    node->decl.func.exported = 0;
     node->decl.func.params = params;
     node->decl.func.result = result;
     node->decl.func.body = body;
@@ -147,19 +174,18 @@ new_typename(char *name)
 }
 
 node_t*
-new_builtin_type(const char *name, int width, sign_t sign)
+new_builtin_type(const char *name)
 {
-    node_t *node = new_node(NODE_BUILTIN_TYPE);
-    node->builtin.name = strdup(name);
-    node->builtin.width = width;
-    node->builtin.sign = sign;
+    node_t *node = new_decl(NODE_BUILTIN_TYPE, strdup(name));
     return node;
 }
 
 node_t*
-new_var(char *name, node_t *type, node_t *init)
+new_var(char *name, node_t *type, node_t *init, int mut)
 {
     node_t *node = new_decl(NODE_VAR, name);
+    node->mut = mut;
+    node->decl.var.exported = 0;
     node->decl.var.type = type;
     node->decl.var.init = init;
     return node;
@@ -215,6 +241,15 @@ new_string(char *text)
     return node;
 }
 
+node_t*
+new_access(node_t *expr, char *field)
+{
+    node_t *node = new_node(NODE_ACCESS);
+    node->access.expr = expr;
+    node->access.field = field;
+    return node;
+}
+
 static void
 dump_nodes(nodes_t *nodes)
 {
@@ -224,6 +259,18 @@ dump_nodes(nodes_t *nodes)
         }
         dump_node(nodes->data + i);
     }
+}
+
+static const char*
+dump_mut(int i)
+{
+    return i ? "mut" : "const";
+}
+
+static const char*
+dump_export(int i)
+{
+    return i ? "public" : "private";
 }
 
 void
@@ -278,7 +325,7 @@ dump_node(node_t *node)
         printf(")");
         break;
     case NODE_FUNC:
-        printf("(def %s (", node->decl.name);
+        printf("(def %s %s (", dump_export(node->decl.func.exported), node->decl.name);
         dump_nodes(node->decl.func.params);
         printf(") ");
         if (node->decl.func.result) {
@@ -319,10 +366,10 @@ dump_node(node_t *node)
         printf(")");
         break;
     case NODE_BUILTIN_TYPE:
-        printf("(builtin %s)", node->builtin.name);
+        printf("(builtin %s)", node->decl.name);
         break;
     case NODE_VAR:
-        printf("(var %s", node->decl.name);
+        printf("(var %s %s %s", dump_export(node->decl.var.exported), dump_mut(node->mut), node->decl.name);
         if (node->decl.var.type) {
             printf(" ");
             dump_node(node->decl.var.type);
@@ -353,28 +400,10 @@ dump_node(node_t *node)
     case NODE_STRING:
         printf("%s", node->text);
         break;
-    }
-}
-
-int
-node_is_decl(node_t *node)
-{
-    switch (node->kind) {
-    case NODE_FUNC: case NODE_BUILTIN_TYPE: case NODE_VAR:
-    case NODE_PARAM:
-        return 1;
-    default:
-        return 0;
-    }
-}
-
-int
-node_is_type(node_t *node)
-{
-    switch (node->kind) {
-    case NODE_BUILTIN_TYPE:
-        return 1;
-    default:
-        return 0;
+    case NODE_ACCESS:
+        printf("(");
+        dump_node(node->access.expr);
+        printf(" %s)", node->access.field);
+        break;
     }
 }

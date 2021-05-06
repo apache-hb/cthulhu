@@ -16,6 +16,9 @@ emit_type(node_t *type)
         emit_type(type->type);
         printf("*");
         break;
+    case NODE_TYPENAME:
+        fprintf(stderr, "typename(%s) leaked past sema\n", type->name);
+        break;
     default:
         printf("unknown type %d\n", type->kind);
         break;
