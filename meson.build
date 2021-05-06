@@ -19,6 +19,8 @@ parse = custom_target('parse',
     depends : lex
 )
 
-executable('cthulhu', parse, lex, 'src/ast.c', 'src/main.c', 'src/sema.c', 'src/emit.c',
+ctc = executable('cthulhu', parse, lex, 'src/ast.c', 'src/main.c', 'src/sema.c', 'src/emit.c',
     include_directories : 'src'
 )
+
+subdir('tests')

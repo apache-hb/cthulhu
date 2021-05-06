@@ -8,24 +8,34 @@ typedef struct node_t node_t;
 typedef struct nodes_t nodes_t;
 
 typedef enum {
+    /* literals */
     NODE_DIGIT,
+    NODE_STRING,
+    NODE_BOOL,
+
+    /* expressions */
     NODE_UNARY,
     NODE_BINARY,
     NODE_TERNARY,
     NODE_CALL,
-    NODE_FUNC,
-    NODE_COMPOUND,
     NODE_NAME,
+    NODE_ACCESS,
+
+    /* statements */
+    NODE_COMPOUND,
     NODE_RETURN,
+    NODE_ASSIGN,
+
+    /* decls */
+    NODE_FUNC,
+    NODE_VAR,
+    NODE_PARAM,
+
+    /* types */
     NODE_TYPENAME,
     NODE_POINTER,
-    NODE_PARAM,
     NODE_BUILTIN_TYPE,
-    NODE_VAR,
-    NODE_CLOSURE,
-    NODE_ASSIGN,
-    NODE_BOOL,
-    NODE_STRING
+    NODE_CLOSURE
 } node_kind_t;
 
 typedef enum {
@@ -44,11 +54,6 @@ typedef enum {
     BINARY_REM
 } binary_op_t;
 
-typedef enum {
-    S_SIGNED,
-    S_UNSIGNED
-} sign_t;
-
 typedef struct nodes_t {
     size_t length;
     size_t size;
@@ -58,6 +63,8 @@ typedef struct nodes_t {
 typedef struct node_t {
     /* the kind of this node */
     node_kind_t kind;
+    /* nearly everything is mutable or not */
+    int mut;
 
     union {
         char *digit;
@@ -70,6 +77,7 @@ typedef struct node_t {
 
             union {
                 struct func_t {
+                    int exported;
                     nodes_t *params;
                     node_t *result;
                     node_t *body;
@@ -79,18 +87,12 @@ typedef struct node_t {
                 node_t *param;
 
                 struct var_t {
+                    int exported;
                     node_t *type;
                     node_t *init;
                 } var;
             };
         } decl;
-
-        /* builtin type */
-        struct builtin_t {
-            char *name;
-            int width;
-            sign_t sign;
-        } builtin;
 
         /* function signature */
         struct closure_t {
@@ -128,6 +130,11 @@ typedef struct node_t {
             node_t *expr;
         } assign;
 
+        struct access_t {
+            node_t *expr;
+            char *field;
+        } access;
+
         node_t *expr;
         nodes_t *compound;
     };
@@ -142,8 +149,17 @@ new_node_list(node_t *init);
 nodes_t*
 node_append(nodes_t *self, node_t *node);
 
+nodes_t*
+node_replace(nodes_t *self, size_t idx, node_t *node);
+
+node_t*
+set_exported(node_t *decl, int exported);
+
 node_t*
 new_digit(char *digit);
+
+node_t*
+new_access(node_t *expr, char *field);
 
 node_t*
 new_unary(unary_op_t op, node_t *expr);
@@ -173,10 +189,10 @@ node_t*
 new_typename(char *name);
 
 node_t*
-new_builtin_type(const char *name, int width, sign_t sign);
+new_builtin_type(const char *name);
 
 node_t*
-new_var(char *name, node_t *type, node_t *init);
+new_var(char *name, node_t *type, node_t *init, int mut);
 
 node_t*
 new_string(char *text);
@@ -201,11 +217,5 @@ new_closure(nodes_t *args, node_t *result);
 
 void
 dump_node(node_t *node);
-
-int
-node_is_decl(node_t *node);
-
-int
-node_is_type(node_t *node);
 
 #endif /* AST_H */

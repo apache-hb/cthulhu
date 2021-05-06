@@ -1,0 +1,7 @@
+def a(i: int, c: bool) {
+
+}
+
+def b() {
+    a(1, false);
+}

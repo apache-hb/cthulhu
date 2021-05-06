@@ -37,7 +37,7 @@ int yyerror();
     DEF "def"
     VAR "var"
     RETURN "return"
-    OPEN "open"
+    EXPORT "export"
     FINAL "final"
     BOOL_TRUE "true"
     BOOL_FALSE "false"
@@ -64,11 +64,15 @@ int yyerror();
     COLON ":"
     ASSIGN "="
     ARROW "->"
+    DOT "."
     END 0 "end of file"
 
 %type<node> 
     primary call postfix unary multiplicative additive conditional expr 
-    decl func stmt type param result var compound declb
+    decl func stmt type param result var compound declb init
+
+%type<cond>
+    mut
 
 %type<nodes>
     exprs stmts decls params fparams types
@@ -85,15 +89,22 @@ decls: decl { $$ = new_node_list($1); }
     ;
 
 decl: declb { $$ = $1; }
-    //| OPEN declb { $$ = add_export($2); }
+    | EXPORT declb { $$ = set_exported($2, 1); }
     ;
 
 declb: func { $$ = $1; }
     | var { $$ = $1; }
     ;
 
-var: VAR IDENT[name] result[it] ASSIGN expr[init] SEMI { $$ = new_var($name, $it, $init); }
-    | VAR IDENT[name] COLON type[it] SEMI { $$ = new_var($name, $it, NULL); }
+var: mut[m] IDENT[name] result[it] init[i] SEMI { $$ = new_var($name, $it, $i, $m); }
+    ;
+
+init: %empty { $$ = NULL; }
+    | ASSIGN expr { $$ = $2; }
+    ;
+
+mut: VAR { $$ = 1; }
+    | FINAL { $$ = 0; }
     ;
 
 func: DEF IDENT[name] fparams[args] result[res] compound[body] { $$ = new_func($name, $args, $res, $body); }
@@ -142,7 +153,7 @@ call: postfix LPAREN RPAREN { $$ = new_call($1, empty_node_list()); }
     ;
 
 postfix: primary { $$ = $1; }
-    //| postfix DOT IDENT
+    | postfix DOT IDENT { $$ = new_access($1, $3); }
     | call { $$ = $1; }
     ;
 

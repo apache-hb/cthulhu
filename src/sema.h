@@ -21,8 +21,6 @@ typedef struct state_t {
     int errors;
 } state_t;
 
-state_t new_state(state_t *parent);
-
 void sema(state_t *self, node_t *program);
 
 #endif /* SEMA_H */
