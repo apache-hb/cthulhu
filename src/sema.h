@@ -3,6 +3,7 @@
 
 #include "ast.h"
 
+/* semantic analysis stuff */
 typedef struct state_t {
     struct state_t *parent;
     
@@ -12,13 +13,15 @@ typedef struct state_t {
     node_t *inttype;
     node_t *voidtype;
     node_t *booltype;
+    node_t *chartype;
 
     node_t *ret;
+
     /* number of errors */
     int errors;
 } state_t;
 
-state_t *new_state(state_t *parent);
+state_t new_state(state_t *parent);
 
 void sema(state_t *self, node_t *program);
 

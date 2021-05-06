@@ -126,7 +126,7 @@ node_t*
 new_param(char *name, node_t *type)
 {
     node_t *node = new_decl(NODE_PARAM, name);
-    node->decl.param.type = type;
+    node->decl.param = type;
     return node;
 }
 
@@ -141,14 +141,19 @@ new_name(char *name)
 node_t*
 new_typename(char *name)
 {
-    node_t *node = new_decl(NODE_TYPENAME, name);
+    node_t *node = new_node(NODE_TYPENAME);
+    node->name = name;
     return node;
 }
 
 node_t*
-new_builtin_type(const char *name)
+new_builtin_type(const char *name, int width, sign_t sign)
 {
-    return new_decl(NODE_BUILTIN_TYPE, strdup(name));
+    node_t *node = new_node(NODE_BUILTIN_TYPE);
+    node->builtin.name = strdup(name);
+    node->builtin.width = width;
+    node->builtin.sign = sign;
+    return node;
 }
 
 node_t*
@@ -157,6 +162,15 @@ new_var(char *name, node_t *type, node_t *init)
     node_t *node = new_decl(NODE_VAR, name);
     node->decl.var.type = type;
     node->decl.var.init = init;
+    return node;
+}
+
+node_t*
+new_assign(node_t *old, node_t *expr)
+{
+    node_t *node = new_node(NODE_ASSIGN);
+    node->assign.old = old;
+    node->assign.expr = expr;
     return node;
 }
 
@@ -185,6 +199,22 @@ new_closure(nodes_t *args, node_t *result)
     return node;
 }
 
+node_t*
+new_bool(int val)
+{
+    node_t *node = new_node(NODE_BOOL);
+    node->boolean = val;
+    return node;
+}
+
+node_t*
+new_string(char *text)
+{
+    node_t *node = new_node(NODE_STRING);
+    node->text = text;
+    return node;
+}
+
 static void
 dump_nodes(nodes_t *nodes)
 {
@@ -208,6 +238,9 @@ dump_node(node_t *node)
         switch (node->unary.op) {
         case UNARY_ABS: printf("abs "); break;
         case UNARY_NEG: printf("neg "); break;
+        case UNARY_REF: printf("ref "); break;
+        case UNARY_DEREF: printf("deref "); break;
+        case UNARY_NOT: printf("not "); break;
         } 
         dump_node(node->unary.expr);
         printf(")");
@@ -238,8 +271,10 @@ dump_node(node_t *node)
     case NODE_CALL:
         printf("(call ");
         dump_node(node->call.body);
-        printf(" ");
-        dump_nodes(node->call.args);
+        if (node->call.args->length) {
+            printf(" ");
+            dump_nodes(node->call.args);
+        }
         printf(")");
         break;
     case NODE_FUNC:
@@ -280,19 +315,22 @@ dump_node(node_t *node)
         break;
     case NODE_PARAM:
         printf("(%s ", node->decl.name);
-        dump_node(node->decl.param.type);
+        dump_node(node->decl.param);
         printf(")");
         break;
     case NODE_BUILTIN_TYPE:
-        printf("%s", node->decl.name);
+        printf("(builtin %s)", node->builtin.name);
         break;
     case NODE_VAR:
-        printf("(var %s ", node->decl.name);
+        printf("(var %s", node->decl.name);
         if (node->decl.var.type) {
-            dump_node(node->decl.var.type);
             printf(" ");
+            dump_node(node->decl.var.type);
         }
-        dump_node(node->decl.var.init);
+        if (node->decl.var.init) {
+            printf(" ");
+            dump_node(node->decl.var.init);
+        }
         printf(")");
         break;
     case NODE_CLOSURE:
@@ -301,6 +339,20 @@ dump_node(node_t *node)
         printf(" (");
         dump_nodes(node->closure.args);
         printf(")");
+        break;
+    case NODE_ASSIGN:
+        printf("(assign ");
+        dump_node(node->assign.old);
+        printf(" ");
+        dump_node(node->assign.expr);
+        printf(")");
+        break;
+    case NODE_BOOL:
+        printf("%s", node->boolean ? "true" : "false");
+        break;
+    case NODE_STRING:
+        printf("%s", node->text);
+        break;
     }
 }
 
