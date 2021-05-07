@@ -1,0 +1,20 @@
+def one() {
+    1;
+}
+def two(): int {
+    return 2;
+}
+def three(): int {
+    return 3;
+}
+def four(): int {
+    return 4;
+}
+
+def five(i: int): int {
+    return i * 5;
+}
+
+def many(a: int, b: int, c: int): int {
+    return a * b + c;
+}

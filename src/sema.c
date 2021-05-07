@@ -154,6 +154,20 @@ resolve_call(state_t *self, node_t *node)
 }
 
 static node_t*
+sema_return(state_t *self, node_t *decl)
+{
+    node_t *result = decl->expr
+        ? resolve_type(self, decl->expr)
+        : get_voidtype(self);
+
+    if (!convertible_to(self, self->ret, result)) {
+        ERR(self, "incompatible return types\n");
+    }
+
+    return decl;
+}
+
+static node_t*
 sema_stmt(state_t *self, node_t *decl)
 {
     state_t nest;
@@ -171,6 +185,14 @@ sema_stmt(state_t *self, node_t *decl)
         break;
     case NODE_VAR:
         decl = add_decl(self, sema_var(self, decl));
+        break;
+    case NODE_DIGIT:
+        break;
+    case NODE_BINARY:
+        resolve_type(self, decl);
+        break;
+    case NODE_RETURN:
+        decl = sema_return(self, decl);
         break;
     default:
         ERRF(self, "sema_stmt(%d) unknown kind\n", decl->kind);
@@ -321,6 +343,8 @@ resolve_type(state_t *self, node_t *node)
         return resolve_type(self, sema_var(self, node)->decl.var.type);
     case NODE_FUNC:
         return resolve_func(self, node);
+    case NODE_PARAM:
+        return resolve_type(self, node->decl.param);
     default:
         ERRF(self, "resolve_type(%d) unknown kind\n", node->kind);
         return node;

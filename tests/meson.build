@@ -41,6 +41,7 @@ func = [
     [ 'func.arg3', true ],
     [ 'func.arg4', true ],
     [ 'func.arg5', false ],
+    [ 'func.mixed1', true ]
 ]
 
 foreach case : parse + sema + func
