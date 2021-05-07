@@ -25,11 +25,13 @@ typedef enum {
     NODE_COMPOUND,
     NODE_RETURN,
     NODE_ASSIGN,
+    NODE_BRANCH,
 
     /* decls */
     NODE_FUNC,
     NODE_VAR,
     NODE_PARAM,
+    NODE_RECORD,
 
     /* types */
     NODE_TYPENAME,
@@ -74,10 +76,12 @@ typedef struct node_t {
 
         struct decl_t {
             char *name;
+            
+            /* NODE_PARAM doesnt care about this but everything else does */
+            int exported;
 
             union {
                 struct func_t {
-                    int exported;
                     nodes_t *params;
                     node_t *result;
                     node_t *body;
@@ -87,12 +91,19 @@ typedef struct node_t {
                 node_t *param;
 
                 struct var_t {
-                    int exported;
                     node_t *type;
                     node_t *init;
                 } var;
+
+                nodes_t *fields;
             };
         } decl;
+
+        struct branch_t {
+            node_t *cond;
+            node_t *body;
+            node_t *next;
+        } branch;
 
         /* function signature */
         struct closure_t {
@@ -214,6 +225,12 @@ new_compound(nodes_t *nodes);
 
 node_t*
 new_closure(nodes_t *args, node_t *result);
+
+node_t*
+new_branch(node_t *cond, node_t *body, node_t *next);
+
+node_t*
+new_record(char *name, nodes_t *fields);
 
 void
 dump_node(node_t *node);

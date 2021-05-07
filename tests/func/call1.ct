@@ -1,0 +1,7 @@
+def x(): int {
+    return 1;
+}
+
+def y() {
+    x();
+}

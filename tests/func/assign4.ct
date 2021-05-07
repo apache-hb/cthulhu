@@ -1,0 +1,5 @@
+export def main(argc: int, argv: **char): int {
+    var a = argc;
+    a = a + 20;
+    return a;
+}
