@@ -30,6 +30,9 @@
 "false" { return BOOL_FALSE; }
 "export" { return EXPORT; }
 "final" { return FINAL; }
+"record" { return RECORD; }
+"if" { return IF; }
+"else" { return ELSE; }
 \"(\\.|[^"\\])*\" { yylval->text = strdup(yytext); return STRING; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 ";" { return SEMI; }

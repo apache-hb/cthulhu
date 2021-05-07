@@ -41,7 +41,16 @@ func = [
     [ 'func.arg3', true ],
     [ 'func.arg4', true ],
     [ 'func.arg5', false ],
-    [ 'func.mixed1', true ]
+    [ 'func.mixed1', true ],
+    [ 'func.call1', true ],
+    [ 'func.cond1', true ],
+    [ 'func.cond2', true ],
+    [ 'func.exit1', true ],
+    [ 'func.assign1', true ],
+    [ 'func.assign2', false ],
+    [ 'func.assign3', false ],
+    [ 'func.assign4', true ],
+    [ 'func.assign5', false ]
 ]
 
 foreach case : parse + sema + func

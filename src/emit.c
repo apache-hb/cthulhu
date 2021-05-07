@@ -10,11 +10,17 @@ emit_type(node_t *type)
 {
     switch (type->kind) {
     case NODE_BUILTIN_TYPE:
+        if (!type->mut) {
+            printf("const ");
+        }
         printf("%s", type->name);
         break;
     case NODE_POINTER:
         emit_type(type->type);
         printf("*");
+        break;
+    case NODE_RECORD:
+        printf("struct %s", type->decl.name);
         break;
     case NODE_TYPENAME:
         fprintf(stderr, "typename(%s) leaked past sema\n", type->name);
@@ -29,12 +35,15 @@ static void
 emit_stmt(node_t *stmt)
 {
     size_t i = 0;
+    node_t *node;
     switch (stmt->kind) {
     case NODE_COMPOUND:
         printf("{");
         for (; i < stmt->compound->length; i++) {
-            emit_stmt(stmt->compound->data + i);
-            printf(";");
+            node = stmt->compound->data + i;
+            emit_stmt(node);
+            if (node->kind != NODE_COMPOUND && node->kind != NODE_BRANCH)
+                printf(";");
         }
         printf("}");
         break;
@@ -114,8 +123,24 @@ emit_stmt(node_t *stmt)
     case NODE_STRING:
         printf("%s", stmt->text);
         break;
+    case NODE_BRANCH:
+        if (stmt->branch.cond) {
+            printf("if (");
+            emit_stmt(stmt->branch.cond);
+            printf(")");
+        }
+        emit_stmt(stmt->branch.body);
+        if (stmt->branch.next) {
+            printf("else");
+            emit_stmt(stmt->branch.next);
+        }
+        break;
+    case NODE_ACCESS:
+        emit_stmt(stmt->access.expr);
+        printf(".%s", stmt->access.field);
+        break;
     default:
-        printf("unknown node\n");
+        printf("unknown node %d\n", stmt->kind);
     }
 }
 
@@ -148,16 +173,37 @@ emit_func(node_t *func)
     emit_stmt(func->decl.func.body);
 }
 
+static void
+emit_record(node_t *node)
+{
+    printf("struct %s {", node->decl.name);
+    for (size_t i = 0; i < node->decl.fields->length; i++) {
+        node_t *field = (node->decl.fields->data + i);
+        emit_type(field->decl.param);
+        printf(" %s;", field->decl.name);
+    }
+    printf("};");
+}
+
 static void 
 emit_decl(node_t *decl)
 {
     switch (decl->kind) {
     case NODE_FUNC: 
+        if (!decl->decl.exported) {
+            printf("static ");
+        }
         emit_func(decl);
         break;
     case NODE_VAR:
+        if (!decl->decl.exported) {
+            printf("static ");
+        }
         emit_stmt(decl);
         printf(";");
+        break;
+    case NODE_RECORD:
+        emit_record(decl);
         break;
     default:
         printf("unknown decl to emit\n");

@@ -18,6 +18,7 @@ static node_t*
 new_decl(node_kind_t kind, char *name)
 {
     node_t *node = new_node(kind);
+    node->decl.exported = 0;
     node->decl.name = name;
     return node;
 }
@@ -69,18 +70,7 @@ node_replace(nodes_t *self, size_t idx, node_t *node)
 node_t*
 set_exported(node_t *decl, int exported)
 {
-    switch (decl->kind) {
-    case NODE_FUNC:
-        decl->decl.func.exported = exported;
-        break;
-    case NODE_VAR:
-        decl->decl.var.exported = exported;
-        break;
-    default:
-        fprintf(stderr, "set_exported(%d) unknown kind\n", decl->kind);
-        break;
-    }
-
+    decl->decl.exported = exported;
     return decl;
 }
 
@@ -142,7 +132,6 @@ node_t*
 new_func(char *name, nodes_t *params, node_t *result, node_t *body)
 {
     node_t *node = new_decl(NODE_FUNC, name);
-    node->decl.func.exported = 0;
     node->decl.func.params = params;
     node->decl.func.result = result;
     node->decl.func.body = body;
@@ -185,7 +174,6 @@ new_var(char *name, node_t *type, node_t *init, int mut)
 {
     node_t *node = new_decl(NODE_VAR, name);
     node->mut = mut;
-    node->decl.var.exported = 0;
     node->decl.var.type = type;
     node->decl.var.init = init;
     return node;
@@ -250,6 +238,24 @@ new_access(node_t *expr, char *field)
     return node;
 }
 
+node_t*
+new_branch(node_t *cond, node_t *body, node_t *next)
+{
+    node_t *node = new_node(NODE_BRANCH);
+    node->branch.cond = cond;
+    node->branch.body = body;
+    node->branch.next = next;
+    return node;
+}
+
+node_t*
+new_record(char *name, nodes_t *fields)
+{
+    node_t *node = new_decl(NODE_RECORD, name);
+    node->decl.fields = fields;
+    return node;
+}
+
 static void
 dump_nodes(nodes_t *nodes)
 {
@@ -307,7 +313,7 @@ dump_node(node_t *node)
         printf(")");
         break;
     case NODE_TERNARY:
-        printf("(if ");
+        printf("(ternary ");
         dump_node(node->ternary.cond);
         printf(" then ");
         dump_node(node->ternary.yes);
@@ -325,7 +331,7 @@ dump_node(node_t *node)
         printf(")");
         break;
     case NODE_FUNC:
-        printf("(def %s %s (", dump_export(node->decl.func.exported), node->decl.name);
+        printf("(def %s %s (", dump_export(node->decl.exported), node->decl.name);
         dump_nodes(node->decl.func.params);
         printf(") ");
         if (node->decl.func.result) {
@@ -369,7 +375,7 @@ dump_node(node_t *node)
         printf("(builtin %s)", node->decl.name);
         break;
     case NODE_VAR:
-        printf("(var %s %s %s", dump_export(node->decl.var.exported), dump_mut(node->mut), node->decl.name);
+        printf("(var %s %s %s", dump_export(node->decl.exported), dump_mut(node->mut), node->decl.name);
         if (node->decl.var.type) {
             printf(" ");
             dump_node(node->decl.var.type);
@@ -404,6 +410,26 @@ dump_node(node_t *node)
         printf("(");
         dump_node(node->access.expr);
         printf(" %s)", node->access.field);
+        break;
+    case NODE_BRANCH:
+        if (node->branch.cond) {
+            printf("(if ");
+            dump_node(node->branch.cond);
+            printf(" then ");
+        }
+        dump_node(node->branch.body);
+
+        if (node->branch.next) {
+            printf(" else ");
+            dump_node(node->branch.next);
+        }
+
+        printf(")");
+        break;
+    case NODE_RECORD:
+        printf("(record %s (", node->decl.name);
+        dump_nodes(node->decl.fields);
+        printf("))");
         break;
     }
 }

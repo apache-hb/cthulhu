@@ -6,6 +6,7 @@
 %lex-param { void *scanner }
 %parse-param { void *scanner } { struct node_t **node }
 %locations
+%expect 0 // TODO: resolve dangling else without requiring compound stmts everywhere
 
 %{
 #include <stdio.h>
@@ -38,9 +39,12 @@ int yyerror();
     VAR "var"
     RETURN "return"
     EXPORT "export"
+    RECORD "record"
     FINAL "final"
     BOOL_TRUE "true"
     BOOL_FALSE "false"
+    IF "if"
+    ELSE "else"
 
 /* math ops */
 %token 
@@ -70,12 +74,15 @@ int yyerror();
 %type<node> 
     primary call postfix unary multiplicative additive conditional expr 
     decl func stmt type param result var compound declb init
+    cond if else record field
 
 %type<cond>
     mut
 
 %type<nodes>
-    exprs stmts decls params fparams types
+    exprs stmts decls params fparams types fields
+
+%right LBRACE ELSE
 
 %start unit
 
@@ -94,6 +101,17 @@ decl: declb { $$ = $1; }
 
 declb: func { $$ = $1; }
     | var { $$ = $1; }
+    | record { $$ = $1; }
+    ;
+
+record: RECORD IDENT LBRACE fields RBRACE { $$ = new_record($2, $4); }
+    ;
+
+fields: field { $$ = new_node_list($1); }
+    | fields field { $$ = node_append($1, $2); }
+    ;
+
+field: IDENT COLON type { $$ = new_param($1, $3); }
     ;
 
 var: mut[m] IDENT[name] result[it] init[i] SEMI { $$ = new_var($name, $it, $i, $m); }
@@ -130,7 +148,18 @@ stmt: compound { $$ = $1; }
     | expr SEMI { $$ = $1; }
     | RETURN SEMI { $$ = new_return(NULL); }
     | RETURN expr SEMI { $$ = new_return($2); }
-    | var
+    | var { $$ = $1; }
+    | if { $$ = $1; }
+    ;
+
+if: IF cond compound else { $$ = new_branch($2, $3, $4); }
+    ;
+
+else: ELSE compound { $$ = new_branch(NULL, $2, NULL); }
+    | %empty { $$ = NULL; }
+    ;
+
+cond: LPAREN expr RPAREN { $$ = $2; }
     ;
 
 compound: LBRACE stmts RBRACE { $$ = new_compound($2); }

@@ -67,11 +67,6 @@ add_decl(state_t *self, node_t *decl)
 
 static int
 convertible_to(state_t *self, node_t *lhs, node_t *rhs) {
-    /* discarding const */
-    if (lhs->mut && !rhs->mut) {
-        return 0;
-    }
-
     if (lhs->kind == NODE_BUILTIN_TYPE && rhs->kind == NODE_BUILTIN_TYPE) {
         return strcmp(lhs->decl.name, rhs->decl.name) == 0;
     }
@@ -82,6 +77,9 @@ convertible_to(state_t *self, node_t *lhs, node_t *rhs) {
 
     return 0;
 }
+
+static node_t*
+sema_stmt(state_t *self, node_t *decl);
 
 static node_t*
 resolve_type(state_t *self, node_t *node);
@@ -168,6 +166,42 @@ sema_return(state_t *self, node_t *decl)
 }
 
 static node_t*
+sema_branch(state_t *self, node_t *decl)
+{
+    if (decl->branch.cond) {
+        node_t *type = resolve_type(self, decl->branch.cond);
+        if (!convertible_to(self, get_booltype(self), type) && !convertible_to(self, get_inttype(self), type)) {
+            ERR(self, "conditional must evaluate to a bool or an int");
+        }
+    }
+
+    decl->branch.body = sema_stmt(self, decl->branch.body);
+
+    if (decl->branch.next) {
+        decl->branch.next = sema_branch(self, decl->branch.next);
+    }
+
+    return decl;
+}
+
+static node_t*
+sema_assign(state_t *self, node_t *decl)
+{
+    node_t *rhs = resolve_type(self, decl->assign.expr),
+           *lhs = resolve_type(self, decl->assign.old);
+
+    if (!convertible_to(self, lhs, rhs)) {
+        ERR(self, "assigning incompatible types\n");
+    }
+
+    if (!lhs->mut) {
+        ERR(self, "cannot assign to an immutable value\n");
+    }
+
+    return decl;
+}
+
+static node_t*
 sema_stmt(state_t *self, node_t *decl)
 {
     state_t nest;
@@ -193,6 +227,12 @@ sema_stmt(state_t *self, node_t *decl)
         break;
     case NODE_RETURN:
         decl = sema_return(self, decl);
+        break;
+    case NODE_BRANCH:
+        decl = sema_branch(self, decl);
+        break;
+    case NODE_ASSIGN:
+        decl = sema_assign(self, decl);
         break;
     default:
         ERRF(self, "sema_stmt(%d) unknown kind\n", decl->kind);
@@ -228,6 +268,18 @@ sema_func(state_t *self, node_t *decl)
 }
 
 static node_t*
+sema_record(state_t *self, node_t *decl)
+{
+    for (size_t i = 0; i < decl->decl.fields->length; i++) {
+        node_t *field = decl->decl.fields->data + i;
+        field->decl.param = resolve_type(self, field->decl.param);
+        node_replace(decl->decl.fields, i, field);
+    }
+
+    return decl;
+}
+
+static node_t*
 sema_decl(state_t *self, node_t *decl)
 {
     switch (decl->kind) {
@@ -235,6 +287,8 @@ sema_decl(state_t *self, node_t *decl)
         return sema_func(self, decl);
     case NODE_VAR:
         return sema_var(self, decl);
+    case NODE_RECORD:
+        return sema_record(self, decl);
     default:
         ERRF(self, "sema_decl unknown kind %d\n", decl->kind);
         return decl;
@@ -285,13 +339,12 @@ resolve_binary(state_t *self, node_t *node)
            *rhs = resolve_type(self, node->binary.rhs);
 
     if (!convertible_to(self, lhs, rhs)) {
-        ERR(self, "incompatible binary operands");
+        ERR(self, "incompatible binary operands\n");
     }
 
     switch (node->binary.op) {
     case BINARY_ADD: case BINARY_SUB:
     case BINARY_DIV: case BINARY_MUL: case BINARY_REM:
-        printf("%s\n", lhs->decl.name);
         if (!convertible_to(self, get_inttype(self), lhs)) {
             ERR(self, "math operator applied to non-int operands\n");
         }
@@ -316,6 +369,28 @@ resolve_func(state_t *self, node_t *node)
     }
 
     return new_closure(args, res);
+}
+
+static node_t*
+resolve_access(state_t *self, node_t *node)
+{
+    const char *field = node->access.field;
+    node_t *record = resolve_type(self, node->access.expr);
+
+    if (record->kind != NODE_RECORD) {
+        ERR(self, "left hand side of access must be a record type\n");
+        return node;
+    }
+
+    for (size_t i = 0; i < record->decl.fields->length; i++) {
+        node_t *decl = record->decl.fields->data + i;
+        if (strcmp(decl->decl.name, field) == 0) {
+            return resolve_type(self, decl->decl.param);
+        }
+    }
+
+    ERRF(self, "record `%s` missing field `%s`\n", record->decl.name, field);
+    return get_voidtype(self);
 }
 
 static node_t*
@@ -345,6 +420,10 @@ resolve_type(state_t *self, node_t *node)
         return resolve_func(self, node);
     case NODE_PARAM:
         return resolve_type(self, node->decl.param);
+    case NODE_RECORD:
+        return node;
+    case NODE_ACCESS:
+        return resolve_access(self, node);
     default:
         ERRF(self, "resolve_type(%d) unknown kind\n", node->kind);
         return node;
