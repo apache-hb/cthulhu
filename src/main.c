@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int dump_ast = 0,
+static bool dump_ast = 0,
     dump_sema = 0,
     dump_ir = 0;
 
@@ -29,11 +29,11 @@ int main(int argc, const char **argv) {
         const char *arg = argv[i];
 
         if (strcmp(arg, "--dump-ast") == 0) {
-            dump_ast = 1;
+            dump_ast = true;
         } else if (strcmp(arg, "--dump-sema") == 0) {
-            dump_sema = 1;
+            dump_sema = true;
         } else if (strcmp(arg, "--dump-ir") == 0) {
-            dump_ir = 1;
+            dump_ir = true;
         } else if (strncmp(arg, OUTPUT_ARG, output_arg_len) == 0) {
             const char *path = arg + output_arg_len;
             size_t len = strlen(path) + 3;
@@ -85,16 +85,28 @@ int main(int argc, const char **argv) {
 
     state_t state;
 
-    state.inttype = new_builtin_type("int");
-    state.voidtype = new_builtin_type("void");
-    state.booltype = new_builtin_type("bool");
-    state.chartype = new_builtin_type("char");
+    state.inttype = new_builtin_type("int", SINT, 4, "int32_t");
+    state.voidtype = new_builtin_type("void", UNIT, 0, "void");
+    state.booltype = new_builtin_type("bool", BOOL, 0, "_Bool");
+    state.chartype = new_builtin_type("char", SINT, 1, "int8_t");
 
     nodes_t *types = empty_node_list();
     types = node_append(types, state.inttype);
     types = node_append(types, state.voidtype);
     types = node_append(types, state.booltype);
     types = node_append(types, state.chartype);
+    types = node_append(types, 
+        new_builtin_type("u8", UINT, 1, "uint8_t"));
+    types = node_append(types, 
+        new_builtin_type("u16", UINT, 2, "uint16_t"));
+    types = node_append(types, 
+        new_builtin_type("u32", UINT, 4, "uint32_t"));
+    types = node_append(types, 
+        new_builtin_type("u64", UINT, 8, "uint64_t"));
+    types = node_append(types, 
+        new_builtin_type("uintptr", UINT, 8, "uintptr_t"));
+    types = node_append(types, 
+        new_builtin_type("usize", UINT, 8, "size_t"));
 
     state.decls = types;
 
@@ -115,6 +127,7 @@ int main(int argc, const char **argv) {
     return err;
 }
 
+/* for syntax errors */
 int yyerror(YYLTYPE *loc, yyscan_t scan, node_t **node, const char *msg) {
     (void)scan;
     (void)node;

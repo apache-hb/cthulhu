@@ -8,12 +8,15 @@
 %locations
 %expect 0 // TODO: resolve dangling else without requiring compound stmts everywhere
 
+%code requires {
+#include "ast.h"
+}
+
 %{
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <inttypes.h>
-#include "ast.h"
 
 int yylex();
 int yyerror();
@@ -24,12 +27,13 @@ int yyerror();
     char *text;
     struct node_t *node;
     struct nodes_t *nodes;
-    int cond;
+    bool cond;
 }
 
 /* tokens from flex */
 %token<text>
     DIGIT "integer literal"
+    XDIGIT "hexadecimal integer literal"
     IDENT "identifier"
     STRING "string literal"
     MULTI_STRING "multiline string literal"
@@ -46,6 +50,7 @@ int yyerror();
     BOOL_FALSE "false"
     IF "if"
     ELSE "else"
+    AS "as"
     WHILE "while"
     BREAK "break"
     CONTINUE "continue"
@@ -70,21 +75,26 @@ int yyerror();
     COMMA ","
     QUESTION "?"
     COLON ":"
+    COLON2 "::"
     ASSIGN "="
     ARROW "->"
+    AT "@"
+    LSQUARE "["
+    RSQUARE "]"
     DOT "."
     END 0 "end of file"
 
 %type<node> 
     primary call postfix unary multiplicative additive conditional expr 
     decl func stmt type param result var compound declb init
-    cond if else record field while
+    cond if else record field while attribute narg
 
 %type<cond>
     mut
 
 %type<nodes>
-    exprs stmts decls params fparams types fields
+    exprs stmts decls params fparams types fields attribs
+    attributes attrib nargs args
 
 %right LBRACE ELSE
 
@@ -99,8 +109,24 @@ decls: decl { $$ = new_node_list($1); }
     | decls decl { $$ = node_append($1, $2); }
     ;
 
-decl: declb { $$ = $1; }
-    | EXPORT declb { $$ = set_exported($2, 1); }
+decl: attribs declb { $$ = add_attribs(add_loc($2, &@2), $1); }
+    | EXPORT declb { $$ = set_exported(add_loc($2, &@2), true); }
+    ;
+
+attribs: %empty { $$ = empty_node_list(); }
+    | attribs attrib { $$ = nodes_merge($1, $2); }
+    ;
+
+attrib: AT attribute { $$ = new_node_list($2); }
+    | AT LSQUARE attributes RSQUARE { $$ = $3; }
+    ;
+
+attributes: attribute { $$ = new_node_list($1); }
+    | attributes COMMA attribute { $$ = node_append($1, $3); }
+    ;
+
+attribute: IDENT { $$ = new_attrib($1, NULL); }
+    | IDENT LPAREN exprs RPAREN { $$ = new_attrib($1, $3); }
     ;
 
 declb: func { $$ = $1; }
@@ -112,21 +138,21 @@ record: RECORD IDENT LBRACE fields RBRACE { $$ = new_record($2, $4); }
     ;
 
 fields: field { $$ = new_node_list($1); }
-    | fields field { $$ = node_append($1, $2); }
+    | fields COMMA field { $$ = node_append($1, $3); }
     ;
 
 field: IDENT COLON type { $$ = new_param($1, $3); }
     ;
 
-var: mut[m] IDENT[name] result[it] init[i] SEMI { $$ = new_var($name, $it, $i, $m); }
+var: mut[m] IDENT[name] result[it] init[i] SEMI { $$ = add_loc(new_var($name, $it, $i, $m), &@name); }
     ;
 
 init: %empty { $$ = NULL; }
     | ASSIGN expr { $$ = $2; }
     ;
 
-mut: VAR { $$ = 1; }
-    | FINAL { $$ = 0; }
+mut: VAR { $$ = true; }
+    | FINAL { $$ = false; }
     ;
 
 func: DEF IDENT[name] fparams[args] result[res] compound[body] { $$ = new_func($name, $args, $res, $body); }
@@ -180,8 +206,9 @@ stmts: %empty { $$ = empty_node_list(); }
     ;
 
 primary: DIGIT { $$ = new_digit($1); }
-    | BOOL_TRUE { $$ = new_bool(1); }
-    | BOOL_FALSE { $$ = new_bool(0); }
+    | XDIGIT { $$ = new_xdigit($1); }
+    | BOOL_TRUE { $$ = new_bool(true); }
+    | BOOL_FALSE { $$ = new_bool(false); }
     | IDENT { $$ = new_name($1); }
     | LPAREN expr[it] RPAREN { $$ = $it; }
     | STRING { $$ = new_string($1); }
@@ -189,11 +216,24 @@ primary: DIGIT { $$ = new_digit($1); }
     ;
 
 call: postfix LPAREN RPAREN { $$ = new_call($1, empty_node_list()); }
-    | postfix LPAREN exprs[args] RPAREN { $$ = new_call($1, $args); }
+    | postfix LPAREN args[a] RPAREN { $$ = new_call($1, $a); }
+    ;
+
+args: expr { $$ = new_node_list(new_arg(NULL, $1)); }
+    | expr COMMA args { $$ = node_prepend($3, $1); }
+    | nargs { $$ = $1; }
+    ;
+
+nargs: narg { $$ = new_node_list($1); }
+    | nargs COMMA narg { $$ = node_append($1, $3); }
+    ;
+
+narg: DOT IDENT ASSIGN expr { $$ = new_arg($2, $4); }
     ;
 
 postfix: primary { $$ = $1; }
     | postfix DOT IDENT { $$ = new_access($1, $3); }
+    | postfix AS type { $$ = new_cast($1, $3); }
     | call { $$ = $1; }
     ;
 
@@ -228,9 +268,12 @@ exprs: expr { $$ = new_node_list($1); }
     ;
 
 type: IDENT { $$ = new_typename($1); }
+    | IDENT COLON2 IDENT { $$ = new_qual($1, $3); }
     | MUL type { $$ = new_pointer($2); }
     | LPAREN types[args] RPAREN ARROW type[res] { $$ = new_closure($args, $res); }
     | LPAREN RPAREN ARROW type[res] { $$ = new_closure(empty_node_list(), $res); }
+    | LSQUARE type RSQUARE { $$ = new_array($2, NULL); }
+    | LSQUARE type COLON expr RSQUARE { $$ = new_array($2, $4); }
     ;
 
 types: type { $$ = new_node_list($1); }

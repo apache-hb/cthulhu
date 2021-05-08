@@ -4,9 +4,8 @@
 #include <stdarg.h>
 #include <string.h>
 
-FILE *s;
-FILE *h;
-int emitting_header = 0;
+static FILE *s, *h;
+static bool emitting_header = 0;
 
 static void
 sfmt(const char *fmt, ...)
@@ -29,11 +28,7 @@ emit_type(node_t *type)
             sfmt("const ");
         }
 
-        if (strcmp(type->name, "bool") == 0) {
-            sfmt("_Bool");
-        } else {
-            sfmt("%s", type->name);
-        }
+        sfmt("%s", type->decl.builtin.cname);
         
         break;
     case NODE_POINTER:
@@ -87,7 +82,7 @@ emit_stmt(node_t *stmt)
         sfmt("}");
         break;
     case NODE_VAR:
-        if (emitting_header && stmt->decl.exported) {
+        if (emitting_header && stmt->exported) {
             sfmt("extern ");
         }
         emit_type(stmt->decl.var.type);
@@ -205,9 +200,34 @@ emit_param(node_t *decl)
     sfmt(" %s", decl->decl.name);
 }
 
+static void
+emit_attrib(node_t *node)
+{
+    sfmt("%s", node->decl.name);
+}
+
+static void
+emit_attribs(nodes_t *nodes)
+{
+    if (nodes && nodes->length) {
+        sfmt("__attribute__((");
+
+        for (size_t i = 0; i < nodes->length; i++) {
+            if (i) {
+                sfmt(", ");
+            }
+            node_t *attrib = nodes->data + i;
+            emit_attrib(attrib);
+        }
+
+        sfmt("))");
+    }
+}
+
 static void 
 emit_func(node_t *func)
 {
+    emit_attribs(func->decl.attribs);
     emit_type(func->decl.func.result);
     sfmt(" %s(", func->decl.name);
     size_t len = func->decl.func.params->length;
@@ -241,7 +261,9 @@ emit_record(node_t *node)
         emit_type(field->decl.param);
         sfmt(" %s;", field->decl.name);
     }
-    sfmt("};");
+    sfmt("}");
+    emit_attribs(node->decl.attribs);
+    sfmt(";");
 }
 
 static void 
@@ -249,15 +271,15 @@ emit_decl(node_t *decl)
 {
     switch (decl->kind) {
     case NODE_FUNC: 
-        if (!decl->decl.exported) {
+        if (!decl->exported) {
             sfmt("static ");
         }
         emit_func(decl);
         break;
     case NODE_VAR:
-        if (!decl->decl.exported && !emitting_header) {
+        if (!decl->exported && !emitting_header) {
             sfmt("static ");
-        } else if (!decl->decl.exported && emitting_header) {
+        } else if (!decl->exported && emitting_header) {
             break;
         }
         emit_stmt(decl);
@@ -273,7 +295,7 @@ emit_decl(node_t *decl)
     sfmt("\n");
 }
 
-int wants_header = 0;
+static bool wants_header = 0;
 
 void 
 emit(char *name, FILE *source, FILE *header, node_t *prog)
@@ -283,12 +305,14 @@ emit(char *name, FILE *source, FILE *header, node_t *prog)
     /* if we have a header then include it */
     char *temp = strrchr(name, '.');
     if (temp != NULL && strcmp(temp, ".h") == 0) {
-        wants_header = 1;
+        wants_header = true;
     }
 
     if (wants_header) {
         sfmt("#include \"%s\"\n", name);
     }
+
+    sfmt("#include <stdint.h>\n");
 
     for (size_t i = 0; i < prog->compound->length; i++) {
         emit_decl(prog->compound->data + i);
@@ -298,7 +322,7 @@ emit(char *name, FILE *source, FILE *header, node_t *prog)
         return;
 
     h = header;
-    emitting_header = 1;
+    emitting_header = true;
 
     size_t l = strlen(name);
     for (size_t i = 0; i < l; i++) {
