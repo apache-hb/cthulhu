@@ -256,6 +256,36 @@ new_record(char *name, nodes_t *fields)
     return node;
 }
 
+node_t*
+new_while(node_t *cond, node_t *body)
+{
+    node_t *node = new_node(NODE_WHILE);
+    node->loop.cond = cond;
+    node->loop.body = body;
+    return node;
+}
+
+node_t*
+new_break()
+{
+    return new_node(NODE_BREAK);
+}
+
+node_t*
+new_continue()
+{
+    return new_node(NODE_CONTINUE);
+}
+
+node_t*
+new_mut(node_t *node)
+{
+    node_t *out = new_node(0);
+    memcpy(out, node, sizeof(node_t));
+    out->mut = 1;
+    return out;
+}
+
 static void
 dump_nodes(nodes_t *nodes)
 {
@@ -430,6 +460,19 @@ dump_node(node_t *node)
         printf("(record %s (", node->decl.name);
         dump_nodes(node->decl.fields);
         printf("))");
+        break;
+    case NODE_WHILE:
+        printf("(while ");
+        dump_node(node->loop.cond);
+        printf(" do ");
+        dump_node(node->loop.body);
+        printf(")");
+        break;
+    case NODE_BREAK:
+        printf("break");
+        break;
+    case NODE_CONTINUE:
+        printf("continue");
         break;
     }
 }

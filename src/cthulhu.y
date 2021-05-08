@@ -45,6 +45,9 @@ int yyerror();
     BOOL_FALSE "false"
     IF "if"
     ELSE "else"
+    WHILE "while"
+    BREAK "break"
+    CONTINUE "continue"
 
 /* math ops */
 %token 
@@ -74,7 +77,7 @@ int yyerror();
 %type<node> 
     primary call postfix unary multiplicative additive conditional expr 
     decl func stmt type param result var compound declb init
-    cond if else record field
+    cond if else record field while
 
 %type<cond>
     mut
@@ -150,6 +153,12 @@ stmt: compound { $$ = $1; }
     | RETURN expr SEMI { $$ = new_return($2); }
     | var { $$ = $1; }
     | if { $$ = $1; }
+    | while { $$ = $1; }
+    | BREAK SEMI { $$ = new_break(); }
+    | CONTINUE SEMI { $$ = new_continue(); }
+    ;
+
+while: WHILE cond compound { $$ = new_while($2, $3); }
     ;
 
 if: IF cond compound else { $$ = new_branch($2, $3, $4); }

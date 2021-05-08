@@ -26,6 +26,9 @@ typedef enum {
     NODE_RETURN,
     NODE_ASSIGN,
     NODE_BRANCH,
+    NODE_WHILE,
+    NODE_BREAK,
+    NODE_CONTINUE,
 
     /* decls */
     NODE_FUNC,
@@ -76,7 +79,7 @@ typedef struct node_t {
 
         struct decl_t {
             char *name;
-            
+
             /* NODE_PARAM doesnt care about this but everything else does */
             int exported;
 
@@ -104,6 +107,11 @@ typedef struct node_t {
             node_t *body;
             node_t *next;
         } branch;
+
+        struct loop_t {
+            node_t *cond;
+            node_t *body;
+        } loop;
 
         /* function signature */
         struct closure_t {
@@ -231,6 +239,18 @@ new_branch(node_t *cond, node_t *body, node_t *next);
 
 node_t*
 new_record(char *name, nodes_t *fields);
+
+node_t*
+new_while(node_t *cond, node_t *body);
+
+node_t*
+new_break();
+
+node_t*
+new_continue();
+
+node_t*
+new_mut(node_t *node);
 
 void
 dump_node(node_t *node);

@@ -33,6 +33,9 @@
 "record" { return RECORD; }
 "if" { return IF; }
 "else" { return ELSE; }
+"while" { return WHILE; }
+"break" { return BREAK; }
+"continue" { return CONTINUE; }
 \"(\\.|[^"\\])*\" { yylval->text = strdup(yytext); return STRING; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 ";" { return SEMI; }

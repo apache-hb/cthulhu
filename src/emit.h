@@ -2,7 +2,8 @@
 #define EMIT_H
 
 #include "ast.h"
+#include <stdio.h>
 
-void emit(node_t *prog);
+void emit(char *name, FILE *source, FILE *header, node_t *prog);
 
 #endif 
