@@ -4,13 +4,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include "bison.h"
 
 static node_t*
 new_node(node_kind_t kind) 
 {
     node_t *node = malloc(sizeof(node_t));
     node->kind = kind;
-    node->mut = 0;
+    node->mut = false;
+    node->exported = false;
+    node->where = NULL;
     return node;
 }
 
@@ -18,8 +21,8 @@ static node_t*
 new_decl(node_kind_t kind, char *name)
 {
     node_t *node = new_node(kind);
-    node->decl.exported = 0;
     node->decl.name = name;
+    node->decl.attribs = NULL;
     return node;
 }
 
@@ -31,6 +34,14 @@ new_nodes(size_t size)
     nodes->size = size;
     nodes->data = malloc(sizeof(node_t) * size);
     return nodes;
+}
+
+node_t*
+add_loc(node_t *node, YYLTYPE *lloc)
+{
+    node->where = malloc(sizeof(YYLTYPE));
+    memcpy(node->where, lloc, sizeof(YYLTYPE));
+    return node;
 }
 
 nodes_t*
@@ -67,18 +78,70 @@ node_replace(nodes_t *self, size_t idx, node_t *node)
     return self;
 }
 
-node_t*
-set_exported(node_t *decl, int exported)
+nodes_t*
+node_prepend(nodes_t *self, node_t *node)
 {
-    decl->decl.exported = exported;
+    if (self->length + 1 >= self->size) {
+        self->size += 8;
+        self->data = realloc(self->data, sizeof(node_t) * self->size);
+    }
+    memmove(self->data + 1, self->data, sizeof(node_t) * self->length);
+    memcpy(self->data, node, sizeof(node_t));
+    self->length += 1;
+    return self;
+}
+
+nodes_t*
+nodes_merge(nodes_t *self, nodes_t *other)
+{
+    size_t len = self->length + other->length;
+    if (len >= self->size) {
+        self->size = len;
+        self->data = realloc(self->data, sizeof(node_t) * self->size);
+    }
+    memcpy(self->data + self->length, other->data, sizeof(node_t) * other->length);
+    self->length = len;
+    return self;
+}
+
+node_t*
+set_exported(node_t *decl, bool exported)
+{
+    decl->exported = exported;
     return decl;
 }
 
 node_t*
-new_digit(char* digit) 
+add_attribs(node_t *decl, nodes_t *attribs)
+{
+    decl->decl.attribs = attribs;
+    return decl;
+}
+
+node_t*
+new_digit(char *digit) 
 {
     node_t *node = new_node(NODE_DIGIT);
-    node->digit = digit;
+    node->digit.digit = digit;
+    node->digit.base = 10;
+    return node;
+}
+
+node_t*
+new_arg(char *name, node_t *expr)
+{
+    node_t *node = new_node(NODE_ARG);
+    node->arg.name = name;
+    node->arg.expr = expr;
+    return node;
+}
+
+node_t*
+new_attrib(char *name, nodes_t *args)
+{
+    node_t *node = new_node(NODE_ATTRIB);
+    node->decl.name = name;
+    node->decl.args = args;
     return node;
 }
 
@@ -163,14 +226,29 @@ new_typename(char *name)
 }
 
 node_t*
-new_builtin_type(const char *name)
+new_xdigit(char *text)
 {
-    node_t *node = new_decl(NODE_BUILTIN_TYPE, strdup(name));
+    node_t *node = new_node(NODE_DIGIT);
+    node->digit.digit = text + 2;
+    node->digit.base = 16;
     return node;
 }
 
 node_t*
-new_var(char *name, node_t *type, node_t *init, int mut)
+new_builtin_type(
+    const char *name, builtin_kind_t kind, 
+    int width, const char *cname
+)
+{
+    node_t *node = new_decl(NODE_BUILTIN_TYPE, strdup(name));
+    node->decl.builtin.kind = kind;
+    node->decl.builtin.width = width;
+    node->decl.builtin.cname = cname;
+    return node;
+}
+
+node_t*
+new_var(char *name, node_t *type, node_t *init, bool mut)
 {
     node_t *node = new_decl(NODE_VAR, name);
     node->mut = mut;
@@ -214,7 +292,7 @@ new_closure(nodes_t *args, node_t *result)
 }
 
 node_t*
-new_bool(int val)
+new_bool(bool val)
 {
     node_t *node = new_node(NODE_BOOL);
     node->boolean = val;
@@ -297,6 +375,33 @@ new_multi_string(char *text)
     return out;
 }
 
+node_t*
+new_qual(char *scope, char *name)
+{
+    node_t *out = new_node(NODE_QUAL);
+    out->qual.scope = scope;
+    out->qual.name = name;
+    return out;
+}
+
+node_t*
+new_cast(node_t *expr, node_t *type)
+{
+    node_t *out = new_node(NODE_CAST);
+    out->cast.expr = expr;
+    out->cast.type = type;
+    return out;
+}
+
+node_t*
+new_array(node_t *type, node_t *size)
+{
+    node_t *out = new_node(NODE_ARRAY);
+    out->array.type = type;
+    out->array.size = size;
+    return out;
+}
+
 static void
 dump_nodes(nodes_t *nodes)
 {
@@ -309,13 +414,13 @@ dump_nodes(nodes_t *nodes)
 }
 
 static const char*
-dump_mut(int i)
+dump_mut(bool i)
 {
     return i ? "mut" : "const";
 }
 
 static const char*
-dump_export(int i)
+dump_export(bool i)
 {
     return i ? "public" : "private";
 }
@@ -325,7 +430,7 @@ dump_node(node_t *node)
 {
     switch (node->kind) {
     case NODE_DIGIT: 
-        printf("%s", node->digit); 
+        printf("(%s %d)", node->digit.digit, node->digit.base); 
         break;
     case NODE_UNARY:    
         printf("("); 
@@ -372,7 +477,7 @@ dump_node(node_t *node)
         printf(")");
         break;
     case NODE_FUNC:
-        printf("(def %s %s (", dump_export(node->decl.exported), node->decl.name);
+        printf("(def %s %s (", dump_export(node->exported), node->decl.name);
         dump_nodes(node->decl.func.params);
         printf(") ");
         if (node->decl.func.result) {
@@ -416,7 +521,7 @@ dump_node(node_t *node)
         printf("(builtin %s)", node->decl.name);
         break;
     case NODE_VAR:
-        printf("(var %s %s %s", dump_export(node->decl.exported), dump_mut(node->mut), node->decl.name);
+        printf("(var %s %s %s", dump_export(node->exported), dump_mut(node->mut), node->decl.name);
         if (node->decl.var.type) {
             printf(" ");
             dump_node(node->decl.var.type);
@@ -484,6 +589,38 @@ dump_node(node_t *node)
         break;
     case NODE_CONTINUE:
         printf("continue");
+        break;
+    case NODE_QUAL:
+        printf("(qual %s::%s)", node->qual.scope, node->qual.name);
+        break;
+    case NODE_CAST:
+        printf("(cast ");
+        dump_node(node->cast.expr);
+        printf(" to ");
+        dump_node(node->cast.type);
+        printf(")");
+        break;
+    case NODE_ATTRIB:
+        printf("(attrib %s ", node->decl.name);
+        dump_nodes(node->decl.args);
+        printf(")");
+        break;
+    case NODE_ARRAY:
+        printf("(array ");
+        dump_node(node->array.type);
+        if (node->array.size) {
+            printf(" ");
+            dump_node(node->array.size);
+        }
+        printf(")");
+        break;
+    case NODE_ARG:
+        printf("(arg ");
+        if (node->arg.name) {
+            printf("%s ", node->arg.name);
+        }
+        dump_node(node->arg.expr);
+        printf(")");
         break;
     }
 }

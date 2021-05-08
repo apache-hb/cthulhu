@@ -24,6 +24,7 @@
 [ \r\n\t] ;
 "//".* ;
 [0-9]+ { yylval->text = strdup(yytext); return DIGIT; }
+"0x"[0-9a-fA-F]+ { yylval->text = strdup(yytext); return XDIGIT; }
 "def" { return DEF; }
 "return" { return RETURN; }
 "var" { return VAR; }
@@ -32,6 +33,7 @@
 "export" { return EXPORT; }
 "final" { return FINAL; }
 "record" { return RECORD; }
+"as" { return AS; }
 "if" { return IF; }
 "else" { return ELSE; }
 "while" { return WHILE; }
@@ -47,7 +49,11 @@
 "/" { return DIV; }
 "%" { return REM; }
 "?" { return QUESTION; }
+"::" { return COLON2; }
 ":" { return COLON; }
+"@" { return AT; }
+"[" { return LSQUARE; }
+"]" { return RSQUARE; }
 "," { return COMMA; }
 "." { return DOT; }
 "=" { return ASSIGN; }

@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef struct node_t node_t;
 typedef struct nodes_t nodes_t;
@@ -20,6 +21,8 @@ typedef enum {
     NODE_CALL,
     NODE_NAME,
     NODE_ACCESS,
+    NODE_CAST,
+    NODE_ARG,
 
     /* statements */
     NODE_COMPOUND,
@@ -35,12 +38,15 @@ typedef enum {
     NODE_VAR,
     NODE_PARAM,
     NODE_RECORD,
+    NODE_ATTRIB,
 
     /* types */
     NODE_TYPENAME,
+    NODE_QUAL,
     NODE_POINTER,
     NODE_BUILTIN_TYPE,
-    NODE_CLOSURE
+    NODE_CLOSURE,
+    NODE_ARRAY
 } node_kind_t;
 
 typedef enum {
@@ -65,23 +71,47 @@ typedef struct nodes_t {
     struct node_t *data;
 } nodes_t;
 
+typedef enum {
+    SINT, // signed integer
+    UINT, // unsigned integer
+    BOOL, // boolean
+    UNIT // void type
+} builtin_kind_t;
+
 typedef struct node_t {
     /* the kind of this node */
     node_kind_t kind;
     /* nearly everything is mutable or not */
-    int mut;
+    bool mut:1;
+    /* is this decl exported */
+    bool exported:1;
+
+    /* location of this node */
+    struct YYLTYPE *where;
 
     union {
-        char *digit;
+        struct digit_t {
+            char *digit;
+            int base;
+        } digit;
+
         char *name;
         char *text;
-        int boolean;
+        bool boolean;
+
+        struct qual_t {
+            char *scope;
+            char *name;
+        } qual;
+
+        struct arg_t {
+            char *name;
+            node_t *expr;
+        } arg;
 
         struct decl_t {
             char *name;
-
-            /* NODE_PARAM doesnt care about this but everything else does */
-            int exported;
+            nodes_t *attribs;
 
             union {
                 struct func_t {
@@ -98,7 +128,14 @@ typedef struct node_t {
                     node_t *init;
                 } var;
 
+                struct builtin_t {
+                    builtin_kind_t kind;
+                    int width;
+                    const char *cname; /* name of this type in C */
+                } builtin;
+
                 nodes_t *fields;
+                nodes_t *args; /* attrib args */
             };
         } decl;
 
@@ -154,10 +191,29 @@ typedef struct node_t {
             char *field;
         } access;
 
+        struct cast_t {
+            node_t *expr;
+            node_t *type;
+        } cast;
+
+        struct array_t {
+            node_t *type;
+            node_t *size;
+        } array;
+
         node_t *expr;
         nodes_t *compound;
     };
 } node_t;
+
+node_t*
+new_arg(char *name, node_t *expr);
+
+node_t*
+add_loc(node_t *node, struct YYLTYPE *lloc);
+
+node_t*
+new_qual(char *scope, char *name);
 
 nodes_t*
 empty_node_list(void);
@@ -169,10 +225,16 @@ nodes_t*
 node_append(nodes_t *self, node_t *node);
 
 nodes_t*
+node_prepend(nodes_t *self, node_t *node);
+
+nodes_t*
 node_replace(nodes_t *self, size_t idx, node_t *node);
 
+nodes_t*
+nodes_merge(nodes_t *self, nodes_t *others);
+
 node_t*
-set_exported(node_t *decl, int exported);
+set_exported(node_t *decl, bool exported);
 
 node_t*
 new_digit(char *digit);
@@ -208,10 +270,19 @@ node_t*
 new_typename(char *name);
 
 node_t*
-new_builtin_type(const char *name);
+new_xdigit(char *text);
 
 node_t*
-new_var(char *name, node_t *type, node_t *init, int mut);
+new_array(node_t *type, node_t *size);
+
+node_t*
+new_builtin_type(
+    const char *name, builtin_kind_t kind, 
+    int width, const char *cname
+);
+
+node_t*
+new_var(char *name, node_t *type, node_t *init, bool mut);
 
 node_t*
 new_string(char *text);
@@ -220,7 +291,7 @@ node_t*
 new_assign(node_t *old, node_t *it);
 
 node_t*
-new_bool(int val);
+new_bool(bool val);
 
 node_t*
 new_array(node_t *type, node_t *size);
@@ -254,6 +325,15 @@ new_mut(node_t *node);
 
 node_t*
 new_multi_string(char *text);
+
+node_t*
+new_cast(node_t *expr, node_t *type);
+
+node_t*
+add_attribs(node_t *decl, nodes_t *attribs);
+
+node_t*
+new_attrib(char *name, nodes_t *args);
 
 void
 dump_node(node_t *node);

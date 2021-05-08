@@ -3,9 +3,44 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include "bison.h"
 
 #define ERR(s, fmt) { add_error(s); fprintf(stderr, fmt); }
 #define ERRF(s, fmt, ...) { add_error(s); fprintf(stderr, fmt, __VA_ARGS__); }
+
+static void
+underline_source(node_t *node, const char *text)
+{
+    if (node->where) {
+        YYLTYPE *w = node->where;
+        fprintf(stderr, "error[%d:%d]: %s\n", w->first_line, w->first_column, text);
+    } else {
+        fprintf(stderr, "error: %s\n", text);
+    }
+}
+
+static void 
+underline_sourcef(node_t *node, const char *text, ...)
+{
+    if (node->where) {
+        YYLTYPE *w = node->where;
+        fprintf(stderr, "error[%d:%d]: ", w->first_line, w->first_column);
+    } else {
+        fprintf(stderr, "error: ");
+    }
+    
+    va_list args;
+    va_start(args, text);
+    vfprintf(stderr, text, args);
+    va_end(args);
+
+    fprintf(stderr, "\n");
+}
+
+/* ErrorWithLocation */
+#define ERRWL(s, n, fmt) { add_error(s); underline_source(n, fmt); }
+#define ERRWLF(s, n, fmt, ...) { add_error(s), underline_sourcef(n, fmt, __VA_ARGS__); }
 
 static state_t*
 root_state(state_t *state) { return state->parent ? root_state(state->parent) : state; }
@@ -93,7 +128,7 @@ sema_var(state_t *self, node_t *decl)
     node_t *type = NULL;
 
     if (!decl->decl.var.init && !decl->decl.var.type) {
-        ERRF(self, "`%s` either a type or assignment is required\n", decl->decl.name);
+        ERRWLF(self, decl, "`%s` either a type or assignment is required\n", decl->decl.name);
         return decl;
     }
 
@@ -119,7 +154,7 @@ sema_var(state_t *self, node_t *decl)
     }
 
     if (convertible_to(self, get_voidtype(self), decl->decl.var.type)) {
-        ERRF(self, "cannot initialize `%s` with void\n", decl->decl.name);
+        ERRWLF(self, decl, "cannot initialize `%s` with void", decl->decl.name);
     }
 
     return decl;
@@ -130,28 +165,33 @@ resolve_call(state_t *self, node_t *node)
 {
     node_t *func = resolve_type(self, node->call.body);
 
-    if (func->kind != NODE_CLOSURE) {
-        ERR(self, "cannot call non-closure type\n");
-    }
-
-    if (func->closure.args->length != node->call.args->length) {
-        ERRF(self, 
-            "calling function with wrong number of parameters, expected `%zu` got `%zu`\n",
-            func->closure.args->length,
-            node->call.args->length
-        );
-    }
-
-    for (size_t i = 0; i < func->closure.args->length; i++) {
-        node_t *arg = resolve_type(self, func->closure.args->data + i);
-        node_t *it = resolve_type(self, node->call.args->data + i);
-
-        if (!convertible_to(self, arg, it)) {
-            ERRF(self, "argument `%zu` has an incompatible type\n", i);
+    if (func->kind == NODE_CLOSURE) {
+        if (func->closure.args->length != node->call.args->length) {
+            ERRF(self, 
+                "calling function with wrong number of parameters, expected `%zu` got `%zu`\n",
+                func->closure.args->length,
+                node->call.args->length
+            );
         }
-    }
 
-    return func->closure.result;
+        for (size_t i = 0; i < func->closure.args->length; i++) {
+            node_t *c = node->call.args->data + i;
+            node_t *arg = resolve_type(self, func->closure.args->data + i);
+            node_t *it = resolve_type(self, c);
+
+            if (!convertible_to(self, arg, it)) {
+                ERRWLF(self, c, "argument `%zu` has an incompatible type\n", i);
+            }
+        }
+
+        return func->closure.result;
+    } else if (func->kind == NODE_RECORD) {
+        ERR(self, "unimplemented struct creation stuff\n");
+        return node;
+    }
+    
+    ERRWL(self, node, "cannot call non-closure type");
+    return node;
 }
 
 static node_t*
@@ -194,11 +234,11 @@ sema_assign(state_t *self, node_t *decl)
            *lhs = resolve_type(self, decl->assign.old);
 
     if (!convertible_to(self, lhs, rhs)) {
-        ERR(self, "assigning incompatible types\n");
+        ERRWL(self, decl, "assigning incompatible types\n");
     }
 
     if (!lhs->mut) {
-        ERR(self, "cannot assign to an immutable value\n");
+        ERRWL(self, decl, "cannot assign to an immutable value\n");
     }
 
     return decl;
@@ -238,7 +278,7 @@ sema_stmt(state_t *self, node_t *decl)
         decl = sema_assign(self, decl);
         break;
     default:
-        ERRF(self, "sema_stmt(%d) unknown kind\n", decl->kind);
+        ERRWLF(self, decl, "sema_stmt(%d) unknown kind", decl->kind);
         break;
     }
 
@@ -307,23 +347,23 @@ resolve_unary(state_t *self, node_t *node)
     switch (node->unary.op) {
     case UNARY_NOT:
         if (!convertible_to(self, get_booltype(self), type)) {
-            ERR(self, "unary not applied to non-boolean type\n");
+            ERRWL(self, node, "unary not applied to non-boolean type\n");
         }
         break;
     case UNARY_ABS: case UNARY_NEG:
         if (!convertible_to(self, get_inttype(self), type)) {
-            ERR(self, "unary abs or neg applied to non-integer type\n");
+            ERRWL(self, node, "unary abs or neg applied to non-integer type\n");
         }
         break;
     case UNARY_REF:
         if (expr->kind != NODE_NAME) {
-            ERR(self, "cannot take reference to a non-rvalue\n");
+            ERRWL(self, node, "cannot take reference to a non-rvalue\n");
         }
         type = new_pointer(type);
         break;
     case UNARY_DEREF:
         if (type->kind != NODE_POINTER) {
-            ERR(self, "cannot derefence a non pointer\n");
+            ERRWL(self, node, "cannot derefence a non pointer\n");
         } else {
             type = type->type;
         }
@@ -351,6 +391,9 @@ resolve_binary(state_t *self, node_t *node)
         if (!convertible_to(self, get_inttype(self), lhs)) {
             ERR(self, "math operator applied to non-int operands\n");
         }
+        break;
+    default:
+        ERRWLF(self, node, "resolve_binary(%d) unknown op", node->binary.op);
         break;
     }
 
@@ -392,13 +435,14 @@ resolve_access(state_t *self, node_t *node)
         }
     }
 
-    ERRF(self, "record `%s` missing field `%s`\n", record->decl.name, field);
+    ERRWLF(self, node, "record `%s` missing field `%s`", record->decl.name, field);
     return get_voidtype(self);
 }
 
 static node_t*
 resolve_type(state_t *self, node_t *node)
 {
+    node_t *name;
     switch (node->kind) {
     case NODE_DIGIT: 
         return get_inttype(self);
@@ -407,7 +451,15 @@ resolve_type(state_t *self, node_t *node)
     case NODE_BUILTIN_TYPE: 
         return node;
     case NODE_NAME: case NODE_TYPENAME:
-        return resolve_type(self, lookup_name(self, node->name));
+        name = lookup_name(self, node->name);
+        if (!name) {
+            ERRWLF(self, node, "no type named `%s` could be resolved", node->name);
+            return node;
+        }
+        return resolve_type(self, name);
+    case NODE_ARRAY:
+        node->array.type = resolve_type(self, node->array.type);
+        return node;
     case NODE_UNARY:
         return resolve_unary(self, node);
     case NODE_BINARY:
@@ -430,7 +482,7 @@ resolve_type(state_t *self, node_t *node)
     case NODE_STRING:
         return new_pointer(get_chartype(self));
     default:
-        ERRF(self, "resolve_type(%d) unknown kind\n", node->kind);
+        ERRWLF(self, node, "resolve_type(%d) unknown kind", node->kind);
         return node;
     }
 }
