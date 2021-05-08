@@ -4,7 +4,8 @@ parse = [
     [ 'parse.var3', true ],
     [ 'parse.var4', true ],
     [ 'parse.var5', false ],
-    [ 'parse.var6', false ]
+    [ 'parse.var6', false ],
+    [ 'parse.str1', true ]
 ]
 
 sema = [
@@ -53,7 +54,11 @@ func = [
     [ 'func.assign5', false ]
 ]
 
-foreach case : parse + sema + func
+struct = [
+    [ 'struct.record1', true ]
+]
+
+foreach case : parse + sema + func + struct
     name = case[0]
     pass = case[1]
     parts = name.split('.')

@@ -11,6 +11,9 @@ int dump_ast = 0,
     dump_sema = 0,
     dump_ir = 0;
 
+#define OUTPUT_ARG "--output="
+static const size_t output_arg_len = strlen(OUTPUT_ARG);
+
 int main(int argc, const char **argv) {
     if (argc < 2) {
         fprintf(stderr, "%s: provide input file\n", argv[0]);
@@ -18,6 +21,9 @@ int main(int argc, const char **argv) {
     }
 
     FILE* file;
+    FILE* output_header = stdout;
+    FILE* output_source = stdout;
+    char *target = strdup("out");
     
     for (int i = 1; i < argc; i++) {
         const char *arg = argv[i];
@@ -28,6 +34,26 @@ int main(int argc, const char **argv) {
             dump_sema = 1;
         } else if (strcmp(arg, "--dump-ir") == 0) {
             dump_ir = 1;
+        } else if (strncmp(arg, OUTPUT_ARG, output_arg_len) == 0) {
+            const char *path = arg + output_arg_len;
+            size_t len = strlen(path) + 3;
+            target = calloc(1, len);
+
+            strcpy(target, path);
+            strcpy(target + len - 3, ".c");
+            output_source = fopen(target, "w");
+            if (!output_source) {
+                fprintf(stderr, "failed to open output file `%s`\n", target);
+                return 1;
+            }
+
+            strcpy(target, path);
+            strcpy(target + len - 3, ".h");
+            output_header = fopen(target, "w");
+            if (!output_header) {
+                fprintf(stderr, "failed to open output file `%s`\n", target);
+                return 1;
+            }
         } else {
             file = fopen(arg, "r");
 
@@ -84,7 +110,7 @@ int main(int argc, const char **argv) {
         printf("\n");
     }
 
-    emit(ast);
+    emit(target, output_source, output_header, ast);
 
     return err;
 }

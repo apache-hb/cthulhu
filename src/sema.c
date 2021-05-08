@@ -35,6 +35,9 @@ static node_t*
 get_voidtype(state_t *state) { return root_state(state)->voidtype; }
 
 static node_t*
+get_chartype(state_t *state) { return root_state(state)->chartype; }
+
+static node_t*
 lookup_name(state_t *self, const char *name)
 {
     for (size_t i = 0; i < self->decls->length; i++) {
@@ -112,7 +115,7 @@ sema_var(state_t *self, node_t *decl)
     }
 
     if (decl->mut) {
-        decl->decl.var.type->mut = 1;
+        decl->decl.var.type = new_mut(decl->decl.var.type);
     }
 
     if (convertible_to(self, get_voidtype(self), decl->decl.var.type)) {
@@ -424,6 +427,8 @@ resolve_type(state_t *self, node_t *node)
         return node;
     case NODE_ACCESS:
         return resolve_access(self, node);
+    case NODE_STRING:
+        return new_pointer(get_chartype(self));
     default:
         ERRF(self, "resolve_type(%d) unknown kind\n", node->kind);
         return node;

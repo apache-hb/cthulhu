@@ -1,6 +1,21 @@
 #include "emit.h"
 
 #include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+
+FILE *s;
+FILE *h;
+int emitting_header = 0;
+
+static void
+sfmt(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(emitting_header ? h : s, fmt, args);
+    va_end(args);
+}
 
 static void 
 emit_stmt(node_t *stmt);
@@ -11,16 +26,22 @@ emit_type(node_t *type)
     switch (type->kind) {
     case NODE_BUILTIN_TYPE:
         if (!type->mut) {
-            printf("const ");
+            sfmt("const ");
         }
-        printf("%s", type->name);
+
+        if (strcmp(type->name, "bool") == 0) {
+            sfmt("_Bool");
+        } else {
+            sfmt("%s", type->name);
+        }
+        
         break;
     case NODE_POINTER:
         emit_type(type->type);
-        printf("*");
+        sfmt("*");
         break;
     case NODE_RECORD:
-        printf("struct %s", type->decl.name);
+        sfmt("struct %s", type->decl.name);
         break;
     case NODE_TYPENAME:
         fprintf(stderr, "typename(%s) leaked past sema\n", type->name);
@@ -38,109 +59,124 @@ emit_stmt(node_t *stmt)
     node_t *node;
     switch (stmt->kind) {
     case NODE_COMPOUND:
-        printf("{");
+        sfmt("{");
         for (; i < stmt->compound->length; i++) {
             node = stmt->compound->data + i;
             emit_stmt(node);
             if (node->kind != NODE_COMPOUND && node->kind != NODE_BRANCH)
-                printf(";");
+                sfmt(";");
         }
-        printf("}");
+        sfmt("}");
         break;
     case NODE_VAR:
+        if (emitting_header && stmt->decl.exported) {
+            sfmt("extern ");
+        }
         emit_type(stmt->decl.var.type);
-        printf(" %s", stmt->decl.name);
-        if (stmt->decl.var.init) {
-            printf(" = ");
+        sfmt(" %s", stmt->decl.name);
+        if (stmt->decl.var.init && !emitting_header) {
+            sfmt(" = ");
             emit_stmt(stmt->decl.var.init);
         }
         break;
     case NODE_BINARY:
-        printf("(");
+        sfmt("(");
         emit_stmt(stmt->binary.lhs);
         switch (stmt->binary.op) {
-        case BINARY_ADD: printf(" + "); break;
-        case BINARY_SUB: printf(" - "); break;
-        case BINARY_MUL: printf(" * "); break;
-        case BINARY_DIV: printf(" / "); break;
-        case BINARY_REM: printf(" %% "); break;
+        case BINARY_ADD: sfmt(" + "); break;
+        case BINARY_SUB: sfmt(" - "); break;
+        case BINARY_MUL: sfmt(" * "); break;
+        case BINARY_DIV: sfmt(" / "); break;
+        case BINARY_REM: sfmt(" %% "); break;
         default: printf("unknown binop\n"); break;
         }
         emit_stmt(stmt->binary.rhs);
-        printf(")");
+        sfmt(")");
         break;
     case NODE_UNARY:
         switch (stmt->unary.op) {
-        case UNARY_ABS: printf("abs("); emit_stmt(stmt->unary.expr); printf(")"); break;
-        case UNARY_NEG: printf("("); emit_stmt(stmt->unary.expr); printf(" * -1)"); break;
-        case UNARY_DEREF: printf("(*"); emit_stmt(stmt->unary.expr); printf(")"); break;
-        case UNARY_REF: printf("(&"); emit_stmt(stmt->unary.expr); printf(")"); break;
-        case UNARY_NOT: printf("(!"); emit_stmt(stmt->unary.expr); printf(")"); break;
-        default: printf("unknown unop\n"); break;
+        case UNARY_ABS: sfmt("ctu_abs("); emit_stmt(stmt->unary.expr); sfmt(")"); break;
+        case UNARY_NEG: sfmt("("); emit_stmt(stmt->unary.expr); sfmt(" * -1)"); break;
+        case UNARY_DEREF: sfmt("(*"); emit_stmt(stmt->unary.expr); sfmt(")"); break;
+        case UNARY_REF: sfmt("(&"); emit_stmt(stmt->unary.expr); sfmt(")"); break;
+        case UNARY_NOT: sfmt("(!"); emit_stmt(stmt->unary.expr); sfmt(")"); break;
+        default: sfmt("unknown unop\n"); break;
         }
         break;
     case NODE_TERNARY:
-        printf("(");
+        sfmt("(");
         emit_stmt(stmt->ternary.cond);
-        printf("?");
+        sfmt("?");
         emit_stmt(stmt->ternary.yes);
-        printf(":");
+        sfmt(":");
         emit_stmt(stmt->ternary.no);
-        printf(")");
+        sfmt(")");
         break;
     case NODE_CALL:
         emit_stmt(stmt->call.body);
-        printf("(");
+        sfmt("(");
         for (; i < stmt->call.args->length; i++) {
             if (i) {
-                printf(", ");
+                sfmt(", ");
             }
             emit_stmt(stmt->call.args->data + i);
         }
-        printf(")");
+        sfmt(")");
         break;
     case NODE_RETURN:
-        printf("return");
+        sfmt("return");
         if (stmt->expr) {
-            printf(" ");
+            sfmt(" ");
             emit_stmt(stmt->expr);
         }
         break;
     case NODE_DIGIT:
-        printf("%s", stmt->digit);
+        sfmt("%s", stmt->digit);
         break;
     case NODE_NAME:
-        printf("%s", stmt->name);
+        sfmt("%s", stmt->name);
         break;
     case NODE_ASSIGN:
         emit_stmt(stmt->assign.old);
-        printf(" = ");
+        sfmt(" = ");
         emit_stmt(stmt->assign.expr);
         break;
     case NODE_BOOL:
-        printf("%d", stmt->boolean);
+        sfmt("%d", stmt->boolean);
         break;
     case NODE_STRING:
-        printf("%s", stmt->text);
+        sfmt("%s", stmt->text);
         break;
     case NODE_BRANCH:
         if (stmt->branch.cond) {
-            printf("if (");
+            sfmt("if (");
             emit_stmt(stmt->branch.cond);
-            printf(")");
+            sfmt(")");
         }
         emit_stmt(stmt->branch.body);
         if (stmt->branch.next) {
-            printf("else");
+            sfmt("else");
             emit_stmt(stmt->branch.next);
         }
         break;
     case NODE_ACCESS:
         emit_stmt(stmt->access.expr);
-        printf(".%s", stmt->access.field);
+        sfmt(".%s", stmt->access.field);
+        break;
+    case NODE_WHILE:
+        sfmt("while (");
+        emit_stmt(stmt->loop.cond);
+        sfmt(")");
+        emit_stmt(stmt->loop.body);
+        break;
+    case NODE_BREAK:
+        sfmt("break");
+        break;
+    case NODE_CONTINUE:
+        sfmt("continue");
         break;
     default:
-        printf("unknown node %d\n", stmt->kind);
+        fprintf(stderr, "unknown node %d\n", stmt->kind);
     }
 }
 
@@ -148,27 +184,32 @@ static void
 emit_param(node_t *decl)
 {
     emit_type(decl->decl.param);
-    printf(" %s", decl->decl.name);
+    sfmt(" %s", decl->decl.name);
 }
 
 static void 
 emit_func(node_t *func)
 {
     emit_type(func->decl.func.result);
-    printf(" %s(", func->decl.name);
+    sfmt(" %s(", func->decl.name);
     size_t len = func->decl.func.params->length;
 
     if (len == 0) {
-        printf("void");
+        sfmt("void");
     } else {
         for (size_t i = 0; i < len; i++) {
             if (i) {
-                printf(", ");
+                sfmt(", ");
             }
             emit_param(func->decl.func.params->data + i);
         }
     }
-    printf(")");
+    sfmt(")");
+
+    if (emitting_header) {
+        sfmt(";");
+        return;
+    }
 
     emit_stmt(func->decl.func.body);
 }
@@ -176,13 +217,13 @@ emit_func(node_t *func)
 static void
 emit_record(node_t *node)
 {
-    printf("struct %s {", node->decl.name);
+    sfmt("struct %s {", node->decl.name);
     for (size_t i = 0; i < node->decl.fields->length; i++) {
         node_t *field = (node->decl.fields->data + i);
         emit_type(field->decl.param);
-        printf(" %s;", field->decl.name);
+        sfmt(" %s;", field->decl.name);
     }
-    printf("};");
+    sfmt("};");
 }
 
 static void 
@@ -191,31 +232,60 @@ emit_decl(node_t *decl)
     switch (decl->kind) {
     case NODE_FUNC: 
         if (!decl->decl.exported) {
-            printf("static ");
+            sfmt("static ");
         }
         emit_func(decl);
         break;
     case NODE_VAR:
-        if (!decl->decl.exported) {
-            printf("static ");
+        if (!decl->decl.exported && !emitting_header) {
+            sfmt("static ");
+        } else if (!decl->decl.exported && emitting_header) {
+            break;
         }
         emit_stmt(decl);
-        printf(";");
+        sfmt(";");
         break;
     case NODE_RECORD:
         emit_record(decl);
         break;
     default:
-        printf("unknown decl to emit\n");
+        fprintf(stderr, "unknown decl to emit %d\n", decl->kind);
         break;
     }
-    printf("\n");
+    sfmt("\n");
 }
 
 void 
-emit(node_t *prog)
+emit(char *name, FILE *source, FILE *header, node_t *prog)
 {
+    s = source;
+
+    sfmt("#include \"%s\"\n", name);
+
     for (size_t i = 0; i < prog->compound->length; i++) {
         emit_decl(prog->compound->data + i);
     }
+
+    h = header;
+    emitting_header = 1;
+
+    size_t l = strlen(name);
+    for (size_t i = 0; i < l; i++) {
+        switch (name[i]) {
+        case '.': case '/': 
+            name[i] = '_';
+            break;
+        default:
+            break;
+        }
+    }
+
+    sfmt("#ifndef %s_h\n", name);
+    sfmt("#define %s_h\n", name);
+
+    for (size_t i = 0; i < prog->compound->length; i++) {
+        emit_decl(prog->compound->data + i);
+    }
+
+    sfmt("#endif /* %s_h */\n", name);
 }
