@@ -32,6 +32,7 @@ int yyerror();
     DIGIT "integer literal"
     IDENT "identifier"
     STRING "string literal"
+    MULTI_STRING "multiline string literal"
 
 /* keywords */
 %token
@@ -184,6 +185,7 @@ primary: DIGIT { $$ = new_digit($1); }
     | IDENT { $$ = new_name($1); }
     | LPAREN expr[it] RPAREN { $$ = $it; }
     | STRING { $$ = new_string($1); }
+    | MULTI_STRING { $$ = new_multi_string($1); }
     ;
 
 call: postfix LPAREN RPAREN { $$ = new_call($1, empty_node_list()); }

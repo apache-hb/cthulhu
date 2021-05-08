@@ -252,6 +252,9 @@ new_continue();
 node_t*
 new_mut(node_t *node);
 
+node_t*
+new_multi_string(char *text);
+
 void
 dump_node(node_t *node);
 
