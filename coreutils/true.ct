@@ -1,0 +1,48 @@
+final help_message = """
+Usage: {0} [ignored command line arguments]
+  or:  {0} OPTION
+Exit with a status code indicating success.
+
+      --help     display this help and exit
+      --version  output version information and exit
+
+NOTE: your shell may have its own version of true, which usually supersedes
+the version described here.  Please refer to your shell's documentation
+for details about the options it supports.
+
+GNU coreutils online help: <https://www.gnu.org/software/coreutils/>
+Report true translation bugs to <https://translationproject.org/team/>
+Full documentation at: <https://www.gnu.org/software/coreutils/true>
+or available locally via: info '(coreutils) true invocation'
+""";
+
+final version_message = """
+true (CTU coreutils) 1.0
+Copyright (C) 2021 Elliot Haisley.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Elliot Haisley.
+""";
+
+def help(name: *char) {
+    print(format(message, name));
+}
+
+def version() {
+    print(version_message);
+}
+
+def main(argc: int, argv: **char): int {
+    for (var idx .. range(1, argc)) {
+        final arg = argv[idx];
+        if (strcmp(arg, "--help") == 0) {
+            help(argv[0]);
+        } else if (strcmp(arg, "--version") == 0) {
+            version();
+        }
+    }
+
+    return 0;
+}

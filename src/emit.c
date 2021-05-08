@@ -53,6 +53,24 @@ emit_type(node_t *type)
 }
 
 static void 
+emit_str(char *text)
+{
+    while (*text) {
+        char c = *text++;
+        switch (c) {
+        case '\n':
+            sfmt("\\n");
+            break;
+        case '\r':
+            break;
+        default:
+            sfmt("%c", c);
+            break;
+        }
+    }
+}
+
+static void 
 emit_stmt(node_t *stmt)
 {
     size_t i = 0;
@@ -145,7 +163,7 @@ emit_stmt(node_t *stmt)
         sfmt("%d", stmt->boolean);
         break;
     case NODE_STRING:
-        sfmt("%s", stmt->text);
+        emit_str(stmt->text);
         break;
     case NODE_BRANCH:
         if (stmt->branch.cond) {
@@ -255,16 +273,29 @@ emit_decl(node_t *decl)
     sfmt("\n");
 }
 
+int wants_header = 0;
+
 void 
 emit(char *name, FILE *source, FILE *header, node_t *prog)
 {
     s = source;
 
-    sfmt("#include \"%s\"\n", name);
+    /* if we have a header then include it */
+    char *temp = strrchr(name, '.');
+    if (temp != NULL && strcmp(temp, ".h") == 0) {
+        wants_header = 1;
+    }
+
+    if (wants_header) {
+        sfmt("#include \"%s\"\n", name);
+    }
 
     for (size_t i = 0; i < prog->compound->length; i++) {
         emit_decl(prog->compound->data + i);
     }
+
+    if (!wants_header)
+        return;
 
     h = header;
     emitting_header = 1;

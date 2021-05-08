@@ -286,6 +286,17 @@ new_mut(node_t *node)
     return out;
 }
 
+node_t*
+new_multi_string(char *text)
+{
+    node_t *out = new_node(NODE_STRING);
+    size_t len = strlen(text);
+    text[len - 2] = '\0';
+    text = text + 2;
+    out->text = text;
+    return out;
+}
+
 static void
 dump_nodes(nodes_t *nodes)
 {

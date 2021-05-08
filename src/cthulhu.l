@@ -22,6 +22,7 @@
 %%
 
 [ \r\n\t] ;
+"//".* ;
 [0-9]+ { yylval->text = strdup(yytext); return DIGIT; }
 "def" { return DEF; }
 "return" { return RETURN; }
@@ -36,6 +37,7 @@
 "while" { return WHILE; }
 "break" { return BREAK; }
 "continue" { return CONTINUE; }
+\"\"\"(\\.|[^"\\])*\"\"\" { yylval->text = strdup(yytext); return MULTI_STRING; }
 \"(\\.|[^"\\])*\" { yylval->text = strdup(yytext); return STRING; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 ";" { return SEMI; }
