@@ -92,11 +92,12 @@ int yyerror();
 %type<cond>
     mut
 
+%type<text>
+    number
+
 %type<nodes>
     exprs stmts decls params fparams types fields attribs
     attributes attrib nargs args
-
-%right LBRACE ELSE
 
 %start unit
 
@@ -205,14 +206,18 @@ stmts: %empty { $$ = empty_node_list(); }
     | stmts stmt { $$ = node_append($1, $2); }
     ;
 
-primary: DIGIT { $$ = new_digit($1); }
-    | XDIGIT { $$ = new_xdigit($1); }
+primary: number { $$ = new_digit($1, NULL); }
+    | number IDENT { $$ = new_digit($1, $2); }
     | BOOL_TRUE { $$ = new_bool(true); }
     | BOOL_FALSE { $$ = new_bool(false); }
     | IDENT { $$ = new_name($1); }
     | LPAREN expr[it] RPAREN { $$ = $it; }
     | STRING { $$ = new_string($1); }
     | MULTI_STRING { $$ = new_multi_string($1); }
+    ;
+
+number: DIGIT { $$ = $1; }
+    | XDIGIT { $$ = $1; }
     ;
 
 call: postfix LPAREN RPAREN { $$ = new_call($1, empty_node_list()); }

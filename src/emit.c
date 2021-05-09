@@ -42,7 +42,7 @@ emit_type(node_t *type)
         fprintf(stderr, "typename(%s) leaked past sema\n", type->name);
         break;
     default:
-        printf("unknown type %d\n", type->kind);
+        fprintf(stderr, "unknown type %d\n", type->kind);
         break;
     }
 }
@@ -62,6 +62,40 @@ emit_str(char *text)
             sfmt("%c", c);
             break;
         }
+    }
+}
+
+static void
+emit_call_or_record_init(node_t *stmt)
+{
+    dump_node(stmt->call.body);
+    printf("\n");
+
+    size_t i;
+
+    switch (stmt->call.body->kind) {
+    case NODE_RECORD: case NODE_NAME:
+        sfmt("{");
+        for (i = 0; i < stmt->call.args->length; i++) {
+            if (i) {
+                sfmt(", ");
+            }
+            emit_stmt(stmt->call.args->data + i);
+        }
+        sfmt("}");
+        break;
+    case NODE_FUNC:
+        sfmt("%s(", stmt->call.body->decl.name);
+        for (i = 0; i < stmt->call.args->length; i++) {
+            if (i) {
+                sfmt(", ");
+            }
+            emit_stmt(stmt->call.args->data + i);
+        }
+        sfmt(")");
+        break;
+    default:
+        fprintf(stderr, "not call or record %d\n", stmt->call.body->kind);
     }
 }
 
@@ -126,15 +160,7 @@ emit_stmt(node_t *stmt)
         sfmt(")");
         break;
     case NODE_CALL:
-        emit_stmt(stmt->call.body);
-        sfmt("(");
-        for (; i < stmt->call.args->length; i++) {
-            if (i) {
-                sfmt(", ");
-            }
-            emit_stmt(stmt->call.args->data + i);
-        }
-        sfmt(")");
+        emit_call_or_record_init(stmt);
         break;
     case NODE_RETURN:
         sfmt("return");
@@ -144,7 +170,13 @@ emit_stmt(node_t *stmt)
         }
         break;
     case NODE_DIGIT:
-        sfmt("%s", stmt->digit);
+        if (stmt->digit.base == 16) {
+            sfmt("0x");
+        }
+        sfmt("%s", stmt->digit.digit);
+        if (stmt->digit.suffix) {
+            sfmt("%s", stmt->digit.suffix);
+        }
         break;
     case NODE_NAME:
         sfmt("%s", stmt->name);
@@ -188,6 +220,11 @@ emit_stmt(node_t *stmt)
     case NODE_CONTINUE:
         sfmt("continue");
         break;
+    case NODE_ARG:
+        emit_stmt(stmt->arg.expr);
+        break;
+    case NODE_RECORD:
+        break;
     default:
         fprintf(stderr, "unknown node %d\n", stmt->kind);
     }
@@ -204,6 +241,17 @@ static void
 emit_attrib(node_t *node)
 {
     sfmt("%s", node->decl.name);
+    if (node->decl.args && node->decl.args->length) {
+        sfmt("(");
+        for (size_t i = 0; i < node->decl.args->length; i++) {
+            if (i) {
+                sfmt(", ");
+            }
+            node_t *arg = node->decl.args->data + i;
+            emit_stmt(arg);
+        }
+        sfmt(")");
+    }
 }
 
 static void
@@ -266,6 +314,15 @@ emit_record(node_t *node)
     sfmt(";");
 }
 
+static void
+emit_array_var(node_t *decl)
+{
+    emit_type(decl->decl.var.type->array.type);
+    sfmt(" %s[", decl->decl.name);
+    emit_stmt(decl->decl.var.type->array.size);
+    sfmt("]");
+}
+
 static void 
 emit_decl(node_t *decl)
 {
@@ -282,7 +339,12 @@ emit_decl(node_t *decl)
         } else if (!decl->exported && emitting_header) {
             break;
         }
-        emit_stmt(decl);
+        emit_attribs(decl->decl.attribs);
+        if (decl->decl.var.type->kind == NODE_ARRAY) {
+            emit_array_var(decl);
+        } else {
+            emit_stmt(decl);
+        }
         sfmt(";");
         break;
     case NODE_RECORD:
@@ -312,10 +374,15 @@ emit(char *name, FILE *source, FILE *header, node_t *prog)
         sfmt("#include \"%s\"\n", name);
     }
 
-    sfmt("#include <stdint.h>\n");
+    sfmt("#include <stdint.h>\n#include <stddef.h>\n");
 
     for (size_t i = 0; i < prog->compound->length; i++) {
-        emit_decl(prog->compound->data + i);
+        node_t *decl = prog->compound->data + i;
+        if (wants_header && decl->kind == NODE_RECORD) {
+            continue;
+        }
+
+        emit_decl(decl);
     }
 
     if (!wants_header)
@@ -337,7 +404,7 @@ emit(char *name, FILE *source, FILE *header, node_t *prog)
 
     sfmt("#ifndef %s_h\n", name);
     sfmt("#define %s_h\n", name);
-
+    sfmt("#include <stdint.h>\n#include <stddef.h>\n");
     for (size_t i = 0; i < prog->compound->length; i++) {
         emit_decl(prog->compound->data + i);
     }

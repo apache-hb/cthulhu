@@ -161,33 +161,88 @@ sema_var(state_t *self, node_t *decl)
 }
 
 static node_t*
+resolve_func_call(state_t *self, node_t *node, node_t *func)
+{
+    if (func->closure.args->length != node->call.args->length) {
+        ERRF(self, 
+            "calling function with wrong number of parameters, expected `%zu` got `%zu`\n",
+            func->closure.args->length,
+            node->call.args->length
+        );
+    }
+
+    for (size_t i = 0; i < func->closure.args->length; i++) {
+        node_t *c = node->call.args->data + i;
+        node_t *arg = resolve_type(self, (func->closure.args->data + i)->arg.expr);
+        node_t *it = resolve_type(self, c->arg.expr);
+
+        if (!convertible_to(self, arg, it)) {
+            ERRWLF(self, c, "argument `%zu` has an incompatible type\n", i);
+        }
+    }
+
+    return func->closure.result;
+}
+
+static node_t*
+get_record_field(state_t *self, node_t *record, const char *name)
+{
+    for (size_t i = 0; i < record->decl.fields->length; i++) {
+        node_t *field = record->decl.fields->data + i;
+        if (strcmp(field->decl.name, name) == 0) {
+            return field;
+        }
+    }
+
+    ERRF(self, "record `%s` has no field `%s`\n", record->decl.name, name);
+    return NULL;
+}
+
+static node_t*
+resolve_struct_call(state_t *self, node_t *node, node_t *record)
+{
+    if (record->decl.fields->length > node->call.args->length) {
+        ERRWLF(self, node, "too many initializers for `%s`", record->decl.name);
+        return node;
+    }
+
+    for (size_t i = 0; i < node->call.args->length; i++) {
+        node_t *arg = node->call.args->data + i;
+        printf("%s %p\n", arg->arg.name, arg->arg.expr);
+        node_t *type = resolve_type(self, arg->arg.expr);
+
+        node_t *field;
+
+        if (arg->arg.name) {
+            field = get_record_field(self, record, arg->arg.name);
+            if (!field) {
+                return node;
+            }
+        } else {
+            field = record->decl.fields->data + i;
+        }
+
+        node_t *ftype = resolve_type(self, field->decl.param);
+
+        if (!convertible_to(self, type, ftype)) {
+            ERR(self, "incompatible field types\n");
+        }
+    }
+
+    return node;
+}
+
+static node_t*
 resolve_call(state_t *self, node_t *node)
 {
     node_t *func = resolve_type(self, node->call.body);
 
+    node->call.body = func;
+
     if (func->kind == NODE_CLOSURE) {
-        if (func->closure.args->length != node->call.args->length) {
-            ERRF(self, 
-                "calling function with wrong number of parameters, expected `%zu` got `%zu`\n",
-                func->closure.args->length,
-                node->call.args->length
-            );
-        }
-
-        for (size_t i = 0; i < func->closure.args->length; i++) {
-            node_t *c = node->call.args->data + i;
-            node_t *arg = resolve_type(self, func->closure.args->data + i);
-            node_t *it = resolve_type(self, c);
-
-            if (!convertible_to(self, arg, it)) {
-                ERRWLF(self, c, "argument `%zu` has an incompatible type\n", i);
-            }
-        }
-
-        return func->closure.result;
+        return resolve_func_call(self, node, func);
     } else if (func->kind == NODE_RECORD) {
-        ERR(self, "unimplemented struct creation stuff\n");
-        return node;
+        return resolve_struct_call(self, node, func);
     }
     
     ERRWL(self, node, "cannot call non-closure type");
