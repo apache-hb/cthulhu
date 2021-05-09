@@ -1,0 +1,57 @@
+@packed
+record Tag {
+    identifier: u64,
+    next: uintptr
+}
+
+@packed
+record Header {
+    entry_point: uintptr,
+    stack: uintptr,
+    flags: u64,
+    tags: uintptr
+}
+
+final stivale2_header_tag_framebuffer_id = 0x3ecc1bc43d0f7971;
+
+@packed
+record Framebuffer {
+    tag: Tag,
+    framebuffer_width: u16,
+    framebuffer_height: u16,
+    framebuffer_bpp: u16
+}
+
+final stivale2_header_tag_terminal_id = 0xa85d499b1823be72;
+
+@packed
+record Terminal {
+    tag: Tag,
+    flags: u64
+}
+
+var stack: [u8:0x1000];
+
+final terminal_tag = Terminal(
+    .tag = Tag(stivale2_header_tag_terminal_id, null),
+    .flags = 0
+);
+
+final framebuffer_tag = Framebuffer(
+    .tag = Tag(stivale2_header_tag_framebuffer_id, &terminal_tag),
+    .framebuffer_width = 0,
+    .framebuffer_height = 0,
+    .framebuffer_bpp = 0
+);
+
+@[section(".stivale2hdr"), used]
+final stivale_hdr = Header(
+    .entry_point = 0,
+    .stack = stack + sizeof(stack),
+    .flags = 0,
+    .tags = &framebuffer_tag
+);
+
+def _start(): void {
+    
+}

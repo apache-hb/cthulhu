@@ -92,6 +92,7 @@ typedef struct node_t {
     union {
         struct digit_t {
             char *digit;
+            char *suffix;
             int base;
         } digit;
 
@@ -237,7 +238,7 @@ node_t*
 set_exported(node_t *decl, bool exported);
 
 node_t*
-new_digit(char *digit);
+new_digit(char *digit, char *suffix);
 
 node_t*
 new_access(node_t *expr, char *field);
@@ -268,9 +269,6 @@ new_name(char *name);
 
 node_t*
 new_typename(char *name);
-
-node_t*
-new_xdigit(char *text);
 
 node_t*
 new_array(node_t *type, node_t *size);

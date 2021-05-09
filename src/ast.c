@@ -119,11 +119,18 @@ add_attribs(node_t *decl, nodes_t *attribs)
 }
 
 node_t*
-new_digit(char *digit) 
+new_digit(char *digit, char *suffix) 
 {
     node_t *node = new_node(NODE_DIGIT);
     node->digit.digit = digit;
-    node->digit.base = 10;
+    node->digit.suffix = suffix;
+
+    if (strncmp(digit, "0x", 2) == 0) {
+        node->digit.base = 16;
+        node->digit.digit += 2;
+    } else {
+        node->digit.base = 10;
+    }
     return node;
 }
 
@@ -222,15 +229,6 @@ new_typename(char *name)
 {
     node_t *node = new_node(NODE_TYPENAME);
     node->name = name;
-    return node;
-}
-
-node_t*
-new_xdigit(char *text)
-{
-    node_t *node = new_node(NODE_DIGIT);
-    node->digit.digit = text + 2;
-    node->digit.base = 16;
     return node;
 }
 
