@@ -172,12 +172,13 @@ resolve_func_call(state_t *self, node_t *node, node_t *func)
     }
 
     for (size_t i = 0; i < func->closure.args->length; i++) {
-        node_t *c = node->call.args->data + i;
-        node_t *arg = resolve_type(self, (func->closure.args->data + i)->arg.expr);
-        node_t *it = resolve_type(self, c->arg.expr);
+        node_t *carg = node->call.args->data + i;
+        node_t *farg = func->closure.args->data + i;
+        node_t *arg = resolve_type(self, farg);
+        node_t *it = resolve_type(self, carg->arg.expr);
 
         if (!convertible_to(self, arg, it)) {
-            ERRWLF(self, c, "argument `%zu` has an incompatible type\n", i);
+            ERRWLF(self, carg, "argument `%zu` has an incompatible type\n", i);
         }
     }
 
@@ -208,7 +209,6 @@ resolve_struct_call(state_t *self, node_t *node, node_t *record)
 
     for (size_t i = 0; i < node->call.args->length; i++) {
         node_t *arg = node->call.args->data + i;
-        printf("%s %p\n", arg->arg.name, arg->arg.expr);
         node_t *type = resolve_type(self, arg->arg.expr);
 
         node_t *field;
@@ -219,14 +219,31 @@ resolve_struct_call(state_t *self, node_t *node, node_t *record)
                 return node;
             }
         } else {
-            field = record->decl.fields->data + i;
+            field = (record->decl.fields->data + i);
         }
 
         node_t *ftype = resolve_type(self, field->decl.param);
 
         if (!convertible_to(self, type, ftype)) {
-            ERR(self, "incompatible field types\n");
+            ERRWLF(self, field, "field `%s` initialized with incompatible type", field->decl.name);
         }
+    }
+
+    return node;
+}
+
+static node_t*
+resolve_builtin_type_apply(state_t *self, node_t *node, node_t *type)
+{
+    (void)self;
+    switch (type->decl.builtin.kind) {
+    case SINT: case UINT:
+        if (node->kind == NODE_DIGIT) {
+            
+        }
+        break;
+    default:
+        break;
     }
 
     return node;
@@ -239,14 +256,17 @@ resolve_call(state_t *self, node_t *node)
 
     node->call.body = func;
 
-    if (func->kind == NODE_CLOSURE) {
+    switch (func->kind) {
+    case NODE_CLOSURE:
         return resolve_func_call(self, node, func);
-    } else if (func->kind == NODE_RECORD) {
+    case NODE_RECORD:
         return resolve_struct_call(self, node, func);
+    case NODE_BUILTIN_TYPE:
+        return resolve_builtin_type_apply(self, node, func);
+    default:    
+        ERRWL(self, node, "expression is not invokable");
+        return node;
     }
-    
-    ERRWL(self, node, "cannot call non-closure type");
-    return node;
 }
 
 static node_t*
@@ -503,6 +523,8 @@ resolve_type(state_t *self, node_t *node)
         return get_inttype(self);
     case NODE_BOOL: 
         return get_booltype(self);
+    case NODE_NULL:
+        return new_pointer(get_voidtype(self));
     case NODE_BUILTIN_TYPE: 
         return node;
     case NODE_NAME: case NODE_TYPENAME:

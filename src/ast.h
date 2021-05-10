@@ -6,13 +6,13 @@
 #include <stdbool.h>
 
 typedef struct node_t node_t;
-typedef struct nodes_t nodes_t;
 
 typedef enum {
     /* literals */
     NODE_DIGIT,
     NODE_STRING,
     NODE_BOOL,
+    NODE_NULL,
 
     /* expressions */
     NODE_UNARY,
@@ -332,6 +332,9 @@ add_attribs(node_t *decl, nodes_t *attribs);
 
 node_t*
 new_attrib(char *name, nodes_t *args);
+
+node_t*
+new_null();
 
 void
 dump_node(node_t *node);

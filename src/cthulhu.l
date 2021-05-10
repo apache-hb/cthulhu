@@ -30,6 +30,7 @@
 "var" { return VAR; }
 "true" { return BOOL_TRUE; }
 "false" { return BOOL_FALSE; }
+"null" { return PTR_NULL; }
 "export" { return EXPORT; }
 "final" { return FINAL; }
 "record" { return RECORD; }
