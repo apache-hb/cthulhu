@@ -8,15 +8,12 @@
 %locations
 %expect 0 // TODO: resolve dangling else without requiring compound stmts everywhere
 
-%code requires {
-#include "ast.h"
-}
-
 %{
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include "ast.h"
 
 int yylex();
 int yyerror();
@@ -26,281 +23,41 @@ int yyerror();
 %union {
     char *text;
     struct node_t *node;
-    struct nodes_t *nodes;
-    bool cond;
 }
 
-/* tokens from flex */
 %token<text>
-    DIGIT "integer literal"
-    XDIGIT "hexadecimal integer literal"
     IDENT "identifier"
+    DIGIT "integer literal"
+    BDIGIT "binary integer literal"
+    XDIGIT "hexadecimal integer literal"
     STRING "string literal"
-    MULTI_STRING "multiline string literal"
+    MSTRING "raw string literal"
+    NIL "null"
 
-/* keywords */
-%token
-    DEF "def"
-    VAR "var"
-    RETURN "return"
-    EXPORT "export"
-    RECORD "record"
-    FINAL "final"
-    BOOL_TRUE "true"
-    BOOL_FALSE "false"
-    PTR_NULL "null"
-    IF "if"
-    ELSE "else"
-    AS "as"
-    WHILE "while"
-    BREAK "break"
-    CONTINUE "continue"
-
-/* math ops */
-%token 
-    SEMI ";"
-    ADD "+"
-    SUB "-"
-    MUL "*"
-    DIV "/"
-    REM "%"
-    BITAND "&"
-    NOT "!"
-
-/* language ops */
-%token
-    LPAREN "("
-    RPAREN ")"
-    LBRACE "{"
-    RBRACE "}"
-    COMMA ","
-    QUESTION "?"
-    COLON ":"
-    COLON2 "::"
-    ASSIGN "="
-    ARROW "->"
-    AT "@"
-    LSQUARE "["
-    RSQUARE "]"
-    DOT "."
-    END 0 "end of file"
-
-%type<node> 
-    primary call postfix unary multiplicative additive conditional expr 
-    decl func stmt type param result var compound declb init
-    cond if else record field while attribute narg
-
-%type<cond>
-    mut
+%type<node>
+    number string literal
 
 %type<text>
-    number
-
-%type<nodes>
-    exprs stmts decls params fparams types fields attribs
-    attributes attrib nargs args
-
-%start unit
+    digit
 
 %%
 
-unit: decls END { *node = new_compound($1); }
+literal: number { $$ = loc($1, &@1); }
+    | string { $$ = loc($1, &@1); }
+    | NIL { $$ = loc(new_null(), &@1); }
     ;
 
-decls: decl { $$ = new_node_list($1); }
-    | decls decl { $$ = node_append($1, $2); }
+number: digit { $$ = new_digit($1, NULL); }
+    | digit IDENT { $$ = new_digit($1, $2); }
     ;
 
-decl: attribs declb { $$ = add_attribs(add_loc($2, &@2), $1); }
-    | EXPORT declb { $$ = set_exported(add_loc($2, &@2), true); }
-    ;
-
-attribs: %empty { $$ = empty_node_list(); }
-    | attribs attrib { $$ = nodes_merge($1, $2); }
-    ;
-
-attrib: AT attribute { $$ = new_node_list($2); }
-    | AT LSQUARE attributes RSQUARE { $$ = $3; }
-    ;
-
-attributes: attribute { $$ = new_node_list($1); }
-    | attributes COMMA attribute { $$ = node_append($1, $3); }
-    ;
-
-attribute: IDENT { $$ = new_attrib($1, NULL); }
-    | IDENT LPAREN exprs RPAREN { $$ = new_attrib($1, $3); }
-    ;
-
-declb: func { $$ = $1; }
-    | var { $$ = $1; }
-    | record { $$ = $1; }
-    ;
-
-record: RECORD IDENT LBRACE fields RBRACE { $$ = new_record($2, $4); }
-    ;
-
-fields: field { $$ = new_node_list($1); }
-    | fields COMMA field { $$ = node_append($1, $3); }
-    ;
-
-field: IDENT COLON type { $$ = new_param($1, $3); }
-    ;
-
-var: mut[m] IDENT[name] result[it] init[i] SEMI { $$ = add_loc(new_var($name, $it, $i, $m), &@name); }
-    ;
-
-init: %empty { $$ = NULL; }
-    | ASSIGN expr { $$ = $2; }
-    ;
-
-mut: VAR { $$ = true; }
-    | FINAL { $$ = false; }
-    ;
-
-func: DEF IDENT[name] fparams[args] result[res] compound[body] { $$ = new_func($name, $args, $res, $body); }
-    ;
-
-result: %empty { $$ = NULL; } 
-    | COLON type { $$ = $2; }
-    ;
-
-fparams: LPAREN RPAREN { $$ = empty_node_list(); }
-    | LPAREN params RPAREN { $$ = $2; }
-    ;
-
-params: param { $$ = new_node_list($1); }
-    | params COMMA param { $$ = node_append($1, $3); }
-    ;
-
-param: IDENT COLON type { $$ = new_param($1, $3); }
-    ;
-
-stmt: compound { $$ = $1; }
-    | expr ASSIGN expr SEMI { $$ = new_assign($1, $3); }
-    | expr SEMI { $$ = $1; }
-    | RETURN SEMI { $$ = new_return(NULL); }
-    | RETURN expr SEMI { $$ = new_return($2); }
-    | var { $$ = $1; }
-    | if { $$ = $1; }
-    | while { $$ = $1; }
-    | BREAK SEMI { $$ = new_break(); }
-    | CONTINUE SEMI { $$ = new_continue(); }
-    ;
-
-while: WHILE cond compound { $$ = new_while($2, $3); }
-    ;
-
-if: IF cond compound else { $$ = new_branch($2, $3, $4); }
-    ;
-
-else: ELSE compound { $$ = new_branch(NULL, $2, NULL); }
-    | %empty { $$ = NULL; }
-    ;
-
-cond: LPAREN expr RPAREN { $$ = $2; }
-    ;
-
-compound: LBRACE stmts RBRACE { $$ = new_compound($2); }
-    ;
-
-stmts: %empty { $$ = empty_node_list(); }
-    | stmts stmt { $$ = node_append($1, $2); }
-    ;
-
-primary: number { $$ = new_digit($1, NULL); }
-    | number IDENT { $$ = new_digit($1, $2); }
-    | BOOL_TRUE { $$ = new_bool(true); }
-    | BOOL_FALSE { $$ = new_bool(false); }
-    | IDENT { $$ = new_name($1); }
-    | LPAREN expr[it] RPAREN { $$ = $it; }
-    | STRING { $$ = new_string($1); }
-    | MULTI_STRING { $$ = new_multi_string($1); }
-    | PTR_NULL { $$ = new_null(); }
-    ;
-
-number: DIGIT { $$ = $1; }
+digit: DIGIT { $$ = $1; }
     | XDIGIT { $$ = $1; }
+    | BDIGIT { $$ = $1; }
     ;
 
-call: postfix LPAREN RPAREN { $$ = new_call($1, empty_node_list()); }
-    | postfix LPAREN args[a] RPAREN { $$ = new_call($1, $a); }
-    ;
-
-args: expr { $$ = new_node_list(new_arg(NULL, $1)); }
-    | expr COMMA args { $$ = node_prepend($3, new_arg(NULL, $1)); }
-    | nargs { $$ = $1; }
-    ;
-
-nargs: narg { $$ = new_node_list($1); }
-    | nargs COMMA narg { $$ = node_append($1, $3); }
-    ;
-
-narg: DOT IDENT ASSIGN expr { $$ = new_arg($2, $4); }
-    ;
-
-postfix: primary { $$ = $1; }
-    | postfix DOT IDENT { $$ = new_access($1, $3); }
-    | postfix AS type { $$ = new_cast($1, $3); }
-    | call { $$ = $1; }
-    ;
-
-unary: postfix { $$ = $1; }
-    | ADD unary { $$ = new_unary(UNARY_ABS, $2); }
-    | SUB unary { $$ = new_unary(UNARY_NEG, $2); }
-    | BITAND unary { $$ = new_unary(UNARY_REF, $2); }
-    | MUL unary { $$ = new_unary(UNARY_DEREF, $2); }
-    | NOT unary { $$ = new_unary(UNARY_NOT, $2); }
-    ;
-
-multiplicative: unary { $$ = $1; }
-    | multiplicative[lhs] MUL unary[rhs] { $$ = new_binary(BINARY_MUL, $lhs, $rhs); }
-    | multiplicative[lhs] DIV unary[rhs] { $$ = new_binary(BINARY_DIV, $lhs, $rhs); }
-    | multiplicative[lhs] REM unary[rhs] { $$ = new_binary(BINARY_REM, $lhs, $rhs); }
-    ;
-
-additive: multiplicative { $$ = $1; }
-    | additive[lhs] ADD multiplicative[rhs] { $$ = new_binary(BINARY_ADD, $lhs, $rhs); }
-    | additive[lhs] SUB multiplicative[rhs] { $$ = new_binary(BINARY_SUB, $lhs, $rhs); }
-    ;
-
-conditional: additive { $$ = $1; }
-    | additive[cond] QUESTION expr[yes] COLON expr[no] { $$ = new_ternary($cond, $yes, $no); }
-    ;
-
-expr: conditional { $$ = $1; }
-    ;
-
-exprs: expr { $$ = new_node_list($1); }
-    | exprs COMMA expr[it] { $$ = node_append($1, $it); }
-    ;
-
-type: IDENT { $$ = new_typename($1); }
-    | IDENT COLON2 IDENT { $$ = new_qual($1, $3); }
-    | MUL type { $$ = new_pointer($2); }
-    | LPAREN types[args] RPAREN ARROW type[res] { $$ = new_closure($args, $res); }
-    | LPAREN RPAREN ARROW type[res] { $$ = new_closure(empty_node_list(), $res); }
-    | LSQUARE type RSQUARE { $$ = new_array($2, NULL); }
-    | LSQUARE type COLON expr RSQUARE { $$ = new_array($2, $4); }
-    ;
-
-types: type { $$ = new_node_list($1); }
-    | types COMMA type[it] { $$ = node_append($1, $it); }
+string: STRING { $$ = new_string($1); }
+    | MSTRING { $$ = new_string($1); }
     ;
 
 %%
-
-/**
-
-tightest-loosest binding
-
-. ->
-() []
-unary + - ~ !
-?:
-< <= > >=
-| & ^
-<< >>
-/ * %
-+ -
-
-*/

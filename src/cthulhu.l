@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "bison.h"
 
-#define YY_USER_ACTION                                             \
+#define YY_USER_ACTION                                               \
     yylloc->first_line = yylloc->last_line;                          \
     yylloc->first_column = yylloc->last_column;                      \
     if (yylloc->last_line == yylineno)                               \
@@ -25,47 +25,13 @@
 "//".* ;
 [0-9]+ { yylval->text = strdup(yytext); return DIGIT; }
 "0x"[0-9a-fA-F]+ { yylval->text = strdup(yytext); return XDIGIT; }
-"def" { return DEF; }
-"return" { return RETURN; }
-"var" { return VAR; }
-"true" { return BOOL_TRUE; }
-"false" { return BOOL_FALSE; }
-"null" { return PTR_NULL; }
-"export" { return EXPORT; }
-"final" { return FINAL; }
-"record" { return RECORD; }
-"as" { return AS; }
-"if" { return IF; }
-"else" { return ELSE; }
-"while" { return WHILE; }
-"break" { return BREAK; }
-"continue" { return CONTINUE; }
-\"\"\"(\\.|[^"\\])*\"\"\" { yylval->text = strdup(yytext); return MULTI_STRING; }
+"0b"[01]+ { yylval->text = strdup(yytext); return BDIGIT; }
+\"\"\"(\\.|[^"\\])*\"\"\" { yylval->text = strdup(yytext); return MSTRING; }
 \"(\\.|[^"\\])*\" { yylval->text = strdup(yytext); return STRING; }
+
+"null" { return NIL; }
+
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
-";" { return SEMI; }
-"+" { return ADD; }
-"-" { return SUB; }
-"*" { return MUL; }
-"/" { return DIV; }
-"%" { return REM; }
-"?" { return QUESTION; }
-"::" { return COLON2; }
-":" { return COLON; }
-"@" { return AT; }
-"[" { return LSQUARE; }
-"]" { return RSQUARE; }
-"," { return COMMA; }
-"." { return DOT; }
-"=" { return ASSIGN; }
-"(" { return LPAREN; }
-")" { return RPAREN; }
-"{" { return LBRACE; }
-"}" { return RBRACE; }
-"&" { return BITAND; }
-"!" { return NOT; }
-"->" { return ARROW; }
-<<EOF>> { return END; }
 . { fprintf(stderr, "unknown characters `%s`\n", yytext); }
 
 %%
