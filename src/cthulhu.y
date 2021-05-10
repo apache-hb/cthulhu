@@ -48,6 +48,7 @@ int yyerror();
     FINAL "final"
     BOOL_TRUE "true"
     BOOL_FALSE "false"
+    PTR_NULL "null"
     IF "if"
     ELSE "else"
     AS "as"
@@ -214,6 +215,7 @@ primary: number { $$ = new_digit($1, NULL); }
     | LPAREN expr[it] RPAREN { $$ = $it; }
     | STRING { $$ = new_string($1); }
     | MULTI_STRING { $$ = new_multi_string($1); }
+    | PTR_NULL { $$ = new_null(); }
     ;
 
 number: DIGIT { $$ = $1; }
@@ -225,7 +227,7 @@ call: postfix LPAREN RPAREN { $$ = new_call($1, empty_node_list()); }
     ;
 
 args: expr { $$ = new_node_list(new_arg(NULL, $1)); }
-    | expr COMMA args { $$ = node_prepend($3, $1); }
+    | expr COMMA args { $$ = node_prepend($3, new_arg(NULL, $1)); }
     | nargs { $$ = $1; }
     ;
 

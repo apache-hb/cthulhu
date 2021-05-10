@@ -38,6 +38,10 @@ int main(int argc, const char **argv) {
             const char *path = arg + output_arg_len;
             size_t len = strlen(path) + 3;
             target = calloc(1, len);
+            if (!target) {
+                fprintf(stderr, "calloc failed\n");
+                return 1;
+            }
 
             strcpy(target, path);
             strcpy(target + len - 3, ".c");

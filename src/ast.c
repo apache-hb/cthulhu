@@ -400,6 +400,12 @@ new_array(node_t *type, node_t *size)
     return out;
 }
 
+node_t*
+new_null()
+{
+    return new_node(NODE_NULL);
+}
+
 static void
 dump_nodes(nodes_t *nodes)
 {
@@ -619,6 +625,9 @@ dump_node(node_t *node)
         }
         dump_node(node->arg.expr);
         printf(")");
+        break;
+    case NODE_NULL:
+        printf("null");
         break;
     }
 }

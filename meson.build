@@ -19,8 +19,16 @@ parse = custom_target('parse',
     depends : lex
 )
 
-ctc = executable('cthulhu', parse, lex, 'src/ast.c', 'src/main.c', 'src/sema.c', 'src/emit.c',
-    include_directories : 'src'
+src = [
+    'src/ast.c', 
+    'src/main.c', 
+    'src/sema.c', 
+    'src/emit.c',
+]
+
+ctc = executable('cthulhu', parse, lex, src,
+    include_directories : 'src',
+    c_args : [ '-Wno-pedantic' ]
 )
 
 subdir('tests')
