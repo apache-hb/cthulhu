@@ -27,6 +27,12 @@ def decorated2() {
     } else {
         return 25;
     }
+
+    for :it [a, b] .. range(10, 20) {
+
+    } else {
+        return;
+    }
 }
 
 final x = 10;
