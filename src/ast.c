@@ -227,6 +227,23 @@ node_t *record(char *name, nodes_t *items)
     return node;
 }
 
+node_t *branch(node_t *cond, node_t *body, node_t *next)
+{
+    node_t *node = new_node(NODE_BRANCH);
+    node->branch.cond = cond;
+    node->branch.body = body;
+    node->branch.next = next;
+    return node;
+}
+
+node_t *condition(node_t *init, node_t *cond)
+{
+    node_t *node = new_node(NODE_COND);
+    node->cond.init = init;
+    node->cond.cond = cond;
+    return node;
+}
+
 node_t *uniondecl(char *name, nodes_t *items)
 {
     node_t *node = new_decl(NODE_UNION, name);
@@ -450,6 +467,8 @@ static void dump_path(path_t *path)
 
 void dump_node(node_t *node)
 {    
+    node_t *tail = node;
+
     bool set = false;
     bool exported = node->exported;
     bool mut = node->type > NODE_MINTYPE && node->type < NODE_MAXTYPE;
@@ -825,6 +844,32 @@ void dump_node(node_t *node)
         break;
     case NODE_LIST:
         printf("("); dump_nodes(node->items, false); printf(")");
+        break;
+    case NODE_COND:
+        printf("(cond "); 
+        dump_node(node->cond.init);
+        printf(" ");
+        dump_node(node->cond.cond);
+        printf(")");
+        break;
+    case NODE_BRANCH:
+        printf("(branch");
+        ln(1);
+        while (tail) {
+            if (tail->branch.cond) {
+                printf("(if "); dump_node(tail->branch.cond);
+            } else {
+                printf("(else ");
+            }
+            ln(1); printf("then = "); 
+            dump_node(tail->branch.body);
+            ln(-1); printf(")");
+            tail = tail->branch.next;
+            if (tail) {
+                ln(0);
+            }
+        }
+        ln(-1); printf(")");
         break;
 
     case NODE_MINTYPE: case NODE_MAXTYPE:

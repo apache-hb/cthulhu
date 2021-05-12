@@ -53,9 +53,11 @@
 "if" { return IF; }
 "else" { return ELSE; }
 "with" { return WITH; } 
+"then" { return THEN; }
 "null" { return NIL; }
 
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
+"$" { yylval->text = strdup(yytext); return IDENT; }
 
 "(" { return LPAREN; }
 ")" { return RPAREN; }

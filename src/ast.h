@@ -33,6 +33,8 @@ typedef enum {
     NODE_ATTRIB,
     NODE_WHILE,
     NODE_FOR,
+    NODE_BRANCH,
+    NODE_COND,
 
     /* decls */
     NODE_MINDECL,
@@ -171,6 +173,11 @@ typedef struct node_t {
             node_t *next;
         } branch;
 
+        struct condition_t {
+            node_t *init;
+            node_t *cond;
+        } cond;
+
         struct digit_t {
             char *digit;
             char *suffix;
@@ -273,6 +280,7 @@ node_t *compound(nodes_t *stmts);
 node_t *assign(node_t *lhs, node_t *rhs, int op);
 node_t *nbreak(char *label);
 node_t *ncontinue();
+node_t *branch(node_t *cond, node_t *body, node_t *next);
 
 /* types */
 node_t *redirect(char *name);
@@ -295,6 +303,7 @@ node_t *subscript(node_t *expr, node_t *index);
 node_t *cast(node_t *expr, node_t *type);
 node_t *name(char *text);
 node_t *items(nodes_t *items);
+node_t *condition(node_t *init, node_t *cond);
 
 /* constants */
 node_t *string(char *text);
