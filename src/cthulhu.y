@@ -114,6 +114,7 @@ int yyerror();
     WHILE "while"
     FOR "for"
     ELSE "else"
+    THEN "then"
     ASM "asm"
     IF "if"
     WITH "with"
@@ -125,7 +126,7 @@ int yyerror();
     array closure aliasdecl record field import union variant
     case module subscript bitshift comparison equality bitwise logical
     stmt compound return assign break continue namedarg attribute
-    while else names for
+    while else names for if elseif condition
 
 %type<nodes>
     args call params parambody defaultparams types typelist
@@ -197,7 +198,7 @@ path: IDENT { $$ = path($1); }
     | path COLON2 IDENT { $$ = path_add($1, $3); }
     ;
 
-basedecl: vardecl { $$ = $1; }
+basedecl: vardecl SEMI { $$ = $1; }
     | funcdecl { $$ = $1; }
     | aliasdecl { $$ = $1; }
     | union { $$ = $1; }
@@ -245,8 +246,6 @@ funcdecl: DEF IDENT params result body { $$ = func($2, $3, $4, $5); }
 body: SEMI { $$ = NULL; }
     | ASSIGN expr SEMI { $$ = $2; }
     | compound { $$ = $1; }
-    | vardecl { $$ = $1; }
-    | aliasdecl { $$ = $1; }
     ;
 
 stmt: compound { $$ = $1; }
@@ -255,8 +254,22 @@ stmt: compound { $$ = $1; }
     | break { $$ = $1; }
     | continue { $$ = $1; }
     | while { $$ = $1; }
-    | vardecl { $$ = $1; }
+    | vardecl SEMI { $$ = $1; }
+    | aliasdecl { $$ = $1; }
     | for { $$ = $1; }
+    | if { $$ = $1; }
+    ;
+
+if: IF condition compound elseif { $$ = branch($2, $3, $4); }
+    ;
+
+elseif: ELSE IF condition compound elseif { $$ = branch($3, $4, $5); }
+    | ELSE compound { $$ = branch(NULL, $2, NULL); }
+    | %empty { $$ = NULL; }
+    ;
+
+condition: expr { $$ = $1; }
+    | vardecl THEN expr { $$ = condition($1, $3); }
     ;
 
 for: FOR label names DOT2 expr compound else { $$ = nfor($2, $3, $5, $6, $7); }
@@ -323,7 +336,7 @@ param: IDENT COLON type { $$ = param($1, $3, NULL); }
 defaultparam: IDENT COLON type ASSIGN expr { $$ = param($1, $3, $5); }
     ;
 
-vardecl: mut names result init SEMI { $$ = var($2, $3, $4, $1); }
+vardecl: mut names result init { $$ = var($2, $3, $4, $1); }
     ;
 
 names: IDENT { $$ = name($1); }

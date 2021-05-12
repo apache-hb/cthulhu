@@ -37,3 +37,15 @@ def decorated2() {
 
 final x = 10;
 final [y, z] = int(10, 20);
+
+def thing() {
+    if x {
+
+    } else if y {
+
+    } else if var x = 10 then x == 10 {
+
+    } else {
+
+    }
+}
