@@ -405,6 +405,15 @@ node_t *items(nodes_t *items)
     return node;
 }
 
+node_t *nfor(char *label, node_t *names, node_t *range, node_t *body, node_t *tail)
+{
+    node_t *node = new_decl(NODE_FOR, label);
+    node->decl.iter.names = names;
+    node->decl.iter.range = range;
+    node->decl.iter.body = body;
+    node->decl.iter.tail = tail;
+    return node;
+}
 
 static int depth = 0;
 
@@ -795,6 +804,19 @@ void dump_node(node_t *node)
         ln(0); printf("body = "); dump_node(node->decl.loop.body);
         if (node->decl.loop.tail) {
             ln(0); printf("else = "); dump_node(node->decl.loop.tail);
+        }
+        ln(-1); printf(")");
+        break;
+    case NODE_FOR:
+        printf("(for ");
+        if (node->decl.name) {
+            printf("label = `%s`", node->decl.name);
+        }
+        ln(1); printf("names = "); dump_node(node->decl.iter.names); 
+        ln(0); printf("range = "); dump_node(node->decl.iter.range);
+        ln(0); printf("body = "); dump_node(node->decl.iter.body);
+        if (node->decl.iter.tail) {
+            printf("else = "); dump_node(node->decl.iter.tail);
         }
         ln(-1); printf(")");
         break;

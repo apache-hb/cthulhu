@@ -124,7 +124,7 @@ int yyerror();
     array closure aliasdecl record field import union variant
     case module subscript bitshift comparison equality bitwise logical
     stmt compound return assign asm break continue namedarg attribute
-    while else names
+    while else names for
 
 %type<nodes>
     args call params parambody defaultparams types typelist
@@ -254,6 +254,11 @@ stmt: compound { $$ = $1; }
     | break { $$ = $1; }
     | continue { $$ = $1; }
     | while { $$ = $1; }
+    | vardecl { $$ = $1; }
+    | for { $$ = $1; }
+    ;
+
+for: FOR label names DOT2 expr compound else { $$ = nfor($2, $3, $5, $6, $7); }
     ;
 
 while: WHILE label expr compound else { $$ = nwhile($2, $3, $4, $5); }

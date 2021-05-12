@@ -32,6 +32,7 @@ typedef enum {
     NODE_CONTINUE,
     NODE_ATTRIB,
     NODE_WHILE,
+    NODE_FOR,
 
     /* decls */
     NODE_MINDECL,
@@ -151,7 +152,7 @@ typedef struct node_t {
                 } loop;
 
                 struct for_t {
-                    node_t *init;
+                    node_t *names;
                     node_t *range;
                     node_t *body;
                     node_t *tail;
@@ -264,6 +265,7 @@ node_t *arg(char *name, node_t *expr);
 node_t *attach(node_t *decl, nodes_t *attribs);
 node_t *attribute(path_t *path, nodes_t *args);
 node_t *nwhile(char *label, node_t *cond, node_t *body, node_t *tail);
+node_t *nfor(char *label, node_t *names, node_t *range, node_t *body, node_t *tail);
 
 /* statements */
 node_t *result(node_t *expr);
