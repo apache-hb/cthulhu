@@ -43,6 +43,7 @@
 "variant" { return VARIANT; }
 "using" { return USING; }
 "return" { return RETURN; }
+"raise" { return RAISE; }
 "continue" { return CONTINUE; }
 "compile" { return COMPILE; }
 "asm" { return ASM; }
