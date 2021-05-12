@@ -18,30 +18,29 @@ int main(int argc, const char **argv) {
         path = "stdin";
     }
 
-    scan_extra_t extra = { NULL, path, NULL };
-    
-    err = yylex_init(&extra.scanner);
+    yyscan_t scan;
+    scan_extra_t extra = { path, strdup("main"), NULL };
+
+    err = yylex_init(&scan);
 
     if (err) {
         fprintf(stderr, "yylex_init failed %d %s\n", err, strerror(errno));
         return err;
     }    
 
-    yyset_in(source, extra.scanner);
-    yyset_extra(&extra, extra.scanner);
+    yyset_in(source, scan);
 
-    err = yyparse(extra.scanner);
+    err = yyparse(scan, &extra);
 
     if (err) {
         fprintf(stderr, "yyparse failed\n");
         return err;
     }
 
-    // TODO: what the actual fuck why is extra.ast invalid here even 
-    // though its assigned in yyparse
-    //dump_node(extra.ast);
+    dump_node(extra.ast);
+    printf("\n");
 
-    yylex_destroy(extra.scanner);
+    yylex_destroy(scan);
 
     return 0;
 }

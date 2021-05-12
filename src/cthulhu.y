@@ -3,9 +3,10 @@
 
 %define parse.error verbose // these messages are still awful but better than nothing
 %define api.pure full
-%param { scan_extra_t *x }
+%lex-param { void *scanner }
+%parse-param { void *scanner } { scan_extra_t *x }
 %locations
-%expect 0 // TODO: resolve dangling else without requiring compound stmts everywhere
+%expect 0
 
 %code requires {
     #include "scanner.h"
@@ -20,8 +21,6 @@
 
 int yylex();
 int yyerror();
-
-#define YYLEX_PARAM x->scanner
 
 %}
 
@@ -175,7 +174,7 @@ int yyerror();
 
 %%
 
-unit: decls { x->ast = scope(path(strdup("main")), $1); dump_node(x->ast); printf("\n"); }
+unit: decls { x->ast = scope(path(strdup(x->mod)), $1); }
     ;
 
 decls: decl { $$ = list($1); }

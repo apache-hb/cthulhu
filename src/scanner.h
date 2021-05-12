@@ -3,9 +3,9 @@
 
 #include "ast.h"
 
-typedef struct {
-    void *scanner;
+typedef struct scan_extra_t {
     const char *path;
+    const char *mod;
     node_t *ast;
 } scan_extra_t;
 
