@@ -6,7 +6,7 @@
 typedef struct {
     void *scanner;
     const char *path;
-    nodes_t *ast;
+    node_t *ast;
 } scan_extra_t;
 
 #endif /* SCANNER_H */

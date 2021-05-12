@@ -366,6 +366,13 @@ node_t *digit(char *text, char *suffix)
     return node;
 }
 
+node_t *raise(node_t *expr)
+{
+    node_t *node = new_node(NODE_RAISE);
+    node->expr = expr;
+    return node;
+}
+
 node_t *variant(char *name, node_t *type, nodes_t *cases)
 {
     node_t *node = new_decl(NODE_VARIANT, name);
@@ -432,6 +439,14 @@ node_t *nfor(char *label, node_t *names, node_t *range, node_t *body, node_t *ta
     return node;
 }
 
+node_t *with(node_t *init, node_t *body)
+{
+    node_t *node = new_node(NODE_WITH);
+    node->with.init = init;
+    node->with.body = body;
+    return node;
+}
+
 static int depth = 0;
 
 static void ln(int change)
@@ -473,7 +488,7 @@ void dump_node(node_t *node)
     bool exported = node->exported;
     bool mut = node->type > NODE_MINTYPE && node->type < NODE_MAXTYPE;
     bool decl = node->type > NODE_MINDECL && node->type < NODE_MAXDECL;
-    bool attribs = decl && node->decl.attribs;
+    bool attribs = decl && node->decl.attribs && node->decl.attribs->length > 0;
     bool comptime = node->comptime;
 
     if (exported) {
@@ -489,7 +504,7 @@ void dump_node(node_t *node)
     }
 
     if (attribs) {
-        printf("(attribs ");
+        printf("(attribs %zu", node->decl.attribs->length);
         ln(1); dump_nodes(node->decl.attribs, true);
         ln(0); printf("decl = ");
     }
@@ -869,6 +884,17 @@ void dump_node(node_t *node)
                 ln(0);
             }
         }
+        ln(-1); printf(")");
+        break;
+    case NODE_RAISE:
+        printf("(raise ");
+        dump_node(node->expr);
+        printf(")");
+        break;
+    case NODE_WITH:
+        printf("(with ");
+        ln(1); printf("init = "); dump_node(node->with.init);
+        ln(0); printf("body = "); dump_node(node->with.body);
         ln(-1); printf(")");
         break;
 

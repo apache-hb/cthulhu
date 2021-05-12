@@ -43,7 +43,6 @@
 "variant" { return VARIANT; }
 "using" { return USING; }
 "return" { return RETURN; }
-"raise" { return RAISE; }
 "continue" { return CONTINUE; }
 "compile" { return COMPILE; }
 "asm" { return ASM; }
@@ -55,6 +54,35 @@
 "with" { return WITH; } 
 "then" { return THEN; }
 "null" { return NIL; }
+
+"raise" { return RAISE; }
+"try" { return TRY; }
+"catch" { return CATCH; }
+"public" { return PUBLIC; }
+"private" { return PRIVATE; }
+"inline" { return INLINE; }
+"trait" { return TRAIT; }
+"class" { return CLASS; }
+"static" { return STATIC; }
+"unsafe" { return UNSAFE; }
+"async" { return ASYNC; }
+"await" { return AWAIT; }
+"yield" { return YIELD; }
+"virtual" { return VIRTUAL; }
+"override" { return OVERRIDE; }
+"this" { return THIS; }
+"case" { return CASE; }
+"switch" { return SWITCH; }
+"match" { return MATCH; }
+"do" { return DO; }
+"operator" { return OPERATOR; }
+"register" { return REGISTER; }
+"volatile" { return VOLATILE; }
+"requires" { return REQUIRES; }
+"concept" { return CONCEPT; }
+"template" { return TEMPLATE; }
+"new" { return NEW; }
+"delete" { return DELETE; }
 
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 "$" { yylval->text = strdup(yytext); return IDENT; }
