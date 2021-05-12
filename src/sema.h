@@ -6,12 +6,14 @@
 typedef struct state_t {
     struct state_t *parent;
     int errors;
+
+    nodes_t *decls;
 } state_t;
 
 void sema_init(state_t *state);
 
-/* resolve typenames and filter out basic errors */
-void typeresolve(state_t *state, node_t *node);
+/* resolve typenames */
+void nameresolve(state_t *state, node_t *node);
 
 /* check typecasting and validate assignments */
 void typecheck(state_t *state, node_t *node);

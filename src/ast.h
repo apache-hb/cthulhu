@@ -35,6 +35,9 @@ typedef enum {
     NODE_FOR,
     NODE_BRANCH,
     NODE_COND,
+    NODE_RAISE,
+    NODE_WITH,
+    NODE_MODULE,
 
     /* decls */
     NODE_MINDECL,
@@ -45,7 +48,6 @@ typedef enum {
     NODE_ALIAS,
     NODE_ITEM,
     NODE_INCLUDE,
-    NODE_MODULE,
     NODE_ARG,
 
     NODE_MAXDECL,
@@ -99,6 +101,11 @@ typedef struct node_t {
 
     union {
         char *text;
+
+        struct with_t {
+            node_t *init;
+            node_t *body;
+        } with;
 
         struct attrib_t {
             path_t *path;
@@ -281,6 +288,8 @@ node_t *assign(node_t *lhs, node_t *rhs, int op);
 node_t *nbreak(char *label);
 node_t *ncontinue();
 node_t *branch(node_t *cond, node_t *body, node_t *next);
+node_t *raise(node_t *expr);
+node_t *with(node_t *init, node_t *body);
 
 /* types */
 node_t *redirect(char *name);

@@ -37,6 +37,10 @@ int main(int argc, const char **argv) {
         return err;
     }
 
+    // TODO: what the actual fuck why is extra.ast invalid here even 
+    // though its assigned in yyparse
+    //dump_node(extra.ast);
+
     yylex_destroy(extra.scanner);
 
     return 0;

@@ -9,7 +9,7 @@ void sema_init(state_t *state)
     state->parent = NULL;
 }
 
-void typeresolve(state_t *state, node_t *node)
+void nameresolve(state_t *state, node_t *node)
 {
     (void)state;
     (void)node;

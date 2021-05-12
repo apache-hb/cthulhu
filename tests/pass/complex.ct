@@ -46,6 +46,6 @@ def thing() {
     } else if var x = 10 then x == 10 {
 
     } else {
-
+        raise 10;
     }
 }

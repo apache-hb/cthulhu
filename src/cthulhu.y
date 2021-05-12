@@ -8,7 +8,6 @@
 %expect 0 // TODO: resolve dangling else without requiring compound stmts everywhere
 
 %code requires {
-    #include <stdbool.h>
     #include "scanner.h"
 }
 
@@ -16,8 +15,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <inttypes.h>
-#include "ast.h"
 
 int yylex();
 int yyerror();
@@ -115,10 +114,40 @@ int yyerror();
     FOR "for"
     ELSE "else"
     THEN "then"
-    ASM "asm"
     IF "if"
     WITH "with"
     RAISE "raise"
+
+/* reserved keywords */
+%token
+    TRY "try"
+    CATCH "catch"
+    PUBLIC "public"
+    PRIVATE "private"
+    INLINE "inline"
+    TRAIT "trait"
+    CLASS "class"
+    STATIC "static"
+    UNSAFE "unsafe"
+    ASYNC "async"
+    AWAIT "await"
+    YIELD "yield"
+    VIRTUAL "virtual"
+    OVERRIDE "override"
+    THIS "this"
+    CASE "case"
+    SWITCH "switch"
+    MATCH "match"
+    DO "do"
+    OPERATOR "operator"
+    REGISTER "register"
+    VOLATILE "volatile"
+    REQUIRES "requires"
+    CONCEPT "concept"
+    TEMPLATE "template"
+    NEW "new"
+    DELETE "delete"
+    ASM "asm"
 
 %type<node>
     number literal expr additive multiplicative unary postfix primary
@@ -126,7 +155,7 @@ int yyerror();
     array closure aliasdecl record field import union variant
     case module subscript bitshift comparison equality bitwise logical
     stmt compound return assign break continue namedarg attribute
-    while else names for if elseif condition
+    while else names for if elseif condition raise with
 
 %type<nodes>
     args call params parambody defaultparams types typelist
@@ -146,7 +175,7 @@ int yyerror();
 
 %%
 
-unit: decls { x->ast = $1; dump_nodes($1, true); printf("\n"); }
+unit: decls { x->ast = scope(path(strdup("main")), $1); dump_node(x->ast); printf("\n"); }
     ;
 
 decls: decl { $$ = list($1); }
@@ -250,6 +279,8 @@ body: SEMI { $$ = NULL; }
 
 stmt: compound { $$ = $1; }
     | return { $$ = $1; }
+    | with { $$ = $1; }
+    | raise { $$ = $1; }
     | assign { $$ = $1; }
     | break { $$ = $1; }
     | continue { $$ = $1; }
@@ -258,6 +289,12 @@ stmt: compound { $$ = $1; }
     | aliasdecl { $$ = $1; }
     | for { $$ = $1; }
     | if { $$ = $1; }
+    ;
+
+with: WITH LPAREN vardecl RPAREN compound { $$ = with($3, $5); }
+    ;
+
+raise: RAISE expr SEMI { $$ = raise($2); }
     ;
 
 if: IF condition compound elseif { $$ = branch($2, $3, $4); }
