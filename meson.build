@@ -13,7 +13,7 @@ lex = custom_target('lex',
 )
 
 parse = custom_target('parse',
-    command : [ find_program('bison'), '-d', '@INPUT@' ],
+    command : [ find_program('bison'), '-d', '@INPUT@', '-Wdeprecated', '-v' ],
     input : 'src/cthulhu.y',
     output : [ 'bison.c', 'bison.h' ],
     depends : lex
@@ -27,8 +27,7 @@ src = [
 ]
 
 ctc = executable('cthulhu', parse, lex, src,
-    include_directories : 'src',
-    c_args : [ '-Wno-pedantic' ]
+    include_directories : 'src'
 )
 
 subdir('tests')
