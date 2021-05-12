@@ -113,17 +113,18 @@ int yyerror();
     BREAK "break"
     WHILE "while"
     FOR "for"
-    IF "if"
     ELSE "else"
-    WITH "with"
     ASM "asm"
+    IF "if"
+    WITH "with"
+    RAISE "raise"
 
 %type<node>
     number literal expr additive multiplicative unary postfix primary
     init result vardecl type decl basedecl param funcdecl body defaultparam
     array closure aliasdecl record field import union variant
     case module subscript bitshift comparison equality bitwise logical
-    stmt compound return assign asm break continue namedarg attribute
+    stmt compound return assign break continue namedarg attribute
     while else names for
 
 %type<nodes>
@@ -372,10 +373,6 @@ mut: VAR { $$ = true; } | FINAL { $$ = false; } ;
 primary: literal { $$ = $1; }
     | qual { $$ = qualified($1); }
     | LPAREN expr RPAREN { $$ = $2; }
-    | asm { $$ = $1; }
-    ;
-
-asm: ASM { $$ = NULL; }
     ;
 
 postfix: primary { $$ = $1; }
