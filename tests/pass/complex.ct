@@ -1,5 +1,5 @@
 module a::b::c {
-    variant type: int {
+   variant type: int {
         a(i: int, b: bool) = 0,
         c(c: *char)
     }
@@ -34,6 +34,8 @@ def decorated2() {
         return;
     }
 }
+
+import a::b::c;
 
 final x = 10;
 final [y, z] = int(10, 20);
