@@ -40,6 +40,9 @@ int main(int argc, const char **argv) {
     dump_node(extra.ast);
     printf("\n");
 
+    state_t *state = new_state(NULL);
+    nameresolve(state, extra.ast);
+
     yylex_destroy(scan);
 
     return 0;

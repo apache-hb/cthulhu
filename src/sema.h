@@ -5,12 +5,16 @@
 
 typedef struct state_t {
     struct state_t *parent;
-    int errors;
 
     nodes_t *decls;
 } state_t;
 
-void sema_init(state_t *state);
+/* semantic errors */
+extern int errors;
+/* root state */
+extern state_t *root;
+
+state_t *new_state(state_t *parent);
 
 /* resolve typenames */
 void nameresolve(state_t *state, node_t *node);

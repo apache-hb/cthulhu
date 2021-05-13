@@ -170,7 +170,6 @@ typedef struct node_t {
                 node_t *expr;
                 node_t *type;
                 nodes_t *fields;
-                nodes_t *opcodes;
             };
         } decl;
 
