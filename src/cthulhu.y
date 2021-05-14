@@ -159,10 +159,10 @@ int yyerror();
 %type<nodes>
     args call params parambody defaultparams types typelist
     fields cases casedata decls stmts namedargs attribs attributes
-    attrib namelist 
+    attrib namelist items list
 
 %type<path>
-    path list items qual
+    path qual
 
 %type<cond>
     mut comptime exported
@@ -174,7 +174,7 @@ int yyerror();
 
 %%
 
-unit: decls { x->ast = scope(path(strdup(x->mod)), $1); }
+unit: decls { x->ast = scope(x->mod, $1); }
     ;
 
 decls: decl { $$ = list($1); }
@@ -214,12 +214,12 @@ import: IMPORT path SEMI { $$ = include($2, NULL); }
     | IMPORT path LPAREN items RPAREN SEMI { $$ = include($2, $4); }
     ;
 
-items: DOT2 { $$ = empty_path(); }
+items: DOT2 { $$ = empty_list(); }
     | list { $$ = $1; }
     ;
 
-list: IDENT { $$ = path($1); }
-    | list COMMA IDENT { $$ = path_add($1, $3); }
+list: IDENT { $$ = list(name($1)); }
+    | list COMMA IDENT { $$ = list_add($1, name($3)); }
     ;
 
 path: IDENT { $$ = path($1); }

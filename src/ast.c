@@ -1,5 +1,8 @@
 #include "ast.h"
 #include "bison.h"
+#include "flex.h"
+#include "scanner.h"
+#include "sema.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -301,7 +304,7 @@ node_t *apply(node_t *expr, nodes_t *args)
     return node;
 }
 
-node_t *include(path_t *path, path_t *items)
+node_t *include(path_t *path, nodes_t *items)
 {
     node_t *node = new_node(NODE_INCLUDE);
     node->include.path = path;
@@ -712,7 +715,7 @@ void dump_node(node_t *node)
             if (node->include.items->length == 0) {
                 printf("*");
             } else {
-                dump_path(node->include.items);
+                dump_nodes(node->include.items, false);
             }
             printf(")");
             ln(-1);
@@ -919,4 +922,93 @@ void dump_node(node_t *node)
     if (exported) {
         printf(")");
     }
+}
+
+node_t *compile_common(path_t *mod, const char *path, FILE *file)
+{
+    int err;
+    yyscan_t scan;
+    scan_extra_t extra = { path, mod, NULL };
+
+    if ((err = yylex_init_extra(&extra, &scan))) {
+        ERRF("ICE: yylex_init = %d", err);
+        return NULL;
+    }
+
+    yyset_in(file, scan);
+
+    if ((err = yyparse(scan, &extra))) {
+        return NULL;
+    }
+
+    yylex_destroy(scan);
+
+    return extra.ast;
+}
+
+node_t *compile_file(char *name, const char *fs, FILE *file)
+{
+    return compile_common(path(name), fs, file);
+}
+
+static char *join_path_with(path_t *path, char sep, const char *ext)
+{
+    size_t needed = strlen(ext) + path->length;
+
+    for (size_t i = 0; i < path->length; i++) {
+        needed += strlen(path->data[i]);
+    }
+
+    char *out = malloc(needed + 1);
+
+    char *cur = out;
+    for (size_t i = 0; i < path->length; i++) {
+        if (i != 0) {
+            *cur++ = sep;
+        }
+
+        char *part = path->data[i];
+        size_t len = strlen(part);
+        strcpy(cur, part);
+        cur += len;
+    }
+
+    strcpy(cur, ext);
+    return out;
+}
+
+node_t *compile_by_path(path_t *path)
+{
+    char *search = join_path_with(path, '/', ".ct");
+
+    FILE *source = fopen(search, "r");
+
+    if (!source) {
+        REPORTF("failed to open file %s", search);
+        return NULL;
+    }
+
+    return compile_common(path, search, source);
+}
+
+char *path_at(path_t *path, size_t idx)
+{
+    return path->data[idx];
+}
+
+char *path_tail(path_t *path)
+{
+    return path_at(path, path->length - 1);
+}
+
+int yyerror(YYLTYPE *yylloc, void *scanner, scan_extra_t *extra, const char *msg) {
+    (void)scanner;
+
+    ERRF("[%s:%d:%d]: %s", 
+        extra->path,
+        yylloc->first_line, 
+        yylloc->first_column, 
+        msg
+    );
+    return 1;
 }

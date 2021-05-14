@@ -5,7 +5,7 @@
 
 typedef struct scan_extra_t {
     const char *path;
-    const char *mod;
+    path_t *mod;
     node_t *ast;
 } scan_extra_t;
 
