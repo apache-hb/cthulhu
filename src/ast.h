@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 typedef struct node_t node_t;
 
@@ -119,7 +120,7 @@ typedef struct node_t {
 
         struct include_t {
             path_t *path;
-            path_t *items;
+            nodes_t *items;
         } include;
 
         struct decl_t {
@@ -271,7 +272,7 @@ node_t *param(char *name, node_t *type, node_t *init);
 node_t *alias(char *name, node_t *type);
 node_t *record(char *name, nodes_t *items);
 node_t *item(char *name, node_t *type);
-node_t *include(path_t *path, path_t *items);
+node_t *include(path_t *path, nodes_t *items);
 node_t *uniondecl(char *name, nodes_t *items);
 node_t *scope(path_t *path, nodes_t *decls);
 node_t *arg(char *name, node_t *expr);
@@ -319,7 +320,14 @@ node_t *nil(void);
 node_t *digit(char *text, char *suffix);
 node_t *bitrange(node_t *front, node_t *back);
 
+/* debugging */
 void dump_nodes(nodes_t *nodes, bool feed);
 void dump_node(node_t *node);
+
+node_t *compile_file(char *name, const char *path, FILE *file);
+node_t *compile_by_path(path_t *path);
+
+char *path_at(path_t *path, size_t idx);
+char *path_tail(path_t *path);
 
 #endif /* AST_H */

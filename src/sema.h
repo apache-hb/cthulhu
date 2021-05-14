@@ -3,26 +3,33 @@
 
 #include "ast.h"
 
-typedef struct state_t {
-    struct state_t *parent;
+typedef struct module_t module_t;
+
+typedef struct {
+    size_t length;
+    size_t size;
+    module_t *data;
+} modules_t;
+
+typedef struct module_t {
+    const char *name;
+    struct module_t *parent;
+    modules_t *children;
 
     nodes_t *decls;
-} state_t;
+} module_t;
 
 /* semantic errors */
 extern int errors;
-/* root state */
-extern state_t *root;
 
-state_t *new_state(state_t *parent);
+#define ERR(msg) { errors++; fprintf(stderr, "error" msg "\n"); }
+#define ERRF(msg, ...) { errors++; fprintf(stderr, "error" msg "\n", __VA_ARGS__); }
 
-/* resolve typenames */
-void nameresolve(state_t *state, node_t *node);
+#define REPORT(msg) ERR(": " msg)
+#define REPORTF(msg, ...) ERRF(": " msg, __VA_ARGS__)
 
-/* check typecasting and validate assignments */
-void typecheck(state_t *state, node_t *node);
+modules_t *compile_program(const char *start, FILE *source);
 
-/* enforce compile time checks */
-void constcheck(state_t *state, node_t *node);
+void dump_module(module_t *mod);
 
 #endif /* SEMA_H */

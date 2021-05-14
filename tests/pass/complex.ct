@@ -1,18 +1,16 @@
-module a::b::c {
-   variant type: int {
-        a(i: int, b: bool) = 0,
-        c(c: *char)
-    }
-
-    export def a(): type {
-        return type::a(
-            .i = 5, 
-            .b = true
-        );
-    }
-
-    def stuff() = 5 * 10;
+variant type: int {
+    a(i: int, b: bool) = 0,
+    c(c: *char)
 }
+
+export def a(): type {
+    return type::a(
+        .i = 5, 
+        .b = true
+    );
+}
+
+def stuff() = 5 * 10;
 
 @name
 def decorated() {
@@ -35,7 +33,7 @@ def decorated2() {
     }
 }
 
-import a::b::c;
+import std::prelude;
 
 final x = 10;
 final [y, z] = int(10, 20);

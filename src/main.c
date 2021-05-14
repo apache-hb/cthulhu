@@ -8,7 +8,6 @@
 int main(int argc, const char **argv) {
     FILE* source;
     const char *path;
-    int err = 0;
 
     if (argc > 1) {
         source = fopen(argv[1], "r");
@@ -18,46 +17,16 @@ int main(int argc, const char **argv) {
         path = "stdin";
     }
 
-    yyscan_t scan;
-    scan_extra_t extra = { path, strdup("main"), NULL };
+    modules_t *prog = compile_program(path, source);
 
-    err = yylex_init(&scan);
+    printf("%zu modules\n", prog->length);
 
-    if (err) {
-        fprintf(stderr, "yylex_init failed %d %s\n", err, strerror(errno));
-        return err;
-    }    
+    for (size_t i = 0; i < prog->length; i++) {
+        module_t *mod = prog->data + i;
 
-    yyset_in(source, scan);
-
-    err = yyparse(scan, &extra);
-
-    if (err) {
-        fprintf(stderr, "yyparse failed\n");
-        return err;
+        dump_module(mod);
     }
-
-    dump_node(extra.ast);
-    printf("\n");
-
-    state_t *state = new_state(NULL);
-    nameresolve(state, extra.ast);
-
-    yylex_destroy(scan);
 
     return 0;
 }
 
-/* for syntax errors */
-int yyerror(YYLTYPE *yylloc, void *scanner, const char *msg) {
-    scan_extra_t *extra = yyget_extra(scanner);
-
-    fprintf(stderr,
-        "error[%s:%d:%d]: %s\n", 
-        extra->path,
-        yylloc->first_line, 
-        yylloc->first_column, 
-        msg
-    );
-    return 1;
-}
