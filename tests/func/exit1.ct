@@ -1,3 +1,0 @@
-def main(argc: int, argv: **char): int {
-    return argc + 1;
-}

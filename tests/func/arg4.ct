@@ -1,7 +1,0 @@
-def a(i: int): int {
-
-}
-
-def b() {
-    var x = a(1);
-}

@@ -1,12 +1,8 @@
-#ifndef SCANNER_H
-#define SCANNER_H
+#pragma once
 
 #include "ast.h"
 
-typedef struct scan_extra_t {
+typedef struct {
     const char *path;
-    path_t *mod;
     node_t *ast;
-} scan_extra_t;
-
-#endif /* SCANNER_H */
+} scanner_t;

@@ -1,7 +1,0 @@
-final x = 0;
-var y = &x;
-
-def main(): int {
-    *y = 10;
-    return x;
-}
