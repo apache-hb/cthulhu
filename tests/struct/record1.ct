@@ -1,7 +1,0 @@
-record a {
-    field: int
-}
-
-def get(it: a): int {
-    return it.field;
-}

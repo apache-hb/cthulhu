@@ -1,5 +1,0 @@
-def main(argc: int, argv: **char): int {
-    final a = argc;
-    a = a + 20;
-    return a;
-}

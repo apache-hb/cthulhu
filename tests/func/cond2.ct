@@ -1,7 +1,0 @@
-def i() {
-    if (true) {
-
-    } else {
-        
-    }
-}

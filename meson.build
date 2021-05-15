@@ -20,14 +20,11 @@ parse = custom_target('parse',
 )
 
 src = [
-    'src/ast.c', 
-    'src/main.c', 
-    'src/sema.c', 
-    'src/emit.c',
+    'src/main.c',
+    'src/ast.c',
+    'src/ir.c'
 ]
 
 ctc = executable('cthulhu', parse, lex, src,
     include_directories : 'src'
 )
-
-subdir('tests')
