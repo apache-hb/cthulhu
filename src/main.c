@@ -114,11 +114,15 @@ static void emit_opcode(size_t idx, opcode_t op) {
     printf("\n");
 }
 
-static void debug_ir() {
+static void debug_ir(void) {
     for (size_t i = 0; i < unit->length; i++) {
         opcode_t op = unit->ops[i];
         emit_opcode(i, op);
     }
+}
+
+static void assemble(void) {
+    printf("global _start\nsection .text\n  _start:\n");
 }
 
 int main(int argc, const char **argv) {
@@ -143,6 +147,18 @@ int main(int argc, const char **argv) {
     emit_ir(node);
 
     debug_ir();
+
+    printf(
+        "\n"
+        "global _start\n"
+        "section .text\n\n"
+        "_start:\n"
+        "  mov rax, 60\n"
+        "  xor edi, edi\n"
+        "  syscall\n"
+    );
+
+    assemble();
 
     return 0;
 }
