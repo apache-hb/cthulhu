@@ -2,6 +2,7 @@
 #include "flex.h"
 
 #include "ir.h"
+#include "asm/x86.h"
 
 int yyerror(YYLTYPE *yylloc, void *scanner, scanner_t *x, const char *msg) {
     (void)scanner;
@@ -39,18 +40,25 @@ static node_t *compile(const char *path, FILE *file) {
 
 unit_t *unit;
 
+static void emit_imm(int64_t num) {
+    printf("$%ld", num);
+}
+
 static void emit_operand(operand_t it) {
     if (it.type == REG) {
-        printf("%%%zu", it.val);
+        printf("%%%zu", it.reg);
     } else {
-        printf("$%zu", it.val);
+        emit_imm(it.num);
     }
-} 
+}
 
 static void emit_opcode(size_t idx, opcode_t op) {
-    printf("%%%zu = ", idx);
+    if (op.op == OP_EMPTY)
+        return;
+
+    printf("  %%%zu = ", idx);
     if (op.op == OP_DIGIT) {
-        emit_operand(op.lhs);
+        emit_imm(op.num);
     } else if (op.op == OP_NEG) {
         printf("neg ");
         emit_operand(op.expr);
@@ -108,6 +116,27 @@ int main(int argc, const char **argv) {
 
     debug_ir();
 
+    size_t times = 0;
+    bool dirty = true;
+
+    while (dirty) {
+        dirty = dirty && (ir_const_fold(unit) || ir_reduce(unit));
+
+        printf("optimize: %zu\n", times++);
+        debug_ir();
+    }
+
+    live_graph_t graph = build_graph(unit);
+
+    for (size_t i = 0; i < graph.len; i++) {
+        if (i) {
+            printf("\n");
+        }
+        live_range_t range = graph.ranges[i];
+        printf("%zu -> %zu", range.first, range.last);
+    }
+    printf("\n");
+
 #if 0
     printf(
         "\n"
@@ -124,3 +153,16 @@ int main(int argc, const char **argv) {
 
     return 0;
 }
+
+#if 0
+5 ? 7 : 8;
+
+  %0 = 5
+if %0 goto 2
+  %1 = 7
+  jmp 3
+2: 
+  %1 = 8
+3: 
+  %3 = %1
+#endif 

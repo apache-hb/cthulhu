@@ -28,3 +28,11 @@ node_t *ast_unary(node_t *expr, int op) {
     node->unary.expr = expr;
     return node;
 }
+
+node_t *ast_ternary(node_t *cond, node_t *lhs, node_t *rhs) {
+    node_t *node = ast(NODE_TERNARY);
+    node->ternary.cond = cond;
+    node->ternary.lhs = lhs;
+    node->ternary.rhs = rhs;
+    return node;
+}

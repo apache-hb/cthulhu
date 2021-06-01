@@ -40,13 +40,15 @@ int yyerror();
 
 %token
     SEMI ";"
+    QUESTION "?"
+    COLON ":"
 
 %token
     LPAREN "("
     RPAREN ")"
 
 %type<node>
-    primary expr additive multiplicative unary
+    primary expr additive multiplicative unary ternary
 
 %start unit
 
@@ -75,7 +77,11 @@ additive: multiplicative { $$ = $1; }
     | additive SUB multiplicative { $$ = ast_binary($1, $3, SUB); }
     ;
 
-expr: additive { $$ = $1; }
+ternary: additive { $$ = $1; }
+    | additive QUESTION expr COLON expr { $$ = ast_ternary($1, $3, $5); }
+    ;
+
+expr: ternary { $$ = $1; }
     ;
 
 %%
