@@ -21,3 +21,10 @@ node_t *ast_binary(node_t *lhs, node_t *rhs, int op) {
     node->binary.rhs = rhs;
     return node;
 }
+
+node_t *ast_unary(node_t *expr, int op) {
+    node_t *node = ast(NODE_UNARY);
+    node->unary.op = op;
+    node->unary.expr = expr;
+    return node;
+}

@@ -46,7 +46,7 @@ int yyerror();
     RPAREN ")"
 
 %type<node>
-    primary expr additive multiplicative
+    primary expr additive multiplicative unary
 
 %start unit
 
@@ -55,14 +55,19 @@ int yyerror();
 unit: expr SEMI { x->ast = $1; }
     ;
 
-primary: DIGIT { $$ = ast_digit($1); }
-    | LPAREN expr RPAREN { $$ = $2; }
+primary: LPAREN expr RPAREN { $$ = $2; }
+    | DIGIT { $$ = ast_digit($1); }
     ;
 
-multiplicative: primary { $$ = $1; }
-    | multiplicative MUL primary { $$ = ast_binary($1, $3, MUL); }
-    | multiplicative DIV primary { $$ = ast_binary($1, $3, DIV); }
-    | multiplicative REM primary { $$ = ast_binary($1, $3, REM); }
+unary: primary { $$ = $1; }
+    | ADD unary { $$ = ast_unary($2, ADD); }
+    | SUB unary { $$ = ast_unary($2, SUB); }
+    ;
+
+multiplicative: unary { $$ = $1; }
+    | multiplicative MUL unary { $$ = ast_binary($1, $3, MUL); }
+    | multiplicative DIV unary { $$ = ast_binary($1, $3, DIV); }
+    | multiplicative REM unary { $$ = ast_binary($1, $3, REM); }
     ;
 
 additive: multiplicative { $$ = $1; }

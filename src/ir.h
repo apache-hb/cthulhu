@@ -1,19 +1,20 @@
 #pragma once
 
+#include "ast.h"
+
 #include <stddef.h>
 
 typedef enum {
+    OP_ABS,
+    OP_NEG,
+
     OP_ADD,
     OP_SUB,
     OP_MUL,
     OP_DIV,
     OP_REM,
-    OP_DIGIT,
 
-    OP_LABEL,
-    OP_COPY,
-    OP_STORE,
-    OP_LOAD
+    OP_DIGIT,
 } optype_t;
 
 typedef struct {
@@ -26,7 +27,8 @@ typedef struct {
     
     union {
         operand_t num;
-
+        operand_t expr;
+        
         struct {
             operand_t lhs;
             operand_t rhs;
@@ -40,5 +42,4 @@ typedef struct {
     opcode_t *ops;
 } unit_t;
 
-unit_t *new_unit(void);
-size_t unit_add(unit_t *unit, opcode_t op);
+unit_t *ir_gen(node_t *node);
