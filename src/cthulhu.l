@@ -18,7 +18,6 @@
       yylloc->last_line = yylineno;                                  \
       yylloc->last_column = yytext + yyleng - strrchr(yytext, '\n'); \
     }
-
 %}
 
 %%
@@ -32,6 +31,8 @@
 "(" { return LPAREN; }
 ")" { return RPAREN; }
 
+":" { return COLON; }
+"?" { return QUESTION; }
 ";" { return SEMI; }
 
 "+" { return ADD; }
