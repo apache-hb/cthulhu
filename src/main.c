@@ -96,6 +96,17 @@ static void emit_opcode(size_t idx, opcode_t op) {
     } else if (op.op == OP_ABS) { 
         printf("abs ");
         emit_operand(op.expr);
+    } else if (op.op == OP_CALL) {
+        printf("call ");
+        emit_operand(op.body);
+        printf(" (");
+        for (size_t i = 0; i < op.total; i++) {
+            if (i) {
+                printf(", ");
+            }
+            emit_operand(op.args[i]);
+        }
+        printf(")");
     } else {
         switch (op.op) {
         case OP_ADD: printf("add "); break;

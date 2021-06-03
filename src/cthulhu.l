@@ -34,6 +34,7 @@
 ":" { return COLON; }
 "?" { return QUESTION; }
 ";" { return SEMI; }
+"," { return COMMA; }
 
 "+" { return ADD; }
 "-" { return SUB; }

@@ -26,6 +26,8 @@ typedef enum {
 
     /* return a value from a function */
     OP_RETURN,
+
+    OP_CALL
 } optype_t;
 
 typedef struct {
@@ -54,6 +56,13 @@ typedef struct {
         struct {
             operand_t lhs;
             operand_t rhs;
+        };
+
+        /* an array of args */
+        struct {
+            operand_t body;
+            operand_t *args;
+            size_t total;
         };
     };
 } opcode_t;

@@ -104,6 +104,21 @@ static size_t build_return(unit_t *unit, node_t *expr) {
     return unit_add(unit, op);
 }
 
+static size_t build_call(unit_t *unit, struct call_t call) {
+    operand_t body = reg(build_ir(unit, call.expr));
+    operand_t *args = malloc(sizeof(operand_t) * call.args->len);
+    for (size_t i = 0; i < call.args->len; i++) {
+        args[i] = reg(build_ir(unit, call.args->data + i));
+    }
+
+    opcode_t op = build_opcode(OP_CALL);
+    op.body = body;
+    op.args = args;
+    op.total = call.args->len;
+
+    return unit_add(unit, op);
+}
+
 static size_t build_ir(unit_t *unit, node_t *node) {
     switch (node->type) {
     case NODE_DIGIT:
@@ -114,6 +129,8 @@ static size_t build_ir(unit_t *unit, node_t *node) {
         return build_binary(unit, node->binary);
     case NODE_RETURN:
         return build_return(unit, node->expr);
+    case NODE_CALL:
+        return build_call(unit, node->call);
 
     default:
         fprintf(stderr, "build_ir(%d)\n", node->type);
@@ -224,8 +241,19 @@ static int64_t map_rem(int64_t lhs, int64_t rhs) {
     return lhs % rhs;
 }
 
-static void fold_return(unit_t *ctx, opcode_t *op) {
+static void fold_return(unit_t *ctx, size_t idx, opcode_t *op) {
     op->expr = get_operand(ctx, op->expr);
+
+    emplace_opcode(ctx, idx, *op);
+}
+
+static void fold_call(unit_t *ctx, size_t idx, opcode_t *op) {
+    for (size_t i = 0; i < op->total; i++) {
+        op->args[i] = get_operand(ctx, op->args[i]);
+    }
+    op->body = get_operand(ctx, op->body);
+
+    emplace_opcode(ctx, idx, *op);
 }
 
 static void fold_opcode(bool *dirty, unit_t *ctx, size_t idx) {
@@ -256,7 +284,11 @@ static void fold_opcode(bool *dirty, unit_t *ctx, size_t idx) {
         break;
 
     case OP_RETURN:
-        fold_return(ctx, op);
+        fold_return(ctx, idx, op);
+        break;
+
+    case OP_CALL:
+        fold_call(ctx, idx, op);
         break;
 
     case OP_DIGIT: case OP_EMPTY:
@@ -291,6 +323,8 @@ static bool refs_operand(operand_t op, size_t reg) {
 }
 
 static bool refs_opcode(opcode_t *op, size_t idx) {
+    size_t i = 0;
+
     switch (op->op) {
     case OP_DIGIT: case OP_EMPTY:
         return false;
@@ -304,6 +338,13 @@ static bool refs_opcode(opcode_t *op, size_t idx) {
 
     case OP_RETURN:
         return refs_operand(op->expr, idx);
+
+    case OP_CALL:
+        for (; i < op->total; i++)
+            if (refs_operand(op->args[i], idx))
+                return true;
+        
+        return refs_operand(op->body, idx);
 
     default:
         fprintf(stderr, "refs_opcode(%d)\n", op->op);
