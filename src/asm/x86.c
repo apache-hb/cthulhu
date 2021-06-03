@@ -121,23 +121,23 @@ static void mark_used(regalloc_t *alloc, size_t idx, bool used) {
     alloc->used[idx] = used;
 }
 
-static void free_regs(regalloc_t *alloc, size_t idx) {
-    for (size_t i = 0; i < REG_NONE; i++) {
-        bool used = false;
-        /* check each live range */
-        for (size_t j = 0; j < alloc->graph->len; j++) {
-            live_range_t *range = range_at(alloc, j);
+static bool reg_is_used(regalloc_t *alloc, size_t at, reg_t reg) {
+    for (size_t j = 0; j < alloc->graph->len; j++) {
+        live_range_t *range = range_at(alloc, j);
 
-            /* if any range is alive at this point and is using this register */
-            if (is_range_live(range, idx) && range->assoc == i) {
-                /* then mark it as used */
-                used = true;
-                break;
-            }
+        /* if any range is alive at this point and is using this register */
+        if (is_range_live(range, at) && range->assoc == reg) {
+            /* then mark it as used */
+            return true;
         }
+    }
+    return false;
+}
 
+static void free_regs(regalloc_t *alloc, size_t idx) {
+    for (reg_t i = 0; i < REG_NONE; i++) {
         /* if no live ranges as using this register at this point */
-        if (!used) {
+        if (!reg_is_used(alloc, idx, i)) {
             /* then mark the register as free */
             mark_used(alloc, i, false);
         }
@@ -185,12 +185,12 @@ static const char *reg_name(reg_t reg) {
 }
 
 static void emit_digit(int64_t num, reg_t reg) {
-    printf("  mov %s, %lu\n", reg_name(reg), num);
+    printf("  mov %s, %ld\n", reg_name(reg), num);
 }
 
 static void emit_operand(regalloc_t *alloc, operand_t op) {
     if (op.type == IMM) { 
-        printf("%lu", op.num);
+        printf("%ld", op.num);
     } else {
         printf("%s", reg_name(range_for_op(alloc, op.reg)->assoc));
     }
@@ -200,6 +200,96 @@ static bool operand_is_reg(regalloc_t *alloc, operand_t op, reg_t reg) {
     return op.type == REG
         ? range_for_op(alloc, op.reg)->assoc == reg
         : false;
+}
+
+static void mov_to_rax(regalloc_t *alloc, operand_t op) {
+    if (op.type == REG) {
+        reg_t reg = range_for_op(alloc, op.reg)->assoc;
+
+        if (reg != RAX) {
+            printf("  mov rax, %s\n", reg_name(reg));
+        }
+    } else {
+        printf("  mov rax, %ld\n", op.num);
+    }
+}
+
+static void emit_mul(regalloc_t *alloc, size_t idx, opcode_t op) {
+    bool used = reg_is_used(alloc, idx, RAX);
+    reg_t dst = range_for_opcode(alloc, op)->assoc;
+
+    bool save_rax = used && dst != RAX;
+
+    if (save_rax) {
+        printf("  push rax\n");
+    }
+
+    mov_to_rax(alloc, op.lhs);
+    printf("  imul ");
+    emit_operand(alloc, op.rhs);
+    printf("\n");
+
+    if (save_rax) {
+        printf("  pop rax\n");
+    }
+}
+
+static void emit_div(regalloc_t *alloc, size_t idx, opcode_t op) {
+    reg_t dst = range_for_opcode(alloc, op)->assoc;
+    
+    // idiv clobbers rax <- quotient and rdx <- remainder
+    bool save_rax = reg_is_used(alloc, idx, RAX) && dst != RAX;
+    bool save_rdx = reg_is_used(alloc, idx, RDX);
+
+    if (save_rax) {
+        printf("  push rax\n");
+    }
+
+    if (save_rdx) {
+        printf("  push rdx\n");
+    }
+
+    mov_to_rax(alloc, op.lhs);
+    printf("  idiv ");
+    emit_operand(alloc, op.rhs);
+    printf("\n");
+
+    if (save_rdx) {
+        printf("  pop rdx\n");
+    }
+
+    if (save_rax) {
+        printf("  pop rax\n");
+    }
+}
+
+static void emit_rem(regalloc_t *alloc, size_t idx, opcode_t op) {
+    reg_t dst = range_for_opcode(alloc, op)->assoc;
+
+    // idiv clobbers rax <- quotient and rdx <- remainder
+    bool save_rax = reg_is_used(alloc, idx, RAX);
+    bool save_rdx = reg_is_used(alloc, idx, RDX) && dst != RDX;
+
+    if (save_rax) {
+        printf("  push rax\n");
+    }
+
+    if (save_rdx) {
+        printf("  push rdx\n");
+    }
+
+    mov_to_rax(alloc, op.lhs);
+    printf("  idiv ");
+    emit_operand(alloc, op.rhs);
+    printf("\n");
+
+    if (save_rdx) {
+        printf("  pop rdx\n");
+    }
+
+    if (save_rax) {
+        printf("  pop rax\n");
+    }
 }
 
 static void emit_add(regalloc_t *alloc, opcode_t op) {
@@ -213,6 +303,21 @@ static void emit_add(regalloc_t *alloc, opcode_t op) {
     }
 
     printf("  add %s, ", dst);
+    emit_operand(alloc, op.rhs);
+    printf("\n");
+}
+
+static void emit_sub(regalloc_t *alloc, opcode_t op) {
+    reg_t reg = range_for_opcode(alloc, op)->assoc;
+    const char *dst = reg_name(reg);
+
+    if (!operand_is_reg(alloc, op.lhs, reg)) {
+        printf("  sub %s, ", dst);
+        emit_operand(alloc, op.lhs);
+        printf("\n");
+    }
+
+    printf("  sub %s, ", dst);
     emit_operand(alloc, op.rhs);
     printf("\n");
 }
@@ -234,7 +339,7 @@ static void emit_ret(regalloc_t *alloc, opcode_t op) {
     printf("  ret\n");
 }
 
-static void emit_inst(regalloc_t *alloc, opcode_t op) {
+static void emit_inst(regalloc_t *alloc, size_t idx, opcode_t op) {
     switch (op.op) {
     case OP_EMPTY:
         break;
@@ -245,6 +350,18 @@ static void emit_inst(regalloc_t *alloc, opcode_t op) {
 
     case OP_ADD:
         emit_add(alloc, op);
+        break;
+    case OP_SUB:
+        emit_sub(alloc, op);
+        break;
+    case OP_MUL:
+        emit_mul(alloc, idx, op);
+        break;
+    case OP_REM:
+        emit_rem(alloc, idx, op);
+        break;
+    case OP_DIV:
+        emit_div(alloc, idx, op);
         break;
 
     case OP_RETURN:
@@ -285,6 +402,6 @@ void emit_asm(unit_t *ir) {
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
     for (size_t i = 0; i < ir->length; i++) {
-        emit_inst(&alloc, ir->ops[i]);
+        emit_inst(&alloc, i, ir->ops[i]);
     }
 }
