@@ -38,6 +38,30 @@ static node_t *compile(const char *path, FILE *file) {
     return extra.ast;
 }
 
+static node_t *compile_string(const char *text) {
+    int err;
+    yyscan_t scan;
+    scanner_t extra = { "cmd", NULL };
+    YY_BUFFER_STATE buffer;
+
+    if ((err = yylex_init_extra(&extra, &scan))) {
+        fprintf(stderr, "yylex_init_extra = %d\n", err);
+        return NULL;
+    }
+
+    if ((buffer = yy_scan_string(text, scan))) {
+        if ((err = yyparse(scan, &extra))) {
+            return NULL;
+        }
+
+        yy_delete_buffer(buffer, scan);
+    }
+
+    yylex_destroy(scan);
+
+    return extra.ast;
+}
+
 unit_t *unit;
 
 static void emit_imm(int64_t num) {
@@ -55,6 +79,13 @@ static void emit_operand(operand_t it) {
 static void emit_opcode(size_t idx, opcode_t op) {
     if (op.op == OP_EMPTY)
         return;
+
+    if (op.op == OP_RETURN) {
+        printf("  ret ");
+        emit_operand(op.expr);
+        printf("\n");
+        return;
+    }
 
     printf("  %%%zu = ", idx);
     if (op.op == OP_DIGIT) {
@@ -88,81 +119,98 @@ static void debug_ir(void) {
     }
 }
 
-#if 0
-static void assemble(void) {
-    printf("global _start\nsection .text\n  _start:\n");
+enum {
+    O0,
+    O1,
+    O2,
+    O3
+} optimize = O1;
+
+node_t *node = NULL;
+
+static void fail_fast(const char *message) {
+    fprintf(stderr, "error: %s\n", message);
+    exit(1);
 }
-#endif
+
+#define NEXT_ARG (argv[idx + 1])
+
+static void parse_arg(int idx, int argc, const char **argv) {
+    const char *arg = argv[idx];
+    bool has_next = argc > idx;
+
+    if (strcmp(arg, "-e") == 0) {
+        if (!has_next) {
+            fail_fast("-e argument requires an expression");
+        } else {
+            node = compile_string(NEXT_ARG);
+        }
+    } else if (strcmp(arg, "-i") == 0) {
+        printf(">>> ");
+        node = compile("stdin", stdin);
+    } else if (strncmp(arg, "-O", 2) == 0) {
+        char level = '1';
+        if (strlen(arg) >= 3) {
+            level = arg[2];
+        } else if (has_next) {
+            level = NEXT_ARG[0];
+        }
+
+        switch (level) {
+        case '0':
+            optimize = O0;
+            break;
+        
+        default:
+        case '1':
+            optimize = O1;
+            break;
+        case '2':
+            optimize = O2;
+            break;
+        case '3':
+            optimize = O3;
+            break;
+        }
+    } else {
+        if (node) {
+            return;
+        }
+        fprintf(stderr, "unknown arg %s\n", arg);
+        exit(1);
+    }
+}
 
 int main(int argc, const char **argv) {
-    FILE *in;
-    const char *path;
+    for (int i = 1; i < argc; i++)
+        parse_arg(i, argc, argv);
 
-    if (argc > 1) {
-        path = argv[1];
-        in = fopen(path, "r");
-    } else {
-        path = "stdin";
-        in = stdin;
-        printf(">>> ");
-    }
-
-    node_t *node = compile(path, in);
     if (!node) {
-        return 1;
+        fail_fast("input required");
     }
 
-    unit = ir_gen(node);
+    unit = ir_gen(ast_return(node));
 
     debug_ir();
 
-    size_t times = 0;
-    bool dirty = true;
+    if (optimize == O0) {
+        /* no optimizing */
+    } else if (optimize > O1) {
+        size_t times = 0;
+        bool dirty = true;
 
-    while (dirty) {
-        dirty = dirty && (ir_const_fold(unit) || ir_reduce(unit));
+        while (dirty) {
+            dirty = dirty && (ir_const_fold(unit) || ir_reduce(unit));
 
-        printf("optimize: %zu\n", times++);
-        debug_ir();
-    }
-
-    live_graph_t graph = build_graph(unit);
-
-    for (size_t i = 0; i < graph.len; i++) {
-        if (i) {
-            printf("\n");
+            printf("optimize: %zu\n", times++);
+            debug_ir();
         }
-        live_range_t range = graph.ranges[i];
-        printf("%zu -> %zu", range.first, range.last);
+    } else {
+        ir_const_fold(unit);
+        ir_reduce(unit);
     }
-    printf("\n");
 
-#if 0
-    printf(
-        "\n"
-        "global _start\n"
-        "section .text\n\n"
-        "_start:\n"
-        "  mov rax, 60\n"
-        "  xor edi, edi\n"
-        "  syscall\n"
-    );
-
-    assemble();
-#endif
+    emit_asm(unit);
 
     return 0;
 }
-
-#if 0
-5 ? 7 : 8;
-
-  %0 = 5
-if %0 goto 2
-  %1 = 7
-  jmp 3
-2: 
-  %1 = 8
-3: 
-  %3 = %1
-#endif 

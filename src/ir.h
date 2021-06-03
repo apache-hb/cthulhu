@@ -23,6 +23,9 @@ typedef enum {
 
     /* literals */
     OP_DIGIT,
+
+    /* return a value from a function */
+    OP_RETURN,
 } optype_t;
 
 typedef struct {
@@ -36,7 +39,9 @@ typedef struct {
 typedef struct {
     optype_t op;
     bool keep;
-    
+    /* associated range */
+    size_t range;
+
     union {
         int64_t num;
         operand_t expr;

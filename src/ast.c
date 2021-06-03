@@ -36,3 +36,9 @@ node_t *ast_ternary(node_t *cond, node_t *lhs, node_t *rhs) {
     node->ternary.rhs = rhs;
     return node;
 }
+
+node_t *ast_return(node_t *expr) {
+    node_t *node = ast(NODE_RETURN);
+    node->expr = expr;
+    return node;
+}
