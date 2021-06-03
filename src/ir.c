@@ -27,7 +27,7 @@ static size_t unit_add(unit_t *unit, opcode_t op) {
 static size_t build_ir(unit_t *unit, node_t *node);
 
 static opcode_t build_opcode(optype_t type) {
-    opcode_t op = { type, false, { } };
+    opcode_t op = { type, false, SIZE_MAX, { } };
     return op;
 }
 
@@ -95,6 +95,15 @@ static size_t build_binary(unit_t *unit, struct binary_t binary) {
     return idx;
 }
 
+static size_t build_return(unit_t *unit, node_t *expr) {
+    operand_t body = reg(build_ir(unit, expr));
+
+    opcode_t op = build_opcode(OP_RETURN);
+    op.expr = body;
+
+    return unit_add(unit, op);
+}
+
 static size_t build_ir(unit_t *unit, node_t *node) {
     switch (node->type) {
     case NODE_DIGIT:
@@ -103,6 +112,8 @@ static size_t build_ir(unit_t *unit, node_t *node) {
         return build_unary(unit, node->unary);
     case NODE_BINARY:
         return build_binary(unit, node->binary);
+    case NODE_RETURN:
+        return build_return(unit, node->expr);
 
     default:
         fprintf(stderr, "build_ir(%d)\n", node->type);
@@ -213,6 +224,10 @@ static int64_t map_rem(int64_t lhs, int64_t rhs) {
     return lhs % rhs;
 }
 
+static void fold_return(unit_t *ctx, opcode_t *op) {
+    op->expr = get_operand(ctx, op->expr);
+}
+
 static void fold_opcode(bool *dirty, unit_t *ctx, size_t idx) {
     opcode_t *op = opcode_at(ctx, idx);
 
@@ -238,6 +253,10 @@ static void fold_opcode(bool *dirty, unit_t *ctx, size_t idx) {
         break;
     case OP_DIV:        
         fold_binary(dirty, ctx, idx, op, map_div);
+        break;
+
+    case OP_RETURN:
+        fold_return(ctx, op);
         break;
 
     case OP_DIGIT: case OP_EMPTY:
@@ -282,6 +301,9 @@ static bool refs_opcode(opcode_t *op, size_t idx) {
     case OP_ADD: case OP_SUB: case OP_DIV:
     case OP_REM: case OP_MUL:
         return refs_operand(op->lhs, idx) || refs_operand(op->rhs, idx);
+
+    case OP_RETURN:
+        return refs_operand(op->expr, idx);
 
     default:
         fprintf(stderr, "refs_opcode(%d)\n", op->op);
