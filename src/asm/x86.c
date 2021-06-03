@@ -25,6 +25,8 @@ static bool op_refs(operand_t op, size_t idx) {
 static bool refs_val(unit_t *ctx, size_t idx, size_t inst) {
     opcode_t op = ctx->ops[idx];
 
+    size_t i = 0;
+
     switch (op.op) {
     case OP_ABS: case OP_NEG:
         return op_refs(op.expr, inst);
@@ -35,6 +37,13 @@ static bool refs_val(unit_t *ctx, size_t idx, size_t inst) {
 
     case OP_RETURN:
         return op_refs(op.expr, inst);
+    
+    case OP_CALL:
+        for (; i < op.total; i++)
+            if (op_refs(op.args[i], inst))
+                return true;
+        
+        return op_refs(op.body, inst);
 
     case OP_EMPTY: case OP_DIGIT:
         return false;
@@ -339,6 +348,23 @@ static void emit_ret(regalloc_t *alloc, opcode_t op) {
     printf("  ret\n");
 }
 
+static void emit_call(regalloc_t *alloc, opcode_t op) {
+    reg_t dst = range_for_opcode(alloc, op)->assoc;
+    operand_t body = op.body;
+
+    if (body.type == IMM) {
+        printf("  call %ld\n", body.num);
+    } else {
+        printf("  call ");
+        emit_operand(alloc, body);
+        printf("\n");
+    }
+
+    if (dst != RAX) {
+        printf("  mov %s, rax\n", reg_name(dst));
+    }
+}
+
 static void emit_inst(regalloc_t *alloc, size_t idx, opcode_t op) {
     switch (op.op) {
     case OP_EMPTY:
@@ -366,6 +392,10 @@ static void emit_inst(regalloc_t *alloc, size_t idx, opcode_t op) {
 
     case OP_RETURN:
         emit_ret(alloc, op);
+        break;
+
+    case OP_CALL:
+        emit_call(alloc, op);
         break;
 
     default:

@@ -25,6 +25,7 @@ int yyerror();
 %union {
     char *text;
     node_t *node;
+    nodes_t *nodes;
 }
 
 %token<text>
@@ -39,6 +40,7 @@ int yyerror();
     REM "%"
 
 %token
+    COMMA ","
     SEMI ";"
     QUESTION "?"
     COLON ":"
@@ -48,7 +50,10 @@ int yyerror();
     RPAREN ")"
 
 %type<node>
-    primary expr additive multiplicative unary ternary
+    primary expr additive multiplicative unary ternary postfix
+
+%type<nodes>
+    call args
 
 %start unit
 
@@ -61,7 +66,19 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | DIGIT { $$ = ast_digit($1); }
     ;
 
-unary: primary { $$ = $1; }
+postfix: primary { $$ = $1; }
+    | postfix call { $$ = ast_call($1, $2); }
+    ;
+
+call: LPAREN RPAREN { $$ = ast_empty(); }
+    | LPAREN args RPAREN { $$ = $2; }
+    ;
+
+args: expr { $$ = ast_list($1); }
+    | args COMMA expr { $$ = ast_append($1, $3); }
+    ;
+
+unary: postfix { $$ = $1; }
     | ADD unary { $$ = ast_unary($2, ADD); }
     | SUB unary { $$ = ast_unary($2, SUB); }
     ;
