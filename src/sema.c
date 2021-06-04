@@ -1,4 +1,13 @@
 #include "sema.h"
+#include <stdio.h>
+
+nodes_t *world;
+
+static node_t *find_symbol(const char *name) {
+    /* for now dont resolve anything */
+    (void)name;
+    return NULL;
+}
 
 static void resolve_node(node_t *node) {
     size_t i = 0;
@@ -31,10 +40,18 @@ static void resolve_node(node_t *node) {
 
     case NODE_DIGIT:
         break;
+
+    case NODE_SYMBOL:
+        if (find_symbol(node->text) == NULL) {
+            fprintf(stderr, "failed to find symbol %s\n", node->text);
+        }
+        break;
     }
 }
 
-void sym_resolve(nodes_t *world) {
+void sym_resolve(nodes_t *all) {
+    world = all;
+
     for (size_t i = 0; i < world->len; i++)
         resolve_node(world->data + i);
 }   

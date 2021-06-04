@@ -42,6 +42,11 @@ static operand_t reg(size_t reg) {
     return op;
 }
 
+static operand_t sym(const char *text) {
+    operand_t op = { SYM, { .name = text } };
+    return op;
+}
+
 static size_t build_digit(unit_t *unit, char *text) {
     int64_t val = strtoll(text, NULL, 10);
     opcode_t op = build_opcode(OP_DIGIT);
@@ -120,6 +125,12 @@ static size_t build_call(unit_t *unit, struct call_t call) {
     return unit_add(unit, op);
 }
 
+static size_t build_name(unit_t *unit, const char *text) {
+    opcode_t op = build_opcode(OP_NAME);
+    op.expr = sym(text);
+    return unit_add(unit, op);
+}
+
 static size_t build_ir(unit_t *unit, node_t *node) {
     switch (node->type) {
     case NODE_DIGIT:
@@ -132,6 +143,8 @@ static size_t build_ir(unit_t *unit, node_t *node) {
         return build_return(unit, node->expr);
     case NODE_CALL:
         return build_call(unit, node->call);
+    case NODE_SYMBOL:
+        return build_name(unit, node->text);
 
     default:
         fprintf(stderr, "build_ir(%d)\n", node->type);
@@ -168,13 +181,16 @@ static void emplace_opcode(unit_t *ctx, size_t idx, opcode_t op) {
 /* ir constant folding */
 
 static operand_t get_operand(unit_t *ctx, operand_t op) {
-    if (op.type == IMM)
+    if (op.type == IMM || op.type == SYM)
         return op;
 
     opcode_t *inst = opcode_at(ctx, op.reg);
 
     if (inst->op == OP_DIGIT) 
         return imm(inst->num);
+
+    if (inst->op == OP_NAME)
+        return sym(inst->expr.name);
 
     return op;
 }
@@ -289,7 +305,7 @@ static void fold_opcode(bool *dirty, unit_t *ctx, size_t idx) {
         fold_call(ctx, op);
         break;
 
-    case OP_DIGIT: case OP_EMPTY:
+    case OP_DIGIT: case OP_EMPTY: case OP_NAME:
         break;
     default:
         fprintf(stderr, "fold_opcode(%d)\n", op->op);
@@ -326,7 +342,7 @@ static bool refs_opcode(opcode_t *op, size_t idx) {
 
     switch (op->op) {
     /* digits and empty cant reference anything */
-    case OP_DIGIT: case OP_EMPTY:
+    case OP_DIGIT: case OP_EMPTY: case OP_NAME:
         return false;
 
     case OP_ABS: case OP_NEG:

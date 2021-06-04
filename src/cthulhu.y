@@ -65,6 +65,7 @@ unit: expr SEMI { x->ast = ast_list($1); }
 
 primary: LPAREN expr RPAREN { $$ = $2; }
     | DIGIT { $$ = ast_digit($1); }
+    | IDENT { $$ = ast_symbol($1); }
     ;
 
 postfix: primary { $$ = $1; }

@@ -95,6 +95,8 @@ static void emit_opcode(size_t idx, opcode_t op) {
     printf("  %%%zu = ", idx);
     if (op.op == OP_DIGIT) {
         emit_imm(op.num);
+    } else if (op.op == OP_NAME) {
+        emit_operand(op.expr);
     } else if (op.op == OP_NEG) {
         printf("neg ");
         emit_operand(op.expr);
