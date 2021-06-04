@@ -60,7 +60,7 @@ static bool refs_val(unit_t *ctx, size_t idx, size_t inst) {
         
         return op_refs(op.body, inst);
 
-    case OP_EMPTY: case OP_DIGIT: case OP_NAME:
+    case OP_EMPTY: case OP_VALUE:
         return false;
 
     default:
@@ -246,15 +246,6 @@ static void emit_alloc_sym_mov(alloc_t dst, const char *text) {
     EMITF(", %s\n", text);
 }
 
-static void emit_digit(int64_t num, alloc_t reg) {
-    emit_alloc_imm_mov(reg, num);
-}
-
-static void emit_symbol(regalloc_t *alloc, opcode_t op) {
-    alloc_t dst = range_for_opcode(alloc, op)->assoc;
-    emit_alloc_sym_mov(dst, op.expr.name);
-}
-
 static void emit_reg_mov(reg_t dst, alloc_t src) {
     if (!is_alloc_reg(src, dst)) {
         EMITF("  mov %s, ", reg_name(dst));
@@ -433,7 +424,7 @@ static void emit_push(regalloc_t *alloc, operand_t arg) {
     EMIT("\n");
 }
 
-static void emit_param(regalloc_t *alloc, size_t i, operand_t arg) {
+static size_t emit_param(regalloc_t *alloc, size_t i, operand_t arg) {
     /* we unconditionally save rdx and rcx */
     switch (i) {
     case 0:
@@ -457,8 +448,10 @@ static void emit_param(regalloc_t *alloc, size_t i, operand_t arg) {
 
     default:
         emit_push(alloc, arg);
-        break;
+        return 8;
     }
+
+    return 0;
 }
 
 static void emit_alloc_mov(alloc_t dst, reg_t src) {
@@ -475,6 +468,8 @@ static void emit_call(regalloc_t *alloc, opcode_t op) {
     alloc_t dst = range->assoc;
     operand_t body = op.body;
 
+    size_t used_stack = 0;
+
     bool save_rcx = reg_is_used(alloc, range->last + 1, RCX);
     bool save_rdx = reg_is_used(alloc, range->last + 1, RDX);
 
@@ -486,7 +481,7 @@ static void emit_call(regalloc_t *alloc, opcode_t op) {
 
     /* sysv pushes arguments in reverse order */
     for (int64_t i = op.total; i--;) {
-        emit_param(alloc, i, op.args[i]);
+        used_stack += emit_param(alloc, i, op.args[i]);
     }
 
     if (body.type == IMM) {
@@ -503,7 +498,27 @@ static void emit_call(regalloc_t *alloc, opcode_t op) {
     if (save_rdx)
         EMIT("  pop rdx\n");
 
+    if (used_stack) {
+        EMITF("  add rsp, %zu\n", used_stack);
+    }
+
     emit_alloc_mov(dst, RAX);
+}
+
+static void emit_value(regalloc_t *alloc, opcode_t op) {
+    alloc_t reg = range_for_opcode(alloc, op)->assoc;
+    switch (op.expr.type) {
+    case SYM:
+        emit_alloc_sym_mov(reg, op.expr.name);
+        break;
+    case IMM:
+        emit_alloc_imm_mov(reg, op.expr.num);
+        break;
+
+    default:
+        fprintf(stderr, "emit_value(%d)\n", op.expr.type);
+        break;
+    }
 }
 
 static void emit_inst(regalloc_t *alloc, size_t idx, opcode_t op) {
@@ -511,8 +526,8 @@ static void emit_inst(regalloc_t *alloc, size_t idx, opcode_t op) {
     case OP_EMPTY:
         break;
 
-    case OP_DIGIT:
-        emit_digit(op.num, range_for_opcode(alloc, op)->assoc);
+    case OP_VALUE:
+        emit_value(alloc, op);
         break;
 
     case OP_ADD:
@@ -537,10 +552,6 @@ static void emit_inst(regalloc_t *alloc, size_t idx, opcode_t op) {
 
     case OP_CALL:
         emit_call(alloc, op);
-        break;
-
-    case OP_NAME:
-        emit_symbol(alloc, op);
         break;
 
     default:
