@@ -23,6 +23,11 @@ typedef enum {
 
     /* either a digit, a register copy, or a symbol */
     OP_VALUE,
+    OP_COPY,
+
+    /* control flow */
+    OP_LABEL,
+    OP_BRANCH,
 
     /* return a value from a function */
     OP_RETURN,
@@ -31,7 +36,7 @@ typedef enum {
 } optype_t;
 
 typedef struct {
-    enum { REG, IMM, SYM } type;
+    enum { REG, IMM, SYM, LABEL } type;
     union {
         size_t reg;
         int64_t num;
@@ -50,7 +55,12 @@ typedef struct {
 
         struct {
             operand_t cond;
-            size_t label;
+            operand_t label;
+        };
+
+        struct {
+            operand_t src;
+            operand_t dst;
         };
 
         struct {

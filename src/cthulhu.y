@@ -48,6 +48,11 @@ int yyerror();
 %token
     LPAREN "("
     RPAREN ")"
+    LBRACE "{"
+    RBRACE "}"
+
+%token
+    DEF "def"
 
 %type<node>
     primary expr additive multiplicative unary ternary postfix
@@ -60,7 +65,7 @@ int yyerror();
 %%
 
 unit: expr SEMI { x->ast = ast_list($1); }
-    | unit expr SEMI { x->ast = ast_append($1, $2); }
+    | unit expr SEMI { x->ast = ast_append(x->ast, $2); }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }

@@ -43,16 +43,16 @@ static bool refs_val(unit_t *ctx, size_t idx, size_t inst) {
     size_t i = 0;
 
     switch (op.op) {
-    case OP_ABS: case OP_NEG:
+    case OP_ABS: case OP_NEG: case OP_RETURN:
         return op_refs(op.expr, inst);
         
     case OP_ADD: case OP_SUB: case OP_DIV:
     case OP_MUL: case OP_REM:
         return op_refs(op.lhs, inst) || op_refs(op.rhs, inst);
 
-    case OP_RETURN:
-        return op_refs(op.expr, inst);
-    
+    case OP_BRANCH:
+        return op_refs(op.cond, inst) || op_refs(op.label, inst);
+
     case OP_CALL:
         for (; i < op.total; i++)
             if (op_refs(op.args[i], inst))
@@ -60,8 +60,11 @@ static bool refs_val(unit_t *ctx, size_t idx, size_t inst) {
         
         return op_refs(op.body, inst);
 
-    case OP_EMPTY: case OP_VALUE:
+    case OP_EMPTY: case OP_VALUE: case OP_LABEL:
         return false;
+
+    case OP_COPY:
+        return op_refs(op.dst, inst) || op_refs(op.src, inst);
 
     default:
         fprintf(stderr, "refs_val(%d)\n", op.op);
@@ -258,6 +261,8 @@ static void emit_operand(regalloc_t *alloc, operand_t op) {
         EMITF("%ld", op.num);
     } else if (op.type == SYM) {
         EMITF("%s", op.name);
+    } else if (op.type == LABEL) {
+        EMITF(".%zu", op.reg);
     } else {
         emit_alloc(range_for_op(alloc, op.reg)->assoc);
     }
@@ -521,6 +526,54 @@ static void emit_value(regalloc_t *alloc, opcode_t op) {
     }
 }
 
+static bool is_const_true(operand_t op) {
+    return op.type == IMM && op.num != 0;
+}
+
+static void emit_branch(regalloc_t *alloc, opcode_t op) {
+    if (!is_const_true(op.cond)) {
+        EMIT("  cmp ");
+        emit_operand(alloc, op.cond);
+        EMIT(", 0\n");
+
+        EMIT("  jne ");
+    } else {
+        EMIT("  jmp ");
+    }
+
+    emit_operand(alloc, op.label);
+    EMIT("\n");
+}
+
+static void emit_label(size_t idx) {
+    EMITF(".%zu:\n", idx);
+}
+
+static bool is_mov_redundant(regalloc_t *alloc, operand_t lhs, operand_t rhs) {
+    if (lhs.type != REG || rhs.type != REG) {
+        return false;
+    }
+    
+    alloc_t dst = range_for_op(alloc, lhs.reg)->assoc,
+            src = range_for_op(alloc, rhs.reg)->assoc;
+
+    if (dst.type == IN_REG && src.type == IN_REG) {
+        return dst.reg == src.reg;
+    } else {
+        return dst.offset == src.offset;
+    }
+}
+
+static void emit_copy(regalloc_t *alloc, opcode_t op) {
+    if (!is_mov_redundant(alloc, op.src, op.dst)) {
+        EMIT("  mov ");
+        emit_operand(alloc, op.dst);
+        EMIT(", ");
+        emit_operand(alloc, op.src);
+        EMIT("\n");
+    }
+}
+
 static void emit_inst(regalloc_t *alloc, size_t idx, opcode_t op) {
     switch (op.op) {
     case OP_EMPTY:
@@ -552,6 +605,17 @@ static void emit_inst(regalloc_t *alloc, size_t idx, opcode_t op) {
 
     case OP_CALL:
         emit_call(alloc, op);
+        break;
+
+    case OP_BRANCH:
+        emit_branch(alloc, op);
+        break;
+    case OP_LABEL:
+        emit_label(idx);
+        break;
+
+    case OP_COPY:
+        emit_copy(alloc, op);
         break;
 
     default:
