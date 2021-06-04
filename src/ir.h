@@ -31,10 +31,11 @@ typedef enum {
 } optype_t;
 
 typedef struct {
-    enum { REG, IMM } type;
+    enum { REG, IMM, SYM } type;
     union {
         size_t reg;
         int64_t num;
+        char *name;
     };
 } operand_t;
 
@@ -71,13 +72,25 @@ typedef struct {
     size_t size;
     size_t length;
     opcode_t *ops;
+    const char *name;
 } unit_t;
 
 /* create a TAC from a valid parse tree */
-unit_t *ir_gen(node_t *node);
+unit_t *ir_gen(node_t *node, const char *name);
 
 /* constant folding, returns false if nothing was folded */
 bool ir_const_fold(unit_t *unit);
 
 /* dead code removal, returns false if nothing was removed */
 bool ir_reduce(unit_t *unit);
+
+typedef struct {
+    unit_t **units;
+    size_t len;
+    size_t size;
+} units_t;
+
+units_t symbol_table(void);
+void add_symbol(units_t *units, unit_t *unit);
+
+bool ir_inline(unit_t *unit, units_t *world);

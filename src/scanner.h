@@ -4,5 +4,5 @@
 
 typedef struct {
     const char *path;
-    node_t *ast;
+    nodes_t *ast;
 } scanner_t;
