@@ -42,6 +42,12 @@ node_t *ast_digit(char *text) {
     return node;
 }
 
+node_t *ast_symbol(char *text) {
+    node_t *node = ast(NODE_SYMBOL);
+    node->text = text;
+    return node;
+}
+
 node_t *ast_binary(node_t *lhs, node_t *rhs, int op) {
     node_t *node = ast(NODE_BINARY);
     node->binary.op = op;

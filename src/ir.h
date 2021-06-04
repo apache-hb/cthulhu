@@ -23,6 +23,7 @@ typedef enum {
 
     /* literals */
     OP_DIGIT,
+    OP_NAME,
 
     /* return a value from a function */
     OP_RETURN,
@@ -35,7 +36,7 @@ typedef struct {
     union {
         size_t reg;
         int64_t num;
-        char *name;
+        const char *name;
     };
 } operand_t;
 

@@ -57,7 +57,7 @@ static bool refs_val(unit_t *ctx, size_t idx, size_t inst) {
         
         return op_refs(op.body, inst);
 
-    case OP_EMPTY: case OP_DIGIT:
+    case OP_EMPTY: case OP_DIGIT: case OP_NAME:
         return false;
 
     default:
@@ -237,8 +237,19 @@ static void emit_alloc_imm_mov(alloc_t dst, int64_t num) {
     }
 }
 
+static void emit_alloc_sym_mov(alloc_t dst, const char *text) {
+    printf("  mov ");
+    emit_alloc(dst);
+    printf(", %s\n", text);
+}
+
 static void emit_digit(int64_t num, alloc_t reg) {
     emit_alloc_imm_mov(reg, num);
+}
+
+static void emit_symbol(regalloc_t *alloc, opcode_t op) {
+    alloc_t dst = range_for_opcode(alloc, op)->assoc;
+    emit_alloc_sym_mov(dst, op.expr.name);
 }
 
 static void emit_reg_mov(reg_t dst, alloc_t src) {
@@ -251,6 +262,8 @@ static void emit_reg_mov(reg_t dst, alloc_t src) {
 static void emit_operand(regalloc_t *alloc, operand_t op) {
     if (op.type == IMM) { 
         printf("%ld", op.num);
+    } else if (op.type == SYM) {
+        printf("%s", op.name);
     } else {
         emit_alloc(range_for_op(alloc, op.reg)->assoc);
     }
@@ -513,6 +526,10 @@ static void emit_inst(regalloc_t *alloc, size_t idx, opcode_t op) {
         emit_call(alloc, op);
         break;
 
+    case OP_NAME:
+        emit_symbol(alloc, op);
+        break;
+
     default:
         fprintf(stderr, "emit_inst(%d)\n", op.op);
         break;
@@ -525,7 +542,7 @@ static size_t round_stack_size(size_t offset) {
 
 void emit_asm(unit_t *ir, FILE *output) {
     out = output;
-    
+
     live_graph_t graph = build_graph(ir);
     regalloc_t alloc = { {}, &graph, 0 };
 
