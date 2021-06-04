@@ -49,8 +49,8 @@ static operand_t sym(const char *text) {
 
 static size_t build_digit(unit_t *unit, char *text) {
     int64_t val = strtoll(text, NULL, 10);
-    opcode_t op = build_opcode(OP_DIGIT);
-    op.num = val;
+    opcode_t op = build_opcode(OP_VALUE);
+    op.expr = imm(val);
     size_t idx = unit_add(unit, op);
 
     return idx;
@@ -126,7 +126,7 @@ static size_t build_call(unit_t *unit, struct call_t call) {
 }
 
 static size_t build_name(unit_t *unit, const char *text) {
-    opcode_t op = build_opcode(OP_NAME);
+    opcode_t op = build_opcode(OP_VALUE);
     op.expr = sym(text);
     return unit_add(unit, op);
 }
@@ -186,18 +186,15 @@ static operand_t get_operand(unit_t *ctx, operand_t op) {
 
     opcode_t *inst = opcode_at(ctx, op.reg);
 
-    if (inst->op == OP_DIGIT) 
-        return imm(inst->num);
-
-    if (inst->op == OP_NAME)
-        return sym(inst->expr.name);
+    if (inst->op == OP_VALUE)
+        return inst->expr;
 
     return op;
 }
 
 static opcode_t make_digit(int64_t it) {
-    opcode_t op = build_opcode(OP_DIGIT);
-    op.num = it;
+    opcode_t op = build_opcode(OP_VALUE);
+    op.expr = imm(it);
     return op;
 }
 
@@ -305,7 +302,7 @@ static void fold_opcode(bool *dirty, unit_t *ctx, size_t idx) {
         fold_call(ctx, op);
         break;
 
-    case OP_DIGIT: case OP_EMPTY: case OP_NAME:
+    case OP_VALUE: case OP_EMPTY:
         break;
     default:
         fprintf(stderr, "fold_opcode(%d)\n", op->op);
@@ -342,7 +339,7 @@ static bool refs_opcode(opcode_t *op, size_t idx) {
 
     switch (op->op) {
     /* digits and empty cant reference anything */
-    case OP_DIGIT: case OP_EMPTY: case OP_NAME:
+    case OP_VALUE: case OP_EMPTY:
         return false;
 
     case OP_ABS: case OP_NEG:
@@ -435,7 +432,7 @@ static void shift_opcode(unit_t *unit, size_t idx, size_t start, size_t by) {
     size_t i = 0;
 
     switch (op->op) {
-    case OP_EMPTY: case OP_DIGIT:
+    case OP_EMPTY: case OP_VALUE:
         break;
 
     case OP_ABS: case OP_NEG: case OP_RETURN:
@@ -487,6 +484,9 @@ static unit_t *find_symbol(operand_t func, units_t *ctx) {
                 return ctx->units[i];
             }
         }
+        fprintf(stderr, "find_symbol(%s) = NULL\n", func.name);
+    } else {
+        fprintf(stderr, "find_symbol(func.type != SYM)\n");
     }
 
     return NULL;
@@ -501,7 +501,8 @@ bool ir_inline(unit_t *unit, units_t *world) {
         opcode_t *op = opcode_at(unit, i++);
 
         if (op->op == OP_CALL) {
-            size_t limit = inline_func(unit, find_symbol(op->body, world), i);
+            unit_t *symbol = find_symbol(op->body, world);
+            size_t limit = inline_func(unit, symbol, i);
         
             if (limit) {
                 dirty = true;

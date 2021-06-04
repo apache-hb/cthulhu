@@ -63,10 +63,6 @@ static nodes_t *compile_string(const char *text) {
     return extra.ast;
 }
 
-static void emit_imm(int64_t num) {
-    printf("$%ld", num);
-}
-
 static void emit_operand(operand_t it) {
     switch (it.type) {
     case REG:
@@ -93,9 +89,7 @@ static void emit_opcode(size_t idx, opcode_t op) {
     }
 
     printf("  %%%zu = ", idx);
-    if (op.op == OP_DIGIT) {
-        emit_imm(op.num);
-    } else if (op.op == OP_NAME) {
+    if (op.op == OP_VALUE) {
         emit_operand(op.expr);
     } else if (op.op == OP_NEG) {
         printf("neg ");

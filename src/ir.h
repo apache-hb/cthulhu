@@ -21,9 +21,8 @@ typedef enum {
     OP_DIV,
     OP_REM,
 
-    /* literals */
-    OP_DIGIT,
-    OP_NAME,
+    /* either a digit, a register copy, or a symbol */
+    OP_VALUE,
 
     /* return a value from a function */
     OP_RETURN,
@@ -47,7 +46,6 @@ typedef struct {
     size_t range;
 
     union {
-        int64_t num;
         operand_t expr;
 
         struct {
