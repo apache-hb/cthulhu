@@ -6,6 +6,9 @@
 
 FILE *out;
 
+#define EMIT(msg) fprintf(out, msg)
+#define EMITF(msg, ...) fprintf(out, msg, __VA_ARGS__)
+
 static alloc_t alloc_reg(reg_t reg) {
     alloc_t out = { IN_REG, { .reg = reg } };
     return out;
@@ -220,27 +223,27 @@ static const char *reg_name(reg_t reg) {
 
 static void emit_alloc(alloc_t alloc) {
     if (alloc.type == IN_REG) {
-        printf("%s", reg_name(alloc.reg));
+        EMITF("%s", reg_name(alloc.reg));
     } else {
-        printf("[rbp - %zu]", alloc.offset * 8);
+        EMITF("[rbp - %zu]", alloc.offset * 8);
     }
 }
 
 static void emit_alloc_imm_mov(alloc_t dst, int64_t num) {
     if (num == 0 && dst.type == IN_REG) {
         const char *name = reg_name(dst.reg);
-        printf("  xor %s, %s\n", name, name);
+        EMITF("  xor %s, %s\n", name, name);
     } else {
-        printf("  mov ");
+        EMIT("  mov ");
         emit_alloc(dst);
-        printf(", %ld\n", num);
+        EMITF(", %ld\n", num);
     }
 }
 
 static void emit_alloc_sym_mov(alloc_t dst, const char *text) {
-    printf("  mov ");
+    EMIT("  mov ");
     emit_alloc(dst);
-    printf(", %s\n", text);
+    EMITF(", %s\n", text);
 }
 
 static void emit_digit(int64_t num, alloc_t reg) {
@@ -254,16 +257,16 @@ static void emit_symbol(regalloc_t *alloc, opcode_t op) {
 
 static void emit_reg_mov(reg_t dst, alloc_t src) {
     if (!is_alloc_reg(src, dst)) {
-        printf("  mov %s, ", reg_name(dst));
+        EMITF("  mov %s, ", reg_name(dst));
         emit_alloc(src);
     }
 }
 
 static void emit_operand(regalloc_t *alloc, operand_t op) {
     if (op.type == IMM) { 
-        printf("%ld", op.num);
+        EMITF("%ld", op.num);
     } else if (op.type == SYM) {
-        printf("%s", op.name);
+        EMITF("%s", op.name);
     } else {
         emit_alloc(range_for_op(alloc, op.reg)->assoc);
     }
@@ -281,18 +284,18 @@ static void mov_to_rax(regalloc_t *alloc, operand_t op) {
 
         emit_reg_mov(RAX, dst);
     } else {
-        printf("  mov rax, %ld\n", op.num);
+        EMITF("  mov rax, %ld\n", op.num);
     }
 }
 
 static void emit_mov(regalloc_t *alloc, reg_t reg, operand_t val) {
     const char *dst = reg_name(reg);
     if (val.type == IMM && val.num == 0) {
-        printf("  xor %s, %s\n", dst, dst);
+        EMITF("  xor %s, %s\n", dst, dst);
     } else {
-        printf("  mov %s, ", dst);
+        EMITF("  mov %s, ", dst);
         emit_operand(alloc, val);
-        printf("\n");
+        EMIT("\n");
     }
 }
 
@@ -303,16 +306,16 @@ static void emit_mul(regalloc_t *alloc, size_t idx, opcode_t op) {
     bool save_rax = used && is_alloc_reg(dst, RAX);
 
     if (save_rax) {
-        printf("  push rax\n");
+        EMIT("  push rax\n");
     }
 
     mov_to_rax(alloc, op.lhs);
-    printf("  imul ");
+    EMIT("  imul ");
     emit_operand(alloc, op.rhs);
-    printf("\n");
+    EMIT("\n");
 
     if (save_rax) {
-        printf("  pop rax\n");
+        EMIT("  pop rax\n");
     }
 }
 
@@ -324,24 +327,24 @@ static void emit_div(regalloc_t *alloc, size_t idx, opcode_t op) {
     bool save_rdx = reg_is_used(alloc, idx, RDX);
 
     if (save_rax) {
-        printf("  push rax\n");
+        EMIT("  push rax\n");
     }
 
     if (save_rdx) {
-        printf("  push rdx\n");
+        EMIT("  push rdx\n");
     }
 
     mov_to_rax(alloc, op.lhs);
-    printf("  idiv ");
+    EMIT("  idiv ");
     emit_operand(alloc, op.rhs);
-    printf("\n");
+    EMIT("\n");
 
     if (save_rdx) {
-        printf("  pop rdx\n");
+        EMIT("  pop rdx\n");
     }
 
     if (save_rax) {
-        printf("  pop rax\n");
+        EMIT("  pop rax\n");
     }
 }
 
@@ -353,24 +356,24 @@ static void emit_rem(regalloc_t *alloc, size_t idx, opcode_t op) {
     bool save_rdx = reg_is_used(alloc, idx, RDX) && is_alloc_reg(dst, RDX);
 
     if (save_rax) {
-        printf("  push rax\n");
+        EMIT("  push rax\n");
     }
 
     if (save_rdx) {
-        printf("  push rdx\n");
+        EMIT("  push rdx\n");
     }
 
     mov_to_rax(alloc, op.lhs);
-    printf("  idiv ");
+    EMIT("  idiv ");
     emit_operand(alloc, op.rhs);
-    printf("\n");
+    EMIT("\n");
 
     if (save_rdx) {
-        printf("  pop rdx\n");
+        EMIT("  pop rdx\n");
     }
 
     if (save_rax) {
-        printf("  pop rax\n");
+        EMIT("  pop rax\n");
     }
 }
 
@@ -378,36 +381,36 @@ static void emit_add(regalloc_t *alloc, opcode_t op) {
     alloc_t reg = range_for_opcode(alloc, op)->assoc;
 
     if (!operand_is_reg(alloc, op.lhs, reg)) {
-        printf("  add ");
+        EMIT("  add ");
         emit_alloc(reg);
-        printf(", ");
+        EMIT(", ");
         emit_operand(alloc, op.lhs);
-        printf("\n");
+        EMIT("\n");
     }
 
-    printf("  add ");
+    EMIT("  add ");
     emit_alloc(reg);
-    printf(", ");
+    EMIT(", ");
     emit_operand(alloc, op.rhs);
-    printf("\n");
+    EMIT("\n");
 }
 
 static void emit_sub(regalloc_t *alloc, opcode_t op) {
     alloc_t reg = range_for_opcode(alloc, op)->assoc;
 
     if (!operand_is_reg(alloc, op.lhs, reg)) {
-        printf("  sub ");
+        EMIT("  sub ");
         emit_alloc(reg);
-        printf(", ");
+        EMIT(", ");
         emit_operand(alloc, op.lhs);
-        printf("\n");
+        EMIT("\n");
     }
 
-    printf("  sub ");
+    EMIT("  sub ");
     emit_alloc(reg);
-    printf(", ");
+    EMIT(", ");
     emit_operand(alloc, op.rhs);
-    printf("\n");
+    EMIT("\n");
 }
 
 static void emit_ret(regalloc_t *alloc, opcode_t op) {
@@ -420,14 +423,14 @@ static void emit_ret(regalloc_t *alloc, opcode_t op) {
         emit_reg_mov(RAX, reg);
     }
 
-    printf("  leave\n");
-    printf("  ret\n");
+    EMIT("  leave\n");
+    EMIT("  ret\n");
 }
 
 static void emit_push(regalloc_t *alloc, operand_t arg) {
-    printf("  push ");
+    EMIT("  push ");
     emit_operand(alloc, arg);
-    printf("\n");
+    EMIT("\n");
 }
 
 static void emit_param(regalloc_t *alloc, size_t i, operand_t arg) {
@@ -462,17 +465,17 @@ static void emit_alloc_mov(alloc_t dst, reg_t src) {
     if (is_alloc_reg(dst, src))
         return;
 
-    printf("  mov ");
+    EMIT("  mov ");
     emit_alloc(dst);
-    printf(", %s\n", reg_name(src));
+    EMITF(", %s\n", reg_name(src));
 }
 
 static void emit_call(regalloc_t *alloc, opcode_t op) {
     alloc_t dst = range_for_opcode(alloc, op)->assoc;
     operand_t body = op.body;
 
-    printf("  push rcx\n");
-    printf("  push rdx\n");
+    EMIT("  push rcx\n");
+    EMIT("  push rdx\n");
 
     /* sysv pushes arguments in reverse order */
     for (int64_t i = op.total; i--;) {
@@ -480,15 +483,15 @@ static void emit_call(regalloc_t *alloc, opcode_t op) {
     }
 
     if (body.type == IMM) {
-        printf("  call %ld\n", body.num);
+        EMITF("  call %ld\n", body.num);
     } else {
-        printf("  call ");
+        EMIT("  call ");
         emit_operand(alloc, body);
-        printf("\n");
+        EMIT("\n");
     }
 
-    printf("  pop rcx\n");
-    printf("  pop rdx\n");
+    EMIT("  pop rcx\n");
+    EMIT("  pop rdx\n");
 
     emit_alloc_mov(dst, RAX);
 }
@@ -551,10 +554,10 @@ void emit_asm(unit_t *ir, FILE *output) {
         link_reg_to_range(&alloc, i);
     }
 
-    printf("%s:\n", ir->name);
-    printf("  push rbp\n");
-    printf("  mov rbp, rsp\n");
-    printf("  sub rsp, %zu\n", round_stack_size(alloc.stack * 8));
+    EMITF("%s:\n", ir->name);
+    EMIT("  push rbp\n");
+    EMIT("  mov rbp, rsp\n");
+    EMITF("  sub rsp, %zu\n", round_stack_size(alloc.stack * 8));
 
     for (size_t i = 0; i < ir->length; i++) {
         emit_inst(&alloc, i, ir->ops[i]);
