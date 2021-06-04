@@ -471,11 +471,18 @@ static void emit_alloc_mov(alloc_t dst, reg_t src) {
 }
 
 static void emit_call(regalloc_t *alloc, opcode_t op) {
-    alloc_t dst = range_for_opcode(alloc, op)->assoc;
+    live_range_t *range = range_for_opcode(alloc, op);
+    alloc_t dst = range->assoc;
     operand_t body = op.body;
 
-    EMIT("  push rcx\n");
-    EMIT("  push rdx\n");
+    bool save_rcx = reg_is_used(alloc, range->last + 1, RCX);
+    bool save_rdx = reg_is_used(alloc, range->last + 1, RDX);
+
+    if (save_rcx)
+        EMIT("  push rcx\n");
+
+    if (save_rdx)
+        EMIT("  push rdx\n");
 
     /* sysv pushes arguments in reverse order */
     for (int64_t i = op.total; i--;) {
@@ -490,8 +497,11 @@ static void emit_call(regalloc_t *alloc, opcode_t op) {
         EMIT("\n");
     }
 
-    EMIT("  pop rcx\n");
-    EMIT("  pop rdx\n");
+    if (save_rcx)
+        EMIT("  pop rcx\n");
+
+    if (save_rdx)
+        EMIT("  pop rdx\n");
 
     emit_alloc_mov(dst, RAX);
 }
@@ -557,7 +567,9 @@ void emit_asm(unit_t *ir, FILE *output) {
     EMITF("%s:\n", ir->name);
     EMIT("  push rbp\n");
     EMIT("  mov rbp, rsp\n");
-    EMITF("  sub rsp, %zu\n", round_stack_size(alloc.stack * 8));
+    
+    if (alloc.stack)
+        EMITF("  sub rsp, %zu\n", round_stack_size(alloc.stack * 8));
 
     for (size_t i = 0; i < ir->length; i++) {
         emit_inst(&alloc, i, ir->ops[i]);

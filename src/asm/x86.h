@@ -9,14 +9,14 @@ typedef enum {
     RBX,
     RCX,
     RDX,
-
+    R8,
+    R9,
+    
     REG_NONE,
 
     /* not used in general regalloc yet */
     RDI,
     RSI,
-    R8,
-    R9
 } reg_t;
 
 /* an allocated register */
