@@ -23,6 +23,7 @@ src = [
     'src/main.c',
     'src/ast.c',
     'src/ir.c',
+    'src/sema.c',
     'src/asm/x86.c'
 ]
 

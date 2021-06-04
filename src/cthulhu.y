@@ -53,13 +53,14 @@ int yyerror();
     primary expr additive multiplicative unary ternary postfix
 
 %type<nodes>
-    call args
+    call args unit
 
 %start unit
 
 %%
 
-unit: expr SEMI { x->ast = $1; }
+unit: expr SEMI { x->ast = ast_list($1); }
+    | unit expr SEMI { x->ast = ast_append($1, $2); }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }

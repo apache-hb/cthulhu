@@ -7,11 +7,12 @@
 
 /* IR building */
 
-static unit_t *new_unit(void) {
+static unit_t *new_unit(const char *name) {
     unit_t *unit = malloc(sizeof(unit_t));
     unit->size = 8;
     unit->length = 0;
     unit->ops = malloc(sizeof(opcode_t) * unit->size);
+    unit->name = name;
     return unit;
 }
 
@@ -138,8 +139,8 @@ static size_t build_ir(unit_t *unit, node_t *node) {
     }
 }
 
-unit_t *ir_gen(node_t *node) {
-    unit_t *unit = new_unit();
+unit_t *ir_gen(node_t *node, const char *name) {
+    unit_t *unit = new_unit(name);
 
     build_ir(unit, node);
 
@@ -241,19 +242,16 @@ static int64_t map_rem(int64_t lhs, int64_t rhs) {
     return lhs % rhs;
 }
 
-static void fold_return(unit_t *ctx, size_t idx, opcode_t *op) {
-    op->expr = get_operand(ctx, op->expr);
 
-    emplace_opcode(ctx, idx, *op);
+static void fold_return(unit_t *ctx, opcode_t *op) {
+    op->expr = get_operand(ctx, op->expr);
 }
 
-static void fold_call(unit_t *ctx, size_t idx, opcode_t *op) {
+static void fold_call(unit_t *ctx, opcode_t *op) {
     for (size_t i = 0; i < op->total; i++) {
         op->args[i] = get_operand(ctx, op->args[i]);
     }
     op->body = get_operand(ctx, op->body);
-
-    emplace_opcode(ctx, idx, *op);
 }
 
 static void fold_opcode(bool *dirty, unit_t *ctx, size_t idx) {
@@ -284,11 +282,11 @@ static void fold_opcode(bool *dirty, unit_t *ctx, size_t idx) {
         break;
 
     case OP_RETURN:
-        fold_return(ctx, idx, op);
+        fold_return(ctx, op);
         break;
 
     case OP_CALL:
-        fold_call(ctx, idx, op);
+        fold_call(ctx, op);
         break;
 
     case OP_DIGIT: case OP_EMPTY:
@@ -322,10 +320,12 @@ static bool refs_operand(operand_t op, size_t reg) {
     return false;
 }
 
+/* check if ir step `op` depends on step `idx` */
 static bool refs_opcode(opcode_t *op, size_t idx) {
     size_t i = 0;
 
     switch (op->op) {
+    /* digits and empty cant reference anything */
     case OP_DIGIT: case OP_EMPTY:
         return false;
 
@@ -343,7 +343,6 @@ static bool refs_opcode(opcode_t *op, size_t idx) {
         for (; i < op->total; i++)
             if (refs_operand(op->args[i], idx))
                 return true;
-        
         return refs_operand(op->body, idx);
 
     default:
@@ -360,9 +359,13 @@ static void reduce_opcode(bool *dirty, unit_t *ctx, size_t idx) {
     if (op->op == OP_EMPTY || op->keep)
         return;
 
+    /* these have side effects so dont remove them */
+    if (op->op == OP_RETURN || op->op == OP_CALL)
+        return;
+
     /* see if anything references this step */
     for (size_t i = idx; i < ctx->length; i++) {
-        if (refs_opcode(op, idx)) {
+        if (refs_opcode(opcode_at(ctx, i), idx)) {
             return;
         }
     }
@@ -376,6 +379,122 @@ bool ir_reduce(unit_t *unit) {
 
     for (size_t i = 0; i < unit->length; i++) 
         reduce_opcode(&dirty, unit, i);
+
+    return dirty;
+}
+
+units_t symbol_table(void) {
+    units_t units = { malloc(sizeof(unit_t*) * 4), 0, 4 };
+    return units;
+}
+
+void add_symbol(units_t *units, unit_t *unit) {
+    if (units->len + 1 > units->size) {
+        units->size += 4;
+        units->units = realloc(units->units, sizeof(unit_t*) * units->size);
+    }
+
+    units->units[units->len++] = unit;
+}
+
+static size_t used_opcodes(unit_t *unit) {
+    size_t count = 0;
+
+    for (size_t i = 0; i < unit->length; i++)
+        if (opcode_at(unit, i)->op != OP_EMPTY)
+            count += 1;
+
+    return count;
+}
+
+static void shift_operand(size_t start, size_t by, operand_t *operand) {
+    if (operand->type == REG && operand->reg >= start) {
+        operand->reg += by;
+    }
+}
+
+static void shift_opcode(unit_t *unit, size_t idx, size_t start, size_t by) {
+    opcode_t *op = opcode_at(unit, idx);
+
+    size_t i = 0;
+
+    switch (op->op) {
+    case OP_EMPTY: case OP_DIGIT:
+        break;
+
+    case OP_ABS: case OP_NEG: case OP_RETURN:
+        shift_operand(start, by, &op->expr);
+        break;
+
+    case OP_ADD: case OP_SUB: case OP_MUL:
+    case OP_DIV: case OP_REM:
+        shift_operand(start, by, &op->lhs);
+        shift_operand(start, by, &op->rhs);
+        break;
+
+    case OP_CALL:
+        for (; i < op->total; i++)
+            shift_operand(start, by, op->args + i);
+        shift_operand(start, by, &op->body);
+        break;
+
+    default:
+        fprintf(stderr, "shift_opcode(%d)\n", op->op);
+        break;
+    }
+}
+
+static void shift_opcodes(unit_t *unit, size_t start, size_t len) {
+    for (size_t i = unit->length; i--;) {
+        shift_opcode(unit, i, start, len);
+    }
+}
+
+static size_t inline_func(unit_t *unit, unit_t *other, size_t idx) {
+    size_t size = used_opcodes(other);
+
+    opcode_t *call = opcode_at(unit, idx);
+
+    /* dont inline stuff thats larger than the call overhead */
+    if (size < call->total) {
+        return 0;
+    }
+
+    shift_opcodes(unit, idx, size);
+    return size;
+}
+
+static unit_t *find_symbol(operand_t func, units_t *ctx) {
+    if (func.type == SYM) {
+        for (size_t i = 0; i < ctx->len; i++) {
+            if (strcmp(func.name, ctx->units[i]->name) == 0) {
+                return ctx->units[i];
+            }
+        }
+    }
+
+    return NULL;
+}
+
+bool ir_inline(unit_t *unit, units_t *world) {
+    size_t len = unit->length;
+    size_t i = 0;
+    bool dirty = false;
+
+    while (i < len) {
+        opcode_t *op = opcode_at(unit, i++);
+
+        if (op->op == OP_CALL) {
+            size_t limit = inline_func(unit, find_symbol(op->body, world), i);
+        
+            if (limit) {
+                dirty = true;
+                len += limit;
+            }
+        }
+
+        len -= 1;
+    }
 
     return dirty;
 }

@@ -2,6 +2,7 @@
 #include "flex.h"
 
 #include "ir.h"
+#include "sema.h"
 #include "asm/x86.h"
 
 int yyerror(YYLTYPE *yylloc, void *scanner, scanner_t *x, const char *msg) {
@@ -17,7 +18,7 @@ int yyerror(YYLTYPE *yylloc, void *scanner, scanner_t *x, const char *msg) {
     return 1;
 }
 
-static node_t *compile(const char *path, FILE *file) {
+static nodes_t *compile(const char *path, FILE *file) {
     int err;
     yyscan_t scan;
     scanner_t extra = { path, NULL };
@@ -38,7 +39,7 @@ static node_t *compile(const char *path, FILE *file) {
     return extra.ast;
 }
 
-static node_t *compile_string(const char *text) {
+static nodes_t *compile_string(const char *text) {
     int err;
     yyscan_t scan;
     scanner_t extra = { "cmd", NULL };
@@ -62,17 +63,21 @@ static node_t *compile_string(const char *text) {
     return extra.ast;
 }
 
-unit_t *unit;
-
 static void emit_imm(int64_t num) {
     printf("$%ld", num);
 }
 
 static void emit_operand(operand_t it) {
-    if (it.type == REG) {
+    switch (it.type) {
+    case REG:
         printf("%%%zu", it.reg);
-    } else {
-        emit_imm(it.num);
+        break;
+    case IMM:
+        printf("$%ld", it.num);
+        break;
+    case SYM:
+        printf("`%s`", it.name);
+        break;
     }
 }
 
@@ -123,7 +128,8 @@ static void emit_opcode(size_t idx, opcode_t op) {
     printf("\n");
 }
 
-static void debug_ir(void) {
+static void debug_ir(unit_t *unit) {
+    printf("%s\n", unit->name);
     for (size_t i = 0; i < unit->length; i++) {
         opcode_t op = unit->ops[i];
         emit_opcode(i, op);
@@ -137,7 +143,11 @@ enum {
     O3
 } optimize = O1;
 
-node_t *node = NULL;
+nodes_t *nodes = NULL;
+
+bool emit_ir = false;
+
+FILE *output;
 
 static void fail_fast(const char *message) {
     fprintf(stderr, "error: %s\n", message);
@@ -154,11 +164,11 @@ static void parse_arg(int idx, int argc, const char **argv) {
         if (!has_next) {
             fail_fast("-e argument requires an expression");
         } else {
-            node = compile_string(NEXT_ARG);
+            nodes = compile_string(NEXT_ARG);
         }
     } else if (strcmp(arg, "-i") == 0) {
         printf(">>> ");
-        node = compile("stdin", stdin);
+        nodes = compile("stdin", stdin);
     } else if (strncmp(arg, "-O", 2) == 0) {
         char level = '1';
         if (strlen(arg) >= 3) {
@@ -183,8 +193,24 @@ static void parse_arg(int idx, int argc, const char **argv) {
             optimize = O3;
             break;
         }
+    } else if (strcmp(arg, "--emit-ir") == 0) {
+        emit_ir = true;
+    } else if (strncmp(arg, "-o", 2) == 0) {
+        const char *dst;
+        if (strlen(arg) > 2) {
+            dst = arg + 2;
+        } else if (has_next) {
+            dst = NEXT_ARG;
+        } else {
+            fail_fast("-o requires output file");
+        }
+
+        output = fopen(dst, "wb");
+        if (!output) {
+            fail_fast("failed to open output file");
+        }
     } else {
-        if (node) {
+        if (nodes) {
             return;
         }
         fprintf(stderr, "unknown arg %s\n", arg);
@@ -192,36 +218,54 @@ static void parse_arg(int idx, int argc, const char **argv) {
     }
 }
 
-int main(int argc, const char **argv) {
-    for (int i = 1; i < argc; i++)
-        parse_arg(i, argc, argv);
-
-    if (!node) {
-        fail_fast("input required");
-    }
-
-    unit = ir_gen(ast_return(node));
-
-    debug_ir();
-
+static void optimize_unit(unit_t *unit, units_t *world) {
     if (optimize == O0) {
         /* no optimizing */
     } else if (optimize > O1) {
-        size_t times = 0;
         bool dirty = true;
 
         while (dirty) {
-            dirty = dirty && (ir_const_fold(unit) || ir_reduce(unit));
-
-            printf("optimize: %zu\n", times++);
-            debug_ir();
+            dirty = dirty && (ir_const_fold(unit) || ir_reduce(unit) || ir_inline(unit, world));
         }
     } else {
         ir_const_fold(unit);
         ir_reduce(unit);
     }
 
-    emit_asm(unit);
+    if (emit_ir) {
+        debug_ir(unit);
+    }
+}
+
+int main(int argc, const char **argv) {
+    output = stdout;
+
+    for (int i = 1; i < argc; i++)
+        parse_arg(i, argc, argv);
+
+    if (!nodes) {
+        fail_fast("input required");
+    }
+
+    sym_resolve(nodes);
+
+    units_t world = symbol_table();
+
+    for (size_t i = 0; i < nodes->len; i++) {
+        unit_t *ir = ir_gen(ast_return(nodes->data + i), "main");
+        add_symbol(&world, ir);
+    }
+
+    if (emit_ir) {
+        for (size_t i = 0; i < world.len; i++)
+            debug_ir(world.units[i]);
+    }
+
+    for (size_t i = 0; i < world.len; i++)
+        optimize_unit(world.units[i], &world);
+
+    for (size_t i = 0; i < world.len; i++)
+        emit_asm(world.units[i], output);
 
     return 0;
 }
