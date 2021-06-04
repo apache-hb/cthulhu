@@ -74,58 +74,94 @@ static void emit_operand(operand_t it) {
     case SYM:
         printf("`%s`", it.name);
         break;
+    case LABEL:
+        printf("`%zu`", it.reg);
+        break;
     }
 }
 
+static void emit_unary_ir(const char *op, operand_t body) {
+    printf("%s ", op);
+    emit_operand(body);
+}
+
+static void emit_binary_ir(const char *op, operand_t lhs, operand_t rhs) {
+    printf("%s ", op);
+    emit_operand(lhs);
+    printf(" ");
+    emit_operand(rhs);
+}
+
 static void emit_opcode(size_t idx, opcode_t op) {
-    if (op.op == OP_EMPTY)
+    switch (op.op) {
+    default: break;
+    
+    case OP_EMPTY: 
         return;
 
-    if (op.op == OP_RETURN) {
+    case OP_RETURN:
         printf("  ret ");
         emit_operand(op.expr);
+        printf("\n");
+        return;
+
+    case OP_LABEL:
+        printf("%zu:\n", idx);
+        return;
+
+    case OP_BRANCH:
+        printf("  if ");
+        emit_operand(op.cond);
+        printf(" goto ");
+        emit_operand(op.label);
+        printf("\n");
+        return;
+    
+    case OP_COPY:
+        printf("  ");
+        emit_operand(op.dst);
+        printf(" = copy ");
+        emit_operand(op.src);
         printf("\n");
         return;
     }
 
     printf("  %%%zu = ", idx);
-    if (op.op == OP_VALUE) {
-        emit_operand(op.expr);
-    } else if (op.op == OP_NEG) {
-        printf("neg ");
-        emit_operand(op.expr);
-    } else if (op.op == OP_ABS) { 
-        printf("abs ");
-        emit_operand(op.expr);
-    } else if (op.op == OP_CALL) {
+
+    size_t i = 0;
+    switch (op.op) {
+    case OP_VALUE: emit_operand(op.expr); break;
+    case OP_NEG: emit_unary_ir("neg", op.expr); break;
+    case OP_ABS: emit_unary_ir("abs", op.expr); break;
+
+    case OP_CALL:
         printf("call ");
         emit_operand(op.body);
         printf(" (");
-        for (size_t i = 0; i < op.total; i++) {
+        for (; i < op.total; i++) {
             if (i) {
                 printf(", ");
             }
             emit_operand(op.args[i]);
         }
         printf(")");
-    } else {
-        switch (op.op) {
-        case OP_ADD: printf("add "); break;
-        case OP_SUB: printf("sub "); break;
-        case OP_DIV: printf("div "); break;
-        case OP_MUL: printf("mul "); break;
-        case OP_REM: printf("rem "); break;
-        default: printf("err "); break;
-        }
-        emit_operand(op.lhs);
-        printf(" ");
-        emit_operand(op.rhs);
+        break;
+
+    case OP_ADD: emit_binary_ir("add", op.lhs, op.rhs); break;
+    case OP_SUB: emit_binary_ir("sub", op.lhs, op.rhs); break;
+    case OP_MUL: emit_binary_ir("mul", op.lhs, op.rhs); break;
+    case OP_DIV: emit_binary_ir("div", op.lhs, op.rhs); break;
+    case OP_REM: emit_binary_ir("rem", op.lhs, op.rhs); break;
+
+    default:
+        fprintf(stderr, "emit_opcode(%d)\n", op.op);
+        break;
     }
     printf("\n");
 }
 
 static void debug_ir(unit_t *unit) {
-    printf("%s\n", unit->name);
+    printf("%s():\n", unit->name);
     for (size_t i = 0; i < unit->length; i++) {
         opcode_t op = unit->ops[i];
         emit_opcode(i, op);

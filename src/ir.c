@@ -7,6 +7,10 @@
 
 /* IR building */
 
+static opcode_t *opcode_at(unit_t *ctx, size_t idx) {
+    return ctx->ops + idx;
+}
+
 static unit_t *new_unit(const char *name) {
     unit_t *unit = malloc(sizeof(unit_t));
     unit->size = 8;
@@ -47,13 +51,31 @@ static operand_t sym(const char *text) {
     return op;
 }
 
+static operand_t label(size_t reg) {
+    operand_t op = { LABEL, { .reg = reg } };
+    return op;
+}
+
+static size_t build_expr(unit_t *unit, optype_t type, operand_t expr) {
+    opcode_t op = build_opcode(type);
+    op.expr = expr;
+    return unit_add(unit, op);
+}
+
+static size_t build_expr2(unit_t *unit, optype_t type, operand_t lhs, operand_t rhs) {
+    opcode_t op = build_opcode(type);
+    op.lhs = lhs;
+    op.rhs = rhs;
+    return unit_add(unit, op);   
+}
+
+static operand_t build_reg(unit_t *unit, node_t *node) {
+    return reg(build_ir(unit, node));
+}
+
 static size_t build_digit(unit_t *unit, char *text) {
     int64_t val = strtoll(text, NULL, 10);
-    opcode_t op = build_opcode(OP_VALUE);
-    op.expr = imm(val);
-    size_t idx = unit_add(unit, op);
-
-    return idx;
+    return build_expr(unit, OP_VALUE, imm(val));
 }
 
 static optype_t unary_optype(int op) {
@@ -68,12 +90,10 @@ static optype_t unary_optype(int op) {
 }
 
 static size_t build_unary(unit_t *unit, struct unary_t unary) {
-    operand_t body = reg(build_ir(unit, unary.expr));
-    opcode_t op = build_opcode(unary_optype(unary.op));
-    op.expr = body;
-    size_t idx = unit_add(unit, op);
-
-    return idx;
+    return build_expr(unit, 
+        unary_optype(unary.op), 
+        build_reg(unit, unary.expr)
+    );
 }
 
 static optype_t binary_optype(int op) {
@@ -91,30 +111,21 @@ static optype_t binary_optype(int op) {
 }
 
 static size_t build_binary(unit_t *unit, struct binary_t binary) {
-    operand_t lhs = reg(build_ir(unit, binary.lhs)), 
-              rhs = reg(build_ir(unit, binary.rhs));
-    opcode_t op = build_opcode(binary_optype(binary.op));
-    op.lhs = lhs;
-    op.rhs = rhs;
-    size_t idx = unit_add(unit, op);
-
-    return idx;
+    return build_expr2(unit, binary_optype(binary.op),
+        build_reg(unit, binary.lhs),
+        build_reg(unit, binary.rhs)
+    );
 }
 
 static size_t build_return(unit_t *unit, node_t *expr) {
-    operand_t body = reg(build_ir(unit, expr));
-
-    opcode_t op = build_opcode(OP_RETURN);
-    op.expr = body;
-
-    return unit_add(unit, op);
+    return build_expr(unit, OP_RETURN, build_reg(unit, expr));
 }
 
 static size_t build_call(unit_t *unit, struct call_t call) {
-    operand_t body = reg(build_ir(unit, call.expr));
+    operand_t body = build_reg(unit, call.expr);
     operand_t *args = malloc(sizeof(operand_t) * call.args->len);
     for (size_t i = 0; i < call.args->len; i++) {
-        args[i] = reg(build_ir(unit, call.args->data + i));
+        args[i] = build_reg(unit, call.args->data + i);
     }
 
     opcode_t op = build_opcode(OP_CALL);
@@ -126,9 +137,64 @@ static size_t build_call(unit_t *unit, struct call_t call) {
 }
 
 static size_t build_name(unit_t *unit, const char *text) {
-    opcode_t op = build_opcode(OP_VALUE);
-    op.expr = sym(text);
+    return build_expr(unit, OP_VALUE, sym(text));
+}
+
+static size_t emit_label(unit_t *unit) {
+    return unit_add(unit, build_opcode(OP_LABEL));
+}
+
+static size_t emit_branch(unit_t *unit, operand_t cond) {
+    opcode_t op = build_opcode(OP_BRANCH);
+    op.cond = cond;
     return unit_add(unit, op);
+}
+
+static size_t emit_op(unit_t *unit, optype_t type) {
+    return unit_add(unit, build_opcode(type));
+}
+
+static void fixup_copy(unit_t *unit, size_t idx, operand_t dst, operand_t src) {
+    opcode_t *op = opcode_at(unit, idx);
+    op->src = src;
+    op->dst = dst;
+}
+
+static size_t build_ternary(unit_t *unit, struct ternary_t ternary) {
+    /* emit conditional */
+    operand_t cond = build_reg(unit, ternary.cond);
+
+    size_t jump = emit_branch(unit, cond);
+
+    /* false leaf */
+    operand_t lhs = build_reg(unit, ternary.rhs);
+    size_t copy_lhs = emit_op(unit, OP_COPY);
+
+    /* unconditional jump to tail */
+    size_t escape = emit_branch(unit, imm(1));
+
+    /* cond jumps here */
+    size_t enter = emit_label(unit);
+
+    /* fixup conditional jump */
+    opcode_at(unit, jump)->label = label(enter);
+
+    /* true leaf */
+    operand_t rhs = build_reg(unit, ternary.lhs);
+    size_t copy_rhs = emit_op(unit, OP_COPY);
+
+    /* false leaf jumps here */
+    size_t tail = emit_label(unit);
+
+    /* unconditional jump to end of cond */
+    opcode_at(unit, escape)->label = label(tail);
+
+    size_t end = emit_op(unit, OP_EMPTY);
+
+    fixup_copy(unit, copy_rhs, reg(end), rhs);
+    fixup_copy(unit, copy_lhs, reg(end), lhs);
+
+    return end;
 }
 
 static size_t build_ir(unit_t *unit, node_t *node) {
@@ -145,6 +211,8 @@ static size_t build_ir(unit_t *unit, node_t *node) {
         return build_call(unit, node->call);
     case NODE_SYMBOL:
         return build_name(unit, node->text);
+    case NODE_TERNARY:
+        return build_ternary(unit, node->ternary);
 
     default:
         fprintf(stderr, "build_ir(%d)\n", node->type);
@@ -164,10 +232,6 @@ unit_t *ir_gen(node_t *node, const char *name) {
 
 /* ir optimization utils */
 
-static opcode_t *opcode_at(unit_t *ctx, size_t idx) {
-    return ctx->ops + idx;
-}
-
 static void emplace_opcode(unit_t *ctx, size_t idx, opcode_t op) {
     opcode_t *old = opcode_at(ctx, idx);
     
@@ -180,16 +244,25 @@ static void emplace_opcode(unit_t *ctx, size_t idx, opcode_t op) {
 
 /* ir constant folding */
 
+static operand_t get_flat_operand(opcode_t *op, operand_t other) {
+    if (op->op == OP_VALUE)
+        return op->expr;
+
+    return other;
+}
+
 static operand_t get_operand(unit_t *ctx, operand_t op) {
     if (op.type == IMM || op.type == SYM)
         return op;
 
-    opcode_t *inst = opcode_at(ctx, op.reg);
+    for (size_t i = 0; i < op.reg; i++) {
+        opcode_t *inst = opcode_at(ctx, i);
+        if (inst->op == OP_COPY) {
+            return get_flat_operand(inst, op);
+        }
+    }
 
-    if (inst->op == OP_VALUE)
-        return inst->expr;
-
-    return op;
+    return get_flat_operand(opcode_at(ctx, op.reg), op);
 }
 
 static opcode_t make_digit(int64_t it) {
@@ -267,6 +340,15 @@ static void fold_call(unit_t *ctx, opcode_t *op) {
     op->body = get_operand(ctx, op->body);
 }
 
+static void fold_branch(unit_t *ctx, opcode_t *op) {
+    op->cond = get_operand(ctx, op->cond);
+}
+
+static void fold_copy(unit_t *ctx, opcode_t *op) {
+    op->dst = get_operand(ctx, op->dst);
+    op->src = get_operand(ctx, op->src);
+}
+
 static void fold_opcode(bool *dirty, unit_t *ctx, size_t idx) {
     opcode_t *op = opcode_at(ctx, idx);
 
@@ -302,8 +384,17 @@ static void fold_opcode(bool *dirty, unit_t *ctx, size_t idx) {
         fold_call(ctx, op);
         break;
 
-    case OP_VALUE: case OP_EMPTY:
+    case OP_BRANCH:
+        fold_branch(ctx, op);
         break;
+
+    case OP_COPY:
+        fold_copy(ctx, op);
+        break;
+
+    case OP_VALUE: case OP_EMPTY: case OP_LABEL:
+        break;
+
     default:
         fprintf(stderr, "fold_opcode(%d)\n", op->op);
     }
@@ -338,25 +429,29 @@ static bool refs_opcode(opcode_t *op, size_t idx) {
     size_t i = 0;
 
     switch (op->op) {
-    /* digits and empty cant reference anything */
-    case OP_VALUE: case OP_EMPTY:
+    /* empty cant reference anything */
+    case OP_EMPTY: case OP_LABEL:
         return false;
 
-    case OP_ABS: case OP_NEG:
+    case OP_ABS: case OP_NEG: 
+    case OP_VALUE: case OP_RETURN:
         return refs_operand(op->expr, idx);
 
     case OP_ADD: case OP_SUB: case OP_DIV:
     case OP_REM: case OP_MUL:
         return refs_operand(op->lhs, idx) || refs_operand(op->rhs, idx);
 
-    case OP_RETURN:
-        return refs_operand(op->expr, idx);
-
     case OP_CALL:
         for (; i < op->total; i++)
             if (refs_operand(op->args[i], idx))
                 return true;
         return refs_operand(op->body, idx);
+
+    case OP_COPY:
+        return refs_operand(op->dst, idx) || refs_operand(op->src, idx);
+
+    case OP_BRANCH:
+        return refs_operand(op->cond, idx) || refs_operand(op->label, idx);
 
     default:
         fprintf(stderr, "refs_opcode(%d)\n", op->op);
@@ -375,6 +470,14 @@ static void reduce_opcode(bool *dirty, unit_t *ctx, size_t idx) {
     /* these have side effects so dont remove them */
     if (op->op == OP_RETURN || op->op == OP_CALL)
         return;
+
+    /* try and find if this opcode is used in any copies */
+    for (size_t i = 0; i < idx; i++) {
+        opcode_t *op = opcode_at(ctx, i);
+        if (op->op == OP_COPY && refs_operand(op->dst, i)) {
+            return;
+        }
+    }
 
     /* see if anything references this step */
     for (size_t i = idx; i < ctx->length; i++) {

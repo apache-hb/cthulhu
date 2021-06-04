@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 static node_t *ast(node_type_t type) {
     node_t *node = malloc(sizeof(node_t));
