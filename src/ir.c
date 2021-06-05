@@ -1,6 +1,105 @@
 #include "ir.h"
 
 #include "bison.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+#define INITIAL_UNIT_SIZE 8
+
+static void ir_emit_opcode(unit_t *unit, opcode_t op) {
+    if (unit->len + 1 >= unit->size) {
+        unit->size += INITIAL_UNIT_SIZE;
+        unit->ops = realloc(unit->ops, sizeof(opcode_t) * unit->size);
+    }
+    unit->ops[unit->len++] = op;
+}
+
+static opcode_t ir_opcode(unit_t *unit, optype_t type) {
+    opcode_t op = { type, unit->idx++, { } };
+    return op;
+}
+
+static operand_t imm(int64_t num) {
+    operand_t op = { IMM, { .num = num } };
+    return op;
+}
+
+static operand_t reg(size_t reg) {
+    operand_t op = { REG, { .reg = reg } };
+    return op;
+}
+
+static size_t ir_emit(unit_t *unit, node_t *node);
+
+static size_t ir_emit_expr(unit_t *unit, optype_t type, operand_t expr) {
+    opcode_t op = ir_opcode(unit, type);
+    op.expr = expr;
+    ir_emit_opcode(unit, op);
+    return op.dst;
+}
+
+static size_t ir_emit_digit(unit_t *unit, node_t *node) {
+    return ir_emit_expr(unit, OP_VALUE, 
+        imm(strtoll(node->text, NULL, 10))
+    );
+}
+
+static optype_t ir_unop(int op) {
+    switch (op) {
+    case ADD: return OP_ABS;
+    case SUB: return OP_NEG;
+
+    default: 
+        fprintf(stderr, "ir_unop(%d)\n", op); 
+        return INT_MAX;
+    }
+}
+
+static size_t ir_emit_unary(unit_t *unit, node_t *node) {
+    return ir_emit_expr(unit, ir_unop(node->unary.op),
+        reg(ir_emit(unit, node->unary.expr))
+    );
+}
+
+static size_t ir_emit_ternary(unit_t *unit, node_t *node) {
+    (void)unit;
+    (void)node;
+    return 0;
+}
+
+static size_t ir_emit(unit_t *unit, node_t *node) {
+    switch (node->type) {
+    case NODE_DIGIT:
+        return ir_emit_digit(unit, node);
+    case NODE_UNARY:
+        return ir_emit_unary(unit, node);
+    case NODE_TERNARY:
+        return ir_emit_ternary(unit, node);
+
+    default:
+        fprintf(stderr, "ir_emit(%d)\n", node->type);
+        return SIZE_MAX;
+    }
+}
+
+unit_t ir_emit_node(node_t *node) {
+    unit_t unit = { 
+        .ops = malloc(sizeof(opcode_t) * INITIAL_UNIT_SIZE), 
+        .len = 0, 
+        .size = INITIAL_UNIT_SIZE,
+        
+        .idx = 0
+    };
+
+    ir_emit(&unit, node);
+
+    return unit;
+}
+
+#if 0
+#include "bison.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -618,3 +717,4 @@ bool ir_inline(unit_t *unit, units_t *world) {
 
     return dirty;
 }
+#endif

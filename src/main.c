@@ -1,9 +1,10 @@
 #include "bison.h"
 #include "flex.h"
 
+#include <stdbool.h>
+
 #include "ir.h"
-#include "sema.h"
-#include "asm/x86.h"
+#include "asm/x64.h"
 
 int yyerror(YYLTYPE *yylloc, void *scanner, scanner_t *x, const char *msg) {
     (void)scanner;
@@ -61,111 +62,6 @@ static nodes_t *compile_string(const char *text) {
     yylex_destroy(scan);
 
     return extra.ast;
-}
-
-static void emit_operand(operand_t it) {
-    switch (it.type) {
-    case REG:
-        printf("%%%zu", it.reg);
-        break;
-    case IMM:
-        printf("$%ld", it.num);
-        break;
-    case SYM:
-        printf("`%s`", it.name);
-        break;
-    case LABEL:
-        printf("`%zu`", it.reg);
-        break;
-    }
-}
-
-static void emit_unary_ir(const char *op, operand_t body) {
-    printf("%s ", op);
-    emit_operand(body);
-}
-
-static void emit_binary_ir(const char *op, operand_t lhs, operand_t rhs) {
-    printf("%s ", op);
-    emit_operand(lhs);
-    printf(" ");
-    emit_operand(rhs);
-}
-
-static void emit_opcode(size_t idx, opcode_t op) {
-    switch (op.op) {
-    default: break;
-    
-    case OP_EMPTY: 
-        return;
-
-    case OP_RETURN:
-        printf("  ret ");
-        emit_operand(op.expr);
-        printf("\n");
-        return;
-
-    case OP_LABEL:
-        printf("%zu:\n", idx);
-        return;
-
-    case OP_BRANCH:
-        printf("  if ");
-        emit_operand(op.cond);
-        printf(" goto ");
-        emit_operand(op.label);
-        printf("\n");
-        return;
-    
-    case OP_COPY:
-        printf("  ");
-        emit_operand(op.dst);
-        printf(" = copy ");
-        emit_operand(op.src);
-        printf("\n");
-        return;
-    }
-
-    printf("  %%%zu = ", idx);
-
-    size_t i = 0;
-    switch (op.op) {
-    case OP_VALUE: emit_operand(op.expr); break;
-    case OP_NEG: emit_unary_ir("neg", op.expr); break;
-    case OP_ABS: emit_unary_ir("abs", op.expr); break;
-
-    case OP_CALL:
-        printf("call ");
-        emit_operand(op.body);
-        printf(" (");
-        for (; i < op.total; i++) {
-            if (i) {
-                printf(", ");
-            }
-            emit_operand(op.args[i]);
-        }
-        printf(")");
-        break;
-
-    case OP_ADD: emit_binary_ir("add", op.lhs, op.rhs); break;
-    case OP_SUB: emit_binary_ir("sub", op.lhs, op.rhs); break;
-    case OP_MUL: emit_binary_ir("mul", op.lhs, op.rhs); break;
-    case OP_DIV: emit_binary_ir("div", op.lhs, op.rhs); break;
-    case OP_REM: emit_binary_ir("rem", op.lhs, op.rhs); break;
-
-    default:
-        fprintf(stderr, "emit_opcode(%d)\n", op.op);
-        break;
-    }
-    printf("\n");
-}
-
-static void debug_ir(unit_t *unit) {
-    printf("%s():\n", unit->name);
-    for (size_t i = 0; i < unit->length; i++) {
-        opcode_t op = unit->ops[i];
-        emit_opcode(i, op);
-    }
 }
 
 enum {
@@ -250,23 +146,43 @@ static void parse_arg(int idx, int argc, const char **argv) {
     }
 }
 
-static void optimize_unit(unit_t *unit, units_t *world) {
-    if (optimize == O0) {
-        /* no optimizing */
-    } else if (optimize > O1) {
-        bool dirty = true;
-
-        while (dirty) {
-            dirty = dirty && (ir_const_fold(unit) || ir_reduce(unit) || ir_inline(unit, world));
-        }
-    } else {
-        ir_const_fold(unit);
-        ir_reduce(unit);
+static void ir_emit_operand(operand_t op) {
+    switch (op.type) {
+    case IMM: printf("$%ld", op.num); break;
+    case REG: printf("%%%zu", op.reg); break;
+    case SYM: printf("`%zu`", op.reg); break;
     }
+}
 
-    if (emit_ir) {
-        debug_ir(unit);
+static void ir_emit_unary(const char *name, operand_t op) {
+    printf("%s ", name);
+    ir_emit_operand(op);
+}
+
+static void ir_debug_op(opcode_t *op) {
+    printf("  %%%zu = ", op->dst);
+    switch (op->type) {
+    case OP_VALUE:
+        ir_emit_operand(op->expr);
+        break;
+
+    case OP_NEG:
+        ir_emit_unary("neg", op->expr);
+        break;
+    case OP_ABS:
+        ir_emit_unary("abs", op->expr);
+        break;
+
+    default:
+        printf("ir_debug_op(%d)\n", op->type);
+        break;
     }
+    printf("\n");
+}
+
+static void ir_debug(unit_t *unit) {
+    for (size_t i = 0; i < unit->len; i++) 
+        ir_debug_op(unit->ops + i);
 }
 
 int main(int argc, const char **argv) {
@@ -279,25 +195,10 @@ int main(int argc, const char **argv) {
         fail_fast("input required");
     }
 
-    sym_resolve(nodes);
-
-    units_t world = symbol_table();
-
     for (size_t i = 0; i < nodes->len; i++) {
-        unit_t *ir = ir_gen(ast_return(nodes->data + i), "main");
-        add_symbol(&world, ir);
+        unit_t unit = ir_emit_node(nodes->data + i);
+        ir_debug(&unit);
     }
-
-    if (emit_ir) {
-        for (size_t i = 0; i < world.len; i++)
-            debug_ir(world.units[i]);
-    }
-
-    for (size_t i = 0; i < world.len; i++)
-        optimize_unit(world.units[i], &world);
-
-    for (size_t i = 0; i < world.len; i++)
-        emit_asm(world.units[i], output);
 
     return 0;
 }

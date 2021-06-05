@@ -23,8 +23,7 @@ src = [
     'src/main.c',
     'src/ast.c',
     'src/ir.c',
-    'src/sema.c',
-    'src/asm/x86.c'
+    'src/asm/x64.c'
 ]
 
 ctc = executable('cthulhu', parse, lex, src,

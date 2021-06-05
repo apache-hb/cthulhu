@@ -4,6 +4,67 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
+typedef enum {
+    /* unary ops */
+    OP_ABS, OP_NEG,
+
+    /* either a literal, register, or symbol */
+    OP_VALUE,
+
+    /* control flow */
+    OP_BRANCH, OP_CALL, OP_RETURN,
+
+    /* binary math ops */
+    OP_ADD, OP_SUB, OP_DIV, OP_MUL, OP_REM
+} optype_t;
+
+typedef struct {
+    enum { REG, IMM, SYM } type;
+    union {
+        size_t reg;
+        int64_t num;
+    };
+} operand_t;
+
+typedef struct {
+    optype_t type;
+    size_t dst;
+
+    union {
+        operand_t expr;
+
+        struct {
+            operand_t lhs;
+            operand_t rhs;
+        };
+
+        struct {
+            operand_t cond;
+            operand_t label;
+        };
+
+        struct {
+            operand_t body;
+            operand_t *args;
+            size_t total;
+        };
+    };
+} opcode_t;
+
+typedef struct {
+    opcode_t *ops;
+    size_t len;
+    size_t size;
+
+    size_t idx;
+} unit_t;
+
+unit_t ir_emit_node(node_t *node);
+
+#if 0
+#include <stddef.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 typedef enum {
@@ -103,3 +164,4 @@ units_t symbol_table(void);
 void add_symbol(units_t *units, unit_t *unit);
 
 bool ir_inline(unit_t *unit, units_t *world);
+#endif

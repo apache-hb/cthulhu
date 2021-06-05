@@ -1,5 +1,10 @@
 #pragma once
 
+#include <stdio.h>
+
+void x64_emit_asm(FILE *out);
+
+#if 0
 #include <stddef.h>
 #include <stdio.h>
 #include "ir.h"
@@ -48,3 +53,4 @@ typedef struct {
 live_graph_t build_graph(unit_t *ir);
 
 void emit_asm(unit_t *ir, FILE *output);
+#endif
