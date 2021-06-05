@@ -1,5 +1,8 @@
-#include "x86.h"
+#include "x64.h"
 
+
+
+#if 0
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdlib.h>
@@ -650,3 +653,4 @@ void emit_asm(unit_t *ir, FILE *output) {
         emit_inst(&alloc, i, ir->ops[i]);
     }
 }
+#endif
