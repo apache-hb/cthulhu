@@ -6,18 +6,15 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#define INITIAL_UNIT_SIZE 8
+#define UNIT_INIT_SIZE 8
 
-static void ir_emit_opcode(unit_t *unit, opcode_t op) {
-    if (unit->len + 1 >= unit->size) {
-        unit->size += INITIAL_UNIT_SIZE;
-        unit->ops = realloc(unit->ops, sizeof(opcode_t) * unit->size);
-    }
-    unit->ops[unit->len++] = op;
-}
+ARRAY_IMPL(unit_t, opcode_t, 
+    ir_emit_opcode, ir_opcode_at, ir_unit_new, 
+    UNIT_INIT_SIZE
+)
 
-static opcode_t ir_opcode(unit_t *unit, optype_t type) {
-    opcode_t op = { type, unit->idx++, { } };
+static opcode_t ir_opcode(optype_t type) {
+    opcode_t op = { type, { } };
     return op;
 }
 
@@ -34,10 +31,16 @@ static operand_t reg(size_t reg) {
 static size_t ir_emit(unit_t *unit, node_t *node);
 
 static size_t ir_emit_expr(unit_t *unit, optype_t type, operand_t expr) {
-    opcode_t op = ir_opcode(unit, type);
+    opcode_t op = ir_opcode(type);
     op.expr = expr;
-    ir_emit_opcode(unit, op);
-    return op.dst;
+    return ir_emit_opcode(unit, op);
+}
+
+static size_t ir_emit_bin(unit_t *unit, optype_t type, operand_t lhs, operand_t rhs) {
+    opcode_t op = ir_opcode(type);
+    op.lhs = lhs;
+    op.rhs = rhs;
+    return ir_emit_opcode(unit, op);
 }
 
 static size_t ir_emit_digit(unit_t *unit, node_t *node) {
@@ -63,20 +66,73 @@ static size_t ir_emit_unary(unit_t *unit, node_t *node) {
     );
 }
 
+static optype_t ir_binop(int op) {
+    switch (op) {
+    case ADD: return OP_ADD;
+    case SUB: return OP_SUB;
+    case DIV: return OP_DIV;
+    case MUL: return OP_MUL;
+    case REM: return OP_REM;
+    default:
+        fprintf(stderr, "ir_binop(%d)\n", op);
+        return INT_MAX;
+    }
+}
+
+static size_t ir_emit_binary(unit_t *unit, node_t *node) {
+    return ir_emit_bin(unit, ir_binop(node->binary.op),
+        reg(ir_emit(unit, node->binary.lhs)),
+        reg(ir_emit(unit, node->binary.rhs))
+    );
+}
+
+static size_t ir_phi(unit_t *unit, size_t lhs, size_t rhs) {
+    return ir_emit_bin(unit, OP_PHI, reg(lhs), reg(rhs));
+}
+
+static size_t ir_jmp(unit_t *unit, operand_t cond) {
+    opcode_t op = ir_opcode(OP_JMP);
+    op.cond = cond;
+    return ir_emit_opcode(unit, op);
+}
+
+static size_t ir_label(unit_t *unit) {
+    return ir_emit_opcode(unit, ir_opcode(OP_LABEL));
+}
+
 static size_t ir_emit_ternary(unit_t *unit, node_t *node) {
-    (void)unit;
-    (void)node;
-    return 0;
+    size_t cond = ir_emit(unit, node->ternary.cond);
+
+    size_t jmp = ir_jmp(unit, reg(cond));
+
+    size_t no = ir_emit(unit, node->ternary.rhs);
+    size_t escape = ir_jmp(unit, imm(1));
+
+    size_t other = ir_label(unit);
+
+    size_t yes = ir_emit(unit, node->ternary.lhs);
+
+    size_t tail = ir_label(unit);
+
+    ir_opcode_at(unit, escape)->label = reg(tail);
+    ir_opcode_at(unit, jmp)->label = reg(other);
+
+    return ir_phi(unit, yes, no);
+}
+
+static size_t ir_emit_return(unit_t *unit, node_t *node) {
+    return ir_emit_expr(unit, OP_RETURN, 
+        reg(ir_emit(unit, node->expr))
+    );
 }
 
 static size_t ir_emit(unit_t *unit, node_t *node) {
     switch (node->type) {
-    case NODE_DIGIT:
-        return ir_emit_digit(unit, node);
-    case NODE_UNARY:
-        return ir_emit_unary(unit, node);
-    case NODE_TERNARY:
-        return ir_emit_ternary(unit, node);
+    case NODE_DIGIT: return ir_emit_digit(unit, node);
+    case NODE_UNARY: return ir_emit_unary(unit, node);
+    case NODE_BINARY: return ir_emit_binary(unit, node);
+    case NODE_TERNARY: return ir_emit_ternary(unit, node);
+    case NODE_RETURN: return ir_emit_return(unit, node);
 
     default:
         fprintf(stderr, "ir_emit(%d)\n", node->type);
@@ -85,13 +141,7 @@ static size_t ir_emit(unit_t *unit, node_t *node) {
 }
 
 unit_t ir_emit_node(node_t *node) {
-    unit_t unit = { 
-        .ops = malloc(sizeof(opcode_t) * INITIAL_UNIT_SIZE), 
-        .len = 0, 
-        .size = INITIAL_UNIT_SIZE,
-        
-        .idx = 0
-    };
+    unit_t unit = ir_unit_new();
 
     ir_emit(&unit, node);
 

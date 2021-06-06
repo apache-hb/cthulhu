@@ -13,14 +13,14 @@ typedef enum {
     OP_VALUE,
 
     /* control flow */
-    OP_BRANCH, OP_CALL, OP_RETURN,
+    OP_JMP, OP_PHI, OP_LABEL, OP_CALL, OP_RETURN,
 
     /* binary math ops */
     OP_ADD, OP_SUB, OP_DIV, OP_MUL, OP_REM
 } optype_t;
 
 typedef struct {
-    enum { REG, IMM, SYM } type;
+    enum { REG, IMM } type;
     union {
         size_t reg;
         int64_t num;
@@ -29,7 +29,6 @@ typedef struct {
 
 typedef struct {
     optype_t type;
-    size_t dst;
 
     union {
         operand_t expr;
@@ -53,14 +52,14 @@ typedef struct {
 } opcode_t;
 
 typedef struct {
-    opcode_t *ops;
-    size_t len;
+    opcode_t *data;
     size_t size;
-
-    size_t idx;
+    size_t len;
 } unit_t;
 
 unit_t ir_emit_node(node_t *node);
+
+opcode_t *ir_opcode_at(unit_t *self, size_t idx);
 
 #if 0
 #include <stddef.h>

@@ -150,7 +150,6 @@ static void ir_emit_operand(operand_t op) {
     switch (op.type) {
     case IMM: printf("$%ld", op.num); break;
     case REG: printf("%%%zu", op.reg); break;
-    case SYM: printf("`%zu`", op.reg); break;
     }
 }
 
@@ -159,19 +158,55 @@ static void ir_emit_unary(const char *name, operand_t op) {
     ir_emit_operand(op);
 }
 
-static void ir_debug_op(opcode_t *op) {
-    printf("  %%%zu = ", op->dst);
-    switch (op->type) {
-    case OP_VALUE:
-        ir_emit_operand(op->expr);
-        break;
+static void ir_emit_jmp(operand_t cond, operand_t dst) {
+    printf("  jmp ");
+    ir_emit_operand(dst);
+    printf(" when ");
+    ir_emit_operand(cond);
+    printf("\n");
+}
 
-    case OP_NEG:
-        ir_emit_unary("neg", op->expr);
-        break;
-    case OP_ABS:
-        ir_emit_unary("abs", op->expr);
-        break;
+static void ir_emit_phi(operand_t lhs, operand_t rhs) {
+    printf("phi [");
+    ir_emit_operand(lhs);
+    printf(", ");
+    ir_emit_operand(rhs);
+    printf("]");
+}
+
+static void ir_emit_binary(const char *op, operand_t lhs, operand_t rhs) {
+    printf("%s ", op);
+    ir_emit_operand(lhs);
+    printf(" ");
+    ir_emit_operand(rhs);
+}
+
+static void ir_emit_ret(operand_t op) {
+    printf("  ret ");
+    ir_emit_operand(op);
+    printf("\n");
+}
+
+static void ir_debug_op(size_t idx, opcode_t *op) {
+    switch (op->type) {
+    case OP_JMP: ir_emit_jmp(op->cond, op->label); return;
+    case OP_LABEL: printf(".%zu:\n", idx); return;
+    case OP_RETURN: ir_emit_ret(op->expr); return;
+    default: break;
+    }
+
+    printf("  %%%zu = ", idx);
+    switch (op->type) {
+    case OP_VALUE: ir_emit_operand(op->expr); break;
+    case OP_NEG: ir_emit_unary("neg", op->expr); break;
+    case OP_ABS: ir_emit_unary("abs", op->expr); break;
+    case OP_PHI: ir_emit_phi(op->lhs, op->rhs); break;
+
+    case OP_ADD: ir_emit_binary("add", op->lhs, op->rhs); break;
+    case OP_SUB: ir_emit_binary("sub", op->lhs, op->rhs); break;
+    case OP_DIV: ir_emit_binary("div", op->lhs, op->rhs); break;
+    case OP_MUL: ir_emit_binary("mul", op->lhs, op->rhs); break;
+    case OP_REM: ir_emit_binary("rem", op->lhs, op->rhs); break;
 
     default:
         printf("ir_debug_op(%d)\n", op->type);
@@ -180,9 +215,12 @@ static void ir_debug_op(opcode_t *op) {
     printf("\n");
 }
 
-static void ir_debug(unit_t *unit) {
-    for (size_t i = 0; i < unit->len; i++) 
-        ir_debug_op(unit->ops + i);
+static void ir_debug(unit_t *unit, size_t idx) {
+    printf("define %zu {\n", idx);
+    for (size_t i = 0; i < unit->len; i++) {
+        ir_debug_op(i, unit->data + i);
+    }
+    printf("}\n");
 }
 
 int main(int argc, const char **argv) {
@@ -196,8 +234,13 @@ int main(int argc, const char **argv) {
     }
 
     for (size_t i = 0; i < nodes->len; i++) {
-        unit_t unit = ir_emit_node(nodes->data + i);
-        ir_debug(&unit);
+        if (i) {
+            printf("\n");
+        }
+        unit_t unit = ir_emit_node(ast_return(nodes->data + i));
+        ir_debug(&unit, i);
+
+        x64_emit_asm(&unit, output);
     }
 
     return 0;

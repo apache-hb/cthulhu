@@ -1,6 +1,293 @@
 #include "x64.h"
 
+#include <stdbool.h>
+#include <limits.h>
+#include <string.h>
 
+typedef enum {
+    RAX, RBX, RCX, RDX,
+    R8, R9,
+
+    RMAX,
+
+    RDI, RSI,
+
+    RBP, RSP
+} reg_t;
+
+/**
+ * TODO: manage lifetimes at a block level
+ *       otherwise span_t and range_t are redundant
+ */
+
+typedef struct {
+    size_t first, last;
+} span_t;
+
+typedef struct {
+    span_t *data;
+    size_t len;
+    size_t size;
+} range_t;
+
+#define RANGE_INIT 4
+
+static range_t new_range(void) {
+    range_t out = { malloc(sizeof(span_t) * RANGE_INIT), 0, RANGE_INIT };
+    return out;
+}
+
+static bool span_contains(span_t span, size_t val) {
+    return span.last < val && span.first <= val;
+}
+
+static bool span_overlaps(span_t *span, size_t val) {
+    return span->last <= val && span->first <= val;
+}
+
+static span_t *tail_span(range_t *self) {
+    return self->data + self->len - 1;
+}
+
+static void add_span(range_t *self, size_t first, size_t last) {
+    if (first > last) {
+        fprintf(stderr,
+            "add_span(first > last)\n"
+            "\twhere first = %zu, last = %zu\n",
+            first, last
+        );
+    }
+    span_t *tail = tail_span(self);
+
+    if (span_overlaps(tail, first)) {
+        tail->last = last;
+        return;
+    }
+
+    span_t span = { first, last };
+
+    if (self->len + 1 > self->size) {
+        self->size += RANGE_INIT;
+        self->data = realloc(self->data, sizeof(span_t) * self->size);
+    }
+    self->data[self->len++] = span;
+}
+
+/* a register or spill allocation */
+typedef struct {
+    enum { XREG, XSPILL, XNULL = INT_MAX } type;
+
+    /* the first and last point this allocation is needed */
+    range_t where;
+
+    union {
+        reg_t reg;
+        size_t addr;
+    };
+} alloc_t;
+
+#define UNUSED_REG SIZE_MAX
+
+typedef struct {
+    /* each used reg is an index into data or UNUSED_REG */
+    size_t used[RMAX];
+    size_t stack;
+
+    alloc_t *data;
+} regalloc_t;
+
+FILE *fp;
+
+static bool operand_uses(operand_t op, size_t idx) {
+    return op.type == REG ? op.reg == idx : false;
+}
+
+/* check if `op` references `self` */
+static bool opcode_uses(opcode_t *op, size_t self) {
+    switch (op->type) {
+    case OP_VALUE: case OP_RETURN: case OP_ABS: case OP_NEG:
+        return operand_uses(op->expr, self);
+
+    case OP_ADD: case OP_SUB: case OP_DIV: case OP_MUL: case OP_REM:
+    case OP_PHI:
+        return operand_uses(op->lhs, self) || operand_uses(op->rhs, self);
+
+    case OP_JMP:
+        return operand_uses(op->cond, self) || operand_uses(op->label, self);
+
+    case OP_LABEL:
+        return false;
+
+    default:
+        fprintf(stderr, "opcode_uses(%d)\n", op->type);
+        return false;
+    }
+}
+
+#if 0
+static bool op_is_label(opcode_t *op) {
+    return op->type == OP_LABEL;
+}
+#endif
+
+alloc_t get_range(unit_t *unit, size_t idx) {
+    range_t where = new_range();
+    
+    /* track the lifetime of this variable */
+    size_t last = idx;
+
+    for (size_t i = idx; i < unit->len; i++) {
+        opcode_t *op = ir_opcode_at(unit, i);
+
+        if (opcode_uses(op, idx)) {
+            last = i;
+        }
+    }
+
+    add_span(&where, idx, last);
+
+    /**
+     * figure out where in this lifetime the variable is *actually* needed.
+     * 
+     * considering the program
+     * ```
+     *   %0 = $5
+     *   jmp %6 when %0
+     *   %2 = $30
+     *   %3 = $20
+     *   %4 = add %3 %2
+     *   jmp %8 when $1
+     * .6:
+     *   %7 = $10
+     * .8:
+     *   %9 = phi [%7, %4]
+     * ```
+     * both %7 and %4 could be allocated in the same register.
+     * the first lifetime pass is able to track that
+     *   %4 is alive between %4 to %9
+     *   %7 is alive between %7 to %9
+     * regalloc will think these lifetimes overlap
+     * and will not assign %4 and %7 to the same register when they could 
+     * use the same register.
+     * 
+     * this next pass infers that 
+     *   %4 is alive between %4 to %6 and %9 to %9
+     *   %7 is alive between %7 and %9
+     * 
+     * regalloc can now give both variables the same register,
+     * reducing pressure and eliding a copy
+     */
+
+    alloc_t alloc = { XNULL, where, { } };
+
+    return alloc;
+}
+
+static bool reg_is_live(alloc_t range, size_t idx) {
+    for (size_t i = 0; i < range.where.len; i++)
+        if (span_contains(range.where.data[i], idx))
+            return true;
+
+    return false;
+}
+
+static void clean_regs(regalloc_t *alloc, size_t idx) {
+    for (int i = 0; i < RMAX; i++) {
+        /* check if this register is currently in use */
+        size_t *reg = alloc->used + i;
+
+        if (*reg != UNUSED_REG && reg_is_live(alloc->data[*reg], idx)) {
+            /* if its not then release the register */
+            *reg = UNUSED_REG;
+        }
+    }
+}
+
+static void patch_alloc_reg(alloc_t *alloc, reg_t reg) {
+    alloc->type = XREG;
+    alloc->reg = reg;
+}
+
+static void patch_alloc_spill(alloc_t *alloc, size_t addr) {
+    alloc->type = XSPILL;
+    alloc->addr = addr;
+}
+
+static void assign_alloc(regalloc_t *alloc, size_t idx) {
+    clean_regs(alloc, idx);
+
+    alloc_t *it = alloc->data + idx;
+
+    for (int i = 0; i < RMAX; i++) {
+        size_t *reg = alloc->used + i;
+        if (*reg == UNUSED_REG) {
+            *reg = idx;
+            patch_alloc_reg(it, i);
+            return;
+        }
+    }
+
+    /* TODO: reuse spill when possible */
+    patch_alloc_spill(it, alloc->stack++);
+}
+
+static const char *x64_reg(reg_t reg) {
+    switch (reg) {
+    case RAX: return "rax";
+    case RBX: return "rbx";
+    case RCX: return "rcx";
+    default: return "err";
+    }
+}
+
+static void emit_alloc(alloc_t alloc) {
+    switch (alloc.type) {
+    case XREG: printf("reg[%s]", x64_reg(alloc.reg)); break;
+    case XSPILL: printf("spill[%zu]", alloc.addr); break;
+    case XNULL: printf("null"); break;
+    }
+}
+
+static void emit_span(span_t span) {
+    printf("%zu..%zu", span.first, span.last);
+}
+
+static void emit_range(range_t range) {
+    printf("[");
+    for (size_t i = 0; i < range.len; i++) {
+        if (i) {
+            printf("|");
+        }
+        emit_span(range.data[i]);
+    }
+    printf("]");
+}
+
+void x64_emit_asm(unit_t *unit, FILE *out) {
+    fp = out;
+
+    regalloc_t alloc = {
+        { }, 0,
+
+        malloc(sizeof(alloc_t) * unit->len)
+    };
+    
+    for (int i = 0; i < RMAX; i++)
+        alloc.used[i] = UNUSED_REG;
+
+    for (size_t i = 0; i < unit->len; i++) {
+        alloc.data[i] = get_range(unit, i);
+    }
+
+    for (size_t i = 0 ; i < unit->len; i++) {
+        assign_alloc(&alloc, i);
+    }
+
+    for (size_t i = 0; i < unit->len; i++) {
+        alloc_t it = alloc.data[i];
+        printf("%zu(", i); emit_alloc(it); printf("): "); emit_range(it.where); printf("\n");
+    }
+}
 
 #if 0
 #include <stdio.h>
