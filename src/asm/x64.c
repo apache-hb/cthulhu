@@ -41,6 +41,7 @@ static bool span_contains(span_t span, size_t val) {
     return span.last < val && span.first <= val;
 }
 
+#if 0
 static bool span_overlaps(span_t *span, size_t val) {
     return span->last <= val && span->first <= val;
 }
@@ -48,22 +49,23 @@ static bool span_overlaps(span_t *span, size_t val) {
 static span_t *tail_span(range_t *self) {
     return self->data + self->len - 1;
 }
+#endif
 
 static void add_span(range_t *self, size_t first, size_t last) {
     if (first > last) {
         fprintf(stderr,
-            "add_span(first > last)\n"
-            "\twhere first = %zu, last = %zu\n",
+            "add_span(first > last): first = %zu, last = %zu\n",
             first, last
         );
     }
+#if 0
     span_t *tail = tail_span(self);
 
     if (span_overlaps(tail, first)) {
         tail->last = last;
         return;
     }
-
+#endif
     span_t span = { first, last };
 
     if (self->len + 1 > self->size) {
@@ -124,21 +126,17 @@ static bool opcode_uses(opcode_t *op, size_t self) {
     }
 }
 
-#if 0
-static bool op_is_label(opcode_t *op) {
-    return op->type == OP_LABEL;
-}
-#endif
+#define OP_EQ(op, kind) (op->type == kind)
+
+#define IS_LABEL(op) OP_EQ(op, OP_LABEL)
 
 alloc_t get_range(unit_t *unit, size_t idx) {
     range_t where = new_range();
-    
-    /* track the lifetime of this variable */
+
     size_t last = idx;
 
     for (size_t i = idx; i < unit->len; i++) {
         opcode_t *op = ir_opcode_at(unit, i);
-
         if (opcode_uses(op, idx)) {
             last = i;
         }
@@ -146,6 +144,28 @@ alloc_t get_range(unit_t *unit, size_t idx) {
 
     add_span(&where, idx, last);
 
+#if 0
+    /* track the lifetime of this variable */
+    size_t last = idx;
+
+    /* the most recent label */
+    size_t label = idx;
+
+    for (size_t i = idx; i < unit->len; i++) {
+        opcode_t *op = ir_opcode_at(unit, i);
+
+        /* find the last time this variable is used */
+        if (opcode_uses(op, idx)) {
+            last = i;
+        }
+
+        if (op_is_label(op)) {
+            label = i;
+        }
+    }
+
+    add_span(&where, idx, last);
+#endif
     /**
      * figure out where in this lifetime the variable is *actually* needed.
      * 
@@ -236,14 +256,17 @@ static const char *x64_reg(reg_t reg) {
     case RAX: return "rax";
     case RBX: return "rbx";
     case RCX: return "rcx";
+    case RDX: return "rdx";
+    case R8: return "r8";
+    case R9: return "r9";
     default: return "err";
     }
 }
 
 static void emit_alloc(alloc_t alloc) {
     switch (alloc.type) {
-    case XREG: printf("reg[%s]", x64_reg(alloc.reg)); break;
-    case XSPILL: printf("spill[%zu]", alloc.addr); break;
+    case XREG: printf("reg:%s", x64_reg(alloc.reg)); break;
+    case XSPILL: printf("spill:%zu", alloc.addr); break;
     case XNULL: printf("null"); break;
     }
 }
