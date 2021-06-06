@@ -77,9 +77,24 @@ bool emit_ir = false;
 
 FILE *output;
 
+const char *prog;
+
 static void fail_fast(const char *message) {
     fprintf(stderr, "error: %s\n", message);
+    fprintf(stderr, "try `%s --help`\n", prog);
     exit(1);
+}
+
+static void print_help() {
+    printf("%s: cthulhu compiler\n", prog);
+
+    printf("\t-h,--help: print this message\n");
+    printf("\t-e: compile expression from string `-e \"5 ? 10 : 20 + 30;\"\n");
+    printf("\t-O: set optimization level `-O0`, `-O1`, `-O2`, `-O3`\n");
+    printf("\t-o: set output file (defaults to stdout) `-o test.asm`\n");
+    printf("\t-i: run in interactive mode\n");
+
+    exit(0);
 }
 
 #define NEXT_ARG (argv[idx + 1])
@@ -137,6 +152,8 @@ static void parse_arg(int idx, int argc, const char **argv) {
         if (!output) {
             fail_fast("failed to open output file");
         }
+    } else if (strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0) {
+        print_help();
     } else {
         if (nodes) {
             return;
@@ -225,6 +242,7 @@ static void ir_debug(unit_t *unit, size_t idx) {
 
 int main(int argc, const char **argv) {
     output = stdout;
+    prog = argv[0];
 
     for (int i = 1; i < argc; i++)
         parse_arg(i, argc, argv);
