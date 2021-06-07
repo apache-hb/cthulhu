@@ -15,7 +15,7 @@ ARRAY_IMPL(unit_t, opcode_t,
 
 void ir_opcode_apply(opcode_t *op, ir_apply_func_t func, void *data) {
     switch (op->type) {
-    case OP_VALUE: case OP_RETURN: case OP_ABS: case OP_NEG:
+    case OP_VALUE: case OP_RET: case OP_ABS: case OP_NEG:
         func(op->expr, data);
         break;
 
@@ -41,7 +41,7 @@ static opcode_t ir_opcode(optype_t type) {
     return op;
 }
 
-static operand_t imm(int64_t num) {
+operand_t op_imm(int64_t num) {
     operand_t op = { IMM, { .num = num } };
     return op;
 }
@@ -68,7 +68,7 @@ static size_t ir_emit_bin(unit_t *unit, optype_t type, operand_t lhs, operand_t 
 
 static size_t ir_emit_digit(unit_t *unit, node_t *node) {
     return ir_emit_expr(unit, OP_VALUE, 
-        imm(strtoll(node->text, NULL, 10))
+        op_imm(strtoll(node->text, NULL, 10))
     );
 }
 
@@ -129,7 +129,7 @@ static size_t ir_emit_ternary(unit_t *unit, node_t *node) {
     size_t jmp = ir_jmp(unit, reg(cond));
 
     size_t no = ir_emit(unit, node->ternary.rhs);
-    size_t escape = ir_jmp(unit, imm(1));
+    size_t escape = ir_jmp(unit, op_imm(1));
 
     size_t other = ir_label(unit);
 
@@ -144,7 +144,7 @@ static size_t ir_emit_ternary(unit_t *unit, node_t *node) {
 }
 
 static size_t ir_emit_return(unit_t *unit, node_t *node) {
-    return ir_emit_expr(unit, OP_RETURN, 
+    return ir_emit_expr(unit, OP_RET, 
         reg(ir_emit(unit, node->expr))
     );
 }

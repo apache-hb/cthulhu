@@ -18,27 +18,33 @@ static bool opcode_uses(opcode_t *op, size_t self) {
     return packet.used;
 }
 
-alloc_t get_range(unit_t *unit, size_t idx) {
+static void assign_range(regalloc_t *alloc, unit_t *unit, size_t idx) {
     /* track the total range of this opcode */
     size_t last = idx;
+
+    size_t phi = NO_PHI;
 
     for (size_t i = idx; i < unit->len; i++) {
         opcode_t *op = ir_opcode_at(unit, i);
         if (opcode_uses(op, idx)) {
             last = i;
         }
+
+        if (op->type == OP_PHI) {
+            phi = i;
+        }
     }
 
-    alloc_t alloc = { ALNULL, idx, last, { } };
+    alloc_t range = { ALNULL, idx, last, phi > last ? NO_PHI : phi, UNUSED_REG };
 
-    return alloc;
+    alloc->data[idx] = range;
 }
 
 static bool alloc_is_live(alloc_t range, size_t idx) {
     return range.first <= idx && idx < range.last;
 }
 
-static bool assign_slot(size_t *spill, size_t idx) {
+static bool assign_slot(slot_t *spill, size_t idx) {
     if (*spill == UNUSED_REG) {
         *spill = idx;
         return true;
@@ -53,7 +59,7 @@ static void patch_alloc_reg(alloc_t *alloc, size_t reg) {
 
 static void patch_alloc_spill(alloc_t *alloc, size_t addr) {
     alloc->type = ALSPILL;
-    alloc->addr = addr;
+    alloc->reg = addr;
 }
 
 static void add_spill_slot(regalloc_t *alloc, alloc_t *it) {
@@ -89,9 +95,14 @@ static void clean_spill(regalloc_t *alloc, size_t idx) {
     clean_slots(alloc, alloc->used, alloc->stack, idx);
 }
 
-static size_t find_free_slot(size_t len, size_t *slots, size_t idx) {
+static slot_t *slot_at(slot_t *slots, size_t idx) {
+    return slots + idx;
+}
+
+static size_t find_free_slot(size_t len, slot_t *slots, size_t idx) {
     for (size_t i = 0; i < len; i++) {
-        if (assign_slot(slots + i, idx)) {
+        slot_t *slot = slot_at(slots, i);
+        if (assign_slot(slot, idx)) {
             return i;
         }
     }
@@ -129,13 +140,13 @@ static void assign_alloc(regalloc_t *alloc, size_t idx) {
 static regalloc_t new_regalloc(size_t len, size_t regs) {
     regalloc_t alloc = {
         /* register slots */
-        malloc(sizeof(size_t) * regs), regs, 
+        malloc(sizeof(slot_t) * regs), regs, 
         
         /* stack slots */
-        malloc(sizeof(size_t) * INIT_SPILL), INIT_SPILL, 0,
+        malloc(sizeof(slot_t) * INIT_SPILL), INIT_SPILL, 0,
 
         /* allocations */
-        malloc(sizeof(alloc_t) * len)
+        malloc(sizeof(alloc_t) * len), len
     };
 
     for (size_t i = 0; i < regs; i++)
@@ -144,15 +155,31 @@ static regalloc_t new_regalloc(size_t len, size_t regs) {
     return alloc;
 }
 
-regalloc_t regalloc_assign(unit_t *unit, size_t regs) {
-    regalloc_t alloc = new_regalloc(unit->len, regs);
+static void merge_alloc(regalloc_t *alloc, size_t idx) {
+    alloc_t *range = alloc->data + idx;
+    if (range->phi == NO_PHI)
+        return;
 
-    for (size_t i = 0; i < unit->len; i++) {
-        alloc.data[i] = get_range(unit, i);
+    alloc_t *phi = alloc->data + range->phi;
+
+    range->type = phi->type;
+    range->reg = phi->reg;
+}
+
+regalloc_t regalloc_assign(unit_t *unit, size_t regs) {
+    size_t len = unit->len;
+    regalloc_t alloc = new_regalloc(len, regs);
+
+    for (size_t i = 0; i < len; i++) {
+        assign_range(&alloc, unit, i);
     }
 
-    for (size_t i = 0; i < unit->len; i++) {
+    for (size_t i = 0; i < len; i++) {
         assign_alloc(&alloc, i);
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        merge_alloc(&alloc, i);
     }
 
     return alloc;

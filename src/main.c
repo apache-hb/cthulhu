@@ -210,7 +210,7 @@ static void ir_debug_op(size_t idx, opcode_t *op) {
     switch (op->type) {
     case OP_JMP: ir_emit_jmp(op->cond, op->label); return;
     case OP_LABEL: printf(".%zu:\n", idx); return;
-    case OP_RETURN: ir_emit_ret(op->expr); return;
+    case OP_RET: ir_emit_ret(op->expr); return;
     default: break;
     }
 

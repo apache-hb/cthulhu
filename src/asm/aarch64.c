@@ -23,7 +23,7 @@ static void a64_reg(reg_t reg) {
 static void emit_alloc(alloc_t alloc) {
     switch (alloc.type) {
     case ALREG: printf("reg:"); a64_reg(alloc.reg); break;
-    case ALSPILL: printf("spill:%zu", alloc.addr); break;
+    case ALSPILL: printf("spill:%zu", alloc.reg); break;
     case ALNULL: printf("null"); break;
     }
 }
