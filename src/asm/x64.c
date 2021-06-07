@@ -5,10 +5,13 @@
 #include "regalloc.h"
 
 typedef enum {
-    RAX, RBX, RCX, RDX,
+    RAX,
+    RMAX,
+    
+    RBX, RCX, RDX,
     R8, R9,
 
-    RMAX,
+    //RMAX,
 
     RDI, RSI,
 

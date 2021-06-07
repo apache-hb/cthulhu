@@ -18,11 +18,19 @@ typedef struct {
 #define UNUSED_REG SIZE_MAX
 
 typedef struct {
-    size_t *used;
+    /* either points to the opcode thats currently using this register, or SIZE_MAX */
+    size_t *slots;
+    /* the total number of register slots */
     size_t regs;
 
-    size_t stack;
+    /* stack slots */
+    size_t *stack;
+    /* total spill size */
+    size_t spill;
+    /* max spill slots */
+    size_t used;
 
+    /* all allocations */
     alloc_t *data;
 } regalloc_t;
 
