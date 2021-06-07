@@ -93,6 +93,7 @@ static void print_help() {
     printf("\t-O: set optimization level `-O0`, `-O1`, `-O2`, `-O3`\n");
     printf("\t-o: set output file (defaults to stdout) `-o test.asm`\n");
     printf("\t-i: run in interactive mode\n");
+    printf("\t-E,--emit-ir: emit ir bytecode\n");
 
     exit(0);
 }
@@ -101,11 +102,11 @@ static void print_help() {
 
 static void parse_arg(int idx, int argc, const char **argv) {
     const char *arg = argv[idx];
-    bool has_next = argc > idx;
+    bool has_next = argc - 1 > idx;
 
     if (strcmp(arg, "-e") == 0) {
         if (!has_next) {
-            fail_fast("-e argument requires an expression");
+            fail_fast("`-e` argument requires an expression");
         } else {
             nodes = compile_string(NEXT_ARG);
         }
@@ -136,7 +137,7 @@ static void parse_arg(int idx, int argc, const char **argv) {
             optimize = O3;
             break;
         }
-    } else if (strcmp(arg, "--emit-ir") == 0) {
+    } else if (strcmp(arg, "-E") == 0 || strcmp(arg, "--emit-ir") == 0) {
         emit_ir = true;
     } else if (strncmp(arg, "-o", 2) == 0) {
         const char *dst;
