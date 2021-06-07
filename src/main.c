@@ -5,6 +5,7 @@
 
 #include "ir.h"
 #include "asm/x64.h"
+#include "asm/aarch64.h"
 
 int yyerror(YYLTYPE *yylloc, void *scanner, scanner_t *x, const char *msg) {
     (void)scanner;
@@ -260,6 +261,7 @@ int main(int argc, const char **argv) {
         ir_debug(&unit, i);
 
         x64_emit_asm(&unit, output);
+        a64_emit_asm(&unit, output);
     }
 
     return 0;

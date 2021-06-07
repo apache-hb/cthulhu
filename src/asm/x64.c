@@ -15,7 +15,7 @@ typedef enum {
     RBP, RSP
 } reg_t;
 
-FILE *fp;
+static FILE *fp;
 
 static const char *x64_reg(reg_t reg) {
     switch (reg) {
