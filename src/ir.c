@@ -13,6 +13,29 @@ ARRAY_IMPL(unit_t, opcode_t,
     UNIT_INIT_SIZE
 )
 
+void ir_opcode_apply(opcode_t *op, ir_apply_func_t func, void *data) {
+    switch (op->type) {
+    case OP_VALUE: case OP_RETURN: case OP_ABS: case OP_NEG:
+        func(op->expr, data);
+        break;
+
+    case OP_ADD: case OP_SUB: case OP_DIV: case OP_MUL: case OP_REM:
+    case OP_PHI:
+        func(op->lhs, data);
+        func(op->rhs, data);
+        break;
+
+    case OP_JMP:
+        func(op->cond, data);
+        func(op->label, data);
+        break;
+
+    case OP_LABEL: break;
+
+    case OP_CALL: break;
+    }
+}
+
 static opcode_t ir_opcode(optype_t type) {
     opcode_t op = { type, { } };
     return op;
