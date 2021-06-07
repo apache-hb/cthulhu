@@ -57,7 +57,7 @@ static void patch_alloc_spill(alloc_t *alloc, size_t addr) {
 }
 
 static void add_spill_slot(regalloc_t *alloc, alloc_t *it) {
-    if (alloc->used + 1 > alloc->spill) {
+    if (alloc->used > alloc->spill) {
         alloc->spill += 4;
         alloc->stack = realloc(alloc->stack, sizeof(size_t) * alloc->spill);
     }
