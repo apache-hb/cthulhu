@@ -34,20 +34,16 @@ alloc_t get_range(unit_t *unit, size_t idx) {
     return alloc;
 }
 
-static bool reg_is_live(alloc_t range, size_t idx) {
-    return range.first <= idx && idx <= range.last;
+static bool alloc_is_live(alloc_t range, size_t idx) {
+    return range.first <= idx && idx < range.last;
 }
 
-static void clean_regs(regalloc_t *alloc, size_t idx) {
-    for (size_t i = 0; i < alloc->regs; i++) {
-        /* check if this register is currently in use */
-        size_t *reg = alloc->used + i;
-
-        if (*reg != UNUSED_REG && reg_is_live(alloc->data[*reg], idx)) {
-            /* if its not then release the register */
-            *reg = UNUSED_REG;
-        }
+static bool assign_slot(size_t *spill, size_t idx) {
+    if (*spill == UNUSED_REG) {
+        *spill = idx;
+        return true;
     }
+    return false;
 }
 
 static void patch_alloc_reg(alloc_t *alloc, size_t reg) {
@@ -60,32 +56,90 @@ static void patch_alloc_spill(alloc_t *alloc, size_t addr) {
     alloc->addr = addr;
 }
 
-static void assign_alloc(regalloc_t *alloc, size_t idx) {
-    clean_regs(alloc, idx);
+static void add_spill_slot(regalloc_t *alloc, alloc_t *it) {
+    if (alloc->used + 1 > alloc->spill) {
+        alloc->spill += 4;
+        alloc->stack = realloc(alloc->stack, sizeof(size_t) * alloc->spill);
+    }
 
-    alloc_t *it = alloc->data + idx;
+    size_t slot = alloc->used++;
+    alloc->stack[slot] = slot;
+    patch_alloc_spill(it, slot);
+}
 
-    for (size_t i = 0; i < alloc->regs; i++) {
-        size_t *reg = alloc->used + i;
-        if (*reg == UNUSED_REG) {
-            *reg = idx;
-            patch_alloc_reg(it, i);
-            return;
+static void clean_slots(
+    regalloc_t *alloc, size_t len,
+    size_t* slots, size_t idx) {
+    
+    /* check if this slot is currently in used */
+    for (size_t i = 0; i < len; i++) {
+        size_t *slot = slots + i;
+        /* if its not then release the slot */
+        if (!alloc_is_live(alloc->data[*slot], idx)) {
+            *slot = UNUSED_REG;
+        }
+    }
+}
+
+static void clean_regs(regalloc_t *alloc, size_t idx) {
+    clean_slots(alloc, alloc->regs, alloc->slots, idx);
+}
+
+static void clean_spill(regalloc_t *alloc, size_t idx) {
+    clean_slots(alloc, alloc->used, alloc->stack, idx);
+}
+
+static size_t find_free_slot(size_t len, size_t *slots, size_t idx) {
+    for (size_t i = 0; i < len; i++) {
+        if (assign_slot(slots + i, idx)) {
+            return i;
         }
     }
 
-    /* TODO: reuse spill when possible */
-    patch_alloc_spill(it, alloc->stack++);
+    return SIZE_MAX;
 }
+
+static void assign_alloc(regalloc_t *alloc, size_t idx) {
+    alloc_t *it = alloc->data + idx;
+    /* if the range is empty then this instruction doesnt need a register */
+    if (it->first == it->last)
+        return;
+
+    clean_regs(alloc, idx);
+
+    size_t reg = find_free_slot(alloc->regs, alloc->slots, idx);
+    if (reg != SIZE_MAX) {
+        patch_alloc_reg(it, reg);
+        return;
+    }
+
+    clean_spill(alloc, idx);
+
+    size_t spill = find_free_slot(alloc->used, alloc->stack, idx);
+    if (spill != SIZE_MAX) {
+        patch_alloc_spill(it, spill);
+        return;
+    }
+
+    add_spill_slot(alloc, it);
+}
+
+#define INIT_SPILL 4
 
 static regalloc_t new_regalloc(size_t len, size_t regs) {
     regalloc_t alloc = {
+        /* register slots */
         malloc(sizeof(size_t) * regs), regs, 
-        0, malloc(sizeof(alloc_t) * len)
+        
+        /* stack slots */
+        malloc(sizeof(size_t) * INIT_SPILL), INIT_SPILL, 0,
+
+        /* allocations */
+        malloc(sizeof(alloc_t) * len)
     };
 
     for (size_t i = 0; i < regs; i++)
-        alloc.used[i] = UNUSED_REG;
+        alloc.slots[i] = UNUSED_REG;
 
     return alloc;
 }

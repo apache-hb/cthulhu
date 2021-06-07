@@ -261,7 +261,6 @@ int main(int argc, const char **argv) {
         ir_debug(&unit, i);
 
         x64_emit_asm(&unit, output);
-        a64_emit_asm(&unit, output);
     }
 
     return 0;
