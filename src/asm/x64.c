@@ -1,6 +1,7 @@
 #include "x64.h"
 
 #include <string.h>
+#include <stdbool.h>
 
 #include "regalloc.h"
 
@@ -32,7 +33,7 @@ static const char *x64_reg(reg_t reg) {
 static void emit_alloc(alloc_t alloc) {
     switch (alloc.type) {
     case ALREG: printf("reg:%s", x64_reg(alloc.reg)); break;
-    case ALSPILL: printf("spill:%zu", alloc.addr); break;
+    case ALSPILL: printf("spill:%zu", alloc.reg); break;
     case ALNULL: printf("null"); break;
     }
 }
@@ -41,14 +42,136 @@ static void emit_range(size_t first, size_t last) {
     printf("[%zu..%zu]", first, last);
 }
 
+static alloc_t make_reg(reg_t reg) {
+    alloc_t alloc = { ALREG, 0, 0, 0, reg };
+    return alloc;
+}
+
+static void x64_alloc(alloc_t alloc) {
+    switch (alloc.type) {
+    case ALREG: printf("%s", x64_reg(alloc.reg)); break;
+    case ALSPILL: printf("[rsp - %zu]", alloc.reg * 8); break;
+    case ALNULL: printf("null"); break;
+    }
+}
+
+static void x64_operand(regalloc_t *alloc, operand_t op) {
+    switch (op.type) {
+    case REG: x64_alloc(alloc->data[op.reg]); break;
+    case IMM: printf("%ld", op.num); break;
+    }
+}
+
+static void x64_mov_alloc_operand(regalloc_t *alloc, alloc_t dst, operand_t src) {
+    if ((dst.type == ALREG && src.type == REG)) {
+        alloc_t other = alloc->data[src.reg];
+        if (dst.reg == other.reg)
+            return;
+    }
+
+    printf("  mov ");
+    x64_alloc(dst);
+    printf(", ");
+    x64_operand(alloc, src);
+    printf("\n");
+}
+
+static void x64_value(regalloc_t *alloc, opcode_t *op, size_t dst) {
+    x64_mov_alloc_operand(alloc, alloc->data[dst], op->expr);
+}
+
+static bool x64_eval_cmp(operand_t cond) {
+    if (cond.type == IMM) {
+        return cond.num != 0;
+    }
+
+    return false;
+}
+
+static void x64_jmp(regalloc_t *alloc, opcode_t *op) {
+    if (!x64_eval_cmp(op->cond)) {
+        printf("  cmp ");
+        x64_operand(alloc, op->cond);
+        printf(", 0\n");
+        printf("  jne .L_%zu\n", op->label.reg);
+    } else {
+        printf("  jmp .L_%zu\n", op->label.reg);
+    }
+}
+
+static void x64_label(size_t idx) {
+    printf(".L_%zu:\n", idx);
+}
+
+static void x64_add(regalloc_t *alloc, opcode_t *op, size_t dst) {
+    alloc_t reg = alloc->data[dst];
+    x64_mov_alloc_operand(alloc, reg, op->lhs);
+    printf("  add ");
+    x64_alloc(reg);
+    printf(", ");
+    x64_operand(alloc, op->rhs);
+    printf("\n");
+}
+
+static void x64_ret(regalloc_t *alloc, opcode_t *op) {
+    x64_mov_alloc_operand(alloc, make_reg(RAX), op->expr);
+    printf("  ret\n");
+}
+
+static void x64_emit(regalloc_t *alloc, unit_t *unit, size_t idx) {
+    opcode_t *op = ir_opcode_at(unit, idx);
+
+    switch (op->type) {
+    case OP_VALUE:
+        x64_value(alloc, op, idx);
+        break;
+
+    case OP_JMP:
+        x64_jmp(alloc, op);
+        break;
+
+    case OP_LABEL:
+        x64_label(idx);
+        break;
+
+    case OP_ADD:
+        x64_add(alloc, op, idx);
+        break;
+
+    case OP_RET:
+        x64_ret(alloc, op);
+        break;
+
+    case OP_PHI: break;
+
+    default:
+        fprintf(stderr, "x64_emit([%zu] = %d)\n", idx, op->type);
+        break;
+    }
+}
+
 void x64_emit_asm(unit_t *unit, FILE *out) {
     fp = out;
 
+    size_t len = unit->len;
+
     regalloc_t alloc = regalloc_assign(unit, RMAX);
 
-    for (size_t i = 0; i < unit->len; i++) {
+    for (size_t i = 0; i < len; i++) {
         alloc_t it = alloc.data[i];
-        printf("%zu(", i); emit_alloc(it); printf("): "); emit_range(it.first, it.last); printf("\n");
+        printf("%zu(", i); 
+        emit_alloc(it); 
+        printf("): "); 
+        emit_range(it.first, it.last); 
+
+        if (it.phi != NO_PHI) {
+            printf(" phi %zu", it.phi);
+        }
+        printf("\n");
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        x64_emit(&alloc, unit, i);
     }
 }
 

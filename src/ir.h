@@ -13,7 +13,7 @@ typedef enum {
     OP_VALUE,
 
     /* control flow */
-    OP_JMP, OP_PHI, OP_LABEL, OP_CALL, OP_RETURN,
+    OP_JMP, OP_PHI, OP_LABEL, OP_CALL, OP_RET,
 
     /* binary math ops */
     OP_ADD, OP_SUB, OP_DIV, OP_MUL, OP_REM
@@ -26,6 +26,8 @@ typedef struct {
         int64_t num;
     };
 } operand_t;
+
+operand_t op_imm(int64_t num);
 
 typedef struct {
     optype_t type;

@@ -4,27 +4,32 @@
 #include <stddef.h>
 #include <limits.h>
 
+#define UNUSED_REG SIZE_MAX
+#define NO_PHI SIZE_MAX
+
+typedef size_t slot_t;
+
 typedef struct {
     enum { ALREG, ALSPILL, ALNULL = INT_MAX } type;
 
+    /* the first and last time this allocation is used */
     size_t first, last;
 
-    union {
-        int reg;
-        size_t addr;
-    };
-} alloc_t;
+    /* where this allocation is merged if it is merged */
+    size_t phi;
 
-#define UNUSED_REG SIZE_MAX
+    /* either the register index or the spill index */
+    size_t reg;
+} alloc_t;
 
 typedef struct {
     /* either points to the opcode thats currently using this register, or SIZE_MAX */
-    size_t *slots;
+    slot_t *slots;
     /* the total number of register slots */
     size_t regs;
 
     /* stack slots */
-    size_t *stack;
+    slot_t *stack;
     /* total spill size */
     size_t spill;
     /* max spill slots */
@@ -32,6 +37,7 @@ typedef struct {
 
     /* all allocations */
     alloc_t *data;
+    size_t total;
 } regalloc_t;
 
 regalloc_t regalloc_assign(unit_t *unit, size_t regs);
