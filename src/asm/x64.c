@@ -5,20 +5,11 @@
 
 #include "regalloc.h"
 
-typedef enum {
-    RAX, RBX, RCX, RDX,
-    R8, R9,
+#define BLOB_SIZE 64
 
-    RMAX,
+#define RMAX R15
 
-    RDI, RSI,
-
-    RBP, RSP
-} reg_t;
-
-static FILE *fp;
-
-static const char *x64_reg(reg_t reg) {
+static const char *x64_reg(x86_reg64_t reg) {
     switch (reg) {
     case RAX: return "rax";
     case RBX: return "rbx";
@@ -42,7 +33,7 @@ static void emit_range(size_t first, size_t last) {
     printf("[%zu..%zu]", first, last);
 }
 
-static alloc_t make_reg(reg_t reg) {
+static alloc_t make_reg(x86_reg64_t reg) {
     alloc_t alloc = { ALREG, 0, 0, 0, reg };
     return alloc;
 }
@@ -62,11 +53,17 @@ static void x64_operand(regalloc_t *alloc, operand_t op) {
     }
 }
 
-static void x64_mov_alloc_operand(regalloc_t *alloc, alloc_t dst, operand_t src) {
-    if ((dst.type == ALREG && src.type == REG)) {
+static bool is_redundant_mov(regalloc_t *alloc, alloc_t dst, operand_t src) {
+    if (dst.type == ALREG && src.type == REG) {
         alloc_t other = alloc->data[src.reg];
-        if (dst.reg == other.reg)
-            return;
+        return dst.reg == other.reg;
+    }
+    return false;
+}
+
+static void x64_mov_alloc_operand(regalloc_t *alloc, alloc_t dst, operand_t src) {
+    if (is_redundant_mov(alloc, dst, src)) {
+        return;
     }
 
     printf("  mov ");
@@ -76,7 +73,7 @@ static void x64_mov_alloc_operand(regalloc_t *alloc, alloc_t dst, operand_t src)
     printf("\n");
 }
 
-static void x64_value(regalloc_t *alloc, opcode_t *op, size_t dst) {
+static void x64_value_text(regalloc_t *alloc, opcode_t *op, size_t dst) {
     x64_mov_alloc_operand(alloc, alloc->data[dst], op->expr);
 }
 
@@ -103,7 +100,7 @@ static void x64_label(size_t idx) {
     printf(".L_%zu:\n", idx);
 }
 
-static void x64_add(regalloc_t *alloc, opcode_t *op, size_t dst) {
+static void x64_add_text(regalloc_t *alloc, opcode_t *op, size_t dst) {
     alloc_t reg = alloc->data[dst];
     x64_mov_alloc_operand(alloc, reg, op->lhs);
     printf("  add ");
@@ -113,17 +110,17 @@ static void x64_add(regalloc_t *alloc, opcode_t *op, size_t dst) {
     printf("\n");
 }
 
-static void x64_ret(regalloc_t *alloc, opcode_t *op) {
+static void x64_ret_text(regalloc_t *alloc, opcode_t *op) {
     x64_mov_alloc_operand(alloc, make_reg(RAX), op->expr);
     printf("  ret\n");
 }
 
-static void x64_emit(regalloc_t *alloc, unit_t *unit, size_t idx) {
+static void x64_emit_text(regalloc_t *alloc, unit_t *unit, size_t idx) {
     opcode_t *op = ir_opcode_at(unit, idx);
 
     switch (op->type) {
     case OP_VALUE:
-        x64_value(alloc, op, idx);
+        x64_value_text(alloc, op, idx);
         break;
 
     case OP_JMP:
@@ -135,14 +132,69 @@ static void x64_emit(regalloc_t *alloc, unit_t *unit, size_t idx) {
         break;
 
     case OP_ADD:
-        x64_add(alloc, op, idx);
+        x64_add_text(alloc, op, idx);
         break;
 
     case OP_RET:
-        x64_ret(alloc, op);
+        x64_ret_text(alloc, op);
         break;
 
     case OP_PHI: break;
+
+    default:
+        fprintf(stderr, "x64_emit_text([%zu] = %d)\n", idx, op->type);
+        break;
+    }
+}
+
+static x86_operand_t cvt_alloc(alloc_t alloc) {
+    switch (alloc.type) {
+    case REG: return x86_reg64(alloc.reg);
+    default:
+        fprintf(stderr, "cvt_alloc(%d)\n", alloc.type);
+        return x86_reg64(INT_MAX);
+    }
+}
+
+static x86_operand_t cvt_operand(regalloc_t *alloc, operand_t op) {
+    switch (op.type) {
+    case REG: return cvt_alloc(alloc->data[op.reg]);
+    case IMM: return x86_imm64(op.num);
+    default:
+        fprintf(stderr, "cvt_operand(%d)\n", op.type);
+        return x86_reg64(INT_MAX);
+    }
+}
+
+static void x64_value(blob_t *blob, regalloc_t *alloc, operand_t val, size_t idx) {
+    x86_mov(blob, 
+        cvt_alloc(alloc->data[idx]), 
+        cvt_operand(alloc, val)
+    );
+}
+
+/* for now we always return through RAX */
+static void x64_ret(blob_t *blob, regalloc_t *alloc, operand_t src) {
+    x86_mov(blob, x86_reg64(RAX), cvt_operand(alloc, src));
+    x86_ret(blob, x86_near(x86_noop()));
+}
+
+static void x64_emit(blob_t *out, regalloc_t *alloc, unit_t *unit, size_t idx) {
+    opcode_t *op = ir_opcode_at(unit, idx);
+
+    switch (op->type) {
+    case OP_VALUE:
+        x64_value(out, alloc, op->expr, idx);
+        break;
+
+    case OP_RET:
+        x64_ret(out, alloc, op->expr);
+        break;
+
+    case OP_PHI: 
+        /* phi nodes dont generate any code */
+        /* probably why they were called phony nodes originally */
+        break;
 
     default:
         fprintf(stderr, "x64_emit([%zu] = %d)\n", idx, op->type);
@@ -150,8 +202,8 @@ static void x64_emit(regalloc_t *alloc, unit_t *unit, size_t idx) {
     }
 }
 
-void x64_emit_asm(unit_t *unit, FILE *out) {
-    fp = out;
+blob_t x64_emit_asm(unit_t *unit, bool text) {
+    blob_t out = x86_blob(64);
 
     size_t len = unit->len;
 
@@ -170,9 +222,19 @@ void x64_emit_asm(unit_t *unit, FILE *out) {
         printf("\n");
     }
 
-    for (size_t i = 0; i < len; i++) {
-        x64_emit(&alloc, unit, i);
+    if (text) {
+        for (size_t i = 0; i < len; i++) {
+            x64_emit_text(&alloc, unit, i);
+        }
     }
+
+    for (size_t i = 0; i < len; i++) {
+        x64_emit(&out, &alloc, unit, i);
+    }
+
+    x86_cmp(&out, x86_reg64(RAX), x86_reg64(R11));
+
+    return out;
 }
 
 #if 0

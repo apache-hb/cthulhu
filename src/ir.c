@@ -6,12 +6,22 @@
 #include <stdlib.h>
 #include <limits.h>
 
-#define UNIT_INIT_SIZE 8
+#define UNIT_SIZE 8
 
-ARRAY_IMPL(unit_t, opcode_t, 
-    ir_emit_opcode, ir_opcode_at, ir_unit_new, 
-    UNIT_INIT_SIZE
-)
+static size_t ir_emit_opcode(unit_t *self, opcode_t op) {
+    ENSURE_SIZE(self->data, self->len, self->size, sizeof(opcode_t), 8);
+    self->data[self->len] = op;
+    return self->len++;
+}
+
+opcode_t *ir_opcode_at(unit_t *self, size_t idx) {
+    return self->data + idx;
+}
+
+static unit_t new_unit(void) {
+    unit_t self = { malloc(sizeof(opcode_t) * UNIT_SIZE), UNIT_SIZE, 0 };
+    return self;
+}
 
 void ir_opcode_apply(opcode_t *op, ir_apply_func_t func, void *data) {
     switch (op->type) {
@@ -164,7 +174,7 @@ static size_t ir_emit(unit_t *unit, node_t *node) {
 }
 
 unit_t ir_emit_node(node_t *node) {
-    unit_t unit = ir_unit_new();
+    unit_t unit = new_unit();
 
     ir_emit(&unit, node);
 

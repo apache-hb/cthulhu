@@ -74,7 +74,8 @@ enum {
 
 nodes_t *nodes = NULL;
 
-bool emit_ir = false;
+static bool emit_ir = false;
+static bool emit_asm = false;
 
 FILE *output;
 
@@ -140,6 +141,8 @@ static void parse_arg(int idx, int argc, const char **argv) {
         }
     } else if (strcmp(arg, "-E") == 0 || strcmp(arg, "--emit-ir") == 0) {
         emit_ir = true;
+    } else if (strcmp(arg, "-S") == 0 || strcmp(arg, "--emit-asm") == 0) {
+        emit_asm = true;
     } else if (strncmp(arg, "-o", 2) == 0) {
         const char *dst;
         if (strlen(arg) > 2) {
@@ -258,9 +261,13 @@ int main(int argc, const char **argv) {
             printf("\n");
         }
         unit_t unit = ir_emit_node(ast_return(nodes->data + i));
-        ir_debug(&unit, i);
+        
+        if (emit_ir)
+            ir_debug(&unit, i);
 
-        x64_emit_asm(&unit, output);
+        blob_t data = x64_emit_asm(&unit, emit_asm);
+
+        fwrite(data.code, 1, data.len, output);
     }
 
     return 0;
