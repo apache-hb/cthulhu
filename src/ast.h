@@ -4,25 +4,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define ARRAY_IMPL(array, type, add_name, at_name, new_name, grow) \
-    static size_t add_name(array *self, type it) { \
-        if (self->len + 1 >= self->size) { \
-            self->size += grow; \
-            self->data = realloc(self->data, sizeof(type) * self->size); \
-        } \
-        self->data[self->len] = it; \
-        return self->len++; \
-    } \
-    type *at_name(array *self, size_t idx) { \
-        if (idx > self->len) { \
-            fprintf(stderr, #at_name "(%zu > %zu)\n", idx, self->len); \
-        } \
-        return self->data + idx; \
-    } \
-    static array new_name(void) { \
-        array self = { malloc(sizeof(type) * grow), grow, 0 }; \
-        return self; \
-    }
+/**
+ * d: data pointer
+ * l: length
+ * s: size
+ * i: sizeof(item)
+ * g: growth amount
+ */
+#define ENSURE_SIZE(d, l, s, i, g) if (l + 1 > s) { s += g; d = realloc(d, i * s); }
 
 typedef enum {
     NODE_DIGIT,
