@@ -12,6 +12,7 @@ typedef struct {
 
 blob_t x86_blob(size_t init);
 
+/* all 64 bit gprs */
 typedef enum {
     /* REX.X = 0 */
     RAX, RBX, RCX, RDX,
@@ -33,11 +34,13 @@ typedef uint64_t x86_imm64_t;
 
 typedef struct {
     enum { 
+        /* general registers */
         X86_REG64, 
-        X86_IMM16,
-        X86_IMM64, 
-        X86_ADDR64,
 
+        /* immediates */
+        X86_IMM16, X86_IMM64, 
+
+        /* empty, used to encode near/far for functions with no operands */
         X86_NOOP
     } type;
 

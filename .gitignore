@@ -9,3 +9,5 @@ build/
 !*.l
 !*.bnf
 !*.ct
+!*.md
+!meson_options.txt

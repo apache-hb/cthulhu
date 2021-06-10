@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ast.h"
+#include "cthulhu/front/ast.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -14,6 +14,9 @@ typedef enum {
 
     /* control flow */
     OP_JMP, OP_PHI, OP_LABEL, OP_CALL, OP_RET,
+
+    /* %vreg = cond ? true : false */
+    OP_CMOV,
 
     /* binary math ops */
     OP_ADD, OP_SUB, OP_DIV, OP_MUL, OP_REM
