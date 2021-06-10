@@ -9,8 +9,8 @@
 %expect 0
 
 %code requires {
-#include "scanner.h"
-#include "ast.h"
+#include "cthulhu/front/scanner.h"
+#include "cthulhu/front/front.h"
 }
 
 %{
@@ -29,7 +29,6 @@ int yyerror();
 }
 
 %token<text>
-    IDENT "identifier"
     DIGIT "integer literal"
 
 %token
@@ -40,7 +39,6 @@ int yyerror();
     REM "%"
 
 %token
-    COMMA ","
     SEMI ";"
     QUESTION "?"
     COLON ":"
@@ -48,17 +46,12 @@ int yyerror();
 %token
     LPAREN "("
     RPAREN ")"
-    LBRACE "{"
-    RBRACE "}"
-
-%token
-    DEF "def"
 
 %type<node>
     primary expr additive multiplicative unary ternary postfix
 
 %type<nodes>
-    call args unit
+    unit
 
 %start unit
 
@@ -70,19 +63,9 @@ unit: expr SEMI { x->ast = ast_list($1); }
 
 primary: LPAREN expr RPAREN { $$ = $2; }
     | DIGIT { $$ = ast_digit($1); }
-    | IDENT { $$ = ast_symbol($1); }
     ;
 
 postfix: primary { $$ = $1; }
-    | postfix call { $$ = ast_call($1, $2); }
-    ;
-
-call: LPAREN RPAREN { $$ = ast_empty(); }
-    | LPAREN args RPAREN { $$ = $2; }
-    ;
-
-args: expr { $$ = ast_list($1); }
-    | args COMMA expr { $$ = ast_append($1, $3); }
     ;
 
 unary: postfix { $$ = $1; }

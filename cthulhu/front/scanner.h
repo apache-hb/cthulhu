@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ast.h"
+#include "front.h"
 
 typedef struct {
     const char *path;

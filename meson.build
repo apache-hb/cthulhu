@@ -2,31 +2,72 @@ project('ctu', 'c',
     default_options : [
         'c_std=gnu99',
         'warning_level=2',
+        'default_library=static',
         'werror=true'
     ]
 )
 
+libreport = library('report', 'cthulhu/report/report.c',
+    include_directories : '.'
+)
+
+report = declare_dependency(
+    link_with : libreport,
+    include_directories : '.'
+)
+
+# create our flex lexer that bison needs
 lex = custom_target('lex',
     command : [ find_program('flex'), '@INPUT@' ],
-    input : 'src/cthulhu.l',
-    output : [ 'flex.c', 'flex.h' ]
+    input : 'cthulhu/front/cthulhu.l',
+    output : [ 'flex.c', 'flex.h' ],
+    depends : libreport
 )
 
+# create our bison parser that our ast needs
 parse = custom_target('parse',
     command : [ find_program('bison'), '-d', '@INPUT@', '-Wdeprecated', '-v' ],
-    input : 'src/cthulhu.y',
+    input : 'cthulhu/front/cthulhu.y',
     output : [ 'bison.c', 'bison.h' ],
-    depends : lex
+    depends : [ lex, libreport ]
 )
 
-src = [
-    'src/main.c',
-    'src/ast.c',
-    'src/ir.c', 'src/asm/regalloc.c',
-    'src/asm/x86-emit.c',
-    'src/asm/x64.c', 'src/asm/aarch64.c'
-]
+# turns text/files into an ast
+libfront = library('ast', lex, parse, [ 'cthulhu/front/front.c', 'cthulhu/front/compile.c' ],
+    dependencies : report,
+    include_directories : '.'
+)
 
-ctc = executable('cthulhu', parse, lex, src,
-    include_directories : 'src'
+front = declare_dependency(
+    link_with : libfront, 
+    dependencies : report,
+    sources : [ lex, parse ],
+    include_directories : '.'
+)
+
+libsema = library('sema', [ 'cthulhu/sema/sema.c' ],
+    dependencies : report,
+    include_directories : '.'
+)
+
+# turns an ast into an ir
+# - handles typechecking and semantics
+# - handles IR optimizations
+libmiddle = library('middle', 'cthulhu/middle/ir.c',
+    dependencies : [ front, report ],
+    include_directories : '.'
+)
+
+middle = declare_dependency(
+    dependencies : report,
+    link_with : libmiddle,
+)
+
+# collect all our backends
+subdir('cthulhu/back')
+
+# user facing frontend
+front = executable('ctc', 'cthulhu/main.c',
+    include_directories : '.',
+    dependencies : backends + [ middle, report ]
 )

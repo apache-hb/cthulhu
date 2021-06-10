@@ -1,0 +1,17 @@
+option('llvm', 
+    type : 'feature', 
+    value : 'disabled',
+    description : 'enable llvm backend target, requires llvm'
+)
+
+option('gcc', 
+    type : 'feature', 
+    value : 'disabled',
+    description : 'enable gcc backend target, requires libgcc'
+)
+
+option('profile',
+    type : 'feature',
+    value : 'auto',
+    description : 'enable timing metrics'
+)
