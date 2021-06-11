@@ -71,3 +71,17 @@ typedef struct {
         };
     };
 } op_t;
+
+/* the control flow of a single function */
+typedef struct {
+    op_t *ops;
+    size_t size;
+    size_t len;
+} flow_t;
+
+/* a compilation unit */
+typedef struct {
+    flow_t *funcs;
+    size_t size;
+    size_t len;
+} unit_t;
