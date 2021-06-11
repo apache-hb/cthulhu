@@ -10,8 +10,8 @@ option('gcc',
     description : 'enable gcc backend target, requires libgcc'
 )
 
-option('profile',
-    type : 'feature',
-    value : 'auto',
-    description : 'enable timing metrics'
+option('fuzzing',
+    type : 'boolean',
+    value : 'false',
+    description : 'build for fuzzing'
 )

@@ -74,8 +74,15 @@ middle = declare_dependency(
 # collect all our backends
 subdir('cthulhu/back')
 
+defs = []
+
+if get_option('fuzzing')
+    defs += [ '-DCTC_FUZZING=1' ]
+endif
+
 # user facing frontend
 front = executable('ctc', 'cthulhu/main.c',
     include_directories : '.',
+    c_args : defs,
     dependencies : backends + [ middle, report ]
 )

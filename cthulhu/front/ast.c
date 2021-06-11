@@ -3,19 +3,11 @@
 #include "bison.h"
 
 #include "cthulhu/report/report.h"
+#include "cthulhu/util.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-/**
- * d: data pointer
- * l: length
- * s: size
- * i: sizeof(item)
- * g: growth amount
- */
-#define ENSURE_SIZE(d, l, s, i, g) if (l + 1 > s) { s += g; d = realloc(d, i * s); }
 
 static node_t *ast(node_type_t type) {
     node_t *node = malloc(sizeof(node_t));

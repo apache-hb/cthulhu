@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "cthulhu/front/ast.h"
+
 typedef enum {
     /* %vreg = |op| */
     OP_ABS, 
@@ -38,21 +40,25 @@ typedef enum {
     OP_MUL, 
     
     /* %vreg = lhs % rhs */
-    OP_REM
-} ir_kind_t;
+    OP_REM,
+
+    /* optimised away */
+    OP_EMPTY
+} optype_t;
 
 typedef size_t vreg_t;
 
 typedef struct {
-    enum { VREG } kind;
+    enum { VREG, IMM } kind;
     union {
         /* kind = VREG */
         vreg_t vreg;
+        int64_t imm;
     };
 } operand_t;
 
 typedef struct {
-    ir_kind_t kind;
+    optype_t kind;
 
     union {
         /* OP_ABS, OP_NEG, OP_VALUE, OP_RET */
@@ -81,7 +87,12 @@ typedef struct {
 
 /* a compilation unit */
 typedef struct {
-    flow_t *funcs;
+    flow_t *flows;
     size_t size;
     size_t len;
 } unit_t;
+
+/**
+ * convert a compiled file into a compilation unit
+ */
+unit_t transform_ast(nodes_t *node);
