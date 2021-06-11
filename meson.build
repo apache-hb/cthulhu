@@ -32,8 +32,14 @@ parse = custom_target('parse',
     depends : [ lex, libreport ]
 )
 
+src = [ 
+    'cthulhu/front/ast.c', 
+    'cthulhu/front/compile.c',
+    'cthulhu/front/debug/debug.c'
+]
+
 # turns text/files into an ast
-libfront = library('ast', lex, parse, [ 'cthulhu/front/front.c', 'cthulhu/front/compile.c' ],
+libfront = library('ast', lex, parse, src,
     dependencies : report,
     include_directories : '.'
 )
@@ -50,10 +56,12 @@ libsema = library('sema', [ 'cthulhu/sema/sema.c' ],
     include_directories : '.'
 )
 
-# turns an ast into an ir
-# - handles typechecking and semantics
-# - handles IR optimizations
-libmiddle = library('middle', 'cthulhu/middle/ir.c',
+src = [
+    'cthulhu/middle/ir.c',
+    'cthulhu/middle/debug/debug.c'
+]
+
+libmiddle = library('middle', src,
     dependencies : [ front, report ],
     include_directories : '.'
 )
