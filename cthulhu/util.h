@@ -1,0 +1,10 @@
+#pragma once
+
+/**
+ * d: data pointer
+ * l: length
+ * s: size
+ * i: sizeof(item)
+ * g: growth amount
+ */
+#define ENSURE_SIZE(d, l, s, i, g) if (l + 1 > s) { s += g; d = realloc(d, i * s); }
