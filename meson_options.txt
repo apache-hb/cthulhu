@@ -1,13 +1,19 @@
-option('llvm', 
-    type : 'feature', 
-    value : 'disabled',
+option('llvm-backend', 
+    type : 'boolean', 
+    value : 'false',
     description : 'enable llvm backend target, requires llvm'
 )
 
-option('gcc', 
-    type : 'feature', 
-    value : 'disabled',
+option('gcc-backend', 
+    type : 'boolean', 
+    value : 'false',
     description : 'enable gcc backend target, requires libgcc'
+)
+
+option('qbe-backend',
+    type : 'boolean',
+    value : 'false',
+    description : 'enable qbe backend target, requires qbe'
 )
 
 option('fuzzing',

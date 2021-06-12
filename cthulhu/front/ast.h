@@ -29,19 +29,19 @@ typedef struct node_t {
         uint64_t digit;
 
         /* AST_BINARY */
-        struct binary_t {
+        struct {
             int op;
             node_t *lhs, *rhs;
         } binary;
 
         /* AST_UNARY */
-        struct unary_t {
+        struct {
             int op;
             node_t *expr;
         } unary;
 
         /* AST_TERNARY */
-        struct ternary_t {
+        struct {
             node_t *cond, *lhs, *rhs;
         } ternary;
 

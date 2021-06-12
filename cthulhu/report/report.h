@@ -2,7 +2,9 @@
 
 #include <stdint.h>
 
-uint64_t errors(void);
+#include "cthulhu/util.h"
 
-void report(const char *fmt);
-void reportf(const char *fmt, ...);
+CTU_API uint64_t errors(void);
+
+CTU_API void report(const char *fmt);
+CTU_API void reportf(const char *fmt, ...);

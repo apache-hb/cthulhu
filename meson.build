@@ -1,10 +1,27 @@
 project('ctu', 'c',
     default_options : [
         'c_std=gnu99',
+        'cpp_std=gnu++17',
         'warning_level=2',
         'default_library=static',
         'werror=true'
     ]
+)
+
+llvm = get_option('llvm-backend')
+gcc = get_option('gcc-backend')
+qbe = get_option('qbe-backend')
+fuzzing = get_option('fuzzing')
+
+config = configuration_data()
+
+config.set10('CTU_LLVM', llvm)
+config.set10('CTU_GCC', gcc)
+config.set10('CTU_QBE', qbe)
+config.set10('CTU_FUZZING', fuzzing)
+
+configure_file(output : 'config.h',
+    configuration : config
 )
 
 libreport = library('report', 'cthulhu/report/report.c',
@@ -74,15 +91,8 @@ middle = declare_dependency(
 # collect all our backends
 subdir('cthulhu/back')
 
-defs = []
-
-if get_option('fuzzing')
-    defs += [ '-DCTC_FUZZING=1' ]
-endif
-
 # user facing frontend
 front = executable('ctc', 'cthulhu/main.c',
     include_directories : '.',
-    c_args : defs,
     dependencies : backends + [ middle, report ]
 )
