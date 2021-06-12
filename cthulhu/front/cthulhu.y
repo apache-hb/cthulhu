@@ -57,8 +57,8 @@ int yyerror();
 
 %%
 
-unit: expr SEMI { x->ast = ast_list($1); }
-    | unit expr SEMI { x->ast = ast_append(x->ast, $2); }
+unit: expr SEMI { x->ast = ast_list(ast_return($1)); }
+    | unit expr SEMI { x->ast = ast_append(x->ast, ast_return($2)); }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }

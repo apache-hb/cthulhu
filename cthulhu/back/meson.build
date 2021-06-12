@@ -1,9 +1,13 @@
 backends = [ ]
 
-if get_option('llvm').enabled()
+if llvm
     subdir('llvm')
 endif
 
-if get_option('gcc').enabled()
+if gcc
     subdir('gcc')
+endif
+
+if qbe
+    subdir('qbe')
 endif

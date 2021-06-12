@@ -48,8 +48,13 @@ typedef enum {
 
 typedef size_t vreg_t;
 
+typedef enum {
+    VREG,
+    IMM
+} opkind_t;
+
 typedef struct {
-    enum { VREG, IMM } kind;
+    opkind_t kind;
     union {
         /* kind = VREG */
         vreg_t vreg;
@@ -80,6 +85,8 @@ typedef struct {
 
 /* the control flow of a single function */
 typedef struct {
+    const char *name;
+
     op_t *ops;
     size_t size;
     size_t len;
@@ -87,6 +94,8 @@ typedef struct {
 
 /* a compilation unit */
 typedef struct {
+    const char *name;
+    
     flow_t *flows;
     size_t size;
     size_t len;

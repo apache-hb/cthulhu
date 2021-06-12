@@ -5,10 +5,9 @@
 #include <stdio.h>
 
 #include "cthulhu/report/report.h"
-#include "cthulhu/util.h"
 
-static unit_t unit_new(size_t size) {
-    unit_t unit = { malloc(sizeof(flow_t) * size), size, 0 };
+static unit_t unit_new(const char *name, size_t size) {
+    unit_t unit = { name, malloc(sizeof(flow_t) * size), size, 0 };
     return unit;
 }
 
@@ -17,8 +16,8 @@ static void unit_add(unit_t *unit, flow_t flow) {
     unit->flows[unit->len++] = flow;
 }
 
-static flow_t flow_new(size_t size) {
-    flow_t flow = { malloc(sizeof(op_t) * size), size, 0 };
+static flow_t flow_new(const char *name, size_t size) {
+    flow_t flow = { name, malloc(sizeof(op_t) * size), size, 0 };
     return flow;
 }
 
@@ -95,12 +94,20 @@ static size_t emit_binary(flow_t *flow, node_t *node) {
     return flow_add(flow, op);
 }
 
+static size_t emit_return(flow_t *flow, node_t *node) {
+    op_t op = create_unary(OP_RET,
+        create_vreg(emit_node(flow, node->expr))
+    );
+    
+    return flow_add(flow, op);
+}
 
 static size_t emit_node(flow_t *flow, node_t *node) {
     switch (node->type) {
     case AST_DIGIT: return emit_digit(flow, node);
     case AST_UNARY: return emit_unary(flow, node);
     case AST_BINARY: return emit_binary(flow, node);
+    case AST_RETURN: return emit_return(flow, node);
 
     default:
         reportf("emit_node(node->type = %d)\n", node->type);
@@ -109,7 +116,7 @@ static size_t emit_node(flow_t *flow, node_t *node) {
 }
 
 static flow_t transform_flow(node_t *node) {
-    flow_t flow = flow_new(32);
+    flow_t flow = flow_new("main", 32);
     
     emit_node(&flow, node);
 
@@ -117,7 +124,7 @@ static flow_t transform_flow(node_t *node) {
 }
 
 unit_t transform_ast(nodes_t *nodes) {
-    unit_t unit = unit_new(4);
+    unit_t unit = unit_new("root", 4);
     for (size_t i = 0; i < nodes->len; i++) {
         flow_t flow = transform_flow(nodes->data + i);
         unit_add(&unit, flow);
