@@ -21,9 +21,6 @@ typedef enum {
     /* %vreg = [ lhs, rhs ] */
     OP_PHI, 
     
-    /* label: */
-    OP_LABEL, 
-
     /* ret op */
     OP_RET,
 

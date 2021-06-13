@@ -1,3 +1,4 @@
+# qbe is hopelessly broken on windows
 if not msvc
     amd64 = subproject('qbe').get_variable('amd64')
 
