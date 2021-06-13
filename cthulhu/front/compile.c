@@ -57,7 +57,7 @@ nodes_t *compile_string(const char *path, const char *text) {
 int yyerror(YYLTYPE *yylloc, void *scanner, scanner_t *x, const char *msg) {
     (void)scanner;
 
-    fprintf(stderr, "[%s:%lld:%lld]: %s\n",
+    fprintf(stderr, "[%s:%ld:%ld]: %s\n",
         x->path, 
         yylloc->first_line,
         yylloc->first_column,

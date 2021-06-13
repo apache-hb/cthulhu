@@ -42,12 +42,17 @@ static operand_t create_vreg(vreg_t vreg) {
     return op;
 }
 
+static operand_t create_imm(int64_t imm) {
+    operand_t op = { IMM, { .imm = imm } };
+    return op;
+}
+
 static size_t emit_node(flow_t *flow, node_t *node);
 
 static size_t emit_digit(flow_t *flow, node_t *node) {
     op_t op = { 
         .kind = OP_VALUE, 
-        { .expr = { IMM, { .imm = node->digit } } } 
+        { .expr = create_imm(node->digit) } 
     };
     return flow_add(flow, op);
 }

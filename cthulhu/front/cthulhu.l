@@ -12,6 +12,13 @@
 
 #ifdef _MSC_VER
 #   define strdup _strdup
+#else
+static char *strdup(const char *str) {
+  size_t len = strlen(str) + 1;
+  char *out = malloc(len);
+  memcpy(out, str, len);
+  return out;
+}
 #endif
 
 #define YY_USER_ACTION                                               \

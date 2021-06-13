@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "back/llvm/llvm.h"
+#include "back/llvm/debug.h"
 #include "back/gcc/gcc.h"
 #include "back/qbe/qbe.h"
 
@@ -206,7 +207,7 @@ static int parse_arg(int index, int argc, char **argv) {
         print_ast = true;
     } else if (startswith(current, "--print-ir")) {
         print_ir = true;
-    } else if (startswith(current, "--print-backend")) {
+    } else if (startswith(current, "--print-back")) {
         print_backend = true;
     } else if (startswith(current, OUTPUT)) {
         output = get_next(OUTPUT, index, argc, argv, &step);
@@ -249,6 +250,10 @@ static nodes_t *compile_input(void) {
 static void llvm_output_unit(unit_t *unit) {
     llvm_context *ctx = llvm_compile(unit);
     check_errors("llvm compilation");
+
+    if (print_backend) {
+        llvm_debug(ctx);
+    }
 
     FILE *file = fopen(output, "w");
     if (!file) {
