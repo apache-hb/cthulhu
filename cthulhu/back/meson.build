@@ -1,13 +1,6 @@
 backends = [ ]
 
-if llvm
-    subdir('llvm')
-endif
-
-if gcc
-    subdir('gcc')
-endif
-
-if qbe
-    subdir('qbe')
-endif
+subdir('local')
+subdir('llvm')
+subdir('gcc')
+subdir('qbe')

@@ -7,7 +7,12 @@
 
 %{
 #include <string.h>
+#include <stdint.h>
 #include "bison.h"
+
+#ifdef _MSC_VER
+#   define strdup _strdup
+#endif
 
 #define YY_USER_ACTION                                               \
     yylloc->first_line = yylloc->last_line;                          \

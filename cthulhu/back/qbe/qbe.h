@@ -2,4 +2,4 @@
 
 #include <stdbool.h>
 
-bool gcc_enabled(void);
+bool qbe_enabled(void);

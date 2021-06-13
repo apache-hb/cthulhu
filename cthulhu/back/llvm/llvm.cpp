@@ -1,7 +1,7 @@
 #include "llvm.h"
 #include "debug.h"
 
-#include "cthulhu/report/report.h"
+#include "cthulhu/util/report.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -208,9 +208,13 @@ void llvm_output(llvm_context *ctx, FILE *file) {
     out.flush();
 }
 
-void llvm_debug(debug_t *debug, llvm_context *ctx) {
+void llvm_debug(llvm_context *ctx) {
     auto *self = (UnitContext*)ctx;
-    auto out = output(debug->out);
+    auto out = output(get_debug());
 
     self->mod->print(out, nullptr);
+}
+
+bool llvm_enabled(void) {
+    return true;
 }

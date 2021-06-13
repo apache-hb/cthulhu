@@ -2,8 +2,8 @@
 
 #include "bison.h"
 
-#include "cthulhu/report/report.h"
-#include "cthulhu/util.h"
+#include "cthulhu/util/report.h"
+#include "cthulhu/util/util.h"
 
 #include <string.h>
 #include <stdlib.h>

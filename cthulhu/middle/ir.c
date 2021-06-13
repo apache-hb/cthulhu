@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "cthulhu/report/report.h"
+#include "cthulhu/util/report.h"
 
 static unit_t unit_new(const char *name, size_t size) {
     unit_t unit = { name, malloc(sizeof(flow_t) * size), size, 0 };
