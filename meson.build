@@ -1,52 +1,58 @@
 project('ctu', 'c',
     default_options : [
-        'c_std=gnu99',
-        'cpp_std=gnu++17',
+        'c_std=c11',
+        'cpp_std=c++17',
         'warning_level=2',
         'default_library=static',
         'werror=true'
     ]
 )
 
-llvm = get_option('llvm-backend')
-gcc = get_option('gcc-backend')
-qbe = get_option('qbe-backend')
-fuzzing = get_option('fuzzing')
+msvc = meson.get_compiler('c').get_id() == 'msvc'
+windows = build_machine.system() == 'windows'
 
-config = configuration_data()
+src = [
+    'cthulhu/util/util.c',
+    'cthulhu/util/report.c'
+]
 
-config.set10('CTU_LLVM', llvm)
-config.set10('CTU_GCC', gcc)
-config.set10('CTU_QBE', qbe)
-config.set10('CTU_FUZZING', fuzzing)
-
-configure_file(output : 'config.h',
-    configuration : config
-)
-
-libreport = library('report', 'cthulhu/report/report.c',
+libutil = library('util', src,
     include_directories : '.'
 )
 
-report = declare_dependency(
-    link_with : libreport,
+util = declare_dependency(
+    link_with : libutil,
     include_directories : '.'
 )
+
+if windows
+    flex = find_program('win_flex', version : '>=2.6')
+    bison = find_program('win_bison', version : '>=3.7')
+else
+    flex = find_program('flex', version : '>=2.6')
+    bison = find_program('bison', version : '>=3.7')
+endif
+
+command = [ flex ]
+if windows
+    command += '--wincompat'
+endif
+command += '@INPUT@'
 
 # create our flex lexer that bison needs
 lex = custom_target('lex',
-    command : [ find_program('flex'), '@INPUT@' ],
+    command : command,
     input : 'cthulhu/front/cthulhu.l',
     output : [ 'flex.c', 'flex.h' ],
-    depends : libreport
+    depends : libutil
 )
 
 # create our bison parser that our ast needs
 parse = custom_target('parse',
-    command : [ find_program('bison'), '-d', '@INPUT@', '-Wdeprecated', '-v' ],
+    command : [ bison, '-d', '@INPUT@', '-Wdeprecated', '-v' ],
     input : 'cthulhu/front/cthulhu.y',
     output : [ 'bison.c', 'bison.h' ],
-    depends : [ lex, libreport ]
+    depends : [ lex, libutil ]
 )
 
 src = [ 
@@ -55,21 +61,25 @@ src = [
     'cthulhu/front/debug/debug.c'
 ]
 
+args = [ '-D_POSIX_C_SOURCE=700' ]
+
 # turns text/files into an ast
 libfront = library('ast', lex, parse, src,
-    dependencies : report,
+    c_args : args,
+    dependencies : util,
     include_directories : '.'
 )
 
 front = declare_dependency(
     link_with : libfront, 
-    dependencies : report,
+    dependencies : util,
     sources : [ lex, parse ],
+    compile_args : args,
     include_directories : '.'
 )
 
 libsema = library('sema', [ 'cthulhu/sema/sema.c' ],
-    dependencies : report,
+    dependencies : util,
     include_directories : '.'
 )
 
@@ -79,20 +89,27 @@ src = [
 ]
 
 libmiddle = library('middle', src,
-    dependencies : [ front, report ],
+    dependencies : [ front, util ],
     include_directories : '.'
 )
 
 middle = declare_dependency(
-    dependencies : report,
+    dependencies : util,
     link_with : libmiddle,
 )
 
 # collect all our backends
 subdir('cthulhu/back')
 
+args = [ ]
+
+if msvc
+    args += '-D_CRT_SECURE_NO_WARNINGS=1'
+endif
+
 # user facing frontend
 front = executable('ctc', 'cthulhu/main.c',
     include_directories : '.',
-    dependencies : backends + [ middle, report ]
+    c_args : args,
+    dependencies : backends + [ middle, util ]
 )

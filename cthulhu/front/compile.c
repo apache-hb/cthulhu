@@ -3,7 +3,7 @@
 #include "bison.h"
 #include "flex.h"
 
-#include "cthulhu/report/report.h"
+#include "cthulhu/util/report.h"
 
 nodes_t *compile_file(const char *path, FILE *stream) {
     int err;
@@ -57,7 +57,7 @@ nodes_t *compile_string(const char *path, const char *text) {
 int yyerror(YYLTYPE *yylloc, void *scanner, scanner_t *x, const char *msg) {
     (void)scanner;
 
-    fprintf(stderr, "[%s:%d:%d]: %s\n",
+    fprintf(stderr, "[%s:%lld:%lld]: %s\n",
         x->path, 
         yylloc->first_line,
         yylloc->first_column,

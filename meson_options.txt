@@ -1,18 +1,18 @@
-option('llvm-backend', 
-    type : 'boolean', 
-    value : 'false',
+option('llvm', 
+    type : 'feature', 
+    value : 'auto',
     description : 'enable llvm backend target, requires llvm'
 )
 
-option('gcc-backend', 
-    type : 'boolean', 
-    value : 'false',
+option('gcc', 
+    type : 'feature', 
+    value : 'auto',
     description : 'enable gcc backend target, requires libgcc'
 )
 
-option('qbe-backend',
-    type : 'boolean',
-    value : 'false',
+option('qbe',
+    type : 'feature',
+    value : 'auto',
     description : 'enable qbe backend target, requires qbe'
 )
 

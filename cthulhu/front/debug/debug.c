@@ -20,48 +20,48 @@ static const char *binary_op(int op) {
     }
 }
 
-static void debug_digit(debug_t *debug, node_t *node) {
-    fprintf(debug->out, "%lu", node->digit);
+static void debug_digit(node_t *node) {
+    debugf("%lu", node->digit);
 }
 
-static void debug_unary(debug_t *debug, node_t *node) {
-    fprintf(debug->out, "%s ", unary_op(node->unary.op));
-    debug_ast(debug, node->unary.expr);
+static void debug_unary(node_t *node) {
+    debugf("%s ", unary_op(node->unary.op));
+    debug_ast(node->unary.expr);
 }
 
-static void debug_binary(debug_t *debug, node_t *node) {
-    fprintf(debug->out, "%s ", binary_op(node->binary.op));
-    debug_ast(debug, node->binary.lhs);
-    fprintf(debug->out, " ");
-    debug_ast(debug, node->binary.rhs);
+static void debug_binary(node_t *node) {
+    debugf("%s ", binary_op(node->binary.op));
+    debug_ast(node->binary.lhs);
+    debugf(" ");
+    debug_ast(node->binary.rhs);
 }
 
-static void debug_ternary(debug_t *debug, node_t *node) {
-    fprintf(debug->out, "if ");
-    debug_ast(debug, node->ternary.cond);
-    fprintf(debug->out, " then ");
-    debug_ast(debug, node->ternary.lhs);
-    fprintf(debug->out, " else ");
-    debug_ast(debug, node->ternary.rhs);
+static void debug_ternary(node_t *node) {
+    debugf("if ");
+    debug_ast(node->ternary.cond);
+    debugf(" then ");
+    debug_ast(node->ternary.lhs);
+    debugf(" else ");
+    debug_ast(node->ternary.rhs);
 }
 
-static void debug_return(debug_t *debug, node_t *node) {
-    fprintf(debug->out, "return ");
-    debug_ast(debug, node->expr);
+static void debug_return(node_t *node) {
+    debugf("return ");
+    debug_ast(node->expr);
 }
 
-void debug_ast(debug_t *debug, node_t *node) {
-    fprintf(debug->out, "(");
+void debug_ast(node_t *node) {
+    debugf("(");
 
     switch (node->type) {
-    case AST_DIGIT: debug_digit(debug, node); break;
-    case AST_UNARY: debug_unary(debug, node); break;
-    case AST_BINARY: debug_binary(debug, node); break;
-    case AST_TERNARY: debug_ternary(debug, node); break;
-    case AST_RETURN: debug_return(debug, node); break;
+    case AST_DIGIT: debug_digit(node); break;
+    case AST_UNARY: debug_unary(node); break;
+    case AST_BINARY: debug_binary(node); break;
+    case AST_TERNARY: debug_ternary(node); break;
+    case AST_RETURN: debug_return(node); break;
 
-    default: fprintf(debug->out, "ERROR"); break;
+    default: debugf("ERROR"); break;
     }
 
-    fprintf(debug->out, ")");
+    debugf(")");
 }

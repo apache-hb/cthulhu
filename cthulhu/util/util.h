@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 /**
  * d: data pointer
  * l: length
@@ -14,3 +16,5 @@
 #else
 #   define CTU_API
 #endif
+
+bool startswith(const char *str, const char *sub);

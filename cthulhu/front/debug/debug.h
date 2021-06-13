@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/debug.h"
+#include "cthulhu/util/debug.h"
 #include "cthulhu/front/ast.h"
 
-void debug_ast(debug_t *debug, node_t *node);
+void debug_ast(node_t *node);
