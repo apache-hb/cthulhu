@@ -90,8 +90,7 @@ static void debug_block(size_t idx) {
 #endif
 
 static void debug_label(operand_t op) {
-    ASSERT(op.kind == VREG);
-    debugf(".L%zu", op.vreg);
+    debugf(".L%zu", op.block);
 }
 
 static void debug_branch(op_t *op) {

@@ -35,6 +35,7 @@ struct FlowContext {
     UnitContext *parent;
     flow_t *flow;
 
+    BasicBlock *root;
     Function *function;
 
     std::map<size_t, Value*> vregs = { };
@@ -80,6 +81,7 @@ struct UnitContext {
         FlowContext *flow = flows[flow_name(idx)];
         auto *block = BasicBlock::Create(llvm, "entry", flow->function);
         builder->SetInsertPoint(block);
+        flow->root = block;
         return flow;
     }
 
@@ -135,44 +137,52 @@ static void llvm_compile_unary(FlowContext *ctx, op_t *op, size_t idx, F&& func)
     ctx->vregs[idx] = func(ctx->parent->builder, val);
 }
 
-#if 0
 static std::string new_label(size_t idx) {
     return "L_" + std::to_string(idx);
 }
 
-static void llvm_compile_block(FlowContext *ctx, size_t idx) {
+static void llvm_create_block(FlowContext *ctx, size_t idx) {
     auto *parent = ctx->parent;
 
-    ctx->blocks[idx] = BasicBlock::Create(parent->llvm, new_label(idx), ctx->function);
-    parent->builder->SetInsertPoint(ctx->get_block(idx));
-}
+    BasicBlock *block;
 
-static void llvm_compile_phi(FlowContext *ctx, op_t *op, size_t idx) {
-    auto *phi = ctx->parent->builder->CreatePHI(Type::getInt64Ty(ctx->parent->llvm), 2, new_label(idx));
-    for (size_t i = 0; i < op->len; i++) {
-        branch_t branch = op->branches[i];
-        phi->addIncoming(
-            ctx->get_value(branch.val), 
-            ctx->get_block(branch.block)
-        );
+    /* prevents empty basic blocks */
+    /* TODO: this is fragile */
+    if (idx == 0) {
+        block = ctx->root;
+    } else {
+        block = BasicBlock::Create(parent->llvm, new_label(idx), ctx->function);
     }
-    ctx->vregs[idx] = phi;
+
+    ctx->blocks[idx] = block;
 }
 
-static void llvm_compile_cond(FlowContext *ctx, op_t *op) {
+static void llvm_enter_block(FlowContext *ctx, size_t idx) {
+    ctx->parent->builder->SetInsertPoint(ctx->get_block(idx));
+}
+
+static void llvm_compile_branch(FlowContext *ctx, op_t *op) {
     ctx->parent->builder->CreateCondBr(
-        ctx->get_value(op->cond), 
-        ctx->get_block(op->block),
-        ctx->get_block(op->other)
+        ctx->get_value(op->cond),
+        ctx->get_block(op->lhs.block),
+        ctx->get_block(op->rhs.block)
     );
 }
 
-static void llvm_compile_jmp(FlowContext *ctx, op_t *op) {
+static void llvm_compile_jump(FlowContext *ctx, op_t *op) {
     ctx->parent->builder->CreateBr(
         ctx->get_block(op->label)
     );
 }
-#endif
+
+static void llvm_compile_phi(FlowContext *ctx, op_t *op, size_t idx) {
+    auto *phi = ctx->parent->builder->CreatePHI(Type::getInt64Ty(ctx->parent->llvm), 2);
+
+    phi->addIncoming(ctx->get_value(op->lhs), ctx->get_block(op->lhs.block));
+    phi->addIncoming(ctx->get_value(op->rhs), ctx->get_block(op->rhs.block));
+    
+    ctx->vregs[idx] = phi;
+}
 
 static void llvm_compile_call(FlowContext *ctx, op_t *op, size_t idx) {
     CallInst *call = ctx->parent->builder->CreateCall(
@@ -259,6 +269,22 @@ static void llvm_compile_opcode(FlowContext *ctx, size_t idx) {
         break;
 #endif
 
+    case OP_PHI:
+        llvm_compile_phi(ctx, op, idx);
+        break;
+
+    case OP_BRANCH:
+        llvm_compile_branch(ctx, op);
+        break;
+
+    case OP_JUMP:
+        llvm_compile_jump(ctx, op);
+        break;
+
+    case OP_BLOCK:
+        llvm_enter_block(ctx, idx);
+        break;
+
     case OP_CALL:
         llvm_compile_call(ctx, op, idx);
         break;
@@ -287,6 +313,12 @@ llvm_context *llvm_compile(unit_t *unit) {
 
     for (size_t f = 0; f < ctx->len(); f++) {
         FlowContext *flow = ctx->begin(f);
+
+        for (size_t i = 0; i < flow->len(); i++) {
+            op_t *op = flow->opcode(i);
+            if (op->kind == OP_BLOCK)
+                llvm_create_block(flow, i);
+        }
 
         for (size_t i = 0; i < flow->len(); i++) {
             llvm_compile_opcode(flow, i);
