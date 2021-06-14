@@ -24,6 +24,10 @@ static void debug_digit(node_t *node) {
     debugf("%lu", node->digit);
 }
 
+static void debug_ident(node_t *node) {
+    debugf("%s", node->text);
+}
+
 static void debug_unary(node_t *node) {
     debugf("%s ", unary_op(node->unary.op));
     debug_ast(node->unary.expr);
@@ -45,9 +49,19 @@ static void debug_ternary(node_t *node) {
     debug_ast(node->ternary.rhs);
 }
 
+static void debug_call(node_t *node) {
+    debugf("call ");
+    debug_ast(node->expr);
+}
+
 static void debug_return(node_t *node) {
     debugf("return ");
     debug_ast(node->expr);
+}
+
+static void debug_func(node_t *node) {
+    debugf("define %s ", node->func.name);
+    debug_ast(node->func.body);
 }
 
 void debug_ast(node_t *node) {
@@ -55,10 +69,13 @@ void debug_ast(node_t *node) {
 
     switch (node->type) {
     case AST_DIGIT: debug_digit(node); break;
+    case AST_IDENT: debug_ident(node); break;
     case AST_UNARY: debug_unary(node); break;
     case AST_BINARY: debug_binary(node); break;
     case AST_TERNARY: debug_ternary(node); break;
+    case AST_CALL: debug_call(node); break;
     case AST_RETURN: debug_return(node); break;
+    case AST_FUNC: debug_func(node); break;
 
     default: debugf("ERROR"); break;
     }

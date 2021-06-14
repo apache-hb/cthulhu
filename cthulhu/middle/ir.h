@@ -21,15 +21,21 @@ typedef enum {
     /* %vreg = op */
     OP_VALUE,
 
-    /* if cond goto block */
-    OP_COND, 
-    
-    /* goto block */
-    OP_JMP,
+    /* %vreg = call op */
+    OP_CALL,
+
+    /* %vreg = select cond true false */
+    OP_SELECT,
+
+    /* branch lhs when cond else rhs */
+    OP_BRANCH, 
+ 
+    /* jmp block */
+    OP_JUMP,
 
     /* %vreg = [ lhs, rhs ] */
     OP_PHI, 
-    
+
     /* block: */
     OP_BLOCK,
 
@@ -59,16 +65,22 @@ typedef size_t vreg_t;
 
 typedef enum {
     VREG,
-    IMM
+    IMM,
+    NAME
 } opkind_t;
 
 typedef struct {
     opkind_t kind;
     union {
-        /* kind = VREG */
+        /* VREG */
         vreg_t vreg;
+        /* IMM */
         int64_t imm;
+        /* NAME */
+        char *name;
     };
+    /* the block this operand is live in */
+    size_t block;
 } operand_t;
 
 typedef struct {
@@ -85,10 +97,18 @@ typedef struct {
 
         /* OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_REM */
         struct {
-            operand_t lhs;
-            operand_t rhs;
+            /* OP_SELECT, OP_BRANCH */
+            operand_t cond;
+
+            /* OP_PHI */
+            operand_t lhs; /* true leaf */
+            operand_t rhs; /* false leaf */
         };
 
+        /* OP_JUMP */
+        size_t label;
+
+#if 0
         /* OP_PHI */
         struct {
             branch_t *branches;
@@ -105,6 +125,7 @@ typedef struct {
 
         /* OP_JMP */
         size_t label;
+#endif
     };
 } op_t;
 
@@ -129,14 +150,4 @@ typedef struct {
 /**
  * convert a compiled file into a compilation unit
  */
-unit_t transform_ast(nodes_t *node);
-
-/* constant folding optimization pass */
-CTU_API bool fold_ir(unit_t *unit);
-
-/* replace blocks of opcodes with more expressive single opcodes */
-/* llvm requires this pass to be run */
-CTU_API bool raise_ir(unit_t *unit);
-
-/* remove dead steps */
-CTU_API bool reduce_ir(unit_t *unit);
+unit_t transform_ast(const char *name, nodes_t *node);

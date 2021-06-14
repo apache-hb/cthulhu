@@ -1,6 +1,7 @@
 #include "util/report.h"
 #include "util/util.h"
 #include "front/front.h"
+#include "sema/sema.h"
 #include "middle/middle.h"
 
 #include <stdlib.h>
@@ -288,14 +289,13 @@ static int compile_main(void) {
         }
     }
 
-    unit_t unit = transform_ast(nodes);
+    sema_mod(nodes);
+    check_errors("semantics");
+
+    unit_t unit = transform_ast("main", nodes);
     check_errors("middle");
 
     if (print_ir) {
-        debug_unit(&unit);
-
-        fold_ir(&unit);
-
         debug_unit(&unit);
     }
 

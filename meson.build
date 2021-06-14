@@ -1,6 +1,6 @@
 project('ctu', 'c',
     default_options : [
-        'c_std=c11',
+        'c_std=c99',
         'cpp_std=c++17',
         'warning_level=2',
         'default_library=static',
@@ -83,6 +83,11 @@ libsema = library('sema', [ 'cthulhu/sema/sema.c' ],
     include_directories : '.'
 )
 
+sema = declare_dependency(
+    link_with : libsema,
+    include_directories : '.'
+)
+
 src = [
     'cthulhu/middle/ir.c',
     'cthulhu/middle/debug/debug.c'
@@ -111,5 +116,5 @@ endif
 front = executable('ctc', 'cthulhu/main.c',
     include_directories : '.',
     c_args : args,
-    dependencies : backends + [ middle, util ]
+    dependencies : backends + [ sema, middle, util ]
 )
