@@ -4,6 +4,12 @@
 #include <stdint.h>
 
 #include "cthulhu/front/ast.h"
+#include "cthulhu/util/util.h"
+
+/**
+ * our IR looks alot like llvms
+ * they mostly got it right so no need to reinvent the wheel.
+ */
 
 typedef enum {
     /* %vreg = |op| */
@@ -15,12 +21,18 @@ typedef enum {
     /* %vreg = op */
     OP_VALUE,
 
-    /* if cond goto label */
-    OP_JMP, 
+    /* if cond goto block */
+    OP_COND, 
     
+    /* goto block */
+    OP_JMP,
+
     /* %vreg = [ lhs, rhs ] */
     OP_PHI, 
     
+    /* block: */
+    OP_BLOCK,
+
     /* ret op */
     OP_RET,
 
@@ -60,23 +72,39 @@ typedef struct {
 } operand_t;
 
 typedef struct {
+    size_t block;
+    operand_t val;
+} branch_t;
+
+typedef struct {
     optype_t kind;
 
     union {
         /* OP_ABS, OP_NEG, OP_VALUE, OP_RET */
         operand_t expr;
 
-        /* OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_REM, OP_PHI */
+        /* OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_REM */
         struct {
             operand_t lhs;
             operand_t rhs;
         };
 
-        /* OP_JMP */
+        /* OP_PHI */
+        struct {
+            branch_t *branches;
+            size_t size;
+            size_t len;
+        };
+
+        /* OP_COND */
         struct {
             operand_t cond;
-            operand_t label;
+            size_t block; /* jmp here when cond */
+            size_t other; /* otherwise jmp here */
         };
+
+        /* OP_JMP */
+        size_t label;
     };
 } op_t;
 
@@ -102,3 +130,13 @@ typedef struct {
  * convert a compiled file into a compilation unit
  */
 unit_t transform_ast(nodes_t *node);
+
+/* constant folding optimization pass */
+CTU_API bool fold_ir(unit_t *unit);
+
+/* replace blocks of opcodes with more expressive single opcodes */
+/* llvm requires this pass to be run */
+CTU_API bool raise_ir(unit_t *unit);
+
+/* remove dead steps */
+CTU_API bool reduce_ir(unit_t *unit);
