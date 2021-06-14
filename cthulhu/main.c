@@ -270,7 +270,7 @@ static void output_unit(unit_t *unit) {
     case LLVM: llvm_output_unit(unit); break;
 
     default:
-        reportf("TODO: %d\n", backend);
+        reportf("TODO: backend %d\n", backend);
         break;
     }
 }
@@ -292,6 +292,10 @@ static int compile_main(void) {
     check_errors("middle");
 
     if (print_ir) {
+        debug_unit(&unit);
+
+        fold_ir(&unit);
+
         debug_unit(&unit);
     }
 
