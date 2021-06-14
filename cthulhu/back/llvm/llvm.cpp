@@ -22,7 +22,15 @@ using LLVMBuilder = IRBuilder<>;
 struct UnitContext;
 
 struct FlowContext {
-    FlowContext(UnitContext *ctx, flow_t *flow);
+    FlowContext(UnitContext *ctx, flow_t *flow, Function *function)
+        : parent(ctx)
+        , flow(flow)
+        , function(function)
+    { 
+        ASSERT(parent != NULL);
+        ASSERT(flow != NULL);
+        ASSERT(function != NULL);
+    }
 
     UnitContext *parent;
     flow_t *flow;
@@ -60,27 +68,43 @@ struct UnitContext {
     LLVMBuilder *builder;
     Module *mod;
 
-    FlowContext get(size_t idx) {
-        return FlowContext(this, unit->flows + idx);
+    std::map<std::string, FlowContext*> flows;
+
+    const char *flow_name(size_t idx) {
+        const char *name = unit->flows[idx].name;
+        ASSERT(name != NULL);
+        return name;
+    }
+
+    FlowContext *begin(size_t idx) {
+        FlowContext *flow = flows[flow_name(idx)];
+        auto *block = BasicBlock::Create(llvm, "entry", flow->function);
+        builder->SetInsertPoint(block);
+        return flow;
+    }
+
+    void create(size_t idx) {
+        flow_t *flow = unit->flows + idx;
+
+        FunctionType *type = FunctionType::get(Type::getInt64Ty(llvm), false);
+        Function *function = Function::Create(type, Function::ExternalLinkage, flow->name, mod);
+    
+        flows[flow->name] = new FlowContext(this, flow, function);
     }
 
     size_t len() const { return unit->len; }
 };
 
-FlowContext::FlowContext(UnitContext *ctx, flow_t *flow) : parent(ctx), flow(flow) { 
-    auto *type = FunctionType::get(Type::getInt64Ty(parent->llvm), false);
-    function = Function::Create(type, Function::ExternalLinkage, flow->name, ctx->mod);
-
-    auto *block = BasicBlock::Create(parent->llvm, "entry", function);
-    parent->builder->SetInsertPoint(block);
-}
-
 static Value *get_imm(UnitContext *ctx, int64_t imm) {
     return ConstantInt::get(ctx->llvm, APInt(64, imm, true));
 }
 
+static Function *get_func(UnitContext *ctx, const char *name) {
+    return ctx->flows[name]->function;
+}
+
 Value *FlowContext::get_value(operand_t op) {
-    Value *out;
+    Value *out = nullptr;
     
     switch (op.kind) {
     case IMM: 
@@ -88,6 +112,9 @@ Value *FlowContext::get_value(operand_t op) {
         break;
     case VREG: 
         out = get_vreg(op.vreg); 
+        break;
+    default:
+        reportf("get_value(op.kind = %d)", op.kind);
         break;
     }
 
@@ -108,6 +135,7 @@ static void llvm_compile_unary(FlowContext *ctx, op_t *op, size_t idx, F&& func)
     ctx->vregs[idx] = func(ctx->parent->builder, val);
 }
 
+#if 0
 static std::string new_label(size_t idx) {
     return "L_" + std::to_string(idx);
 }
@@ -144,6 +172,29 @@ static void llvm_compile_jmp(FlowContext *ctx, op_t *op) {
         ctx->get_block(op->label)
     );
 }
+#endif
+
+static void llvm_compile_call(FlowContext *ctx, op_t *op, size_t idx) {
+    CallInst *call = ctx->parent->builder->CreateCall(
+        get_func(ctx->parent, op->expr.name), 
+        { /* no args */ }
+    );
+
+    /* clang does this so its probably a good idea */
+    call->setTailCall();
+    ctx->vregs[idx] = call;
+}
+
+static void llvm_compile_select(FlowContext *ctx, op_t *op, size_t idx) {
+    Value *cmp = ctx->parent->builder->CreateICmpNE(
+        ctx->get_value(op->cond), 
+        get_imm(ctx->parent, 0)
+    );
+    ctx->vregs[idx] = ctx->parent->builder->CreateSelect(cmp,
+        ctx->get_value(op->lhs),
+        ctx->get_value(op->rhs)
+    );
+}
 
 static void llvm_compile_opcode(FlowContext *ctx, size_t idx) {
     op_t *op = ctx->opcode(idx);
@@ -151,6 +202,9 @@ static void llvm_compile_opcode(FlowContext *ctx, size_t idx) {
 
     switch (op->kind) {
     case OP_VALUE: 
+        if (op->expr.kind == NAME)
+            break;
+
         expr = ctx->get_value(op->expr);
         ctx->vregs[idx] = expr;
         break;
@@ -187,6 +241,7 @@ static void llvm_compile_opcode(FlowContext *ctx, size_t idx) {
         });
         break;
 
+#if 0
     case OP_BLOCK:
         llvm_compile_block(ctx, idx);
         break;
@@ -201,6 +256,15 @@ static void llvm_compile_opcode(FlowContext *ctx, size_t idx) {
 
     case OP_JMP:
         llvm_compile_jmp(ctx, op);
+        break;
+#endif
+
+    case OP_CALL:
+        llvm_compile_call(ctx, op, idx);
+        break;
+
+    case OP_SELECT:
+        llvm_compile_select(ctx, op, idx);
         break;
 
     case OP_RET:
@@ -218,10 +282,14 @@ llvm_context *llvm_compile(unit_t *unit) {
     UnitContext *ctx = new UnitContext(unit);
 
     for (size_t f = 0; f < ctx->len(); f++) {
-        FlowContext flow = ctx->get(f);
+        ctx->create(f);
+    }
 
-        for (size_t i = 0; i < flow.len(); i++) {
-            llvm_compile_opcode(&flow, i);
+    for (size_t f = 0; f < ctx->len(); f++) {
+        FlowContext *flow = ctx->begin(f);
+
+        for (size_t i = 0; i < flow->len(); i++) {
+            llvm_compile_opcode(flow, i);
         }
     }
 

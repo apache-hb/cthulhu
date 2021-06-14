@@ -2,6 +2,4 @@
 
 #include "cthulhu/front/front.h"
 
-typedef enum {
-    I64, BOOL
-} type_t;
+void sema_mod(nodes_t *nodes);

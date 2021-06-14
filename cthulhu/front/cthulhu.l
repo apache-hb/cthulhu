@@ -37,6 +37,9 @@ static char *strdup(const char *str) {
 [ \r\n\t] ;
 "//".* ;
 
+"def" { return DEF; }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
+
 [0-9]+ { yylval->text = strdup(yytext); return DIGIT; }
 
 "(" { return LPAREN; }

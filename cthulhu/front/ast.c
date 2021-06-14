@@ -47,6 +47,12 @@ node_t *ast_digit(char *text) {
     return node;
 }
 
+node_t *ast_ident(char *text) {
+    node_t *node = ast(AST_IDENT);
+    node->text = text;
+    return node;
+}
+
 node_t *ast_binary(node_t *lhs, node_t *rhs, int op) {
     node_t *node = ast(AST_BINARY);
     node->binary.op = op;
@@ -70,8 +76,21 @@ node_t *ast_ternary(node_t *cond, node_t *lhs, node_t *rhs) {
     return node;
 }
 
+node_t *ast_call(node_t *func) {
+    node_t *node = ast(AST_CALL);
+    node->expr = func;
+    return node;
+}
+
 node_t *ast_return(node_t *expr) {
     node_t *node = ast(AST_RETURN);
     node->expr = expr;
+    return node;
+}
+
+node_t *ast_func(char *name, node_t *body) {
+    node_t *node = ast(AST_FUNC);
+    node->func.name = name;
+    node->func.body = body;
     return node;
 }

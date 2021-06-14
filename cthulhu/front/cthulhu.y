@@ -29,6 +29,7 @@ int yyerror();
 }
 
 %token<text>
+    IDENT "identifier"
     DIGIT "integer literal"
 
 %token
@@ -47,7 +48,11 @@ int yyerror();
     LPAREN "("
     RPAREN ")"
 
+%token
+    DEF "def"
+
 %type<node>
+    funcdecl
     primary expr additive multiplicative unary ternary postfix
 
 %type<nodes>
@@ -57,15 +62,20 @@ int yyerror();
 
 %%
 
-unit: expr SEMI { x->ast = ast_list(ast_return($1)); }
-    | unit expr SEMI { x->ast = ast_append(x->ast, ast_return($2)); }
+unit: funcdecl { x->ast = ast_list($1); }
+    | unit funcdecl { x->ast = ast_append(x->ast, $2); }
+    ;
+
+funcdecl: DEF IDENT expr SEMI { $$ = ast_func($2, ast_return($3)); }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }
     | DIGIT { $$ = ast_digit($1); }
+    | IDENT { $$ = ast_ident($1); }
     ;
 
 postfix: primary { $$ = $1; }
+    | postfix LPAREN RPAREN { $$ = ast_call($1); }
     ;
 
 unary: postfix { $$ = $1; }

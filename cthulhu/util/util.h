@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 /**
  * d: data pointer
@@ -18,3 +19,5 @@
 #endif
 
 bool startswith(const char *str, const char *sub);
+
+char *format(const char *fmt, ...);
