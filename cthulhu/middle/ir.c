@@ -205,8 +205,8 @@ static size_t emit_branch(flow_t *flow, size_t cond) {
 static void fixup_branch(flow_t *flow, size_t idx, size_t lhs, size_t rhs) {
     op_t *op = flow_at(flow, idx);
 
-    op->lhs = create_vreg(lhs);
-    op->rhs = create_vreg(rhs);
+    op->lhs.block = lhs;
+    op->rhs.block = rhs;
 }
 
 static size_t emit_phi(flow_t *flow, operand_t lhs, operand_t rhs) {
