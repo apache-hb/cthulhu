@@ -24,7 +24,6 @@ typedef struct path_t {
 
     bool ended;
     gcc_jit_block **blocks;
-    size_t block_track;
     gcc_jit_block *current;
 } path_t;
 
@@ -49,13 +48,6 @@ static gcc_jit_block *cursor(path_t *path) {
 
 static gcc_jit_block *get_block(path_t *path, size_t idx) {
     return path->blocks[idx];
-}
-
-static void mark_block_done(path_t *path, size_t idx) {
-    if (path->block_track != SIZE_MAX)
-        path->blocks[path->block_track] = NULL;
-
-    path->block_track = idx;
 }
 
 static gcc_jit_rvalue *imm_rvalue(path_t *ctx, int64_t imm) {
@@ -99,7 +91,6 @@ static void gcc_select_block(path_t *path, size_t idx) {
     printf("select block %zu\n", idx);
     if (!path->ended) {
         gcc_jit_block_end_with_jump(last, NULL, now);
-        mark_block_done(path, idx);
         path->ended = true;
     }
 }
@@ -173,13 +164,20 @@ static void gcc_compile_select(path_t *path, op_t *op, size_t idx) {
     gcc_jit_block_add_assignment(lhs, NULL, temp, operand_value(path, op->lhs));
     gcc_jit_block_add_assignment(rhs, NULL, temp, operand_value(path, op->rhs));
 
-    gcc_jit_block_end_with_conditional(start, NULL, 
+    gcc_jit_rvalue *cmp = gcc_jit_context_new_comparison(path->parent->gcc, NULL, 
+        GCC_JIT_COMPARISON_NE, 
         operand_value(path, op->cond),
-        lhs, rhs
+        imm_rvalue(path, 0)
+    );
+
+    gcc_jit_block_end_with_conditional(start, NULL, 
+        cmp, lhs, rhs
     );
 
     gcc_jit_block_end_with_jump(lhs, NULL, end);
     gcc_jit_block_end_with_jump(rhs, NULL, end);
+
+    path->locals[idx] = gcc_jit_lvalue_as_rvalue(temp);
 
     path->current = end;
 }
@@ -312,7 +310,6 @@ static void gcc_create_flow(gcc_t *ctx, flow_t *flow, size_t i) {
     path->func = func;
     path->flow = flow;
     path->locals = locals;
-    path->block_track = SIZE_MAX;
     path->blocks = blocks;
     path->ended = false;
     path->current = gcc_jit_function_new_block(func, "entry");
