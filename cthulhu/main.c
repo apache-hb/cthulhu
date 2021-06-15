@@ -14,7 +14,7 @@
 #include "back/qbe/qbe.h"
 
 typedef enum {
-    LOCAL, LLVM, GCC, QBE, WASMTIME
+    LOCAL, LLVM, GCC, QBE
 } backend_t;
 
 typedef enum {
@@ -31,7 +31,6 @@ static const char *target = NULL;
 #define LLVM_STR "llvm"
 #define GCC_STR "gcc"
 #define QBE_STR "qbe"
-#define WASMTIME_STR "wasmtime"
 
 static const char *set_backend(const char *str) {
     if (startswith(str, AUTO_STR)) {
@@ -56,11 +55,6 @@ static const char *set_backend(const char *str) {
     if (startswith(str, QBE_STR)) {
         backend = QBE;
         return str + strlen(QBE_STR);
-    }
-
-    if (startswith(str, WASMTIME_STR)) {
-        backend = WASMTIME;
-        return str + strlen(WASMTIME_STR);
     }
 
     reportf("unable to parse backend from target `%s`", str);
@@ -133,8 +127,8 @@ static void list_quads(void) {
     bool has_gcc = gcc_enabled();
     printf("\tgcc: %s\n", status(has_gcc));
     if (has_gcc) {
-        puts("\t\tarch: i8086, x86, x64");
-        puts("\t\tformat: elf, coff");
+        puts("\t\tarch: x86, x64");
+        puts("\t\tformat: elf");
         puts("\t\ttype: exec, static, shared");
     }
 
@@ -146,14 +140,6 @@ static void list_quads(void) {
         puts("\t\ttype: exec, static, shared");
     }
 
-    /*
-    bool has_cranelift = cranelift_enabled();
-    printf("\tcranelift: %s\n", status(has_cranelift));
-    if (has_cranelift) {
-        puts("\t\tarch: wasm");
-        puts("\t\tformat: elf");
-        puts("\t\ttype: exec, static, shared");
-    }*/
     exit(0);
 }
 
@@ -266,9 +252,18 @@ static void llvm_output_unit(unit_t *unit) {
     check_errors("llvm output");
 }
 
+static void gcc_output_unit(unit_t *unit) {
+    gcc_context *ctx = gcc_compile(unit, print_backend);
+    check_errors("gcc compilation");
+
+    gcc_output(ctx, output);
+    check_errors("gcc output");
+}
+
 static void output_unit(unit_t *unit) {
     switch (backend) {
     case LLVM: llvm_output_unit(unit); break;
+    case GCC: gcc_output_unit(unit); break;
 
     default:
         reportf("TODO: backend %d\n", backend);
