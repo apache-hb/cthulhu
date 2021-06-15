@@ -1,8 +1,9 @@
-gccjit = dependency('gccjit', required : get_option('gcc'))
+cc = meson.get_compiler('c')
+gccjit = cc.find_library('gccjit', required : get_option('gcc'))
 
 if gccjit.found()
     gcc = library('gcc-backend', 'gcc.c',
-        dependencies : gccjit
+        dependencies : [ gccjit, middle ]
     )
 
     backends += declare_dependency(
