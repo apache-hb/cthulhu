@@ -92,7 +92,7 @@ typedef struct {
     optype_t kind;
 
     union {
-        /* OP_ABS, OP_NEG, OP_VALUE, OP_RET */
+        /* OP_ABS, OP_NEG, OP_VALUE, OP_RET, OP_CALL */
         operand_t expr;
 
         /* OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_REM */
@@ -107,25 +107,6 @@ typedef struct {
 
         /* OP_JUMP */
         size_t label;
-
-#if 0
-        /* OP_PHI */
-        struct {
-            branch_t *branches;
-            size_t size;
-            size_t len;
-        };
-
-        /* OP_COND */
-        struct {
-            operand_t cond;
-            size_t block; /* jmp here when cond */
-            size_t other; /* otherwise jmp here */
-        };
-
-        /* OP_JMP */
-        size_t label;
-#endif
     };
 } op_t;
 
