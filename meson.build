@@ -1,8 +1,8 @@
 project('ctu', 'c',
     default_options : [
-        'c_std=c99',
-        'cpp_std=c++17',
-        'warning_level=2',
+        'c_std=c11', # flex under msvc requires c11
+        'cpp_std=c++17', # llvm headers require c++17
+        'warning_level=2', # bison generates code that warns on gcc at level 3
         'default_library=static',
         'werror=true'
     ]
@@ -101,6 +101,7 @@ libmiddle = library('middle', src,
 middle = declare_dependency(
     dependencies : util,
     link_with : libmiddle,
+    include_directories : '.'
 )
 
 # collect all our backends
@@ -113,8 +114,14 @@ if msvc
 endif
 
 # user facing frontend
-front = executable('ctc', 'cthulhu/main.c',
+driver = executable('ctc', 'cthulhu/main.c',
     include_directories : '.',
     c_args : args,
     dependencies : backends + [ sema, middle, util ]
 )
+
+if not meson.is_subproject()
+    executable('test-runner', 'tools/test.c',
+        c_args : '-D_CRT_SECURE_NO_WARNINGS'
+    )
+endif

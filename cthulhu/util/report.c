@@ -4,9 +4,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#define RED "\x1B[1;31m"
-#define RESET "\x1B[0m"
-
 static uint64_t total = 0;
 static FILE *dbg = NULL;
 
@@ -25,20 +22,28 @@ void debugf(const char *fmt, ...) {
     va_end(args);
 }
 
-void reportf(const char *fmt, ...) {
+void add_fail(void) {
     total++;
-    fprintf(stderr, RED "error: " RESET);
+}
 
+void reportf(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
+    reportv(fmt, args);
     va_end(args);
+}
+
+void reportv(const char *fmt, va_list args) {
+    add_fail();
+    fprintf(stderr, COLOUR_RED "error: " COLOUR_RESET);
+    vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
 }
 
-void check_errors(const char *stage) {
+bool check_errors(const char *stage) {
     if (total > 0) {
-        reportf("%s: aborting due to %llu previous error(s)", stage, total);
-        exit(1);
+        reportf("%s: aborting due to %llu error(s)", stage, total);
+        return true;
     }
+    return false;
 }

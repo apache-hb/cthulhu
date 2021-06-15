@@ -33,7 +33,7 @@ static op_t *flow_at(flow_t *flow, size_t idx) {
 }
 
 static size_t emit_op(flow_t *flow, optype_t kind) {
-    op_t op = { kind, { } };
+    op_t op = { kind, { .label = SIZE_MAX } };
     return flow_add(flow, op);
 }
 
@@ -48,7 +48,7 @@ static op_t create_binary(optype_t kind, operand_t lhs, operand_t rhs) {
 }
 
 static operand_t create_operand(opkind_t kind) {
-    operand_t op = { kind, { }, SIZE_MAX };
+    operand_t op = { kind, { .vreg = SIZE_MAX }, SIZE_MAX };
     return op;
 }
 

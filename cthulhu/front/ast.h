@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
+#include "scanner.h"
 
 typedef enum {
     /* literals */
@@ -31,6 +30,9 @@ typedef struct {
 
 typedef struct node_t {
     node_type_t type;
+
+    scanner_t *source;
+    YYLTYPE loc;
 
     union {
         /* AST_IDENT */

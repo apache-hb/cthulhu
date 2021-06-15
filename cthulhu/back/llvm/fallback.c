@@ -1,9 +1,15 @@
 #include "llvm.h"
+#include "debug.h"
 
 #include "cthulhu/util/report.h"
 
 bool llvm_enabled(void) {
     return false;
+}
+
+void llvm_debug(llvm_context *ctx) {
+    (void)ctx;
+    reportf("llvm is disabled");
 }
 
 llvm_context *llvm_compile(unit_t *unit) {
