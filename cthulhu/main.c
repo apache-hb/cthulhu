@@ -13,6 +13,8 @@
 #include "back/gcc/gcc.h"
 #include "back/qbe/qbe.h"
 
+#define CHECK_ERRS_EXIT(stage) if (check_errors(stage)) { write_errors(); exit(1); }
+
 typedef enum {
     LOCAL, LLVM, GCC, QBE
 } backend_t;
@@ -103,6 +105,7 @@ static const char *output = "a.out";
 static bool print_ast = false;
 static bool print_ir = false;
 static bool print_backend = false;
+static const char *header_name = NULL;
 
 static const char *status(bool enabled) {
     return enabled ? "installed" : "not installed";
@@ -153,6 +156,7 @@ static void print_help(void) {
     puts("\t--output <path>: change output path (default a.out)");
     puts("\t--target <quad>: specify a target quad `backend-arch-format-type` (default local-native-native-exec)");
     puts("\t--quads: list all available quads");
+    puts("\t--header <name>: output name for C header");
     exit(0);
 }
 
@@ -183,6 +187,7 @@ static const char *get_next(
 #define EXPR "--expr"
 #define TARGET "--target"
 #define OUTPUT "--output"
+#define HEADER "--header"
 
 static int parse_arg(int index, int argc, char **argv) {
     const char *current = argv[index];
@@ -204,10 +209,12 @@ static int parse_arg(int index, int argc, char **argv) {
         const char *next = get_next(TARGET, index, argc, argv, &step);
         if (next) {
             set_target(next);
-            check_errors("target parsing");
+            CHECK_ERRS_EXIT("target parsing");
         }
     } else if (startswith(current, "--quads")) {
         list_quads();
+    } else if (startswith(current, HEADER)) {
+        header_name = get_next(HEADER, index, argc, argv, &step);
     } else if (!startswith(current, "-")) {
         // TODO: there has to be a better way of checking if something 
         // is a file we want to parse
@@ -221,7 +228,7 @@ static int parse_arg(int index, int argc, char **argv) {
 
 static nodes_t *compile_input(void) {
     if (expr) {
-        return compile_string("expr", expr);
+        return compile_string("stdin", expr);
     }
 
     FILE *file = fopen(path, "r");
@@ -236,7 +243,7 @@ static nodes_t *compile_input(void) {
 
 static void llvm_output_unit(unit_t *unit) {
     llvm_context *ctx = llvm_compile(unit);
-    check_errors("llvm compilation");
+    CHECK_ERRS_EXIT("llvm compilation");
 
     if (print_backend) {
         llvm_debug(ctx);
@@ -249,15 +256,15 @@ static void llvm_output_unit(unit_t *unit) {
     }
 
     llvm_output(ctx, file);
-    check_errors("llvm output");
+    CHECK_ERRS_EXIT("llvm output");
 }
 
 static void gcc_output_unit(unit_t *unit) {
     gcc_context *ctx = gcc_compile(unit, print_backend);
-    check_errors("gcc compilation");
+    CHECK_ERRS_EXIT("gcc compilation");
 
     gcc_output(ctx, output);
-    check_errors("gcc output");
+    CHECK_ERRS_EXIT("gcc output");
 }
 
 static void output_unit(unit_t *unit) {
@@ -271,11 +278,46 @@ static void output_unit(unit_t *unit) {
     }
 }
 
+static void emit_headers(unit_t *unit) {
+    if (!header_name)
+        return;
+
+    FILE *headers = fopen(header_name, "w");
+    if (!headers) {
+        reportf("failed to open file `%s`", header_name);
+        return;
+    }
+
+    fprintf(headers,
+        "#ifndef CTU_H\n"
+        "#define CTU_H\n\n"
+        "#ifdef __cplusplus\n"
+        "extern \"C\" {\n"
+        "#endif /* __cplusplus */\n\n"
+        "#include <stdint.h>\n\n"
+    );
+
+    for (size_t i = 0; i < unit->len; i++) {
+        const char *name = unit->flows[i].name;
+        fprintf(headers, "extern int64_t %s(void);\n", name);
+    }
+
+    fprintf(headers,
+        "\n#ifdef __cplusplus\n"
+        "}\n"
+        "#endif /* __cplusplus */\n\n"
+        "#endif /* CTU_H */\n"
+    );
+
+    fclose(headers);
+}
+
 static int compile_main(void) {
     set_debug(stdout);
+    max_errors(20);
 
     nodes_t *nodes = compile_input();
-    check_errors("frontend");
+    CHECK_ERRS_EXIT("frontend");
     
     if (print_ast) {
         for (size_t i = 0; i < nodes->len; i++) {
@@ -285,17 +327,19 @@ static int compile_main(void) {
     }
 
     sema_mod(nodes);
-    check_errors("semantics");
+    CHECK_ERRS_EXIT("semantics");
 
     unit_t unit = transform_ast("main", nodes);
-    check_errors("middle");
+    CHECK_ERRS_EXIT("middle");
 
     if (print_ir) {
         debug_unit(&unit);
     }
 
     output_unit(&unit);
-    check_errors("backend");
+    CHECK_ERRS_EXIT("backend");
+
+    emit_headers(&unit);
 
     return 0;
 }
@@ -327,10 +371,10 @@ int main(int argc, char **argv) {
         print_help();
     }
 
-    check_errors("command line");
+    CHECK_ERRS_EXIT("command line");
 #endif
 
     int res = compile_main();
-    check_errors("compiler");
+    CHECK_ERRS_EXIT("compiler");
     return res;
 }

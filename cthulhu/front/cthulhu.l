@@ -4,11 +4,14 @@
 %option yylineno 8bit nodefault
 %option noyywrap noinput nounput
 %option reentrant bison-bridge bison-locations
+%option never-interactive batch
 
 %{
 #include <string.h>
 #include <stdint.h>
 #include "bison.h"
+
+#include "cthulhu/util/report.h"
 
 #ifdef _MSC_VER
 #   define strdup _strdup
@@ -30,6 +33,10 @@ static char *strdup(const char *str) {
       yylloc->last_line = yylineno;                                  \
       yylloc->last_column = yytext + yyleng - strrchr(yytext, '\n'); \
     }
+
+#define YY_INPUT(buf, result, size) \
+    result = flex_provide(yylloc, yyextra, buf); \
+    if (result <= 0) result = YY_NULL; 
 %}
 
 %%
@@ -55,6 +62,6 @@ static char *strdup(const char *str) {
 "*" { return MUL; }
 "%" { return REM; }
 
-. { fprintf(stderr, "unknown character `%s`\n", yytext); }
+. { scan_reportf(yylloc, yyextra, "unknown character `%s`", yytext); }
 
 %%

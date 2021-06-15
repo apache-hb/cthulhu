@@ -15,15 +15,22 @@ char *format(const char *fmt, ...) {
     va_list args;
 
     va_start(args, fmt);
-    int len = vsnprintf(NULL, 0, fmt, args) + 1;
+    char *out = formatv(fmt, args);
     va_end(args);
+
+    return out;
+}
+
+char *formatv(const char *fmt, va_list args) {
+    va_list again;
+    va_copy(again, args);
+    int len = vsnprintf(NULL, 0, fmt, args) + 1;
 
     char *out = malloc(len);
 
-    va_start(args, fmt);
-    int err = vsnprintf(out, len, fmt, args);
-    va_end(args);
+    int err = vsnprintf(out, len, fmt, again);
 
     ASSERT(err >= 0);
+
     return out;
 }

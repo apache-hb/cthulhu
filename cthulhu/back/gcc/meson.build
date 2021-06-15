@@ -12,6 +12,6 @@ if gccjit.found()
     )
 else
     backends += declare_dependency(
-        link_with : library('gcc-fallback', 'fallback.c')
+        link_with : library('gcc-fallback', 'fallback.c', dependencies : middle)
     )
 endif

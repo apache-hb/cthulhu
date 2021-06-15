@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 /**
  * d: data pointer
@@ -21,3 +22,4 @@
 bool startswith(const char *str, const char *sub);
 
 char *format(const char *fmt, ...);
+char *formatv(const char *fmt, va_list args);

@@ -20,6 +20,8 @@
 int yylex();
 int yyerror();
 
+#define LOC(it) { it->source = x; it->loc = *yylloc; }
+
 %}
 
 %union {
@@ -33,23 +35,23 @@ int yyerror();
     DIGIT "integer literal"
 
 %token
-    ADD "+"
-    SUB "-"
-    DIV "/"
-    MUL "*"
-    REM "%"
+    ADD "`+`"
+    SUB "`-`"
+    DIV "`/`"
+    MUL "`*`"
+    REM "`%`"
 
 %token
-    SEMI ";"
-    QUESTION "?"
-    COLON ":"
+    SEMI "`;`"
+    QUESTION "`?`"
+    COLON "`:`"
 
 %token
-    LPAREN "("
-    RPAREN ")"
+    LPAREN "`(`"
+    RPAREN "`)`"
 
 %token
-    DEF "def"
+    DEF "`def`"
 
 %type<node>
     funcdecl

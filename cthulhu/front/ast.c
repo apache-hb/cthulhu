@@ -12,6 +12,12 @@
 static node_t *ast(node_type_t type) {
     node_t *node = malloc(sizeof(node_t));
     node->type = type;
+    node->source = NULL;
+    node->loc.distance = 0;
+    node->loc.first_line = 0;
+    node->loc.first_column = 0;
+    node->loc.last_line = 0;
+    node->loc.last_column = 0;
     return node;
 }
 
