@@ -12,11 +12,18 @@
 #include "back/llvm/debug.h"
 #include "back/gcc/gcc.h"
 #include "back/qbe/qbe.h"
+#include "back/c/c.h"
 
 #define CHECK_ERRS_EXIT(stage) if (check_errors(stage)) { write_errors(); exit(1); }
 
+#if __x86_64__
+#   define CURRENT_ARCH "x64"
+#else
+#   define CURRENT_ARCH "x86"
+#endif
+
 typedef enum {
-    LOCAL, LLVM, GCC, QBE
+    LOCAL, LLVM, GCC, QBE, C
 } backend_t;
 
 typedef enum {
@@ -33,6 +40,7 @@ static const char *target = NULL;
 #define LLVM_STR "llvm"
 #define GCC_STR "gcc"
 #define QBE_STR "qbe"
+#define C_STR "c"
 
 static const char *set_backend(const char *str) {
     if (startswith(str, AUTO_STR)) {
@@ -57,6 +65,11 @@ static const char *set_backend(const char *str) {
     if (startswith(str, QBE_STR)) {
         backend = QBE;
         return str + strlen(QBE_STR);
+    }
+
+    if (startswith(str, C_STR)) {
+        backend = C;
+        return str + strlen(C_STR);
     }
 
     reportf("unable to parse backend from target `%s`", str);
@@ -97,10 +110,12 @@ static void set_target(const char *str) {
     str = set_arch(str) + 1;
 }
 
+static const char * const default_output = "a.out";
+
 static const char *name = NULL;
 static const char *path = NULL;
 static const char *expr = NULL;
-static const char *output = "a.out";
+static const char *output = default_output;
 
 static bool print_ast = false;
 static bool print_ir = false;
@@ -119,6 +134,11 @@ static void list_quads(void) {
     puts("\t\tformat: elf, coff");
     puts("\t\ttype: exec, static, shared");
     
+    printf("\tc89: %s\n", status(true));
+    puts("\t\tarch: N/A");
+    puts("\t\tformat: N/A");
+    puts("\t\ttype: N/A");
+    
     bool has_llvm = llvm_enabled();
     printf("\tllvm: %s\n", status(has_llvm));
     if (has_llvm) {
@@ -130,7 +150,7 @@ static void list_quads(void) {
     bool has_gcc = gcc_enabled();
     printf("\tgcc: %s\n", status(has_gcc));
     if (has_gcc) {
-        puts("\t\tarch: x86, x64");
+        puts("\t\tarch: " CURRENT_ARCH);
         puts("\t\tformat: elf");
         puts("\t\ttype: exec, static, shared");
     }
@@ -267,10 +287,23 @@ static void gcc_output_unit(unit_t *unit) {
     CHECK_ERRS_EXIT("gcc output");
 }
 
+static void c_output_unit(unit_t *unit) {
+    if (output == default_output) {
+        output = "out.c";
+    }
+    
+    c_ctx_t ctx = c_compile(unit, fopen(output, "w"));
+    CHECK_ERRS_EXIT("c compilation");
+
+    c_output(&ctx);
+    CHECK_ERRS_EXIT("c output");
+}
+
 static void output_unit(unit_t *unit) {
     switch (backend) {
     case LLVM: llvm_output_unit(unit); break;
     case GCC: gcc_output_unit(unit); break;
+    case C: c_output_unit(unit); break;
 
     default:
         reportf("TODO: backend %d\n", backend);
