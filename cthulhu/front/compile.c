@@ -96,7 +96,6 @@ nodes_t *compile_string(const char *path, const char *text) {
 }
 
 void flex_init(YYLTYPE *loc) {
-    loc->distance = 0;
     loc->first_line = 1;
     loc->last_line = 1;
     loc->first_column = 1;
@@ -104,10 +103,9 @@ void flex_init(YYLTYPE *loc) {
 }
 
 typedef struct {
-    char *msg;
-    size_t distance;
-    int64_t line, col, end_col;
-    scanner_t *source;
+    const char *msg;
+    scanner_t *scanner;
+    YYLTYPE loc;
 } error_t;
 
 static size_t max_errs = 20;
@@ -122,98 +120,99 @@ void max_errors(size_t num) {
 int yyerror(YYLTYPE *yylloc, void *scanner, scanner_t *x, const char *msg) {
     (void)scanner;
 
-    scan_reportf(yylloc, x, msg);
+    add_error(msg, x, *yylloc);
 
     return 1;
 }
 
-#define IS_NEWLINE(l) (l == '\n' || l == '\r')
+void add_error(const char *msg, scanner_t *scanner, YYLTYPE loc) {
+    error_t err = { msg, scanner, loc };
 
-static void print_line(scanner_t *x, int64_t line, int64_t col, int64_t end_col, size_t dist) {
-    /* find the begining of this line */
-    size_t begin = dist;
-    char letter = x->text[begin];
-    while (begin && !IS_NEWLINE(letter)) {
-        letter = x->text[begin--];
+    if (err_idx <= max_errs) {
+        errors[err_idx++] = err;
     }
 
-    /* find the end of this line */
-    size_t end = dist;
-    letter = x->text[end];
-    while (letter && !IS_NEWLINE(letter)) {
-        letter = x->text[end++];
-    }
+    add_fail();
+}
 
-    if (!letter) {
-        char buffer;
-        YYLTYPE loc;
-        while (flex_provide(&loc, x, &buffer)) { 
-            if (IS_NEWLINE(buffer))
-                break;
-            end += 1;
+static size_t get_start(scanner_t *scanner, loc_t first_line) {
+    size_t distance = 0;
+    
+    while (first_line > 0) {
+        char c = scanner->text[distance];
+        if (!c) {
+            //reportf("get_start out of range");
+            return distance;
         }
+
+        if (c == '\n') {
+            first_line -= 1;
+        }
+
+        distance += 1;
     }
 
-    char *num = format("%" PRId64 " ", line);
-    size_t len = strlen(num);
+    return distance;
+}
 
-    for (size_t i = 0; i < len; i++) {
+static void underline_location(scanner_t *scanner, YYLTYPE loc) {
+    char *line_str = format("%" PRId64, loc.first_line);
+    size_t line_len = strlen(line_str);
+
+    /* print padding above source */
+    for (size_t i = 0; i < line_len + 2; i++) {
         printf(" ");
     }
     printf("|\n");
 
-    printf("%s| ", num);
-
-    /* print the line */
-    for (size_t i = begin; i < end; i++) {
-        printf("%c", x->text[i]);
+    /* print source line */
+    printf(" %s | ", line_str);
+    /* bison locations start at 1 rather than 0 */
+    size_t start = get_start(scanner, loc.first_line - 1);
+    size_t off = start;
+    char c;
+    while (true) {
+        c = scanner->text[off++];
+        if (!c || c == '\n') {
+            break;
+        }
+        printf("%c", c);
     }
-    printf("\n");
 
-    for (size_t i = 0; i < len; i++) {
+    /* print padding below source */
+    printf("\n");
+    for (size_t i = 0; i < line_len + 2; i++) {
         printf(" ");
     }
     printf("| ");
 
-    for (int64_t i = 0; i < col - 1; i++) {
-        printf(" ");
+    loc_t col = 0;
+
+    /* print underline */
+    while (true) {
+        c = scanner->text[start++];
+        if (!c || c == '\n') {
+            break;
+        } else {
+            if (col++ == loc.first_column - 1)
+                printf("^");
+            else
+                printf("%s", c == '\t' ? "\t" : " ");
+        }
     }
-    printf(COLOUR_CYAN);
-    int64_t dots = end_col - col;
-    while (dots--)
-        printf("^");
-    printf(COLOUR_RESET "\n");
+    printf("\n");
 }
 
 void write_errors(void) {
     for (size_t i = 0; i < err_idx; i++) {
         error_t err = errors[i];
-        
+
         reportf(err.msg);
         fprintf(stderr, " => [%s:%" PRId64 ":%" PRId64 "]\n", 
-            err.source->path, err.line, err.col
+            err.scanner->path, err.loc.first_line, err.loc.first_column
         );
-        print_line(err.source, err.line, err.col, err.end_col, err.distance);
+        underline_location(err.scanner, err.loc);
     }
-}
-
-void scan_reportf(YYLTYPE *where, scanner_t *x, const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    char *msg = formatv(fmt, args);
-    va_end(args);
-
-    error_t err = {
-        msg, where->distance,
-        where->first_line, where->first_column,
-        where->last_column, x
-    };
-
-    if (err_idx < max_errs) {
-        errors[err_idx++] = err;
-    }
-
-    add_fail();
 }
 
 static void add_char(scanner_t *dst, int c) {
@@ -226,11 +225,10 @@ static void add_char(scanner_t *dst, int c) {
     dst->text[dst->len] = 0;
 }
 
-int flex_provide(YYLTYPE *loc, scanner_t *x, char *buf) {
+int flex_provide(scanner_t *x, char *buf) {
     int letter = x->next(x->data);
     buf[0] = letter;
-    if (letter) {
-        loc->distance += 1;
+    if (letter && letter != '\r') {
         add_char(x, letter);
     }
     return !!letter;

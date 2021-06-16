@@ -1,11 +1,14 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "scanner.h"
 
 typedef enum {
     /* literals */
     AST_DIGIT,
     AST_IDENT,
+    AST_BOOL,
 
     /* operations */
     AST_UNARY,
@@ -42,6 +45,9 @@ typedef struct node_t {
         /* AST_DIGIT */
         uint64_t digit;
 
+        /* AST_BOOL */
+        bool b;
+
         /* AST_FUNC */
         struct {
             char *name;
@@ -77,12 +83,13 @@ nodes_t *ast_list(node_t *init);
 nodes_t *ast_empty(void);
 nodes_t *ast_append(nodes_t *list, node_t *item);
 
-node_t *ast_digit(char *text);
-node_t *ast_ident(char *text);
-node_t *ast_binary(node_t *lhs, node_t *rhs, int op);
-node_t *ast_unary(node_t *expr, int op);
-node_t *ast_ternary(node_t *cond, node_t *lhs, node_t *rhs);
-node_t *ast_call(node_t *func);
-node_t *ast_return(node_t *expr);
-node_t *ast_stmts(nodes_t *stmts);
-node_t *ast_func(char *name, node_t *body);
+node_t *ast_digit(scanner_t *x, YYLTYPE loc, char *text, int base);
+node_t *ast_ident(scanner_t *x, YYLTYPE loc, char *text);
+node_t *ast_bool(scanner_t *x, YYLTYPE loc, bool b);
+node_t *ast_binary(scanner_t *x, YYLTYPE loc, node_t *lhs, node_t *rhs, int op);
+node_t *ast_unary(scanner_t *x, YYLTYPE loc, node_t *expr, int op);
+node_t *ast_ternary(scanner_t *x, YYLTYPE loc, node_t *cond, node_t *lhs, node_t *rhs);
+node_t *ast_call(scanner_t *x, YYLTYPE loc, node_t *func);
+node_t *ast_return(scanner_t *x, YYLTYPE loc, node_t *expr);
+node_t *ast_stmts(scanner_t *x, YYLTYPE loc, nodes_t *stmts);
+node_t *ast_func(scanner_t *x, YYLTYPE loc, char *name, node_t *body);

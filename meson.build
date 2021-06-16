@@ -79,7 +79,7 @@ front = declare_dependency(
 )
 
 libsema = library('sema', [ 'cthulhu/sema/sema.c' ],
-    dependencies : util,
+    dependencies : [ util, front ],
     include_directories : '.'
 )
 

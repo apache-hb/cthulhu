@@ -19,16 +19,17 @@ typedef struct {
   size_t size;
 } scanner_t;
 
+typedef int64_t loc_t;
+
 typedef struct YYLTYPE {
-  size_t distance;
-  int64_t first_line;
-  int64_t first_column;
-  int64_t last_line;
-  int64_t last_column;
+  loc_t first_line;
+  loc_t first_column;
+  loc_t last_line;
+  loc_t last_column;
 } YYLTYPE;
 
 #define YYLTYPE_IS_DECLARED 1
 #define YY_USER_INIT flex_init(yylloc);
 void flex_init(YYLTYPE *loc);
 void scan_reportf(YYLTYPE *where, scanner_t *x, const char *fmt, ...);
-int flex_provide(YYLTYPE *loc, scanner_t *x, char *buf);
+int flex_provide(scanner_t *x, char *buf);
