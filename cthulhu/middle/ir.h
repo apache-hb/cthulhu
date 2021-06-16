@@ -64,9 +64,10 @@ typedef enum {
 typedef size_t vreg_t;
 
 typedef enum {
-    VREG,
-    IMM,
-    NAME
+    VREG, /* virtual register */
+    IMM, /* immediate value */
+    BIMM, /* immediate bool */
+    NAME /* a function name */
 } opkind_t;
 
 typedef struct {
@@ -76,6 +77,8 @@ typedef struct {
         vreg_t vreg;
         /* IMM */
         int64_t imm;
+        /* BIMM */
+        bool bimm;
         /* NAME */
         char *name;
     };

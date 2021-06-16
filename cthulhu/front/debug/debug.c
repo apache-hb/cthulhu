@@ -74,12 +74,17 @@ static void debug_stmts(node_t *node) {
     }
 }
 
+static void debug_bool(node_t *node) {
+    debugf("%s", node->b ? "true" : "false");
+}
+
 void debug_ast(node_t *node) {
     debugf("(");
 
     switch (node->type) {
     case AST_DIGIT: debug_digit(node); break;
     case AST_IDENT: debug_ident(node); break;
+    case AST_BOOL: debug_bool(node); break;
     case AST_UNARY: debug_unary(node); break;
     case AST_BINARY: debug_binary(node); break;
     case AST_TERNARY: debug_ternary(node); break;

@@ -6,6 +6,7 @@ static void debug_operand(operand_t op) {
     switch (op.kind) {
     case VREG: debugf("%%%zu", op.vreg); break;
     case IMM: debugf("%ld", op.imm); break;
+    case BIMM: debugf("%s", op.bimm ? "true" : "false"); break;
     case NAME: debugf("`%s`", op.name); break;
     }
 }
@@ -54,40 +55,6 @@ static void debug_select(size_t idx, op_t *op) {
     debug_operand(op->rhs);
     debugf("\n");
 }
-
-#if 0
-static void debug_cond(op_t *op) {
-    debugf("  jmp .%zu when ", op->block);
-    debug_operand(op->cond);
-    debugf("\n");
-}
-
-static void debug_jmp(op_t *op) {
-    debugf("  jmp .%zu\n", op->label);
-}
-
-static void debug_branch(branch_t *it) {
-    debugf("[ ");
-    debug_operand(it->val);
-    debugf(" from .%zu ]", it->block);
-}
-
-static void debug_phi(size_t idx, op_t *op) {
-    debug_index(idx);
-    debugf("phi ");
-    for (size_t i = 0; i < op->len; i++) {
-        if (i) {
-            debugf(", ");
-        }
-        debug_branch(op->branches + i);
-    }
-    debugf("\n");
-}
-
-static void debug_block(size_t idx) {
-    debugf(".%zu:\n", idx);
-}
-#endif
 
 static void debug_label(operand_t op) {
     debugf(".L%zu", op.block);

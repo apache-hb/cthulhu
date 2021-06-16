@@ -20,9 +20,15 @@
 int yylex();
 int yyerror();
 
+#define LOC(n, l) n->loc = l
+
 %}
 
 %union {
+    struct {
+        char *text;
+        int base;
+    } digit;
     char *text;
     node_t *node;
     nodes_t *nodes;
@@ -30,6 +36,8 @@ int yyerror();
 
 %token<text>
     IDENT "identifier"
+
+%token<digit>
     DIGIT "integer literal"
 
 %token
@@ -53,6 +61,8 @@ int yyerror();
 %token
     DEF "`def`"
     RETURN "`return`"
+    BTRUE "`true`"
+    BFALSE "`false`"
 
 %type<node>
     funcdecl stmt
@@ -69,7 +79,7 @@ unit: funcdecl { x->ast = ast_list($1); }
     | unit funcdecl { x->ast = ast_append(x->ast, $2); }
     ;
 
-funcdecl: DEF IDENT LBRACE stmts RBRACE { $$ = ast_func($2, ast_stmts($4)); }
+funcdecl: DEF IDENT LBRACE stmts RBRACE { $$ = ast_func(x, @$, $2, ast_stmts(x, @4, $4)); }
     ;
 
 stmts: %empty { $$ = ast_empty(); }
@@ -77,38 +87,40 @@ stmts: %empty { $$ = ast_empty(); }
     ;
 
 stmt: expr SEMI { $$ = $1; }
-    | LBRACE stmts RBRACE { $$ = ast_stmts($2); }
-    | RETURN SEMI { $$ = ast_return(NULL); }
-    | RETURN expr SEMI { $$ = ast_return($2); }
+    | LBRACE stmts RBRACE { $$ = ast_stmts(x, @$, $2); }
+    | RETURN SEMI { $$ = ast_return(x, @$, NULL); }
+    | RETURN expr SEMI { $$ = ast_return(x, @$, $2); }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }
-    | DIGIT { $$ = ast_digit($1); }
-    | IDENT { $$ = ast_ident($1); }
+    | DIGIT { $$ = ast_digit(x, @$, $1.text, $1.base); }
+    | IDENT { $$ = ast_ident(x, @$, $1); }
+    | BTRUE { $$ = ast_bool(x, @$, true); }
+    | BFALSE { $$ = ast_bool(x, @$, false); }
     ;
 
 postfix: primary { $$ = $1; }
-    | postfix LPAREN RPAREN { $$ = ast_call($1); }
+    | postfix LPAREN RPAREN { $$ = ast_call(x, @$, $1); }
     ;
 
 unary: postfix { $$ = $1; }
-    | ADD unary { $$ = ast_unary($2, ADD); }
-    | SUB unary { $$ = ast_unary($2, SUB); }
+    | ADD unary { $$ = ast_unary(x, @$, $2, ADD); }
+    | SUB unary { $$ = ast_unary(x, @$, $2, SUB); }
     ;
 
 multiplicative: unary { $$ = $1; }
-    | multiplicative MUL unary { $$ = ast_binary($1, $3, MUL); }
-    | multiplicative DIV unary { $$ = ast_binary($1, $3, DIV); }
-    | multiplicative REM unary { $$ = ast_binary($1, $3, REM); }
+    | multiplicative MUL unary { $$ = ast_binary(x, @$, $1, $3, MUL); }
+    | multiplicative DIV unary { $$ = ast_binary(x, @$, $1, $3, DIV); }
+    | multiplicative REM unary { $$ = ast_binary(x, @$, $1, $3, REM); }
     ;
 
 additive: multiplicative { $$ = $1; }
-    | additive ADD multiplicative { $$ = ast_binary($1, $3, ADD); }
-    | additive SUB multiplicative { $$ = ast_binary($1, $3, SUB); }
+    | additive ADD multiplicative { $$ = ast_binary(x, @$, $1, $3, ADD); }
+    | additive SUB multiplicative { $$ = ast_binary(x, @$, $1, $3, SUB); }
     ;
 
 ternary: additive { $$ = $1; }
-    | additive QUESTION expr COLON expr { $$ = ast_ternary($1, $3, $5); }
+    | additive QUESTION expr COLON expr { $$ = ast_ternary(x, @$, $1, $3, $5); }
     ;
 
 expr: ternary { $$ = $1; }

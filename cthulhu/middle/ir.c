@@ -64,6 +64,12 @@ static operand_t create_imm(int64_t imm) {
     return op;
 }
 
+static operand_t create_bool(bool b) {
+    operand_t op = create_operand(BIMM);
+    op.bimm = b;
+    return op;
+}
+
 static operand_t create_name(char *text) {
     ASSERT(text != NULL);
 
@@ -136,8 +142,13 @@ static size_t emit_return(flow_t *flow, node_t *node) {
 
 static bool is_expr_pure(node_t *node) {
     switch (node->type) {
-    case AST_DIGIT: return true;
-    case AST_CALL: return false;
+    case AST_BOOL:
+    case AST_DIGIT: 
+        return true;
+
+    case AST_CALL: 
+        return false;
+
     case AST_UNARY: 
         return is_expr_pure(node->unary.expr);
 
@@ -181,6 +192,7 @@ static int64_t const_eval_binary(node_t *node) {
 static int64_t const_eval_node(node_t *node) {
     switch (node->type) {
     case AST_DIGIT: return node->digit;
+    case AST_BOOL: return node->b ? 1 : 0;
     case AST_BINARY: return const_eval_binary(node);
 
     default:
@@ -396,9 +408,14 @@ static size_t emit_stmts(flow_t *flow, node_t *node) {
     return SIZE_MAX;
 }
 
+static size_t emit_bool(flow_t *flow, node_t *node) {
+    return flow_add(flow, create_unary(OP_VALUE, create_bool(node->b)));
+}
+
 static size_t emit_node(flow_t *flow, node_t *node) {
     switch (node->type) {
     case AST_DIGIT: return emit_digit(flow, node);
+    case AST_BOOL: return emit_bool(flow, node);
     case AST_UNARY: return emit_unary(flow, node);
     case AST_BINARY: return emit_binary(flow, node);
     case AST_TERNARY: return emit_ternary(flow, node);

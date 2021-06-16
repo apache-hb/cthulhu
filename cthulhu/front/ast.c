@@ -9,15 +9,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static node_t *ast(node_type_t type) {
+static node_t *ast(scanner_t *x, YYLTYPE loc, node_type_t type) {
     node_t *node = malloc(sizeof(node_t));
     node->type = type;
-    node->source = NULL;
-    node->loc.distance = 0;
-    node->loc.first_line = 0;
-    node->loc.first_column = 0;
-    node->loc.last_line = 0;
-    node->loc.last_column = 0;
+    node->source = x;
+    node->loc = loc;
     return node;
 }
 
@@ -45,9 +41,9 @@ nodes_t *ast_list(node_t *init) {
     return ast_append(it, init);
 }
 
-node_t *ast_digit(char *text) {
-    node_t *node = ast(AST_DIGIT);
-    uint64_t num = strtoull(text, NULL, 10);
+node_t *ast_digit(scanner_t *x, YYLTYPE loc, char *text, int base) {
+    node_t *node = ast(x, loc, AST_DIGIT);
+    uint64_t num = strtoull(text, NULL, base);
 
     if (num == UINT64_MAX) {
         reportf("integer overflow `%s` > UINT64_MAX", text);
@@ -57,56 +53,62 @@ node_t *ast_digit(char *text) {
     return node;
 }
 
-node_t *ast_ident(char *text) {
-    node_t *node = ast(AST_IDENT);
+node_t *ast_ident(scanner_t *x, YYLTYPE loc, char *text) {
+    node_t *node = ast(x, loc, AST_IDENT);
     node->text = text;
     return node;
 }
 
-node_t *ast_binary(node_t *lhs, node_t *rhs, int op) {
-    node_t *node = ast(AST_BINARY);
+node_t *ast_bool(scanner_t *x, YYLTYPE loc, bool b) {
+    node_t *node = ast(x, loc, AST_BOOL);
+    node->b = b;
+    return node;
+}
+
+node_t *ast_binary(scanner_t *x, YYLTYPE loc, node_t *lhs, node_t *rhs, int op) {
+    node_t *node = ast(x, loc, AST_BINARY);
     node->binary.op = op;
     node->binary.lhs = lhs;
     node->binary.rhs = rhs;
     return node;
 }
 
-node_t *ast_unary(node_t *expr, int op) {
-    node_t *node = ast(AST_UNARY);
+node_t *ast_unary(scanner_t *x, YYLTYPE loc, node_t *expr, int op) {
+    node_t *node = ast(x, loc, AST_UNARY);
     node->unary.op = op;
     node->unary.expr = expr;
     return node;
 }
 
-node_t *ast_ternary(node_t *cond, node_t *lhs, node_t *rhs) {
-    node_t *node = ast(AST_TERNARY);
+node_t *ast_ternary(scanner_t *x, YYLTYPE loc, node_t *cond, node_t *lhs, node_t *rhs) {
+    node_t *node = ast(x, loc, AST_TERNARY);
     node->ternary.cond = cond;
     node->ternary.lhs = lhs;
     node->ternary.rhs = rhs;
     return node;
 }
 
-node_t *ast_call(node_t *func) {
-    node_t *node = ast(AST_CALL);
+node_t *ast_call(scanner_t *x, YYLTYPE loc, node_t *func) {
+    node_t *node = ast(x, loc, AST_CALL);
     node->expr = func;
     return node;
 }
 
-node_t *ast_return(node_t *expr) {
-    node_t *node = ast(AST_RETURN);
+node_t *ast_return(scanner_t *x, YYLTYPE loc, node_t *expr) {
+    node_t *node = ast(x, loc, AST_RETURN);
     node->expr = expr;
     return node;
 }
 
-node_t *ast_func(char *name, node_t *body) {
-    node_t *node = ast(AST_FUNC);
+node_t *ast_func(scanner_t *x, YYLTYPE loc, char *name, node_t *body) {
+    node_t *node = ast(x, loc, AST_FUNC);
     node->func.name = name;
     node->func.body = body;
     return node;
 }
 
-node_t *ast_stmts(nodes_t *stmts) {
-    node_t *node = ast(AST_STMTS);
+node_t *ast_stmts(scanner_t *x, YYLTYPE loc, nodes_t *stmts) {
+    node_t *node = ast(x, loc, AST_STMTS);
     node->stmts = stmts;
     return node;
 }

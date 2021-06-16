@@ -1,6 +1,7 @@
 #include "sema.h"
 
 #include "cthulhu/util/report.h"
+#include "bison.h"
 
 #include <string.h>
 
@@ -32,10 +33,12 @@ static bool types_equal(type_t *lhs, type_t *rhs) {
 
     return false;
 }
+
 static type_t *typeof_node(node_t *node) {
     type_t *lhs, *rhs;
     switch (node->type) {
     case AST_DIGIT: return LONG_TYPE;
+    case AST_BOOL: return BOOL_TYPE;
     case AST_BINARY: 
         lhs = typeof_node(node->binary.lhs);
         rhs = typeof_node(node->binary.rhs);
@@ -61,7 +64,7 @@ static bool is_callable(node_t *node) {
 
 static bool is_bool_convertible(node_t *node) {
     switch (node->type) {
-    case AST_DIGIT: 
+    case AST_DIGIT: case AST_BOOL:
         return true;
     case AST_BINARY: 
         return is_bool_convertible(node->binary.lhs)
@@ -95,12 +98,48 @@ static char *pretty_print(node_t *node) {
     }
 }
 
+static bool is_integer_type(type_t *type) {
+    return types_equal(type, LONG_TYPE);
+}
+
+static void sema_node(node_t *node);
+
+static void sema_binary(node_t *node) {
+    type_t *lhs = typeof_node(node->binary.lhs),
+           *rhs = typeof_node(node->binary.rhs);
+
+    bool ok = true;
+
+    switch (node->binary.op) {
+    case ADD: case SUB: case DIV: 
+    case MUL: case REM:
+        if (!is_integer_type(lhs) || !is_integer_type(rhs)) {
+            reportf("binary math must be performed on integer types");
+            ok = false;
+        }
+        break;
+    
+    default:
+        ok = false;
+        reportf("sema_binary(node->binary.op = %d)", node->binary.op);
+        break;
+    }
+
+    if (ok) {
+        sema_node(node->binary.lhs);
+        sema_node(node->binary.rhs);
+    }
+    
+}
+
 static void sema_node(node_t *node) {
     size_t i = 0;
 
     switch (node->type) {
-    case AST_DIGIT: break;
-    case AST_IDENT: break;
+    case AST_DIGIT: 
+    case AST_IDENT: 
+    case AST_BOOL:
+        break;
 
     case AST_CALL: 
         if (!is_callable(node->expr))
@@ -115,6 +154,7 @@ static void sema_node(node_t *node) {
         break;
 
     case AST_BINARY:
+        sema_binary(node);
         if (!node_types_equal(node->binary.lhs, node->binary.rhs))
             reportf("binary expression must have the same type on both sides");
 
@@ -133,6 +173,9 @@ static void sema_node(node_t *node) {
 
         if (!is_bool_convertible(node->ternary.cond))
             reportf("ternary condition must be convertible to a boolean");
+        
+        if (!node_types_equal(node->ternary.lhs, node->ternary.rhs))
+            reportf("both sides of ternary must be the same type");
         break;
 
     case AST_STMTS:
