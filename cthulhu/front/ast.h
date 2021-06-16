@@ -15,6 +15,7 @@ typedef enum {
 
     /* statements */
     AST_RETURN,
+    AST_STMTS,
 
     /* decls */
     AST_FUNC
@@ -66,10 +67,14 @@ typedef struct node_t {
 
         /* AST_RETURN, AST_CALL */
         node_t *expr;
+
+        /* AST_STMTS */
+        nodes_t *stmts;
     };
 } node_t;
 
 nodes_t *ast_list(node_t *init);
+nodes_t *ast_empty(void);
 nodes_t *ast_append(nodes_t *list, node_t *item);
 
 node_t *ast_digit(char *text);
@@ -79,4 +84,5 @@ node_t *ast_unary(node_t *expr, int op);
 node_t *ast_ternary(node_t *cond, node_t *lhs, node_t *rhs);
 node_t *ast_call(node_t *func);
 node_t *ast_return(node_t *expr);
+node_t *ast_stmts(nodes_t *stmts);
 node_t *ast_func(char *name, node_t *body);
