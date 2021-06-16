@@ -64,6 +64,16 @@ static void debug_func(node_t *node) {
     debug_ast(node->func.body);
 }
 
+static void debug_stmts(node_t *node) {
+    debugf("stmts ");
+    for (size_t i = 0; i < node->stmts->len; i++) {
+        if (i) {
+            debugf(" ");
+        }
+        debug_ast(node->stmts->data + i);
+    }
+}
+
 void debug_ast(node_t *node) {
     debugf("(");
 
@@ -76,8 +86,7 @@ void debug_ast(node_t *node) {
     case AST_CALL: debug_call(node); break;
     case AST_RETURN: debug_return(node); break;
     case AST_FUNC: debug_func(node); break;
-
-    default: debugf("ERROR"); break;
+    case AST_STMTS: debug_stmts(node); break;
     }
 
     debugf(")");

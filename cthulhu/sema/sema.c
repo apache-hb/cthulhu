@@ -25,27 +25,34 @@ static type_t *LONG_TYPE = NULL;
 static type_t *BOOL_TYPE = NULL;
 static type_t *VOID_TYPE = NULL;
 
+static bool types_equal(type_t *lhs, type_t *rhs) {
+    if (lhs->kind == BUILTIN && rhs->kind == BUILTIN) {
+        return lhs->builtin == rhs->builtin;
+    }
+
+    return false;
+}
 static type_t *typeof_node(node_t *node) {
+    type_t *lhs, *rhs;
     switch (node->type) {
     case AST_DIGIT: return LONG_TYPE;
+    case AST_BINARY: 
+        lhs = typeof_node(node->binary.lhs);
+        rhs = typeof_node(node->binary.rhs);
+        if (!types_equal(lhs, rhs))
+            reportf("both sides of a binary expression must have the same type");
+        return lhs;
     default:
         reportf("typeof_node(node->type = %d)", node->type);
         return VOID_TYPE;
     }
 }
 
-static bool types_equal(node_t *l, node_t *r) {
+static bool node_types_equal(node_t *l, node_t *r) {
     type_t *lhs = typeof_node(l),
            *rhs = typeof_node(r);
 
-    if (lhs->kind != rhs->kind)
-        return false;
-
-    if (lhs->kind == BUILTIN) {
-        return lhs->builtin == rhs->builtin;
-    } else {
-        return false;
-    }
+    return types_equal(lhs, rhs);
 }
 
 static bool is_callable(node_t *node) {
@@ -89,6 +96,8 @@ static char *pretty_print(node_t *node) {
 }
 
 static void sema_node(node_t *node) {
+    size_t i = 0;
+
     switch (node->type) {
     case AST_DIGIT: break;
     case AST_IDENT: break;
@@ -106,7 +115,7 @@ static void sema_node(node_t *node) {
         break;
 
     case AST_BINARY:
-        if (!types_equal(node->binary.lhs, node->binary.rhs))
+        if (!node_types_equal(node->binary.lhs, node->binary.rhs))
             reportf("binary expression must have the same type on both sides");
 
         sema_node(node->binary.lhs);
@@ -126,8 +135,13 @@ static void sema_node(node_t *node) {
             reportf("ternary condition must be convertible to a boolean");
         break;
 
-    default:
-        reportf("sema_node(node->type = %d)", node->type);
+    case AST_STMTS:
+        for (i = 0; i < node->stmts->len; i++)
+            sema_node(node->stmts->data + i);
+        break;
+
+    case AST_FUNC:
+        reportf("sema_node(AST_FUNC)");
         break;
     }
 }

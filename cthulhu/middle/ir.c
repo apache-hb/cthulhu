@@ -387,6 +387,15 @@ static size_t emit_call(flow_t *flow, node_t *node) {
     return flow_add(flow, op);
 }
 
+static size_t emit_stmts(flow_t *flow, node_t *node) {
+    for (size_t i = 0; i < node->stmts->len; i++) {
+        emit_node(flow, node->stmts->data + i);
+    }
+
+    /* the result of a statement should never be used */
+    return SIZE_MAX;
+}
+
 static size_t emit_node(flow_t *flow, node_t *node) {
     switch (node->type) {
     case AST_DIGIT: return emit_digit(flow, node);
@@ -395,11 +404,16 @@ static size_t emit_node(flow_t *flow, node_t *node) {
     case AST_TERNARY: return emit_ternary(flow, node);
     case AST_RETURN: return emit_return(flow, node);
     case AST_CALL: return emit_call(flow, node);
+    case AST_STMTS: return emit_stmts(flow, node);
 
-    default:
-        reportf("emit_node(node->type = %d)\n", node->type);
-        return 0;
+    case AST_IDENT:
+    case AST_FUNC:
+        reportf("emit_node(node->type = %d)", node->type);
+        return SIZE_MAX;
     }
+
+    reportf("unreachable");
+    return SIZE_MAX;
 }
 
 static flow_t transform_flow(node_t *node) {

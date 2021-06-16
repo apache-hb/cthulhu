@@ -20,8 +20,6 @@
 int yylex();
 int yyerror();
 
-#define LOC(it) { it->source = x; it->loc = *yylloc; }
-
 %}
 
 %union {
@@ -49,16 +47,19 @@ int yyerror();
 %token
     LPAREN "`(`"
     RPAREN "`)`"
+    LBRACE "`{`"
+    RBRACE "`}`"
 
 %token
     DEF "`def`"
+    RETURN "`return`"
 
 %type<node>
-    funcdecl
+    funcdecl stmt
     primary expr additive multiplicative unary ternary postfix
 
 %type<nodes>
-    unit
+    unit stmts
 
 %start unit
 
@@ -68,7 +69,17 @@ unit: funcdecl { x->ast = ast_list($1); }
     | unit funcdecl { x->ast = ast_append(x->ast, $2); }
     ;
 
-funcdecl: DEF IDENT expr SEMI { $$ = ast_func($2, ast_return($3)); }
+funcdecl: DEF IDENT LBRACE stmts RBRACE { $$ = ast_func($2, ast_stmts($4)); }
+    ;
+
+stmts: %empty { $$ = ast_empty(); }
+    | stmts stmt { $$ = ast_append($1, $2); }
+    ;
+
+stmt: expr SEMI { $$ = $1; }
+    | LBRACE stmts RBRACE { $$ = ast_stmts($2); }
+    | RETURN SEMI { $$ = ast_return(NULL); }
+    | RETURN expr SEMI { $$ = ast_return($2); }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }

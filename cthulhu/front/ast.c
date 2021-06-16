@@ -29,6 +29,10 @@ static nodes_t *nodes(size_t init) {
     return it;
 }
 
+nodes_t *ast_empty(void) {
+    return nodes(4);
+}
+
 nodes_t *ast_append(nodes_t *list, node_t *item) {
     ENSURE_SIZE(list->data, list->len, list->size, sizeof(node_t), 4);
     memcpy(list->data + list->len, item, sizeof(node_t));
@@ -98,5 +102,11 @@ node_t *ast_func(char *name, node_t *body) {
     node_t *node = ast(AST_FUNC);
     node->func.name = name;
     node->func.body = body;
+    return node;
+}
+
+node_t *ast_stmts(nodes_t *stmts) {
+    node_t *node = ast(AST_STMTS);
+    node->stmts = stmts;
     return node;
 }
