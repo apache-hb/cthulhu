@@ -9,6 +9,8 @@ typedef struct {
     const char *msg;
     const char *note;
 
+    node_t *source;
+
     scanner_t *scanner;
     YYLTYPE loc;
 
@@ -20,6 +22,19 @@ static size_t max_errs = 20;
 static size_t err_idx = 0;
 static error_t *errors = NULL;
 
+static bool error_already_reported(size_t idx) {
+    node_t *node = errors[idx].source;
+
+    if (!node)
+        return false;
+    
+    for (size_t i = 0; i < idx; i++)
+        if (errors[i].source == node)
+            return true;
+
+    return false;
+}
+
 void max_errors(size_t num) {
     max_errs = num;
     errors = malloc(sizeof(error_t) * num);
@@ -28,13 +43,13 @@ void max_errors(size_t num) {
 int yyerror(YYLTYPE *yylloc, void *scanner, scanner_t *x, const char *msg) {
     (void)scanner;
 
-    add_error(strdup(msg), x, *yylloc);
+    add_lexer_error(strdup(msg), x, *yylloc);
 
     return 1;
 }
 
-static msg_idx_t add_err(const char *msg, scanner_t *scanner, YYLTYPE loc, bool fatal) {
-    error_t err = { msg, NULL, scanner, loc, fatal };
+static msg_idx_t add_err(const char *msg, node_t *source, scanner_t *scanner, YYLTYPE loc, bool fatal) {
+    error_t err = { msg, NULL, source, scanner, loc, fatal };
 
     if (err_idx <= max_errs) {
         errors[err_idx++] = err;
@@ -47,12 +62,16 @@ static msg_idx_t add_err(const char *msg, scanner_t *scanner, YYLTYPE loc, bool 
     return err_idx - 1;
 }
 
-msg_idx_t add_error(const char *msg, scanner_t *scanner, YYLTYPE loc) {
-    return add_err(msg, scanner, loc, true);
+msg_idx_t add_lexer_error(const char *msg, scanner_t *scanner, YYLTYPE loc) {
+    return add_err(msg, NULL, scanner, loc, true);
 }
 
-msg_idx_t add_warn(const char *msg, scanner_t *scanner, YYLTYPE loc) {
-    return add_err(msg, scanner, loc, false);
+msg_idx_t add_error(const char *msg, node_t *node) {
+    return add_err(msg, node, node->source, node->loc, true);
+}
+
+msg_idx_t add_warn(const char *msg, node_t *node) {
+    return add_err(msg, node, node->source, node->loc, false);
 }
 
 void add_note(msg_idx_t id, const char *note) {
@@ -65,7 +84,6 @@ static size_t get_start(scanner_t *scanner, loc_t first_line) {
     while (first_line > 0) {
         char c = scanner->text[distance];
         if (!c) {
-            //reportf("get_start out of range");
             return distance;
         }
 
@@ -147,6 +165,9 @@ bool write_messages(const char *stage) {
     size_t fatal = 0;
 
     for (size_t i = 0; i < err_idx; i++) {
+        if (error_already_reported(i))
+            continue;
+
         error_t err = errors[i];
 
         if (err.fatal) {

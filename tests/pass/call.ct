@@ -1,0 +1,7 @@
+def main: long {
+    return x();
+}
+
+def x: int {
+    return 100;
+}

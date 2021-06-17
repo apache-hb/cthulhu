@@ -5,7 +5,8 @@
 static void debug_operand(operand_t op) {
     switch (op.kind) {
     case VREG: debugf("%%%zu", op.vreg); break;
-    case IMM_L: debugf("%ld", op.imm_l); break;
+    case IMM_L: debugf("long %ld", op.imm_l); break;
+    case IMM_I: debugf("int %d", op.imm_i); break;
     case BIMM: debugf("%s", op.bimm ? "true" : "false"); break;
     case NAME: debugf("`%s`", op.name); break;
     case NONE: debugf("void"); break;

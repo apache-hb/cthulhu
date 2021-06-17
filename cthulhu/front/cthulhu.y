@@ -51,6 +51,7 @@ int yyerror();
     SEMI "`;`"
     QUESTION "`?`"
     COLON "`:`"
+    ASSIGN "`=`"
 
 %token
     LPAREN "`(`"
@@ -59,6 +60,7 @@ int yyerror();
     RBRACE "`}`"
 
 %token
+    FINAL "`final`"
     DEF "`def`"
     RETURN "`return`"
     BTRUE "`true`"
@@ -66,7 +68,7 @@ int yyerror();
 
 %type<node>
     funcdecl /* decls */
-    stmt /* stmts */
+    stmt var /* stmts */
     type /* types */
     primary expr additive multiplicative unary ternary postfix /* exprs */
 
@@ -81,7 +83,7 @@ unit: funcdecl { x->ast = ast_list($1); }
     | unit funcdecl { x->ast = ast_append(x->ast, $2); }
     ;
 
-funcdecl: DEF IDENT type LBRACE stmts RBRACE { $$ = ast_func(x, @$, $2, $3, ast_stmts(x, @4, $5)); }
+funcdecl: DEF IDENT[n] COLON type[r] LBRACE stmts[b] RBRACE { $$ = ast_func(x, @$, $n, $r, ast_stmts(x, @4, $b)); }
     ;
 
 type: IDENT { $$ = ast_typename(x, @$, $1); }
@@ -95,6 +97,10 @@ stmt: expr SEMI { $$ = $1; }
     | LBRACE stmts RBRACE { $$ = ast_stmts(x, @$, $2); }
     | RETURN SEMI { $$ = ast_return(x, @$, NULL); }
     | RETURN expr SEMI { $$ = ast_return(x, @$, $2); }
+    | var { $$ = $1; }
+    ;
+
+var: FINAL IDENT[n] ASSIGN expr[v] SEMI { $$ = ast_var(x, @$, $n, $v); }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }
