@@ -3,6 +3,7 @@ def main long {
 }
 
 def a void {
+    25 ? true : false;
     return;
 }
 

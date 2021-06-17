@@ -14,7 +14,7 @@
 #include "back/qbe/qbe.h"
 #include "back/c/c.h"
 
-#define CHECK_ERRS_EXIT(stage) if (check_errors(stage)) { write_errors(); exit(1); }
+#define CHECK_ERRS_EXIT(stage) if (check_errors(stage)) { exit(1); }
 
 #if __x86_64__
 #   define CURRENT_ARCH "x64"
@@ -350,7 +350,7 @@ static int compile_main(void) {
     max_errors(20);
 
     nodes_t *nodes = compile_input();
-    CHECK_ERRS_EXIT("frontend");
+    write_messages("frontend");
     
     if (print_ast) {
         for (size_t i = 0; i < nodes->len; i++) {
@@ -360,7 +360,7 @@ static int compile_main(void) {
     }
 
     sema_mod(nodes);
-    CHECK_ERRS_EXIT("semantics");
+    write_messages("semantics");
 
     unit_t unit = transform_ast("main", nodes);
     CHECK_ERRS_EXIT("middle");
