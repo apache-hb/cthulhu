@@ -12,6 +12,7 @@ typedef struct {
     gcc_jit_context *gcc;
 
     gcc_jit_type *lltype; /* long type */
+    gcc_jit_type *itype; /* int type */
     gcc_jit_type *btype; /* bool type */
     gcc_jit_type *vtype; /* void type */
     
@@ -69,6 +70,7 @@ static gcc_jit_rvalue *imm_rvalue_bool(path_t *ctx, bool imm) {
 static gcc_jit_type *operand_type(gcc_t *ctx, opkind_t kind) {
     switch (kind) {
     case IMM_L: return ctx->lltype;
+    case IMM_I: return ctx->itype;
     case BIMM: return ctx->btype;
     case NONE: return ctx->vtype;
 
@@ -253,12 +255,25 @@ static void gcc_compile_call(path_t *path, op_t *op, size_t idx) {
     path->locals[idx] = call;
 }
 
+static void gcc_compile_cast(path_t *path, op_t *op, size_t idx) {
+    gcc_jit_rvalue *value = operand_value(path, op->expr);
+    gcc_jit_rvalue *self = gcc_jit_context_new_cast(
+        path->parent->gcc, NULL, value,
+        operand_type(path->parent, op->cast)
+    );
+    path->locals[idx] = self;
+}
+
 static void gcc_compile_op(path_t *path, size_t idx) {
     op_t *op = flow_at(path->flow, idx);
 
     switch (op->kind) {
     case OP_VALUE:
         gcc_compile_value(path, op, idx);
+        break;
+
+    case OP_CAST:
+        gcc_compile_cast(path, op, idx);
         break;
 
     case OP_ABS:
@@ -384,6 +399,7 @@ gcc_context *gcc_compile(unit_t *unit, bool debug) {
     ctx->lltype = gcc_jit_context_get_type(gcc, GCC_JIT_TYPE_LONG_LONG);
     ctx->btype = gcc_jit_context_get_type(gcc, GCC_JIT_TYPE_BOOL);
     ctx->vtype = gcc_jit_context_get_type(gcc, GCC_JIT_TYPE_VOID);
+    ctx->itype = gcc_jit_context_get_type(gcc, GCC_JIT_TYPE_INT);
 
     for (size_t i = 0; i < unit->len; i++) {
         gcc_create_flow(ctx, unit->flows + i, i);

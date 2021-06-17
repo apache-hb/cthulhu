@@ -10,11 +10,12 @@ typedef enum {
     AST_IDENT,
     AST_BOOL,
 
-    /* operations */
+    /* expressions */
     AST_UNARY,
     AST_BINARY,
     AST_TERNARY,
     AST_CALL,
+    AST_CAST,
 
     /* statements */
     AST_RETURN,
@@ -24,7 +25,8 @@ typedef enum {
     AST_TYPENAME,
 
     /* decls */
-    AST_FUNC
+    AST_FUNC,
+    AST_VAR
 } node_type_t;
 
 typedef struct node_t node_t;
@@ -75,6 +77,16 @@ typedef struct node_t {
             node_t *cond, *lhs, *rhs;
         } ternary;
 
+        struct {
+            char *name;
+            node_t *init;
+        } var;
+
+        /* AST_CAST */
+        struct {
+            node_t *expr, type;
+        } cast;
+
         /* AST_RETURN, AST_CALL */
         node_t *expr;
 
@@ -101,3 +113,4 @@ node_t *ast_return(scanner_t *x, YYLTYPE loc, node_t *expr);
 node_t *ast_stmts(scanner_t *x, YYLTYPE loc, nodes_t *stmts);
 
 node_t *ast_func(scanner_t *x, YYLTYPE loc, char *name, node_t *result, node_t *body);
+node_t *ast_var(scanner_t *x, YYLTYPE loc, char *name, node_t *init);

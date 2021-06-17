@@ -119,3 +119,10 @@ node_t *ast_typename(scanner_t *x, YYLTYPE loc, char *name) {
     node->text = name;
     return node;
 }
+
+node_t *ast_var(scanner_t *x, YYLTYPE loc, char *name, node_t *init) {
+    node_t *node = ast(x, loc, AST_VAR);
+    node->var.name = name;
+    node->var.init = init;
+    return node;
+}

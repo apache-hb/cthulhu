@@ -21,6 +21,9 @@ typedef enum {
     /* %vreg = op */
     OP_VALUE,
 
+    /* %vreg = (type)op */
+    OP_CAST,
+
     /* %vreg = call op */
     OP_CALL,
 
@@ -66,6 +69,7 @@ typedef size_t vreg_t;
 typedef enum {
     VREG, /* virtual register */
     IMM_L, /* long immediate value */
+    IMM_I, /* integer immediate value */
     BIMM, /* immediate bool */
     NAME, /* a function name */
     NONE /* void value */
@@ -77,11 +81,13 @@ typedef struct {
         /* VREG */
         vreg_t vreg;
         /* IMM_L */
-        int64_t imm_l;
+        long long imm_l;
+        /* IMM_I */
+        int imm_i;
         /* BIMM */
         bool bimm;
         /* NAME */
-        char *name;
+        const char *name;
     };
     /* the block this operand is live in */
     size_t block;
@@ -97,7 +103,11 @@ typedef struct {
 
     union {
         /* OP_ABS, OP_NEG, OP_VALUE, OP_RET, OP_CALL */
-        operand_t expr;
+        struct {
+            operand_t expr;
+            /* OP_CAST */
+            opkind_t cast;
+        };
 
         /* OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_REM */
         struct {

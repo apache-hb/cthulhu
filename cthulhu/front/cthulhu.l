@@ -34,6 +34,7 @@
 "//".* ;
 
 "def" { return DEF; }
+"final" { return FINAL; }
 "return" { return RETURN; }
 "true" { return BTRUE; }
 "false" { return BFALSE; }
@@ -48,6 +49,7 @@
 "{" { return LBRACE; }
 "}" { return RBRACE; }
 
+"=" { return ASSIGN; }
 ":" { return COLON; }
 "?" { return QUESTION; }
 ";" { return SEMI; }
@@ -58,6 +60,6 @@
 "*" { return MUL; }
 "%" { return REM; }
 
-. { add_error(format("unknown character `%s`", yytext), yyextra, *yylloc); }
+. { add_lexer_error(format("unknown character `%s`", yytext), yyextra, *yylloc); }
 
 %%

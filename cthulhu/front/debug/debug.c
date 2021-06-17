@@ -84,6 +84,11 @@ static void debug_typename(node_t *node) {
     debugf("typename `%s`", node->text);
 }
 
+static void debug_var(node_t *node) {
+    debugf("var %s ", node->var.name);
+    debug_ast(node->var.init);
+}
+
 void debug_ast(node_t *node) {
     debugf("(");
 
@@ -99,6 +104,7 @@ void debug_ast(node_t *node) {
     case AST_FUNC: debug_func(node); break;
     case AST_STMTS: debug_stmts(node); break;
     case AST_TYPENAME: debug_typename(node); break;
+    case AST_VAR: debug_var(node); break;
     }
 
     debugf(")");

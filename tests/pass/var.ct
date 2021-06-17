@@ -1,0 +1,5 @@
+def main: long {
+    final x = 20;
+    final y = true;
+    return y + x;
+}

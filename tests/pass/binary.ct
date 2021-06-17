@@ -1,4 +1,5 @@
-def main long {
-    5 + 6 + 7;
-    return 100;
+def main void {
+    5 + true;
+    false + 10;
+    return true ? 20 + 10 : false;
 }
