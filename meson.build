@@ -124,4 +124,5 @@ if not meson.is_subproject()
     executable('test-runner', 'tools/test.c',
         c_args : '-D_CRT_SECURE_NO_WARNINGS'
     )
+    subdir('tests')
 endif

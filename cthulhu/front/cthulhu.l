@@ -13,17 +13,6 @@
 #include "cthulhu/front/scanner.h"
 #include "cthulhu/util/report.h"
 
-#ifdef _MSC_VER
-#   define strdup _strdup
-#else
-static char *strdup(const char *str) {
-  size_t len = strlen(str) + 1;
-  char *out = malloc(len);
-  memcpy(out, str, len);
-  return out;
-}
-#endif
-
 #define YY_USER_ACTION                                               \
     yylloc->first_line = yylloc->last_line;                          \
     yylloc->first_column = yylloc->last_column;                      \

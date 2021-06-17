@@ -23,3 +23,11 @@ bool startswith(const char *str, const char *sub);
 
 char *format(const char *fmt, ...);
 char *formatv(const char *fmt, va_list args);
+
+#ifndef __cplusplus
+#   ifdef _MSC_VER
+#       define strdup _strdup
+#   else
+char *strdup(const char *str);
+#   endif
+#endif

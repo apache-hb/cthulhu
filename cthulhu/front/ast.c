@@ -100,9 +100,10 @@ node_t *ast_return(scanner_t *x, YYLTYPE loc, node_t *expr) {
     return node;
 }
 
-node_t *ast_func(scanner_t *x, YYLTYPE loc, char *name, node_t *body) {
+node_t *ast_func(scanner_t *x, YYLTYPE loc, char *name, node_t *result, node_t *body) {
     node_t *node = ast(x, loc, AST_FUNC);
     node->func.name = name;
+    node->func.result = result;
     node->func.body = body;
     return node;
 }
@@ -110,5 +111,11 @@ node_t *ast_func(scanner_t *x, YYLTYPE loc, char *name, node_t *body) {
 node_t *ast_stmts(scanner_t *x, YYLTYPE loc, nodes_t *stmts) {
     node_t *node = ast(x, loc, AST_STMTS);
     node->stmts = stmts;
+    return node;
+}
+
+node_t *ast_typename(scanner_t *x, YYLTYPE loc, char *name) {
+    node_t *node = ast(x, loc, AST_TYPENAME);
+    node->text = name;
     return node;
 }

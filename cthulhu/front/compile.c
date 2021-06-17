@@ -120,7 +120,7 @@ void max_errors(size_t num) {
 int yyerror(YYLTYPE *yylloc, void *scanner, scanner_t *x, const char *msg) {
     (void)scanner;
 
-    add_error(msg, x, *yylloc);
+    add_error(strdup(msg), x, *yylloc);
 
     return 1;
 }

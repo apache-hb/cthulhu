@@ -10,7 +10,11 @@ typedef struct path_t path_t;
 
 typedef struct {
     gcc_jit_context *gcc;
-    gcc_jit_type *lltype;
+
+    gcc_jit_type *lltype; /* long type */
+    gcc_jit_type *btype; /* bool type */
+    gcc_jit_type *vtype; /* void type */
+    
     unit_t *unit;
     path_t **paths;
 } gcc_t;
@@ -50,18 +54,41 @@ static gcc_jit_block *get_block(path_t *path, size_t idx) {
     return path->blocks[idx];
 }
 
-static gcc_jit_rvalue *imm_rvalue(path_t *ctx, int64_t imm) {
+static gcc_jit_rvalue *imm_rvalue_long(path_t *ctx, int64_t imm) {
     return gcc_jit_context_new_rvalue_from_long(
         ctx->parent->gcc, ctx->parent->lltype, imm
     );
 }
 
+static gcc_jit_rvalue *imm_rvalue_bool(path_t *ctx, bool imm) {
+    return gcc_jit_context_new_rvalue_from_long(
+        ctx->parent->gcc, ctx->parent->btype, imm
+    );
+}
+
+static gcc_jit_type *operand_type(gcc_t *ctx, opkind_t kind) {
+    switch (kind) {
+    case IMM_L: return ctx->lltype;
+    case BIMM: return ctx->btype;
+    case NONE: return ctx->vtype;
+
+    default:
+        reportf("operand_type(kind = %d)", kind);
+        return NULL;
+    }
+}
+
 static gcc_jit_rvalue *operand_value(path_t *ctx, operand_t op) {
     switch (op.kind) {
-    case IMM: 
-        return imm_rvalue(ctx, op.imm);
+    case IMM_L:
+        return imm_rvalue_long(ctx, op.imm_l);
+    case BIMM:
+        return imm_rvalue_bool(ctx, op.bimm);
     case VREG:
         return ctx->locals[op.vreg];
+    case NONE:
+        reportf("operand_value(NONE)");
+        return NULL;
     default:
         reportf("operand_value(op.kind = %d)", op.kind);
         return NULL;
@@ -72,7 +99,7 @@ static void gcc_compile_value(path_t *path, op_t *op, size_t idx) {
     gcc_jit_rvalue *value = operand_value(path, op->expr);
 
     gcc_jit_lvalue *self = gcc_jit_function_new_local(
-        path->func, NULL, path->parent->lltype, 
+        path->func, NULL, operand_type(path->parent, op->expr.kind), 
         format("local-%zu", idx)
     );
 
@@ -88,17 +115,27 @@ static void gcc_select_block(path_t *path, size_t idx) {
     path->current = get_block(path, idx);
     gcc_jit_block *now = cursor(path);
 
-    printf("select block %zu\n", idx);
     if (!path->ended) {
         gcc_jit_block_end_with_jump(last, NULL, now);
         path->ended = true;
     }
 }
 
+static bool is_void_op(operand_t op) {
+    return op.kind == NONE;
+}
+
 static void gcc_compile_ret(path_t *path, op_t *op) {
-    gcc_jit_block_end_with_return(
-        cursor(path), NULL, operand_value(path, op->expr)
-    );
+    operand_t ret = op->expr;
+    gcc_jit_block *block = cursor(path);
+
+    if (is_void_op(ret)) {
+        gcc_jit_block_end_with_void_return(block, NULL);
+    } else {
+        gcc_jit_block_end_with_return(
+            block, NULL, operand_value(path, ret)
+        );
+    }
 }
 
 static op_t *flow_at(flow_t *flow, size_t idx) {
@@ -108,7 +145,8 @@ static op_t *flow_at(flow_t *flow, size_t idx) {
 static void gcc_compile_unary(path_t *path, op_t *op, size_t idx, enum gcc_jit_unary_op unary) {
     path->locals[idx] = gcc_jit_context_new_unary_op(
         path->parent->gcc, NULL, unary,
-        path->parent->lltype, operand_value(path, op->expr)
+        path->parent->lltype, 
+        operand_value(path, op->expr)
     );
 }
 
@@ -167,7 +205,7 @@ static void gcc_compile_select(path_t *path, op_t *op, size_t idx) {
     gcc_jit_rvalue *cmp = gcc_jit_context_new_comparison(path->parent->gcc, NULL, 
         GCC_JIT_COMPARISON_NE, 
         operand_value(path, op->cond),
-        imm_rvalue(path, 0)
+        imm_rvalue_long(path, 0)
     );
 
     gcc_jit_block_end_with_conditional(start, NULL, 
@@ -183,11 +221,10 @@ static void gcc_compile_select(path_t *path, op_t *op, size_t idx) {
 }
 
 static void gcc_compile_branch(path_t *path, op_t *op) {
-    printf("branch\n");
     gcc_jit_rvalue *cmp = gcc_jit_context_new_comparison(path->parent->gcc, NULL, 
         GCC_JIT_COMPARISON_NE, 
         operand_value(path, op->cond),
-        imm_rvalue(path, 0)
+        imm_rvalue_long(path, 0)
     );
     gcc_jit_block_end_with_conditional(cursor(path), NULL,
         cmp,
@@ -197,7 +234,6 @@ static void gcc_compile_branch(path_t *path, op_t *op) {
 }
 
 static void gcc_compile_jump(path_t *path, op_t *op) {
-    printf("compile jump\n");
     gcc_jit_block_end_with_jump(cursor(path), NULL,
         get_block(path, op->label)
     );
@@ -291,7 +327,8 @@ static void gcc_create_flow(gcc_t *ctx, flow_t *flow, size_t i) {
 
     gcc_jit_function *func = gcc_jit_context_new_function(gcc, NULL,
         GCC_JIT_FUNCTION_EXPORTED,
-        ctx->lltype, flow->name,
+        operand_type(ctx, flow->result), 
+        flow->name,
         0, NULL, 0
     );
 
@@ -343,7 +380,10 @@ gcc_context *gcc_compile(unit_t *unit, bool debug) {
     ctx->gcc = gcc;
     ctx->unit = unit;
     ctx->paths = malloc(sizeof(path_t*) * unit->len);
+
     ctx->lltype = gcc_jit_context_get_type(gcc, GCC_JIT_TYPE_LONG_LONG);
+    ctx->btype = gcc_jit_context_get_type(gcc, GCC_JIT_TYPE_BOOL);
+    ctx->vtype = gcc_jit_context_get_type(gcc, GCC_JIT_TYPE_VOID);
 
     for (size_t i = 0; i < unit->len; i++) {
         gcc_create_flow(ctx, unit->flows + i, i);

@@ -65,9 +65,10 @@ typedef size_t vreg_t;
 
 typedef enum {
     VREG, /* virtual register */
-    IMM, /* immediate value */
+    IMM_L, /* long immediate value */
     BIMM, /* immediate bool */
-    NAME /* a function name */
+    NAME, /* a function name */
+    NONE /* void value */
 } opkind_t;
 
 typedef struct {
@@ -75,8 +76,8 @@ typedef struct {
     union {
         /* VREG */
         vreg_t vreg;
-        /* IMM */
-        int64_t imm;
+        /* IMM_L */
+        int64_t imm_l;
         /* BIMM */
         bool bimm;
         /* NAME */
@@ -116,6 +117,9 @@ typedef struct {
 /* the control flow of a single function */
 typedef struct {
     const char *name;
+
+    /* return type */
+    opkind_t result;
 
     op_t *ops;
     size_t size;

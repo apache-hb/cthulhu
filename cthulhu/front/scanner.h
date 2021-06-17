@@ -30,6 +30,6 @@ typedef struct YYLTYPE {
 
 #define YYLTYPE_IS_DECLARED 1
 #define YY_USER_INIT flex_init(yylloc);
+
 void flex_init(YYLTYPE *loc);
-void scan_reportf(YYLTYPE *where, scanner_t *x, const char *fmt, ...);
 int flex_provide(scanner_t *x, char *buf);

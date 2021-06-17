@@ -1,0 +1,15 @@
+import std::types(u64, u8);
+
+struct Padded {
+    field: u64,
+    lol: u8
+}
+
+def main {
+    final len = 256;
+    var dst = Padded[len];
+    var src = Padded[len](0xFFFF, 0);
+
+    // memcpy(dst, src, len * sizeof(Padded));
+    dst <- src : len;
+}
