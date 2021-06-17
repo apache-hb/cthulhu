@@ -58,6 +58,7 @@ parse = custom_target('parse',
 src = [ 
     'cthulhu/front/ast.c', 
     'cthulhu/front/compile.c',
+    'cthulhu/front/message.c',
     'cthulhu/front/debug/debug.c'
 ]
 

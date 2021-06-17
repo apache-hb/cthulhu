@@ -26,18 +26,27 @@ void add_fail(void) {
     total++;
 }
 
+static void reportv(bool fail, const char *prefix, const char *fmt, va_list args) {
+    if (fail)
+        add_fail();
+
+    fprintf(stderr, "%s", prefix);
+    vfprintf(stderr, fmt, args);
+    fprintf(stderr, "\n");
+}
+
 void reportf(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    reportv(fmt, args);
+    reportv(true, COLOUR_RED "error: " COLOUR_RESET, fmt, args);
     va_end(args);
 }
 
-void reportv(const char *fmt, va_list args) {
-    add_fail();
-    fprintf(stderr, COLOUR_RED "error: " COLOUR_RESET);
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
+void warnf(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    reportv(false, COLOUR_YELLOW "warning: " COLOUR_RESET, fmt, args);
+    va_end(args);
 }
 
 bool check_errors(const char *stage) {

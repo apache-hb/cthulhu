@@ -13,7 +13,12 @@ typedef struct {
     const char *name;
 
     union {
-        enum { LONG, BOOL, VOID } builtin;
+        enum { 
+            LONG, 
+            BOOL, 
+            VOID, /* unit type */
+            POISON /* used for error reporting */
+        } builtin;
     };
 } type_t;
 
@@ -156,6 +161,7 @@ static void sema_binary(node_t *node) {
 
 static void sema_node(node_t *node) {
     size_t i = 0;
+    msg_idx_t msg;
 
     switch (node->type) {
     case AST_DIGIT: 
@@ -199,28 +205,20 @@ static void sema_node(node_t *node) {
         }
         break;
 
-    /*
+    /** 
+     * if for some reason a user decides to use a ternary as a statement
+     * we handle that by typechecking it
+     * (why someone would discard the result of a ternary is beyond me, but they can)
+     */
     case AST_TERNARY:
-        sema_node(node->ternary.cond);
-        sema_node(node->ternary.lhs);
-        sema_node(node->ternary.rhs);
-
-        if (!is_bool_convertible(node->ternary.cond))
-            add_error("ternary condition must be convertible to a boolean", node->ternary.cond->source, node->ternary.cond->loc);
-        
-        if (!node_types_equal(node->ternary.lhs, node->ternary.rhs))
-            add_error("both sides of ternary must be the same type", node->source, node->loc);
-        
+        typeof_node(node);
+        msg = add_warn("discarding result of ternary expression", node->source, node->loc);
+        add_note(msg, "assign this expression to a value to suppress this warning");
         break;
-        */
 
     case AST_STMTS:
         for (i = 0; i < node->stmts->len; i++)
             sema_node(node->stmts->data + i);
-        break;
-
-    case AST_TERNARY:
-        reportf("sema_node(AST_TERNARY)");
         break;
 
     case AST_FUNC:
