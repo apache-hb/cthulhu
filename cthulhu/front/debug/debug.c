@@ -61,6 +61,8 @@ static void debug_return(node_t *node) {
 
 static void debug_func(node_t *node) {
     debugf("define %s ", node->func.name);
+    debug_ast(node->func.result);
+    debugf(" ");
     debug_ast(node->func.body);
 }
 
@@ -78,6 +80,10 @@ static void debug_bool(node_t *node) {
     debugf("%s", node->b ? "true" : "false");
 }
 
+static void debug_typename(node_t *node) {
+    debugf("typename `%s`", node->text);
+}
+
 void debug_ast(node_t *node) {
     debugf("(");
 
@@ -92,6 +98,7 @@ void debug_ast(node_t *node) {
     case AST_RETURN: debug_return(node); break;
     case AST_FUNC: debug_func(node); break;
     case AST_STMTS: debug_stmts(node); break;
+    case AST_TYPENAME: debug_typename(node); break;
     }
 
     debugf(")");

@@ -17,8 +17,8 @@ static void unit_add(unit_t *unit, flow_t flow) {
     unit->flows[unit->len++] = flow;
 }
 
-static flow_t flow_new(const char *name, size_t size) {
-    flow_t flow = { name, malloc(sizeof(op_t) * size), size, 0 };
+static flow_t flow_new(const char *name, opkind_t result, size_t size) {
+    flow_t flow = { name, result, malloc(sizeof(op_t) * size), size, 0 };
     return flow;
 }
 
@@ -58,9 +58,10 @@ static operand_t create_vreg(vreg_t vreg) {
     return op;
 }
 
-static operand_t create_imm(int64_t imm) {
-    operand_t op = create_operand(IMM);
-    op.imm = imm;
+/* TODO: IMM_L */
+static operand_t create_imm_l(int64_t imm) {
+    operand_t op = create_operand(IMM_L);
+    op.imm_l = imm;
     return op;
 }
 
@@ -86,7 +87,7 @@ static operand_t create_phi_branch(operand_t value, vreg_t block) {
 static size_t emit_node(flow_t *flow, node_t *node);
 
 static size_t emit_digit(flow_t *flow, node_t *node) {
-    op_t op = create_unary(OP_VALUE, create_imm(node->digit));
+    op_t op = create_unary(OP_VALUE, create_imm_l(node->digit));
     return flow_add(flow, op);
 }
 
@@ -133,9 +134,11 @@ static size_t emit_binary(flow_t *flow, node_t *node) {
 }
 
 static size_t emit_return(flow_t *flow, node_t *node) {
-    op_t op = create_unary(OP_RET,
-        create_vreg(emit_node(flow, node->expr))
-    );
+    operand_t ret = !!node->expr
+        ? create_vreg(emit_node(flow, node->expr))
+        : create_operand(NONE);
+
+    op_t op = create_unary(OP_RET, ret);
     
     return flow_add(flow, op);
 }
@@ -208,8 +211,8 @@ static size_t emit_block(flow_t *flow) {
 static size_t emit_branch(flow_t *flow, size_t cond) {
     op_t op = { OP_BRANCH, { 
         .cond = create_vreg(cond),
-        .lhs = create_imm(SIZE_MAX),
-        .rhs = create_imm(SIZE_MAX)
+        .lhs = create_imm_l(SIZE_MAX),
+        .rhs = create_imm_l(SIZE_MAX)
     }};
     return flow_add(flow, op);
 }
@@ -274,7 +277,7 @@ static size_t emit_ternary_impure(flow_t *flow,
         false_block = emit_block(flow);
         false_operand = create_vreg(emit_node(flow, rhs));
         false_escape = emit_jump(flow);
-        true_operand = create_imm(const_eval_node(lhs));
+        true_operand = create_imm_l(const_eval_node(lhs));
     } else if (rhs_pure) {
         /**
          * if the false path (rhs) is pure then emit
@@ -292,7 +295,7 @@ static size_t emit_ternary_impure(flow_t *flow,
         true_block = emit_block(flow);
         true_operand = create_vreg(emit_node(flow, lhs));
         true_escape = emit_jump(flow);
-        false_operand = create_imm(const_eval_node(rhs));
+        false_operand = create_imm_l(const_eval_node(rhs));
     } else {
         /**
          * if both sides are impure then we emit the full if
@@ -378,8 +381,8 @@ static size_t emit_ternary(flow_t *flow, node_t *node) {
 
         op_t op = { OP_SELECT, {
             .cond = create_vreg(cond_node),
-            .lhs = create_imm(lhs_val),
-            .rhs = create_imm(rhs_val)
+            .lhs = create_imm_l(lhs_val),
+            .rhs = create_imm_l(rhs_val)
         }};
 
         return flow_add(flow, op);
@@ -423,6 +426,7 @@ static size_t emit_node(flow_t *flow, node_t *node) {
     case AST_CALL: return emit_call(flow, node);
     case AST_STMTS: return emit_stmts(flow, node);
 
+    case AST_TYPENAME:
     case AST_IDENT:
     case AST_FUNC:
         reportf("emit_node(node->type = %d)", node->type);
@@ -433,8 +437,23 @@ static size_t emit_node(flow_t *flow, node_t *node) {
     return SIZE_MAX;
 }
 
+static opkind_t get_result_type(char *name) {
+    if (strcmp(name, "void") == 0)
+        return NONE;
+    else if (strcmp(name, "long") == 0)
+        return IMM_L;
+    else if (strcmp(name, "bool") == 0)
+        return BIMM;
+
+    reportf("get_result_type(%s)", name);
+    return NONE;
+}
+
 static flow_t transform_flow(node_t *node) {
-    flow_t flow = flow_new(node->func.name, 32);
+    flow_t flow = flow_new(node->func.name, 
+        get_result_type(node->func.result->text), 
+        32
+    );
     
     emit_node(&flow, node->func.body);
 

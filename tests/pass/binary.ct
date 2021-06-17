@@ -1,0 +1,4 @@
+def main long {
+    5 + 6 + 7;
+    return 100;
+}

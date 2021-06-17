@@ -65,8 +65,10 @@ int yyerror();
     BFALSE "`false`"
 
 %type<node>
-    funcdecl stmt
-    primary expr additive multiplicative unary ternary postfix
+    funcdecl /* decls */
+    stmt /* stmts */
+    type /* types */
+    primary expr additive multiplicative unary ternary postfix /* exprs */
 
 %type<nodes>
     unit stmts
@@ -79,7 +81,10 @@ unit: funcdecl { x->ast = ast_list($1); }
     | unit funcdecl { x->ast = ast_append(x->ast, $2); }
     ;
 
-funcdecl: DEF IDENT LBRACE stmts RBRACE { $$ = ast_func(x, @$, $2, ast_stmts(x, @4, $4)); }
+funcdecl: DEF IDENT type LBRACE stmts RBRACE { $$ = ast_func(x, @$, $2, $3, ast_stmts(x, @4, $5)); }
+    ;
+
+type: IDENT { $$ = ast_typename(x, @$, $1); }
     ;
 
 stmts: %empty { $$ = ast_empty(); }

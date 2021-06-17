@@ -1,0 +1,11 @@
+def main long {
+    return 20;
+}
+
+def a void {
+    return;
+}
+
+def b bool {
+    return 1 ? true : false;
+}

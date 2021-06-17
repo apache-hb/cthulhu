@@ -20,6 +20,9 @@ typedef enum {
     AST_RETURN,
     AST_STMTS,
 
+    /* types */
+    AST_TYPENAME,
+
     /* decls */
     AST_FUNC
 } node_type_t;
@@ -39,7 +42,7 @@ typedef struct node_t {
     YYLTYPE loc;
 
     union {
-        /* AST_IDENT */
+        /* AST_IDENT, AST_TYPENAME */
         char *text;
 
         /* AST_DIGIT */
@@ -50,8 +53,9 @@ typedef struct node_t {
 
         /* AST_FUNC */
         struct {
-            char *name;
-            node_t *body;
+            char *name; /* name of function */
+            node_t *result; /* return type */
+            node_t *body; /* body */
         } func;
 
         /* AST_BINARY */
@@ -90,6 +94,10 @@ node_t *ast_binary(scanner_t *x, YYLTYPE loc, node_t *lhs, node_t *rhs, int op);
 node_t *ast_unary(scanner_t *x, YYLTYPE loc, node_t *expr, int op);
 node_t *ast_ternary(scanner_t *x, YYLTYPE loc, node_t *cond, node_t *lhs, node_t *rhs);
 node_t *ast_call(scanner_t *x, YYLTYPE loc, node_t *func);
+
+node_t *ast_typename(scanner_t *x, YYLTYPE loc, char *name);
+
 node_t *ast_return(scanner_t *x, YYLTYPE loc, node_t *expr);
 node_t *ast_stmts(scanner_t *x, YYLTYPE loc, nodes_t *stmts);
-node_t *ast_func(scanner_t *x, YYLTYPE loc, char *name, node_t *body);
+
+node_t *ast_func(scanner_t *x, YYLTYPE loc, char *name, node_t *result, node_t *body);

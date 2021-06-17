@@ -97,8 +97,12 @@ struct UnitContext {
     size_t len() const { return unit->len; }
 };
 
-static Value *get_imm(UnitContext *ctx, int64_t imm) {
+static Value *get_imm_long(UnitContext *ctx, int64_t imm) {
     return ConstantInt::get(ctx->llvm, APInt(64, imm, true));
+}
+
+static Value *get_imm_bool(UnitContext *ctx, bool imm) {
+    return ConstantInt::get(ctx->llvm, APInt(1, imm, true));
 }
 
 static Function *get_func(UnitContext *ctx, const char *name) {
@@ -109,8 +113,11 @@ Value *FlowContext::get_value(operand_t op) {
     Value *out = nullptr;
     
     switch (op.kind) {
-    case IMM: 
-        out = get_imm(parent, op.imm);
+    case IMM_L: 
+        out = get_imm_long(parent, op.imm_l);
+        break;
+    case BIMM:
+        out = get_imm_bool(parent, op.bimm);
         break;
     case VREG: 
         out = get_vreg(op.vreg); 
@@ -198,12 +205,21 @@ static void llvm_compile_call(FlowContext *ctx, op_t *op, size_t idx) {
 static void llvm_compile_select(FlowContext *ctx, op_t *op, size_t idx) {
     Value *cmp = ctx->parent->builder->CreateICmpNE(
         ctx->get_value(op->cond), 
-        get_imm(ctx->parent, 0)
+        get_imm_long(ctx->parent, 0)
     );
     ctx->vregs[idx] = ctx->parent->builder->CreateSelect(cmp,
         ctx->get_value(op->lhs),
         ctx->get_value(op->rhs)
     );
+}
+
+static void llvm_compile_return(FlowContext *ctx, op_t *op) {
+    if (op->expr.kind == NONE) {
+        ctx->parent->builder->CreateRetVoid();
+    } else {
+        Value *expr = ctx->get_value(op->expr);
+        ctx->parent->builder->CreateRet(expr);
+    }
 }
 
 static void llvm_compile_opcode(FlowContext *ctx, size_t idx) {
@@ -247,27 +263,9 @@ static void llvm_compile_opcode(FlowContext *ctx, size_t idx) {
 
     case OP_NEG:
         llvm_compile_unary(ctx, op, idx, [ctx](auto *builder, auto *val) {
-            return builder->CreateMul(val, get_imm(ctx->parent, -1));
+            return builder->CreateMul(val, get_imm_long(ctx->parent, -1));
         });
         break;
-
-#if 0
-    case OP_BLOCK:
-        llvm_compile_block(ctx, idx);
-        break;
-
-    case OP_PHI:
-        llvm_compile_phi(ctx, op, idx);
-        break;
-
-    case OP_COND:
-        llvm_compile_cond(ctx, op);
-        break;
-
-    case OP_JMP:
-        llvm_compile_jmp(ctx, op);
-        break;
-#endif
 
     case OP_PHI:
         llvm_compile_phi(ctx, op, idx);
@@ -294,8 +292,7 @@ static void llvm_compile_opcode(FlowContext *ctx, size_t idx) {
         break;
 
     case OP_RET:
-        expr = ctx->get_value(op->expr);
-        ctx->parent->builder->CreateRet(expr);
+        llvm_compile_return(ctx, op);
         break;
 
     default:
