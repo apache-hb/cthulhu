@@ -11,3 +11,4 @@ build/
 !*.ct
 !*.md
 !meson_options.txt
+.vscode/
