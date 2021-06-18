@@ -60,6 +60,7 @@ int yyerror();
     RBRACE "`}`"
 
 %token
+    AS "`as`"
     FINAL "`final`"
     DEF "`def`"
     RETURN "`return`"
@@ -111,6 +112,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     ;
 
 postfix: primary { $$ = $1; }
+    | postfix AS type { $$ = ast_cast(x, @$, $1, $3); }
     | postfix LPAREN RPAREN { $$ = ast_call(x, @$, $1); }
     ;
 

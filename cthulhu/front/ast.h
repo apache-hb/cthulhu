@@ -5,6 +5,26 @@
 #include "scanner.h"
 
 typedef enum {
+    INTEGER, BOOLEAN, VOID
+} builtin_type_t;
+
+typedef struct {
+    builtin_type_t real;
+    size_t width;
+} builtin_t;
+
+typedef struct type_t {
+    enum { BUILTIN, CALLABLE, POISON } kind;
+    const char *name;
+    struct node_t *node;
+
+    union {
+        builtin_t builtin;
+        struct type_t *result;
+    };
+} type_t;
+
+typedef enum {
     /* literals */
     AST_DIGIT,
     AST_IDENT,
@@ -42,6 +62,8 @@ typedef struct node_t {
 
     scanner_t *source;
     YYLTYPE loc;
+
+    type_t *typeof;
 
     union {
         /* AST_IDENT, AST_TYPENAME */
@@ -84,7 +106,7 @@ typedef struct node_t {
 
         /* AST_CAST */
         struct {
-            node_t *expr, type;
+            node_t *expr, *type;
         } cast;
 
         /* AST_RETURN, AST_CALL */
@@ -102,10 +124,12 @@ nodes_t *ast_append(nodes_t *list, node_t *item);
 node_t *ast_digit(scanner_t *x, YYLTYPE loc, char *text, int base);
 node_t *ast_ident(scanner_t *x, YYLTYPE loc, char *text);
 node_t *ast_bool(scanner_t *x, YYLTYPE loc, bool b);
+
 node_t *ast_binary(scanner_t *x, YYLTYPE loc, node_t *lhs, node_t *rhs, int op);
 node_t *ast_unary(scanner_t *x, YYLTYPE loc, node_t *expr, int op);
 node_t *ast_ternary(scanner_t *x, YYLTYPE loc, node_t *cond, node_t *lhs, node_t *rhs);
 node_t *ast_call(scanner_t *x, YYLTYPE loc, node_t *func);
+node_t *ast_cast(scanner_t *x, YYLTYPE loc, node_t *expr, node_t *type);
 
 node_t *ast_typename(scanner_t *x, YYLTYPE loc, char *name);
 

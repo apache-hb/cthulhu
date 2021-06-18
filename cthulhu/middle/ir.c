@@ -129,6 +129,7 @@ static operand_t create_phi_branch(operand_t value, vreg_t block) {
 }
 
 static size_t emit_node(flow_gen_t *gen, node_t *node);
+static operand_t emit_operand(flow_gen_t *gen, node_t *node);
 
 static size_t emit_digit(flow_gen_t *gen, node_t *node) {
     op_t op = create_unary(OP_VALUE, create_imm_i(node->digit));
@@ -148,7 +149,7 @@ static int get_unary(int op) {
 
 static size_t emit_unary(flow_gen_t *gen, node_t *node) {
     op_t op = create_unary(get_unary(node->unary.op),
-        create_vreg(emit_node(gen, node->unary.expr))
+        emit_operand(gen, node->unary.expr)
     );
 
     return flow_gen_add(gen, op);
@@ -170,8 +171,8 @@ static int get_binary(int op) {
 
 static size_t emit_binary(flow_gen_t *gen, node_t *node) {
     op_t op = create_binary(get_binary(node->binary.op),
-        create_vreg(emit_node(gen, node->binary.lhs)),
-        create_vreg(emit_node(gen, node->binary.rhs))
+        emit_operand(gen, node->binary.lhs),
+        emit_operand(gen, node->binary.rhs)
     );
 
     return flow_gen_add(gen, op);
@@ -179,7 +180,7 @@ static size_t emit_binary(flow_gen_t *gen, node_t *node) {
 
 static size_t emit_return(flow_gen_t *gen, node_t *node) {
     operand_t ret = !!node->expr
-        ? create_vreg(emit_node(gen, node->expr))
+        ? emit_operand(gen, node->expr)
         : create_operand(NONE);
 
     op_t op = create_unary(OP_RET, ret);
@@ -320,7 +321,7 @@ static size_t emit_ternary_impure(flow_gen_t *gen,
          */
         true_block = entry_block;
         false_block = emit_block(gen);
-        false_operand = create_vreg(emit_node(gen, rhs));
+        false_operand = emit_operand(gen, rhs);
         false_escape = emit_jump(gen);
         true_operand = const_eval_node(lhs);
     } else if (rhs_pure) {
@@ -338,7 +339,7 @@ static size_t emit_ternary_impure(flow_gen_t *gen,
          */
         false_block = entry_block;
         true_block = emit_block(gen);
-        true_operand = create_vreg(emit_node(gen, lhs));
+        true_operand = emit_operand(gen, lhs);
         true_escape = emit_jump(gen);
         false_operand = const_eval_node(rhs);
     } else {
@@ -358,11 +359,11 @@ static size_t emit_ternary_impure(flow_gen_t *gen,
          *   %3 = phi [ .true %1 ], [ .false %2 ]
          */
         true_block = emit_block(gen);
-        true_operand = create_vreg(emit_node(gen, lhs));
+        true_operand = emit_operand(gen, lhs);
         true_escape = emit_jump(gen);
 
         false_block = emit_block(gen);
-        false_operand = create_vreg(emit_node(gen, rhs));
+        false_operand = emit_operand(gen, rhs);
         false_escape = emit_jump(gen);
     }
 
@@ -469,15 +470,6 @@ static size_t emit_var(flow_gen_t *gen, node_t *node) {
     return init;
 }
 
-static size_t emit_ident(flow_gen_t *gen, node_t *node) {
-    operand_t op = get_var(gen, node->text);
-    if (op.kind == VREG) {
-        return op.vreg;
-    }
-    reportf("failed to resolve ident %s", node->text);
-    return SIZE_MAX;
-}
-
 static size_t emit_node(flow_gen_t *gen, node_t *node) {
     /* TODO: we need to figure out when to cast */
     switch (node->type) {
@@ -490,8 +482,9 @@ static size_t emit_node(flow_gen_t *gen, node_t *node) {
     case AST_CALL: return emit_call(gen, node);
     case AST_STMTS: return emit_stmts(gen, node);
     case AST_VAR: return emit_var(gen, node);
-    case AST_IDENT: return emit_ident(gen, node);
 
+    case AST_IDENT:
+    case AST_CAST:
     case AST_TYPENAME:
     case AST_FUNC:
         reportf("emit_node(node->type = %d)", node->type);
@@ -500,6 +493,13 @@ static size_t emit_node(flow_gen_t *gen, node_t *node) {
 
     reportf("unreachable");
     return SIZE_MAX;
+}
+
+static operand_t emit_operand(flow_gen_t *gen, node_t *node) {
+    if (node->type == AST_IDENT)
+        return get_var(gen, node->text);
+
+    return create_vreg(emit_node(gen, node));
 }
 
 static opkind_t get_result_type(char *name) {

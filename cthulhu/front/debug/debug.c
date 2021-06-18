@@ -89,6 +89,13 @@ static void debug_var(node_t *node) {
     debug_ast(node->var.init);
 }
 
+static void debug_cast(node_t *node) {
+    debugf("cast ");
+    debug_ast(node->cast.expr);
+    debugf(" to ");
+    debug_ast(node->cast.type);
+}
+
 void debug_ast(node_t *node) {
     debugf("(");
 
@@ -105,6 +112,7 @@ void debug_ast(node_t *node) {
     case AST_STMTS: debug_stmts(node); break;
     case AST_TYPENAME: debug_typename(node); break;
     case AST_VAR: debug_var(node); break;
+    case AST_CAST: debug_cast(node); break;
     }
 
     debugf(")");

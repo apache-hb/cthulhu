@@ -3,5 +3,5 @@ def main: long {
 }
 
 def x: int {
-    return 100;
+    return 100 as long;
 }

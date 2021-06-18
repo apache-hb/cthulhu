@@ -1,0 +1,8 @@
+def main: long {
+    final y = x;
+    return y();
+}
+
+def x: long {
+    return 200;
+}

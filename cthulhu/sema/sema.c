@@ -8,26 +8,6 @@
 
 static nodes_t *ctx = NULL;
 
-typedef enum {
-    INTEGER, BOOLEAN, VOID
-} builtin_type_t;
-
-typedef struct {
-    builtin_type_t real;
-    size_t width;
-} builtin_t;
-
-typedef struct type_t {
-    enum { BUILTIN, CALLABLE, POISON } kind;
-    const char *name;
-    node_t *node;
-
-    union {
-        builtin_t builtin;
-        struct type_t *result;
-    };
-} type_t;
-
 typedef struct {
     const char *name;
     node_t *node;
@@ -110,22 +90,6 @@ static bool is_integer_type(type_t *type) {
 static bool is_bool_type(type_t *type) {
     return is_builtin_type(type, BOOLEAN);
 }
-
-static bool convertible_to(type_t *to, type_t *from) {
-    if (types_equal(to, from))
-        return true;
-
-    if (is_integer_type(to) && is_integer_type(from)) {
-        return to->builtin.width >= from->builtin.width;
-    } 
-    
-    if (types_equal(to, BOOL_TYPE)) {
-        return is_integer_type(from) || is_bool_type(from);
-    }
-
-    return false;
-}
-
 static type_t *get_typename(node_t *node) {
     const char *name = node->text;
 
@@ -165,10 +129,40 @@ static const char *nameof_type(type_t *type) {
     }
 }
 
+static bool convertible_to(node_t *node, type_t *to, type_t *from) {
+    if (types_equal(to, from))
+        return true;
+
+    if (is_integer_type(to) && is_integer_type(from)) {
+        bool result = to->builtin.width >= from->builtin.width;
+        
+        if (!result && node) {
+            const char *lhs_name = nameof_type(to),
+                       *rhs_name = nameof_type(from);
+            msg_idx_t id = add_error(
+                format("cannot perfom narrowing conversion from %s to %s", rhs_name, lhs_name),
+                node
+            );
+            add_note(id, format("%s is %zu bytes wide, %s is %zu bytes wide",
+                lhs_name, to->builtin.width,
+                rhs_name, from->builtin.width
+            ));
+        }
+
+        return result;
+    } 
+    
+    if (types_equal(to, BOOL_TYPE)) {
+        return is_integer_type(from) || is_bool_type(from);
+    }
+
+    return false;
+}
+
 static type_t *typeof_node(sema_t *sema, node_t *node);
 
 static bool is_type_bool_convertible(type_t *type) {
-    return convertible_to(BOOL_TYPE, type);
+    return convertible_to(NULL, BOOL_TYPE, type);
 }
 
 static type_t *sema_binary(node_t *node, int op, type_t *lhs, type_t *rhs) {
@@ -230,21 +224,29 @@ static type_t *typeof_node(sema_t *sema, node_t *node) {
     type_t *lhs, *rhs, *cond, *type;
     msg_idx_t id;
     node_t *it;
+    type_t *out;
+
+    /* short circuit for performance */
+    if (node->typeof)
+        return node->typeof;
+
     const char *msg, *lhs_name, *rhs_name;
     switch (node->type) {
-    case AST_DIGIT: return INT_TYPE;
-    case AST_BOOL: return BOOL_TYPE;
+    case AST_DIGIT: out = INT_TYPE; break;
+    case AST_BOOL: out = BOOL_TYPE; break;
     case AST_IDENT:
         it = find_decl(sema, node->text);
         if (!it) {
             add_error(format("could not resolve `%s`", node->text), node);
             return poison(format("unresolved symbol `%s`", node->text), node);
         }
-        return typeof_node(sema, it);
+        out = typeof_node(sema, it);
+        break;
     case AST_BINARY: 
         lhs = typeof_node(sema, node->binary.lhs);
         rhs = typeof_node(sema, node->binary.rhs);
-        return sema_binary(node, node->binary.op, lhs, rhs);
+        out = sema_binary(node, node->binary.op, lhs, rhs);
+        break;
     case AST_TERNARY:
         cond = typeof_node(sema, node->ternary.cond);
         lhs = typeof_node(sema, node->ternary.lhs);
@@ -256,31 +258,50 @@ static type_t *typeof_node(sema_t *sema, node_t *node) {
             id = add_error("both sides of ternary must be the same type", node);
             msg = format("%s and %s are incompatible ternary leafs", lhs_name, rhs_name);
             add_note(id, msg);
-            return poison(format("either `%s` or `%s`", lhs_name, rhs_name), node);
+            out = poison(format("either `%s` or `%s`", lhs_name, rhs_name), node);
         }
 
         if (!is_type_bool_convertible(cond)) {
             add_error("ternary condition must be convertible to a boolean", node->ternary.cond);
         }
 
-        return lhs;
+        out = lhs;
+        break;
     case AST_TYPENAME:
-        return get_typename(node);
+        out = get_typename(node);
+        break;
     case AST_FUNC:
-        return new_callable(node->func.name, typeof_node(sema, node->func.result));
+        out = new_callable(node->func.name, typeof_node(sema, node->func.result));
+        break;
     case AST_CALL:
         type = typeof_node(sema, node->expr);
         if (!type_is_callable(type)) {
             add_error("cannot call non-invokable expression", node);
             return poison("a malformed function call", node);
         }
-        return type->result;
+        out = type->result;
+        break;
     case AST_VAR:
-        return typeof_node(sema, node->var.init);
+        out = typeof_node(sema, node->var.init);
+        break;
+    case AST_CAST:
+        out = typeof_node(sema, node->cast.type);
+        type = typeof_node(sema, node->cast.expr);
+        if (!convertible_to(node, out, type)) {
+            add_error(
+                format("cannot cast %s to %s", nameof_type(type), nameof_type(out)), 
+                node
+            );
+        }
+        break;
     default:
         reportf("typeof_node(node->type = %d)", node->type);
-        return VOID_TYPE;
+        out = VOID_TYPE;
+        break;
     }
+
+    node->typeof = out;
+    return out;
 }
 
 static void sema_node(sema_t *sema, node_t *node) {
@@ -302,17 +323,6 @@ static void sema_node(sema_t *sema, node_t *node) {
         if (!type_is_callable(type)) {
             add_error(format("%s is not callable", nameof_type(type)), node->expr);
         }
-    /*
-        type = find_name(sema, node->expr);
-
-        if (!is_callable(node->expr)) {
-            add_error(format("type `%s` is not callable", typeof_node(node->expr)->name), node);
-            break;
-        }
-
-        if (!find_name(sema, node->expr->text)) {
-            add_error(format("`%s` not declared", node->expr->text), node->expr);
-        }*/
         break;
 
     case AST_UNARY:
@@ -332,13 +342,16 @@ static void sema_node(sema_t *sema, node_t *node) {
             }
         } else {
             type = typeof_node(sema, node->expr);
-            if (!convertible_to(current_return_type, type)) {
+            if (!convertible_to(node, current_return_type, type)) {
                 current_name = nameof_type(current_return_type);
                 ret_name = nameof_type(type);
                 msg = add_error("type mismatch in return", node);
-                add_note(msg,
-                    format("function `%s` returns `%s` but %s was provided", current_func->func.name, current_name, ret_name)
-                );
+                add_note(msg, format("function `%s` returns `%s` but %s was provided", 
+                    current_func->func.name,
+                    current_name, ret_name
+                ));
+            } else {
+                node->expr = ast_cast(node->source, node->loc, node, current_func->func.result);
             }
         }
         break;
@@ -371,6 +384,10 @@ static void sema_node(sema_t *sema, node_t *node) {
     case AST_VAR:
         add_decl(sema, node->var.name, node->var.init);
         typeof_node(sema, node->var.init);
+        break;
+
+    case AST_CAST:
+        typeof_node(sema, node);
         break;
     }
 }
