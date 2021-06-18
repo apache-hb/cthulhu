@@ -14,6 +14,7 @@ static node_t *ast(scanner_t *x, YYLTYPE loc, node_type_t type) {
     node->type = type;
     node->source = x;
     node->loc = loc;
+    node->typeof = NULL;
     return node;
 }
 
@@ -124,5 +125,12 @@ node_t *ast_var(scanner_t *x, YYLTYPE loc, char *name, node_t *init) {
     node_t *node = ast(x, loc, AST_VAR);
     node->var.name = name;
     node->var.init = init;
+    return node;
+}
+
+node_t *ast_cast(scanner_t *x, YYLTYPE loc, node_t *expr, node_t *type) {
+    node_t *node = ast(x, loc, AST_CAST);
+    node->cast.expr = expr;
+    node->cast.type = type;
     return node;
 }

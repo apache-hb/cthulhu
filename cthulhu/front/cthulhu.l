@@ -33,6 +33,7 @@
 [ \r\n\t] ;
 "//".* ;
 
+"as" { return AS; }
 "def" { return DEF; }
 "final" { return FINAL; }
 "return" { return RETURN; }
