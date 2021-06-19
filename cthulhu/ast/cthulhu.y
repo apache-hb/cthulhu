@@ -8,6 +8,7 @@
 
 %{
 #include "cthulhu/ast/scanner.h"
+#include "cthulhu/ast/ast.h"
 
 int ctu_lex();
 int ctu_error();
