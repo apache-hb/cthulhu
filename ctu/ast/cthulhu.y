@@ -1,22 +1,24 @@
 %define parse.error verbose
 %define api.pure full
-%define api.prefix {ctu_}
 %lex-param { void *scanner }
 %parse-param { void *scanner } { scanner_t *x }
 %locations
 %expect 0
 
-%{
-#include "cthulhu/ast/scanner.h"
-#include "cthulhu/ast/ast.h"
+%code requires {
+    #include "ctu/ast/scanner.h"
+}
 
-int ctu_lex();
-int ctu_error();
+%{
+#include "ctu/ast/ast.h"
+
+int yylex();
+int yyerror();
 %}
 
 %union {
     char *text;
-    node_t *node;
+    struct node_t *node;
 }
 
 %token<text>

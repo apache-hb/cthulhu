@@ -1,12 +1,12 @@
 %option extra-type="scanner_t*"
-%option prefix="ctu_"
 %option yylineno 8bit nodefault
 %option noyywrap noinput nounput
 %option reentrant bison-bridge bison-locations
 %option never-interactive batch
 
 %{
-#include "cthulhu/ast/scanner.h"
+#include "bison.h"
+#include "ctu/ast/scanner.h"
 
 #define YY_USER_ACTION \
     flex_update(yylloc, yylineno, yyleng, yytext);

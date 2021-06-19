@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-
 static const char *name = NULL;
 
 static const char *output = "a.out";
@@ -13,8 +12,8 @@ static const char *output = "a.out";
 
 static void print_help(void) {
     printf("%s: cthulhu compiler\n", name);
-    puts("\t" HELP_ARG ": print this message");
-    puts("\t" OUTPUT_ARG " <name>: set output name (default a.out)")
+    printf("\t" HELP_ARG ": print this message\n");
+    printf("\t" OUTPUT_ARG " <name>: set output name (default %s)", output);
 }
 
 int main(int argc, const char **argv) {

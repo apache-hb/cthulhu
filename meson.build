@@ -28,7 +28,7 @@ lex = custom_target('lex',
         '--header-file=@OUTPUT1@', 
         '@INPUT@'
     ],
-    input : 'cthulhu/ast/cthulhu.l',
+    input : 'ctu/ast/cthulhu.l',
     output : [ 'flex.c', 'flex.h' ]
 )
 
@@ -39,9 +39,18 @@ parse = custom_target('parse',
         '--output=@OUTPUT0@',
         '--defines=@OUTPUT1@'
     ],
-    input : 'cthulhu/ast/cthulhu.y',
+    input : 'ctu/ast/cthulhu.y',
     output : [ 'bison.c', 'bison.h' ],
     depends : [ lex ]
 )
 
-libast = library('ast', 'cthulhu/ast/compile.c', parse)
+src = [
+    'ctu/ast/compile.c',
+    'ctu/ast/scanner.c'
+]
+
+libast = library('ast', src, lex, parse)
+
+driver = executable('ctc', 'ctu/main.c',
+    link_with : libast
+)
