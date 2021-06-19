@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 typedef struct {
     const char *path;
@@ -13,11 +14,13 @@ typedef struct {
     size_t len, size;
 } scanner_t;
 
+typedef int64_t loc_t;
+
 typedef struct {
-    int first_line;
-    int first_column;
-    int last_line;
-    int last_column;
+    loc_t first_line;
+    loc_t first_column;
+    loc_t last_line;
+    loc_t last_column;
 } where_t;
 
 void flex_init(where_t *where);

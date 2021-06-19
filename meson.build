@@ -20,10 +20,11 @@ bison = find_program(
     version : '>=3.7'
 )
 
+
+
 # create our flex lexer that bison needs
 lex = custom_target('lex',
-    command : [
-        flex, 
+    command : [ flex ] + (windows ? [ '--wincompat'] : []) + [ 
         '--outfile=@OUTPUT0@', 
         '--header-file=@OUTPUT1@', 
         '@INPUT@'
