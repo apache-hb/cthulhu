@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "scanner.h"
 #include "type.h"
 
@@ -54,7 +56,7 @@ typedef struct node_t {
     /**
      * the type of this nodes expression in its current context
      */
-    type_t *type;
+    type_t *typeof;
 
     union {
         /* AST_IDENT */
