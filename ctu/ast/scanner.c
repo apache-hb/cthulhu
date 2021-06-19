@@ -10,7 +10,9 @@ void flex_init(where_t *where) {
 }
 
 int flex_get(scanner_t *scanner, char *out) {
-    
+    int letter = scanner->next(scanner->file);
+    *out = letter;
+    return !!letter;
 }
 
 void flex_update(where_t *where, int line, int length, const char *text) {

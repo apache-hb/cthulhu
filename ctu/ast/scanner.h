@@ -24,5 +24,5 @@ void flex_init(where_t *where);
 int flex_get(scanner_t *scanner, char *out);
 void flex_update(where_t *where, int lineno, int length, const char *text);
 
-#define CTU_LTYPE where_t
+#define YYLTYPE where_t
 #define YY_USER_INIT flex_init(yylloc);
