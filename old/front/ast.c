@@ -81,14 +81,6 @@ node_t *ast_unary(scanner_t *x, YYLTYPE loc, node_t *expr, int op) {
     return node;
 }
 
-node_t *ast_ternary(scanner_t *x, YYLTYPE loc, node_t *cond, node_t *lhs, node_t *rhs) {
-    node_t *node = ast(x, loc, AST_TERNARY);
-    node->ternary.cond = cond;
-    node->ternary.lhs = lhs;
-    node->ternary.rhs = rhs;
-    return node;
-}
-
 node_t *ast_call(scanner_t *x, YYLTYPE loc, node_t *func) {
     node_t *node = ast(x, loc, AST_CALL);
     node->expr = func;

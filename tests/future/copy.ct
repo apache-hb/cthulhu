@@ -11,5 +11,7 @@ def main {
     var src = Padded[len](0xFFFF, 0);
 
     // memcpy(dst, src, len * sizeof(Padded));
+    // copies only the elements from src to dst
+    // does not need to copy any padding
     dst <- src : len;
 }
