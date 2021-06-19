@@ -33,7 +33,6 @@ typedef enum {
     /* expressions */
     AST_UNARY,
     AST_BINARY,
-    AST_TERNARY,
     AST_CALL,
     AST_CAST,
 
@@ -59,11 +58,6 @@ typedef struct {
 
 typedef struct node_t {
     node_type_t type;
-
-    scanner_t *source;
-    YYLTYPE loc;
-
-    type_t *typeof;
 
     union {
         /* AST_IDENT, AST_TYPENAME */
@@ -94,11 +88,6 @@ typedef struct node_t {
             node_t *expr;
         } unary;
 
-        /* AST_TERNARY */
-        struct {
-            node_t *cond, *lhs, *rhs;
-        } ternary;
-
         struct {
             char *name;
             node_t *init;
@@ -115,6 +104,13 @@ typedef struct node_t {
         /* AST_STMTS */
         nodes_t *stmts;
     };
+    
+    /* error reporting */
+    scanner_t *source;
+    YYLTYPE loc;
+
+    /* filled in by sema */
+    type_t *typeof;
 } node_t;
 
 nodes_t *ast_list(node_t *init);
@@ -127,7 +123,6 @@ node_t *ast_bool(scanner_t *x, YYLTYPE loc, bool b);
 
 node_t *ast_binary(scanner_t *x, YYLTYPE loc, node_t *lhs, node_t *rhs, int op);
 node_t *ast_unary(scanner_t *x, YYLTYPE loc, node_t *expr, int op);
-node_t *ast_ternary(scanner_t *x, YYLTYPE loc, node_t *cond, node_t *lhs, node_t *rhs);
 node_t *ast_call(scanner_t *x, YYLTYPE loc, node_t *func);
 node_t *ast_cast(scanner_t *x, YYLTYPE loc, node_t *expr, node_t *type);
 

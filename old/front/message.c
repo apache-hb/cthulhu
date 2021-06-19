@@ -148,11 +148,12 @@ static size_t underline_location(scanner_t *scanner, YYLTYPE loc) {
         if (!c || c == '\n') {
             break;
         } else {
-            if (col >= first_col && len--) {
+            if (col >= first_col) {
                 printf(col == first_col ? "^" : "~");
             } else {
                 printf("%s", c == '\t' ? "\t" : " ");
             }
+            len--;
             col++;
         }
     }

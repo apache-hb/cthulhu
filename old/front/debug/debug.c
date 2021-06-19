@@ -40,15 +40,6 @@ static void debug_binary(node_t *node) {
     debug_ast(node->binary.rhs);
 }
 
-static void debug_ternary(node_t *node) {
-    debugf("if ");
-    debug_ast(node->ternary.cond);
-    debugf(" then ");
-    debug_ast(node->ternary.lhs);
-    debugf(" else ");
-    debug_ast(node->ternary.rhs);
-}
-
 static void debug_call(node_t *node) {
     debugf("call ");
     debug_ast(node->expr);
@@ -105,7 +96,6 @@ void debug_ast(node_t *node) {
     case AST_BOOL: debug_bool(node); break;
     case AST_UNARY: debug_unary(node); break;
     case AST_BINARY: debug_binary(node); break;
-    case AST_TERNARY: debug_ternary(node); break;
     case AST_CALL: debug_call(node); break;
     case AST_RETURN: debug_return(node); break;
     case AST_FUNC: debug_func(node); break;

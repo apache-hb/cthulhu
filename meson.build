@@ -8,122 +8,40 @@ project('ctu', 'c',
     ]
 )
 
-msvc = meson.get_compiler('c').get_id() == 'msvc'
 windows = build_machine.system() == 'windows'
 
-src = [
-    'cthulhu/util/util.c',
-    'cthulhu/util/report.c'
-]
-
-libutil = library('util', src,
-    include_directories : '.'
+flex = find_program(
+    windows ? 'win_flex' : 'flex', 
+    version : '>=2.6'
 )
 
-util = declare_dependency(
-    link_with : libutil,
-    include_directories : '.'
+bison = find_program(
+    windows ? 'win_bison' : 'bison', 
+    version : '>=3.7'
 )
-
-if windows
-    flex = find_program('win_flex', version : '>=2.6')
-    bison = find_program('win_bison', version : '>=3.7')
-else
-    flex = find_program('flex', version : '>=2.6')
-    bison = find_program('bison', version : '>=3.7')
-endif
-
-command = [ flex ]
-if windows
-    command += '--wincompat'
-endif
-command += '@INPUT@'
 
 # create our flex lexer that bison needs
 lex = custom_target('lex',
-    command : command,
-    input : 'cthulhu/front/cthulhu.l',
-    output : [ 'flex.c', 'flex.h' ],
-    depends : libutil
+    command : [
+        flex, 
+        '--outfile=@OUTPUT0@', 
+        '--header-file=@OUTPUT1@', 
+        '@INPUT@'
+    ],
+    input : 'cthulhu/ast/cthulhu.l',
+    output : [ 'flex.c', 'flex.h' ]
 )
 
 # create our bison parser that our ast needs
 parse = custom_target('parse',
-    command : [ bison, '-d', '@INPUT@', '-Wdeprecated', '-v' ],
-    input : 'cthulhu/front/cthulhu.y',
+    command : [ 
+        bison, '-d', '@INPUT@', '-Wdeprecated', '-v',
+        '--output=@OUTPUT0@',
+        '--defines=@OUTPUT1@'
+    ],
+    input : 'cthulhu/ast/cthulhu.y',
     output : [ 'bison.c', 'bison.h' ],
-    depends : [ lex, libutil ]
+    depends : [ lex ]
 )
 
-src = [ 
-    'cthulhu/front/ast.c', 
-    'cthulhu/front/compile.c',
-    'cthulhu/front/message.c',
-    'cthulhu/front/debug/debug.c'
-]
-
-args = [ '-D_POSIX_C_SOURCE=700' ]
-
-# turns text/files into an ast
-libfront = library('ast', lex, parse, src,
-    c_args : args,
-    dependencies : util,
-    include_directories : '.'
-)
-
-front = declare_dependency(
-    link_with : libfront, 
-    dependencies : util,
-    sources : [ lex, parse ],
-    compile_args : args,
-    include_directories : '.'
-)
-
-libsema = library('sema', [ 'cthulhu/sema/sema.c' ],
-    dependencies : [ util, front ],
-    include_directories : '.'
-)
-
-sema = declare_dependency(
-    link_with : libsema,
-    include_directories : '.'
-)
-
-src = [
-    'cthulhu/middle/ir.c',
-    'cthulhu/middle/debug/debug.c'
-]
-
-libmiddle = library('middle', src,
-    dependencies : [ front, util ],
-    include_directories : '.'
-)
-
-middle = declare_dependency(
-    dependencies : util,
-    link_with : libmiddle,
-    include_directories : '.'
-)
-
-# collect all our backends
-subdir('cthulhu/back')
-
-args = [ ]
-
-if msvc
-    args += '-D_CRT_SECURE_NO_WARNINGS=1'
-endif
-
-# user facing frontend
-driver = executable('ctc', 'cthulhu/main.c',
-    include_directories : '.',
-    c_args : args,
-    dependencies : backends + [ sema, middle, util ]
-)
-
-if not meson.is_subproject()
-    executable('test-runner', 'tools/test.c',
-        c_args : '-D_CRT_SECURE_NO_WARNINGS'
-    )
-    subdir('tests')
-endif
+libast = library('ast', 'cthulhu/ast/compile.c', parse)

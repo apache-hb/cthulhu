@@ -129,12 +129,19 @@ static const char *nameof_type(type_t *type) {
     }
 }
 
-static bool convertible_to(node_t *node, type_t *to, type_t *from) {
+/* check if `from` can be converted `to` */
+static bool convertible_to(
+    node_t *node, 
+    type_t *to, type_t *from, 
+    bool explicit_cast /* allow narrowing conversion */
+) {
     if (types_equal(to, from))
         return true;
 
     if (is_integer_type(to) && is_integer_type(from)) {
-        bool result = to->builtin.width >= from->builtin.width;
+        /* if this is an explicit conversion then narrowing is allowed */
+        bool result = to->builtin.width >= from->builtin.width 
+            || explicit_cast;
         
         if (!result && node) {
             const char *lhs_name = nameof_type(to),
@@ -150,20 +157,17 @@ static bool convertible_to(node_t *node, type_t *to, type_t *from) {
         }
 
         return result;
-    } 
+    }
     
     if (types_equal(to, BOOL_TYPE)) {
-        return is_integer_type(from) || is_bool_type(from);
+        return is_integer_type(from) 
+            || is_bool_type(from);
     }
 
     return false;
 }
 
 static type_t *typeof_node(sema_t *sema, node_t *node);
-
-static bool is_type_bool_convertible(type_t *type) {
-    return convertible_to(NULL, BOOL_TYPE, type);
-}
 
 static type_t *sema_binary(node_t *node, int op, type_t *lhs, type_t *rhs) {
     char *msg;
@@ -201,12 +205,6 @@ static bool type_is_callable(type_t *type) {
     return type->kind == CALLABLE;
 }
 
-static void add_decl(sema_t *ctx, const char *name, node_t *decl) {
-    ENSURE_SIZE(ctx->decls, ctx->len, ctx->size, sizeof(decl_t), 4);
-    decl_t it = { name, decl };
-    ctx->decls[ctx->len++] = it;
-}
-
 static node_t *find_decl(sema_t *ctx, const char *name) {
     for (size_t i = 0; i < ctx->len; i++) {
         decl_t decl = ctx->decls[i];
@@ -220,9 +218,19 @@ static node_t *find_decl(sema_t *ctx, const char *name) {
     return NULL;
 }
 
+static void add_decl(sema_t *ctx, const char *name, node_t *decl) {
+    node_t *other = find_decl(ctx, name);
+    if (other) {
+        add_error(format("%s already defined", name), decl);
+    }
+
+    ENSURE_SIZE(ctx->decls, ctx->len, ctx->size, sizeof(decl_t), 4);
+    decl_t it = { name, decl };
+    ctx->decls[ctx->len++] = it;
+}
+
 static type_t *typeof_node(sema_t *sema, node_t *node) {
-    type_t *lhs, *rhs, *cond, *type;
-    msg_idx_t id;
+    type_t *lhs, *rhs, *type;
     node_t *it;
     type_t *out;
 
@@ -230,7 +238,6 @@ static type_t *typeof_node(sema_t *sema, node_t *node) {
     if (node->typeof)
         return node->typeof;
 
-    const char *msg, *lhs_name, *rhs_name;
     switch (node->type) {
     case AST_DIGIT: out = INT_TYPE; break;
     case AST_BOOL: out = BOOL_TYPE; break;
@@ -246,26 +253,6 @@ static type_t *typeof_node(sema_t *sema, node_t *node) {
         lhs = typeof_node(sema, node->binary.lhs);
         rhs = typeof_node(sema, node->binary.rhs);
         out = sema_binary(node, node->binary.op, lhs, rhs);
-        break;
-    case AST_TERNARY:
-        cond = typeof_node(sema, node->ternary.cond);
-        lhs = typeof_node(sema, node->ternary.lhs);
-        rhs = typeof_node(sema, node->ternary.rhs);
-
-        if (!types_equal(lhs, rhs)) {
-            lhs_name = nameof_type(lhs);
-            rhs_name = nameof_type(rhs);
-            id = add_error("both sides of ternary must be the same type", node);
-            msg = format("%s and %s are incompatible ternary leafs", lhs_name, rhs_name);
-            add_note(id, msg);
-            out = poison(format("either `%s` or `%s`", lhs_name, rhs_name), node);
-        }
-
-        if (!is_type_bool_convertible(cond)) {
-            add_error("ternary condition must be convertible to a boolean", node->ternary.cond);
-        }
-
-        out = lhs;
         break;
     case AST_TYPENAME:
         out = get_typename(node);
@@ -287,7 +274,7 @@ static type_t *typeof_node(sema_t *sema, node_t *node) {
     case AST_CAST:
         out = typeof_node(sema, node->cast.type);
         type = typeof_node(sema, node->cast.expr);
-        if (!convertible_to(node, out, type)) {
+        if (!convertible_to(node, out, type, true)) {
             add_error(
                 format("cannot cast %s to %s", nameof_type(type), nameof_type(out)), 
                 node
@@ -342,7 +329,7 @@ static void sema_node(sema_t *sema, node_t *node) {
             }
         } else {
             type = typeof_node(sema, node->expr);
-            if (!convertible_to(node, current_return_type, type)) {
+            if (!convertible_to(node, current_return_type, type, false)) {
                 current_name = nameof_type(current_return_type);
                 ret_name = nameof_type(type);
                 msg = add_error("type mismatch in return", node);
@@ -356,21 +343,11 @@ static void sema_node(sema_t *sema, node_t *node) {
         }
         break;
 
-    /** 
-     * if for some reason a user decides to use a ternary as a statement
-     * we handle that by typechecking it
-     * (why someone would discard the result of a ternary is beyond me, but they can)
-     */
-    case AST_TERNARY:
-        typeof_node(sema, node);
-        msg = add_warn("discarding result of ternary expression", node);
-        add_note(msg, "assign this expression to a value to suppress this warning");
-        break;
-
     case AST_STMTS: 
         nest = new_sema(sema);
-        for (i = 0; i < node->stmts->len; i++)
+        for (i = 0; i < node->stmts->len; i++) {
             sema_node(nest, node->stmts->data + i);
+        }
         break;
 
     case AST_FUNC:
@@ -382,7 +359,7 @@ static void sema_node(sema_t *sema, node_t *node) {
         break;
 
     case AST_VAR:
-        add_decl(sema, node->var.name, node->var.init);
+        add_decl(sema, node->var.name, node);
         typeof_node(sema, node->var.init);
         break;
 

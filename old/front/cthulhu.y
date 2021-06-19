@@ -71,7 +71,7 @@ int yyerror();
     funcdecl /* decls */
     stmt var /* stmts */
     type /* types */
-    primary expr additive multiplicative unary ternary postfix /* exprs */
+    primary expr additive multiplicative unary postfix /* exprs */
 
 %type<nodes>
     unit stmts
@@ -112,6 +112,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     ;
 
 postfix: primary { $$ = $1; }
+    | postfix QUESTION { $$ = $1; /* TODO */ }
     | postfix AS type { $$ = ast_cast(x, @$, $1, $3); }
     | postfix LPAREN RPAREN { $$ = ast_call(x, @$, $1); }
     ;
@@ -132,11 +133,7 @@ additive: multiplicative { $$ = $1; }
     | additive SUB multiplicative { $$ = ast_binary(x, @$, $1, $3, SUB); }
     ;
 
-ternary: additive { $$ = $1; }
-    | additive QUESTION expr COLON expr { $$ = ast_ternary(x, @$, $1, $3, $5); }
-    ;
-
-expr: ternary { $$ = $1; }
+expr: additive { $$ = $1; }
     ;
 
 %%
