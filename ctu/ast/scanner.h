@@ -25,6 +25,6 @@ typedef struct {
 
 void flex_init(where_t *where, int line);
 int flex_get(scanner_t *scanner, char *out, int size);
-void flex_update(where_t *where, int lineno, int length, const char *text);
+void flex_update(where_t *where, const char *text);
 
 #define YYLTYPE where_t

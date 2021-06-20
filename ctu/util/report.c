@@ -8,14 +8,6 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-void assert(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    va_end(args);
-    fprintf(stderr, "\n");
-}
-
 typedef struct {
     level_t level;
     char *message;
@@ -55,6 +47,7 @@ static void push_report(level_t level, scanner_t *source, where_t where, node_t 
 
 static void print_message(level_t level, const char *message) {
     switch (level) {
+    case LEVEL_INTERNAL: fprintf(stderr, COLOUR_CYAN "internal compiler error: " COLOUR_RESET); break;
     case LEVEL_ERROR: fprintf(stderr, COLOUR_RED "error: " COLOUR_RESET); break;
     case LEVEL_WARNING: fprintf(stderr, COLOUR_YELLOW "warning: " COLOUR_RESET); break;
     default: fprintf(stderr, COLOUR_BLUE "other: " COLOUR_RESET); break;
@@ -101,7 +94,9 @@ static void print_line(scanner_t *source, loc_t line) {
         c = source->text[index++];
         fprintf(stderr, "%c", c);
     } while (c && c != '\n');
-    fprintf(stderr, "\n");
+    
+    if (c != '\n')
+        fprintf(stderr, "\n");
 }
 
 static void print_underline(loc_t column, loc_t length) {
@@ -131,14 +126,7 @@ static void underline_source(scanner_t *source, where_t where) {
     fprintf(stderr, " %s | ", linestr);
     print_line(source, line);
     print_padding(padding, '|', false);
-    
-    /** 
-     * this (line ? 1 : 0) works around a strange bug
-     * where the column location of the token is off
-     * by one on every line *aside* from the first line
-     * where its correct.
-     */
-    print_underline(column - (line ? 1 : 0), length);
+    print_underline(column, length);
 }
 
 static void underline_block(scanner_t *source, where_t where) {
@@ -160,10 +148,14 @@ static void outline_source(scanner_t *source, where_t where) {
  */
 static bool print_report(report_t report) {
     print_message(report.level, report.message);
-    print_location(report.source, report.where);
-    outline_source(report.source, report.where);
+    
+    if (report.source) {
+        print_location(report.source, report.where);
+        outline_source(report.source, report.where);
+    }
 
-    return report.level == LEVEL_ERROR;
+    return report.level == LEVEL_ERROR 
+        || report.level == LEVEL_INTERNAL;
 }
 
 void report_begin(size_t limit) {
@@ -175,18 +167,36 @@ bool report_end(const char *name) {
     size_t fatal = 0;
 
     for (size_t i = 0; i < num_reports; i++) {
+        /* dont report duplicate errors */
         if (already_reported(i))
             continue;
 
+        /* count the number of fatal errors */
         if (print_report(reports[i]))
             fatal += 1;
     }
 
     if (fatal) {
-        fprintf(stderr, "aborting after %s state due to %zu error(s)\n", name, fatal);
+        fprintf(stderr, "aborting after %s stage due to %zu error(s)\n", name, fatal);
     }
 
     return fatal != 0;
+}
+
+static const where_t NOWHERE = { 0, 0, 0, 0 };
+
+void ensure(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    push_report(LEVEL_ERROR, NULL, NOWHERE, NULL, formatv(fmt, args));
+    va_end(args);
+}
+
+void assert(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    push_report(LEVEL_INTERNAL, NULL, NOWHERE, NULL, formatv(fmt, args));
+    va_end(args);
 }
 
 void reportf(level_t level, node_t *node, const char *fmt, ...) {

@@ -9,14 +9,13 @@
 #include "ctu/ast/scanner.h"
 #include "ctu/util/report.h"
 
-#define YY_USER_ACTION \
-    flex_update(yylloc, yylineno, yyleng, yytext);
+#define YY_USER_ACTION flex_update(yylloc, yytext);
 
 #define YY_INPUT(buffer, result, size) \
     result = flex_get(yyextra, buffer, size); \
     if (result <= 0) { result = YY_NULL; }
 
-#define YY_USER_INIT flex_init(yylloc, yylineno)
+#define YY_USER_INIT flex_init(yylloc, 0)
 
 %}
 
