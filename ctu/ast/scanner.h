@@ -5,9 +5,9 @@
 
 typedef struct {
     const char *path;
-    struct node_t *node;
+    void *ast;
 
-    void *file;
+    void *handle;
     int(*next)(void*);
 
     char *text;
@@ -23,9 +23,8 @@ typedef struct {
     loc_t last_column;
 } where_t;
 
-void flex_init(where_t *where);
-int flex_get(scanner_t *scanner, char *out);
+void flex_init(where_t *where, int line);
+int flex_get(scanner_t *scanner, char *out, int size);
 void flex_update(where_t *where, int lineno, int length, const char *text);
 
 #define YYLTYPE where_t
-#define YY_USER_INIT flex_init(yylloc);

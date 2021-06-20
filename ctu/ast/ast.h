@@ -17,6 +17,7 @@ typedef enum {
     AST_UNARY,
     AST_BINARY,
 
+    AST_STMTS,
     AST_RETURN,
 
     AST_DECL_FUNC,
@@ -65,6 +66,9 @@ typedef struct node_t {
         /* AST_DIGIT */
         uint64_t digit;
 
+        /* AST_STMTS */
+        nodes_t *stmts;
+
         struct {
             /* AST_UNARY */
             unary_t unary;
@@ -101,8 +105,14 @@ typedef struct node_t {
     };
 } node_t;
 
+nodes_t *ast_list(node_t *init);
+nodes_t *ast_append(nodes_t *list, node_t *node);
+
 node_t *ast_digit(scanner_t *scanner, where_t where, char *digit);
 node_t *ast_ident(scanner_t *scanner, where_t where, char *text);
 
 node_t *ast_unary(scanner_t *scanner, where_t where, unary_t unary, node_t *expr);
 node_t *ast_binary(scanner_t *scanner, where_t where, binary_t binary, node_t *lhs, node_t *rhs);
+
+node_t *ast_stmts(scanner_t *scanner, where_t where, nodes_t *stmts);
+node_t *ast_return(scanner_t *scanner, where_t where, node_t *expr);
