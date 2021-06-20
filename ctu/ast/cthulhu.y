@@ -7,18 +7,18 @@
 
 %code requires {
     #include "ctu/ast/scanner.h"
+    #include "ctu/ast/ast.h"
 }
 
 %{
-#include "ctu/ast/ast.h"
-
 int yylex();
-int yyerror();
+void yyerror();
 %}
 
 %union {
     char *text;
-    struct node_t *node;
+    node_t *node;
+    nodes_t *nodes;
 }
 
 %token<text>
@@ -35,16 +35,43 @@ int yyerror();
 %token
     LPAREN "`(`"
     RPAREN "`)`"
+    LBRACE "`{`"
+    RBRACE "`}`"
 
 %token
     QUESTION "`?`"
+    SEMI "`;`"
+
+%token
+    RETURN "`return`"
 
 %type<node>
+    stmt stmts
     primary postfix unary multiply add expr
 
-%start expr
+%type<nodes>
+    stmtlist
+
+%start unit
 
 %%
+
+unit: stmt { x->ast = ast_list($1); }
+    | unit stmt { ast_append(x->ast, $2); }
+    ;
+
+stmtlist: %empty { $$ = ast_list(NULL); }
+    | stmtlist stmt { $$ = ast_append($1, $2); }
+    ;
+
+stmts: LBRACE stmtlist RBRACE { $$ = ast_stmts(x, @$, $2); }
+    ;
+
+stmt: expr SEMI { $$ = $1; }
+    | RETURN SEMI { $$ = ast_return(x, @$, NULL); }
+    | RETURN expr SEMI { $$ = ast_return(x, @$, $2); }
+    | stmts { $$ = $1; }
+    ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }
     | IDENT { $$ = ast_ident(x, @$, $1); }

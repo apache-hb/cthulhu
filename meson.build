@@ -20,11 +20,9 @@ bison = find_program(
     version : '>=3.7'
 )
 
-
-
 # create our flex lexer that bison needs
 lex = custom_target('lex',
-    command : [ flex ] + (windows ? [ '--wincompat'] : []) + [ 
+    command : [ flex ] + (windows ? [ '--wincompat' ] : []) + [ 
         '--outfile=@OUTPUT0@', 
         '--header-file=@OUTPUT1@', 
         '@INPUT@'
@@ -46,12 +44,30 @@ parse = custom_target('parse',
 )
 
 src = [
-    'ctu/ast/compile.c',
-    'ctu/ast/scanner.c'
+    'ctu/util/str.c',
+    'ctu/util/report.c'
 ]
 
-libast = library('ast', src, lex, parse)
+libutil = library('util', src)
+
+src = [
+    'ctu/ast/compile.c',
+    'ctu/ast/scanner.c',
+    'ctu/ast/ast.c'
+]
+
+libast = library('ast', src, lex, parse,
+    link_with : libutil
+)
+
+src = [
+    'ctu/debug/ast.c'
+]
+
+libdebug = library('debug', src,
+    link_with : libast
+)
 
 driver = executable('ctc', 'ctu/main.c',
-    link_with : libast
+    link_with : libdebug
 )
