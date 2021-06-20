@@ -3,6 +3,7 @@
 #include "ast/compile.h"
 #include "debug/ast.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -11,6 +12,36 @@ static const char *name = NULL;
 
 /* name of file to output to */
 static const char *output = "a.out";
+
+typedef struct {
+    const char *path;
+    FILE *file;
+} input_t;
+
+typedef struct {
+    input_t *files;
+    size_t len, size;
+} inputs_t;
+
+static inputs_t inputs = { NULL, 0, 0 };
+
+static void init_inputs(void) {
+    inputs.files = malloc(sizeof(input_t) * 4);
+    inputs.len = 0;
+    inputs.size = 4;
+}
+
+static void add_file(const char *path) {
+    FILE *file = fopen(path, "r");
+    ENSURE(file != NULL)("failed to open file `%s`", path);
+
+    if (inputs.len + 1 > inputs.size) {
+        inputs.size += 4;
+        inputs.files = realloc(inputs.files, sizeof(input_t) * inputs.size);
+    }
+    input_t item = { path, file };
+    inputs.files[inputs.len++] = item;
+}
 
 #define HELP_ARG "--help"
 #define OUTPUT_ARG "--output"
@@ -28,6 +59,8 @@ static int parse_arg(int index, int argc, const char **argv) {
 
     if (strcmp(arg, HELP_ARG) == 0) {
         print_help();
+    } else if (!startswith(arg, "-")) {
+        add_file(arg);
     }
 
     return 1;
@@ -46,20 +79,24 @@ static void parse_argc_argv(int argc, const char **argv) {
 
 int main(int argc, const char **argv) {
     name = argv[0];
-    parse_argc_argv(argc, argv);
+
+    init_inputs();
 
     report_begin(20);
 
-    nodes_t *nodes = compile_string("stdin", 
-        "{ 5; 6; lol return 69; }"
-    );
+    parse_argc_argv(argc, argv);
 
-    if (report_end("parse"))
+    if (report_end("input"))
         return 1;
 
-    for (size_t i = 0; i < nodes->len; i++) {
-        debug_ast(nodes->data + i);
-        printf("\n");
+    report_begin(20);
+
+    for (size_t i = 0; i < inputs.len; i++) {
+        input_t it = inputs.files[i];
+        compile_file(it.path, it.file);
+
+        if (report_end("parse"))
+            return 1;
     }
 
     return 0;

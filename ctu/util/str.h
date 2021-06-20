@@ -4,6 +4,7 @@
 #include <stdarg.h>
 
 #define COLOUR_RED "\x1B[1;31m"
+#define COLOUR_GREEN "\x1B[0;32m"
 #define COLOUR_YELLOW "\x1B[1;33m"
 #define COLOUR_BLUE "\x1B[1;34m"
 #define COLOUR_PURPLE "\x1B[1;35m"
