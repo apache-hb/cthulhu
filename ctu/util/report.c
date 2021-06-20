@@ -154,6 +154,10 @@ static void outline_source(scanner_t *source, where_t where) {
     }
 }
 
+/**
+ * print an error report to the console
+ * return true if the report is fatal
+ */
 static bool print_report(report_t report) {
     print_message(report.level, report.message);
     print_location(report.source, report.where);
