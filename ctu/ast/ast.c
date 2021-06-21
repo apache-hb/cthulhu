@@ -93,3 +93,21 @@ node_t *ast_return(scanner_t *scanner, where_t where, node_t *expr) {
 
     return node;
 }
+
+node_t *ast_branch(scanner_t *scanner, where_t where, node_t *cond, node_t *branch) {
+    node_t *node = new_node(scanner, where, AST_BRANCH);
+
+    node->cond = cond;
+    node->branch = branch;
+
+    return node;
+}
+
+node_t *ast_decl_func(scanner_t *scanner, where_t where, char *name, node_t *body) {
+    node_t *node = new_node(scanner, where, AST_DECL_FUNC);
+
+    node->name = name;
+    node->body = body;
+
+    return node;
+}

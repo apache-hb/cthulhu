@@ -8,6 +8,7 @@
 #include "bison.h"
 #include "ctu/ast/scanner.h"
 #include "ctu/util/report.h"
+#include "ctu/util/str.h"
 
 #define YY_USER_ACTION flex_update(yylloc, yytext);
 
@@ -24,9 +25,11 @@
 [ \r\n\t] ;
 "//".* ;
 
+"def" { return DEF; }
+"if" { return IF; }
 "return" { return RETURN; }
 
-[a-zA-Z_][a-zA-Z0-9_]* { yylval->text = yytext; return IDENT; }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 
 [0-9]+ { yylval->text = yytext; return DIGIT; }
 
@@ -42,6 +45,8 @@
 "}" { return RBRACE; }
 "?" { return QUESTION; }
 ";" { return SEMI; }
+
+\0 { return END; }
 
 . { report(LEVEL_ERROR, yyextra, *yylloc, "unknown character `%s`", yytext); }
 

@@ -1,6 +1,7 @@
 #include "report.h"
 
 #include "str.h"
+#include "util.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -63,7 +64,7 @@ static void print_location(scanner_t *source, where_t where) {
 }
 
 static void print_padding(size_t size, char sep, bool feed) {
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < size + 1; i++) {
         fprintf(stderr, " ");
     }
 
@@ -113,6 +114,13 @@ static void print_underline(loc_t column, loc_t length) {
     fprintf(stderr, COLOUR_RESET "\n");
 }
 
+static void print_line_indicator(const char *text, size_t len, size_t padding) {
+    for (size_t i = 0; i < (padding - len); i++)
+        fprintf(stderr, " ");
+
+    fprintf(stderr, "%s | ", text);
+}
+
 static void underline_source(scanner_t *source, where_t where) {
     loc_t line = where.first_line;
     loc_t column = where.first_column;
@@ -120,26 +128,24 @@ static void underline_source(scanner_t *source, where_t where) {
 
     char *linestr = format("%" PRId64, line + 1);
     size_t linelen = strlen(linestr);
-    size_t padding = linelen + 2;
+    size_t padding = linelen + 1;
 
     print_padding(padding, '|', true);
-    fprintf(stderr, " %s | ", linestr);
+    print_line_indicator(linestr, linelen, padding);
     print_line(source, line);
     print_padding(padding, '|', false);
     print_underline(column, length);
 }
 
-static void underline_block(scanner_t *source, where_t where) {
-    (void)source;
-    (void)where;
-}
-
 static void outline_source(scanner_t *source, where_t where) {
     if (where.first_line == where.last_line) {
         underline_source(source, where);
-    } else {
-        underline_block(source, where);
     }
+
+    /* TODO: better multiline span reporting */
+    fprintf(stderr, "spanning line %" PRId64 " to line %" PRId64 "\n", 
+        where.first_line, where.last_line
+    );
 }
 
 /**

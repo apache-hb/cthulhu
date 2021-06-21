@@ -61,13 +61,21 @@ libast = library('ast', src, lex, parse,
 )
 
 src = [
+    'ctu/sema/type.c'
+]
+
+libsema = library('sema', src,
+    link_with : libutil
+)
+
+src = [
     'ctu/debug/ast.c'
 ]
 
 libdebug = library('debug', src,
-    link_with : libast
+    link_with : libutil
 )
 
 driver = executable('ctc', 'ctu/main.c',
-    link_with : libdebug
+    link_with : [ libdebug, libsema, libast ]
 )

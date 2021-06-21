@@ -1,6 +1,7 @@
 #include "util/str.h"
 #include "util/report.h"
 #include "ast/compile.h"
+#include "sema/sema.h"
 #include "debug/ast.h"
 
 #include <stdlib.h>
@@ -93,9 +94,15 @@ int main(int argc, const char **argv) {
 
     for (size_t i = 0; i < inputs.len; i++) {
         input_t it = inputs.files[i];
-        compile_file(it.path, it.file);
+        nodes_t *nodes = compile_file(it.path, it.file);
 
         if (report_end("parse"))
+            return 1;
+
+        sema_t *sema = resolve(nodes);
+        typecheck(sema);
+
+        if (report_end("semantic"))
             return 1;
     }
 
