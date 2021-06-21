@@ -4,8 +4,11 @@
 
 typedef struct sema_t {
     struct sema_t *parent;
+    nodes_t *nodes;
+
+    nodes_t *decls;
 } sema_t;
 
-void resolve(nodes_t *nodes);
+sema_t *resolve(nodes_t *nodes);
 
-void typecheck(nodes_t *nodes);
+void typecheck(sema_t *sema);

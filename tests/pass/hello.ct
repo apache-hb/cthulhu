@@ -1,3 +1,10 @@
-def _start(): void {
-    
+def main {
+    if (thing) {
+        return thing;
+    } 
+    return 200;
+}
+
+def thing {
+    return 100;
 }

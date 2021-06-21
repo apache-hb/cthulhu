@@ -19,6 +19,7 @@ typedef enum {
 
     AST_STMTS,
     AST_RETURN,
+    AST_BRANCH,
 
     AST_DECL_FUNC,
     AST_DECL_VAR
@@ -84,6 +85,12 @@ typedef struct node_t {
             struct node_t *rhs;
         };
 
+        /* AST_BRANCH */
+        struct {
+            struct node_t *cond;
+            struct node_t *branch;
+        };
+
         /* AST_DECL */
         struct {
             char *name;
@@ -116,3 +123,6 @@ node_t *ast_binary(scanner_t *scanner, where_t where, binary_t binary, node_t *l
 
 node_t *ast_stmts(scanner_t *scanner, where_t where, nodes_t *stmts);
 node_t *ast_return(scanner_t *scanner, where_t where, node_t *expr);
+node_t *ast_branch(scanner_t *scanner, where_t where, node_t *cond, node_t *branch);
+
+node_t *ast_decl_func(scanner_t *scanner, where_t where, char *name, node_t *body);

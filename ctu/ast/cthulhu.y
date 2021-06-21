@@ -11,6 +11,7 @@
 }
 
 %{
+#include <stdio.h>
 int yylex();
 void yyerror();
 %}
@@ -44,20 +45,32 @@ void yyerror();
 
 %token
     RETURN "`return`"
+    DEF "`def`"
+    IF "`if`"
+    END 0 "end of file"
 
 %type<node>
-    stmt stmts
-    primary postfix unary multiply add expr
+    decl function /* declarations */
+    stmt stmts return if /* statements */
+    primary postfix unary multiply add expr /* expressions */
 
 %type<nodes>
     stmtlist
 
-%start unit
+%start file
 
 %%
 
-unit: stmt { x->ast = ast_list($1); }
-    | unit stmt { ast_append(x->ast, $2); }
+file: unit END ;
+
+unit: decl { x->ast = ast_list($1); }
+    | unit decl { ast_append(x->ast, $2); }
+    ;
+
+decl: function { $$ = $1; }
+    ;
+
+function: DEF IDENT stmts { $$ = ast_decl_func(x, @$, $2, $3); }
     ;
 
 stmtlist: %empty { $$ = ast_list(NULL); }
@@ -67,9 +80,16 @@ stmtlist: %empty { $$ = ast_list(NULL); }
 stmts: LBRACE stmtlist RBRACE { $$ = ast_stmts(x, @$, $2); }
     ;
 
-stmt: expr SEMI { $$ = $1; }
-    | RETURN SEMI { $$ = ast_return(x, @$, NULL); }
+return: RETURN SEMI { $$ = ast_return(x, @$, NULL); }
     | RETURN expr SEMI { $$ = ast_return(x, @$, $2); }
+    ;
+
+if: IF expr stmts { $$ = ast_branch(x, @$, $2, $3); }
+    ;
+
+stmt: expr SEMI { $$ = $1; }
+    | return { $$ = $1; }
+    | if { $$ = $1; }
     | stmts { $$ = $1; }
     ;
 

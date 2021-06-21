@@ -46,7 +46,7 @@ nodes_t *compile_file(const char *path, FILE *stream) {
     }
 
     yyset_in(stream, scanner);
-
+    
     if ((err = yyparse(scanner, extra))) {
         return NULL;
     }
