@@ -56,7 +56,12 @@ typedef enum {
      *  - casting a signed type containing a negative number 
      *    to an unsgined type is undefined behaviour.
      */
-    TYPE_INTEGER
+    TYPE_INTEGER,
+
+    /**
+     * error handling type
+     */
+    TYPE_POISON
 } typeof_t;
 
 typedef enum {
@@ -73,7 +78,7 @@ typedef struct type_t {
     /** 
      * the type of this type 
      */
-    typeof_t type;
+    typeof_t kind;
     
     /** 
      * is this type mutable 
@@ -89,12 +94,16 @@ typedef struct type_t {
 
     /** 
      * the node that generated this type 
-     * may be null
      */
     struct node_t *node;
 
     /* data about this type */
     union {
+        /**
+         * poison error message
+         */
+        char *text;
+        
         /** 
          * builtin integer data 
          * TYPE_INTEGER
@@ -102,4 +111,3 @@ typedef struct type_t {
         integer_t integer;
     };
 } type_t;
-

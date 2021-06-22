@@ -45,7 +45,8 @@ parse = custom_target('parse',
 
 src = [
     'ctu/util/str.c',
-    'ctu/util/report.c'
+    'ctu/util/report.c',
+    'ctu/util/util.c'
 ]
 
 libutil = library('util', src)
@@ -69,7 +70,17 @@ libsema = library('sema', src,
 )
 
 src = [
-    'ctu/debug/ast.c'
+    'ctu/ir/ir.c'
+]
+
+libir = library('ir', src,
+    link_with : libutil
+)
+
+src = [
+    'ctu/debug/ast.c',
+    'ctu/debug/ir.c',
+    'ctu/debug/common.c'
 ]
 
 libdebug = library('debug', src,
@@ -77,5 +88,5 @@ libdebug = library('debug', src,
 )
 
 driver = executable('ctc', 'ctu/main.c',
-    link_with : [ libdebug, libsema, libast ]
+    link_with : [ libdebug, libir, libsema, libast ]
 )

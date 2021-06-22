@@ -3,8 +3,10 @@
 #include "ctu/ast/ast.h"
 
 /**
- * fast assert
+ * assert is for internal compiler errors
+ * ensure is for normal compiler errors
  * ASSERT(expr)("error message %s", "more");
+ * ENSURE(expr)("error message %s", "more");
  */
 void assert(const char *fmt, ...);
 void ensure(const char *fmt, ...);

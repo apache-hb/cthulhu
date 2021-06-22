@@ -4,6 +4,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+where_t merge_locations(where_t begin, where_t end) {
+    where_t out = {
+        begin.first_line,
+        begin.first_column,
+        end.last_line,
+        end.last_column
+    };
+    return out;
+}
+
 void flex_init(where_t *where, int line) {
     where->first_line = line;
     where->last_line = line;
