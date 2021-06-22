@@ -11,18 +11,31 @@ typedef struct {
 } nodes_t;
 
 typedef enum {
+    /**
+     * expressions
+     */
     AST_DIGIT,
     AST_IDENT,
-
     AST_UNARY,
     AST_BINARY,
 
+    /**
+     * statements
+     */
     AST_STMTS,
     AST_RETURN,
     AST_BRANCH,
 
+    /**
+     * declarations
+     */
     AST_DECL_FUNC,
-    AST_DECL_VAR
+    AST_DECL_VAR,
+
+    /**
+     * implementation details
+     */
+    AST_TYPE
 } ast_t;
 
 typedef enum {
@@ -93,7 +106,12 @@ typedef struct node_t {
 
         /* AST_DECL */
         struct {
-            char *name;
+            union {
+                char *name;
+
+                /* AST_TYPE */
+                const char *nameof;
+            };
 
             union {
                 /* AST_DECL_FUNC */
@@ -112,6 +130,8 @@ typedef struct node_t {
     };
 } node_t;
 
+const char *node_name(node_t *node);
+
 nodes_t *ast_list(node_t *init);
 nodes_t *ast_append(nodes_t *list, node_t *node);
 
@@ -126,3 +146,7 @@ node_t *ast_return(scanner_t *scanner, where_t where, node_t *expr);
 node_t *ast_branch(scanner_t *scanner, where_t where, node_t *cond, node_t *branch);
 
 node_t *ast_decl_func(scanner_t *scanner, where_t where, char *name, node_t *body);
+
+node_t *ast_type(const char *name, type_t *typeof);
+
+void connect_type(node_t *node, type_t *type);

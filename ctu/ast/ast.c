@@ -13,8 +13,20 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
     node->kind = kind;
     node->scanner = scanner;
     node->where = where;
+    node->typeof = NULL;
 
     return node;
+}
+
+const char *node_name(node_t *node) {
+    switch (node->kind) {
+    case AST_TYPE: return node->nameof;
+    case AST_DECL_FUNC: case AST_DECL_VAR:
+        return node->name;
+
+    default:
+        return NULL;
+    }
 }
 
 nodes_t *ast_append(nodes_t *list, node_t *node) {
@@ -110,4 +122,25 @@ node_t *ast_decl_func(scanner_t *scanner, where_t where, char *name, node_t *bod
     node->body = body;
 
     return node;
+}
+
+static const where_t NOWHERE = { 0, 0, 0, 0 };
+
+node_t *ast_type(const char *name, type_t *typeof) {
+    node_t *node = new_node(NULL, NOWHERE, AST_TYPE);
+    node->nameof = name;
+
+    connect_type(node, typeof);
+
+    return node;
+}
+
+void connect_type(node_t *node, type_t *type) {
+    /**
+     * tell the type that this is the parent node
+     * for easier error reporting and decl lookup
+     * circular reference, take that rust :P
+     */
+    node->typeof = type;
+    type->node = node;
 }

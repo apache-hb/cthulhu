@@ -30,7 +30,8 @@ static bool already_reported(size_t index) {
     }
 
     for (size_t i = 0; i < index; i++) {
-        if (reports[i].node == node) {
+        report_t it = reports[i];
+        if (it.node == node && it.level != LEVEL_WARNING) {
             return true;
         }
     }
@@ -140,12 +141,12 @@ static void underline_source(scanner_t *source, where_t where) {
 static void outline_source(scanner_t *source, where_t where) {
     if (where.first_line == where.last_line) {
         underline_source(source, where);
+    } else {
+        /* TODO: better multiline span reporting */
+        fprintf(stderr, "spanning line %" PRId64 " to line %" PRId64 "\n", 
+            where.first_line, where.last_line
+        );
     }
-
-    /* TODO: better multiline span reporting */
-    fprintf(stderr, "spanning line %" PRId64 " to line %" PRId64 "\n", 
-        where.first_line, where.last_line
-    );
 }
 
 /**

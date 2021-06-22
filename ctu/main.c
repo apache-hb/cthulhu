@@ -3,6 +3,8 @@
 #include "ast/compile.h"
 #include "sema/sema.h"
 #include "debug/ast.h"
+#include "debug/ir.h"
+#include "ir/ir.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -90,7 +92,7 @@ int main(int argc, const char **argv) {
     if (report_end("input"))
         return 1;
 
-    report_begin(20);
+    sema_init();
 
     for (size_t i = 0; i < inputs.len; i++) {
         input_t it = inputs.files[i];
@@ -99,11 +101,17 @@ int main(int argc, const char **argv) {
         if (report_end("parse"))
             return 1;
 
-        sema_t *sema = resolve(nodes);
-        typecheck(sema);
+        typecheck(nodes);
 
         if (report_end("semantic"))
             return 1;
+
+        module_t mod = compile_module(nodes);
+
+        if (report_end("intermediate"))
+            return 1;
+
+        debug_module(mod);
     }
 
     return 0;

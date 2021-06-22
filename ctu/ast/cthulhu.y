@@ -70,7 +70,7 @@ unit: decl { x->ast = ast_list($1); }
 decl: function { $$ = $1; }
     ;
 
-function: DEF IDENT stmts { $$ = ast_decl_func(x, @$, $2, $3); }
+function: DEF IDENT stmts { $$ = ast_decl_func(x, merge_locations(@1, @2), $2, $3); }
     ;
 
 stmtlist: %empty { $$ = ast_list(NULL); }
