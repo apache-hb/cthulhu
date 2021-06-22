@@ -4,6 +4,8 @@
 #include "ctu/util/str.h"
 #include "ctu/util/util.h"
 
+#include "ctu/debug/ast.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -16,7 +18,24 @@ static sema_t *new_sema(sema_t *parent) {
     sema_t *sema = malloc(sizeof(sema_t));
     sema->parent = parent;
     sema->decls = ast_list(NULL);
+    sema->current_return_type = NULL;
     return sema;
+}
+
+static type_t *current_return_type(sema_t *sema) {
+    if (sema->current_return_type) {
+        return sema->current_return_type;
+    }
+
+    if (sema->parent) {
+        return current_return_type(sema->parent);
+    }
+
+    return NULL;
+}
+
+static void set_current_return_type(sema_t *sema, type_t *type) {
+    sema->current_return_type = type;
 }
 
 static type_t *new_type(typeof_t kind, bool mut, bool sign) {
@@ -42,6 +61,13 @@ static type_t *new_poison(node_t *node, char *msg) {
     return type;
 }
 
+static type_t *new_callable(node_t *function) {
+    type_t *type = new_type(TYPE_CALLABLE, false, false);
+    type->function = function;
+
+    return type;
+}
+
 /**
  * typechecking utils
  */
@@ -60,6 +86,14 @@ static bool is_integer(type_t *type) {
     return type->kind == TYPE_INTEGER;
 }
 
+static bool is_callable(type_t *type) {
+    return type->kind == TYPE_CALLABLE;
+}
+
+static bool is_builtin(type_t *type) {
+    return type->kind == TYPE_INTEGER;
+}
+
 static bool is_signed(type_t *type) {
     return type->sign;
 }
@@ -71,24 +105,47 @@ static type_t *make_signed(type_t *type) {
 }
 
 static const char *get_typename(type_t *type) {
+    if (!type) {
+        return "null";
+    }
+
     switch (type->kind) {
     case TYPE_INTEGER: return type->node->nameof;
-    case TYPE_POISON: return type->node->name;
+    case TYPE_POISON: return type->text;
+    case TYPE_CALLABLE: return format("() -> %s", get_typename(type->result));
     default: return "error";
     }
 }
 
-static bool types_equal(type_t *lhs, type_t *rhs) {
-    if (lhs->kind != rhs->kind) {
-        return false;
+static bool comatible_binary_operands(type_t *lhs, type_t *rhs) {
+    if (is_integer(lhs) && is_integer(rhs)) {
+        return true;
     }
 
-    if (lhs->sign != rhs->sign) {
-        return false;
-    }
+    return false;
+}
 
-    if (lhs->kind == TYPE_INTEGER && rhs->kind == TYPE_INTEGER) {
-        return lhs->integer == rhs->integer;
+static bool integer_conversion_would_truncate(type_t *to, type_t *from) {
+    return to->integer < from->integer;
+}
+
+static bool convertible_to(node_t *node, type_t *to, type_t *from) {
+    if (is_integer(to) && is_integer(from)) {
+        if (!is_signed(to) && is_signed(from)) {
+            reportf(LEVEL_WARNING, node, 
+                format("implicit conversion from unsigned type %s to signed type %s is lossy",
+                get_typename(from), get_typename(to)
+            ));
+        }
+
+        if (integer_conversion_would_truncate(to, from)) {
+            reportf(LEVEL_WARNING, node,
+                format("implicit conversion from type %s to type %s may truncate",
+                get_typename(from), get_typename(to)   
+            ));
+        }
+
+        return true;
     }
 
     return false;
@@ -164,9 +221,13 @@ static type_t *typecheck_binary(sema_t *sema, node_t *node) {
 
     if (is_binary_math_op(node->binary)) {
         if (!is_integer(lhs) || !is_integer(rhs)) {
+            const char *lhs_name = get_typename(lhs),
+                       *rhs_name = get_typename(rhs);
+            
+            printf("%d = %p, %d = %p\n", lhs->kind, lhs_name, rhs->kind, rhs_name);
             char *msg = format(
                 "binary math operands must both be integers. %s and %s are incompatible",
-                get_typename(lhs), get_typename(rhs)
+                lhs_name, rhs_name
             );
 
             reportf(LEVEL_ERROR, node, msg);
@@ -175,7 +236,7 @@ static type_t *typecheck_binary(sema_t *sema, node_t *node) {
         }
     }
 
-    if (!types_equal(lhs, rhs)) {
+    if (!comatible_binary_operands(lhs, rhs)) {
         char *msg = format(
             "%s and %s are incompatible binary operands",
             get_typename(lhs), get_typename(rhs)
@@ -194,8 +255,37 @@ static void typecheck_stmts(sema_t *sema, node_t *nodes, size_t len) {
     }
 }
 
+static type_t *typecheck_call(sema_t *sema, node_t *node) {
+    type_t *func = typecheck_node(sema, node->expr);
+    if (!is_callable(func)) {
+        reportf(LEVEL_ERROR, node, format("cannot call type %s", get_typename(func)));
+        return new_poison(node->expr, "malformed call expression");
+    }
+
+    return typecheck_node(sema, func->function)->result;
+}
+
+static type_t *typecheck_func(sema_t *sema, node_t *node) {
+    type_t *type = new_callable(node);
+    type->result = typecheck_node(sema, node->result);
+    return type;
+}
+
+static void typecheck_return(sema_t *sema, node_t *node) {
+    type_t *type = typecheck_node(sema, node->expr);
+    type_t *result = current_return_type(sema);
+
+    if (!convertible_to(node, result, type)) {
+        reportf(LEVEL_ERROR, node, 
+            format("cannot return %s from a function that returns %s",
+            get_typename(type), get_typename(result)   
+        ));
+    }
+}
+
 static type_t *typecheck_node(sema_t *sema, node_t *node) {
     type_t *type;
+    node_t *decl;
 
     if (node->typeof) {
         return node->typeof;
@@ -212,18 +302,32 @@ static type_t *typecheck_node(sema_t *sema, node_t *node) {
         type = typecheck_binary(sema, node);
         break;
     case AST_RETURN:
-        typecheck_node(sema, node->expr);
+        typecheck_return(sema, node);
         return NULL;
     case AST_STMTS:
         typecheck_stmts(sema, node->stmts->data, node->stmts->len);
         return NULL;
+    case AST_SYMBOL:
+        decl = find_decl(sema, node->ident);
+        type = typecheck_node(sema, decl);
+        break;
+    case AST_CALL:
+        type = typecheck_call(sema, node);
+        break;
+    case AST_DECL_FUNC:
+        type = typecheck_func(sema, node);
+        break;
     default:
         reportf(LEVEL_INTERNAL, node, "failed to typecheck node %d", node->kind);
         type = new_poison(node, format("failed to typechech node %d", node->kind));
         break;
     }
 
-    connect_type(node, type);
+    if (is_builtin(type)) {
+        node->typeof = type;
+    } else {
+        connect_type(node, type);
+    }
 
     return type;
 }
@@ -231,6 +335,9 @@ static type_t *typecheck_node(sema_t *sema, node_t *node) {
 static void typecheck_decl(sema_t *sema, node_t *node) {
     ASSERT(node->kind == AST_DECL_FUNC)("typecheck_decl(kind = %d)", node->kind);
     sema_t *nest = new_sema(sema);
+
+    type_t *result = typecheck_node(nest, node->result);
+    set_current_return_type(sema, result);
 
     typecheck_node(nest, node->body);
 }

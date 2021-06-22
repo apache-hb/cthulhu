@@ -5,10 +5,6 @@ static void debug_digit(node_t *node) {
     printf("digit %" PRIu64, node->digit);
 }
 
-static void debug_ident(node_t *node) {
-    printf("ident %s", node->ident);
-}
-
 static void debug_unary(node_t *node) {
     printf("unary %s ", unary_name(node->unary));
     debug_ast(node->expr);
@@ -43,16 +39,43 @@ static void debug_stmts(node_t *node) {
     }
 }
 
+static void debug_call(node_t *node) {
+    printf("call[%zu] ", node->args->len);
+    debug_ast(node->expr);
+    
+    if (node->args->len) {
+        printf(" ");
+    }
+
+    for (size_t i = 0; i < node->args->len; i++) {
+        if (i != 0) {
+            printf(" ");
+        }
+        debug_ast(node->args->data + i);
+    }
+}
+
+static void debug_symbol(node_t *node) {
+    printf("symbol %s", node->ident);
+}
+
+static void debug_func(node_t *node) {
+    printf("def %s ", node->name);
+    debug_ast(node->body);
+}
+
 void debug_ast(node_t *node) {
     printf("(");
     switch (node->kind) {
     case AST_DIGIT: debug_digit(node); break;
-    case AST_IDENT: debug_ident(node); break;
     case AST_UNARY: debug_unary(node); break;
     case AST_BINARY: debug_binary(node); break;
     case AST_RETURN: debug_return(node); break;
     case AST_STMTS: debug_stmts(node); break;
-    default: printf("error"); break;
+    case AST_CALL: debug_call(node); break;
+    case AST_SYMBOL: debug_symbol(node); break;
+    case AST_DECL_FUNC: debug_func(node); break;
+    default: printf("error");
     }
     printf(")");
 }

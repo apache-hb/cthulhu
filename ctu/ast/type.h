@@ -59,6 +59,11 @@ typedef enum {
     TYPE_INTEGER,
 
     /**
+     * the type of a function
+     */
+    TYPE_CALLABLE,
+
+    /**
      * error handling type
      */
     TYPE_POISON
@@ -73,6 +78,11 @@ typedef enum {
     INTEGER_INTPTR,
     INTEGER_INTMAX
 } integer_t;
+
+typedef struct {
+    struct type_t *data;
+    size_t size;
+} types_t;
 
 typedef struct type_t {
     /** 
@@ -109,5 +119,14 @@ typedef struct type_t {
          * TYPE_INTEGER
          */
         integer_t integer;
+
+        /**
+         * the original function if this is a callable
+         */
+        struct {
+            struct node_t *function;
+            struct type_t *result;
+            types_t args;
+        };
     };
 } type_t;

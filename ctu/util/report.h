@@ -28,7 +28,7 @@ typedef enum {
 /**
  * set the report limit and begin a new report
  */
-void report_begin(size_t limit);
+void report_begin(size_t limit, bool eager);
 /**
  * end the current report of `name`
  * return true if there were fatal errors

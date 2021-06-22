@@ -19,6 +19,7 @@ typedef struct {
     node_t *node;
 } report_t;
 
+static bool eager_report = false;
 static report_t *reports = NULL;
 static size_t max_reports = 0;
 static size_t num_reports = 0;
@@ -37,14 +38,6 @@ static bool already_reported(size_t index) {
     }
 
     return false;
-}
-
-static void push_report(level_t level, scanner_t *source, where_t where, node_t *node, char *message) {
-    report_t it = { level, message, source, where, node };
-
-    if (num_reports < max_reports) {
-        reports[num_reports++] = it;
-    }
 }
 
 static void print_message(level_t level, const char *message) {
@@ -165,8 +158,21 @@ static bool print_report(report_t report) {
         || report.level == LEVEL_INTERNAL;
 }
 
-void report_begin(size_t limit) {
+static void push_report(level_t level, scanner_t *source, where_t where, node_t *node, char *message) {
+    report_t it = { level, message, source, where, node };
+
+    if (num_reports < max_reports) {
+        reports[num_reports++] = it;
+    }
+
+    if (eager_report) {
+        print_report(it);
+    }
+}
+
+void report_begin(size_t limit, bool eager) {
     max_reports = limit;
+    eager_report = eager;
     reports = malloc(sizeof(report_t) * limit);
 }
 
@@ -186,6 +192,8 @@ bool report_end(const char *name) {
     if (fatal) {
         fprintf(stderr, "aborting after %s stage due to %zu error(s)\n", name, fatal);
     }
+
+    num_reports = 0;
 
     return fatal != 0;
 }

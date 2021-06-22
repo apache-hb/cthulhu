@@ -15,9 +15,9 @@ typedef enum {
      * expressions
      */
     AST_DIGIT,
-    AST_IDENT,
     AST_UNARY,
     AST_BINARY,
+    AST_CALL,
 
     /**
      * statements
@@ -31,6 +31,12 @@ typedef enum {
      */
     AST_DECL_FUNC,
     AST_DECL_VAR,
+    AST_DECL_PARAM,
+
+    /**
+     * name resolution
+     */
+    AST_SYMBOL,
 
     /**
      * implementation details
@@ -74,7 +80,7 @@ typedef struct node_t {
     type_t *typeof;
 
     union {
-        /* AST_IDENT */
+        /* AST_SYMBOL */
         char *ident;
 
         /* AST_DIGIT */
@@ -89,6 +95,9 @@ typedef struct node_t {
 
             /* AST_RETURN */
             struct node_t *expr;
+
+            /* AST_CALL */
+            nodes_t *args;
         };
 
         /* AST_BINARY */
@@ -116,12 +125,14 @@ typedef struct node_t {
             union {
                 /* AST_DECL_FUNC */
                 struct {
+                    nodes_t *params;
                     struct node_t *result;
                     struct node_t *body;
                 };
 
                 /* AST_DECL_VAR */
                 struct {
+                    /* AST_DECL_PARAM */
                     struct node_t *type;
                     struct node_t *init;
                 };
@@ -136,16 +147,23 @@ nodes_t *ast_list(node_t *init);
 nodes_t *ast_append(nodes_t *list, node_t *node);
 
 node_t *ast_digit(scanner_t *scanner, where_t where, char *digit);
-node_t *ast_ident(scanner_t *scanner, where_t where, char *text);
 
 node_t *ast_unary(scanner_t *scanner, where_t where, unary_t unary, node_t *expr);
 node_t *ast_binary(scanner_t *scanner, where_t where, binary_t binary, node_t *lhs, node_t *rhs);
+node_t *ast_call(scanner_t *scanner, where_t where, node_t *body, nodes_t *args);
 
 node_t *ast_stmts(scanner_t *scanner, where_t where, nodes_t *stmts);
 node_t *ast_return(scanner_t *scanner, where_t where, node_t *expr);
 node_t *ast_branch(scanner_t *scanner, where_t where, node_t *cond, node_t *branch);
 
-node_t *ast_decl_func(scanner_t *scanner, where_t where, char *name, node_t *body);
+node_t *ast_symbol(scanner_t *scanner, where_t where, char *text);
+
+node_t *ast_decl_func(
+    scanner_t *scanner, where_t where, 
+    char *name, nodes_t *params,
+    node_t *result, node_t *body
+);
+node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *type);
 
 node_t *ast_type(const char *name, type_t *typeof);
 
