@@ -45,6 +45,8 @@
 "}" { return RBRACE; }
 "?" { return QUESTION; }
 ";" { return SEMI; }
+":" { return COLON; }
+"," { return COMMA; }
 
 \0 { return END; }
 

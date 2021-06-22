@@ -16,6 +16,9 @@ static const char *name = NULL;
 /* name of file to output to */
 static const char *output = "a.out";
 
+/* enable eager error reporting */
+static bool eager_reporting = false;
+
 typedef struct {
     const char *path;
     FILE *file;
@@ -47,12 +50,14 @@ static void add_file(const char *path) {
 }
 
 #define HELP_ARG "--help"
+#define EAGER_ARG "--eager"
 #define OUTPUT_ARG "--output"
 
 static void print_help(void) {
     printf("usage: %s [options] file...\n", name);
     printf("options:\n");
     printf("\t" HELP_ARG ": print this message\n");
+    printf("\t" EAGER_ARG ": enable eager error reporting\n");
     printf("\t" OUTPUT_ARG "=name: set output name (default %s)\n", output);
 }
 
@@ -62,6 +67,8 @@ static int parse_arg(int index, int argc, const char **argv) {
 
     if (strcmp(arg, HELP_ARG) == 0) {
         print_help();
+    } else if (strcmp(arg, EAGER_ARG) == 0) {
+        eager_reporting = true;
     } else if (!startswith(arg, "-")) {
         add_file(arg);
     }
@@ -85,12 +92,17 @@ int main(int argc, const char **argv) {
 
     init_inputs();
 
-    report_begin(20);
+    report_begin(20, eager_reporting);
 
     parse_argc_argv(argc, argv);
 
     if (report_end("input"))
         return 1;
+
+    if (inputs.len == 0) {
+        fprintf(stderr, "no input files\n");
+        return 1;
+    }
 
     sema_init();
 

@@ -8,6 +8,7 @@
 %code requires {
     #include "ctu/ast/scanner.h"
     #include "ctu/ast/ast.h"
+    #include "ctu/util/str.h"
 }
 
 %{
@@ -42,6 +43,8 @@ void yyerror();
 %token
     QUESTION "`?`"
     SEMI "`;`"
+    COMMA "`,`"
+    COLON "`:`"
 
 %token
     RETURN "`return`"
@@ -50,16 +53,23 @@ void yyerror();
     END 0 "end of file"
 
 %type<node>
-    decl function /* declarations */
+    decl function param /* declarations */
+    type typename /* types */
     stmt stmts return if /* statements */
     primary postfix unary multiply add expr /* expressions */
 
 %type<nodes>
     stmtlist
+    args arglist
+    params paramlist
 
 %start file
 
 %%
+
+/**
+ * toplevel decls
+ */
 
 file: unit END ;
 
@@ -70,8 +80,31 @@ unit: decl { x->ast = ast_list($1); }
 decl: function { $$ = $1; }
     ;
 
-function: DEF IDENT stmts { $$ = ast_decl_func(x, merge_locations(@1, @2), $2, $3); }
+function: DEF IDENT params COLON type stmts 
+    { 
+        $$ = ast_decl_func(x, merge_locations(@1, @2), 
+            /* name */ $2, 
+            /* params */ $3,
+            /* result */ $5,
+            /* body */ $6
+        ); 
+    }
     ;
+
+params: LPAREN RPAREN { $$ = ast_list(NULL); }
+    | LPAREN paramlist RPAREN { $$ = $2; }
+    ;
+
+paramlist: param { $$ = ast_list($1); }
+    | paramlist COMMA param { $$ = ast_append($1, $3); }
+    ;
+
+param: IDENT COLON type { $$ = ast_decl_param(x, @$, $1, $3); }
+    ;
+
+/**
+ * statements
+ */
 
 stmtlist: %empty { $$ = ast_list(NULL); }
     | stmtlist stmt { $$ = ast_append($1, $2); }
@@ -93,13 +126,38 @@ stmt: expr SEMI { $$ = $1; }
     | stmts { $$ = $1; }
     ;
 
+/**
+ * types
+ */
+
+type: typename { $$ = $1; }
+    ;
+
+typename: IDENT { $$ = ast_symbol(x, @$, strdup($1)); }
+    ;
+
+/**
+ * expressions
+ */
+
+
+args: %empty { $$ = ast_list(NULL); }
+    | arglist { $$ = $1; }
+    ;
+
+arglist: expr { $$ = ast_list($1); }
+    | arglist COMMA expr { $$ = ast_append($1, $3); }
+    ;
+
+
 primary: LPAREN expr RPAREN { $$ = $2; }
-    | IDENT { $$ = ast_ident(x, @$, $1); }
+    | type { $$ = $1; }
     | DIGIT { $$ = ast_digit(x, @$, $1); }
     ;
 
 postfix: primary { $$ = $1; }
     | postfix QUESTION { $$ = ast_unary(x, @$, UNARY_TRY, $1); }
+    | postfix LPAREN args RPAREN { $$ = ast_call(x, @$, $1, $3); }
     ;
 
 unary: postfix { $$ = $1; }

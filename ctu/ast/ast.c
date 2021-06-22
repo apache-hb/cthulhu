@@ -21,7 +21,7 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
 const char *node_name(node_t *node) {
     switch (node->kind) {
     case AST_TYPE: return node->nameof;
-    case AST_DECL_FUNC: case AST_DECL_VAR:
+    case AST_DECL_FUNC: case AST_DECL_VAR: case AST_DECL_PARAM:
         return node->name;
 
     default:
@@ -63,10 +63,10 @@ node_t *ast_digit(scanner_t *scanner, where_t where, char *digit) {
     return node;
 }
 
-node_t *ast_ident(scanner_t *scanner, where_t where, char *text) {
-    node_t *node = new_node(scanner, where, AST_IDENT);
+node_t *ast_symbol(scanner_t *scanner, where_t where, char *text) {
+    node_t *node = new_node(scanner, where, AST_SYMBOL);
 
-    node->ident = strdup(text);
+    node->ident = text;
 
     return node;
 }
@@ -86,6 +86,15 @@ node_t *ast_binary(scanner_t *scanner, where_t where, binary_t binary, node_t *l
     node->binary = binary;
     node->lhs = lhs;
     node->rhs = rhs;
+
+    return node;
+}
+
+node_t *ast_call(scanner_t *scanner, where_t where, node_t *body, nodes_t *args) {
+    node_t *node = new_node(scanner, where, AST_CALL);
+
+    node->expr = body;
+    node->args = args;
 
     return node;
 }
@@ -115,11 +124,26 @@ node_t *ast_branch(scanner_t *scanner, where_t where, node_t *cond, node_t *bran
     return node;
 }
 
-node_t *ast_decl_func(scanner_t *scanner, where_t where, char *name, node_t *body) {
+node_t *ast_decl_func(
+    scanner_t *scanner, where_t where, 
+    char *name, nodes_t *params,
+    node_t *result, node_t *body) {
+
     node_t *node = new_node(scanner, where, AST_DECL_FUNC);
 
     node->name = name;
+    node->params = params;
+    node->result = result;
     node->body = body;
+
+    return node;
+}
+
+node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *type) {
+    node_t *node = new_node(scanner, where, AST_DECL_PARAM);
+
+    node->name = name;
+    node->type = type;
 
     return node;
 }
@@ -138,7 +162,7 @@ node_t *ast_type(const char *name, type_t *typeof) {
 void connect_type(node_t *node, type_t *type) {
     /**
      * tell the type that this is the parent node
-     * for easier error reporting and decl lookup
+     * for easier error reporting and decl lookup.
      * circular reference, take that rust :P
      */
     node->typeof = type;
