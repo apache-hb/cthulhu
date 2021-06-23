@@ -59,6 +59,11 @@ typedef enum {
     TYPE_INTEGER,
 
     /**
+     * the result of a comparison
+     */
+    TYPE_BOOLEAN,
+
+    /**
      * the type of a function
      */
     TYPE_CALLABLE,

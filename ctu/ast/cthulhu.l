@@ -33,6 +33,11 @@
 
 [0-9]+ { yylval->text = yytext; return DIGIT; }
 
+">=" { return GTE; }
+"<=" { return LTE; }
+">" { return GT; }
+"<" { return LT; }
+
 "+" { return ADD; }
 "-" { return SUB; }
 "/" { return DIV; }
