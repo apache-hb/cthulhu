@@ -64,6 +64,13 @@ static void debug_func(node_t *node) {
     debug_ast(node->body);
 }
 
+static void debug_branch(node_t *node) {
+    printf("branch ");
+    debug_ast(node->cond);
+    printf(" ");
+    debug_ast(node->branch);
+}
+
 void debug_ast(node_t *node) {
     printf("(");
     switch (node->kind) {
@@ -75,6 +82,7 @@ void debug_ast(node_t *node) {
     case AST_CALL: debug_call(node); break;
     case AST_SYMBOL: debug_symbol(node); break;
     case AST_DECL_FUNC: debug_func(node); break;
+    case AST_BRANCH: debug_branch(node); break;
     default: printf("error");
     }
     printf(")");

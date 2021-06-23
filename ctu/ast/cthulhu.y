@@ -33,6 +33,10 @@ void yyerror();
     MUL "`*`"
     DIV "`/`"
     REM "`%`"
+    GT "`>`"
+    GTE "`>=`"
+    LT "`<`"
+    LTE "`<=`"
 
 %token
     LPAREN "`(`"
@@ -56,7 +60,7 @@ void yyerror();
     decl function param /* declarations */
     type typename /* types */
     stmt stmts return if /* statements */
-    primary postfix unary multiply add expr /* expressions */
+    primary postfix unary multiply add compare expr /* expressions */
 
 %type<nodes>
     stmtlist
@@ -176,7 +180,14 @@ add: multiply { $$ = $1; }
     | add SUB multiply { $$ = ast_binary(x, @$, BINARY_SUB, $1, $3); }
     ;
 
-expr: add { $$ = $1; }
+compare: add { $$ = $1; }
+    | compare GT add { $$ = ast_binary(x, @$, BINARY_GT, $1, $3); }
+    | compare GTE add { $$ = ast_binary(x, @$, BINARY_GTE, $1, $3); }
+    | compare LT add { $$ = ast_binary(x, @$, BINARY_LT, $1, $3); }
+    | compare LTE add { $$ = ast_binary(x, @$, BINARY_LTE, $1, $3); }
+    ;
+
+expr: compare { $$ = $1; }
     ;
     
 %%

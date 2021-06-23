@@ -55,7 +55,12 @@ typedef enum {
     BINARY_SUB, /* expr - expr */
     BINARY_MUL, /* expr * expr */
     BINARY_DIV, /* expr / expr */
-    BINARY_REM /* expr % expr */
+    BINARY_REM, /* expr % expr */
+
+    BINARY_LT, /* expr < expr */
+    BINARY_LTE, /* expr <= expr */
+    BINARY_GT, /* expr > expr */
+    BINARY_GTE /* expr >= expr */
 } binary_t;
 
 typedef struct node_t {
