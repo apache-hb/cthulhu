@@ -1,3 +1,11 @@
-def main(a: int): void {
+def two(b: int): int {
+    return b * 2;
+}
+
+def main(a: bool): int {
+    return two(500);
+}
+
+def thing(): void {
     return;
 }

@@ -64,6 +64,9 @@ typedef enum {
      */
     TYPE_BOOLEAN,
 
+    /**
+     * void type
+     */
     TYPE_VOID,
 
     /**
@@ -158,5 +161,6 @@ bool is_integer(type_t *type);
 bool is_boolean(type_t *type);
 bool is_callable(type_t *type);
 bool is_void(type_t *type);
+bool is_signed(type_t *type);
 
 void connect_type(struct node_t *node, type_t *type);

@@ -63,6 +63,9 @@ typedef enum {
     BINARY_GTE /* expr >= expr */
 } binary_t;
 
+bool is_math_op(binary_t op);
+bool is_comparison_op(binary_t op);
+
 typedef struct node_t {
     /**
      * the type of this node 
