@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef enum {
     /** 
@@ -63,15 +64,18 @@ typedef enum {
      */
     TYPE_BOOLEAN,
 
+    TYPE_VOID,
+
     /**
      * the type of a function
      */
     TYPE_CALLABLE,
 
     /**
-     * error handling type
+     * error handling types
      */
-    TYPE_POISON
+    TYPE_POISON, /* typecheck error */
+    TYPE_UNRESOLVED /* symbol lookup failed */
 } typeof_t;
 
 typedef enum {
@@ -85,7 +89,7 @@ typedef enum {
 } integer_t;
 
 typedef struct {
-    struct type_t *data;
+    struct type_t **data;
     size_t size;
 } types_t;
 
@@ -97,7 +101,6 @@ typedef struct type_t {
     
     /** 
      * is this type mutable 
-     * unused with TYPE_VOID
      */
     bool mut:1;
 
@@ -117,7 +120,7 @@ typedef struct type_t {
         /**
          * poison error message
          */
-        char *text;
+        const char *text;
         
         /** 
          * builtin integer data 
@@ -126,12 +129,34 @@ typedef struct type_t {
         integer_t integer;
 
         /**
-         * the original function if this is a callable
+         * callable data
          */
         struct {
+            /* the original function */
             struct node_t *function;
+            /* the return type */
             struct type_t *result;
-            types_t args;
+            /* the argument types */
+            types_t *args;
         };
     };
 } type_t;
+
+types_t *new_typelist(size_t size);
+size_t typelist_len(types_t *list);
+void typelist_put(types_t *list, size_t idx, type_t *type);
+type_t *typelist_at(types_t *list, size_t idx);
+
+type_t *new_integer(integer_t kind, bool sign, const char *name);
+type_t *new_builtin(typeof_t kind, const char *name);
+type_t *new_unresolved(struct node_t *symbol);
+type_t *new_poison(struct node_t *parent, const char *err);
+type_t *new_callable(struct node_t *func, types_t *args, type_t *result);
+
+bool is_unresolved(type_t *type);
+bool is_integer(type_t *type);
+bool is_boolean(type_t *type);
+bool is_callable(type_t *type);
+bool is_void(type_t *type);
+
+void connect_type(struct node_t *node, type_t *type);

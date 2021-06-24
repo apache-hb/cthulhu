@@ -6,7 +6,7 @@
 #include "type.h"
 
 typedef struct {
-    struct node_t *data;
+    struct node_t **data;
     size_t len, size;
 } nodes_t;
 
@@ -146,10 +146,30 @@ typedef struct node_t {
     };
 } node_t;
 
-const char *node_name(node_t *node);
+/**
+ * query information
+ */
+
+const char *get_decl_name(node_t *node);
+const char *get_symbol_name(node_t *node);
+const char *get_resolved_name(node_t *node);
+type_t *get_type(node_t *node);
+type_t *raw_type(node_t *node);
+nodes_t *get_stmts(node_t *node);
+
+/**
+ * list managment
+ */
 
 nodes_t *ast_list(node_t *init);
 nodes_t *ast_append(nodes_t *list, node_t *node);
+node_t *ast_at(nodes_t *list, size_t idx);
+node_t *ast_kind_at(nodes_t *list, size_t idx, ast_t kind);
+size_t ast_len(nodes_t *list);
+
+/**
+ * node creation
+ */
 
 node_t *ast_digit(scanner_t *scanner, where_t where, char *digit);
 
@@ -170,6 +190,4 @@ node_t *ast_decl_func(
 );
 node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *type);
 
-node_t *ast_type(const char *name, type_t *typeof);
-
-void connect_type(node_t *node, type_t *type);
+node_t *ast_type(const char *name);

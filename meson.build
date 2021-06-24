@@ -45,8 +45,7 @@ parse = custom_target('parse',
 
 src = [
     'ctu/util/str.c',
-    'ctu/util/report.c',
-    'ctu/util/util.c'
+    'ctu/util/report.c'
 ]
 
 libutil = library('util', src)
@@ -54,7 +53,8 @@ libutil = library('util', src)
 src = [
     'ctu/ast/compile.c',
     'ctu/ast/scanner.c',
-    'ctu/ast/ast.c'
+    'ctu/ast/ast.c',
+    'ctu/ast/type.c'
 ]
 
 libast = library('ast', src, lex, parse,

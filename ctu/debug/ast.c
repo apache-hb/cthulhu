@@ -27,31 +27,33 @@ static void debug_return(node_t *node) {
 }
 
 static void debug_stmts(node_t *node) {
-    printf("stmts[%zu]", node->stmts->len);
-    if (node->stmts->len) {
+    size_t len = ast_len(node->stmts);
+    printf("stmts[%zu]", len);
+    if (len) {
         printf(" ");
     }
-    for (size_t i = 0; i < node->stmts->len; i++) {
+    for (size_t i = 0; i < len; i++) {
         if (i != 0) {
             printf(" ");
         }
-        debug_ast(node->stmts->data + i);
+        debug_ast(ast_at(node->stmts, i));
     }
 }
 
 static void debug_call(node_t *node) {
-    printf("call[%zu] ", node->args->len);
+    size_t len = ast_len(node->args);
+    printf("call[%zu] ", len);
     debug_ast(node->expr);
     
-    if (node->args->len) {
+    if (len) {
         printf(" ");
     }
 
-    for (size_t i = 0; i < node->args->len; i++) {
+    for (size_t i = 0; i < len; i++) {
         if (i != 0) {
             printf(" ");
         }
-        debug_ast(node->args->data + i);
+        debug_ast(ast_at(node->args, i));
     }
 }
 

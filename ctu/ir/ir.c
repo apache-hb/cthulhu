@@ -86,7 +86,7 @@ static operand_t emit_binary(flow_t *flow, node_t *node) {
 
 static operand_t emit_stmts(flow_t *flow, node_t *node) {
     for (size_t i = 0; i < node->stmts->len; i++) {
-        emit_opcode(flow, node->stmts->data + i);
+        emit_opcode(flow, ast_at(node->stmts, i));
     }
     return new_operand(NONE);
 }
@@ -133,7 +133,7 @@ module_t compile_module(nodes_t *nodes) {
     module_t mod = { malloc(sizeof(flow_t) * 4), 0, 4 };
     
     for (size_t i = 0; i < nodes->len; i++) {
-        flow_t flow = compile_flow(nodes->data + i);
+        flow_t flow = compile_flow(ast_at(nodes, i));
         add_flow(&mod, flow);
     }
 
