@@ -16,6 +16,10 @@ const char *binary_name(binary_t binary) {
     case BINARY_MUL: return "mul";
     case BINARY_DIV: return "div";
     case BINARY_REM: return "rem";
+    case BINARY_GT: return "gt";
+    case BINARY_GTE: return "gte";
+    case BINARY_LT: return "lt";
+    case BINARY_LTE: return "lte";
     default: return "error";
     }
 }

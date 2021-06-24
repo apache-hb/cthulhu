@@ -11,7 +11,7 @@ typedef enum {
     OP_VALUE, /* either a copy or an immediate */
 
     OP_BLOCK, /* start of a basic block */
-    OP_JUMP /* conditional jump */
+    OP_BRANCH /* conditional jump */
 } opcode_t;
 
 typedef size_t vreg_t;
@@ -20,6 +20,7 @@ typedef struct {
     enum { 
         ARG, /* an argument passed to this function */
         VREG, /* a virtual register in the current flow */
+        BLOCK, /* an address of a basic block in the current flow */
         IMM, /* an immediate value */
         NAME, /* an external function */
         FUNC, /* another flow in the current unit */
@@ -29,6 +30,7 @@ typedef struct {
     union {
         vreg_t vreg;
         vreg_t arg;
+        size_t label;
         size_t func;
         int64_t imm;
         const char *name;
@@ -47,6 +49,20 @@ typedef struct {
 
             operand_t *args;
             size_t len;
+        };
+
+        /* OP_BRANCH */
+        struct {
+            /**
+             * if cond then 
+             *  goto block 
+             * else 
+             *  goto other
+             * end
+             */
+            operand_t cond;
+            operand_t block;
+            operand_t other;
         };
 
         /* OP_UNARY */
@@ -85,6 +101,8 @@ typedef struct {
     /* the parent module this flow is contained in */
     struct module_t *mod;
 } flow_t;
+
+step_t *step_at(flow_t *flow, size_t idx);
 
 /**
  * a compilation unit

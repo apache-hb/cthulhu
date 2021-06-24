@@ -78,6 +78,14 @@ libir = library('ir', src,
 )
 
 src = [
+    'ctu/speed/dead.c'
+]
+
+libspeed = library('speed', src,
+    link_with : libir
+)
+
+src = [
     'ctu/debug/ast.c',
     'ctu/debug/ir.c',
     'ctu/debug/common.c'
@@ -88,5 +96,5 @@ libdebug = library('debug', src,
 )
 
 driver = executable('ctc', 'ctu/main.c',
-    link_with : [ libdebug, libir, libsema, libast ]
+    link_with : [ libdebug, libspeed, libir, libsema, libast ]
 )

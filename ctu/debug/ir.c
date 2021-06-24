@@ -8,10 +8,11 @@ static const char *get_flow_name(module_t *mod, size_t idx) {
 static void debug_operand(module_t *mod, operand_t op) {
     switch (op.kind) {
     case VREG: printf("%%%zu", op.vreg); break;
-    case ARG: printf("(arg:%zu)", op.arg); break;
+    case ARG: printf("arg[%zu]", op.arg); break;
     case IMM: printf("$%lu", op.imm); break;
     case NAME: printf("@%s", op.name); break;
-    case NONE: printf("void"); break;
+    case NONE: printf("none"); break;
+    case BLOCK: printf(".%zu", op.label); break;
     case FUNC: printf("%zu:%s", op.func, get_flow_name(mod, op.func)); break;
     }
 }
@@ -80,32 +81,43 @@ static void debug_step(module_t *mod, size_t idx, step_t step) {
         debug_operand(mod, step.value);
         break;
     case OP_EMPTY:
-        break;
+        return;
     case OP_BINARY:
         debug_index(idx); 
-        printf("%s ", binary_name(step.binary));
+        debug_type(step.type);
+        printf(" %s ", binary_name(step.binary));
         debug_operand(mod, step.lhs);
         printf(" ");
         debug_operand(mod, step.rhs);
         break;
     case OP_UNARY:
         debug_index(idx); 
-        printf("%s ", unary_name(step.unary));
+        debug_type(step.type);
+        printf(" %s ", unary_name(step.unary));
         debug_operand(mod, step.expr);
         break;
     case OP_VALUE:
         debug_index(idx); 
+        debug_type(step.type);
+        printf(" ");
         debug_operand(mod, step.value);
         break;
     case OP_BLOCK:
-        printf("@%zu:", idx);
+        printf(".%zu:", idx);
         break;
-    case OP_JUMP:
-        printf("  jmp");
+    case OP_BRANCH:
+        printf("  branch ");
+        debug_operand(mod, step.cond);
+        printf(" ");
+        debug_operand(mod, step.block);
+        printf(" else ");
+        debug_operand(mod, step.other);
         break;
     case OP_CALL:
         debug_index(idx);
         printf("call ");
+        debug_type(step.type);
+        printf(" ");
         debug_operand(mod, step.value);
         debug_args(mod, step);
         break;

@@ -26,7 +26,7 @@ static sema_t *ROOT_SEMA = NULL;
 static type_t *INT_TYPE = NULL;
 static type_t *UINT_TYPE = NULL;
 static type_t *BOOL_TYPE = NULL;
-static type_t *VOID_TYPE = NULL;
+type_t *VOID_TYPE = NULL;
 
 /**
  * builders
@@ -271,6 +271,15 @@ static type_t *typecheck_unary(sema_t *sema, node_t *expr) {
     return type;
 }
 
+static void typecheck_branch(sema_t *sema, node_t *stmt) {
+    type_t *cond = typecheck_expr(sema, stmt->cond);
+    typecheck_stmt(sema, stmt->branch);
+
+    if (!convertible_to(BOOL_TYPE, cond)) {
+        reportf(LEVEL_ERROR, stmt->cond, "cannot branch on a non-boolean type");
+    }
+}
+
 static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
     type_t *type = raw_type(expr);
 
@@ -346,6 +355,10 @@ static void typecheck_stmt(sema_t *sema, node_t *stmt) {
 
     case AST_STMTS:
         typecheck_stmts(sema, stmt);
+        break;
+
+    case AST_BRANCH:
+        typecheck_branch(sema, stmt);
         break;
 
     case AST_DIGIT: case AST_UNARY: 

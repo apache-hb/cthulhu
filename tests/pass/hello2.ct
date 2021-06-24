@@ -1,11 +1,20 @@
-def two(b: int): int {
-    return b * 2;
+def main(): void {
+    fib(40);
 }
 
-def main(a: bool): int {
-    return two(500);
+def fib(i: uint): uint {
+    if i < 2 {
+        return i;
+    }
+
+    return fib(i - 1) + fib(i - 2);
 }
 
-def thing(): void {
-    return;
+def empty(): void {
+    {
+
+    }
+    {
+        
+    }
 }

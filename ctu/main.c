@@ -5,6 +5,7 @@
 #include "debug/ast.h"
 #include "debug/ir.h"
 #include "ir/ir.h"
+#include "speed/speed.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -121,6 +122,12 @@ int main(int argc, const char **argv) {
         module_t mod = compile_module(nodes);
 
         if (report_end("intermediate"))
+            return 1;
+
+        remove_dead_code(&mod);
+        remove_empty_blocks(&mod);
+
+        if (report_end("optimize"))
             return 1;
 
         debug_module(mod);
