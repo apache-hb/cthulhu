@@ -55,7 +55,7 @@ static type_t *return_type(sema_t *sema) {
         return return_type(sema->parent);
     }
 
-    return NULL;
+    return VOID_TYPE;
 }
 
 static void add_decl(sema_t *sema, node_t *decl) {
@@ -117,6 +117,8 @@ static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
         reportf(LEVEL_ERROR, symbol, "cannot resolve `%s` to a type", get_symbol_name(symbol));
     }
 
+    connect_type(symbol, type);
+
     return type;
 }
 
@@ -148,18 +150,24 @@ static void typecheck_stmt(sema_t *sema, node_t *stmt);
 static type_t *typecheck_expr(sema_t *sema, node_t *expr);
 static type_t *typecheck_decl(sema_t *sema, node_t *decl);
 
-static void typecheck_return(sema_t *sema, node_t *stmt) {
+static type_t *typecheck_return(sema_t *sema, node_t *stmt) {
     node_t *expr = stmt->expr;
 
     type_t *result = expr == NULL 
         ? VOID_TYPE
         : typecheck_expr(sema, expr);
 
+    if (result == VOID_TYPE && expr != NULL) {
+        reportf(LEVEL_ERROR, stmt, "cannot explicitly return void");
+    }
+
     type_t *expect = return_type(sema);
 
     if (!convertible_to(expect, result)) {
         reportf(LEVEL_ERROR, stmt, "incorrect return type");
     }
+
+    return result;
 }
 
 static void typecheck_stmts(sema_t *sema, node_t *stmts) {
@@ -175,13 +183,6 @@ static void typecheck_stmts(sema_t *sema, node_t *stmts) {
 static type_t *get_digit_type(node_t *expr) {
     (void)expr;
     return INT_TYPE;
-}
-
-static type_t *typecheck_symbol(sema_t *sema, node_t *symbol) {
-    const char *name = get_symbol_name(symbol);
-    node_t *decl = get_decl(sema, name);
-
-    return typecheck_decl(sema, decl);
 }
 
 static type_t *typecheck_call(sema_t *sema, node_t *node) {
@@ -219,11 +220,33 @@ static type_t *typecheck_func(sema_t *sema, node_t *decl) {
     types_t *args = new_typelist(len);
 
     for (size_t i = 0; i < len; i++) {
-        type_t *arg = typecheck_decl(sema, ast_at(decl->params, i));
+        node_t *param = ast_at(decl->params, i);
+        type_t *arg = typecheck_decl(sema, param);
         typelist_put(args, i, arg);
     }
 
     return new_callable(decl, args, result);
+}
+
+static type_t *typecheck_binary(sema_t *sema, node_t *expr) {
+    type_t *lhs = typecheck_expr(sema, expr->lhs);
+    type_t *rhs = typecheck_expr(sema, expr->rhs);
+    binary_t op = expr->binary;
+    type_t *result;
+
+    if (is_comparison_op(op)) {
+        result = BOOL_TYPE;
+    } else if (is_math_op(op)) {
+        result = INT_TYPE;
+
+        if (!is_integer(lhs) || !is_integer(rhs)) {
+            reportf(LEVEL_ERROR, expr, "both sides of math operation must be integral");
+        }
+    } else {
+        result = new_poison(expr, "unknown operation");
+    }
+
+    return result;
 }
 
 static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
@@ -238,8 +261,12 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
         type = get_digit_type(expr);
         break;
 
-    case AST_SYMBOL: 
-        type = typecheck_symbol(sema, expr);
+    case AST_BINARY:
+        type = typecheck_binary(sema, expr);
+        break;
+
+    case AST_SYMBOL:
+        type = resolve_symbol(sema, expr);
         break;
 
     case AST_CALL:
@@ -266,15 +293,11 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
 
     switch (decl->kind) {
     case AST_DECL_PARAM:
-        type = typecheck_decl(sema, decl->type);
+        type = resolve_symbol(sema, decl->type);
         break;
 
     case AST_DECL_FUNC:
         type = typecheck_func(sema, decl);
-        break;
-
-    case AST_SYMBOL:
-        type = typecheck_symbol(sema, decl);
         break;
 
     default:
@@ -288,21 +311,34 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
 }
 
 static void typecheck_stmt(sema_t *sema, node_t *stmt) {
+    type_t *type = VOID_TYPE;
+
     switch (stmt->kind) {
     case AST_RETURN:
-        typecheck_return(sema, stmt);
+        type = typecheck_return(sema, stmt);
         break;
 
     case AST_STMTS:
         typecheck_stmts(sema, stmt);
         break;
 
+    case AST_DIGIT: case AST_UNARY: 
+    case AST_BINARY: case AST_CALL:
+        type = typecheck_expr(sema, stmt);
+        if (!is_void(type)) {
+            reportf(LEVEL_WARNING, stmt, "discarding value of expression");
+        }
+        break;
+
     default:
         reportf(LEVEL_INTERNAL, stmt, "unimplement statement typecheck");
         break;
     }
+
+    connect_type(stmt, type);
 }
 
+/*
 static void typecheck_func_params(sema_t *sema, nodes_t *params) {
     size_t len = ast_len(params);
 
@@ -326,7 +362,7 @@ static void typecheck_func_params(sema_t *sema, nodes_t *params) {
     }
 }
 
-static void typecheck_func_result(sema_t *sema, node_t *result) {
+static void resolve_func_result(sema_t *sema, node_t *result) {
     sema->result = resolve_symbol(sema, result);
 }
 
@@ -334,9 +370,32 @@ static void typecheck_function_impl(sema_t *sema, node_t *decl) {
     sema_t *nested = new_sema(sema);
 
     typecheck_func_params(nested, decl->params);
-    typecheck_func_result(nested, decl->result);
+    resolve_func_result(nested, decl->result);
 
     typecheck_stmts(nested, decl->body);
+}
+*/
+
+static void validate_params(sema_t *sema, nodes_t *params) {
+    size_t len = ast_len(params);
+    for (size_t i = 0; i < len; i++) {
+        node_t *param = ast_at(params, i);
+        type_t *type = typecheck_decl(sema, param);
+        
+        add_decl_unique(sema, param);
+
+        if (is_void(type)) {
+            reportf(LEVEL_ERROR, param, "parameter cannot have void type");
+        }
+    }
+}
+
+static void validate_function(sema_t *sema, node_t *func) {
+    sema_t *nest = new_sema(sema);
+    validate_params(nest, func->params);
+    sema->result = resolve_symbol(sema, func->result);
+
+    typecheck_stmts(nest, func->body);
 }
 
 static void add_all_decls(sema_t *sema, nodes_t *decls) {
@@ -344,6 +403,7 @@ static void add_all_decls(sema_t *sema, nodes_t *decls) {
 
     for (size_t i = 0; i < len; i++) {
         node_t *decl = ast_kind_at(decls, i, AST_DECL_FUNC);
+        typecheck_func(sema, decl);
         add_decl_unique(sema, decl);
     }
 }
@@ -355,7 +415,7 @@ static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {
 
     for (size_t i = 0; i < len; i++) {
         node_t *decl = ast_kind_at(decls, i, AST_DECL_FUNC);
-        typecheck_function_impl(sema, decl);
+        validate_function(sema, decl);
     }
 }
 

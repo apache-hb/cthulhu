@@ -72,6 +72,27 @@ nodes_t *get_stmts(node_t *node) {
     return node->stmts;
 }
 
+bool is_math_op(binary_t op) {
+    switch (op) {
+    case BINARY_ADD: case BINARY_SUB:
+    case BINARY_DIV: case BINARY_MUL:
+    case BINARY_REM: 
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool is_comparison_op(binary_t op) {
+    switch (op) {
+    case BINARY_GT: case BINARY_GTE:
+    case BINARY_LT: case BINARY_LTE:
+        return true;
+    default:
+        return false;
+    }
+}
+
 nodes_t *ast_append(nodes_t *list, node_t *node) {
     if (list->len + 1 >= list->size) {
         list->size += 4;

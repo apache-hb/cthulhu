@@ -86,6 +86,10 @@ static bool is_builtin(type_t *type) {
         || is_void(type);
 }
 
+bool is_signed(type_t *type) {
+    return type->sign;
+}
+
 void connect_type(node_t *node, type_t *type) {
     node->typeof = type;
 
