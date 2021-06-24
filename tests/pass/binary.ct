@@ -1,5 +1,7 @@
-def main void {
-    5 + true;
-    false + 10;
-    return true ? 20 + 10 : false;
+def main(a: int, b: int, a: bool): bool {
+
+}
+
+def a(): bool {
+    
 }

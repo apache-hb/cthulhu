@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "ctu/util/str.h"
+#include "ctu/util/report.h"
 
 #include "ctu/debug/ast.h"
 
@@ -18,32 +19,72 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
     return node;
 }
 
-const char *node_name(node_t *node) {
+const char *get_decl_name(node_t *node) {
     switch (node->kind) {
-    case AST_TYPE: return node->nameof;
     case AST_DECL_FUNC: case AST_DECL_VAR: case AST_DECL_PARAM:
         return node->name;
 
     default:
+        reportf(LEVEL_INTERNAL, node, "node is not a declaration");
         return NULL;
     }
+}
+
+const char *get_symbol_name(node_t *node) {
+    switch (node->kind) {
+    case AST_SYMBOL: 
+        return node->ident;
+
+    default:
+        reportf(LEVEL_INTERNAL, node, "node is not a symbol");
+        return NULL;
+    }
+}
+
+const char *get_resolved_name(node_t *node) {
+    switch (node->kind) {
+    case AST_TYPE:
+        return node->nameof;
+    case AST_DECL_FUNC: case AST_DECL_PARAM:
+        return node->name;
+
+    default:
+        reportf(LEVEL_INTERNAL, node, "node does not have a name");
+        return NULL;
+    }
+}
+
+type_t *raw_type(node_t *node) {
+    return node->typeof;
+}
+
+type_t *get_type(node_t *node) {
+    type_t *type = raw_type(node);
+    
+    return type == NULL
+        ? new_unresolved(node)
+        : type;
+}
+
+nodes_t *get_stmts(node_t *node) {
+    ASSERT(node->kind == AST_STMTS)("node->kind != AST_STMTS when calling get_stmts");
+
+    return node->stmts;
 }
 
 nodes_t *ast_append(nodes_t *list, node_t *node) {
     if (list->len + 1 >= list->size) {
         list->size += 4;
-        list->data = realloc(list->data, sizeof(node_t) * list->size);
+        list->data = realloc(list->data, sizeof(node_t*) * list->size);
     }
-    memcpy(list->data + list->len, node, sizeof(node_t));
-    list->len += 1;
-
+    list->data[list->len++] = node;
     return list;
 }
 
 nodes_t *ast_list(node_t *init) {
     nodes_t *nodes = malloc(sizeof(nodes_t));
 
-    nodes->data = malloc(sizeof(node_t) * 4);
+    nodes->data = malloc(sizeof(node_t*) * 4);
     nodes->len = 0;
     nodes->size = 4;
 
@@ -51,6 +92,20 @@ nodes_t *ast_list(node_t *init) {
         ast_append(nodes, init);
 
     return nodes;
+}
+
+node_t *ast_at(nodes_t *list, size_t idx) {
+    return list->data[idx];
+}
+
+node_t *ast_kind_at(nodes_t *list, size_t idx, ast_t kind) {
+    node_t *node = ast_at(list, idx);
+    ASSERT(node->kind == kind)("unexpected node `%d` at `%zu`", node->kind, idx);
+    return node;
+}
+
+size_t ast_len(nodes_t *list) {
+    return list->len;
 }
 
 node_t *ast_digit(scanner_t *scanner, where_t where, char *digit) {
@@ -150,21 +205,8 @@ node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *ty
 
 static const where_t NOWHERE = { 0, 0, 0, 0 };
 
-node_t *ast_type(const char *name, type_t *typeof) {
+node_t *ast_type(const char *name) {
     node_t *node = new_node(NULL, NOWHERE, AST_TYPE);
     node->nameof = name;
-
-    connect_type(node, typeof);
-
     return node;
-}
-
-void connect_type(node_t *node, type_t *type) {
-    /**
-     * tell the type that this is the parent node
-     * for easier error reporting and decl lookup.
-     * circular reference, take that rust :P
-     */
-    node->typeof = type;
-    type->node = node;
 }
