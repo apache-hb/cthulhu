@@ -233,6 +233,10 @@ static type_t *get_digit_type(node_t *expr) {
     return INT_TYPE;
 }
 
+static type_t *get_bool_type(void) {
+    return BOOL_TYPE;
+}
+
 static type_t *typecheck_call(sema_t *sema, node_t *node) {
     type_t *body = typecheck_expr(sema, node->expr);
 
@@ -276,24 +280,44 @@ static type_t *typecheck_func(sema_t *sema, node_t *decl) {
     return new_callable(decl, args, result);
 }
 
+static void check_binary_cmp(node_t* node, type_t *lhs, type_t *rhs) {
+    if (!is_integer(lhs) || !is_integer(rhs)) {
+        reportf(LEVEL_ERROR, node, "both sides of comparison operation must be integral");
+    }
+}
+
+static void check_binary_math(node_t* node, type_t *lhs, type_t *rhs) {
+    if (!is_integer(lhs) || !is_integer(rhs)) {
+        reportf(LEVEL_ERROR, node, "both sides of math operation must be integral");
+    }
+}
+
+static void check_binary_equality(node_t* node, type_t *lhs, type_t *rhs) {
+    if (is_integer(lhs) && is_integer(rhs)) {
+        return;
+    }
+
+    if (is_boolean(lhs) && is_boolean(rhs)) {
+        return;
+    }
+
+    reportf(LEVEL_ERROR, node, "incompatible comparison operands");
+}
+
 static type_t *typecheck_binary(sema_t *sema, node_t *expr) {
     type_t *lhs = typecheck_expr(sema, expr->lhs);
     type_t *rhs = typecheck_expr(sema, expr->rhs);
     binary_t op = expr->binary;
-    type_t *result;
+    type_t *result = BOOL_TYPE;
 
     if (is_comparison_op(op)) {
-        result = BOOL_TYPE;
-
-        if (!is_integer(lhs) || !is_integer(rhs)) {
-            reportf(LEVEL_ERROR, expr, "both sides of comparison operation must be integral");
-        }
+        check_binary_cmp(expr, lhs, rhs);
+    } else if (is_equality_op(op)) {
+        check_binary_equality(expr, lhs, rhs);
     } else if (is_math_op(op)) {
         result = lhs;
 
-        if (!is_integer(lhs) || !is_integer(rhs)) {
-            reportf(LEVEL_ERROR, expr, "both sides of math operation must be integral");
-        }
+        check_binary_math(expr, lhs, rhs);
     } else {
         result = new_poison(expr, "unknown operation");
     }
@@ -349,6 +373,10 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
     switch (expr->kind) {
     case AST_DIGIT: 
         type = get_digit_type(expr);
+        break;
+
+    case AST_BOOL:
+        type = get_bool_type();
         break;
 
     case AST_BINARY:

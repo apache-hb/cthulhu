@@ -94,6 +94,15 @@ bool is_comparison_op(binary_t op) {
     }
 }
 
+bool is_equality_op(binary_t op) {
+    switch (op) {
+    case BINARY_EQ: case BINARY_NEQ:
+        return true;
+    default:
+        return false;
+    }
+}
+
 nodes_t *ast_append(nodes_t *list, node_t *node) {
     if (list->len + 1 >= list->size) {
         list->size += 4;
@@ -135,12 +144,20 @@ node_t *make_implicit(node_t *node) {
     return node;
 }
 
-node_t *ast_digit(scanner_t *scanner, where_t where, char *digit) {
+node_t *ast_digit(scanner_t *scanner, where_t where, char *digit, int base) {
     node_t *node = new_node(scanner, where, AST_DIGIT);
 
-    uint64_t out = strtoull(digit, NULL, 10);
+    uint64_t out = strtoull(digit, NULL, base);
 
     node->digit = out;
+
+    return node;
+}
+
+node_t *ast_bool(scanner_t *scanner, where_t where, bool boolean) {
+    node_t *node = new_node(scanner, where, AST_BOOL);
+
+    node->boolean = boolean;
 
     return node;
 }

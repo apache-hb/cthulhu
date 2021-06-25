@@ -18,7 +18,15 @@ static operand_t new_operand(int kind) {
 
 static operand_t new_imm(int64_t imm) {
     operand_t op = new_operand(IMM);
-    op.imm = imm;
+    op.imm.kind = IMM_INT;
+    op.imm.imm_int = imm;
+    return op;
+}
+
+static operand_t new_imm_b(bool b) {
+    operand_t op = new_operand(IMM);
+    op.imm.kind = IMM_BOOL;
+    op.imm.imm_bool = b;
     return op;
 }
 
@@ -92,6 +100,10 @@ static operand_t emit_opcode(flow_t *flow, node_t *node);
 
 static operand_t emit_digit(node_t *node) {
     return new_imm(node->digit);
+}
+
+static operand_t emit_bool(node_t *node) {
+    return new_imm_b(node->boolean);
 }
 
 static operand_t emit_unary(flow_t *flow, node_t *node) {
@@ -216,6 +228,7 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
     case AST_DIGIT: return emit_digit(node);
+    case AST_BOOL: return emit_bool(node);
     case AST_UNARY: return emit_unary(flow, node);
     case AST_BINARY: return emit_binary(flow, node);
     case AST_RETURN: return emit_return(flow, node);
