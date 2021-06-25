@@ -125,7 +125,7 @@ int main(int argc, const char **argv) {
             return 1;
 
         remove_dead_code(&mod);
-        remove_empty_blocks(&mod);
+        remove_unused_blocks(&mod);
 
         if (report_end("optimize"))
             return 1;
