@@ -30,9 +30,11 @@ char *format(const char *fmt, ...) {
     return out;
 }
 
+#ifndef _MSC_VER
 char *strdup(const char *str) {
     size_t len = strlen(str) + 1;
     char *out = malloc(len);
     memcpy(out, str, len);
     return out;
 }
+#endif

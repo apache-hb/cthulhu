@@ -96,5 +96,6 @@ libdebug = library('debug', src,
 )
 
 driver = executable('ctc', 'ctu/main.c',
+    c_args : [ '-D_CRT_SECURE_NO_WARNINGS=1' ],
     link_with : [ libdebug, libspeed, libir, libsema, libast ]
 )

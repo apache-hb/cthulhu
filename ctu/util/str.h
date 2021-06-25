@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdarg.h>
+#include <string.h>
 
 #define COLOUR_RED "\x1B[1;31m"
 #define COLOUR_GREEN "\x1B[0;32m"
@@ -16,4 +17,8 @@ bool startswith(const char *str, const char *other);
 char *formatv(const char *fmt, va_list args);
 char *format(const char *fmt, ...);
 
+#ifdef _MSC_VER
+#   define strdup _strdup
+#else
 char *strdup(const char *str);
+#endif
