@@ -27,6 +27,7 @@
 
 "def" { return DEF; }
 "if" { return IF; }
+"as" { return AS; }
 "return" { return RETURN; }
 
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }

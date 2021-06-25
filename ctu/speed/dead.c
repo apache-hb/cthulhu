@@ -66,6 +66,8 @@ static void track_blocks(flow_t *flow, bool *dirty) {
             *dirty = true;
         }
     }
+
+    free(refs);
 }
 
 bool remove_unused_blocks(module_t *mod) {

@@ -121,6 +121,13 @@ static void debug_step(module_t *mod, size_t idx, step_t step) {
         debug_operand(mod, step.value);
         debug_args(mod, step);
         break;
+    case OP_CONVERT:
+        debug_index(idx);
+        printf("cast ");
+        debug_type(step.type);
+        printf(" ");
+        debug_operand(mod, step.value);
+        break;
     }
 
     printf("\n");
@@ -145,6 +152,8 @@ static void debug_params(flow_t *flow) {
 static void debug_flow(module_t *mod, flow_t flow) {
     printf("define %s", flow.name);
     debug_params(&flow);
+    printf(": ");
+    debug_type(flow.result);
     printf(" {\n");
 
     for (size_t i = 0; i < flow.len; i++) {

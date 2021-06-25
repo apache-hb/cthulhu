@@ -203,6 +203,15 @@ static operand_t emit_branch(flow_t *flow, node_t *node) {
     return cond;
 }
 
+static operand_t emit_convert(flow_t *flow, node_t *node) {
+    operand_t body = emit_opcode(flow, node->expr);
+
+    step_t step = new_step(OP_CONVERT, node);
+    step.value = body;
+
+    return add_vreg(flow, step);
+}
+
 static operand_t emit_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
@@ -213,6 +222,7 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
     case AST_CALL: return emit_call(flow, node);
     case AST_SYMBOL: return emit_symbol(flow, node);
     case AST_BRANCH: return emit_branch(flow, node);
+    case AST_CAST: return emit_convert(flow, node);
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);
         return new_operand(NONE);
@@ -232,6 +242,7 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     size_t len = ast_len(params);
 
     flow_t flow = { 
+        /* name */
         get_decl_name(node), 
         
         /* arguments */
@@ -240,6 +251,10 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         /* body */
         malloc(sizeof(step_t) * 64), 0, 64, 
         
+        /* return type */
+        get_type(node->result),
+
+        /* parent */
         mod 
     };
 
