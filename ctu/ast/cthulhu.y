@@ -54,6 +54,7 @@ void yyerror();
     RETURN "`return`"
     DEF "`def`"
     IF "`if`"
+    AS "`as`"
     END 0 "end of file"
 
 %type<node>
@@ -162,6 +163,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
 postfix: primary { $$ = $1; }
     | postfix QUESTION { $$ = ast_unary(x, @$, UNARY_TRY, $1); }
     | postfix LPAREN args RPAREN { $$ = ast_call(x, @$, $1, $3); }
+    | postfix AS type { $$ = ast_cast(x, @$, $1, $3); }
     ;
 
 unary: postfix { $$ = $1; }

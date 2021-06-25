@@ -1,22 +1,10 @@
 #pragma once
 
-#include <stdint.h>
+#include "generic.h"
+#include "ctu/ir/ir.h"
 
 /**
- * generic codegen for 8086, x86, and x64
+ * codegen for 8086, x86, and x64
  */
 
-/**
- * a single function
- */
-typedef struct {
-    uint8_t *bytes;
-} func_t;
-
-/**
- * a blob of functions 
- * with relocations and extra data
- */
-typedef struct {
-
-} blob_t;
+blob_t *gen_x64(module_t *mod);

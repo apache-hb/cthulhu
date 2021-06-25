@@ -15,6 +15,7 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
     node->scanner = scanner;
     node->where = where;
     node->typeof = NULL;
+    node->implicit = false;
 
     return node;
 }
@@ -129,6 +130,11 @@ size_t ast_len(nodes_t *list) {
     return list->len;
 }
 
+node_t *make_implicit(node_t *node) {
+    node->implicit = true;
+    return node;
+}
+
 node_t *ast_digit(scanner_t *scanner, where_t where, char *digit) {
     node_t *node = new_node(scanner, where, AST_DIGIT);
 
@@ -171,6 +177,15 @@ node_t *ast_call(scanner_t *scanner, where_t where, node_t *body, nodes_t *args)
 
     node->expr = body;
     node->args = args;
+
+    return node;
+}
+
+node_t *ast_cast(scanner_t *scanner, where_t where, node_t *expr, node_t *cast) {
+    node_t *node = new_node(scanner, where, AST_CAST);
+
+    node->expr = expr;
+    node->cast = cast;
 
     return node;
 }

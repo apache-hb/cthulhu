@@ -122,24 +122,68 @@ static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
     return type;
 }
 
+static type_t *resolve_typename(sema_t *sema, node_t *node) {
+    return resolve_symbol(sema, node);
+}
+
+static node_t *implicit_cast(node_t *original, type_t *to) {
+    node_t *cast = ast_cast(original->scanner, original->where, original, NULL);
+
+    connect_type(cast, to);
+
+    return make_implicit(cast);
+}
+
 /**
  * comparison
  */
 
-static bool convertible_to(type_t *to, type_t *from) {
+static void check_sign_conversion(node_t **node, type_t *to, type_t *from, bool implicit) {
+    if (is_signed(to) != is_signed(from) && implicit) {
+        reportf(LEVEL_WARNING, *node, "types do not have the same sign, conversion may be lossy");
+        *node = implicit_cast(*node, to);
+    }
+}
+
+static bool convertible_to(
+    node_t **node,
+    type_t *to, type_t *from,
+    bool implicit
+) {
     if (is_void(to)) {
         return is_void(from);
     }
     
-    if (is_integer(to)) {
-        return is_integer(from);
+    if (is_integer(to) && is_integer(from)) {
+        check_sign_conversion(node, to, from, implicit);
+
+        return true;
     }
 
     if (is_boolean(to)) {
-        return is_integer(from) || is_boolean(from);
+        if (is_boolean(from)) {
+            return true;
+        }
+
+        if (is_integer(from)) {
+            if (implicit) {
+                reportf(LEVEL_WARNING, *node, "implicit integer to boolean conversion");
+                *node = implicit_cast(*node, to);
+            }
+
+            return true;
+        }
     }
 
     return false;
+}
+
+static bool implicit_convertible_to(node_t **node, type_t *to, type_t *from) {
+    return convertible_to(node, to, from, true);
+}
+
+static bool explicit_convertible_to(type_t *to, type_t *from) {
+    return convertible_to(NULL, to, from, false);
 }
 
 /**
@@ -163,9 +207,13 @@ static type_t *typecheck_return(sema_t *sema, node_t *stmt) {
 
     type_t *expect = return_type(sema);
 
-    if (!convertible_to(expect, result)) {
+    if (!implicit_convertible_to(&stmt->expr, expect, result)) {
         reportf(LEVEL_ERROR, stmt, "incorrect return type");
     }
+    
+    result = stmt->expr == NULL
+        ? VOID_TYPE
+        : get_type(stmt->expr);
 
     return result;
 }
@@ -206,7 +254,7 @@ static type_t *typecheck_call(sema_t *sema, node_t *node) {
         type_t *to = typelist_at(body->args, i);
         type_t *from = typecheck_expr(sema, arg);
     
-        if (!convertible_to(to, from)) {
+        if (!implicit_convertible_to(&arg, to, from)) {
             reportf(LEVEL_ERROR, arg, "incompatible argument type");
         }
     }
@@ -215,7 +263,7 @@ static type_t *typecheck_call(sema_t *sema, node_t *node) {
 }
 
 static type_t *typecheck_func(sema_t *sema, node_t *decl) {
-    type_t *result = resolve_symbol(sema, decl->result);
+    type_t *result = resolve_typename(sema, decl->result);
     size_t len = ast_len(decl->params);
     types_t *args = new_typelist(len);
 
@@ -275,9 +323,20 @@ static void typecheck_branch(sema_t *sema, node_t *stmt) {
     type_t *cond = typecheck_expr(sema, stmt->cond);
     typecheck_stmt(sema, stmt->branch);
 
-    if (!convertible_to(BOOL_TYPE, cond)) {
+    if (!implicit_convertible_to(&stmt->cond, BOOL_TYPE, cond)) {
         reportf(LEVEL_ERROR, stmt->cond, "cannot branch on a non-boolean type");
     }
+}
+
+static type_t *typecheck_cast(sema_t *sema, node_t *cast) {
+    type_t *origin = typecheck_expr(sema, cast->expr);
+    type_t *target = resolve_typename(sema, cast->cast);
+
+    if (!explicit_convertible_to(target, origin)) {
+        reportf(LEVEL_ERROR, cast, "cannot perform explicit conversion");
+    }
+
+    return target;
 }
 
 static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
@@ -308,6 +367,10 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
         type = typecheck_call(sema, expr);
         break;
 
+    case AST_CAST:
+        type = typecheck_cast(sema, expr);
+        break;
+
     default:
         reportf(LEVEL_INTERNAL, expr, "unimplemented expression typecheck");
         type = new_poison(expr, "unimplemented expression typecheck");
@@ -328,7 +391,7 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
 
     switch (decl->kind) {
     case AST_DECL_PARAM:
-        type = resolve_symbol(sema, decl->type);
+        type = resolve_typename(sema, decl->type);
         break;
 
     case AST_DECL_FUNC:
@@ -336,8 +399,8 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
         break;
 
     default:
-        reportf(LEVEL_INTERNAL, decl, "unimplement declaration typecheck");
-        type = new_poison(decl, "unimplement declaration typecheck");
+        reportf(LEVEL_INTERNAL, decl, "unimplemented declaration typecheck");
+        type = new_poison(decl, "unimplemented declaration typecheck");
         break;
     }
 
@@ -394,7 +457,7 @@ static void validate_params(sema_t *sema, nodes_t *params) {
 static void validate_function(sema_t *sema, node_t *func) {
     sema_t *nest = new_sema(sema);
     validate_params(nest, func->params);
-    sema->result = resolve_symbol(sema, func->result);
+    sema->result = resolve_typename(sema, func->result);
 
     typecheck_stmts(nest, func->body);
 }

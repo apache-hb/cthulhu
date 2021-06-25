@@ -9,6 +9,7 @@ typedef enum {
     OP_UNARY, /* unary operation */
     OP_CALL, /* calling a function */
     OP_VALUE, /* either a copy or an immediate */
+    OP_CONVERT, /* convert a value to another type */
 
     OP_BLOCK, /* start of a basic block */
     OP_BRANCH /* conditional jump */
@@ -97,6 +98,9 @@ typedef struct {
 
     step_t *steps;
     size_t len, size;
+
+    /* the return type */
+    type_t *result;
 
     /* the parent module this flow is contained in */
     struct module_t *mod;

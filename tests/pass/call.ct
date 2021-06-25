@@ -1,14 +1,3 @@
-def main: long {
-    // should implicity cast from int to long
-    return x();
-}
-
-def x: int {
-    final z = 1000 as long;
-    // narrowing conversion
-    return z as int;
-}
-
-def y: long {
-    return 0;
+def main(): uint {
+    return 100;
 }
