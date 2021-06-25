@@ -18,11 +18,22 @@ typedef enum {
 typedef size_t vreg_t;
 
 typedef struct {
+    enum { IMM_BOOL, IMM_INT } kind;
+
+    union {
+        bool imm_bool;
+        int64_t imm_int;
+    };
+} imm_t;
+
+typedef struct {
     enum { 
         ARG, /* an argument passed to this function */
         VREG, /* a virtual register in the current flow */
         BLOCK, /* an address of a basic block in the current flow */
+        
         IMM, /* an immediate value */
+
         NAME, /* an external function */
         FUNC, /* another flow in the current unit */
         NONE /* nothing */
@@ -33,7 +44,9 @@ typedef struct {
         vreg_t arg;
         size_t label;
         size_t func;
-        int64_t imm;
+
+        imm_t imm;
+
         const char *name;
     };
 } operand_t;

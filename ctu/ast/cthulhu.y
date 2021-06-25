@@ -18,6 +18,11 @@ void yyerror();
 %}
 
 %union {
+    struct {
+        char *text;
+        int base;
+    } digit;
+
     char *text;
     node_t *node;
     nodes_t *nodes;
@@ -25,6 +30,8 @@ void yyerror();
 
 %token<text>
     IDENT "identifier"
+
+%token<digit>
     DIGIT "integer literal"
 
 %token
@@ -33,10 +40,14 @@ void yyerror();
     MUL "`*`"
     DIV "`/`"
     REM "`%`"
+
     GT "`>`"
     GTE "`>=`"
     LT "`<`"
     LTE "`<=`"
+
+    EQ "`==`"
+    NEQ "`!=`"
 
 %token
     LPAREN "`(`"
@@ -51,6 +62,10 @@ void yyerror();
     COLON "`:`"
 
 %token
+    BOOL_TRUE "`true`"
+    BOOL_FALSE "`false`"
+
+%token
     RETURN "`return`"
     DEF "`def`"
     IF "`if`"
@@ -61,7 +76,7 @@ void yyerror();
     decl function param /* declarations */
     type typename /* types */
     stmt stmts return if /* statements */
-    primary postfix unary multiply add compare expr /* expressions */
+    primary postfix unary multiply add compare equality expr /* expressions */
 
 %type<nodes>
     stmtlist
@@ -157,7 +172,9 @@ arglist: expr { $$ = ast_list($1); }
 
 primary: LPAREN expr RPAREN { $$ = $2; }
     | type { $$ = $1; }
-    | DIGIT { $$ = ast_digit(x, @$, $1); }
+    | DIGIT { $$ = ast_digit(x, @$, $1.text, $1.base); }
+    | BOOL_TRUE { $$ = ast_bool(x, @$, true); }
+    | BOOL_FALSE { $$ = ast_bool(x, @$, false); }
     ;
 
 postfix: primary { $$ = $1; }
@@ -189,7 +206,12 @@ compare: add { $$ = $1; }
     | compare LTE add { $$ = ast_binary(x, @$, BINARY_LTE, $1, $3); }
     ;
 
-expr: compare { $$ = $1; }
+equality: compare { $$ = $1; }
+    | equality EQ compare { $$ = ast_binary(x, @$, BINARY_EQ, $1, $3); }
+    | equality NEQ compare{ $$ = ast_binary(x, @$, BINARY_NEQ, $1, $3); }
+    ;
+
+expr: equality { $$ = $1; }
     ;
     
 %%

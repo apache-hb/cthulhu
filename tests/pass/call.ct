@@ -1,3 +1,7 @@
-def main(): uint {
-    return 100;
+def main(i: int): bool {
+    if i == 100 {
+        return true;
+    }
+
+    return main(0b1000110101001) == main(i);
 }

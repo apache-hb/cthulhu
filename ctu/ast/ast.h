@@ -15,6 +15,7 @@ typedef enum {
      * expressions
      */
     AST_DIGIT,
+    AST_BOOL,
     AST_UNARY,
     AST_BINARY,
     AST_CALL,
@@ -61,11 +62,15 @@ typedef enum {
     BINARY_LT, /* expr < expr */
     BINARY_LTE, /* expr <= expr */
     BINARY_GT, /* expr > expr */
-    BINARY_GTE /* expr >= expr */
+    BINARY_GTE, /* expr >= expr */
+
+    BINARY_EQ, /* expr == expr */
+    BINARY_NEQ, /* expr != expr */
 } binary_t;
 
 bool is_math_op(binary_t op);
 bool is_comparison_op(binary_t op);
+bool is_equality_op(binary_t op);
 
 typedef struct node_t {
     /**
@@ -99,6 +104,9 @@ typedef struct node_t {
 
         /* AST_DIGIT */
         uint64_t digit;
+
+        /* AST_BOOL */
+        bool boolean;
 
         /* AST_STMTS */
         nodes_t *stmts;
@@ -191,7 +199,8 @@ node_t *make_implicit(node_t *node);
  * node creation
  */
 
-node_t *ast_digit(scanner_t *scanner, where_t where, char *digit);
+node_t *ast_digit(scanner_t *scanner, where_t where, char *digit, int base);
+node_t *ast_bool(scanner_t *scanner, where_t where, bool boolean);
 
 node_t *ast_unary(scanner_t *scanner, where_t where, unary_t unary, node_t *expr);
 node_t *ast_binary(scanner_t *scanner, where_t where, binary_t binary, node_t *lhs, node_t *rhs);

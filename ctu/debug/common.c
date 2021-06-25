@@ -20,6 +20,8 @@ const char *binary_name(binary_t binary) {
     case BINARY_GTE: return "gte";
     case BINARY_LT: return "lt";
     case BINARY_LTE: return "lte";
+    case BINARY_EQ: return "eq";
+    case BINARY_NEQ: return "neq";
     default: return "error";
     }
 }

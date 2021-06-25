@@ -5,11 +5,18 @@ static const char *get_flow_name(module_t *mod, size_t idx) {
     return mod->flows[idx].name;
 }
 
+static void debug_imm(imm_t imm) {
+    switch (imm.kind) {
+    case IMM_INT: printf("$%lu", imm.imm_int); break;
+    case IMM_BOOL: printf("$%s", imm.imm_bool ? "true" : "false"); break;
+    }
+}
+
 static void debug_operand(module_t *mod, operand_t op) {
     switch (op.kind) {
     case VREG: printf("%%%zu", op.vreg); break;
     case ARG: printf("arg[%zu]", op.arg); break;
-    case IMM: printf("$%lu", op.imm); break;
+    case IMM: debug_imm(op.imm); break;
     case NAME: printf("@%s", op.name); break;
     case NONE: printf("none"); break;
     case BLOCK: printf(".%zu", op.label); break;

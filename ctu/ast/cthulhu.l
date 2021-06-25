@@ -28,16 +28,37 @@
 "def" { return DEF; }
 "if" { return IF; }
 "as" { return AS; }
+"true" { return BOOL_TRUE; }
+"false" { return BOOL_FALSE; }
 "return" { return RETURN; }
 
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 
-[0-9]+ { yylval->text = yytext; return DIGIT; }
+[0-9]+ { 
+    yylval->digit.text = yytext; 
+    yylval->digit.base = 10;
+    return DIGIT; 
+}
+
+"0b"[01]+ { 
+    yylval->digit.text = yytext + 2; 
+    yylval->digit.base = 2;
+    return DIGIT; 
+}
+
+"0x"[0-9a-fA-F]+ { 
+    yylval->digit.text = yytext + 2;
+    yylval->digit.base = 16;
+    return DIGIT; 
+}
+
 
 ">=" { return GTE; }
 "<=" { return LTE; }
 ">" { return GT; }
 "<" { return LT; }
+"==" { return EQ; }
+"!=" { return NEQ; }
 
 "+" { return ADD; }
 "-" { return SUB; }
