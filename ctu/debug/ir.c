@@ -7,7 +7,7 @@ static const char *get_flow_name(module_t *mod, size_t idx) {
 
 static void debug_imm(imm_t imm) {
     switch (imm.kind) {
-    case IMM_INT: printf("$%lu", imm.imm_int); break;
+    case IMM_INT: printf("$%" PRId64, imm.imm_int); break;
     case IMM_BOOL: printf("$%s", imm.imm_bool ? "true" : "false"); break;
     }
 }

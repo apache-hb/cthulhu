@@ -6,13 +6,14 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 /**
  * builder functions
  */
 
 static operand_t new_operand(int kind) {
-    operand_t op = { kind, { } };
+    operand_t op = { kind, { SIZE_MAX } };
     return op;
 }
 
@@ -55,7 +56,13 @@ static operand_t new_block(size_t addr) {
 }
 
 static step_t new_typed_step(opcode_t op, type_t *type) {
-    step_t step = { op, type, { } };
+    step_t step = { 
+        /* opcode */ op, 
+        /* type */ type,
+#ifndef _MSC_VER
+        /* data */ { }
+#endif
+    };
     return step;
 }
 
