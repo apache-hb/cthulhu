@@ -10,6 +10,6 @@
 bool remove_dead_code(module_t *mod);
 
 /**
- * remove empty basic blocks
+ * remove unreferenced block labels
  */
-bool remove_empty_blocks(module_t *mod);
+bool remove_unused_blocks(module_t *mod);
