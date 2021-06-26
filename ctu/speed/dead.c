@@ -27,7 +27,7 @@ static void remove_ops(flow_t *flow, bool *dirty) {
 bool remove_dead_code(module_t *mod) {
     bool dirty = false;
 
-    for (size_t i = 0; i < mod->len; i++) {
+    for (size_t i = 0; i < num_flows(mod); i++) {
         remove_ops(mod->flows + i, &dirty);
     }
 
@@ -73,7 +73,7 @@ static void track_blocks(flow_t *flow, bool *dirty) {
 bool remove_unused_blocks(module_t *mod) {
     bool dirty = false;
 
-    for (size_t i = 0; i < mod->len; i++) {
+    for (size_t i = 0; i < num_flows(mod); i++) {
         track_blocks(mod->flows + i, &dirty);
     }
 

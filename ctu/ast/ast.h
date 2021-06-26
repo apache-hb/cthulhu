@@ -94,13 +94,20 @@ typedef struct node_t {
     bool implicit:1;
 
     /**
+     * is this node referencing a local variable
+     */
+    bool find_local:1;
+
+    /**
      * the type of this nodes expression in its current context
      */
     type_t *typeof;
 
     union {
-        /* AST_SYMBOL */
-        char *ident;
+        struct {
+            /* AST_SYMBOL */
+            char *ident;
+        };
 
         /* AST_DIGIT */
         uint64_t digit;
@@ -149,12 +156,18 @@ typedef struct node_t {
                 const char *nameof;
             };
 
+            /* own local index */
+            size_t local;
+
             union {
                 /* AST_DECL_FUNC */
                 struct {
                     nodes_t *params;
                     struct node_t *result;
                     struct node_t *body;
+
+                    /* total number of local variables */
+                    size_t locals;
                 };
 
                 /* AST_DECL_VAR */
@@ -178,6 +191,8 @@ const char *get_resolved_name(node_t *node);
 type_t *get_type(node_t *node);
 type_t *raw_type(node_t *node);
 nodes_t *get_stmts(node_t *node);
+
+bool is_discard_name(const char *name);
 
 /**
  * list managment
@@ -219,5 +234,6 @@ node_t *ast_decl_func(
     node_t *result, node_t *body
 );
 node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *type);
+node_t *ast_decl_var(scanner_t *scanner, where_t where, char *name, node_t *init);
 
 node_t *ast_type(const char *name);

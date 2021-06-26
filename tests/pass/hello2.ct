@@ -1,20 +1,11 @@
 def main(): void {
-    fib(40);
+    final $ = fib(40);
 }
 
-def fib(i: uint): uint {
+def fib(i: int): int {
     if i < 2 {
         return i;
     }
 
     return fib(i - 1) + fib(i - 2);
-}
-
-def empty(): void {
-    {
-
-    }
-    {
-        
-    }
 }

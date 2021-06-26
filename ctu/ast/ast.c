@@ -16,6 +16,7 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
     node->where = where;
     node->typeof = NULL;
     node->implicit = false;
+    node->find_local = false;
 
     return node;
 }
@@ -46,13 +47,17 @@ const char *get_resolved_name(node_t *node) {
     switch (node->kind) {
     case AST_TYPE:
         return node->nameof;
-    case AST_DECL_FUNC: case AST_DECL_PARAM:
+    case AST_DECL_FUNC: case AST_DECL_PARAM: case AST_DECL_VAR:
         return node->name;
 
     default:
         reportf(LEVEL_INTERNAL, node, "node does not have a name");
         return NULL;
     }
+}
+
+bool is_discard_name(const char *name) {
+    return name[0] == '$';
 }
 
 type_t *raw_type(node_t *node) {
@@ -252,6 +257,15 @@ node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *ty
 
     node->name = name;
     node->type = type;
+
+    return node;
+}
+
+node_t *ast_decl_var(scanner_t *scanner, where_t where, char *name, node_t *init) {
+    node_t *node = new_node(scanner, where, AST_DECL_VAR);
+
+    node->name = name;
+    node->init = init;
 
     return node;
 }

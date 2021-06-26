@@ -28,10 +28,12 @@
 "def" { return DEF; }
 "if" { return IF; }
 "as" { return AS; }
+"final" { return FINAL; }
 "true" { return BOOL_TRUE; }
 "false" { return BOOL_FALSE; }
 "return" { return RETURN; }
 
+"$" { yylval->text = "$"; return IDENT; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 
 [0-9]+ { 
@@ -74,6 +76,7 @@
 ";" { return SEMI; }
 ":" { return COLON; }
 "," { return COMMA; }
+"=" { return ASSIGN; }
 
 \0 { return END; }
 

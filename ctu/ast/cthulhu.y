@@ -60,6 +60,7 @@ void yyerror();
     SEMI "`;`"
     COMMA "`,`"
     COLON "`:`"
+    ASSIGN "`=`"
 
 %token
     BOOL_TRUE "`true`"
@@ -70,10 +71,11 @@ void yyerror();
     DEF "`def`"
     IF "`if`"
     AS "`as`"
+    FINAL "`final`"
     END 0 "end of file"
 
 %type<node>
-    decl function param /* declarations */
+    decl function param variable /* declarations */
     type typename /* types */
     stmt stmts return if /* statements */
     primary postfix unary multiply add compare equality expr /* expressions */
@@ -100,8 +102,7 @@ unit: decl { x->ast = ast_list($1); }
 decl: function { $$ = $1; }
     ;
 
-function: DEF IDENT params COLON type stmts 
-    { 
+function: DEF IDENT params COLON type stmts { 
         $$ = ast_decl_func(x, merge_locations(@1, @2), 
             /* name */ $2, 
             /* params */ $3,
@@ -109,6 +110,9 @@ function: DEF IDENT params COLON type stmts
             /* body */ $6
         ); 
     }
+    ;
+
+variable: FINAL IDENT ASSIGN expr SEMI { $$ = ast_decl_var(x, @$, $2, $4); }
     ;
 
 params: LPAREN RPAREN { $$ = ast_list(NULL); }
@@ -144,6 +148,7 @@ stmt: expr SEMI { $$ = $1; }
     | return { $$ = $1; }
     | if { $$ = $1; }
     | stmts { $$ = $1; }
+    | variable { $$ = $1; }
     ;
 
 /**

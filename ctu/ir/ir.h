@@ -3,8 +3,9 @@
 #include "ctu/ast/ast.h"
 
 typedef enum {
-    OP_RETURN, /* return from function */
     OP_EMPTY, /* optimized out */
+
+    OP_RETURN, /* return from function */
     OP_BINARY, /* binary operation */
     OP_UNARY, /* unary operation */
     OP_CALL, /* calling a function */
@@ -37,21 +38,31 @@ typedef struct {
         BLOCK, /* an address of a basic block in the current flow */
         
         IMM, /* an immediate value */
-
-        NAME, /* an external function */
+        
         FUNC, /* another flow in the current unit */
+        GLOBAL, /* a global variable */
+        
         NONE /* nothing */
     } kind;
 
     union {
+        /* virtual register in current flow */
         vreg_t vreg;
+
+        /* argument in current flow */
         vreg_t arg;
+
+        /* basic block in current flow */
         size_t label;
+
+        /* global function index */
         size_t func;
 
-        imm_t imm;
+        /* global variable index */
+        size_t var;
 
-        const char *name;
+        /* immediate value */
+        imm_t imm;
     };
 } operand_t;
 
@@ -125,6 +136,9 @@ typedef struct {
     step_t *steps;
     size_t len, size;
 
+    vreg_t *locals;
+    size_t nlocals;
+
     /* the return type */
     type_t *result;
 
@@ -139,7 +153,9 @@ step_t *step_at(flow_t *flow, size_t idx);
  */
 typedef struct module_t {
     flow_t *flows;
-    size_t len;
+    size_t nflows;
 } module_t;
+
+size_t num_flows(module_t *mod);
 
 module_t compile_module(nodes_t *nodes);

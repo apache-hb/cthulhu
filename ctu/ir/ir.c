@@ -138,7 +138,7 @@ static operand_t emit_binary(flow_t *flow, node_t *node) {
 static operand_t emit_stmts(flow_t *flow, node_t *node) {
     operand_t block = add_block(flow);
     
-    for (size_t i = 0; i < node->stmts->len; i++) {
+    for (size_t i = 0; i < ast_len(node->stmts); i++) {
         emit_opcode(flow, ast_at(node->stmts, i));
     }
 
@@ -180,10 +180,16 @@ static operand_t emit_call(flow_t *flow, node_t *node) {
 }
 
 static operand_t emit_symbol(flow_t *flow, node_t *node) {
+    if (node->find_local) {
+        step_t load = new_step(OP_LOAD, node);
+        load.src = new_vreg(flow->locals[node->local]);
+        return add_vreg(flow, load);
+    }
+
     /**
      * first try all functions
      */
-    for (size_t i = 0; i < flow->mod->len; i++) {
+    for (size_t i = 0; i < num_flows(flow->mod); i++) {
         const char *name = flow->mod->flows[i].name;
 
         if (strcmp(name, node->ident) == 0) {
@@ -194,13 +200,14 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
     /**
      * now try arguments
      */
-
     for (size_t i = 0; i < flow->nargs; i++) {
         arg_t arg = flow->args[i];
         if (strcmp(arg.name, arg.name) == 0) {
             return new_arg(i);
         }
     }
+
+    reportf(LEVEL_INTERNAL, node, "unable to resolve %s typechecker let bad code slip", node->ident);
 
     /* oh no */
     return new_operand(NONE);
@@ -231,6 +238,24 @@ static operand_t emit_convert(flow_t *flow, node_t *node) {
     return add_vreg(flow, step);
 }
 
+static operand_t emit_var(flow_t *flow, node_t *node) {
+    operand_t val = emit_opcode(flow, node->init);
+
+    step_t reserve = new_step(OP_RESERVE, node);
+    reserve.size = new_imm(1);
+
+    operand_t out = add_vreg(flow, reserve);
+
+    step_t step = new_step(OP_STORE, node);
+    step.dst = out;
+    step.src = val;
+
+    /* store the vreg into the local variable table */
+    flow->locals[node->local] = out.vreg;
+
+    return add_vreg(flow, step);
+}
+
 static operand_t emit_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
@@ -243,6 +268,7 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
     case AST_SYMBOL: return emit_symbol(flow, node);
     case AST_BRANCH: return emit_branch(flow, node);
     case AST_CAST: return emit_convert(flow, node);
+    case AST_DECL_VAR: return emit_var(flow, node);
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);
         return new_operand(NONE);
@@ -261,6 +287,8 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     nodes_t *params = node->params;
     size_t len = ast_len(params);
 
+    size_t locals = node->locals;
+
     flow_t flow = { 
         /* name */
         get_decl_name(node), 
@@ -271,6 +299,9 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         /* body */
         malloc(sizeof(step_t) * 64), 0, 64, 
         
+        /* local variables */
+        malloc(sizeof(vreg_t) * locals), locals,
+
         /* return type */
         get_type(node->result),
 
@@ -313,4 +344,8 @@ module_t compile_module(nodes_t *nodes) {
 
 step_t *step_at(flow_t *flow, size_t idx) {
     return flow->steps + idx;
+}
+
+size_t num_flows(module_t *mod) {
+    return mod->nflows;
 }
