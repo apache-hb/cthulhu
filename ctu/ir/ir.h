@@ -11,6 +11,10 @@ typedef enum {
     OP_VALUE, /* either a copy or an immediate */
     OP_CONVERT, /* convert a value to another type */
 
+    OP_RESERVE, /* reserve space for type */
+    OP_LOAD, /* load from memory */
+    OP_STORE, /* store to memory */
+
     OP_BLOCK, /* start of a basic block */
     OP_BRANCH /* conditional jump */
 } opcode_t;
@@ -77,6 +81,15 @@ typedef struct {
             operand_t cond;
             operand_t block;
             operand_t other;
+        };
+
+        /* OP_RESERVE */
+        operand_t size;
+
+        /* OP_STORE, OP_LOAD */
+        struct {
+            operand_t src;
+            operand_t dst;
         };
 
         /* OP_UNARY */
