@@ -1,5 +1,6 @@
-def main: long {
-    final x = 20;
-    final y = true;
-    return y + x;
+def empty(): int {
+    final x = 200 + 300;
+    final y = x * 2;
+
+    return x * 7 + y;
 }

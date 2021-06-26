@@ -17,10 +17,10 @@ static void debug_operand(module_t *mod, operand_t op) {
     case VREG: printf("%%%zu", op.vreg); break;
     case ARG: printf("arg[%zu]", op.arg); break;
     case IMM: debug_imm(op.imm); break;
-    case NAME: printf("@%s", op.name); break;
     case NONE: printf("none"); break;
     case BLOCK: printf(".%zu", op.label); break;
-    case FUNC: printf("%zu:%s", op.func, get_flow_name(mod, op.func)); break;
+    case FUNC: printf("def(%zu:%s)", op.func, get_flow_name(mod, op.func)); break;
+    case GLOBAL: printf("var(%zu:%s)", op.var, "TODO"); break;
     }
 }
 
@@ -81,14 +81,14 @@ static void debug_type(type_t *type) {
 
 static void debug_step(module_t *mod, size_t idx, step_t step) {
     switch (step.opcode) {
+    case OP_EMPTY:
+        return;
     case OP_RETURN:
         printf("  ret ");
         debug_type(step.type);
         printf(" ");
         debug_operand(mod, step.value);
         break;
-    case OP_EMPTY:
-        return;
     case OP_BINARY:
         debug_index(idx); 
         debug_type(step.type);
@@ -135,6 +135,28 @@ static void debug_step(module_t *mod, size_t idx, step_t step) {
         printf(" ");
         debug_operand(mod, step.value);
         break;
+    case OP_RESERVE:
+        debug_index(idx);
+        printf("reserve ");
+        debug_type(step.type);
+        printf(" ");
+        debug_operand(mod, step.size);
+        break;
+    case OP_LOAD:
+        debug_index(idx);
+        printf("load ");
+        debug_type(step.type);
+        printf(" ");
+        debug_operand(mod, step.src);
+        break;
+    case OP_STORE:
+        printf("  store ");
+        debug_type(step.type);
+        printf(" ");
+        debug_operand(mod, step.dst);
+        printf(" ");
+        debug_operand(mod, step.src);
+        break;
     }
 
     printf("\n");
@@ -170,7 +192,7 @@ static void debug_flow(module_t *mod, flow_t flow) {
 }
 
 void debug_module(module_t mod) {
-    for (size_t i = 0; i < mod.len; i++) {
+    for (size_t i = 0; i < num_flows(&mod); i++) {
         debug_flow(&mod, mod.flows[i]);
     }
 }

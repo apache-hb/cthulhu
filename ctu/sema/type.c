@@ -15,6 +15,7 @@ typedef struct sema_t {
     nodes_t *decls;
 
     type_t *result;
+    size_t locals;
 } sema_t;
 
 /**
@@ -37,6 +38,7 @@ static sema_t *new_sema(sema_t *parent) {
     sema->parent = parent;
     sema->decls = ast_list(NULL);
     sema->result = NULL;
+    sema->locals = 0;
     return sema;
 }
 
@@ -99,6 +101,37 @@ static void add_decl_unique(sema_t *sema, node_t *node) {
     add_decl(sema, node);
 }
 
+static void add_decl_global(sema_t *sema, node_t *decl) {
+    if (is_discard_name(get_decl_name(decl))) {
+        reportf(LEVEL_ERROR, decl, "may not discard declaration");
+        return;
+    }
+
+    add_decl_unique(sema, decl);
+}
+
+static void add_local(sema_t *sema, node_t *decl) {
+    add_decl_unique(sema, decl);
+    decl->local = ROOT_SEMA->locals;
+    ROOT_SEMA->locals += 1;
+}
+
+static void add_discardable_local(sema_t *sema, node_t *decl) {
+    if (!is_discard_name(get_decl_name(decl))) {
+        add_local(sema, decl);
+    }
+}
+
+static size_t reset_locals() {
+    size_t num = ROOT_SEMA->locals;
+    ROOT_SEMA->locals = 0;
+    return num;
+}
+
+static bool is_local(node_t *node) {
+    return node->kind == AST_DECL_VAR;
+}
+
 static type_t *query_symbol(sema_t *sema, node_t *symbol) {
     const char *name = get_symbol_name(symbol);
     node_t *origin = get_decl(sema, name);
@@ -107,10 +140,19 @@ static type_t *query_symbol(sema_t *sema, node_t *symbol) {
         return new_unresolved(symbol);
     }
 
+    if (is_local(origin)) {
+        symbol->find_local = true;
+    }
+
     return get_type(origin);
 }
 
 static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
+    if (is_discard_name(symbol->ident)) {
+        reportf(LEVEL_ERROR, symbol, "you cannot resolve the discarded symbol");
+        return new_poison(symbol, "discarded symbol");
+    }
+
     type_t *type = query_symbol(sema, symbol);
 
     if (is_unresolved(type)) {
@@ -228,8 +270,7 @@ static void typecheck_stmts(sema_t *sema, node_t *stmts) {
     }
 }
 
-static type_t *get_digit_type(node_t *expr) {
-    (void)expr;
+static type_t *get_digit_type(void) {
     return INT_TYPE;
 }
 
@@ -372,7 +413,7 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
 
     switch (expr->kind) {
     case AST_DIGIT: 
-        type = get_digit_type(expr);
+        type = get_digit_type();
         break;
 
     case AST_BOOL:
@@ -410,6 +451,14 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
     return type;
 }
 
+static type_t *typecheck_var(sema_t *sema, node_t *decl) {
+    type_t *type = typecheck_expr(sema, decl->init);
+
+    connect_type(decl, type);
+
+    return type;
+}
+
 static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
     type_t *type = raw_type(decl);
 
@@ -426,6 +475,11 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
         type = typecheck_func(sema, decl);
         break;
 
+    case AST_DECL_VAR:
+        type = typecheck_var(sema, decl);
+        add_local(sema, decl);
+        return type;
+
     default:
         reportf(LEVEL_INTERNAL, decl, "unimplemented declaration typecheck");
         type = new_poison(decl, "unimplemented declaration typecheck");
@@ -433,6 +487,7 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
     }
 
     connect_type(decl, type);
+
     return type;
 }
 
@@ -450,6 +505,10 @@ static void typecheck_stmt(sema_t *sema, node_t *stmt) {
 
     case AST_BRANCH:
         typecheck_branch(sema, stmt);
+        break;
+
+    case AST_DECL_VAR:
+        type = typecheck_decl(sema, stmt);
         break;
 
     case AST_DIGIT: case AST_UNARY: 
@@ -474,7 +533,7 @@ static void validate_params(sema_t *sema, nodes_t *params) {
         node_t *param = ast_at(params, i);
         type_t *type = typecheck_decl(sema, param);
         
-        add_decl_unique(sema, param);
+        add_discardable_local(sema, param);
 
         if (is_void(type)) {
             reportf(LEVEL_ERROR, param, "parameter cannot have void type");
@@ -496,7 +555,7 @@ static void add_all_decls(sema_t *sema, nodes_t *decls) {
     for (size_t i = 0; i < len; i++) {
         node_t *decl = ast_kind_at(decls, i, AST_DECL_FUNC);
         typecheck_func(sema, decl);
-        add_decl_unique(sema, decl);
+        add_decl_global(sema, decl);
     }
 }
 
@@ -508,6 +567,7 @@ static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {
     for (size_t i = 0; i < len; i++) {
         node_t *decl = ast_kind_at(decls, i, AST_DECL_FUNC);
         validate_function(sema, decl);
+        decl->locals = reset_locals();
     }
 }
 
