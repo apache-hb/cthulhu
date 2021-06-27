@@ -31,7 +31,7 @@ static operand_t new_imm_b(bool b) {
     return op;
 }
 
-static operand_t new_vreg(vreg_t reg) {
+operand_t new_vreg(vreg_t reg) {
     operand_t op = new_operand(VREG);
     op.vreg = reg;
     return op;
@@ -49,9 +49,9 @@ static operand_t new_arg(size_t idx) {
     return op;
 }
 
-static operand_t new_block(size_t addr) {
+operand_t new_block(size_t label) {
     operand_t op = new_operand(BLOCK);
-    op.label = addr;
+    op.label = label;
     return op;
 }
 
@@ -63,6 +63,12 @@ static step_t new_typed_step(opcode_t op, type_t *type) {
         /* data */ { }
 #endif
     };
+    return step;
+}
+
+step_t new_jump(operand_t label) {
+    step_t step = new_typed_step(OP_JUMP, NULL);
+    step.block = label;
     return step;
 }
 
@@ -178,6 +184,8 @@ static operand_t emit_call(flow_t *flow, node_t *node) {
 
     return add_vreg(flow, step);
 }
+
+#include <stdio.h>
 
 static operand_t emit_symbol(flow_t *flow, node_t *node) {
     if (node->find_local) {

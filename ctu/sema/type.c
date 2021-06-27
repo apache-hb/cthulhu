@@ -110,16 +110,18 @@ static void add_decl_global(sema_t *sema, node_t *decl) {
     add_decl_unique(sema, decl);
 }
 
-static void add_local(sema_t *sema, node_t *decl) {
-    add_decl_unique(sema, decl);
+static void add_local(sema_t *sema, node_t *decl, bool add) {
+    if (add) {
+        add_decl_unique(sema, decl);
+    }
+
     decl->local = ROOT_SEMA->locals;
     ROOT_SEMA->locals += 1;
 }
 
 static void add_discardable_local(sema_t *sema, node_t *decl) {
-    if (!is_discard_name(get_decl_name(decl))) {
-        add_local(sema, decl);
-    }
+    bool discard = is_discard_name(get_decl_name(decl));
+    add_local(sema, decl, !discard);
 }
 
 static size_t reset_locals() {
@@ -140,15 +142,21 @@ static type_t *query_symbol(sema_t *sema, node_t *symbol) {
         return new_unresolved(symbol);
     }
 
+    /**
+     * if the variable is a local variable
+     * then propogate what its index is
+     * for the ir gen
+     */
     if (is_local(origin)) {
         symbol->find_local = true;
+        symbol->local = origin->local;
     }
 
     return get_type(origin);
 }
 
 static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
-    if (is_discard_name(symbol->ident)) {
+    if (is_discard_name(get_symbol_name(symbol))) {
         reportf(LEVEL_ERROR, symbol, "you cannot resolve the discarded symbol");
         return new_poison(symbol, "discarded symbol");
     }
@@ -477,7 +485,7 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
 
     case AST_DECL_VAR:
         type = typecheck_var(sema, decl);
-        add_local(sema, decl);
+        add_discardable_local(sema, decl);
         return type;
 
     default:
