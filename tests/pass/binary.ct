@@ -1,7 +1,18 @@
-def main(a: int, b: int, a: bool): bool {
-
+def main($: int, b: int, $: bool): int {
+    final $ = b;
 }
 
 def a(): bool {
+    final x = main(0, 200, false);
     
+    if x == 200 {
+        final y = x;
+    }
+    final y = x + x / x;
+
+    final z = x * 100;
+
+    final $ = -z;
+
+    return y;
 }

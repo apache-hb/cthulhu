@@ -157,6 +157,10 @@ static void debug_step(module_t *mod, size_t idx, step_t step) {
         printf(" ");
         debug_operand(mod, step.src);
         break;
+    case OP_JUMP:
+        printf("  jmp ");
+        debug_operand(mod, step.block);
+        break;
     }
 
     printf("\n");

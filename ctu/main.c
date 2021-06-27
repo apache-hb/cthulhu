@@ -124,8 +124,45 @@ int main(int argc, const char **argv) {
         if (report_end("intermediate"))
             return 1;
 
-        remove_dead_code(&mod);
-        remove_unused_blocks(&mod);
+        debug_module(mod);
+
+        bool done = false;
+
+        do {
+            size_t dirty_stages = 0;
+
+            if (remove_dead_code(&mod))
+                dirty_stages += 1;
+
+            if (remove_unused_blocks(&mod))
+                dirty_stages += 1;
+
+            if (mem2reg(&mod))
+                dirty_stages += 1;
+
+            if (propogate_consts(&mod))
+                dirty_stages += 1;
+
+            if (remove_unused_code(&mod))
+                dirty_stages += 1;
+
+            if (remove_empty_blocks(&mod))
+                dirty_stages += 1;
+
+            if (remove_branches(&mod))
+                dirty_stages += 1;
+
+            if (remove_jumps(&mod))
+                dirty_stages += 1;
+
+            if (remove_pure_code(&mod))
+                dirty_stages += 1;
+
+            if (dirty_stages == 0) {
+                done = true;
+            }
+            
+        } while (!done);
 
         if (report_end("optimize"))
             return 1;

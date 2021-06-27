@@ -17,7 +17,8 @@ typedef enum {
     OP_STORE, /* store to memory */
 
     OP_BLOCK, /* start of a basic block */
-    OP_BRANCH /* conditional jump */
+    OP_BRANCH, /* conditional jump */
+    OP_JUMP /* unconditional jump */
 } opcode_t;
 
 typedef size_t vreg_t;
@@ -66,13 +67,16 @@ typedef struct {
     };
 } operand_t;
 
+operand_t new_vreg(vreg_t vreg);
+operand_t new_block(size_t label);
+
 typedef struct {
     opcode_t opcode;
 
     type_t *type;
 
     union {
-        /* OP_RETURN, OP_VALUE */
+        /* OP_RETURN, OP_VALUE, OP_CONVERT */
         struct {
             operand_t value;
 
@@ -90,7 +94,10 @@ typedef struct {
              * end
              */
             operand_t cond;
+
+            /* OP_JUMP */
             operand_t block;
+
             operand_t other;
         };
 
@@ -117,6 +124,8 @@ typedef struct {
         };
     };
 } step_t;
+
+step_t new_jump(operand_t label);
 
 typedef struct {
     const char *name;
