@@ -53,6 +53,7 @@ static void add_file(const char *path) {
 #define HELP_ARG "--help"
 #define EAGER_ARG "--eager"
 #define OUTPUT_ARG "--output"
+#define VERBOSE_ARG "--verbose"
 
 static void print_help(void) {
     printf("usage: %s [options] file...\n", name);
@@ -60,6 +61,7 @@ static void print_help(void) {
     printf("\t" HELP_ARG ": print this message\n");
     printf("\t" EAGER_ARG ": enable eager error reporting\n");
     printf("\t" OUTPUT_ARG "=name: set output name (default %s)\n", output);
+    printf("\t" VERBOSE_ARG ": enable verbose logging\n");
 }
 
 static int parse_arg(int index, int argc, const char **argv) {
@@ -70,8 +72,12 @@ static int parse_arg(int index, int argc, const char **argv) {
         print_help();
     } else if (strcmp(arg, EAGER_ARG) == 0) {
         eager_reporting = true;
+    } else if (strcmp(arg, VERBOSE_ARG) == 0) {
+        verbose = true;
+        logfmt("enabled verbose logging");
     } else if (!startswith(arg, "-")) {
         add_file(arg);
+        logfmt("adding `%s` as a source file", arg);
     }
 
     return 1;
@@ -93,12 +99,14 @@ int main(int argc, const char **argv) {
 
     init_inputs();
 
-    report_begin(20, eager_reporting);
+    report_begin(20, false);
 
     parse_argc_argv(argc, argv);
 
     if (report_end("input"))
         return 1;
+
+    report_begin(20, eager_reporting);
 
     if (inputs.len == 0) {
         fprintf(stderr, "no input files\n");
@@ -131,32 +139,50 @@ int main(int argc, const char **argv) {
         do {
             size_t dirty_stages = 0;
 
-            if (remove_dead_code(&mod))
+            if (remove_dead_code(&mod)) {
+                logfmt("removed dead code");
                 dirty_stages += 1;
+            }
 
-            if (remove_unused_blocks(&mod))
+            if (remove_unused_blocks(&mod)) {
+                logfmt("removed unused blocks");
                 dirty_stages += 1;
+            }
 
-            if (mem2reg(&mod))
+            if (mem2reg(&mod)) {
+                logfmt("reduced memory");
                 dirty_stages += 1;
+            }
 
-            if (propogate_consts(&mod))
+            if (propogate_consts(&mod)) {
+                logfmt("propogated values");
                 dirty_stages += 1;
+            }
 
-            if (remove_unused_code(&mod))
+            if (remove_unused_code(&mod)) {
+                logfmt("removed unreferenced vregs");
                 dirty_stages += 1;
+            }
 
-            if (remove_empty_blocks(&mod))
+            if (remove_empty_blocks(&mod)) {
+                logfmt("removed empty blocks");
                 dirty_stages += 1;
+            }
 
-            if (remove_branches(&mod))
+            if (remove_branches(&mod)) {
+                logfmt("removed excess branches");
                 dirty_stages += 1;
+            }
 
-            if (remove_jumps(&mod))
+            if (remove_jumps(&mod)) {
+                logfmt("removed excess jumps");
                 dirty_stages += 1;
+            }
 
-            if (remove_pure_code(&mod))
+            if (remove_pure_code(&mod)) {
+                logfmt("removed unused pure operations");
                 dirty_stages += 1;
+            }
 
             if (dirty_stages == 0) {
                 done = true;

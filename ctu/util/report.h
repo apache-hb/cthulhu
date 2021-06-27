@@ -29,6 +29,7 @@ typedef enum {
  * set the report limit and begin a new report
  */
 void report_begin(size_t limit, bool eager);
+
 /**
  * end the current report of `name`
  * return true if there were fatal errors
@@ -45,3 +46,14 @@ void reportf(level_t level, node_t *node, const char *fmt, ...);
  * generate a report from a source and location
  */
 void report(level_t level, scanner_t *source, where_t where, const char *fmt, ...);
+
+
+extern bool verbose;
+
+/**
+ * log a message 
+ * 
+ * i would have liked to call this logf or log
+ * but <math.h> had other ideas
+ */
+void logfmt(const char *fmt, ...);

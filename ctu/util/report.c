@@ -173,7 +173,7 @@ static void push_report(level_t level, scanner_t *source, where_t where, node_t 
 void report_begin(size_t limit, bool eager) {
     max_reports = limit;
     eager_report = eager;
-    reports = malloc(sizeof(report_t) * limit);
+    reports = realloc(reports, sizeof(report_t) * limit);
 }
 
 bool report_end(const char *name) {
@@ -226,4 +226,20 @@ void report(level_t level, scanner_t *source, where_t where, const char *fmt, ..
     va_start(args, fmt);
     push_report(level, source, where, NULL, formatv(fmt, args));
     va_end(args);
+}
+
+bool verbose = false;
+
+void logfmt(const char *fmt, ...) {
+    if (!verbose)
+        return;
+
+    printf(COLOUR_GREEN "log: " COLOUR_RESET);
+
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+
+    printf("\n");
 }

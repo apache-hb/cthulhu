@@ -145,6 +145,8 @@ typedef struct node_t {
         struct {
             struct node_t *cond;
             struct node_t *branch;
+
+            struct node_t *next;
         };
 
         /* AST_DECL */
@@ -225,6 +227,7 @@ node_t *ast_cast(scanner_t *scanner, where_t where, node_t *expr, node_t *cast);
 node_t *ast_stmts(scanner_t *scanner, where_t where, nodes_t *stmts);
 node_t *ast_return(scanner_t *scanner, where_t where, node_t *expr);
 node_t *ast_branch(scanner_t *scanner, where_t where, node_t *cond, node_t *branch);
+node_t *add_branch(node_t *branch, node_t *next);
 
 node_t *ast_symbol(scanner_t *scanner, where_t where, char *text);
 
