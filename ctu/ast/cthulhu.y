@@ -70,6 +70,7 @@ void yyerror();
     RETURN "`return`"
     DEF "`def`"
     IF "`if`"
+    ELSE "`else`"
     AS "`as`"
     FINAL "`final`"
     END 0 "end of file"
@@ -77,7 +78,7 @@ void yyerror();
 %type<node>
     decl function param variable /* declarations */
     type typename /* types */
-    stmt stmts return if /* statements */
+    stmt stmts return if else elseif branch /* statements */
     primary postfix unary multiply add compare equality expr /* expressions */
 
 %type<nodes>
@@ -141,12 +142,23 @@ return: RETURN SEMI { $$ = ast_return(x, @$, NULL); }
     | RETURN expr SEMI { $$ = ast_return(x, @$, $2); }
     ;
 
+branch: if { $$ = $1; }
+    | if else { $$ = add_branch($1, $2); }
+    ;
+
 if: IF expr stmts { $$ = ast_branch(x, @$, $2, $3); }
+    ;
+
+else: ELSE stmts { $$ = ast_branch(x, @$, NULL, $2); }
+    | elseif else { $$ = add_branch($1, $2); }
+    ;
+
+elseif: ELSE IF expr stmts { $$ = ast_branch(x, @$, $3, $4); }
     ;
 
 stmt: expr SEMI { $$ = $1; }
     | return { $$ = $1; }
-    | if { $$ = $1; }
+    | branch { $$ = $1; }
     | stmts { $$ = $1; }
     | variable { $$ = $1; }
     ;

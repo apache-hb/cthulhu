@@ -1,8 +1,11 @@
-def main: long {
-    final y = x;
-    return y();
-}
-
-def x: long {
-    return 200;
+def main(i: int): int {
+    if i == 0 {
+        return 100;
+    } else if i == 1 {
+        return 200;
+    } else if i == 300 {
+        return 400;
+    } else {
+        return 500;
+    }
 }

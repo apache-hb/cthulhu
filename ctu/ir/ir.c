@@ -222,19 +222,29 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
 }
 
 static operand_t emit_branch(flow_t *flow, node_t *node) {
-    operand_t cond = emit_opcode(flow, node->cond);
-    
+    operand_t head = add_block(flow);
+    operand_t cond;
+    if (node->cond) {
+        /* this is an if branch */
+        cond = emit_opcode(flow, node->cond);
+    } else {
+        /* this is an else branch */
+        cond = new_imm_b(true);
+    }
+
     step_t *branch = add_step(flow, new_typed_step(OP_BRANCH, NULL));
 
     operand_t body = emit_opcode(flow, node->branch);
 
-    operand_t tail = add_block(flow);
+    operand_t other = node->next == NULL
+        ? add_block(flow)
+        : emit_branch(flow, node->next);
 
     branch->cond = cond;
     branch->block = body;
-    branch->other = tail;
+    branch->other = other;
 
-    return cond;
+    return head;
 }
 
 static operand_t emit_convert(flow_t *flow, node_t *node) {

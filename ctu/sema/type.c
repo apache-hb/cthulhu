@@ -393,11 +393,17 @@ static type_t *typecheck_unary(sema_t *sema, node_t *expr) {
 }
 
 static void typecheck_branch(sema_t *sema, node_t *stmt) {
-    type_t *cond = typecheck_expr(sema, stmt->cond);
+    if (stmt->cond) {
+        type_t *cond = typecheck_expr(sema, stmt->cond);
+        if (!implicit_convertible_to(&stmt->cond, BOOL_TYPE, cond)) {
+            reportf(LEVEL_ERROR, stmt->cond, "cannot branch on a non-boolean type");
+        }
+    }
+
     typecheck_stmt(sema, stmt->branch);
 
-    if (!implicit_convertible_to(&stmt->cond, BOOL_TYPE, cond)) {
-        reportf(LEVEL_ERROR, stmt->cond, "cannot branch on a non-boolean type");
+    if (stmt->next) {
+        typecheck_branch(sema, stmt->next);
     }
 }
 

@@ -12,16 +12,11 @@ static void remove_ops(flow_t *flow, bool *dirty) {
         step_t *step = step_at(flow, i);
         if (step->opcode == OP_BLOCK) {
             dead = false;
-            continue;
-        }
-
-        if (dead) {
+        } else if (step->opcode == OP_RETURN || step->opcode == OP_JUMP || step->opcode == OP_BRANCH) {
+            dead = true;
+        } else if (dead && step->opcode != OP_EMPTY) {
             step->opcode = OP_EMPTY;
             *dirty = true;
-        }
-
-        if (step->opcode == OP_RETURN) {
-            dead = true;
         }
     }
 }
@@ -146,6 +141,16 @@ static bool op_used(operand_t op, size_t reg) {
     return op.kind == VREG && op.vreg == reg;
 }
 
+static bool any_arg_uses(operand_t *args, size_t num, size_t idx) {
+    for (size_t i = 0; i < num; i++) {
+        if (op_used(args[i], idx)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static bool is_value_used(flow_t *flow, size_t idx) {
     for (size_t i = idx; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
@@ -186,6 +191,11 @@ static bool is_value_used(flow_t *flow, size_t idx) {
             used = op_used(step->cond, idx)
                 || op_used(step->block, idx)
                 || op_used(step->other, idx);
+            break;
+
+        case OP_CALL:
+            used = op_used(step->value, idx)
+                || any_arg_uses(step->args, step->len, idx);
             break;
 
         case OP_EMPTY:
@@ -303,6 +313,12 @@ static bool blocks_equal(operand_t lhs, operand_t rhs) {
         && lhs.label == rhs.label;
 }
 
+static bool is_const_true(operand_t op) {
+    return op.kind == IMM
+        && op.imm.kind == IMM_BOOL
+        && op.imm.imm_bool;
+}
+
 static void remove_unneeded_branches(flow_t *flow, bool *dirty) {
     for (size_t i = 0; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
@@ -311,6 +327,9 @@ static void remove_unneeded_branches(flow_t *flow, bool *dirty) {
             continue;
 
         if (blocks_equal(step->block, step->other)) {
+            *step = new_jump(step->block);
+            *dirty = true;
+        } else if (is_const_true(step->cond)) {
             *step = new_jump(step->block);
             *dirty = true;
         }

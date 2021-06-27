@@ -233,8 +233,14 @@ node_t *ast_branch(scanner_t *scanner, where_t where, node_t *cond, node_t *bran
 
     node->cond = cond;
     node->branch = branch;
+    node->next = NULL;
 
     return node;
+}
+
+node_t *add_branch(node_t *branch, node_t *next) {
+    branch->next = next;
+    return branch;
 }
 
 node_t *ast_decl_func(

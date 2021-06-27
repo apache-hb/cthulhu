@@ -1,9 +1,0 @@
-export using u8 = uchar;
-export using u16 = ushort;
-export using u32 = uint;
-export using u64 = ulong;
-
-export using i8 = char;
-export using i16 = short;
-export using i32 = int;
-export using i64 = long;

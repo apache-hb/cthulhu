@@ -27,6 +27,7 @@
 
 "def" { return DEF; }
 "if" { return IF; }
+"else" { return ELSE; }
 "as" { return AS; }
 "final" { return FINAL; }
 "true" { return BOOL_TRUE; }
