@@ -1,5 +1,7 @@
 #include "x86.h"
 
+#include "ctu/ir/ir.h"
+
 typedef enum {
     RAX, RBX, RCX, RDX,
     RSI, RDI, RBP, RIP,
@@ -13,7 +15,10 @@ typedef enum {
 
 typedef struct {
     /* current used registers */
-    bool used[USABLE];
+    vreg_t used[USABLE];
+
+    vreg_t *spill;
+    size_t total;
 } x86_regalloc_t;
 
 blob_t *gen_x64(module_t *mod) {

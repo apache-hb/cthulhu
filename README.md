@@ -3,9 +3,9 @@
 Probably better than javascript
 
 ## Building
-* building requires `meson` `ninja` and a C compiler with gnu99 extensions
-* the gcc backend requires gccjit to be installed locally
-* the llvm backend requires llvm to be installed locally
+* building requires `meson` `ninja` and a C99 compliant compiler
+* building also requires `flex` and `bison`
+    - windows users can use `win_flex` and `win_bison` from choco
 
 ## Overview
 
