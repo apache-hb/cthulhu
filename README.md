@@ -13,8 +13,8 @@ Probably better than javascript
 * symbol resolution, typechecking in semantic analysis
 * convert ast into typed ast for IR
 * convert typed ast into SSA
-* optimize SSA form (TODO)
-* use backend to produce end library/executable from SSA
+* optimize SSA form
+* use backend to produce end library/executable from SSA (TODO)
 
 Each stage will try and continue if it encounters any errors but will exit at the end of the stage.
 Stages after semantic analysis can expect that input will always be correct.

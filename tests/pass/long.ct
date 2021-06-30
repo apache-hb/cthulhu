@@ -1,0 +1,8 @@
+def main(): int {
+    final a = 100 + 50;
+    final b = a * a; // 10000
+    final c = a * b; // 1000000
+    final d = c + 500; // 1000500
+    final e = d * 999; // 999499500
+    return e + a;
+}

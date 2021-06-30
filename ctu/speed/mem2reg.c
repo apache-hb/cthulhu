@@ -29,7 +29,7 @@ static void replace_loads(flow_t *flow, size_t start, size_t addr) {
     for (size_t i = start; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
 
-        if (step->opcode == OP_LOAD) {
+        if (step->opcode == OP_LOAD && equals_vreg(step->src, start)) {
             step->opcode = OP_VALUE;
             step->value = new_vreg(addr);
         }

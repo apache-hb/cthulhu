@@ -70,7 +70,8 @@ libsema = library('sema', src,
 )
 
 src = [
-    'ctu/ir/ir.c'
+    'ctu/ir/ir.c',
+    'ctu/ir/match.c'
 ]
 
 libir = library('ir', src,
@@ -87,6 +88,15 @@ libspeed = library('speed', src,
 )
 
 src = [
+    'ctu/gen/x86.c',
+    'ctu/gen/generic.c'
+]
+
+libgen = library('gen', src,
+    link_with : libir
+)
+
+src = [
     'ctu/debug/ast.c',
     'ctu/debug/ir.c',
     'ctu/debug/common.c'
@@ -98,5 +108,5 @@ libdebug = library('debug', src,
 
 driver = executable('ctc', 'ctu/main.c',
     c_args : [ '-D_CRT_SECURE_NO_WARNINGS=1' ],
-    link_with : [ libdebug, libspeed, libir, libsema, libast ]
+    link_with : [ libdebug, libgen, libspeed, libir, libsema, libast ]
 )
