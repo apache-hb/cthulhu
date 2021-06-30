@@ -197,6 +197,9 @@ static void debug_flow(module_t *mod, flow_t flow) {
 
 void debug_module(module_t mod) {
     for (size_t i = 0; i < num_flows(&mod); i++) {
+        if (i != 0) {
+            printf("\n");
+        }
         debug_flow(&mod, mod.flows[i]);
     }
 }

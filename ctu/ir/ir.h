@@ -127,6 +127,8 @@ typedef struct {
 
 step_t new_jump(operand_t label);
 
+bool is_vreg_used(const step_t *step, vreg_t reg);
+
 typedef struct {
     const char *name;
     type_t *type;

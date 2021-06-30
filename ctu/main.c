@@ -6,6 +6,7 @@
 #include "debug/ir.h"
 #include "ir/ir.h"
 #include "speed/speed.h"
+#include "gen/x86.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -134,9 +135,10 @@ int main(int argc, const char **argv) {
 
         debug_module(mod);
 
-        bool done = false;
+        size_t passes = 0;
 
-        do {
+        while (true) {
+            printf("=== pass %zu ===\n", passes);
             size_t dirty_stages = 0;
 
             if (remove_dead_code(&mod)) {
@@ -153,6 +155,8 @@ int main(int argc, const char **argv) {
                 logfmt("reduced memory");
                 dirty_stages += 1;
             }
+
+            debug_module(mod);
 
             if (propogate_consts(&mod)) {
                 logfmt("propogated values");
@@ -185,15 +189,21 @@ int main(int argc, const char **argv) {
             }
 
             if (dirty_stages == 0) {
-                done = true;
+                break;
             }
-            
-        } while (!done);
+
+            passes += 1;
+        }
 
         if (report_end("optimize"))
             return 1;
 
         debug_module(mod);
+
+        gen_x64(&mod);
+
+        if (report_end("generate"))
+            return 1;
     }
 
     return 0;

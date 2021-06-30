@@ -137,82 +137,12 @@ bool propogate_consts(module_t *mod) {
     return dirty;
 }
 
-static bool op_used(operand_t op, size_t reg) {
-    return op.kind == VREG && op.vreg == reg;
-}
-
-static bool any_arg_uses(operand_t *args, size_t num, size_t idx) {
-    for (size_t i = 0; i < num; i++) {
-        if (op_used(args[i], idx)) {
+static bool is_value_used(flow_t *flow, size_t vreg) {
+    for (size_t i = vreg; i < flow->len; i++) {
+        if (is_vreg_used(step_at(flow, i), vreg)) {
             return true;
         }
     }
-
-    return false;
-}
-
-static bool is_value_used(flow_t *flow, size_t idx) {
-    for (size_t i = idx; i < flow->len; i++) {
-        step_t *step = step_at(flow, i);
-        bool used = true;
-        
-        switch (step->opcode) {
-        case OP_VALUE: 
-            used = op_used(step->value, idx);
-            break;
-
-        case OP_UNARY:
-            used = op_used(step->expr, idx);
-            break;
-
-        case OP_BINARY:
-            used = op_used(step->lhs, idx) 
-                || op_used(step->rhs, idx);
-            break;
-
-        case OP_CONVERT:
-            used = op_used(step->value, idx);
-            break;
-
-        case OP_RETURN:
-            used = op_used(step->value, idx);
-            break;
-
-        case OP_STORE:
-            used = op_used(step->src, idx) 
-                || op_used(step->dst, idx);
-            break;
-
-        case OP_LOAD:
-            used = op_used(step->src, idx);
-            break;
-
-        case OP_BRANCH:
-            used = op_used(step->cond, idx)
-                || op_used(step->block, idx)
-                || op_used(step->other, idx);
-            break;
-
-        case OP_CALL:
-            used = op_used(step->value, idx)
-                || any_arg_uses(step->args, step->len, idx);
-            break;
-
-        case OP_EMPTY:
-        case OP_BLOCK:
-            used = false;
-            break;
-
-        default:
-            assert("unknown IR step %d in flow at %zu, unable to remove dead code", step->opcode, i);
-            break;
-        }
-
-        if (used) {
-            return true;
-        }
-    }
-
     return false;
 }
 

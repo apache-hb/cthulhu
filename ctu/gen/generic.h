@@ -9,3 +9,5 @@ typedef struct {
     byte_t *code;
     size_t len, size;
 } blob_t;
+
+blob_t *new_blob();
