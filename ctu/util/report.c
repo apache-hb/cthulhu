@@ -57,14 +57,12 @@ static void print_location(scanner_t *source, where_t where) {
     );
 }
 
-static void print_padding(size_t size, char sep, bool feed) {
+static void print_padding(size_t size, bool feed) {
     for (size_t i = 0; i < size + 1; i++) {
         fprintf(stderr, " ");
     }
 
-    if (sep) {
-        fprintf(stderr, "%c ", sep);
-    }
+    fprintf(stderr, "┃ ");
 
     if (feed) {
         fprintf(stderr, "\n");
@@ -100,9 +98,9 @@ static void print_underline(loc_t column, loc_t length) {
     for (loc_t i = 0; i < column; i++) {
         fprintf(stderr, " ");
     }
-    fprintf(stderr, "^");
+    fprintf(stderr, "╰");
     for (loc_t i = 0; i < length - 1; i++) {
-        fprintf(stderr, "~");
+        fprintf(stderr, "─");
     }
 
     fprintf(stderr, COLOUR_RESET "\n");
@@ -112,7 +110,7 @@ static void print_line_indicator(const char *text, size_t len, size_t padding) {
     for (size_t i = 0; i < (padding - len); i++)
         fprintf(stderr, " ");
 
-    fprintf(stderr, "%s | ", text);
+    fprintf(stderr, "%s ┃ ", text);
 }
 
 static void underline_source(scanner_t *source, where_t where) {
@@ -124,10 +122,10 @@ static void underline_source(scanner_t *source, where_t where) {
     size_t linelen = strlen(linestr);
     size_t padding = linelen + 1;
 
-    print_padding(padding, '|', true);
+    print_padding(padding, true);
     print_line_indicator(linestr, linelen, padding);
     print_line(source, line);
-    print_padding(padding, '|', false);
+    print_padding(padding, false);
     print_underline(column, length);
 }
 

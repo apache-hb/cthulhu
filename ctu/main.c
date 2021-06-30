@@ -7,6 +7,7 @@
 #include "ir/ir.h"
 #include "speed/speed.h"
 #include "gen/x86.h"
+#include "gen/elf.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -205,6 +206,10 @@ int main(int argc, const char **argv) {
         if (report_end("generate"))
             return 1;
     }
+
+    FILE *test = fopen("test.elf", "wb");
+    emit_elf(test);
+    fclose(test);
 
     return 0;
 }
