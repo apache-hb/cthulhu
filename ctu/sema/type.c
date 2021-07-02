@@ -42,6 +42,11 @@ static sema_t *new_sema(sema_t *parent) {
     return sema;
 }
 
+static void free_sema(sema_t *sema) {
+    free_ast_list(sema->decls, false);
+    free(sema);
+}
+
 /**
  * declaration managment
  */
@@ -276,6 +281,8 @@ static void typecheck_stmts(sema_t *sema, node_t *stmts) {
     for (size_t i = 0; i < ast_len(list); i++) {
         typecheck_stmt(nest, ast_at(list, i));
     }
+
+    free_sema(nest);
 }
 
 static type_t *get_digit_type(void) {
@@ -561,6 +568,8 @@ static void validate_function(sema_t *sema, node_t *func) {
     sema->result = resolve_typename(sema, func->result);
 
     typecheck_stmts(nest, func->body);
+
+    free_sema(nest);
 }
 
 static void add_all_decls(sema_t *sema, nodes_t *decls) {
@@ -596,6 +605,7 @@ static void add_builtin(type_t *type) {
 void typecheck(nodes_t *nodes) {
     sema_t *sema = new_sema(ROOT_SEMA);
     typecheck_all_decls(sema, nodes);
+    free_sema(sema);
 }
 
 void sema_init(void) {

@@ -19,31 +19,16 @@ void flex_init(where_t *where, int line) {
     where->last_line = line;
 }
 
-static void scanner_add(scanner_t *scanner, char c) {
-    if (scanner->len + 2 > scanner->size) {
-        scanner->size += 0x1000;
-        scanner->text = realloc(scanner->text, scanner->size);
-    }
-    scanner->text[scanner->len++] = c;
-    scanner->text[scanner->len] = 0;
+static void scanner_add(scanner_t *scanner, char *c, size_t len) {
+    memcpy(scanner->text + scanner->len, c, len);
+    scanner->len += len;
+    scanner->text[scanner->len + 1] = 0;
 }
 
 int flex_get(scanner_t *scanner, char *out, int size) {
-    int total = 0;
+    size_t total = fread(out, 1, size, scanner->handle);
 
-    while (size > 0) {
-        int letter;
-        while ((letter = scanner->next(scanner->handle)) == '\r');
-        
-        size -= 1;
-
-        out[total++] = letter;
-        if (!letter) {
-            break;
-        }
-
-        scanner_add(scanner, (char)letter);
-    }
+    scanner_add(scanner, out, total);
 
     return total;
 }
@@ -60,4 +45,9 @@ void flex_update(where_t *where, const char *text) {
             where->last_column += 1;
         }
     }
+}
+
+void free_scanner(scanner_t *scanner) {
+    free(scanner->text);
+    free(scanner);
 }

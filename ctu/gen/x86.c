@@ -19,6 +19,12 @@ typedef enum {
     UNUSED
 } reg_t;
 
+#if 0
+static void mov_reg_reg(blob_t *blob, reg_t dst, reg_t src) {
+    
+}
+#endif
+
 /**
  * an allocation
  */
@@ -33,6 +39,10 @@ typedef struct {
 static alloc_t alloc_reg(reg_t reg) {
     alloc_t alloc = { REG, { reg } };
     return alloc;
+}
+
+static bool is_unused(alloc_t alloc) {
+    return alloc.kind == REG && alloc.reg == UNUSED;
 }
 
 static const char *alloc_tostr(alloc_t alloc) {
@@ -113,6 +123,10 @@ static x86_regalloc_t new_regalloc(flow_t *flow) {
     return alloc;
 }
 
+static void free_regalloc(x86_regalloc_t *regs) {
+    free(regs->ranges);
+    free(regs->spill);
+}
 
 static void assign_range(x86_regalloc_t *regs, size_t idx) {
     size_t start = idx;
@@ -127,7 +141,7 @@ static void assign_range(x86_regalloc_t *regs, size_t idx) {
                 end = i;
             }
         }
-        mem = first->opcode == OP_RESERVE;
+        mem = (first->opcode == OP_RESERVE);
     }
 
     range_t range = { start, end, idx, mem, alloc_reg(USABLE) };
@@ -204,6 +218,10 @@ static x86_regalloc_t assign_ranges(flow_t *flow) {
     printf("%s\n", flow->name);
     for (size_t i = 0; i < regalloc.len; i++) {
         range_t range = regalloc.ranges[i];
+        
+        if (is_unused(range.alloc))
+            continue;
+
         printf("- %zu: %zu -> %zu = %s\n", i, range.start, range.end, alloc_tostr(range.alloc));
     }
 
@@ -214,7 +232,8 @@ blob_t *gen_x64(module_t *mod) {
     blob_t *blob = new_blob();
 
     for (size_t i = 0; i < num_flows(mod); i++) {
-        assign_ranges(mod->flows + i);
+        x86_regalloc_t regalloc = assign_ranges(mod->flows + i);
+        free_regalloc(&regalloc);
     }
     return blob;
 }

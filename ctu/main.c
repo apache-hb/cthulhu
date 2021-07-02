@@ -118,8 +118,9 @@ int main(int argc, const char **argv) {
     sema_init();
 
     for (size_t i = 0; i < inputs.len; i++) {
+        scanner_t *scan;
         input_t it = inputs.files[i];
-        nodes_t *nodes = compile_file(it.path, it.file);
+        nodes_t *nodes = compile_file(it.path, it.file, &scan);
 
         if (report_end("parse"))
             return 1;
@@ -139,7 +140,6 @@ int main(int argc, const char **argv) {
         size_t passes = 0;
 
         while (true) {
-            printf("=== pass %zu ===\n", passes);
             size_t dirty_stages = 0;
 
             if (remove_dead_code(&mod)) {
@@ -156,8 +156,6 @@ int main(int argc, const char **argv) {
                 logfmt("reduced memory");
                 dirty_stages += 1;
             }
-
-            debug_module(mod);
 
             if (propogate_consts(&mod)) {
                 logfmt("propogated values");
@@ -201,10 +199,12 @@ int main(int argc, const char **argv) {
 
         debug_module(mod);
 
-        gen_x64(&mod);
+        //gen_x64(&mod);
 
-        if (report_end("generate"))
-            return 1;
+        //if (report_end("generate"))
+        //    return 1;
+
+        free_scanner(scan);
     }
 
     FILE *test = fopen("test.elf", "wb");
