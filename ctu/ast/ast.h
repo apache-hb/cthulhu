@@ -72,6 +72,9 @@ bool is_math_op(binary_t op);
 bool is_comparison_op(binary_t op);
 bool is_equality_op(binary_t op);
 
+/**
+ * we need string interning at some point
+ */
 typedef struct node_t {
     /**
      * the type of this node 
@@ -240,3 +243,5 @@ node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *ty
 node_t *ast_decl_var(scanner_t *scanner, where_t where, char *name, node_t *init);
 
 node_t *ast_type(const char *name);
+
+void free_ast_list(nodes_t *list, bool free_items);

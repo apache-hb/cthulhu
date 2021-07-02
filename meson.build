@@ -1,7 +1,6 @@
 project('ctu', 'c',
     default_options : [
         'c_std=c11', # flex under msvc requires c11
-        'cpp_std=c++17', # llvm headers require c++17
         'warning_level=2', # bison generates code that warns on gcc at level 3
         'default_library=static',
         'werror=true'

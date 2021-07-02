@@ -66,10 +66,23 @@ typedef struct {
 #define SECTION_NULL 0
 #define SECTION_STRTAB 3
 
+#define PROGRAM_NULL 0
+#define PROGRAM_LOAD 1
+#define PROGRAM_INTERP 3
+#define PROGRAM_PHDR 6
+
+#define FLAG_EXEC 0x1
+#define FLAG_WRITE 0x2
+#define FLAG_READ 0x4
+
 typedef struct {
     uint8_t *bytes;
     size_t cursor, size;
 } output_t;
+
+static void ofree(output_t *out) {
+    free(out->bytes);
+}
 
 static void ensure_size(output_t *out, size_t size) {
     if (size > out->size) {
@@ -111,11 +124,11 @@ typedef struct {
 
     /* all program headers */
     output_t programs;
-    size_t nprograms;
+    uint16_t nprograms;
 
     /* all section headers */
     output_t sections;
-    size_t nsections;
+    uint16_t nsections;
 
     /* strtab contents */
     output_t strings;
@@ -147,6 +160,24 @@ static size_t add_section(elf_t *elf, uint32_t type, const char *name) {
     return elf->nsections++;
 }
 
+#if 0
+static elf64_program_t *add_program(elf_t *elf, uint32_t type) {
+    elf64_program_t program = {
+        .type = type,
+        .flags = 0,
+        .offset = 0,
+        .vaddr = 0,
+        .paddr = 0,
+        .filesize = 0,
+        .memsize = 0,
+        .align = 0
+    };
+
+    owrite(&elf->programs, &program, sizeof(elf64_program_t));
+    return oget(&elf->programs, elf->nprograms++);
+}
+#endif
+
 static elf64_section_t *get_section(elf_t *elf, size_t idx) {
     return oget(&elf->sections, idx * sizeof(elf64_section_t));
 }
@@ -165,6 +196,7 @@ static elf_t new_elf(void) {
         onew()
     };
 
+    /* the first byte in the string table must be null */
     char nul[] = "";
     owrite(&elf.strings, nul, sizeof(nul));
 
@@ -217,81 +249,14 @@ static void build_elf(FILE *out, elf_t *elf) {
     fwrite(oget(&elf->programs, 0), sizeof(elf64_program_t), elf->nprograms, out);
     fwrite(oget(&elf->contents, 0), 1, osize(&elf->contents), out);
     fwrite(oget(&elf->sections, 0), sizeof(elf64_section_t), elf->nsections, out);
+
+    ofree(&elf->sections);
+    ofree(&elf->programs);
+    ofree(&elf->strings);
+    ofree(&elf->contents);
 }
 
 void emit_elf(FILE *file) {
     elf_t elf = new_elf();
     build_elf(file, &elf);
 }
-
-#if 0
-void emit_elf(FILE *file) {
-    elf_t elf = new_elf();
-    output_t o = { NULL, 0, 0 };
-    elf64_header_t header = {
-        .ident = {
-            .magic = 0x464C457F, /* 0x7F ELF */
-            .cls = 0x2, /* 64 bit */
-            .endian = 1, /* little endian */
-            .version = 1, /* must be 1 */
-            .abi = 0, /* sysv abi */
-            .abiversion = 0, /* ignored mostly */
-            .pad = { 0 }
-        },
-        .type = 0x2, /* exec */
-        .machine = 0x3E, /* x64 */
-        .version = 1, /* must be 1 */
-        .entry = 0,
-        .phoffset = 0,
-        .shoffset = 0,
-        .flags = 0,
-        .size = 64,
-        .phsize = sizeof(elf64_program_t),
-        .phnum = 0,
-        .shsize = sizeof(elf64_section_t),
-        .shnum = 2,
-        .stridx = 1
-    };
-    owrite(&o, &header, sizeof(elf64_header_t));
-
-    char name[] = "\0.null\0.shstrtab";
-    size_t name_offset = otell(&o);
-    owrite(&o, name, sizeof(name));
-    size_t sh_offset = otell(&o);
-
-    elf64_section_t strtab = {
-        .name = 7,
-        .type = 3,
-        .flags = 2,
-        .addr = 0,
-        .offset = name_offset,
-        .size = sizeof(name),
-        .link = 0,
-        .info = 0,
-        .align = 1,
-        .entsize = 0
-    };
-
-    elf64_section_t undefsec = {
-        .name = 1,
-        .type = 0,
-        .flags = 0,
-        .addr = 0,
-        .offset = 0,
-        .size = 0,
-        .link = 0,
-        .info = 0,
-        .align = 1,
-        .entsize = 0
-    };
-
-    owrite(&o, &undefsec, sizeof(elf64_section_t));
-    owrite(&o, &strtab, sizeof(elf64_section_t));
-
-    oseek(&o, 0);
-    header.shoffset = sh_offset;
-    owrite(&o, &header, sizeof(elf64_header_t));
-
-    odump(&o, file);
-}
-#endif

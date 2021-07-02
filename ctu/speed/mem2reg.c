@@ -44,6 +44,11 @@ static void mem2reg_flow(flow_t *flow, bool *dirty) {
             size_t addr;
             size_t stores = count_stores(flow, i, &addr);
 
+            if (stores == 0) {
+                step_at(flow, i)->opcode = OP_EMPTY;
+                continue;
+            }
+
             /**
              * duplicate stores to the same variable
              * probably means its mutable.

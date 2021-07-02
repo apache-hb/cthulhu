@@ -183,6 +183,7 @@ static bool is_block_empty(flow_t *flow, size_t idx, size_t *end) {
             return false;
     }
 
+    *end = flow->len;
     return true;
 } 
 

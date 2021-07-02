@@ -283,3 +283,14 @@ node_t *ast_type(const char *name) {
     node->nameof = name;
     return node;
 }
+
+void free_ast_list(nodes_t *list, bool free_items) {
+    if (free_items) {
+        for (size_t i = 0; i < ast_len(list); i++) {
+            free(ast_at(list, i));
+        }
+    }
+
+    free(list->data);
+    free(list);
+}
