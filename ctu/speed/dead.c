@@ -92,8 +92,7 @@ static void update_operand(flow_t *flow, operand_t *op, bool *dirty) {
 
 static void propogate_value(flow_t *flow, step_t *step, bool *dirty) {
     switch (step->opcode) {
-    case OP_CONVERT:
-    case OP_VALUE: 
+    case OP_RETURN: case OP_CONVERT: case OP_VALUE: 
         update_operand(flow, &step->value, dirty); 
         break;
     case OP_UNARY:

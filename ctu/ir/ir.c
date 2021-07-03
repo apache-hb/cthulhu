@@ -17,17 +17,10 @@ static operand_t new_operand(int kind) {
     return op;
 }
 
-static operand_t new_imm(int64_t imm) {
+operand_t new_int(int64_t imm) {
     operand_t op = new_operand(IMM);
     op.imm.kind = IMM_INT;
     op.imm.imm_int = imm;
-    return op;
-}
-
-static operand_t new_imm_b(bool b) {
-    operand_t op = new_operand(IMM);
-    op.imm.kind = IMM_BOOL;
-    op.imm.imm_bool = b;
     return op;
 }
 
@@ -72,8 +65,43 @@ step_t new_jump(operand_t label) {
     return step;
 }
 
+step_t new_value(step_t *old, operand_t value) {
+    step_t step = new_typed_step(OP_VALUE, old->type);
+    step.value = value;
+    return step;
+}
+
+type_t *step_type(step_t *step) {
+    ASSERT(step->type != NULL)("step did not have a type");
+    return step->type;
+}
+
 static step_t new_step(opcode_t op, node_t *node) {
     return new_typed_step(op, get_type(node));
+}
+
+bool operand_is_imm(operand_t op) {
+    return op.kind == IMM;
+}
+
+bool operand_is_bool(operand_t op) {
+    return operand_is_imm(op) && op.imm.kind == IMM_BOOL;
+}
+
+bool operand_get_bool(operand_t op) {
+    ASSERT(operand_is_bool(op))("cannot get boolean from a non-boolean immediate");
+    return op.imm.imm_bool;
+}
+
+int64_t operand_get_int(operand_t op) {
+    return op.imm.imm_int;
+}
+
+operand_t new_bool(bool b) {
+    operand_t op = new_operand(IMM);
+    op.imm.kind = IMM_BOOL;
+    op.imm.imm_bool = b;
+    return op;
 }
 
 /**
@@ -112,11 +140,11 @@ static operand_t add_block(flow_t *flow) {
 static operand_t emit_opcode(flow_t *flow, node_t *node);
 
 static operand_t emit_digit(node_t *node) {
-    return new_imm(node->digit);
+    return new_int(node->digit);
 }
 
 static operand_t emit_bool(node_t *node) {
-    return new_imm_b(node->boolean);
+    return new_bool(node->boolean);
 }
 
 static operand_t emit_unary(flow_t *flow, node_t *node) {
@@ -229,7 +257,7 @@ static operand_t emit_branch(flow_t *flow, node_t *node) {
         cond = emit_opcode(flow, node->cond);
     } else {
         /* this is an else branch */
-        cond = new_imm_b(true);
+        cond = new_bool(true);
     }
 
     step_t *branch = add_step(flow, new_typed_step(OP_BRANCH, NULL));
@@ -260,7 +288,7 @@ static operand_t emit_var(flow_t *flow, node_t *node) {
     operand_t val = emit_opcode(flow, node->init);
 
     step_t reserve = new_step(OP_RESERVE, node);
-    reserve.size = new_imm(1);
+    reserve.size = new_int(1);
 
     operand_t out = add_vreg(flow, reserve);
 

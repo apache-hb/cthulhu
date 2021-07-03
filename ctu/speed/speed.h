@@ -52,3 +52,8 @@ bool remove_branches(module_t *mod);
  * remove unneeded jumps
  */
 bool remove_jumps(module_t *mod);
+
+/**
+ * constant folding
+ */
+bool fold_consts(module_t *mod);

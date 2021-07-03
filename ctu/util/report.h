@@ -10,8 +10,13 @@
  */
 void assert(const char *fmt, ...);
 void ensure(const char *fmt, ...);
-#define ENSURE(expr) if (!(expr)) (ensure)
-#define ASSERT(expr) if (!(expr)) (assert)
+#ifndef NDEBUG
+#   define ENSURE(expr) if (!(expr)) (ensure)
+#   define ASSERT(expr) if (!(expr)) (assert)
+#else
+#   define ENSURE(_)
+#   define ASSERT(_)
+#endif
 
 /**
  * error severity
@@ -24,6 +29,8 @@ typedef enum {
     LEVEL_ERROR,
     LEVEL_WARNING
 } level_t;
+
+typedef size_t reportid_t;
 
 /**
  * set the report limit and begin a new report
@@ -40,13 +47,22 @@ bool report_end(const char *name);
 /**
  * generate a report from a node
  */
-void reportf(level_t level, node_t *node, const char *fmt, ...);
+reportid_t reportf(level_t level, node_t *node, const char *fmt, ...);
 
 /**
  * generate a report from a source and location
  */
 void report(level_t level, scanner_t *source, where_t where, const char *fmt, ...);
 
+/**
+ * add a message to be printed next to the squiggly report undline
+ */
+void report_underline(reportid_t id, const char *msg);
+
+/**
+ * add a note to be printed under a report
+ */
+void report_note(reportid_t id, const char *note);
 
 extern bool verbose;
 

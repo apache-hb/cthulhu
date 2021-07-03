@@ -67,8 +67,17 @@ typedef struct {
     };
 } operand_t;
 
+bool operand_is_imm(operand_t op);
+
+bool operand_is_bool(operand_t op);
+bool operand_get_bool(operand_t op);
+
+int64_t operand_get_int(operand_t op);
+
 operand_t new_vreg(vreg_t vreg);
 operand_t new_block(size_t label);
+operand_t new_bool(bool b);
+operand_t new_int(int64_t i);
 
 typedef struct {
     opcode_t opcode;
@@ -126,7 +135,9 @@ typedef struct {
 } step_t;
 
 step_t new_jump(operand_t label);
+step_t new_value(step_t *last, operand_t value);
 
+type_t *step_type(step_t *step);
 bool is_vreg_used(const step_t *step, vreg_t reg);
 
 typedef struct {

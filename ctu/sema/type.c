@@ -222,7 +222,9 @@ static bool convertible_to(
 
         if (is_integer(from)) {
             if (implicit) {
-                reportf(LEVEL_WARNING, *node, "implicit integer to boolean conversion");
+                reportid_t report = reportf(LEVEL_WARNING, *node, "implicit integer to boolean conversion");
+                report_underline(report, "conversion happens here");
+                report_note(report, "add an explicit cast to silence this warning");
                 *node = implicit_cast(*node, to);
             }
 

@@ -1,0 +1,4 @@
+def implicit(): bool {
+    final i = 100;
+    return i;
+}

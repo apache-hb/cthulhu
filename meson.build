@@ -79,7 +79,8 @@ libir = library('ir', src,
 
 src = [
     'ctu/speed/dead.c',
-    'ctu/speed/mem2reg.c'
+    'ctu/speed/mem2reg.c',
+    'ctu/speed/fold.c'
 ]
 
 libspeed = library('speed', src,

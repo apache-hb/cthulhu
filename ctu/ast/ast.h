@@ -68,8 +68,19 @@ typedef enum {
     BINARY_NEQ, /* expr != expr */
 } binary_t;
 
+/**
+ * is any binary math operation
+ */
 bool is_math_op(binary_t op);
+
+/**
+ * is any binary comparison operator, not including equality
+ */
 bool is_comparison_op(binary_t op);
+
+/**
+ * is any binary equality operator
+ */
 bool is_equality_op(binary_t op);
 
 /**
@@ -155,6 +166,9 @@ typedef struct node_t {
         /* AST_DECL */
         struct {
             union {
+                /**
+                 * all declarations have names
+                 */
                 char *name;
 
                 /* AST_TYPE */
@@ -190,22 +204,66 @@ typedef struct node_t {
  * query information
  */
 
+/**
+ * get the name of a declaration node
+ * do not call on something that isnt a declaration
+ */
 const char *get_decl_name(node_t *node);
+
+/**
+ * get the name of a symbol
+ * do not call on something that isnt a symbol
+ */
 const char *get_symbol_name(node_t *node);
+
+/**
+ * get the name of a resolved type
+ * do not call with symbols
+ */
 const char *get_resolved_name(node_t *node);
+
+/**
+ * get the type of a node
+ * returns an unresolved type if the type hasnt been resolved
+ */
 type_t *get_type(node_t *node);
+
+/**
+ * get the type of a node or NULL
+ */
 type_t *raw_type(node_t *node);
+
+/**
+ * get all statements in a list
+ */
 nodes_t *get_stmts(node_t *node);
 
+/**
+ * is this name the discarded name `$`
+ */
 bool is_discard_name(const char *name);
 
 /**
  * list managment
  */
 
+/**
+ * create a new list starting with init
+ * if init is null the list is empty
+ */
 nodes_t *ast_list(node_t *init);
 nodes_t *ast_append(nodes_t *list, node_t *node);
+
+/**
+ * get a node from a list
+ * must be in bounds
+ */
 node_t *ast_at(nodes_t *list, size_t idx);
+
+/**
+ * get a node of a specific kind from a list
+ * asserts if the node is not of that kind
+ */
 node_t *ast_kind_at(nodes_t *list, size_t idx, ast_t kind);
 size_t ast_len(nodes_t *list);
 
@@ -213,6 +271,10 @@ size_t ast_len(nodes_t *list);
  * modify nodes
  */
 
+/**
+ * mark a node as implicitly generated
+ * used in the semantic state to generate implicit casts
+ */
 node_t *make_implicit(node_t *node);
 
 /**
@@ -242,6 +304,14 @@ node_t *ast_decl_func(
 node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *type);
 node_t *ast_decl_var(scanner_t *scanner, where_t where, char *name, node_t *init);
 
+/**
+ * create a builtin type
+ */
 node_t *ast_type(const char *name);
 
+/**
+ * free a list of nodes
+ * if free_items is true then also free all the nodes
+ * in the list
+ */
 void free_ast_list(nodes_t *list, bool free_items);

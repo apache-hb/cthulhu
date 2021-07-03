@@ -131,6 +131,7 @@ nodes_t *ast_list(node_t *init) {
 }
 
 node_t *ast_at(nodes_t *list, size_t idx) {
+    ASSERT(idx < list->len)("indexing out of bounds (%zu > %zu)", idx, list->len);
     return list->data[idx];
 }
 
