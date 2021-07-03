@@ -140,6 +140,7 @@ int main(int argc, const char **argv) {
         size_t passes = 0;
 
         while (true) {
+            logfmt("beginning optimization pass %zu", passes + 1);
             size_t dirty_stages = 0;
 
             if (remove_dead_code(&mod)) {
@@ -184,6 +185,11 @@ int main(int argc, const char **argv) {
 
             if (remove_pure_code(&mod)) {
                 logfmt("removed unused pure operations");
+                dirty_stages += 1;
+            }
+
+            if (fold_consts(&mod)) {
+                logfmt("folded constant expressions");
                 dirty_stages += 1;
             }
 

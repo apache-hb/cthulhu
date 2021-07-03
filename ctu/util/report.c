@@ -16,6 +16,18 @@ typedef struct {
     scanner_t *source;
     where_t where;
     
+    /**
+     * underline message
+     * may be null
+     */
+    const char *underline;
+
+    /**
+     * note
+     * may be null
+     */
+    const char *note;
+
     node_t *node;
 } report_t;
 
@@ -92,7 +104,7 @@ static void print_line(scanner_t *source, loc_t line) {
         fprintf(stderr, "\n");
 }
 
-static void print_underline(loc_t column, loc_t length) {
+static void print_underline(loc_t column, loc_t length, const char *msg) {
     fprintf(stderr, COLOUR_PURPLE);
 
     for (loc_t i = 0; i < column; i++) {
@@ -101,6 +113,10 @@ static void print_underline(loc_t column, loc_t length) {
     fprintf(stderr, "╰");
     for (loc_t i = 0; i < length - 1; i++) {
         fprintf(stderr, "─");
+    }
+
+    if (msg) {
+        fprintf(stderr, " %s", msg);
     }
 
     fprintf(stderr, COLOUR_RESET "\n");
@@ -113,7 +129,7 @@ static void print_line_indicator(const char *text, size_t len, size_t padding) {
     fprintf(stderr, "%s ┃ ", text);
 }
 
-static void underline_source(scanner_t *source, where_t where) {
+static void underline_source(scanner_t *source, where_t where, const char *msg) {
     loc_t line = where.first_line;
     loc_t column = where.first_column;
     loc_t length = where.last_column - column;
@@ -126,17 +142,20 @@ static void underline_source(scanner_t *source, where_t where) {
     print_line_indicator(linestr, linelen, padding);
     print_line(source, line);
     print_padding(padding, false);
-    print_underline(column, length);
+    print_underline(column, length, msg);
 }
 
-static void outline_source(scanner_t *source, where_t where) {
+static void outline_source(scanner_t *source, where_t where, const char *msg) {
     if (where.first_line == where.last_line) {
-        underline_source(source, where);
+        underline_source(source, where, msg);
     } else {
         /* TODO: better multiline span reporting */
         fprintf(stderr, "spanning line %" PRId64 " to line %" PRId64 "\n", 
             where.first_line, where.last_line
         );
+        if (msg) {
+            fprintf(stderr, "message: %s\n", msg);
+        }
     }
 }
 
@@ -149,23 +168,29 @@ static bool print_report(report_t report) {
     
     if (report.source) {
         print_location(report.source, report.where);
-        outline_source(report.source, report.where);
+        outline_source(report.source, report.where, report.underline);
+    }
+
+    if (report.note) {
+        fprintf(stderr, COLOUR_GREEN "note:" COLOUR_RESET " %s\n", report.note);
     }
 
     return report.level == LEVEL_ERROR 
         || report.level == LEVEL_INTERNAL;
 }
 
-static void push_report(level_t level, scanner_t *source, where_t where, node_t *node, char *message) {
-    report_t it = { level, message, source, where, node };
+static reportid_t push_report(level_t level, scanner_t *source, where_t where, node_t *node, char *message) {
+    report_t it = { level, message, source, where, NULL, NULL, node };
 
     if (num_reports < max_reports) {
-        reports[num_reports++] = it;
+        reports[num_reports] = it;
     }
 
     if (eager_report) {
         print_report(it);
     }
+
+    return num_reports++;
 }
 
 void report_begin(size_t limit, bool eager) {
@@ -212,11 +237,12 @@ void assert(const char *fmt, ...) {
     va_end(args);
 }
 
-void reportf(level_t level, node_t *node, const char *fmt, ...) {
+reportid_t reportf(level_t level, node_t *node, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    push_report(level, node->scanner, node->where, node, formatv(fmt, args));
+    reportid_t id = push_report(level, node->scanner, node->where, node, formatv(fmt, args));
     va_end(args);
+    return id;
 }
 
 void report(level_t level, scanner_t *source, where_t where, const char *fmt, ...) {
@@ -224,6 +250,14 @@ void report(level_t level, scanner_t *source, where_t where, const char *fmt, ..
     va_start(args, fmt);
     push_report(level, source, where, NULL, formatv(fmt, args));
     va_end(args);
+}
+
+void report_underline(reportid_t id, const char *msg) {
+    reports[id].underline = msg;
+}
+
+void report_note(reportid_t id, const char *msg) {
+    reports[id].note = msg;
 }
 
 bool verbose = false;
