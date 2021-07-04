@@ -22,28 +22,38 @@ static void fold_cast(step_t *step, bool *dirty) {
     }
 }
 
-static int64_t fold_div(step_t *step, int64_t lhs, int64_t rhs) {
+static step_t fold_div(step_t *step, int64_t lhs, int64_t rhs, bool *dirty) {
     if (rhs == 0) {
         report(LEVEL_WARNING, step->source, step->where, "right hand side of division evaluates to zero");
-        return 0;
+        return *step;
     }
-    
-    return lhs / rhs;
+
+    *dirty = true;
+    return new_value(step, new_int(lhs / rhs));
 }
 
-static int64_t fold_math_op(step_t *step) {
+static step_t fold_math_op(step_t *step, bool *dirty) {
     int64_t lhs = operand_get_int(step->lhs),
             rhs = operand_get_int(step->rhs);
 
     switch (step->binary) {
-    case BINARY_ADD: return lhs + rhs;
-    case BINARY_SUB: return lhs - rhs;
-    case BINARY_DIV: return fold_div(step, lhs, rhs);
-    case BINARY_MUL: return lhs * rhs;
-    case BINARY_REM: return lhs % rhs;
+    case BINARY_ADD: 
+        *dirty = true;
+        return new_value(step, new_int(lhs + rhs));
+    case BINARY_SUB: 
+        *dirty = true;
+        return new_value(step, new_int(lhs - rhs));
+    case BINARY_DIV: 
+        return fold_div(step, lhs, rhs, dirty);
+    case BINARY_MUL: 
+        *dirty = true;
+        return new_value(step, new_int(lhs * rhs));
+    case BINARY_REM: 
+        *dirty = true;
+        return new_value(step, new_int(lhs % rhs));
     default: 
         assert("invalid math op when folding");
-        return 0;
+        return *step;
     }
 }
 
@@ -58,10 +68,7 @@ static void fold_binary(step_t *step, bool *dirty) {
      * we know both sides will be integers
      */
     if (is_math_op(step->binary)) {
-        *step = new_value(step,
-            new_int(fold_math_op(step))
-        );
-        *dirty = true;
+        *step = fold_math_op(step, dirty);
     }
 }
 

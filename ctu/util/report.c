@@ -74,7 +74,7 @@ static void print_padding(size_t size, bool feed) {
         fprintf(stderr, " ");
     }
 
-    fprintf(stderr, "┃ ");
+    fprintf(stderr, "| ");
 
     if (feed) {
         fprintf(stderr, "\n");
@@ -126,7 +126,7 @@ static void print_line_indicator(const char *text, size_t len, size_t padding) {
     for (size_t i = 0; i < (padding - len); i++)
         fprintf(stderr, " ");
 
-    fprintf(stderr, "%s ┃ ", text);
+    fprintf(stderr, "%s | ", text);
 }
 
 static void underline_source(scanner_t *source, where_t where, const char *msg) {
