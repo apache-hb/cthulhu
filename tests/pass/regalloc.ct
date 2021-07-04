@@ -1,0 +1,12 @@
+def main(): int {
+    final a = 0;
+    final b = 1;
+    final c = 2;
+    final x = 1 * a;
+    final d = 3 + a;
+    final e = 4 + b;
+    final f = 5 + a;
+    final j = d * d;
+    final z = a * b - c / x % d + e + f + j;
+    return z;
+}

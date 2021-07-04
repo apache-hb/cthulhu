@@ -22,6 +22,15 @@ static void fold_cast(step_t *step, bool *dirty) {
     }
 }
 
+static int64_t fold_div(step_t *step, int64_t lhs, int64_t rhs) {
+    if (rhs == 0) {
+        report(LEVEL_WARNING, step->source, step->where, "right hand side of division evaluates to zero");
+        return 0;
+    }
+    
+    return lhs / rhs;
+}
+
 static int64_t fold_math_op(step_t *step) {
     int64_t lhs = operand_get_int(step->lhs),
             rhs = operand_get_int(step->rhs);
@@ -29,7 +38,7 @@ static int64_t fold_math_op(step_t *step) {
     switch (step->binary) {
     case BINARY_ADD: return lhs + rhs;
     case BINARY_SUB: return lhs - rhs;
-    case BINARY_DIV: return lhs / rhs;
+    case BINARY_DIV: return fold_div(step, lhs, rhs);
     case BINARY_MUL: return lhs * rhs;
     case BINARY_REM: return lhs % rhs;
     default: 

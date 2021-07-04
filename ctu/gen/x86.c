@@ -52,6 +52,7 @@ static const char *alloc_tostr(alloc_t alloc) {
         case RBX: return "rbx";
         case RCX: return "rcx";
         case RDX: return "rdx";
+        case RSI: return "rsi";
         case UNUSED: return "unused";
         default: return "ERR";
         }
@@ -235,5 +236,6 @@ blob_t *gen_x64(module_t *mod) {
         x86_regalloc_t regalloc = assign_ranges(mod->flows + i);
         free_regalloc(&regalloc);
     }
+    
     return blob;
 }
