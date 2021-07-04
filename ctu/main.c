@@ -22,6 +22,9 @@ static const char *output = "a.out";
 /* enable eager error reporting */
 static bool eager_reporting = false;
 
+/* should code be optimized */
+static bool speed = false;
+
 typedef struct {
     const char *path;
     FILE *file;
@@ -56,6 +59,7 @@ static void add_file(const char *path) {
 #define EAGER_ARG "--eager"
 #define OUTPUT_ARG "--output"
 #define VERBOSE_ARG "--verbose"
+#define OPTIMIZE_ARG "--speed"
 
 static void print_help(void) {
     printf("usage: %s [options] file...\n", name);
@@ -64,6 +68,7 @@ static void print_help(void) {
     printf("\t" EAGER_ARG ": enable eager error reporting\n");
     printf("\t" OUTPUT_ARG "=name: set output name (default %s)\n", output);
     printf("\t" VERBOSE_ARG ": enable verbose logging\n");
+    printf("\t" OPTIMIZE_ARG ": enable optimization\n");
 }
 
 static int parse_arg(int index, int argc, const char **argv) {
@@ -77,6 +82,9 @@ static int parse_arg(int index, int argc, const char **argv) {
     } else if (strcmp(arg, VERBOSE_ARG) == 0) {
         verbose = true;
         logfmt("enabled verbose logging");
+    } else if (strcmp(arg, OPTIMIZE_ARG) == 0) {
+        speed = true;
+        logfmt("enabled optimization");
     } else if (!startswith(arg, "-")) {
         add_file(arg);
         logfmt("adding `%s` as a source file", arg);
@@ -139,7 +147,7 @@ int main(int argc, const char **argv) {
 
         size_t passes = 0;
 
-        while (true) {
+        while (speed) {
             logfmt("beginning optimization pass %zu", passes + 1);
             size_t dirty_stages = 0;
 
@@ -205,10 +213,10 @@ int main(int argc, const char **argv) {
 
         debug_module(mod);
 
-        //gen_x64(&mod);
+        gen_x64(&mod);
 
-        //if (report_end("generate"))
-        //    return 1;
+        if (report_end("generate"))
+            return 1;
 
         free_scanner(scan);
     }

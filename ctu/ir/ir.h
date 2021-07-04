@@ -84,6 +84,10 @@ typedef struct {
 
     type_t *type;
 
+    /* location and source text */
+    scanner_t *source;
+    where_t where;
+
     union {
         /* OP_RETURN, OP_VALUE, OP_CONVERT */
         struct {

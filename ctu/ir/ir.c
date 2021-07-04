@@ -48,15 +48,24 @@ operand_t new_block(size_t label) {
     return op;
 }
 
+static where_t NOWHERE = { 0, 0, 0, 0 };
+
 static step_t new_typed_step(opcode_t op, type_t *type) {
     step_t step = { 
         /* opcode */ op, 
         /* type */ type,
+        /* scanner */ NULL,
+        /* where */ NOWHERE,
 #ifndef _MSC_VER
         /* data */ { }
 #endif
     };
     return step;
+}
+
+static void node_attach(step_t *step, node_t *node) {
+    step->source = node->scanner;
+    step->where = node->where;
 }
 
 step_t new_jump(operand_t label) {
@@ -165,6 +174,8 @@ static operand_t emit_binary(flow_t *flow, node_t *node) {
     step.binary = node->binary;
     step.lhs = lhs;
     step.rhs = rhs;
+
+    node_attach(&step, node);
 
     return add_vreg(flow, step);
 }

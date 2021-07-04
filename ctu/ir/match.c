@@ -34,6 +34,9 @@ bool is_vreg_used(const step_t *step, vreg_t vreg) {
     case OP_RETURN:
         return op_used(step->value, vreg);
 
+    case OP_RESERVE:
+        return op_used(step->size, vreg);
+
     case OP_STORE:
         return op_used(step->src, vreg) 
             || op_used(step->dst, vreg);
@@ -55,7 +58,7 @@ bool is_vreg_used(const step_t *step, vreg_t vreg) {
         return false;
 
     default:
-        assert("unknown IR step %d, unable to remove dead code", step->opcode);
+        assert("unknown IR opcode %d", step->opcode);
         return true;
     }
 }
