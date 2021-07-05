@@ -7,12 +7,6 @@
 #include "bison.h"
 #include "flex.h"
 
-static int flex_file_next(void *handle) {
-    FILE *file = handle;
-    int letter = fgetc(file);
-    return letter == EOF ? 0 : letter;
-}
-
 static size_t file_size(FILE *fd) {
     fseek(fd, 0, SEEK_END);
     size_t size = ftell(fd);
@@ -20,15 +14,14 @@ static size_t file_size(FILE *fd) {
     return size;
 }
 
-static scanner_t *new_scanner(const char *path, void *handle, int(*next)(void*), size_t size) {
+static scanner_t *new_scanner(const char *path, size_t size) {
     scanner_t *scanner = malloc(sizeof(scanner_t));
 
     scanner->path = path;
-    scanner->handle = handle;
-    scanner->next = next;
 
     scanner->text = malloc(size + 1);
-    scanner->len = 0;
+    scanner->offset = 0;
+    scanner->size = size;
 
     return scanner;
 }
@@ -44,7 +37,9 @@ static const char *yyerror_str(int err) {
 nodes_t *compile_file(const char *path, FILE *stream, scanner_t **scanout) {
     int err;
     yyscan_t scanner;
-    scanner_t *extra = new_scanner(path, stream, flex_file_next, file_size(stream));
+    size_t size = file_size(stream);
+    scanner_t *extra = new_scanner(path, file_size(stream));
+    fread(extra->text, 1, size, stream);
 
     if ((err = yylex_init_extra(extra, &scanner))) {
         assert("yylex_init_extra -> %s", yyerror_str(err));
@@ -69,7 +64,7 @@ nodes_t *compile_file(const char *path, FILE *stream, scanner_t **scanout) {
 nodes_t *compile_string(const char *path, const char *text, scanner_t **scanout) {
     int err;
     yyscan_t scanner;
-    scanner_t *extra = new_scanner(path, NULL, NULL, strlen(text));
+    scanner_t *extra = new_scanner(path, strlen(text));
     extra->text = strdup(text);
     YY_BUFFER_STATE buffer;
 

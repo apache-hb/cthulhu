@@ -152,10 +152,9 @@ static type_t *query_symbol(sema_t *sema, node_t *symbol) {
      * then propogate what its index is
      * for the ir gen
      */
-    if (is_local(origin)) {
-        symbol->find_local = true;
-        symbol->local = origin->local;
-    }
+    symbol->local = is_local(origin)
+        ? origin->local
+        : NOT_LOCAL;
 
     return get_type(origin);
 }

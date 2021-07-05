@@ -16,9 +16,15 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
     node->where = where;
     node->typeof = NULL;
     node->implicit = false;
-    node->find_local = false;
 
     return node;
+}
+
+static node_t *new_decl(scanner_t *scanner, where_t where, ast_t kind, char *name) {
+    node_t *decl = new_node(scanner, where, kind);
+    decl->name = name;
+    decl->local = NOT_LOCAL;
+    return decl;
 }
 
 const char *get_decl_name(node_t *node) {
@@ -249,9 +255,8 @@ node_t *ast_decl_func(
     char *name, nodes_t *params,
     node_t *result, node_t *body) {
 
-    node_t *node = new_node(scanner, where, AST_DECL_FUNC);
+    node_t *node = new_decl(scanner, where, AST_DECL_FUNC, name);
 
-    node->name = name;
     node->params = params;
     node->result = result;
     node->body = body;
@@ -260,18 +265,16 @@ node_t *ast_decl_func(
 }
 
 node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *type) {
-    node_t *node = new_node(scanner, where, AST_DECL_PARAM);
+    node_t *node = new_decl(scanner, where, AST_DECL_PARAM, name);
 
-    node->name = name;
     node->type = type;
 
     return node;
 }
 
 node_t *ast_decl_var(scanner_t *scanner, where_t where, char *name, node_t *init) {
-    node_t *node = new_node(scanner, where, AST_DECL_VAR);
+    node_t *node = new_decl(scanner, where, AST_DECL_VAR, name);
 
-    node->name = name;
     node->init = init;
 
     return node;

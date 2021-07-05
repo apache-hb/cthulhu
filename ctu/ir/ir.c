@@ -224,10 +224,8 @@ static operand_t emit_call(flow_t *flow, node_t *node) {
     return add_vreg(flow, step);
 }
 
-#include <stdio.h>
-
 static operand_t emit_symbol(flow_t *flow, node_t *node) {
-    if (node->find_local) {
+    if (node->local != NOT_LOCAL) {
         step_t load = new_step(OP_LOAD, node);
         load.src = new_vreg(flow->locals[node->local]);
         return add_vreg(flow, load);

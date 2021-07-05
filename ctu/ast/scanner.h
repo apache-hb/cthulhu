@@ -7,11 +7,9 @@ typedef struct {
     const char *path;
     void *ast;
 
-    void *handle;
-    int(*next)(void*);
-
     char *text;
-    size_t len;
+    size_t offset;
+    size_t size;
 } scanner_t;
 
 typedef int64_t loc_t;
