@@ -102,9 +102,6 @@ static void propogate_value(flow_t *flow, step_t *step, bool *dirty) {
         update_operand(flow, &step->lhs, dirty);
         update_operand(flow, &step->rhs, dirty);
         break;
-    case OP_RESERVE:
-        update_operand(flow, &step->size, dirty);
-        break;
     case OP_BRANCH:
         update_operand(flow, &step->cond, dirty); 
         break;

@@ -33,7 +33,7 @@ lex = custom_target('lex',
 # create our bison parser that our ast needs
 parse = custom_target('parse',
     command : [ 
-        bison, '-d', '@INPUT@', '-Wdeprecated', '-v',
+        bison, '-d', '@INPUT@', '-Wcounterexamples', '-Wdeprecated', '-v',
         '--output=@OUTPUT0@',
         '--defines=@OUTPUT1@'
     ],

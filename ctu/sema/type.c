@@ -180,6 +180,14 @@ static type_t *resolve_typename(sema_t *sema, node_t *node) {
     return resolve_symbol(sema, node);
 }
 
+static type_t *resolve_type(sema_t *sema, node_t *node) {
+    if (node->kind == AST_PTR) {
+        return new_pointer(node, resolve_type(sema, node->ptr));
+    } else {
+        return resolve_typename(sema, node);
+    }
+}
+
 static node_t *implicit_cast(node_t *original, type_t *to) {
     node_t *cast = ast_cast(original->scanner, original->where, original, NULL);
 
@@ -229,6 +237,10 @@ static bool convertible_to(
 
             return true;
         }
+    }
+
+    if (is_pointer(to) && is_pointer(from)) {
+        return convertible_to(node, to->ptr, from->ptr, implicit);
     }
 
     return false;
@@ -324,7 +336,7 @@ static type_t *typecheck_call(sema_t *sema, node_t *node) {
 }
 
 static type_t *typecheck_func(sema_t *sema, node_t *decl) {
-    type_t *result = resolve_typename(sema, decl->result);
+    type_t *result = resolve_type(sema, decl->result);
     size_t len = ast_len(decl->params);
     types_t *args = new_typelist(len);
 
@@ -382,6 +394,10 @@ static type_t *typecheck_binary(sema_t *sema, node_t *expr) {
     return result;
 }
 
+static bool is_lvalue(node_t *expr) {
+    return expr->kind == AST_SYMBOL;
+}
+
 static type_t *typecheck_unary(sema_t *sema, node_t *expr) {
     type_t *type = typecheck_expr(sema, expr->expr);
     unary_t op = expr->unary;
@@ -390,6 +406,21 @@ static type_t *typecheck_unary(sema_t *sema, node_t *expr) {
     case UNARY_ABS: case UNARY_NEG:
         if (!is_integer(type)) {
             reportf(LEVEL_ERROR, expr, "unary operation requires integral");
+        }
+        break;
+
+    case UNARY_REF:
+        if (!is_lvalue(expr->expr)) {
+            reportf(LEVEL_ERROR, expr, "cannot take a reference to a non-lvalue");
+        } else {
+            type = new_pointer(expr, type);
+        }
+        break;
+    case UNARY_DEREF:
+        if (!is_pointer(type)) {
+            reportf(LEVEL_ERROR, expr, "cannot dereference a type that isnt a pointer");
+        } else {
+            type = type->ptr;
         }
         break;
     case UNARY_TRY:
@@ -417,7 +448,7 @@ static void typecheck_branch(sema_t *sema, node_t *stmt) {
 
 static type_t *typecheck_cast(sema_t *sema, node_t *cast) {
     type_t *origin = typecheck_expr(sema, cast->expr);
-    type_t *target = resolve_typename(sema, cast->cast);
+    type_t *target = resolve_type(sema, cast->cast);
 
     if (!explicit_convertible_to(target, origin)) {
         reportf(LEVEL_ERROR, cast, "cannot perform explicit conversion");
@@ -490,7 +521,7 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
 
     switch (decl->kind) {
     case AST_DECL_PARAM:
-        type = resolve_typename(sema, decl->type);
+        type = resolve_type(sema, decl->type);
         break;
 
     case AST_DECL_FUNC:
@@ -566,7 +597,7 @@ static void validate_params(sema_t *sema, nodes_t *params) {
 static void validate_function(sema_t *sema, node_t *func) {
     sema_t *nest = new_sema(sema);
     validate_params(nest, func->params);
-    sema->result = resolve_typename(sema, func->result);
+    sema->result = resolve_type(sema, func->result);
 
     typecheck_stmts(nest, func->body);
 

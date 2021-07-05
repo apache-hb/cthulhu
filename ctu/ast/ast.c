@@ -182,6 +182,12 @@ node_t *ast_symbol(scanner_t *scanner, where_t where, char *text) {
     return node;
 }
 
+node_t *ast_pointer(scanner_t *scanner, where_t where, node_t *ptr) {
+    node_t *node = new_node(scanner, where, AST_PTR);
+    node->ptr = ptr;
+    return node;
+}
+
 node_t *ast_unary(scanner_t *scanner, where_t where, unary_t unary, node_t *expr) {
     node_t *node = new_node(scanner, where, AST_UNARY);
 

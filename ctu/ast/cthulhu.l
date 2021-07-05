@@ -69,6 +69,8 @@
 "*" { return MUL; }
 "%" { return REM; }
 
+"&" { return BITAND; }
+
 "(" { return LPAREN; }
 ")" { return RPAREN; }
 "{" { return LBRACE; }

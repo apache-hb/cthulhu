@@ -7,8 +7,9 @@ static const char *get_flow_name(module_t *mod, size_t idx) {
 
 static void debug_imm(imm_t imm) {
     switch (imm.kind) {
-    case IMM_INT: printf("$%" PRId64, imm.imm_int); break;
-    case IMM_BOOL: printf("$%s", imm.imm_bool ? "true" : "false"); break;
+    case IMM_INT: printf("int(%" PRId64 ")", imm.imm_int); break;
+    case IMM_BOOL: printf("bool(%s)", imm.imm_bool ? "true" : "false"); break;
+    case IMM_SIZE: printf("size(%zu)", imm.imm_size);
     }
 }
 
@@ -74,6 +75,7 @@ static void debug_type(type_t *type) {
     case TYPE_BOOLEAN: printf("bool"); break;
     case TYPE_VOID: printf("void"); break;
     case TYPE_CALLABLE: debug_callable(type); break;
+    case TYPE_POINTER: printf("*"); debug_type(type->ptr); break;
     case TYPE_POISON: printf("poison(%s)", type->text); break;
     case TYPE_UNRESOLVED: printf("unresolved"); break;
     }
@@ -139,8 +141,6 @@ static void debug_step(module_t *mod, size_t idx, step_t step) {
         debug_index(idx);
         printf("reserve ");
         debug_type(step.type);
-        printf(" ");
-        debug_operand(mod, step.size);
         break;
     case OP_LOAD:
         debug_index(idx);

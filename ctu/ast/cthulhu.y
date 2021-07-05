@@ -41,6 +41,8 @@ void yyerror();
     DIV "`/`"
     REM "`%`"
 
+    BITAND "`&`"
+
     GT "`>`"
     GTE "`>=`"
     LT "`<`"
@@ -77,7 +79,7 @@ void yyerror();
 
 %type<node>
     decl function param variable /* declarations */
-    type typename /* types */
+    type typename pointer /* types */
     stmt stmts return if else elseif branch /* statements */
     primary postfix unary multiply add compare equality expr /* expressions */
 
@@ -168,6 +170,10 @@ stmt: expr SEMI { $$ = $1; }
  */
 
 type: typename { $$ = $1; }
+    | pointer { $$ = $1; }
+    ;
+
+pointer: MUL type { $$ = ast_pointer(x, @$, $2); }
     ;
 
 typename: IDENT { $$ = ast_symbol(x, @$, strdup($1)); }
@@ -188,7 +194,7 @@ arglist: expr { $$ = ast_list($1); }
 
 
 primary: LPAREN expr RPAREN { $$ = $2; }
-    | type { $$ = $1; }
+    | typename { $$ = $1; }
     | DIGIT { $$ = ast_digit(x, @$, $1.text, $1.base); }
     | BOOL_TRUE { $$ = ast_bool(x, @$, true); }
     | BOOL_FALSE { $$ = ast_bool(x, @$, false); }
@@ -203,6 +209,8 @@ postfix: primary { $$ = $1; }
 unary: postfix { $$ = $1; }
     | ADD unary { $$ = ast_unary(x, @$, UNARY_ABS, $2); }
     | SUB unary { $$ = ast_unary(x, @$, UNARY_NEG, $2); }
+    | BITAND unary { $$ = ast_unary(x, @$, UNARY_REF, $2); }
+    | MUL unary { $$ = ast_unary(x, @$, UNARY_DEREF, $2); }
     ;
 
 multiply: unary { $$ = $1; }

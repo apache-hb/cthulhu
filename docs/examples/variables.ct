@@ -1,0 +1,15 @@
+def main(): void {
+    // declare an immutable variable
+    // final variables cannot be reassigned or modified
+    final x = 10;
+
+    // uncomment this and see what happens
+    // x = 20;
+
+    // declare a mutable variable
+    // variables may be reassigned and modified
+    var y = 100;
+
+    y = 20;
+    y += 80;
+}

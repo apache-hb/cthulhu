@@ -75,6 +75,11 @@ typedef enum {
     TYPE_CALLABLE,
 
     /**
+     * a pointer type
+     */
+    TYPE_POINTER,
+
+    /**
      * error handling types
      */
     TYPE_POISON, /* typecheck error */
@@ -132,6 +137,12 @@ typedef struct type_t {
         integer_t integer;
 
         /**
+         * the type this type points to
+         * TYPE_POINTER
+         */
+        struct type_t *ptr;
+
+        /**
          * callable data
          */
         struct {
@@ -155,6 +166,7 @@ type_t *new_builtin(typeof_t kind, const char *name);
 type_t *new_unresolved(struct node_t *symbol);
 type_t *new_poison(struct node_t *parent, const char *err);
 type_t *new_callable(struct node_t *func, types_t *args, type_t *result);
+type_t *new_pointer(struct node_t *node, type_t *to);
 
 bool is_unresolved(type_t *type);
 bool is_integer(type_t *type);
@@ -162,5 +174,6 @@ bool is_boolean(type_t *type);
 bool is_callable(type_t *type);
 bool is_void(type_t *type);
 bool is_signed(type_t *type);
+bool is_pointer(type_t *type);
 
 void connect_type(struct node_t *node, type_t *type);
