@@ -97,6 +97,10 @@ bool operand_is_bool(operand_t op) {
     return operand_is_imm(op) && op.imm.kind == IMM_BOOL;
 }
 
+bool operand_is_invalid(operand_t op) {
+    return op.kind == NONE;
+}
+
 bool operand_get_bool(operand_t op) {
     ASSERT(operand_is_bool(op))("cannot get boolean from a non-boolean immediate");
     return op.imm.imm_bool;
@@ -110,6 +114,13 @@ operand_t new_bool(bool b) {
     operand_t op = new_operand(IMM);
     op.imm.kind = IMM_BOOL;
     op.imm.imm_bool = b;
+    return op;
+}
+
+operand_t new_size(size_t s) {
+    operand_t op = new_operand(IMM);
+    op.imm.kind = IMM_SIZE;
+    op.imm.imm_size = s;
     return op;
 }
 
@@ -142,6 +153,11 @@ static operand_t add_block(flow_t *flow) {
     return new_block(add_step_raw(flow, block));
 }
 
+static operand_t add_reserve(flow_t *flow, node_t *node) {
+    step_t step = new_step(OP_RESERVE, node);
+    return add_vreg(flow, step);
+}
+
 /**
  * codegen logic
  */
@@ -156,12 +172,40 @@ static operand_t emit_bool(node_t *node) {
     return new_bool(node->boolean);
 }
 
-static operand_t emit_unary(flow_t *flow, node_t *node) {
-    operand_t expr = emit_opcode(flow, node->expr);
+static operand_t get_lvalue(flow_t *flow, node_t *node) {
+    if (node->local != NOT_LOCAL) {
+        return new_vreg(flow->locals[node->local]);
+    } else {
+        return new_operand(NONE);
+    }
+}
 
-    step_t step = new_step(OP_UNARY, node);
-    step.unary = node->unary;
-    step.expr = expr;
+static operand_t emit_ref(flow_t *flow, node_t *node) {
+    step_t step = new_step(OP_STORE, node->expr);
+    step.dst = add_reserve(flow, node->expr);
+    step.src = get_lvalue(flow, node->expr);
+    add_step(flow, step);
+    return step.dst;
+}
+
+static step_t emit_deref(node_t *node, operand_t expr) {
+    step_t step = new_step(OP_LOAD, node->expr);
+    step.src = expr;
+    return step;
+}
+
+static operand_t emit_unary(flow_t *flow, node_t *node) {
+    step_t step;
+
+    if (node->unary == UNARY_REF) {
+        return emit_ref(flow, node);
+    } else if (node->unary == UNARY_DEREF) {
+        step = emit_deref(node, emit_opcode(flow, node->expr));
+    } else {
+        step = new_step(OP_UNARY, node);
+        step.unary = node->unary;
+        step.expr = emit_opcode(flow, node->expr);
+    }
 
     return add_vreg(flow, step);
 }
@@ -225,9 +269,10 @@ static operand_t emit_call(flow_t *flow, node_t *node) {
 }
 
 static operand_t emit_symbol(flow_t *flow, node_t *node) {
-    if (node->local != NOT_LOCAL) {
+    operand_t local = get_lvalue(flow, node);
+    if (!operand_is_invalid(local)) {
         step_t load = new_step(OP_LOAD, node);
-        load.src = new_vreg(flow->locals[node->local]);
+        load.src = local;
         return add_vreg(flow, load);
     }
 
@@ -296,10 +341,7 @@ static operand_t emit_convert(flow_t *flow, node_t *node) {
 static operand_t emit_var(flow_t *flow, node_t *node) {
     operand_t val = emit_opcode(flow, node->init);
 
-    step_t reserve = new_step(OP_RESERVE, node);
-    reserve.size = new_int(1);
-
-    operand_t out = add_vreg(flow, reserve);
+    operand_t out = add_reserve(flow, node);
 
     step_t step = new_step(OP_STORE, node);
     step.dst = out;

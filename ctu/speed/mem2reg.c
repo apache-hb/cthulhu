@@ -4,19 +4,12 @@ static bool equals_vreg(operand_t op, vreg_t reg) {
     return op.kind == VREG && op.vreg == reg;
 }
 
-static bool stores_to(step_t *step, size_t idx) {
-    if (step->opcode != OP_STORE) {
-        return false;
-    }
-
-    return equals_vreg(step->dst, idx);
-}
-
-static size_t count_stores(flow_t *flow, size_t idx, size_t *last) {
+static size_t count_stores_and_uses(flow_t *flow, size_t idx, size_t *last) {
     size_t count = 0;
     
     for (size_t i = idx; i < flow->len; i++) {
-        if (stores_to(step_at(flow, i), idx)) {
+        step_t *step = step_at(flow, i);
+        if (is_vreg_used(step, idx)) {
             count += 1;
             *last = i;
         }
@@ -26,12 +19,18 @@ static size_t count_stores(flow_t *flow, size_t idx, size_t *last) {
 }
 
 static void replace_loads(flow_t *flow, size_t start, size_t addr) {
+    operand_t vreg = new_vreg(addr);
+
+    step_t *reserve = step_at(flow, start);
+    reserve->opcode = OP_VALUE;
+    reserve->value = vreg;
+    
     for (size_t i = start; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
 
         if (step->opcode == OP_LOAD && equals_vreg(step->src, start)) {
             step->opcode = OP_VALUE;
-            step->value = new_vreg(addr);
+            step->value = vreg;
         }
     }
 }
@@ -42,7 +41,7 @@ static void mem2reg_flow(flow_t *flow, bool *dirty) {
 
         if (step->opcode == OP_RESERVE) {
             size_t addr;
-            size_t stores = count_stores(flow, i, &addr);
+            size_t stores = count_stores_and_uses(flow, i, &addr);
 
             if (stores == 0) {
                 step_at(flow, i)->opcode = OP_EMPTY;
@@ -67,8 +66,6 @@ static void mem2reg_flow(flow_t *flow, bool *dirty) {
             store->value = store->src;
 
             replace_loads(flow, i, addr);
-
-            step->opcode = OP_EMPTY;
         }
     }
 }

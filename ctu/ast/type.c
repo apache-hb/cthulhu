@@ -60,6 +60,12 @@ type_t *new_callable(node_t *func, types_t *args, type_t *result) {
     return type;
 }
 
+type_t *new_pointer(struct node_t *node, type_t *to) {
+    type_t *type = new_type(TYPE_POINTER, node);
+    type->ptr = to;
+    return type;
+}
+
 bool is_unresolved(type_t *type) {
     return type->kind == TYPE_UNRESOLVED;
 }
@@ -88,6 +94,10 @@ static bool is_builtin(type_t *type) {
 
 bool is_signed(type_t *type) {
     return type->sign;
+}
+
+bool is_pointer(type_t *type) {
+    return type->kind == TYPE_POINTER;
 }
 
 void connect_type(node_t *node, type_t *type) {

@@ -1,0 +1,21 @@
+def take(ptr: *int): int {
+    return *ptr;
+}
+
+def take3(ptr: ***int): int {
+    return ***ptr;
+}
+
+def test(): void {
+    final i = 20;
+    final $ = take(&i);
+
+    final a = 0;
+    final b = &a;
+    final c = &b;
+    final d = &c;
+
+    take3(d);
+
+    // final $ = take(&100);
+}

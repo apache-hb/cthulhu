@@ -24,11 +24,12 @@ typedef enum {
 typedef size_t vreg_t;
 
 typedef struct {
-    enum { IMM_BOOL, IMM_INT } kind;
+    enum { IMM_BOOL, IMM_INT, IMM_SIZE } kind;
 
     union {
         bool imm_bool;
         int64_t imm_int;
+        size_t imm_size;
     };
 } imm_t;
 
@@ -71,6 +72,7 @@ bool operand_is_imm(operand_t op);
 
 bool operand_is_bool(operand_t op);
 bool operand_get_bool(operand_t op);
+bool operand_is_invalid(operand_t op);
 
 int64_t operand_get_int(operand_t op);
 
@@ -78,6 +80,7 @@ operand_t new_vreg(vreg_t vreg);
 operand_t new_block(size_t label);
 operand_t new_bool(bool b);
 operand_t new_int(int64_t i);
+operand_t new_size(size_t s);
 
 typedef struct {
     opcode_t opcode;
@@ -115,7 +118,7 @@ typedef struct {
         };
 
         /* OP_RESERVE */
-        operand_t size;
+        /* operand_t size; */
 
         /* OP_STORE, OP_LOAD */
         struct {

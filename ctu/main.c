@@ -213,7 +213,7 @@ int main(int argc, const char **argv) {
 
         debug_module(mod);
 
-        gen_x64(&mod);
+        //gen_x64(&mod);
 
         if (report_end("generate"))
             return 1;

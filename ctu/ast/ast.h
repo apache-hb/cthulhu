@@ -36,9 +36,10 @@ typedef enum {
     AST_DECL_PARAM,
 
     /**
-     * name resolution
+     * types
      */
     AST_SYMBOL,
+    AST_PTR,
 
     /**
      * implementation details
@@ -49,7 +50,11 @@ typedef enum {
 typedef enum {
     UNARY_ABS, /* +expr */
     UNARY_NEG, /* -expr */
-    UNARY_TRY /* expr? */
+
+    UNARY_REF, /* &expr */
+    UNARY_DEREF, /* *expr */
+
+    UNARY_TRY, /* expr? */
 } unary_t;
 
 typedef enum {
@@ -128,6 +133,9 @@ typedef struct node_t {
 
         /* AST_STMTS */
         nodes_t *stmts;
+
+        /* AST_PTR */
+        struct node_t *ptr;
 
         struct {
             /* AST_UNARY */
@@ -292,6 +300,7 @@ node_t *ast_branch(scanner_t *scanner, where_t where, node_t *cond, node_t *bran
 node_t *add_branch(node_t *branch, node_t *next);
 
 node_t *ast_symbol(scanner_t *scanner, where_t where, char *text);
+node_t *ast_pointer(scanner_t *scanner, where_t where, node_t *ptr);
 
 node_t *ast_decl_func(
     scanner_t *scanner, where_t where, 
