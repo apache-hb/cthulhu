@@ -188,8 +188,10 @@ static operand_t emit_ref(flow_t *flow, node_t *node) {
     return step.dst;
 }
 
+#include <stdio.h>
+
 static step_t emit_deref(node_t *node, operand_t expr) {
-    step_t step = new_step(OP_LOAD, node->expr);
+    step_t step = new_typed_step(OP_LOAD, get_type(node->expr)->ptr);
     step.src = expr;
     return step;
 }

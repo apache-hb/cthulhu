@@ -4,12 +4,11 @@ static bool equals_vreg(operand_t op, vreg_t reg) {
     return op.kind == VREG && op.vreg == reg;
 }
 
-static size_t count_stores_and_uses(flow_t *flow, size_t idx, size_t *last) {
+static size_t count_uses(flow_t *flow, size_t idx, size_t *last) {
     size_t count = 0;
-    
     for (size_t i = idx; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
-        if (is_vreg_used(step, idx)) {
+        if (step->opcode != OP_LOAD && is_vreg_used(step, idx)) {
             count += 1;
             *last = i;
         }
@@ -41,9 +40,9 @@ static void mem2reg_flow(flow_t *flow, bool *dirty) {
 
         if (step->opcode == OP_RESERVE) {
             size_t addr;
-            size_t stores = count_stores_and_uses(flow, i, &addr);
+            size_t uses = count_uses(flow, i, &addr);
 
-            if (stores == 0) {
+            if (uses == 0) {
                 step_at(flow, i)->opcode = OP_EMPTY;
                 continue;
             }
@@ -54,7 +53,7 @@ static void mem2reg_flow(flow_t *flow, bool *dirty) {
              * and if its not really thats on you for 
              * writing bad code
              */
-            if (stores > 1) {
+            if (uses > 1) {
                 continue;
             }
 
