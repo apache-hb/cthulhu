@@ -1,5 +1,7 @@
 #include "scanner.h"
 
+#include "ctu/util/util.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,16 +21,13 @@ void flex_init(where_t *where, int line) {
     where->last_line = line;
 }
 
-static void scanner_add(scanner_t *scanner, char *c, size_t len) {
-    memcpy(scanner->text + scanner->len, c, len);
-    scanner->len += len;
-    scanner->text[scanner->len + 1] = 0;
-}
-
 int flex_get(scanner_t *scanner, char *out, int size) {
-    size_t total = fread(out, 1, size, scanner->handle);
-
-    scanner_add(scanner, out, total);
+    size_t total = MIN(scanner->size - scanner->offset, (size_t)size);
+    
+    
+    memcpy(out, scanner->text + scanner->offset, total);
+    
+    scanner->offset += total;
 
     return total;
 }
