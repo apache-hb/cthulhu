@@ -24,6 +24,15 @@ static void fold_cast(step_t *step, bool *dirty) {
 
 static step_t fold_div(step_t *step, int64_t lhs, int64_t rhs, bool *dirty) {
     if (rhs == 0) {
+        /**
+         * specifically retain the divide opcode
+         * when rhs == 0
+         * but warn about the divide by zero
+         * sometimes people do actually want to cause
+         * a floating point exception to test hardware
+         * and optimizing that away on purpose 
+         * is annoying to the end user
+         */
         report(LEVEL_WARNING, step->source, step->where, "right hand side of division evaluates to zero");
         return *step;
     }

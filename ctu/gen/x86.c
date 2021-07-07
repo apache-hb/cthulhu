@@ -8,15 +8,17 @@
 
 typedef enum {
     RAX, RBX, RCX, RDX,
+
+    USABLE,
+
     RSI, RDI, RBP, RIP,
     RSP, 
 
     R8, R9, R10, R11,
     R12, R13, R14, R15,
 
-    USABLE,
-
-    UNUSED
+    UNUSED,
+    INVALID
 } reg_t;
 
 #if 0
@@ -54,6 +56,7 @@ static const char *alloc_tostr(alloc_t alloc) {
         case RDX: return "rdx";
         case RSI: return "rsi";
         case UNUSED: return "unused";
+        case INVALID: return "invalid";
         default: return "ERR";
         }
     } else {
@@ -156,8 +159,7 @@ static bool reg_is_used(x86_regalloc_t *alloc, reg_t reg) {
 static range_t range_of_reg(x86_regalloc_t *alloc, reg_t reg) {
     ASSERT(reg_is_used(alloc, reg))("cannot query range of unused register");
 
-    size_t range = alloc->used[reg];
-    range_t out = alloc->ranges[range];
+    range_t out = alloc->ranges[alloc->used[reg]];
     return out;
 }
 
@@ -184,8 +186,8 @@ static reg_t get_free_reg(x86_regalloc_t *alloc) {
         }
     }
 
-    assert("failed to find free register");
-    return 0;
+    /* TODO: spill to stack */
+    return INVALID;
 }
 
 static bool range_needs_reg(range_t range) {
@@ -199,6 +201,9 @@ static void assign_reg(x86_regalloc_t *alloc, size_t idx) {
 
     if (range_needs_reg(alloc->ranges[idx])) {
         reg = get_free_reg(alloc);
+        if (reg == INVALID) {
+            assert("failed to find free register for opcode %zu", idx);
+        }
         alloc->used[reg] = idx;
     }
 
