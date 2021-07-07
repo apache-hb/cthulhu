@@ -240,6 +240,9 @@ static bool convertible_to(
     }
 
     if (is_pointer(to) && is_pointer(from)) {
+        if (to->ptr->mut && !from->ptr->mut) {
+            reportf(LEVEL_ERROR, *node, "cannot discard const from pointer type");
+        }
         return convertible_to(node, to->ptr, from->ptr, implicit);
     }
 

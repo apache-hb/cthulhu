@@ -1,11 +1,9 @@
+def other(o: int): int {
+    return 20 * o;
+}
+
 def main(i: int): int {
-    if i == 0 {
-        return 100;
-    } else if i == 1 {
-        return 200;
-    } else if i == 300 {
-        return 400;
-    } else {
-        return 500;
-    }
+    final o = other;
+
+    return o(i);    
 }
