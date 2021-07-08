@@ -118,7 +118,9 @@ static const char *gen_type(type_t *type, const char *name) {
 }
 
 static char *genarg(size_t idx) {
-    return format("arg%zu", idx);
+    char *out = format("arg%zu", idx);
+    printf("genarg = `%s`\n", out);
+    return out;
 }
 
 static void gen_func_decl(FILE *out, flow_t *flow, bool omit_names) {
@@ -208,6 +210,12 @@ static const char *get_binary(binary_t op) {
     case BINARY_MUL: return "*";
     case BINARY_REM: return "%";
 
+    case BINARY_GT: return ">";
+    case BINARY_GTE: return ">=";
+
+    case BINARY_LT: return "<";
+    case BINARY_LTE: return "<=";
+
     default:
         assert("unreachable get_binary");
         return "";
@@ -268,6 +276,14 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
             fprintf(out, "%s = ", gen_type(step->type, local(idx)));
         }
         fprintf(out, "%s(%s);\n", gen_operand(flow, step->value), gen_args(flow, step->args, step->len));
+        break;
+
+    case OP_BRANCH:
+        fprintf(out, "if (%s) { goto %s; } else { goto %s; }\n",
+            gen_operand(flow, step->cond),
+            gen_operand(flow, step->block),
+            gen_operand(flow, step->other)
+        );
         break;
 
     case OP_EMPTY: break;

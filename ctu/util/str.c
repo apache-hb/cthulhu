@@ -94,7 +94,7 @@ char *str_join(const char *sep, const char **strs, size_t num) {
             cur += slen;
         }
         size_t len = strlen(strs[i]);
-        memcpy(cur, strs[i], len);
+        memcpy(cur, strs[i], len + 1);
         cur += len;
     }
 

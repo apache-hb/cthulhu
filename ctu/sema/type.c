@@ -24,6 +24,7 @@ typedef struct sema_t {
 
 static sema_t *ROOT_SEMA = NULL;
 
+static type_t *CHAR_TYPE = NULL;
 static type_t *INT_TYPE = NULL;
 static type_t *UINT_TYPE = NULL;
 static type_t *BOOL_TYPE = NULL;
@@ -646,11 +647,13 @@ void typecheck(nodes_t *nodes) {
 void sema_init(void) {
     ROOT_SEMA = new_sema(NULL);
 
+    CHAR_TYPE = new_integer(INTEGER_CHAR, true, "char");
     INT_TYPE = new_integer(INTEGER_INT, true, "int");
     UINT_TYPE = new_integer(INTEGER_INT, false, "uint");
     BOOL_TYPE = new_builtin(TYPE_BOOLEAN, "bool");
     VOID_TYPE = new_builtin(TYPE_VOID, "void");
 
+    add_builtin(CHAR_TYPE);
     add_builtin(INT_TYPE);
     add_builtin(UINT_TYPE);
     add_builtin(BOOL_TYPE);
