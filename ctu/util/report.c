@@ -182,15 +182,16 @@ static bool print_report(report_t report) {
 static reportid_t push_report(level_t level, scanner_t *source, where_t where, node_t *node, char *message) {
     report_t it = { level, message, source, where, NULL, NULL, node };
 
-    if (num_reports < max_reports) {
-        reports[num_reports] = it;
-    }
-
     if (eager_report) {
         print_report(it);
     }
+    
+    if (num_reports < max_reports) {
+        reports[num_reports] = it;
+        return num_reports++;
+    }
 
-    return num_reports++;
+    return INVALID_REPORT;
 }
 
 void report_begin(size_t limit, bool eager) {
@@ -237,6 +238,13 @@ void assert(const char *fmt, ...) {
     va_end(args);
 }
 
+void warnf(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    push_report(LEVEL_WARNING, NULL, NOWHERE, NULL, formatv(fmt, args));
+    va_end(args);
+}
+
 reportid_t reportf(level_t level, node_t *node, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -253,11 +261,13 @@ void report(level_t level, scanner_t *source, where_t where, const char *fmt, ..
 }
 
 void report_underline(reportid_t id, const char *msg) {
-    reports[id].underline = msg;
+    if (id != INVALID_REPORT)
+        reports[id].underline = msg;
 }
 
 void report_note(reportid_t id, const char *msg) {
-    reports[id].note = msg;
+    if (id != INVALID_REPORT)
+        reports[id].note = msg;
 }
 
 bool verbose = false;

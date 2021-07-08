@@ -155,6 +155,7 @@ static operand_t add_block(flow_t *flow) {
 
 static operand_t add_reserve(flow_t *flow, node_t *node) {
     step_t step = new_step(OP_RESERVE, node);
+    step.type = set_mut(step.type, true);
     return add_vreg(flow, step);
 }
 
@@ -259,7 +260,9 @@ static operand_t emit_call(flow_t *flow, node_t *node) {
     operand_t *args = malloc(sizeof(operand_t) * len);
 
     for (size_t i = 0; i < len; i++) {
-        args[i] = emit_opcode(flow, ast_at(node->args, i));
+        node_t *arg = ast_at(node->args, i);
+        printf("kind %d\n", arg->kind);
+        args[i] = emit_opcode(flow, arg);
     }
 
     step_t step = new_step(OP_CALL, node);
@@ -405,7 +408,10 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         get_type(node->result),
 
         /* parent */
-        mod 
+        mod,
+
+        /* exported */
+        is_exported(node)
     };
 
     for (size_t i = 0; i < len; i++) {
@@ -426,16 +432,19 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     return flow;
 }
 
-module_t compile_module(nodes_t *nodes) {
+module_t *compile_module(const char *name, nodes_t *nodes) {
     size_t len = ast_len(nodes);
-    module_t mod = { malloc(sizeof(flow_t) * len), len };
+    module_t *mod = malloc(sizeof(module_t));
+    mod->name = name;
+    mod->flows = malloc(sizeof(flow_t) * len);
+    mod->nflows = len;
     
     for (size_t i = 0; i < len; i++) {
-        mod.flows[i].name = get_decl_name(ast_at(nodes, i));
+        mod->flows[i].name = get_decl_name(ast_at(nodes, i));
     }
 
     for (size_t i = 0; i < len; i++) {
-        mod.flows[i] = compile_flow(&mod, ast_at(nodes, i));
+        mod->flows[i] = compile_flow(mod, ast_at(nodes, i));
     }
 
     return mod;

@@ -88,9 +88,7 @@ libspeed = library('speed', src,
 )
 
 src = [
-    'ctu/gen/x86.c',
-    'ctu/gen/generic.c',
-    'ctu/gen/elf.c'
+    'ctu/gen/c99.c'
 ]
 
 libgen = library('gen', src,

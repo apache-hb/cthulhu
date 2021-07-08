@@ -18,6 +18,8 @@ void ensure(const char *fmt, ...);
 #   define ASSERT(_)
 #endif
 
+void warnf(const char *fmt, ...);
+
 /**
  * error severity
  * LEVEL_INTERNAL is an internal compiler issue
@@ -29,6 +31,8 @@ typedef enum {
     LEVEL_ERROR,
     LEVEL_WARNING
 } level_t;
+
+#define INVALID_REPORT SIZE_MAX
 
 typedef size_t reportid_t;
 
