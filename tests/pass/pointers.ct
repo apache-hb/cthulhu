@@ -10,6 +10,10 @@ def take3(ptr: ***int): int {
     return ***ptr;
 }
 
+def refarg(ptr: int): int {
+    return take1(&ptr);
+}
+
 def test(): int {
     final i = 20;
     final $ = take1(&i);
@@ -30,5 +34,5 @@ def test(): int {
 
     // final $ = take(&100);
 
-    return a1;
+    return refarg(a1);
 }
