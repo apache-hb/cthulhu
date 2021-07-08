@@ -173,23 +173,45 @@ static operand_t emit_bool(node_t *node) {
     return new_bool(node->boolean);
 }
 
+#include <stdio.h>
+
+static operand_t find_arg(flow_t *flow, node_t *node) {
+    const char *name = get_symbol_name(node);
+    if (!name) {
+        return new_operand(NONE);
+    }
+
+    for (size_t i = 0; i < flow->nargs; i++) {
+        arg_t arg = flow->args[i];
+        printf("%s -> %s\n", arg.name, node->ident);
+        if (strcmp(arg.name, node->ident) == 0) {
+            printf("returning arg\n");
+            return new_arg(i);
+        }
+    }
+
+    return new_operand(NONE);
+}
 static operand_t get_lvalue(flow_t *flow, node_t *node) {
     if (node->local != NOT_LOCAL) {
         return new_vreg(flow->locals[node->local]);
     } else {
-        return new_operand(NONE);
+        return find_arg(flow, node);
     }
 }
 
 static operand_t emit_ref(flow_t *flow, node_t *node) {
-    step_t step = new_step(OP_STORE, node->expr);
-    step.dst = add_reserve(flow, node->expr);
-    step.src = get_lvalue(flow, node->expr);
-    add_step(flow, step);
-    return step.dst;
-}
+    operand_t op = get_lvalue(flow, node->expr);
+    if (op.kind != ARG)
+        return op;
 
-#include <stdio.h>
+    operand_t reserve = add_reserve(flow, node->expr);
+    step_t step = new_step(OP_STORE, node->expr);
+    step.src = op;
+    step.dst = reserve;
+    add_step(flow, step);
+    return reserve;
+}
 
 static step_t emit_deref(node_t *node, operand_t expr) {
     step_t step = new_typed_step(OP_LOAD, get_type(node->expr)->ptr);
@@ -261,7 +283,6 @@ static operand_t emit_call(flow_t *flow, node_t *node) {
 
     for (size_t i = 0; i < len; i++) {
         node_t *arg = ast_at(node->args, i);
-        printf("kind %d\n", arg->kind);
         args[i] = emit_opcode(flow, arg);
     }
 
@@ -276,6 +297,9 @@ static operand_t emit_call(flow_t *flow, node_t *node) {
 static operand_t emit_symbol(flow_t *flow, node_t *node) {
     operand_t local = get_lvalue(flow, node);
     if (!operand_is_invalid(local)) {
+        if (local.kind == ARG)
+            return local;
+            
         step_t load = new_step(OP_LOAD, node);
         load.src = local;
         return add_vreg(flow, load);
@@ -289,16 +313,6 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
 
         if (strcmp(name, node->ident) == 0) {
             return new_func(i);
-        }
-    }
-
-    /**
-     * now try arguments
-     */
-    for (size_t i = 0; i < flow->nargs; i++) {
-        arg_t arg = flow->args[i];
-        if (strcmp(arg.name, arg.name) == 0) {
-            return new_arg(i);
         }
     }
 
