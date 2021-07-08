@@ -227,7 +227,8 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
 
     switch (step->opcode) {
     case OP_BLOCK: 
-        fprintf(out, "block%zu:\n", idx); 
+        /* the (void)0 cast makes clang accept this code */
+        fprintf(out, "block%zu:(void)0;\n", idx); 
         break;
     case OP_JUMP: 
         fprintf(out, "goto %s;\n", gen_operand(flow, step->block)); 
