@@ -109,3 +109,5 @@ driver = executable('ctc', 'ctu/main.c',
     c_args : [ '-D_CRT_SECURE_NO_WARNINGS=1' ],
     link_with : [ libdebug, libgen, libspeed, libir, libsema, libast ]
 )
+
+subdir('tests')

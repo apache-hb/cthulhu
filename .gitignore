@@ -12,3 +12,4 @@
 !*.md
 !meson_options.txt
 .vscode/
+!*.py
