@@ -1,3 +1,7 @@
+export def main(argc: int, argv: **char): int {
+    return fib(argc);
+}
+
 def fib(n: int): int {
     if n < 2 {
         return n;
