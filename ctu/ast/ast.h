@@ -115,6 +115,11 @@ typedef struct node_t {
     bool implicit:1;
 
     /**
+     * is this node publicly visible
+     */
+    bool exported:1;
+
+    /**
      * the type of this nodes expression in its current context
      */
     type_t *typeof;
@@ -249,6 +254,11 @@ nodes_t *get_stmts(node_t *node);
 bool is_discard_name(const char *name);
 
 /**
+ * is a decl exported
+ */
+bool is_exported(node_t *node);
+
+/**
  * list managment
  */
 
@@ -281,6 +291,11 @@ size_t ast_len(nodes_t *list);
  * used in the semantic state to generate implicit casts
  */
 node_t *make_implicit(node_t *node);
+
+/**
+ * mark a node as exported
+ */
+node_t *make_exported(node_t *node);
 
 /**
  * node creation

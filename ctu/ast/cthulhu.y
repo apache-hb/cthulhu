@@ -75,6 +75,7 @@ void yyerror();
     ELSE "`else`"
     AS "`as`"
     FINAL "`final`"
+    EXPORTED "`export`"
     END 0 "end of file"
 
 %type<node>
@@ -103,6 +104,7 @@ unit: decl { x->ast = ast_list($1); }
     ;
 
 decl: function { $$ = $1; }
+    | EXPORTED function { $$ = make_exported($2); }
     ;
 
 function: DEF IDENT params COLON type stmts { 

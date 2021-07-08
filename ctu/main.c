@@ -6,8 +6,7 @@
 #include "debug/ir.h"
 #include "ir/ir.h"
 #include "speed/speed.h"
-#include "gen/x86.h"
-#include "gen/elf.h"
+#include "gen/c99.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -138,12 +137,12 @@ int main(int argc, const char **argv) {
         if (report_end("semantic"))
             return 1;
 
-        module_t mod = compile_module(nodes);
+        module_t *mod = compile_module("ctu/main", nodes);
 
         if (report_end("intermediate"))
             return 1;
 
-        debug_module(mod);
+        debug_module(*mod);
 
         size_t passes = 0;
 
@@ -151,52 +150,52 @@ int main(int argc, const char **argv) {
             logfmt("beginning optimization pass %zu", passes + 1);
             size_t dirty_stages = 0;
 
-            if (remove_dead_code(&mod)) {
+            if (remove_dead_code(mod)) {
                 logfmt("removed dead code");
                 dirty_stages += 1;
             }
 
-            if (remove_unused_blocks(&mod)) {
+            if (remove_unused_blocks(mod)) {
                 logfmt("removed unused blocks");
                 dirty_stages += 1;
             }
 
-            if (mem2reg(&mod)) {
+            if (mem2reg(mod)) {
                 logfmt("reduced memory");
                 dirty_stages += 1;
             }
 
-            if (propogate_consts(&mod)) {
+            if (propogate_consts(mod)) {
                 logfmt("propogated values");
                 dirty_stages += 1;
             }
 
-            if (remove_unused_code(&mod)) {
+            if (remove_unused_code(mod)) {
                 logfmt("removed unreferenced vregs");
                 dirty_stages += 1;
             }
 
-            if (remove_empty_blocks(&mod)) {
+            if (remove_empty_blocks(mod)) {
                 logfmt("removed empty blocks");
                 dirty_stages += 1;
             }
 
-            if (remove_branches(&mod)) {
+            if (remove_branches(mod)) {
                 logfmt("removed excess branches");
                 dirty_stages += 1;
             }
 
-            if (remove_jumps(&mod)) {
+            if (remove_jumps(mod)) {
                 logfmt("removed excess jumps");
                 dirty_stages += 1;
             }
 
-            if (remove_pure_code(&mod)) {
+            if (remove_pure_code(mod)) {
                 logfmt("removed unused pure operations");
                 dirty_stages += 1;
             }
 
-            if (fold_consts(&mod)) {
+            if (fold_consts(mod)) {
                 logfmt("folded constant expressions");
                 dirty_stages += 1;
             }
@@ -211,19 +210,15 @@ int main(int argc, const char **argv) {
         if (report_end("optimize"))
             return 1;
 
-        debug_module(mod);
+        debug_module(*mod);
 
-        gen_x64(&mod);
+        gen_c99(fopen("test.c", "w"), mod);
 
         if (report_end("generate"))
             return 1;
 
         free_scanner(scan);
     }
-
-    FILE *test = fopen("test.elf", "wb");
-    emit_elf(test);
-    fclose(test);
 
     return 0;
 }

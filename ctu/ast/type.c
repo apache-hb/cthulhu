@@ -3,6 +3,7 @@
 #include "ast.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 types_t *new_typelist(size_t size) {
     types_t *list = malloc(sizeof(types_t));
@@ -96,8 +97,19 @@ bool is_signed(type_t *type) {
     return type->sign;
 }
 
+bool is_const(type_t *type) {
+    return !type->mut;
+}
+
 bool is_pointer(type_t *type) {
     return type->kind == TYPE_POINTER;
+}
+
+type_t *set_mut(type_t *type, bool mut) {
+    type_t *out = malloc(sizeof(type_t));
+    memcpy(out, type, sizeof(type_t));
+    out->mut = mut;
+    return out;
 }
 
 void connect_type(node_t *node, type_t *type) {

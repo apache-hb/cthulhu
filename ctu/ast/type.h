@@ -175,5 +175,8 @@ bool is_callable(type_t *type);
 bool is_void(type_t *type);
 bool is_signed(type_t *type);
 bool is_pointer(type_t *type);
+bool is_const(type_t *type);
+
+type_t *set_mut(type_t *type, bool mut);
 
 void connect_type(struct node_t *node, type_t *type);

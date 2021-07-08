@@ -16,6 +16,7 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
     node->where = where;
     node->typeof = NULL;
     node->implicit = false;
+    node->exported = false;
 
     return node;
 }
@@ -153,6 +154,11 @@ size_t ast_len(nodes_t *list) {
 
 node_t *make_implicit(node_t *node) {
     node->implicit = true;
+    return node;
+}
+
+node_t *make_exported(node_t *node) {
+    node->exported = true;
     return node;
 }
 
@@ -303,4 +309,8 @@ void free_ast_list(nodes_t *list, bool free_items) {
 
     free(list->data);
     free(list);
+}
+
+bool is_exported(node_t *node) {
+    return node->exported;
 }

@@ -10,7 +10,7 @@ def take3(ptr: ***int): int {
     return ***ptr;
 }
 
-def test(): void {
+def test(): int {
     final i = 20;
     final $ = take1(&i);
 
@@ -29,4 +29,6 @@ def test(): void {
     take0(***a4);
 
     // final $ = take(&100);
+
+    return a1;
 }

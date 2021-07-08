@@ -173,6 +173,8 @@ typedef struct {
 
     /* the parent module this flow is contained in */
     struct module_t *mod;
+
+    bool exported:1;
 } flow_t;
 
 step_t *step_at(flow_t *flow, size_t idx);
@@ -181,10 +183,11 @@ step_t *step_at(flow_t *flow, size_t idx);
  * a compilation unit
  */
 typedef struct module_t {
+    const char *name;
     flow_t *flows;
     size_t nflows;
 } module_t;
 
 size_t num_flows(module_t *mod);
 
-module_t compile_module(nodes_t *nodes);
+module_t *compile_module(const char *name, nodes_t *nodes);
