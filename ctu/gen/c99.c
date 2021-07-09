@@ -215,6 +215,9 @@ static const char *get_binary(binary_t op) {
     case BINARY_LT: return "<";
     case BINARY_LTE: return "<=";
 
+    case BINARY_EQ: return "==";
+    case BINARY_NEQ: return "!=";
+
     default:
         assert("unreachable get_binary");
         return "";
@@ -285,10 +288,18 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
         );
         break;
 
+    case OP_CONVERT:
+        fprintf(out, "%s = (%s)%s", 
+            gen_type(step->type, local(idx)),
+            gen_type(step->type, NULL),
+            gen_operand(flow, step->value)
+        );
+        break;
+
     case OP_EMPTY: break;
 
     default:
-        assert("gen_step unreachable");
+        assert("gen_step unreachable %d", step->opcode);
     }
 }
 

@@ -1,4 +1,4 @@
-def main(argc: int, argv: **char): int {
+export def main(argc: var(int), argv: **char): int {
     argc = argc * 2;
     return argc;
 }

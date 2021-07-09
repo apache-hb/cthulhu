@@ -23,14 +23,14 @@ def test(): int {
     final c = &b;
     final d = &c;
 
-    take3(d);
+    final $ = take3(d);
 
     final a1 = 0;
     final a2 = &a1;
     final a3 = &a2;
     final a4 = &a3;
 
-    take0(***a4);
+    final $ = take0(***a4);
 
     // final $ = take(&100);
 
