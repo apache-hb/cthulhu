@@ -183,9 +183,7 @@ static operand_t find_arg(flow_t *flow, node_t *node) {
 
     for (size_t i = 0; i < flow->nargs; i++) {
         arg_t arg = flow->args[i];
-        printf("%s -> %s\n", arg.name, node->ident);
         if (strcmp(arg.name, node->ident) == 0) {
-            printf("returning arg\n");
             return new_arg(i);
         }
     }
@@ -322,6 +320,10 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
     return new_operand(NONE);
 }
 
+static step_t *new_branch(flow_t *flow) {
+    return add_step(flow, new_typed_step(OP_BRANCH, NULL));
+}
+
 static operand_t emit_branch(flow_t *flow, node_t *node) {
     operand_t head = add_block(flow);
     operand_t cond;
@@ -333,7 +335,7 @@ static operand_t emit_branch(flow_t *flow, node_t *node) {
         cond = new_bool(true);
     }
 
-    step_t *branch = add_step(flow, new_typed_step(OP_BRANCH, NULL));
+    step_t *branch = new_branch(flow);
 
     operand_t body = emit_opcode(flow, node->branch);
 
@@ -372,6 +374,51 @@ static operand_t emit_var(flow_t *flow, node_t *node) {
     return add_vreg(flow, step);
 }
 
+static operand_t emit_assign(flow_t *flow, node_t *node) {
+    operand_t dst = get_lvalue(flow, node->dst);
+    operand_t src = emit_opcode(flow, node->src);
+
+    step_t step = new_step(OP_STORE, node->dst);
+    step.dst = dst;
+    step.src = src;
+    add_step(flow, step);
+
+    return new_operand(NONE);
+}
+
+/**
+ * while cond { body }
+ * 
+ * transforms to
+ * 
+ * head:
+ *   %cond = cond
+ *   branch %cond entry else tail
+ * entry:
+ *   body
+ *   jmp head
+ * tail:
+ */
+
+static operand_t emit_while(flow_t *flow, node_t *node) {
+    operand_t head = add_block(flow);
+    operand_t cond = emit_opcode(flow, node->cond);
+    
+    step_t *branch = new_branch(flow);
+    operand_t entry = add_block(flow);
+
+    emit_opcode(flow, node->next);
+
+    add_step(flow, new_jump(head));
+    operand_t tail = add_block(flow);
+
+    branch->cond = cond;
+    branch->block = entry;
+    branch->other = tail;
+
+    return new_operand(NONE);
+}
+
 static operand_t emit_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
@@ -385,6 +432,8 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
     case AST_BRANCH: return emit_branch(flow, node);
     case AST_CAST: return emit_convert(flow, node);
     case AST_DECL_VAR: return emit_var(flow, node);
+    case AST_ASSIGN: return emit_assign(flow, node);
+    case AST_WHILE: return emit_while(flow, node);
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);
         return new_operand(NONE);

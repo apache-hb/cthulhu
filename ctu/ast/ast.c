@@ -17,6 +17,7 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
     node->typeof = NULL;
     node->implicit = false;
     node->exported = false;
+    node->mut = false;
 
     return node;
 }
@@ -262,6 +263,24 @@ node_t *add_branch(node_t *branch, node_t *next) {
     return branch;
 }
 
+node_t *ast_assign(scanner_t *scanner, where_t where, node_t *dst, node_t *src) {
+    node_t *node = new_node(scanner, where, AST_ASSIGN);
+
+    node->dst = dst;
+    node->src = src;
+
+    return node;
+}
+
+node_t *ast_while(scanner_t *scanner, where_t where, node_t *cond, node_t *body) {
+    node_t *node = new_node(scanner, where, AST_WHILE);
+
+    node->cond = cond;
+    node->next = body;
+
+    return node;
+}
+
 node_t *ast_decl_func(
     scanner_t *scanner, where_t where, 
     char *name, nodes_t *params,
@@ -284,9 +303,10 @@ node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *ty
     return node;
 }
 
-node_t *ast_decl_var(scanner_t *scanner, where_t where, char *name, node_t *init) {
+node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, node_t *init) {
     node_t *node = new_decl(scanner, where, AST_DECL_VAR, name);
 
+    node->mut = mut;
     node->init = init;
 
     return node;

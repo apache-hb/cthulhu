@@ -51,8 +51,6 @@ char *str_replace(const char *str, const char *old, const char *with) {
         }
     }
 
-    printf("len: %zu\n", rlen);
-
     char *out = malloc(rlen + 1);
     out[rlen] = 0;
 
@@ -61,7 +59,6 @@ char *str_replace(const char *str, const char *old, const char *with) {
     idx = 0;
     while (cur < (out + rlen)) {
         if (startswith(str + idx, old)) {
-            printf("replace\n");
             memcpy(cur, with, wlen);
             cur += wlen;
             idx += olen;

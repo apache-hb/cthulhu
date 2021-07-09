@@ -1,0 +1,4 @@
+def main(argc: int, argv: **char): int {
+    argc = argc * 2;
+    return argc;
+}

@@ -27,6 +27,8 @@ typedef enum {
     AST_STMTS,
     AST_RETURN,
     AST_BRANCH,
+    AST_ASSIGN,
+    AST_WHILE,
 
     /**
      * declarations
@@ -120,6 +122,11 @@ typedef struct node_t {
     bool exported:1;
 
     /**
+     * is this mutable
+     */
+    bool mut:1;
+
+    /**
      * the type of this nodes expression in its current context
      */
     type_t *typeof;
@@ -165,11 +172,18 @@ typedef struct node_t {
             struct node_t *rhs;
         };
 
+        /* AST_ASSIGN */
+        struct {
+            struct node_t *dst;
+            struct node_t *src;
+        };
+
         /* AST_BRANCH */
         struct {
             struct node_t *cond;
             struct node_t *branch;
 
+            /* AST_WHILE */
             struct node_t *next;
         };
 
@@ -313,6 +327,8 @@ node_t *ast_stmts(scanner_t *scanner, where_t where, nodes_t *stmts);
 node_t *ast_return(scanner_t *scanner, where_t where, node_t *expr);
 node_t *ast_branch(scanner_t *scanner, where_t where, node_t *cond, node_t *branch);
 node_t *add_branch(node_t *branch, node_t *next);
+node_t *ast_assign(scanner_t *scanner, where_t where, node_t *dst, node_t *src);
+node_t *ast_while(scanner_t *scanner, where_t where, node_t *cond, node_t *body);
 
 node_t *ast_symbol(scanner_t *scanner, where_t where, char *text);
 node_t *ast_pointer(scanner_t *scanner, where_t where, node_t *ptr);
@@ -323,7 +339,7 @@ node_t *ast_decl_func(
     node_t *result, node_t *body
 );
 node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *type);
-node_t *ast_decl_var(scanner_t *scanner, where_t where, char *name, node_t *init);
+node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, node_t *init);
 
 /**
  * create a builtin type

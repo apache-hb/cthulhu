@@ -1,6 +1,11 @@
-def empty(): int {
-    final x = 200 + 300;
-    final y = x * 2;
+def empty(i: bool): int {
+    var x = 10;
 
-    return x * 7 + y;
+    if i {
+        x = x * 100;
+    } else {
+        x = 50;
+    }
+
+    return x;
 }
