@@ -191,6 +191,7 @@ stmt: expr SEMI { $$ = $1; }
 
 type: typename { $$ = $1; }
     | pointer { $$ = $1; }
+    | VAR LPAREN type RPAREN { $$ = ast_mut(x, @$, $3); }
     ;
 
 pointer: MUL type { $$ = ast_pointer(x, @$, $2); }

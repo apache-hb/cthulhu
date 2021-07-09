@@ -184,6 +184,9 @@ static type_t *resolve_typename(sema_t *sema, node_t *node) {
 static type_t *resolve_type(sema_t *sema, node_t *node) {
     if (node->kind == AST_PTR) {
         return new_pointer(node, resolve_type(sema, node->ptr));
+    } else if (node->kind == AST_MUT) {
+        type_t *type = resolve_type(sema, node->next);
+        return set_mut(type, true);
     } else {
         return resolve_typename(sema, node);
     }
@@ -402,6 +405,16 @@ static bool is_lvalue(node_t *expr) {
     return expr->kind == AST_SYMBOL;
 }
 
+static bool is_assignable(type_t *type, node_t *expr) {
+    if (expr->kind == AST_UNARY && expr->unary == UNARY_DEREF)
+        return is_assignable(type, expr->expr);
+
+    if (expr->kind == AST_SYMBOL)
+        return !is_const(type);
+
+    return false;
+}
+
 static type_t *typecheck_unary(sema_t *sema, node_t *expr) {
     type_t *type = typecheck_expr(sema, expr->expr);
     unary_t op = expr->unary;
@@ -526,12 +539,8 @@ static void typecheck_assign(sema_t *sema, node_t *decl) {
         reportf(LEVEL_ERROR, decl, "cannot assign unrelated types");
     }
 
-    if (!is_lvalue(decl->dst)) {
+    if (!is_assignable(dst, decl->dst)) {
         reportf(LEVEL_ERROR, decl, "cannot assign to a non-lvalue");
-    }
-
-    if (is_const(dst)) {
-        reportf(LEVEL_ERROR, decl, "cannot assign to an immutable value");
     }
 }
 

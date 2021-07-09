@@ -312,6 +312,12 @@ node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, no
     return node;
 }
 
+node_t *ast_mut(scanner_t *scanner, where_t where, node_t *it) {
+    node_t *node = new_node(scanner, where, AST_MUT);
+    node->next = it;
+    return node;
+}
+
 static const where_t NOWHERE = { 0, 0, 0, 0 };
 
 node_t *ast_type(const char *name) {

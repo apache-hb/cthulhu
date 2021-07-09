@@ -4,6 +4,8 @@ const char *unary_name(unary_t unary) {
     switch (unary) {
     case UNARY_ABS: return "abs";
     case UNARY_NEG: return "neg";
+    case UNARY_REF: return "ref";
+    case UNARY_DEREF: return "deref";
     case UNARY_TRY: return "try";
     default: return "error";
     }

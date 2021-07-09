@@ -1,0 +1,15 @@
+def thing(): int {
+    var a1 = 0;
+    var a2 = &a1;
+    var a3 = &a2;
+
+    **a3 = 20;
+
+    return *a2;
+}
+
+def none(): int {
+    var a1 = 0;
+
+    return a1;
+}

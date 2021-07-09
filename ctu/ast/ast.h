@@ -42,6 +42,7 @@ typedef enum {
      */
     AST_SYMBOL,
     AST_PTR,
+    AST_MUT,
 
     /**
      * implementation details
@@ -183,7 +184,7 @@ typedef struct node_t {
             struct node_t *cond;
             struct node_t *branch;
 
-            /* AST_WHILE */
+            /* AST_WHILE, AST_MUT */
             struct node_t *next;
         };
 
@@ -332,6 +333,7 @@ node_t *ast_while(scanner_t *scanner, where_t where, node_t *cond, node_t *body)
 
 node_t *ast_symbol(scanner_t *scanner, where_t where, char *text);
 node_t *ast_pointer(scanner_t *scanner, where_t where, node_t *ptr);
+node_t *ast_mut(scanner_t *scanner, where_t where, node_t *it);
 
 node_t *ast_decl_func(
     scanner_t *scanner, where_t where, 
