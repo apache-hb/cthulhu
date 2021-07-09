@@ -511,9 +511,37 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
 static type_t *typecheck_var(sema_t *sema, node_t *decl) {
     type_t *type = typecheck_expr(sema, decl->init);
 
+    type->mut = decl->mut;
+
     connect_type(decl, type);
 
     return type;
+}
+
+static void typecheck_assign(sema_t *sema, node_t *decl) {
+    type_t *dst = typecheck_expr(sema, decl->dst),
+           *src = typecheck_expr(sema, decl->src);
+
+    if (!implicit_convertible_to(&decl, dst, src)) {
+        reportf(LEVEL_ERROR, decl, "cannot assign unrelated types");
+    }
+
+    if (!is_lvalue(decl->dst)) {
+        reportf(LEVEL_ERROR, decl, "cannot assign to a non-lvalue");
+    }
+
+    if (is_const(dst)) {
+        reportf(LEVEL_ERROR, decl, "cannot assign to an immutable value");
+    }
+}
+
+static void typecheck_while(sema_t *sema, node_t *decl) {
+    type_t *cond = typecheck_expr(sema, decl->cond);
+    typecheck_stmt(sema, decl->next);
+
+    if (!implicit_convertible_to(&decl->cond, BOOL_TYPE, cond)) {
+        reportf(LEVEL_ERROR, decl->cond, "cannot loop on a non-boolean condition");
+    }
 }
 
 static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
@@ -574,6 +602,14 @@ static void typecheck_stmt(sema_t *sema, node_t *stmt) {
         if (!is_void(type)) {
             reportf(LEVEL_WARNING, stmt, "discarding value of expression");
         }
+        break;
+
+    case AST_ASSIGN:
+        typecheck_assign(sema, stmt);
+        break;
+
+    case AST_WHILE:
+        typecheck_while(sema, stmt);
         break;
 
     default:

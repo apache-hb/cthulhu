@@ -279,7 +279,21 @@ static bool jump_skips_steps(flow_t *flow, size_t idx) {
 
     size_t to = jump->block.label;
 
-    for (size_t i = idx + 1; i < to; i++) {
+    size_t start;
+    size_t end;
+
+    /**
+     * handle both forwards and backwards jumps
+     */
+    if (to < idx) {
+        start = to;
+        end = idx;
+    } else {
+        start = idx + 1;
+        end = to;
+    }
+
+    for (size_t i = start; i < end; i++) {
         step_t *step = step_at(flow, i);
 
         if (step->opcode != OP_EMPTY)

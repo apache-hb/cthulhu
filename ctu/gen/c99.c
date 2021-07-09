@@ -119,7 +119,6 @@ static const char *gen_type(type_t *type, const char *name) {
 
 static char *genarg(size_t idx) {
     char *out = format("arg%zu", idx);
-    printf("genarg = `%s`\n", out);
     return out;
 }
 

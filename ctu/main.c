@@ -142,8 +142,6 @@ int main(int argc, const char **argv) {
         if (report_end("intermediate"))
             return 1;
 
-        debug_module(*mod);
-
         size_t passes = 0;
 
         while (speed) {
@@ -209,8 +207,6 @@ int main(int argc, const char **argv) {
 
         if (report_end("optimize"))
             return 1;
-
-        debug_module(*mod);
 
         gen_c99(fopen("test.c", "w"), mod);
 

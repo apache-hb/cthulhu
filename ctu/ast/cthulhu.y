@@ -26,6 +26,7 @@ void yyerror();
     char *text;
     node_t *node;
     nodes_t *nodes;
+    bool mut;
 }
 
 %token<text>
@@ -75,19 +76,24 @@ void yyerror();
     ELSE "`else`"
     AS "`as`"
     FINAL "`final`"
+    VAR "`var`"
+    WHILE "`while`"
     EXPORTED "`export`"
     END 0 "end of file"
 
 %type<node>
     decl function param variable /* declarations */
     type typename pointer /* types */
-    stmt stmts return if else elseif branch /* statements */
+    stmt stmts return if else elseif branch assign while /* statements */
     primary postfix unary multiply add compare equality expr /* expressions */
 
 %type<nodes>
     stmtlist
     args arglist
     params paramlist
+
+%type<mut>
+    mut
 
 %start file
 
@@ -117,7 +123,11 @@ function: DEF IDENT params COLON type stmts {
     }
     ;
 
-variable: FINAL IDENT ASSIGN expr SEMI { $$ = ast_decl_var(x, @$, $2, $4); }
+variable: mut IDENT ASSIGN expr SEMI { $$ = ast_decl_var(x, @$, $1, $2, $4); }
+    ;
+
+mut: VAR { $$ = true; }
+    | FINAL { $$ = false; }
     ;
 
 params: LPAREN RPAREN { $$ = ast_list(NULL); }
@@ -160,11 +170,19 @@ else: ELSE stmts { $$ = ast_branch(x, @$, NULL, $2); }
 elseif: ELSE IF expr stmts { $$ = ast_branch(x, @$, $3, $4); }
     ;
 
+assign: expr ASSIGN expr SEMI { $$ = ast_assign(x, @$, $1, $3); }
+    ;
+
+while: WHILE expr stmts { $$ = ast_while(x, @$, $2, $3); }
+    ;
+
 stmt: expr SEMI { $$ = $1; }
     | return { $$ = $1; }
     | branch { $$ = $1; }
     | stmts { $$ = $1; }
     | variable { $$ = $1; }
+    | assign { $$ = $1; }
+    | while { $$ = $1; }
     ;
 
 /**

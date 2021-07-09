@@ -30,6 +30,8 @@
 "else" { return ELSE; }
 "as" { return AS; }
 "final" { return FINAL; }
+"var" { return VAR; }
+"while" { return WHILE; }
 "true" { return BOOL_TRUE; }
 "false" { return BOOL_FALSE; }
 "return" { return RETURN; }
