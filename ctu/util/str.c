@@ -1,4 +1,5 @@
 #include "str.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,7 +10,7 @@ char *formatv(const char *fmt, va_list args) {
     va_copy(again, args);
     int len = vsnprintf(NULL, 0, fmt, args) + 1;
 
-    char *out = malloc(len);
+    char *out = ctu_malloc(len);
 
     vsnprintf(out, len, fmt, again);
 
@@ -51,7 +52,7 @@ char *str_replace(const char *str, const char *old, const char *with) {
         }
     }
 
-    char *out = malloc(rlen + 1);
+    char *out = ctu_malloc(rlen + 1);
     out[rlen] = 0;
 
     char *cur = out;
@@ -80,7 +81,7 @@ char *str_join(const char *sep, const char **strs, size_t num) {
         len += strlen(strs[i]);
     }
 
-    char *out = malloc(len + 1);
+    char *out = ctu_malloc(len + 1);
     out[len] = 0;
     
     char *cur = out;
@@ -101,7 +102,7 @@ char *str_join(const char *sep, const char **strs, size_t num) {
 #ifndef _MSC_VER
 char *strdup(const char *str) {
     size_t len = strlen(str) + 1;
-    char *out = malloc(len);
+    char *out = ctu_malloc(len);
     memcpy(out, str, len);
     return out;
 }

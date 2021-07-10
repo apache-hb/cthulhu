@@ -2,14 +2,16 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "ctu/util/str.h"
 #include "ctu/util/report.h"
+#include "ctu/util/util.h"
 
 #include "ctu/debug/ast.h"
 
 static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
-    node_t *node = malloc(sizeof(node_t));
+    node_t *node = ctu_malloc(sizeof(node_t));
 
     node->kind = kind;
     node->scanner = scanner;
@@ -119,16 +121,16 @@ bool is_equality_op(binary_t op) {
 nodes_t *ast_append(nodes_t *list, node_t *node) {
     if (list->len + 1 >= list->size) {
         list->size += 4;
-        list->data = realloc(list->data, sizeof(node_t*) * list->size);
+        list->data = ctu_realloc(list->data, sizeof(node_t*) * list->size);
     }
     list->data[list->len++] = node;
     return list;
 }
 
 nodes_t *ast_list(node_t *init) {
-    nodes_t *nodes = malloc(sizeof(nodes_t));
+    nodes_t *nodes = ctu_malloc(sizeof(nodes_t));
 
-    nodes->data = malloc(sizeof(node_t*) * 4);
+    nodes->data = ctu_malloc(sizeof(node_t*) * 4);
     nodes->len = 0;
     nodes->size = 4;
 
@@ -329,12 +331,12 @@ node_t *ast_type(const char *name) {
 void free_ast_list(nodes_t *list, bool free_items) {
     if (free_items) {
         for (size_t i = 0; i < ast_len(list); i++) {
-            free(ast_at(list, i));
+            ctu_free(ast_at(list, i));
         }
     }
 
-    free(list->data);
-    free(list);
+    ctu_free(list->data);
+    ctu_free(list);
 }
 
 bool is_exported(node_t *node) {

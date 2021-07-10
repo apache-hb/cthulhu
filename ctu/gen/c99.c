@@ -2,6 +2,7 @@
 
 #include "ctu/util/str.h"
 #include "ctu/util/report.h"
+#include "ctu/util/util.h"
 
 #include <stdlib.h>
 #include <inttypes.h>
@@ -225,7 +226,7 @@ static const char *get_binary(binary_t op) {
 }
 
 static char *gen_args(flow_t *flow, operand_t *args, size_t len) {
-    const char **types = malloc(sizeof(char*) * len);
+    const char **types = ctu_malloc(sizeof(char*) * len);
     for (size_t i = 0; i < len; i++) {
         types[i] = gen_operand(flow, args[i]);
     }
