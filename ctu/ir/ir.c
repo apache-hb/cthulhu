@@ -352,6 +352,12 @@ static operand_t emit_convert(flow_t *flow, node_t *node) {
     return add_vreg(flow, step);
 }
 
+static void set_local(flow_t *flow, size_t idx, operand_t to) {
+    ASSERT(to.kind == VREG)("set_local requires a vreg");
+
+    flow->locals[idx] = to.vreg;
+}
+
 static operand_t emit_var(flow_t *flow, node_t *node) {
     operand_t val = emit_opcode(flow, node->init);
 
@@ -362,7 +368,7 @@ static operand_t emit_var(flow_t *flow, node_t *node) {
     step.src = val;
 
     /* store the vreg into the local variable table */
-    flow->locals[node->local] = out.vreg;
+    set_local(flow, node->local, out);
 
     return add_vreg(flow, step);
 }
@@ -481,8 +487,7 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         step.dst = dst;
         add_step(&flow, step);
 
-        param->local = dst.vreg;
-        flow.locals[param->local] = dst.vreg;
+        set_local(&flow, param->local, dst);
 
         flow.args[i] = arg;
     }
