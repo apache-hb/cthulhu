@@ -20,8 +20,6 @@ Each stage will try and continue if it encounters any errors but will exit at th
 Stages after semantic analysis can expect that input will always be correct.
 
 ## Currently broken things
-* assigning and mutating arguments causes incorrect IR generation
-* lvalues that are also dereferences causes incorrect IR generation
 * intermittent spurious typecheck in function calls with pointers as parameters
 
 ## Licensing
