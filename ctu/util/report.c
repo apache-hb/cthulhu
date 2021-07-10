@@ -198,7 +198,7 @@ static reportid_t push_report(level_t level, scanner_t *source, where_t where, n
 void report_begin(size_t limit, bool eager) {
     max_reports = limit;
     eager_report = eager;
-    reports = realloc(reports, sizeof(report_t) * limit);
+    reports = ctu_realloc(reports, sizeof(report_t) * limit);
 }
 
 bool report_end(const char *name) {

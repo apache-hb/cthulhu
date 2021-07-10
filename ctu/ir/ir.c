@@ -2,12 +2,14 @@
 
 #include "ctu/util/report.h"
 #include "ctu/debug/ast.h"
+#include "ctu/util/util.h"
 
 #include "ctu/sema/sema.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <stdio.h>
 
 /**
  * builder functions
@@ -132,7 +134,7 @@ operand_t new_size(size_t s) {
 static size_t add_step_raw(flow_t *flow, step_t step) {
     if (flow->len + 1 > flow->size) {
         flow->size += 64;
-        flow->steps = realloc(flow->steps, flow->size * sizeof(step_t));
+        flow->steps = ctu_realloc(flow->steps, flow->size * sizeof(step_t));
     }
 
     flow->steps[flow->len] = step;
@@ -174,11 +176,22 @@ static operand_t emit_bool(node_t *node) {
     return new_bool(node->boolean);
 }
 
-#include <stdio.h>
-
 static bool is_deref(node_t *node) {
     return node->kind == AST_UNARY
         && node->unary == UNARY_DEREF;
+}
+
+static operand_t get_func(flow_t *flow, node_t *node) {
+    const char *name = get_symbol_name(node);
+    for (size_t i = 0; i < num_flows(flow->mod); i++) {
+        const char *it = flow->mod->flows[i].name;
+
+        if (strcmp(it, name) == 0) {
+            return new_func(i);
+        }
+    }
+
+    return new_operand(NONE);
 }
 
 static operand_t get_lvalue(flow_t *flow, node_t *node) {
@@ -186,6 +199,10 @@ static operand_t get_lvalue(flow_t *flow, node_t *node) {
         step_t step = new_step(OP_LOAD, node->expr);
         step.src = get_lvalue(flow, node->expr);
         return add_vreg(flow, step);
+    }
+
+    if (node->local == NOT_LOCAL) {
+        return get_func(flow, node);
     }
 
     return new_vreg(flow->locals[node->local]);
@@ -270,7 +287,7 @@ static operand_t emit_call(flow_t *flow, node_t *node) {
     operand_t expr = emit_opcode(flow, node->expr);
 
     size_t len = ast_len(node->args);
-    operand_t *args = malloc(sizeof(operand_t) * len);
+    operand_t *args = ctu_malloc(sizeof(operand_t) * len);
 
     for (size_t i = 0; i < len; i++) {
         node_t *arg = ast_at(node->args, i);
@@ -299,12 +316,9 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
     /**
      * first try all functions
      */
-    for (size_t i = 0; i < num_flows(flow->mod); i++) {
-        const char *name = flow->mod->flows[i].name;
-
-        if (strcmp(name, node->ident) == 0) {
-            return new_func(i);
-        }
+    local = get_func(flow, node);
+    if (operand_is_invalid(local)) {
+        return local;
     }
 
     reportf(LEVEL_INTERNAL, node, "unable to resolve %s typechecker let bad code slip", node->ident);
@@ -458,13 +472,13 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         get_decl_name(node), 
         
         /* arguments */
-        malloc(sizeof(arg_t) * len), len,
+        ctu_malloc(sizeof(arg_t) * len), len,
 
         /* body */
-        malloc(sizeof(step_t) * 64), 0, 64, 
+        ctu_malloc(sizeof(step_t) * 64), 0, 64, 
         
         /* local variables */
-        malloc(sizeof(vreg_t) * locals), locals,
+        ctu_malloc(sizeof(vreg_t) * locals), locals,
 
         /* return type */
         get_type(node->result),
@@ -504,9 +518,9 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
 
 module_t *compile_module(const char *name, nodes_t *nodes) {
     size_t len = ast_len(nodes);
-    module_t *mod = malloc(sizeof(module_t));
+    module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
-    mod->flows = malloc(sizeof(flow_t) * len);
+    mod->flows = ctu_malloc(sizeof(flow_t) * len);
     mod->nflows = len;
     
     for (size_t i = 0; i < len; i++) {

@@ -1,6 +1,7 @@
 #include "speed.h"
 
 #include "ctu/util/report.h"
+#include "ctu/util/util.h"
 
 #include <stdlib.h>
 
@@ -52,7 +53,7 @@ static void track_branch(bool *refs, size_t idx, step_t *step) {
 }
 
 static void track_blocks(flow_t *flow, bool *dirty) {
-    bool *refs = malloc(sizeof(bool) * flow->len);
+    bool *refs = ctu_malloc(sizeof(bool) * flow->len);
     for (size_t i = 0; i < flow->len; i++)
         refs[i] = false;
 
@@ -67,7 +68,7 @@ static void track_blocks(flow_t *flow, bool *dirty) {
         }
     }
 
-    free(refs);
+    ctu_free(refs);
 }
 
 bool remove_unused_blocks(module_t *mod) {

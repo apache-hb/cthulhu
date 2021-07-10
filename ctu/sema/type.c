@@ -1,6 +1,7 @@
 #include "sema.h"
 
 #include "ctu/util/report.h"
+#include "ctu/util/util.h"
 
 #include "ctu/debug/ast.h"
 
@@ -37,7 +38,7 @@ type_t *VOID_TYPE = NULL;
  */
 
 static sema_t *new_sema(sema_t *parent) {
-    sema_t *sema = malloc(sizeof(sema_t));
+    sema_t *sema = ctu_malloc(sizeof(sema_t));
     sema->parent = parent;
     sema->decls = ast_list(NULL);
     sema->result = NULL;
@@ -47,7 +48,7 @@ static sema_t *new_sema(sema_t *parent) {
 
 static void free_sema(sema_t *sema) {
     free_ast_list(sema->decls, false);
-    free(sema);
+    ctu_free(sema);
 }
 
 /**
@@ -250,9 +251,9 @@ static bool convertible_to(
     }
 
     if (is_pointer(to) && is_pointer(from)) {
+        printf("to = %p from = %p\n", to->node, from->node);
         if (to->ptr->mut && !from->ptr->mut) {
             if (to->ptr != from->ptr) {
-                printf("to = %p from = %p\n", to->node, from->node);
 
                 printf("- found the UB\n");
 

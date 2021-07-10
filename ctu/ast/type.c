@@ -2,12 +2,14 @@
 
 #include "ast.h"
 
+#include "ctu/util/util.h"
+
 #include <stdlib.h>
 #include <string.h>
 
 types_t *new_typelist(size_t size) {
-    types_t *list = malloc(sizeof(types_t));
-    list->data = malloc(sizeof(type_t*) * size);
+    types_t *list = ctu_malloc(sizeof(types_t));
+    list->data = ctu_malloc(sizeof(type_t*) * size);
     list->size = size;
     return list;
 }
@@ -25,7 +27,7 @@ void typelist_put(types_t *list, size_t idx, type_t *type) {
 }
 
 static type_t *new_type(typeof_t kind, node_t *node) {
-    type_t *type = malloc(sizeof(type_t));
+    type_t *type = ctu_malloc(sizeof(type_t));
     type->kind = kind;
     type->node = node;
     node->typeof = type;
@@ -106,7 +108,7 @@ bool is_pointer(type_t *type) {
 }
 
 type_t *set_mut(type_t *type, bool mut) {
-    type_t *out = malloc(sizeof(type_t));
+    type_t *out = ctu_malloc(sizeof(type_t));
     memcpy(out, type, sizeof(type_t));
     out->mut = mut;
     return out;

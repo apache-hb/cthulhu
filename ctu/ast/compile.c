@@ -2,6 +2,7 @@
 
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
+#include "ctu/util/util.h"
 
 #include "scanner.h"
 #include "bison.h"
@@ -15,11 +16,11 @@ static size_t file_size(FILE *fd) {
 }
 
 static scanner_t *new_scanner(const char *path, size_t size) {
-    scanner_t *scanner = malloc(sizeof(scanner_t));
+    scanner_t *scanner = ctu_malloc(sizeof(scanner_t));
 
     scanner->path = path;
 
-    scanner->text = malloc(size + 1);
+    scanner->text = ctu_malloc(size + 1);
     scanner->offset = 0;
     scanner->size = size;
 

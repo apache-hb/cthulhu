@@ -7,6 +7,7 @@
 #include "ir/ir.h"
 #include "speed/speed.h"
 #include "gen/c99.h"
+#include "ctu/util/util.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -40,7 +41,7 @@ typedef struct {
 static inputs_t inputs = { NULL, 0, 0 };
 
 static void init_inputs(void) {
-    inputs.files = malloc(sizeof(input_t) * 4);
+    inputs.files = ctu_malloc(sizeof(input_t) * 4);
     inputs.len = 0;
     inputs.size = 4;
 }
@@ -51,7 +52,7 @@ static void add_file(const char *path) {
 
     if (inputs.len + 1 > inputs.size) {
         inputs.size += 4;
-        inputs.files = realloc(inputs.files, sizeof(input_t) * inputs.size);
+        inputs.files = ctu_realloc(inputs.files, sizeof(input_t) * inputs.size);
     }
     input_t item = { path, file };
     inputs.files[inputs.len++] = item;
