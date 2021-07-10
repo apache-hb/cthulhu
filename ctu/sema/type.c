@@ -2,6 +2,8 @@
 
 #include "ctu/util/report.h"
 
+#include "ctu/debug/ast.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -14,8 +16,8 @@ typedef struct sema_t {
     struct sema_t *parent;
     nodes_t *decls;
 
-    type_t *result;
-    size_t locals;
+    type_t *result; /* return type of current function */
+    size_t locals; /* number of locals the current function has */
 } sema_t;
 
 /**
@@ -116,13 +118,16 @@ static void add_decl_global(sema_t *sema, node_t *decl) {
     add_decl_unique(sema, decl);
 }
 
+static void mark_local(node_t *decl) {
+    decl->local = ROOT_SEMA->locals++;
+}
+
 static void add_local(sema_t *sema, node_t *decl, bool add) {
     if (add) {
         add_decl_unique(sema, decl);
     }
 
-    decl->local = ROOT_SEMA->locals;
-    ROOT_SEMA->locals += 1;
+    mark_local(decl);
 }
 
 static void add_discardable_local(sema_t *sema, node_t *decl) {
@@ -137,7 +142,8 @@ static size_t reset_locals() {
 }
 
 static bool is_local(node_t *node) {
-    return node->kind == AST_DECL_VAR;
+    return node->kind == AST_DECL_VAR 
+        || node->kind == AST_DECL_PARAM;
 }
 
 static type_t *query_symbol(sema_t *sema, node_t *symbol) {
@@ -245,8 +251,18 @@ static bool convertible_to(
 
     if (is_pointer(to) && is_pointer(from)) {
         if (to->ptr->mut && !from->ptr->mut) {
+            if (to->ptr != from->ptr) {
+                printf("to = %p from = %p\n", to->node, from->node);
+
+                printf("- found the UB\n");
+
+                volatile char *lol = NULL;
+                *lol = '0';
+            }
+
             reportf(LEVEL_ERROR, *node, "cannot discard const from pointer type");
         }
+
         return convertible_to(node, to->ptr, from->ptr, implicit);
     }
 

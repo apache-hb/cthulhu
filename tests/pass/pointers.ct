@@ -6,8 +6,8 @@ def take1(ptr: *int): int {
     return *ptr;
 }
 
-def take3(ptr: ***int): int {
-    return ***ptr;
+def take3(ptr2: ***int): int {
+    return ***ptr2;
 }
 
 def refarg(ptr: int): int {
