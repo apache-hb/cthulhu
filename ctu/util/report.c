@@ -65,7 +65,8 @@ static void print_message(level_t level, const char *message) {
 static void print_location(scanner_t *source, where_t where) {
     fprintf(stderr, " => [%s:%" PRId64 ":%" PRId64 "]\n", 
         source->path, 
-        where.first_line, where.first_column
+        where.first_line + 1, /* most text editors columns start at 1 */
+        where.first_column
     );
 }
 

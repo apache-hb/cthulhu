@@ -452,7 +452,7 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     nodes_t *params = node->params;
     size_t len = ast_len(params);
 
-    size_t locals = node->locals;
+    size_t locals = node->locals + len;
 
     flow_t flow = { 
         /* name */
@@ -481,6 +481,15 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         node_t *param = ast_at(params, i);
 
         arg_t arg = { get_decl_name(param), get_type(param) };
+
+        operand_t dst = add_reserve(&flow, param);
+        step_t step = new_step(OP_STORE, param);
+        step.src = new_arg(i);
+        step.dst = dst;
+        add_step(&flow, step);
+
+        param->local = dst.vreg;
+        flow.locals[param->local] = dst.vreg;
 
         flow.args[i] = arg;
     }

@@ -24,6 +24,9 @@ static bool eager_reporting = false;
 /* should code be optimized */
 static bool speed = false;
 
+/* should the ir be dumped */
+static bool emit = false;
+
 typedef struct {
     const char *path;
     FILE *file;
@@ -59,6 +62,7 @@ static void add_file(const char *path) {
 #define OUTPUT_ARG "--output"
 #define VERBOSE_ARG "--verbose"
 #define OPTIMIZE_ARG "--speed"
+#define EMIT_ARG "--emit"
 
 static void print_help(void) {
     printf("usage: %s [options] file...\n", name);
@@ -68,6 +72,7 @@ static void print_help(void) {
     printf("\t" OUTPUT_ARG "=name: set output name (default %s)\n", output);
     printf("\t" VERBOSE_ARG ": enable verbose logging\n");
     printf("\t" OPTIMIZE_ARG ": enable optimization\n");
+    printf("\t" EMIT_ARG ": print intermediate form\n");
 }
 
 static int parse_arg(int index, int argc, const char **argv) {
@@ -84,6 +89,8 @@ static int parse_arg(int index, int argc, const char **argv) {
     } else if (strcmp(arg, OPTIMIZE_ARG) == 0) {
         speed = true;
         logfmt("enabled optimization");
+    } else if (strcmp(arg, EMIT_ARG) == 0) {
+        emit = true;
     } else if (!startswith(arg, "-")) {
         add_file(arg);
         logfmt("adding `%s` as a source file", arg);
@@ -141,6 +148,9 @@ int main(int argc, const char **argv) {
 
         if (report_end("intermediate"))
             return 1;
+
+        if (emit)
+            debug_module(*mod);
 
         size_t passes = 0;
 
@@ -204,6 +214,9 @@ int main(int argc, const char **argv) {
 
             passes += 1;
         }
+
+        if (emit)
+            debug_module(*mod);
 
         if (report_end("optimize"))
             return 1;
