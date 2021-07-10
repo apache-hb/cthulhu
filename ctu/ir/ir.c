@@ -1,6 +1,7 @@
 #include "ir.h"
 
 #include "ctu/util/report.h"
+#include "ctu/debug/ast.h"
 
 #include "ctu/sema/sema.h"
 
@@ -175,27 +176,19 @@ static operand_t emit_bool(node_t *node) {
 
 #include <stdio.h>
 
-static operand_t find_arg(flow_t *flow, node_t *node) {
-    const char *name = get_symbol_name(node);
-    if (!name) {
-        return new_operand(NONE);
-    }
-
-    for (size_t i = 0; i < flow->nargs; i++) {
-        arg_t arg = flow->args[i];
-        if (strcmp(arg.name, node->ident) == 0) {
-            return new_arg(i);
-        }
-    }
-
-    return new_operand(NONE);
+static bool is_deref(node_t *node) {
+    return node->kind == AST_UNARY
+        && node->unary == UNARY_DEREF;
 }
+
 static operand_t get_lvalue(flow_t *flow, node_t *node) {
-    if (node->local != NOT_LOCAL) {
-        return new_vreg(flow->locals[node->local]);
-    } else {
-        return find_arg(flow, node);
+    if (is_deref(node)) {
+        step_t step = new_step(OP_LOAD, node->expr);
+        step.src = get_lvalue(flow, node->expr);
+        return add_vreg(flow, step);
     }
+
+    return new_vreg(flow->locals[node->local]);
 }
 
 static operand_t emit_ref(flow_t *flow, node_t *node) {
