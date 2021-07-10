@@ -23,6 +23,8 @@ def test(): int {
     final c = &b;
     final d = &c;
 
+    // this explodes 50% of the time
+    // this should pass 100% of the time
     final $ = take3(d);
 
     final a1 = 0;
@@ -31,8 +33,6 @@ def test(): int {
     final a4 = &a3;
 
     final $ = take0(***a4);
-
-    // final $ = take(&100);
 
     return refarg(a1);
 }

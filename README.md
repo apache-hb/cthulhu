@@ -20,8 +20,7 @@ Each stage will try and continue if it encounters any errors but will exit at th
 Stages after semantic analysis can expect that input will always be correct.
 
 ## Currently broken things
-* intermittent spurious typecheck in function calls with pointers as parameters
-
+* intermittent spurious typecheck in function calls with pointers as parameters (see tests/pass/pointers.ct)
 ## Licensing
 
 This project is licensed under [AGPL3](./LICENSE).
