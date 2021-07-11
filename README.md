@@ -25,13 +25,15 @@ ninja -C build test
 * convert ast into typed ast for IR
 * convert typed ast into SSA
 * optimize SSA form
-* use backend to produce end library/executable from SSA (TODO)
+* use backend to produce end library/executable from SSA 
+  * assembler backend (TODO)
 
 Each stage will try and continue if it encounters any errors but will exit at the end of the stage.
 Stages after semantic analysis can expect that input will always be correct.
 
-## Currently broken things
-* intermittent spurious typecheck in function calls with pointers as parameters (see tests/pass/pointers.ct)
+## Tooling
+
+* syntax highlighting for vscode is available [here](https://github.com/apache-hb/ctu-vscode)
 
 ## Licensing
 

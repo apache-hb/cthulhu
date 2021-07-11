@@ -120,17 +120,7 @@ type_t *set_mut(type_t *type, bool mut) {
 }
 
 void connect_type(node_t *node, type_t *type) {
-    if (node->typeof != NULL) {
-        printf("node %p already has type %p\n", node, node->typeof);
-        debug_ast(node);
-        printf(": ");
-        debug_type(node->typeof);
-        printf("\n");
-    }
-    
     node->typeof = type;
-
-    printf("connecting %p and %p\n", node, type);
 
     if (!is_builtin(type)) {
         type->node = node;
