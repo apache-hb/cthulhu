@@ -1,4 +1,10 @@
+/* we need to conditionally set this and mmap for windows */
+#define _POSIX_SOURCE
+
 #include "compile.h"
+
+#include <sys/mman.h>
+#include <stdio.h>
 
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
@@ -19,11 +25,23 @@ static scanner_t *new_scanner(const char *path, size_t size) {
     scanner_t *scanner = ctu_malloc(sizeof(scanner_t));
 
     scanner->path = path;
-
-    scanner->text = ctu_malloc(size + 1);
     scanner->offset = 0;
     scanner->size = size;
 
+    return scanner;
+}
+
+static scanner_t *new_str_scanner(const char *path, const char *str) {
+    scanner_t *scanner = new_scanner(path, strlen(str));
+    scanner->text = str;
+    return scanner;
+}
+
+static scanner_t *new_file_scanner(const char *path, FILE *file) {
+    size_t size = file_size(file);
+    scanner_t *scanner = new_scanner(path, size);
+    int fd = fileno(file);
+    scanner->text = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
     return scanner;
 }
 
@@ -38,9 +56,7 @@ static const char *yyerror_str(int err) {
 nodes_t *compile_file(const char *path, FILE *stream, scanner_t **scanout) {
     int err;
     yyscan_t scanner;
-    size_t size = file_size(stream);
-    scanner_t *extra = new_scanner(path, file_size(stream));
-    fread(extra->text, 1, size, stream);
+    scanner_t *extra = new_file_scanner(path, stream);
 
     if ((err = yylex_init_extra(extra, &scanner))) {
         assert("yylex_init_extra -> %s", yyerror_str(err));
@@ -65,8 +81,7 @@ nodes_t *compile_file(const char *path, FILE *stream, scanner_t **scanout) {
 nodes_t *compile_string(const char *path, const char *text, scanner_t **scanout) {
     int err;
     yyscan_t scanner;
-    scanner_t *extra = new_scanner(path, strlen(text));
-    extra->text = strdup(text);
+    scanner_t *extra = new_str_scanner(path, text);
     YY_BUFFER_STATE buffer;
 
     if ((err = yylex_init_extra(extra, &scanner))) {
