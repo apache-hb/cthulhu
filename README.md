@@ -7,6 +7,17 @@ Probably better than javascript
 * building also requires `flex` and `bison`
     - windows users can use `win_flex` and `win_bison` from choco
 
+```sh
+meson build
+ninja -C build
+
+# running tests
+ninja -C build test
+
+# using the compiler
+./build/ctc --help
+```
+
 ## Overview
 
 * lex + parse with flex and bison
@@ -21,6 +32,7 @@ Stages after semantic analysis can expect that input will always be correct.
 
 ## Currently broken things
 * intermittent spurious typecheck in function calls with pointers as parameters (see tests/pass/pointers.ct)
+
 ## Licensing
 
 This project is licensed under [AGPL3](./LICENSE).
