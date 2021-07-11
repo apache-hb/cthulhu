@@ -1,6 +1,8 @@
 #include "ast.h"
 #include "common.h"
 
+#include "ctu/util/str.h"
+
 static void debug_digit(node_t *node) {
     printf("digit %" PRIu64, node->digit);
 }
@@ -73,8 +75,28 @@ static void debug_branch(node_t *node) {
     debug_ast(node->branch);
 }
 
+static void debug_var(node_t *node) {
+    printf("var %s ", node->name);
+    debug_ast(node->init);
+}
+
+static const char *fmt_where(where_t where) {
+    return format("[%" PRId64 ":%" PRId64 ":%" PRId64 ":%" PRId64 "]", 
+        where.first_line, 
+        where.first_column,
+        where.last_line,
+        where.last_column
+    );
+}
+
 void debug_ast(node_t *node) {
-    printf("(");
+    printf("(%p:%s:%d:%d:%d ", 
+        node->scanner, 
+        fmt_where(node->where), 
+        node->implicit, 
+        node->exported, 
+        node->mut
+    );
     switch (node->kind) {
     case AST_DIGIT: debug_digit(node); break;
     case AST_UNARY: debug_unary(node); break;
@@ -85,7 +107,8 @@ void debug_ast(node_t *node) {
     case AST_SYMBOL: debug_symbol(node); break;
     case AST_DECL_FUNC: debug_func(node); break;
     case AST_BRANCH: debug_branch(node); break;
-    default: printf("error");
+    case AST_DECL_VAR: debug_var(node); break;
+    default: printf("error %d", node->kind); break;
     }
     printf(")");
 }

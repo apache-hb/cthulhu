@@ -3,6 +3,7 @@
 #include "ctu/util/report.h"
 #include "ctu/util/util.h"
 
+#include "ctu/debug/type.h"
 #include "ctu/debug/ast.h"
 
 #include <stdlib.h>
@@ -251,7 +252,12 @@ static bool convertible_to(
     }
 
     if (is_pointer(to) && is_pointer(from)) {
+        debug_type(to->ptr); printf("\n");
+        debug_type(from->ptr); printf("\n");
+        debug_ast(to->node); printf("\n");
+        debug_ast(from->node); printf("\n");
         printf("to = %p from = %p\n", to->node, from->node);
+        printf("to->ptr = %p from->ptr = %p\n", to->ptr, from->ptr);
         if (to->ptr->mut && !from->ptr->mut) {
             if (to->ptr != from->ptr) {
 
