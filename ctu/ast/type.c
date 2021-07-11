@@ -34,6 +34,7 @@ static type_t *new_type(typeof_t kind, node_t *node) {
     type_t *type = ctu_malloc(sizeof(type_t));
     type->kind = kind;
     type->node = node;
+    type->mut = false;
     node->typeof = type;
     return type;
 }
