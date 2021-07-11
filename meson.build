@@ -99,7 +99,8 @@ libgen = library('gen', src,
 src = [
     'ctu/debug/ast.c',
     'ctu/debug/ir.c',
-    'ctu/debug/common.c'
+    'ctu/debug/common.c',
+    'ctu/debug/type.c'
 ]
 
 libdebug = library('debug', src,

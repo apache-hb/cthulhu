@@ -94,6 +94,12 @@ bool is_equality_op(binary_t op);
 #define NOT_LOCAL SIZE_MAX
 
 /**
+ * define this to either struct or union
+ * for debugging purposes
+ */
+#define AST_UNION union
+
+/**
  * we need string interning at some point
  */
 typedef struct node_t {
@@ -132,7 +138,7 @@ typedef struct node_t {
      */
     type_t *typeof;
 
-    union {
+    AST_UNION {
         struct {
             /* AST_SYMBOL */
             char *ident;
@@ -157,7 +163,7 @@ typedef struct node_t {
             /* AST_RETURN */
             struct node_t *expr;
 
-            union {
+            AST_UNION {
                 /* AST_CAST */
                 struct node_t *cast;
 
@@ -190,7 +196,7 @@ typedef struct node_t {
 
         /* AST_DECL */
         struct {
-            union {
+            AST_UNION {
                 /**
                  * all declarations have names
                  */
@@ -203,7 +209,7 @@ typedef struct node_t {
             /* own local index, or NOT_LOCAL if its not local */
             size_t local;
 
-            union {
+            AST_UNION {
                 /* AST_DECL_FUNC */
                 struct {
                     nodes_t *params;
