@@ -47,6 +47,5 @@ void flex_update(where_t *where, const char *text) {
 }
 
 void free_scanner(scanner_t *scanner) {
-    ctu_free(scanner->text);
     ctu_free(scanner);
 }

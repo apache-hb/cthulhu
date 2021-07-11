@@ -7,7 +7,7 @@ typedef struct {
     const char *path;
     void *ast;
 
-    char *text;
+    const char *text;
     size_t offset;
     size_t size;
 } scanner_t;
