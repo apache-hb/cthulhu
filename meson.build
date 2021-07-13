@@ -107,6 +107,11 @@ libdebug = library('debug', src,
     link_with : libutil
 )
 
+ctu = declare_dependency(
+    include_directories : '.',
+    link_with : [ libdebug, libgen, libspeed, libir, libsema, libast ]
+)
+
 driver = executable('ctc', 'ctu/main.c',
     c_args : [ '-D_CRT_SECURE_NO_WARNINGS=1' ],
     link_with : [ libdebug, libgen, libspeed, libir, libsema, libast ]

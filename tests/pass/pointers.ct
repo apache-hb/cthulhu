@@ -23,10 +23,9 @@ def test(): int {
     final c = &b;
     final d = &c;
 
-    // this explodes 50% of the time
-    // this should pass 100% of the time
     final $ = take3(d);
 
+    final $ = take0(200);
     final a1 = 0;
     final a2 = &a1;
     final a3 = &a2;

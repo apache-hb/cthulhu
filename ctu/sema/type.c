@@ -29,8 +29,23 @@ typedef struct sema_t {
 static sema_t *ROOT_SEMA = NULL;
 
 static type_t *CHAR_TYPE = NULL;
+static type_t *UCHAR_TYPE = NULL;
+
+static type_t *SHORT_TYPE = NULL;
+static type_t *USHORT_TYPE = NULL;
+
 static type_t *INT_TYPE = NULL;
 static type_t *UINT_TYPE = NULL;
+
+static type_t *LONG_TYPE = NULL;
+static type_t *ULONG_TYPE = NULL;
+
+static type_t *INTMAX_TYPE = NULL;
+static type_t *UINTMAX_TYPE = NULL;
+
+static type_t *INTPTR_TYPE = NULL;
+static type_t *UINTPTR_TYPE = NULL;
+
 static type_t *BOOL_TYPE = NULL;
 type_t *VOID_TYPE = NULL;
 
@@ -702,14 +717,39 @@ void sema_init(void) {
     ROOT_SEMA = new_sema(NULL);
 
     CHAR_TYPE = new_integer(INTEGER_CHAR, true, "char");
+    UCHAR_TYPE = new_integer(INTEGER_CHAR, false, "uchar");
+
+    SHORT_TYPE = new_integer(INTEGER_SHORT, true, "short");
+    USHORT_TYPE = new_integer(INTEGER_SHORT, false, "ushort");
+
     INT_TYPE = new_integer(INTEGER_INT, true, "int");
     UINT_TYPE = new_integer(INTEGER_INT, false, "uint");
+
+    LONG_TYPE = new_integer(INTEGER_LONG, true, "long");
+    ULONG_TYPE = new_integer(INTEGER_LONG, false, "ulong");
+
+    INTPTR_TYPE = new_integer(INTEGER_INTPTR, true, "intptr");
+    UINTPTR_TYPE = new_integer(INTEGER_INTPTR, false, "uintptr");
+
+    INTMAX_TYPE = new_integer(INTEGER_INTMAX, true, "intmax");
+    UINTMAX_TYPE = new_integer(INTEGER_INTMAX, false, "uintmax");
+
     BOOL_TYPE = new_builtin(TYPE_BOOLEAN, "bool");
     VOID_TYPE = new_builtin(TYPE_VOID, "void");
 
     add_builtin(CHAR_TYPE);
+    add_builtin(UCHAR_TYPE);
+    add_builtin(SHORT_TYPE);
+    add_builtin(USHORT_TYPE);
     add_builtin(INT_TYPE);
     add_builtin(UINT_TYPE);
+    add_builtin(LONG_TYPE);
+    add_builtin(ULONG_TYPE);
+    add_builtin(INTPTR_TYPE);
+    add_builtin(UINTPTR_TYPE);
+    add_builtin(INTMAX_TYPE);
+    add_builtin(UINTMAX_TYPE);
+
     add_builtin(BOOL_TYPE);
     add_builtin(VOID_TYPE);
 }

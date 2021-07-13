@@ -1,0 +1,19 @@
+// ast unit tests
+
+#include "ctu/ast/ast.h"
+#include "ctu/util/report.h"
+
+
+static where_t NOWHERE = { 0, 0, 0, 0 };
+
+int main(void) {
+    report_begin(1, true);
+    
+    node_t *node = ast_return(NULL, NOWHERE, NULL);
+
+    type_t *type = get_type(node);
+
+    ASSERT(is_unresolved(type))("untagged node had type");
+
+    return report_end("test");
+}

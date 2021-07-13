@@ -30,14 +30,21 @@ static char *gen_callable(type_t *type, const char *name) {
     const char *ret = gen_type(type->result, NULL);
     char *body = format("(*%s)", name ? name : "");
     
-    const char *args[64];
     size_t nargs = type->args->size;
+    const char **args = malloc(sizeof(char*) * nargs);
 
     for (size_t i = 0; i < nargs; i++) {
         args[i] = gen_type(type->args->data[i], NULL);
     }
 
-    return format("%s%s(%s)", ret, body, str_join(", ", args, nargs));
+    char *out = format("%s%s(%s)", ret, body, str_join(", ", args, nargs));
+    free(args);
+
+    return out;
+}
+
+static const char *get_size(bool sign) {
+    return sign ? "ssize_t" : "size_t";
 }
 
 static const char *int_name(type_t *type) {
@@ -47,12 +54,7 @@ static const char *int_name(type_t *type) {
     case INTEGER_SHORT: out = "short"; break;
     case INTEGER_INT: out = "int"; break;
     case INTEGER_LONG: out = "long long"; break;
-    case INTEGER_SIZE: 
-        if (is_signed(type)) {
-            warnf("signed size_t not supported yet");
-        }
-        out = "size_t";
-        break;
+    case INTEGER_SIZE: out = get_size(is_signed(type)); break;
     default:
         assert("int_name unreachable");
         return "";

@@ -10,13 +10,8 @@
  */
 void assert(const char *fmt, ...);
 void ensure(const char *fmt, ...);
-#ifndef NDEBUG
-#   define ENSURE(expr) if (!(expr)) (ensure)
-#   define ASSERT(expr) if (!(expr)) (assert)
-#else
-#   define ENSURE(_)
-#   define ASSERT(_)
-#endif
+#define ENSURE(expr) if (!(expr)) (ensure)
+#define ASSERT(expr) if (!(expr)) (assert)
 
 void warnf(const char *fmt, ...);
 
