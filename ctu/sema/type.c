@@ -314,8 +314,10 @@ static void typecheck_stmts(sema_t *sema, node_t *stmts) {
     free_sema(nest);
 }
 
-static type_t *get_digit_type(void) {
-    return INT_TYPES[INTEGER_INT];
+static type_t *get_digit_type(node_t *digit) {
+    return digit->sign 
+        ? INT_TYPES[digit->integer] 
+        : UINT_TYPES[digit->integer];
 }
 
 static type_t *get_bool_type(void) {
@@ -506,7 +508,7 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
 
     switch (expr->kind) {
     case AST_DIGIT: 
-        type = get_digit_type();
+        type = get_digit_type(expr);
         break;
 
     case AST_BOOL:
