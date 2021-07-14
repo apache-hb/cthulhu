@@ -175,6 +175,7 @@ typedef struct {
     struct module_t *mod;
 
     bool exported:1;
+    bool used:1;
 } flow_t;
 
 step_t *step_at(flow_t *flow, size_t idx);

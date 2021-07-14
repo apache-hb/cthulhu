@@ -128,7 +128,7 @@ type_t *set_mut(type_t *type, bool mut) {
 void connect_type(node_t *node, type_t *type) {
     node->typeof = type;
 
-    if (!is_builtin(type)) {
+    if (!is_builtin(type) && type->node == NULL) {
         type->node = node;
     }
 }

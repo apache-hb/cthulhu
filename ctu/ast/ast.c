@@ -22,6 +22,7 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
     node->implicit = false;
     node->exported = false;
     node->mut = false;
+    node->used = false;
 
     return node;
 }
@@ -404,4 +405,12 @@ void free_ast_list(nodes_t *list, bool free_items) {
 
 bool is_exported(node_t *node) {
     return node->exported;
+}
+
+void mark_used(node_t *node) {
+    node->used = true;
+}
+
+bool is_used(node_t *node) {
+    return node->used;
 }

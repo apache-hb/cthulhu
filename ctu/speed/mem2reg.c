@@ -34,7 +34,8 @@ static void replace_loads(flow_t *flow, size_t start, size_t addr) {
     }
 }
 
-static void mem2reg_flow(flow_t *flow, bool *dirty) {
+bool mem2reg(flow_t *flow) {
+    bool dirty = false;
     for (size_t i = 0; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
 
@@ -57,7 +58,7 @@ static void mem2reg_flow(flow_t *flow, bool *dirty) {
                 continue;
             }
 
-            *dirty = true;
+            dirty = true;
 
             step_t *store = step_at(flow, addr);
 
@@ -66,14 +67,6 @@ static void mem2reg_flow(flow_t *flow, bool *dirty) {
 
             replace_loads(flow, i, addr);
         }
-    }
-}
-
-bool mem2reg(module_t *mod) {
-    bool dirty = false;
-
-    for (size_t i = 0; i < num_flows(mod); i++) {
-        mem2reg_flow(mod->flows + i, &dirty);
     }
 
     return dirty;
