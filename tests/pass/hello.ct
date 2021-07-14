@@ -1,5 +1,5 @@
 export def main(argc: int, argv: **char): int {
-    return fib(argc);
+    return fib(40);
 }
 
 def fib(n: int): int {

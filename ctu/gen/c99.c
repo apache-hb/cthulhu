@@ -31,7 +31,7 @@ static char *gen_callable(type_t *type, const char *name) {
     char *body = format("(*%s)", name ? name : "");
     
     size_t nargs = type->args->size;
-    const char **args = malloc(sizeof(char*) * nargs);
+    const char **args = ctu_malloc(sizeof(char*) * nargs);
 
     for (size_t i = 0; i < nargs; i++) {
         args[i] = gen_type(type->args->data[i], NULL);
@@ -123,6 +123,10 @@ static const char *gen_type(type_t *type, const char *name) {
 static char *genarg(size_t idx) {
     char *out = format("arg%zu", idx);
     return out;
+}
+
+static bool should_emit_func(flow_t *flow) {
+    return flow->exported || flow->used;
 }
 
 static void gen_func_decl(FILE *out, flow_t *flow, bool omit_names) {
@@ -334,13 +338,17 @@ void gen_c99(FILE *out, module_t *mod) {
     line(out);
 
     for (size_t i = 0; i < num_flows(mod); i++) {
-        def_flow(out, mod->flows + i);
+        flow_t *flow = mod->flows + i;
+        if (should_emit_func(flow))
+            def_flow(out, mod->flows + i);
     }
 
     line(out);
 
     for (size_t i = 0; i < num_flows(mod); i++) {
-        gen_flow(out, mod->flows + i);
+        flow_t *flow = mod->flows + i;
+        if (should_emit_func(flow))
+            gen_flow(out, mod->flows + i);
     }
 
     guard_tail(out, name);

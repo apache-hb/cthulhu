@@ -134,6 +134,11 @@ typedef struct node_t {
     bool mut:1;
 
     /**
+     * is this function/variable ever used
+     */
+    bool used:1;
+
+    /**
      * the type of this nodes expression in its current context
      */
     type_t *typeof;
@@ -324,6 +329,12 @@ node_t *make_implicit(node_t *node);
  * mark a node as exported
  */
 node_t *make_exported(node_t *node);
+
+/**
+ * mark a node as used so its not discarded
+ */
+void mark_used(node_t *node);
+bool is_used(node_t *node);
 
 /**
  * node creation

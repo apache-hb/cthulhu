@@ -166,16 +166,18 @@ int main(int argc, const char **argv) {
             debug_module(*mod);
         }
 
+        if (speed) {
+            pass_t pass = new_pass(mod);
+
+            while (run_pass(&pass));
+        }
+
+        /*
         size_t passes = 0;
 
         while (speed) {
             logfmt("beginning optimization pass %zu", passes + 1);
             size_t dirty_stages = 0;
-
-            if (remove_dead_code(mod)) {
-                logfmt("removed dead code");
-                dirty_stages += 1;
-            }
 
             if (remove_unused_blocks(mod)) {
                 logfmt("removed unused blocks");
@@ -227,7 +229,7 @@ int main(int argc, const char **argv) {
             }
 
             passes += 1;
-        }
+        }*/
 
         if (emit) {
             debug_module(*mod);

@@ -5,9 +5,10 @@
 
 #include <stdlib.h>
 
-static void remove_ops(flow_t *flow, bool *dirty) {
+bool remove_dead_code(flow_t *flow) {
     /* remove unreachable code after return ops */
     bool dead = false;
+    bool dirty = false;
     
     for (size_t i = 0; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
@@ -17,16 +18,8 @@ static void remove_ops(flow_t *flow, bool *dirty) {
             dead = true;
         } else if (dead && step->opcode != OP_EMPTY) {
             step->opcode = OP_EMPTY;
-            *dirty = true;
+            dirty = true;
         }
-    }
-}
-
-bool remove_dead_code(module_t *mod) {
-    bool dirty = false;
-
-    for (size_t i = 0; i < num_flows(mod); i++) {
-        remove_ops(mod->flows + i, &dirty);
     }
 
     return dirty;
@@ -52,7 +45,8 @@ static void track_branch(bool *refs, size_t idx, step_t *step) {
     }
 }
 
-static void track_blocks(flow_t *flow, bool *dirty) {
+bool remove_unused_blocks(flow_t *flow) {
+    bool dirty = false;
     bool *refs = ctu_malloc(sizeof(bool) * flow->len);
     for (size_t i = 0; i < flow->len; i++)
         refs[i] = false;
@@ -64,21 +58,12 @@ static void track_blocks(flow_t *flow, bool *dirty) {
     for (size_t i = 0; i < flow->len; i++) {
         if (!refs[i]) {
             step_at(flow, i)->opcode = OP_EMPTY;
-            *dirty = true;
+            dirty = true;
         }
     }
+    return dirty;
 
     ctu_free(refs);
-}
-
-bool remove_unused_blocks(module_t *mod) {
-    bool dirty = false;
-
-    for (size_t i = 0; i < num_flows(mod); i++) {
-        track_blocks(mod->flows + i, &dirty);
-    }
-
-    return dirty;
 }
 
 static void update_operand(flow_t *flow, operand_t *op, bool *dirty) {
@@ -116,20 +101,12 @@ static void propogate_value(flow_t *flow, step_t *step, bool *dirty) {
     }
 }
 
-static void propogate_flow(flow_t *flow, bool *dirty) {
+bool propogate_consts(flow_t *flow) {
+    bool dirty = false;
     for (size_t i = 0; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
-        propogate_value(flow, step, dirty);
+        propogate_value(flow, step, &dirty);
     }
-}
-
-bool propogate_consts(module_t *mod) {
-    bool dirty = false;
-
-    for (size_t i = 0; i < num_flows(mod); i++) {
-        propogate_flow(mod->flows + i, &dirty);
-    }
-
     return dirty;
 }
 
@@ -142,7 +119,8 @@ static bool is_value_used(flow_t *flow, size_t vreg) {
     return false;
 }
 
-static void flow_remove_unused(flow_t *flow, bool *dirty) {
+bool remove_unused_code(flow_t *flow) {
+    bool dirty = false;
     for (size_t i = 0; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
         if (step->opcode != OP_VALUE)
@@ -150,18 +128,9 @@ static void flow_remove_unused(flow_t *flow, bool *dirty) {
 
         if (!is_value_used(flow, i)) {
             step->opcode = OP_EMPTY;
-            *dirty = true;
+            dirty = true;
         }
     }
-}
-
-bool remove_unused_code(module_t *mod) {
-    bool dirty = false;
-
-    for (size_t i = 0; i < num_flows(mod); i++) {
-        flow_remove_unused(mod->flows + i, &dirty);
-    }
-
     return dirty;
 }
 
@@ -203,7 +172,8 @@ static void replace_branch_leafs(flow_t *flow, size_t old, size_t replace) {
     }
 }
 
-static void remove_empty(flow_t *flow, bool *dirty) {
+bool remove_empty_blocks(flow_t *flow) {
+    bool dirty = false;
     size_t replace;
 
     for (size_t i = 0; i < flow->len; i++) {
@@ -218,19 +188,10 @@ static void remove_empty(flow_t *flow, bool *dirty) {
          */
         if (is_block_empty(flow, i, &replace)) {
             step->opcode = OP_EMPTY;
-            *dirty = true;
+            dirty = true;
             replace_branch_leafs(flow, i, replace);
         }
     }
-}
-
-bool remove_empty_blocks(module_t *mod) {
-    bool dirty = false;
-
-    for (size_t i = 0; i < num_flows(mod); i++) {
-        remove_empty(mod->flows + i, &dirty);
-    }
-
     return dirty;
 }
 
@@ -246,31 +207,20 @@ static bool is_const_true(operand_t op) {
         && op.imm.imm_bool;
 }
 
-static void remove_unneeded_branches(flow_t *flow, bool *dirty) {
+bool remove_branches(flow_t *flow) {
+    bool dirty = false;
     for (size_t i = 0; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
 
         if (step->opcode != OP_BRANCH)
             continue;
 
-        if (blocks_equal(step->block, step->other)) {
+        if (blocks_equal(step->block, step->other) || is_const_true(step->cond)) {
             *step = new_jump(step->block);
-            *dirty = true;
-        } else if (is_const_true(step->cond)) {
-            *step = new_jump(step->block);
-            *dirty = true;
+            dirty = true;
         }
     }
-}
-
-bool remove_branches(module_t *mod) {
-    bool dirty = false;
-
-    for (size_t i = 0; i < num_flows(mod); i++) {
-        remove_unneeded_branches(mod->flows + i, &dirty);
-    }
-
-    return dirty;   
+    return dirty;
 }
 
 static bool jump_skips_steps(flow_t *flow, size_t idx) {
@@ -294,7 +244,8 @@ static bool jump_skips_steps(flow_t *flow, size_t idx) {
     return false;
 }
 
-static void remove_unused_jumps(flow_t *flow, bool *dirty) {
+bool remove_jumps(flow_t *flow) {
+    bool dirty = false;
     for (size_t i = 0; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
 
@@ -303,19 +254,10 @@ static void remove_unused_jumps(flow_t *flow, bool *dirty) {
 
         if (!jump_skips_steps(flow, i)) {
             step->opcode = OP_EMPTY;
-            *dirty = true;
+            dirty = true;
         }
     }
-}
-
-bool remove_jumps(module_t *mod) {
-    bool dirty = false;
-
-    for (size_t i = 0; i < num_flows(mod); i++) {
-        remove_unused_jumps(mod->flows + i, &dirty);
-    }
-
-    return dirty; 
+    return dirty;
 }
 
 static bool is_pure_op(step_t *step) {
@@ -326,7 +268,8 @@ static bool is_pure_op(step_t *step) {
         || step->opcode == OP_LOAD;
 }
 
-static void remove_code(flow_t *flow, bool *dirty) {
+bool remove_pure_code(flow_t *flow) {
+    bool dirty = false;
     for (size_t i = 0; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
         if (!is_pure_op(step))
@@ -337,17 +280,8 @@ static void remove_code(flow_t *flow, bool *dirty) {
 
         if (!is_value_used(flow, i)) {
             step->opcode = OP_EMPTY;
-            *dirty = true;
+            dirty = true;
         }
     }
-}
-
-bool remove_pure_code(module_t *mod) {
-    bool dirty = false;
-
-    for (size_t i = 0; i < num_flows(mod); i++) {
-        remove_code(mod->flows + i, &dirty);
-    }
-
-    return dirty; 
+    return dirty;
 }

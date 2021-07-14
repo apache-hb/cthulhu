@@ -487,7 +487,8 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         mod,
 
         /* exported */
-        is_exported(node)
+        is_exported(node),
+        is_used(node)
     };
 
     for (size_t i = 0; i < len; i++) {

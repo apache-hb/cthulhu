@@ -16,7 +16,7 @@
 
 typedef struct sema_t {
     struct sema_t *parent;
-    nodes_t *decls;
+    map_t *decls;
 
     type_t *result; /* return type of current function */
     size_t locals; /* number of locals the current function has */
@@ -38,17 +38,20 @@ type_t *VOID_TYPE = NULL;
  * builders
  */
 
-static sema_t *new_sema(sema_t *parent) {
+static sema_t *base_sema(sema_t *parent, size_t size) {
     sema_t *sema = ctu_malloc(sizeof(sema_t));
     sema->parent = parent;
-    sema->decls = ast_list(NULL);
+    sema->decls = new_map(size);
     sema->result = NULL;
     sema->locals = 0;
     return sema;
 }
 
+static sema_t *new_sema(sema_t *parent) {
+    return base_sema(parent, 32);
+}
+
 static void free_sema(sema_t *sema) {
-    free_ast_list(sema->decls, false);
     ctu_free(sema);
 }
 
@@ -71,17 +74,13 @@ static type_t *return_type(sema_t *sema) {
 }
 
 static void add_decl(sema_t *sema, node_t *decl) {
-    ast_append(sema->decls, decl);
+    map_put(sema->decls, get_resolved_name(decl), decl);
 }
 
 static node_t *get_decl(sema_t *sema, const char *name) {
-    for (size_t i = 0; i < ast_len(sema->decls); i++) {
-        node_t *other = ast_at(sema->decls, i);
-        const char *id = get_resolved_name(other);
-
-        if (strcmp(id, name) == 0) {
-            return other;
-        }
+    node_t *decl = map_get(sema->decls, name);
+    if (decl) {
+        return decl;
     }
 
     /**
@@ -186,6 +185,11 @@ static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
 }
 
 static type_t *resolve_typename(sema_t *sema, node_t *node) {
+    type_t *type = raw_type(node);
+    if (type) {
+        return type;
+    }
+
     return resolve_symbol(sema, node);
 }
 
@@ -303,15 +307,11 @@ static type_t *typecheck_return(sema_t *sema, node_t *stmt) {
 }
 
 static void typecheck_stmts(sema_t *sema, node_t *stmts) {
-    sema_t *nest = new_sema(sema);
-
     nodes_t *list = get_stmts(stmts);
     
     for (size_t i = 0; i < ast_len(list); i++) {
-        typecheck_stmt(nest, ast_at(list, i));
+        typecheck_stmt(sema, ast_at(list, i));
     }
-
-    free_sema(nest);
 }
 
 static type_t *get_digit_type(node_t *digit) {
@@ -525,6 +525,7 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
 
     case AST_SYMBOL:
         type = resolve_symbol(sema, expr);
+        mark_used(type->node);
         break;
 
     case AST_CALL:
@@ -619,7 +620,7 @@ static void typecheck_stmt(sema_t *sema, node_t *stmt) {
         break;
 
     case AST_STMTS:
-        typecheck_stmts(sema, stmt);
+        typecheck_stmts(base_sema(sema, 64), stmt);
         break;
 
     case AST_BRANCH:
@@ -709,7 +710,7 @@ static void add_builtin(type_t *type) {
  */
 
 void typecheck(nodes_t *nodes) {
-    sema_t *sema = new_sema(ROOT_SEMA);
+    sema_t *sema = base_sema(ROOT_SEMA, 256);
     typecheck_all_decls(sema, nodes);
     free_sema(sema);
 }

@@ -107,18 +107,10 @@ static void try_fold(step_t *step, bool *dirty) {
     }
 }
 
-static void fold(flow_t *flow, bool *dirty) {
-    for (size_t i = 0; i < flow->len; i++) {
-        try_fold(step_at(flow, i), dirty);
-    }
-}
-
-bool fold_consts(module_t *mod) {
+bool fold_consts(flow_t *flow) {
     bool dirty = false;
-
-    for (size_t i = 0; i < num_flows(mod); i++) {
-        fold(mod->flows + i, &dirty);
+    for (size_t i = 0; i < flow->len; i++) {
+        try_fold(step_at(flow, i), &dirty);
     }
-
-    return dirty; 
+    return dirty;
 }
