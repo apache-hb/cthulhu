@@ -225,6 +225,8 @@ node_t *ast_digit(scanner_t *scanner, where_t where, char *digit, int base) {
 
     if (out == ULLONG_MAX && errno == ERANGE) {
         reportf(LEVEL_WARNING, node, "digit `%s` is out of range", digit);
+        node->sign = true;
+        node->integer = INTEGER_INT;
     } else {
         add_integer_type(node, end);
     }
