@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
+#include <limits.h>
 
 #include "ctu/util/str.h"
 #include "ctu/util/report.h"
@@ -165,12 +167,71 @@ node_t *make_exported(node_t *node) {
     return node;
 }
 
+static void add_integer_type(node_t *node, const char *str) {
+    bool sign = true;
+    if (*str == 'u') {
+        sign = false;
+        str += 1;
+    }
+
+    integer_t kind = INTEGER_INT;
+
+    switch (*str) {
+    case 't':
+        /* char suffix */
+        kind = INTEGER_CHAR;
+        break;
+    case 's':
+        /* short suffix */
+        kind = INTEGER_SHORT;
+        break;
+    case 'i':
+        /* int suffix */
+        kind = INTEGER_INT;
+        break;
+    case 'l':
+        /* long suffix */
+        kind = INTEGER_LONG;
+        break;
+    case 'z':
+        /* size suffix */
+        kind = INTEGER_SIZE;
+        break;
+    case 'p':
+        /* ptr suffix */
+        kind = INTEGER_INTPTR;
+        break;
+    case 'm':
+        /* max suffix */
+        kind = INTEGER_INTMAX;
+        break;
+    
+    case '\0': break;
+
+    default:
+        assert("invalid suffix `%c`", *str);
+        break;
+    }
+
+    node->sign = sign;
+    node->integer = kind;
+}
+
 node_t *ast_digit(scanner_t *scanner, where_t where, char *digit, int base) {
     node_t *node = new_node(scanner, where, AST_DIGIT);
+    char *end;
 
-    uint64_t out = strtoull(digit, NULL, base);
+    uint64_t out = strtoull(digit, &end, base);
+
+    if (out == ULLONG_MAX && errno == ERANGE) {
+        reportf(LEVEL_WARNING, node, "digit `%s` is out of range", digit);
+    } else {
+        add_integer_type(node, end);
+    }
 
     node->digit = out;
+
+    free(digit);
 
     return node;
 }

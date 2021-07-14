@@ -26,25 +26,10 @@ typedef struct sema_t {
  * constants
  */
 
+static type_t *INT_TYPES[INTEGER_END];
+static type_t *UINT_TYPES[INTEGER_END];
+
 static sema_t *ROOT_SEMA = NULL;
-
-static type_t *CHAR_TYPE = NULL;
-static type_t *UCHAR_TYPE = NULL;
-
-static type_t *SHORT_TYPE = NULL;
-static type_t *USHORT_TYPE = NULL;
-
-static type_t *INT_TYPE = NULL;
-static type_t *UINT_TYPE = NULL;
-
-static type_t *LONG_TYPE = NULL;
-static type_t *ULONG_TYPE = NULL;
-
-static type_t *INTMAX_TYPE = NULL;
-static type_t *UINTMAX_TYPE = NULL;
-
-static type_t *INTPTR_TYPE = NULL;
-static type_t *UINTPTR_TYPE = NULL;
 
 static type_t *BOOL_TYPE = NULL;
 type_t *VOID_TYPE = NULL;
@@ -330,7 +315,7 @@ static void typecheck_stmts(sema_t *sema, node_t *stmts) {
 }
 
 static type_t *get_digit_type(void) {
-    return INT_TYPE;
+    return INT_TYPES[INTEGER_INT];
 }
 
 static type_t *get_bool_type(void) {
@@ -404,6 +389,17 @@ static void check_binary_equality(node_t* node, type_t *lhs, type_t *rhs) {
     reportf(LEVEL_ERROR, node, "incompatible comparison operands");
 }
 
+// get the largest integer we need
+static type_t *get_binary_math_type(type_t *lhs, type_t *rhs) {
+    integer_t it = MAX(get_integer_kind(lhs), get_integer_kind(rhs));
+
+    if (is_signed(lhs) || is_signed(rhs)) {
+        return INT_TYPES[it];
+    } else {
+        return UINT_TYPES[it];
+    }
+}
+
 static type_t *typecheck_binary(sema_t *sema, node_t *expr) {
     type_t *lhs = typecheck_expr(sema, expr->lhs);
     type_t *rhs = typecheck_expr(sema, expr->rhs);
@@ -415,7 +411,7 @@ static type_t *typecheck_binary(sema_t *sema, node_t *expr) {
     } else if (is_equality_op(op)) {
         check_binary_equality(expr, lhs, rhs);
     } else if (is_math_op(op)) {
-        result = lhs;
+        result = get_binary_math_type(lhs, rhs);
 
         check_binary_math(expr, lhs, rhs);
     } else {
@@ -447,6 +443,9 @@ static type_t *typecheck_unary(sema_t *sema, node_t *expr) {
     case UNARY_ABS: case UNARY_NEG:
         if (!is_integer(type)) {
             reportf(LEVEL_ERROR, expr, "unary operation requires integral");
+        }
+        if (!is_signed(type) && op == UNARY_NEG) {
+            reportf(LEVEL_WARNING, expr, "unary negation on an unsigned type");
         }
         break;
 
@@ -713,42 +712,40 @@ void typecheck(nodes_t *nodes) {
     free_sema(sema);
 }
 
+static void add_int(int kind, const char *name) {
+    INT_TYPES[kind] = new_integer(kind, true, name);
+}
+
+static void add_uint(int kind, const char *name) {
+    UINT_TYPES[kind] = new_integer(kind, false, name);
+}
+
 void sema_init(void) {
     ROOT_SEMA = new_sema(NULL);
 
-    CHAR_TYPE = new_integer(INTEGER_CHAR, true, "char");
-    UCHAR_TYPE = new_integer(INTEGER_CHAR, false, "uchar");
-
-    SHORT_TYPE = new_integer(INTEGER_SHORT, true, "short");
-    USHORT_TYPE = new_integer(INTEGER_SHORT, false, "ushort");
-
-    INT_TYPE = new_integer(INTEGER_INT, true, "int");
-    UINT_TYPE = new_integer(INTEGER_INT, false, "uint");
-
-    LONG_TYPE = new_integer(INTEGER_LONG, true, "long");
-    ULONG_TYPE = new_integer(INTEGER_LONG, false, "ulong");
-
-    INTPTR_TYPE = new_integer(INTEGER_INTPTR, true, "intptr");
-    UINTPTR_TYPE = new_integer(INTEGER_INTPTR, false, "uintptr");
-
-    INTMAX_TYPE = new_integer(INTEGER_INTMAX, true, "intmax");
-    UINTMAX_TYPE = new_integer(INTEGER_INTMAX, false, "uintmax");
-
+    add_int(INTEGER_CHAR, "char");
+    add_int(INTEGER_SHORT, "short");
+    add_int(INTEGER_INT, "int");
+    add_int(INTEGER_LONG, "long");
+    add_int(INTEGER_SIZE, "isize");
+    add_int(INTEGER_INTPTR, "intptr");
+    add_int(INTEGER_INTMAX, "intmax");
+    
+    add_uint(INTEGER_CHAR, "uchar");
+    add_uint(INTEGER_SHORT, "ushort");
+    add_uint(INTEGER_INT, "uint");
+    add_uint(INTEGER_LONG, "ulong");
+    add_uint(INTEGER_SIZE, "usize");
+    add_uint(INTEGER_INTPTR, "uintptr");
+    add_uint(INTEGER_INTMAX, "uintmax");
+    
     BOOL_TYPE = new_builtin(TYPE_BOOLEAN, "bool");
     VOID_TYPE = new_builtin(TYPE_VOID, "void");
 
-    add_builtin(CHAR_TYPE);
-    add_builtin(UCHAR_TYPE);
-    add_builtin(SHORT_TYPE);
-    add_builtin(USHORT_TYPE);
-    add_builtin(INT_TYPE);
-    add_builtin(UINT_TYPE);
-    add_builtin(LONG_TYPE);
-    add_builtin(ULONG_TYPE);
-    add_builtin(INTPTR_TYPE);
-    add_builtin(UINTPTR_TYPE);
-    add_builtin(INTMAX_TYPE);
-    add_builtin(UINTMAX_TYPE);
+    for (int i = 0; i < INTEGER_END; i++) {
+        add_builtin(INT_TYPES[i]);
+        add_builtin(UINT_TYPES[i]);
+    }
 
     add_builtin(BOOL_TYPE);
     add_builtin(VOID_TYPE);

@@ -145,7 +145,14 @@ typedef struct node_t {
         };
 
         /* AST_DIGIT */
-        uint64_t digit;
+        struct {
+            /* actual number */
+            uint64_t digit;
+            /* is the integer signed */
+            bool sign;
+            /* the underlying integer type */
+            integer_t integer;
+        };
 
         /* AST_BOOL */
         bool boolean;

@@ -40,24 +40,23 @@
 "$" { yylval->text = "$"; return IDENT; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 
-[0-9]+ { 
-    yylval->digit.text = yytext; 
+[0-9]+[u]?[csilzpm]? { 
+    yylval->digit.text = strdup(yytext); 
     yylval->digit.base = 10;
     return DIGIT; 
 }
 
-"0b"[01]+ { 
-    yylval->digit.text = yytext + 2; 
+"0b"[01]+[u]?[csilzpm]? { 
+    yylval->digit.text = strdup(yytext + 2); 
     yylval->digit.base = 2;
     return DIGIT; 
 }
 
-"0x"[0-9a-fA-F]+ { 
-    yylval->digit.text = yytext + 2;
+"0x"[0-9a-fA-F]+[u]?[csilzpm]? { 
+    yylval->digit.text = strdup(yytext + 2);
     yylval->digit.base = 16;
     return DIGIT; 
 }
-
 
 ">=" { return GTE; }
 "<=" { return LTE; }

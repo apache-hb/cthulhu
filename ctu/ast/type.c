@@ -2,6 +2,7 @@
 
 #include "ast.h"
 
+#include "ctu/util/report.h"
 #include "ctu/util/util.h"
 
 #include "ctu/debug/type.h"
@@ -92,6 +93,11 @@ bool is_callable(type_t *type) {
 
 bool is_void(type_t *type) {
     return type->kind == TYPE_VOID;
+}
+
+integer_t get_integer_kind(type_t *type) {
+    ASSERT(is_integer(type))("type is not an integer");
+    return type->integer;
 }
 
 static bool is_builtin(type_t *type) {
