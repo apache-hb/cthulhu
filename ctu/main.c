@@ -9,19 +9,12 @@
 #include "gen/c99.h"
 #include "ctu/util/util.h"
 
-#include "template.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-#include <sys/stat.h>
-
 /* current name of this program */
 static const char *name = NULL;
-
-/* name of file to output to */
-//static const char *output = "a.out";
 
 /* enable eager error reporting */
 static bool eager_reporting = false;
@@ -31,9 +24,6 @@ static bool speed = false;
 
 /* should the ir be dumped */
 static bool emit = false;
-
-/* do we want to run the init tool */
-static bool init = false;
 
 typedef struct {
     const char *path;
@@ -67,22 +57,18 @@ static void add_file(const char *path) {
 
 #define HELP_ARG "--help"
 #define EAGER_ARG "--eager"
-#define OUTPUT_ARG "--output"
 #define VERBOSE_ARG "--verbose"
 #define OPTIMIZE_ARG "--speed"
 #define EMIT_ARG "--emit"
-#define INIT_ARG "--init"
 
 static void print_help(void) {
     printf("usage: %s [options] file...\n", name);
     printf("options:\n");
     printf("\t" HELP_ARG ": print this message\n");
     printf("\t" EAGER_ARG ": enable eager error reporting\n");
-    //printf("\t" OUTPUT_ARG "=name: set output name (default %s)\n", output);
     printf("\t" VERBOSE_ARG ": enable verbose logging\n");
     printf("\t" OPTIMIZE_ARG ": enable optimization\n");
     printf("\t" EMIT_ARG ": print debug info\n");
-    printf("\t" INIT_ARG ": initialize a new project\n");
 }
 
 static int parse_arg(int index, int argc, const char **argv) {
@@ -104,9 +90,6 @@ static int parse_arg(int index, int argc, const char **argv) {
     } else if (strcmp(arg, EMIT_ARG) == 0) {
         emit = true;
         logfmt("enabled ir debugging");
-    } else if (strcmp(arg, INIT_ARG) == 0) {
-        init = true;
-        logfmt("project init was chosen");
     } else if (!startswith(arg, "-")) {
         add_file(arg);
         logfmt("adding `%s` as a source file", arg);
@@ -127,21 +110,6 @@ static void parse_argc_argv(int argc, const char **argv) {
     }
 }
 
-static void generate_file(const char *path, const char *text) {
-    FILE *it = fopen(path, "w");
-    fwrite(text, 1, strlen(text), it);
-    fclose(it);
-}
-
-static int generate_project(void) {
-    mkdir(SOURCE_DIR, 0700);
-    generate_file(BUILD_PATH, BUILD_TEMPLATE);
-    generate_file(SOURCE_PATH, SOURCE_TEMPLATE);
-
-    printf("initialized project in currrent directory\n");
-
-    return 0;
-}
 
 int main(int argc, const char **argv) {
     name = argv[0];
@@ -156,10 +124,6 @@ int main(int argc, const char **argv) {
         return 1;
 
     report_begin(20, eager_reporting);
-
-    if (init) {
-        return generate_project();
-    }
 
     if (inputs.len == 0) {
         fprintf(stderr, "no input files\n");

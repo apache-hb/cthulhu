@@ -35,3 +35,16 @@ symbol_name_test = executable('symbol-name-test', 'symbol-name.c',
 test('decl-name-test', decl_name_test, should_fail : true)
 test('resolved-name-test', resolved_name_test, should_fail : true)
 test('symbol-name-test', symbol_name_test, should_fail : true)
+
+suffixes = [
+    'char', 'short', 'int', 'long', 
+    'uchar', 'ushort', 'uint', 'ulong',
+    'intptr', 'isize', 'intmax',
+    'uintptr', 'usize', 'uintmax'
+]
+
+foreach suffix : suffixes
+    path = 'suffix'/'test-' + suffix + '.c'
+    name = 'suffix-test-' + suffix
+    test(name, executable(name, path, dependencies : ctu))
+endforeach

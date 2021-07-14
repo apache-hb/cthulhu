@@ -5,7 +5,7 @@ pass = [
     'args', 'binary', 'call', 'func',
     'hello', 'hello2', 'implicit-bool-cast',
     'long', 'loop', 'mut', 'pointers', 'pointers2',
-    'regalloc', 'var'
+    'regalloc', 'var', 'suffix'
 ]
 
 foreach it : pass 
@@ -22,6 +22,18 @@ subdir('multiple')
 
 # TODO: find a way to test init code
 #test('init', driver, args : [ '--init' ])
+
+warn = [
+    'int-overflow'
+]
+
+foreach it : warn 
+    path = meson.current_source_dir()/'warn'/it + '.ct'
+    test('warn-' + it, driver, args : [ 
+        '--verbose', '--emit', 
+        '--speed', path 
+    ])
+endforeach
 
 
 ## tests that should fail

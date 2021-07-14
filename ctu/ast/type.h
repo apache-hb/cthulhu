@@ -93,7 +93,10 @@ typedef enum {
     INTEGER_LONG,
     INTEGER_SIZE,
     INTEGER_INTPTR,
-    INTEGER_INTMAX
+    INTEGER_INTMAX,
+
+    /* unused */
+    INTEGER_END
 } integer_t;
 
 typedef struct {
@@ -176,6 +179,8 @@ bool is_void(type_t *type);
 bool is_signed(type_t *type);
 bool is_pointer(type_t *type);
 bool is_const(type_t *type);
+
+integer_t get_integer_kind(type_t *type);
 
 type_t *set_mut(type_t *type, bool mut);
 
