@@ -41,11 +41,30 @@ typedef struct {
     regbits_t d;
 } regalloc_t;
 
+range_t range_for(flow_t *flow, size_t idx) {
+    size_t start = idx;
+    size_t end = idx;
+
+    for (size_t i = idx; i < flow->len; i++) {
+        step_t *step = step_at(flow, i);
+        if (is_vreg_used(step, idx)) {
+            end = i;
+        }
+    }
+
+    range_t range = { start, end };
+    return range;
+}
+
 regalloc_t assign_regs(flow_t *flow) {
     regalloc_t self = { 
         unused_reg(), unused_reg(), 
         unused_reg(), unused_reg() 
     };
+
+    for (size_t i = 0; i < flow->len; i++) {
+        range_for(flow, i);
+    }
 
     return self;
 }
@@ -70,6 +89,10 @@ blob_t compile_flow(flow_t *flow) {
     size_t *data = malloc(sizeof(step_data_t) * flow->len);
 
     free(data);
+
+    blob_t blob = {};
+
+    return blob;
 }
 
 void gen_x86(FILE *out, module_t *mod) {

@@ -613,6 +613,7 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
 
 static void typecheck_stmt(sema_t *sema, node_t *stmt) {
     type_t *type = VOID_TYPE;
+    sema_t *nest;
 
     switch (stmt->kind) {
     case AST_RETURN:
@@ -620,7 +621,9 @@ static void typecheck_stmt(sema_t *sema, node_t *stmt) {
         break;
 
     case AST_STMTS:
-        typecheck_stmts(base_sema(sema, 64), stmt);
+        nest = base_sema(sema, 8);
+        typecheck_stmts(nest, stmt);
+        free_sema(nest);
         break;
 
     case AST_BRANCH:

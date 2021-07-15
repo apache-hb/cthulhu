@@ -5,7 +5,7 @@ pass = [
     'args', 'binary', 'call', 'func',
     'hello', 'hello2', 'implicit-bool-cast',
     'long', 'loop', 'mut', 'pointers', 'pointers2',
-    'regalloc', 'var', 'suffix'
+    'regalloc', 'var', 'suffix', 'forward'
 ]
 
 foreach it : pass 
@@ -44,7 +44,7 @@ test('fail-no-files', driver, args : [ '--verbose' ],
 fail = [ 
     'incorrect-return1',
     'incorrect-return2',
-    'invalid-char'
+    'invalid-char', 'scope', 'bad-return'
 ]
 
 foreach it : fail 
