@@ -1,0 +1,7 @@
+def x(): void {
+    var i = 0;
+    {
+        var y = a;
+    }
+    var a = i;
+}
