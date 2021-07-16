@@ -223,7 +223,7 @@ bool report_end(const char *name) {
     return fatal != 0;
 }
 
-static const where_t NOWHERE = { 0, 0, 0, 0 };
+const where_t NOWHERE = { 0, 0, 0, 0 };
 
 void ensure(const char *fmt, ...) {
     va_list args;

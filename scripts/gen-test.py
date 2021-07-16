@@ -25,8 +25,6 @@ def gen_test(it):
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
 
-static where_t NOWHERE = {{ 0, 0, 0, 0 }};
-
 int main(void) {{
     report_begin(20, true);
 

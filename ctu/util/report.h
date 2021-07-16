@@ -64,6 +64,7 @@ void report_underline(reportid_t id, const char *msg);
 void report_note(reportid_t id, const char *note);
 
 extern bool verbose;
+extern const where_t NOWHERE;
 
 /**
  * log a message 

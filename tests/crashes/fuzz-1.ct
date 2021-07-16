@@ -1,0 +1,11 @@
+def fac(i: int): int {
+    var acc = 1;
+
+    var j = 1;
+    while j <= i {
+        acc =&acc * j;
+        j = j + 1;
+    }
+
+    return acc;
+}

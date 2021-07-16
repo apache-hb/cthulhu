@@ -54,3 +54,15 @@ foreach it : fail
         should_fail : true
     )
 endforeach
+
+crashes = [ 
+    'fuzz-1', 'fuzz-2'
+]
+
+foreach it : crashes 
+    path = meson.current_source_dir()/'crashes'/it + '.ct'
+    test('fail-' + it, driver, 
+        args : [ '--verbose', '--emit', '--speed', path ],
+        should_fail : true
+    )
+endforeach
