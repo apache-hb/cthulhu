@@ -90,7 +90,11 @@ blob_t compile_flow(flow_t *flow) {
 
     free(data);
 
-    blob_t blob = {};
+    blob_t blob = {
+#ifdef _WIN32
+        NULL, 0
+#endif
+    };
 
     return blob;
 }

@@ -3,7 +3,10 @@
 
 #include "compile.h"
 
-#include <sys/mman.h>
+#ifndef _WIN32
+#   include <sys/mman.h>
+#endif
+
 #include <stdio.h>
 
 #include "ctu/util/report.h"
@@ -40,8 +43,17 @@ static scanner_t *new_str_scanner(const char *path, const char *str) {
 static scanner_t *new_file_scanner(const char *path, FILE *file) {
     size_t size = file_size(file);
     scanner_t *scanner = new_scanner(path, size);
+
+#ifndef _WIN32
     int fd = fileno(file);
     scanner->text = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
+#else
+    char *text = ctu_malloc(size + 1);
+    fread(text, 1, size, file);
+    text[size] = '\0';
+    scanner->text = text;
+#endif
+
     return scanner;
 }
 
