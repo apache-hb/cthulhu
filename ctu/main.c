@@ -7,6 +7,7 @@
 #include "ir/ir.h"
 #include "speed/speed.h"
 #include "gen/c99.h"
+#include "gen/x86.h"
 #include "ctu/util/util.h"
 
 #include <stdlib.h>
@@ -24,6 +25,9 @@ static bool speed = false;
 
 /* should the ir be dumped */
 static bool emit = false;
+
+/* should we print c99 or generate native x86 binaries */
+static bool c99 = false;
 
 typedef struct {
     const char *path;
@@ -60,6 +64,7 @@ static void add_file(const char *path) {
 #define VERBOSE_ARG "--verbose"
 #define OPTIMIZE_ARG "--speed"
 #define EMIT_ARG "--emit"
+#define C99_ARG "--c99"
 
 static void print_help(void) {
     printf("usage: %s [options] file...\n", name);
@@ -69,6 +74,7 @@ static void print_help(void) {
     printf("\t" VERBOSE_ARG ": enable verbose logging\n");
     printf("\t" OPTIMIZE_ARG ": enable optimization\n");
     printf("\t" EMIT_ARG ": print debug info\n");
+    printf("\t" C99_ARG ": enable C99 output\n");
 }
 
 static int parse_arg(int index, int argc, const char **argv) {
@@ -90,6 +96,9 @@ static int parse_arg(int index, int argc, const char **argv) {
     } else if (strcmp(arg, EMIT_ARG) == 0) {
         emit = true;
         logfmt("enabled ir debugging");
+    } else if (strcmp(arg, C99_ARG) == 0) {
+        c99 = true;
+        logfmt("emitting c99");
     } else if (!startswith(arg, "-")) {
         add_file(arg);
         logfmt("adding `%s` as a source file", arg);
@@ -110,6 +119,19 @@ static void parse_argc_argv(int argc, const char **argv) {
     }
 }
 
+/**
+ * open a file for writing and log if it fails to open 
+ * then return NULL or the opened file
+ */
+static FILE *open_file(const char *path) {
+    FILE *file = fopen(path, "w");
+    if (file == NULL) {
+        ensure("failed to open `%s` for writing", path);
+        return NULL;
+    }
+    logfmt("opened `%s` for writing", path);
+    return file;
+}
 
 int main(int argc, const char **argv) {
     name = argv[0];
@@ -172,65 +194,6 @@ int main(int argc, const char **argv) {
             while (run_pass(&pass));
         }
 
-        /*
-        size_t passes = 0;
-
-        while (speed) {
-            logfmt("beginning optimization pass %zu", passes + 1);
-            size_t dirty_stages = 0;
-
-            if (remove_unused_blocks(mod)) {
-                logfmt("removed unused blocks");
-                dirty_stages += 1;
-            }
-
-            if (mem2reg(mod)) {
-                logfmt("reduced memory");
-                dirty_stages += 1;
-            }
-
-            if (propogate_consts(mod)) {
-                logfmt("propogated values");
-                dirty_stages += 1;
-            }
-
-            if (remove_unused_code(mod)) {
-                logfmt("removed unreferenced vregs");
-                dirty_stages += 1;
-            }
-
-            if (remove_empty_blocks(mod)) {
-                logfmt("removed empty blocks");
-                dirty_stages += 1;
-            }
-
-            if (remove_branches(mod)) {
-                logfmt("removed excess branches");
-                dirty_stages += 1;
-            }
-
-            if (remove_jumps(mod)) {
-                logfmt("removed excess jumps");
-                dirty_stages += 1;
-            }
-
-            if (remove_pure_code(mod)) {
-                logfmt("removed unused pure operations");
-                dirty_stages += 1;
-            }
-
-            if (fold_consts(mod)) {
-                logfmt("folded constant expressions");
-                dirty_stages += 1;
-            }
-
-            if (dirty_stages == 0) {
-                break;
-            }
-
-            passes += 1;
-        }*/
-
         if (emit) {
             debug_module(*mod);
         }
@@ -238,7 +201,17 @@ int main(int argc, const char **argv) {
         if (report_end("optimize"))
             return 1;
 
-        gen_c99(fopen("test.c", "w"), mod);
+        if (c99) {
+            FILE *out = open_file("out.c");
+            if (out) {
+                gen_c99(out, mod);
+            }
+        } else {
+            FILE *out = open_file("out.o");
+            if (out) {
+                gen_x86(out, mod);
+            }
+        }
 
         if (report_end("generate"))
             return 1;

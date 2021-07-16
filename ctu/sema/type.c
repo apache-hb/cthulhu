@@ -248,7 +248,8 @@ static bool convertible_to(
                 reportid_t report = reportf(LEVEL_WARNING, *node, "implicit integer to boolean conversion");
                 report_underline(report, "conversion happens here");
                 report_note(report, "add an explicit cast to silence this warning");
-                *node = implicit_cast(*node, to);
+                node_t *temp = implicit_cast(*node, to);
+                *node = temp;
             }
 
             return true;
@@ -373,10 +374,12 @@ static void check_binary_cmp(node_t* node, type_t *lhs, type_t *rhs) {
     }
 }
 
-static void check_binary_math(node_t* node, type_t *lhs, type_t *rhs) {
+static bool check_binary_math(node_t* node, type_t *lhs, type_t *rhs) {
     if (!is_integer(lhs) || !is_integer(rhs)) {
         reportf(LEVEL_ERROR, node, "both sides of math operation must be integral");
+        return false;
     }
+    return true;
 }
 
 static void check_binary_equality(node_t* node, type_t *lhs, type_t *rhs) {
@@ -413,12 +416,12 @@ static type_t *typecheck_binary(sema_t *sema, node_t *expr) {
     } else if (is_equality_op(op)) {
         check_binary_equality(expr, lhs, rhs);
     } else if (is_math_op(op)) {
-        result = get_binary_math_type(lhs, rhs);
-
-        check_binary_math(expr, lhs, rhs);
+        if (check_binary_math(expr, lhs, rhs)) {
+            result = get_binary_math_type(lhs, rhs);
+        }
     } else {
-        result = new_poison(expr, "unknown operation");
-    }
+            result = new_poison(expr, "unknown operation");
+        }
 
     return result;
 }
@@ -428,7 +431,9 @@ static bool is_lvalue(node_t *expr) {
 }
 
 static bool is_assignable(type_t *type, node_t *expr) {
-    if (expr->kind == AST_UNARY && expr->unary == UNARY_DEREF)
+    if (
+        expr->kind == AST_UNARY 
+        && expr->unary == UNARY_DEREF)
         return is_assignable(type, expr->expr);
 
     if (expr->kind == AST_SYMBOL)
@@ -558,15 +563,15 @@ static type_t *typecheck_var(sema_t *sema, node_t *decl) {
 }
 
 static void typecheck_assign(sema_t *sema, node_t *decl) {
-    type_t *dst = typecheck_expr(sema, decl->dst),
-           *src = typecheck_expr(sema, decl->src);
-
-    if (!implicit_convertible_to(&decl, dst, src)) {
-        reportf(LEVEL_ERROR, decl, "cannot assign unrelated types");
-    }
+    type_t *dst = typecheck_expr(sema, decl->dst);
+    type_t *src = typecheck_expr(sema, decl->src);
 
     if (!is_assignable(dst, decl->dst)) {
         reportf(LEVEL_ERROR, decl, "cannot assign to a non-lvalue");
+    }
+
+    if (!implicit_convertible_to(&decl, dst, src)) {
+        reportf(LEVEL_ERROR, decl, "cannot assign unrelated types");
     }
 }
 

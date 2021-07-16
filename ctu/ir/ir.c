@@ -51,8 +51,6 @@ operand_t new_block(size_t label) {
     return op;
 }
 
-static where_t NOWHERE = { 0, 0, 0, 0 };
-
 static step_t new_typed_step(opcode_t op, type_t *type) {
     step_t step = { 
         /* opcode */ op, 

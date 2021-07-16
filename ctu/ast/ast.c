@@ -384,8 +384,6 @@ node_t *ast_mut(scanner_t *scanner, where_t where, node_t *it) {
     return node;
 }
 
-static const where_t NOWHERE = { 0, 0, 0, 0 };
-
 node_t *ast_type(const char *name) {
     node_t *node = new_node(NULL, NOWHERE, AST_TYPE);
     node->nameof = name;

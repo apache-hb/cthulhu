@@ -4,8 +4,6 @@
 #include "ctu/util/str.h"
 #include "ctu/util/report.h"
 
-static where_t NOWHERE = { 0, 0, 0, 0 };
-
 int main(void) {
     report_begin(1, true);
     
