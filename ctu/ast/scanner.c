@@ -24,12 +24,11 @@ void flex_init(where_t *where, int line) {
 int flex_get(scanner_t *scanner, char *out, int size) {
     size_t total = MIN(scanner->size - scanner->offset, (size_t)size);
     
-    
     memcpy(out, scanner->text + scanner->offset, total);
     
     scanner->offset += total;
 
-    return total;
+    return (int)total;
 }
 
 void flex_update(where_t *where, const char *text) {

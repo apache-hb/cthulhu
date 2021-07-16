@@ -31,13 +31,20 @@ static char *gen_callable(type_t *type, const char *name) {
     char *body = format("(*%s)", name ? name : "");
     
     size_t nargs = type->args->size;
-    const char **args = ctu_malloc(sizeof(char*) * nargs);
+    
+    // make a copy of this pointer list so we can store const pointers
+    // in it and still be able to free it later
+    char **args = ctu_malloc(sizeof(char*) * nargs);
 
     for (size_t i = 0; i < nargs; i++) {
-        args[i] = gen_type(type->args->data[i], NULL);
+        /**
+         * why are you casting a const char* to a char* you may ask?
+         * because i know better than the compiler, thats why.
+         */
+        args[i] = (char*)gen_type(type->args->data[i], NULL);
     }
 
-    char *out = format("%s%s(%s)", ret, body, str_join(", ", args, nargs));
+    char *out = format("%s%s(%s)", ret, body, str_join(", ", (const char **)args, nargs));
     free(args);
 
     return out;

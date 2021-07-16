@@ -48,7 +48,7 @@ static void init_inputs(void) {
 }
 
 static void add_file(const char *path) {
-    FILE *file = fopen(path, "r");
+    FILE *file = fopen(path, "rb");
     ENSURE(file != NULL)("failed to open file `%s`", path);
 
     if (inputs.len + 1 > inputs.size) {
