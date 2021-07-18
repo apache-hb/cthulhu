@@ -40,7 +40,7 @@ SUFFIX [u]?[csilzpm]?
 "export" { return EXPORTED; }
 
 "$" { yylval->text = "$"; return IDENT; }
-[a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval->text = intern(yytext); return IDENT; }
 
 [0-9]+{SUFFIX} { 
     yylval->digit.text = strdup(yytext); 

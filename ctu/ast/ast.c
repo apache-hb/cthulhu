@@ -387,7 +387,7 @@ node_t *ast_mut(scanner_t *scanner, where_t where, node_t *it) {
 
 node_t *ast_type(const char *name) {
     node_t *node = new_node(NULL, NOWHERE, AST_TYPE);
-    node->nameof = name;
+    node->nameof = intern(name);
     return node;
 }
 

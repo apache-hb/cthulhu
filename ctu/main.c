@@ -136,6 +136,7 @@ static FILE *open_file(const char *path) {
 int main(int argc, const char **argv) {
     name = argv[0];
 
+    init_pool();
     init_inputs();
 
     report_begin(20, false);

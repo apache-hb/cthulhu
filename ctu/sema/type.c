@@ -26,6 +26,8 @@ typedef struct sema_t {
  * constants
  */
 
+set_t *pool = NULL;
+
 static type_t *INT_TYPES[INTEGER_END];
 static type_t *UINT_TYPES[INTEGER_END];
 
@@ -763,6 +765,7 @@ static void add_uint(int kind, const char *name) {
 
 void sema_init(void) {
     ROOT_SEMA = new_sema(NULL);
+    pool = new_set(256);
 
     add_int(INTEGER_CHAR, "char");
     add_int(INTEGER_SHORT, "short");
