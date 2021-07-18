@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "ctu/util/util.h"
+
 typedef struct {
     const char *path;
     void *ast;

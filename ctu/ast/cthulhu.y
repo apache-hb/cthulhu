@@ -205,7 +205,7 @@ type: typename { $$ = $1; }
 pointer: MUL type { $$ = ast_pointer(x, @$, $2); }
     ;
 
-typename: IDENT { $$ = ast_symbol(x, @$, strdup($1)); }
+typename: IDENT { $$ = ast_symbol(x, @$, intern($1)); }
     ;
 
 /**
