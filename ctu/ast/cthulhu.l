@@ -4,6 +4,8 @@
 %option reentrant bison-bridge bison-locations
 %option never-interactive batch
 
+SUFFIX [u]?[csilzpm]?
+
 %{
 #include "bison.h"
 #include "ctu/ast/scanner.h"
@@ -40,19 +42,19 @@
 "$" { yylval->text = "$"; return IDENT; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
 
-[0-9]+[u]?[csilzpm]? { 
+[0-9]+{SUFFIX} { 
     yylval->digit.text = strdup(yytext); 
     yylval->digit.base = 10;
     return DIGIT; 
 }
 
-"0b"[01]+[u]?[csilzpm]? { 
+"0b"[01]+{SUFFIX} { 
     yylval->digit.text = strdup(yytext + 2); 
     yylval->digit.base = 2;
     return DIGIT; 
 }
 
-"0x"[0-9a-fA-F]+[u]?[csilzpm]? { 
+"0x"[0-9a-fA-F]+{SUFFIX} { 
     yylval->digit.text = strdup(yytext + 2);
     yylval->digit.base = 16;
     return DIGIT; 
@@ -82,6 +84,8 @@
 ":" { return COLON; }
 "," { return COMMA; }
 "=" { return ASSIGN; }
+
+"@" { return AT; }
 
 \0 { return END; }
 

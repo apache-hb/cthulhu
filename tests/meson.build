@@ -5,7 +5,8 @@ pass = [
     'args', 'binary', 'call', 'func',
     'hello', 'hello2', 'implicit-bool-cast',
     'long', 'loop', 'mut', 'pointers', 'pointers2',
-    'regalloc', 'var', 'suffix', 'forward'
+    'regalloc', 'var', 'suffix', 'forward', 'global',
+    'unused-var'
 ]
 
 foreach it : pass 
@@ -24,7 +25,7 @@ subdir('multiple')
 #test('init', driver, args : [ '--init' ])
 
 warn = [
-    'int-overflow'
+    'int-overflow', 'mod-by-zero'
 ]
 
 foreach it : warn 
@@ -34,7 +35,6 @@ foreach it : warn
         '--speed', path 
     ])
 endforeach
-
 
 ## tests that should fail
 test('fail-no-files', driver, args : [ '--verbose' ], 

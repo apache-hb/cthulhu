@@ -369,10 +369,11 @@ node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *ty
     return node;
 }
 
-node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, node_t *init) {
+node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, node_t *type, node_t *init) {
     node_t *node = new_decl(scanner, where, AST_DECL_VAR, name);
 
     node->mut = mut;
+    node->type = type;
     node->init = init;
 
     return node;

@@ -77,26 +77,19 @@ static void debug_branch(node_t *node) {
 
 static void debug_var(node_t *node) {
     printf("var %s ", node->name);
-    debug_ast(node->init);
-}
-
-static const char *fmt_where(where_t where) {
-    return format("[%" PRId64 ":%" PRId64 ":%" PRId64 ":%" PRId64 "]", 
-        where.first_line, 
-        where.first_column,
-        where.last_line,
-        where.last_column
-    );
+    if (node->init) {
+        debug_ast(node->init);
+        if (node->type) {
+            printf(" ");
+        }
+    }
+    if (node->type) {
+        debug_ast(node->type);
+    }
 }
 
 void debug_ast(node_t *node) {
-    printf("(%p:%s:%d:%d:%d ", 
-        node->scanner, 
-        fmt_where(node->where), 
-        node->implicit, 
-        node->exported, 
-        node->mut
-    );
+    printf("(");
     switch (node->kind) {
     case AST_DIGIT: debug_digit(node); break;
     case AST_UNARY: debug_unary(node); break;

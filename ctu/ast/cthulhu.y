@@ -52,6 +52,8 @@ void yyerror();
     EQ "`==`"
     NEQ "`!=`"
 
+    AT "`@`"
+
 %token
     LPAREN "`(`"
     RPAREN "`)`"
@@ -82,7 +84,7 @@ void yyerror();
     END 0 "end of file"
 
 %type<node>
-    decl function param variable /* declarations */
+    decl declbase function param variable /* declarations */
     type typename pointer /* types */
     stmt stmts return if else elseif branch assign while /* statements */
     primary postfix unary multiply add compare equality expr /* expressions */
@@ -109,8 +111,12 @@ unit: decl { x->ast = ast_list($1); }
     | unit decl { ast_append(x->ast, $2); }
     ;
 
-decl: function { $$ = $1; }
-    | EXPORTED function { $$ = make_exported($2); }
+decl: declbase { $$ = $1; }
+    | EXPORTED declbase { $$ = make_exported($2); }
+    ;
+
+declbase: function { $$ = $1; }
+    | variable { $$ = $1; }
     ;
 
 function: DEF IDENT params COLON type stmts { 
@@ -123,7 +129,9 @@ function: DEF IDENT params COLON type stmts {
     }
     ;
 
-variable: mut IDENT ASSIGN expr SEMI { $$ = ast_decl_var(x, @$, $1, $2, $4); }
+variable: mut IDENT ASSIGN expr SEMI { $$ = ast_decl_var(x, @$, $1, $2, NULL, $4); }
+    | mut IDENT COLON type SEMI { $$ = ast_decl_var(x, @$, $1, $2, $4, NULL); }
+    | mut IDENT COLON type ASSIGN expr SEMI { $$ = ast_decl_var(x, @$, $1, $2, $4, $6); }
     ;
 
 mut: VAR { $$ = true; }

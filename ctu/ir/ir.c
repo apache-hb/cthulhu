@@ -39,6 +39,12 @@ static operand_t new_func(size_t idx) {
     return op;
 }
 
+static operand_t new_var(size_t idx) {
+    operand_t op = new_operand(VAR);
+    op.var = idx;
+    return op;
+}
+
 static operand_t new_arg(size_t idx) {
     operand_t op = new_operand(ARG);
     op.arg = idx;
@@ -179,13 +185,21 @@ static bool is_deref(node_t *node) {
         && node->unary == UNARY_DEREF;
 }
 
-static operand_t get_func(flow_t *flow, node_t *node) {
+static operand_t get_global(flow_t *flow, node_t *node) {
     const char *name = get_symbol_name(node);
     for (size_t i = 0; i < num_flows(flow->mod); i++) {
         const char *it = flow->mod->flows[i].name;
 
         if (strcmp(it, name) == 0) {
             return new_func(i);
+        }
+    }
+
+    for (size_t i = 0; i < num_vars(flow->mod); i++) {
+        const char *it = flow->mod->vars[i].name;
+
+        if (strcmp(it, name) == 0) {
+            return new_var(i);
         }
     }
 
@@ -200,7 +214,7 @@ static operand_t get_lvalue(flow_t *flow, node_t *node) {
     }
 
     if (node->local == NOT_LOCAL) {
-        return get_func(flow, node);
+        return get_global(flow, node);
     }
 
     return new_vreg(flow->locals[node->local]);
@@ -314,7 +328,7 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
     /**
      * first try all functions
      */
-    local = get_func(flow, node);
+    local = get_global(flow, node);
     if (operand_is_invalid(local)) {
         return local;
     }
@@ -371,18 +385,27 @@ static void set_local(flow_t *flow, size_t idx, operand_t to) {
 }
 
 static operand_t emit_var(flow_t *flow, node_t *node) {
-    operand_t val = emit_opcode(flow, node->init);
+    
+    operand_t val;
+    if (node->init) {
+        val = emit_opcode(flow, node->init);
+    } else {
+        val = new_operand(NONE);
+    }
 
     operand_t out = add_reserve(flow, node);
 
-    step_t step = new_step(OP_STORE, node);
-    step.dst = out;
-    step.src = val;
+    if (!operand_is_invalid(val)) {
+        step_t step = new_step(OP_STORE, node);
+        step.dst = out;
+        step.src = val;
+        add_vreg(flow, step);
+    }
 
     /* store the vreg into the local variable table */
     set_local(flow, node->local, out);
 
-    return add_vreg(flow, step);
+    return out;
 }
 
 static operand_t emit_assign(flow_t *flow, node_t *node) {
@@ -515,19 +538,68 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     return flow;
 }
 
+static var_t compile_var(module_t *mod, node_t *node) {
+    ASSERT(node->kind == AST_DECL_VAR)("compile_var requires a variable");
+
+    (void) mod;
+
+    var_t var = { 
+        get_decl_name(node), 
+        get_type(node),
+
+        is_exported(node),
+        is_used(node)
+    };
+
+    return var;
+}
+
+static size_t count_decls(nodes_t *nodes, ast_t kind) {
+    size_t count = 0;
+    for (size_t i = 0; i < ast_len(nodes); i++) {
+        node_t *node = ast_at(nodes, i);
+        if (node->kind == kind) {
+            count++;
+        }
+    }
+    return count;
+}
+
 module_t *compile_module(const char *name, nodes_t *nodes) {
-    size_t len = ast_len(nodes);
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
-    mod->flows = ctu_malloc(sizeof(flow_t) * len);
-    mod->nflows = len;
+   
+    /**
+     * TODO: allocate the minimum amount needed
+     */
+    mod->nflows = count_decls(nodes, AST_DECL_FUNC);
+    mod->flows = ctu_malloc(sizeof(flow_t) * mod->nflows);
     
-    for (size_t i = 0; i < len; i++) {
-        mod->flows[i].name = get_decl_name(ast_at(nodes, i));
+    mod->nvars = count_decls(nodes, AST_DECL_VAR);
+    mod->vars = ctu_malloc(sizeof(var_t) * mod->nvars);
+
+    size_t len = ast_len(nodes);
+
+    size_t flow_idx = 0;
+    size_t var_idx = 0;
+    for (size_t idx = 0; idx < len; idx++) {
+        node_t *decl = ast_at(nodes, idx);
+        if (decl->kind == AST_DECL_FUNC) {
+            mod->flows[flow_idx++].name = get_decl_name(decl);
+        } else {
+            mod->vars[var_idx++].name = get_decl_name(decl);
+        }
     }
 
+    flow_idx = 0;
+    var_idx = 0;
     for (size_t i = 0; i < len; i++) {
-        mod->flows[i] = compile_flow(mod, ast_at(nodes, i));
+        node_t *decl = ast_at(nodes, i);
+        if (decl->kind == AST_DECL_FUNC) {
+            mod->flows[flow_idx++] = compile_flow(mod, decl);
+        } else {
+            mod->vars[var_idx++] = compile_var(mod, decl);
+        }
     }
 
     return mod;
@@ -539,4 +611,8 @@ step_t *step_at(flow_t *flow, size_t idx) {
 
 size_t num_flows(module_t *mod) {
     return mod->nflows;
+}
+
+size_t num_vars(module_t *mod) {
+    return mod->nvars;
 }
