@@ -4,7 +4,6 @@
 #include "ctu/util/report.h"
 
 int main(void) {
-    init_pool();
     report_begin(1, true);
     
     nodes_t *nodes = compile_string("test/main", 
