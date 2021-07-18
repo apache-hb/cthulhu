@@ -41,8 +41,8 @@ typedef struct {
         
         IMM, /* an immediate value */
         
-        FUNC, /* another flow in the current unit */
-        GLOBAL, /* a global variable */
+        FUNC, /* a global function */
+        VAR, /* a global variable */
         
         NONE /* nothing */
     } kind;
@@ -178,6 +178,20 @@ typedef struct {
     bool used:1;
 } flow_t;
 
+/**
+ * a single variable
+ */
+typedef struct {
+    /* the name of this variable */
+    const char *name;
+
+    /* the type of this variable */
+    type_t *type;
+
+    bool exported:1;
+    bool used:1;
+} var_t;
+
 step_t *step_at(flow_t *flow, size_t idx);
 
 /**
@@ -185,10 +199,17 @@ step_t *step_at(flow_t *flow, size_t idx);
  */
 typedef struct module_t {
     const char *name;
+
+    /* functions in the current module */
     flow_t *flows;
     size_t nflows;
+
+    /* variables in the current module */
+    var_t *vars;
+    size_t nvars;
 } module_t;
 
 size_t num_flows(module_t *mod);
+size_t num_vars(module_t *mod);
 
 module_t *compile_module(const char *name, nodes_t *nodes);

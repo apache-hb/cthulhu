@@ -365,7 +365,7 @@ node_t *ast_decl_func(
     node_t *result, node_t *body
 );
 node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *type);
-node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, node_t *init);
+node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, node_t *type, node_t *init);
 
 /**
  * create a builtin type

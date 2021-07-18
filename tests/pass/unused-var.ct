@@ -1,0 +1,8 @@
+var x: int;
+
+def f(y: int): int {
+    return x + y;
+    var z: bool;
+}
+
+export def main(): int {}

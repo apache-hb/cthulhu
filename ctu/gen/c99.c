@@ -132,26 +132,29 @@ static char *genarg(size_t idx) {
     return out;
 }
 
-static bool should_emit_func(flow_t *flow) {
-    return flow->exported || flow->used;
-}
+#define SHOULD_EMIT(it) (it->exported || it->used)
 
 static void gen_func_decl(FILE *out, flow_t *flow, bool omit_names) {
     if (!flow->exported) {
         fprintf(out, "static ");
     }
     fprintf(out, "%s %s(", gen_type(flow->result, NULL), flow->name);
-    for (size_t i = 0; i < flow->nargs; i++) {
-        if (i != 0) {
-            fprintf(out, ", ");
+    
+    if (flow->nargs == 0) {
+        fprintf(out, "void");
+    } else {
+        for (size_t i = 0; i < flow->nargs; i++) {
+            if (i != 0) {
+                fprintf(out, ", ");
+            }
+            arg_t *arg = flow->args + i;
+            const char *name = NULL;
+            if (!omit_names) {
+                name = genarg(i);
+            }
+            /* omit argument names if function predefines */
+            fprintf(out, "%s", gen_type(arg->type, name));
         }
-        arg_t *arg = flow->args + i;
-        const char *name = NULL;
-        if (!omit_names) {
-            name = genarg(i);
-        }
-        /* omit argument names if function predefines */
-        fprintf(out, "%s", gen_type(arg->type, name));
     }
     fprintf(out, ")");
 }
@@ -177,7 +180,7 @@ static char *local(size_t idx) {
     return format("local%zu", idx);
 }
 
-static char *global(size_t idx) {
+static char *gen_var(size_t idx) {
     return format("global%zu", idx);
 }
 
@@ -191,7 +194,7 @@ static const char *gen_operand(flow_t *flow, operand_t op) {
     case VREG: return local(op.vreg);
     case IMM: return gen_imm(op.imm);
     case FUNC: return gen_func(flow->mod, op.func);
-    case GLOBAL: return global(op.var);
+    case VAR: return gen_var(op.var);
     case ARG: return genarg(op.arg);
 
     case NONE:
@@ -325,11 +328,13 @@ static void gen_flow(FILE *out, flow_t *flow) {
         gen_step(out, flow, i);
     }
 
-    for (size_t i = 0; i < flow->len; i++) {
-
-    }
-
     fprintf(out, "}\n\n");
+}
+
+static void gen_global(FILE *out, var_t *var, size_t idx) {
+    fprintf(out, "%s[1];\n", 
+        gen_type(var->type, gen_var(idx))
+    );
 }
 
 void gen_c99(FILE *out, module_t *mod) {
@@ -342,11 +347,17 @@ void gen_c99(FILE *out, module_t *mod) {
     add_include(out, "stdint");
     add_include(out, "stddef");
 
+    for (size_t i = 0; i < num_vars(mod); i++) {
+        var_t *var = mod->vars + i;
+        if (SHOULD_EMIT(var))
+            gen_global(out, var, i);
+    }
+
     line(out);
 
     for (size_t i = 0; i < num_flows(mod); i++) {
         flow_t *flow = mod->flows + i;
-        if (should_emit_func(flow))
+        if (SHOULD_EMIT(flow))
             def_flow(out, mod->flows + i);
     }
 
@@ -354,7 +365,7 @@ void gen_c99(FILE *out, module_t *mod) {
 
     for (size_t i = 0; i < num_flows(mod); i++) {
         flow_t *flow = mod->flows + i;
-        if (should_emit_func(flow))
+        if (SHOULD_EMIT(flow))
             gen_flow(out, mod->flows + i);
     }
 

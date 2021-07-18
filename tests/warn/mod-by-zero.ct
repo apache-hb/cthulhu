@@ -1,0 +1,11 @@
+var x: int;
+var z: bool;
+
+def f(y: int): int {
+    return x + y;
+}
+
+export def main(): int {
+    x = 1%0;
+    return f(200);
+}

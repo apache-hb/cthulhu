@@ -41,6 +41,19 @@ static step_t fold_div(step_t *step, int64_t lhs, int64_t rhs, bool *dirty) {
     return new_value(step, new_int(lhs / rhs));
 }
 
+static step_t fold_rem(step_t *step, int64_t lhs, int64_t rhs, bool *dirty) {
+    if (rhs == 0) {
+        /**
+         * same case as divide but for modulo
+         */
+        report(LEVEL_WARNING, step->source, step->where, "right hand side of modulo evaluates to zero");
+        return *step;
+    }
+
+    *dirty = true;
+    return new_value(step, new_int(lhs % rhs));
+}
+
 static step_t fold_math_op(step_t *step, bool *dirty) {
     int64_t lhs = operand_get_int(step->lhs),
             rhs = operand_get_int(step->rhs);
@@ -54,12 +67,11 @@ static step_t fold_math_op(step_t *step, bool *dirty) {
         return new_value(step, new_int(lhs - rhs));
     case BINARY_DIV: 
         return fold_div(step, lhs, rhs, dirty);
+    case BINARY_REM: 
+        return fold_rem(step, lhs, rhs, dirty);
     case BINARY_MUL: 
         *dirty = true;
         return new_value(step, new_int(lhs * rhs));
-    case BINARY_REM: 
-        *dirty = true;
-        return new_value(step, new_int(lhs % rhs));
     default: 
         assert("invalid math op when folding");
         return *step;

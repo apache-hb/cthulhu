@@ -80,6 +80,7 @@ static void add_decl(sema_t *sema, node_t *decl) {
 static node_t *get_decl(sema_t *sema, const char *name) {
     node_t *decl = map_get(sema->decls, name);
     if (decl) {
+        mark_used(decl);
         return decl;
     }
 
@@ -530,7 +531,6 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
 
     case AST_SYMBOL:
         type = resolve_symbol(sema, expr);
-        mark_used(type->node);
         break;
 
     case AST_CALL:
@@ -553,13 +553,32 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
 }
 
 static type_t *typecheck_var(sema_t *sema, node_t *decl) {
-    type_t *type = typecheck_expr(sema, decl->init);
+    type_t *type = NULL;
+    type_t *init = NULL;
 
-    type->mut = decl->mut;
+    type_t *var = NULL;
 
-    connect_type(decl, type);
+    if (decl->type) {
+        type = resolve_type(sema, decl->type);
+        var = type;
+    }
 
-    return type;
+    if (decl->init) {
+        init = typecheck_expr(sema, decl->init);
+        var = init;
+    }
+
+    if (type && init) {
+        if (!implicit_convertible_to(&decl, type, init)) {
+            reportf(LEVEL_ERROR, decl, "variable type and initializer are incompatible");
+        }
+    }
+
+    var->mut = decl->mut;
+
+    connect_type(decl, var);
+
+    return var;
 }
 
 static void typecheck_assign(sema_t *sema, node_t *decl) {
@@ -691,10 +710,17 @@ static void add_all_decls(sema_t *sema, nodes_t *decls) {
     size_t len = ast_len(decls);
 
     for (size_t i = 0; i < len; i++) {
-        node_t *decl = ast_kind_at(decls, i, AST_DECL_FUNC);
-        typecheck_func(sema, decl);
+        node_t *decl = ast_at(decls, i);
+        if (decl->kind == AST_DECL_FUNC)
+            typecheck_func(sema, decl);
+        else
+            typecheck_var(sema, decl);
         add_decl_global(sema, decl);
     }
+}
+
+static void validate_var(sema_t *sema, node_t *var) {
+    typecheck_decl(sema, var);
 }
 
 static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {
@@ -703,9 +729,13 @@ static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {
     size_t len = ast_len(decls);
 
     for (size_t i = 0; i < len; i++) {
-        node_t *decl = ast_kind_at(decls, i, AST_DECL_FUNC);
-        validate_function(sema, decl);
-        decl->locals = reset_locals();
+        node_t *decl = ast_at(decls, i);
+        if (decl->kind == AST_DECL_VAR) {
+            validate_var(sema, decl);
+        } else {
+            validate_function(sema, decl);
+            decl->locals = reset_locals();
+        }
     }
 }
 

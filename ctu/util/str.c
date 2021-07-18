@@ -21,6 +21,15 @@ bool startswith(const char *str, const char *other) {
     return strncmp(str, other, strlen(other)) == 0;
 }
 
+size_t str_find(const char *str, const char *substr) {
+    const char *idx = strstr(str, substr);
+    if (idx) {
+        return idx - str;
+    }
+
+    return 0;
+}
+
 char *format(const char *fmt, ...) {
     va_list args;
 

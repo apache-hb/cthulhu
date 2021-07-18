@@ -6,6 +6,10 @@ static const char *get_flow_name(module_t *mod, size_t idx) {
     return mod->flows[idx].name;
 }
 
+static const char *get_var_name(module_t *mod, size_t idx) {
+    return mod->vars[idx].name;
+}
+
 static void debug_imm(imm_t imm) {
     switch (imm.kind) {
     case IMM_INT: printf("int(%" PRId64 ")", imm.imm_int); break;
@@ -22,7 +26,7 @@ static void debug_operand(module_t *mod, operand_t op) {
     case NONE: printf("none"); break;
     case BLOCK: printf(".%zu", op.label); break;
     case FUNC: printf("def(%zu:%s)", op.func, get_flow_name(mod, op.func)); break;
-    case GLOBAL: printf("var(%zu:%s)", op.var, "TODO"); break;
+    case VAR: printf("var(%zu:%s)", op.var, get_var_name(mod, op.var)); break;
     }
 }
 
