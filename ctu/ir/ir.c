@@ -190,7 +190,7 @@ static operand_t get_global(flow_t *flow, node_t *node) {
     for (size_t i = 0; i < num_flows(flow->mod); i++) {
         const char *it = flow->mod->flows[i].name;
 
-        if (it == name) {
+        if (strcmp(it, name) == 0) {
             return new_func(i);
         }
     }
@@ -198,7 +198,7 @@ static operand_t get_global(flow_t *flow, node_t *node) {
     for (size_t i = 0; i < num_vars(flow->mod); i++) {
         const char *it = flow->mod->vars[i].name;
 
-        if (it == name) {
+        if (strcmp(it, name) == 0) {
             return new_var(i);
         }
     }
