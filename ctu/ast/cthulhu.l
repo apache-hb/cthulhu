@@ -60,6 +60,9 @@ SUFFIX [u]?[csilzpm]?
     return DIGIT; 
 }
 
+"." { return DOT; }
+"->" { return ARROW; }
+
 ">=" { return GTE; }
 "<=" { return LTE; }
 ">" { return GT; }
@@ -84,8 +87,6 @@ SUFFIX [u]?[csilzpm]?
 ":" { return COLON; }
 "," { return COMMA; }
 "=" { return ASSIGN; }
-
-"@" { return AT; }
 
 \0 { return END; }
 

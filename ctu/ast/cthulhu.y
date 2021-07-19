@@ -52,7 +52,8 @@ void yyerror();
     EQ "`==`"
     NEQ "`!=`"
 
-    AT "`@`"
+    DOT "`.`"
+    ARROW "`->`"
 
 %token
     LPAREN "`(`"
@@ -233,6 +234,8 @@ postfix: primary { $$ = $1; }
     | postfix QUESTION { $$ = ast_unary(x, @$, UNARY_TRY, $1); }
     | postfix LPAREN args RPAREN { $$ = ast_call(x, @$, $1, $3); }
     | postfix AS type { $$ = ast_cast(x, @$, $1, $3); }
+    | postfix DOT IDENT { $$ = ast_access(x, @$, $1, $3, false); }
+    | postfix ARROW IDENT { $$ = ast_access(x, @$, $1, $3, true); }
     ;
 
 unary: postfix { $$ = $1; }

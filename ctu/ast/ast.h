@@ -20,6 +20,7 @@ typedef enum {
     AST_BINARY,
     AST_CALL,
     AST_CAST,
+    AST_ACCESS,
 
     /**
      * statements
@@ -147,6 +148,18 @@ typedef struct node_t {
         struct {
             /* AST_SYMBOL */
             char *ident;
+        };
+
+        /* AST_ACCESS */
+        struct {
+            /* the object to access */
+            struct node_t *target;
+
+            /* the field to access */
+            char *field;
+
+            /* is the access direct or indirect */
+            bool indirect;
         };
 
         /* AST_DIGIT */
@@ -347,6 +360,7 @@ node_t *ast_unary(scanner_t *scanner, where_t where, unary_t unary, node_t *expr
 node_t *ast_binary(scanner_t *scanner, where_t where, binary_t binary, node_t *lhs, node_t *rhs);
 node_t *ast_call(scanner_t *scanner, where_t where, node_t *body, nodes_t *args);
 node_t *ast_cast(scanner_t *scanner, where_t where, node_t *expr, node_t *cast);
+node_t *ast_access(scanner_t *scanner, where_t where, node_t *expr, char *name, bool indirect);
 
 node_t *ast_stmts(scanner_t *scanner, where_t where, nodes_t *stmts);
 node_t *ast_return(scanner_t *scanner, where_t where, node_t *expr);
