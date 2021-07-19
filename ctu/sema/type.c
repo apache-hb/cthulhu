@@ -505,6 +505,18 @@ static type_t *typecheck_cast(sema_t *sema, node_t *cast) {
     return target;
 }
 
+static type_t *typecheck_access(sema_t *sema, node_t *access) { 
+    type_t *body = typecheck_expr(sema, access->target);
+
+    
+
+    if (is_pointer(body) && !access->indirect) { 
+        reportf(LEVEL_ERROR, access, "cannot access a pointer without indirection");
+    }
+
+    return body;
+}
+
 static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
     type_t *type = raw_type(expr);
 
@@ -539,6 +551,10 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
 
     case AST_CAST:
         type = typecheck_cast(sema, expr);
+        break;
+
+    case AST_ACCESS:
+        type = typecheck_access(sema, expr);
         break;
 
     default:

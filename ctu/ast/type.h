@@ -80,6 +80,16 @@ typedef enum {
     TYPE_POINTER,
 
     /**
+     * a struct or record type
+     */
+    TYPE_STRUCT,
+
+    /**
+     * a single field in a struct
+     */
+    TYPE_FIELD,
+
+    /**
      * error handling types
      */
     TYPE_POISON, /* typecheck error */
@@ -144,6 +154,23 @@ typedef struct type_t {
          * TYPE_POINTER
          */
         struct type_t *ptr;
+
+        /**
+         * struct data
+         */
+        struct {
+            const char *name;
+
+            /**
+             * an array of TYPE_FIELD
+             */
+            types_t *fields;
+        };
+
+        struct {
+            const char *field;
+            struct type_t *type;
+        };
 
         /**
          * callable data

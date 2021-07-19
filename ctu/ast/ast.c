@@ -391,6 +391,16 @@ node_t *ast_type(const char *name) {
     return node;
 }
 
+node_t *ast_access(scanner_t *scanner, where_t where, node_t *expr, char *name, bool indirect) {
+    node_t *node = new_node(scanner, where, AST_ACCESS);
+    
+    node->target = expr;
+    node->field = name;
+    node->indirect = indirect;
+
+    return node;
+}
+
 void free_ast_list(nodes_t *list, bool free_items) {
     if (free_items) {
         for (size_t i = 0; i < ast_len(list); i++) {
