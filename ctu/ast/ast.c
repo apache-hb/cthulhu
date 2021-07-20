@@ -37,6 +37,7 @@ static node_t *new_decl(scanner_t *scanner, where_t where, ast_t kind, char *nam
 const char *get_decl_name(node_t *node) {
     switch (node->kind) {
     case AST_DECL_FUNC: case AST_DECL_VAR: case AST_DECL_PARAM:
+    case AST_RECORD_DECL: case AST_FIELD_DECL:
         return node->name;
 
     default:
@@ -60,12 +61,9 @@ const char *get_resolved_name(node_t *node) {
     switch (node->kind) {
     case AST_TYPE:
         return node->nameof;
-    case AST_DECL_FUNC: case AST_DECL_PARAM: case AST_DECL_VAR:
-        return node->name;
 
     default:
-        reportf(LEVEL_INTERNAL, node, "node does not have a name");
-        return NULL;
+        return get_decl_name(node);
     }
 }
 
@@ -397,6 +395,23 @@ node_t *ast_access(scanner_t *scanner, where_t where, node_t *expr, char *name, 
     node->target = expr;
     node->field = name;
     node->indirect = indirect;
+
+    return node;
+}
+
+node_t *ast_decl_record(scanner_t *scanner, where_t where, char *name, nodes_t *fields) {
+    node_t *node = new_decl(scanner, where, AST_RECORD_DECL, name);
+
+    node->fields = fields;
+
+    return node;
+}
+
+node_t *ast_field(scanner_t *scanner, where_t where, char *name, node_t *type) {
+    node_t *node = new_node(scanner, where, AST_FIELD_DECL);
+
+    node->name = name;
+    node->ftype = type;
 
     return node;
 }

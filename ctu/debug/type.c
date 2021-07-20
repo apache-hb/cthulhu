@@ -40,5 +40,7 @@ void debug_type(type_t *type) {
     case TYPE_POINTER: printf("*"); debug_type(type->ptr); break;
     case TYPE_POISON: printf("poison(%s)", type->text); break;
     case TYPE_UNRESOLVED: printf("unresolved"); break;
+    case TYPE_STRUCT: printf("struct(%s)", type->name); break;
+    case TYPE_FIELD: break;
     }
 }
