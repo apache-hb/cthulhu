@@ -207,6 +207,10 @@ typedef struct module_t {
     /* variables in the current module */
     var_t *vars;
     size_t nvars;
+
+    /* all types declared in this module */
+    type_t **types;
+    size_t ntypes;
 } module_t;
 
 size_t num_flows(module_t *mod);

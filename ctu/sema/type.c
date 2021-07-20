@@ -505,16 +505,35 @@ static type_t *typecheck_cast(sema_t *sema, node_t *cast) {
     return target;
 }
 
+static type_t *get_field(node_t *node, type_t *type, const char *name) {
+    for (size_t i = 0; i < type->fields.size; i++) {
+        field_t field = type->fields.fields[i];
+        if (strcmp(field.name, name) == 0) {
+            return field.type;
+        }
+    }
+
+    reportf(LEVEL_ERROR, node, "no field `%s` in struct `%s`", name, type->name);
+    return new_poison(node, "unknown field");
+}
+
 static type_t *typecheck_access(sema_t *sema, node_t *access) { 
     type_t *body = typecheck_expr(sema, access->target);
-
-    
 
     if (is_pointer(body) && !access->indirect) { 
         reportf(LEVEL_ERROR, access, "cannot access a pointer without indirection");
     }
 
-    return body;
+    type_t *inner = is_pointer(body)
+        ? body->ptr
+        : body;
+
+    if (!is_struct(inner)) {
+        reportf(LEVEL_ERROR, access, "cannot access a non-struct type");
+        return new_poison(access, "access to a non-struct type");
+    }
+
+    return get_field(access, inner, access->field);
 }
 
 static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
@@ -617,6 +636,15 @@ static void typecheck_while(sema_t *sema, node_t *decl) {
     if (!implicit_convertible_to(&decl->cond, BOOL_TYPE, cond)) {
         reportf(LEVEL_ERROR, decl->cond, "cannot loop on a non-boolean condition");
     }
+}
+
+/**
+ * check that a record has no duplicated fields
+ * and make sure it isnt of infinite size
+ */
+static void typecheck_record(sema_t *sema, node_t *decl) {
+    (void)sema;
+    (void)decl;
 }
 
 static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
@@ -727,16 +755,22 @@ static void add_all_decls(sema_t *sema, nodes_t *decls) {
 
     for (size_t i = 0; i < len; i++) {
         node_t *decl = ast_at(decls, i);
-        if (decl->kind == AST_DECL_FUNC)
-            typecheck_func(sema, decl);
-        else
-            typecheck_var(sema, decl);
+        switch (decl->kind) {
+        case AST_DECL_FUNC: typecheck_func(sema, decl); break;
+        case AST_DECL_VAR: typecheck_var(sema, decl); break;
+        case AST_RECORD_DECL: typecheck_record(sema, decl); break;
+        default: assert("unknown decl type %d", decl->kind);
+        }
         add_decl_global(sema, decl);
     }
 }
 
 static void validate_var(sema_t *sema, node_t *var) {
     typecheck_decl(sema, var);
+}
+
+static void validate_record(sema_t *sema, node_t *record) {
+    typecheck_record(sema, record);
 }
 
 static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {
@@ -746,11 +780,20 @@ static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {
 
     for (size_t i = 0; i < len; i++) {
         node_t *decl = ast_at(decls, i);
-        if (decl->kind == AST_DECL_VAR) {
-            validate_var(sema, decl);
-        } else {
+        switch (decl->kind) {
+        case AST_DECL_VAR: 
+            validate_var(sema, decl); 
+            break;
+        case AST_DECL_FUNC: 
             validate_function(sema, decl);
             decl->locals = reset_locals();
+            break;
+        case AST_RECORD_DECL:
+            validate_record(sema, decl);
+            break;
+        default: 
+            assert("unknown decl type %d", decl->kind);
+            break;
         }
     }
 }

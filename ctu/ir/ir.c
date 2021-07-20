@@ -541,6 +541,10 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
 static var_t compile_var(module_t *mod, node_t *node) {
     ASSERT(node->kind == AST_DECL_VAR)("compile_var requires a variable");
 
+    /**
+     * TODO: static initialization
+     */
+
     (void) mod;
 
     var_t var = { 
@@ -565,29 +569,44 @@ static size_t count_decls(nodes_t *nodes, ast_t kind) {
     return count;
 }
 
+static size_t count_types(nodes_t *nodes) {
+    return count_decls(nodes, AST_RECORD_DECL);
+}
+
 module_t *compile_module(const char *name, nodes_t *nodes) {
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
    
-    /**
-     * TODO: allocate the minimum amount needed
-     */
     mod->nflows = count_decls(nodes, AST_DECL_FUNC);
     mod->flows = ctu_malloc(sizeof(flow_t) * mod->nflows);
     
     mod->nvars = count_decls(nodes, AST_DECL_VAR);
     mod->vars = ctu_malloc(sizeof(var_t) * mod->nvars);
 
+    mod->ntypes = count_types(nodes);
+    mod->types = ctu_malloc(sizeof(type_t*) * mod->ntypes);
+
     size_t len = ast_len(nodes);
 
     size_t flow_idx = 0;
     size_t var_idx = 0;
+    size_t type_idx = 0;
     for (size_t idx = 0; idx < len; idx++) {
         node_t *decl = ast_at(nodes, idx);
-        if (decl->kind == AST_DECL_FUNC) {
+        switch (decl->kind) {
+        case AST_DECL_FUNC:
             mod->flows[flow_idx++].name = get_decl_name(decl);
-        } else {
+            break;
+        case AST_DECL_VAR:
             mod->vars[var_idx++].name = get_decl_name(decl);
+            break;
+        case AST_RECORD_DECL:
+            mod->types[type_idx++] = get_type(decl);
+            break;
+
+        default:
+            assert("unknown decl kind %d", decl->kind);
+            break;
         }
     }
 
@@ -595,10 +614,20 @@ module_t *compile_module(const char *name, nodes_t *nodes) {
     var_idx = 0;
     for (size_t i = 0; i < len; i++) {
         node_t *decl = ast_at(nodes, i);
-        if (decl->kind == AST_DECL_FUNC) {
+        switch (decl->kind) {
+        case AST_DECL_FUNC:
             mod->flows[flow_idx++] = compile_flow(mod, decl);
-        } else {
+            break;
+        case AST_DECL_VAR:
             mod->vars[var_idx++] = compile_var(mod, decl);
+            break;
+
+        case AST_RECORD_DECL:
+            break;
+
+        default:
+            assert("unknown decl kind %d", decl->kind);
+            break;
         }
     }
 

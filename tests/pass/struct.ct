@@ -1,0 +1,5 @@
+record String {
+    front: *var(char),
+    back: *var(char),
+    size: *var(char)
+}

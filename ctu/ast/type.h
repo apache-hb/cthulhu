@@ -114,6 +114,16 @@ typedef struct {
     size_t size;
 } types_t;
 
+typedef struct {
+    const char *name;
+    struct type_t *type;
+} field_t;
+
+typedef struct {
+    size_t size;
+    field_t *fields;
+} record_t;
+
 typedef struct type_t {
     /** 
      * the type of this type 
@@ -161,15 +171,7 @@ typedef struct type_t {
         struct {
             const char *name;
 
-            /**
-             * an array of TYPE_FIELD
-             */
-            types_t *fields;
-        };
-
-        struct {
-            const char *field;
-            struct type_t *type;
+            record_t fields;
         };
 
         /**
@@ -206,6 +208,7 @@ bool is_void(type_t *type);
 bool is_signed(type_t *type);
 bool is_pointer(type_t *type);
 bool is_const(type_t *type);
+bool is_struct(type_t *type);
 
 integer_t get_integer_kind(type_t *type);
 

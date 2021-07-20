@@ -95,6 +95,10 @@ bool is_void(type_t *type) {
     return type->kind == TYPE_VOID;
 }
 
+bool is_struct(type_t *type) {
+    return type->kind == TYPE_STRUCT;
+}
+
 integer_t get_integer_kind(type_t *type) {
     ASSERT(is_integer(type))("type is not an integer");
     return type->integer;
