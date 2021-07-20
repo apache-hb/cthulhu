@@ -42,18 +42,18 @@ const char *get_decl_name(node_t *node) {
 
     default:
         reportf(LEVEL_INTERNAL, node, "node is not a declaration");
-        return NULL;
+        return "not-a-decl";
     }
 }
 
 const char *get_symbol_name(node_t *node) {
     switch (node->kind) {
-    case AST_SYMBOL: 
+    case AST_SYMBOL:
         return node->ident;
 
     default:
         reportf(LEVEL_INTERNAL, node, "node is not a symbol");
-        return NULL;
+        return "not-a-symbol";
     }
 }
 
@@ -64,6 +64,17 @@ const char *get_resolved_name(node_t *node) {
 
     default:
         return get_decl_name(node);
+    }
+}
+
+const char *get_field_name(node_t *node) {
+    switch (node->kind) {
+    case AST_FIELD_DECL:
+        return node->name;
+    
+    default:
+        reportf(LEVEL_INTERNAL, node, "node is not a field");
+        return "not-a-field";
     }
 }
 
@@ -117,6 +128,14 @@ bool is_equality_op(binary_t op) {
     default:
         return false;
     }
+}
+
+bool is_deref(node_t *expr) { 
+    return expr->kind == AST_UNARY && expr->unary == UNARY_DEREF;
+}
+
+bool is_access(node_t *expr) {
+    return expr->kind == AST_ACCESS;
 }
 
 nodes_t *ast_append(nodes_t *list, node_t *node) {

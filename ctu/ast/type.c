@@ -36,6 +36,8 @@ static type_t *new_type(typeof_t kind, node_t *node) {
     type->kind = kind;
     type->node = node;
     type->mut = false;
+    type->index = SIZE_MAX;
+
     node->typeof = type;
     return type;
 }
@@ -73,6 +75,19 @@ type_t *new_pointer(struct node_t *node, type_t *to) {
     type_t *type = new_type(TYPE_POINTER, node);
     type->ptr = to;
     return type;
+}
+
+type_t *new_record(struct node_t *decl, const char *name) {
+    type_t *type = new_type(TYPE_STRUCT, decl);
+
+    type->name = name;
+
+    return type;
+}
+
+void resize_record(type_t *type, size_t size) {
+    type->fields.size = size;
+    type->fields.fields = ctu_malloc(sizeof(field_t) * size);
 }
 
 bool is_unresolved(type_t *type) {
@@ -123,9 +138,21 @@ bool is_pointer(type_t *type) {
 }
 
 type_t *set_mut(type_t *type, bool mut) {
+    if (type->mut == mut) {
+        return type;
+    }
+
     type_t *out = ctu_malloc(sizeof(type_t));
     memcpy(out, type, sizeof(type_t));
     out->mut = mut;
+    
+    if (is_struct(out)) {
+        for (size_t i = 0; i < out->fields.size; i++) {
+            field_t *field = &out->fields.fields[i];
+            field->type = set_mut(field->type, mut);
+        }
+    }
+
     return out;
 }
 

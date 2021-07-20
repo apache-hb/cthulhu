@@ -146,6 +146,11 @@ typedef struct type_t {
      */
     struct node_t *node;
 
+    /**
+     * index of this type in the type table
+     */
+    size_t index;
+
     /* data about this type */
     union {
         /**
@@ -199,6 +204,9 @@ type_t *new_unresolved(struct node_t *symbol);
 type_t *new_poison(struct node_t *parent, const char *err);
 type_t *new_callable(struct node_t *func, types_t *args, type_t *result);
 type_t *new_pointer(struct node_t *node, type_t *to);
+
+type_t *new_record(struct node_t *decl, const char *name);
+void resize_record(type_t *type, size_t size);
 
 bool is_unresolved(type_t *type);
 bool is_integer(type_t *type);

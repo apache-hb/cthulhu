@@ -16,7 +16,7 @@
  */
 
 static operand_t new_operand(int kind) {
-    operand_t op = { kind, { SIZE_MAX } };
+    operand_t op = { kind, { SIZE_MAX }, SIZE_MAX };
     return op;
 }
 
@@ -55,6 +55,17 @@ operand_t new_block(size_t label) {
     operand_t op = new_operand(BLOCK);
     op.label = label;
     return op;
+}
+
+static void add_type_index(module_t *mod, type_t *type) {
+    if (is_struct(type) && type->index == SIZE_MAX) {
+        for (size_t i = 0; i < num_types(mod); i++) {
+            type_t *other = mod->types[i];
+            if (strcmp(type->name, other->name) == 0) {
+                type->index = other->index;
+            }
+        }
+    }
 }
 
 static step_t new_typed_step(opcode_t op, type_t *type) {
@@ -136,6 +147,10 @@ operand_t new_size(size_t s) {
  */
 
 static size_t add_step_raw(flow_t *flow, step_t step) {
+    if (step.type) {
+        add_type_index(flow->mod, step.type);
+    }
+
     if (flow->len + 1 > flow->size) {
         flow->size += 64;
         flow->steps = ctu_realloc(flow->steps, flow->size * sizeof(step_t));
@@ -180,11 +195,6 @@ static operand_t emit_bool(node_t *node) {
     return new_bool(node->boolean);
 }
 
-static bool is_deref(node_t *node) {
-    return node->kind == AST_UNARY
-        && node->unary == UNARY_DEREF;
-}
-
 static operand_t get_global(flow_t *flow, node_t *node) {
     const char *name = get_symbol_name(node);
     for (size_t i = 0; i < num_flows(flow->mod); i++) {
@@ -206,11 +216,31 @@ static operand_t get_global(flow_t *flow, node_t *node) {
     return new_operand(NONE);
 }
 
+static size_t field_offset(type_t *type, const char *field) {
+    size_t len = type->fields.size;
+    for (size_t i = 0; i < len; i++) {
+        const char *name = type->fields.fields[i].name;
+        if (strcmp(name, field) == 0) {
+            return i;
+        }
+    }
+
+    assert("field offset not found");
+    return SIZE_MAX;
+}
+
 static operand_t get_lvalue(flow_t *flow, node_t *node) {
     if (is_deref(node)) {
         step_t step = new_step(OP_LOAD, node->expr);
         step.src = get_lvalue(flow, node->expr);
         return add_vreg(flow, step);
+    }
+
+    if (is_access(node)) {
+        node_t *target = node->target;
+        operand_t field = get_lvalue(flow, target);
+        field.offset = field_offset(raw_type(target), node->field);
+        return field;
     }
 
     if (node->local == NOT_LOCAL) {
@@ -488,6 +518,9 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
 
     size_t locals = node->locals + len;
 
+    type_t *result = get_type(node->result);
+    add_type_index(mod, result);
+
     flow_t flow = { 
         /* name */
         get_decl_name(node), 
@@ -502,7 +535,7 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         ctu_malloc(sizeof(vreg_t) * locals), locals,
 
         /* return type */
-        get_type(node->result),
+        result,
 
         /* parent */
         mod,
@@ -591,6 +624,8 @@ module_t *compile_module(const char *name, nodes_t *nodes) {
     size_t flow_idx = 0;
     size_t var_idx = 0;
     size_t type_idx = 0;
+    type_t *type;
+
     for (size_t idx = 0; idx < len; idx++) {
         node_t *decl = ast_at(nodes, idx);
         switch (decl->kind) {
@@ -601,7 +636,9 @@ module_t *compile_module(const char *name, nodes_t *nodes) {
             mod->vars[var_idx++].name = get_decl_name(decl);
             break;
         case AST_RECORD_DECL:
-            mod->types[type_idx++] = get_type(decl);
+            type = get_type(decl);
+            type->index = type_idx;
+            mod->types[type_idx++] = type;
             break;
 
         default:
@@ -644,4 +681,8 @@ size_t num_flows(module_t *mod) {
 
 size_t num_vars(module_t *mod) {
     return mod->nvars;
+}
+
+size_t num_types(module_t *mod) {
+    return mod->ntypes;
 }

@@ -3,6 +3,15 @@
 
 #include "ctu/util/str.h"
 
+static void debug_list(nodes_t *nodes) {
+    for (size_t i = 0; i < ast_len(nodes); i++) {
+        if (i != 0) {
+            printf(" ");
+        }
+        debug_ast(ast_at(nodes, i));
+    }
+}
+
 static void debug_digit(node_t *node) {
     printf("digit %" PRIu64, node->digit);
 }
@@ -34,12 +43,7 @@ static void debug_stmts(node_t *node) {
     if (len) {
         printf(" ");
     }
-    for (size_t i = 0; i < len; i++) {
-        if (i != 0) {
-            printf(" ");
-        }
-        debug_ast(ast_at(node->stmts, i));
-    }
+    debug_list(node->stmts);
 }
 
 static void debug_call(node_t *node) {
@@ -51,12 +55,7 @@ static void debug_call(node_t *node) {
         printf(" ");
     }
 
-    for (size_t i = 0; i < len; i++) {
-        if (i != 0) {
-            printf(" ");
-        }
-        debug_ast(ast_at(node->args, i));
-    }
+    debug_list(node->args);
 }
 
 static void debug_symbol(node_t *node) {
@@ -88,9 +87,33 @@ static void debug_var(node_t *node) {
     }
 }
 
+static void debug_assign(node_t *node) {
+    printf("assign ");
+    debug_ast(node->dst);
+    printf(" ");
+    debug_ast(node->src);
+}
+
+static void debug_record(node_t *node) {
+    printf("record %s ", node->name);
+    debug_list(node->fields);
+}
+
+static void debug_field(node_t *node) {
+    printf("field %s ", node->name);
+    debug_ast(node->ftype);
+}
+
+static void debug_access(node_t *node) {
+    printf("access ");
+    debug_ast(node->target);
+    printf(" %s %s", node->field, node->indirect ? "indirect" : "direct");
+}
+
 void debug_ast(node_t *node) {
     printf("(");
     switch (node->kind) {
+    case AST_ACCESS: debug_access(node); break;
     case AST_DIGIT: debug_digit(node); break;
     case AST_UNARY: debug_unary(node); break;
     case AST_BINARY: debug_binary(node); break;
@@ -101,7 +124,11 @@ void debug_ast(node_t *node) {
     case AST_DECL_FUNC: debug_func(node); break;
     case AST_BRANCH: debug_branch(node); break;
     case AST_DECL_VAR: debug_var(node); break;
+    case AST_ASSIGN: debug_assign(node); break;
+    case AST_RECORD_DECL: debug_record(node); break;
+    case AST_FIELD_DECL: debug_field(node); break;
     default: printf("error %d", node->kind); break;
     }
     printf(")");
 }
+

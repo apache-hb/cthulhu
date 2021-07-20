@@ -229,6 +229,11 @@ static bool convertible_to(
     type_t *to, type_t *from,
     bool implicit
 ) {
+    /* if the types are the same then obviously convertible */
+    if (to == from) {
+        return true;
+    }
+
     if (is_void(to)) {
         return is_void(from);
     }
@@ -263,6 +268,11 @@ static bool convertible_to(
         }
 
         return convertible_to(node, to->ptr, from->ptr, implicit);
+    }
+
+    if (is_struct(to) && is_struct(from)) {
+        /* this wont work once imports are a thing */
+        return strcmp(to->name, from->name) == 0;
     }
 
     return false;
@@ -432,12 +442,10 @@ static bool is_lvalue(node_t *expr) {
 }
 
 static bool is_assignable(type_t *type, node_t *expr) {
-    if (
-        expr->kind == AST_UNARY 
-        && expr->unary == UNARY_DEREF)
+    if (is_deref(expr))
         return is_assignable(type, expr->expr);
 
-    if (expr->kind == AST_SYMBOL)
+    if (is_access(expr) || expr->kind == AST_SYMBOL)
         return !is_const(type);
 
     return false;
@@ -609,7 +617,7 @@ static type_t *typecheck_var(sema_t *sema, node_t *decl) {
         }
     }
 
-    var->mut = decl->mut;
+    var = set_mut(var, decl->mut);
 
     connect_type(decl, var);
 
@@ -638,13 +646,48 @@ static void typecheck_while(sema_t *sema, node_t *decl) {
     }
 }
 
+static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
+    const char *name = get_field_name(field);
+
+    for (size_t i = 0; i < at; i++) {
+        const char *other = record->fields.fields[i].name;
+        if (!is_discard_name(name) && strcmp(name, other) == 0) { 
+            reportf(LEVEL_ERROR, field, "duplicate field `%s` in record", name);
+        }
+    }
+
+    field_t it = { name, resolve_type(sema, field->ftype) };
+
+    record->fields.fields[at] = it;
+}   
+
+static type_t *begin_record(node_t *decl) { 
+    const char *name = get_decl_name(decl);
+    return new_record(decl, name);
+}
+
 /**
  * check that a record has no duplicated fields
  * and make sure it isnt of infinite size
  */
-static void typecheck_record(sema_t *sema, node_t *decl) {
-    (void)sema;
-    (void)decl;
+static type_t *typecheck_record(node_t *decl) {
+    return get_type(decl);
+}
+
+static void validate_record(sema_t *sema, node_t *decl) {
+    const char *name = get_decl_name(decl);
+
+    nodes_t *fields = decl->fields;
+    size_t len = ast_len(fields);
+
+    type_t *result = get_type(get_decl(sema, name));
+
+    resize_record(result, len);
+
+    for (size_t i = 0; i < len; i++) {
+        node_t *field = ast_kind_at(fields, i, AST_FIELD_DECL);
+        add_field(sema, i, result, field);
+    }
 }
 
 static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
@@ -667,6 +710,10 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
         type = typecheck_var(sema, decl);
         add_discardable_local(sema, decl);
         return type;
+
+    case AST_RECORD_DECL:
+        type = typecheck_record(decl);
+        break;
 
     default:
         reportf(LEVEL_INTERNAL, decl, "unimplemented declaration typecheck");
@@ -758,7 +805,7 @@ static void add_all_decls(sema_t *sema, nodes_t *decls) {
         switch (decl->kind) {
         case AST_DECL_FUNC: typecheck_func(sema, decl); break;
         case AST_DECL_VAR: typecheck_var(sema, decl); break;
-        case AST_RECORD_DECL: typecheck_record(sema, decl); break;
+        case AST_RECORD_DECL: begin_record(decl); break;
         default: assert("unknown decl type %d", decl->kind);
         }
         add_decl_global(sema, decl);
@@ -767,10 +814,6 @@ static void add_all_decls(sema_t *sema, nodes_t *decls) {
 
 static void validate_var(sema_t *sema, node_t *var) {
     typecheck_decl(sema, var);
-}
-
-static void validate_record(sema_t *sema, node_t *record) {
-    typecheck_record(sema, record);
 }
 
 static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {

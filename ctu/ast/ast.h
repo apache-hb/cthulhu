@@ -286,6 +286,12 @@ const char *get_symbol_name(node_t *node);
  */
 const char *get_resolved_name(node_t *node);
 
+const char *get_field_name(node_t *node);
+
+bool is_deref(node_t *expr);
+
+bool is_access(node_t *expr);
+
 /**
  * get the type of a node
  * returns an unresolved type if the type hasnt been resolved

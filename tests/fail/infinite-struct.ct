@@ -1,0 +1,7 @@
+record A {
+    b: B
+}
+
+record B {
+    i: A
+}
