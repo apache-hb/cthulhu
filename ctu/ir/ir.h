@@ -66,6 +66,9 @@ typedef struct {
         /* immediate value */
         imm_t imm;
     };
+
+    /* field offset */
+    size_t offset;
 } operand_t;
 
 bool operand_is_imm(operand_t op);
@@ -215,5 +218,6 @@ typedef struct module_t {
 
 size_t num_flows(module_t *mod);
 size_t num_vars(module_t *mod);
+size_t num_types(module_t *mod);
 
 module_t *compile_module(const char *name, nodes_t *nodes);

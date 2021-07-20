@@ -164,7 +164,7 @@ int main(int argc, const char **argv) {
 
         if (emit) {
             for (size_t i = 0; i < nodes->len; i++) {
-                debug_ast(nodes->data[i]);
+                debug_ast(nodes->data[i]); printf("\n");
             }
         }
 
@@ -175,7 +175,7 @@ int main(int argc, const char **argv) {
 
         if (emit) {
             for (size_t i = 0; i < nodes->len; i++) {
-                debug_ast(nodes->data[i]);
+                debug_ast(nodes->data[i]); printf("\n");
             }
         }
 

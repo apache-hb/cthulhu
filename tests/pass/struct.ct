@@ -1,5 +1,16 @@
-record String {
-    front: *var(char),
-    back: *var(char),
-    size: *var(char)
+record Vec3 {
+    x: int,
+    y: int,
+    z: int
+}
+
+var global: int = 25;
+
+export def vec(i: int): Vec3 {
+    var v: Vec3;
+    v.x = i;
+    v.y = i;
+    v.z = i;
+    global = i;
+    return v;
 }

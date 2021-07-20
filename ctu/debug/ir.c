@@ -28,6 +28,10 @@ static void debug_operand(module_t *mod, operand_t op) {
     case FUNC: printf("def(%zu:%s)", op.func, get_flow_name(mod, op.func)); break;
     case VAR: printf("var(%zu:%s)", op.var, get_var_name(mod, op.var)); break;
     }
+
+    if (op.offset != SIZE_MAX) {
+        printf(" +%zu", op.offset);
+    }
 }
 
 static void debug_index(size_t idx) {
@@ -159,8 +163,34 @@ static void debug_flow(module_t *mod, flow_t flow) {
     printf("}\n");
 }
 
+static void debug_global(size_t i, var_t var) {
+    printf("global %zu = %s: ", i, var.name);
+    debug_type(var.type);
+}
+
 void debug_module(module_t mod) {
+    printf("; types\n");
+    for (size_t i = 0; i < num_types(&mod); i++) {
+        if (i != 0) {
+            printf("\n");
+        }
+
+        printf("type %zu = ", i);
+        debug_type_verbose(mod.types[i]);
+    }
+
+    printf("\n; globals \n");
+    for (size_t i = 0; i < num_vars(&mod); i++) {
+        if (i != 0) {
+            printf("\n");
+        }
+
+        debug_global(i, mod.vars[i]);
+    }
+    
+    printf("\n; functions\n");
     for (size_t i = 0; i < num_flows(&mod); i++) {
+
         if (i != 0) {
             printf("\n");
         }

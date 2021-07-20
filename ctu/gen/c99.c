@@ -113,6 +113,14 @@ static char *gen_pointer(type_t *type, const char *name) {
     }
 }
 
+static char *gen_struct(type_t *type, const char *name) {
+    if (name) {
+        return format("struct type_%zu_t %s", type->index, name);
+    } else {
+        return format("struct type_%zu_t", type->index);
+    }
+}
+
 static const char *gen_type(type_t *type, const char *name) {
     switch (type->kind) {
     case TYPE_INTEGER: return gen_int(type, name);
@@ -120,9 +128,10 @@ static const char *gen_type(type_t *type, const char *name) {
     case TYPE_VOID: return gen_void(name);
     case TYPE_CALLABLE: return gen_callable(type, name);
     case TYPE_POINTER: return gen_pointer(type, name);
+    case TYPE_STRUCT: return gen_struct(type, name);
 
     default:
-        assert("unreacable branch in gen_type");
+        assert("unreachable branch in gen_type");
         return "void";
     }
 }
@@ -249,6 +258,18 @@ static char *gen_args(flow_t *flow, operand_t *args, size_t len) {
     return str_join(", ", types, len);
 }
 
+static void gen_store(FILE *out, flow_t *flow, step_t *step) {
+    const char *dst = gen_operand(flow, step->dst);
+    const char *src = gen_operand(flow, step->src);
+
+    if (step->dst.offset != SIZE_MAX) {
+        /* TODO: at the point we can store a struct in a register fix this */
+        fprintf(out, "%s[0]._%zu = %s;\n", dst, step->dst.offset, src);
+    } else {
+        fprintf(out, "%s[0] = %s;\n", dst, src);
+    }
+}
+
 static void gen_step(FILE *out, flow_t *flow, size_t idx) {
     step_t *step = flow->steps + idx;
 
@@ -274,7 +295,7 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
         fprintf(out, "%s[1];\n", gen_type(step->type, local(idx)));
         break;
     case OP_STORE:
-        fprintf(out, "*%s = %s;\n", gen_operand(flow, step->dst), gen_operand(flow, step->src));
+        gen_store(out, flow, step);
         break;
     case OP_LOAD:
         fprintf(out, "%s = *%s;\n", gen_type(step->type, local(idx)), gen_operand(flow, step->src));
@@ -337,6 +358,19 @@ static void gen_global(FILE *out, var_t *var, size_t idx) {
     );
 }
 
+static void emit_type(FILE *out, type_t *type) {
+    ASSERT(type->kind == TYPE_STRUCT)("can only emit structs");
+
+    fprintf(out, "struct type_%zu_t { ", type->index);
+
+    record_t fields = type->fields;
+    for (size_t i = 0; i < fields.size; i++) {
+        field_t field = fields.fields[i];
+        fprintf(out, "%s;", gen_type(field.type, format("_%zu", i)));
+    }
+    fprintf(out, "};");
+}
+
 void gen_c99(FILE *out, module_t *mod) {
     char *name = str_replace(mod->name, "/", "_");
     guard_head(out, name);
@@ -346,6 +380,26 @@ void gen_c99(FILE *out, module_t *mod) {
     add_include(out, "stdbool");
     add_include(out, "stdint");
     add_include(out, "stddef");
+
+    for (size_t i = 0; i < num_types(mod); i++) {
+        if (i != 0) {
+            line(out);
+        }
+        type_t *type = mod->types[i];
+        fprintf(out, "%s;", gen_type(type, NULL));
+    }
+
+    line(out);
+
+    for (size_t i = 0; i < num_types(mod); i++) {
+        if (i != 0) {
+            line(out);
+        }
+        type_t *type = mod->types[i];
+        emit_type(out, type);
+    }
+
+    line(out);
 
     for (size_t i = 0; i < num_vars(mod); i++) {
         var_t *var = mod->vars + i;
