@@ -646,11 +646,31 @@ static void typecheck_while(sema_t *sema, node_t *decl) {
     }
 }
 
+static bool struct_contains_struct(type_t *type, type_t *member) {
+    record_t fields = type->fields;
+    for (size_t i = 0; i < fields.size; i++) {
+        field_t field = fields.fields[i];
+        type_t *it = field.type;
+        if (is_struct(it)) {
+            if (strcmp(it->name, member->name) == 0) {
+                return true;
+            }
+
+            if (struct_contains_struct(it, member)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
     const char *name = get_field_name(field);
 
     for (size_t i = 0; i < at; i++) {
-        const char *other = record->fields.fields[i].name;
+        field_t it = record->fields.fields[i];
+        const char *other = it.name;
+
         if (!is_discard_name(name) && strcmp(name, other) == 0) { 
             reportf(LEVEL_ERROR, field, "duplicate field `%s` in record", name);
         }
@@ -663,7 +683,26 @@ static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
 
 static type_t *begin_record(node_t *decl) { 
     const char *name = get_decl_name(decl);
+
+    printf("begin %s\n", name);
+
     return new_record(decl, name);
+}
+
+static void build_record(sema_t *sema, node_t *decl) {
+    type_t *result = get_type(decl);
+
+    printf("building %s\n", result->name);
+
+    nodes_t *fields = decl->fields;
+    size_t len = ast_len(fields);
+
+    resize_record(result, len);
+
+    for (size_t i = 0; i < len; i++) {
+        node_t *field = ast_kind_at(fields, i, AST_FIELD_DECL);
+        add_field(sema, i, result, field);
+    }
 }
 
 /**
@@ -674,19 +713,19 @@ static type_t *typecheck_record(node_t *decl) {
     return get_type(decl);
 }
 
-static void validate_record(sema_t *sema, node_t *decl) {
-    const char *name = get_decl_name(decl);
-
-    nodes_t *fields = decl->fields;
-    size_t len = ast_len(fields);
-
-    type_t *result = get_type(get_decl(sema, name));
-
-    resize_record(result, len);
-
+static void validate_record(node_t *decl) {
+    type_t *record = get_type(decl);
+    record_t fields = record->fields;
+    size_t len = fields.size;
+    printf("validating %s\n", record->name);
     for (size_t i = 0; i < len; i++) {
-        node_t *field = ast_kind_at(fields, i, AST_FIELD_DECL);
-        add_field(sema, i, result, field);
+        field_t field = fields.fields[i];
+        if (is_struct(field.type)) {
+            if (struct_contains_struct(field.type, record)) {
+                reportf(LEVEL_ERROR, decl, "struct `%s` contains itself recursivley", record->name);
+                record->invalid = true;
+            }
+        }
     }
 }
 
@@ -810,6 +849,13 @@ static void add_all_decls(sema_t *sema, nodes_t *decls) {
         }
         add_decl_global(sema, decl);
     }
+
+    for (size_t i = 0; i < len; i++) {
+        node_t *decl = ast_at(decls, i);
+        if (decl->kind == AST_RECORD_DECL) {
+            build_record(sema, decl);
+        }
+    }
 }
 
 static void validate_var(sema_t *sema, node_t *var) {
@@ -832,7 +878,7 @@ static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {
             decl->locals = reset_locals();
             break;
         case AST_RECORD_DECL:
-            validate_record(sema, decl);
+            validate_record(decl);
             break;
         default: 
             assert("unknown decl type %d", decl->kind);

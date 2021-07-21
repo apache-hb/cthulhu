@@ -480,7 +480,7 @@ static operand_t emit_while(flow_t *flow, node_t *node) {
     branch->block = entry;
     branch->other = tail;
 
-    return new_operand(NONE);
+    return head;
 }
 
 static operand_t emit_opcode(flow_t *flow, node_t *node) {

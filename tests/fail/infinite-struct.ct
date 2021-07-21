@@ -3,5 +3,5 @@ record A {
 }
 
 record B {
-    i: A
+    a: A
 }
