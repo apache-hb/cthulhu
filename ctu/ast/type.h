@@ -141,6 +141,11 @@ typedef struct type_t {
      */
     bool sign:1;
 
+    /**
+     * is this type a struct that contains itself
+     */
+    bool invalid:1;
+
     /** 
      * the node that generated this type 
      */

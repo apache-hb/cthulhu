@@ -44,7 +44,8 @@ test('fail-no-files', driver, args : [ '--verbose' ],
 fail = [ 
     'incorrect-return1',
     'incorrect-return2',
-    'invalid-char', 'scope', 'bad-return'
+    'invalid-char', 'scope', 'bad-return',
+    'infinite-struct'
 ]
 
 foreach it : fail 

@@ -36,6 +36,7 @@ static type_t *new_type(typeof_t kind, node_t *node) {
     type->kind = kind;
     type->node = node;
     type->mut = false;
+    type->invalid = false;
     type->index = SIZE_MAX;
 
     node->typeof = type;
@@ -146,7 +147,7 @@ type_t *set_mut(type_t *type, bool mut) {
     memcpy(out, type, sizeof(type_t));
     out->mut = mut;
     
-    if (is_struct(out)) {
+    if (is_struct(out) && !type->invalid) {
         for (size_t i = 0; i < out->fields.size; i++) {
             field_t *field = &out->fields.fields[i];
             field->type = set_mut(field->type, mut);
