@@ -102,6 +102,8 @@ static int parse_arg(int index, int argc, const char **argv) {
     } else if (!startswith(arg, "-")) {
         add_file(arg);
         logfmt("adding `%s` as a source file", arg);
+    } else {
+        ensure("unknown argument `%s`", arg);
     }
 
     return 1;
@@ -137,7 +139,6 @@ int main(int argc, const char **argv) {
     name = argv[0];
 
     init_inputs();
-
     report_begin(20, false);
 
     parse_argc_argv(argc, argv);
