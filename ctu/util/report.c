@@ -29,6 +29,11 @@ typedef struct {
     const char *note;
 
     node_t *node;
+
+    /**
+     * unique tag
+     */
+    const void *tag;
 } report_t;
 
 static bool eager_report = false;
@@ -37,14 +42,14 @@ static size_t max_reports = 0;
 static size_t num_reports = 0;
 
 static bool already_reported(size_t index) {
-    node_t *node = reports[index].node;
-    if (!node) {
+    const void *tag = reports[index].tag;
+    if (!tag) {
         return false;
     }
 
     for (size_t i = 0; i < index; i++) {
         report_t it = reports[i];
-        if (it.node == node && it.level != LEVEL_WARNING) {
+        if (it.tag == tag) {
             return true;
         }
     }
@@ -181,7 +186,7 @@ static bool print_report(report_t report) {
 }
 
 static reportid_t push_report(level_t level, scanner_t *source, where_t where, node_t *node, char *message) {
-    report_t it = { level, message, source, where, NULL, NULL, node };
+    report_t it = { level, message, source, where, NULL, NULL, node, node };
 
     if (eager_report) {
         print_report(it);
@@ -239,11 +244,12 @@ void assert(const char *fmt, ...) {
     va_end(args);
 }
 
-void warnf(const char *fmt, ...) {
+reportid_t warnf(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    push_report(LEVEL_WARNING, NULL, NOWHERE, NULL, formatv(fmt, args));
+    reportid_t id = push_report(LEVEL_WARNING, NULL, NOWHERE, NULL, formatv(fmt, args));
     va_end(args);
+    return id;
 }
 
 reportid_t reportf(level_t level, node_t *node, const char *fmt, ...) {
@@ -269,6 +275,11 @@ void report_underline(reportid_t id, const char *msg) {
 void report_note(reportid_t id, const char *msg) {
     if (id != INVALID_REPORT)
         reports[id].note = msg;
+}
+
+void report_tag(reportid_t id, const void *tag) {
+    if (id != INVALID_REPORT)
+        reports[id].tag = tag;
 }
 
 bool verbose = false;

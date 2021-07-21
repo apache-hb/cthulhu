@@ -2,6 +2,7 @@
 
 #include "ctu/util/util.h"
 #include "ctu/util/report.h"
+#include "ctu/debug/ir.h"
 
 #define FINISHED_OPTIMIZATION SIZE_MAX
 

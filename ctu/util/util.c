@@ -6,7 +6,6 @@
 #include <string.h>
 
 void *ctu_malloc(size_t size) {
-    malloc(0x1000);
     return malloc(size);
 }
 
