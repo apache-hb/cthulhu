@@ -3,19 +3,6 @@
 #include "ctu/ast/ast.h"
 
 /**
- * assert is for internal compiler errors
- * ensure is for normal compiler errors
- * ASSERT(expr)("error message %s", "more");
- * ENSURE(expr)("error message %s", "more");
- */
-void assert(const char *fmt, ...);
-void ensure(const char *fmt, ...);
-#define ENSURE(expr) if (!(expr)) (ensure)
-#define ASSERT(expr) if (!(expr)) (assert)
-
-void warnf(const char *fmt, ...);
-
-/**
  * error severity
  * LEVEL_INTERNAL is an internal compiler issue
  * LEVEL_ERROR is fatal
@@ -30,6 +17,19 @@ typedef enum {
 #define INVALID_REPORT SIZE_MAX
 
 typedef size_t reportid_t;
+
+/**
+ * assert is for internal compiler errors
+ * ensure is for normal compiler errors
+ * ASSERT(expr)("error message %s", "more");
+ * ENSURE(expr)("error message %s", "more");
+ */
+void assert(const char *fmt, ...);
+void ensure(const char *fmt, ...);
+#define ENSURE(expr) if (!(expr)) (ensure)
+#define ASSERT(expr) if (!(expr)) (assert)
+
+reportid_t warnf(const char *fmt, ...);
 
 /**
  * set the report limit and begin a new report
@@ -62,6 +62,11 @@ void report_underline(reportid_t id, const char *msg);
  * add a note to be printed under a report
  */
 void report_note(reportid_t id, const char *note);
+
+/**
+ * set the unique tag for a report
+ */
+void report_tag(reportid_t id, const void *tag);
 
 extern bool verbose;
 extern const where_t NOWHERE;

@@ -150,7 +150,7 @@ static void debug_params(flow_t *flow) {
     printf(")");
 }
 
-static void debug_flow(module_t *mod, flow_t flow) {
+void debug_flow(flow_t flow) {
     printf("define %s", flow.name);
     debug_params(&flow);
     printf(": ");
@@ -158,7 +158,7 @@ static void debug_flow(module_t *mod, flow_t flow) {
     printf(" {\n");
 
     for (size_t i = 0; i < flow.len; i++) {
-        debug_step(mod, i, flow.steps[i]);
+        debug_step(flow.mod, i, flow.steps[i]);
     }
     printf("}\n");
 }
@@ -194,6 +194,6 @@ void debug_module(module_t mod) {
         if (i != 0) {
             printf("\n");
         }
-        debug_flow(&mod, mod.flows[i]);
+        debug_flow(mod.flows[i]);
     }
 }

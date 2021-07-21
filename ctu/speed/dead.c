@@ -25,8 +25,6 @@ bool remove_dead_code(flow_t *flow) {
     return dirty;
 }
 
-#include <stdio.h>
-
 static bool is_block(operand_t op, size_t label) {
     return op.kind == BLOCK && op.label == label;
 }
@@ -35,21 +33,15 @@ static void track_label(bool *refs, operand_t op) {
     if (op.kind != BLOCK)
         return;
 
-    printf("label %zu\n", op.label);
-
     refs[op.label] = true;
 }
 
 static void track_branch(bool *refs, size_t idx, step_t *step) {
     if (step->opcode == OP_BRANCH) { 
-        printf("at %zu\n", idx);
-        printf("block\n");
         track_label(refs, step->block);
-        printf("other\n");
         track_label(refs, step->other);
         refs[idx] = true;
     } else if (step->opcode == OP_JUMP) {
-        printf("jump\n");
         track_label(refs, step->block);
         refs[idx] = true;
     } else {
@@ -148,7 +140,24 @@ bool remove_unused_code(flow_t *flow) {
 }
 
 static bool is_block_empty(flow_t *flow, size_t idx, size_t *end) {
-    
+    if (idx + 1 >= flow->len) {
+        /**
+         * this is an interesting edge case caused
+         * by a branch to the end of a function that has 
+         * a missing return instruction.
+         * 
+         * this isnt an issue with void functions because
+         * we automatically add a return instruction, but with
+         * non-void functions we dont, this function is techinically
+         * malformed, but we can handle it.
+         * 
+         * we also inform the user they may have messed up
+         */
+        reportid_t id = warnf("function `%s` may not return", flow->name);
+        report_tag(id, flow);
+        return false;
+    }
+
     for (size_t i = idx + 1; i < flow->len; i++) {
         step_t *step = step_at(flow, i);
         
