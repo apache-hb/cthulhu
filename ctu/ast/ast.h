@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #include "scanner.h"
-#include "type.h"
+#include "ctu/types/type.h"
 
 typedef struct {
     struct node_t **data;

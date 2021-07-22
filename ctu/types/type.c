@@ -1,6 +1,6 @@
 #include "type.h"
 
-#include "ast.h"
+#include "ctu/ast/ast.h"
 
 #include "ctu/util/report.h"
 #include "ctu/util/util.h"
