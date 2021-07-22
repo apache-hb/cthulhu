@@ -39,6 +39,7 @@ SUFFIX [u]?[csilzpm]?
 "return" { return RETURN; }
 "export" { return EXPORTED; }
 "record" { return RECORD; }
+"import" { return IMPORT; }
 
 "$" { yylval->text = "$"; return IDENT; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = ctu_strdup(yytext); return IDENT; }

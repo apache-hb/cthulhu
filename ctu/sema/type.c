@@ -706,7 +706,7 @@ static void build_record(sema_t *sema, node_t *decl) {
     resize_record(result, len);
 
     for (size_t i = 0; i < len; i++) {
-        node_t *field = ast_kind_at(fields, i, AST_FIELD_DECL);
+        node_t *field = ast_kind_at(fields, i, AST_DECL_FIELD);
         add_field(sema, i, result, field);
     }
 }
@@ -755,7 +755,7 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
         add_discardable_local(sema, decl);
         return type;
 
-    case AST_RECORD_DECL:
+    case AST_DECL_RECORD:
         type = typecheck_record(decl);
         break;
 
@@ -849,7 +849,7 @@ static void add_all_decls(sema_t *sema, nodes_t *decls) {
         switch (decl->kind) {
         case AST_DECL_FUNC: typecheck_func(sema, decl); break;
         case AST_DECL_VAR: typecheck_var(sema, decl); break;
-        case AST_RECORD_DECL: begin_record(decl); break;
+        case AST_DECL_RECORD: begin_record(decl); break;
         default: assert("unknown decl type %d", decl->kind);
         }
         add_decl_global(sema, decl);
@@ -857,7 +857,7 @@ static void add_all_decls(sema_t *sema, nodes_t *decls) {
 
     for (size_t i = 0; i < len; i++) {
         node_t *decl = ast_at(decls, i);
-        if (decl->kind == AST_RECORD_DECL) {
+        if (decl->kind == AST_DECL_RECORD) {
             build_record(sema, decl);
         }
     }
@@ -882,7 +882,7 @@ static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {
             validate_function(sema, decl);
             decl->locals = reset_locals();
             break;
-        case AST_RECORD_DECL:
+        case AST_DECL_RECORD:
             validate_record(decl);
             break;
         default: 
@@ -900,15 +900,17 @@ static void add_builtin(type_t *type) {
  * external api
  */
 
-unit_t typecheck(nodes_t *nodes) {
+unit_t typecheck(node_t *root) {
     reset_strings();
     reset_locals();
 
+    nodes_t *decls = all_decls(root);
+
     sema_t *sema = base_sema(ROOT_SEMA, 256);
-    typecheck_all_decls(sema, nodes);
+    typecheck_all_decls(sema, decls);
     free_sema(sema);
 
-    unit_t out = { nodes, strings };
+    unit_t out = { root, strings };
     return out;
 }
 

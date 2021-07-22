@@ -6,6 +6,7 @@
 
 int main(void) {
     report_begin(1, true);
+    types_init();
     
     node_t *digit10 = ast_digit(NULL, NOWHERE, ctu_strdup("100"), 10);
 

@@ -110,6 +110,13 @@ static void debug_access(node_t *node) {
     printf(" %s %s", node->field, node->indirect ? "indirect" : "direct");
 }
 
+static void debug_root(node_t *node) {
+    printf("root ");
+    debug_list(all_imports(node));
+    printf(" ");
+    debug_list(all_decls(node));
+}
+
 void debug_ast(node_t *node) {
     printf("(");
     switch (node->kind) {
@@ -125,8 +132,9 @@ void debug_ast(node_t *node) {
     case AST_BRANCH: debug_branch(node); break;
     case AST_DECL_VAR: debug_var(node); break;
     case AST_ASSIGN: debug_assign(node); break;
-    case AST_RECORD_DECL: debug_record(node); break;
-    case AST_FIELD_DECL: debug_field(node); break;
+    case AST_DECL_RECORD: debug_record(node); break;
+    case AST_DECL_FIELD: debug_field(node); break;
+    case AST_ROOT: debug_root(node); break;
     default: printf("error %d", node->kind); break;
     }
     printf(")");
