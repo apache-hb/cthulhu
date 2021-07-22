@@ -1,15 +1,20 @@
-def gen_ct(name, num):
+def gen_any(name, num, fmt):
     with open(name, 'w') as f:
         for i in range(0, num):
-            f.write(f'def func{i}(): void {{ }}\n')
+            f.write(fmt.format(i))
 
-def gen_c(name, num):
-    with open(name, 'w') as f:
-        for i in range(0, num):
-            f.write(f'void func{i}() {{ }}\n')
+gen_ct = lambda name, num: gen_any(name, num, 'def func{}(): void {{ }}\n')
+gen_c = lambda name, num: gen_any(name, num, 'void func{}() {{ }}\n')
+gen_v = lambda name, num: gen_any(name, num, 'fn func{}() {{ }}\n')
+gen_rs = lambda name, num: gen_any(name, num, 'fn func{}() {{ }}\n')
 
-gen_ct('big-1m.ct', 1000000)
-gen_ct('big-10k.ct', 10000)
+langs = [
+    ('ct', gen_c),
+    ('v', gen_v),
+    ('rs', gen_rs),
+    ('c', gen_c)
+]
 
-gen_c('big-1m.c', 1000000)
-gen_c('big-10k.c', 10000)
+for ext, gen in langs:
+    gen(f'big-10k.{ext}', 10000)
+    gen(f'big-1m.{ext}', 1000000)
