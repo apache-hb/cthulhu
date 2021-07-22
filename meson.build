@@ -51,14 +51,19 @@ src = [
 libutil = library('util', src)
 
 src = [
+    'ctu/types/type.c'
+]
+
+libtype = library('type', src, link_with : libutil)
+
+src = [
     'ctu/ast/compile.c',
     'ctu/ast/scanner.c',
-    'ctu/ast/ast.c',
-    'ctu/ast/type.c'
+    'ctu/ast/ast.c'
 ]
 
 libast = library('ast', src, lex, parse,
-    link_with : libutil
+    link_with : [ libutil, libtype ]
 )
 
 src = [
