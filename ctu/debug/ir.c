@@ -27,6 +27,7 @@ static void debug_operand(module_t *mod, operand_t op) {
     case BLOCK: printf(".%zu", op.label); break;
     case FUNC: printf("def(%zu:%s)", op.func, get_flow_name(mod, op.func)); break;
     case VAR: printf("var(%zu:%s)", op.var, get_var_name(mod, op.var)); break;
+    case STRING: printf("string[%zu]", op.var); break;
     }
 
     if (op.offset != SIZE_MAX) {
@@ -168,6 +169,10 @@ static void debug_global(size_t i, var_t var) {
     debug_type(var.type);
 }
 
+static void debug_string(size_t i, char *str) {
+    printf("string %zu = \"%s\"\n", i, str);
+}
+
 void debug_module(module_t mod) {
     printf("; types\n");
     for (size_t i = 0; i < num_types(&mod); i++) {
@@ -179,7 +184,16 @@ void debug_module(module_t mod) {
         debug_type_verbose(mod.types[i]);
     }
 
-    printf("\n; globals \n");
+    printf("\n; strings\n");
+    for (size_t i = 0; i < num_strings(&mod); i++) {
+        if (i != 0) {
+            printf("\n");
+        }
+
+        debug_string(i, mod.strings[i]);
+    }
+
+    printf("\n; globals\n");
     for (size_t i = 0; i < num_vars(&mod); i++) {
         if (i != 0) {
             printf("\n");

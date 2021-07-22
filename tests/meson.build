@@ -6,7 +6,7 @@ pass = [
     'hello', 'hello2', 'implicit-bool-cast',
     'long', 'loop', 'mut', 'pointers', 'pointers2',
     'regalloc', 'var', 'suffix', 'forward', 'global',
-    'unused-var', 'implicit-var-cast'
+    'unused-var', 'implicit-var-cast', 'string'
 ]
 
 foreach it : pass 

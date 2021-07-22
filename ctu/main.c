@@ -169,7 +169,7 @@ int main(int argc, const char **argv) {
             }
         }
 
-        typecheck(nodes);
+        unit_t unit = typecheck(nodes);
 
         if (report_end("semantic"))
             return 1;
@@ -180,7 +180,7 @@ int main(int argc, const char **argv) {
             }
         }
 
-        module_t *mod = compile_module("ctu/main", nodes);
+        module_t *mod = compile_module("ctu/main", unit);
 
         if (report_end("intermediate"))
             return 1;
@@ -208,10 +208,10 @@ int main(int argc, const char **argv) {
                 gen_c99(out, mod);
             }
         } else {
-            FILE *out = open_file("out.o");
-            if (out) {
-                gen_x86(out, mod);
-            }
+            //FILE *out = open_file("out.o");
+            //if (out) {
+            //    gen_x86(out, mod);
+            //}
         }
 
         if (report_end("generate"))

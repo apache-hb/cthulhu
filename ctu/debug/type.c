@@ -50,6 +50,7 @@ static void debug_type_internal(type_t *type, bool verbose) {
     case TYPE_INTEGER: printf("%s", integer_name(type)); break;
     case TYPE_BOOLEAN: printf("bool"); break;
     case TYPE_VOID: printf("void"); break;
+    case TYPE_STRING: printf("str"); break;
     case TYPE_CALLABLE: debug_callable(type); break;
     case TYPE_POINTER: printf("*"); debug_type(type->ptr); break;
     case TYPE_POISON: printf("poison(%s)", type->text); break;

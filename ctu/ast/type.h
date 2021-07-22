@@ -90,6 +90,11 @@ typedef enum {
     TYPE_FIELD,
 
     /**
+     * a string
+     */
+    TYPE_STRING,
+
+    /**
      * error handling types
      */
     TYPE_POISON, /* typecheck error */

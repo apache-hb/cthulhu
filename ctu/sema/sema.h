@@ -4,6 +4,11 @@
 
 extern type_t *VOID_TYPE;
 
-void typecheck(nodes_t *nodes);
+typedef struct {
+    nodes_t *nodes;
+    size_t strings;
+} unit_t;
+
+unit_t typecheck(nodes_t *nodes);
 
 void sema_init(void);
