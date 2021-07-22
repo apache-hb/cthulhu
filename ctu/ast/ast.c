@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
+#include <ctype.h>
 
 #include "ctu/util/str.h"
 #include "ctu/util/report.h"
@@ -185,9 +186,14 @@ node_t *make_exported(node_t *node) {
     return node;
 }
 
-static void add_integer_type(node_t *node, const char *str) {
+static void add_integer_type(node_t *node, char *str) {
+    while (isxdigit(*str)) {
+        str++;
+    }
+
     bool sign = true;
     if (*str == 'u') {
+        *str = 0;
         sign = false;
         str += 1;
     }
@@ -231,27 +237,29 @@ static void add_integer_type(node_t *node, const char *str) {
         break;
     }
 
+    *str = 0;
+
     node->sign = sign;
     node->integer = kind;
 }
 
 node_t *ast_digit(scanner_t *scanner, where_t where, char *digit, int base) {
     node_t *node = new_node(scanner, where, AST_DIGIT);
-    char *end;
 
-    uint64_t out = strtoull(digit, &end, base);
+    add_integer_type(node, digit);
 
-    if (out == ULLONG_MAX && errno == ERANGE) {
-        reportf(LEVEL_WARNING, node, "digit `%s` is out of range", digit);
-        node->sign = true;
-        node->integer = INTEGER_INT;
-    } else {
-        add_integer_type(node, end);
+    if (mpz_init_set_str(node->num, digit, base)) {
+        assert("failed to initialize mpz_t digit");
     }
 
-    node->digit = out;
+    ctu_free(digit);
 
-    free(digit);
+    sanitize_range(
+        get_int_type(node->sign, node->integer),
+        node->num,
+        scanner,
+        where
+    );
 
     return node;
 }

@@ -153,6 +153,7 @@ int main(int argc, const char **argv) {
         return 1;
     }
 
+    types_init();
     sema_init();
 
     for (size_t i = 0; i < inputs.len; i++) {

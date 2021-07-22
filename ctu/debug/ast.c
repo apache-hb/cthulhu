@@ -13,7 +13,7 @@ static void debug_list(nodes_t *nodes) {
 }
 
 static void debug_digit(node_t *node) {
-    printf("digit %" PRIu64, node->digit);
+    printf("digit %s", mpz_get_str(NULL, 10, node->num));
 }
 
 static void debug_unary(node_t *node) {

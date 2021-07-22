@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <gmp.h>
 
 #include "scanner.h"
 #include "ctu/types/type.h"
@@ -166,8 +167,9 @@ typedef struct node_t {
         /* AST_DIGIT */
         struct {
             /* actual number */
-            uint64_t digit;
-            /* is the integer signed */
+            mpz_t num;
+
+            /* true if signed, false if unsigned */
             bool sign;
             /* the underlying integer type */
             integer_t integer;

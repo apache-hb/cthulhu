@@ -8,7 +8,9 @@ static bool convert_to_bool(operand_t op) {
     if (operand_is_bool(op)) {
         return operand_get_bool(op);
     } else {
-        return operand_get_int(op) != 0;
+        mpz_t it;
+        operand_get_int(it, op);
+        return mpz_cmp_ui(it, 0) != 0;
     }
 }
 
@@ -22,8 +24,12 @@ static void fold_cast(step_t *step, bool *dirty) {
     }
 }
 
-static step_t fold_div(step_t *step, int64_t lhs, int64_t rhs, bool *dirty) {
-    if (rhs == 0) {
+static bool is_zero(mpz_t i) {
+    return mpz_cmp_ui(i, 0) == 0;
+}
+
+static step_t fold_div(step_t *step, mpz_t lhs, mpz_t rhs, bool *dirty) {
+    if (is_zero(rhs)) {
         /**
          * specifically retain the divide opcode
          * when rhs == 0
@@ -37,12 +43,16 @@ static step_t fold_div(step_t *step, int64_t lhs, int64_t rhs, bool *dirty) {
         return *step;
     }
 
+    mpz_t it;
+    mpz_init(it);
+    mpz_cdiv_q(it, lhs, rhs);
+
     *dirty = true;
-    return new_value(step, new_int(lhs / rhs));
+    return new_value(step, new_int(it));
 }
 
-static step_t fold_rem(step_t *step, int64_t lhs, int64_t rhs, bool *dirty) {
-    if (rhs == 0) {
+static step_t fold_rem(step_t *step, mpz_t lhs, mpz_t rhs, bool *dirty) {
+    if (is_zero(rhs)) {
         /**
          * same case as divide but for modulo
          */
@@ -50,30 +60,53 @@ static step_t fold_rem(step_t *step, int64_t lhs, int64_t rhs, bool *dirty) {
         return *step;
     }
 
+    mpz_t it;
+    mpz_init(it);
+    mpz_mod(it, lhs, rhs);
+
     *dirty = true;
-    return new_value(step, new_int(lhs % rhs));
+    return new_value(step, new_int(it));
 }
 
+#include <stdio.h>
+
 static step_t fold_math_op(step_t *step, bool *dirty) {
-    int64_t lhs = operand_get_int(step->lhs),
-            rhs = operand_get_int(step->rhs);
+    mpz_t lhs;
+    mpz_t rhs;
+    mpz_t it;
+    mpz_init(it);
+    operand_get_int(lhs, step->lhs);
+    operand_get_int(rhs, step->rhs);
+
+    bool changed = false;
 
     switch (step->binary) {
     case BINARY_ADD: 
-        *dirty = true;
-        return new_value(step, new_int(lhs + rhs));
-    case BINARY_SUB: 
-        *dirty = true;
-        return new_value(step, new_int(lhs - rhs));
+        changed = true;
+        mpz_add(it, lhs, rhs);
+        break;
+    case BINARY_SUB:
+        changed = true;
+        mpz_sub(it, lhs, rhs);
+        break;
     case BINARY_DIV: 
-        return fold_div(step, lhs, rhs, dirty);
+        return fold_div(step, lhs, rhs, &changed);
     case BINARY_REM: 
-        return fold_rem(step, lhs, rhs, dirty);
+        return fold_rem(step, lhs, rhs, &changed);
     case BINARY_MUL: 
-        *dirty = true;
-        return new_value(step, new_int(lhs * rhs));
+        changed = true;
+        mpz_mul(it, lhs, rhs);
+        break;
     default: 
         assert("invalid math op when folding");
+        return *step;
+    }
+
+    if (changed) {
+        *dirty = true;
+        sanitize_range(step->type, it, step->source, step->where);
+        return new_value(step, new_int(it));
+    } else {
         return *step;
     }
 }
@@ -97,15 +130,17 @@ static void fold_unary(step_t *step, bool *dirty) {
     if (!operand_is_imm(step->expr))
         return;
 
+    mpz_t it;
+    mpz_init(it);
+    operand_get_int(it, step->expr);
+
     if (step->unary == UNARY_ABS) {
-        *step = new_value(step, new_int(
-            llabs(operand_get_int(step->expr))
-        ));
+        mpz_abs(it, it);
+        *step = new_value(step, new_int(it));
         *dirty = true;
     } else if (step->unary == UNARY_NEG) {
-        *step = new_value(step, new_int(
-            operand_get_int(step->expr) * -1
-        ));
+        mpz_neg(it, it);
+        *step = new_value(step, new_int(it));
         *dirty = true;
     }
 }

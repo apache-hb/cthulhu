@@ -1,6 +1,7 @@
 #include "type.h"
 
 #include "ctu/ast/ast.h"
+#include "ctu/ir/ir.h"
 
 #include "ctu/util/report.h"
 #include "ctu/util/util.h"
@@ -11,6 +12,47 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+static type_t *INT_TYPES[INTEGER_END];
+static type_t *UINT_TYPES[INTEGER_END];
+
+type_t *STRING_TYPE = NULL;
+type_t *BOOL_TYPE = NULL;
+type_t *VOID_TYPE = NULL;
+
+static void add_int(int kind, const char *name) {
+    INT_TYPES[kind] = new_integer(kind, true, name);
+}
+
+static void add_uint(int kind, const char *name) {
+    UINT_TYPES[kind] = new_integer(kind, false, name);
+}
+
+type_t *get_int_type(bool sign, integer_t kind) {
+    return sign ? INT_TYPES[kind] : UINT_TYPES[kind];
+}
+
+void types_init(void) {
+    add_int(INTEGER_CHAR, "char");
+    add_int(INTEGER_SHORT, "short");
+    add_int(INTEGER_INT, "int");
+    add_int(INTEGER_LONG, "long");
+    add_int(INTEGER_SIZE, "isize");
+    add_int(INTEGER_INTPTR, "intptr");
+    add_int(INTEGER_INTMAX, "intmax");
+    
+    add_uint(INTEGER_CHAR, "uchar");
+    add_uint(INTEGER_SHORT, "ushort");
+    add_uint(INTEGER_INT, "uint");
+    add_uint(INTEGER_LONG, "ulong");
+    add_uint(INTEGER_SIZE, "usize");
+    add_uint(INTEGER_INTPTR, "uintptr");
+    add_uint(INTEGER_INTMAX, "uintmax");
+    
+    STRING_TYPE = new_builtin(TYPE_STRING, "str");
+    BOOL_TYPE = new_builtin(TYPE_BOOLEAN, "bool");
+    VOID_TYPE = new_builtin(TYPE_VOID, "void");
+}
 
 types_t *new_typelist(size_t size) {
     types_t *list = ctu_malloc(sizeof(types_t));
@@ -162,5 +204,80 @@ void connect_type(node_t *node, type_t *type) {
 
     if (!is_builtin(type) && type->node == NULL) {
         type->node = node;
+    }
+}
+
+static void sanitize_signed(scanner_t *source, where_t where, integer_t kind, mpz_t it) {
+    switch (kind) {
+    case INTEGER_CHAR:
+        if (mpz_cmp_si(it, -128) < 0 || mpz_cmp_si(it, 127) > 0) {
+            report(LEVEL_WARNING, source, where, "character out of range");
+        }
+        break;
+    case INTEGER_SHORT:
+        if (mpz_cmp_si(it, -32768) < 0 || mpz_cmp_si(it, 32767) > 0) {
+            report(LEVEL_WARNING, source, where, "short out of range");
+        }
+        break;
+    case INTEGER_INT:
+        if (mpz_cmp_si(it, -2147483648) < 0 || mpz_cmp_si(it, 2147483647) > 0) {
+            report(LEVEL_WARNING, source, where, "int out of range");
+        }
+        break;
+    case INTEGER_LONG:
+        if (mpz_cmp_si(it, -9223372036854775807LL) < 0 || mpz_cmp_si(it, 9223372036854775807LL) > 0) {
+            report(LEVEL_WARNING, source, where, "long out of range");
+        }
+        break;
+
+    default: 
+        /**
+         * all other types have platform defined ranges
+         * so dont warn if they overflow
+         */
+        break;
+    }
+}
+
+static void sanitize_unsigned(scanner_t *source, where_t where, integer_t kind, mpz_t it) {
+    switch (kind) {
+    case INTEGER_CHAR: 
+        if (mpz_cmp_ui(it, 0xFF) > 0) {
+            report(LEVEL_WARNING, source, where, "unsigned char overflow");
+        }
+        break;
+    case INTEGER_SHORT:
+        if (mpz_cmp_ui(it, 0xFFFF) > 0) {
+            report(LEVEL_WARNING, source, where, "unsigned short overflow");
+        }
+        break;
+    case INTEGER_INT:
+        if (mpz_cmp_ui(it, 0xFFFFFFFF) > 0) {
+            report(LEVEL_WARNING, source, where, "unsigned int overflow");
+        }
+        break;
+    case INTEGER_LONG:
+        if (mpz_cmp_ui(it, 0xFFFFFFFFFFFFFFFFULL) > 0) {
+            report(LEVEL_WARNING, source, where, "unsigned long overflow");
+        }
+        break;
+
+    default: 
+        /**
+         * same as above
+         */
+        break;
+    }
+}
+
+void sanitize_range(type_t *type, mpz_t it, scanner_t *scanner, where_t where) {
+    if (!is_integer(type)) {
+        return;
+    }
+
+    if (is_signed(type)) {
+        sanitize_signed(scanner, where, get_integer_kind(type), it);
+    } else {
+        sanitize_unsigned(scanner, where, get_integer_kind(type), it);
     }
 }
