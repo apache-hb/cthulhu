@@ -16,6 +16,7 @@ typedef enum {
      */
     AST_DIGIT,
     AST_BOOL,
+    AST_STRING,
     AST_UNARY,
     AST_BINARY,
     AST_CALL,
@@ -147,10 +148,8 @@ typedef struct node_t {
     type_t *typeof;
 
     AST_UNION {
-        struct {
-            /* AST_SYMBOL */
-            char *ident;
-        };
+        /* AST_SYMBOL */
+        char *ident;
 
         /* AST_ACCESS */
         struct {
@@ -231,6 +230,14 @@ typedef struct node_t {
 
                 /* AST_TYPE */
                 const char *nameof;
+                
+                /**
+                 * string is here because strings are
+                 * stored in a global array, not inline
+                 * so we need to know where in the array
+                 * they are, we use `local` to find that
+                 */
+                char *string;
             };
 
             /* own local index, or NOT_LOCAL if its not local */
@@ -369,6 +376,7 @@ bool is_used(node_t *node);
 
 node_t *ast_digit(scanner_t *scanner, where_t where, char *digit, int base);
 node_t *ast_bool(scanner_t *scanner, where_t where, bool boolean);
+node_t *ast_string(scanner_t *scanner, where_t where, char *string);
 
 node_t *ast_unary(scanner_t *scanner, where_t where, unary_t unary, node_t *expr);
 node_t *ast_binary(scanner_t *scanner, where_t where, binary_t binary, node_t *lhs, node_t *rhs);

@@ -121,6 +121,14 @@ static char *gen_struct(type_t *type, const char *name) {
     }
 }
 
+static const char *gen_string(const char *name) {
+    if (name) {
+        return format("const char* %s", name);
+    } else {
+        return "const char*";
+    }
+}
+
 static const char *gen_type(type_t *type, const char *name) {
     switch (type->kind) {
     case TYPE_INTEGER: return gen_int(type, name);
@@ -128,6 +136,7 @@ static const char *gen_type(type_t *type, const char *name) {
     case TYPE_VOID: return gen_void(name);
     case TYPE_CALLABLE: return gen_callable(type, name);
     case TYPE_POINTER: return gen_pointer(type, name);
+    case TYPE_STRING: return gen_string(name);
     case TYPE_STRUCT: return gen_struct(type, name);
 
     default:
@@ -197,6 +206,10 @@ static const char *gen_func(module_t *mod, size_t idx) {
     return mod->flows[idx].name;
 }
 
+static char *genstr(size_t idx) {
+    return format("str%zu", idx);
+}
+
 static const char *gen_operand(flow_t *flow, operand_t op) {
     switch (op.kind) {
     case BLOCK: return format("block%zu", op.label);
@@ -205,6 +218,7 @@ static const char *gen_operand(flow_t *flow, operand_t op) {
     case FUNC: return gen_func(flow->mod, op.func);
     case VAR: return gen_var(op.var);
     case ARG: return genarg(op.arg);
+    case STRING: return genstr(op.var);
 
     case NONE:
         assert("gen_operand invalid operand");
@@ -371,6 +385,15 @@ static void emit_type(FILE *out, type_t *type) {
     fprintf(out, "};");
 }
 
+static void emit_string(FILE *out, size_t idx, const char *str) {
+    fprintf(out, "const char *str%zu = ", idx);
+    fprintf(out, "\"");
+    for (size_t i = 0; i < strlen(str); i++) {
+        fprintf(out, "\\x%x", str[i]);
+    }
+    fprintf(out, "\";");
+}
+
 void gen_c99(FILE *out, module_t *mod) {
     char *name = str_replace(mod->name, "/", "_");
     guard_head(out, name);
@@ -380,6 +403,13 @@ void gen_c99(FILE *out, module_t *mod) {
     add_include(out, "stdbool");
     add_include(out, "stdint");
     add_include(out, "stddef");
+
+    for (size_t i = 0; i < num_strings(mod); i++) {
+        if (i != 0) {
+            line(out);
+        }
+        emit_string(out, i, mod->strings[i]);
+    }
 
     for (size_t i = 0; i < num_types(mod); i++) {
         if (i != 0) {

@@ -264,6 +264,55 @@ node_t *ast_bool(scanner_t *scanner, where_t where, bool boolean) {
     return node;
 }
 
+static char *escape_string(const char *str) {
+    size_t len = strlen(str);
+    char *out = ctu_malloc(len + 1);
+
+    size_t idx = 0;
+    size_t dst = 0;
+
+    while (str[idx]) {
+        char c = str[idx++];
+        if (c == '\\') {
+            char n = str[idx++];
+            switch (n) {
+            case '\\': out[dst++] = '\\'; break;
+            case 'n': out[dst++] = '\n'; break;
+            case 't': out[dst++] = '\t'; break;
+            case 'r': out[dst++] = '\r'; break;
+            case '"': out[dst++] = '"'; break;
+            case '\'': out[dst++] = '\''; break;
+            case '0': out[dst++] = '\0'; break;
+            case 'a': out[dst++] = '\a'; break;
+            case 'b': out[dst++] = '\b'; break;
+            case 'e': out[dst++] = '\x1b'; break;
+            case 'v': out[dst++] = '\v'; break;
+            case 'f': out[dst++] = '\f'; break;
+            default:
+                reportf(LEVEL_ERROR, NULL, "invalid escape sequence `\\%c`", n);
+                break;
+            }
+        } else {
+            out[dst++] = c;
+        }
+    }
+
+    return out;
+}
+
+node_t *ast_string(scanner_t *scanner, where_t where, char *string) {
+    node_t *node = new_node(scanner, where, AST_STRING);
+
+    char *in = string + 1;
+    string[strlen(string) - 1] = '\0';
+
+    node->string = escape_string(in);
+
+    ctu_free(string);
+
+    return node;
+}
+
 node_t *ast_symbol(scanner_t *scanner, where_t where, char *text) {
     node_t *node = new_node(scanner, where, AST_SYMBOL);
 

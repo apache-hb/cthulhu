@@ -45,6 +45,12 @@ static operand_t new_var(size_t idx) {
     return op;
 }
 
+static operand_t new_string(size_t idx) {
+    operand_t op = new_operand(STRING);
+    op.var = idx;
+    return op;
+}
+
 static operand_t new_arg(size_t idx) {
     operand_t op = new_operand(ARG);
     op.arg = idx;
@@ -483,6 +489,12 @@ static operand_t emit_while(flow_t *flow, node_t *node) {
     return head;
 }
 
+static operand_t emit_string(flow_t *flow, node_t *node) {
+    size_t idx = node->local;
+    flow->mod->strings[idx] = node->string;
+    return new_string(idx); 
+}
+
 static operand_t emit_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
@@ -498,6 +510,7 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
     case AST_DECL_VAR: return emit_var(flow, node);
     case AST_ASSIGN: return emit_assign(flow, node);
     case AST_WHILE: return emit_while(flow, node);
+    case AST_STRING: return emit_string(flow, node);
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);
         return new_operand(NONE);
@@ -606,7 +619,9 @@ static size_t count_types(nodes_t *nodes) {
     return count_decls(nodes, AST_RECORD_DECL);
 }
 
-module_t *compile_module(const char *name, nodes_t *nodes) {
+module_t *compile_module(const char *name, unit_t unit) {
+    nodes_t *nodes = unit.nodes;
+
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
    
@@ -618,6 +633,9 @@ module_t *compile_module(const char *name, nodes_t *nodes) {
 
     mod->ntypes = count_types(nodes);
     mod->types = ctu_malloc(sizeof(type_t*) * mod->ntypes);
+
+    mod->nstrings = unit.strings;
+    mod->strings = ctu_malloc(sizeof(char*) * mod->nstrings);
 
     size_t len = ast_len(nodes);
 
@@ -685,4 +703,8 @@ size_t num_vars(module_t *mod) {
 
 size_t num_types(module_t *mod) {
     return mod->ntypes;
+}
+
+size_t num_strings(module_t *mod) {
+    return mod->nstrings;
 }

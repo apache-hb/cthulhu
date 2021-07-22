@@ -61,6 +61,11 @@ SUFFIX [u]?[csilzpm]?
     return DIGIT; 
 }
 
+\"(\\.|[^"\\])*\" { 
+    yylval->text = strdup(yytext);
+    return STRING;
+}
+
 "." { return DOT; }
 "->" { return ARROW; }
 

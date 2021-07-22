@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ctu/ast/ast.h"
+#include "ctu/sema/sema.h"
 
 typedef enum {
     OP_EMPTY, /* optimized out */
@@ -24,7 +25,9 @@ typedef enum {
 typedef size_t vreg_t;
 
 typedef struct {
-    enum { IMM_BOOL, IMM_INT, IMM_SIZE } kind;
+    enum { 
+        IMM_BOOL, IMM_INT, IMM_SIZE
+    } kind;
 
     union {
         bool imm_bool;
@@ -43,6 +46,7 @@ typedef struct {
         
         FUNC, /* a global function */
         VAR, /* a global variable */
+        STRING, /* a string constant stored in the modules string table */
         
         NONE /* nothing */
     } kind;
@@ -214,10 +218,14 @@ typedef struct module_t {
     /* all types declared in this module */
     type_t **types;
     size_t ntypes;
+
+    char **strings;
+    size_t nstrings;
 } module_t;
 
 size_t num_flows(module_t *mod);
 size_t num_vars(module_t *mod);
 size_t num_types(module_t *mod);
+size_t num_strings(module_t *mod);
 
-module_t *compile_module(const char *name, nodes_t *nodes);
+module_t *compile_module(const char *name, unit_t unit);

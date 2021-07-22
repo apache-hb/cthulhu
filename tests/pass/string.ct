@@ -1,0 +1,8 @@
+
+def hello(): str {
+    return "hello";
+}
+
+export def main(argc: int, argv: **char): int {
+    final x = hello();
+}

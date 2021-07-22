@@ -36,6 +36,7 @@ void yyerror();
 
 %token<text>
     IDENT "identifier"
+    STRING "string literal"
 
 %token<digit>
     DIGIT "integer literal"
@@ -246,6 +247,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | DIGIT { $$ = ast_digit(x, @$, $1.text, $1.base); }
     | BOOL_TRUE { $$ = ast_bool(x, @$, true); }
     | BOOL_FALSE { $$ = ast_bool(x, @$, false); }
+    | STRING { $$ = ast_string(x, @$, $1); }
     ;
 
 postfix: primary { $$ = $1; }

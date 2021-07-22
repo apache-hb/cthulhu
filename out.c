@@ -4,32 +4,21 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+const char *str0 = "\x68\x65\x6c\x6c\x6f";
 
 
+static const char* hello(void);
+const int main(const int, const char**);
 
-const int main(void);
-static const int fac(const int);
-
-const int main(void)
+static const char* hello(void)
 {
-const int(*local1)(const int) = *fac;
-const int local2 = local1(5);
-return local2;
+return str0;
 }
 
-static const int fac(const int arg0)
+const int main(const int arg0, const char** arg1)
 {
-int local5[1];
-local5[0] = 1;
-block7:(void)0;
-int local8 = *local5;
-bool local10 = local8 <= arg0;
-if (local10) { goto block12; } else { goto block23; }
-block12:(void)0;
-int local19 = *local5;
-const int local20 = local19 + 1;
-local5[0] = local20;
-goto block7;
+const char*(*local5)() = *hello;
+const char* local6 = local5();
 }
 
 #endif /* ctu_main */

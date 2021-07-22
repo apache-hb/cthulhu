@@ -19,8 +19,10 @@ typedef struct sema_t {
     map_t *decls;
 
     type_t *result; /* return type of current function */
-    size_t locals; /* number of locals the current function has */
 } sema_t;
+
+size_t locals;
+size_t strings;
 
 /**
  * constants
@@ -31,6 +33,7 @@ static type_t *UINT_TYPES[INTEGER_END];
 
 static sema_t *ROOT_SEMA = NULL;
 
+static type_t *STRING_TYPE = NULL;
 static type_t *BOOL_TYPE = NULL;
 type_t *VOID_TYPE = NULL;
 
@@ -43,7 +46,6 @@ static sema_t *base_sema(sema_t *parent, size_t size) {
     sema->parent = parent;
     sema->decls = new_map(size);
     sema->result = NULL;
-    sema->locals = 0;
     return sema;
 }
 
@@ -120,8 +122,24 @@ static void add_decl_global(sema_t *sema, node_t *decl) {
     add_decl_unique(sema, decl);
 }
 
+static void mark_string(node_t *str) {
+    str->local = strings++;
+}
+
+static size_t reset_strings(void) {
+    size_t num = strings;
+    strings = 0;
+    return num;
+}
+
 static void mark_local(node_t *decl) {
-    decl->local = ROOT_SEMA->locals++;
+    decl->local = locals++;
+}
+
+static size_t reset_locals(void) {
+    size_t num = locals;
+    locals = 0;
+    return num;
 }
 
 static void add_local(sema_t *sema, node_t *decl, bool add) {
@@ -135,12 +153,6 @@ static void add_local(sema_t *sema, node_t *decl, bool add) {
 static void add_discardable_local(sema_t *sema, node_t *decl) {
     bool discard = is_discard_name(get_decl_name(decl));
     add_local(sema, decl, !discard);
-}
-
-static size_t reset_locals() {
-    size_t num = ROOT_SEMA->locals;
-    ROOT_SEMA->locals = 0;
-    return num;
 }
 
 static bool is_local(node_t *node) {
@@ -544,6 +556,11 @@ static type_t *typecheck_access(sema_t *sema, node_t *access) {
     return get_field(access, inner, access->field);
 }
 
+static type_t *get_string_type(node_t *str) {
+    mark_string(str);
+    return STRING_TYPE;
+}
+
 static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
     type_t *type = raw_type(expr);
 
@@ -558,6 +575,10 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
 
     case AST_BOOL:
         type = get_bool_type();
+        break;
+
+    case AST_STRING:
+        type = get_string_type(expr);
         break;
 
     case AST_BINARY:
@@ -684,15 +705,11 @@ static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
 static type_t *begin_record(node_t *decl) { 
     const char *name = get_decl_name(decl);
 
-    printf("begin %s\n", name);
-
     return new_record(decl, name);
 }
 
 static void build_record(sema_t *sema, node_t *decl) {
     type_t *result = get_type(decl);
-
-    printf("building %s\n", result->name);
 
     nodes_t *fields = decl->fields;
     size_t len = ast_len(fields);
@@ -717,7 +734,6 @@ static void validate_record(node_t *decl) {
     type_t *record = get_type(decl);
     record_t fields = record->fields;
     size_t len = fields.size;
-    printf("validating %s\n", record->name);
     for (size_t i = 0; i < len; i++) {
         field_t field = fields.fields[i];
         if (is_struct(field.type)) {
@@ -895,10 +911,16 @@ static void add_builtin(type_t *type) {
  * external api
  */
 
-void typecheck(nodes_t *nodes) {
+unit_t typecheck(nodes_t *nodes) {
+    reset_strings();
+    reset_locals();
+
     sema_t *sema = base_sema(ROOT_SEMA, 256);
     typecheck_all_decls(sema, nodes);
     free_sema(sema);
+
+    unit_t out = { nodes, strings };
+    return out;
 }
 
 static void add_int(int kind, const char *name) {
@@ -928,6 +950,7 @@ void sema_init(void) {
     add_uint(INTEGER_INTPTR, "uintptr");
     add_uint(INTEGER_INTMAX, "uintmax");
     
+    STRING_TYPE = new_builtin(TYPE_STRING, "str");
     BOOL_TYPE = new_builtin(TYPE_BOOLEAN, "bool");
     VOID_TYPE = new_builtin(TYPE_VOID, "void");
 
@@ -936,6 +959,7 @@ void sema_init(void) {
         add_builtin(UINT_TYPES[i]);
     }
 
+    add_builtin(STRING_TYPE);
     add_builtin(BOOL_TYPE);
     add_builtin(VOID_TYPE);
 }
