@@ -6,6 +6,8 @@
 #include "ctu/debug/type.h"
 #include "ctu/debug/ast.h"
 
+#include <gmp.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -28,14 +30,7 @@ size_t strings;
  * constants
  */
 
-static type_t *INT_TYPES[INTEGER_END];
-static type_t *UINT_TYPES[INTEGER_END];
-
 static sema_t *ROOT_SEMA = NULL;
-
-static type_t *STRING_TYPE = NULL;
-static type_t *BOOL_TYPE = NULL;
-type_t *VOID_TYPE = NULL;
 
 /**
  * builders
@@ -339,9 +334,7 @@ static void typecheck_stmts(sema_t *sema, node_t *stmts) {
 }
 
 static type_t *get_digit_type(node_t *digit) {
-    return digit->sign 
-        ? INT_TYPES[digit->integer] 
-        : UINT_TYPES[digit->integer];
+    return get_int_type(digit->sign, digit->integer);
 }
 
 static type_t *get_bool_type(void) {
@@ -421,11 +414,7 @@ static void check_binary_equality(node_t* node, type_t *lhs, type_t *rhs) {
 static type_t *get_binary_math_type(type_t *lhs, type_t *rhs) {
     integer_t it = MAX(get_integer_kind(lhs), get_integer_kind(rhs));
 
-    if (is_signed(lhs) || is_signed(rhs)) {
-        return INT_TYPES[it];
-    } else {
-        return UINT_TYPES[it];
-    }
+    return get_int_type(is_signed(lhs) || is_signed(rhs), it);
 }
 
 static type_t *typecheck_binary(sema_t *sema, node_t *expr) {
@@ -923,40 +912,12 @@ unit_t typecheck(nodes_t *nodes) {
     return out;
 }
 
-static void add_int(int kind, const char *name) {
-    INT_TYPES[kind] = new_integer(kind, true, name);
-}
-
-static void add_uint(int kind, const char *name) {
-    UINT_TYPES[kind] = new_integer(kind, false, name);
-}
-
 void sema_init(void) {
     ROOT_SEMA = new_sema(NULL);
 
-    add_int(INTEGER_CHAR, "char");
-    add_int(INTEGER_SHORT, "short");
-    add_int(INTEGER_INT, "int");
-    add_int(INTEGER_LONG, "long");
-    add_int(INTEGER_SIZE, "isize");
-    add_int(INTEGER_INTPTR, "intptr");
-    add_int(INTEGER_INTMAX, "intmax");
-    
-    add_uint(INTEGER_CHAR, "uchar");
-    add_uint(INTEGER_SHORT, "ushort");
-    add_uint(INTEGER_INT, "uint");
-    add_uint(INTEGER_LONG, "ulong");
-    add_uint(INTEGER_SIZE, "usize");
-    add_uint(INTEGER_INTPTR, "uintptr");
-    add_uint(INTEGER_INTMAX, "uintmax");
-    
-    STRING_TYPE = new_builtin(TYPE_STRING, "str");
-    BOOL_TYPE = new_builtin(TYPE_BOOLEAN, "bool");
-    VOID_TYPE = new_builtin(TYPE_VOID, "void");
-
     for (int i = 0; i < INTEGER_END; i++) {
-        add_builtin(INT_TYPES[i]);
-        add_builtin(UINT_TYPES[i]);
+        add_builtin(get_int_type(false, i));
+        add_builtin(get_int_type(true, i));
     }
 
     add_builtin(STRING_TYPE);

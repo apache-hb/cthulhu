@@ -12,9 +12,9 @@ static const char *get_var_name(module_t *mod, size_t idx) {
 
 static void debug_imm(imm_t imm) {
     switch (imm.kind) {
-    case IMM_INT: printf("int(%" PRId64 ")", imm.imm_int); break;
-    case IMM_BOOL: printf("bool(%s)", imm.imm_bool ? "true" : "false"); break;
-    case IMM_SIZE: printf("size(%zu)", imm.imm_size);
+    case IMM_INT: printf("int(%s)", mpz_get_str(NULL, 0, imm.num)); break;
+    case IMM_BOOL: printf("bool(%s)", imm.b ? "true" : "false"); break;
+    case IMM_SIZE: printf("size(%s)", mpz_get_str(NULL, 0, imm.num));
     }
 }
 

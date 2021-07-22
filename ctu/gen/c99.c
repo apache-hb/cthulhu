@@ -184,9 +184,9 @@ static void def_flow(FILE *out, flow_t *flow) {
 
 static const char *gen_imm(imm_t imm) {
     switch (imm.kind) {
-    case IMM_BOOL: return imm.imm_bool ? "true" : "false";
-    case IMM_INT: return format("%" PRId64, imm.imm_int);
-    case IMM_SIZE: return format("%zu", imm.imm_size);
+    case IMM_BOOL: return imm.b ? "true" : "false";
+    case IMM_INT: return format("%s", mpz_get_str(NULL, 0, imm.num));
+    case IMM_SIZE: return format("%s", mpz_get_str(NULL, 0, imm.num));
 
     default:
         assert("unreachable gen_imm");

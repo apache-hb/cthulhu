@@ -20,10 +20,10 @@ static operand_t new_operand(int kind) {
     return op;
 }
 
-operand_t new_int(int64_t imm) {
+operand_t new_int(mpz_t imm) {
     operand_t op = new_operand(IMM);
     op.imm.kind = IMM_INT;
-    op.imm.imm_int = imm;
+    mpz_init_set(op.imm.num, imm);
     return op;
 }
 
@@ -127,24 +127,17 @@ bool operand_is_invalid(operand_t op) {
 
 bool operand_get_bool(operand_t op) {
     ASSERT(operand_is_bool(op))("cannot get boolean from a non-boolean immediate");
-    return op.imm.imm_bool;
+    return op.imm.b;
 }
 
-int64_t operand_get_int(operand_t op) {
-    return op.imm.imm_int;
+void operand_get_int(mpz_t it, operand_t op) {
+    mpz_init_set(it, op.imm.num);
 }
 
 operand_t new_bool(bool b) {
     operand_t op = new_operand(IMM);
     op.imm.kind = IMM_BOOL;
-    op.imm.imm_bool = b;
-    return op;
-}
-
-operand_t new_size(size_t s) {
-    operand_t op = new_operand(IMM);
-    op.imm.kind = IMM_SIZE;
-    op.imm.imm_size = s;
+    op.imm.b = b;
     return op;
 }
 
@@ -194,7 +187,7 @@ static operand_t add_reserve(flow_t *flow, node_t *node) {
 static operand_t emit_opcode(flow_t *flow, node_t *node);
 
 static operand_t emit_digit(node_t *node) {
-    return new_int(node->digit);
+    return new_int(node->num);
 }
 
 static operand_t emit_bool(node_t *node) {

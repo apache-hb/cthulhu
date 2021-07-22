@@ -5,6 +5,7 @@
 
 int main(void) {
     report_begin(1, true);
+    types_init();
     
     nodes_t *nodes = compile_string("test/main", 
         "def main(): int { return 100; }\n",

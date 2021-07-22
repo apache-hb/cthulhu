@@ -7,6 +7,8 @@ project('ctu', 'c',
     ]
 )
 
+gmp = dependency('gmp')
+
 windows = build_machine.system() == 'windows'
 
 flex = find_program(
@@ -63,6 +65,7 @@ src = [
 ]
 
 libast = library('ast', src, lex, parse,
+    dependencies : gmp,
     link_with : [ libutil, libtype ]
 )
 

@@ -3,6 +3,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include <gmp.h>
+
+#include "ctu/ast/scanner.h"
+
 typedef enum {
     /** 
      * # Builtin Integer types 
@@ -14,7 +18,7 @@ typedef enum {
      *  - char. can represent at least the range [-128 to 127]
      *  - short. can represent at least the range [-32,768 to 32,767]
      *  - int. can represent at least the range [-2,147,483,648 to 2,147,483,647]
-     *  - long. can represent at least the range [-9,223,372,036,854,775,808 to 9,223,372,036,854,775,807]
+     *  - long. can represent at least the range [-9,223,372,036,854,775,807 to 9,223,372,036,854,775,807]
      * 
      * ### Unsigned
      *  - uchar. can represent at least the range [0 to 255]
@@ -203,6 +207,14 @@ typedef struct type_t {
     };
 } type_t;
 
+extern type_t *STRING_TYPE;
+extern type_t *BOOL_TYPE;
+extern type_t *VOID_TYPE;
+
+type_t *get_int_type(bool sign, integer_t kind);
+
+void types_init(void);
+
 types_t *new_typelist(size_t size);
 size_t typelist_len(types_t *list);
 void typelist_put(types_t *list, size_t idx, type_t *type);
@@ -233,3 +245,5 @@ integer_t get_integer_kind(type_t *type);
 type_t *set_mut(type_t *type, bool mut);
 
 void connect_type(struct node_t *node, type_t *type);
+
+void sanitize_range(type_t *type, mpz_t it, scanner_t *scanner, where_t where);
