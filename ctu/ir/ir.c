@@ -609,11 +609,11 @@ static size_t count_decls(nodes_t *nodes, ast_t kind) {
 }
 
 static size_t count_types(nodes_t *nodes) {
-    return count_decls(nodes, AST_RECORD_DECL);
+    return count_decls(nodes, AST_DECL_RECORD);
 }
 
 module_t *compile_module(const char *name, unit_t unit) {
-    nodes_t *nodes = unit.nodes;
+    nodes_t *nodes = all_decls(unit.root);
 
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
@@ -646,7 +646,7 @@ module_t *compile_module(const char *name, unit_t unit) {
         case AST_DECL_VAR:
             mod->vars[var_idx++].name = get_decl_name(decl);
             break;
-        case AST_RECORD_DECL:
+        case AST_DECL_RECORD:
             type = get_type(decl);
             type->index = type_idx;
             mod->types[type_idx++] = type;
@@ -670,7 +670,7 @@ module_t *compile_module(const char *name, unit_t unit) {
             mod->vars[var_idx++] = compile_var(mod, decl);
             break;
 
-        case AST_RECORD_DECL:
+        case AST_DECL_RECORD:
             break;
 
         default:

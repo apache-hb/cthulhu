@@ -5,10 +5,10 @@
 extern type_t *VOID_TYPE;
 
 typedef struct {
-    nodes_t *nodes;
+    node_t *root;
     size_t strings;
 } unit_t;
 
-unit_t typecheck(nodes_t *nodes);
+unit_t typecheck(node_t *root);
 
 void sema_init(void);

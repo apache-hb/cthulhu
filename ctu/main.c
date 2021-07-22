@@ -159,26 +159,22 @@ int main(int argc, const char **argv) {
     for (size_t i = 0; i < inputs.len; i++) {
         scanner_t *scan;
         input_t it = inputs.files[i];
-        nodes_t *nodes = compile_file(it.path, it.file, &scan);
+        node_t *root = compile_file(it.path, it.file, &scan);
 
         if (report_end("parse"))
             return 1;
 
         if (emit) {
-            for (size_t i = 0; i < nodes->len; i++) {
-                debug_ast(nodes->data[i]); printf("\n");
-            }
+            debug_ast(root);
         }
 
-        unit_t unit = typecheck(nodes);
+        unit_t unit = typecheck(root);
 
         if (report_end("semantic"))
             return 1;
 
         if (emit) {
-            for (size_t i = 0; i < nodes->len; i++) {
-                debug_ast(nodes->data[i]); printf("\n");
-            }
+            debug_ast(unit.root);
         }
 
         module_t *mod = compile_module("ctu/main", unit);

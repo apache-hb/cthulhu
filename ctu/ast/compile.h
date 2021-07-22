@@ -9,5 +9,5 @@
  * that can be used to get the internal scanner
  */
 
-nodes_t *compile_file(const char *path, FILE *stream, scanner_t **scanner);
-nodes_t *compile_string(const char *path, const char *text, scanner_t **scanner);
+node_t *compile_file(const char *path, FILE *stream, scanner_t **scanner);
+node_t *compile_string(const char *path, const char *text, scanner_t **scanner);
