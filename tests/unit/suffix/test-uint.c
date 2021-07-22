@@ -10,9 +10,9 @@
 int main(void) {
     report_begin(20, true);
 
-    node_t *base10 = ast_digit(NULL, NOWHERE, strdup("100ui"), 10);
-    node_t *base2 = ast_digit(NULL, NOWHERE, strdup("100ui"), 2);
-    node_t *base16 = ast_digit(NULL, NOWHERE, strdup("100ui"), 16);
+    node_t *base10 = ast_digit(NULL, NOWHERE, ctu_strdup("100ui"), 10);
+    node_t *base2 = ast_digit(NULL, NOWHERE, ctu_strdup("100ui"), 2);
+    node_t *base16 = ast_digit(NULL, NOWHERE, ctu_strdup("100ui"), 16);
 
     ASSERT(base10->digit == 100)("base10 digit parse failed, got `%" PRIu64 "`", base10->digit);
     ASSERT(base10->sign == false)("base10 sign incorrect, got %s", base10->sign ? "true" : "false");

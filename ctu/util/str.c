@@ -109,7 +109,7 @@ char *str_join(const char *sep, const char **strs, size_t num) {
 }
 
 #ifndef _MSC_VER
-char *strdup(const char *str) {
+char *ctu_strdup(const char *str) {
     size_t len = strlen(str) + 1;
     char *out = ctu_malloc(len);
     memcpy(out, str, len);

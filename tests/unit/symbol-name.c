@@ -7,7 +7,7 @@
 int main(void) {
     report_begin(1, true);
     
-    node_t *digit10 = ast_digit(NULL, NOWHERE, strdup("100"), 10);
+    node_t *digit10 = ast_digit(NULL, NOWHERE, ctu_strdup("100"), 10);
 
     get_symbol_name(digit10);
 

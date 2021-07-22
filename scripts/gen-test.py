@@ -28,9 +28,9 @@ def gen_test(it):
 int main(void) {{
     report_begin(20, true);
 
-    node_t *base10 = ast_digit(NULL, NOWHERE, strdup("100{it[3]}"), 10);
-    node_t *base2 = ast_digit(NULL, NOWHERE, strdup("100{it[3]}"), 2);
-    node_t *base16 = ast_digit(NULL, NOWHERE, strdup("100{it[3]}"), 16);
+    node_t *base10 = ast_digit(NULL, NOWHERE, ctu_strdup("100{it[3]}"), 10);
+    node_t *base2 = ast_digit(NULL, NOWHERE, ctu_strdup("100{it[3]}"), 2);
+    node_t *base16 = ast_digit(NULL, NOWHERE, ctu_strdup("100{it[3]}"), 16);
 
     ASSERT(base10->digit == 100)("base10 digit parse failed, got `%" PRIu64 "`", base10->digit);
     ASSERT(base10->sign == {str(it[2]).lower()})("base10 sign incorrect, got %s", base10->sign ? "true" : "false");

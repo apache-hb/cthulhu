@@ -41,28 +41,28 @@ SUFFIX [u]?[csilzpm]?
 "record" { return RECORD; }
 
 "$" { yylval->text = "$"; return IDENT; }
-[a-zA-Z_][a-zA-Z0-9_]* { yylval->text = strdup(yytext); return IDENT; }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval->text = ctu_strdup(yytext); return IDENT; }
 
 [0-9]+{SUFFIX} { 
-    yylval->digit.text = strdup(yytext); 
+    yylval->digit.text = ctu_strdup(yytext); 
     yylval->digit.base = 10;
     return DIGIT; 
 }
 
 "0b"[01]+{SUFFIX} { 
-    yylval->digit.text = strdup(yytext + 2); 
+    yylval->digit.text = ctu_strdup(yytext + 2); 
     yylval->digit.base = 2;
     return DIGIT; 
 }
 
 "0x"[0-9a-fA-F]+{SUFFIX} { 
-    yylval->digit.text = strdup(yytext + 2);
+    yylval->digit.text = ctu_strdup(yytext + 2);
     yylval->digit.base = 16;
     return DIGIT; 
 }
 
 \"(\\.|[^"\\])*\" { 
-    yylval->text = strdup(yytext);
+    yylval->text = ctu_strdup(yytext);
     return STRING;
 }
 

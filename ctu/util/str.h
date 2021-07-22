@@ -20,8 +20,4 @@ size_t str_find(const char *str, const char *substr);
 char *formatv(const char *fmt, va_list args);
 char *format(const char *fmt, ...);
 
-#ifdef _MSC_VER
-#   define strdup _strdup
-#else
-char *strdup(const char *str);
-#endif
+char *ctu_strdup(const char *str);
