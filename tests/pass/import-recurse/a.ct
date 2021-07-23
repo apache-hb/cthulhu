@@ -1,0 +1,8 @@
+import c;
+import folder::b;
+
+export var num = 100;
+
+export def get(): int {
+    return c::num * b::digit;
+}

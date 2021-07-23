@@ -1,0 +1,6 @@
+import a;
+import c;
+
+export def main(argc: int, argv: **char): int {
+    return a::get() * c::get();
+}
