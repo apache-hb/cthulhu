@@ -203,9 +203,10 @@ node_t *make_exported(node_t *node) {
     return node;
 }
 
-node_t *ast_build(nodes_t *imports, nodes_t *decls) {
+node_t *ast_build(scanner_t *scanner, nodes_t *imports, nodes_t *decls) {
     node_t *node = new_node(NULL, NOWHERE, AST_ROOT);
 
+    node->file = scanner->path;
     node->imports = imports;
     node->decls = decls;
 

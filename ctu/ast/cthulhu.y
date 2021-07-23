@@ -123,8 +123,8 @@ void yyerror();
 
 file: unit END ;
 
-unit: decls { x->ast = ast_build(ast_list(NULL), $1); }
-    | imports decls { x->ast = ast_build($1, $2); }
+unit: decls { x->ast = ast_build(x, ast_list(NULL), $1); }
+    | imports decls { x->ast = ast_build(x, $1, $2); }
     ;
 
 decls: decl { $$ = ast_list($1); }

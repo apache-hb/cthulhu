@@ -1,0 +1,3 @@
+import a::b::c;
+
+def stub(): void { }

@@ -159,6 +159,7 @@ typedef struct node_t {
     AST_UNION {
         /* AST_ROOT */
         struct {
+            const char *file;
             nodes_t *imports;
             nodes_t *decls;
         };
@@ -399,7 +400,7 @@ nodes_t *all_imports(node_t *root);
  * node creation
  */
 
-node_t *ast_build(nodes_t *decls, nodes_t *imports);
+node_t *ast_build(scanner_t *scanner, nodes_t *decls, nodes_t *imports);
 
 node_t *ast_import(scanner_t *scanner, where_t where, symbol_t *path);
 
