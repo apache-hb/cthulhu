@@ -168,8 +168,12 @@ static bool is_local(node_t *node) {
         || node->kind == AST_DECL_PARAM;
 }
 
-static type_t *query_current_file(sema_t *sema, node_t *node, const char *name) {
+static type_t *query_current_file(sema_t *sema, node_t *node, const char *name, node_t **found) {
     node_t *origin = get_decl(sema, name);
+
+    if (found) {
+        *found = origin;
+    }
 
     if (origin == NULL) {
         return new_unresolved(node);
@@ -189,7 +193,7 @@ static type_t *query_current_file(sema_t *sema, node_t *node, const char *name) 
     return get_type(origin);
 }
 
-static type_t *query_symbol(sema_t *sema, node_t *node, symbol_t *symbol) {
+static type_t *query_symbol(sema_t *sema, node_t *node, symbol_t *symbol, node_t **out) {
     const char *first = symbol->parts[0];
     
     if (symbol->len > 1) {
@@ -204,16 +208,17 @@ static type_t *query_symbol(sema_t *sema, node_t *node, symbol_t *symbol) {
             symbol->size
         };
 
-        return query_symbol(other, node, &temp);
+        return query_symbol(other, node, &temp, out);
     }
 
-    return query_current_file(sema, node, first);
+    return query_current_file(sema, node, first, out);
 }
 
 static type_t *query_symbol_node(sema_t *sema, node_t *node) {
-    return query_symbol(sema, node, node->symbol);
+    return query_symbol(sema, node, node->symbol, NULL);
 }
 
+/*
 static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
     type_t *type = query_symbol_node(sema, symbol);
 
@@ -225,6 +230,7 @@ static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
 
     return type;
 }
+*/
 
 static type_t *resolve_typename(sema_t *sema, node_t *node) {
     type_t *type = raw_type(node);
@@ -232,7 +238,12 @@ static type_t *resolve_typename(sema_t *sema, node_t *node) {
         return type;
     }
 
-    return resolve_symbol(sema, node);
+    type_t *out = query_symbol_node(sema, node);
+    if (is_unresolved(out)) {
+        reportf(LEVEL_ERROR, node, "failed to resolve typename `%s`", last_symbol(node->symbol));
+    }
+
+    return out;
 }
 
 static type_t *resolve_type(sema_t *sema, node_t *node) {
@@ -244,6 +255,38 @@ static type_t *resolve_type(sema_t *sema, node_t *node) {
     } else {
         return resolve_typename(sema, node);
     }
+}
+
+static bool is_typedecl(node_t *node) {
+    return node->kind == AST_DECL_RECORD
+        || node->kind == AST_DECL_IMPORT
+        || node->kind == AST_DECL_FIELD
+        || node->kind == AST_TYPE;
+}
+
+/**
+ * resolve a *variable* to a type
+ * will error if a typename is passed
+ */
+static type_t *resolve_expr(sema_t *sema, node_t *node) {
+    node_t *found;
+    type_t *it = query_symbol(sema, node, node->symbol, &found);
+
+    /**
+     * if the node
+     */
+    if (!is_unresolved(it)) {
+        /**
+         * check for typedecls and builtin types
+         */
+        if (is_typedecl(found) || !get_type(found)->node) {
+            reportf(LEVEL_ERROR, node, "cannot use typename `%s` as an expression", last_symbol(node->symbol));
+        }
+    } else {
+        reportf(LEVEL_ERROR, node, "cannot resolve `%s`", last_symbol(node->symbol));
+    }
+
+    return it;
 }
 
 static node_t *implicit_cast(node_t *original, type_t *to) {
@@ -613,7 +656,7 @@ static type_t *typecheck_expr(sema_t *sema, node_t *expr) {
         break;
 
     case AST_SYMBOL:
-        type = resolve_symbol(sema, expr);
+        type = resolve_expr(sema, expr);
         break;
 
     case AST_CALL:

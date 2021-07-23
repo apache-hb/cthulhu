@@ -1,0 +1,11 @@
+export def main(argc: int, argv: **char): int {
+    return fib(40);
+}
+
+def fib(n: int): int {
+    if n <int{
+        return n;
+    }
+
+    return fib(n - 1) + fib(n - 2);
+}
