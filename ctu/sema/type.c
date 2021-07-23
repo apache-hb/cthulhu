@@ -19,6 +19,7 @@
 typedef struct sema_t {
     struct sema_t *parent;
     map_t *decls;
+    map_t *imports;
 
     type_t *result; /* return type of current function */
 } sema_t;
@@ -42,6 +43,13 @@ static sema_t *base_sema(sema_t *parent, size_t size) {
     sema->parent = parent;
     sema->decls = new_map(size);
     sema->result = NULL;
+
+    if (!parent) {
+        sema->imports = new_map(8);
+    } else {
+        sema->imports = parent->imports;
+    }
+
     return sema;
 }
 
@@ -87,6 +95,15 @@ static node_t *get_decl(sema_t *sema, const char *name) {
      */
     if (sema->parent) {
         return get_decl(sema->parent, name);
+    }
+
+    /**
+     * now check the imports
+     */
+
+    node_t *import = map_get(sema->imports, name);
+    if (import) {
+        return import;
     }
 
     /**
@@ -897,19 +914,13 @@ static void add_builtin(type_t *type) {
     add_decl(ROOT_SEMA, type->node);
 }
 
-static void find_imports(sema_t *sema, nodes_t *imports) {
-    (void)sema;
-    for (size_t i = 0; i < ast_len(imports); i++) {
-        printf("import ");
+static void add_all_imports(sema_t *sema, nodes_t *imports) {
+    size_t len = ast_len(imports);
+
+    for (size_t i = 0; i < len; i++) {
         node_t *import = ast_kind_at(imports, i, AST_DECL_IMPORT);
-        symbol_t *path = import->path;
-        for (size_t j = 0; j < path->len; j++) {
-            if (j != 0) {
-                printf("::");
-            }
-            printf("%s", path->parts[j]);
-        }
-        printf("\n");
+        char *name = last_symbol(import->path);
+        map_put(sema->imports, name, import);
     }
 }
 
@@ -925,11 +936,10 @@ unit_t typecheck(node_t *root) {
     nodes_t *imports = all_imports(root);
 
     sema_t *sema = base_sema(ROOT_SEMA, 256);
+    add_all_imports(sema, imports);
     typecheck_all_decls(sema, decls);
 
     map_put(files, root->file, root);
-
-    find_imports(sema, imports);
 
     free_sema(sema);
 

@@ -555,7 +555,12 @@ nodes_t *all_decls(node_t *root) {
     return root->decls;
 
 }
+
 nodes_t *all_imports(node_t *root) {
     ASSERT(root->kind == AST_ROOT)("all_imports must be called on a root");
     return root->imports;
+}
+
+char *last_symbol(symbol_t *symbol) {
+    return symbol->parts[symbol->len - 1];
 }

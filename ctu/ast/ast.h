@@ -307,6 +307,8 @@ const char *get_decl_name(node_t *node);
  */
 const char *get_symbol_name(node_t *node);
 
+char *last_symbol(symbol_t *symbol);
+
 /**
  * get the name of a resolved type
  * do not call with symbols

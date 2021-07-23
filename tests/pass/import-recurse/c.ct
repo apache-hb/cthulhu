@@ -1,0 +1,7 @@
+import a;
+
+export var num = 200;
+
+export def get(): int {
+    return a::num;
+}
