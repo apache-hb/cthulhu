@@ -23,6 +23,7 @@ typedef struct sema_t {
     type_t *result; /* return type of current function */
 } sema_t;
 
+map_t *files;
 size_t locals;
 size_t strings;
 
@@ -896,6 +897,22 @@ static void add_builtin(type_t *type) {
     add_decl(ROOT_SEMA, type->node);
 }
 
+static void find_imports(sema_t *sema, nodes_t *imports) {
+    (void)sema;
+    for (size_t i = 0; i < ast_len(imports); i++) {
+        printf("import ");
+        node_t *import = ast_kind_at(imports, i, AST_DECL_IMPORT);
+        symbol_t *path = import->path;
+        for (size_t j = 0; j < path->len; j++) {
+            if (j != 0) {
+                printf("::");
+            }
+            printf("%s", path->parts[j]);
+        }
+        printf("\n");
+    }
+}
+
 /**
  * external api
  */
@@ -905,9 +922,15 @@ unit_t typecheck(node_t *root) {
     reset_locals();
 
     nodes_t *decls = all_decls(root);
+    nodes_t *imports = all_imports(root);
 
     sema_t *sema = base_sema(ROOT_SEMA, 256);
     typecheck_all_decls(sema, decls);
+
+    map_put(files, root->file, root);
+
+    find_imports(sema, imports);
+
     free_sema(sema);
 
     unit_t out = { root, strings };
@@ -915,6 +938,7 @@ unit_t typecheck(node_t *root) {
 }
 
 void sema_init(void) {
+    files = new_map(32);
     ROOT_SEMA = new_sema(NULL);
 
     for (int i = 0; i < INTEGER_END; i++) {
