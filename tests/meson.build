@@ -6,8 +6,7 @@ pass = [
     'hello', 'hello2', 'implicit-bool-cast',
     'long', 'loop', 'mut', 'pointers', 'pointers2',
     'regalloc', 'var', 'suffix', 'forward', 'global',
-    'unused-var', 'implicit-var-cast', 'string',
-    'import-recurse/main'
+    'unused-var', 'implicit-var-cast', 'string'
 ]
 
 foreach it : pass 
@@ -17,6 +16,13 @@ foreach it : pass
         '--speed', path 
     ])
 endforeach
+
+here = meson.current_source_dir()
+
+test('recurse-import', driver, args : [
+    '--verbose', '--emit', '--root=' + here/'pass/import-recurse',
+    '--speed', here/'pass/import-recurse/main.ct'
+])
 
 test('pass-help', driver, args : [ '--help' ])
 

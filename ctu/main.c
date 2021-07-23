@@ -65,6 +65,7 @@ static void add_file(const char *path) {
 #define OPTIMIZE_ARG "--speed"
 #define EMIT_ARG "--emit"
 #define C99_ARG "--c99"
+#define ROOT_ARG "--root"
 
 static void print_help(void) {
     printf("usage: %s [options] file...\n", name);
@@ -75,6 +76,7 @@ static void print_help(void) {
     printf("\t" OPTIMIZE_ARG ": enable optimization\n");
     printf("\t" EMIT_ARG ": print debug info\n");
     printf("\t" C99_ARG ": enable C99 output\n");
+    printf("\t" ROOT_ARG "=path: set the directory for import searching to path\n");
 }
 
 static int parse_arg(int index, int argc, const char **argv) {
@@ -99,6 +101,9 @@ static int parse_arg(int index, int argc, const char **argv) {
     } else if (strcmp(arg, C99_ARG) == 0) {
         c99 = true;
         logfmt("emitting c99");
+    } else if (startswith(arg, ROOT_ARG)) {
+        search_path = arg + strlen(ROOT_ARG) + 1;
+        logfmt("searching for imports in `%s`", search_path);
     } else if (!startswith(arg, "-")) {
         add_file(arg);
         logfmt("adding `%s` as a source file", arg);
@@ -168,13 +173,13 @@ int main(int argc, const char **argv) {
             debug_ast(root);
         }
 
-        unit_t unit = typecheck(root);
+        unit_t unit = typecheck(root, NULL);
 
         if (report_end("semantic"))
             return 1;
 
         if (emit) {
-            debug_ast(unit.root);
+            debug_list(unit.decls);
         }
 
         module_t *mod = compile_module("ctu/main", unit);
