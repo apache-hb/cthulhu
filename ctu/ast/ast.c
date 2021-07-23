@@ -47,17 +47,6 @@ const char *get_decl_name(node_t *node) {
     }
 }
 
-const char *get_symbol_name(node_t *node) {
-    switch (node->kind) {
-    case AST_SYMBOL:
-        return node->ident;
-
-    default:
-        reportf(LEVEL_INTERNAL, node, "node is not a symbol");
-        return "not-a-symbol";
-    }
-}
-
 const char *get_resolved_name(node_t *node) {
     switch (node->kind) {
     case AST_TYPE:
@@ -76,6 +65,17 @@ const char *get_field_name(node_t *node) {
     default:
         reportf(LEVEL_INTERNAL, node, "node is not a field");
         return "not-a-field";
+    }
+}
+
+bool is_decl(node_t *node) {
+    switch (node->kind) {
+    case AST_DECL_FUNC: case AST_DECL_VAR: case AST_DECL_PARAM:
+    case AST_DECL_RECORD: case AST_DECL_FIELD:
+        return true;
+
+    default:
+        return false;
     }
 }
 
@@ -348,10 +348,17 @@ node_t *ast_string(scanner_t *scanner, where_t where, char *string) {
     return node;
 }
 
-node_t *ast_symbol(scanner_t *scanner, where_t where, char *text) {
+node_t *ast_symbol(scanner_t *scanner, where_t where, symbol_t *text) {
     node_t *node = new_node(scanner, where, AST_SYMBOL);
 
-    node->ident = text;
+    for (size_t i = 0; i < text->len; i++) {
+        if (is_discard_name(text->parts[i])) {
+            report(LEVEL_ERROR, scanner, where, "symbol contains discard name");
+        }
+    }
+
+    node->symbol = text;
+    node->origin = NULL;
 
     return node;
 }

@@ -167,9 +167,6 @@ typedef struct node_t {
         /* AST_IMPORT */
         symbol_t *path;
 
-        /* AST_SYMBOL */
-        char *ident;
-
         /* AST_ACCESS */
         struct {
             /* the object to access */
@@ -258,10 +255,16 @@ typedef struct node_t {
                  * they are, we use `local` to find that
                  */
                 char *string;
+
+                /* AST_SYMBOL */
+                symbol_t *symbol;
             };
 
             /* own local index, or NOT_LOCAL if its not local */
             size_t local;
+
+            /* what does this symbol point to */
+            struct node_t *origin;
 
             AST_UNION {
                 /* AST_FIELD */
@@ -295,17 +298,13 @@ typedef struct node_t {
  * query information
  */
 
+bool is_decl(node_t *node);
+
 /**
  * get the name of a declaration node
  * do not call on something that isnt a declaration
  */
 const char *get_decl_name(node_t *node);
-
-/**
- * get the name of a symbol
- * do not call on something that isnt a symbol
- */
-const char *get_symbol_name(node_t *node);
 
 char *last_symbol(symbol_t *symbol);
 
@@ -423,7 +422,7 @@ node_t *add_branch(node_t *branch, node_t *next);
 node_t *ast_assign(scanner_t *scanner, where_t where, node_t *dst, node_t *src);
 node_t *ast_while(scanner_t *scanner, where_t where, node_t *cond, node_t *body);
 
-node_t *ast_symbol(scanner_t *scanner, where_t where, char *text);
+node_t *ast_symbol(scanner_t *scanner, where_t where, symbol_t *text);
 node_t *ast_pointer(scanner_t *scanner, where_t where, node_t *ptr);
 node_t *ast_mut(scanner_t *scanner, where_t where, node_t *it);
 

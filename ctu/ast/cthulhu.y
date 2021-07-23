@@ -138,10 +138,6 @@ imports: import { $$ = ast_list($1); }
 import: IMPORT path SEMI { $$ = ast_import(x, @$, $2); }
     ;
 
-path: IDENT { $$ = ast_symbol_list($1); }
-    | path COLON2 IDENT { $$ = ast_symbol_append($1, $3); }
-    ;
-
 decl: declbase { $$ = $1; }
     | EXPORTED declbase { $$ = make_exported($2); }
     ;
@@ -174,7 +170,6 @@ fields: field { $$ = ast_list($1); }
     ;
 
 field: IDENT COLON type { $$ = ast_field(x, @$, $1, $3); }
-    // | IDENT COLON type ASSIGN expr
     ;
 
 mut: VAR { $$ = true; }
@@ -248,7 +243,7 @@ type: typename { $$ = $1; }
 pointer: MUL type { $$ = ast_pointer(x, @$, $2); }
     ;
 
-typename: IDENT { $$ = ast_symbol(x, @$, ctu_strdup($1)); }
+typename: path { $$ = ast_symbol(x, @$, $1); }
     ;
 
 /**
@@ -313,5 +308,10 @@ equality: compare { $$ = $1; }
 
 expr: equality { $$ = $1; }
     ;
-    
+
+
+
+path: IDENT { $$ = ast_symbol_list($1); }
+    | path COLON2 IDENT { $$ = ast_symbol_append($1, $3); }
+    ;  
 %%

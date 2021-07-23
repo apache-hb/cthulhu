@@ -2,31 +2,34 @@
 
 #include "ctu/util/report.h"
 #include "ctu/util/util.h"
+#include "ctu/util/str.h"
+
+#include "ctu/ast/compile.h"
 
 #include "ctu/debug/type.h"
 #include "ctu/debug/ast.h"
-
-#include <gmp.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
+const char *search_path = ".";
+
 /**
- * structures
+ * a global map of all files
+ * keyed as 
+ * path => sema_t*
  */
-
-typedef struct sema_t {
-    struct sema_t *parent;
-    map_t *decls;
-    map_t *imports;
-
-    type_t *result; /* return type of current function */
-} sema_t;
-
 map_t *files;
+
 size_t locals;
 size_t strings;
+
+/**
+ * all decls from all files
+ * TODO: this needs to go when dynamic linking becomes a thing
+ */
+nodes_t *global_decls;
 
 /**
  * constants
@@ -98,15 +101,6 @@ static node_t *get_decl(sema_t *sema, const char *name) {
     }
 
     /**
-     * now check the imports
-     */
-
-    node_t *import = map_get(sema->imports, name);
-    if (import) {
-        return import;
-    }
-
-    /**
      * the decl doesnt exist
      */
     return NULL;
@@ -133,6 +127,7 @@ static void add_decl_global(sema_t *sema, node_t *decl) {
     }
 
     add_decl_unique(sema, decl);
+    ast_append(global_decls, decl);
 }
 
 static void mark_string(node_t *str) {
@@ -173,36 +168,57 @@ static bool is_local(node_t *node) {
         || node->kind == AST_DECL_PARAM;
 }
 
-static type_t *query_symbol(sema_t *sema, node_t *symbol) {
-    const char *name = get_symbol_name(symbol);
+static type_t *query_current_file(sema_t *sema, node_t *node, const char *name) {
     node_t *origin = get_decl(sema, name);
 
     if (origin == NULL) {
-        return new_unresolved(symbol);
+        return new_unresolved(node);
     }
+
+    node->origin = origin;
 
     /**
      * if the variable is a local variable
      * then propogate what its index is
      * for the ir gen
      */
-    symbol->local = is_local(origin)
+    node->local = is_local(origin)
         ? origin->local
         : NOT_LOCAL;
 
     return get_type(origin);
 }
 
-static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
-    if (is_discard_name(get_symbol_name(symbol))) {
-        reportf(LEVEL_ERROR, symbol, "you cannot resolve the discarded symbol");
-        return new_poison(symbol, "discarded symbol");
+static type_t *query_symbol(sema_t *sema, node_t *node, symbol_t *symbol) {
+    const char *first = symbol->parts[0];
+    
+    if (symbol->len > 1) {
+        sema_t *other = map_get(sema->imports, first);
+        if (!other) {
+            return new_unresolved(node);
+        }
+        
+        symbol_t temp = { 
+            symbol->parts + 1,
+            symbol->len - 1,
+            symbol->size
+        };
+
+        return query_symbol(other, node, &temp);
     }
 
-    type_t *type = query_symbol(sema, symbol);
+    return query_current_file(sema, node, first);
+}
+
+static type_t *query_symbol_node(sema_t *sema, node_t *node) {
+    return query_symbol(sema, node, node->symbol);
+}
+
+static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
+    type_t *type = query_symbol_node(sema, symbol);
 
     if (is_unresolved(type)) {
-        reportf(LEVEL_ERROR, symbol, "cannot resolve `%s` to a type", get_symbol_name(symbol));
+        reportf(LEVEL_ERROR, symbol, "cannot resolve `%s` to a type", last_symbol(symbol->symbol));
     }
 
     connect_type(symbol, type);
@@ -450,8 +466,8 @@ static type_t *typecheck_binary(sema_t *sema, node_t *expr) {
             result = get_binary_math_type(lhs, rhs);
         }
     } else {
-            result = new_poison(expr, "unknown operation");
-        }
+        result = new_poison(expr, "unknown operation");
+    }
 
     return result;
 }
@@ -886,8 +902,6 @@ static void validate_var(sema_t *sema, node_t *var) {
 }
 
 static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {
-    add_all_decls(sema, decls);
-
     size_t len = ast_len(decls);
 
     for (size_t i = 0; i < len; i++) {
@@ -910,44 +924,80 @@ static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {
     }
 }
 
-static void add_builtin(type_t *type) {
-    add_decl(ROOT_SEMA, type->node);
+static char *symbol_to_path(symbol_t *sym) {
+    char *path = str_join("/", (const char**)sym->parts, sym->len);
+    char *out = format("%s/%s.ct", search_path, path);
+    ctu_free(path);
+    return out;
 }
 
-static void add_all_imports(sema_t *sema, nodes_t *imports) {
-    size_t len = ast_len(imports);
+static void process_import(sema_t *sema, node_t *import) {
+    char *path = symbol_to_path(import->path);
+    const char *name = last_symbol(import->path);
 
-    for (size_t i = 0; i < len; i++) {
-        node_t *import = ast_kind_at(imports, i, AST_DECL_IMPORT);
-        char *name = last_symbol(import->path);
-        map_put(sema->imports, name, import);
+    sema_t *other = map_get(files, path);
+    if (other) {
+        map_put(sema->imports, name, other);
+        return;
     }
+
+    FILE *f = fopen(path, "rb");
+    if (!f) {
+        reportf(LEVEL_ERROR, import, "could not open file %s", path);
+        return;
+    }
+
+    node_t *it = compile_file(path, f, NULL);
+    typecheck(it, &other);
+
+    map_put(sema->imports, name, other);
+}
+
+static void process_imports(sema_t *sema, nodes_t *nodes) {
+    for (size_t i = 0; i < ast_len(nodes); i++) {
+        process_import(sema, ast_kind_at(nodes, i, AST_DECL_IMPORT));
+    }
+}
+
+static void add_builtin(type_t *type) {
+    add_decl(ROOT_SEMA, type->node);
 }
 
 /**
  * external api
  */
 
-unit_t typecheck(node_t *root) {
+unit_t typecheck(node_t *root, sema_t **ret) {
     reset_strings();
     reset_locals();
 
+    sema_t *sema = base_sema(ROOT_SEMA, 256);
+
     nodes_t *decls = all_decls(root);
+
+    add_all_decls(sema, decls);
+
+    map_put(files, root->file, sema);
+
     nodes_t *imports = all_imports(root);
 
-    sema_t *sema = base_sema(ROOT_SEMA, 256);
-    add_all_imports(sema, imports);
+    process_imports(sema, imports);
+
     typecheck_all_decls(sema, decls);
 
-    map_put(files, root->file, root);
+    if (ret) {
+        *ret = sema;
+    }
 
-    free_sema(sema);
-
-    unit_t out = { root, strings };
+    /**
+     * TODO: change the output format a bit
+     */
+    unit_t out = { global_decls, strings };
     return out;
 }
 
 void sema_init(void) {
+    global_decls = ast_list(NULL);
     files = new_map(32);
     ROOT_SEMA = new_sema(NULL);
 
