@@ -1,10 +1,8 @@
 #include "ir.h"
 
-#include "ctu/debug/ast.h"
-
 #include "ctu/util/report.h"
+#include "ctu/debug/ast.h"
 #include "ctu/util/util.h"
-#include "ctu/util/str.h"
 
 #include "ctu/sema/sema.h"
 
@@ -34,7 +32,6 @@ operand_t new_vreg(vreg_t reg) {
     op.vreg = reg;
     return op;
 }
-
 
 static operand_t new_func(size_t idx) {
     operand_t op = new_operand(FUNC);
@@ -197,37 +194,8 @@ static operand_t emit_bool(node_t *node) {
     return new_bool(node->boolean);
 }
 
-static char *clean_path(const char *path) {
-    char *a = str_replace(path, "/", "_");
-    char *b = str_replace(a, ".ct", "");
-    char *c = str_replace(b, ".", "_");
-    char *d = str_replace(c, "-", "_");
-    return d;
-}
-
-static const char *mangle_name(node_t *decl) {
-    char *out;
-    if (is_decl(decl)) {
-        const char *name = get_decl_name(decl);
-        const char *path = clean_path(decl->scanner->path);
-
-        out = format("%s_%s", path, name);
-    } else if (decl->kind == AST_SYMBOL) {
-        const char *name = last_symbol(decl->symbol);
-        node_t *source = decl->origin;
-        const char *path = clean_path(source->scanner->path);
-
-        out = format("%s_%s", path, name);
-    } else {
-        assert("cannot mangle node %d\n", decl->kind);
-        return "";
-    }
-
-    return out;
-}
-
 static operand_t get_global(flow_t *flow, node_t *node) {
-    const char *name = mangle_name(node);
+    const char *name = get_symbol_name(node);
     for (size_t i = 0; i < num_flows(flow->mod); i++) {
         const char *it = flow->mod->flows[i].name;
 
@@ -244,7 +212,6 @@ static operand_t get_global(flow_t *flow, node_t *node) {
         }
     }
 
-    assert("failed to resolve `%s`", name);
     return new_operand(NONE);
 }
 
@@ -395,10 +362,7 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
         return local;
     }
 
-    /**
-     * TODO: improve reporting symbols
-     */
-    reportf(LEVEL_INTERNAL, node, "unable to resolve %s, typechecker let bad code slip", last_symbol(node->symbol));
+    reportf(LEVEL_INTERNAL, node, "unable to resolve %s typechecker let bad code slip", node->ident);
 
     /* oh no */
     return new_operand(NONE);
@@ -552,7 +516,7 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
  * external api
  */
 
-static flow_t compile_flow(module_t *mod, size_t idx, node_t *node) {
+static flow_t compile_flow(module_t *mod, node_t *node) {
     ASSERT(node->kind == AST_DECL_FUNC)("compile_flow requires a function");
 
     nodes_t *params = node->params;
@@ -565,7 +529,7 @@ static flow_t compile_flow(module_t *mod, size_t idx, node_t *node) {
 
     flow_t flow = { 
         /* name */
-        mod->flows[idx].name, 
+        get_decl_name(node), 
         
         /* arguments */
         ctu_malloc(sizeof(arg_t) * len), len,
@@ -613,7 +577,7 @@ static flow_t compile_flow(module_t *mod, size_t idx, node_t *node) {
     return flow;
 }
 
-static var_t compile_var(module_t *mod, size_t idx, node_t *node) {
+static var_t compile_var(module_t *mod, node_t *node) {
     ASSERT(node->kind == AST_DECL_VAR)("compile_var requires a variable");
 
     /**
@@ -623,7 +587,7 @@ static var_t compile_var(module_t *mod, size_t idx, node_t *node) {
     (void) mod;
 
     var_t var = { 
-        mod->vars[idx].name, 
+        get_decl_name(node), 
         get_type(node),
 
         is_exported(node),
@@ -645,11 +609,11 @@ static size_t count_decls(nodes_t *nodes, ast_t kind) {
 }
 
 static size_t count_types(nodes_t *nodes) {
-    return count_decls(nodes, AST_DECL_RECORD);
+    return count_decls(nodes, AST_RECORD_DECL);
 }
 
 module_t *compile_module(const char *name, unit_t unit) {
-    nodes_t *nodes = unit.decls;
+    nodes_t *nodes = unit.nodes;
 
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
@@ -677,12 +641,12 @@ module_t *compile_module(const char *name, unit_t unit) {
         node_t *decl = ast_at(nodes, idx);
         switch (decl->kind) {
         case AST_DECL_FUNC:
-            mod->flows[flow_idx++].name = mangle_name(decl);
+            mod->flows[flow_idx++].name = get_decl_name(decl);
             break;
         case AST_DECL_VAR:
-            mod->vars[var_idx++].name = mangle_name(decl);
+            mod->vars[var_idx++].name = get_decl_name(decl);
             break;
-        case AST_DECL_RECORD:
+        case AST_RECORD_DECL:
             type = get_type(decl);
             type->index = type_idx;
             mod->types[type_idx++] = type;
@@ -700,15 +664,13 @@ module_t *compile_module(const char *name, unit_t unit) {
         node_t *decl = ast_at(nodes, i);
         switch (decl->kind) {
         case AST_DECL_FUNC:
-            mod->flows[flow_idx] = compile_flow(mod, flow_idx, decl);
-            flow_idx += 1;
+            mod->flows[flow_idx++] = compile_flow(mod, decl);
             break;
         case AST_DECL_VAR:
-            mod->vars[var_idx] = compile_var(mod, var_idx, decl);
-            var_idx += 1;
+            mod->vars[var_idx++] = compile_var(mod, decl);
             break;
 
-        case AST_DECL_RECORD:
+        case AST_RECORD_DECL:
             break;
 
         default:

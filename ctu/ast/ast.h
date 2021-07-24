@@ -11,14 +11,7 @@ typedef struct {
     size_t len, size;
 } nodes_t;
 
-typedef struct {
-    char **parts;
-    size_t len, size;
-} symbol_t;
-
 typedef enum {
-    AST_ROOT,
-
     /**
      * expressions
      */
@@ -46,9 +39,8 @@ typedef enum {
     AST_DECL_FUNC,
     AST_DECL_VAR,
     AST_DECL_PARAM,
-    AST_DECL_RECORD,
-    AST_DECL_FIELD,
-    AST_DECL_IMPORT,
+    AST_RECORD_DECL,
+    AST_FIELD_DECL,
 
     /**
      * types
@@ -157,15 +149,8 @@ typedef struct node_t {
     type_t *typeof;
 
     AST_UNION {
-        /* AST_ROOT */
-        struct {
-            const char *file;
-            nodes_t *imports;
-            nodes_t *decls;
-        };
-
-        /* AST_IMPORT */
-        symbol_t *path;
+        /* AST_SYMBOL */
+        char *ident;
 
         /* AST_ACCESS */
         struct {
@@ -255,22 +240,16 @@ typedef struct node_t {
                  * they are, we use `local` to find that
                  */
                 char *string;
-
-                /* AST_SYMBOL */
-                symbol_t *symbol;
             };
 
             /* own local index, or NOT_LOCAL if its not local */
             size_t local;
 
-            /* what does this symbol point to */
-            struct node_t *origin;
-
             AST_UNION {
                 /* AST_FIELD */
                 struct node_t *ftype;
 
-                /* AST_DECL_RECORD */
+                /* AST_RECORD_DECL */
                 nodes_t *fields;
 
                 /* AST_DECL_FUNC */
@@ -298,15 +277,17 @@ typedef struct node_t {
  * query information
  */
 
-bool is_decl(node_t *node);
-
 /**
  * get the name of a declaration node
  * do not call on something that isnt a declaration
  */
 const char *get_decl_name(node_t *node);
 
-char *last_symbol(symbol_t *symbol);
+/**
+ * get the name of a symbol
+ * do not call on something that isnt a symbol
+ */
+const char *get_symbol_name(node_t *node);
 
 /**
  * get the name of a resolved type
@@ -370,9 +351,6 @@ node_t *ast_at(nodes_t *list, size_t idx);
 node_t *ast_kind_at(nodes_t *list, size_t idx, ast_t kind);
 size_t ast_len(nodes_t *list);
 
-symbol_t *ast_symbol_list(char *init);
-symbol_t *ast_symbol_append(symbol_t *it, char *name);
-
 /**
  * modify nodes
  */
@@ -394,16 +372,9 @@ node_t *make_exported(node_t *node);
 void mark_used(node_t *node);
 bool is_used(node_t *node);
 
-nodes_t *all_decls(node_t *root);
-nodes_t *all_imports(node_t *root);
-
 /**
  * node creation
  */
-
-node_t *ast_build(scanner_t *scanner, nodes_t *decls, nodes_t *imports);
-
-node_t *ast_import(scanner_t *scanner, where_t where, symbol_t *path);
 
 node_t *ast_digit(scanner_t *scanner, where_t where, char *digit, int base);
 node_t *ast_bool(scanner_t *scanner, where_t where, bool boolean);
@@ -422,7 +393,7 @@ node_t *add_branch(node_t *branch, node_t *next);
 node_t *ast_assign(scanner_t *scanner, where_t where, node_t *dst, node_t *src);
 node_t *ast_while(scanner_t *scanner, where_t where, node_t *cond, node_t *body);
 
-node_t *ast_symbol(scanner_t *scanner, where_t where, symbol_t *text);
+node_t *ast_symbol(scanner_t *scanner, where_t where, char *text);
 node_t *ast_pointer(scanner_t *scanner, where_t where, node_t *ptr);
 node_t *ast_mut(scanner_t *scanner, where_t where, node_t *it);
 

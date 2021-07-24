@@ -9,7 +9,7 @@ int main(void) {
     
     node_t *digit10 = ast_digit(NULL, NOWHERE, ctu_strdup("100"), 10);
 
-    get_resolved_name(digit10);
+    get_symbol_name(digit10);
 
     return report_end("test");
 }
