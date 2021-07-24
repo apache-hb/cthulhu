@@ -47,17 +47,6 @@ const char *get_decl_name(node_t *node) {
     }
 }
 
-const char *get_symbol_name(node_t *node) {
-    switch (node->kind) {
-    case AST_SYMBOL:
-        return node->ident;
-
-    default:
-        reportf(LEVEL_INTERNAL, node, "node is not a symbol");
-        return "not-a-symbol";
-    }
-}
-
 const char *get_resolved_name(node_t *node) {
     switch (node->kind) {
     case AST_TYPE:
@@ -95,7 +84,7 @@ type_t *get_type(node_t *node) {
         : type;
 }
 
-nodes_t *get_stmts(node_t *node) {
+list_t *get_stmts(node_t *node) {
     ASSERT(node->kind == AST_STMTS)("node->kind != AST_STMTS when calling get_stmts");
 
     return node->stmts;
@@ -139,41 +128,8 @@ bool is_access(node_t *expr) {
     return expr->kind == AST_ACCESS;
 }
 
-nodes_t *ast_append(nodes_t *list, node_t *node) {
-    if (list->len + 1 >= list->size) {
-        list->size += 4;
-        list->data = ctu_realloc(list->data, sizeof(node_t*) * list->size);
-    }
-    list->data[list->len++] = node;
-    return list;
-}
-
-nodes_t *ast_list(node_t *init) {
-    nodes_t *nodes = ctu_malloc(sizeof(nodes_t));
-
-    nodes->data = ctu_malloc(sizeof(node_t*) * 4);
-    nodes->len = 0;
-    nodes->size = 4;
-
-    if (init)
-        ast_append(nodes, init);
-
-    return nodes;
-}
-
-node_t *ast_at(nodes_t *list, size_t idx) {
-    ASSERT(idx < list->len)("indexing out of bounds (%zu > %zu)", idx, list->len);
-    return list->data[idx];
-}
-
-node_t *ast_kind_at(nodes_t *list, size_t idx, ast_t kind) {
-    node_t *node = ast_at(list, idx);
-    ASSERT(node->kind == kind)("unexpected node `%d` at `%zu`", node->kind, idx);
-    return node;
-}
-
-size_t ast_len(nodes_t *list) {
-    return list->len;
+bool is_symbol(node_t *it) {
+    return it->kind == AST_SYMBOL;
 }
 
 node_t *make_implicit(node_t *node) {
@@ -321,7 +277,7 @@ node_t *ast_string(scanner_t *scanner, where_t where, char *string) {
     return node;
 }
 
-node_t *ast_symbol(scanner_t *scanner, where_t where, char *text) {
+node_t *ast_symbol(scanner_t *scanner, where_t where, list_t *text) {
     node_t *node = new_node(scanner, where, AST_SYMBOL);
 
     node->ident = text;
@@ -354,7 +310,7 @@ node_t *ast_binary(scanner_t *scanner, where_t where, binary_t binary, node_t *l
     return node;
 }
 
-node_t *ast_call(scanner_t *scanner, where_t where, node_t *body, nodes_t *args) {
+node_t *ast_call(scanner_t *scanner, where_t where, node_t *body, list_t *args) {
     node_t *node = new_node(scanner, where, AST_CALL);
 
     node->expr = body;
@@ -372,7 +328,7 @@ node_t *ast_cast(scanner_t *scanner, where_t where, node_t *expr, node_t *cast) 
     return node;
 }
 
-node_t *ast_stmts(scanner_t *scanner, where_t where, nodes_t *stmts) {
+node_t *ast_stmts(scanner_t *scanner, where_t where, list_t *stmts) {
     node_t *node = new_node(scanner, where, AST_STMTS);
 
     node->stmts = stmts;
@@ -423,7 +379,7 @@ node_t *ast_while(scanner_t *scanner, where_t where, node_t *cond, node_t *body)
 
 node_t *ast_decl_func(
     scanner_t *scanner, where_t where, 
-    char *name, nodes_t *params,
+    char *name, list_t *params,
     node_t *result, node_t *body) {
 
     node_t *node = new_decl(scanner, where, AST_DECL_FUNC, name);
@@ -475,7 +431,7 @@ node_t *ast_access(scanner_t *scanner, where_t where, node_t *expr, char *name, 
     return node;
 }
 
-node_t *ast_decl_record(scanner_t *scanner, where_t where, char *name, nodes_t *fields) {
+node_t *ast_decl_record(scanner_t *scanner, where_t where, char *name, list_t *fields) {
     node_t *node = new_decl(scanner, where, AST_RECORD_DECL, name);
 
     node->fields = fields;
@@ -490,17 +446,6 @@ node_t *ast_field(scanner_t *scanner, where_t where, char *name, node_t *type) {
     node->ftype = type;
 
     return node;
-}
-
-void free_ast_list(nodes_t *list, bool free_items) {
-    if (free_items) {
-        for (size_t i = 0; i < ast_len(list); i++) {
-            ctu_free(ast_at(list, i));
-        }
-    }
-
-    ctu_free(list->data);
-    ctu_free(list);
 }
 
 bool is_exported(node_t *node) {

@@ -195,7 +195,7 @@ static operand_t emit_bool(node_t *node) {
 }
 
 static operand_t get_global(flow_t *flow, node_t *node) {
-    const char *name = get_symbol_name(node);
+    const char *name = list_last(node->ident);
     for (size_t i = 0; i < num_flows(flow->mod); i++) {
         const char *it = flow->mod->flows[i].name;
 
@@ -301,8 +301,8 @@ static operand_t emit_binary(flow_t *flow, node_t *node) {
 static operand_t emit_stmts(flow_t *flow, node_t *node) {
     operand_t block = add_block(flow);
     
-    for (size_t i = 0; i < ast_len(node->stmts); i++) {
-        emit_opcode(flow, ast_at(node->stmts, i));
+    for (size_t i = 0; i < list_len(node->stmts); i++) {
+        emit_opcode(flow, list_at(node->stmts, i));
     }
 
     return block;
@@ -327,11 +327,11 @@ static operand_t emit_return(flow_t *flow, node_t *node) {
 static operand_t emit_call(flow_t *flow, node_t *node) {
     operand_t expr = emit_opcode(flow, node->expr);
 
-    size_t len = ast_len(node->args);
+    size_t len = list_len(node->args);
     operand_t *args = ctu_malloc(sizeof(operand_t) * len);
 
     for (size_t i = 0; i < len; i++) {
-        node_t *arg = ast_at(node->args, i);
+        node_t *arg = list_at(node->args, i);
         args[i] = emit_opcode(flow, arg);
     }
 
@@ -519,8 +519,8 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
 static flow_t compile_flow(module_t *mod, node_t *node) {
     ASSERT(node->kind == AST_DECL_FUNC)("compile_flow requires a function");
 
-    nodes_t *params = node->params;
-    size_t len = ast_len(params);
+    list_t *params = node->params;
+    size_t len = list_len(params);
 
     size_t locals = node->locals + len;
 
@@ -552,7 +552,7 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     };
 
     for (size_t i = 0; i < len; i++) {
-        node_t *param = ast_at(params, i);
+        node_t *param = list_at(params, i);
 
         arg_t arg = { get_decl_name(param), get_type(param) };
 
@@ -597,10 +597,10 @@ static var_t compile_var(module_t *mod, node_t *node) {
     return var;
 }
 
-static size_t count_decls(nodes_t *nodes, ast_t kind) {
+static size_t count_decls(list_t *nodes, ast_t kind) {
     size_t count = 0;
-    for (size_t i = 0; i < ast_len(nodes); i++) {
-        node_t *node = ast_at(nodes, i);
+    for (size_t i = 0; i < list_len(nodes); i++) {
+        node_t *node = list_at(nodes, i);
         if (node->kind == kind) {
             count++;
         }
@@ -608,12 +608,12 @@ static size_t count_decls(nodes_t *nodes, ast_t kind) {
     return count;
 }
 
-static size_t count_types(nodes_t *nodes) {
+static size_t count_types(list_t *nodes) {
     return count_decls(nodes, AST_RECORD_DECL);
 }
 
 module_t *compile_module(const char *name, unit_t unit) {
-    nodes_t *nodes = unit.nodes;
+    list_t *nodes = unit.nodes;
 
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
@@ -630,7 +630,7 @@ module_t *compile_module(const char *name, unit_t unit) {
     mod->nstrings = unit.strings;
     mod->strings = ctu_malloc(sizeof(char*) * mod->nstrings);
 
-    size_t len = ast_len(nodes);
+    size_t len = list_len(nodes);
 
     size_t flow_idx = 0;
     size_t var_idx = 0;
@@ -638,7 +638,7 @@ module_t *compile_module(const char *name, unit_t unit) {
     type_t *type;
 
     for (size_t idx = 0; idx < len; idx++) {
-        node_t *decl = ast_at(nodes, idx);
+        node_t *decl = list_at(nodes, idx);
         switch (decl->kind) {
         case AST_DECL_FUNC:
             mod->flows[flow_idx++].name = get_decl_name(decl);
@@ -661,7 +661,7 @@ module_t *compile_module(const char *name, unit_t unit) {
     flow_idx = 0;
     var_idx = 0;
     for (size_t i = 0; i < len; i++) {
-        node_t *decl = ast_at(nodes, i);
+        node_t *decl = list_at(nodes, i);
         switch (decl->kind) {
         case AST_DECL_FUNC:
             mod->flows[flow_idx++] = compile_flow(mod, decl);

@@ -159,7 +159,7 @@ int main(int argc, const char **argv) {
     for (size_t i = 0; i < inputs.len; i++) {
         scanner_t *scan;
         input_t it = inputs.files[i];
-        nodes_t *nodes = compile_file(it.path, it.file, &scan);
+        list_t *nodes = compile_file(it.path, it.file, &scan);
 
         if (report_end("parse"))
             return 1;
