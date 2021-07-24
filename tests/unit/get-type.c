@@ -5,6 +5,7 @@
 
 int main(void) {
     report_begin(1, true);
+    types_init();
     
     node_t *node = ast_return(NULL, NOWHERE, NULL);
 
