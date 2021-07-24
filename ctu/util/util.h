@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdio.h>
 
 #define MAX(L, R) ((L) > (R) ? (L) : (R)) 
 #define MIN(L, R) ((L) < (R) ? (L) : (R)) 
@@ -8,6 +9,9 @@
 void *ctu_malloc(size_t size);
 void *ctu_realloc(void *ptr, size_t size);
 void ctu_free(void *ptr);
+
+FILE *ctu_open(const char *path, const char *mode);
+void ctu_close(FILE *fp);
 
 typedef struct entry_t {
     const char *id;

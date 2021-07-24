@@ -48,7 +48,7 @@ static void init_inputs(void) {
 }
 
 static void add_file(const char *path) {
-    FILE *file = fopen(path, "rb");
+    FILE *file = ctu_open(path, "rb");
     ENSURE(file != NULL)("failed to open file `%s`", path);
 
     if (inputs.len + 1 > inputs.size) {
@@ -126,7 +126,7 @@ static void parse_argc_argv(int argc, const char **argv) {
  * then return NULL or the opened file
  */
 static FILE *open_file(const char *path) {
-    FILE *file = fopen(path, "w");
+    FILE *file = ctu_open(path, "w");
     if (file == NULL) {
         ensure("failed to open `%s` for writing", path);
         return NULL;

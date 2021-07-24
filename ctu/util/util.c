@@ -1,5 +1,7 @@
 #include "util.h"
 
+#include "report.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -15,6 +17,15 @@ void *ctu_realloc(void *ptr, size_t size) {
 
 void ctu_free(void *ptr) {
     free(ptr);
+}
+
+FILE *ctu_open(const char *path, const char *mode) {
+    logfmt("opening file `%s`", path);
+    return fopen(path, mode);
+}
+
+void ctu_close(FILE *fp) {
+    fclose(fp);
 }
 
 static uint32_t hash_string(const char *str) {
