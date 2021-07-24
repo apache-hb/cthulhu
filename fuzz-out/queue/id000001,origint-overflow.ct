@@ -1,6 +1,0 @@
-def main(): int {
-    final really_big_number = 99999999999999999999999999999999999999;
-
-    return really_big_number;
-}
-  
