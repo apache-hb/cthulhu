@@ -37,7 +37,8 @@ typedef enum {
     AST_DECL_VAR,
     AST_DECL_PARAM,
     AST_DECL_STRUCT,
-    AST_FIELD_DECL,
+    AST_DECL_FIELD,
+    AST_IMPORT,
 
     /**
      * types
@@ -49,7 +50,8 @@ typedef enum {
     /**
      * implementation details
      */
-    AST_TYPE
+    AST_TYPE,
+    AST_ROOT
 } ast_t;
 
 typedef enum {
@@ -149,6 +151,19 @@ typedef struct node_t {
         /* AST_SYMBOL */
         /** @var list_t<char*> */
         list_t *ident;
+
+        /* AST_IMPORT */
+        /** @var list_t<char*> */
+        list_t *path;
+
+        /* AST_ROOT */
+        struct {
+            /** @var list_t<node_t> */
+            list_t *imports;
+
+            /** @var list_t<node_t> */
+            list_t *decls;
+        };
 
         /* AST_ACCESS */
         struct {
@@ -380,6 +395,10 @@ node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *ty
 node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, node_t *type, node_t *init);
 node_t *ast_decl_struct(scanner_t *scanner, where_t where, char *name, list_t *fields);
 node_t *ast_field(scanner_t *scanner, where_t where, char *name, node_t *type);
+
+node_t *ast_import(scanner_t *scanner, where_t where, list_t *path);
+
+node_t *ast_root(scanner_t *scanner, list_t *imports, list_t *decls);
 
 /**
  * create a builtin type

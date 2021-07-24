@@ -613,7 +613,7 @@ static size_t count_types(list_t *nodes) {
 }
 
 module_t *compile_module(const char *name, unit_t unit) {
-    list_t *nodes = unit.nodes;
+    list_t *nodes = unit.decls;
 
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;

@@ -132,7 +132,7 @@ void debug_ast(node_t *node) {
     case AST_DECL_VAR: debug_var(node); break;
     case AST_ASSIGN: debug_assign(node); break;
     case AST_DECL_STRUCT: debug_struct(node); break;
-    case AST_FIELD_DECL: debug_field(node); break;
+    case AST_DECL_FIELD: debug_field(node); break;
     default: printf("error %d", node->kind); break;
     }
     printf(")");

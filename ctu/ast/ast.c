@@ -38,7 +38,7 @@ static node_t *new_decl(scanner_t *scanner, where_t where, ast_t kind, char *nam
 const char *get_decl_name(node_t *node) {
     switch (node->kind) {
     case AST_DECL_FUNC: case AST_DECL_VAR: case AST_DECL_PARAM:
-    case AST_DECL_STRUCT: case AST_FIELD_DECL:
+    case AST_DECL_STRUCT: case AST_DECL_FIELD:
         return node->name;
 
     default:
@@ -59,7 +59,7 @@ const char *get_resolved_name(node_t *node) {
 
 const char *get_field_name(node_t *node) {
     switch (node->kind) {
-    case AST_FIELD_DECL:
+    case AST_DECL_FIELD:
         return node->name;
     
     default:
@@ -440,10 +440,27 @@ node_t *ast_decl_struct(scanner_t *scanner, where_t where, char *name, list_t *f
 }
 
 node_t *ast_field(scanner_t *scanner, where_t where, char *name, node_t *type) {
-    node_t *node = new_node(scanner, where, AST_FIELD_DECL);
+    node_t *node = new_node(scanner, where, AST_DECL_FIELD);
 
     node->name = name;
     node->ftype = type;
+
+    return node;
+}
+
+node_t *ast_import(scanner_t *scanner, where_t where, list_t *path) {
+    node_t *node = new_node(scanner, where, AST_IMPORT);
+
+    node->path = path;
+
+    return node;
+}
+
+node_t *ast_root(scanner_t *scanner, list_t *imports, list_t *decls) {
+    node_t *node = new_node(scanner, NOWHERE, AST_ROOT);
+
+    node->imports = imports;
+    node->decls = decls;
 
     return node;
 }
