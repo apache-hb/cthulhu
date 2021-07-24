@@ -3,12 +3,12 @@
 
 #include "ctu/util/str.h"
 
-static void debug_list(nodes_t *nodes) {
-    for (size_t i = 0; i < ast_len(nodes); i++) {
+static void debug_list(list_t *nodes) {
+    for (size_t i = 0; i < list_len(nodes); i++) {
         if (i != 0) {
             printf(" ");
         }
-        debug_ast(ast_at(nodes, i));
+        debug_ast(list_at(nodes, i));
     }
 }
 
@@ -38,7 +38,7 @@ static void debug_return(node_t *node) {
 }
 
 static void debug_stmts(node_t *node) {
-    size_t len = ast_len(node->stmts);
+    size_t len = list_len(node->stmts);
     printf("stmts[%zu]", len);
     if (len) {
         printf(" ");
@@ -47,7 +47,7 @@ static void debug_stmts(node_t *node) {
 }
 
 static void debug_call(node_t *node) {
-    size_t len = ast_len(node->args);
+    size_t len = list_len(node->args);
     printf("call[%zu] ", len);
     debug_ast(node->expr);
     
@@ -59,7 +59,13 @@ static void debug_call(node_t *node) {
 }
 
 static void debug_symbol(node_t *node) {
-    printf("symbol %s", node->ident);
+    printf("symbol ");
+    for (size_t i = 0; i < list_len(node->ident); i++) {
+        if (i != 0) {
+            printf("::");
+        }
+        printf("%s", (char*)list_at(node->ident, i));
+    }
 }
 
 static void debug_func(node_t *node) {

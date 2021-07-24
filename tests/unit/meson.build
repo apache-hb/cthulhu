@@ -28,13 +28,8 @@ resolved_name_test = executable('resolved-name-test', 'resolved-name.c',
     dependencies : ctu
 )
 
-symbol_name_test = executable('symbol-name-test', 'symbol-name.c',
-    dependencies : ctu
-)
-
 test('decl-name-test', decl_name_test, should_fail : true)
 test('resolved-name-test', resolved_name_test, should_fail : true)
-test('symbol-name-test', symbol_name_test, should_fail : true)
 
 suffixes = [
     'char', 'short', 'int', 'long', 

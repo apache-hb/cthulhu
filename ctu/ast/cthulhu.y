@@ -30,7 +30,7 @@ void yyerror();
 
     char *text;
     node_t *node;
-    nodes_t *nodes;
+    list_t *nodes;
     bool mut;
 }
 
@@ -72,6 +72,7 @@ void yyerror();
     SEMI "`;`"
     COMMA "`,`"
     COLON "`:`"
+    COLON2 "`::`"
     ASSIGN "`=`"
 
 %token
@@ -101,6 +102,7 @@ void yyerror();
     stmtlist fields
     args arglist
     params paramlist
+    names
 
 %type<mut>
     mut
@@ -115,8 +117,8 @@ void yyerror();
 
 file: unit END ;
 
-unit: decl { x->ast = ast_list($1); }
-    | unit decl { ast_append(x->ast, $2); }
+unit: decl { x->ast = new_list($1); }
+    | unit decl { list_push(x->ast, $2); }
     ;
 
 decl: declbase { $$ = $1; }
@@ -146,8 +148,8 @@ variable: mut IDENT ASSIGN expr SEMI { $$ = ast_decl_var(x, @$, $1, $2, NULL, $4
 record: RECORD IDENT LBRACE fields RBRACE { $$ = ast_decl_record(x, @$, $2, $4); }
     ;
 
-fields: field { $$ = ast_list($1); }
-    | fields COMMA field { $$ = ast_append($1, $3); }
+fields: field { $$ = new_list($1); }
+    | fields COMMA field { $$ = list_push($1, $3); }
     ;
 
 field: IDENT COLON type { $$ = ast_field(x, @$, $1, $3); }
@@ -158,12 +160,12 @@ mut: VAR { $$ = true; }
     | FINAL { $$ = false; }
     ;
 
-params: LPAREN RPAREN { $$ = ast_list(NULL); }
+params: LPAREN RPAREN { $$ = new_list(NULL); }
     | LPAREN paramlist RPAREN { $$ = $2; }
     ;
 
-paramlist: param { $$ = ast_list($1); }
-    | paramlist COMMA param { $$ = ast_append($1, $3); }
+paramlist: param { $$ = new_list($1); }
+    | paramlist COMMA param { $$ = list_push($1, $3); }
     ;
 
 param: IDENT COLON type { $$ = ast_decl_param(x, @$, $1, $3); }
@@ -173,8 +175,8 @@ param: IDENT COLON type { $$ = ast_decl_param(x, @$, $1, $3); }
  * statements
  */
 
-stmtlist: %empty { $$ = ast_list(NULL); }
-    | stmtlist stmt { $$ = ast_append($1, $2); }
+stmtlist: %empty { $$ = new_list(NULL); }
+    | stmtlist stmt { $$ = list_push($1, $2); }
     ;
 
 stmts: LBRACE stmtlist RBRACE { $$ = ast_stmts(x, @$, $2); }
@@ -225,20 +227,22 @@ type: typename { $$ = $1; }
 pointer: MUL type { $$ = ast_pointer(x, @$, $2); }
     ;
 
-typename: IDENT { $$ = ast_symbol(x, @$, ctu_strdup($1)); }
+typename: names { $$ = ast_symbol(x, @$, $1); }
+
+names: IDENT { $$ = new_list($1); }
+    | names COLON2 IDENT { $$ = list_push($1, $3); }
     ;
 
 /**
  * expressions
  */
 
-
-args: %empty { $$ = ast_list(NULL); }
+args: %empty { $$ = new_list(NULL); }
     | arglist { $$ = $1; }
     ;
 
-arglist: expr { $$ = ast_list($1); }
-    | arglist COMMA expr { $$ = ast_append($1, $3); }
+arglist: expr { $$ = new_list($1); }
+    | arglist COMMA expr { $$ = list_push($1, $3); }
     ;
 
 

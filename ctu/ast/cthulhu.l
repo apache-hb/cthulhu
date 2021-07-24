@@ -90,6 +90,7 @@ SUFFIX [u]?[csilzpm]?
 "}" { return RBRACE; }
 "?" { return QUESTION; }
 ";" { return SEMI; }
+"::" { return COLON2; }
 ":" { return COLON; }
 "," { return COMMA; }
 "=" { return ASSIGN; }

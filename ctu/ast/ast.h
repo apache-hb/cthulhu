@@ -6,10 +6,7 @@
 #include "scanner.h"
 #include "ctu/types/type.h"
 
-typedef struct {
-    struct node_t **data;
-    size_t len, size;
-} nodes_t;
+#include "ctu/util/util.h"
 
 typedef enum {
     /**
@@ -150,7 +147,8 @@ typedef struct node_t {
 
     AST_UNION {
         /* AST_SYMBOL */
-        char *ident;
+        /** @var list_t<char*> */
+        list_t *ident;
 
         /* AST_ACCESS */
         struct {
@@ -179,7 +177,8 @@ typedef struct node_t {
         bool boolean;
 
         /* AST_STMTS */
-        nodes_t *stmts;
+        /** @var list_t<node_t*> */
+        list_t *stmts;
 
         /* AST_PTR */
         struct node_t *ptr;
@@ -196,7 +195,8 @@ typedef struct node_t {
                 struct node_t *cast;
 
                 /* AST_CALL */
-                nodes_t *args;
+                /** @var list_t<node_t*> */
+                list_t *args;
             };
         };
 
@@ -250,11 +250,13 @@ typedef struct node_t {
                 struct node_t *ftype;
 
                 /* AST_RECORD_DECL */
-                nodes_t *fields;
+                /** @var list_t<node_t*> */
+                list_t *fields;
 
                 /* AST_DECL_FUNC */
                 struct {
-                    nodes_t *params;
+                    /** @var list_t<node_t*> */
+                    list_t *params;
                     struct node_t *result;
                     struct node_t *body;
 
@@ -284,12 +286,6 @@ typedef struct node_t {
 const char *get_decl_name(node_t *node);
 
 /**
- * get the name of a symbol
- * do not call on something that isnt a symbol
- */
-const char *get_symbol_name(node_t *node);
-
-/**
  * get the name of a resolved type
  * do not call with symbols
  */
@@ -300,6 +296,8 @@ const char *get_field_name(node_t *node);
 bool is_deref(node_t *expr);
 
 bool is_access(node_t *expr);
+
+bool is_symbol(node_t *it);
 
 /**
  * get the type of a node
@@ -315,7 +313,7 @@ type_t *raw_type(node_t *node);
 /**
  * get all statements in a list
  */
-nodes_t *get_stmts(node_t *node);
+list_t *get_stmts(node_t *node);
 
 /**
  * is this name the discarded name `$`
@@ -326,30 +324,6 @@ bool is_discard_name(const char *name);
  * is a decl exported
  */
 bool is_exported(node_t *node);
-
-/**
- * list managment
- */
-
-/**
- * create a new list starting with init
- * if init is null the list is empty
- */
-nodes_t *ast_list(node_t *init);
-nodes_t *ast_append(nodes_t *list, node_t *node);
-
-/**
- * get a node from a list
- * must be in bounds
- */
-node_t *ast_at(nodes_t *list, size_t idx);
-
-/**
- * get a node of a specific kind from a list
- * asserts if the node is not of that kind
- */
-node_t *ast_kind_at(nodes_t *list, size_t idx, ast_t kind);
-size_t ast_len(nodes_t *list);
 
 /**
  * modify nodes
@@ -382,39 +356,32 @@ node_t *ast_string(scanner_t *scanner, where_t where, char *string);
 
 node_t *ast_unary(scanner_t *scanner, where_t where, unary_t unary, node_t *expr);
 node_t *ast_binary(scanner_t *scanner, where_t where, binary_t binary, node_t *lhs, node_t *rhs);
-node_t *ast_call(scanner_t *scanner, where_t where, node_t *body, nodes_t *args);
+node_t *ast_call(scanner_t *scanner, where_t where, node_t *body, list_t *args);
 node_t *ast_cast(scanner_t *scanner, where_t where, node_t *expr, node_t *cast);
 node_t *ast_access(scanner_t *scanner, where_t where, node_t *expr, char *name, bool indirect);
 
-node_t *ast_stmts(scanner_t *scanner, where_t where, nodes_t *stmts);
+node_t *ast_stmts(scanner_t *scanner, where_t where, list_t *stmts);
 node_t *ast_return(scanner_t *scanner, where_t where, node_t *expr);
 node_t *ast_branch(scanner_t *scanner, where_t where, node_t *cond, node_t *branch);
 node_t *add_branch(node_t *branch, node_t *next);
 node_t *ast_assign(scanner_t *scanner, where_t where, node_t *dst, node_t *src);
 node_t *ast_while(scanner_t *scanner, where_t where, node_t *cond, node_t *body);
 
-node_t *ast_symbol(scanner_t *scanner, where_t where, char *text);
+node_t *ast_symbol(scanner_t *scanner, where_t where, list_t *text);
 node_t *ast_pointer(scanner_t *scanner, where_t where, node_t *ptr);
 node_t *ast_mut(scanner_t *scanner, where_t where, node_t *it);
 
 node_t *ast_decl_func(
     scanner_t *scanner, where_t where, 
-    char *name, nodes_t *params,
+    char *name, list_t *params,
     node_t *result, node_t *body
 );
 node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *type);
 node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, node_t *type, node_t *init);
-node_t *ast_decl_record(scanner_t *scanner, where_t where, char *name, nodes_t *fields);
+node_t *ast_decl_record(scanner_t *scanner, where_t where, char *name, list_t *fields);
 node_t *ast_field(scanner_t *scanner, where_t where, char *name, node_t *type);
 
 /**
  * create a builtin type
  */
 node_t *ast_type(const char *name);
-
-/**
- * free a list of nodes
- * if free_items is true then also free all the nodes
- * in the list
- */
-void free_ast_list(nodes_t *list, bool free_items);

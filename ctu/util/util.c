@@ -73,3 +73,42 @@ void map_put(map_t *map, const char *id, void *data) {
         }
     }
 }
+
+list_t *new_list(void *init) {
+    list_t *list = ctu_malloc(sizeof(list_t));
+    
+    list->size = 4;
+    list->len = 0;
+    list->data = ctu_malloc(sizeof(void*) * list->size);
+
+    if (init) {
+        list_push(list, init);
+    }
+
+    return list;
+}
+
+size_t list_len(list_t *list) {
+    return list->len;
+}
+
+void *list_at(list_t *list, size_t index) {
+    return list->data[index];
+}
+
+list_t *list_push(list_t *list, void *data) {
+    if (list->len + 1 > list->size) {
+        list->size *= 2;
+        list->data = ctu_realloc(list->data, sizeof(void*) * list->size);
+    }
+    list->data[list->len++] = data;
+    return list;
+}
+
+void *list_first(list_t *list) {
+    return list->data[0];
+}
+
+void *list_last(list_t *list) {
+    return list->data[list->len - 1];
+}

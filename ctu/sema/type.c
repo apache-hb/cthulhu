@@ -27,6 +27,11 @@ size_t locals;
 size_t strings;
 
 /**
+ * all files
+ */
+map_t *files;
+
+/**
  * constants
  */
 
@@ -156,7 +161,7 @@ static bool is_local(node_t *node) {
 }
 
 static type_t *query_symbol(sema_t *sema, node_t *symbol) {
-    const char *name = get_symbol_name(symbol);
+    const char *name = list_last(symbol->ident);
     node_t *origin = get_decl(sema, name);
 
     if (origin == NULL) {
@@ -176,7 +181,7 @@ static type_t *query_symbol(sema_t *sema, node_t *symbol) {
 }
 
 static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
-    if (is_discard_name(get_symbol_name(symbol))) {
+    if (is_discard_name(list_last(symbol->ident))) {
         reportf(LEVEL_ERROR, symbol, "you cannot resolve the discarded symbol");
         return new_poison(symbol, "discarded symbol");
     }
@@ -184,7 +189,7 @@ static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
     type_t *type = query_symbol(sema, symbol);
 
     if (is_unresolved(type)) {
-        reportf(LEVEL_ERROR, symbol, "cannot resolve `%s` to a type", get_symbol_name(symbol));
+        reportf(LEVEL_ERROR, symbol, "cannot resolve `%s` to a type", list_last(symbol->ident));
     }
 
     connect_type(symbol, type);
@@ -326,10 +331,10 @@ static type_t *typecheck_return(sema_t *sema, node_t *stmt) {
 }
 
 static void typecheck_stmts(sema_t *sema, node_t *stmts) {
-    nodes_t *list = get_stmts(stmts);
+    list_t *list = get_stmts(stmts);
     
-    for (size_t i = 0; i < ast_len(list); i++) {
-        typecheck_stmt(sema, ast_at(list, i));
+    for (size_t i = 0; i < list_len(list); i++) {
+        typecheck_stmt(sema, list_at(list, i));
     }
 }
 
@@ -350,7 +355,7 @@ static type_t *typecheck_call(sema_t *sema, node_t *node) {
     }
 
     size_t params = typelist_len(body->args);
-    size_t args = ast_len(node->args);
+    size_t args = list_len(node->args);
 
     if (params != args) {
         reportf(LEVEL_ERROR, node, "incorrect number of parameters");
@@ -358,7 +363,7 @@ static type_t *typecheck_call(sema_t *sema, node_t *node) {
     }
 
     for (size_t i = 0; i < params; i++) {
-        node_t *arg = ast_at(node->args, i);
+        node_t *arg = list_at(node->args, i);
         type_t *to = typelist_at(body->args, i);
         type_t *from = typecheck_expr(sema, arg);
     
@@ -372,11 +377,11 @@ static type_t *typecheck_call(sema_t *sema, node_t *node) {
 
 static type_t *typecheck_func(sema_t *sema, node_t *decl) {
     type_t *result = resolve_type(sema, decl->result);
-    size_t len = ast_len(decl->params);
+    size_t len = list_len(decl->params);
     types_t *args = new_typelist(len);
 
     for (size_t i = 0; i < len; i++) {
-        node_t *param = ast_at(decl->params, i);
+        node_t *param = list_at(decl->params, i);
         type_t *arg = typecheck_decl(sema, param);
         typelist_put(args, i, arg);
     }
@@ -700,21 +705,17 @@ static type_t *begin_record(node_t *decl) {
 static void build_record(sema_t *sema, node_t *decl) {
     type_t *result = get_type(decl);
 
-    nodes_t *fields = decl->fields;
-    size_t len = ast_len(fields);
+    list_t *fields = decl->fields;
+    size_t len = list_len(fields);
 
     resize_record(result, len);
 
     for (size_t i = 0; i < len; i++) {
-        node_t *field = ast_kind_at(fields, i, AST_FIELD_DECL);
+        node_t *field = list_at(fields, i);
         add_field(sema, i, result, field);
     }
 }
 
-/**
- * check that a record has no duplicated fields
- * and make sure it isnt of infinite size
- */
 static type_t *typecheck_record(node_t *decl) {
     return get_type(decl);
 }
@@ -817,10 +818,10 @@ static void typecheck_stmt(sema_t *sema, node_t *stmt) {
     connect_type(stmt, type);
 }
 
-static void validate_params(sema_t *sema, nodes_t *params) {
-    size_t len = ast_len(params);
+static void validate_params(sema_t *sema, list_t *params) {
+    size_t len = list_len(params);
     for (size_t i = 0; i < len; i++) {
-        node_t *param = ast_at(params, i);
+        node_t *param = list_at(params, i);
         type_t *type = typecheck_decl(sema, param);
         
         add_discardable_local(sema, param);
@@ -841,11 +842,11 @@ static void validate_function(sema_t *sema, node_t *func) {
     free_sema(nest);
 }
 
-static void add_all_decls(sema_t *sema, nodes_t *decls) {
-    size_t len = ast_len(decls);
+static void add_all_decls(sema_t *sema, list_t *decls) {
+    size_t len = list_len(decls);
 
     for (size_t i = 0; i < len; i++) {
-        node_t *decl = ast_at(decls, i);
+        node_t *decl = list_at(decls, i);
         switch (decl->kind) {
         case AST_DECL_FUNC: typecheck_func(sema, decl); break;
         case AST_DECL_VAR: typecheck_var(sema, decl); break;
@@ -856,7 +857,7 @@ static void add_all_decls(sema_t *sema, nodes_t *decls) {
     }
 
     for (size_t i = 0; i < len; i++) {
-        node_t *decl = ast_at(decls, i);
+        node_t *decl = list_at(decls, i);
         if (decl->kind == AST_RECORD_DECL) {
             build_record(sema, decl);
         }
@@ -867,13 +868,13 @@ static void validate_var(sema_t *sema, node_t *var) {
     typecheck_decl(sema, var);
 }
 
-static void typecheck_all_decls(sema_t *sema, nodes_t *decls) {
+static void typecheck_all_decls(sema_t *sema, list_t *decls) {
     add_all_decls(sema, decls);
 
-    size_t len = ast_len(decls);
+    size_t len = list_len(decls);
 
     for (size_t i = 0; i < len; i++) {
-        node_t *decl = ast_at(decls, i);
+        node_t *decl = list_at(decls, i);
         switch (decl->kind) {
         case AST_DECL_VAR: 
             validate_var(sema, decl); 
@@ -900,7 +901,7 @@ static void add_builtin(type_t *type) {
  * external api
  */
 
-unit_t typecheck(nodes_t *nodes) {
+unit_t typecheck(list_t *nodes) {
     reset_strings();
     reset_locals();
 
@@ -913,6 +914,7 @@ unit_t typecheck(nodes_t *nodes) {
 }
 
 void sema_init(void) {
+    files = new_map(16);
     ROOT_SEMA = new_sema(NULL);
 
     for (int i = 0; i < INTEGER_END; i++) {
