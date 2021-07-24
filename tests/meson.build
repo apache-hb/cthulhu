@@ -28,9 +28,6 @@ test('pass-help', driver, args : [ '--help' ])
 
 subdir('multiple')
 
-# TODO: find a way to test init code
-#test('init', driver, args : [ '--init' ])
-
 warn = [
     'int-overflow', 'mod-by-zero'
 ]
