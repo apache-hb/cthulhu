@@ -1,0 +1,5 @@
+import b;
+
+def main(): void {
+    final a = b::get();
+}

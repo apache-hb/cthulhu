@@ -2,15 +2,19 @@
 
 #include "ctu/util/report.h"
 #include "ctu/util/util.h"
+#include "ctu/util/str.h"
 
 #include "ctu/debug/type.h"
 #include "ctu/debug/ast.h"
+
+#include "ctu/ast/compile.h"
 
 #include <gmp.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 
 /**
  * structures
@@ -18,6 +22,15 @@
 
 typedef struct sema_t {
     struct sema_t *parent;
+
+    /**
+     * a map of the imported name to the full path
+     */
+
+    /** @var map_t<const char*, const char*> */
+    map_t *imports;
+
+    /** @var map_t<const char*, node_t*> */
     map_t *decls;
 
     type_t *result; /* return type of current function */
@@ -28,6 +41,7 @@ size_t strings;
 
 /**
  * all files
+ * @var map_t<const char*, sema_t*>
  */
 map_t *files;
 
@@ -41,16 +55,17 @@ static sema_t *ROOT_SEMA = NULL;
  * builders
  */
 
-static sema_t *base_sema(sema_t *parent, size_t size) {
+static sema_t *base_sema(sema_t *parent, map_t *imports, size_t size) {
     sema_t *sema = ctu_malloc(sizeof(sema_t));
     sema->parent = parent;
     sema->decls = new_map(size);
     sema->result = NULL;
+    sema->imports = imports;
     return sema;
 }
 
 static sema_t *new_sema(sema_t *parent) {
-    return base_sema(parent, 32);
+    return base_sema(parent, NULL, 32);
 }
 
 static void free_sema(sema_t *sema) {
@@ -781,7 +796,7 @@ static void typecheck_stmt(sema_t *sema, node_t *stmt) {
         break;
 
     case AST_STMTS:
-        nest = base_sema(sema, 8);
+        nest = base_sema(sema, NULL, 8);
         typecheck_stmts(nest, stmt);
         free_sema(nest);
         break;
@@ -836,7 +851,7 @@ static void validate_function(sema_t *sema, node_t *func) {
     sema_t *nest = new_sema(sema);
     validate_params(nest, func->params);
     sema->result = resolve_type(sema, func->result);
-
+    
     typecheck_stmts(nest, func->body);
 
     free_sema(nest);
@@ -869,8 +884,6 @@ static void validate_var(sema_t *sema, node_t *var) {
 }
 
 static void typecheck_all_decls(sema_t *sema, list_t *decls) {
-    add_all_decls(sema, decls);
-
     size_t len = list_len(decls);
 
     for (size_t i = 0; i < len; i++) {
@@ -897,22 +910,101 @@ static void add_builtin(type_t *type) {
     add_decl(ROOT_SEMA, type->node);
 }
 
+static void add_import(sema_t *sema, sema_t *other, node_t *it, const char *name) {
+    if (map_get(sema->imports, name) != NULL) {
+        reportf(LEVEL_ERROR, it, "import %s already declared", name);
+    } else {
+        map_put(sema->imports, name, other);
+    }
+}
+
+static char *path_of(list_t *parts) {
+    char *seps = str_join("/", (const char**)parts->data, parts->len);
+    return format("%s.ct", seps);
+}
+
+static sema_t *import_file(node_t *inc, const char *path);
+
+static void add_imports(sema_t *sema, list_t *imports) {
+    for (size_t i = 0; i < list_len(imports); i++) {
+        node_t *it = list_at(imports, i);
+        list_t *parts = it->path;
+        char *name = list_last(parts);
+
+        const char *path = path_of(parts);
+
+        sema_t *other = import_file(it, path);
+        
+        if (other == NULL) {
+            add_import(sema, other, it, name);
+        }
+    }
+}
+
+static sema_t *typecheck_file(node_t *root, const char *path) {
+    list_t *decls = root->decls;
+
+    sema_t *sema = base_sema(ROOT_SEMA, new_map(8), 256);
+
+    /**
+     * register all decls first
+     * so recursive imports can find them
+     */
+    add_all_decls(sema, decls);
+
+    map_put(files, path, sema);
+
+    /**
+     * then add all imports and process them
+     */
+    add_imports(sema, root->imports);
+
+    /**
+     * then finally typecheck everything
+     * in the current file
+     */
+    typecheck_all_decls(sema, decls);
+
+    return sema;
+}
+
+static sema_t *import_file(node_t *inc, const char *path) {
+    printf("get: %s\n", path);
+    sema_t *other = map_get(files, path);
+    if (other != NULL) {
+        return other;
+    }
+
+    FILE *stream = ctu_open(path, "r");
+    if (stream == NULL) {
+        reportf(LEVEL_ERROR, inc, "failed to open file `%s` due to `%s`", path, strerror(errno));
+        return NULL;
+    }
+
+    node_t *root = compile_file(path, stream, NULL);
+
+    if (report_end(format("compiling `%s`", path))) {
+        reportf(LEVEL_ERROR, inc, "failed to compile file `%s`", path);
+        return NULL;
+    }
+
+    sema_t *res = typecheck_file(root, path);
+
+    return res;
+}
+
 /**
  * external api
  */
 
 unit_t typecheck(node_t *root) {
-    list_t *decls = root->decls;
-
     reset_strings();
-    reset_locals();
 
-    sema_t *sema = base_sema(ROOT_SEMA, 256);
-    typecheck_all_decls(sema, decls);
-    free_sema(sema);
+    typecheck_file(root, root->scanner->path);
 
-    unit_t out = { decls, strings };
-    return out;
+    unit_t unit = { new_list(NULL), 0 };
+
+    return unit;
 }
 
 void sema_init(void) {

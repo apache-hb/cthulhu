@@ -1,0 +1,7 @@
+import b;
+
+final num = 10;
+
+def get(): int {
+    return b::num;
+}
