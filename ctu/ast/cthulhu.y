@@ -91,6 +91,7 @@ void yyerror();
     EXPORTED "`export`"
     STRUCT "`struct`"
     UNION "`union`"
+    IMPORT "`import`"
     END 0 "end of file"
 
 %type<node>
@@ -98,12 +99,13 @@ void yyerror();
     type typename pointer /* types */
     stmt stmts return if else elseif branch assign while /* statements */
     primary postfix unary multiply add compare equality expr /* expressions */
+    import
 
 %type<nodes>
     stmtlist fields
     args arglist
     params paramlist
-    names
+    names imports unit
 
 %type<mut>
     mut
@@ -116,10 +118,12 @@ void yyerror();
  * toplevel decls
  */
 
-file: unit END ;
+file: unit END { x->ast = ast_root(x, new_list(NULL), $1); }
+    | imports unit END { x->ast = ast_root(x, $1, $2); }
+    ;
 
-unit: decl { x->ast = new_list($1); }
-    | unit decl { list_push(x->ast, $2); }
+unit: decl { $$ = new_list($1); }
+    | unit decl { list_push($1, $2); }
     ;
 
 decl: declbase { $$ = $1; }
@@ -170,6 +174,13 @@ paramlist: param { $$ = new_list($1); }
     ;
 
 param: IDENT COLON type { $$ = ast_decl_param(x, @$, $1, $3); }
+    ;
+
+imports: import { $$ = new_list($1); }
+    | imports import { $$ = list_push($1, $2); }
+    ;
+
+import: IMPORT names SEMI { $$ = ast_import(x, @$, $2); }
     ;
 
 /**

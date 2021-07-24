@@ -901,15 +901,17 @@ static void add_builtin(type_t *type) {
  * external api
  */
 
-unit_t typecheck(list_t *nodes) {
+unit_t typecheck(node_t *root) {
+    list_t *decls = root->decls;
+
     reset_strings();
     reset_locals();
 
     sema_t *sema = base_sema(ROOT_SEMA, 256);
-    typecheck_all_decls(sema, nodes);
+    typecheck_all_decls(sema, decls);
     free_sema(sema);
 
-    unit_t out = { nodes, strings };
+    unit_t out = { decls, strings };
     return out;
 }
 
