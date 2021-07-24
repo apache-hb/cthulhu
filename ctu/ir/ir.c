@@ -609,7 +609,7 @@ static size_t count_decls(list_t *nodes, ast_t kind) {
 }
 
 static size_t count_types(list_t *nodes) {
-    return count_decls(nodes, AST_RECORD_DECL);
+    return count_decls(nodes, AST_DECL_STRUCT);
 }
 
 module_t *compile_module(const char *name, unit_t unit) {
@@ -646,7 +646,7 @@ module_t *compile_module(const char *name, unit_t unit) {
         case AST_DECL_VAR:
             mod->vars[var_idx++].name = get_decl_name(decl);
             break;
-        case AST_RECORD_DECL:
+        case AST_DECL_STRUCT:
             type = get_type(decl);
             type->index = type_idx;
             mod->types[type_idx++] = type;
@@ -670,7 +670,7 @@ module_t *compile_module(const char *name, unit_t unit) {
             mod->vars[var_idx++] = compile_var(mod, decl);
             break;
 
-        case AST_RECORD_DECL:
+        case AST_DECL_STRUCT:
             break;
 
         default:

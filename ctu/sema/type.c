@@ -662,7 +662,7 @@ static void typecheck_while(sema_t *sema, node_t *decl) {
 }
 
 static bool struct_contains_struct(type_t *type, type_t *member) {
-    record_t fields = type->fields;
+    fields_t fields = type->fields;
     for (size_t i = 0; i < fields.size; i++) {
         field_t field = fields.fields[i];
         type_t *it = field.type;
@@ -687,7 +687,7 @@ static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
         const char *other = it.name;
 
         if (!is_discard_name(name) && strcmp(name, other) == 0) { 
-            reportf(LEVEL_ERROR, field, "duplicate field `%s` in record", name);
+            reportf(LEVEL_ERROR, field, "duplicate field `%s` in struct", name);
         }
     }
 
@@ -696,19 +696,19 @@ static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
     record->fields.fields[at] = it;
 }   
 
-static type_t *begin_record(node_t *decl) { 
+static type_t *begin_struct(node_t *decl) { 
     const char *name = get_decl_name(decl);
 
-    return new_record(decl, name);
+    return new_struct(decl, name);
 }
 
-static void build_record(sema_t *sema, node_t *decl) {
+static void build_struct(sema_t *sema, node_t *decl) {
     type_t *result = get_type(decl);
 
     list_t *fields = decl->fields;
     size_t len = list_len(fields);
 
-    resize_record(result, len);
+    resize_struct(result, len);
 
     for (size_t i = 0; i < len; i++) {
         node_t *field = list_at(fields, i);
@@ -716,13 +716,13 @@ static void build_record(sema_t *sema, node_t *decl) {
     }
 }
 
-static type_t *typecheck_record(node_t *decl) {
+static type_t *typecheck_struct(node_t *decl) {
     return get_type(decl);
 }
 
-static void validate_record(node_t *decl) {
+static void validate_struct(node_t *decl) {
     type_t *record = get_type(decl);
-    record_t fields = record->fields;
+    fields_t fields = record->fields;
     size_t len = fields.size;
     for (size_t i = 0; i < len; i++) {
         field_t field = fields.fields[i];
@@ -756,8 +756,8 @@ static type_t *typecheck_decl(sema_t *sema, node_t *decl) {
         add_discardable_local(sema, decl);
         return type;
 
-    case AST_RECORD_DECL:
-        type = typecheck_record(decl);
+    case AST_DECL_STRUCT:
+        type = typecheck_struct(decl);
         break;
 
     default:
@@ -850,7 +850,7 @@ static void add_all_decls(sema_t *sema, list_t *decls) {
         switch (decl->kind) {
         case AST_DECL_FUNC: typecheck_func(sema, decl); break;
         case AST_DECL_VAR: typecheck_var(sema, decl); break;
-        case AST_RECORD_DECL: begin_record(decl); break;
+        case AST_DECL_STRUCT: begin_struct(decl); break;
         default: assert("unknown decl type %d", decl->kind);
         }
         add_decl_global(sema, decl);
@@ -858,8 +858,8 @@ static void add_all_decls(sema_t *sema, list_t *decls) {
 
     for (size_t i = 0; i < len; i++) {
         node_t *decl = list_at(decls, i);
-        if (decl->kind == AST_RECORD_DECL) {
-            build_record(sema, decl);
+        if (decl->kind == AST_DECL_STRUCT) {
+            build_struct(sema, decl);
         }
     }
 }
@@ -883,8 +883,8 @@ static void typecheck_all_decls(sema_t *sema, list_t *decls) {
             validate_function(sema, decl);
             decl->locals = reset_locals();
             break;
-        case AST_RECORD_DECL:
-            validate_record(decl);
+        case AST_DECL_STRUCT:
+            validate_struct(decl);
             break;
         default: 
             assert("unknown decl type %d", decl->kind);

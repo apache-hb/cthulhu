@@ -89,11 +89,12 @@ void yyerror();
     VAR "`var`"
     WHILE "`while`"
     EXPORTED "`export`"
-    RECORD "`record`"
+    STRUCT "`struct`"
+    UNION "`union`"
     END 0 "end of file"
 
 %type<node>
-    decl declbase function param variable record field /* declarations */
+    decl declbase function param variable struct field /* declarations */
     type typename pointer /* types */
     stmt stmts return if else elseif branch assign while /* statements */
     primary postfix unary multiply add compare equality expr /* expressions */
@@ -127,7 +128,7 @@ decl: declbase { $$ = $1; }
 
 declbase: function { $$ = $1; }
     | variable { $$ = $1; }
-    | record { $$ = $1; }
+    | struct { $$ = $1; }
     ;
 
 function: DEF IDENT params COLON type stmts { 
@@ -145,7 +146,7 @@ variable: mut IDENT ASSIGN expr SEMI { $$ = ast_decl_var(x, @$, $1, $2, NULL, $4
     | mut IDENT COLON type ASSIGN expr SEMI { $$ = ast_decl_var(x, @$, $1, $2, $4, $6); }
     ;
 
-record: RECORD IDENT LBRACE fields RBRACE { $$ = ast_decl_record(x, @$, $2, $4); }
+struct: STRUCT IDENT LBRACE fields RBRACE { $$ = ast_decl_struct(x, @$, $2, $4); }
     ;
 
 fields: field { $$ = new_list($1); }

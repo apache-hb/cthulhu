@@ -120,7 +120,7 @@ type_t *new_pointer(struct node_t *node, type_t *to) {
     return type;
 }
 
-type_t *new_record(struct node_t *decl, const char *name) {
+type_t *new_struct(struct node_t *decl, const char *name) {
     type_t *type = new_type(TYPE_STRUCT, decl);
 
     type->name = name;
@@ -128,7 +128,7 @@ type_t *new_record(struct node_t *decl, const char *name) {
     return type;
 }
 
-void resize_record(type_t *type, size_t size) {
+void resize_struct(type_t *type, size_t size) {
     type->fields.size = size;
     type->fields.fields = ctu_malloc(sizeof(field_t) * size);
 }

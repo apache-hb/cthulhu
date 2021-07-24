@@ -36,3 +36,5 @@ void *list_at(list_t *list, size_t index);
 list_t *list_push(list_t *list, void *data);
 void *list_first(list_t *list);
 void *list_last(list_t *list);
+
+#define LIST_AT(T, L, I) ((T)list_at(L, I))

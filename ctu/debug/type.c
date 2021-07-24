@@ -32,7 +32,7 @@ static void debug_callable(type_t *type) {
     debug_type(type->result);
 }
 
-static void debug_struct(record_t fields) {
+static void debug_struct(fields_t fields) {
     printf("{");
     for (size_t i = 0; i < fields.size; i++) {
         if (i != 0) {
