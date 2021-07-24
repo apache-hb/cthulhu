@@ -84,7 +84,7 @@ typedef enum {
     TYPE_POINTER,
 
     /**
-     * a struct or record type
+     * a struct
      */
     TYPE_STRUCT,
 
@@ -131,7 +131,7 @@ typedef struct {
 typedef struct {
     size_t size;
     field_t *fields;
-} record_t;
+} fields_t;
 
 typedef struct type_t {
     /** 
@@ -190,7 +190,7 @@ typedef struct type_t {
         struct {
             const char *name;
 
-            record_t fields;
+            fields_t fields;
         };
 
         /**
@@ -227,8 +227,8 @@ type_t *new_poison(struct node_t *parent, const char *err);
 type_t *new_callable(struct node_t *func, types_t *args, type_t *result);
 type_t *new_pointer(struct node_t *node, type_t *to);
 
-type_t *new_record(struct node_t *decl, const char *name);
-void resize_record(type_t *type, size_t size);
+type_t *new_struct(struct node_t *decl, const char *name);
+void resize_struct(type_t *type, size_t size);
 
 bool is_unresolved(type_t *type);
 bool is_integer(type_t *type);

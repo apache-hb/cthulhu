@@ -377,7 +377,7 @@ static void emit_type(FILE *out, type_t *type) {
 
     fprintf(out, "struct type_%zu_t { ", type->index);
 
-    record_t fields = type->fields;
+    fields_t fields = type->fields;
     for (size_t i = 0; i < fields.size; i++) {
         field_t field = fields.fields[i];
         fprintf(out, "%s;", gen_type(field.type, format("_%zu", i)));

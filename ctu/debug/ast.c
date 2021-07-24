@@ -64,7 +64,7 @@ static void debug_symbol(node_t *node) {
         if (i != 0) {
             printf("::");
         }
-        printf("%s", (char*)list_at(node->ident, i));
+        printf("%s", LIST_AT(char*, node->ident, i));
     }
 }
 
@@ -100,8 +100,8 @@ static void debug_assign(node_t *node) {
     debug_ast(node->src);
 }
 
-static void debug_record(node_t *node) {
-    printf("record %s ", node->name);
+static void debug_struct(node_t *node) {
+    printf("struct %s ", node->name);
     debug_list(node->fields);
 }
 
@@ -131,7 +131,7 @@ void debug_ast(node_t *node) {
     case AST_BRANCH: debug_branch(node); break;
     case AST_DECL_VAR: debug_var(node); break;
     case AST_ASSIGN: debug_assign(node); break;
-    case AST_RECORD_DECL: debug_record(node); break;
+    case AST_DECL_STRUCT: debug_struct(node); break;
     case AST_FIELD_DECL: debug_field(node); break;
     default: printf("error %d", node->kind); break;
     }

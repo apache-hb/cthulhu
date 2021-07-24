@@ -1,7 +1,7 @@
-record A {
+struct A {
     b: B
 }
 
-record B {
+struct B {
     a: A
 }

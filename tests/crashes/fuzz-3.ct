@@ -1,4 +1,4 @@
-record Vec3 {
+struct Vec3 {
     x: int,
     y:Vec3,
     z: int

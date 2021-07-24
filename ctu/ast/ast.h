@@ -36,7 +36,7 @@ typedef enum {
     AST_DECL_FUNC,
     AST_DECL_VAR,
     AST_DECL_PARAM,
-    AST_RECORD_DECL,
+    AST_DECL_STRUCT,
     AST_FIELD_DECL,
 
     /**
@@ -249,7 +249,7 @@ typedef struct node_t {
                 /* AST_FIELD */
                 struct node_t *ftype;
 
-                /* AST_RECORD_DECL */
+                /* AST_DECL_STRUCT */
                 /** @var list_t<node_t*> */
                 list_t *fields;
 
@@ -378,7 +378,7 @@ node_t *ast_decl_func(
 );
 node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *type);
 node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, node_t *type, node_t *init);
-node_t *ast_decl_record(scanner_t *scanner, where_t where, char *name, list_t *fields);
+node_t *ast_decl_struct(scanner_t *scanner, where_t where, char *name, list_t *fields);
 node_t *ast_field(scanner_t *scanner, where_t where, char *name, node_t *type);
 
 /**

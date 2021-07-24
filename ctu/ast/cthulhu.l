@@ -38,7 +38,8 @@ SUFFIX [u]?[csilzpm]?
 "false" { return BOOL_FALSE; }
 "return" { return RETURN; }
 "export" { return EXPORTED; }
-"record" { return RECORD; }
+"struct" { return STRUCT; }
+"union" { return UNION; }
 
 "$" { yylval->text = "$"; return IDENT; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval->text = ctu_strdup(yytext); return IDENT; }

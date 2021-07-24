@@ -38,7 +38,7 @@ static node_t *new_decl(scanner_t *scanner, where_t where, ast_t kind, char *nam
 const char *get_decl_name(node_t *node) {
     switch (node->kind) {
     case AST_DECL_FUNC: case AST_DECL_VAR: case AST_DECL_PARAM:
-    case AST_RECORD_DECL: case AST_FIELD_DECL:
+    case AST_DECL_STRUCT: case AST_FIELD_DECL:
         return node->name;
 
     default:
@@ -431,8 +431,8 @@ node_t *ast_access(scanner_t *scanner, where_t where, node_t *expr, char *name, 
     return node;
 }
 
-node_t *ast_decl_record(scanner_t *scanner, where_t where, char *name, list_t *fields) {
-    node_t *node = new_decl(scanner, where, AST_RECORD_DECL, name);
+node_t *ast_decl_struct(scanner_t *scanner, where_t where, char *name, list_t *fields) {
+    node_t *node = new_decl(scanner, where, AST_DECL_STRUCT, name);
 
     node->fields = fields;
 
