@@ -38,12 +38,23 @@ static node_t *new_decl(scanner_t *scanner, where_t where, ast_t kind, char *nam
 const char *get_decl_name(node_t *node) {
     switch (node->kind) {
     case AST_DECL_FUNC: case AST_DECL_VAR: case AST_DECL_PARAM:
-    case AST_DECL_RECORD: case AST_DECL_FIELD:
+    case AST_RECORD_DECL: case AST_FIELD_DECL:
         return node->name;
 
     default:
         reportf(LEVEL_INTERNAL, node, "node is not a declaration");
         return "not-a-decl";
+    }
+}
+
+const char *get_symbol_name(node_t *node) {
+    switch (node->kind) {
+    case AST_SYMBOL:
+        return node->ident;
+
+    default:
+        reportf(LEVEL_INTERNAL, node, "node is not a symbol");
+        return "not-a-symbol";
     }
 }
 
@@ -59,23 +70,12 @@ const char *get_resolved_name(node_t *node) {
 
 const char *get_field_name(node_t *node) {
     switch (node->kind) {
-    case AST_DECL_FIELD:
+    case AST_FIELD_DECL:
         return node->name;
     
     default:
         reportf(LEVEL_INTERNAL, node, "node is not a field");
         return "not-a-field";
-    }
-}
-
-bool is_decl(node_t *node) {
-    switch (node->kind) {
-    case AST_DECL_FUNC: case AST_DECL_VAR: case AST_DECL_PARAM:
-    case AST_DECL_RECORD: case AST_DECL_FIELD:
-        return true;
-
-    default:
-        return false;
     }
 }
 
@@ -176,23 +176,6 @@ size_t ast_len(nodes_t *list) {
     return list->len;
 }
 
-symbol_t *ast_symbol_list(char *init) {
-    symbol_t *symbol = ctu_malloc(sizeof(symbol_t));
-    symbol->parts = NULL;
-    symbol->len = 0;
-    symbol->size = 0;
-    return ast_symbol_append(symbol, init);
-}
-
-symbol_t *ast_symbol_append(symbol_t *it, char *name) {
-    if (it->len + 1 >= it->size) {
-        it->size += 4;
-        it->parts = ctu_realloc(it->parts, sizeof(char*) * it->size);
-    }
-    it->parts[it->len++] = name;
-    return it;
-}
-
 node_t *make_implicit(node_t *node) {
     node->implicit = true;
     return node;
@@ -200,16 +183,6 @@ node_t *make_implicit(node_t *node) {
 
 node_t *make_exported(node_t *node) {
     node->exported = true;
-    return node;
-}
-
-node_t *ast_build(scanner_t *scanner, nodes_t *imports, nodes_t *decls) {
-    node_t *node = new_node(NULL, NOWHERE, AST_ROOT);
-
-    node->file = scanner->path;
-    node->imports = imports;
-    node->decls = decls;
-
     return node;
 }
 
@@ -348,17 +321,10 @@ node_t *ast_string(scanner_t *scanner, where_t where, char *string) {
     return node;
 }
 
-node_t *ast_symbol(scanner_t *scanner, where_t where, symbol_t *text) {
+node_t *ast_symbol(scanner_t *scanner, where_t where, char *text) {
     node_t *node = new_node(scanner, where, AST_SYMBOL);
 
-    for (size_t i = 0; i < text->len; i++) {
-        if (is_discard_name(text->parts[i])) {
-            report(LEVEL_ERROR, scanner, where, "symbol contains discard name");
-        }
-    }
-
-    node->symbol = text;
-    node->origin = NULL;
+    node->ident = text;
 
     return node;
 }
@@ -510,7 +476,7 @@ node_t *ast_access(scanner_t *scanner, where_t where, node_t *expr, char *name, 
 }
 
 node_t *ast_decl_record(scanner_t *scanner, where_t where, char *name, nodes_t *fields) {
-    node_t *node = new_decl(scanner, where, AST_DECL_RECORD, name);
+    node_t *node = new_decl(scanner, where, AST_RECORD_DECL, name);
 
     node->fields = fields;
 
@@ -518,18 +484,10 @@ node_t *ast_decl_record(scanner_t *scanner, where_t where, char *name, nodes_t *
 }
 
 node_t *ast_field(scanner_t *scanner, where_t where, char *name, node_t *type) {
-    node_t *node = new_node(scanner, where, AST_DECL_FIELD);
+    node_t *node = new_node(scanner, where, AST_FIELD_DECL);
 
     node->name = name;
     node->ftype = type;
-
-    return node;
-}
-
-node_t *ast_import(scanner_t *scanner, where_t where, symbol_t *path) {
-    node_t *node = new_node(scanner, where, AST_DECL_IMPORT);
-
-    node->path = path;
 
     return node;
 }
@@ -555,19 +513,4 @@ void mark_used(node_t *node) {
 
 bool is_used(node_t *node) {
     return node->used;
-}
-
-nodes_t *all_decls(node_t *root) {
-    ASSERT(root->kind == AST_ROOT)("all_decls must be called on a root");
-    return root->decls;
-
-}
-
-nodes_t *all_imports(node_t *root) {
-    ASSERT(root->kind == AST_ROOT)("all_imports must be called on a root");
-    return root->imports;
-}
-
-char *last_symbol(symbol_t *symbol) {
-    return symbol->parts[symbol->len - 1];
 }

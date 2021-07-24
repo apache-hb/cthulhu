@@ -3,7 +3,7 @@
 
 #include "ctu/util/str.h"
 
-void debug_list(nodes_t *nodes) {
+static void debug_list(nodes_t *nodes) {
     for (size_t i = 0; i < ast_len(nodes); i++) {
         if (i != 0) {
             printf(" ");
@@ -58,18 +58,8 @@ static void debug_call(node_t *node) {
     debug_list(node->args);
 }
 
-static void debug_symbols(symbol_t *all) {
-    for (size_t i = 0; i < all->len; i++) {
-        if (i != 0) {
-            printf("::");
-        }
-        printf("%s", all->parts[i]);
-    }
-}
-
 static void debug_symbol(node_t *node) {
-    printf("symbol ");
-    debug_symbols(node->symbol);
+    printf("symbol %s", node->ident);
 }
 
 static void debug_func(node_t *node) {
@@ -120,13 +110,6 @@ static void debug_access(node_t *node) {
     printf(" %s %s", node->field, node->indirect ? "indirect" : "direct");
 }
 
-static void debug_root(node_t *node) {
-    printf("root ");
-    debug_list(all_imports(node));
-    printf(" ");
-    debug_list(all_decls(node));
-}
-
 void debug_ast(node_t *node) {
     printf("(");
     switch (node->kind) {
@@ -142,9 +125,8 @@ void debug_ast(node_t *node) {
     case AST_BRANCH: debug_branch(node); break;
     case AST_DECL_VAR: debug_var(node); break;
     case AST_ASSIGN: debug_assign(node); break;
-    case AST_DECL_RECORD: debug_record(node); break;
-    case AST_DECL_FIELD: debug_field(node); break;
-    case AST_ROOT: debug_root(node); break;
+    case AST_RECORD_DECL: debug_record(node); break;
+    case AST_FIELD_DECL: debug_field(node); break;
     default: printf("error %d", node->kind); break;
     }
     printf(")");

@@ -28,7 +28,6 @@ void yyerror();
         node_t *node;
     } field;
 
-    symbol_t *symbol;
     char *text;
     node_t *node;
     nodes_t *nodes;
@@ -73,7 +72,6 @@ void yyerror();
     SEMI "`;`"
     COMMA "`,`"
     COLON "`:`"
-    COLON2 "`::`"
     ASSIGN "`=`"
 
 %token
@@ -91,7 +89,6 @@ void yyerror();
     WHILE "`while`"
     EXPORTED "`export`"
     RECORD "`record`"
-    IMPORT "`import`"
     END 0 "end of file"
 
 %type<node>
@@ -99,19 +96,14 @@ void yyerror();
     type typename pointer /* types */
     stmt stmts return if else elseif branch assign while /* statements */
     primary postfix unary multiply add compare equality expr /* expressions */
-    import
 
 %type<nodes>
     stmtlist fields
     args arglist
     params paramlist
-    imports decls
 
 %type<mut>
     mut
-
-%type<symbol>
-    path
 
 %start file
 
@@ -123,19 +115,8 @@ void yyerror();
 
 file: unit END ;
 
-unit: decls { x->ast = ast_build(x, ast_list(NULL), $1); }
-    | imports decls { x->ast = ast_build(x, $1, $2); }
-    ;
-
-decls: decl { $$ = ast_list($1); }
-    | decls decl { $$ = ast_append($1, $2); }
-    ;
-
-imports: import { $$ = ast_list($1); }
-    | imports import { $$ = ast_append($1, $2); }
-    ;
-
-import: IMPORT path SEMI { $$ = ast_import(x, @$, $2); }
+unit: decl { x->ast = ast_list($1); }
+    | unit decl { ast_append(x->ast, $2); }
     ;
 
 decl: declbase { $$ = $1; }
@@ -170,6 +151,7 @@ fields: field { $$ = ast_list($1); }
     ;
 
 field: IDENT COLON type { $$ = ast_field(x, @$, $1, $3); }
+    // | IDENT COLON type ASSIGN expr
     ;
 
 mut: VAR { $$ = true; }
@@ -243,7 +225,7 @@ type: typename { $$ = $1; }
 pointer: MUL type { $$ = ast_pointer(x, @$, $2); }
     ;
 
-typename: path { $$ = ast_symbol(x, @$, $1); }
+typename: IDENT { $$ = ast_symbol(x, @$, ctu_strdup($1)); }
     ;
 
 /**
@@ -308,10 +290,5 @@ equality: compare { $$ = $1; }
 
 expr: equality { $$ = $1; }
     ;
-
-
-
-path: IDENT { $$ = ast_symbol_list($1); }
-    | path COLON2 IDENT { $$ = ast_symbol_append($1, $3); }
-    ;  
+    
 %%

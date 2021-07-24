@@ -65,7 +65,6 @@ static void add_file(const char *path) {
 #define OPTIMIZE_ARG "--speed"
 #define EMIT_ARG "--emit"
 #define C99_ARG "--c99"
-#define ROOT_ARG "--root"
 
 static void print_help(void) {
     printf("usage: %s [options] file...\n", name);
@@ -76,7 +75,6 @@ static void print_help(void) {
     printf("\t" OPTIMIZE_ARG ": enable optimization\n");
     printf("\t" EMIT_ARG ": print debug info\n");
     printf("\t" C99_ARG ": enable C99 output\n");
-    printf("\t" ROOT_ARG "=path: set the directory for import searching to path\n");
 }
 
 static int parse_arg(int index, int argc, const char **argv) {
@@ -101,9 +99,6 @@ static int parse_arg(int index, int argc, const char **argv) {
     } else if (strcmp(arg, C99_ARG) == 0) {
         c99 = true;
         logfmt("emitting c99");
-    } else if (startswith(arg, ROOT_ARG)) {
-        search_path = arg + strlen(ROOT_ARG) + 1;
-        logfmt("searching for imports in `%s`", search_path);
     } else if (!startswith(arg, "-")) {
         add_file(arg);
         logfmt("adding `%s` as a source file", arg);
@@ -164,22 +159,26 @@ int main(int argc, const char **argv) {
     for (size_t i = 0; i < inputs.len; i++) {
         scanner_t *scan;
         input_t it = inputs.files[i];
-        node_t *root = compile_file(it.path, it.file, &scan);
+        nodes_t *nodes = compile_file(it.path, it.file, &scan);
 
         if (report_end("parse"))
             return 1;
 
         if (emit) {
-            debug_ast(root);
+            for (size_t i = 0; i < nodes->len; i++) {
+                debug_ast(nodes->data[i]); printf("\n");
+            }
         }
 
-        unit_t unit = typecheck(root, NULL);
+        unit_t unit = typecheck(nodes);
 
         if (report_end("semantic"))
             return 1;
 
         if (emit) {
-            debug_list(unit.decls);
+            for (size_t i = 0; i < nodes->len; i++) {
+                debug_ast(nodes->data[i]); printf("\n");
+            }
         }
 
         module_t *mod = compile_module("ctu/main", unit);

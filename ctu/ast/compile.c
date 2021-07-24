@@ -65,7 +65,7 @@ static const char *yyerror_str(int err) {
     }
 }
 
-node_t *compile_file(const char *path, FILE *stream, scanner_t **scanout) {
+nodes_t *compile_file(const char *path, FILE *stream, scanner_t **scanout) {
     int err;
     yyscan_t scanner;
     scanner_t *extra = new_file_scanner(path, stream);
@@ -90,7 +90,7 @@ node_t *compile_file(const char *path, FILE *stream, scanner_t **scanout) {
     return extra->ast;
 }
 
-node_t *compile_string(const char *path, const char *text, scanner_t **scanout) {
+nodes_t *compile_string(const char *path, const char *text, scanner_t **scanout) {
     int err;
     yyscan_t scanner;
     scanner_t *extra = new_str_scanner(path, text);

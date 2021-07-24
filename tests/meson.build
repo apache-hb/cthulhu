@@ -12,21 +12,17 @@ pass = [
 foreach it : pass 
     path = meson.current_source_dir()/'pass'/it + '.ct'
     test('pass-' + it, driver, args : [ 
-        '--verbose', '--emit', '--c99',
+        '--verbose', '--emit', 
         '--speed', path 
     ])
 endforeach
 
-here = meson.current_source_dir()
-
-test('recurse-import', driver, args : [
-    '--verbose', '--emit', '--root=' + here/'pass/import-recurse',
-    '--speed', here/'pass/import-recurse/main.ct'
-])
-
 test('pass-help', driver, args : [ '--help' ])
 
 subdir('multiple')
+
+# TODO: find a way to test init code
+#test('init', driver, args : [ '--init' ])
 
 warn = [
     'int-overflow', 'mod-by-zero'
@@ -35,7 +31,7 @@ warn = [
 foreach it : warn 
     path = meson.current_source_dir()/'warn'/it + '.ct'
     test('warn-' + it, driver, args : [ 
-        '--verbose', '--emit', '--c99',
+        '--verbose', '--emit', 
         '--speed', path 
     ])
 endforeach
@@ -61,7 +57,7 @@ foreach it : fail
 endforeach
 
 crashes = [ 
-    'fuzz-1', 'fuzz-2', 'fuzz-3', 'fuzz-4'
+    'fuzz-1', 'fuzz-2'
 ]
 
 foreach it : crashes 

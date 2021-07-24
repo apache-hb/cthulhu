@@ -2,23 +2,13 @@
 
 #include "ctu/ast/ast.h"
 
-#include "ctu/util/util.h"
-
-extern const char *search_path;
+extern type_t *VOID_TYPE;
 
 typedef struct {
-    nodes_t *decls;
+    nodes_t *nodes;
     size_t strings;
 } unit_t;
 
-typedef struct sema_t {
-    struct sema_t *parent;
-    map_t *decls;
-    map_t *imports;
-
-    type_t *result; /* return type of current function */
-} sema_t;
-
-unit_t typecheck(node_t *root, sema_t **out);
+unit_t typecheck(nodes_t *nodes);
 
 void sema_init(void);
