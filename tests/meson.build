@@ -12,7 +12,7 @@ pass = [
 foreach it : pass 
     path = meson.current_source_dir()/'pass'/it + '.ct'
     test('pass-' + it, driver, args : [ 
-        '--verbose', '--emit', 
+        '--verbose', '--emit', '--c99',
         '--speed', path 
     ])
 endforeach
@@ -35,7 +35,7 @@ warn = [
 foreach it : warn 
     path = meson.current_source_dir()/'warn'/it + '.ct'
     test('warn-' + it, driver, args : [ 
-        '--verbose', '--emit', 
+        '--verbose', '--emit', '--c99',
         '--speed', path 
     ])
 endforeach
