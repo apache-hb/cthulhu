@@ -450,7 +450,7 @@ node_t *ast_field(scanner_t *scanner, where_t where, char *name, node_t *type) {
     node_t *node = new_node(scanner, where, AST_DECL_FIELD);
 
     node->name = name;
-    node->ftype = type;
+    node->type = type;
 
     return node;
 }

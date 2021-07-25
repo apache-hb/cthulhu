@@ -79,11 +79,46 @@ static char *path_of(list_t *it) {
 }
 
 static void add_import(sema_t *sema, node_t *it) {
+    /**
+     * compile the imported file
+     */
     char *path = path_of(it->path);
-
     sema_t *other = begin_file(it, NULL, path);
 
+    /**
+     * then add it to the current scope
+     * currently we add it by taking the last element
+     * of the path and using that as the key.
+     */
     map_put(sema->imports, list_last(it->path), other);
+}
+
+static void put_unique(map_t *dst, const char *key, node_t *node) {
+    if (map_get(dst, key)) {
+        reportf(LEVEL_ERROR, node, "redeclaration of `%s`", key);
+    } else {
+        map_put(dst, key, node);
+    }
+}
+
+static void add_decl(sema_t *sema, node_t *it) {
+    const char *name = get_decl_name(it);
+
+    switch (it->kind) {
+    case AST_DECL_VAR:
+        put_unique(sema->vars, name, it);
+        break;
+    case AST_DECL_STRUCT:
+        put_unique(sema->types, name, it);
+        break;
+    case AST_DECL_FUNC:
+        put_unique(sema->funcs, name, it);
+        break;
+
+    default:
+        assert("unknown add_decl kind %d", it->type);
+        break;
+    }
 }
 
 /**
@@ -133,6 +168,12 @@ static sema_t *begin_file(node_t *inc, node_t *root, const char *path) {
         add_import(sema, list_at(imports, i));
     }
 
+    list_t *decls = root->decls;
+
+    for (size_t i = 0; i < list_len(decls); i++) {
+        add_decl(sema, list_at(decls, i));
+    }
+
     /**
      * now add all declarations
      */
@@ -143,7 +184,7 @@ static sema_t *begin_file(node_t *inc, node_t *root, const char *path) {
 unit_t typecheck(node_t *root) {
     begin_file(NULL, root, root->scanner->path);
 
-    unit_t unit = { new_list(NULL), 0 };
+    unit_t unit = { new_list(NULL), strings };
 
     return unit;
 }
@@ -865,7 +906,7 @@ static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
         }
     }
 
-    field_t it = { name, resolve_type(sema, field->ftype) };
+    field_t it = { name, resolve_type(sema, field->type) };
 
     record->fields.fields[at] = it;
 }   
