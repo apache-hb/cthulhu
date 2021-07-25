@@ -85,6 +85,19 @@ void map_put(map_t *map, const char *id, void *data) {
     }
 }
 
+
+void map_iter(map_t *map, void (*func)(const char *id, void *data, void *arg), void *arg) {
+    for (size_t i = 0; i < map->size; i++) {
+        entry_t *entry = &map->data[i];
+        while (entry) {
+            if (entry->id) {
+                func(entry->id, entry->data, arg);
+            }
+            entry = entry->next;
+        }
+    }
+}
+
 list_t *new_list(void *init) {
     list_t *list = ctu_malloc(sizeof(list_t));
     
@@ -122,4 +135,10 @@ void *list_first(list_t *list) {
 
 void *list_last(list_t *list) {
     return list->data[list->len - 1];
+}
+
+list_t list_slice(list_t *list, size_t offset) {
+    list_t slice = { list->size, list->len - offset, list->data + offset };
+
+    return slice;
 }

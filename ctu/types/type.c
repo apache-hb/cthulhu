@@ -79,6 +79,7 @@ static type_t *new_type(typeof_t kind, node_t *node) {
     type->node = node;
     type->mut = false;
     type->invalid = false;
+    type->lvalue = false;
     type->index = SIZE_MAX;
 
     node->typeof = type;

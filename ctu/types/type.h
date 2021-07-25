@@ -155,6 +155,11 @@ typedef struct type_t {
      */
     bool invalid:1;
 
+    /**
+     * can we take a reference to this or assign to it
+     */
+    bool lvalue:1;
+
     /** 
      * the node that generated this type 
      */

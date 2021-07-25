@@ -28,6 +28,8 @@ map_t *new_map(size_t size);
 void *map_get(map_t *map, const char *id);
 void map_put(map_t *map, const char *id, void *data);
 
+void map_iter(map_t *map, void (*func)(const char *id, void *data, void *arg), void *arg);
+
 typedef struct {
     size_t size;
     size_t len;
@@ -40,5 +42,6 @@ void *list_at(list_t *list, size_t index);
 list_t *list_push(list_t *list, void *data);
 void *list_first(list_t *list);
 void *list_last(list_t *list);
+list_t list_slice(list_t *list, size_t offset);
 
 #define LIST_AT(T, L, I) ((T)list_at(L, I))
