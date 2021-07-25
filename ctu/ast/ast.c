@@ -280,6 +280,13 @@ node_t *ast_string(scanner_t *scanner, where_t where, char *string) {
 node_t *ast_symbol(scanner_t *scanner, where_t where, list_t *text) {
     node_t *node = new_node(scanner, where, AST_SYMBOL);
 
+    for (size_t i = 0; i < list_len(text); i++) {
+        char *str = list_at(text, i);
+        if (is_discard_name(str)) {
+            reportf(LEVEL_ERROR, node, "symbol may not contain discard name `$`");
+        }
+    }
+
     node->ident = text;
 
     return node;

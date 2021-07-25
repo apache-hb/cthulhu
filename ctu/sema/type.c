@@ -4,6 +4,160 @@
 #include "ctu/util/util.h"
 #include "ctu/util/str.h"
 
+#include "ctu/ast/compile.h"
+
+#include <errno.h>
+
+typedef struct sema_t {
+    struct sema_t *parent;
+
+    /** 
+     * @var map_t<string, sema_t*> 
+     * 
+     * map of imports to their respective scope
+     */
+    map_t *imports;
+
+    /** 
+     * @var map_t<string, node_t*> 
+     * 
+     * variables in the current scope
+     */
+    map_t *vars;
+
+    /** 
+     * @var map_t<string, node_t*> 
+     * 
+     * type declarations
+     */
+    map_t *types;
+
+    /** 
+     * @var map_t<string, node_t*> 
+     * 
+     * function declarations
+     */
+    map_t *funcs;
+} sema_t;
+
+/**
+ * all parsed files
+ * kept in a map so we never open a file twice
+ */
+map_t *files = NULL;
+
+/**
+ * total number of strings
+ */
+size_t strings = 0;
+
+static sema_t *begin_file(node_t *inc, node_t *root, const char *path);
+
+static sema_t *new_sema(sema_t *parent) {
+    sema_t *sema = ctu_malloc(sizeof(sema_t));
+
+    if (parent) {
+        sema->imports = parent->imports;
+    } else {
+        sema->imports = new_map(8);
+    }
+
+    sema->parent = parent;
+    sema->vars = new_map(8);
+    sema->types = new_map(8);
+    sema->funcs = new_map(8);
+
+    return sema;
+}
+
+static char *path_of(list_t *it) {
+    char *joined = str_join("/", (const char**)it->data, it->len);
+    char *out = format("%s.ct", joined);
+    ctu_free(joined);
+
+    return out;
+}
+
+static void add_import(sema_t *sema, node_t *it) {
+    char *path = path_of(it->path);
+
+    sema_t *other = begin_file(it, NULL, path);
+
+    map_put(sema->imports, list_last(it->path), other);
+}
+
+/**
+ * `inc` is the import that caused this file to be parsed
+ * parse a file at `path`
+ * if root is null then this function will `ctu_open` 
+ * the path and attempt to parse it. otherwise it will use it
+ */
+static sema_t *begin_file(node_t *inc, node_t *root, const char *path) {
+    /**
+     * if the files already parsed
+     * then reuse it
+     */
+    sema_t *sema = map_get(files, path);
+    if (sema != NULL) {
+        return sema;
+    }
+    
+    /**
+     * if we havent been given a root node
+     * then open the file and parse it
+     */
+    if (root == NULL) {
+        FILE *fd = ctu_open(path, "rb");
+        if (!fd) {
+            reportf(LEVEL_ERROR, inc, "failed to open `%s` due to `%s`", path, strerror(errno));
+            return NULL;
+        }
+
+        root = compile_file(path, fd, NULL);
+        if (root == NULL) {
+            return NULL;
+        }
+    }
+
+    /**
+     * now typecheck the ast
+     */
+    sema = new_sema(NULL);
+    map_put(files, path, sema);
+
+    /**
+     * first add all its imports
+     */
+    list_t *imports = root->imports;
+    for (size_t i = 0; i < list_len(imports); i++) {
+        add_import(sema, list_at(imports, i));
+    }
+
+    /**
+     * now add all declarations
+     */
+
+    return sema;
+}
+
+unit_t typecheck(node_t *root) {
+    begin_file(NULL, root, root->scanner->path);
+
+    unit_t unit = { new_list(NULL), 0 };
+
+    return unit;
+}
+
+void sema_init(void) {
+    files = new_map(8);
+}
+
+#if 0
+
+#include "ctu/util/report.h"
+#include "ctu/util/util.h"
+#include "ctu/util/str.h"
+
 #include "ctu/debug/type.h"
 #include "ctu/debug/ast.h"
 
@@ -30,8 +184,17 @@ typedef struct sema_t {
     /** @var map_t<const char*, const char*> */
     map_t *imports;
 
+    /**
+     * all types in the current scope
+     */
     /** @var map_t<const char*, node_t*> */
     map_t *decls;
+
+    /**
+     * all variables in the current scope
+     */
+    /** @var map_t<const char*, node_t*> */
+    map_t *vars;
 
     type_t *result; /* return type of current function */
 } sema_t;
@@ -59,6 +222,7 @@ static sema_t *base_sema(sema_t *parent, map_t *imports, size_t size) {
     sema_t *sema = ctu_malloc(sizeof(sema_t));
     sema->parent = parent;
     sema->decls = new_map(size);
+    sema->vars = new_map(size);
     sema->result = NULL;
     sema->imports = imports;
     return sema;
@@ -196,11 +360,6 @@ static type_t *query_symbol(sema_t *sema, node_t *symbol) {
 }
 
 static type_t *resolve_symbol(sema_t *sema, node_t *symbol) {
-    if (is_discard_name(list_last(symbol->ident))) {
-        reportf(LEVEL_ERROR, symbol, "you cannot resolve the discarded symbol");
-        return new_poison(symbol, "discarded symbol");
-    }
-
     type_t *type = query_symbol(sema, symbol);
 
     if (is_unresolved(type)) {
@@ -1020,3 +1179,4 @@ void sema_init(void) {
     add_builtin(BOOL_TYPE);
     add_builtin(VOID_TYPE);
 }
+#endif

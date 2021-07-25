@@ -45,7 +45,7 @@ fail = [
     'incorrect-return1',
     'incorrect-return2',
     'invalid-char', 'scope', 'bad-return',
-    'infinite-struct'
+    'infinite-struct', 'type-in-expr'
 ]
 
 foreach it : fail 
