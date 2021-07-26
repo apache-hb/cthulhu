@@ -41,6 +41,11 @@ typedef struct sema_t {
 } sema_t;
 
 /**
+ * builtin types
+ */
+map_t *builtins = NULL;
+
+/**
  * all parsed files
  * kept in a map so we never open a file twice
  */
@@ -156,17 +161,14 @@ static void build_var(sema_t *sema, node_t *it) {
         connect_type(it, init);
     }
 
-    /**
-     * TODO: check this case
     if (type != NULL && init != NULL) {
-        if (!convertible_to(type, init)) {
+        if (!type_can_become_implicit(&it, type, init)) {
             reportf(LEVEL_ERROR, it, "incompatible types for initialization of variable `%s`", it->name);
         }
-    }*/
+    }
 }
 
-static void build_var_wrap(const char *id, void *data, void *arg) {
-    printf("building var `%s`\n", id);
+static void build_var_wrap(void *data, void *arg) {
     build_var(arg, data);
 }
 
@@ -250,8 +252,22 @@ unit_t typecheck(node_t *root) {
     return unit;
 }
 
+static void add_builtin(type_t *type) {
+    map_put(builtins, type->node->name, type);
+}
+
 void sema_init(void) {
     files = new_map(8);
+    builtins = new_map(32);
+
+    for (int i = 0; i < INTEGER_END; i++) {
+        add_builtin(get_int_type(false, i));
+        add_builtin(get_int_type(true, i));
+    }
+
+    add_builtin(STRING_TYPE);
+    add_builtin(BOOL_TYPE);
+    add_builtin(VOID_TYPE);
 }
 
 #if 0

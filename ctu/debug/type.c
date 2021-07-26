@@ -20,13 +20,13 @@ static const char *integer_name(type_t *type) {
 void debug_type(type_t *type);
 
 static void debug_callable(type_t *type) {
-    types_t *args = type->args;
+    list_t *args = type->args;
     printf("(");
-    for (size_t i = 0; i < typelist_len(args); i++) {
+    for (size_t i = 0; i < list_len(args); i++) {
         if (i != 0) {
             printf(", ");
         }
-        debug_type(typelist_at(args, i));
+        debug_type(list_at(args, i));
     }
     printf(") -> ");
     debug_type(type->result);

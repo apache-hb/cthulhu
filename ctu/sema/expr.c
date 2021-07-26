@@ -68,40 +68,7 @@ static bool is_lvalue(type_t *it) {
     return it->lvalue;
 }
 
-static type_t *unary_math(sema_t *sema, node_t *expr) {
-    type_t *type = query_expr(sema, expr->expr);
-
-    if (!is_integer(type)) {
-        reportf(LEVEL_ERROR, expr, "unary operator on non-integer");
-    }
-
-    if (expr->unary == UNARY_NEG && !is_signed(type)) {
-        reportf(LEVEL_ERROR, expr, "cannot negate unsigned int");
-    }
-
-    return type;
-}
-
-static type_t *unary_ref(sema_t *sema, node_t *expr) {
-    type_t *type = query_expr(sema, expr->expr);
-    if (!is_lvalue(type)) {
-        reportf(LEVEL_ERROR, expr, "cannot take the address of a non-lvalue");
-    }
-
-    return new_pointer(expr, type);
-}
-
-static type_t *unary_deref(sema_t *sema, node_t *expr) {
-    type_t *inner = query_expr(sema, expr->expr);
-
-    if (is_pointer(inner)) {
-        inner = inner->ptr;
-    } else {
-        reportf(LEVEL_ERROR, expr, "dereferencing non-pointer");
-    }
-
-    return inner;
-}
+#include "unary.c"
 
 static type_t *query_unary(sema_t *sema, node_t *expr) {
     switch (expr->unary) {
@@ -115,19 +82,12 @@ static type_t *query_unary(sema_t *sema, node_t *expr) {
         assert("unary try is currently unimplemented");
         return new_poison(expr, "unary try is currently unimplemented");
     }
+
+    assert("invalid unary");
+    return new_poison(expr, "invalid unary expr");
 }
 
-static type_t *binary_math(sema_t *sema, node_t *expr) {
-
-}
-
-static type_t *binary_cmp(sema_t *sema, node_t *expr) {
-
-}
-
-static type_t *binary_eq(sema_t *sema, node_t *expr) {
-
-}
+#include "binary.c"
 
 static type_t *query_binary(sema_t *sema, node_t *expr) {
     switch (expr->binary) {
@@ -150,11 +110,40 @@ static type_t *query_binary(sema_t *sema, node_t *expr) {
 
 static type_t *query_call(sema_t *sema, node_t *expr) {
     type_t *type = query_expr(sema, expr->expr);
+
+    if (!is_callable(type)) {
+        reportf(LEVEL_ERROR, expr, "uncallable type");
+        return new_poison(expr, "not callable");
+    }
+
+    size_t args = list_len(expr->args);
+    size_t needs = list_len(type->args);
+
+    if (args != needs) {
+        reportf(LEVEL_ERROR, expr, "wrong number of arguments");
+    } else {
+        for (size_t i = 0; i < args; i++) {
+            node_t *arg = list_at(expr->args, i);
+            type_t *in = query_expr(sema, arg);
+            type_t *out = list_at(type->args, i);
+            if (!type_can_become_implicit(&arg, in, out)) {
+                reportf(LEVEL_ERROR, arg, "argument %zu has the incorrect type", i);
+            }
+        }
+    }
+
+    return type->result;
 }
 
 static type_t *query_cast(sema_t *sema, node_t *expr) {
     type_t *src = query_expr(sema, expr->expr);
     type_t *dst = query_type(sema, expr->cast);
+
+    if (!type_can_become_explicit(&expr, dst, src)) {
+        return new_poison(expr, "invalid cast");
+    }
+
+    return dst;
 }
 
 static type_t *get_field(type_t *record, node_t *get) {

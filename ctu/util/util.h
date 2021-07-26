@@ -28,7 +28,7 @@ map_t *new_map(size_t size);
 void *map_get(map_t *map, const char *id);
 void map_put(map_t *map, const char *id, void *data);
 
-void map_iter(map_t *map, void (*func)(const char *id, void *data, void *arg), void *arg);
+void map_iter(map_t *map, void (*func)(void *data, void *arg), void *arg);
 
 typedef struct {
     size_t size;
