@@ -1,9 +1,55 @@
+static type_t *query_func(sema_t *sema, node_t *func) {
+    type_t *type = raw_type(func);
+    if (type) {
+        return type;
+    }
+
+    type_t *result = query_type(sema, func->result);
+
+    size_t len = list_len(func->params);
+    list_t *args = new_list(NULL);
+
+    for (size_t i = 0; i < len; i++) {
+        node_t *param = list_at(func->params, i);
+        type_t *param_type = query_type(sema, param->type);
+        list_push(args, param_type);
+    }
+
+    return new_callable(func, args, result);
+}
+
+static type_t *query_local_expr(sema_t *sema, node_t *node, const char *name) {
+    /**
+     * search variables first
+     */
+    node_t *var = map_get(sema->vars, name);
+    if (var) {
+        return get_type(var);
+    }
+
+    /**
+     * then search functions
+     */
+    node_t *func = map_get(sema->funcs, name);
+    if (func) {
+        return query_func(sema, func);
+    }
+
+    if (sema->parent) {
+        return query_local_expr(sema->parent, node, name);
+    } else {
+        /**
+         * error out if we found nothing
+         */
+        reportf(LEVEL_ERROR, node, "unknown symbol `%s`", name);
+        return new_poison(node, "unresolved symbol");
+    }
+}
 
 /**
  * query for a variable or a function recursivley
  */
 static type_t *query_expr_symbol(sema_t *sema, node_t *expr, list_t *symbol) {
-    printf("len: %zu\n", symbol->len);
     const char *first = list_first(symbol);
     
     /**
@@ -11,27 +57,7 @@ static type_t *query_expr_symbol(sema_t *sema, node_t *expr, list_t *symbol) {
      * the current namespace
      */
     if (symbol->len == 1) {
-        /**
-         * search variables first
-         */
-        node_t *var = map_get(sema->vars, first);
-        if (var) {
-            return get_type(var);
-        }
-
-        /**
-         * then search functions
-         */
-        node_t *func = map_get(sema->funcs, first);
-        if (func) {
-            return get_type(func);
-        }
-
-        /**
-         * error out if we found nothing
-         */
-        reportf(LEVEL_ERROR, expr, "unknown symbol `%s`", first);
-        return new_poison(expr, format("unresolved symbol `%s`", first));
+        return query_local_expr(sema, expr, first);
     }
 
     /**
@@ -61,6 +87,7 @@ static type_t *query_bool(void) {
 }
 
 static type_t *query_string(void) {
+    strings += 1;
     return STRING_TYPE;
 }
 
@@ -75,9 +102,9 @@ static type_t *query_unary(sema_t *sema, node_t *expr) {
     case UNARY_ABS: case UNARY_NEG:
         return unary_math(sema, expr);
     case UNARY_REF:
-        return unary_ref(sema, expr->expr);
+        return unary_ref(sema, expr);
     case UNARY_DEREF:
-        return unary_deref(sema, expr->expr);
+        return unary_deref(sema, expr);
     case UNARY_TRY:
         assert("unary try is currently unimplemented");
         return new_poison(expr, "unary try is currently unimplemented");

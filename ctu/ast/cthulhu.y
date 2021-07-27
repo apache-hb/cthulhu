@@ -136,12 +136,22 @@ declbase: function { $$ = $1; }
     ;
 
 function: DEF IDENT params COLON type stmts { 
+        /* function body */
         $$ = ast_decl_func(x, merge_locations(@1, @2), 
             /* name */ $2, 
             /* params */ $3,
             /* result */ $5,
             /* body */ $6
         ); 
+    }
+    | DEF IDENT params COLON type SEMI {
+        /* function predefine */
+        $$ = ast_decl_func(x, merge_locations(@1, @2),
+            /* name */ $2,
+            /* params */ $3,
+            /* result */ $5,
+            /* body */ NULL
+        );
     }
     ;
 

@@ -161,13 +161,18 @@ bool is_pointer(type_t *type) {
     return type->kind == TYPE_POINTER;
 }
 
+type_t *copyty(type_t *type) {
+    type_t *copy = ctu_malloc(sizeof(type_t));
+    memcpy(copy, type, sizeof(type_t));
+    return copy;
+}
+
 type_t *set_mut(type_t *type, bool mut) {
     if (type->mut == mut) {
         return type;
     }
 
-    type_t *out = ctu_malloc(sizeof(type_t));
-    memcpy(out, type, sizeof(type_t));
+    type_t *out = copyty(type);
     out->mut = mut;
 
     return out;

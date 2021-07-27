@@ -144,32 +144,73 @@ static void add_decl(sema_t *sema, node_t *it) {
     }
 }
 
+static void add_discard(map_t *dst, node_t *it) {
+    const char *name = get_decl_name(it);
+    if (!is_discard_name(name)) {
+        map_put(dst, name, it);
+    }
+}
+
+static void build_var(sema_t *sema, node_t *it);
+
 #include "type.c"
 #include "expr.c"
+#include "stmt.c"
+
+static void build_type(sema_t *sema, node_t *it) {
+    (void)sema;
+    (void)it;
+}
 
 static void build_var(sema_t *sema, node_t *it) {
     type_t *type = NULL;
     type_t *init = NULL;
 
-    if (it->type) {
-        type = query_type(sema, it->type);
-        connect_type(it, type);
-    }
+    type_t *out;
 
     if (it->init) {
         init = query_expr(sema, it->init);
-        connect_type(it, init);
+        out = init;
     }
+
+    if (it->type) {
+        type = query_type(sema, it->type);
+        out = type;
+    }
+
+    /**
+     * variables are lvalues
+     */
+    out = copyty(out);
+    out->lvalue = true;
 
     if (type != NULL && init != NULL) {
         if (!type_can_become_implicit(&it, type, init)) {
             reportf(LEVEL_ERROR, it, "incompatible types for initialization of variable `%s`", it->name);
         }
     }
+
+    connect_type(it, out);
 }
 
-static void build_var_wrap(void *data, void *arg) {
-    build_var(arg, data);
+static void build_params(sema_t *sema, list_t *params) {
+    for (size_t i = 0; i < list_len(params); i++) {
+        node_t *param = list_at(params, i);
+        type_t *type = query_type(sema, param);
+
+        add_discard(sema->vars, param);
+
+        if (is_void(type)) {
+            reportf(LEVEL_ERROR, param, "void type not allowed as parameter");
+        }
+    }
+}
+
+static void build_func(sema_t *sema, node_t *it) {
+    sema_t *nest = new_sema(sema);
+    build_params(nest, it->params);
+
+    build_stmts(nest, it->body);
 }
 
 /**
@@ -238,14 +279,37 @@ static sema_t *begin_file(node_t *inc, node_t *root, const char *path) {
     return sema;
 }
 
+static void build_type_wrap(const char *id, void *data, void *arg) {
+    (void)id;
+    build_type(data, arg);
+}
+
+static void build_var_wrap(const char *id, void *data, void *arg) {
+    (void)id;
+    build_var(arg, data);
+}
+
+static void build_func_wrap(const char *id, void *data, void *arg) {
+    (void)id;
+    build_func(arg, data);
+}
+
 static void build_file(sema_t *sema) {
+    map_iter(sema->types, build_type_wrap, sema);
     map_iter(sema->vars, build_var_wrap, sema);
+    map_iter(sema->funcs, build_func_wrap, sema);
+}
+
+static void build_file_wrap(const char *id, void *data, void *arg) {
+    (void)arg;
+    (void)id;
+    build_file(data);
 }
 
 unit_t typecheck(node_t *root) {
-    sema_t *sema = begin_file(NULL, root, root->scanner->path);
+    begin_file(NULL, root, root->scanner->path);
 
-    build_file(sema);
+    map_iter(files, build_file_wrap, NULL);
 
     unit_t unit = { new_list(NULL), strings };
 

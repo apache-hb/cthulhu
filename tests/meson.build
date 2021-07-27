@@ -57,7 +57,7 @@ foreach it : fail
 endforeach
 
 crashes = [ 
-    'fuzz-1', 'fuzz-2'
+    'fuzz-1', 'fuzz-2', 'fuzz-3'
 ]
 
 foreach it : crashes 

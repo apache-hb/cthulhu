@@ -30,5 +30,8 @@ static type_t *unary_deref(sema_t *sema, node_t *expr) {
         reportf(LEVEL_ERROR, expr, "dereferencing non-pointer");
     }
 
-    return inner;
+    type_t *out = copyty(inner);
+    out->lvalue = true;
+
+    return out;
 }

@@ -85,12 +85,12 @@ void map_put(map_t *map, const char *id, void *data) {
     }
 }
 
-void map_iter(map_t *map, void (*func)(void *data, void *arg), void *arg) {
+void map_iter(map_t *map, void (*func)(const char *id, void *data, void *arg), void *arg) {
     for (size_t i = 0; i < map->size; i++) {
         entry_t *entry = &map->data[i];
         while (entry) {
             if (entry->id) {
-                func(entry->data, arg);
+                func(entry->id, entry->data, arg);
             }
             entry = entry->next;
         }
