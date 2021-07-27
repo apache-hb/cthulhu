@@ -3,7 +3,11 @@
 #include "ctu/ast/ast.h"
 
 typedef struct {
-    list_t *decls;
+    list_t *funcs;
+
+    list_t *vars;
+
+    list_t *types;
 
     /**
      * total number of string literals

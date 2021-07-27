@@ -232,10 +232,12 @@ bool is_pointer(type_t *type);
 bool is_const(type_t *type);
 bool is_struct(type_t *type);
 
+bool types_equal(type_t *type, type_t *other);
+
 integer_t get_integer_kind(type_t *type);
 
-type_t *set_mut(type_t *type, bool mut);
-type_t *copyty(type_t *type);
+type_t *make_mut(type_t *type);
+type_t *make_lvalue(type_t *type);
 
 void connect_type(struct node_t *node, type_t *type);
 

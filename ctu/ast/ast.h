@@ -147,6 +147,9 @@ typedef struct node_t {
      */
     type_t *typeof;
 
+    /* own local index, or NOT_LOCAL if its not local */
+    size_t local;
+
     AST_UNION {
         /* AST_SYMBOL */
         /** @var list_t<char*> */
@@ -256,9 +259,6 @@ typedef struct node_t {
                  */
                 char *string;
             };
-
-            /* own local index, or NOT_LOCAL if its not local */
-            size_t local;
 
             AST_UNION {
                 /* AST_DECL_STRUCT */

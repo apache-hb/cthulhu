@@ -38,23 +38,42 @@ typedef struct sema_t {
      * function declarations
      */
     map_t *funcs;
+
+
+    /**
+     * the return type of the current function
+     */
+    type_t *result;
+
+    /**
+     * counters for certain types of nodes
+     */
+
+    /* the local index for the current function */
+    size_t locals;
 } sema_t;
 
 /**
  * builtin types
  */
-map_t *builtins = NULL;
+static map_t *builtins = NULL;
 
 /**
  * all parsed files
  * kept in a map so we never open a file twice
  */
-map_t *files = NULL;
+static map_t *files = NULL;
 
 /**
  * total number of strings
  */
-size_t strings = 0;
+static size_t strings = 0;
+
+static size_t locals = 0;
+
+static list_t *funcs = NULL;
+static list_t *vars = NULL;
+static list_t *types = NULL;
 
 static sema_t *begin_file(node_t *inc, node_t *root, const char *path);
 
@@ -63,16 +82,23 @@ static sema_t *new_sema(sema_t *parent) {
 
     if (parent) {
         sema->imports = parent->imports;
+        sema->result = parent->result;
     } else {
         sema->imports = new_map(8);
+        sema->result = NULL;
     }
 
     sema->parent = parent;
     sema->vars = new_map(8);
     sema->types = new_map(8);
     sema->funcs = new_map(8);
+    sema->locals = 0;
 
     return sema;
+}
+
+static void mark_local(node_t *node) {
+    node->local = locals++;
 }
 
 static char *path_of(list_t *it) {
@@ -158,15 +184,24 @@ static void build_var(sema_t *sema, node_t *it);
 #include "stmt.c"
 
 static void build_type(sema_t *sema, node_t *it) {
-    (void)sema;
-    (void)it;
+    switch (it->kind) {
+    case AST_DECL_STRUCT:
+        build_struct(sema, it);
+        break;
+
+    default:
+        assert("unknown type %d", it->kind);
+        break;
+    }
 }
 
 static void build_var(sema_t *sema, node_t *it) {
+    ASSERT(it->init || it->type)("var must be partialy initialized");
+    
     type_t *type = NULL;
     type_t *init = NULL;
 
-    type_t *out;
+    type_t *out = NULL;
 
     if (it->init) {
         init = query_expr(sema, it->init);
@@ -181,8 +216,12 @@ static void build_var(sema_t *sema, node_t *it) {
     /**
      * variables are lvalues
      */
-    out = copyty(out);
-    out->lvalue = true;
+
+    out = make_lvalue(out);
+    
+    if (it->mut) {
+        out = make_mut(out);
+    }
 
     if (type != NULL && init != NULL) {
         if (!type_can_become_implicit(&it, type, init)) {
@@ -199,6 +238,7 @@ static void build_params(sema_t *sema, list_t *params) {
         type_t *type = query_type(sema, param);
 
         add_discard(sema->vars, param);
+        mark_local(param);
 
         if (is_void(type)) {
             reportf(LEVEL_ERROR, param, "void type not allowed as parameter");
@@ -210,7 +250,11 @@ static void build_func(sema_t *sema, node_t *it) {
     sema_t *nest = new_sema(sema);
     build_params(nest, it->params);
 
+    nest->result = query_type(sema, it->result);
+
     build_stmts(nest, it->body);
+    it->locals = locals;
+    locals = 0;
 }
 
 /**
@@ -282,16 +326,19 @@ static sema_t *begin_file(node_t *inc, node_t *root, const char *path) {
 static void build_type_wrap(const char *id, void *data, void *arg) {
     (void)id;
     build_type(data, arg);
+    list_push(types, data);
 }
 
 static void build_var_wrap(const char *id, void *data, void *arg) {
     (void)id;
     build_var(arg, data);
+    list_push(vars, data);
 }
 
 static void build_func_wrap(const char *id, void *data, void *arg) {
     (void)id;
     build_func(arg, data);
+    list_push(funcs, data);
 }
 
 static void build_file(sema_t *sema) {
@@ -307,11 +354,15 @@ static void build_file_wrap(const char *id, void *data, void *arg) {
 }
 
 unit_t typecheck(node_t *root) {
+    funcs = new_list(NULL);
+    vars = new_list(NULL);
+    types = new_list(NULL);
+
     begin_file(NULL, root, root->scanner->path);
 
     map_iter(files, build_file_wrap, NULL);
 
-    unit_t unit = { new_list(NULL), strings };
+    unit_t unit = { funcs, vars, types, strings };
 
     return unit;
 }

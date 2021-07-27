@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static size_t index = 0;
+
 static type_t *INT_TYPES[INTEGER_END];
 static type_t *UINT_TYPES[INTEGER_END];
 
@@ -60,7 +62,7 @@ static type_t *new_type(typeof_t kind, node_t *node) {
     type->node = node;
     type->mut = false;
     type->lvalue = false;
-    type->index = SIZE_MAX;
+    type->index = index++;
 
     node->typeof = type;
     return type;
@@ -154,7 +156,7 @@ bool is_signed(type_t *type) {
 }
 
 bool is_const(type_t *type) {
-    return !type->mut;
+    return !type->lvalue;
 }
 
 bool is_pointer(type_t *type) {
@@ -167,13 +169,24 @@ type_t *copyty(type_t *type) {
     return copy;
 }
 
-type_t *set_mut(type_t *type, bool mut) {
-    if (type->mut == mut) {
+type_t *make_mut(type_t *type) {
+    if (type->mut) {
+        return type;
+    }
+
+    type_t *copy = copyty(type);
+    copy->mut = true;
+
+    return copy;
+}
+
+type_t *make_lvalue(type_t *type) {
+    if (type->lvalue) {
         return type;
     }
 
     type_t *out = copyty(type);
-    out->mut = mut;
+    out->lvalue = true;
 
     return out;
 }
@@ -317,7 +330,22 @@ static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implic
         }
     }
 
-    return src->kind == dst->kind;
+    /**
+     * implicit boolean conversion
+     */
+    if (is_boolean(dst) && is_integer(src)) {
+        if (implicit) {
+            reportf(LEVEL_WARNING, *node, "implicit cast to boolean");
+        }
+        *node = implicit_cast(*node, dst);
+        return true;
+    }
+
+    return dst->index == src->index;
+}
+
+bool types_equal(type_t *type, type_t *other) {
+    return type->index == other->index;
 }
 
 bool type_can_become_implicit(node_t **node, type_t *dst, type_t *src) {

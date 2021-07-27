@@ -24,6 +24,7 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
     node->exported = false;
     node->mut = false;
     node->used = false;
+    node->local = NOT_LOCAL;
 
     return node;
 }
@@ -31,7 +32,6 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
 static node_t *new_decl(scanner_t *scanner, where_t where, ast_t kind, char *name) {
     node_t *decl = new_node(scanner, where, kind);
     decl->name = name;
-    decl->local = NOT_LOCAL;
     return decl;
 }
 

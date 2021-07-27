@@ -44,7 +44,7 @@ static type_t *binary_cmp(sema_t *sema, node_t *expr) {
         reportf(LEVEL_ERROR, expr, "cannot compare incompatible types");
     }
 
-    return query_bool();
+    return BOOL_TYPE;
 }
 
 static type_t *binary_eq(sema_t *sema, node_t *expr) {
@@ -67,5 +67,5 @@ static type_t *binary_eq(sema_t *sema, node_t *expr) {
         reportf(LEVEL_ERROR, expr, "cannot use incompatible type in equality comparison");
     }
 
-    return query_bool();
+    return BOOL_TYPE;
 }

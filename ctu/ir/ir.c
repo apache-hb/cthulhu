@@ -176,7 +176,7 @@ static operand_t add_block(flow_t *flow) {
 
 static operand_t add_reserve(flow_t *flow, node_t *node) {
     step_t step = new_step(OP_RESERVE, node);
-    step.type = set_mut(step.type, true);
+    step.type = make_lvalue(step.type);
     return add_vreg(flow, step);
 }
 
@@ -245,6 +245,8 @@ static operand_t get_lvalue(flow_t *flow, node_t *node) {
     if (node->local == NOT_LOCAL) {
         return get_global(flow, node);
     }
+
+    fprintf(stderr, "get-lvalue [%zu]\n", node->local);
 
     return new_vreg(flow->locals[node->local]);
 }
@@ -409,12 +411,14 @@ static operand_t emit_convert(flow_t *flow, node_t *node) {
 
 static void set_local(flow_t *flow, size_t idx, operand_t to) {
     ASSERT(to.kind == VREG)("set_local requires a vreg");
+    ASSERT(idx != NOT_LOCAL)("set_local requires a local");
+
+    printf("set-local [%zu] = %zu\n", idx, to.vreg);
 
     flow->locals[idx] = to.vreg;
 }
 
 static operand_t emit_var(flow_t *flow, node_t *node) {
-    
     operand_t val;
     if (node->init) {
         val = emit_opcode(flow, node->init);
@@ -483,6 +487,7 @@ static operand_t emit_while(flow_t *flow, node_t *node) {
 }
 
 static operand_t emit_string(flow_t *flow, node_t *node) {
+    printf("emit: %zu %p", node->local, node->string);
     size_t idx = node->local;
     flow->mod->strings[idx] = node->string;
     return new_string(idx); 
@@ -597,86 +602,50 @@ static var_t compile_var(module_t *mod, node_t *node) {
     return var;
 }
 
-static size_t count_decls(list_t *nodes, ast_t kind) {
-    size_t count = 0;
-    for (size_t i = 0; i < list_len(nodes); i++) {
-        node_t *node = list_at(nodes, i);
-        if (node->kind == kind) {
-            count++;
-        }
-    }
-    return count;
-}
-
-static size_t count_types(list_t *nodes) {
-    return count_decls(nodes, AST_DECL_STRUCT);
-}
-
 module_t *compile_module(const char *name, unit_t unit) {
-    list_t *nodes = unit.decls;
-
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
    
-    mod->nflows = count_decls(nodes, AST_DECL_FUNC);
+    mod->nflows = list_len(unit.funcs);
     mod->flows = ctu_malloc(sizeof(flow_t) * mod->nflows);
     
-    mod->nvars = count_decls(nodes, AST_DECL_VAR);
+    mod->nvars = list_len(unit.vars);
     mod->vars = ctu_malloc(sizeof(var_t) * mod->nvars);
 
-    mod->ntypes = count_types(nodes);
+    mod->ntypes = list_len(unit.types);
     mod->types = ctu_malloc(sizeof(type_t*) * mod->ntypes);
 
     mod->nstrings = unit.strings;
     mod->strings = ctu_malloc(sizeof(char*) * mod->nstrings);
 
-    size_t len = list_len(nodes);
+    /**
+     * first pass
+     */
 
-    size_t flow_idx = 0;
-    size_t var_idx = 0;
-    size_t type_idx = 0;
-    type_t *type;
-
-    for (size_t idx = 0; idx < len; idx++) {
-        node_t *decl = list_at(nodes, idx);
-        switch (decl->kind) {
-        case AST_DECL_FUNC:
-            mod->flows[flow_idx++].name = get_decl_name(decl);
-            break;
-        case AST_DECL_VAR:
-            mod->vars[var_idx++].name = get_decl_name(decl);
-            break;
-        case AST_DECL_STRUCT:
-            type = get_type(decl);
-            type->index = type_idx;
-            mod->types[type_idx++] = type;
-            break;
-
-        default:
-            assert("unknown decl kind %d", decl->kind);
-            break;
-        }
+    for (size_t i = 0; i < mod->nflows; i++) {
+        mod->flows[i].name = get_decl_name(list_at(unit.funcs, i));
     }
 
-    flow_idx = 0;
-    var_idx = 0;
-    for (size_t i = 0; i < len; i++) {
-        node_t *decl = list_at(nodes, i);
-        switch (decl->kind) {
-        case AST_DECL_FUNC:
-            mod->flows[flow_idx++] = compile_flow(mod, decl);
-            break;
-        case AST_DECL_VAR:
-            mod->vars[var_idx++] = compile_var(mod, decl);
-            break;
+    for (size_t i = 0; i < mod->nvars; i++) {
+        mod->vars[i].name = get_decl_name(list_at(unit.vars, i));
+    }
 
-        case AST_DECL_STRUCT:
-            break;
+    for (size_t i = 0; i < mod->ntypes; i++) {
+        type_t *type = get_type(list_at(unit.types, i));
+        type->index = i;
+        mod->types[i] = type;
+    }
 
-        default:
-            assert("unknown decl kind %d", decl->kind);
-            break;
-        }
+    /**
+     * second pass 
+     */
+
+    for (size_t i = 0; i < mod->nflows; i++) {
+        mod->flows[i] = compile_flow(mod, list_at(unit.funcs, i));
+    }
+
+    for (size_t i = 0; i < mod->nvars; i++) {
+        mod->vars[i] = compile_var(mod, list_at(unit.vars, i));
     }
 
     return mod;

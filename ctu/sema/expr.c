@@ -1,3 +1,7 @@
+static void mark_string(node_t *str) {
+    str->local = strings++;
+}
+
 static type_t *query_func(sema_t *sema, node_t *func) {
     type_t *type = raw_type(func);
     if (type) {
@@ -8,6 +12,8 @@ static type_t *query_func(sema_t *sema, node_t *func) {
 
     size_t len = list_len(func->params);
     list_t *args = new_list(NULL);
+
+    printf("len: %zu\n", len);
 
     for (size_t i = 0; i < len; i++) {
         node_t *param = list_at(func->params, i);
@@ -24,6 +30,8 @@ static type_t *query_local_expr(sema_t *sema, node_t *node, const char *name) {
      */
     node_t *var = map_get(sema->vars, name);
     if (var) {
+        mark_used(var);
+        node->local = var->local;
         return get_type(var);
     }
 
@@ -32,6 +40,7 @@ static type_t *query_local_expr(sema_t *sema, node_t *node, const char *name) {
      */
     node_t *func = map_get(sema->funcs, name);
     if (func) {
+        mark_used(func);
         return query_func(sema, func);
     }
 
@@ -86,8 +95,8 @@ static type_t *query_bool(void) {
     return BOOL_TYPE;
 }
 
-static type_t *query_string(void) {
-    strings += 1;
+static type_t *query_string(node_t *str) {
+    mark_string(str);
     return STRING_TYPE;
 }
 
@@ -221,7 +230,7 @@ static type_t *query_expr(sema_t *sema, node_t *it) {
         type = query_bool();
         break;
     case AST_STRING:
-        type = query_string();
+        type = query_string(it);
         break;
     case AST_UNARY:
         type = query_unary(sema, it);

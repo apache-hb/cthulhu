@@ -22,13 +22,22 @@ static void build_assign(sema_t *sema, node_t *assign) {
 }
 
 static void build_return(sema_t *sema, node_t *stmt) {
-    (void)sema;
-    (void)stmt;
+    type_t *result = VOID_TYPE;
+    if (stmt->expr) {
+        result = query_expr(sema, stmt->expr);
+    }
+
+    if (!type_can_become_implicit(&stmt->expr, sema->result, result)) {
+        reportf(LEVEL_ERROR, stmt, "cannot return incompatible types");
+    }
+    
+    connect_type(stmt, result);
 }
 
 static void local_var(sema_t *sema, node_t *stmt) {
     build_var(sema, stmt);
     add_discard(sema->vars, stmt);
+    mark_local(stmt);
 }
 
 static void build_branch(sema_t *sema, node_t *stmt) {

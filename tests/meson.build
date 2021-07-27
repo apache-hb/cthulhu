@@ -5,8 +5,8 @@ pass = [
     'args', 'binary', 'call', 'func',
     'hello', 'hello2', 'implicit-bool-cast',
     'long', 'loop', 'mut', 'pointers', 'pointers2',
-    'regalloc', 'var', 'suffix', 'forward', 'global',
-    'unused-var', 'implicit-var-cast', 'string'
+    'regalloc', 'var', 'suffix', 'global',
+    'unused-var', 'implicit-var-cast', 'string', 'forward'
 ]
 
 foreach it : pass 
