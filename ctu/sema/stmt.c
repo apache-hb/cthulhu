@@ -30,7 +30,7 @@ static void build_return(sema_t *sema, node_t *stmt) {
     if (!type_can_become_implicit(&stmt->expr, sema->result, result)) {
         reportf(LEVEL_ERROR, stmt, "cannot return incompatible types");
     }
-    
+
     connect_type(stmt, result);
 }
 
@@ -92,6 +92,12 @@ static void build_stmt(sema_t *sema, node_t *stmt) {
 
     case AST_CALL:
         query_expr(sema, stmt);
+        break;
+
+    case AST_SYMBOL: case AST_DIGIT: case AST_BOOL:
+    case AST_STRING: case AST_UNARY: case AST_BINARY:
+    case AST_CAST: case AST_ACCESS: 
+        reportf(LEVEL_ERROR, stmt, "unexpected expression");
         break;
 
     default:

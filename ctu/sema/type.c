@@ -45,7 +45,7 @@ static type_t *query_type(sema_t *sema, node_t *it) {
 
     case AST_DECL_PARAM:
         type = query_type(sema, it->type);
-        type = make_lvalue(type);
+        type = set_lvalue(type, true);
         break;
 
     case AST_PTR:
@@ -55,7 +55,7 @@ static type_t *query_type(sema_t *sema, node_t *it) {
 
     case AST_MUT:
         type = query_type(sema, it->next);
-        type = make_lvalue(type);
+        type = set_mut(type, true);
         break;
 
     default:

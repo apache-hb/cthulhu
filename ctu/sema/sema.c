@@ -197,7 +197,7 @@ static void build_type(sema_t *sema, node_t *it) {
 
 static void build_var(sema_t *sema, node_t *it) {
     ASSERT(it->init || it->type)("var must be partialy initialized");
-    
+
     type_t *type = NULL;
     type_t *init = NULL;
 
@@ -217,11 +217,8 @@ static void build_var(sema_t *sema, node_t *it) {
      * variables are lvalues
      */
 
-    out = make_lvalue(out);
-    
-    if (it->mut) {
-        out = make_mut(out);
-    }
+    out = set_lvalue(out, true);
+    out = set_mut(out, it->mut);
 
     if (type != NULL && init != NULL) {
         if (!type_can_become_implicit(&it, type, init)) {
@@ -252,7 +249,9 @@ static void build_func(sema_t *sema, node_t *it) {
 
     nest->result = query_type(sema, it->result);
 
-    build_stmts(nest, it->body);
+    if (it->body) {
+        build_stmts(nest, it->body);
+    }
     it->locals = locals;
     locals = 0;
 }

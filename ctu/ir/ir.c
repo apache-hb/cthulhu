@@ -176,7 +176,7 @@ static operand_t add_block(flow_t *flow) {
 
 static operand_t add_reserve(flow_t *flow, node_t *node) {
     step_t step = new_step(OP_RESERVE, node);
-    step.type = make_lvalue(step.type);
+    step.type = set_lvalue(step.type, true);
     return add_vreg(flow, step);
 }
 

@@ -9,7 +9,7 @@ static type_t *unary_math(sema_t *sema, node_t *expr) {
         reportf(LEVEL_ERROR, expr, "cannot negate unsigned int");
     }
 
-    return type;
+    return set_lvalue(type, false);
 }
 
 static type_t *unary_ref(sema_t *sema, node_t *expr) {
@@ -30,5 +30,5 @@ static type_t *unary_deref(sema_t *sema, node_t *expr) {
         reportf(LEVEL_ERROR, expr, "dereferencing non-pointer");
     }
 
-    return make_lvalue(inner);
+    return set_lvalue(inner, true);
 }

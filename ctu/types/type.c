@@ -169,24 +169,24 @@ type_t *copyty(type_t *type) {
     return copy;
 }
 
-type_t *make_mut(type_t *type) {
-    if (type->mut) {
+type_t *set_mut(type_t *type, bool mut) {
+    if (type->mut == mut) {
         return type;
     }
 
     type_t *copy = copyty(type);
-    copy->mut = true;
+    copy->mut = mut;
 
     return copy;
 }
 
-type_t *make_lvalue(type_t *type) {
-    if (type->lvalue) {
+type_t *set_lvalue(type_t *type, bool lvalue) {
+    if (type->lvalue == lvalue) {
         return type;
     }
 
     type_t *out = copyty(type);
-    out->lvalue = true;
+    out->lvalue = lvalue;
 
     return out;
 }

@@ -1,6 +1,7 @@
 *
 !*/
 *build/
+fuzz-*/
 !*.cpp
 !*.c
 !*.build
