@@ -74,7 +74,7 @@ static void validate_struct(type_t *type, type_t *member) {
         field_t field = fields.fields[i];
         type_t *it = field.type;
         if (types_equal(it, member)) {
-            reportf(LEVEL_ERROR, type->node, "struct contains itself recursivley");
+            reportf(LEVEL_ERROR, type->node, "struct `%s` contains itself recursivley", type->name);
         }
 
         validate_struct(it, member);

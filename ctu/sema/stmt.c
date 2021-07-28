@@ -17,7 +17,8 @@ static void build_assign(sema_t *sema, node_t *assign) {
     }
 
     if (!type_can_become_implicit(&assign->src, dst, src)) {
-        reportf(LEVEL_ERROR, assign, "cannot assign unrelated types");
+        reportid_t id = reportf(LEVEL_ERROR, assign, "cannot assign to unrelated type %s", typefmt(dst));
+        report_underline(id, typefmt(src));
     }
 }
 
@@ -28,7 +29,9 @@ static void build_return(sema_t *sema, node_t *stmt) {
     }
 
     if (!type_can_become_implicit(&stmt->expr, sema->result, result)) {
-        reportf(LEVEL_ERROR, stmt, "cannot return incompatible types");
+        reportid_t err = reportf(LEVEL_ERROR, stmt, "cannot return incompatible types");
+        report_underline(err, format("type: `%s`", typefmt(result)));
+        report_note(err, format("expected `%s`", typefmt(sema->result)));
     }
 
     connect_type(stmt, result);
@@ -60,7 +63,8 @@ static void build_while(sema_t *sema, node_t *stmt) {
     build_stmt(sema, stmt->next);
 
     if (!type_can_become_implicit(&stmt->cond, BOOL_TYPE, cond)) {
-        reportf(LEVEL_ERROR, stmt, "can only loop on boolean convertible expressions");
+        reportid_t id = reportf(LEVEL_ERROR, stmt, "can only loop on boolean convertible expressions");
+        report_underline(id, format("found type `%s`", typefmt(cond)));
     }
 }
 

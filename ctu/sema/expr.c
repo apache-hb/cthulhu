@@ -13,8 +13,6 @@ static type_t *query_func(sema_t *sema, node_t *func) {
     size_t len = list_len(func->params);
     list_t *args = new_list(NULL);
 
-    printf("len: %zu\n", len);
-
     for (size_t i = 0; i < len; i++) {
         node_t *param = list_at(func->params, i);
         type_t *param_type = query_type(sema, param->type);
@@ -22,6 +20,16 @@ static type_t *query_func(sema_t *sema, node_t *func) {
     }
 
     return new_callable(func, args, result);
+}
+
+static type_t *delay_build_var(node_t *node) {
+    type_t *ty = raw_type(node);
+    if (ty) {
+        return ty;
+    }
+
+    build_var(node->ctx, node);
+    return get_type(node);
 }
 
 static type_t *query_local_expr(sema_t *sema, node_t *node, const char *name) {
@@ -32,7 +40,7 @@ static type_t *query_local_expr(sema_t *sema, node_t *node, const char *name) {
     if (var) {
         mark_used(var);
         node->local = var->local;
-        return get_type(var);
+        return delay_build_var(var);
     }
 
     /**

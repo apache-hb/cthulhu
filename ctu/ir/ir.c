@@ -559,8 +559,9 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         stubbed
     };
 
-    if (stubbed)
+    if (stubbed) {
         return flow;
+    }
 
     for (size_t i = 0; i < len; i++) {
         node_t *param = list_at(params, i);

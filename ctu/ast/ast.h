@@ -260,6 +260,12 @@ typedef struct node_t {
                 char *string;
             };
 
+            /**
+             * a semantic context to evaluate this decl inside of
+             * actually a sema_t* defined in sema.c
+             */
+            void *ctx;
+
             AST_UNION {
                 /* AST_DECL_STRUCT */
                 /** @var list_t<node_t*> */

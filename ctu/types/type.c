@@ -5,6 +5,7 @@
 
 #include "ctu/util/report.h"
 #include "ctu/util/util.h"
+#include "ctu/util/str.h"
 
 #include "ctu/debug/type.h"
 #include "ctu/debug/ast.h"
@@ -354,4 +355,24 @@ bool type_can_become_implicit(node_t **node, type_t *dst, type_t *src) {
 
 bool type_can_become_explicit(node_t **node, type_t *dst, type_t *src) {
     return type_can_become(node, dst, src, false);
+}
+
+char *typefmt(type_t *type) {
+    switch (type->kind) {
+    case TYPE_INTEGER: case TYPE_BOOLEAN: 
+    case TYPE_VOID:
+        return type->node->name;
+
+    case TYPE_STRUCT:
+        return ctu_strdup(type->name);
+
+    case TYPE_POINTER:
+        return format("*%s", typefmt(type->ptr));
+
+    case TYPE_POISON:
+        return ctu_strdup(type->text);
+
+    default:
+        return ctu_strdup("unresolved type");
+    }
 }

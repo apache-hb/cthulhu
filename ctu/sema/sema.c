@@ -155,6 +155,8 @@ static void put_decl_unique(sema_t *sema, node_t *node) {
 static void add_decl(sema_t *sema, node_t *it) {
     const char *name = get_decl_name(it);
 
+    it->ctx = sema;
+
     switch (it->kind) {
     case AST_DECL_VAR: case AST_DECL_FUNC:
         put_decl_unique(sema, it);
@@ -178,6 +180,7 @@ static void add_discard(map_t *dst, node_t *it) {
 }
 
 static void build_var(sema_t *sema, node_t *it);
+static void build_func(sema_t *sema, node_t *it);
 
 #include "type.c"
 #include "expr.c"
@@ -315,10 +318,6 @@ static sema_t *begin_file(node_t *inc, node_t *root, const char *path) {
         add_decl(sema, decl);
     }
 
-    /**
-     * now add all declarations
-     */
-
     return sema;
 }
 
@@ -341,8 +340,11 @@ static void build_func_wrap(const char *id, void *data, void *arg) {
 }
 
 static void build_file(sema_t *sema) {
+    printf(":: types\n");
     map_iter(sema->types, build_type_wrap, sema);
+    printf(":: vars\n");
     map_iter(sema->vars, build_var_wrap, sema);
+    printf(":: funcs\n");
     map_iter(sema->funcs, build_func_wrap, sema);
 }
 
