@@ -1,5 +1,7 @@
 import b;
 
+final x = 200;
+
 def main(): void {
     final a = b::get();
 }

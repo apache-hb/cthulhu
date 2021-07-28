@@ -70,7 +70,7 @@ libast = library('ast', src, lex, parse,
 )
 
 src = [
-    'ctu/sema/type.c'
+    'ctu/sema/sema.c'
 ]
 
 libsema = library('sema', src,

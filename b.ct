@@ -1,6 +1,6 @@
 import c;
 
-final num = 20;
+final num: int = 20;
 
 def get(): int {
     return c::num;

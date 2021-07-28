@@ -5,6 +5,7 @@
 
 #include "ctu/util/report.h"
 #include "ctu/util/util.h"
+#include "ctu/util/str.h"
 
 #include "ctu/debug/type.h"
 #include "ctu/debug/ast.h"
@@ -12,6 +13,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+static size_t index = 0;
 
 static type_t *INT_TYPES[INTEGER_END];
 static type_t *UINT_TYPES[INTEGER_END];
@@ -54,32 +57,13 @@ void types_init(void) {
     VOID_TYPE = new_builtin(TYPE_VOID, "void");
 }
 
-types_t *new_typelist(size_t size) {
-    types_t *list = ctu_malloc(sizeof(types_t));
-    list->data = ctu_malloc(sizeof(type_t*) * size);
-    list->size = size;
-    return list;
-}
-
-size_t typelist_len(types_t *list) {
-    return list->size;
-}
-
-type_t *typelist_at(types_t *list, size_t idx) {
-    return list->data[idx];
-}
-
-void typelist_put(types_t *list, size_t idx, type_t *type) {
-    list->data[idx] = type;
-}
-
 static type_t *new_type(typeof_t kind, node_t *node) {
     type_t *type = ctu_malloc(sizeof(type_t));
     type->kind = kind;
     type->node = node;
     type->mut = false;
-    type->invalid = false;
-    type->index = SIZE_MAX;
+    type->lvalue = false;
+    type->index = index++;
 
     node->typeof = type;
     return type;
@@ -106,7 +90,7 @@ type_t *new_poison(node_t *parent, const char *err) {
     return type;
 }
 
-type_t *new_callable(node_t *func, types_t *args, type_t *result) {
+type_t *new_callable(node_t *func, list_t *args, type_t *result) {
     type_t *type = new_type(TYPE_CALLABLE, func);
     type->args = args;
     type->result = result;
@@ -173,11 +157,17 @@ bool is_signed(type_t *type) {
 }
 
 bool is_const(type_t *type) {
-    return !type->mut;
+    return !type->lvalue;
 }
 
 bool is_pointer(type_t *type) {
     return type->kind == TYPE_POINTER;
+}
+
+type_t *copyty(type_t *type) {
+    type_t *copy = ctu_malloc(sizeof(type_t));
+    memcpy(copy, type, sizeof(type_t));
+    return copy;
 }
 
 type_t *set_mut(type_t *type, bool mut) {
@@ -185,16 +175,19 @@ type_t *set_mut(type_t *type, bool mut) {
         return type;
     }
 
-    type_t *out = ctu_malloc(sizeof(type_t));
-    memcpy(out, type, sizeof(type_t));
-    out->mut = mut;
-    
-    if (is_struct(out) && !type->invalid) {
-        for (size_t i = 0; i < out->fields.size; i++) {
-            field_t *field = &out->fields.fields[i];
-            field->type = set_mut(field->type, mut);
-        }
+    type_t *copy = copyty(type);
+    copy->mut = mut;
+
+    return copy;
+}
+
+type_t *set_lvalue(type_t *type, bool lvalue) {
+    if (type->lvalue == lvalue) {
+        return type;
     }
+
+    type_t *out = copyty(type);
+    out->lvalue = lvalue;
 
     return out;
 }
@@ -279,5 +272,107 @@ void sanitize_range(type_t *type, mpz_t it, scanner_t *scanner, where_t where) {
         sanitize_signed(scanner, where, get_integer_kind(type), it);
     } else {
         sanitize_unsigned(scanner, where, get_integer_kind(type), it);
+    }
+}
+
+static node_t *implicit_cast(node_t *original, type_t *to) {
+    node_t *cast = ast_cast(original->scanner, original->where, original, NULL);
+
+    connect_type(cast, to);
+
+    return make_implicit(cast);
+}
+
+static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implicit) {
+    if (is_integer(dst) && is_integer(src)) {
+        integer_t to = get_integer_kind(dst);
+        integer_t from = get_integer_kind(src);
+
+        if ((from > to) && implicit) {
+            reportf(LEVEL_WARNING, *node, "implcit narrowing cast to a smaller integer type");
+            *node = implicit_cast(*node, dst);
+        }
+
+        if ((dst->sign != src->sign) && implicit) {
+            reportf(LEVEL_WARNING, *node, "implicit sign change");
+            *node = implicit_cast(*node, dst);
+        }
+
+        return true;
+    }
+
+    if (is_pointer(dst) && is_pointer(src)) {
+        /* allow explicit casts between any pointer types */
+        if (!implicit) {
+            return true;
+        }
+
+        if (dst->mut && !src->mut) {
+            reportf(LEVEL_ERROR, *node, "cannot implicitly remove const");
+            return false;
+        }
+
+        return type_can_become(node, dst->ptr, src->ptr, implicit);
+    }
+
+    if (is_struct(src) && is_struct(dst)) {
+        if (src->index != dst->index) {
+            reportf(LEVEL_ERROR, *node, "cannot implicitly cast between unrelated types");
+            return false;
+        }
+    }
+
+    if (is_integer(dst) && is_pointer(src)) {
+        if (get_integer_kind(dst) != INTEGER_INTPTR) {
+            reportf(LEVEL_ERROR, *node, "cannot implicitly cast pointer to a non intptr integer");
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * implicit boolean conversion
+     */
+    if (is_boolean(dst) && is_integer(src)) {
+        if (implicit) {
+            reportf(LEVEL_WARNING, *node, "implicit cast to boolean");
+        }
+        *node = implicit_cast(*node, dst);
+        return true;
+    }
+
+    return dst->index == src->index;
+}
+
+bool types_equal(type_t *type, type_t *other) {
+    return type->index == other->index;
+}
+
+bool type_can_become_implicit(node_t **node, type_t *dst, type_t *src) {
+    return type_can_become(node, dst, src, true);
+}
+
+bool type_can_become_explicit(node_t **node, type_t *dst, type_t *src) {
+    return type_can_become(node, dst, src, false);
+}
+
+char *typefmt(type_t *type) {
+    switch (type->kind) {
+    case TYPE_INTEGER: case TYPE_BOOLEAN: 
+    case TYPE_VOID:
+        return type->node->name;
+
+    case TYPE_STRUCT:
+        return ctu_strdup(type->name);
+
+    case TYPE_POINTER:
+        return format("*%s", typefmt(type->ptr));
+
+    case TYPE_POISON:
+        return ctu_strdup(type->text);
+
+    default:
+        return ctu_strdup("unresolved type");
     }
 }

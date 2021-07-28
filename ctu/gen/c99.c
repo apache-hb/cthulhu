@@ -30,7 +30,7 @@ static char *gen_callable(type_t *type, const char *name) {
     const char *ret = gen_type(type->result, NULL);
     char *body = format("(*%s)", name ? name : "");
     
-    size_t nargs = type->args->size;
+    size_t nargs = list_len(type->args);
     
     // make a copy of this pointer list so we can store const pointers
     // in it and still be able to free it later
@@ -130,6 +130,7 @@ static const char *gen_string(const char *name) {
 }
 
 static const char *gen_type(type_t *type, const char *name) {
+    printf("gen-type [%p]\n", type);
     switch (type->kind) {
     case TYPE_INTEGER: return gen_int(type, name);
     case TYPE_BOOLEAN: return gen_bool(name);
@@ -287,6 +288,8 @@ static void gen_store(FILE *out, flow_t *flow, step_t *step) {
 static void gen_step(FILE *out, flow_t *flow, size_t idx) {
     step_t *step = flow->steps + idx;
 
+    printf("gen-step [%zu] = %d\n", idx, step->opcode);
+
     switch (step->opcode) {
     case OP_BLOCK: 
         /* the (void)0 cast makes clang accept this code */
@@ -357,6 +360,10 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
 
 static void gen_flow(FILE *out, flow_t *flow) {
     gen_func_decl(out, flow, false);
+    if (flow->stub) {
+        fprintf(out, ";\n");
+        return;
+    }
     fprintf(out, "\n{\n");
 
     for (size_t i = 0; i < flow->len; i++) {

@@ -5,6 +5,8 @@
 
 #include <gmp.h>
 
+#include "ctu/util/util.h"
+
 #include "ctu/ast/scanner.h"
 
 typedef enum {
@@ -119,11 +121,6 @@ typedef enum {
 } integer_t;
 
 typedef struct {
-    struct type_t **data;
-    size_t size;
-} types_t;
-
-typedef struct {
     const char *name;
     struct type_t *type;
 } field_t;
@@ -151,9 +148,9 @@ typedef struct type_t {
     bool sign:1;
 
     /**
-     * is this type a struct that contains itself
+     * can we take a reference to this or assign to it
      */
-    bool invalid:1;
+    bool lvalue:1;
 
     /** 
      * the node that generated this type 
@@ -202,7 +199,7 @@ typedef struct type_t {
             /* the return type */
             struct type_t *result;
             /* the argument types */
-            types_t *args;
+            list_t *args;
         };
     };
 } type_t;
@@ -215,16 +212,11 @@ type_t *get_int_type(bool sign, integer_t kind);
 
 void types_init(void);
 
-types_t *new_typelist(size_t size);
-size_t typelist_len(types_t *list);
-void typelist_put(types_t *list, size_t idx, type_t *type);
-type_t *typelist_at(types_t *list, size_t idx);
-
 type_t *new_integer(integer_t kind, bool sign, const char *name);
 type_t *new_builtin(typeof_t kind, const char *name);
 type_t *new_unresolved(struct node_t *symbol);
 type_t *new_poison(struct node_t *parent, const char *err);
-type_t *new_callable(struct node_t *func, types_t *args, type_t *result);
+type_t *new_callable(struct node_t *func, list_t *args, type_t *result);
 type_t *new_pointer(struct node_t *node, type_t *to);
 
 type_t *new_struct(struct node_t *decl, const char *name);
@@ -240,10 +232,18 @@ bool is_pointer(type_t *type);
 bool is_const(type_t *type);
 bool is_struct(type_t *type);
 
+bool types_equal(type_t *type, type_t *other);
+
 integer_t get_integer_kind(type_t *type);
 
 type_t *set_mut(type_t *type, bool mut);
+type_t *set_lvalue(type_t *type, bool lvalue);
 
 void connect_type(struct node_t *node, type_t *type);
 
 void sanitize_range(type_t *type, mpz_t it, scanner_t *scanner, where_t where);
+
+bool type_can_become_implicit(struct node_t **node, type_t *dst, type_t *src);
+bool type_can_become_explicit(struct node_t **node, type_t *dst, type_t *src);
+
+char *typefmt(type_t *type);

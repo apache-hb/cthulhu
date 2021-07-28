@@ -183,6 +183,7 @@ typedef struct {
 
     bool exported:1;
     bool used:1;
+    bool stub:1;
 } flow_t;
 
 /**

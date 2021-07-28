@@ -107,7 +107,7 @@ static void debug_struct(node_t *node) {
 
 static void debug_field(node_t *node) {
     printf("field %s ", node->name);
-    debug_ast(node->ftype);
+    debug_ast(node->type);
 }
 
 static void debug_access(node_t *node) {

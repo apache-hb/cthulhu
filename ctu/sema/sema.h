@@ -2,10 +2,16 @@
 
 #include "ctu/ast/ast.h"
 
-extern type_t *VOID_TYPE;
-
 typedef struct {
-    list_t *decls;
+    list_t *funcs;
+
+    list_t *vars;
+
+    list_t *types;
+
+    /**
+     * total number of string literals
+     */
     size_t strings;
 } unit_t;
 

@@ -147,6 +147,9 @@ typedef struct node_t {
      */
     type_t *typeof;
 
+    /* own local index, or NOT_LOCAL if its not local */
+    size_t local;
+
     AST_UNION {
         /* AST_SYMBOL */
         /** @var list_t<char*> */
@@ -257,13 +260,13 @@ typedef struct node_t {
                 char *string;
             };
 
-            /* own local index, or NOT_LOCAL if its not local */
-            size_t local;
+            /**
+             * a semantic context to evaluate this decl inside of
+             * actually a sema_t* defined in sema.c
+             */
+            void *ctx;
 
             AST_UNION {
-                /* AST_FIELD */
-                struct node_t *ftype;
-
                 /* AST_DECL_STRUCT */
                 /** @var list_t<node_t*> */
                 list_t *fields;
@@ -281,7 +284,7 @@ typedef struct node_t {
 
                 /* AST_DECL_VAR */
                 struct {
-                    /* AST_DECL_PARAM */
+                    /* AST_DECL_PARAM, AST_DECL_FIELD */
                     struct node_t *type;
                     struct node_t *init;
                 };
