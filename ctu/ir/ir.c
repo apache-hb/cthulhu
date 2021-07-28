@@ -532,6 +532,8 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     type_t *result = get_type(node->result);
     add_type_index(mod, result);
 
+    bool stubbed = node->body == NULL;
+
     flow_t flow = { 
         /* name */
         get_decl_name(node), 
@@ -553,8 +555,12 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
 
         /* exported */
         is_exported(node),
-        is_used(node)
+        is_used(node),
+        stubbed
     };
+
+    if (stubbed)
+        return flow;
 
     for (size_t i = 0; i < len; i++) {
         node_t *param = list_at(params, i);

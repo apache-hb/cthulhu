@@ -360,6 +360,10 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
 
 static void gen_flow(FILE *out, flow_t *flow) {
     gen_func_decl(out, flow, false);
+    if (flow->stub) {
+        fprintf(out, ";\n");
+        return;
+    }
     fprintf(out, "\n{\n");
 
     for (size_t i = 0; i < flow->len; i++) {
