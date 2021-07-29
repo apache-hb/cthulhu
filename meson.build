@@ -11,15 +11,8 @@ gmp = dependency('gmp')
 
 windows = build_machine.system() == 'windows'
 
-flex = find_program(
-    windows ? 'win_flex' : 'flex', 
-    version : '>=2.6'
-)
-
-bison = find_program(
-    windows ? 'win_bison' : 'bison', 
-    version : '>=3.7'
-)
+flex = find_program(windows ? 'win_flex' : 'flex', version : '>=2.6')
+bison = find_program(windows ? 'win_bison' : 'bison', version : '>=3.5')
 
 # create our flex lexer that bison needs
 lex = custom_target('lex',
@@ -35,7 +28,7 @@ lex = custom_target('lex',
 # create our bison parser that our ast needs
 parse = custom_target('parse',
     command : [ 
-        bison, '-d', '@INPUT@', '-Wcounterexamples', '-Wdeprecated', '-v',
+        bison, '-d', '@INPUT@', '-Wdeprecated', '-v',
         '--output=@OUTPUT0@',
         '--defines=@OUTPUT1@'
     ],

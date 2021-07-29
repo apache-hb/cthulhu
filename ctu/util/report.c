@@ -223,8 +223,6 @@ bool report_end(const char *name) {
         fprintf(stderr, "aborting after %s stage due to %zu error(s)\n", name, fatal);
     }
 
-    num_reports = 0;
-
     return fatal != 0;
 }
 

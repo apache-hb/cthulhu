@@ -107,7 +107,7 @@ static int parse_arg(int index, int argc, const char **argv) {
         ensure("unknown argument `%s`", arg);
     }
 
-    return report_code();
+    return 1;
 }
 
 static void parse_argc_argv(int argc, const char **argv) {
