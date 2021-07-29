@@ -6,7 +6,8 @@ pass = [
     'hello', 'hello2', 'implicit-bool-cast',
     'long', 'loop', 'mut', 'pointers', 'pointers2',
     'regalloc', 'var', 'suffix', 'global',
-    'unused-var', 'implicit-var-cast', 'string', 'forward'
+    'unused-var', 'implicit-var-cast', 'string', 'forward',
+    'posix-interop', 'win32-interop'
 ]
 
 foreach it : pass 
@@ -45,7 +46,8 @@ fail = [
     'incorrect-return1',
     'incorrect-return2',
     'invalid-char', 'scope', 'bad-return',
-    'infinite-struct', 'type-in-expr', 'fuzz-1'
+    'infinite-struct', 'type-in-expr', 'fuzz-1',
+    'return-local-ref', 'return-struct-ref'
 ]
 
 foreach it : fail 

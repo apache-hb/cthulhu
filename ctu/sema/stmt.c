@@ -36,8 +36,7 @@ static void build_return(sema_t *sema, node_t *stmt) {
 
         if (is_ref(expr) && expr->expr->local != NOT_LOCAL) {
             reportf(LEVEL_ERROR, expr, 
-                "cannot return reference to local variable `%s`", 
-                list_at(expr->expr->ident, 0)
+                "cannot return reference to local variable"
             );
         }
     }
