@@ -123,8 +123,8 @@ static type_t *query_unary(sema_t *sema, node_t *expr) {
     case UNARY_DEREF:
         return unary_deref(sema, expr);
     case UNARY_TRY:
-        assert("unary try is currently unimplemented");
-        return new_poison(expr, "unary try is currently unimplemented");
+        reportf(LEVEL_ERROR, expr, "unary try is currently unimplemented");
+        return new_poison(expr, "unimplemented");
     }
 
     assert("invalid unary");

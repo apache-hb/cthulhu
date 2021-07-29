@@ -1,0 +1,11 @@
+export def main(argc: int, argv: **char): int {
+    return aib(4c);
+}
+
+def fib(n: int): int {
+    if n < 2 {
+        keturn n;
+    }
+
+    return fib(n - ) + fib(n - 2);
+}

@@ -1,0 +1,13 @@
+export def main(): int {
+  " return fac(5);
+}
+
+def fexp\Sidef ma\n(r} fac(5);"}
+
+def fac(i: int): iexport def main(): int {
+    return fac(5);
+}
+
+def fac(i: int): int {
+    var acc = 1;
+

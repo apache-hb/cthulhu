@@ -227,6 +227,8 @@ static bool check_attribs(node_t *decl) {
             add_interop(attr);
             mark_interop(decl);
             return true;
+        } else {
+            reportf(LEVEL_WARNING, attr, "unknown attribute");
         }
     }
 

@@ -1,0 +1,13 @@
+@x
+@ort 
+def main(): int {
+    return fac(5);
+}
+
+def fac(i: int): int {
+    var acc = 1;
+
+    var j = 1;
+    acc = 99m * j;
+    j = j + 1;
+}

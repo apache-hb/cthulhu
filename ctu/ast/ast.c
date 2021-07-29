@@ -217,7 +217,7 @@ node_t *ast_digit(scanner_t *scanner, where_t where, char *digit, int base) {
     add_integer_type(node, digit);
 
     if (mpz_init_set_str(node->num, digit, base)) {
-        assert("failed to initialize mpz_t digit");
+        report(LEVEL_INTERNAL, scanner, where, "failed to initialize mpz_t digit");
     }
 
     ctu_free(digit);
@@ -240,7 +240,7 @@ node_t *ast_bool(scanner_t *scanner, where_t where, bool boolean) {
     return node;
 }
 
-static char *escape_string(const char *str) {
+static char *escape_string(scanner_t *scanner, where_t where, const char *str) {
     size_t len = strlen(str);
     char *out = ctu_malloc(len + 1);
 
@@ -265,7 +265,7 @@ static char *escape_string(const char *str) {
             case 'v': out[dst++] = '\v'; break;
             case 'f': out[dst++] = '\f'; break;
             default:
-                reportf(LEVEL_ERROR, NULL, "invalid escape sequence `\\%c`", n);
+                report(LEVEL_ERROR, scanner, where, "invalid escape sequence `\\%c`", n);
                 break;
             }
         } else {
@@ -284,7 +284,7 @@ node_t *ast_string(scanner_t *scanner, where_t where, char *string) {
     char *in = string + 1;
     string[strlen(string) - 1] = '\0';
 
-    node->string = escape_string(in);
+    node->string = escape_string(scanner, where, in);
 
     ctu_free(string);
 

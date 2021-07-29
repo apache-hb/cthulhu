@@ -5,7 +5,7 @@
 %option never-interactive batch
 %option prefix="ct"
 
-SUFFIX [u]?[csilzpm]?
+SUFFIX [u]?[tsilzpm]?
 
 %{
 #include "ctu-bison.h"

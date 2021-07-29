@@ -54,6 +54,14 @@ static const char *get_size(bool sign) {
     return sign ? "ssize_t" : "size_t";
 }
 
+static const char *get_max(bool sign) {
+    return sign ? "intmax_t" : "uintmax_t";
+}
+
+static const char *get_ptr(bool sign) {
+    return sign ? "intptr_t" : "uintptr_t";
+}
+
 static const char *int_name(type_t *type) {
     const char *out;
     switch (type->integer) {
@@ -62,6 +70,8 @@ static const char *int_name(type_t *type) {
     case INTEGER_INT: out = "int"; break;
     case INTEGER_LONG: out = "long long"; break;
     case INTEGER_SIZE: out = get_size(is_signed(type)); break;
+    case INTEGER_INTMAX: out = get_max(is_signed(type)); break;
+    case INTEGER_INTPTR: out = get_ptr(is_signed(type)); break;
     default:
         assert("int_name unreachable");
         return "";
@@ -161,14 +171,12 @@ static void gen_func_decl(FILE *out, flow_t *flow, bool omit_names) {
     if (flow->nargs == 0) {
         fprintf(out, "void");
     } else {
-        printf("args: %zu\n", flow->nargs);
         for (size_t i = 0; i < flow->nargs; i++) {
             if (i != 0) {
                 fprintf(out, ", ");
             }
             arg_t *arg = flow->args + i;
             const char *name = omit_names ? NULL : genarg(i);
-            printf("arg [%zu] = (%p <- %s)\n", i, arg->type, name);
             /* omit argument names if function predefines */
             fprintf(out, "%s", gen_type(arg->type, name));
         }

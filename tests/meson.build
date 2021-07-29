@@ -25,7 +25,7 @@ subdir('multiple')
 #test('init', driver, args : [ '--init' ])
 
 warn = [
-    'int-overflow', 'mod-by-zero'
+    'int-overflow', 'mod-by-zero', 'fuzz-7'
 ]
 
 foreach it : warn 
@@ -45,7 +45,7 @@ fail = [
     'incorrect-return1',
     'incorrect-return2',
     'invalid-char', 'scope', 'bad-return',
-    'infinite-struct', 'type-in-expr'
+    'infinite-struct', 'type-in-expr', 'fuzz-1'
 ]
 
 foreach it : fail 
@@ -57,7 +57,8 @@ foreach it : fail
 endforeach
 
 crashes = [ 
-    'fuzz-1', 'fuzz-2', 'fuzz-3'
+    'fuzz-1', 'fuzz-2', 'fuzz-3', 'fuzz-4',
+    'fuzz-5', 'fuzz-6'
 ]
 
 foreach it : crashes 

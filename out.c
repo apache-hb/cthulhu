@@ -4,10 +4,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-struct type_0_t;
-struct type_1_t;
-struct type_0_t { struct type_1_t _0;};
-struct type_1_t { struct type_0_t _0;};
 
+
+
+static const int fac(int);
+
+static const int fac(int arg0)
+{
+}
 
 #endif /* ctu_main */
