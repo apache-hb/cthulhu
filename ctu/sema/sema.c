@@ -199,6 +199,7 @@ static void add_header(char *str) {
         }
     }
     list_push(headers, str);
+    printf("adding header %s\n", str);
 }
 
 static void add_lib(char *str) {
@@ -221,7 +222,8 @@ static void add_interop(node_t *attr) {
     /* TODO: once  abuiltin system is in place, use that instead */
 
     if (list_len(args) > 0) {
-        add_header(LIST_AT(node_t*, args, 0)->string);
+        char *header = LIST_AT(node_t*, args, 0)->string;
+        add_header(header);
     }
 
     if (list_len(args) > 1) {
@@ -452,9 +454,11 @@ unit_t typecheck(node_t *root) {
 
     map_iter(files, build_file_wrap, NULL);
 
+    printf("semantic headers: %zu\n", list_len(headers));
+
     unit_t unit = { 
         funcs, vars, types, 
-        headers, libs,
+        libs, headers,
         strings 
     };
 

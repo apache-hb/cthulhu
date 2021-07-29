@@ -9,7 +9,7 @@ gen_v = lambda name, num: gen_any(name, num, 'fn func{}() {{ }}\n')
 gen_rs = lambda name, num: gen_any(name, num, 'fn func{}() {{ }}\n')
 
 langs = [
-    ('ct', gen_c),
+    ('ct', gen_ct),
     ('v', gen_v),
     ('rs', gen_rs),
     ('c', gen_c)

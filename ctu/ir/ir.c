@@ -608,6 +608,8 @@ module_t *compile_module(const char *name, unit_t unit) {
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
    
+    printf("ir headers: %zu\n", list_len(unit.headers));
+
     mod->nflows = list_len(unit.funcs);
     mod->flows = ctu_malloc(sizeof(flow_t) * mod->nflows);
     
@@ -619,6 +621,9 @@ module_t *compile_module(const char *name, unit_t unit) {
 
     mod->nstrings = unit.strings;
     mod->strings = ctu_malloc(sizeof(char*) * mod->nstrings);
+
+    mod->headers = unit.headers;
+    mod->libs = unit.libs;
 
     /**
      * first pass
