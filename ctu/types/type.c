@@ -110,6 +110,7 @@ type_t *new_struct(struct node_t *decl, const char *name) {
     type_t *type = new_type(TYPE_STRUCT, decl);
 
     type->name = name;
+    type->fields.size = 0;
 
     return type;
 }
