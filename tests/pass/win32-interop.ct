@@ -1,7 +1,7 @@
-@interop("windows.h", "kernel32")
-def OutputDebugStringA(lpOutputString: str): void;
+@interop("windows.h", "user32")
+def MessageBoxA(hWnd: *void, lpText: str, lpCaption: str, uType: uint): int;
 
 export def main(argc: int, argv: *str): int {
-    OutputDebugStringA("Hello, world!");
+    MessageBoxA(0 as *void, "text", "caption", 0u);
     return 0;
 }

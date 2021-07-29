@@ -338,14 +338,22 @@ static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implic
         }
     }
 
+    if (is_pointer(dst) && is_integer(src)) {
+        if (implicit) {
+            reportf(LEVEL_ERROR, *node, "possibly narrowing integer to pointer cast");
+            return false;
+        }
+        return true;
+    }
+
     /**
      * implicit boolean conversion
      */
     if (is_boolean(dst) && is_integer(src)) {
         if (implicit) {
             reportf(LEVEL_WARNING, *node, "implicit cast to boolean");
+            *node = implicit_cast(*node, dst);
         }
-        *node = implicit_cast(*node, dst);
         return true;
     }
 

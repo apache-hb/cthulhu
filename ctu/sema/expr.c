@@ -164,14 +164,15 @@ static type_t *query_call(sema_t *sema, node_t *expr) {
     size_t needs = list_len(type->args);
 
     if (args != needs) {
-        reportf(LEVEL_ERROR, expr, "wrong number of arguments");
+        reportf(LEVEL_ERROR, expr, "wrong number of arguments, expected %zu, got %zu", needs, args);
     } else {
         for (size_t i = 0; i < args; i++) {
             node_t *arg = list_at(expr->args, i);
             type_t *in = query_expr(sema, arg);
             type_t *out = list_at(type->args, i);
             if (!type_can_become_implicit(&arg, in, out)) {
-                reportf(LEVEL_ERROR, arg, "argument %zu has the incorrect type", i);
+                reportid_t id = reportf(LEVEL_ERROR, arg, "argument %zu expected type %s", i, typefmt(out));
+                report_underline(id, typefmt(in));
             }
         }
     }

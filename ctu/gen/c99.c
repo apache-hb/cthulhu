@@ -364,7 +364,7 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
         break;
 
     case OP_CONVERT:
-        fprintf(out, "%s = (%s)%s", 
+        fprintf(out, "%s = (%s)%s;\n", 
             gen_type(step->type, local(idx)),
             gen_type(step->type, NULL),
             gen_operand(flow, step->value)

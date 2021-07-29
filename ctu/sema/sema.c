@@ -199,7 +199,6 @@ static void add_header(char *str) {
         }
     }
     list_push(headers, str);
-    printf("adding header %s\n", str);
 }
 
 static void add_lib(char *str) {
@@ -453,8 +452,6 @@ unit_t typecheck(node_t *root) {
     begin_file(NULL, root, root->scanner->path);
 
     map_iter(files, build_file_wrap, NULL);
-
-    printf("semantic headers: %zu\n", list_len(headers));
 
     unit_t unit = { 
         funcs, vars, types, 
