@@ -1,0 +1,10 @@
+struct a {
+    b: int
+}
+
+def get(): *int {
+    var t: a;
+    t.b = 10;
+
+    return &t.b;
+}

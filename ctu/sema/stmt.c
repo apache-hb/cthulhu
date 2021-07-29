@@ -22,10 +22,24 @@ static void build_assign(sema_t *sema, node_t *assign) {
     }
 }
 
+static bool is_ref(node_t *node) {
+    return node->kind == AST_UNARY
+        && node->unary == UNARY_REF;
+}
+
 static void build_return(sema_t *sema, node_t *stmt) {
     type_t *result = VOID_TYPE;
-    if (stmt->expr) {
-        result = query_expr(sema, stmt->expr);
+    node_t *expr = stmt->expr;
+
+    if (expr) {
+        result = query_expr(sema, expr);
+
+        if (is_ref(expr) && expr->expr->local != NOT_LOCAL) {
+            reportf(LEVEL_ERROR, expr, 
+                "cannot return reference to local variable `%s`", 
+                list_at(expr->expr->ident, 0)
+            );
+        }
     }
 
     if (!type_can_become_implicit(&stmt->expr, sema->result, result)) {

@@ -1,0 +1,4 @@
+def thing(): int {
+    var i = 0;
+    var x = &&i;
+}

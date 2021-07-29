@@ -219,6 +219,10 @@ static type_t *query_access(sema_t *sema, node_t *expr) {
         return new_poison(expr, "cannot access non struct type");
     }
 
+    printf("%zu %zu\n", expr->local, expr->target->local);
+
+    expr->local = expr->target->local;
+
     return get_field(body, expr);
 }
 
