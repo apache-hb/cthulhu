@@ -96,6 +96,7 @@ SUFFIX [u]?[csilzpm]?
 ":" { return COLON; }
 "," { return COMMA; }
 "=" { return ASSIGN; }
+"@" { return AT; }
 
 \0 { return END; }
 

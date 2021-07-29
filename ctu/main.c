@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 
 /* current name of this program */
 static const char *name = NULL;
@@ -49,7 +50,7 @@ static void init_inputs(void) {
 
 static void add_file(const char *path) {
     FILE *file = ctu_open(path, "rb");
-    ENSURE(file != NULL)("failed to open file `%s`", path);
+    ENSURE(file != NULL)("failed to open file `%s` due to `%s`", path, strerror(errno));
 
     if (inputs.len + 1 > inputs.size) {
         inputs.size += 4;
@@ -106,7 +107,7 @@ static int parse_arg(int index, int argc, const char **argv) {
         ensure("unknown argument `%s`", arg);
     }
 
-    return 1;
+    return report_code();
 }
 
 static void parse_argc_argv(int argc, const char **argv) {
@@ -144,7 +145,7 @@ int main(int argc, const char **argv) {
     parse_argc_argv(argc, argv);
 
     if (report_end("input"))
-        return 1;
+        return report_code();
 
     report_begin(20, eager_reporting);
 
@@ -162,7 +163,7 @@ int main(int argc, const char **argv) {
         node_t *root = compile_file(it.path, it.file, &scan);
 
         if (report_end("parse"))
-            return 1;
+            return report_code();
 
         if (emit) {
             debug_ast(root);
@@ -171,7 +172,7 @@ int main(int argc, const char **argv) {
         unit_t unit = typecheck(root);
 
         if (report_end("semantic"))
-            return 1;
+            return report_code();
 
         if (emit) {
             debug_ast(root);
@@ -180,7 +181,7 @@ int main(int argc, const char **argv) {
         module_t *mod = compile_module("ctu/main", unit);
 
         if (report_end("intermediate"))
-            return 1;
+            return report_code();
 
         if (emit) {
             debug_module(*mod);
@@ -197,7 +198,7 @@ int main(int argc, const char **argv) {
         }
 
         if (report_end("optimize"))
-            return 1;
+            return report_code();
 
         if (c99) {
             FILE *out = open_file("out.c");
@@ -212,7 +213,7 @@ int main(int argc, const char **argv) {
         }
 
         if (report_end("generate"))
-            return 1;
+            return report_code();
 
         free_scanner(scan);
     }

@@ -63,6 +63,8 @@ static type_t *new_type(typeof_t kind, node_t *node) {
     type->node = node;
     type->mut = false;
     type->lvalue = false;
+    type->interop = false;
+    type->valid = true;
     type->index = index++;
 
     node->typeof = type;
@@ -115,10 +117,6 @@ type_t *new_struct(struct node_t *decl, const char *name) {
 void resize_struct(type_t *type, size_t size) {
     type->fields.size = size;
     type->fields.fields = ctu_malloc(sizeof(field_t) * size);
-}
-
-bool is_unresolved(type_t *type) {
-    return type->kind == TYPE_UNRESOLVED;
 }
 
 bool is_integer(type_t *type) {
@@ -188,6 +186,14 @@ type_t *set_lvalue(type_t *type, bool lvalue) {
 
     type_t *out = copyty(type);
     out->lvalue = lvalue;
+
+    if (is_struct(type) && type->valid) {
+        for (size_t i = 0; i < type->fields.size; i++) {
+            type_t *field = type->fields.fields[i].type;
+            field = set_lvalue(field, lvalue);
+            type->fields.fields[i].type = field;
+        }
+    }
 
     return out;
 }
@@ -346,7 +352,8 @@ static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implic
 }
 
 bool types_equal(type_t *type, type_t *other) {
-    return type->index == other->index;
+    return type == other 
+        || type->index == other->index;
 }
 
 bool type_can_become_implicit(node_t **node, type_t *dst, type_t *src) {
@@ -358,9 +365,13 @@ bool type_can_become_explicit(node_t **node, type_t *dst, type_t *src) {
 }
 
 char *typefmt(type_t *type) {
+    if (type == NULL) {
+        return ctu_strdup("nil");
+    }
+
     switch (type->kind) {
     case TYPE_INTEGER: case TYPE_BOOLEAN: 
-    case TYPE_VOID:
+    case TYPE_VOID: case TYPE_STRING:
         return type->node->name;
 
     case TYPE_STRUCT:
@@ -375,4 +386,8 @@ char *typefmt(type_t *type) {
     default:
         return ctu_strdup("unresolved type");
     }
+}
+
+node_t *nodeof(type_t *type) {
+    return type->node;
 }

@@ -1,0 +1,7 @@
+@interop("stdio.h")
+def puts(s: str): int;
+
+export def main(argc: int, argv: *str): int {
+    puts("hello world");
+    return 0;
+}

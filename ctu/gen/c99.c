@@ -130,7 +130,6 @@ static const char *gen_string(const char *name) {
 }
 
 static const char *gen_type(type_t *type, const char *name) {
-    printf("gen-type [%p]\n", type);
     switch (type->kind) {
     case TYPE_INTEGER: return gen_int(type, name);
     case TYPE_BOOLEAN: return gen_bool(name);
@@ -141,7 +140,7 @@ static const char *gen_type(type_t *type, const char *name) {
     case TYPE_STRUCT: return gen_struct(type, name);
 
     default:
-        assert("unreachable branch in gen_type");
+        reportf(LEVEL_INTERNAL, nodeof(type), "gen-type(`%s` <- `%s`)", typefmt(type), name);
         return "void";
     }
 }
@@ -162,15 +161,14 @@ static void gen_func_decl(FILE *out, flow_t *flow, bool omit_names) {
     if (flow->nargs == 0) {
         fprintf(out, "void");
     } else {
+        printf("args: %zu\n", flow->nargs);
         for (size_t i = 0; i < flow->nargs; i++) {
             if (i != 0) {
                 fprintf(out, ", ");
             }
             arg_t *arg = flow->args + i;
-            const char *name = NULL;
-            if (!omit_names) {
-                name = genarg(i);
-            }
+            const char *name = omit_names ? NULL : genarg(i);
+            printf("arg [%zu] = (%p <- %s)\n", i, arg->type, name);
             /* omit argument names if function predefines */
             fprintf(out, "%s", gen_type(arg->type, name));
         }
@@ -288,8 +286,6 @@ static void gen_store(FILE *out, flow_t *flow, step_t *step) {
 static void gen_step(FILE *out, flow_t *flow, size_t idx) {
     step_t *step = flow->steps + idx;
 
-    printf("gen-step [%zu] = %d\n", idx, step->opcode);
-
     switch (step->opcode) {
     case OP_BLOCK: 
         /* the (void)0 cast makes clang accept this code */
@@ -360,10 +356,6 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
 
 static void gen_flow(FILE *out, flow_t *flow) {
     gen_func_decl(out, flow, false);
-    if (flow->stub) {
-        fprintf(out, ";\n");
-        return;
-    }
     fprintf(out, "\n{\n");
 
     for (size_t i = 0; i < flow->len; i++) {
@@ -423,6 +415,10 @@ void gen_c99(FILE *out, module_t *mod) {
             line(out);
         }
         type_t *type = mod->types[i];
+        if (type->interop) {
+            continue;
+        }
+
         fprintf(out, "%s;", gen_type(type, NULL));
     }
 
@@ -433,6 +429,10 @@ void gen_c99(FILE *out, module_t *mod) {
             line(out);
         }
         type_t *type = mod->types[i];
+        if (type->interop) {
+            continue;
+        }
+        
         emit_type(out, type);
     }
 
@@ -440,6 +440,10 @@ void gen_c99(FILE *out, module_t *mod) {
 
     for (size_t i = 0; i < num_vars(mod); i++) {
         var_t *var = mod->vars + i;
+        if (var->interop) {
+            continue;
+        }
+        
         if (SHOULD_EMIT(var))
             gen_global(out, var, i);
     }
@@ -448,6 +452,10 @@ void gen_c99(FILE *out, module_t *mod) {
 
     for (size_t i = 0; i < num_flows(mod); i++) {
         flow_t *flow = mod->flows + i;
+        if (flow->interop) {
+            continue;
+        }
+
         if (SHOULD_EMIT(flow))
             def_flow(out, mod->flows + i);
     }
@@ -456,7 +464,11 @@ void gen_c99(FILE *out, module_t *mod) {
 
     for (size_t i = 0; i < num_flows(mod); i++) {
         flow_t *flow = mod->flows + i;
-        if (SHOULD_EMIT(flow))
+        if (flow->interop) {
+            continue;
+        }
+        
+        if (SHOULD_EMIT(flow) && !flow->stub)
             gen_flow(out, mod->flows + i);
     }
 

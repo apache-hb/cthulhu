@@ -9,6 +9,12 @@ typedef struct {
 
     list_t *types;
 
+    /* required libraries to link to */
+    list_t *libs;
+
+    /* required C headers for interop */
+    list_t *headers;
+
     /**
      * total number of string literals
      */

@@ -20,10 +20,7 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
     node->scanner = scanner;
     node->where = where;
     node->typeof = NULL;
-    node->implicit = false;
-    node->exported = false;
-    node->mut = false;
-    node->used = false;
+    node->attribs = 0;
     node->local = NOT_LOCAL;
 
     return node;
@@ -32,6 +29,8 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
 static node_t *new_decl(scanner_t *scanner, where_t where, ast_t kind, char *name) {
     node_t *decl = new_node(scanner, where, kind);
     decl->name = name;
+    decl->ctx = NULL;
+    decl->attr = new_list(NULL);
     return decl;
 }
 
@@ -79,9 +78,22 @@ type_t *raw_type(node_t *node) {
 type_t *get_type(node_t *node) {
     type_t *type = raw_type(node);
     
-    return type == NULL
-        ? new_unresolved(node)
-        : type;
+    if (type == NULL) {
+        type = new_unresolved(node);
+    }
+
+    return type;
+}
+
+type_t *get_resolved_type(node_t *node) {
+    type_t *type = raw_type(node);
+    
+    if (type == NULL) {
+        reportf(LEVEL_ERROR, node, "type of node is not known");
+        type = new_unresolved(node);
+    }
+
+    return type;
 }
 
 list_t *get_stmts(node_t *node) {
@@ -133,12 +145,12 @@ bool is_symbol(node_t *it) {
 }
 
 node_t *make_implicit(node_t *node) {
-    node->implicit = true;
+    node->attribs |= ATTR_IMPLICIT;
     return node;
 }
 
 node_t *make_exported(node_t *node) {
-    node->exported = true;
+    node->attribs |= ATTR_EXPORT;
     return node;
 }
 
@@ -260,6 +272,8 @@ static char *escape_string(const char *str) {
             out[dst++] = c;
         }
     }
+
+    out[idx] = 0;
 
     return out;
 }
@@ -409,7 +423,10 @@ node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *ty
 node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, node_t *type, node_t *init) {
     node_t *node = new_decl(scanner, where, AST_DECL_VAR, name);
 
-    node->mut = mut;
+    if (mut) {
+        node->attribs |= ATTR_MUTABLE;
+    }
+
     node->type = type;
     node->init = init;
 
@@ -456,7 +473,7 @@ node_t *ast_field(scanner_t *scanner, where_t where, char *name, node_t *type) {
 }
 
 node_t *ast_import(scanner_t *scanner, where_t where, list_t *path) {
-    node_t *node = new_node(scanner, where, AST_IMPORT);
+    node_t *node = new_node(scanner, where, AST_DECL_IMPORT);
 
     node->path = path;
 
@@ -473,13 +490,40 @@ node_t *ast_root(scanner_t *scanner, list_t *imports, list_t *decls) {
 }
 
 bool is_exported(node_t *node) {
-    return node->exported;
+    return node->attribs & ATTR_EXPORT;
+}
+
+bool is_mut(node_t *node) {
+    return node->attribs & ATTR_MUTABLE;
 }
 
 void mark_used(node_t *node) {
-    node->used = true;
+    node->attribs |= ATTR_USED;
 }
 
 bool is_used(node_t *node) {
-    return node->used;
+    return node->attribs & ATTR_USED;
+}
+
+node_t *ast_attribs(node_t *decl, attrib_t attribs, list_t *decorate) {
+    decl->attribs |= attribs;
+    decl->decorate = decorate;
+    return decl;
+}
+
+node_t *ast_attrib(scanner_t *scanner, where_t where, list_t *name, list_t *args) {
+    node_t *decl = new_node(scanner, where, AST_ATTRIB);
+
+    decl->attr = name;
+    decl->args = args;
+
+    return decl;
+}
+
+void mark_interop(node_t *node) {
+    node->attribs |= ATTR_INTEROP;
+}
+
+bool is_interop(node_t *node) {
+    return node->attribs & ATTR_INTEROP;
 }

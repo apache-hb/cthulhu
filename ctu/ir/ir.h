@@ -184,6 +184,7 @@ typedef struct {
     bool exported:1;
     bool used:1;
     bool stub:1;
+    bool interop:1;
 } flow_t;
 
 /**
@@ -198,6 +199,7 @@ typedef struct {
 
     bool exported:1;
     bool used:1;
+    bool interop:1;
 } var_t;
 
 step_t *step_at(flow_t *flow, size_t idx);
@@ -222,6 +224,10 @@ typedef struct module_t {
 
     char **strings;
     size_t nstrings;
+
+    /* required headers and libraries */
+    list_t *headers;
+    list_t *libs;
 } module_t;
 
 size_t num_flows(module_t *mod);

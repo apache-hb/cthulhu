@@ -152,6 +152,14 @@ typedef struct type_t {
      */
     bool lvalue:1;
 
+    /**
+     * is this a type defined externally
+     */
+    bool interop:1;
+
+    /* is this struct valid */
+    bool valid:1;
+
     /** 
      * the node that generated this type 
      */
@@ -222,7 +230,6 @@ type_t *new_pointer(struct node_t *node, type_t *to);
 type_t *new_struct(struct node_t *decl, const char *name);
 void resize_struct(type_t *type, size_t size);
 
-bool is_unresolved(type_t *type);
 bool is_integer(type_t *type);
 bool is_boolean(type_t *type);
 bool is_callable(type_t *type);
@@ -247,3 +254,4 @@ bool type_can_become_implicit(struct node_t **node, type_t *dst, type_t *src);
 bool type_can_become_explicit(struct node_t **node, type_t *dst, type_t *src);
 
 char *typefmt(type_t *type);
+struct node_t *nodeof(type_t *type);

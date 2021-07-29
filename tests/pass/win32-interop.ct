@@ -1,0 +1,7 @@
+@interop("windows.h", "kernel32")
+def OutputDebugStringA(lpOutputString: str): void;
+
+export def main(argc: int, argv: *str): int {
+    OutputDebugStringA("Hello, world!");
+    return 0;
+}

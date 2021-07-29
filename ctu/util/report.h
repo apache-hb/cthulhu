@@ -68,6 +68,8 @@ void report_note(reportid_t id, const char *note);
  */
 void report_tag(reportid_t id, const void *tag);
 
+int report_code(void);
+
 extern bool verbose;
 extern const where_t NOWHERE;
 

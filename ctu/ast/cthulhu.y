@@ -31,6 +31,7 @@ void yyerror();
     char *text;
     node_t *node;
     list_t *nodes;
+    attrib_t attrib;
     bool mut;
 }
 
@@ -74,6 +75,7 @@ void yyerror();
     COLON "`:`"
     COLON2 "`::`"
     ASSIGN "`=`"
+    AT "`@`"
 
 %token
     BOOL_TRUE "`true`"
@@ -99,16 +101,20 @@ void yyerror();
     type typename pointer /* types */
     stmt stmts return if else elseif branch assign while /* statements */
     primary postfix unary multiply add compare equality expr /* expressions */
-    import
+    import attrib
 
 %type<nodes>
     stmtlist fields
     args arglist
     params paramlist
     names imports unit
+    decorate decorators
 
 %type<mut>
     mut
+
+%type<attrib>
+    attribs
 
 %start file
 
@@ -126,8 +132,23 @@ unit: decl { $$ = new_list($1); }
     | unit decl { list_push($1, $2); }
     ;
 
-decl: declbase { $$ = $1; }
-    | EXPORTED declbase { $$ = make_exported($2); }
+decl: decorate attribs declbase { $$ = ast_attribs($3, $2, $1); }
+    ;
+
+decorate: %empty { $$ = new_list(NULL); }
+    | decorators { $$ = $1; }
+    ;
+
+decorators: attrib { $$ = new_list($1); }
+    | decorators attrib { $$ = list_push($1, $2); }
+    ;
+
+attrib: AT names { $$ = ast_attrib(x, @$, $2, new_list(NULL)); }
+    | AT names LPAREN args RPAREN { $$ = ast_attrib(x, @$, $2, $4); }
+    ;
+
+attribs: %empty { $$ = 0; }
+    | EXPORTED { $$ = ATTR_EXPORT; }
     ;
 
 declbase: function { $$ = $1; }

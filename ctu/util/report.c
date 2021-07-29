@@ -253,10 +253,20 @@ reportid_t warnf(const char *fmt, ...) {
 }
 
 reportid_t reportf(level_t level, node_t *node, const char *fmt, ...) {
+    if (node == NULL) {
+        assert("reporting a NULL node");
+        va_list args;
+        va_start(args, fmt);
+        reportid_t id = push_report(level, NULL, NOWHERE, NULL, formatv(fmt, args));
+        va_end(args);
+        return id;
+    }
+
     va_list args;
     va_start(args, fmt);
     reportid_t id = push_report(level, node->scanner, node->where, node, formatv(fmt, args));
     va_end(args);
+    
     return id;
 }
 
@@ -296,4 +306,15 @@ void logfmt(const char *fmt, ...) {
     va_end(args);
 
     printf("\n");
+}
+
+int report_code(void) {
+    for (size_t i = 0; i < num_reports; i++) {
+        report_t report = reports[i];
+        if (report.level == LEVEL_INTERNAL) {
+            return 99;
+        }
+    }
+
+    return num_reports != 0;
 }

@@ -110,7 +110,7 @@ type_t *step_type(step_t *step) {
 }
 
 static step_t new_step(opcode_t op, node_t *node) {
-    return new_typed_step(op, get_type(node));
+    return new_typed_step(op, get_resolved_type(node));
 }
 
 bool operand_is_imm(operand_t op) {
@@ -238,15 +238,13 @@ static operand_t get_lvalue(flow_t *flow, node_t *node) {
     if (is_access(node)) {
         node_t *target = node->target;
         operand_t field = get_lvalue(flow, target);
-        field.offset = field_offset(raw_type(target), node->field);
+        field.offset = field_offset(get_resolved_type(target), node->field);
         return field;
     }
 
     if (node->local == NOT_LOCAL) {
         return get_global(flow, node);
     }
-
-    fprintf(stderr, "get-lvalue [%zu]\n", node->local);
 
     return new_vreg(flow->locals[node->local]);
 }
@@ -265,7 +263,7 @@ static operand_t emit_ref(flow_t *flow, node_t *node) {
 }
 
 static step_t emit_deref(node_t *node, operand_t expr) {
-    step_t step = new_typed_step(OP_LOAD, get_type(node->expr)->ptr);
+    step_t step = new_typed_step(OP_LOAD, get_resolved_type(node->expr)->ptr);
     step.src = expr;
     return step;
 }
@@ -321,7 +319,7 @@ static operand_t emit_return(flow_t *flow, node_t *node) {
         ? new_operand(NONE)
         : emit_opcode(flow, node->expr);
 
-    step_t step = step_return(get_type(node), value);
+    step_t step = step_return(get_resolved_type(node), value);
 
     return add_vreg(flow, step);
 }
@@ -413,8 +411,6 @@ static void set_local(flow_t *flow, size_t idx, operand_t to) {
     ASSERT(to.kind == VREG)("set_local requires a vreg");
     ASSERT(idx != NOT_LOCAL)("set_local requires a local");
 
-    printf("set-local [%zu] = %zu\n", idx, to.vreg);
-
     flow->locals[idx] = to.vreg;
 }
 
@@ -487,7 +483,6 @@ static operand_t emit_while(flow_t *flow, node_t *node) {
 }
 
 static operand_t emit_string(flow_t *flow, node_t *node) {
-    printf("emit: %zu %p", node->local, node->string);
     size_t idx = node->local;
     flow->mod->strings[idx] = node->string;
     return new_string(idx); 
@@ -529,7 +524,7 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
 
     size_t locals = node->locals + len;
 
-    type_t *result = get_type(node->result);
+    type_t *result = get_resolved_type(node->result);
     add_type_index(mod, result);
 
     bool stubbed = node->body == NULL;
@@ -556,17 +551,14 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         /* exported */
         is_exported(node),
         is_used(node),
-        stubbed
+        stubbed,
+        is_interop(node)
     };
-
-    if (stubbed) {
-        return flow;
-    }
 
     for (size_t i = 0; i < len; i++) {
         node_t *param = list_at(params, i);
 
-        arg_t arg = { get_decl_name(param), get_type(param) };
+        arg_t arg = { get_decl_name(param), get_resolved_type(param) };
 
         operand_t dst = add_reserve(&flow, param);
         step_t step = new_step(OP_STORE, param);
@@ -579,9 +571,11 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         flow.args[i] = arg;
     }
 
-    emit_opcode(&flow, node->body);
+    if (!stubbed) {
+        emit_opcode(&flow, node->body);
+    }
 
-    if (is_void(get_type(node->result))) {
+    if (is_void(get_resolved_type(node->result))) {
         step_t ret = step_return(VOID_TYPE, new_operand(NONE));
         add_step(&flow, ret);
     }
@@ -600,10 +594,11 @@ static var_t compile_var(module_t *mod, node_t *node) {
 
     var_t var = { 
         get_decl_name(node), 
-        get_type(node),
+        get_resolved_type(node),
 
         is_exported(node),
-        is_used(node)
+        is_used(node),
+        is_interop(node)
     };
 
     return var;
@@ -638,7 +633,7 @@ module_t *compile_module(const char *name, unit_t unit) {
     }
 
     for (size_t i = 0; i < mod->ntypes; i++) {
-        type_t *type = get_type(list_at(unit.types, i));
+        type_t *type = get_resolved_type(list_at(unit.types, i));
         type->index = i;
         mod->types[i] = type;
     }

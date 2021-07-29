@@ -1,4 +1,4 @@
-static type_t *query_type_local(sema_t *sema, node_t *node, const char *name) {
+static type_t *query_type_local(sema_t *sema, node_t *node, const char *name) {    
     node_t *type = map_get(sema->types, name);
     if (type) {
         return get_type(type);
@@ -7,6 +7,10 @@ static type_t *query_type_local(sema_t *sema, node_t *node, const char *name) {
     type_t *builtin = map_get(builtins, name);
     if (builtin) {
         return builtin;
+    }
+
+    if (sema->parent) {
+        return query_type_local(sema->parent, node, name);
     }
 
     reportf(LEVEL_ERROR, node, "unknown type `%s`", name);
@@ -68,17 +72,28 @@ static type_t *query_type(sema_t *sema, node_t *it) {
     return type;
 }
 
-static void validate_struct(type_t *type, type_t *member) {
-    fields_t fields = type->fields;
-    for (size_t i = 0; i < fields.size; i++) {
-        field_t field = fields.fields[i];
-        type_t *it = field.type;
-        if (types_equal(it, member)) {
-            reportf(LEVEL_ERROR, type->node, "struct `%s` contains itself recursivley", type->name);
+static void struct_contains(type_t *type, type_t *other) {
+    if (!is_struct(type)) {
+        return;
+    }
+
+    for (size_t i = 0; i < type->fields.size; i++) {
+        field_t field = type->fields.fields[i];
+        type_t *ty = field.type;
+        if (types_equal(ty, other)) {
+            reportf(LEVEL_ERROR, nodeof(ty), "recursive field `%s`", field.name);
+            ty->valid = false;
         }
 
-        validate_struct(it, member);
+        if (is_struct(ty) && ty->valid) {
+            printf("is-struct %zu\n", ty->fields.size);
+            struct_contains(ty, other);
+        }
     }
+}
+
+static void recursive_struct(type_t *it) {
+    struct_contains(it, it);
 }
 
 static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
@@ -95,18 +110,22 @@ static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
         }
     }
 
-    field_t it = { name, query_type(sema, field->type) };
+    type_t *ty = query_type(sema, field->type);
+
+    if (ty->kind == TYPE_UNRESOLVED) {
+        reportf(LEVEL_ERROR, field, "unresolved field type `%s`", name);
+    }
+
+    field_t it = { name, ty };
 
     record->fields.fields[at] = it;
-
-    validate_struct(it.type, record);
 }
 
 static void build_struct(sema_t *sema, node_t *node) {
     list_t *fields = node->fields;
     size_t len = list_len(fields);
 
-    type_t *result = new_struct(node, get_decl_name(node));
+    type_t *result = raw_type(node);
     resize_struct(result, len);
 
     for (size_t i = 0; i < len; i++) {
@@ -115,4 +134,6 @@ static void build_struct(sema_t *sema, node_t *node) {
     }
 
     connect_type(node, result);
+
+    recursive_struct(result);
 }
