@@ -22,7 +22,7 @@ lex = custom_target('lex',
         '@INPUT@'
     ],
     input : 'ctu/ast/cthulhu.l',
-    output : [ 'flex.c', 'flex.h' ]
+    output : [ 'ctu-flex.c', 'ctu-flex.h' ]
 )
 
 # create our bison parser that our ast needs
@@ -33,7 +33,7 @@ parse = custom_target('parse',
         '--defines=@OUTPUT1@'
     ],
     input : 'ctu/ast/cthulhu.y',
-    output : [ 'bison.c', 'bison.h' ],
+    output : [ 'ctu-bison.c', 'ctu-bison.h' ],
     depends : [ lex ]
 )
 

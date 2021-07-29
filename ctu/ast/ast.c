@@ -527,3 +527,7 @@ void mark_interop(node_t *node) {
 bool is_interop(node_t *node) {
     return node->attribs & ATTR_INTEROP;
 }
+
+node_t *ast_noop(void) {
+    return new_node(NULL, NOWHERE, AST_NOOP);
+}

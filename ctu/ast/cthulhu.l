@@ -3,11 +3,12 @@
 %option noyywrap noinput nounput
 %option reentrant bison-bridge bison-locations
 %option never-interactive batch
+%option prefix="ct"
 
 SUFFIX [u]?[csilzpm]?
 
 %{
-#include "bison.h"
+#include "ctu-bison.h"
 #include "ctu/ast/scanner.h"
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
@@ -19,7 +20,6 @@ SUFFIX [u]?[csilzpm]?
     if (result <= 0) { result = YY_NULL; }
 
 #define YY_USER_INIT flex_init(yylloc, 0)
-
 %}
 
 %%

@@ -52,7 +52,8 @@ typedef enum {
      * implementation details
      */
     AST_TYPE,
-    AST_ROOT
+    AST_ROOT,
+    AST_NOOP
 } ast_t;
 
 typedef enum {
@@ -415,3 +416,4 @@ node_t *ast_type(const char *name);
 node_t *ast_attribs(node_t *decl, attrib_t attribs, list_t *decorate);
 
 node_t *ast_attrib(scanner_t *scanner, where_t where, list_t *name, list_t *args);
+node_t *ast_noop(void);

@@ -14,8 +14,8 @@
 #include "ctu/util/util.h"
 
 #include "scanner.h"
-#include "bison.h"
-#include "flex.h"
+#include "ctu-bison.h"
+#include "ctu-flex.h"
 
 static size_t file_size(FILE *fd) {
     fseek(fd, 0, SEEK_END);
@@ -70,18 +70,18 @@ node_t *compile_file(const char *path, FILE *stream, scanner_t **scanout) {
     yyscan_t scanner;
     scanner_t *extra = new_file_scanner(path, stream);
 
-    if ((err = yylex_init_extra(extra, &scanner))) {
+    if ((err = ctlex_init_extra(extra, &scanner))) {
         assert("yylex_init_extra -> %s", yyerror_str(err));
         return NULL;
     }
 
-    yyset_in(stream, scanner);
+    ctset_in(stream, scanner);
     
-    if ((err = yyparse(scanner, extra))) {
+    if ((err = ctparse(scanner, extra))) {
         return NULL;
     }
 
-    yylex_destroy(scanner);
+    ctlex_destroy(scanner);
 
     if (scanout) {
         *scanout = extra;
@@ -96,22 +96,22 @@ node_t *compile_string(const char *path, const char *text, scanner_t **scanout) 
     scanner_t *extra = new_str_scanner(path, text);
     YY_BUFFER_STATE buffer;
 
-    if ((err = yylex_init_extra(extra, &scanner))) {
+    if ((err = ctlex_init_extra(extra, &scanner))) {
         assert("yylex_init_extra -> %s", yyerror_str(err));
         return NULL;
     }
 
-    if (!(buffer = yy_scan_string(text, scanner))) {
+    if (!(buffer = ct_scan_string(text, scanner))) {
         assert("yy_scan_string -> NULL");
         return NULL;
     }
 
-    if ((err = yyparse(scanner, extra))) {
-        yy_delete_buffer(buffer, scanner);
+    if ((err = ctparse(scanner, extra))) {
+        ct_delete_buffer(buffer, scanner);
         return NULL;
     }
 
-    yylex_destroy(scanner);
+    ctlex_destroy(scanner);
 
     if (scanout) {
         *scanout = extra;
@@ -120,7 +120,7 @@ node_t *compile_string(const char *path, const char *text, scanner_t **scanout) 
     return extra->ast;
 }
 
-void yyerror(where_t *where, void *state, scanner_t *scanner, const char *msg) {
+void cterror(where_t *where, void *state, scanner_t *scanner, const char *msg) {
     (void)state;
     
     report(LEVEL_ERROR, scanner, *where, msg);

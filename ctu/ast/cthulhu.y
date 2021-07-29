@@ -4,8 +4,12 @@
 %parse-param { void *scanner } { scanner_t *x }
 %locations
 %expect 0
+%define api.prefix {ct}
 
 %code requires {
+    #define YYSTYPE CTSTYPE
+    #define YYLTYPE CTLTYPE
+
     #include "ctu/ast/scanner.h"
     #include "ctu/ast/ast.h"
     #include "ctu/util/str.h"
@@ -13,8 +17,8 @@
 
 %{
 #include <stdio.h>
-int yylex();
-void yyerror();
+int ctlex();
+void cterror();
 %}
 
 %union {
@@ -256,6 +260,7 @@ stmt: expr SEMI { $$ = $1; }
     | variable { $$ = $1; }
     | assign { $$ = $1; }
     | while { $$ = $1; }
+    | error SEMI { $$ = ast_noop(); }
     ;
 
 /**

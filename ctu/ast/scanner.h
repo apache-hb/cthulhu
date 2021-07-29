@@ -28,4 +28,4 @@ int flex_get(scanner_t *scanner, char *out, int size);
 void flex_update(where_t *where, const char *text);
 void free_scanner(scanner_t *scanner);
 
-#define YYLTYPE where_t
+#define CTLTYPE where_t
