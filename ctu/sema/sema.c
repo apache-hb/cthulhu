@@ -192,6 +192,23 @@ static void build_func(node_t *it);
 #include "expr.c"
 #include "stmt.c"
 
+static void add_header(char *str) {
+    for (size_t i = 0; i < list_len(headers); i++) {
+        if (strcmp(str, list_at(headers, i)) == 0) {
+            return;
+        }
+    }
+    list_push(headers, str);
+}
+
+static void add_lib(char *str) {
+    for (size_t i = 0; i < list_len(libs); i++) {
+        if (strcmp(str, list_at(libs, i)) == 0) {
+            return;
+        }
+    }
+    list_push(libs, str);
+}
 
 static bool is_interop_attr(list_t *name) {
     return list_len(name) == 1 
@@ -204,11 +221,11 @@ static void add_interop(node_t *attr) {
     /* TODO: once  abuiltin system is in place, use that instead */
 
     if (list_len(args) > 0) {
-        list_push(headers, LIST_AT(node_t*, args, 0)->string);
+        add_header(LIST_AT(node_t*, args, 0)->string);
     }
 
     if (list_len(args) > 1) {
-        list_push(libs, LIST_AT(node_t*, args, 1)->string);
+        add_lib(LIST_AT(node_t*, args, 1)->string);
     }
 }
 

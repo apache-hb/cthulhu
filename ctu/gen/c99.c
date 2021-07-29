@@ -20,6 +20,10 @@ static void add_include(FILE *out, const char *name) {
     fprintf(out, "#include <%s.h>\n", name);
 }
 
+static void plain_include(FILE *out, const char *name) {
+    fprintf(out, "#include <%s>\n", name);
+}
+
 static void line(FILE *out) {
     fprintf(out, "\n");
 }
@@ -283,9 +287,21 @@ static void gen_store(FILE *out, flow_t *flow, step_t *step) {
     const char *dst = gen_operand(flow, step->dst);
     const char *src = gen_operand(flow, step->src);
 
-    if (step->dst.offset != SIZE_MAX) {
+    type_t *ty = step->type;
+
+    size_t disp = step->dst.offset;
+
+    if (disp != SIZE_MAX) {
+        const char *off;
+
+        if (ty->interop) {
+            off = ty->fields.fields[disp].name;
+        } else {
+            off = format("_%zu", step->dst.offset);
+        }
+
         /* TODO: at the point we can store a struct in a register fix this */
-        fprintf(out, "%s[0]._%zu = %s;\n", dst, step->dst.offset, src);
+        fprintf(out, "%s[0].%s = %s;\n", dst, off, src);
     } else {
         fprintf(out, "%s[0] = %s;\n", dst, src);
     }
@@ -410,6 +426,12 @@ void gen_c99(FILE *out, module_t *mod) {
     add_include(out, "stdbool");
     add_include(out, "stdint");
     add_include(out, "stddef");
+
+    line(out);
+
+    for (size_t i = 0; i < list_len(mod->headers); i++) {
+        plain_include(out, list_at(mod->headers, i));
+    }
 
     for (size_t i = 0; i < num_strings(mod); i++) {
         if (i != 0) {
