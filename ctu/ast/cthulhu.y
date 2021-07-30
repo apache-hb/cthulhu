@@ -71,6 +71,8 @@ void cterror();
     RPAREN "`)`"
     LBRACE "`{`"
     RBRACE "`}`"
+    LSQUARE "`[`"
+    RSQUARE "`]`"
 
 %token
     QUESTION "`?`"
@@ -105,7 +107,7 @@ void cterror();
     type typename pointer /* types */
     stmt stmts return if else elseif branch assign while /* statements */
     primary postfix unary multiply add compare equality expr /* expressions */
-    import attrib
+    import attrib array
 
 %type<nodes>
     stmtlist fields
@@ -269,6 +271,7 @@ stmt: expr SEMI { $$ = $1; }
 
 type: typename { $$ = $1; }
     | pointer { $$ = $1; }
+    | array { $$ = $1; }
     | VAR LPAREN type RPAREN { $$ = ast_mut(x, @$, $3); }
     ;
 
@@ -279,6 +282,10 @@ typename: names { $$ = ast_symbol(x, @$, $1); }
 
 names: IDENT { $$ = new_list($1); }
     | names COLON2 IDENT { $$ = list_push($1, $3); }
+    ;
+
+array: LSQUARE type RSQUARE { $$ = ast_array(x, @$, $2, NULL); }
+    | LSQUARE type COLON expr RSQUARE { $$ = ast_array(x, @$, $2, $4); }
     ;
 
 /**

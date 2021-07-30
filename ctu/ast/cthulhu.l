@@ -90,6 +90,8 @@ SUFFIX [u]?[tsilzpm]?
 ")" { return RPAREN; }
 "{" { return LBRACE; }
 "}" { return RBRACE; }
+"[" { return LSQAURE; }
+"]" { return RSQAURE; }
 "?" { return QUESTION; }
 ";" { return SEMI; }
 "::" { return COLON2; }

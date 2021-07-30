@@ -47,6 +47,7 @@ typedef enum {
     AST_SYMBOL,
     AST_PTR,
     AST_MUT,
+    AST_ARRAY,
 
     /**
      * implementation details
@@ -234,6 +235,18 @@ typedef struct node_t {
 
             /* AST_WHILE, AST_MUT */
             struct node_t *next;
+        };
+
+        /* AST_ARRAY */
+        struct {
+            /* array of item */
+            struct node_t *of;
+            
+            /** 
+             * the number of items in an array, 
+             * if NULL then array is unbounded 
+             */
+            struct node_t *size;
         };
 
         /* AST_DECL */
