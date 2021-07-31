@@ -192,6 +192,7 @@ typedef struct node_t {
 
             /* true if signed, false if unsigned */
             bool sign;
+            
             /* the underlying integer type */
             integer_t integer;
         };
