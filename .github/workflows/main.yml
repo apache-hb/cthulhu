@@ -13,15 +13,10 @@ jobs:
     strategy:
       matrix:
         config: 
-          - { name: "windows-msvc", os: windows-latest, cc: "cl", cxx: "cl", options: "-Dcpp_std=c++latest" }
-          - { name: "windows-clang", os: windows-latest, cc: "clang", cxx: "clang-cl", options: "-Dcpp_std=c++latest" }
-          - { name: "linux-gcc", os: ubuntu-20.04, cc: "gcc", cxx: "g++", options: "-Dcpp_std=c++2a" }
-          - { name: "linux-clang", os: ubuntu-20.04, cc: "clang", cxx: "clang++", options: "-Dcpp_std=c++2a" }
-          - { name: "macos-clang", os: macos-latest, cc: "clang", cxx: "clang++", options: "-Dcpp_std=c++2a" }
+          - { name: "linux-gcc", os: ubuntu-20.04, cc: "gcc" }
+          - { name: "linux-clang", os: ubuntu-20.04, cc: "clang" }
           
     steps:
-      - uses: ilammy/msvc-dev-cmd@v1.5.0
-        if: ${{ matrix.config.os }} == 'windows-msvc'
       - uses: actions/checkout@master
         with:
           submodules: 'true'
@@ -30,11 +25,9 @@ jobs:
       - uses: BSFishy/meson-build@v1.0.2
         with:
           action: test
-          setup-options: ${{ matrix.config.options }}
-          meson-version: 0.57.1
+          meson-version: 0.59.0
         env:
           CC: ${{ matrix.config.cc }}
-          CXX: ${{ matrix.config.cxx }}
       - uses: actions/upload-artifact@v2
         if: always()
         with:

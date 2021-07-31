@@ -1,3 +1,5 @@
+static type_t *query_type(sema_t *sema, node_t *it);
+
 static type_t *query_type_local(sema_t *sema, node_t *node, const char *name) {    
     node_t *type = map_get(sema->types, name);
     if (type) {
@@ -33,6 +35,26 @@ static type_t *query_type_symbol(sema_t *sema, node_t *expr, list_t *symbol) {
     return new_poison(expr, "unresolved type");
 }
 
+static type_t *query_array(sema_t *sema, node_t *expr) {
+    type_t *of = query_type(sema, expr->of);
+    type_t *len = NULL;
+    size_t size = 0;
+
+    if (expr->size) {
+        len = query_expr(sema, expr->size);
+        
+        if (!is_consteval(expr->size)) {
+            reportf(LEVEL_ERROR, expr, "array size must be constant");
+        }
+
+        if (!type_can_become_implicit(&expr->size, get_int_type(false, INTEGER_SIZE), of)) {
+            reportf(LEVEL_ERROR, expr, "array size must be convertible to usize, `%s` is incompatible", typefmt(len));
+        }
+    }
+
+    return new_array(expr, of, size, expr->size == NULL);
+}
+
 /**
  * find a type given a typename
  */
@@ -60,6 +82,10 @@ static type_t *query_type(sema_t *sema, node_t *it) {
     case AST_MUT:
         type = query_type(sema, it->next);
         type = set_mut(type, true);
+        break;
+
+    case AST_ARRAY:
+        type = query_array(sema, it);
         break;
 
     default:

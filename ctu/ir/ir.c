@@ -590,7 +590,11 @@ static var_t compile_var(module_t *mod, node_t *node) {
      * TODO: static initialization
      */
 
-    (void) mod;
+    (void)mod;
+
+    if (node->init && !is_consteval(node->init)) {
+        reportf(LEVEL_ERROR, node, "variable `%s` initialization must be constant", node->name);
+    }
 
     var_t var = { 
         get_decl_name(node), 

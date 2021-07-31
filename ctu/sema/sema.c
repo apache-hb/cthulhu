@@ -187,6 +187,7 @@ static void add_discard(map_t *dst, node_t *it) {
 
 static void build_var(sema_t *sema, node_t *it);
 static void build_func(node_t *it);
+static type_t *query_expr(sema_t *sema, node_t *it);
 
 #include "type.c"
 #include "expr.c"
@@ -478,4 +479,21 @@ void sema_init(void) {
     add_builtin(STRING_TYPE);
     add_builtin(BOOL_TYPE);
     add_builtin(VOID_TYPE);
+}
+
+bool is_consteval(node_t *node) {
+    switch (node->kind) {
+    case AST_DIGIT: case AST_STRING: case AST_BOOL:
+        return true;
+
+    case AST_UNARY: 
+        return is_consteval(node->expr);
+
+    case AST_BINARY:
+        return is_consteval(node->lhs)
+            && is_consteval(node->rhs);
+
+    default:
+        return false;
+    }
 }

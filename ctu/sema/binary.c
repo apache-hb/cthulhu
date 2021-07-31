@@ -69,3 +69,45 @@ static type_t *binary_eq(sema_t *sema, node_t *expr) {
 
     return BOOL_TYPE;
 }
+
+static bool is_bool_convertible(node_t *node, type_t *type) {
+    return type_can_become_implicit(&node, type, BOOL_TYPE);
+}
+
+static type_t *binary_logic(sema_t *sema, node_t *expr) {
+    type_t *lhs = query_expr(sema, expr->lhs);
+    type_t *rhs = query_expr(sema, expr->rhs);
+
+    if (!is_bool_convertible(expr->lhs, lhs) || !is_bool_convertible(expr->rhs, rhs)) {
+        reportf(LEVEL_ERROR, expr, "both sides of logical operation must be nool convertible");
+    }
+
+    return BOOL_TYPE;
+}
+
+static type_t *binary_bit(sema_t *sema, node_t *expr) {
+    type_t *lhs = query_expr(sema, expr->lhs);
+    type_t *rhs = query_expr(sema, expr->rhs);
+
+    if (!is_integer(lhs) || !is_integer(rhs)) {
+        reportf(LEVEL_ERROR, expr, 
+            "both sides of bitwise operation must be integral, got `%s` and `%s`", 
+            typefmt(lhs), typefmt(rhs)
+        );
+    }
+
+    return binary_math_result(lhs, rhs);
+}
+
+static type_t *binary_shift(sema_t *sema, node_t *expr) {
+    type_t *lhs = query_expr(sema, expr->lhs);
+    type_t *rhs = query_expr(sema, expr->rhs);
+
+    if (!is_integer(lhs) || !is_integer(rhs)) {
+        reportf(LEVEL_ERROR, expr, "both sides of shift operation must be integral, got `%s` and `%s`",
+            typefmt(lhs), typefmt(rhs)   
+        );
+    }
+
+    return binary_math_result(lhs, rhs);
+}

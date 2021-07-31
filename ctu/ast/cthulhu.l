@@ -68,6 +68,13 @@ SUFFIX [u]?[tsilzpm]?
     return STRING;
 }
 
+"<<" { return SHL; }
+">>" { return SHR; }
+"^" { return XOR; }
+
+"&&" { return AND; }
+"||" { return OR; }
+
 "." { return DOT; }
 "->" { return ARROW; }
 
@@ -85,13 +92,14 @@ SUFFIX [u]?[tsilzpm]?
 "%" { return REM; }
 
 "&" { return BITAND; }
+"|" { return BITOR; }
 
 "(" { return LPAREN; }
 ")" { return RPAREN; }
 "{" { return LBRACE; }
 "}" { return RBRACE; }
-"[" { return LSQAURE; }
-"]" { return RSQAURE; }
+"[" { return LSQUARE; }
+"]" { return RSQUARE; }
 "?" { return QUESTION; }
 ";" { return SEMI; }
 "::" { return COLON2; }

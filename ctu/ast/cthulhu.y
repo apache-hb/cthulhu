@@ -53,8 +53,6 @@ void cterror();
     DIV "`/`"
     REM "`%`"
 
-    BITAND "`&`"
-
     GT "`>`"
     GTE "`>=`"
     LT "`<`"
@@ -62,6 +60,16 @@ void cterror();
 
     EQ "`==`"
     NEQ "`!=`"
+
+    SHL "`<<`"
+    SHR "`>>`"
+    XOR "`^`"
+
+    AND "`&&`"
+    OR "`||`"
+
+    BITAND "`&`"
+    BITOR "`|`"
 
     DOT "`.`"
     ARROW "`->`"
@@ -106,7 +114,7 @@ void cterror();
     decl declbase function param variable struct field /* declarations */
     type typename pointer /* types */
     stmt stmts return if else elseif branch assign while /* statements */
-    primary postfix unary multiply add compare equality expr /* expressions */
+    primary postfix unary multiply add compare equality or and shift xor bits expr /* expressions */
     import attrib array
 
 %type<nodes>
@@ -315,6 +323,7 @@ postfix: primary { $$ = $1; }
     | postfix AS type { $$ = ast_cast(x, @$, $1, $3); }
     | postfix DOT IDENT { $$ = ast_access(x, @$, $1, $3, false); }
     | postfix ARROW IDENT { $$ = ast_access(x, @$, $1, $3, true); }
+    | postfix LSQUARE expr RSQUARE { $$ = ast_index(x, @$, $1, $3); }
     ;
 
 unary: postfix { $$ = $1; }
@@ -344,10 +353,32 @@ compare: add { $$ = $1; }
 
 equality: compare { $$ = $1; }
     | equality EQ compare { $$ = ast_binary(x, @$, BINARY_EQ, $1, $3); }
-    | equality NEQ compare{ $$ = ast_binary(x, @$, BINARY_NEQ, $1, $3); }
+    | equality NEQ compare { $$ = ast_binary(x, @$, BINARY_NEQ, $1, $3); }
     ;
 
-expr: equality { $$ = $1; }
+shift: equality { $$ = $1; }
+    | shift SHL equality { $$ = ast_binary(x, @$, BINARY_SHL, $1, $3); }
+    | shift SHR equality { $$ = ast_binary(x, @$, BINARY_SHR, $1, $3); }
+    ;
+
+bits: shift { $$ = $1; }
+    | bits BITAND shift { $$ = ast_binary(x, @$, BINARY_BITAND, $1, $3); }
+    | bits BITOR shift { $$ = ast_binary(x, @$, BINARY_BITOR, $1, $3); }
+    ;
+
+xor: bits { $$ = $1; }
+    | xor XOR bits { $$ = ast_binary(x, @$, BINARY_XOR, $1, $3); }
+    ;
+
+and: xor { $$ = $1; }
+    | and AND xor { $$ = ast_binary(x, @$, BINARY_AND, $1, $3); }
+    ;
+
+or: and { $$ = $1; }
+    | or OR and { $$ = ast_binary(x, @$, BINARY_OR, $1, $3); }
+    ;
+
+expr: or { $$ = $1; }
     ;
     
 %%

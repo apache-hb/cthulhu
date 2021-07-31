@@ -81,6 +81,16 @@ typedef enum {
 
     BINARY_EQ, /* expr == expr */
     BINARY_NEQ, /* expr != expr */
+
+    BINARY_SHL, /* expr << expr */
+    BINARY_SHR, /* expr >> expr */
+    BINARY_XOR, /* expr ^ expr */
+
+    BINARY_AND, /* expr && expr */
+    BINARY_OR, /* expr || epxr */
+
+    BINARY_BITAND, /* expr & expr */
+    BINARY_BITOR, /* expr | expr */
 } binary_t;
 
 typedef enum {
@@ -406,6 +416,7 @@ node_t *ast_while(scanner_t *scanner, where_t where, node_t *cond, node_t *body)
 node_t *ast_symbol(scanner_t *scanner, where_t where, list_t *text);
 node_t *ast_pointer(scanner_t *scanner, where_t where, node_t *ptr);
 node_t *ast_mut(scanner_t *scanner, where_t where, node_t *it);
+node_t *ast_array(scanner_t *scanner, where_t where, node_t *of, node_t *size);
 
 node_t *ast_decl_func(
     scanner_t *scanner, where_t where, 

@@ -531,3 +531,12 @@ bool is_interop(node_t *node) {
 node_t *ast_noop(void) {
     return new_node(NULL, NOWHERE, AST_NOOP);
 }
+
+node_t *ast_array(scanner_t *scanner, where_t where, node_t *of, node_t *size) {
+    node_t *node = new_node(scanner, where, AST_ARRAY);
+
+    node->of = of;
+    node->size = size;
+
+    return node;
+}

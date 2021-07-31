@@ -85,6 +85,9 @@ typedef enum {
      */
     TYPE_POINTER,
 
+    /* an array of a type, possibly with size */
+    TYPE_ARRAY,
+
     /**
      * a struct
      */
@@ -160,6 +163,9 @@ typedef struct type_t {
     /* is this struct valid */
     bool valid:1;
 
+    /* is this array unbounded */
+    bool unbounded:1;
+
     /** 
      * the node that generated this type 
      */
@@ -198,6 +204,13 @@ typedef struct type_t {
             fields_t fields;
         };
 
+        /* array data */
+        struct {
+            struct type_t *of;
+
+            size_t size;
+        };
+
         /**
          * callable data
          */
@@ -226,6 +239,7 @@ type_t *new_unresolved(struct node_t *symbol);
 type_t *new_poison(struct node_t *parent, const char *err);
 type_t *new_callable(struct node_t *func, list_t *args, type_t *result);
 type_t *new_pointer(struct node_t *node, type_t *to);
+type_t *new_array(struct node_t *node, type_t *of, size_t size, bool unbounded);
 
 type_t *new_struct(struct node_t *decl, const char *name);
 void resize_struct(type_t *type, size_t size);

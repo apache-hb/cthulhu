@@ -146,6 +146,16 @@ static type_t *query_binary(sema_t *sema, node_t *expr) {
     case BINARY_EQ: case BINARY_NEQ:
         return binary_eq(sema, expr);
 
+    case BINARY_AND: case BINARY_OR:
+        return binary_logic(sema, expr);
+
+    case BINARY_BITAND: case BINARY_BITOR:
+    case BINARY_XOR:
+        return binary_bit(sema, expr);
+
+    case BINARY_SHL: case BINARY_SHR:
+        return binary_shift(sema, expr);
+
     default:
         assert("unknown binary operator %d", expr->binary);
         return new_poison(expr, "unknown binary operator");

@@ -24,3 +24,5 @@ typedef struct {
 unit_t typecheck(node_t *root);
 
 void sema_init(void);
+
+bool is_consteval(node_t *node);

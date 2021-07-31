@@ -45,6 +45,16 @@ static void debug_struct(fields_t fields) {
     printf("}");
 }
 
+static void debug_array(type_t *type) {
+    printf("[");
+    debug_type(type->of);
+    printf("]");
+
+    if (!type->unbounded) {
+        printf(" of %zu", type->size);
+    }
+}
+
 static void debug_type_internal(type_t *type, bool verbose) {
     switch (type->kind) {
     case TYPE_INTEGER: printf("%s", integer_name(type)); break;
@@ -55,7 +65,8 @@ static void debug_type_internal(type_t *type, bool verbose) {
     case TYPE_POINTER: printf("*"); debug_type(type->ptr); break;
     case TYPE_POISON: printf("poison(%s)", type->text); break;
     case TYPE_UNRESOLVED: printf("unresolved"); break;
-    
+    case TYPE_ARRAY: debug_array(type); break;
+
     case TYPE_STRUCT: 
         printf("struct(%s)", type->name); 
         if (verbose) { 

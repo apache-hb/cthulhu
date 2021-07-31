@@ -65,6 +65,7 @@ static type_t *new_type(typeof_t kind, node_t *node) {
     type->lvalue = false;
     type->interop = false;
     type->valid = true;
+    type->unbounded = false;
     type->index = index++;
 
     node->typeof = type;
@@ -373,6 +374,15 @@ bool type_can_become_explicit(node_t **node, type_t *dst, type_t *src) {
     return type_can_become(node, dst, src, false);
 }
 
+static char *array_name(type_t *type) {
+    char *inner = typefmt(type->of);
+    if (type->unbounded) {
+        return format("unbounded array of %s", inner);
+    } else {
+        return format("array of %s", inner);
+    }
+}
+
 char *typefmt(type_t *type) {
     if (type == NULL) {
         return ctu_strdup("nil");
@@ -392,6 +402,9 @@ char *typefmt(type_t *type) {
     case TYPE_POISON:
         return ctu_strdup(type->text);
 
+    case TYPE_ARRAY:
+        return array_name(type);
+
     default:
         return ctu_strdup("unresolved type");
     }
@@ -399,4 +412,14 @@ char *typefmt(type_t *type) {
 
 node_t *nodeof(type_t *type) {
     return type->node;
+}
+
+type_t *new_array(struct node_t *node, type_t *of, size_t size, bool unbounded) {
+    type_t *type = new_type(TYPE_ARRAY, node);
+
+    type->unbounded = unbounded;
+    type->of = of;
+    type->size = size;
+
+    return type;
 }
