@@ -43,12 +43,18 @@ static type_t *query_array(sema_t *sema, node_t *expr) {
     if (expr->size) {
         len = query_expr(sema, expr->size);
         
-        if (!is_consteval(expr->size)) {
-            reportf(LEVEL_ERROR, expr, "array size must be constant");
+        if (!type_can_become_explicit(&expr->size, get_int_type(false, INTEGER_SIZE), len)) {
+            reportf(LEVEL_ERROR, expr, "array size must be convertible to usize, `%s` is incompatible", typefmt(len));
         }
 
-        if (!type_can_become_implicit(&expr->size, get_int_type(false, INTEGER_SIZE), of)) {
-            reportf(LEVEL_ERROR, expr, "array size must be convertible to usize, `%s` is incompatible", typefmt(len));
+        if (!is_consteval(expr->size)) {
+            reportf(LEVEL_ERROR, expr, "array size must be constant");
+        } else {
+            mpz_t num;
+            if (!eval_ast(num, expr->size)) {
+                reportf(LEVEL_INTERNAL, expr->size, "failed to evaluate size");
+            }
+            size = mpz_get_ui(num);
         }
     }
 

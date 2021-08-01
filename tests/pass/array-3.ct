@@ -1,0 +1,9 @@
+export def main(): int {
+    var arr: [int:10uz];
+    final x = 2;
+
+    arr[x] = 0;
+    arr[3] = 25;
+
+    return arr[3];
+}

@@ -1,0 +1,5 @@
+def thing(): int {
+    return 25;
+}
+
+var x: [int:thing()];

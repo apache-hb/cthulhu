@@ -96,7 +96,8 @@ static type_t *query_expr_symbol(sema_t *sema, node_t *expr, list_t *symbol) {
 static type_t *query_expr(sema_t *sema, node_t *it);
 
 static type_t *query_digit(node_t *expr) {
-    return get_int_type(expr->sign, expr->integer);
+    type_t *ty = get_int_type(expr->sign, expr->integer);
+    return ty;
 }
 
 static type_t *query_bool(void) {
@@ -137,7 +138,7 @@ static type_t *query_binary(sema_t *sema, node_t *expr) {
     switch (expr->binary) {
     case BINARY_ADD: case BINARY_SUB: case BINARY_DIV:
     case BINARY_MUL: case BINARY_REM:
-        return binary_math(sema, expr);
+        return binary_math(expr->binary, sema, expr);
 
     case BINARY_LT: case BINARY_LTE:
     case BINARY_GT: case BINARY_GTE:
@@ -234,6 +235,28 @@ static type_t *query_access(sema_t *sema, node_t *expr) {
     return get_field(body, expr);
 }
 
+static type_t *query_index(sema_t *sema, node_t *expr) {
+    type_t *body = query_expr(sema, expr->expr);
+    type_t *index = query_expr(sema, expr->index);
+
+    if (!can_index(body)) {
+        reportf(LEVEL_ERROR, expr, "cannot index into non indexable type `%s`", typefmt(body));
+        return new_poison(expr, "bad index");
+    }
+
+    if (!type_can_become_explicit(&expr->index, get_int_type(false, INTEGER_SIZE), index)) {
+        reportid_t id = reportf(LEVEL_ERROR, expr->index, "index expected type %s", typefmt(get_int_type(false, INTEGER_SIZE)));
+        report_underline(id, format("found `%s` instead", typefmt(index)));
+    }
+
+    connect_type(expr->expr, array_decay(body));
+
+    mark_local(expr);
+
+    type_t *out = index_type(body);
+    return set_lvalue(out, true);
+}
+
 /**
  * given an expression find its type
  */
@@ -267,6 +290,9 @@ static type_t *query_expr(sema_t *sema, node_t *it) {
         break;
     case AST_ACCESS:
         type = query_access(sema, it);
+        break;
+    case AST_INDEX:
+        type = query_index(sema, it);
         break;
 
     case AST_SYMBOL:

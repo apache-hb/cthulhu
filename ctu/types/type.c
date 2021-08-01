@@ -181,6 +181,19 @@ type_t *set_mut(type_t *type, bool mut) {
     return copy;
 }
 
+bool is_array(type_t *type) {
+    return type->kind == TYPE_ARRAY;
+}
+
+type_t *array_decay(type_t *type) {
+    ASSERT(is_array(type))("type is not an array");
+
+    type_t *decayed = copyty(type);
+    decayed->kind = TYPE_POINTER;
+    decayed->ptr = index_type(type);
+    return decayed;
+}
+
 type_t *set_lvalue(type_t *type, bool lvalue) {
     if (type->lvalue == lvalue) {
         return type;
@@ -188,6 +201,10 @@ type_t *set_lvalue(type_t *type, bool lvalue) {
 
     type_t *out = copyty(type);
     out->lvalue = lvalue;
+
+    if (is_array(type)) {
+        out->of = set_lvalue(out->of, lvalue);
+    }
 
     if (is_struct(type) && type->valid) {
         for (size_t i = 0; i < type->fields.size; i++) {
@@ -291,18 +308,25 @@ static node_t *implicit_cast(node_t *original, type_t *to) {
     return make_implicit(cast);
 }
 
+static const char *sign_name(type_t *num) {
+    return num->sign ? "signed" : "unsigned";
+}
+
 static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implicit) {
     if (is_integer(dst) && is_integer(src)) {
         integer_t to = get_integer_kind(dst);
         integer_t from = get_integer_kind(src);
 
         if ((from > to) && implicit) {
-            reportf(LEVEL_WARNING, *node, "implcit narrowing cast to a smaller integer type");
+            reportf(LEVEL_WARNING, *node, "implcit narrowing cast from `%s` to a smaller integer `%s`", typefmt(src), typefmt(dst));
             *node = implicit_cast(*node, dst);
         }
 
         if ((dst->sign != src->sign) && implicit) {
-            reportf(LEVEL_WARNING, *node, "implicit sign change");
+            reportf(LEVEL_WARNING, *node, "implicit sign change from %s type `%s` to %s type `%s`", 
+                sign_name(src), typefmt(src), 
+                sign_name(dst), typefmt(dst)
+            );
             *node = implicit_cast(*node, dst);
         }
 
@@ -325,7 +349,7 @@ static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implic
 
     if (is_struct(src) && is_struct(dst)) {
         if (src->index != dst->index) {
-            reportf(LEVEL_ERROR, *node, "cannot implicitly cast between unrelated types");
+            reportf(LEVEL_ERROR, *node, "cannot implicitly cast between unrelated types `%s` and `%s`", typefmt(src), typefmt(dst));
             return false;
         }
     }
@@ -422,4 +446,21 @@ type_t *new_array(struct node_t *node, type_t *of, size_t size, bool unbounded) 
     type->size = size;
 
     return type;
+}
+
+
+bool can_index(type_t *type) {
+    return type->kind == TYPE_ARRAY 
+        || type->kind == TYPE_POINTER;
+}
+
+type_t *index_type(type_t *type) {
+    if (type->kind == TYPE_ARRAY) {
+        return type->of;
+    } else if (type->kind == TYPE_POINTER) {
+        return type->ptr;
+    } else {
+        assert("cannot get index type of %s", typefmt(type));
+        return type;
+    }
 }

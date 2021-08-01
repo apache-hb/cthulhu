@@ -283,6 +283,14 @@ static char *gen_args(flow_t *flow, operand_t *args, size_t len) {
     return str_join(", ", types, len);
 }
 
+static const char *get_offset(flow_t *flow, operand_t off) {
+    if (operand_is_invalid(off)) {
+        return "0";
+    } else {
+        return gen_operand(flow, off);
+    }
+}
+
 static void gen_store(FILE *out, flow_t *flow, step_t *step) {
     const char *dst = gen_operand(flow, step->dst);
     const char *src = gen_operand(flow, step->src);
@@ -301,10 +309,18 @@ static void gen_store(FILE *out, flow_t *flow, step_t *step) {
         }
 
         /* TODO: at the point we can store a struct in a register fix this */
-        fprintf(out, "%s[0].%s = %s;\n", dst, off, src);
+        fprintf(out, "%s[%s].%s = %s;\n", dst, get_offset(flow, step->offset), off, src);
     } else {
-        fprintf(out, "%s[0] = %s;\n", dst, src);
+        fprintf(out, "%s[%s] = %s;\n", dst, get_offset(flow, step->offset), src);
     }
+}
+
+static void gen_load(FILE *out, flow_t *flow, size_t idx, step_t *step) {
+    fprintf(out, "%s = %s[%s];\n", 
+        gen_type(step->type, local(idx)), 
+        gen_operand(flow, step->src),
+        get_offset(flow, step->offset)
+    );
 }
 
 static void gen_step(FILE *out, flow_t *flow, size_t idx) {
@@ -329,13 +345,13 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
         } 
         break;
     case OP_RESERVE:
-        fprintf(out, "%s[1];\n", gen_type(step->type, local(idx)));
+        fprintf(out, "%s[%zu];\n", gen_type(step->type, local(idx)), step->size);
         break;
     case OP_STORE:
         gen_store(out, flow, step);
         break;
     case OP_LOAD:
-        fprintf(out, "%s = *%s;\n", gen_type(step->type, local(idx)), gen_operand(flow, step->src));
+        gen_load(out, flow, idx, step);
         break;
     case OP_UNARY:
         fprintf(out, "%s = %s;\n", gen_type(step->type, local(idx)), get_unary(step->unary, gen_operand(flow, step->expr)));

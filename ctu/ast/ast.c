@@ -30,7 +30,7 @@ static node_t *new_decl(scanner_t *scanner, where_t where, ast_t kind, char *nam
     node_t *decl = new_node(scanner, where, kind);
     decl->name = name;
     decl->ctx = NULL;
-    decl->attr = new_list(NULL);
+    decl->decorate = new_list(NULL);
     return decl;
 }
 
@@ -537,6 +537,15 @@ node_t *ast_array(scanner_t *scanner, where_t where, node_t *of, node_t *size) {
 
     node->of = of;
     node->size = size;
+
+    return node;
+}
+
+node_t *ast_index(scanner_t *scanner, where_t where, node_t *expr, node_t *index) {
+    node_t *node = new_node(scanner, where, AST_INDEX);
+
+    node->expr = expr;
+    node->index = index;
 
     return node;
 }

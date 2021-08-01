@@ -4,6 +4,8 @@
 #include "ctu/debug/ast.h"
 #include "ctu/util/util.h"
 
+#include "ctu/eval/eval.h"
+
 #include "ctu/sema/sema.h"
 
 #include <stdlib.h>
@@ -174,10 +176,15 @@ static operand_t add_block(flow_t *flow) {
     return new_block(add_step_raw(flow, block));
 }
 
-static operand_t add_reserve(flow_t *flow, node_t *node) {
-    step_t step = new_step(OP_RESERVE, node);
-    step.type = set_lvalue(step.type, true);
+static operand_t add_reserve_type(flow_t *flow, type_t *type, size_t len) {
+    step_t step = new_typed_step(OP_RESERVE, type);
+    step.type = set_lvalue(type, true);
+    step.size = len;
     return add_vreg(flow, step);
+}
+
+static operand_t add_reserve(flow_t *flow, node_t *node, size_t len) {
+    return add_reserve_type(flow, get_resolved_type(node), len);
 }
 
 /**
@@ -232,6 +239,7 @@ static operand_t get_lvalue(flow_t *flow, node_t *node) {
     if (is_deref(node)) {
         step_t step = new_step(OP_LOAD, node->expr);
         step.src = get_lvalue(flow, node->expr);
+        step.offset = new_operand(NONE);
         return add_vreg(flow, step);
     }
 
@@ -246,6 +254,8 @@ static operand_t get_lvalue(flow_t *flow, node_t *node) {
         return get_global(flow, node);
     }
 
+    printf("get-lvalue %zu -> %zu\n", node->local, flow->locals[node->local]);
+
     return new_vreg(flow->locals[node->local]);
 }
 
@@ -254,10 +264,11 @@ static operand_t emit_ref(flow_t *flow, node_t *node) {
     if (op.kind != ARG)
         return op;
 
-    operand_t reserve = add_reserve(flow, node->expr);
+    operand_t reserve = add_reserve(flow, node->expr, 1);
     step_t step = new_step(OP_STORE, node->expr);
     step.src = op;
     step.dst = reserve;
+    step.offset = new_operand(NONE);
     add_step(flow, step);
     return reserve;
 }
@@ -265,6 +276,7 @@ static operand_t emit_ref(flow_t *flow, node_t *node) {
 static step_t emit_deref(node_t *node, operand_t expr) {
     step_t step = new_typed_step(OP_LOAD, get_resolved_type(node->expr)->ptr);
     step.src = expr;
+    step.offset = new_operand(NONE);
     return step;
 }
 
@@ -351,6 +363,7 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
             
         step_t load = new_step(OP_LOAD, node);
         load.src = local;
+        load.offset = new_operand(NONE);
         return add_vreg(flow, load);
     }
 
@@ -414,6 +427,15 @@ static void set_local(flow_t *flow, size_t idx, operand_t to) {
     flow->locals[idx] = to.vreg;
 }
 
+static operand_t make_var_reserve(flow_t *flow, node_t *node) {
+    type_t *ty = get_resolved_type(node);
+    if (is_array(ty)) {
+        return add_reserve_type(flow, index_type(ty), ty->size);
+    } else {
+        return add_reserve_type(flow, ty, 1);
+    }
+}
+
 static operand_t emit_var(flow_t *flow, node_t *node) {
     operand_t val;
     if (node->init) {
@@ -422,12 +444,13 @@ static operand_t emit_var(flow_t *flow, node_t *node) {
         val = new_operand(NONE);
     }
 
-    operand_t out = add_reserve(flow, node);
+    operand_t out = make_var_reserve(flow, node);
 
     if (!operand_is_invalid(val)) {
         step_t step = new_step(OP_STORE, node);
         step.dst = out;
         step.src = val;
+        step.offset = new_operand(NONE);
         add_vreg(flow, step);
     }
 
@@ -438,12 +461,13 @@ static operand_t emit_var(flow_t *flow, node_t *node) {
 }
 
 static operand_t emit_assign(flow_t *flow, node_t *node) {
-    operand_t dst = get_lvalue(flow, node->dst);
+    operand_t dst = emit_opcode(flow, node->dst);
     operand_t src = emit_opcode(flow, node->src);
 
     step_t step = new_step(OP_STORE, node->dst);
     step.dst = dst;
     step.src = src;
+    step.offset = new_operand(NONE);
     add_step(flow, step);
 
     return new_operand(NONE);
@@ -488,6 +512,20 @@ static operand_t emit_string(flow_t *flow, node_t *node) {
     return new_string(idx); 
 }
 
+static operand_t emit_index(flow_t *flow, node_t *node) {
+    operand_t arr = emit_opcode(flow, node->expr);
+    operand_t idx = emit_opcode(flow, node->index);
+
+    step_t step = new_step(OP_LOAD, node);
+    step.src = arr;
+    step.offset = idx;
+
+    operand_t op = add_vreg(flow, step);
+    set_local(flow, node->local, op);
+
+    return op;
+}
+
 static operand_t emit_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
@@ -504,6 +542,7 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
     case AST_ASSIGN: return emit_assign(flow, node);
     case AST_WHILE: return emit_while(flow, node);
     case AST_STRING: return emit_string(flow, node);
+    case AST_INDEX: return emit_index(flow, node);
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);
         return new_operand(NONE);
@@ -560,10 +599,11 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
 
         arg_t arg = { get_decl_name(param), get_resolved_type(param) };
 
-        operand_t dst = add_reserve(&flow, param);
+        operand_t dst = add_reserve(&flow, param, 1);
         step_t step = new_step(OP_STORE, param);
         step.src = new_arg(i);
         step.dst = dst;
+        step.offset = new_operand(NONE);
         add_step(&flow, step);
 
         set_local(&flow, param->local, dst);

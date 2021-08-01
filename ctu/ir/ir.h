@@ -99,6 +99,9 @@ typedef struct {
     where_t where;
 
     union {
+        /* number of elements to reserve */
+        size_t size;
+
         /* OP_RETURN, OP_VALUE, OP_CONVERT */
         struct {
             operand_t value;
@@ -124,13 +127,12 @@ typedef struct {
             operand_t other;
         };
 
-        /* OP_RESERVE */
-        /* operand_t size; */
-
         /* OP_STORE, OP_LOAD */
         struct {
             operand_t src;
             operand_t dst;
+            /* if indexing this is set */
+            operand_t offset;
         };
 
         /* OP_UNARY */

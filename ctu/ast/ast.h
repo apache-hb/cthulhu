@@ -20,6 +20,7 @@ typedef enum {
     AST_CALL,
     AST_CAST,
     AST_ACCESS,
+    AST_INDEX,
 
     /**
      * statements
@@ -214,6 +215,7 @@ typedef struct node_t {
             /* AST_RETURN */
             struct node_t *expr;
 
+            /* part of a decorator */
             list_t *attr;
 
             AST_UNION {
@@ -223,6 +225,8 @@ typedef struct node_t {
                 /* AST_CALL */
                 /** @var list_t<node_t*> */
                 list_t *args;
+
+                struct node_t *index;
             };
         };
 
@@ -442,3 +446,4 @@ node_t *ast_attribs(node_t *decl, attrib_t attribs, list_t *decorate);
 
 node_t *ast_attrib(scanner_t *scanner, where_t where, list_t *name, list_t *args);
 node_t *ast_noop(void);
+node_t *ast_index(scanner_t *scanner, where_t where, node_t *expr, node_t *index);

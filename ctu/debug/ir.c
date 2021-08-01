@@ -110,6 +110,7 @@ static void debug_step(module_t *mod, size_t idx, step_t step) {
         debug_index(idx);
         printf("reserve ");
         debug_type(step.type);
+        printf(" [%zu]", step.size);
         break;
     case OP_LOAD:
         debug_index(idx);

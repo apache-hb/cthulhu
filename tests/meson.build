@@ -7,7 +7,7 @@ pass = [
     'long', 'loop', 'mut', 'pointers', 'pointers2',
     'regalloc', 'var', 'suffix', 'global',
     'unused-var', 'implicit-var-cast', 'string', 'forward',
-    'posix-interop', 'win32-interop'
+    'posix-interop', 'win32-interop', 'array-1', 'array-2'
 ]
 
 foreach it : pass 
@@ -47,7 +47,8 @@ fail = [
     'incorrect-return2',
     'invalid-char', 'scope', 'bad-return',
     'infinite-struct', 'type-in-expr', 'fuzz-1',
-    'return-local-ref', 'return-struct-ref'
+    'return-local-ref', 'return-struct-ref',
+    'array', 'array-2'
 ]
 
 foreach it : fail 

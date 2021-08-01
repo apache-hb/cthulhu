@@ -40,7 +40,8 @@ parse = custom_target('parse',
 src = [
     'ctu/util/str.c',
     'ctu/util/report.c',
-    'ctu/util/util.c'
+    'ctu/util/util.c',
+    'ctu/eval/eval.c'
 ]
 
 libutil = library('util', src)

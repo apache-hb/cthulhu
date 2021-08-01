@@ -6,12 +6,24 @@ static type_t *binary_math_result(type_t *lhs, type_t *rhs) {
     return get_int_type(sign, width);
 }
 
-static type_t *binary_math(sema_t *sema, node_t *expr) {
+static type_t *binary_math(binary_t binary, sema_t *sema, node_t *expr) {
     type_t *lhs = query_expr(sema, expr->lhs);
     type_t *rhs = query_expr(sema, expr->rhs);
 
-    if (!is_integer(lhs) || !is_integer(rhs)) {
-        reportf(LEVEL_ERROR, expr, "binary math requires both operands to be integral");
+    if (!is_integer(rhs)) {
+        reportf(LEVEL_ERROR, expr, "binary math requires right side operand to be integral. `%s` is not integral", typefmt(rhs));
+        return new_poison(expr, "invalid binary");
+    }
+
+    if (binary == BINARY_ADD || binary == BINARY_SUB) {
+        if (!is_integer(lhs) && !is_pointer(lhs)) {
+            reportf(LEVEL_ERROR, expr, "binary addition is only valid on integral and pointer types. `%s` is neither", typefmt(lhs));
+            return new_poison(expr, "invalid binary");
+        }
+    }
+
+    if (!is_integer(lhs)) {
+        reportf(LEVEL_ERROR, expr, "binary math requires left side operand to be integral. `%s` is not integral", typefmt(lhs));
         return new_poison(expr, "invalid binary");
     }
 

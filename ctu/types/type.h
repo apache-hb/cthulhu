@@ -252,6 +252,10 @@ bool is_signed(type_t *type);
 bool is_pointer(type_t *type);
 bool is_const(type_t *type);
 bool is_struct(type_t *type);
+bool is_array(type_t *type);
+bool can_index(type_t *type);
+type_t *index_type(type_t *type);
+type_t *array_decay(type_t *type);
 
 bool types_equal(type_t *type, type_t *other);
 
