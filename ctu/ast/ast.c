@@ -144,6 +144,10 @@ bool is_symbol(node_t *it) {
     return it->kind == AST_SYMBOL;
 }
 
+bool is_index(node_t *expr) {
+    return expr->kind == AST_INDEX;
+}
+
 node_t *make_implicit(node_t *node) {
     node->attribs |= ATTR_IMPLICIT;
     return node;

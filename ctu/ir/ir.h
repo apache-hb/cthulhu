@@ -16,6 +16,7 @@ typedef enum {
     OP_RESERVE, /* reserve space for type */
     OP_LOAD, /* load from memory */
     OP_STORE, /* store to memory */
+    OP_OFFSET, /* an offset based on a memory address */
 
     OP_BLOCK, /* start of a basic block */
     OP_BRANCH, /* conditional jump */
@@ -130,9 +131,11 @@ typedef struct {
         /* OP_STORE, OP_LOAD */
         struct {
             operand_t src;
-            operand_t dst;
-            /* if indexing this is set */
-            operand_t offset;
+
+            union {
+                operand_t dst;
+                operand_t index;
+            };
         };
 
         /* OP_UNARY */

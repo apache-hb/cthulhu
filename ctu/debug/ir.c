@@ -131,6 +131,15 @@ static void debug_step(module_t *mod, size_t idx, step_t step) {
         printf("  jmp ");
         debug_operand(mod, step.block);
         break;
+    case OP_OFFSET:
+        debug_index(idx);
+        printf("offset ");
+        debug_type(step.type);
+        printf(" ");
+        debug_operand(mod, step.src);
+        printf(" ");
+        debug_operand(mod, step.index);
+        break;
     }
 
     printf("\n");

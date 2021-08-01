@@ -5,3 +5,20 @@ final x = 200;
 def main(): void {
     final a = b::get();
 }
+
+export def test(b: bool, i: int): int {
+    var arr: [int:25];
+
+    arr[0] = 25;
+    final x = 2;
+    arr[x] = arr[0] * x;
+
+    var it = i;
+    it = it * it;
+
+    if b {
+        return arr[x];
+    } else {
+        return it;
+    }
+}

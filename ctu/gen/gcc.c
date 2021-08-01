@@ -1,3 +1,4 @@
+#if 0
 #include <libgccjit.h>
 
 #include "gcc.h"
@@ -135,3 +136,4 @@ void gen_gcc(module_t *mod) {
 
     }
 }
+#endif

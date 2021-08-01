@@ -235,11 +235,33 @@ static size_t field_offset(type_t *type, const char *field) {
     return SIZE_MAX;
 }
 
+static void set_local(flow_t *flow, size_t idx, operand_t to) {
+    ASSERT(to.kind == VREG)("set_local requires a vreg");
+    ASSERT(idx != NOT_LOCAL)("set_local requires a local");
+
+    flow->locals[idx] = to.vreg;
+}
+
+static operand_t get_lvalue(flow_t *flow, node_t *node);
+
+static operand_t inner_index(flow_t *flow, node_t *node) {
+    operand_t arr = get_lvalue(flow, node->expr);
+    operand_t idx = emit_opcode(flow, node->index);
+
+    step_t step = new_step(OP_OFFSET, node->expr);
+    step.src = arr;
+    step.index = idx;
+
+    operand_t op = add_vreg(flow, step);
+    set_local(flow, node->local, op);
+
+    return op;
+}
+
 static operand_t get_lvalue(flow_t *flow, node_t *node) {
     if (is_deref(node)) {
         step_t step = new_step(OP_LOAD, node->expr);
         step.src = get_lvalue(flow, node->expr);
-        step.offset = new_operand(NONE);
         return add_vreg(flow, step);
     }
 
@@ -250,11 +272,13 @@ static operand_t get_lvalue(flow_t *flow, node_t *node) {
         return field;
     }
 
+    if (is_index(node)) {
+        return inner_index(flow, node);
+    }
+
     if (node->local == NOT_LOCAL) {
         return get_global(flow, node);
     }
-
-    printf("get-lvalue %zu -> %zu\n", node->local, flow->locals[node->local]);
 
     return new_vreg(flow->locals[node->local]);
 }
@@ -268,7 +292,6 @@ static operand_t emit_ref(flow_t *flow, node_t *node) {
     step_t step = new_step(OP_STORE, node->expr);
     step.src = op;
     step.dst = reserve;
-    step.offset = new_operand(NONE);
     add_step(flow, step);
     return reserve;
 }
@@ -276,7 +299,6 @@ static operand_t emit_ref(flow_t *flow, node_t *node) {
 static step_t emit_deref(node_t *node, operand_t expr) {
     step_t step = new_typed_step(OP_LOAD, get_resolved_type(node->expr)->ptr);
     step.src = expr;
-    step.offset = new_operand(NONE);
     return step;
 }
 
@@ -363,7 +385,6 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
             
         step_t load = new_step(OP_LOAD, node);
         load.src = local;
-        load.offset = new_operand(NONE);
         return add_vreg(flow, load);
     }
 
@@ -420,13 +441,6 @@ static operand_t emit_convert(flow_t *flow, node_t *node) {
     return add_vreg(flow, step);
 }
 
-static void set_local(flow_t *flow, size_t idx, operand_t to) {
-    ASSERT(to.kind == VREG)("set_local requires a vreg");
-    ASSERT(idx != NOT_LOCAL)("set_local requires a local");
-
-    flow->locals[idx] = to.vreg;
-}
-
 static operand_t make_var_reserve(flow_t *flow, node_t *node) {
     type_t *ty = get_resolved_type(node);
     if (is_array(ty)) {
@@ -450,7 +464,6 @@ static operand_t emit_var(flow_t *flow, node_t *node) {
         step_t step = new_step(OP_STORE, node);
         step.dst = out;
         step.src = val;
-        step.offset = new_operand(NONE);
         add_vreg(flow, step);
     }
 
@@ -461,13 +474,12 @@ static operand_t emit_var(flow_t *flow, node_t *node) {
 }
 
 static operand_t emit_assign(flow_t *flow, node_t *node) {
-    operand_t dst = emit_opcode(flow, node->dst);
+    operand_t dst = get_lvalue(flow, node->dst);
     operand_t src = emit_opcode(flow, node->src);
 
     step_t step = new_step(OP_STORE, node->dst);
     step.dst = dst;
     step.src = src;
-    step.offset = new_operand(NONE);
     add_step(flow, step);
 
     return new_operand(NONE);
@@ -513,17 +525,12 @@ static operand_t emit_string(flow_t *flow, node_t *node) {
 }
 
 static operand_t emit_index(flow_t *flow, node_t *node) {
-    operand_t arr = emit_opcode(flow, node->expr);
-    operand_t idx = emit_opcode(flow, node->index);
+    operand_t src = inner_index(flow, node);
 
     step_t step = new_step(OP_LOAD, node);
-    step.src = arr;
-    step.offset = idx;
+    step.src = src;
 
-    operand_t op = add_vreg(flow, step);
-    set_local(flow, node->local, op);
-
-    return op;
+    return add_vreg(flow, step);
 }
 
 static operand_t emit_opcode(flow_t *flow, node_t *node) {
@@ -603,7 +610,6 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         step_t step = new_step(OP_STORE, param);
         step.src = new_arg(i);
         step.dst = dst;
-        step.offset = new_operand(NONE);
         add_step(&flow, step);
 
         set_local(&flow, param->local, dst);

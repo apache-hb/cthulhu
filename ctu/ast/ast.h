@@ -345,6 +345,8 @@ bool is_access(node_t *expr);
 
 bool is_symbol(node_t *it);
 
+bool is_index(node_t *expr);
+
 /**
  * get the type of a node
  * returns an unresolved type if the type hasnt been resolved
