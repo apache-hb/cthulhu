@@ -40,6 +40,7 @@ list_t *new_list(void *init);
 size_t list_len(list_t *list);
 void *list_at(list_t *list, size_t index);
 list_t *list_push(list_t *list, void *data);
+void *list_pop(list_t *list);
 void *list_first(list_t *list);
 void *list_last(list_t *list);
 list_t list_slice(list_t *list, size_t offset);

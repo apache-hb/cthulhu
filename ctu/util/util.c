@@ -128,6 +128,12 @@ list_t *list_push(list_t *list, void *data) {
     return list;
 }
 
+void *list_pop(list_t *list) {
+    ASSERT(list->len > 0)("cannot pop empty list");
+
+    return list->data[--list->len];
+}
+
 void *list_first(list_t *list) {
     return list->data[0];
 }

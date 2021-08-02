@@ -75,6 +75,8 @@ static size_t strings = 0;
 
 static size_t locals = 0;
 
+static list_t *current = NULL;
+
 static list_t *funcs = NULL;
 static list_t *vars = NULL;
 static list_t *types = NULL;
@@ -278,6 +280,12 @@ static void build_var(sema_t *sema, node_t *it) {
 
     check_attribs(it);
 
+    /**
+     * NOTE: if you set sema->ctx be sure to set it to null afterwards 
+     */
+
+    list_push(current, it);
+
     type_t *type = NULL;
     type_t *init = NULL;
 
@@ -307,6 +315,7 @@ static void build_var(sema_t *sema, node_t *it) {
     }
 
     connect_type(it, out);
+    list_pop(current);
 }
 
 static void build_global_var(node_t *it) {
@@ -451,6 +460,8 @@ unit_t typecheck(node_t *root) {
 
     headers = new_list(NULL);
     libs = new_list(NULL);
+
+    current = new_list(NULL);
 
     begin_file(NULL, root, root->scanner->path);
 

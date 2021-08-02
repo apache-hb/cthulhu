@@ -106,6 +106,7 @@ static type_t *binary_bit(sema_t *sema, node_t *expr) {
             "both sides of bitwise operation must be integral, got `%s` and `%s`", 
             typefmt(lhs), typefmt(rhs)
         );
+        return new_poison(expr, "invalid bitwise op");
     }
 
     return binary_math_result(lhs, rhs);
@@ -119,6 +120,7 @@ static type_t *binary_shift(sema_t *sema, node_t *expr) {
         reportf(LEVEL_ERROR, expr, "both sides of shift operation must be integral, got `%s` and `%s`",
             typefmt(lhs), typefmt(rhs)   
         );
+        return new_poison(expr, "invalid bitshift");
     }
 
     return binary_math_result(lhs, rhs);

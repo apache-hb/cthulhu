@@ -7,7 +7,8 @@ pass = [
     'long', 'loop', 'mut', 'pointers', 'pointers2',
     'regalloc', 'var', 'suffix', 'global',
     'unused-var', 'implicit-var-cast', 'string', 'forward',
-    'posix-interop', 'win32-interop', 'array-1', 'array-2'
+    'posix-interop', 'win32-interop', 'array-1', 'array-2', 
+    'fuzz-8'
 ]
 
 foreach it : pass 
@@ -61,7 +62,8 @@ endforeach
 
 crashes = [ 
     'fuzz-1', 'fuzz-2', 'fuzz-3', 'fuzz-4',
-    'fuzz-5', 'fuzz-6'
+    'fuzz-5', 'fuzz-6', 'fuzz-7', 'fuzz-8',
+    'fuzz-9'
 ]
 
 foreach it : crashes 

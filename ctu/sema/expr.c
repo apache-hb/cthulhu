@@ -22,7 +22,22 @@ static type_t *query_func(sema_t *sema, node_t *func) {
     return new_callable(func, args, result);
 }
 
+static bool is_var_recursive(node_t *node) {
+    size_t len = list_len(current);
+    for (size_t i = 0; i < len; i++) {
+        if (list_at(current, i) == node) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static type_t *delay_build_var(node_t *node) {
+    if (is_var_recursive(node)) {
+        reportf(LEVEL_ERROR, node, "recursive initialization of variable `%s`", get_decl_name(node));
+        return new_poison(node, "recursive resolution");
+    }
+
     type_t *ty = raw_type(node);
     if (ty) {
         return ty;

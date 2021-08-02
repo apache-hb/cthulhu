@@ -269,6 +269,15 @@ static const char *get_binary(binary_t op) {
     case BINARY_EQ: return "==";
     case BINARY_NEQ: return "!=";
 
+    case BINARY_AND: return "&&";
+    case BINARY_OR: return "||";
+    case BINARY_XOR: return "^";
+
+    case BINARY_SHL: return "<<";
+    case BINARY_SHR: return ">>";
+    case BINARY_BITAND: return "&";
+    case BINARY_BITOR: return "|";
+
     default:
         assert("unreachable get_binary");
         return "";
