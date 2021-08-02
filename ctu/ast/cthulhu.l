@@ -40,6 +40,7 @@ SUFFIX [u]?[tsilzpm]?
 "export" { return EXPORTED; }
 "struct" { return STRUCT; }
 "union" { return UNION; }
+"enum" { return ENUM; }
 "import" { return IMPORT; }
 
 "$" { yylval->text = "$"; return IDENT; }

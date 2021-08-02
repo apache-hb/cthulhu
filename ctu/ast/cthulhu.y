@@ -107,6 +107,7 @@ void cterror();
     EXPORTED "`export`"
     STRUCT "`struct`"
     UNION "`union`"
+    ENUM "`enum`"
     IMPORT "`import`"
     END 0 "end of file"
 
