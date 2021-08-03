@@ -50,6 +50,12 @@ static void debug_args(module_t *mod, step_t step) {
     printf(")");
 }
 
+static void debug_builtin(builtin_t it) {
+    switch (it) {
+    case BUILTIN_SIZEOF: printf("sizeof"); break;
+    }
+}
+
 static void debug_step(module_t *mod, size_t idx, step_t step) {
     switch (step.opcode) {
     case OP_EMPTY:
@@ -139,6 +145,13 @@ static void debug_step(module_t *mod, size_t idx, step_t step) {
         debug_operand(mod, step.src);
         printf(" ");
         debug_operand(mod, step.index);
+        break;
+    case OP_BUILTIN:
+        debug_index(idx);
+        printf("builtin ");
+        debug_type(step.type);
+        printf(" ");
+        debug_builtin(step.builtin);
         break;
     }
 

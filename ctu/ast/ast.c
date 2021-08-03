@@ -586,3 +586,11 @@ node_t *ast_break(scanner_t *scanner, where_t where) {
 node_t *ast_continue(scanner_t *scanner, where_t where) {
     return new_node(scanner, where, AST_CONTINUE);
 }
+
+node_t *ast_sizeof(node_t *it) {
+    node_t *node = new_node(NULL, NOWHERE, AST_BUILTIN_SIZEOF);
+
+    node->of = it;
+
+    return node;
+}

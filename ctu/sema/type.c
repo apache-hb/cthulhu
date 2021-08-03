@@ -43,7 +43,7 @@ static type_t *query_array(sema_t *sema, node_t *expr) {
     if (expr->size) {
         len = query_expr(sema, expr->size);
         
-        if (!type_can_become_explicit(&expr->size, get_int_type(false, INTEGER_SIZE), len)) {
+        if (!type_can_become_explicit(&expr->size, size_int(), len)) {
             reportf(LEVEL_ERROR, expr, "array size must be convertible to usize, `%s` is incompatible", typefmt(len));
             return new_poison(expr, "unresolved array size");
         }

@@ -91,6 +91,11 @@ bool run_pass(pass_t *pass) {
             mark_dirty(pass, i);
         }
 
+        if (remove_casts(flow)) {
+            logfmt("removed duplicate casts");
+            mark_dirty(pass, i);
+        }
+
         if (is_dirty(pass, i)) {
             changed = true;
         }

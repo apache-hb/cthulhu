@@ -464,3 +464,5 @@ node_t *ast_attribs(node_t *decl, attrib_t attribs, list_t *decorate);
 node_t *ast_attrib(scanner_t *scanner, where_t where, list_t *name, list_t *args);
 node_t *ast_noop(void);
 node_t *ast_index(scanner_t *scanner, where_t where, node_t *expr, node_t *index);
+
+node_t *ast_sizeof(node_t *it);

@@ -20,7 +20,9 @@ typedef enum {
 
     OP_BLOCK, /* start of a basic block */
     OP_BRANCH, /* conditional jump */
-    OP_JUMP /* unconditional jump */
+    OP_JUMP, /* unconditional jump */
+
+    OP_BUILTIN, /* call a builtin function */
 } opcode_t;
 
 typedef size_t vreg_t;
@@ -75,6 +77,10 @@ typedef struct {
     size_t offset;
 } operand_t;
 
+typedef enum {
+    BUILTIN_SIZEOF
+} builtin_t;
+
 bool operand_is_imm(operand_t op);
 
 bool operand_is_bool(operand_t op);
@@ -110,6 +116,8 @@ typedef struct {
             operand_t *args;
             size_t len;
         };
+
+        builtin_t builtin;
 
         /* OP_BRANCH */
         struct {
@@ -222,6 +230,7 @@ typedef struct module_t {
     /* functions in the current module */
     flow_t *flows;
     size_t nflows;
+    size_t closures;
 
     /* variables in the current module */
     var_t *vars;

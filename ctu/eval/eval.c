@@ -102,8 +102,7 @@ bool eval_ast(mpz_t result, node_t *ast) {
     
     if (out) {
         /* for now this function is only for array sizes */
-        sanitize_range(
-            get_int_type(false, INTEGER_SIZE), 
+        sanitize_range(size_int(), 
             result, ast->scanner, ast->where
         );
     }

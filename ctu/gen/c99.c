@@ -73,9 +73,9 @@ static const char *int_name(type_t *type) {
     case INTEGER_SHORT: out = "short"; break;
     case INTEGER_INT: out = "int"; break;
     case INTEGER_LONG: out = "long long"; break;
-    case INTEGER_SIZE: out = get_size(is_signed(type)); break;
-    case INTEGER_INTMAX: out = get_max(is_signed(type)); break;
-    case INTEGER_INTPTR: out = get_ptr(is_signed(type)); break;
+    case INTEGER_SIZE: return get_size(is_signed(type));
+    case INTEGER_INTMAX: return get_max(is_signed(type));
+    case INTEGER_INTPTR: return get_ptr(is_signed(type));
     default:
         assert("int_name unreachable");
         return "";
@@ -188,6 +188,9 @@ static const char *gen_type(type_t *type, const char *name) {
     case TYPE_ARRAY: 
         ty = gen_array(type, name); 
         break;
+
+    case TYPE_SIZEOF:
+        return gen_type(type->of, name);
 
     default:
         reportf(LEVEL_INTERNAL, nodeof(type), "gen-type(`%s` <- `%s`)", typefmt(type), name);
@@ -374,6 +377,17 @@ static void gen_load(FILE *out, flow_t *flow, size_t idx, step_t *step) {
     fprintf(out, "%s = %s;\n", gen_type(step->type, local(idx)), src);
 }
 
+static void gen_builtin(FILE *out, size_t idx, step_t *step) {
+    switch (step->builtin) {
+    case BUILTIN_SIZEOF:
+        fprintf(out, "%s = sizeof(%s);\n", 
+            gen_type(size_int(), local(idx)),
+            gen_type(step->type, NULL)
+        );
+        break;
+    }
+}
+
 static void gen_step(FILE *out, flow_t *flow, size_t idx) {
     step_t *step = flow->steps + idx;
 
@@ -450,6 +464,10 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
             gen_operand(flow, step->type, step->src),
             gen_operand(flow, step->type, step->index)
         );
+        break;
+
+    case OP_BUILTIN:
+        gen_builtin(out, idx, step);
         break;
 
     case OP_EMPTY: break;
@@ -530,6 +548,9 @@ void gen_c99(FILE *out, module_t *mod) {
             continue;
         }
 
+        if (type->kind == TYPE_SIZEOF)
+            type = type->of;
+
         fprintf(out, "%s;", gen_type(set_mut(type, true), NULL));
     }
 
@@ -543,6 +564,9 @@ void gen_c99(FILE *out, module_t *mod) {
         if (type->interop) {
             continue;
         }
+
+        if (type->kind == TYPE_SIZEOF)
+            type = type->of;
         
         emit_type(out, type);
     }

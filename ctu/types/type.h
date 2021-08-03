@@ -111,6 +111,9 @@ typedef enum {
      */
     TYPE_STRING,
 
+    /* builtins */
+    TYPE_SIZEOF,
+
     /**
      * error handling types
      */
@@ -270,8 +273,11 @@ bool is_union(type_t *type);
 bool is_array(type_t *type);
 bool is_record(type_t *type);
 bool can_index(type_t *type);
+bool is_enum(type_t *type);
 type_t *index_type(type_t *type);
 type_t *array_decay(type_t *type);
+
+type_t *get_result(type_t *func);
 
 bool types_equal(type_t *type, type_t *other);
 
@@ -289,3 +295,6 @@ bool type_can_become_explicit(struct node_t **node, type_t *dst, type_t *src);
 
 char *typefmt(type_t *type);
 struct node_t *nodeof(type_t *type);
+
+type_t *builtin_sizeof(struct node_t *node, type_t *it);
+type_t *size_int(void);

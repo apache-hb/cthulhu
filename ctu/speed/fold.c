@@ -161,3 +161,30 @@ bool fold_consts(flow_t *flow) {
     }
     return dirty;
 }
+
+static bool step_is_cast(flow_t *flow, operand_t op, type_t *type) {
+    if (op.kind != VREG)
+        return false;
+
+    step_t *step = step_at(flow, op.vreg);
+
+    if (step->opcode != OP_CONVERT)
+        return false;
+
+    return types_equal(type, step->type);
+}
+
+bool remove_casts(flow_t *flow) {
+    bool dirty = false;
+    for (size_t i = 0; i < flow->len; i++) {
+        step_t *step = step_at(flow, i);
+
+        if (step->opcode == OP_CONVERT) {
+            if (step_is_cast(flow, step->value, step->type)) {
+                dirty = true;
+                step->opcode = OP_VALUE;
+            }
+        }
+    }
+    return dirty;
+}

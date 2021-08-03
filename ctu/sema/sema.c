@@ -73,6 +73,8 @@ static map_t *files = NULL;
  */
 static size_t strings = 0;
 
+static size_t closures = 0;
+
 static size_t locals = 0;
 
 static list_t *current = NULL;
@@ -491,7 +493,7 @@ unit_t typecheck(node_t *root) {
     unit_t unit = { 
         funcs, vars, types, 
         libs, headers,
-        strings 
+        strings, closures
     };
 
     return unit;

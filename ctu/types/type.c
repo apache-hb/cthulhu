@@ -153,7 +153,19 @@ bool is_boolean(type_t *type) {
 }
 
 bool is_callable(type_t *type) {
-    return type->kind == TYPE_CALLABLE;
+    return type->kind == TYPE_CALLABLE
+        || type->kind == TYPE_SIZEOF;
+}
+
+type_t *get_result(type_t *func) {
+    if (func->kind == TYPE_CALLABLE) {
+        return func->result;
+    } else if (func->kind == TYPE_SIZEOF) {
+        return size_int();
+    } else {
+        assert("get-result on non-callable type");
+        return new_poison(func->node, "invalid call");
+    }
 }
 
 bool is_void(type_t *type) {
@@ -170,6 +182,10 @@ bool is_union(type_t *type) {
 
 bool is_record(type_t *type) {
     return is_union(type) || is_struct(type);
+}
+
+bool is_enum(type_t *type) {
+    return type->kind == TYPE_ENUM;
 }
 
 integer_t get_integer_kind(type_t *type) {
@@ -495,4 +511,16 @@ type_t *index_type(type_t *type) {
         assert("cannot get index type of %s", typefmt(type));
         return type;
     }
+}
+
+type_t *builtin_sizeof(struct node_t *node, type_t *it) {
+    type_t *type = new_type(TYPE_SIZEOF, node);
+
+    type->of = it;
+
+    return type;
+}
+
+type_t *size_int(void) {
+    return get_int_type(false, INTEGER_SIZE);
 }

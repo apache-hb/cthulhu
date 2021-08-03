@@ -3,6 +3,7 @@
 #include "ctu/util/report.h"
 #include "ctu/debug/ast.h"
 #include "ctu/util/util.h"
+#include "ctu/util/str.h"
 
 #include "ctu/eval/eval.h"
 
@@ -186,10 +187,14 @@ static operand_t emit_bool(node_t *node) {
     return new_bool(node->boolean);
 }
 
+static flow_t *get_flow(module_t *mod, size_t idx) {
+    return mod->flows + (idx + mod->closures);
+}
+
 static operand_t get_global(flow_t *flow, node_t *node) {
     const char *name = list_last(node->ident);
     for (size_t i = 0; i < num_flows(flow->mod); i++) {
-        const char *it = flow->mod->flows[i].name;
+        const char *it = get_flow(flow->mod, i)->name;
 
         if (strcmp(it, name) == 0) {
             return new_func(i);
@@ -373,7 +378,7 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
         return add_vreg(flow, load);
     }
 
-    reportf(LEVEL_INTERNAL, node, "unable to resolve %s typechecker let bad code slip", node->ident);
+    reportf(LEVEL_INTERNAL, node, "unable to resolve %s. typechecker let bad code slip", list_last(node->ident));
 
     /* oh no */
     return new_operand(NONE);
@@ -575,6 +580,43 @@ static operand_t emit_continue(flow_t *flow) {
     return new_operand(NONE);
 }
 
+static operand_t emit_sizeof(flow_t *flow, node_t *node) {
+    flow_t self = { 
+        .name = format("closure%zu", node->local),
+        .args = NULL,
+        .nargs = 0,
+
+        .steps = ctu_malloc(sizeof(step_t) * 64), 
+        .len = 0, .size = 64, 
+        
+        .locals = NULL,
+        .nlocals = 0,
+
+        .result = size_int(),
+
+        .mod = flow->mod,
+
+        .exported = false,
+        .used = true,
+        .stub = false,
+        .interop = false,
+
+        .breaks = NULL,
+        .continues = NULL
+    };
+
+    step_t get = new_step(OP_BUILTIN, node);
+    get.builtin = BUILTIN_SIZEOF;
+    step_t ret = new_step(OP_RETURN, node);
+
+    ret.value = add_vreg(&self, get);
+    add_step(&self, ret);
+
+    flow->mod->flows[node->local] = self;
+
+    return new_func(node->local);
+}
+
 static operand_t emit_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
@@ -594,14 +636,13 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
     case AST_INDEX: return emit_index(flow, node);
     case AST_BREAK: return emit_break(flow);
     case AST_CONTINUE: return emit_continue(flow);
+    case AST_BUILTIN_SIZEOF: return emit_sizeof(flow, node);
 
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);
         return new_operand(NONE);
     }
 }
-
-
 
 /**
  * external api
@@ -705,7 +746,13 @@ module_t *compile_module(const char *name, unit_t unit) {
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
    
-    mod->nflows = list_len(unit.funcs);
+    size_t funcs = list_len(unit.funcs);
+    size_t closures = unit.closures;
+
+    mod->closures = closures;
+
+    /* functions are put after closures */
+    mod->nflows = funcs + closures;
     mod->flows = ctu_malloc(sizeof(flow_t) * mod->nflows);
     
     mod->nvars = list_len(unit.vars);
@@ -724,8 +771,8 @@ module_t *compile_module(const char *name, unit_t unit) {
      * first pass
      */
 
-    for (size_t i = 0; i < mod->nflows; i++) {
-        mod->flows[i].name = get_decl_name(list_at(unit.funcs, i));
+    for (size_t i = 0; i < funcs; i++) {
+        mod->flows[i + closures].name = get_decl_name(list_at(unit.funcs, i));
     }
 
     for (size_t i = 0; i < mod->nvars; i++) {
@@ -741,8 +788,8 @@ module_t *compile_module(const char *name, unit_t unit) {
      * second pass 
      */
 
-    for (size_t i = 0; i < mod->nflows; i++) {
-        mod->flows[i] = compile_flow(mod, list_at(unit.funcs, i));
+    for (size_t i = 0; i < funcs; i++) {
+        mod->flows[i + closures] = compile_flow(mod, list_at(unit.funcs, i));
     }
 
     for (size_t i = 0; i < mod->nvars; i++) {

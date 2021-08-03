@@ -66,3 +66,5 @@ bool remove_jumps(flow_t *flow);
  * constant folding
  */
 bool fold_consts(flow_t *flow);
+
+bool remove_casts(flow_t *flow);

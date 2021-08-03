@@ -85,6 +85,11 @@ static void debug_type_internal(type_t *type, bool verbose) {
         } 
         break;
 
+    case TYPE_SIZEOF: 
+        printf("sizeof ");
+        debug_type(type->of);
+        break;
+
     case TYPE_FIELD: break;
     }
 

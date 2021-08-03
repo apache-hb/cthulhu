@@ -111,6 +111,20 @@ list_t *new_list(void *init) {
     return list;
 }
 
+list_t *sized_list(size_t size) {
+    list_t *list = ctu_malloc(sizeof(list_t));
+
+    list->size = size;
+    list->len = 0;
+    list->data = ctu_malloc(sizeof(void*) * size);
+
+    return list;
+}
+
+void list_set(list_t *list, size_t index, void *data) {
+    list->data[index] = data;
+}
+
 size_t list_len(list_t *list) {
     return list->len;
 }
