@@ -379,8 +379,8 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
     return new_operand(NONE);
 }
 
-static step_t *new_branch(flow_t *flow) {
-    return add_step(flow, new_typed_step(OP_BRANCH, NULL));
+static size_t new_branch(flow_t *flow) {
+    return add_step_raw(flow, new_typed_step(OP_BRANCH, NULL));
 }
 
 static operand_t emit_branch(flow_t *flow, node_t *node) {
@@ -394,13 +394,15 @@ static operand_t emit_branch(flow_t *flow, node_t *node) {
         cond = new_bool(true);
     }
 
-    step_t *branch = new_branch(flow);
+    size_t idx = new_branch(flow);
 
     operand_t body = emit_opcode(flow, node->branch);
 
     operand_t other = node->next == NULL
         ? add_block(flow)
         : emit_branch(flow, node->next);
+
+    step_t *branch = step_at(flow, idx);
 
     branch->cond = cond;
     branch->block = body;
@@ -518,13 +520,15 @@ static operand_t emit_while(flow_t *flow, node_t *node) {
     operand_t head = add_block(flow);
     operand_t cond = emit_opcode(flow, node->cond);
     
-    step_t *branch = new_branch(flow);
+    size_t idx = new_branch(flow);
     operand_t entry = add_block(flow);
 
     emit_opcode(flow, node->next);
 
     add_step(flow, new_jump(head));
     operand_t tail = add_block(flow);
+
+    step_t *branch = step_at(flow, idx);
 
     branch->cond = cond;
     branch->block = entry;
