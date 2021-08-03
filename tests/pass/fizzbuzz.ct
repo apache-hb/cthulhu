@@ -1,0 +1,34 @@
+@interop("stdio.h")
+def puts($: str): int;
+
+@interop("stdio.h")
+def putd($: int): int;
+
+def fizzbuzz(i: int): void {
+    var count = 0;
+    while true {
+        if count > i {
+            break;
+        }
+
+        if count % 3 == 0 {
+            puts("fizz");
+        }
+
+        if count % 5 == 0 {
+            puts("buzz");
+        }
+
+        if (count % 3 != 0) && (count % 5 != 0) {
+            // putd(count); TODO: come back when printf is working
+            // printf depends on implementing varargs
+        }
+
+        count = count + 1;
+    }
+}
+
+export def main(argc: int, argv: *str): int {
+    fizzbuzz(300);
+    return 0;
+}

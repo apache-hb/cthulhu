@@ -30,6 +30,8 @@ typedef enum {
     AST_BRANCH,
     AST_ASSIGN,
     AST_WHILE,
+    AST_BREAK,
+    AST_CONTINUE,
 
     /**
      * declarations
@@ -38,9 +40,12 @@ typedef enum {
     AST_DECL_VAR,
     AST_DECL_PARAM,
     AST_DECL_STRUCT,
+    AST_DECL_UNION,
+    AST_DECL_ENUM,
     AST_DECL_FIELD,
     AST_DECL_IMPORT,
     AST_ATTRIB,
+    AST_ENUM_ITEM,
 
     /**
      * types
@@ -51,9 +56,14 @@ typedef enum {
     AST_ARRAY,
 
     /**
+     * builtins
+     */
+    AST_BUILTIN_TYPE,
+    AST_BUILTIN_SIZEOF,
+
+    /**
      * implementation details
      */
-    AST_TYPE,
     AST_ROOT,
     AST_NOOP
 } ast_t;
@@ -272,7 +282,7 @@ typedef struct node_t {
                  */
                 char *name;
 
-                /* AST_TYPE */
+                /* AST_BUILTIN_TYPE */
                 const char *nameof;
                 
                 /**
@@ -294,7 +304,7 @@ typedef struct node_t {
             list_t *decorate;
 
             AST_UNION {
-                /* AST_DECL_STRUCT */
+                /* AST_DECL_STRUCT, AST_DECL_ENUM, AST_DECL_UNION */
                 /** @var list_t<node_t*> */
                 list_t *fields;
 
@@ -412,6 +422,8 @@ node_t *ast_binary(scanner_t *scanner, where_t where, binary_t binary, node_t *l
 node_t *ast_call(scanner_t *scanner, where_t where, node_t *body, list_t *args);
 node_t *ast_cast(scanner_t *scanner, where_t where, node_t *expr, node_t *cast);
 node_t *ast_access(scanner_t *scanner, where_t where, node_t *expr, char *name, bool indirect);
+node_t *ast_break(scanner_t *scanner, where_t where);
+node_t *ast_continue(scanner_t *scanner, where_t where);
 
 node_t *ast_stmts(scanner_t *scanner, where_t where, list_t *stmts);
 node_t *ast_return(scanner_t *scanner, where_t where, node_t *expr);
@@ -433,7 +445,10 @@ node_t *ast_decl_func(
 node_t *ast_decl_param(scanner_t *scanner, where_t where, char *name, node_t *type);
 node_t *ast_decl_var(scanner_t *scanner, where_t where, bool mut, char *name, node_t *type, node_t *init);
 node_t *ast_decl_struct(scanner_t *scanner, where_t where, char *name, list_t *fields);
+node_t *ast_decl_union(scanner_t *scanner, where_t where, char *name, list_t *fields);
+node_t *ast_decl_enum(scanner_t *scanner, where_t where, char *name, list_t *fields);
 node_t *ast_field(scanner_t *scanner, where_t where, char *name, node_t *type);
+node_t *ast_enum_item(scanner_t *scanner, where_t where, char *name, node_t *init);
 
 node_t *ast_import(scanner_t *scanner, where_t where, list_t *path);
 

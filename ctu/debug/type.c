@@ -56,6 +56,9 @@ static void debug_array(type_t *type) {
 }
 
 static void debug_type_internal(type_t *type, bool verbose) {
+    if (type->mut) {
+        printf("var ");
+    }
     switch (type->kind) {
     case TYPE_INTEGER: printf("%s", integer_name(type)); break;
     case TYPE_BOOLEAN: printf("bool"); break;
@@ -66,8 +69,11 @@ static void debug_type_internal(type_t *type, bool verbose) {
     case TYPE_POISON: printf("poison(%s)", type->text); break;
     case TYPE_UNRESOLVED: printf("unresolved"); break;
     case TYPE_ARRAY: debug_array(type); break;
+    case TYPE_ENUM:
+        printf("enum(%s)", type->name); 
+        break;
 
-    case TYPE_STRUCT: 
+    case TYPE_STRUCT:
         printf("struct(%s)", type->name); 
         if (verbose) { 
             debug_struct(type->fields);
@@ -77,7 +83,13 @@ static void debug_type_internal(type_t *type, bool verbose) {
     case TYPE_FIELD: break;
     }
 
-    if (type->index != SIZE_MAX) {
+    if (
+        type->kind != TYPE_INTEGER &&
+        type->kind != TYPE_BOOLEAN &&
+        type->kind != TYPE_STRING &&
+        type->kind != TYPE_VOID &&
+        type->kind != TYPE_POINTER &&
+        type->index != SIZE_MAX) {
         printf(" @%zu", type->index);
     }
 }

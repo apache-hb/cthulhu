@@ -1,0 +1,11 @@
+struct Thing {
+    field: [int:10]
+}
+
+export def main(argc: int, argv: *str): int {
+    var x: Thing;
+
+    x.field[0] = 1;
+
+    return x.field[0];
+}

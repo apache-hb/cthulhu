@@ -37,7 +37,7 @@ static node_t *new_decl(scanner_t *scanner, where_t where, ast_t kind, char *nam
 const char *get_decl_name(node_t *node) {
     switch (node->kind) {
     case AST_DECL_FUNC: case AST_DECL_VAR: case AST_DECL_PARAM:
-    case AST_DECL_STRUCT: case AST_DECL_FIELD:
+    case AST_DECL_STRUCT: case AST_DECL_FIELD: case AST_DECL_ENUM:
         return node->name;
 
     default:
@@ -48,7 +48,7 @@ const char *get_decl_name(node_t *node) {
 
 const char *get_resolved_name(node_t *node) {
     switch (node->kind) {
-    case AST_TYPE:
+    case AST_BUILTIN_TYPE:
         return node->nameof;
 
     default:
@@ -444,7 +444,7 @@ node_t *ast_mut(scanner_t *scanner, where_t where, node_t *it) {
 }
 
 node_t *ast_type(const char *name) {
-    node_t *node = new_node(NULL, NOWHERE, AST_TYPE);
+    node_t *node = new_node(NULL, NOWHERE, AST_BUILTIN_TYPE);
     node->nameof = name;
     return node;
 }
@@ -552,4 +552,36 @@ node_t *ast_index(scanner_t *scanner, where_t where, node_t *expr, node_t *index
     node->index = index;
 
     return node;
+}
+
+node_t *ast_decl_union(scanner_t *scanner, where_t where, char *name, list_t *fields) {
+    node_t *node = new_decl(scanner, where, AST_DECL_UNION, name);
+
+    node->fields = fields;
+
+    return node;
+}
+
+node_t *ast_decl_enum(scanner_t *scanner, where_t where, char *name, list_t *fields) {
+    node_t *node = new_decl(scanner, where, AST_DECL_ENUM, name);
+
+    node->fields = fields;
+
+    return node;
+}
+
+node_t *ast_enum_item(scanner_t *scanner, where_t where, char *name, node_t *init) {
+    node_t *node = new_decl(scanner, where, AST_ENUM_ITEM, name);
+
+    node->init = init;
+
+    return node;
+}
+
+node_t *ast_break(scanner_t *scanner, where_t where) {
+    return new_node(scanner, where, AST_BREAK);
+}
+
+node_t *ast_continue(scanner_t *scanner, where_t where) {
+    return new_node(scanner, where, AST_CONTINUE);
 }

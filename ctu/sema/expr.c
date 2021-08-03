@@ -22,7 +22,7 @@ static type_t *query_func(sema_t *sema, node_t *func) {
     return new_callable(func, args, result);
 }
 
-static bool is_var_recursive(node_t *node) {
+static bool is_delay_recursive(node_t *node) {
     size_t len = list_len(current);
     for (size_t i = 0; i < len; i++) {
         if (list_at(current, i) == node) {
@@ -33,7 +33,7 @@ static bool is_var_recursive(node_t *node) {
 }
 
 static type_t *delay_build_var(node_t *node) {
-    if (is_var_recursive(node)) {
+    if (is_delay_recursive(node)) {
         reportf(LEVEL_ERROR, node, "recursive initialization of variable `%s`", get_decl_name(node));
         return new_poison(node, "recursive resolution");
     }
@@ -78,6 +78,28 @@ static type_t *query_local_expr(sema_t *sema, node_t *node, const char *name) {
     }
 }
 
+static type_t *delay_build_type(node_t *expr, node_t *node, list_t *slice) {
+    if (is_delay_recursive(node)) {
+        reportf(LEVEL_ERROR, node, "recursive type resolution of `%s`", get_decl_name(node));
+        return new_poison(node, "recursive resolution");
+    }
+
+    if (list_len(slice) > 1) {
+        reportf(LEVEL_ERROR, expr, "attempting to resolve a nested type");
+        return new_poison(expr, "nested type resolution");
+    }
+
+    // const char *lookup = list_first(slice);
+
+    type_t *ty = raw_type(node);
+    if (ty) {
+        return ty;
+    }
+
+    build_type(node);
+    return get_type(node);
+}
+
 /**
  * query for a variable or a function recursivley
  */
@@ -92,13 +114,26 @@ static type_t *query_expr_symbol(sema_t *sema, node_t *expr, list_t *symbol) {
         return query_local_expr(sema, expr, first);
     }
 
+    list_t slice = list_slice(symbol, 1);
+
     /**
      * search the imports to try and find it
      */
     sema_t *other = map_get(sema->imports, first);
     if (other) {
-        list_t slice = list_slice(symbol, 1);
         return query_expr_symbol(other, expr, &slice);
+    }
+
+    /**
+     * resolve expressions such as 
+     * EnumName::EnumValue.
+     * 
+     * we need delayed lookup due to enum fields
+     * being expressions.
+     */
+    node_t *ty = map_get(sema->types, first);
+    if (ty) {
+        return delay_build_type(ty, expr, &slice);
     }
 
     /**

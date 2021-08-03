@@ -94,6 +94,11 @@ typedef enum {
     TYPE_STRUCT,
 
     /**
+     * an enumeration
+     */
+    TYPE_ENUM,
+
+    /**
      * a single field in a struct
      */
     TYPE_FIELD,

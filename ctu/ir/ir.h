@@ -190,6 +190,10 @@ typedef struct {
     bool used:1;
     bool stub:1;
     bool interop:1;
+
+    /* implementation details */
+    list_t *breaks;
+    list_t *continues;
 } flow_t;
 
 /**

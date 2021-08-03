@@ -100,6 +100,10 @@ static void propogate_value(flow_t *flow, step_t *step, bool *dirty) {
     case OP_STORE:
         update_operand(flow, &step->src, dirty);
         break;
+    case OP_OFFSET:
+        update_operand(flow, &step->src, dirty);
+        update_operand(flow, &step->index, dirty);
+        break;
 
     default:
         break;
@@ -150,11 +154,7 @@ static bool is_block_empty(flow_t *flow, size_t idx, size_t *end) {
          * we automatically add a return instruction, but with
          * non-void functions we dont, this function is techinically
          * malformed, but we can handle it.
-         * 
-         * we also inform the user they may have messed up
          */
-        reportid_t id = warnf("function `%s` may not return", flow->name);
-        report_tag(id, flow);
         return false;
     }
 

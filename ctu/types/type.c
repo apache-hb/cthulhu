@@ -157,7 +157,8 @@ bool is_signed(type_t *type) {
 }
 
 bool is_const(type_t *type) {
-    return !type->lvalue;
+    /* consts can fail a compile so best we're conservative with them */
+    return !type->mut && !type->lvalue;
 }
 
 bool is_pointer(type_t *type) {

@@ -162,16 +162,24 @@ static void debug_params(flow_t *flow) {
 }
 
 void debug_flow(flow_t flow) {
-    printf("define %s", flow.name);
+    if (flow.interop) { 
+        printf("extern %s", flow.name);
+    } else {
+        printf("define %s", flow.name);
+    }
     debug_params(&flow);
     printf(": ");
     debug_type(flow.result);
-    printf(" {\n");
 
-    for (size_t i = 0; i < flow.len; i++) {
-        debug_step(flow.mod, i, flow.steps[i]);
+    if (!flow.interop) {
+        printf(" {\n");
+        for (size_t i = 0; i < flow.len; i++) {
+            debug_step(flow.mod, i, flow.steps[i]);
+        }
+        printf("}");
     }
-    printf("}\n");
+
+    printf("\n");
 }
 
 static void debug_global(size_t i, var_t var) {
@@ -196,10 +204,6 @@ void debug_module(module_t mod) {
 
     printf("\n; strings\n");
     for (size_t i = 0; i < num_strings(&mod); i++) {
-        if (i != 0) {
-            printf("\n");
-        }
-
         debug_string(i, mod.strings[i]);
     }
 

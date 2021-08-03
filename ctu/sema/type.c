@@ -149,6 +149,10 @@ static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
         reportf(LEVEL_ERROR, field, "unresolved field type `%s`", name);
     }
 
+    if (is_array(ty) && ty->unbounded) {
+        reportf(LEVEL_ERROR, field, "structs may not contain unbounded arrays");
+    }
+
     field_t it = { name, ty };
 
     record->fields.fields[at] = it;

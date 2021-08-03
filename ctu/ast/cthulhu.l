@@ -34,6 +34,8 @@ SUFFIX [u]?[tsilzpm]?
 "final" { return FINAL; }
 "var" { return VAR; }
 "while" { return WHILE; }
+"break" { return BREAK; }
+"continue" { return CONTINUE; }
 "true" { return BOOL_TRUE; }
 "false" { return BOOL_FALSE; }
 "return" { return RETURN; }

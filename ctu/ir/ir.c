@@ -65,17 +65,6 @@ operand_t new_block(size_t label) {
     return op;
 }
 
-static void add_type_index(module_t *mod, type_t *type) {
-    if (is_struct(type) && type->index == SIZE_MAX) {
-        for (size_t i = 0; i < num_types(mod); i++) {
-            type_t *other = mod->types[i];
-            if (strcmp(type->name, other->name) == 0) {
-                type->index = other->index;
-            }
-        }
-    }
-}
-
 static step_t new_typed_step(opcode_t op, type_t *type) {
     step_t step = { 
         /* opcode */ op, 
@@ -148,10 +137,6 @@ operand_t new_bool(bool b) {
  */
 
 static size_t add_step_raw(flow_t *flow, step_t step) {
-    if (step.type) {
-        add_type_index(flow->mod, step.type);
-    }
-
     if (flow->len + 1 > flow->size) {
         flow->size += 64;
         flow->steps = ctu_realloc(flow->steps, flow->size * sizeof(step_t));
@@ -380,20 +365,12 @@ static operand_t emit_call(flow_t *flow, node_t *node) {
 static operand_t emit_symbol(flow_t *flow, node_t *node) {
     operand_t local = get_lvalue(flow, node);
     if (!operand_is_invalid(local)) {
-        if (local.kind == ARG)
+        if (local.kind == ARG || local.kind == FUNC)
             return local;
-            
+        
         step_t load = new_step(OP_LOAD, node);
         load.src = local;
         return add_vreg(flow, load);
-    }
-
-    /**
-     * first try all functions
-     */
-    local = get_global(flow, node);
-    if (operand_is_invalid(local)) {
-        return local;
     }
 
     reportf(LEVEL_INTERNAL, node, "unable to resolve %s typechecker let bad code slip", node->ident);
@@ -499,7 +476,45 @@ static operand_t emit_assign(flow_t *flow, node_t *node) {
  * tail:
  */
 
+typedef struct {
+    list_t *breaks;
+    list_t *continues;
+} flow_state_t;
+
+static flow_state_t save_state(flow_t *flow) {
+    flow_state_t state = { flow->breaks, flow->continues };
+
+    flow->breaks = new_list(NULL);
+    flow->continues = new_list(NULL);
+    return state;
+}
+
+static void load_state(flow_t *flow, flow_state_t state) {
+    flow->breaks = state.breaks;
+    flow->continues = state.continues;
+}
+
+static void fixup_control_flow(flow_t *flow, operand_t begin, operand_t end) {
+    size_t breaks = list_len(flow->breaks);
+    size_t continues = list_len(flow->continues);
+
+    /* redirect all breaks to the end of the loop */
+    for (size_t i = 0; i < breaks; i++) {
+        size_t branch = (size_t)list_at(flow->breaks, i);
+        step_at(flow, branch)->block = end;
+    }
+
+    /* redirect all continues to the beginning of the loop */
+    for (size_t i = 0; i < continues; i++) {
+        size_t branch = (size_t)list_at(flow->continues, i);
+        step_at(flow, branch)->block = begin;
+    }
+}
+
 static operand_t emit_while(flow_t *flow, node_t *node) {
+    /* save control state */
+    flow_state_t state = save_state(flow);
+
     operand_t head = add_block(flow);
     operand_t cond = emit_opcode(flow, node->cond);
     
@@ -514,6 +529,11 @@ static operand_t emit_while(flow_t *flow, node_t *node) {
     branch->cond = cond;
     branch->block = entry;
     branch->other = tail;
+
+    fixup_control_flow(flow, head, tail);
+
+    /* reload state */
+    load_state(flow, state);
 
     return head;
 }
@@ -533,6 +553,24 @@ static operand_t emit_index(flow_t *flow, node_t *node) {
     return add_vreg(flow, step);
 }
 
+/**
+ * we handle break and continue statements 
+ * by pushing them onto the respective list
+ * and then fixing them up later in the loop statements
+ */
+
+static operand_t emit_break(flow_t *flow) {
+    size_t idx = add_step_raw(flow, new_jump(new_operand(NONE)));
+    list_push(flow->breaks, (void*)idx);
+    return new_operand(NONE);
+}
+
+static operand_t emit_continue(flow_t *flow) {
+    size_t idx = add_step_raw(flow, new_jump(new_operand(NONE)));
+    list_push(flow->continues, (void*)idx);
+    return new_operand(NONE);
+}
+
 static operand_t emit_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
@@ -550,6 +588,9 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
     case AST_WHILE: return emit_while(flow, node);
     case AST_STRING: return emit_string(flow, node);
     case AST_INDEX: return emit_index(flow, node);
+    case AST_BREAK: return emit_break(flow);
+    case AST_CONTINUE: return emit_continue(flow);
+
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);
         return new_operand(NONE);
@@ -571,7 +612,6 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     size_t locals = node->locals + len;
 
     type_t *result = get_resolved_type(node->result);
-    add_type_index(mod, result);
 
     bool stubbed = node->body == NULL;
 
@@ -598,7 +638,10 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         is_exported(node),
         is_used(node),
         stubbed,
-        is_interop(node)
+        is_interop(node),
+
+        new_list(NULL), /* breaks */
+        new_list(NULL) /* continues */
     };
 
     for (size_t i = 0; i < len; i++) {
@@ -687,7 +730,6 @@ module_t *compile_module(const char *name, unit_t unit) {
 
     for (size_t i = 0; i < mod->ntypes; i++) {
         type_t *type = get_resolved_type(list_at(unit.types, i));
-        type->index = i;
         mod->types[i] = type;
     }
 

@@ -84,6 +84,8 @@ static list_t *types = NULL;
 static list_t *headers = NULL;
 static list_t *libs = NULL;
 
+static bool loop = false;
+
 static sema_t *begin_file(node_t *inc, node_t *root, const char *path);
 
 static sema_t *new_sema(sema_t *parent) {
@@ -189,6 +191,7 @@ static void add_discard(map_t *dst, node_t *it) {
     }
 }
 
+static void build_type(node_t *it);
 static void build_var(sema_t *sema, node_t *it);
 static void build_func(node_t *it);
 static type_t *query_expr(sema_t *sema, node_t *it);
@@ -259,6 +262,7 @@ static bool check_attribs(node_t *decl) {
 }
 
 static void build_type(node_t *it) {
+    list_push(current, it);
     sema_t *sema = it->ctx;
     switch (it->kind) {
     case AST_DECL_STRUCT:
@@ -267,22 +271,21 @@ static void build_type(node_t *it) {
 
     default:
         assert("unknown type node %d", it->kind);
-        return;
+        goto clear;
     }
 
     if (check_attribs(it)) {
         get_resolved_type(it)->interop = true;
     }
+
+clear:
+    list_pop(current);
 }
 
 static void build_var(sema_t *sema, node_t *it) {
     ASSERT(it->init || it->type)("var must be partialy initialized");
 
     check_attribs(it);
-
-    /**
-     * NOTE: if you set sema->ctx be sure to set it to null afterwards 
-     */
 
     list_push(current, it);
 
@@ -311,6 +314,12 @@ static void build_var(sema_t *sema, node_t *it) {
     if (type != NULL && init != NULL) {
         if (!type_can_become_implicit(&it, type, init)) {
             reportf(LEVEL_ERROR, it, "incompatible types for initialization of variable `%s`", it->name);
+        }
+    }
+
+    if (type && is_array(type)) {
+        if (!init && type->unbounded) {
+            reportf(LEVEL_ERROR, it, "unbounded array must be initialized");
         }
     }
 

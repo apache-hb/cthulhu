@@ -53,6 +53,10 @@ bool is_vreg_used(const step_t *step, vreg_t vreg) {
     case OP_JUMP:
         return op_used(step->block, vreg);
 
+    case OP_OFFSET:
+        return op_used(step->src, vreg)
+            || op_used(step->index, vreg);
+
     case OP_RESERVE:
     case OP_EMPTY:
     case OP_BLOCK:

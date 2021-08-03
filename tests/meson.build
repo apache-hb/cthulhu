@@ -8,7 +8,7 @@ pass = [
     'regalloc', 'var', 'suffix', 'global',
     'unused-var', 'implicit-var-cast', 'string', 'forward',
     'posix-interop', 'win32-interop', 'array-1', 'array-2', 
-    'fuzz-8'
+    'fuzz-8', 'array-struct', 'fizzbuzz'
 ]
 
 foreach it : pass 

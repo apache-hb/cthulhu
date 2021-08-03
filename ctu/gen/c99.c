@@ -85,10 +85,6 @@ static const char *int_name(type_t *type) {
         out = format("unsigned %s", out);
     }
 
-    if (is_const(type)) {
-        out = format("const %s", out);
-    }
-
     return out;
 }
 
@@ -143,20 +139,55 @@ static const char *gen_string(const char *name) {
     }
 }
 
+static const char *gen_array(type_t *type, const char *name) {
+    const char *body = gen_type(type->of, NULL);
+
+    if (name) {
+        return format("%s %s[%zu]", body, name, type->size);
+    } else {
+        return format("%s[%zu]", body, type->size);
+    }
+}
+
 static const char *gen_type(type_t *type, const char *name) {
+    const char *ty = NULL;
+    
     switch (type->kind) {
-    case TYPE_INTEGER: return gen_int(type, name);
-    case TYPE_BOOLEAN: return gen_bool(name);
-    case TYPE_VOID: return gen_void(name);
-    case TYPE_CALLABLE: return gen_callable(type, name);
-    case TYPE_POINTER: return gen_pointer(type, name);
-    case TYPE_STRING: return gen_string(name);
-    case TYPE_STRUCT: return gen_struct(type, name);
+    case TYPE_INTEGER: 
+        ty = gen_int(type, name); 
+        break;
+    case TYPE_BOOLEAN: 
+        ty = gen_bool(name);
+        break;
+    case TYPE_VOID: 
+        ty = gen_void(name); 
+        break;
+    case TYPE_CALLABLE: 
+        ty = gen_callable(type, name);
+        break;
+    case TYPE_POINTER: 
+        ty = gen_pointer(type, name); 
+        break;
+    case TYPE_STRING: 
+        ty = gen_string(name);
+        break;
+    case TYPE_STRUCT: 
+        ty = gen_struct(type, name);
+        break;
+    case TYPE_ARRAY: 
+        ty = gen_array(type, name); 
+        break;
 
     default:
         reportf(LEVEL_INTERNAL, nodeof(type), "gen-type(`%s` <- `%s`)", typefmt(type), name);
         return "void";
     }
+
+    if (type->kind != TYPE_VOID && is_const(type)) {
+        ty = format("const %s", ty);
+    }
+
+    return ty;
 }
 
 static char *genarg(size_t idx) {
@@ -221,7 +252,7 @@ static char *genstr(size_t idx) {
     return format("str%zu", idx);
 }
 
-static const char *gen_operand(flow_t *flow, operand_t op) {
+static const char *gen_operand_inner(flow_t *flow, operand_t op) {
     switch (op.kind) {
     case BLOCK: return format("block%zu", op.label);
     case VREG: return local(op.vreg);
@@ -239,6 +270,33 @@ static const char *gen_operand(flow_t *flow, operand_t op) {
         assert("gen_operand unreachable");
         return "";
     }
+}
+
+static const char *gen_operand_indirect(flow_t *flow, type_t *ty, operand_t op, bool indirect) {
+    const char *inner = gen_operand_inner(flow, op);
+
+    size_t offset = op.offset;
+    const char *off = NULL;
+    
+    if (offset != SIZE_MAX) {
+        if (ty->interop) {
+            off = format("%s->%s", inner, ty->fields.fields[offset].name);
+        } else {
+            off = format("%s->_%zu", inner, offset);
+        }
+    } else {
+        if (indirect) {
+            off = format("*%s", inner);
+        } else {
+            off = format("%s", inner);
+        }
+    }
+
+    return off;
+}
+
+static const char *gen_operand(flow_t *flow, type_t *ty, operand_t op) {
+    return gen_operand_indirect(flow, ty, op, false);
 }
 
 static char *get_unary(unary_t op, const char *it) {
@@ -287,40 +345,22 @@ static const char *get_binary(binary_t op) {
 static char *gen_args(flow_t *flow, operand_t *args, size_t len) {
     const char **types = ctu_malloc(sizeof(char*) * len);
     for (size_t i = 0; i < len; i++) {
-        types[i] = gen_operand(flow, args[i]);
+        types[i] = gen_operand_inner(flow, args[i]);
     }
     return str_join(", ", types, len);
 }
 
 static void gen_store(FILE *out, flow_t *flow, step_t *step) {
-    const char *dst = gen_operand(flow, step->dst);
-    const char *src = gen_operand(flow, step->src);
+    const char *src = gen_operand(flow, step->type, step->src);
+    const char *dst = gen_operand_indirect(flow, step->type, step->dst, true);
 
-    type_t *ty = step->type;
-
-    size_t disp = step->dst.offset;
-
-    if (disp != SIZE_MAX) {
-        const char *off;
-
-        if (ty->interop) {
-            off = ty->fields.fields[disp].name;
-        } else {
-            off = format("_%zu", step->dst.offset);
-        }
-
-        /* TODO: at the point we can store a struct in a register fix this */
-        fprintf(out, "%s->%s = %s;\n", dst, off, src);
-    } else {
-        fprintf(out, "*%s = %s;\n", dst, src);
-    }
+    fprintf(out, "%s = %s;\n", dst, src);
 }
 
 static void gen_load(FILE *out, flow_t *flow, size_t idx, step_t *step) {
-    fprintf(out, "%s = *%s;\n", 
-        gen_type(step->type, local(idx)), 
-        gen_operand(flow, step->src)
-    );
+    const char *src = gen_operand_indirect(flow, step->type, step->src, true);
+
+    fprintf(out, "%s = %s;\n", gen_type(step->type, local(idx)), src);
 }
 
 static void gen_step(FILE *out, flow_t *flow, size_t idx) {
@@ -332,16 +372,16 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
         fprintf(out, "block%zu:(void)0;\n", idx); 
         break;
     case OP_JUMP: 
-        fprintf(out, "goto %s;\n", gen_operand(flow, step->block)); 
+        fprintf(out, "goto %s;\n", gen_operand(flow, step->type, step->block)); 
         break;
     case OP_VALUE: 
-        fprintf(out, "%s = %s;\n", gen_type(step->type, local(idx)), gen_operand(flow, step->value)); 
+        fprintf(out, "%s = %s;\n", gen_type(step->type, local(idx)), gen_operand(flow, step->type, step->value)); 
         break;
     case OP_RETURN:
         if (is_void(step->type)) {
             fprintf(out, "return;\n");
         } else {
-            fprintf(out, "return %s;\n", gen_operand(flow, step->value));
+            fprintf(out, "return %s;\n", gen_operand(flow, step->type, step->value));
         } 
         break;
     case OP_RESERVE:
@@ -354,13 +394,16 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
         gen_load(out, flow, idx, step);
         break;
     case OP_UNARY:
-        fprintf(out, "%s = %s;\n", gen_type(step->type, local(idx)), get_unary(step->unary, gen_operand(flow, step->expr)));
+        fprintf(out, "%s = %s;\n", 
+            gen_type(step->type, local(idx)), 
+            get_unary(step->unary, gen_operand(flow, step->type, step->expr))
+        );
         break;
     case OP_BINARY:
         fprintf(out, "%s = %s %s %s;\n", gen_type(step->type, local(idx)), 
-            gen_operand(flow, step->lhs), 
+            gen_operand(flow, step->type, step->lhs), 
             get_binary(step->binary), 
-            gen_operand(flow, step->rhs)
+            gen_operand(flow, step->type, step->rhs)
         );
         break;
 
@@ -368,14 +411,17 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
         if (!is_void(step->type)) {
             fprintf(out, "%s = ", gen_type(step->type, local(idx)));
         }
-        fprintf(out, "%s(%s);\n", gen_operand(flow, step->value), gen_args(flow, step->args, step->len));
+        fprintf(out, "%s(%s);\n", 
+            gen_operand(flow, step->type, step->value), 
+            gen_args(flow, step->args, step->len)
+        );
         break;
 
     case OP_BRANCH:
         fprintf(out, "if (%s) { goto %s; } else { goto %s; }\n",
-            gen_operand(flow, step->cond),
-            gen_operand(flow, step->block),
-            gen_operand(flow, step->other)
+            gen_operand(flow, step->type, step->cond),
+            gen_operand(flow, step->type, step->block),
+            gen_operand(flow, step->type, step->other)
         );
         break;
 
@@ -383,15 +429,15 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
         fprintf(out, "%s = (%s)%s;\n", 
             gen_type(step->type, local(idx)),
             gen_type(step->type, NULL),
-            gen_operand(flow, step->value)
+            gen_operand(flow, step->type, step->value)
         );
         break;
 
     case OP_OFFSET:
         fprintf(out, "%s = %s + %s;\n",
             gen_type(step->type, local(idx)),
-            gen_operand(flow, step->src),
-            gen_operand(flow, step->index)
+            gen_operand(flow, step->type, step->src),
+            gen_operand(flow, step->type, step->index)
         );
         break;
 

@@ -104,6 +104,8 @@ void cterror();
     FINAL "`final`"
     VAR "`var`"
     WHILE "`while`"
+    BREAK "`break`"
+    CONTINUE "`continue`"
     EXPORTED "`export`"
     STRUCT "`struct`"
     UNION "`union`"
@@ -116,10 +118,10 @@ void cterror();
     type typename pointer /* types */
     stmt stmts return if else elseif branch assign while /* statements */
     primary postfix unary multiply add compare equality or and shift xor bits expr /* expressions */
-    import attrib array
+    import attrib array union enum item
 
 %type<nodes>
-    stmtlist fields
+    stmtlist fields enums
     args arglist
     params paramlist
     names imports unit
@@ -169,6 +171,8 @@ attribs: %empty { $$ = 0; }
 declbase: function { $$ = $1; }
     | variable { $$ = $1; }
     | struct { $$ = $1; }
+    | union { $$ = $1; }
+    | enum { $$ = $1; }
     ;
 
 function: DEF IDENT params COLON type stmts { 
@@ -199,12 +203,25 @@ variable: mut IDENT ASSIGN expr SEMI { $$ = ast_decl_var(x, @$, $1, $2, NULL, $4
 struct: STRUCT IDENT LBRACE fields RBRACE { $$ = ast_decl_struct(x, @$, $2, $4); }
     ;
 
+union: UNION IDENT LBRACE fields RBRACE { $$ = ast_decl_union(x, @$, $2, $4); }
+    ;
+
 fields: field { $$ = new_list($1); }
     | fields COMMA field { $$ = list_push($1, $3); }
     ;
 
 field: IDENT COLON type { $$ = ast_field(x, @$, $1, $3); }
-    // | IDENT COLON type ASSIGN expr
+    ;
+
+enum: ENUM IDENT LBRACE enums RBRACE { $$ = ast_decl_enum(x, @$, $2, $4); }
+    ;
+
+enums: item { $$ = new_list($1); }
+    | enums COMMA item { $$ = list_push($1, $3); }
+    ;
+
+item: IDENT { $$ = ast_enum_item(x, @$, $1, NULL); }
+    | IDENT ASSIGN expr { $$ = ast_enum_item(x, @$, $1, $3); }
     ;
 
 mut: VAR { $$ = true; }
@@ -271,6 +288,8 @@ stmt: expr SEMI { $$ = $1; }
     | variable { $$ = $1; }
     | assign { $$ = $1; }
     | while { $$ = $1; }
+    | BREAK SEMI { $$ = ast_break(x, @$); }
+    | CONTINUE SEMI { $$ = ast_continue(x, @$); }
     | error SEMI { $$ = ast_noop(); }
     ;
 

@@ -72,6 +72,7 @@ static void build_branch(sema_t *sema, node_t *stmt) {
 }
 
 static void build_while(sema_t *sema, node_t *stmt) {
+    loop = true;
     type_t *cond = query_expr(sema, stmt->cond);
     build_stmt(sema, stmt->next);
 
@@ -79,6 +80,7 @@ static void build_while(sema_t *sema, node_t *stmt) {
         reportid_t id = reportf(LEVEL_ERROR, stmt, "can only loop on boolean convertible expressions");
         report_underline(id, format("found type `%s`", typefmt(cond)));
     }
+    loop = false;
 }
 
 static void build_stmt(sema_t *sema, node_t *stmt) {
@@ -109,6 +111,18 @@ static void build_stmt(sema_t *sema, node_t *stmt) {
 
     case AST_CALL:
         query_expr(sema, stmt);
+        break;
+
+    case AST_BREAK:
+        if (!loop) {
+            reportf(LEVEL_ERROR, stmt, "break outside loop");
+        }
+        break;
+        
+    case AST_CONTINUE:
+        if (!loop) {
+            reportf(LEVEL_ERROR, stmt, "continue outside loop");
+        }
         break;
 
     case AST_SYMBOL: case AST_DIGIT: case AST_BOOL:
