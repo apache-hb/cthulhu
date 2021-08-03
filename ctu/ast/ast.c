@@ -38,6 +38,7 @@ const char *get_decl_name(node_t *node) {
     switch (node->kind) {
     case AST_DECL_FUNC: case AST_DECL_VAR: case AST_DECL_PARAM:
     case AST_DECL_STRUCT: case AST_DECL_FIELD: case AST_DECL_ENUM:
+    case AST_DECL_UNION:
         return node->name;
 
     default:

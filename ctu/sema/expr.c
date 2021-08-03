@@ -275,7 +275,7 @@ static type_t *query_access(sema_t *sema, node_t *expr) {
         }
     }
 
-    if (!is_struct(body)) {
+    if (!is_record(body)) {
         reportf(LEVEL_ERROR, expr, "cannot access non struct type");
         return new_poison(expr, "cannot access non struct type");
     }

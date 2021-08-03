@@ -178,6 +178,16 @@ static void add_decl(sema_t *sema, node_t *it) {
         put_unique(sema->types, name, it);
         break;
 
+    case AST_DECL_UNION:
+        connect_type(it, new_union(it, name));
+        put_unique(sema->types, name, it);
+        break;
+
+    case AST_DECL_ENUM:
+        connect_type(it, new_enum(it, name));
+        put_unique(sema->types, name, it);
+        break;
+
     default:
         assert("unknown add-decl kind %d", it->kind);
         break;
@@ -242,7 +252,9 @@ static bool check_attribs(node_t *decl) {
     ASSERT(
         decl->kind == AST_DECL_FUNC || 
         decl->kind == AST_DECL_VAR || 
-        decl->kind == AST_DECL_STRUCT
+        decl->kind == AST_DECL_STRUCT ||
+        decl->kind == AST_DECL_UNION ||
+        decl->kind == AST_DECL_ENUM
     )("node cannot have attributes");
 
     list_t *decorate = decl->decorate;
@@ -265,8 +277,8 @@ static void build_type(node_t *it) {
     list_push(current, it);
     sema_t *sema = it->ctx;
     switch (it->kind) {
-    case AST_DECL_STRUCT:
-        build_struct(sema, it);
+    case AST_DECL_STRUCT: case AST_DECL_UNION:
+        build_record(sema, it);
         break;
 
     default:

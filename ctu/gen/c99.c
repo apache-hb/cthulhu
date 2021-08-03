@@ -123,11 +123,22 @@ static char *gen_pointer(type_t *type, const char *name) {
     }
 }
 
-static char *gen_struct(type_t *type, const char *name) {
+static const char *record_type(type_t *type) {
+    switch (type->kind) {
+    case TYPE_UNION: return "union";
+    case TYPE_STRUCT: return "struct";
+
+    default:
+        assert("record-type unreachable");
+        return "error";
+    }
+}
+
+static char *gen_record(type_t *type, const char *name) {
     if (name) {
-        return format("struct type_%zu_t %s", type->index, name);
+        return format("%s type_%zu_t %s", record_type(type), type->index, name);
     } else {
-        return format("struct type_%zu_t", type->index);
+        return format("%s type_%zu_t", record_type(type), type->index);
     }
 }
 
@@ -171,8 +182,8 @@ static const char *gen_type(type_t *type, const char *name) {
     case TYPE_STRING: 
         ty = gen_string(name);
         break;
-    case TYPE_STRUCT: 
-        ty = gen_struct(type, name);
+    case TYPE_STRUCT: case TYPE_UNION:
+        ty = gen_record(type, name);
         break;
     case TYPE_ARRAY: 
         ty = gen_array(type, name); 
@@ -466,9 +477,9 @@ static void gen_global(FILE *out, var_t *var, size_t idx) {
 }
 
 static void emit_type(FILE *out, type_t *type) {
-    ASSERT(type->kind == TYPE_STRUCT)("can only emit structs");
+    ASSERT(is_record(type))("can only emit record types");
 
-    fprintf(out, "struct type_%zu_t { ", type->index);
+    fprintf(out, "%s type_%zu_t { ", record_type(type), type->index);
 
     fields_t fields = type->fields;
     for (size_t i = 0; i < fields.size; i++) {
@@ -519,7 +530,7 @@ void gen_c99(FILE *out, module_t *mod) {
             continue;
         }
 
-        fprintf(out, "%s;", gen_type(type, NULL));
+        fprintf(out, "%s;", gen_type(set_mut(type, true), NULL));
     }
 
     line(out);

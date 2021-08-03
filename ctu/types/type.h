@@ -93,6 +93,9 @@ typedef enum {
      */
     TYPE_STRUCT,
 
+    /* a union */
+    TYPE_UNION,
+
     /**
      * an enumeration
      */
@@ -131,7 +134,10 @@ typedef enum {
 typedef struct {
     const char *name;
     struct type_t *type;
+    struct node_t *init;
 } field_t;
+
+field_t new_type_field(const char *name, struct type_t *type);
 
 typedef struct {
     size_t size;
@@ -247,7 +253,10 @@ type_t *new_pointer(struct node_t *node, type_t *to);
 type_t *new_array(struct node_t *node, type_t *of, size_t size, bool unbounded);
 
 type_t *new_struct(struct node_t *decl, const char *name);
-void resize_struct(type_t *type, size_t size);
+type_t *new_union(struct node_t *decl, const char *name);
+type_t *new_enum(struct node_t *decl, const char *name);
+
+void resize_type(type_t *type, size_t size);
 
 bool is_integer(type_t *type);
 bool is_boolean(type_t *type);
@@ -257,7 +266,9 @@ bool is_signed(type_t *type);
 bool is_pointer(type_t *type);
 bool is_const(type_t *type);
 bool is_struct(type_t *type);
+bool is_union(type_t *type);
 bool is_array(type_t *type);
+bool is_record(type_t *type);
 bool can_index(type_t *type);
 type_t *index_type(type_t *type);
 type_t *array_decay(type_t *type);

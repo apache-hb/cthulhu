@@ -116,9 +116,32 @@ type_t *new_struct(struct node_t *decl, const char *name) {
     return type;
 }
 
-void resize_struct(type_t *type, size_t size) {
+type_t *new_union(struct node_t *decl, const char *name) {
+    type_t *type = new_type(TYPE_UNION, decl);
+
+    type->name = name;
+    type->fields.size = 0;
+
+    return type;
+}
+
+type_t *new_enum(struct node_t *decl, const char *name) {
+    type_t *type = new_type(TYPE_ENUM, decl);
+
+    type->name = name;
+    type->fields.size = 0;
+
+    return type;
+}
+
+void resize_type(type_t *type, size_t size) {
     type->fields.size = size;
     type->fields.fields = ctu_malloc(sizeof(field_t) * size);
+}
+
+field_t new_type_field(const char *name, struct type_t *type) {
+    field_t field = { name, type, NULL };
+    return field;
 }
 
 bool is_integer(type_t *type) {
@@ -139,6 +162,14 @@ bool is_void(type_t *type) {
 
 bool is_struct(type_t *type) {
     return type->kind == TYPE_STRUCT;
+}
+
+bool is_union(type_t *type) {
+    return type->kind == TYPE_UNION;
+}
+
+bool is_record(type_t *type) {
+    return is_union(type) || is_struct(type);
 }
 
 integer_t get_integer_kind(type_t *type) {
@@ -207,7 +238,7 @@ type_t *set_lvalue(type_t *type, bool lvalue) {
         out->of = set_lvalue(out->of, lvalue);
     }
 
-    if (is_struct(type) && type->valid) {
+    if (is_record(type) && type->valid) {
         for (size_t i = 0; i < type->fields.size; i++) {
             type_t *field = type->fields.fields[i].type;
             field = set_lvalue(field, lvalue);
@@ -348,7 +379,7 @@ static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implic
         return type_can_become(node, dst->ptr, src->ptr, implicit);
     }
 
-    if (is_struct(src) && is_struct(dst)) {
+    if (is_record(src) && is_record(dst)) {
         if (src->index != dst->index) {
             reportf(LEVEL_ERROR, *node, "cannot implicitly cast between unrelated types `%s` and `%s`", typefmt(src), typefmt(dst));
             return false;

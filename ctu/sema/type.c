@@ -105,8 +105,8 @@ static type_t *query_type(sema_t *sema, node_t *it) {
     return type;
 }
 
-static void struct_contains(type_t *type, type_t *other) {
-    if (!is_struct(type)) {
+static void record_contains(type_t *type, type_t *other) {
+    if (!is_record(type)) {
         return;
     }
 
@@ -118,15 +118,14 @@ static void struct_contains(type_t *type, type_t *other) {
             ty->valid = false;
         }
 
-        if (is_struct(ty) && ty->valid) {
-            printf("is-struct %zu\n", ty->fields.size);
-            struct_contains(ty, other);
+        if (is_record(ty) && ty->valid) {
+            record_contains(ty, other);
         }
     }
 }
 
-static void recursive_struct(type_t *it) {
-    struct_contains(it, it);
+static void recursive_record(type_t *it) {
+    record_contains(it, it);
 }
 
 static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
@@ -153,17 +152,17 @@ static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
         reportf(LEVEL_ERROR, field, "structs may not contain unbounded arrays");
     }
 
-    field_t it = { name, ty };
+    field_t it = new_type_field(name, ty);
 
     record->fields.fields[at] = it;
 }
 
-static void build_struct(sema_t *sema, node_t *node) {
+static void build_record(sema_t *sema, node_t *node) {
     list_t *fields = node->fields;
     size_t len = list_len(fields);
 
     type_t *result = raw_type(node);
-    resize_struct(result, len);
+    resize_type(result, len);
 
     for (size_t i = 0; i < len; i++) {
         node_t *field = list_at(fields, i);
@@ -172,5 +171,5 @@ static void build_struct(sema_t *sema, node_t *node) {
 
     connect_type(node, result);
 
-    recursive_struct(result);
+    recursive_record(result);
 }

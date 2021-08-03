@@ -48,7 +48,7 @@ static type_t *binary_cmp(sema_t *sema, node_t *expr) {
         reportf(LEVEL_ERROR, expr, "cannot compare functions");
     }
 
-    if (is_struct(lhs) || is_struct(rhs)) {
+    if (is_record(lhs) || is_record(rhs)) {
         reportf(LEVEL_ERROR, expr, "cannot compare user defined types");
     }
 
@@ -71,7 +71,7 @@ static type_t *binary_eq(sema_t *sema, node_t *expr) {
         reportf(LEVEL_ERROR, expr, "cannot use functions in equality");
     }
 
-    if (is_struct(lhs) || is_struct(rhs)) {
+    if (is_record(lhs) || is_record(rhs)) {
         reportf(LEVEL_ERROR, expr, "cannot use user defined types in equality");
     }
 
