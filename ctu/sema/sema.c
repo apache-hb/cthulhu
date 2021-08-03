@@ -179,7 +179,7 @@ static void add_decl(sema_t *sema, node_t *it) {
         break;
 
     default:
-        assert("unknown add_decl kind %d", it->type);
+        assert("unknown add-decl kind %d", it->kind);
         break;
     }
 }

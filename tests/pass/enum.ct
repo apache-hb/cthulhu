@@ -1,0 +1,7 @@
+enum Enum {
+    A = 0
+}
+
+def zero(): Enum {
+    return Enum::A;
+}
