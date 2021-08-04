@@ -525,6 +525,7 @@ void gen_c99(FILE *out, module_t *mod) {
     add_include(out, "stdbool");
     add_include(out, "stdint");
     add_include(out, "stddef");
+    add_include(out, "stdlib");
 
     line(out);
 

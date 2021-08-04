@@ -140,7 +140,12 @@ void resize_type(type_t *type, size_t size) {
 }
 
 field_t new_type_field(const char *name, struct type_t *type) {
-    field_t field = { name, type, NULL };
+    field_t field = { name, type, 0 };
+    return field;
+}
+
+field_t new_init_field(const char *name, struct type_t *parent, size_t init) {
+    field_t field = { name, parent, init };
     return field;
 }
 

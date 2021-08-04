@@ -68,6 +68,17 @@ const char *get_field_name(node_t *node) {
     }
 }
 
+const char *get_item_name(node_t *node) {
+    switch (node->kind) {
+    case AST_ENUM_ITEM:
+        return node->name;
+
+    default:
+        reportf(LEVEL_INTERNAL, node, "node is not an enum item");
+        return "not-an-enum-item";
+    }
+}
+
 bool is_discard_name(const char *name) {
     return name[0] == '$';
 }

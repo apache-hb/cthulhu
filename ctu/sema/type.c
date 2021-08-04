@@ -152,9 +152,7 @@ static void add_field(sema_t *sema, size_t at, type_t *record, node_t *field) {
         reportf(LEVEL_ERROR, field, "structs may not contain unbounded arrays");
     }
 
-    field_t it = new_type_field(name, ty);
-
-    record->fields.fields[at] = it;
+    record->fields.fields[at] = new_type_field(name, ty);
 }
 
 static void build_record(sema_t *sema, node_t *node) {
@@ -172,4 +170,59 @@ static void build_record(sema_t *sema, node_t *node) {
     connect_type(node, result);
 
     recursive_record(result);
+}
+
+static void add_item(size_t idx, type_t *result, node_t *field) {
+    const char *name = get_item_name(field);
+
+    if (is_discard_name(name)) {
+        reportf(LEVEL_ERROR, field, "enum cannot contain discard values");
+        return;
+    }
+
+    for (size_t i = 0; i < idx; i++) {
+        field_t it = result->fields.fields[i];
+        if (strcmp(it.name, name) == 0) {
+            reportf(LEVEL_ERROR, field, "duplicate enum value `%s`", name);
+            return;
+        }
+    }
+
+    node_t *val = field->init;
+    size_t out;
+
+    if (val) {
+        if (!is_consteval(val)) {
+            reportf(LEVEL_ERROR, field, "enum value for `%s` must be constant", name);
+            return;
+        }
+
+        mpz_t num;
+        if (!eval_ast(num, val)) {
+            reportf(LEVEL_INTERNAL, val, "failed to evaluate enum value for `%s`", name);
+            return;
+        }
+        out = mpz_get_ui(num);
+    } else {
+        out = idx;
+    }
+
+    result->fields.fields[idx] = new_init_field(name, result, out);
+
+    connect_type(field, result);
+}
+
+static void build_enum(node_t *node) {
+    list_t *fields = node->fields;
+    size_t len = list_len(fields);
+
+    type_t *result = raw_type(node);
+    resize_type(result, len);
+
+    for (size_t i = 0; i < len; i++) {
+        node_t *field = list_at(fields, i);
+        add_item(i, result, field);
+    }
+
+    connect_type(node, result);
 }

@@ -283,6 +283,10 @@ static void build_type(node_t *it) {
         build_record(sema, it);
         break;
 
+    case AST_DECL_ENUM:
+        build_enum(it);
+        break;
+
     default:
         assert("unknown type node %d", it->kind);
         goto clear;

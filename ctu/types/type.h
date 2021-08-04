@@ -137,10 +137,13 @@ typedef enum {
 typedef struct {
     const char *name;
     struct type_t *type;
-    struct node_t *init;
+
+    /* TODO: eventually a generic value will be needed */
+    size_t init;
 } field_t;
 
 field_t new_type_field(const char *name, struct type_t *type);
+field_t new_init_field(const char *name, struct type_t *parent, size_t init);
 
 typedef struct {
     size_t size;

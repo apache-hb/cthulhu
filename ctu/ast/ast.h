@@ -348,6 +348,7 @@ const char *get_decl_name(node_t *node);
 const char *get_resolved_name(node_t *node);
 
 const char *get_field_name(node_t *node);
+const char *get_item_name(node_t *node);
 
 bool is_deref(node_t *expr);
 
