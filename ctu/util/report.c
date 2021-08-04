@@ -40,6 +40,7 @@ static bool eager_report = false;
 static report_t *reports = NULL;
 static size_t max_reports = 0;
 static size_t num_reports = 0;
+static bool internal = false;
 
 static bool already_reported(size_t index) {
     const void *tag = reports[index].tag;
@@ -188,6 +189,10 @@ static bool print_report(report_t report) {
 static reportid_t push_report(level_t level, scanner_t *source, where_t where, node_t *node, char *message) {
     report_t it = { level, message, source, where, NULL, NULL, node, node };
 
+    if (level == LEVEL_INTERNAL) {
+        internal = true;
+    }
+
     if (eager_report) {
         print_report(it);
     }
@@ -307,11 +312,8 @@ void logfmt(const char *fmt, ...) {
 }
 
 int report_code(void) {
-    for (size_t i = 0; i < num_reports; i++) {
-        report_t report = reports[i];
-        if (report.level == LEVEL_INTERNAL) {
-            return 99;
-        }
+    if (internal) {
+        return 99;
     }
 
     return num_reports != 0;
