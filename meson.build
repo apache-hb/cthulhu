@@ -72,7 +72,8 @@ libsema = library('sema', src,
 
 src = [
     'ctu/ir/ir.c',
-    'ctu/ir/match.c'
+    'ctu/ir/match.c',
+    'ctu/ir/eval.c'
 ]
 
 libir = library('ir', src,
