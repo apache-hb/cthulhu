@@ -4,8 +4,6 @@
 #include "ctu/util/util.h"
 #include "ctu/util/str.h"
 
-#include "ctu/eval/eval.h"
-
 #include "ctu/ast/compile.h"
 
 #include "ctu/debug/ast.h"
@@ -281,10 +279,6 @@ static void build_type(node_t *it) {
     switch (it->kind) {
     case AST_DECL_STRUCT: case AST_DECL_UNION:
         build_record(sema, it);
-        break;
-
-    case AST_DECL_ENUM:
-        build_enum(it);
         break;
 
     default:

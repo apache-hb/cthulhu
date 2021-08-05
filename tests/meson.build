@@ -7,7 +7,7 @@ pass = [
     'long', 'loop', 'mut', 'pointers', 'pointers2',
     'regalloc', 'var', 'suffix', 'global',
     'unused-var', 'implicit-var-cast', 'string', 'forward',
-    'posix-interop', 'win32-interop', 'array-1', 'array-2', 
+    'posix-interop', 'win32-interop', 'array-1', 'array-3',
     'fuzz-8', 'array-struct', 'fizzbuzz'
 ]
 

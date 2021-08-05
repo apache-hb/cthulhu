@@ -47,16 +47,6 @@ static type_t *query_array(sema_t *sema, node_t *expr) {
             reportf(LEVEL_ERROR, expr, "array size must be convertible to usize, `%s` is incompatible", typefmt(len));
             return new_poison(expr, "unresolved array size");
         }
-
-        if (!is_consteval(expr->size)) {
-            reportf(LEVEL_ERROR, expr, "array size must be constant");
-        } else {
-            mpz_t num;
-            if (!eval_ast(num, expr->size)) {
-                reportf(LEVEL_INTERNAL, expr->size, "failed to evaluate size");
-            }
-            size = mpz_get_ui(num);
-        }
     }
 
     return new_array(expr, of, size, expr->size == NULL);
@@ -170,59 +160,4 @@ static void build_record(sema_t *sema, node_t *node) {
     connect_type(node, result);
 
     recursive_record(result);
-}
-
-static void add_item(size_t idx, type_t *result, node_t *field) {
-    const char *name = get_item_name(field);
-
-    if (is_discard_name(name)) {
-        reportf(LEVEL_ERROR, field, "enum cannot contain discard values");
-        return;
-    }
-
-    for (size_t i = 0; i < idx; i++) {
-        field_t it = result->fields.fields[i];
-        if (strcmp(it.name, name) == 0) {
-            reportf(LEVEL_ERROR, field, "duplicate enum value `%s`", name);
-            return;
-        }
-    }
-
-    node_t *val = field->init;
-    size_t out;
-
-    if (val) {
-        if (!is_consteval(val)) {
-            reportf(LEVEL_ERROR, field, "enum value for `%s` must be constant", name);
-            return;
-        }
-
-        mpz_t num;
-        if (!eval_ast(num, val)) {
-            reportf(LEVEL_INTERNAL, val, "failed to evaluate enum value for `%s`", name);
-            return;
-        }
-        out = mpz_get_ui(num);
-    } else {
-        out = idx;
-    }
-
-    result->fields.fields[idx] = new_init_field(name, result, out);
-
-    connect_type(field, result);
-}
-
-static void build_enum(node_t *node) {
-    list_t *fields = node->fields;
-    size_t len = list_len(fields);
-
-    type_t *result = raw_type(node);
-    resize_type(result, len);
-
-    for (size_t i = 0; i < len; i++) {
-        node_t *field = list_at(fields, i);
-        add_item(i, result, field);
-    }
-
-    connect_type(node, result);
 }

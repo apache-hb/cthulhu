@@ -5,8 +5,6 @@
 #include "ctu/util/util.h"
 #include "ctu/util/str.h"
 
-#include "ctu/eval/eval.h"
-
 #include "ctu/sema/sema.h"
 
 #include <stdlib.h>
@@ -725,10 +723,6 @@ static var_t compile_var(module_t *mod, node_t *node) {
      */
 
     (void)mod;
-
-    if (node->init && !is_consteval(node->init)) {
-        reportf(LEVEL_ERROR, node, "variable `%s` initialization must be constant", node->name);
-    }
 
     var_t var = { 
         get_decl_name(node), 

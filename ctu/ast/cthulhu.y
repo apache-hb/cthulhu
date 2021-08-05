@@ -13,6 +13,7 @@
     #include "ctu/ast/scanner.h"
     #include "ctu/ast/ast.h"
     #include "ctu/util/str.h"
+    #include "ctu/util/report.h"
 }
 
 %{
@@ -115,10 +116,10 @@ void cterror();
 
 %type<node>
     decl declbase function param variable struct field /* declarations */
-    type typename pointer /* types */
+    type typename pointer array /* types */
     stmt stmts return if else elseif branch assign while /* statements */
     primary postfix unary multiply add compare equality or and shift xor bits expr /* expressions */
-    import attrib array union enum item
+    import attrib union enum item digit
 
 %type<nodes>
     stmtlist fields enums
@@ -313,7 +314,11 @@ names: IDENT { $$ = new_list($1); }
     ;
 
 array: LSQUARE type RSQUARE { $$ = ast_array(x, @$, $2, NULL); }
-    | LSQUARE type COLON expr RSQUARE { $$ = ast_array(x, @$, $2, $4); }
+    | LSQUARE type COLON digit RSQUARE { $$ = ast_array(x, @$, $2, $4); }
+    | LSQUARE type COLON error RSQUARE { 
+        $$ = ast_array(x, @$, $2, NULL); 
+        reportf(LEVEL_ERROR, $$, "array length must be an integer literal");
+    }
     ;
 
 /**
@@ -328,10 +333,12 @@ arglist: expr { $$ = new_list($1); }
     | arglist COMMA expr { $$ = list_push($1, $3); }
     ;
 
+digit: DIGIT { $$ = ast_digit(x, @$, $1.text, $1.base); }
+    ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }
     | typename { $$ = $1; }
-    | DIGIT { $$ = ast_digit(x, @$, $1.text, $1.base); }
+    | digit { $$ = $1; }
     | BOOL_TRUE { $$ = ast_bool(x, @$, true); }
     | BOOL_FALSE { $$ = ast_bool(x, @$, false); }
     | STRING { $$ = ast_string(x, @$, $1); }
