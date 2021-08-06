@@ -289,7 +289,7 @@ static char *escape_string(scanner_t *scanner, where_t where, const char *str) {
         }
     }
 
-    out[idx] = 0;
+    out[dst] = 0;
 
     return out;
 }

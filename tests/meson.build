@@ -8,7 +8,8 @@ pass = [
     'regalloc', 'var', 'suffix', 'global',
     'unused-var', 'implicit-var-cast', 'string', 'forward',
     'posix-interop', 'win32-interop', 'array-1', 'array-3',
-    'fuzz-8', 'array-struct', 'fizzbuzz'
+    'fuzz-8', 'array-struct', 'fizzbuzz', 'long-while',
+    'struct', 'union'
 ]
 
 foreach it : pass 
@@ -63,7 +64,10 @@ endforeach
 crashes = [ 
     'fuzz-1', 'fuzz-2', 'fuzz-3', 'fuzz-4',
     'fuzz-5', 'fuzz-6', 'fuzz-7', 'fuzz-8',
-    'fuzz-9'
+    'fuzz-9',
+    
+    'overflow/1', 'overflow/2', 'overflow/3',
+    'overflow/4', 'overflow/5'
 ]
 
 foreach it : crashes 
