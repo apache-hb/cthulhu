@@ -279,25 +279,26 @@ void connect_type(node_t *node, type_t *type) {
 }
 
 static void sanitize_signed(scanner_t *source, where_t where, integer_t kind, mpz_t it) {
+    reportid_t id = INVALID_REPORT;
     switch (kind) {
     case INTEGER_CHAR:
         if (mpz_cmp_si(it, -128) < 0 || mpz_cmp_si(it, 127) > 0) {
-            report(LEVEL_WARNING, source, where, "character out of range");
+            id = report(LEVEL_WARNING, source, where, "character out of range");
         }
         break;
     case INTEGER_SHORT:
         if (mpz_cmp_si(it, -32768) < 0 || mpz_cmp_si(it, 32767) > 0) {
-            report(LEVEL_WARNING, source, where, "short out of range");
+            id = report(LEVEL_WARNING, source, where, "short out of range");
         }
         break;
     case INTEGER_INT:
         if (mpz_cmp_si(it, -2147483648) < 0 || mpz_cmp_si(it, 2147483647) > 0) {
-            report(LEVEL_WARNING, source, where, "int out of range");
+            id = report(LEVEL_WARNING, source, where, "int out of range");
         }
         break;
     case INTEGER_LONG:
         if (mpz_cmp_si(it, -9223372036854775807LL) < 0 || mpz_cmp_si(it, 9223372036854775807LL) > 0) {
-            report(LEVEL_WARNING, source, where, "long out of range");
+            id = report(LEVEL_WARNING, source, where, "long out of range");
         }
         break;
 
@@ -306,30 +307,35 @@ static void sanitize_signed(scanner_t *source, where_t where, integer_t kind, mp
          * all other types have platform defined ranges
          * so dont warn if they overflow
          */
-        break;
+        return;
+    }
+
+    if (id != INVALID_REPORT) {
+        report_underline(id, format("evaluated to %s", mpz_get_str(NULL, 10, it)));
     }
 }
 
 static void sanitize_unsigned(scanner_t *source, where_t where, integer_t kind, mpz_t it) {
+    reportid_t id = INVALID_REPORT;
     switch (kind) {
     case INTEGER_CHAR: 
         if (mpz_cmp_ui(it, 0xFF) > 0) {
-            report(LEVEL_WARNING, source, where, "unsigned char overflow");
+            id = report(LEVEL_WARNING, source, where, "unsigned char overflow");
         }
         break;
     case INTEGER_SHORT:
         if (mpz_cmp_ui(it, 0xFFFF) > 0) {
-            report(LEVEL_WARNING, source, where, "unsigned short overflow");
+            id = report(LEVEL_WARNING, source, where, "unsigned short overflow");
         }
         break;
     case INTEGER_INT:
         if (mpz_cmp_ui(it, 0xFFFFFFFF) > 0) {
-            report(LEVEL_WARNING, source, where, "unsigned int overflow");
+            id = report(LEVEL_WARNING, source, where, "unsigned int overflow");
         }
         break;
     case INTEGER_LONG:
         if (mpz_cmp_ui(it, 0xFFFFFFFFFFFFFFFFULL) > 0) {
-            report(LEVEL_WARNING, source, where, "unsigned long overflow");
+            id = report(LEVEL_WARNING, source, where, "unsigned long overflow");
         }
         break;
 
@@ -337,7 +343,11 @@ static void sanitize_unsigned(scanner_t *source, where_t where, integer_t kind, 
         /**
          * same as above
          */
-        break;
+        return;
+    }
+
+    if (id != INVALID_REPORT) {
+        report_underline(id, format("evaluated to %s", mpz_get_str(NULL, 10, it)));
     }
 }
 

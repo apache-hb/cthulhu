@@ -28,9 +28,7 @@ typedef enum {
 typedef size_t vreg_t;
 
 typedef struct {
-    enum { 
-        IMM_BOOL, IMM_INT, IMM_SIZE
-    } kind;
+    type_t *type;
 
     union {
         mpz_t num;
@@ -94,7 +92,7 @@ void operand_get_int(mpz_t it, operand_t op);
 operand_t new_vreg(vreg_t vreg);
 operand_t new_block(size_t label);
 operand_t new_bool(bool b);
-operand_t new_int(mpz_t i);
+operand_t new_int(type_t *type, mpz_t i);
 
 typedef struct {
     opcode_t opcode;
@@ -176,7 +174,8 @@ typedef struct {
  * a single function
  */
 typedef struct {
-    /* the name of the function */
+    node_t *node;
+
     const char *name;
 
     arg_t *args;
@@ -191,6 +190,9 @@ typedef struct {
     /* the return type */
     type_t *result;
 
+    /* if this is a variable this is the result of the variable */
+    struct value_t *value;
+
     /* the parent module this flow is contained in */
     struct module_t *mod;
 
@@ -204,20 +206,39 @@ typedef struct {
     list_t *continues;
 } flow_t;
 
-/**
- * a single variable
- */
-typedef struct {
-    /* the name of this variable */
-    const char *name;
-
-    /* the type of this variable */
+/* a compile time value */
+typedef struct value_t {
+    /* the type of this value */
     type_t *type;
 
-    bool exported:1;
-    bool used:1;
-    bool interop:1;
-} var_t;
+    union {
+        /* if this is a digit this is active */
+        mpz_t digit;
+
+        /* if this is a bool this is active */
+        bool boolean;
+
+        /* if this is a string this is active */
+        char *string;
+
+        /* if this is a struct or a union this is active */
+        map_t *items;
+
+        /* if this is a function this is active */
+        flow_t *func;
+
+        /* if this is a pointer this points to a value */
+        struct {
+            size_t size;
+            struct value_t **values;
+
+            bool *init;
+        };
+    };
+} value_t;
+
+
+const char *flow_name(const flow_t *flow);
 
 step_t *step_at(flow_t *flow, size_t idx);
 
@@ -233,7 +254,7 @@ typedef struct module_t {
     size_t closures;
 
     /* variables in the current module */
-    var_t *vars;
+    flow_t *vars;
     size_t nvars;
 
     /* all types declared in this module */

@@ -1,7 +1,9 @@
 #include "ir.h"
+#include "eval.h"
 
 #include "ctu/util/report.h"
 #include "ctu/debug/ast.h"
+#include "ctu/debug/ir.h"
 #include "ctu/util/util.h"
 #include "ctu/util/str.h"
 
@@ -21,9 +23,9 @@ static operand_t new_operand(int kind) {
     return op;
 }
 
-operand_t new_int(mpz_t imm) {
+operand_t new_int(type_t *type, mpz_t imm) {
     operand_t op = new_operand(IMM);
-    op.imm.kind = IMM_INT;
+    op.imm.type = type;
     mpz_init_set(op.imm.num, imm);
     return op;
 }
@@ -100,7 +102,10 @@ type_t *step_type(step_t *step) {
 }
 
 static step_t new_step(opcode_t op, node_t *node) {
-    return new_typed_step(op, get_resolved_type(node));
+    step_t step = new_typed_step(op, get_resolved_type(node));
+    step.source = node->scanner;
+    step.where = node->where;
+    return step;
 }
 
 bool operand_is_imm(operand_t op) {
@@ -108,7 +113,8 @@ bool operand_is_imm(operand_t op) {
 }
 
 bool operand_is_bool(operand_t op) {
-    return operand_is_imm(op) && op.imm.kind == IMM_BOOL;
+    return operand_is_imm(op) 
+        && is_boolean(op.imm.type);
 }
 
 bool operand_is_invalid(operand_t op) {
@@ -126,7 +132,7 @@ void operand_get_int(mpz_t it, operand_t op) {
 
 operand_t new_bool(bool b) {
     operand_t op = new_operand(IMM);
-    op.imm.kind = IMM_BOOL;
+    op.imm.type = BOOL_TYPE;
     op.imm.b = b;
     return op;
 }
@@ -178,7 +184,7 @@ static operand_t add_reserve(flow_t *flow, node_t *node, size_t len) {
 static operand_t emit_opcode(flow_t *flow, node_t *node);
 
 static operand_t emit_digit(node_t *node) {
-    return new_int(node->num);
+    return new_int(get_resolved_type(node), node->num);
 }
 
 static operand_t emit_bool(node_t *node) {
@@ -580,6 +586,7 @@ static operand_t emit_continue(flow_t *flow) {
 
 static operand_t emit_sizeof(flow_t *flow, node_t *node) {
     flow_t self = { 
+        .node = node,
         .name = format("closure%zu", node->local),
         .args = NULL,
         .nargs = 0,
@@ -591,6 +598,7 @@ static operand_t emit_sizeof(flow_t *flow, node_t *node) {
         .nlocals = 0,
 
         .result = size_int(),
+        .value = NULL,
 
         .mod = flow->mod,
 
@@ -659,6 +667,7 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     bool stubbed = node->body == NULL;
 
     flow_t flow = { 
+        node,
         /* name */
         get_decl_name(node), 
         
@@ -673,6 +682,7 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
 
         /* return type */
         result,
+        NULL,
 
         /* parent */
         mod,
@@ -715,25 +725,43 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     return flow;
 }
 
-static var_t compile_var(module_t *mod, node_t *node) {
+static flow_t compile_var(module_t *mod, node_t *node) {
     ASSERT(node->kind == AST_DECL_VAR)("compile_var requires a variable");
 
-    /**
-     * TODO: static initialization
-     */
+    flow_t self = { 
+        .node = node,
+        .name = get_decl_name(node),
+        .args = NULL,
+        .nargs = 0,
 
-    (void)mod;
+        .steps = ctu_malloc(sizeof(step_t) * 64), 
+        .len = 0, .size = 64, 
+        
+        .locals = NULL,
+        .nlocals = 0,
 
-    var_t var = { 
-        get_decl_name(node), 
-        get_resolved_type(node),
+        .result = get_resolved_type(node),
+        .value = NULL,
 
-        is_exported(node),
-        is_used(node),
-        is_interop(node)
+        .mod = mod,
+
+        .exported = is_exported(node),
+        .used = is_used(node),
+        .stub = false,
+        .interop = is_interop(node),
+
+        .breaks = NULL,
+        .continues = NULL
     };
 
-    return var;
+    if (node->init != NULL) {
+        operand_t op = emit_opcode(&self, node->init);
+        step_t ret = new_step(OP_RETURN, node->init);
+        ret.value = op;
+        add_step(&self, ret);
+    }
+
+    return self;
 }
 
 module_t *compile_module(const char *name, unit_t unit) {
@@ -750,7 +778,7 @@ module_t *compile_module(const char *name, unit_t unit) {
     mod->flows = ctu_malloc(sizeof(flow_t) * mod->nflows);
     
     mod->nvars = list_len(unit.vars);
-    mod->vars = ctu_malloc(sizeof(var_t) * mod->nvars);
+    mod->vars = ctu_malloc(sizeof(flow_t) * mod->nvars);
 
     mod->ntypes = list_len(unit.types);
     mod->types = ctu_malloc(sizeof(type_t*) * mod->ntypes);
@@ -790,7 +818,24 @@ module_t *compile_module(const char *name, unit_t unit) {
         mod->vars[i] = compile_var(mod, list_at(unit.vars, i));
     }
 
+    /**
+     * evaluate global variables
+     */
+
+    for (size_t i = 0; i < mod->nvars; i++) {
+        flow_t *var = mod->vars + i;
+        if (var->node->init) {
+            var->value = eval_global(mod, mod->vars + i);
+        } else {
+            var->value = empty_value();
+        }
+    }
+
     return mod;
+}
+
+const char *flow_name(const flow_t *flow) {
+    return flow->name;
 }
 
 step_t *step_at(flow_t *flow, size_t idx) {

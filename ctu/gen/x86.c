@@ -88,7 +88,7 @@ blob_t compile_flow(flow_t *flow) {
     */
     size_t *data = malloc(sizeof(step_data_t) * flow->len);
 
-    free(data);
+    ctu_free(data);
 
     blob_t blob = {
 #ifdef _WIN32

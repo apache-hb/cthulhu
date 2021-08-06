@@ -51,7 +51,7 @@ reportid_t reportf(level_t level, node_t *node, const char *fmt, ...);
 /**
  * generate a report from a source and location
  */
-void report(level_t level, scanner_t *source, where_t where, const char *fmt, ...);
+reportid_t report(level_t level, scanner_t *source, where_t where, const char *fmt, ...);
 
 /**
  * add a message to be printed next to the squiggly report undline

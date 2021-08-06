@@ -11,10 +11,15 @@ static const char *get_var_name(module_t *mod, size_t idx) {
 }
 
 static void debug_imm(imm_t imm) {
-    switch (imm.kind) {
-    case IMM_INT: printf("int(%s)", mpz_get_str(NULL, 0, imm.num)); break;
-    case IMM_BOOL: printf("bool(%s)", imm.b ? "true" : "false"); break;
-    case IMM_SIZE: printf("size(%s)", mpz_get_str(NULL, 0, imm.num));
+    if (is_boolean(imm.type)) {
+        printf("bool(%s)", imm.b ? "true" : "false");
+    } else if (is_integer(imm.type)) {
+        printf("%sint(%s)", 
+            is_signed(imm.type) ? "" : "u",
+            mpz_get_str(NULL, 0, imm.num)
+        );
+    } else {
+        printf("error-imm");
     }
 }
 
@@ -174,16 +179,7 @@ static void debug_params(flow_t *flow) {
     printf(")");
 }
 
-void debug_flow(flow_t flow) {
-    if (flow.interop) { 
-        printf("extern %s", flow.name);
-    } else {
-        printf("define %s", flow.name);
-    }
-    debug_params(&flow);
-    printf(": ");
-    debug_type(flow.result);
-
+static void debug_flow_inner(flow_t flow) {
     if (!flow.interop) {
         printf(" {\n");
         for (size_t i = 0; i < flow.len; i++) {
@@ -195,9 +191,24 @@ void debug_flow(flow_t flow) {
     printf("\n");
 }
 
-static void debug_global(size_t i, var_t var) {
+void debug_flow(flow_t flow) {
+    if (flow.interop) { 
+        printf("extern %s", flow.name);
+    } else {
+        printf("define %s", flow.name);
+    }
+    
+    debug_params(&flow);
+    printf(": ");
+    debug_type(flow.result);
+
+    debug_flow_inner(flow);
+}
+
+static void debug_global(size_t i, flow_t var) {
     printf("global %zu = %s: ", i, var.name);
-    debug_type(var.type);
+    debug_type(var.result);
+    debug_flow_inner(var);
 }
 
 static void debug_string(size_t i, char *str) {

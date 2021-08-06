@@ -44,7 +44,7 @@ bool run_pass(pass_t *pass) {
 
         flow_t *flow = pass->mod->flows + i;
 
-        logfmt("begin pass for %s", flow->name);
+        logfmt("begin pass for %s", flow_name(flow));
 
         if (remove_unused_blocks(flow)) {
             logfmt("removed unused blocks");

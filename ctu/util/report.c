@@ -42,15 +42,22 @@ static size_t max_reports = 0;
 static size_t num_reports = 0;
 static bool internal = false;
 
+static const void *get_tag(size_t idx) {
+    const void *tag = reports[idx].tag;
+    if (!tag) {
+        tag = reports[idx].node;
+    }
+    return tag;
+}
+
 static bool already_reported(size_t index) {
-    const void *tag = reports[index].tag;
+    const void *tag = get_tag(index);
     if (!tag) {
         return false;
     }
 
     for (size_t i = 0; i < index; i++) {
-        report_t it = reports[i];
-        if (it.tag == tag) {
+        if (get_tag(i) == tag) {
             return true;
         }
     }
@@ -90,7 +97,7 @@ static void print_padding(size_t size, bool feed) {
 
 static void print_line(scanner_t *source, loc_t line) {
     size_t index = 0;
-    char c = source->text[index];
+    char c = '\0';
     while (line > 0) {
         c = source->text[index++];
         if (!c) {
@@ -273,11 +280,12 @@ reportid_t reportf(level_t level, node_t *node, const char *fmt, ...) {
     return id;
 }
 
-void report(level_t level, scanner_t *source, where_t where, const char *fmt, ...) {
+reportid_t report(level_t level, scanner_t *source, where_t where, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    push_report(level, source, where, NULL, formatv(fmt, args));
+    reportid_t id = push_report(level, source, where, NULL, formatv(fmt, args));
     va_end(args);
+    return id;
 }
 
 void report_underline(reportid_t id, const char *msg) {

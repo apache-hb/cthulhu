@@ -48,7 +48,7 @@ static step_t fold_div(step_t *step, mpz_t lhs, mpz_t rhs, bool *dirty) {
     mpz_cdiv_q(it, lhs, rhs);
 
     *dirty = true;
-    return new_value(step, new_int(it));
+    return new_value(step, new_int(step->type, it));
 }
 
 static step_t fold_rem(step_t *step, mpz_t lhs, mpz_t rhs, bool *dirty) {
@@ -65,7 +65,7 @@ static step_t fold_rem(step_t *step, mpz_t lhs, mpz_t rhs, bool *dirty) {
     mpz_mod(it, lhs, rhs);
 
     *dirty = true;
-    return new_value(step, new_int(it));
+    return new_value(step, new_int(step->type, it));
 }
 
 #include <stdio.h>
@@ -105,7 +105,7 @@ static step_t fold_math_op(step_t *step, bool *dirty) {
     if (changed) {
         *dirty = true;
         sanitize_range(step->type, it, step->source, step->where);
-        return new_value(step, new_int(it));
+        return new_value(step, new_int(step->type, it));
     } else {
         return *step;
     }
@@ -136,11 +136,11 @@ static void fold_unary(step_t *step, bool *dirty) {
 
     if (step->unary == UNARY_ABS) {
         mpz_abs(it, it);
-        *step = new_value(step, new_int(it));
+        *step = new_value(step, new_int(step->type, it));
         *dirty = true;
     } else if (step->unary == UNARY_NEG) {
         mpz_neg(it, it);
-        *step = new_value(step, new_int(it));
+        *step = new_value(step, new_int(step->type, it));
         *dirty = true;
     }
 }

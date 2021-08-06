@@ -49,7 +49,7 @@ static char *gen_callable(type_t *type, const char *name) {
     }
 
     char *out = format("%s%s(%s)", ret, body, str_join(", ", (const char **)args, nargs));
-    free(args);
+    ctu_free(args);
 
     return out;
 }
@@ -215,7 +215,7 @@ static void gen_func_decl(FILE *out, flow_t *flow, bool omit_names) {
     if (!flow->exported) {
         fprintf(out, "static ");
     }
-    fprintf(out, "%s %s(", gen_type(flow->result, NULL), flow->name);
+    fprintf(out, "%s %s(", gen_type(flow->result, NULL), flow_name(flow));
     
     if (flow->nargs == 0) {
         fprintf(out, "void");
@@ -239,15 +239,16 @@ static void def_flow(FILE *out, flow_t *flow) {
 }
 
 static const char *gen_imm(imm_t imm) {
-    switch (imm.kind) {
-    case IMM_BOOL: return imm.b ? "true" : "false";
-    case IMM_INT: return format("%s", mpz_get_str(NULL, 0, imm.num));
-    case IMM_SIZE: return format("%s", mpz_get_str(NULL, 0, imm.num));
-
-    default:
-        assert("unreachable gen_imm");
-        return "";
+    if (is_boolean(imm.type)) {
+        return imm.b ? "true" : "false";
     }
+
+    if (is_integer(imm.type)) {
+        return format("%s", mpz_get_str(NULL, 0, imm.num));
+    }
+
+    assert("unreachable gen_imm");
+    return "";
 }
 
 static char *local(size_t idx) {
@@ -488,9 +489,9 @@ static void gen_flow(FILE *out, flow_t *flow) {
     fprintf(out, "}\n\n");
 }
 
-static void gen_global(FILE *out, var_t *var, size_t idx) {
+static void gen_global(FILE *out, flow_t *var, size_t idx) {
     fprintf(out, "%s[1];\n", 
-        gen_type(var->type, gen_var(idx))
+        gen_type(var->result, gen_var(idx))
     );
 }
 
@@ -575,7 +576,7 @@ void gen_c99(FILE *out, module_t *mod) {
     line(out);
 
     for (size_t i = 0; i < num_vars(mod); i++) {
-        var_t *var = mod->vars + i;
+        flow_t *var = mod->vars + i;
         if (var->interop) {
             continue;
         }
