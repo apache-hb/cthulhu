@@ -543,8 +543,10 @@ static operand_t emit_while(flow_t *flow, node_t *node) {
 }
 
 static operand_t emit_string(flow_t *flow, node_t *node) {
+    printf("%zu\n", flow->mod->nstrings);
     size_t idx = node->local;
     flow->mod->strings[idx] = node->string;
+    printf("%p = %p\n", flow->mod->strings[idx], node->string);
     return new_string(idx); 
 }
 
@@ -716,6 +718,10 @@ module_t *compile_module(const char *name, unit_t unit) {
 
     mod->nstrings = unit.strings;
     mod->strings = ctu_malloc(sizeof(char*) * mod->nstrings);
+
+    for (size_t i = 0; i < mod->nstrings; i++) {
+        mod->strings[i] = NULL;
+    }
 
     mod->headers = unit.headers;
     mod->libs = unit.libs;

@@ -175,6 +175,8 @@ typedef struct node_t {
         /** @var list_t<char*> */
         list_t *path;
 
+        char *string;
+
         /* AST_ROOT */
         struct {
             /** @var list_t<node_t> */
@@ -284,14 +286,6 @@ typedef struct node_t {
 
                 /* AST_BUILTIN_TYPE */
                 const char *nameof;
-                
-                /**
-                 * string is here because strings are
-                 * stored in a global array, not inline
-                 * so we need to know where in the array
-                 * they are, we use `local` to find that
-                 */
-                char *string;
             };
 
             /**

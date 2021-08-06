@@ -480,9 +480,14 @@ static void emit_type(FILE *out, type_t *type) {
 
 static void emit_string(FILE *out, size_t idx, const char *str) {
     fprintf(out, "const char *str%zu = ", idx);
-    fprintf(out, "\"");
-    for (size_t i = 0; i < strlen(str); i++) {
-        fprintf(out, "\\x%x", str[i]);
+    if (str != NULL) {
+        fprintf(out, "\"");
+        printf("%zu = %p\n", idx, str);
+        while (*str) {
+            fprintf(out, "\\x%x", *str++);
+        }
+    } else {
+        fprintf(out, "NULL");
     }
     fprintf(out, "\";");
 }
