@@ -833,7 +833,6 @@ module_t *compile_module(const char *name, unit_t unit) {
 
     for (size_t i = 0; i < mod->nvars; i++) {
         flow_t *var = mod->vars + i;
-        printf("%s is ", var->name); debug_type(var->result); printf("\n");
         if (var->node->init) {
             var->value = eval_global(mod, mod->vars + i);
         } else {

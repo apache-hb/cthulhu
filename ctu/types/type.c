@@ -407,6 +407,10 @@ static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implic
             return false;
         }
 
+        if (is_void(src) || is_void(dst)) {
+            return true;
+        }
+
         return type_can_become(node, dst->ptr, src->ptr, implicit);
     }
 
@@ -415,32 +419,22 @@ static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implic
             reportf(LEVEL_ERROR, *node, "cannot implicitly cast between unrelated types `%s` and `%s`", typefmt(src), typefmt(dst));
             return false;
         }
-    }
-
-    if (is_integer(dst) && is_pointer(src)) {
-        if (get_integer_kind(dst) != INTEGER_INTPTR) {
-            reportf(LEVEL_ERROR, *node, "cannot implicitly cast pointer to a non intptr integer");
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    if (is_pointer(dst) && is_integer(src)) {
-        if (implicit) {
-            reportf(LEVEL_ERROR, *node, "possibly narrowing integer to pointer cast");
-            return false;
-        }
         return true;
     }
 
-    /**
-     * implicit boolean conversion
-     */
-    if (is_boolean(dst) && is_integer(src)) {
-        if (implicit) {
-            reportf(LEVEL_WARNING, *node, "implicit cast to boolean");
-            *node = implicit_cast(*node, dst);
+    if (is_integer(dst) && is_pointer(src)) {
+        if (get_integer_kind(dst) != INTEGER_INTPTR && implicit) {
+            reportf(LEVEL_ERROR, *node, "cannot implicitly cast pointer to a non intptr integer");
+            return false;
+        } 
+
+        return true;
+    }
+
+    if (is_pointer(dst) && is_integer(src)) {
+        if (get_integer_kind(src) != INTEGER_INTPTR && implicit) {
+            reportf(LEVEL_ERROR, *node, "possibly narrowing integer to pointer cast");
+            return false;
         }
         return true;
     }

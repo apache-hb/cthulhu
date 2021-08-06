@@ -37,6 +37,15 @@ static step_t *current(state_t *state) {
     return &state->flow->steps[state->ip];
 }
 
+static reportid_t step_report(level_t level, state_t *state, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    step_t *here = current(state);
+    reportid_t id = reportv(level, here->source, here->where, fmt, args);
+    va_end(args);
+    return id;
+}
+
 static void sanitize_value(state_t *state, value_t *value) {
     if (value->type && is_integer(value->type)) {
         step_t *here = current(state);
@@ -150,9 +159,15 @@ static value_t *eval_binary(state_t *state, type_t *type, binary_t binary, opera
         mpz_mul(value->digit, lhs->digit, rhs->digit);
         break;
     case BINARY_DIV:
+        if (mpz_sgn(rhs->digit) == 0) {
+            step_report(LEVEL_ERROR, state, "divide by zero");
+        }
         mpz_div(value->digit, lhs->digit, rhs->digit);
         break;
     case BINARY_REM:
+        if (mpz_sgn(rhs->digit) == 0) {
+            step_report(LEVEL_ERROR, state, "remainder by zero");
+        }
         mpz_mod(value->digit, lhs->digit, rhs->digit);
         break;
 
@@ -234,10 +249,43 @@ static value_t *eval_unary(state_t *state, type_t *type, unary_t unary, operand_
 
 static value_t *eval_convert(state_t *state, type_t *type, operand_t val) {
     value_t *value = build_value(type);
+    value_t *other = make_value(state, val);
 
     if (is_boolean(type)) {
-        /* TODO: lol */
+        if (is_boolean(other->type)) {
+            value->boolean = other->boolean;
+        } else if (is_integer(other->type)) {
+            value->boolean = mpz_cmp_si(other->digit, 0) != 0;
+        } else {
+            value->boolean = false;
+            reportid_t id = step_report(LEVEL_ERROR, state, "cannot convert to %s at compile time", typefmt(type));
+            report_underline(id, typefmt(other->type));
+        }
+        return value;
     }
+
+    if (is_integer(type)) {
+        if (is_integer(other->type)) {
+            mpz_set(value->digit, other->digit);
+            if (!is_signed(type) && mpz_sgn(value->digit) < 0) {
+                step_report(LEVEL_WARNING, state, "converting negative signed int to unsigned int, truncating to 0");
+                mpz_set_ui(value->digit, 0);
+            }
+        } else if (is_pointer(other->type)) {
+            if (get_integer_kind(type) != INTEGER_INTPTR) {
+                reportid_t id = step_report(LEVEL_ERROR, state, "cannot convert to %s at compile time", typefmt(type));
+                report_underline(id, typefmt(other->type));
+                report_note(id, "consider casting to (u)intptr");
+            }
+            mpz_set_ui(value->digit, (uintptr_t)other->values);
+        }
+
+        return value;
+    }
+
+    value_t *out = empty_value();
+    report_uninit(state, out);
+    return out;
 }
 
 /* evaluate a step, return false if a value has been returned */

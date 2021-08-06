@@ -517,7 +517,7 @@ static void gen_global(FILE *out, flow_t *var, size_t idx) {
         gen_type(var->result, gen_var(idx))
     );
 
-    if (var->value) {
+    if (var->value && var->value->type) {
         fprintf(out, " = { %s }", gen_value(var->value));
     }
 

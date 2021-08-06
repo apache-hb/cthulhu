@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdarg.h>
+
 #include "ctu/ast/ast.h"
 
 /**
@@ -42,6 +44,8 @@ void report_begin(size_t limit, bool eager);
  * otherwise return false
  */
 bool report_end(const char *name);
+
+reportid_t reportv(level_t level, scanner_t *source, where_t where, const char *fmt, va_list args);
 
 /**
  * generate a report from a node

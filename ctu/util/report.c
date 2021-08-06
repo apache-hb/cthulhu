@@ -280,6 +280,10 @@ reportid_t reportf(level_t level, node_t *node, const char *fmt, ...) {
     return id;
 }
 
+reportid_t reportv(level_t level, scanner_t *source, where_t where, const char *fmt, va_list args) {
+    return push_report(level, source, where, NULL, formatv(fmt, args));
+}
+
 reportid_t report(level_t level, scanner_t *source, where_t where, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);

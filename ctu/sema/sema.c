@@ -321,8 +321,6 @@ static void build_var(sema_t *sema, node_t *it) {
      * variables are lvalues
      */
 
-    printf("%s = %p\n", it->name, it);
-
     out = set_lvalue(out, true);
     out = set_mut(out, is_mut(it));
 
@@ -342,8 +340,6 @@ static void build_var(sema_t *sema, node_t *it) {
             reportf(LEVEL_ERROR, it, "unbounded array must be initialized");
         }
     }
-
-    printf("%s = %p\n", it->name, it);
 
     connect_type(it, out);
     list_pop(current);
