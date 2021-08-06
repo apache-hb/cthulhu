@@ -1,10 +1,12 @@
 #include "ir.h"
+#include "eval.h"
 
 #include "ctu/util/report.h"
 #include "ctu/debug/ast.h"
+#include "ctu/debug/ir.h"
+#include "ctu/debug/type.h"
 #include "ctu/util/util.h"
-
-#include "ctu/eval/eval.h"
+#include "ctu/util/str.h"
 
 #include "ctu/sema/sema.h"
 
@@ -22,9 +24,9 @@ static operand_t new_operand(int kind) {
     return op;
 }
 
-operand_t new_int(mpz_t imm) {
+operand_t new_int(type_t *type, mpz_t imm) {
     operand_t op = new_operand(IMM);
-    op.imm.kind = IMM_INT;
+    op.imm.type = type;
     mpz_init_set(op.imm.num, imm);
     return op;
 }
@@ -101,7 +103,10 @@ type_t *step_type(step_t *step) {
 }
 
 static step_t new_step(opcode_t op, node_t *node) {
-    return new_typed_step(op, get_resolved_type(node));
+    step_t step = new_typed_step(op, get_resolved_type(node));
+    step.source = node->scanner;
+    step.where = node->where;
+    return step;
 }
 
 bool operand_is_imm(operand_t op) {
@@ -109,7 +114,8 @@ bool operand_is_imm(operand_t op) {
 }
 
 bool operand_is_bool(operand_t op) {
-    return operand_is_imm(op) && op.imm.kind == IMM_BOOL;
+    return operand_is_imm(op) 
+        && is_boolean(op.imm.type);
 }
 
 bool operand_is_invalid(operand_t op) {
@@ -127,7 +133,7 @@ void operand_get_int(mpz_t it, operand_t op) {
 
 operand_t new_bool(bool b) {
     operand_t op = new_operand(IMM);
-    op.imm.kind = IMM_BOOL;
+    op.imm.type = BOOL_TYPE;
     op.imm.b = b;
     return op;
 }
@@ -179,17 +185,21 @@ static operand_t add_reserve(flow_t *flow, node_t *node, size_t len) {
 static operand_t emit_opcode(flow_t *flow, node_t *node);
 
 static operand_t emit_digit(node_t *node) {
-    return new_int(node->num);
+    return new_int(get_resolved_type(node), node->num);
 }
 
 static operand_t emit_bool(node_t *node) {
     return new_bool(node->boolean);
 }
 
+static flow_t *get_flow(module_t *mod, size_t idx) {
+    return mod->flows + (idx + mod->closures);
+}
+
 static operand_t get_global(flow_t *flow, node_t *node) {
     const char *name = list_last(node->ident);
     for (size_t i = 0; i < num_flows(flow->mod); i++) {
-        const char *it = flow->mod->flows[i].name;
+        const char *it = get_flow(flow->mod, i)->name;
 
         if (strcmp(it, name) == 0) {
             return new_func(i);
@@ -373,7 +383,7 @@ static operand_t emit_symbol(flow_t *flow, node_t *node) {
         return add_vreg(flow, load);
     }
 
-    reportf(LEVEL_INTERNAL, node, "unable to resolve %s typechecker let bad code slip", node->ident);
+    reportf(LEVEL_INTERNAL, node, "unable to resolve %s. typechecker let bad code slip", list_last(node->ident));
 
     /* oh no */
     return new_operand(NONE);
@@ -577,6 +587,45 @@ static operand_t emit_continue(flow_t *flow) {
     return new_operand(NONE);
 }
 
+static operand_t emit_sizeof(flow_t *flow, node_t *node) {
+    flow_t self = { 
+        .node = node,
+        .name = format("closure%zu", node->local),
+        .args = NULL,
+        .nargs = 0,
+
+        .steps = ctu_malloc(sizeof(step_t) * 64), 
+        .len = 0, .size = 64, 
+        
+        .locals = NULL,
+        .nlocals = 0,
+
+        .result = size_int(),
+        .value = NULL,
+
+        .mod = flow->mod,
+
+        .exported = false,
+        .used = true,
+        .stub = false,
+        .interop = false,
+
+        .breaks = NULL,
+        .continues = NULL
+    };
+
+    step_t get = new_step(OP_BUILTIN, node);
+    get.builtin = BUILTIN_SIZEOF;
+    step_t ret = new_step(OP_RETURN, node);
+
+    ret.value = add_vreg(&self, get);
+    add_step(&self, ret);
+
+    flow->mod->flows[node->local] = self;
+
+    return new_func(node->local);
+}
+
 static operand_t emit_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
@@ -596,14 +645,13 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
     case AST_INDEX: return emit_index(flow, node);
     case AST_BREAK: return emit_break(flow);
     case AST_CONTINUE: return emit_continue(flow);
+    case AST_BUILTIN_SIZEOF: return emit_sizeof(flow, node);
 
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);
         return new_operand(NONE);
     }
 }
-
-
 
 /**
  * external api
@@ -622,6 +670,7 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     bool stubbed = node->body == NULL;
 
     flow_t flow = { 
+        node,
         /* name */
         get_decl_name(node), 
         
@@ -636,6 +685,7 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
 
         /* return type */
         result,
+        NULL,
 
         /* parent */
         mod,
@@ -678,40 +728,117 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
     return flow;
 }
 
-static var_t compile_var(module_t *mod, node_t *node) {
+static flow_t compile_var(module_t *mod, node_t *node) {
     ASSERT(node->kind == AST_DECL_VAR)("compile_var requires a variable");
 
-    /**
-     * TODO: static initialization
-     */
+    flow_t self = { 
+        .node = node,
+        .name = get_decl_name(node),
+        .args = NULL,
+        .nargs = 0,
 
-    (void)mod;
+        .steps = ctu_malloc(sizeof(step_t) * 64), 
+        .len = 0, .size = 64, 
+        
+        .locals = NULL,
+        .nlocals = 0,
 
-    if (node->init && !is_consteval(node->init)) {
-        reportf(LEVEL_ERROR, node, "variable `%s` initialization must be constant", node->name);
-    }
+        .result = get_resolved_type(node),
+        .value = NULL,
 
-    var_t var = { 
-        get_decl_name(node), 
-        get_resolved_type(node),
+        .mod = mod,
 
-        is_exported(node),
-        is_used(node),
-        is_interop(node)
+        .exported = is_exported(node),
+        .used = is_used(node),
+        .stub = false,
+        .interop = is_interop(node),
+
+        .breaks = NULL,
+        .continues = NULL
     };
 
-    return var;
+    if (node->init != NULL) {
+        operand_t op = emit_opcode(&self, node->init);
+        step_t ret = new_step(OP_RETURN, node->init);
+        
+        type_t *type = get_resolved_type(node);
+        if (!types_equal(type, get_resolved_type(node->init))) {
+            step_t cast = new_step(OP_CONVERT, node->type);
+            cast.value = op;
+            ret.value = add_vreg(&self, cast);
+        } else {
+            ret.value = op;
+        }
+        add_step(&self, ret);
+    }
+
+    return self;
+}
+
+typedef struct {
+    size_t idx;
+    size_t len;
+    type_t **types;
+} types_t;
+
+static bool needs_record(types_t *types, type_t *type) {
+    if (!is_record(type)) {
+        return false;
+    }
+
+    for (size_t i = 0; i < types->idx; i++) {
+        if (types_equal(type, types->types[i])) {
+            return !types->types[i]->emitted;
+        }
+    }
+
+    return true;
+}
+
+static void add_record(types_t *types, type_t *type) {
+    if (!is_record(type) || type->emitted) {
+        return;
+    }
+
+    fields_t fields = type->fields;
+    for (size_t i = 0; i < fields.size; i++) {
+        field_t field = fields.fields[i];
+        if (needs_record(types, field.type)) {
+            add_record(types, field.type);
+        }
+    }
+
+    type->emitted = true;
+    types->types[types->idx++] = type;
+}
+
+static void reorder_records(module_t *mod) {
+    type_t **types = ctu_malloc(sizeof(type_t *) * mod->ntypes);
+
+    types_t ty = { 0, mod->ntypes, types };
+
+    for (size_t i = 0; i < mod->ntypes; i++) {
+        add_record(&ty, mod->types[i]);
+    }
+
+    mod->types = types;
 }
 
 module_t *compile_module(const char *name, unit_t unit) {
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
    
-    mod->nflows = list_len(unit.funcs);
+    size_t funcs = list_len(unit.funcs);
+    size_t closures = unit.closures;
+
+    mod->closures = closures;
+
+    /* functions are put after closures */
+    mod->nflows = funcs + closures;
     mod->flows = ctu_malloc(sizeof(flow_t) * mod->nflows);
     
     mod->nvars = list_len(unit.vars);
-    mod->vars = ctu_malloc(sizeof(var_t) * mod->nvars);
+    mod->vars = ctu_malloc(sizeof(flow_t) * mod->nvars);
 
     mod->ntypes = list_len(unit.types);
     mod->types = ctu_malloc(sizeof(type_t*) * mod->ntypes);
@@ -730,8 +857,8 @@ module_t *compile_module(const char *name, unit_t unit) {
      * first pass
      */
 
-    for (size_t i = 0; i < mod->nflows; i++) {
-        mod->flows[i].name = get_decl_name(list_at(unit.funcs, i));
+    for (size_t i = 0; i < funcs; i++) {
+        mod->flows[i + closures].name = get_decl_name(list_at(unit.funcs, i));
     }
 
     for (size_t i = 0; i < mod->nvars; i++) {
@@ -747,15 +874,34 @@ module_t *compile_module(const char *name, unit_t unit) {
      * second pass 
      */
 
-    for (size_t i = 0; i < mod->nflows; i++) {
-        mod->flows[i] = compile_flow(mod, list_at(unit.funcs, i));
+    for (size_t i = 0; i < funcs; i++) {
+        mod->flows[i + closures] = compile_flow(mod, list_at(unit.funcs, i));
     }
 
     for (size_t i = 0; i < mod->nvars; i++) {
         mod->vars[i] = compile_var(mod, list_at(unit.vars, i));
     }
 
+    /**
+     * evaluate global variables
+     */
+
+    for (size_t i = 0; i < mod->nvars; i++) {
+        flow_t *var = mod->vars + i;
+        if (var->node->init) {
+            var->value = eval_global(mod, mod->vars + i);
+        } else {
+            var->value = empty_value();
+        }
+    }
+
+    reorder_records(mod);
+
     return mod;
+}
+
+const char *flow_name(const flow_t *flow) {
+    return flow->name;
 }
 
 step_t *step_at(flow_t *flow, size_t idx) {

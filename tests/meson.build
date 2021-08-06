@@ -3,11 +3,11 @@ subdir('unit')
 
 pass = [
     'args', 'binary', 'call', 'func',
-    'hello', 'hello2', 'implicit-bool-cast',
+    'hello', 'hello2',
     'long', 'loop', 'mut', 'pointers', 'pointers2',
     'regalloc', 'var', 'suffix', 'global',
     'unused-var', 'implicit-var-cast', 'string', 'forward',
-    'posix-interop', 'win32-interop', 'array-1', 'array-2', 
+    'posix-interop', 'win32-interop', 'array-1', 'array-3',
     'fuzz-8', 'array-struct', 'fizzbuzz'
 ]
 
@@ -49,7 +49,7 @@ fail = [
     'invalid-char', 'scope', 'bad-return',
     'infinite-struct', 'type-in-expr', 'fuzz-1',
     'return-local-ref', 'return-struct-ref',
-    'array', 'array-2'
+    'array', 'array-2', 'implicit-bool-cast'
 ]
 
 foreach it : fail 

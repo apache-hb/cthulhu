@@ -46,7 +46,12 @@ static scanner_t *new_file_scanner(const char *path, FILE *file) {
 
 #ifndef _WIN32
     int fd = fileno(file);
-    scanner->text = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
+    void *text = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
+    if (text == MAP_FAILED) {
+        scanner->text = "";
+    } else {
+        scanner->text = text;
+    }
 #else
     char *text = ctu_malloc(size + 1);
     fread(text, 1, size, file);

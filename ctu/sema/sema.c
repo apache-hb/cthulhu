@@ -4,10 +4,9 @@
 #include "ctu/util/util.h"
 #include "ctu/util/str.h"
 
-#include "ctu/eval/eval.h"
-
 #include "ctu/ast/compile.h"
 
+#include "ctu/debug/type.h"
 #include "ctu/debug/ast.h"
 
 #include <errno.h>
@@ -72,6 +71,8 @@ static map_t *files = NULL;
  * total number of strings
  */
 static size_t strings = 0;
+
+static size_t closures = 0;
 
 static size_t locals = 0;
 
@@ -178,8 +179,18 @@ static void add_decl(sema_t *sema, node_t *it) {
         put_unique(sema->types, name, it);
         break;
 
+    case AST_DECL_UNION:
+        connect_type(it, new_union(it, name));
+        put_unique(sema->types, name, it);
+        break;
+
+    case AST_DECL_ENUM:
+        connect_type(it, new_enum(it, name));
+        put_unique(sema->types, name, it);
+        break;
+
     default:
-        assert("unknown add_decl kind %d", it->type);
+        assert("unknown add-decl kind %d", it->kind);
         break;
     }
 }
@@ -242,7 +253,9 @@ static bool check_attribs(node_t *decl) {
     ASSERT(
         decl->kind == AST_DECL_FUNC || 
         decl->kind == AST_DECL_VAR || 
-        decl->kind == AST_DECL_STRUCT
+        decl->kind == AST_DECL_STRUCT ||
+        decl->kind == AST_DECL_UNION ||
+        decl->kind == AST_DECL_ENUM
     )("node cannot have attributes");
 
     list_t *decorate = decl->decorate;
@@ -265,8 +278,8 @@ static void build_type(node_t *it) {
     list_push(current, it);
     sema_t *sema = it->ctx;
     switch (it->kind) {
-    case AST_DECL_STRUCT:
-        build_struct(sema, it);
+    case AST_DECL_STRUCT: case AST_DECL_UNION:
+        build_record(sema, it);
         break;
 
     default:
@@ -312,7 +325,12 @@ static void build_var(sema_t *sema, node_t *it) {
     out = set_mut(out, is_mut(it));
 
     if (type != NULL && init != NULL) {
-        if (!type_can_become_implicit(&it, type, init)) {
+        /** 
+         * type_can_become_implicit modifies the first argument,
+         * this will mangle a variable, so we copy it
+         */
+        node_t *nop = ast_noop(it->scanner, it->where);
+        if (!type_can_become_implicit(&nop, type, init)) {
             reportf(LEVEL_ERROR, it, "incompatible types for initialization of variable `%s`", it->name);
         }
     }
@@ -479,7 +497,7 @@ unit_t typecheck(node_t *root) {
     unit_t unit = { 
         funcs, vars, types, 
         libs, headers,
-        strings 
+        strings, closures
     };
 
     return unit;

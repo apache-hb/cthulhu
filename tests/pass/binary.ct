@@ -15,5 +15,5 @@ def a(): bool {
 
     final $ = -z;
 
-    return y;
+    return y != 0;
 }

@@ -40,8 +40,7 @@ parse = custom_target('parse',
 src = [
     'ctu/util/str.c',
     'ctu/util/report.c',
-    'ctu/util/util.c',
-    'ctu/eval/eval.c'
+    'ctu/util/util.c'
 ]
 
 libutil = library('util', src)
@@ -73,7 +72,8 @@ libsema = library('sema', src,
 
 src = [
     'ctu/ir/ir.c',
-    'ctu/ir/match.c'
+    'ctu/ir/match.c',
+    'ctu/ir/eval.c'
 ]
 
 libir = library('ir', src,

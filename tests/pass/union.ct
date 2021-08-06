@@ -1,0 +1,13 @@
+union A {
+    i: int,
+    b: bool
+}
+
+export def test(): A {
+    var a: A;
+
+    a.i = 20;
+    a.b = true;
+
+    return a;
+}

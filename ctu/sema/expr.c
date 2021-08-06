@@ -73,12 +73,44 @@ static type_t *query_local_expr(sema_t *sema, node_t *node, const char *name) {
         /**
          * error out if we found nothing
          */
-        reportf(LEVEL_ERROR, node, "unknown symbol `%s`", name);
+        reportf(LEVEL_ERROR, node, "unable to resolve symbol `%s`", name);
         return new_poison(node, "unresolved symbol");
     }
 }
 
-static type_t *delay_build_type(node_t *expr, node_t *node, list_t *slice) {
+static type_t *get_field(type_t *record, node_t *get, const char *name) {
+    for (size_t i = 0; i < record->fields.size; i++) {
+        field_t field = record->fields.fields[i];
+
+        if (strcmp(field.name, name) == 0) {
+            return field.type;
+        }
+    }
+
+    reportf(LEVEL_ERROR, get, "unknown field `%s`", name);
+    return new_poison(get, "unknown field");
+}
+
+static type_t *lookup_field(node_t *node, node_t *expr, const char *name) {
+    type_t *ty = get_resolved_type(node);
+    if (strcmp(name, "sizeof") == 0) {
+        /* patch the node to be a sizeof expression */
+        expr->kind = AST_BUILTIN_SIZEOF;
+        type_t *out = builtin_sizeof(node, ty);
+        connect_type(expr, out);
+        expr->local = closures++;
+        return out;
+    }
+
+    if (!is_enum(ty)) {
+        reportf(LEVEL_ERROR, expr, "cannot query field `%s` from non-enum type", name);
+        return new_poison(expr, "invalid field");
+    }
+
+    return get_field(ty, expr, name);
+}
+
+static type_t *delay_build_type(node_t *node, node_t *expr, list_t *slice) {
     if (is_delay_recursive(node)) {
         reportf(LEVEL_ERROR, node, "recursive type resolution of `%s`", get_decl_name(node));
         return new_poison(node, "recursive resolution");
@@ -89,15 +121,15 @@ static type_t *delay_build_type(node_t *expr, node_t *node, list_t *slice) {
         return new_poison(expr, "nested type resolution");
     }
 
-    // const char *lookup = list_first(slice);
-
     type_t *ty = raw_type(node);
-    if (ty) {
-        return ty;
+    if (!ty) {
+        build_type(node);
+        ty = get_resolved_type(node);
     }
 
-    build_type(node);
-    return get_type(node);
+    const char *lookup = list_first(slice);
+
+    return lookup_field(node, expr, lookup);
 }
 
 /**
@@ -126,7 +158,7 @@ static type_t *query_expr_symbol(sema_t *sema, node_t *expr, list_t *symbol) {
 
     /**
      * resolve expressions such as 
-     * EnumName::EnumValue.
+     * EnumName::EnumValue or Struct::sizeof
      * 
      * we need delayed lookup due to enum fields
      * being expressions.
@@ -134,6 +166,11 @@ static type_t *query_expr_symbol(sema_t *sema, node_t *expr, list_t *symbol) {
     node_t *ty = map_get(sema->types, first);
     if (ty) {
         return delay_build_type(ty, expr, &slice);
+    }
+
+    /* try the above scope */
+    if (sema->parent) {
+        return query_expr_symbol(sema->parent, expr, symbol);
     }
 
     /**
@@ -217,8 +254,13 @@ static type_t *query_call(sema_t *sema, node_t *expr) {
     type_t *type = query_expr(sema, expr->expr);
 
     if (!is_callable(type)) {
-        reportf(LEVEL_ERROR, expr, "uncallable type");
+        reportid_t id = reportf(LEVEL_ERROR, expr, "uncallable type");
+        report_underline(id, format("type `%s` cannot be called", typefmt(type)));
         return new_poison(expr, "not callable");
+    }
+
+    if (type->kind == TYPE_SIZEOF) {
+        return get_result(type);
     }
 
     size_t args = list_len(expr->args);
@@ -238,7 +280,7 @@ static type_t *query_call(sema_t *sema, node_t *expr) {
         }
     }
 
-    return type->result;
+    return get_result(type);
 }
 
 static type_t *query_cast(sema_t *sema, node_t *expr) {
@@ -252,19 +294,6 @@ static type_t *query_cast(sema_t *sema, node_t *expr) {
     return dst;
 }
 
-static type_t *get_field(type_t *record, node_t *get) {
-    for (size_t i = 0; i < record->fields.size; i++) {
-        field_t field = record->fields.fields[i];
-
-        if (strcmp(field.name, get->field) == 0) {
-            return field.type;
-        }
-    }
-
-    reportf(LEVEL_ERROR, get, "unknown field `%s`", get->field);
-    return new_poison(get, "unknown field");
-}
-
 static type_t *query_access(sema_t *sema, node_t *expr) {
     type_t *body = query_expr(sema, expr->target);
 
@@ -275,14 +304,14 @@ static type_t *query_access(sema_t *sema, node_t *expr) {
         }
     }
 
-    if (!is_struct(body)) {
+    if (!is_record(body)) {
         reportf(LEVEL_ERROR, expr, "cannot access non struct type");
         return new_poison(expr, "cannot access non struct type");
     }
 
     expr->local = expr->target->local;
 
-    return get_field(body, expr);
+    return get_field(body, expr, expr->field);
 }
 
 static type_t *query_index(sema_t *sema, node_t *expr) {
@@ -294,8 +323,8 @@ static type_t *query_index(sema_t *sema, node_t *expr) {
         return new_poison(expr, "bad index");
     }
 
-    if (!type_can_become_explicit(&expr->index, get_int_type(false, INTEGER_SIZE), index)) {
-        reportid_t id = reportf(LEVEL_ERROR, expr->index, "index expected type %s", typefmt(get_int_type(false, INTEGER_SIZE)));
+    if (!type_can_become_explicit(&expr->index, size_int(), index)) {
+        reportid_t id = reportf(LEVEL_ERROR, expr->index, "index expected type %s", typefmt(size_int()));
         report_underline(id, format("found `%s` instead", typefmt(index)));
     }
 
@@ -348,6 +377,9 @@ static type_t *query_expr(sema_t *sema, node_t *it) {
     case AST_SYMBOL:
         type = query_expr_symbol(sema, it, it->ident);
         break;
+
+    case AST_BUILTIN_SIZEOF:
+        return size_int();
 
     default:
         assert("query_expr invalid node %d", it->kind);

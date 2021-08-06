@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdarg.h>
+
 #include "ctu/ast/ast.h"
 
 /**
@@ -43,6 +45,8 @@ void report_begin(size_t limit, bool eager);
  */
 bool report_end(const char *name);
 
+reportid_t reportv(level_t level, scanner_t *source, where_t where, const char *fmt, va_list args);
+
 /**
  * generate a report from a node
  */
@@ -51,7 +55,7 @@ reportid_t reportf(level_t level, node_t *node, const char *fmt, ...);
 /**
  * generate a report from a source and location
  */
-void report(level_t level, scanner_t *source, where_t where, const char *fmt, ...);
+reportid_t report(level_t level, scanner_t *source, where_t where, const char *fmt, ...);
 
 /**
  * add a message to be printed next to the squiggly report undline

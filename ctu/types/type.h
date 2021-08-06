@@ -93,6 +93,9 @@ typedef enum {
      */
     TYPE_STRUCT,
 
+    /* a union */
+    TYPE_UNION,
+
     /**
      * an enumeration
      */
@@ -107,6 +110,9 @@ typedef enum {
      * a string
      */
     TYPE_STRING,
+
+    /* builtins */
+    TYPE_SIZEOF,
 
     /**
      * error handling types
@@ -131,7 +137,13 @@ typedef enum {
 typedef struct {
     const char *name;
     struct type_t *type;
+
+    /* TODO: eventually a generic value will be needed */
+    size_t init;
 } field_t;
+
+field_t new_type_field(const char *name, struct type_t *type);
+field_t new_init_field(const char *name, struct type_t *parent, size_t init);
 
 typedef struct {
     size_t size;
@@ -170,6 +182,9 @@ typedef struct type_t {
 
     /* is this array unbounded */
     bool unbounded:1;
+
+    /* has this been emitted */
+    bool emitted:1;
 
     /** 
      * the node that generated this type 
@@ -247,7 +262,10 @@ type_t *new_pointer(struct node_t *node, type_t *to);
 type_t *new_array(struct node_t *node, type_t *of, size_t size, bool unbounded);
 
 type_t *new_struct(struct node_t *decl, const char *name);
-void resize_struct(type_t *type, size_t size);
+type_t *new_union(struct node_t *decl, const char *name);
+type_t *new_enum(struct node_t *decl, const char *name);
+
+void resize_type(type_t *type, size_t size);
 
 bool is_integer(type_t *type);
 bool is_boolean(type_t *type);
@@ -257,10 +275,15 @@ bool is_signed(type_t *type);
 bool is_pointer(type_t *type);
 bool is_const(type_t *type);
 bool is_struct(type_t *type);
+bool is_union(type_t *type);
 bool is_array(type_t *type);
+bool is_record(type_t *type);
 bool can_index(type_t *type);
+bool is_enum(type_t *type);
 type_t *index_type(type_t *type);
 type_t *array_decay(type_t *type);
+
+type_t *get_result(type_t *func);
 
 bool types_equal(type_t *type, type_t *other);
 
@@ -278,3 +301,6 @@ bool type_can_become_explicit(struct node_t **node, type_t *dst, type_t *src);
 
 char *typefmt(type_t *type);
 struct node_t *nodeof(type_t *type);
+
+type_t *builtin_sizeof(struct node_t *node, type_t *it);
+type_t *size_int(void);

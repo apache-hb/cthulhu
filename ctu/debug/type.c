@@ -73,11 +73,21 @@ static void debug_type_internal(type_t *type, bool verbose) {
         printf("enum(%s)", type->name); 
         break;
 
+    case TYPE_UNION: 
+        printf("union(%s)", type->name);
+        /* TODO: print fields */
+        break;
+
     case TYPE_STRUCT:
         printf("struct(%s)", type->name); 
         if (verbose) { 
             debug_struct(type->fields);
         } 
+        break;
+
+    case TYPE_SIZEOF: 
+        printf("sizeof ");
+        debug_type(type->of);
         break;
 
     case TYPE_FIELD: break;

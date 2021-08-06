@@ -4,9 +4,7 @@
 
 typedef struct {
     list_t *funcs;
-
     list_t *vars;
-
     list_t *types;
 
     /* required libraries to link to */
@@ -19,6 +17,7 @@ typedef struct {
      * total number of string literals
      */
     size_t strings;
+    size_t closures;
 } unit_t;
 
 unit_t typecheck(node_t *root);

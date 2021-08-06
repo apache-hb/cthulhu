@@ -66,6 +66,7 @@ static type_t *new_type(typeof_t kind, node_t *node) {
     type->interop = false;
     type->valid = true;
     type->unbounded = false;
+    type->emitted = false;
     type->index = index++;
 
     node->typeof = type;
@@ -116,9 +117,37 @@ type_t *new_struct(struct node_t *decl, const char *name) {
     return type;
 }
 
-void resize_struct(type_t *type, size_t size) {
+type_t *new_union(struct node_t *decl, const char *name) {
+    type_t *type = new_type(TYPE_UNION, decl);
+
+    type->name = name;
+    type->fields.size = 0;
+
+    return type;
+}
+
+type_t *new_enum(struct node_t *decl, const char *name) {
+    type_t *type = new_type(TYPE_ENUM, decl);
+
+    type->name = name;
+    type->fields.size = 0;
+
+    return type;
+}
+
+void resize_type(type_t *type, size_t size) {
     type->fields.size = size;
     type->fields.fields = ctu_malloc(sizeof(field_t) * size);
+}
+
+field_t new_type_field(const char *name, struct type_t *type) {
+    field_t field = { name, type, 0 };
+    return field;
+}
+
+field_t new_init_field(const char *name, struct type_t *parent, size_t init) {
+    field_t field = { name, parent, init };
+    return field;
 }
 
 bool is_integer(type_t *type) {
@@ -130,7 +159,19 @@ bool is_boolean(type_t *type) {
 }
 
 bool is_callable(type_t *type) {
-    return type->kind == TYPE_CALLABLE;
+    return type->kind == TYPE_CALLABLE
+        || type->kind == TYPE_SIZEOF;
+}
+
+type_t *get_result(type_t *func) {
+    if (func->kind == TYPE_CALLABLE) {
+        return func->result;
+    } else if (func->kind == TYPE_SIZEOF) {
+        return size_int();
+    } else {
+        assert("get-result on non-callable type");
+        return new_poison(func->node, "invalid call");
+    }
 }
 
 bool is_void(type_t *type) {
@@ -139,6 +180,18 @@ bool is_void(type_t *type) {
 
 bool is_struct(type_t *type) {
     return type->kind == TYPE_STRUCT;
+}
+
+bool is_union(type_t *type) {
+    return type->kind == TYPE_UNION;
+}
+
+bool is_record(type_t *type) {
+    return is_union(type) || is_struct(type);
+}
+
+bool is_enum(type_t *type) {
+    return type->kind == TYPE_ENUM;
 }
 
 integer_t get_integer_kind(type_t *type) {
@@ -207,7 +260,7 @@ type_t *set_lvalue(type_t *type, bool lvalue) {
         out->of = set_lvalue(out->of, lvalue);
     }
 
-    if (is_struct(type) && type->valid) {
+    if (is_record(type) && type->valid) {
         for (size_t i = 0; i < type->fields.size; i++) {
             type_t *field = type->fields.fields[i].type;
             field = set_lvalue(field, lvalue);
@@ -227,25 +280,26 @@ void connect_type(node_t *node, type_t *type) {
 }
 
 static void sanitize_signed(scanner_t *source, where_t where, integer_t kind, mpz_t it) {
+    reportid_t id = INVALID_REPORT;
     switch (kind) {
     case INTEGER_CHAR:
         if (mpz_cmp_si(it, -128) < 0 || mpz_cmp_si(it, 127) > 0) {
-            report(LEVEL_WARNING, source, where, "character out of range");
+            id = report(LEVEL_WARNING, source, where, "character out of range");
         }
         break;
     case INTEGER_SHORT:
         if (mpz_cmp_si(it, -32768) < 0 || mpz_cmp_si(it, 32767) > 0) {
-            report(LEVEL_WARNING, source, where, "short out of range");
+            id = report(LEVEL_WARNING, source, where, "short out of range");
         }
         break;
     case INTEGER_INT:
         if (mpz_cmp_si(it, -2147483648) < 0 || mpz_cmp_si(it, 2147483647) > 0) {
-            report(LEVEL_WARNING, source, where, "int out of range");
+            id = report(LEVEL_WARNING, source, where, "int out of range");
         }
         break;
     case INTEGER_LONG:
         if (mpz_cmp_si(it, -9223372036854775807LL) < 0 || mpz_cmp_si(it, 9223372036854775807LL) > 0) {
-            report(LEVEL_WARNING, source, where, "long out of range");
+            id = report(LEVEL_WARNING, source, where, "long out of range");
         }
         break;
 
@@ -254,38 +308,47 @@ static void sanitize_signed(scanner_t *source, where_t where, integer_t kind, mp
          * all other types have platform defined ranges
          * so dont warn if they overflow
          */
-        break;
+        return;
+    }
+
+    if (id != INVALID_REPORT) {
+        report_underline(id, format("evaluated to %s", mpz_get_str(NULL, 10, it)));
     }
 }
 
 static void sanitize_unsigned(scanner_t *source, where_t where, integer_t kind, mpz_t it) {
+    reportid_t id = INVALID_REPORT;
     switch (kind) {
     case INTEGER_CHAR: 
         if (mpz_cmp_ui(it, 0xFF) > 0) {
-            report(LEVEL_WARNING, source, where, "unsigned char overflow");
+            id = report(LEVEL_WARNING, source, where, "unsigned char overflow");
         }
         break;
     case INTEGER_SHORT:
         if (mpz_cmp_ui(it, 0xFFFF) > 0) {
-            report(LEVEL_WARNING, source, where, "unsigned short overflow");
+            id = report(LEVEL_WARNING, source, where, "unsigned short overflow");
         }
         break;
     case INTEGER_INT:
         if (mpz_cmp_ui(it, 0xFFFFFFFF) > 0) {
-            report(LEVEL_WARNING, source, where, "unsigned int overflow");
+            id = report(LEVEL_WARNING, source, where, "unsigned int overflow");
         }
         break;
     case INTEGER_LONG:
         if (mpz_cmp_ui(it, 0xFFFFFFFFFFFFFFFFULL) > 0) {
-            report(LEVEL_WARNING, source, where, "unsigned long overflow");
+            id = report(LEVEL_WARNING, source, where, "unsigned long overflow");
         }
         break;
 
-    default: 
+    default:
         /**
          * same as above
          */
-        break;
+        return;
+    }
+
+    if (id != INVALID_REPORT) {
+        report_underline(id, format("evaluated to %s", mpz_get_str(NULL, 10, it)));
     }
 }
 
@@ -345,40 +408,34 @@ static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implic
             return false;
         }
 
+        if (is_void(src) || is_void(dst)) {
+            return true;
+        }
+
         return type_can_become(node, dst->ptr, src->ptr, implicit);
     }
 
-    if (is_struct(src) && is_struct(dst)) {
+    if (is_record(src) && is_record(dst)) {
         if (src->index != dst->index) {
             reportf(LEVEL_ERROR, *node, "cannot implicitly cast between unrelated types `%s` and `%s`", typefmt(src), typefmt(dst));
-            return false;
-        }
-    }
-
-    if (is_integer(dst) && is_pointer(src)) {
-        if (get_integer_kind(dst) != INTEGER_INTPTR) {
-            reportf(LEVEL_ERROR, *node, "cannot implicitly cast pointer to a non intptr integer");
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    if (is_pointer(dst) && is_integer(src)) {
-        if (implicit) {
-            reportf(LEVEL_ERROR, *node, "possibly narrowing integer to pointer cast");
             return false;
         }
         return true;
     }
 
-    /**
-     * implicit boolean conversion
-     */
-    if (is_boolean(dst) && is_integer(src)) {
-        if (implicit) {
-            reportf(LEVEL_WARNING, *node, "implicit cast to boolean");
-            *node = implicit_cast(*node, dst);
+    if (is_integer(dst) && is_pointer(src)) {
+        if (get_integer_kind(dst) != INTEGER_INTPTR && implicit) {
+            reportf(LEVEL_ERROR, *node, "cannot implicitly cast pointer to a non intptr integer");
+            return false;
+        } 
+
+        return true;
+    }
+
+    if (is_pointer(dst) && is_integer(src)) {
+        if (get_integer_kind(src) != INTEGER_INTPTR && implicit) {
+            reportf(LEVEL_ERROR, *node, "possibly narrowing integer to pointer cast");
+            return false;
         }
         return true;
     }
@@ -464,4 +521,16 @@ type_t *index_type(type_t *type) {
         assert("cannot get index type of %s", typefmt(type));
         return type;
     }
+}
+
+type_t *builtin_sizeof(struct node_t *node, type_t *it) {
+    type_t *type = new_type(TYPE_SIZEOF, node);
+
+    type->of = it;
+
+    return type;
+}
+
+type_t *size_int(void) {
+    return get_int_type(false, INTEGER_SIZE);
 }

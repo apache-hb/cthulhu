@@ -37,8 +37,10 @@ typedef struct {
 } list_t;
 
 list_t *new_list(void *init);
+list_t *sized_list(size_t size);
 size_t list_len(list_t *list);
 void *list_at(list_t *list, size_t index);
+void list_set(list_t *list, size_t index, void *data);
 list_t *list_push(list_t *list, void *data);
 void *list_pop(list_t *list);
 void *list_first(list_t *list);

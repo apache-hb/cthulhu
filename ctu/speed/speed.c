@@ -44,7 +44,7 @@ bool run_pass(pass_t *pass) {
 
         flow_t *flow = pass->mod->flows + i;
 
-        logfmt("begin pass for %s", flow->name);
+        logfmt("begin pass for %s", flow_name(flow));
 
         if (remove_unused_blocks(flow)) {
             logfmt("removed unused blocks");
@@ -88,6 +88,11 @@ bool run_pass(pass_t *pass) {
 
         if (fold_consts(flow)) {
             logfmt("folded constant expressions");
+            mark_dirty(pass, i);
+        }
+
+        if (remove_casts(flow)) {
+            logfmt("removed duplicate casts");
             mark_dirty(pass, i);
         }
 

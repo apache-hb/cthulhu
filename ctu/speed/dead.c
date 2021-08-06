@@ -221,7 +221,7 @@ static bool blocks_equal(operand_t lhs, operand_t rhs) {
 
 static bool is_const_true(operand_t op) {
     return op.kind == IMM
-        && op.imm.kind == IMM_BOOL
+        && is_boolean(op.imm.type)
         && op.imm.b;
 }
 
