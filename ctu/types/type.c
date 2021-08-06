@@ -66,6 +66,7 @@ static type_t *new_type(typeof_t kind, node_t *node) {
     type->interop = false;
     type->valid = true;
     type->unbounded = false;
+    type->emitted = false;
     type->index = index++;
 
     node->typeof = type;

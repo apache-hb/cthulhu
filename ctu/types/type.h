@@ -183,6 +183,9 @@ typedef struct type_t {
     /* is this array unbounded */
     bool unbounded:1;
 
+    /* has this been emitted */
+    bool emitted:1;
+
     /** 
      * the node that generated this type 
      */

@@ -773,6 +773,55 @@ static flow_t compile_var(module_t *mod, node_t *node) {
     return self;
 }
 
+typedef struct {
+    size_t idx;
+    size_t len;
+    type_t **types;
+} types_t;
+
+static bool needs_record(types_t *types, type_t *type) {
+    if (!is_record(type)) {
+        return false;
+    }
+
+    for (size_t i = 0; i < types->idx; i++) {
+        if (types_equal(type, types->types[i])) {
+            return !types->types[i]->emitted;
+        }
+    }
+
+    return true;
+}
+
+static void add_record(types_t *types, type_t *type) {
+    if (!is_record(type) || type->emitted) {
+        return;
+    }
+
+    fields_t fields = type->fields;
+    for (size_t i = 0; i < fields.size; i++) {
+        field_t field = fields.fields[i];
+        if (needs_record(types, field.type)) {
+            add_record(types, field.type);
+        }
+    }
+
+    type->emitted = true;
+    types->types[types->idx++] = type;
+}
+
+static void reorder_records(module_t *mod) {
+    type_t **types = ctu_malloc(sizeof(type_t *) * mod->ntypes);
+
+    types_t ty = { 0, mod->ntypes, types };
+
+    for (size_t i = 0; i < mod->ntypes; i++) {
+        add_record(&ty, mod->types[i]);
+    }
+
+    mod->types = types;
+}
+
 module_t *compile_module(const char *name, unit_t unit) {
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
@@ -839,6 +888,8 @@ module_t *compile_module(const char *name, unit_t unit) {
             var->value = empty_value();
         }
     }
+
+    reorder_records(mod);
 
     return mod;
 }
