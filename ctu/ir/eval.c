@@ -278,10 +278,14 @@ static value_t *eval_convert(state_t *state, type_t *type, operand_t val) {
                 report_note(id, "consider casting to (u)intptr");
             }
             mpz_set_ui(value->digit, (uintptr_t)other->values);
+        } else {
+            assert("invalid integer cast");
         }
 
         return value;
     }
+
+    assert("unknown type cast");
 
     value_t *out = empty_value();
     report_uninit(state, out);
