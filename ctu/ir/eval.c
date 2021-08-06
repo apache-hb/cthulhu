@@ -232,6 +232,14 @@ static value_t *eval_unary(state_t *state, type_t *type, unary_t unary, operand_
     return value;
 }
 
+static value_t *eval_convert(state_t *state, type_t *type, operand_t val) {
+    value_t *value = build_value(type);
+
+    if (is_boolean(type)) {
+        /* TODO: lol */
+    }
+}
+
 /* evaluate a step, return false if a value has been returned */
 static bool eval_step(state_t *state) {
     /* prevent out of bounds access */
@@ -265,6 +273,9 @@ static bool eval_step(state_t *state) {
     case OP_RETURN:
         state->result = make_value(state, step->value); 
         return false;
+    case OP_CONVERT:
+        state->values[state->ip] = eval_convert(state, step->type, step->value);
+        return true;
 
     case OP_BLOCK: case OP_EMPTY: 
         return true;

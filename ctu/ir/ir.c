@@ -758,7 +758,15 @@ static flow_t compile_var(module_t *mod, node_t *node) {
     if (node->init != NULL) {
         operand_t op = emit_opcode(&self, node->init);
         step_t ret = new_step(OP_RETURN, node->init);
-        ret.value = op;
+        
+        type_t *type = get_resolved_type(node);
+        if (!types_equal(type, get_resolved_type(node->init))) {
+            step_t cast = new_step(OP_CONVERT, node->type);
+            cast.value = op;
+            ret.value = add_vreg(&self, cast);
+        } else {
+            ret.value = op;
+        }
         add_step(&self, ret);
     }
 
