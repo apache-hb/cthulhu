@@ -84,11 +84,11 @@ static void debug_var(node_t *node) {
     printf("var %s ", node->name);
     if (node->init) {
         debug_ast(node->init);
-        if (node->type) {
+        if (raw_type(node)) {
             printf(" ");
         }
     }
-    if (node->type) {
+    if (raw_type(node)) {
         debug_ast(node->type);
     }
 }

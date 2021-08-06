@@ -1,3 +1,3 @@
 var x = 0xFFFFFFFFu;
-var y = 0xFFFFFFFFu;
-var z = x * y;
+var y = 0x4;
+export var z: usize = x * y;

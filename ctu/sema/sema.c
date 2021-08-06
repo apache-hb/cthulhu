@@ -6,6 +6,7 @@
 
 #include "ctu/ast/compile.h"
 
+#include "ctu/debug/type.h"
 #include "ctu/debug/ast.h"
 
 #include <errno.h>
@@ -320,11 +321,18 @@ static void build_var(sema_t *sema, node_t *it) {
      * variables are lvalues
      */
 
+    printf("%s = %p\n", it->name, it);
+
     out = set_lvalue(out, true);
     out = set_mut(out, is_mut(it));
 
     if (type != NULL && init != NULL) {
-        if (!type_can_become_implicit(&it, type, init)) {
+        /** 
+         * type_can_become_implicit modifies the first argument,
+         * this will mangle a variable, so we copy it
+         */
+        node_t *nop = ast_noop(it->scanner, it->where);
+        if (!type_can_become_implicit(&nop, type, init)) {
             reportf(LEVEL_ERROR, it, "incompatible types for initialization of variable `%s`", it->name);
         }
     }
@@ -334,6 +342,8 @@ static void build_var(sema_t *sema, node_t *it) {
             reportf(LEVEL_ERROR, it, "unbounded array must be initialized");
         }
     }
+
+    printf("%s = %p\n", it->name, it);
 
     connect_type(it, out);
     list_pop(current);

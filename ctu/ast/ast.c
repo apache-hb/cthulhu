@@ -101,7 +101,7 @@ type_t *get_resolved_type(node_t *node) {
     type_t *type = raw_type(node);
     
     if (type == NULL) {
-        reportf(LEVEL_ERROR, node, "type of node is not known");
+        reportf(LEVEL_INTERNAL, node, "type of node is not known");
         type = new_unresolved(node);
     }
 
@@ -544,8 +544,8 @@ bool is_interop(node_t *node) {
     return node->attribs & ATTR_INTEROP;
 }
 
-node_t *ast_noop(void) {
-    return new_node(NULL, NOWHERE, AST_NOOP);
+node_t *ast_noop(scanner_t *scanner, where_t where) {
+    return new_node(scanner, where, AST_NOOP);
 }
 
 node_t *ast_array(scanner_t *scanner, where_t where, node_t *of, node_t *size) {

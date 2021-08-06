@@ -4,6 +4,7 @@
 #include "ctu/util/report.h"
 #include "ctu/debug/ast.h"
 #include "ctu/debug/ir.h"
+#include "ctu/debug/type.h"
 #include "ctu/util/util.h"
 #include "ctu/util/str.h"
 
@@ -824,6 +825,7 @@ module_t *compile_module(const char *name, unit_t unit) {
 
     for (size_t i = 0; i < mod->nvars; i++) {
         flow_t *var = mod->vars + i;
+        printf("%s is ", var->name); debug_type(var->result); printf("\n");
         if (var->node->init) {
             var->value = eval_global(mod, mod->vars + i);
         } else {

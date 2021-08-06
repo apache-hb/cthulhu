@@ -339,7 +339,7 @@ static void sanitize_unsigned(scanner_t *source, where_t where, integer_t kind, 
         }
         break;
 
-    default: 
+    default:
         /**
          * same as above
          */

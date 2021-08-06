@@ -4,6 +4,8 @@
 #include "ctu/util/report.h"
 #include "ctu/util/util.h"
 
+#include "ctu/debug/type.h"
+
 #include <stdlib.h>
 #include <inttypes.h>
 
@@ -489,10 +491,37 @@ static void gen_flow(FILE *out, flow_t *flow) {
     fprintf(out, "}\n\n");
 }
 
+static const char *gen_value(value_t *value) {
+    if (is_integer(value->type)) {
+        return mpz_get_str(NULL, 10, value->digit);
+    }
+
+    if (is_boolean(value->type)) {
+        return value->boolean ? "true" : "false";
+    }
+
+    if (is_callable(value->type)) {
+        return value->func->name;
+    }
+
+    assert("unknown gen-value");
+    return "NULL";
+}
+
 static void gen_global(FILE *out, flow_t *var, size_t idx) {
-    fprintf(out, "%s[1];\n", 
+    if (!var->exported) {
+        fprintf(out, "static ");
+    }
+
+    fprintf(out, "%s[1]", 
         gen_type(var->result, gen_var(idx))
     );
+
+    if (var->value) {
+        fprintf(out, " = { %s }", gen_value(var->value));
+    }
+
+    fprintf(out, ";\n");
 }
 
 static void emit_type(FILE *out, type_t *type) {

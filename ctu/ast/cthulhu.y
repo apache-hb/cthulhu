@@ -291,7 +291,7 @@ stmt: expr SEMI { $$ = $1; }
     | while { $$ = $1; }
     | BREAK SEMI { $$ = ast_break(x, @$); }
     | CONTINUE SEMI { $$ = ast_continue(x, @$); }
-    | error SEMI { $$ = ast_noop(); }
+    | error SEMI { $$ = ast_noop(x, @$); }
     ;
 
 /**
