@@ -95,6 +95,7 @@ void cterror();
 %token
     BOOL_TRUE "`true`"
     BOOL_FALSE "`false`"
+    PTR_NULL "`null`"
 
 %token
     RETURN "`return`"
@@ -116,17 +117,18 @@ void cterror();
 
 %type<node>
     decl declbase function param variable struct field /* declarations */
-    type typename pointer array /* types */
+    type typename pointer array funcptr /* types */
     stmt stmts return if else elseif branch assign while /* statements */
     primary postfix unary multiply add compare equality or and shift xor bits expr /* expressions */
-    import attrib union enum item digit
+    import attrib union enum item digit namedarg arg
 
 %type<nodes>
     stmtlist fields enums
-    args arglist
+    args arglist namedargs
     params paramlist
     names imports unit
     decorate decorators
+    types
 
 %type<mut>
     mut
@@ -301,7 +303,12 @@ stmt: expr SEMI { $$ = $1; }
 type: typename { $$ = $1; }
     | pointer { $$ = $1; }
     | array { $$ = $1; }
+    | funcptr { $$ = $1; }
     | VAR LPAREN type RPAREN { $$ = ast_mut(x, @$, $3); }
+    ;
+
+types: type { $$ = new_list($1); }
+    | types COMMA type { $$ = list_push($1, $3); }
     ;
 
 pointer: MUL type { $$ = ast_pointer(x, @$, $2); }
@@ -311,6 +318,10 @@ typename: names { $$ = ast_symbol(x, @$, $1); }
 
 names: IDENT { $$ = new_list($1); }
     | names COLON2 IDENT { $$ = list_push($1, $3); }
+    ;
+
+funcptr: DEF LPAREN RPAREN ARROW type { $$ = ast_funcptr(x, @$, new_list(NULL), $5); }
+    | DEF LPAREN types RPAREN ARROW type { $$ = ast_funcptr(x, @$, $3, $6); }
     ;
 
 array: LSQUARE type RSQUARE { $$ = ast_array(x, @$, $2, NULL); }
@@ -329,9 +340,21 @@ args: %empty { $$ = new_list(NULL); }
     | arglist { $$ = $1; }
     ;
 
-arglist: expr { $$ = new_list($1); }
-    | arglist COMMA expr { $$ = list_push($1, $3); }
+arglist: arg { $$ = new_list($1); }
+    | arg COMMA arglist { $$ = list_emplace($3, $1); }
+    | namedargs { $$ = $1; }
     ;
+
+arg: expr { $$ = ast_arg(x, @$, NULL, $1); }
+    ;
+
+namedargs: namedarg { $$ = new_list($1); }
+    | namedargs COMMA namedarg { $$ = list_push($1, $3); }
+    ;
+
+namedarg: IDENT COLON expr { $$ = ast_arg(x, @$, $1, $3); }
+    ;
+
 
 digit: DIGIT { $$ = ast_digit(x, @$, $1.text, $1.base); }
     ;
@@ -342,6 +365,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | BOOL_TRUE { $$ = ast_bool(x, @$, true); }
     | BOOL_FALSE { $$ = ast_bool(x, @$, false); }
     | STRING { $$ = ast_string(x, @$, $1); }
+    | PTR_NULL { $$ = ast_null(x, @$); }
     ;
 
 postfix: primary { $$ = $1; }

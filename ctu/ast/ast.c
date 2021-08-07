@@ -31,6 +31,7 @@ static node_t *new_decl(scanner_t *scanner, where_t where, ast_t kind, char *nam
     decl->name = name;
     decl->ctx = NULL;
     decl->decorate = new_list(NULL);
+    decl->section = NULL;
     return decl;
 }
 
@@ -604,4 +605,30 @@ node_t *ast_sizeof(node_t *it) {
     node->of = it;
 
     return node;
+}
+
+node_t *ast_null(scanner_t *scanner, where_t where) {
+    return new_node(scanner, where, AST_NULL);
+}
+
+node_t *ast_funcptr(scanner_t *scanner, where_t where, list_t *params, node_t *result) {
+    node_t *node = new_node(scanner, where, AST_FUNCPTR);
+
+    node->params = params;
+    node->result = result;
+
+    return node;
+}
+
+node_t *ast_arg(scanner_t *scanner, where_t where, char *name, node_t *expr) {
+    node_t *node = new_node(scanner, where, AST_ARG);
+
+    node->name = name;
+    node->arg = expr;
+
+    return node;
+}
+
+void mark_section(node_t *node, const char *section) {
+    node->section = section;
 }

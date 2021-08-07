@@ -232,6 +232,15 @@ type_t *set_mut(type_t *type, bool mut) {
     type_t *copy = copyty(type);
     copy->mut = mut;
 
+    if (is_pointer(copy)) {
+        copy->ptr = set_mut(copy->ptr, mut);
+    } else if (is_record(copy)) {
+        for (size_t i = 0; i < copy->fields.size; i++) {
+            copy->fields.fields[i].type 
+                = set_mut(copy->fields.fields[i].type, mut);
+        }
+    }
+
     return copy;
 }
 
@@ -404,11 +413,11 @@ static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implic
         }
 
         if (dst->mut && !src->mut) {
-            reportf(LEVEL_ERROR, *node, "cannot implicitly remove const");
+            reportf(LEVEL_ERROR, *node, "cannot implicitly remove const from %s", typefmt(src));
             return false;
         }
 
-        if (is_void(src) || is_void(dst)) {
+        if (is_void(src->ptr) || is_void(dst->ptr)) {
             return true;
         }
 
@@ -432,12 +441,24 @@ static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implic
         return true;
     }
 
-    if (is_pointer(dst) && is_integer(src)) {
+    if (is_integer(src) && is_pointer(dst)) {
         if (get_integer_kind(src) != INTEGER_INTPTR && implicit) {
             reportf(LEVEL_ERROR, *node, "possibly narrowing integer to pointer cast");
             return false;
         }
         return true;
+    }
+
+    if (is_callable(dst)) {
+        if (is_integer(src)) {
+            return get_integer_kind(src) == INTEGER_INTPTR;
+        }
+
+        if (is_pointer(src)) {
+            return is_void(src->ptr);
+        }
+
+        return false;
     }
 
     return dst->index == src->index;

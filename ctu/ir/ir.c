@@ -591,6 +591,7 @@ static operand_t emit_sizeof(flow_t *flow, node_t *node) {
     flow_t self = { 
         .node = node,
         .name = format("closure%zu", node->local),
+        .section = flow->section,
         .args = NULL,
         .nargs = 0,
 
@@ -626,6 +627,11 @@ static operand_t emit_sizeof(flow_t *flow, node_t *node) {
     return new_func(node->local);
 }
 
+static operand_t emit_null(void) {
+    /* reserve no space, with a type of *void, this is null */
+    return new_operand(NIL);
+}
+
 static operand_t emit_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
@@ -645,7 +651,9 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
     case AST_INDEX: return emit_index(flow, node);
     case AST_BREAK: return emit_break(flow);
     case AST_CONTINUE: return emit_continue(flow);
+    case AST_NULL: return emit_null();
     case AST_BUILTIN_SIZEOF: return emit_sizeof(flow, node);
+    case AST_ARG: return emit_opcode(flow, node->arg);
 
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);
@@ -673,6 +681,7 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
         node,
         /* name */
         get_decl_name(node), 
+        node->section,
         
         /* arguments */
         ctu_malloc(sizeof(arg_t) * len), len,
@@ -734,6 +743,7 @@ static flow_t compile_var(module_t *mod, node_t *node) {
     flow_t self = { 
         .node = node,
         .name = get_decl_name(node),
+        .section = node->section,
         .args = NULL,
         .nargs = 0,
 

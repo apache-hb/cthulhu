@@ -69,25 +69,30 @@ void *map_get(map_t *map, const char *id) {
 void map_put(map_t *map, const char *id, void *data) {
     uint32_t hash = hash_string(id);
     entry_t *entry = &map->data[hash % map->size];
+
     while (entry) {
         if (entry->id == NULL) {
             entry->id = id;
             entry->data = data;
             break;
         } else if (strcmp(entry->id, id) == 0) {
+            entry->data = data;
             break;
-        } else {
-            entry->next = ctu_malloc(sizeof(entry_t));
-            entry->next->id = NULL;
-            entry->next->next = NULL;
+        } else if (entry->next) {
             entry = entry->next;
+        } else {
+            entry_t *next = ctu_malloc(sizeof(entry_t));
+            next->id = NULL;
+            next->next = NULL;
+            entry->next = next;
+            entry = next;
         }
     }
 }
 
 void map_iter(map_t *map, void (*func)(const char *id, void *data, void *arg), void *arg) {
     for (size_t i = 0; i < map->size; i++) {
-        entry_t *entry = &map->data[i];
+        entry_t *entry = map->data + i;
         while (entry) {
             if (entry->id) {
                 func(entry->id, entry->data, arg);
@@ -133,11 +138,16 @@ void *list_at(list_t *list, size_t index) {
     return list->data[index];
 }
 
-list_t *list_push(list_t *list, void *data) {
-    if (list->len + 1 > list->size) {
+static void list_ensure(list_t *list, size_t size) {
+    if (size > list->size) {
         list->size *= 2;
         list->data = ctu_realloc(list->data, sizeof(void*) * list->size);
     }
+}
+
+list_t *list_push(list_t *list, void *data) {
+    list_ensure(list, list->len + 1);
+    
     list->data[list->len++] = data;
     return list;
 }
@@ -160,4 +170,14 @@ list_t list_slice(list_t *list, size_t offset) {
     list_t slice = { list->size, list->len - offset, list->data + offset };
 
     return slice;
+}
+
+list_t *list_emplace(list_t *list, void *data) {
+    list_ensure(list, list->len + 1);
+
+    memmove(list->data + 1, list->data, sizeof(void*) * list->len);
+    list->data[0] = data;
+
+    list->len++;
+    return list;
 }

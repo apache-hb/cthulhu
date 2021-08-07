@@ -41,7 +41,8 @@ typedef struct {
         ARG, /* an argument passed to this function */
         VREG, /* a virtual register in the current flow */
         BLOCK, /* an address of a basic block in the current flow */
-        
+        NIL, /* null literal */
+
         IMM, /* an immediate value */
         
         FUNC, /* a global function */
@@ -177,6 +178,7 @@ typedef struct {
     node_t *node;
 
     const char *name;
+    const char *section;
 
     arg_t *args;
     size_t nargs;

@@ -38,6 +38,7 @@ SUFFIX [u]?[tsilzpm]?
 "continue" { return CONTINUE; }
 "true" { return BOOL_TRUE; }
 "false" { return BOOL_FALSE; }
+"null" { return PTR_NULL; }
 "return" { return RETURN; }
 "export" { return EXPORTED; }
 "struct" { return STRUCT; }
@@ -46,7 +47,10 @@ SUFFIX [u]?[tsilzpm]?
 "import" { return IMPORT; }
 
 "$" { yylval->text = "$"; return IDENT; }
-[a-zA-Z_][a-zA-Z0-9_]* { yylval->text = ctu_strdup(yytext); return IDENT; }
+[a-zA-Z_][a-zA-Z0-9_]* { 
+    yylval->text = ctu_strdup(yytext); 
+    return IDENT; 
+}
 
 [0-9]+{SUFFIX} { 
     yylval->digit.text = ctu_strdup(yytext); 

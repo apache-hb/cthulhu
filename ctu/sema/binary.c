@@ -76,7 +76,8 @@ static type_t *binary_eq(sema_t *sema, node_t *expr) {
     }
 
     if (lhs->kind != rhs->kind) {
-        reportf(LEVEL_ERROR, expr, "cannot use incompatible type in equality comparison");
+        reportid_t id = reportf(LEVEL_ERROR, expr, "cannot use incompatible type in equality comparison");
+        report_underline(id, format("comparing %s to %s", typefmt(lhs), typefmt(rhs)));
     }
 
     return BOOL_TYPE;

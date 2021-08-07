@@ -47,13 +47,31 @@ static type_t *query_array(sema_t *sema, node_t *expr) {
             reportf(LEVEL_ERROR, expr, "array size must be convertible to usize, `%s` is incompatible", typefmt(len));
             return new_poison(expr, "unresolved array size");
         }
+
+        if (mpz_sgn(expr->size->num) <= 0) {
+            reportf(LEVEL_ERROR, expr, "array size must be greater than 0");
+        }
     }
 
     return new_array(expr, of, size, expr->size == NULL);
 }
 
+static type_t *query_signature(sema_t *sema, node_t *expr) {
+    type_t *result = query_type(sema, expr->result);
+    size_t len = list_len(expr->params);
+    list_t *args = sized_list(len);
+
+    for (size_t i = 0; i < len; i++) {
+        node_t *param = list_at(expr->params, i);
+        type_t *type = query_type(sema, param);
+        list_push(args, type);
+    }
+
+    return new_callable(expr, args, result);
+}
+
 /**
- * find a type given a typename
+ * find a type
  */
 static type_t *query_type(sema_t *sema, node_t *it) {
     type_t *type = raw_type(it); 
@@ -83,6 +101,10 @@ static type_t *query_type(sema_t *sema, node_t *it) {
 
     case AST_ARRAY:
         type = query_array(sema, it);
+        break;
+
+    case AST_FUNCPTR:
+        type = query_signature(sema, it);
         break;
 
     default:

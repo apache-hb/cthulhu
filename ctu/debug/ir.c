@@ -28,6 +28,7 @@ static void debug_operand(module_t *mod, operand_t op) {
     case VREG: printf("%%%zu", op.vreg); break;
     case ARG: printf("arg[%zu]", op.arg); break;
     case IMM: debug_imm(op.imm); break;
+    case NIL: printf("null"); break;
     case NONE: printf("none"); break;
     case BLOCK: printf(".%zu", op.label); break;
     case FUNC: printf("def(%zu:%s)", op.func, get_flow_name(mod, op.func)); break;

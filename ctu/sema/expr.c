@@ -336,6 +336,10 @@ static type_t *query_index(sema_t *sema, node_t *expr) {
     return set_lvalue(out, true);
 }
 
+static type_t *query_null(node_t *expr) {
+    return new_pointer(expr, VOID_TYPE);
+}
+
 /**
  * given an expression find its type
  */
@@ -354,6 +358,9 @@ static type_t *query_expr(sema_t *sema, node_t *it) {
         break;
     case AST_STRING:
         type = query_string(it);
+        break;
+    case AST_NULL:
+        type = query_null(it);
         break;
     case AST_UNARY:
         type = query_unary(sema, it);
@@ -376,6 +383,10 @@ static type_t *query_expr(sema_t *sema, node_t *it) {
 
     case AST_SYMBOL:
         type = query_expr_symbol(sema, it, it->ident);
+        break;
+
+    case AST_ARG:
+        type = query_expr(sema, it->arg);
         break;
 
     case AST_BUILTIN_SIZEOF:

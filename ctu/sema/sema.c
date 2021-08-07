@@ -212,6 +212,10 @@ static type_t *query_expr(sema_t *sema, node_t *it);
 #include "stmt.c"
 
 static void add_header(char *str) {
+    if (!str) {
+        return;
+    }
+    
     for (size_t i = 0; i < list_len(headers); i++) {
         if (strcmp(str, list_at(headers, i)) == 0) {
             return;
@@ -221,6 +225,10 @@ static void add_header(char *str) {
 }
 
 static void add_lib(char *str) {
+    if (!str) {
+        return;
+    }
+
     for (size_t i = 0; i < list_len(libs); i++) {
         if (strcmp(str, list_at(libs, i)) == 0) {
             return;
@@ -229,27 +237,78 @@ static void add_lib(char *str) {
     list_push(libs, str);
 }
 
-static bool is_interop_attr(list_t *name) {
-    return list_len(name) == 1 
-        && strcmp(list_at(name, 0), "interop") == 0;
+static char *get_str(node_t *node) {
+    if (node->kind != AST_ARG) {
+        reportf(LEVEL_ERROR, node, "decorator argument requires string argument");
+        return NULL;
+    }
+
+    node_t *arg = node->arg;
+
+    if (arg->kind != AST_STRING) {
+        reportf(LEVEL_ERROR, node, "decorator requires string");
+        return NULL;
+    }
+
+    return arg->string;
 }
 
-static void add_interop(node_t *attr) {
-    list_t *args = attr->args;
+static void add_interop(node_t *decl, list_t *args) {
     /* first arg is header, then library */
-    /* TODO: once  abuiltin system is in place, use that instead */
+    /* TODO: once a builtin system is in place, use that instead */
 
     if (list_len(args) > 0) {
-        char *header = LIST_AT(node_t*, args, 0)->string;
+        char *header = get_str(list_at(args, 0));
         add_header(header);
     }
 
     if (list_len(args) > 1) {
-        add_lib(LIST_AT(node_t*, args, 1)->string);
+        char *library = get_str(list_at(args, 1));
+        add_lib(library);
+    }
+
+    mark_interop(decl);
+}
+
+static void add_section(node_t *decl, list_t *args) {
+    if (list_len(args) == 0) {
+        reportf(LEVEL_ERROR, decl, "section requires name");
+    } else {
+        char *name = get_str(list_at(args, 0));
+        mark_section(decl, name);
     }
 }
 
-static bool check_attribs(node_t *decl) {
+typedef struct {
+    const char *name;
+    void(*process)(node_t*, list_t*);
+} attr_t;
+
+attr_t attrs[] = {
+    { "interop", add_interop },
+    { "section", add_section }
+};
+
+static bool apply_attrib(node_t *attrib, node_t *decl) {
+    list_t *name = attrib->attr;
+
+    /* for now all atributes have a length of 1 */
+    if (list_len(name) != 1) {
+        return false;
+    }
+
+    const char *attr = list_at(name, 0);
+    for (size_t i = 0; i < sizeof(attrs) / sizeof(attr_t); i++) {
+        if (strcmp(attr, attrs[i].name) == 0) {
+            attrs[i].process(decl, attrib->args);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static void check_attribs(node_t *decl) {
     ASSERT(
         decl->kind == AST_DECL_FUNC || 
         decl->kind == AST_DECL_VAR || 
@@ -262,16 +321,10 @@ static bool check_attribs(node_t *decl) {
     for (size_t i = 0; i < list_len(decorate); i++) {
         node_t *attr = list_at(decorate, i);
 
-        if (is_interop_attr(attr->attr)) {
-            add_interop(attr);
-            mark_interop(decl);
-            return true;
-        } else {
+        if (!apply_attrib(attr, decl)) {
             reportf(LEVEL_WARNING, attr, "unknown attribute");
         }
     }
-
-    return false;
 }
 
 static void build_type(node_t *it) {
@@ -287,7 +340,9 @@ static void build_type(node_t *it) {
         goto clear;
     }
 
-    if (check_attribs(it)) {
+    check_attribs(it);
+
+    if (is_interop(it)) {
         get_resolved_type(it)->interop = true;
     }
 
@@ -331,7 +386,9 @@ static void build_var(sema_t *sema, node_t *it) {
          */
         node_t *nop = ast_noop(it->scanner, it->where);
         if (!type_can_become_implicit(&nop, type, init)) {
-            reportf(LEVEL_ERROR, it, "incompatible types for initialization of variable `%s`", it->name);
+            reportid_t id = reportf(LEVEL_ERROR, it, "incompatible types for initialization of variable `%s`", it->name);
+            report_underline(id, format("found: %s", typefmt(init)));
+            report_note(id, format("required %s", typefmt(type)));
         }
     }
 
@@ -372,15 +429,16 @@ static void build_func(node_t *it) {
 
     nest->result = query_type(sema, it->result);
 
-    bool interop = check_attribs(it);
+    check_attribs(it);
 
-    if (interop && it->body) {
+    if (is_interop(it) && it->body) {
         reportf(LEVEL_ERROR, it, "interop function `%s` must be stubbed", it->name);
     }
 
     if (it->body) {
         build_stmts(nest, it->body);
     }
+    
     it->locals = locals;
     locals = 0;
 }

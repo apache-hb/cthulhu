@@ -1,0 +1,104 @@
+var stack: [uchar:4096];
+
+final STIVALE2_HEADER_TAG_TERMINAL_ID
+    = 0xa85d499b1823be72ul;
+
+final STIVALE2_HEADER_TAG_FRAMEBUFFER_ID
+    = 0x3ecc1bc43d0f7971ul;
+
+@interop("stivale2.h")
+struct stivale2_header {
+    // these are uint64_t instead of uintptr
+    // but we use uintptr because its more correct
+    // and cthulhu has stricter pointer conversion rules
+    entry_point: uintptr,
+    stack: uintptr,
+    flags: ulong,
+    tags: uintptr
+}
+
+@interop("stivale2.h")
+struct stivale2_tag {
+    identifier: ulong,
+    next: uintptr
+}
+
+@interop("stivale2.h")
+struct stivale2_header_tag_framebuffer {
+    tag: stivale2_tag,
+    framebuffer_width: ushort,
+    framebuffer_height: ushort,
+    framebuffer_bpp: ushort,
+    $: ushort
+}
+
+@interop("stivale2.h")
+struct stivale2_header_tag_terminal {
+    tag: stivale2_tag,
+    flags: ulong,
+    callback: uintptr
+}
+
+@interop("stivale2.h")
+struct stivale2_struct_tag_terminal {
+    tag: stivale2_tag,
+    flags: uint,
+    cols: ushort,
+    rows: ushort,
+    term_write: uintptr,
+    max_length: ulong
+}
+
+@section(".stivale2hdr")
+export final header = stivale2_header(
+    entry_point: null,
+    stack: (stack as uintptr) + stack::sizeof(),
+    flags: (1 << 1) | (1 << 2),
+    tags: &framebuffer_header
+);
+
+final framebuffer_header = stivale2_header_tag_framebuffer(
+    tag: stivale2_tag(
+        identifier: STIVALE2_HEADER_TAG_FRAMEBUFFER_ID, 
+        next: &terminal_header
+    ),
+    framebuffer_width: 0,
+    framebuffer_height: 0,
+    framebuffer_bpp: 0
+);
+
+final terminal_header = stivale2_header_tag_terminal(
+    tag: stivale2_tag(
+        identifier: STIVALE2_HEADER_TAG_TERMINAL_ID,
+        next: null
+    ),
+    flags: 0,
+    callback: null
+);
+
+export def kmain(stivale2: *var(stivale2_header)): void {
+    // try and find the terminal tag
+    var terminal: *stivale2_struct_tag_terminal = null;
+    var tag: *stivale2_tag = stivale2->tags;
+
+    while tag != null {
+        if tag->identifier == STIVALE2_HEADER_TAG_TERMINAL_ID {
+            terminal = tag as *stivale2_struct_tag_terminal;
+            break;
+        }
+
+        tag = tag->next as *stivale2_tag;
+    }
+
+    // hang forever if the terminal isnt found
+    if terminal == null {
+        while true { }
+    }
+
+    var write = terminal->term_write
+        as def(str, usize) -> void;
+
+    write("Hello Cthulhu", 13uz);
+
+    while true { }
+}

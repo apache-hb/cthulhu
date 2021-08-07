@@ -21,6 +21,8 @@ typedef enum {
     AST_CAST,
     AST_ACCESS,
     AST_INDEX,
+    AST_NULL,
+    AST_ARG,
 
     /**
      * statements
@@ -54,6 +56,7 @@ typedef enum {
     AST_PTR,
     AST_MUT,
     AST_ARRAY,
+    AST_FUNCPTR,
 
     /**
      * builtins
@@ -281,6 +284,8 @@ typedef struct node_t {
             AST_UNION {
                 /**
                  * all declarations have names
+                 * 
+                 * AST_ARG may have this set to NULL
                  */
                 char *name;
 
@@ -296,6 +301,8 @@ typedef struct node_t {
 
             /* decorators applied to this declaration */
             list_t *decorate;
+
+            const char *section;
 
             AST_UNION {
                 /* AST_DECL_STRUCT, AST_DECL_ENUM, AST_DECL_UNION */
@@ -313,6 +320,9 @@ typedef struct node_t {
                     /* total number of local variables */
                     size_t locals;
                 };
+
+                /* AST_ARG */
+                struct node_t *arg;
 
                 /* AST_DECL_VAR */
                 struct {
@@ -403,6 +413,7 @@ bool is_used(node_t *node);
 bool is_mut(node_t *node);
 void mark_interop(node_t *node);
 bool is_interop(node_t *node);
+void mark_section(node_t *node, const char *section);
 
 /**
  * node creation
@@ -411,6 +422,7 @@ bool is_interop(node_t *node);
 node_t *ast_digit(scanner_t *scanner, where_t where, char *digit, int base);
 node_t *ast_bool(scanner_t *scanner, where_t where, bool boolean);
 node_t *ast_string(scanner_t *scanner, where_t where, char *string);
+node_t *ast_null(scanner_t *scanner, where_t where);
 
 node_t *ast_unary(scanner_t *scanner, where_t where, unary_t unary, node_t *expr);
 node_t *ast_binary(scanner_t *scanner, where_t where, binary_t binary, node_t *lhs, node_t *rhs);
@@ -431,6 +443,7 @@ node_t *ast_symbol(scanner_t *scanner, where_t where, list_t *text);
 node_t *ast_pointer(scanner_t *scanner, where_t where, node_t *ptr);
 node_t *ast_mut(scanner_t *scanner, where_t where, node_t *it);
 node_t *ast_array(scanner_t *scanner, where_t where, node_t *of, node_t *size);
+node_t *ast_funcptr(scanner_t *scanner, where_t where, list_t *params, node_t *result);
 
 node_t *ast_decl_func(
     scanner_t *scanner, where_t where, 
@@ -461,3 +474,5 @@ node_t *ast_noop(scanner_t *scanner, where_t where);
 node_t *ast_index(scanner_t *scanner, where_t where, node_t *expr, node_t *index);
 
 node_t *ast_sizeof(node_t *it);
+
+node_t *ast_arg(scanner_t *scanner, where_t where, char *name, node_t *expr);

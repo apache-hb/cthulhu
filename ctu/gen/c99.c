@@ -278,6 +278,7 @@ static const char *gen_operand_inner(flow_t *flow, operand_t op) {
     case VAR: return gen_var(op.var);
     case ARG: return genarg(op.arg);
     case STRING: return genstr(op.var);
+    case NIL: return "NULL";
 
     case NONE:
         assert("gen_operand invalid operand");
@@ -614,7 +615,11 @@ void gen_c99(FILE *out, module_t *mod) {
         if (var->interop) {
             continue;
         }
-        
+
+        if (var->section) {
+            fprintf(out, "__attribute__((section(\"%s\")))", var->section);
+        }
+
         if (SHOULD_EMIT(var))
             gen_global(out, var, i);
     }
@@ -639,6 +644,10 @@ void gen_c99(FILE *out, module_t *mod) {
             continue;
         }
         
+        if (flow->section) {
+            fprintf(out, "__attribute__((section(\"%s\")))", flow->section);
+        }
+
         if (SHOULD_EMIT(flow) && !flow->stub)
             gen_flow(out, mod->flows + i);
     }
