@@ -390,11 +390,19 @@ static bool type_can_become(node_t *node, type_t *dst, type_t *src, bool implici
     }
 
     if (is_integer(dst) && is_pointer(src)) {
-        return get_integer_kind(dst) == INTEGER_INTPTR;
+        if (implicit) {
+            return get_integer_kind(dst) == INTEGER_INTPTR;
+        }
+
+        return true;
     }
 
     if (is_pointer(dst) && is_integer(src)) {
-        return get_integer_kind(src) == INTEGER_INTPTR;
+        if (implicit) {
+            return get_integer_kind(src) == INTEGER_INTPTR;
+        }
+
+        return true;
     }
 
     return dst->index == src->index;

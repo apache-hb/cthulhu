@@ -421,13 +421,17 @@ static operand_t emit_branch(flow_t *flow, node_t *node) {
     return head;
 }
 
-static operand_t emit_convert(flow_t *flow, node_t *node) {
-    operand_t body = emit_opcode(flow, node->expr);
-
-    step_t step = new_step(OP_CONVERT, node);
-    step.value = body;
+static operand_t emit_cast(flow_t *flow, operand_t value, type_t *type) {
+    step_t step = new_typed_step(OP_CONVERT, type);
+    step.value = value;
 
     return add_vreg(flow, step);
+}
+
+static operand_t emit_convert(flow_t *flow, node_t *node) {
+    operand_t value = emit_opcode(flow, node->expr);
+
+    return emit_cast(flow, value, node->typeof);
 }
 
 static operand_t make_var_reserve(flow_t *flow, node_t *node) {
@@ -553,10 +557,8 @@ static operand_t emit_while(flow_t *flow, node_t *node) {
 }
 
 static operand_t emit_string(flow_t *flow, node_t *node) {
-    printf("%zu\n", flow->mod->nstrings);
     size_t idx = node->local;
     flow->mod->strings[idx] = node->string;
-    printf("%p = %p\n", flow->mod->strings[idx], node->string);
     return new_string(idx); 
 }
 
@@ -632,7 +634,7 @@ static operand_t emit_null(void) {
     return new_operand(NIL);
 }
 
-static operand_t emit_opcode(flow_t *flow, node_t *node) {
+static operand_t emit_inner_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
     case AST_DIGIT: return emit_digit(node);
@@ -653,12 +655,22 @@ static operand_t emit_opcode(flow_t *flow, node_t *node) {
     case AST_CONTINUE: return emit_continue(flow);
     case AST_NULL: return emit_null();
     case AST_BUILTIN_SIZEOF: return emit_sizeof(flow, node);
-    case AST_ARG: return emit_opcode(flow, node->arg);
+    case AST_ARG: return emit_inner_opcode(flow, node->arg);
 
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);
         return new_operand(NONE);
     }
+}
+
+static operand_t emit_opcode(flow_t *flow, node_t *node) {
+    operand_t op = emit_inner_opcode(flow, node);
+    
+    if (node->cast != NULL) {
+        op = emit_cast(flow, op, node->cast);
+    }
+
+    return op;
 }
 
 /**

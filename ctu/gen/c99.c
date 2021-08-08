@@ -542,7 +542,6 @@ static void emit_string(FILE *out, size_t idx, const char *str) {
     fprintf(out, "const char *str%zu = ", idx);
     if (str != NULL) {
         fprintf(out, "\"");
-        printf("%zu = %p\n", idx, str);
         while (*str) {
             fprintf(out, "\\x%x", *str++);
         }
