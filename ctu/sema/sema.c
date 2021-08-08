@@ -384,8 +384,7 @@ static void build_var(sema_t *sema, node_t *it) {
          * type_can_become_implicit modifies the first argument,
          * this will mangle a variable, so we copy it
          */
-        node_t *nop = ast_noop(it->scanner, it->where);
-        if (!type_can_become_implicit(&nop, type, init)) {
+        if (!type_can_become_implicit(it->init, type, init)) {
             reportid_t id = reportf(LEVEL_ERROR, it, "incompatible types for initialization of variable `%s`", it->name);
             report_underline(id, format("found: %s", typefmt(init)));
             report_note(id, format("required %s", typefmt(type)));

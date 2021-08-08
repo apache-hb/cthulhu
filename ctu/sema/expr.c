@@ -273,7 +273,7 @@ static type_t *query_call(sema_t *sema, node_t *expr) {
             node_t *arg = list_at(expr->args, i);
             type_t *in = query_expr(sema, arg);
             type_t *out = list_at(type->args, i);
-            if (!type_can_become_implicit(&arg, in, out)) {
+            if (!type_can_become_implicit(arg, in, out)) {
                 reportid_t id = reportf(LEVEL_ERROR, arg, "argument %zu expected type %s", i, typefmt(out));
                 report_underline(id, typefmt(in));
             }
@@ -285,9 +285,9 @@ static type_t *query_call(sema_t *sema, node_t *expr) {
 
 static type_t *query_cast(sema_t *sema, node_t *expr) {
     type_t *src = query_expr(sema, expr->expr);
-    type_t *dst = query_type(sema, expr->cast);
+    type_t *dst = query_type(sema, expr->convert);
 
-    if (!type_can_become_explicit(&expr, dst, src)) {
+    if (!type_can_become_explicit(expr, dst, src)) {
         return new_poison(expr, "invalid cast");
     }
 
@@ -323,7 +323,7 @@ static type_t *query_index(sema_t *sema, node_t *expr) {
         return new_poison(expr, "bad index");
     }
 
-    if (!type_can_become_explicit(&expr->index, size_int(), index)) {
+    if (!type_can_become_explicit(expr->index, size_int(), index)) {
         reportid_t id = reportf(LEVEL_ERROR, expr->index, "index expected type %s", typefmt(size_int()));
         report_underline(id, format("found `%s` instead", typefmt(index)));
     }

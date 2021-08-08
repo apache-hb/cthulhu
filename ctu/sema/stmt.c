@@ -16,7 +16,7 @@ static void build_assign(sema_t *sema, node_t *assign) {
         reportf(LEVEL_ERROR, assign, "can only assign to lvalues");
     }
 
-    if (!type_can_become_implicit(&assign->src, dst, src)) {
+    if (!type_can_become_implicit(assign->src, dst, src)) {
         reportid_t id = reportf(LEVEL_ERROR, assign, "cannot assign to unrelated type %s", typefmt(dst));
         report_underline(id, typefmt(src));
     }
@@ -41,7 +41,7 @@ static void build_return(sema_t *sema, node_t *stmt) {
         }
     }
 
-    if (!type_can_become_implicit(&stmt->expr, sema->result, result)) {
+    if (!type_can_become_implicit(stmt->expr, sema->result, result)) {
         reportid_t err = reportf(LEVEL_ERROR, stmt, "cannot return incompatible types");
         report_underline(err, format("type: `%s`", typefmt(result)));
         report_note(err, format("expected `%s`", typefmt(sema->result)));
@@ -59,7 +59,7 @@ static void local_var(sema_t *sema, node_t *stmt) {
 static void build_branch(sema_t *sema, node_t *stmt) {
     if (stmt->cond) {
         type_t *cond = query_expr(sema, stmt->cond);
-        if (!type_can_become_implicit(&stmt->cond, BOOL_TYPE, cond)) {
+        if (!type_can_become_implicit(stmt->cond, BOOL_TYPE, cond)) {
             reportf(LEVEL_ERROR, stmt, "can only branch on boolean convertible expressions");
         }
     }
@@ -76,7 +76,7 @@ static void build_while(sema_t *sema, node_t *stmt) {
     type_t *cond = query_expr(sema, stmt->cond);
     build_stmt(sema, stmt->next);
 
-    if (!type_can_become_implicit(&stmt->cond, BOOL_TYPE, cond)) {
+    if (!type_can_become_implicit(stmt->cond, BOOL_TYPE, cond)) {
         reportid_t id = reportf(LEVEL_ERROR, stmt, "can only loop on boolean convertible expressions");
         report_underline(id, format("found type `%s`", typefmt(cond)));
     }

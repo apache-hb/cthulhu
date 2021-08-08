@@ -296,8 +296,8 @@ void connect_type(struct node_t *node, type_t *type);
 
 void sanitize_range(type_t *type, mpz_t it, scanner_t *scanner, where_t where);
 
-bool type_can_become_implicit(struct node_t **node, type_t *dst, type_t *src);
-bool type_can_become_explicit(struct node_t **node, type_t *dst, type_t *src);
+bool type_can_become_implicit(struct node_t *node, type_t *dst, type_t *src);
+bool type_can_become_explicit(struct node_t *node, type_t *dst, type_t *src);
 
 char *typefmt(type_t *type);
 struct node_t *nodeof(type_t *type);

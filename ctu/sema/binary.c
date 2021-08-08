@@ -84,7 +84,7 @@ static type_t *binary_eq(sema_t *sema, node_t *expr) {
 }
 
 static bool is_bool_convertible(node_t *node, type_t *type) {
-    return type_can_become_implicit(&node, type, BOOL_TYPE);
+    return type_can_become_implicit(node, type, BOOL_TYPE);
 }
 
 static type_t *binary_logic(sema_t *sema, node_t *expr) {

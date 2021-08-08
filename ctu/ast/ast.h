@@ -169,6 +169,9 @@ typedef struct node_t {
     /* own local index, or NOT_LOCAL if its not local */
     size_t local;
 
+    /* the type to cast to implicitly */
+    type_t *cast;
+
     AST_UNION {
         /* AST_SYMBOL */
         /** @var list_t<char*> */
@@ -235,7 +238,7 @@ typedef struct node_t {
 
             AST_UNION {
                 /* AST_CAST */
-                struct node_t *cast;
+                struct node_t *convert;
 
                 /* AST_CALL */
                 /** @var list_t<node_t*> */

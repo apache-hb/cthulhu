@@ -22,6 +22,7 @@ static node_t *new_node(scanner_t *scanner, where_t where, ast_t kind) {
     node->typeof = NULL;
     node->attribs = 0;
     node->local = NOT_LOCAL;
+    node->cast = NULL;
 
     return node;
 }
@@ -361,7 +362,7 @@ node_t *ast_cast(scanner_t *scanner, where_t where, node_t *expr, node_t *cast) 
     node_t *node = new_node(scanner, where, AST_CAST);
 
     node->expr = expr;
-    node->cast = cast;
+    node->convert = cast;
 
     return node;
 }

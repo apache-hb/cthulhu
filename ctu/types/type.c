@@ -232,15 +232,6 @@ type_t *set_mut(type_t *type, bool mut) {
     type_t *copy = copyty(type);
     copy->mut = mut;
 
-    if (is_pointer(copy)) {
-        copy->ptr = set_mut(copy->ptr, mut);
-    } else if (is_record(copy)) {
-        for (size_t i = 0; i < copy->fields.size; i++) {
-            copy->fields.fields[i].type 
-                = set_mut(copy->fields.fields[i].type, mut);
-        }
-    }
-
     return copy;
 }
 
@@ -373,19 +364,41 @@ void sanitize_range(type_t *type, mpz_t it, scanner_t *scanner, where_t where) {
     }
 }
 
-static node_t *implicit_cast(node_t *original, type_t *to) {
-    node_t *cast = ast_cast(original->scanner, original->where, original, NULL);
+static bool type_can_become(node_t *node, type_t *dst, type_t *src, bool implicit) {
+    if (is_pointer(dst) && is_pointer(src)) {
+        node->cast = dst;
+        if (!implicit) {
+            return true;
+        }
 
-    connect_type(cast, to);
+        type_t *to = dst->ptr;
+        type_t *from = src->ptr;
 
-    return make_implicit(cast);
-}
+        if (to->mut && !from->mut) {
+            return false;
+        }
 
-static const char *sign_name(type_t *num) {
-    return num->sign ? "signed" : "unsigned";
-}
+        if (is_void(to) || is_void(from)) {
+            return true;
+        }
 
-static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implicit) {
+        return true;
+    }
+
+    if (is_integer(dst) && is_integer(src)) {
+        return true;
+    }
+
+    if (is_integer(dst) && is_pointer(src)) {
+        return get_integer_kind(dst) == INTEGER_INTPTR;
+    }
+
+    if (is_pointer(dst) && is_integer(src)) {
+        return get_integer_kind(src) == INTEGER_INTPTR;
+    }
+
+    return dst->index == src->index;
+#if 0
     if (is_integer(dst) && is_integer(src)) {
         integer_t to = get_integer_kind(dst);
         integer_t from = get_integer_kind(src);
@@ -461,7 +474,8 @@ static bool type_can_become(node_t **node, type_t *dst, type_t *src, bool implic
         return false;
     }
 
-    return dst->index == src->index;
+    return false;
+#endif
 }
 
 bool types_equal(type_t *type, type_t *other) {
@@ -469,11 +483,11 @@ bool types_equal(type_t *type, type_t *other) {
         || type->index == other->index;
 }
 
-bool type_can_become_implicit(node_t **node, type_t *dst, type_t *src) {
+bool type_can_become_implicit(node_t *node, type_t *dst, type_t *src) {
     return type_can_become(node, dst, src, true);
 }
 
-bool type_can_become_explicit(node_t **node, type_t *dst, type_t *src) {
+bool type_can_become_explicit(node_t *node, type_t *dst, type_t *src) {
     return type_can_become(node, dst, src, false);
 }
 
