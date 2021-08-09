@@ -76,7 +76,7 @@ final terminal_header = stivale2_header_tag_terminal(
     callback: null
 );
 
-export def kmain(stivale2: *var(stivale2_header)): void {
+export def kmain(stivale2: stivale2_header): void {
     // try and find the terminal tag
     var terminal: *stivale2_struct_tag_terminal = null;
     var tag: *stivale2_tag = stivale2->tags;

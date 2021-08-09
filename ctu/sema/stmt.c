@@ -14,7 +14,10 @@ static void build_assign(sema_t *sema, node_t *assign) {
 
     if (!is_lvalue(dst)) {
         reportf(LEVEL_ERROR, assign, "can only assign to lvalues");
+    } else if (is_const(dst)) {
+        reportf(LEVEL_ERROR, assign, "cannot assign to const value");
     }
+
 
     if (!type_can_become_implicit(assign->src, dst, src)) {
         reportid_t id = reportf(LEVEL_ERROR, assign, "cannot assign to unrelated type %s", typefmt(dst));
@@ -30,6 +33,7 @@ static bool is_ref(node_t *node) {
 static void build_return(sema_t *sema, node_t *stmt) {
     type_t *result = VOID_TYPE;
     node_t *expr = stmt->expr;
+    node_t *res = expr;
 
     if (expr) {
         result = query_expr(sema, expr);
@@ -39,9 +43,11 @@ static void build_return(sema_t *sema, node_t *stmt) {
                 "cannot return reference to local variable"
             );
         }
+    } else {
+        res = ast_noop(stmt->scanner, stmt->where);
     }
 
-    if (!type_can_become_implicit(stmt->expr, sema->result, result)) {
+    if (!type_can_become_implicit(res, sema->result, result)) {
         reportid_t err = reportf(LEVEL_ERROR, stmt, "cannot return incompatible types");
         report_underline(err, format("type: `%s`", typefmt(result)));
         report_note(err, format("expected `%s`", typefmt(sema->result)));

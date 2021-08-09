@@ -211,7 +211,7 @@ bool is_signed(type_t *type) {
 
 bool is_const(type_t *type) {
     /* consts can fail a compile so best we're conservative with them */
-    return !type->mut && !type->lvalue;
+    return !type->mut;
 }
 
 bool is_pointer(type_t *type) {
@@ -231,6 +231,15 @@ type_t *set_mut(type_t *type, bool mut) {
 
     type_t *copy = copyty(type);
     copy->mut = mut;
+
+    if (is_record(type)) {
+        for (size_t i = 0; i < type->fields.size; i++) {
+            type_t *field = type->fields.fields[i].type;
+            copy->fields.fields[i].type = set_mut(field, mut);
+        }
+    } else if (is_array(type)) {
+        copy->of = set_mut(copy->of, mut);
+    }
 
     return copy;
 }
@@ -364,126 +373,158 @@ void sanitize_range(type_t *type, mpz_t it, scanner_t *scanner, where_t where) {
     }
 }
 
+static const char *sign_name(bool sign) {
+    return sign ? "signed" : "unsigned";
+}
+
 static bool type_can_become(node_t *node, type_t *dst, type_t *src, bool implicit) {
     if (is_pointer(dst) && is_pointer(src)) {
-        node->cast = dst;
         if (!implicit) {
-            return true;
+            goto good;
         }
 
         type_t *to = dst->ptr;
         type_t *from = src->ptr;
 
         if (to->mut && !from->mut) {
+            reportf(LEVEL_ERROR, node, "cannot implicitly remove const from %s", typefmt(from));
             return false;
         }
 
         if (is_void(to) || is_void(from)) {
-            return true;
+            goto good;
         }
 
-        return true;
+        if (type_can_become(node, to, from, implicit)) {
+            goto good;
+        }
+
+        reportf(LEVEL_ERROR, node, "cannot implicitly cast %s to %s",
+            typefmt(from), typefmt(to)
+        );
+        return false;
     }
 
     if (is_integer(dst) && is_integer(src)) {
-        return true;
+        if (implicit) {
+            if (src->sign != dst->sign) {
+                reportf(LEVEL_WARNING, node, "implicit sign conversion from %s type %s to %s type %s",
+                    sign_name(src->sign), typefmt(src),
+                    sign_name(dst->sign), typefmt(dst)
+                );
+            }
+
+            integer_t to = get_integer_kind(dst);
+            integer_t from = get_integer_kind(src);
+
+            if (to != from) {
+                reportf(LEVEL_WARNING, node, "implicit integer type conversion from %s to %s",
+                    typefmt(src), typefmt(dst)
+                );
+            }
+        }
+        goto good;
     }
 
     if (is_integer(dst) && is_pointer(src)) {
         if (implicit) {
-            return get_integer_kind(dst) == INTEGER_INTPTR;
+            if (get_integer_kind(dst) == INTEGER_INTPTR) {
+                goto good;
+            }
+
+            reportid_t id = reportf(LEVEL_ERROR, node, "can only implicitly cast to (u)intptr");
+            report_underline(id, typefmt(src));
+
+            return false;
         }
 
-        return true;
+        goto good;
     }
 
     if (is_pointer(dst) && is_integer(src)) {
-        if (implicit) {
-            return get_integer_kind(src) == INTEGER_INTPTR;
-        }
-
-        return true;
-    }
-
-    return dst->index == src->index;
-#if 0
-    if (is_integer(dst) && is_integer(src)) {
-        integer_t to = get_integer_kind(dst);
-        integer_t from = get_integer_kind(src);
-
-        if ((from > to) && implicit) {
-            reportf(LEVEL_WARNING, *node, "implcit narrowing cast from `%s` to a smaller integer `%s`", typefmt(src), typefmt(dst));
-            *node = implicit_cast(*node, dst);
-        }
-
-        if ((dst->sign != src->sign) && implicit) {
-            reportf(LEVEL_WARNING, *node, "implicit sign change from %s type `%s` to %s type `%s`", 
-                sign_name(src), typefmt(src), 
-                sign_name(dst), typefmt(dst)
-            );
-            *node = implicit_cast(*node, dst);
-        }
-
-        return true;
-    }
-
-    if (is_pointer(dst) && is_pointer(src)) {
-        /* allow explicit casts between any pointer types */
         if (!implicit) {
-            return true;
+            goto good;
         }
 
-        if (dst->mut && !src->mut) {
-            reportf(LEVEL_ERROR, *node, "cannot implicitly remove const from %s", typefmt(src));
-            return false;
+        if (get_integer_kind(src) == INTEGER_INTPTR) {
+            goto good;
         }
 
-        if (is_void(src->ptr) || is_void(dst->ptr)) {
-            return true;
-        }
-
-        return type_can_become(node, dst->ptr, src->ptr, implicit);
-    }
-
-    if (is_record(src) && is_record(dst)) {
-        if (src->index != dst->index) {
-            reportf(LEVEL_ERROR, *node, "cannot implicitly cast between unrelated types `%s` and `%s`", typefmt(src), typefmt(dst));
-            return false;
-        }
-        return true;
-    }
-
-    if (is_integer(dst) && is_pointer(src)) {
-        if (get_integer_kind(dst) != INTEGER_INTPTR && implicit) {
-            reportf(LEVEL_ERROR, *node, "cannot implicitly cast pointer to a non intptr integer");
-            return false;
-        } 
-
-        return true;
-    }
-
-    if (is_integer(src) && is_pointer(dst)) {
-        if (get_integer_kind(src) != INTEGER_INTPTR && implicit) {
-            reportf(LEVEL_ERROR, *node, "possibly narrowing integer to pointer cast");
-            return false;
-        }
-        return true;
-    }
-
-    if (is_callable(dst)) {
-        if (is_integer(src)) {
-            return get_integer_kind(src) == INTEGER_INTPTR;
-        }
-
-        if (is_pointer(src)) {
-            return is_void(src->ptr);
-        }
+        reportid_t id = reportf(LEVEL_ERROR, node, "can only implicitly cast from (u)intptr");
+        report_underline(id, typefmt(dst));
 
         return false;
     }
 
+    if (is_callable(dst) && is_pointer(src)) {
+        if (!implicit) {
+            goto good;
+        }
+
+        if (is_void(src->ptr)) {
+            goto good;
+        }
+
+        reportid_t id = reportf(LEVEL_ERROR, node, "can only implicitly cast from *void");
+        report_underline(id, typefmt(src));
+        return false;
+    }
+
+    if (is_pointer(dst) && is_callable(src)) {
+        if (!implicit) {
+            goto good;
+        }
+
+        if (is_void(dst->ptr)) {
+            goto good;
+        }
+
+        reportid_t id = reportf(LEVEL_ERROR, node, "can only implicitly cast to *void");
+        report_underline(id, typefmt(dst));
+        return false;
+    }
+
+    if (is_callable(dst) && is_integer(src)) {
+        if (!implicit) {
+            goto good;
+        }
+
+        if (get_integer_kind(src) == INTEGER_INTPTR) {
+            goto good;
+        }
+
+        reportid_t id = reportf(LEVEL_ERROR, node, "can only implicitly cast from (u)intptr");
+        report_underline(id, typefmt(src));
+        return false;
+    }
+
+    if (is_integer(dst) && is_callable(src)) {
+        if (!implicit) {
+            goto good;
+        }
+
+        if (get_integer_kind(dst) == INTEGER_INTPTR) {
+            goto good;
+        }
+
+        reportid_t id = reportf(LEVEL_ERROR, node, "can only implicitly cast to (u)intptr");
+        report_underline(id, typefmt(dst));
+        return false;
+    }
+
+    if (dst->index == src->index) {
+        goto good;
+    }
+
+    reportf(LEVEL_ERROR, node, "cannot implicitly cast %s to %s",
+        typefmt(src), typefmt(dst)
+    );
+
     return false;
-#endif
+
+good:
+    node->cast = dst;
+    return true;
 }
 
 bool types_equal(type_t *type, type_t *other) {

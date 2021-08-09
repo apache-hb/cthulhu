@@ -633,3 +633,12 @@ node_t *ast_arg(scanner_t *scanner, where_t where, char *name, node_t *expr) {
 void mark_section(node_t *node, const char *section) {
     node->section = section;
 }
+
+node_t *ast_list(scanner_t *scanner, where_t where, list_t *init, node_t *kind) {
+    node_t *node = new_node(scanner, where, AST_LIST);
+
+    node->exprs = init;
+    node->elem = kind;
+
+    return node;
+}

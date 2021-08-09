@@ -46,6 +46,9 @@ SUFFIX [u]?[tsilzpm]?
 "enum" { return ENUM; }
 "import" { return IMPORT; }
 
+"with" { return WITH; }
+"of" { return OF; }
+
 "$" { yylval->text = "$"; return IDENT; }
 [a-zA-Z_][a-zA-Z0-9_]* { 
     yylval->text = ctu_strdup(yytext); 

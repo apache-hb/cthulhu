@@ -492,6 +492,20 @@ static void gen_flow(FILE *out, flow_t *flow) {
     fprintf(out, "}\n\n");
 }
 
+static const char *gen_value(value_t *value);
+
+static char *gen_array_literal(value_t *val) {
+    size_t len = val->size;
+    const char **vals = ctu_malloc(sizeof(char*) * len);
+    for (size_t i = 0; i < len; i++) {
+        vals[i] = gen_value(val->values[i]);
+    }
+
+    char *all = str_join(", ", vals, len);
+
+    return format("{ %s }", all);
+}
+
 static const char *gen_value(value_t *value) {
     if (is_integer(value->type)) {
         return mpz_get_str(NULL, 10, value->digit);
@@ -505,6 +519,10 @@ static const char *gen_value(value_t *value) {
         return value->func->name;
     }
 
+    if (is_array(value->type)) {
+        return gen_array_literal(value);
+    }
+
     assert("unknown gen-value");
     return "NULL";
 }
@@ -514,12 +532,26 @@ static void gen_global(FILE *out, flow_t *var, size_t idx) {
         fprintf(out, "static ");
     }
 
-    fprintf(out, "%s[1]", 
-        gen_type(var->result, gen_var(idx))
-    );
+    type_t *type = var->result;
+
+    bool arr = is_array(type);
+
+    if (arr) {
+        fprintf(out, "%s", 
+            gen_type(type, gen_var(idx))
+        );
+    } else {
+        fprintf(out, "%s[1]", 
+            gen_type(var->result, gen_var(idx))
+        );
+    }
 
     if (var->value && var->value->type) {
-        fprintf(out, " = { %s }", gen_value(var->value));
+        if (arr) {
+            fprintf(out, " = %s", gen_array_literal(var->value));
+        } else {
+            fprintf(out, " = { %s }", gen_value(var->value));
+        }
     }
 
     fprintf(out, ";\n");

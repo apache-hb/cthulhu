@@ -380,14 +380,17 @@ static void build_var(sema_t *sema, node_t *it) {
     out = set_mut(out, is_mut(it));
 
     if (type != NULL && init != NULL) {
-        /** 
-         * type_can_become_implicit modifies the first argument,
-         * this will mangle a variable, so we copy it
-         */
         if (!type_can_become_implicit(it->init, type, init)) {
             reportid_t id = reportf(LEVEL_ERROR, it, "incompatible types for initialization of variable `%s`", it->name);
             report_underline(id, format("found: %s", typefmt(init)));
             report_note(id, format("required %s", typefmt(type)));
+        }
+    }
+
+    if (type == NULL && is_array(init)) {
+        if (init->of == NULL) {
+            reportid_t id = reportf(LEVEL_ERROR, it->init, "array initialization requires type");
+            report_note(id, format("empty array without `of` specifier does not convey enough type information"));
         }
     }
 

@@ -24,6 +24,13 @@ static operand_t new_operand(int kind) {
     return op;
 }
 
+operand_t new_size(type_t *type, size_t imm) {
+    operand_t op = new_operand(IMM);
+    op.imm.type = type;
+    mpz_init_set_ui(op.imm.num, imm);
+    return op;
+}
+
 operand_t new_int(type_t *type, mpz_t imm) {
     operand_t op = new_operand(IMM);
     op.imm.type = type;
@@ -634,6 +641,35 @@ static operand_t emit_null(void) {
     return new_operand(NIL);
 }
 
+static operand_t new_offset(flow_t *flow, type_t *type, operand_t src, size_t idx) {
+    step_t offset = new_typed_step(OP_OFFSET, type);
+    offset.src = src;
+    offset.index = new_size(size_int(), idx);
+
+    return add_vreg(flow, offset);
+}
+
+static operand_t emit_list(flow_t *flow, node_t *node) {
+    type_t *type = node->typeof;
+    type_t *of = index_type(type);
+    operand_t space = add_reserve_type(flow, type, type->size);
+
+    list_t *elems = node->exprs;
+    size_t len = list_len(elems);
+
+    for (size_t i = 0; i < len; i++) {
+        node_t *elem = list_at(elems, i);
+        operand_t offset = new_offset(flow, of, space, i);
+        
+        step_t store = new_typed_step(OP_STORE, of);
+        store.dst = offset;
+        store.src = emit_opcode(flow, elem);
+        add_step(flow, store);
+    }
+
+    return space;
+}
+
 static operand_t emit_inner_opcode(flow_t *flow, node_t *node) {
     switch (node->kind) {
     case AST_STMTS: return emit_stmts(flow, node);
@@ -656,6 +692,7 @@ static operand_t emit_inner_opcode(flow_t *flow, node_t *node) {
     case AST_NULL: return emit_null();
     case AST_BUILTIN_SIZEOF: return emit_sizeof(flow, node);
     case AST_ARG: return emit_inner_opcode(flow, node->arg);
+    case AST_LIST: return emit_list(flow, node);
 
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);

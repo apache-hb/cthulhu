@@ -29,6 +29,21 @@ static value_t *build_value(type_t *type) {
     return value;
 }
 
+static value_t *build_array(type_t *type, size_t len) {
+    value_t *value = ctu_malloc(sizeof(value_t));
+
+    value->type = type;
+
+    value->size = len;
+    value->values = ctu_malloc(sizeof(value_t *) * len);
+    
+    for (size_t i = 0; i < len; i++) {
+        value->values[i] = build_value(index_type(type));
+    }
+
+    return value;
+}
+
 value_t *empty_value(void) {
     return build_value(NULL);
 }
@@ -92,7 +107,18 @@ static value_t *func_value(module_t *mod, size_t idx) {
     return value;
 }
 
+static value_t *string_value(module_t *mod, size_t idx) {
+    value_t *value = build_value(STRING_TYPE);
+    value->string = mod->strings[idx];
+    return value;
+}
+
 static value_t *make_value(state_t *state, operand_t op) {
+    if (op.offset != SIZE_MAX) {
+        assert("field constinit not yet supported");
+        return empty_value();
+    }
+
     value_t *value = empty_value();
     switch (op.kind) {
     case ARG: 
@@ -112,6 +138,10 @@ static value_t *make_value(state_t *state, operand_t op) {
 
     case FUNC:
         value = func_value(state->mod, op.func);
+        break;
+
+    case STRING:
+        value = string_value(state->mod, op.var);
         break;
 
     default:
@@ -292,6 +322,49 @@ static value_t *eval_convert(state_t *state, type_t *type, operand_t val) {
     return out;
 }
 
+static value_t *reserve(step_t *step) {
+    size_t size = step->size;
+    type_t *of = step->type;
+
+    value_t *val = build_array(of, size);
+
+    return val;
+}
+
+static value_t *get_offset(state_t *state, step_t *step) {
+    value_t *array = make_value(state, step->src);
+    if (!is_array(array->type)) {
+        assert("cannot get offset of non-array type");
+        return empty_value();
+    }
+
+    value_t *offset = make_value(state, step->index);
+    if (!is_integer(offset->type)) {
+        assert("cannot get offset from non-integer type");
+        return empty_value();
+    }
+
+    size_t shift = mpz_get_ui(offset->digit);
+
+    if (shift >= array->size) {
+        assert("array index out of bounds");
+        return empty_value();
+    }
+
+    value_t *out = build_value(array->type);
+    out->size = array->size - shift;
+    out->values = array->values + shift;
+
+    return out;
+}
+
+static void do_store(state_t *state, step_t *step) {
+    value_t *dst = make_value(state, step->dst);
+    value_t *src = make_value(state, step->src);
+
+    dst->values[0] = src;
+}
+
 /* evaluate a step, return false if a value has been returned */
 static bool eval_step(state_t *state) {
     /* prevent out of bounds access */
@@ -327,6 +400,18 @@ static bool eval_step(state_t *state) {
         return false;
     case OP_CONVERT:
         state->values[state->ip] = eval_convert(state, step->type, step->value);
+        return true;
+
+    case OP_RESERVE:
+        state->values[state->ip] = reserve(step);
+        return true;
+
+    case OP_OFFSET:
+        state->values[state->ip] = get_offset(state, step);
+        return true;
+
+    case OP_STORE:
+        do_store(state, step);
         return true;
 
     case OP_BLOCK: case OP_EMPTY: 

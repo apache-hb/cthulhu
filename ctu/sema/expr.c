@@ -340,6 +340,39 @@ static type_t *query_null(node_t *expr) {
     return new_pointer(expr, VOID_TYPE);
 }
 
+static type_t *query_list(sema_t *sema, node_t *expr) {
+    list_t *items = expr->exprs;
+    size_t len = list_len(items);
+
+    type_t *of = NULL;
+    if (expr->elem) {
+        of = query_type(sema, expr->elem);
+    }
+
+    if (len != 0) {
+        type_t *last = of;
+        for (size_t i = 0; i < len; i++) {
+            node_t *item = list_at(items, i);
+            type_t *next = query_expr(sema, item);
+            
+            if (!last) {
+                last = next;
+            }
+
+            if (!type_can_become_implicit(item, last, next)) {
+                reportid_t id = reportf(LEVEL_ERROR, item, "item %zu expected type %s", i, typefmt(last));
+                report_underline(id, typefmt(next));
+            }
+        }
+
+        ASSERT(last != NULL)("last was null");
+
+        return new_array(expr, last, len, false);
+    }
+
+    return new_array(expr, of, 0, false);
+}
+
 /**
  * given an expression find its type
  */
@@ -350,6 +383,9 @@ static type_t *query_expr(sema_t *sema, node_t *it) {
     }
 
     switch (it->kind) {
+    case AST_SYMBOL:
+        type = query_expr_symbol(sema, it, it->ident);
+        break;
     case AST_DIGIT: 
         type = query_digit(it);
         break;
@@ -380,15 +416,12 @@ static type_t *query_expr(sema_t *sema, node_t *it) {
     case AST_INDEX:
         type = query_index(sema, it);
         break;
-
-    case AST_SYMBOL:
-        type = query_expr_symbol(sema, it, it->ident);
+    case AST_LIST:
+        type = query_list(sema, it);
         break;
-
     case AST_ARG:
         type = query_expr(sema, it->arg);
         break;
-
     case AST_BUILTIN_SIZEOF:
         return size_int();
 

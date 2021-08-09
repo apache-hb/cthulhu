@@ -118,6 +118,20 @@ static void print_line(scanner_t *source, loc_t line) {
         fprintf(stderr, "\n");
 }
 
+static void print_underline_message(const char *prefix, const char *msg) {
+    if (msg) {
+        char *result;
+        if (prefix) {
+            result = format("%s:" COLOUR_PURPLE " %s", prefix, msg);
+        } else {
+            result = format(COLOUR_PURPLE " %s", msg);
+        }
+        fprintf(stderr, "%s" COLOUR_RESET "\n", result);
+    } else {
+        fprintf(stderr, "\n");
+    }
+}
+
 static void print_underline(loc_t column, loc_t length, const char *msg) {
     fprintf(stderr, COLOUR_PURPLE);
 
@@ -129,11 +143,9 @@ static void print_underline(loc_t column, loc_t length, const char *msg) {
         fprintf(stderr, "─");
     }
 
-    if (msg) {
-        fprintf(stderr, " %s", msg);
-    }
+    print_underline_message(NULL, msg);
 
-    fprintf(stderr, COLOUR_RESET "\n");
+    fprintf(stderr, COLOUR_RESET);
 }
 
 static void print_line_indicator(const char *text, size_t len, size_t padding) {
@@ -159,17 +171,171 @@ static void underline_source(scanner_t *source, where_t where, const char *msg) 
     print_underline(column, length, msg);
 }
 
+static void print_lineno(const char *num, size_t width, bool bar) {
+    fprintf(stderr, " ");
+    while (*num) {
+        fprintf(stderr, "%c", *num++);
+        width -= 1;
+    }
+
+    while (width > 0) {
+        fprintf(stderr, " ");
+        width -= 1;
+    }
+
+    if (bar) {
+        fprintf(stderr, "| ");
+    }
+}
+
+typedef struct {
+    loc_t start;
+    loc_t end;
+} range_t;
+
+static range_t range(loc_t start, loc_t end) {
+    range_t result = { start, end };
+    return result;
+}
+
+static bool range_in(range_t range, loc_t loc) {
+    return loc >= range.start && loc <= range.end;
+}
+
+#define ONCE(...) do { static bool once = true; if (once) { __VA_ARGS__ once = false; } } while (0)
+
+static void print_error_line(scanner_t *source, size_t line, range_t colour, const char *msg) {
+    size_t index = 0;
+    char c = '\0';
+    while (line > 0) {
+        c = source->text[index++];
+        if (!c) {
+            break;
+        }
+            
+        if (c == '\n') {
+            line -= 1;
+        }
+    }
+
+    size_t col = 0;
+
+    do {
+        col += 1;
+        if (range_in(colour, col)) {
+            fprintf(stderr, COLOUR_PURPLE);
+        } else {
+            fprintf(stderr, COLOUR_RESET);
+        }
+
+        c = source->text[index++];
+        fprintf(stderr, "%c", c);
+    } while (c && c != '\n');
+    
+    if (msg) {
+        fprintf(stderr, COLOUR_RESET "message: " COLOUR_PURPLE "%s" COLOUR_RESET, msg);
+    }
+
+    if (c != '\n') {
+        fprintf(stderr, "\n");
+    }
+
+    fprintf(stderr, COLOUR_RESET);
+}
+
+static void underline_2lines(scanner_t *source, where_t where) {
+    loc_t front = where.first_line;
+    loc_t back = where.last_line;
+    
+    char *first = format("%" PRId64, front);
+    char *last = format("%" PRId64, back);
+
+    size_t pad = MAX(strlen(first), strlen(last)) + 2;
+
+    print_padding(pad, true);
+
+    print_padding(pad, false);
+    print_error_line(source, where.first_line, range(where.first_column, INT64_MAX), NULL);
+
+    print_lineno(last, pad, true); 
+    print_error_line(source, where.last_line, range(0, where.last_column), NULL);
+
+    print_padding(pad, false);
+}
+
+static void underline_3lines(scanner_t *source, where_t where) {
+    loc_t front = where.first_line;
+    loc_t back = where.last_line;
+
+    char *first = format("%" PRId64, front);
+    char *last = format("%" PRId64, back);
+
+    size_t pad = MAX(strlen(first), strlen(last)) + 2;
+    
+    print_padding(pad, true);
+    
+    print_lineno(first, pad, true);
+    print_error_line(source, where.first_line, range(where.first_column, INT64_MAX), NULL);
+
+    print_padding(pad, false);
+    print_error_line(source, where.first_line + 1, range(0, INT64_MAX), NULL);
+
+    print_lineno(last, pad, true);
+    print_error_line(source, where.last_line, range(0, where.last_column), NULL);
+
+    print_padding(pad, false);
+}
+
+static void underline_many(scanner_t *source, where_t where) {
+    loc_t front = where.first_line;
+    loc_t back = where.last_line;
+
+    char *first = format("%" PRId64, front);
+    const char *middle = "...";
+    char *last = format("%" PRId64, back);
+
+    size_t pad = MAX(strlen(first), strlen(last));
+    size_t pad2 = MAX(pad, strlen(middle));
+    
+    print_padding(pad2, true);
+    
+    print_lineno(first, pad2, true);
+    print_error_line(source, where.first_line, range(where.first_column, INT64_MAX), NULL);
+
+    print_lineno(middle, pad2, false); fprintf(stderr, "\n");
+    
+    print_lineno(last, pad2, true); 
+    print_error_line(source, where.last_line, range(0, where.last_column), NULL);
+
+    print_padding(pad2, false);
+}
+
+static void underline_multiline(scanner_t *source, where_t where, const char *msg) {
+    loc_t first = where.first_line;
+    loc_t last = where.last_line;
+
+    loc_t span = last - first;
+
+    if (span == 1) {
+        underline_2lines(source, where);
+    } else if (span == 2) {
+        underline_3lines(source, where);
+    } else {
+        underline_many(source, where);
+    }
+
+    if (msg) {
+        print_underline(where.last_column - 1, 0, msg);
+    } else {
+        fprintf(stderr, "\n");
+    }
+}
+
 static void outline_source(scanner_t *source, where_t where, const char *msg) {
     if (where.first_line == where.last_line) {
         underline_source(source, where, msg);
     } else {
-        /* TODO: better multiline span reporting */
-        fprintf(stderr, "spanning line %" PRId64 " to line %" PRId64 "\n", 
-            where.first_line, where.last_line
-        );
-        if (msg) {
-            fprintf(stderr, "message: %s\n", msg);
-        }
+        underline_multiline(source, where, msg);
     }
 }
 

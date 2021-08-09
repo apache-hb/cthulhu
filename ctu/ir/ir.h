@@ -230,11 +230,10 @@ typedef struct value_t {
         flow_t *func;
 
         /* if this is a pointer this points to a value */
+        /* also contains arrays */
         struct {
             size_t size;
             struct value_t **values;
-
-            bool *init;
         };
     };
 } value_t;

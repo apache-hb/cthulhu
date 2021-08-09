@@ -23,6 +23,7 @@ typedef enum {
     AST_INDEX,
     AST_NULL,
     AST_ARG,
+    AST_LIST,
 
     /**
      * statements
@@ -222,6 +223,12 @@ typedef struct node_t {
         /* AST_STMTS */
         /** @var list_t<node_t*> */
         list_t *stmts;
+
+        struct {
+            /* AST_LIST */
+            list_t *exprs;
+            struct node_t *elem;
+        };
 
         /* AST_PTR */
         struct node_t *ptr;
@@ -479,3 +486,4 @@ node_t *ast_index(scanner_t *scanner, where_t where, node_t *expr, node_t *index
 node_t *ast_sizeof(node_t *it);
 
 node_t *ast_arg(scanner_t *scanner, where_t where, char *name, node_t *expr);
+node_t *ast_list(scanner_t *scanner, where_t where, list_t *init, node_t *kind);

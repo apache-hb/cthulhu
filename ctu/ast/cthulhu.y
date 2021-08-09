@@ -113,6 +113,8 @@ void cterror();
     UNION "`union`"
     ENUM "`enum`"
     IMPORT "`import`"
+    WITH "`with`"
+    OF "`of`"
     END 0 "end of file"
 
 %type<node>
@@ -120,7 +122,7 @@ void cterror();
     type typename pointer array funcptr /* types */
     stmt stmts return if else elseif branch assign while /* statements */
     primary postfix unary multiply add compare equality or and shift xor bits expr /* expressions */
-    import attrib union enum item digit namedarg arg
+    import attrib union enum item digit namedarg arg list ofkind
 
 %type<nodes>
     stmtlist fields enums
@@ -128,7 +130,7 @@ void cterror();
     params paramlist
     names imports unit
     decorate decorators
-    types
+    types exprs
 
 %type<mut>
     mut
@@ -359,9 +361,22 @@ namedarg: IDENT COLON expr { $$ = ast_arg(x, @$, $1, $3); }
 digit: DIGIT { $$ = ast_digit(x, @$, $1.text, $1.base); }
     ;
 
+ofkind: %empty { $$ = NULL; }
+    | OF type { $$ = $2; }
+    ;
+
+list: LSQUARE RSQUARE ofkind { $$ = ast_list(x, @$, new_list(NULL), $3); }
+    | LSQUARE exprs RSQUARE ofkind { $$ = ast_list(x, @$, $2, $4); }
+    ;
+
+exprs: expr { $$ = new_list($1); }
+    | exprs COMMA expr { $$ = list_push($1, $3); }
+    ;
+
 primary: LPAREN expr RPAREN { $$ = $2; }
     | typename { $$ = $1; }
     | digit { $$ = $1; }
+    | list { $$ = $1; }
     | BOOL_TRUE { $$ = ast_bool(x, @$, true); }
     | BOOL_FALSE { $$ = ast_bool(x, @$, false); }
     | STRING { $$ = ast_string(x, @$, $1); }
