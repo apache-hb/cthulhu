@@ -349,28 +349,24 @@ static type_t *query_list(sema_t *sema, node_t *expr) {
         of = query_type(sema, expr->elem);
     }
 
-    if (len != 0) {
-        type_t *last = of;
-        for (size_t i = 0; i < len; i++) {
-            node_t *item = list_at(items, i);
-            type_t *next = query_expr(sema, item);
-            
-            if (!last) {
-                last = next;
-            }
-
-            if (!type_can_become_implicit(item, last, next)) {
-                reportid_t id = reportf(LEVEL_ERROR, item, "item %zu expected type %s", i, typefmt(last));
-                report_underline(id, typefmt(next));
-            }
+    type_t *last = of;
+    for (size_t i = 0; i < len; i++) {
+        node_t *item = list_at(items, i);
+        type_t *next = query_expr(sema, item);
+        
+        if (!last) {
+            last = next;
         }
 
-        ASSERT(last != NULL)("last was null");
-
-        return new_array(expr, last, len, false);
+        if (!type_can_become_implicit(item, last, next)) {
+            reportid_t id = reportf(LEVEL_ERROR, item, "item %zu expected type %s", i, typefmt(last));
+            report_underline(id, typefmt(next));
+        }
     }
 
-    return new_array(expr, of, 0, false);
+    ASSERT(last != NULL)("last was null");
+
+    return new_array(expr, last, len, false);
 }
 
 /**

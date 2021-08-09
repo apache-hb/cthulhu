@@ -233,9 +233,11 @@ type_t *set_mut(type_t *type, bool mut) {
     copy->mut = mut;
 
     if (is_record(type)) {
-        for (size_t i = 0; i < type->fields.size; i++) {
-            type_t *field = type->fields.fields[i].type;
-            copy->fields.fields[i].type = set_mut(field, mut);
+        if (type->valid) {
+            for (size_t i = 0; i < type->fields.size; i++) {
+                type_t *field = type->fields.fields[i].type;
+                copy->fields.fields[i].type = set_mut(field, mut);
+            }
         }
     } else if (is_array(type)) {
         copy->of = set_mut(copy->of, mut);

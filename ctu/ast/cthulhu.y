@@ -365,8 +365,7 @@ ofkind: %empty { $$ = NULL; }
     | OF type { $$ = $2; }
     ;
 
-list: LSQUARE RSQUARE ofkind { $$ = ast_list(x, @$, new_list(NULL), $3); }
-    | LSQUARE exprs RSQUARE ofkind { $$ = ast_list(x, @$, $2, $4); }
+list: LSQUARE exprs RSQUARE ofkind { $$ = ast_list(x, @$, $2, $4); }
     ;
 
 exprs: expr { $$ = new_list($1); }
