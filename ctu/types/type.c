@@ -514,6 +514,10 @@ static bool type_can_become(node_t *node, type_t *dst, type_t *src, bool implici
         return false;
     }
 
+    if (is_array(dst) && is_array(src)) {
+        return type_can_become(node, dst->of, src->of, implicit);
+    }
+
     if (dst->index == src->index) {
         goto good;
     }
@@ -544,11 +548,7 @@ bool type_can_become_explicit(node_t *node, type_t *dst, type_t *src) {
 
 static char *array_name(type_t *type) {
     char *inner = typefmt(type->of);
-    if (type->unbounded) {
-        return format("unbounded array of %s", inner);
-    } else {
-        return format("array of %s", inner);
-    }
+    return format("[%s]", inner);
 }
 
 char *typefmt(type_t *type) {

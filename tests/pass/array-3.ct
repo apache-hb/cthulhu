@@ -1,5 +1,5 @@
 export def main(): int {
-    var arr: [int:10uz];
+    var arr: [int:10uz] = [ 25, 0, 50 ];
     final x = 2;
 
     arr[x] = 0;
