@@ -24,9 +24,6 @@ test('pass-help', driver, args : [ '--help' ])
 
 subdir('multiple')
 
-# TODO: find a way to test init code
-#test('init', driver, args : [ '--init' ])
-
 warn = [
     'int-overflow', 'mod-by-zero', 'fuzz-7'
 ]
@@ -50,7 +47,8 @@ fail = [
     'invalid-char', 'scope', 'bad-return',
     'infinite-struct', 'type-in-expr', 'fuzz-1',
     'return-local-ref', 'return-struct-ref',
-    'array', 'array-2', 'implicit-bool-cast'
+    'array', 'array-2', 'implicit-bool-cast',
+    'array-oob'
 ]
 
 foreach it : fail 

@@ -213,6 +213,12 @@ typedef struct value_t {
     /* the type of this value */
     type_t *type;
 
+    /* has this value been set */
+    bool init:1;
+    
+    /* has this value been used in an error report */
+    bool reported:1;
+
     union {
         /* if this is a digit this is active */
         mpz_t digit;
@@ -229,15 +235,16 @@ typedef struct value_t {
         /* if this is a function this is active */
         flow_t *func;
 
-        /* if this is a pointer this points to a value */
-        /* also contains arrays */
+        /* pointer */
+        struct value_t *value;
+
+        /* array */
         struct {
             size_t size;
             struct value_t **values;
         };
     };
 } value_t;
-
 
 const char *flow_name(const flow_t *flow);
 

@@ -240,6 +240,7 @@ static size_t field_offset(type_t *type, const char *field) {
 static void set_local(flow_t *flow, size_t idx, operand_t to) {
     ASSERT(to.kind == VREG)("set_local requires a vreg");
     ASSERT(idx != NOT_LOCAL)("set_local requires a local");
+    ASSERT(flow->locals != NULL)("flow needs initialized locals");
 
     flow->locals[idx] = to.vreg;
 }
@@ -789,6 +790,8 @@ static flow_t compile_flow(module_t *mod, node_t *node) {
 static flow_t compile_var(module_t *mod, node_t *node) {
     ASSERT(node->kind == AST_DECL_VAR)("compile_var requires a variable");
 
+    size_t locals = node->locals;
+
     flow_t self = { 
         .node = node,
         .name = get_decl_name(node),
@@ -799,8 +802,8 @@ static flow_t compile_var(module_t *mod, node_t *node) {
         .steps = ctu_malloc(sizeof(step_t) * 64), 
         .len = 0, .size = 64, 
         
-        .locals = NULL,
-        .nlocals = 0,
+        .locals = ctu_malloc(sizeof(vreg_t) * locals),
+        .nlocals = locals,
 
         .result = get_resolved_type(node),
         .value = NULL,
@@ -941,6 +944,9 @@ module_t *compile_module(const char *name, unit_t unit) {
         mod->vars[i] = compile_var(mod, list_at(unit.vars, i));
     }
 
+    if (report_end("compilation"))
+        exit(report_code());
+
     /**
      * evaluate global variables
      */
@@ -953,6 +959,9 @@ module_t *compile_module(const char *name, unit_t unit) {
             var->value = empty_value();
         }
     }
+
+    if (report_end("constant evaluation"))
+        exit(report_code());
 
     reorder_records(mod);
 

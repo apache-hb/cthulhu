@@ -33,6 +33,7 @@ static node_t *new_decl(scanner_t *scanner, where_t where, ast_t kind, char *nam
     decl->ctx = NULL;
     decl->decorate = new_list(NULL);
     decl->section = NULL;
+    decl->locals = 0;
     return decl;
 }
 

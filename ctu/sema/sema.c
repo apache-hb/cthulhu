@@ -400,6 +400,8 @@ static void build_var(sema_t *sema, node_t *it) {
         }
     }
 
+    it->locals = locals;
+
     connect_type(it, out);
     list_pop(current);
 }

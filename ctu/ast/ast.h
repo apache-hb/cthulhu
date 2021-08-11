@@ -314,6 +314,9 @@ typedef struct node_t {
 
             const char *section;
 
+            /* number of local variables */
+            size_t locals;
+
             AST_UNION {
                 /* AST_DECL_STRUCT, AST_DECL_ENUM, AST_DECL_UNION */
                 /** @var list_t<node_t*> */
@@ -326,9 +329,6 @@ typedef struct node_t {
 
                     struct node_t *result;
                     struct node_t *body;
-
-                    /* total number of local variables */
-                    size_t locals;
                 };
 
                 /* AST_ARG */
