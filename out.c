@@ -6,8 +6,13 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-const char *str0 = "\x6c\x6f\x6c";
 
 
+
+const int fib(const int);
+
+const int fib(const int arg0)
+{
+}
 
 #endif /* ctu_main */

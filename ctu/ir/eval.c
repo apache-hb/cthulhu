@@ -128,6 +128,7 @@ static value_t *make_value(state_t *state, operand_t op) {
         break;
 
     case VREG: 
+        printf("reg: %zu\n", op.vreg);
         value = state->values[op.vreg]; 
         break;
 
@@ -146,13 +147,20 @@ static value_t *make_value(state_t *state, operand_t op) {
         value = string_value(state->mod, op.var);
         break;
 
+    case NONE:
+        assert("none in make-value");
+        value = empty_value();
+        break;
+
     default:
         value = empty_value();
         assert("make-value %d", op.kind);
         break;
     }
 
-    report_uninit(state, value);
+    if (report_uninit(state, value)) {
+
+    }
 
     return value;
 }
@@ -194,14 +202,16 @@ static value_t *eval_binary(state_t *state, type_t *type, binary_t binary, opera
     case BINARY_DIV:
         if (mpz_sgn(rhs->digit) == 0) {
             step_report(LEVEL_ERROR, state, "divide by zero");
+        } else {
+            mpz_div(value->digit, lhs->digit, rhs->digit);
         }
-        mpz_div(value->digit, lhs->digit, rhs->digit);
         break;
     case BINARY_REM:
         if (mpz_sgn(rhs->digit) == 0) {
             step_report(LEVEL_ERROR, state, "remainder by zero");
+        } else {
+            mpz_mod(value->digit, lhs->digit, rhs->digit);
         }
-        mpz_mod(value->digit, lhs->digit, rhs->digit);
         break;
 
     case BINARY_AND:
@@ -238,6 +248,13 @@ static value_t *eval_binary(state_t *state, type_t *type, binary_t binary, opera
         break;
     case BINARY_GTE:
         value->boolean = mpz_cmp(lhs->digit, rhs->digit) >= 0;
+        break;
+
+    case BINARY_SHL:
+        mpz_mul_2exp(value->digit, lhs->digit, mpz_size(rhs->digit));
+        break;
+    case BINARY_SHR:
+        mpz_div_2exp(value->digit, lhs->digit, mpz_size(rhs->digit));
         break;
 
     default:
@@ -300,19 +317,10 @@ static value_t *eval_convert(state_t *state, type_t *type, operand_t val) {
     if (is_integer(type)) {
         if (is_integer(other->type)) {
             mpz_set(value->digit, other->digit);
-            if (!is_signed(type) && mpz_sgn(value->digit) < 0) {
-                step_report(LEVEL_WARNING, state, "converting negative signed int to unsigned int, truncating to 0");
-                mpz_set_ui(value->digit, 0);
-            }
         } else if (is_pointer(other->type)) {
-            if (get_integer_kind(type) != INTEGER_INTPTR) {
-                reportid_t id = step_report(LEVEL_ERROR, state, "cannot convert to %s at compile time", typefmt(type));
-                report_underline(id, typefmt(other->type));
-                report_note(id, "consider casting to (u)intptr");
-            }
             mpz_set_ui(value->digit, (uintptr_t)other->values);
         } else {
-            assert("invalid integer cast");
+            assert(format("invalid integer cast from %s to %s", typefmt(type), typefmt(other->type)));
         }
 
         return value;
@@ -339,7 +347,9 @@ static value_t *get_offset(state_t *state, step_t *step) {
     ASSERT(step->type != NULL)("step type was null");
 
     value_t *array = make_value(state, step->src);
-    if (!is_array(array->type)) {
+    type_t *type = array->type;
+
+    if (!is_array(type) && !is_pointer(type)) {
         assert("cannot get offset of non-array type");
         return empty_value();
     }
@@ -359,7 +369,7 @@ static value_t *get_offset(state_t *state, step_t *step) {
         return empty_value();
     }
 
-    value_t *out = build_value(array->type, true);
+    value_t *out = build_value(type, true);
     out->size = array->size - shift;
     out->values = array->values + shift;
 

@@ -364,6 +364,9 @@ static type_t *query_list(sema_t *sema, node_t *expr) {
         }
     }
 
+    mark_local(expr);
+    printf("list %p at %zu\n", expr, expr->local);
+
     ASSERT(last != NULL)("last was null");
 
     return new_array(expr, last, len, false);

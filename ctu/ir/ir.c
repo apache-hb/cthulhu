@@ -221,6 +221,8 @@ static operand_t get_global(flow_t *flow, node_t *node) {
         }
     }
 
+    reportf(LEVEL_INTERNAL, node, "failed to find global");
+
     return new_operand(NONE);
 }
 
@@ -242,13 +244,15 @@ static void set_local(flow_t *flow, size_t idx, operand_t to) {
     ASSERT(idx != NOT_LOCAL)("set_local requires a local");
     ASSERT(flow->locals != NULL)("flow needs initialized locals");
 
+    printf("setting %zu to %zu in %s\n", idx, to.vreg, flow->name);
+
     flow->locals[idx] = to.vreg;
 }
 
 static operand_t get_lvalue(flow_t *flow, node_t *node);
 
 static operand_t inner_index(flow_t *flow, node_t *node) {
-    operand_t arr = get_lvalue(flow, node->expr);
+    operand_t arr = emit_opcode(flow, node->expr);
     operand_t idx = emit_opcode(flow, node->index);
 
     step_t step = new_step(OP_OFFSET, node->expr);
@@ -278,6 +282,8 @@ static operand_t get_lvalue(flow_t *flow, node_t *node) {
     if (is_index(node)) {
         return inner_index(flow, node);
     }
+
+    printf("query %p at %zu\n", node, node->local);
 
     if (node->local == NOT_LOCAL) {
         return get_global(flow, node);
@@ -651,7 +657,7 @@ static operand_t new_offset(flow_t *flow, type_t *type, operand_t src, size_t id
 }
 
 static operand_t emit_list(flow_t *flow, node_t *node) {
-    type_t *type = node->typeof;
+    type_t *type = get_resolved_type(node);
     type_t *of = index_type(type);
     operand_t space = add_reserve_type(flow, type, type->size);
 
@@ -667,6 +673,8 @@ static operand_t emit_list(flow_t *flow, node_t *node) {
         store.src = emit_opcode(flow, elem);
         add_step(flow, store);
     }
+
+    set_local(flow, node->local, space);
 
     return space;
 }
@@ -694,6 +702,7 @@ static operand_t emit_inner_opcode(flow_t *flow, node_t *node) {
     case AST_BUILTIN_SIZEOF: return emit_sizeof(flow, node);
     case AST_ARG: return emit_inner_opcode(flow, node->arg);
     case AST_LIST: return emit_list(flow, node);
+    case AST_ACCESS: return get_lvalue(flow, node);
 
     default:
         reportf(LEVEL_INTERNAL, node, "unknown node kind %d", node->kind);
@@ -946,6 +955,8 @@ module_t *compile_module(const char *name, unit_t unit) {
 
     if (report_end("compilation"))
         exit(report_code());
+
+    debug_module(*mod);
 
     /**
      * evaluate global variables

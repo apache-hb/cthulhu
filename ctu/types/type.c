@@ -251,7 +251,7 @@ bool is_array(type_t *type) {
 }
 
 type_t *array_decay(type_t *type) {
-    ASSERT(is_array(type))("type is not an array");
+    ASSERT(is_array(type) || is_pointer(type))("invalid decay type");
 
     type_t *decayed = copyty(type);
     decayed->kind = TYPE_POINTER;

@@ -9,7 +9,7 @@ pass = [
     'unused-var', 'implicit-var-cast', 'string', 'forward',
     'posix-interop', 'win32-interop', 'array-1', 'array-3',
     'fuzz-8', 'array-struct', 'fizzbuzz', 'long-while',
-    'struct', 'union'
+    'struct', 'union', 'direct-index', 'large', 'horror'
 ]
 
 foreach it : pass 
@@ -48,7 +48,8 @@ fail = [
     'infinite-struct', 'type-in-expr', 'fuzz-1',
     'return-local-ref', 'return-struct-ref',
     'array', 'array-2', 'implicit-bool-cast',
-    'array-oob'
+    'array-oob', 'array-ref', 'div-0',
+    'direct-index'
 ]
 
 foreach it : fail 
