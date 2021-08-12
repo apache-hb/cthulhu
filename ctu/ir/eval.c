@@ -257,7 +257,6 @@ static value_t *eval_binary(state_t *state, type_t *type, binary_t binary, opera
         break;
 
     default:
-        /* TODO: how does gmp do bitshifts */
         assert("unknown binary op %d", binary);
         break;
     }
