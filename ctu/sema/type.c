@@ -51,6 +51,9 @@ static type_t *query_array(sema_t *sema, node_t *expr) {
         if (mpz_sgn(expr->size->num) <= 0) {
             reportf(LEVEL_ERROR, expr, "array size must be greater than 0");
         }
+
+        size = mpz_get_ui(expr->size->num);
+        printf("array: %zu\n", mpz_get_ui(expr->size->num));
     }
 
     return new_array(expr, of, size, expr->size == NULL);

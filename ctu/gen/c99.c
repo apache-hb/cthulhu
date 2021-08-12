@@ -199,9 +199,9 @@ static const char *gen_type(type_t *type, const char *name) {
         return "void";
     }
 
-    if (type->kind != TYPE_VOID && is_const(type)) {
+    /*if (type->kind != TYPE_VOID && is_const(type)) {
         ty = format("const %s", ty);
-    }
+    }*/
 
     return ty;
 }
@@ -463,6 +463,8 @@ static void gen_step(FILE *out, flow_t *flow, size_t idx) {
         break;
 
     case OP_OFFSET:
+        printf("offset[%zu] %s\n", idx, gen_type(step->type, NULL));
+
         fprintf(out, "%s = %s + %s;\n",
             gen_type(step->type, local(idx)),
             gen_operand(flow, step->type, step->src),

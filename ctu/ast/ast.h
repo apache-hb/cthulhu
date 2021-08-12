@@ -237,7 +237,7 @@ typedef struct node_t {
             /* AST_UNARY */
             unary_t unary;
 
-            /* AST_RETURN */
+            /* AST_RETURN, AST_INDEX */
             struct node_t *expr;
 
             /* part of a decorator */
@@ -251,6 +251,7 @@ typedef struct node_t {
                 /** @var list_t<node_t*> */
                 list_t *args;
 
+                /* AST_INDEX */
                 struct node_t *index;
             };
         };

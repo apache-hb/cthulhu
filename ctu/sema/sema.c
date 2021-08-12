@@ -385,6 +385,10 @@ static void build_var(sema_t *sema, node_t *it) {
             report_underline(id, format("found: %s", typefmt(init)));
             report_note(id, format("required %s", typefmt(type)));
         }
+
+        if (is_array(type) && is_array(init)) {
+            init->size = type->size;
+        }
     }
 
     if (type == NULL && is_array(init)) {
@@ -400,14 +404,13 @@ static void build_var(sema_t *sema, node_t *it) {
         }
     }
 
-    it->locals = locals;
-
     connect_type(it, out);
     list_pop(current);
 }
 
 static void build_global_var(node_t *it) {
     build_var(it->ctx, it);
+    it->locals = locals;
 }
 
 static void build_params(sema_t *sema, list_t *params) {

@@ -252,12 +252,11 @@ static void set_local(flow_t *flow, size_t idx, operand_t to) {
 static operand_t get_lvalue(flow_t *flow, node_t *node);
 
 static operand_t inner_index(flow_t *flow, node_t *node) {
-    operand_t arr = emit_opcode(flow, node->expr);
-    operand_t idx = emit_opcode(flow, node->index);
-
     step_t step = new_step(OP_OFFSET, node->expr);
-    step.src = arr;
-    step.index = idx;
+    printf("expr: %s\n", typefmt(node->expr->typeof));
+    
+    step.src = emit_opcode(flow, node->expr);
+    step.index = emit_opcode(flow, node->index);
 
     operand_t op = add_vreg(flow, step);
     set_local(flow, node->local, op);
@@ -282,8 +281,6 @@ static operand_t get_lvalue(flow_t *flow, node_t *node) {
     if (is_index(node)) {
         return inner_index(flow, node);
     }
-
-    printf("query %p at %zu\n", node, node->local);
 
     if (node->local == NOT_LOCAL) {
         return get_global(flow, node);
@@ -448,6 +445,15 @@ static operand_t emit_convert(flow_t *flow, node_t *node) {
     return emit_cast(flow, value, get_resolved_type(node));
 }
 
+static operand_t reserve_array(flow_t *flow, type_t *type) {
+    if (is_array(type)) {
+        ASSERT(type->size != 0)("array size was 0");
+        return add_reserve_type(flow, index_type(type), type->size);
+    } else {
+        return add_reserve_type(flow, type, 1);
+    }
+}
+
 static operand_t emit_var(flow_t *flow, node_t *node) {
     operand_t val;
     if (node->init) {
@@ -456,7 +462,12 @@ static operand_t emit_var(flow_t *flow, node_t *node) {
         val = new_operand(NONE);
     }
 
-    operand_t out = add_reserve_type(flow, get_resolved_type(node), 1);
+    if (is_array(get_resolved_type(node->init))) {
+        set_local(flow, node->local, val);
+        return val;
+    }
+
+    operand_t out = reserve_array(flow, get_resolved_type(node));
 
     if (!operand_is_invalid(val)) {
         step_t step = new_step(OP_STORE, node);
@@ -650,14 +661,15 @@ static operand_t new_offset(flow_t *flow, type_t *type, operand_t src, size_t id
 static operand_t emit_list(flow_t *flow, node_t *node) {
     type_t *type = get_resolved_type(node);
     type_t *of = index_type(type);
-    operand_t space = add_reserve_type(flow, type, type->size);
+    type_t *decay = array_decay(type);
+    operand_t space = reserve_array(flow, type);
 
     list_t *elems = node->exprs;
     size_t len = list_len(elems);
 
     for (size_t i = 0; i < len; i++) {
         node_t *elem = list_at(elems, i);
-        operand_t offset = new_offset(flow, of, space, i);
+        operand_t offset = new_offset(flow, decay, space, i);
         
         step_t store = new_typed_step(OP_STORE, of);
         store.dst = offset;

@@ -515,6 +515,11 @@ static bool type_can_become(node_t *node, type_t *dst, type_t *src, bool implici
     }
 
     if (is_array(dst) && is_array(src)) {
+        if (src->size > dst->size) {
+            reportf(LEVEL_ERROR, node, "cannot narrow array size from %zu to %zu", src->size, dst->size);
+            return false;
+        }
+
         return type_can_become(node, dst->of, src->of, implicit);
     }
 
