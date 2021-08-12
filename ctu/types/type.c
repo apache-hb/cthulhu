@@ -211,7 +211,7 @@ bool is_signed(type_t *type) {
 
 bool is_const(type_t *type) {
     /* consts can fail a compile so best we're conservative with them */
-    return !type->mut;
+    return !type->mut && !type->lvalue;
 }
 
 bool is_pointer(type_t *type) {
@@ -530,7 +530,6 @@ static bool type_can_become(node_t *node, type_t *dst, type_t *src, bool implici
 
 good:
     if (implicit && !types_equal(src, dst)) {
-        reportf(LEVEL_WARNING, node, "implicit cast from %s to %s", typefmt(src), typefmt(dst));
         node->cast = dst;
     }
     return true;
