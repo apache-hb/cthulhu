@@ -46,19 +46,12 @@ static void debug_struct(fields_t fields) {
 }
 
 static void debug_array(type_t *type) {
-    printf("[");
     debug_type(type->of);
-    printf("]");
 
-    if (!type->unbounded) {
-        printf(" of %zu", type->size);
-    }
+    printf("[%zu]", type->size);
 }
 
 static void debug_type_internal(type_t *type, bool verbose) {
-    if (type->mut) {
-        printf("var ");
-    }
     switch (type->kind) {
     case TYPE_INTEGER: printf("%s", integer_name(type)); break;
     case TYPE_BOOLEAN: printf("bool"); break;
@@ -91,6 +84,10 @@ static void debug_type_internal(type_t *type, bool verbose) {
         break;
 
     case TYPE_FIELD: break;
+    }
+
+    if (!verbose) {
+        return;
     }
 
     if (

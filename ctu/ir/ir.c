@@ -445,16 +445,7 @@ static operand_t emit_cast(flow_t *flow, operand_t value, type_t *type) {
 static operand_t emit_convert(flow_t *flow, node_t *node) {
     operand_t value = emit_opcode(flow, node->expr);
 
-    return emit_cast(flow, value, node->typeof);
-}
-
-static operand_t make_var_reserve(flow_t *flow, node_t *node) {
-    type_t *ty = get_resolved_type(node);
-    if (is_array(ty)) {
-        return add_reserve_type(flow, index_type(ty), ty->size);
-    } else {
-        return add_reserve_type(flow, ty, 1);
-    }
+    return emit_cast(flow, value, get_resolved_type(node));
 }
 
 static operand_t emit_var(flow_t *flow, node_t *node) {
@@ -465,7 +456,7 @@ static operand_t emit_var(flow_t *flow, node_t *node) {
         val = new_operand(NONE);
     }
 
-    operand_t out = make_var_reserve(flow, node);
+    operand_t out = add_reserve_type(flow, get_resolved_type(node), 1);
 
     if (!operand_is_invalid(val)) {
         step_t step = new_step(OP_STORE, node);
@@ -713,8 +704,9 @@ static operand_t emit_inner_opcode(flow_t *flow, node_t *node) {
 static operand_t emit_opcode(flow_t *flow, node_t *node) {
     operand_t op = emit_inner_opcode(flow, node);
     
-    if (node->cast != NULL) {
-        op = emit_cast(flow, op, node->cast);
+    type_t *cast = node->cast;
+    if (cast != NULL) {
+        op = emit_cast(flow, op, cast);
     }
 
     return op;

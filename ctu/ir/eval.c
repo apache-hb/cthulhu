@@ -128,7 +128,6 @@ static value_t *make_value(state_t *state, operand_t op) {
         break;
 
     case VREG: 
-        printf("reg: %zu\n", op.vreg);
         value = state->values[op.vreg]; 
         break;
 
@@ -317,8 +316,6 @@ static value_t *eval_convert(state_t *state, type_t *type, operand_t val) {
     if (is_integer(type)) {
         if (is_integer(other->type)) {
             mpz_set(value->digit, other->digit);
-        } else if (is_pointer(other->type)) {
-            mpz_set_ui(value->digit, (uintptr_t)other->values);
         } else {
             assert(format("invalid integer cast from %s to %s", typefmt(type), typefmt(other->type)));
         }
@@ -394,6 +391,8 @@ static bool eval_step(state_t *state) {
 
     step_t *step = step_at(state->flow, ip);
     opcode_t op = step->opcode;
+
+    printf("ip: %zu\n", ip);
 
     switch (op) {
     case OP_VALUE:

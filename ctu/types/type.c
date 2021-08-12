@@ -529,7 +529,10 @@ static bool type_can_become(node_t *node, type_t *dst, type_t *src, bool implici
     return false;
 
 good:
-    node->cast = dst;
+    if (implicit && !types_equal(src, dst)) {
+        reportf(LEVEL_WARNING, node, "implicit cast from %s to %s", typefmt(src), typefmt(dst));
+        node->cast = dst;
+    }
     return true;
 }
 

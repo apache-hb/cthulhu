@@ -133,7 +133,7 @@ static void build_stmt(sema_t *sema, node_t *stmt) {
 
     case AST_SYMBOL: case AST_DIGIT: case AST_BOOL:
     case AST_STRING: case AST_UNARY: case AST_BINARY:
-    case AST_CAST: case AST_ACCESS: 
+    case AST_CAST: case AST_ACCESS: case AST_LIST:
         reportf(LEVEL_ERROR, stmt, "unexpected expression");
         break;
 
