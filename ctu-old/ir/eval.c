@@ -40,7 +40,7 @@ static value_t *build_array(type_t *type, size_t len) {
     value->values = ctu_malloc(sizeof(value_t*) * len);
     
     for (size_t i = 0; i < len; i++) {
-        value->values[i] = build_value(index_type(type), false);
+        value->values[i] = build_value(type, false);
     }
 
     return value;

@@ -1,11 +1,8 @@
 #include "util.h"
+#include "io.h"
 
-#include "report.h"
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
 void *ctu_malloc(size_t size) {
     return malloc(size);
@@ -19,165 +16,172 @@ void ctu_free(void *ptr) {
     free(ptr);
 }
 
-FILE *ctu_open(const char *path, const char *mode) {
-    logfmt("opening file `%s`", path);
-    return fopen(path, mode);
+char *ctu_strdup(const char *str) {
+    size_t len = strlen(str) + 1;
+    char *out = ctu_malloc(len);
+    memcpy(out, str, len);
+    return out;
 }
 
-void ctu_close(FILE *fp) {
-    fclose(fp);
-}
+static size_t string_hash(const char *str) {
+    size_t hash = 0;
 
-static uint32_t hash_string(const char *str) {
-    uint32_t hash = 0;
-    for (size_t i = 0; i < strlen(str); i++) {
-        hash = (hash << 5) - hash + str[i];
+    while (*str) {
+        hash = (hash << 5) - hash + *str++;
     }
+
     return hash;
 }
 
-static void *entry_get(entry_t *it, const char *key) {
-    if (it->id && strcmp(it->id, key) == 0) {
-        return it->data;
+// map internals
+
+/**
+ * maps end with a flexible array.
+ * calcuate the actual size of the map to malloc
+ */
+static size_t sizeof_map(size_t size) {
+    return sizeof(map_t) + (size * sizeof(entry_t));
+}
+
+static entry_t *entry_new(const char *key, void *value) { 
+    entry_t *entry = ctu_malloc(sizeof(entry_t));
+    entry->key = key;
+    entry->value = value;
+    entry->next = NULL;
+    return entry;
+}
+
+static void *entry_get(entry_t *entry, const char *key) {
+    if (entry->key && strcmp(entry->key, key) == 0) {
+        return entry->value;
     }
 
-    if (it->next) {
-        return entry_get(it->next, key);
+    if (entry->next) {
+        return entry_get(entry->next, key);
     }
 
     return NULL;
 }
 
-map_t *new_map(size_t size) {
-    map_t *map = ctu_malloc(sizeof(map_t));
+static void entry_delete(entry_t *entry) {
+    if (entry->next) {
+        entry_delete(entry->next);
+    }
+
+    ctu_free(entry);
+}
+
+/* find which bucket a key should be in */
+static entry_t *map_bucket(map_t *map, const char *key) {
+    size_t hash = string_hash(key);
+    size_t index = hash % map->size;
+    entry_t *entry = &map->data[index];
+    return entry;
+}
+
+// map public api
+
+map_t *map_new(size_t size) {
+    map_t *map = ctu_malloc(sizeof_map(size));
+
     map->size = size;
-    map->data = ctu_malloc(sizeof(entry_t) * size);
-    
+
+    /* clear out the map keys */
     for (size_t i = 0; i < size; i++) {
-        map->data[i].id = NULL;
-        map->data[i].next = NULL;
+        map->data[i].key = NULL;
     }
 
     return map;
 }
 
-void *map_get(map_t *map, const char *id) {
-    uint32_t hash = hash_string(id);
-    return entry_get(&map->data[hash % map->size], id);
+void map_delete(map_t *map) {
+    /* free all entries, but dont free the toplevel ones */
+    for (size_t i = 0; i < map->size; i++) {
+        entry_t *entry = &map->data[i];
+        if (entry->next) {
+            entry_delete(entry->next);
+        }
+    }
+
+    /* this frees both the map and the toplevel entries */
+    ctu_free(map);
 }
 
-void map_put(map_t *map, const char *id, void *data) {
-    uint32_t hash = hash_string(id);
-    entry_t *entry = &map->data[hash % map->size];
+void *map_get(map_t *map, const char *key) {
+    entry_t *entry = map_bucket(map, key);
+    return entry_get(entry, key);
+}
+
+void map_set(map_t *map, const char *key, void *value) {
+    entry_t *entry = map_bucket(map, key);
 
     while (entry) {
-        if (entry->id == NULL) {
-            entry->id = id;
-            entry->data = data;
-            break;
-        } else if (strcmp(entry->id, id) == 0) {
-            entry->data = data;
-            break;
-        } else if (entry->next) {
+        if (entry->key == NULL) {
+            entry->key = key;
+            entry->value = value;
+            return;
+        } else if (strcmp(entry->key, key) == 0) {
+            entry->value = value;
+            return;
+        } else if (entry->next != NULL) {
             entry = entry->next;
         } else {
-            entry_t *next = ctu_malloc(sizeof(entry_t));
-            next->id = NULL;
-            next->next = NULL;
-            entry->next = next;
-            entry = next;
+            entry->next = entry_new(key, value);
+            return;
         }
     }
 }
 
-void map_iter(map_t *map, void (*func)(const char *id, void *data, void *arg), void *arg) {
-    for (size_t i = 0; i < map->size; i++) {
-        entry_t *entry = map->data + i;
-        while (entry) {
-            if (entry->id) {
-                func(entry->id, entry->data, arg);
-            }
-            entry = entry->next;
-        }
+// vector internals
+
+static size_t vector_size(size_t size) {
+    return sizeof(vector_t) + (size * sizeof(void *));
+}
+
+#define VEC (*vector)
+
+static void vector_ensure(vector_t **vector, size_t size) {
+    if (size >= VEC->size) {
+        size_t resize = (size + 1) * 2;
+        VEC->size = resize;
+        VEC = ctu_realloc(VEC, vector_size(resize));
     }
 }
 
-list_t *new_list(void *init) {
-    list_t *list = ctu_malloc(sizeof(list_t));
+// vector public api
+
+vector_t *vector_new(size_t size) {
+    vector_t *vector = ctu_malloc(vector_size(size));
     
-    list->size = 4;
-    list->len = 0;
-    list->data = ctu_malloc(sizeof(void*) * list->size);
+    vector->size = size;
+    vector->used = 0;
 
-    if (init) {
-        list_push(list, init);
-    }
-
-    return list;
+    return vector;
 }
 
-list_t *sized_list(size_t size) {
-    list_t *list = ctu_malloc(sizeof(list_t));
-
-    list->size = size;
-    list->len = 0;
-    list->data = ctu_malloc(sizeof(void*) * size);
-
-    return list;
+vector_t *vector_init(void *value) {
+    vector_t *vector = vector_new(1);
+    vector_push(&vector, value);
+    return vector;
 }
 
-void list_set(list_t *list, size_t index, void *data) {
-    list->data[index] = data;
+void vector_delete(vector_t *vector) {
+    ctu_free(vector);
 }
 
-size_t list_len(list_t *list) {
-    return list->len;
+void vector_push(vector_t **vector, void *value) {
+    vector_ensure(vector, VEC->used + 1);
+    VEC->data[VEC->used++] = value;
 }
 
-void *list_at(list_t *list, size_t index) {
-    return list->data[index];
+void *vector_pop(vector_t *vector) {
+    return vector->data[--vector->used];
 }
 
-static void list_ensure(list_t *list, size_t size) {
-    if (size > list->size) {
-        list->size *= 2;
-        list->data = ctu_realloc(list->data, sizeof(void*) * list->size);
-    }
+void vector_set(vector_t *vector, size_t index, void *value) {
+    vector->data[index] = value;
 }
 
-list_t *list_push(list_t *list, void *data) {
-    list_ensure(list, list->len + 1);
-    
-    list->data[list->len++] = data;
-    return list;
-}
-
-void *list_pop(list_t *list) {
-    ASSERT(list->len > 0)("cannot pop empty list");
-
-    return list->data[--list->len];
-}
-
-void *list_first(list_t *list) {
-    return list->data[0];
-}
-
-void *list_last(list_t *list) {
-    return list->data[list->len - 1];
-}
-
-list_t list_slice(list_t *list, size_t offset) {
-    list_t slice = { list->size, list->len - offset, list->data + offset };
-
-    return slice;
-}
-
-list_t *list_emplace(list_t *list, void *data) {
-    list_ensure(list, list->len + 1);
-
-    memmove(list->data + 1, list->data, sizeof(void*) * list->len);
-    list->data[0] = data;
-
-    list->len++;
-    return list;
+void *vector_get(vector_t *vector, size_t index) {
+    return vector->data[index];
 }

@@ -1,51 +1,48 @@
 #pragma once
 
 #include <stddef.h>
-#include <stdio.h>
 
 #define MAX(L, R) ((L) > (R) ? (L) : (R)) 
 #define MIN(L, R) ((L) < (R) ? (L) : (R)) 
 
+// memory managment
+
 void *ctu_malloc(size_t size);
 void *ctu_realloc(void *ptr, size_t size);
 void ctu_free(void *ptr);
+char *ctu_strdup(const char *str);
 
-FILE *ctu_open(const char *path, const char *mode);
-void ctu_close(FILE *fp);
+// map collection
 
 typedef struct entry_t {
-    const char *id;
-    void *data;
+    const char *key;
+    void *value;
     struct entry_t *next;
 } entry_t;
 
 typedef struct {
     size_t size;
-    entry_t *data;
+    entry_t data[];
 } map_t;
 
-map_t *new_map(size_t size);
-void *map_get(map_t *map, const char *id);
-void map_put(map_t *map, const char *id, void *data);
+map_t *map_new(size_t size);
+void map_delete(map_t *map);
+void *map_get(map_t *map, const char *key);
+void map_set(map_t *map, const char *key, void *value);
 
-void map_iter(map_t *map, void (*func)(const char *id, void *data, void *arg), void *arg);
+
+// vector collection
 
 typedef struct {
     size_t size;
-    size_t len;
-    void **data;
-} list_t;
+    size_t used;
+    void *data[];
+} vector_t;
 
-list_t *new_list(void *init);
-list_t *sized_list(size_t size);
-size_t list_len(list_t *list);
-void *list_at(list_t *list, size_t index);
-void list_set(list_t *list, size_t index, void *data);
-list_t *list_push(list_t *list, void *data);
-void *list_pop(list_t *list);
-void *list_first(list_t *list);
-void *list_last(list_t *list);
-list_t list_slice(list_t *list, size_t offset);
-list_t *list_emplace(list_t *list, void *data);
-
-#define LIST_AT(T, L, I) ((T)list_at(L, I))
+vector_t *vector_new(size_t size);
+vector_t *vector_init(void *value);
+void vector_delete(vector_t *vector);
+void vector_push(vector_t **vector, void *value);
+void *vector_pop(vector_t *vector);
+void vector_set(vector_t *vector, size_t index, void *value);
+void *vector_get(vector_t *vector, size_t index);
