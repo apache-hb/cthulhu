@@ -1,7 +1,10 @@
 #include "scan.h"
+#include "interop.h"
 
 #include "ctu/util/util.h"
+#include "ctu/util/report.h"
 
+#include <errno.h>
 #include <string.h>
 
 #ifndef _WIN32
@@ -36,6 +39,7 @@ static const void *map_file(size_t size, FILE *file) {
     text = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (text == MAP_FAILED) {
         text = NULL;
+        report(INTERNAL, "failed to mmap file: %s\n", strerror(errno));
     }
 #else
     text = ctu_malloc(size + 1);
@@ -60,10 +64,10 @@ scan_t *scan_file(const char *path, FILE *fd) {
     scan_t *scan = scan_new(path, size);
 
     if (!(scan->text = map_file(size, fd))) {
-
+        end_report("file mapping");
     }
 
     return scan;
 }
 
-location_t nowhere = { 0, 0, 0, 0 };
+where_t nowhere = { 0, 0, 0, 0 };

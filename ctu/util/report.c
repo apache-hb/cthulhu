@@ -17,7 +17,7 @@ typedef struct {
 
     /* source and location, if scan is NULL then location is ignored */
     scan_t *scan;
-    location_t location;
+    where_t location;
 } message_t;
 
 /* has an internal error happened */
@@ -47,7 +47,7 @@ static void report_header(message_t *message) {
     fprintf(stderr, "%s: %s\n", lvl, message->message);
 
     if (message->scan) {
-        location_t location = message->location;
+        where_t location = message->location;
 
         const char *path = message->scan->path;
         line_t line = location.first_line;

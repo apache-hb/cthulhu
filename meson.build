@@ -9,6 +9,7 @@ project('ctu', 'c',
 
 src = [
     'ctu/ast/scan.c',
+    'ctu/ast/interop.c',
 
     'ctu/util/report.c',
     'ctu/util/str.c',

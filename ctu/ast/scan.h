@@ -26,6 +26,6 @@ typedef struct {
 
     column_t first_column;
     column_t last_column;
-} location_t;
+} where_t;
 
-extern location_t nowhere;
+extern where_t nowhere;
