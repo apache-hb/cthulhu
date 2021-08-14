@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ctu/ast/scan.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -26,3 +28,6 @@ void assert(const char *fmt, ...);
 #define ASSERT(expr) if (!(expr)) (assert)
 
 report_t report(level_t level, const char *fmt, ...);
+report_t reportf(level_t level, scan_t *scan, where_t where, const char *fmt, ...);
+
+void add_note(report_t id, const char *fmt, ...);

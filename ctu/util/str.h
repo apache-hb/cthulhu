@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdarg.h>
+#include <stdbool.h>
 
 #define COLOUR_RED "\x1B[1;31m"
 #define COLOUR_GREEN "\x1B[1;32m"
@@ -12,3 +13,5 @@
 
 char *format(const char *fmt, ...);
 char *formatv(const char *fmt, va_list args);
+
+bool startswith(const char *str, const char *prefix);

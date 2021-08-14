@@ -1,0 +1,3 @@
+option('cthulhu-driver', type : 'boolean', value : 'true')
+option('c-driver', type : 'boolean', value : 'true')
+option('pl0-driver', type : 'boolean', value : 'true')

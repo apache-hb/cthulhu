@@ -9,17 +9,46 @@ typedef int64_t line_t;
 typedef int64_t column_t;
 
 typedef struct {
+    /* the language name */
+    const char *language;
+
+    /* path to the file */
     const char *path;
+
+    /* whatever the file creates by parsing */
     void *data;
 
+    /* the source text of the file */
     const char *text;
+    
+    /* how much of the text has been read */
     size_t offset;
+
+    /* the length of the text */
     size_t size;
 } scan_t;
 
-scan_t *scan_string(const char *path, const char *text);
-scan_t *scan_file(const char *path, FILE *fd);
+/* create a scanner from a string */
+scan_t *scan_string(const char *language, const char *path, const char *text);
 
+/* create a scanner from a file */
+scan_t *scan_file(const char *language, const char *path, FILE *fd);
+
+/* set the export data */
+void scan_export(scan_t *scan, void *data);
+
+typedef struct {
+    int(*init)(scan_t *extra, void *scanner);
+    void(*set_in)(FILE *fd, void *scanner);
+    int(*parse)(void *scanner, void *extra);
+    void*(*scan)(const char *text, void *scanner);
+    void(*destroy)(void *scanner);
+} callbacks_t;
+
+void *compile_string(scan_t *extra, callbacks_t *callbacks);
+void *compile_file(scan_t *extra, callbacks_t *callbacks);
+
+/* a location inside a scanner */
 typedef struct {
     line_t first_line;
     line_t last_line;

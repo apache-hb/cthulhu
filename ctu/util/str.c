@@ -4,6 +4,7 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 char *format(const char *fmt, ...) {
     va_list args;
@@ -27,4 +28,8 @@ char *formatv(const char *fmt, va_list args) {
     vsnprintf(out, len, fmt, again);
 
     return out;
+}
+
+bool startswith(const char *str, const char *prefix) {
+    return strncmp(str, prefix, strlen(prefix)) == 0;
 }

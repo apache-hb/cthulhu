@@ -10,15 +10,65 @@ project('ctu', 'c',
 src = [
     'ctu/ast/scan.c',
     'ctu/ast/interop.c',
+    'ctu/ast/ast.c',
 
     'ctu/util/report.c',
     'ctu/util/str.c',
     'ctu/util/util.c'
 ]
 
-generic = library('generic', src)
+gmp = dependency('gmp')
 
-# gmp = dependency('gmp')
+libgeneric = library('generic', src,
+    dependencies : gmp
+)
+
+generic = declare_dependency(
+    link_with : libgeneric,
+    include_directories : '.',
+    dependencies : gmp
+)
+
+windows = build_machine.system() == 'windows'
+
+flex = find_program(windows ? 'win_flex' : 'flex', version : '>=2.6')
+bison = find_program(windows ? 'win_bison' : 'bison', version : '>=3.5')
+
+lex = generator(flex, 
+    output : [ '@BASENAME@-flex.c', '@BASENAME@-flex.h' ],
+    arguments : (windows ? [ '--wincompat' ] : []) + [ 
+        '--outfile=@OUTPUT0@', 
+        '--header-file=@OUTPUT1@', 
+        '@INPUT@' 
+    ]
+)
+
+parse = generator(bison,
+    output : [ '@BASENAME@-bison.c', '@BASENAME@-bison.h' ],
+    arguments : [ 
+        '-d', '@INPUT@', '-Wdeprecated', '-v',
+        '--output=@OUTPUT0@', 
+        '--defines=@OUTPUT1@' 
+    ]
+)
+
+options = [ ]
+
+if get_option('c-driver')
+    subdir('ctu/frontend/c')
+endif
+
+if get_option('cthulhu-driver')
+    subdir('ctu/frontend/ctu')
+endif
+
+if get_option('pl0-driver')
+    subdir('ctu/frontend/pl0')
+endif
+
+driver = executable('driver', 'ctu/driver/main.c',
+    dependencies : options
+)
 
 # windows = build_machine.system() == 'windows'
 

@@ -15,5 +15,3 @@ void flex_init(where_t *where);
 
 #define YY_USER_INIT \
     flex_init(yylloc);
-
-#define YYLTYPE where_t
