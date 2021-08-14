@@ -1,5 +1,6 @@
 #pragma once
 
 #include "ctu/util/util.h"
+#include "ctu/ast/ast.h"
 
-void pl0_driver(vector_t *files);
+node_t *pl0_driver(vector_t *files);

@@ -35,10 +35,11 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
     NUMBER "number"
 
 %type<node>
-    block init
+    block init ident number
 
 %type<vector>
-    inits consts
+    consts inits
+    vars names
 
 %token
     DOT "`.`"
@@ -49,6 +50,7 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %token
     CONST "const"
+    VAR "var"
 
 %start program
 
@@ -57,7 +59,7 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 program: block DOT { scan_export(x, $1); }
     ;
 
-block: consts { $$ = pl0_program(x, @$, $1); }
+block: consts vars { $$ = pl0_program(x, @$, $1, $2); }
     ;
 
 consts: %empty { $$ = vector_new(0); }
@@ -68,7 +70,21 @@ inits: init { $$ = vector_init($1); }
     | inits COMMA init { vector_push(&$1, $3); $$ = $1; }
     ;
 
-init: IDENT EQUALS NUMBER { $$ = pl0_const(x, @$, $1, $3); }
+init: ident EQUALS number { $$ = pl0_const(x, @$, $1, $3); }
+    ;
+
+vars: %empty { $$ = vector_new(0); }
+    | VAR names SEMICOLON { $$ = $2; }
+    ;
+
+names: ident { $$ = vector_init($1); }
+    | names COMMA ident { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+ident: IDENT { $$ = pl0_ident(x, @$, $1); }
+    ;
+
+number: NUMBER { $$ = pl0_number(x, @$, $1); }
     ;
 
 %%

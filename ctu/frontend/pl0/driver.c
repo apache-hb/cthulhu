@@ -13,7 +13,7 @@ static FILE *open_file(const char *path) {
     return fp;
 }
 
-void pl0_driver(vector_t *files) {
+node_t *pl0_driver(vector_t *files) {
     size_t len = vector_len(files);
     for (size_t i = 0; i < len; i++) {
         const char *path = vector_get(files, i);
@@ -21,8 +21,9 @@ void pl0_driver(vector_t *files) {
         if (fp != NULL) {
             pl0_node_t *program = pl0_compile(path, fp);
             if (program != NULL) {
-                pl0_sema(program);
+                return pl0_sema(program);
             }
         }
     }
+    return NULL;
 }

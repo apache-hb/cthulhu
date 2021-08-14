@@ -3,6 +3,8 @@
 
 #include "ctu/frontend/pl0/driver.h"
 
+#include "ctu/backend/c/driver.h"
+
 #include <string.h>
 
 static const char *name = NULL;
@@ -38,9 +40,13 @@ int main(int argc, char **argv) {
 
     parse_args(argc, argv);
 
-    pl0_driver(sources);
+    node_t *node = pl0_driver(sources);
 
     end_report("PL/0 compilation");
+
+    c_emit(stdout, node);
+
+    end_report("C generation");
 
     if (argc == 1) {
         return 0;

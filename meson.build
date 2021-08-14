@@ -56,14 +56,17 @@ options = [ ]
 
 if get_option('c-driver')
     subdir('ctu/frontend/c')
+    subdir('ctu/backend/c')
 endif
 
 if get_option('cthulhu-driver')
     subdir('ctu/frontend/ctu')
+    subdir('ctu/backend/ctu')
 endif
 
 if get_option('pl0-driver')
     subdir('ctu/frontend/pl0')
+    subdir('ctu/backend/pl0')
 endif
 
 driver = executable('driver', 'ctu/driver/main.c',

@@ -120,5 +120,5 @@ void *compile_file(scan_t *extra, callbacks_t *callbacks) {
 
     callbacks->destroy(scanner);
 
-    return extra;
+    return extra->data;
 }

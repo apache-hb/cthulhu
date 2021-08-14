@@ -7,6 +7,13 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    char *message;
+    scan_t *scan;
+    where_t where;
+} part_t;
 
 typedef struct {
     /* the level of this error */
@@ -14,13 +21,13 @@ typedef struct {
 
     /* error message displayed at the top */
     char *message;
+    char *underline;
+
+    vector_t *parts;
 
     /* source and location, if scan is NULL then location is ignored */
     scan_t *scan;
-    where_t location;
-
-    /* associated notes */
-    vector_t *notes;
+    where_t where;
 } message_t;
 
 /* has an internal error happened */
@@ -54,12 +61,12 @@ static void report_header(message_t *message) {
     fprintf(stderr, "%s: %s\n", lvl, message->message);
 
     if (message->scan) {
-        where_t location = message->location;
+        where_t where = message->where;
 
         const char *path = message->scan->path;
         const char *language = message->scan->language;
-        line_t line = location.first_line;
-        column_t column = location.first_column;
+        line_t line = where.first_line;
+        column_t column = where.first_column;
 
         fprintf(stderr, " => %s source [%s:%ld:%ld]\n",
             language, path, line, column
@@ -67,22 +74,81 @@ static void report_header(message_t *message) {
     }
 }
 
-static void report_note(const char *note) {
-    fprintf(stderr, COLOUR_GREEN "note: " COLOUR_RESET "%s\n", note);
+static char *padding(size_t len) {
+    char *str = malloc(len + 1);
+    memset(str, ' ', len);
+    str[len] = '\0';
+    return str;
 }
 
-static void report_notes(message_t *message) {
-    vector_t *notes = message->notes;
-    size_t len = vector_len(notes);
-    for (size_t i = 0; i < len; i++) {
-        const char *note = vector_get(notes, i);
-        report_note(note);
+static char *extract_line(scan_t *scan, line_t line) {
+    size_t start = 0;
+    const char *text = scan->text;
+    while (text[start] && line > 0) {
+        char c = text[start++];
+        if (c == '\n') {
+            line -= 1;
+        }
     }
+    
+    size_t len = 0;
+    while (text[start + len]) {
+        char c = text[start + len++];
+        if (c == '\n') {
+            break;
+        }
+    }
+
+    char *str = malloc(len + 1);
+    memcpy(str, text + start, len - 1);
+    str[len] = '\0';
+    return str;
 }
 
-static void report_send(message_t *message) {
+static char *build_underline(column_t front, column_t back, char *note) {
+    size_t width = back - front;
+    size_t len = note ? strlen(note) : 0;
+    char *str = malloc(back + len + 1);
+
+    memset(str, ' ', front);
+    memset(str + front, '^', width);
+    
+    if (note) {
+        memcpy(str + front + width, note, len);
+        str[front + width + len] = '\0';
+    } else {
+        str[front + width] = '\0';
+    }
+
+    return str;
+}
+
+static void report_source(message_t *message) {
+    scan_t *scan = message->scan;
+    where_t where = message->where;
+    if (!scan) {
+        return;
+    }
+
+    line_t start = where.first_line;
+
+    column_t front = where.first_column;
+    column_t back = where.last_column;
+
+    char *line = format(" %ld ",start);
+    size_t len = strlen(line);
+    char *pad = padding(len);
+
+    fprintf(stderr, "%s|\n", pad);
+    fprintf(stderr, "%s| %s\n", line, extract_line(scan, start));
+    fprintf(stderr, "%s| " COLOUR_PURPLE "%s\n" COLOUR_RESET, pad, build_underline(front, back, message->underline));
+}
+
+static bool report_send(message_t *message) {
     report_header(message);
-    report_notes(message);
+    report_source(message);
+
+    return message->level <= ERROR;
 }
 
 void begin_report(size_t limit) {
@@ -91,14 +157,21 @@ void begin_report(size_t limit) {
 }
 
 void end_report(const char *name) {
+    bool fatal = false;
+
     for (size_t i = 0; i < used; i++) {
         message_t *message = get_message(i);
-        report_send(message);
+        fatal = fatal || report_send(message);
     }
     
     if (internal) {
-        fprintf(stderr, "exiting during %s due to a fatal error", name);
+        fprintf(stderr, "exiting during %s due to an internal error", name);
         exit(99);
+    }
+
+    if (fatal) {
+        fprintf(stderr, "exiting during %s due to a fatal error\n", name);
+        exit(1);
     }
 }
 
@@ -120,20 +193,14 @@ static report_t report_add(
     char *str = formatv(fmt, args);
     message_t msg = {
         .level = level,
+        .parts = vector_new(1),
         .message = str,
         .scan = scan,
-        .location = where,
-        .notes = vector_new(0)
+        .where = where
     };
 
     messages[used] = msg;
     return used++;
-}
-
-static void note_add(report_t id, const char *fmt, va_list args) {
-    char *msg = formatv(fmt, args);
-    message_t *message = get_message(id);
-    vector_push(&message->notes, msg);
 }
 
 void assert(const char *fmt, ...) {
@@ -157,15 +224,4 @@ report_t reportf(level_t level, scan_t *scan, where_t where, const char *fmt, ..
     report_t id = report_add(level, scan, where, fmt, args);
     va_end(args);
     return id;
-}
-
-void add_note(report_t id, const char *fmt, ...) {
-    if (id == INVALID_REPORT) {
-        return;
-    }
-
-    va_list args;
-    va_start(args, fmt);
-    note_add(id, fmt, args);
-    va_end(args);
 }

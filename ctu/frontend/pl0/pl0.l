@@ -9,6 +9,7 @@
 #include "pl0-bison.h"
 #include "scan.h"
 #include "ctu/util/report.h"
+#include "ctu/ast/interop.h"
 %}
 
 %%
@@ -16,6 +17,7 @@
 [ \r\n\t] ;
 
 (?i:const) { return CONST; }
+(?i:var) { return VAR; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);
