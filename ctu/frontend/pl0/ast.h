@@ -1,18 +1,23 @@
 #pragma once
 
+#include "ctu/ast/ast.h"
 #include "ctu/ast/scan.h"
 #include "ctu/util/util.h"
 
 #include <gmp.h>
 
 typedef enum {
+    /* an entire program */
     PL0_PROGRAM,
 
+    /* named declarations */
     PL0_CONST,
     PL0_GLOBAL,
+    PL0_PROCEDURE,
 
-    PL0_IDENT,
-    PL0_NUMBER
+    /* statements */
+    PL0_STATEMENTS,
+    PL0_CALL
 } pl0_ast_t;
 
 typedef struct pl0_node_t {
@@ -29,29 +34,42 @@ typedef struct pl0_node_t {
 
             /* global values */
             vector_t *vars;
+
+            /* function decls */
+            vector_t *procedures;
         };
 
         /* PL0_GLOBAL */
         struct {
-            struct pl0_node_t *key;
-            struct pl0_node_t *value;
+            node_t *name;
+
+            union {
+                /* PL0_CONST */
+                node_t *value;
+
+                /* PL0_PROCEDURE */
+                struct {
+                    vector_t *locals;
+                };
+            };
         };
 
-        /* PL0_IDENT */
-        char *ident;
+        /* PL0_STATEMENTS */
+        vector_t *statements;
 
-        /* PL0_NUMBER */
-        mpz_t number;
+        /* PL0_CALL */
+        node_t *call;
     };
 } pl0_node_t;
 
 pl0_node_t *pl0_program(
     scan_t *scan, where_t where, 
-    vector_t *consts, vector_t *vars
+    vector_t *consts, vector_t *vars, vector_t *procedures
 );
 
-pl0_node_t *pl0_global(scan_t *scan, where_t where, pl0_node_t *key, pl0_node_t *value);
-pl0_node_t *pl0_const(scan_t *scan, where_t where, pl0_node_t *key, pl0_node_t *value);
+pl0_node_t *pl0_global(scan_t *scan, where_t where, node_t *name);
+pl0_node_t *pl0_const(scan_t *scan, where_t where, node_t *name, node_t *value);
+pl0_node_t *pl0_procedure(scan_t *scan, where_t where, node_t *name, vector_t *locals);
 
-pl0_node_t *pl0_ident(scan_t *scan, where_t where, char *ident);
-pl0_node_t *pl0_number(scan_t *scan, where_t where, mpz_t number);
+pl0_node_t *pl0_statements(scan_t *scan, where_t where, vector_t *statements);
+pl0_node_t *pl0_call(scan_t *scan, where_t where, node_t *call);

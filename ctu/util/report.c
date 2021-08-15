@@ -8,12 +8,21 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 typedef struct {
     char *message;
     scan_t *scan;
     where_t where;
 } part_t;
+
+static part_t *part_new(char *message, scan_t *scan, where_t where) {
+    part_t *part = ctu_malloc(sizeof(part_t));
+    part->message = message;
+    part->scan = scan;
+    part->where = where;
+    return part;
+}
 
 typedef struct {
     /* the level of this error */
@@ -55,22 +64,24 @@ static const char *report_level(level_t level) {
     }
 }
 
+static void report_scanner(scan_t *scan, where_t where) {
+    const char *path = scan->path;
+    const char *language = scan->language;
+    line_t line = where.first_line;
+    column_t column = where.first_column;
+
+    fprintf(stderr, " => %s source [%s:%ld:%ld]\n",
+        language, path, line, column
+    );
+}
+
 static void report_header(message_t *message) {
     const char *lvl = report_level(message->level);
 
     fprintf(stderr, "%s: %s\n", lvl, message->message);
 
     if (message->scan) {
-        where_t where = message->where;
-
-        const char *path = message->scan->path;
-        const char *language = message->scan->language;
-        line_t line = where.first_line;
-        column_t column = where.first_column;
-
-        fprintf(stderr, " => %s source [%s:%ld:%ld]\n",
-            language, path, line, column
-        );
+        report_scanner(message->scan, message->where);
     }
 }
 
@@ -105,20 +116,66 @@ static char *extract_line(scan_t *scan, line_t line) {
     return str;
 }
 
-static char *build_underline(column_t front, column_t back, char *note) {
+static char *build_underline(char *source, column_t front, column_t back, char *note) {
     size_t width = back - front;
     size_t len = note ? strlen(note) : 0;
-    char *str = malloc(back + len + 1);
+    char *str = malloc(back + len + 2);
 
-    memset(str, ' ', front);
-    memset(str + front, '^', width);
-    
-    if (note) {
-        memcpy(str + front + width, note, len);
-        str[front + width + len] = '\0';
-    } else {
-        str[front + width] = '\0';
+    column_t idx = 0;
+
+    /* use correct tabs or spaces when underlining */
+    while (front > idx) {
+        char c = source[idx];
+        str[idx++] = isspace(c) ? c : ' ';
     }
+
+    str[idx] = '^';
+    memset(str + idx + 1, '~', width - 1);
+    str[idx + width] = ' ';
+    if (note) {
+        memcpy(str + idx + width + 1, note, len);
+        str[idx + width + len + 1] = '\0';
+    } else {
+        str[idx + width + 1] = '\0';
+    }
+
+    return str;
+}
+
+static size_t longest_line(scan_t *scan, where_t where, vector_t *parts) {
+    char *fmt = format(" %ld ", where.first_line);
+
+    size_t len = strlen(fmt);
+
+    free(fmt);
+
+    for (size_t i = 0; i < vector_len(parts); i++) {
+        part_t *part = vector_get(parts, i);
+
+        if (part->scan != scan) {
+            continue;
+        }
+
+        line_t line = part->where.first_line;
+        char *it = format(" %ld ", line);
+        len = MAX(len, strlen(it));
+        free(it);
+    }
+
+    return len;
+}
+
+static char *right_align(line_t line, size_t width) {
+    char *fmt = format(" %ld ", line);
+    size_t len = strlen(fmt);
+
+    size_t align = width - len;
+
+    char *str = malloc(align + 1);
+    memset(str, ' ', align);
+    strcpy(str + align, fmt);
+
+    free(fmt);
 
     return str;
 }
@@ -135,18 +192,54 @@ static void report_source(message_t *message) {
     column_t front = where.first_column;
     column_t back = where.last_column;
 
-    char *line = format(" %ld ",start);
-    size_t len = strlen(line);
-    char *pad = padding(len);
+    char *source = extract_line(scan, start);
+    char *underline = build_underline(source, front, back, message->underline);
+
+    size_t longest = longest_line(scan, where, message->parts);
+    char *line = right_align(start, longest);
+    char *pad = padding(longest);
 
     fprintf(stderr, "%s|\n", pad);
-    fprintf(stderr, "%s| %s\n", line, extract_line(scan, start));
-    fprintf(stderr, "%s| " COLOUR_PURPLE "%s\n" COLOUR_RESET, pad, build_underline(front, back, message->underline));
+    fprintf(stderr, "%s| %s\n", line, source);
+    fprintf(stderr, "%s| " COLOUR_PURPLE "%s\n" COLOUR_RESET, pad, underline);
+}
+
+static void report_part(message_t *message, part_t *part) {
+    char *msg = part->message;
+    scan_t *scan = part->scan;
+    where_t where = part->where;
+
+    size_t start = where.first_line;
+    column_t front = where.first_column;
+    column_t back = where.last_column;
+
+    char *source = extract_line(scan, start);
+    char *underline = build_underline(source, front, back, msg);
+
+    size_t longest = longest_line(scan, part->where, message->parts);
+    char *pad = padding(longest);
+    char *line = right_align(start, longest);
+
+    if (message->scan != scan) {
+        report_scanner(part->scan, part->where);
+    }
+
+    fprintf(stderr, "%s> %s source %s:%ld:%ld\n", pad, 
+        scan->language, scan->path, 
+        where.first_line, where.first_column
+    );
+    fprintf(stderr, "%s|\n", pad);
+    fprintf(stderr, "%s| %s\n", line, source);
+    fprintf(stderr, "%s| " COLOUR_PURPLE "%s\n" COLOUR_RESET, pad, underline);
 }
 
 static bool report_send(message_t *message) {
     report_header(message);
     report_source(message);
+
+    for (size_t i = 0; i < vector_len(message->parts); i++) {
+        report_part(message, vector_get(message->parts, i));
+    }
 
     return message->level <= ERROR;
 }
@@ -224,4 +317,18 @@ report_t reportf(level_t level, scan_t *scan, where_t where, const char *fmt, ..
     report_t id = report_add(level, scan, where, fmt, args);
     va_end(args);
     return id;
+}
+
+void report_append(report_t id, scan_t *scan, where_t where, const char *fmt, ...) {
+    if (id == INVALID_REPORT) {
+        return;
+    }
+
+    va_list args;
+    va_start(args, fmt);
+    char *msg = formatv(fmt, args);
+    va_end(args);
+
+    message_t *message = get_message(id);
+    vector_push(&message->parts, part_new(msg, scan, where));
 }

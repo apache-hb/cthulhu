@@ -9,10 +9,8 @@
 
 typedef enum {
     AST_DIGIT,
+    AST_IDENT
 
-    AST_DECL_VALUE,
-
-    AST_PROGRAM
 } ast_t;
 
 typedef struct node_t {
@@ -25,22 +23,10 @@ typedef struct node_t {
         /* AST_DIGIT */
         mpz_t digit;
 
-        /* AST_DECL_VALUE */
-        struct {
-            bool mutable;
-            char *name;
-            struct node_t *value;
-        };
-
-        /* AST_PROGRAM */
-        struct {
-            vector_t *decls;
-        };
+        /* AST_IDENT */
+        char *ident;
     };
 } node_t;
 
 node_t *ast_digit(scan_t *scan, where_t where, mpz_t digit);
-node_t *ast_digit_zero(scan_t *scan, where_t where);
-node_t *ast_value(scan_t *scan, where_t where, bool mutable, char *name, node_t *value);
-
-node_t *ast_program(scan_t *scan, where_t where, vector_t *decls);
+node_t *ast_ident(scan_t *scan, where_t where, char *ident);

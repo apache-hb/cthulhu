@@ -12,14 +12,6 @@ static node_t *ast_new(scan_t *scan, where_t where, ast_t kind) {
     return node;
 }
 
-node_t *ast_digit_zero(scan_t *scan, where_t where) {
-    node_t *node = ast_new(scan, where, AST_DIGIT);
-
-    mpz_init_set_ui(node->digit, 0);
-
-    return node;
-}
-
 node_t *ast_digit(scan_t *scan, where_t where, mpz_t digit) {
     node_t *node = ast_new(scan, where, AST_DIGIT);
 
@@ -28,20 +20,10 @@ node_t *ast_digit(scan_t *scan, where_t where, mpz_t digit) {
     return node;
 }
 
-node_t *ast_value(scan_t *scan, where_t where, bool mutable, char *name, node_t *value) {
-    node_t *node = ast_new(scan, where, AST_DECL_VALUE);
+node_t *ast_ident(scan_t *scan, where_t where, char *ident) {
+    node_t *node = ast_new(scan, where, AST_IDENT);
 
-    node->mutable = mutable;
-    node->name = name;
-    node->value = value;
-
-    return node;
-}
-
-node_t *ast_program(scan_t *scan, where_t where, vector_t *decls) {
-    node_t *node = ast_new(scan, where, AST_PROGRAM);
-
-    node->decls = decls;
+    node->ident = ident;
 
     return node;
 }

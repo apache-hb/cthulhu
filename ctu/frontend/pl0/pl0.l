@@ -18,6 +18,15 @@
 
 (?i:const) { return CONST; }
 (?i:var) { return VAR; }
+(?i:procedure) { return PROCEDURE; }
+
+(?i:begin) { return START; }
+(?i:end) { return END; }
+(?i:if) { return IF; }
+(?i:then) { return THEN; }
+(?i:while) { return WHILE; }
+(?i:do) { return DO; }
+(?i:call) { return CALL; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);

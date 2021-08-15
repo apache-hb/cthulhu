@@ -30,4 +30,4 @@ void assert(const char *fmt, ...);
 report_t report(level_t level, const char *fmt, ...);
 report_t reportf(level_t level, scan_t *scan, where_t where, const char *fmt, ...);
 
-void add_note(report_t id, const char *fmt, ...);
+void report_append(report_t id, scan_t *scan, where_t where, const char *fmt, ...);
