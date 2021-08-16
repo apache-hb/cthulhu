@@ -28,6 +28,8 @@
 (?i:do) { return DO; }
 (?i:call) { return CALL; }
 
+(?i:odd) { return ODD; }
+
 [a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);
     return IDENT;
@@ -41,7 +43,22 @@
 ";" { return SEMICOLON; }
 "." { return DOT; }
 "," { return COMMA; }
+":=" { return ASSIGN; }
+
 "=" { return EQUALS; }
+"#" { return NOTEQUAL; }
+"<" { return LESS; }
+">" { return GREATER; }
+"<=" { return LESSEQ; }
+">=" { return GREATEQ; }
+
+"(" { return LPAREN; }
+")" { return RPAREN; }
+
+"+" { return ADD; }
+"-" { return SUB; }
+"*" { return MUL; }
+"/" { return DIV; }
 
 . { reportf(ERROR, yyextra, *yylloc, "unknown character %s", yytext); }
 

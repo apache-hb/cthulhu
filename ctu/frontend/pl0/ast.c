@@ -28,7 +28,7 @@ pl0_node_t *pl0_program(scan_t *scan, where_t where, vector_t *consts, vector_t 
     return node;
 }
 
-pl0_node_t *pl0_global(scan_t *scan, where_t where, node_t *name) {
+pl0_node_t *pl0_value(scan_t *scan, where_t where, node_t *name) {
     return pl0_decl(scan, where, PL0_GLOBAL, name);
 }
 
@@ -60,6 +60,42 @@ pl0_node_t *pl0_call(scan_t *scan, where_t where, node_t *call) {
     pl0_node_t *node = pl0_new(scan, where, PL0_CALL);
 
     node->call = call;
+
+    return node;
+}
+
+pl0_node_t *pl0_assign(scan_t *scan, where_t where, node_t *dst, node_t *src) {
+    pl0_node_t *node = pl0_new(scan, where, PL0_ASSIGN);
+
+    node->dst = dst;
+    node->src = src;
+
+    return node;
+}
+
+node_t *pl0_odd(scan_t *scan, where_t where, node_t *expr) {
+    node_t *zero = ast_int(scan, where, 0);
+    node_t *one = ast_int(scan, where, 1);
+    node_t *rem = ast_binary(scan, where, BINARY_REM, expr, one);
+    node_t *cmp = ast_binary(scan, where, BINARY_NEQ, rem, zero);
+
+    return cmp;
+}
+
+pl0_node_t *pl0_if(scan_t *scan, where_t where, node_t *cond, pl0_node_t *then) {
+    pl0_node_t *node = pl0_new(scan, where, PL0_IF);
+
+    node->cond = cond;
+    node->then = then;
+
+    return node;
+}
+
+pl0_node_t *pl0_while(scan_t *scan, where_t where, node_t *cond, pl0_node_t *then) {
+    pl0_node_t *node = pl0_new(scan, where, PL0_WHILE);
+
+    node->cond = cond;
+    node->then = then;
 
     return node;
 }

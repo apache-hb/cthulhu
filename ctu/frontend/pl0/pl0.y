@@ -36,11 +36,12 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
     NUMBER "number"
 
 %type<node>
-    ident number
+    ident number factor term expr
+    unary condition
 
 %type<pl0node>
-    block init procedure
-    statement statements call
+    block init procedure name
+    statement statements
 
 %type<vector>
     consts inits
@@ -52,8 +53,25 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 %token
     DOT "`.`"
     SEMICOLON "`;`"
-    EQUALS "`=`"
     COMMA "`,`"
+    ASSIGN ":="
+
+    EQUALS "`=`"
+    ODD "odd"
+    NOTEQUAL "#"
+    LESS "<"
+    GREATER ">"
+    LESSEQ "<="
+    GREATEQ ">="
+
+    LPAREN "("
+    RPAREN ")"
+
+    ADD "+"
+    SUB "-"
+
+    MUL "*"
+    DIV "/"
 
 %token
     CONST "const"
@@ -94,8 +112,11 @@ vars: %empty { $$ = vector_new(0); }
     | VAR names SEMICOLON { $$ = $2; }
     ;
 
-names: ident { $$ = vector_init($1); }
-    | names COMMA ident { vector_push(&$1, $3); $$ = $1; }
+names: name { $$ = vector_init($1); }
+    | names COMMA name { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+name: ident { $$ = pl0_value(x, @$, $1); }
     ;
 
 procedures: %empty { $$ = vector_new(0); }
@@ -106,14 +127,14 @@ proclist: procedure { $$ = vector_init($1); }
     | proclist procedure { vector_push(&$1, $2); $$ = $1; }
     ;
 
-procedure: PROCEDURE ident SEMICOLON vars statements { $$ = pl0_procedure(x, @$, $2, $4); }
+procedure: PROCEDURE ident SEMICOLON vars statements SEMICOLON { $$ = pl0_procedure(x, @$, $2, $4); }
     ;
 
 statement: statements { $$ = $1; }
-    | call { $$ = $1; }
-    ;
-
-call: CALL ident { $$ = pl0_call(x, @$, $2); }
+    | CALL ident { $$ = pl0_call(x, @$, $2); }
+    | ident ASSIGN expr { $$ = pl0_assign(x, @$, $1, $3); }
+    | IF condition THEN statement { $$ = pl0_if(x, @$, $2, $4); }
+    | WHILE condition DO statement { $$ = pl0_while(x, @$, $2, $4); }
     ;
 
 statements: START stmtlist END { $$ = pl0_statements(x, @$, $2); }
@@ -121,6 +142,33 @@ statements: START stmtlist END { $$ = pl0_statements(x, @$, $2); }
 
 stmtlist: statement { $$ = vector_init($1); }
     | stmtlist SEMICOLON statement { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+factor: ident { $$ = $1; }
+    | number { $$ = $1; }
+    | LPAREN expr RPAREN { $$ = $2; }
+    ;
+
+term: factor { $$ = $1; }
+    | factor MUL term { $$ = ast_binary(x, @$, BINARY_MUL, $1, $3); }
+    | factor DIV term { $$ = ast_binary(x, @$, BINARY_DIV, $1, $3); }
+    ;
+
+unary: term { $$ = $1; }
+    | SUB unary { $$ = ast_unary(x, @$, UNARY_NEG, $2); }
+    | ADD unary { $$ = ast_unary(x, @$, UNARY_ABS, $2); }
+    ;
+
+expr: unary { $$ = $1; }
+    ;
+
+condition: ODD expr { $$ = pl0_odd(x, @$, $2); }
+    | expr EQUALS expr { $$ = ast_binary(x, @$, BINARY_EQ, $1, $3); }
+    | expr NOTEQUAL expr { $$ = ast_binary(x, @$, BINARY_NEQ, $1, $3); }
+    | expr LESS expr { $$ = ast_binary(x, @$, BINARY_LT, $1, $3); }
+    | expr LESSEQ expr { $$ = ast_binary(x, @$, BINARY_LTE, $1, $3); }
+    | expr GREATER expr { $$ = ast_binary(x, @$, BINARY_GT, $1, $3); }
+    | expr GREATEQ expr { $$ = ast_binary(x, @$, BINARY_GTE, $1, $3); }
     ;
 
 ident: IDENT { $$ = ast_ident(x, @$, $1); }
