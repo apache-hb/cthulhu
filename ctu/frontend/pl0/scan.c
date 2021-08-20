@@ -39,9 +39,9 @@ scan_t *pl0_scan_file(const char *path, FILE *fd) {
     return scan_file(LANGUAGE, path, fd);
 }
 
-pl0_node_t *pl0_compile(const char *path, FILE *fd) {
+node_t *pl0_compile(const char *path, FILE *fd) {
     scan_t *scan = pl0_scan_file(path, fd);
-    pl0_node_t *node = compile_file(scan, &CALLBACKS);
+    node_t *node = compile_file(scan, &CALLBACKS);
     return node;
 }
 

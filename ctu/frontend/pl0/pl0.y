@@ -22,7 +22,6 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %union {
     node_t *node;
-    pl0_node_t *pl0node;
     vector_t *vector;
 
     char *ident;
@@ -38,8 +37,6 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<node>
     ident number factor term expr
     unary condition
-
-%type<pl0node>
     block init procedure name
     statement statements
 
@@ -94,7 +91,7 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 program: block DOT { scan_export(x, $1); }
     ;
 
-block: consts vars procedures { $$ = pl0_program(x, @$, $1, $2, $3); }
+block: consts vars procedures statement { $$ = pl0_module(x, @$, $1, $2, $3, $4); }
     ;
 
 consts: %empty { $$ = vector_new(0); }
@@ -105,7 +102,7 @@ inits: init { $$ = vector_init($1); }
     | inits COMMA init { vector_push(&$1, $3); $$ = $1; }
     ;
 
-init: ident EQUALS number { $$ = pl0_const(x, @$, $1, $3); }
+init: ident EQUALS number { $$ = ast_value(x, @$, $1, NULL, $3); }
     ;
 
 vars: %empty { $$ = vector_new(0); }
@@ -116,7 +113,7 @@ names: name { $$ = vector_init($1); }
     | names COMMA name { vector_push(&$1, $3); $$ = $1; }
     ;
 
-name: ident { $$ = pl0_value(x, @$, $1); }
+name: ident { $$ = ast_value(x, @$, $1, NULL, NULL); }
     ;
 
 procedures: %empty { $$ = vector_new(0); }
@@ -127,17 +124,17 @@ proclist: procedure { $$ = vector_init($1); }
     | proclist procedure { vector_push(&$1, $2); $$ = $1; }
     ;
 
-procedure: PROCEDURE ident SEMICOLON vars statements SEMICOLON { $$ = pl0_procedure(x, @$, $2, $4); }
+procedure: PROCEDURE ident SEMICOLON vars statements SEMICOLON { $$ = ast_define(x, @$, $2, $4, vector_new(0), NULL, $5); }
     ;
 
 statement: statements { $$ = $1; }
-    | CALL ident { $$ = pl0_call(x, @$, $2); }
-    | ident ASSIGN expr { $$ = pl0_assign(x, @$, $1, $3); }
-    | IF condition THEN statement { $$ = pl0_if(x, @$, $2, $4); }
-    | WHILE condition DO statement { $$ = pl0_while(x, @$, $2, $4); }
+    | CALL ident { $$ = ast_call(x, @$, $2, vector_new(0)); }
+    | ident ASSIGN expr { $$ = ast_assign(x, @$, $1, $3); }
+    | IF condition THEN statement { $$ = ast_branch(x, @$, $2, $4, NULL); }
+    | WHILE condition DO statement { $$ = ast_while(x, @$, $2, $4); }
     ;
 
-statements: START stmtlist END { $$ = pl0_statements(x, @$, $2); }
+statements: START stmtlist END { $$ = ast_stmts(x, @$, $2); }
     ;
 
 stmtlist: statement { $$ = vector_init($1); }

@@ -19,9 +19,10 @@ node_t *pl0_driver(vector_t *files) {
         const char *path = vector_get(files, i);
         FILE *fp = open_file(path);
         if (fp != NULL) {
-            pl0_node_t *program = pl0_compile(path, fp);
+            node_t *program = pl0_compile(path, fp);
             if (program != NULL) {
-                return pl0_sema(program);
+                pl0_sema(program);
+                return program;
             }
         }
     }

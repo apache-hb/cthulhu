@@ -47,3 +47,4 @@ void *vector_pop(vector_t *vector);
 void vector_set(vector_t *vector, size_t index, void *value);
 void *vector_get(vector_t *vector, size_t index);
 size_t vector_len(vector_t *vector);
+vector_t *vector_join(vector_t *lhs, vector_t *rhs);

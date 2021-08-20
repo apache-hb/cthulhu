@@ -189,3 +189,20 @@ void *vector_get(vector_t *vector, size_t index) {
 size_t vector_len(vector_t *vector) {
     return vector->used;
 }
+
+vector_t *vector_join(vector_t *lhs, vector_t *rhs) {
+    size_t lhs_len = vector_len(lhs);
+    size_t rhs_len = vector_len(rhs);
+
+    vector_t *out = vector_new(lhs_len + rhs_len);
+
+    for (size_t i = 0; i < lhs_len; i++) {
+        vector_set(out, i, vector_get(lhs, i));
+    }
+
+    for (size_t i = 0; i < rhs_len; i++) {
+        vector_set(out, lhs_len + i, vector_get(rhs, i));
+    }
+
+    return out;
+}
