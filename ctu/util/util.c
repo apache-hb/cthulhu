@@ -1,8 +1,11 @@
 #include "util.h"
 #include "io.h"
 
+#include "ctu/util/report.h"
+
 #include <string.h>
 #include <stdlib.h>
+#include <gmp.h>
 
 void *ctu_malloc(size_t size) {
     return malloc(size);
@@ -14,6 +17,24 @@ void *ctu_realloc(void *ptr, size_t size) {
 
 void ctu_free(void *ptr) {
     free(ptr);
+}
+
+static void *ctu_gmp_realloc(void *ptr, size_t old_size, size_t new_size) {
+    UNUSED(old_size);
+    return ctu_realloc(ptr, new_size);
+}
+
+static void ctu_gmp_free(void *ptr, size_t size) {
+    UNUSED(size);
+    ctu_free(ptr);
+}
+
+void init_memory(void) {
+    mp_set_memory_functions(
+        ctu_malloc, 
+        ctu_gmp_realloc, 
+        ctu_gmp_free
+    );
 }
 
 char *ctu_strdup(const char *str) {
@@ -31,6 +52,32 @@ static size_t string_hash(const char *str) {
     }
 
     return hash;
+}
+
+file_t *ctu_open(const char *path, const char *mode) {
+    FILE *fp = fopen(path, mode);
+
+    if (fp == NULL) {
+        report(ERROR, "failed to open `%s`", path);
+    }
+
+    file_t *file = ctu_malloc(sizeof(file_t));
+    file->file = fp;
+    file->path = path;
+
+    return file;
+}
+
+void ctu_close(file_t *fp) {
+    if (fp->file) {
+        fclose(fp->file);
+    }
+
+    ctu_free(fp);
+}
+
+bool ctu_valid(file_t *fp) {
+    return fp->file != NULL;
 }
 
 // map internals

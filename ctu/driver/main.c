@@ -4,16 +4,27 @@
 #include "ctu/frontend/pl0/driver.h"
 
 #include <string.h>
+#include <stdlib.h>
+
+#include "cmd.c"
 
 static const char *name = NULL;
 
+/* vector_t<file_t*> */
 static vector_t *sources = NULL;
 
+#define MATCH(arg, a, b) (startswith(arg, a) || startswith(arg, b))
+
 static int parse_arg(int index, char **argv) {
-    char *arg = argv[index];
+    const char *arg = argv[index];
     
     if (!startswith(arg, "--")) {
-        vector_push(&sources, arg);
+        file_t *fp = ctu_open(arg, "rb");
+        vector_push(&sources, fp);
+    } else if (MATCH(arg, "-h", "--help")) {
+        print_help(name);
+    } else if (MATCH(arg, "-v", "--version")) {
+        print_version();
     } else {
         report(ERROR, "unknown argument %s", arg);
     }
@@ -22,6 +33,10 @@ static int parse_arg(int index, char **argv) {
 }
 
 static void parse_args(int argc, char **argv) {
+    if (argc == 1) {
+        print_help(name);
+    }
+
     sources = vector_new(4);
 
     for (int i = 1; i < argc;) {
@@ -33,6 +48,7 @@ static void parse_args(int argc, char **argv) {
 
 int main(int argc, char **argv) {
     name = argv[0];
+    init_memory();
 
     begin_report(20);
 
@@ -42,8 +58,9 @@ int main(int argc, char **argv) {
 
     end_report("PL/0 compilation");
 
-    if (argc == 1) {
-        return 0;
+    for (size_t i = 0; i < vector_len(sources); i++) {
+        file_t *fp = vector_get(sources, i);
+        ctu_close(fp);
     }
 
     return 0;

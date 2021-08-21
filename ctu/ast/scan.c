@@ -60,9 +60,10 @@ scan_t *scan_string(const char *language, const char *path, const char *text) {
     return scan;
 }
 
-scan_t *scan_file(const char *language, const char *path, FILE *fd) {
+scan_t *scan_file(const char *language, file_t *file) {
+    FILE *fd = file->file;
     size_t size = file_size(fd);
-    scan_t *scan = scan_new(language, path, size);
+    scan_t *scan = scan_new(language, file->path, size);
 
     scan->data = fd;
 

@@ -1,6 +1,10 @@
-src = [ 'scan.c' ]
+src = [ 
+    lex.process('ctu.l'),
+    parse.process('ctu.y'),
+    'scan.c', 'driver.c'
+]
 
-libctu = library('cthulhu', src,
+libctu = library('ctu', src,
     dependencies : generic
 )
 

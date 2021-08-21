@@ -5,12 +5,15 @@
 #define MAX(L, R) ((L) > (R) ? (L) : (R)) 
 #define MIN(L, R) ((L) < (R) ? (L) : (R)) 
 
+#define UNUSED(x) ((void)(x))
+
 // memory managment
 
 void *ctu_malloc(size_t size);
 void *ctu_realloc(void *ptr, size_t size);
 void ctu_free(void *ptr);
 char *ctu_strdup(const char *str);
+void init_memory(void);
 
 // map collection
 

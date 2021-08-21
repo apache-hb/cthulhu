@@ -32,7 +32,7 @@ typedef struct {
 scan_t *scan_string(const char *language, const char *path, const char *text);
 
 /* create a scanner from a file */
-scan_t *scan_file(const char *language, const char *path, FILE *fd);
+scan_t *scan_file(const char *language, file_t *file);
 
 /* set the export data */
 void scan_export(scan_t *scan, void *data);

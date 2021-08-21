@@ -1,5 +1,7 @@
 #pragma once
 
-#include "ctu/ast/scan.h"
+#include "ctu/ast/ast.h"
 
-scan_t *ctu_scan_file(const char *path, FILE *fd);
+node_t *ctu_compile(file_t *fd);
+
+#define CTULTYPE where_t

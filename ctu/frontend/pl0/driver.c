@@ -5,26 +5,18 @@
 #include "scan.h"
 #include "sema.h"
 
-static FILE *open_file(const char *path) {
-    FILE *fp = fopen(path, "r");
-    if (fp == NULL) {
-        report(ERROR, "failed to open file `%s` for parsing", path);
-    }
-    return fp;
-}
-
-node_t *pl0_driver(vector_t *files) {
+vector_t *pl0_driver(vector_t *files) {
     size_t len = vector_len(files);
+    vector_t *result = vector_new(len);
+
     for (size_t i = 0; i < len; i++) {
-        const char *path = vector_get(files, i);
-        FILE *fp = open_file(path);
+        file_t *fp = vector_get(files, i);
+
         if (fp != NULL) {
-            node_t *program = pl0_compile(path, fp);
-            if (program != NULL) {
-                pl0_sema(program);
-                return program;
-            }
+            node_t *program = pl0_compile(fp);
+            vector_push(&result, program);
         }
     }
-    return NULL;
+
+    return result;
 }

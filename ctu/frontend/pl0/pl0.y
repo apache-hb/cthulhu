@@ -38,7 +38,7 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
     ident number factor term expr
     unary condition
     block init procedure name
-    statement statements
+    statement statements toplevel
 
 %type<vector>
     consts inits
@@ -91,7 +91,11 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 program: block DOT { scan_export(x, $1); }
     ;
 
-block: consts vars procedures statement { $$ = pl0_module(x, @$, $1, $2, $3, $4); }
+block: consts vars procedures toplevel { $$ = pl0_module(x, @$, $1, $2, $3, $4); }
+    ;
+
+toplevel: %empty { $$ = NULL; }
+    | statement { $$ = $1; }
     ;
 
 consts: %empty { $$ = vector_new(0); }
