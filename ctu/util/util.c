@@ -51,7 +51,7 @@ static entry_t *entry_new(const char *key, void *value) {
     return entry;
 }
 
-static void *entry_get(entry_t *entry, const char *key) {
+static void *entry_get(const entry_t *entry, const char *key) {
     if (entry->key && strcmp(entry->key, key) == 0) {
         return entry->value;
     }
@@ -182,15 +182,15 @@ void vector_set(vector_t *vector, size_t index, void *value) {
     vector->data[index] = value;
 }
 
-void *vector_get(vector_t *vector, size_t index) {
+void *vector_get(const vector_t *vector, size_t index) {
     return vector->data[index];
 }
 
-size_t vector_len(vector_t *vector) {
+size_t vector_len(const vector_t *vector) {
     return vector->used;
 }
 
-vector_t *vector_join(vector_t *lhs, vector_t *rhs) {
+vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) {
     size_t lhs_len = vector_len(lhs);
     size_t rhs_len = vector_len(rhs);
 
