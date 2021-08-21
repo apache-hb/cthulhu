@@ -46,11 +46,27 @@ typedef enum {
     UNARY_ABS,
 } unary_t;
 
+typedef struct {
+    /** 
+     * the name of the entrypoint or null if this function
+     * isnt an entrypoint. this is platform and target dependant
+     * 
+     * possible (but not all) values could be 
+     *  "main" for C 
+     *  "wWinMain" for C on windows
+     *  "import" for toplevel code
+     */
+    const char *entry;
+} traits_t;
+
 typedef struct node_t {
     ast_t kind;
 
     scan_t *scan;
     where_t where;
+
+    /* extra traits */
+    traits_t *traits;
 
     union {
         /* AST_DIGIT */
