@@ -8,6 +8,7 @@ static node_t *ast_new(scan_t *scan, where_t where, ast_t kind) {
     node->kind = kind;
     node->scan = scan;
     node->where = where;
+    node->traits = NULL;
 
     return node;
 }
@@ -139,3 +140,4 @@ node_t *ast_module(scan_t *scan, where_t where, vector_t *values, vector_t *defi
 
     return node;
 }
+

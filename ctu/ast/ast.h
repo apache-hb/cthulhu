@@ -146,7 +146,7 @@ typedef struct node_t {
          */
         vector_t *stmts;
 
-        /* any declaration */
+        /* any named declaration */
         struct {
             /* name of the declaration */
             struct node_t *name;
