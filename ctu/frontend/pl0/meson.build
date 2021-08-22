@@ -1,7 +1,7 @@
 src = [ 
     lex.process('pl0.l'), 
     parse.process('pl0.y'),
-    'scan.c', 'driver.c', 'ast.c', 'sema.c'
+    'scan.c', 'driver.c', 'ast.c'
 ]
 
 libpl0 = library('pl0', src,

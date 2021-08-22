@@ -57,7 +57,7 @@ typedef struct {
      *  "import" for toplevel code
      */
     const char *entry;
-} traits_t;
+} detail_t;
 
 typedef struct node_t {
     ast_t kind;
@@ -66,7 +66,7 @@ typedef struct node_t {
     where_t where;
 
     /* extra traits */
-    traits_t *traits;
+    detail_t *detail;
 
     union {
         /* AST_DIGIT */

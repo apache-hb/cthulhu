@@ -8,7 +8,7 @@ static node_t *ast_new(scan_t *scan, where_t where, ast_t kind) {
     node->kind = kind;
     node->scan = scan;
     node->where = where;
-    node->traits = NULL;
+    node->detail = NULL;
 
     return node;
 }

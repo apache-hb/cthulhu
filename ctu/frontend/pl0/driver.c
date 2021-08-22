@@ -3,7 +3,6 @@
 #include "ctu/util/report.h"
 
 #include "scan.h"
-#include "sema.h"
 
 vector_t *pl0_driver(vector_t *files) {
     size_t len = vector_len(files);
