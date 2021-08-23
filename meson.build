@@ -12,6 +12,8 @@ src = [
     'ctu/ast/interop.c',
     'ctu/ast/ast.c',
 
+    'ctu/sema/sema.c',
+
     'ctu/util/report.c',
     'ctu/util/str.c',
     'ctu/util/util.c'
@@ -29,14 +31,12 @@ generic = declare_dependency(
     dependencies : gmp
 )
 
-windows = build_machine.system() == 'windows'
-
-flex = find_program(windows ? 'win_flex' : 'flex', version : '>=2.6')
-bison = find_program(windows ? 'win_bison' : 'bison', version : '>=3.5')
+flex = find_program('flex', version : '>=2.6')
+bison = find_program('bison', version : '>=3.5')
 
 lex = generator(flex, 
     output : [ '@BASENAME@-flex.c', '@BASENAME@-flex.h' ],
-    arguments : (windows ? [ '--wincompat' ] : []) + [ 
+    arguments : [ 
         '--outfile=@OUTPUT0@', 
         '--header-file=@OUTPUT1@', 
         '@INPUT@' 
@@ -56,124 +56,8 @@ options = [ ]
 
 foreach lang : [ 'c', 'ctu', 'pl0' ] 
     subdir('ctu/frontend'/lang)
-    #subdir('ctu/backend'/lang)
 endforeach
 
 driver = executable('driver', 'ctu/driver/main.c',
     dependencies : options
 )
-
-# windows = build_machine.system() == 'windows'
-
-# flex = find_program(windows ? 'win_flex' : 'flex', version : '>=2.6')
-# bison = find_program(windows ? 'win_bison' : 'bison', version : '>=3.5')
-
-# # create our flex lexer that bison needs
-# lex = custom_target('lex',
-#     command : [ flex ] + (windows ? [ '--wincompat' ] : []) + [ 
-#         '--outfile=@OUTPUT0@', 
-#         '--header-file=@OUTPUT1@', 
-#         '@INPUT@'
-#     ],
-#     input : 'ctu/ast/cthulhu.l',
-#     output : [ 'ctu-flex.c', 'ctu-flex.h' ]
-# )
-
-# # create our bison parser that our ast needs
-# parse = custom_target('parse',
-#     command : [ 
-#         bison, '-d', '@INPUT@', '-Wdeprecated', '-v',
-#         '--output=@OUTPUT0@',
-#         '--defines=@OUTPUT1@'
-#     ],
-#     input : 'ctu/ast/cthulhu.y',
-#     output : [ 'ctu-bison.c', 'ctu-bison.h' ],
-#     depends : [ lex ]
-# )
-
-# src = [
-#     'ctu/util/str.c',
-#     'ctu/util/report.c',
-#     'ctu/util/util.c'
-# ]
-
-# libutil = library('util', src)
-
-# src = [
-#     'ctu/types/type.c'
-# ]
-
-# libtype = library('type', src, link_with : libutil)
-
-# src = [
-#     'ctu/ast/compile.c',
-#     'ctu/ast/scanner.c',
-#     'ctu/ast/ast.c'
-# ]
-
-# libast = library('ast', src, lex, parse,
-#     dependencies : gmp,
-#     link_with : [ libutil, libtype ]
-# )
-
-# src = [
-#     'ctu/sema/sema.c'
-# ]
-
-# libsema = library('sema', src,
-#     link_with : libutil
-# )
-
-# src = [
-#     'ctu/ir/ir.c',
-#     'ctu/ir/match.c',
-#     'ctu/ir/eval.c'
-# ]
-
-# libir = library('ir', src,
-#     link_with : libutil
-# )
-
-# src = [
-#     'ctu/speed/speed.c',
-#     'ctu/speed/dead.c',
-#     'ctu/speed/mem2reg.c',
-#     'ctu/speed/fold.c'
-# ]
-
-# libspeed = library('speed', src,
-#     link_with : libir
-# )
-
-# src = [
-#     'ctu/gen/c99.c',
-#     'ctu/gen/x86.c',
-#     'ctu/gen/gcc.c'
-# ]
-
-# libgen = library('gen', src,
-#     link_with : libir
-# )
-
-# src = [
-#     'ctu/debug/ast.c',
-#     'ctu/debug/ir.c',
-#     'ctu/debug/common.c',
-#     'ctu/debug/type.c'
-# ]
-
-# libdebug = library('debug', src,
-#     link_with : libutil
-# )
-
-# ctu = declare_dependency(
-#     include_directories : '.',
-#     link_with : [ libdebug, libgen, libspeed, libir, libsema, libast ]
-# )
-
-# driver = executable('ctc', 'ctu/main.c',
-#     c_args : [ '-D_CRT_SECURE_NO_WARNINGS=1' ],
-#     link_with : [ libdebug, libgen, libspeed, libir, libsema, libast ]
-# )
-
-# subdir('tests')

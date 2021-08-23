@@ -15,3 +15,4 @@ char *format(const char *fmt, ...);
 char *formatv(const char *fmt, va_list args);
 
 bool startswith(const char *str, const char *prefix);
+bool endswith(const char *str, const char *suffix);

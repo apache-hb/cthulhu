@@ -33,3 +33,13 @@ char *formatv(const char *fmt, va_list args) {
 bool startswith(const char *str, const char *prefix) {
     return strncmp(str, prefix, strlen(prefix)) == 0;
 }
+
+bool endswith(const char *str, const char *suffix) {
+    size_t lenstr = strlen(str);
+    size_t lensuffix = strlen(suffix);
+    if (lensuffix > lenstr) {
+        return false;
+    }
+
+    return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
+}

@@ -1,4 +1,4 @@
-src = [ 'scan.c' ]
+src = [ 'scan.c', 'driver.c' ]
 
 libcc = library('c', src,
     dependencies : generic
