@@ -1,17 +1,8 @@
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
 
-#include "ctu/frontend/pl0/driver.h"
-#include "ctu/frontend/ctu/driver.h"
-
 #include <string.h>
 #include <stdlib.h>
-
-typedef struct {
-    const char *version;
-    const char *name;
-    vector_t*(*driver)(vector_t*);
-} driver_t;
 
 #include "cmd.c"
 
@@ -29,7 +20,7 @@ static driver_t driver;
 static int parse_arg(int index, int argc, char **argv) {
     const char *arg = argv[index];
     
-    if (!startswith(arg, "--")) {
+    if (!startswith(arg, "-")) {
         file_t *fp = ctu_open(arg, "rb");
         vector_push(&sources, fp);
     } else if (MATCH(arg, "-h", "--help")) {
@@ -40,7 +31,7 @@ static int parse_arg(int index, int argc, char **argv) {
         driver = select_driver(NEXT(index, argc, argv));
         return 2;
     } else {
-        report(ERROR, "unknown argument %s", arg);
+        report(WARNING, "unknown argument %s", arg);
     }
 
     return 1;
@@ -69,10 +60,18 @@ int main(int argc, char **argv) {
 
     parse_args(argc, argv);
 
-    pl0_driver(sources);
+    logfmt("selected driver %s", driver.name);
 
-    end_report("PL/0 compilation");
+    if (driver.driver == NULL) {
+        report(ERROR, "driver `%s` is not available", driver.name);
+        end_report("driver check");
+    }
 
+    driver.driver(sources);
+
+    end_report(format("%s compilation", driver.name));
+
+    /* close all source files */
     for (size_t i = 0; i < vector_len(sources); i++) {
         file_t *fp = vector_get(sources, i);
         ctu_close(fp);

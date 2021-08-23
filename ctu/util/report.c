@@ -303,6 +303,13 @@ void assert(const char *fmt, ...) {
     va_end(args);
 }
 
+void logfmt(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    report_add(NOTE, NULL, nowhere, fmt, args);
+    va_end(args);
+}
+
 report_t report(level_t level, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);

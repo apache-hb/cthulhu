@@ -10,6 +10,5 @@ libctu = library('ctu', src,
 
 options += declare_dependency(
     link_with : libctu,
-    include_directories : '.',
-    compile_args : '-DCTU_DRIVER=1'
+    include_directories : '.'
 )

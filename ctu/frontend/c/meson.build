@@ -6,6 +6,5 @@ libcc = library('c', src,
 
 options += declare_dependency(
     link_with : libcc,
-    include_directories : '.',
-    compile_args : '-DC_DRIVER=1'
+    include_directories : '.'
 )

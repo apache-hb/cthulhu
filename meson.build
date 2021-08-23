@@ -1,6 +1,6 @@
 project('ctu', 'c',
     default_options : [
-        'c_std=c11', # flex under msvc requires c11
+        'c_std=gnu11', # flex under msvc requires c11
         'warning_level=2', # bison generates code that warns on gcc at level 3
         'default_library=static',
         'werror=true'
@@ -54,20 +54,10 @@ parse = generator(bison,
 
 options = [ ]
 
-if get_option('c-driver')
-    subdir('ctu/frontend/c')
-    #subdir('ctu/backend/c')
-endif
-
-if get_option('cthulhu-driver')
-    subdir('ctu/frontend/ctu')
-    #subdir('ctu/backend/ctu')
-endif
-
-if get_option('pl0-driver')
-    subdir('ctu/frontend/pl0')
-    #subdir('ctu/backend/pl0')
-endif
+foreach lang : [ 'c', 'ctu', 'pl0' ] 
+    subdir('ctu/frontend'/lang)
+    #subdir('ctu/backend'/lang)
+endforeach
 
 driver = executable('driver', 'ctu/driver/main.c',
     dependencies : options

@@ -1,7 +1,0 @@
-import c;
-
-final num: int = 20;
-
-def get(): int {
-    return c::num;
-}

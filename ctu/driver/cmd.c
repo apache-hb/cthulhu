@@ -1,4 +1,15 @@
+#include "ctu/util/util.h"
+
+#include "ctu/frontend/pl0/driver.h"
+#include "ctu/frontend/ctu/driver.h"
+
 static const char *VERSION = "0.0.1";
+
+typedef struct {
+    const char *version;
+    const char *name;
+    vector_t*(*driver)(vector_t*);
+} driver_t;
 
 static const driver_t PL0 = {
     .version = "0.0.1",
@@ -35,9 +46,9 @@ static driver_t select_driver(const char *lang) {
 }
 
 static driver_t select_name(const char *name) {
-    if (strcmp(name, "ctc") == 0) {
+    if (strstr(name, "ctc") != NULL) {
         return CTU;
-    } else if (strcmp(name, "pl0") == 0) {
+    } else if (strstr(name, "pl0") != NULL) {
         return PL0;
     } else {
         return INVALID;

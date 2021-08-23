@@ -11,6 +11,5 @@ libpl0 = library('pl0', src,
 
 options += declare_dependency(
     link_with : libpl0,
-    include_directories : '.',
-    compile_args : '-DPL0_DRIVER=1'
+    include_directories : '.'
 )
