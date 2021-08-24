@@ -44,6 +44,14 @@ node_t *ast_ident(scan_t *scan, where_t where, char *ident) {
     return node;
 }
 
+node_t *ast_type(scan_t *scan, where_t where, type_t *type) {
+    node_t *node = ast_new(scan, where, AST_TYPE);
+
+    node->builtin = type;
+
+    return node;
+}
+
 node_t *ast_unary(scan_t *scan, where_t where, unary_t unary, node_t *operand) {
     node_t *node = ast_new(scan, where, AST_UNARY);
 

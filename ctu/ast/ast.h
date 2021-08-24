@@ -3,6 +3,7 @@
 #include "scan.h"
 
 #include "ctu/util/util.h"
+#include "ctu/type/type.h"
 
 #include <stdbool.h>
 #include <gmp.h>
@@ -10,6 +11,7 @@
 typedef enum {
     AST_DIGIT,
     AST_IDENT,
+    AST_TYPE,
 
     AST_UNARY,
     AST_BINARY,
@@ -66,6 +68,9 @@ typedef struct node_t {
 
         /* AST_IDENT */
         char *ident;
+
+        /* AST_TYPE */
+        type_t *builtin;
 
         /** 
          * AST_UNARY 
@@ -186,6 +191,7 @@ typedef struct node_t {
 node_t *ast_digit(scan_t *scan, where_t where, mpz_t digit);
 node_t *ast_int(scan_t *scan, where_t where, int digit);
 node_t *ast_ident(scan_t *scan, where_t where, char *ident);
+node_t *ast_type(scan_t *scan, where_t where, type_t *type);
 
 /* expressions */
 node_t *ast_unary(scan_t *scan, where_t where, unary_t unary, node_t *operand);

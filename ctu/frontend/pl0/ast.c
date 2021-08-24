@@ -5,6 +5,12 @@ static const options_t OPTIONS = {
     .order_independent = true
 };
 
+static node_t *pl0_int(void) {
+    type_t *type = type_digit(true, TY_INT);
+    node_t *node = ast_type(NULL, nowhere, type);
+    return node;
+}
+
 node_t *pl0_odd(scan_t *scan, where_t where, node_t *expr) {
     node_t *zero = ast_int(scan, where, 0);
     node_t *one = ast_int(scan, where, 1);
@@ -22,7 +28,7 @@ node_t *pl0_module(scan_t *scan, where_t where, vector_t *consts, vector_t *valu
         node_t *name = ast_ident(scan, body->where, ctu_strdup(scan->path));
         node_t *toplevel = ast_define(body->scan, body->where, name, 
             /* params = */ vector_new(0), 
-            /* result = */ NULL, 
+            /* result = */ pl0_int(), 
             /* body = */ body
         );
 
@@ -45,7 +51,7 @@ node_t *pl0_procedure(scan_t *scan, where_t where, node_t *name, vector_t *local
 
     return ast_define(scan, where, name, 
         /* params = */ vector_new(0), 
-        /* result = */ NULL, 
+        /* result = */ pl0_int(), 
         /* body = */ ast_stmts(scan, where, stmts)
     );
 }
