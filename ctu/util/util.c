@@ -241,7 +241,10 @@ vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) {
     size_t lhs_len = vector_len(lhs);
     size_t rhs_len = vector_len(rhs);
 
-    vector_t *out = vector_new(lhs_len + rhs_len);
+    size_t len = lhs_len + rhs_len;
+
+    vector_t *out = vector_new(len);
+    out->used = len;
 
     for (size_t i = 0; i < lhs_len; i++) {
         vector_set(out, i, vector_get(lhs, i));

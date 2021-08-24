@@ -128,7 +128,7 @@ proclist: procedure { $$ = vector_init($1); }
     | proclist procedure { vector_push(&$1, $2); $$ = $1; }
     ;
 
-procedure: PROCEDURE ident SEMICOLON vars statements SEMICOLON { $$ = ast_define(x, @$, $2, $4, vector_new(0), NULL, $5); }
+procedure: PROCEDURE ident SEMICOLON vars statements SEMICOLON { $$ = pl0_procedure(x, @$, $2, $4, $5); }
     ;
 
 statement: statements { $$ = $1; }

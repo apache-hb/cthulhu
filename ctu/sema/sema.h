@@ -1,5 +1,5 @@
 #pragma once
 
-#include "ctu/ast/ast.h"
+#include "lir.h"
 
-void sema_program(node_t *program);
+lir_t *sema_module(node_t *mod);

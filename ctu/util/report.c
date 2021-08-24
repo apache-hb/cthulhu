@@ -37,11 +37,15 @@ typedef struct {
     /* source and location, if scan is NULL then location is ignored */
     scan_t *scan;
     where_t where;
+
+    /* extra note */
+    char *note;
 } message_t;
 
 /* has an internal error happened */
 /* we track this to exit(99) for fuzzing reasons */
 static bool internal = false;
+static bool fatal = false;
 
 /* the number of error reports to store */
 static size_t reports = 0;
@@ -233,12 +237,20 @@ static void report_part(message_t *message, part_t *part) {
     fprintf(stderr, "%s| " COLOUR_PURPLE "%s\n" COLOUR_RESET, pad, underline);
 }
 
+static void send_note(const char *note) {
+    fprintf(stderr, "%s: %s\n", report_level(NOTE), note);
+}
+
 static bool report_send(message_t *message) {
     report_header(message);
     report_source(message);
 
     for (size_t i = 0; i < vector_len(message->parts); i++) {
         report_part(message, vector_get(message->parts, i));
+    }
+
+    if (message->note) {
+        send_note(message->note);
     }
 
     return message->level <= ERROR;
@@ -249,22 +261,49 @@ void begin_report(size_t limit) {
     messages = ctu_malloc(sizeof(message_t) * limit);
 }
 
-void end_report(const char *name) {
-    bool fatal = false;
+static void message_delete(message_t *message) {
+    for (size_t i = 0; i < vector_len(message->parts); i++) {
+        part_t *part = vector_get(message->parts, i);
+        ctu_free(part->message);
+    }
 
+    vector_delete(message->parts);
+
+    if (message->message) {
+        ctu_free(message->message);
+    }
+
+    if (message->underline) {
+        ctu_free(message->underline);
+    }
+
+    if (message->note) {
+        ctu_free(message->note);
+    }
+}
+
+void end_report(bool quit, const char *name) {
     for (size_t i = 0; i < used; i++) {
         message_t *message = get_message(i);
-        fatal = fatal || report_send(message);
+        fatal |= report_send(message);
+        message_delete(message);
     }
     
+    used = 0;
+
     if (internal) {
         fprintf(stderr, "exiting during %s due to an internal error", name);
         exit(99);
     }
 
     if (fatal) {
-        fprintf(stderr, "exiting during %s due to a fatal error\n", name);
-        exit(1);
+        fprintf(stderr, "fatal error in %s", name);
+        
+        if (quit) {
+            fprintf(stderr, ", exiting\n");
+            exit(1);
+        }
+        fprintf(stderr, "\n");
     }
 }
 
@@ -289,7 +328,8 @@ static report_t report_add(
         .parts = vector_new(1),
         .message = str,
         .scan = scan,
-        .where = where
+        .where = where,
+        .note = NULL
     };
 
     messages[used] = msg;
@@ -331,4 +371,18 @@ void report_append(report_t id, scan_t *scan, where_t where, const char *fmt, ..
 
     message_t *message = get_message(id);
     vector_push(&message->parts, part_new(msg, scan, where));
+}
+
+void report_note(report_t id, const char *fmt, ...) {
+    if (id == INVALID_REPORT) {
+        return;
+    }
+
+    va_list args;
+    va_start(args, fmt);
+    char *msg = formatv(fmt, args);
+    va_end(args);
+
+    message_t *message = get_message(id);
+    message->note = msg;
 }

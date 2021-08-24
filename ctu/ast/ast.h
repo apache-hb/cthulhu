@@ -47,26 +47,18 @@ typedef enum {
 } unary_t;
 
 typedef struct {
-    /** 
-     * the name of the entrypoint or null if this function
-     * isnt an entrypoint. this is platform and target dependant
-     * 
-     * possible (but not all) values could be 
-     *  "main" for C 
-     *  "wWinMain" for C on windows
-     *  "import" for toplevel code
-     */
-    const char *entry;
-} detail_t;
+    /* is lookup case insensitive */
+    bool case_sensitive:1;
+
+    /* are declarations order independent */
+    bool order_independent:1;
+} options_t;
 
 typedef struct node_t {
     ast_t kind;
 
     scan_t *scan;
     where_t where;
-
-    /* extra traits */
-    detail_t *detail;
 
     union {
         /* AST_DIGIT */
@@ -166,12 +158,10 @@ typedef struct node_t {
                  * AST_DEFINE 
                  * 
                  * result name(params...) {
-                 *     locals;
                  *     return body;
                  * }
                  */
                 struct {
-                    vector_t *locals;
                     vector_t *params;
                     struct node_t *result;
                     struct node_t *body;
@@ -182,12 +172,12 @@ typedef struct node_t {
         /** 
          * AST_MODULE 
          * 
-         * values
-         * defines
+         * declarations...
          */
         struct {
-            vector_t *values; /* all values */
-            vector_t *defines; /* all defines */
+            const options_t *options; /* language and module settings */
+
+            vector_t *declarations; /* all declarations */
         };
     };
 } node_t;
@@ -211,8 +201,7 @@ node_t *ast_stmts(scan_t *scan, where_t where, vector_t *stmts);
 /* declarations */
 node_t *ast_value(scan_t *scan, where_t where, node_t *name, node_t *type, node_t *value);
 node_t *ast_define(scan_t *scan, where_t where, node_t *name, 
-    vector_t *locals, vector_t *params, 
-    node_t *result, node_t *body
+    vector_t *params, node_t *result, node_t *body
 );
 
-node_t *ast_module(scan_t *scan, where_t where, vector_t *values, vector_t *defines);
+node_t *ast_module(scan_t *scan, where_t where, const options_t *options, vector_t *declarations);

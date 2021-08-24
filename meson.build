@@ -13,6 +13,7 @@ src = [
     'ctu/ast/ast.c',
 
     'ctu/sema/sema.c',
+    'ctu/sema/lir.c',
 
     'ctu/util/report.c',
     'ctu/util/str.c',

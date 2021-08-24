@@ -21,7 +21,7 @@ typedef enum {
 void begin_report(size_t limit);
 
 /* end a report with a `name` and exit if it contains an error */
-void end_report(const char *name);
+void end_report(bool quit, const char *name);
 
 /* report an internal compiler error */
 void assert(const char *fmt, ...);
@@ -31,3 +31,4 @@ report_t report(level_t level, const char *fmt, ...);
 report_t reportf(level_t level, scan_t *scan, where_t where, const char *fmt, ...);
 
 void report_append(report_t id, scan_t *scan, where_t where, const char *fmt, ...);
+void report_note(report_t id, const char *fmt, ...);

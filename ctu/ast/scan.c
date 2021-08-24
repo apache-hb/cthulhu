@@ -68,7 +68,7 @@ scan_t *scan_file(const char *language, file_t *file) {
     scan->data = fd;
 
     if (!(scan->text = map_file(size, fd))) {
-        end_report("file mapping");
+        end_report(true, "file mapping");
     }
 
     return scan;

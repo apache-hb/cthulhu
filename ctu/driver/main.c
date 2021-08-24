@@ -1,6 +1,8 @@
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
 
+#include "ctu/sema/sema.h"
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -42,7 +44,7 @@ static void parse_args(int argc, char **argv) {
         i += parse_arg(i, argv);
     }
 
-    end_report("commandline parsing");
+    end_report(true, "commandline parsing");
 }
 
 static const driver_t *driver_for(file_t *file) {
@@ -82,10 +84,32 @@ int main(int argc, char **argv) {
             vector_push(&nodes, node);
         }
 
-        end_report(format("compilation of `%s`", fp->path));
+        end_report(false, format("compilation of `%s`", fp->path));
 
         ctu_close(fp);
     }
+
+    end_report(true, "compilation");
+
+    size_t total = vector_len(nodes);
+
+    for (size_t i = 0; i < total; i++) {
+        node_t *node = vector_get(nodes, i);
+        sema_module(node);
+
+        end_report(false, format("semantic analysis of `%s`", node->scan->path));
+    }
+
+    end_report(true, "semantic analysis");
+
+    /*
+    vector_t *programs = vector_new(total);
+
+    for (size_t i = 0; i < total; i++) {
+        node_t *node = vector_get(nodes, i);
+        module_t *mod = emit_program(node);
+        vector_push(&programs, mod);
+    }*/
 
     return 0;
 }

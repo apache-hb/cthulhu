@@ -8,7 +8,6 @@ static node_t *ast_new(scan_t *scan, where_t where, ast_t kind) {
     node->kind = kind;
     node->scan = scan;
     node->where = where;
-    node->detail = NULL;
 
     return node;
 }
@@ -120,11 +119,9 @@ node_t *ast_value(scan_t *scan, where_t where, node_t *name, node_t *type, node_
 }
 
 node_t *ast_define(scan_t *scan, where_t where, node_t *name, 
-    vector_t *locals, vector_t *params, 
-    node_t *result, node_t *body) {
+    vector_t *params, node_t *result, node_t *body) {
     node_t *node = ast_decl(scan, where, AST_DEFINE, name);
 
-    node->locals = locals;
     node->params = params;
     node->result = result;
     node->body = body;
@@ -132,11 +129,11 @@ node_t *ast_define(scan_t *scan, where_t where, node_t *name,
     return node;
 }
 
-node_t *ast_module(scan_t *scan, where_t where, vector_t *values, vector_t *defines) {
+node_t *ast_module(scan_t *scan, where_t where, const options_t *options, vector_t *declarations) {
     node_t *node = ast_new(scan, where, AST_MODULE);
 
-    node->values = values;
-    node->defines = defines;
+    node->options = options;
+    node->declarations = declarations;
 
     return node;
 }
