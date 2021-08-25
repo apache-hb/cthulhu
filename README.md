@@ -16,6 +16,17 @@ ninja -C build test
 ./build/ctc --help
 ```
 
+## Layout
+
+* ctu - source
+  * ast - generic ast
+  * driver - user facing driver and command line
+  * sema - generic semantic analysis
+  * frontend - all parser frontends
+  * backend - all language backends from transpiling
+  * emit - conversion from typed ir to bytecode
+  * util - helpers
+
 ## Overview
 
 * lex + parse with flex and bison
