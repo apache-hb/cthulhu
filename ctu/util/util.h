@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #define MAX(L, R) ((L) > (R) ? (L) : (R)) 
 #define MIN(L, R) ((L) < (R) ? (L) : (R)) 
@@ -33,7 +34,6 @@ void map_delete(map_t *map);
 void *map_get(map_t *map, const char *key);
 void map_set(map_t *map, const char *key, void *value);
 
-
 // vector collection
 
 typedef struct {
@@ -51,3 +51,5 @@ void vector_set(vector_t *vector, size_t index, void *value);
 void *vector_get(const vector_t *vector, size_t index);
 size_t vector_len(const vector_t *vector);
 vector_t *vector_join(const vector_t *lhs, const vector_t *rhs);
+
+vector_t *map_collect(map_t *map, bool(*filter)(void *value));

@@ -136,6 +136,8 @@ map_t *map_new(size_t size) {
     /* clear out the map keys */
     for (size_t i = 0; i < size; i++) {
         map->data[i].key = NULL;
+        map->data[i].value = NULL;
+        map->data[i].next = NULL;
     }
 
     return map;
@@ -177,6 +179,23 @@ void map_set(map_t *map, const char *key, void *value) {
             return;
         }
     }
+}
+
+vector_t *map_collect(map_t *map, bool(*filter)(void *value)) {
+    vector_t *result = vector_new(map->size);
+    
+    for (size_t i = 0; i < map->size; i++) {
+        entry_t *entry = &map->data[i];
+        while (entry && entry->key) {
+            if (filter(entry->value)) {
+                vector_push(&result, entry->value);
+            }
+
+            entry = entry->next;
+        }
+    }
+    
+    return result;
 }
 
 // vector internals

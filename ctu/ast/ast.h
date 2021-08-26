@@ -177,12 +177,12 @@ typedef struct node_t {
         /** 
          * AST_MODULE 
          * 
-         * declarations...
+         * decls...
          */
         struct {
             const options_t *options; /* language and module settings */
 
-            vector_t *declarations; /* all declarations */
+            vector_t *decls; /* all declarations */
         };
     };
 } node_t;
@@ -210,4 +210,4 @@ node_t *ast_define(scan_t *scan, where_t where, node_t *name,
     vector_t *params, node_t *result, node_t *body
 );
 
-node_t *ast_module(scan_t *scan, where_t where, const options_t *options, vector_t *declarations);
+node_t *ast_module(scan_t *scan, where_t where, const options_t *options, vector_t *decls);

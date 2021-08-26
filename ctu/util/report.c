@@ -99,7 +99,7 @@ static char *padding(size_t len) {
 static char *extract_line(scan_t *scan, line_t line) {
     size_t start = 0;
     const char *text = scan->text;
-    while (text[start] && line > 0) {
+    while (text[start] != '\0' && line > 0) {
         char c = text[start++];
         if (c == '\n') {
             line -= 1;
@@ -170,18 +170,8 @@ static size_t longest_line(scan_t *scan, where_t where, vector_t *parts) {
 }
 
 static char *right_align(line_t line, size_t width) {
-    char *fmt = format(" %ld ", line);
-    size_t len = strlen(fmt);
-
-    size_t align = width - len;
-
-    char *str = malloc(align + 1);
-    memset(str, ' ', align);
-    strcpy(str + align, fmt);
-
-    free(fmt);
-
-    return str;
+    char *num = format("%ld", line);
+    return format("%*s", width, num);
 }
 
 static void report_source(message_t *message) {
