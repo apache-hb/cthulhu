@@ -1,0 +1,12 @@
+var x;
+
+procedure hello;
+var x;
+begin
+    x := 1;
+    x := x + 1;
+    ! x
+end
+
+call hello;
+.
