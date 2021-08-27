@@ -16,7 +16,7 @@ static vector_t *sources = NULL;
 #define MATCH(arg, a, b) (startswith(arg, a) || startswith(arg, b))
 #define NEXT(idx, argc, argv) (idx + 1 >= argc ? NULL : argv[idx + 1])
 
-static int parse_arg(int index, char **argv) {
+static int parse_arg(int index, int argc, char **argv) {
     const char *arg = argv[index];
     
     if (!startswith(arg, "-")) {
@@ -26,6 +26,9 @@ static int parse_arg(int index, char **argv) {
         print_help(name);
     } else if (MATCH(arg, "-v", "--version")) {
         print_version();
+    } else if (MATCH(arg, "-src", "--source")) {
+        DRIVER = select_driver(NEXT(index, argc, argv));
+        return 2;
     } else {
         report(WARNING, "unknown argument %s", arg);
     }
@@ -41,24 +44,10 @@ static void parse_args(int argc, char **argv) {
     sources = vector_new(4);
 
     for (int i = 1; i < argc;) {
-        i += parse_arg(i, argv);
+        i += parse_arg(i, argc, argv);
     }
 
     end_report(true, "commandline parsing");
-}
-
-static const driver_t *driver_for(file_t *file) {
-    const char *path = file->path;
-
-    if (endswith(path, ".c")) {
-        return &C;
-    } else if (endswith(path, ".pl0")) {
-        return &PL0;
-    } else if (endswith(path, ".ct")) {
-        return &CTU;
-    } else {
-        return &INVALID;
-    }
 }
 
 int main(int argc, char **argv) {

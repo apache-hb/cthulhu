@@ -36,6 +36,44 @@ static const driver_t INVALID = {
     .driver = NULL
 };
 
+static const driver_t *DRIVER = NULL;
+
+static const driver_t *select_driver(const char *name) {
+    if (name == NULL) {
+        report(ERROR, "No driver specified");
+        return &INVALID;
+    }
+
+    if (strcmp(name, "pl0") == 0) {
+        return &PL0;
+    } else if (strcmp(name, "ctu") == 0) {
+        return &CTU;
+    } else if (strcmp(name, "c") == 0) {
+        return &C;
+    } else {
+        report(ERROR, "Unknown driver: %s", name);
+        return &INVALID;
+    }
+}
+
+static const driver_t *driver_for(file_t *file) {
+    if (DRIVER != NULL) {
+        return DRIVER;
+    }
+
+    const char *path = file->path;
+
+    if (endswith(path, ".c")) {
+        return &C;
+    } else if (endswith(path, ".pl0")) {
+        return &PL0;
+    } else if (endswith(path, ".ct")) {
+        return &CTU;
+    } else {
+        return &INVALID;
+    }
+}
+
 static void print_help(const char *name) {
     printf("Cthulhu Compiler Collection\n");
     printf("Usage: %s [options...] [sources...]\n", name);

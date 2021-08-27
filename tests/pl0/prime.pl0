@@ -24,7 +24,7 @@ begin
     begin
         call isprime;
         if ret = 1 then ! arg;
-        arg := arg + 1;
+        arg := arg + 1
     end
 end;
 

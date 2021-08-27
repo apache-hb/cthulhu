@@ -75,21 +75,45 @@ static lir_t *get_value(sema_t *sema, const char *id) {
     return NULL;
 }
 
+static void report_redefine(sema_t *sema, const char *id, node_t *self, node_t *other) {
+    report_t err = reportf(ERROR, self->scan, self->where, "value `%s` already defined", id);
+    report_append(err, other->scan, other->where, "previously defined here");
+
+    if (is_nocase(sema)) {
+        report_note(err, "%s is case insensitive", self->scan->language);
+    }
+}
+ 
 static void add_value(sema_t *sema, const char *id, lir_t *value) {
     lir_t *other = get_value(sema, id);
     if (other) {
-        node_t *node = other->node;
-        node_t *self = value->node;
-
-        report_t err = reportf(ERROR, self->scan, self->where, "value `%s` already defined", id);
-        report_append(err, node->scan, node->where, "previously defined here");
-
-        if (is_nocase(sema)) {
-            report_note(err, "%s is case insensitive", self->scan->language);
-        }
+        report_redefine(sema, id, value->node, other->node);
     }
     
     map_set(sema->values, id, value);
+}
+
+static lir_t *get_define(sema_t *sema, const char *id) {
+    lir_t *define = map_get(sema->defines, id);
+    if (define) {
+        return define;
+    }
+
+    if (sema->parent != NULL) {
+        return get_define(sema->parent, id);
+    }
+
+    return NULL;
+}
+
+static void add_define(sema_t *sema, const char *id, lir_t *define) {
+    lir_t *other = get_define(sema, id);
+
+    if (other) {
+        report_redefine(sema, id, define->node, other->node);
+    }
+
+    map_set(sema->defines, id, define);
 }
 
 static leaf_t node_leaf(node_t *node) {
@@ -114,9 +138,23 @@ static void declare_decl(sema_t *sema, node_t *decl) {
         add_value(sema, name, lir); 
         break;
 
+    case AST_DEFINE:
+        add_define(sema, name, lir);
+        break;
+
     default:
         assert("unimplemented declare-decl %d", decl->kind);
         break;
+    }
+}
+
+static void declare_all(sema_t *sema, vector_t *decls) {
+    size_t len = vector_len(decls);
+
+    /* forward declare all declarations */
+    for (size_t i = 0; i < len; i++) {
+        node_t *decl = vector_get(decls, i);
+        declare_decl(sema, decl);
     }
 }
 
@@ -129,14 +167,10 @@ lir_t *sema_module(node_t *node) {
     sema_t *sema = sema_new(node->options, NULL);
 
     vector_t *decls = node->decls;
-    size_t len = vector_len(decls);
 
-    /* forward declare all declarations */
-    /* TODO: only do this on languages that wants this */
-    for (size_t i = 0; i < len; i++) {
-        node_t *decl = vector_get(decls, i);
-        declare_decl(sema, decl);
-    }
+    /* first forward declare everything */
+    /* TODO: only for languages that want this */
+    declare_all(sema, decls);
 
     sema_delete(sema);
 

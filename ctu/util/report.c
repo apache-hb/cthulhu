@@ -249,7 +249,6 @@ static bool report_send(message_t *message) {
 
 void begin_report(size_t limit) {
     reports = limit;
-    self = false;
     messages = ctu_malloc(sizeof(message_t) * limit);
 }
 
@@ -284,8 +283,6 @@ void end_report(bool quit, const char *name) {
         message_delete(message);
     }
     
-    used = 0;
-
     if (internal) {
         fprintf(stderr, "exiting during %s due to an internal error\n", name);
         exit(99);
@@ -299,6 +296,9 @@ void end_report(bool quit, const char *name) {
         fprintf(stderr, "fatal error in %s, exiting\n", name);
         exit(1);
     }
+
+    self = false;
+    used = 0;
 }
 
 static report_t report_add(
