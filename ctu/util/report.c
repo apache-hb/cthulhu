@@ -46,6 +46,7 @@ typedef struct {
 /* we track this to exit(99) for fuzzing reasons */
 static bool internal = false;
 static bool fatal = false;
+static bool self = false;
 
 /* the number of error reports to store */
 static size_t reports = 0;
@@ -248,6 +249,7 @@ static bool report_send(message_t *message) {
 
 void begin_report(size_t limit) {
     reports = limit;
+    self = false;
     messages = ctu_malloc(sizeof(message_t) * limit);
 }
 
@@ -275,25 +277,27 @@ static void message_delete(message_t *message) {
 void end_report(bool quit, const char *name) {
     for (size_t i = 0; i < used; i++) {
         message_t *message = get_message(i);
-        fatal |= report_send(message);
+        if (report_send(message)) {
+            self = true;
+            fatal = true;
+        }
         message_delete(message);
     }
     
     used = 0;
 
     if (internal) {
-        fprintf(stderr, "exiting during %s due to an internal error", name);
+        fprintf(stderr, "exiting during %s due to an internal error\n", name);
         exit(99);
     }
 
-    if (fatal) {
-        fprintf(stderr, "fatal error in %s", name);
-        
-        if (quit) {
-            fprintf(stderr, ", exiting\n");
-            exit(1);
-        }
-        fprintf(stderr, "\n");
+    if (self && !quit) {
+        fprintf(stderr, "fatal error in %s\n", name);
+    }
+
+    if (fatal && quit) {
+        fprintf(stderr, "fatal error in %s, exiting\n", name);
+        exit(1);
     }
 }
 

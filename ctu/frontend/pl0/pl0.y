@@ -35,7 +35,7 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
     NUMBER "number"
 
 %type<node>
-    ident number factor term expr
+    ident number factor term expr math
     unary condition
     block init procedure name
     statement statements toplevel
@@ -83,6 +83,8 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
     WHILE "while"
     DO "do"
     CALL "call"
+
+    PRINT "!"
 
 %start program
 
@@ -136,6 +138,7 @@ statement: statements { $$ = $1; }
     | ident ASSIGN expr { $$ = ast_assign(x, @$, $1, $3); }
     | IF condition THEN statement { $$ = ast_branch(x, @$, $2, $4, NULL); }
     | WHILE condition DO statement { $$ = ast_while(x, @$, $2, $4); }
+    | PRINT expr { $$ = pl0_print(x, @$, $2); }
     ;
 
 statements: START stmtlist END { $$ = ast_stmts(x, @$, $2); }
@@ -155,7 +158,12 @@ term: factor { $$ = $1; }
     | factor DIV term { $$ = ast_binary(x, @$, BINARY_DIV, $1, $3); }
     ;
 
-unary: term { $$ = $1; }
+math: term { $$ = $1; }
+    | term ADD math { $$ = ast_binary(x, @$, BINARY_ADD, $1, $3); }
+    | term SUB math { $$ = ast_binary(x, @$, BINARY_SUB, $1, $3); }
+    ;
+
+unary: math { $$ = $1; }
     | SUB unary { $$ = ast_unary(x, @$, UNARY_NEG, $2); }
     | ADD unary { $$ = ast_unary(x, @$, UNARY_ABS, $2); }
     ;

@@ -60,6 +60,8 @@
 "*" { return MUL; }
 "/" { return DIV; }
 
+"!" { return PRINT; }
+
 . { reportf(ERROR, yyextra, *yylloc, "unknown character %s", yytext); }
 
 %%

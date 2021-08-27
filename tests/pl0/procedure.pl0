@@ -4,4 +4,6 @@ procedure set;
 begin
     x := 25
 end;
+
+call set
 .

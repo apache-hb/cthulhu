@@ -20,6 +20,14 @@ node_t *pl0_odd(scan_t *scan, where_t where, node_t *expr) {
     return cmp;
 }
 
+node_t *pl0_print(scan_t *scan, where_t where, node_t *expr) {
+    // TODO: needs extern functions at least
+    (void)scan;
+    (void)where;
+    (void)expr;
+    return NULL;
+}
+
 node_t *pl0_module(scan_t *scan, where_t where, vector_t *consts, vector_t *values, vector_t *procs, node_t *body) {
     vector_t *vars = vector_join(consts, values);
     
