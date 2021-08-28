@@ -108,7 +108,7 @@ inits: init { $$ = vector_init($1); }
     | inits COMMA init { vector_push(&$1, $3); $$ = $1; }
     ;
 
-init: ident EQUALS number { $$ = ast_value(x, @$, $1, NULL, $3); }
+init: ident EQUALS number { $$ = pl0_value(x, @$, $1, $3); }
     ;
 
 vars: %empty { $$ = vector_new(0); }
@@ -119,7 +119,7 @@ names: name { $$ = vector_init($1); }
     | names COMMA name { vector_push(&$1, $3); $$ = $1; }
     ;
 
-name: ident { $$ = ast_value(x, @$, $1, NULL, NULL); }
+name: ident { $$ = pl0_value(x, @$, $1, NULL); }
     ;
 
 procedures: %empty { $$ = vector_new(0); }

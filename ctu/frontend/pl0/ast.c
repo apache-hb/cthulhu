@@ -28,6 +28,11 @@ node_t *pl0_print(scan_t *scan, where_t where, node_t *expr) {
     return NULL;
 }
 
+node_t *pl0_value(scan_t *scan, where_t where, node_t *name, node_t *expr) {
+    node_t *type = pl0_int();
+    return ast_value(scan, where, name, type, expr);
+}
+
 node_t *pl0_module(scan_t *scan, where_t where, vector_t *consts, vector_t *values, vector_t *procs, node_t *body) {
     vector_t *vars = vector_join(consts, values);
     

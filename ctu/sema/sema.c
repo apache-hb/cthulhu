@@ -152,12 +152,47 @@ static void declare_decl(sema_t *sema, node_t *decl) {
     }
 }
 
-static type_t *compile_value(sema_t *sema, const char *id, lir_t *value) {
+static type_t *resolve_type(sema_t *sema, node_t *type) {
+    (void)sema;
+    switch (type->kind) {
+    case AST_TYPE: return type->builtin;
 
+    default: 
+        assert("resolve-type unimplemented %s", type->kind);
+        return NULL;
+    }
+}
+
+static type_t *compile_value(sema_t *sema, const char *id, lir_t *value) {
+    (void)id;
+
+    node_t *node = value->node;
+    type_t *type = NULL;
+
+    if (node->type) {
+        type = resolve_type(sema, node->type);
+    }
+
+    printf("value %s: %s\n", id, type ? type_format(type) : "<>");
+
+    return type;
 }
 
 static type_t *compile_define(sema_t *sema, const char *id, lir_t *define) {
+    (void)sema;
+    (void)id;
+    (void)define;
+    return NULL;
+}
 
+static void apply_value(void *user, const char *id, void *value) {
+    lir_t *lir = value;
+    compile_value(user, id, lir);
+}
+
+static void apply_define(void *user, const char *id, void *define) {
+    lir_t *lir = define;
+    compile_define(user, id, lir);
 }
 
 static void declare_all(sema_t *sema, vector_t *decls) {
@@ -169,8 +204,8 @@ static void declare_all(sema_t *sema, vector_t *decls) {
         declare_decl(sema, decl);
     }
 
-    map_apply(sema->values, sema, (map_apply_t)compile_value);
-    map_apply(sema->defines, sema, (map_apply_t)compile_define);
+    map_apply(sema->values, sema, apply_value);
+    map_apply(sema->defines, sema, apply_define);
 }
 
 static void compile_all(sema_t *sema, vector_t *decls) {
