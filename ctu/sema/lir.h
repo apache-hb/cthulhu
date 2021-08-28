@@ -54,9 +54,7 @@ typedef struct lir_t {
                  * a function
                  */
                 struct {
-                    vector_t *params;
-                    type_t *result;
-                    struct lir_t *body;
+                    vector_t *locals;
                 };
             };
         };

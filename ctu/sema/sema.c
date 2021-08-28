@@ -42,6 +42,10 @@ static bool is_nocase(sema_t *sema) {
     return !sema->options->case_sensitive;
 }
 
+static bool is_ordered(sema_t *sema) {
+    return !sema->options->order_independent;
+}
+
 static const char *normalize(sema_t *sema, const char *name) {
     if (is_nocase(sema)) {
         char *out = ctu_strdup(name);
@@ -148,6 +152,14 @@ static void declare_decl(sema_t *sema, node_t *decl) {
     }
 }
 
+static type_t *compile_value(sema_t *sema, const char *id, lir_t *value) {
+
+}
+
+static type_t *compile_define(sema_t *sema, const char *id, lir_t *define) {
+
+}
+
 static void declare_all(sema_t *sema, vector_t *decls) {
     size_t len = vector_len(decls);
 
@@ -156,6 +168,14 @@ static void declare_all(sema_t *sema, vector_t *decls) {
         node_t *decl = vector_get(decls, i);
         declare_decl(sema, decl);
     }
+
+    map_apply(sema->values, sema, (map_apply_t)compile_value);
+    map_apply(sema->defines, sema, (map_apply_t)compile_define);
+}
+
+static void compile_all(sema_t *sema, vector_t *decls) {
+    (void)sema;
+    (void)decls;
 }
 
 lir_t *sema_module(node_t *node) {
@@ -168,9 +188,15 @@ lir_t *sema_module(node_t *node) {
 
     vector_t *decls = node->decls;
 
-    /* first forward declare everything */
-    /* TODO: only for languages that want this */
-    declare_all(sema, decls);
+    /** 
+     * either forward everything and compile for languages like pl0
+     * or compile everything in order for languages like C
+     */
+    if (is_ordered(sema)) {
+        compile_all(sema, decls);
+    } else {
+        declare_all(sema, decls);
+    }
 
     sema_delete(sema);
 

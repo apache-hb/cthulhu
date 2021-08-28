@@ -29,10 +29,13 @@ typedef struct {
     entry_t data[];
 } map_t;
 
+typedef void(*map_apply_t)(void *user, const char *key, void *value);
+
 map_t *map_new(size_t size);
 void map_delete(map_t *map);
 void *map_get(map_t *map, const char *key);
 void map_set(map_t *map, const char *key, void *value);
+void map_apply(map_t *map, void *user, map_apply_t func);
 
 // vector collection
 

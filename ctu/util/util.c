@@ -181,6 +181,16 @@ void map_set(map_t *map, const char *key, void *value) {
     }
 }
 
+void map_apply(map_t *map, void *user, map_apply_t func) {
+    for (size_t i = 0; i < map->size; i++) {
+        entry_t *entry = &map->data[i];
+        while (entry && entry->key) {
+            func(user, entry->key, entry->value);
+            entry = entry->next;
+        }
+    }
+}
+
 vector_t *map_collect(map_t *map, bool(*filter)(void *value)) {
     vector_t *result = vector_new(map->size);
     
