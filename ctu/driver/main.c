@@ -2,6 +2,7 @@
 #include "ctu/util/str.h"
 
 #include "ctu/sema/sema.h"
+#include "ctu/emit/emit.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -84,21 +85,20 @@ int main(int argc, char **argv) {
 
     for (size_t i = 0; i < total; i++) {
         node_t *node = vector_get(nodes, i);
-        sema_module(node);
+        lir_t *lir = sema_module(node);
+
+        vector_set(nodes, i, lir);
 
         end_report(false, format("semantic analysis of `%s`", node->scan->path));
     }
 
     end_report(true, "semantic analysis");
 
-    /*
-    vector_t *programs = vector_new(total);
-
     for (size_t i = 0; i < total; i++) {
-        node_t *node = vector_get(nodes, i);
-        module_t *mod = emit_program(node);
-        vector_push(&programs, mod);
-    }*/
+        lir_t *lir = vector_get(nodes, i);
+
+        emit_c(stdout, lir);
+    }
 
     return 0;
 }

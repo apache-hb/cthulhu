@@ -163,43 +163,34 @@ static type_t *resolve_type(sema_t *sema, node_t *type) {
     }
 }
 
-static type_t *resolve_digit(node_t *expr) {
-    (void)expr; /* TODO: properly resolve ints */
-    return type_digit(true, TY_INT);
+static lir_t *compile_digit(node_t *digit) {
+    return lir_digit(digit, digit->digit);
 }
 
-static type_t *resolve_expr(sema_t *sema, node_t *expr) {
+static lir_t *compile_expr(sema_t *sema, node_t *expr) {
     (void)sema;
     switch (expr->kind) {
-    case AST_DIGIT: return resolve_digit(expr);
-
-    default:
-        assert("resolve-expr unimplemented %d", expr->kind);
-        return NULL;
+    case AST_DIGIT: return compile_digit(expr);
+    default: return NULL;
     }
 }
 
-static type_t *compile_value(sema_t *sema, const char *id, lir_t *value) {
+static void compile_value(sema_t *sema, const char *id, lir_t *value) {
+    value->name = id;
+    
     node_t *node = value->node;
     type_t *type = NULL;
-    type_t *init = NULL;
+    lir_t *init = NULL;
 
     if (node->type) {
         type = resolve_type(sema, node->type);
     }
 
     if (node->value) {
-        init = resolve_expr(sema, node->value);
+        init = compile_expr(sema, node->value);
     }
 
-    if (type && init) {
-        /* TODO: conversion */
-        type = init;
-    }
-
-    printf("value %s: %s\n", id, type ? type_format(type) : "<>");
-
-    return type;
+    lir_value(value, type, init);
 }
 
 static type_t *compile_define(sema_t *sema, const char *id, lir_t *define) {
@@ -210,9 +201,7 @@ static type_t *compile_define(sema_t *sema, const char *id, lir_t *define) {
 }
 
 static void apply_value(void *user, const char *id, void *value) {
-    lir_t *lir = value;
-    type_t *type = compile_value(user, id, lir);
-    lir->type = type;
+    compile_value(user, id, value);
 }
 
 static void apply_define(void *user, const char *id, void *define) {
@@ -238,6 +227,16 @@ static void compile_all(sema_t *sema, vector_t *decls) {
     (void)decls;
 }
 
+static bool yes(void *value) {
+    return value != NULL;
+}
+
+static lir_t *build_module(sema_t *sema, node_t *node) {
+    vector_t *vars = map_collect(sema->values, yes);
+    vector_t *defs = map_collect(sema->defines, yes);
+    return lir_module(node, vars, defs);
+}
+
 lir_t *sema_module(node_t *node) {
     if (node->kind != AST_MODULE) {
         assert("sema-module only works on modules");
@@ -258,7 +257,9 @@ lir_t *sema_module(node_t *node) {
         declare_all(sema, decls);
     }
 
+    lir_t *mod = build_module(sema, node);
+
     sema_delete(sema);
 
-    return NULL;
+    return mod;
 }

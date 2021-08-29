@@ -14,6 +14,8 @@ src = [
 
     'ctu/type/type.c',
 
+    'ctu/emit/emit.c',
+
     'ctu/sema/sema.c',
     'ctu/sema/lir.c',
     

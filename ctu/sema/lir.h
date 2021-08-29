@@ -5,6 +5,9 @@
 typedef enum {
     LIR_NAME,
     
+    /* integer literal */
+    LIR_DIGIT,
+
     /* forward declaration */
     LIR_EMPTY,
 
@@ -32,6 +35,13 @@ typedef struct lir_t {
          * will read or write to.
          */
         struct lir_t *id;
+
+        /**
+         * LIR_DIGIT
+         * 
+         * integer literal
+         */
+        mpz_t digit;
 
         struct {
             const char *name;
@@ -75,3 +85,8 @@ typedef struct lir_t {
 } lir_t;
 
 lir_t *lir_declare(node_t *node, const char *name, leaf_t expected);
+lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs);
+
+lir_t *lir_digit(node_t *node, mpz_t digit);
+
+void lir_value(lir_t *dst, type_t *type, lir_t *init);
