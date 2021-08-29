@@ -21,6 +21,9 @@ typedef struct lir_t {
     /* the node that this ir originated from */
     node_t *node;
 
+    /* the type this node resolved to */
+    type_t *type;
+
     union {
         /** 
          * LIR_NAME 

@@ -158,19 +158,43 @@ static type_t *resolve_type(sema_t *sema, node_t *type) {
     case AST_TYPE: return type->builtin;
 
     default: 
-        assert("resolve-type unimplemented %s", type->kind);
+        assert("resolve-type unimplemented %d", type->kind);
+        return NULL;
+    }
+}
+
+static type_t *resolve_digit(node_t *expr) {
+    (void)expr; /* TODO: properly resolve ints */
+    return type_digit(true, TY_INT);
+}
+
+static type_t *resolve_expr(sema_t *sema, node_t *expr) {
+    (void)sema;
+    switch (expr->kind) {
+    case AST_DIGIT: return resolve_digit(expr);
+
+    default:
+        assert("resolve-expr unimplemented %d", expr->kind);
         return NULL;
     }
 }
 
 static type_t *compile_value(sema_t *sema, const char *id, lir_t *value) {
-    (void)id;
-
     node_t *node = value->node;
     type_t *type = NULL;
+    type_t *init = NULL;
 
     if (node->type) {
         type = resolve_type(sema, node->type);
+    }
+
+    if (node->value) {
+        init = resolve_expr(sema, node->value);
+    }
+
+    if (type && init) {
+        /* TODO: conversion */
+        type = init;
     }
 
     printf("value %s: %s\n", id, type ? type_format(type) : "<>");
@@ -187,7 +211,8 @@ static type_t *compile_define(sema_t *sema, const char *id, lir_t *define) {
 
 static void apply_value(void *user, const char *id, void *value) {
     lir_t *lir = value;
-    compile_value(user, id, lir);
+    type_t *type = compile_value(user, id, lir);
+    lir->type = type;
 }
 
 static void apply_define(void *user, const char *id, void *define) {
