@@ -152,10 +152,24 @@ static void declare_decl(sema_t *sema, node_t *decl) {
     }
 }
 
+static type_t *resolve_typename(sema_t *sema, node_t *it) {
+    node_t *ident = it->id;
+    const char *name = normalize(sema, ident->ident);
+    
+    map_t *builtins = sema->options->types;
+    type_t *builtin = map_get(builtins, name);
+    if (builtin) {
+        return builtin;
+    }
+
+    reportf(ERROR, ident->scan, ident->where, "failed to resolve type `%s`", name);
+    return NULL;
+}
+
 static type_t *resolve_type(sema_t *sema, node_t *type) {
-    (void)sema;
     switch (type->kind) {
     case AST_TYPE: return type->builtin;
+    case AST_TYPENAME: return resolve_typename(sema, type);
 
     default: 
         assert("resolve-type unimplemented %d", type->kind);
@@ -169,10 +183,25 @@ static lir_t *compile_digit(node_t *digit) {
     return lir;
 }
 
+static lir_t *compile_ident(sema_t *sema, node_t *ident) {
+    lir_t *value = get_value(sema, ident->ident);
+    if (value) {
+        return value;
+    }
+
+    lir_t *define = get_define(sema, ident->ident);
+    if (define) {
+        return define;
+    }
+
+    reportf(ERROR, ident->scan, ident->where, "undefined value `%s`", ident->ident);
+    return lir_poison(ident, ctu_strdup("unresolved expression"));
+}
+
 static lir_t *compile_expr(sema_t *sema, node_t *expr) {
-    (void)sema;
     switch (expr->kind) {
     case AST_DIGIT: return compile_digit(expr);
+    case AST_IDENT: return compile_ident(sema, expr);
     default: return NULL;
     }
 }

@@ -146,3 +146,10 @@ node_t *ast_module(scan_t *scan, where_t where, const options_t *options, vector
     return node;
 }
 
+node_t *ast_typename(scan_t *scan, where_t where, node_t *id) {
+    node_t *node = ast_new(scan, where, AST_TYPENAME);
+
+    node->id = id;
+
+    return node;
+}

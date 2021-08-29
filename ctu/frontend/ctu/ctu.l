@@ -30,6 +30,7 @@
 
 ";" { return SEMI; }
 "=" { return ASSIGN; }
+":" { return COLON; }
 
 . { reportf(ERROR, yyextra, *yylloc, "unknown character %s", yytext); }
 

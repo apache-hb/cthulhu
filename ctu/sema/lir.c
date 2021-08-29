@@ -49,6 +49,14 @@ void lir_value(lir_t *dst, type_t *type, lir_t *init) {
     dst->init = init;
 }
 
+lir_t *lir_poison(node_t *node, char *msg) {
+    lir_t *lir = lir_new(node, LIR_POISON);
+
+    lir->msg = msg;
+
+    return lir;
+}
+
 void lir_resolve(lir_t *lir, type_t *type) {
     lir->type = type;
 }

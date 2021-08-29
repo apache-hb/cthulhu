@@ -13,6 +13,9 @@ typedef enum {
     AST_IDENT,
     AST_TYPE,
 
+    AST_TYPENAME,
+    AST_POINTER,
+
     AST_UNARY,
     AST_BINARY,
     AST_CALL,
@@ -54,6 +57,9 @@ typedef struct {
 
     /* are declarations order independent */
     bool order_independent:1;
+
+    /* all builtin types */
+    map_t *types;
 } options_t;
 
 typedef struct node_t {
@@ -102,6 +108,11 @@ typedef struct node_t {
             struct node_t *call;
             vector_t *args;
         };
+
+        /**
+         * AST_TYPENAME
+         */
+        struct node_t *id;
 
         /**
          * AST_ASSIGN
@@ -197,6 +208,9 @@ node_t *ast_type(scan_t *scan, where_t where, type_t *type);
 node_t *ast_unary(scan_t *scan, where_t where, unary_t unary, node_t *operand);
 node_t *ast_binary(scan_t *scan, where_t where, binary_t binary, node_t *lhs, node_t *rhs);
 node_t *ast_call(scan_t *scan, where_t where, node_t *call, vector_t *args);
+
+/* types */
+node_t *ast_typename(scan_t *scan, where_t where, node_t *id);
 
 /* statements */
 node_t *ast_assign(scan_t *scan, where_t where, node_t *dst, node_t *src);

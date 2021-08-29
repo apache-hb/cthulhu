@@ -1,9 +1,12 @@
 #include "ast.h"
 
-static const options_t OPTIONS = {
-    .case_sensitive = false,
-    .order_independent = true
-};
+static options_t *pl0_options(void) {
+    options_t *opts = ctu_malloc(sizeof(options_t));
+    opts->case_sensitive = false;
+    opts->order_independent = true;
+    opts->types = map_new(0);
+    return opts;
+}
 
 static node_t *pl0_int(void) {
     type_t *type = type_digit(true, TY_INT);
@@ -56,7 +59,7 @@ node_t *pl0_module(scan_t *scan, where_t where, vector_t *consts, vector_t *valu
     vector_delete(consts);
     vector_delete(values);
 
-    return ast_module(scan, where, &OPTIONS, decls);
+    return ast_module(scan, where, pl0_options(), decls);
 }
 
 node_t *pl0_procedure(scan_t *scan, where_t where, node_t *name, vector_t *locals, node_t *body) {

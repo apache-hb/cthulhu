@@ -14,7 +14,9 @@ typedef enum {
     LIR_VALUE,
     LIR_DEFINE,
 
-    LIR_MODULE
+    LIR_MODULE,
+
+    LIR_POISON
 } leaf_t;
 
 /* lowered intermediate representation */
@@ -35,6 +37,12 @@ typedef struct lir_t {
          * will read or write to.
          */
         struct lir_t *id;
+
+        /**
+         * LIR_POISON
+         * 
+         */
+        char *msg;
 
         /**
          * LIR_DIGIT
@@ -88,6 +96,8 @@ lir_t *lir_declare(node_t *node, const char *name, leaf_t expected);
 lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs);
 
 lir_t *lir_digit(node_t *node, mpz_t digit);
+
+lir_t *lir_poison(node_t *node, char *msg);
 
 void lir_value(lir_t *dst, type_t *type, lir_t *init);
 

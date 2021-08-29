@@ -38,11 +38,12 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     VAR "`var`"
     SEMI "`;`"
     ASSIGN "`=`"
+    COLON "`:`"
     END 0 
 
 %type<node>
     ident digit value decl
-    expr
+    expr type primary
 
 %type<vector>
     unit
@@ -62,9 +63,17 @@ decl: value { $$ = $1; }
     ;
 
 value: VAR ident ASSIGN expr SEMI { $$ = ast_value(x, @$, $2, NULL, $4); }
+    | VAR ident COLON type SEMI { $$ = ast_value(x, @$, $2, $4, NULL); }
     ;
 
-expr: digit { $$ = $1; }
+type: ident { $$ = ast_typename(x, @$, $1); }
+    ;
+
+primary: digit { $$ = $1; }
+    | ident { $$ = $1; }
+    ;
+
+expr: primary { $$ = $1; }
     ;
 
 ident: IDENT { $$ = ast_ident(x, @$, $1); }
