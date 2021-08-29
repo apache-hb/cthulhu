@@ -16,10 +16,20 @@
 
 [ \r\n\t] ;
 
+"var" { return VAR; }
+
 [a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);
     return IDENT;
 }
+
+[0-9]+ {
+    mpz_init_set_str(yylval->digit, yytext, 10);
+    return DIGIT;
+}
+
+";" { return SEMI; }
+"=" { return ASSIGN; }
 
 . { reportf(ERROR, yyextra, *yylloc, "unknown character %s", yytext); }
 

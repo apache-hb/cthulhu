@@ -48,3 +48,11 @@ void lir_value(lir_t *dst, type_t *type, lir_t *init) {
     dst->type = type;
     dst->init = init;
 }
+
+void lir_resolve(lir_t *lir, type_t *type) {
+    lir->type = type;
+}
+
+type_t *lir_resolved(lir_t *lir) {
+    return lir->type;
+}

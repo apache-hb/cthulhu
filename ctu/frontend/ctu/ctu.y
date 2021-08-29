@@ -22,28 +22,55 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %union {
     node_t *node;
+    vector_t *vector;
 
     char *ident;
-    mpz_t number;
+    mpz_t digit;
 }
 
 %token<ident>
     IDENT "identifier"
 
+%token<digit>
+    DIGIT "integer literal"
+
 %token
+    VAR "`var`"
+    SEMI "`;`"
+    ASSIGN "`=`"
     END 0 
 
 %type<node>
+    ident digit value decl
+    expr
+
+%type<vector>
     unit
 
 %start program
 
 %%
 
-program: unit END { scan_export(x, $1); }
+program: unit END { scan_export(x, ctu_module(x, @$, $1)); }
     ;
 
-unit: %empty { $$ = NULL; }
+unit: decl { $$ = vector_init($1); }
+    | unit decl { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+decl: value { $$ = $1; }
+    ;
+
+value: VAR ident ASSIGN expr SEMI { $$ = ast_value(x, @$, $2, NULL, $4); }
+    ;
+
+expr: digit { $$ = $1; }
+    ;
+
+ident: IDENT { $$ = ast_ident(x, @$, $1); }
+    ;
+
+digit: DIGIT { $$ = ast_digit(x, @$, $1); }
     ;
 
 %%

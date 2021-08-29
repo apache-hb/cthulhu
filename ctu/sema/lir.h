@@ -90,3 +90,6 @@ lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs);
 lir_t *lir_digit(node_t *node, mpz_t digit);
 
 void lir_value(lir_t *dst, type_t *type, lir_t *init);
+
+void lir_resolve(lir_t *dst, type_t *type);
+type_t *lir_resolved(lir_t *lir);

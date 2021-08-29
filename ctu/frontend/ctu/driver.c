@@ -1,6 +1,7 @@
 #include "driver.h"
 
+#include "scan.h"
+
 node_t *ctu_driver(file_t *file) {
-    (void)file;
-    return NULL;
+    return ctu_compile(file);
 }

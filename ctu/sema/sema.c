@@ -164,7 +164,9 @@ static type_t *resolve_type(sema_t *sema, node_t *type) {
 }
 
 static lir_t *compile_digit(node_t *digit) {
-    return lir_digit(digit, digit->digit);
+    lir_t *lir = lir_digit(digit, digit->digit);
+    lir_resolve(lir, type_digit(true, TY_INT));
+    return lir;
 }
 
 static lir_t *compile_expr(sema_t *sema, node_t *expr) {
@@ -188,6 +190,10 @@ static void compile_value(sema_t *sema, const char *id, lir_t *value) {
 
     if (node->value) {
         init = compile_expr(sema, node->value);
+    }
+
+    if (type == NULL) {
+        type = lir_resolved(init);
     }
 
     lir_value(value, type, init);
