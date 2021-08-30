@@ -32,7 +32,7 @@ typedef struct lir_t {
          * LIR_POISON
          * 
          */
-        char *msg;
+        const char *msg;
 
         /**
          * LIR_DIGIT
@@ -50,7 +50,10 @@ typedef struct lir_t {
                  * 
                  * a forward declared decl and the type its going to be
                  */
-                leaf_t expected;
+                struct {
+                    leaf_t expected;
+                    struct sema_t *sema;
+                };
 
                 /**
                  * LIR_VALUE
@@ -82,14 +85,17 @@ typedef struct lir_t {
     };
 } lir_t;
 
-lir_t *lir_declare(node_t *node, const char *name, leaf_t expected);
+lir_t *lir_declare(node_t *node, const char *name, leaf_t expected, struct sema_t *sema);
 lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs);
 
 lir_t *lir_digit(node_t *node, mpz_t digit);
 
-lir_t *lir_poison(node_t *node, char *msg);
+lir_t *lir_poison(node_t *node, const char *msg);
 
 void lir_value(lir_t *dst, type_t *type, lir_t *init);
+void lir_begin(lir_t *dst, leaf_t leaf);
+bool lir_ok(lir_t *lir);
+bool lir_is(lir_t *lir, leaf_t leaf);
 
 void lir_resolve(lir_t *dst, type_t *type);
 type_t *lir_resolved(lir_t *lir);

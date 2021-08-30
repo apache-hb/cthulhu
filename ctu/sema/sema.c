@@ -66,17 +66,17 @@ static const char *normalize(sema_t *sema, const char *name) {
     return name;
 }
 
-static lir_t *get_value(sema_t *sema, const char *id) {
+static lir_t *get_value(sema_t *sema, node_t *node, const char *id) {
     lir_t *value = map_get(sema->values, id);
     if (value) {
         return value;
     }
 
     if (sema->parent != NULL) {
-        return get_value(sema->parent, id);
+        return get_value(sema->parent, node, id);
     }
 
-    return NULL;
+    return lir_poison(node, "unresolved value");
 }
 
 static void report_redefine(sema_t *sema, const char *id, node_t *self, node_t *other) {
@@ -87,10 +87,10 @@ static void report_redefine(sema_t *sema, const char *id, node_t *self, node_t *
         report_note(err, "%s is case insensitive", self->scan->language);
     }
 }
- 
+
 static void add_value(sema_t *sema, const char *id, lir_t *value) {
-    lir_t *other = get_value(sema, id);
-    if (other) {
+    lir_t *other = get_value(sema, value->node, id);
+    if (lir_ok(other)) {
         report_redefine(sema, id, value->node, other->node);
     }
     
@@ -113,7 +113,7 @@ static lir_t *get_define(sema_t *sema, const char *id) {
 static void add_define(sema_t *sema, const char *id, lir_t *define) {
     lir_t *other = get_define(sema, id);
 
-    if (other) {
+    if (lir_ok(other)) {
         report_redefine(sema, id, define->node, other->node);
     }
 
@@ -135,7 +135,7 @@ static void declare_decl(sema_t *sema, node_t *decl) {
     leaf_t leaf = node_leaf(decl);
     const char *name = normalize(sema, decl->name->ident);
 
-    lir_t *lir = lir_declare(decl, name, leaf);
+    lir_t *lir = lir_declare(decl, name, leaf, sema);
 
     switch (decl->kind) {
     case AST_VALUE: 
@@ -183,10 +183,26 @@ static lir_t *compile_digit(node_t *digit) {
     return lir;
 }
 
+static lir_t *compile_value(sema_t *sema, lir_t *value);
+
+static lir_t *build_value(lir_t *lir) {
+    if (!lir_is(lir, LIR_EMPTY)) {
+        if (lir->type == NULL) {
+            node_t *node = lir->node;
+            reportf(ERROR, node->scan, node->where, "recursive resolution");
+            return lir_poison(node, "recursive resolution");
+        }
+        
+        return lir;
+    }
+
+    return compile_value(lir->sema, lir);
+}
+
 static lir_t *compile_ident(sema_t *sema, node_t *ident) {
-    lir_t *value = get_value(sema, ident->ident);
+    lir_t *value = get_value(sema, ident, ident->ident);
     if (value) {
-        return value;
+        return build_value(value);
     }
 
     lir_t *define = get_define(sema, ident->ident);
@@ -206,9 +222,9 @@ static lir_t *compile_expr(sema_t *sema, node_t *expr) {
     }
 }
 
-static void compile_value(sema_t *sema, const char *id, lir_t *value) {
-    value->name = id;
-    
+static lir_t *compile_value(sema_t *sema, lir_t *value) {
+    lir_begin(value, LIR_VALUE);
+
     node_t *node = value->node;
     type_t *type = NULL;
     lir_t *init = NULL;
@@ -226,22 +242,24 @@ static void compile_value(sema_t *sema, const char *id, lir_t *value) {
     }
 
     lir_value(value, type, init);
+
+    return value;
 }
 
-static type_t *compile_define(sema_t *sema, const char *id, lir_t *define) {
+static type_t *compile_define(sema_t *sema, lir_t *define) {
     (void)sema;
-    (void)id;
     (void)define;
     return NULL;
 }
 
-static void apply_value(void *user, const char *id, void *value) {
-    compile_value(user, id, value);
+static void apply_value(void *user, void *value) {
+    if (lir_is(value, LIR_EMPTY)) {
+        compile_value(user, value);
+    }
 }
 
-static void apply_define(void *user, const char *id, void *define) {
-    lir_t *lir = define;
-    compile_define(user, id, lir);
+static void apply_define(void *user, void *define) {
+    compile_define(user, define);
 }
 
 static void declare_all(sema_t *sema, vector_t *decls) {

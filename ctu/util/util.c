@@ -185,7 +185,7 @@ void map_apply(map_t *map, void *user, map_apply_t func) {
     for (size_t i = 0; i < map->size; i++) {
         entry_t *entry = &map->data[i];
         while (entry && entry->key) {
-            func(user, entry->key, entry->value);
+            func(user, entry->value);
             entry = entry->next;
         }
     }

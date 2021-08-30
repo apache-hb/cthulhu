@@ -29,7 +29,7 @@ typedef struct {
     entry_t data[];
 } map_t;
 
-typedef void(*map_apply_t)(void *user, const char *key, void *value);
+typedef void(*map_apply_t)(void *user, void *value);
 
 map_t *map_new(size_t size);
 void map_delete(map_t *map);
