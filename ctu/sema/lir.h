@@ -3,8 +3,6 @@
 #include "ctu/ast/ast.h"
 
 typedef enum {
-    LIR_NAME,
-    
     /* integer literal */
     LIR_DIGIT,
 
@@ -30,14 +28,6 @@ typedef struct lir_t {
     type_t *type;
 
     union {
-        /** 
-         * LIR_NAME 
-         * 
-         * points to a variable declaration that this 
-         * will read or write to.
-         */
-        struct lir_t *id;
-
         /**
          * LIR_POISON
          * 

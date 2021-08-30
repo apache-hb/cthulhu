@@ -38,9 +38,8 @@ static char *emit_type(type_t *type, const char *name) {
     }
 }
 
-static char *emit_name(lir_t *name) {
-    lir_t *it = name->id;
-    return ctu_strdup(it->name);
+static char *emit_name(lir_t *id) {
+    return ctu_strdup(id->name);
 }
 
 static char *emit_literal(mpz_t digit) {
@@ -49,7 +48,7 @@ static char *emit_literal(mpz_t digit) {
 
 static char *emit_expr(lir_t *expr) {
     switch (expr->leaf) {
-    case LIR_NAME: return emit_name(expr->id);
+    case LIR_VALUE: return emit_name(expr);
     case LIR_DIGIT: return emit_literal(expr->digit);
     default: return NULL;
     }
