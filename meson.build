@@ -16,8 +16,8 @@ src = [
 
     'ctu/emit/emit.c',
 
-    'ctu/sema/sema.c',
-    'ctu/sema/lir.c',
+    'ctu/lir/lir.c',
+    'ctu/lir/sema.c',
     
     'ctu/util/report.c',
     'ctu/util/str.c',

@@ -1,7 +1,7 @@
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
 
-#include "ctu/sema/sema.h"
+#include "ctu/lir/sema.h"
 #include "ctu/emit/emit.h"
 
 #include <string.h>
@@ -67,10 +67,10 @@ int main(int argc, char **argv) {
 
         const driver_t *driver = driver_for(fp);
 
-        if (driver->driver == NULL) {
+        if (driver->parse == NULL) {
             report(ERROR, "unknown file type: %s", fp->path);
         } else {
-            node_t *node = driver->driver(fp);
+            node_t *node = driver->parse(fp);
             vector_push(&nodes, node);
         }
 
@@ -81,6 +81,7 @@ int main(int argc, char **argv) {
 
     end_report(true, "compilation");
 
+    /*
     size_t total = vector_len(nodes);
 
     for (size_t i = 0; i < total; i++) {
@@ -98,7 +99,7 @@ int main(int argc, char **argv) {
         lir_t *lir = vector_get(nodes, i);
 
         emit_c(stdout, lir);
-    }
+    }*/
 
     return 0;
 }

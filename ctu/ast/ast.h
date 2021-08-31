@@ -51,17 +51,6 @@ typedef enum {
     UNARY_ABS,
 } unary_t;
 
-typedef struct {
-    /* is lookup case insensitive */
-    bool case_sensitive:1;
-
-    /* are declarations order independent */
-    bool order_independent:1;
-
-    /* all builtin types */
-    map_t *types;
-} options_t;
-
 typedef struct node_t {
     ast_t kind;
 
@@ -190,11 +179,7 @@ typedef struct node_t {
          * 
          * decls...
          */
-        struct {
-            const options_t *options; /* language and module settings */
-
-            vector_t *decls; /* all declarations */
-        };
+        vector_t *decls; /* all declarations */
     };
 } node_t;
 
@@ -224,4 +209,4 @@ node_t *ast_define(scan_t *scan, where_t where, node_t *name,
     vector_t *params, node_t *result, node_t *body
 );
 
-node_t *ast_module(scan_t *scan, where_t where, const options_t *options, vector_t *decls);
+node_t *ast_module(scan_t *scan, where_t where, vector_t *decls);

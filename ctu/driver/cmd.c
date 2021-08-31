@@ -9,31 +9,36 @@ static const char *VERSION = "0.0.1";
 typedef struct {
     const char *version;
     const char *name;
-    node_t*(*driver)(file_t*);
+    node_t*(*parse)(file_t*);
+    lir_t*(*analyze)(node_t*);
 } driver_t;
 
 static const driver_t PL0 = {
     .version = "0.0.1",
     .name = "PL/0",
-    .driver = pl0_driver
+    .parse = pl0_parse,
+    .analyze = pl0_analyze
 };
 
 static const driver_t CTU = {
     .version = "0.0.1",
     .name = "Cthulhu",
-    .driver = ctu_driver
+    .parse = ctu_parse,
+    .analyze = ctu_analyze
 };
 
 static const driver_t C = {
     .version = "0.0.1",
     .name = "C",
-    .driver = c_driver
+    .parse = c_parse,
+    .analyze = c_analyze
 };
 
 static const driver_t INVALID = {
     .version = "1.0.0",
     .name = "Invalid",
-    .driver = NULL
+    .parse = NULL,
+    .analyze = NULL
 };
 
 static const driver_t *DRIVER = NULL;

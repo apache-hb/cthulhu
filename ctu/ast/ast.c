@@ -137,10 +137,9 @@ node_t *ast_define(scan_t *scan, where_t where, node_t *name,
     return node;
 }
 
-node_t *ast_module(scan_t *scan, where_t where, const options_t *options, vector_t *decls) {
+node_t *ast_module(scan_t *scan, where_t where, vector_t *decls) {
     node_t *node = ast_new(scan, where, AST_MODULE);
 
-    node->options = options;
     node->decls = decls;
 
     return node;
