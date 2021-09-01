@@ -137,13 +137,15 @@ static void report_recurse(vector_t *stack, lir_t *root) {
     node_t *node = root->node;
     report_t id = reportf(ERROR, node->scan, node->where, "initialization of `%s` is recursive", root->name);
     
-    node_t *last = NULL;
+    node_t *last = node;
     size_t len = vector_len(stack);
+    size_t t = 0;
+
     for (size_t i = 0; i < len; i++) {
         lir_t *lir = vector_get(stack, i);
         node_t *it = lir->node;
         if (it != last) {
-            report_append(id, it->scan, it->where, "relevant trace %zu/%zu", i, len - 1);
+            report_append(id, it->scan, it->where, "trace %zu", t++);
         }
         last = it;
     }

@@ -159,8 +159,10 @@ static char *build_underline(char *source, column_t front, column_t back, char *
     return str;
 }
 
-static size_t longest_line(scan_t *scan, vector_t *parts) {
-    size_t len = 0;
+static size_t longest_line(scan_t *scan, line_t init, vector_t *parts) {
+    char *num = format(" %ld ", init);
+    size_t len = strlen(num);
+    ctu_free(num);
 
     for (size_t i = 0; i < vector_len(parts); i++) {
         part_t *part = vector_get(parts, i);
@@ -172,7 +174,7 @@ static size_t longest_line(scan_t *scan, vector_t *parts) {
         line_t line = part->where.first_line;
         char *it = format(" %ld ", line);
         len = MAX(len, strlen(it));
-        free(it);
+        ctu_free(it);
     }
 
     return len;
@@ -197,7 +199,7 @@ static void report_source(message_t *message) {
     char *source = extract_line(scan, start);
     char *underline = build_underline(source, front, back, message->underline);
 
-    size_t longest = longest_line(scan, message->parts);
+    size_t longest = longest_line(scan, start, message->parts);
     char *line = right_align(start, longest);
     char *pad = padding(longest);
 
@@ -218,7 +220,7 @@ static void report_part(message_t *message, part_t *part) {
     char *source = extract_line(scan, start);
     char *underline = build_underline(source, front, back, msg);
 
-    size_t longest = longest_line(scan, message->parts);
+    size_t longest = longest_line(scan, start, message->parts);
     char *pad = padding(longest);
     char *line = right_align(start, longest);
 
