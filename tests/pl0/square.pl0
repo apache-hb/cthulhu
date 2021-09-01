@@ -11,6 +11,6 @@ BEGIN
     BEGIN
         CALL square;
         ! squ;
-        x := x + 1;
+        x := x + 1
     END
 END.

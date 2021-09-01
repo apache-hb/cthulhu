@@ -72,7 +72,7 @@ static const char *report_level(level_t level) {
 static void report_scanner(scan_t *scan, where_t where) {
     const char *path = scan->path;
     const char *language = scan->language;
-    line_t line = where.first_line;
+    line_t line = where.first_line + 1;
     column_t column = where.first_column;
 
     fprintf(stderr, " => %s source [%s:%ld:%ld]\n",
@@ -171,7 +171,7 @@ static size_t longest_line(scan_t *scan, line_t init, vector_t *parts) {
             continue;
         }
 
-        line_t line = part->where.first_line;
+        line_t line = part->where.first_line + 1;
         char *it = format(" %ld ", line);
         len = MAX(len, strlen(it));
         ctu_free(it);
@@ -199,8 +199,8 @@ static void report_source(message_t *message) {
     char *source = extract_line(scan, start);
     char *underline = build_underline(source, front, back, message->underline);
 
-    size_t longest = longest_line(scan, start, message->parts);
-    char *line = right_align(start, longest);
+    size_t longest = longest_line(scan, start + 1, message->parts);
+    char *line = right_align(start + 1, longest);
     char *pad = padding(longest);
 
     fprintf(stderr, "%s|\n", pad);
@@ -220,9 +220,9 @@ static void report_part(message_t *message, part_t *part) {
     char *source = extract_line(scan, start);
     char *underline = build_underline(source, front, back, msg);
 
-    size_t longest = longest_line(scan, start, message->parts);
+    size_t longest = longest_line(scan, start + 1, message->parts);
     char *pad = padding(longest);
-    char *line = right_align(start, longest);
+    char *line = right_align(start + 1, longest);
 
     if (message->scan != scan) {
         report_scanner(part->scan, part->where);
@@ -230,7 +230,7 @@ static void report_part(message_t *message, part_t *part) {
 
     fprintf(stderr, "%s> %s source %s:%ld:%ld\n", pad, 
         scan->language, scan->path, 
-        where.first_line, where.first_column
+        start + 1, front
     );
     fprintf(stderr, "%s|\n", pad);
     fprintf(stderr, "%s| %s\n", line, source);
