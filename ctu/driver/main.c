@@ -51,6 +51,21 @@ static void parse_args(int argc, char **argv) {
     end_report(true, "commandline parsing");
 }
 
+typedef struct {
+    const driver_t *driver;
+    file_t *file;
+    node_t *root;
+    lir_t *lir;
+} unit_t;
+
+static unit_t *unit_new(const driver_t *driver, file_t *file, node_t *node) {
+    unit_t *unit = ctu_malloc(sizeof(unit_t));
+    unit->driver = driver;
+    unit->file = file;
+    unit->root = node;
+    return unit;
+}
+
 int main(int argc, char **argv) {
     name = argv[0];
     init_memory();
@@ -60,7 +75,7 @@ int main(int argc, char **argv) {
     parse_args(argc, argv);
 
     size_t len = vector_len(sources);
-    vector_t *nodes = vector_new(len);
+    vector_t *units = vector_new(len);
 
     for (size_t i = 0; i < len; i++) {
         file_t *fp = vector_get(sources, i);
@@ -70,36 +85,27 @@ int main(int argc, char **argv) {
         if (driver->parse == NULL) {
             report(ERROR, "unknown file type: %s", fp->path);
         } else {
-            node_t *node = driver->parse(fp);
-            vector_push(&nodes, node);
+            vector_push(&units, unit_new(driver, fp, driver->parse(fp)));
         }
 
         end_report(false, format("compilation of `%s`", fp->path));
-
-        ctu_close(fp);
     }
 
     end_report(true, "compilation");
 
-    /*
-    size_t total = vector_len(nodes);
+    for (size_t i = 0; i < len; i++) {
+        unit_t *unit = vector_get(units, i);
+        unit->lir = unit->driver->analyze(unit->root);
 
-    for (size_t i = 0; i < total; i++) {
-        node_t *node = vector_get(nodes, i);
-        lir_t *lir = sema_module(node);
-
-        vector_set(nodes, i, lir);
-
-        end_report(false, format("semantic analysis of `%s`", node->scan->path));
+        end_report(false, format("semantic analysis of `%s`", unit->file->path));
     }
 
     end_report(true, "semantic analysis");
 
-    for (size_t i = 0; i < total; i++) {
-        lir_t *lir = vector_get(nodes, i);
-
-        emit_c(stdout, lir);
-    }*/
+    for (size_t i = 0; i < len; i++) {
+        unit_t *unit = vector_get(units, i);
+        emit_c(stdout, unit->lir);
+    }
 
     return 0;
 }

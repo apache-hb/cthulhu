@@ -6,6 +6,10 @@ typedef enum {
     /* integer literal */
     LIR_DIGIT,
 
+    /* binary expresion */
+    LIR_BINARY,
+    LIR_UNARY,
+
     /* forward declaration */
     LIR_EMPTY,
 
@@ -40,6 +44,17 @@ typedef struct lir_t {
          * integer literal
          */
         mpz_t digit;
+
+        struct {
+            binary_t binary;
+            struct lir_t *lhs;
+            struct lir_t *rhs;
+        };
+
+        struct {
+            unary_t unary;
+            struct lir_t *operand;
+        };
 
         struct {
             const char *name;
@@ -88,7 +103,11 @@ typedef struct lir_t {
 lir_t *lir_declare(node_t *node, const char *name, leaf_t expected, struct sema_t *sema);
 lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs);
 
+lir_t *lir_int(node_t *node, int digit);
 lir_t *lir_digit(node_t *node, mpz_t digit);
+
+lir_t *lir_binary(node_t *node, binary_t binary, lir_t *lhs, lir_t *rhs);
+lir_t *lir_unary(node_t *node, unary_t unary, lir_t *operand);
 
 lir_t *lir_poison(node_t *node, const char *msg);
 
@@ -97,5 +116,4 @@ void lir_begin(lir_t *dst, leaf_t leaf);
 bool lir_ok(lir_t *lir);
 bool lir_is(lir_t *lir, leaf_t leaf);
 
-void lir_resolve(lir_t *dst, type_t *type);
-type_t *lir_resolved(lir_t *lir);
+vector_t *lir_recurses(lir_t *lir, lir_t *root);

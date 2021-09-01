@@ -110,14 +110,26 @@ static char *extract_line(scan_t *scan, line_t line) {
     size_t len = 0;
     while (text[start + len]) {
         char c = text[start + len++];
-        if (c == '\n') {
+        if (c == '\r' || c == '\n') {
             break;
         }
     }
 
+    /** 
+     * while windows line endings might technically be more correct
+     * it doesnt make them any less painful to handle
+     */
     char *str = malloc(len + 1);
-    memcpy(str, text + start, len - 1);
-    str[len] = '\0';
+    char *out = str;
+    for (size_t i = 0; i < len - 1; i++) {
+        char c = text[start + i];
+        if (c == '\r') {
+            continue;
+        }
+        *out++ = c;
+    }
+    *out = '\0';
+
     return str;
 }
 
@@ -147,12 +159,8 @@ static char *build_underline(char *source, column_t front, column_t back, char *
     return str;
 }
 
-static size_t longest_line(scan_t *scan, where_t where, vector_t *parts) {
-    char *fmt = format(" %ld ", where.first_line);
-
-    size_t len = strlen(fmt);
-
-    free(fmt);
+static size_t longest_line(scan_t *scan, vector_t *parts) {
+    size_t len = 0;
 
     for (size_t i = 0; i < vector_len(parts); i++) {
         part_t *part = vector_get(parts, i);
@@ -171,8 +179,7 @@ static size_t longest_line(scan_t *scan, where_t where, vector_t *parts) {
 }
 
 static char *right_align(line_t line, size_t width) {
-    char *num = format("%ld", line);
-    return format("%*s", width, num);
+    return format("%*ld", width, line);
 }
 
 static void report_source(message_t *message) {
@@ -190,7 +197,7 @@ static void report_source(message_t *message) {
     char *source = extract_line(scan, start);
     char *underline = build_underline(source, front, back, message->underline);
 
-    size_t longest = longest_line(scan, where, message->parts);
+    size_t longest = longest_line(scan, message->parts);
     char *line = right_align(start, longest);
     char *pad = padding(longest);
 
@@ -211,7 +218,7 @@ static void report_part(message_t *message, part_t *part) {
     char *source = extract_line(scan, start);
     char *underline = build_underline(source, front, back, msg);
 
-    size_t longest = longest_line(scan, part->where, message->parts);
+    size_t longest = longest_line(scan, message->parts);
     char *pad = padding(longest);
     char *line = right_align(start, longest);
 

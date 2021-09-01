@@ -108,7 +108,7 @@ inits: init { $$ = vector_init($1); }
     | inits COMMA init { vector_push(&$1, $3); $$ = $1; }
     ;
 
-init: ident EQUALS number { $$ = pl0_value(x, @$, $1, $3); }
+init: ident EQUALS expr { $$ = pl0_value(x, @$, $1, $3); }
     ;
 
 vars: %empty { $$ = vector_new(0); }

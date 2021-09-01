@@ -321,19 +321,17 @@ lir_t *sema_module(node_t *node) {
 
 #endif
 
-sema_t *sema_new(sema_t *parent, sema_new_t create, sema_delete_t destroy) {
+sema_t *sema_new(sema_t *parent, sema_new_t create) {
     sema_t *sema = ctu_malloc(sizeof(sema_t));
     
     sema->parent = parent;
-    sema->create = create;
-    sema->destroy = destroy;
     sema->fields = create();
 
     return sema;
 }
 
-void sema_delete(sema_t *sema) {
-    sema->destroy(sema->fields);
+void sema_delete(sema_t *sema, sema_delete_t destroy) {
+    destroy(sema->fields);
 }
 
 void sema_set(sema_t *sema, const char *name, lir_t *lir, sema_set_t set) {

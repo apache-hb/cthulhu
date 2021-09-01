@@ -30,6 +30,7 @@ typedef struct {
 } map_t;
 
 typedef void(*map_apply_t)(void *user, void *value);
+typedef bool(*map_collect_t)(void *value);
 
 map_t *map_new(size_t size);
 void map_delete(map_t *map);
@@ -55,4 +56,7 @@ void *vector_get(const vector_t *vector, size_t index);
 size_t vector_len(const vector_t *vector);
 vector_t *vector_join(const vector_t *lhs, const vector_t *rhs);
 
-vector_t *map_collect(map_t *map, bool(*filter)(void *value));
+vector_t *map_collect(map_t *map, map_collect_t filter);
+
+#define MAP_APPLY(map, user, func) map_apply(map, user, (map_apply_t)func)
+#define MAP_COLLECT(map, filter) map_collect(map, (map_collect_t)filter)

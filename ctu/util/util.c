@@ -191,7 +191,7 @@ void map_apply(map_t *map, void *user, map_apply_t func) {
     }
 }
 
-vector_t *map_collect(map_t *map, bool(*filter)(void *value)) {
+vector_t *map_collect(map_t *map, map_collect_t filter) {
     vector_t *result = vector_new(map->size);
     
     for (size_t i = 0; i < map->size; i++) {

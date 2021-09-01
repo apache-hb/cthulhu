@@ -32,10 +32,38 @@ lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs) {
     return lir;
 }
 
+
+lir_t *lir_int(node_t *node, int digit) {
+    lir_t *lir = lir_new(node, LIR_DIGIT);
+
+    mpz_init_set_si(lir->digit, digit);
+
+    return lir;
+}
+
 lir_t *lir_digit(node_t *node, mpz_t digit) {
     lir_t *lir = lir_new(node, LIR_DIGIT);
 
     mpz_init_set(lir->digit, digit);
+
+    return lir;
+}
+
+lir_t *lir_binary(node_t *node, binary_t binary, lir_t *lhs, lir_t *rhs) {
+    lir_t *lir = lir_new(node, LIR_BINARY);
+
+    lir->binary = binary;
+    lir->lhs = lhs;
+    lir->rhs = rhs;
+
+    return lir;
+}
+
+lir_t *lir_unary(node_t *node, unary_t unary, lir_t *operand) {
+    lir_t *lir = lir_new(node, LIR_UNARY);
+
+    lir->unary = unary;
+    lir->operand = operand;
 
     return lir;
 }
@@ -79,14 +107,44 @@ bool lir_is(lir_t *lir, leaf_t leaf) {
     return lir->leaf == leaf;
 }
 
-void lir_resolve(lir_t *lir, type_t *type) {
-    lir->type = type;
-}
+vector_t *lir_recurses(lir_t *lir, lir_t *root) {
+    vector_t *result = NULL;
+    lir_t *source = NULL;
 
-type_t *lir_resolved(lir_t *lir) {
-    if (lir->leaf != LIR_EMPTY) {
-        return lir->type;
-    } else {
+    if (lir == root) {
+        return vector_init(lir);
+    }
+
+    switch (lir->leaf) {
+    case LIR_VALUE:
+        result = lir_recurses(lir->init, root);
+        source = lir->init;
+        break;
+
+    case LIR_BINARY:
+        if ((result = lir_recurses(lir->lhs, root))) {
+            source = lir->lhs;
+            break;
+        }
+        
+        if ((result = lir_recurses(lir->rhs, root))) {
+            source = lir->rhs;
+            break;
+        }
+        break;
+
+    case LIR_UNARY:
+        result = lir_recurses(lir->operand, root);
+        source = lir->operand;
+        break;
+
+    default:
         return NULL;
     }
+
+    if (result) {
+        vector_push(&result, source);
+    }
+
+    return result;
 }
