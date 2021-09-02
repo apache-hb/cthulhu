@@ -99,11 +99,11 @@ lir_t *lir_poison(node_t *node, const char *msg) {
     return lir;
 }
 
-bool lir_ok(lir_t *lir) {
+bool lir_ok(const lir_t *lir) {
     return !lir_is(lir, LIR_POISON);
 }
 
-bool lir_is(lir_t *lir, leaf_t leaf) {
+bool lir_is(const lir_t *lir, leaf_t leaf) {
     return lir->leaf == leaf;
 }
 

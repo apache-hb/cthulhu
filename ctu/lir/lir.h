@@ -113,7 +113,7 @@ lir_t *lir_poison(node_t *node, const char *msg);
 
 void lir_value(lir_t *dst, type_t *type, lir_t *init);
 void lir_begin(lir_t *dst, leaf_t leaf);
-bool lir_ok(lir_t *lir);
-bool lir_is(lir_t *lir, leaf_t leaf);
+bool lir_ok(const lir_t *lir);
+bool lir_is(const lir_t *lir, leaf_t leaf);
 
 vector_t *lir_recurses(lir_t *lir, const lir_t *root);
