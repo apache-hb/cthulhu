@@ -107,7 +107,7 @@ bool lir_is(lir_t *lir, leaf_t leaf) {
     return lir->leaf == leaf;
 }
 
-vector_t *lir_recurses(lir_t *lir, lir_t *root) {
+vector_t *lir_recurses(lir_t *lir, const lir_t *root) {
     vector_t *result = NULL;
     lir_t *source = NULL;
 

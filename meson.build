@@ -12,13 +12,14 @@ src = [
     'ctu/ast/interop.c',
     'ctu/ast/ast.c',
 
-    'ctu/type/type.c',
-
-    'ctu/emit/emit.c',
-
     'ctu/lir/lir.c',
     'ctu/lir/sema.c',
     
+    'ctu/type/type.c',
+
+    'ctu/emit/emit.c',
+    'ctu/gen/emit.c',
+
     'ctu/util/report.c',
     'ctu/util/str.c',
     'ctu/util/util.c'
