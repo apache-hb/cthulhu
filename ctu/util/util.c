@@ -76,7 +76,7 @@ void ctu_close(file_t *fp) {
     ctu_free(fp);
 }
 
-bool ctu_valid(file_t *fp) {
+bool ctu_valid(const file_t *fp) {
     return fp->file != NULL;
 }
 

@@ -14,4 +14,4 @@ typedef struct {
 
 file_t *ctu_open(const char *path, const char *mode);
 void ctu_close(file_t *fp);
-bool ctu_valid(file_t *fp);
+bool ctu_valid(const file_t *fp);

@@ -28,4 +28,4 @@ typedef struct {
 } type_t;
 
 type_t *type_digit(bool sign, int_t kind);
-char *type_format(type_t *type);
+char *type_format(const type_t *type);

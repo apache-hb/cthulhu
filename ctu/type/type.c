@@ -34,7 +34,7 @@ static char *digit_format(digit_t digit) {
     return ctu_strdup(ty);
 }
 
-char *type_format(type_t *type) {
+char *type_format(const type_t *type) {
     switch (type->type) {
     case TY_DIGIT: return digit_format(type->digit);
     case TY_VOID: return ctu_strdup("void");

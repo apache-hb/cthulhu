@@ -12,11 +12,11 @@
 
 typedef struct {
     char *message;
-    scan_t *scan;
+    const scan_t *scan;
     where_t where;
 } part_t;
 
-static part_t *part_new(char *message, scan_t *scan, where_t where) {
+static part_t *part_new(char *message, const scan_t *scan, where_t where) {
     part_t *part = ctu_malloc(sizeof(part_t));
     part->message = message;
     part->scan = scan;
@@ -35,7 +35,7 @@ typedef struct {
     vector_t *parts;
 
     /* source and location, if scan is NULL then location is ignored */
-    scan_t *scan;
+    const scan_t *scan;
     where_t where;
 
     /* extra note */
@@ -69,7 +69,7 @@ static const char *report_level(level_t level) {
     }
 }
 
-static void report_scanner(scan_t *scan, where_t where) {
+static void report_scanner(const scan_t *scan, where_t where) {
     const char *path = scan->path;
     const char *language = scan->language;
     line_t line = where.first_line + 1;
@@ -97,7 +97,7 @@ static char *padding(size_t len) {
     return str;
 }
 
-static char *extract_line(scan_t *scan, line_t line) {
+static char *extract_line(const scan_t *scan, line_t line) {
     size_t start = 0;
     const char *text = scan->text;
     while (text[start] != '\0' && line > 0) {
@@ -159,7 +159,7 @@ static char *build_underline(char *source, column_t front, column_t back, char *
     return str;
 }
 
-static size_t longest_line(scan_t *scan, line_t init, vector_t *parts) {
+static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {
     char *num = format(" %ld ", init);
     size_t len = strlen(num);
     ctu_free(num);
@@ -185,7 +185,7 @@ static char *right_align(line_t line, size_t width) {
 }
 
 static void report_source(message_t *message) {
-    scan_t *scan = message->scan;
+    const scan_t *scan = message->scan;
     where_t where = message->where;
     if (!scan) {
         return;
@@ -210,7 +210,7 @@ static void report_source(message_t *message) {
 
 static void report_part(message_t *message, part_t *part) {
     char *msg = part->message;
-    scan_t *scan = part->scan;
+    const scan_t *scan = part->scan;
     where_t where = part->where;
 
     size_t start = where.first_line;
@@ -312,7 +312,7 @@ void end_report(bool quit, const char *name) {
 
 static report_t report_add(
     level_t level, 
-    scan_t *scan, 
+    const scan_t *scan, 
     where_t where, 
     const char *fmt, 
     va_list args
@@ -354,7 +354,7 @@ report_t report(level_t level, const char *fmt, ...) {
     return id;
 }
 
-report_t reportf(level_t level, scan_t *scan, where_t where, const char *fmt, ...) {
+report_t reportf(level_t level, const scan_t *scan, where_t where, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     report_t id = report_add(level, scan, where, fmt, args);
@@ -362,7 +362,7 @@ report_t reportf(level_t level, scan_t *scan, where_t where, const char *fmt, ..
     return id;
 }
 
-void report_append(report_t id, scan_t *scan, where_t where, const char *fmt, ...) {
+void report_append(report_t id, const scan_t *scan, where_t where, const char *fmt, ...) {
     if (id == INVALID_REPORT) {
         return;
     }
