@@ -1,6 +1,7 @@
 #include "emit.h"
 
 #include "ctu/util/util.h"
+#include "ctu/util/report.h"
 
 static size_t add_step(flow_t *flow, step_t step) {
     if (flow->len + 1 >= flow->size) {
@@ -10,6 +11,42 @@ static size_t add_step(flow_t *flow, step_t step) {
 
     flow->steps[flow->len + 1] = step;
     return flow->len++;
+}
+
+static operand_t new_operand(optype_t kind) {
+    operand_t operand;
+    operand.kind = kind;
+    return operand;
+}
+
+static step_t step_of(opcode_t op, lir_t *lir) {
+    step_t step = {
+        .opcode = op,
+        .node = lir->node,
+        .type = lir->type
+    };
+
+    return step;
+}
+
+static operand_t emit_lir(flow_t *flow, lir_t *lir);
+
+static operand_t emit_unary(flow_t *flow, lir_t *lir) {
+    operand_t operand = emit_lir(flow, lir->operand);
+    step_t step = step_of(OP_UNARY, lir);
+    step.unary = lir->unary;
+    step.operand = operand;
+    /* TODO */
+}
+
+static operand_t emit_lir(flow_t *flow, lir_t *lir) {
+    switch (lir->leaf) {
+    case LIR_UNARY:
+        return emit_unary(flow, lir);
+    default:
+        assert("emit-lir unknown %d", lir->leaf);
+        return new_operand(EMPTY);
+    }
 }
 
 static flow_t *build_flow(lir_t *lir) {

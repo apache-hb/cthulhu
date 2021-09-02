@@ -118,6 +118,12 @@ static lir_t *pl0_compile_binary(sema_t *sema, node_t *expr) {
     return lir_binary(expr, expr->binary, lhs, rhs);
 }
 
+static lir_t *pl0_compile_unary(sema_t *sema, node_t *expr) {
+    lir_t *operand = pl0_compile_expr(sema, expr->operand);
+
+    return lir_unary(expr, expr->unary, operand);
+}
+
 static lir_t *pl0_compile_expr(sema_t *sema, node_t *expr) {
     switch (expr->kind) {
     case AST_IDENT:
@@ -126,6 +132,8 @@ static lir_t *pl0_compile_expr(sema_t *sema, node_t *expr) {
         return lir_digit(expr, expr->digit);
     case AST_BINARY:
         return pl0_compile_binary(sema, expr);
+    case AST_UNARY:
+        return pl0_compile_unary(sema, expr);
 
     default:
         assert("unknown expr %d", expr->kind);
