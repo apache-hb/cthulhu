@@ -10,6 +10,8 @@ typedef enum {
     LIR_BINARY,
     LIR_UNARY,
 
+    LIR_ASSIGN,
+
     /* forward declaration */
     LIR_EMPTY,
 
@@ -44,6 +46,11 @@ typedef struct lir_t {
          * integer literal
          */
         mpz_t digit;
+
+        struct {
+            struct lir_t *dst;
+            struct lir_t *src;
+        };
 
         struct {
             binary_t binary;
@@ -84,6 +91,7 @@ typedef struct lir_t {
                  */
                 struct {
                     vector_t *locals;
+                    struct lir_t *body;
                 };
             };
         };
@@ -109,9 +117,12 @@ lir_t *lir_digit(node_t *node, mpz_t digit);
 lir_t *lir_binary(node_t *node, binary_t binary, lir_t *lhs, lir_t *rhs);
 lir_t *lir_unary(node_t *node, unary_t unary, lir_t *operand);
 
+lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src);
+
 lir_t *lir_poison(node_t *node, const char *msg);
 
 void lir_value(lir_t *dst, type_t *type, lir_t *init);
+void lir_define(lir_t *dst, type_t *type, vector_t *locals, lir_t *body);
 void lir_begin(lir_t *dst, leaf_t leaf);
 bool lir_ok(const lir_t *lir);
 bool lir_is(const lir_t *lir, leaf_t leaf);

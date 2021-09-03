@@ -7,14 +7,17 @@
 typedef struct {
     map_t *globals;
     map_t *procs;
+    vector_t *locals;
 } pl0_data_t;
 
 static type_t *DIGIT = NULL;
+static type_t *RESULT = NULL;
 
 static void *pl0_data_new(void) {
     pl0_data_t *sema = ctu_malloc(sizeof(pl0_data_t));
     sema->globals = map_new(4);
     sema->procs = map_new(4);
+    sema->locals = NULL;
     return sema;
 }
 
@@ -23,6 +26,15 @@ static void pl0_data_delete(void *data) {
     map_delete(sema->globals);
     map_delete(sema->procs);
     ctu_free(sema);
+}
+
+static void add_local(sema_t *sema, lir_t *lir) {
+    pl0_data_t *data = sema->fields;
+    if (data->locals != NULL) {
+        vector_push(&data->locals, lir);
+    } else if (sema->parent != NULL) {
+        add_local(sema->parent, lir);
+    } 
 }
 
 #define NEW_SEMA(parent) sema_new(parent, pl0_data_new)
@@ -110,6 +122,7 @@ static void pl0_declare(sema_t *sema, node_t *decl) {
 }
 
 static lir_t *pl0_compile_expr(sema_t *sema, node_t *expr);
+static lir_t *pl0_compile_stmt(sema_t *sema, node_t *stmt);
 
 static lir_t *pl0_compile_binary(sema_t *sema, node_t *expr) {
     lir_t *lhs = pl0_compile_expr(sema, expr->lhs);
@@ -169,6 +182,48 @@ static void report_recurse(vector_t *stack, lir_t *root) {
     }
 }
 
+static lir_t *pl0_compile_assign(sema_t *sema, node_t *expr) {
+    lir_t *dst = pl0_compile_expr(sema, expr->dst);
+    lir_t *src = pl0_compile_expr(sema, expr->src);
+
+    return lir_assign(expr, dst, src);
+}
+
+static void pl0_compile_local(sema_t *sema, node_t *expr) {
+    lir_t *init = lir_int(expr, 0);
+    init->type = DIGIT;
+
+    const char *name = pl0_name(expr->name);
+
+    lir_t *lir = lir_declare(expr, name, LIR_VALUE, NULL);
+    lir_begin(lir, LIR_VALUE);
+    lir_value(lir, DIGIT, init);
+
+    add_local(sema, lir);
+    SET_GLOBAL(sema, name, lir);
+}
+
+static lir_t *pl0_compile_stmts(sema_t *sema, node_t *stmts) {
+    return NULL; /* TODO */
+}
+
+static lir_t *pl0_compile_stmt(sema_t *sema, node_t *stmt) {
+    switch (stmt->kind) {
+    case AST_ASSIGN:
+        return pl0_compile_assign(sema, stmt);
+
+    case AST_VALUE:
+        pl0_compile_local(sema, stmt);
+        return NULL;
+
+    case AST_STMTS:
+        return pl0_compile_stmts(sema, stmt);
+
+    default:
+        return NULL;
+    }
+}
+
 static void pl0_global(void *user, lir_t *lir) {
     lir_begin(lir, LIR_VALUE);
 
@@ -190,11 +245,19 @@ static void pl0_global(void *user, lir_t *lir) {
 }
 
 static void pl0_proc(void *user, lir_t *lir) {
+    lir_begin(lir, LIR_DEFINE);
+    
     sema_t *sema = user;
-
     node_t *node = lir->node;
-    (void)node;
-    (void)sema;
+
+    sema_t *nest = NEW_SEMA(sema);
+
+    pl0_data_t *data = nest->fields;
+    data->locals = vector_new(4);
+
+    lir_t *proc = pl0_compile_stmt(nest, node->body);
+
+    lir_define(lir, RESULT, data->locals, proc);
 }
 
 static bool always(void *value) {
@@ -227,6 +290,10 @@ lir_t *pl0_sema(node_t *node) {
 
     if (DIGIT == NULL) {
         DIGIT = type_digit(true, TY_INT);
+    }
+
+    if (RESULT == NULL) {
+        RESULT = type_closure(vector_new(0), DIGIT);
     }
 
     lir_t *result = pl0_compile(sema, node);

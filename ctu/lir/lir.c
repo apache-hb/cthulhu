@@ -67,6 +67,15 @@ lir_t *lir_unary(node_t *node, unary_t unary, lir_t *operand) {
     return lir;
 }
 
+lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src) {
+    lir_t *lir = lir_new(node, LIR_ASSIGN);
+
+    lir->dst = dst;
+    lir->src = src;
+
+    return lir;
+}
+
 void lir_value(lir_t *dst, type_t *type, lir_t *init) {
     if (dst->leaf != LIR_VALUE) {
         assert("lir-value already resolved");
@@ -74,6 +83,16 @@ void lir_value(lir_t *dst, type_t *type, lir_t *init) {
 
     dst->type = type;
     dst->init = init;
+}
+
+void lir_define(lir_t *dst, type_t *type, vector_t *locals, lir_t *body) {
+    if (dst->leaf != LIR_DEFINE) {
+        assert("lir-define already resolved");
+    }
+
+    dst->type = type;
+    dst->locals = locals;
+    dst->body = body;   
 }
 
 void lir_begin(lir_t *dst, leaf_t leaf) {

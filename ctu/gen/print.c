@@ -90,21 +90,29 @@ static char *emit_step(block_t *flow, size_t idx) {
     }
 }
 
-static const char *block_type(block_type_t type) {
-    switch (type) {
-    case BLOCK_VALUE: return "value";
-    case BLOCK_FLOW: return "define";
-    default: return NULL;
-    }
-}
-
-static void flow_print(FILE *out, module_t *mod, size_t idx) {
-    block_t *flow = vector_get(mod->blocks, idx);
+static void var_print(FILE *out, module_t *mod, size_t idx) {
+    block_t *flow = vector_get(mod->vars, idx);
     const char *name = flow->name;
     
     size_t len = flow->len;
-    const char *type = block_type(flow->type);
-    fprintf(out, "%s %s: %s {\n", type, name, type_format(flow->result));
+    fprintf(out, "value %s: %s {\n", name, type_format(flow->result));
+
+    for (size_t i = 0; i < len; i++) {
+        char *step = emit_step(flow, i);
+        if (step != NULL) {
+            fprintf(out, "  %s\n", step);
+        }
+    }
+
+    fprintf(out, "}\n");
+}
+
+static void func_print(FILE *out, module_t *mod, size_t idx) {
+    block_t *flow = vector_get(mod->funcs, idx);
+    const char *name = flow->name;
+    
+    size_t len = flow->len;
+    fprintf(out, "define %s: %s {\n", name, type_format(flow->result));
 
     for (size_t i = 0; i < len; i++) {
         char *step = emit_step(flow, i);
@@ -117,9 +125,15 @@ static void flow_print(FILE *out, module_t *mod, size_t idx) {
 }
 
 void module_print(FILE *out, module_t *mod) {
-    size_t len = vector_len(mod->blocks);
+    size_t nvars = vector_len(mod->vars);
+    size_t nfuncs = vector_len(mod->funcs);
+
     fprintf(out, "module = %s\n", mod->name);
-    for (size_t i = 0; i < len; i++) {
-        flow_print(out, mod, i);
+    for (size_t i = 0; i < nvars; i++) {
+        var_print(out, mod, i);
+    }
+
+    for (size_t i = 0; i < nfuncs; i++) {
+        func_print(out, mod, i);
     }
 }

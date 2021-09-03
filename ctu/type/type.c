@@ -16,6 +16,13 @@ type_t *type_digit(bool sign, int_t kind) {
     return type;
 }
 
+type_t *type_closure(vector_t *args, type_t *result) {
+    type_t *type = type_new(TY_CLOSURE);
+    type->args = args;
+    type->result = result;
+    return type;
+}
+
 static const char *int_format(int_t kind) {
     switch (kind) {
     case TY_CHAR: return "char";

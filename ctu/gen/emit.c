@@ -123,12 +123,11 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     }
 }
 
-static block_t *init_block(lir_t *decl, block_type_t kind, type_t *type) {
+static block_t *init_block(lir_t *decl, type_t *type) {
     block_t *block = ctu_malloc(sizeof(block_t));
     
     block->name = decl->name;
     block->result = type;
-    block->type = kind;
 
     block->len = 0;
     block->size = 16;
@@ -146,33 +145,55 @@ static void build_block(module_t *mod, block_t *block, map_t *lookup, lir_t *bod
     }
 }
 
-static module_t *init_module(vector_t *blocks, const char *name) {
+static module_t *init_module(vector_t *vars, vector_t *funcs, const char *name) {
     module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
-    mod->blocks = blocks;
+    mod->vars = vars;
+    mod->funcs = funcs;
     return mod;
+}
+
+static block_t *block_declare(map_t *table, lir_t *lir) {
+    block_t *block = init_block(lir, lir->type);
+    map_set(table, lir->name, block);
+    return block;
 }
 
 module_t *module_build(lir_t *root) {
     vector_t *vars = root->vars;
-    size_t len = vector_len(vars);
+    size_t nvars = vector_len(vars);
 
-    vector_t *blocks = vector_of(len);
-    module_t *mod = init_module(blocks, root->node->scan->path);
+    vector_t *funcs = root->funcs;
+    size_t nfuncs = vector_len(funcs);
 
-    map_t *lookup = map_new(32);
+    vector_t *varblocks = vector_of(nvars);
+    vector_t *funcblocks = vector_of(nfuncs);
 
-    for (size_t i = 0; i < len; i++) {
+    map_t *vartable = map_new(32);
+    map_t *blocktable = map_new(32);
+
+    module_t *mod = init_module(varblocks, funcblocks, root->node->scan->path);
+
+    for (size_t i = 0; i < nvars; i++) {
         lir_t *var = vector_get(vars, i);
-        block_t *block = init_block(var, BLOCK_VALUE, var->type);
-        vector_set(blocks, i, block);
-        map_set(lookup, var->name, block);
+        vector_set(varblocks, i, block_declare(vartable, var));
     }
 
-    for (size_t i = 0; i < len; i++) {
+    for (size_t i = 0; i < nfuncs; i++) {
+        lir_t *func = vector_get(funcs, i);
+        vector_set(funcblocks, i, block_declare(blocktable, func));
+    }
+
+    for (size_t i = 0; i < nvars; i++) {
         lir_t *var = vector_get(vars, i);
-        block_t *block = vector_get(blocks, i);
-        build_block(mod, block, lookup, var->init);
+        block_t *block = vector_get(varblocks, i);
+        build_block(mod, block, vartable, var->init);
+    }
+
+    for (size_t i = 0; i < nfuncs; i++) {
+        lir_t *func = vector_get(funcs, i);
+        block_t *block = vector_get(funcblocks, i);
+        build_block(mod, block, blocktable, func->body);
     }
 
     return mod;

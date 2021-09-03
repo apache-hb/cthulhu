@@ -66,14 +66,8 @@ typedef struct {
     };
 } step_t;
 
-typedef enum {
-    BLOCK_VALUE,
-    BLOCK_FLOW
-} block_type_t;
-
 typedef struct block_t {
     const char *name;
-    block_type_t type;
 
     /* the return type of this */
     type_t *result;
@@ -86,7 +80,8 @@ typedef struct block_t {
 typedef struct {
     const char *name;
 
-    vector_t *blocks;
+    vector_t *vars;
+    vector_t *funcs;
 } module_t;
 
 module_t *module_build(lir_t *root);
