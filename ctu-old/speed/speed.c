@@ -42,7 +42,7 @@ bool run_pass(pass_t *pass) {
             continue;
         }
 
-        flow_t *flow = pass->mod->flows + i;
+        flow_t *flow = pass->mod->blocks + i;
 
         logfmt("begin pass for %s", flow_name(flow));
 

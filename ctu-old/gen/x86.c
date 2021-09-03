@@ -101,7 +101,7 @@ blob_t compile_flow(flow_t *flow) {
 
 void gen_x86(FILE *out, module_t *mod) {
     for (size_t i = 0; i < num_flows(mod); i++) {
-        blob_t blob = compile_flow(mod->flows + i);
+        blob_t blob = compile_flow(mod->blocks + i);
         fwrite(out, blob.size, 1, blob.data);
     }
 }

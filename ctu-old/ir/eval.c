@@ -100,7 +100,7 @@ static value_t *imm_value(imm_t imm) {
 }
 
 static value_t *func_value(module_t *mod, size_t idx) {
-    flow_t *flow = mod->flows + idx;
+    flow_t *flow = mod->blocks + idx;
     type_t *type = get_resolved_type(flow->node);
 
     value_t *value = build_value(type, true);

@@ -124,12 +124,16 @@ static lir_t *pl0_compile_unary(sema_t *sema, node_t *expr) {
     return lir_unary(expr, expr->unary, operand);
 }
 
-static lir_t *pl0_compile_expr(sema_t *sema, node_t *expr) {
+static lir_t *pl0_compile_digit(node_t *expr) {
+    return lir_digit(expr, expr->digit);
+}
+
+static lir_t *pl0_match_expr(sema_t *sema, node_t *expr) {
     switch (expr->kind) {
     case AST_IDENT:
         return GET_GLOBAL(sema, expr->ident);
     case AST_DIGIT:
-        return lir_digit(expr, expr->digit);
+        return pl0_compile_digit(expr);
     case AST_BINARY:
         return pl0_compile_binary(sema, expr);
     case AST_UNARY:
@@ -139,6 +143,12 @@ static lir_t *pl0_compile_expr(sema_t *sema, node_t *expr) {
         assert("unknown expr %d", expr->kind);
         return lir_poison(expr, "unknown expr");
     }
+}
+
+static lir_t *pl0_compile_expr(sema_t *sema, node_t *expr) {
+    lir_t *lir = pl0_match_expr(sema, expr);
+    lir->type = DIGIT;
+    return lir;
 }
 
 static void report_recurse(vector_t *stack, lir_t *root) {
@@ -169,6 +179,8 @@ static void pl0_global(void *user, lir_t *lir) {
         ? pl0_compile_expr(sema, node->value) 
         : lir_int(node, 0);
     
+    init->type = DIGIT;
+
     vector_t *path = lir_recurses(init, lir);
     if (path != NULL) {
         report_recurse(path, lir);

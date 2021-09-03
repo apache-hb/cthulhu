@@ -38,6 +38,8 @@ static char *emit_type(type_t *type, const char *name) {
     }
 }
 
+static char *emit_expr(lir_t *expr);
+
 static char *emit_name(lir_t *id) {
     return ctu_strdup(id->name);
 }
@@ -46,10 +48,38 @@ static char *emit_literal(mpz_t digit) {
     return mpz_get_str(NULL, 10, digit);
 }
 
+static const char *binary_op(binary_t binary) {
+    switch (binary) {
+    case BINARY_ADD: return "+";
+    case BINARY_SUB: return "-";
+    case BINARY_MUL: return "*";
+    case BINARY_DIV: return "/";
+    case BINARY_REM: return "%";
+
+    case BINARY_EQ: return "==";
+    case BINARY_NEQ: return "!=";
+    case BINARY_LT: return "<";
+    case BINARY_LTE: return "<=";
+    case BINARY_GT: return ">";
+    case BINARY_GTE: return ">=";
+
+    default: return NULL;
+    }
+}
+
+static char *emit_binary(lir_t *binary) {
+    const char *op = binary_op(binary->binary);
+    char *lhs = emit_expr(binary->lhs);
+    char *rhs = emit_expr(binary->rhs);
+
+    return format("%s %s %s", lhs, op, rhs);
+}
+
 static char *emit_expr(lir_t *expr) {
     switch (expr->leaf) {
     case LIR_VALUE: return emit_name(expr);
     case LIR_DIGIT: return emit_literal(expr->digit);
+    case LIR_BINARY: return emit_binary(expr);
     default: return NULL;
     }
 }

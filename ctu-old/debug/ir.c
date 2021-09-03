@@ -3,7 +3,7 @@
 #include "common.h"
 
 static const char *get_flow_name(module_t *mod, size_t idx) {
-    return mod->flows[idx].name;
+    return mod->blocks[idx].name;
 }
 
 static const char *get_var_name(module_t *mod, size_t idx) {

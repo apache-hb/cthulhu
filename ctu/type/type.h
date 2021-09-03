@@ -11,7 +11,8 @@ typedef enum {
     TY_CHAR,
     TY_SHORT,
     TY_INT,
-    TY_LONG
+    TY_LONG,
+    TY_SIZE
 } int_t;
 
 typedef struct {

@@ -32,7 +32,6 @@ lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs) {
     return lir;
 }
 
-
 lir_t *lir_int(node_t *node, int digit) {
     lir_t *lir = lir_new(node, LIR_DIGIT);
 

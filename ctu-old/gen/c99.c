@@ -262,7 +262,7 @@ static char *gen_var(size_t idx) {
 }
 
 static const char *gen_func(module_t *mod, size_t idx) {
-    return mod->flows[idx].name;
+    return mod->blocks[idx].name;
 }
 
 static char *genstr(size_t idx) {
@@ -660,19 +660,19 @@ void gen_c99(FILE *out, module_t *mod) {
     line(out);
 
     for (size_t i = 0; i < num_flows(mod); i++) {
-        flow_t *flow = mod->flows + i;
+        flow_t *flow = mod->blocks + i;
         if (flow->interop) {
             continue;
         }
 
         if (SHOULD_EMIT(flow))
-            def_flow(out, mod->flows + i);
+            def_flow(out, mod->blocks + i);
     }
 
     line(out);
 
     for (size_t i = 0; i < num_flows(mod); i++) {
-        flow_t *flow = mod->flows + i;
+        flow_t *flow = mod->blocks + i;
         if (flow->interop) {
             continue;
         }
@@ -682,7 +682,7 @@ void gen_c99(FILE *out, module_t *mod) {
         }
 
         if (SHOULD_EMIT(flow) && !flow->stub)
-            gen_flow(out, mod->flows + i);
+            gen_flow(out, mod->blocks + i);
     }
 
     guard_tail(out, name);

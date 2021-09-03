@@ -235,6 +235,12 @@ vector_t *vector_new(size_t size) {
     return vector;
 }
 
+vector_t *vector_of(size_t len) {
+    vector_t *vector = vector_new(len);
+    vector->used = len;
+    return vector;
+}
+
 vector_t *vector_init(void *value) {
     vector_t *vector = vector_new(1);
     vector_push(&vector, value);

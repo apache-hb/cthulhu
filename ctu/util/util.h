@@ -47,6 +47,7 @@ typedef struct {
 } vector_t;
 
 vector_t *vector_new(size_t size);
+vector_t *vector_of(size_t len);
 vector_t *vector_init(void *value);
 void vector_delete(vector_t *vector);
 void vector_push(vector_t **vector, void *value);

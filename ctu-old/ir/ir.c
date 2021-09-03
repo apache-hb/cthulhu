@@ -200,7 +200,7 @@ static operand_t emit_bool(node_t *node) {
 }
 
 static flow_t *get_flow(module_t *mod, size_t idx) {
-    return mod->flows + (idx + mod->closures);
+    return mod->blocks + (idx + mod->closures);
 }
 
 static operand_t get_global(flow_t *flow, node_t *node) {
@@ -640,7 +640,7 @@ static operand_t emit_sizeof(flow_t *flow, node_t *node) {
     ret.value = add_vreg(&self, get);
     add_step(&self, ret);
 
-    flow->mod->flows[node->local] = self;
+    flow->mod->blocks[node->local] = self;
 
     return new_func(node->local);
 }
@@ -910,7 +910,7 @@ module_t *compile_module(const char *name, unit_t unit) {
 
     /* functions are put after closures */
     mod->nflows = funcs + closures;
-    mod->flows = ctu_malloc(sizeof(flow_t) * mod->nflows);
+    mod->blocks = ctu_malloc(sizeof(flow_t) * mod->nflows);
     
     mod->nvars = list_len(unit.vars);
     mod->vars = ctu_malloc(sizeof(flow_t) * mod->nvars);
@@ -933,7 +933,7 @@ module_t *compile_module(const char *name, unit_t unit) {
      */
 
     for (size_t i = 0; i < funcs; i++) {
-        mod->flows[i + closures].name = get_decl_name(list_at(unit.funcs, i));
+        mod->blocks[i + closures].name = get_decl_name(list_at(unit.funcs, i));
     }
 
     for (size_t i = 0; i < mod->nvars; i++) {
@@ -950,7 +950,7 @@ module_t *compile_module(const char *name, unit_t unit) {
      */
 
     for (size_t i = 0; i < funcs; i++) {
-        mod->flows[i + closures] = compile_flow(mod, list_at(unit.funcs, i));
+        mod->blocks[i + closures] = compile_flow(mod, list_at(unit.funcs, i));
     }
 
     for (size_t i = 0; i < mod->nvars; i++) {
