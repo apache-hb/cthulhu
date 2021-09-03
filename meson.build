@@ -61,7 +61,11 @@ parse = generator(bison,
 
 options = [ ]
 
-foreach lang : [ 'c', 'ctu', 'pl0' ] 
+foreach lang : [ 
+    'c', 
+    'ctu', 
+    'pl0' 
+    ] 
     subdir('ctu/frontend'/lang)
 endforeach
 

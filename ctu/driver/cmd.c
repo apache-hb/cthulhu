@@ -6,32 +6,35 @@
 
 static const char *VERSION = "0.0.1";
 
+typedef void*(*parse_t)(file_t*);
+typedef lir_t*(*analyze_t)(void*);
+
 typedef struct {
     const char *version;
     const char *name;
-    node_t*(*parse)(file_t*);
-    lir_t*(*analyze)(node_t*);
+    void*(*parse)(file_t*);
+    lir_t*(*analyze)(void*);
 } driver_t;
 
 static const driver_t PL0 = {
     .version = "0.0.1",
     .name = "PL/0",
-    .parse = pl0_parse,
-    .analyze = pl0_analyze
+    .parse = (parse_t)pl0_parse,
+    .analyze = (analyze_t)pl0_analyze
 };
 
 static const driver_t CTU = {
     .version = "0.0.1",
     .name = "Cthulhu",
-    .parse = ctu_parse,
-    .analyze = ctu_analyze
+    .parse = (parse_t)ctu_parse,
+    .analyze = (analyze_t)ctu_analyze
 };
 
 static const driver_t C = {
     .version = "0.0.1",
     .name = "C",
-    .parse = c_parse,
-    .analyze = c_analyze
+    .parse = (parse_t)c_parse,
+    .analyze = (analyze_t)c_analyze
 };
 
 static const driver_t INVALID = {

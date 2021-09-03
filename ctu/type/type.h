@@ -18,8 +18,13 @@ typedef enum {
     TY_SIZE
 } int_t;
 
+typedef enum {
+    SIGNED,
+    UNSIGNED
+} sign_t;
+
 typedef struct {
-    bool sign;
+    sign_t sign;
     int_t kind;
 } digit_t;
 
@@ -36,6 +41,12 @@ typedef struct type_t {
     };
 } type_t;
 
-type_t *type_digit(bool sign, int_t kind);
-type_t *type_closure(vector_t *args, type_t *result);
 char *type_format(const type_t *type);
+
+type_t *type_digit(sign_t sign, int_t kind);
+type_t *type_closure(vector_t *args, type_t *result);
+
+bool is_digit(const type_t *type);
+
+bool is_signed(const type_t *type);
+bool is_unsigned(const type_t *type);

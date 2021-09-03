@@ -2,40 +2,83 @@
 
 #include "ctu/util/report.h"
 
-#include <ctype.h>
-
 typedef struct {
-    map_t *globals;
+    map_t *vars;
+    map_t *consts;
     map_t *procs;
-    vector_t *locals;
 } pl0_data_t;
-
-static type_t *DIGIT = NULL;
-static type_t *RESULT = NULL;
 
 static void *pl0_data_new(void) {
     pl0_data_t *sema = ctu_malloc(sizeof(pl0_data_t));
-    sema->globals = map_new(4);
+    sema->vars = map_new(4);
+    sema->consts = map_new(4);
     sema->procs = map_new(4);
-    sema->locals = NULL;
     return sema;
 }
 
 static void pl0_data_delete(void *data) {
     pl0_data_t *sema = data;
-    map_delete(sema->globals);
+    map_delete(sema->vars);
+    map_delete(sema->consts);
     map_delete(sema->procs);
     ctu_free(sema);
 }
 
-static void add_local(sema_t *sema, lir_t *lir) {
-    pl0_data_t *data = sema->fields;
-    if (data->locals != NULL) {
-        vector_push(&data->locals, lir);
-    } else if (sema->parent != NULL) {
-        add_local(sema->parent, lir);
-    } 
+#define NEW_SEMA(parent) sema_new(parent, pl0_data_new)
+#define DELETE_SEMA(sema) sema_delete(sema, pl0_data_delete)
+
+static void report_shadow(const char *name, node_t *other, node_t *self) {
+    report_t id = reportf(ERROR, self->scan, self->where, "refinition of `%s`", name);
+    report_append(id, other->scan, other->where, "previous definition");
+    report_note(id, "PL/0 is case insensitive");
 }
+
+#define PL0_ADD(field, get1, func) \
+    static void func(sema_t *sema, const char *name, lir_t *lir) { \
+        pl0_data_t *data = sema->fields; \
+        lir_t *other1 = get1(sema, name); \
+        if (other1 != NULL) { \
+            report_shadow(name, other1->node, lir->node); \
+        } \
+        map_set(data->field, name, lir); \
+    }
+
+#define PL0_ADD2(field, get1, get2, func) \
+    static void func(sema_t *sema, const char *name, lir_t *lir) { \
+        pl0_data_t *data = sema->fields; \
+        lir_t *other1 = get1(sema, name); \
+        if (other1 != NULL) { \
+            report_shadow(name, other1->node, lir->node); \
+        } \
+        lir_t *other2 = get2(sema, name); \
+        if (other2 != NULL) { \
+            report_shadow(name, other2->node, lir->node); \
+        } \
+        map_set(data->field, name, lir); \
+    }
+
+#define PL0_GET(field, func) \
+    static lir_t *func(sema_t *sema, const char *name) { \
+        pl0_data_t *data = sema->fields; \
+        return map_get(data->field, name); \
+    }
+
+PL0_GET(vars, pl0_get_var)
+PL0_GET(consts, pl0_get_const)
+PL0_GET(procs, pl0_get_proc)
+
+PL0_ADD2(vars, pl0_get_var, pl0_get_const, pl0_add_var)
+PL0_ADD2(consts, pl0_get_const, pl0_get_var, pl0_add_const)
+PL0_ADD(procs, pl0_get_proc, pl0_add_proc)
+
+#if 0
+
+#include "ctu/util/report.h"
+
+#include <ctype.h>
+
+static type_t *DIGIT = NULL;
+static type_t *RESULT = NULL;
 
 #define NEW_SEMA(parent) sema_new(parent, pl0_data_new)
 #define DELETE_SEMA(sema) sema_delete(sema, pl0_data_delete)
@@ -84,7 +127,7 @@ static void pl0_set_proc(sema_t *sema, const char *name, lir_t *proc) {
     map_set(data->procs, name, proc);
 }
 
-static leaf_t decl_leaf(node_t *decl) {
+static leaf_t decl_leaf(pl0_t *decl) {
     switch (decl->kind) {
     case AST_VALUE: return LIR_VALUE;
     case AST_DEFINE: return LIR_DEFINE;
@@ -141,7 +184,7 @@ static lir_t *pl0_compile_digit(node_t *expr) {
     return lir_digit(expr, expr->digit);
 }
 
-static lir_t *pl0_match_expr(sema_t *sema, node_t *expr) {
+static lir_t *pl0_match_expr(sema_t *sema, pl0_t *expr) {
     switch (expr->kind) {
     case AST_IDENT:
         return GET_GLOBAL(sema, expr->ident);
@@ -154,11 +197,11 @@ static lir_t *pl0_match_expr(sema_t *sema, node_t *expr) {
 
     default:
         assert("unknown expr %d", expr->kind);
-        return lir_poison(expr, "unknown expr");
+        return lir_poison(expr->node, "unknown expr");
     }
 }
 
-static lir_t *pl0_compile_expr(sema_t *sema, node_t *expr) {
+static lir_t *pl0_compile_expr(sema_t *sema, pl0_t *expr) {
     lir_t *lir = pl0_match_expr(sema, expr);
     lir->type = DIGIT;
     return lir;
@@ -199,7 +242,6 @@ static void pl0_compile_local(sema_t *sema, node_t *expr) {
     lir_begin(lir, LIR_VALUE);
     lir_value(lir, DIGIT, init);
 
-    add_local(sema, lir);
     SET_GLOBAL(sema, name, lir);
 }
 
@@ -252,24 +294,19 @@ static void pl0_proc(void *user, lir_t *lir) {
 
     sema_t *nest = NEW_SEMA(sema);
 
-    pl0_data_t *data = nest->fields;
-    data->locals = vector_new(4);
-
     lir_t *proc = pl0_compile_stmt(nest, node->body);
-
-    lir_define(lir, RESULT, data->locals, proc);
 }
 
 static bool always(void *value) {
     return value != NULL;
 }
 
-static lir_t *pl0_compile(sema_t *sema, node_t *root) {
+static lir_t *pl0_compile(sema_t *sema, pl0_t *root) {
     /* declare everything */
     vector_t *decls = root->decls;
     size_t len = vector_len(decls);
     for (size_t i = 0; i < len; i++) {
-        node_t *decl = vector_get(decls, i);
+        pl0_t *decl = vector_get(decls, i);
         pl0_declare(sema, decl);
     }
 
@@ -285,7 +322,7 @@ static lir_t *pl0_compile(sema_t *sema, node_t *root) {
     return lir_module(root, vars, procs);
 }
 
-lir_t *pl0_sema(node_t *node) {
+lir_t *pl0_sema(pl0_t *node) {
     sema_t *sema = NEW_SEMA(NULL);
 
     if (DIGIT == NULL) {
@@ -301,4 +338,38 @@ lir_t *pl0_sema(node_t *node) {
     DELETE_SEMA(sema);
 
     return result;
+}
+#endif
+
+lir_t *pl0_sema(pl0_t *node) {
+    (void) node;
+
+    sema_t *sema = NEW_SEMA(NULL);
+
+    vector_t *vars = node->globals;
+    vector_t *consts = node->consts;
+    vector_t *procs = node->procs;
+
+    size_t nvars = vector_len(vars);
+    size_t nconsts = vector_len(consts);
+    size_t nprocs = vector_len(procs);
+
+    for (size_t i = 0; i < nvars; i++) {
+        pl0_t *decl = vector_get(vars, i);
+        pl0_add_var(sema, decl->name, NULL);
+    }
+
+    for (size_t i = 0; i < nconsts; i++) {
+        pl0_t *decl = vector_get(consts, i);
+        pl0_add_const(sema, decl->name, NULL);
+    }
+
+    for (size_t i = 0; i < nprocs; i++) {
+        pl0_t *decl = vector_get(procs, i);
+        pl0_add_proc(sema, decl->name, NULL);
+    }
+
+    DELETE_SEMA(sema);
+
+    return NULL;
 }

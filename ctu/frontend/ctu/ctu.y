@@ -21,7 +21,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 
 %union {
-    node_t *node;
+    ctu_t *ctu;
     vector_t *vector;
 
     char *ident;
@@ -38,12 +38,11 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     VAR "`var`"
     SEMI "`;`"
     ASSIGN "`=`"
-    COLON "`:`"
     END 0 
 
-%type<node>
-    ident digit value decl
-    expr type primary
+%type<ctu>
+    value decl
+    expr primary
 
 %type<vector>
     unit
@@ -62,24 +61,14 @@ unit: decl { $$ = vector_init($1); }
 decl: value { $$ = $1; }
     ;
 
-value: VAR ident ASSIGN expr SEMI { $$ = ast_value(x, @$, $2, NULL, $4); }
-    | VAR ident COLON type SEMI { $$ = ast_value(x, @$, $2, $4, NULL); }
+value: VAR IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, $4); }
     ;
 
-type: ident { $$ = ast_typename(x, @$, $1); }
-    ;
-
-primary: digit { $$ = $1; }
-    | ident { $$ = $1; }
+primary: DIGIT { $$ = ctu_digit(x, @$, $1); }
+    | IDENT { $$ = ctu_ident(x, @$, $1); }
     ;
 
 expr: primary { $$ = $1; }
-    ;
-
-ident: IDENT { $$ = ast_ident(x, @$, $1); }
-    ;
-
-digit: DIGIT { $$ = ast_digit(x, @$, $1); }
     ;
 
 %%

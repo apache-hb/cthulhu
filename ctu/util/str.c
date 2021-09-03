@@ -44,3 +44,34 @@ bool endswith(const char *str, const char *suffix) {
 
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
+
+char *strjoin(const char *sep, vector_t *parts) {
+    size_t all = vector_len(parts);
+    size_t len = 0;
+    size_t seplen = strlen(sep);
+    for (size_t i = 0; i < all; i++) {
+        const char *part = vector_get(parts, i);
+        len += strlen(part);
+
+        if (i != 0) {
+            len += seplen;
+        }
+    }
+
+    char *out = ctu_malloc(len + 1);
+    size_t idx = 0;
+
+    for (size_t i = 0; i < all; i++) {
+        const char *part = vector_get(parts, i);
+        strcpy(out, part);
+        out += strlen(part);
+
+        if (i != 0) {
+            strcpy(out + idx, sep);
+            idx += seplen;
+        }
+    }
+
+    out[idx] = 0;
+    return out;
+}

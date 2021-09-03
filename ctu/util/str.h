@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+#include "util.h"
+
 #define COLOUR_RED "\x1B[1;31m"
 #define COLOUR_GREEN "\x1B[1;32m"
 #define COLOUR_YELLOW "\x1B[1;33m"
@@ -16,3 +18,5 @@ char *formatv(const char *fmt, va_list args);
 
 bool startswith(const char *str, const char *prefix);
 bool endswith(const char *str, const char *suffix);
+
+char *strjoin(const char *sep, vector_t *parts);

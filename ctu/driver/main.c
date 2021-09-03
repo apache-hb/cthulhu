@@ -55,11 +55,11 @@ static void parse_args(int argc, char **argv) {
 typedef struct {
     const driver_t *driver;
     file_t *file;
-    node_t *root;
+    void *root;
     lir_t *lir;
 } unit_t;
 
-static unit_t *unit_new(const driver_t *driver, file_t *file, node_t *node) {
+static unit_t *unit_new(const driver_t *driver, file_t *file, void *node) {
     unit_t *unit = ctu_malloc(sizeof(unit_t));
     unit->driver = driver;
     unit->file = file;

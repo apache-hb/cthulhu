@@ -17,16 +17,17 @@ static lir_t *lir_decl(node_t *node, leaf_t leaf, const char *name) {
 }
 
 lir_t *lir_declare(node_t *node, const char *name, leaf_t expected, struct sema_t *sema) {
-    lir_t *lir = lir_decl(node, LIR_EMPTY, name);
+    lir_t *lir = lir_decl(node, LIR_FORWARD, name);
     lir->expected = expected;
     lir->sema = sema;
     return lir;
 }
 
-lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs) {
+lir_t *lir_module(node_t *node, vector_t *vars, vector_t *consts, vector_t *funcs) {
     lir_t *lir = lir_new(node, LIR_MODULE);
 
     lir->vars = vars;
+    lir->consts = consts;
     lir->funcs = funcs;
 
     return lir;
@@ -96,7 +97,7 @@ void lir_define(lir_t *dst, type_t *type, vector_t *locals, lir_t *body) {
 }
 
 void lir_begin(lir_t *dst, leaf_t leaf) {
-    if (dst->leaf != LIR_EMPTY) {
+    if (dst->leaf != LIR_FORWARD) {
         assert("lir-begin already began");
         return;
     }
