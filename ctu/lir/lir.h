@@ -12,8 +12,12 @@ typedef enum {
     /* binary expresion */
     LIR_BINARY,
     LIR_UNARY,
+    LIR_CALL,
 
     LIR_ASSIGN,
+    LIR_WHILE,
+    LIR_BRANCH,
+    LIR_STMTS,
 
     /* forward declaration */
     LIR_FORWARD,
@@ -67,6 +71,19 @@ typedef struct lir_t {
         };
 
         struct {
+            struct lir_t *cond;
+            struct lir_t *then;
+            struct lir_t *other;
+        };
+
+        vector_t *stmts;
+
+        struct {
+            struct lir_t *func;
+            vector_t *args;
+        };
+
+        struct {
             const char *name;
 
             union {
@@ -77,7 +94,7 @@ typedef struct lir_t {
                  */
                 struct {
                     leaf_t expected;
-                    struct sema_t *sema;
+                    void *ctx;
                 };
 
                 /**
@@ -111,7 +128,7 @@ typedef struct lir_t {
     };
 } lir_t;
  
-lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, struct sema_t *sema);
+lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, void *ctx);
 lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs);
 
 lir_t *lir_int(node_t *node, int digit);
@@ -119,8 +136,12 @@ lir_t *lir_digit(node_t *node, mpz_t digit);
 
 lir_t *lir_binary(node_t *node, binary_t binary, lir_t *lhs, lir_t *rhs);
 lir_t *lir_unary(node_t *node, unary_t unary, lir_t *operand);
+lir_t *lir_call(node_t *node, lir_t *func, vector_t *args);
 
 lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src);
+lir_t *lir_while(node_t *node, lir_t *cond, lir_t *then);
+lir_t *lir_branch(node_t *node, lir_t *cond, lir_t *then, lir_t *other);
+lir_t *lir_stmts(node_t *node, vector_t *stmts);
 
 lir_t *lir_poison(node_t *node, const char *msg);
 

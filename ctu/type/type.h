@@ -7,6 +7,7 @@
 typedef enum {
     TY_VOID,
     TY_DIGIT,
+    TY_BOOL,
     TY_CLOSURE
 } metatype_t;
 
@@ -31,6 +32,9 @@ typedef struct {
 typedef struct type_t {
     metatype_t type;
 
+    /* is this type mutable */
+    bool mut;
+
     union {
         digit_t digit;
 
@@ -45,6 +49,9 @@ char *type_format(const type_t *type);
 
 type_t *type_digit(sign_t sign, int_t kind);
 type_t *type_closure(vector_t *args, type_t *result);
+type_t *type_bool(void);
+
+void type_mut(type_t *type, bool mut);
 
 bool is_digit(const type_t *type);
 

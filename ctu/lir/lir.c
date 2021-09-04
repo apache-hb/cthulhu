@@ -16,10 +16,10 @@ static lir_t *lir_decl(node_t *node, leaf_t leaf, const char *name) {
     return lir;
 }
 
-lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, struct sema_t *sema) {
+lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, void *ctx) {
     lir_t *lir = lir_decl(node, LIR_FORWARD, name);
     lir->expected = expected;
-    lir->sema = sema;
+    lir->ctx = ctx;
     return lir;
 }
 
@@ -67,6 +67,15 @@ lir_t *lir_unary(node_t *node, unary_t unary, lir_t *operand) {
     return lir;
 }
 
+lir_t *lir_call(node_t *node, lir_t *func, vector_t *args) {
+    lir_t *lir = lir_new(node, LIR_CALL);
+
+    lir->func = func;
+    lir->args = args;
+
+    return lir;
+}
+
 lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src) {
     lir_t *lir = lir_new(node, LIR_ASSIGN);
 
@@ -76,20 +85,49 @@ lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src) {
     return lir;
 }
 
+lir_t *lir_while(node_t *node, lir_t *cond, lir_t *then) {
+    lir_t *lir = lir_new(node, LIR_WHILE);
+
+    lir->cond = cond;
+    lir->then = then;
+
+    return lir;
+}
+
+lir_t *lir_stmts(node_t *node, vector_t *stmts) {
+    lir_t *lir = lir_new(node, LIR_STMTS);
+
+    lir->stmts = stmts;
+
+    return lir;
+}
+
+lir_t *lir_branch(node_t *node, lir_t *cond, lir_t *then, lir_t *other) {
+    lir_t *lir = lir_new(node, LIR_BRANCH);
+
+    lir->cond = cond;
+    lir->then = then;
+    lir->other = other;
+
+    return lir;
+}
+
 void lir_value(lir_t *dst, type_t *type, lir_t *init) {
-    if (dst->leaf != LIR_VALUE) {
+    if (dst->leaf != LIR_FORWARD) {
         assert("lir-value already resolved");
     }
 
+    dst->leaf = LIR_VALUE;
     dst->type = type;
     dst->init = init;
 }
 
 void lir_define(lir_t *dst, type_t *type, vector_t *locals, lir_t *body) {
-    if (dst->leaf != LIR_DEFINE) {
+    if (dst->leaf != LIR_FORWARD) {
         assert("lir-define already resolved");
     }
 
+    dst->leaf = LIR_DEFINE;
     dst->type = type;
     dst->locals = locals;
     dst->body = body;   
@@ -130,7 +168,7 @@ vector_t *lir_recurses(lir_t *lir, const lir_t *root) {
     lir_t *source = NULL;
 
     if (lir == root) {
-        return vector_init(lir);
+        return vector_init(lir->node);
     }
 
     switch (lir->leaf) {
@@ -161,7 +199,7 @@ vector_t *lir_recurses(lir_t *lir, const lir_t *root) {
     }
 
     if (result) {
-        vector_push(&result, source);
+        vector_push(&result, source->node);
     }
 
     return result;

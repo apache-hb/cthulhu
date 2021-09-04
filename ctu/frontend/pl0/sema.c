@@ -35,24 +35,49 @@ static void report_shadow(const char *name, node_t *other, node_t *self) {
     report_note(id, "PL/0 is case insensitive");
 }
 
-#define PL0_ADD(field, get, func) \
+static void report_recurse(vector_t *stack, lir_t *root) {
+    node_t *node = root->node;
+    report_t id = reportn(ERROR, node, "initialization of `%s` is recursive", root->name);
+    
+    node_t *last = node;
+    size_t len = vector_len(stack);
+    size_t t = 0;
+
+    for (size_t i = 0; i < len; i++) {
+        node_t *it = vector_get(stack, i);
+        if (it != last) {
+            report_appendn(id, it, "trace %zu", t++);
+        }
+        last = it;
+    }
+}
+
+#define GET_VAR(sema, name) sema_get(sema, name, pl0_get_var)
+#define GET_CONST(sema, name) sema_get(sema, name, pl0_get_const)
+#define GET_PROC(sema, name) sema_get(sema, name, pl0_get_proc)
+
+#define SET_VAR(sema, name, lir) sema_set(sema, name, lir, pl0_add_var)
+#define SET_CONST(sema, name, lir) sema_set(sema, name, lir, pl0_add_const)
+#define SET_PROC(sema, name, lir) sema_set(sema, name, lir, pl0_add_proc)
+
+#define PL0_ADD(field, func) \
     static void func(sema_t *sema, const char *name, lir_t *lir) { \
         pl0_data_t *data = sema->fields; \
-        lir_t *other = get(sema, name); \
+        lir_t *other = GET_PROC(sema, name); \
         if (other != NULL) { \
             report_shadow(name, other->node, lir->node); \
         } \
         map_set(data->field, name, lir); \
     }
 
-#define PL0_ADD2(field, get1, get2, func) \
+#define PL0_ADD2(field, func) \
     static void func(sema_t *sema, const char *name, lir_t *lir) { \
         pl0_data_t *data = sema->fields; \
-        lir_t *other1 = get1(sema, name); \
+        lir_t *other1 = GET_VAR(sema, name); \
         if (other1 != NULL) { \
             report_shadow(name, other1->node, lir->node); \
         } \
-        lir_t *other2 = get2(sema, name); \
+        lir_t *other2 = GET_CONST(sema, name); \
         if (other2 != NULL) { \
             report_shadow(name, other2->node, lir->node); \
         } \
@@ -69,279 +94,12 @@ PL0_GET(vars, pl0_get_var)
 PL0_GET(consts, pl0_get_const)
 PL0_GET(procs, pl0_get_proc)
 
-PL0_ADD2(vars, pl0_get_var, pl0_get_const, pl0_add_var)
-PL0_ADD2(consts, pl0_get_const, pl0_get_var, pl0_add_const)
-PL0_ADD(procs, pl0_get_proc, pl0_add_proc)
+PL0_ADD2(vars, pl0_add_var)
+PL0_ADD2(consts, pl0_add_const)
+PL0_ADD(procs, pl0_add_proc)
 
-#if 0
-
-#include "ctu/util/report.h"
-
-#include <ctype.h>
-
-static type_t *DIGIT = NULL;
-static type_t *RESULT = NULL;
-
-#define NEW_SEMA(parent) sema_new(parent, pl0_data_new)
-#define DELETE_SEMA(sema) sema_delete(sema, pl0_data_delete)
-#define GET_GLOBAL(sema, name) sema_get(sema, name, pl0_get_global)
-#define SET_GLOBAL(sema, name, value) sema_set(sema, name, value, pl0_set_global)
-
-#define GET_PROC(sema, name) sema_get(sema, name, pl0_get_proc)
-#define SET_PROC(sema, name, proc) sema_set(sema, name, proc, pl0_set_proc)
-
-static void report_shadow(const char *name, node_t *other, node_t *self) {
-    report_t id = reportf(ERROR, self->scan, self->where, "refinition of `%s`", name);
-    report_append(id, other->scan, other->where, "previous definition");
-    report_note(id, "PL/0 is case insensitive");
-}
-
-static lir_t *pl0_get_global(sema_t *sema, const char *name) {
-    pl0_data_t *data = sema->fields;
-
-    return map_get(data->globals, name);
-}
-
-static void pl0_set_global(sema_t *sema, const char *name, lir_t *value) {
-    lir_t *other = GET_GLOBAL(sema, name);
-    if (other != NULL) {
-        report_shadow(name, other->node, value->node);
-        return;
-    }
-    
-    pl0_data_t *data = sema->fields;
-    map_set(data->globals, name, value);
-}
-
-static lir_t *pl0_get_proc(sema_t *sema, const char *name) {
-    pl0_data_t *data = sema->fields;
-    return map_get(data->procs, name);
-}
-
-static void pl0_set_proc(sema_t *sema, const char *name, lir_t *proc) {
-    lir_t *other = GET_PROC(sema, name);
-    if (other != NULL) {
-        report_shadow(name, other->node, proc->node);
-        return;
-    }
-    
-    pl0_data_t *data = sema->fields;
-    map_set(data->procs, name, proc);
-}
-
-static leaf_t decl_leaf(pl0_t *decl) {
-    switch (decl->kind) {
-    case AST_VALUE: return LIR_VALUE;
-    case AST_DEFINE: return LIR_DEFINE;
-
-    default:
-        assert("unknown decl-leaf %d", decl->kind);
-        return LIR_EMPTY;
-    }
-}
-
-static char *pl0_name(node_t *ident) {
-    char *out = ctu_strdup(ident->ident);
-    for (char *p = out; *p != '\0'; p++) {
-        *p = tolower(*p);
-    }
-    return out;
-}
-
-static void pl0_declare(sema_t *sema, node_t *decl) {
-    leaf_t leaf = decl_leaf(decl);
-    char *name = pl0_name(decl->name);
-    lir_t *lir = lir_declare(decl, name, leaf, NULL);
-
-    switch (leaf) {
-    case LIR_VALUE:
-        SET_GLOBAL(sema, name, lir);
-        break;
-    case LIR_DEFINE:
-        SET_PROC(sema, name, lir);
-        break;
-    default:
-        assert("unknown leaf %d", leaf);
-        break;
-    }
-}
-
-static lir_t *pl0_compile_expr(sema_t *sema, node_t *expr);
-static lir_t *pl0_compile_stmt(sema_t *sema, node_t *stmt);
-
-static lir_t *pl0_compile_binary(sema_t *sema, node_t *expr) {
-    lir_t *lhs = pl0_compile_expr(sema, expr->lhs);
-    lir_t *rhs = pl0_compile_expr(sema, expr->rhs);
-
-    return lir_binary(expr, expr->binary, lhs, rhs);
-}
-
-static lir_t *pl0_compile_unary(sema_t *sema, node_t *expr) {
-    lir_t *operand = pl0_compile_expr(sema, expr->operand);
-
-    return lir_unary(expr, expr->unary, operand);
-}
-
-static lir_t *pl0_compile_digit(node_t *expr) {
-    return lir_digit(expr, expr->digit);
-}
-
-static lir_t *pl0_match_expr(sema_t *sema, pl0_t *expr) {
-    switch (expr->kind) {
-    case AST_IDENT:
-        return GET_GLOBAL(sema, expr->ident);
-    case AST_DIGIT:
-        return pl0_compile_digit(expr);
-    case AST_BINARY:
-        return pl0_compile_binary(sema, expr);
-    case AST_UNARY:
-        return pl0_compile_unary(sema, expr);
-
-    default:
-        assert("unknown expr %d", expr->kind);
-        return lir_poison(expr->node, "unknown expr");
-    }
-}
-
-static lir_t *pl0_compile_expr(sema_t *sema, pl0_t *expr) {
-    lir_t *lir = pl0_match_expr(sema, expr);
-    lir->type = DIGIT;
-    return lir;
-}
-
-static void report_recurse(vector_t *stack, lir_t *root) {
-    node_t *node = root->node;
-    report_t id = reportf(ERROR, node->scan, node->where, "initialization of `%s` is recursive", root->name);
-    
-    node_t *last = node;
-    size_t len = vector_len(stack);
-    size_t t = 0;
-
-    for (size_t i = 0; i < len; i++) {
-        lir_t *lir = vector_get(stack, i);
-        node_t *it = lir->node;
-        if (it != last) {
-            report_append(id, it->scan, it->where, "trace %zu", t++);
-        }
-        last = it;
-    }
-}
-
-static lir_t *pl0_compile_assign(sema_t *sema, node_t *expr) {
-    lir_t *dst = pl0_compile_expr(sema, expr->dst);
-    lir_t *src = pl0_compile_expr(sema, expr->src);
-
-    return lir_assign(expr, dst, src);
-}
-
-static void pl0_compile_local(sema_t *sema, node_t *expr) {
-    lir_t *init = lir_int(expr, 0);
-    init->type = DIGIT;
-
-    const char *name = pl0_name(expr->name);
-
-    lir_t *lir = lir_declare(expr, name, LIR_VALUE, NULL);
-    lir_begin(lir, LIR_VALUE);
-    lir_value(lir, DIGIT, init);
-
-    SET_GLOBAL(sema, name, lir);
-}
-
-static lir_t *pl0_compile_stmts(sema_t *sema, node_t *stmts) {
-    return NULL; /* TODO */
-}
-
-static lir_t *pl0_compile_stmt(sema_t *sema, node_t *stmt) {
-    switch (stmt->kind) {
-    case AST_ASSIGN:
-        return pl0_compile_assign(sema, stmt);
-
-    case AST_VALUE:
-        pl0_compile_local(sema, stmt);
-        return NULL;
-
-    case AST_STMTS:
-        return pl0_compile_stmts(sema, stmt);
-
-    default:
-        return NULL;
-    }
-}
-
-static void pl0_global(void *user, lir_t *lir) {
-    lir_begin(lir, LIR_VALUE);
-
-    sema_t *sema = user;
-
-    node_t *node = lir->node;
-    lir_t *init = node->value
-        ? pl0_compile_expr(sema, node->value) 
-        : lir_int(node, 0);
-    
-    init->type = DIGIT;
-
-    vector_t *path = lir_recurses(init, lir);
-    if (path != NULL) {
-        report_recurse(path, lir);
-    }
-
-    lir_value(lir, DIGIT, init);
-}
-
-static void pl0_proc(void *user, lir_t *lir) {
-    lir_begin(lir, LIR_DEFINE);
-    
-    sema_t *sema = user;
-    node_t *node = lir->node;
-
-    sema_t *nest = NEW_SEMA(sema);
-
-    lir_t *proc = pl0_compile_stmt(nest, node->body);
-}
-
-static bool always(void *value) {
-    return value != NULL;
-}
-
-static lir_t *pl0_compile(sema_t *sema, pl0_t *root) {
-    /* declare everything */
-    vector_t *decls = root->decls;
-    size_t len = vector_len(decls);
-    for (size_t i = 0; i < len; i++) {
-        pl0_t *decl = vector_get(decls, i);
-        pl0_declare(sema, decl);
-    }
-
-    /* compile everything */
-    pl0_data_t *data = sema->fields;
-
-    MAP_APPLY(data->globals, sema, pl0_global);
-    MAP_APPLY(data->procs, sema, pl0_proc);
-
-    vector_t *vars = MAP_COLLECT(data->globals, always);
-    vector_t *procs = MAP_COLLECT(data->procs, always);
-
-    return lir_module(root, vars, procs);
-}
-
-lir_t *pl0_sema(pl0_t *node) {
-    sema_t *sema = NEW_SEMA(NULL);
-
-    if (DIGIT == NULL) {
-        DIGIT = type_digit(true, TY_INT);
-    }
-
-    if (RESULT == NULL) {
-        RESULT = type_closure(vector_new(0), DIGIT);
-    }
-
-    lir_t *result = pl0_compile(sema, node);
-
-    DELETE_SEMA(sema);
-
-    return result;
-}
-#endif
+static lir_t *compile_expr(sema_t *sema, pl0_t *expr);
+static lir_t *compile_stmt(sema_t *sema, pl0_t *stmt);
 
 static char *pl0_name(const char *name) {
     char *out = ctu_strdup(name);
@@ -351,8 +109,274 @@ static char *pl0_name(const char *name) {
     return out;
 }
 
-static lir_t *pl0_declare(pl0_t *pl0, leaf_t leaf) {
-    return lir_forward(pl0->node, pl0_name(pl0->name), leaf, NULL);
+static type_t *pl0_int(bool mut) {
+    type_t *ty = type_digit(SIGNED, TY_LONG);
+    type_mut(ty, mut);
+    return ty;
+}
+
+static type_t *pl0_bool(void) {
+    return type_bool();
+}
+
+static type_t *pl0_closure(void) {
+    vector_t *args = vector_new(0);
+    return type_closure(args, pl0_int(true));
+}
+
+static lir_t *pl0_num(node_t *node, int num) {
+    lir_t *lir = lir_int(node, num);
+    lir->type = pl0_int(false);
+    return lir;
+}
+
+static lir_t *compile_digit(pl0_t *expr) {
+    return lir_digit(expr->node, expr->digit);
+}
+
+static lir_t *query_ident(sema_t *sema, const char *name) {
+    lir_t *val = GET_CONST(sema, name);
+    if (val != NULL) {
+        return val;
+    }
+
+    lir_t *var = GET_VAR(sema, name);
+    if (var != NULL) {
+        return var;
+    }
+
+    return NULL;
+}
+
+static lir_t *compile_ident(sema_t *sema, pl0_t *expr) {
+    char *name = pl0_name(expr->ident);
+    node_t *node = expr->node;
+
+    lir_t *val = query_ident(sema, name);
+
+    if (val != NULL) {
+        return val;
+    }
+
+    report_t id = reportn(ERROR, node, "unknown variable name `%s`", name);
+    report_note(id, "PL/0 is case insensitive");
+
+    return lir_poison(node, "unresolved variable");
+}
+
+static lir_t *compile_binary(sema_t *sema, pl0_t *expr) {
+    lir_t *lhs = compile_expr(sema, expr->lhs);
+    lir_t *rhs = compile_expr(sema, expr->rhs);
+
+    return lir_binary(expr->node, expr->binary, lhs, rhs);
+}
+
+static lir_t *compile_unary(sema_t *sema, pl0_t *expr) {
+    lir_t *operand = compile_expr(sema, expr->operand);
+
+    return lir_unary(expr->node, expr->unary, operand);
+}
+
+static lir_t *compile_odd(sema_t *sema, pl0_t *expr) {
+    lir_t *lhs = compile_expr(sema, expr->lhs);
+
+    node_t *node = expr->node;
+    lir_t *rem = lir_binary(node, BINARY_REM, lhs, pl0_num(node, 2));
+    lir_t *cmp = lir_binary(node, BINARY_EQ, rem, pl0_num(node, 1));
+    return cmp;
+}
+
+static lir_t *compile_expr(sema_t *sema, pl0_t *expr) {
+    lir_t *result = NULL;
+
+    switch (expr->type) {
+    case PL0_DIGIT: 
+        result = compile_digit(expr);
+        break;
+    case PL0_IDENT:
+        return compile_ident(sema, expr);
+    case PL0_BINARY:
+        result = compile_binary(sema, expr);
+        break;
+    case PL0_UNARY:
+        result = compile_unary(sema, expr);
+        break;
+    default:
+        assert("compile-expr unknown expr %d", expr->type);
+        return lir_poison(expr->node, "unknown expr");
+    }
+
+    result->type = pl0_int(false);
+
+    return result;
+}
+
+static lir_t *compile_cond(sema_t *sema, pl0_t *expr) {
+    lir_t *result = NULL;
+    switch (expr->type) {
+    case PL0_ODD:
+        result = compile_odd(sema, expr);
+        break;
+    case PL0_BINARY:
+        result = compile_binary(sema, expr);
+        break;
+    
+    default:
+        assert("compile-cond unknown cond %d", expr->type);
+        return lir_poison(expr->node, "unknown cond");
+    }
+
+    result->type = pl0_bool();
+
+    return result;
+}
+
+static lir_t *compile_assign(sema_t *sema, pl0_t *stmt) {
+    node_t *node = stmt->node;
+    char *name = pl0_name(stmt->dst);
+    lir_t *lhs = query_ident(sema, name);
+    if (lhs == NULL) {
+        report_t id = reportn(ERROR, node, "unknown variable name `%s`", name);
+        report_note(id, "PL/0 is case insensitive");
+
+        return lir_poison(node, "unresolved variable");
+    }
+
+    lir_t *rhs = compile_expr(sema, stmt->src);
+
+    if (!lhs->type->mut) {
+        reportn(ERROR, node, "cannot assign to const value `%s` %s", name, type_format(lhs->type));
+    }
+
+    return lir_assign(node, lhs, rhs);
+}
+
+static lir_t *compile_print(sema_t *sema, pl0_t *stmt) {
+    lir_t *expr = compile_expr(sema, stmt->operand);
+
+    return expr;
+}
+
+static lir_t *compile_loop(sema_t *sema, pl0_t *stmt) {
+    lir_t *cond = compile_cond(sema, stmt->cond);
+    lir_t *then = compile_stmt(sema, stmt->then);
+
+    return lir_while(stmt->node, cond, then);
+}
+
+static lir_t *compile_stmts(sema_t *sema, pl0_t *stmts) {
+    vector_t *all = stmts->stmts;
+    size_t len = vector_len(all);
+    vector_t *result = vector_of(len);
+
+    for (size_t i = 0; i < len; i++) {
+        pl0_t *stmt = vector_get(all, i);
+        lir_t *lir = compile_stmt(sema, stmt);
+        vector_set(result, i, lir);
+    }
+
+    return lir_stmts(stmts->node, result);
+}
+
+static lir_t *compile_branch(sema_t *sema, pl0_t *stmt) {
+    lir_t *cond = compile_cond(sema, stmt->cond);
+    lir_t *then = compile_stmt(sema, stmt->then);
+
+    return lir_branch(stmt->node, cond, then, NULL);
+}
+
+static lir_t *compile_call(sema_t *sema, pl0_t *stmt) {
+    char *name = pl0_name(stmt->ident);
+    lir_t *proc = GET_PROC(sema, name);
+    
+    if (proc == NULL) {
+        reportn(ERROR, stmt->node, "unknown procedure `%s`", name);
+        return lir_poison(stmt->node, "unknown procedure");
+    }
+
+    return lir_call(stmt->node, proc, vector_new(0));
+}
+
+static lir_t *compile_stmt(sema_t *sema, pl0_t *stmt) {
+    switch (stmt->type) {
+    case PL0_ASSIGN:
+        return compile_assign(sema, stmt);
+    case PL0_PRINT:
+        return compile_print(sema, stmt);
+    case PL0_LOOP:
+        return compile_loop(sema, stmt);
+    case PL0_STMTS:
+        return compile_stmts(sema, stmt);
+    case PL0_BRANCH:
+        return compile_branch(sema, stmt);
+    case PL0_CALL:
+        return compile_call(sema, stmt);
+
+    default:
+        assert("compile-stmt unknown stmt %d", stmt->type);
+        return lir_poison(stmt->node, "unknown stmt");
+    }
+}
+
+static void compile_const(sema_t *sema, lir_t *lir) {
+    pl0_t *node = lir->ctx;
+    lir_t *value = compile_expr(sema, node->value);
+
+    vector_t *path = lir_recurses(value, lir);
+    if (path != NULL) {
+        report_recurse(path, lir);
+    }
+
+    lir_value(lir, pl0_int(false), value);
+}
+
+static lir_t *build_var(sema_t *sema, pl0_t *node) {
+    char *name = pl0_name(node->name);
+    lir_t *lir = lir_forward(node->node, name, LIR_VALUE, NULL);
+    lir_value(lir, pl0_int(true), pl0_num(node->node, 0));
+    
+    SET_VAR(sema, name, lir);
+
+    return lir;
+}
+
+static void compile_var(sema_t *sema, lir_t *lir) {
+    (void)sema;
+    pl0_t *node = lir->ctx;
+    lir_t *value = pl0_num(node->node, 0);
+
+    lir_value(lir, pl0_int(true), value);
+}
+
+static void compile_proc(sema_t *sema, lir_t *lir) {
+    (void)sema;
+
+    pl0_t *node = lir->ctx;
+    size_t nlocals = vector_len(node->locals);
+    vector_t *locals = vector_of(nlocals);
+
+    sema_t *nest = NEW_SEMA(sema);
+
+    for (size_t i = 0; i < nlocals; i++) {
+        pl0_t *local = vector_get(node->locals, i);
+        lir_t *var = build_var(nest, local);
+        vector_set(locals, i, var);
+    }
+
+    size_t nbody = vector_len(node->body);
+    vector_t *body = vector_of(nbody);
+
+    for (size_t i = 0; i < nbody; i++) {
+        pl0_t *it = vector_get(node->body, i);
+        lir_t *stmt = compile_stmt(nest, it);
+        vector_set(body, i, stmt);
+    }
+
+    lir_define(lir, pl0_closure(), locals, lir_stmts(node->node, body));
+}
+
+static lir_t *pl0_declare(pl0_t *pl0, const char *name, leaf_t leaf) {
+    return lir_forward(pl0->node, name, leaf, pl0);
 }
 
 static bool always(void *value) {
@@ -372,20 +396,27 @@ lir_t *pl0_sema(pl0_t *node) {
 
     for (size_t i = 0; i < nvars; i++) {
         pl0_t *decl = vector_get(vars, i);
-        pl0_add_var(sema, decl->name, pl0_declare(decl, LIR_VALUE));
+        char *name = pl0_name(decl->name);
+        pl0_add_var(sema, name, pl0_declare(decl, name, LIR_VALUE));
     }
 
     for (size_t i = 0; i < nconsts; i++) {
         pl0_t *decl = vector_get(consts, i);
-        pl0_add_const(sema, decl->name, pl0_declare(decl, LIR_VALUE));
+        char *name = pl0_name(decl->name);
+        pl0_add_const(sema, name, pl0_declare(decl, name, LIR_VALUE));
     }
 
     for (size_t i = 0; i < nprocs; i++) {
         pl0_t *decl = vector_get(procs, i);
-        pl0_add_proc(sema, decl->name, pl0_declare(decl, LIR_DEFINE));
+        char *name = pl0_name(decl->name);
+        pl0_add_proc(sema, name, pl0_declare(decl, name, LIR_DEFINE));
     }
 
     pl0_data_t *data = sema->fields;
+
+    MAP_APPLY(data->consts, sema, compile_const);
+    MAP_APPLY(data->vars, sema, compile_var);
+    MAP_APPLY(data->procs, sema, compile_proc);
 
     vector_t *globals = vector_join(
         MAP_COLLECT(data->vars, always),

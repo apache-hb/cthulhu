@@ -65,7 +65,7 @@ typedef struct pl0_t {
             union {
                 struct {
                     vector_t *locals;
-                    struct pl0_t *body;
+                    vector_t *body;
                 };
 
                 struct pl0_t *value;
@@ -126,16 +126,8 @@ pl0_t *pl0_stmts(scan_t *scan, where_t where,
 
 pl0_t *pl0_procedure(scan_t *scan, where_t where,
                      const char *name, vector_t *locals,
-                     pl0_t *body);
+                     vector_t *body);
 
 pl0_t *pl0_module(scan_t *scan, where_t where, 
                   vector_t *consts, vector_t *globals, 
                   vector_t *procs, struct pl0_t *toplevel);
-
-#if 0
-pl0_t *pl0_odd(scan_t *scan, where_t where, pl0_t *expr);
-pl0_t *pl0_print(scan_t *scan, where_t where, pl0_t *expr);
-pl0_t *pl0_module(scan_t *scan, where_t where, vector_t *consts, vector_t *values, vector_t *procs, pl0_t *body);
-pl0_t *pl0_value(scan_t *scan, where_t where, pl0_t *name, pl0_t *expr);
-pl0_t *pl0_procedure(scan_t *scan, where_t where, pl0_t *name, vector_t *locals, pl0_t *body);
-#endif

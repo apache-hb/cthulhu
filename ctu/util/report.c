@@ -5,7 +5,6 @@
 #include "util.h"
 #include "str.h"
 
-#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -44,9 +43,9 @@ typedef struct {
 
 /* has an internal error happened */
 /* we track this to exit(99) for fuzzing reasons */
-static bool internal = false;
-static bool fatal = false;
-static bool self = false;
+static size_t internal = 0;
+static size_t fatal = 0;
+static size_t self = 0;
 
 /* the number of error reports to store */
 static size_t reports = 0;
@@ -286,27 +285,27 @@ void end_report(bool quit, const char *name) {
     for (size_t i = 0; i < used; i++) {
         message_t *message = get_message(i);
         if (report_send(message)) {
-            self = true;
-            fatal = true;
+            self += 1;
+            fatal += 1;
         }
         message_delete(message);
     }
     
     if (internal) {
-        fprintf(stderr, "exiting during %s due to an internal error\n", name);
+        fprintf(stderr, "exiting during %s due to %zu internal error(s)\n", name, internal);
         exit(99);
     }
 
     if (self && !quit) {
-        fprintf(stderr, "fatal error in %s\n", name);
+        fprintf(stderr, "%zu fatal error(s) in %s\n", self, name);
     }
 
     if (fatal && quit) {
-        fprintf(stderr, "fatal error in %s, exiting\n", name);
+        fprintf(stderr, "%zu fatal error(s) in %s, exiting\n", fatal, name);
         exit(1);
     }
 
-    self = false;
+    self = 0;
     used = 0;
 }
 
@@ -318,7 +317,7 @@ static report_t report_add(
     va_list args
 ) {
     if (level == INTERNAL) {
-        internal = true;
+        internal += 1;
     }
 
     if (used >= reports) {
@@ -362,6 +361,21 @@ report_t reportf(level_t level, const scan_t *scan, where_t where, const char *f
     return id;
 }
 
+report_t reportv(level_t level, const scan_t *scan, where_t where, const char *fmt, va_list args) {
+    return report_add(level, scan, where, fmt, args);
+}
+
+void report_appendv(report_t id, const scan_t *scan, where_t where, const char *fmt, va_list args) {
+    if (id == INVALID_REPORT) {
+        return;
+    }
+
+    char *msg = formatv(fmt, args);
+
+    message_t *message = get_message(id);
+    vector_push(&message->parts, part_new(msg, scan, where));
+}
+
 void report_append(report_t id, const scan_t *scan, where_t where, const char *fmt, ...) {
     if (id == INVALID_REPORT) {
         return;
@@ -369,11 +383,8 @@ void report_append(report_t id, const scan_t *scan, where_t where, const char *f
 
     va_list args;
     va_start(args, fmt);
-    char *msg = formatv(fmt, args);
+    report_appendv(id, scan, where, fmt, args);
     va_end(args);
-
-    message_t *message = get_message(id);
-    vector_push(&message->parts, part_new(msg, scan, where));
 }
 
 void report_note(report_t id, const char *fmt, ...) {

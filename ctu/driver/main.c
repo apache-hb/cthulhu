@@ -106,8 +106,8 @@ int main(int argc, char **argv) {
     for (size_t i = 0; i < len; i++) {
         unit_t *unit = vector_get(units, i);
         emit_c(stdout, unit->lir);
-        module_t *mod = module_build(unit->lir);
-        module_print(stdout, mod);
+         module_build(unit->lir);
+        //module_print(stdout, mod);
     }
 
     end_report(true, "code generation");

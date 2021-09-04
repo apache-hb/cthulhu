@@ -3,6 +3,7 @@
 #include "scan.h"
 
 #include "ctu/util/util.h"
+#include "ctu/util/report.h"
 
 typedef enum {
     BINARY_ADD,
@@ -30,3 +31,5 @@ typedef struct {
 } node_t;
 
 node_t *node_new(scan_t *scan, where_t where);
+report_t reportn(level_t lvl, const node_t *node, const char *fmt, ...);
+void report_appendn(report_t id, const node_t *node, const char *fmt, ...);
