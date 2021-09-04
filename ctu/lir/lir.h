@@ -106,14 +106,13 @@ typedef struct lir_t {
          */
         struct {
             vector_t *vars;
-            vector_t *consts;
             vector_t *funcs;
         };
     };
 } lir_t;
  
 lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, struct sema_t *sema);
-lir_t *lir_module(node_t *node, vector_t *vars, vector_t *consts, vector_t *funcs);
+lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs);
 
 lir_t *lir_int(node_t *node, int digit);
 lir_t *lir_digit(node_t *node, mpz_t digit);

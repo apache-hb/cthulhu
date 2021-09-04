@@ -16,18 +16,17 @@ static lir_t *lir_decl(node_t *node, leaf_t leaf, const char *name) {
     return lir;
 }
 
-lir_t *lir_declare(node_t *node, const char *name, leaf_t expected, struct sema_t *sema) {
+lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, struct sema_t *sema) {
     lir_t *lir = lir_decl(node, LIR_FORWARD, name);
     lir->expected = expected;
     lir->sema = sema;
     return lir;
 }
 
-lir_t *lir_module(node_t *node, vector_t *vars, vector_t *consts, vector_t *funcs) {
+lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs) {
     lir_t *lir = lir_new(node, LIR_MODULE);
 
     lir->vars = vars;
-    lir->consts = consts;
     lir->funcs = funcs;
 
     return lir;

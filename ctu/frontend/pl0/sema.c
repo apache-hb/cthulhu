@@ -2,6 +2,8 @@
 
 #include "ctu/util/report.h"
 
+#include <ctype.h>
+
 typedef struct {
     map_t *vars;
     map_t *consts;
@@ -33,12 +35,12 @@ static void report_shadow(const char *name, node_t *other, node_t *self) {
     report_note(id, "PL/0 is case insensitive");
 }
 
-#define PL0_ADD(field, get1, func) \
+#define PL0_ADD(field, get, func) \
     static void func(sema_t *sema, const char *name, lir_t *lir) { \
         pl0_data_t *data = sema->fields; \
-        lir_t *other1 = get1(sema, name); \
-        if (other1 != NULL) { \
-            report_shadow(name, other1->node, lir->node); \
+        lir_t *other = get(sema, name); \
+        if (other != NULL) { \
+            report_shadow(name, other->node, lir->node); \
         } \
         map_set(data->field, name, lir); \
     }
@@ -341,9 +343,23 @@ lir_t *pl0_sema(pl0_t *node) {
 }
 #endif
 
-lir_t *pl0_sema(pl0_t *node) {
-    (void) node;
+static char *pl0_name(const char *name) {
+    char *out = ctu_strdup(name);
+    for (char *p = out; *p != '\0'; p++) {
+        *p = tolower(*p);
+    }
+    return out;
+}
 
+static lir_t *pl0_declare(pl0_t *pl0, leaf_t leaf) {
+    return lir_forward(pl0->node, pl0_name(pl0->name), leaf, NULL);
+}
+
+static bool always(void *value) {
+    return value != NULL;
+}
+
+lir_t *pl0_sema(pl0_t *node) {
     sema_t *sema = NEW_SEMA(NULL);
 
     vector_t *vars = node->globals;
@@ -356,20 +372,29 @@ lir_t *pl0_sema(pl0_t *node) {
 
     for (size_t i = 0; i < nvars; i++) {
         pl0_t *decl = vector_get(vars, i);
-        pl0_add_var(sema, decl->name, NULL);
+        pl0_add_var(sema, decl->name, pl0_declare(decl, LIR_VALUE));
     }
 
     for (size_t i = 0; i < nconsts; i++) {
         pl0_t *decl = vector_get(consts, i);
-        pl0_add_const(sema, decl->name, NULL);
+        pl0_add_const(sema, decl->name, pl0_declare(decl, LIR_VALUE));
     }
 
     for (size_t i = 0; i < nprocs; i++) {
         pl0_t *decl = vector_get(procs, i);
-        pl0_add_proc(sema, decl->name, NULL);
+        pl0_add_proc(sema, decl->name, pl0_declare(decl, LIR_DEFINE));
     }
+
+    pl0_data_t *data = sema->fields;
+
+    vector_t *globals = vector_join(
+        MAP_COLLECT(data->vars, always),
+        MAP_COLLECT(data->consts, always)
+    );
+
+    vector_t *funcs = MAP_COLLECT(data->procs, always);
 
     DELETE_SEMA(sema);
 
-    return NULL;
+    return lir_module(node->node, globals, funcs);
 }
