@@ -7,6 +7,7 @@ static lir_t *lir_new(node_t *node, leaf_t leaf) {
     lir->node = node;
     lir->leaf = leaf;
     lir->type = NULL;
+    lir->data = NULL;
     return lir;
 }
 

@@ -126,6 +126,9 @@ typedef struct lir_t {
             vector_t *funcs;
         };
     };
+
+    /* internal user data, frontends are not allowed to touch this */
+    void *data;
 } lir_t;
  
 lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, void *ctx);

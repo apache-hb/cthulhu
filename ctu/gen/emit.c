@@ -6,8 +6,6 @@
 typedef struct {
     module_t *mod;
     block_t *block;
-    map_t *vars;
-    map_t *funcs;
 } context_t;
 
 static size_t push_step(block_t *block, step_t step) {
@@ -74,6 +72,48 @@ static operand_t add_step(context_t ctx, step_t step) {
 
 static operand_t emit_lir(context_t ctx, lir_t *lir);
 
+static operand_t build_return(context_t ctx, lir_t *lir, operand_t op) {
+    step_t step = step_of(OP_RETURN, lir);
+    step.operand = op;
+    return add_step(ctx, step);
+}
+
+static block_t *init_block(lir_t *decl, type_t *type) {
+    block_t *block = ctu_malloc(sizeof(block_t));
+    
+    block->name = decl->name;
+    block->result = type;
+
+    block->len = 0;
+    block->size = 16;
+    block->steps = ctu_malloc(sizeof(step_t) * block->size);
+
+    return block;
+}
+
+static block_t *block_declare(lir_t *lir) {
+    block_t *block = init_block(lir, lir->type);
+    lir->data = block;
+    return block;
+}
+
+static block_t *compile_block(module_t *mod, lir_t *decl) {
+    block_t *block = block_declare(decl);
+    context_t ctx = { mod, block };
+    build_return(ctx, decl->init, emit_lir(ctx, decl->init));
+    vector_push(&mod->vars, block);
+    return block;
+}
+
+static void build_block(module_t *mod, block_t *block, lir_t *body) {
+    context_t ctx = { mod, block };
+
+    if (body != NULL) {
+        operand_t op = emit_lir(ctx, body);
+        build_return(ctx, body, op);
+    }
+}
+
 static operand_t emit_unary(context_t ctx, lir_t *lir) {
     operand_t operand = emit_lir(ctx, lir->operand);
     step_t step = step_of(OP_UNARY, lir);
@@ -95,10 +135,11 @@ static operand_t emit_digit(lir_t *lir) {
 }
 
 static operand_t emit_value(context_t ctx, lir_t *lir) {
-    block_t *other = map_get(ctx.vars, lir->name);
+    block_t *other = lir->data;
 
     if (other == NULL) {
-        assert("emit-value %s failed to find block", lir->name);
+        other = compile_block(ctx.mod, lir);
+        lir->data = other;
     }
 
     operand_t op = new_address(other);
@@ -106,12 +147,6 @@ static operand_t emit_value(context_t ctx, lir_t *lir) {
     step.src = op;
     step.offset = new_imm(new_zero());
 
-    return add_step(ctx, step);
-}
-
-static operand_t build_return(context_t ctx, lir_t *lir, operand_t op) {
-    step_t step = step_of(OP_RETURN, lir);
-    step.operand = op;
     return add_step(ctx, step);
 }
 
@@ -135,6 +170,12 @@ static operand_t emit_assign(context_t ctx, lir_t *lir) {
     return add_step(ctx, step);
 }
 
+static operand_t emit_while(context_t ctx, lir_t *lir) {
+    /* TODO: this */
+
+    return emit_lir(ctx, lir->cond);
+}
+
 static operand_t emit_lir(context_t ctx, lir_t *lir) {
     switch (lir->leaf) {
     case LIR_UNARY: return emit_unary(ctx, lir);
@@ -143,32 +184,11 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_VALUE: return emit_value(ctx, lir);
     case LIR_STMTS: return emit_stmts(ctx, lir);
     case LIR_ASSIGN: return emit_assign(ctx, lir);
+    case LIR_WHILE: return emit_while(ctx, lir);
 
     default:
         assert("emit-lir unknown %d", lir->leaf);
         return new_operand(EMPTY);
-    }
-}
-
-static block_t *init_block(lir_t *decl, type_t *type) {
-    block_t *block = ctu_malloc(sizeof(block_t));
-    
-    block->name = decl->name;
-    block->result = type;
-
-    block->len = 0;
-    block->size = 16;
-    block->steps = ctu_malloc(sizeof(step_t) * block->size);
-
-    return block;
-}
-
-static void build_block(module_t *mod, block_t *block, map_t *vars, map_t *funcs, lir_t *body) {
-    context_t ctx = { mod, block, vars, funcs };
-
-    if (body != NULL) {
-        operand_t op = emit_lir(ctx, body);
-        build_return(ctx, body, op);
     }
 }
 
@@ -178,12 +198,6 @@ static module_t *init_module(vector_t *vars, vector_t *funcs, const char *name) 
     mod->vars = vars;
     mod->funcs = funcs;
     return mod;
-}
-
-static block_t *block_declare(map_t *table, lir_t *lir) {
-    block_t *block = init_block(lir, lir->type);
-    map_set(table, lir->name, block);
-    return block;
 }
 
 module_t *module_build(lir_t *root) {
@@ -196,31 +210,28 @@ module_t *module_build(lir_t *root) {
     vector_t *varblocks = vector_of(nvars);
     vector_t *funcblocks = vector_of(nfuncs);
 
-    map_t *vartable = map_new(32);
-    map_t *blocktable = map_new(32);
-
     module_t *mod = init_module(varblocks, funcblocks, root->node->scan->path);
 
     for (size_t i = 0; i < nvars; i++) {
         lir_t *var = vector_get(vars, i);
-        vector_set(varblocks, i, block_declare(vartable, var));
+        vector_set(varblocks, i, block_declare(var));
     }
 
     for (size_t i = 0; i < nfuncs; i++) {
         lir_t *func = vector_get(funcs, i);
-        vector_set(funcblocks, i, block_declare(blocktable, func));
+        vector_set(funcblocks, i, block_declare(func));
     }
 
     for (size_t i = 0; i < nvars; i++) {
         lir_t *var = vector_get(vars, i);
         block_t *block = vector_get(varblocks, i);
-        build_block(mod, block, vartable, blocktable, var->init);
+        build_block(mod, block, var->init);
     }
 
     for (size_t i = 0; i < nfuncs; i++) {
         lir_t *func = vector_get(funcs, i);
         block_t *block = vector_get(funcblocks, i);
-        build_block(mod, block, vartable, blocktable, func->body);
+        build_block(mod, block, func->body);
     }
 
     return mod;

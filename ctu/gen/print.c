@@ -69,7 +69,10 @@ static char *emit_binary(size_t idx, step_t step) {
 
 static char *emit_return(step_t step) {
     char *operand = emit_operand(step.operand);
-    return format("return %s", operand);
+    if (operand) {
+        return format("ret %s", operand);
+    }
+    return ctu_strdup("ret");
 }
 
 static char *emit_load(size_t idx, step_t step) {
