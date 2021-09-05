@@ -38,7 +38,11 @@ typedef enum {
     OP_RETURN,
 
     OP_LOAD,
-    OP_STORE
+    OP_STORE,
+
+    OP_BRANCH,
+    OP_JMP,
+    OP_BLOCK
 } opcode_t;
 
 typedef struct {
@@ -51,6 +55,11 @@ typedef struct {
             operand_t src;
             operand_t dst;
             operand_t offset;
+        };
+
+        struct {
+            operand_t label;
+            operand_t cond;
         };
         
         struct {

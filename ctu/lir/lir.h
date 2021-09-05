@@ -9,24 +9,33 @@ typedef enum {
     /* integer literal */
     LIR_DIGIT,
 
+    /* reference to a variable */
+    LIR_NAME,
+
     /* binary expresion */
     LIR_BINARY,
+
+    /* unary expression */
     LIR_UNARY,
+
+    /* function call */
     LIR_CALL,
 
+    /* assign to a variable */
     LIR_ASSIGN,
+
     LIR_WHILE,
     LIR_BRANCH,
     LIR_STMTS,
-
-    /* forward declaration */
-    LIR_FORWARD,
 
     LIR_VALUE,
     LIR_DEFINE,
 
     LIR_MODULE,
 
+    LIR_FORWARD,
+
+    /* error handling */
     LIR_POISON
 } leaf_t;
 
@@ -53,6 +62,8 @@ typedef struct lir_t {
          * integer literal
          */
         mpz_t digit;
+
+        struct lir_t *it;
 
         struct {
             struct lir_t *dst;
@@ -136,6 +147,7 @@ lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs);
 
 lir_t *lir_int(node_t *node, int digit);
 lir_t *lir_digit(node_t *node, mpz_t digit);
+lir_t *lir_name(node_t *node, lir_t *it);
 
 lir_t *lir_binary(node_t *node, binary_t binary, lir_t *lhs, lir_t *rhs);
 lir_t *lir_unary(node_t *node, unary_t unary, lir_t *operand);

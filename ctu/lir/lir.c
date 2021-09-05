@@ -49,6 +49,14 @@ lir_t *lir_digit(node_t *node, mpz_t digit) {
     return lir;
 }
 
+lir_t *lir_name(node_t *node, lir_t *it) {
+    lir_t *lir = lir_new(node, LIR_NAME);
+
+    lir->it = it;
+
+    return lir;
+}
+
 lir_t *lir_binary(node_t *node, binary_t binary, lir_t *lhs, lir_t *rhs) {
     lir_t *lir = lir_new(node, LIR_BINARY);
 
@@ -173,6 +181,11 @@ vector_t *lir_recurses(lir_t *lir, const lir_t *root) {
     }
 
     switch (lir->leaf) {
+    case LIR_NAME:
+        result = lir_recurses(lir->it, root);
+        source = lir->it;
+        break;
+        
     case LIR_VALUE:
         result = lir_recurses(lir->init, root);
         source = lir->init;

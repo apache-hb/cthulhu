@@ -71,6 +71,7 @@ static operand_t add_step(context_t ctx, step_t step) {
 }
 
 static operand_t emit_lir(context_t ctx, lir_t *lir);
+static operand_t emit_lir(context_t ctx, lir_t *lir);
 
 static operand_t build_return(context_t ctx, lir_t *lir, operand_t op) {
     step_t step = step_of(OP_RETURN, lir);
@@ -143,11 +144,8 @@ static operand_t emit_value(context_t ctx, lir_t *lir) {
     }
 
     operand_t op = new_address(other);
-    step_t step = step_of(OP_LOAD, lir);
-    step.src = op;
-    step.offset = new_imm(new_zero());
 
-    return add_step(ctx, step);
+    return op;
 }
 
 static operand_t emit_stmts(context_t ctx, lir_t *lir) {
@@ -176,6 +174,20 @@ static operand_t emit_while(context_t ctx, lir_t *lir) {
     return emit_lir(ctx, lir->cond);
 }
 
+static operand_t emit_branch(context_t ctx, lir_t *lir) {
+    step_t step = step_of(OP_BRANCH, lir);
+    step.cond = emit_lir(ctx, lir->cond);
+
+    return add_step(ctx, step);
+}
+
+static operand_t emit_name(context_t ctx, lir_t *lir) {
+    step_t step = step_of(OP_LOAD, lir);
+    step.src = emit_lir(ctx, lir->it);
+    step.offset = new_imm(new_zero());
+    return add_step(ctx, step);
+}
+
 static operand_t emit_lir(context_t ctx, lir_t *lir) {
     switch (lir->leaf) {
     case LIR_UNARY: return emit_unary(ctx, lir);
@@ -185,12 +197,15 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_STMTS: return emit_stmts(ctx, lir);
     case LIR_ASSIGN: return emit_assign(ctx, lir);
     case LIR_WHILE: return emit_while(ctx, lir);
+    case LIR_BRANCH: return emit_branch(ctx, lir);
+    case LIR_NAME: return emit_name(ctx, lir);
 
     default:
         assert("emit-lir unknown %d", lir->leaf);
         return new_operand(EMPTY);
     }
 }
+
 
 static module_t *init_module(vector_t *vars, vector_t *funcs, const char *name) {
     module_t *mod = ctu_malloc(sizeof(module_t));

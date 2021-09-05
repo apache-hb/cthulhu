@@ -81,6 +81,28 @@ static char *emit_load(size_t idx, step_t step) {
     return format("%%%zu = load %s +%s", idx, addr, offset);
 }
 
+static char *emit_jmp(step_t step) {
+    char *label = emit_operand(step.label);
+    return format("jmp %s", label);
+}
+
+static char *emit_branch(step_t step) {
+    char *cond = emit_operand(step.cond);
+    char *label = emit_operand(step.label);
+    return format("branch %s %s", cond, label);
+}
+
+static char *emit_block(size_t idx) {
+    return format("\r\r.%zu:", idx);
+}
+
+static char *emit_store(step_t step) {
+    char *dst = emit_operand(step.dst);
+    char *src = emit_operand(step.src);
+
+    return format("store %s %s", dst, src);
+}
+
 static char *emit_step(block_t *flow, size_t idx) {
     step_t step = flow->steps[idx];
     switch (step.opcode) {
@@ -89,7 +111,13 @@ static char *emit_step(block_t *flow, size_t idx) {
     case OP_UNARY: return emit_unary(idx, step);
     case OP_RETURN: return emit_return(step);
     case OP_LOAD: return emit_load(idx, step);
-    default: return NULL;
+    case OP_STORE: return emit_store(step);
+
+    case OP_JMP: return emit_jmp(step);
+    case OP_BRANCH: return emit_branch(step);
+    case OP_BLOCK: return emit_block(idx);
+
+    default: return format("error %d", step.opcode);
     }
 }
 

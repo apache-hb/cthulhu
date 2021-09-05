@@ -155,7 +155,7 @@ static lir_t *compile_ident(sema_t *sema, pl0_t *expr) {
     lir_t *val = query_ident(sema, name);
 
     if (val != NULL) {
-        return val;
+        return lir_name(node, val);
     }
 
     report_t id = reportn(ERROR, node, "unknown variable name `%s`", name);
