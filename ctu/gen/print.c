@@ -2,34 +2,11 @@
 
 #include "ctu/util/str.h"
 
-static const char *unary_op(unary_t unary) {
-    switch (unary) {
-    case UNARY_ABS: return "abs";
-    case UNARY_NEG: return "neg";
-    default: return NULL;
-    }
-}
-
-static const char *binary_op(binary_t binary) {
-    switch (binary) {
-    case BINARY_ADD: return "add";
-    case BINARY_SUB: return "sub";
-    case BINARY_MUL: return "mul";
-    case BINARY_DIV: return "div";
-    case BINARY_REM: return "rem";
-
-    case BINARY_EQ: return "eq";
-    case BINARY_NEQ: return "neq";
-    case BINARY_LT: return "lt";
-    case BINARY_LTE: return "lte";
-    case BINARY_GT: return "gt";
-    case BINARY_GTE: return "gte";
-
-    default: return NULL;
-    }
-}
-
 static char *emit_imm(value_t *imm) {
+    if (imm == NULL) {
+        return "???";
+    }
+
     type_t *type = imm->type;
     if (type->type == TY_DIGIT) {
         return format("%s", mpz_get_str(NULL, 10, imm->digit));
@@ -53,14 +30,14 @@ static char *emit_operand(operand_t op) {
 }
 
 static char *emit_unary(size_t idx, step_t step) {
-    const char *op = unary_op(step.unary);
+    const char *op = unary_name(step.unary);
     char *operand = emit_operand(step.operand);
     
     return format("%%%zu = unary %s %s", idx, op, operand);
 }
 
 static char *emit_binary(size_t idx, step_t step) {
-    const char *op = binary_op(step.binary);
+    const char *op = binary_name(step.binary);
     char *lhs = emit_operand(step.lhs);
     char *rhs = emit_operand(step.rhs);
 
@@ -69,10 +46,11 @@ static char *emit_binary(size_t idx, step_t step) {
 
 static char *emit_return(step_t step) {
     char *operand = emit_operand(step.operand);
-    if (operand) {
+    if (operand == NULL) {
+        return ctu_strdup("ret");
+    } else {
         return format("ret %s", operand);
     }
-    return ctu_strdup("ret");
 }
 
 static char *emit_load(size_t idx, step_t step) {
@@ -89,7 +67,8 @@ static char *emit_jmp(step_t step) {
 static char *emit_branch(step_t step) {
     char *cond = emit_operand(step.cond);
     char *label = emit_operand(step.label);
-    return format("branch %s %s", cond, label);
+    char *other = emit_operand(step.other);
+    return format("branch %s then %s else %s", cond, label, other);
 }
 
 static char *emit_block(size_t idx) {
@@ -103,6 +82,17 @@ static char *emit_store(step_t step) {
     return format("store %s %s", dst, src);
 }
 
+static char *emit_call(size_t idx, step_t step) {
+    char *func = emit_operand(step.func);
+    vector_t *args = vector_of(step.len);
+    for (size_t i = 0; i < step.len; i++) {
+        char *arg = emit_operand(step.args[i]);
+        vector_set(args, i, arg);
+    }
+
+    return format("%%%zu = call %s (%s)", idx, func, strjoin(", ", args));
+}
+
 static char *emit_step(block_t *flow, size_t idx) {
     step_t step = flow->steps[idx];
     switch (step.opcode) {
@@ -112,6 +102,7 @@ static char *emit_step(block_t *flow, size_t idx) {
     case OP_RETURN: return emit_return(step);
     case OP_LOAD: return emit_load(idx, step);
     case OP_STORE: return emit_store(step);
+    case OP_CALL: return emit_call(idx, step);
 
     case OP_JMP: return emit_jmp(step);
     case OP_BRANCH: return emit_branch(step);

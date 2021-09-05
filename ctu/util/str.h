@@ -20,3 +20,4 @@ bool startswith(const char *str, const char *prefix);
 bool endswith(const char *str, const char *suffix);
 
 char *strjoin(const char *sep, vector_t *parts);
+char *strmul(const char *str, size_t times);

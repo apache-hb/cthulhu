@@ -291,3 +291,16 @@ vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) {
 
     return out;
 }
+
+vector_t *vector_map(const vector_t *vector, vector_apply_t func) {
+    size_t len = vector_len(vector);
+    vector_t *out = vector_of(len);
+
+    for (size_t i = 0; i < len; i++) {
+        void *value = vector_get(vector, i);
+        void *result = func(value);
+        vector_set(out, i, result);
+    }
+
+    return out;
+}

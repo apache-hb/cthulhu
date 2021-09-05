@@ -62,16 +62,27 @@ char *strjoin(const char *sep, vector_t *parts) {
     size_t idx = 0;
 
     for (size_t i = 0; i < all; i++) {
-        const char *part = vector_get(parts, i);
-        strcpy(out, part);
-        out += strlen(part);
-
         if (i != 0) {
             strcpy(out + idx, sep);
             idx += seplen;
         }
+
+        const char *part = vector_get(parts, i);
+        strcpy(out + idx, part);
+        idx += strlen(part);
     }
 
     out[idx] = 0;
+    return out;
+}
+
+char *strmul(const char *str, size_t times) {
+    size_t len = strlen(str);
+    size_t outlen = len * times;
+    char *out = ctu_malloc(outlen + 1);
+    for (size_t i = 0; i < times; i++) {
+        strcpy(out + i * len, str);
+    }
+    out[outlen] = 0;
     return out;
 }

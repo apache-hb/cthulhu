@@ -167,3 +167,4 @@ bool lir_ok(const lir_t *lir);
 bool lir_is(const lir_t *lir, leaf_t leaf);
 
 vector_t *lir_recurses(lir_t *lir, const lir_t *root);
+char *print_lir(const lir_t *lir);

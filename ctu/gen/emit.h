@@ -35,6 +35,7 @@ typedef enum {
     OP_EMPTY,
     OP_UNARY,
     OP_BINARY,
+    OP_CALL,
     OP_RETURN,
 
     OP_LOAD,
@@ -52,14 +53,21 @@ typedef struct {
 
     union {
         struct {
+            operand_t func;
+            operand_t *args;
+            size_t len;
+        };
+
+        struct {
             operand_t src;
             operand_t dst;
             operand_t offset;
         };
 
         struct {
-            operand_t label;
             operand_t cond;
+            operand_t label;
+            operand_t other;
         };
         
         struct {

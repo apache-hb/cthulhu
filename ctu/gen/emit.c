@@ -64,9 +64,35 @@ static step_t step_of(opcode_t op, lir_t *lir) {
     return step;
 }
 
+static step_t empty_step(opcode_t op) {
+    step_t step = {
+        .opcode = op,
+        .node = NULL,
+        .type = NULL
+    };
+
+    return step;
+}
+
+static step_t *get_step(context_t ctx, operand_t op) {
+    if (op.kind == LABEL) {
+        return &ctx.block->steps[op.label];
+    }
+
+    assert("get-step invalid kind %d", op.kind);
+
+    return NULL;
+}
+
 static operand_t add_step(context_t ctx, step_t step) {
     operand_t op = new_operand(VREG);
     op.vreg = push_step(ctx.block, step);
+    return op;
+}
+
+static operand_t add_label(context_t ctx, step_t step) {
+    operand_t op = new_operand(LABEL);
+    op.label = push_step(ctx.block, step);
     return op;
 }
 
@@ -148,6 +174,19 @@ static operand_t emit_value(context_t ctx, lir_t *lir) {
     return op;
 }
 
+static operand_t emit_define(context_t ctx, lir_t *lir) {
+    block_t *other = lir->data;
+
+    if (other == NULL) {
+        other = compile_block(ctx.mod, lir);
+        lir->data = other;
+    }
+
+    operand_t op = new_address(other);
+    
+    return op;
+}
+
 static operand_t emit_stmts(context_t ctx, lir_t *lir) {
     size_t len = vector_len(lir->stmts);
     for (size_t i = 0; i < len; i++) {
@@ -168,23 +207,71 @@ static operand_t emit_assign(context_t ctx, lir_t *lir) {
     return add_step(ctx, step);
 }
 
-static operand_t emit_while(context_t ctx, lir_t *lir) {
-    /* TODO: this */
+static operand_t add_block(context_t ctx, lir_t *lir) {
+    if (lir == NULL) {
+        return add_label(ctx, empty_step(OP_BLOCK));
+    }
 
-    return emit_lir(ctx, lir->cond);
+    operand_t block = add_label(ctx, step_of(OP_BLOCK, lir));
+    emit_lir(ctx, lir);
+    return block;
+}
+
+static operand_t emit_while(context_t ctx, lir_t *lir) {
+    operand_t begin = add_label(ctx, step_of(OP_BLOCK, lir));
+    
+    step_t step = step_of(OP_BRANCH, lir);
+    step.cond = emit_lir(ctx, lir->cond);
+    operand_t branch = add_label(ctx, step);
+
+    operand_t body = add_block(ctx, lir->then);
+
+    operand_t end = add_label(ctx, step_of(OP_BLOCK, lir));
+
+    step_t *it = get_step(ctx, branch);
+    it->label = body;
+    it->other = end;
+
+    return begin;
 }
 
 static operand_t emit_branch(context_t ctx, lir_t *lir) {
     step_t step = step_of(OP_BRANCH, lir);
     step.cond = emit_lir(ctx, lir->cond);
+    operand_t branch = add_label(ctx, step);
 
-    return add_step(ctx, step);
+    operand_t yes = add_block(ctx, lir->then);
+
+    operand_t no = add_block(ctx, lir->other);
+
+    step_t *it = get_step(ctx, branch);
+    it->label = yes;
+    it->other = no;
+
+    return branch;
 }
 
 static operand_t emit_name(context_t ctx, lir_t *lir) {
     step_t step = step_of(OP_LOAD, lir);
     step.src = emit_lir(ctx, lir->it);
     step.offset = new_imm(new_zero());
+    return add_step(ctx, step);
+}
+
+static operand_t emit_call(context_t ctx, lir_t *lir) {
+    size_t len = vector_len(lir->args);
+    operand_t *args = ctu_malloc(sizeof(operand_t) * len);
+    
+    for (size_t i = 0; i < len; i++) {
+        lir_t *arg = vector_get(lir->args, i);
+        args[i] = emit_lir(ctx, arg);
+    }
+
+    step_t step = step_of(OP_CALL, lir);
+    step.func = emit_lir(ctx, lir->func);
+    step.args = args;
+    step.len = len;
+
     return add_step(ctx, step);
 }
 
@@ -199,6 +286,8 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_WHILE: return emit_while(ctx, lir);
     case LIR_BRANCH: return emit_branch(ctx, lir);
     case LIR_NAME: return emit_name(ctx, lir);
+    case LIR_CALL: return emit_call(ctx, lir);
+    case LIR_DEFINE: return emit_define(ctx, lir);
 
     default:
         assert("emit-lir unknown %d", lir->leaf);
