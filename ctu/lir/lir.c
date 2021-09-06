@@ -140,6 +140,7 @@ void lir_define(lir_t *dst, type_t *type, vector_t *locals, lir_t *body) {
 
     dst->leaf = LIR_DEFINE;
     dst->type = type;
+    dst->entry = NULL;
     dst->locals = locals;
     dst->body = body;   
 }

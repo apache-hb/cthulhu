@@ -121,7 +121,7 @@ static type_t *pl0_bool(void) {
 
 static type_t *pl0_closure(void) {
     vector_t *args = vector_new(0);
-    return type_closure(args, pl0_int(true));
+    return type_closure(args, type_void());
 }
 
 static lir_t *pl0_num(node_t *node, int num) {
@@ -410,6 +410,15 @@ lir_t *pl0_sema(pl0_t *node) {
         pl0_t *decl = vector_get(procs, i);
         char *name = pl0_name(decl->name);
         pl0_add_proc(sema, name, pl0_declare(decl, name, LIR_DEFINE));
+    }
+
+    pl0_t *top = node->toplevel;
+    if (top != NULL) {
+        /* TODO: fix this */
+        node_t *node = top->node;
+        vector_t *body = vector_init(top);
+        pl0_t *entry = pl0_procedure(node->scan, node->where, "pl0-main", vector_new(0), body);
+        pl0_add_proc(sema, "pl0-main", pl0_declare(entry, "pl0-main", LIR_DEFINE));
     }
 
     pl0_data_t *data = sema->fields;

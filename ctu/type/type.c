@@ -75,6 +75,10 @@ type_t *type_digit(sign_t sign, int_t kind) {
     return type;
 }
 
+type_t *type_void(void) {
+    return type_new(TY_VOID);
+}
+
 type_t *type_closure(vector_t *args, type_t *result) {
     type_t *type = type_new(TY_CLOSURE);
     type->args = args;

@@ -121,6 +121,7 @@ typedef struct lir_t {
                  * a function
                  */
                 struct {
+                    const char *entry;
                     vector_t *locals;
                     struct lir_t *body;
                 };

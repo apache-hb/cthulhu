@@ -48,6 +48,7 @@ typedef struct type_t {
 char *type_format(const type_t *type);
 
 type_t *type_digit(sign_t sign, int_t kind);
+type_t *type_void(void);
 type_t *type_closure(vector_t *args, type_t *result);
 type_t *type_bool(void);
 
