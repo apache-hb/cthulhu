@@ -7,11 +7,13 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+struct reports_t;
+
 typedef struct {
     const char *path;
     FILE *file;
 } file_t;
 
-file_t *ctu_open(const char *path, const char *mode);
+file_t *ctu_open(struct reports_t *reports, const char *path, const char *mode);
 void ctu_close(file_t *fp);
 bool ctu_valid(const file_t *fp);

@@ -1,7 +1,7 @@
 #include "util.h"
 #include "io.h"
 
-#include "ctu/util/report.h"
+#include "report.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -54,11 +54,11 @@ static size_t string_hash(const char *str) {
     return hash;
 }
 
-file_t *ctu_open(const char *path, const char *mode) {
+file_t *ctu_open(struct reports_t *reports, const char *path, const char *mode) {
     FILE *fp = fopen(path, mode);
 
     if (fp == NULL) {
-        report(ERROR, "failed to open `%s`", path);
+        reportf(reports, ERROR, NULL, "failed to open `%s`", path);
     }
 
     file_t *file = ctu_malloc(sizeof(file_t));

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "ast.h"
+#include "ctu/util/report.h"
 
-pl0_t *pl0_compile(file_t *fd);
+pl0_t *pl0_compile(reports_t *reports, file_t *fd);
 
 #define PL0LTYPE where_t

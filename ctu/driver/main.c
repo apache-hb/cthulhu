@@ -22,7 +22,7 @@ static int parse_arg(int index, int argc, char **argv) {
     const char *arg = argv[index];
     
     if (!startswith(arg, "-")) {
-        file_t *fp = ctu_open(arg, "rb");
+        file_t *fp = ctu_open(reports, arg, "rb");
         vector_push(&sources, fp);
     } else if (MATCH(arg, "-h", "--help")) {
         print_help(name);
@@ -32,7 +32,7 @@ static int parse_arg(int index, int argc, char **argv) {
         DRIVER = select_driver(NEXT(index, argc, argv));
         return 2;
     } else {
-        report(WARNING, "unknown argument %s", arg);
+        reportf(reports, WARNING, NULL, "unknown argument %s", arg);
     }
 
     return 1;
@@ -49,19 +49,24 @@ static void parse_args(int argc, char **argv) {
         i += parse_arg(i, argc, argv);
     }
 
-    end_report(true, "commandline parsing");
+    int error = end_report(reports, "commandline parsing");
+    if (error != 0) {
+        exit(error);
+    }
 }
 
 typedef struct {
     const driver_t *driver;
+    reports_t *reports;
     file_t *file;
     void *root;
     lir_t *lir;
 } unit_t;
 
-static unit_t *unit_new(const driver_t *driver, file_t *file, void *node) {
+static unit_t *unit_new(const driver_t *driver, reports_t *reports, file_t *file, void *node) {
     unit_t *unit = ctu_malloc(sizeof(unit_t));
     unit->driver = driver;
+    unit->reports = reports;
     unit->file = file;
     unit->root = node;
     return unit;
@@ -71,7 +76,7 @@ int main(int argc, char **argv) {
     name = argv[0];
     init_memory();
 
-    begin_report(20);
+    reports = begin_report(20);
 
     parse_args(argc, argv);
 
@@ -84,21 +89,26 @@ int main(int argc, char **argv) {
         const driver_t *driver = driver_for(fp);
 
         if (driver->parse == NULL) {
-            report(ERROR, "unknown file type: %s", fp->path);
+            reportf(reports, ERROR, NULL, "unknown file type: %s", fp->path);
         } else {
-            vector_push(&units, unit_new(driver, fp, driver->parse(fp)));
+            reports_t *errs = begin_report(20);
+            void *data = driver->parse(errs, fp);
+            vector_push(&units, unit_new(driver, errs, fp, data));
         }
 
-        end_report(false, format("compilation of `%s`", fp->path));
+        end_report(reports, format("compilation of `%s`", fp->path));
     }
 
-    end_report(true, "compilation");
+    int error = end_report(reports, "compilation");
+    if (error != 0) {
+        exit(error);
+    }
 
     for (size_t i = 0; i < len; i++) {
         unit_t *unit = vector_get(units, i);
-        unit->lir = unit->driver->analyze(unit->root);
+        unit->lir = unit->driver->analyze(unit->reports, unit->root);
 
-        end_report(false, format("semantic analysis of `%s`", unit->file->path));
+        end_report(unit->reports, format("semantic analysis of `%s`", unit->file->path));
     }
 
     end_report(true, "semantic analysis");

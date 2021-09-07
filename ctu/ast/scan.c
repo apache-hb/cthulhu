@@ -6,12 +6,13 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 
 #ifndef _WIN32
 #   include <sys/mman.h>
 #endif
 
-static scan_t *scan_new(const char *language, const char *path, size_t size) {
+static scan_t *scan_new(struct reports_t *reports, const char *language, const char *path, size_t size) {
     scan_t *scan = ctu_malloc(sizeof(scan_t));
 
     scan->language = language;
@@ -21,6 +22,7 @@ static scan_t *scan_new(const char *language, const char *path, size_t size) {
     /* scan->text is filled in by the caller */
     scan->offset = 0;
     scan->size = size;
+    scan->reports = reports;
 
     return scan;
 }
@@ -32,7 +34,7 @@ static size_t file_size(FILE *fd) {
     return size;
 }
 
-static const void *map_file(size_t size, FILE *file) {
+static const void *map_file(struct reports_t *reports, size_t size, FILE *file) {
     char *text;
 
 #ifndef _WIN32
@@ -40,35 +42,43 @@ static const void *map_file(size_t size, FILE *file) {
     text = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (text == MAP_FAILED) {
         text = NULL;
-        report(INTERNAL, "failed to mmap file: %s\n", strerror(errno));
+        reportf(reports, INTERNAL, NULL, "failed to mmap file: %s\n", strerror(errno));
     }
 #else
     text = ctu_malloc(size + 1);
-    fread(text, size, 1, file);
+    size_t total = fread(text, size, 1, file);
     text[size] = '\0';
+
+    if (total != size) {
+        reportf(reports, INTERNAL, NULL, "failed to read file: %s\n", strerror(errno));
+    }
 #endif
 
     return text;
 }
 
-scan_t *scan_string(const char *language, const char *path, const char *text) {
+scan_t *scan_string(struct reports_t *reports, const char *language, const char *path, const char *text) {
     size_t size = strlen(text);
-    scan_t *scan = scan_new(language, path, size);
+    scan_t *scan = scan_new(reports, language, path, size);
 
     scan->text = text;
 
     return scan;
 }
 
-scan_t *scan_file(const char *language, file_t *file) {
+scan_t *scan_file(struct reports_t *reports, const char *language, file_t *file) {
     FILE *fd = file->file;
     size_t size = file_size(fd);
-    scan_t *scan = scan_new(language, file->path, size);
+    scan_t *scan = scan_new(reports, language, file->path, size);
 
     scan->data = fd;
 
-    if (!(scan->text = map_file(size, fd))) {
-        end_report(true, "file mapping");
+    if (!(scan->text = map_file(reports, size, fd))) {
+        int error = end_report(reports, "file mapping");
+        
+        if (error != 0) {
+            exit(error);
+        }
     }
 
     return scan;

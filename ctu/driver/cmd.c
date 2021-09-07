@@ -4,16 +4,18 @@
 #include "ctu/frontend/ctu/driver.h"
 #include "ctu/frontend/c/driver.h"
 
+static reports_t *reports = NULL;
+
 static const char *VERSION = "0.0.1";
 
-typedef void*(*parse_t)(file_t*);
-typedef lir_t*(*analyze_t)(void*);
+typedef void*(*parse_t)(reports_t*, file_t*);
+typedef lir_t*(*analyze_t)(reports_t*, void*);
 
 typedef struct {
     const char *version;
     const char *name;
-    void*(*parse)(file_t*);
-    lir_t*(*analyze)(void*);
+    parse_t parse;
+    analyze_t analyze;
 } driver_t;
 
 static const driver_t PL0 = {
@@ -48,7 +50,7 @@ static const driver_t *DRIVER = NULL;
 
 static const driver_t *select_driver(const char *name) {
     if (name == NULL) {
-        report(ERROR, "No driver specified");
+        reportf(reports, ERROR, NULL, "No driver specified");
         return &INVALID;
     }
 
@@ -59,7 +61,7 @@ static const driver_t *select_driver(const char *name) {
     } else if (strcmp(name, "c") == 0) {
         return &C;
     } else {
-        report(ERROR, "Unknown driver: %s", name);
+        reportf(reports, ERROR, NULL, "Unknown driver: %s", name);
         return &INVALID;
     }
 }

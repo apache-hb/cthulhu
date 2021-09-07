@@ -8,6 +8,7 @@
 %{
 #include "pl0-bison.h"
 #include "scan.h"
+#include "ctu/ast/ast.h"
 #include "ctu/util/report.h"
 #include "ctu/ast/interop.h"
 %}
@@ -62,6 +63,6 @@
 
 "!" { return PRINT; }
 
-. { reportf(ERROR, yyextra, *yylloc, "unknown character %s", yytext); }
+. { reportf((reports_t*)yyextra->reports, ERROR, node_new(yyextra, *yylloc), "unknown character %s", yytext); }
 
 %%
