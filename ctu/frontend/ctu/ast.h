@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ctu/ast/ast.h"
-#include "ctu/util/util.h"
 
 #include <gmp.h>
 

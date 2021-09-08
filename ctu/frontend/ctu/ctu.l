@@ -8,7 +8,6 @@
 %{
 #include "ctu-bison.h"
 #include "scan.h"
-#include "ast.h"
 #include "ctu/util/report.h"
 #include "ctu/ast/interop.h"
 %}
@@ -32,6 +31,6 @@
 ";" { return SEMI; }
 "=" { return ASSIGN; }
 
-. { reportf((reports_t*)yyextra->reports, ERROR, node_new(yyextra, *yylloc), "unknown character %s", yytext); }
+. { reportf(ERROR, yyextra, *yylloc, "unknown character %s", yytext); }
 
 %%

@@ -125,7 +125,7 @@ lir_t *lir_branch(node_t *node, lir_t *cond, lir_t *then, lir_t *other) {
 
 void lir_value(lir_t *dst, type_t *type, lir_t *init) {
     if (dst->leaf != LIR_FORWARD) {
-        assertf("lir-value already resolved");
+        assert("lir-value already resolved");
     }
 
     dst->leaf = LIR_VALUE;
@@ -135,7 +135,7 @@ void lir_value(lir_t *dst, type_t *type, lir_t *init) {
 
 void lir_define(lir_t *dst, type_t *type, vector_t *locals, lir_t *body) {
     if (dst->leaf != LIR_FORWARD) {
-        assertf("lir-define already resolved");
+        assert("lir-define already resolved");
     }
 
     dst->leaf = LIR_DEFINE;
@@ -147,12 +147,12 @@ void lir_define(lir_t *dst, type_t *type, vector_t *locals, lir_t *body) {
 
 void lir_begin(lir_t *dst, leaf_t leaf) {
     if (dst->leaf != LIR_FORWARD) {
-        assertf("lir-begin already began");
+        assert("lir-begin already began");
         return;
     }
 
     if (dst->expected != leaf) {
-        assertf("lir-begin unexpected leaf");
+        assert("lir-begin unexpected leaf");
         return;
     }
 

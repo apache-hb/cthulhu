@@ -4,7 +4,6 @@
 #include "ctu/util/report.h"
 
 typedef struct {
-    reports_t *reports;
     module_t *mod;
     block_t *block;
 } context_t;
@@ -80,7 +79,7 @@ static step_t *get_step(context_t ctx, operand_t op) {
         return &ctx.block->steps[op.label];
     }
 
-    assertf(ctx.reports, "get-step invalid kind %d", op.kind);
+    assert("get-step invalid kind %d", op.kind);
 
     return NULL;
 }
@@ -291,7 +290,7 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_DEFINE: return emit_define(ctx, lir);
 
     default:
-        assertf(ctx.reports, "emit-lir unknown %d", lir->leaf);
+        assert("emit-lir unknown %d", lir->leaf);
         return new_operand(EMPTY);
     }
 }

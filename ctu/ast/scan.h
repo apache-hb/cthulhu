@@ -26,16 +26,13 @@ typedef struct {
 
     /* the length of the text */
     size_t size;
-
-    /* the error reporting sink */
-    struct reports_t *reports;
 } scan_t;
 
 /* create a scanner from a string */
-scan_t *scan_string(struct reports_t *reports, const char *language, const char *path, const char *text);
+scan_t *scan_string(const char *language, const char *path, const char *text);
 
 /* create a scanner from a file */
-scan_t *scan_file(struct reports_t *reports, const char *language, file_t *file);
+scan_t *scan_file(const char *language, file_t *file);
 
 /* set the export data */
 void scan_export(scan_t *scan, void *data);

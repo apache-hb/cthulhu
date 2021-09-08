@@ -3,11 +3,10 @@
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
 
-sema_t *sema_new(sema_t *parent, reports_t *reports, sema_new_t create) {
+sema_t *sema_new(sema_t *parent, sema_new_t create) {
     sema_t *sema = ctu_malloc(sizeof(sema_t));
     
     sema->parent = parent;
-    sema->reports = reports;
     sema->fields = create();
 
     return sema;
