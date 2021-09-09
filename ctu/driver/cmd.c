@@ -6,14 +6,14 @@
 
 static const char *VERSION = "0.0.1";
 
-typedef void*(*parse_t)(file_t*);
-typedef lir_t*(*analyze_t)(void*);
+typedef void*(*parse_t)(reports_t*, file_t*);
+typedef lir_t*(*analyze_t)(reports_t*, void*);
 
 typedef struct {
     const char *version;
     const char *name;
-    void*(*parse)(file_t*);
-    lir_t*(*analyze)(void*);
+    parse_t parse;
+    analyze_t analyze;
 } driver_t;
 
 static const driver_t PL0 = {
@@ -88,6 +88,7 @@ static void print_help(const char *name) {
     printf("Options:\n");
     printf("\t -h, --help: Print this help message\n");
     printf("\t -v, --version: Print version information\n");
+    printf("\t -src, --source: Override file extension based compiler choice\n");
 
     exit(0);
 }

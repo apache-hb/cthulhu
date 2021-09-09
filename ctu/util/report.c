@@ -9,12 +9,6 @@
 #include <string.h>
 #include <ctype.h>
 
-typedef struct {
-    char *message;
-    const scan_t *scan;
-    where_t where;
-} part_t;
-
 static part_t *part_new(char *message, const scan_t *scan, where_t where) {
     part_t *part = ctu_malloc(sizeof(part_t));
     part->message = message;
@@ -23,23 +17,12 @@ static part_t *part_new(char *message, const scan_t *scan, where_t where) {
     return part;
 }
 
-typedef struct {
-    /* the level of this error */
-    level_t level;
-
-    /* error message displayed at the top */
-    char *message;
-    char *underline;
-
-    vector_t *parts;
-
-    /* source and location, if scan is NULL then location is ignored */
-    const scan_t *scan;
-    where_t where;
-
-    /* extra note */
-    char *note;
-} message_t;
+static part_t *part_node(char *message, const node_t *node) {
+    part_t *part = ctu_malloc(sizeof(part_t));
+    part->message = message;
+    part->node = node;
+    return part;
+}
 
 /* has an internal error happened */
 /* we track this to exit(99) for fuzzing reasons */
@@ -398,5 +381,106 @@ void report_note(report_t id, const char *fmt, ...) {
     va_end(args);
 
     message_t *message = get_message(id);
+    message->note = msg;
+}
+
+reports_t *begin_reports() {
+    reports_t *r = ctu_malloc(sizeof(reports_t));
+    r->messages = vector_new(32);
+    return r;
+}
+
+int end_reports(reports_t *reports, size_t total, const char *name) {
+    size_t internal = 0;
+    size_t fatal = 0;
+
+    size_t errors = vector_len(reports->messages);
+
+    for (size_t i = 0; i < errors; i++) {
+        message_t *message = vector_get(reports->messages, i);
+        switch (message->level) {
+        case INTERNAL: 
+            internal += 1;
+            break;
+        case ERROR:
+            fatal += 1;
+            break;
+        default:
+            break;
+        }
+
+        if (i >= total) {
+            continue;
+        }
+    }
+
+    if (internal > 0) {
+        fprintf(stderr, "%zu internal error(s) encountered during %s stage", internal, name);
+        return 99;
+    }
+
+    if (fatal > 0) {
+        fprintf(stderr, "%zu fatal error(s) encountered during %s stage", fatal, name);
+        return 1;
+    }
+
+    return 0;
+}
+
+static message_t *report_push(reports_t *reports,
+                              level_t level,
+                              const node_t *node, 
+                              const char *fmt, 
+                              va_list args)
+{
+    char *str = formatv(fmt, args);
+    message_t *message = ctu_malloc(sizeof(message_t));
+
+    message->level = level;
+    message->parts = vector_new(1);
+    message->message = str;
+    message->underline = NULL;
+    message->node = node;
+    message->note = NULL;
+
+    vector_push(&reports->messages, message);
+    return message;
+}
+
+message_t *report2(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    message_t *msg = report_push(reports, level, node, fmt, args);
+
+    va_end(args);
+
+    return msg;
+}
+
+void report_append2(message_t *message, const node_t *node, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char *str = formatv(fmt, args);
+    va_end(args);
+
+    vector_push(&message->parts, part_node(str, node));
+}
+
+void report_underline(message_t *message, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char *msg = formatv(fmt, args);
+    va_end(args);
+
+    message->underline = msg;
+}
+
+void report_note2(message_t *message, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char *msg = formatv(fmt, args);
+    va_end(args);
+
     message->note = msg;
 }

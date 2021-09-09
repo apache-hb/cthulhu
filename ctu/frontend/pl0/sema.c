@@ -26,7 +26,7 @@ static void pl0_data_delete(void *data) {
     ctu_free(sema);
 }
 
-#define NEW_SEMA(parent) sema_new(parent, pl0_data_new)
+#define NEW_SEMA(parent, reports) sema_new(parent, reports, pl0_data_new)
 #define DELETE_SEMA(sema) sema_delete(sema, pl0_data_delete)
 
 static void report_shadow(const char *name, node_t *other, node_t *self) {
@@ -35,9 +35,9 @@ static void report_shadow(const char *name, node_t *other, node_t *self) {
     report_note(id, "PL/0 is case insensitive");
 }
 
-static void report_recurse(vector_t *stack, lir_t *root) {
+static void report_recurse(reports_t *reports, vector_t *stack, lir_t *root) {
     node_t *node = root->node;
-    report_t id = reportn(ERROR, node, "initialization of `%s` is recursive", root->name);
+    message_t *id = report2(reports, ERROR, node, "initialization of `%s` is recursive", root->name);
     
     node_t *last = node;
     size_t len = vector_len(stack);
@@ -46,7 +46,7 @@ static void report_recurse(vector_t *stack, lir_t *root) {
     for (size_t i = 0; i < len; i++) {
         node_t *it = vector_get(stack, i);
         if (it != last) {
-            report_appendn(id, it, "trace %zu", t++);
+            report_append2(id, it, "trace %zu", t++);
         }
         last = it;
     }
@@ -158,8 +158,8 @@ static lir_t *compile_ident(sema_t *sema, pl0_t *expr) {
         return lir_name(node, val);
     }
 
-    report_t id = reportn(ERROR, node, "unknown variable name `%s`", name);
-    report_note(id, "PL/0 is case insensitive");
+    message_t *id = report2(sema->reports, ERROR, node, "unknown variable name `%s`", name);
+    report_note2(id, "PL/0 is case insensitive");
 
     return lir_poison(node, "unresolved variable");
 }
@@ -236,8 +236,8 @@ static lir_t *compile_assign(sema_t *sema, pl0_t *stmt) {
     char *name = pl0_name(stmt->dst);
     lir_t *lhs = query_ident(sema, name);
     if (lhs == NULL) {
-        report_t id = reportn(ERROR, node, "unknown variable name `%s`", name);
-        report_note(id, "PL/0 is case insensitive");
+        message_t *id = report2(sema->reports, ERROR, node, "unknown variable name `%s`", name);
+        report_note2(id, "PL/0 is case insensitive");
 
         return lir_poison(node, "unresolved variable");
     }
@@ -245,7 +245,7 @@ static lir_t *compile_assign(sema_t *sema, pl0_t *stmt) {
     lir_t *rhs = compile_expr(sema, stmt->src);
 
     if (!lhs->type->mut) {
-        reportn(ERROR, node, "cannot assign to const value `%s` %s", name, type_format(lhs->type));
+        report2(sema->reports, ERROR, node, "cannot assign to const value `%s` %s", name, type_format(lhs->type));
     }
 
     return lir_assign(node, lhs, rhs);
@@ -290,7 +290,7 @@ static lir_t *compile_call(sema_t *sema, pl0_t *stmt) {
     lir_t *proc = GET_PROC(sema, name);
     
     if (proc == NULL) {
-        reportn(ERROR, stmt->node, "unknown procedure `%s`", name);
+        report2(sema->reports, ERROR, stmt->node, "unknown procedure `%s`", name);
         return lir_poison(stmt->node, "unknown procedure");
     }
 
@@ -324,7 +324,7 @@ static void compile_const(sema_t *sema, lir_t *lir) {
 
     vector_t *path = lir_recurses(value, lir);
     if (path != NULL) {
-        report_recurse(path, lir);
+        report_recurse(sema->reports, path, lir);
     }
 
     lir_value(lir, pl0_int(false), value);
@@ -355,7 +355,7 @@ static void compile_proc(sema_t *sema, lir_t *lir) {
     size_t nlocals = vector_len(node->locals);
     vector_t *locals = vector_of(nlocals);
 
-    sema_t *nest = NEW_SEMA(sema);
+    sema_t *nest = NEW_SEMA(sema, sema->reports);
 
     for (size_t i = 0; i < nlocals; i++) {
         pl0_t *local = vector_get(node->locals, i);
@@ -383,8 +383,8 @@ static bool always(void *value) {
     return value != NULL;
 }
 
-lir_t *pl0_sema(pl0_t *node) {
-    sema_t *sema = NEW_SEMA(NULL);
+lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
+    sema_t *sema = NEW_SEMA(NULL, reports);
 
     vector_t *vars = node->globals;
     vector_t *consts = node->consts;

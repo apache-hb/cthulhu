@@ -2,11 +2,12 @@
 
 #include "scan.h"
 
-node_t *ctu_parse(file_t *file) {
-    return ctu_compile(file);
+node_t *ctu_parse(reports_t *reports, file_t *file) {
+    return ctu_compile(reports, file);
 }
 
-lir_t *ctu_analyze(node_t *node) {
+lir_t *ctu_analyze(reports_t *reports, node_t *node) {
+    (void)reports;
     (void)node;
     return NULL;
 }

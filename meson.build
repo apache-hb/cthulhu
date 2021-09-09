@@ -11,6 +11,7 @@ src = [
     'ctu/ast/scan.c',
     'ctu/ast/interop.c',
     'ctu/ast/ast.c',
+    'ctu/ast/compile.c',
 
     'ctu/lir/lir.c',
     'ctu/lir/sema.c',

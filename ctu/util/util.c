@@ -58,7 +58,7 @@ file_t *ctu_open(const char *path, const char *mode) {
     FILE *fp = fopen(path, mode);
 
     if (fp == NULL) {
-        report(ERROR, "failed to open `%s`", path);
+        return NULL;
     }
 
     file_t *file = ctu_malloc(sizeof(file_t));
