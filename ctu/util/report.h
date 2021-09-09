@@ -8,9 +8,6 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-typedef bool verbose_t;
-typedef size_t report_t;
-
 typedef enum {
     INTERNAL, /* compiler reached a broken state */
     ERROR, /* an issue that prevents compilation from continuing */
@@ -18,25 +15,8 @@ typedef enum {
     NOTE /* an info message */
 } level_t;
 
-#define INVALID_REPORT SIZE_MAX
-
-/* report an internal compiler error */
-void assert(const char *fmt, ...);
-#define ASSERT(expr) if (!(expr)) (assert)
-
-//report_t report(level_t level, const char *fmt, ...);
-report_t reportf(level_t level, const scan_t *scan, where_t where, const char *fmt, ...);
-report_t reportv(level_t level, const scan_t *scan, where_t where, const char *fmt, va_list args);
-
-void report_append(report_t id, const scan_t *scan, where_t where, const char *fmt, ...);
-void report_appendv(report_t id, const scan_t *scan, where_t where, const char *fmt, va_list args);
-void report_note(report_t id, const char *fmt, ...);
-
 typedef struct {
     char *message;
-
-    const scan_t *scan;
-    where_t where;
 
     const node_t *node;
 } part_t;

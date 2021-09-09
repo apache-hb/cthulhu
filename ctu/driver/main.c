@@ -133,9 +133,12 @@ int main(int argc, char **argv) {
         emit_c(stdout, unit->lir);
         */
        
-        module_t *mod = module_build(unit->lir);
+        module_t *mod = module_build(unit->reports, unit->lir);
         module_print(stdout, mod);
+
+        err = end_reports(unit->reports, SIZE_MAX, format("code generation of `%s`", unit->file->path));
+        fails = MAX(fails, err);
     }
 
-    return 0;
+    return fails;
 }

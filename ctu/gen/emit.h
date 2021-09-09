@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ctu/util/util.h"
+#include "ctu/util/report.h"
 #include "ctu/type/type.h"
 #include "ctu/lir/lir.h"
 
@@ -101,5 +102,5 @@ typedef struct {
     vector_t *funcs;
 } module_t;
 
-module_t *module_build(lir_t *root);
+module_t *module_build(reports_t *reports, lir_t *root);
 void module_print(FILE *out, module_t *mod);

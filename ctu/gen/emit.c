@@ -6,6 +6,7 @@
 typedef struct {
     module_t *mod;
     block_t *block;
+    reports_t *reports;
 } context_t;
 
 static size_t push_step(block_t *block, step_t step) {
@@ -79,7 +80,7 @@ static step_t *get_step(context_t ctx, operand_t op) {
         return &ctx.block->steps[op.label];
     }
 
-    assert("get-step invalid kind %d", op.kind);
+    assert2(ctx.reports, "get-step invalid kind %d", op.kind);
 
     return NULL;
 }
@@ -124,16 +125,15 @@ static block_t *block_declare(lir_t *lir) {
     return block;
 }
 
-static block_t *compile_block(module_t *mod, lir_t *decl) {
+static block_t *compile_block(context_t ctx, lir_t *decl) {
     block_t *block = block_declare(decl);
-    context_t ctx = { mod, block };
     build_return(ctx, decl->init, emit_lir(ctx, decl->init));
-    vector_push(&mod->vars, block);
+    vector_push(&ctx.mod->vars, block);
     return block;
 }
 
-static void build_block(module_t *mod, block_t *block, lir_t *body) {
-    context_t ctx = { mod, block };
+static void build_block(reports_t *reports, module_t *mod, block_t *block, lir_t *body) {
+    context_t ctx = { mod, block, reports };
 
     if (body != NULL) {
         operand_t op = emit_lir(ctx, body);
@@ -165,7 +165,7 @@ static operand_t emit_value(context_t ctx, lir_t *lir) {
     block_t *other = lir->data;
 
     if (other == NULL) {
-        other = compile_block(ctx.mod, lir);
+        other = compile_block(ctx, lir);
         lir->data = other;
     }
 
@@ -178,7 +178,7 @@ static operand_t emit_define(context_t ctx, lir_t *lir) {
     block_t *other = lir->data;
 
     if (other == NULL) {
-        other = compile_block(ctx.mod, lir);
+        other = compile_block(ctx, lir);
         lir->data = other;
     }
 
@@ -290,7 +290,7 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_DEFINE: return emit_define(ctx, lir);
 
     default:
-        assert("emit-lir unknown %d", lir->leaf);
+        assert2(ctx.reports, "emit-lir unknown %d", lir->leaf);
         return new_operand(EMPTY);
     }
 }
@@ -304,7 +304,7 @@ static module_t *init_module(vector_t *vars, vector_t *funcs, const char *name) 
     return mod;
 }
 
-module_t *module_build(lir_t *root) {
+module_t *module_build(reports_t *reports, lir_t *root) {
     vector_t *vars = root->vars;
     size_t nvars = vector_len(vars);
 
@@ -329,13 +329,13 @@ module_t *module_build(lir_t *root) {
     for (size_t i = 0; i < nvars; i++) {
         lir_t *var = vector_get(vars, i);
         block_t *block = vector_get(varblocks, i);
-        build_block(mod, block, var->init);
+        build_block(reports, mod, block, var->init);
     }
 
     for (size_t i = 0; i < nfuncs; i++) {
         lir_t *func = vector_get(funcs, i);
         block_t *block = vector_get(funcblocks, i);
-        build_block(mod, block, func->body);
+        build_block(reports, mod, block, func->body);
     }
 
     return mod;

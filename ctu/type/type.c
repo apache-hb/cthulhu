@@ -100,7 +100,6 @@ bool is_digit(const type_t *type) {
 
 bool is_signed(const type_t *type) {
     if (!is_digit(type)) {
-        assert("is-signed cannot operate on non-digit types");
         return false;
     }
 
@@ -109,7 +108,6 @@ bool is_signed(const type_t *type) {
 
 bool is_unsigned(const type_t *type) {
     if (!is_digit(type)) {
-        assert("is-unsigned cannot operate on non-digit types");
         return false;
     }
 

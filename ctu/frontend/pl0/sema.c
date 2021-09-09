@@ -327,13 +327,13 @@ static void compile_const(sema_t *sema, lir_t *lir) {
         report_recurse(sema->reports, path, lir);
     }
 
-    lir_value(lir, pl0_int(false), value);
+    lir_value(sema->reports, lir, pl0_int(false), value);
 }
 
 static lir_t *build_var(sema_t *sema, pl0_t *node) {
     char *name = pl0_name(node->name);
     lir_t *lir = lir_forward(node->node, name, LIR_VALUE, NULL);
-    lir_value(lir, pl0_int(true), pl0_num(node->node, 0));
+    lir_value(sema->reports, lir, pl0_int(true), pl0_num(node->node, 0));
     
     SET_VAR(sema, name, lir);
 
@@ -345,7 +345,7 @@ static void compile_var(sema_t *sema, lir_t *lir) {
     pl0_t *node = lir->ctx;
     lir_t *value = pl0_num(node->node, 0);
 
-    lir_value(lir, pl0_int(true), value);
+    lir_value(sema->reports, lir, pl0_int(true), value);
 }
 
 static void compile_proc(sema_t *sema, lir_t *lir) {
@@ -372,7 +372,7 @@ static void compile_proc(sema_t *sema, lir_t *lir) {
         vector_set(body, i, stmt);
     }
 
-    lir_define(lir, pl0_closure(), locals, lir_stmts(node->node, body));
+    lir_define(sema->reports, lir, pl0_closure(), locals, lir_stmts(node->node, body));
 }
 
 static lir_t *pl0_declare(pl0_t *pl0, const char *name, leaf_t leaf) {

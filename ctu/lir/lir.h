@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ctu/ast/ast.h"
+#include "ctu/util/report.h"
 #include "ctu/type/type.h"
 
 #include <gmp.h>
@@ -161,9 +162,9 @@ lir_t *lir_stmts(node_t *node, vector_t *stmts);
 
 lir_t *lir_poison(node_t *node, const char *msg);
 
-void lir_value(lir_t *dst, type_t *type, lir_t *init);
-void lir_define(lir_t *dst, type_t *type, vector_t *locals, lir_t *body);
-void lir_begin(lir_t *dst, leaf_t leaf);
+void lir_value(reports_t *reports, lir_t *dst, type_t *type, lir_t *init);
+void lir_define(reports_t *reports, lir_t *dst, type_t *type, vector_t *locals, lir_t *body);
+void lir_begin(reports_t *reports, lir_t *dst, leaf_t leaf);
 bool lir_ok(const lir_t *lir);
 bool lir_is(const lir_t *lir, leaf_t leaf);
 
