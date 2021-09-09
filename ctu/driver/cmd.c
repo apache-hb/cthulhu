@@ -48,7 +48,7 @@ static const driver_t *DRIVER = NULL;
 
 static const driver_t *select_driver(const char *name) {
     if (name == NULL) {
-        report(ERROR, "No driver specified");
+        report2(errors, ERROR, NULL, "No driver specified");
         return &INVALID;
     }
 
@@ -59,7 +59,7 @@ static const driver_t *select_driver(const char *name) {
     } else if (strcmp(name, "c") == 0) {
         return &C;
     } else {
-        report(ERROR, "Unknown driver: %s", name);
+        report2(errors, ERROR, NULL, "Unknown driver: %s", name);
         return &INVALID;
     }
 }

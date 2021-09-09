@@ -29,10 +29,10 @@ static void pl0_data_delete(void *data) {
 #define NEW_SEMA(parent, reports) sema_new(parent, reports, pl0_data_new)
 #define DELETE_SEMA(sema) sema_delete(sema, pl0_data_delete)
 
-static void report_shadow(const char *name, node_t *other, node_t *self) {
-    report_t id = reportf(ERROR, self->scan, self->where, "refinition of `%s`", name);
-    report_append(id, other->scan, other->where, "previous definition");
-    report_note(id, "PL/0 is case insensitive");
+static void report_shadow(reports_t *reports, const char *name, node_t *other, node_t *self) {
+    message_t *id = report2(reports, ERROR, self, "refinition of `%s`", name);
+    report_append2(id, other, "previous definition");
+    report_note2(id, "PL/0 is case insensitive");
 }
 
 static void report_recurse(reports_t *reports, vector_t *stack, lir_t *root) {
@@ -65,7 +65,7 @@ static void report_recurse(reports_t *reports, vector_t *stack, lir_t *root) {
         pl0_data_t *data = sema->fields; \
         lir_t *other = GET_PROC(sema, name); \
         if (other != NULL) { \
-            report_shadow(name, other->node, lir->node); \
+            report_shadow(sema->reports, name, other->node, lir->node); \
         } \
         map_set(data->field, name, lir); \
     }
@@ -75,11 +75,11 @@ static void report_recurse(reports_t *reports, vector_t *stack, lir_t *root) {
         pl0_data_t *data = sema->fields; \
         lir_t *other1 = GET_VAR(sema, name); \
         if (other1 != NULL) { \
-            report_shadow(name, other1->node, lir->node); \
+            report_shadow(sema->reports, name, other1->node, lir->node); \
         } \
         lir_t *other2 = GET_CONST(sema, name); \
         if (other2 != NULL) { \
-            report_shadow(name, other2->node, lir->node); \
+            report_shadow(sema->reports, name, other2->node, lir->node); \
         } \
         map_set(data->field, name, lir); \
     }
@@ -202,7 +202,7 @@ static lir_t *compile_expr(sema_t *sema, pl0_t *expr) {
         result = compile_unary(sema, expr);
         break;
     default:
-        assert("compile-expr unknown expr %d", expr->type);
+        assert2(sema->reports, "compile-expr unknown expr %d", expr->type);
         return lir_poison(expr->node, "unknown expr");
     }
 
@@ -222,7 +222,7 @@ static lir_t *compile_cond(sema_t *sema, pl0_t *expr) {
         break;
     
     default:
-        assert("compile-cond unknown cond %d", expr->type);
+        assert2(sema->reports, "compile-cond unknown cond %d", expr->type);
         return lir_poison(expr->node, "unknown cond");
     }
 
@@ -313,7 +313,7 @@ static lir_t *compile_stmt(sema_t *sema, pl0_t *stmt) {
         return compile_call(sema, stmt);
 
     default:
-        assert("compile-stmt unknown stmt %d", stmt->type);
+        assert2(sema->reports, "compile-stmt unknown stmt %d", stmt->type);
         return lir_poison(stmt->node, "unknown stmt");
     }
 }

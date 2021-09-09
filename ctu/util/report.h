@@ -20,17 +20,11 @@ typedef enum {
 
 #define INVALID_REPORT SIZE_MAX
 
-/* begin a report that holds up to `limit` reports */
-void begin_report(size_t limit);
-
-/* end a report with a `name` and exit if it contains an error */
-void end_report(bool quit, const char *name);
-
 /* report an internal compiler error */
 void assert(const char *fmt, ...);
 #define ASSERT(expr) if (!(expr)) (assert)
 
-report_t report(level_t level, const char *fmt, ...);
+//report_t report(level_t level, const char *fmt, ...);
 report_t reportf(level_t level, const scan_t *scan, where_t where, const char *fmt, ...);
 report_t reportv(level_t level, const scan_t *scan, where_t where, const char *fmt, va_list args);
 
@@ -73,6 +67,8 @@ typedef struct {
 
 reports_t *begin_reports();
 int end_reports(reports_t *reports, size_t limit, const char *name);
+
+message_t *assert2(reports_t *reports, const char *fmt, ...);
 
 message_t *report2(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...);
 void report_append2(message_t *message, const node_t *node, const char *fmt, ...);

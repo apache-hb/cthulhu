@@ -26,6 +26,9 @@ typedef struct {
 
     /* the length of the text */
     size_t size;
+
+    /* actually reports_t * but forward declaration pains */
+    void *reports;
 } scan_t;
 
 /* a location inside a scanner */

@@ -44,5 +44,5 @@ node_t *ctu_compile(reports_t *reports, file_t *fd) {
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg) {
     (void)state;
 
-    reportf(ERROR, scan, *where, "%s", msg);
+    report2(scan->reports, ERROR, node_new(scan, *where), "%s", msg);
 }

@@ -12,7 +12,7 @@
 #   include <sys/mman.h>
 #endif
 
-static scan_t *scan_new(const char *language, const char *path, size_t size) {
+static scan_t *scan_new(reports_t *reports, const char *language, const char *path, size_t size) {
     scan_t *scan = ctu_malloc(sizeof(scan_t));
 
     scan->language = language;
@@ -22,6 +22,8 @@ static scan_t *scan_new(const char *language, const char *path, size_t size) {
     /* scan->text is filled in by the caller */
     scan->offset = 0;
     scan->size = size;
+
+    scan->reports = reports;
 
     return scan;
 }
@@ -53,9 +55,9 @@ static const void *map_file(reports_t *reports, size_t size, FILE *file) {
     return text;
 }
 
-scan_t *scan_string(const char *language, const char *path, const char *text) {
+scan_t *scan_string(reports_t *reports, const char *language, const char *path, const char *text) {
     size_t size = strlen(text);
-    scan_t *scan = scan_new(language, path, size);
+    scan_t *scan = scan_new(reports, language, path, size);
 
     scan->text = text;
 
@@ -65,7 +67,7 @@ scan_t *scan_string(const char *language, const char *path, const char *text) {
 scan_t *scan_file(reports_t *reports, const char *language, file_t *file) {
     FILE *fd = file->file;
     size_t size = file_size(fd);
-    scan_t *scan = scan_new(language, file->path, size);
+    scan_t *scan = scan_new(reports, language, file->path, size);
 
     scan->data = fd;
 

@@ -8,14 +8,14 @@
 #include <string.h>
 #include <stdlib.h>
 
+static reports_t *errors = NULL;
+
 #include "cmd.c"
 
 static const char *name = NULL;
 
 /* vector_t<file_t*> */
 static vector_t *sources = NULL;
-
-static reports_t *errors = NULL;
 
 #define MATCH(arg, a, b) (startswith(arg, a) || startswith(arg, b))
 #define NEXT(idx, argc, argv) (idx + 1 >= argc ? NULL : argv[idx + 1])
@@ -25,7 +25,7 @@ static int parse_arg(int index, int argc, char **argv) {
     
     if (!startswith(arg, "-")) {
         file_t *fp = ctu_open(arg, "rb");
-        
+
         if (fp == NULL) {
             report2(errors, ERROR, NULL, "failed to open file: %s", arg);
         } else {
@@ -39,7 +39,7 @@ static int parse_arg(int index, int argc, char **argv) {
         DRIVER = select_driver(NEXT(index, argc, argv));
         return 2;
     } else {
-        report(WARNING, "unknown argument %s", arg);
+        report2(errors, WARNING, NULL, "unknown argument %s", arg);
     }
 
     return 1;
@@ -55,8 +55,6 @@ static void parse_args(int argc, char **argv) {
     for (int i = 1; i < argc;) {
         i += parse_arg(i, argc, argv);
     }
-
-    end_report(true, "commandline parsing");
 }
 
 typedef struct {
@@ -82,8 +80,6 @@ int main(int argc, char **argv) {
 
     errors = begin_reports();
 
-    begin_report(20);
-
     parse_args(argc, argv);
 
     int err = end_reports(errors, SIZE_MAX, "command line parsing");
@@ -94,6 +90,8 @@ int main(int argc, char **argv) {
     size_t len = vector_len(sources);
     vector_t *units = vector_new(len);
 
+    int fails = 0;
+
     for (size_t i = 0; i < len; i++) {
         file_t *fp = vector_get(sources, i);
 
@@ -101,25 +99,31 @@ int main(int argc, char **argv) {
         reports_t *reports = begin_reports();
 
         if (driver->parse == NULL) {
-            report(ERROR, "unknown file type: %s", fp->path);
+            report2(errors, ERROR, NULL, "unknown file type: %s", fp->path);
         } else {
             void *node = driver->parse(reports, fp);
             vector_push(&units, unit_new(driver, reports, fp, node));
         }
 
-        end_report(false, format("compilation of `%s`", fp->path));
+        err = end_reports(reports, SIZE_MAX, format("compilation of `%s`", fp->path));
+        fails = MAX(fails, err);
     }
 
-    end_report(true, "compilation");
+    if (fails > 0) {
+        return fails;
+    }
 
     for (size_t i = 0; i < len; i++) {
         unit_t *unit = vector_get(units, i);
         unit->lir = unit->driver->analyze(unit->reports, unit->root);
 
-        end_report(false, format("semantic analysis of `%s`", unit->file->path));
+        err = end_reports(unit->reports, SIZE_MAX, format("semantic analysis of `%s`", unit->file->path));
+        fails = MAX(fails, err);
     }
 
-    end_report(true, "semantic analysis");
+    if (fails > 0) {
+        return fails;
+    }
 
     for (size_t i = 0; i < len; i++) {
         unit_t *unit = vector_get(units, i);
@@ -132,8 +136,6 @@ int main(int argc, char **argv) {
         module_t *mod = module_build(unit->lir);
         module_print(stdout, mod);
     }
-
-    end_report(true, "code generation");
 
     return 0;
 }

@@ -21,6 +21,8 @@ static part_t *part_node(char *message, const node_t *node) {
     part_t *part = ctu_malloc(sizeof(part_t));
     part->message = message;
     part->node = node;
+    part->scan = node->scan;
+    part->where = node->where;
     return part;
 }
 
@@ -412,15 +414,17 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
         if (i >= total) {
             continue;
         }
+
+        report_send(message);
     }
 
     if (internal > 0) {
-        fprintf(stderr, "%zu internal error(s) encountered during %s stage", internal, name);
+        fprintf(stderr, "%zu internal error(s) encountered during %s stage\n", internal, name);
         return 99;
     }
 
     if (fatal > 0) {
-        fprintf(stderr, "%zu fatal error(s) encountered during %s stage", fatal, name);
+        fprintf(stderr, "%zu fatal error(s) encountered during %s stage\n", fatal, name);
         return 1;
     }
 
@@ -440,10 +444,24 @@ static message_t *report_push(reports_t *reports,
     message->parts = vector_new(1);
     message->message = str;
     message->underline = NULL;
+    
     message->node = node;
+    message->scan = node->scan;
+    message->where = node->where;
+
     message->note = NULL;
 
     vector_push(&reports->messages, message);
+    return message;
+}
+
+
+message_t *assert2(reports_t *reports, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    message_t *message = report_push(reports, INTERNAL, NULL, fmt, args);
+    va_end(args);
+
     return message;
 }
 

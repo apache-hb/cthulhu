@@ -5,7 +5,7 @@
 #include "scan.h"
 
 /* create a scanner from a string */
-scan_t *scan_string(const char *language, const char *path, const char *text);
+scan_t *scan_string(reports_t *reports, const char *language, const char *path, const char *text);
 
 /* create a scanner from a file */
 scan_t *scan_file(reports_t *reports, const char *language, file_t *file);
