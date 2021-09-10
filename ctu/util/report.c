@@ -147,11 +147,13 @@ static char *right_align(line_t line, size_t width) {
 }
 
 static void report_source(message_t *message) {
-    const scan_t *scan = message->scan;
-    where_t where = message->where;
-    if (!scan) {
+    const node_t *node = message->node;
+    if (!node) {
         return;
     }
+
+    const scan_t *scan = node->scan;
+    where_t where = node->where;
 
     line_t start = where.first_line;
 
@@ -172,10 +174,12 @@ static void report_source(message_t *message) {
 
 static void report_part(message_t *message, part_t *part) {
     char *msg = part->message;
-    const scan_t *scan = part->node->scan;
-    where_t where = part->node->where;
 
-    size_t start = where.first_line;
+    const node_t *node = part->node;
+    const scan_t *scan = node->scan;
+    where_t where = node->where;
+
+    line_t start = where.first_line;
     column_t front = where.first_column;
     column_t back = where.last_column;
 
@@ -191,7 +195,7 @@ static void report_part(message_t *message, part_t *part) {
     }
 
     fprintf(stderr, "%s> %s source %s:%ld:%ld\n", pad, 
-        scan->language, scan->path, 
+        scan->language, scan->path,
         start + 1, front
     );
     fprintf(stderr, "%s|\n", pad);
