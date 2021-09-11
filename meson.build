@@ -71,6 +71,12 @@ foreach lang : [
     subdir('ctu/frontend'/lang)
 endforeach
 
-driver = executable('driver', 'ctu/driver/main.c',
+main = [
+    'ctu/driver/main.c',
+    'ctu/driver/driver.c',
+    'ctu/driver/async.c'
+]
+
+driver = executable('driver', main,
     dependencies : options
 )

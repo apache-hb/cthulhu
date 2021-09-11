@@ -59,6 +59,20 @@ size_t vector_len(const vector_t *vector);
 vector_t *vector_join(const vector_t *lhs, const vector_t *rhs);
 vector_t *vector_map(const vector_t *vector, vector_apply_t func);
 
+// queue collection
+
+typedef struct {
+    size_t size;
+    size_t front;
+    size_t back;
+    void *data[];
+} queue_t;
+
+queue_t *queue_new(size_t size);
+void queue_delete(queue_t *queue);
+void queue_write(queue_t **queue, void *value);
+void *queue_read(queue_t *queue);
+
 vector_t *map_collect(map_t *map, map_collect_t filter);
 
 #define MAP_APPLY(map, user, func) map_apply(map, user, (map_apply_t)func)

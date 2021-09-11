@@ -282,8 +282,6 @@ static message_t *report_push(reports_t *reports,
     message->underline = NULL;
     
     message->node = node;
-    message->scan = node->scan;
-    message->where = node->where;
 
     message->note = NULL;
 

@@ -2,7 +2,6 @@
 
 #include "ctu/util/util.h"
 
-
 const char *binary_name(binary_t op) {
     switch (op) {
     case BINARY_ADD: return "add";

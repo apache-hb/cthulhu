@@ -1,48 +1,6 @@
 #include "ctu/util/util.h"
 
-#include "ctu/frontend/pl0/driver.h"
-#include "ctu/frontend/ctu/driver.h"
-#include "ctu/frontend/c/driver.h"
-
 static const char *VERSION = "0.0.1";
-
-typedef void*(*parse_t)(reports_t*, file_t*);
-typedef lir_t*(*analyze_t)(reports_t*, void*);
-
-typedef struct {
-    const char *version;
-    const char *name;
-    parse_t parse;
-    analyze_t analyze;
-} driver_t;
-
-static const driver_t PL0 = {
-    .version = "0.0.1",
-    .name = "PL/0",
-    .parse = (parse_t)pl0_parse,
-    .analyze = (analyze_t)pl0_analyze
-};
-
-static const driver_t CTU = {
-    .version = "0.0.1",
-    .name = "Cthulhu",
-    .parse = (parse_t)ctu_parse,
-    .analyze = (analyze_t)ctu_analyze
-};
-
-static const driver_t C = {
-    .version = "0.0.1",
-    .name = "C",
-    .parse = (parse_t)c_parse,
-    .analyze = (analyze_t)c_analyze
-};
-
-static const driver_t INVALID = {
-    .version = "1.0.0",
-    .name = "Invalid",
-    .parse = NULL,
-    .analyze = NULL
-};
 
 static const driver_t *DRIVER = NULL;
 
@@ -89,6 +47,7 @@ static void print_help(const char *name) {
     printf("\t -h, --help: Print this help message\n");
     printf("\t -v, --version: Print version information\n");
     printf("\t -src, --source: Override file extension based compiler choice\n");
+    printf("\t -t, --threads: Provide a number of threads to use for parralel compilation\n");
 
     exit(0);
 }

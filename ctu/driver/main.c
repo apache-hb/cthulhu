@@ -1,7 +1,10 @@
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
 
+#include "async.h"
+
 #include "ctu/lir/sema.h"
+#include "driver.h"
 #include "ctu/emit/emit.h"
 #include "ctu/gen/emit.h"
 
@@ -10,12 +13,36 @@
 
 static reports_t *errors = NULL;
 
+/** 
+ * number of threads to use when compiling 
+ * if 0 no threading is used
+ */
+static size_t threadnum = 0;
+
 #include "cmd.c"
 
 static const char *name = NULL;
 
 /* vector_t<file_t*> */
 static vector_t *sources = NULL;
+
+static void set_threadnum(const char *arg) {
+    if (threadnum != 0) {
+        report2(errors, WARNING, NULL, "threadnum already set to %zu", threadnum);
+        return;
+    }
+
+    if (arg == NULL) {
+        report2(errors, ERROR, NULL, "missing argument for --threads");
+        return;
+    }
+
+    threadnum = strtoull(arg, NULL, 10);
+
+    if (threadnum == 0) {
+        report2(errors, ERROR, NULL, "invalid argument for --threads: %s", arg);
+    }
+}
 
 #define MATCH(arg, a, b) (startswith(arg, a) || startswith(arg, b))
 #define NEXT(idx, argc, argv) (idx + 1 >= argc ? NULL : argv[idx + 1])
@@ -37,6 +64,9 @@ static int parse_arg(int index, int argc, char **argv) {
         print_version();
     } else if (MATCH(arg, "-src", "--source")) {
         DRIVER = select_driver(NEXT(index, argc, argv));
+        return 2;
+    } else if (MATCH(arg, "-t", "--threads")) {
+        set_threadnum(NEXT(index, argc, argv));
         return 2;
     } else {
         report2(errors, WARNING, NULL, "unknown argument %s", arg);
@@ -85,6 +115,10 @@ int main(int argc, char **argv) {
     int err = end_reports(errors, SIZE_MAX, "command line parsing");
     if (err > 0) {
         return err;
+    }
+
+    if (threadnum != 0) {
+        return async_main(threadnum, sources);
     }
 
     size_t len = vector_len(sources);

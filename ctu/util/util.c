@@ -304,3 +304,47 @@ vector_t *vector_map(const vector_t *vector, vector_apply_t func) {
 
     return out;
 }
+
+static size_t queue_size(size_t elems) {
+    return sizeof(queue_t) + (elems * sizeof(void *));
+}
+
+#define SELF (*queue)
+
+static void queue_resize(queue_t **queue, size_t size) {
+    *queue = ctu_realloc(SELF, queue_size(size));
+    SELF->size = size;
+}
+
+queue_t *queue_new(size_t size) {
+    queue_t *queue = ctu_malloc(queue_size(size));
+    queue->size = size;
+    queue->front = 0;
+    queue->back = 0;
+    return queue;
+}
+
+void queue_delete(queue_t *queue) {
+    ctu_free(queue);
+}
+
+void queue_write(queue_t **queue, void *value) {
+    if (((SELF->front + 1) % SELF->size) == SELF->back) {
+        queue_resize(queue, SELF->size * 2);
+    }
+
+    queue_t *self = *queue;
+
+    self->data[self->front] = value;
+    self->front = (self->front + 1) % self->size;
+}
+
+void *queue_read(queue_t *queue) {
+    if (queue->front == queue->back) {
+        return NULL;
+    }
+
+    void *value = queue->data[queue->back];
+    queue->back = (queue->back + 1) % queue->size;
+    return value;
+}

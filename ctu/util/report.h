@@ -31,10 +31,7 @@ typedef struct {
 
     vector_t *parts;
 
-    /* source and location, if scan is NULL then location is ignored */
-    const scan_t *scan;
-    where_t where;
-
+    /* source and location, if node is NULL then location is ignored */
     const node_t *node;
 
     /* extra note */
