@@ -1,5 +1,9 @@
 #include "driver.h"
 
+#include "ctu/util/str.h"
+
+#include <string.h>
+
 #include "ctu/frontend/pl0/driver.h"
 #include "ctu/frontend/ctu/driver.h"
 #include "ctu/frontend/c/driver.h"
@@ -25,9 +29,37 @@ const driver_t C = {
     .analyze = (analyze_t)c_analyze
 };
 
-const driver_t INVALID = {
-    .version = "1.0.0",
-    .name = "Invalid",
-    .parse = NULL,
-    .analyze = NULL
-};
+const driver_t *select_driver(reports_t *reports, const char *name) {
+    if (name == NULL) {
+        report2(reports, ERROR, NULL, "no driver specified");
+        return NULL;
+    }
+
+    if (strcmp(name, "pl0") == 0) {
+        return &PL0;
+    } else if (strcmp(name, "ctu") == 0) {
+        return &CTU;
+    } else if (strcmp(name, "c") == 0) {
+        return &C;
+    } else {
+        report2(reports, ERROR, NULL, "unknown driver: %s", name);
+        return NULL;
+    }
+}
+
+const driver_t *select_driver_by_extension(reports_t *reports, const driver_t *driver, const char *path) {
+    if (driver != NULL) {
+        return driver;
+    }
+
+    if (endswith(path, ".pl0")) {
+        return &PL0;
+    } else if (endswith(path, ".ct")) {
+        return &CTU;
+    } else if (endswith(path, ".c")) {
+        return &C;
+    } else {
+        report2(reports, ERROR, NULL, "unknown extension on input: %s", path);
+        return NULL;
+    }
+}

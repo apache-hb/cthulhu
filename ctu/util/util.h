@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 
 #define MAX(L, R) ((L) > (R) ? (L) : (R)) 
 #define MIN(L, R) ((L) < (R) ? (L) : (R)) 
@@ -62,16 +63,17 @@ vector_t *vector_map(const vector_t *vector, vector_apply_t func);
 // queue collection
 
 typedef struct {
-    size_t size;
-    size_t front;
-    size_t back;
+    atomic_size_t size;
+    atomic_size_t front;
+    atomic_size_t back;
     void *data[];
 } queue_t;
 
 queue_t *queue_new(size_t size);
 void queue_delete(queue_t *queue);
-void queue_write(queue_t **queue, void *value);
+bool queue_write(queue_t *queue, void *value, bool blocking);
 void *queue_read(queue_t *queue);
+bool queue_is_empty(const queue_t *queue);
 
 vector_t *map_collect(map_t *map, map_collect_t filter);
 

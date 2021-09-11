@@ -25,19 +25,21 @@ src = [
 
     'ctu/util/report.c',
     'ctu/util/str.c',
-    'ctu/util/util.c'
+    'ctu/util/util.c',
+    'ctu/util/task/task.c'
 ]
 
 gmp = dependency('gmp')
+threads = dependency('threads')
 
 libgeneric = library('generic', src,
-    dependencies : gmp
+    dependencies : [ gmp, threads ]
 )
 
 generic = declare_dependency(
     link_with : libgeneric,
     include_directories : '.',
-    dependencies : gmp
+    dependencies : [ gmp, threads ]
 )
 
 flex = find_program('flex', version : '>=2.6')
@@ -63,11 +65,7 @@ parse = generator(bison,
 
 options = [ ]
 
-foreach lang : [ 
-    'c', 
-    'ctu', 
-    'pl0' 
-    ] 
+foreach lang : [ 'c', 'ctu', 'pl0' ] 
     subdir('ctu/frontend'/lang)
 endforeach
 

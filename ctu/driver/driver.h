@@ -14,7 +14,9 @@ typedef struct {
     analyze_t analyze;
 } driver_t;
 
-extern const driver_t PL0;
-extern const driver_t CTU;
 extern const driver_t C;
-extern const driver_t INVALID;
+extern const driver_t CTU;
+extern const driver_t PL0;
+
+const driver_t *select_driver(reports_t *reports, const char *name);
+const driver_t *select_driver_by_extension(reports_t *reports, const driver_t *driver, const char *path);

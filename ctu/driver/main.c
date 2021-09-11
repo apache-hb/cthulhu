@@ -13,79 +13,9 @@
 
 static reports_t *errors = NULL;
 
-/** 
- * number of threads to use when compiling 
- * if 0 no threading is used
- */
-static size_t threadnum = 0;
-
 #include "cmd.c"
 
 static const char *name = NULL;
-
-/* vector_t<file_t*> */
-static vector_t *sources = NULL;
-
-static void set_threadnum(const char *arg) {
-    if (threadnum != 0) {
-        report2(errors, WARNING, NULL, "threadnum already set to %zu", threadnum);
-        return;
-    }
-
-    if (arg == NULL) {
-        report2(errors, ERROR, NULL, "missing argument for --threads");
-        return;
-    }
-
-    threadnum = strtoull(arg, NULL, 10);
-
-    if (threadnum == 0) {
-        report2(errors, ERROR, NULL, "invalid argument for --threads: %s", arg);
-    }
-}
-
-#define MATCH(arg, a, b) (startswith(arg, a) || startswith(arg, b))
-#define NEXT(idx, argc, argv) (idx + 1 >= argc ? NULL : argv[idx + 1])
-
-static int parse_arg(int index, int argc, char **argv) {
-    const char *arg = argv[index];
-    
-    if (!startswith(arg, "-")) {
-        file_t *fp = ctu_open(arg, "rb");
-
-        if (fp == NULL) {
-            report2(errors, ERROR, NULL, "failed to open file: %s", arg);
-        } else {
-            vector_push(&sources, fp);
-        }
-    } else if (MATCH(arg, "-h", "--help")) {
-        print_help(name);
-    } else if (MATCH(arg, "-v", "--version")) {
-        print_version();
-    } else if (MATCH(arg, "-src", "--source")) {
-        DRIVER = select_driver(NEXT(index, argc, argv));
-        return 2;
-    } else if (MATCH(arg, "-t", "--threads")) {
-        set_threadnum(NEXT(index, argc, argv));
-        return 2;
-    } else {
-        report2(errors, WARNING, NULL, "unknown argument %s", arg);
-    }
-
-    return 1;
-}
-
-static void parse_args(int argc, char **argv) {
-    if (argc == 1) {
-        print_help(name);
-    }
-
-    sources = vector_new(4);
-
-    for (int i = 1; i < argc;) {
-        i += parse_arg(i, argc, argv);
-    }
-}
 
 typedef struct {
     const driver_t *driver;
@@ -110,29 +40,29 @@ int main(int argc, char **argv) {
 
     errors = begin_reports();
 
-    parse_args(argc, argv);
+    settings_t settings = parse_args(errors, argc, argv);
 
     int err = end_reports(errors, SIZE_MAX, "command line parsing");
     if (err > 0) {
         return err;
     }
 
-    if (threadnum != 0) {
-        return async_main(threadnum, sources);
+    if (settings.threads != 0) {
+        return async_main(settings);
     }
 
-    size_t len = vector_len(sources);
+    size_t len = vector_len(settings.sources);
     vector_t *units = vector_new(len);
 
     int fails = 0;
 
     for (size_t i = 0; i < len; i++) {
-        file_t *fp = vector_get(sources, i);
+        file_t *fp = vector_get(settings.sources, i);
 
-        const driver_t *driver = driver_for(fp);
         reports_t *reports = begin_reports();
+        const driver_t *driver = select_driver_by_extension(reports, settings.driver, fp->path);
 
-        if (driver->parse == NULL) {
+        if (driver == NULL) {
             report2(errors, ERROR, NULL, "unknown file type: %s", fp->path);
         } else {
             void *node = driver->parse(reports, fp);
