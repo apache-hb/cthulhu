@@ -1,7 +1,6 @@
 #include "report.h"
 
 #include "ctu/ast/scan.h"
-#include "task/critical.h"
 
 #include "util.h"
 #include "str.h"
@@ -10,8 +9,7 @@
 #include <string.h>
 #include <ctype.h>
 
-atomic_bool verbose = false;
-static ctu_critical_t lock = CTU_CRITICAL_INIT;
+bool verbose = false;
 
 static part_t *part_new(char *message, const node_t *node) {
     part_t *part = ctu_malloc(sizeof(part_t));
@@ -239,35 +237,33 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
 
     size_t errors = vector_len(reports->messages);
 
-    CTU_CRITICAL(&lock, {
-        for (size_t i = 0; i < errors; i++) {
-            message_t *message = vector_get(reports->messages, i);
-            switch (message->level) {
-            case INTERNAL: 
-                internal += 1;
-                break;
-            case ERROR:
-                fatal += 1;
-                break;
-            default:
-                break;
-            }
-
-            if (i >= total) {
-                continue;
-            }
-
-            report_send(message);
+    for (size_t i = 0; i < errors; i++) {
+        message_t *message = vector_get(reports->messages, i);
+        switch (message->level) {
+        case INTERNAL: 
+            internal += 1;
+            break;
+        case ERROR:
+            fatal += 1;
+            break;
+        default:
+            break;
         }
 
-        if (internal > 0) {
-            fprintf(stderr, "%zu internal error(s) encountered during %s stage\n", internal, name);
-            result = 99;
-        } else if (fatal > 0) {
-            fprintf(stderr, "%zu fatal error(s) encountered during %s stage\n", fatal, name);
-            result = 1;
+        if (i >= total) {
+            continue;
         }
-    });
+
+        report_send(message);
+    }
+
+    if (internal > 0) {
+        fprintf(stderr, "%zu internal error(s) encountered during %s stage\n", internal, name);
+        result = 99;
+    } else if (fatal > 0) {
+        fprintf(stderr, "%zu fatal error(s) encountered during %s stage\n", fatal, name);
+        result = 1;
+    }
 
     return result;
 }
@@ -346,10 +342,8 @@ void logverbose(const char *fmt, ...) {
         return;
     }
 
-    CTU_CRITICAL(&lock, {
-        va_list args;
-        va_start(args, fmt);
-        fprintf(stderr, "%s: %s\n", report_level(NOTE), formatv(fmt, args));
-        va_end(args);
-    });
+    va_list args;
+    va_start(args, fmt);
+    fprintf(stderr, "%s: %s\n", report_level(NOTE), formatv(fmt, args));
+    va_end(args);
 }

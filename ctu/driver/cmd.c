@@ -1,6 +1,9 @@
 #include "cmd.h"
 
 #include "ctu/util/util.h"
+#include "ctu/util/str.h"
+
+#include <stdlib.h>
 
 static const char *VERSION = "0.0.1";
 static const char *NAME = "driver";
@@ -25,24 +28,6 @@ static void print_version(void) {
     printf("C Version: %s\n", C.version);
 
     exit(0);
-}
-
-static void set_threadnum(settings_t *settings, const char *arg) {
-    if (settings->threads != 0) {
-        report2(settings->reports, WARNING, NULL, "threadnum already set to %zu", settings->threads);
-        return;
-    }
-
-    if (arg == NULL) {
-        report2(settings->reports, ERROR, NULL, "missing argument for --threads");
-        return;
-    }
-
-    settings->threads = strtoull(arg, NULL, 10);
-
-    if (settings->threads == 0) {
-        report2(settings->reports, ERROR, NULL, "invalid argument for --threads: %s", arg);
-    }
 }
 
 #define MATCH(arg, a, b) (startswith(arg, a) || startswith(arg, b))
@@ -70,11 +55,8 @@ static int parse_arg(settings_t *settings, int index, int argc, char **argv) {
 
         settings->driver = select_driver(settings->reports, NEXT(index, argc, argv));
         return 2;
-    } else if (MATCH(arg, "-t", "--threads")) {
-        set_threadnum(settings, NEXT(index, argc, argv));
-        return 2;
     } else if (MATCH(arg, "-V", "--verbose")) {
-        verbose = true;
+        settings->verbose = true;
     } else {
         report2(settings->reports, WARNING, NULL, "unknown argument %s", arg);
     }
@@ -86,10 +68,10 @@ settings_t parse_args(reports_t *reports, int argc, char **argv) {
     NAME = argv[0];
 
     settings_t settings = { 
-        .threads = 0, 
         .driver = NULL, 
         .sources = vector_new(0),
-        .reports = reports
+        .reports = reports,
+        .verbose = false
     };
 
     if (argc == 1) {

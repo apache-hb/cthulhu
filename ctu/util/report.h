@@ -52,6 +52,6 @@ void report_append2(message_t *message, const node_t *node, const char *fmt, ...
 void report_underline(message_t *message, const char *fmt, ...);
 void report_note2(message_t *message, const char *fmt, ...);
 
-extern atomic_bool verbose;
+extern bool verbose;
 
 void logverbose(const char *fmt, ...);

@@ -25,8 +25,7 @@ src = [
 
     'ctu/util/report.c',
     'ctu/util/str.c',
-    'ctu/util/util.c',
-    'ctu/util/task/task.c'
+    'ctu/util/util.c'
 ]
 
 gmp = dependency('gmp')
@@ -72,7 +71,7 @@ endforeach
 main = [
     'ctu/driver/main.c',
     'ctu/driver/driver.c',
-    'ctu/driver/async.c'
+    'ctu/driver/cmd.c'
 ]
 
 driver = executable('driver', main,

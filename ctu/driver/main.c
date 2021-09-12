@@ -1,10 +1,9 @@
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
 
-#include "async.h"
-
-#include "ctu/lir/sema.h"
 #include "driver.h"
+#include "cmd.h"
+#include "ctu/lir/sema.h"
 #include "ctu/emit/emit.h"
 #include "ctu/gen/emit.h"
 
@@ -12,8 +11,6 @@
 #include <stdlib.h>
 
 static reports_t *errors = NULL;
-
-#include "cmd.c"
 
 static const char *name = NULL;
 
@@ -45,10 +42,6 @@ int main(int argc, char **argv) {
     int err = end_reports(errors, SIZE_MAX, "command line parsing");
     if (err > 0) {
         return err;
-    }
-
-    if (settings.threads != 0) {
-        return async_main(settings);
     }
 
     size_t len = vector_len(settings.sources);
