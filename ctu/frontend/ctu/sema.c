@@ -1,9 +1,23 @@
 #include "sema.h"
 
+
+#if 0
 typedef struct {
     map_t *types;
     map_t *decls;
 } ctu_data_t;
+
+typedef struct {
+    sema_t *sema;
+    ctu_t *ctu;
+} ctx_t;
+
+ctx_t *ctx_new(sema_t *sema, ctu_t *ctu) {
+    ctx_t *ctx = ctu_malloc(sizeof(ctx_t));
+    ctx->sema = sema;
+    ctx->ctu = ctu;
+    return ctx;
+}
 
 static void *ctu_data_new(void) {
     ctu_data_t *data = ctu_malloc(sizeof(ctu_data_t));
@@ -84,13 +98,58 @@ static void add_global(sema_t *sema, leaf_t leaf, const char *name, ctu_t *ctu) 
     }
 }
 
-static void compile_value(sema_t *sema, lir_t *lir) {
-    (void) sema;
-    (void) lir;
-    assert2(sema->reports, "value not implemented");
+static lir_t *compile_digit(ctu_t *digit) {
+    lir_t *lir = lir_digit(digit->node, digit->digit);
+    lir->type = type_digit(true, TY_INT); /* TODO: type suffixes */
+    return lir;
 }
 
-static lir_t *build_decl(sema_t *sema, lir_t *lir) {
+static lir_t *compile_unary(sema_t *sema, ctu_t *unary) {
+    lir_t *operand = compile_expr(sema, unary->operand);
+
+    lir_t *lir = lir_unary(unary->node, unary->unary, operand);
+
+    return lir;
+}
+
+static lir_t *compile_binary(sema_t *sema, ctu_t *binary) {
+    lir_t *lhs = compile_unary(sema, binary->lhs);
+    lir_t *rhs = compile_unary(sema, binary->rhs);
+
+    lir_t *lir = lir_binary(binary->node, binary->binary, lhs, rhs);
+
+    return lir;
+}
+
+static lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
+    lir_t *result = NULL;
+
+    switch (expr->type) {
+    case CTU_DIGIT:
+        result = compile_digit(expr);
+        break;
+    case CTU_UNARY:
+        result = compile_unary(sema, expr);
+        break;
+    case CTU_BINARY:
+        result = compile_binary(sema, expr);
+        break;
+        
+    default:
+        assert2(sema->reports, "unknown type");
+        result = lir_poison(expr->node, "unknown type");
+    }
+
+    return result;
+}
+
+static void compile_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
+    lir_t *value = compile_expr(sema, lir->value);
+    
+    lir_value(sema->reports, lir, value->type, value);
+}
+
+static lir_t *build_decl(sema_t *sema, lir_t *lir, ctu_t *ctu) {
     if (lir->leaf != LIR_FORWARD) {
         return lir;
     }
@@ -101,7 +160,7 @@ static lir_t *build_decl(sema_t *sema, lir_t *lir) {
 
     switch (lir->leaf) {
     case LIR_VALUE:
-        compile_value(sema, lir);
+        compile_value(sema, lir, ctu);
         break;
 
     default:
@@ -112,11 +171,12 @@ static lir_t *build_decl(sema_t *sema, lir_t *lir) {
     return lir;
 }
 
-static void compile_decl(sema_t *sema, lir_t *lir) {
+static void compile_decl(sema_t *sema, ctx_t *ctx) {
+    lir_t *lir = ctx->lir;
     if (lir->leaf != LIR_FORWARD) {
         return;
     }
-    build_decl(sema, lir);
+    build_decl(sema, lir, ctx->ctu);
 }
 
 #define IS_LEAF(func, it) \
@@ -150,4 +210,40 @@ lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
     DELETE_SEMA(sema);
 
     return lir_module(ctu->node, values, defines);
+}
+#endif
+
+typedef struct {
+    map_t *decls;
+    map_t *types;
+} ctu_data_t;
+
+static void *ctu_data_new(void) {
+    ctu_data_t *data = NEW(ctu_data_t);
+    data->decls = map_new(4);
+    data->types = map_new(4);
+    return data;
+}
+
+static void ctu_data_delete(void *arg) {
+    ctu_data_t *data = arg;
+    map_delete(data->decls);
+    map_delete(data->types);
+    DELETE(data);
+}
+
+#define NEW_SEMA(parent, reports) \
+    sema_new(parent, reports, ctu_data_new)
+
+#define DELETE_SEMA(sema) \
+    sema_delete(sema, ctu_data_delete)
+
+lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
+    sema_t *sema = NEW_SEMA(NULL, reports);
+
+    DELETE_SEMA(sema);
+
+    (void)ctu;
+
+    return NULL;
 }

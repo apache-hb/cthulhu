@@ -3,7 +3,7 @@
 #include "ctu/util/report.h"
 
 static lir_t *lir_new(node_t *node, leaf_t leaf) {
-    lir_t *lir = ctu_malloc(sizeof(lir_t));
+    lir_t *lir = NEW(lir_t);
     lir->node = node;
     lir->leaf = leaf;
     lir->type = NULL;

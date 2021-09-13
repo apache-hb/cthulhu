@@ -2,7 +2,6 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include <stdatomic.h>
 
 #define MAX(L, R) ((L) > (R) ? (L) : (R)) 
 #define MIN(L, R) ((L) < (R) ? (L) : (R)) 
@@ -16,6 +15,11 @@ void *ctu_realloc(void *ptr, size_t size);
 void ctu_free(void *ptr);
 char *ctu_strdup(const char *str);
 void init_memory(void);
+
+#define NEW(type) ((type *)ctu_malloc(sizeof(type)))
+#define NEW_ARRAY(type, count) ((type *)ctu_malloc(sizeof(type) * (count)))
+#define DELETE(ptr) ctu_free(ptr)
+#define DELETE_ARRAY(ptr, len) ctu_free(ptr)
 
 // map collection
 
@@ -59,21 +63,6 @@ void *vector_get(const vector_t *vector, size_t index);
 size_t vector_len(const vector_t *vector);
 vector_t *vector_join(const vector_t *lhs, const vector_t *rhs);
 vector_t *vector_map(const vector_t *vector, vector_apply_t func);
-
-// queue collection
-
-typedef struct {
-    atomic_size_t size;
-    atomic_size_t front;
-    atomic_size_t back;
-    void *data[];
-} queue_t;
-
-queue_t *queue_new(size_t size);
-void queue_delete(queue_t *queue);
-bool queue_write(queue_t *queue, void *value, bool blocking);
-void *queue_read(queue_t *queue);
-bool queue_is_empty(const queue_t *queue);
 
 vector_t *map_collect(map_t *map, map_collect_t filter);
 

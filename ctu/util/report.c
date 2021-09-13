@@ -12,7 +12,7 @@
 bool verbose = false;
 
 static part_t *part_new(char *message, const node_t *node) {
-    part_t *part = ctu_malloc(sizeof(part_t));
+    part_t *part = NEW(part_t);
     part->message = message;
     part->node = node;
     return part;
@@ -133,7 +133,7 @@ static char *build_underline(char *source, where_t where, char *note) {
 static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {
     char *num = format(" %ld ", init);
     size_t len = strlen(num);
-    ctu_free(num);
+    DELETE(num);
 
     for (size_t i = 0; i < vector_len(parts); i++) {
         part_t *part = vector_get(parts, i);
@@ -145,7 +145,7 @@ static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {
         line_t line = part->node->where.first_line + 1;
         char *it = format(" %ld ", line);
         len = MAX(len, strlen(it));
-        ctu_free(it);
+        DELETE(it);
     }
 
     return len;
@@ -228,7 +228,7 @@ static bool report_send(message_t *message) {
 }
 
 reports_t *begin_reports() {
-    reports_t *r = ctu_malloc(sizeof(reports_t));
+    reports_t *r = NEW(reports_t);
     r->messages = vector_new(32);
     return r;
 }
@@ -278,7 +278,7 @@ static message_t *report_push(reports_t *reports,
                               va_list args)
 {
     char *str = formatv(fmt, args);
-    message_t *message = ctu_malloc(sizeof(message_t));
+    message_t *message = NEW(message_t);
 
     message->level = level;
     message->parts = vector_new(1);

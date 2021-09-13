@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <gmp.h>
 
+#ifndef _WIN32
+#   include <sys/mman.h>
+#endif
+
 void *ctu_malloc(size_t size) {
     return malloc(size);
 }
@@ -26,7 +30,7 @@ static void *ctu_gmp_realloc(void *ptr, size_t old_size, size_t new_size) {
 
 static void ctu_gmp_free(void *ptr, size_t size) {
     UNUSED(size);
-    ctu_free(ptr);
+    DELETE(ptr);
 }
 
 void init_memory(void) {
@@ -61,7 +65,7 @@ file_t *ctu_open(const char *path, const char *mode) {
         return NULL;
     }
 
-    file_t *file = ctu_malloc(sizeof(file_t));
+    file_t *file = NEW(file_t);
     file->file = fp;
     file->path = path;
 
@@ -73,11 +77,41 @@ void ctu_close(file_t *fp) {
         fclose(fp->file);
     }
 
-    ctu_free(fp);
+    DELETE(fp);
 }
 
 bool ctu_valid(const file_t *fp) {
     return fp->file != NULL;
+}
+
+size_t ctu_read(void *dst, size_t total, file_t *fp) {
+    return fread(dst, 1, total, fp->file);
+}
+
+static size_t file_size(FILE *fd) {
+    fseek(fd, 0, SEEK_END);
+    size_t size = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+    return size;
+}
+
+void *ctu_mmap(file_t *fp) {
+    char *text;
+    size_t size = file_size(fp->file);
+
+#ifndef _WIN32
+    int fd = fileno(fp->file);
+    text = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (text == MAP_FAILED) {
+        text = NULL;
+    }
+#else
+    text = ctu_malloc(size + 1);
+    fread(text, size, 1, file);
+    text[size] = '\0';
+#endif
+
+    return text;
 }
 
 // map internals
@@ -91,7 +125,7 @@ static size_t sizeof_map(size_t size) {
 }
 
 static entry_t *entry_new(const char *key, void *value) { 
-    entry_t *entry = ctu_malloc(sizeof(entry_t));
+    entry_t *entry = NEW(entry_t);
     entry->key = key;
     entry->value = value;
     entry->next = NULL;
@@ -115,7 +149,7 @@ static void entry_delete(entry_t *entry) {
         entry_delete(entry->next);
     }
 
-    ctu_free(entry);
+    DELETE(entry);
 }
 
 /* find which bucket a key should be in */
@@ -153,7 +187,7 @@ void map_delete(map_t *map) {
     }
 
     /* this frees both the map and the toplevel entries */
-    ctu_free(map);
+    DELETE(map);
 }
 
 void *map_get(map_t *map, const char *key) {
@@ -248,7 +282,7 @@ vector_t *vector_init(void *value) {
 }
 
 void vector_delete(vector_t *vector) {
-    ctu_free(vector);
+    DELETE(vector);
 }
 
 void vector_push(vector_t **vector, void *value) {
@@ -303,56 +337,4 @@ vector_t *vector_map(const vector_t *vector, vector_apply_t func) {
     }
 
     return out;
-}
-
-static size_t queue_size(size_t elems) {
-    return sizeof(queue_t) + (elems * sizeof(void *));
-}
-
-queue_t *queue_new(size_t size) {
-    queue_t *queue = ctu_malloc(queue_size(size));
-    queue->size = size;
-    queue->front = 0;
-    queue->back = 0;
-    return queue;
-}
-
-void queue_delete(queue_t *queue) {
-    ctu_free(queue);
-}
-
-bool queue_write(queue_t *queue, void *value, bool blocking) {
-    if (((queue->front + 1) % queue->size) == queue->back) {
-        if (!blocking) {
-            return false;
-        }
-    }
-
-    /* block until there is space */
-    while (!queue_is_empty(queue)) { }
-    
-    /** 
-     * TODO: this is two atomic ops isnt it.
-     * cant wait for this to fail in production.
-     * transactional memory would be nice to have but for now
-     * it is not a thing.
-     */
-    queue->data[queue->front] = value;
-    queue->front = (queue->front + 1) % queue->size;
-
-    return true;
-}
-
-void *queue_read(queue_t *queue) {
-    if (queue->front == queue->back) {
-        return NULL;
-    }
-
-    void *value = queue->data[queue->back];
-    queue->back = (queue->back + 1) % queue->size;
-    return value;
-}
-
-bool queue_is_empty(const queue_t *queue) {
-    return queue->front == queue->back;
 }

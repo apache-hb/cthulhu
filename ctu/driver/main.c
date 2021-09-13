@@ -23,7 +23,7 @@ typedef struct {
 } unit_t;
 
 static unit_t *unit_new(const driver_t *driver, reports_t *reports, file_t *file, void *node) {
-    unit_t *unit = ctu_malloc(sizeof(unit_t));
+    unit_t *unit = NEW(unit_t);
     unit->driver = driver;
     unit->reports = reports;
     unit->file = file;

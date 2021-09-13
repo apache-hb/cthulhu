@@ -11,7 +11,7 @@ typedef struct {
 } pl0_data_t;
 
 static void *pl0_data_new(void) {
-    pl0_data_t *sema = ctu_malloc(sizeof(pl0_data_t));
+    pl0_data_t *sema = NEW(pl0_data_t);
     sema->vars = map_new(4);
     sema->consts = map_new(4);
     sema->procs = map_new(4);
@@ -23,7 +23,7 @@ static void pl0_data_delete(void *data) {
     map_delete(sema->vars);
     map_delete(sema->consts);
     map_delete(sema->procs);
-    ctu_free(sema);
+    DELETE(sema);
 }
 
 #define NEW_SEMA(parent, reports) sema_new(parent, reports, pl0_data_new)

@@ -13,7 +13,7 @@
 #endif
 
 static scan_t *scan_new(reports_t *reports, const char *language, const char *path, size_t size) {
-    scan_t *scan = ctu_malloc(sizeof(scan_t));
+    scan_t *scan = NEW(scan_t);
 
     scan->language = language;
     scan->path = path;
@@ -28,33 +28,6 @@ static scan_t *scan_new(reports_t *reports, const char *language, const char *pa
     return scan;
 }
 
-static size_t file_size(FILE *fd) {
-    fseek(fd, 0, SEEK_END);
-    size_t size = ftell(fd);
-    fseek(fd, 0, SEEK_SET);
-    return size;
-}
-
-static const void *map_file(reports_t *reports, size_t size, FILE *file) {
-    char *text;
-
-#ifndef _WIN32
-    int fd = fileno(file);
-    text = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (text == MAP_FAILED) {
-        text = NULL;
-        report2(reports, INTERNAL, NULL, "failed to mmap file: %s\n", strerror(errno));
-    }
-#else
-    (void)reports;
-    text = ctu_malloc(size + 1);
-    fread(text, size, 1, file);
-    text[size] = '\0';
-#endif
-
-    return text;
-}
-
 scan_t *scan_string(reports_t *reports, const char *language, const char *path, const char *text) {
     size_t size = strlen(text);
     scan_t *scan = scan_new(reports, language, path, size);
@@ -64,6 +37,13 @@ scan_t *scan_string(reports_t *reports, const char *language, const char *path, 
     return scan;
 }
 
+static size_t file_size(FILE *fd) {
+    fseek(fd, 0, SEEK_END);
+    size_t size = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+    return size;
+}
+
 scan_t *scan_file(reports_t *reports, const char *language, file_t *file) {
     FILE *fd = file->file;
     size_t size = file_size(fd);
@@ -71,11 +51,8 @@ scan_t *scan_file(reports_t *reports, const char *language, file_t *file) {
 
     scan->data = fd;
 
-    if (!(scan->text = map_file(reports, size, fd))) {
-        int error = end_reports(reports, SIZE_MAX, "file mapping");
-        if (error > 0) {
-            exit(error);
-        }
+    if (!(scan->text = ctu_mmap(file))) {
+        assert2(reports, "failed to mmap file");
     }
 
     return scan;

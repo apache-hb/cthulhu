@@ -30,7 +30,7 @@ const char *unary_name(unary_t op) {
 }
 
 node_t *node_new(scan_t *scan, where_t where) {
-    node_t *node = ctu_malloc(sizeof(node_t));
+    node_t *node = NEW(node_t);
     node->scan = scan;
     node->where = where;
     return node;

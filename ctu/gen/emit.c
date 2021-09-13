@@ -26,7 +26,7 @@ static operand_t new_operand(optype_t kind) {
 }
 
 static value_t *new_value(type_t *type) {
-    value_t *value = ctu_malloc(sizeof(value_t));
+    value_t *value = NEW(value_t);
     value->type = type;
     return value;
 }
@@ -107,14 +107,14 @@ static operand_t build_return(context_t ctx, lir_t *lir, operand_t op) {
 }
 
 static block_t *init_block(lir_t *decl, type_t *type) {
-    block_t *block = ctu_malloc(sizeof(block_t));
+    block_t *block = NEW(block_t);
     
     block->name = decl->name;
     block->result = type;
 
     block->len = 0;
     block->size = 16;
-    block->steps = ctu_malloc(sizeof(step_t) * block->size);
+    block->steps = NEW_ARRAY(step_t, block->size);
 
     return block;
 }
@@ -260,7 +260,7 @@ static operand_t emit_name(context_t ctx, lir_t *lir) {
 
 static operand_t emit_call(context_t ctx, lir_t *lir) {
     size_t len = vector_len(lir->args);
-    operand_t *args = ctu_malloc(sizeof(operand_t) * len);
+    operand_t *args = NEW_ARRAY(operand_t, len);
     
     for (size_t i = 0; i < len; i++) {
         lir_t *arg = vector_get(lir->args, i);
@@ -297,7 +297,7 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
 
 
 static module_t *init_module(vector_t *vars, vector_t *funcs, const char *name) {
-    module_t *mod = ctu_malloc(sizeof(module_t));
+    module_t *mod = NEW(module_t);
     mod->name = name;
     mod->vars = vars;
     mod->funcs = funcs;
