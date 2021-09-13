@@ -29,6 +29,34 @@
 }
 
 ";" { return SEMI; }
+
+"(" { return LPAREN; }
+")" { return RPAREN; }
+
+"+" { return ADD; }
+"-" { return SUB; }
+"*" { return MUL; }
+"/" { return DIV; }
+"%" { return REM; }
+
+"==" { return EQ; }
+"!=" { return NEQ; }
+
+"<<" { return SHL; }
+">>" { return SHR; }
+
+">=" { return GTE; }
+">" { return GT; }
+"<=" { return LTE; }
+"<" { return LT; }
+
+"&" { return BITAND; }
+"|" { return BITOR; }
+"^" { return XOR; }
+
+"&&" { return AND; }
+"||" { return OR; }
+
 "=" { return ASSIGN; }
 
 . { report2(yyextra->reports, ERROR, node_new(yyextra, *yylloc), "unknown character %s", yytext); }

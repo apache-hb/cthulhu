@@ -1,7 +1,7 @@
 src = [ 
     lex.process('ctu.l'),
     parse.process('ctu.y'),
-    'scan.c', 'driver.c', 'ast.c'
+    'scan.c', 'driver.c', 'ast.c', 'sema.c'
 ]
 
 libctu = library('ctu', src,

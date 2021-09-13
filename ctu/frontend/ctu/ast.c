@@ -23,6 +23,25 @@ ctu_t *ctu_ident(scan_t *scan, where_t where, const char *ident) {
     return ctu;
 }
 
+ctu_t *ctu_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *operand) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_UNARY);
+
+    ctu->unary = unary;
+    ctu->operand = operand;
+
+    return ctu;
+}
+
+ctu_t *ctu_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_BINARY);
+
+    ctu->binary = binary;
+    ctu->lhs = lhs;
+    ctu->rhs = rhs;
+
+    return ctu;
+}
+
 ctu_t *ctu_value(scan_t *scan, where_t where, const char *name, ctu_t *value) {
     ctu_t *ctu = ctu_new(scan, where, CTU_VALUE);
 

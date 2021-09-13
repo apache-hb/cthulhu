@@ -29,16 +29,15 @@ src = [
 ]
 
 gmp = dependency('gmp')
-threads = dependency('threads')
 
 libgeneric = library('generic', src,
-    dependencies : [ gmp, threads ]
+    dependencies : gmp
 )
 
 generic = declare_dependency(
     link_with : libgeneric,
     include_directories : '.',
-    dependencies : [ gmp, threads ]
+    dependencies : gmp
 )
 
 flex = find_program('flex', version : '>=2.6')

@@ -2,6 +2,8 @@
 
 #include "ctu/ast/ast.h"
 
+#include <gmp.h>
+
 typedef enum {
     C_VALUE
 } c_type_t;

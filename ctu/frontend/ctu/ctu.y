@@ -38,11 +38,31 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     VAR "`var`"
     SEMI "`;`"
     ASSIGN "`=`"
+    LPAREN "`(`"
+    RPAREN "`)`"
+    ADD "`+`"
+    SUB "`-`"
+    MUL "`*`"
+    DIV "`/`"
+    REM "`%`"
+    EQ "`==`"
+    NEQ "`!=`"
+    GT "`>`"
+    GTE "`>=`"
+    LT "`<`"
+    LTE "`<=`"
+    SHL "`<<`"
+    SHR "`>>`"
+    BITAND "`&`"
+    BITOR "`|`"
+    XOR "`^`"
+    AND "`&&`"
+    OR "`||`"
     END 0 
 
 %type<ctu>
     value decl
-    expr primary
+    expr primary postfix unary multiply add compare equality shift bits xor and or
 
 %type<vector>
     unit
@@ -64,11 +84,65 @@ decl: value { $$ = $1; }
 value: VAR IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, $4); }
     ;
 
-primary: DIGIT { $$ = ctu_digit(x, @$, $1); }
+primary: LPAREN expr RPAREN { $$ = $2; }
     | IDENT { $$ = ctu_ident(x, @$, $1); }
+    | DIGIT { $$ = ctu_digit(x, @$, $1); }
     ;
 
-expr: primary { $$ = $1; }
+postfix: primary { $$ = $1; }
     ;
 
+unary: postfix { $$ = $1; }
+    | ADD unary { $$ = ctu_unary(x, @$, UNARY_ABS, $2); }
+    | SUB unary { $$ = ctu_unary(x, @$, UNARY_NEG, $2); }
+    ;
+
+multiply: unary { $$ = $1; }
+    | multiply MUL unary { $$ = ctu_binary(x, @$, BINARY_MUL, $1, $3); }
+    | multiply DIV unary { $$ = ctu_binary(x, @$, BINARY_DIV, $1, $3); }
+    | multiply REM unary { $$ = ctu_binary(x, @$, BINARY_REM, $1, $3); }
+    ;
+
+add: multiply { $$ = $1; }
+    | add ADD multiply { $$ = ctu_binary(x, @$, BINARY_ADD, $1, $3); }
+    | add SUB multiply { $$ = ctu_binary(x, @$, BINARY_SUB, $1, $3); }
+    ;
+
+compare: add { $$ = $1; }
+    | compare GT add { $$ = ctu_binary(x, @$, BINARY_GT, $1, $3); }
+    | compare GTE add { $$ = ctu_binary(x, @$, BINARY_GTE, $1, $3); }
+    | compare LT add { $$ = ctu_binary(x, @$, BINARY_LT, $1, $3); }
+    | compare LTE add { $$ = ctu_binary(x, @$, BINARY_LTE, $1, $3); }
+    ;
+
+equality: compare { $$ = $1; }
+    | equality EQ compare { $$ = ctu_binary(x, @$, BINARY_EQ, $1, $3); }
+    | equality NEQ compare { $$ = ctu_binary(x, @$, BINARY_NEQ, $1, $3); }
+    ;
+
+shift: equality { $$ = $1; }
+    | shift SHL equality { $$ = ctu_binary(x, @$, BINARY_SHL, $1, $3); }
+    | shift SHR equality { $$ = ctu_binary(x, @$, BINARY_SHR, $1, $3); }
+    ;
+
+bits: shift { $$ = $1; }
+    | bits BITAND shift { $$ = ctu_binary(x, @$, BINARY_BITAND, $1, $3); }
+    | bits BITOR shift { $$ = ctu_binary(x, @$, BINARY_BITOR, $1, $3); }
+    ;
+
+xor: bits { $$ = $1; }
+    | xor XOR bits { $$ = ctu_binary(x, @$, BINARY_XOR, $1, $3); }
+    ;
+
+and: xor { $$ = $1; }
+    | and AND xor { $$ = ctu_binary(x, @$, BINARY_AND, $1, $3); }
+    ;
+
+or: and { $$ = $1; }
+    | or OR and { $$ = ctu_binary(x, @$, BINARY_OR, $1, $3); }
+    ;
+
+expr: or { $$ = $1; }
+    ;
+    
 %%

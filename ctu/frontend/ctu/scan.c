@@ -35,9 +35,9 @@ static callbacks_t CALLBACKS = {
 
 static const char *LANGUAGE = "cthulhu";
 
-node_t *ctu_compile(reports_t *reports, file_t *fd) {
+ctu_t *ctu_compile(reports_t *reports, file_t *fd) {
     scan_t *scan = scan_file(reports, LANGUAGE, fd);
-    node_t *node = compile_file(scan, &CALLBACKS);
+    ctu_t *node = compile_file(scan, &CALLBACKS);
     return node;
 }
 

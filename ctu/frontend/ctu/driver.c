@@ -1,13 +1,12 @@
 #include "driver.h"
 
 #include "scan.h"
+#include "sema.h"
 
-node_t *ctu_parse(reports_t *reports, file_t *file) {
+ctu_t *ctu_parse(reports_t *reports, file_t *file) {
     return ctu_compile(reports, file);
 }
 
-lir_t *ctu_analyze(reports_t *reports, node_t *node) {
-    (void)reports;
-    (void)node;
-    return NULL;
+lir_t *ctu_analyze(reports_t *reports, ctu_t *node) {
+    return ctu_sema(reports, node);
 }

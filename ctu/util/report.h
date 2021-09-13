@@ -8,6 +8,12 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+#ifdef __GNUC__
+#   define PRINT(fmt, args) __attribute__((format(printf, fmt, args)))
+#else
+#   define PRINT(fmt, args)
+#endif
+
 typedef enum {
     INTERNAL, /* compiler reached a broken state */
     ERROR, /* an issue that prevents compilation from continuing */
@@ -45,11 +51,19 @@ typedef struct {
 reports_t *begin_reports();
 int end_reports(reports_t *reports, size_t limit, const char *name);
 
+PRINT(2, 3)
 message_t *assert2(reports_t *reports, const char *fmt, ...);
 
+PRINT(4, 5)
 message_t *report2(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...);
+
+PRINT(3, 4)
 void report_append2(message_t *message, const node_t *node, const char *fmt, ...);
+
+PRINT(2, 3)
 void report_underline(message_t *message, const char *fmt, ...);
+
+PRINT(2, 3)
 void report_note2(message_t *message, const char *fmt, ...);
 
 extern bool verbose;

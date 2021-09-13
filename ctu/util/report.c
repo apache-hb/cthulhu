@@ -97,7 +97,14 @@ static char *extract_line(const scan_t *scan, line_t line) {
     return str;
 }
 
-static char *build_underline(char *source, column_t front, column_t back, char *note) {
+static char *build_underline(char *source, where_t where, char *note) {
+    column_t front = where.first_column;
+    column_t back = where.last_column;
+
+    if (where.first_line < where.last_line) {
+        back = strlen(source);
+    }
+
     size_t width = back - front;
     size_t len = note ? strlen(note) : 0;
     char *str = malloc(back + len + 2);
@@ -159,11 +166,8 @@ static void report_source(message_t *message) {
 
     line_t start = where.first_line;
 
-    column_t front = where.first_column;
-    column_t back = where.last_column;
-
     char *source = extract_line(scan, start);
-    char *underline = build_underline(source, front, back, message->underline);
+    char *underline = build_underline(source, where, message->underline);
 
     size_t longest = longest_line(scan, start + 1, message->parts);
     char *line = right_align(start + 1, longest);
@@ -183,10 +187,9 @@ static void report_part(message_t *message, part_t *part) {
 
     line_t start = where.first_line;
     column_t front = where.first_column;
-    column_t back = where.last_column;
 
     char *source = extract_line(scan, start);
-    char *underline = build_underline(source, front, back, msg);
+    char *underline = build_underline(source, where, msg);
 
     size_t longest = longest_line(scan, start + 1, message->parts);
     char *pad = padding(longest);

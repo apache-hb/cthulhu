@@ -17,6 +17,14 @@ typedef enum {
     BINARY_GTE,
     BINARY_LT,
     BINARY_LTE,
+
+    BINARY_AND,
+    BINARY_OR,
+    BINARY_XOR,
+    BINARY_SHL,
+    BINARY_SHR,
+    BINARY_BITAND,
+    BINARY_BITOR,
 } binary_t;
 
 typedef enum {

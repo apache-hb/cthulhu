@@ -10,6 +10,9 @@ static const char *int_format(int_t kind) {
     case TY_SHORT: return "short";
     case TY_INT: return "int";
     case TY_LONG: return "long";
+    case TY_SIZE: return "size";
+    case TY_INTPTR: return "intptr";
+    case TY_INTMAX: return "intmax";
     default: return "";
     }
 }

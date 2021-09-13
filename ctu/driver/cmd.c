@@ -15,7 +15,7 @@ static void print_help(void) {
     printf("\t -h, --help: Print this help message\n");
     printf("\t -v, --version: Print version information\n");
     printf("\t -src, --source: Override file extension based compiler choice\n");
-    printf("\t -t, --threads: Provide a number of threads to use for parralel compilation\n");
+    printf("\t -V, --verbose: Enable verbose logging\n");
 
     exit(0);
 }

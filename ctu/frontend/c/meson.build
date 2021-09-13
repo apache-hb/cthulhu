@@ -1,4 +1,8 @@
-src = [ 'scan.c', 'driver.c' ]
+src = [ 
+    lex.process('cc.l'),
+    parse.process('cc.y'),
+    'scan.c', 'driver.c' 
+]
 
 libcc = library('c', src,
     dependencies : generic

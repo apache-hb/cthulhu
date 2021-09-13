@@ -16,7 +16,9 @@ typedef enum {
     TY_SHORT,
     TY_INT,
     TY_LONG,
-    TY_SIZE
+    TY_SIZE,
+    TY_INTPTR,
+    TY_INTMAX
 } int_t;
 
 typedef enum {
