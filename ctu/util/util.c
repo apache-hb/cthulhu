@@ -48,6 +48,12 @@ char *ctu_strdup(const char *str) {
     return out;
 }
 
+void *ctu_memdup(const void *ptr, size_t size) {
+    void *out = ctu_malloc(size);
+    memcpy(out, ptr, size);
+    return out;
+}
+
 static size_t string_hash(const char *str) {
     size_t hash = 0;
 

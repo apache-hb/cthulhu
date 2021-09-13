@@ -14,6 +14,7 @@ void *ctu_malloc(size_t size);
 void *ctu_realloc(void *ptr, size_t size);
 void ctu_free(void *ptr);
 char *ctu_strdup(const char *str);
+void *ctu_memdup(const void *ptr, size_t size);
 void init_memory(void);
 
 #define NEW(type) ((type *)ctu_malloc(sizeof(type)))

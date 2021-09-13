@@ -2,14 +2,7 @@
 
 #include "ctu/ast/compile.h"
 
-typedef struct {
-    reports_t *reports;
-    c_data_t *context;
-    scan_t *scanner;
-    where_t where;
-    size_t offset;
-    char lookahead;
-} c_scan_t; 
+#include <ctype.h>
 
 typedef enum {
     TOK_KEYWORD,
@@ -21,6 +14,8 @@ typedef enum {
 } tok_type_t;
 
 typedef enum {
+    KEY_NONE = 0,
+
     KEY_AUTO,
     KEY_BREAK,
     KEY_CASE,
@@ -96,6 +91,16 @@ typedef struct {
     };
 } tok_t;
 
+typedef struct {
+    reports_t *reports;
+    c_data_t *context;
+    scan_t *scanner;
+    where_t where;
+    size_t offset;
+    char lookahead;
+    tok_t tok;
+} c_scan_t; 
+
 static node_t *node_of(tok_t tok, c_scan_t scan) {
     return node_new(scan.scanner, tok.where);
 }
@@ -126,24 +131,161 @@ static char peek_char(c_scan_t *scan) {
     return scan->lookahead;
 }
 
+static map_t *keywords = NULL;
+
+static void init_keywords(void) {
+    if (keywords != NULL) {
+        return;
+    }
+
+    keywords = map_new(16);
+
+    map_set(keywords, "auto", (void *) KEY_AUTO);
+    map_set(keywords, "break", (void *) KEY_BREAK);
+    map_set(keywords, "case", (void *) KEY_CASE);
+    map_set(keywords, "char", (void *) KEY_CHAR);
+    map_set(keywords, "const", (void *) KEY_CONST);
+    map_set(keywords, "continue", (void *) KEY_CONTINUE);
+    map_set(keywords, "default", (void *) KEY_DEFAULT);
+    map_set(keywords, "do", (void *) KEY_DO);
+    map_set(keywords, "double", (void *) KEY_DOUBLE);
+    map_set(keywords, "else", (void *) KEY_ELSE);
+    map_set(keywords, "enum", (void *) KEY_ENUM);
+    map_set(keywords, "extern", (void *) KEY_EXTERN);
+    map_set(keywords, "float", (void *) KEY_FLOAT);
+    map_set(keywords, "for", (void *) KEY_FOR);
+    map_set(keywords, "goto", (void *) KEY_GOTO);
+    map_set(keywords, "if", (void *) KEY_IF);
+    map_set(keywords, "inline", (void *) KEY_INLINE);
+    map_set(keywords, "int", (void *) KEY_INT);
+    map_set(keywords, "long", (void *) KEY_LONG);
+    map_set(keywords, "register", (void *) KEY_REGISTER);
+    map_set(keywords, "restrict", (void *) KEY_RESTRICT);
+    map_set(keywords, "return", (void *) KEY_RETURN);
+    map_set(keywords, "short", (void *) KEY_SHORT);
+    map_set(keywords, "signed", (void *) KEY_SIGNED);
+    map_set(keywords, "sizeof", (void *) KEY_SIZEOF);
+    map_set(keywords, "static", (void *) KEY_STATIC);
+    map_set(keywords, "struct", (void *) KEY_STRUCT);
+    map_set(keywords, "switch", (void *) KEY_SWITCH);
+    map_set(keywords, "typedef", (void *) KEY_TYPEDEF);
+    map_set(keywords, "union", (void *) KEY_UNION);
+    map_set(keywords, "unsigned", (void *) KEY_UNSIGNED);
+    map_set(keywords, "void", (void *) KEY_VOID);
+    map_set(keywords, "volatile", (void *) KEY_VOLATILE);
+    map_set(keywords, "while", (void *) KEY_WHILE);
+    
+    map_set(keywords, "_Alignas", (void *) KEY_ALIGNAS);
+    map_set(keywords, "_Alignof", (void *) KEY_ALIGNOF);
+    map_set(keywords, "_Atomic", (void *) KEY_ATOMIC);
+    map_set(keywords, "_Bool", (void *) KEY_BOOL);
+    map_set(keywords, "_Complex", (void *) KEY_COMPLEX);
+    map_set(keywords, "_Generic", (void *) KEY_GENERIC);
+    map_set(keywords, "_Decimal128", (void *) KEY_DECIMAL128);
+    map_set(keywords, "_Decimal32", (void *) KEY_DECIMAL32);
+    map_set(keywords, "_Decimal64", (void *) KEY_DECIMAL64);
+    map_set(keywords, "_Imaginary", (void *) KEY_IMAGINARY);
+    map_set(keywords, "_Noreturn", (void *) KEY_NORETURN);
+    map_set(keywords, "_Thread_local", (void *) KEY_THREAD_LOCAL);
+    map_set(keywords, "_Static_assert", (void *) KEY_STATIC_ASSERT);
+}
+
 static tok_t build_tok(c_scan_t *scan, tok_type_t kind) {
-    
-    
-    tok_t tok = { .kind = kind };
+    tok_t tok = { 
+        .kind = kind,
+        .where = scan->where
+    };
+    return tok;
+}
+
+static tok_t build_ident(c_scan_t *scan, char *ident) {
+    key_t key = (key_t)map_get(keywords, ident);
+    if (key != KEY_NONE) {
+        tok_t tok = build_tok(scan, TOK_KEYWORD);
+        tok.key = key;
+        return tok;
+    }
+
+    tok_t tok = build_tok(scan, TOK_IDENTIFIER);
+    tok.ident = ident;
+    return tok;
+}
+
+static char skip_whitespace(c_scan_t *scan) {
+    char c = next_char(scan);
+    while (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+        c = next_char(scan);
+    }
+    return c;
+}
+
+static bool isident1(char c) {
+    return isalpha(c) || c == '_';
+}
+
+static bool isident2(char c) {
+    return isalnum(c) || c == '_';
+}
+
+static tok_t get_tok(c_scan_t *scan) {
+    scan->where.first_line = scan->where.last_line;
+    scan->where.first_column = scan->where.last_column;
+
+    char c = skip_whitespace(scan);
+
+    size_t start = scan->offset - 1;
+
+    if (c == '\0') {
+        return build_tok(scan, TOK_EOF);
+    } else if (isident1(c)) {
+        size_t end = start;
+        while (isident2(peek_char(scan))) {
+            end = scan->offset;
+            c = next_char(scan);
+        }
+        char *ident = ctu_memdup(scan->scanner->text + start, end - start + 1);
+        ident[end - start] = '\0';
+        return build_ident(scan, ident);
+    }
+
+    report2(scan->reports, ERROR,
+        node_new(scan->scanner, scan->where),
+        "unknown character %c", c
+    );
+
+    return get_tok(scan);
 }
 
 static tok_t next_tok(c_scan_t *scan) {
-    char c = next_char(scan);
+    tok_t tok = scan->tok;
+    if (tok.kind != TOK_EOF) {
+        scan->tok = get_tok(scan);
+    }
+    return tok;
+}
 
-    if (c == '\0') {
+
+static tok_t peek_tok(c_scan_t *scan) {
+    return scan->tok;
+}
+
+static bool parse_decl(c_scan_t *scan) {
+    (void)next_tok;
+    (void)peek_tok;
+    return scan != NULL;
 }
 
 static c_t *parse_c(c_scan_t *scan) {
-    (void)scan;
+    bool ok = true;
+    while (ok) {
+        ok = parse_decl(scan);
+    }
     return NULL;
 }
 
 c_t *c_compile(reports_t *reports, file_t *fd) {
+    init_keywords();
+
     where_t start = { 0, 0, 0, 0 };
 
     c_scan_t scan = {
@@ -155,6 +297,7 @@ c_t *c_compile(reports_t *reports, file_t *fd) {
     };
 
     scan.lookahead = get_char(&scan);
+    scan.tok = get_tok(&scan);
 
     (void)node_of;
 
