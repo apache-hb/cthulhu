@@ -25,7 +25,7 @@ static void print_version(void) {
     printf("Version: %s\n", VERSION);
     printf("Cthulhu Version: %s\n", CTU.version);
     printf("PL/0 Version: %s\n", PL0.version);
-    printf("C Version: %s\n", C.version);
+    /* printf("C Version: %s\n", C.version); */
 
     exit(0);
 }

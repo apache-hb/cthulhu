@@ -269,13 +269,46 @@ static tok_t peek_tok(c_scan_t *scan) {
     return scan->tok;
 }
 
+static bool is_key(tok_t tok, key_t key) {
+    return tok.kind == TOK_KEYWORD 
+        && tok.key == key;
+}
+
+static type_t *parse_typespec(c_scan_t *scan) {
+    tok_t tok = next_tok(scan);
+
+    type_t *result = NULL;
+
+    if (is_key(tok, KEY_CONST)) {
+        result = parse_typespec(scan);
+        /* make const */
+    } else if (is_key(tok, KEY_VOLATILE)) {
+        result = parse_typespec(scan);
+        /* make volatile */
+    } else if (is_key(tok, KEY_UNSIGNED)) {
+        
+    }
+
+    while (true) {
+        tok = peek_tok(scan);
+        if (is_key(tok, KEY_MUL)) {
+            next_tok(scan);
+            result = type_ptr(result);
+        } else {
+            break;
+        }
+    }
+
+    return result;
+}
+
 static bool parse_decl(c_scan_t *scan) {
-    (void)next_tok;
-    (void)peek_tok;
+    tok_t tok = next_tok(scan);
     return scan != NULL;
 }
 
-static c_t *parse_c(c_scan_t *scan) {
+static c_t *parse_program(c_scan_t *scan) {
+    /* parse-decl-list */
     bool ok = true;
     while (ok) {
         ok = parse_decl(scan);
@@ -301,5 +334,5 @@ c_t *c_compile(reports_t *reports, file_t *fd) {
 
     (void)node_of;
 
-    return parse_c(&scan);
+    return parse_program(&scan);
 }

@@ -22,13 +22,14 @@ const driver_t CTU = {
     .analyze = (analyze_t)ctu_analyze
 };
 
+/*
 const driver_t C = {
     .version = "0.0.1",
     .name = "C",
     .parse = (parse_t)c_parse,
     .analyze = (analyze_t)c_analyze
 };
-
+*/
 const driver_t *select_driver(reports_t *reports, const char *name) {
     if (name == NULL) {
         report2(reports, ERROR, NULL, "no driver specified");
@@ -39,8 +40,6 @@ const driver_t *select_driver(reports_t *reports, const char *name) {
         return &PL0;
     } else if (strcmp(name, "ctu") == 0) {
         return &CTU;
-    } else if (strcmp(name, "c") == 0) {
-        return &C;
     } else {
         report2(reports, ERROR, NULL, "unknown driver: %s", name);
         return NULL;
@@ -56,8 +55,6 @@ const driver_t *select_driver_by_extension(reports_t *reports, const driver_t *d
         return &PL0;
     } else if (endswith(path, ".ct")) {
         return &CTU;
-    } else if (endswith(path, ".c")) {
-        return &C;
     } else {
         report2(reports, ERROR, NULL, "unknown extension on input: %s", path);
         return NULL;

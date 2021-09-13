@@ -14,7 +14,6 @@ typedef struct {
     analyze_t analyze;
 } driver_t;
 
-extern const driver_t C;
 extern const driver_t CTU;
 extern const driver_t PL0;
 
