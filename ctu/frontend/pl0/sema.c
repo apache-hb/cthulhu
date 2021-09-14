@@ -125,13 +125,11 @@ static type_t *pl0_closure(void) {
 }
 
 static lir_t *pl0_num(node_t *node, int num) {
-    lir_t *lir = lir_int(node, num);
-    lir->type = pl0_int(false);
-    return lir;
+    return lir_int(node, pl0_int(false), num);
 }
 
 static lir_t *compile_digit(pl0_t *expr) {
-    return lir_digit(expr->node, expr->digit);
+    return lir_digit(expr->node, pl0_int(false), expr->digit);
 }
 
 static lir_t *query_ident(sema_t *sema, const char *name) {
@@ -155,7 +153,7 @@ static lir_t *compile_ident(sema_t *sema, pl0_t *expr) {
     lir_t *val = query_ident(sema, name);
 
     if (val != NULL) {
-        return lir_name(node, val);
+        return lir_name(node, lir_type(val), val);
     }
 
     message_t *id = report2(sema->reports, ERROR, node, "unknown variable name `%s`", name);
@@ -168,67 +166,60 @@ static lir_t *compile_binary(sema_t *sema, pl0_t *expr) {
     lir_t *lhs = compile_expr(sema, expr->lhs);
     lir_t *rhs = compile_expr(sema, expr->rhs);
 
-    return lir_binary(expr->node, expr->binary, lhs, rhs);
+    type_t *type = types_common(lir_type(lhs), lir_type(rhs));
+
+    return lir_binary(expr->node, type, expr->binary, lhs, rhs);
 }
 
 static lir_t *compile_unary(sema_t *sema, pl0_t *expr) {
     lir_t *operand = compile_expr(sema, expr->operand);
 
-    return lir_unary(expr->node, expr->unary, operand);
+    return lir_unary(expr->node, lir_type(operand), expr->unary, operand);
 }
 
 static lir_t *compile_odd(sema_t *sema, pl0_t *expr) {
-    lir_t *lhs = compile_expr(sema, expr->lhs);
+    lir_t *operand = compile_expr(sema, expr->operand);
 
     node_t *node = expr->node;
-    lir_t *rem = lir_binary(node, BINARY_REM, lhs, pl0_num(node, 2));
-    lir_t *cmp = lir_binary(node, BINARY_EQ, rem, pl0_num(node, 1));
+    lir_t *rem = lir_binary(node, operand->type, BINARY_REM, operand, pl0_num(node, 2));
+    lir_t *cmp = lir_binary(node, pl0_bool(), BINARY_EQ, rem, pl0_num(node, 1));
     return cmp;
 }
 
 static lir_t *compile_expr(sema_t *sema, pl0_t *expr) {
-    lir_t *result = NULL;
-
     switch (expr->type) {
     case PL0_DIGIT: 
-        result = compile_digit(expr);
-        break;
+        return compile_digit(expr);
     case PL0_IDENT:
         return compile_ident(sema, expr);
     case PL0_BINARY:
-        result = compile_binary(sema, expr);
-        break;
+        return compile_binary(sema, expr);
     case PL0_UNARY:
-        result = compile_unary(sema, expr);
-        break;
+        return compile_unary(sema, expr);
     default:
         assert2(sema->reports, "compile-expr unknown expr %d", expr->type);
         return lir_poison(expr->node, "unknown expr");
     }
+}
 
-    result->type = pl0_int(false);
+static lir_t *compile_cmp(sema_t *sema, pl0_t *expr) {
+    lir_t *lhs = compile_expr(sema, expr->lhs);
+    lir_t *rhs = compile_expr(sema, expr->rhs);
 
-    return result;
+    return lir_binary(expr->node, pl0_bool(), expr->binary, lhs, rhs);
 }
 
 static lir_t *compile_cond(sema_t *sema, pl0_t *expr) {
-    lir_t *result = NULL;
     switch (expr->type) {
     case PL0_ODD:
-        result = compile_odd(sema, expr);
-        break;
+        return compile_odd(sema, expr);
     case PL0_BINARY:
-        result = compile_binary(sema, expr);
-        break;
+        return compile_cmp(sema, expr);
     
     default:
         assert2(sema->reports, "compile-cond unknown cond %d", expr->type);
         return lir_poison(expr->node, "unknown cond");
     }
-
-    result->type = pl0_bool();
-
-    return result;
 }
 
 static lir_t *compile_assign(sema_t *sema, pl0_t *stmt) {

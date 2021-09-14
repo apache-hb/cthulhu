@@ -1,6 +1,5 @@
 #include "sema.h"
 
-
 #if 0
 typedef struct {
     map_t *types;
@@ -213,6 +212,16 @@ lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
 }
 #endif
 
+static void report_shadow(reports_t *reports, const char *name, node_t *other, node_t *self) {
+    message_t *id = report2(reports, ERROR, self, "refinition of `%s`", name);
+    report_append2(id, other, "previous definition");
+    report_note2(id, "PL/0 is case insensitive");
+}
+
+static lir_t *ctu_declare(sema_t *sema, ctu_t *ctu, const char *name, leaf_t leaf) {
+    return lir_forward(ctu->node, name, leaf, sema);
+}
+
 typedef struct {
     map_t *decls;
     map_t *types;
@@ -238,12 +247,141 @@ static void ctu_data_delete(void *arg) {
 #define DELETE_SEMA(sema) \
     sema_delete(sema, ctu_data_delete)
 
+#define GET_TYPE(sema, name) sema_get(sema, name, ctu_get_type)
+#define GET_DECL(sema, name) sema_get(sema, name, ctu_get_decl)
+
+#define SET_TYPE(sema, name, type) sema_set(sema, name, type, ctu_add_type)
+#define SET_DECL(sema, name, decl) sema_set(sema, name, decl, ctu_add_decl)
+
+#define CTU_GET(field, func) \
+    static lir_t *func(sema_t *sema, const char *name) { \
+        ctu_data_t *data = sema->fields; \
+        return map_get(data->field, name); \
+    }
+
+#define CTU_ADD(field, func) \
+    static void func(sema_t *sema, const char *name, lir_t *lir) { \
+        ctu_data_t *data = sema->fields; \
+        lir_t *other1 = GET_TYPE(sema, name); \
+        if (other1 != NULL) { \
+            report_shadow(sema->reports, name, lir->node, other1->node); \
+        } \
+        lir_t *other2 = GET_DECL(sema, name); \
+        if (other2 != NULL) { \
+            report_shadow(sema->reports, name, lir->node, other2->node); \
+        } \
+        map_set(data->field, name, lir); \
+    } 
+
+CTU_GET(types, ctu_get_type)
+CTU_GET(decls, ctu_get_decl)
+
+CTU_ADD(decls, ctu_add_decl)
+
+static leaf_t leaf_of(ctu_t *ctu) {
+    switch (ctu->type) {
+    case CTU_VALUE: return LIR_VALUE;
+    default: return ~0;
+    }
+}
+
+static void add_global(sema_t *sema, ctu_t *ctu) {
+    leaf_t leaf = leaf_of(ctu);
+    lir_t *lir = ctu_declare(sema, ctu, ctu->name, leaf);
+
+    switch (leaf) {
+    case LIR_VALUE:
+        SET_DECL(sema, ctu->name, lir);
+        break;
+
+    default:
+        assert2(sema->reports, "add-global unknown leaf");
+        break;
+    }
+
+    ctu->lir = lir;
+}
+
+static lir_t *compile_expr(sema_t *sema, ctu_t *ctu);
+
+static lir_t *compile_digit(ctu_t *ctu) {
+    return lir_digit(ctu->node, type_digit(true, TY_LONG), ctu->digit);
+}
+
+static lir_t *compile_unary(sema_t *sema, ctu_t *ctu) {
+    lir_t *operand = compile_expr(sema, ctu->operand);
+
+    return lir_unary(ctu->node, operand->type, ctu->unary, operand);
+}
+
+static lir_t *compile_binary(sema_t *sema, ctu_t *ctu) {
+    lir_t *lhs = compile_expr(sema, ctu->lhs);
+    lir_t *rhs = compile_expr(sema, ctu->rhs);
+
+    /* TODO: this is wrong */
+    type_t *result = types_common(lhs->type, rhs->type);
+
+    return lir_binary(ctu->node, result, ctu->binary, lhs, rhs);
+}
+
+static lir_t *compile_expr(sema_t *sema, ctu_t *ctu) {
+    switch (ctu->type) {
+    case CTU_DIGIT:
+        return compile_digit(ctu);
+    case CTU_UNARY:
+        return compile_unary(sema, ctu);
+    case CTU_BINARY:
+        return compile_binary(sema, ctu);
+
+    default:
+        assert2(sema->reports, "compile-expr unknown type");
+        return lir_poison(ctu->node, "unknown compile-expr");
+    }
+}
+
+static void build_value(sema_t *sema, ctu_t *ctu) {
+    lir_t *init = compile_expr(sema, ctu->value);
+    
+    lir_value(sema->reports, ctu->lir, init->type, init);
+}
+
+static void build_decl(sema_t *sema, lir_t *mod, ctu_t *ctu) {
+    lir_t *lir = ctu->lir;
+
+    switch (lir->expected) {
+    case LIR_VALUE:
+        build_value(sema, ctu);
+        add_module_var(mod, lir);
+        break;
+
+    default:
+        assert2(sema->reports, "build-decl unknown leaf");
+        break;
+    }
+}
+
 lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
     sema_t *sema = NEW_SEMA(NULL, reports);
 
+    vector_t *decls = ctu->decls;
+    size_t len = vector_len(decls);
+
+    for (size_t i = 0; i < len; i++) {
+        ctu_t *decl = vector_get(decls, i);
+        add_global(sema, decl);
+    }
+
+    lir_t *mod = lir_module(ctu->node, 
+        vector_new(0), 
+        vector_new(0)
+    );
+
+    for (size_t i = 0; i < len; i++) {
+        ctu_t *decl = vector_get(decls, i);
+        build_decl(sema, mod, decl);
+    }
+
     DELETE_SEMA(sema);
 
-    (void)ctu;
-
-    return NULL;
+    return mod;
 }

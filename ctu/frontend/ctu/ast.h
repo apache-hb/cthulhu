@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ctu/ast/ast.h"
+#include "ctu/lir/lir.h"
 
 #include <gmp.h>
 
@@ -19,6 +20,7 @@ typedef enum {
 typedef struct ctu_t {
     ctu_type_t type;
     node_t *node;
+    lir_t *lir;
 
     union {
         mpz_t digit;

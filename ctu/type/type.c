@@ -93,12 +93,22 @@ type_t *type_bool(void) {
     return type_new(TY_BOOL);
 }
 
+type_t *type_poison(const char *msg) {
+    type_t *type = type_new(TY_POISON);
+    type->msg = msg;
+    return type;
+}
+
 void type_mut(type_t *type, bool mut) {
     type->mut = mut;
 }
 
 bool is_digit(const type_t *type) {
     return type->type == TY_DIGIT;
+}
+
+bool is_bool(const type_t *type) {
+    return type->type == TY_BOOL;
 }
 
 bool is_signed(const type_t *type) {
@@ -115,4 +125,49 @@ bool is_unsigned(const type_t *type) {
     }
 
     return type->digit.sign == UNSIGNED;
+}
+
+typecmp_t types_equal(const type_t *lhs, const type_t *rhs) {
+    if (lhs->type != rhs->type) {
+        return NONE;
+    }
+
+    if (is_digit(lhs) && is_digit(rhs)) {
+        digit_t ld = lhs->digit;
+        digit_t rd = rhs->digit;
+
+        if (ld.sign != rd.sign) {
+            return INTSIGN;
+        }
+
+        if (ld.kind != rd.kind) {
+            return INTWIDTH;
+        }
+
+        return INTEXACT;
+    }
+
+    if (is_bool(lhs) && is_bool(rhs)) {
+        return BOOLEXACT;
+    }
+
+    return NONE;
+}
+
+type_t *types_common(const type_t *lhs, const type_t *rhs) {
+    if (is_digit(lhs) && is_digit(rhs)) {
+        digit_t ld = lhs->digit;
+        digit_t rd = rhs->digit;
+
+        bool sign = ld.sign || rd.sign;
+        int_t kind = MAX(ld.kind, rd.kind);
+
+        return type_digit(sign, kind);
+    }
+
+    if (is_bool(lhs) && is_bool(rhs)) {
+        return type_bool();
+    }
+
+    return type_poison("cannot get common type of unrelated types");
 }

@@ -6,7 +6,7 @@
 #include "ctu/lir/lir.h"
 
 typedef struct {
-    type_t *type;
+    const type_t *type;
 
     union {
         mpz_t digit;
@@ -50,7 +50,7 @@ typedef enum {
 typedef struct {
     opcode_t opcode;
     node_t *node;
-    type_t *type;
+    const type_t *type;
 
     union {
         struct {
@@ -88,7 +88,7 @@ typedef struct block_t {
     const char *name;
 
     /* the return type of this */
-    type_t *result;
+    const type_t *result;
 
     size_t len;
     size_t size;

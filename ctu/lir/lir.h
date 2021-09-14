@@ -48,7 +48,7 @@ typedef struct lir_t {
     node_t *node;
 
     /* the type this node resolved to */
-    type_t *type;
+    const type_t *type;
 
     union {
         /**
@@ -140,19 +140,21 @@ typedef struct lir_t {
         };
     };
 
-    /* internal user data, frontends are not allowed to touch this */
+    /* internal user data, frontends shouldnt touch this */
     void *data;
 } lir_t;
  
 lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, void *ctx);
 lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs);
+void add_module_var(lir_t *mod, lir_t *var);
+void add_module_func(lir_t *mod, lir_t *func);
 
-lir_t *lir_int(node_t *node, int digit);
-lir_t *lir_digit(node_t *node, mpz_t digit);
-lir_t *lir_name(node_t *node, lir_t *it);
+lir_t *lir_int(node_t *node, const type_t *type, int digit);
+lir_t *lir_digit(node_t *node, const type_t *type, mpz_t digit);
+lir_t *lir_name(node_t *node, const type_t *type, lir_t *it);
 
-lir_t *lir_binary(node_t *node, binary_t binary, lir_t *lhs, lir_t *rhs);
-lir_t *lir_unary(node_t *node, unary_t unary, lir_t *operand);
+lir_t *lir_binary(node_t *node, const type_t *type, binary_t binary, lir_t *lhs, lir_t *rhs);
+lir_t *lir_unary(node_t *node, const type_t *type, unary_t unary, lir_t *operand);
 lir_t *lir_call(node_t *node, lir_t *func, vector_t *args);
 
 lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src);
@@ -162,11 +164,12 @@ lir_t *lir_stmts(node_t *node, vector_t *stmts);
 
 lir_t *lir_poison(node_t *node, const char *msg);
 
-void lir_value(reports_t *reports, lir_t *dst, type_t *type, lir_t *init);
-void lir_define(reports_t *reports, lir_t *dst, type_t *type, vector_t *locals, lir_t *body);
+void lir_value(reports_t *reports, lir_t *dst, const type_t *type, lir_t *init);
+void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *locals, lir_t *body);
 void lir_begin(reports_t *reports, lir_t *dst, leaf_t leaf);
 bool lir_ok(const lir_t *lir);
 bool lir_is(const lir_t *lir, leaf_t leaf);
 
 vector_t *lir_recurses(lir_t *lir, const lir_t *root);
 char *print_lir(const lir_t *lir);
+const type_t *lir_type(const lir_t *lir);

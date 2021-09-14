@@ -25,19 +25,19 @@ static operand_t new_operand(optype_t kind) {
     return operand;
 }
 
-static value_t *new_value(type_t *type) {
+static value_t *new_value(const type_t *type) {
     value_t *value = NEW(value_t);
     value->type = type;
     return value;
 }
 
-static value_t *new_digit(type_t *type, mpz_t digit) {
+static value_t *new_digit(const type_t *type, mpz_t digit) {
     value_t *value = new_value(type);
     mpz_init_set(value->digit, digit);
     return value;
 }
 
-static value_t *new_zero() {
+static value_t *new_zero(void) {
     value_t *value = new_value(type_digit(false, TY_SIZE));
     mpz_init_set_ui(value->digit, 0);
     return value;
@@ -98,7 +98,6 @@ static operand_t add_label(context_t ctx, step_t step) {
 }
 
 static operand_t emit_lir(context_t ctx, lir_t *lir);
-static operand_t emit_lir(context_t ctx, lir_t *lir);
 
 static operand_t build_return(context_t ctx, lir_t *lir, operand_t op) {
     step_t step = step_of(OP_RETURN, lir);
@@ -106,7 +105,7 @@ static operand_t build_return(context_t ctx, lir_t *lir, operand_t op) {
     return add_step(ctx, step);
 }
 
-static block_t *init_block(lir_t *decl, type_t *type) {
+static block_t *init_block(lir_t *decl, const type_t *type) {
     block_t *block = NEW(block_t);
     
     block->name = decl->name;

@@ -2,12 +2,12 @@
 
 #include "ctu/util/str.h"
 
-static char *emit_imm(value_t *imm) {
+static char *emit_imm(const value_t *imm) {
     if (imm == NULL) {
         return "???";
     }
 
-    type_t *type = imm->type;
+    const type_t *type = imm->type;
     if (type->type == TY_DIGIT) {
         return format("%s", mpz_get_str(NULL, 10, imm->digit));
     } else {

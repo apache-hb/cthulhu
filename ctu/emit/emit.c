@@ -30,7 +30,7 @@ static char *emit_void(const char *name) {
     }
 }
 
-static char *emit_type(type_t *type, const char *name) {
+static char *emit_type(const type_t *type, const char *name) {
     switch (type->type) {
     case TY_DIGIT: return emit_digit(type->digit, name);
     case TY_VOID: return emit_void(name);

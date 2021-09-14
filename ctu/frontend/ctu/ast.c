@@ -4,6 +4,7 @@ static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_type_t type) {
     ctu_t *ctu = NEW(ctu_t);
     ctu->node = node_new(scan, where);
     ctu->type = type;
+    ctu->lir = NULL;
     return ctu;
 }
 
