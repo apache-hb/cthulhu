@@ -25,24 +25,6 @@ static operand_t new_operand(optype_t kind) {
     return operand;
 }
 
-static value_t *new_value(const type_t *type) {
-    value_t *value = NEW(value_t);
-    value->type = type;
-    return value;
-}
-
-static value_t *new_digit(const type_t *type, mpz_t digit) {
-    value_t *value = new_value(type);
-    mpz_init_set(value->digit, digit);
-    return value;
-}
-
-static value_t *new_zero(void) {
-    value_t *value = new_value(type_digit(false, TY_SIZE));
-    mpz_init_set_ui(value->digit, 0);
-    return value;
-}
-
 static operand_t new_imm(value_t *value) {
     operand_t operand = new_operand(IMM);
     operand.imm = value;
@@ -55,24 +37,26 @@ static operand_t new_address(block_t *block) {
     return operand;
 }
 
-static step_t step_of(opcode_t op, lir_t *lir) {
+static value_t *value_zero(void) {
+    return value_int(type_digit(false, TY_SIZE), 0);
+}
+
+static step_t step_with_type(opcode_t op, node_t *node, const type_t *type) {
     step_t step = {
         .opcode = op,
-        .node = lir->node,
-        .type = lir->type
+        .node = node,
+        .type = type
     };
 
     return step;
 }
 
-static step_t empty_step(opcode_t op) {
-    step_t step = {
-        .opcode = op,
-        .node = NULL,
-        .type = NULL
-    };
+static step_t step_of(opcode_t op, lir_t *lir) {
+    return step_with_type(op, lir->node, lir_type(lir));
+}
 
-    return step;
+static step_t empty_step(opcode_t op) {
+    return step_with_type(op, NULL, NULL);
 }
 
 static step_t *get_step(context_t ctx, operand_t op) {
@@ -119,7 +103,7 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
 }
 
 static block_t *block_declare(lir_t *lir) {
-    block_t *block = init_block(lir, lir->type);
+    block_t *block = init_block(lir, lir_type(lir));
     lir->data = block;
     return block;
 }
@@ -157,7 +141,7 @@ static operand_t emit_binary(context_t ctx, lir_t *lir) {
 }
 
 static operand_t emit_digit(lir_t *lir) {
-    return new_imm(new_digit(lir->type, lir->digit));
+    return new_imm(value_digit(lir_type(lir), lir->digit));
 }
 
 static operand_t emit_value(context_t ctx, lir_t *lir) {
@@ -202,7 +186,7 @@ static operand_t emit_assign(context_t ctx, lir_t *lir) {
     step_t step = step_of(OP_STORE, lir->dst);
     step.dst = dst;
     step.src = src;
-    step.offset = new_imm(new_zero());
+    step.offset = new_imm(value_zero());
     return add_step(ctx, step);
 }
 
@@ -251,9 +235,9 @@ static operand_t emit_branch(context_t ctx, lir_t *lir) {
 }
 
 static operand_t emit_name(context_t ctx, lir_t *lir) {
-    step_t step = step_of(OP_LOAD, lir);
+    step_t step = step_with_type(OP_LOAD, lir->node, lir_type(lir->it));
     step.src = emit_lir(ctx, lir->it);
-    step.offset = new_imm(new_zero());
+    step.offset = new_imm(value_zero());
     return add_step(ctx, step);
 }
 

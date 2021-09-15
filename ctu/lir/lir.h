@@ -151,7 +151,7 @@ void add_module_func(lir_t *mod, lir_t *func);
 
 lir_t *lir_int(node_t *node, const type_t *type, int digit);
 lir_t *lir_digit(node_t *node, const type_t *type, mpz_t digit);
-lir_t *lir_name(node_t *node, const type_t *type, lir_t *it);
+lir_t *lir_name(node_t *node, lir_t *it);
 
 lir_t *lir_binary(node_t *node, const type_t *type, binary_t binary, lir_t *lhs, lir_t *rhs);
 lir_t *lir_unary(node_t *node, const type_t *type, unary_t unary, lir_t *operand);

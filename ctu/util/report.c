@@ -227,7 +227,7 @@ static bool report_send(message_t *message) {
     return message->level <= ERROR;
 }
 
-reports_t *begin_reports() {
+reports_t *begin_reports(void) {
     reports_t *r = NEW(reports_t);
     r->messages = vector_new(32);
     return r;

@@ -153,7 +153,7 @@ static lir_t *compile_ident(sema_t *sema, pl0_t *expr) {
     lir_t *val = query_ident(sema, name);
 
     if (val != NULL) {
-        return lir_name(node, lir_type(val), val);
+        return lir_name(node, val);
     }
 
     message_t *id = report2(sema->reports, ERROR, node, "unknown variable name `%s`", name);
@@ -197,7 +197,7 @@ static lir_t *compile_expr(sema_t *sema, pl0_t *expr) {
     case PL0_UNARY:
         return compile_unary(sema, expr);
     default:
-        assert2(sema->reports, "compile-expr unknown expr %d", expr->type);
+        assert2(sema->reports, "(pl0) compile-expr unknown expr %d", expr->type);
         return lir_poison(expr->node, "unknown expr");
     }
 }
@@ -332,7 +332,8 @@ static lir_t *build_var(sema_t *sema, pl0_t *node) {
 }
 
 static void compile_var(sema_t *sema, lir_t *lir) {
-    (void)sema;
+    UNUSED(sema);
+
     pl0_t *node = lir->ctx;
     lir_t *value = pl0_num(node->node, 0);
 
@@ -340,7 +341,7 @@ static void compile_var(sema_t *sema, lir_t *lir) {
 }
 
 static void compile_proc(sema_t *sema, lir_t *lir) {
-    (void)sema;
+    UNUSED(sema);
 
     pl0_t *node = lir->ctx;
     size_t nlocals = vector_len(node->locals);

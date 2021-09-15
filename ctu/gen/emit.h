@@ -2,16 +2,9 @@
 
 #include "ctu/util/util.h"
 #include "ctu/util/report.h"
-#include "ctu/type/type.h"
 #include "ctu/lir/lir.h"
 
-typedef struct {
-    const type_t *type;
-
-    union {
-        mpz_t digit;
-    };
-} value_t;
+#include "value.h"
 
 typedef enum {
     IMM,
@@ -89,6 +82,7 @@ typedef struct block_t {
 
     /* the return type of this */
     const type_t *result;
+    const value_t *value;
 
     size_t len;
     size_t size;

@@ -48,7 +48,7 @@ typedef struct {
     vector_t *messages;
 } reports_t;
 
-reports_t *begin_reports();
+reports_t *begin_reports(void);
 int end_reports(reports_t *reports, size_t limit, const char *name);
 
 PRINT(2, 3)

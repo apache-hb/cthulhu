@@ -41,6 +41,10 @@ static char *closure_format(const type_t *type) {
 }
 
 char *type_format(const type_t *type) {
+    if (type == NULL) {
+        return ctu_strdup("(null)");
+    }
+    
     char *result = NULL;
     switch (type->type) {
     case TY_DIGIT: 
@@ -89,6 +93,12 @@ type_t *type_closure(vector_t *args, type_t *result) {
     return type;
 }
 
+type_t *type_ptr(type_t *to) {
+    type_t *type = type_new(TY_PTR);
+    type->ptr = to;
+    return type;
+}
+
 type_t *type_bool(void) {
     return type_new(TY_BOOL);
 }
@@ -125,33 +135,6 @@ bool is_unsigned(const type_t *type) {
     }
 
     return type->digit.sign == UNSIGNED;
-}
-
-typecmp_t types_equal(const type_t *lhs, const type_t *rhs) {
-    if (lhs->type != rhs->type) {
-        return NONE;
-    }
-
-    if (is_digit(lhs) && is_digit(rhs)) {
-        digit_t ld = lhs->digit;
-        digit_t rd = rhs->digit;
-
-        if (ld.sign != rd.sign) {
-            return INTSIGN;
-        }
-
-        if (ld.kind != rd.kind) {
-            return INTWIDTH;
-        }
-
-        return INTEXACT;
-    }
-
-    if (is_bool(lhs) && is_bool(rhs)) {
-        return BOOLEXACT;
-    }
-
-    return NONE;
 }
 
 type_t *types_common(const type_t *lhs, const type_t *rhs) {

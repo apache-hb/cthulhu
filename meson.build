@@ -21,6 +21,7 @@ src = [
 
     'ctu/emit/emit.c',
     'ctu/gen/emit.c',
+    'ctu/gen/value.c',
     'ctu/gen/print.c',
 
     'ctu/util/report.c',
