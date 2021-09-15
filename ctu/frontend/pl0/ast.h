@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ctu/ast/ast.h"
+#include "ctu/ast/ops/ops.h"
 #include "ctu/ast/scan.h"
 #include "ctu/util/util.h"
 

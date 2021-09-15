@@ -3,18 +3,22 @@
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
 
-sema_t *sema_new(sema_t *parent, reports_t *reports, sema_new_t create) {
+sema_t *sema_new(sema_t *parent, reports_t *reports, void *data) {
     sema_t *sema = NEW(sema_t);
     
     sema->parent = parent;
     sema->reports = reports;
-    sema->fields = create();
+    sema->fields = data;
 
     return sema;
 }
 
-void sema_delete(sema_t *sema, sema_delete_t destroy) {
-    destroy(sema->fields);
+void sema_delete(sema_t *sema) {
+    DELETE(sema);
+}
+
+void *sema_data(sema_t *sema) {
+    return sema->fields;
 }
 
 void sema_set(sema_t *sema, const char *name, lir_t *lir, sema_set_t set) {

@@ -13,11 +13,15 @@ src = [
     'ctu/ast/ast.c',
     'ctu/ast/compile.c',
 
+    'ctu/ast/ops/ops.c',
+
     'ctu/lir/lir.c',
     'ctu/lir/sema.c',
     'ctu/lir/print.c',
     
     'ctu/type/type.c',
+    'ctu/type/query.c',
+    'ctu/type/format.c',
 
     'ctu/emit/emit.c',
     'ctu/gen/emit.c',

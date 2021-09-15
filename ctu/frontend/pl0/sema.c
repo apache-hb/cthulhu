@@ -18,16 +18,21 @@ static void *pl0_data_new(void) {
     return sema;
 }
 
-static void pl0_data_delete(void *data) {
-    pl0_data_t *sema = data;
-    map_delete(sema->vars);
-    map_delete(sema->consts);
-    map_delete(sema->procs);
-    DELETE(sema);
+static void pl0_data_delete(sema_t *sema) {
+    pl0_data_t *data = sema_data(sema);
+    map_delete(data->vars);
+    map_delete(data->consts);
+    map_delete(data->procs);
+    DELETE(data);
+
+    sema_delete(sema);
 }
 
-#define NEW_SEMA(parent, reports) sema_new(parent, reports, pl0_data_new)
-#define DELETE_SEMA(sema) sema_delete(sema, pl0_data_delete)
+#define NEW_SEMA(parent, reports) \
+    sema_new(parent, reports, pl0_data_new())
+    
+#define DELETE_SEMA(sema) \
+    pl0_data_delete(sema)
 
 static void report_shadow(reports_t *reports, const char *name, node_t *other, node_t *self) {
     message_t *id = report2(reports, ERROR, self, "refinition of `%s`", name);

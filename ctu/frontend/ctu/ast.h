@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ctu/ast/ast.h"
+#include "ctu/ast/ops/ops.h"
 #include "ctu/lir/lir.h"
 
 #include <gmp.h>

@@ -8,7 +8,7 @@ static char *emit_imm(const value_t *imm) {
     }
 
     const type_t *type = imm->type;
-    if (type->type == TY_DIGIT) {
+    if (type->type == TY_INTEGER) {
         return format("%s", mpz_get_str(NULL, 10, imm->digit));
     } else {
         return NULL;

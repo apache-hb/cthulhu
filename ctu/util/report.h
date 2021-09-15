@@ -8,17 +8,11 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#ifdef __GNUC__
-#   define PRINT(fmt, args) __attribute__((format(printf, fmt, args)))
-#else
-#   define PRINT(fmt, args)
-#endif
-
 typedef enum {
-    INTERNAL, /* compiler reached a broken state */
-    ERROR, /* an issue that prevents compilation from continuing */
-    WARNING, /* an issue that should be addressed */
-    NOTE /* an info message */
+    INTERNAL, /// an invalid state has been reached internally
+    ERROR, /// a user issue that prevents the program from continuing
+    WARNING, // a user issue that may be resolved
+    NOTE // a notification for logging
 } level_t;
 
 typedef struct {
@@ -48,24 +42,103 @@ typedef struct {
     vector_t *messages;
 } reports_t;
 
+/**
+ * create a reporting context
+ * 
+ * @return the new context
+ */
 reports_t *begin_reports(void);
-int end_reports(reports_t *reports, size_t limit, const char *name);
 
+/**
+ * flush a reporting context and return an exit code
+ * 
+ * @param reports the context to flush
+ * @param limit the maximum number of errors to report
+ * @param name the name of this report
+ * 
+ * @return an exit code
+ */
+int end_reports(reports_t *reports, 
+                size_t limit, 
+                const char *name);
+
+/**
+ * push an internal compiler error into a reporting context
+ * 
+ * @param reports the reporting context
+ * @param fmt the format string
+ * @param ... the arguments to the format string
+ * 
+ * @return a message object to attach extra data to
+ */
 PRINT(2, 3)
-message_t *assert2(reports_t *reports, const char *fmt, ...);
+message_t *assert2(reports_t *reports, 
+                   const char *fmt, ...);
 
+/**
+ * push a compiler message into a reporting context
+ * 
+ * @param reports the reporting context
+ * @param level the severity of this message
+ * @param node the location that this message applies to, can be NULL
+ * @param fmt the format string
+ * @param ... the arguments to the format string
+ * 
+ * @return a message object to attach extra data to
+ */
 PRINT(4, 5)
-message_t *report2(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...);
+message_t *report2(reports_t *reports, 
+                   level_t level, 
+                   const node_t *node, 
+                   const char *fmt, ...);
 
+/**
+ * add another part to a message
+ * 
+ * @param message the message to add to
+ * @param node the location that this part applies to, can be NULL
+ * @param fmt the format string
+ * @param ... the arguments to the format string
+ */
 PRINT(3, 4)
-void report_append2(message_t *message, const node_t *node, const char *fmt, ...);
+void report_append2(message_t *message, 
+                    const node_t *node, 
+                    const char *fmt, ...);
 
+/**
+ * add an underline message to an existing message
+ * 
+ * @param message the message to add to
+ * @param fmt the format string
+ * @param ... the arguments to the format string
+ */
 PRINT(2, 3)
-void report_underline(message_t *message, const char *fmt, ...);
+void report_underline(message_t *message, 
+                      const char *fmt, ...);
 
+/**
+ * add a note to an existing message
+ * 
+ * @param message the message to add to
+ * @param fmt the format string
+ * @param ... the arguments to the format string
+ */
 PRINT(2, 3)
-void report_note2(message_t *message, const char *fmt, ...);
+void report_note2(message_t *message, 
+                  const char *fmt, ...);
 
+/**
+ * whether logverbose should print or not
+ * 
+ * set to true to enable verbose logging.
+ * false to disable
+ */
 extern bool verbose;
 
+/**
+ * log to console only when verbose is true
+ * 
+ * @param fmt format string
+ * @param ... arguments
+ */
 void logverbose(const char *fmt, ...);

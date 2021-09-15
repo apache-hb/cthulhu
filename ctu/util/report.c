@@ -151,7 +151,7 @@ static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {
     return len;
 }
 
-static char *right_align(line_t line, size_t width) {
+static char *right_align(line_t line, int width) {
     return format("%*ld", width, line);
 }
 

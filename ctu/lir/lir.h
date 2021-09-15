@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ctu/ast/ast.h"
+#include "ctu/ast/ops/ops.h"
 #include "ctu/util/report.h"
 #include "ctu/type/type.h"
 
