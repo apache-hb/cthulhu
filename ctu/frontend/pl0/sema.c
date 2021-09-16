@@ -4,35 +4,19 @@
 
 #include <ctype.h>
 
-typedef struct {
-    map_t *vars;
-    map_t *consts;
-    map_t *procs;
-} pl0_data_t;
+typedef enum {
+    TAG_VARS,
+    TAG_CONSTS,
+    TAG_PROCS,
 
-static void *pl0_data_new(void) {
-    pl0_data_t *sema = NEW(pl0_data_t);
-    sema->vars = map_new(4);
-    sema->consts = map_new(4);
-    sema->procs = map_new(4);
-    return sema;
-}
-
-static void pl0_data_delete(sema_t *sema) {
-    pl0_data_t *data = sema_data(sema);
-    map_delete(data->vars);
-    map_delete(data->consts);
-    map_delete(data->procs);
-    DELETE(data);
-
-    sema_delete(sema);
-}
+    TAG_MAX
+} pl0_tag_t;
 
 #define NEW_SEMA(parent, reports) \
-    sema_new(parent, reports, pl0_data_new())
+    sema_new(parent, reports, TAG_MAX)
     
 #define DELETE_SEMA(sema) \
-    pl0_data_delete(sema)
+    sema_delete(sema)
 
 static void report_shadow(reports_t *reports, const char *name, node_t *other, node_t *self) {
     message_t *id = report2(reports, ERROR, self, "refinition of `%s`", name);
@@ -56,52 +40,6 @@ static void report_recurse(reports_t *reports, vector_t *stack, lir_t *root) {
         last = it;
     }
 }
-
-#define GET_VAR(sema, name) sema_get(sema, name, pl0_get_var)
-#define GET_CONST(sema, name) sema_get(sema, name, pl0_get_const)
-#define GET_PROC(sema, name) sema_get(sema, name, pl0_get_proc)
-
-#define SET_VAR(sema, name, lir) sema_set(sema, name, lir, pl0_add_var)
-#define SET_CONST(sema, name, lir) sema_set(sema, name, lir, pl0_add_const)
-#define SET_PROC(sema, name, lir) sema_set(sema, name, lir, pl0_add_proc)
-
-#define PL0_ADD(field, func) \
-    static void func(sema_t *sema, const char *name, lir_t *lir) { \
-        pl0_data_t *data = sema->fields; \
-        lir_t *other = GET_PROC(sema, name); \
-        if (other != NULL) { \
-            report_shadow(sema->reports, name, other->node, lir->node); \
-        } \
-        map_set(data->field, name, lir); \
-    }
-
-#define PL0_ADD2(field, func) \
-    static void func(sema_t *sema, const char *name, lir_t *lir) { \
-        pl0_data_t *data = sema->fields; \
-        lir_t *other1 = GET_VAR(sema, name); \
-        if (other1 != NULL) { \
-            report_shadow(sema->reports, name, other1->node, lir->node); \
-        } \
-        lir_t *other2 = GET_CONST(sema, name); \
-        if (other2 != NULL) { \
-            report_shadow(sema->reports, name, other2->node, lir->node); \
-        } \
-        map_set(data->field, name, lir); \
-    }
-
-#define PL0_GET(field, func) \
-    static lir_t *func(sema_t *sema, const char *name) { \
-        pl0_data_t *data = sema->fields; \
-        return map_get(data->field, name); \
-    }
-
-PL0_GET(vars, pl0_get_var)
-PL0_GET(consts, pl0_get_const)
-PL0_GET(procs, pl0_get_proc)
-
-PL0_ADD2(vars, pl0_add_var)
-PL0_ADD2(consts, pl0_add_const)
-PL0_ADD(procs, pl0_add_proc)
 
 static lir_t *compile_expr(sema_t *sema, pl0_t *expr);
 static lir_t *compile_stmt(sema_t *sema, pl0_t *stmt);
@@ -138,17 +76,40 @@ static lir_t *compile_digit(pl0_t *expr) {
 }
 
 static lir_t *query_ident(sema_t *sema, const char *name) {
-    lir_t *val = GET_CONST(sema, name);
+    lir_t *val = sema_get(sema, TAG_CONSTS, name);
     if (val != NULL) {
         return val;
     }
 
-    lir_t *var = GET_VAR(sema, name);
+    lir_t *var = sema_get(sema, TAG_VARS, name);
     if (var != NULL) {
         return var;
     }
 
     return NULL;
+}
+
+static void set_proc(sema_t *sema, const char *name, lir_t *proc) {
+    lir_t *other = sema_get(sema, TAG_PROCS, name);
+    if (other != NULL) {
+        report_shadow(sema->reports, name, other->node, proc->node);
+    }
+
+    sema_set(sema, TAG_PROCS, name, proc);
+}
+
+static void set_var(sema_t *sema, size_t tag, const char *name, lir_t *var) {
+    lir_t *other1 = sema_get(sema, TAG_CONSTS, name);
+    if (other1 != NULL) {
+        report_shadow(sema->reports, name, other1->node, var->node);
+    }
+
+    lir_t *other2 = sema_get(sema, tag, name);
+    if (other2 != NULL) {
+        report_shadow(sema->reports, name, other2->node, var->node);
+    }
+
+    sema_set(sema, tag, name, var);
 }
 
 static lir_t *compile_ident(sema_t *sema, pl0_t *expr) {
@@ -283,7 +244,7 @@ static lir_t *compile_branch(sema_t *sema, pl0_t *stmt) {
 
 static lir_t *compile_call(sema_t *sema, pl0_t *stmt) {
     char *name = pl0_name(stmt->ident);
-    lir_t *proc = GET_PROC(sema, name);
+    lir_t *proc = sema_get(sema, TAG_PROCS, name);
     
     if (proc == NULL) {
         report2(sema->reports, ERROR, stmt->node, "unknown procedure `%s`", name);
@@ -331,7 +292,7 @@ static lir_t *build_var(sema_t *sema, pl0_t *node) {
     lir_t *lir = lir_forward(node->node, name, LIR_VALUE, NULL);
     lir_value(sema->reports, lir, pl0_int(true), pl0_num(node->node, 0));
     
-    SET_VAR(sema, name, lir);
+    sema_set(sema, TAG_VARS, name, lir);
 
     return lir;
 }
@@ -394,19 +355,19 @@ lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
     for (size_t i = 0; i < nvars; i++) {
         pl0_t *decl = vector_get(vars, i);
         char *name = pl0_name(decl->name);
-        pl0_add_var(sema, name, pl0_declare(decl, name, LIR_VALUE));
+        set_var(sema, TAG_VARS, name, pl0_declare(decl, name, LIR_VALUE));
     }
 
     for (size_t i = 0; i < nconsts; i++) {
         pl0_t *decl = vector_get(consts, i);
         char *name = pl0_name(decl->name);
-        pl0_add_const(sema, name, pl0_declare(decl, name, LIR_VALUE));
+        set_var(sema, TAG_CONSTS, name, pl0_declare(decl, name, LIR_VALUE));
     }
 
     for (size_t i = 0; i < nprocs; i++) {
         pl0_t *decl = vector_get(procs, i);
         char *name = pl0_name(decl->name);
-        pl0_add_proc(sema, name, pl0_declare(decl, name, LIR_DEFINE));
+        set_proc(sema, name, pl0_declare(decl, name, LIR_DEFINE));
     }
 
     pl0_t *top = node->toplevel;
@@ -415,21 +376,23 @@ lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
         node_t *node = top->node;
         vector_t *body = vector_init(top);
         pl0_t *entry = pl0_procedure(node->scan, node->where, "pl0-main", vector_new(0), body);
-        pl0_add_proc(sema, "pl0-main", pl0_declare(entry, "pl0-main", LIR_DEFINE));
+        set_proc(sema, "pl0-main", pl0_declare(entry, "pl0-main", LIR_DEFINE));
     }
 
-    pl0_data_t *data = sema->fields;
+    map_t *const_map = sema_tag(sema, TAG_CONSTS);
+    map_t *var_map = sema_tag(sema, TAG_VARS);
+    map_t *proc_map = sema_tag(sema, TAG_PROCS);
 
-    MAP_APPLY(data->consts, sema, compile_const);
-    MAP_APPLY(data->vars, sema, compile_var);
-    MAP_APPLY(data->procs, sema, compile_proc);
+    MAP_APPLY(const_map, sema, compile_const);
+    MAP_APPLY(var_map, sema, compile_var);
+    MAP_APPLY(proc_map, sema, compile_proc);
 
     vector_t *globals = vector_join(
-        MAP_COLLECT(data->vars, always),
-        MAP_COLLECT(data->consts, always)
+        MAP_COLLECT(var_map, always),
+        MAP_COLLECT(const_map, always)
     );
 
-    vector_t *funcs = MAP_COLLECT(data->procs, always);
+    vector_t *funcs = MAP_COLLECT(proc_map, always);
 
     DELETE_SEMA(sema);
 

@@ -7,11 +7,12 @@
 #include "value.h"
 
 typedef enum {
-    IMM,
-    VREG,
-    LABEL,
-    ADDRESS,
-    EMPTY
+    IMM, /// an immediate value
+    VREG, /// a virtual register value in the current block
+    LABEL, /// an address in the current function
+    LOCAL, /// a function local variable
+    ADDRESS, /// an address of a global object
+    EMPTY /// an empty or invalid operand
 } optype_t;
 
 typedef struct {
@@ -83,6 +84,9 @@ typedef struct block_t {
     /* the return type of this */
     const type_t *result;
     const value_t *value;
+
+    operand_t *vars;
+    size_t locals;
 
     size_t len;
     size_t size;

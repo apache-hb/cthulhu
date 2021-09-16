@@ -95,6 +95,15 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
     block->name = decl->name;
     block->result = type;
 
+    if (lir_is(decl, LIR_DEFINE)) {
+        vector_t *locals = decl->locals;
+        block->locals = vector_len(locals);
+        block->vars = NEW_ARRAY(operand_t, block->locals);
+    } else {
+        block->locals = 0;
+        block->vars = NULL;
+    }
+
     block->len = 0;
     block->size = 16;
     block->steps = NEW_ARRAY(step_t, block->size);

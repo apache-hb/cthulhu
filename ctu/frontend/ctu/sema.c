@@ -212,35 +212,19 @@ lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
 }
 #endif
 
-typedef struct {
-    map_t *funcs;
-    map_t *vars;
-    map_t *types;
-} ctu_data_t;
+typedef enum {
+    TAG_TYPES,
+    TAG_VARS,
+    TAG_FUNCS,
 
-static void *ctu_data_new(void) {
-    ctu_data_t *data = NEW(ctu_data_t);
-    data->funcs = map_new(4);
-    data->vars = map_new(4);
-    data->types = map_new(4);
-    return data;
-}
-
-static void ctu_data_delete(sema_t *sema) {
-    ctu_data_t *data = sema_data(sema);
-    map_delete(data->funcs);
-    map_delete(data->vars);
-    map_delete(data->types);
-    DELETE(data);
-
-    sema_delete(sema);
-}
+    TAG_MAX
+} ctu_tag_t;
 
 #define NEW_SEMA(parent, reports) \
-    sema_new(parent, reports, ctu_data_new())
+    sema_new(parent, reports, TAG_MAX)
 
 #define DELETE_SEMA(sema) \
-    ctu_data_delete(sema)
+    sema_delete(sema)
 
 lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
     UNUSED(ctu);
