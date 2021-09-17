@@ -126,7 +126,7 @@ void *ctu_mmap(file_t *fp) {
  * maps end with a flexible array.
  * calcuate the actual size of the map to malloc
  */
-static size_t sizeof_map(size_t size) {
+static size_t sizeof_map(map_size_t size) {
     return sizeof(map_t) + (size * sizeof(entry_t));
 }
 
@@ -168,7 +168,7 @@ static entry_t *map_bucket(map_t *map, const char *key) {
 
 // map public api
 
-map_t *map_new(size_t size) {
+map_t *map_new(map_size_t size) {
     map_t *map = ctu_malloc(sizeof_map(size));
 
     map->size = size;
@@ -176,7 +176,6 @@ map_t *map_new(size_t size) {
     /* clear out the map keys */
     for (size_t i = 0; i < size; i++) {
         map->data[i].key = NULL;
-        map->data[i].value = NULL;
         map->data[i].next = NULL;
     }
 

@@ -102,3 +102,34 @@ typedef struct {
 
 module_t *module_build(reports_t *reports, lir_t *root);
 void module_print(FILE *out, module_t *mod);
+
+typedef struct {
+    /* the mangled name of this symbol */
+    const char *name;
+
+    /** 
+     * vector_t<type_t*> 
+     * 
+     * a vector of all local variables used in the 
+     * block.
+     */
+    vector_t *locals;
+
+    /** 
+     * vector_t<type_t*> 
+     * 
+     * a vector of all parameters passed into this
+     * block.
+     */
+    vector_t *params;
+
+    /* the return type of this function */
+    const type_t *result;
+
+    /* the computed result of this block if its compile time */
+    const value_t *value;
+
+    step_t *steps;
+    size_t len;
+    size_t size;
+} block2_t;
