@@ -5,26 +5,7 @@
 #include "ctu/lir/lir.h"
 
 #include "value.h"
-
-typedef enum {
-    IMM, /// an immediate value
-    VREG, /// a virtual register value in the current block
-    LABEL, /// an address in the current function
-    LOCAL, /// a function local variable
-    ADDRESS, /// an address of a global object
-    EMPTY /// an empty or invalid operand
-} optype_t;
-
-typedef struct {
-    optype_t kind;
-
-    union {
-        value_t *imm;
-        size_t vreg;
-        size_t label;
-        struct block_t *block;
-    };
-} operand_t;
+#include "operand.h"
 
 typedef enum {
     OP_EMPTY,

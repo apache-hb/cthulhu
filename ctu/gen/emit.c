@@ -19,24 +19,6 @@ static size_t push_step(block_t *block, step_t step) {
     return block->len++;
 }
 
-static operand_t new_operand(optype_t kind) {
-    operand_t operand;
-    operand.kind = kind;
-    return operand;
-}
-
-static operand_t new_imm(value_t *value) {
-    operand_t operand = new_operand(IMM);
-    operand.imm = value;
-    return operand;
-}
-
-static operand_t new_address(block_t *block) {
-    operand_t operand = new_operand(ADDRESS);
-    operand.block = block;
-    return operand;
-}
-
 static value_t *value_zero(void) {
     return value_int(type_digit(false, TY_SIZE), 0);
 }
@@ -70,15 +52,13 @@ static step_t *get_step(context_t ctx, operand_t op) {
 }
 
 static operand_t add_step(context_t ctx, step_t step) {
-    operand_t op = new_operand(VREG);
-    op.vreg = push_step(ctx.block, step);
-    return op;
+    vreg_t vreg = push_step(ctx.block, step);
+    return operand_vreg(vreg);
 }
 
 static operand_t add_label(context_t ctx, step_t step) {
-    operand_t op = new_operand(LABEL);
-    op.label = push_step(ctx.block, step);
-    return op;
+    label_t label = push_step(ctx.block, step);
+    return operand_label(label);
 }
 
 static operand_t emit_lir(context_t ctx, lir_t *lir);
@@ -150,7 +130,7 @@ static operand_t emit_binary(context_t ctx, lir_t *lir) {
 }
 
 static operand_t emit_digit(lir_t *lir) {
-    return new_imm(value_digit(lir_type(lir), lir->digit));
+    return operand_imm(value_digit(lir_type(lir), lir->digit));
 }
 
 static operand_t emit_value(context_t ctx, lir_t *lir) {
@@ -161,9 +141,7 @@ static operand_t emit_value(context_t ctx, lir_t *lir) {
         lir->data = other;
     }
 
-    operand_t op = new_address(other);
-
-    return op;
+    return operand_address(other);
 }
 
 static operand_t emit_define(context_t ctx, lir_t *lir) {
@@ -174,9 +152,7 @@ static operand_t emit_define(context_t ctx, lir_t *lir) {
         lir->data = other;
     }
 
-    operand_t op = new_address(other);
-    
-    return op;
+    return operand_address(other);
 }
 
 static operand_t emit_stmts(context_t ctx, lir_t *lir) {
@@ -185,7 +161,7 @@ static operand_t emit_stmts(context_t ctx, lir_t *lir) {
         lir_t *stmt = vector_get(lir->stmts, i);
         emit_lir(ctx, stmt);
     }
-    return new_operand(EMPTY);
+    return operand_empty();
 }
 
 static operand_t emit_assign(context_t ctx, lir_t *lir) {
@@ -195,7 +171,7 @@ static operand_t emit_assign(context_t ctx, lir_t *lir) {
     step_t step = step_of(OP_STORE, lir->dst);
     step.dst = dst;
     step.src = src;
-    step.offset = new_imm(value_zero());
+    step.offset = operand_imm(value_zero());
     return add_step(ctx, step);
 }
 
@@ -246,7 +222,7 @@ static operand_t emit_branch(context_t ctx, lir_t *lir) {
 static operand_t emit_name(context_t ctx, lir_t *lir) {
     step_t step = step_with_type(OP_LOAD, lir->node, lir_type(lir->it));
     step.src = emit_lir(ctx, lir->it);
-    step.offset = new_imm(value_zero());
+    step.offset = operand_imm(value_zero());
     return add_step(ctx, step);
 }
 
@@ -283,7 +259,7 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
 
     default:
         assert2(ctx.reports, "emit-lir unknown %d", lir->leaf);
-        return new_operand(EMPTY);
+        return operand_empty();
     }
 }
 
