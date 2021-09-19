@@ -119,7 +119,7 @@ static char *get_named_type(named_t *named) {
     return type_format(named->type);
 }
 
-static char *emit_locals(vector_t *locals) {
+static char *emit_names(const char *set, vector_t *locals) {
     if (locals == NULL || vector_len(locals) == 0) {
         return NULL;
     }
@@ -133,22 +133,27 @@ static char *emit_locals(vector_t *locals) {
         vector_set(all, i, fmt);
     }
 
-    return format("locals = { %s }", strjoin(", ", all));
+    return format("%s = { %s }", set, strjoin(", ", all));
 }
 
 static void var_print(FILE *out, module_t *mod, size_t idx) {
     block_t *flow = vector_get(mod->vars, idx);
     const char *name = flow->name;
     
+    char *locals = emit_names("locals", flow->locals);
+    if (locals != NULL) {
+        fprintf(out, "  %s\n", locals);
+    }
+
+    char *params = emit_names("params", flow->params);
+    if (params != NULL) {
+        fprintf(out, "%s\n", params);
+    }
+
     size_t len = flow->len;
     fprintf(out, "value %s: %s {\n", name, 
         type_format(flow->result)
     );
-
-    char *locals = emit_locals(flow->locals);
-    if (locals != NULL) {
-        fprintf(out, "  %s\n", locals);
-    }
 
     for (size_t i = 0; i < len; i++) {
         char *step = emit_step(flow, i);
@@ -164,15 +169,20 @@ static void func_print(FILE *out, module_t *mod, size_t idx) {
     block_t *flow = vector_get(mod->funcs, idx);
     const char *name = flow->name;
     
+    char *locals = emit_names("locals", flow->locals);
+    if (locals != NULL) {
+        fprintf(out, "%s\n", locals);
+    }
+
+    char *params = emit_names("params", flow->params);
+    if (params != NULL) {
+        fprintf(out, "%s\n", params);
+    }
+
     size_t len = flow->len;
     fprintf(out, "define %s: %s {\n", name, 
         type_format(flow->result)
     );
-
-    char *locals = emit_locals(flow->locals);
-    if (locals != NULL) {
-        fprintf(out, "  %s\n", locals);
-    }
 
     for (size_t i = 0; i < len; i++) {
         char *step = emit_step(flow, i);
@@ -190,10 +200,18 @@ void module_print(FILE *out, module_t *mod) {
 
     fprintf(out, "module = %s\n", mod->name);
     for (size_t i = 0; i < nvars; i++) {
+        if (i > 0) {
+            fprintf(out, "\n");
+        }
+        
         var_print(out, mod, i);
     }
 
     for (size_t i = 0; i < nfuncs; i++) {
+        if (i > 0) {
+            fprintf(out, "\n");
+        }
+
         func_print(out, mod, i);
     }
 }
