@@ -24,10 +24,12 @@ src = [
     'ctu/type/format.c',
 
     'ctu/emit/emit.c',
+    
     'ctu/gen/emit.c',
     'ctu/gen/value.c',
     'ctu/gen/operand.c',
     'ctu/gen/print.c',
+    'ctu/gen/eval.c',
 
     'ctu/util/report.c',
     'ctu/util/str.c',

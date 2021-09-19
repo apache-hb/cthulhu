@@ -119,6 +119,8 @@ bool is_digit(const type_t *type);
 bool is_bool(const type_t *type);
 bool is_signed(const type_t *type);
 bool is_unsigned(const type_t *type);
+bool is_void(const type_t *type);
+bool is_poison(const type_t *type);
 
 /**
  * return a common type of lhs and rhs if possible.

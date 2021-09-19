@@ -24,6 +24,14 @@ bool is_unsigned(const type_t *type) {
     return type->digit.sign == UNSIGNED;
 }
 
+bool is_void(const type_t *type) {
+    return type->type == TY_VOID;
+}
+
+bool is_poison(const type_t *type) {
+    return type->type == TY_POISON;
+}
+
 type_t *types_common(const type_t *lhs, const type_t *rhs) {
     if (is_digit(lhs) && is_digit(rhs)) {
         digit_t ld = lhs->digit;

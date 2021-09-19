@@ -1,6 +1,7 @@
 #include "eval.h"
 
 typedef struct {
+    reports_t *reports;
     module_t *mod;
     block_t *block;
     size_t ip;
@@ -9,15 +10,16 @@ typedef struct {
     value_t *result;
 } exec_t;
 
-static exec_t *exec_new(module_t *mod, block_t *block) {
+static exec_t *exec_new(reports_t *reports, module_t *mod, block_t *block) {
     size_t size = block->len;
 
     value_t **values = NEW_ARRAY(value_t*, size);
     for (size_t i = 0; i < size; i++) {
-        values[i] = value_poison("unintalized value")
+        values[i] = value_poison("unintalized value");
     }
 
     exec_t *exec = NEW(exec_t);
+    exec->reports = reports;
     exec->mod = mod;
     exec->block = block;
     exec->ip = 0;
@@ -51,15 +53,8 @@ static size_t get_label(exec_t *exec, operand_t it) {
     return it.label;
 }
 
-static value_t *value_digit(const type_t *type, mpz_t digit) {
-    value_t *value = NEW(value_t);
-    value->type = type;
-    mpz_init_set(value->digit, digit);
-    return value;
-}
-
 static value_t *value_abs(value_t *v) {
-    if (!is_digit(v)) {
+    if (!is_digit(v->type)) {
         return value_poison("not a digit type");
     }
 
@@ -68,6 +63,18 @@ static value_t *value_abs(value_t *v) {
 
     return value_digit(v->type, result);
 }
+
+static value_t *value_neg(value_t *v) {
+    if (!is_digit(v->type)) {
+        return value_poison("not a digit type");
+    }
+
+    mpz_t result;
+    mpz_neg(result, v->digit);
+
+    return value_digit(v->type, result);
+}
+
 
 static value_t *exec_unary(exec_t *exec, step_t step) {
     value_t *operand = get_value(exec, step.operand);
@@ -109,8 +116,8 @@ static bool exec_step(exec_t *exec) {
     }
 }
 
-value_t *eval_block(module_t *ctx, block_t *block) {
-    exec_t *exec = exec_new(ctx, block);
+value_t *eval_block(reports_t *reports, module_t *ctx, block_t *block) {
+    exec_t *exec = exec_new(reports, ctx, block);
 
     while (exec_step(exec)) {
         // empty

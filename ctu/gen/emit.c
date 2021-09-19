@@ -3,6 +3,8 @@
 #include "ctu/util/util.h"
 #include "ctu/util/report.h"
 
+#include "eval.h"
+
 typedef struct {
     module_t *mod;
     block_t *block;
@@ -159,7 +161,7 @@ static operand_t emit_value(const lir_t *lir) {
     return operand_address(lir->data);
 }
 
-static operand_t emit_define(lir_t *lir) {
+static operand_t emit_define(const lir_t *lir) {
     return operand_address(lir->data);
 }
 
@@ -314,6 +316,13 @@ module_t *module_build(reports_t *reports, lir_t *root) {
         lir_t *func = vector_get(funcs, i);
         block_t *block = vector_get(funcblocks, i);
         build_define(reports, mod, block, func);
+    }
+
+    for (size_t i = 0; i < nvars; i++) {
+        block_t *var = vector_get(varblocks, i);
+        value_t *result = eval_block(reports, mod, var);
+
+        var->value = result;
     }
 
     return mod;

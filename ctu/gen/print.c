@@ -150,6 +150,14 @@ static void var_print(FILE *out, module_t *mod, size_t idx) {
         fprintf(out, "%s\n", params);
     }
 
+    if (flow->value != NULL) {
+        fprintf(out, "value %s: %s = %s\n", name,
+            type_format(flow->result),
+            value_format(flow->value)  
+        );
+        return;
+    }
+
     size_t len = flow->len;
     fprintf(out, "value %s: %s {\n", name, 
         type_format(flow->result)
@@ -205,6 +213,10 @@ void module_print(FILE *out, module_t *mod) {
         }
         
         var_print(out, mod, i);
+    }
+
+    if (nfuncs > 0) {
+        fprintf(out, "\n");
     }
 
     for (size_t i = 0; i < nfuncs; i++) {
