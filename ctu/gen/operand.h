@@ -16,21 +16,64 @@ typedef enum {
     EMPTY /// an empty or invalid operand
 } optype_t;
 
+/**
+ * an operand of an instruction
+ */
 typedef struct {
     optype_t kind;
 
     union {
-        value_t *imm;
-        vreg_t vreg;
-        vreg_t arg;
-        label_t label;
-        struct block_t *block;
+        value_t *imm; /// an immediate value, `1`, `true`, `0.1`, etc
+        vreg_t vreg; /// a virtual register address. `%N`
+        vreg_t arg; /// a function argument
+        label_t label; /// a label in the current function `.N:`
+        struct block_t *block; /// another block
     };
 } operand_t;
 
+/**
+ * create an immediate value
+ * 
+ * @param value the value
+ * @return the operand
+ */
 operand_t operand_imm(value_t *imm);
+
+/**
+ * create a virtual register operand
+ * 
+ * @param vreg the virtual register
+ * @return the operand
+ */
 operand_t operand_vreg(vreg_t vreg);
+
+/**
+ * create an argument operand
+ * 
+ * @param arg the argument index
+ * @return the operand
+ */
 operand_t operand_arg(vreg_t arg);
+
+/**
+ * create a label 
+ * 
+ * @param label the label
+ * @return the operand
+ */
 operand_t operand_label(label_t label);
+
+/**
+ * create an address of another block
+ * 
+ * @param block the block
+ * @return the operand
+ */
 operand_t operand_address(struct block_t *block);
+
+/**
+ * create an operand to fill in later
+ * 
+ * @return the empty operand
+ */
 operand_t operand_empty(void);

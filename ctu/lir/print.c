@@ -93,6 +93,10 @@ static char *print_branch(const lir_t *lir) {
     return format("%s then %s", cond, body);
 }
 
+static char *print_call(const lir_t *lir) {
+    return ctu_strdup(lir->func->name);
+}
+
 char *print_lir(const lir_t *lir) {
     leaf_t leaf = lir->leaf;
     const char *name = leaf_name(leaf);
@@ -111,6 +115,7 @@ char *print_lir(const lir_t *lir) {
     case LIR_STMTS: body = print_stmts(lir); break;
     case LIR_VALUE: body = print_value(lir); break;
     case LIR_DEFINE: body = print_define(lir); break;
+    case LIR_CALL: body = print_call(lir); break;
 
     case LIR_ASSIGN: body = print_assign(lir); break;
 

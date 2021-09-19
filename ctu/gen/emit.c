@@ -69,6 +69,15 @@ static operand_t build_return(context_t ctx, lir_t *lir, operand_t op) {
     return add_step(ctx, step);
 }
 
+static named_t *lir_named(const lir_t *lir) {
+    named_t *named = NEW(named_t);
+
+    named->name = lir->name;
+    named->type = lir_type(lir);
+
+    return named;
+}
+ 
 static block_t *init_block(lir_t *decl, const type_t *type) {
     block_t *block = NEW(block_t);
     
@@ -77,11 +86,12 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
 
     if (lir_is(decl, LIR_DEFINE)) {
         vector_t *locals = decl->locals;
-        block->locals = vector_len(locals);
-        block->vars = NEW_ARRAY(operand_t, block->locals);
+        vector_t *params = decl->params;
+        block->locals = VECTOR_MAP(locals, lir_named);
+        block->params = VECTOR_MAP(params, lir_named);
     } else {
-        block->locals = 0;
-        block->vars = NULL;
+        block->locals = NULL;
+        block->params = NULL;
     }
 
     block->len = 0;
@@ -97,13 +107,6 @@ static block_t *block_declare(lir_t *lir) {
     return block;
 }
 
-static block_t *compile_block(context_t ctx, lir_t *decl) {
-    block_t *block = block_declare(decl);
-    build_return(ctx, decl->init, emit_lir(ctx, decl->init));
-    vector_push(&ctx.mod->vars, block);
-    return block;
-}
-
 static void build_block(reports_t *reports, module_t *mod, block_t *block, lir_t *body) {
     context_t ctx = { mod, block, reports };
 
@@ -111,6 +114,25 @@ static void build_block(reports_t *reports, module_t *mod, block_t *block, lir_t
         operand_t op = emit_lir(ctx, body);
         build_return(ctx, body, op);
     }
+}
+
+static void build_define(reports_t *reports, module_t *mod, block_t *block, lir_t *define) {
+    context_t ctx = { mod, block, reports };
+
+    vector_t *locals = define->locals;
+    vector_t *params = define->params;
+
+    for (size_t i = 0; i < vector_len(locals); i++) {
+        block_declare(vector_get(locals, i));
+    }
+
+    for (size_t i = 0; i < vector_len(params); i++) {
+        block_declare(vector_get(params, i));
+    }
+
+    lir_t *body = define->body;
+    operand_t op = emit_lir(ctx, body);
+    build_return(ctx, body, op);
 }
 
 static operand_t emit_unary(context_t ctx, lir_t *lir) {
@@ -133,26 +155,12 @@ static operand_t emit_digit(lir_t *lir) {
     return operand_imm(value_digit(lir_type(lir), lir->digit));
 }
 
-static operand_t emit_value(context_t ctx, lir_t *lir) {
-    block_t *other = lir->data;
-
-    if (other == NULL) {
-        other = compile_block(ctx, lir);
-        lir->data = other;
-    }
-
-    return operand_address(other);
+static operand_t emit_value(const lir_t *lir) {
+    return operand_address(lir->data);
 }
 
-static operand_t emit_define(context_t ctx, lir_t *lir) {
-    block_t *other = lir->data;
-
-    if (other == NULL) {
-        other = compile_block(ctx, lir);
-        lir->data = other;
-    }
-
-    return operand_address(other);
+static operand_t emit_define(lir_t *lir) {
+    return operand_address(lir->data);
 }
 
 static operand_t emit_stmts(context_t ctx, lir_t *lir) {
@@ -248,14 +256,14 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_UNARY: return emit_unary(ctx, lir);
     case LIR_BINARY: return emit_binary(ctx, lir);
     case LIR_DIGIT: return emit_digit(lir);
-    case LIR_VALUE: return emit_value(ctx, lir);
+    case LIR_VALUE: return emit_value(lir);
     case LIR_STMTS: return emit_stmts(ctx, lir);
     case LIR_ASSIGN: return emit_assign(ctx, lir);
     case LIR_WHILE: return emit_while(ctx, lir);
     case LIR_BRANCH: return emit_branch(ctx, lir);
     case LIR_NAME: return emit_name(ctx, lir);
     case LIR_CALL: return emit_call(ctx, lir);
-    case LIR_DEFINE: return emit_define(ctx, lir);
+    case LIR_DEFINE: return emit_define(lir);
 
     default:
         assert2(ctx.reports, "emit-lir unknown %d", lir->leaf);
@@ -286,12 +294,14 @@ module_t *module_build(reports_t *reports, lir_t *root) {
 
     for (size_t i = 0; i < nvars; i++) {
         lir_t *var = vector_get(vars, i);
-        vector_set(varblocks, i, block_declare(var));
+        block_t *block = block_declare(var);
+        vector_set(varblocks, i, block);
     }
 
     for (size_t i = 0; i < nfuncs; i++) {
         lir_t *func = vector_get(funcs, i);
-        vector_set(funcblocks, i, block_declare(func));
+        block_t *block = block_declare(func);
+        vector_set(funcblocks, i, block);
     }
 
     for (size_t i = 0; i < nvars; i++) {
@@ -303,7 +313,7 @@ module_t *module_build(reports_t *reports, lir_t *root) {
     for (size_t i = 0; i < nfuncs; i++) {
         lir_t *func = vector_get(funcs, i);
         block_t *block = vector_get(funcblocks, i);
-        build_block(reports, mod, block, func->body);
+        build_define(reports, mod, block, func);
     }
 
     return mod;

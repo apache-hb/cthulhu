@@ -91,6 +91,7 @@ typedef struct lir_t {
 
         vector_t *stmts;
 
+        /* function call */
         struct {
             struct lir_t *func;
             vector_t *args;
@@ -125,6 +126,7 @@ typedef struct lir_t {
                 struct {
                     const char *entry;
                     vector_t *locals;
+                    vector_t *params;
                     struct lir_t *body;
                 };
             };
@@ -166,7 +168,7 @@ lir_t *lir_stmts(node_t *node, vector_t *stmts);
 lir_t *lir_poison(node_t *node, const char *msg);
 
 void lir_value(reports_t *reports, lir_t *dst, const type_t *type, lir_t *init);
-void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *locals, lir_t *body);
+void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *locals, vector_t *params, lir_t *body);
 void lir_begin(reports_t *reports, lir_t *dst, leaf_t leaf);
 bool lir_ok(const lir_t *lir);
 bool lir_is(const lir_t *lir, leaf_t leaf);

@@ -16,6 +16,9 @@ static char *emit_imm(const value_t *imm) {
 }
 
 static char *emit_addr(block_t *addr) {
+    if (addr == NULL) {
+        return ctu_strdup("???");
+    }
     return format("@%s", addr->name);
 }
 
@@ -112,12 +115,40 @@ static char *emit_step(block_t *flow, size_t idx) {
     }
 }
 
+static char *get_named_type(named_t *named) {
+    return type_format(named->type);
+}
+
+static char *emit_locals(vector_t *locals) {
+    if (locals == NULL || vector_len(locals) == 0) {
+        return NULL;
+    }
+
+    vector_t *all = VECTOR_MAP(locals, get_named_type);
+    for (size_t i = 0; i < vector_len(all); i++) {
+        char *type = vector_get(all, i);
+        named_t *it = vector_get(locals, i);
+        const char *name = it->name;
+        char *fmt = format("[%s] = %s", name, type);
+        vector_set(all, i, fmt);
+    }
+
+    return format("locals = { %s }", strjoin(", ", all));
+}
+
 static void var_print(FILE *out, module_t *mod, size_t idx) {
     block_t *flow = vector_get(mod->vars, idx);
     const char *name = flow->name;
     
     size_t len = flow->len;
-    fprintf(out, "value %s: %s {\n", name, type_format(flow->result));
+    fprintf(out, "value %s: %s {\n", name, 
+        type_format(flow->result)
+    );
+
+    char *locals = emit_locals(flow->locals);
+    if (locals != NULL) {
+        fprintf(out, "  %s\n", locals);
+    }
 
     for (size_t i = 0; i < len; i++) {
         char *step = emit_step(flow, i);
@@ -134,7 +165,14 @@ static void func_print(FILE *out, module_t *mod, size_t idx) {
     const char *name = flow->name;
     
     size_t len = flow->len;
-    fprintf(out, "define %s: %s {\n", name, type_format(flow->result));
+    fprintf(out, "define %s: %s {\n", name, 
+        type_format(flow->result)
+    );
+
+    char *locals = emit_locals(flow->locals);
+    if (locals != NULL) {
+        fprintf(out, "  %s\n", locals);
+    }
 
     for (size_t i = 0; i < len; i++) {
         char *step = emit_step(flow, i);

@@ -59,37 +59,17 @@ typedef struct {
     };
 } step_t;
 
+typedef struct {
+    const char *name;
+    const type_t *type;
+} named_t;
+
 typedef struct block_t {
-    const char *name;
-
-    /* the return type of this */
-    const type_t *result;
-    const value_t *value;
-
-    operand_t *vars;
-    size_t locals;
-
-    size_t len;
-    size_t size;
-    step_t *steps;
-} block_t;
-
-typedef struct {
-    const char *name;
-
-    vector_t *vars;
-    vector_t *funcs;
-} module_t;
-
-module_t *module_build(reports_t *reports, lir_t *root);
-void module_print(FILE *out, module_t *mod);
-
-typedef struct {
     /* the mangled name of this symbol */
     const char *name;
 
     /** 
-     * vector_t<type_t*> 
+     * vector_t<named_t*> 
      * 
      * a vector of all local variables used in the 
      * block.
@@ -97,7 +77,7 @@ typedef struct {
     vector_t *locals;
 
     /** 
-     * vector_t<type_t*> 
+     * vector_t<named_t*> 
      * 
      * a vector of all parameters passed into this
      * block.
@@ -110,7 +90,17 @@ typedef struct {
     /* the computed result of this block if its compile time */
     const value_t *value;
 
-    step_t *steps;
-    size_t len;
-    size_t size;
-} block2_t;
+    step_t *steps; /// array of steps
+    size_t len; /// number of used steps
+    size_t size; /// number of allocated steps
+} block_t;
+
+typedef struct {
+    const char *name;
+
+    vector_t *vars;
+    vector_t *funcs;
+} module_t;
+
+module_t *module_build(reports_t *reports, lir_t *root);
+void module_print(FILE *out, module_t *mod);
