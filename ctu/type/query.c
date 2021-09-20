@@ -32,6 +32,14 @@ bool is_poison(const type_t *type) {
     return type->type == TY_POISON;
 }
 
+bool is_pointer(const type_t *type) {
+    return type->type == TY_PTR;
+}
+
+bool is_closure(const type_t *type) {
+    return type->type == TY_CLOSURE;
+}
+
 type_t *types_common(const type_t *lhs, const type_t *rhs) {
     if (is_digit(lhs) && is_digit(rhs)) {
         digit_t ld = lhs->digit;

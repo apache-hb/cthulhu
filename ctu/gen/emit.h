@@ -93,6 +93,8 @@ typedef struct block_t {
     step_t *steps; /// array of steps
     size_t len; /// number of used steps
     size_t size; /// number of allocated steps
+
+    void *data; /// arbitrary data
 } block_t;
 
 typedef struct {

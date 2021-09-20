@@ -2,8 +2,53 @@
 
 #include "ctu/util/util.h"
 #include "ctu/util/report.h"
+#include "ctu/util/str.h"
 
 #include "eval.h"
+
+#include <string.h>
+
+/* https://itanium-cxx-abi.github.io/cxx-abi/abi.html */
+static const char *mangle_type(const type_t *type) {
+    if (is_digit(type)) { 
+        digit_t digit = type->digit;
+        switch (digit.kind) {
+        case TY_CHAR: return digit.sign ? "c" : "a";
+        case TY_SHORT: return digit.sign ? "s" : "t";
+        case TY_INT: return digit.sign ? "i" : "j";
+        case TY_LONG: return digit.sign ? "l" : "m";
+        default: return NULL; /* TODO */
+        }
+    }
+
+    if (is_void(type)) {
+        return "v";
+    }
+
+    if (is_pointer(type)) {
+        return format("P%s", mangle_type(type->ptr));
+    }
+
+    if (is_closure(type)) {
+        size_t len = vector_len(type->args);
+        vector_t *args = vector_of(len);
+
+        for (size_t i = 0; i < len; i++) {
+            const char *it = mangle_type(vector_get(type->args, i));
+            vector_set(args, i, (char*)it);
+        }
+
+        return strjoin("", args);
+    }
+
+    return NULL;
+}
+
+static char *mangle_name(const char *name, const type_t *type) {
+    size_t len = strlen(name);
+    const char *ty = mangle_type(type);
+    return format("_Z%zu%s%s", len, name, ty);
+}
 
 typedef struct {
     module_t *mod;
@@ -83,7 +128,7 @@ static named_t *lir_named(const lir_t *lir) {
 static block_t *init_block(lir_t *decl, const type_t *type) {
     block_t *block = NEW(block_t);
     
-    block->name = decl->name;
+    block->name = mangle_name(decl->name, type);
     block->result = type;
 
     if (lir_is(decl, LIR_DEFINE)) {
@@ -99,6 +144,8 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
     block->len = 0;
     block->size = 16;
     block->steps = NEW_ARRAY(step_t, block->size);
+
+    block->data = NULL;
 
     return block;
 }

@@ -31,6 +31,8 @@ src = [
     'ctu/gen/print.c',
     'ctu/gen/eval.c',
 
+    'ctu/backend/gcc.c',
+
     'ctu/util/report.c',
     'ctu/util/str.c',
     'ctu/util/util.c'
@@ -82,5 +84,6 @@ main = [
 ]
 
 driver = executable('driver', main,
+    link_args : [ '-lgccjit' ],
     dependencies : options
 )

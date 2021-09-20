@@ -1,7 +1,9 @@
 #include "sema.h"
 
 #include "ctu/util/report.h"
+#include "ctu/util/str.h"
 
+#include <string.h>
 #include <ctype.h>
 
 typedef enum {
@@ -11,6 +13,14 @@ typedef enum {
 
     TAG_MAX
 } pl0_tag_t;
+
+static char *pl0_name(const char *name) {
+    char *out = ctu_strdup(name);
+    for (char *p = out; *p != '\0'; p++) {
+        *p = tolower(*p);
+    }
+    return out;
+}
 
 #define NEW_SEMA(parent, reports) \
     sema_new(parent, reports, TAG_MAX)
@@ -43,14 +53,6 @@ static void report_recurse(reports_t *reports, vector_t *stack, lir_t *root) {
 
 static lir_t *compile_expr(sema_t *sema, pl0_t *expr);
 static lir_t *compile_stmt(sema_t *sema, pl0_t *stmt);
-
-static char *pl0_name(const char *name) {
-    char *out = ctu_strdup(name);
-    for (char *p = out; *p != '\0'; p++) {
-        *p = tolower(*p);
-    }
-    return out;
-}
 
 static type_t *pl0_int(bool mut) {
     type_t *ty = type_digit(SIGNED, TY_LONG);

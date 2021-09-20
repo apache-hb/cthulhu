@@ -7,6 +7,8 @@
 #include "ctu/emit/emit.h"
 #include "ctu/gen/emit.h"
 
+#include "ctu/backend/gcc.h"
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -20,6 +22,7 @@ typedef struct {
     file_t *file;
     void *root;
     lir_t *lir;
+    module_t *mod;
 } unit_t;
 
 static unit_t *unit_new(const driver_t *driver, reports_t *reports, file_t *file, void *node) {
@@ -28,6 +31,7 @@ static unit_t *unit_new(const driver_t *driver, reports_t *reports, file_t *file
     unit->reports = reports;
     unit->file = file;
     unit->root = node;
+    unit->mod = NULL;
     return unit;
 }
 
@@ -84,17 +88,22 @@ int main(int argc, char **argv) {
 
     for (size_t i = 0; i < len; i++) {
         unit_t *unit = vector_get(units, i);
-        lir_t *lir = unit->lir;
-        printf("%s\n", print_lir(lir));
-        /*
-        emit_c(stdout, unit->lir);
-        */
-       
+
         module_t *mod = module_build(unit->reports, unit->lir);
         module_print(stdout, mod);
 
         err = end_reports(unit->reports, SIZE_MAX, format("code generation of `%s`", unit->file->path));
         fails = MAX(fails, err);
+
+        unit->mod = mod;
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        unit_t *unit = vector_get(units, i);
+        module_t *mod = unit->mod;
+        const char *path = unit->file->path;
+
+        gccjit_build(unit->reports, mod, format("%s.exe", path));
     }
 
     return fails;
