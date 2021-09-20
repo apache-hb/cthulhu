@@ -59,40 +59,56 @@ typedef struct {
     };
 } step_t;
 
-typedef struct {
-    const char *name;
-    const type_t *type;
-} named_t;
+typedef enum {
+    BLOCK_DEFINE,
+    BLOCK_SYMBOL,
+    BLOCK_STRING
+} blocktype_t;
 
 typedef struct block_t {
+    blocktype_t kind;
+
     /* the mangled name of this symbol */
     const char *name;
 
-    /** 
-     * vector_t<named_t*> 
-     * 
-     * a vector of all local variables used in the 
-     * block.
-     */
-    vector_t *locals;
+    union {
+        /* BLOCK_SYMBOL|BLOCK_STRING */
+        struct {
+            const type_t *type;
 
-    /** 
-     * vector_t<named_t*> 
-     * 
-     * a vector of all parameters passed into this
-     * block.
-     */
-    vector_t *params;
+            size_t idx; /* index in the string table */
+            const char *string; /* the string itself */
+        };
 
-    /* the return type of this function */
-    const type_t *result;
+        /* BLOCK_DEFINE */
+        struct {
+            /** 
+             * vector_t<struct block_t<BLOCK_SYMBOL>*> 
+             * 
+             * a vector of all local variables used in the 
+             * block.
+             */
+            vector_t *locals;
 
-    /* the computed result of this block if its compile time */
-    const value_t *value;
+            /** 
+             * vector_t<struct block_t<BLOCK_SYMBOL>*> 
+             * 
+             * a vector of all parameters passed into this
+             * block.
+             */
+            vector_t *params;
 
-    step_t *steps; /// array of steps
-    size_t len; /// number of used steps
-    size_t size; /// number of allocated steps
+            /* the return type of this function */
+            const type_t *result;
+
+            /* the computed result of this block if its compile time */
+            const value_t *value;
+
+            step_t *steps; /// array of steps
+            size_t len; /// number of used steps
+            size_t size; /// number of allocated steps
+        };
+    };
 
     void *data; /// arbitrary data
 } block_t;
@@ -102,6 +118,10 @@ typedef struct {
 
     vector_t *vars;
     vector_t *funcs;
+
+    vector_t *strtab; /* vector_t<block_t<BLOCK_STRING>*> */
+
+    map_t *imports; /* map_t<const char*, block_t<BLOCK_SYMBOL>*> */
 } module_t;
 
 module_t *module_build(reports_t *reports, lir_t *root);

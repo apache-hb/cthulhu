@@ -27,7 +27,7 @@ typedef struct {
         vreg_t vreg; /// a virtual register address. `%N`
         vreg_t arg; /// a function argument
         label_t label; /// a label in the current function `.N:`
-        struct block_t *block; /// another block
+        struct block_t *block; /// another block or an imported symbol
     };
 } operand_t;
 

@@ -22,6 +22,14 @@ void sema_delete(sema_t *sema) {
     DELETE(sema);
 }
 
+void sema_set_data(sema_t *sema, void *data) {
+    sema->data = data;
+}
+
+void *sema_get_data(sema_t *sema) {
+    return sema->data;
+}
+
 map_t *sema_tag(sema_t *sema, size_t tag) {
     return vector_get(sema->decls, tag);
 }

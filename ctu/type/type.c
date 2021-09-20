@@ -34,8 +34,16 @@ type_t *type_ptr(type_t *to) {
     return type;
 }
 
+type_t *type_string(void) {
+    return type_new(TY_STRING);
+}
+
 type_t *type_bool(void) {
     return type_new(TY_BOOL);
+}
+
+type_t *type_varargs(void) {
+    return type_new(TY_VARARGS);
 }
 
 type_t *type_poison(const char *msg) {

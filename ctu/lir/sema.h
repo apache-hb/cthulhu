@@ -11,6 +11,8 @@ typedef struct sema_t {
 
     /** vector_t<map_t<const char *, lir_t*>*> */
     vector_t *decls;
+
+    void *data; /// user data
 } sema_t;
 
 /**
@@ -30,6 +32,12 @@ sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls);
  * @param sema the semantic environment to delete
  */
 void sema_delete(sema_t *sema);
+
+/**
+ * get and set user defined data
+ */
+void sema_set_data(sema_t *sema, void *data);
+void *sema_get_data(sema_t *sema);
 
 void sema_set(sema_t *sema, size_t tag, const char *name, lir_t *lir);
 lir_t *sema_get(sema_t *sema, size_t tag, const char *name);

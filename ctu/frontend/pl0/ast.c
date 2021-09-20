@@ -129,10 +129,11 @@ pl0_t *pl0_value(scan_t *scan, where_t where,
 
 pl0_t *pl0_procedure(scan_t *scan, where_t where,
                      const char *name, vector_t *locals,
-                     vector_t *body)
+                     vector_t *body, bool entry)
 {
     pl0_t *pl0 = pl0_new(scan, where, PL0_PROCEDURE);
 
+    pl0->entry = entry;
     pl0->name = name;
     pl0->locals = locals;
     pl0->body = body;

@@ -19,16 +19,23 @@ static char *emit_addr(block_t *addr) {
     if (addr == NULL) {
         return ctu_strdup("???");
     }
+    
+    if (addr->kind == BLOCK_STRING) {
+        return format("str[%zu]", addr->idx);
+    }
+
     return format("@%s", addr->name);
 }
 
 static char *emit_operand(operand_t op) {
     switch (op.kind) {
-    case VREG: return format("%%%zu", op.vreg);
-    case LABEL: return format(".%zu", op.label);
     case IMM: return emit_imm(op.imm);
+    case LABEL: return format(".%zu", op.label);
+    case VREG: return format("%%%zu", op.vreg);
+    case ARG: return format("arg(%zu)", op.arg);
     case ADDRESS: return emit_addr(op.block);
-    default: return NULL;
+    case EMPTY: return ctu_strdup("(empty)");
+    default: return ctu_strdup("???");
     }
 }
 
@@ -115,8 +122,8 @@ static char *emit_step(block_t *flow, size_t idx) {
     }
 }
 
-static char *get_named_type(named_t *named) {
-    return type_format(named->type);
+static char *get_block_type(block_t *block) {
+    return type_format(block->type);
 }
 
 static char *emit_names(const char *set, vector_t *locals) {
@@ -124,10 +131,10 @@ static char *emit_names(const char *set, vector_t *locals) {
         return NULL;
     }
 
-    vector_t *all = VECTOR_MAP(locals, get_named_type);
+    vector_t *all = VECTOR_MAP(locals, get_block_type);
     for (size_t i = 0; i < vector_len(all); i++) {
         char *type = vector_get(all, i);
-        named_t *it = vector_get(locals, i);
+        block_t *it = vector_get(locals, i);
         const char *name = it->name;
         char *fmt = format("[%s] = %s", name, type);
         vector_set(all, i, fmt);

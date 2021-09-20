@@ -10,6 +10,8 @@ typedef enum {
     TY_INTEGER, /// any integer type
     TY_PTR, /// a pointer to another type
     TY_CLOSURE, /// a function signature
+    TY_STRING, /// a string type, convertible to const char*
+    TY_VARARGS, /// a variadic function signature
     TY_POISON /// a compiler error
 } metatype_t;
 
@@ -98,11 +100,25 @@ type_t *type_closure(vector_t *args, type_t *result);
 type_t *type_ptr(type_t *to);
 
 /**
+ * create a string type
+ * 
+ * @return the string type
+ */
+type_t *type_string(void);
+
+/**
  * create the boolean type
  * 
  * @return the boolean type
  */
 type_t *type_bool(void);
+
+/**
+ * create an untyped varargs type
+ * 
+ * @return the varargs type
+ */
+type_t *type_varargs(void);
 
 /**
  * create a poison type

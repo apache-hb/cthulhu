@@ -11,6 +11,8 @@ typedef enum {
     /* integer literal */
     LIR_DIGIT,
 
+    LIR_STRING,
+
     /* reference to a variable */
     LIR_NAME,
 
@@ -32,6 +34,7 @@ typedef enum {
 
     LIR_VALUE,
     LIR_DEFINE,
+    LIR_SYMBOL,
 
     LIR_MODULE,
 
@@ -64,6 +67,13 @@ typedef struct lir_t {
          * integer literal
          */
         mpz_t digit;
+
+        /**
+         * LIR_STRING 
+         * 
+         * the encoded string
+         */
+        const char *str;
 
         struct lir_t *it;
 
@@ -138,8 +148,9 @@ typedef struct lir_t {
          * vector of all global variables and procedures.
          */
         struct {
-            vector_t *vars;
-            vector_t *funcs;
+            vector_t *imports; /* imported symbols */
+            vector_t *vars; /* defined vars */
+            vector_t *funcs; /* defined functions */
         };
     };
 
@@ -148,12 +159,18 @@ typedef struct lir_t {
 } lir_t;
  
 lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, void *ctx);
-lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs);
+
+lir_t *lir_module(node_t *node, 
+                  vector_t *imports, 
+                  vector_t *vars, 
+                  vector_t *funcs);
+
 void add_module_var(lir_t *mod, lir_t *var);
 void add_module_func(lir_t *mod, lir_t *func);
 
 lir_t *lir_int(node_t *node, const type_t *type, int digit);
 lir_t *lir_digit(node_t *node, const type_t *type, mpz_t digit);
+lir_t *lir_string(node_t *node, const type_t *type, const char *str);
 lir_t *lir_name(node_t *node, lir_t *it);
 
 lir_t *lir_binary(node_t *node, const type_t *type, binary_t binary, lir_t *lhs, lir_t *rhs);
@@ -164,6 +181,8 @@ lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src);
 lir_t *lir_while(node_t *node, lir_t *cond, lir_t *then);
 lir_t *lir_branch(node_t *node, lir_t *cond, lir_t *then, lir_t *other);
 lir_t *lir_stmts(node_t *node, vector_t *stmts);
+
+lir_t *lir_symbol(node_t *node, const type_t *type, const char *name);
 
 lir_t *lir_poison(node_t *node, const char *msg);
 

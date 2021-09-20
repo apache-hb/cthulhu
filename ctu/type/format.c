@@ -60,6 +60,12 @@ char *type_format(const type_t *type) {
     case TY_PTR:
         result = format("ptr(%s)", type_format(type->ptr));
         break;
+    case TY_STRING:
+        result = ctu_strdup("string");
+        break;
+    case TY_VARARGS:
+        result = ctu_strdup("varargs");
+        break;
     case TY_POISON:
         result = format("poison(%s)", type->msg);
         break;

@@ -28,6 +28,18 @@ static char *pl0_name(const char *name) {
 #define DELETE_SEMA(sema) \
     sema_delete(sema)
 
+static lir_t *pl0_import_print(reports_t *reports, node_t *node) {
+    vector_t *args = vector_init(type_string());
+    vector_push(&args, type_varargs());
+    
+    const type_t *signature = type_closure(args, type_digit(true, TY_INT));
+    
+    lir_t *func = lir_forward(node, "printf", LIR_DEFINE, NULL);
+    lir_define(reports, func, signature, NULL, NULL, NULL);
+    
+    return func;
+}
+
 static void report_shadow(reports_t *reports, const char *name, node_t *other, node_t *self) {
     message_t *id = report2(reports, ERROR, self, "refinition of `%s`", name);
     report_append2(id, other, "previous definition");
@@ -213,7 +225,13 @@ static lir_t *compile_assign(sema_t *sema, pl0_t *stmt) {
 static lir_t *compile_print(sema_t *sema, pl0_t *stmt) {
     lir_t *expr = compile_expr(sema, stmt->operand);
 
-    return expr;
+    lir_t *print = sema_get_data(sema);
+
+    vector_t *args = vector_new(2);
+    vector_push(&args, lir_string(stmt->node, type_string(), "%d\n"));
+    vector_push(&args, expr);
+
+    return lir_call(stmt->node, print, args);
 }
 
 static lir_t *compile_loop(sema_t *sema, pl0_t *stmt) {
@@ -316,6 +334,7 @@ static void compile_proc(sema_t *sema, lir_t *lir) {
     vector_t *locals = vector_of(nlocals);
 
     sema_t *nest = NEW_SEMA(sema, sema->reports);
+    sema_set_data(nest, sema_get_data(sema));
 
     for (size_t i = 0; i < nlocals; i++) {
         pl0_t *local = vector_get(node->locals, i);
@@ -338,6 +357,10 @@ static void compile_proc(sema_t *sema, lir_t *lir) {
         /* params = */ vector_of(0), 
         /* body = */ lir_stmts(node->node, body)
     );
+
+    if (node->entry) {
+        lir->entry = "main";
+    }
 }
 
 static lir_t *pl0_declare(pl0_t *pl0, const char *name, leaf_t leaf) {
@@ -350,6 +373,8 @@ static bool always(void *value) {
 
 lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
     sema_t *sema = NEW_SEMA(NULL, reports);
+    lir_t *print = pl0_import_print(reports, node->node);
+    sema_set_data(sema, print);
 
     vector_t *vars = node->globals;
     vector_t *consts = node->consts;
@@ -382,8 +407,8 @@ lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
         /* TODO: fix this */
         node_t *node = top->node;
         vector_t *body = vector_init(top);
-        pl0_t *entry = pl0_procedure(node->scan, node->where, "pl0-main", vector_new(0), body);
-        set_proc(sema, "pl0-main", pl0_declare(entry, "pl0-main", LIR_DEFINE));
+        pl0_t *entry = pl0_procedure(node->scan, node->where, "main", vector_new(0), body, true);
+        set_proc(sema, "main", pl0_declare(entry, "main", LIR_DEFINE));
     }
 
     map_t *const_map = sema_tag(sema, TAG_CONSTS);
@@ -403,5 +428,9 @@ lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
 
     DELETE_SEMA(sema);
 
-    return lir_module(node->node, globals, funcs);
+    return lir_module(node->node,
+        /* imports = */ vector_init(print),
+        globals, 
+        funcs
+    );
 }

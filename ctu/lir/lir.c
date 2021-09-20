@@ -24,9 +24,13 @@ lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, void *ctx) {
     return lir;
 }
 
-lir_t *lir_module(node_t *node, vector_t *vars, vector_t *funcs) {
+lir_t *lir_module(node_t *node, 
+                  vector_t *imports, 
+                  vector_t *vars, 
+                  vector_t *funcs) {
     lir_t *lir = lir_new(node, NULL, LIR_MODULE);
 
+    lir->imports = imports;
     lir->vars = vars;
     lir->funcs = funcs;
 
@@ -53,6 +57,14 @@ lir_t *lir_digit(node_t *node, const type_t *type, mpz_t digit) {
     lir_t *lir = lir_new(node, type, LIR_DIGIT);
 
     mpz_init_set(lir->digit, digit);
+
+    return lir;
+}
+
+lir_t *lir_string(node_t *node, const type_t *type, const char *str) {
+    lir_t *lir = lir_new(node, type, LIR_STRING);
+
+    lir->str = str;
 
     return lir;
 }
@@ -164,6 +176,15 @@ void lir_begin(reports_t *reports, lir_t *dst, leaf_t leaf) {
     }
 
     dst->leaf = leaf;
+}
+
+
+lir_t *lir_symbol(node_t *node, const type_t *type, const char *name) {
+    lir_t *lir = lir_new(node, type, LIR_SYMBOL);
+
+    lir->name = name;
+
+    return lir;
 }
 
 lir_t *lir_poison(node_t *node, const char *msg) {
