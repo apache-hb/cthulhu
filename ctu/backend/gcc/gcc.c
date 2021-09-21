@@ -1,6 +1,5 @@
 #include "gcc.h"
-
-#include <libgccjit.h>
+#include "type.h"
 
 #include "ctu/util/str.h"
 
@@ -565,7 +564,87 @@ typedef struct {
     void **steps;
 } flow_t;
 
+typedef struct {
+    reports_t *reports;
+    module_t *mod;
+
+    gcc_jit_function *startup; /// global init function
+    gcc_jit_context *gcc; /// gcc context
+} context_t;
+
+static context_t *gcc_context_for_module(reports_t *reports, module_t *mod) {
+    gcc_jit_context *gcc = gcc_jit_context_acquire();
+    if (gcc == NULL) {
+        return NULL;
+    }
+
+    context_t *context = NEW(context_t);
+    context->reports = reports;
+    context->mod = mod; 
+    context->gcc = gcc;
+    return context;
+}
+
+static gcc_jit_location *location_from_node(context_t *ctx, const node_t *node) {
+    if (node == NULL) {
+        return NULL;
+    }
+
+    const char *path = node->scan->path;
+    int line = node->where.first_line;
+    int col = node->where.first_column;
+    return gcc_jit_context_new_location(
+        /* context = */ ctx->gcc,
+        /* file = */ path,
+        /* line = */ line,
+        /* column = */ col
+    );
+}
+
+static void assign_globals(context_t *ctx, vector_t *globals) {
+    size_t nglobals = vector_len(globals);
+    for (size_t i = 0; i < nglobals; i++) {
+        block_t *block = vector_get(globals, i);
+        
+        gcc_jit_lvalue *global = gcc_jit_context_new_global(
+            /* ctxt = */ ctx->gcc,
+            /* loc = */ location_from_node(ctx, block->node),
+            /* kind = */ GCC_JIT_GLOBAL_EXPORTED,
+            /* type = */ select_gcc_type(ctx->gcc, block->type),
+            /* name = */ block->name
+        );
+
+        // TODO: find some way to assign to globals at startup
+#if 0
+        size_t bytes = 0;
+        void *blob = build_blob(block->value, &bytes);
+
+        gcc_jit_global_set_initializer(
+            /* global = */ global,
+            /* blob = */ blob,
+            /* num_bytes = */ bytes
+        );
+#endif
+
+        block->data = global;
+    }
+}
+
 bool gccjit_build(reports_t *reports, module_t *mod, const char *path) {
+    context_t *context = gcc_context_for_module(reports, mod);
+    if (context == NULL) {
+        return false;
+    }
+
+    assign_globals(context, mod->vars);
+    
+    gcc_jit_context_dump_to_file(
+        /* ctxt = */ context->gcc,
+        /* path = */ path,
+        /* update_locations = */ 1
+    );
+    
+    //vector_t *blocks = begin_gcc_blocks(context, mod->funcs);
     assert2(reports, "gccjit unimplemented %p %s", mod, path);
     return false;
 }

@@ -32,6 +32,8 @@ src = [
     'ctu/gen/eval.c',
 
     'ctu/backend/gcc/gcc.c',
+    'ctu/backend/gcc/type.c',
+    
     'ctu/backend/c89/c89.c',
 
     'ctu/util/report.c',

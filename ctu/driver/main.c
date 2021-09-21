@@ -105,6 +105,9 @@ int main(int argc, char **argv) {
         const char *path = unit->file->path;
 
         gccjit_build(unit->reports, mod, format("%s.exe", path));
+    
+        err = end_reports(unit->reports, SIZE_MAX, format("code generation of `%s`", path));
+        fails = MAX(fails, err);
     }
 
     return fails;
