@@ -71,11 +71,15 @@ typedef struct block_t {
     /* the mangled name of this symbol */
     const char *name;
 
+    /* the node where this block originated */
+    const node_t *node;
+
+    /* the type of this block */
+    const type_t *type;
+
     union {
         /* BLOCK_SYMBOL|BLOCK_STRING */
         struct {
-            const type_t *type;
-
             size_t idx; /* index in the string table */
             const char *string; /* the string itself */
         };
@@ -98,9 +102,6 @@ typedef struct block_t {
              */
             vector_t *params;
 
-            /* the return type of this function */
-            const type_t *result;
-
             /* the computed result of this block if its compile time */
             const value_t *value;
 
@@ -120,8 +121,7 @@ typedef struct {
     vector_t *funcs;
 
     vector_t *strtab; /* vector_t<block_t<BLOCK_STRING>*> */
-
-    map_t *imports; /* map_t<const char*, block_t<BLOCK_SYMBOL>*> */
+    vector_t *imports; /* vector_t<block_t<BLOCK_SYMBOL>*> */
 } module_t;
 
 module_t *module_build(reports_t *reports, lir_t *root);

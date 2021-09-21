@@ -32,10 +32,10 @@ static lir_t *pl0_import_print(reports_t *reports, node_t *node) {
     vector_t *args = vector_init(type_string());
     vector_push(&args, type_varargs());
     
-    const type_t *signature = type_closure(args, type_digit(true, TY_INT));
+    const type_t *type = type_closure(args, type_digit(true, TY_INT));
     
     lir_t *func = lir_forward(node, "printf", LIR_DEFINE, NULL);
-    lir_define(reports, func, signature, NULL, NULL, NULL);
+    lir_define(reports, func, type, NULL, NULL, NULL);
     
     return func;
 }

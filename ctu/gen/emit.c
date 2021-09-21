@@ -56,10 +56,15 @@ static char *mangle_name(const char *name, const type_t *type) {
     return format("_Z%zu%s%s", len, name, ty);
 }
 
-static block_t *new_block(blocktype_t type, const char *name) {
+static block_t *new_block(blocktype_t kind, 
+                          const char *name, 
+                          const node_t *node,
+                          const type_t *type) {
     block_t *block = NEW(block_t);
-    block->kind = type;
+    block->kind = kind;
     block->name = name;
+    block->node = node;
+    block->type = type;
     block->data = NULL;
     return block;
 }
@@ -132,22 +137,27 @@ static operand_t build_return(context_t ctx, lir_t *lir, operand_t op) {
 }
 
 static block_t *lir_named(const lir_t *lir) {
-    block_t *named = new_block(BLOCK_SYMBOL, lir->name);
-    named->type = lir_type(lir);
-    return named;
+    return new_block(
+        BLOCK_SYMBOL, 
+        lir->name, 
+        lir->node, 
+        lir_type(lir)
+    );
 }
  
 static block_t *init_block(lir_t *decl, const type_t *type) {
     /* itanium only mangles functions */
-    bool mangle = lir_is(decl, LIR_DEFINE);
-    const char *name = "main";
-    if (decl->entry == NULL) {
-        name = !mangle ? decl->name : mangle_name(decl->name, type);
+    const char *name = decl->name;
+    if (lir_is(decl, LIR_DEFINE)) {
+        name = decl->entry ?: mangle_name(decl->name, type);
     }
     
-    block_t *block = new_block(BLOCK_DEFINE, name);
-    
-    block->result = type;
+    block_t *block = new_block(
+        BLOCK_DEFINE, 
+        name, 
+        decl->node, 
+        type
+    );
 
     if (lir_is(decl, LIR_DEFINE)) {
         vector_t *locals = decl->locals;
@@ -173,8 +183,12 @@ static block_t *block_declare(lir_t *lir) {
 }
 
 static block_t *import_symbol(lir_t *lir) {
-    block_t *block = new_block(BLOCK_SYMBOL, lir->name);
-    block->type = lir_type(lir);
+    block_t *block = new_block(
+        BLOCK_SYMBOL, 
+        lir->name, 
+        lir->node,
+        lir_type(lir)
+    );
     lir->data = block;
     return block;
 }
@@ -328,8 +342,12 @@ static operand_t emit_symbol(lir_t *lir) {
 }
 
 static operand_t emit_string(context_t ctx, lir_t *lir) {
-    block_t *str = new_block(BLOCK_STRING, NULL);
-    str->type = lir_type(lir);
+    block_t *str = new_block(
+        BLOCK_STRING, 
+        NULL, 
+        lir->node,
+        lir_type(lir)
+    );
     str->idx = vector_len(*(ctx.strings));
     str->string = lir->str;
     vector_push(ctx.strings, str);
@@ -374,14 +392,10 @@ module_t *module_build(reports_t *reports, lir_t *root) {
     vector_t *funcs = root->funcs;
     size_t nfuncs = vector_len(funcs);
 
-    vector_t *imports = root->imports;
-    size_t nimports = vector_len(imports);
-
     vector_t *varblocks = vector_of(nvars);
     vector_t *funcblocks = vector_of(nfuncs);
 
     vector_t *strings = vector_new(4);
-    map_t *symbols = map_new(MAP_SMALL);
 
     module_t *mod = init_module(varblocks, funcblocks, root->node->scan->path);
 
@@ -397,10 +411,13 @@ module_t *module_build(reports_t *reports, lir_t *root) {
         vector_set(funcblocks, i, block);
     }
 
+    vector_t *imports = root->imports;
+    size_t nimports = vector_len(imports);
+    vector_t *symbols = vector_of(nimports);
     for (size_t i = 0; i < nimports; i++) {
         lir_t *it = vector_get(imports, i);
         block_t *block = import_symbol(it);
-        map_set(symbols, it->name, block);
+        vector_set(symbols, i, block);
     }
 
     for (size_t i = 0; i < nvars; i++) {
@@ -421,6 +438,11 @@ module_t *module_build(reports_t *reports, lir_t *root) {
 
         var->value = result;
     }
+
+    mod->imports = symbols;
+    mod->strtab = strings;
+
+    printf("imports %zu\n", vector_len(symbols));
 
     return mod;
 }

@@ -139,6 +139,9 @@ bool is_void(const type_t *type);
 bool is_poison(const type_t *type);
 bool is_pointer(const type_t *type);
 bool is_closure(const type_t *type);
+bool is_varargs(const type_t *type);
+bool is_variadic(const type_t *type);
+bool is_string(const type_t *type);
 
 /**
  * return a common type of lhs and rhs if possible.

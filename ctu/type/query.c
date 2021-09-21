@@ -40,6 +40,26 @@ bool is_closure(const type_t *type) {
     return type->type == TY_CLOSURE;
 }
 
+bool is_varargs(const type_t *type) {
+    return type->type == TY_VARARGS;
+}
+
+bool is_variadic(const type_t *type) {
+    if (!is_closure(type)) {
+        return false;
+    }
+
+    if (vector_len(type->args) == 0) {
+        return false;
+    }
+
+    return is_varargs(vector_tail(type->args));
+}
+
+bool is_string(const type_t *type) {
+    return type->type == TY_STRING;
+}
+
 type_t *types_common(const type_t *lhs, const type_t *rhs) {
     if (is_digit(lhs) && is_digit(rhs)) {
         digit_t ld = lhs->digit;

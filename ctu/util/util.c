@@ -307,6 +307,14 @@ void *vector_get(const vector_t *vector, size_t index) {
     return vector->data[index];
 }
 
+void *vector_tail(const vector_t *vector) {
+    return vector->data[vector->used - 1];
+}
+
+void **vector_data(vector_t *vector) {
+    return vector->data;
+}
+
 size_t vector_len(const vector_t *vector) {
     return vector->used;
 }

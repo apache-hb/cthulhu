@@ -188,6 +188,23 @@ void vector_set(vector_t *vector, size_t index, void *value);
 void *vector_get(const vector_t *vector, size_t index);
 
 /**
+ * get the last element from a vector.
+ * calling on an empty vector is invalid.
+ * 
+ * @param vector the vector to get from
+ * @return the value of the last element
+ */
+void *vector_tail(const vector_t *vector);
+
+/**
+ * get the contents pointer of a vector.
+ * 
+ * @param vector the vector to get the contents of
+ * @return the contents pointer
+ */
+void **vector_data(vector_t *vector);
+
+/**
  * get the length of a vector
  * 
  * @param vector the vector to get the length of

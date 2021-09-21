@@ -2,6 +2,8 @@
 
 #include "ctu/util/str.h"
 
+#include <ctype.h>
+
 static char *emit_imm(const value_t *imm) {
     if (imm == NULL) {
         return "???";
@@ -147,37 +149,37 @@ static void var_print(FILE *out, module_t *mod, size_t idx) {
     block_t *flow = vector_get(mod->vars, idx);
     const char *name = flow->name;
     
-    char *locals = emit_names("locals", flow->locals);
+    char *locals = emit_names("  locals", flow->locals);
     if (locals != NULL) {
         fprintf(out, "  %s\n", locals);
     }
 
-    char *params = emit_names("params", flow->params);
+    char *params = emit_names("  params", flow->params);
     if (params != NULL) {
         fprintf(out, "%s\n", params);
     }
 
+    const char *type = type_format(flow->type);
+
     if (flow->value != NULL) {
-        fprintf(out, "value %s: %s = %s\n", name,
-            type_format(flow->result),
+        fprintf(out, "  %s: %s = %s {\n", name,
+            type,
             value_format(flow->value)  
         );
-        return;
+    } else {
+        fprintf(out, "  %s: %s {\n", name, type);
     }
 
     size_t len = flow->len;
-    fprintf(out, "value %s: %s {\n", name, 
-        type_format(flow->result)
-    );
 
     for (size_t i = 0; i < len; i++) {
         char *step = emit_step(flow, i);
         if (step != NULL) {
-            fprintf(out, "  %s\n", step);
+            fprintf(out, "    %s\n", step);
         }
     }
 
-    fprintf(out, "}\n");
+    fprintf(out, "  }\n");
 }
 
 static void func_print(FILE *out, module_t *mod, size_t idx) {
@@ -196,7 +198,7 @@ static void func_print(FILE *out, module_t *mod, size_t idx) {
 
     size_t len = flow->len;
     fprintf(out, "define %s: %s {\n", name, 
-        type_format(flow->result)
+        type_format(flow->type)
     );
 
     for (size_t i = 0; i < len; i++) {
@@ -209,18 +211,74 @@ static void func_print(FILE *out, module_t *mod, size_t idx) {
     fprintf(out, "}\n");
 }
 
+static void values_print(FILE *out, module_t *mod, vector_t *vars) {
+    size_t nvars = vector_len(vars);
+    
+    fprintf(out, "values[%zu] {\n", nvars);
+    
+    for (size_t i = 0; i < nvars; i++) {
+        var_print(out, mod, i);
+    }
+
+    fprintf(out, "}\n");
+}
+
+static char *normalize_string(const char *str) {
+    size_t len = 0;
+    const char *temp = str;
+    while (*temp != '\0') {
+        if (isprint(*temp)) {
+            len += 1;
+        } else {
+            len += 4;
+        }
+        temp += 1;
+    }
+
+    char *buf = ctu_malloc(len + 1);
+    char *out = buf;
+    while (*str != '\0') {
+        if (isprint(*str)) {
+            *out = *str;
+            out += 1;
+        } else {
+            sprintf(out, "\\x%02x", *str);
+            out += 4;
+        }
+        str += 1;
+    }
+    *out = '\0';
+
+    return buf;
+}
+
+static void strtab_print(FILE *out, vector_t *strtab) {
+    size_t len = vector_len(strtab);
+    fprintf(out, "strtab[%zu] {\n", len);
+    for (size_t i = 0; i < len; i++) {
+        const char *str = vector_get(strtab, i);
+        fprintf(out, "  %zu: `%s`\n", i, normalize_string(str));
+    }
+    fprintf(out, "}\n");
+}
+
+static void imports_print(FILE *out, vector_t *imports) {
+    size_t len = vector_len(imports);
+    fprintf(out, "imports[%zu] {\n", len);
+    for (size_t i = 0; i < len; i++) {
+        block_t *imp = vector_get(imports, i);
+        fprintf(out, "  %s: %s\n", imp->name, type_format(imp->type));
+    }
+    fprintf(out, "}\n");
+}
+
 void module_print(FILE *out, module_t *mod) {
-    size_t nvars = vector_len(mod->vars);
     size_t nfuncs = vector_len(mod->funcs);
 
     fprintf(out, "module = %s\n", mod->name);
-    for (size_t i = 0; i < nvars; i++) {
-        if (i > 0) {
-            fprintf(out, "\n");
-        }
-        
-        var_print(out, mod, i);
-    }
+    imports_print(out, mod->imports);
+    strtab_print(out, mod->strtab);
+    values_print(out, mod, mod->vars);
 
     if (nfuncs > 0) {
         fprintf(out, "\n");
