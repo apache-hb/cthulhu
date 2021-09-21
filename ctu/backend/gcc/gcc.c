@@ -4,6 +4,7 @@
 
 #include "ctu/util/str.h"
 
+#if 0
 typedef struct {
     reports_t *reports;
     module_t *module;
@@ -550,4 +551,21 @@ bool gccjit_build(reports_t *reports, module_t *mod, const char *path) {
     );
 
     return true;
+}
+#endif
+
+typedef struct {
+    block_t *block;
+    gcc_jit_function *function;
+
+    gcc_jit_block *path;
+    gcc_jit_param **params;
+    
+    /* gcc_jit_lvalue|gcc_jit_rvalue|gcc_jit_block */
+    void **steps;
+} flow_t;
+
+bool gccjit_build(reports_t *reports, module_t *mod, const char *path) {
+    assert2(reports, "gccjit unimplemented %p %s", mod, path);
+    return false;
 }

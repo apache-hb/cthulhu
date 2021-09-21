@@ -7,7 +7,8 @@
 #include "ctu/emit/emit.h"
 #include "ctu/gen/emit.h"
 
-#include "ctu/backend/gcc.h"
+#include "ctu/backend/gcc/gcc.h"
+#include "ctu/backend/c89/c89.h"
 
 #include <string.h>
 #include <stdlib.h>
