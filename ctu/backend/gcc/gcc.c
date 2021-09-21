@@ -569,21 +569,9 @@ typedef struct {
     module_t *mod;
 
     gcc_jit_function *startup; /// global init function
+    gcc_jit_block *global;
     gcc_jit_context *gcc; /// gcc context
 } context_t;
-
-static context_t *gcc_context_for_module(reports_t *reports, module_t *mod) {
-    gcc_jit_context *gcc = gcc_jit_context_acquire();
-    if (gcc == NULL) {
-        return NULL;
-    }
-
-    context_t *context = NEW(context_t);
-    context->reports = reports;
-    context->mod = mod; 
-    context->gcc = gcc;
-    return context;
-}
 
 static gcc_jit_location *location_from_node(context_t *ctx, const node_t *node) {
     if (node == NULL) {
@@ -601,20 +589,73 @@ static gcc_jit_location *location_from_node(context_t *ctx, const node_t *node) 
     );
 }
 
+static gcc_jit_function *create_function(context_t *ctx,
+                                         const node_t *node,
+                                         const type_t *type,
+                                         const char *name) {
+    gcc_jit_location *location = location_from_node(ctx, node);
+
+    vector_t *params = build_gcc_params(ctx->gcc, type);
+    gcc_jit_type *result = select_gcc_type(ctx->gcc, type->result);
+
+    if (params == NULL) {
+        assert2(ctx->reports, "failed to build gcc params for %s", name);
+        return NULL;
+    }
+
+    gcc_jit_function *function = gcc_jit_context_new_function(
+        /* ctxt = */ ctx->gcc,
+        /* loc = */ location,
+        /* kind = */ GCC_JIT_FUNCTION_EXPORTED,
+        /* return_type = */ result,
+        /* name = */ name,
+        /* num_params = */ vector_len(params),
+        /* params = */ (gcc_jit_param**)vector_data(params),
+        /* is_variadic = */ is_variadic(type)
+    );
+
+    return function;
+}
+
+static context_t *gcc_context_for_module(reports_t *reports, module_t *mod) {
+    gcc_jit_context *gcc = gcc_jit_context_acquire();
+    if (gcc == NULL) {
+        return NULL;
+    }
+
+    context_t *context = NEW(context_t);
+    context->reports = reports;
+    context->mod = mod; 
+    context->gcc = gcc;
+    context->startup = create_function(
+        /* ctxt = */ context, 
+        /* node = */ NULL, 
+        /* type = */ type_closure(vector_new(0), type_void()), 
+        /* name = */ "gccstartup"
+    );
+    return context;
+}
+
 static void assign_globals(context_t *ctx, vector_t *globals) {
     size_t nglobals = vector_len(globals);
     for (size_t i = 0; i < nglobals; i++) {
         block_t *block = vector_get(globals, i);
-        
+        gcc_jit_location *location = location_from_node(ctx, block->node);
+
         gcc_jit_lvalue *global = gcc_jit_context_new_global(
             /* ctxt = */ ctx->gcc,
-            /* loc = */ location_from_node(ctx, block->node),
+            /* loc = */ location,
             /* kind = */ GCC_JIT_GLOBAL_EXPORTED,
             /* type = */ select_gcc_type(ctx->gcc, block->type),
             /* name = */ block->name
         );
 
-        // TODO: find some way to assign to globals at startup
+        gcc_jit_block_add_assignment(
+            /* ctxt = */ ctx->global,
+            /* loc = */ location,
+            /* lvalue = */ global,
+            /* rvalue = */ rvalue_from_value(ctx, block->value)
+        );
 #if 0
         size_t bytes = 0;
         void *blob = build_blob(block->value, &bytes);
