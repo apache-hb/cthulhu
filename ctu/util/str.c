@@ -86,3 +86,29 @@ char *strmul(const char *str, size_t times) {
     out[outlen] = 0;
     return out;
 }
+
+stream_t *stream_new(size_t size) {
+    stream_t *out = NEW(stream_t);
+    out->size = size;
+    out->len = 0;
+
+    out->data = ctu_malloc(size + 1);
+    out->data[0] = 0;
+
+    return out;
+}
+
+void stream_delete(stream_t *stream) {
+    ctu_free(stream);
+}
+
+void stream_write(stream_t *stream, const char *str) {
+    size_t len = strlen(str);
+    if (stream->len + len > stream->size) {
+        stream->size = stream->len + len;
+        stream->data = ctu_realloc(stream->data, stream->size + 1);
+    }
+
+    strcpy(stream->data + stream->len, str);
+    stream->len += len;
+}

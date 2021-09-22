@@ -67,3 +67,14 @@ char *strjoin(const char *sep, vector_t *parts);
  * @return the repeated string
  */
 char *strmul(const char *str, size_t times);
+
+typedef struct {
+    size_t len;
+    size_t size;
+    char *data;
+} stream_t;
+
+stream_t *stream_new(size_t size);
+void stream_delete(stream_t *stream);
+
+void stream_write(stream_t *stream, const char *str);

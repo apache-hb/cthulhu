@@ -1,5 +1,6 @@
 #include "gcc.h"
 #include "type.h"
+#include "value.h"
 
 #include "ctu/util/str.h"
 
@@ -569,7 +570,7 @@ typedef struct {
     module_t *mod;
 
     gcc_jit_function *startup; /// global init function
-    gcc_jit_block *global;
+    gcc_jit_block *global; /// global init block
     gcc_jit_context *gcc; /// gcc context
 } context_t;
 
@@ -633,6 +634,10 @@ static context_t *gcc_context_for_module(reports_t *reports, module_t *mod) {
         /* type = */ type_closure(vector_new(0), type_void()), 
         /* name = */ "gccstartup"
     );
+    context->global = gcc_jit_function_new_block(
+        /* func = */ context->startup,
+        /* name = */ "global"
+    );
     return context;
 }
 
@@ -654,11 +659,11 @@ static void assign_globals(context_t *ctx, vector_t *globals) {
             /* ctxt = */ ctx->global,
             /* loc = */ location,
             /* lvalue = */ global,
-            /* rvalue = */ rvalue_from_value(ctx, block->value)
+            /* rvalue = */ rvalue_from_value(ctx->gcc, block->value)
         );
 #if 0
         size_t bytes = 0;
-        void *blob = build_blob(block->value, &bytes);
+        void *blob = blob_from_value(block->value, &bytes);
 
         gcc_jit_global_set_initializer(
             /* global = */ global,
@@ -666,7 +671,6 @@ static void assign_globals(context_t *ctx, vector_t *globals) {
             /* num_bytes = */ bytes
         );
 #endif
-
         block->data = global;
     }
 }
@@ -685,6 +689,12 @@ bool gccjit_build(reports_t *reports, module_t *mod, const char *path) {
         /* update_locations = */ 1
     );
     
+    gcc_jit_context_set_bool_option(context->gcc, GCC_JIT_BOOL_OPTION_DUMP_INITIAL_GIMPLE, 1);
+
+    gcc_jit_block_end_with_void_return(context->global, NULL);
+
+    gcc_jit_context_compile(context->gcc);
+
     //vector_t *blocks = begin_gcc_blocks(context, mod->funcs);
     assert2(reports, "gccjit unimplemented %p %s", mod, path);
     return false;

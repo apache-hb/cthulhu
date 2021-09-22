@@ -33,6 +33,7 @@ src = [
 
     'ctu/backend/gcc/gcc.c',
     'ctu/backend/gcc/type.c',
+    'ctu/backend/gcc/value.c',
     
     'ctu/backend/c89/c89.c',
 
@@ -88,5 +89,6 @@ main = [
 
 driver = executable('driver', main,
     link_args : [ '-lgccjit' ],
-    dependencies : options
+    dependencies : options,
+    install : true
 )
