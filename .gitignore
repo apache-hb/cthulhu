@@ -15,4 +15,3 @@ fuzz-*/
 !meson_options.txt
 .vscode/
 !*.py
-gcc*/
