@@ -24,7 +24,7 @@ typedef enum {
 
 typedef struct {
     opcode_t opcode;
-    node_t *node;
+    const node_t *node;
     const type_t *type;
 
     union {

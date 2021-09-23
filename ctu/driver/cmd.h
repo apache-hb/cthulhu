@@ -3,7 +3,8 @@
 #include "driver.h"
 
 typedef struct {
-    const driver_t *driver; 
+    const frontend_t *frontend; 
+    const backend_t *backend;
     vector_t *sources;
     reports_t *reports;
     bool verbose;

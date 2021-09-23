@@ -1,6 +1,6 @@
-project('ctu', 'c',
+project('ctu', [ 'c', 'cpp' ],
     default_options : [
-        'c_std=gnu11', # flex under msvc requires c11
+        'c_std=gnu11',
         'warning_level=2', # bison generates code that warns on gcc at level 3
         'default_library=static',
         'werror=true'
@@ -22,20 +22,12 @@ src = [
     'ctu/type/type.c',
     'ctu/type/query.c',
     'ctu/type/format.c',
-
-    'ctu/emit/emit.c',
     
     'ctu/gen/emit.c',
     'ctu/gen/value.c',
     'ctu/gen/operand.c',
     'ctu/gen/print.c',
     'ctu/gen/eval.c',
-
-    'ctu/backend/gcc/gcc.c',
-    'ctu/backend/gcc/type.c',
-    'ctu/backend/gcc/value.c',
-    
-    'ctu/backend/c89/c89.c',
 
     'ctu/util/report.c',
     'ctu/util/str.c',
@@ -77,8 +69,12 @@ parse = generator(bison,
 
 options = [ ]
 
-foreach lang : [ 'ctu', 'pl0' ] 
+foreach lang : [ 'ctu', 'pl0', 'c11' ] 
     subdir('ctu/frontend'/lang)
+endforeach
+
+foreach gen : [ 'c99', 'gcc', 'llvm' ]
+    subdir('ctu/backend'/gen)
 endforeach
 
 main = [
@@ -88,7 +84,6 @@ main = [
 ]
 
 driver = executable('driver', main,
-    link_args : [ '-lgccjit' ],
     dependencies : options,
     install : true
 )

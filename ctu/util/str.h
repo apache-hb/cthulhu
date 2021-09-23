@@ -78,3 +78,4 @@ stream_t *stream_new(size_t size);
 void stream_delete(stream_t *stream);
 
 void stream_write(stream_t *stream, const char *str);
+const char *stream_data(const stream_t *stream);

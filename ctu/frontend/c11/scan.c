@@ -1,6 +1,7 @@
 #include "scan.h"
 
 #include "ctu/ast/compile.h"
+#include "ctu/type/type.h"
 
 #include <ctype.h>
 
@@ -64,6 +65,12 @@ typedef enum {
     KEY_STATIC_ASSERT,
     KEY_THREAD_LOCAL,
 
+    KEY_ADD,
+    KEY_SUB,
+    KEY_DIV,
+    KEY_MUL,
+    KEY_REM,
+
     KEY_LPAREN,
     KEY_RPAREN,
     KEY_LBRACE,
@@ -75,7 +82,7 @@ typedef enum {
 typedef struct {
     mpz_t value;
     char *suffix;
-} digit_t;
+} c_digit_t;
 
 typedef struct {
     tok_type_t kind;
@@ -87,7 +94,7 @@ typedef struct {
         key_t key; /* a keyword or punctuator */
         char *ident; /* an identifier */
         char *string; /* an escaped string literal */
-        digit_t digit; /* either a float or an int */
+        c_digit_t digit; /* either a float or an int */
     };
 } tok_t;
 
@@ -304,6 +311,8 @@ static type_t *parse_typespec(c_scan_t *scan) {
 
 static bool parse_decl(c_scan_t *scan) {
     tok_t tok = next_tok(scan);
+    (void)tok;
+    (void)parse_typespec;
     return scan != NULL;
 }
 

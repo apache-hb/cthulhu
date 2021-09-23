@@ -685,7 +685,7 @@ bool gccjit_build(reports_t *reports, module_t *mod, const char *path) {
     
     gcc_jit_context_dump_to_file(
         /* ctxt = */ context->gcc,
-        /* path = */ path,
+        /* path = */ "gccjit-replay.c",
         /* update_locations = */ 1
     );
     

@@ -112,3 +112,7 @@ void stream_write(stream_t *stream, const char *str) {
     strcpy(stream->data + stream->len, str);
     stream->len += len;
 }
+
+const char *stream_data(const stream_t *stream) {
+    return stream->data;
+}

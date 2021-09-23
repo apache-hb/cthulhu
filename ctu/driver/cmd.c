@@ -15,6 +15,7 @@ static void print_help(void) {
     printf("\t -h, --help: Print this help message\n");
     printf("\t -v, --version: Print version information\n");
     printf("\t -src, --source: Override file extension based compiler choice\n");
+    printf("\t -gen, --generator: Override default backend code generator\n");
     printf("\t -V, --verbose: Enable verbose logging\n");
 
     exit(0);
@@ -23,9 +24,14 @@ static void print_help(void) {
 static void print_version(void) {
     printf("Cthulhu Compiler Collection\n");
     printf("Version: %s\n", VERSION);
-    printf("Cthulhu Version: %s\n", CTU.version);
-    printf("PL/0 Version: %s\n", PL0.version);
-    /* printf("C Version: %s\n", C.version); */
+    printf("Frontends:\n");
+    printf("* Cthulhu Version: %s\n", FRONTEND_CTU.version);
+    printf("* PL/0 Version: %s\n", FRONTEND_PL0.version);
+    printf("* C Version: %s\n", FRONTEND_C11.version);
+    printf("Backends:\n");
+    printf("* C99 Version: %s\n", BACKEND_C99.version);
+    printf("* GCCJIT Version: %s\n", BACKEND_GCCJIT.version);
+    printf("* LLVM Version: %s\n", BACKEND_LLVM.version);
 
     exit(0);
 }
@@ -49,11 +55,18 @@ static int parse_arg(settings_t *settings, int index, int argc, char **argv) {
     } else if (MATCH(arg, "-v", "--version")) {
         print_version();
     } else if (MATCH(arg, "-src", "--source")) {
-        if (settings->driver != NULL) {
+        if (settings->frontend != NULL) {
             report2(settings->reports, ERROR, NULL, "source already specified");
         }
 
-        settings->driver = select_driver(settings->reports, NEXT(index, argc, argv));
+        settings->frontend = select_frontend(settings->reports, NEXT(index, argc, argv));
+        return 2;
+    } else if (MATCH(arg, "-gen", "--generator")) {
+        if (settings->backend != NULL) {
+            report2(settings->reports, ERROR, NULL, "generator already specified");
+        }
+
+        settings->backend = select_backend(settings->reports, NEXT(index, argc, argv));
         return 2;
     } else if (MATCH(arg, "-V", "--verbose")) {
         settings->verbose = true;
@@ -68,7 +81,8 @@ settings_t parse_args(reports_t *reports, int argc, char **argv) {
     NAME = argv[0];
 
     settings_t settings = { 
-        .driver = NULL, 
+        .frontend = NULL, 
+        .backend = NULL,
         .sources = vector_new(0),
         .reports = reports,
         .verbose = false

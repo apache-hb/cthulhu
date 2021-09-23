@@ -90,7 +90,7 @@ static value_t *value_zero(void) {
     return value_int(type_digit(false, TY_SIZE), 0);
 }
 
-static step_t step_with_type(opcode_t op, node_t *node, const type_t *type) {
+static step_t step_with_type(opcode_t op, const node_t *node, const type_t *type) {
     step_t step = {
         .opcode = op,
         .node = node,
@@ -288,6 +288,10 @@ static operand_t emit_while(context_t ctx, lir_t *lir) {
 
     operand_t body = add_block(ctx, lir->then);
 
+    step_t loop = step_of(OP_JMP, lir);
+    loop.label = begin;
+    add_step(ctx, loop);
+
     operand_t end = add_label(ctx, step_of(OP_BLOCK, lir));
 
     step_t *it = get_step(ctx, branch);
@@ -304,11 +308,18 @@ static operand_t emit_branch(context_t ctx, lir_t *lir) {
 
     operand_t yes = add_block(ctx, lir->then);
 
+    operand_t esc = add_label(ctx, step_with_type(OP_JMP, lir->node, NULL));
+
     operand_t no = add_block(ctx, lir->other);
+
+    operand_t tail = lir->other == NULL ? no : add_block(ctx, NULL);
 
     step_t *it = get_step(ctx, branch);
     it->label = yes;
     it->other = no;
+
+    step_t *jmp = get_step(ctx, esc);
+    jmp->label = tail;
 
     return branch;
 }
