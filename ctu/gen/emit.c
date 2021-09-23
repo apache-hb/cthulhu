@@ -340,8 +340,10 @@ static operand_t emit_call(context_t ctx, lir_t *lir) {
         args[i] = emit_lir(ctx, arg);
     }
 
-    step_t step = step_of(OP_CALL, lir);
-    step.func = emit_lir(ctx, lir->func);
+    operand_t func = emit_lir(ctx, lir->func);
+
+    step_t step = step_with_type(OP_CALL, lir->node, lir_type(lir->func)->result);
+    step.func = func;
     step.args = args;
     step.len = len;
 

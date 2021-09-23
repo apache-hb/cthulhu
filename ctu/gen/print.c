@@ -223,41 +223,12 @@ static void values_print(FILE *out, module_t *mod, vector_t *vars) {
     fprintf(out, "}\n");
 }
 
-static char *normalize_string(const char *str) {
-    size_t len = 0;
-    const char *temp = str;
-    while (*temp != '\0') {
-        if (isprint(*temp)) {
-            len += 1;
-        } else {
-            len += 4;
-        }
-        temp += 1;
-    }
-
-    char *buf = ctu_malloc(len + 1);
-    char *out = buf;
-    while (*str != '\0') {
-        if (isprint(*str)) {
-            *out = *str;
-            out += 1;
-        } else {
-            sprintf(out, "\\x%02x", *str);
-            out += 4;
-        }
-        str += 1;
-    }
-    *out = '\0';
-
-    return buf;
-}
-
 static void strtab_print(FILE *out, vector_t *strtab) {
     size_t len = vector_len(strtab);
     fprintf(out, "strtab[%zu] {\n", len);
     for (size_t i = 0; i < len; i++) {
         const char *str = vector_get(strtab, i);
-        fprintf(out, "  %zu: `%s`\n", i, normalize_string(str));
+        fprintf(out, "  %zu: `%s`\n", i, strnorm(str));
     }
     fprintf(out, "}\n");
 }

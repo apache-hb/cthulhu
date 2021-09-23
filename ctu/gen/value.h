@@ -11,6 +11,7 @@ typedef struct value_t {
     union {
         mpz_t digit;
         bool boolean;
+        const char *string;
         struct value_t *ptr;
     };
 } value_t;

@@ -36,7 +36,7 @@ const frontend_t FRONTEND_C11 = {
 const backend_t BACKEND_LLVM = {
     .version = "0.0.1",
     .name = "LLVM",
-    .compile = (compile_t)llvm_build
+    .compile = NULL //(compile_t)llvm_build
 };
 
 const backend_t BACKEND_C99 = {

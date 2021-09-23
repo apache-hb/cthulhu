@@ -87,6 +87,36 @@ char *strmul(const char *str, size_t times) {
     return out;
 }
 
+
+char *strnorm(const char *str) {
+    size_t len = 0;
+    const char *temp = str;
+    while (*temp != '\0') {
+        if (isprint(*temp)) {
+            len += 1;
+        } else {
+            len += 4;
+        }
+        temp += 1;
+    }
+
+    char *buf = ctu_malloc(len + 1);
+    char *out = buf;
+    while (*str != '\0') {
+        if (isprint(*str)) {
+            *out = *str;
+            out += 1;
+        } else {
+            sprintf(out, "\\x%02x", *str);
+            out += 4;
+        }
+        str += 1;
+    }
+    *out = '\0';
+
+    return buf;
+}
+
 stream_t *stream_new(size_t size) {
     stream_t *out = NEW(stream_t);
     out->size = size;
@@ -100,6 +130,10 @@ stream_t *stream_new(size_t size) {
 
 void stream_delete(stream_t *stream) {
     ctu_free(stream);
+}
+
+size_t stream_len(stream_t *stream) {
+    return stream->len;
 }
 
 void stream_write(stream_t *stream, const char *str) {

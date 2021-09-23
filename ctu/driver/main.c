@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 
         const backend_t *backend = settings.backend ?: &BACKEND_C99;
 
-        backend->compile(unit->reports, mod, path);
+        backend->compile(unit->reports, mod, "out.c");
     
         err = end_reports(unit->reports, SIZE_MAX, format("code generation of `%s`", path));
         fails = MAX(fails, err);

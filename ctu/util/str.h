@@ -68,6 +68,15 @@ char *strjoin(const char *sep, vector_t *parts);
  */
 char *strmul(const char *str, size_t times);
 
+/**
+ * normalize a string into a valid C string
+ * 
+ * @param str the string to normalize
+ * 
+ * @return the normalized string
+ */
+char *strnorm(const char *str);
+
 typedef struct {
     size_t len;
     size_t size;
@@ -76,6 +85,6 @@ typedef struct {
 
 stream_t *stream_new(size_t size);
 void stream_delete(stream_t *stream);
-
+size_t stream_len(stream_t *stream);
 void stream_write(stream_t *stream, const char *str);
 const char *stream_data(const stream_t *stream);

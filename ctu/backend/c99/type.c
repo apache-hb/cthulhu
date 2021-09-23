@@ -27,9 +27,9 @@ static const char *digit_to_string(digit_t digit, const char *name) {
 
 static const char *bool_to_string(const char *name) {
     if (name != NULL) {
-        return format("bool %s", name);
+        return format("_Bool %s", name);
     } else {
-        return "bool";
+        return "_Bool";
     }
 }
 
@@ -38,6 +38,14 @@ static const char *string_to_string(const char *name) {
         return format("const char *%s", name);
     } else {
         return "const char *";
+    }
+}
+
+static const char *void_to_string(const char *name) {
+    if (name != NULL) {
+        return format("void %s", name);
+    } else {
+        return "void";
     }
 }
 
@@ -54,6 +62,10 @@ const char *type_to_string(const type_t *type, const char *name) {
         return string_to_string(name);
     }
 
+    if (is_void(type)) {
+        return void_to_string(name);
+    }
+
     return NULL;
 }
 
@@ -67,7 +79,11 @@ const char *value_to_string(const value_t *value) {
     }
 
     if (is_bool(type)) {
-        return value->boolean ? "true" : "false";
+        return value->boolean ? "1" : "0";
+    }
+
+    if (is_string(type)) {
+        return format("\"%s\"", strnorm(value->string));
     }
 
     return NULL;

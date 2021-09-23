@@ -1,4 +1,4 @@
-project('ctu', [ 'c', 'cpp' ],
+project('ctu', [ 'c' ],
     default_options : [
         'c_std=gnu11',
         'warning_level=2', # bison generates code that warns on gcc at level 3
@@ -73,7 +73,7 @@ foreach lang : [ 'ctu', 'pl0', 'c11' ]
     subdir('ctu/frontend'/lang)
 endforeach
 
-foreach gen : [ 'c99', 'gcc', 'llvm' ]
+foreach gen : [ 'c99', 'gcc' ]
     subdir('ctu/backend'/gen)
 endforeach
 

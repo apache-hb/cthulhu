@@ -35,7 +35,7 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
     NUMBER "number"
 
 %type<pl0>
-    number factor term expr math
+    number factor term expr math mul
     unary condition
     block init procedure name
     statement statements toplevel
@@ -154,13 +154,16 @@ factor: IDENT { $$ = pl0_ident(x, @$, $1); }
     ;
 
 term: factor { $$ = $1; }
-    | factor MUL term { $$ = pl0_binary(x, @$, BINARY_MUL, $1, $3); }
     | factor DIV term { $$ = pl0_binary(x, @$, BINARY_DIV, $1, $3); }
     ;
 
-math: term { $$ = $1; }
-    | term ADD math { $$ = pl0_binary(x, @$, BINARY_ADD, $1, $3); }
-    | term SUB math { $$ = pl0_binary(x, @$, BINARY_SUB, $1, $3); }
+mul: term { $$ = $1; }
+    | term MUL mul { $$ = pl0_binary(x, @$, BINARY_MUL, $1, $3); }
+    ;
+
+math: mul { $$ = $1; }
+    | mul ADD math { $$ = pl0_binary(x, @$, BINARY_ADD, $1, $3); }
+    | mul SUB math { $$ = pl0_binary(x, @$, BINARY_SUB, $1, $3); }
     ;
 
 unary: math { $$ = $1; }
