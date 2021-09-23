@@ -25,13 +25,18 @@ typedef struct {
     module_t *mod;
 } unit_t;
 
-static unit_t *unit_new(const frontend_t *frontend, reports_t *reports, file_t *file, void *node) {
+static unit_t *unit_new(const frontend_t *frontend, 
+                        reports_t *reports, 
+                        file_t *file, 
+                        void *node) {
+
     unit_t *unit = NEW(unit_t);
     unit->frontend = frontend;
     unit->reports = reports;
     unit->file = file;
     unit->root = node;
     unit->mod = NULL;
+    
     return unit;
 }
 
@@ -103,7 +108,9 @@ int main(int argc, char **argv) {
         module_t *mod = unit->mod;
         const char *path = unit->file->path;
 
-        gccjit_build(unit->reports, mod, path);
+        const backend_t *backend = settings.backend ?: &BACKEND_C99;
+
+        backend->compile(unit->reports, mod, path);
     
         err = end_reports(unit->reports, SIZE_MAX, format("code generation of `%s`", path));
         fails = MAX(fails, err);

@@ -567,7 +567,6 @@ typedef struct {
 
 typedef struct {
     reports_t *reports;
-    module_t *mod;
 
     gcc_jit_function *startup; /// global init function
     gcc_jit_block *global; /// global init block
@@ -618,7 +617,7 @@ static gcc_jit_function *create_function(context_t *ctx,
     return function;
 }
 
-static context_t *gcc_context_for_module(reports_t *reports, module_t *mod) {
+static context_t *gcc_context_for_module(reports_t *reports) {
     gcc_jit_context *gcc = gcc_jit_context_acquire();
     if (gcc == NULL) {
         return NULL;
@@ -626,7 +625,6 @@ static context_t *gcc_context_for_module(reports_t *reports, module_t *mod) {
 
     context_t *context = NEW(context_t);
     context->reports = reports;
-    context->mod = mod; 
     context->gcc = gcc;
     context->startup = create_function(
         /* ctxt = */ context, 
@@ -676,7 +674,7 @@ static void assign_globals(context_t *ctx, vector_t *globals) {
 }
 
 bool gccjit_build(reports_t *reports, module_t *mod, const char *path) {
-    context_t *context = gcc_context_for_module(reports, mod);
+    context_t *context = gcc_context_for_module(reports);
     if (context == NULL) {
         return false;
     }

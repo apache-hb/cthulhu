@@ -1,4 +1,4 @@
-src = [ 'c99.c' ]
+src = [ 'c99.c', 'type.c' ]
 
 libc99 = library('c99', src,
     include_directories : '.',
