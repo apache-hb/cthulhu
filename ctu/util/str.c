@@ -120,12 +120,18 @@ size_t strhash(const char *str) {
     size_t hash = 0;
 
     while (*str) {
+        // hash = 31 * hash + (*str++ & 0xff);
         hash = (hash << 5) - hash + *str++;
     }
 
     return hash;
 }
 
+bool streq(const char *lhs, const char *rhs) {
+    /* compare pointers as well for better perf
+       with interned strings */
+    return lhs == rhs || strcmp(lhs, rhs) == 0;
+}
 
 stream_t *stream_new(size_t size) {
     stream_t *out = NEW(stream_t);
@@ -213,7 +219,7 @@ char *set_add(set_t *set, const char *str) {
         if (entry->key == NULL) {
             entry->key = ctu_strdup(str);
             key = entry->key;
-        } else if (strcmp(entry->key, str) == 0) {
+        } else if (streq(entry->key, str)) {
             key = entry->key;
         } else if (entry->next != NULL) {
             entry = entry->next;

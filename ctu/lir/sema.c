@@ -6,7 +6,7 @@
 sema_t *sema_new(sema_t *parent, 
                  reports_t *reports, 
                  size_t decls,
-                 map_size_t size) 
+                 size_t *sizes) 
 {
     sema_t *sema = NEW(sema_t);
     
@@ -15,7 +15,7 @@ sema_t *sema_new(sema_t *parent,
 
     sema->decls = vector_of(decls);
     for (size_t i = 0; i < decls; i++) {
-        map_t *map = map_new(size);
+        map_t *map = optimal_map(sizes[i]);
         vector_set(sema->decls, i, map);
     }
 

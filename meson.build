@@ -31,7 +31,8 @@ src = [
 
     'ctu/util/report.c',
     'ctu/util/str.c',
-    'ctu/util/util.c'
+    'ctu/util/util.c',
+    'ctu/util/optimal.c'
 ]
 
 gmp = dependency('gmp')

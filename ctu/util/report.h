@@ -2,6 +2,7 @@
 
 #include "ctu/ast/ast.h"
 
+#include "macros.h"
 #include "util.h"
 
 #include <stdbool.h>
@@ -60,14 +61,14 @@ reports_t *begin_reports(void);
  */
 int end_reports(reports_t *reports, 
                 size_t limit, 
-                const char *name);
+                const char *name) NOTNULL(1, 3);
 
 /**
  * release reporting context from memory
  * 
  * @param reports the context to release
  */
-void delete_reports(reports_t *reports);
+void delete_reports(reports_t *reports) NONULL;
 
 /**
  * push an internal compiler error into a reporting context
@@ -80,7 +81,7 @@ void delete_reports(reports_t *reports);
  */
 PRINT(2, 3)
 message_t *assert2(reports_t *reports, 
-                   const char *fmt, ...);
+                   const char *fmt, ...) NOTNULL(1, 2);
 
 /**
  * push a compiler message into a reporting context
@@ -97,7 +98,7 @@ PRINT(4, 5)
 message_t *report2(reports_t *reports, 
                    level_t level, 
                    const node_t *node, 
-                   const char *fmt, ...);
+                   const char *fmt, ...) NOTNULL(1, 4);
 
 /**
  * add another part to a message
@@ -110,7 +111,7 @@ message_t *report2(reports_t *reports,
 PRINT(3, 4)
 void report_append2(message_t *message, 
                     const node_t *node, 
-                    const char *fmt, ...);
+                    const char *fmt, ...) NOTNULL(1, 3);
 
 /**
  * add an underline message to an existing message
@@ -121,7 +122,7 @@ void report_append2(message_t *message,
  */
 PRINT(2, 3)
 void report_underline(message_t *message, 
-                      const char *fmt, ...);
+                      const char *fmt, ...) NOTNULL(1, 2);
 
 /**
  * add a note to an existing message
@@ -132,7 +133,7 @@ void report_underline(message_t *message,
  */
 PRINT(2, 3)
 void report_note2(message_t *message, 
-                  const char *fmt, ...);
+                  const char *fmt, ...) NOTNULL(1, 2);
 
 /**
  * whether logverbose should print or not
@@ -148,4 +149,4 @@ extern bool verbose;
  * @param fmt format string
  * @param ... arguments
  */
-void logverbose(const char *fmt, ...);
+void logverbose(const char *fmt, ...) NOTNULL(1);

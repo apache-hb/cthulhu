@@ -76,10 +76,6 @@ void ctu_close(file_t *fp) {
     DELETE(fp);
 }
 
-bool ctu_valid(const file_t *fp) {
-    return fp->file != NULL;
-}
-
 size_t ctu_read(void *dst, size_t total, file_t *fp) {
     return fread(dst, 1, total, fp->file);
 }
@@ -129,7 +125,7 @@ static bucket_t *bucket_new(const char *key, void *value) {
 }
 
 static void *entry_get(const bucket_t *entry, const char *key) {
-    if (entry->key && strcmp(entry->key, key) == 0) {
+    if (entry->key && streq(entry->key, key)) {
         return entry->value;
     }
 
@@ -198,9 +194,7 @@ void map_set(map_t *map, const char *key, void *value) {
             entry->key = key;
             entry->value = value;
             return;
-        } else if (entry->key == key || strcmp(entry->key, key) == 0) {
-            /* compare by pointer because parts of the compiler use interned strings */
-            /* this can have a reasonable speedup */
+        } else if (streq(entry->key, key)) {
             entry->value = value;
             return;
         } else if (entry->next != NULL) {

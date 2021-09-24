@@ -57,11 +57,11 @@ const frontend_t *select_frontend(reports_t *reports, const char *name) {
         return NULL;
     }
 
-    if (strcmp(name, "pl0") == 0) {
+    if (streq(name, "pl0")) {
         return &FRONTEND_PL0;
-    } else if (strcmp(name, "ctu") == 0) {
+    } else if (streq(name, "ctu")) {
         return &FRONTEND_CTU;
-    } else if (strcmp(name, "c11") == 0) {
+    } else if (streq(name, "c11")) {
         return &FRONTEND_C11;
     } else {
         report2(reports, ERROR, NULL, "unknown frontend: %s", name);
@@ -91,11 +91,11 @@ const backend_t *select_backend(reports_t *reports, const char *name) {
         report2(reports, ERROR, NULL, "no backend specified");
     }
 
-    if (strcmp(name, "c99") == 0) {
+    if (streq(name, "c99")) {
         return &BACKEND_C99;
-    } else if (strcmp(name, "gccjit") == 0) {
+    } else if (streq(name, "gccjit")) {
         return &BACKEND_GCCJIT;
-    } else if (strcmp(name, "llvm") == 0) {
+    } else if (streq(name, "llvm")) {
         return &BACKEND_LLVM;
     } else {
         report2(reports, ERROR, NULL, "unknown backend: %s", name);

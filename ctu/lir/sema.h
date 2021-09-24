@@ -21,14 +21,14 @@ typedef struct sema_t {
  * @param parent the parent environment or NULL if this is the root
  * @param reports the reporting context to use
  * @param data user defined data
- * @param size the estimated size of the context layer
+ * @param size the estimated sizes of each context layer decltype
  * 
  * @return the new semantic environment
  */
 sema_t *sema_new(sema_t *parent, 
                  reports_t *reports, 
                  size_t decls,
-                 map_size_t size);
+                 size_t *sizes);
 
 /**
  * delete a semantic enviroment. user data will not be deleted.

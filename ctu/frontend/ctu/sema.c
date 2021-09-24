@@ -220,8 +220,8 @@ typedef enum {
     TAG_MAX
 } ctu_tag_t;
 
-#define NEW_SEMA(parent, reports, size) \
-    sema_new(parent, reports, TAG_MAX, size)
+#define NEW_SEMA(parent, reports, sizes) \
+    sema_new(parent, reports, TAG_MAX, sizes)
 
 #define DELETE_SEMA(sema) \
     sema_delete(sema)
@@ -229,7 +229,7 @@ typedef enum {
 lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
     UNUSED(ctu);
 
-    sema_t *sema = NEW_SEMA(NULL, reports, MAP_MASSIVE);
+    sema_t *sema = NEW_SEMA(NULL, reports, NULL);
 
     DELETE_SEMA(sema);
 

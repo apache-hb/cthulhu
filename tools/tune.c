@@ -22,10 +22,52 @@ static void diff(const char *name, ns_t diff) {
 /* a precalculated array of unique names */
 vector_t *idents = NULL;
 
+static const char *NAMES[] = {
+    "Zero", "One", "Two", "Three",
+    "Four", "Five", "Six", "Seven",
+    "Eight", "Nine"
+};
+
+static void vector_flip(vector_t *vec) {
+    size_t start = 0;
+    size_t end = vector_len(vec) - 1;
+    while (start < end) {
+        char *lhs = vector_get(vec, start);
+        char *rhs = vector_get(vec, end);
+        vector_set(vec, end, lhs);
+        vector_set(vec, start, rhs);
+
+        start += 1;
+        end -= 1;
+    }
+}
+
+static char *long_name_for(size_t digit) {
+    if (digit == 0) {
+        return ctu_strdup("Zero");
+    }
+
+    vector_t *id = vector_new(8);
+
+    while (digit != 0) {
+        size_t rem = digit % 10;
+        vector_push(&id, (char*)NAMES[rem]);
+        digit = digit / 10;
+    }
+
+    vector_flip(id);
+
+    char *out = strjoin("_", id);
+
+    vector_delete(id);
+
+    return out;
+}
+
 static void init_globals(size_t total) {
     idents = vector_of(total);
     for (size_t i = 0; i < total; i++) {
-        char *ident = format("%zu", i);
+        char *ident = long_name_for(i);
         vector_set(idents, i, ident);
     }
 }

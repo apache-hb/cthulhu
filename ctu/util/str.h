@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 
+#include "macros.h"
 #include "util.h"
 
 #define COLOUR_RED "\x1B[1;31m"
@@ -20,7 +21,7 @@
  * @return the formatted string
  */
 PRINT(1, 2)
-char *format(const char *fmt, ...);
+char *format(const char *fmt, ...) NOTNULL(1);
 
 /**
  * format a string with printf-like syntax with a va_list
@@ -29,7 +30,7 @@ char *format(const char *fmt, ...);
  * @param args the va_list
  * @return the formatted string
  */
-char *formatv(const char *fmt, va_list args);
+char *formatv(const char *fmt, va_list args) NONULL;
 
 /**
  * check if a string starts with a substring
@@ -38,7 +39,7 @@ char *formatv(const char *fmt, va_list args);
  * @param prefix the prefix to check for
  * @return if str starts with prefix
  */
-bool startswith(const char *str, const char *prefix);
+bool startswith(const char *str, const char *prefix) PURE NONULL;
 
 /**
  * check if a string ends with a substring
@@ -47,7 +48,7 @@ bool startswith(const char *str, const char *prefix);
  * @param suffix the suffix to check for
  * @return if str ends with suffix
  */
-bool endswith(const char *str, const char *suffix);
+bool endswith(const char *str, const char *suffix) PURE NONULL;
 
 /**
  * join a vector of strings together with a separator
@@ -56,7 +57,7 @@ bool endswith(const char *str, const char *suffix);
  * @param parts a vector of strings to join
  * @return the joined string
  */
-char *strjoin(const char *sep, vector_t *parts);
+char *strjoin(const char *sep, vector_t *parts) NONULL;
 
 /**
  * repeat a string n times
@@ -66,7 +67,7 @@ char *strjoin(const char *sep, vector_t *parts);
  * 
  * @return the repeated string
  */
-char *strmul(const char *str, size_t times);
+char *strmul(const char *str, size_t times) NOTNULL(1);
 
 /**
  * normalize a string into a valid C string
@@ -75,7 +76,7 @@ char *strmul(const char *str, size_t times);
  * 
  * @return the normalized string
  */
-char *strnorm(const char *str);
+char *strnorm(const char *str) NONULL;
 
 /**
  * hash a string into a size_t
@@ -84,7 +85,17 @@ char *strnorm(const char *str);
  * 
  * @return the hash
  */
-size_t strhash(const char *str);
+size_t strhash(const char *str) PURE NONULL;
+
+/**
+ * check if 2 strings are equal
+ * 
+ * @param lhs the left hand side of the comparison
+ * @param rhs the right hand side of the comparison
+ * 
+ * @return if the strings are equal
+ */
+bool streq(const char *lhs, const char *rhs) PURE NONULL;
 
 typedef struct {
     size_t len;
@@ -93,10 +104,10 @@ typedef struct {
 } stream_t;
 
 stream_t *stream_new(size_t size);
-void stream_delete(stream_t *stream);
-size_t stream_len(stream_t *stream);
-void stream_write(stream_t *stream, const char *str);
-const char *stream_data(const stream_t *stream);
+void stream_delete(stream_t *stream) NONULL;
+size_t stream_len(stream_t *stream) PURE NONULL;
+void stream_write(stream_t *stream, const char *str) NONULL;
+const char *stream_data(const stream_t *stream) PURE NONULL;
 
 typedef struct entry_t {
     char *key;
@@ -109,5 +120,5 @@ typedef struct {
 } set_t;
 
 set_t *set_new(size_t size);
-void set_delete(set_t *set);
-char *set_add(set_t *set, const char *str);
+void set_delete(set_t *set) NONULL;
+char *set_add(set_t *set, const char *str) NONULL;

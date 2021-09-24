@@ -1,8 +1,6 @@
 #pragma once
 
-#ifndef _POSIX_C_SOURCE
-#   define _POSIX_C_SOURCE 200112L
-#endif
+#include "macros.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -12,9 +10,8 @@ typedef struct {
     FILE *file;
 } file_t;
 
-file_t *ctu_open(const char *path, const char *mode);
-void ctu_close(file_t *fp);
-bool ctu_valid(const file_t *fp);
+file_t *ctu_open(const char *path, const char *mode) NONULL;
+void ctu_close(file_t *fp) NONULL;
 
-size_t ctu_read(void *dst, size_t total, file_t *fp);
-void *ctu_mmap(file_t *fp);
+size_t ctu_read(void *dst, size_t total, file_t *fp) NONULL;
+void *ctu_mmap(file_t *fp) NONULL;
