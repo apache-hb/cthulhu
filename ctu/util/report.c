@@ -105,7 +105,11 @@ static char *build_underline(char *source, where_t where, char *note) {
         back = strlen(source);
     }
 
-    size_t width = back - front;
+    if (front <= back) {
+        front = 0;
+    }
+
+    size_t width = MAX(back - front, 1);
     size_t len = note ? strlen(note) : 0;
     char *str = malloc(back + len + 2);
 
@@ -176,6 +180,10 @@ static void report_source(message_t *message) {
     fprintf(stderr, "%s|\n", pad);
     fprintf(stderr, "%s| %s\n", line, source);
     fprintf(stderr, "%s| " COLOUR_PURPLE "%s\n" COLOUR_RESET, pad, underline);
+
+    DELETE(line);
+    DELETE(source);
+    DELETE(pad);
 }
 
 static void report_part(message_t *message, part_t *part) {
@@ -227,6 +235,25 @@ static bool report_send(message_t *message) {
     return message->level <= ERROR;
 }
 
+static void delete_message(message_t *message) {
+    for (size_t i = 0; i < vector_len(message->parts); i++) {
+        part_t *part = vector_get(message->parts, i);
+        DELETE(part->message);
+    }
+    vector_delete(message->parts);
+
+    DELETE(message->message);
+    if (message->underline) {
+        DELETE(message->underline);
+    }
+
+    if (message->note) {
+        DELETE(message->note);
+    }
+
+    DELETE(message);
+}
+
 reports_t *begin_reports(void) {
     reports_t *r = NEW(reports_t);
     r->messages = vector_new(32);
@@ -269,6 +296,15 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
     }
 
     return result;
+}
+
+void delete_reports(reports_t *reports) {
+    for (size_t i = 0; i < vector_len(reports->messages); i++) {
+        message_t *message = vector_get(reports->messages, i);
+        delete_message(message);
+    }
+    vector_delete(reports->messages);
+    DELETE(reports);
 }
 
 static message_t *report_push(reports_t *reports,

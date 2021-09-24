@@ -87,3 +87,7 @@ driver = executable('driver', main,
     dependencies : options,
     install : true
 )
+
+tune = executable('tune', [ 'tools/tune.c' ],
+    dependencies : generic
+)

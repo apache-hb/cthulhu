@@ -63,6 +63,13 @@ int end_reports(reports_t *reports,
                 const char *name);
 
 /**
+ * release reporting context from memory
+ * 
+ * @param reports the context to release
+ */
+void delete_reports(reports_t *reports);
+
+/**
  * push an internal compiler error into a reporting context
  * 
  * @param reports the reporting context

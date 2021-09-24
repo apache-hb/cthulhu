@@ -85,15 +85,18 @@ vector_t *build_gcc_params(gcc_jit_context *ctx, const type_t *closure) {
     vector_t *params = vector_of(len);
     for (size_t i = 0; i < len; i++) {
         const type_t *arg = vector_get(closure->args, i);
+        char *id = format("arg(%zu)", i);
         gcc_jit_type *type = select_gcc_type(ctx, arg);
         gcc_jit_param *param = gcc_jit_context_new_param(
             /* ctxt = */ ctx,
             /* loc = */ NULL,
             /* type = */ type,
-            /* name = */ format("arg(%zu)", i)
+            /* name = */ id
         );
 
         vector_set(params, i, param);
+
+        ctu_free(id);
     }
 
     return params;

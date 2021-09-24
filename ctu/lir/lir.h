@@ -157,7 +157,7 @@ typedef struct lir_t {
     /* internal user data, frontends shouldnt touch this */
     void *data;
 } lir_t;
- 
+
 lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, void *ctx);
 
 lir_t *lir_module(node_t *node, 

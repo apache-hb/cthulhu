@@ -40,6 +40,15 @@ static unit_t *unit_new(const frontend_t *frontend,
     return unit;
 }
 
+static void unit_delete(unit_t *unit) {
+    delete_reports(unit->reports);
+    if (unit->mod != NULL) {
+        module_free(unit->mod);
+    }
+    ctu_close(unit->file);
+    DELETE(unit);
+}
+
 int main(int argc, char **argv) {
     name = argv[0];
     init_memory();
@@ -49,6 +58,9 @@ int main(int argc, char **argv) {
     settings_t settings = parse_args(errors, argc, argv);
 
     int err = end_reports(errors, SIZE_MAX, "command line parsing");
+
+    delete_reports(errors);
+
     if (err > 0) {
         return err;
     }
@@ -65,7 +77,7 @@ int main(int argc, char **argv) {
         const frontend_t *frontend = select_frontend_by_extension(reports, settings.frontend, fp->path);
 
         if (frontend == NULL) {
-            report2(errors, ERROR, NULL, "unknown file type: %s", fp->path);
+            report2(reports, ERROR, NULL, "unknown file type: %s", fp->path);
         } else {
             void *node = frontend->parse(reports, fp);
             vector_push(&units, unit_new(frontend, reports, fp, node));
@@ -83,8 +95,10 @@ int main(int argc, char **argv) {
         unit_t *unit = vector_get(units, i);
         unit->lir = unit->frontend->analyze(unit->reports, unit->root);
 
-        err = end_reports(unit->reports, SIZE_MAX, format("semantic analysis of `%s`", unit->file->path));
+        char *stage = format("semantic analysis of `%s`", unit->file->path);
+        err = end_reports(unit->reports, SIZE_MAX, stage);
         fails = MAX(fails, err);
+        ctu_free(stage);
     }
 
     if (fails > 0) {
@@ -95,7 +109,7 @@ int main(int argc, char **argv) {
         unit_t *unit = vector_get(units, i);
 
         module_t *mod = module_build(unit->reports, unit->lir);
-        module_print(stdout, mod);
+        //module_print(stdout, mod);
 
         err = end_reports(unit->reports, SIZE_MAX, format("code generation of `%s`", unit->file->path));
         fails = MAX(fails, err);
@@ -112,9 +126,20 @@ int main(int argc, char **argv) {
 
         backend->compile(unit->reports, mod, "out.c");
     
-        err = end_reports(unit->reports, SIZE_MAX, format("code generation of `%s`", path));
+        char *stage = format("code generation of `%s`", path);
+        err = end_reports(unit->reports, SIZE_MAX, stage);
         fails = MAX(fails, err);
+        ctu_free(stage);
     }
+
+    vector_delete(settings.sources);
+
+    for (size_t i = 0; i < len; i++) {
+        unit_t *unit = vector_get(units, i);
+        unit_delete(unit);
+    }
+
+    vector_delete(units);
 
     return fails;
 }

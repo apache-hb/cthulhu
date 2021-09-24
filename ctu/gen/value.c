@@ -50,3 +50,15 @@ char *value_format(const value_t *value) {
     /* trigraphs are fun */
     return format("%s(\?\?\?)", typestr);
 }
+
+void value_delete(value_t *value) {
+    const type_t *type = value->type;
+
+    if (is_digit(type)) {
+        mpz_clear(value->digit);
+    } else if (is_pointer(type)) {
+        value_delete(value->ptr);
+    }
+
+    DELETE(value);
+}

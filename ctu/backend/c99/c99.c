@@ -8,6 +8,7 @@ typedef struct {
     reports_t *reports;
     module_t *mod;
 
+    map_t *strings;
     stream_t *result;
 } context_t;
 
@@ -15,8 +16,14 @@ static context_t *init_c99_context(reports_t *reports, module_t *mod) {
     context_t *ctx = NEW(context_t);
     ctx->reports = reports;
     ctx->mod = mod;
+    ctx->strings = map_new(MAP_SMALL);
     ctx->result = stream_new(0x1000);
     return ctx;
+}
+
+static void free_c99_context(context_t *ctx) {
+    stream_delete(ctx->result);
+    DELETE(ctx);
 }
 
 static void forward_global(context_t *ctx, const block_t *block) {
@@ -28,6 +35,8 @@ static void forward_global(context_t *ctx, const block_t *block) {
     char *forward = format("%s;\n", decl);
 
     stream_write(ctx->result, forward);
+
+    ctu_free(forward);
 }
 
 static void add_global(context_t *ctx, const block_t *block) {
@@ -41,6 +50,8 @@ static void add_global(context_t *ctx, const block_t *block) {
     char *fmt = format("%s = %s;\n", start, init);
 
     stream_write(ctx->result, fmt);
+
+    ctu_free(fmt);
 }
 
 static void add_globals(context_t *ctx, vector_t *globals) {
@@ -94,7 +105,8 @@ static char *string_name(size_t idx) {
 
 static char *format_addr(const block_t *block) {
     if (block->kind == BLOCK_STRING) {
-        return string_name(block->idx);
+        const block_t *real = block->data ?: block;
+        return string_name(real->idx);
     }
 
     return format("&%s", block->name);
@@ -119,10 +131,10 @@ static char *format_branch(step_t step) {
     return format("  if (%s) { goto %s; } else { goto %s; }\n", cond, label, other);
 }
 
-static const char *format_return(step_t step) {
+static char *format_return(step_t step) {
     operand_t ret = step.operand;
     if (ret.kind == EMPTY) {
-        return "  return;\n";
+        return ctu_strdup("  return;\n");
     }
 
     return format("  return %s;\n", format_operand(ret));
@@ -131,6 +143,8 @@ static const char *format_return(step_t step) {
 static char *format_load(size_t idx, step_t step) {
     char *vreg = format_vreg(idx);
     const char *local = type_to_string(step.type, vreg);
+
+    ctu_free(vreg);
 
     return format("  %s = *%s;\n", local, format_operand(step.src));
 }
@@ -179,7 +193,7 @@ static const char *binary_op_to_string(binary_t op) {
     }
 }
 
-static char *unary_op_to_string(unary_t op, const char *operand) {
+static const char *unary_op_to_string(unary_t op, const char *operand) {
     switch (op) {
     case UNARY_ABS: return format("abs(%s)", operand);
     case UNARY_NEG: return format("-%s", operand);
@@ -206,50 +220,51 @@ static char *format_unary(size_t idx, step_t step) {
     return format("  %s = %s;\n", temp, op);
 }
 
-static void write_step(context_t *ctx, size_t idx, step_t step) {
-    switch (step.opcode) {
-    case OP_EMPTY: return;
+static char *select_step(context_t *ctx, size_t idx, step_t step) {
+switch (step.opcode) {
+    case OP_EMPTY: return NULL;
     case OP_BLOCK: 
-        stream_write(ctx->result, format("block%zu:\n", idx)); 
-        break;
+        return format("block%zu:\n", idx); 
 
     case OP_JMP:
-        stream_write(ctx->result, format("  goto %s;\n", format_operand(step.label)));
-        break;
+        return format("  goto %s;\n", format_operand(step.label));
 
     case OP_BRANCH:
-        stream_write(ctx->result, format_branch(step));
-        break;
+        return format_branch(step);
 
     case OP_RETURN:
-        stream_write(ctx->result, format_return(step));
-        break;
+        return format_return(step);
 
     case OP_LOAD:
-        stream_write(ctx->result, format_load(idx, step));
-        break;
+        return format_load(idx, step);
 
     case OP_STORE:
-        stream_write(ctx->result, format_store(step));
-        break;
+        return format_store(step);
 
     case OP_CALL:
-        stream_write(ctx->result, format_call(idx, step));
-        break;
+        return format_call(idx, step);
 
     case OP_UNARY:
-        stream_write(ctx->result, format_unary(idx, step));
-        break;
+        return format_unary(idx, step);
 
     case OP_BINARY:
-        stream_write(ctx->result, format_binary(idx, step));
-        break;
+        return format_binary(idx, step);
 
     default:
         assert2(ctx->reports, "unknown opcode: %d", step.opcode);
-        stream_write(ctx->result, format("  // unimplemented operand %d at %zu\n", step.opcode, idx));
-        break;
+        return format("  // unimplemented operand %d at %zu\n", step.opcode, idx);
     }
+}
+
+static void write_step(context_t *ctx, size_t idx, step_t step) {
+    char *code = select_step(ctx, idx, step);
+    if (code == NULL) {
+        return;
+    }
+
+    stream_write(ctx->result, code);
+
+    ctu_free(code);
 }
 
 static void write_locals(context_t *ctx, const block_t *block) {
@@ -303,11 +318,19 @@ static void add_strings(context_t *ctx, vector_t *strings) {
     stream_write(ctx->result, "\n// String literals\n");
 
     for (size_t i = 0; i < len; i++) {
-        const block_t *block = vector_get(strings, i);
-        const char *name = string_name(block->idx);
-        const char *str = strnorm(block->string);
-        char *fmt = format("const char *%s = \"%s\";\n", name, str);
-        stream_write(ctx->result, fmt);
+        block_t *block = vector_get(strings, i);
+        
+        block_t *other = map_get(ctx->strings, block->string);
+        if (other != NULL && other != block) {
+            block->data = other;
+        } else {
+            map_set(ctx->strings, block->string, block);
+            block->data = NULL;
+            char *name = string_name(block->idx);
+            char *str = strnorm(block->string);
+            char *fmt = format("const char *%s = \"%s\";\n", name, str);
+            stream_write(ctx->result, fmt);
+        }
     }
 }
 
@@ -324,6 +347,8 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
 
     stream_write(ctx->result, header);
 
+    ctu_free(header);
+
     add_strings(ctx, mod->strtab);
 
     add_globals(ctx, mod->vars);
@@ -333,12 +358,14 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
     file_t *file = ctu_open(path, "w");
     if (file == NULL) {
         assert2(ctx->reports, "failed to open file: %s", path);
+        free_c99_context(ctx);
         return false;
     }
 
     fwrite(stream_data(ctx->result), 1, stream_len(ctx->result), file->file);
 
     ctu_close(file);
+    free_c99_context(ctx);
 
     return true;
 }

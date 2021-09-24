@@ -3,7 +3,11 @@
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
 
-sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls) {
+sema_t *sema_new(sema_t *parent, 
+                 reports_t *reports, 
+                 size_t decls,
+                 map_size_t size) 
+{
     sema_t *sema = NEW(sema_t);
     
     sema->parent = parent;
@@ -11,7 +15,7 @@ sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls) {
 
     sema->decls = vector_of(decls);
     for (size_t i = 0; i < decls; i++) {
-        map_t *map = map_new(MAP_SMALL);
+        map_t *map = map_new(size);
         vector_set(sema->decls, i, map);
     }
 

@@ -1,7 +1,7 @@
 #include "util.h"
 #include "io.h"
-
-#include "ctu/util/report.h"
+#include "report.h"
+#include "str.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -52,16 +52,6 @@ void *ctu_memdup(const void *ptr, size_t size) {
     void *out = ctu_malloc(size);
     memcpy(out, ptr, size);
     return out;
-}
-
-static size_t string_hash(const char *str) {
-    size_t hash = 0;
-
-    while (*str) {
-        hash = (hash << 5) - hash + *str++;
-    }
-
-    return hash;
 }
 
 file_t *ctu_open(const char *path, const char *mode) {
@@ -127,18 +117,18 @@ void *ctu_mmap(file_t *fp) {
  * calcuate the actual size of the map to malloc
  */
 static size_t sizeof_map(map_size_t size) {
-    return sizeof(map_t) + (size * sizeof(entry_t));
+    return sizeof(map_t) + (size * sizeof(bucket_t));
 }
 
-static entry_t *entry_new(const char *key, void *value) { 
-    entry_t *entry = NEW(entry_t);
+static bucket_t *bucket_new(const char *key, void *value) { 
+    bucket_t *entry = NEW(bucket_t);
     entry->key = key;
     entry->value = value;
     entry->next = NULL;
     return entry;
 }
 
-static void *entry_get(const entry_t *entry, const char *key) {
+static void *entry_get(const bucket_t *entry, const char *key) {
     if (entry->key && strcmp(entry->key, key) == 0) {
         return entry->value;
     }
@@ -150,7 +140,7 @@ static void *entry_get(const entry_t *entry, const char *key) {
     return NULL;
 }
 
-static void entry_delete(entry_t *entry) {
+static void entry_delete(bucket_t *entry) {
     if (entry->next) {
         entry_delete(entry->next);
     }
@@ -159,10 +149,10 @@ static void entry_delete(entry_t *entry) {
 }
 
 /* find which bucket a key should be in */
-static entry_t *map_bucket(map_t *map, const char *key) {
-    size_t hash = string_hash(key);
+static bucket_t *map_bucket(map_t *map, const char *key) {
+    size_t hash = strhash(key);
     size_t index = hash % map->size;
-    entry_t *entry = &map->data[index];
+    bucket_t *entry = &map->data[index];
     return entry;
 }
 
@@ -185,7 +175,7 @@ map_t *map_new(map_size_t size) {
 void map_delete(map_t *map) {
     /* free all entries, but dont free the toplevel ones */
     for (size_t i = 0; i < map->size; i++) {
-        entry_t *entry = &map->data[i];
+        bucket_t *entry = &map->data[i];
         if (entry->next) {
             entry_delete(entry->next);
         }
@@ -196,25 +186,27 @@ void map_delete(map_t *map) {
 }
 
 void *map_get(map_t *map, const char *key) {
-    entry_t *entry = map_bucket(map, key);
+    bucket_t *entry = map_bucket(map, key);
     return entry_get(entry, key);
 }
 
 void map_set(map_t *map, const char *key, void *value) {
-    entry_t *entry = map_bucket(map, key);
+    bucket_t *entry = map_bucket(map, key);
 
-    while (entry) {
+    while (entry != NULL) {
         if (entry->key == NULL) {
             entry->key = key;
             entry->value = value;
             return;
-        } else if (strcmp(entry->key, key) == 0) {
+        } else if (entry->key == key || strcmp(entry->key, key) == 0) {
+            /* compare by pointer because parts of the compiler use interned strings */
+            /* this can have a reasonable speedup */
             entry->value = value;
             return;
         } else if (entry->next != NULL) {
             entry = entry->next;
         } else {
-            entry->next = entry_new(key, value);
+            entry->next = bucket_new(key, value);
             return;
         }
     }
@@ -222,7 +214,7 @@ void map_set(map_t *map, const char *key, void *value) {
 
 void map_apply(map_t *map, void *user, map_apply_t func) {
     for (size_t i = 0; i < map->size; i++) {
-        entry_t *entry = &map->data[i];
+        bucket_t *entry = &map->data[i];
         while (entry && entry->key) {
             func(user, entry->value);
             entry = entry->next;
@@ -234,7 +226,7 @@ vector_t *map_collect(map_t *map, map_collect_t filter) {
     vector_t *result = vector_new(map->size);
     
     for (size_t i = 0; i < map->size; i++) {
-        entry_t *entry = &map->data[i];
+        bucket_t *entry = &map->data[i];
         while (entry && entry->key) {
             if (filter(entry->value)) {
                 vector_push(&result, entry->value);

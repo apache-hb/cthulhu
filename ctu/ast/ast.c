@@ -8,3 +8,7 @@ node_t *node_new(scan_t *scan, where_t where) {
     node->where = where;
     return node;
 }
+
+void node_delete(node_t *node) {
+    DELETE(node);
+}

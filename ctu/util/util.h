@@ -1,7 +1,8 @@
 #pragma once
 
-#include <stddef.h>
 #include <stdbool.h>
+
+#include "sizes.h"
 
 #ifdef __GNUC__
 #   define PRINT(fmt, args) __attribute__((format(printf, fmt, args)))
@@ -30,37 +31,20 @@ void init_memory(void);
 
 // map collection
 
-typedef struct entry_t {
+typedef struct bucket_t {
     const char *key;
     void *value;
-    struct entry_t *next;
-} entry_t;
+    struct bucket_t *next;
+} bucket_t;
 
 typedef struct {
     size_t size;
-    entry_t data[];
+    bucket_t data[];
 } map_t;
 
 typedef void(*map_apply_t)(void *user, void *value);
 typedef bool(*map_collect_t)(void *value);
 typedef void*(*vector_apply_t)(void *value);
-
-/**
- * a map size enum.
- * 
- * a curious case with compilers is that maps either need to be massive
- * or miniscule. a toplevel module may have hundreds of functions, variables, imports etc.
- * then function bodies maybe have 10 variables including arguments.
- * 
- * symbol tables seemingly follow this rule of either exporting 1 or 2 functions
- * or exporting an entire library with thousands of symbols.
- *
- * we pick a few arbitrary primes
- */
-typedef enum {
-    MAP_SMALL = 7, /// optimal for maps with less than 10 items
-    MAP_BIG = 97 /// optimal for maps with 100 or more items
-} map_size_t;
 
 /**
  * create a new map

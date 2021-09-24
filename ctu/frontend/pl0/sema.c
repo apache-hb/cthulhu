@@ -22,8 +22,8 @@ static char *pl0_name(const char *name) {
     return out;
 }
 
-#define NEW_SEMA(parent, reports) \
-    sema_new(parent, reports, TAG_MAX)
+#define NEW_SEMA(parent, reports, size) \
+    sema_new(parent, reports, TAG_MAX, size)
     
 #define DELETE_SEMA(sema) \
     sema_delete(sema)
@@ -333,7 +333,7 @@ static void compile_proc(sema_t *sema, lir_t *lir) {
     size_t nlocals = vector_len(node->locals);
     vector_t *locals = vector_of(nlocals);
 
-    sema_t *nest = NEW_SEMA(sema, sema->reports);
+    sema_t *nest = NEW_SEMA(sema, sema->reports, MAP_SMALL);
     sema_set_data(nest, sema_get_data(sema));
 
     for (size_t i = 0; i < nlocals; i++) {
@@ -372,7 +372,7 @@ static bool always(void *value) {
 }
 
 lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
-    sema_t *sema = NEW_SEMA(NULL, reports);
+    sema_t *sema = NEW_SEMA(NULL, reports, 131071); /* TODO: calculate optimial hashmap size */
     lir_t *print = pl0_import_print(reports, node->node);
     sema_set_data(sema, print);
 

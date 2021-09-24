@@ -66,6 +66,11 @@ static block_t *new_block(blocktype_t kind,
     block->node = node;
     block->type = type;
     block->data = NULL;
+
+    if (kind == BLOCK_DEFINE) {
+        block->value = NULL;
+    }
+
     return block;
 }
 
@@ -266,6 +271,7 @@ static operand_t emit_assign(context_t ctx, lir_t *lir) {
     step.dst = dst;
     step.src = src;
     step.offset = operand_imm(value_zero());
+
     return add_step(ctx, step);
 }
 
@@ -389,7 +395,6 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     }
 }
 
-
 static module_t *init_module(vector_t *vars, vector_t *funcs, const char *name) {
     module_t *mod = NEW(module_t);
     mod->name = name;
@@ -455,7 +460,70 @@ module_t *module_build(reports_t *reports, lir_t *root) {
     mod->imports = symbols;
     mod->strtab = strings;
 
-    printf("imports %zu\n", vector_len(symbols));
-
     return mod;
+}
+
+static void block_free(block_t *block);
+
+static void free_blocks(vector_t *blocks) {
+    size_t n = vector_len(blocks);
+    for (size_t i = 0; i < n; i++) {
+        block_t *block = vector_get(blocks, i);
+        block_free(block);
+    }
+    vector_delete(blocks);
+}
+
+static void define_free(block_t *block) {
+    if (block->locals != NULL) {
+        free_blocks(block->locals);
+    }
+    
+    if (block->params != NULL) {
+        free_blocks(block->params);
+    }
+
+    if (block->value != NULL) {
+        value_delete(block->value);
+    }
+
+    DELETE_ARRAY(block->steps, block->size);
+}
+
+
+static void block_free(block_t *block) {
+    if (block->kind == BLOCK_DEFINE) {
+        define_free(block);
+    }
+
+    DELETE(block);
+}
+
+void module_free(module_t *mod) {
+    for (size_t i = 0; i < vector_len(mod->vars); i++) {
+        block_t *block = vector_get(mod->vars, i);
+        block_free(block);
+    }
+
+    for (size_t i = 0; i < vector_len(mod->funcs); i++) {
+        block_t *block = vector_get(mod->funcs, i);
+        block_free(block);
+    }
+
+    for (size_t i = 0; i < vector_len(mod->strtab); i++) {
+        block_t *block = vector_get(mod->strtab, i);
+        block_free(block);
+    }
+
+    for (size_t i = 0; i < vector_len(mod->imports); i++) {
+        block_t *block = vector_get(mod->imports, i);
+        block_free(block);
+    }
+
+    vector_delete(mod->vars);
+    vector_delete(mod->funcs);
+    vector_delete(mod->strtab);
+    vector_delete(mod->imports);
+
+    DELETE(mod);
 }

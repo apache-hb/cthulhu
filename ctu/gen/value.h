@@ -23,3 +23,5 @@ value_t *value_int(const type_t *type, int digit);
 value_t *value_ptr(const type_t *type, value_t *ptr);
 
 char *value_format(const value_t *value);
+
+void value_delete(value_t *value);

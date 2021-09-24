@@ -103,7 +103,7 @@ typedef struct block_t {
             vector_t *params;
 
             /* the computed result of this block if its compile time */
-            const value_t *value;
+            value_t *value;
 
             step_t *steps; /// array of steps
             size_t len; /// number of used steps
@@ -126,3 +126,4 @@ typedef struct {
 
 module_t *module_build(reports_t *reports, lir_t *root);
 void module_print(FILE *out, module_t *mod);
+void module_free(module_t *mod);

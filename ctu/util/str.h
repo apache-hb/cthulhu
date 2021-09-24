@@ -77,6 +77,15 @@ char *strmul(const char *str, size_t times);
  */
 char *strnorm(const char *str);
 
+/**
+ * hash a string into a size_t
+ * 
+ * @param str the string to hash
+ * 
+ * @return the hash
+ */
+size_t strhash(const char *str);
+
 typedef struct {
     size_t len;
     size_t size;
@@ -88,3 +97,17 @@ void stream_delete(stream_t *stream);
 size_t stream_len(stream_t *stream);
 void stream_write(stream_t *stream, const char *str);
 const char *stream_data(const stream_t *stream);
+
+typedef struct entry_t {
+    char *key;
+    struct entry_t *next;
+} entry_t;
+
+typedef struct {
+    size_t size;
+    entry_t data[];
+} set_t;
+
+set_t *set_new(size_t size);
+void set_delete(set_t *set);
+char *set_add(set_t *set, const char *str);

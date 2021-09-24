@@ -87,7 +87,6 @@ char *strmul(const char *str, size_t times) {
     return out;
 }
 
-
 char *strnorm(const char *str) {
     size_t len = 0;
     const char *temp = str;
@@ -117,6 +116,17 @@ char *strnorm(const char *str) {
     return buf;
 }
 
+size_t strhash(const char *str) {
+    size_t hash = 0;
+
+    while (*str) {
+        hash = (hash << 5) - hash + *str++;
+    }
+
+    return hash;
+}
+
+
 stream_t *stream_new(size_t size) {
     stream_t *out = NEW(stream_t);
     out->size = size;
@@ -129,6 +139,7 @@ stream_t *stream_new(size_t size) {
 }
 
 void stream_delete(stream_t *stream) {
+    DELETE_ARRAY(stream->data, stream->size);
     ctu_free(stream);
 }
 
@@ -149,4 +160,68 @@ void stream_write(stream_t *stream, const char *str) {
 
 const char *stream_data(const stream_t *stream) {
     return stream->data;
+}
+
+static size_t set_size(size_t size) {
+    return sizeof(set_t) + (sizeof(entry_t) * size);
+}
+
+static void entry_delete(entry_t *entry) {
+    if (entry->next) {
+        entry_delete(entry->next);
+    }
+    DELETE(entry);
+}
+
+static entry_t *select_entry(set_t *set, const char *key) {
+    size_t hash = strhash(key);
+    size_t idx = hash % set->size;
+    return &set->data[idx];
+}
+
+static entry_t *new_entry(char *key) {
+    entry_t *entry = NEW(entry_t);
+    entry->key = key;
+    entry->next = NULL;
+    return entry;
+}
+
+set_t *set_new(size_t size) {
+    set_t *set = ctu_malloc(set_size(size));
+    set->size = size;
+    for (size_t i = 0; i < size; i++) {
+        set->data[i].key = NULL;
+        set->data[i].next = NULL;
+    }
+    return set;
+}
+
+void set_delete(set_t *set) {
+    /* toplevel entries are part of the set
+       and get deleted seperatley */
+    for (size_t i = 0; i < set->size; i++) {
+        entry_delete(set->data[i].next);
+    }
+    DELETE(set);
+}
+
+char *set_add(set_t *set, const char *str) {
+    entry_t *entry = select_entry(set, str);
+    char *key = NULL;
+
+    while (key == NULL) {
+        if (entry->key == NULL) {
+            entry->key = ctu_strdup(str);
+            key = entry->key;
+        } else if (strcmp(entry->key, str) == 0) {
+            key = entry->key;
+        } else if (entry->next != NULL) {
+            entry = entry->next;
+        } else {
+            entry->next = new_entry(ctu_strdup(str));
+            key = entry->next->key;
+        }
+    }
+
+    return key;
 }
