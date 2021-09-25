@@ -8,7 +8,7 @@ sema_t *sema_new(sema_t *parent,
                  size_t decls,
                  size_t *sizes) 
 {
-    sema_t *sema = NEW(sema_t);
+    sema_t *sema = ctu_malloc(sizeof(sema_t));
     
     sema->parent = parent;
     sema->reports = reports;
@@ -23,7 +23,7 @@ sema_t *sema_new(sema_t *parent,
 }
 
 void sema_delete(sema_t *sema) {
-    DELETE(sema);
+    ctu_free(sema, sizeof(sema_t));
 }
 
 void sema_set_data(sema_t *sema, void *data) {

@@ -60,7 +60,7 @@ static block_t *new_block(blocktype_t kind,
                           const char *name, 
                           const node_t *node,
                           const type_t *type) {
-    block_t *block = NEW(block_t);
+    block_t *block = ctu_malloc(sizeof(block_t));
     block->kind = kind;
     block->name = name;
     block->node = node;
@@ -83,8 +83,9 @@ typedef struct {
 
 static size_t push_step(block_t *block, step_t step) {
     if (block->len + 1 >= block->size) {
+        size_t old = block->size;
         block->size += 16;
-        block->steps = ctu_realloc(block->steps, block->size * sizeof(step_t));
+        block->steps = ctu_realloc(block->steps, old, block->size * sizeof(step_t));
     }
 
     block->steps[block->len] = step;
@@ -176,7 +177,7 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
 
     block->len = 0;
     block->size = 16;
-    block->steps = NEW_ARRAY(step_t, block->size);
+    block->steps = ctu_malloc(sizeof(step_t) * block->size);
 
     return block;
 }
@@ -339,7 +340,7 @@ static operand_t emit_name(context_t ctx, lir_t *lir) {
 
 static operand_t emit_call(context_t ctx, lir_t *lir) {
     size_t len = vector_len(lir->args);
-    operand_t *args = NEW_ARRAY(operand_t, len);
+    operand_t *args = ctu_malloc(sizeof(operand_t) * len);
     
     for (size_t i = 0; i < len; i++) {
         lir_t *arg = vector_get(lir->args, i);
@@ -396,7 +397,7 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
 }
 
 static module_t *init_module(vector_t *vars, vector_t *funcs, const char *name) {
-    module_t *mod = NEW(module_t);
+    module_t *mod = ctu_malloc(sizeof(module_t));
     mod->name = name;
     mod->vars = vars;
     mod->funcs = funcs;
@@ -487,7 +488,7 @@ static void define_free(block_t *block) {
         value_delete(block->value);
     }
 
-    DELETE_ARRAY(block->steps, block->size);
+    ctu_free(block->steps, block->size * sizeof(step_t));
 }
 
 
@@ -496,7 +497,7 @@ static void block_free(block_t *block) {
         define_free(block);
     }
 
-    DELETE(block);
+    ctu_free(block, sizeof(block_t));
 }
 
 void module_free(module_t *mod) {
@@ -525,5 +526,5 @@ void module_free(module_t *mod) {
     vector_delete(mod->strtab);
     vector_delete(mod->imports);
 
-    DELETE(mod);
+    ctu_free(mod, sizeof(module_t));
 }

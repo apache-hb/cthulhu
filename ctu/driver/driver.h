@@ -30,6 +30,7 @@ extern const frontend_t FRONTEND_C11;
 extern const backend_t BACKEND_LLVM;
 extern const backend_t BACKEND_C99;
 extern const backend_t BACKEND_GCCJIT;
+extern const backend_t BACKEND_NULL;
 
 /**
  * select a frontend based on a language name

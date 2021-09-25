@@ -30,7 +30,7 @@ static unit_t *unit_new(const frontend_t *frontend,
                         file_t *file, 
                         void *node) {
 
-    unit_t *unit = NEW(unit_t);
+    unit_t *unit = ctu_malloc(sizeof(unit_t));
     unit->frontend = frontend;
     unit->reports = reports;
     unit->file = file;
@@ -46,7 +46,7 @@ static void unit_delete(unit_t *unit) {
         module_free(unit->mod);
     }
     ctu_close(unit->file);
-    DELETE(unit);
+    ctu_free(unit, sizeof(unit_t));
 }
 
 int main(int argc, char **argv) {
@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
         char *stage = format("semantic analysis of `%s`", unit->file->path);
         err = end_reports(unit->reports, SIZE_MAX, stage);
         fails = MAX(fails, err);
-        ctu_free(stage);
+        ctu_free(stage, strlen(stage) + 1);
     }
 
     if (fails > 0) {
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
         char *stage = format("code generation of `%s`", path);
         err = end_reports(unit->reports, SIZE_MAX, stage);
         fails = MAX(fails, err);
-        ctu_free(stage);
+        ctu_free(stage, strlen(stage) + 1);
     }
 
     vector_delete(settings.sources);

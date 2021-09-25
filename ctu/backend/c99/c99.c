@@ -4,6 +4,8 @@
 
 #include "type.h"
 
+#include <string.h>
+
 typedef struct {
     reports_t *reports;
     module_t *mod;
@@ -13,7 +15,7 @@ typedef struct {
 } context_t;
 
 static context_t *init_c99_context(reports_t *reports, module_t *mod) {
-    context_t *ctx = NEW(context_t);
+    context_t *ctx = ctu_malloc(sizeof(context_t));
     ctx->reports = reports;
     ctx->mod = mod;
     ctx->strings = map_new(MAP_SMALL);
@@ -23,7 +25,7 @@ static context_t *init_c99_context(reports_t *reports, module_t *mod) {
 
 static void free_c99_context(context_t *ctx) {
     stream_delete(ctx->result);
-    DELETE(ctx);
+    ctu_free(ctx, sizeof(context_t));
 }
 
 static void forward_global(context_t *ctx, const block_t *block) {
@@ -36,7 +38,7 @@ static void forward_global(context_t *ctx, const block_t *block) {
 
     stream_write(ctx->result, forward);
 
-    ctu_free(forward);
+    ctu_free(forward, strlen(forward) + 1);
 }
 
 static void add_global(context_t *ctx, const block_t *block) {
@@ -51,7 +53,7 @@ static void add_global(context_t *ctx, const block_t *block) {
 
     stream_write(ctx->result, fmt);
 
-    ctu_free(fmt);
+    ctu_free(fmt, strlen(fmt) + 1);
 }
 
 static void add_globals(context_t *ctx, vector_t *globals) {
@@ -144,7 +146,7 @@ static char *format_load(size_t idx, step_t step) {
     char *vreg = format_vreg(idx);
     const char *local = type_to_string(step.type, vreg);
 
-    ctu_free(vreg);
+    ctu_free(vreg, strlen(vreg) + 1);
 
     return format("  %s = *%s;\n", local, format_operand(step.src));
 }
@@ -264,7 +266,7 @@ static void write_step(context_t *ctx, size_t idx, step_t step) {
 
     stream_write(ctx->result, code);
 
-    ctu_free(code);
+    ctu_free(code, strlen(code) + 1);
 }
 
 static void write_locals(context_t *ctx, const block_t *block) {
@@ -347,7 +349,7 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
 
     stream_write(ctx->result, header);
 
-    ctu_free(header);
+    ctu_free(header, strlen(header) + 1);
 
     add_strings(ctx, mod->strtab);
 

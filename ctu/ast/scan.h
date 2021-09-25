@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ctu/util/io.h"
+#include "ctu/util/str.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -27,6 +28,9 @@ typedef struct {
     /* the length of the text */
     size_t size;
 
+    /* string interning pool */
+    set_t *pool;
+
     /* actually reports_t * but forward declaration pains */
     void *reports;
 } scan_t;
@@ -41,3 +45,5 @@ typedef struct {
 } where_t;
 
 extern where_t nowhere;
+
+char *ctu_intern(scan_t *scan, char *str);

@@ -11,31 +11,46 @@
 #   include <sys/mman.h>
 #endif
 
+#ifdef CTU_MIMALLOC
+#   include <mimalloc.h>
+#   define MALLOC(size) mi_malloc(size)
+#   define REALLOC(ptr, size) mi_realloc(ptr, size)
+#   define FREE(ptr) mi_free(ptr)
+#else
+#   define MALLOC(size) malloc(size)
+#   define REALLOC(ptr, size) realloc(ptr, size)
+#   define FREE(ptr) free(ptr)
+#endif
+
 void *ctu_malloc(size_t size) {
-    return malloc(size);
+    return MALLOC(size);
 }
 
-void *ctu_realloc(void *ptr, size_t size) {
-    return realloc(ptr, size);
+void *ctu_realloc(void *ptr, size_t old, size_t size) {
+    UNUSED(old);
+    return REALLOC(ptr, size);
 }
 
-void ctu_free(void *ptr) {
-    free(ptr);
+void ctu_free(void *ptr, size_t size) {
+    UNUSED(size);
+    FREE(ptr);
 }
 
-static void *ctu_gmp_realloc(void *ptr, size_t old_size, size_t new_size) {
-    UNUSED(old_size);
-    return ctu_realloc(ptr, new_size);
+static void *ctu_gmp_malloc(size_t size) {
+    return ctu_malloc(size);
+}
+
+static void *ctu_gmp_realloc(void *ptr, size_t old, size_t size) {
+    return ctu_realloc(ptr, old, size);
 }
 
 static void ctu_gmp_free(void *ptr, size_t size) {
-    UNUSED(size);
-    DELETE(ptr);
+    ctu_free(ptr, size);
 }
 
 void init_memory(void) {
     mp_set_memory_functions(
-        ctu_malloc, 
+        ctu_gmp_malloc, 
         ctu_gmp_realloc, 
         ctu_gmp_free
     );
@@ -61,7 +76,7 @@ file_t *ctu_open(const char *path, const char *mode) {
         return NULL;
     }
 
-    file_t *file = NEW(file_t);
+    file_t *file = ctu_malloc(sizeof(file_t));
     file->file = fp;
     file->path = path;
 
@@ -73,7 +88,7 @@ void ctu_close(file_t *fp) {
         fclose(fp->file);
     }
 
-    DELETE(fp);
+    ctu_free(fp, sizeof(file_t));
 }
 
 size_t ctu_read(void *dst, size_t total, file_t *fp) {
@@ -117,7 +132,7 @@ static size_t sizeof_map(map_size_t size) {
 }
 
 static bucket_t *bucket_new(const char *key, void *value) { 
-    bucket_t *entry = NEW(bucket_t);
+    bucket_t *entry = ctu_malloc(sizeof(bucket_t));
     entry->key = key;
     entry->value = value;
     entry->next = NULL;
@@ -141,7 +156,7 @@ static void entry_delete(bucket_t *entry) {
         entry_delete(entry->next);
     }
 
-    DELETE(entry);
+    ctu_free(entry, sizeof(bucket_t));
 }
 
 /* find which bucket a key should be in */
@@ -178,7 +193,7 @@ void map_delete(map_t *map) {
     }
 
     /* this frees both the map and the toplevel entries */
-    DELETE(map);
+    ctu_free(map, sizeof_map(map->size));
 }
 
 void *map_get(map_t *map, const char *key) {
@@ -243,9 +258,10 @@ static size_t vector_size(size_t size) {
 
 static void vector_ensure(vector_t **vector, size_t size) {
     if (size >= VEC->size) {
+        size_t old = VEC->size;
         size_t resize = (size + 1) * 2;
         VEC->size = resize;
-        VEC = ctu_realloc(VEC, vector_size(resize));
+        VEC = ctu_realloc(VEC, vector_size(old), vector_size(resize));
     }
 }
 
@@ -273,7 +289,7 @@ vector_t *vector_init(void *value) {
 }
 
 void vector_delete(vector_t *vector) {
-    DELETE(vector);
+    ctu_free(vector, vector_size(vector->size));
 }
 
 void vector_push(vector_t **vector, void *value) {

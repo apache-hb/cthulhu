@@ -11,6 +11,7 @@
 #include "ctu/backend/c99/c99.h"
 #include "ctu/backend/gcc/gcc.h"
 #include "ctu/backend/llvm/llvm.h"
+#include "ctu/backend/null/null.h"
 
 const frontend_t FRONTEND_PL0 = {
     .version = "0.0.1",
@@ -49,6 +50,12 @@ const backend_t BACKEND_GCCJIT = {
     .version = "0.0.1",
     .name = "GCCJIT",
     .compile = (compile_t)gccjit_build
+};
+
+const backend_t BACKEND_NULL = {
+    .version = "1.0.0",
+    .name = "NULL",
+    .compile = (compile_t)null_build
 };
 
 const frontend_t *select_frontend(reports_t *reports, const char *name) {
@@ -97,6 +104,8 @@ const backend_t *select_backend(reports_t *reports, const char *name) {
         return &BACKEND_GCCJIT;
     } else if (streq(name, "llvm")) {
         return &BACKEND_LLVM;
+    } else if (streq(name, "null")) {
+        return &BACKEND_NULL;
     } else {
         report2(reports, ERROR, NULL, "unknown backend: %s", name);
         return NULL;

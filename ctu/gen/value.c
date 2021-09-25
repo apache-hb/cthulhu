@@ -3,7 +3,7 @@
 #include "ctu/util/str.h"
 
 value_t *value_of(const type_t *type) {
-    value_t *value = NEW(value_t);
+    value_t *value = ctu_malloc(sizeof(value_t));
     value->type = type;
     return value;
 }
@@ -60,5 +60,5 @@ void value_delete(value_t *value) {
         value_delete(value->ptr);
     }
 
-    DELETE(value);
+    ctu_free(value, sizeof(value_t));
 }

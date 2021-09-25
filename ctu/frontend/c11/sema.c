@@ -1,7 +1,7 @@
 #include "sema.h"
 
 c_data_t *c_data_new(void) {
-    c_data_t *data = NEW(c_data_t);
+    c_data_t *data = ctu_malloc(sizeof(c_data_t));
 
     data->funcs = map_new(4);
     data->vars = map_new(4);

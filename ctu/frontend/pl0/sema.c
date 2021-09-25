@@ -414,7 +414,6 @@ lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
 
     pl0_t *top = node->toplevel;
     if (top != NULL) {
-        /* TODO: fix this */
         node_t *node = top->node;
         vector_t *body = vector_init(top);
         pl0_t *entry = pl0_procedure(node->scan, node->where, "main", vector_new(0), body, true);

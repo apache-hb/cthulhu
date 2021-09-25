@@ -134,7 +134,7 @@ bool streq(const char *lhs, const char *rhs) {
 }
 
 stream_t *stream_new(size_t size) {
-    stream_t *out = NEW(stream_t);
+    stream_t *out = ctu_malloc(sizeof(stream_t));
     out->size = size;
     out->len = 0;
 
@@ -145,8 +145,8 @@ stream_t *stream_new(size_t size) {
 }
 
 void stream_delete(stream_t *stream) {
-    DELETE_ARRAY(stream->data, stream->size);
-    ctu_free(stream);
+    ctu_free(stream->data, stream->size);
+    ctu_free(stream, sizeof(stream_t));
 }
 
 size_t stream_len(stream_t *stream) {
@@ -156,8 +156,9 @@ size_t stream_len(stream_t *stream) {
 void stream_write(stream_t *stream, const char *str) {
     size_t len = strlen(str);
     if (stream->len + len > stream->size) {
+        size_t old = stream->size;
         stream->size = stream->len + len;
-        stream->data = ctu_realloc(stream->data, stream->size + 1);
+        stream->data = ctu_realloc(stream->data, old, stream->size + 1);
     }
 
     strcpy(stream->data + stream->len, str);
@@ -176,7 +177,7 @@ static void entry_delete(entry_t *entry) {
     if (entry->next) {
         entry_delete(entry->next);
     }
-    DELETE(entry);
+    ctu_free(entry, sizeof(entry_t));
 }
 
 static entry_t *select_entry(set_t *set, const char *key) {
@@ -186,7 +187,7 @@ static entry_t *select_entry(set_t *set, const char *key) {
 }
 
 static entry_t *new_entry(char *key) {
-    entry_t *entry = NEW(entry_t);
+    entry_t *entry = ctu_malloc(sizeof(entry_t));
     entry->key = key;
     entry->next = NULL;
     return entry;
@@ -208,7 +209,7 @@ void set_delete(set_t *set) {
     for (size_t i = 0; i < set->size; i++) {
         entry_delete(set->data[i].next);
     }
-    DELETE(set);
+    ctu_free(set, set_size(set->size));
 }
 
 char *set_add(set_t *set, const char *str) {

@@ -12,7 +12,7 @@
 bool verbose = false;
 
 static part_t *part_new(char *message, const node_t *node) {
-    part_t *part = NEW(part_t);
+    part_t *part = ctu_malloc(sizeof(part_t));
     part->message = message;
     part->node = node;
     return part;
@@ -137,7 +137,7 @@ static char *build_underline(char *source, where_t where, char *note) {
 static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {
     char *num = format(" %ld ", init);
     size_t len = strlen(num);
-    DELETE(num);
+    ctu_free(num, len);
 
     for (size_t i = 0; i < vector_len(parts); i++) {
         part_t *part = vector_get(parts, i);
@@ -148,8 +148,9 @@ static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {
 
         line_t line = part->node->where.first_line + 1;
         char *it = format(" %ld ", line);
-        len = MAX(len, strlen(it));
-        DELETE(it);
+        size_t itlen = strlen(it);
+        len = MAX(len, itlen);
+        ctu_free(it, len);
     }
 
     return len;
@@ -181,9 +182,9 @@ static void report_source(message_t *message) {
     fprintf(stderr, "%s| %s\n", line, source);
     fprintf(stderr, "%s| " COLOUR_PURPLE "%s\n" COLOUR_RESET, pad, underline);
 
-    DELETE(line);
-    DELETE(source);
-    DELETE(pad);
+    ctu_free(line, strlen(line) + 1);
+    ctu_free(source, strlen(source) + 1);
+    ctu_free(pad, strlen(pad) + 1);
 }
 
 static void report_part(message_t *message, part_t *part) {
@@ -238,24 +239,25 @@ static bool report_send(message_t *message) {
 static void delete_message(message_t *message) {
     for (size_t i = 0; i < vector_len(message->parts); i++) {
         part_t *part = vector_get(message->parts, i);
-        DELETE(part->message);
+        ctu_free(part->message, strlen(part->message) + 1);
+        ctu_free(part, sizeof(part_t));
     }
     vector_delete(message->parts);
 
-    DELETE(message->message);
+    ctu_free(message->message, strlen(message->message) + 1);
     if (message->underline) {
-        DELETE(message->underline);
+        ctu_free(message->underline, strlen(message->underline) + 1);
     }
 
     if (message->note) {
-        DELETE(message->note);
+        ctu_free(message->note, strlen(message->note) + 1);
     }
 
-    DELETE(message);
+    ctu_free(message, sizeof(message_t));
 }
 
 reports_t *begin_reports(void) {
-    reports_t *r = NEW(reports_t);
+    reports_t *r = ctu_malloc(sizeof(reports_t));
     r->messages = vector_new(32);
     return r;
 }
@@ -304,7 +306,7 @@ void delete_reports(reports_t *reports) {
         delete_message(message);
     }
     vector_delete(reports->messages);
-    DELETE(reports);
+    ctu_free(reports, sizeof(reports_t));
 }
 
 static message_t *report_push(reports_t *reports,
@@ -314,7 +316,7 @@ static message_t *report_push(reports_t *reports,
                               va_list args)
 {
     char *str = formatv(fmt, args);
-    message_t *message = NEW(message_t);
+    message_t *message = ctu_malloc(sizeof(message_t));
 
     message->level = level;
     message->parts = vector_new(1);

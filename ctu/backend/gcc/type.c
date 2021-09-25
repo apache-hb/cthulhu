@@ -2,6 +2,8 @@
 
 #include "ctu/util/str.h"
 
+#include <string.h>
+
 static gcc_jit_type *select_gcc_int_type(gcc_jit_context *ctx, digit_t digit) {
     switch (digit.kind) {
     case TY_CHAR:
@@ -96,7 +98,7 @@ vector_t *build_gcc_params(gcc_jit_context *ctx, const type_t *closure) {
 
         vector_set(params, i, param);
 
-        ctu_free(id);
+        ctu_free(id, strlen(id) + 1);
     }
 
     return params;

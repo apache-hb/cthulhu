@@ -13,12 +13,12 @@ typedef struct {
 static exec_t *exec_new(reports_t *reports, module_t *mod, block_t *block) {
     size_t size = block->len;
 
-    value_t **values = NEW_ARRAY(value_t*, size);
+    value_t **values = ctu_malloc(sizeof(value_t*) * size);
     for (size_t i = 0; i < size; i++) {
         values[i] = value_poison("unintalized value");
     }
 
-    exec_t *exec = NEW(exec_t);
+    exec_t *exec = ctu_malloc(sizeof(exec_t));
     exec->reports = reports;
     exec->mod = mod;
     exec->block = block;

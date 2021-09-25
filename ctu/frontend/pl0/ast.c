@@ -1,7 +1,7 @@
 #include "ast.h"
 
 static pl0_t *pl0_new(scan_t *scan, where_t where, pl0_type_t type) {    
-    pl0_t *pl0 = NEW(pl0_t);
+    pl0_t *pl0 = ctu_malloc(sizeof(pl0_t));
     pl0->node = node_new(scan, where);
     pl0->type = type;
     return pl0;

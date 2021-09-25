@@ -4,7 +4,7 @@
 #include "ctu/util/report.h"
 
 static type_t *type_new(metatype_t meta) {
-    type_t *type = NEW(type_t);
+    type_t *type = ctu_malloc(sizeof(type_t));
     type->type = meta;
     type->mut = false;
     return type;

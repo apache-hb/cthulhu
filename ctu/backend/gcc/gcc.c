@@ -623,7 +623,7 @@ static context_t *gcc_context_for_module(reports_t *reports) {
         return NULL;
     }
 
-    context_t *context = NEW(context_t);
+    context_t *context = ctu_malloc(sizeof(context_t));
     context->reports = reports;
     context->gcc = gcc;
     context->startup = create_function(

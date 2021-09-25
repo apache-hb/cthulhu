@@ -8,16 +8,11 @@
 // memory managment
 
 void *ctu_malloc(size_t size);
-void *ctu_realloc(void *ptr, size_t size) NOTNULL(1);
-void ctu_free(void *ptr) NONULL;
+void *ctu_realloc(void *ptr, size_t old, size_t size) NOTNULL(1);
+void ctu_free(void *ptr, size_t size) NONULL;
 char *ctu_strdup(const char *str) NONULL;
 void *ctu_memdup(const void *ptr, size_t size) NOTNULL(1);
 void init_memory(void);
-
-#define NEW(type) ((type *)ctu_malloc(sizeof(type)))
-#define NEW_ARRAY(type, count) ((type *)ctu_malloc(sizeof(type) * (count)))
-#define DELETE(ptr) ctu_free(ptr)
-#define DELETE_ARRAY(ptr, len) ctu_free(ptr)
 
 // map collection
 

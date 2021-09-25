@@ -11,7 +11,7 @@ typedef struct {
 } llvm_context_t;
 
 static llvm_context_t *init_llvm_context(module_t *mod, reports_t *reports, const char *path) {
-    llvm_context_t *ctx = NEW(llvm_context_t);
+    llvm_context_t *ctx = ctu_malloc(sizeof(llvm_context_t));
 
     ctx->mod = mod;
     ctx->reports = reports;

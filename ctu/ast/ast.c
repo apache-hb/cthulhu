@@ -3,12 +3,12 @@
 #include "ctu/util/util.h"
 
 node_t *node_new(scan_t *scan, where_t where) {
-    node_t *node = NEW(node_t);
+    node_t *node = ctu_malloc(sizeof(node_t));
     node->scan = scan;
     node->where = where;
     return node;
 }
 
 void node_delete(node_t *node) {
-    DELETE(node);
+    ctu_free(node, sizeof(node_t));
 }

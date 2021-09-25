@@ -37,8 +37,17 @@ src = [
 
 gmp = dependency('gmp')
 
+mimalloc = dependency('mimalloc', required : false)
+
+args = []
+
+if mimalloc.found()
+    args += [ '-DCTU_MIMALLOC' ]
+endif
+
 libgeneric = library('generic', src,
-    dependencies : gmp
+    c_args : args,
+    dependencies : [ gmp, mimalloc ]
 )
 
 generic = declare_dependency(
@@ -74,7 +83,7 @@ foreach lang : [ 'ctu', 'pl0', 'c11' ]
     subdir('ctu/frontend'/lang)
 endforeach
 
-foreach gen : [ 'c99', 'gcc' ]
+foreach gen : [ 'c99', 'gcc', 'null' ]
     subdir('ctu/backend'/gen)
 endforeach
 

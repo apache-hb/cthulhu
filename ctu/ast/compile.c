@@ -13,7 +13,7 @@
 #endif
 
 static scan_t *scan_new(reports_t *reports, const char *language, const char *path, size_t size) {
-    scan_t *scan = NEW(scan_t);
+    scan_t *scan = ctu_malloc(sizeof(scan_t));
 
     scan->language = language;
     scan->path = path;
@@ -22,6 +22,8 @@ static scan_t *scan_new(reports_t *reports, const char *language, const char *pa
     /* scan->text is filled in by the caller */
     scan->offset = 0;
     scan->size = size;
+
+    scan->pool = set_new(1257787); /* TODO: figure out a good size based on file size */
 
     scan->reports = reports;
 
