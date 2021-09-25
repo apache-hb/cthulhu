@@ -210,6 +210,7 @@ vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) NONULL;
 vector_t *vector_map(const vector_t *vector, vector_apply_t func) NONULL;
 
 vector_t *map_collect(map_t *map, map_collect_t filter) NONULL;
+vector_t *map_values(map_t *map) NONULL;
 
 #define MAP_APPLY(map, user, func) map_apply(map, user, (map_apply_t)func)
 #define MAP_COLLECT(map, filter) map_collect(map, (map_collect_t)filter)

@@ -30,6 +30,7 @@ src = [
     'ctu/gen/eval.c',
 
     'ctu/util/report.c',
+    'ctu/util/report-ext.c',
     'ctu/util/str.c',
     'ctu/util/util.c',
     'ctu/util/optimal.c'

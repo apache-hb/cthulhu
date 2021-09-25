@@ -248,6 +248,20 @@ vector_t *map_collect(map_t *map, map_collect_t filter) {
     return result;
 }
 
+vector_t *map_values(map_t *map) {
+    vector_t *result = vector_new(map->size);
+
+    for (size_t i = 0; i < map->size; i++) {
+        bucket_t *entry = &map->data[i];
+        while (entry && entry->key) {
+            vector_push(&result, entry->value);
+            entry = entry->next;
+        }
+    }
+
+    return result;
+}
+
 // vector internals
 
 static size_t vector_size(size_t size) {

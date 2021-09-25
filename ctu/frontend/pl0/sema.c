@@ -1,6 +1,7 @@
 #include "sema.h"
 
 #include "ctu/util/report.h"
+#include "ctu/util/report-ext.h"
 #include "ctu/util/str.h"
 
 #include <string.h>
@@ -40,9 +41,12 @@ static lir_t *pl0_import_print(reports_t *reports, node_t *node) {
     return func;
 }
 
-static void report_shadow(reports_t *reports, const char *name, node_t *other, node_t *self) {
-    message_t *id = report2(reports, ERROR, self, "refinition of `%s`", name);
-    report_append2(id, other, "previous definition");
+static void pl0_shadow(reports_t *reports, 
+                       const char *name, 
+                       node_t *other, 
+                       node_t *self)
+{
+    message_t *id = report_shadow(reports, name, other, self);
     report_note2(id, "PL/0 is case insensitive");
 }
 
@@ -106,7 +110,7 @@ static lir_t *query_ident(sema_t *sema, const char *name) {
 static void set_proc(sema_t *sema, const char *name, lir_t *proc) {
     lir_t *other = sema_get(sema, TAG_PROCS, name);
     if (other != NULL) {
-        report_shadow(sema->reports, name, other->node, proc->node);
+        pl0_shadow(sema->reports, name, other->node, proc->node);
     }
 
     sema_set(sema, TAG_PROCS, name, proc);
@@ -115,12 +119,12 @@ static void set_proc(sema_t *sema, const char *name, lir_t *proc) {
 static void set_var(sema_t *sema, size_t tag, const char *name, lir_t *var) {
     lir_t *other1 = sema_get(sema, TAG_CONSTS, name);
     if (other1 != NULL) {
-        report_shadow(sema->reports, name, other1->node, var->node);
+        pl0_shadow(sema->reports, name, other1->node, var->node);
     }
 
     lir_t *other2 = sema_get(sema, tag, name);
     if (other2 != NULL) {
-        report_shadow(sema->reports, name, other2->node, var->node);
+        pl0_shadow(sema->reports, name, other2->node, var->node);
     }
 
     sema_set(sema, tag, name, var);
@@ -366,14 +370,12 @@ static void compile_proc(sema_t *sema, lir_t *lir) {
     if (node->entry) {
         lir->entry = "main";
     }
+
+    DELETE_SEMA(nest);
 }
 
 static lir_t *pl0_declare(pl0_t *pl0, const char *name, leaf_t leaf) {
     return lir_forward(pl0->node, name, leaf, pl0);
-}
-
-static bool always(void *value) {
-    return value != NULL;
 }
 
 lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
@@ -429,11 +431,11 @@ lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
     MAP_APPLY(proc_map, sema, compile_proc);
 
     vector_t *globals = vector_join(
-        MAP_COLLECT(var_map, always),
-        MAP_COLLECT(const_map, always)
+        map_values(var_map),
+        map_values(const_map)
     );
 
-    vector_t *funcs = MAP_COLLECT(proc_map, always);
+    vector_t *funcs = map_values(proc_map);
 
     DELETE_SEMA(sema);
 
