@@ -30,8 +30,15 @@
 
 ";" { return SEMI; }
 
+"::" { return COLON2; }
+":" { return COLON; }
+
 "(" { return LPAREN; }
 ")" { return RPAREN; }
+"{" { return LBRACE; }
+"}" { return RBRACE; }
+
+"," { return COMMA; }
 
 "+" { return ADD; }
 "-" { return SUB; }

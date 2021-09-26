@@ -110,6 +110,8 @@ typedef struct lir_t {
         struct {
             const char *name;
 
+            bool exported; /* is this publically visible */
+
             union {
                 /**
                  * LIR_EMPTY
@@ -186,7 +188,11 @@ lir_t *lir_symbol(node_t *node, const type_t *type, const char *name);
 
 lir_t *lir_poison(node_t *node, const char *msg);
 
-void lir_value(reports_t *reports, lir_t *dst, const type_t *type, lir_t *init);
+void lir_value(reports_t *reports, 
+               lir_t *dst, 
+               const type_t *type, 
+               lir_t *init);
+
 void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *locals, vector_t *params, lir_t *body);
 void lir_begin(reports_t *reports, lir_t *dst, leaf_t leaf);
 bool lir_ok(const lir_t *lir);

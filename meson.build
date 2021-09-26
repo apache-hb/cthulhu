@@ -29,6 +29,8 @@ src = [
     'ctu/gen/print.c',
     'ctu/gen/eval.c',
 
+    'ctu/perf/perf.c',
+
     'ctu/util/report.c',
     'ctu/util/report-ext.c',
     'ctu/util/str.c',

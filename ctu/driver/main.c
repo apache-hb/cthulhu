@@ -6,8 +6,7 @@
 #include "ctu/lir/sema.h"
 #include "ctu/gen/emit.h"
 
-#include "ctu/backend/gcc/gcc.h"
-#include "ctu/backend/c99/c99.h"
+#include "ctu/perf/perf.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -113,6 +112,8 @@ int main(int argc, char **argv) {
 
         err = end_reports(unit->reports, SIZE_MAX, format("code generation of `%s`", unit->file->path));
         fails = MAX(fails, err);
+
+        dead_function_elimination(unit->reports, mod);
 
         unit->mod = mod;
     }

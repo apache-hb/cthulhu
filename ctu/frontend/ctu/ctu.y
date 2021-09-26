@@ -36,10 +36,16 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %token
     VAR "`var`"
+    DEF "`def`"
     SEMI "`;`"
     ASSIGN "`=`"
     LPAREN "`(`"
     RPAREN "`)`"
+    LBRACE "`{`"
+    RBRACE "`}`"
+    COLON2 "`::`"
+    COLON "`:`"
+    COMMA "`,`"
     ADD "`+`"
     SUB "`-`"
     MUL "`*`"
@@ -63,9 +69,10 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<ctu>
     value decl
     expr primary postfix unary multiply add compare equality shift bits xor and or
+    statements stmt type param
 
 %type<vector>
-    unit
+    unit stmtlist params
 
 %start program
 
@@ -82,6 +89,30 @@ decl: value { $$ = $1; }
     ;
 
 value: VAR IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, $4); }
+    ;
+
+function: DEF IDENT LPAREN params RPAREN COLON type statements
+    ;
+
+params: param { $$ = vector_init($1); }
+    | params COMMA param { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+param: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
+    ;
+
+type: IDENT { $$ = ctu_type(x, @$, $1); }
+    ;
+
+statements: LBRACE stmtlist RBRACE { $$ = ctu_stmts(x, @$, $2); }
+    ;
+
+stmtlist: stmt { $$ = vector_init($1); }
+    | stmtlist stmt { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+stmt: expr SEMI { $$ = $1; }
+    | statements { $$ = $1; }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }

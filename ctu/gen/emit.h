@@ -77,6 +77,9 @@ typedef struct block_t {
     /* the type of this block */
     const type_t *type;
 
+    /* is this block exported */
+    bool exported;
+
     union {
         /* BLOCK_SYMBOL|BLOCK_STRING */
         struct {
@@ -126,4 +129,5 @@ typedef struct {
 
 module_t *module_build(reports_t *reports, lir_t *root);
 void module_print(FILE *out, module_t *mod);
+void block_free(block_t *block);
 void module_free(module_t *mod);

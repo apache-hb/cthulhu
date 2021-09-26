@@ -303,6 +303,9 @@ static void add_blocks(context_t *ctx, vector_t *blocks) {
 
     for (size_t i = 0; i < len; i++) {
         const block_t *block = vector_get(blocks, i);
+        if (block == NULL) {
+            continue;
+        }
         forward_block(ctx, block);
     }
 
@@ -310,6 +313,9 @@ static void add_blocks(context_t *ctx, vector_t *blocks) {
 
     for (size_t i = 0; i < len; i++) {
         const block_t *block = vector_get(blocks, i);
+        if (block == NULL) {
+            continue;
+        }
         add_block(ctx, block);
     }
 }

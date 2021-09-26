@@ -59,13 +59,15 @@ static char *mangle_name(const char *name, const type_t *type) {
 static block_t *new_block(blocktype_t kind, 
                           const char *name, 
                           const node_t *node,
-                          const type_t *type) {
+                          const type_t *type,
+                          bool exported) {
     block_t *block = ctu_malloc(sizeof(block_t));
     block->kind = kind;
     block->name = name;
     block->node = node;
     block->type = type;
     block->data = NULL;
+    block->exported = exported;
 
     if (kind == BLOCK_DEFINE) {
         block->value = NULL;
@@ -93,7 +95,7 @@ static size_t push_step(block_t *block, step_t step) {
 }
 
 static value_t *value_zero(void) {
-    return value_int(type_digit(false, TY_SIZE), 0);
+    return value_int(type_digit(SIGNED, TY_SIZE), 0);
 }
 
 static step_t step_with_type(opcode_t op, const node_t *node, const type_t *type) {
@@ -147,7 +149,8 @@ static block_t *lir_named(const lir_t *lir) {
         BLOCK_SYMBOL, 
         lir->name, 
         lir->node, 
-        lir_type(lir)
+        lir_type(lir),
+        false
     );
 }
  
@@ -162,7 +165,8 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
         BLOCK_DEFINE, 
         name, 
         decl->node, 
-        type
+        type,
+        decl->exported
     );
 
     if (lir_is(decl, LIR_DEFINE)) {
@@ -193,7 +197,8 @@ static block_t *import_symbol(lir_t *lir) {
         BLOCK_SYMBOL, 
         lir->name, 
         lir->node,
-        lir_type(lir)
+        lir_type(lir),
+        false
     );
     lir->data = block;
     return block;
@@ -366,7 +371,8 @@ static operand_t emit_string(context_t ctx, lir_t *lir) {
         BLOCK_STRING, 
         NULL, 
         lir->node,
-        lir_type(lir)
+        lir_type(lir),
+        false
     );
     str->idx = vector_len(*(ctx.strings));
     str->string = lir->str;
@@ -464,8 +470,6 @@ module_t *module_build(reports_t *reports, lir_t *root) {
     return mod;
 }
 
-static void block_free(block_t *block);
-
 static void free_blocks(vector_t *blocks) {
     size_t n = vector_len(blocks);
     for (size_t i = 0; i < n; i++) {
@@ -491,8 +495,11 @@ static void define_free(block_t *block) {
     ctu_free(block->steps, block->size * sizeof(step_t));
 }
 
+void block_free(block_t *block) {
+    if (block == NULL) {
+        return;
+    }
 
-static void block_free(block_t *block) {
     if (block->kind == BLOCK_DEFINE) {
         define_free(block);
     }

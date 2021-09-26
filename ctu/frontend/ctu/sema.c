@@ -60,6 +60,64 @@ static void add_global(sema_t *sema, ctu_tag_t tag, const char *name, lir_t *lir
     sema_set(sema, tag, name, lir);
 }
 
+static lir_t *compile_expr(sema_t *sema, ctu_t *expr);
+
+static lir_t *compile_digit(ctu_t *expr) {
+    type_t *ty = type_digit(SIGNED, TY_LONG);
+    return lir_digit(expr->node, ty, expr->digit);
+}
+
+static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
+    const char *name = expr->ident;
+    lir_t *value = sema_get(sema, TAG_VARS, name);
+    if (value != NULL) {
+        return lir_name(expr->node, value);
+    }
+
+    lir_t *func = sema_get(sema, TAG_FUNCS, name);
+    if (func != NULL) {
+        return lir_name(expr->node, func);
+    }
+
+    report2(sema->reports, ERROR, expr->node, "failed to resolve name `%s`", name);
+    return lir_poison(expr->node, "unresolved name");
+}
+
+static lir_t *compile_unary(sema_t *sema, ctu_t *expr) {
+    lir_t *operand = compile_expr(sema, expr->operand);
+    unary_t op = expr->unary;
+
+    return lir_unary(expr->node, lir_type(operand), op, operand);
+}
+
+static lir_t *compile_binary(sema_t *sema, ctu_t *expr) {
+    lir_t *lhs = compile_expr(sema, expr->lhs),
+          *rhs = compile_expr(sema, expr->rhs);
+        
+    binary_t op = expr->binary;
+
+    type_t *common = types_common(lir_type(lhs), lir_type(rhs));
+
+    return lir_binary(expr->node, common, op, lhs, rhs);
+}
+
+static lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
+    switch (expr->type) {
+    case CTU_DIGIT: 
+        return compile_digit(expr);
+    case CTU_IDENT:
+        return compile_name(sema, expr);
+    case CTU_UNARY:
+        return compile_unary(sema, expr);
+    case CTU_BINARY:
+        return compile_binary(sema, expr);
+    
+    default:
+        assert2(sema->reports, "unexpected expr type %d", expr->type);
+        return lir_poison(expr->node, "unexpected expr type");
+    }
+}
+
 static void compile_type(sema_t *sema, lir_t *decl) {
     UNUSED(sema);
     UNUSED(decl);
@@ -68,6 +126,18 @@ static void compile_type(sema_t *sema, lir_t *decl) {
 static void compile_value(sema_t *sema, lir_t *decl) {
     UNUSED(sema);
     UNUSED(decl);
+
+    ctx_t *ctx = decl->ctx;
+    ctu_t *node = ctx->decl;
+    sema_t *nest = ctx->sema;
+
+    lir_t *init = compile_expr(nest, node->value);
+
+    lir_value(sema->reports,
+        /* dst = */ decl,
+        /* type = */ lir_type(init),
+        /* init = */ init
+    );
 }
 
 static void compile_func(sema_t *sema, lir_t *decl) {
@@ -79,6 +149,9 @@ static void compile_func(sema_t *sema, lir_t *decl) {
     sema_t *nest = NEW_SEMA(sema, sema->reports, sizes);
 
     ctx_t *ctx = decl->ctx;
+    ctu_t *it = ctx->decl;
+
+    UNUSED(it);
 
     DELETE_SEMA(nest);
 }
