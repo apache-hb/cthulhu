@@ -49,7 +49,7 @@ const backend_t BACKEND_C99 = {
 const backend_t BACKEND_GCCJIT = {
     .version = "0.0.1",
     .name = "GCCJIT",
-    .compile = (compile_t)gccjit_build
+    .compile = NULL //(compile_t)gccjit_build
 };
 
 const backend_t BACKEND_NULL = {

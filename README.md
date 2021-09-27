@@ -3,7 +3,7 @@
 Probably better than javascript
 
 ## Building
-* building requires `meson`, `ninja`, `gmp`, `flex`, `bison`, `gmp`, `pkg-config`, `llvm`, `libgccjit`, and `build-essential`
+* building requires `meson`, `ninja`, `gmp`, `flex`, `bison`, `pkg-config`, and `build-essential`
 
 ```sh
 meson build

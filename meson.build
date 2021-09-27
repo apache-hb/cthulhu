@@ -86,7 +86,7 @@ foreach lang : [ 'ctu', 'pl0', 'c11' ]
     subdir('ctu/frontend'/lang)
 endforeach
 
-foreach gen : [ 'c99', 'gcc', 'null' ]
+foreach gen : [ 'c99', 'null' ]
     subdir('ctu/backend'/gen)
 endforeach
 
