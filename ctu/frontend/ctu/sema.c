@@ -133,6 +133,11 @@ static void compile_value(sema_t *sema, lir_t *decl) {
 
     lir_t *init = compile_expr(nest, node->value);
 
+    vector_t *path = lir_recurses(init, decl);
+    if (path != NULL) {
+        report_recursive(sema->reports, path, decl);
+    }
+
     lir_value(sema->reports,
         /* dst = */ decl,
         /* type = */ lir_type(init),

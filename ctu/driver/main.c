@@ -118,6 +118,10 @@ int main(int argc, char **argv) {
         unit->mod = mod;
     }
 
+    if (fails > 0) {
+        return fails;
+    }
+
     for (size_t i = 0; i < len; i++) {
         unit_t *unit = vector_get(units, i);
         module_t *mod = unit->mod;
@@ -131,6 +135,10 @@ int main(int argc, char **argv) {
         err = end_reports(unit->reports, SIZE_MAX, stage);
         fails = MAX(fails, err);
         ctu_free(stage, strlen(stage) + 1);
+    }
+
+    if (fails > 0) {
+        return fails;
     }
 
     vector_delete(settings.sources);

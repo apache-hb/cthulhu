@@ -69,7 +69,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<ctu>
     value decl
     expr primary postfix unary multiply add compare equality shift bits xor and or
-    statements stmt type param
+    statements stmt type param function
 
 %type<vector>
     unit stmtlist params
@@ -86,12 +86,15 @@ unit: decl { $$ = vector_init($1); }
     ;
 
 decl: value { $$ = $1; }
+    | function { $$ = $1; }
     ;
 
-value: VAR IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, $4); }
+value: VAR IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, NULL, $4); }
+    | VAR IDENT COLON type ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, $4, $6); }
     ;
 
-function: DEF IDENT LPAREN params RPAREN COLON type statements
+function: DEF IDENT LPAREN params RPAREN COLON type statements 
+    { $$ = ctu_define(x, @$, $2, $4, $7, $8); }
     ;
 
 params: param { $$ = vector_init($1); }
@@ -101,7 +104,8 @@ params: param { $$ = vector_init($1); }
 param: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
     ;
 
-type: IDENT { $$ = ctu_type(x, @$, $1); }
+type: IDENT { $$ = ctu_typename(x, @$, $1); }
+    | MUL type { $$ = ctu_pointer(x, @$, $2); }
     ;
 
 statements: LBRACE stmtlist RBRACE { $$ = ctu_stmts(x, @$, $2); }

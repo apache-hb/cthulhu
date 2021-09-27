@@ -35,6 +35,10 @@ typedef struct {
     int_t kind;
 } digit_t;
 
+typedef struct {
+    size_t align;
+} extra_t;
+
 typedef struct type_t {
     metatype_t type;
 

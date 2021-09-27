@@ -50,23 +50,6 @@ static void pl0_shadow(reports_t *reports,
     report_note2(id, "PL/0 is case insensitive");
 }
 
-static void report_recurse(reports_t *reports, vector_t *stack, lir_t *root) {
-    node_t *node = root->node;
-    message_t *id = report2(reports, ERROR, node, "initialization of `%s` is recursive", root->name);
-    
-    node_t *last = node;
-    size_t len = vector_len(stack);
-    size_t t = 0;
-
-    for (size_t i = 0; i < len; i++) {
-        node_t *it = vector_get(stack, i);
-        if (it != last) {
-            report_append2(id, it, "trace %zu", t++);
-        }
-        last = it;
-    }
-}
-
 static lir_t *compile_expr(sema_t *sema, pl0_t *expr);
 static lir_t *compile_stmt(sema_t *sema, pl0_t *stmt);
 
@@ -119,12 +102,12 @@ static void set_proc(sema_t *sema, const char *name, lir_t *proc) {
 static void set_var(sema_t *sema, size_t tag, const char *name, lir_t *var) {
     lir_t *other1 = sema_get(sema, TAG_CONSTS, name);
     if (other1 != NULL) {
-        pl0_shadow(sema->reports, name, other1->node, var->node);
+        pl0_shadow(sema->reports, name, var->node, other1->node);
     }
 
-    lir_t *other2 = sema_get(sema, tag, name);
+    lir_t *other2 = sema_get(sema, TAG_VARS, name);
     if (other2 != NULL) {
-        pl0_shadow(sema->reports, name, other2->node, var->node);
+        pl0_shadow(sema->reports, name, var->node, other2->node);
     }
 
     sema_set(sema, tag, name, var);
@@ -305,7 +288,7 @@ static void compile_const(sema_t *sema, lir_t *lir) {
 
     vector_t *path = lir_recurses(value, lir);
     if (path != NULL) {
-        report_recurse(sema->reports, path, lir);
+        report_recursive(sema->reports, path, lir);
     }
 
     lir_value(sema->reports, lir, pl0_int(false), value);

@@ -65,6 +65,11 @@ typedef enum {
     BLOCK_STRING
 } blocktype_t;
 
+typedef struct {
+    const char *mangle; /// override name mangling
+    const char *section; /// override default section
+} attrib_t;
+
 typedef struct block_t {
     blocktype_t kind;
 
@@ -89,6 +94,11 @@ typedef struct block_t {
 
         /* BLOCK_DEFINE */
         struct {
+            /**
+             * all atributes of this block 
+             */
+            attrib_t *attribs;
+            
             /** 
              * vector_t<struct block_t<BLOCK_SYMBOL>*> 
              * 

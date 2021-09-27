@@ -1,0 +1,5 @@
+final x = 25;
+
+compile if (x == 25) {
+    #error "$(x=) is not equal to 25"
+}

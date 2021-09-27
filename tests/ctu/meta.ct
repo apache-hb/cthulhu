@@ -1,0 +1,27 @@
+// peak bikeshedding right here
+variant Colours: usize {
+    red,
+    orange,
+    yellow,
+    green,
+    blue,
+    indigo,
+    violet
+}
+
+final names: [str:Colours];
+
+compile :ColourNames for (final colour : Colours) {
+    names[colour] = #"{colour}";
+}
+
+final nil = 0 as *void;
+
+compile :IsNil if ((nil as uintptr) != 0) {
+    #error #"{=nil} was not 0";
+}
+
+requires (ColourNames, IsNil)
+compile :NamesAreValid for (final colour : Colours) {
+    #assert names[colour] != nil : #"name for {colour} was nil";
+}

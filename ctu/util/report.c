@@ -105,8 +105,8 @@ static char *build_underline(char *source, where_t where, char *note) {
         back = strlen(source);
     }
 
-    if (front <= back) {
-        front = 0;
+    if (front >= back) {
+        front = back;
     }
 
     size_t width = MAX(back - front, 1);

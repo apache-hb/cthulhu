@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ctu/lir/lir.h"
 #include "report.h"
 
 /**
@@ -16,3 +17,7 @@ message_t *report_shadow(reports_t *reports,
                         const char *name,
                         const node_t *shadowed,
                         const node_t *shadowing);
+
+message_t *report_recursive(reports_t *reports,
+                            vector_t *stack,
+                            lir_t *root);

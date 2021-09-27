@@ -8,6 +8,12 @@ static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_type_t type) {
     return ctu;
 }
 
+static ctu_t *ctu_decl(scan_t *scan, where_t where, ctu_type_t type, const char *name) {
+    ctu_t *ctu = ctu_new(scan, where, type);
+    ctu->name = name;
+    return ctu;
+}
+
 ctu_t *ctu_digit(scan_t *scan, where_t where, mpz_t digit) {
     ctu_t *ctu = ctu_new(scan, where, CTU_DIGIT);
 
@@ -43,11 +49,64 @@ ctu_t *ctu_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_
     return ctu;
 }
 
-ctu_t *ctu_value(scan_t *scan, where_t where, const char *name, ctu_t *value) {
-    ctu_t *ctu = ctu_new(scan, where, CTU_VALUE);
+ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_STMTS);
 
-    ctu->name = name;
+    ctu->stmts = stmts;
+
+    return ctu;
+}
+
+ctu_t *ctu_pointer(scan_t *scan, where_t where, 
+                   ctu_t *ptr)
+{
+    ctu_t *ctu = ctu_new(scan, where, CTU_POINTER);
+
+    ctu->ptr = ptr;
+
+    return ctu;
+}
+
+ctu_t *ctu_typename(scan_t *scan, where_t where, 
+                    const char *name) 
+{
+    ctu_t *ctu = ctu_new(scan, where, CTU_TYPENAME);
+
+    ctu->ident = name;
+
+    return ctu;
+}
+
+ctu_t *ctu_value(scan_t *scan, where_t where, 
+                 const char *name, ctu_t *type,
+                 ctu_t *value) {
+    ctu_t *ctu = ctu_decl(scan, where, CTU_VALUE, name);
+
+    ctu->kind = type;
     ctu->value = value;
+
+    return ctu;
+}
+
+ctu_t *ctu_param(scan_t *scan, where_t where,
+                 const char *name, ctu_t *type)
+{
+    ctu_t *ctu = ctu_decl(scan, where, CTU_PARAM, name);
+
+    ctu->kind = type;
+
+    return ctu;
+}
+
+ctu_t *ctu_define(scan_t *scan, where_t where, 
+                  const char *name, vector_t *params, 
+                  ctu_t *result, ctu_t *body)
+{
+    ctu_t *ctu = ctu_decl(scan, where, CTU_DEFINE, name);
+
+    ctu->params = params;
+    ctu->result = result;
+    ctu->body = body;
 
     return ctu;
 }
