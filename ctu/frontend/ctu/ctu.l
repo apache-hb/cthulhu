@@ -12,9 +12,16 @@
 #include "ctu/ast/interop.h"
 %}
 
+%x COMMENT
+
 %%
 
 [ \r\n\t] ;
+"//".* ;
+"/$" { BEGIN(COMMENT); }
+<COMMENT>"$/" { BEGIN(INITIAL); }
+<COMMENT>\n ;
+<COMMENT>. ;
 
 "var" { return VAR; }
 

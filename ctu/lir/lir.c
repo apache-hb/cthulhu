@@ -165,21 +165,6 @@ void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *lo
     dst->body = body;   
 }
 
-void lir_begin(reports_t *reports, lir_t *dst, leaf_t leaf) {
-    if (dst->leaf != LIR_FORWARD) {
-        assert2(reports, "lir-begin already began");
-        return;
-    }
-
-    if (dst->expected != leaf) {
-        assert2(reports, "lir-begin unexpected leaf");
-        return;
-    }
-
-    dst->leaf = leaf;
-}
-
-
 lir_t *lir_symbol(node_t *node, const type_t *type, const char *name) {
     lir_t *lir = lir_new(node, type, LIR_SYMBOL);
 

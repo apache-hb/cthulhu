@@ -35,7 +35,6 @@ ninja -C build test
 * convert typed ast into SSA
 * optimize SSA form
 * use backend to produce end library/executable from SSA 
-  * assembler backend (TODO)
 
 Each stage will try and continue if it encounters any errors but will exit at the end of the stage.
 Stages after semantic analysis can expect that input will always be correct.

@@ -129,6 +129,11 @@ int main(int argc, char **argv) {
 
         const backend_t *backend = settings.backend ?: &BACKEND_C99;
 
+        if (backend->compile == NULL) {
+            report2(unit->reports, NOTE, NULL, "backend `%s` is disabled", backend->name);
+            continue;
+        }
+
         backend->compile(unit->reports, mod, "out.c");
     
         char *stage = format("code generation of `%s`", path);

@@ -15,6 +15,7 @@
 %%
 
 [ \r\n\t] ;
+"//".* ;
 
 (?i:const) { return CONST; }
 (?i:var) { return VAR; }

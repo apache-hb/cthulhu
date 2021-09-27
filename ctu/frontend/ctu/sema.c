@@ -124,14 +124,10 @@ static void compile_type(sema_t *sema, lir_t *decl) {
 }
 
 static void compile_value(sema_t *sema, lir_t *decl) {
-    UNUSED(sema);
-    UNUSED(decl);
-
     ctx_t *ctx = decl->ctx;
     ctu_t *node = ctx->decl;
-    sema_t *nest = ctx->sema;
 
-    lir_t *init = compile_expr(nest, node->value);
+    lir_t *init = compile_expr(sema, node->value);
 
     vector_t *path = lir_recurses(init, decl);
     if (path != NULL) {
