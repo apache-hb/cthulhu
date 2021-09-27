@@ -42,13 +42,13 @@ static void forward_global(context_t *ctx, const block_t *block) {
 }
 
 static void add_global(context_t *ctx, const block_t *block) {
-    if (block->value == NULL) {
-        return;
-    }
-
     const type_t *type = block->type;
     const value_t *value = block->value;
     const char *name = block->name;
+
+    if (value == NULL) {
+        return;
+    }
 
     const char *start = type_to_string(type, name);
     const char *init = value_to_string(value);
@@ -346,6 +346,17 @@ static void add_strings(context_t *ctx, vector_t *strings) {
     }
 }
 
+static void add_imports(context_t *ctx, vector_t *symbols) {
+    stream_write(ctx->result, "// Imported symbols\n");
+
+    size_t len = vector_len(symbols);
+    for (size_t i = 0; i < len; i++) {
+        block_t *symbol = vector_get(symbols, i);
+
+        add_import(ctx, symbol);
+    }
+}
+
 bool c99_build(reports_t *reports, module_t *mod, const char *path) {
     context_t *ctx = init_c99_context(reports, mod);
     
@@ -362,6 +373,8 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
     ctu_free(header, strlen(header) + 1);
 
     add_strings(ctx, mod->strtab);
+
+    add_imports(ctx, mod->imports);
 
     add_globals(ctx, mod->vars);
 

@@ -9,7 +9,6 @@
 signed int x;
 
 // Global initialization
-signed int x = (null);
 
 // Function forwarding
 
