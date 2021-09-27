@@ -91,6 +91,11 @@ static value_t *exec_unary(exec_t *exec, step_t step) {
 
 static bool exec_step(exec_t *exec) {
     size_t here = exec->ip;
+    
+    if (here >= exec->block->len) {
+        return false;
+    }
+
     step_t step = get_step(exec, exec->ip++);
 
     switch (step.opcode) {
@@ -111,7 +116,7 @@ static bool exec_step(exec_t *exec) {
         return true;
 
     default:
-        assert2(exec->reports, "%s invalid opcode: %d", exec->block->name, step.opcode);
+        assert2(exec->reports, "%s invalid opcode: [%zu] = %d", exec->block->name, exec->ip, step.opcode);
         return false;
     }
 }

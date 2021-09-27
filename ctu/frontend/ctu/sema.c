@@ -167,21 +167,20 @@ static void compile_value(sema_t *sema, lir_t *decl) {
     ctx_t *ctx = decl->ctx;
     ctu_t *node = ctx->decl;
 
-    lir_t *init = compile_expr(sema, node->value);
+    lir_t *init = node->value ? compile_expr(sema, node->value) : NULL;
+    const type_t *type = node->kind ? compile_type(sema, node->kind) : NULL;
 
-    type_t *type = NULL;
-    if (node->kind != NULL) {
-        type = compile_type(sema, node->kind);
+    if (init != NULL) {
+        if (type != NULL) {
+            /* check for casting */
+        }
 
-        /* todo: check conversion is valid
-           if implict cast is needed apply it */
-    } else {
-        type = init->type;
-    }
+        type = lir_type(init);
 
-    vector_t *path = lir_recurses(init, decl);
-    if (path != NULL) {
-        report_recursive(sema->reports, path, decl);
+        vector_t *path = lir_recurses(init, decl);
+        if (path != NULL) {
+            report_recursive(sema->reports, path, decl);
+        }
     }
 
     lir_value(sema->reports,

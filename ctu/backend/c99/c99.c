@@ -42,6 +42,10 @@ static void forward_global(context_t *ctx, const block_t *block) {
 }
 
 static void add_global(context_t *ctx, const block_t *block) {
+    if (block->value == NULL) {
+        return;
+    }
+
     const type_t *type = block->type;
     const value_t *value = block->value;
     const char *name = block->name;

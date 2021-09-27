@@ -4,75 +4,13 @@
  */
 
 // String literals
-const char *strtab0 = "%d\x0a";
 
 // Global forwarding
-signed long ret;
-signed long arg;
-signed long max;
+signed int x;
 
 // Global initialization
-signed long ret = (signed long)0;
-signed long arg = (signed long)0;
-signed long max = (signed long)100;
+signed int x = (null);
 
 // Function forwarding
-void _Z7isprimev();
-void _Z6primesv();
 
 // Function definitions
-void _Z7isprimev() {
-  signed long i;
-  *&ret = (signed long)1;
-  *&i = (signed long)2;
-block2:
-  signed long vreg3 = *&i;
-  signed long vreg4 = *&arg;
-  _Bool vreg5 = vreg3 < vreg4;
-  if (vreg5) { goto block7; } else { goto block26; }
-block7:
-  signed long vreg8 = *&arg;
-  signed long vreg9 = *&i;
-  signed long vreg10 = vreg8 / vreg9;
-  signed long vreg11 = *&i;
-  signed long vreg12 = vreg10 * vreg11;
-  signed long vreg13 = *&arg;
-  _Bool vreg14 = vreg12 == vreg13;
-  if (vreg14) { goto block16; } else { goto block21; }
-block16:
-  *&ret = (signed long)0;
-  signed long vreg18 = *&arg;
-  *&i = vreg18;
-  goto block21;
-block21:
-  signed long vreg22 = *&i;
-  signed long vreg23 = vreg22 + (signed long)1;
-  *&i = vreg23;
-  goto block2;
-block26:
-  return;
-}
-void _Z6primesv() {
-  *&arg = (signed long)2;
-block1:
-  signed long vreg2 = *&arg;
-  signed long vreg3 = *&max;
-  _Bool vreg4 = vreg2 < vreg3;
-  if (vreg4) { goto block6; } else { goto block20; }
-block6:
-  (*&_Z7isprimev)();
-  signed long vreg8 = *&ret;
-  _Bool vreg9 = vreg8 == (signed long)1;
-  if (vreg9) { goto block11; } else { goto block15; }
-block11:
-  signed long vreg12 = *&arg;
-  signed int vreg13 = (*&printf)(strtab0, vreg12);
-  goto block15;
-block15:
-  signed long vreg16 = *&arg;
-  signed long vreg17 = vreg16 + (signed long)1;
-  *&arg = vreg17;
-  goto block1;
-block20:
-  return;
-}

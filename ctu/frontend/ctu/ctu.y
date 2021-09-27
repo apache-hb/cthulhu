@@ -91,6 +91,7 @@ decl: value { $$ = $1; }
 
 value: VAR IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, NULL, $4); }
     | VAR IDENT COLON type ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, $4, $6); }
+    | VAR IDENT COLON type SEMI { $$ = ctu_value(x, @$, $2, $4, NULL); }
     ;
 
 function: DEF IDENT LPAREN params RPAREN COLON type statements 
