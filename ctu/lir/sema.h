@@ -1,6 +1,5 @@
 #pragma once
 
-#include "lir.h"
 #include "ctu/util/report.h"
 
 typedef void(*sema_delete_t)(void*);
@@ -9,7 +8,7 @@ typedef struct sema_t {
     struct sema_t *parent;
     reports_t *reports;
 
-    /** vector_t<map_t<const char *, lir_t*>*> */
+    /** vector_t<map_t<const char*, void*>*> */
     vector_t *decls;
 
     void *data; /// user data
@@ -43,6 +42,6 @@ void sema_delete(sema_t *sema);
 void sema_set_data(sema_t *sema, void *data);
 void *sema_get_data(sema_t *sema);
 
-void sema_set(sema_t *sema, size_t tag, const char *name, lir_t *lir);
-lir_t *sema_get(sema_t *sema, size_t tag, const char *name);
+void sema_set(sema_t *sema, size_t tag, const char *name, void *lir);
+void *sema_get(sema_t *sema, size_t tag, const char *name);
 map_t *sema_tag(sema_t *sema, size_t tag);

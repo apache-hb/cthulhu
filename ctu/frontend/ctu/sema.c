@@ -60,6 +60,46 @@ static void add_global(sema_t *sema, ctu_tag_t tag, const char *name, lir_t *lir
     sema_set(sema, tag, name, lir);
 }
 
+static type_t *get_type(sema_t *sema, const char *name) {
+    return sema_get(sema, TAG_TYPES, name);
+}
+
+static void add_type(sema_t *sema, const char *name, type_t *type) {
+    type_t *other = get_type(sema, name);
+    if (other != NULL) {
+        report2(sema->reports, ERROR, NULL, "declaration of %s shadows existing type", name);
+    }
+
+    sema_set(sema, TAG_TYPES, name, type);
+}
+
+static type_t *compile_type(sema_t *sema, ctu_t *node);
+
+static type_t *compile_pointer_type(sema_t *sema, ctu_t *node) {
+    type_t *to = compile_type(sema, node->ptr);
+
+    return type_ptr(to);
+}
+
+static type_t *compile_name_type(sema_t *sema, ctu_t *node) {
+    const char *id = node->ident;
+
+    type_t *real = get_type(sema, id) ?: type_poison("unresolved type");
+
+    return real;
+}
+
+static type_t *compile_type(sema_t *sema, ctu_t *node) {
+    switch (node->type) {
+    case CTU_POINTER: return compile_pointer_type(sema, node);
+    case CTU_TYPENAME: return compile_name_type(sema, node);
+
+    default:
+        assert2(sema->reports, "compile-type unknown node %d", node->type);
+        return type_poison("unknown type");
+    }
+}
+
 static lir_t *compile_expr(sema_t *sema, ctu_t *expr);
 
 static lir_t *compile_digit(ctu_t *expr) {
@@ -118,7 +158,7 @@ static lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     }
 }
 
-static void compile_type(sema_t *sema, lir_t *decl) {
+static void compile_typedecl(sema_t *sema, lir_t *decl) {
     UNUSED(sema);
     UNUSED(decl);
 }
@@ -129,6 +169,16 @@ static void compile_value(sema_t *sema, lir_t *decl) {
 
     lir_t *init = compile_expr(sema, node->value);
 
+    type_t *type = NULL;
+    if (node->kind != NULL) {
+        type = compile_type(sema, node->kind);
+
+        /* todo: check conversion is valid
+           if implict cast is needed apply it */
+    } else {
+        type = init->type;
+    }
+
     vector_t *path = lir_recurses(init, decl);
     if (path != NULL) {
         report_recursive(sema->reports, path, decl);
@@ -136,7 +186,7 @@ static void compile_value(sema_t *sema, lir_t *decl) {
 
     lir_value(sema->reports,
         /* dst = */ decl,
-        /* type = */ lir_type(init),
+        /* type = */ type,
         /* init = */ init
     );
 }
@@ -157,17 +207,28 @@ static void compile_func(sema_t *sema, lir_t *decl) {
     DELETE_SEMA(nest);
 }
 
+static sema_t *base_sema(reports_t *reports, size_t decls) {
+    size_t sizes[TAG_MAX] = {
+        [TAG_TYPES] = decls,
+        [TAG_VARS] = decls,
+        [TAG_FUNCS] = decls
+    };
+
+    sema_t *sema = NEW_SEMA(NULL, reports, sizes);
+
+    add_type(sema, "int", type_digit(SIGNED, TY_INT));
+    add_type(sema, "uint", type_digit(UNSIGNED, TY_INT));
+    add_type(sema, "void", type_void());
+    add_type(sema, "bool", type_bool());
+
+    return sema;
+}
+
 lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
     vector_t *decls = ctu->decls;
     size_t ndecls = vector_len(decls);
 
-    size_t sizes[TAG_MAX] = {
-        [TAG_TYPES] = ndecls,
-        [TAG_VARS] = ndecls,
-        [TAG_FUNCS] = ndecls
-    };
-
-    sema_t *sema = NEW_SEMA(NULL, reports, sizes);
+    sema_t *sema = base_sema(reports, ndecls);
 
     for (size_t i = 0; i < ndecls; i++) {
         ctu_t *decl = vector_get(decls, i);
@@ -179,7 +240,7 @@ lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
     map_t *global_map = sema_tag(sema, TAG_VARS);
     map_t *func_map = sema_tag(sema, TAG_FUNCS);
 
-    MAP_APPLY(type_map, sema, compile_type);
+    MAP_APPLY(type_map, sema, compile_typedecl);
     MAP_APPLY(global_map, sema, compile_value);
     MAP_APPLY(func_map, sema, compile_func);
 

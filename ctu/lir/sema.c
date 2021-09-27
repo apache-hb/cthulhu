@@ -38,15 +38,15 @@ map_t *sema_tag(sema_t *sema, size_t tag) {
     return vector_get(sema->decls, tag);
 }
 
-void sema_set(sema_t *sema, size_t tag, const char *name, lir_t *lir) {
+void sema_set(sema_t *sema, size_t tag, const char *name, void *lir) {
     map_t *map = sema_tag(sema, tag);
     map_set(map, name, lir);
 }
 
-lir_t *sema_get(sema_t *sema, size_t tag, const char *name) {
+void *sema_get(sema_t *sema, size_t tag, const char *name) {
     map_t *map = sema_tag(sema, tag);
 
-    lir_t *lir = map_get(map, name);
+    void *lir = map_get(map, name);
     if (lir != NULL) {
         return lir;
     }
