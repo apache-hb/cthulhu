@@ -230,7 +230,7 @@ static char *select_step(context_t *ctx, size_t idx, step_t step) {
 switch (step.opcode) {
     case OP_EMPTY: return NULL;
     case OP_BLOCK: 
-        return format("block%zu:\n", idx); 
+        return format("block%zu: /* empty */;\n", idx); 
 
     case OP_JMP:
         return format("  goto %s;\n", format_operand(step.label));
@@ -343,6 +343,16 @@ static void add_strings(context_t *ctx, vector_t *strings) {
             char *fmt = format("const char *%s = \"%s\";\n", name, str);
             stream_write(ctx->result, fmt);
         }
+    }
+}
+
+static void add_import(context_t *ctx, const block_t *block) {
+    if (block->kind == BLOCK_DEFINE) {
+        char *it = format_function(block);
+        stream_write(ctx->result, format("extern %s;\n", it));
+    } else {
+        const char *it = type_to_string(block->type, block->name);
+        stream_write(ctx->result, format("extern %s;\n", it));
     }
 }
 

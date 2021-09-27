@@ -66,6 +66,10 @@ const char *type_to_string(const type_t *type, const char *name) {
         return void_to_string(name);
     }
 
+    if (is_varargs(type)) {
+        return "...";
+    }
+
     return NULL;
 }
 

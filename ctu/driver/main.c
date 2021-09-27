@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
         unit_t *unit = vector_get(units, i);
 
         module_t *mod = module_build(unit->reports, unit->lir);
-        //module_print(stdout, mod);
+        module_print(stdout, mod);
 
         err = end_reports(unit->reports, SIZE_MAX, format("code generation of `%s`", unit->file->path));
         fails = MAX(fails, err);

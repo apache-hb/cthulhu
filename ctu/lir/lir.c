@@ -159,7 +159,6 @@ void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *lo
 
     dst->leaf = LIR_DEFINE;
     dst->type = type;
-    dst->entry = NULL;
     dst->locals = locals;
     dst->params = params;
     dst->body = body;   

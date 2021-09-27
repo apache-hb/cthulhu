@@ -158,7 +158,8 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
     /* itanium only mangles functions */
     const char *name = decl->name;
     if (lir_is(decl, LIR_DEFINE)) {
-        name = decl->entry ?: mangle_name(decl->name, type);
+        /* todo: massive hack */
+        name = streq(decl->name, "main") ? decl->name : mangle_name(decl->name, type);
     }
     
     block_t *block = new_block(
@@ -194,7 +195,7 @@ static block_t *block_declare(lir_t *lir) {
 
 static block_t *import_symbol(lir_t *lir) {
     block_t *block = new_block(
-        BLOCK_SYMBOL, 
+        lir_is(lir, LIR_DEFINE) ? BLOCK_DEFINE : BLOCK_VALUE, 
         lir->name, 
         lir->node,
         lir_type(lir),
@@ -229,7 +230,9 @@ static void build_define(vector_t **strings, reports_t *reports, module_t *mod, 
 
     lir_t *body = define->body;
     operand_t op = emit_lir(ctx, body);
-    build_return(ctx, body, op);
+    build_return(ctx, body, 
+        is_void(block->type->result) ? operand_empty() : op
+    );
 }
 
 static operand_t emit_unary(context_t ctx, lir_t *lir) {

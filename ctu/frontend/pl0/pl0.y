@@ -130,7 +130,7 @@ proclist: procedure { $$ = vector_init($1); }
     | proclist procedure { vector_push(&$1, $2); $$ = $1; }
     ;
 
-procedure: PROCEDURE IDENT SEMICOLON vars START stmtlist END SEMICOLON { $$ = pl0_procedure(x, @$, $2, $4, $6, false); }
+procedure: PROCEDURE IDENT SEMICOLON vars START stmtlist END SEMICOLON { $$ = pl0_procedure(x, @$, $2, $4, $6); }
     ;
 
 statement: statements { $$ = $1; }

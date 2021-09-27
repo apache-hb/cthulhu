@@ -350,15 +350,29 @@ static void compile_proc(sema_t *sema, lir_t *lir) {
         /* body = */ lir_stmts(node->node, body)
     );
 
-    if (node->entry) {
-        lir->entry = "main";
-    }
-
     DELETE_SEMA(nest);
 }
 
 static lir_t *pl0_declare(pl0_t *pl0, const char *name, leaf_t leaf) {
     return lir_forward(pl0->node, name, leaf, pl0);
+}
+
+static lir_t *compile_entry(sema_t *sema, pl0_t *body) {    
+    lir_t *stmts = compile_stmt(sema, body);
+
+    lir_t *entry = pl0_declare(body, "main", LIR_DEFINE);
+
+    lir_define(sema->reports, entry,
+        /* type = */ pl0_closure(),
+        /* locals = */ vector_of(0),
+        /* params = */ vector_of(0),
+        /* body = */ stmts
+    );
+
+    /* todo: suffering */
+    entry->exported = true;
+
+    return entry;
 }
 
 lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
@@ -397,14 +411,6 @@ lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
         set_proc(sema, name, pl0_declare(decl, name, LIR_DEFINE));
     }
 
-    pl0_t *top = node->toplevel;
-    if (top != NULL) {
-        node_t *node = top->node;
-        vector_t *body = vector_init(top);
-        pl0_t *entry = pl0_procedure(node->scan, node->where, "main", vector_new(0), body, true);
-        set_proc(sema, "main", pl0_declare(entry, "main", LIR_DEFINE));
-    }
-
     map_t *const_map = sema_tag(sema, TAG_CONSTS);
     map_t *var_map = sema_tag(sema, TAG_VARS);
     map_t *proc_map = sema_tag(sema, TAG_PROCS);
@@ -419,6 +425,10 @@ lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
     );
 
     vector_t *funcs = map_values(proc_map);
+
+    if (node->toplevel) {
+        vector_push(&funcs, compile_entry(sema, node->toplevel));
+    }
 
     DELETE_SEMA(sema);
 

@@ -61,6 +61,7 @@ typedef struct {
 
 typedef enum {
     BLOCK_DEFINE,
+    BLOCK_VALUE,
     BLOCK_SYMBOL,
     BLOCK_STRING
 } blocktype_t;
@@ -92,7 +93,7 @@ typedef struct block_t {
             const char *string; /* the string itself */
         };
 
-        /* BLOCK_DEFINE */
+        /* BLOCK_VALUE|BLOCK_DEFINE */
         struct {
             /**
              * all atributes of this block 
