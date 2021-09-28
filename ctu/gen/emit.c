@@ -230,9 +230,7 @@ static void build_define(vector_t **strings, reports_t *reports, module_t *mod, 
 
     lir_t *body = define->body;
     operand_t op = emit_lir(ctx, body);
-    build_return(ctx, body, 
-        is_void(block->type->result) ? operand_empty() : op
-    );
+    build_return(ctx, body, op);
 }
 
 static operand_t emit_unary(context_t ctx, lir_t *lir) {

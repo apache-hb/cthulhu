@@ -366,7 +366,7 @@ static lir_t *compile_entry(sema_t *sema, pl0_t *body) {
         /* type = */ pl0_closure(),
         /* locals = */ vector_of(0),
         /* params = */ vector_of(0),
-        /* body = */ stmts
+        /* body = */ lir_stmts(body->node, vector_init(stmts))
     );
 
     /* todo: suffering */

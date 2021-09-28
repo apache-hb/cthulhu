@@ -60,6 +60,8 @@ static void add_global(sema_t *sema, ctu_tag_t tag, const char *name, lir_t *lir
     sema_set(sema, tag, name, lir);
 }
 
+static lir_t *compile_expr(sema_t *sema, ctu_t *expr);
+
 static type_t *get_type(sema_t *sema, const char *name) {
     return sema_get(sema, TAG_TYPES, name);
 }
@@ -240,12 +242,7 @@ lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
     map_t *func_map = sema_tag(sema, TAG_FUNCS);
 
     MAP_APPLY(type_map, sema, compile_typedecl);
-    MAP_APPLY(global_map, sema, compile_value);
-    MAP_APPLY(func_map, sema, compile_func);
-
-    vector_t *tys = map_values(type_map);
-    vector_t *vars = map_values(global_map);
-    vector_t *funcs = map_values(func_map);
+   vector_t *funcs = map_values(func_map);
 
     DELETE_SEMA(sema);
 
