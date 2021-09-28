@@ -211,7 +211,10 @@ static void build_block(vector_t **strings, reports_t *reports, module_t *mod, b
     if (body != NULL) {
         operand_t op = emit_lir(ctx, body);
         build_return(ctx, body, op);
-    }
+    } else {
+        /*
+        build_return(ctx, body, operand_empty());
+    */}
 }
 
 static void build_define(vector_t **strings, reports_t *reports, module_t *mod, block_t *block, lir_t *define) {

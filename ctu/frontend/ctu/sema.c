@@ -165,6 +165,34 @@ static void compile_typedecl(sema_t *sema, lir_t *decl) {
     UNUSED(decl);
 }
 
+static lir_t *not_zero(lir_t *expr) {
+    lir_t *zero = lir_int(expr->node, lir_type(expr), 0);
+    lir_t *cmp = lir_binary(expr->node, type_bool(), BINARY_NEQ, expr, zero);
+
+    return cmp;
+}
+
+static lir_t *implicit_bool(lir_t *expr) {
+    const type_t *type = lir_type(expr);
+    if (is_bool(type)) {
+        return expr;
+    }
+
+    if (is_digit(type)) {
+        return not_zero(expr);
+    }
+
+    return NULL;
+}
+
+static lir_t *implicit_cast(lir_t *expr, const type_t *type) {
+    if (is_bool(type)) {
+        return implicit_bool(expr);
+    }
+
+    return NULL;
+}
+
 static void compile_value(sema_t *sema, lir_t *decl) {
     ctx_t *ctx = decl->ctx;
     ctu_t *node = ctx->decl;
@@ -174,7 +202,15 @@ static void compile_value(sema_t *sema, lir_t *decl) {
 
     if (init != NULL) {
         if (type != NULL) {
-            /* check for casting */
+            lir_t *cast = implicit_cast(init, type);
+            if (cast == NULL) {
+                report2(sema->reports, ERROR, node->node, "cannot implitly convert from `%s` to `%s`",
+                    /* provided-type = */ type_format(lir_type(init)),
+                    /* expected-type = */ type_format(type)
+                );
+            } else {
+                init = cast;
+            }
         }
 
         type = lir_type(init);
@@ -242,11 +278,13 @@ lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
     map_t *func_map = sema_tag(sema, TAG_FUNCS);
 
     MAP_APPLY(type_map, sema, compile_typedecl);
-   vector_t *funcs = map_values(func_map);
+    MAP_APPLY(global_map, sema, compile_value);
+    MAP_APPLY(func_map, sema, compile_func);
+    
+    vector_t *funcs = map_values(func_map);
+    vector_t *vars = map_values(global_map);
 
     DELETE_SEMA(sema);
-
-    UNUSED(tys);
 
     return lir_module(ctu->node,
         /* imports = */ vector_of(0),
