@@ -47,7 +47,7 @@ static void pl0_shadow(reports_t *reports,
                        node_t *self)
 {
     message_t *id = report_shadow(reports, name, other, self);
-    report_note2(id, "PL/0 is case insensitive");
+    report_note(id, "PL/0 is case insensitive");
 }
 
 static lir_t *compile_expr(sema_t *sema, pl0_t *expr);
@@ -123,8 +123,8 @@ static lir_t *compile_ident(sema_t *sema, pl0_t *expr) {
         return lir_name(node, val);
     }
 
-    message_t *id = report2(sema->reports, ERROR, node, "unknown variable name `%s`", name);
-    report_note2(id, "PL/0 is case insensitive");
+    message_t *id = report(sema->reports, ERROR, node, "unknown variable name `%s`", name);
+    report_note(id, "PL/0 is case insensitive");
 
     return lir_poison(node, "unresolved variable");
 }
@@ -164,7 +164,7 @@ static lir_t *compile_expr(sema_t *sema, pl0_t *expr) {
     case PL0_UNARY:
         return compile_unary(sema, expr);
     default:
-        assert2(sema->reports, "(pl0) compile-expr unknown expr %d", expr->type);
+        ctu_assert(sema->reports, "(pl0) compile-expr unknown expr %d", expr->type);
         return lir_poison(expr->node, "unknown expr");
     }
 }
@@ -184,7 +184,7 @@ static lir_t *compile_cond(sema_t *sema, pl0_t *expr) {
         return compile_cmp(sema, expr);
     
     default:
-        assert2(sema->reports, "compile-cond unknown cond %d", expr->type);
+        ctu_assert(sema->reports, "compile-cond unknown cond %d", expr->type);
         return lir_poison(expr->node, "unknown cond");
     }
 }
@@ -194,8 +194,8 @@ static lir_t *compile_assign(sema_t *sema, pl0_t *stmt) {
     char *name = pl0_name(stmt->dst);
     lir_t *lhs = query_ident(sema, name);
     if (lhs == NULL) {
-        message_t *id = report2(sema->reports, ERROR, node, "unknown variable name `%s`", name);
-        report_note2(id, "PL/0 is case insensitive");
+        message_t *id = report(sema->reports, ERROR, node, "unknown variable name `%s`", name);
+        report_note(id, "PL/0 is case insensitive");
 
         return lir_poison(node, "unresolved variable");
     }
@@ -203,7 +203,7 @@ static lir_t *compile_assign(sema_t *sema, pl0_t *stmt) {
     lir_t *rhs = compile_expr(sema, stmt->src);
 
     if (!lhs->type->mut) {
-        report2(sema->reports, ERROR, node, "cannot assign to const value `%s` %s", name, type_format(lhs->type));
+        report(sema->reports, ERROR, node, "cannot assign to const value `%s` %s", name, type_format(lhs->type));
     }
 
     return lir_assign(node, lhs, rhs);
@@ -254,7 +254,7 @@ static lir_t *compile_call(sema_t *sema, pl0_t *stmt) {
     lir_t *proc = sema_get(sema, TAG_PROCS, name);
     
     if (proc == NULL) {
-        report2(sema->reports, ERROR, stmt->node, "unknown procedure `%s`", name);
+        report(sema->reports, ERROR, stmt->node, "unknown procedure `%s`", name);
         return lir_poison(stmt->node, "unknown procedure");
     }
 
@@ -277,7 +277,7 @@ static lir_t *compile_stmt(sema_t *sema, pl0_t *stmt) {
         return compile_call(sema, stmt);
 
     default:
-        assert2(sema->reports, "compile-stmt unknown stmt %d", stmt->type);
+        ctu_assert(sema->reports, "compile-stmt unknown stmt %d", stmt->type);
         return lir_poison(stmt->node, "unknown stmt");
     }
 }

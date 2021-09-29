@@ -331,7 +331,7 @@ static message_t *report_push(reports_t *reports,
     return message;
 }
 
-message_t *assert2(reports_t *reports, const char *fmt, ...) {
+message_t *ctu_assert(reports_t *reports, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     message_t *message = report_push(reports, INTERNAL, NULL, fmt, args);
@@ -340,7 +340,7 @@ message_t *assert2(reports_t *reports, const char *fmt, ...) {
     return message;
 }
 
-message_t *report2(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...) {
+message_t *report(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
@@ -351,7 +351,7 @@ message_t *report2(reports_t *reports, level_t level, const node_t *node, const 
     return msg;
 }
 
-void report_append2(message_t *message, const node_t *node, const char *fmt, ...) {
+void report_append(message_t *message, const node_t *node, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     char *str = formatv(fmt, args);
@@ -369,7 +369,7 @@ void report_underline(message_t *message, const char *fmt, ...) {
     message->underline = msg;
 }
 
-void report_note2(message_t *message, const char *fmt, ...) {
+void report_note(message_t *message, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     char *msg = formatv(fmt, args);

@@ -63,6 +63,6 @@
 
 "!" { return PRINT; }
 
-. { report2(yyextra->reports, ERROR, node_new(yyextra, *yylloc), "unknown character %s", yytext); }
+. { report(yyextra->reports, ERROR, node_new(yyextra, *yylloc), "unknown character %s", yytext); }
 
 %%

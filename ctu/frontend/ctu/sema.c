@@ -69,7 +69,7 @@ static type_t *get_type(sema_t *sema, const char *name) {
 static void add_type(sema_t *sema, const char *name, type_t *type) {
     type_t *other = get_type(sema, name);
     if (other != NULL) {
-        report2(sema->reports, ERROR, NULL, "declaration of %s shadows existing type", name);
+        report(sema->reports, ERROR, NULL, "declaration of %s shadows existing type", name);
     }
 
     sema_set(sema, TAG_TYPES, name, type);
@@ -97,7 +97,7 @@ static type_t *compile_type(sema_t *sema, ctu_t *node) {
     case CTU_TYPENAME: return compile_name_type(sema, node);
 
     default:
-        assert2(sema->reports, "compile-type unknown node %d", node->type);
+        ctu_assert(sema->reports, "compile-type unknown node %d", node->type);
         return type_poison("unknown type");
     }
 }
@@ -121,7 +121,7 @@ static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
         return lir_name(expr->node, func);
     }
 
-    report2(sema->reports, ERROR, expr->node, "failed to resolve name `%s`", name);
+    report(sema->reports, ERROR, expr->node, "failed to resolve name `%s`", name);
     return lir_poison(expr->node, "unresolved name");
 }
 
@@ -155,7 +155,7 @@ static lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
         return compile_binary(sema, expr);
     
     default:
-        assert2(sema->reports, "unexpected expr type %d", expr->type);
+        ctu_assert(sema->reports, "unexpected expr type %d", expr->type);
         return lir_poison(expr->node, "unexpected expr type");
     }
 }
@@ -204,7 +204,7 @@ static void compile_value(sema_t *sema, lir_t *decl) {
         if (type != NULL) {
             lir_t *cast = implicit_cast(init, type);
             if (cast == NULL) {
-                report2(sema->reports, ERROR, node->node, "cannot implitly convert from `%s` to `%s`",
+                report(sema->reports, ERROR, node->node, "cannot implitly convert from `%s` to `%s`",
                     /* provided-type = */ type_format(lir_type(init)),
                     /* expected-type = */ type_format(type)
                 );

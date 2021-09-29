@@ -37,16 +37,17 @@ static value_t *get_value(exec_t *exec, operand_t it) {
     switch (it.kind) {
     case IMM: return it.imm;
     case VREG: return exec->values[it.vreg];
-    
+    case EMPTY: return value_empty();
+
     default:
-        assert2(exec->reports, "invalid operand kind");
+        ctu_assert(exec->reports, "invalid operand kind");
         return value_poison("invalid operand kind");
     }
 }
 
 static size_t get_label(exec_t *exec, operand_t it) {
     if (it.kind != LABEL) {
-        assert2(exec->reports, "invalid operand kind");
+        ctu_assert(exec->reports, "invalid operand kind");
         return SIZE_MAX;
     }
 
@@ -84,7 +85,7 @@ static value_t *exec_unary(exec_t *exec, step_t step) {
     case UNARY_NEG: return value_neg(operand);
 
     default:
-        assert2(exec->reports, "invalid unary operator");
+        ctu_assert(exec->reports, "invalid unary operator");
         return value_poison("invalid unary operator");
     }
 }
@@ -116,7 +117,7 @@ static bool exec_step(exec_t *exec) {
         return true;
 
     default:
-        assert2(exec->reports, "%s invalid opcode: [%zu] = %d", exec->block->name, exec->ip, step.opcode);
+        ctu_assert(exec->reports, "%s invalid opcode: [%zu] = %d", exec->block->name, exec->ip, step.opcode);
         return false;
     }
 }

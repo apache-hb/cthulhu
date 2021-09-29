@@ -16,8 +16,19 @@
 message_t *report_shadow(reports_t *reports,
                         const char *name,
                         const node_t *shadowed,
-                        const node_t *shadowing);
+                        const node_t *shadowing) NONULL;
 
+/**
+ * report that a defition is recursive
+ * 
+ * @param reports the report sink
+ * @param stack vector_t<node_t*> 
+ *              the stacktrace of the recursive definiton
+ *              as returned from lir_recurses
+ * @param root the root node where the stack start
+ * 
+ * @return the message
+ */
 message_t *report_recursive(reports_t *reports,
                             vector_t *stack,
-                            lir_t *root);
+                            lir_t *root) NONULL;

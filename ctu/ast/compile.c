@@ -54,7 +54,7 @@ scan_t *scan_file(reports_t *reports, const char *language, file_t *file) {
     scan->data = fd;
 
     if (!(scan->text = ctu_mmap(file))) {
-        assert2(reports, "failed to mmap file");
+        ctu_assert(reports, "failed to mmap file");
     }
 
     return scan;

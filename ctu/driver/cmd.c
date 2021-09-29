@@ -46,7 +46,7 @@ static int parse_arg(settings_t *settings, int index, int argc, char **argv) {
         file_t *fp = ctu_open(arg, "rb");
 
         if (fp == NULL) {
-            report2(settings->reports, ERROR, NULL, "failed to open file: %s", arg);
+            report(settings->reports, ERROR, NULL, "failed to open file: %s", arg);
         } else {
             vector_push(&settings->sources, fp);
         }
@@ -56,14 +56,14 @@ static int parse_arg(settings_t *settings, int index, int argc, char **argv) {
         print_version();
     } else if (MATCH(arg, "-src", "--source")) {
         if (settings->frontend != NULL) {
-            report2(settings->reports, ERROR, NULL, "source already specified");
+            report(settings->reports, ERROR, NULL, "source already specified");
         }
 
         settings->frontend = select_frontend(settings->reports, NEXT(index, argc, argv));
         return 2;
     } else if (MATCH(arg, "-gen", "--generator")) {
         if (settings->backend != NULL) {
-            report2(settings->reports, ERROR, NULL, "generator already specified");
+            report(settings->reports, ERROR, NULL, "generator already specified");
         }
 
         settings->backend = select_backend(settings->reports, NEXT(index, argc, argv));
@@ -71,7 +71,7 @@ static int parse_arg(settings_t *settings, int index, int argc, char **argv) {
     } else if (MATCH(arg, "-V", "--verbose")) {
         settings->verbose = true;
     } else {
-        report2(settings->reports, WARNING, NULL, "unknown argument %s", arg);
+        report(settings->reports, WARNING, NULL, "unknown argument %s", arg);
     }
 
     return 1;

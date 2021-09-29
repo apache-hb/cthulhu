@@ -121,7 +121,7 @@ static step_t *get_step(context_t ctx, operand_t op) {
         return &ctx.block->steps[op.label];
     }
 
-    assert2(ctx.reports, "get-step invalid kind %d", op.kind);
+    ctu_assert(ctx.reports, "get-step invalid kind %d", op.kind);
 
     return NULL;
 }
@@ -212,9 +212,10 @@ static void build_block(vector_t **strings, reports_t *reports, module_t *mod, b
         operand_t op = emit_lir(ctx, body);
         build_return(ctx, body, op);
     } else {
-        /*
-        build_return(ctx, body, operand_empty());
-    */}
+        step_t step = step_with_type(OP_RETURN, NULL, type_void());
+        step.operand = operand_empty();
+        add_step(ctx, step);
+    }
 }
 
 static void build_define(vector_t **strings, reports_t *reports, module_t *mod, block_t *block, lir_t *define) {
@@ -401,7 +402,7 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_DEFINE: return emit_define(lir);
 
     default:
-        assert2(ctx.reports, "emit-lir unknown %d", lir->leaf);
+        ctu_assert(ctx.reports, "emit-lir unknown %d", lir->leaf);
         return operand_empty();
     }
 }

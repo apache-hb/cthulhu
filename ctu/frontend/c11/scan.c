@@ -255,7 +255,7 @@ static tok_t get_tok(c_scan_t *scan) {
         return build_ident(scan, ident);
     }
 
-    report2(scan->reports, ERROR,
+    report(scan->reports, ERROR,
         node_new(scan->scanner, scan->where),
         "unknown character %c", c
     );

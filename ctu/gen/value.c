@@ -30,8 +30,17 @@ value_t *value_ptr(const type_t *type, value_t *ptr) {
     return value;
 }
 
+value_t *value_empty(void) {
+    return value_of(type_void());
+}
+
 char *value_format(const value_t *value) {
     const type_t *type = value->type;
+
+    if (is_void(type)) {
+        return ctu_strdup("empty");
+    }
+
     char *typestr = type_format(type);
 
     if (is_digit(type)) {
@@ -39,12 +48,8 @@ char *value_format(const value_t *value) {
         return format("%s(%s)", typestr, str);
     }
 
-    if (is_void(type)) {
-        return format("%s(void)", typestr);
-    }
-
     if (is_poison(type)) {
-        return format("%s(%s)", typestr, type->msg);
+        return typestr;
     }
 
     /* trigraphs are fun */

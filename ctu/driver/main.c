@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
         const frontend_t *frontend = select_frontend_by_extension(reports, settings.frontend, fp->path);
 
         if (frontend == NULL) {
-            report2(reports, ERROR, NULL, "unknown file type: %s", fp->path);
+            report(reports, ERROR, NULL, "unknown file type: %s", fp->path);
         } else {
             void *node = frontend->parse(reports, fp);
             vector_push(&units, unit_new(frontend, reports, fp, node));
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
         const backend_t *backend = settings.backend ?: &BACKEND_C99;
 
         if (backend->compile == NULL) {
-            report2(unit->reports, NOTE, NULL, "backend `%s` is disabled", backend->name);
+            report(unit->reports, NOTE, NULL, "backend `%s` is disabled", backend->name);
             continue;
         }
 

@@ -208,7 +208,7 @@ static context_t *gcc_context_for_module(reports_t *reports, module_t *module) {
     gcc_jit_context *gcc = gcc_jit_context_acquire();
 
     if (gcc == NULL) {
-        assert2(reports, "failed to create gccjit context");
+        ctu_assert(reports, "failed to create gccjit context");
         return NULL;
     }
 
@@ -599,7 +599,7 @@ static gcc_jit_function *create_function(context_t *ctx,
     gcc_jit_type *result = select_gcc_type(ctx->gcc, type->result);
 
     if (params == NULL) {
-        assert2(ctx->reports, "failed to build gcc params for %s", name);
+        ctu_assert(ctx->reports, "failed to build gcc params for %s", name);
         return NULL;
     }
 
@@ -694,6 +694,6 @@ bool gccjit_build(reports_t *reports, module_t *mod, const char *path) {
     gcc_jit_context_compile(context->gcc);
 
     //vector_t *blocks = begin_gcc_blocks(context, mod->funcs);
-    assert2(reports, "gccjit unimplemented %p %s", mod, path);
+    ctu_assert(reports, "gccjit unimplemented %p %s", mod, path);
     return false;
 }

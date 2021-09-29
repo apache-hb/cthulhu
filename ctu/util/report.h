@@ -80,7 +80,7 @@ void delete_reports(reports_t *reports) NONULL;
  * @return a message object to attach extra data to
  */
 PRINT(2, 3)
-message_t *assert2(reports_t *reports, 
+message_t *ctu_assert(reports_t *reports, 
                    const char *fmt, ...) NOTNULL(1, 2);
 
 /**
@@ -95,7 +95,7 @@ message_t *assert2(reports_t *reports,
  * @return a message object to attach extra data to
  */
 PRINT(4, 5)
-message_t *report2(reports_t *reports, 
+message_t *report(reports_t *reports, 
                    level_t level, 
                    const node_t *node, 
                    const char *fmt, ...) NOTNULL(1, 4);
@@ -109,7 +109,7 @@ message_t *report2(reports_t *reports,
  * @param ... the arguments to the format string
  */
 PRINT(3, 4)
-void report_append2(message_t *message, 
+void report_append(message_t *message, 
                     const node_t *node, 
                     const char *fmt, ...) NOTNULL(1, 3);
 
@@ -132,7 +132,7 @@ void report_underline(message_t *message,
  * @param ... the arguments to the format string
  */
 PRINT(2, 3)
-void report_note2(message_t *message, 
+void report_note(message_t *message, 
                   const char *fmt, ...) NOTNULL(1, 2);
 
 /**

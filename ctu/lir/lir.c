@@ -38,14 +38,6 @@ lir_t *lir_module(node_t *node,
     return lir;
 }
 
-void add_module_var(lir_t *mod, lir_t *var) {
-    vector_push(&mod->vars, var);
-}
-
-void add_module_func(lir_t *mod, lir_t *func) {
-    vector_push(&mod->funcs, func);
-}
-
 lir_t *lir_int(node_t *node, const type_t *type, int digit) {
     lir_t *lir = lir_new(node, type, LIR_DIGIT);
 
@@ -144,7 +136,7 @@ lir_t *lir_branch(node_t *node, lir_t *cond, lir_t *then, lir_t *other) {
 
 void lir_value(reports_t *reports, lir_t *dst, const type_t *type, lir_t *init) {
     if (dst->leaf != LIR_FORWARD) {
-        assert2(reports, "lir-value already resolved");
+        ctu_assert(reports, "lir-value already resolved");
     }
 
     dst->leaf = LIR_VALUE;
@@ -154,7 +146,7 @@ void lir_value(reports_t *reports, lir_t *dst, const type_t *type, lir_t *init) 
 
 void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *locals, vector_t *params, lir_t *body) {
     if (dst->leaf != LIR_FORWARD) {
-        assert2(reports, "lir-define already resolved");
+        ctu_assert(reports, "lir-define already resolved");
     }
 
     dst->leaf = LIR_DEFINE;

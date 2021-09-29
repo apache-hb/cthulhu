@@ -166,9 +166,6 @@ lir_t *lir_module(node_t *node,
                   vector_t *vars, 
                   vector_t *funcs);
 
-void add_module_var(lir_t *mod, lir_t *var);
-void add_module_func(lir_t *mod, lir_t *func);
-
 lir_t *lir_int(node_t *node, const type_t *type, int digit);
 lir_t *lir_digit(node_t *node, const type_t *type, mpz_t digit);
 lir_t *lir_string(node_t *node, const type_t *type, const char *str);

@@ -46,7 +46,7 @@ static void add_global(context_t *ctx, const block_t *block) {
     const value_t *value = block->value;
     const char *name = block->name;
 
-    if (value == NULL) {
+    if (is_void(value->type)) {
         return;
     }
 
@@ -257,7 +257,7 @@ switch (step.opcode) {
         return format_binary(idx, step);
 
     default:
-        assert2(ctx->reports, "unknown opcode: %d", step.opcode);
+        ctu_assert(ctx->reports, "unknown opcode: %d", step.opcode);
         return format("  // unimplemented operand %d at %zu\n", step.opcode, idx);
     }
 }
@@ -392,7 +392,7 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
 
     file_t *file = ctu_open(path, "w");
     if (file == NULL) {
-        assert2(ctx->reports, "failed to open file: %s", path);
+        ctu_assert(ctx->reports, "failed to open file: %s", path);
         free_c99_context(ctx);
         return false;
     }

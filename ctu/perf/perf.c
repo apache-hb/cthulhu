@@ -22,7 +22,7 @@ void dead_function_elimination(reports_t *reports,
     vector_t *funcs = mod->funcs;
     size_t len = vector_len(funcs);
 
-    report2(reports, NOTE, NULL, "running DFE pass on %zu blocks", len);
+    report(reports, NOTE, NULL, "running DFE pass on %zu blocks", len);
 
     for (size_t i = 0; i < len; i++) {
         block_t *func = vector_get(funcs, i);

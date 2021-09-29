@@ -162,10 +162,11 @@ static void var_print(FILE *out, module_t *mod, size_t idx) {
     const char *type = type_format(flow->type);
 
     if (flow->value != NULL) {
-        fprintf(out, "  %s: %s = %s {\n", name,
+        fprintf(out, "  %s: %s = %s\n", name,
             type,
             value_format(flow->value)  
         );
+        return;
     } else {
         fprintf(out, "  %s: %s {\n", name, type);
     }
@@ -214,6 +215,10 @@ static void func_print(FILE *out, module_t *mod, size_t idx) {
 static void values_print(FILE *out, module_t *mod, vector_t *vars) {
     size_t nvars = vector_len(vars);
     
+    if (nvars == 0) {
+        return;
+    }
+
     fprintf(out, "values[%zu] {\n", nvars);
     
     for (size_t i = 0; i < nvars; i++) {
@@ -225,6 +230,11 @@ static void values_print(FILE *out, module_t *mod, vector_t *vars) {
 
 static void strtab_print(FILE *out, vector_t *strtab) {
     size_t len = vector_len(strtab);
+    
+    if (len == 0) {
+        return;
+    }
+
     fprintf(out, "strtab[%zu] {\n", len);
     for (size_t i = 0; i < len; i++) {
         const char *str = vector_get(strtab, i);
@@ -235,6 +245,11 @@ static void strtab_print(FILE *out, vector_t *strtab) {
 
 static void imports_print(FILE *out, vector_t *imports) {
     size_t len = vector_len(imports);
+    
+    if (len == 0) {
+        return;
+    }
+    
     fprintf(out, "imports[%zu] {\n", len);
     for (size_t i = 0; i < len; i++) {
         block_t *imp = vector_get(imports, i);

@@ -60,7 +60,7 @@ const backend_t BACKEND_NULL = {
 
 const frontend_t *select_frontend(reports_t *reports, const char *name) {
     if (name == NULL) {
-        report2(reports, ERROR, NULL, "no frontend specified");
+        report(reports, ERROR, NULL, "no frontend specified");
         return NULL;
     }
 
@@ -71,7 +71,7 @@ const frontend_t *select_frontend(reports_t *reports, const char *name) {
     } else if (streq(name, "c11")) {
         return &FRONTEND_C11;
     } else {
-        report2(reports, ERROR, NULL, "unknown frontend: %s", name);
+        report(reports, ERROR, NULL, "unknown frontend: %s", name);
         return NULL;
     }
 }
@@ -88,14 +88,14 @@ const frontend_t *select_frontend_by_extension(reports_t *reports, const fronten
     } else if (endswith(path, ".c")) {
         return &FRONTEND_C11;
     } else {
-        report2(reports, ERROR, NULL, "unknown extension on input: %s", path);
+        report(reports, ERROR, NULL, "unknown extension on input: %s", path);
         return NULL;
     }
 }
 
 const backend_t *select_backend(reports_t *reports, const char *name) {
     if (name == NULL) {
-        report2(reports, ERROR, NULL, "no backend specified");
+        report(reports, ERROR, NULL, "no backend specified");
     }
 
     if (streq(name, "c99")) {
@@ -107,7 +107,7 @@ const backend_t *select_backend(reports_t *reports, const char *name) {
     } else if (streq(name, "null")) {
         return &BACKEND_NULL;
     } else {
-        report2(reports, ERROR, NULL, "unknown backend: %s", name);
+        report(reports, ERROR, NULL, "unknown backend: %s", name);
         return NULL;
     }
 }
