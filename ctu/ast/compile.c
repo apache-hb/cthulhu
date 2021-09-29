@@ -30,6 +30,11 @@ static scan_t *scan_new(reports_t *reports, const char *language, const char *pa
     return scan;
 }
 
+void scan_delete(scan_t *scan) {
+    set_delete(scan->pool);
+    ctu_free(scan, sizeof(scan_t));
+}
+
 scan_t *scan_string(reports_t *reports, const char *language, const char *path, const char *text) {
     size_t size = strlen(text);
     scan_t *scan = scan_new(reports, language, path, size);

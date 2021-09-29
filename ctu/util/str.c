@@ -174,7 +174,7 @@ static size_t set_size(size_t size) {
 }
 
 static void entry_delete(entry_t *entry) {
-    if (entry->next) {
+    if (entry->next != NULL) {
         entry_delete(entry->next);
     }
     ctu_free(entry, sizeof(entry_t));
@@ -207,7 +207,10 @@ void set_delete(set_t *set) {
     /* toplevel entries are part of the set
        and get deleted seperatley */
     for (size_t i = 0; i < set->size; i++) {
-        entry_delete(set->data[i].next);
+        entry_t *entry = set->data[i].next;
+        if (entry != NULL) {
+            entry_delete(entry);
+        }
     }
     ctu_free(set, set_size(set->size));
 }

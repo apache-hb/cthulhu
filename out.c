@@ -7,12 +7,9 @@
 // Imported symbols
 
 // Global forwarding
-signed long x;
-signed long X;
+signed int x;
 
 // Global initialization
-signed long x = (signed long)10;
-signed long X = (signed long)20;
 
 // Function forwarding
 

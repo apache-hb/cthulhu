@@ -38,11 +38,12 @@ static const char *LANGUAGE = "cthulhu";
 ctu_t *ctu_compile(reports_t *reports, file_t *fd) {
     scan_t *scan = scan_file(reports, LANGUAGE, fd);
     ctu_t *node = compile_file(scan, &CALLBACKS);
+    //scan_delete(scan);
     return node;
 }
 
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg) {
-    (void)state;
+    UNUSED(state);
 
     report(scan->reports, ERROR, node_new(scan, *where), "%s", msg);
 }
