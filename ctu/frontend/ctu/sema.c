@@ -86,7 +86,11 @@ static type_t *compile_pointer_type(sema_t *sema, ctu_t *node) {
 static type_t *compile_name_type(sema_t *sema, ctu_t *node) {
     const char *id = node->ident;
 
-    type_t *real = get_type(sema, id) ?: type_poison("unresolved type");
+    type_t *real = get_type(sema, id);
+    if (real == NULL) {
+        report(sema->reports, ERROR, node->node, "unknown type `%s`", id);
+        real = type_poison("unresolved type");
+    }
 
     return real;
 }
@@ -196,15 +200,23 @@ static lir_t *implicit_cast(lir_t *expr, const type_t *type) {
 static void compile_value(sema_t *sema, lir_t *decl) {
     ctx_t *ctx = decl->ctx;
     ctu_t *node = ctx->decl;
+    const node_t *where = node->node;
 
     lir_t *init = node->value ? compile_expr(sema, node->value) : NULL;
     const type_t *type = node->kind ? compile_type(sema, node->kind) : NULL;
+
+    if (type != NULL && is_void(type)) {
+        report(sema->reports, ERROR, where,
+            "value `%s` cannot be a void type", 
+            node->name
+        );
+    }
 
     if (init != NULL) {
         if (type != NULL) {
             lir_t *cast = implicit_cast(init, type);
             if (cast == NULL) {
-                report(sema->reports, ERROR, node->node, "cannot implitly convert from `%s` to `%s`",
+                report(sema->reports, ERROR, where, "cannot implitly convert from `%s` to `%s`",
                     /* provided-type = */ type_format(lir_type(init)),
                     /* expected-type = */ type_format(type)
                 );
