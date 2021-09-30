@@ -63,17 +63,17 @@ static char *padding(size_t len) {
 
 static char *extract_line(const scan_t *scan, line_t line) {
     size_t start = 0;
-    const char *text = scan_text(scan);
-    while (text[start] != '\0' && line > 0) {
-        char c = text[start++];
+    text_t source = scan->source;
+    while (start < source.size && line > 0) {
+        char c = source.text[start++];
         if (c == '\n') {
             line -= 1;
         }
     }
     
     size_t len = 0;
-    while (text[start + len]) {
-        char c = text[start + len++];
+    while (source.size > start + len) {
+        char c = source.text[start + len++];
         if (c == '\r' || c == '\n') {
             break;
         }
@@ -86,7 +86,7 @@ static char *extract_line(const scan_t *scan, line_t line) {
     char *str = malloc(len + 1);
     char *out = str;
     for (size_t i = 0; i < len - 1; i++) {
-        char c = text[start + i];
+        char c = source.text[start + i];
         if (c == '\r') {
             continue;
         }
