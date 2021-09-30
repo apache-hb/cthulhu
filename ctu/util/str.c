@@ -116,6 +116,32 @@ char *strnorm(const char *str) {
     return buf;
 }
 
+char *nstrnorm(const char *str, size_t len) {
+    size_t outlen = 0;
+    for (size_t i = 0; i < len; i++) {
+        if (isprint(str[i])) {
+            outlen += 1;
+        } else {
+            outlen += 4;
+        }
+    }
+
+    char *buf = ctu_malloc(outlen + 1);
+    char *out = buf;
+    for (size_t i = 0; i < len; i++) {
+        if (isprint(str[i])) {
+            *out = str[i];
+            out += 1;
+        } else {
+            sprintf(out, "\\x%02x", str[i]);
+            out += 4;
+        }
+    }
+
+    *out = '\0';
+    return buf;
+}
+
 size_t strhash(const char *str) {
     size_t hash = 0;
 

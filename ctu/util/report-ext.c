@@ -37,7 +37,10 @@ message_t *report_unknown_character(reports_t *reports,
                                     node_t *node,
                                     const char *str)
 {
-    char *normal = strnorm(str);
+    where_t where = node->where;
+
+    column_t width = where.last_column - where.first_column;
+    char *normal = nstrnorm(str, MAX(width, 1));
     message_t *id = report(reports, ERROR, node, "unknown character `%s`", normal);
     
     while (*str) {

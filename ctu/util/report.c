@@ -94,7 +94,7 @@ static char *extract_line(const scan_t *scan, line_t line) {
     }
     *out = '\0';
 
-    return str;
+    return nstrnorm(str, len - 1);
 }
 
 static char *build_underline(char *source, where_t where, char *note) {
@@ -111,7 +111,7 @@ static char *build_underline(char *source, where_t where, char *note) {
 
     size_t width = MAX(back - front, 1);
     size_t len = note ? strlen(note) : 0;
-    char *str = malloc(back + len + 2);
+    char *str = malloc(back + width + len + 2);
 
     column_t idx = 0;
 

@@ -79,6 +79,16 @@ char *strmul(const char *str, size_t times) NOTNULL(1);
 char *strnorm(const char *str) NONULL;
 
 /**
+ * normalize a string with length into a valid C string
+ *
+ * @param str the string to normalize
+ * @param len the length of the string
+ * 
+ * @return the normalized string
+ */
+char *nstrnorm(const char *str, size_t len) NONULL;
+
+/**
  * hash a string into a size_t
  * 
  * @param str the string to hash
