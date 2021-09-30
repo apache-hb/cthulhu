@@ -10,6 +10,11 @@ typedef int64_t line_t;
 typedef int64_t column_t;
 
 typedef struct {
+    size_t size;
+    const char *text;
+} text_t;
+
+typedef struct {
     /* the language name */
     const char *language;
 
@@ -20,13 +25,15 @@ typedef struct {
     void *data;
 
     /* the source text of the file */
-    const char *text;
+    // const char *text;
     
+    text_t source;
+
     /* how much of the text has been read */
     size_t offset;
 
     /* the length of the text */
-    size_t size;
+    // size_t size;
 
     /* string interning pool */
     set_t *pool;
@@ -34,6 +41,9 @@ typedef struct {
     /* actually reports_t * but forward declaration pains */
     void *reports;
 } scan_t;
+
+size_t scan_size(const scan_t *scan);
+const char *scan_text(const scan_t *scan);
 
 /* a location inside a scanner */
 typedef struct {

@@ -63,7 +63,7 @@ static char *padding(size_t len) {
 
 static char *extract_line(const scan_t *scan, line_t line) {
     size_t start = 0;
-    const char *text = scan->text;
+    const char *text = scan_text(scan);
     while (text[start] != '\0' && line > 0) {
         char c = text[start++];
         if (c == '\n') {

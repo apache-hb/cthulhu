@@ -5,11 +5,15 @@
 
 // String literals
 // Imported symbols
+extern signed int printf(const char *, ...);
 
 // Global forwarding
-signed int x;
+signed long z;
+signed long zd;
 
 // Global initialization
+signed long z = (signed long)0;
+signed long zd = (signed long)25;
 
 // Function forwarding
 

@@ -106,8 +106,6 @@ void *ctu_mmap(file_t *fp) {
     char *text;
     size_t size = file_size(fp->file);
 
-    printf("%s = %zu\n", fp->path, size);
-
 #ifndef _WIN32
     int fd = fileno(fp->file);
     text = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);

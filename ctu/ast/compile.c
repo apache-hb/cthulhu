@@ -12,16 +12,14 @@
 #   include <sys/mman.h>
 #endif
 
-static scan_t *scan_new(reports_t *reports, const char *language, const char *path, size_t size) {
+static scan_t *scan_new(reports_t *reports, const char *language, const char *path) {
     scan_t *scan = ctu_malloc(sizeof(scan_t));
 
     scan->language = language;
     scan->path = path;
     scan->data = NULL;
 
-    /* scan->text is filled in by the caller */
     scan->offset = 0;
-    scan->size = size;
 
     scan->pool = set_new(1257787); /* TODO: figure out a good size based on file size */
 
@@ -36,10 +34,9 @@ void scan_delete(scan_t *scan) {
 }
 
 scan_t *scan_string(reports_t *reports, const char *language, const char *path, const char *text) {
-    size_t size = strlen(text);
-    scan_t *scan = scan_new(reports, language, path, size);
+    scan_t *scan = scan_new(reports, language, path);
 
-    scan->text = text;
+    scan->source = (text_t){ strlen(text), text };
 
     return scan;
 }
@@ -54,13 +51,16 @@ static size_t file_size(FILE *fd) {
 scan_t *scan_file(reports_t *reports, const char *language, file_t *file) {
     FILE *fd = file->file;
     size_t size = file_size(fd);
-    scan_t *scan = scan_new(reports, language, file->path, size);
+    scan_t *scan = scan_new(reports, language, file->path);
 
     scan->data = fd;
 
-    if (!(scan->text = ctu_mmap(file))) {
+    char *text;
+    if (!(text = ctu_mmap(file))) {
         ctu_assert(reports, "failed to mmap file");
     }
+
+    scan->source = (text_t){ size, text };
 
     return scan;
 }
@@ -78,7 +78,7 @@ void *compile_string(scan_t *extra, callbacks_t *callbacks) {
         return NULL;
     }
 
-    if (!(state = callbacks->scan(extra->text, scanner))) {
+    if (!(state = callbacks->scan(scan_text(extra), scanner))) {
         return NULL;
     }
 

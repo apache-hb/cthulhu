@@ -2,6 +2,7 @@
 
 #include "ctu/ast/compile.h"
 #include "ctu/type/type.h"
+#include "ctu/util/report-ext.h"
 
 #include <ctype.h>
 
@@ -113,7 +114,7 @@ static node_t *node_of(tok_t tok, c_scan_t scan) {
 }
 
 static char get_char(c_scan_t *scan) {
-    const char *buffer = scan->scanner->text;
+    const char *buffer = scan_text(scan->scanner);
     char c = buffer[scan->offset++];
 
     if (c == '\n') {
@@ -250,14 +251,15 @@ static tok_t get_tok(c_scan_t *scan) {
             end = scan->offset;
             c = next_char(scan);
         }
-        char *ident = ctu_memdup(scan->scanner->text + start, end - start + 1);
+        char *ident = ctu_memdup(scan_text(scan->scanner) + start, end - start + 1);
         ident[end - start] = '\0';
         return build_ident(scan, ident);
     }
 
-    report(scan->reports, ERROR,
+    char msg[] = { c, '\0' };
+    report_unknown_character(scan->reports,
         node_new(scan->scanner, scan->where),
-        "unknown character %c", c
+        msg
     );
 
     return get_tok(scan);

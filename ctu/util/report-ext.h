@@ -32,3 +32,8 @@ message_t *report_shadow(reports_t *reports,
 message_t *report_recursive(reports_t *reports,
                             vector_t *stack,
                             lir_t *root) NONULL;
+
+message_t *report_unknown_character(reports_t *reports,
+                                    node_t *node,
+                                    const char *str) NONULL;
+                                    

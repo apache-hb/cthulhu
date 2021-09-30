@@ -32,3 +32,17 @@ message_t *report_recursive(reports_t *reports,
 
     return id;
 }
+
+message_t *report_unknown_character(reports_t *reports,
+                                    node_t *node,
+                                    const char *str)
+{
+    char *normal = strnorm(str);
+    message_t *id = report(reports, ERROR, node, "unknown character `%s`", normal);
+    
+    while (*str) {
+        printf("%x", *str++);
+    }
+    
+    return id;
+}

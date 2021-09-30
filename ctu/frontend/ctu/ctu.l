@@ -9,6 +9,7 @@
 #include "ctu-bison.h"
 #include "scan.h"
 #include "ctu/util/report.h"
+#include "ctu/util/report-ext.h"
 #include "ctu/ast/interop.h"
 %}
 
@@ -73,6 +74,6 @@
 
 "=" { return ASSIGN; }
 
-. { report(yyextra->reports, ERROR, node_new(yyextra, *yylloc), "unknown character %s", yytext); }
+. { report_unknown_character(yyextra->reports, node_new(yyextra, *yylloc), yytext); }
 
 %%
