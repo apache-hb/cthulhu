@@ -109,8 +109,7 @@ static type_t *compile_type(sema_t *sema, ctu_t *node) {
 static lir_t *compile_expr(sema_t *sema, ctu_t *expr);
 
 static lir_t *compile_digit(ctu_t *expr) {
-    type_t *ty = type_digit(SIGNED, TY_LONG);
-    return lir_digit(expr->node, ty, expr->digit);
+    return lir_digit(expr->node, type_literal_integer(), expr->digit);
 }
 
 static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
@@ -189,12 +188,35 @@ static lir_t *implicit_bool(lir_t *expr) {
     return NULL;
 }
 
+static lir_t *implicit_digit(const type_t *to, lir_t *expr) {
+    const type_t *from = lir_type(expr);
+
+    if (is_literal(from)) {
+        expr->type = to;
+        return expr;
+    }
+
+    return NULL;
+}
+
 static lir_t *implicit_cast(lir_t *expr, const type_t *type) {
     if (is_bool(type)) {
         return implicit_bool(expr);
     }
 
+    if (is_digit(type)) {
+        return implicit_digit(type, expr);
+    }
+
     return NULL;
+}
+
+static lir_t *realise_expr(lir_t *expr) {
+    const type_t *type = lir_type(expr);
+    if (is_literal(type)) {
+        expr->type = type_digit(SIGNED, TY_INT);
+    }
+    return expr;
 }
 
 static void compile_value(sema_t *sema, lir_t *decl) {
@@ -202,7 +224,7 @@ static void compile_value(sema_t *sema, lir_t *decl) {
     ctu_t *node = ctx->decl;
     const node_t *where = node->node;
 
-    lir_t *init = node->value ? compile_expr(sema, node->value) : NULL;
+    lir_t *init = node->value ? realise_expr(compile_expr(sema, node->value)) : NULL;
     const type_t *type = node->kind ? compile_type(sema, node->kind) : NULL;
 
     if (type != NULL && is_void(type)) {

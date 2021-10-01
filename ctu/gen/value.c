@@ -1,4 +1,5 @@
 #include "value.h"
+#include "module.h"
 
 #include "ctu/util/str.h"
 
@@ -10,6 +11,12 @@ value_t *value_of(const type_t *type) {
 
 value_t *value_poison(const char *msg) {
     return value_of(type_poison(msg));
+}
+
+value_t *value_bool(bool value) {
+    value_t *result = value_of(type_bool());
+    result->boolean = value;
+    return result;
 }
 
 value_t *value_digit(const type_t *type, mpz_t digit) {
@@ -27,6 +34,12 @@ value_t *value_int(const type_t *type, int digit) {
 value_t *value_ptr(const type_t *type, value_t *ptr) {
     value_t *value = value_of(type);
     value->ptr = ptr;
+    return value;
+}
+
+value_t *value_block(struct block_t *block) {
+    value_t *value = value_of(block->type);
+    value->block = block;
     return value;
 }
 

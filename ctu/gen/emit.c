@@ -462,15 +462,10 @@ module_t *module_build(reports_t *reports, lir_t *root) {
         build_define(&strings, reports, mod, block, func);
     }
 
-    for (size_t i = 0; i < nvars; i++) {
-        block_t *var = vector_get(varblocks, i);
-        value_t *result = var->len > 0 ? eval_block(reports, mod, var) : NULL;
-
-        var->value = result;
-    }
-
     mod->imports = symbols;
     mod->strtab = strings;
+
+    eval_world(reports, mod);
 
     return mod;
 }

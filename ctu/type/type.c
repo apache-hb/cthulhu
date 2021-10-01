@@ -10,6 +10,10 @@ static type_t *type_new(metatype_t meta) {
     return type;
 }
 
+type_t *type_literal_integer(void) {
+    return type_new(TY_LITERAL_INTEGER);
+}
+
 type_t *type_digit(sign_t sign, int_t kind) {
     type_t *type = type_new(TY_INTEGER);
     digit_t digit = { sign, kind };

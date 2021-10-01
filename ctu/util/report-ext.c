@@ -43,9 +43,5 @@ message_t *report_unknown_character(reports_t *reports,
     char *normal = nstrnorm(str, MAX(width, 1));
     message_t *id = report(reports, ERROR, node, "unknown character `%s`", normal);
     
-    while (*str) {
-        printf("%x", *str++);
-    }
-    
     return id;
 }

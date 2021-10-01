@@ -5,6 +5,8 @@
 #include "ctu/util/util.h"
 
 typedef enum {
+    TY_LITERAL_INTEGER, /// integer literal type that can cast to any integer type
+
     TY_VOID, /// the unit type
     TY_BOOL, /// the boolean type
     TY_INTEGER, /// any integer type
@@ -69,6 +71,12 @@ typedef struct type_t {
 char *type_format(const type_t *type);
 
 
+/**
+ * create a integer literal type that is common to any integer
+ * 
+ * @return the integer literal type
+ */
+type_t *type_literal_integer(void);
 
 /**
  * create a digit type
@@ -134,7 +142,8 @@ type_t *type_poison(const char *msg);
 
 void type_mut(type_t *type, bool mut);
 
-
+bool is_literal(const type_t *type);
+bool is_integer(const type_t *type);
 bool is_digit(const type_t *type);
 bool is_bool(const type_t *type);
 bool is_signed(const type_t *type);

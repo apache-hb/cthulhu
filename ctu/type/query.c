@@ -1,5 +1,13 @@
 #include "type.h"
 
+bool is_literal(const type_t *type) {
+    return type->type == TY_LITERAL_INTEGER;
+}
+
+bool is_integer(const type_t *type) {
+    return is_digit(type) || is_literal(type);
+}
+
 bool is_digit(const type_t *type) {
     return type->type == TY_INTEGER;
 }

@@ -45,6 +45,9 @@ char *type_format(const type_t *type) {
     
     char *result = NULL;
     switch (type->type) {
+    case TY_LITERAL_INTEGER:
+        result = ctu_strdup("int-literal");
+        break;
     case TY_INTEGER: 
         result = digit_format(type->digit); 
         break;
