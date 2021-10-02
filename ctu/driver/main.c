@@ -4,6 +4,7 @@
 #include "driver.h"
 #include "cmd.h"
 #include "ctu/lir/sema.h"
+#include "ctu/gen/eval.h"
 #include "ctu/gen/emit.h"
 
 #include "ctu/perf/perf.h"
@@ -109,13 +110,22 @@ int main(int argc, char **argv) {
 
         module_t *mod = module_build(unit->reports, unit->lir);
         module_print(stdout, mod);
+        unit->mod = mod;
 
         err = end_reports(unit->reports, SIZE_MAX, format("code generation of `%s`", unit->file->path));
         fails = MAX(fails, err);
+        if (err > 0) {
+            continue;
+        }
 
         dead_function_elimination(unit->reports, mod);
 
-        unit->mod = mod;
+        eval_world(unit->reports, mod);
+        err = end_reports(unit->reports, SIZE_MAX, format("code generation of `%s`", unit->file->path));
+        fails = MAX(fails, err);
+        if (err > 0) {
+            continue;
+        }
     }
 
     if (fails > 0) {

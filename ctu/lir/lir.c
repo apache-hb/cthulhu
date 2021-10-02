@@ -165,11 +165,7 @@ lir_t *lir_symbol(node_t *node, const type_t *type, const char *name) {
 }
 
 lir_t *lir_poison(node_t *node, const char *msg) {
-    lir_t *lir = lir_new(node, NULL, LIR_POISON);
-
-    lir->msg = msg;
-
-    return lir;
+    return lir_new(node, type_poison(msg), LIR_POISON);
 }
 
 bool lir_ok(const lir_t *lir) {

@@ -1,6 +1,8 @@
 #include "sema.h"
+#include "ctu/util/util.h"
 #include "ctu/util/report-ext.h"
 
+#if 0
 typedef enum {
     TAG_TYPES,
     TAG_VARS,
@@ -10,12 +12,14 @@ typedef enum {
 } ctu_tag_t;
 
 typedef struct {
+    bool building;
     ctu_t *decl;
     sema_t *sema;
 } ctx_t;
 
 static ctx_t *ctx_new(ctu_t *decl, sema_t *sema) {
     ctx_t *ctx = ctu_malloc(sizeof(ctx_t));
+    ctx->building = false;
     ctx->decl = decl;
     ctx->sema = sema;
     return ctx;
@@ -107,6 +111,7 @@ static type_t *compile_type(sema_t *sema, ctu_t *node) {
 }
 
 static lir_t *compile_expr(sema_t *sema, ctu_t *expr);
+static lir_t *compile_value(sema_t *sema, lir_t *decl);
 
 static lir_t *compile_digit(ctu_t *expr) {
     return lir_digit(expr->node, type_literal_integer(), expr->digit);
@@ -116,7 +121,7 @@ static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
     const char *name = expr->ident;
     lir_t *value = sema_get(sema, TAG_VARS, name);
     if (value != NULL) {
-        return lir_name(expr->node, value);
+        return lir_name(expr->node, compile_value(sema, value));
     }
 
     lir_t *func = sema_get(sema, TAG_FUNCS, name);
@@ -219,13 +224,32 @@ static lir_t *realise_expr(lir_t *expr) {
     return expr;
 }
 
-static void compile_value(sema_t *sema, lir_t *decl) {
+static lir_t *compile_value(sema_t *sema, lir_t *decl) {
+    if (!lir_is(decl, LIR_FORWARD)) {
+        return decl;
+    }
+
     ctx_t *ctx = decl->ctx;
     ctu_t *node = ctx->decl;
-    const node_t *where = node->node;
+    node_t *where = node->node;
 
-    lir_t *init = node->value ? realise_expr(compile_expr(sema, node->value)) : NULL;
+    if (ctx->building) {
+        return lir_poison(where, "recursive dependency");
+    }
+
+    ctx->building = true;
+
+    lir_t *init = node->value ? compile_expr(sema, node->value) : NULL;
     const type_t *type = node->kind ? compile_type(sema, node->kind) : NULL;
+
+    if (init != NULL) {
+        vector_t *path = lir_recurses(init, decl);
+        if (path != NULL) {
+            report_recursive(sema->reports, path, decl);
+        } else {
+            init = realise_expr(init);
+        }
+    }
 
     if (type != NULL && is_void(type)) {
         report(sema->reports, ERROR, where,
@@ -248,11 +272,6 @@ static void compile_value(sema_t *sema, lir_t *decl) {
         }
 
         type = lir_type(init);
-
-        vector_t *path = lir_recurses(init, decl);
-        if (path != NULL) {
-            report_recursive(sema->reports, path, decl);
-        }
     }
 
     lir_value(sema->reports,
@@ -260,6 +279,14 @@ static void compile_value(sema_t *sema, lir_t *decl) {
         /* type = */ type,
         /* init = */ init
     );
+
+    ctx->building = false;
+
+    return decl;
+}
+
+static void build_value(sema_t *sema, lir_t *decl) {
+    compile_value(sema, decl);
 }
 
 static void compile_func(sema_t *sema, lir_t *decl) {
@@ -312,7 +339,7 @@ lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
     map_t *func_map = sema_tag(sema, TAG_FUNCS);
 
     MAP_APPLY(type_map, sema, compile_typedecl);
-    MAP_APPLY(global_map, sema, compile_value);
+    MAP_APPLY(global_map, sema, build_value);
     MAP_APPLY(func_map, sema, compile_func);
     
     vector_t *funcs = map_values(func_map);
@@ -326,4 +353,77 @@ lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
         vars,
         funcs
     );
+}
+#endif
+
+typedef enum {
+    TAG_TYPES,
+    TAG_GLOBALS,
+    TAG_FUNCS,
+
+    TAG_MAX
+} tag_t;
+
+typedef struct {
+    void *TODO;
+} stack_t;
+
+static stack_t *stack_new(void) {
+    stack_t *stack = ctu_malloc(sizeof(stack_t));
+    
+    return stack;
+}
+
+static sema_t *new_sema(reports_t *reports, 
+                        sema_t *parent,
+                        size_t *sizes) {
+    sema_t *sema = sema_new(parent, reports, TAG_MAX, sizes);
+    sema_set_data(sema, stack_new());
+    return sema;
+}
+
+static lir_t *compile_value(sema_t *sema, lir_t *lir);
+static lir_t *compile_expr(sema_t *sema, lir_t *lir);
+static void build_expr(sema_t *sema, lir_t *lir);
+
+static lir_t *compile_value(sema_t *sema, lir_t *lir) {
+
+}
+
+static lir_t *compile_expr(sema_t *sema, lir_t *lir) {
+
+}
+
+static void build_expr(sema_t *sema, lir_t *lir) {
+
+}
+
+static sema_t *base_sema(reports_t *reports, size_t decls) {
+    size_t sizes[TAG_MAX] = {
+        [TAG_TYPES] = decls,
+        [TAG_GLOBALS] = decls,
+        [TAG_FUNCS] = decls
+    };
+
+    sema_t *sema = new_sema(reports, NULL, sizes);
+
+    /*
+    add_type(sema, "int", type_digit(SIGNED, TY_INT));
+    add_type(sema, "uint", type_digit(UNSIGNED, TY_INT));
+    add_type(sema, "void", type_void());
+    add_type(sema, "bool", type_bool());
+    */
+
+    return sema;
+}
+
+lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
+    vector_t *decls = ctu->decls;
+    size_t ndecls = vector_len(decls);
+    sema_t *sema = base_sema(reports, ndecls);
+
+    sema_delete(sema);
+    
+    ctu_assert(reports, "ctu-sema unimplemented");
+    return NULL;
 }
