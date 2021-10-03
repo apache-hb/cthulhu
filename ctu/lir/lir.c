@@ -62,8 +62,8 @@ lir_t *lir_string(node_t *node, const type_t *type, const char *str) {
     return lir;
 }
 
-lir_t *lir_name(node_t *node, lir_t *it) {
-    lir_t *lir = lir_new(node, NULL, LIR_NAME);
+lir_t *lir_name(node_t *node, const type_t *type, lir_t *it) {
+    lir_t *lir = lir_new(node, type, LIR_NAME);
 
     lir->it = it;
 
@@ -224,9 +224,5 @@ vector_t *lir_recurses(lir_t *lir, const lir_t *root) {
 }
 
 const type_t *lir_type(const lir_t *lir) {
-    if (lir_is(lir, LIR_NAME)) {
-        lir = lir->it;
-    }
-    
     return lir->type;
 }

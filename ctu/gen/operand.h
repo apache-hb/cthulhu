@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ctu/util/report.h"
+
 #include "value.h"
 
 typedef size_t vreg_t;
@@ -37,7 +39,7 @@ typedef struct {
  * @param value the value
  * @return the operand
  */
-operand_t operand_imm(value_t *imm);
+operand_t operand_imm(reports_t *reports, value_t *imm);
 
 /**
  * create a virtual register operand

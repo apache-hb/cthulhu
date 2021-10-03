@@ -19,10 +19,11 @@ static void mark_live_funcs(block_t *block)
 void dead_function_elimination(reports_t *reports, 
                                module_t *mod)
 {
+    UNUSED(reports);
     vector_t *funcs = mod->funcs;
     size_t len = vector_len(funcs);
 
-    report(reports, NOTE, NULL, "running DFE pass on %zu blocks", len);
+    logverbose("running DFE pass on %zu blocks in %s", len, mod->name);
 
     for (size_t i = 0; i < len; i++) {
         block_t *func = vector_get(funcs, i);

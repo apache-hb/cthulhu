@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
     errors = begin_reports();
 
     settings_t settings = parse_args(errors, argc, argv);
+    verbose = settings.verbose;
 
     int err = end_reports(errors, SIZE_MAX, "command line parsing");
 

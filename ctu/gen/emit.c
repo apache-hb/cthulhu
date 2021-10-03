@@ -253,8 +253,8 @@ static operand_t emit_binary(context_t ctx, lir_t *lir) {
     return add_step(ctx, step);
 }
 
-static operand_t emit_digit(lir_t *lir) {
-    return operand_imm(value_digit(lir_type(lir), lir->digit));
+static operand_t emit_digit(context_t ctx, lir_t *lir) {
+    return operand_imm(ctx.reports, value_digit(lir_type(lir), lir->digit));
 }
 
 static operand_t emit_value(const lir_t *lir) {
@@ -281,7 +281,7 @@ static operand_t emit_assign(context_t ctx, lir_t *lir) {
     step_t step = step_of(OP_STORE, lir->dst);
     step.dst = dst;
     step.src = src;
-    step.offset = operand_imm(value_zero());
+    step.offset = operand_imm(ctx.reports, value_zero());
 
     return add_step(ctx, step);
 }
@@ -344,7 +344,7 @@ static operand_t emit_branch(context_t ctx, lir_t *lir) {
 static operand_t emit_name(context_t ctx, lir_t *lir) {
     step_t step = step_with_type(OP_LOAD, lir->node, lir_type(lir->it));
     step.src = emit_lir(ctx, lir->it);
-    step.offset = operand_imm(value_zero());
+    step.offset = operand_imm(ctx.reports, value_zero());
     return add_step(ctx, step);
 }
 
@@ -394,7 +394,7 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     switch (lir->leaf) {
     case LIR_UNARY: return emit_unary(ctx, lir);
     case LIR_BINARY: return emit_binary(ctx, lir);
-    case LIR_DIGIT: return emit_digit(lir);
+    case LIR_DIGIT: return emit_digit(ctx, lir);
     case LIR_STRING: return emit_string(ctx, lir);
     case LIR_STMTS: return emit_stmts(ctx, lir);
     case LIR_ASSIGN: return emit_assign(ctx, lir);

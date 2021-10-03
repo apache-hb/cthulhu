@@ -3,6 +3,7 @@
 #include "ctu/util/report.h"
 #include "ctu/util/report-ext.h"
 #include "ctu/util/str.h"
+#include "ctu/type/retype.h"
 
 #include <string.h>
 #include <ctype.h>
@@ -120,7 +121,7 @@ static lir_t *compile_ident(sema_t *sema, pl0_t *expr) {
     lir_t *val = query_ident(sema, name);
 
     if (val != NULL) {
-        return lir_name(node, val);
+        return lir_name(node, lir_type(val), val);
     }
 
     message_t *id = report(sema->reports, ERROR, node, "unknown variable name `%s`", name);
@@ -290,14 +291,24 @@ static void compile_const(sema_t *sema, lir_t *lir) {
     if (path != NULL) {
         report_recursive(sema->reports, path, lir);
     }
+    const type_t *type = pl0_int(false);
 
-    lir_value(sema->reports, lir, pl0_int(false), value);
+    lir_value(sema->reports, lir, 
+        /* type = */ type,
+        /* init = */ retype_expr(sema->reports, type, value)
+    );
 }
 
 static lir_t *build_var(sema_t *sema, pl0_t *node) {
     char *name = pl0_name(node->name);
     lir_t *lir = lir_forward(node->node, name, LIR_VALUE, NULL);
-    lir_value(sema->reports, lir, pl0_int(true), pl0_num(node->node, 0));
+    const type_t *type = pl0_int(true);
+    lir_t *init = retype_expr(sema->reports, type, pl0_num(node->node, 0));
+
+    lir_value(sema->reports, lir, 
+        /* type = */ type, 
+        /* init = */ init
+    );
     
     sema_set(sema, TAG_VARS, name, lir);
 
@@ -309,8 +320,10 @@ static void compile_var(sema_t *sema, lir_t *lir) {
 
     pl0_t *node = lir->ctx;
     lir_t *value = pl0_num(node->node, 0);
+    type_t *type = pl0_int(true);
+    lir_t *init = retype_expr(sema->reports, type, value);
 
-    lir_value(sema->reports, lir, pl0_int(true), value);
+    lir_value(sema->reports, lir, type, init);
 }
 
 static void compile_proc(sema_t *sema, lir_t *lir) {

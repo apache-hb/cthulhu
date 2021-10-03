@@ -6,7 +6,11 @@ static operand_t operand_new(optype_t kind) {
     return operand;
 }
 
-operand_t operand_imm(value_t *imm) {
+operand_t operand_imm(reports_t *reports, value_t *imm) {
+    if (is_literal(imm->type)) {
+        ctu_assert(reports, "immediate cannt be untyped");
+    }
+    
     operand_t operand = operand_new(IMM);
     operand.imm = imm;
     return operand;
