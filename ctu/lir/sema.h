@@ -2,8 +2,6 @@
 
 #include "ctu/util/report.h"
 
-typedef void(*sema_delete_t)(void*);
-
 typedef struct sema_t {
     struct sema_t *parent;
     reports_t *reports;

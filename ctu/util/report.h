@@ -44,11 +44,18 @@ typedef struct {
 } reports_t;
 
 /**
+ * release reporting context from memory
+ * 
+ * @param reports the context to release
+ */
+void delete_reports(reports_t *reports) NONULL;
+
+/**
  * create a reporting context
  * 
  * @return the new context
  */
-reports_t *begin_reports(void);
+reports_t *begin_reports(void) ALLOC(delete_reports);
 
 /**
  * flush a reporting context and return an exit code
@@ -62,13 +69,6 @@ reports_t *begin_reports(void);
 int end_reports(reports_t *reports, 
                 size_t limit, 
                 const char *name) NOTNULL(1, 3);
-
-/**
- * release reporting context from memory
- * 
- * @param reports the context to release
- */
-void delete_reports(reports_t *reports) NONULL;
 
 /**
  * push an internal compiler error into a reporting context

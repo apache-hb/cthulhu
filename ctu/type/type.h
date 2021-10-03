@@ -166,4 +166,4 @@ bool is_string(const type_t *type);
  * @param rhs the right hand side type
  * @return the common type of lhs and rhs
  */
-type_t *types_common(const type_t *lhs, const type_t *rhs);
+const type_t *types_common(const type_t *lhs, const type_t *rhs);

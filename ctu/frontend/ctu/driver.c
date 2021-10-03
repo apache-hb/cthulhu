@@ -1,7 +1,7 @@
 #include "driver.h"
 
 #include "scan.h"
-#include "sema.h"
+#include "sema/sema.h"
 
 ctu_t *ctu_parse(reports_t *reports, file_t *file) {
     return ctu_compile(reports, file);

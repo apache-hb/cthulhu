@@ -181,7 +181,7 @@ vector_t *lir_recurses(lir_t *lir, const lir_t *root) {
     lir_t *source = NULL;
 
     if (lir == root) {
-        return vector_init(lir->node);
+        return vector_init(lir);
     }
 
     switch (lir->leaf) {
@@ -217,7 +217,7 @@ vector_t *lir_recurses(lir_t *lir, const lir_t *root) {
     }
 
     if (result) {
-        vector_push(&result, source->node);
+        vector_push(&result, source);
     }
 
     return result;

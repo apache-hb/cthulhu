@@ -68,7 +68,7 @@ bool is_string(const type_t *type) {
     return type->type == TY_STRING;
 }
 
-type_t *types_common(const type_t *lhs, const type_t *rhs) {
+const type_t *types_common(const type_t *lhs, const type_t *rhs) {
     if (is_digit(lhs) && is_digit(rhs)) {
         digit_t ld = lhs->digit;
         digit_t rd = rhs->digit;
@@ -77,6 +77,18 @@ type_t *types_common(const type_t *lhs, const type_t *rhs) {
         int_t kind = MAX(ld.kind, rd.kind);
 
         return type_digit(sign, kind);
+    }
+
+    if (is_literal(lhs) && is_literal(rhs)) {
+        return type_literal_integer();
+    }
+
+    if (is_literal(lhs) && is_digit(rhs)) {
+        return rhs;
+    }
+
+    if (is_digit(lhs) && is_literal(rhs)) {
+        return lhs;
     }
 
     if (is_bool(lhs) && is_bool(rhs)) {

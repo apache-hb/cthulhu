@@ -23,11 +23,11 @@ message_t *report_recursive(reports_t *reports,
     size_t t = 0;
 
     for (size_t i = 0; i < len; i++) {
-        node_t *it = vector_get(stack, i);
-        if (it != last) {
-            report_append(id, it, "trace %zu", t++);
+        lir_t *lir = vector_get(stack, i);
+        if (lir->node != last) {
+            report_append(id, lir->node, "trace %zu", t++);
         }
-        last = it;
+        last = lir->node;
     }
 
     return id;

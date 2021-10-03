@@ -69,11 +69,11 @@ static type_t *pl0_closure(void) {
 }
 
 static lir_t *pl0_num(node_t *node, int num) {
-    return lir_int(node, pl0_int(false), num);
+    return lir_int(node, type_literal_integer(), num);
 }
 
 static lir_t *compile_digit(pl0_t *expr) {
-    return lir_digit(expr->node, pl0_int(false), expr->digit);
+    return lir_digit(expr->node, type_literal_integer(), expr->digit);
 }
 
 static lir_t *query_ident(sema_t *sema, const char *name) {
@@ -133,7 +133,7 @@ static lir_t *compile_binary(sema_t *sema, pl0_t *expr) {
     lir_t *lhs = compile_expr(sema, expr->lhs);
     lir_t *rhs = compile_expr(sema, expr->rhs);
 
-    type_t *type = types_common(lir_type(lhs), lir_type(rhs));
+    const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
 
     return lir_binary(expr->node, type, expr->binary, lhs, rhs);
 }

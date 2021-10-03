@@ -10,7 +10,7 @@ static char *emit_imm(const value_t *imm) {
     }
 
     const type_t *type = imm->type;
-    if (type->type == TY_INTEGER) {
+    if (is_integer(type)) {
         return format("%s", mpz_get_str(NULL, 10, imm->digit));
     } else {
         return NULL;

@@ -139,7 +139,7 @@ static bucket_t *bucket_new(const char *key, void *value) {
     return entry;
 }
 
-static void *entry_get(const bucket_t *entry, const char *key) {
+HOT static void *entry_get(const bucket_t *entry, const char *key) {
     if (entry->key && streq(entry->key, key)) {
         return entry->value;
     }
@@ -160,7 +160,7 @@ static void entry_delete(bucket_t *entry) {
 }
 
 /* find which bucket a key should be in */
-static bucket_t *map_bucket(map_t *map, const char *key) {
+HOT static bucket_t *map_bucket(map_t *map, const char *key) {
     size_t hash = strhash(key);
     size_t index = hash % map->size;
     bucket_t *entry = &map->data[index];

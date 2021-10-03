@@ -39,7 +39,7 @@ char *formatv(const char *fmt, va_list args) NONULL;
  * @param prefix the prefix to check for
  * @return if str starts with prefix
  */
-bool startswith(const char *str, const char *prefix) PURE NONULL;
+bool startswith(const char *str, const char *prefix) CONSTFN NONULL;
 
 /**
  * check if a string ends with a substring
@@ -48,7 +48,7 @@ bool startswith(const char *str, const char *prefix) PURE NONULL;
  * @param suffix the suffix to check for
  * @return if str ends with suffix
  */
-bool endswith(const char *str, const char *suffix) PURE NONULL;
+bool endswith(const char *str, const char *suffix) CONSTFN NONULL;
 
 /**
  * join a vector of strings together with a separator
@@ -95,7 +95,7 @@ char *nstrnorm(const char *str, size_t len) NONULL;
  * 
  * @return the hash
  */
-size_t strhash(const char *str) PURE NONULL;
+size_t strhash(const char *str) CONSTFN NONULL;
 
 /**
  * check if 2 strings are equal
@@ -105,7 +105,7 @@ size_t strhash(const char *str) PURE NONULL;
  * 
  * @return if the strings are equal
  */
-bool streq(const char *lhs, const char *rhs) PURE NONULL;
+bool streq(const char *lhs, const char *rhs) HOT CONSTFN NONULL;
 
 typedef struct {
     size_t len;
@@ -113,11 +113,11 @@ typedef struct {
     char *data;
 } stream_t;
 
-stream_t *stream_new(size_t size);
 void stream_delete(stream_t *stream) NONULL;
-size_t stream_len(stream_t *stream) PURE NONULL;
+stream_t *stream_new(size_t size) ALLOC(stream_delete);
+size_t stream_len(stream_t *stream) CONSTFN NONULL;
 void stream_write(stream_t *stream, const char *str) NONULL;
-const char *stream_data(const stream_t *stream) PURE NONULL;
+const char *stream_data(const stream_t *stream) CONSTFN NONULL;
 
 typedef struct entry_t {
     char *key;
@@ -129,6 +129,6 @@ typedef struct {
     entry_t data[];
 } set_t;
 
-set_t *set_new(size_t size);
 void set_delete(set_t *set) NONULL;
+set_t *set_new(size_t size) ALLOC(set_delete);
 char *set_add(set_t *set, const char *str) NONULL;
