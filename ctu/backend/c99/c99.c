@@ -32,7 +32,7 @@ static void forward_global(context_t *ctx, const block_t *block) {
     const type_t *type = block->type;
     const char *name = block->name;
 
-    const char *decl = type_to_string(type, name);
+    const char *decl = type_to_string(ctx->reports, type, name);
 
     char *forward = format("%s;\n", decl);
 
@@ -46,8 +46,8 @@ static void add_global(context_t *ctx, const block_t *block) {
     const value_t *value = block->value;
     const char *name = block->name;
 
-    const char *start = type_to_string(type, name);
-    const char *init = value_to_string(value);
+    const char *start = type_to_string(ctx->reports, type, name);
+    const char *init = value_to_string(ctx->reports, value);
 
     char *fmt = format("%s = %s;\n", start, init);
 
@@ -74,7 +74,7 @@ static void add_globals(context_t *ctx, vector_t *globals) {
     }
 }
 
-static char *format_function(const block_t *block) {
+static char *format_function(reports_t *reports, const block_t *block) {
     const char *name = block->name;
     const type_t *type = block->type;
     const vector_t *args = type->args;
@@ -83,17 +83,17 @@ static char *format_function(const block_t *block) {
     vector_t *params = vector_of(vector_len(args));
     for (size_t i = 0; i < len; i++) {
         const type_t *arg = vector_get(args, i);
-        const char *param = type_to_string(arg, NULL);
+        const char *param = type_to_string(reports, arg, NULL);
         vector_set(params, i, (char*)param);
     }
     
-    const char *decl = type_to_string(type->result, name);
+    const char *decl = type_to_string(reports, type->result, name);
 
     return format("%s(%s)", decl, strjoin(", ", params));
 }
 
 static void forward_block(context_t *ctx, const block_t *block) {
-    char *decl = format_function(block);
+    char *decl = format_function(ctx->reports, block);
     stream_write(ctx->result, format("%s;\n", decl));
 }
 
@@ -114,62 +114,62 @@ static char *format_addr(const block_t *block) {
     return format("&%s", block->name);
 }
 
-static const char *format_operand(operand_t op) {
+static const char *format_operand(reports_t *reports, operand_t op) {
     switch (op.kind) {
     case LABEL: return format("block%zu", op.label);
     case VREG: return format_vreg(op.vreg);
     case ADDRESS: return format_addr(op.block);
-    case IMM: return value_to_string(op.imm);
+    case IMM: return value_to_string(reports, op.imm);
 
     default: return format("unknown(%d)", op.kind);
     }
 }
 
-static char *format_branch(step_t step) {
-    const char *cond = format_operand(step.cond);
-    const char *label = format_operand(step.label);
-    const char *other = format_operand(step.other);
+static char *format_branch(reports_t *reports, step_t step) {
+    const char *cond = format_operand(reports, step.cond);
+    const char *label = format_operand(reports, step.label);
+    const char *other = format_operand(reports, step.other);
 
     return format("  if (%s) { goto %s; } else { goto %s; }\n", cond, label, other);
 }
 
-static char *format_return(step_t step) {
+static char *format_return(reports_t *reports, step_t step) {
     operand_t ret = step.operand;
     if (ret.kind == EMPTY) {
         return ctu_strdup("  return;\n");
     }
 
-    return format("  return %s;\n", format_operand(ret));
+    return format("  return %s;\n", format_operand(reports, ret));
 }
 
-static char *format_load(size_t idx, step_t step) {
+static char *format_load(reports_t *reports, size_t idx, step_t step) {
     char *vreg = format_vreg(idx);
-    const char *local = type_to_string(step.type, vreg);
+    const char *local = type_to_string(reports, step.type, vreg);
 
     ctu_free(vreg, strlen(vreg) + 1);
 
-    return format("  %s = *%s;\n", local, format_operand(step.src));
+    return format("  %s = *%s;\n", local, format_operand(reports, step.src));
 }
 
-static char *format_store(step_t step) {
-    const char *dst = format_operand(step.dst);
-    const char *src = format_operand(step.src);
+static char *format_store(reports_t *reports, step_t step) {
+    const char *dst = format_operand(reports, step.dst);
+    const char *src = format_operand(reports, step.src);
 
     return format("  *%s = %s;\n", dst, src);
 }
 
-static char *format_call(size_t idx, step_t step) {
+static char *format_call(reports_t *reports, size_t idx, step_t step) {
     const char *init = "";
     if (!is_void(step.type)) {
         char *vreg = format_vreg(idx);
-        init = format("%s = ", type_to_string(step.type, vreg));
+        init = format("%s = ", type_to_string(reports, step.type, vreg));
     }
 
-    const char *call = format_operand(step.func);
+    const char *call = format_operand(reports, step.func);
     vector_t *params = vector_of(step.len);
     for (size_t i = 0; i < step.len; i++) {
         operand_t arg = step.args[i];
-        const char *param = format_operand(arg);
+        const char *param = format_operand(reports, arg);
         vector_set(params, i, (char*)param);
     }
 
@@ -203,20 +203,20 @@ static const char *unary_op_to_string(unary_t op, const char *operand) {
     }
 }
 
-static char *format_binary(size_t idx, step_t step) {
+static char *format_binary(reports_t *reports, size_t idx, step_t step) {
     const char *vreg = format_vreg(idx);
-    const char *temp = type_to_string(step.type, vreg);
-    const char *lhs = format_operand(step.lhs);
-    const char *rhs = format_operand(step.rhs);
+    const char *temp = type_to_string(reports, step.type, vreg);
+    const char *lhs = format_operand(reports, step.lhs);
+    const char *rhs = format_operand(reports, step.rhs);
     const char *op = binary_op_to_string(step.binary);
 
     return format("  %s = %s %s %s;\n", temp, lhs, op, rhs);
 }
 
-static char *format_unary(size_t idx, step_t step) {
+static char *format_unary(reports_t *reports, size_t idx, step_t step) {
     const char *vreg = format_vreg(idx);
-    const char *temp = type_to_string(step.type, vreg);
-    const char *operand = format_operand(step.operand);
+    const char *temp = type_to_string(reports, step.type, vreg);
+    const char *operand = format_operand(reports, step.operand);
     const char *op = unary_op_to_string(step.unary, operand);
 
     return format("  %s = %s;\n", temp, op);
@@ -229,28 +229,28 @@ switch (step.opcode) {
         return format("block%zu: /* empty */;\n", idx); 
 
     case OP_JMP:
-        return format("  goto %s;\n", format_operand(step.label));
+        return format("  goto %s;\n", format_operand(ctx->reports, step.label));
 
     case OP_BRANCH:
-        return format_branch(step);
+        return format_branch(ctx->reports, step);
 
     case OP_RETURN:
-        return format_return(step);
+        return format_return(ctx->reports, step);
 
     case OP_LOAD:
-        return format_load(idx, step);
+        return format_load(ctx->reports, idx, step);
 
     case OP_STORE:
-        return format_store(step);
+        return format_store(ctx->reports, step);
 
     case OP_CALL:
-        return format_call(idx, step);
+        return format_call(ctx->reports, idx, step);
 
     case OP_UNARY:
-        return format_unary(idx, step);
+        return format_unary(ctx->reports, idx, step);
 
     case OP_BINARY:
-        return format_binary(idx, step);
+        return format_binary(ctx->reports, idx, step);
 
     default:
         ctu_assert(ctx->reports, "unknown opcode: %d", step.opcode);
@@ -277,14 +277,14 @@ static void write_locals(context_t *ctx, const block_t *block) {
         const block_t *local = vector_get(locals, i);
         const char *name = local->name;
         const type_t *type = local->type;
-        const char *it = type_to_string(type, name);
+        const char *it = type_to_string(ctx->reports, type, name);
 
         stream_write(ctx->result, format("  %s;\n", it));
     }
 }
 
 static void add_block(context_t *ctx, const block_t *block) {
-    char *decl = format_function(block);
+    char *decl = format_function(ctx->reports, block);
     stream_write(ctx->result, format("%s {\n", decl));
 
     write_locals(ctx, block);
@@ -344,10 +344,10 @@ static void add_strings(context_t *ctx, vector_t *strings) {
 
 static void add_import(context_t *ctx, const block_t *block) {
     if (block->kind == BLOCK_DEFINE) {
-        char *it = format_function(block);
+        char *it = format_function(ctx->reports, block);
         stream_write(ctx->result, format("extern %s;\n", it));
     } else {
-        const char *it = type_to_string(block->type, block->name);
+        const char *it = type_to_string(ctx->reports, block->type, block->name);
         stream_write(ctx->result, format("extern %s;\n", it));
     }
 }

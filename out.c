@@ -4,14 +4,82 @@
  */
 
 // String literals
+const char *strtab0 = "%d\x0a";
 // Imported symbols
+extern signed int printf(const char *, ...);
 
 // Global forwarding
-signed int x;
+signed long ret;
+signed long arg;
+signed long max;
 
 // Global initialization
-signed int x = (signed int)200;
+signed long ret = (signed long)0;
+signed long arg = (signed long)0;
+signed long max = (signed long)100;
 
 // Function forwarding
+void _Z7isprimev();
+void _Z6primesv();
+void main();
 
 // Function definitions
+void _Z7isprimev() {
+  signed long i;
+  *&ret = (signed long)1;
+  *&i = (signed long)2;
+block2: /* empty */;
+  signed long vreg3 = *&i;
+  signed long vreg4 = *&arg;
+  _Bool vreg5 = vreg3 < vreg4;
+  if (vreg5) { goto block7; } else { goto block26; }
+block7: /* empty */;
+  signed long vreg8 = *&arg;
+  signed long vreg9 = *&i;
+  signed long vreg10 = vreg8 / vreg9;
+  signed long vreg11 = *&i;
+  signed long vreg12 = vreg10 * vreg11;
+  signed long vreg13 = *&arg;
+  _Bool vreg14 = vreg12 == vreg13;
+  if (vreg14) { goto block16; } else { goto block21; }
+block16: /* empty */;
+  *&ret = (signed long)0;
+  signed long vreg18 = *&arg;
+  *&i = vreg18;
+  goto block21;
+block21: /* empty */;
+  signed long vreg22 = *&i;
+  signed long vreg23 = vreg22 + (signed long)1;
+  *&i = vreg23;
+  goto block2;
+block26: /* empty */;
+  return;
+}
+void _Z6primesv() {
+  *&arg = (signed long)2;
+block1: /* empty */;
+  signed long vreg2 = *&arg;
+  signed long vreg3 = *&max;
+  _Bool vreg4 = vreg2 < vreg3;
+  if (vreg4) { goto block6; } else { goto block20; }
+block6: /* empty */;
+  (*&_Z7isprimev)();
+  signed long vreg8 = *&ret;
+  _Bool vreg9 = vreg8 == (signed long)1;
+  if (vreg9) { goto block11; } else { goto block15; }
+block11: /* empty */;
+  signed long vreg12 = *&arg;
+  signed int vreg13 = (*&printf)(strtab0, vreg12);
+  goto block15;
+block15: /* empty */;
+  signed long vreg16 = *&arg;
+  signed long vreg17 = vreg16 + (signed long)1;
+  *&arg = vreg17;
+  goto block1;
+block20: /* empty */;
+  return;
+}
+void main() {
+  (*&_Z6primesv)();
+  return;
+}

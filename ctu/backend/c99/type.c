@@ -49,7 +49,7 @@ static const char *void_to_string(const char *name) {
     }
 }
 
-const char *type_to_string(const type_t *type, const char *name) {
+const char *type_to_string(reports_t *reports, const type_t *type, const char *name) {
     if (is_digit(type)) {
         return digit_to_string(type->digit, name);
     }
@@ -70,12 +70,19 @@ const char *type_to_string(const type_t *type, const char *name) {
         return "...";
     }
 
+    if (is_literal(type)) {
+        ctu_assert(reports, "cannot format untyped integer literal type");
+        return "literal";
+    }
+
+    ctu_assert(reports, "unknown type `%s`", type_format(type));
+
     return NULL;
 }
 
-const char *value_to_string(const value_t *value) {
+const char *value_to_string(reports_t *reports, const value_t *value) {
     const type_t *type = value->type;
-    const char *cast = type_to_string(type, NULL);
+    const char *cast = type_to_string(reports, type, NULL);
 
     if (is_digit(type)) {
         char *digit = mpz_get_str(NULL, 10, value->digit);
@@ -90,5 +97,12 @@ const char *value_to_string(const value_t *value) {
         return format("\"%s\"", strnorm(value->string));
     }
 
-    return NULL;
+    if (is_literal(type)) {
+        ctu_assert(reports, "cannot emit untyped integer literal value");
+        return "literal";
+    }
+
+    ctu_assert(reports, "unknown value type `%s`", type_format(type));
+
+    return "???";
 }

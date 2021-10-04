@@ -1,5 +1,7 @@
 #include "type.h"
 
+#include "ctu/util/str.h"
+
 bool is_literal(const type_t *type) {
     return type->type == TY_LITERAL_INTEGER;
 }
@@ -80,7 +82,8 @@ const type_t *types_common(const type_t *lhs, const type_t *rhs) {
     }
 
     if (is_poison(lhs) || is_poison(rhs)) {
-        return type_poison("poisoned common type");
+        char *err = format("poisoned common type (%s, %s)", type_format(lhs), type_format(rhs));
+        return type_poison(err);
     }
 
     if (is_literal(lhs) && is_literal(rhs)) {
@@ -99,5 +102,6 @@ const type_t *types_common(const type_t *lhs, const type_t *rhs) {
         return type_bool();
     }
 
-    return type_poison("cannot get common type of unrelated types");
+    char *err = format("cannot get common type of unrelated types (%s, %s)", type_format(lhs), type_format(rhs));
+    return type_poison(err);
 }

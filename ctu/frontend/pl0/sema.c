@@ -153,8 +153,9 @@ static lir_t *compile_unary(sema_t *sema, pl0_t *expr) {
 static lir_t *compile_odd(sema_t *sema, pl0_t *expr) {
     lir_t *operand = compile_expr(sema, expr->operand);
 
+    lir_t *res = retype_expr(sema->reports, pl0_int(false), operand);
     node_t *node = expr->node;
-    lir_t *rem = lir_binary(node, operand->type, BINARY_REM, operand, pl0_num(node, 2));
+    lir_t *rem = lir_binary(node, lir_type(res), BINARY_REM, res, pl0_num(node, 2));
     lir_t *cmp = lir_binary(node, pl0_bool(), BINARY_EQ, rem, pl0_num(node, 1));
     return cmp;
 }
@@ -179,7 +180,10 @@ static lir_t *compile_cmp(sema_t *sema, pl0_t *expr) {
     lir_t *lhs = compile_expr(sema, expr->lhs);
     lir_t *rhs = compile_expr(sema, expr->rhs);
 
-    return lir_binary(expr->node, pl0_bool(), expr->binary, lhs, rhs);
+    return lir_binary(expr->node, pl0_bool(), expr->binary, 
+        retype_expr(sema->reports, pl0_int(false), lhs), 
+        retype_expr(sema->reports, pl0_int(false), rhs)
+    );
 }
 
 static lir_t *compile_cond(sema_t *sema, pl0_t *expr) {
@@ -252,7 +256,7 @@ static lir_t *compile_branch(sema_t *sema, pl0_t *stmt) {
     lir_t *cond = compile_cond(sema, stmt->cond);
     lir_t *then = compile_stmt(sema, stmt->then);
 
-    return lir_branch(stmt->node, retype_expr(sema->reports, type_bool(), cond), then, NULL);
+    return lir_branch(stmt->node, cond, then, NULL);
 }
 
 static lir_t *compile_call(sema_t *sema, pl0_t *stmt) {
