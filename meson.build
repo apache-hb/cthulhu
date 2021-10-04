@@ -105,3 +105,5 @@ driver = executable('driver', main,
 tune = executable('tune', [ 'tools/tune.c' ],
     dependencies : generic
 )
+
+subdir('tests/ctu')
