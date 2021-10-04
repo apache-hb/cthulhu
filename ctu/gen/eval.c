@@ -27,7 +27,7 @@ static exec_t *exec_new(world_t *world, block_t *block) {
     exec->block = block;
     exec->ip = 0;
     exec->values = values;
-    exec->result = value_poison("unintalized result");
+    exec->result = NULL;
 
     return exec;
 }
@@ -209,12 +209,11 @@ static value_t *eval_block(world_t *world, block_t *block) {
         // empty
     }
 
-    block->value = exec->result;
-
-    return exec->result;
+    return (block->value = exec->result);
 }
 
 void eval_world(reports_t *reports, module_t *mod) {
+    logverbose("compiling module %s", mod->name);
     world_t world = { reports, mod };
 
     size_t nvars = vector_len(mod->vars);

@@ -8,7 +8,7 @@ static operand_t operand_new(optype_t kind) {
 
 operand_t operand_imm(reports_t *reports, value_t *imm) {
     if (is_literal(imm->type)) {
-        ctu_assert(reports, "immediate cannt be untyped");
+        ctu_assert(reports, "immediate cannot be untyped");
     }
     
     operand_t operand = operand_new(IMM);

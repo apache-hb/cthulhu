@@ -46,10 +46,6 @@ static void add_global(context_t *ctx, const block_t *block) {
     const value_t *value = block->value;
     const char *name = block->name;
 
-    if (is_void(value->type)) {
-        return;
-    }
-
     const char *start = type_to_string(type, name);
     const char *init = value_to_string(value);
 

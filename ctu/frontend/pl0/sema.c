@@ -207,7 +207,7 @@ static lir_t *compile_assign(sema_t *sema, pl0_t *stmt) {
         report(sema->reports, ERROR, node, "cannot assign to const value `%s` %s", name, type_format(lhs->type));
     }
 
-    return lir_assign(node, lhs, rhs);
+    return lir_assign(node, lhs, retype_expr(sema->reports, lir_type(lhs), rhs));
 }
 
 static lir_t *compile_print(sema_t *sema, pl0_t *stmt) {
@@ -247,7 +247,7 @@ static lir_t *compile_branch(sema_t *sema, pl0_t *stmt) {
     lir_t *cond = compile_cond(sema, stmt->cond);
     lir_t *then = compile_stmt(sema, stmt->then);
 
-    return lir_branch(stmt->node, cond, then, NULL);
+    return lir_branch(stmt->node, retype_expr(sema->reports, type_bool(), cond), then, NULL);
 }
 
 static lir_t *compile_call(sema_t *sema, pl0_t *stmt) {
@@ -316,8 +316,6 @@ static lir_t *build_var(sema_t *sema, pl0_t *node) {
 }
 
 static void compile_var(sema_t *sema, lir_t *lir) {
-    UNUSED(sema);
-
     pl0_t *node = lir->ctx;
     lir_t *value = pl0_num(node->node, 0);
     type_t *type = pl0_int(true);
@@ -327,8 +325,6 @@ static void compile_var(sema_t *sema, lir_t *lir) {
 }
 
 static void compile_proc(sema_t *sema, lir_t *lir) {
-    UNUSED(sema);
-
     pl0_t *node = lir->ctx;
     size_t nlocals = vector_len(node->locals);
     vector_t *locals = vector_of(nlocals);

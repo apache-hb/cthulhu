@@ -30,12 +30,24 @@ static lir_t *retype_digit(reports_t *reports, const type_t *type, lir_t *expr) 
 
 static lir_t *retype_unary(reports_t *reports, const type_t *type, lir_t *expr) {
     lir_t *operand = select_retype(reports, type, expr->operand);
-    unary_t unary
+
+    return lir_unary(expr->node,
+        types_common(type, lir_type(operand)),
+        expr->unary,
+        operand
+    );
 }
 
 static lir_t *retype_binary(reports_t *reports, const type_t *type, lir_t *expr) {
     lir_t *lhs = select_retype(reports, type, expr->lhs);
     lir_t *rhs = select_retype(reports, type, expr->rhs);
+
+    return lir_binary(expr->node,
+        types_common(type, lir_type(expr)),
+        expr->binary,
+        lhs,
+        rhs
+    );
 }
 
 static lir_t *select_retype(reports_t *reports, const type_t *type, lir_t *expr) {

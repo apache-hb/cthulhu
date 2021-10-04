@@ -10,7 +10,9 @@ static char *emit_imm(const value_t *imm) {
     }
 
     const type_t *type = imm->type;
-    if (is_integer(type)) {
+    if (is_literal(type)) {
+        return format("untyped(%s)", mpz_get_str(NULL, 10, imm->digit));
+    } else if (is_digit(type)) {
         return format("%s", mpz_get_str(NULL, 10, imm->digit));
     } else {
         return NULL;
@@ -168,7 +170,7 @@ static void var_print(FILE *out, module_t *mod, size_t idx) {
         );
         return;
     } else {
-        fprintf(out, "  %s: %s {\n", name, type);
+        fprintf(out, "  %s: %s = %p {\n", name, type, flow->value);
     }
 
     size_t len = flow->len;
