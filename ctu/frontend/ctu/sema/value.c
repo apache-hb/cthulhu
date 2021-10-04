@@ -9,6 +9,11 @@ static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
         return;
     }
 
+    if (!lir_is(lir, LIR_FORWARD)) {
+        stack_leave(sema, lir);
+        return;
+    }
+
     lir_t *expr = compile_expr(sema, ctu->value);
     lir_t *init = retype_expr(sema->reports, 
         types_common(lir_type(expr), type_digit(SIGNED, TY_INT)),

@@ -1,4 +1,5 @@
 #include "expr.h"
+#include "value.h"
 
 static lir_t *compile_digit(ctu_t *digit) {
     return lir_digit(digit->node, 
@@ -31,14 +32,32 @@ static lir_t *compile_binary(sema_t *sema, ctu_t *expr) {
     return lir_binary(expr->node, common, binary, lhs, rhs);
 }
 
+static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
+    const char *name = expr->ident;
+    lir_t *var = get_var(sema, name);
+    if (var != NULL) {
+        lir_t *it = compile_value(var);
+        return lir_name(expr->node, lir_type(it), it);
+    }
+
+    lir_t *func = get_func(sema, name);
+    if (func != NULL) {
+        return func;
+    }
+
+    report(sema->reports, ERROR, expr->node, "failed to resolve `%s`", name);
+    return lir_poison(expr->node, "unresolved name");
+}
+
 lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
     case CTU_DIGIT: return compile_digit(expr);
     case CTU_UNARY: return compile_unary(sema, expr);
     case CTU_BINARY: return compile_binary(sema, expr);
+    case CTU_IDENT: return compile_name(sema, expr);
 
     default:
-        ctu_assert(sema->reports, "compile-expr unimplemented");
+        ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);
         return lir_poison(expr->node, "unimplemented");
     }
 }

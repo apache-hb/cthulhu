@@ -79,6 +79,10 @@ const type_t *types_common(const type_t *lhs, const type_t *rhs) {
         return type_digit(sign, kind);
     }
 
+    if (is_poison(lhs) || is_poison(rhs)) {
+        return type_poison("poisoned common type");
+    }
+
     if (is_literal(lhs) && is_literal(rhs)) {
         return type_literal_integer();
     }

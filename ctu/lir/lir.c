@@ -12,7 +12,7 @@ static lir_t *lir_new(node_t *node, const type_t *type, leaf_t leaf) {
 }
 
 static lir_t *lir_decl(node_t *node, leaf_t leaf, const char *name) {
-    lir_t *lir = lir_new(node, NULL, leaf);
+    lir_t *lir = lir_new(node, type_poison("forward declaration"), leaf);
     lir->name = name;
     lir->exported = false;
     return lir;
