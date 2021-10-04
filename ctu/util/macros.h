@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef __GNUC__
+#if __GNUC__ >= 11
 #   define PRINT(fmt, args) __attribute__((format(printf, fmt, args)))
 #   define NONULL __attribute__((nonnull))
 #   define NOTNULL(...) __attribute__((nonnull(__VA_ARGS__)))
