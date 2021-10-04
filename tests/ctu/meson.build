@@ -1,3 +1,5 @@
+dir = meson.current_source_dir()
+
 crashes = [ 
     'fuzz-1', 'fuzz-2', 'fuzz-3', 'fuzz-4', 'fuzz-5',
     'fuzz-6', 'fuzz-7', 'fuzz-8', 'fuzz-9', 'fuzz-10',
@@ -6,6 +8,22 @@ crashes = [
 
 foreach case : crashes
     where = case.replace('.', '/')
-    path = meson.current_source_dir()/'crashes'/where + '.ct'
+    path = dir/'crashes'/where + '.ct'
     test('crash-' + case, driver, args : [ '-V', path ], should_fail : true)
+endforeach
+
+fails = [
+    'array-2', 'array-oob', 'array-ref', 'array',
+    'bad-return', 'case-names', 'direct-index', 'div-0',
+    'fuzz-1', 'implicit-bool-cast', 'incorrect-return1',
+    'incorrect-return2', 'infinite-struct', 'invalid-char',
+    'invalid-init', 'loop', 'nested-refs', 'no-init', 'recurse',
+    'return-local-ref', 'return-struct-ref', 'scope',
+    'type-in-expr', 'uninit-global', 'void-var', 'weird'
+]
+
+foreach case : fails
+    where = case.replace('.', '/')
+    path = dir/'fails'/where + '.ct'
+    test('fail-' + case, driver, args : [ '-V', path ], should_fail : true)
 endforeach

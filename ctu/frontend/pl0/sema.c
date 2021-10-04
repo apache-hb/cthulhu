@@ -30,7 +30,8 @@ static char *pl0_name(const char *name) {
 #define DELETE_SEMA(sema) \
     sema_delete(sema)
 
-static attrib_t PRINT = {
+static const attrib_t PRINT = {
+    .visibility = IMPORTED,
     .mangle = "printf"
 };
 
@@ -375,9 +376,8 @@ static lir_t *pl0_declare(pl0_t *pl0, const char *name, leaf_t leaf) {
     return lir_forward(pl0->node, name, leaf, pl0);
 }
 
-static attrib_t ENTRY = {
-    .exported = true,
-    .entry = true,
+static const attrib_t ENTRY = {
+    .visibility = ENTRYPOINT,
     .mangle = "main"
 };
 

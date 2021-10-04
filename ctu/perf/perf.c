@@ -15,6 +15,16 @@ static void mark_live_funcs(block_t *block)
         }
     }
 }
+static bool can_be_removed(const attrib_t *attribs) {
+    return attribs->visibility == ENTRYPOINT 
+        || attribs->visibility == PUBLIC;
+}
+
+static bool has_refs(const block_t *block) {
+    const void *data = block->data;
+    uintptr_t count = (uintptr_t)data;
+    return count > 0;
+}
 
 void dead_function_elimination(reports_t *reports, 
                                module_t *mod)
@@ -27,7 +37,7 @@ void dead_function_elimination(reports_t *reports,
 
     for (size_t i = 0; i < len; i++) {
         block_t *func = vector_get(funcs, i);
-        func->data = (void*)(uintptr_t)(func->exported ? 1 : 0);
+        func->data = (void*)(uintptr_t)(can_be_removed(func->attribs));
     }
 
     for (size_t i = 0; i < len; i++) {
@@ -37,7 +47,7 @@ void dead_function_elimination(reports_t *reports,
 
     for (size_t i = 0; i < len; i++) {
         block_t *func = vector_get(funcs, i);
-        if ((size_t)func->data == 0) {
+        if (!has_refs(func)) {
             block_free(func);
             vector_set(funcs, i, NULL);
         }

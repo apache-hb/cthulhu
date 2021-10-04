@@ -59,20 +59,25 @@ static char *mangle_name(const char *name, const type_t *type) {
 static block_t *new_block(blocktype_t kind, 
                           const char *name, 
                           const node_t *node,
-                          const type_t *type,
-                          bool exported) {
+                          const type_t *type) {
     block_t *block = ctu_malloc(sizeof(block_t));
     block->kind = kind;
     block->name = name;
     block->node = node;
     block->type = type;
     block->data = NULL;
-    block->exported = exported;
 
-    if (kind == BLOCK_DEFINE) {
-        block->value = NULL;
-    }
+    return block;
+}
 
+static block_t *new_define(const char *name,
+                           const node_t *node,
+                           const type_t *type,
+                           const attrib_t *attribs)
+{
+    block_t *block = new_block(BLOCK_DEFINE, name, node, type);
+    block->attribs = attribs;
+    block->value = NULL;
     return block;
 }
 
@@ -149,29 +154,22 @@ static block_t *lir_named(const lir_t *lir) {
         BLOCK_SYMBOL, 
         lir->name, 
         lir->node, 
-        lir_type(lir),
-        false
+        lir_type(lir)
     );
 }
 
-static const char *get_name(const attrib_t *attrib) {
-    return attrib != NULL ? attrib->mangle : NULL;
+static const char *symbol_name(const lir_t *lir) {
+    if (!lir_is(lir, LIR_DEFINE)) {
+        return lir->name;
+    }
+
+    return lir->attribs->mangle ?: mangle_name(lir->name, lir_type(lir));
 }
 
 static block_t *init_block(lir_t *decl, const type_t *type) {
     /* itanium only mangles functions */
-    const char *name = decl->name;
-    if (lir_is(decl, LIR_DEFINE)) {
-        name = get_name(decl->attribs) ?: mangle_name(decl->name, type);
-    }
-    
-    block_t *block = new_block(
-        BLOCK_DEFINE, 
-        name, 
-        decl->node, 
-        type,
-        decl->attribs == NULL ? false : decl->attribs->exported
-    );
+    const char *name = symbol_name(decl);
+    block_t *block = new_define(name, decl->node, type, decl->attribs);
 
     if (lir_is(decl, LIR_DEFINE)) {
         vector_t *locals = decl->locals;
@@ -197,13 +195,7 @@ static block_t *block_declare(lir_t *lir) {
 }
 
 static block_t *import_symbol(lir_t *lir) {
-    block_t *block = new_block(
-        lir_is(lir, LIR_DEFINE) ? BLOCK_DEFINE : BLOCK_VALUE, 
-        lir->name, 
-        lir->node,
-        lir_type(lir),
-        false
-    );
+    block_t *block = new_define(symbol_name(lir), lir->node, lir_type(lir), lir->attribs);
     lir->data = block;
     return block;
 }
@@ -375,13 +367,7 @@ static operand_t emit_symbol(lir_t *lir) {
 }
 
 static operand_t emit_string(context_t ctx, lir_t *lir) {
-    block_t *str = new_block(
-        BLOCK_STRING, 
-        NULL, 
-        lir->node,
-        lir_type(lir),
-        false
-    );
+    block_t *str = new_block(BLOCK_STRING, NULL, lir->node, lir_type(lir));
     str->idx = vector_len(*(ctx.strings));
     str->string = lir->str;
     vector_push(ctx.strings, str);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ctu/ast/ops/ops.h"
+#include "ctu/lir/attrib.h"
 
 #include "value.h"
 #include "operand.h"
@@ -58,8 +59,12 @@ typedef struct {
 } step_t;
 
 typedef enum {
+    /** 
+     * either a function or a variable 
+     * distinguished by the `value` variable
+     * being NULL for functions or non-NULL for variables
+     */
     BLOCK_DEFINE,
-    BLOCK_VALUE,
     BLOCK_SYMBOL,
     BLOCK_STRING
 } blocktype_t;
@@ -76,9 +81,6 @@ typedef struct block_t {
     /* the type of this block */
     const type_t *type;
 
-    /* is this block exported */
-    bool exported;
-
     union {
         /* BLOCK_SYMBOL|BLOCK_STRING */
         struct {
@@ -86,8 +88,11 @@ typedef struct block_t {
             const char *string; /* the string itself */
         };
 
-        /* BLOCK_VALUE|BLOCK_DEFINE */
+        /* BLOCK_DEFINE */
         struct {
+            /* all attributes for this block */
+            const attrib_t *attribs;
+
             /** 
              * vector_t<struct block_t<BLOCK_SYMBOL>*> 
              * 

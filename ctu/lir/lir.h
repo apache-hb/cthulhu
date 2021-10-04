@@ -110,7 +110,7 @@ typedef struct lir_t {
 
         struct {
             const char *name;
-            attrib_t *attribs;
+            const attrib_t *attribs;
 
             union {
                 /**
@@ -198,7 +198,7 @@ void lir_define(reports_t *reports,
                 vector_t *params, 
                 lir_t *body);
 
-void lir_attribs(lir_t *dst, attrib_t *attribs);
+void lir_attribs(lir_t *dst, const attrib_t *attribs);
 
 bool lir_ok(const lir_t *lir);
 bool lir_is(const lir_t *lir, leaf_t leaf);

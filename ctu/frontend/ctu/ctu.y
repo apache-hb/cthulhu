@@ -108,6 +108,8 @@ value: VAR IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, NULL, $4); }
 
 function: DEF IDENT LPAREN params RPAREN COLON type statements 
     { $$ = ctu_define(x, @$, $2, $4, $7, $8); }
+    | DEF IDENT LPAREN params RPAREN COLON type ASSIGN expr SEMI
+    { $$ = NULL; }
     ;
 
 params: param { $$ = vector_init($1); }
