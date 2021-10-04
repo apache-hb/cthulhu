@@ -41,17 +41,12 @@ src = [
 
 gmp = dependency('gmp')
 
-mimalloc = dependency('mimalloc', required : false)
-
 args = []
-
-if mimalloc.found()
-    args += [ '-DCTU_MIMALLOC' ]
-endif
+deps = [ gmp ]
 
 libgeneric = library('generic', src,
     c_args : args,
-    dependencies : [ gmp, mimalloc ]
+    dependencies : deps
 )
 
 generic = declare_dependency(

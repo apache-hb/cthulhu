@@ -24,6 +24,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     ctu_t *ctu;
     vector_t *vector;
 
+    bool boolean;
     char *ident;
     mpz_t digit;
 }
@@ -37,6 +38,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %token
     VAR "`var`"
     DEF "`def`"
+    EXPORT "`export`"
     SEMI "`;`"
     ASSIGN "`=`"
     LPAREN "`(`"
@@ -67,12 +69,15 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     END 0 
 
 %type<ctu>
-    value decl
+    value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
     statements stmt type param function
 
 %type<vector>
     unit stmtlist params
+
+%type<boolean>
+    exported
 
 %start program
 
@@ -85,8 +90,15 @@ unit: decl { $$ = vector_init($1); }
     | unit decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: value { $$ = $1; }
+decl: exported declbase { $$ = set_export($2, $1); }
+    ;
+
+declbase: value { $$ = $1; }
     | function { $$ = $1; }
+    ;
+
+exported: %empty { $$ = false; }
+    | EXPORT { $$ = true; }
     ;
 
 value: VAR IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, NULL, $4); }

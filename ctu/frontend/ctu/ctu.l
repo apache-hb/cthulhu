@@ -24,7 +24,9 @@
 <COMMENT>\n ;
 <COMMENT>. ;
 
+"def" { return DEF; }
 "var" { return VAR; }
+"export" { return EXPORT; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);

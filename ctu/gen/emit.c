@@ -153,13 +153,16 @@ static block_t *lir_named(const lir_t *lir) {
         false
     );
 }
- 
+
+static const char *get_name(const attrib_t *attrib) {
+    return attrib != NULL ? attrib->mangle : NULL;
+}
+
 static block_t *init_block(lir_t *decl, const type_t *type) {
     /* itanium only mangles functions */
     const char *name = decl->name;
     if (lir_is(decl, LIR_DEFINE)) {
-        /* todo: massive hack */
-        name = streq(decl->name, "main") ? decl->name : mangle_name(decl->name, type);
+        name = get_name(decl->attribs) ?: mangle_name(decl->name, type);
     }
     
     block_t *block = new_block(
@@ -167,7 +170,7 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
         name, 
         decl->node, 
         type,
-        decl->exported
+        decl->attribs == NULL ? false : decl->attribs->exported
     );
 
     if (lir_is(decl, LIR_DEFINE)) {

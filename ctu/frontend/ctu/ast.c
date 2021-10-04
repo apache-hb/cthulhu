@@ -11,6 +11,7 @@ static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_type_t type) {
 static ctu_t *ctu_decl(scan_t *scan, where_t where, ctu_type_t type, const char *name) {
     ctu_t *ctu = ctu_new(scan, where, type);
     ctu->name = name;
+    ctu->exported = false;
     return ctu;
 }
 
@@ -117,4 +118,9 @@ ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *decls) {
     ctu->decls = decls;
 
     return ctu;
+}
+
+ctu_t *set_export(ctu_t *decl, bool exported) {
+    decl->exported = exported;
+    return decl;
 }

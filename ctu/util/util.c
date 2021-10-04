@@ -11,16 +11,9 @@
 #   include <sys/mman.h>
 #endif
 
-#ifdef CTU_MIMALLOC
-#   include <mimalloc.h>
-#   define MALLOC(size) mi_malloc(size)
-#   define REALLOC(ptr, size) mi_realloc(ptr, size)
-#   define FREE(ptr) mi_free(ptr)
-#else
-#   define MALLOC(size) malloc(size)
-#   define REALLOC(ptr, size) realloc(ptr, size)
-#   define FREE(ptr) free(ptr)
-#endif
+#define MALLOC(size) malloc(size)
+#define REALLOC(ptr, size) realloc(ptr, size)
+#define FREE(ptr) free(ptr)
 
 void *ctu_malloc(size_t size) {
     return MALLOC(size);

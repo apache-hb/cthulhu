@@ -50,6 +50,7 @@ typedef struct ctu_t {
 
         struct {
             const char *name;
+            bool exported; /* is this exported on local */
 
             union {
                 struct {
@@ -103,3 +104,5 @@ ctu_t *ctu_define(scan_t *scan, where_t where,
 /* modules */
 ctu_t *ctu_module(scan_t *scan, where_t where, 
                   vector_t *decls);
+
+ctu_t *set_export(ctu_t *decl, bool exported);

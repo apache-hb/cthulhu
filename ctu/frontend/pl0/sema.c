@@ -30,6 +30,10 @@ static char *pl0_name(const char *name) {
 #define DELETE_SEMA(sema) \
     sema_delete(sema)
 
+static attrib_t PRINT = {
+    .mangle = "printf"
+};
+
 static lir_t *pl0_import_print(reports_t *reports, node_t *node) {
     vector_t *args = vector_init(type_string());
     vector_push(&args, type_varargs());
@@ -38,7 +42,8 @@ static lir_t *pl0_import_print(reports_t *reports, node_t *node) {
     
     lir_t *func = lir_forward(node, "printf", LIR_DEFINE, NULL);
     lir_define(reports, func, type, NULL, NULL, NULL);
-    
+    lir_attribs(func, &PRINT);
+
     return func;
 }
 
@@ -366,6 +371,12 @@ static lir_t *pl0_declare(pl0_t *pl0, const char *name, leaf_t leaf) {
     return lir_forward(pl0->node, name, leaf, pl0);
 }
 
+static attrib_t ENTRY = {
+    .exported = true,
+    .entry = true,
+    .mangle = "main"
+};
+
 static lir_t *compile_entry(sema_t *sema, pl0_t *body) {    
     lir_t *stmts = compile_stmt(sema, body);
 
@@ -378,8 +389,7 @@ static lir_t *compile_entry(sema_t *sema, pl0_t *body) {
         /* body = */ lir_stmts(body->node, vector_init(stmts))
     );
 
-    /* todo: suffering */
-    entry->exported = true;
+    lir_attribs(entry, &ENTRY);
 
     return entry;
 }

@@ -38,7 +38,6 @@ static const char *LANGUAGE = "PL/0";
 pl0_t *pl0_compile(reports_t *reports, file_t *fd) {
     scan_t *scan = scan_file(reports, LANGUAGE, fd);
     pl0_t *node = compile_file(scan, &CALLBACKS);
-    //scan_delete(scan);
     return node;
 }
 

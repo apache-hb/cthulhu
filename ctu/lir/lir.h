@@ -4,6 +4,7 @@
 #include "ctu/ast/ops/ops.h"
 #include "ctu/util/report.h"
 #include "ctu/type/type.h"
+#include "attrib.h"
 
 #include <gmp.h>
 
@@ -109,8 +110,7 @@ typedef struct lir_t {
 
         struct {
             const char *name;
-
-            bool exported; /* is this publically visible */
+            attrib_t *attribs;
 
             union {
                 /**
@@ -197,6 +197,8 @@ void lir_define(reports_t *reports,
                 vector_t *locals, 
                 vector_t *params, 
                 lir_t *body);
+
+void lir_attribs(lir_t *dst, attrib_t *attribs);
 
 bool lir_ok(const lir_t *lir);
 bool lir_is(const lir_t *lir, leaf_t leaf);
