@@ -27,3 +27,21 @@ foreach case : fails
     path = dir/'fails'/where + '.ct'
     test('fail-' + case, driver, args : [ '-V', path ], should_fail : true)
 endforeach
+
+pass = [
+    'args', 'array-1', 'array-3', 'array-init', 'array-of',
+    'array-struct', 'binary', 'call', 'chained', 'comments',
+    'direct-index', 'fizzbuzz', 'forward', 'func', 'fuzz-8',
+    'global-const', 'global-init', 'global-uninit', 'global-var',
+    'global', 'hello', 'hello2', 'horror', 'implicit-var-cast',
+    'large', 'long-while', 'long', 'loop', 'multiline', 'mut',
+    'nest', 'order', 'pointers', 'pointers2', 'posix-interop', 'regalloc',
+    'string', 'struct', 'suffix', 'union', 'unused-var', 'var', 'win32-interop',
+    'win32-wsa'
+]
+
+foreach case : pass
+    where = case.replace('.', '/')
+    path = dir/'pass'/where + '.ct'
+    test('pass-' + case, driver, args : [ '-V', path ])
+endforeach

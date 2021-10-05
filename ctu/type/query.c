@@ -2,6 +2,14 @@
 
 #include "ctu/util/str.h"
 
+bool is_const(const type_t *type) {
+    return !type->mut;
+}
+
+bool is_any(const type_t *type) {
+    return type->type == TY_ANY;
+}
+
 bool is_literal(const type_t *type) {
     return type->type == TY_LITERAL_INTEGER;
 }
@@ -85,6 +93,9 @@ const type_t *types_common(const type_t *lhs, const type_t *rhs) {
         char *err = format("poisoned common type (%s, %s)", type_format(lhs), type_format(rhs));
         return type_poison(err);
     }
+
+    if (is_any(lhs)) { return rhs; }
+    if (is_any(rhs)) { return lhs; }
 
     if (is_literal(lhs) && is_literal(rhs)) {
         return type_literal_integer();

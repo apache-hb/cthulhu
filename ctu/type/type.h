@@ -7,6 +7,7 @@
 typedef enum {
     TY_LITERAL_INTEGER, /// integer literal type that can cast to any integer type
 
+    TY_ANY, /// the any type, common with all other types
     TY_VOID, /// the unit type
     TY_BOOL, /// the boolean type
     TY_INTEGER, /// any integer type
@@ -57,7 +58,7 @@ typedef struct type_t {
 
         const char *msg;
 
-        struct type_t *ptr;
+        const struct type_t *ptr;
     };
 } type_t;
 
@@ -77,6 +78,13 @@ char *type_format(const type_t *type);
  * @return the integer literal type
  */
 type_t *type_literal_integer(void);
+
+/**
+ * create the any type
+ *
+ * @return the any type
+ */
+const type_t *type_any(void);
 
 /**
  * create a digit type
@@ -109,7 +117,7 @@ type_t *type_closure(vector_t *args, type_t *result);
  * @param to the type this pointer points to
  * @return a pointer type
  */
-type_t *type_ptr(type_t *to);
+type_t *type_ptr(const type_t *to);
 
 /**
  * create a string type
@@ -142,6 +150,8 @@ type_t *type_poison(const char *msg);
 
 void type_mut(type_t *type, bool mut);
 
+bool is_const(const type_t *type);
+bool is_any(const type_t *type);
 bool is_literal(const type_t *type);
 bool is_integer(const type_t *type);
 bool is_digit(const type_t *type);

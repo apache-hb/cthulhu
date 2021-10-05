@@ -14,6 +14,15 @@ type_t *type_literal_integer(void) {
     return type_new(TY_LITERAL_INTEGER);
 }
 
+static type_t ANY = { 
+    .type = TY_ANY, 
+    .mut = true
+};
+
+const type_t *type_any(void) {
+    return &ANY;
+}
+
 type_t *type_digit(sign_t sign, int_t kind) {
     type_t *type = type_new(TY_INTEGER);
     digit_t digit = { sign, kind };
@@ -32,7 +41,7 @@ type_t *type_closure(vector_t *args, type_t *result) {
     return type;
 }
 
-type_t *type_ptr(type_t *to) {
+type_t *type_ptr(const type_t *to) {
     type_t *type = type_new(TY_PTR);
     type->ptr = to;
     return type;

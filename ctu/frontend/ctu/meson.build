@@ -3,7 +3,7 @@ src = [
     parse.process('ctu.y'),
     'scan.c', 'driver.c', 'ast.c', 
     'sema/sema.c', 'sema/value.c', 'sema/data.c',
-    'sema/expr.c', 'sema/eval.c'
+    'sema/expr.c', 'sema/type.c'
 ]
 
 libctu = library('ctu', src,

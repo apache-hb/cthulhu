@@ -2,4 +2,4 @@
 
 #include "data.h"
 
-type_t *compile_type(sema_t *sema, ctu_t *ctu);
+const type_t *compile_type(sema_t *sema, ctu_t *ctu);

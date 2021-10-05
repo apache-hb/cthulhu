@@ -481,10 +481,6 @@ static void define_free(block_t *block) {
         free_blocks(block->params);
     }
 
-    if (block->value != NULL) {
-        value_delete(block->value);
-    }
-
     ctu_free(block->steps, block->size * sizeof(step_t));
 }
 

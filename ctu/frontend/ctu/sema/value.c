@@ -1,6 +1,6 @@
 #include "value.h"
 #include "expr.h"
-#include "eval.h"
+#include "type.h"
 
 #include "ctu/type/retype.h"
 
@@ -22,13 +22,32 @@ static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
         return;
     }
 
-    lir_t *expr = compile_expr(sema, ctu->value);
-    lir_t *init = retype_expr(sema->reports, 
-        types_common(lir_type(expr), type_digit(SIGNED, TY_INT)),
-        expr
-    );
+    const type_t *type = type_any();
+    lir_t *init = NULL;
 
-    lir_value(sema->reports, lir, lir_type(init), init);
+    if (ctu->kind) {
+        type = compile_type(sema, ctu->kind);
+    }
+
+    if (ctu->value) {
+        lir_t *expr = compile_expr(sema, ctu->value);
+        init = retype_expr(sema->reports, 
+            types_common(lir_type(expr), type),
+            expr
+        );
+
+        if (type == type_any()) {
+            type = lir_type(init);
+        }
+    }
+
+    if (is_void(type)) {
+        report(sema->reports, ERROR, ctu->node, "cannot initialize variable `%s` with type `%s`",
+            ctu->name, type_format(type)
+        );
+    }
+
+    lir_value(sema->reports, lir, type, init);
 
     attach_attribs(lir, ctu);
 

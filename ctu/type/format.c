@@ -48,6 +48,9 @@ char *type_format(const type_t *type) {
     case TY_LITERAL_INTEGER:
         result = ctu_strdup("int-literal");
         break;
+    case TY_ANY:
+        result = ctu_strdup("any");
+        break;
     case TY_INTEGER: 
         result = digit_format(type->digit); 
         break;
@@ -74,7 +77,7 @@ char *type_format(const type_t *type) {
         break;
     }
 
-    if (type->mut) {
+    if (!is_const(type)) {
         result = format("mut %s", result);
     }
 

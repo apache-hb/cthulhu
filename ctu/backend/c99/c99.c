@@ -46,6 +46,10 @@ static void add_global(context_t *ctx, const block_t *block) {
     const value_t *value = block->value;
     const char *name = block->name;
 
+    if (is_void(value->type)) {
+        return;
+    }
+
     const char *start = type_to_string(ctx->reports, type, name);
     const char *init = value_to_string(ctx->reports, value);
 
@@ -134,6 +138,8 @@ static char *format_branch(reports_t *reports, step_t step) {
 }
 
 static char *format_return(reports_t *reports, step_t step) {
+    printf("return %s\n", format_operand(reports, step.operand));
+    
     operand_t ret = step.operand;
     if (ret.kind == EMPTY) {
         return ctu_strdup("  return;\n");

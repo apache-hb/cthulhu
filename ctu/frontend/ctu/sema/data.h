@@ -31,9 +31,11 @@ void stack_leave(sema_t *sema, lir_t *lir);
 
 void add_var(sema_t *sema, const char *name, lir_t *lir);
 void add_func(sema_t *sema, const char *name, lir_t *lir);
+void add_type(sema_t *sema, const char *name, const type_t *type);
 
 lir_t *get_var(sema_t *sema, const char *name);
 lir_t *get_func(sema_t *sema, const char *name);
+const type_t *get_type(sema_t *sema, const char *name);
 
 sema_t *new_sema(reports_t *reports, sema_t *parent, size_t *sizes);
 sema_t *base_sema(reports_t *reports, size_t decls);

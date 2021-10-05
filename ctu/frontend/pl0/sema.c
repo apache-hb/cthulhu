@@ -213,8 +213,8 @@ static lir_t *compile_assign(sema_t *sema, pl0_t *stmt) {
 
     lir_t *rhs = compile_expr(sema, stmt->src);
 
-    if (!lhs->type->mut) {
-        report(sema->reports, ERROR, node, "cannot assign to const value `%s` %s", name, type_format(lhs->type));
+    if (is_const(lhs->type)) {
+        report(sema->reports, ERROR, node, "cannot assign to const value `%s`", name);
     }
 
     return lir_assign(node, lhs, retype_expr(sema->reports, lir_type(lhs), rhs));
