@@ -375,7 +375,7 @@ static operand_t emit_string(context_t ctx, lir_t *lir) {
 }
 
 static operand_t emit_error(context_t ctx, lir_t *lir) {
-    report(ctx.reports, ERROR, lir->node, "%s", lir->type->msg);
+    report(ctx.reports, ERROR, lir->node, "%s", type_format(lir_type(lir)));
     return operand_empty();
 }
 
@@ -394,7 +394,8 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_SYMBOL: return emit_symbol(lir);
     case LIR_VALUE: return emit_value(lir);
     case LIR_DEFINE: return emit_define(lir);
-    case LIR_POISON: return emit_error(ctx, lir);
+    case LIR_POISON: case LIR_FORWARD:
+        return emit_error(ctx, lir);
 
     default:
         ctu_assert(ctx.reports, "emit-lir unknown %d", lir->leaf);

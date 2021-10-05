@@ -50,6 +50,22 @@ static lir_t *retype_binary(reports_t *reports, const type_t *type, lir_t *expr)
     );
 }
 
+static lir_t *retype_call(reports_t *reports, const type_t *type, lir_t *expr) {
+    const type_t *closure = lir_type(expr->func);
+
+    const type_t *result = types_common(type, closure_result(closure));
+
+    size_t len = vector_len(expr->args);
+    vector_t *args = vector_of(len);
+    for (size_t i = 0; i < len; i++) {
+        lir_t *param = vector_get(expr->args, i);
+        lir_t *it = select_retype(reports, param_at(closure, i), param);
+        vector_set(args, i, it);
+    }
+
+    return lir_call(expr->node, result, expr->func, args);
+}
+
 static lir_t *select_retype(reports_t *reports, const type_t *type, lir_t *expr) {
     switch (expr->leaf) {
     case LIR_DIGIT:
@@ -58,6 +74,8 @@ static lir_t *select_retype(reports_t *reports, const type_t *type, lir_t *expr)
         return retype_unary(reports, type, expr);
     case LIR_BINARY:
         return retype_binary(reports, type, expr);
+    case LIR_CALL:
+        return retype_call(reports, type, expr);
     case LIR_NAME: case LIR_POISON:
         return expr;
 

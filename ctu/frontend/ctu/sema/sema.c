@@ -1,12 +1,14 @@
 #include "sema.h"
 #include "data.h"
 #include "value.h"
+
 #include "ctu/util/util.h"
 #include "ctu/util/report-ext.h"
 
 static leaf_t decl_leaf(ctu_t *ctu) {
     switch (ctu->type) {
     case CTU_VALUE: return LIR_VALUE;
+    case CTU_DEFINE: return LIR_DEFINE;
 
     default: return LIR_FORWARD;
     }
@@ -25,7 +27,9 @@ static void add_decls(sema_t *sema, vector_t *decls) {
         case LIR_VALUE:
             add_var(sema, name, lir);
             break;
-
+        case LIR_DEFINE:
+            add_func(sema, name, lir);
+            break;
         default:
             ctu_assert(sema->reports, "add-decls unreachable");
             break;

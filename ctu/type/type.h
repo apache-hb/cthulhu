@@ -165,6 +165,7 @@ bool is_closure(const type_t *type);
 bool is_varargs(const type_t *type);
 bool is_variadic(const type_t *type);
 size_t minimum_params(const type_t *type);
+const type_t *param_at(const type_t *type, size_t idx);
 const type_t *closure_result(const type_t *type);
 bool is_string(const type_t *type);
 

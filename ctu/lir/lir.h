@@ -175,7 +175,10 @@ lir_t *lir_name(node_t *node, const type_t *type, lir_t *it);
 
 lir_t *lir_binary(node_t *node, const type_t *type, binary_t binary, lir_t *lhs, lir_t *rhs);
 lir_t *lir_unary(node_t *node, const type_t *type, unary_t unary, lir_t *operand);
-lir_t *lir_call(node_t *node, const type_t *type, lir_t *func, vector_t *args);
+lir_t *lir_call(node_t *node, 
+                const type_t *type, 
+                lir_t *func, 
+                vector_t *args);
 
 lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src);
 lir_t *lir_while(node_t *node, lir_t *cond, lir_t *then);

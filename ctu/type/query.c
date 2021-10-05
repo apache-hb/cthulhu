@@ -96,6 +96,22 @@ const type_t *closure_result(const type_t *type) {
     return type->result;
 }
 
+const type_t *param_at(const type_t *type, size_t idx) {
+    if (!is_closure(type)) {
+        return type_poison("non closure types do not accept parameters");
+    }
+
+    if (is_variadic(type)) {
+        return vector_len(type->args) - 1 > idx
+            ? vector_get(type->args, idx)
+            : type_any();
+    }
+
+    return vector_len(type->args) > idx
+        ? vector_get(type->args, idx)
+        : type_poison("parameter out of range");
+}
+
 bool is_string(const type_t *type) {
     return type->type == TY_STRING;
 }

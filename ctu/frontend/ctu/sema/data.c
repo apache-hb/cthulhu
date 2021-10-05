@@ -62,14 +62,13 @@ void add_func(sema_t *sema, const char *name, lir_t *lir) {
     sema_set(sema, TAG_FUNCS, name, lir);
 }
 
-void add_type(sema_t *sema, const char *name, const type_t *type) {
+void add_type(sema_t *sema, const char *name, type_t *type) {
     const type_t *ty = get_type(sema, name);
     if (ty != NULL) {
         report(sema->reports, ERROR, NULL, "duplicate definition of type `%s`", type_format(type));
     }
 
-    /* casting away the const here is fine because its always added back in get_type */
-    sema_set(sema, TAG_TYPES, name, (type_t*)type);
+    sema_set(sema, TAG_TYPES, name, type);
 }
 
 lir_t *get_var(sema_t *sema, const char *name) {
@@ -80,7 +79,7 @@ lir_t *get_func(sema_t *sema, const char *name) {
     return sema_get(sema, TAG_FUNCS, name);
 }
 
-const type_t *get_type(sema_t *sema, const char *name) {
+type_t *get_type(sema_t *sema, const char *name) {
     return sema_get(sema, TAG_TYPES, name);
 }
 

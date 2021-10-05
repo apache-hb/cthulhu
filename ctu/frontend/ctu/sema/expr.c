@@ -1,5 +1,6 @@
 #include "expr.h"
 #include "value.h"
+#include "define.h"
 
 #include "ctu/type/retype.h"
 
@@ -86,7 +87,8 @@ static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
 
     lir_t *func = get_func(sema, name);
     if (func != NULL) {
-        return func;
+        lir_t *it = compile_define(func);
+        return it;
     }
 
     report(sema->reports, ERROR, expr->node, "failed to resolve `%s`", name);
