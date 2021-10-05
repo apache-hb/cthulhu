@@ -229,7 +229,7 @@ static lir_t *compile_print(sema_t *sema, pl0_t *stmt) {
     vector_push(&args, lir_string(stmt->node, type_string(), "%d\n"));
     vector_push(&args, expr);
 
-    return lir_call(stmt->node, print, args);
+    return lir_call(stmt->node, closure_result(lir_type(print)), print, args);
 }
 
 static lir_t *compile_loop(sema_t *sema, pl0_t *stmt) {
@@ -269,7 +269,7 @@ static lir_t *compile_call(sema_t *sema, pl0_t *stmt) {
         return lir_poison(stmt->node, "unknown procedure");
     }
 
-    return lir_call(stmt->node, proc, vector_new(0));
+    return lir_call(stmt->node, closure_result(lir_type(proc)), proc, vector_new(0));
 }
 
 static lir_t *compile_stmt(sema_t *sema, pl0_t *stmt) {

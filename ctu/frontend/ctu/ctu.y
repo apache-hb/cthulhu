@@ -74,7 +74,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     statements stmt type param function
 
 %type<vector>
-    unit stmtlist params
+    unit stmtlist params paramlist args arglist
 
 %type<boolean>
     exported
@@ -106,10 +106,14 @@ value: VAR IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, NULL, $4); }
     | VAR IDENT COLON type SEMI { $$ = ctu_value(x, @$, $2, $4, NULL); }
     ;
 
-function: DEF IDENT LPAREN params RPAREN COLON type statements 
+function: DEF IDENT LPAREN paramlist RPAREN COLON type statements 
     { $$ = ctu_define(x, @$, $2, $4, $7, $8); }
-    | DEF IDENT LPAREN params RPAREN COLON type ASSIGN expr SEMI
+    | DEF IDENT LPAREN paramlist RPAREN COLON type ASSIGN expr SEMI
     { $$ = NULL; }
+    ;
+
+paramlist: %empty { $$ = vector_new(0); }
+    | params { $$ = $1; }
     ;
 
 params: param { $$ = vector_init($1); }
@@ -134,12 +138,21 @@ stmt: expr SEMI { $$ = $1; }
     | statements { $$ = $1; }
     ;
 
+arglist: %empty { $$ = vector_new(0); }
+    | args { $$ = $1; }
+    ;
+
+args: expr { $$ = vector_init($1); }
+    | args COMMA expr { vector_push(&$1, $3); $$ = $1; }
+    ;
+
 primary: LPAREN expr RPAREN { $$ = $2; }
     | IDENT { $$ = ctu_ident(x, @$, $1); }
     | DIGIT { $$ = ctu_digit(x, @$, $1); }
     ;
 
 postfix: primary { $$ = $1; }
+    | postfix LPAREN arglist RPAREN { $$ = ctu_call(x, @$, $1, $3); }
     ;
 
 unary: postfix { $$ = $1; }

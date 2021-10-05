@@ -50,6 +50,15 @@ ctu_t *ctu_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_
     return ctu;
 }
 
+ctu_t *ctu_call(scan_t *scan, where_t where, ctu_t *func, vector_t *args) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_CALL);
+
+    ctu->func = func;
+    ctu->args = args;
+
+    return ctu;
+}
+
 ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts) {
     ctu_t *ctu = ctu_new(scan, where, CTU_STMTS);
 

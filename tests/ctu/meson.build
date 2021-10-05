@@ -19,7 +19,7 @@ fails = [
     'incorrect-return2', 'infinite-struct', 'invalid-char',
     'invalid-init', 'loop', 'nested-refs', 'no-init', 'recurse',
     'return-local-ref', 'return-struct-ref', 'scope',
-    'type-in-expr', 'uninit-global', 'void-var', 'weird'
+    'type-in-expr', 'uninit-global', 'void-var', 'weird', 'large'
 ]
 
 foreach case : fails
@@ -34,7 +34,7 @@ pass = [
     'direct-index', 'fizzbuzz', 'forward', 'func', 'fuzz-8',
     'global-const', 'global-init', 'global-uninit', 'global-var',
     'global', 'hello', 'hello2', 'horror', 'implicit-var-cast',
-    'large', 'long-while', 'long', 'loop', 'multiline', 'mut',
+    'long-while', 'long', 'loop', 'multiline', 'mut',
     'nest', 'order', 'pointers', 'pointers2', 'posix-interop', 'regalloc',
     'string', 'struct', 'suffix', 'union', 'unused-var', 'var', 'win32-interop',
     'win32-wsa'

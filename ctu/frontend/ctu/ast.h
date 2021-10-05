@@ -12,6 +12,7 @@ typedef enum {
 
     CTU_UNARY,
     CTU_BINARY,
+    CTU_CALL,
 
     CTU_STMTS,
 
@@ -49,6 +50,11 @@ typedef struct ctu_t {
         };
 
         struct {
+            struct ctu_t *func;
+            vector_t *args;
+        };
+
+        struct {
             const char *name;
             bool exported; /* is this exported on local */
 
@@ -79,6 +85,7 @@ ctu_t *ctu_ident(scan_t *scan, where_t where, const char *ident);
 /* expressions */
 ctu_t *ctu_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *operand);
 ctu_t *ctu_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs);
+ctu_t *ctu_call(scan_t *scan, where_t where, ctu_t *func, vector_t *args);
 
 /* statements */
 ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts);

@@ -1,0 +1,5 @@
+var y = x(5);
+
+def x(i: int): int {
+    x(5);
+}

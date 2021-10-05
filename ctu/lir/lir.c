@@ -98,8 +98,8 @@ lir_t *lir_unary(node_t *node, const type_t *type, unary_t unary, lir_t *operand
     return lir;
 }
 
-lir_t *lir_call(node_t *node, lir_t *func, vector_t *args) {
-    lir_t *lir = lir_new(node, NULL, LIR_CALL);
+lir_t *lir_call(node_t *node, const type_t *type, lir_t *func, vector_t *args) {
+    lir_t *lir = lir_new(node, type, LIR_CALL);
 
     lir->func = func;
     lir->args = args;

@@ -2,6 +2,8 @@
 
 #include "ctu/util/str.h"
 
+#include <stdint.h>
+
 bool is_const(const type_t *type) {
     return !type->mut;
 }
@@ -72,6 +74,26 @@ bool is_variadic(const type_t *type) {
     }
 
     return is_varargs(vector_tail(type->args));
+}
+
+size_t minimum_params(const type_t *type) {
+    if (!is_closure(type)) {
+        return SIZE_MAX;
+    }
+
+    if (is_variadic(type)) {
+        return vector_len(type->args) - 1;
+    }
+
+    return vector_len(type->args);
+}
+
+const type_t *closure_result(const type_t *type) {
+    if (!is_closure(type)) {
+        return type_poison("non closure types do not return");
+    }
+
+    return type->result;
 }
 
 bool is_string(const type_t *type) {

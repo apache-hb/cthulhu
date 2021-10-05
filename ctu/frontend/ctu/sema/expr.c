@@ -1,6 +1,8 @@
 #include "expr.h"
 #include "value.h"
 
+#include "ctu/type/retype.h"
+
 static lir_t *compile_digit(ctu_t *digit) {
     return lir_digit(digit->node, 
         /* type = */ type_literal_integer(), 
@@ -32,6 +34,48 @@ static lir_t *compile_binary(sema_t *sema, ctu_t *expr) {
     return lir_binary(expr->node, common, binary, lhs, rhs);
 }
 
+static lir_t *compile_call(sema_t *sema, ctu_t *expr) {
+    size_t len = vector_len(expr->args);
+    lir_t *func = compile_expr(sema, expr->func);
+    vector_t *args = vector_of(len);
+    for (size_t i = 0; i < len; i++) {
+        ctu_t *it = vector_get(expr->args, i);
+        lir_t *arg = compile_expr(sema, it);
+        vector_set(args, i, arg);
+    }
+
+    const type_t *fty = lir_type(func);
+    if (!is_closure(fty)) {
+        report(sema->reports, ERROR, expr->node, "cannot apply call to type `%s`", type_format(fty));
+        return lir_poison(expr->node, "invalid call");
+    }
+
+    size_t least = minimum_params(fty);
+    if (least > len) {
+        if (is_variadic(fty)) {
+            report(sema->reports, ERROR, expr->node, "incorrect number of arguments, expected at least %zu have %zu", least, len);
+        } else {
+            report(sema->reports, ERROR, expr->node, "incorrect number of arguments, expected %zu have %zu", least, len);
+        }
+
+        return lir_poison(expr->node, "invalid call");
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        const type_t *want = vector_get(fty->args, i);
+        lir_t *arg = vector_get(args, i);
+        lir_t *res = retype_expr(sema->reports, i > least ? type_any() : want, arg);
+
+        if (is_poison(lir_type(res))) {
+            report(sema->reports, ERROR, res->node, "cannot convert cast argument %zu from `%s` to `%s`", i, type_format(lir_type(arg)), type_format(want));
+        }
+
+        vector_set(args, i, res);
+    }
+
+    return lir_call(expr->node, closure_result(fty), func, args);
+}
+
 static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
     const char *name = expr->ident;
     lir_t *var = get_var(sema, name);
@@ -54,6 +98,7 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_DIGIT: return compile_digit(expr);
     case CTU_UNARY: return compile_unary(sema, expr);
     case CTU_BINARY: return compile_binary(sema, expr);
+    case CTU_CALL: return compile_call(sema, expr);
     case CTU_IDENT: return compile_name(sema, expr);
 
     default:
