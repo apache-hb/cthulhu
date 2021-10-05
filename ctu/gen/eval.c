@@ -192,8 +192,13 @@ static bool exec_step(exec_t *exec) {
         exec->values[here] = exec_load(exec, step);
         return true;
 
+    case OP_CALL:
+        report(exec->world->reports, ERROR, step.node, "can only call `compile` functions at compile time");
+        exec->result = value_poison("invalid function colour");
+        return false;
+
     default:
-        ctu_assert(exec->world->reports, "%s invalid opcode: [%zu] = %d", exec->block->name, exec->ip, step.opcode);
+        ctu_assert(exec->world->reports, "invalid opcode: %s[%zu] = %d", exec->block->name, exec->ip, step.opcode);
         return false;
     }
 }

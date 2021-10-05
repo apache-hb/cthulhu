@@ -1,6 +1,7 @@
 #include "sema.h"
 #include "data.h"
 #include "value.h"
+#include "define.h"
 
 #include "ctu/util/util.h"
 #include "ctu/util/report-ext.h"
@@ -41,10 +42,13 @@ static lir_t *compile_decls(sema_t *sema, node_t *root) {
     map_t *vars = sema_tag(sema, TAG_GLOBALS);
     MAP_APPLY(vars, sema, build_value);
 
+    map_t *funcs = sema_tag(sema, TAG_FUNCS);
+    MAP_APPLY(funcs, sema, build_define);
+
     return lir_module(root, 
-        /* externs = */ vector_new(0), 
-        /* vars = */ map_values(vars), 
-        /* funcs = */ vector_new(0)
+        /* externs = */ vector_new(0),
+        /* vars = */ map_values(vars),
+        /* funcs = */ map_values(funcs)
     );
 }
 

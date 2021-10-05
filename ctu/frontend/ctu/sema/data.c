@@ -5,6 +5,7 @@
 stack_t *stack_new(void) {
     stack_t *stack = ctu_malloc(sizeof(stack_t));
     stack->stack = vector_new(16);
+    stack->locals = vector_new(8);
     return stack;
 }
 
@@ -118,4 +119,14 @@ sema_t *base_sema(reports_t *reports, size_t decls) {
 
 void delete_sema(sema_t *sema) {
     sema_delete(sema);
+}
+
+vector_t *move_locals(sema_t *sema) {
+    stack_t *data = sema_get_data(sema);
+    return data->locals;
+}
+
+void wipe_locals(sema_t *sema) {
+    stack_t *data = sema_get_data(sema);
+    data->locals = vector_new(8);
 }

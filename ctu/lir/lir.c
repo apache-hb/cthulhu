@@ -153,7 +153,7 @@ void lir_value(reports_t *reports, lir_t *dst, const type_t *type, lir_t *init) 
     dst->init = init;
 }
 
-void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *locals, vector_t *params, lir_t *body) {
+void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *locals, lir_t *body) {
     if (dst->leaf != LIR_FORWARD) {
         ctu_assert(reports, "lir-define already resolved");
     }
@@ -161,7 +161,6 @@ void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *lo
     dst->leaf = LIR_DEFINE;
     dst->type = type;
     dst->locals = locals;
-    dst->params = params;
     dst->body = body;   
 }
 

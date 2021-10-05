@@ -30,18 +30,33 @@ static const char *report_level(level_t level) {
     }
 }
 
+static bool is_multiline_report(where_t where) {
+    return where.last_line > where.first_line;
+}
+
+static size_t total_lines(where_t where) {
+    return where.last_line - where.first_line;
+}
+
+static char *format_location(const scan_t *scan, where_t where) {
+    if (is_multiline_report(where)) {
+        return format("%s source [%s:%ld:%ld-%ld:%ld]",
+            scan->language, scan->path, 
+            where.first_line + 1, where.first_column,
+            where.last_line + 1, where.last_column
+        );
+    } else {
+        return format("%s source [%s:%ld:%ld]",
+            scan->language, scan->path, 
+            where.first_line + 1, where.first_column
+        );
+    }
+}
+
 static void report_scanner(const node_t *node) {
     const scan_t *scan = node->scan;
     where_t where = node->where;
-
-    const char *path = scan->path;
-    const char *language = scan->language;
-    line_t line = where.first_line + 1;
-    column_t column = where.first_column;
-
-    fprintf(stderr, " => %s source [%s:%ld:%ld]\n",
-        language, path, line, column
-    );
+    fprintf(stderr, " => %s\n", format_location(scan, where));
 }
 
 static void report_header(message_t *message) {
@@ -134,10 +149,29 @@ static char *build_underline(char *source, where_t where, char *note) {
     return str;
 }
 
+/* stupid code but quick and simple */
+static size_t base10_length(line_t digit) {
+    if (digit < 10) { return 1; } 
+    else if (digit < 100) { return 2; } 
+    else if (digit < 1000) { return 3; } 
+    else if (digit < 10000) { return 4; } 
+    else if (digit < 100000) { return 5; } 
+    else if (digit < 1000000) { return 6; }
+    else if (digit < 10000000) { return 7; }
+    else if (digit < 100000000) { return 8; }
+    else if (digit < 1000000000) { return 9; }
+    else if (digit < 10000000000) { return 10; }
+    else if (digit < 100000000000) { return 11; }
+    else if (digit < 1000000000000) { return 12; }
+    else if (digit < 10000000000000) { return 13; }
+    else if (digit < 100000000000000) { return 14; }
+    else if (digit < 1000000000000000) { return 15; }
+    else if (digit < 10000000000000000) { return 16; }
+    else { return 17; }
+}
+
 static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {
-    char *num = format(" %ld ", init);
-    size_t len = strlen(num);
-    ctu_free(num, len);
+    size_t len = base10_length(init);
 
     for (size_t i = 0; i < vector_len(parts); i++) {
         part_t *part = vector_get(parts, i);
@@ -146,11 +180,7 @@ static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {
             continue;
         }
 
-        line_t line = part->node->where.first_line + 1;
-        char *it = format(" %ld ", line);
-        size_t itlen = strlen(it);
-        len = MAX(len, itlen);
-        ctu_free(it, len);
+        len = MAX(len, base10_length(part->node->where.first_line + 1));
     }
 
     return len;
@@ -158,6 +188,26 @@ static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {
 
 static char *right_align(line_t line, int width) {
     return format("%*ld", width, line);
+}
+
+static char *underline_single(const scan_t *scan, where_t where) {
+    
+}
+
+static char *underline_medium(const scan_t *scan, where_t where) {
+
+}
+
+static char *underline_large(const scan_t *scan, where_t where) {
+    
+}
+
+static char *underline_source(const scan_t *scan, where_t where) {
+    switch (total_lines(where)) {
+    case 0: return underline_single(scan, where);
+    case 1: case 2: return underline_medium(scan, where);
+    default: return underline_large(scan, where);
+    }
 }
 
 static void report_source(message_t *message) {
@@ -195,7 +245,6 @@ static void report_part(message_t *message, part_t *part) {
     where_t where = node->where;
 
     line_t start = where.first_line;
-    column_t front = where.first_column;
 
     char *source = extract_line(scan, start);
     char *underline = build_underline(source, where, msg);
@@ -208,10 +257,9 @@ static void report_part(message_t *message, part_t *part) {
         report_scanner(part->node);
     }
 
-    fprintf(stderr, "%s> %s source %s:%ld:%ld\n", pad, 
-        scan->language, scan->path,
-        start + 1, front
-    );
+    char *loc = format_location(scan, where);
+
+    fprintf(stderr, "%s> %s\n", pad, loc);
     fprintf(stderr, "%s|\n", pad);
     fprintf(stderr, "%s| %s\n", line, source);
     fprintf(stderr, "%s| " COLOUR_PURPLE "%s\n" COLOUR_RESET, pad, underline);

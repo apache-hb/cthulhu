@@ -137,7 +137,6 @@ typedef struct lir_t {
                  */
                 struct {
                     vector_t *locals;
-                    vector_t *params;
                     struct lir_t *body;
                 };
             };
@@ -198,7 +197,6 @@ void lir_define(reports_t *reports,
                 lir_t *dst, 
                 const type_t *type, 
                 vector_t *locals, 
-                vector_t *params, 
                 lir_t *body);
 
 void lir_attribs(lir_t *dst, const attrib_t *attribs);

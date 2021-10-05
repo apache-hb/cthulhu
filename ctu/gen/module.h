@@ -101,14 +101,6 @@ typedef struct block_t {
              */
             vector_t *locals;
 
-            /** 
-             * vector_t<struct block_t<BLOCK_SYMBOL>*> 
-             * 
-             * a vector of all parameters passed into this
-             * block.
-             */
-            vector_t *params;
-
             /* the computed result of this block if its compile time */
             value_t *value;
 

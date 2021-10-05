@@ -156,11 +156,6 @@ static void var_print(FILE *out, module_t *mod, size_t idx) {
         fprintf(out, "  %s\n", locals);
     }
 
-    char *params = emit_names("  params", flow->params);
-    if (params != NULL) {
-        fprintf(out, "%s\n", params);
-    }
-
     const char *type = type_format(flow->type);
 
     if (flow->value != NULL) {
@@ -192,11 +187,6 @@ static void func_print(FILE *out, module_t *mod, size_t idx) {
     char *locals = emit_names("locals", flow->locals);
     if (locals != NULL) {
         fprintf(out, "%s\n", locals);
-    }
-
-    char *params = emit_names("params", flow->params);
-    if (params != NULL) {
-        fprintf(out, "%s\n", params);
     }
 
     size_t len = flow->len;

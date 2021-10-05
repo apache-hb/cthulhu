@@ -173,12 +173,9 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
 
     if (lir_is(decl, LIR_DEFINE)) {
         vector_t *locals = decl->locals;
-        vector_t *params = decl->params;
         block->locals = VECTOR_MAP(locals, lir_named);
-        block->params = VECTOR_MAP(params, lir_named);
     } else {
         block->locals = NULL;
-        block->params = NULL;
     }
 
     block->len = 0;
@@ -217,14 +214,9 @@ static void build_define(vector_t **strings, reports_t *reports, module_t *mod, 
     context_t ctx = { strings, mod, block, reports };
 
     vector_t *locals = define->locals;
-    vector_t *params = define->params;
 
     for (size_t i = 0; i < vector_len(locals); i++) {
         block_declare(vector_get(locals, i));
-    }
-
-    for (size_t i = 0; i < vector_len(params); i++) {
-        block_declare(vector_get(params, i));
     }
 
     lir_t *body = define->body;
@@ -374,8 +366,13 @@ static operand_t emit_string(context_t ctx, lir_t *lir) {
     return operand_address(str);
 }
 
-static operand_t emit_error(context_t ctx, lir_t *lir) {
-    report(ctx.reports, ERROR, lir->node, "%s", type_format(lir_type(lir)));
+static operand_t emit_forward(context_t ctx, lir_t *lir) {
+    report(ctx.reports, INTERNAL, lir->node, "forward `%s`", type_format(lir_type(lir)));
+    return operand_empty();
+}
+
+static operand_t emit_poison(context_t ctx, lir_t *lir) {
+    report(ctx.reports, INTERNAL, lir->node, "poison `%s`", type_format(lir_type(lir)));
     return operand_empty();
 }
 
@@ -394,8 +391,8 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_SYMBOL: return emit_symbol(lir);
     case LIR_VALUE: return emit_value(lir);
     case LIR_DEFINE: return emit_define(lir);
-    case LIR_POISON: case LIR_FORWARD:
-        return emit_error(ctx, lir);
+    case LIR_POISON: return emit_poison(ctx, lir);
+    case LIR_FORWARD: return emit_forward(ctx, lir);
 
     default:
         ctu_assert(ctx.reports, "emit-lir unknown %d", lir->leaf);
@@ -476,10 +473,6 @@ static void free_blocks(vector_t *blocks) {
 static void define_free(block_t *block) {
     if (block->locals != NULL) {
         free_blocks(block->locals);
-    }
-    
-    if (block->params != NULL) {
-        free_blocks(block->params);
     }
 
     ctu_free(block->steps, block->size * sizeof(step_t));

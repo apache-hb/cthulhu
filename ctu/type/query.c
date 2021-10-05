@@ -76,16 +76,24 @@ bool is_variadic(const type_t *type) {
     return is_varargs(vector_tail(type->args));
 }
 
-size_t minimum_params(const type_t *type) {
+size_t maximum_params(const type_t *type) {
     if (!is_closure(type)) {
         return SIZE_MAX;
     }
 
     if (is_variadic(type)) {
-        return vector_len(type->args) - 1;
+        return SIZE_MAX;
     }
 
     return vector_len(type->args);
+}
+
+size_t minimum_params(const type_t *type) {
+    if (!is_closure(type)) {
+        return SIZE_MAX;
+    }
+
+    return vector_len(type->args) - (is_variadic(type) ? 1 : 0);
 }
 
 const type_t *closure_result(const type_t *type) {

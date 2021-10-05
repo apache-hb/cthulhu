@@ -42,7 +42,7 @@ static lir_t *pl0_import_print(reports_t *reports, node_t *node) {
     const type_t *type = type_closure(args, type_digit(SIGNED, TY_INT));
     
     lir_t *func = lir_forward(node, "printf", LIR_DEFINE, NULL);
-    lir_define(reports, func, type, NULL, NULL, NULL);
+    lir_define(reports, func, type, vector_new(0), NULL);
     lir_attribs(func, &PRINT);
 
     return func;
@@ -364,8 +364,7 @@ static void compile_proc(sema_t *sema, lir_t *lir) {
 
     lir_define(sema->reports, lir, 
         /* type = */ pl0_closure(), 
-        /* locals = */ locals, 
-        /* params = */ vector_of(0), 
+        /* locals = */ locals,
         /* body = */ lir_stmts(node->node, body)
     );
 
@@ -389,7 +388,6 @@ static lir_t *compile_entry(sema_t *sema, pl0_t *body) {
     lir_define(sema->reports, entry,
         /* type = */ pl0_closure(),
         /* locals = */ vector_of(0),
-        /* params = */ vector_of(0),
         /* body = */ lir_stmts(body->node, vector_init(stmts))
     );
 

@@ -51,21 +51,22 @@ static lir_t *compile_call(sema_t *sema, ctu_t *expr) {
         return lir_poison(expr->node, "invalid call");
     }
 
-    size_t least = minimum_params(fty);
-    if (least > len) {
+    size_t total = maximum_params(fty);
+    if (total < len) {
         if (is_variadic(fty)) {
+            size_t least = minimum_params(fty);
             report(sema->reports, ERROR, expr->node, "incorrect number of arguments, expected at least %zu have %zu", least, len);
         } else {
-            report(sema->reports, ERROR, expr->node, "incorrect number of arguments, expected %zu have %zu", least, len);
+            report(sema->reports, ERROR, expr->node, "incorrect number of arguments, expected %zu have %zu", total, len);
         }
 
         return lir_poison(expr->node, "invalid call");
     }
 
     for (size_t i = 0; i < len; i++) {
-        const type_t *want = vector_get(fty->args, i);
+        const type_t *want = param_at(fty, i);
         lir_t *arg = vector_get(args, i);
-        lir_t *res = retype_expr(sema->reports, i > least ? type_any() : want, arg);
+        lir_t *res = retype_expr(sema->reports, want, arg);
 
         if (is_poison(lir_type(res))) {
             report(sema->reports, ERROR, res->node, "cannot convert cast argument %zu from `%s` to `%s`", i, type_format(lir_type(arg)), type_format(want));
@@ -106,5 +107,34 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     default:
         ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);
         return lir_poison(expr->node, "unimplemented");
+    }
+}
+
+lir_t *compile_stmts(sema_t *sema, ctu_t *stmts) {
+    vector_t *all = stmts->stmts;
+    size_t len = vector_len(all);
+
+    vector_t *result = vector_of(len);
+    for (size_t i = 0; i < len; i++) {
+        ctu_t *it = vector_get(stmts->stmts, i);
+        lir_t *stmt = compile_stmt(sema, it);
+        vector_set(result, i, stmt);
+    }
+
+    return lir_stmts(stmts->node, result);
+}
+
+static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };
+
+lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
+    switch (stmt->type) {
+    case CTU_STMTS: return compile_stmts(new_sema(sema->reports, sema, SMALL_SIZES), stmt);
+    
+    case CTU_CALL: return compile_call(sema, stmt);
+
+
+    default: 
+        ctu_assert(sema->reports, "compile-stmt unknown type %d", stmt->type);
+        return lir_poison(stmt->node, "compile-stmt unknown type");
     }
 }
