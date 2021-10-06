@@ -111,3 +111,10 @@ const backend_t *select_backend(reports_t *reports, const char *name) {
         return NULL;
     }
 }
+
+int common_main(const frontend_t *frontend, int argc, const char **argv) {
+    UNUSED(frontend);
+    UNUSED(argc);
+    UNUSED(argv);
+    return 0;
+}

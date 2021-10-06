@@ -112,7 +112,7 @@ static char *extract_line(const scan_t *scan, line_t line) {
     return nstrnorm(str, len - 1);
 }
 
-static char *build_underline(char *source, where_t where, char *note) {
+static char *build_underline(char *source, where_t where, const char *note) {
     column_t front = where.first_column;
     column_t back = where.last_column;
 
@@ -190,23 +190,140 @@ static char *right_align(line_t line, int width) {
     return format("%*ld", width, line);
 }
 
-static char *underline_single(const scan_t *scan, where_t where) {
-    
+/**
+ * formats a source span for a single line
+ * 
+ *      |
+ *  line| source text
+ *      | ^~~~~~ underline message
+ */
+static char *format_single(const scan_t *scan, where_t where, const char *underline) {
+    line_t first_line = where.first_line + 1;
+    size_t align = base10_length(first_line);
+
+    char *pad = padding(align);
+    char *digit = right_align(first_line, align);
+
+    char *first_source = extract_line(scan, where.first_line);
+
+    return format(
+        " %s|\n"
+        " %s| %s\n"
+        " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+        pad,
+        digit, first_source,
+        pad, build_underline(first_source, where, underline)
+    );
 }
 
-static char *underline_medium(const scan_t *scan, where_t where) {
+/**
+ * formats a source span for 2 lines
+ * 
+ *       |
+ *  line1> source text 1
+ *       > source text on the next line
+ *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
+ *       |
+ */
+static char *format_medium2(const scan_t *scan, where_t where, const char *underline) {
+    line_t first_line = where.first_line + 1;
+    size_t align = base10_length(first_line);
 
+    char *pad = padding(align);
+    char *digit = right_align(first_line, align);
+
+    char *first_source = extract_line(scan, where.first_line);
+    char *last_source = extract_line(scan, where.last_line);
+
+    return format(
+        " %s|\n"
+        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
+        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
+        " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+        pad,
+        digit, first_source,
+        pad, last_source,
+        pad, build_underline(last_source, where, underline)
+    );
 }
 
-static char *underline_large(const scan_t *scan, where_t where) {
-    
+/**
+ * formats a source span for 3 lines
+ * 
+ *       |
+ *  line1> source text 1
+ *       > source text on the next line
+ *       > source text on the third line
+ *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
+ *       |
+ */
+static char *format_medium3(const scan_t *scan, where_t where, const char *underline) {
+    line_t first_line = where.first_line + 1;
+    size_t align = base10_length(first_line);
+
+    char *pad = padding(align);
+    char *digit = right_align(first_line, align);
+
+    char *first_source = extract_line(scan, where.first_line);
+    char *middle_source = extract_line(scan, where.first_line + 1);
+    char *last_source = extract_line(scan, where.last_line);
+
+    return format(
+        " %s|\n"
+        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
+        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
+        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
+        " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+        pad,
+        digit, first_source,
+        pad, middle_source,
+        pad, last_source,
+        pad, build_underline(last_source, where, underline)
+    );
 }
 
-static char *underline_source(const scan_t *scan, where_t where) {
+/**
+ * formats a source span for more than 3 lines
+ * 
+ *       |
+ *  line1> source text 1
+ *       > ...
+ *  lineN> source text on the final line
+ *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
+ *       |
+ */
+static char *format_large(const scan_t *scan, where_t where, const char *underline) {
+    line_t first_line = where.first_line + 1;
+    line_t last_line = where.last_line + 1;
+    size_t align = MAX(base10_length(first_line), base10_length(last_line)) + 1;
+
+    char *pad = padding(align);
+    char *first_digit = right_align(first_line, align);
+    char *last_digit = right_align(last_line, align);
+
+    char *first_source = extract_line(scan, where.first_line);
+    char *last_source = extract_line(scan, where.last_line);
+
+    return format(
+        " %s|\n"
+        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
+        " %s>" COLOUR_PURPLE " ...\n" COLOUR_RESET
+        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
+        " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+        pad,
+        first_digit, first_source,
+        pad,
+        last_digit, last_source,
+        pad, build_underline(last_source, where, underline)
+    );
+}
+
+static char *format_source(const scan_t *scan, where_t where, const char *underline) {
     switch (total_lines(where)) {
-    case 0: return underline_single(scan, where);
-    case 1: case 2: return underline_medium(scan, where);
-    default: return underline_large(scan, where);
+    case 0: return format_single(scan, where, underline);
+    case 1: return format_medium2(scan, where, underline);
+    case 2: return format_medium3(scan, where, underline);
+    default: return format_large(scan, where, underline);
     }
 }
 
@@ -219,22 +336,7 @@ static void report_source(message_t *message) {
     const scan_t *scan = node->scan;
     where_t where = node->where;
 
-    line_t start = where.first_line;
-
-    char *source = extract_line(scan, start);
-    char *underline = build_underline(source, where, message->underline);
-
-    size_t longest = longest_line(scan, start + 1, message->parts);
-    char *line = right_align(start + 1, longest);
-    char *pad = padding(longest);
-
-    fprintf(stderr, "%s|\n", pad);
-    fprintf(stderr, "%s| %s\n", line, source);
-    fprintf(stderr, "%s| " COLOUR_PURPLE "%s\n" COLOUR_RESET, pad, underline);
-
-    ctu_free(line, strlen(line) + 1);
-    ctu_free(source, strlen(source) + 1);
-    ctu_free(pad, strlen(pad) + 1);
+    fprintf(stderr, "%s", format_source(scan, where, message->underline));
 }
 
 static void report_part(message_t *message, part_t *part) {
@@ -246,12 +348,8 @@ static void report_part(message_t *message, part_t *part) {
 
     line_t start = where.first_line;
 
-    char *source = extract_line(scan, start);
-    char *underline = build_underline(source, where, msg);
-
     size_t longest = longest_line(scan, start + 1, message->parts);
     char *pad = padding(longest);
-    char *line = right_align(start + 1, longest);
 
     if (message->node->scan != scan) {
         report_scanner(part->node);
@@ -260,9 +358,7 @@ static void report_part(message_t *message, part_t *part) {
     char *loc = format_location(scan, where);
 
     fprintf(stderr, "%s> %s\n", pad, loc);
-    fprintf(stderr, "%s|\n", pad);
-    fprintf(stderr, "%s| %s\n", line, source);
-    fprintf(stderr, "%s| " COLOUR_PURPLE "%s\n" COLOUR_RESET, pad, underline);
+    fprintf(stderr, "%s", format_source(scan, where, msg));
 }
 
 static void send_note(const char *note) {

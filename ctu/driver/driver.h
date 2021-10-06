@@ -55,7 +55,6 @@ const frontend_t *select_frontend(reports_t *reports, const char *name);
  */
 const frontend_t *select_frontend_by_extension(reports_t *reports, const frontend_t *frotnend, const char *path);
 
-
 /**
  * select a backend based on a target name
  * 
@@ -65,3 +64,12 @@ const frontend_t *select_frontend_by_extension(reports_t *reports, const fronten
  * @return the backend or NULL if not found
  */
 const backend_t *select_backend(reports_t *reports, const char *name);
+
+/**
+ * run the common main
+ * 
+ * @param frontend the frontend this is managing
+ * @param argc the argc from main
+ * @param argv the argv from main
+ */
+int common_main(const frontend_t *frontend, int argc, const char **argv);
