@@ -1,0 +1,2 @@
+var $discarded = 500;
+var read = $discarded * 2;

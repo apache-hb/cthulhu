@@ -132,3 +132,7 @@ vector_t *move_locals(sema_t *sema) {
     data->locals = vector_new(16);
     return locals;
 }
+
+bool is_discard(const char *name) {
+    return startswith(name, "$");
+}

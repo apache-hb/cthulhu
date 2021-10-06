@@ -80,6 +80,10 @@ static lir_t *compile_call(sema_t *sema, ctu_t *expr) {
 
 static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
     const char *name = expr->ident;
+    if (is_discard(name)) {
+        report(sema->reports, WARNING, expr->node, "reading from a discarded identifier `%s`", name);
+    }
+    
     lir_t *var = get_var(sema, name);
     if (var != NULL) {
         lir_t *it = compile_value(var);

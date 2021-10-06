@@ -71,6 +71,12 @@ static context_t *new_context(reports_t *reports, file_t *file, void *node) {
     return ctx;
 }
 
+static int max_report(int *error, reports_t *reports, const char *msg) {
+    int result = end_reports(reports, SIZE_MAX, msg);
+    *error = MAX(*error, result);
+    return result;
+}
+
 int common_main(const frontend_t *frontend, int argc, char **argv) {
     init_memory();
 
@@ -98,7 +104,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
         context_t *ctx = new_context(reports, file, node);
         vector_set(all, i, ctx);
 
-        error = MAX(error, end_reports(reports, SIZE_MAX, format("parsing of `%s`", file->path)));
+        max_report(&error, reports, format("parsing of `%s`", file->path));
     }
 
     if (error > 0) { return error; }
@@ -107,7 +113,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
         context_t *ctx = vector_get(all, i);
         ctx->lir = frontend->analyze(ctx->reports, ctx->node);
 
-        error = MAX(error, end_reports(ctx->reports, SIZE_MAX, format("analysis of `%s`", ctx->file->path)));
+        max_report(&error, ctx->reports, format("analysis of `%s`", ctx->file->path));
     }
 
     if (error > 0) { return error; }
@@ -118,15 +124,14 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
         ctx->mod = module_build(ctx->reports, ctx->lir);
 
         logverbose("reporting %s", ctx->file->path);
-        int local = end_reports(ctx->reports, SIZE_MAX, format("compilation of `%s`", ctx->file->path));
+        int local = max_report(&error, ctx->reports, format("compilation of `%s`", ctx->file->path));
         if (local > 0) {
-            error = MAX(error, local);
             continue;
         }
 
         eval_world(ctx->reports, ctx->mod);
 
-        error = MAX(error, end_reports(ctx->reports, SIZE_MAX, format("evaluation of `%s`", ctx->file->path)));
+        max_report(&error, ctx->reports, format("evaluation of `%s`", ctx->file->path));
     }
 
     if (error > 0) { return error; }
@@ -140,7 +145,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
         }
 
         backend->compile(ctx->reports, ctx->mod, "out.c");
-        error = MAX(error, end_reports(ctx->reports, SIZE_MAX, format("generation of `%s`", ctx->file->path)));
+        max_report(&error, ctx->reports, format("generation of `%s`", ctx->file->path));
     }
 
     return error;

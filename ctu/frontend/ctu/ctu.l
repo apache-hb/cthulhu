@@ -30,7 +30,7 @@
 "return" { return RETURN; }
 "import" { return IMPORT; }
 
-[a-zA-Z_][a-zA-Z0-9_]* {
+$?[a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);
     return IDENT;
 }
