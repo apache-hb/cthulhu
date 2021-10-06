@@ -45,7 +45,6 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
     lir_t *body = compile_stmts(nest, ctu->body);
 
     vector_t *locals = move_locals(sema);
-    wipe_locals(sema);
 
     sema_delete(nest);
 

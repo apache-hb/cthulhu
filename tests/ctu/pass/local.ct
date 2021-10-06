@@ -1,0 +1,4 @@
+export def a(): void {
+    var x = 5;
+    var z = x;
+}

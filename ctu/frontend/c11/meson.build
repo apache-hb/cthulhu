@@ -1,10 +1,7 @@
 src = [  'scan.c', 'driver.c', 'sema.c' ]
 
-libcc = library('c', src,
-    dependencies : generic
-)
-
-options += declare_dependency(
-    link_with : libcc,
-    include_directories : '.'
+cc = executable('cc', src,
+    include_directories : '.',
+    dependencies : options,
+    install : true
 )

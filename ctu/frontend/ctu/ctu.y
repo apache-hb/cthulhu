@@ -135,6 +135,7 @@ stmtlist: stmt { $$ = vector_init($1); }
     ;
 
 stmt: expr SEMI { $$ = $1; }
+    | value { $$ = $1; }
     | statements { $$ = $1; }
     ;
 

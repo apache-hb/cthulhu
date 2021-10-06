@@ -25,35 +25,10 @@ typedef struct {
     compile_t compile;
 } backend_t;
 
-extern const frontend_t FRONTEND_CTU;
-extern const frontend_t FRONTEND_PL0;
-extern const frontend_t FRONTEND_C11;
-
 extern const backend_t BACKEND_LLVM;
 extern const backend_t BACKEND_C99;
 extern const backend_t BACKEND_GCCJIT;
 extern const backend_t BACKEND_NULL;
-
-/**
- * select a frontend based on a language name
- * 
- * @param reports report sink
- * @param name the language name to parse
- * 
- * @return the frontend or NULL if not found
- */
-const frontend_t *select_frontend(reports_t *reports, const char *name);
-
-/**
- * select a frontend for a file based on the file extension
- * 
- * @param reports report sink
- * @param frontend the default frontend from parse_args
- * @param path the file path
- * 
- * @return the frontend or NULL if not found
- */
-const frontend_t *select_frontend_by_extension(reports_t *reports, const frontend_t *frotnend, const char *path);
 
 /**
  * select a backend based on a target name
@@ -72,4 +47,4 @@ const backend_t *select_backend(reports_t *reports, const char *name);
  * @param argc the argc from main
  * @param argv the argv from main
  */
-int common_main(const frontend_t *frontend, int argc, const char **argv);
+int common_main(const frontend_t *frontend, int argc, char **argv);

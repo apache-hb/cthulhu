@@ -36,7 +36,10 @@ src = [
     'ctu/util/report-ext.c',
     'ctu/util/str.c',
     'ctu/util/util.c',
-    'ctu/util/optimal.c'
+    'ctu/util/optimal.c',
+
+    'ctu/driver/driver.c',
+    'ctu/driver/cmd.c'
 ]
 
 gmp = dependency('gmp')
@@ -76,26 +79,19 @@ parse = generator(bison,
     ]
 )
 
-options = [ ]
-
-foreach lang : [ 'ctu', 'pl0', 'c11' ] 
-    subdir('ctu/frontend'/lang)
-endforeach
+options = [ generic ]
 
 foreach gen : [ 'c99', 'null' ]
     subdir('ctu/backend'/gen)
 endforeach
 
-main = [
-    'ctu/driver/main.c',
-    'ctu/driver/driver.c',
-    'ctu/driver/cmd.c'
-]
+foreach lang : [ 'ctu', 'pl0', 'c11' ] 
+    subdir('ctu/frontend'/lang)
+endforeach
 
-driver = executable('driver', main,
-    dependencies : options,
-    install : true
-)
+main = [
+    'ctu/driver/main.c'
+]
 
 tune = executable('tune', [ 'tools/tune.c' ],
     dependencies : generic

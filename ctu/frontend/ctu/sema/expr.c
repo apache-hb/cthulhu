@@ -124,6 +124,13 @@ lir_t *compile_stmts(sema_t *sema, ctu_t *stmts) {
     return lir_stmts(stmts->node, result);
 }
 
+static lir_t *compile_local(sema_t *sema, ctu_t *stmt) {
+    lir_t *value = local_value(sema, stmt);
+    add_local(sema, value);
+    add_var(sema, stmt->name, value);
+    return value;    
+}
+
 static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };
 
 lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
@@ -131,7 +138,7 @@ lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
     case CTU_STMTS: return compile_stmts(new_sema(sema->reports, sema, SMALL_SIZES), stmt);
     
     case CTU_CALL: return compile_call(sema, stmt);
-
+    case CTU_VALUE: return compile_local(sema, stmt);
 
     default: 
         ctu_assert(sema->reports, "compile-stmt unknown type %d", stmt->type);

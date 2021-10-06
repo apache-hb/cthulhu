@@ -1,38 +1,17 @@
 #include "driver.h"
+#include "cmd.h"
 
 #include "ctu/util/str.h"
 
-#include <string.h>
+#include "ctu/gen/emit.h"
+#include "ctu/gen/eval.h"
 
-#include "ctu/frontend/pl0/driver.h"
-#include "ctu/frontend/ctu/driver.h"
-#include "ctu/frontend/c11/driver.h"
+#include <string.h>
 
 #include "ctu/backend/c99/c99.h"
 #include "ctu/backend/gcc/gcc.h"
 #include "ctu/backend/llvm/llvm.h"
 #include "ctu/backend/null/null.h"
-
-const frontend_t FRONTEND_PL0 = {
-    .version = "0.0.1",
-    .name = "PL/0",
-    .parse = (parse_t)pl0_parse,
-    .analyze = (analyze_t)pl0_analyze
-};
-
-const frontend_t FRONTEND_CTU = {
-    .version = "0.0.1",
-    .name = "Cthulhu",
-    .parse = (parse_t)ctu_parse,
-    .analyze = (analyze_t)ctu_analyze
-};
-
-const frontend_t FRONTEND_C11 = {
-    .version = "0.0.1",
-    .name = "C",
-    .parse = (parse_t)c_parse,
-    .analyze = (analyze_t)c_analyze
-};
 
 const backend_t BACKEND_LLVM = {
     .version = "0.0.1",
@@ -57,42 +36,6 @@ const backend_t BACKEND_NULL = {
     .name = "NULL",
     .compile = (compile_t)null_build
 };
-
-const frontend_t *select_frontend(reports_t *reports, const char *name) {
-    if (name == NULL) {
-        report(reports, ERROR, NULL, "no frontend specified");
-        return NULL;
-    }
-
-    if (streq(name, "pl0")) {
-        return &FRONTEND_PL0;
-    } else if (streq(name, "ctu")) {
-        return &FRONTEND_CTU;
-    } else if (streq(name, "c11")) {
-        return &FRONTEND_C11;
-    } else {
-        report(reports, ERROR, NULL, "unknown frontend: %s", name);
-        return NULL;
-    }
-}
-
-const frontend_t *select_frontend_by_extension(reports_t *reports, const frontend_t *frontend, const char *path) {
-    if (frontend != NULL) {
-        return frontend;
-    }
-
-    if (endswith(path, ".pl0")) {
-        return &FRONTEND_PL0;
-    } else if (endswith(path, ".ct")) {
-        return &FRONTEND_CTU;
-    } else if (endswith(path, ".c")) {
-        return &FRONTEND_C11;
-    } else {
-        report(reports, ERROR, NULL, "unknown extension on input: %s", path);
-        return NULL;
-    }
-}
-
 const backend_t *select_backend(reports_t *reports, const char *name) {
     if (name == NULL) {
         report(reports, ERROR, NULL, "no backend specified");
@@ -112,9 +55,88 @@ const backend_t *select_backend(reports_t *reports, const char *name) {
     }
 }
 
-int common_main(const frontend_t *frontend, int argc, const char **argv) {
-    UNUSED(frontend);
-    UNUSED(argc);
-    UNUSED(argv);
-    return 0;
+typedef struct {
+    reports_t *reports;
+    file_t *file;
+    void *node;
+    lir_t *lir;
+    module_t *mod;
+} context_t;
+
+static context_t *new_context(reports_t *reports, file_t *file, void *node) {
+    context_t *ctx = ctu_malloc(sizeof(context_t));
+    ctx->reports = reports;
+    ctx->file = file;
+    ctx->node = node;
+    return ctx;
+}
+
+int common_main(const frontend_t *frontend, int argc, char **argv) {
+    init_memory();
+
+    int error = 0;
+    reports_t *errors = begin_reports();
+    settings_t settings = parse_args(errors, frontend, argc, argv);
+
+    if ((error = end_reports(errors, SIZE_MAX, "command line parsing")) > 0) {
+        return error;
+    }
+
+    vector_t *sources = settings.sources;
+    size_t len = vector_len(sources);
+
+    vector_t *all = vector_of(len);
+
+    for (size_t i = 0; i < len; i++) {
+        file_t *file = vector_get(sources, i);
+        reports_t *reports = begin_reports();
+        void *node = frontend->parse(reports, file);
+        context_t *ctx = new_context(reports, file, node);
+        vector_set(all, i, ctx);
+
+        error = MAX(error, end_reports(reports, SIZE_MAX, format("parsing of `%s`", file->path)));
+    }
+
+    if (error > 0) { return error; }
+
+    for (size_t i = 0; i < len; i++) {
+        context_t *ctx = vector_get(all, i);
+        ctx->lir = frontend->analyze(ctx->reports, ctx->node);
+
+        error = MAX(error, end_reports(ctx->reports, SIZE_MAX, format("analysis of `%s`", ctx->file->path)));
+    }
+
+    if (error > 0) { return error; }
+
+    for (size_t i = 0; i < len; i++) {
+        context_t *ctx = vector_get(all, i);
+
+        ctx->mod = module_build(ctx->reports, ctx->lir);
+
+        int local = end_reports(ctx->reports, SIZE_MAX, format("compilation of `%s`", ctx->file->path));
+        if (local > 0) {
+            error = MAX(error, local);
+            continue;
+        }
+
+        eval_world(ctx->reports, ctx->mod);
+
+        error = MAX(error, end_reports(ctx->reports, SIZE_MAX, format("evaluation of `%s`", ctx->file->path)));
+    }
+
+    if (error > 0) { return error; }
+
+    const backend_t *backend = settings.backend;
+    for (size_t i = 0; i < len; i++) {
+        context_t *ctx = vector_get(all, i);
+        if (backend == NULL || backend->compile == NULL) {
+            report(ctx->reports, NOTE, NULL, "no backend specified, skipping compilation of `%s`", ctx->file->path);
+            continue;
+        }
+
+        backend->compile(ctx->reports, ctx->mod, "out.c");
+        error = MAX(error, end_reports(ctx->reports, SIZE_MAX, format("generation of `%s`", ctx->file->path)));
+    }
+
+    return error;
 }

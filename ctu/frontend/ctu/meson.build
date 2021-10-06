@@ -6,11 +6,8 @@ src = [
     'sema/expr.c', 'sema/type.c', 'sema/define.c'
 ]
 
-libctu = library('ctu', src,
-    dependencies : generic
-)
-
-options += declare_dependency(
-    link_with : libctu,
-    include_directories : '.'
+ctc = executable('ctc', src,
+    include_directories : '.',
+    dependencies : options,
+    install : true
 )

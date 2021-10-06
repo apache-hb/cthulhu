@@ -64,3 +64,9 @@ void build_value(sema_t *sema, lir_t *lir) {
     state_t *state = lir->ctx;
     realise_value(sema, lir, state->ctu);
 }
+
+lir_t *local_value(sema_t *sema, ctu_t *ctu) {
+    lir_t *value = lir_forward(ctu->node, ctu->name, LIR_VALUE, NULL);
+    realise_value(sema, value, ctu);
+    return value;
+}

@@ -30,8 +30,8 @@ void stack_delete(stack_t *stack);
 bool stack_enter(sema_t *sema, lir_t *lir);
 void stack_leave(sema_t *sema, lir_t *lir);
 
+void add_local(sema_t *sema, lir_t *lir);
 vector_t *move_locals(sema_t *sema);
-void wipe_locals(sema_t *sema);
 
 void add_var(sema_t *sema, const char *name, lir_t *lir);
 void add_func(sema_t *sema, const char *name, lir_t *lir);

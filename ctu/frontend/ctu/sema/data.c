@@ -121,12 +121,14 @@ void delete_sema(sema_t *sema) {
     sema_delete(sema);
 }
 
-vector_t *move_locals(sema_t *sema) {
+void add_local(sema_t *sema, lir_t *lir) {
     stack_t *data = sema_get_data(sema);
-    return data->locals;
+    vector_push(&data->locals, lir);
 }
 
-void wipe_locals(sema_t *sema) {
+vector_t *move_locals(sema_t *sema) {
     stack_t *data = sema_get_data(sema);
-    data->locals = vector_new(8);
+    vector_t *locals = data->locals;
+    data->locals = vector_new(16);
+    return locals;
 }

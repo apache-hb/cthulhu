@@ -2,7 +2,7 @@ src = [ 'null.c' ]
 
 libnull = library('null', src,
     include_directories : '.',
-    dependencies : [ generic ]
+    dependencies : generic
 )
 
 options += declare_dependency(
