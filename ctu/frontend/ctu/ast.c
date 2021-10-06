@@ -67,6 +67,12 @@ ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts) {
     return ctu;
 }
 
+ctu_t *ctu_return(scan_t *scan, where_t where, ctu_t *operand) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_RETURN);
+    ctu->operand = operand;
+    return ctu;
+}
+
 ctu_t *ctu_pointer(scan_t *scan, where_t where, 
                    ctu_t *ptr)
 {

@@ -27,6 +27,8 @@
 "def" { return DEF; }
 "var" { return VAR; }
 "export" { return EXPORT; }
+"return" { return RETURN; }
+"import" { return IMPORT; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);

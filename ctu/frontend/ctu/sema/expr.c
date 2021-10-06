@@ -128,7 +128,13 @@ static lir_t *compile_local(sema_t *sema, ctu_t *stmt) {
     lir_t *value = local_value(sema, stmt);
     add_local(sema, value);
     add_var(sema, stmt->name, value);
-    return value;    
+    return lir_assign(stmt->node, value, value->init);
+}
+
+static lir_t *compile_return(sema_t *sema, ctu_t *stmt) {
+    lir_t *operand = stmt->operand == NULL ? NULL : compile_expr(sema, stmt->operand);
+
+    return lir_return(stmt->node, operand);
 }
 
 static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };
@@ -136,7 +142,8 @@ static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };
 lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
     switch (stmt->type) {
     case CTU_STMTS: return compile_stmts(new_sema(sema->reports, sema, SMALL_SIZES), stmt);
-    
+    case CTU_RETURN: return compile_return(sema, stmt);
+
     case CTU_CALL: return compile_call(sema, stmt);
     case CTU_VALUE: return compile_local(sema, stmt);
 

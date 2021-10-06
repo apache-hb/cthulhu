@@ -66,7 +66,7 @@ void build_value(sema_t *sema, lir_t *lir) {
 }
 
 lir_t *local_value(sema_t *sema, ctu_t *ctu) {
-    lir_t *value = lir_forward(ctu->node, ctu->name, LIR_VALUE, NULL);
+    lir_t *value = lir_forward(ctu->node, ctu->name, LIR_VALUE, state_new(sema, ctu));
     realise_value(sema, value, ctu);
     return value;
 }

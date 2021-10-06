@@ -138,8 +138,6 @@ static char *format_branch(reports_t *reports, step_t step) {
 }
 
 static char *format_return(reports_t *reports, step_t step) {
-    printf("return %s\n", format_operand(reports, step.operand));
-    
     operand_t ret = step.operand;
     if (ret.kind == EMPTY) {
         return ctu_strdup("  return;\n");

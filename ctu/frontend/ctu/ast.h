@@ -15,6 +15,7 @@ typedef enum {
     CTU_CALL,
 
     CTU_STMTS,
+    CTU_RETURN,
 
     CTU_TYPENAME,
     CTU_POINTER,
@@ -89,6 +90,7 @@ ctu_t *ctu_call(scan_t *scan, where_t where, ctu_t *func, vector_t *args);
 
 /* statements */
 ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts);
+ctu_t *ctu_return(scan_t *scan, where_t where, ctu_t *operand);
 
 /* types */
 ctu_t *ctu_pointer(scan_t *scan, where_t where, 

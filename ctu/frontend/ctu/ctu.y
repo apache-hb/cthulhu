@@ -39,6 +39,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     VAR "`var`"
     DEF "`def`"
     EXPORT "`export`"
+    RETURN "`return`"
+    IMPORT "`import`"
     SEMI "`;`"
     ASSIGN "`=`"
     LPAREN "`(`"
@@ -71,10 +73,10 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<ctu>
     value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
-    statements stmt type param function
+    statements stmt type param function return import
 
 %type<vector>
-    unit stmtlist params paramlist args arglist
+    unit stmtlist params paramlist args arglist imports
 
 %type<boolean>
     exported
@@ -84,6 +86,14 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %%
 
 program: unit END { scan_export(x, ctu_module(x, @$, $1)); }
+    | imports unit END { scan_export(x, ctu_module(x, @$, $2)); }
+    ;
+
+imports: import { $$ = vector_init($1); }
+    | imports import { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+import: IMPORT { $$ = NULL; }
     ;
 
 unit: decl { $$ = vector_init($1); }
@@ -137,6 +147,11 @@ stmtlist: stmt { $$ = vector_init($1); }
 stmt: expr SEMI { $$ = $1; }
     | value { $$ = $1; }
     | statements { $$ = $1; }
+    | return { $$ = $1; }
+    ;
+
+return: RETURN SEMI { $$ = ctu_return(x, @$, NULL); }
+    | RETURN expr SEMI { $$ = ctu_return(x, @$, $2); }
     ;
 
 arglist: %empty { $$ = vector_new(0); }

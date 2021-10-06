@@ -32,6 +32,7 @@ typedef enum {
     LIR_WHILE,
     LIR_BRANCH,
     LIR_STMTS,
+    LIR_RETURN,
 
     LIR_VALUE,
     LIR_DEFINE,
@@ -183,6 +184,7 @@ lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src);
 lir_t *lir_while(node_t *node, lir_t *cond, lir_t *then);
 lir_t *lir_branch(node_t *node, lir_t *cond, lir_t *then, lir_t *other);
 lir_t *lir_stmts(node_t *node, vector_t *stmts);
+lir_t *lir_return(node_t *node, lir_t *operand);
 
 lir_t *lir_symbol(node_t *node, const type_t *type, const char *name);
 

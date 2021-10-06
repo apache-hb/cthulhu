@@ -77,6 +77,8 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
     int error = 0;
     reports_t *errors = begin_reports();
     settings_t settings = parse_args(errors, frontend, argc, argv);
+    
+    verbose = settings.verbose;
 
     if ((error = end_reports(errors, SIZE_MAX, "command line parsing")) > 0) {
         return error;
@@ -84,6 +86,8 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
 
     vector_t *sources = settings.sources;
     size_t len = vector_len(sources);
+
+    logverbose("compiling %zu file(s)", len);
 
     vector_t *all = vector_of(len);
 
@@ -113,6 +117,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
 
         ctx->mod = module_build(ctx->reports, ctx->lir);
 
+        logverbose("reporting %s", ctx->file->path);
         int local = end_reports(ctx->reports, SIZE_MAX, format("compilation of `%s`", ctx->file->path));
         if (local > 0) {
             error = MAX(error, local);

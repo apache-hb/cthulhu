@@ -125,6 +125,12 @@ lir_t *lir_while(node_t *node, lir_t *cond, lir_t *then) {
     return lir;
 }
 
+lir_t *lir_return(node_t *node, lir_t *operand) {
+    lir_t *lir = lir_new(node, NULL, LIR_RETURN);
+    lir->operand = operand;
+    return lir;
+}
+
 lir_t *lir_stmts(node_t *node, vector_t *stmts) {
     lir_t *lir = lir_new(node, NULL, LIR_STMTS);
 
