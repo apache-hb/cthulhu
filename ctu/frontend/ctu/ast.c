@@ -73,6 +73,24 @@ ctu_t *ctu_return(scan_t *scan, where_t where, ctu_t *operand) {
     return ctu;
 }
 
+ctu_t *ctu_while(scan_t *scan, where_t where, ctu_t *cond, ctu_t *body) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_WHILE);
+
+    ctu->cond = cond;
+    ctu->then = body;
+
+    return ctu;
+}
+
+ctu_t *ctu_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_ASSIGN);
+    
+    ctu->dst = dst;
+    ctu->src = src;
+
+    return ctu;
+}
+
 ctu_t *ctu_pointer(scan_t *scan, where_t where, 
                    ctu_t *ptr)
 {

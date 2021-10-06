@@ -40,6 +40,9 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     DEF "`def`"
     EXPORT "`export`"
     RETURN "`return`"
+    IF "`if`"
+    ELSE "`else`"
+    WHILE "`while`"
     IMPORT "`import`"
     SEMI "`;`"
     ASSIGN "`=`"
@@ -73,7 +76,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<ctu>
     value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
-    statements stmt type param function return import
+    statements stmt type param function return import while
+    assign
 
 %type<vector>
     unit stmtlist params paramlist args arglist imports
@@ -120,6 +124,8 @@ function: DEF IDENT LPAREN paramlist RPAREN COLON type statements
     { $$ = ctu_define(x, @$, $2, $4, $7, $8); }
     | DEF IDENT LPAREN paramlist RPAREN COLON type ASSIGN expr SEMI
     { $$ = NULL; }
+    | DEF IDENT LPAREN paramlist RPAREN COLON type SEMI 
+    { $$ = NULL; }
     ;
 
 paramlist: %empty { $$ = vector_new(0); }
@@ -148,6 +154,14 @@ stmt: expr SEMI { $$ = $1; }
     | value { $$ = $1; }
     | statements { $$ = $1; }
     | return { $$ = $1; }
+    | while { $$ = $1; }
+    | assign { $$ = $1; }
+    ;
+
+assign: expr ASSIGN expr SEMI { $$ = ctu_assign(x, @$, $1, $3); }
+    ;
+
+while: WHILE expr statements { $$ = ctu_while(x, @$, $2, $3); }
     ;
 
 return: RETURN SEMI { $$ = ctu_return(x, @$, NULL); }

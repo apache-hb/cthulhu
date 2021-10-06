@@ -16,6 +16,8 @@ typedef enum {
 
     CTU_STMTS,
     CTU_RETURN,
+    CTU_WHILE,
+    CTU_ASSIGN,
 
     CTU_TYPENAME,
     CTU_POINTER,
@@ -51,8 +53,18 @@ typedef struct ctu_t {
         };
 
         struct {
+            struct ctu_t *dst;
+            struct ctu_t *src;
+        };
+
+        struct {
             struct ctu_t *func;
             vector_t *args;
+        };
+
+        struct {
+            struct ctu_t *cond;
+            struct ctu_t *then;
         };
 
         struct {
@@ -91,6 +103,8 @@ ctu_t *ctu_call(scan_t *scan, where_t where, ctu_t *func, vector_t *args);
 /* statements */
 ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts);
 ctu_t *ctu_return(scan_t *scan, where_t where, ctu_t *operand);
+ctu_t *ctu_while(scan_t *scan, where_t where, ctu_t *cond, ctu_t *body);
+ctu_t *ctu_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src);
 
 /* types */
 ctu_t *ctu_pointer(scan_t *scan, where_t where, 

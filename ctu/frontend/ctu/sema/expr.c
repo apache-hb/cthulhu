@@ -141,12 +141,28 @@ static lir_t *compile_return(sema_t *sema, ctu_t *stmt) {
     return lir_return(stmt->node, operand);
 }
 
+static lir_t *compile_while(sema_t *sema, ctu_t *stmt) {
+    lir_t *cond = compile_expr(sema, stmt->cond);
+    lir_t *body = compile_stmt(sema, stmt->then);
+
+    return lir_while(stmt->node, cond, body);
+}
+
+static lir_t *compile_assign(sema_t *sema, ctu_t *stmt) {
+    lir_t *dst = compile_expr(sema, stmt->dst);
+    lir_t *src = compile_expr(sema, stmt->src);
+
+    return lir_assign(stmt->node, dst, src);
+}
+
 static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };
 
 lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
     switch (stmt->type) {
     case CTU_STMTS: return compile_stmts(new_sema(sema->reports, sema, SMALL_SIZES), stmt);
     case CTU_RETURN: return compile_return(sema, stmt);
+    case CTU_WHILE: return compile_while(sema, stmt);
+    case CTU_ASSIGN: return compile_assign(sema, stmt);
 
     case CTU_CALL: return compile_call(sema, stmt);
     case CTU_VALUE: return compile_local(sema, stmt);

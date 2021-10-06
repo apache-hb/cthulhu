@@ -28,6 +28,9 @@
 "var" { return VAR; }
 "export" { return EXPORT; }
 "return" { return RETURN; }
+"if" { return IF; }
+"else" { return ELSE; }
+"while" { return WHILE; }
 "import" { return IMPORT; }
 
 $?[a-zA-Z_][a-zA-Z0-9_]* {
