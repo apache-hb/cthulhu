@@ -131,6 +131,10 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
 
         eval_world(ctx->reports, ctx->mod);
 
+        if (settings.ir) {
+            module_print(stdout, ctx->mod);
+        }
+
         max_report(&error, ctx->reports, format("evaluation of `%s`", ctx->file->path));
     }
 

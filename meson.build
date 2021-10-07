@@ -85,13 +85,9 @@ foreach gen : [ 'c99', 'null' ]
     subdir('ctu/backend'/gen)
 endforeach
 
-foreach lang : [ 'ctu', 'pl0', 'c11' ] 
+foreach lang : get_option('languages')
     subdir('ctu/frontend'/lang)
 endforeach
-
-main = [
-    'ctu/driver/main.c'
-]
 
 tune = executable('tune', [ 'tools/tune.c' ],
     dependencies : generic

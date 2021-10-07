@@ -76,7 +76,7 @@ static lir_t *select_retype(reports_t *reports, const type_t *type, lir_t *expr)
         return retype_binary(reports, type, expr);
     case LIR_CALL:
         return retype_call(reports, type, expr);
-    case LIR_NAME: case LIR_POISON:
+    case LIR_PARAM: case LIR_NAME: case LIR_POISON:
         return expr;
 
     default:

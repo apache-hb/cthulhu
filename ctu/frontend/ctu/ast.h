@@ -25,6 +25,7 @@ typedef enum {
     CTU_VALUE,
     CTU_PARAM,
     CTU_DEFINE,
+    CTU_ATTRIB,
 
     CTU_MODULE
 } ctu_type_t;
@@ -69,6 +70,7 @@ typedef struct ctu_t {
 
         struct {
             const char *name;
+            vector_t *attribs;
             bool exported; /* is this exported on local */
 
             union {
@@ -124,8 +126,10 @@ ctu_t *ctu_define(scan_t *scan, where_t where,
                   const char *name, vector_t *params, 
                   ctu_t *result, ctu_t *body);
 
+ctu_t *ctu_attrib(scan_t *scan, where_t where, const char *name);
+
 /* modules */
 ctu_t *ctu_module(scan_t *scan, where_t where, 
                   vector_t *decls);
 
-ctu_t *set_export(ctu_t *decl, bool exported);
+ctu_t *set_details(ctu_t *decl, vector_t *attribs, bool exported);

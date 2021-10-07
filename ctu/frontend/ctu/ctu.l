@@ -52,6 +52,8 @@ $?[a-zA-Z_][a-zA-Z0-9_]* {
 ")" { return RPAREN; }
 "{" { return LBRACE; }
 "}" { return RBRACE; }
+"[" { return LSQUARE; }
+"]" { return RSQUARE; }
 
 "," { return COMMA; }
 
@@ -80,6 +82,7 @@ $?[a-zA-Z_][a-zA-Z0-9_]* {
 "||" { return OR; }
 
 "=" { return ASSIGN; }
+"@" { return AT; }
 
 . { report_unknown_character(yyextra->reports, node_new(yyextra, *yylloc), yytext); }
 

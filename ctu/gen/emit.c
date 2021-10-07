@@ -354,10 +354,6 @@ static operand_t emit_call(context_t ctx, lir_t *lir) {
     return add_step(ctx, step);
 }
 
-static operand_t emit_symbol(lir_t *lir) {
-    return operand_address(lir->data);
-}
-
 static operand_t emit_string(context_t ctx, lir_t *lir) {
     block_t *str = new_block(BLOCK_STRING, NULL, lir->node, lir_type(lir));
     str->idx = vector_len(*(ctx.strings));
@@ -377,11 +373,12 @@ static operand_t emit_poison(context_t ctx, lir_t *lir) {
 }
 
 static operand_t emit_return(context_t ctx, lir_t *lir) {
-    if (lir->operand != NULL) {
-        return build_return(ctx, NULL, emit_lir(ctx, lir->operand));
-    } else {
-        return build_return(ctx, NULL, operand_empty());
-    }
+    operand_t operand = lir->operand == NULL ? operand_empty() : emit_lir(ctx, lir->operand);
+    return build_return(ctx, lir, operand);
+}
+
+static operand_t emit_param(lir_t *lir) {
+    return operand_arg(lir->index);
 }
 
 static operand_t emit_lir(context_t ctx, lir_t *lir) {
@@ -396,9 +393,9 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_BRANCH: return emit_branch(ctx, lir);
     case LIR_NAME: return emit_name(ctx, lir);
     case LIR_CALL: return emit_call(ctx, lir);
-    case LIR_SYMBOL: return emit_symbol(lir);
     case LIR_VALUE: return emit_value(lir);
     case LIR_DEFINE: return emit_define(lir);
+    case LIR_PARAM: return emit_param(lir);
     case LIR_RETURN: return emit_return(ctx, lir);
     case LIR_POISON: return emit_poison(ctx, lir);
     case LIR_FORWARD: return emit_forward(ctx, lir);

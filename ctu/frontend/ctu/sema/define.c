@@ -1,6 +1,7 @@
 #include "define.h"
 #include "type.h"
 #include "expr.h"
+#include "attrib.h"
 
 static const type_t *realise_closure(sema_t *sema, ctu_t *ctu) {
     vector_t *params = ctu->params;
@@ -39,7 +40,8 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
     size_t len = vector_len(params);
     for (size_t i = 0; i < len; i++) {
         ctu_t *param = vector_get(params, i);
-        add_var(nest, param->name, NULL);
+        const type_t *arg = param_at(type, i);
+        add_var(nest, param->name, lir_param(param->node, param->name, arg, i));
     }
 
     lir_t *body = compile_stmts(nest, ctu->body);
@@ -53,6 +55,8 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
         /* locals = */ locals,
         /* body = */ body
     );
+
+    compile_attribs(sema->reports, lir, ctu);
 }
 
 lir_t *compile_define(lir_t *lir) {

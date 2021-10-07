@@ -1,3 +1,4 @@
+@entry
 export def main(): int {
     return fac(5);
 }

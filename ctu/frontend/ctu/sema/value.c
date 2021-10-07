@@ -1,16 +1,9 @@
 #include "value.h"
 #include "expr.h"
 #include "type.h"
+#include "attrib.h"
 
 #include "ctu/type/retype.h"
-
-static const attrib_t EXPORTED = { .visibility = PUBLIC };
-
-static void attach_attribs(lir_t *decl, ctu_t *ctu) {
-    if (ctu->exported) {
-        lir_attribs(decl, &EXPORTED);
-    }
-}
 
 static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
     if (!stack_enter(sema, lir)) {
@@ -49,7 +42,7 @@ static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
 
     lir_value(sema->reports, lir, type, init);
 
-    attach_attribs(lir, ctu);
+    compile_attribs(sema->reports, lir, ctu);
 
     stack_leave(sema, lir);
 }

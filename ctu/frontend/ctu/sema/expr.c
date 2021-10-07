@@ -22,15 +22,98 @@ static lir_t *compile_unary(sema_t *sema, ctu_t *expr) {
     return lir_unary(expr->node, lir_type(operand), unary, operand);
 }
 
+static const type_t *binary_equal(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
+    const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
+    if (is_poison(type)) {
+        report(reports, ERROR, node, "cannot take equality of `%s` and `%s`",
+            type_format(lir_type(lhs)),
+            type_format(lir_type(rhs))
+        );
+    }
+
+    return type_bool();
+}
+
+static const type_t *binary_compare(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
+    const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
+    if (!is_integer(type)) {
+        report(reports, ERROR, node, "cannot compare `%s` to `%s`", 
+            type_format(lir_type(lhs)), 
+            type_format(lir_type(rhs))
+        );
+    }
+
+    return type_bool();
+}
+
+static const type_t *binary_logic(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
+    const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
+    if (!is_bool(type)) {
+        report(reports, ERROR, node, "cannot logically evaluate `%s` with `%s`", 
+            type_format(lir_type(lhs)), 
+            type_format(lir_type(rhs))
+        );
+    }
+
+    return type_bool();
+}
+
+static const type_t *binary_math(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
+    const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
+    if (!is_integer(type)) {
+        report(reports, ERROR, node, "cannot perform math operations on `%s` with `%s`",
+            type_format(lir_type(lhs)),
+            type_format(lir_type(rhs))
+        );
+    }
+
+    return type;
+}
+
+static const type_t *binary_bits(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
+    const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
+    if (!is_integer(type)) {
+        report(reports, ERROR, node, "cannot perform bitwise operations on `%s` with `%s`",
+            type_format(lir_type(lhs)),
+            type_format(lir_type(rhs))
+        );
+    }
+
+    return type;
+}
+
+static const type_t *binary_type(reports_t *reports, node_t *node, binary_t binary, lir_t *lhs, lir_t *rhs) {
+    switch (binary) {
+    case BINARY_EQ: case BINARY_NEQ:
+        return binary_equal(reports, node, lhs, rhs);
+    
+    case BINARY_GT: case BINARY_GTE:
+    case BINARY_LT: case BINARY_LTE:
+        return binary_compare(reports, node, lhs, rhs);
+
+    case BINARY_AND: case BINARY_OR:
+        return binary_logic(reports, node, lhs, rhs);
+
+    case BINARY_ADD: case BINARY_SUB:
+    case BINARY_MUL: case BINARY_DIV: case BINARY_REM:
+        return binary_math(reports, node, lhs, rhs);
+
+    case BINARY_SHL: case BINARY_SHR:
+    case BINARY_BITAND: case BINARY_BITOR: case BINARY_XOR:
+        return binary_bits(reports, node, lhs, rhs);
+
+    default:
+        ctu_assert(reports, "binary-type unreachable %d", binary);
+        return type_poison("unreachable");
+    }
+}
+
 static lir_t *compile_binary(sema_t *sema, ctu_t *expr) {
     lir_t *lhs = compile_expr(sema, expr->lhs);
     lir_t *rhs = compile_expr(sema, expr->rhs);
     binary_t binary = expr->binary;
 
-    const type_t *common = types_common(lir_type(lhs), lir_type(rhs));
-    if (common == NULL) {
-        report(sema->reports, ERROR, expr->node, "binary operation requires compatible operands");
-    }
+    const type_t *common = binary_type(sema->reports, expr->node, binary, lhs, rhs);
 
     return lir_binary(expr->node, common, binary, lhs, rhs);
 }
@@ -86,6 +169,10 @@ static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
     
     lir_t *var = get_var(sema, name);
     if (var != NULL) {
+        if (lir_is(var, LIR_PARAM)) {
+            return var;
+        }
+
         lir_t *it = compile_value(var);
         return lir_name(expr->node, lir_type(it), it);
     }
@@ -136,7 +223,11 @@ static lir_t *compile_local(sema_t *sema, ctu_t *stmt) {
 }
 
 static lir_t *compile_return(sema_t *sema, ctu_t *stmt) {
-    lir_t *operand = stmt->operand == NULL ? NULL : compile_expr(sema, stmt->operand);
+    lir_t *operand = NULL;
+    if (stmt->operand != NULL) {
+        lir_t *lir = compile_expr(sema, stmt->operand);
+        operand = retype_expr(sema->reports, get_return(sema), lir);
+    }
 
     return lir_return(stmt->node, operand);
 }
@@ -145,14 +236,19 @@ static lir_t *compile_while(sema_t *sema, ctu_t *stmt) {
     lir_t *cond = compile_expr(sema, stmt->cond);
     lir_t *body = compile_stmt(sema, stmt->then);
 
-    return lir_while(stmt->node, cond, body);
+    return lir_while(stmt->node, 
+        retype_expr(sema->reports, type_bool(), cond), 
+        body
+    );
 }
 
 static lir_t *compile_assign(sema_t *sema, ctu_t *stmt) {
     lir_t *dst = compile_expr(sema, stmt->dst);
     lir_t *src = compile_expr(sema, stmt->src);
 
-    return lir_assign(stmt->node, dst, src);
+    return lir_assign(stmt->node, dst, 
+        retype_expr(sema->reports, lir_type(dst), src)
+    );
 }
 
 static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };

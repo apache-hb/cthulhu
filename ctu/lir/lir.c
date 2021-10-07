@@ -170,11 +170,10 @@ void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *lo
     dst->body = body;   
 }
 
-lir_t *lir_symbol(node_t *node, const type_t *type, const char *name) {
-    lir_t *lir = lir_new(node, type, LIR_SYMBOL);
-
-    lir->name = name;
-
+lir_t *lir_param(node_t *node, const char *name, const type_t *type, size_t index) {
+    lir_t *lir = lir_decl(node, LIR_PARAM, name);
+    lir->type = type;
+    lir->index = index;
     return lir;
 }
 

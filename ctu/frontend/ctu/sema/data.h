@@ -15,6 +15,7 @@ typedef enum {
 typedef struct {
     vector_t *stack;
     vector_t *locals;
+    const type_t *result;
 } stack_t;
 
 typedef struct {
@@ -29,6 +30,9 @@ void stack_delete(stack_t *stack);
 
 bool stack_enter(sema_t *sema, lir_t *lir);
 void stack_leave(sema_t *sema, lir_t *lir);
+
+void set_return(sema_t *sema, const type_t *type);
+const type_t *get_return(sema_t *sema);
 
 void add_local(sema_t *sema, lir_t *lir);
 vector_t *move_locals(sema_t *sema);

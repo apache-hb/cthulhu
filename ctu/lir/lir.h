@@ -36,7 +36,7 @@ typedef enum {
 
     LIR_VALUE,
     LIR_DEFINE,
-    LIR_SYMBOL,
+    LIR_PARAM, /* a parameter of the current function */
 
     LIR_MODULE,
 
@@ -115,6 +115,13 @@ typedef struct lir_t {
 
             union {
                 /**
+                 * LIR_PARAM
+                 * 
+                 * the parameter index
+                 */
+                size_t index;
+
+                /**
                  * LIR_EMPTY
                  * 
                  * a forward declared decl and the type its going to be
@@ -186,8 +193,6 @@ lir_t *lir_branch(node_t *node, lir_t *cond, lir_t *then, lir_t *other);
 lir_t *lir_stmts(node_t *node, vector_t *stmts);
 lir_t *lir_return(node_t *node, lir_t *operand);
 
-lir_t *lir_symbol(node_t *node, const type_t *type, const char *name);
-
 lir_t *lir_poison(node_t *node, const char *msg);
 
 void lir_value(reports_t *reports, 
@@ -200,6 +205,8 @@ void lir_define(reports_t *reports,
                 const type_t *type, 
                 vector_t *locals, 
                 lir_t *body);
+
+lir_t *lir_param(node_t *node, const char *name, const type_t *type, size_t index);
 
 void lir_attribs(lir_t *dst, const attrib_t *attribs);
 

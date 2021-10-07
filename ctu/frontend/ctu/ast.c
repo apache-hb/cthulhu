@@ -11,6 +11,7 @@ static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_type_t type) {
 static ctu_t *ctu_decl(scan_t *scan, where_t where, ctu_type_t type, const char *name) {
     ctu_t *ctu = ctu_new(scan, where, type);
     ctu->name = name;
+    ctu->attribs = vector_new(0);
     ctu->exported = false;
     return ctu;
 }
@@ -145,6 +146,10 @@ ctu_t *ctu_define(scan_t *scan, where_t where,
     return ctu;
 }
 
+ctu_t *ctu_attrib(scan_t *scan, where_t where, const char *name) {
+    return ctu_decl(scan, where, CTU_ATTRIB, name);
+}
+
 ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *decls) {
     ctu_t *ctu = ctu_new(scan, where, CTU_MODULE);
 
@@ -153,7 +158,8 @@ ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *decls) {
     return ctu;
 }
 
-ctu_t *set_export(ctu_t *decl, bool exported) {
+ctu_t *set_details(ctu_t *decl, vector_t *attribs, bool exported) {
+    decl->attribs = attribs;
     decl->exported = exported;
     return decl;
 }

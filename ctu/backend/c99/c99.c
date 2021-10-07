@@ -78,6 +78,10 @@ static void add_globals(context_t *ctx, vector_t *globals) {
     }
 }
 
+static char *arg_name(size_t idx) {
+    return format("arg%zu", idx);
+}
+
 static char *format_function(reports_t *reports, const block_t *block) {
     const char *name = block->name;
     const type_t *type = block->type;
@@ -88,7 +92,7 @@ static char *format_function(reports_t *reports, const block_t *block) {
     for (size_t i = 0; i < len; i++) {
         const type_t *arg = vector_get(args, i);
         const char *param = type_to_string(reports, arg, NULL);
-        vector_set(params, i, (char*)param);
+        vector_set(params, i, format("%s %s", param, arg_name(i)));
     }
     
     const char *decl = type_to_string(reports, type->result, name);
@@ -124,6 +128,7 @@ static const char *format_operand(reports_t *reports, operand_t op) {
     case VREG: return format_vreg(op.vreg);
     case ADDRESS: return format_addr(op.block);
     case IMM: return value_to_string(reports, op.imm);
+    case ARG: return arg_name(op.arg);
 
     default: return format("unknown(%d)", op.kind);
     }

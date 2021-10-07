@@ -7,6 +7,7 @@ typedef struct {
     vector_t *sources;
     reports_t *reports;
     bool verbose;
+    bool ir;
 } settings_t;
 
 /**

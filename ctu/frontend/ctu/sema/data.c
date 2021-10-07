@@ -6,6 +6,7 @@ stack_t *stack_new(void) {
     stack_t *stack = ctu_malloc(sizeof(stack_t));
     stack->stack = vector_new(16);
     stack->locals = vector_new(8);
+    stack->result = type_poison("uninitialized return type");
     return stack;
 }
 
@@ -119,6 +120,16 @@ sema_t *base_sema(reports_t *reports, size_t decls) {
 
 void delete_sema(sema_t *sema) {
     sema_delete(sema);
+}
+
+void set_return(sema_t *sema, const type_t *type) {
+    stack_t *data = sema_get_data(sema);
+    data->result = type;
+}
+
+const type_t *get_return(sema_t *sema) {
+    stack_t *data = sema_get_data(sema);
+    return data->result;
 }
 
 void add_local(sema_t *sema, lir_t *lir) {

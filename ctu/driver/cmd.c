@@ -15,6 +15,7 @@ static void print_help(const frontend_t *frontend) {
     printf("\t -v, --version: Print version information\n");
     printf("\t -gen, --generator: Override default backend code generator\n");
     printf("\t -V, --verbose: Enable verbose logging\n");
+    printf("\t-ir: Print IR for debugging\n");
 
     exit(0);
 }
@@ -56,6 +57,8 @@ static int parse_arg(settings_t *settings, const frontend_t *frontend, int index
         return 2;
     } else if (MATCH(arg, "-V", "--verbose")) {
         settings->verbose = true;
+    } else if (startswith(arg, "-ir")) {
+        settings->ir = true;
     } else {
         report(settings->reports, WARNING, NULL, "unknown argument %s", arg);
     }
@@ -70,7 +73,8 @@ settings_t parse_args(reports_t *reports, const frontend_t *frontend, int argc, 
         .backend = NULL,
         .sources = vector_new(0),
         .reports = reports,
-        .verbose = false
+        .verbose = false,
+        .ir = false
     };
 
     if (argc == 1) {

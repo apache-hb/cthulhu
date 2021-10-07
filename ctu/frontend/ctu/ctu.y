@@ -50,6 +50,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     RPAREN "`)`"
     LBRACE "`{`"
     RBRACE "`}`"
+    LSQUARE "`[`"
+    RSQUARE "`]`"
     COLON2 "`::`"
     COLON "`:`"
     COMMA "`,`"
@@ -71,16 +73,18 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     XOR "`^`"
     AND "`&&`"
     OR "`||`"
+    AT "`@`"
     END 0 
 
 %type<ctu>
     value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
     statements stmt type param function return import while
-    assign
+    assign attrib
 
 %type<vector>
     unit stmtlist params paramlist args arglist imports
+    attributes attriblist attribute attribs
 
 %type<boolean>
     exported
@@ -104,7 +108,26 @@ unit: decl { $$ = vector_init($1); }
     | unit decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: exported declbase { $$ = set_export($2, $1); }
+decl: attributes exported declbase { $$ = set_details($3, $1, $2); }
+    ;
+
+attributes: %empty { $$ = vector_new(0); }
+    | attriblist { $$ = $1; }
+    ;
+
+attriblist: attribute { $$ = $1; }
+    | attriblist attribute { $$ = vector_join($1, $2); }
+    ;
+
+attribute: AT attrib { $$ = vector_init($2); }
+    | AT LSQUARE attribs RSQUARE { $$ = $3; }
+    ;
+
+attribs: attrib { $$ = vector_init($1); }
+    | attribs attrib { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+attrib: IDENT { $$ = ctu_attrib(x, @$, $1); }
     ;
 
 declbase: value { $$ = $1; }

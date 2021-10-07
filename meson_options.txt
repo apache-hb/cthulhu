@@ -1,0 +1,5 @@
+option('languages', type : 'array',
+    description : 'select which languages to compile',
+    choices : [ 'ctu', 'pl0', 'c11' ],
+    value : [ 'ctu', 'pl0', 'c11' ]
+)
