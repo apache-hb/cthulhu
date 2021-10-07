@@ -219,7 +219,13 @@ static lir_t *compile_local(sema_t *sema, ctu_t *stmt) {
     lir_t *value = local_value(sema, stmt);
     add_local(sema, value);
     add_var(sema, stmt->name, value);
-    return lir_assign(stmt->node, value, value->init);
+    
+    if (value->init) {
+        return lir_assign(stmt->node, value, value->init);
+    } 
+
+    /* basically a no-op */
+    return lir_stmts(stmt->node, vector_new(0));
 }
 
 static lir_t *compile_return(sema_t *sema, ctu_t *stmt) {

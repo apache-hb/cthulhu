@@ -166,7 +166,8 @@ type: IDENT { $$ = ctu_typename(x, @$, $1); }
     | MUL type { $$ = ctu_pointer(x, @$, $2); }
     ;
 
-statements: LBRACE stmtlist RBRACE { $$ = ctu_stmts(x, @$, $2); }
+statements: LBRACE RBRACE { $$ = ctu_stmts(x, @$, vector_new(0)); } 
+    | LBRACE stmtlist RBRACE { $$ = ctu_stmts(x, @$, $2); }
     ;
 
 stmtlist: stmt { $$ = vector_init($1); }

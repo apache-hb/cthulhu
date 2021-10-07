@@ -43,6 +43,16 @@ $?[a-zA-Z_][a-zA-Z0-9_]* {
     return DIGIT;
 }
 
+"0b"[01]+ { 
+    mpz_init_set_str(yylval->digit, yytext + 2, 2);
+    return DIGIT;
+}
+
+"0x"[0-9a-fA-F]+ {
+    mpz_init_set_str(yylval->digit, yytext + 2, 16);
+    return DIGIT;
+}
+
 ";" { return SEMI; }
 
 "::" { return COLON2; }
