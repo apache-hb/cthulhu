@@ -246,6 +246,14 @@ static lir_t *compile_assign(sema_t *sema, ctu_t *stmt) {
     lir_t *dst = compile_expr(sema, stmt->dst);
     lir_t *src = compile_expr(sema, stmt->src);
 
+    /* TODO: a touch hacky */
+    if (!lir_is(dst, LIR_NAME)) {
+        report(sema->reports, ERROR, stmt->node, "can only assign to named expressions");
+        dst = lir_poison(stmt->node, "invalid assigment");
+    } else {
+        dst = dst->it;
+    }
+
     return lir_assign(stmt->node, dst, 
         retype_expr(sema->reports, lir_type(dst), src)
     );

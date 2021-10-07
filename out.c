@@ -27,21 +27,19 @@ signed int _Z3facj(signed int arg0) {
   *&j = (signed int)1;
 block2: /* empty */;
   signed int vreg3 = *&j;
-  _Bool vreg4 = vreg3 <= &arg0;
-  if (vreg4) { goto block6; } else { goto block17; }
+  _Bool vreg4 = vreg3 <= arg0;
+  if (vreg4) { goto block6; } else { goto block15; }
 block6: /* empty */;
   signed int vreg7 = *&acc;
-  signed int vreg8 = *&acc;
-  signed int vreg9 = *&j;
-  signed int vreg10 = vreg8 * vreg9;
-  *vreg7 = vreg10;
-  signed int vreg12 = *&j;
-  signed int vreg13 = *&j;
-  signed int vreg14 = vreg13 + (signed int)1;
-  *vreg12 = vreg14;
+  signed int vreg8 = *&j;
+  signed int vreg9 = vreg7 * vreg8;
+  *&acc = vreg9;
+  signed int vreg11 = *&j;
+  signed int vreg12 = vreg11 + (signed int)1;
+  *&j = vreg12;
   goto block2;
-block17: /* empty */;
-  signed int vreg18 = *&acc;
-  return vreg18;
+block15: /* empty */;
+  signed int vreg16 = *&acc;
+  return vreg16;
   return;
 }
