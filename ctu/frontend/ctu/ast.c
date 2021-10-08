@@ -24,6 +24,14 @@ ctu_t *ctu_digit(scan_t *scan, where_t where, mpz_t digit) {
     return ctu;
 }
 
+ctu_t *ctu_bool(scan_t *scan, where_t where, bool value) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_BOOL);
+
+    ctu->boolean = value;
+
+    return ctu;
+}
+
 ctu_t *ctu_ident(scan_t *scan, where_t where, const char *ident) {
     ctu_t *ctu = ctu_new(scan, where, CTU_IDENT);
 
@@ -88,6 +96,15 @@ ctu_t *ctu_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src) {
     
     ctu->dst = dst;
     ctu->src = src;
+
+    return ctu;
+}
+
+ctu_t *ctu_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_BRANCH);
+
+    ctu->cond = cond;
+    ctu->then = then;
 
     return ctu;
 }

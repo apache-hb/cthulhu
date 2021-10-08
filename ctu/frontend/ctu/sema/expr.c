@@ -11,6 +11,10 @@ static lir_t *compile_digit(ctu_t *digit) {
     );
 }
 
+static lir_t *compile_bool(ctu_t *value) {
+    return lir_bool(value->node, type_bool(), value->boolean);
+}
+
 static lir_t *compile_unary(sema_t *sema, ctu_t *expr) {
     lir_t *operand = compile_expr(sema, expr->operand);
     unary_t unary = expr->unary;
@@ -190,6 +194,7 @@ static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
 lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
     case CTU_DIGIT: return compile_digit(expr);
+    case CTU_BOOL: return compile_bool(expr);
     case CTU_UNARY: return compile_unary(sema, expr);
     case CTU_BINARY: return compile_binary(sema, expr);
     case CTU_CALL: return compile_call(sema, expr);
@@ -265,6 +270,17 @@ static lir_t *compile_assign(sema_t *sema, ctu_t *stmt) {
     );
 }
 
+static lir_t *compile_branch(sema_t *sema, ctu_t *stmt) {
+    lir_t *cond = compile_expr(sema, stmt->cond);
+    lir_t *then = compile_stmt(sema, stmt->then);
+
+    return lir_branch(stmt->node, 
+        retype_expr(sema->reports, type_bool(), cond), 
+        then,
+        NULL
+    );
+}
+
 static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };
 
 lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
@@ -273,6 +289,7 @@ lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
     case CTU_RETURN: return compile_return(sema, stmt);
     case CTU_WHILE: return compile_while(sema, stmt);
     case CTU_ASSIGN: return compile_assign(sema, stmt);
+    case CTU_BRANCH: return compile_branch(sema, stmt);
 
     case CTU_CALL: return compile_call(sema, stmt);
     case CTU_VALUE: return compile_local(sema, stmt);

@@ -44,6 +44,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     ELSE "`else`"
     WHILE "`while`"
     IMPORT "`import`"
+    YES "`true`"
+    NO "`false`"
     SEMI "`;`"
     ASSIGN "`=`"
     LPAREN "`(`"
@@ -80,7 +82,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
     statements stmt type param function return import while
-    assign attrib
+    assign attrib branch
 
 %type<vector>
     unit stmtlist params paramlist args arglist imports
@@ -180,6 +182,10 @@ stmt: expr SEMI { $$ = $1; }
     | return { $$ = $1; }
     | while { $$ = $1; }
     | assign { $$ = $1; }
+    | branch { $$ = $1; }
+    ;
+
+branch: IF expr statements { $$ = ctu_branch(x, @$, $2, $3); }
     ;
 
 assign: expr ASSIGN expr SEMI { $$ = ctu_assign(x, @$, $1, $3); }
@@ -203,6 +209,8 @@ args: expr { $$ = vector_init($1); }
 primary: LPAREN expr RPAREN { $$ = $2; }
     | IDENT { $$ = ctu_ident(x, @$, $1); }
     | DIGIT { $$ = ctu_digit(x, @$, $1); }
+    | YES { $$ = ctu_bool(x, @$, true); }
+    | NO { $$ = ctu_bool(x, @$, false); }
     ;
 
 postfix: primary { $$ = $1; }

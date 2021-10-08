@@ -71,6 +71,14 @@ lir_t *lir_string(node_t *node, const type_t *type, const char *str) {
     return lir;
 }
 
+lir_t *lir_bool(node_t *node, const type_t *type, bool value) {
+    lir_t *lir = lir_new(node, type, LIR_BOOL);
+
+    lir->boolean = value;
+
+    return lir;
+}
+
 lir_t *lir_name(node_t *node, const type_t *type, lir_t *it) {
     lir_t *lir = lir_new(node, type, LIR_NAME);
 

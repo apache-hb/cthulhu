@@ -244,6 +244,10 @@ static operand_t emit_digit(context_t ctx, lir_t *lir) {
     return operand_imm(ctx.reports, value_digit(lir_type(lir), lir->digit));
 }
 
+static operand_t emit_bool(context_t ctx, lir_t *lir) {
+    return operand_imm(ctx.reports, value_bool(lir->boolean));
+}
+
 static operand_t emit_value(const lir_t *lir) {
     return operand_address(lir->data);
 }
@@ -386,6 +390,7 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_UNARY: return emit_unary(ctx, lir);
     case LIR_BINARY: return emit_binary(ctx, lir);
     case LIR_DIGIT: return emit_digit(ctx, lir);
+    case LIR_BOOL: return emit_bool(ctx, lir);
     case LIR_STRING: return emit_string(ctx, lir);
     case LIR_STMTS: return emit_stmts(ctx, lir);
     case LIR_ASSIGN: return emit_assign(ctx, lir);

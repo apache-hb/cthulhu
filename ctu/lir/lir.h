@@ -14,6 +14,8 @@ typedef enum {
 
     LIR_STRING,
 
+    LIR_BOOL,
+
     /* reference to a variable */
     LIR_NAME,
 
@@ -76,6 +78,8 @@ typedef struct lir_t {
          * the encoded string
          */
         const char *str;
+
+        bool boolean;
 
         struct lir_t *it;
 
@@ -174,10 +178,9 @@ lir_t *lir_module(node_t *node,
                   vector_t *funcs);
 
 lir_t *lir_int(node_t *node, const type_t *type, int digit);
-lir_t *lir_digit(node_t *node, 
-                 const type_t *type, 
-                 mpz_t digit);
+lir_t *lir_digit(node_t *node, const type_t *type, mpz_t digit);
 lir_t *lir_string(node_t *node, const type_t *type, const char *str);
+lir_t *lir_bool(node_t *node, const type_t *type, bool value);
 lir_t *lir_name(node_t *node, const type_t *type, lir_t *it);
 
 lir_t *lir_binary(node_t *node, const type_t *type, binary_t binary, lir_t *lhs, lir_t *rhs);

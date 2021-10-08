@@ -31,6 +31,8 @@
 "if" { return IF; }
 "else" { return ELSE; }
 "while" { return WHILE; }
+"true" { return YES; }
+"false" { return NO; }
 "import" { return IMPORT; }
 
 $?[a-zA-Z_][a-zA-Z0-9_]* {

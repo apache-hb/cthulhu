@@ -36,6 +36,8 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
 
     sema_t *nest = new_sema(sema->reports, sema, sizes);
 
+    set_return(nest, closure_result(type));
+
     vector_t *params = ctu->params;
     size_t len = vector_len(params);
     for (size_t i = 0; i < len; i++) {
