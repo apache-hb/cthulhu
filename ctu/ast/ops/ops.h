@@ -24,12 +24,15 @@ typedef enum {
     BINARY_SHL,
     BINARY_SHR,
     BINARY_BITAND,
-    BINARY_BITOR,
+    BINARY_BITOR
 } binary_t;
 
 typedef enum {
     UNARY_NEG,
     UNARY_ABS,
+
+    UNARY_ADDR,
+    UNARY_DEREF
 } unary_t;
 
 //

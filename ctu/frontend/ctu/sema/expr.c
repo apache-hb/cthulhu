@@ -17,13 +17,31 @@ static lir_t *compile_bool(ctu_t *value) {
 
 static lir_t *compile_unary(sema_t *sema, ctu_t *expr) {
     lir_t *operand = compile_expr(sema, expr->operand);
+    const type_t *type = lir_type(operand);
     unary_t unary = expr->unary;
 
-    if (!is_integer(lir_type(operand))) {
-        report(sema->reports, ERROR, expr->node, "unary operator requires an integer operand");
+    switch (unary) {
+    case UNARY_ABS: case UNARY_NEG:
+        if (!is_integer(type)) {
+            report(sema->reports, ERROR, expr->node, "unary math requires an integer operand, `%s` provided", type_format(type));
+        }
+        break;
+    case UNARY_ADDR:
+        type = type_ptr(type);
+        break;
+    case UNARY_DEREF:
+        if (!is_pointer(type)) {
+            report(sema->reports, ERROR, expr->node, "unary dereference requires a pointer operand, `%s` provided", type_format(type));
+        } else {
+            type = type->ptr;
+        }
+        break;
+    default:
+        ctu_assert(sema->reports, "compile-unary unknown op %d", unary);
+        break;
     }
 
-    return lir_unary(expr->node, lir_type(operand), unary, operand);
+    return lir_unary(expr->node, type, unary, operand);
 }
 
 static const type_t *binary_equal(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {

@@ -38,16 +38,29 @@ static lir_t *retype_unary(reports_t *reports, const type_t *type, lir_t *expr) 
     );
 }
 
+static lir_t *retype_logic(reports_t *reports, lir_t *expr) {
+    lir_t *lhs = select_retype(reports, type_any(), expr->lhs);
+    lir_t *rhs = select_retype(reports, type_any(), expr->rhs);
+
+    return lir_binary(expr->node, type_bool(), expr->binary, lhs, rhs);
+}
+
 static lir_t *retype_binary(reports_t *reports, const type_t *type, lir_t *expr) {
     lir_t *lhs = select_retype(reports, type, expr->lhs);
     lir_t *rhs = select_retype(reports, type, expr->rhs);
 
-    return lir_binary(expr->node,
-        types_common(type, lir_type(expr)),
-        expr->binary,
-        lhs,
-        rhs
-    );
+    switch (expr->binary) {
+    case BINARY_EQ: case BINARY_NEQ:
+    case BINARY_GT: case BINARY_GTE:
+    case BINARY_LT: case BINARY_LTE:
+        return retype_logic(reports, expr);
+
+    default:
+        return lir_binary(expr->node,
+            types_common(type, lir_type(expr)),
+            expr->binary, lhs, rhs
+        );
+    }
 }
 
 static lir_t *retype_call(reports_t *reports, const type_t *type, lir_t *expr) {

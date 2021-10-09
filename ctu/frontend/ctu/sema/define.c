@@ -24,33 +24,37 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
         return;
     }
 
+    lir_t *body = NULL;
+    vector_t *locals = vector_new(0);
     const type_t *type = is_poison(lir_type(lir))
         ? realise_closure(sema, ctu)
         : lir_type(lir);
 
-    size_t sizes[TAG_MAX] = {
-        [TAG_GLOBALS] = MAP_SMALL,
-        [TAG_FUNCS] = MAP_SMALL,
-        [TAG_TYPES] = MAP_SMALL
-    };
+    if (ctu->body != NULL) {
+        size_t sizes[TAG_MAX] = {
+            [TAG_GLOBALS] = MAP_SMALL,
+            [TAG_FUNCS] = MAP_SMALL,
+            [TAG_TYPES] = MAP_SMALL
+        };
 
-    sema_t *nest = new_sema(sema->reports, sema, sizes);
+        sema_t *nest = new_sema(sema->reports, sema, sizes);
 
-    set_return(nest, closure_result(type));
+        set_return(nest, closure_result(type));
 
-    vector_t *params = ctu->params;
-    size_t len = vector_len(params);
-    for (size_t i = 0; i < len; i++) {
-        ctu_t *param = vector_get(params, i);
-        const type_t *arg = param_at(type, i);
-        add_var(nest, param->name, lir_param(param->node, param->name, arg, i));
+        vector_t *params = ctu->params;
+        size_t len = vector_len(params);
+        for (size_t i = 0; i < len; i++) {
+            ctu_t *param = vector_get(params, i);
+            const type_t *arg = param_at(type, i);
+            add_var(nest, param->name, lir_param(param->node, param->name, arg, i));
+        }
+
+        body = compile_stmts(nest, ctu->body);
+
+        locals = move_locals(sema);
+
+        sema_delete(nest);
     }
-
-    lir_t *body = compile_stmts(nest, ctu->body);
-
-    vector_t *locals = move_locals(sema);
-
-    sema_delete(nest);
 
     lir_define(sema->reports, lir, 
         /* type = */ type,

@@ -23,6 +23,9 @@ const char *unary_name(unary_t op) {
     switch (op) {
     case UNARY_ABS: return "abs";
     case UNARY_NEG: return "neg";
+    case UNARY_ADDR: return "addr";
+    case UNARY_DEREF: return "deref";
+    
     default: return "???";
     }
 }

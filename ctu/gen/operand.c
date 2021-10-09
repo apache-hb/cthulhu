@@ -11,6 +11,10 @@ operand_t operand_imm(reports_t *reports, value_t *imm) {
         ctu_assert(reports, "immediate cannot be untyped");
     }
     
+    if (is_any(imm->type)) {
+        ctu_assert(reports, "immediate must be typed");
+    }
+
     operand_t operand = operand_new(IMM);
     operand.imm = imm;
     return operand;

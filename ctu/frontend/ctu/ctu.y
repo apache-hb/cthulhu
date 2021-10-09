@@ -150,7 +150,7 @@ function: DEF IDENT LPAREN paramlist RPAREN COLON type statements
     | DEF IDENT LPAREN paramlist RPAREN COLON type ASSIGN expr SEMI
     { $$ = NULL; }
     | DEF IDENT LPAREN paramlist RPAREN COLON type SEMI 
-    { $$ = NULL; }
+    { $$ = ctu_define(x, @$, $2, $4, $7, NULL); }
     ;
 
 paramlist: %empty { $$ = vector_new(0); }
@@ -220,6 +220,8 @@ postfix: primary { $$ = $1; }
 unary: postfix { $$ = $1; }
     | ADD unary { $$ = ctu_unary(x, @$, UNARY_ABS, $2); }
     | SUB unary { $$ = ctu_unary(x, @$, UNARY_NEG, $2); }
+    | BITAND unary { $$ = ctu_unary(x, @$, UNARY_ADDR, $2); }
+    | MUL unary { $$ = ctu_unary(x, @$, UNARY_DEREF, $2); }
     ;
 
 multiply: unary { $$ = $1; }
