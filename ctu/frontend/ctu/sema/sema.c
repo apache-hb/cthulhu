@@ -38,6 +38,10 @@ static void add_decls(sema_t *sema, vector_t *decls) {
     }
 }
 
+static bool nonull(lir_t *lir) {
+    return lir->body != NULL;
+}
+
 static lir_t *compile_decls(sema_t *sema, node_t *root) {
     map_t *vars = sema_tag(sema, TAG_GLOBALS);
     MAP_APPLY(vars, sema, build_value);
@@ -46,9 +50,9 @@ static lir_t *compile_decls(sema_t *sema, node_t *root) {
     MAP_APPLY(funcs, sema, build_define);
 
     return lir_module(root, 
-        /* externs = */ vector_new(0),
+        /* externs = */ move_externs(sema),
         /* vars = */ map_values(vars),
-        /* funcs = */ map_values(funcs)
+        /* funcs = */ MAP_COLLECT(funcs, nonull)
     );
 }
 

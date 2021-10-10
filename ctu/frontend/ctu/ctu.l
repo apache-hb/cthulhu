@@ -55,6 +55,11 @@
     return DIGIT;
 }
 
+\"(\\.|[^"\\])*\" { 
+    yylval->ident = ctu_strndup(yytext + 1, yyleng - 2);
+    return STRING;
+}
+
 ";" { return SEMI; }
 
 "::" { return COLON2; }

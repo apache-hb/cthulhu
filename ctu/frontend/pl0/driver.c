@@ -21,5 +21,5 @@ static const frontend_t DRIVER = {
 };
 
 int main(int argc, char **argv) {
-    return common_main(&DRIVER, argc, argv);
+    return common_main(&DRIVER, argc, argv, NULL);
 }

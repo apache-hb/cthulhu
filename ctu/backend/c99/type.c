@@ -49,6 +49,15 @@ static const char *void_to_string(const char *name) {
     }
 }
 
+static const char *ptr_to_string(reports_t *reports, const type_t *ptr, const char *name) {
+    const char *type = type_to_string(reports, ptr, NULL);
+    if (name != NULL) {
+        return format("%s* %s", type, name);
+    } else {
+        return format("%s*", type);
+    }
+}
+
 const char *type_to_string(reports_t *reports, const type_t *type, const char *name) {
     if (is_digit(type)) {
         return digit_to_string(type->digit, name);
@@ -75,9 +84,13 @@ const char *type_to_string(reports_t *reports, const type_t *type, const char *n
         return "literal";
     }
 
+    if (is_pointer(type)) {
+        return ptr_to_string(reports, type->ptr, name);
+    }
+
     ctu_assert(reports, "unknown type `%s`", type_format(type));
 
-    return NULL;
+    return "...";
 }
 
 const char *value_to_string(reports_t *reports, const value_t *value) {

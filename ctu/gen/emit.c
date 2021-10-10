@@ -17,7 +17,7 @@ static const char *mangle_type(const type_t *type) {
         case TY_SHORT: return digit.sign ? "s" : "t";
         case TY_INT: return digit.sign ? "i" : "j";
         case TY_LONG: return digit.sign ? "l" : "m";
-        default: return NULL; /* TODO */
+        default: return ""; /* TODO */
         }
     }
 
@@ -30,7 +30,7 @@ static const char *mangle_type(const type_t *type) {
     }
 
     if (is_closure(type)) {
-        size_t len = vector_len(type->args);
+        size_t len = minimum_params(type);
 
         /* if a closure has no arguments, it implicty has a void argument */
         if (len == 0) {
@@ -40,14 +40,14 @@ static const char *mangle_type(const type_t *type) {
         vector_t *args = vector_of(len);
 
         for (size_t i = 0; i < len; i++) {
-            const char *it = mangle_type(vector_get(type->args, i));
+            const char *it = mangle_type(param_at(type, i));
             vector_set(args, i, (char*)it);
         }
 
         return strjoin("", args);
     }
 
-    return NULL;
+    return "";
 }
 
 static char *mangle_name(const char *name, const type_t *type) {

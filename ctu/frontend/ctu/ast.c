@@ -40,6 +40,14 @@ ctu_t *ctu_ident(scan_t *scan, where_t where, const char *ident) {
     return ctu;
 }
 
+ctu_t *ctu_string(scan_t *scan, where_t where, const char *str) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_STRING);
+
+    ctu->str = str;
+
+    return ctu;
+}
+
 ctu_t *ctu_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *operand) {
     ctu_t *ctu = ctu_new(scan, where, CTU_UNARY);
 
@@ -163,8 +171,10 @@ ctu_t *ctu_define(scan_t *scan, where_t where,
     return ctu;
 }
 
-ctu_t *ctu_attrib(scan_t *scan, where_t where, const char *name) {
-    return ctu_decl(scan, where, CTU_ATTRIB, name);
+ctu_t *ctu_attrib(scan_t *scan, where_t where, const char *name, vector_t *params) {
+    ctu_t *ctu = ctu_decl(scan, where, CTU_ATTRIB, name);
+    ctu->params = params;
+    return ctu;
 }
 
 ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *decls) {

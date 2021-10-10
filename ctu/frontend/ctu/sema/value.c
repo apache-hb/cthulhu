@@ -42,7 +42,7 @@ static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
 
     lir_value(sema->reports, lir, type, init);
 
-    compile_attribs(sema->reports, lir, ctu);
+    compile_attribs(sema, lir, ctu);
 
     stack_leave(sema, lir);
 }

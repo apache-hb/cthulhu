@@ -10,6 +10,7 @@ typedef enum {
     CTU_DIGIT,
     CTU_IDENT,
     CTU_BOOL,
+    CTU_STRING,
 
     CTU_UNARY,
     CTU_BINARY,
@@ -23,6 +24,10 @@ typedef enum {
 
     CTU_TYPENAME,
     CTU_POINTER,
+
+    CTU_STRUCT,
+    CTU_UNION,
+    CTU_ENUM,
 
     CTU_VALUE,
     CTU_PARAM,
@@ -43,6 +48,8 @@ typedef struct ctu_t {
         bool boolean;
 
         const char *ident;
+
+        const char *str;
 
         struct ctu_t *ptr;
 
@@ -101,6 +108,7 @@ typedef struct ctu_t {
 ctu_t *ctu_digit(scan_t *scan, where_t where, mpz_t digit);
 ctu_t *ctu_ident(scan_t *scan, where_t where, const char *ident);
 ctu_t *ctu_bool(scan_t *scan, where_t where, bool value);
+ctu_t *ctu_string(scan_t *scan, where_t where, const char *str);
 
 /* expressions */
 ctu_t *ctu_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *operand);
@@ -132,7 +140,7 @@ ctu_t *ctu_define(scan_t *scan, where_t where,
                   const char *name, vector_t *params, 
                   ctu_t *result, ctu_t *body);
 
-ctu_t *ctu_attrib(scan_t *scan, where_t where, const char *name);
+ctu_t *ctu_attrib(scan_t *scan, where_t where, const char *name, vector_t *params);
 
 /* modules */
 ctu_t *ctu_module(scan_t *scan, where_t where, 

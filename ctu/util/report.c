@@ -441,6 +441,8 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
         result = 1;
     }
 
+    reports->messages = vector_new(0);
+
     return result;
 }
 

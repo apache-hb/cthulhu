@@ -16,6 +16,7 @@ typedef struct {
     vector_t *stack;
     vector_t *locals;
     const type_t *result;
+    vector_t *externs;
 } stack_t;
 
 typedef struct {
@@ -36,6 +37,9 @@ const type_t *get_return(sema_t *sema);
 
 void add_local(sema_t *sema, lir_t *lir);
 vector_t *move_locals(sema_t *sema);
+
+void add_extern(sema_t *sema, lir_t *lir);
+vector_t *move_externs(sema_t *sema);
 
 void add_var(sema_t *sema, const char *name, lir_t *lir);
 void add_func(sema_t *sema, const char *name, lir_t *lir);

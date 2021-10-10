@@ -56,6 +56,13 @@ char *ctu_strdup(const char *str) {
     return out;
 }
 
+char *ctu_strndup(const char *str, size_t len) {
+    char *out = ctu_malloc(len + 1);
+    memcpy(out, str, len);
+    out[len] = '\0';
+    return out;
+}
+
 void *ctu_memdup(const void *ptr, size_t size) {
     void *out = ctu_malloc(size);
     memcpy(out, ptr, size);

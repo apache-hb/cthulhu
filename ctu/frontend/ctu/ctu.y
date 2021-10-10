@@ -31,6 +31,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %token<ident>
     IDENT "identifier"
+    STRING "string literal"
 
 %token<digit>
     DIGIT "integer literal"
@@ -129,7 +130,8 @@ attribs: attrib { $$ = vector_init($1); }
     | attribs attrib { vector_push(&$1, $2); $$ = $1; }
     ;
 
-attrib: IDENT { $$ = ctu_attrib(x, @$, $1); }
+attrib: IDENT { $$ = ctu_attrib(x, @$, $1, vector_new(0)); }
+    | IDENT LPAREN args RPAREN { $$ = ctu_attrib(x, @$, $1, $3); }
     ;
 
 declbase: value { $$ = $1; }
@@ -148,7 +150,7 @@ value: VAR IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, NULL, $4); }
 function: DEF IDENT LPAREN paramlist RPAREN COLON type statements 
     { $$ = ctu_define(x, @$, $2, $4, $7, $8); }
     | DEF IDENT LPAREN paramlist RPAREN COLON type ASSIGN expr SEMI
-    { $$ = NULL; }
+    { $$ = ctu_define(x, @$, $2, $4, $7, ctu_stmts(x, @9, vector_init(ctu_return(x, @9, $9)))); }
     | DEF IDENT LPAREN paramlist RPAREN COLON type SEMI 
     { $$ = ctu_define(x, @$, $2, $4, $7, NULL); }
     ;
@@ -211,6 +213,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | DIGIT { $$ = ctu_digit(x, @$, $1); }
     | YES { $$ = ctu_bool(x, @$, true); }
     | NO { $$ = ctu_bool(x, @$, false); }
+    | STRING { $$ = ctu_string(x, @$, $1); }
     ;
 
 postfix: primary { $$ = $1; }

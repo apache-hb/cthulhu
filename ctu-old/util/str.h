@@ -16,6 +16,7 @@ bool startswith(const char *str, const char *other);
 char *str_replace(const char *str, const char *old, const char *with);
 char *str_join(const char *sep, const char **strs, size_t num);
 size_t str_find(const char *str, const char *substr);
+char *str_strip(const char *str, const char *it);
 
 char *formatv(const char *fmt, va_list args);
 char *format(const char *fmt, ...);

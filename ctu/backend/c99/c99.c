@@ -91,8 +91,8 @@ static char *format_function(reports_t *reports, const block_t *block) {
     vector_t *params = vector_of(vector_len(args));
     for (size_t i = 0; i < len; i++) {
         const type_t *arg = vector_get(args, i);
-        const char *param = type_to_string(reports, arg, NULL);
-        vector_set(params, i, format("%s %s", param, arg_name(i)));
+        const char *param = type_to_string(reports, arg, arg_name(i));
+        vector_set(params, i, (char*)param);
     }
     
     const char *decl = type_to_string(reports, type->result, name);
@@ -192,6 +192,9 @@ static const char *binary_op_to_string(binary_t op) {
     case BINARY_MUL: return "*";
     case BINARY_DIV: return "/";
     case BINARY_REM: return "%";
+
+    case BINARY_AND: return "&&";
+    case BINARY_OR: return "||";
 
     case BINARY_EQ: return "==";
     case BINARY_NEQ: return "!=";

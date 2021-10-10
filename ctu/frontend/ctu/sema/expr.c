@@ -209,6 +209,10 @@ static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
     return lir_poison(expr->node, "unresolved name");
 }
 
+static lir_t *compile_string(ctu_t *expr) {
+    return lir_string(expr->node, type_string(), expr->str);
+}
+
 lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
     case CTU_DIGIT: return compile_digit(expr);
@@ -217,6 +221,7 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_BINARY: return compile_binary(sema, expr);
     case CTU_CALL: return compile_call(sema, expr);
     case CTU_IDENT: return compile_name(sema, expr);
+    case CTU_STRING: return compile_string(expr);
 
     default:
         ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);
@@ -312,7 +317,11 @@ lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
     case CTU_CALL: return compile_call(sema, stmt);
     case CTU_VALUE: return compile_local(sema, stmt);
 
-    default: 
+    case CTU_IDENT:
+        report(sema->reports, WARNING, stmt->node, "expression has no effect");
+        return lir_stmts(stmt->node, vector_new(0));
+
+    default:
         ctu_assert(sema->reports, "compile-stmt unknown type %d", stmt->type);
         return lir_poison(stmt->node, "compile-stmt unknown type");
     }

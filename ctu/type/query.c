@@ -159,6 +159,10 @@ const type_t *types_common(const type_t *lhs, const type_t *rhs) {
         return type_bool();
     }
 
+    if (is_string(lhs) && is_string(rhs)) {
+        return type_string();
+    }
+
     char *err = format("cannot get common type of unrelated types (%s, %s)", type_format(lhs), type_format(rhs));
     return type_poison(err);
 }

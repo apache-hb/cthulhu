@@ -1,0 +1,7 @@
+@mangle("__fun")
+def fun(i: int): int = i + i;
+
+@entry
+def entry(): int {
+    return fun(25);
+}

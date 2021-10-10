@@ -62,7 +62,11 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
         /* body = */ body
     );
 
-    compile_attribs(sema->reports, lir, ctu);
+    compile_attribs(sema, lir, ctu);
+
+    if (ctu->body == NULL) {
+        add_extern(sema, lir);
+    }
 }
 
 lir_t *compile_define(lir_t *lir) {

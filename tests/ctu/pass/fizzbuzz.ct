@@ -1,7 +1,7 @@
-@interop("stdio.h")
+@mangle("puts")
 def puts($: str): int;
 
-@interop("stdio.h")
+@mangle("putd")
 def putd($: int): int;
 
 def fizzbuzz(i: int): void {
@@ -28,6 +28,7 @@ def fizzbuzz(i: int): void {
     }
 }
 
+@entry
 export def main(argc: int, argv: *str): int {
     fizzbuzz(300);
     return 0;

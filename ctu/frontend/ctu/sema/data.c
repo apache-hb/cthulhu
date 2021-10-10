@@ -7,6 +7,7 @@ stack_t *stack_new(void) {
     stack->stack = vector_new(16);
     stack->locals = vector_new(8);
     stack->result = type_poison("uninitialized return type");
+    stack->externs = vector_new(8);
     return stack;
 }
 
@@ -114,6 +115,7 @@ sema_t *base_sema(reports_t *reports, size_t decls) {
     add_type(sema, "uint", type_digit(UNSIGNED, TY_INT));
     add_type(sema, "void", type_void());
     add_type(sema, "bool", type_bool());
+    add_type(sema, "str", type_string());
 
     return sema;
 }
@@ -142,6 +144,18 @@ vector_t *move_locals(sema_t *sema) {
     vector_t *locals = data->locals;
     data->locals = vector_new(16);
     return locals;
+}
+
+void add_extern(sema_t *sema, lir_t *lir) {
+    stack_t *data = sema_get_data(sema);
+    vector_push(&data->externs, lir);
+}
+
+vector_t *move_externs(sema_t *sema) {
+    stack_t *data = sema_get_data(sema);
+    vector_t *externs = data->externs;
+    data->externs = vector_new(16);
+    return externs;
 }
 
 bool is_discard(const char *name) {

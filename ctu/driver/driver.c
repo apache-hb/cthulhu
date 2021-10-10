@@ -77,7 +77,7 @@ static int max_report(int *error, reports_t *reports, const char *msg) {
     return result;
 }
 
-int common_main(const frontend_t *frontend, int argc, char **argv) {
+int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(void)) {
     init_memory();
 
     int error = 0;
@@ -88,6 +88,10 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
 
     if ((error = end_reports(errors, SIZE_MAX, "command line parsing")) > 0) {
         return error;
+    }
+
+    if (init != NULL) {
+        init();
     }
 
     vector_t *sources = settings.sources;

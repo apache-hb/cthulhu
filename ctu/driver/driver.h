@@ -47,4 +47,4 @@ const backend_t *select_backend(reports_t *reports, const char *name);
  * @param argc the argc from main
  * @param argv the argv from main
  */
-int common_main(const frontend_t *frontend, int argc, char **argv);
+int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(void));

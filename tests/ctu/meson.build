@@ -2,7 +2,7 @@ dir = meson.current_source_dir()
 
 crashes = [ 
     'fuzz-1', 'fuzz-2', 'fuzz-3', 'fuzz-4', 'fuzz-5',
-    'fuzz-6', 'fuzz-7', 'fuzz-8', 'fuzz-9', 'fuzz-10',
+    'fuzz-6', 'fuzz-7', 'fuzz-8', 'fuzz-9',
     'overflow.1', 'overflow.2', 'overflow.3', 'overflow.4', 'overflow.5'
 ]
 
@@ -37,7 +37,7 @@ pass = [
     'long-while', 'long', 'loop', 'multiline', 'mut',
     'nest', 'order', 'pointers', 'pointers2', 'posix-interop', 'regalloc',
     'string', 'struct', 'suffix', 'union', 'unused-var', 'var', 'win32-interop',
-    'win32-wsa'
+    'win32-wsa', 'simple', 'extern', 'fuzz-10'
 ]
 
 foreach case : pass
