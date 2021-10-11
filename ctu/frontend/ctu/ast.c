@@ -76,6 +76,16 @@ ctu_t *ctu_call(scan_t *scan, where_t where, ctu_t *func, vector_t *args) {
     return ctu;
 }
 
+ctu_t *ctu_access(scan_t *scan, where_t where, ctu_t *object, const char *field, bool indirect) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_ACCESS);
+
+    ctu->object = object;
+    ctu->field = field;
+    ctu->indirect = indirect;
+
+    return ctu;
+}
+
 ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts) {
     ctu_t *ctu = ctu_new(scan, where, CTU_STMTS);
 
@@ -108,11 +118,12 @@ ctu_t *ctu_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src) {
     return ctu;
 }
 
-ctu_t *ctu_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then) {
+ctu_t *ctu_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *other) {
     ctu_t *ctu = ctu_new(scan, where, CTU_BRANCH);
 
     ctu->cond = cond;
     ctu->then = then;
+    ctu->other = other;
 
     return ctu;
 }
@@ -138,10 +149,11 @@ ctu_t *ctu_typename(scan_t *scan, where_t where,
 }
 
 ctu_t *ctu_value(scan_t *scan, where_t where, 
-                 const char *name, ctu_t *type,
-                 ctu_t *value) {
+                 bool mut, const char *name, 
+                 ctu_t *type, ctu_t *value) {
     ctu_t *ctu = ctu_decl(scan, where, CTU_VALUE, name);
 
+    ctu->mut = mut;
     ctu->kind = type;
     ctu->value = value;
 
@@ -167,6 +179,38 @@ ctu_t *ctu_define(scan_t *scan, where_t where,
     ctu->params = params;
     ctu->result = result;
     ctu->body = body;
+
+    return ctu;
+}
+
+ctu_t *ctu_union(scan_t *scan, where_t where, const char *name, vector_t *fields) {
+    ctu_t *ctu = ctu_decl(scan, where, CTU_UNION, name);
+
+    ctu->fields = fields;
+
+    return ctu;
+}
+
+ctu_t *ctu_struct(scan_t *scan, where_t where, const char *name, vector_t *fields) {
+    ctu_t *ctu = ctu_decl(scan, where, CTU_STRUCT, name);
+
+    ctu->fields = fields;
+
+    return ctu;
+}
+
+ctu_t *ctu_enum(scan_t *scan, where_t where, const char *name, vector_t *fields) {
+    ctu_t *ctu = ctu_decl(scan, where, CTU_ENUM, name);
+
+    ctu->fields = fields;
+
+    return ctu;
+}
+
+ctu_t *ctu_field(scan_t *scan, where_t where, const char *name, ctu_t *kind) {
+    ctu_t *ctu = ctu_decl(scan, where, CTU_FIELD, name);
+
+    ctu->kind = kind;
 
     return ctu;
 }

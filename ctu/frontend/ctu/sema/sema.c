@@ -1,5 +1,6 @@
 #include "sema.h"
 #include "data.h"
+#include "type.h"
 #include "value.h"
 #include "define.h"
 
@@ -24,15 +25,21 @@ static void add_decls(sema_t *sema, vector_t *decls) {
         const char *name = decl->name;
         lir_t *lir = lir_forward(decl->node, name, leaf, state_new(sema, decl));
 
-        switch (leaf) {
-        case LIR_VALUE:
+        switch (decl->type) {
+        case CTU_VALUE:
             add_var(sema, name, lir);
             break;
-        case LIR_DEFINE:
+        case CTU_DEFINE:
             add_func(sema, name, lir);
             break;
+        case CTU_STRUCT:
+            add_struct(sema, decl);
+            break;
+        case CTU_UNION:
+            add_union(sema, decl);
+            break;
         default:
-            ctu_assert(sema->reports, "add-decls unreachable");
+            ctu_assert(sema->reports, "add-decls unreachable %d", decl->type);
             break;
         }
     }

@@ -38,11 +38,15 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %token
     VAR "`var`"
+    FINAL "`final`"
     DEF "`def`"
     EXPORT "`export`"
     RETURN "`return`"
     IF "`if`"
     ELSE "`else`"
+    STRUCT "`struct`"
+    UNION "`union`"
+    USING "`using`"
     WHILE "`while`"
     IMPORT "`import`"
     YES "`true`"
@@ -58,6 +62,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     COLON2 "`::`"
     COLON "`:`"
     COMMA "`,`"
+    DOT "`.`"
+    ARROW "`->`"
     ADD "`+`"
     SUB "`-`"
     MUL "`*`"
@@ -83,14 +89,14 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
     statements stmt type param function return import while
-    assign attrib branch
+    assign attrib branch struct union field tail
 
 %type<vector>
     unit stmtlist params paramlist args arglist imports
-    attributes attriblist attribute attribs
+    attributes attriblist attribute attribs fields fieldlist
 
 %type<boolean>
-    exported
+    exported const
 
 %start program
 
@@ -136,15 +142,38 @@ attrib: IDENT { $$ = ctu_attrib(x, @$, $1, vector_new(0)); }
 
 declbase: value { $$ = $1; }
     | function { $$ = $1; }
+    | struct { $$ = $1; }
+    | union { $$ = $1; }
     ;
 
 exported: %empty { $$ = false; }
     | EXPORT { $$ = true; }
     ;
 
-value: VAR IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, NULL, $4); }
-    | VAR IDENT COLON type ASSIGN expr SEMI { $$ = ctu_value(x, @$, $2, $4, $6); }
-    | VAR IDENT COLON type SEMI { $$ = ctu_value(x, @$, $2, $4, NULL); }
+struct: STRUCT IDENT LBRACE fields RBRACE { $$ = ctu_struct(x, @$, $2, $4); }
+    ;
+
+union: UNION IDENT LBRACE fields RBRACE { $$ = ctu_union(x, @$, $2, $4); }
+    ;
+
+fields: %empty { $$ = vector_new(0); }
+    | fieldlist { $$ = $1; }
+    ;
+
+fieldlist: field { $$ = vector_init($1); }
+    | fieldlist COMMA field { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+field: IDENT COLON type { $$ = ctu_value(x, @$, true, $1, $3, NULL); }
+    ;
+
+value: const IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $1, $2, NULL, $4); }
+    | const IDENT COLON type ASSIGN expr SEMI { $$ = ctu_value(x, @$, $1, $2, $4, $6); }
+    | const IDENT COLON type SEMI { $$ = ctu_value(x, @$, $1, $2, $4, NULL); }
+    ;
+
+const: VAR { $$ = true; }
+    | FINAL { $$ = false; }
     ;
 
 function: DEF IDENT LPAREN paramlist RPAREN COLON type statements 
@@ -187,7 +216,12 @@ stmt: expr SEMI { $$ = $1; }
     | branch { $$ = $1; }
     ;
 
-branch: IF expr statements { $$ = ctu_branch(x, @$, $2, $3); }
+branch: IF expr statements tail { $$ = ctu_branch(x, @$, $2, $3, $4); }
+    ;
+
+tail: %empty { $$ = NULL; }
+    | ELSE statements { $$ = $2; }
+    | ELSE branch { $$ = $2; }
     ;
 
 assign: expr ASSIGN expr SEMI { $$ = ctu_assign(x, @$, $1, $3); }
@@ -218,6 +252,8 @@ primary: LPAREN expr RPAREN { $$ = $2; }
 
 postfix: primary { $$ = $1; }
     | postfix LPAREN arglist RPAREN { $$ = ctu_call(x, @$, $1, $3); }
+    | postfix DOT IDENT { $$ = ctu_access(x, @$, $1, $3, false); }
+    | postfix ARROW IDENT { $$ = ctu_access(x, @$, $1, $3, true); }
     ;
 
 unary: postfix { $$ = $1; }

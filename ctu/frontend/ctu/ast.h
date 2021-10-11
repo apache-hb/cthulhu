@@ -15,6 +15,7 @@ typedef enum {
     CTU_UNARY,
     CTU_BINARY,
     CTU_CALL,
+    CTU_ACCESS,
 
     CTU_STMTS,
     CTU_RETURN,
@@ -28,6 +29,7 @@ typedef enum {
     CTU_STRUCT,
     CTU_UNION,
     CTU_ENUM,
+    CTU_FIELD,
 
     CTU_VALUE,
     CTU_PARAM,
@@ -59,6 +61,12 @@ typedef struct ctu_t {
         };
 
         struct {
+            struct ctu_t *object;
+            const char *field;
+            bool indirect;
+        };
+
+        struct {
             binary_t binary;
             struct ctu_t *lhs;
             struct ctu_t *rhs;
@@ -77,6 +85,7 @@ typedef struct ctu_t {
         struct {
             struct ctu_t *cond;
             struct ctu_t *then;
+            struct ctu_t *other;
         };
 
         struct {
@@ -86,6 +95,7 @@ typedef struct ctu_t {
 
             union {
                 struct {
+                    bool mut;
                     struct ctu_t *kind;
                     struct ctu_t *value;
                 };
@@ -95,6 +105,8 @@ typedef struct ctu_t {
                     struct ctu_t *result;
                     struct ctu_t *body;
                 };
+
+                vector_t *fields;
             };
         };
 
@@ -114,13 +126,14 @@ ctu_t *ctu_string(scan_t *scan, where_t where, const char *str);
 ctu_t *ctu_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *operand);
 ctu_t *ctu_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs);
 ctu_t *ctu_call(scan_t *scan, where_t where, ctu_t *func, vector_t *args);
+ctu_t *ctu_access(scan_t *scan, where_t where, ctu_t *object, const char *field, bool indirect);
 
 /* statements */
 ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts);
 ctu_t *ctu_return(scan_t *scan, where_t where, ctu_t *operand);
 ctu_t *ctu_while(scan_t *scan, where_t where, ctu_t *cond, ctu_t *body);
 ctu_t *ctu_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src);
-ctu_t *ctu_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then);
+ctu_t *ctu_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *other);
 
 /* types */
 ctu_t *ctu_pointer(scan_t *scan, where_t where, 
@@ -128,10 +141,16 @@ ctu_t *ctu_pointer(scan_t *scan, where_t where,
 ctu_t *ctu_typename(scan_t *scan, where_t where, 
                     const char *name);
 
+ctu_t *ctu_union(scan_t *scan, where_t where, const char *name, vector_t *fields);
+ctu_t *ctu_struct(scan_t *scan, where_t where, const char *name, vector_t *fields);
+ctu_t *ctu_enum(scan_t *scan, where_t where, const char *name, vector_t *fields);
+
+ctu_t *ctu_field(scan_t *scan, where_t where, const char *name, ctu_t *kind);
+
 /* declarations */
 ctu_t *ctu_value(scan_t *scan, where_t where, 
-                 const char *name, ctu_t *type, 
-                 ctu_t *value);
+                 bool mut, const char *name, 
+                 ctu_t *type, ctu_t *value);
 
 ctu_t *ctu_param(scan_t *scan, where_t where,
                  const char *name, ctu_t *type);

@@ -61,9 +61,7 @@ static lir_t *compile_expr(sema_t *sema, pl0_t *expr);
 static lir_t *compile_stmt(sema_t *sema, pl0_t *stmt);
 
 static type_t *pl0_int(bool mut) {
-    type_t *ty = type_digit(SIGNED, TY_LONG);
-    type_mut(ty, mut);
-    return ty;
+    return type_mut(type_digit(SIGNED, TY_LONG), mut);
 }
 
 static type_t *pl0_bool(void) {

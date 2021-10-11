@@ -92,7 +92,7 @@ static value_t *exec_unary(exec_t *exec, step_t step) {
 
     default:
         ctu_assert(exec->world->reports, "invalid unary operator");
-        return value_poison("invalid unary operator");
+        return value_poison_with_node("invalid unary operator", step.node);
     }
 }
 
@@ -115,13 +115,13 @@ static value_t *exec_binary(exec_t *exec, step_t step) {
         return value_digit(step.type, result);
     case BINARY_DIV:
         if (mpz_sgn(rhs->digit) == 0) {
-            return value_poison("division by zero");
+            return value_poison_with_node("division by zero", step.node);
         }
         mpz_tdiv_q(result, lhs->digit, rhs->digit);
         return value_digit(step.type, result);
     case BINARY_REM:
         if (mpz_sgn(rhs->digit) == 0) {
-            return value_poison("division by zero");
+            return value_poison_with_node("division by zero", step.node);
         }
         mpz_tdiv_r(result, lhs->digit, rhs->digit);
         return value_digit(step.type, result);
@@ -149,7 +149,7 @@ static value_t *exec_binary(exec_t *exec, step_t step) {
 
     default:
         ctu_assert(exec->world->reports, "invalid binary operator %d", step.binary);
-        return value_poison("invalid binary operator");
+        return value_poison_with_node("invalid binary operator", step.node);
     }
 }
 
@@ -194,7 +194,7 @@ static bool exec_step(exec_t *exec) {
 
     case OP_CALL:
         report(exec->world->reports, ERROR, step.node, "can only call `compile` functions at compile time");
-        exec->result = value_poison("invalid function colour");
+        exec->result = value_poison_with_node("invalid function colour", step.node);
         return false;
 
     default:

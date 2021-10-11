@@ -4,6 +4,18 @@
 
 #include "ctu/type/retype.h"
 
+static lir_t *is_lvalue(lir_t *lir) {
+    if (lir_is(lir, LIR_NAME)) {
+        return lir->it;
+    }
+
+    if (lir_is(lir, LIR_UNARY) && lir->unary == UNARY_DEREF) {
+        return is_lvalue(lir->operand);
+    }
+
+    return NULL;
+}
+
 static lir_t *compile_digit(ctu_t *digit) {
     return lir_digit(digit->node, 
         /* type = */ type_literal_integer(), 
@@ -126,7 +138,7 @@ static const type_t *binary_type(reports_t *reports, node_t *node, binary_t bina
 
     default:
         ctu_assert(reports, "binary-type unreachable %d", binary);
-        return type_poison("unreachable");
+        return type_poison_with_node("unreachable", node);
     }
 }
 
@@ -209,6 +221,42 @@ static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
     return lir_poison(expr->node, "unresolved name");
 }
 
+static lir_t *compile_access(sema_t *sema, ctu_t *expr) {
+    lir_t *obj = compile_expr(sema, expr->object);
+    const type_t *type = lir_type(obj);
+    const type_t *aggregate = is_pointer(type) ? type->ptr : type;
+    
+    bool error = false;
+
+    if (is_pointer(type) && !expr->indirect) {
+        message_t *id = report(sema->reports, ERROR, expr->node, "cannot directly access pointer type `%s`", type_format(type));
+        report_underline(id, "use `->` for accessing pointers to aggregates");
+        error = true;
+    } else if (!is_pointer(type) && expr->indirect) {
+        message_t *id = report(sema->reports, ERROR, expr->node, "cannot indirectly access non-pointer type `%s`", type_format(type));
+        report_underline(id, "use `.` for accessing aggregates");
+        error = true;
+    }
+
+    if (!is_aggregate(aggregate) && !error) {
+        message_t *id = report(sema->reports, ERROR, expr->node, "only aggregate types can be accessed");
+        report_underline(id, "`%s` is not an aggregate type", type_format(type));
+        report_note(id, "user defined structs and unions are aggregate types");
+        error = true;
+    }
+
+    size_t field_index = field_offset(type, expr->field);
+    if (field_index == SIZE_MAX && !error) {
+        report(sema->reports, ERROR, expr->node, "type `%s` has no field named `%s`", type_format(aggregate), expr->field);
+    }
+
+    const type_t *field_type = get_field(aggregate, field_index);
+
+    lir_t *access = lir_access(expr->node, field_type, obj, field_index);
+
+    return lir_name(expr->node, field_type, access);
+}
+
 static lir_t *compile_string(ctu_t *expr) {
     return lir_string(expr->node, type_string(), expr->str);
 }
@@ -221,6 +269,7 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_BINARY: return compile_binary(sema, expr);
     case CTU_CALL: return compile_call(sema, expr);
     case CTU_IDENT: return compile_name(sema, expr);
+    case CTU_ACCESS: return compile_access(sema, expr);
     case CTU_STRING: return compile_string(expr);
 
     default:
@@ -279,13 +328,13 @@ static lir_t *compile_while(sema_t *sema, ctu_t *stmt) {
 static lir_t *compile_assign(sema_t *sema, ctu_t *stmt) {
     lir_t *dst = compile_expr(sema, stmt->dst);
     lir_t *src = compile_expr(sema, stmt->src);
+    lir_t *lvalue = is_lvalue(dst);
 
-    /* TODO: a touch hacky */
-    if (!lir_is(dst, LIR_NAME)) {
-        report(sema->reports, ERROR, stmt->node, "can only assign to named expressions");
-        dst = lir_poison(stmt->node, "invalid assigment");
-    } else {
-        dst = dst->it;
+    if (lvalue == NULL) {
+        report(sema->reports, ERROR, stmt->node, "can only assign to lvalues");
+        lvalue = lir_poison(stmt->node, "invalid assigment");
+    } else if (is_const(lir_type(lvalue))) {
+        report(sema->reports, ERROR, stmt->node, "cannot assign to const values");
     }
 
     return lir_assign(stmt->node, dst, 
@@ -296,11 +345,16 @@ static lir_t *compile_assign(sema_t *sema, ctu_t *stmt) {
 static lir_t *compile_branch(sema_t *sema, ctu_t *stmt) {
     lir_t *cond = compile_expr(sema, stmt->cond);
     lir_t *then = compile_stmt(sema, stmt->then);
+    lir_t *other = NULL;
+
+    if (stmt->other != NULL) {
+        other = compile_stmts(sema, stmt->other);
+    }
 
     return lir_branch(stmt->node, 
         retype_expr(sema->reports, type_bool(), cond), 
         then,
-        NULL
+        other
     );
 }
 

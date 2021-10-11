@@ -72,8 +72,14 @@ char *type_format(const type_t *type) {
     case TY_VARARGS:
         result = ctu_strdup("varargs");
         break;
+    case TY_STRUCT:
+        result = ctu_strdup("struct");
+        break;
+    case TY_UNION:
+        result = ctu_strdup("union");
+        break;
     case TY_POISON:
-        result = format("poison(%s)", type->msg);
+        result = format("poison(%s)", get_poison_type_message(type));
         break;
     }
 

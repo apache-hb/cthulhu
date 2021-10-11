@@ -18,6 +18,7 @@ typedef struct value_t {
 } value_t;
 
 value_t *value_of(const type_t *type);
+value_t *value_poison_with_node(const char *msg, const node_t *node);
 value_t *value_poison(const char *msg);
 value_t *value_bool(bool value);
 value_t *value_digit(const type_t *type, mpz_t digit);

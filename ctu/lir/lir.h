@@ -9,27 +9,17 @@
 #include <gmp.h>
 
 typedef enum {
-    /* integer literal */
-    LIR_DIGIT,
+    LIR_DIGIT, /// an integer literal
+    LIR_STRING, /// a string literal
+    LIR_BOOL, /// a boolean literal
 
-    LIR_STRING,
+    LIR_NAME, /// read from an address
+    LIR_ACCESS, /// get the address of a field in an aggregate type
+    LIR_BINARY, /// a binary operation
+    LIR_UNARY, /// a uary operation
+    LIR_CALL, /// calling an address with parameters
 
-    LIR_BOOL,
-
-    /* reference to a variable */
-    LIR_NAME,
-
-    /* binary expresion */
-    LIR_BINARY,
-
-    /* unary expression */
-    LIR_UNARY,
-
-    /* function call */
-    LIR_CALL,
-
-    /* assign to a variable */
-    LIR_ASSIGN,
+    LIR_ASSIGN, /// assign from a value into an address
 
     LIR_WHILE,
     LIR_BRANCH,
@@ -61,7 +51,6 @@ typedef struct lir_t {
     union {
         /**
          * LIR_POISON
-         * 
          */
         const char *msg;
 
@@ -81,7 +70,10 @@ typedef struct lir_t {
 
         bool boolean;
 
-        struct lir_t *it;
+        struct {
+            struct lir_t *it;
+            size_t offset;
+        };
 
         struct {
             struct lir_t *dst;
@@ -181,6 +173,8 @@ lir_t *lir_int(node_t *node, const type_t *type, int digit);
 lir_t *lir_digit(node_t *node, const type_t *type, mpz_t digit);
 lir_t *lir_string(node_t *node, const type_t *type, const char *str);
 lir_t *lir_bool(node_t *node, const type_t *type, bool value);
+
+lir_t *lir_access(node_t *node, const type_t *type, lir_t *it, size_t index);
 lir_t *lir_name(node_t *node, const type_t *type, lir_t *it);
 
 lir_t *lir_binary(node_t *node, const type_t *type, binary_t binary, lir_t *lhs, lir_t *rhs);

@@ -111,11 +111,15 @@ sema_t *base_sema(reports_t *reports, size_t decls) {
     sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
     sema_set_data(sema, stack_new());
 
+    add_type(sema, "char", type_digit(SIGNED, TY_CHAR));
+    add_type(sema, "uchar", type_digit(UNSIGNED, TY_CHAR));
     add_type(sema, "int", type_digit(SIGNED, TY_INT));
     add_type(sema, "uint", type_digit(UNSIGNED, TY_INT));
+    add_type(sema, "isize", type_digit(SIGNED, TY_SIZE));
+    add_type(sema, "usize", type_digit(UNSIGNED, TY_SIZE));
     add_type(sema, "void", type_void());
-    add_type(sema, "bool", type_bool());
-    add_type(sema, "str", type_string());
+    add_type(sema, "bool", type_bool_with_name("bool"));
+    add_type(sema, "str", type_string_with_name("str"));
 
     return sema;
 }

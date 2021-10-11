@@ -1,26 +1,36 @@
 #include "type.h"
 
+#include <string.h>
+
 #include "ctu/util/util.h"
 #include "ctu/util/report.h"
 
-static type_t *type_new(metatype_t meta) {
+static type_t *new_detailed_type(metatype_t meta, const char *name, const node_t *node) {
     type_t *type = ctu_malloc(sizeof(type_t));
     type->type = meta;
     type->mut = false;
+    type->name = name;
+    type->node = node;
     return type;
+}
+
+static type_t *type_new(metatype_t meta) {
+    return new_detailed_type(meta, NULL, NULL);
+}
+
+aggregate_field_t *new_aggregate_field(const char *name, type_t *type) {
+    aggregate_field_t *field = ctu_malloc(sizeof(aggregate_field_t));
+    field->name = name;
+    field->type = type;
+    return field;
 }
 
 type_t *type_literal_integer(void) {
     return type_new(TY_LITERAL_INTEGER);
 }
 
-static type_t ANY = { 
-    .type = TY_ANY, 
-    .mut = true
-};
-
-const type_t *type_any(void) {
-    return &ANY;
+type_t *type_any(void) {
+    return type_new(TY_ANY);
 }
 
 type_t *type_digit(sign_t sign, int_t kind) {
@@ -47,24 +57,51 @@ type_t *type_ptr(const type_t *to) {
     return type;
 }
 
+type_t *type_string_with_name(const char *name) {
+    return new_detailed_type(TY_STRING, name, NULL);
+}
+
 type_t *type_string(void) {
-    return type_new(TY_STRING);
+    return type_string_with_name(NULL);
+}
+
+type_t *type_bool_with_name(const char *name) {
+    return new_detailed_type(TY_BOOL, name, NULL);
 }
 
 type_t *type_bool(void) {
-    return type_new(TY_BOOL);
+    return type_bool_with_name(NULL);
 }
 
 type_t *type_varargs(void) {
     return type_new(TY_VARARGS);
 }
 
+type_t *type_poison_with_node(const char *msg, const node_t *node) {
+    return new_detailed_type(TY_POISON, msg, node);
+}
+
 type_t *type_poison(const char *msg) {
-    type_t *type = type_new(TY_POISON);
-    type->msg = msg;
+    return type_poison_with_node(msg, NULL);
+}
+
+static type_t *new_aggregate_type(const char *name, const node_t *node, metatype_t meta, vector_t *fields) {
+    type_t *type = new_detailed_type(meta, name, node);
+    type->fields = fields;
     return type;
 }
 
-void type_mut(type_t *type, bool mut) {
-    type->mut = mut;
+type_t *type_struct(const char *name, const node_t *node, vector_t *fields) {
+    return new_aggregate_type(name, node, TY_STRUCT, fields);
+}
+
+type_t *type_union(const char *name, const node_t *node, vector_t *fields) {
+    return new_aggregate_type(name, node, TY_UNION, fields);
+}
+
+type_t *type_mut(const type_t *type, bool mut) {
+    type_t *it = ctu_malloc(sizeof(type_t));
+    memcpy(it, type, sizeof(type_t));
+    it->mut = mut;
+    return it;
 }

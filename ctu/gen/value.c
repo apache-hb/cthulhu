@@ -9,8 +9,12 @@ value_t *value_of(const type_t *type) {
     return value;
 }
 
+value_t *value_poison_with_node(const char *msg, const node_t *node) {
+    return value_of(type_poison_with_node(msg, node));
+}
+
 value_t *value_poison(const char *msg) {
-    return value_of(type_poison(msg));
+    return value_poison_with_node(msg, NULL);
 }
 
 value_t *value_bool(bool value) {

@@ -124,6 +124,57 @@ bool is_string(const type_t *type) {
     return type->type == TY_STRING;
 }
 
+bool is_aggregate(const type_t *type) {
+    return is_struct(type) || is_union(type);
+}
+
+bool is_struct(const type_t *type) {
+    return type->type == TY_STRUCT;
+}
+
+bool is_union(const type_t *type) {
+    return type->type == TY_UNION;
+}
+
+size_t field_offset(const type_t *type, const char *name) {
+    if (!is_aggregate(type)) {
+        return SIZE_MAX;
+    }
+
+    size_t len = vector_len(type->fields);
+    for (size_t i = 0; i < len; i++) {
+        aggregate_field_t *field = vector_get(type->fields, i);
+        if (streq(field->name, name)) {
+            return i;
+        }
+    }
+
+    return SIZE_MAX;
+}
+
+const type_t *get_field(const type_t *type, size_t idx) {
+    UNUSED(idx);
+
+    if (!is_aggregate(type)) {
+        return type_poison("cannot take field from non aggregate");
+    }
+
+    if (vector_len(type->fields) >= idx) {
+        return type_poison("out of bounds field access");
+    }
+
+    aggregate_field_t *field = vector_get(type->fields, idx);
+    return field->type;
+}
+
+const char *get_poison_type_message(const type_t *type) {
+    if (!is_poison(type)) {
+        return "non-poison type";
+    }
+
+    return type->name;
+}
+
 const type_t *types_common(const type_t *lhs, const type_t *rhs) {
     if (is_digit(lhs) && is_digit(rhs)) {
         digit_t ld = lhs->digit;

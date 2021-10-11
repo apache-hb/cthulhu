@@ -79,6 +79,15 @@ lir_t *lir_bool(node_t *node, const type_t *type, bool value) {
     return lir;
 }
 
+lir_t *lir_access(node_t *node, const type_t *type, lir_t *it, size_t field) {
+    lir_t *lir = lir_new(node, type, LIR_ACCESS);
+
+    lir->it = it;
+    lir->offset = field;
+
+    return lir;
+}
+
 lir_t *lir_name(node_t *node, const type_t *type, lir_t *it) {
     lir_t *lir = lir_new(node, type, LIR_NAME);
 

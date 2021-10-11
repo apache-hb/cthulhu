@@ -2,12 +2,15 @@
 
 #include <stdbool.h>
 
+#include "ctu/ast/ast.h"
 #include "ctu/util/util.h"
 
 typedef enum {
+    /* untyped types */
     TY_LITERAL_INTEGER, /// integer literal type that can cast to any integer type
-
     TY_ANY, /// the any type, common with all other types
+    
+    /* builtin types */
     TY_VOID, /// the unit type
     TY_BOOL, /// the boolean type
     TY_INTEGER, /// any integer type
@@ -15,6 +18,12 @@ typedef enum {
     TY_CLOSURE, /// a function signature
     TY_STRING, /// a string type, convertible to const char*
     TY_VARARGS, /// a variadic function signature
+
+    /* user defined types */
+    TY_STRUCT,
+    TY_UNION,
+
+    /* error handling types */
     TY_POISON /// a compiler error
 } metatype_t;
 
@@ -39,14 +48,18 @@ typedef struct {
 } digit_t;
 
 typedef struct {
-    size_t align;
-} extra_t;
+    const char *name;
+    struct type_t *type;
+} aggregate_field_t;
 
 typedef struct type_t {
     metatype_t type;
 
     /* is this type mutable */
-    bool mut;
+    bool mut:1;
+
+    const char *name; /// the name of this type
+    const node_t *node; /// the source location of this type
 
     union {
         digit_t digit;
@@ -56,12 +69,13 @@ typedef struct type_t {
             struct type_t *result;
         };
 
-        const char *msg;
-
         const struct type_t *ptr;
+
+        vector_t *fields;
     };
 } type_t;
 
+aggregate_field_t *new_aggregate_field(const char *name, type_t *type);
 
 /**
  * format a type into a string
@@ -84,7 +98,7 @@ type_t *type_literal_integer(void);
  *
  * @return the any type
  */
-const type_t *type_any(void);
+type_t *type_any(void);
 
 /**
  * create a digit type
@@ -125,6 +139,7 @@ type_t *type_ptr(const type_t *to);
  * @return the string type
  */
 type_t *type_string(void);
+type_t *type_string_with_name(const char *name);
 
 /**
  * create the boolean type
@@ -132,6 +147,7 @@ type_t *type_string(void);
  * @return the boolean type
  */
 type_t *type_bool(void);
+type_t *type_bool_with_name(const char *name);
 
 /**
  * create an untyped varargs type
@@ -140,6 +156,10 @@ type_t *type_bool(void);
  */
 type_t *type_varargs(void);
 
+type_t *type_struct(const char *name, const node_t *node, vector_t *fields);
+
+type_t *type_union(const char *name, const node_t *node, vector_t *fields);
+
 /**
  * create a poison type
  * 
@@ -147,8 +167,9 @@ type_t *type_varargs(void);
  * @return the poison type with message
  */
 type_t *type_poison(const char *msg);
+type_t *type_poison_with_node(const char *msg, const node_t *node);
 
-void type_mut(type_t *type, bool mut);
+type_t *type_mut(const type_t *type, bool mut);
 
 bool is_const(const type_t *type);
 bool is_any(const type_t *type);
@@ -169,6 +190,14 @@ size_t minimum_params(const type_t *type);
 const type_t *param_at(const type_t *type, size_t idx);
 const type_t *closure_result(const type_t *type);
 bool is_string(const type_t *type);
+
+bool is_aggregate(const type_t *type);
+bool is_struct(const type_t *type);
+bool is_union(const type_t *type);
+size_t field_offset(const type_t *type, const char *name);
+const type_t *get_field(const type_t *type, size_t idx);
+
+const char *get_poison_type_message(const type_t *type);
 
 /**
  * return a common type of lhs and rhs if possible.
