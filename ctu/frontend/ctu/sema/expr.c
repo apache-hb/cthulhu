@@ -4,17 +4,7 @@
 
 #include "ctu/type/retype.h"
 
-static lir_t *is_lvalue(lir_t *lir) {
-    if (lir_is(lir, LIR_NAME)) {
-        return lir->it;
-    }
-
-    if (lir_is(lir, LIR_UNARY) && lir->unary == UNARY_DEREF) {
-        return is_lvalue(lir->operand);
-    }
-
-    return NULL;
-}
+static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr);
 
 static lir_t *compile_digit(ctu_t *digit) {
     return lir_digit(digit->node, 
@@ -207,8 +197,7 @@ static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
             return var;
         }
 
-        lir_t *it = compile_value(var);
-        return lir_name(expr->node, lir_type(it), it);
+        return compile_value(var);
     }
 
     lir_t *func = get_func(sema, name);
@@ -252,15 +241,35 @@ static lir_t *compile_access(sema_t *sema, ctu_t *expr) {
 
     const type_t *field_type = get_field(aggregate, field_index);
 
-    lir_t *access = lir_access(expr->node, field_type, obj, field_index);
-
-    return lir_name(expr->node, field_type, access);
+    return lir_access(expr->node, field_type, obj, field_index);
 }
 
 static lir_t *compile_string(ctu_t *expr) {
     return lir_string(expr->node, type_string(), expr->str);
 }
 
+static lir_t *name_expr(node_t *node, lir_t *lir) {
+    return lir_name(node, lir_type(lir), lir);
+}
+
+static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
+    switch (expr->type) {
+    case CTU_DIGIT: case CTU_BOOL: case CTU_BINARY:
+    case CTU_CALL: case CTU_STRING:
+        report(sema->reports, ERROR, expr->node, "expression is not an lvalue");
+        return lir_poison(expr->node, "malformed lvalue");
+
+    case CTU_UNARY: return compile_unary(sema, expr);
+    case CTU_IDENT: return compile_name(sema, expr);
+    case CTU_ACCESS: return compile_access(sema, expr);
+
+    default:
+        ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);
+        return lir_poison(expr->node, "unimplemented");
+    }
+}
+
+/* actually compiles an rvalue */
 lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
     case CTU_DIGIT: return compile_digit(expr);
@@ -268,8 +277,8 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_UNARY: return compile_unary(sema, expr);
     case CTU_BINARY: return compile_binary(sema, expr);
     case CTU_CALL: return compile_call(sema, expr);
-    case CTU_IDENT: return compile_name(sema, expr);
-    case CTU_ACCESS: return compile_access(sema, expr);
+    case CTU_IDENT: return name_expr(expr->node, compile_name(sema, expr));
+    case CTU_ACCESS: return name_expr(expr->node, compile_access(sema, expr));
     case CTU_STRING: return compile_string(expr);
 
     default:
@@ -326,14 +335,10 @@ static lir_t *compile_while(sema_t *sema, ctu_t *stmt) {
 }
 
 static lir_t *compile_assign(sema_t *sema, ctu_t *stmt) {
-    lir_t *dst = compile_expr(sema, stmt->dst);
+    lir_t *dst = compile_lvalue(sema, stmt->dst);
     lir_t *src = compile_expr(sema, stmt->src);
-    lir_t *lvalue = is_lvalue(dst);
 
-    if (lvalue == NULL) {
-        report(sema->reports, ERROR, stmt->node, "can only assign to lvalues");
-        lvalue = lir_poison(stmt->node, "invalid assigment");
-    } else if (is_const(lir_type(lvalue))) {
+    if (is_const(lir_type(dst))) {
         report(sema->reports, ERROR, stmt->node, "cannot assign to const values");
     }
 
