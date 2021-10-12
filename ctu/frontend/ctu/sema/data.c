@@ -101,6 +101,19 @@ sema_t *new_sema(reports_t *reports, sema_t *parent, size_t *sizes) {
     return sema;
 }
 
+static const char *digit_name(sign_t sign, int_t width) {
+    switch (width) {
+    case TY_CHAR: return sign == SIGNED ? "char": "uchar";
+    case TY_SHORT: return sign == SIGNED ? "short": "ushort";
+    case TY_INT: return sign == SIGNED ? "int": "uint";
+    case TY_LONG: return sign == SIGNED ? "long": "ulong";
+    case TY_SIZE: return sign == SIGNED ? "isize": "usize";
+    case TY_INTPTR: return sign == SIGNED ? "intptr": "uintptr";
+    case TY_INTMAX: return sign == SIGNED ? "intmax": "uintmax";
+    default: return "???";
+    }
+}
+
 sema_t *base_sema(reports_t *reports, size_t decls) {
     size_t sizes[TAG_MAX] = {
         [TAG_TYPES] = decls,
@@ -109,14 +122,18 @@ sema_t *base_sema(reports_t *reports, size_t decls) {
     };
 
     sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
-    sema_set_data(sema, stack_new());
+    stack_t *data = stack_new();
+    sema_set_data(sema, data);
 
-    add_type(sema, "char", type_digit(SIGNED, TY_CHAR));
-    add_type(sema, "uchar", type_digit(UNSIGNED, TY_CHAR));
-    add_type(sema, "int", type_digit(SIGNED, TY_INT));
-    add_type(sema, "uint", type_digit(UNSIGNED, TY_INT));
-    add_type(sema, "isize", type_digit(SIGNED, TY_SIZE));
-    add_type(sema, "usize", type_digit(UNSIGNED, TY_SIZE));
+    for (sign_t sign = 0; sign < SIGN_TOTAL; sign++) {
+        for (int_t width = 0; width < TY_INT_TOTAL; width++) {
+            const char *name = digit_name(sign, width);
+            type_t *type = type_digit_with_name(name, sign, width);
+            data->digits[width][sign] = type;
+            add_type(sema, name, type);
+        }
+    }
+
     add_type(sema, "void", type_void());
     add_type(sema, "bool", type_bool_with_name("bool"));
     add_type(sema, "str", type_string_with_name("str"));
@@ -164,4 +181,9 @@ vector_t *move_externs(sema_t *sema) {
 
 bool is_discard(const char *name) {
     return startswith(name, "$");
+}
+
+type_t *get_cached_digit_type(sema_t *sema, sign_t sign, int_t width) {
+    stack_t *data = sema_get_data(sema);
+    return data->digits[width][sign];
 }

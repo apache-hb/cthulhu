@@ -1,6 +1,6 @@
 #include "attrib.h"
 #include "expr.h"
-#include "ctu/type/retype.h"
+#include "retype/retype.h"
 
 typedef void(*callback_t)(reports_t*, attrib_t*, vector_t*);
 
@@ -43,7 +43,7 @@ static void apply_attrib(sema_t *sema, attrib_t *dst, ctu_t *attrib) {
     for (size_t i = 0; i < len; i++) {
         ctu_t *expr = vector_get(args, i);
         lir_t *lir = compile_expr(sema, expr);
-        lir_t *retyped = retype_expr(sema->reports, type_any(), lir);
+        lir_t *retyped = retype_expr(sema, type_any(), lir);
         vector_set(result, i, retyped);
     }
 

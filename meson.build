@@ -22,7 +22,6 @@ src = [
     'ctu/type/type.c',
     'ctu/type/query.c',
     'ctu/type/format.c',
-    'ctu/type/retype.c',
     
     'ctu/gen/emit.c',
     'ctu/gen/value.c',

@@ -33,11 +33,15 @@ type_t *type_any(void) {
     return type_new(TY_ANY);
 }
 
-type_t *type_digit(sign_t sign, int_t kind) {
-    type_t *type = type_new(TY_INTEGER);
+type_t *type_digit_with_name(const char *name, sign_t sign, int_t kind) {
+    type_t *type = new_detailed_type(TY_INTEGER, name, NULL);
     digit_t digit = { sign, kind };
     type->digit = digit;
     return type;
+}
+
+type_t *type_digit(sign_t sign, int_t kind) {
+    return type_digit_with_name(NULL, sign, kind);
 }
 
 type_t *type_void(void) {

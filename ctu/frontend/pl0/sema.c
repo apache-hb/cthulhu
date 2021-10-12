@@ -3,7 +3,6 @@
 #include "ctu/util/report.h"
 #include "ctu/util/report-ext.h"
 #include "ctu/util/str.h"
-#include "ctu/type/retype.h"
 
 #include <string.h>
 #include <ctype.h>
@@ -74,11 +73,11 @@ static type_t *pl0_closure(void) {
 }
 
 static lir_t *pl0_num(node_t *node, int num) {
-    return lir_int(node, type_literal_integer(), num);
+    return lir_int(node, pl0_int(false), num);
 }
 
 static lir_t *compile_digit(pl0_t *expr) {
-    return lir_digit(expr->node, type_literal_integer(), expr->digit);
+    return lir_digit(expr->node, pl0_int(false), expr->digit);
 }
 
 static lir_t *query_ident(sema_t *sema, const char *name) {
@@ -152,9 +151,8 @@ static lir_t *compile_unary(sema_t *sema, pl0_t *expr) {
 static lir_t *compile_odd(sema_t *sema, pl0_t *expr) {
     lir_t *operand = compile_expr(sema, expr->operand);
 
-    lir_t *res = retype_expr(sema->reports, pl0_int(false), operand);
     node_t *node = expr->node;
-    lir_t *rem = lir_binary(node, lir_type(res), BINARY_REM, res, pl0_num(node, 2));
+    lir_t *rem = lir_binary(node, lir_type(operand), BINARY_REM, operand, pl0_num(node, 2));
     lir_t *cmp = lir_binary(node, pl0_bool(), BINARY_EQ, rem, pl0_num(node, 1));
     return cmp;
 }
@@ -179,10 +177,7 @@ static lir_t *compile_cmp(sema_t *sema, pl0_t *expr) {
     lir_t *lhs = compile_expr(sema, expr->lhs);
     lir_t *rhs = compile_expr(sema, expr->rhs);
 
-    return lir_binary(expr->node, pl0_bool(), expr->binary, 
-        retype_expr(sema->reports, pl0_int(false), lhs), 
-        retype_expr(sema->reports, pl0_int(false), rhs)
-    );
+    return lir_binary(expr->node, pl0_bool(), expr->binary, lhs, rhs);
 }
 
 static lir_t *compile_cond(sema_t *sema, pl0_t *expr) {
@@ -215,7 +210,7 @@ static lir_t *compile_assign(sema_t *sema, pl0_t *stmt) {
         report(sema->reports, ERROR, node, "cannot assign to const value `%s`", name);
     }
 
-    return lir_assign(node, lhs, retype_expr(sema->reports, lir_type(lhs), rhs));
+    return lir_assign(node, lhs, rhs);
 }
 
 static lir_t *compile_print(sema_t *sema, pl0_t *stmt) {
@@ -303,7 +298,7 @@ static void compile_const(sema_t *sema, lir_t *lir) {
 
     lir_value(sema->reports, lir, 
         /* type = */ type,
-        /* init = */ retype_expr(sema->reports, type, value)
+        /* init = */ value
     );
 }
 
@@ -311,7 +306,7 @@ static lir_t *build_var(sema_t *sema, pl0_t *node) {
     char *name = pl0_name(node->name);
     lir_t *lir = lir_forward(node->node, name, LIR_VALUE, NULL);
     const type_t *type = pl0_int(true);
-    lir_t *init = retype_expr(sema->reports, type, pl0_num(node->node, 0));
+    lir_t *init = pl0_num(node->node, 0);
 
     lir_value(sema->reports, lir, 
         /* type = */ type, 
@@ -327,9 +322,8 @@ static void compile_var(sema_t *sema, lir_t *lir) {
     pl0_t *node = lir->ctx;
     lir_t *value = pl0_num(node->node, 0);
     type_t *type = pl0_int(true);
-    lir_t *init = retype_expr(sema->reports, type, value);
 
-    lir_value(sema->reports, lir, type, init);
+    lir_value(sema->reports, lir, type, value);
 }
 
 static void compile_proc(sema_t *sema, lir_t *lir) {

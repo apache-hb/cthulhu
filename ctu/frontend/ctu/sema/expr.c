@@ -2,7 +2,7 @@
 #include "value.h"
 #include "define.h"
 
-#include "ctu/type/retype.h"
+#include "retype/retype.h"
 
 static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr);
 
@@ -173,7 +173,7 @@ static lir_t *compile_call(sema_t *sema, ctu_t *expr) {
     for (size_t i = 0; i < len; i++) {
         const type_t *want = param_at(fty, i);
         lir_t *arg = vector_get(args, i);
-        lir_t *res = retype_expr(sema->reports, want, arg);
+        lir_t *res = retype_expr(sema, want, arg);
 
         if (is_poison(lir_type(res))) {
             report(sema->reports, ERROR, res->node, "cannot convert cast argument %zu from `%s` to `%s`", i, type_format(lir_type(arg)), type_format(want));
@@ -318,7 +318,7 @@ static lir_t *compile_return(sema_t *sema, ctu_t *stmt) {
     lir_t *operand = NULL;
     if (stmt->operand != NULL) {
         lir_t *lir = compile_expr(sema, stmt->operand);
-        operand = retype_expr(sema->reports, get_return(sema), lir);
+        operand = retype_expr(sema, get_return(sema), lir);
     }
 
     return lir_return(stmt->node, operand);
@@ -329,7 +329,7 @@ static lir_t *compile_while(sema_t *sema, ctu_t *stmt) {
     lir_t *body = compile_stmt(sema, stmt->then);
 
     return lir_while(stmt->node, 
-        retype_expr(sema->reports, type_bool(), cond), 
+        retype_expr(sema, type_bool(), cond), 
         body
     );
 }
@@ -343,7 +343,7 @@ static lir_t *compile_assign(sema_t *sema, ctu_t *stmt) {
     }
 
     return lir_assign(stmt->node, dst, 
-        retype_expr(sema->reports, lir_type(dst), src)
+        retype_expr(sema, lir_type(dst), src)
     );
 }
 
@@ -357,7 +357,7 @@ static lir_t *compile_branch(sema_t *sema, ctu_t *stmt) {
     }
 
     return lir_branch(stmt->node, 
-        retype_expr(sema->reports, type_bool(), cond), 
+        retype_expr(sema, type_bool(), cond), 
         then,
         other
     );

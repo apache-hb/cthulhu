@@ -34,12 +34,16 @@ typedef enum {
     TY_LONG, /// at least 64 bits wide
     TY_SIZE, /// used for indexing
     TY_INTPTR, /// the same width as a pointer type
-    TY_INTMAX /// the largest available integer type
+    TY_INTMAX, /// the largest available integer type
+
+    TY_INT_TOTAL /// tail
 } int_t;
 
 typedef enum {
     SIGNED, /// signed integer
-    UNSIGNED /// unsigned integer
+    UNSIGNED, /// unsigned integer
+
+    SIGN_TOTAL /// tail
 } sign_t;
 
 typedef struct {
@@ -108,6 +112,7 @@ type_t *type_any(void);
  * @return the digit type
  */
 type_t *type_digit(sign_t sign, int_t kind);
+type_t *type_digit_with_name(const char *name, sign_t sign, int_t kind);
 
 /**
  * create a void type
