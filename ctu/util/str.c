@@ -117,24 +117,18 @@ char *strnorm(const char *str) {
 }
 
 char *nstrnorm(const char *str, size_t len) {
-    size_t outlen = 0;
+    size_t outlen = 1;
     for (size_t i = 0; i < len; i++) {
-        if (isprint(str[i])) {
-            outlen += 1;
-        } else {
-            outlen += 4;
-        }
+        outlen += (isprint(str[i]) ? 1 : 4);
     }
 
     char *buf = ctu_malloc(outlen + 1);
     char *out = buf;
     for (size_t i = 0; i < len; i++) {
         if (isprint(str[i])) {
-            *out = str[i];
-            out += 1;
+            *out++ = str[i];
         } else {
-            sprintf(out, "\\x%02x", str[i]);
-            out += 4;
+            out += sprintf(out, "\\x%2x", str[i] & 0xFF);
         }
     }
 

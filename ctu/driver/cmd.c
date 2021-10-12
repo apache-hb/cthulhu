@@ -81,9 +81,9 @@ settings_t parse_args(reports_t *reports, const frontend_t *frontend, int argc, 
         print_help(frontend);
     }
 
-    if (streq(argv[2], "-fuzz")) {
+    if (streq(argv[1], "-fuzz")) {
         settings.verbose = true;
-        vector_push(&settings.sources, ctu_open(argv[3], "rb"));
+        vector_push(&settings.sources, ctu_open(argv[2], "rb"));
         return settings;
     }
 
