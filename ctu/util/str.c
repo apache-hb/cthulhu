@@ -91,11 +91,7 @@ char *strnorm(const char *str) {
     size_t len = 0;
     const char *temp = str;
     while (*temp != '\0') {
-        if (isprint(*temp)) {
-            len += 1;
-        } else {
-            len += 4;
-        }
+        len += (isprint(*temp) ? 1 : 4);
         temp += 1;
     }
 
@@ -103,11 +99,9 @@ char *strnorm(const char *str) {
     char *out = buf;
     while (*str != '\0') {
         if (isprint(*str)) {
-            *out = *str;
-            out += 1;
+            *out++ = *str;
         } else {
-            sprintf(out, "\\x%02x", *str);
-            out += 4;
+            out += sprintf(out, "\\x%02x", *str);
         }
         str += 1;
     }
@@ -128,7 +122,7 @@ char *nstrnorm(const char *str, size_t len) {
         if (isprint(str[i])) {
             *out++ = str[i];
         } else {
-            out += sprintf(out, "\\x%2x", str[i] & 0xFF);
+            out += sprintf(out, "\\x%02x", str[i] & 0xFF);
         }
     }
 

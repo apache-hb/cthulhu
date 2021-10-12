@@ -11,5 +11,7 @@ const char *scan_text(const scan_t *scan) {
 }
 
 char *ctu_intern(scan_t *scan, char *str) {
-    return set_add(scan->pool, str);
+    UNUSED(scan);
+    return str;
+    // return set_add(scan->pool, str);
 }

@@ -207,7 +207,7 @@ static tok_t build_tok(c_scan_t *scan, tok_type_t kind) {
 }
 
 static tok_t build_ident(c_scan_t *scan, char *ident) {
-    key_t key = (key_t)map_get(keywords, ident);
+    key_t key = (key_t)(uintptr_t)(map_get(keywords, ident));
     if (key != KEY_NONE) {
         tok_t tok = build_tok(scan, TOK_KEYWORD);
         tok.key = key;

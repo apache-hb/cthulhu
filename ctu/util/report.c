@@ -84,12 +84,15 @@ static char *extract_line(const scan_t *scan, line_t line) {
         if (c == '\n') {
             line -= 1;
         }
+        if (c == '\0') {
+            break;
+        }
     }
     
     size_t len = 0;
     while (source.size > start + len) {
         char c = source.text[start + len++];
-        if (c == '\r' || c == '\n') {
+        if (c == '\r' || c == '\n' || c == '\0') {
             break;
         }
     }
@@ -100,16 +103,21 @@ static char *extract_line(const scan_t *scan, line_t line) {
      */
     char *str = malloc(len + 1);
     char *out = str;
-    for (size_t i = 0; i < len - 1; i++) {
+    for (size_t i = 0; i < len; i++) {
         char c = source.text[start + i];
         if (c == '\r') {
             continue;
         }
+
+        if (c == '\0') {
+            break;
+        }
+        
         *out++ = c;
     }
     *out = '\0';
 
-    return nstrnorm(str, len - 1);
+    return nstrnorm(str, (size_t)(out - str));
 }
 
 static char *build_underline(char *source, where_t where, const char *note) {
