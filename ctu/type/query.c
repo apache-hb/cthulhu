@@ -194,10 +194,6 @@ const type_t *types_common(const type_t *lhs, const type_t *rhs) {
     if (is_any(lhs)) { return rhs; }
     if (is_any(rhs)) { return lhs; }
 
-    if (is_literal(lhs) && is_literal(rhs)) {
-        return type_literal_integer();
-    }
-
     if (is_literal(lhs) && is_digit(rhs)) {
         return rhs;
     }

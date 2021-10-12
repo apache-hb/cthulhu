@@ -148,6 +148,17 @@ ctu_t *ctu_typename(scan_t *scan, where_t where,
     return ctu;
 }
 
+ctu_t *ctu_closure(scan_t *scan, where_t where,
+                    vector_t *args, ctu_t *result)
+{
+    ctu_t *ctu = ctu_new(scan, where, CTU_CLOSURE);
+
+    ctu->params = args;
+    ctu->result = result;
+
+    return ctu;
+}
+
 ctu_t *ctu_value(scan_t *scan, where_t where, 
                  bool mut, const char *name, 
                  ctu_t *type, ctu_t *value) {

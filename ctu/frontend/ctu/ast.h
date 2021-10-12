@@ -25,6 +25,7 @@ typedef enum {
 
     CTU_TYPENAME,
     CTU_POINTER,
+    CTU_CLOSURE,
 
     CTU_STRUCT,
     CTU_UNION,
@@ -140,6 +141,8 @@ ctu_t *ctu_pointer(scan_t *scan, where_t where,
                    ctu_t *ptr);
 ctu_t *ctu_typename(scan_t *scan, where_t where, 
                     const char *name);
+ctu_t *ctu_closure(scan_t *scan, where_t where,
+                    vector_t *args, ctu_t *result);
 
 ctu_t *ctu_union(scan_t *scan, where_t where, const char *name, vector_t *fields);
 ctu_t *ctu_struct(scan_t *scan, where_t where, const char *name, vector_t *fields);

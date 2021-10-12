@@ -2,13 +2,11 @@
 #include "value.h"
 #include "define.h"
 
-#include "retype/retype.h"
-
 static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr);
 
 static lir_t *compile_digit(ctu_t *digit) {
     return lir_digit(digit->node, 
-        /* type = */ type_literal_integer(), 
+        /* type = */ type_digit(SIGNED, TY_INT), 
         /* digit = */ digit->digit
     );
 }
@@ -171,15 +169,14 @@ static lir_t *compile_call(sema_t *sema, ctu_t *expr) {
     }
 
     for (size_t i = 0; i < len; i++) {
-        const type_t *want = param_at(fty, i);
         lir_t *arg = vector_get(args, i);
-        lir_t *res = retype_expr(sema, want, arg);
+        const type_t *want = param_at(fty, i);
 
-        if (is_poison(lir_type(res))) {
-            report(sema->reports, ERROR, res->node, "cannot convert cast argument %zu from `%s` to `%s`", i, type_format(lir_type(arg)), type_format(want));
+        if (is_poison(lir_type(arg))) {
+            report(sema->reports, ERROR, arg->node, "cannot convert cast argument %zu from `%s` to `%s`", i, type_format(lir_type(arg)), type_format(want));
         }
 
-        vector_set(args, i, res);
+        vector_set(args, i, arg);
     }
 
     return lir_call(expr->node, closure_result(fty), func, args);
@@ -255,11 +252,10 @@ static lir_t *name_expr(node_t *node, lir_t *lir) {
 static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
     case CTU_DIGIT: case CTU_BOOL: case CTU_BINARY:
-    case CTU_CALL: case CTU_STRING:
+    case CTU_CALL: case CTU_STRING: case CTU_UNARY:
         report(sema->reports, ERROR, expr->node, "expression is not an lvalue");
         return lir_poison(expr->node, "malformed lvalue");
 
-    case CTU_UNARY: return compile_unary(sema, expr);
     case CTU_IDENT: return compile_name(sema, expr);
     case CTU_ACCESS: return compile_access(sema, expr);
 
@@ -317,8 +313,7 @@ static lir_t *compile_local(sema_t *sema, ctu_t *stmt) {
 static lir_t *compile_return(sema_t *sema, ctu_t *stmt) {
     lir_t *operand = NULL;
     if (stmt->operand != NULL) {
-        lir_t *lir = compile_expr(sema, stmt->operand);
-        operand = retype_expr(sema, get_return(sema), lir);
+        operand = compile_expr(sema, stmt->operand);
     }
 
     return lir_return(stmt->node, operand);
@@ -328,10 +323,7 @@ static lir_t *compile_while(sema_t *sema, ctu_t *stmt) {
     lir_t *cond = compile_expr(sema, stmt->cond);
     lir_t *body = compile_stmt(sema, stmt->then);
 
-    return lir_while(stmt->node, 
-        retype_expr(sema, type_bool(), cond), 
-        body
-    );
+    return lir_while(stmt->node, cond, body);
 }
 
 static lir_t *compile_assign(sema_t *sema, ctu_t *stmt) {
@@ -342,9 +334,7 @@ static lir_t *compile_assign(sema_t *sema, ctu_t *stmt) {
         report(sema->reports, ERROR, stmt->node, "cannot assign to const values");
     }
 
-    return lir_assign(stmt->node, dst, 
-        retype_expr(sema, lir_type(dst), src)
-    );
+    return lir_assign(stmt->node, dst, src);
 }
 
 static lir_t *compile_branch(sema_t *sema, ctu_t *stmt) {
@@ -356,11 +346,7 @@ static lir_t *compile_branch(sema_t *sema, ctu_t *stmt) {
         other = compile_stmts(sema, stmt->other);
     }
 
-    return lir_branch(stmt->node, 
-        retype_expr(sema, type_bool(), cond), 
-        then,
-        other
-    );
+    return lir_branch(stmt->node, cond, then, other);
 }
 
 static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };

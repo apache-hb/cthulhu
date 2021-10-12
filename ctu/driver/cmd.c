@@ -81,6 +81,12 @@ settings_t parse_args(reports_t *reports, const frontend_t *frontend, int argc, 
         print_help(frontend);
     }
 
+    if (streq(argv[2], "-fuzz")) {
+        settings.verbose = true;
+        vector_push(&settings.sources, ctu_open(argv[3], "rb"));
+        return settings;
+    }
+
     for (int i = 1; i < argc;) {
         i += parse_arg(&settings, frontend, i, argc, argv);
     }

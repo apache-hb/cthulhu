@@ -89,11 +89,12 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
     statements stmt type param function return import while
-    assign attrib branch struct union field tail
+    assign attrib branch struct union field tail closure
 
 %type<vector>
     unit stmtlist params paramlist args arglist imports
     attributes attriblist attribute attribs fields fieldlist
+    typelist types
 
 %type<boolean>
     exported const
@@ -197,6 +198,18 @@ param: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
 
 type: IDENT { $$ = ctu_typename(x, @$, $1); }
     | MUL type { $$ = ctu_pointer(x, @$, $2); }
+    | closure { $$ = $1; }
+    ;
+
+closure: LPAREN typelist RPAREN ARROW type { $$ = ctu_closure(x, @$, $2, $5); }
+    ;
+
+typelist: %empty { $$ = vector_new(0); }
+    | types { $$ = $1; }
+    ;
+
+types: type { $$ = vector_init($1); }
+    | types COMMA type { vector_push(&$1, $3); $$ = $1; }
     ;
 
 statements: LBRACE RBRACE { $$ = ctu_stmts(x, @$, vector_new(0)); } 

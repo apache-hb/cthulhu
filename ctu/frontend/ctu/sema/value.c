@@ -3,8 +3,6 @@
 #include "type.h"
 #include "attrib.h"
 
-#include "retype/retype.h"
-
 static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
     if (!stack_enter(sema, lir)) {
         return;
@@ -15,7 +13,7 @@ static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
         return;
     }
 
-    const type_t *type = type_any();
+    const type_t *type = NULL;
     lir_t *init = NULL;
 
     if (ctu->kind) {
@@ -23,14 +21,12 @@ static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
     }
 
     if (ctu->value) {
-        lir_t *expr = compile_expr(sema, ctu->value);
-        init = retype_expr(sema, 
-            types_common(lir_type(expr), type),
-            expr
-        );
+        init = compile_expr(sema, ctu->value);
 
-        if (type == type_any()) {
+        if (type == NULL) {
             type = lir_type(init);
+        } else {
+            /* check conversion */
         }
     }
 

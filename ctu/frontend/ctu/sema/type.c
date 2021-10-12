@@ -14,12 +14,29 @@ static type_t *compile_pointer(sema_t *sema, ctu_t *ctu) {
     return type_ptr(type);
 }
 
+static type_t *compile_closure(sema_t *sema, ctu_t *ctu) {
+    type_t *result = compile_type(sema, ctu->result);
+    
+    size_t len = vector_len(ctu->params);
+    vector_t *args = vector_of(len);
+
+    for (size_t i = 0; i < len; i++) {
+        ctu_t *param = vector_get(ctu->params, i);
+        type_t *type = compile_type(sema, param);
+        vector_set(args, i, type);
+    }
+
+    return type_closure(args, result);
+}
+
 type_t *compile_type(sema_t *sema, ctu_t *ctu) {
     switch (ctu->type) {
     case CTU_TYPENAME:
         return compile_typename(sema, ctu);
     case CTU_POINTER:
         return compile_pointer(sema, ctu);
+    case CTU_CLOSURE:
+        return compile_closure(sema, ctu);
 
     default:
         ctu_assert(sema->reports, "compile-type unknown type %d", ctu->type);
