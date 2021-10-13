@@ -5,6 +5,7 @@
 stack_t *stack_new(void) {
     stack_t *stack = ctu_malloc(sizeof(stack_t));
     stack->stack = vector_new(16);
+
     stack->locals = vector_new(8);
     stack->result = type_poison("uninitialized return type");
     stack->externs = vector_new(8);

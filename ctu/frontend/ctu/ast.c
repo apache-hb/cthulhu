@@ -159,6 +159,14 @@ ctu_t *ctu_closure(scan_t *scan, where_t where,
     return ctu;
 }
 
+ctu_t *ctu_mutable(scan_t *scan, where_t where, ctu_t *type) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_MUTABLE);
+
+    ctu->kind = type;
+
+    return ctu;
+}
+
 ctu_t *ctu_value(scan_t *scan, where_t where, 
                  bool mut, const char *name, 
                  ctu_t *type, ctu_t *value) {
@@ -190,38 +198,6 @@ ctu_t *ctu_define(scan_t *scan, where_t where,
     ctu->params = params;
     ctu->result = result;
     ctu->body = body;
-
-    return ctu;
-}
-
-ctu_t *ctu_union(scan_t *scan, where_t where, const char *name, vector_t *fields) {
-    ctu_t *ctu = ctu_decl(scan, where, CTU_UNION, name);
-
-    ctu->fields = fields;
-
-    return ctu;
-}
-
-ctu_t *ctu_struct(scan_t *scan, where_t where, const char *name, vector_t *fields) {
-    ctu_t *ctu = ctu_decl(scan, where, CTU_STRUCT, name);
-
-    ctu->fields = fields;
-
-    return ctu;
-}
-
-ctu_t *ctu_enum(scan_t *scan, where_t where, const char *name, vector_t *fields) {
-    ctu_t *ctu = ctu_decl(scan, where, CTU_ENUM, name);
-
-    ctu->fields = fields;
-
-    return ctu;
-}
-
-ctu_t *ctu_field(scan_t *scan, where_t where, const char *name, ctu_t *kind) {
-    ctu_t *ctu = ctu_decl(scan, where, CTU_FIELD, name);
-
-    ctu->kind = kind;
 
     return ctu;
 }

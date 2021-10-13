@@ -29,6 +29,17 @@ static type_t *compile_closure(sema_t *sema, ctu_t *ctu) {
     return type_closure(args, result);
 }
 
+static type_t *compile_mutable(sema_t *sema, ctu_t *ctu) {
+    type_t *type = compile_type(sema, ctu->kind);
+
+    if (!is_const(type)) {
+        message_t *id = report(sema->reports, WARNING, ctu->node, "type is already mutable");
+        report_underline(id, "redundant mutable specifier");
+    }
+
+    return type_mut(type, true);
+}
+
 type_t *compile_type(sema_t *sema, ctu_t *ctu) {
     switch (ctu->type) {
     case CTU_TYPENAME:
@@ -37,44 +48,11 @@ type_t *compile_type(sema_t *sema, ctu_t *ctu) {
         return compile_pointer(sema, ctu);
     case CTU_CLOSURE:
         return compile_closure(sema, ctu);
+    case CTU_MUTABLE:
+        return compile_mutable(sema, ctu);
 
     default:
         ctu_assert(sema->reports, "compile-type unknown type %d", ctu->type);
         return type_poison_with_node("unknown type", ctu->node);
     }
-}
-
-void add_struct(sema_t *sema, ctu_t *ctu) {
-    const char *name = ctu->name;
-    const type_t *type = get_type(sema, name);
-    if (type != NULL) {
-        report(sema->reports, ERROR, ctu->node, "struct `%s` shadows an existing type", ctu->name);
-    }
-
-    vector_t *fields = ctu->fields;
-    size_t num_fields = vector_len(fields);
-
-    vector_t *all_fields = vector_of(num_fields);
-    for (size_t i = 0; i < num_fields; i++) {
-        ctu_t *field_node = vector_get(fields, i);
-        type_t *field_type = compile_type(sema, field_node->kind);
-
-        aggregate_field_t *field = new_aggregate_field(field_node->name, field_type);
-
-        vector_set(all_fields, i, field);
-    }
-
-    type_t *struct_type = type_struct(name, ctu->node, all_fields);
-
-    add_type(sema, name, struct_type);
-}
-
-void add_union(sema_t *sema, ctu_t *ctu) {
-    const char *name = ctu->name;
-    const type_t *type = get_type(sema, name);
-    if (type != NULL) {
-        report(sema->reports, ERROR, ctu->node, "struct `%s` shadows an existing type", ctu->name);
-    }
-
-    add_type(sema, name, type_poison("add-union unimplemented"));
 }

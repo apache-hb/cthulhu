@@ -89,11 +89,11 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
     statements stmt type param function return import while
-    assign attrib branch struct union field tail closure
+    assign attrib branch tail closure
 
 %type<vector>
     unit stmtlist params paramlist args arglist imports
-    attributes attriblist attribute attribs fields fieldlist
+    attributes attriblist attribute attribs
     typelist types
 
 %type<boolean>
@@ -143,29 +143,10 @@ attrib: IDENT { $$ = ctu_attrib(x, @$, $1, vector_new(0)); }
 
 declbase: value { $$ = $1; }
     | function { $$ = $1; }
-    | struct { $$ = $1; }
-    | union { $$ = $1; }
     ;
 
 exported: %empty { $$ = false; }
     | EXPORT { $$ = true; }
-    ;
-
-struct: STRUCT IDENT LBRACE fields RBRACE { $$ = ctu_struct(x, @$, $2, $4); }
-    ;
-
-union: UNION IDENT LBRACE fields RBRACE { $$ = ctu_union(x, @$, $2, $4); }
-    ;
-
-fields: %empty { $$ = vector_new(0); }
-    | fieldlist { $$ = $1; }
-    ;
-
-fieldlist: field { $$ = vector_init($1); }
-    | fieldlist COMMA field { vector_push(&$1, $3); $$ = $1; }
-    ;
-
-field: IDENT COLON type { $$ = ctu_value(x, @$, true, $1, $3, NULL); }
     ;
 
 value: const IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $1, $2, NULL, $4); }
@@ -199,6 +180,7 @@ param: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
 type: IDENT { $$ = ctu_typename(x, @$, $1); }
     | MUL type { $$ = ctu_pointer(x, @$, $2); }
     | closure { $$ = $1; }
+    | VAR LPAREN type RPAREN { $$ = ctu_mutable(x, @$, $3); }
     ;
 
 closure: LPAREN typelist RPAREN ARROW type { $$ = ctu_closure(x, @$, $2, $5); }

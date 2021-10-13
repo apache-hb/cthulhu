@@ -14,6 +14,7 @@ typedef enum {
 
 typedef struct {
     vector_t *stack;
+
     vector_t *locals;
     const type_t *result;
     vector_t *externs;

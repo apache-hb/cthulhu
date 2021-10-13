@@ -185,7 +185,7 @@ static lir_t *compile_call(sema_t *sema, ctu_t *expr) {
 static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
     const char *name = expr->ident;
     if (is_discard(name)) {
-        report(sema->reports, WARNING, expr->node, "reading from a discarded identifier `%s`", name);
+        report(sema->reports, ERROR, expr->node, "reading from a discarded identifier `%s`", name);
     }
     
     lir_t *var = get_var(sema, name);
@@ -300,8 +300,10 @@ lir_t *compile_stmts(sema_t *sema, ctu_t *stmts) {
 static lir_t *compile_local(sema_t *sema, ctu_t *stmt) {
     lir_t *value = local_value(sema, stmt);
     add_local(sema, value);
-    add_var(sema, stmt->name, value);
-    
+    if (!is_discard(stmt->name)) {
+        add_var(sema, stmt->name, value);
+    }
+
     if (value->init) {
         return lir_assign(stmt->node, value, value->init);
     } 

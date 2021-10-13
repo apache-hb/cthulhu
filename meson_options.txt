@@ -3,3 +3,8 @@ option('languages', type : 'array',
     choices : [ 'ctu', 'pl0', 'c11' ],
     value : [ 'ctu', 'pl0', 'c11' ]
 )
+
+option('fuzzing', type : 'boolean',
+    description : 'compile for persistent fuzzing',
+    value : false
+)

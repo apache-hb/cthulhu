@@ -83,7 +83,6 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
     int error = 0;
     reports_t *errors = begin_reports();
     settings_t settings = parse_args(errors, frontend, argc, argv);
-    
     verbose = settings.verbose;
 
     if ((error = end_reports(errors, SIZE_MAX, "command line parsing")) > 0) {
@@ -93,6 +92,10 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
     if (init != NULL) {
         init();
     }
+
+#if FUZZING
+    while (__AFL_LOOP(1000)) {
+#endif
 
     vector_t *sources = settings.sources;
     size_t len = vector_len(sources);
@@ -155,6 +158,10 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
         backend->compile(ctx->reports, ctx->mod, "out.c");
         max_report(&error, ctx->reports, format("generation of `%s`", ctx->file->path));
     }
+
+#if FUZZING
+    }
+#endif
 
     return error;
 }

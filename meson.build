@@ -46,6 +46,10 @@ gmp = dependency('gmp')
 args = []
 deps = [ gmp ]
 
+if get_option('fuzzing')
+    args += [ '-DFUZZING=1' ]
+endif
+
 libgeneric = library('generic', src,
     c_args : args,
     dependencies : deps

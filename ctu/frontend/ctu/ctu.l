@@ -34,9 +34,6 @@
 "while" { return WHILE; }
 "true" { return YES; }
 "false" { return NO; }
-"struct" { return STRUCT; }
-"union" { return UNION; }
-"using" { return USING; }
 "import" { return IMPORT; }
 
 [$a-zA-Z_][a-zA-Z0-9_]* {

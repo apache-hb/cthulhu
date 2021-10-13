@@ -46,7 +46,9 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
         for (size_t i = 0; i < len; i++) {
             ctu_t *param = vector_get(params, i);
             const type_t *arg = param_at(type, i);
-            add_var(nest, param->name, lir_param(param->node, param->name, arg, i));
+            if (!is_discard(param->name)) {
+                add_var(nest, param->name, lir_param(param->node, param->name, arg, i));
+            }
         }
 
         body = compile_stmts(nest, ctu->body);

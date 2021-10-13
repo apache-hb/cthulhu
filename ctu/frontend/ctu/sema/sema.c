@@ -32,12 +32,6 @@ static void add_decls(sema_t *sema, vector_t *decls) {
         case CTU_DEFINE:
             add_func(sema, name, lir);
             break;
-        case CTU_STRUCT:
-            add_struct(sema, decl);
-            break;
-        case CTU_UNION:
-            add_union(sema, decl);
-            break;
         default:
             ctu_assert(sema->reports, "add-decls unreachable %d", decl->type);
             break;
