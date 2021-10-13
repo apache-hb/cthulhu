@@ -34,6 +34,7 @@
 "while" { return WHILE; }
 "true" { return YES; }
 "false" { return NO; }
+"as" { return AS; }
 "import" { return IMPORT; }
 
 [$a-zA-Z_][a-zA-Z0-9_]* {

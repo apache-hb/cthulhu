@@ -44,10 +44,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     RETURN "`return`"
     IF "`if`"
     ELSE "`else`"
-    STRUCT "`struct`"
-    UNION "`union`"
-    USING "`using`"
     WHILE "`while`"
+    AS "`as`"
     IMPORT "`import`"
     YES "`true`"
     NO "`false`"
@@ -249,6 +247,7 @@ postfix: primary { $$ = $1; }
     | postfix LPAREN arglist RPAREN { $$ = ctu_call(x, @$, $1, $3); }
     | postfix DOT IDENT { $$ = ctu_access(x, @$, $1, $3, false); }
     | postfix ARROW IDENT { $$ = ctu_access(x, @$, $1, $3, true); }
+    | postfix AS type { $$ = ctu_cast(x, @$, $1, $3); }
     ;
 
 unary: postfix { $$ = $1; }
