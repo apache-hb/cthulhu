@@ -7,6 +7,7 @@
 #   define CONSTFN __attribute__((const))
 #   define HOT __attribute__((hot))
 #   define ALLOC(release) __attribute__((malloc(release)))
+#   define POISON(...) _Pragma GCC poison __VA_ARGS__
 #else
 #   define PRINT(fmt, args)
 #   define NONULL
@@ -14,6 +15,7 @@
 #   define CONSTFN
 #   define HOT
 #   define ALLOC(release)
+#   define POISON(...)
 #endif
 
 #define MAX(L, R) ((L) > (R) ? (L) : (R)) 

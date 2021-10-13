@@ -1,6 +1,16 @@
 #pragma once
 
 #include <stddef.h>
+#include "macros.h"
+
+/** 
+ * poison default memory functions
+ * using these defeats the point of using arenas
+ * and malloc has an impressively large startup overhead
+ * on first call
+ */
+POISON(malloc realloc free) /// libc memory managment
+POISON(ctu_malloc ctu_realloc ctu_free) /// our memory managment
 
 typedef struct {
     const char *name;
