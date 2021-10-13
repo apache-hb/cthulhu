@@ -16,6 +16,7 @@ typedef enum {
     CTU_BINARY,
     CTU_CALL,
     CTU_ACCESS,
+    CTU_CAST,
 
     CTU_STMTS,
     CTU_RETURN,
@@ -124,6 +125,7 @@ ctu_t *ctu_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *operand);
 ctu_t *ctu_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs);
 ctu_t *ctu_call(scan_t *scan, where_t where, ctu_t *func, vector_t *args);
 ctu_t *ctu_access(scan_t *scan, where_t where, ctu_t *object, const char *field, bool indirect);
+ctu_t *ctu_cast(scan_t *scan, where_t where, ctu_t *expr, ctu_t *type);
 
 /* statements */
 ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts);

@@ -86,6 +86,15 @@ ctu_t *ctu_access(scan_t *scan, where_t where, ctu_t *object, const char *field,
     return ctu;
 }
 
+ctu_t *ctu_cast(scan_t *scan, where_t where, ctu_t *expr, ctu_t *type) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_CAST);
+
+    ctu->src = expr;
+    ctu->dst = type;
+
+    return ctu;
+}
+
 ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts) {
     ctu_t *ctu = ctu_new(scan, where, CTU_STMTS);
 
