@@ -15,6 +15,7 @@ POISON(ctu_malloc ctu_realloc ctu_free) /// our memory managment
 typedef struct {
     const char *name;
     void *data;
+    size_t cursor;
     size_t size;
 } arena_t;
 

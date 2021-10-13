@@ -12,7 +12,12 @@ arena_t new_arena(const char *name, size_t initial) {
         /* offset = */ 0
     );
 
-    arena_t arena = { name, data, initial };
+    arena_t arena = { 
+        .name = name, 
+        .data = data, 
+        .cursor = 0, 
+        .size = initial 
+    };
 
     return arena;
 }
