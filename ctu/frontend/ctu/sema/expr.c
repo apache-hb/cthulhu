@@ -1,4 +1,5 @@
 #include "expr.h"
+#include "type.h"
 #include "value.h"
 #include "define.h"
 
@@ -251,8 +252,14 @@ static lir_t *name_expr(node_t *node, lir_t *lir) {
 
 static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
+    case CTU_UNARY:
+        /* hacky but pretty at the same time */
+        if (expr->unary == UNARY_DEREF) {
+            return compile_unary(sema, expr);
+        }
+        // fallthrough
     case CTU_DIGIT: case CTU_BOOL: case CTU_BINARY:
-    case CTU_CALL: case CTU_STRING: case CTU_UNARY:
+    case CTU_CALL: case CTU_STRING:
         report(sema->reports, ERROR, expr->node, "expression is not an lvalue");
         return lir_poison(expr->node, "malformed lvalue");
 
