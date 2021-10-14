@@ -265,6 +265,15 @@ static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
     }
 }
 
+static lir_t *compile_cast(sema_t *sema, ctu_t *expr) {
+    lir_t *it = compile_expr(sema, expr->src);
+    type_t *type = compile_type(sema, expr->dst);
+
+    it->type = type;
+
+    return it;
+}
+
 /* actually compiles an rvalue */
 lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
@@ -276,6 +285,7 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_IDENT: return name_expr(expr->node, compile_name(sema, expr));
     case CTU_ACCESS: return name_expr(expr->node, compile_access(sema, expr));
     case CTU_STRING: return compile_string(expr);
+    case CTU_CAST: return compile_cast(sema, expr);
 
     default:
         ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);

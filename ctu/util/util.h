@@ -5,8 +5,11 @@
 #include "sizes.h"
 #include "macros.h"
 
-// memory managment
-
+/**
+ * deprecated memory managment functions
+ * 
+ * arenas should be used in place of these for performance reasons
+ */
 void ctu_free(void *ptr, size_t size) NONULL;
 void *ctu_malloc(size_t size) ALLOC(ctu_free);
 void *ctu_realloc(void *ptr, size_t old, size_t size) NOTNULL(1) ALLOC(ctu_free);
@@ -15,12 +18,16 @@ char *ctu_strndup(const char *str, size_t len) NONULL ALLOC(ctu_free);
 void *ctu_memdup(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 void init_memory(void);
 
-// map collection
-
+/**
+ * a hashmap of strings to weak pointers
+ * 
+ * freeing the map will not free the keys or the values.
+ * these need to be freed beforehand by the owner of the container.
+ */
 typedef struct bucket_t {
-    const char *key;
-    void *value;
-    struct bucket_t *next;
+    WEAK NULLABLE const char *key;
+    WEAK NULLABLE void *value;
+    OWNED NULLABLE struct bucket_t *next;
 } bucket_t;
 
 typedef struct {
@@ -37,7 +44,7 @@ typedef void*(*vector_apply_t)(void *value);
  * 
  * @param map the map to delete
  */
-void map_delete(map_t *map) NONULL;
+void map_delete(OWNED map_t *map) NONULL;
 
 /**
  * create a new map
@@ -48,7 +55,7 @@ void map_delete(map_t *map) NONULL;
  * 
  * @return a new map
  */
-map_t *map_new(map_size_t size) ALLOC(map_delete);
+OWNED map_t *map_new(map_size_t size) ALLOC(map_delete);
 
 /**
  * create a map with an optimal number of buckets 
@@ -58,7 +65,7 @@ map_t *map_new(map_size_t size) ALLOC(map_delete);
  * 
  * @return a new map
  */
-map_t *optimal_map(size_t size) ALLOC(map_delete);
+OWNED map_t *optimal_map(size_t size) ALLOC(map_delete);
 
 /**
  * get a value from a map
@@ -68,7 +75,7 @@ map_t *optimal_map(size_t size) ALLOC(map_delete);
  * 
  * @return the value for the key or NULL if the key is not found
  */
-void *map_get(map_t *map, const char *key) HOT CONSTFN NONULL;
+WEAK void *map_get(WEAK map_t *map, const char *key) HOT CONSTFN NONULL;
 
 /**
  * set or overwrite a value in a map
@@ -77,7 +84,7 @@ void *map_get(map_t *map, const char *key) HOT CONSTFN NONULL;
  * @param key the key to set the value for
  * @param value the value to set
  */
-void map_set(map_t *map, const char *key, void *value) HOT NOTNULL(1, 2);
+void map_set(WEAK map_t *map, const char *key, WEAK void *value) HOT NOTNULL(1, 2);
 
 /**
  * apply a function to all values in a map
@@ -86,11 +93,15 @@ void map_set(map_t *map, const char *key, void *value) HOT NOTNULL(1, 2);
  * @param user user data passed into func
  * @param func the function to apply
  */
-void map_apply(map_t *map, void *user, 
-               map_apply_t func) NOTNULL(1, 3);
+void map_apply(WEAK map_t *map, WEAK void *user, map_apply_t func) NOTNULL(1, 3);
 
-// vector collection
-
+/**
+ * a vector of non-owning pointers
+ * 
+ * all elements in the vector must fit into a pointer each.
+ * freeing the vector does not free the data it references internally.
+ * only the vector itself is freed.
+ */
 typedef struct {
     size_t size;
     size_t used;
@@ -102,7 +113,7 @@ typedef struct {
  * 
  * @param vector the vector to release
  */
-void vector_delete(vector_t *vector) NONULL;
+void vector_delete(OWNED vector_t *vector) NONULL;
 
 /**
  * create a new vector.
@@ -110,7 +121,7 @@ void vector_delete(vector_t *vector) NONULL;
  * @param size the initial amount of allocated memory
  * @return a new vector
  */
-vector_t *vector_new(size_t size) ALLOC(vector_delete);
+OWNED vector_t *vector_new(size_t size) ALLOC(vector_delete);
 
 /**
  * create a new vector with a specified size
@@ -118,7 +129,7 @@ vector_t *vector_new(size_t size) ALLOC(vector_delete);
  * @param len the initial size of the vector
  * @return a new vector
  */
-vector_t *vector_of(size_t len) ALLOC(vector_delete);
+OWNED vector_t *vector_of(size_t len) ALLOC(vector_delete);
 
 /**
  * create a vector with a single item
@@ -126,7 +137,7 @@ vector_t *vector_of(size_t len) ALLOC(vector_delete);
  * @param value the initial element
  * @return the new vector
  */
-vector_t *vector_init(void *value) ALLOC(vector_delete);
+OWNED vector_t *vector_init(WEAK void *value) ALLOC(vector_delete);
 
 /**
  * push an element onto the end of a vector
@@ -136,7 +147,7 @@ vector_t *vector_init(void *value) ALLOC(vector_delete);
  * 
  * @param value the value to push onto the vector
  */
-void vector_push(vector_t **vector, void *value) NOTNULL(1);
+void vector_push(WEAK vector_t **vector, WEAK void *value) NOTNULL(1);
 
 /**
  * pop the last element from a vector.
@@ -145,7 +156,7 @@ void vector_push(vector_t **vector, void *value) NOTNULL(1);
  * @param vector the vector to take from
  * @return the value of the last element
  */
-void *vector_pop(vector_t *vector) NONULL;
+OWNED void *vector_pop(vector_t *vector) NONULL;
 
 /**
  * set an element in a vector by index.
@@ -165,7 +176,7 @@ void vector_set(vector_t *vector, size_t index, void *value) NOTNULL(1);
  * @param index the index to query
  * @return the value at index
  */
-void *vector_get(const vector_t *vector, size_t index) CONSTFN NOTNULL(1);
+WEAK void *vector_get(WEAK const vector_t *vector, size_t index) CONSTFN NOTNULL(1);
 
 /**
  * get the last element from a vector.
@@ -174,7 +185,7 @@ void *vector_get(const vector_t *vector, size_t index) CONSTFN NOTNULL(1);
  * @param vector the vector to get from
  * @return the value of the last element
  */
-void *vector_tail(const vector_t *vector) CONSTFN NONULL;
+WEAK void *vector_tail(WEAK const vector_t *vector) CONSTFN NONULL;
 
 /**
  * get the contents pointer of a vector.
@@ -182,7 +193,7 @@ void *vector_tail(const vector_t *vector) CONSTFN NONULL;
  * @param vector the vector to get the contents of
  * @return the contents pointer
  */
-void **vector_data(vector_t *vector) CONSTFN NONULL;
+WEAK void **vector_data(vector_t *vector) CONSTFN NONULL;
 
 /**
  * get the length of a vector
@@ -199,7 +210,7 @@ size_t vector_len(const vector_t *vector) CONSTFN NONULL;
  * @param rhs the right vector
  * @return the new vector
  */
-vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) NONULL ALLOC(vector_delete);
+OWNED vector_t *vector_join(WEAK const vector_t *lhs, WEAK const vector_t *rhs) NONULL ALLOC(vector_delete);
 
 /**
  * return a new vector after applying a function to all elements
@@ -208,10 +219,10 @@ vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) NONULL ALLOC(vec
  * @param func the function to apply
  * @return the new vector
  */
-vector_t *vector_map(const vector_t *vector, vector_apply_t func) NONULL ALLOC(vector_delete);
+OWNED vector_t *vector_map(WEAK const vector_t *vector, vector_apply_t func) NONULL ALLOC(vector_delete);
 
-vector_t *map_collect(map_t *map, map_collect_t filter) NONULL ALLOC(vector_delete);
-vector_t *map_values(map_t *map) NONULL ALLOC(vector_delete);
+OWNED vector_t *map_collect(WEAK map_t *map, map_collect_t filter) NONULL ALLOC(vector_delete);
+OWNED vector_t *map_values(WEAK map_t *map) NONULL ALLOC(vector_delete);
 
 #define MAP_APPLY(map, user, func) map_apply(map, user, (map_apply_t)func)
 #define MAP_COLLECT(map, filter) map_collect(map, (map_collect_t)filter)

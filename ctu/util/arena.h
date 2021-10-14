@@ -9,9 +9,21 @@
  * and malloc has an impressively large startup overhead
  * on first call
  */
-POISON(malloc realloc free) /// libc memory managment
-POISON(ctu_malloc ctu_realloc ctu_free) /// our memory managment
+//POISON(malloc realloc free) /// libc memory managment
+//POISON(ctu_malloc ctu_realloc ctu_free) /// our memory managment
 
+typedef void*(*arena_alloc_t)(void *arena, size_t bytes);
+typedef void(*arena_realloc_t)(void *arena, void **ptr, size_t old, size_t bytes);
+typedef void(*arena_release_t)(void *arena, void *ptr);
+
+typedef struct {
+    arena_alloc_t alloc;
+    arena_realloc_t realloc;
+    arena_release_t release;
+    char data[];
+} arena_t;
+
+#if 0
 typedef struct {
     const char *name;
     void *data;
@@ -25,3 +37,4 @@ void delete_arena(arena_t arena);
 void *arena_alloc(arena_t *arena, size_t size);
 void arena_realloc(arena_t *arena, void **ptr, size_t old, size_t size);
 void arena_release(arena_t *arena, void *ptr, size_t size);
+#endif

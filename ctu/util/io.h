@@ -7,11 +7,11 @@
 
 typedef struct {
     const char *path;
-    FILE *file;
+    NULLABLE FILE *file;
 } file_t;
 
-void ctu_close(file_t *fp) NONULL;
-file_t *ctu_open(const char *path, const char *mode) NONULL ALLOC(ctu_close);
+void ctu_close(OWNED file_t *fp) NONULL;
+OWNED file_t *ctu_open(const char *path, const char *mode) NONULL ALLOC(ctu_close);
 
-size_t ctu_read(void *dst, size_t total, file_t *fp) NONULL;
-void *ctu_mmap(file_t *fp) NONULL;
+size_t ctu_read(WEAK void *dst, size_t total, file_t *fp) NONULL;
+OWNED void *ctu_mmap(WEAK file_t *fp) NONULL;

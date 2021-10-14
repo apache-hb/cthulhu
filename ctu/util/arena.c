@@ -2,6 +2,7 @@
 
 #include <sys/mman.h>
 
+#if 0
 arena_t new_arena(const char *name, size_t initial) {
     void *data = mmap(
         /* addr = */ NULL, 
@@ -37,3 +38,4 @@ void arena_realloc(arena_t *arena, void **ptr, size_t old, size_t size) {
 void arena_release(arena_t *arena, void *ptr, size_t size) {
 
 }
+#endif

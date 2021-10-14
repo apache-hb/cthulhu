@@ -57,7 +57,7 @@ bool endswith(const char *str, const char *suffix) CONSTFN NONULL;
  * @param parts a vector of strings to join
  * @return the joined string
  */
-char *strjoin(const char *sep, vector_t *parts) NONULL;
+OWNED char *strjoin(const char *sep, WEAK vector_t *parts) NONULL;
 
 /**
  * repeat a string n times
@@ -110,7 +110,7 @@ bool streq(const char *lhs, const char *rhs) HOT CONSTFN NONULL;
 typedef struct {
     size_t len;
     size_t size;
-    char *data;
+    OWNED char *data;
 } stream_t;
 
 void stream_delete(stream_t *stream) NONULL;
@@ -120,8 +120,8 @@ void stream_write(stream_t *stream, const char *str) NONULL;
 const char *stream_data(const stream_t *stream) CONSTFN NONULL;
 
 typedef struct entry_t {
-    char *key;
-    struct entry_t *next;
+    OWNED NULLABLE char *key;
+    OWNED NULLABLE struct entry_t *next;
 } entry_t;
 
 typedef struct {

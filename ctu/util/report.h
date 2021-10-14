@@ -17,9 +17,8 @@ typedef enum {
 } level_t;
 
 typedef struct {
-    char *message;
-
-    const node_t *node;
+    OWNED char *message;
+    WEAK NULLABLE const node_t *node;
 } part_t;
 
 typedef struct {
@@ -27,20 +26,20 @@ typedef struct {
     level_t level;
 
     /* error message displayed at the top */
-    char *message;
-    char *underline;
+    OWNED NULLABLE char *message;
+    OWNED NULLABLE char *underline;
 
-    vector_t *parts;
+    OWNED vector_t *parts;
 
     /* source and location, if node is NULL then location is ignored */
-    const node_t *node;
+    WEAK NULLABLE const node_t *node;
 
     /* extra note */
-    char *note;
+    OWNED NULLABLE char *note;
 } message_t;
 
 typedef struct {
-    vector_t *messages;
+    OWNED vector_t *messages;
 } reports_t;
 
 /**
@@ -48,14 +47,14 @@ typedef struct {
  * 
  * @param reports the context to release
  */
-void delete_reports(reports_t *reports) NONULL;
+void delete_reports(OWNED reports_t *reports) NONULL;
 
 /**
  * create a reporting context
  * 
  * @return the new context
  */
-reports_t *begin_reports(void) ALLOC(delete_reports);
+OWNED reports_t *begin_reports(void) ALLOC(delete_reports);
 
 /**
  * flush a reporting context and return an exit code
@@ -66,7 +65,7 @@ reports_t *begin_reports(void) ALLOC(delete_reports);
  * 
  * @return an exit code
  */
-int end_reports(reports_t *reports, 
+int end_reports(WEAK reports_t *reports, 
                 size_t limit, 
                 const char *name) NOTNULL(1, 3);
 
@@ -80,7 +79,7 @@ int end_reports(reports_t *reports,
  * @return a message object to attach extra data to
  */
 PRINT(2, 3)
-message_t *ctu_assert(reports_t *reports, 
+message_t *ctu_assert(WEAK reports_t *reports, 
                    const char *fmt, ...) NOTNULL(1, 2);
 
 /**
@@ -95,9 +94,9 @@ message_t *ctu_assert(reports_t *reports,
  * @return a message object to attach extra data to
  */
 PRINT(4, 5)
-message_t *report(reports_t *reports, 
+message_t *report(WEAK reports_t *reports, 
                    level_t level, 
-                   const node_t *node, 
+                   WEAK const node_t *node, 
                    const char *fmt, ...) NOTNULL(1, 4);
 
 /**
@@ -109,8 +108,8 @@ message_t *report(reports_t *reports,
  * @param ... the arguments to the format string
  */
 PRINT(3, 4)
-void report_append(message_t *message, 
-                    const node_t *node, 
+void report_append(WEAK message_t *message, 
+                    WEAK const node_t *node, 
                     const char *fmt, ...) NOTNULL(1, 3);
 
 /**
@@ -121,7 +120,7 @@ void report_append(message_t *message,
  * @param ... the arguments to the format string
  */
 PRINT(2, 3)
-void report_underline(message_t *message, 
+void report_underline(WEAK message_t *message, 
                       const char *fmt, ...) NOTNULL(1, 2);
 
 /**
@@ -132,7 +131,7 @@ void report_underline(message_t *message,
  * @param ... the arguments to the format string
  */
 PRINT(2, 3)
-void report_note(message_t *message, 
+void report_note(WEAK message_t *message, 
                   const char *fmt, ...) NOTNULL(1, 2);
 
 /**
