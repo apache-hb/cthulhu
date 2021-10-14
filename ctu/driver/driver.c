@@ -81,7 +81,8 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
     init_memory();
 
     int error = 0;
-    reports_t *errors = begin_reports();
+    arena_t report_arena = new_blockmap(sizeof(message_t), 128);
+    reports_t *errors = begin_reports(&report_arena);
     settings_t settings = parse_args(errors, frontend, argc, argv);
     verbose = settings.verbose;
 
@@ -106,7 +107,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
 
     for (size_t i = 0; i < len; i++) {
         file_t *file = vector_get(sources, i);
-        reports_t *reports = begin_reports();
+        reports_t *reports = begin_reports(&report_arena);
         void *node = frontend->parse(reports, file);
         context_t *ctx = new_context(reports, file, node);
         vector_set(all, i, ctx);

@@ -2,14 +2,11 @@
 #include "io.h"
 #include "report.h"
 #include "str.h"
+#include "macros.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <gmp.h>
-
-#ifndef _WIN32
-#   include <sys/mman.h>
-#endif
 
 #define MALLOC(size) malloc(size)
 #define REALLOC(ptr, size) realloc(ptr, size)

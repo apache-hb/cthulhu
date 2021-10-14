@@ -2,6 +2,7 @@
 
 #include "scan.h"
 #include "ctu/util/macros.h"
+#include "ctu/util/arena.h"
 
 /* a position in a source file */
 typedef struct {

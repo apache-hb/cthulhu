@@ -19,6 +19,8 @@
 #   define POISON(...)
 #endif
 
+#define NORETURN _Noreturn
+
 /// macros with functionality
 #define MAX(L, R) ((L) > (R) ? (L) : (R)) 
 #define MIN(L, R) ((L) < (R) ? (L) : (R)) 
@@ -26,12 +28,34 @@
 /// macros for readability
 #define UNUSED(x) ((void)(x))
 
+#define INNER_STR(x) #x
+#define STR(x) INNER_STR(x)
+
 #define WEAK /// this pointer does not own its data
 #define OWNED /// this pointer owns its data
 #define MOVE /// moves ownership of data
 #define NULLABLE /// pointer can be null
 
+#define COLOUR_RED "\x1B[1;31m"
+#define COLOUR_GREEN "\x1B[1;32m"
+#define COLOUR_YELLOW "\x1B[1;33m"
+#define COLOUR_BLUE "\x1B[1;34m"
+#define COLOUR_PURPLE "\x1B[1;35m"
+#define COLOUR_CYAN "\x1B[1;36m"
+#define COLOUR_RESET "\x1B[0m"
+
 /// macros for headers
 #ifndef _POSIX_C_SOURCE
 #   define _POSIX_C_SOURCE 200112L
 #endif
+
+#ifndef _DEFAULT_SOURCE
+#   define _DEFAULT_SOURCE
+#   include <sys/mman.h>
+#endif
+
+NORETURN PRINT(1, 2)
+void ctpanic(const char *msg, ...);
+
+#define CTASSERT(expr, msg) if (!(expr)) { ctpanic(COLOUR_CYAN "assert [" COLOUR_RESET STR(__FILE__) ":" STR(__LINE__) "]: " msg); }
+#define CTASSERTF(expr, msg, ...) if (!(expr)) { ctpanic(COLOUR_CYAN "assert [" COLOUR_RESET STR(__FILE__) ":" STR(__LINE__) "]: " msg, __VA_ARGS__); }

@@ -16,6 +16,15 @@ char *format(const char *fmt, ...) {
     return str;
 }
 
+char *formatex(arena_t *arena, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char *str = formatvex(arena, fmt, args);
+    va_end(args);
+
+    return str;
+}
+
 char *formatv(const char *fmt, va_list args) {
     /* make a copy of the args for the second format */
     va_list again;
@@ -25,6 +34,21 @@ char *formatv(const char *fmt, va_list args) {
     int len = vsnprintf(NULL, 0, fmt, args) + 1;
 
     char *out = ctu_malloc(len);
+
+    vsnprintf(out, len, fmt, again);
+
+    return out;
+}
+
+char *formatvex(arena_t *arena, const char *fmt, va_list args) {
+    /* make a copy of the args for the second format */
+    va_list again;
+    va_copy(again, args);
+
+    /* get the number of bytes needed to format */
+    int len = vsnprintf(NULL, 0, fmt, args) + 1;
+
+    char *out = arena_malloc(arena, len);
 
     vsnprintf(out, len, fmt, again);
 

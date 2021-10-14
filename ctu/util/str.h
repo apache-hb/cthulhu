@@ -3,15 +3,8 @@
 #include <stdarg.h>
 
 #include "macros.h"
+#include "arena.h"
 #include "util.h"
-
-#define COLOUR_RED "\x1B[1;31m"
-#define COLOUR_GREEN "\x1B[1;32m"
-#define COLOUR_YELLOW "\x1B[1;33m"
-#define COLOUR_BLUE "\x1B[1;34m"
-#define COLOUR_PURPLE "\x1B[1;35m"
-#define COLOUR_CYAN "\x1B[1;36m"
-#define COLOUR_RESET "\x1B[0m"
 
 /**
  * format a string with printf-like syntax
@@ -23,6 +16,9 @@
 PRINT(1, 2)
 char *format(const char *fmt, ...) NOTNULL(1);
 
+PRINT(2, 3)
+char *formatex(arena_t *arena, const char *fmt, ...) NONULL;
+
 /**
  * format a string with printf-like syntax with a va_list
  * 
@@ -31,6 +27,8 @@ char *format(const char *fmt, ...) NOTNULL(1);
  * @return the formatted string
  */
 char *formatv(const char *fmt, va_list args) NONULL;
+
+char *formatvex(arena_t *arena, const char *fmt, va_list args) NONULL;
 
 /**
  * check if a string starts with a substring

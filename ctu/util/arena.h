@@ -14,27 +14,21 @@
 
 typedef void*(*arena_alloc_t)(void *arena, size_t bytes);
 typedef void(*arena_realloc_t)(void *arena, void **ptr, size_t old, size_t bytes);
-typedef void(*arena_release_t)(void *arena, void *ptr);
+typedef void(*arena_release_t)(void *arena, void *ptr, size_t bytes);
 
 typedef struct {
     arena_alloc_t alloc;
     arena_realloc_t realloc;
     arena_release_t release;
-    char data[];
-} arena_t;
-
-#if 0
-typedef struct {
-    const char *name;
     void *data;
-    size_t cursor;
-    size_t size;
 } arena_t;
 
-arena_t new_arena(const char *name, size_t initial);
-void delete_arena(arena_t arena);
+arena_t new_arena(arena_alloc_t alloc, arena_realloc_t realloc, arena_release_t release, void *data);
+#define NEW_ARENA(alloc, realloc, release, data) \
+    new_arena((arena_alloc_t)alloc, (arena_realloc_t)realloc, (arena_release_t)release, (void*)data)
 
-void *arena_alloc(arena_t *arena, size_t size);
-void arena_realloc(arena_t *arena, void **ptr, size_t old, size_t size);
-void arena_release(arena_t *arena, void *ptr, size_t size);
-#endif
+void *arena_malloc(arena_t *arena, size_t bytes);
+void arena_realloc(arena_t *arena, void **ptr, size_t previous, size_t bytes);
+void arena_free(arena_t *arena, void *ptr, size_t bytes);
+
+arena_t new_blockmap(size_t width, size_t blocks);

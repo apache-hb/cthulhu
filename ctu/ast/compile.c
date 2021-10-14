@@ -3,14 +3,11 @@
 
 #include "ctu/util/util.h"
 #include "ctu/util/report.h"
+#include "ctu/util/macros.h"
 
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-
-#ifndef _WIN32
-#   include <sys/mman.h>
-#endif
 
 static scan_t *scan_new(reports_t *reports, const char *language, const char *path) {
     scan_t *scan = ctu_malloc(sizeof(scan_t));
