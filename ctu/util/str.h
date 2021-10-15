@@ -85,6 +85,7 @@ char *strnorm(const char *str) NONULL;
  * @return the normalized string
  */
 char *nstrnorm(const char *str, size_t len) NONULL;
+char *nstrnorm2(arena_t *arena, const char *str, size_t len) NONULL;
 
 /**
  * hash a string into a size_t

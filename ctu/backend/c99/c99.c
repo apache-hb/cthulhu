@@ -14,18 +14,19 @@ typedef struct {
     stream_t *result;
 } context_t;
 
-static context_t *init_c99_context(reports_t *reports, module_t *mod) {
-    context_t *ctx = ctu_malloc(sizeof(context_t));
-    ctx->reports = reports;
-    ctx->mod = mod;
-    ctx->strings = map_new(MAP_SMALL);
-    ctx->result = stream_new(0x1000);
+static context_t init_c99_context(reports_t *reports, module_t *mod) {
+    context_t ctx = {
+        .reports = reports,
+        .mod = mod,
+        .strings = map_new(MAP_SMALL),
+        .result = stream_new(0x1000)
+    };
+
     return ctx;
 }
 
-static void free_c99_context(context_t *ctx) {
-    stream_delete(ctx->result);
-    ctu_free(ctx, sizeof(context_t));
+static void free_c99_context(context_t ctx) {
+    stream_delete(ctx.result);
 }
 
 static void forward_global(context_t *ctx, const block_t *block) {
@@ -376,7 +377,7 @@ static void add_imports(context_t *ctx, vector_t *symbols) {
 }
 
 bool c99_build(reports_t *reports, module_t *mod, const char *path) {
-    context_t *ctx = init_c99_context(reports, mod);
+    context_t ctx = init_c99_context(reports, mod);
     
     char *header = format(
         "/**\n"
@@ -386,28 +387,25 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
         mod->name
     );
 
-    stream_write(ctx->result, header);
+    stream_write(ctx.result, header);
 
     ctu_free(header, strlen(header) + 1);
 
-    add_strings(ctx, mod->strtab);
+    add_strings(&ctx, mod->strtab);
+    add_imports(&ctx, mod->imports);
+    add_globals(&ctx, mod->vars);
+    add_blocks(&ctx, mod->funcs);
 
-    add_imports(ctx, mod->imports);
-
-    add_globals(ctx, mod->vars);
-
-    add_blocks(ctx, mod->funcs);
-
-    file_t *file = ctu_open(path, "w");
-    if (file == NULL) {
-        ctu_assert(ctx->reports, "failed to open file: %s", path);
+    file_t file = ctu_fopen(path, "w");
+    if (file.file == NULL) {
+        ctu_assert(ctx.reports, "failed to open file: %s", path);
         free_c99_context(ctx);
         return false;
     }
 
-    fwrite(stream_data(ctx->result), 1, stream_len(ctx->result), file->file);
+    fwrite(stream_data(ctx.result), 1, stream_len(ctx.result), file.file);
 
-    ctu_close(file);
+    ctu_close(&file);
     free_c99_context(ctx);
 
     return true;

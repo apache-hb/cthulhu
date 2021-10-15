@@ -14,7 +14,7 @@ typedef struct {
     value_t *result;
 } exec_t;
 
-static exec_t *exec_new(world_t *world, block_t *block) {
+static exec_t exec_new(world_t *world, block_t *block) {
     size_t size = block->len;
 
     value_t **values = ctu_malloc(sizeof(value_t*) * size);
@@ -22,12 +22,12 @@ static exec_t *exec_new(world_t *world, block_t *block) {
         values[i] = value_poison("unintalized value");
     }
 
-    exec_t *exec = ctu_malloc(sizeof(exec_t));
-    exec->world = world;
-    exec->block = block;
-    exec->ip = 0;
-    exec->values = values;
-    exec->result = NULL;
+    exec_t exec = {
+        .world = world,
+        .block = block,
+        .values = values,
+        .result = NULL
+    };
 
     return exec;
 }
@@ -208,17 +208,17 @@ static value_t *eval_block(world_t *world, block_t *block) {
         return block->value;
     }
 
-    exec_t *exec = exec_new(world, block);
+    exec_t exec = exec_new(world, block);
 
-    while (exec_step(exec)) {
+    while (exec_step(&exec)) {
         // empty
     }
 
-    return (block->value = exec->result);
+    return (block->value = exec.result);
 }
 
 void eval_world(reports_t *reports, module_t *mod) {
-    logverbose("compiling module %s", mod->name);
+    logverbose("compiling module %p", mod->name);
     world_t world = { reports, mod };
 
     size_t nvars = vector_len(mod->vars);

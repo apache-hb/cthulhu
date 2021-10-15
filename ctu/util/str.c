@@ -154,6 +154,26 @@ char *nstrnorm(const char *str, size_t len) {
     return buf;
 }
 
+char *nstrnorm2(arena_t *arena, const char *str, size_t len) {
+    size_t outlen = 1;
+    for (size_t i = 0; i < len; i++) {
+        outlen += (isprint(str[i]) ? 1 : 4);
+    }
+
+    char *buf = arena_malloc(arena, outlen + 1);
+    char *out = buf;
+    for (size_t i = 0; i < len; i++) {
+        if (isprint(str[i])) {
+            *out++ = str[i];
+        } else {
+            out += sprintf(out, "\\x%02x", str[i] & 0xFF);
+        }
+    }
+
+    *out = '\0';
+    return buf;
+}
+
 size_t strhash(const char *str) {
     size_t hash = 0;
 

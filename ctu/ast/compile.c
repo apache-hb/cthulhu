@@ -9,27 +9,25 @@
 #include <string.h>
 #include <stdlib.h>
 
-static scan_t *scan_new(reports_t *reports, size_t ast, const char *language, const char *path) {
-    scan_t *scan = ctu_malloc(sizeof(scan_t));
-
-    scan->language = language;
-    scan->path = path;
-    scan->data = NULL;
-
-    scan->ast = new_bitmap("scanner-ast-arena", ast, 0x1000);
-    scan->nodes = new_bitmap("scanner-node-arena", sizeof(node_t), 0x1000);
-
-    scan->offset = 0;
-
-    scan->reports = reports;
+static scan_t scan_new(reports_t *reports, const char *language, const char *path) {
+    scan_t scan = {
+        .nodes = new_bump("scanner-node-arena", sizeof(node_t) * 0x1000),
+        .ast = new_bump("scanner-ast-arena", 0x4000),
+        .tokens = new_blockmap("scanner-token-arena", 256, 0x1000),
+        .strings = new_bump("scanner-string-arena", 0x1000),
+        .language = language,
+        .path = path,
+        .reports = reports
+    };
 
     return scan;
 }
 
-scan_t *scan_string(reports_t *reports, size_t ast, const char *language, const char *path, const char *text) {
-    scan_t *scan = scan_new(reports, ast, language, path);
+scan_t scan_string(reports_t *reports, const char *language, const char *path, const char *text) {
+    text_t source = { .size = strlen(text), .text = text };
+    scan_t scan = scan_new(reports, language, path);
 
-    scan->source = (text_t){ strlen(text), text };
+    scan.source = source;
 
     return scan;
 }
@@ -41,19 +39,18 @@ static size_t file_size(FILE *fd) {
     return size;
 }
 
-scan_t *scan_file(reports_t *reports, size_t ast, const char *language, file_t *file) {
+scan_t scan_file(reports_t *reports, const char *language, file_t *file) {
     FILE *fd = file->file;
     size_t size = file_size(fd);
-    scan_t *scan = scan_new(reports, ast, language, file->path);
-
-    scan->data = fd;
+    scan_t scan = scan_new(reports, language, file->path);
+    scan.data = fd;
 
     char *text;
     if (!(text = ctu_mmap(file))) {
         ctu_assert(reports, "failed to mmap file");
     }
-
-    scan->source = (text_t){ size, text };
+    text_t source = { .size = size, .text = text };
+    scan.source = source;
 
     return scan;
 }
@@ -87,23 +84,24 @@ void *compile_string(scan_t *extra, callbacks_t *callbacks) {
     return extra->data;
 }
 
-void *compile_file(scan_t *extra, callbacks_t *callbacks) {
-    FILE *fd = extra->data;
+void *compile_file(scan_t *scan, callbacks_t *callbacks) {
+    logverbose("compile [%p]", scan);
+    FILE *fd = scan->data;
 
     int err;
-    void *scanner;
+    void *state;
 
-    if ((err = callbacks->init(extra, &scanner))) {
+    if ((err = callbacks->init(scan, &state))) {
         return NULL;
     }
 
-    callbacks->set_in(fd, scanner);
+    callbacks->set_in(fd, state);
 
-    if ((err = callbacks->parse(scanner, extra))) {
+    if ((err = callbacks->parse(scan, state))) {
         return NULL;
     }
 
-    callbacks->destroy(scanner);
+    callbacks->destroy(state);
 
-    return extra->data;
+    return scan->data;
 }

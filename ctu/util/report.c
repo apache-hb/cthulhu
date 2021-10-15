@@ -69,14 +69,14 @@ static void report_header(message_t *message) {
     }
 }
 
-static char *padding(size_t len) {
-    char *str = malloc(len + 1);
+static char *padding(arena_t *arena, size_t len) {
+    char *str = arena_malloc(arena, len + 1);
     memset(str, ' ', len);
     str[len] = '\0';
     return str;
 }
 
-static char *extract_line(const scan_t *scan, line_t line) {
+static char *extract_line(arena_t *arena, const scan_t *scan, line_t line) {
     size_t start = 0;
     text_t source = scan->source;
     while (start < source.size && line > 0) {
@@ -101,7 +101,7 @@ static char *extract_line(const scan_t *scan, line_t line) {
      * while windows line endings might technically be more correct
      * it doesnt make them any less painful to handle
      */
-    char *str = malloc(len + 1);
+    char *str = arena_malloc(arena, len + 1);
     char *out = str;
     for (size_t i = 0; i < len; i++) {
         char c = source.text[start + i];
@@ -117,10 +117,10 @@ static char *extract_line(const scan_t *scan, line_t line) {
     }
     *out = '\0';
 
-    return nstrnorm(str, (size_t)(out - str));
+    return nstrnorm2(arena, str, (size_t)(out - str));
 }
 
-static char *build_underline(char *source, where_t where, const char *note) {
+static char *build_underline(arena_t *arena, char *source, where_t where, const char *note) {
     column_t front = where.first_column;
     column_t back = where.last_column;
 
@@ -134,7 +134,7 @@ static char *build_underline(char *source, where_t where, const char *note) {
 
     size_t width = MAX(back - front, 1);
     size_t len = note ? strlen(note) : 0;
-    char *str = malloc(back + width + len + 2);
+    char *str = arena_malloc(arena, back + width + len + 2);
 
     column_t idx = 0;
 
@@ -209,10 +209,10 @@ static char *format_single(arena_t *arena, const scan_t *scan, where_t where, co
     line_t first_line = where.first_line + 1;
     size_t align = base10_length(first_line);
 
-    char *pad = padding(align);
+    char *pad = padding(arena, align);
     char *digit = right_align(arena, first_line, align);
 
-    char *first_source = extract_line(scan, where.first_line);
+    char *first_source = extract_line(arena, scan, where.first_line);
 
     return formatex(arena,
         " %s|\n"
@@ -220,7 +220,7 @@ static char *format_single(arena_t *arena, const scan_t *scan, where_t where, co
         " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
         pad,
         digit, first_source,
-        pad, build_underline(first_source, where, underline)
+        pad, build_underline(arena, first_source, where, underline)
     );
 }
 
@@ -237,11 +237,11 @@ static char *format_medium2(arena_t *arena, const scan_t *scan, where_t where, c
     line_t first_line = where.first_line + 1;
     size_t align = base10_length(first_line);
 
-    char *pad = padding(align);
+    char *pad = padding(arena, align);
     char *digit = right_align(arena, first_line, align);
 
-    char *first_source = extract_line(scan, where.first_line);
-    char *last_source = extract_line(scan, where.last_line);
+    char *first_source = extract_line(arena, scan, where.first_line);
+    char *last_source = extract_line(arena, scan, where.last_line);
 
     return formatex(arena,
         " %s|\n"
@@ -251,7 +251,7 @@ static char *format_medium2(arena_t *arena, const scan_t *scan, where_t where, c
         pad,
         digit, first_source,
         pad, last_source,
-        pad, build_underline(last_source, where, underline)
+        pad, build_underline(arena, last_source, where, underline)
     );
 }
 
@@ -269,12 +269,12 @@ static char *format_medium3(arena_t *arena, const scan_t *scan, where_t where, c
     line_t first_line = where.first_line + 1;
     size_t align = base10_length(first_line);
 
-    char *pad = padding(align);
+    char *pad = padding(arena, align);
     char *digit = right_align(arena, first_line, align);
 
-    char *first_source = extract_line(scan, where.first_line);
-    char *middle_source = extract_line(scan, where.first_line + 1);
-    char *last_source = extract_line(scan, where.last_line);
+    char *first_source = extract_line(arena, scan, where.first_line);
+    char *middle_source = extract_line(arena, scan, where.first_line + 1);
+    char *last_source = extract_line(arena, scan, where.last_line);
 
     return formatex(arena,
         " %s|\n"
@@ -286,7 +286,7 @@ static char *format_medium3(arena_t *arena, const scan_t *scan, where_t where, c
         digit, first_source,
         pad, middle_source,
         pad, last_source,
-        pad, build_underline(last_source, where, underline)
+        pad, build_underline(arena, last_source, where, underline)
     );
 }
 
@@ -305,12 +305,12 @@ static char *format_large(arena_t *arena, const scan_t *scan, where_t where, con
     line_t last_line = where.last_line + 1;
     size_t align = MAX(base10_length(first_line), base10_length(last_line)) + 1;
 
-    char *pad = padding(align);
+    char *pad = padding(arena, align);
     char *first_digit = right_align(arena, first_line, align);
     char *last_digit = right_align(arena, last_line, align);
 
-    char *first_source = extract_line(scan, where.first_line);
-    char *last_source = extract_line(scan, where.last_line);
+    char *first_source = extract_line(arena, scan, where.first_line);
+    char *last_source = extract_line(arena, scan, where.last_line);
 
     return formatex(arena,
         " %s|\n"
@@ -322,7 +322,7 @@ static char *format_large(arena_t *arena, const scan_t *scan, where_t where, con
         first_digit, first_source,
         pad,
         last_digit, last_source,
-        pad, build_underline(last_source, where, underline)
+        pad, build_underline(arena, last_source, where, underline)
     );
 }
 
@@ -357,7 +357,7 @@ static void report_part(message_t *message, part_t *part) {
     line_t start = where.first_line;
 
     size_t longest = longest_line(scan, start + 1, message->parts);
-    char *pad = padding(longest);
+    char *pad = padding(message->arena, longest);
 
     if (message->node->scan != scan) {
         report_scanner(message->arena, part->node);
@@ -391,7 +391,7 @@ static bool report_send(message_t *message) {
 reports_t *begin_reports(arena_t *arena) {
     reports_t *reports = arena_malloc(arena, sizeof(reports_t));
     reports->arena = arena;
-    reports->messages = vector_new(32);
+    reports->messages = vector_new2(arena, 32);
     return reports;
 }
 
@@ -430,7 +430,7 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
         result = 1;
     }
 
-    reports->messages = vector_new(0);
+    reports->messages = vector_new2(reports->arena, 0);
 
     return result;
 }
@@ -441,12 +441,12 @@ static message_t *report_push(reports_t *reports,
                               const char *fmt, 
                               va_list args)
 {
-    char *str = formatv(fmt, args);
+    char *str = formatvex(reports->arena, fmt, args);
     message_t *message = arena_malloc(reports->arena, sizeof(message_t));
 
     message->level = level;
     message->arena = reports->arena;
-    message->parts = vector_new(1);
+    message->parts = vector_new2(reports->arena, 1);
     message->message = str;
     message->underline = NULL;
     
@@ -505,6 +505,12 @@ void report_note(message_t *message, const char *fmt, ...) {
     message->note = msg;
 }
 
+static arena_t LOGGING;
+
+void init_log(void) {
+    LOGGING = new_blockmap("logging-arena", 64, 1024);
+}
+
 void logverbose(const char *fmt, ...) {
     if (!verbose) {
         return;
@@ -512,6 +518,6 @@ void logverbose(const char *fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    fprintf(stderr, "%s: %s\n", report_level(NOTE), formatv(fmt, args));
+    fprintf(stderr, "%s: %s\n", report_level(NOTE), formatvex(&LOGGING, fmt, args));
     va_end(args);
 }

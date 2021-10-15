@@ -94,7 +94,6 @@ static ns_t time_prime(size_t len, size_t prime) {
         char *ident = vector_get(idents, i);
         map_set(map, ident, ident);
     }
-    map_delete(map);
 
     ns_t end = now();
 

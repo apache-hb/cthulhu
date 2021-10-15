@@ -3,6 +3,6 @@
 #include "ast.h"
 #include "ctu/ast/compile.h"
 
-pl0_t *pl0_compile(reports_t *reports, file_t *fd);
+pl0_t *pl0_compile(scan_t *scan);
 
 #define PL0LTYPE where_t

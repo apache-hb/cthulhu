@@ -3,8 +3,14 @@
 
 #include "ctu/util/str.h"
 
+static arena_t VALUES;
+
+void init_values(void) {
+    VALUES = new_bitmap("value-arena", sizeof(value_t), 0x1000);
+}
+
 value_t *value_of(const type_t *type) {
-    value_t *value = ctu_malloc(sizeof(value_t));
+    value_t *value = arena_malloc(&VALUES, sizeof(value_t));
     value->type = type;
     return value;
 }

@@ -17,6 +17,8 @@ typedef struct value_t {
     };
 } value_t;
 
+void init_values(void);
+
 value_t *value_of(const type_t *type);
 value_t *value_poison_with_node(const char *msg, const node_t *node);
 value_t *value_poison(const char *msg);

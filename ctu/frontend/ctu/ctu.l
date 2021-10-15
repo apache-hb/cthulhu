@@ -1,6 +1,7 @@
 %option extra-type="scan_t*"
 %option yylineno 8bit nodefault
 %option noyywrap noinput nounput
+%option noyyalloc noyyrealloc noyyfree
 %option reentrant bison-bridge bison-locations
 %option never-interactive batch
 %option prefix="ctu"
@@ -38,7 +39,7 @@
 "import" { return IMPORT; }
 
 [$a-zA-Z_][a-zA-Z0-9_]* {
-    yylval->ident = ctu_strdup(yytext);
+    yylval->ident = ctu_strdup2(&yyextra->strings, yytext);
     return IDENT;
 }
 
@@ -108,3 +109,5 @@
 . { report_unknown_character(yyextra->reports, node_new(yyextra, *yylloc), yytext); }
 
 %%
+
+FLEX_MEMORY(ctualloc, cturealloc, ctufree)

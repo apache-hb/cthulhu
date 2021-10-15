@@ -6,6 +6,7 @@
 #include "ctu-flex.h"
 
 static int init(scan_t *extra, void *scanner) {
+    logverbose("init [%p] [%p]", extra, scanner);
     return ctulex_init_extra(extra, scanner);
 }
 
@@ -13,7 +14,7 @@ static void set_in(FILE *fd, void *scanner) {
     ctuset_in(fd, scanner);
 }
 
-static int parse(void *scanner, void *extra) {
+static int parse(scan_t *extra, void *scanner) {
     return ctuparse(scanner, extra);
 }
 
@@ -33,12 +34,8 @@ static callbacks_t CALLBACKS = {
     .destroy = destroy
 };
 
-static const char *LANGUAGE = "cthulhu";
-
-ctu_t *ctu_compile(reports_t *reports, file_t *fd) {
-    scan_t *scan = scan_file(reports, sizeof(ctu_t), LANGUAGE, fd);
-    ctu_t *node = compile_file(scan, &CALLBACKS);
-    return node;
+ctu_t *ctu_compile(scan_t *scan) {
+    return compile_file(scan, &CALLBACKS);
 }
 
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg) {

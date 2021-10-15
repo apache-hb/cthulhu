@@ -79,6 +79,8 @@ typedef struct type_t {
     };
 } type_t;
 
+void init_types(void);
+
 aggregate_field_t *new_aggregate_field(const char *name, type_t *type);
 
 /**

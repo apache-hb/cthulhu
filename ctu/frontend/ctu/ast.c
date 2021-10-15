@@ -11,7 +11,7 @@ static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_type_t type) {
 static ctu_t *ctu_decl(scan_t *scan, where_t where, ctu_type_t type, const char *name) {
     ctu_t *ctu = ctu_new(scan, where, type);
     ctu->name = name;
-    ctu->attribs = vector_new(0);
+    ctu->attribs = vector_new2(&scan->tokens, 0);
     ctu->exported = false;
     return ctu;
 }

@@ -13,7 +13,7 @@ static void set_in(FILE *fd, void *scanner) {
     pl0set_in(fd, scanner);
 }
 
-static int parse(void *scanner, void *extra) {
+static int parse(scan_t *extra, void *scanner) {
     return pl0parse(scanner, extra);
 }
 
@@ -33,12 +33,8 @@ static callbacks_t CALLBACKS = {
     .destroy = destroy
 };
 
-static const char *LANGUAGE = "PL/0";
-
-pl0_t *pl0_compile(reports_t *reports, file_t *fd) {
-    scan_t *scan = scan_file(reports, sizeof(pl0_t), LANGUAGE, fd);
-    pl0_t *node = compile_file(scan, &CALLBACKS);
-    return node;
+pl0_t *pl0_compile(scan_t *scan) {
+    return compile_file(scan, &CALLBACKS);
 }
 
 void pl0error(where_t *where, void *state, scan_t *scan, const char *msg) {

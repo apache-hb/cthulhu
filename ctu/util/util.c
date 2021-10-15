@@ -41,7 +41,7 @@ static void ctu_gmp_free(void *ptr, size_t size) {
     arena_free(&GMP, ptr, size);
 }
 
-void init_memory(void) {
+void init_gmp(void) {
     GMP = new_blockmap("gmp-arena", sizeof(mpz_t), 0x1000);
 
     mp_set_memory_functions(
@@ -51,9 +51,20 @@ void init_memory(void) {
     );
 }
 
+void deinit_gmp(void) {
+    delete_arena(&GMP);
+}
+
 char *ctu_strdup(const char *str) {
     size_t len = strlen(str) + 1;
     char *out = ctu_malloc(len);
+    memcpy(out, str, len);
+    return out;
+}
+
+char *ctu_strdup2(arena_t *arena, const char *str) {
+    size_t len = strlen(str) + 1;
+    char *out = arena_malloc(arena, len);
     memcpy(out, str, len);
     return out;
 }
@@ -71,16 +82,8 @@ void *ctu_memdup(const void *ptr, size_t size) {
     return out;
 }
 
-file_t *ctu_open(const char *path, const char *mode) {
-    FILE *fp = fopen(path, mode);
-
-    if (fp == NULL) {
-        return NULL;
-    }
-
-    file_t *file = ctu_malloc(sizeof(file_t));
-    file->file = fp;
-    file->path = path;
+file_t ctu_fopen(const char *path, const char *mode) {
+    file_t file = { path, fopen(path, mode) };
 
     return file;
 }
@@ -89,8 +92,6 @@ void ctu_close(file_t *fp) {
     if (fp->file) {
         fclose(fp->file);
     }
-
-    ctu_free(fp, sizeof(file_t));
 }
 
 size_t ctu_read(void *dst, size_t total, file_t *fp) {
@@ -153,14 +154,6 @@ HOT static void *entry_get(const bucket_t *entry, const char *key) {
     return NULL;
 }
 
-static void entry_delete(bucket_t *entry) {
-    if (entry->next) {
-        entry_delete(entry->next);
-    }
-
-    ctu_free(entry, sizeof(bucket_t));
-}
-
 /* find which bucket a key should be in */
 HOT static bucket_t *map_bucket(map_t *map, const char *key) {
     size_t hash = strhash(key);
@@ -169,33 +162,35 @@ HOT static bucket_t *map_bucket(map_t *map, const char *key) {
     return entry;
 }
 
+static void clear_keys(bucket_t *buckets, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        buckets[i].key = NULL;
+        buckets[i].next = NULL;
+    }
+}
+
 // map public api
 
 map_t *map_new(map_size_t size) {
     map_t *map = ctu_malloc(sizeof_map(size));
 
+    map->arena = NULL;
     map->size = size;
 
-    /* clear out the map keys */
-    for (size_t i = 0; i < size; i++) {
-        map->data[i].key = NULL;
-        map->data[i].next = NULL;
-    }
+    clear_keys(map->data, size);
 
     return map;
 }
 
-void map_delete(map_t *map) {
-    /* free all entries, but dont free the toplevel ones */
-    for (size_t i = 0; i < map->size; i++) {
-        bucket_t *entry = &map->data[i];
-        if (entry->next) {
-            entry_delete(entry->next);
-        }
-    }
+map_t *map_new2(arena_t *arena, map_size_t size) {
+    map_t *map = arena_malloc(arena, sizeof_map(size));
 
-    /* this frees both the map and the toplevel entries */
-    ctu_free(map, sizeof_map(map->size));
+    map->arena = arena;
+    map->size = size;
+
+    clear_keys(map->data, size);
+
+    return map;
 }
 
 void *map_get(map_t *map, const char *key) {
@@ -277,7 +272,11 @@ static void vector_ensure(vector_t **vector, size_t size) {
         size_t old = VEC->size;
         size_t resize = (size + 1) * 2;
         VEC->size = resize;
-        VEC = ctu_realloc(VEC, vector_size(old), vector_size(resize));
+        if (VEC->arena != NULL) {
+            arena_realloc(VEC->arena, (void**)vector, vector_size(old), vector_size(resize));
+        } else {
+            VEC = ctu_realloc(VEC, vector_size(old), vector_size(resize));
+        }
     }
 }
 
@@ -286,6 +285,7 @@ static void vector_ensure(vector_t **vector, size_t size) {
 vector_t *vector_new(size_t size) {
     vector_t *vector = ctu_malloc(vector_size(size));
     
+    vector->arena = NULL;
     vector->size = size;
     vector->used = 0;
 
@@ -301,6 +301,28 @@ vector_t *vector_of(size_t len) {
 vector_t *vector_init(void *value) {
     vector_t *vector = vector_new(1);
     vector_push(&vector, value);
+    return vector;
+}
+
+vector_t *vector_new2(arena_t *arena, size_t size) {
+    vector_t *vector = arena_malloc(arena, vector_size(size));
+
+    vector->arena = arena;
+    vector->size = size;
+    vector->used = 0;
+
+    return vector;
+}
+
+vector_t *vector_init2(WEAK arena_t *arena, WEAK void *value) {
+    vector_t *vector = vector_new2(arena, 2);
+    vector_push(&vector, value);
+    return vector;
+}
+
+vector_t *vector_of2(WEAK arena_t *arena, size_t size) {
+    vector_t *vector = vector_new2(arena, size);
+    vector->used = size;
     return vector;
 }
 

@@ -4,6 +4,7 @@
 
 #include "sizes.h"
 #include "macros.h"
+#include "arena.h"
 
 /**
  * deprecated memory managment functions
@@ -14,9 +15,12 @@ void ctu_free(void *ptr, size_t size) NONULL;
 void *ctu_malloc(size_t size) ALLOC(ctu_free);
 void *ctu_realloc(void *ptr, size_t old, size_t size) NOTNULL(1) ALLOC(ctu_free);
 char *ctu_strdup(const char *str) NONULL ALLOC(ctu_free);
+char *ctu_strdup2(arena_t *arena, const char *str) NONULL;
 char *ctu_strndup(const char *str, size_t len) NONULL ALLOC(ctu_free);
 void *ctu_memdup(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
-void init_memory(void);
+
+void init_gmp(void);
+void deinit_gmp(void);
 
 /**
  * a hashmap of strings to weak pointers
@@ -31,6 +35,7 @@ typedef struct bucket_t {
 } bucket_t;
 
 typedef struct {
+    WEAK arena_t *arena;
     size_t size;
     bucket_t data[];
 } map_t;
@@ -38,13 +43,6 @@ typedef struct {
 typedef void(*map_apply_t)(void *user, void *value);
 typedef bool(*map_collect_t)(void *value);
 typedef void*(*vector_apply_t)(void *value);
-
-/**
- * delete a map. elements of the map are not freed
- * 
- * @param map the map to delete
- */
-void map_delete(OWNED map_t *map) NONULL;
 
 /**
  * create a new map
@@ -55,7 +53,9 @@ void map_delete(OWNED map_t *map) NONULL;
  * 
  * @return a new map
  */
-OWNED map_t *map_new(map_size_t size) ALLOC(map_delete);
+OWNED map_t *map_new(map_size_t size);
+
+WEAK map_t *map_new2(arena_t *arena, map_size_t size) NONULL;
 
 /**
  * create a map with an optimal number of buckets 
@@ -65,7 +65,7 @@ OWNED map_t *map_new(map_size_t size) ALLOC(map_delete);
  * 
  * @return a new map
  */
-OWNED map_t *optimal_map(size_t size) ALLOC(map_delete);
+OWNED map_t *optimal_map(size_t size);
 
 /**
  * get a value from a map
@@ -103,6 +103,7 @@ void map_apply(WEAK map_t *map, WEAK void *user, map_apply_t func) NOTNULL(1, 3)
  * only the vector itself is freed.
  */
 typedef struct {
+    WEAK arena_t *arena;
     size_t size;
     size_t used;
     void *data[];
@@ -138,6 +139,10 @@ OWNED vector_t *vector_of(size_t len) ALLOC(vector_delete);
  * @return the new vector
  */
 OWNED vector_t *vector_init(WEAK void *value) ALLOC(vector_delete);
+
+WEAK vector_t *vector_init2(WEAK arena_t *arena, WEAK void *value) NONULL;
+WEAK vector_t *vector_new2(WEAK arena_t *arena, size_t size) NONULL;
+WEAK vector_t *vector_of2(WEAK arena_t *arena, size_t size) NONULL;
 
 /**
  * push an element onto the end of a vector

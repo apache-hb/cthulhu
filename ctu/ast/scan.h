@@ -15,9 +15,11 @@ typedef struct {
 } text_t;
 
 typedef struct {
-    arena_t nodes;
-    arena_t ast;
-    
+    arena_t nodes; /// for tracking nodes
+    arena_t ast; /// for the language ast
+    arena_t tokens; /// for flex and bison
+    arena_t strings; /// for the strings
+
     /* the language name */
     const char *language;
 

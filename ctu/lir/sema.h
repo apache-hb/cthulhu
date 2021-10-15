@@ -3,13 +3,13 @@
 #include "ctu/util/report.h"
 
 typedef struct sema_t {
-    struct sema_t *parent;
-    reports_t *reports;
+    WEAK struct sema_t *parent;
+    WEAK reports_t *reports;
 
     /** vector_t<map_t<const char*, void*>*> */
     vector_t *decls;
 
-    void *data; /// user data
+    WEAK void *data; /// user data
 } sema_t;
 
 /**

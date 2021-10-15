@@ -11,6 +11,10 @@ typedef struct {
     char data[]; /* the counters and then block data */
 } blockmap_t;
 
+static size_t blockmap_size(size_t blocks, size_t width) {
+    return ((width + sizeof(size_t)) * blocks) + sizeof(blockmap_t);
+}
+
 /* get the blockmap counters */
 static size_t *blockmap_counters(blockmap_t *map) {
     return (size_t*)map->data;
@@ -120,26 +124,31 @@ static void blockmap_free(blockmap_t *arena, void *ptr, size_t bytes) {
     }
 }
 
+static void blockmap_reset(blockmap_t *arena) {
+    size_t *counters = blockmap_counters(arena);
+    for (size_t i = 0; i < arena->blocks; i++) {
+        counters[i] = 0;
+    }
+}
+
 arena_t new_blockmap(const char *name, size_t width, size_t blocks) {
     /* reserve enough space for the header, data, and counters */
-    size_t bytes = ((width + sizeof(size_t)) * blocks) + sizeof(blockmap_t);
-    arena_t result = NEW_ARENA(
-        /* name = */ name,
-        /* initial = */ bytes,
-        /* malloc = */ blockmap_malloc,
-        /* realloc = */ blockmap_realloc,
-        /* free = */ blockmap_free
-    );
+    arena_t result = {
+        .alloc = ARENA_MALLOC(blockmap_malloc),
+        .realloc = ARENA_REALLOC(blockmap_realloc),
+        .release = ARENA_FREE(blockmap_free),
+        .reset = ARENA_RESET(blockmap_reset),
+        .name = name
+    };
+    
+    new_arena(&result, blockmap_size(width, blocks));
 
     blockmap_t *arena = result.data;
     arena->name = name;
     arena->blocks = blocks;
     arena->width = width;
 
-    size_t *counters = blockmap_counters(arena);
-    for (size_t i = 0; i < blocks; i++) {
-        counters[i] = 0;
-    }
+    blockmap_reset(arena);
 
     return result;
 }

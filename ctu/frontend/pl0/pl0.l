@@ -1,6 +1,7 @@
 %option extra-type="scan_t*"
 %option yylineno 8bit nodefault
 %option noyywrap noinput nounput
+%option noyyalloc noyyrealloc noyyfree
 %option reentrant bison-bridge bison-locations
 %option never-interactive batch
 %option prefix="pl0"
@@ -67,3 +68,5 @@
 . { report_unknown_character(yyextra->reports, node_new(yyextra, *yylloc), yytext); }
 
 %%
+
+FLEX_MEMORY(pl0alloc, pl0realloc, pl0free)

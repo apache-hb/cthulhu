@@ -132,6 +132,8 @@ PRINT(2, 3)
 void report_note(WEAK message_t *message, 
                   const char *fmt, ...) NOTNULL(1, 2);
 
+void init_log(void);
+
 /**
  * whether logverbose should print or not
  * 

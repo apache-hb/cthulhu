@@ -101,8 +101,8 @@ typedef struct {
 
 typedef struct {
     reports_t *reports;
-    c_data_t *context;
-    scan_t *scanner;
+    c_data_t context;
+    scan_t scanner;
     where_t where;
     size_t offset;
     char lookahead;
@@ -110,11 +110,11 @@ typedef struct {
 } c_scan_t; 
 
 static node_t *node_of(tok_t tok, c_scan_t scan) {
-    return node_new(scan.scanner, tok.where);
+    return node_new(&scan.scanner, tok.where);
 }
 
 static char get_char(c_scan_t *scan) {
-    const char *buffer = scan_text(scan->scanner);
+    const char *buffer = scan_text(&scan->scanner);
     char c = buffer[scan->offset++];
 
     if (c == '\n') {
@@ -251,14 +251,14 @@ static tok_t get_tok(c_scan_t *scan) {
             end = scan->offset;
             c = next_char(scan);
         }
-        char *ident = ctu_memdup(scan_text(scan->scanner) + start, end - start + 1);
+        char *ident = ctu_memdup(scan_text(&scan->scanner) + start, end - start + 1);
         ident[end - start] = '\0';
         return build_ident(scan, ident);
     }
 
     char msg[] = { c, '\0' };
     report_unknown_character(scan->reports,
-        node_new(scan->scanner, scan->where),
+        node_new(&scan->scanner, scan->where),
         msg
     );
 
@@ -335,7 +335,7 @@ c_t *c_compile(reports_t *reports, file_t *fd) {
     c_scan_t scan = {
         .reports = reports,
         .context = c_data_new(),
-        .scanner = scan_file(reports, sizeof(c_t), "C11", fd),
+        .scanner = scan_file(reports, "C11", fd),
         .where = start,
         .offset = 0
     };

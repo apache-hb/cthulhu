@@ -57,15 +57,17 @@ const backend_t *select_backend(reports_t *reports, const char *name) {
 
 typedef struct {
     reports_t *reports;
+    scan_t scan;
     file_t *file;
     void *node;
     lir_t *lir;
     module_t *mod;
 } context_t;
 
-static context_t *new_context(reports_t *reports, file_t *file, void *node) {
-    context_t *ctx = ctu_malloc(sizeof(context_t));
+static context_t *new_context(arena_t *arena, reports_t *reports, scan_t scan, file_t *file, void *node) {
+    context_t *ctx = arena_malloc(arena, sizeof(context_t));
     ctx->reports = reports;
+    ctx->scan = scan;
     ctx->file = file;
     ctx->node = node;
     return ctx;
@@ -78,12 +80,19 @@ static int max_report(int *error, reports_t *reports, const char *msg) {
 }
 
 int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(void)) {
-    init_memory();
+    init_log();
+    init_gmp();
+    init_types();
+    init_lir();
+    init_values();
 
     int error = 0;
     arena_t report_arena = new_blockmap("report-arena", sizeof(message_t), 128);
+    arena_t format_arena = new_blockmap("format-arena", 64, 128);
+    arena_t settings_arena = new_blockmap("settings-arena", 64, 128);
+
     reports_t *errors = begin_reports(&report_arena);
-    settings_t settings = parse_args(errors, frontend, argc, argv);
+    settings_t settings = parse_args(&settings_arena, errors, frontend, argc, argv);
     verbose = settings.verbose;
 
     if ((error = end_reports(errors, SIZE_MAX, "command line parsing")) > 0) {
@@ -100,20 +109,27 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
 
     vector_t *sources = settings.sources;
     size_t len = vector_len(sources);
+    scan_t scans[len];
 
+    arena_t context_arena = new_bump("context-arena", sizeof(context_t) * len * 2);
     logverbose("compiling %zu file(s)", len);
 
-    vector_t *all = vector_of(len);
+    vector_t *all = vector_of2(&context_arena, len);
 
     for (size_t i = 0; i < len; i++) {
-        file_t *file = vector_get(sources, i);
         reports_t *reports = begin_reports(&report_arena);
-        void *node = frontend->parse(reports, file);
-        context_t *ctx = new_context(reports, file, node);
+        file_t *file = vector_get(sources, i);
+        scans[i] = frontend->open(reports, file);
+
+        void *node = frontend->parse(&scans[i]);
+        context_t *ctx = new_context(&context_arena, reports, scans[i], file, node);
+        
         vector_set(all, i, ctx);
 
-        max_report(&error, reports, format("parsing of `%s`", file->path));
+        max_report(&error, reports, formatex(&format_arena, "parsing of `%s`", file->path));
     }
+
+    logverbose("parsed %zu file(s)", len);
 
     if (error > 0) { return error; }
 
@@ -121,8 +137,10 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
         context_t *ctx = vector_get(all, i);
         ctx->lir = frontend->analyze(ctx->reports, ctx->node);
 
-        max_report(&error, ctx->reports, format("analysis of `%s`", ctx->file->path));
+        max_report(&error, ctx->reports, formatex(&format_arena, "analysis of `%s`", ctx->file->path));
     }
+
+    logverbose("analyzed %zu file(s)", len);
 
     if (error > 0) { return error; }
 
@@ -132,7 +150,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
         ctx->mod = module_build(ctx->reports, ctx->lir);
 
         logverbose("reporting %s", ctx->file->path);
-        int local = max_report(&error, ctx->reports, format("compilation of `%s`", ctx->file->path));
+        int local = max_report(&error, ctx->reports, formatex(&format_arena, "compilation of `%s`", ctx->file->path));
         if (local > 0) {
             continue;
         }
@@ -143,7 +161,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
             module_print(stdout, ctx->mod);
         }
 
-        max_report(&error, ctx->reports, format("evaluation of `%s`", ctx->file->path));
+        max_report(&error, ctx->reports, formatex(&format_arena, "evaluation of `%s`", ctx->file->path));
     }
 
     if (error > 0) { return error; }
@@ -157,7 +175,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
         }
 
         backend->compile(ctx->reports, ctx->mod, "out.c");
-        max_report(&error, ctx->reports, format("generation of `%s`", ctx->file->path));
+        max_report(&error, ctx->reports, formatex(&format_arena, "generation of `%s`", ctx->file->path));
     }
 
 #if FUZZING

@@ -57,5 +57,5 @@
 NORETURN PRINT(1, 2)
 void ctpanic(const char *msg, ...);
 
-#define CTASSERT(expr, msg) if (!(expr)) { ctpanic(COLOUR_CYAN "assert [" COLOUR_RESET STR(__FILE__) ":" STR(__LINE__) "]: " msg); }
-#define CTASSERTF(expr, msg, ...) if (!(expr)) { ctpanic(COLOUR_CYAN "assert [" COLOUR_RESET STR(__FILE__) ":" STR(__LINE__) "]: " msg, __VA_ARGS__); }
+#define CTASSERT(expr, msg) if (!(expr)) { ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" STR(__FILE__) ":" STR(__LINE__) "]: " msg "\n"); }
+#define CTASSERTF(expr, msg, ...) if (!(expr)) { ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" STR(__FILE__) ":" STR(__LINE__) "]: " msg "\n", __VA_ARGS__); }

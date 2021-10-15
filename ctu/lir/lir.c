@@ -2,8 +2,14 @@
 
 #include "ctu/util/report.h"
 
+static arena_t LIR;
+
+void init_lir(void) {
+    LIR = new_bump("lir-arena", sizeof(lir_t) * 0x1000);
+}
+
 static lir_t *lir_new(node_t *node, const type_t *type, leaf_t leaf) {
-    lir_t *lir = ctu_malloc(sizeof(lir_t));
+    lir_t *lir = arena_malloc(&LIR, sizeof(lir_t));
     lir->node = node;
     lir->leaf = leaf;
     lir->type = type;

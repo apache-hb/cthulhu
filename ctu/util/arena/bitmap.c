@@ -64,45 +64,50 @@ static void *bitmap_malloc(bitmap_t *arena, size_t bytes) {
     CTASSERTF(arena->width == bytes, "bitmap [%s] alloc size mismatch. got size %zu, expected size %zu", bytes, arena->width);
 
     size_t block = find_block(arena);
-    CTASSERTF(block != SIZE_MAX, "bitmap [%s] out of memory", arena->name);
+    if (block == SIZE_MAX) {
+        return NULL;
+    }
 
     mark_bit(arena, block, true);
 
     return bitmap_entry(arena, block);
 }
 
-static void bitmap_realloc(bitmap_t *arena, void **ptr, size_t previous, size_t bytes) {
-    CTASSERTF(false, "bitmap [%s] reallocating of pointer %p with size %zu to new size of %zu", arena->name, *ptr, previous, bytes);
-}
-
 static void bitmap_free(bitmap_t *arena, void *ptr, size_t bytes) {
     CTASSERTF(arena->width == bytes, "bitmap [%s] free size mismatch with ptr %p of size %zu, expected size %zu", ptr, bytes, arena->width);
+
     size_t index = bitmap_index(arena, ptr);
     mark_bit(arena, index, false);
 }
 
-arena_t new_bitmap(const char *name, size_t width, size_t blocks) {
-    size_t size = sizeof(bitmap_t) + (blocks * width);
-    size_t bitmap = ALIGN(blocks / 8, 8);
+static void bitmap_reset(bitmap_t *arena) {
+    uint8_t *bits = bitmap_bits(arena);
+    for (size_t i = 0; i < arena->entries / 8; i++) {
+        bits[i] = 0;
+    }
+}
 
-    arena_t result = NEW_ARENA(
-        /* name = */ name,
-        /* initial = */ bitmap + size,
-        /* malloc = */ bitmap_malloc,
-        /* realloc = */ bitmap_realloc,
-        /* free = */ bitmap_free
-    );
+arena_t new_bitmap(const char *name, size_t width, size_t blocks) {
+    CTASSERTF(blocks % 8 == 0, "bitmap [%s] block size must be a multiple of 8", name);
+
+    arena_t result = {
+        .alloc = ARENA_MALLOC(bitmap_malloc),
+        .release = ARENA_FREE(bitmap_free),
+        .reset = ARENA_RESET(bitmap_reset),
+        .name = name
+    };
+
+    size_t size = sizeof(bitmap_t) + (blocks * width);
+    size_t bitmap = blocks / 8;
+
+    new_arena(&result, bitmap + size);
 
     bitmap_t *arena = result.data;
     arena->name = name;
     arena->width = width;
     arena->entries = blocks;
 
-    /* set the bitmap to all 0s */
-    uint8_t *bits = bitmap_bits(arena);
-    for (size_t i = 0; i < bitmap; i++) {
-        bits[i] = 0;
-    }
+    bitmap_reset(arena);
 
     return result;
 }

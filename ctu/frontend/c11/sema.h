@@ -11,4 +11,4 @@ typedef struct {
     map_t *typedefs;
 } c_data_t;
 
-c_data_t *c_data_new(void);
+c_data_t c_data_new(void);

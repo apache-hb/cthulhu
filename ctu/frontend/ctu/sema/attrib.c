@@ -8,10 +8,11 @@ typedef struct {
     callback_t callback;
 } builtin_t;
 
+static arena_t BUILTINS;
 static map_t *builtins = NULL;
 
 static void add_builtin(const char *name, type_t *type, callback_t callback) {
-    builtin_t *builtin = ctu_malloc(sizeof(builtin_t));
+    builtin_t *builtin = arena_malloc(&BUILTINS, sizeof(builtin_t));
 
     builtin->type = type;
     builtin->callback = callback;
@@ -72,9 +73,10 @@ static void apply_attrib(sema_t *sema, attrib_t *dst, ctu_t *attrib) {
 }
 
 void init_attribs(void) {
-    builtins = map_new(MAP_SMALL);
-    add_builtin("entry", type_closure(vector_new(0), type_void()), entry_attrib);
-    add_builtin("mangle", type_closure(vector_init(type_string()), type_void()), mangle_attrib);
+    BUILTINS = new_bump("builtin-arena", sizeof(builtin_t) * 64);
+    builtins = map_new2(&BUILTINS, MAP_SMALL);
+    add_builtin("entry", type_closure(vector_new2(&BUILTINS, 0), type_void()), entry_attrib);
+    add_builtin("mangle", type_closure(vector_init2(&BUILTINS, type_string()), type_void()), mangle_attrib);
 }
 
 void compile_attribs(sema_t *sema, lir_t *lir, ctu_t *ctu) {

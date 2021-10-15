@@ -5,8 +5,8 @@
 #include "ctu/lir/lir.h"
 #include "ctu/gen/emit.h"
 
-typedef scan_t*(*open_t)(reports_t*, file_t*);
-typedef void*(*parse_t)(reports_t*, file_t*);
+typedef scan_t(*open_t)(reports_t*, file_t*);
+typedef void*(*parse_t)(scan_t *);
 typedef lir_t*(*analyze_t)(reports_t*, void*);
 
 typedef struct {

@@ -105,21 +105,21 @@ program: unit END { scan_export(x, ctu_module(x, @$, $1)); }
     | imports unit END { scan_export(x, ctu_module(x, @$, $2)); }
     ;
 
-imports: import { $$ = vector_init($1); }
+imports: import { $$ = vector_init2(&x->tokens, $1); }
     | imports import { vector_push(&$1, $2); $$ = $1; }
     ;
 
 import: IMPORT { $$ = NULL; }
     ;
 
-unit: decl { $$ = vector_init($1); }
+unit: decl { $$ = vector_init2(&x->tokens, $1); }
     | unit decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
 decl: attributes exported declbase { $$ = set_details($3, $1, $2); }
     ;
 
-attributes: %empty { $$ = vector_new(0); }
+attributes: %empty { $$ = vector_new2(&x->tokens, 0); }
     | attriblist { $$ = $1; }
     ;
 
@@ -127,11 +127,11 @@ attriblist: attribute { $$ = $1; }
     | attriblist attribute { $$ = vector_join($1, $2); }
     ;
 
-attribute: AT attrib { $$ = vector_init($2); }
+attribute: AT attrib { $$ = vector_init2(&x->tokens, $2); }
     | AT LSQUARE attribs RSQUARE { $$ = $3; }
     ;
 
-attribs: attrib { $$ = vector_init($1); }
+attribs: attrib { $$ = vector_init2(&x->tokens, $1); }
     | attribs attrib { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -159,7 +159,7 @@ const: VAR { $$ = true; }
 function: DEF IDENT LPAREN paramlist RPAREN COLON type statements 
     { $$ = ctu_define(x, @$, $2, $4, $7, $8); }
     | DEF IDENT LPAREN paramlist RPAREN COLON type ASSIGN expr SEMI
-    { $$ = ctu_define(x, @$, $2, $4, $7, ctu_stmts(x, @9, vector_init(ctu_return(x, @9, $9)))); }
+    { $$ = ctu_define(x, @$, $2, $4, $7, ctu_stmts(x, @9, vector_init2(&x->ast, ctu_return(x, @9, $9)))); }
     | DEF IDENT LPAREN paramlist RPAREN COLON type SEMI 
     { $$ = ctu_define(x, @$, $2, $4, $7, NULL); }
     ;
@@ -168,7 +168,7 @@ paramlist: %empty { $$ = vector_new(0); }
     | params { $$ = $1; }
     ;
 
-params: param { $$ = vector_init($1); }
+params: param { $$ = vector_init2(&x->tokens, $1); }
     | params COMMA param { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -188,7 +188,7 @@ typelist: %empty { $$ = vector_new(0); }
     | types { $$ = $1; }
     ;
 
-types: type { $$ = vector_init($1); }
+types: type { $$ = vector_init2(&x->tokens, $1); }
     | types COMMA type { vector_push(&$1, $3); $$ = $1; }
     ;
 
@@ -196,7 +196,7 @@ statements: LBRACE RBRACE { $$ = ctu_stmts(x, @$, vector_new(0)); }
     | LBRACE stmtlist RBRACE { $$ = ctu_stmts(x, @$, $2); }
     ;
 
-stmtlist: stmt { $$ = vector_init($1); }
+stmtlist: stmt { $$ = vector_init2(&x->tokens, $1); }
     | stmtlist stmt { vector_push(&$1, $2); $$ = $1; }
     ;
 
@@ -231,7 +231,7 @@ arglist: %empty { $$ = vector_new(0); }
     | args { $$ = $1; }
     ;
 
-args: expr { $$ = vector_init($1); }
+args: expr { $$ = vector_init2(&x->tokens, $1); }
     | args COMMA expr { vector_push(&$1, $3); $$ = $1; }
     ;
 
