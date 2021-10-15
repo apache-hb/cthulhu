@@ -11,4 +11,3 @@ typedef struct {
 } node_t;
 
 node_t *node_new(WEAK scan_t *scan, where_t where) NONULL;
-void node_delete(OWNED node_t *node) NONULL;

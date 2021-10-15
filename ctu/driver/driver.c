@@ -81,7 +81,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
     init_memory();
 
     int error = 0;
-    arena_t report_arena = new_blockmap(sizeof(message_t), 128);
+    arena_t report_arena = new_blockmap("report-arena", sizeof(message_t), 128);
     reports_t *errors = begin_reports(&report_arena);
     settings_t settings = parse_args(errors, frontend, argc, argv);
     verbose = settings.verbose;

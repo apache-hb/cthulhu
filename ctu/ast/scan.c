@@ -9,9 +9,3 @@ size_t scan_size(const scan_t *scan) {
 const char *scan_text(const scan_t *scan) {
     return scan->source.text;
 }
-
-char *ctu_intern(scan_t *scan, char *str) {
-    UNUSED(scan);
-    return str;
-    // return set_add(scan->pool, str);
-}

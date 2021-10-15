@@ -18,16 +18,9 @@ static scan_t *scan_new(reports_t *reports, const char *language, const char *pa
 
     scan->offset = 0;
 
-    //scan->pool = set_new(1257787); /* TODO: figure out a good size based on file size */
-
     scan->reports = reports;
 
     return scan;
-}
-
-void scan_delete(scan_t *scan) {
-    //set_delete(scan->pool);
-    ctu_free(scan, sizeof(scan_t));
 }
 
 scan_t *scan_string(reports_t *reports, const char *language, const char *path, const char *text) {

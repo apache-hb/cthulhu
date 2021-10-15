@@ -20,15 +20,43 @@ typedef struct {
     arena_alloc_t alloc;
     arena_realloc_t realloc;
     arena_release_t release;
+    const char *name;
     void *data;
 } arena_t;
 
-arena_t new_arena(arena_alloc_t alloc, arena_realloc_t realloc, arena_release_t release, void *data);
-#define NEW_ARENA(alloc, realloc, release, data) \
-    new_arena((arena_alloc_t)alloc, (arena_realloc_t)realloc, (arena_release_t)release, (void*)data)
+arena_t new_arena(const char *name, 
+                  arena_alloc_t alloc, 
+                  arena_realloc_t realloc, 
+                  arena_release_t release, 
+                  void *data) NONULL;
 
-void *arena_malloc(arena_t *arena, size_t bytes);
-void arena_realloc(arena_t *arena, void **ptr, size_t previous, size_t bytes);
-void arena_free(arena_t *arena, void *ptr, size_t bytes);
+#define NEW_ARENA(name, alloc, realloc, release, data) \
+    new_arena(name, (arena_alloc_t)alloc, (arena_realloc_t)realloc, (arena_release_t)release, (void*)data)
 
-arena_t new_blockmap(size_t width, size_t blocks);
+void arena_free(arena_t *arena, void *ptr, size_t bytes) NONULL;
+void *arena_malloc(arena_t *arena, size_t bytes) NOTNULL(1) ALLOC(arena_free);
+void arena_realloc(arena_t *arena, void **ptr, size_t previous, size_t bytes) NOTNULL(1) ALLOC(arena_free);
+
+/**
+ * an arena optimized for variable sized allocations 
+ * with frequent realloc calls
+ * 
+ * @param name the name of the arena
+ * @param width the estimated width of the allocations maximum size
+ * @param blocks the number of blocks to initially allocate
+ * 
+ * @return the arena
+ */
+arena_t new_blockmap(const char *name, size_t width, size_t blocks);
+
+/**
+ * an arena optimized for fixed sized allocations
+ * which cannot realloc
+ * 
+ * @param name the name of the arena
+ * @param width the width of each allocation
+ * @param blocks the number of blocks to initially allocate
+ * 
+ * @return the arena
+ */
+arena_t new_bitmap(const char *name, size_t width, size_t blocks);

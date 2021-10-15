@@ -48,7 +48,6 @@ void dead_function_elimination(reports_t *reports,
     for (size_t i = 0; i < len; i++) {
         block_t *func = vector_get(funcs, i);
         if (!has_refs(func)) {
-            block_free(func);
             vector_set(funcs, i, NULL);
         }
     }

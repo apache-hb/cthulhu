@@ -10,5 +10,3 @@
 
 module_t *module_build(reports_t *reports, lir_t *root);
 void module_print(FILE *out, module_t *mod);
-void block_free(block_t *block);
-void module_free(module_t *mod);

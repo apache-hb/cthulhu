@@ -13,8 +13,6 @@ scan_t *scan_file(reports_t *reports, const char *language, file_t *file);
 /* set the export data */
 void scan_export(scan_t *scan, void *data);
 
-void scan_delete(scan_t *scan);
-
 typedef struct {
     int(*init)(scan_t *extra, void *scanner);
     void(*set_in)(FILE *fd, void *scanner);

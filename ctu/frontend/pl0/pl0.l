@@ -33,7 +33,7 @@
 (?i:odd) { return ODD; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    yylval->ident = ctu_intern(yyextra, yytext);
+    yylval->ident = yytext;
     return IDENT;
 }
 

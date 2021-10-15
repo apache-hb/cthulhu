@@ -55,5 +55,3 @@ typedef struct {
 } where_t;
 
 extern where_t nowhere;
-
-char *ctu_intern(scan_t *scan, char *str);

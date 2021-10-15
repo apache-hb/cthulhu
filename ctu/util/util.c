@@ -26,19 +26,24 @@ void ctu_free(void *ptr, size_t size) {
     FREE(ptr);
 }
 
+static arena_t GMP;
+
 static void *ctu_gmp_malloc(size_t size) {
-    return ctu_malloc(size);
+    return arena_malloc(&GMP, size);
 }
 
 static void *ctu_gmp_realloc(void *ptr, size_t old, size_t size) {
-    return ctu_realloc(ptr, old, size);
+    arena_realloc(&GMP, &ptr, old, size);
+    return ptr;
 }
 
 static void ctu_gmp_free(void *ptr, size_t size) {
-    ctu_free(ptr, size);
+    arena_free(&GMP, ptr, size);
 }
 
 void init_memory(void) {
+    GMP = new_blockmap("gmp-arena", sizeof(mpz_t), 0x1000);
+
     mp_set_memory_functions(
         ctu_gmp_malloc, 
         ctu_gmp_realloc, 
