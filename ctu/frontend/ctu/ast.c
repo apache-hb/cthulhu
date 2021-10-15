@@ -1,7 +1,7 @@
 #include "ast.h"
 
 static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_type_t type) {
-    ctu_t *ctu = ctu_malloc(sizeof(ctu_t));
+    ctu_t *ctu = arena_malloc(&scan->ast, sizeof(ctu_t));
     ctu->node = node_new(scan, where);
     ctu->type = type;
     ctu->lir = NULL;

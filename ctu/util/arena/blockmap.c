@@ -63,7 +63,7 @@ static size_t more_free_blocks(blockmap_t *arena, size_t start, size_t blocks) {
 }
 
 static size_t blockmap_index(blockmap_t *arena, void *ptr) {
-    CTASSERTF(ptr >= blockmap_data(arena), "ptr `%p` is not in arena `%s`", ptr, arena->name);
+    CTASSERTF(ptr >= blockmap_data(arena), "arena [%s] does not contain ptr `%p`", arena->name, ptr);
     return (ptr - blockmap_data(arena)) / arena->width;
 }
 
@@ -71,7 +71,7 @@ static void *blockmap_malloc(blockmap_t *arena, size_t bytes) {
     size_t index = next_free_block(arena, 0);
     size_t *counters = blockmap_counters(arena);
     
-    CTASSERTF(index != SIZE_MAX, "no free blocks while allocating object of size %zu in arena `%s`", bytes, arena->name);
+    CTASSERTF(index != SIZE_MAX, "arena [%s] no free blocks while allocating object of size %zu", arena->name, bytes);
 
     counters[index] = bytes;
     return blockmap_entry(arena, index);
@@ -121,14 +121,17 @@ static void blockmap_free(blockmap_t *arena, void *ptr, size_t bytes) {
 }
 
 arena_t new_blockmap(const char *name, size_t width, size_t blocks) {
-    /* reserve extra space for the width counters */
-    size_t extra = sizeof(size_t) * blocks;
-    size_t size = ALIGN4K((width * blocks) + extra + sizeof(blockmap_t));
+    /* reserve enough space for the header, data, and counters */
+    size_t bytes = ((width + sizeof(size_t)) * blocks) + sizeof(blockmap_t);
+    arena_t result = NEW_ARENA(
+        /* name = */ name,
+        /* initial = */ bytes,
+        /* malloc = */ blockmap_malloc,
+        /* realloc = */ blockmap_realloc,
+        /* free = */ blockmap_free
+    );
 
-    void *data = MMAP_ARENA(size);
-    CTASSERTF(data != MAP_FAILED, "failed to mmap %zu bytes", size)
-
-    blockmap_t *arena = data;
+    blockmap_t *arena = result.data;
     arena->name = name;
     arena->blocks = blocks;
     arena->width = width;
@@ -138,5 +141,5 @@ arena_t new_blockmap(const char *name, size_t width, size_t blocks) {
         counters[i] = 0;
     }
 
-    return NEW_ARENA(name, blockmap_malloc, blockmap_realloc, blockmap_free, data);
+    return result;
 }

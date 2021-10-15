@@ -25,6 +25,11 @@ static void *bitmap_entry(bitmap_t *arena, size_t index) {
     return bitmap_data(arena) + (arena->width * index);
 }
 
+static size_t bitmap_index(bitmap_t *arena, void *ptr) {
+    CTASSERTF(ptr >= bitmap_data(arena), "arena [%s] does not contain ptr `%p`", arena->name, ptr);
+    return (ptr - bitmap_data(arena)) / arena->width;
+}
+
 static size_t find_block(bitmap_t *arena) {
     uint8_t *bits = bitmap_bits(arena);
     size_t entries = arena->entries;
@@ -46,40 +51,49 @@ static size_t find_block(bitmap_t *arena) {
     return SIZE_MAX;
 }
 
-static void mark_used(bitmap_t *arena, size_t block) {
+static void mark_bit(bitmap_t *arena, size_t block, bool used) {
     uint8_t *bits = bitmap_bits(arena);
-    bits[block / 8] |= (1 << (block % 8));
+    if (used) {
+        bits[block / 8] |= (1 << (block % 8));
+    } else {
+        bits[block / 8] &= ~(1 << (block % 8));
+    }
 }
 
 static void *bitmap_malloc(bitmap_t *arena, size_t bytes) {
-    CTASSERTF(arena->width == bytes, "bitmap alloc size mismatch in %s. got size %zu, expected size %zu", bytes, arena->width);
+    CTASSERTF(arena->width == bytes, "bitmap [%s] alloc size mismatch. got size %zu, expected size %zu", bytes, arena->width);
 
     size_t block = find_block(arena);
-    CTASSERTF(block != SIZE_MAX, "bitmap out of memory in %s", arena->name);
+    CTASSERTF(block != SIZE_MAX, "bitmap [%s] out of memory", arena->name);
 
-    mark_used(arena, block);
+    mark_bit(arena, block, true);
 
     return bitmap_entry(arena, block);
 }
 
 static void bitmap_realloc(bitmap_t *arena, void **ptr, size_t previous, size_t bytes) {
-    CTASSERTF(false, "reallocating inside bitmap `%s` of pointer %p with size %zu to new size of %zu", arena->name, *ptr, previous, bytes);
+    CTASSERTF(false, "bitmap [%s] reallocating of pointer %p with size %zu to new size of %zu", arena->name, *ptr, previous, bytes);
 }
 
 static void bitmap_free(bitmap_t *arena, void *ptr, size_t bytes) {
-    CTASSERTF(arena->width == bytes, "bitmap free size mismatch in %s with ptr %p of size %zu, expected size %zu", ptr, bytes, arena->width);
+    CTASSERTF(arena->width == bytes, "bitmap [%s] free size mismatch with ptr %p of size %zu, expected size %zu", ptr, bytes, arena->width);
+    size_t index = bitmap_index(arena, ptr);
+    mark_bit(arena, index, false);
 }
 
 arena_t new_bitmap(const char *name, size_t width, size_t blocks) {
     size_t size = sizeof(bitmap_t) + (blocks * width);
     size_t bitmap = ALIGN(blocks / 8, 8);
 
-    /* allocate enough space for the data and the bitmap */
-    size_t aligned = ALIGN4K(bitmap + size); 
+    arena_t result = NEW_ARENA(
+        /* name = */ name,
+        /* initial = */ bitmap + size,
+        /* malloc = */ bitmap_malloc,
+        /* realloc = */ bitmap_realloc,
+        /* free = */ bitmap_free
+    );
 
-    void *data = MMAP_ARENA(aligned);
-
-    bitmap_t *arena = data;
+    bitmap_t *arena = result.data;
     arena->name = name;
     arena->width = width;
     arena->entries = blocks;
@@ -90,5 +104,5 @@ arena_t new_bitmap(const char *name, size_t width, size_t blocks) {
         bits[i] = 0;
     }
 
-    return NEW_ARENA(name, bitmap_malloc, bitmap_realloc, bitmap_free, arena);
+    return result;
 }

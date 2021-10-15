@@ -25,13 +25,13 @@ typedef struct {
 } arena_t;
 
 arena_t new_arena(const char *name, 
+                  size_t initial,
                   arena_alloc_t alloc, 
                   arena_realloc_t realloc, 
-                  arena_release_t release, 
-                  void *data) NONULL;
+                  arena_release_t release) NONULL;
 
-#define NEW_ARENA(name, alloc, realloc, release, data) \
-    new_arena(name, (arena_alloc_t)alloc, (arena_realloc_t)realloc, (arena_release_t)release, (void*)data)
+#define NEW_ARENA(name, initial, alloc, realloc, release) \
+    new_arena(name, initial, (arena_alloc_t)alloc, (arena_realloc_t)realloc, (arena_release_t)release)
 
 void arena_free(arena_t *arena, void *ptr, size_t bytes) NONULL;
 void *arena_malloc(arena_t *arena, size_t bytes) NOTNULL(1) ALLOC(arena_free);

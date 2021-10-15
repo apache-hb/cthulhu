@@ -659,16 +659,7 @@ static void assign_globals(context_t *ctx, vector_t *globals) {
             /* lvalue = */ global,
             /* rvalue = */ rvalue_from_value(ctx->gcc, block->value)
         );
-#if 0
-        size_t bytes = 0;
-        void *blob = blob_from_value(block->value, &bytes);
 
-        gcc_jit_global_set_initializer(
-            /* global = */ global,
-            /* blob = */ blob,
-            /* num_bytes = */ bytes
-        );
-#endif
         block->data = global;
     }
 }

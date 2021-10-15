@@ -335,7 +335,7 @@ c_t *c_compile(reports_t *reports, file_t *fd) {
     c_scan_t scan = {
         .reports = reports,
         .context = c_data_new(),
-        .scanner = scan_file(reports, "C99", fd),
+        .scanner = scan_file(reports, sizeof(c_t), "C11", fd),
         .where = start,
         .offset = 0
     };

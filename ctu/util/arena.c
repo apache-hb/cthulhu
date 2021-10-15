@@ -1,10 +1,16 @@
 #include "arena.h"
 
 #include "ctu/util/macros.h"
+#include "arena/util.h"
 
 #include <stdint.h>
 
-arena_t new_arena(const char *name, arena_alloc_t alloc, arena_realloc_t realloc, arena_release_t release, void *data) {
+arena_t new_arena(const char *name, size_t initial, arena_alloc_t alloc, arena_realloc_t realloc, arena_release_t release) {
+    size_t aligned = ALIGN4K(initial);
+    void *data = MMAP_ARENA(aligned);
+    
+    CTASSERTF(data != MAP_FAILED, "arena [%s] failed to map %zu bytes", aligned);
+
     arena_t arena = {
         .alloc = alloc,
         .realloc = realloc,

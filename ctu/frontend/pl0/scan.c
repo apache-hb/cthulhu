@@ -36,7 +36,7 @@ static callbacks_t CALLBACKS = {
 static const char *LANGUAGE = "PL/0";
 
 pl0_t *pl0_compile(reports_t *reports, file_t *fd) {
-    scan_t *scan = scan_file(reports, LANGUAGE, fd);
+    scan_t *scan = scan_file(reports, sizeof(pl0_t), LANGUAGE, fd);
     pl0_t *node = compile_file(scan, &CALLBACKS);
     return node;
 }

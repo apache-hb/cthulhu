@@ -9,12 +9,15 @@
 #include <string.h>
 #include <stdlib.h>
 
-static scan_t *scan_new(reports_t *reports, const char *language, const char *path) {
+static scan_t *scan_new(reports_t *reports, size_t ast, const char *language, const char *path) {
     scan_t *scan = ctu_malloc(sizeof(scan_t));
 
     scan->language = language;
     scan->path = path;
     scan->data = NULL;
+
+    scan->ast = new_bitmap("scanner-ast-arena", ast, 0x1000);
+    scan->nodes = new_bitmap("scanner-node-arena", sizeof(node_t), 0x1000);
 
     scan->offset = 0;
 
@@ -23,8 +26,8 @@ static scan_t *scan_new(reports_t *reports, const char *language, const char *pa
     return scan;
 }
 
-scan_t *scan_string(reports_t *reports, const char *language, const char *path, const char *text) {
-    scan_t *scan = scan_new(reports, language, path);
+scan_t *scan_string(reports_t *reports, size_t ast, const char *language, const char *path, const char *text) {
+    scan_t *scan = scan_new(reports, ast, language, path);
 
     scan->source = (text_t){ strlen(text), text };
 
@@ -38,10 +41,10 @@ static size_t file_size(FILE *fd) {
     return size;
 }
 
-scan_t *scan_file(reports_t *reports, const char *language, file_t *file) {
+scan_t *scan_file(reports_t *reports, size_t ast, const char *language, file_t *file) {
     FILE *fd = file->file;
     size_t size = file_size(fd);
-    scan_t *scan = scan_new(reports, language, file->path);
+    scan_t *scan = scan_new(reports, ast, language, file->path);
 
     scan->data = fd;
 

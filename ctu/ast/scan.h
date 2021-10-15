@@ -15,6 +15,9 @@ typedef struct {
 } text_t;
 
 typedef struct {
+    arena_t nodes;
+    arena_t ast;
+    
     /* the language name */
     const char *language;
 
@@ -31,12 +34,6 @@ typedef struct {
 
     /* how much of the text has been read */
     size_t offset;
-
-    /* the length of the text */
-    // size_t size;
-
-    /* string interning pool */
-    set_t *pool;
 
     /* actually reports_t * but forward declaration pains */
     void *reports;

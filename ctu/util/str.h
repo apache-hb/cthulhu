@@ -116,17 +116,3 @@ stream_t *stream_new(size_t size) ALLOC(stream_delete);
 size_t stream_len(stream_t *stream) CONSTFN NONULL;
 void stream_write(stream_t *stream, const char *str) NONULL;
 const char *stream_data(const stream_t *stream) CONSTFN NONULL;
-
-typedef struct entry_t {
-    OWNED NULLABLE char *key;
-    OWNED NULLABLE struct entry_t *next;
-} entry_t;
-
-typedef struct {
-    size_t size;
-    entry_t data[];
-} set_t;
-
-void set_delete(set_t *set) NONULL;
-set_t *set_new(size_t size) ALLOC(set_delete);
-char *set_add(set_t *set, const char *str) NONULL;
