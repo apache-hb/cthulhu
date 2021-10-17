@@ -47,7 +47,7 @@ typedef struct {
  * 
  * @return the new context
  */
-OWNED reports_t *begin_reports(void) ALLOC(delete_reports);
+OWNED reports_t *begin_reports(void);
 
 /**
  * flush a reporting context and return an exit code
