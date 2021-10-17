@@ -90,9 +90,8 @@ typedef struct {
 
 static size_t push_step(block_t *block, step_t step) {
     if (block->len + 1 >= block->size) {
-        size_t old = block->size;
         block->size += 16;
-        block->steps = ctu_realloc(block->steps, old, block->size * sizeof(step_t));
+        block->steps = ctu_realloc(block->steps, block->size * sizeof(step_t));
     }
 
     block->steps[block->len] = step;

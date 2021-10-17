@@ -11,10 +11,6 @@
 
 static scan_t scan_new(reports_t *reports, const char *language, const char *path) {
     scan_t scan = {
-        .nodes = new_bump("scanner-node-arena", sizeof(node_t) * 0x1000),
-        .ast = new_bump("scanner-ast-arena", 0x4000),
-        .tokens = new_blockmap("scanner-token-arena", 256, 0x1000),
-        .strings = new_bump("scanner-string-arena", 0x1000),
         .language = language,
         .path = path,
         .reports = reports
@@ -85,7 +81,6 @@ void *compile_string(scan_t *extra, callbacks_t *callbacks) {
 }
 
 void *compile_file(scan_t *scan, callbacks_t *callbacks) {
-    logverbose("compile [%p]", scan);
     FILE *fd = scan->data;
 
     int err;

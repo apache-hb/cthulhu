@@ -16,34 +16,29 @@ void *ctu_malloc(size_t size) {
     return MALLOC(size);
 }
 
-void *ctu_realloc(void *ptr, size_t old, size_t size) {
-    UNUSED(old);
+void *ctu_realloc(void *ptr, size_t size) {
     return REALLOC(ptr, size);
 }
 
-void ctu_free(void *ptr, size_t size) {
-    UNUSED(size);
+void ctu_free(void *ptr) {
     FREE(ptr);
 }
 
-static arena_t GMP;
-
 static void *ctu_gmp_malloc(size_t size) {
-    return arena_malloc(&GMP, size);
+    return ctu_malloc(size);
 }
 
 static void *ctu_gmp_realloc(void *ptr, size_t old, size_t size) {
-    arena_realloc(&GMP, &ptr, old, size);
-    return ptr;
+    UNUSED(old);
+    return ctu_realloc(ptr, size);
 }
 
 static void ctu_gmp_free(void *ptr, size_t size) {
-    arena_free(&GMP, ptr, size);
+    UNUSED(size);
+    ctu_free(ptr);
 }
 
 void init_gmp(void) {
-    GMP = new_blockmap("gmp-arena", sizeof(mpz_t), 0x1000);
-
     mp_set_memory_functions(
         ctu_gmp_malloc, 
         ctu_gmp_realloc, 
@@ -51,20 +46,9 @@ void init_gmp(void) {
     );
 }
 
-void deinit_gmp(void) {
-    delete_arena(&GMP);
-}
-
 char *ctu_strdup(const char *str) {
     size_t len = strlen(str) + 1;
     char *out = ctu_malloc(len);
-    memcpy(out, str, len);
-    return out;
-}
-
-char *ctu_strdup2(arena_t *arena, const char *str) {
-    size_t len = strlen(str) + 1;
-    char *out = arena_malloc(arena, len);
     memcpy(out, str, len);
     return out;
 }
@@ -82,9 +66,10 @@ void *ctu_memdup(const void *ptr, size_t size) {
     return out;
 }
 
-file_t ctu_fopen(const char *path, const char *mode) {
-    file_t file = { path, fopen(path, mode) };
-
+file_t *ctu_fopen(const char *path, const char *mode) {
+    file_t *file = ctu_malloc(sizeof(file_t));
+    file->path = path;
+    file->file = fopen(path, mode);
     return file;
 }
 
@@ -174,18 +159,6 @@ static void clear_keys(bucket_t *buckets, size_t size) {
 map_t *map_new(map_size_t size) {
     map_t *map = ctu_malloc(sizeof_map(size));
 
-    map->arena = NULL;
-    map->size = size;
-
-    clear_keys(map->data, size);
-
-    return map;
-}
-
-map_t *map_new2(arena_t *arena, map_size_t size) {
-    map_t *map = arena_malloc(arena, sizeof_map(size));
-
-    map->arena = arena;
     map->size = size;
 
     clear_keys(map->data, size);
@@ -269,14 +242,9 @@ static size_t vector_size(size_t size) {
 
 static void vector_ensure(vector_t **vector, size_t size) {
     if (size >= VEC->size) {
-        size_t old = VEC->size;
         size_t resize = (size + 1) * 2;
         VEC->size = resize;
-        if (VEC->arena != NULL) {
-            arena_realloc(VEC->arena, (void**)vector, vector_size(old), vector_size(resize));
-        } else {
-            VEC = ctu_realloc(VEC, vector_size(old), vector_size(resize));
-        }
+        VEC = ctu_realloc(VEC, vector_size(resize));
     }
 }
 
@@ -285,7 +253,6 @@ static void vector_ensure(vector_t **vector, size_t size) {
 vector_t *vector_new(size_t size) {
     vector_t *vector = ctu_malloc(vector_size(size));
     
-    vector->arena = NULL;
     vector->size = size;
     vector->used = 0;
 
@@ -304,30 +271,8 @@ vector_t *vector_init(void *value) {
     return vector;
 }
 
-vector_t *vector_new2(arena_t *arena, size_t size) {
-    vector_t *vector = arena_malloc(arena, vector_size(size));
-
-    vector->arena = arena;
-    vector->size = size;
-    vector->used = 0;
-
-    return vector;
-}
-
-vector_t *vector_init2(WEAK arena_t *arena, WEAK void *value) {
-    vector_t *vector = vector_new2(arena, 2);
-    vector_push(&vector, value);
-    return vector;
-}
-
-vector_t *vector_of2(WEAK arena_t *arena, size_t size) {
-    vector_t *vector = vector_new2(arena, size);
-    vector->used = size;
-    return vector;
-}
-
 void vector_delete(vector_t *vector) {
-    ctu_free(vector, vector_size(vector->size));
+    ctu_free(vector);
 }
 
 void vector_push(vector_t **vector, void *value) {

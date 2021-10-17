@@ -162,8 +162,6 @@ typedef struct lir_t {
     void *data;
 } lir_t;
 
-void init_lir(void);
-
 lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, void *ctx);
 
 lir_t *lir_module(node_t *node, 

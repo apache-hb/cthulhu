@@ -23,7 +23,7 @@ sema_t *sema_new(sema_t *parent,
 }
 
 void sema_delete(sema_t *sema) {
-    ctu_free(sema, sizeof(sema_t));
+    ctu_free(sema);
 }
 
 void sema_set_data(sema_t *sema, void *data) {

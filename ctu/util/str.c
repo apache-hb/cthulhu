@@ -16,15 +16,6 @@ char *format(const char *fmt, ...) {
     return str;
 }
 
-char *formatex(arena_t *arena, const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    char *str = formatvex(arena, fmt, args);
-    va_end(args);
-
-    return str;
-}
-
 char *formatv(const char *fmt, va_list args) {
     /* make a copy of the args for the second format */
     va_list again;
@@ -34,21 +25,6 @@ char *formatv(const char *fmt, va_list args) {
     int len = vsnprintf(NULL, 0, fmt, args) + 1;
 
     char *out = ctu_malloc(len);
-
-    vsnprintf(out, len, fmt, again);
-
-    return out;
-}
-
-char *formatvex(arena_t *arena, const char *fmt, va_list args) {
-    /* make a copy of the args for the second format */
-    va_list again;
-    va_copy(again, args);
-
-    /* get the number of bytes needed to format */
-    int len = vsnprintf(NULL, 0, fmt, args) + 1;
-
-    char *out = arena_malloc(arena, len);
 
     vsnprintf(out, len, fmt, again);
 
@@ -154,26 +130,6 @@ char *nstrnorm(const char *str, size_t len) {
     return buf;
 }
 
-char *nstrnorm2(arena_t *arena, const char *str, size_t len) {
-    size_t outlen = 1;
-    for (size_t i = 0; i < len; i++) {
-        outlen += (isprint(str[i]) ? 1 : 4);
-    }
-
-    char *buf = arena_malloc(arena, outlen + 1);
-    char *out = buf;
-    for (size_t i = 0; i < len; i++) {
-        if (isprint(str[i])) {
-            *out++ = str[i];
-        } else {
-            out += sprintf(out, "\\x%02x", str[i] & 0xFF);
-        }
-    }
-
-    *out = '\0';
-    return buf;
-}
-
 size_t strhash(const char *str) {
     size_t hash = 0;
 
@@ -203,8 +159,8 @@ stream_t *stream_new(size_t size) {
 }
 
 void stream_delete(stream_t *stream) {
-    ctu_free(stream->data, stream->size);
-    ctu_free(stream, sizeof(stream_t));
+    ctu_free(stream->data);
+    ctu_free(stream);
 }
 
 size_t stream_len(stream_t *stream) {
@@ -214,9 +170,8 @@ size_t stream_len(stream_t *stream) {
 void stream_write(stream_t *stream, const char *str) {
     size_t len = strlen(str);
     if (stream->len + len > stream->size) {
-        size_t old = stream->size;
         stream->size = stream->len + len;
-        stream->data = ctu_realloc(stream->data, old, stream->size + 1);
+        stream->data = ctu_realloc(stream->data, stream->size + 1);
     }
 
     strcpy(stream->data + stream->len, str);

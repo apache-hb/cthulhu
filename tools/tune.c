@@ -166,7 +166,7 @@ static void time_primes(size_t len) {
 
         char *name = format("avg items=%zu,size=%zu", len, prime);
         diff(name, avg);
-        ctu_free(name, strlen(name) + 1);
+        ctu_free(name);
         
         vector_push(&times, (void *)avg);
 

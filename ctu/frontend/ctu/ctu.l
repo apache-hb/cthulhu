@@ -39,7 +39,7 @@
 "import" { return IMPORT; }
 
 [$a-zA-Z_][a-zA-Z0-9_]* {
-    yylval->ident = ctu_strdup2(&yyextra->strings, yytext);
+    yylval->ident = ctu_strdup(yytext);
     return IDENT;
 }
 

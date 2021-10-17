@@ -36,10 +36,6 @@ src = [
     'ctu/util/str.c',
     'ctu/util/util.c',
     'ctu/util/optimal.c',
-    'ctu/util/arena.c',
-    'ctu/util/arena/bitmap.c',
-    'ctu/util/arena/blockmap.c',
-    'ctu/util/arena/bump.c',
     'ctu/util/panic.c',
 
     'ctu/driver/driver.c',

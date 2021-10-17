@@ -4,7 +4,6 @@
 
 #include "macros.h"
 #include "util.h"
-#include "arena.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -26,9 +25,6 @@ typedef struct {
     /* the level of this error */
     level_t level;
 
-    /* allocation arena for parts */
-    WEAK arena_t *arena;
-
     /* error message displayed at the top */
     OWNED NULLABLE char *message;
     OWNED NULLABLE char *underline;
@@ -43,7 +39,6 @@ typedef struct {
 } message_t;
 
 typedef struct {
-    WEAK arena_t *arena;
     OWNED vector_t *messages;
 } reports_t;
 
@@ -52,7 +47,7 @@ typedef struct {
  * 
  * @return the new context
  */
-OWNED reports_t *begin_reports(WEAK arena_t *arena) ALLOC(delete_reports);
+OWNED reports_t *begin_reports(void) ALLOC(delete_reports);
 
 /**
  * flush a reporting context and return an exit code
@@ -131,8 +126,6 @@ void report_underline(WEAK message_t *message,
 PRINT(2, 3)
 void report_note(WEAK message_t *message, 
                   const char *fmt, ...) NOTNULL(1, 2);
-
-void init_log(void);
 
 /**
  * whether logverbose should print or not

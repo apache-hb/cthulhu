@@ -13,7 +13,7 @@ stack_t *stack_new(void) {
 }
 
 void stack_delete(stack_t *stack) {
-    ctu_free(stack, sizeof(stack_t));
+    ctu_free(stack);
 }
 
 state_t *state_new(sema_t *sema, ctu_t *ctu) {

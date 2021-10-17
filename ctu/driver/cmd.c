@@ -33,18 +33,16 @@ static void print_version(const frontend_t *frontend) {
 #define MATCH(arg, a, b) (startswith(arg, a) || startswith(arg, b))
 #define NEXT(idx, argc, argv) (idx + 1 >= argc ? NULL : argv[idx + 1])
 
-static int parse_arg(arena_t *arena, settings_t *settings, const frontend_t *frontend, int index, int argc, char **argv) {
+static int parse_arg(settings_t *settings, const frontend_t *frontend, int index, int argc, char **argv) {
     const char *arg = argv[index];
     
     if (!startswith(arg, "-")) {
-        file_t fp = ctu_fopen(arg, "rb");
+        file_t *fp = ctu_fopen(arg, "rb");
 
-        if (fp.file == NULL) {
+        if (fp->file == NULL) {
             report(settings->reports, ERROR, NULL, "failed to open file: %s", arg);
         } else {
-            file_t *file = arena_malloc(arena, sizeof(file_t));
-            *file = fp;
-            vector_push(&settings->sources, file);
+            vector_push(&settings->sources, fp);
         }
     } else if (MATCH(arg, "-h", "--help")) {
         print_help(frontend);
@@ -68,12 +66,12 @@ static int parse_arg(arena_t *arena, settings_t *settings, const frontend_t *fro
     return 1;
 }
 
-settings_t parse_args(arena_t *arena, reports_t *reports, const frontend_t *frontend, int argc, char **argv) {
+settings_t parse_args(reports_t *reports, const frontend_t *frontend, int argc, char **argv) {
     NAME = argv[0];
 
     settings_t settings = { 
         .backend = NULL,
-        .sources = vector_new2(arena, 0),
+        .sources = vector_new(0),
         .reports = reports,
         .verbose = false,
         .ir = false
@@ -84,7 +82,7 @@ settings_t parse_args(arena_t *arena, reports_t *reports, const frontend_t *fron
     }
 
     for (int i = 1; i < argc;) {
-        i += parse_arg(arena, &settings, frontend, i, argc, argv);
+        i += parse_arg(&settings, frontend, i, argc, argv);
     }
 
     return settings;

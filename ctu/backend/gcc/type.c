@@ -98,7 +98,7 @@ vector_t *build_gcc_params(gcc_jit_context *ctx, const type_t *closure) {
 
         vector_set(params, i, param);
 
-        ctu_free(id, strlen(id) + 1);
+        ctu_free(id);
     }
 
     return params;

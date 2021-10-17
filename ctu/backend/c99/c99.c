@@ -39,7 +39,7 @@ static void forward_global(context_t *ctx, const block_t *block) {
 
     stream_write(ctx->result, forward);
 
-    ctu_free(forward, strlen(forward) + 1);
+    ctu_free(forward);
 }
 
 static void add_global(context_t *ctx, const block_t *block) {
@@ -58,7 +58,7 @@ static void add_global(context_t *ctx, const block_t *block) {
 
     stream_write(ctx->result, fmt);
 
-    ctu_free(fmt, strlen(fmt) + 1);
+    ctu_free(fmt);
 }
 
 static void add_globals(context_t *ctx, vector_t *globals) {
@@ -156,7 +156,7 @@ static char *format_load(reports_t *reports, size_t idx, step_t step) {
     char *vreg = format_vreg(idx);
     const char *local = type_to_string(reports, step.type, vreg);
 
-    ctu_free(vreg, strlen(vreg) + 1);
+    ctu_free(vreg);
 
     return format("  %s = *%s;\n", local, format_operand(reports, step.src));
 }
@@ -279,7 +279,7 @@ static void write_step(context_t *ctx, size_t idx, step_t step) {
 
     stream_write(ctx->result, code);
 
-    ctu_free(code, strlen(code) + 1);
+    ctu_free(code);
 }
 
 static void write_locals(context_t *ctx, const block_t *block) {
@@ -389,23 +389,23 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
 
     stream_write(ctx.result, header);
 
-    ctu_free(header, strlen(header) + 1);
+    ctu_free(header);
 
     add_strings(&ctx, mod->strtab);
     add_imports(&ctx, mod->imports);
     add_globals(&ctx, mod->vars);
     add_blocks(&ctx, mod->funcs);
 
-    file_t file = ctu_fopen(path, "w");
-    if (file.file == NULL) {
+    file_t *file = ctu_fopen(path, "w");
+    if (file->file == NULL) {
         ctu_assert(ctx.reports, "failed to open file: %s", path);
         free_c99_context(ctx);
         return false;
     }
 
-    fwrite(stream_data(ctx.result), 1, stream_len(ctx.result), file.file);
+    fwrite(stream_data(ctx.result), 1, stream_len(ctx.result), file->file);
 
-    ctu_close(&file);
+    ctu_close(file);
     free_c99_context(ctx);
 
     return true;

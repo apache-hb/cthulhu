@@ -21,4 +21,4 @@ typedef struct {
  * 
  * @return parsed settings
  */
-settings_t parse_args(arena_t *arena, reports_t *reports, const frontend_t *frontend, int argc, char **argv);
+settings_t parse_args(reports_t *reports, const frontend_t *frontend, int argc, char **argv);

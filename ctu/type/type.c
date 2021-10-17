@@ -4,18 +4,9 @@
 
 #include "ctu/util/util.h"
 #include "ctu/util/report.h"
-#include "ctu/util/arena.h"
-
-static arena_t TYPES;
-static arena_t FIELDS;
-
-void init_types(void) {
-    TYPES = new_bump("types-arena", sizeof(type_t) * 0x1000);
-    FIELDS = new_bump("fields-arena", sizeof(aggregate_field_t) * 0x1000);
-}
 
 static type_t *new_detailed_type(metatype_t meta, const char *name, const node_t *node) {
-    type_t *type = arena_malloc(&TYPES, sizeof(type_t));
+    type_t *type = ctu_malloc(sizeof(type_t));
     type->type = meta;
     type->mut = false;
     type->name = name;
@@ -28,7 +19,7 @@ static type_t *type_new(metatype_t meta) {
 }
 
 aggregate_field_t *new_aggregate_field(const char *name, type_t *type) {
-    aggregate_field_t *field = arena_malloc(&FIELDS, sizeof(aggregate_field_t)); 
+    aggregate_field_t *field = ctu_malloc(sizeof(aggregate_field_t)); 
     field->name = name;
     field->type = type;
     return field;
@@ -113,7 +104,7 @@ type_t *type_union(const char *name, const node_t *node, vector_t *fields) {
 }
 
 type_t *type_mut(const type_t *type, bool mut) {
-    type_t *it = arena_malloc(&TYPES, sizeof(type_t));
+    type_t *it = ctu_malloc(sizeof(type_t));
     memcpy(it, type, sizeof(type_t));
     it->mut = mut;
     return it;

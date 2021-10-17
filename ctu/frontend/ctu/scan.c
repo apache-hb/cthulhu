@@ -6,7 +6,6 @@
 #include "ctu-flex.h"
 
 static int init(scan_t *extra, void *scanner) {
-    logverbose("init [%p] [%p]", extra, scanner);
     return ctulex_init_extra(extra, scanner);
 }
 

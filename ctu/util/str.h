@@ -3,7 +3,6 @@
 #include <stdarg.h>
 
 #include "macros.h"
-#include "arena.h"
 #include "util.h"
 
 /**
@@ -16,9 +15,6 @@
 PRINT(1, 2)
 char *format(const char *fmt, ...) NOTNULL(1);
 
-PRINT(2, 3)
-char *formatex(arena_t *arena, const char *fmt, ...) NONULL;
-
 /**
  * format a string with printf-like syntax with a va_list
  * 
@@ -27,8 +23,6 @@ char *formatex(arena_t *arena, const char *fmt, ...) NONULL;
  * @return the formatted string
  */
 char *formatv(const char *fmt, va_list args) NONULL;
-
-char *formatvex(arena_t *arena, const char *fmt, va_list args) NONULL;
 
 /**
  * check if a string starts with a substring
@@ -85,7 +79,6 @@ char *strnorm(const char *str) NONULL;
  * @return the normalized string
  */
 char *nstrnorm(const char *str, size_t len) NONULL;
-char *nstrnorm2(arena_t *arena, const char *str, size_t len) NONULL;
 
 /**
  * hash a string into a size_t

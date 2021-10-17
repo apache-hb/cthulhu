@@ -3,14 +3,9 @@
 
 #include "ctu/util/str.h"
 
-static arena_t VALUES;
-
-void init_values(void) {
-    VALUES = new_bitmap("value-arena", sizeof(value_t), 0x1000);
-}
 
 value_t *value_of(const type_t *type) {
-    value_t *value = arena_malloc(&VALUES, sizeof(value_t));
+    value_t *value = ctu_malloc(sizeof(value_t));
     value->type = type;
     return value;
 }
@@ -77,16 +72,4 @@ char *value_format(const value_t *value) {
 
     /* trigraphs are fun */
     return format("%s(\?\?\?)", typestr);
-}
-
-void value_delete(value_t *value) {
-    const type_t *type = value->type;
-
-    if (is_digit(type)) {
-        mpz_clear(value->digit);
-    } else if (is_pointer(type)) {
-        value_delete(value->ptr);
-    }
-
-    ctu_free(value, sizeof(value_t));
 }
