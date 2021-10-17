@@ -1,4 +1,7 @@
-project('ctu', [ 'c' ],
+project('cthulhu', 'c',
+    license : 'APGLv3',
+    version : '0.0.2',
+    meson_version : '>=0.58',
     default_options : [
         'c_std=gnu11',
         'warning_level=2', # bison generates code that warns on gcc at level 3

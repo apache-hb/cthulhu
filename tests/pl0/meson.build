@@ -13,10 +13,17 @@ fail = [
 
 foreach case : pass
     path = dir/case + '.pl0'
-    test('pl0-pass-' + case, pl0, args : [ '-V', path ])
+    test('pass-' + case, pl0, 
+        args : [ '-V', path ], 
+        suite : 'pl0'
+    )
 endforeach
 
 foreach case : fail
     path = dir/case + '.pl0'
-    test('pl0-fail-' + case, pl0, args : [ '-V', path ], should_fail : true)
+    test('fail-' + case, pl0, 
+        args : [ '-V', path ], 
+        suite : 'pl0',
+        should_fail : true
+    )
 endforeach

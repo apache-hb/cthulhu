@@ -9,7 +9,11 @@ crashes = [
 foreach case : crashes
     where = case.replace('.', '/')
     path = dir/'crashes'/where + '.ct'
-    test('ctu-crash-' + case, ctc, args : [ '-V', path ], should_fail : true)
+    test('crash-' + case, ctc, 
+        args : [ '-V', path ], 
+        suite : 'ctu',
+        should_fail : true
+    )
 endforeach
 
 fails = [
@@ -25,7 +29,11 @@ fails = [
 foreach case : fails
     where = case.replace('.', '/')
     path = dir/'fails'/where + '.ct'
-    test('ctu-fail-' + case, ctc, args : [ '-V', path ], should_fail : true)
+    test('fail-' + case, ctc, 
+        args : [ '-V', path ], 
+        suite : 'ctu',
+        should_fail : true
+    )
 endforeach
 
 pass = [
@@ -43,5 +51,8 @@ pass = [
 foreach case : pass
     where = case.replace('.', '/')
     path = dir/'pass'/where + '.ct'
-    test('ctu-pass-' + case, ctc, args : [ '-V', path ])
+    test('pass-' + case, ctc, 
+        args : [ '-V', path ],
+        suite : 'ctu'
+    )
 endforeach

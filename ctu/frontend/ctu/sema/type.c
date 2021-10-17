@@ -56,3 +56,34 @@ type_t *compile_type(sema_t *sema, ctu_t *ctu) {
         return type_poison_with_node("unknown type", ctu->node);
     }
 }
+
+type_t *common_digit(const type_t *lhs, const type_t *rhs) {
+    digit_t left = lhs->digit;
+    digit_t right = rhs->digit;
+
+    sign_t sign = (left.sign == SIGNED || right.sign == SIGNED) ? SIGNED : UNSIGNED;
+    int_t width = MAX(left.kind, right.kind);
+
+    return type_digit(sign, width);
+}
+
+type_t *next_digit(type_t *type) {
+    if (!is_digit(type)) {
+        return type;
+    }
+
+    digit_t digit = type->digit;
+    if (digit.kind == TY_INTMAX) {
+        return type;
+    }
+
+    return type_digit(digit.sign, digit.kind + 1);
+}
+
+type_t *common_type(const type_t *lhs, const type_t *rhs) {
+    if (is_digit(lhs) && is_digit(rhs)) {
+        return common_digit(lhs, rhs);
+    }
+
+    return type_poison("cannot find common type");
+}

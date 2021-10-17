@@ -106,7 +106,7 @@ const type_t *closure_result(const type_t *type) {
 
 const type_t *param_at(const type_t *type, size_t idx) {
     if (!is_closure(type)) {
-        return type_poison("non closure types do not accept parameters");
+        return type_poison_with_node("non closure types do not accept parameters", type->node);
     }
 
     if (is_variadic(type)) {
@@ -117,7 +117,7 @@ const type_t *param_at(const type_t *type, size_t idx) {
 
     return vector_len(type->args) > idx
         ? vector_get(type->args, idx)
-        : type_poison("parameter out of range");
+        : type_poison_with_node("parameter out of range", type->node);
 }
 
 bool is_string(const type_t *type) {

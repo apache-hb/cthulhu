@@ -45,8 +45,11 @@ static lir_t *compile_unary(sema_t *sema, ctu_t *expr) {
     return lir_unary(expr->node, type, unary, operand);
 }
 
+/**
+ * handle `==` and `!=` expressions
+ */
 static const type_t *binary_equal(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
-    const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
+    const type_t *type = common_type(lir_type(lhs), lir_type(rhs));
     if (is_poison(type)) {
         report(reports, ERROR, node, "cannot take equality of `%s` and `%s`",
             type_format(lir_type(lhs)),
@@ -57,8 +60,11 @@ static const type_t *binary_equal(reports_t *reports, node_t *node, lir_t *lhs, 
     return type_bool();
 }
 
+/**
+ * handle `<`, `<=`, `>`, and `>=` expressions
+ */
 static const type_t *binary_compare(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
-    const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
+    const type_t *type = common_type(lir_type(lhs), lir_type(rhs));
     if (!is_integer(type)) {
         report(reports, ERROR, node, "cannot compare `%s` to `%s`", 
             type_format(lir_type(lhs)), 
@@ -69,8 +75,11 @@ static const type_t *binary_compare(reports_t *reports, node_t *node, lir_t *lhs
     return type_bool();
 }
 
+/**
+ * handle `&&` and `||` expressions
+ */
 static const type_t *binary_logic(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
-    const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
+    const type_t *type = common_type(lir_type(lhs), lir_type(rhs));
     if (!is_bool(type)) {
         report(reports, ERROR, node, "cannot logically evaluate `%s` with `%s`", 
             type_format(lir_type(lhs)), 
@@ -81,6 +90,9 @@ static const type_t *binary_logic(reports_t *reports, node_t *node, lir_t *lhs, 
     return type_bool();
 }
 
+/**
+ * handle `+`, `-`, `*`, and `/` expressions
+ */
 static const type_t *binary_math(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
     const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
     if (!is_integer(type)) {
