@@ -64,22 +64,13 @@ typedef struct {
     module_t *mod;
 } context_t;
 
-static context_t *new_context(reports_t *reports, scan_t scan, file_t *file, void *node) {
-    context_t *ctx = ctu_malloc(sizeof(context_t));
-    ctx->reports = reports;
-    ctx->scan = scan;
-    ctx->file = file;
-    ctx->node = node;
-    return ctx;
-}
-
 static int max_report(int *error, reports_t *reports, const char *msg) {
     int result = end_reports(reports, SIZE_MAX, msg);
     *error = MAX(*error, result);
     return result;
 }
 
-int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(void)) {
+int common_main(const frontend_t *frontend, int argc, char **argv) {
     init_gmp();
 
     int error = 0;
@@ -91,8 +82,8 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
         return error;
     }
 
-    if (init != NULL) {
-        init();
+    if (frontend->init != NULL) {
+        frontend->init();
     }
 
 #if FUZZING
@@ -101,23 +92,18 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
 
     vector_t *sources = settings.sources;
     size_t len = vector_len(sources);
-    scan_t scans[len];
+    context_t all[len];
 
     logverbose("compiling %zu file(s)", len);
 
-    vector_t *all = vector_of(len);
-
     for (size_t i = 0; i < len; i++) {
-        reports_t *reports = begin_reports();
-        file_t *file = vector_get(sources, i);
-        scans[i] = frontend->open(reports, file);
+        context_t *ctx = all + i;
+        ctx->reports = begin_reports();
+        ctx->file = vector_get(sources, i);
+        ctx->scan = frontend->open(ctx->reports, ctx->file);
+        ctx->node = frontend->parse(&ctx->scan);
 
-        void *node = frontend->parse(&scans[i]);
-        context_t *ctx = new_context(reports, scans[i], file, node);
-        
-        vector_set(all, i, ctx);
-
-        max_report(&error, reports, format("parsing of `%s`", file->path));
+        max_report(&error, ctx->reports, format("parsing of `%s`", ctx->file->path));
     }
 
     logverbose("parsed %zu file(s)", len);
@@ -125,7 +111,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
     if (error > 0) { return error; }
 
     for (size_t i = 0; i < len; i++) {
-        context_t *ctx = vector_get(all, i);
+        context_t *ctx = all + i;
         ctx->lir = frontend->analyze(ctx->reports, ctx->node);
 
         max_report(&error, ctx->reports, format("analysis of `%s`", ctx->file->path));
@@ -136,7 +122,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
     if (error > 0) { return error; }
 
     for (size_t i = 0; i < len; i++) {
-        context_t *ctx = vector_get(all, i);
+        context_t *ctx = all + i;
 
         ctx->mod = module_build(ctx->reports, ctx->lir);
 
@@ -159,7 +145,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(v
 
     const backend_t *backend = settings.backend;
     for (size_t i = 0; i < len; i++) {
-        context_t *ctx = vector_get(all, i);
+        context_t *ctx = all + i;
         if (backend == NULL || backend->compile == NULL) {
             report(ctx->reports, NOTE, NULL, "no backend specified, skipping compilation of `%s`", ctx->file->path);
             continue;

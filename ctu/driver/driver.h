@@ -8,10 +8,12 @@
 typedef scan_t(*open_t)(reports_t*, file_t*);
 typedef void*(*parse_t)(scan_t *);
 typedef lir_t*(*analyze_t)(reports_t*, void*);
+typedef void(*init_t)(void);
 
 typedef struct {
     const char *version;
     const char *name;
+    init_t init;
     open_t open;
     parse_t parse;
     analyze_t analyze;
@@ -47,4 +49,4 @@ const backend_t *select_backend(reports_t *reports, const char *name);
  * @param argc the argc from main
  * @param argv the argv from main
  */
-int common_main(const frontend_t *frontend, int argc, char **argv, void(*init)(void));
+int common_main(const frontend_t *frontend, int argc, char **argv);

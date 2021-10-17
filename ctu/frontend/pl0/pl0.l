@@ -34,7 +34,7 @@
 (?i:odd) { return ODD; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    yylval->ident = yytext;
+    yylval->ident = pl0_normalize(yytext);
     return IDENT;
 }
 

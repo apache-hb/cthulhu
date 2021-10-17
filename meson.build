@@ -91,10 +91,9 @@ endforeach
 
 foreach lang : get_option('languages')
     subdir('ctu/frontend'/lang)
+    subdir('tests'/lang)
 endforeach
 
 tune = executable('tune', [ 'tools/tune.c' ],
     dependencies : generic
 )
-
-subdir('tests/ctu')

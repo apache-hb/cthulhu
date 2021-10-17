@@ -218,7 +218,6 @@ static value_t *eval_block(world_t *world, block_t *block) {
 }
 
 void eval_world(reports_t *reports, module_t *mod) {
-    logverbose("compiling module %p", mod->name);
     world_t world = { reports, mod };
 
     size_t nvars = vector_len(mod->vars);
