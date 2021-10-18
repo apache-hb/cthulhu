@@ -341,6 +341,13 @@ static lir_t *compile_return(sema_t *sema, ctu_t *stmt) {
     lir_t *operand = NULL;
     if (stmt->operand != NULL) {
         operand = compile_expr(sema, stmt->operand);
+
+        if (is_void(lir_type(operand))) {
+            vector_t *stmts = vector_new(1);
+            vector_push(&stmts, operand);
+            vector_push(&stmts, lir_return(stmt->node, NULL));
+            return lir_stmts(stmt->node, stmts);
+        }
     }
 
     return lir_return(stmt->node, operand);

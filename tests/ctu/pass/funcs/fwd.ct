@@ -1,0 +1,4 @@
+def one(): void;
+def two: void;
+def three();
+def four;

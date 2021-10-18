@@ -38,6 +38,7 @@
 "as" { return AS; }
 "break" { return BREAK; }
 "import" { return IMPORT; }
+"lambda" { return LAMBDA; }
 
 [$a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);

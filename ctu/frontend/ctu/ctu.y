@@ -50,6 +50,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     YES "`true`"
     NO "`false`"
     BREAK "`break`"
+    LAMBDA "`lambda`"
     SEMI "`;`"
     ASSIGN "`=`"
     LPAREN "`(`"
@@ -88,12 +89,12 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
     statements stmt type param function return import while
-    assign attrib branch tail closure
+    assign attrib branch tail closure result
 
 %type<vector>
     unit stmtlist params paramlist args arglist imports
     attributes attriblist attribute attribs
-    typelist types
+    typelist types optparams
 
 %type<boolean>
     exported const
@@ -157,12 +158,20 @@ const: VAR { $$ = true; }
     | FINAL { $$ = false; }
     ;
 
-function: DEF IDENT LPAREN paramlist RPAREN COLON type statements 
-    { $$ = ctu_define(x, @$, $2, $4, $7, $8); }
-    | DEF IDENT LPAREN paramlist RPAREN COLON type ASSIGN expr SEMI
-    { $$ = ctu_define(x, @$, $2, $4, $7, ctu_stmts(x, @9, vector_init(ctu_return(x, @9, $9)))); }
-    | DEF IDENT LPAREN paramlist RPAREN COLON type SEMI 
-    { $$ = ctu_define(x, @$, $2, $4, $7, NULL); }
+function: DEF IDENT optparams result statements 
+    { $$ = ctu_define(x, @$, $2, $3, $4, $5); }
+    | DEF IDENT optparams result ASSIGN expr SEMI
+    { $$ = ctu_define(x, @$, $2, $3, $4, ctu_stmts(x, @6, vector_init(ctu_return(x, @6, $6)))); }
+    | DEF IDENT optparams result SEMI 
+    { $$ = ctu_define(x, @$, $2, $3, $4, NULL); }
+    ;
+
+result: %empty { $$ = ctu_typename(x, @$, "void"); }
+    | COLON type { $$ = $2; }
+    ;
+
+optparams: %empty { $$ = vector_new(0); }
+    | LPAREN paramlist RPAREN { $$ = $2; }
     ;
 
 paramlist: %empty { $$ = vector_new(0); }

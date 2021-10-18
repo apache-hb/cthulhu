@@ -1,0 +1,4 @@
+def one(): void { return; }
+def two: void { return; }
+def three() { return; }
+def four { return; }
