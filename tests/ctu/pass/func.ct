@@ -2,6 +2,7 @@ def other(o: int): int {
     return 20 * o;
 }
 
+@entry
 def main(i: int): int {
     final o = other;
 

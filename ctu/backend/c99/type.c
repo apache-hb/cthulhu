@@ -58,6 +58,24 @@ static const char *ptr_to_string(reports_t *reports, const type_t *ptr, const ch
     }
 }
 
+static char *closure_to_string(reports_t *reports, const type_t *type, const char *name) {
+    size_t len = num_params(type);
+    vector_t *params = vector_of(len);
+    for (size_t i = 0; i < len; i++) {
+        const char *param = type_to_string(reports, param_at(type, i), NULL);
+        vector_set(params, i, (char*)param);
+    }
+
+    const char *result = type_to_string(reports, closure_result(type), NULL);
+    char *args = strjoin(", ", params);
+
+    if (name != NULL) {
+        return format("%s (*%s)(%s)", result, name, args);
+    } else {
+        return format("%s (*)(%s)", result, args);
+    }
+}
+
 const char *type_to_string(reports_t *reports, const type_t *type, const char *name) {
     if (is_digit(type)) {
         return digit_to_string(type->digit, name);
@@ -86,6 +104,10 @@ const char *type_to_string(reports_t *reports, const type_t *type, const char *n
 
     if (is_pointer(type)) {
         return ptr_to_string(reports, type->ptr, name);
+    }
+
+    if (is_closure(type)) {
+        return closure_to_string(reports, type, name);
     }
 
     ctu_assert(reports, "unknown type `%s`", type_format(type));

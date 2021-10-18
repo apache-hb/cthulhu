@@ -195,6 +195,10 @@ static lir_t *compile_call(sema_t *sema, ctu_t *expr) {
     return lir_call(expr->node, closure_result(fty), func, args);
 }
 
+static lir_t *name_expr(node_t *node, lir_t *lir) {
+    return lir_name(node, lir_type(lir), lir);
+}
+
 static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
     const char *name = expr->ident;
     if (is_discard(name)) {
@@ -203,17 +207,13 @@ static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
     
     lir_t *var = get_var(sema, name);
     if (var != NULL) {
-        if (lir_is(var, LIR_PARAM)) {
-            return var;
-        }
-
-        return compile_value(var);
+        return lir_is(var, LIR_PARAM) 
+            ? var : name_expr(expr->node, compile_value(var));
     }
 
     lir_t *func = get_func(sema, name);
     if (func != NULL) {
-        lir_t *it = compile_define(func);
-        return it;
+        return compile_define(func);
     }
 
     report(sema->reports, ERROR, expr->node, "failed to resolve `%s`", name);
@@ -258,10 +258,6 @@ static lir_t *compile_string(ctu_t *expr) {
     return lir_string(expr->node, type_string(), expr->str);
 }
 
-static lir_t *name_expr(node_t *node, lir_t *lir) {
-    return lir_name(node, lir_type(lir), lir);
-}
-
 static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
     case CTU_UNARY:
@@ -301,7 +297,7 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_UNARY: return compile_unary(sema, expr);
     case CTU_BINARY: return compile_binary(sema, expr);
     case CTU_CALL: return compile_call(sema, expr);
-    case CTU_IDENT: return name_expr(expr->node, compile_name(sema, expr));
+    case CTU_IDENT: return compile_name(sema, expr);
     case CTU_ACCESS: return name_expr(expr->node, compile_access(sema, expr));
     case CTU_STRING: return compile_string(expr);
     case CTU_CAST: return compile_cast(sema, expr);

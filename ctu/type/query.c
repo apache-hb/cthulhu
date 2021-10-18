@@ -104,6 +104,14 @@ const type_t *closure_result(const type_t *type) {
     return type->result;
 }
 
+size_t num_params(const type_t *type) {
+    if (!is_closure(type)) {
+        return SIZE_MAX;
+    }
+
+    return vector_len(type->args);
+}
+
 const type_t *param_at(const type_t *type, size_t idx) {
     if (!is_closure(type)) {
         return type_poison_with_node("non closure types do not accept parameters", type->node);
