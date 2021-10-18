@@ -23,6 +23,7 @@ typedef enum {
     CTU_WHILE,
     CTU_ASSIGN,
     CTU_BRANCH,
+    CTU_BREAK,
 
     CTU_TYPENAME,
     CTU_POINTER,
@@ -133,6 +134,7 @@ ctu_t *ctu_return(scan_t *scan, where_t where, ctu_t *operand);
 ctu_t *ctu_while(scan_t *scan, where_t where, ctu_t *cond, ctu_t *body);
 ctu_t *ctu_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src);
 ctu_t *ctu_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *other);
+ctu_t *ctu_break(scan_t *scan, where_t where);
 
 /* types */
 ctu_t *ctu_pointer(scan_t *scan, where_t where, ctu_t *ptr);

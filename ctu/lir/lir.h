@@ -25,6 +25,7 @@ typedef enum {
     LIR_BRANCH,
     LIR_STMTS,
     LIR_RETURN,
+    LIR_BREAK,
 
     LIR_VALUE,
     LIR_DEFINE,
@@ -96,6 +97,8 @@ typedef struct lir_t {
             struct lir_t *then;
             struct lir_t *other;
         };
+
+        struct lir_t *loop;
 
         vector_t *stmts;
 
@@ -189,6 +192,7 @@ lir_t *lir_while(node_t *node, lir_t *cond, lir_t *then);
 lir_t *lir_branch(node_t *node, lir_t *cond, lir_t *then, lir_t *other);
 lir_t *lir_stmts(node_t *node, vector_t *stmts);
 lir_t *lir_return(node_t *node, lir_t *operand);
+lir_t *lir_break(node_t *node, lir_t *loop);
 
 lir_t *lir_poison(node_t *node, const char *msg);
 

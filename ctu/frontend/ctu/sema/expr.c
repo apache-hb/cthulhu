@@ -380,6 +380,10 @@ static lir_t *compile_branch(sema_t *sema, ctu_t *stmt) {
     return lir_branch(stmt->node, cond, then, other);
 }
 
+static lir_t *compile_break(ctu_t *stmt) {
+    return lir_break(stmt->node, NULL);
+}
+
 static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };
 
 lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
@@ -389,6 +393,8 @@ lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
     case CTU_WHILE: return compile_while(sema, stmt);
     case CTU_ASSIGN: return compile_assign(sema, stmt);
     case CTU_BRANCH: return compile_branch(sema, stmt);
+
+    case CTU_BREAK: return compile_break(stmt);
 
     case CTU_CALL: return compile_call(sema, stmt);
     case CTU_VALUE: return compile_local(sema, stmt);

@@ -166,6 +166,14 @@ lir_t *lir_branch(node_t *node, lir_t *cond, lir_t *then, lir_t *other) {
     return lir;
 }
 
+lir_t *lir_break(node_t *node, lir_t *loop) {
+    lir_t *lir = lir_new(node, NULL, LIR_BREAK);
+
+    lir->loop = loop;
+
+    return lir;
+}
+
 void lir_value(reports_t *reports, lir_t *dst, const type_t *type, lir_t *init) {
     if (dst->leaf != LIR_FORWARD) {
         ctu_assert(reports, "lir-value already resolved");

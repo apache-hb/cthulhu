@@ -15,6 +15,15 @@ const char *binary_name(binary_t op) {
     case BINARY_GT: return "gt";
     case BINARY_GTE: return "gte";
 
+    case BINARY_SHL: return "shl";
+    case BINARY_SHR: return "shr";
+    case BINARY_AND: return "and";
+    case BINARY_OR: return "or";
+    case BINARY_XOR: return "xor";
+
+    case BINARY_BITAND: return "bitand";
+    case BINARY_BITOR: return "bitor";
+
     default: return "???";
     }
 }

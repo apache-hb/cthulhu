@@ -137,6 +137,10 @@ ctu_t *ctu_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *
     return ctu;
 }
 
+ctu_t *ctu_break(scan_t *scan, where_t where) {
+    return ctu_new(scan, where, CTU_BREAK);
+}
+
 ctu_t *ctu_pointer(scan_t *scan, where_t where, 
                    ctu_t *ptr)
 {

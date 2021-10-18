@@ -33,6 +33,19 @@ typedef struct {
     };
 } operand_t;
 
+typedef struct {
+    operand_t *ops;
+    size_t used;
+    size_t size;
+} oplist_t;
+
+oplist_t *oplist_new(size_t size);
+oplist_t *oplist_of(size_t size);
+void oplist_push(oplist_t *list, operand_t op);
+void oplist_set(oplist_t *list, size_t index, operand_t op);
+operand_t oplist_get(oplist_t *list, size_t index);
+size_t oplist_len(oplist_t *list);
+
 /**
  * create an immediate value
  * 

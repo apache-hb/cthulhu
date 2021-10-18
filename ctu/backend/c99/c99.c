@@ -176,9 +176,10 @@ static char *format_call(reports_t *reports, size_t idx, step_t step) {
     }
 
     const char *call = format_operand(reports, step.func);
-    vector_t *params = vector_of(step.len);
-    for (size_t i = 0; i < step.len; i++) {
-        operand_t arg = step.args[i];
+    size_t len = oplist_len(step.args);
+    vector_t *params = vector_of(len);
+    for (size_t i = 0; i < len; i++) {
+        operand_t arg = oplist_get(step.args, i);
         const char *param = format_operand(reports, arg);
         vector_set(params, i, (char*)param);
     }

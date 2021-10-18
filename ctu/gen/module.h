@@ -29,8 +29,7 @@ typedef struct {
     union {
         struct {
             operand_t func;
-            operand_t *args;
-            size_t len;
+            oplist_t *args;
         };
 
         struct {

@@ -49,6 +49,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     IMPORT "`import`"
     YES "`true`"
     NO "`false`"
+    BREAK "`break`"
     SEMI "`;`"
     ASSIGN "`=`"
     LPAREN "`(`"
@@ -207,6 +208,7 @@ stmt: expr SEMI { $$ = $1; }
     | while { $$ = $1; }
     | assign { $$ = $1; }
     | branch { $$ = $1; }
+    | BREAK SEMI { $$ = ctu_break(x, @$); }
     ;
 
 branch: IF expr statements tail { $$ = ctu_branch(x, @$, $2, $3, $4); }

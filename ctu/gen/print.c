@@ -6,7 +6,7 @@
 
 static char *emit_imm(const value_t *imm) {
     if (imm == NULL) {
-        return "???";
+        return "null";
     }
 
     const type_t *type = imm->type;
@@ -14,6 +14,8 @@ static char *emit_imm(const value_t *imm) {
         return format("untyped(%s)", mpz_get_str(NULL, 10, imm->digit));
     } else if (is_digit(type)) {
         return format("%s", mpz_get_str(NULL, 10, imm->digit));
+    } else if (is_bool(type)) {
+        return ctu_strdup(imm->boolean ? "true" : "false");
     } else {
         return NULL;
     }
@@ -98,9 +100,10 @@ static char *emit_store(step_t step) {
 
 static char *emit_call(size_t idx, step_t step) {
     char *func = emit_operand(step.func);
-    vector_t *args = vector_of(step.len);
-    for (size_t i = 0; i < step.len; i++) {
-        char *arg = emit_operand(step.args[i]);
+    size_t len = oplist_len(step.args);
+    vector_t *args = vector_of(len);
+    for (size_t i = 0; i < len; i++) {
+        char *arg = emit_operand(oplist_get(step.args, i));
         vector_set(args, i, arg);
     }
 

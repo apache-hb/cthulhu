@@ -36,6 +36,7 @@
 "true" { return YES; }
 "false" { return NO; }
 "as" { return AS; }
+"break" { return BREAK; }
 "import" { return IMPORT; }
 
 [$a-zA-Z_][a-zA-Z0-9_]* {

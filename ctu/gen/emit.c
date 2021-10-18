@@ -86,7 +86,24 @@ typedef struct {
     module_t *mod;
     block_t *block;
     reports_t *reports;
+    oplist_t *fixups;
 } context_t;
+
+static void add_fixup(context_t *ctx, lir_t *dst, operand_t op) {
+    if (dst != NULL) {
+        oplist_push(dst->data, op);
+    } else {
+        oplist_push(ctx->fixups, op);
+    }
+}
+
+static oplist_t *get_fixups(context_t *ctx) {
+    return ctx->fixups;
+}
+
+static void set_fixups(context_t *ctx, oplist_t *fixups) {
+    ctx->fixups = fixups;
+}
 
 static size_t push_step(block_t *block, step_t step) {
     if (block->len + 1 >= block->size) {
@@ -120,29 +137,29 @@ static step_t empty_step(opcode_t op) {
     return step_with_type(op, NULL, NULL);
 }
 
-static step_t *get_step(context_t ctx, operand_t op) {
+static step_t *get_step(context_t *ctx, operand_t op) {
     if (op.kind == LABEL) {
-        return &ctx.block->steps[op.label];
+        return &ctx->block->steps[op.label];
     }
 
-    ctu_assert(ctx.reports, "get-step invalid kind %d", op.kind);
+    ctu_assert(ctx->reports, "get-step invalid kind %d", op.kind);
 
     return NULL;
 }
 
-static operand_t add_step(context_t ctx, step_t step) {
-    vreg_t vreg = push_step(ctx.block, step);
+static operand_t add_step(context_t *ctx, step_t step) {
+    vreg_t vreg = push_step(ctx->block, step);
     return operand_vreg(vreg);
 }
 
-static operand_t add_label(context_t ctx, step_t step) {
-    label_t label = push_step(ctx.block, step);
+static operand_t add_label(context_t *ctx, step_t step) {
+    label_t label = push_step(ctx->block, step);
     return operand_label(label);
 }
 
-static operand_t emit_lir(context_t ctx, lir_t *lir);
+static operand_t emit_lir(context_t *ctx, lir_t *lir);
 
-static operand_t build_return(context_t ctx, lir_t *lir, operand_t op) {
+static operand_t build_return(context_t *ctx, lir_t *lir, operand_t op) {
     step_t step = step_of(OP_RETURN, lir);
     step.operand = op;
     return add_step(ctx, step);
@@ -197,20 +214,20 @@ static block_t *import_symbol(lir_t *lir) {
 }
 
 static void build_block(vector_t **strings, reports_t *reports, module_t *mod, block_t *block, lir_t *body) {
-    context_t ctx = { strings, mod, block, reports };
+    context_t ctx = { strings, mod, block, reports, oplist_new(4) };
 
     if (body != NULL) {
-        operand_t op = emit_lir(ctx, body);
-        build_return(ctx, body, op);
+        operand_t op = emit_lir(&ctx, body);
+        build_return(&ctx, body, op);
     } else {
         step_t step = step_with_type(OP_RETURN, NULL, type_void());
         step.operand = operand_empty();
-        add_step(ctx, step);
+        add_step(&ctx, step);
     }
 }
 
 static void build_define(vector_t **strings, reports_t *reports, module_t *mod, block_t *block, lir_t *define) {
-    context_t ctx = { strings, mod, block, reports };
+    context_t ctx = { strings, mod, block, reports, oplist_new(4) };
 
     vector_t *locals = define->locals;
 
@@ -219,11 +236,11 @@ static void build_define(vector_t **strings, reports_t *reports, module_t *mod, 
     }
 
     lir_t *body = define->body;
-    operand_t op = emit_lir(ctx, body);
-    build_return(ctx, body, op);
+    operand_t op = emit_lir(&ctx, body);
+    build_return(&ctx, body, op);
 }
 
-static operand_t emit_unary(context_t ctx, lir_t *lir) {
+static operand_t emit_unary(context_t *ctx, lir_t *lir) {
     operand_t operand = emit_lir(ctx, lir->operand);
     step_t step = step_of(OP_UNARY, lir);
     step.unary = lir->unary;
@@ -231,7 +248,7 @@ static operand_t emit_unary(context_t ctx, lir_t *lir) {
     return add_step(ctx, step);
 }
 
-static operand_t emit_binary(context_t ctx, lir_t *lir) {
+static operand_t emit_binary(context_t *ctx, lir_t *lir) {
     step_t step = step_of(OP_BINARY, lir);
     step.binary = lir->binary;
     step.lhs = emit_lir(ctx, lir->lhs);
@@ -239,12 +256,12 @@ static operand_t emit_binary(context_t ctx, lir_t *lir) {
     return add_step(ctx, step);
 }
 
-static operand_t emit_digit(context_t ctx, lir_t *lir) {
-    return operand_imm(ctx.reports, value_digit(lir_type(lir), lir->digit));
+static operand_t emit_digit(context_t *ctx, lir_t *lir) {
+    return operand_imm(ctx->reports, value_digit(lir_type(lir), lir->digit));
 }
 
-static operand_t emit_bool(context_t ctx, lir_t *lir) {
-    return operand_imm(ctx.reports, value_bool(lir->boolean));
+static operand_t emit_bool(context_t *ctx, lir_t *lir) {
+    return operand_imm(ctx->reports, value_bool(lir->boolean));
 }
 
 static operand_t emit_value(const lir_t *lir) {
@@ -255,7 +272,7 @@ static operand_t emit_define(const lir_t *lir) {
     return operand_address(lir->data);
 }
 
-static operand_t emit_stmts(context_t ctx, lir_t *lir) {
+static operand_t emit_stmts(context_t *ctx, lir_t *lir) {
     size_t len = vector_len(lir->stmts);
     for (size_t i = 0; i < len; i++) {
         lir_t *stmt = vector_get(lir->stmts, i);
@@ -264,19 +281,19 @@ static operand_t emit_stmts(context_t ctx, lir_t *lir) {
     return operand_empty();
 }
 
-static operand_t emit_assign(context_t ctx, lir_t *lir) {
+static operand_t emit_assign(context_t *ctx, lir_t *lir) {
     operand_t dst = emit_lir(ctx, lir->dst);
     operand_t src = emit_lir(ctx, lir->src);
 
     step_t step = step_of(OP_STORE, lir->dst);
     step.dst = dst;
     step.src = src;
-    step.offset = operand_imm(ctx.reports, value_zero());
+    step.offset = operand_imm(ctx->reports, value_zero());
 
     return add_step(ctx, step);
 }
 
-static operand_t add_block(context_t ctx, lir_t *lir) {
+static operand_t add_block(context_t *ctx, lir_t *lir) {
     if (lir == NULL) {
         return add_label(ctx, empty_step(OP_BLOCK));
     }
@@ -286,29 +303,45 @@ static operand_t add_block(context_t ctx, lir_t *lir) {
     return block;
 }
 
-static operand_t emit_while(context_t ctx, lir_t *lir) {
+static operand_t emit_while(context_t *ctx, lir_t *lir) {
     operand_t begin = add_label(ctx, step_of(OP_BLOCK, lir));
     
     step_t step = step_of(OP_BRANCH, lir);
     step.cond = emit_lir(ctx, lir->cond);
     operand_t branch = add_label(ctx, step);
 
-    operand_t body = add_block(ctx, lir->then);
+    oplist_t *stack = get_fixups(ctx);
+    {
+        oplist_t *temp = oplist_new(4);
+        set_fixups(ctx, temp);
+        lir->data = temp;
 
-    step_t loop = step_of(OP_JMP, lir);
-    loop.label = begin;
-    add_step(ctx, loop);
+        operand_t body = add_block(ctx, lir->then);
 
-    operand_t end = add_label(ctx, step_of(OP_BLOCK, lir));
+        step_t loop = step_of(OP_JMP, lir);
+        loop.label = begin;
+        add_step(ctx, loop);
 
-    step_t *it = get_step(ctx, branch);
-    it->label = body;
-    it->other = end;
+        /* create a vector of blocks that will later become fixups */
+        operand_t end = add_label(ctx, step_of(OP_BLOCK, lir));
+
+        step_t *it = get_step(ctx, branch);
+        it->label = body;
+        it->other = end;
+
+        size_t len = oplist_len(temp);
+        for (size_t i = 0; i < len; i++) {
+            operand_t op = oplist_get(temp, i);
+            step_t *fixup = get_step(ctx, op);
+            fixup->label = end;
+        }
+    }
+    set_fixups(ctx, stack);
 
     return begin;
 }
 
-static operand_t emit_branch(context_t ctx, lir_t *lir) {
+static operand_t emit_branch(context_t *ctx, lir_t *lir) {
     step_t step = step_of(OP_BRANCH, lir);
     step.cond = emit_lir(ctx, lir->cond);
     operand_t branch = add_label(ctx, step);
@@ -331,20 +364,20 @@ static operand_t emit_branch(context_t ctx, lir_t *lir) {
     return branch;
 }
 
-static operand_t emit_name(context_t ctx, lir_t *lir) {
+static operand_t emit_name(context_t *ctx, lir_t *lir) {
     step_t step = step_with_type(OP_LOAD, lir->node, lir_type(lir->it));
     step.src = emit_lir(ctx, lir->it);
-    step.offset = operand_imm(ctx.reports, value_zero());
+    step.offset = operand_imm(ctx->reports, value_zero());
     return add_step(ctx, step);
 }
 
-static operand_t emit_call(context_t ctx, lir_t *lir) {
+static operand_t emit_call(context_t *ctx, lir_t *lir) {
     size_t len = vector_len(lir->args);
-    operand_t *args = ctu_malloc(sizeof(operand_t) * len);
+    oplist_t *args = oplist_of(len);
     
     for (size_t i = 0; i < len; i++) {
         lir_t *arg = vector_get(lir->args, i);
-        args[i] = emit_lir(ctx, arg);
+        oplist_set(args, i, emit_lir(ctx, arg));
     }
 
     operand_t func = emit_lir(ctx, lir->func);
@@ -352,30 +385,29 @@ static operand_t emit_call(context_t ctx, lir_t *lir) {
     step_t step = step_with_type(OP_CALL, lir->node, lir_type(lir->func)->result);
     step.func = func;
     step.args = args;
-    step.len = len;
 
     return add_step(ctx, step);
 }
 
-static operand_t emit_string(context_t ctx, lir_t *lir) {
+static operand_t emit_string(context_t *ctx, lir_t *lir) {
     block_t *str = new_block(BLOCK_STRING, NULL, lir->node, lir_type(lir));
-    str->idx = vector_len(*(ctx.strings));
+    str->idx = vector_len(*(ctx->strings));
     str->string = lir->str;
-    vector_push(ctx.strings, str);
+    vector_push(ctx->strings, str);
     return operand_address(str);
 }
 
-static operand_t emit_forward(context_t ctx, lir_t *lir) {
-    report(ctx.reports, INTERNAL, lir->node, "forward `%s`", type_format(lir_type(lir)));
+static operand_t emit_forward(context_t *ctx, lir_t *lir) {
+    report(ctx->reports, INTERNAL, lir->node, "forward `%s`", type_format(lir_type(lir)));
     return operand_empty();
 }
 
-static operand_t emit_poison(context_t ctx, lir_t *lir) {
-    report(ctx.reports, INTERNAL, lir->node, "poison `%s`", type_format(lir_type(lir)));
+static operand_t emit_poison(context_t *ctx, lir_t *lir) {
+    report(ctx->reports, INTERNAL, lir->node, "poison `%s`", type_format(lir_type(lir)));
     return operand_empty();
 }
 
-static operand_t emit_return(context_t ctx, lir_t *lir) {
+static operand_t emit_return(context_t *ctx, lir_t *lir) {
     operand_t operand = lir->operand == NULL ? operand_empty() : emit_lir(ctx, lir->operand);
     return build_return(ctx, lir, operand);
 }
@@ -384,7 +416,15 @@ static operand_t emit_param(lir_t *lir) {
     return operand_arg(lir->index);
 }
 
-static operand_t emit_lir(context_t ctx, lir_t *lir) {
+static operand_t emit_break(context_t *ctx, lir_t *lir) {
+    step_t step = step_of(OP_JMP, lir);
+    step.label = operand_empty();
+    operand_t jump = add_label(ctx, step);
+    add_fixup(ctx, lir->loop, jump);
+    return operand_empty();
+}
+
+static operand_t emit_lir(context_t *ctx, lir_t *lir) {
     switch (lir->leaf) {
     case LIR_UNARY: return emit_unary(ctx, lir);
     case LIR_BINARY: return emit_binary(ctx, lir);
@@ -403,9 +443,10 @@ static operand_t emit_lir(context_t ctx, lir_t *lir) {
     case LIR_RETURN: return emit_return(ctx, lir);
     case LIR_POISON: return emit_poison(ctx, lir);
     case LIR_FORWARD: return emit_forward(ctx, lir);
+    case LIR_BREAK: return emit_break(ctx, lir);
 
     default:
-        ctu_assert(ctx.reports, "emit-lir unknown %d", lir->leaf);
+        ctu_assert(ctx->reports, "emit-lir unknown %d", lir->leaf);
         return operand_empty();
     }
 }

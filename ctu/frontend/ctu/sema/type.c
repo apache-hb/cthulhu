@@ -85,5 +85,9 @@ type_t *common_type(const type_t *lhs, const type_t *rhs) {
         return common_digit(lhs, rhs);
     }
 
+    if (is_bool(lhs) && is_bool(rhs)) {
+        return type_bool();
+    }
+
     return type_poison("cannot find common type");
 }
