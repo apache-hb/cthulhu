@@ -61,7 +61,7 @@ static void add_global(context_t *ctx, const block_t *block) {
     ctu_free(fmt);
 }
 
-static void add_globals(context_t *ctx, vector_t *globals) {
+static void forward_globals(context_t *ctx, vector_t *globals) {
     size_t len = vector_len(globals);
     
     stream_write(ctx->result, "\n// Global forwarding\n");
@@ -70,6 +70,10 @@ static void add_globals(context_t *ctx, vector_t *globals) {
         const block_t *block = vector_get(globals, i);
         forward_global(ctx, block);
     }
+}
+
+static void add_globals(context_t *ctx, vector_t *globals) {
+    size_t len = vector_len(globals);
 
     stream_write(ctx->result, "\n// Global initialization\n");
 
@@ -310,7 +314,7 @@ static void add_block(context_t *ctx, const block_t *block) {
     stream_write(ctx->result, "}\n");
 }
 
-static void add_blocks(context_t *ctx, vector_t *blocks) {
+static void forward_blocks(context_t *ctx, vector_t *blocks) {
     size_t len = vector_len(blocks);
 
     stream_write(ctx->result, "\n// Function forwarding\n");
@@ -322,6 +326,10 @@ static void add_blocks(context_t *ctx, vector_t *blocks) {
         }
         forward_block(ctx, block);
     }
+}
+
+static void add_blocks(context_t *ctx, vector_t *blocks) {
+    size_t len = vector_len(blocks);
 
     stream_write(ctx->result, "\n// Function definitions\n");
 
@@ -394,6 +402,8 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
 
     add_strings(&ctx, mod->strtab);
     add_imports(&ctx, mod->imports);
+    forward_globals(&ctx, mod->vars);
+    forward_blocks(&ctx, mod->funcs);
     add_globals(&ctx, mod->vars);
     add_blocks(&ctx, mod->funcs);
 

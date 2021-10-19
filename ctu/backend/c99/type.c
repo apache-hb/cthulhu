@@ -1,5 +1,7 @@
 #include "type.h"
 
+#include "ctu/gen/value.h"
+#include "ctu/gen/module.h"
 #include "ctu/util/str.h"
 
 static const char *digit_name(int_t kind, bool sign) {
@@ -130,6 +132,10 @@ const char *value_to_string(reports_t *reports, const value_t *value) {
 
     if (is_string(type)) {
         return format("\"%s\"", strnorm(value->string));
+    }
+
+    if (is_closure(type)) {
+        return value->block->name;
     }
 
     if (is_literal(type)) {

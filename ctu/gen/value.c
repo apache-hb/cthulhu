@@ -70,6 +70,10 @@ char *value_format(const value_t *value) {
         return typestr;
     }
 
+    if (is_closure(type)) {
+        return format("%s(&%s)", typestr, value->block->name);
+    }
+
     /* trigraphs are fun */
     return format("%s(\?\?\?)", typestr);
 }

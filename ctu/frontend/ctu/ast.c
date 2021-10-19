@@ -95,6 +95,16 @@ ctu_t *ctu_cast(scan_t *scan, where_t where, ctu_t *expr, ctu_t *type) {
     return ctu;
 }
 
+ctu_t *ctu_lambda(scan_t *scan, where_t where, vector_t *params, ctu_t *result, ctu_t *body) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_LAMBDA);
+
+    ctu->params = params;
+    ctu->result = result;
+    ctu->body = body;
+
+    return ctu;
+}
+
 ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts) {
     ctu_t *ctu = ctu_new(scan, where, CTU_STMTS);
 

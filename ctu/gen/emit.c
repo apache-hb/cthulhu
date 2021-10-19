@@ -179,7 +179,17 @@ static const char *symbol_name(const lir_t *lir) {
         return lir->name;
     }
 
-    return lir->attribs->mangle ?: mangle_name(lir->name, lir_type(lir));
+    if (lir->attribs->mangle != NULL) {
+        return lir->attribs->mangle;
+    }
+
+    if (lir->name != NULL) {
+        mangle_name(lir->name, lir_type(lir));
+    }
+
+    node_t *node = lir->node;
+    where_t where = node->where;
+    return format("lambda%ld%ld", where.first_line, where.first_column);
 }
 
 static block_t *init_block(lir_t *decl, const type_t *type) {

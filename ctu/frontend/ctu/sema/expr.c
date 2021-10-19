@@ -3,6 +3,8 @@
 #include "value.h"
 #include "define.h"
 
+static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };
+
 static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr);
 
 static lir_t *compile_digit(ctu_t *digit) {
@@ -289,6 +291,32 @@ static lir_t *compile_cast(sema_t *sema, ctu_t *expr) {
     return it;
 }
 
+static lir_t *compile_lambda(sema_t *sema, ctu_t *expr) {
+    local_t save = move_state(sema);
+    sema_t *nest = new_sema(sema->reports, sema, SMALL_SIZES);
+
+    const type_t *type = lambda_type(sema, expr);
+    set_return(nest, type);
+    add_locals(nest, type, expr->params);
+
+    lir_t *body = compile_stmts(nest, expr->body);
+    vector_t *locals = move_locals(nest);
+
+    lir_t *lambda = lir_forward(expr->node, NULL, LIR_DEFINE, NULL);
+    lir_define(sema->reports, lambda,
+        /* type = */ type,
+        /* locals = */ locals,
+        /* body = */ body
+    );
+
+    add_lambda(sema, lambda);
+
+    delete_sema(nest);
+    set_state(sema, save);
+
+    return lambda;
+}
+
 /* actually compiles an rvalue */
 lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
@@ -301,6 +329,7 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_ACCESS: return name_expr(expr->node, compile_access(sema, expr));
     case CTU_STRING: return compile_string(expr);
     case CTU_CAST: return compile_cast(sema, expr);
+    case CTU_LAMBDA: return compile_lambda(sema, expr);
 
     default:
         ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);
@@ -387,8 +416,6 @@ static lir_t *compile_break(ctu_t *stmt) {
     return lir_break(stmt->node, NULL);
 }
 
-static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };
-
 lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
     switch (stmt->type) {
     case CTU_STMTS: return compile_stmts(new_sema(sema->reports, sema, SMALL_SIZES), stmt);
@@ -396,7 +423,6 @@ lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
     case CTU_WHILE: return compile_while(sema, stmt);
     case CTU_ASSIGN: return compile_assign(sema, stmt);
     case CTU_BRANCH: return compile_branch(sema, stmt);
-
     case CTU_BREAK: return compile_break(stmt);
 
     case CTU_CALL: return compile_call(sema, stmt);

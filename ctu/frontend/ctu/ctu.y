@@ -89,7 +89,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
     statements stmt type param function return import while
-    assign attrib branch tail closure result
+    assign attrib branch tail closure result funcbody lambda lambdabody
 
 %type<vector>
     unit stmtlist params paramlist args arglist imports
@@ -158,12 +158,18 @@ const: VAR { $$ = true; }
     | FINAL { $$ = false; }
     ;
 
-function: DEF IDENT optparams result statements 
+function: DEF IDENT optparams result funcbody 
     { $$ = ctu_define(x, @$, $2, $3, $4, $5); }
-    | DEF IDENT optparams result ASSIGN expr SEMI
-    { $$ = ctu_define(x, @$, $2, $3, $4, ctu_stmts(x, @6, vector_init(ctu_return(x, @6, $6)))); }
     | DEF IDENT optparams result SEMI 
     { $$ = ctu_define(x, @$, $2, $3, $4, NULL); }
+    ;
+
+funcbody: statements { $$ = $1; }
+    | ASSIGN expr SEMI { $$ = ctu_stmts(x, @$, vector_init(ctu_return(x, @$, $2))); }
+    ;
+
+lambdabody: statements { $$ = $1; }
+    | ASSIGN expr { $$ = ctu_stmts(x, @$, vector_init(ctu_return(x, @$, $2))); }
     ;
 
 result: %empty { $$ = ctu_typename(x, @$, "void"); }
@@ -246,6 +252,9 @@ args: expr { $$ = vector_init($1); }
     | args COMMA expr { vector_push(&$1, $3); $$ = $1; }
     ;
 
+lambda: LAMBDA optparams result lambdabody { $$ = ctu_lambda(x, @$, $2, $3, $4); }
+    ;
+
 primary: LPAREN expr RPAREN { $$ = $2; }
     | IDENT { $$ = ctu_ident(x, @$, $1); }
     | DIGIT { $$ = ctu_digit(x, @$, $1); }
@@ -314,6 +323,7 @@ or: and { $$ = $1; }
     ;
 
 expr: or { $$ = $1; }
+    | lambda { $$ = $1; }
     ;
     
 %%

@@ -2,13 +2,23 @@
 
 #include "ctu/util/report-ext.h"
 
+static local_t new_local(void) {
+    local_t local = {
+        .locals = vector_new(8),
+        .result = type_poison("uninitialized return type")
+    };
+
+    return local;
+}
+
 stack_t *stack_new(void) {
     stack_t *stack = ctu_malloc(sizeof(stack_t));
     stack->stack = vector_new(16);
 
-    stack->locals = vector_new(8);
-    stack->result = type_poison("uninitialized return type");
+    stack->local = new_local();
+
     stack->externs = vector_new(8);
+    stack->lambdas = vector_new(8);
     return stack;
 }
 
@@ -148,23 +158,23 @@ void delete_sema(sema_t *sema) {
 
 void set_return(sema_t *sema, const type_t *type) {
     stack_t *data = sema_get_data(sema);
-    data->result = type;
+    data->local.result = type;
 }
 
 const type_t *get_return(sema_t *sema) {
     stack_t *data = sema_get_data(sema);
-    return data->result;
+    return data->local.result;
 }
 
 void add_local(sema_t *sema, lir_t *lir) {
     stack_t *data = sema_get_data(sema);
-    vector_push(&data->locals, lir);
+    vector_push(&data->local.locals, lir);
 }
 
 vector_t *move_locals(sema_t *sema) {
     stack_t *data = sema_get_data(sema);
-    vector_t *locals = data->locals;
-    data->locals = vector_new(16);
+    vector_t *locals = data->local.locals;
+    data->local.locals = vector_new(16);
     return locals;
 }
 
@@ -178,6 +188,29 @@ vector_t *move_externs(sema_t *sema) {
     vector_t *externs = data->externs;
     data->externs = vector_new(16);
     return externs;
+}
+
+void add_lambda(sema_t *sema, lir_t *lir) {
+    stack_t *data = sema_get_data(sema);
+    vector_push(&data->lambdas, lir);
+}
+
+vector_t *move_lambdas(sema_t *sema) {
+    stack_t *data = sema_get_data(sema);
+    vector_t *lambdas = data->lambdas;
+    return lambdas;
+}
+
+local_t move_state(sema_t *sema) {
+    stack_t *data = sema_get_data(sema);
+    local_t local = data->local;
+    data->local = new_local();
+    return local;
+}
+
+void set_state(sema_t *sema, local_t state) {
+    stack_t *data = sema_get_data(sema);
+    data->local = state;
 }
 
 bool is_discard(const char *name) {

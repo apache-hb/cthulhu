@@ -50,10 +50,13 @@ static lir_t *compile_decls(sema_t *sema, node_t *root) {
     map_t *funcs = sema_tag(sema, TAG_FUNCS);
     MAP_APPLY(funcs, sema, build_define);
 
+    vector_t *defs = MAP_COLLECT(funcs, nonull);
+    vector_t *lambdas = move_lambdas(sema);
+
     return lir_module(root, 
         /* externs = */ move_externs(sema),
         /* vars = */ map_values(vars),
-        /* funcs = */ MAP_COLLECT(funcs, nonull)
+        /* funcs = */ vector_join(defs, lambdas)
     );
 }
 
