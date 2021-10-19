@@ -135,7 +135,9 @@ static const char *format_operand(reports_t *reports, operand_t op) {
     case IMM: return value_to_string(reports, op.imm);
     case ARG: return arg_name(op.arg);
 
-    default: return format("unknown(%d)", op.kind);
+    default: 
+        ctu_assert(reports, "unknown operand %d", op.kind);
+        return format("unknown(%d)", op.kind);
     }
 }
 

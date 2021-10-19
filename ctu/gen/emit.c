@@ -189,7 +189,7 @@ static const char *symbol_name(const lir_t *lir) {
 
     node_t *node = lir->node;
     where_t where = node->where;
-    return format("lambda%ld%ld", where.first_line, where.first_column);
+    return format("lambda%ld_%ld", where.first_line, where.first_column);
 }
 
 static block_t *init_block(lir_t *decl, const type_t *type) {
