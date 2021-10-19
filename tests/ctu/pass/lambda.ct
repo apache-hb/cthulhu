@@ -1,1 +1,1 @@
-var x = lambda(i: int): int = return 5 * i;
+var x = lambda(i: int): int = 5 * i;

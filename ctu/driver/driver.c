@@ -6,6 +6,8 @@
 #include "ctu/gen/emit.h"
 #include "ctu/gen/eval.h"
 
+#include "ctu/perf/perf.h"
+
 #include <string.h>
 
 #include "ctu/backend/c99/c99.h"
@@ -133,6 +135,8 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
         }
 
         eval_world(ctx->reports, ctx->mod);
+
+        dead_step_elimination(ctx->reports, ctx->mod);
 
         if (settings.ir) {
             module_print(stdout, ctx->mod);

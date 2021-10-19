@@ -26,10 +26,9 @@ static bool has_refs(const block_t *block) {
     return count > 0;
 }
 
-void dead_function_elimination(reports_t *reports, 
-                               module_t *mod)
-{
+void dead_function_elimination(reports_t *reports, module_t *mod) {
     UNUSED(reports);
+
     vector_t *funcs = mod->funcs;
     size_t len = vector_len(funcs);
 
@@ -50,5 +49,42 @@ void dead_function_elimination(reports_t *reports,
         if (!has_refs(func)) {
             vector_set(funcs, i, NULL);
         }
+    }
+}
+
+static void delete_dead_steps(block_t *block) {
+    bool removing = false;
+    size_t len = block->len;
+
+    for (size_t i = 0; i < len; i++) {
+        step_t *step = block->steps + i;
+
+        if (step->opcode == OP_BLOCK) {
+            removing = false;
+            continue;
+        }
+
+        if (removing) {
+            step->opcode = OP_EMPTY;
+            continue;
+        }
+
+        if (step->opcode == OP_JMP || step->opcode == OP_BRANCH || step->opcode == OP_RETURN) {
+            removing = true;
+        }
+    }
+}
+
+void dead_step_elimination(reports_t *reports, module_t *mod) {
+    UNUSED(reports);
+
+    vector_t *funcs = mod->funcs;
+    size_t len = vector_len(funcs);
+
+    logverbose("running DDB pass on %zu blocks in %s", len, mod->name);
+
+    for (size_t i = 0; i < len; i++) {
+        block_t *func = vector_get(funcs, i);
+        delete_dead_steps(func);
     }
 }
