@@ -184,7 +184,7 @@ static const char *symbol_name(const lir_t *lir) {
     }
 
     if (lir->name != NULL) {
-        mangle_name(lir->name, lir_type(lir));
+        return mangle_name(lir->name, lir_type(lir));
     }
 
     node_t *node = lir->node;
