@@ -11,4 +11,5 @@ typedef enum {
 typedef struct {
     visibility_t visibility; /* the visibility of this symbol */
     const char *mangle; /* what is the mangled name of this symbol */
+    const char *section; /* what section this symbol is in */
 } attrib_t;

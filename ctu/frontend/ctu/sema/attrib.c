@@ -34,6 +34,13 @@ static void mangle_attrib(reports_t *reports, attrib_t *dst, vector_t *args) {
     dst->mangle = first->str;
 }
 
+static void section_attrib(reports_t *reports, attrib_t *dst, vector_t *args) {
+    UNUSED(reports);
+
+    lir_t *first = vector_get(args, 0);
+    dst->library = first->str;
+}
+
 static void apply_attrib(sema_t *sema, attrib_t *dst, ctu_t *attrib) {
     vector_t *args = attrib->params;
     size_t len = vector_len(args);
@@ -75,6 +82,7 @@ void init_attribs(void) {
     builtins = map_new(MAP_SMALL);
     add_builtin("entry", type_closure(vector_new(0), type_void()), entry_attrib);
     add_builtin("mangle", type_closure(vector_init(type_string()), type_void()), mangle_attrib);
+    add_builtin("section", type_closure(vector_init(type_string()), type_void()), section_attrib);
 }
 
 void compile_attribs(sema_t *sema, lir_t *lir, ctu_t *ctu) {
