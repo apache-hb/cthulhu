@@ -24,6 +24,7 @@ typedef enum {
     TY_UNION,
 
     /* error handling types */
+    TY_FORWARD, /// a forward declaration
     TY_POISON /// a compiler error
 } metatype_t;
 
@@ -160,6 +161,8 @@ type_t *type_bool_with_name(const char *name);
  * @return the varargs type
  */
 type_t *type_varargs(void);
+
+type_t *type_forward(const char *name, const node_t *node);
 
 type_t *type_struct(const char *name, const node_t *node, vector_t *fields);
 

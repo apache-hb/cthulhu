@@ -137,6 +137,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
         eval_world(ctx->reports, ctx->mod);
 
         dead_step_elimination(ctx->reports, ctx->mod);
+        dead_function_elimination(ctx->reports, ctx->mod);
 
         if (settings.ir) {
             module_print(stdout, ctx->mod);
