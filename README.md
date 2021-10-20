@@ -20,12 +20,14 @@ ninja -C build test
 
 * ctu - source
   * ast - generic ast
-  * driver - user facing driver and command line
-  * sema - generic semantic analysis
-  * frontend - all parser frontends
   * backend - all language backends from transpiling
-  * emit - conversion from typed ir to bytecode
-  * util - helpers
+  * driver - user facing driver and command line
+  * frontend - all parser frontends
+  * gen - converts generic ast to bytecode
+  * lir - generic ast and semantic analysis context
+  * pref - bytecode optimisation
+  * type - generic type data
+  * util - helper library
 
 ## Overview
 
