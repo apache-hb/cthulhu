@@ -15,7 +15,9 @@ static void print_help(const frontend_t *frontend) {
     printf("\t -v, --version: Print version information\n");
     printf("\t -gen, --generator: Override default backend code generator\n");
     printf("\t -V, --verbose: Enable verbose logging\n");
-    printf("\t-ir: Print IR for debugging\n");
+    printf("\t-ir, --intermediate: Print IR\n");
+    printf("\t-O, --opt: set optimisation level");
+    printf("\t-P, --pass: specify optimisation passes to run\n");
 
     exit(0);
 }
@@ -57,7 +59,7 @@ static int parse_arg(settings_t *settings, const frontend_t *frontend, int index
         return 2;
     } else if (MATCH(arg, "-V", "--verbose")) {
         settings->verbose = true;
-    } else if (startswith(arg, "-ir")) {
+    } else if (MATCH(arg, "-ir", "--intermediate")) {
         settings->ir = true;
     } else {
         report(settings->reports, WARNING, NULL, "unknown argument %s", arg);

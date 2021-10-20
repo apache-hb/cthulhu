@@ -81,6 +81,9 @@ char *type_format(const type_t *type) {
     case TY_POISON:
         result = format("poison(%s)", get_poison_type_message(type));
         break;
+    case TY_FORWARD:
+        result = format("forward(%s)", type->name);
+        break;
     }
 
     if (!is_const(type)) {
