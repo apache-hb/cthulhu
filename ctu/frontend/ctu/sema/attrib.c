@@ -38,7 +38,7 @@ static void section_attrib(reports_t *reports, attrib_t *dst, vector_t *args) {
     UNUSED(reports);
 
     lir_t *first = vector_get(args, 0);
-    dst->library = first->str;
+    dst->section = first->str;
 }
 
 static void apply_attrib(sema_t *sema, attrib_t *dst, ctu_t *attrib) {
@@ -91,6 +91,7 @@ void compile_attribs(sema_t *sema, lir_t *lir, ctu_t *ctu) {
     attrib_t *attr = ctu_malloc(sizeof(attrib_t));
     attr->visibility = ctu->exported ? PUBLIC : PRIVATE;
     attr->mangle = NULL;
+    attr->section = NULL;
 
     for (size_t i = 0; i < vector_len(attribs); i++) {
         apply_attrib(sema, attr, vector_get(attribs, i));

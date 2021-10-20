@@ -29,6 +29,12 @@ static void free_c99_context(context_t ctx) {
     stream_delete(ctx.result);
 }
 
+static void write_section(context_t *ctx, const attrib_t *attribs) {
+    if (attribs->section != NULL) {
+        stream_write(ctx->result, format("__attribute__((section(\"%s\")))\n", attribs->section));
+    }
+}
+
 static void forward_global(context_t *ctx, const block_t *block) {
     const type_t *type = block->type;
     const char *name = block->name;
@@ -37,6 +43,7 @@ static void forward_global(context_t *ctx, const block_t *block) {
 
     char *forward = format("%s;\n", decl);
 
+    write_section(ctx, block->attribs);
     stream_write(ctx->result, forward);
 
     ctu_free(forward);
@@ -305,6 +312,7 @@ static void write_locals(context_t *ctx, const block_t *block) {
 
 static void add_block(context_t *ctx, const block_t *block) {
     char *decl = format_function(ctx->reports, block);
+    write_section(ctx, block->attribs);
     stream_write(ctx->result, format("%s {\n", decl));
 
     write_locals(ctx, block);

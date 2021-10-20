@@ -1,0 +1,14 @@
+@mangle("puts")
+def putStrLn($: str): int;
+
+@section(".init_array")
+export final $ = custom_init;
+
+def custom_init {
+    putStrLn("custom_init");
+}
+
+@entry
+def entry {
+    putStrLn("entry");
+}

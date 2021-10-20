@@ -13,7 +13,8 @@ static lir_t *lir_new(node_t *node, const type_t *type, leaf_t leaf) {
 
 static const attrib_t DEFAULT_ATTRIBS = {
     .visibility = PRIVATE,
-    .mangle = NULL
+    .mangle = NULL,
+    .section = NULL
 };
 
 static lir_t *lir_decl(node_t *node, leaf_t leaf, const char *name) {

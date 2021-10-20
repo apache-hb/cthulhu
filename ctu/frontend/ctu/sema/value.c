@@ -42,6 +42,11 @@ static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
 
     compile_attribs(sema, lir, ctu);
 
+    if (is_discard(lir->name) && lir->attribs->mangle == NULL) {
+        where_t where = lir->node->where;
+        lir->name = format("anon%ld_%ld", where.first_line, where.first_column);
+    }
+
     stack_leave(sema, lir);
 }
 

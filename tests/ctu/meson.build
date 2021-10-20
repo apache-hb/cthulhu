@@ -46,7 +46,7 @@ pass = [
     'local', 'long-while', 'long', 'loop', 'multiline', 'mut',
     'nest', 'order', 'pointers', 'pointers2', 'posix-interop', 'regalloc',
     'string', 'struct', 'suffix', 'union', 'unused-var', 'var', 'win32-interop',
-    'win32-wsa', 'simple', 'extern', 'fuzz-10',
+    'win32-wsa', 'simple', 'extern', 'fuzz-10', 'section',
     'funcs.fwd', 'funcs.single', 'funcs.stmts', 'lambda'
 ]
 
