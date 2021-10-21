@@ -18,3 +18,5 @@ OWNED file_t *ctu_fopen(const char *path, const char *mode) NONULL ALLOC(ctu_clo
 
 size_t ctu_read(WEAK void *dst, size_t total, file_t *fp) NONULL;
 OWNED void *ctu_mmap(WEAK file_t *fp) NONULL;
+
+char *ctu_basepath(const char *path) NONULL;

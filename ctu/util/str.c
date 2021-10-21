@@ -134,6 +134,18 @@ char *nstrnorm(const char *str, size_t len) {
     return buf;
 }
 
+vector_t *strsplit(const char *str, const char *sep) {
+    vector_t *result = vector_new(4);
+    char *save;
+    char *token = strtok_r((char *)str, sep, &save);
+    while (token != NULL) {
+        vector_push(&result, token);
+        token = strtok_r(NULL, sep, &save);
+    }
+
+    return result;
+}
+
 size_t strhash(const char *str) {
     size_t hash = 0;
 

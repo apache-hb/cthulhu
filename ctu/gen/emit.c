@@ -499,7 +499,12 @@ static vector_t *collect_imports(vector_t *vec) {
     return vector_collect(all);
 }
 
-module_t *module_build(reports_t *reports, vector_t *nodes) {
+static char *module_name(const char *base) {
+    vector_t *parts = strsplit(base, PATH_SEP);
+    return strjoin("::", parts);
+}
+
+module_t *module_build(reports_t *reports, const char *base, vector_t *nodes) {
     vector_t *vars = collect_vars(nodes); // root->vars;
     size_t nvars = vector_len(vars);
 
@@ -511,7 +516,7 @@ module_t *module_build(reports_t *reports, vector_t *nodes) {
 
     vector_t *strings = vector_new(4);
 
-    module_t *mod = init_module(varblocks, funcblocks, "module");
+    module_t *mod = init_module(varblocks, funcblocks, module_name(base));
 
     for (size_t i = 0; i < nvars; i++) {
         lir_t *var = vector_get(vars, i);

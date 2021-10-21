@@ -72,6 +72,16 @@ void *ctu_memdup(const void *ptr, size_t size) {
     return out;
 }
 
+char *ctu_basepath(const char *path) {
+    char *base = ctu_strdup(path);
+    size_t len = strlen(base);
+    while (!endswith(base, PATH_SEP)) {
+        base[len--] = '\0';
+    }
+    base[len] = '\0';
+    return base;
+}
+
 file_t *ctu_fopen(const char *path, const char *mode) {
     const char *full = realpath(path, ctu_malloc(PATH_MAX + 1));
     file_t *file = ctu_malloc(sizeof(file_t));

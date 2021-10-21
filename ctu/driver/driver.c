@@ -128,7 +128,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
     for (size_t i = 0; i < len; i++) {
         context_t *ctx = all + i;
 
-        ctx->mod = module_build(ctx->reports, ctx->modules);
+        ctx->mod = module_build(ctx->reports, ctu_basepath(ctx->file->path), ctx->modules);
 
         logverbose("reporting %s", ctx->file->path);
         int local = max_report(&error, ctx->reports, format("compilation of `%s`", ctx->file->path));

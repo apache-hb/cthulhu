@@ -1,0 +1,3 @@
+import second;
+
+export def thing = 10;

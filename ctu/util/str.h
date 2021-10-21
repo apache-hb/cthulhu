@@ -80,6 +80,8 @@ char *strnorm(const char *str) NONULL;
  */
 char *nstrnorm(const char *str, size_t len) NONULL;
 
+vector_t *strsplit(const char *str, const char *sep) NONULL;
+
 /**
  * hash a string into a size_t
  * 
