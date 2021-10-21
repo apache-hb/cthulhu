@@ -54,7 +54,7 @@ void compile_import(sema_t *sema, ctu_t *ctu) {
 
     sema_t *import = ctu_start(sema->reports, tree);
     add_module(sema, ctu, import);
-    set_cache(path, sema);
+    set_cache(path, import);
 
     ctu_close(file);
 }

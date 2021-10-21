@@ -102,7 +102,8 @@ vector_t *ctu_analyze(reports_t *reports, ctu_t *ctu) {
     ctu_sema(reports, ctu);
     vector_t *cache = cached_data();
     for (size_t i = 0; i < vector_len(cache); i++) {
-        vector_set(cache, i, ctu_finish(vector_get(cache, i)));
+        sema_t *sema = vector_get(cache, i);
+        vector_set(cache, i, ctu_finish(sema));
     }
     return cache;
 }

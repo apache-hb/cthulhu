@@ -76,7 +76,6 @@ operand_t operand_label(label_t label) {
 }
 
 operand_t operand_address(struct block_t *block) {
-    printf("address: %p\n", block);
     operand_t operand = operand_new(ADDRESS);
     operand.block = block;
     return operand;

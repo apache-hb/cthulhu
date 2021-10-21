@@ -212,7 +212,6 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
 }
 
 static block_t *block_declare(lir_t *lir) {
-    printf("declare: %s\n", lir->name);
     block_t *block = init_block(lir, lir_type(lir));
     lir->data = block;
     return block;
@@ -473,7 +472,6 @@ static module_t *init_module(vector_t *vars, vector_t *funcs, const char *name) 
 static vector_t *collect_vars(vector_t *vec) {
     vector_t *all = vector_new(64);
     size_t len = vector_len(vec);
-    printf("len: %zu\n", len);
     for (size_t i = 0; i < len; i++) {
         lir_t *lir = vector_get(vec, i);
         vector_push(&all, lir->vars);
