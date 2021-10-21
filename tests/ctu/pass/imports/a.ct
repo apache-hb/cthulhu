@@ -1,0 +1,4 @@
+import b;
+
+@entry
+def entry = b::thing();

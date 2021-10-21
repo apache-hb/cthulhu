@@ -80,6 +80,7 @@
 "," { return COMMA; }
 "." { return DOT; }
 "->" { return ARROW; }
+"=>" { return WIDEARROW; }
 
 "+" { return ADD; }
 "-" { return SUB; }

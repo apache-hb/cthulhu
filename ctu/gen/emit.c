@@ -469,11 +469,42 @@ static module_t *init_module(vector_t *vars, vector_t *funcs, const char *name) 
     return mod;
 }
 
-module_t *module_build(reports_t *reports, lir_t *root) {
-    vector_t *vars = root->vars;
+static vector_t *collect_vars(vector_t *vec) {
+    vector_t *all = vector_new(64);
+    size_t len = vector_len(vec);
+    printf("len: %zu\n", len);
+    for (size_t i = 0; i < len; i++) {
+        lir_t *lir = vector_get(vec, i);
+        vector_push(&all, lir->vars);
+    }
+    return vector_collect(all);
+}
+
+static vector_t *collect_funcs(vector_t *vec) {
+    vector_t *all = vector_new(64);
+    size_t len = vector_len(vec);
+    for (size_t i = 0; i < len; i++) {
+        lir_t *lir = vector_get(vec, i);
+        vector_push(&all, lir->funcs);
+    }
+    return vector_collect(all);
+}
+
+static vector_t *collect_imports(vector_t *vec) {
+    vector_t *all = vector_new(64);
+    size_t len = vector_len(vec);
+    for (size_t i = 0; i < len; i++) {
+        lir_t *lir = vector_get(vec, i);
+        vector_push(&all, lir->imports);
+    }
+    return vector_collect(all);
+}
+
+module_t *module_build(reports_t *reports, vector_t *nodes) {
+    vector_t *vars = collect_vars(nodes); // root->vars;
     size_t nvars = vector_len(vars);
 
-    vector_t *funcs = root->funcs;
+    vector_t *funcs = collect_funcs(nodes); // root->funcs;
     size_t nfuncs = vector_len(funcs);
 
     vector_t *varblocks = vector_of(nvars);
@@ -481,7 +512,7 @@ module_t *module_build(reports_t *reports, lir_t *root) {
 
     vector_t *strings = vector_new(4);
 
-    module_t *mod = init_module(varblocks, funcblocks, root->node->scan->path);
+    module_t *mod = init_module(varblocks, funcblocks, "module");
 
     for (size_t i = 0; i < nvars; i++) {
         lir_t *var = vector_get(vars, i);
@@ -495,7 +526,7 @@ module_t *module_build(reports_t *reports, lir_t *root) {
         vector_set(funcblocks, i, block);
     }
 
-    vector_t *imports = root->imports;
+    vector_t *imports = collect_imports(nodes);
     size_t nimports = vector_len(imports);
     vector_t *symbols = vector_of(nimports);
     for (size_t i = 0; i < nimports; i++) {

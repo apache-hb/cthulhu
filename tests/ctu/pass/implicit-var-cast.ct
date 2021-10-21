@@ -1,2 +1,2 @@
 // cast a short to a long
-export var i: long = 100s;
+export var i: long = 100;

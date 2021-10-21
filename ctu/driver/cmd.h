@@ -3,11 +3,12 @@
 #include "driver.h"
 
 typedef struct {
-    const backend_t *backend;
-    vector_t *sources;
-    reports_t *reports;
-    bool verbose;
-    bool ir;
+    const backend_t *backend; /// codegen backend
+    vector_t *sources; /// all source files
+    vector_t *headers; /// include paths
+    reports_t *reports; /// error report sink
+    bool verbose; /// enable verbose logging
+    bool ir; /// enable IR output
 } settings_t;
 
 /**

@@ -1,6 +1,6 @@
 @entry
 def main {
-    var i = lambda = i();
+    var i = lambda => i();
 
     return i();
 }

@@ -8,5 +8,5 @@
 #include "operand.h"
 #include "module.h"
 
-module_t *module_build(reports_t *reports, lir_t *root);
+module_t *module_build(reports_t *reports, vector_t *nodes);
 void module_print(FILE *out, module_t *mod);

@@ -23,8 +23,8 @@ static char *pl0_name(const char *name) {
     return out;
 }
 
-#define NEW_SEMA(parent, reports, sizes) \
-    sema_new(parent, reports, TAG_MAX, sizes)
+#define NEW_SEMA(parent, path, reports, sizes) \
+    sema_new(parent, path, reports, TAG_MAX, sizes)
     
 #define DELETE_SEMA(sema) \
     sema_delete(sema)
@@ -336,7 +336,7 @@ static void compile_proc(sema_t *sema, lir_t *lir) {
         [TAG_CONSTS] = 0,
         [TAG_PROCS] = 0,
     };
-    sema_t *nest = NEW_SEMA(sema, sema->reports, sizes);
+    sema_t *nest = NEW_SEMA(sema, sema->path, sema->reports, sizes);
     sema_set_data(nest, sema_get_data(sema));
 
     for (size_t i = 0; i < nlocals; i++) {
@@ -402,7 +402,7 @@ lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
         [TAG_CONSTS] = nconsts,
         [TAG_PROCS] = nprocs
     };
-    sema_t *sema = NEW_SEMA(NULL, reports, sizes);
+    sema_t *sema = NEW_SEMA(NULL, node->node->scan->path, reports, sizes);
     lir_t *print = pl0_import_print(reports, node->node);
     sema_set_data(sema, print);
 

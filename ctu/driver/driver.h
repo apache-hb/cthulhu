@@ -7,7 +7,9 @@
 
 typedef scan_t(*open_t)(reports_t*, file_t*);
 typedef void*(*parse_t)(scan_t *);
-typedef lir_t*(*analyze_t)(reports_t*, void*);
+
+/* return a vector of modules */
+typedef vector_t*(*analyze_t)(reports_t*, void*);
 typedef void(*init_t)(void);
 
 typedef struct {

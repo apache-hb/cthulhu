@@ -64,6 +64,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     COMMA "`,`"
     DOT "`.`"
     ARROW "`->`"
+    WIDEARROW "`=>`"
     ADD "`+`"
     SUB "`-`"
     MUL "`*`"
@@ -94,24 +95,38 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<vector>
     unit stmtlist params paramlist args arglist imports
     attributes attriblist attribute attribs
-    typelist types optparams
+    typelist types optparams importlist path
 
 %type<boolean>
     exported const
+
+%type<ident>
+    alias
 
 %start program
 
 %%
 
-program: unit END { scan_export(x, ctu_module(x, @$, $1)); }
-    | imports unit END { scan_export(x, ctu_module(x, @$, $2)); }
+program: importlist unit END { scan_export(x, ctu_module(x, @$, $1, $2)); }
+    ;
+
+importlist: %empty { $$ = vector_new(0); }
+    | imports { $$ = $1; }
     ;
 
 imports: import { $$ = vector_init($1); }
     | imports import { vector_push(&$1, $2); $$ = $1; }
     ;
 
-import: IMPORT { $$ = NULL; }
+import: IMPORT path alias SEMI { $$ = ctu_import(x, @$, $2, $3); }
+    ;
+
+path: IDENT { $$ = vector_init($1); }
+    | path COLON2 IDENT { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+alias: %empty { $$ = NULL; }
+    | AS IDENT { $$ = $2; }
     ;
 
 unit: decl { $$ = vector_init($1); }
@@ -169,7 +184,7 @@ funcbody: statements { $$ = $1; }
     ;
 
 lambdabody: statements { $$ = $1; }
-    | ASSIGN expr { $$ = ctu_stmts(x, @$, vector_init(ctu_return(x, @$, $2))); }
+    | WIDEARROW expr { $$ = ctu_stmts(x, @$, vector_init(ctu_return(x, @$, $2))); }
     ;
 
 result: %empty { $$ = ctu_typename(x, @$, "void"); }
@@ -256,7 +271,7 @@ lambda: LAMBDA optparams result lambdabody { $$ = ctu_lambda(x, @$, $2, $3, $4);
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }
-    | IDENT { $$ = ctu_ident(x, @$, $1); }
+    | path { $$ = ctu_path(x, @$, $1); }
     | DIGIT { $$ = ctu_digit(x, @$, $1); }
     | YES { $$ = ctu_bool(x, @$, true); }
     | NO { $$ = ctu_bool(x, @$, false); }

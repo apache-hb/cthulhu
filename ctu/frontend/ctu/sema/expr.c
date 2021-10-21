@@ -201,8 +201,7 @@ static lir_t *name_expr(node_t *node, lir_t *lir) {
     return lir_name(node, lir_type(lir), lir);
 }
 
-static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
-    const char *name = expr->ident;
+static lir_t *compile_name(sema_t *sema, const char *name, ctu_t *expr) {
     if (is_discard(name)) {
         report(sema->reports, ERROR, expr->node, "reading from a discarded identifier `%s`", name);
     }
@@ -220,6 +219,22 @@ static lir_t *compile_name(sema_t *sema, ctu_t *expr) {
 
     report(sema->reports, ERROR, expr->node, "failed to resolve `%s`", name);
     return lir_poison(expr->node, "unresolved name");
+}
+
+static lir_t *compile_path(sema_t *sema, vector_t *path, ctu_t *expr) {
+    size_t len = vector_len(path);
+
+    if (len == 1) {
+        return compile_name(sema, vector_head(path), expr);
+    }
+
+    sema_t *nest = get_module(sema, vector_head(path));
+    if (nest != NULL) {
+        return compile_path(nest, vector_slice(path, 1, len), expr);
+    }
+
+    report(sema->reports, ERROR, expr->node, "failed to find segment `%s`", (char*)vector_head(path));
+    return lir_poison(expr->node, "unresolved path");
 }
 
 static lir_t *compile_access(sema_t *sema, ctu_t *expr) {
@@ -273,7 +288,7 @@ static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
         report(sema->reports, ERROR, expr->node, "expression is not an lvalue");
         return lir_poison(expr->node, "malformed lvalue");
 
-    case CTU_IDENT: return compile_name(sema, expr);
+    case CTU_PATH: return compile_path(sema, expr->path, expr);
     case CTU_ACCESS: return compile_access(sema, expr);
 
     default:
@@ -325,7 +340,7 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_UNARY: return compile_unary(sema, expr);
     case CTU_BINARY: return compile_binary(sema, expr);
     case CTU_CALL: return compile_call(sema, expr);
-    case CTU_IDENT: return compile_name(sema, expr);
+    case CTU_PATH: return compile_path(sema, expr->path, expr);
     case CTU_ACCESS: return name_expr(expr->node, compile_access(sema, expr));
     case CTU_STRING: return compile_string(expr);
     case CTU_CAST: return compile_cast(sema, expr);
@@ -428,7 +443,7 @@ lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
     case CTU_CALL: return compile_call(sema, stmt);
     case CTU_VALUE: return compile_local(sema, stmt);
 
-    case CTU_IDENT:
+    case CTU_PATH:
         report(sema->reports, WARNING, stmt->node, "expression has no effect");
         return lir_stmts(stmt->node, vector_new(0));
 

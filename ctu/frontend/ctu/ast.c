@@ -32,10 +32,10 @@ ctu_t *ctu_bool(scan_t *scan, where_t where, bool value) {
     return ctu;
 }
 
-ctu_t *ctu_ident(scan_t *scan, where_t where, const char *ident) {
-    ctu_t *ctu = ctu_new(scan, where, CTU_IDENT);
+ctu_t *ctu_path(scan_t *scan, where_t where, vector_t *path) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_PATH);
 
-    ctu->ident = ident;
+    ctu->path = path;
 
     return ctu;
 }
@@ -231,10 +231,20 @@ ctu_t *ctu_attrib(scan_t *scan, where_t where, const char *name, vector_t *param
     return ctu;
 }
 
-ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *decls) {
+ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *imports, vector_t *decls) {
     ctu_t *ctu = ctu_new(scan, where, CTU_MODULE);
 
+    ctu->imports = imports;
     ctu->decls = decls;
+
+    return ctu;
+}
+
+ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, const char *alias) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_IMPORT);
+
+    ctu->path = path;
+    ctu->alias = alias;
 
     return ctu;
 }

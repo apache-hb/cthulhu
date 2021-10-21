@@ -24,6 +24,12 @@ void ctu_free(void *ptr) {
     FREE(ptr);
 }
 
+void *ctu_box(void *ptr, size_t size) {
+    void *box = ctu_malloc(size);
+    memcpy(box, ptr, size);
+    return box;
+}
+
 static void *ctu_gmp_malloc(size_t size) {
     return ctu_malloc(size);
 }
@@ -67,9 +73,10 @@ void *ctu_memdup(const void *ptr, size_t size) {
 }
 
 file_t *ctu_fopen(const char *path, const char *mode) {
+    const char *full = realpath(path, ctu_malloc(PATH_MAX + 1));
     file_t *file = ctu_malloc(sizeof(file_t));
-    file->path = path;
-    file->file = fopen(path, mode);
+    file->path = full;
+    file->file = fopen(full, mode);
     return file;
 }
 
@@ -224,6 +231,7 @@ vector_t *map_values(map_t *map) {
     for (size_t i = 0; i < map->size; i++) {
         bucket_t *entry = &map->data[i];
         while (entry && entry->key) {
+            printf("adding %s\n", entry->key);
             vector_push(&result, entry->value);
             entry = entry->next;
         }
@@ -296,12 +304,24 @@ void *vector_tail(const vector_t *vector) {
     return vector->data[vector->used - 1];
 }
 
+void *vector_head(WEAK const vector_t *vector) {
+    return vector->data[0];
+}
+
 void **vector_data(vector_t *vector) {
     return vector->data;
 }
 
 size_t vector_len(const vector_t *vector) {
     return vector->used;
+}
+
+vector_t *vector_slice(vector_t *vector, size_t start, size_t end) {
+    vector_t *result = vector_of(end - start);
+    for (size_t i = start; i < end; i++) {
+        vector_set(result, i - start, vector_get(vector, i));
+    }
+    return result;
 }
 
 vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) {
@@ -332,6 +352,27 @@ vector_t *vector_map(const vector_t *vector, vector_apply_t func) {
         void *value = vector_get(vector, i);
         void *result = func(value);
         vector_set(out, i, result);
+    }
+
+    return out;
+}
+
+vector_t *vector_collect(vector_t *vectors) {
+    size_t vecs = vector_len(vectors);
+    size_t len = 0;
+    for (size_t i = 0; i < vecs; i++) {
+        vector_t *vec = vector_get(vectors, i);
+        len += vector_len(vec);
+    }
+
+    vector_t *out = vector_of(len);
+    size_t idx = 0;
+    for (size_t i = 0; i < vecs; i++) {
+        vector_t *vec = vector_get(vectors, i);
+        size_t sub = vector_len(vec);
+        for (size_t j = 0; j < sub; j++) {
+            vector_set(out, idx++, vector_get(vec, j));
+        }
     }
 
     return out;

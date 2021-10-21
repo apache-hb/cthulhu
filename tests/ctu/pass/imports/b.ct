@@ -1,0 +1,3 @@
+def thing(): int {
+    return 25;
+}

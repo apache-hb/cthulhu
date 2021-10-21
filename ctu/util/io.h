@@ -4,6 +4,9 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <limits.h>
+
+#define PATH_SEP "/"
 
 typedef struct {
     const char *path;

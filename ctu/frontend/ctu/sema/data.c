@@ -2,6 +2,8 @@
 
 #include "ctu/util/report-ext.h"
 
+#include "ctu/driver/include.h"
+
 static local_t new_local(void) {
     local_t local = {
         .locals = vector_new(8),
@@ -11,11 +13,13 @@ static local_t new_local(void) {
     return local;
 }
 
-stack_t *stack_new(void) {
+static stack_t *stack_new(ctu_t *tree) {
     stack_t *stack = ctu_malloc(sizeof(stack_t));
     stack->stack = vector_new(16);
 
     stack->local = new_local();
+    stack->complete = NULL;
+    stack->tree = tree;
 
     stack->externs = vector_new(8);
     stack->lambdas = vector_new(8);
@@ -85,6 +89,10 @@ void add_type(sema_t *sema, const char *name, type_t *type) {
     sema_set(sema, TAG_TYPES, name, type);
 }
 
+void set_module(sema_t *sema, const char *name, sema_t *mod) {
+    sema_set(sema, TAG_IMPORTS, name, mod);
+}
+
 lir_t *get_var(sema_t *sema, const char *name) {
     return sema_get(sema, TAG_GLOBALS, name);
 }
@@ -97,13 +105,17 @@ type_t *get_type(sema_t *sema, const char *name) {
     return sema_get(sema, TAG_TYPES, name);
 }
 
+sema_t *get_module(sema_t *sema, const char *name) {
+    return sema_get(sema, TAG_IMPORTS, name);
+}
+
 sema_t *new_sema(reports_t *reports, sema_t *parent, size_t *sizes) {
-    sema_t *sema = sema_new(parent, reports, TAG_MAX, sizes);
+    sema_t *sema = sema_new(parent, parent->path, reports, TAG_MAX, sizes);
     stack_t *stack;
     
     if (parent == NULL) {
         ctu_assert(reports, "new-sema parent == NULL");
-        stack = stack_new();
+        stack = stack_new(NULL);
     } else {
         stack = sema_get_data(parent);
     }
@@ -125,15 +137,16 @@ static const char *digit_name(sign_t sign, int_t width) {
     }
 }
 
-sema_t *base_sema(reports_t *reports, size_t decls) {
+sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decls, size_t imports) {    
     size_t sizes[TAG_MAX] = {
         [TAG_TYPES] = decls,
         [TAG_GLOBALS] = decls,
-        [TAG_FUNCS] = decls
+        [TAG_FUNCS] = decls,
+        [TAG_IMPORTS] = imports
     };
 
-    sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
-    stack_t *data = stack_new();
+    sema_t *sema = sema_new(NULL, path, reports, TAG_MAX, sizes);
+    stack_t *data = stack_new(tree);
     sema_set_data(sema, data);
 
     for (sign_t sign = 0; sign < SIGN_TOTAL; sign++) {
@@ -149,6 +162,7 @@ sema_t *base_sema(reports_t *reports, size_t decls) {
     add_type(sema, "bool", type_bool_with_name("bool"));
     add_type(sema, "str", type_string_with_name("str"));
 
+    set_cache(path, sema);
     return sema;
 }
 
@@ -220,4 +234,25 @@ bool is_discard(const char *name) {
 type_t *get_cached_digit_type(sema_t *sema, sign_t sign, int_t width) {
     stack_t *data = sema_get_data(sema);
     return data->digits[width][sign];
+}
+
+
+bool is_complete(sema_t *sema) {
+    stack_t *data = sema_get_data(sema);
+    return data->complete != NULL;
+}
+
+void make_complete(sema_t *sema, lir_t *lir) {
+    stack_t *data = sema_get_data(sema);
+    data->complete = lir;
+}
+
+lir_t *cached_lir(sema_t *sema) {
+    stack_t *data = sema_get_data(sema);
+    return data->complete;
+}
+
+ctu_t *get_tree(sema_t *sema) {
+    stack_t *data = sema_get_data(sema);
+    return data->tree;
 }

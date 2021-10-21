@@ -1,0 +1,4 @@
+@entry
+def entry {
+    return (lambda(i: int): int => i * i)(5);
+}

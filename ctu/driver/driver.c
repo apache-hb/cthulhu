@@ -1,5 +1,6 @@
 #include "driver.h"
 #include "cmd.h"
+#include "include.h"
 
 #include "ctu/util/str.h"
 
@@ -62,7 +63,7 @@ typedef struct {
     scan_t scan;
     file_t *file;
     void *node;
-    lir_t *lir;
+    vector_t *modules;
     module_t *mod;
 } context_t;
 
@@ -74,6 +75,7 @@ static int max_report(int *error, reports_t *reports, const char *msg) {
 
 int common_main(const frontend_t *frontend, int argc, char **argv) {
     init_gmp();
+    init_includes(vector_new(0));
 
     int error = 0;
     reports_t *errors = begin_reports();
@@ -114,7 +116,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
 
     for (size_t i = 0; i < len; i++) {
         context_t *ctx = all + i;
-        ctx->lir = frontend->analyze(ctx->reports, ctx->node);
+        ctx->modules = frontend->analyze(ctx->reports, ctx->node);
 
         max_report(&error, ctx->reports, format("analysis of `%s`", ctx->file->path));
     }
@@ -126,7 +128,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
     for (size_t i = 0; i < len; i++) {
         context_t *ctx = all + i;
 
-        ctx->mod = module_build(ctx->reports, ctx->lir);
+        ctx->mod = module_build(ctx->reports, ctx->modules);
 
         logverbose("reporting %s", ctx->file->path);
         int local = max_report(&error, ctx->reports, format("compilation of `%s`", ctx->file->path));

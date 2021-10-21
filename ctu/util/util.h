@@ -19,6 +19,9 @@ void *ctu_memdup(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 
 void init_gmp(void);
 
+void *ctu_box(void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
+#define BOX(name) ctu_box(&name, sizeof(name))
+
 /**
  * a hashmap of strings to weak pointers
  * 
@@ -181,6 +184,8 @@ WEAK void *vector_get(WEAK const vector_t *vector, size_t index) CONSTFN NOTNULL
  */
 WEAK void *vector_tail(WEAK const vector_t *vector) CONSTFN NONULL;
 
+WEAK void *vector_head(WEAK const vector_t *vector) CONSTFN NONULL;
+
 /**
  * get the contents pointer of a vector.
  * 
@@ -205,6 +210,9 @@ size_t vector_len(const vector_t *vector) CONSTFN NONULL;
  * @return the new vector
  */
 OWNED vector_t *vector_join(WEAK const vector_t *lhs, WEAK const vector_t *rhs) NONULL ALLOC(vector_delete);
+
+vector_t *vector_slice(vector_t *vector, size_t start, size_t end) NONULL;
+vector_t *vector_collect(vector_t *vectors);
 
 /**
  * return a new vector after applying a function to all elements

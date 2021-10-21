@@ -3,9 +3,19 @@
 #include "type.h"
 #include "value.h"
 #include "define.h"
+#include "import.h"
 
+#include "ctu/driver/include.h"
 #include "ctu/util/util.h"
 #include "ctu/util/report-ext.h"
+
+static void add_imports(sema_t *sema, vector_t *imports) {
+    size_t len = vector_len(imports);
+    for (size_t i = 0; i < len; i++) {
+        ctu_t *node = vector_get(imports, i);
+        compile_import(sema, node);
+    }
+}
 
 static leaf_t decl_leaf(ctu_t *ctu) {
     switch (ctu->type) {
@@ -53,21 +63,43 @@ static lir_t *compile_decls(sema_t *sema, node_t *root) {
     vector_t *defs = MAP_COLLECT(funcs, nonull);
     vector_t *lambdas = move_lambdas(sema);
 
-    return lir_module(root, 
+    lir_t *mod = lir_module(root, 
         /* externs = */ move_externs(sema),
         /* vars = */ map_values(vars),
         /* funcs = */ vector_join(defs, lambdas)
     );
+
+    make_complete(sema, mod);
+    return mod;
 }
 
 lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
-    vector_t *decls = ctu->decls;
-    size_t ndecls = vector_len(decls);
-    sema_t *sema = base_sema(reports, ndecls);
-
-    add_decls(sema, decls);
-    lir_t *mod = compile_decls(sema, ctu->node);
-
+    sema_t *sema = ctu_start(reports, ctu);
+    lir_t *mod = ctu_finish(sema);
     sema_delete(sema);
     return mod;
+}
+
+sema_t *ctu_start(reports_t *reports, ctu_t *ctu) {
+    vector_t *decls = ctu->decls;
+    vector_t *imports = ctu->imports;
+    sema_t *sema = base_sema(reports, ctu->node->scan->path, ctu, vector_len(decls), vector_len(imports));
+
+    add_imports(sema, imports);
+    add_decls(sema, decls);
+
+    return sema;
+}
+
+lir_t *ctu_finish(sema_t *sema) {
+    if (is_complete(sema)) {
+        return cached_lir(sema);
+    }
+
+    return compile_decls(sema, get_tree(sema)->node);
+}
+
+vector_t *ctu_analyze(reports_t *reports, ctu_t *ctu) {
+    ctu_sema(reports, ctu);
+    return cached_data();
 }

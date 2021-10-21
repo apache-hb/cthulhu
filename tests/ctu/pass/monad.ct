@@ -1,6 +1,6 @@
 @entry
 def entry(argc: int, argv: **char): int {
-    var add = lambda(lhs: int, rhs: int): int = lhs + rhs;
+    var add = lambda(lhs: int, rhs: int): int => lhs + rhs;
 
     return add(argc, argc * 4);
 }

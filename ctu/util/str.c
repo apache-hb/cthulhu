@@ -87,18 +87,22 @@ char *strmul(const char *str, size_t times) {
     return out;
 }
 
+static bool ctu_isprint(char c) {
+    return isprint(c) || c == 0x0A;
+}
+
 char *strnorm(const char *str) {
     size_t len = 0;
     const char *temp = str;
     while (*temp != '\0') {
-        len += (isprint(*temp) ? 1 : 4);
+        len += (ctu_isprint(*temp) ? 1 : 4);
         temp += 1;
     }
 
     char *buf = ctu_malloc(len + 1);
     char *out = buf;
     while (*str != '\0') {
-        if (isprint(*str)) {
+        if (ctu_isprint(*str)) {
             *out++ = *str;
         } else {
             out += sprintf(out, "\\x%02x", *str);
@@ -113,13 +117,13 @@ char *strnorm(const char *str) {
 char *nstrnorm(const char *str, size_t len) {
     size_t outlen = 1;
     for (size_t i = 0; i < len; i++) {
-        outlen += (isprint(str[i]) ? 1 : 4);
+        outlen += (ctu_isprint(str[i]) ? 1 : 4);
     }
 
     char *buf = ctu_malloc(outlen + 1);
     char *out = buf;
     for (size_t i = 0; i < len; i++) {
-        if (isprint(str[i])) {
+        if (ctu_isprint(str[i])) {
             *out++ = str[i];
         } else {
             out += sprintf(out, "\\x%02x", str[i] & 0xFF);

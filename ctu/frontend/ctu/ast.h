@@ -8,7 +8,7 @@
 
 typedef enum {
     CTU_DIGIT,
-    CTU_IDENT,
+    CTU_PATH,
     CTU_BOOL,
     CTU_STRING,
 
@@ -36,6 +36,7 @@ typedef enum {
     CTU_DEFINE,
     CTU_ATTRIB,
 
+    CTU_IMPORT,
     CTU_MODULE
 } ctu_type_t;
 
@@ -110,7 +111,15 @@ typedef struct ctu_t {
             };
         };
 
-        vector_t *decls;
+        struct {
+            vector_t *imports;
+            vector_t *decls;
+        };
+
+        struct {
+            vector_t *path;
+            const char *alias;
+        };
 
         vector_t *stmts;
     };
@@ -118,7 +127,7 @@ typedef struct ctu_t {
 
 /* literals */
 ctu_t *ctu_digit(scan_t *scan, where_t where, mpz_t digit);
-ctu_t *ctu_ident(scan_t *scan, where_t where, const char *ident);
+ctu_t *ctu_path(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_bool(scan_t *scan, where_t where, bool value);
 ctu_t *ctu_string(scan_t *scan, where_t where, const char *str);
 
@@ -159,7 +168,8 @@ ctu_t *ctu_define(scan_t *scan, where_t where,
 ctu_t *ctu_attrib(scan_t *scan, where_t where, const char *name, vector_t *params);
 
 /* modules */
-ctu_t *ctu_module(scan_t *scan, where_t where, 
-                  vector_t *decls);
+ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *imports, vector_t *decls);
+
+ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, const char *alias);
 
 ctu_t *set_details(ctu_t *decl, vector_t *attribs, bool exported);

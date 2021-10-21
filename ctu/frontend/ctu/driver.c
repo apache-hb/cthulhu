@@ -6,10 +6,6 @@
 #include "ctu/driver/driver.h"
 #include "sema/attrib.h"
 
-static scan_t ctu_open(reports_t *reports, file_t *file) {
-    return scan_file(reports, "cthulhu", file);
-}
-
 static void ctu_init(void) {
     init_attribs();
 }

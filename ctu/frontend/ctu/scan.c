@@ -37,6 +37,10 @@ ctu_t *ctu_compile(scan_t *scan) {
     return compile_file(scan, &CALLBACKS);
 }
 
+scan_t ctu_open(reports_t *reports, file_t *file) {
+    return scan_file(reports, "cthulhu", file);
+}
+
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg) {
     UNUSED(state);
 

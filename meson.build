@@ -42,7 +42,8 @@ src = [
     'ctu/util/panic.c',
 
     'ctu/driver/driver.c',
-    'ctu/driver/cmd.c'
+    'ctu/driver/cmd.c',
+    'ctu/driver/include.c'
 ]
 
 gmp = dependency('gmp')

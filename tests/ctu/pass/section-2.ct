@@ -1,0 +1,8 @@
+@mangle("puts")
+def puts($: str): int;
+
+@section(".init_array")
+export final $ = (lambda => puts("custom init"));
+
+@entry
+def entry = puts("entry");

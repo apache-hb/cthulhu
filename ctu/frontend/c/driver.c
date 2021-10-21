@@ -15,11 +15,11 @@ c_t *c_parse(scan_t *scan) {
     return NULL;
 }
 
-lir_t *c_analyze(reports_t *reports, c_t *node) {
+vector_t *c_analyze(reports_t *reports, c_t *node) {
     UNUSED(reports);
     UNUSED(node);
     CTASSERT(false, "c-analyze not implemented");
-    return NULL;
+    return vector_new(0);
 }
 
 static const frontend_t DRIVER = {

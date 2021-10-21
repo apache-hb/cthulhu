@@ -91,10 +91,11 @@ static char *extract_line(const scan_t *scan, line_t line) {
     
     size_t len = 0;
     while (source.size > start + len) {
-        char c = source.text[start + len++];
+        char c = source.text[start + len];
         if (c == '\r' || c == '\n' || c == '\0') {
             break;
         }
+        len += 1;
     }
 
     /** 
