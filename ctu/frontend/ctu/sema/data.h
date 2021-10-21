@@ -19,6 +19,7 @@ typedef struct {
 } local_t;
 
 typedef struct {
+    vector_t *path;
     lir_t *complete;
     ctu_t *tree;
     vector_t *stack;
@@ -81,3 +82,6 @@ void make_complete(sema_t *sema, lir_t *lir);
 lir_t *cached_lir(sema_t *sema);
 
 ctu_t *get_tree(sema_t *sema);
+
+void set_path(sema_t *sema, vector_t *path);
+vector_t *get_path(sema_t *sema);

@@ -24,7 +24,7 @@ void ctu_free(void *ptr) {
     FREE(ptr);
 }
 
-void *ctu_box(void *ptr, size_t size) {
+void *ctu_box(const void *ptr, size_t size) {
     void *box = ctu_malloc(size);
     memcpy(box, ptr, size);
     return box;
@@ -82,8 +82,19 @@ char *ctu_basepath(const char *path) {
     return base;
 }
 
+char *ctu_noext(const char *path) {
+    char *base = ctu_strdup(path);
+    size_t len = strlen(base);
+    while (!endswith(base, ".")) {
+        base[len--] = '\0';
+    }
+    base[len] = '\0';
+    return base;
+}
+
 file_t *ctu_fopen(const char *path, const char *mode) {
     const char *full = realpath(path, ctu_malloc(PATH_MAX + 1));
+    logverbose("opening: %s", full);
     file_t *file = ctu_malloc(sizeof(file_t));
     file->path = full;
     file->file = fopen(full, mode);

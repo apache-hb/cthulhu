@@ -145,7 +145,7 @@ sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decl
         [TAG_IMPORTS] = imports
     };
 
-    sema_t *sema = sema_new(NULL, path, reports, TAG_MAX, sizes);
+    sema_t *sema = sema_new(NULL, ctu_noext(path), reports, TAG_MAX, sizes);
     stack_t *data = stack_new(tree);
     sema_set_data(sema, data);
 
@@ -255,4 +255,14 @@ lir_t *cached_lir(sema_t *sema) {
 ctu_t *get_tree(sema_t *sema) {
     stack_t *data = sema_get_data(sema);
     return data->tree;
+}
+
+void set_path(sema_t *sema, vector_t *path) {
+    stack_t *data = sema_get_data(sema);
+    data->path = path;
+}
+
+vector_t *get_path(sema_t *sema) {
+    stack_t *data = sema_get_data(sema);
+    return data->path;
 }

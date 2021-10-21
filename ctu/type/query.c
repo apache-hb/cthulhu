@@ -104,6 +104,14 @@ const type_t *closure_result(const type_t *type) {
     return type->result;
 }
 
+vector_t *closure_params(const type_t *type) {
+    if (!is_closure(type)) {
+        return vector_new(0);
+    }
+
+    return type->args;
+}
+
 size_t num_params(const type_t *type) {
     if (!is_closure(type)) {
         return SIZE_MAX;

@@ -19,7 +19,7 @@ void *ctu_memdup(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 
 void init_gmp(void);
 
-void *ctu_box(void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
+void *ctu_box(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 #define BOX(name) ctu_box(&name, sizeof(name))
 
 /**

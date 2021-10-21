@@ -3,58 +3,8 @@
 #include "ctu/util/util.h"
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
-
 #include "eval.h"
-
 #include <string.h>
-
-/* https://itanium-cxx-abi.github.io/cxx-abi/abi.html */
-static const char *mangle_type(const type_t *type) {
-    if (is_digit(type)) { 
-        digit_t digit = type->digit;
-        switch (digit.kind) {
-        case TY_CHAR: return digit.sign ? "c" : "a";
-        case TY_SHORT: return digit.sign ? "s" : "t";
-        case TY_INT: return digit.sign ? "i" : "j";
-        case TY_LONG: return digit.sign ? "l" : "m";
-        default: return ""; /* TODO */
-        }
-    }
-
-    if (is_void(type)) {
-        return "v";
-    }
-
-    if (is_pointer(type)) {
-        return format("P%s", mangle_type(type->ptr));
-    }
-
-    if (is_closure(type)) {
-        size_t len = minimum_params(type);
-
-        /* if a closure has no arguments, it implicty has a void argument */
-        if (len == 0) {
-            return "v";
-        }
-
-        vector_t *args = vector_of(len);
-
-        for (size_t i = 0; i < len; i++) {
-            const char *it = mangle_type(param_at(type, i));
-            vector_set(args, i, (char*)it);
-        }
-
-        return strjoin("", args);
-    }
-
-    return "";
-}
-
-static char *mangle_name(const char *name, const type_t *type) {
-    size_t len = strlen(name);
-    const char *ty = mangle_type(type);
-    return format("_Z%zu%s%s", len, name, ty);
-}
 
 static block_t *new_block(blocktype_t kind, 
                           const char *name, 
@@ -184,7 +134,7 @@ static const char *symbol_name(const lir_t *lir) {
     }
 
     if (lir->name != NULL) {
-        return mangle_name(lir->name, lir_type(lir));
+        return lir->name;
     }
 
     node_t *node = lir->node;

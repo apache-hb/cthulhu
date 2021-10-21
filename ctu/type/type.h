@@ -198,6 +198,7 @@ size_t minimum_params(const type_t *type);
 size_t num_params(const type_t *type);
 const type_t *param_at(const type_t *type, size_t idx);
 const type_t *closure_result(const type_t *type);
+vector_t *closure_params(const type_t *type);
 bool is_string(const type_t *type);
 
 bool is_aggregate(const type_t *type);

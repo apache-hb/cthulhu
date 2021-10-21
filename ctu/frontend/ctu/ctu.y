@@ -107,7 +107,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %%
 
-program: importlist unit END { scan_export(x, ctu_module(x, @$, $1, $2)); }
+program: importlist unit END 
+    { scan_export(x, ctu_module(x, @$, $1, $2)); }
     ;
 
 importlist: %empty { $$ = vector_new(0); }

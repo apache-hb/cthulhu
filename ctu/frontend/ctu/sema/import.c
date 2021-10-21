@@ -51,6 +51,9 @@ void compile_import(sema_t *sema, ctu_t *ctu) {
     
     scan_t scan = ctu_open(sema->reports, file);
     ctu_t *tree = ctu_compile(BOX(scan));
+    if (tree == NULL) {
+        return;
+    }
 
     sema_t *import = ctu_start(sema->reports, tree);
     add_module(sema, ctu, import);

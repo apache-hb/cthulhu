@@ -20,3 +20,4 @@ size_t ctu_read(WEAK void *dst, size_t total, file_t *fp) NONULL;
 OWNED void *ctu_mmap(WEAK file_t *fp) NONULL;
 
 char *ctu_basepath(const char *path) NONULL;
+char *ctu_noext(const char *path) NONULL;

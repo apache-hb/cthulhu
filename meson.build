@@ -21,6 +21,7 @@ src = [
     'ctu/lir/lir.c',
     'ctu/lir/sema.c',
     'ctu/lir/print.c',
+    'ctu/lir/abi.c',
     
     'ctu/type/type.c',
     'ctu/type/query.c',

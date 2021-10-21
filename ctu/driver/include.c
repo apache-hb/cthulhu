@@ -38,7 +38,6 @@ const char *find_include(const char *cwd, const char *path) {
         char *full = format("%s/%s", include, path);
         char *real = realpath(full, ctu_malloc(PATH_MAX + 1));
         if (access(real, F_OK) != -1) {
-            logverbose("find-include: %s\n", real);
             return real;
         }
     }

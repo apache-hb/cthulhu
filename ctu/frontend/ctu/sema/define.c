@@ -2,6 +2,7 @@
 #include "type.h"
 #include "expr.h"
 #include "attrib.h"
+#include "ctu/lir/abi.h"
 
 static const type_t *realise_closure(sema_t *sema, ctu_t *ctu) {
     vector_t *params = ctu->params;
@@ -57,9 +58,20 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
 
     compile_attribs(sema, lir, ctu);
 
-    if (is_discard(lir->name) && lir->attribs->mangle == NULL) {
+    if (lir->attribs->mangle == NULL) {
         where_t where = lir->node->where;
-        lir->name = format("anon%ld_%ld", where.first_line, where.first_column);
+        const char *name = is_discard(lir->name) 
+            ? format("anon%ld_%ld", where.first_line, where.first_column)
+            : lir->name;
+        
+        vector_t *path = get_path(sema);
+        vector_t *full = vector_join(path, vector_init((char*)name));
+        char *mangled = mangle_name(full, type);
+        
+        attrib_t *temp = BOX(*lir->attribs);
+        temp->mangle = mangled;
+
+        lir->attribs = temp;
     }
 
     if (ctu->body == NULL) {
