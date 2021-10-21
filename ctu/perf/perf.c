@@ -2,6 +2,7 @@
 
 static void do_ref(operand_t op) {
     if (op.kind == ADDRESS) {
+        printf("data: %p\n", op.block);
         op.block->data = (void*)((size_t)op.block->data) + 1;
     }
 }
@@ -30,6 +31,7 @@ static void add_ref(step_t step) {
 
 static void mark_live_funcs(block_t *block)
 {
+    printf("block: %p %zu %p\n", block, block->len, block->steps);
     for (size_t i = 0; i < block->len; i++) {
         add_ref(block->steps[i]);
     }

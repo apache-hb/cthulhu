@@ -212,6 +212,7 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
 }
 
 static block_t *block_declare(lir_t *lir) {
+    printf("declare: %s\n", lir->name);
     block_t *block = init_block(lir, lir_type(lir));
     lir->data = block;
     return block;

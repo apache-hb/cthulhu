@@ -231,7 +231,6 @@ vector_t *map_values(map_t *map) {
     for (size_t i = 0; i < map->size; i++) {
         bucket_t *entry = &map->data[i];
         while (entry && entry->key) {
-            printf("adding %s\n", entry->key);
             vector_push(&result, entry->value);
             entry = entry->next;
         }

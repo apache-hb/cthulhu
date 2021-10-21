@@ -16,7 +16,7 @@ static const frontend_t DRIVER = {
     .init = (init_t)ctu_init,
     .open = (open_t)ctu_open,
     .parse = (parse_t)ctu_compile,
-    .analyze = (analyze_t)ctu_sema
+    .analyze = (analyze_t)ctu_analyze
 };
 
 int main(int argc, char **argv) {

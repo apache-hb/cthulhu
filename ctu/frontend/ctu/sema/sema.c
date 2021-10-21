@@ -76,7 +76,6 @@ static lir_t *compile_decls(sema_t *sema, node_t *root) {
 lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
     sema_t *sema = ctu_start(reports, ctu);
     lir_t *mod = ctu_finish(sema);
-    sema_delete(sema);
     return mod;
 }
 
@@ -101,5 +100,9 @@ lir_t *ctu_finish(sema_t *sema) {
 
 vector_t *ctu_analyze(reports_t *reports, ctu_t *ctu) {
     ctu_sema(reports, ctu);
-    return cached_data();
+    vector_t *cache = cached_data();
+    for (size_t i = 0; i < vector_len(cache); i++) {
+        vector_set(cache, i, ctu_finish(vector_get(cache, i)));
+    }
+    return cache;
 }
