@@ -578,11 +578,12 @@ static gcc_jit_location *location_from_node(context_t *ctx, const node_t *node) 
         return NULL;
     }
 
+    const char *path = node->scan->path;
     int line = node->where.first_line;
     int col = node->where.first_column;
     return gcc_jit_context_new_location(
         /* context = */ ctx->gcc,
-        /* file = */ scan_path(node->scan),
+        /* file = */ path,
         /* line = */ line,
         /* column = */ col
     );
@@ -663,7 +664,7 @@ static void assign_globals(context_t *ctx, vector_t *globals) {
     }
 }
 
-bool gccjit_build(reports_t *reports, module_t *mod, path_t *path) {
+bool gccjit_build(reports_t *reports, module_t *mod, const char *path) {
     context_t *context = gcc_context_for_module(reports);
     if (context == NULL) {
         return false;
@@ -684,6 +685,6 @@ bool gccjit_build(reports_t *reports, module_t *mod, path_t *path) {
     gcc_jit_context_compile(context->gcc);
 
     //vector_t *blocks = begin_gcc_blocks(context, mod->funcs);
-    ctu_assert(reports, "gccjit unimplemented %p %s", mod, path_string(path));
+    ctu_assert(reports, "gccjit unimplemented %p %s", mod, path);
     return false;
 }

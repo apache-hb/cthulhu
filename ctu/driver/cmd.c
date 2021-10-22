@@ -39,10 +39,9 @@ static int parse_arg(settings_t *settings, const frontend_t *frontend, int index
     const char *arg = argv[index];
     
     if (!startswith(arg, "-")) {
-        path_t *path = relative_path(settings->root, arg);
-        file_t *fp = path_open(path, FILE_READ);
+        file_t *fp = ctu_fopen(arg, "rb");
 
-        if (fp == NULL) {
+        if (fp->file == NULL) {
             report(settings->reports, ERROR, NULL, "failed to open file: %s", arg);
         } else {
             vector_push(&settings->sources, fp);
@@ -72,8 +71,7 @@ static int parse_arg(settings_t *settings, const frontend_t *frontend, int index
 settings_t parse_args(reports_t *reports, const frontend_t *frontend, int argc, char **argv) {
     NAME = argv[0];
 
-    settings_t settings = {
-        .root = root_path(), 
+    settings_t settings = { 
         .backend = NULL,
         .sources = vector_new(0),
         .reports = reports,

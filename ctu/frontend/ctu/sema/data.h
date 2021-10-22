@@ -19,6 +19,7 @@ typedef struct {
 } local_t;
 
 typedef struct {
+    vector_t *path;
     lir_t *complete;
     ctu_t *tree;
     vector_t *stack;
@@ -67,7 +68,7 @@ type_t *get_type(sema_t *sema, const char *name);
 sema_t *get_module(sema_t *sema, const char *name);
 
 sema_t *new_sema(reports_t *reports, sema_t *parent, size_t *sizes);
-sema_t *base_sema(reports_t *reports, ctu_t *tree, size_t decls, size_t imports);
+sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decls, size_t imports);
 void delete_sema(sema_t *sema);
 
 bool is_discard(const char *name);
@@ -81,3 +82,6 @@ void make_complete(sema_t *sema, lir_t *lir);
 lir_t *cached_lir(sema_t *sema);
 
 ctu_t *get_tree(sema_t *sema);
+
+void set_path(sema_t *sema, vector_t *path);
+vector_t *get_path(sema_t *sema);

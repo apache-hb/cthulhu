@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-static scan_t scan_new(reports_t *reports, const char *language, path_t *path) {
+static scan_t scan_new(reports_t *reports, const char *language, const char *path) {
     scan_t scan = {
         .language = language,
         .path = path,
@@ -19,7 +19,7 @@ static scan_t scan_new(reports_t *reports, const char *language, path_t *path) {
     return scan;
 }
 
-scan_t scan_string(reports_t *reports, const char *language, path_t *path, const char *text) {
+scan_t scan_string(reports_t *reports, const char *language, const char *path, const char *text) {
     text_t source = { .size = strlen(text), .text = text };
     scan_t scan = scan_new(reports, language, path);
 
@@ -28,14 +28,21 @@ scan_t scan_string(reports_t *reports, const char *language, path_t *path, const
     return scan;
 }
 
+static size_t file_size(FILE *fd) {
+    fseek(fd, 0, SEEK_END);
+    size_t size = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+    return size;
+}
+
 scan_t scan_file(reports_t *reports, const char *language, file_t *file) {
     FILE *fd = file->file;
-    size_t size = file_size(file);
+    size_t size = file_size(fd);
     scan_t scan = scan_new(reports, language, file->path);
     scan.data = fd;
 
     char *text;
-    if (!(text = file_map(file))) {
+    if (!(text = ctu_mmap(file))) {
         ctu_assert(reports, "failed to mmap file");
     }
     text_t source = { .size = size, .text = text };
@@ -54,17 +61,17 @@ void *compile_string(scan_t *extra, callbacks_t *callbacks) {
     void *state;
 
     if ((err = callbacks->init(extra, &scanner))) {
-        ctu_assert(extra->reports, "failed to init parser for %s due to %d", scan_path(extra), err);
+        ctu_assert(extra->reports, "failed to init parser for %s due to %d", extra->path, err);
         return NULL;
     }
 
     if (!(state = callbacks->scan(scan_text(extra), scanner))) {
-        report(extra->reports, ERROR, NULL, "failed to scan %s", scan_path(extra));
+        report(extra->reports, ERROR, NULL, "failed to scan %s", extra->path);
         return NULL;
     }
 
     if ((err = callbacks->parse(scanner, extra))) {
-        report(extra->reports, ERROR, NULL, "failed to parse %s", scan_path(extra));
+        report(extra->reports, ERROR, NULL, "failed to parse %s", extra->path);
         return NULL;
     }
 

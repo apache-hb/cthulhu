@@ -41,7 +41,6 @@ src = [
     'ctu/util/util.c',
     'ctu/util/optimal.c',
     'ctu/util/panic.c',
-    'ctu/util/path.c',
 
     'ctu/driver/driver.c',
     'ctu/driver/cmd.c',

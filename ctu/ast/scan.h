@@ -19,7 +19,7 @@ typedef struct {
     const char *language;
 
     /* path to the file */
-    path_t *path;
+    const char *path;
 
     /* whatever the file creates by parsing */
     void *data;
@@ -38,7 +38,6 @@ typedef struct {
 
 size_t scan_size(const scan_t *scan);
 const char *scan_text(const scan_t *scan);
-char *scan_path(const scan_t *scan);
 
 /* a location inside a scanner */
 typedef struct {

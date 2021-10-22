@@ -9,9 +9,6 @@
 #include "ctu/util/util.h"
 #include "ctu/util/report-ext.h"
 
-#include <string.h>
-#include <unistd.h>
-
 static void add_imports(sema_t *sema, vector_t *imports) {
     size_t len = vector_len(imports);
     for (size_t i = 0; i < len; i++) {
@@ -85,8 +82,13 @@ lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
 sema_t *ctu_start(reports_t *reports, ctu_t *ctu) {
     vector_t *decls = ctu->decls;
     vector_t *imports = ctu->imports;
-    sema_t *sema = base_sema(reports, ctu, vector_len(decls), vector_len(imports));
-    
+    const char *path = ctu->node->scan->path;
+    sema_t *sema = base_sema(reports, path, ctu, vector_len(decls), vector_len(imports));
+    vector_t *header = strsplit(ctu_noext(path), PATH_SEP);
+
+    /* TODO: find a better way of doing module names */
+    set_path(sema, header);
+
     add_imports(sema, imports);
     add_decls(sema, decls);
 

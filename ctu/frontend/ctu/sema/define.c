@@ -64,7 +64,7 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
             ? format("anon%ld_%ld", where.first_line, where.first_column)
             : lir->name;
         
-        vector_t *path = path_parts(sema->path);
+        vector_t *path = get_path(sema);
         vector_t *full = vector_join(path, vector_init((char*)name));
         char *mangled = mangle_name(full, type);
         

@@ -30,23 +30,22 @@ static void add_module(sema_t *sema, ctu_t *ctu, sema_t *mod) {
 }
 
 void compile_import(sema_t *sema, ctu_t *ctu) {
-    const char *ext = format("%s", strjoin(PATH_SEP, ctu->path));
-    path_t *search = relative_path(NODE_PATH(ctu), ext);
-    path_t *path = find_include(search);
+    const char *ext = format("%s.ct", strjoin(PATH_SEP, ctu->path));
+    const char *path = find_include(ctu->node->scan->path, ext);
     if (path == NULL) {
-        report(sema->reports, ERROR, ctu->node, "import file not found: %s", path_relative(search));
+        report(sema->reports, ERROR, ctu->node, "import file not found: %s", ext);
         return;
     }
 
-    sema_t *cached = get_cache(path_realpath(path));
+    sema_t *cached = get_cache(path);
     if (cached != NULL) {
         add_module(sema, ctu, cached);
         return;
     }
 
-    file_t *file = path_open(path, FILE_READ);
+    file_t *file = ctu_fopen(path, "rb");
     if (file == NULL) {
-        report(sema->reports, ERROR, ctu->node, "failed to open file: %s", path_relative(search));
+        report(sema->reports, ERROR, ctu->node, "failed to open file: %s", ext);
         return;
     }
     
@@ -58,5 +57,7 @@ void compile_import(sema_t *sema, ctu_t *ctu) {
 
     sema_t *import = ctu_start(sema->reports, tree);
     add_module(sema, ctu, import);
-    set_cache(path_realpath(path), import);
+    set_cache(path, import);
+
+    ctu_close(file);
 }

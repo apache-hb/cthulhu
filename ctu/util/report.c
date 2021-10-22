@@ -41,13 +41,13 @@ static size_t total_lines(where_t where) {
 static char *format_location(const scan_t *scan, where_t where) {
     if (is_multiline_report(where)) {
         return format("%s source [%s:%ld:%ld-%ld:%ld]",
-            scan->language, scan_path(scan), 
+            scan->language, scan->path, 
             where.first_line + 1, where.first_column,
             where.last_line + 1, where.last_column
         );
     } else {
         return format("%s source [%s:%ld:%ld]",
-            scan->language, scan_path(scan), 
+            scan->language, scan->path, 
             where.first_line + 1, where.first_column
         );
     }

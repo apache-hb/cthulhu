@@ -395,7 +395,7 @@ static void add_imports(context_t *ctx, vector_t *symbols) {
     }
 }
 
-bool c99_build(reports_t *reports, module_t *mod, path_t *path) {
+bool c99_build(reports_t *reports, module_t *mod, const char *path) {
     context_t ctx = init_c99_context(reports, mod);
     
     char *header = format(
@@ -417,15 +417,16 @@ bool c99_build(reports_t *reports, module_t *mod, path_t *path) {
     add_globals(&ctx, mod->vars);
     add_blocks(&ctx, mod->funcs);
 
-    file_t *file = path_open(path, FILE_WRITE);
+    file_t *file = ctu_fopen(path, "w");
     if (file->file == NULL) {
-        ctu_assert(ctx.reports, "failed to open file: %s", path_relative(path));
+        ctu_assert(ctx.reports, "failed to open file: %s", path);
         free_c99_context(ctx);
         return false;
     }
 
     fwrite(stream_data(ctx.result), 1, stream_len(ctx.result), file->file);
 
+    ctu_close(file);
     free_c99_context(ctx);
 
     return true;

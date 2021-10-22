@@ -3,7 +3,6 @@
 #include "driver.h"
 
 typedef struct {
-    path_t *root; /// root working directory
     const backend_t *backend; /// codegen backend
     vector_t *sources; /// all source files
     vector_t *headers; /// include paths
