@@ -80,6 +80,8 @@ char *strnorm(const char *str) NONULL;
  */
 char *nstrnorm(const char *str, size_t len) NONULL;
 
+char *strslice(const char *str, size_t start, size_t end) NONULL;
+
 vector_t *strsplit(const char *str, const char *sep) NONULL;
 
 /**

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "macros.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -21,3 +22,4 @@ OWNED void *ctu_mmap(WEAK file_t *fp) NONULL;
 
 char *ctu_basepath(const char *path) NONULL;
 char *ctu_noext(const char *path) NONULL;
+char *common_base(vector_t *paths) NONULL;

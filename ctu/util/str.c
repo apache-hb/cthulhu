@@ -163,6 +163,12 @@ bool streq(const char *lhs, const char *rhs) {
     return lhs == rhs || strcmp(lhs, rhs) == 0;
 }
 
+
+char *strslice(const char *str, size_t start, size_t end) {
+    size_t bytes = end - start;
+    return ctu_strndup(str + start, bytes);
+}
+
 stream_t *stream_new(size_t size) {
     stream_t *out = ctu_malloc(sizeof(stream_t));
     out->size = size;
@@ -196,4 +202,24 @@ void stream_write(stream_t *stream, const char *str) {
 
 const char *stream_data(const stream_t *stream) {
     return stream->data;
+}
+
+char *common_base(vector_t *paths) {
+    char *first = vector_head(paths);
+    size_t len = vector_len(paths);
+    size_t idx = 0;
+
+    bool searching = true;
+    while (searching) { 
+        idx += 1;
+        for (size_t i = 0; i < len; i++) {
+            char *path = vector_get(paths, i);
+            if (strncmp(first, path, idx) != 0) {
+                searching = false;
+                break;
+            }
+        }
+    }
+
+    return strslice(first, 0, idx);
 }
