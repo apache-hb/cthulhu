@@ -47,7 +47,8 @@ pass = [
     'nest', 'order', 'pointers', 'pointers2', 'posix-interop', 'regalloc',
     'string', 'struct', 'suffix', 'union', 'unused-var', 'var', 'win32-interop',
     'win32-wsa', 'simple', 'extern', 'fuzz-10', 'section', 'section-2', 'immediate-invoke',
-    'funcs.fwd', 'funcs.single', 'funcs.stmts', 'lambda'
+    'funcs.fwd', 'funcs.single', 'funcs.stmts', 'lambda',
+    'imports.a', 'imports.first'
 ]
 
 foreach case : pass

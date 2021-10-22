@@ -4,7 +4,7 @@
 #include "ctu/util/str.h"
 
 sema_t *sema_new(sema_t *parent, 
-                 const char *path,
+                 path_t *path,
                  reports_t *reports, 
                  size_t decls,
                  size_t *sizes) 

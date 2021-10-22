@@ -402,7 +402,7 @@ lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
         [TAG_CONSTS] = nconsts,
         [TAG_PROCS] = nprocs
     };
-    sema_t *sema = NEW_SEMA(NULL, node->node->scan->path, reports, sizes);
+    sema_t *sema = NEW_SEMA(NULL, NODE_PATH(node), reports, sizes);
     lir_t *print = pl0_import_print(reports, node->node);
     sema_set_data(sema, print);
 

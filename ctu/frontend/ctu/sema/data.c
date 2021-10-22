@@ -137,7 +137,7 @@ static const char *digit_name(sign_t sign, int_t width) {
     }
 }
 
-sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decls, size_t imports) {    
+sema_t *base_sema(reports_t *reports, ctu_t *tree, size_t decls, size_t imports) {    
     size_t sizes[TAG_MAX] = {
         [TAG_TYPES] = decls,
         [TAG_GLOBALS] = decls,
@@ -145,7 +145,9 @@ sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decl
         [TAG_IMPORTS] = imports
     };
 
-    sema_t *sema = sema_new(NULL, ctu_noext(path), reports, TAG_MAX, sizes);
+    path_t *path = NODE_PATH(tree);
+
+    sema_t *sema = sema_new(NULL, path, reports, TAG_MAX, sizes);
     stack_t *data = stack_new(tree);
     sema_set_data(sema, data);
 
@@ -162,7 +164,7 @@ sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decl
     add_type(sema, "bool", type_bool_with_name("bool"));
     add_type(sema, "str", type_string_with_name("str"));
 
-    set_cache(path, sema);
+    set_cache(path_realpath(path), sema);
     return sema;
 }
 
@@ -255,14 +257,4 @@ lir_t *cached_lir(sema_t *sema) {
 ctu_t *get_tree(sema_t *sema) {
     stack_t *data = sema_get_data(sema);
     return data->tree;
-}
-
-void set_path(sema_t *sema, vector_t *path) {
-    stack_t *data = sema_get_data(sema);
-    data->path = path;
-}
-
-vector_t *get_path(sema_t *sema) {
-    stack_t *data = sema_get_data(sema);
-    return data->path;
 }

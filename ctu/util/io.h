@@ -1,6 +1,7 @@
 #pragma once
 
 #include "macros.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -8,16 +9,33 @@
 
 #define PATH_SEP "/"
 
+typedef enum {
+    FILE_READ,
+    FILE_WRITE
+} file_mode_t;
+
 typedef struct {
-    const char *path;
-    NULLABLE FILE *file;
+    const char *base;
+    const char *relative;
+    const char *ext;
+} path_t;
+
+typedef struct {
+    path_t *path;
+    FILE *file;
 } file_t;
 
-void ctu_close(OWNED file_t *fp) NONULL;
-OWNED file_t *ctu_fopen(const char *path, const char *mode) NONULL ALLOC(ctu_close);
+path_t *new_path(const char *base, const char *relative, const char *ext) NONULL;
+path_t *relative_path(path_t *base, const char *path) NONULL;
+path_t *root_path(void) NONULL;
+char *path_realpath(const path_t *path) NONULL;
+char *path_relative(const path_t *path) NONULL;
+char *path_noext(const path_t *path) NONULL;
+char *path_string(const path_t *path) NONULL;
+bool path_exists(const path_t *path) NONULL;
+file_t *path_open(path_t *path, file_mode_t mode) NONULL;
+vector_t *path_parts(const path_t *path) NONULL;
 
-size_t ctu_read(WEAK void *dst, size_t total, file_t *fp) NONULL;
-OWNED void *ctu_mmap(WEAK file_t *fp) NONULL;
-
-char *ctu_basepath(const char *path) NONULL;
-char *ctu_noext(const char *path) NONULL;
+size_t file_read(void *dst, size_t total, file_t *fp) NONULL;
+size_t file_size(file_t *fp) NONULL;
+void *file_map(file_t *fp) NONULL;

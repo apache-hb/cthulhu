@@ -67,6 +67,10 @@ typedef struct {
     module_t *mod;
 } context_t;
 
+static const char *file_path(file_t *file) {
+    return path_relative(file->path);
+}
+
 static int max_report(int *error, reports_t *reports, const char *msg) {
     int result = end_reports(reports, SIZE_MAX, msg);
     *error = MAX(*error, result);
@@ -107,7 +111,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
         ctx->scan = frontend->open(ctx->reports, ctx->file);
         ctx->node = frontend->parse(&ctx->scan);
 
-        max_report(&error, ctx->reports, format("parsing of `%s`", ctx->file->path));
+        max_report(&error, ctx->reports, format("parsing of `%s`", file_path(ctx->file)));
     }
 
     logverbose("parsed %zu file(s)", len);
@@ -118,7 +122,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
         context_t *ctx = all + i;
         ctx->modules = frontend->analyze(ctx->reports, ctx->node);
 
-        max_report(&error, ctx->reports, format("analysis of `%s`", ctx->file->path));
+        max_report(&error, ctx->reports, format("analysis of `%s`", file_path(ctx->file)));
     }
 
     logverbose("analyzed %zu file(s)", len);
@@ -128,10 +132,10 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
     for (size_t i = 0; i < len; i++) {
         context_t *ctx = all + i;
 
-        ctx->mod = module_build(ctx->reports, ctu_basepath(ctx->file->path), ctx->modules);
+        ctx->mod = module_build(ctx->reports, ctx->file->path->base, ctx->modules);
 
-        logverbose("reporting %s", ctx->file->path);
-        int local = max_report(&error, ctx->reports, format("compilation of `%s`", ctx->file->path));
+        logverbose("reporting %s", file_path(ctx->file));
+        int local = max_report(&error, ctx->reports, format("compilation of `%s`", file_path(ctx->file)));
         if (local > 0) {
             continue;
         }
@@ -145,7 +149,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
             module_print(stdout, ctx->mod);
         }
 
-        max_report(&error, ctx->reports, format("evaluation of `%s`", ctx->file->path));
+        max_report(&error, ctx->reports, format("evaluation of `%s`", file_path(ctx->file)));
     }
 
     if (error > 0) { return error; }
@@ -154,12 +158,12 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
     for (size_t i = 0; i < len; i++) {
         context_t *ctx = all + i;
         if (backend == NULL || backend->compile == NULL) {
-            report(ctx->reports, NOTE, NULL, "no backend specified, skipping compilation of `%s`", ctx->file->path);
+            report(ctx->reports, NOTE, NULL, "no backend specified, skipping compilation of `%s`", file_path(ctx->file));
             continue;
         }
 
         backend->compile(ctx->reports, ctx->mod, "out.c");
-        max_report(&error, ctx->reports, format("generation of `%s`", ctx->file->path));
+        max_report(&error, ctx->reports, format("generation of `%s`", file_path(ctx->file)));
     }
 
 #if FUZZING

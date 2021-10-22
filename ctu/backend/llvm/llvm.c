@@ -10,13 +10,13 @@ typedef struct {
     LLVMModuleRef llvm_module;
 } llvm_context_t;
 
-static llvm_context_t *init_llvm_context(module_t *mod, reports_t *reports, const char *path) {
+static llvm_context_t *init_llvm_context(module_t *mod, reports_t *reports, path_t *path) {
     llvm_context_t *ctx = ctu_malloc(sizeof(llvm_context_t));
 
     ctx->mod = mod;
     ctx->reports = reports;
 
-    ctx->llvm_module = LLVMModuleCreateWithName(path);
+    ctx->llvm_module = LLVMModuleCreateWithName(path_realpath(path));
 
     return ctx;
 }

@@ -15,33 +15,20 @@ void init_includes(vector_t *paths) {
     cache = map_new(MAP_BIG);
 }
 
-static void trim_path(char *path) {
-    size_t len = strlen(path);
-    while (!endswith(path, PATH_SEP)) {
-        path[len--] = '\0';
+path_t *find_include(path_t *path) {
+    if (path_exists(path)) {
+        return path;
     }
-    path[len] = '\0';
-}
 
-const char *find_include(const char *cwd, const char *path) {
-    char *base = realpath(ctu_strdup(cwd), ctu_malloc(PATH_MAX + 1));
-    trim_path(base);
-    char *search = format("%s/%s", base, path);
-    char *it = realpath(search, ctu_malloc(PATH_MAX + 1));
-    if (access(it, F_OK) != -1) {
-        return it;
-    }
-    
     size_t len = vector_len(includes);
     for (size_t i = 0; i < len; i++) {
-        char *include = vector_get(includes, i);
-        char *full = format("%s/%s", include, path);
-        char *real = realpath(full, ctu_malloc(PATH_MAX + 1));
-        if (access(real, F_OK) != -1) {
-            return real;
+        path_t *include = vector_get(includes, i);
+        path_t *search = new_path(include->base, path_relative(path), path->ext);
+        if (path_exists(search)) {
+            return search;
         }
     }
-    
+
     return NULL;
 }
 

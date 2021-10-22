@@ -1,5 +1,3 @@
-module second;
-
 import third;
 
 export def thing = 10;

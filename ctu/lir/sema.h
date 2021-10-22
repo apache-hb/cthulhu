@@ -5,7 +5,7 @@
 typedef struct sema_t {
     WEAK struct sema_t *parent;
     WEAK reports_t *reports;
-    const char *path;
+    path_t *path;
 
     /** vector_t<map_t<const char*, void*>*> */
     vector_t *decls;
@@ -17,6 +17,7 @@ typedef struct sema_t {
  * create a new semantic environment
  * 
  * @param parent the parent environment or NULL if this is the root
+ * @param path the path of the file being parsed
  * @param reports the reporting context to use
  * @param data user defined data
  * @param size the estimated sizes of each context layer decltype
@@ -24,7 +25,7 @@ typedef struct sema_t {
  * @return the new semantic environment
  */
 sema_t *sema_new(sema_t *parent, 
-                 const char *path,
+                 path_t *path,
                  reports_t *reports, 
                  size_t decls,
                  size_t *sizes);
