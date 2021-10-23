@@ -425,9 +425,11 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
     if (internal > 0) {
         fprintf(stderr, "%zu internal error(s) encountered during %s stage\n", internal, name);
         result = 99;
+        printf("\a");
     } else if (fatal > 0) {
         fprintf(stderr, "%zu fatal error(s) encountered during %s stage\n", fatal, name);
         result = 1;
+        printf("\a");
     }
 
     reports->messages = vector_new(0);

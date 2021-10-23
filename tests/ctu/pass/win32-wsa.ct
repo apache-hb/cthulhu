@@ -1,1 +1,0 @@
-@interop("winsock2.h", "wsa_2.lib")

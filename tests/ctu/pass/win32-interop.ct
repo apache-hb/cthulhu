@@ -1,7 +1,9 @@
-@interop("windows.h", "user32")
-def MessageBoxA(hWnd: *void, lpText: str, lpCaption: str, uType: uint): int;
+type HWND = *void;
+
+@[mangle("MessageBoxA"), library("user32")]
+export def MessageBoxA(hWnd: HWND, lpText: str, lpCaption: str, uType: uint): int;
 
 export def main(argc: int, argv: *str): int {
-    MessageBoxA(0 as *void, "text", "caption", 0u);
+    MessageBoxA(null, "text", "caption", 0);
     return 0;
 }
