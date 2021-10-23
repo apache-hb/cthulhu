@@ -203,23 +203,3 @@ void stream_write(stream_t *stream, const char *str) {
 const char *stream_data(const stream_t *stream) {
     return stream->data;
 }
-
-char *common_base(vector_t *paths) {
-    char *first = vector_head(paths);
-    size_t len = vector_len(paths);
-    size_t idx = 0;
-
-    bool searching = true;
-    while (searching) { 
-        idx += 1;
-        for (size_t i = 0; i < len; i++) {
-            char *path = vector_get(paths, i);
-            if (strncmp(first, path, idx) != 0) {
-                searching = false;
-                break;
-            }
-        }
-    }
-
-    return strslice(first, 0, idx);
-}

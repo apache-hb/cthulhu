@@ -25,7 +25,8 @@ fails = [
     'return-local-ref', 'return-struct-ref', 'scope',
     'type-in-expr', 'uninit-global', 'void-var', 'weird', 'large',
     'recurse-lambda',
-    'data.loop-complex', 'data.loop-newtype', 'data.loop-ptr'
+    'data.loop-complex', 'data.loop-newtype', 'data.loop-ptr',
+    'data.duplicate'
 ]
 
 foreach case : fails
