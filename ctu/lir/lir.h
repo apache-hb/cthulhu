@@ -39,6 +39,8 @@ typedef enum {
     LIR_POISON
 } leaf_t;
 
+typedef vector_t *symbol_t;
+
 /* lowered intermediate representation */
 typedef struct lir_t {
     leaf_t leaf;
@@ -51,65 +53,133 @@ typedef struct lir_t {
 
     union {
         /**
-         * LIR_POISON
+         * a poison error message 
+         * error nodes are valid in all places
+         * but are considered invalid to the codegen
+         * 
+         * if emitting a poison error please
+         * also place a fatal error into the reporting
+         * sink to prevent bad data getting through
          */
         const char *msg;
 
         /**
-         * LIR_DIGIT
-         * 
-         * integer literal
+         * any integer literal
          */
         mpz_t digit;
 
         /**
-         * LIR_STRING 
-         * 
-         * the encoded string
+         * an encoded string, null terminated
          */
         const char *str;
 
+        /**
+         * a boolean literal
+         */
         bool boolean;
 
+        /**
+         * a name and an optional offset
+         * default the offset to 0, non-0 indicates
+         * array access
+         * 
+         * equivilent to loading from an address
+         */
         struct {
             struct lir_t *it;
             size_t offset;
         };
 
+        /**
+         * an assignment operation
+         * 
+         * equivilent to storing to an address
+         */
         struct {
             struct lir_t *dst;
             struct lir_t *src;
         };
 
+        /**
+         * a binary operation
+         * 
+         * can be either a mathmatical operation
+         * or a logical operation
+         */
         struct {
             binary_t binary;
             struct lir_t *lhs;
             struct lir_t *rhs;
         };
 
+        /**
+         * a unary operation
+         * 
+         * can be either a mathmatical operation
+         * or a logical operation
+         */
         struct {
             unary_t unary;
             struct lir_t *operand;
         };
 
+        /**
+         * either a branch or a while loop
+         * 
+         * a null terminated linked list of branches on other
+         * 
+         * other can provided on while loops to provide a construct
+         * similar to pythons while-else loops
+         * 
+         * while expr:
+         *   stmts
+         * else:
+         *  stmts # while body was never executed
+         */
         struct {
             struct lir_t *cond;
             struct lir_t *then;
             struct lir_t *other;
         };
 
+        /**
+         * either a break or a continue
+         * if loop is null then it references the current loop
+         * otherwise it represents a break or continue with a loop label
+         */
         struct lir_t *loop;
 
+        /**
+         * a list of statements 
+         */
         vector_t *stmts;
 
-        /* function call */
+        /**
+         * function call 
+         * 
+         * func must be an address
+         */
         struct {
             struct lir_t *func;
             vector_t *args;
         };
 
+        /**
+         * any named declaration
+         * includes variables, functions, arguments, and forward declarations
+         */
         struct {
-            const char *name;
+            symbol_t symbol;
+
+            /**
+             * if name is null then the symbol is anonymous
+             */
+            const char *_name;
+
+            /**
+             * declaration attributes
+             * not needed for parameters
+             */
             const attrib_t *attribs;
 
             union {
@@ -217,3 +287,6 @@ bool lir_is(const lir_t *lir, leaf_t leaf);
 vector_t *lir_recurses(lir_t *lir, const lir_t *root);
 char *print_lir(const lir_t *lir);
 const type_t *lir_type(const lir_t *lir);
+
+bool has_name(const lir_t *lir);
+const char *get_name(const lir_t *lir);

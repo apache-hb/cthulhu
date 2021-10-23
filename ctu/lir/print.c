@@ -57,13 +57,13 @@ static char *print_module(const lir_t *lir) {
 static char *print_value(const lir_t *lir) {
     char *body = print_lir(lir->init);
 
-    return format("%s %s", lir->name, body);
+    return format("%s %s", get_name(lir), body);
 }
 
 static char *print_define(const lir_t *lir) {
     char *body = print_lir(lir->body);
 
-    return format("%s %s", lir->name, body);
+    return format("%s %s", get_name(lir), body);
 }
 
 static char *print_stmts(const lir_t *lir) {
@@ -94,7 +94,7 @@ static char *print_branch(const lir_t *lir) {
 }
 
 static char *print_call(const lir_t *lir) {
-    return ctu_strdup(lir->func->name);
+    return ctu_strdup(get_name(lir->func));
 }
 
 char *print_lir(const lir_t *lir) {

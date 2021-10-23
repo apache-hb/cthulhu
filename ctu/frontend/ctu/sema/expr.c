@@ -2,6 +2,7 @@
 #include "type.h"
 #include "value.h"
 #include "define.h"
+#include "sema.h"
 
 static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };
 
@@ -217,6 +218,8 @@ static lir_t *compile_name(sema_t *sema, const char *name, ctu_t *expr) {
         return compile_define(func);
     }
 
+    printf("unresolved: %s in %s\n", name, sema->path);
+
     report(sema->reports, ERROR, expr->node, "failed to resolve `%s`", name);
     return lir_poison(expr->node, "unresolved name");
 }
@@ -317,7 +320,7 @@ static lir_t *compile_lambda(sema_t *sema, ctu_t *expr) {
     lir_t *body = compile_stmts(nest, expr->body);
     vector_t *locals = move_locals(nest);
 
-    lir_t *lambda = lir_forward(expr->node, NULL, LIR_DEFINE, NULL);
+    lir_t *lambda = ctu_forward(expr->node, NULL, LIR_DEFINE, NULL);
     lir_define(sema->reports, lambda,
         /* type = */ type,
         /* locals = */ locals,

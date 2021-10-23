@@ -2,6 +2,7 @@
 #include "expr.h"
 #include "type.h"
 #include "attrib.h"
+#include "sema.h"
 
 static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
     if (!stack_enter(sema, lir)) {
@@ -42,11 +43,6 @@ static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
 
     compile_attribs(sema, lir, ctu);
 
-    if (is_discard(lir->name) && lir->attribs->mangle == NULL) {
-        where_t where = lir->node->where;
-        lir->name = format("anon%ld_%ld", where.first_line, where.first_column);
-    }
-
     stack_leave(sema, lir);
 }
 
@@ -62,7 +58,7 @@ void build_value(sema_t *sema, lir_t *lir) {
 }
 
 lir_t *local_value(sema_t *sema, ctu_t *ctu) {
-    lir_t *value = lir_forward(ctu->node, ctu->name, LIR_VALUE, state_new(sema, ctu));
+    lir_t *value = ctu_forward(ctu->node, ctu->name, LIR_VALUE, state_new(sema, ctu));
     realise_value(sema, value, ctu);
     return value;
 }

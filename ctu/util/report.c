@@ -38,34 +38,34 @@ static size_t total_lines(where_t where) {
     return where.last_line - where.first_line;
 }
 
-static char *format_location(const scan_t *scan, where_t where) {
+static char *format_location(const char *base, const scan_t *scan, where_t where) {
     if (is_multiline_report(where)) {
         return format("%s source [%s:%ld:%ld-%ld:%ld]",
-            scan->language, scan->path, 
+            scan->language, scan->path + strlen(base), 
             where.first_line + 1, where.first_column,
             where.last_line + 1, where.last_column
         );
     } else {
         return format("%s source [%s:%ld:%ld]",
-            scan->language, scan->path, 
+            scan->language, scan->path + strlen(base), 
             where.first_line + 1, where.first_column
         );
     }
 }
 
-static void report_scanner(const node_t *node) {
+static void report_scanner(const char *base, const node_t *node) {
     const scan_t *scan = node->scan;
     where_t where = node->where;
-    fprintf(stderr, " => %s\n", format_location(scan, where));
+    fprintf(stderr, " => %s\n", format_location(base, scan, where));
 }
 
-static void report_header(message_t *message) {
+static void report_header(const char *base, message_t *message) {
     const char *lvl = report_level(message->level);
 
     fprintf(stderr, "%s: %s\n", lvl, message->message);
 
     if (message->node) {
-        report_scanner(message->node);
+        report_scanner(base, message->node);
     }
 }
 
@@ -348,7 +348,7 @@ static void report_source(message_t *message) {
     fprintf(stderr, "%s", format_source(scan, where, message->underline));
 }
 
-static void report_part(message_t *message, part_t *part) {
+static void report_part(const char *base, message_t *message, part_t *part) {
     char *msg = part->message;
 
     const node_t *node = part->node;
@@ -361,10 +361,10 @@ static void report_part(message_t *message, part_t *part) {
     char *pad = padding(longest);
 
     if (message->node->scan != scan) {
-        report_scanner(part->node);
+        report_scanner(base, part->node);
     }
 
-    char *loc = format_location(scan, where);
+    char *loc = format_location(base, scan, where);
 
     fprintf(stderr, "%s> %s\n", pad, loc);
     fprintf(stderr, "%s", format_source(scan, where, msg));
@@ -374,12 +374,12 @@ static void send_note(const char *note) {
     fprintf(stderr, "%s: %s\n", report_level(NOTE), note);
 }
 
-static bool report_send(message_t *message) {
-    report_header(message);
+static bool report_send(const char *base, message_t *message) {
+    report_header(base, message);
     report_source(message);
 
     for (size_t i = 0; i < vector_len(message->parts); i++) {
-        report_part(message, vector_get(message->parts, i));
+        report_part(base, message, vector_get(message->parts, i));
     }
 
     if (message->note) {
@@ -395,12 +395,35 @@ reports_t *begin_reports(void) {
     return reports;
 }
 
+static const char *paths_base(vector_t *messages) {
+    size_t len = vector_len(messages);
+    vector_t *result = vector_new(len);
+
+    for (size_t i = 0; i < len; i++) {
+        message_t *message = vector_get(messages, i);
+        if (message->node != NULL) {
+            vector_push(&result, (char*)message->node->scan->path);
+        }
+
+        vector_t *parts = message->parts;
+        for (size_t j = 0; j < vector_len(parts); j++) {
+            part_t *part = vector_get(parts, j);
+            if (part->node != NULL) {
+                vector_push(&result, (char*)part->node->scan->path);
+            }
+        }
+    }
+
+    return common_prefix(result);
+}
+
 int end_reports(reports_t *reports, size_t total, const char *name) {
     size_t internal = 0;
     size_t fatal = 0;
     int result = 0;
 
     size_t errors = vector_len(reports->messages);
+    const char *common = errors > 0 ? paths_base(reports->messages) : "";
 
     for (size_t i = 0; i < errors; i++) {
         message_t *message = vector_get(reports->messages, i);
@@ -419,7 +442,7 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
             continue;
         }
 
-        report_send(message);
+        report_send(common, message);
     }
 
     if (internal > 0) {

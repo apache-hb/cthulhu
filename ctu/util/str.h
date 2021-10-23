@@ -84,6 +84,10 @@ char *strslice(const char *str, size_t start, size_t end) NONULL;
 
 vector_t *strsplit(const char *str, const char *sep) NONULL;
 
+const char *common_prefix(vector_t *strings) NONULL;
+
+size_t rfind(const char *str, char c) CONSTFN NONULL;
+
 /**
  * hash a string into a size_t
  * 

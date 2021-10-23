@@ -59,22 +59,6 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
 
     compile_attribs(sema, lir, ctu);
 
-    if (lir->attribs->mangle == NULL) {
-        where_t where = lir->node->where;
-        const char *name = is_discard(lir->name) 
-            ? format("anon%ld_%ld", where.first_line, where.first_column)
-            : lir->name;
-        
-        vector_t *path = get_path(sema);
-        vector_t *full = vector_join(path, vector_init((char*)name));
-        char *mangled = mangle_name(full, type);
-        
-        attrib_t *temp = BOX(*lir->attribs);
-        temp->mangle = mangled;
-
-        lir->attribs = temp;
-    }
-
     if (ctu->body == NULL) {
         add_extern(sema, lir);
     }
@@ -105,8 +89,9 @@ void add_locals(sema_t *sema, const type_t *type, vector_t *params) {
     for (size_t i = 0; i < len; i++) {
         ctu_t *param = vector_get(params, i);
         const type_t *arg = param_at(type, i);
-        if (!is_discard(param->name)) {
-            add_var(sema, param->name, lir_param(param->node, param->name, arg, i));
+        const char *name = param->name;
+        if (!is_discard(name)) {
+            add_var(sema, name, lir_param(param->node, param->name, arg, i));
         }
     }
 }

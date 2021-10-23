@@ -118,23 +118,19 @@ static operand_t build_return(context_t *ctx, lir_t *lir, operand_t op) {
 static block_t *lir_named(const lir_t *lir) {
     return new_block(
         BLOCK_SYMBOL, 
-        lir->name, 
+        get_name(lir), 
         lir->node, 
         lir_type(lir)
     );
 }
 
 static const char *symbol_name(const lir_t *lir) {
-    if (!lir_is(lir, LIR_DEFINE)) {
-        return lir->name;
-    }
-
     if (lir->attribs->mangle != NULL) {
         return lir->attribs->mangle;
     }
 
-    if (lir->name != NULL) {
-        return lir->name;
+    if (has_name(lir)) {
+        return get_name(lir);
     }
 
     node_t *node = lir->node;

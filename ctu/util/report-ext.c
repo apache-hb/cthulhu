@@ -16,7 +16,7 @@ message_t *report_recursive(reports_t *reports,
                             lir_t *root)
 {
     node_t *node = root->node;
-    message_t *id = report(reports, ERROR, node, "initialization of `%s` is recursive", root->name);
+    message_t *id = report(reports, ERROR, node, "initialization of `%s` is recursive", get_name(root));
     
     node_t *last = node;
     size_t len = vector_len(stack);

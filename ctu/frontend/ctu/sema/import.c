@@ -23,10 +23,6 @@ static void add_module(sema_t *sema, ctu_t *ctu, sema_t *mod) {
     }
 
     set_module(sema, name, mod);
-
-    if (!is_complete(mod)) {
-        ctu_finish(mod);
-    }
 }
 
 void compile_import(sema_t *sema, ctu_t *ctu) {

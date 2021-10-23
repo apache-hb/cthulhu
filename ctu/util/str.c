@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdint.h>
 
 char *format(const char *fmt, ...) {
     va_list args;
@@ -202,4 +203,53 @@ void stream_write(stream_t *stream, const char *str) {
 
 const char *stream_data(const stream_t *stream) {
     return stream->data;
+}
+
+/**
+ * modified version of https://rosettacode.org/wiki/Longest_common_prefix#C
+ * 
+ * expects a list of file paths
+ */
+const char *common_prefix(vector_t *args) {
+    size_t len = vector_len(args);
+    char **strings = ctu_malloc(len * sizeof(char*));
+
+    size_t min = SIZE_MAX;
+
+    for (size_t i = 0; i < len; i++) {
+        char *arg = vector_get(args, i);
+        size_t len = rfind(arg, '/');
+        strings[i] = ctu_strndup(arg, len);
+
+        min = MIN(min, len);
+    }
+
+    if (min == 0) {
+        return "";
+    }
+
+    for (size_t i = 0; i < min; i++) {
+        for (size_t j = 1; j < len; j++) {
+            if (strings[j][i] != strings[0][i]) {
+                if (i == 0) {
+                    return "";
+                } else {
+                    return ctu_strndup(strings[0], i);
+                }
+            }
+        }
+    }
+
+    return ctu_strndup(strings[0], min);
+}
+
+size_t rfind(const char *str, char c) {
+    size_t len = strlen(str);
+    while (len--) {
+        if (str[len] == c) {
+            return len;
+        }
+    }
+
+    return SIZE_MAX;
 }

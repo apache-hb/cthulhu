@@ -19,7 +19,7 @@ static const attrib_t DEFAULT_ATTRIBS = {
 
 static lir_t *lir_decl(node_t *node, leaf_t leaf, const char *name) {
     lir_t *lir = lir_new(node, type_poison_with_node("forward declaration", node), leaf);
-    lir->name = name;
+    lir->_name = name;
     lir->attribs = &DEFAULT_ATTRIBS;
     return lir;
 }
@@ -264,4 +264,12 @@ vector_t *lir_recurses(lir_t *lir, const lir_t *root) {
 
 const type_t *lir_type(const lir_t *lir) {
     return lir->type;
+}
+
+const char *get_name(const lir_t *lir) {
+    return lir->_name;
+}
+
+bool has_name(const lir_t *lir) {
+    return get_name(lir) != NULL;
 }

@@ -26,6 +26,10 @@ static leaf_t decl_leaf(ctu_t *ctu) {
     }
 }
 
+lir_t *ctu_forward(node_t *node, const char *name, leaf_t leaf, void *data) {
+    return lir_forward(node, is_discard(name) ? NULL : name, leaf, data);
+}
+
 static void add_decls(sema_t *sema, vector_t *decls) {
     size_t len = vector_len(decls);
     for (size_t i = 0; i < len; i++) {
@@ -41,7 +45,7 @@ static void add_decls(sema_t *sema, vector_t *decls) {
         default: break;
         }
 
-        lir_t *lir = lir_forward(decl->node, name, leaf, state_new(sema, decl));
+        lir_t *lir = ctu_forward(decl->node, name, leaf, state_new(sema, decl));
 
         switch (decl->type) {
         case CTU_VALUE:

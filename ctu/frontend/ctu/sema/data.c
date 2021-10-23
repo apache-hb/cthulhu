@@ -233,7 +233,7 @@ void set_state(sema_t *sema, local_t state) {
 }
 
 bool is_discard(const char *name) {
-    return startswith(name, "$");
+    return name == NULL || startswith(name, "$");
 }
 
 type_t *get_cached_digit_type(sema_t *sema, sign_t sign, int_t width) {
