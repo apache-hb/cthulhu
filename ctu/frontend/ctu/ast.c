@@ -161,13 +161,13 @@ ctu_t *ctu_pointer(scan_t *scan, where_t where,
     return ctu;
 }
 
-ctu_t *ctu_typename(scan_t *scan, where_t where, 
-                    const char *name) 
-{
-    ctu_t *ctu = ctu_new(scan, where, CTU_TYPENAME);
+ctu_t *ctu_typename(scan_t *scan, where_t where, const char *name) {
+    return ctu_typepath(scan, where, vector_init((char*)name));
+}
 
-    ctu->ident = name;
-
+ctu_t *ctu_typepath(scan_t *scan, where_t where, vector_t *path) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_TYPEPATH);
+    ctu->path = path;
     return ctu;
 }
 
@@ -222,6 +222,14 @@ ctu_t *ctu_define(scan_t *scan, where_t where,
     ctu->result = result;
     ctu->body = body;
 
+    return ctu;
+}
+
+ctu_t *ctu_newtype(scan_t *scan, where_t where, 
+                   const char *name, ctu_t *type) 
+{
+    ctu_t *ctu = ctu_decl(scan, where, CTU_NEWTYPE, name);
+    ctu->result = type;
     return ctu;
 }
 

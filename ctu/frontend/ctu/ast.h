@@ -26,7 +26,7 @@ typedef enum {
     CTU_BRANCH,
     CTU_BREAK,
 
-    CTU_TYPENAME,
+    CTU_TYPEPATH,
     CTU_POINTER,
     CTU_CLOSURE,
     CTU_MUTABLE,
@@ -35,6 +35,7 @@ typedef enum {
     CTU_PARAM,
     CTU_DEFINE,
     CTU_ATTRIB,
+    CTU_NEWTYPE,
 
     CTU_IMPORT,
     CTU_MODULE
@@ -150,6 +151,7 @@ ctu_t *ctu_break(scan_t *scan, where_t where);
 /* types */
 ctu_t *ctu_pointer(scan_t *scan, where_t where, ctu_t *ptr);
 ctu_t *ctu_typename(scan_t *scan, where_t where, const char *name);
+ctu_t *ctu_typepath(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_closure(scan_t *scan, where_t where, vector_t *args, ctu_t *result);
 ctu_t *ctu_mutable(scan_t *scan, where_t where, ctu_t *type);
 
@@ -164,6 +166,9 @@ ctu_t *ctu_param(scan_t *scan, where_t where,
 ctu_t *ctu_define(scan_t *scan, where_t where, 
                   const char *name, vector_t *params, 
                   ctu_t *result, ctu_t *body);
+
+ctu_t *ctu_newtype(scan_t *scan, where_t where, 
+                   const char *name, ctu_t *type);
 
 ctu_t *ctu_attrib(scan_t *scan, where_t where, const char *name, vector_t *params);
 

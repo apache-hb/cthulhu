@@ -80,13 +80,12 @@ void add_func(sema_t *sema, const char *name, lir_t *lir) {
     sema_set(sema, TAG_FUNCS, name, lir);
 }
 
-void add_type(sema_t *sema, const char *name, type_t *type) {
-    const type_t *ty = get_type(sema, name);
-    if (ty != NULL) {
-        report(sema->reports, ERROR, NULL, "duplicate definition of type `%s`", type_format(type));
-    }
-
+static void add_builtin_type(sema_t *sema, const char *name, type_t *type) {
     sema_set(sema, TAG_TYPES, name, type);
+}
+
+void add_type(sema_t *sema, const char *name, type_t *type) {
+    sema_set(sema, TAG_USERTYPES, name, type);
 }
 
 void set_module(sema_t *sema, const char *name, sema_t *mod) {
@@ -102,7 +101,12 @@ lir_t *get_func(sema_t *sema, const char *name) {
 }
 
 type_t *get_type(sema_t *sema, const char *name) {
-    return sema_get(sema, TAG_TYPES, name);
+    type_t *type = sema_get(sema, TAG_TYPES, name);
+    if (type != NULL) {
+        return type;
+    }
+
+    return sema_get(sema, TAG_USERTYPES, name);
 }
 
 sema_t *get_module(sema_t *sema, const char *name) {
@@ -140,6 +144,7 @@ static const char *digit_name(sign_t sign, int_t width) {
 sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decls, size_t imports) {    
     size_t sizes[TAG_MAX] = {
         [TAG_TYPES] = decls,
+        [TAG_USERTYPES] = decls,
         [TAG_GLOBALS] = decls,
         [TAG_FUNCS] = decls,
         [TAG_IMPORTS] = imports
@@ -154,13 +159,13 @@ sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decl
             const char *name = digit_name(sign, width);
             type_t *type = type_digit_with_name(name, sign, width);
             data->digits[width][sign] = type;
-            add_type(sema, name, type);
+            add_builtin_type(sema, name, type);
         }
     }
 
-    add_type(sema, "void", type_void());
-    add_type(sema, "bool", type_bool_with_name("bool"));
-    add_type(sema, "str", type_string_with_name("str"));
+    add_builtin_type(sema, "void", type_void());
+    add_builtin_type(sema, "bool", type_bool_with_name("bool"));
+    add_builtin_type(sema, "str", type_string_with_name("str"));
 
     set_cache(path, sema);
     return sema;

@@ -95,8 +95,10 @@ static type_t *new_aggregate_type(const char *name, const node_t *node, metatype
     return type;
 }
 
-type_t *type_forward(const char *name, const node_t *node) {
-    return new_detailed_type(TY_FORWARD, name, node);
+type_t *type_forward(const char *name, const node_t *node, void *data) {
+    type_t *type = new_detailed_type(TY_FORWARD, name, node);
+    type->data = data;
+    return type;
 }
 
 type_t *type_struct(const char *name, const node_t *node, vector_t *fields) {

@@ -1,7 +1,52 @@
 #include "type.h"
 
-static type_t *compile_typename(sema_t *sema, ctu_t *ctu) {
-    type_t *type = get_type(sema, ctu->ident);
+void forward_type(sema_t *sema, const char *name, ctu_t *ctu) {
+    type_t *type = get_type(sema, name);
+    if (type != NULL) {
+        message_t *id = report(sema->reports, ERROR, ctu->node, "type `%s` already defined", name);
+        if (type->node == NULL) {
+            report_note(id, "`%s` is a builtin type", type->name);
+        } else {
+            report_append(id, type->node, "previously declared here");
+        }
+        return;
+    }
+
+    type_t *fwd = type_forward(name, ctu->node, ctu);
+    add_type(sema, name, fwd);
+}
+
+static void build_newtype(sema_t *sema, type_t *type, ctu_t *ctu) {
+    *type = *compile_type(sema, ctu->result);
+}
+
+void build_type(sema_t *sema, type_t *type) {
+    ctu_t *ctu = type->data;
+
+    switch (ctu->type) {
+    case CTU_NEWTYPE: 
+        build_newtype(sema, type, ctu);
+        break;
+
+    default:
+        ctu_assert(sema->reports, "(ctu) unimplemented build-type %d", ctu->type);
+        break;
+    }
+}
+
+static type_t *compile_typepath(sema_t *sema, ctu_t *ctu) {
+    size_t idx = 0;
+    size_t len = vector_len(ctu->path);
+    while (idx < len - 1) {
+        const char *name = vector_get(ctu->path, idx++);
+        sema_t *nest = get_module(sema, name);
+        if (nest == NULL) {
+            report(sema->reports, ERROR, ctu->node, "failed to resolve path segment `%s`", name);
+            return type_poison_with_node("unresolved type", ctu->node);
+        }
+    }
+
+    type_t *type = get_type(sema, vector_tail(ctu->path));
     if (type == NULL) {
         report(sema->reports, ERROR, ctu->node, "unable to resolve type name `%s`", ctu->ident);
         return type_poison_with_node("unresolved type", ctu->node);
@@ -42,8 +87,8 @@ static type_t *compile_mutable(sema_t *sema, ctu_t *ctu) {
 
 type_t *compile_type(sema_t *sema, ctu_t *ctu) {
     switch (ctu->type) {
-    case CTU_TYPENAME:
-        return compile_typename(sema, ctu);
+    case CTU_TYPEPATH:
+        return compile_typepath(sema, ctu);
     case CTU_POINTER:
         return compile_pointer(sema, ctu);
     case CTU_CLOSURE:

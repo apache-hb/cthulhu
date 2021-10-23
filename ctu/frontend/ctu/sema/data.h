@@ -6,6 +6,7 @@
 
 typedef enum {
     TAG_TYPES,
+    TAG_USERTYPES,
     TAG_GLOBALS,
     TAG_FUNCS,
     TAG_IMPORTS,

@@ -90,7 +90,7 @@ parse = generator(bison,
 
 options = [ generic ]
 
-foreach gen : [ 'c99', 'null' ]
+foreach gen : get_option('backends')
     subdir('ctu/backend'/gen)
 endforeach
 

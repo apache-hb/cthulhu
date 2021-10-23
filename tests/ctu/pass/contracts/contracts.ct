@@ -1,0 +1,9 @@
+requires { assert divisor != 0; }
+def modulo(dividend: int, divisor: int): int {
+    return dividend / divisor;
+}
+
+requires { assert num > 0; }
+def sqrt(num: int): int {
+
+}

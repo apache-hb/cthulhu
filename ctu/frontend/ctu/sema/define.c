@@ -35,7 +35,8 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
         size_t sizes[TAG_MAX] = {
             [TAG_GLOBALS] = MAP_SMALL,
             [TAG_FUNCS] = MAP_SMALL,
-            [TAG_TYPES] = MAP_SMALL
+            [TAG_TYPES] = MAP_SMALL,
+            [TAG_USERTYPES] = MAP_SMALL
         };
 
         sema_t *nest = new_sema(sema->reports, sema, sizes);

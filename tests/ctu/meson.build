@@ -24,7 +24,8 @@ fails = [
     'invalid-init', 'loop', 'nested-refs', 'no-init', 'recurse',
     'return-local-ref', 'return-struct-ref', 'scope',
     'type-in-expr', 'uninit-global', 'void-var', 'weird', 'large',
-    'recurse-lambda'
+    'recurse-lambda',
+    'data.loop-complex', 'data.loop-newtype', 'data.loop-ptr'
 ]
 
 foreach case : fails
@@ -47,7 +48,7 @@ pass = [
     'nest', 'order', 'pointers', 'pointers2', 'posix-interop', 'regalloc',
     'string', 'struct', 'suffix', 'union', 'unused-var', 'var', 'win32-interop',
     'win32-wsa', 'simple', 'extern', 'fuzz-10', 'section', 'section-2', 'immediate-invoke',
-    'funcs.fwd', 'funcs.single', 'funcs.stmts', 'lambda'
+    'funcs.fwd', 'funcs.single', 'funcs.stmts', 'lambda', 'data.string'
 ]
 
 foreach case : pass

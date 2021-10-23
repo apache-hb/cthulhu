@@ -4,6 +4,12 @@ option('languages', type : 'array',
     value : [ 'ctu', 'pl0', 'c' ]
 )
 
+option('backends', type : 'array',
+    description : 'select which backends to compile',
+    choices : [ 'null', 'c99', 'llvm', 'gcc' ],
+    value : [ 'null', 'c99' ]
+)
+
 option('fuzzing', type : 'boolean',
     description : 'compile for persistent fuzzing',
     value : false

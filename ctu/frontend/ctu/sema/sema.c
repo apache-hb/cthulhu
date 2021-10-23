@@ -33,6 +33,14 @@ static void add_decls(sema_t *sema, vector_t *decls) {
         leaf_t leaf = decl_leaf(decl);
 
         const char *name = decl->name;
+     
+        switch (decl->type) {
+        case CTU_NEWTYPE:
+            forward_type(sema, name, decl);
+            continue;
+        default: break;
+        }
+
         lir_t *lir = lir_forward(decl->node, name, leaf, state_new(sema, decl));
 
         switch (decl->type) {
@@ -62,6 +70,9 @@ static lir_t *compile_decls(sema_t *sema, node_t *root) {
 
     vector_t *defs = MAP_COLLECT(funcs, nonull);
     vector_t *lambdas = move_lambdas(sema);
+
+    map_t *types = sema_tag(sema, TAG_USERTYPES);
+    MAP_APPLY(types, sema, build_type);
 
     lir_t *mod = lir_module(root, 
         /* externs = */ move_externs(sema),

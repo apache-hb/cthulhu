@@ -51,6 +51,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     NO "`false`"
     BREAK "`break`"
     LAMBDA "`lambda`"
+    TYPE "`type`"
     SEMI "`;`"
     ASSIGN "`=`"
     LPAREN "`(`"
@@ -90,7 +91,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
     statements stmt type param function return import while
-    assign attrib branch tail closure result funcbody lambda lambdabody
+    assign attrib branch tail closure result funcbody lambda lambdabody newtype
 
 %type<vector>
     unit stmtlist params paramlist args arglist imports
@@ -159,6 +160,10 @@ attrib: IDENT { $$ = ctu_attrib(x, @$, $1, vector_new(0)); }
 
 declbase: value { $$ = $1; }
     | function { $$ = $1; }
+    | newtype { $$ = $1; }
+    ;
+
+newtype: TYPE IDENT ASSIGN type SEMI { $$ = ctu_newtype(x, @$, $2, $4); }
     ;
 
 exported: %empty { $$ = false; }
@@ -207,7 +212,7 @@ params: param { $$ = vector_init($1); }
 param: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
     ;
 
-type: IDENT { $$ = ctu_typename(x, @$, $1); }
+type: path { $$ = ctu_typepath(x, @$, $1); }
     | MUL type { $$ = ctu_pointer(x, @$, $2); }
     | closure { $$ = $1; }
     | VAR LPAREN type RPAREN { $$ = ctu_mutable(x, @$, $3); }
