@@ -50,7 +50,8 @@ pass = [
     'string', 'struct', 'suffix', 'union', 'unused-var', 'var', 'win32-interop',
     'simple', 'extern', 'fuzz-10', 'section', 'section-2', 'immediate-invoke',
     'funcs.fwd', 'funcs.single', 'funcs.stmts', 'lambda', 'data.string',
-    'imports.first', 'imports.a'
+    'imports.first', 'imports.a',
+    'builtins.sizeof'
 ]
 
 foreach case : pass

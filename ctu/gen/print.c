@@ -110,6 +110,22 @@ static char *emit_call(size_t idx, step_t step) {
     return format("%%%zu = call %s (%s)", idx, func, strjoin(", ", args));
 }
 
+static const char *get_builtin_name(builtin_t builtin) {
+    switch (builtin) {
+    case BUILTIN_ALIGNOF: return "alignof";
+    case BUILTIN_SIZEOF: return "sizeof";
+    case BUILTIN_UUIDOF: return "uuidof";
+    default: return "???";
+    }
+}
+
+static char *emit_builtin(size_t idx, step_t step) {
+    const char *builtin = get_builtin_name(step.builtin);
+    char *target = type_format(step.target);
+
+    return format("%%%zu = builtin %s %s", idx, builtin, target);
+}
+
 static char *emit_step(block_t *flow, size_t idx) {
     step_t step = flow->steps[idx];
     switch (step.opcode) {
@@ -120,6 +136,8 @@ static char *emit_step(block_t *flow, size_t idx) {
     case OP_LOAD: return emit_load(idx, step);
     case OP_STORE: return emit_store(step);
     case OP_CALL: return emit_call(idx, step);
+
+    case OP_BUILTIN: return emit_builtin(idx, step);
 
     case OP_JMP: return emit_jmp(step);
     case OP_BRANCH: return emit_branch(step);

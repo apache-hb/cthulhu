@@ -380,6 +380,20 @@ static operand_t emit_break(context_t *ctx, lir_t *lir) {
     return operand_empty();
 }
 
+static operand_t emit_sizeof(context_t *ctx, lir_t *lir) {
+    step_t step = step_of(OP_BUILTIN, lir);
+    step.builtin = BUILTIN_SIZEOF;
+    step.target = lir->of;
+    return add_step(ctx, step);
+}
+
+static operand_t emit_alignof(context_t *ctx, lir_t *lir) {
+    step_t step = step_of(OP_BUILTIN, lir);
+    step.builtin = BUILTIN_ALIGNOF;
+    step.target = lir->of;
+    return add_step(ctx, step);
+}
+
 static operand_t emit_lir(context_t *ctx, lir_t *lir) {
     switch (lir->leaf) {
     case LIR_UNARY: return emit_unary(ctx, lir);
@@ -400,6 +414,9 @@ static operand_t emit_lir(context_t *ctx, lir_t *lir) {
     case LIR_POISON: return emit_poison(ctx, lir);
     case LIR_FORWARD: return emit_forward(ctx, lir);
     case LIR_BREAK: return emit_break(ctx, lir);
+
+    case LIR_DETAIL_SIZEOF: return emit_sizeof(ctx, lir);
+    case LIR_DETAIL_ALIGNOF: return emit_alignof(ctx, lir);
 
     default:
         ctu_assert(ctx->reports, "emit-lir unknown %d", lir->leaf);

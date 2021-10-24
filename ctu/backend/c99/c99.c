@@ -249,6 +249,24 @@ static char *format_unary(reports_t *reports, size_t idx, step_t step) {
     return format("  %s = %s;\n", temp, op);
 }
 
+static const char *select_builtin(builtin_t builtin) {
+    switch (builtin) {
+    case BUILTIN_SIZEOF: return "sizeof";
+    case BUILTIN_ALIGNOF: return "alignof";
+    case BUILTIN_UUIDOF: return "__uuid";
+    default: return "???";
+    }
+}
+
+static char *format_builtin(reports_t *reports, size_t idx, step_t step) {
+    const char *builtin = select_builtin(step.builtin);
+
+    const char *vreg = format_vreg(idx);
+    const char *temp = type_to_string(reports, step.type, vreg);
+
+    return format("  %s = %s(%s);\n", temp, builtin, type_to_string(reports, step.target, NULL));
+}
+
 static char *select_step(context_t *ctx, size_t idx, step_t step) {
 switch (step.opcode) {
     case OP_EMPTY: return NULL;
@@ -278,6 +296,9 @@ switch (step.opcode) {
 
     case OP_BINARY:
         return format_binary(ctx->reports, idx, step);
+
+    case OP_BUILTIN:
+        return format_builtin(ctx->reports, idx, step);
 
     default:
         ctu_assert(ctx->reports, "unknown opcode: %d", step.opcode);
@@ -407,6 +428,8 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
     );
 
     stream_write(ctx.result, header);
+
+    stream_write(ctx.result, "#include <stddef.h>\n");
 
     ctu_free(header);
 

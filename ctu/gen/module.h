@@ -16,10 +16,18 @@ typedef enum {
     OP_LOAD,
     OP_STORE,
 
+    OP_BUILTIN,
+
     OP_BRANCH,
     OP_JMP,
     OP_BLOCK
 } opcode_t;
+
+typedef enum {
+    BUILTIN_SIZEOF,
+    BUILTIN_UUIDOF,
+    BUILTIN_ALIGNOF
+} builtin_t;
 
 typedef struct {
     opcode_t opcode;
@@ -27,6 +35,11 @@ typedef struct {
     const type_t *type;
 
     union {
+        struct {
+            builtin_t builtin;
+            const type_t *target;
+        };
+
         struct {
             operand_t func;
             oplist_t *args;
