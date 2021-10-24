@@ -30,6 +30,7 @@ typedef enum {
     CTU_POINTER,
     CTU_CLOSURE,
     CTU_MUTABLE,
+    CTU_VARARGS,
 
     CTU_VALUE,
     CTU_PARAM,
@@ -154,6 +155,7 @@ ctu_t *ctu_typename(scan_t *scan, where_t where, const char *name);
 ctu_t *ctu_typepath(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_closure(scan_t *scan, where_t where, vector_t *args, ctu_t *result);
 ctu_t *ctu_mutable(scan_t *scan, where_t where, ctu_t *type);
+ctu_t *ctu_varargs(scan_t *scan, where_t where);
 
 /* declarations */
 ctu_t *ctu_value(scan_t *scan, where_t where, 

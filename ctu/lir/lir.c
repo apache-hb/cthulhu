@@ -125,6 +125,22 @@ lir_t *lir_call(node_t *node, const type_t *type, lir_t *func, vector_t *args) {
     return lir;
 }
 
+lir_t *lir_detail_sizeof(node_t *node, const type_t *type) {
+    lir_t *lir = lir_new(node, type_digit(UNSIGNED, TY_SIZE), LIR_DETAIL_SIZEOF);
+
+    lir->of = type;
+
+    return lir;
+}
+
+lir_t *lir_detail_alignof(node_t *node, const type_t *type) {
+    lir_t *lir = lir_new(node, type_digit(UNSIGNED, TY_SIZE), LIR_DETAIL_ALIGNOF);
+
+    lir->of = type;
+
+    return lir;
+}
+
 lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src) {
     lir_t *lir = lir_new(node, NULL, LIR_ASSIGN);
 

@@ -190,6 +190,10 @@ ctu_t *ctu_mutable(scan_t *scan, where_t where, ctu_t *type) {
     return ctu;
 }
 
+ctu_t *ctu_varargs(scan_t *scan, where_t where) {
+    return ctu_new(scan, where, CTU_VARARGS);
+}
+
 ctu_t *ctu_value(scan_t *scan, where_t where, 
                  bool mut, const char *name, 
                  ctu_t *type, ctu_t *value) {

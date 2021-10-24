@@ -63,6 +63,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     COLON2 "`::`"
     COLON "`:`"
     COMMA "`,`"
+    ELLIPSIS "`...`"
     DOT "`.`"
     ARROW "`->`"
     WIDEARROW "`=>`"
@@ -210,6 +211,7 @@ params: param { $$ = vector_init($1); }
     ;
 
 param: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
+    | IDENT COLON ELLIPSIS { $$ = ctu_param(x, @$, $1, ctu_varargs(x, @3)); }
     ;
 
 type: path { $$ = ctu_typepath(x, @$, $1); }

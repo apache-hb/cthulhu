@@ -1,5 +1,5 @@
 @mangle("printf")
-def print(fmt: str, ...): int;
+def print(fmt: str, args: ...): int;
 
 @entry
 def main: int {

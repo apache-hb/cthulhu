@@ -95,6 +95,8 @@ type_t *compile_type(sema_t *sema, ctu_t *ctu) {
         return compile_closure(sema, ctu);
     case CTU_MUTABLE:
         return compile_mutable(sema, ctu);
+    case CTU_VARARGS:
+        return type_varargs();
 
     default:
         ctu_assert(sema->reports, "compile-type unknown type %d", ctu->type);

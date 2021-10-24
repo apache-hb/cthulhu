@@ -19,6 +19,9 @@ typedef enum {
     LIR_UNARY, /// a uary operation
     LIR_CALL, /// calling an address with parameters
 
+    LIR_DETAIL_SIZEOF, /// sizeof(type)
+    LIR_DETAIL_ALIGNOF, /// alignof(type)
+
     LIR_ASSIGN, /// assign from a value into an address
 
     LIR_WHILE,
@@ -77,6 +80,12 @@ typedef struct lir_t {
          * a boolean literal
          */
         bool boolean;
+
+        /**
+         * operations like sizeof and alignof take types 
+         * as parameters
+         */
+        const type_t *of;
 
         /**
          * a name and an optional offset
@@ -256,6 +265,9 @@ lir_t *lir_call(node_t *node,
                 const type_t *type, 
                 lir_t *func, 
                 vector_t *args);
+
+lir_t *lir_detail_sizeof(node_t *node, const type_t *type);
+lir_t *lir_detail_alignof(node_t *node, const type_t *type);
 
 lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src);
 lir_t *lir_while(node_t *node, lir_t *cond, lir_t *then);

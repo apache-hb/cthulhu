@@ -79,6 +79,7 @@
 "]" { return RSQUARE; }
 
 "," { return COMMA; }
+"..." { return ELLIPSIS; }
 "." { return DOT; }
 "->" { return ARROW; }
 "=>" { return WIDEARROW; }

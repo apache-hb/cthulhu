@@ -3,6 +3,7 @@
 #include "value.h"
 #include "define.h"
 #include "sema.h"
+#include "attrib.h"
 
 static size_t SMALL_SIZES[TAG_MAX] = { MAP_SMALL, MAP_SMALL, MAP_SMALL };
 
@@ -224,6 +225,10 @@ static lir_t *compile_name(sema_t *sema, const char *name, ctu_t *expr) {
     return lir_poison(expr->node, "unresolved name");
 }
 
+static lir_t *compile_builtin(sema_t *sema, type_t *type, ctu_t *expr, const char *detail) {
+    return compile_detail(sema, expr, type, detail);
+}
+
 static lir_t *compile_path(sema_t *sema, vector_t *path, ctu_t *expr) {
     size_t len = vector_len(path);
 
@@ -234,6 +239,15 @@ static lir_t *compile_path(sema_t *sema, vector_t *path, ctu_t *expr) {
     sema_t *nest = get_module(sema, vector_head(path));
     if (nest != NULL) {
         return compile_path(nest, vector_slice(path, 1, len), expr);
+    }
+
+    type_t *type = get_type(sema, vector_head(path));
+    if (type != NULL) {
+        if (len != 2) {
+            report(sema->reports, ERROR, expr->node, "cannot name a type or access a module through a type name");
+            return lir_poison(expr->node, "invalid path");
+        }
+        return compile_builtin(sema, type, expr, vector_tail(path));
     }
 
     report(sema->reports, ERROR, expr->node, "failed to find segment `%s`", (char*)vector_head(path));
