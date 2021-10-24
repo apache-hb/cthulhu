@@ -78,13 +78,13 @@ char *strnorm(const char *str) NONULL;
  * 
  * @return the normalized string
  */
-char *nstrnorm(const char *str, size_t len) NONULL;
+char *nstrnorm(const char *str, size_t len) CONSTFN NONULL;
 
-char *strslice(const char *str, size_t start, size_t end) NONULL;
+char *strslice(const char *str, size_t start, size_t end) CONSTFN NONULL;
 
-vector_t *strsplit(const char *str, const char *sep) NONULL;
+vector_t *strsplit(const char *str, const char *sep) CONSTFN NONULL;
 
-const char *common_prefix(vector_t *strings) NONULL;
+const char *common_prefix(vector_t *strings) CONSTFN NONULL;
 
 size_t rfind(const char *str, char c) CONSTFN NONULL;
 

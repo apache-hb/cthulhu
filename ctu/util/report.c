@@ -414,7 +414,7 @@ static const char *paths_base(vector_t *messages) {
         }
     }
 
-    return common_prefix(result);
+    return vector_len(result) > 0 ? common_prefix(result) : "";
 }
 
 int end_reports(reports_t *reports, size_t total, const char *name) {
@@ -423,7 +423,7 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
     int result = 0;
 
     size_t errors = vector_len(reports->messages);
-    const char *common = errors > 0 ? paths_base(reports->messages) : "";
+    const char *common = paths_base(reports->messages);
 
     for (size_t i = 0; i < errors; i++) {
         message_t *message = vector_get(reports->messages, i);

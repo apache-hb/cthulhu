@@ -1,0 +1,7 @@
+struct Cube {
+    width: int,
+    height: int,
+    depth: int
+}
+
+var big = Cube { width: 10, height: 10, depth: 10 };

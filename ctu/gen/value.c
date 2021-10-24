@@ -4,52 +4,53 @@
 #include "ctu/util/str.h"
 
 
-value_t *value_of(const type_t *type) {
+value_t *value_of(const type_t *type, const node_t *node) {
     value_t *value = ctu_malloc(sizeof(value_t));
     value->type = type;
+    value->node = node;
     return value;
 }
 
 value_t *value_poison_with_node(const char *msg, const node_t *node) {
-    return value_of(type_poison_with_node(msg, node));
+    return value_of(type_poison_with_node(msg, node), node);
 }
 
 value_t *value_poison(const char *msg) {
     return value_poison_with_node(msg, NULL);
 }
 
-value_t *value_bool(bool value) {
-    value_t *result = value_of(type_bool());
+value_t *value_bool(const node_t *node, bool value) {
+    value_t *result = value_of(type_bool(), node);
     result->boolean = value;
     return result;
 }
 
-value_t *value_digit(const type_t *type, mpz_t digit) {
-    value_t *value = value_of(type);
+value_t *value_digit(const node_t *node, const type_t *type, mpz_t digit) {
+    value_t *value = value_of(type, node);
     mpz_init_set(value->digit, digit);
     return value;
 }
 
-value_t *value_int(const type_t *type, int digit) {
-    value_t *value = value_of(type);
+value_t *value_int(const node_t *node, const type_t *type, int digit) {
+    value_t *value = value_of(type, node);
     mpz_init_set_si(value->digit, digit);
     return value;
 }
 
 value_t *value_ptr(const type_t *type, value_t *ptr) {
-    value_t *value = value_of(type);
+    value_t *value = value_of(type, NULL);
     value->ptr = ptr;
     return value;
 }
 
 value_t *value_block(struct block_t *block) {
-    value_t *value = value_of(block->type);
+    value_t *value = value_of(block->type, NULL);
     value->block = block;
     return value;
 }
 
 value_t *value_empty(void) {
-    return value_of(type_void());
+    return value_of(type_void(), NULL);
 }
 
 char *value_format(const value_t *value) {

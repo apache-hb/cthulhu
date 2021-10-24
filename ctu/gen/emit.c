@@ -66,7 +66,7 @@ static size_t push_step(block_t *block, step_t step) {
 }
 
 static value_t *value_zero(void) {
-    return value_int(type_digit(SIGNED, TY_SIZE), 0);
+    return value_int(NULL, type_digit(SIGNED, TY_SIZE), 0);
 }
 
 static step_t step_with_type(opcode_t op, const node_t *node, const type_t *type) {
@@ -213,11 +213,11 @@ static operand_t emit_binary(context_t *ctx, lir_t *lir) {
 }
 
 static operand_t emit_digit(context_t *ctx, lir_t *lir) {
-    return operand_imm(ctx->reports, value_digit(lir_type(lir), lir->digit));
+    return operand_imm(ctx->reports, value_digit(lir->node, lir_type(lir), lir->digit));
 }
 
 static operand_t emit_bool(context_t *ctx, lir_t *lir) {
-    return operand_imm(ctx->reports, value_bool(lir->boolean));
+    return operand_imm(ctx->reports, value_bool(lir->node, lir->boolean));
 }
 
 static operand_t emit_value(const lir_t *lir) {

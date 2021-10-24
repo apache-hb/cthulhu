@@ -1,0 +1,8 @@
+type HRESULT = int;
+
+@uuid("00000000-0000-0000-C000-000000000046")
+export object IUnknown {
+    virtual def QueryInterface(uuid: *guid, ppv: **void): HRESULT;
+    virtual def AddRef: ulong;
+    virtual def Release: ulong; 
+}

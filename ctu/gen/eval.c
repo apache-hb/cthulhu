@@ -14,6 +14,29 @@ typedef struct {
     value_t *result;
 } exec_t;
 
+typedef int(*mpz_fits)(const mpz_t);
+
+static mpz_fits get_fits(const type_t *type) {
+    digit_t digit = type->digit;
+    switch (digit.kind) {
+    case TY_INT: return is_signed(type) ? mpz_fits_sint_p : mpz_fits_uint_p;
+    case TY_LONG: case TY_INTPTR: case TY_INTMAX:
+        return is_signed(type) ? mpz_fits_slong_p : mpz_fits_ulong_p;
+    default: case TY_SHORT: 
+        return is_signed(type) ? mpz_fits_sshort_p : mpz_fits_ushort_p;
+    }
+}
+
+static void check_overflow(reports_t *reports, value_t *value) {
+    mpz_fits fits = get_fits(value->type);
+    if (!fits(value->digit)) {
+        report(reports, ERROR, value->node, "%s overflows type %s", 
+            mpz_get_str(NULL, 10, value->digit), 
+            type_format(value->type)
+        );
+    }
+}
+
 static exec_t exec_new(world_t *world, block_t *block) {
     size_t size = block->len;
 
@@ -68,7 +91,7 @@ static value_t *value_abs(value_t *v) {
     mpz_t result;
     mpz_abs(result, v->digit);
 
-    return value_digit(v->type, result);
+    return value_digit(v->node, v->type, result);
 }
 
 static value_t *value_neg(value_t *v) {
@@ -79,7 +102,7 @@ static value_t *value_neg(value_t *v) {
     mpz_t result;
     mpz_neg(result, v->digit);
 
-    return value_digit(v->type, result);
+    return value_digit(v->node, v->type, result);
 }
 
 
@@ -99,6 +122,7 @@ static value_t *exec_unary(exec_t *exec, step_t step) {
 static value_t *exec_binary(exec_t *exec, step_t step) {
     value_t *lhs = get_value(exec, step.lhs);
     value_t *rhs = get_value(exec, step.rhs);
+    node_t *node = node_merge(lhs->node, rhs->node);
 
     mpz_t result;
     mpz_init(result);
@@ -106,46 +130,58 @@ static value_t *exec_binary(exec_t *exec, step_t step) {
     switch (step.binary) {
     case BINARY_ADD:
         mpz_add(result, lhs->digit, rhs->digit);
-        return value_digit(step.type, result);
+        return value_digit(node, step.type, result);
     case BINARY_SUB:
         mpz_sub(result, lhs->digit, rhs->digit);
-        return value_digit(step.type, result);
+        return value_digit(node, step.type, result);
     case BINARY_MUL:
         mpz_mul(result, lhs->digit, rhs->digit);
-        return value_digit(step.type, result);
+        return value_digit(node, step.type, result);
     case BINARY_DIV:
         if (mpz_sgn(rhs->digit) == 0) {
             return value_poison_with_node("division by zero", step.node);
         }
         mpz_tdiv_q(result, lhs->digit, rhs->digit);
-        return value_digit(step.type, result);
+        return value_digit(node, step.type, result);
     case BINARY_REM:
         if (mpz_sgn(rhs->digit) == 0) {
             return value_poison_with_node("division by zero", step.node);
         }
         mpz_tdiv_r(result, lhs->digit, rhs->digit);
-        return value_digit(step.type, result);
+        return value_digit(node, step.type, result);
 
     case BINARY_EQ:
-        return value_bool(mpz_cmp(lhs->digit, rhs->digit) == 0);
+        return value_bool(node, mpz_cmp(lhs->digit, rhs->digit) == 0);
     case BINARY_NEQ:
-        return value_bool(mpz_cmp(lhs->digit, rhs->digit) != 0);
+        return value_bool(node, mpz_cmp(lhs->digit, rhs->digit) != 0);
     case BINARY_LT:
-        return value_bool(mpz_cmp(lhs->digit, rhs->digit) < 0);
+        return value_bool(node, mpz_cmp(lhs->digit, rhs->digit) < 0);
     case BINARY_LTE:
-        return value_bool(mpz_cmp(lhs->digit, rhs->digit) <= 0);
+        return value_bool(node, mpz_cmp(lhs->digit, rhs->digit) <= 0);
     case BINARY_GT:
-        return value_bool(mpz_cmp(lhs->digit, rhs->digit) > 0);
+        return value_bool(node, mpz_cmp(lhs->digit, rhs->digit) > 0);
     case BINARY_GTE:
-        return value_bool(mpz_cmp(lhs->digit, rhs->digit) >= 0);
+        return value_bool(node, mpz_cmp(lhs->digit, rhs->digit) >= 0);
 
     case BINARY_AND:
+        return value_bool(node, lhs->boolean && rhs->boolean);
     case BINARY_OR:
+        return value_bool(node, lhs->boolean || rhs->boolean);
     case BINARY_XOR:
+        mpz_xor(result, lhs->digit, rhs->digit);
+        return value_digit(node, step.type, result);
     case BINARY_SHL:
+        mpz_mul_2exp(result, lhs->digit, mpz_size(rhs->digit));
+        return value_digit(node, step.type, result);
     case BINARY_SHR:
+        mpz_tdiv_q_2exp(result, lhs->digit, mpz_size(rhs->digit));
+        return value_digit(node, step.type, result);
     case BINARY_BITAND:
+        mpz_and(result, lhs->digit, rhs->digit);
+        return value_digit(node, step.type, result);
     case BINARY_BITOR:
+        mpz_ior(result, lhs->digit, rhs->digit);
+        return value_digit(node, step.type, result);
 
     default:
         ctu_assert(exec->world->reports, "invalid binary operator %d", step.binary);
@@ -214,7 +250,13 @@ static value_t *eval_block(world_t *world, block_t *block) {
         // empty
     }
 
-    return (block->value = exec.result);
+    value_t *value = (block->value = exec.result);
+
+    if (is_digit(value->type)) {
+        check_overflow(world->reports, value);
+    }
+
+    return value;
 }
 
 void eval_world(reports_t *reports, module_t *mod) {

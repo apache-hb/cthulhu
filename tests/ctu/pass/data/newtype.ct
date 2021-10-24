@@ -1,0 +1,8 @@
+type I = int;
+
+def takeAlias(x: I): int = x as int;
+
+@entry
+def main {
+    takeAlias(I::new(1));
+}
