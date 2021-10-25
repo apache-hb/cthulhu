@@ -18,6 +18,7 @@ static void print_help(const frontend_t *frontend) {
     printf("\t-ir, --intermediate: Print IR\n");
     printf("\t-O, --opt: set optimisation level");
     printf("\t-P, --pass: specify optimisation passes to run\n");
+    printf("\t-o, --output: Specify output file\n");
 
     exit(0);
 }
@@ -61,6 +62,8 @@ static int parse_arg(settings_t *settings, const frontend_t *frontend, int index
         settings->verbose = true;
     } else if (MATCH(arg, "-ir", "--intermediate")) {
         settings->ir = true;
+    } else if (MATCH(arg, "-o", "--output")) {
+        settings->output = NEXT(index, argc, argv);
     } else {
         report(settings->reports, WARNING, NULL, "unknown argument %s", arg);
     }

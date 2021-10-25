@@ -112,6 +112,8 @@ foreach lang : get_option('languages')
     subdir('tests'/lang)
 endforeach
 
-tune = executable('tune', [ 'tools/tune.c' ],
-    dependencies : generic
-)
+if get_option('tuning')
+    tune = executable('tune', [ 'tools/tune.c' ],
+        dependencies : generic
+    )
+endif

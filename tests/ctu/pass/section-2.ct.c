@@ -6,7 +6,7 @@
 
 // String literals
 const char *strtab0 = "entry";
-const char *strtab1 = "custom_init";
+const char *strtab1 = "custom init";
 // Imported symbols
 extern signed int puts(const char *arg0);
 
@@ -16,17 +16,17 @@ void (*lambda4_7)();
 
 // Function forwarding
 void main();
-void custom_init();
+void lambda4_18();
 
 // Global initialization
-void (*lambda4_7)() = custom_init;
+void (*lambda4_7)() = lambda4_18;
 
 // Function definitions
 void main() {
   signed int vreg0 = (*&puts)(strtab0);
-  return;
+  return vreg0;
 }
-void custom_init() {
+void lambda4_18() {
   signed int vreg0 = (*&puts)(strtab1);
-  return;
+  return vreg0;
 }

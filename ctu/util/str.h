@@ -86,7 +86,7 @@ vector_t *strsplit(const char *str, const char *sep) CONSTFN NONULL;
 
 const char *common_prefix(vector_t *strings) CONSTFN NONULL;
 
-size_t rfind(const char *str, char c) CONSTFN NONULL;
+size_t rfind(const char *str, const char *sub) CONSTFN NONULL;
 
 /**
  * hash a string into a size_t

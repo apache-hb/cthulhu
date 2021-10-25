@@ -1,6 +1,7 @@
 #include "str.h"
 
 #include "util.h"
+#include "io.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -218,13 +219,13 @@ const char *common_prefix(vector_t *args) {
 
     for (size_t i = 0; i < len; i++) {
         char *arg = vector_get(args, i);
-        size_t len = rfind(arg, '/');
+        size_t len = rfind(arg, PATH_SEP);
         strings[i] = ctu_strndup(arg, len);
 
         min = MIN(min, len);
     }
 
-    if (min == 0) {
+    if (min == 0 || min == SIZE_MAX) {
         return "";
     }
 
@@ -243,10 +244,10 @@ const char *common_prefix(vector_t *args) {
     return ctu_strndup(strings[0], min);
 }
 
-size_t rfind(const char *str, char c) {
+size_t rfind(const char *str, const char *sub) {
     size_t len = strlen(str);
     while (len--) {
-        if (str[len] == c) {
+        if (strcmp(str + len, sub) == 0) {
             return len;
         }
     }

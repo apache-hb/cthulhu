@@ -7,7 +7,11 @@
 #include <stdbool.h>
 #include <limits.h>
 
-#define PATH_SEP "/"
+#if CTU_WINDOWS
+#   define PATH_SEP "\\"
+#else
+#   define PATH_SEP "/"
+#endif
 
 typedef struct {
     const char *path;

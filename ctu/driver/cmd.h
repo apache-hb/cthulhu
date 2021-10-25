@@ -9,6 +9,7 @@ typedef struct {
     reports_t *reports; /// error report sink
     bool verbose; /// enable verbose logging
     bool ir; /// enable IR output
+    const char *output; /// output file name
 } settings_t;
 
 /**

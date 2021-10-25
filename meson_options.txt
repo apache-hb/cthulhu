@@ -14,3 +14,8 @@ option('fuzzing', type : 'boolean',
     description : 'compile for persistent fuzzing',
     value : false
 )
+
+option('tuning', type : 'boolean',
+    description : 'compile tuning programs',
+    value : false
+)

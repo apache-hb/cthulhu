@@ -1,6 +1,7 @@
 #include "c99.h"
 
 #include "ctu/util/str.h"
+#include "ctu/util/compat.h"
 
 #include "type.h"
 
@@ -440,16 +441,16 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
     add_globals(&ctx, mod->vars);
     add_blocks(&ctx, mod->funcs);
 
-    file_t *file = ctu_fopen(path, "w");
-    if (file->file == NULL) {
+    FILE *file = compat_fopen(path, "w");
+    if (file == NULL) {
         ctu_assert(ctx.reports, "failed to open file: %s", path);
         free_c99_context(ctx);
         return false;
     }
 
-    fwrite(stream_data(ctx.result), 1, stream_len(ctx.result), file->file);
+    fwrite(stream_data(ctx.result), 1, stream_len(ctx.result), file);
 
-    ctu_close(file);
+    fclose(file);
     free_c99_context(ctx);
 
     return true;

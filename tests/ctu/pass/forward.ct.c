@@ -5,28 +5,29 @@
 #include <stddef.h>
 
 // String literals
-const char *strtab0 = "entry";
-const char *strtab1 = "custom_init";
 // Imported symbols
-extern signed int puts(const char *arg0);
 
 // Global forwarding
-__attribute__((section(".init_array")))
-void (*lambda4_7)();
 
 // Function forwarding
 void main();
-void custom_init();
+void set(signed int* arg0);
+void forward(signed int arg0);
 
 // Global initialization
-void (*lambda4_7)() = custom_init;
 
 // Function definitions
 void main() {
-  signed int vreg0 = (*&puts)(strtab0);
+  (*&forward)((signed int)10);
   return;
 }
-void custom_init() {
-  signed int vreg0 = (*&puts)(strtab1);
+void set(signed int* arg0) {
+  signed int vreg0 = ???;
+  *vreg0 = (signed int)25;
+  return;
+}
+void forward(signed int arg0) {
+  signed int* vreg0 = ???;
+  (*&set)(vreg0);
   return;
 }
