@@ -219,7 +219,7 @@ const char *common_prefix(vector_t *args) {
 
     for (size_t i = 0; i < len; i++) {
         char *arg = vector_get(args, i);
-        size_t len = rfind(arg, PATH_SEP);
+        size_t len = rfind(arg, PATH_SEP) + 1;
         strings[i] = ctu_strndup(arg, len);
 
         min = MIN(min, len);
@@ -246,8 +246,9 @@ const char *common_prefix(vector_t *args) {
 
 size_t rfind(const char *str, const char *sub) {
     size_t len = strlen(str);
+    size_t sublen = strlen(sub);
     while (len--) {
-        if (strcmp(str + len, sub) == 0) {
+        if (strncmp(str + len, sub, sublen) == 0) {
             return len;
         }
     }

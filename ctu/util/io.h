@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include <limits.h>
 
-#if CTU_WINDOWS
+#ifdef CTU_WINDOWS
 #   define PATH_SEP "\\"
 #else
 #   define PATH_SEP "/"

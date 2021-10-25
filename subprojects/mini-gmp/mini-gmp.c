@@ -1541,7 +1541,8 @@ mpz_init_set (mpz_t r, const mpz_t x)
 int 
 mpz_fits_sshort_p (const mpz_t u)
 {
-  return 0;
+  return (SHRT_MAX + SHRT_MIN == 0 || mpz_cmp_ui (u, SHRT_MAX) <= 0) &&
+    mpz_cmpabs_ui (u, GMP_NEG_CAST (unsigned short, SHRT_MIN)) <= 0;
 }
 
 int 
@@ -1553,7 +1554,8 @@ mpz_fits_ushort_p (const mpz_t u)
 int 
 mpz_fits_sint_p (const mpz_t u)
 {
-  return 0;
+  return (INT_MAX + INT_MIN == 0 || mpz_cmp_ui (u, INT_MAX) <= 0) &&
+    mpz_cmpabs_ui (u, GMP_NEG_CAST (unsigned int, INT_MIN)) <= 0;
 }
 
 int 
