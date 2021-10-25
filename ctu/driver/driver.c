@@ -158,7 +158,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
             continue;
         }
 
-        backend->compile(ctx->reports, ctx->mod, settings.output != NULL ? format("%s.c", settings.output) : format("%s.c", ctx->file->path));
+        backend->compile(ctx->reports, ctx->mod, settings.output != NULL ? format("%s.c", settings.output) : "out.c");
         max_report(&error, ctx->reports, format("generation of `%s`", ctx->file->path));
     }
 

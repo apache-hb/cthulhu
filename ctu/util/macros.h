@@ -69,6 +69,7 @@
 #   define STRTOK_R(str, delim, save) strtok_s(str, delim, save)
 #   define PATH_LEN MAX_PATH
 #else 
+#   include <alloca.h>
 #   define ALLOCA(size) alloca(size)
 #   define STRTOK_R(str, delim, save) strtok_r(str, delim, save)
 #   define PATH_LEN PATH_MAX

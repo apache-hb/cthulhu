@@ -180,7 +180,7 @@ static int base10_length(line_t digit) {
 }
 
 static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {
-    size_t len = base10_length(init);
+    int len = base10_length(init);
 
     for (size_t i = 0; i < vector_len(parts); i++) {
         part_t *part = vector_get(parts, i);
