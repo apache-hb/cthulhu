@@ -19,6 +19,14 @@
 #   define POISON(...)
 #endif
 
+#if defined(_WIN32)
+#   define CTU_WINDOWS 1
+#elif defined(__linux__)
+#   define CTU_LINUX 1
+#else
+#   error "unknown platform"
+#endif
+
 #define NORETURN _Noreturn
 
 /// macros with functionality
@@ -51,7 +59,19 @@
 
 #ifndef _DEFAULT_SOURCE
 #   define _DEFAULT_SOURCE
-#   include <sys/mman.h>
+#   if !CTU_WINDOWS
+#       include <sys/mman.h>
+#   endif
+#endif
+
+#if CTU_WINDOWS
+#   define ALLOCA(size) _alloca(size)
+#   define STRTOK_R(str, delim, save) strtok_s(str, delim, save)
+#   define PATH_LEN MAX_PATH
+#else 
+#   define ALLOCA(size) alloca(size)
+#   define STRTOK_R(str, delim, save) strtok_r(str, delim, save)
+#   define PATH_LEN PATH_MAX
 #endif
 
 NORETURN PRINT(1, 2)

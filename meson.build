@@ -1,14 +1,16 @@
 project('cthulhu', 'c',
     license : 'APGLv3',
-    version : '0.0.2',
+    version : '0.0.3',
     meson_version : '>=0.58',
     default_options : [
         'c_std=gnu11',
         'warning_level=2', # bison generates code that warns on gcc at level 3
-        'default_library=static',
-        'werror=true'
+        'default_library=static'#,
+        #'werror=true'
     ]
 )
+
+target = target_machine.system()
 
 src = [
     'ctu/ast/scan.c',
@@ -41,16 +43,30 @@ src = [
     'ctu/util/util.c',
     'ctu/util/optimal.c',
     'ctu/util/panic.c',
+    'ctu/util/compat-platform.c'.replace('platform', target),
 
     'ctu/driver/driver.c',
     'ctu/driver/cmd.c',
     'ctu/driver/include.c'
 ]
 
-gmp = dependency('gmp')
+gmp = dependency('gmp', 
+    not_found_message : 'no system gmp found, falling back to mini-gmp',
+    fallback : [ 'mini-gmp', 'gmp' ]
+)
 
 args = []
 deps = [ gmp ]
+
+flex = find_program('flex', 'win_flex', version : '>=2.6')
+bison = find_program('bison', 'win_bison', version : '>=3.5')
+
+lexargs = []
+
+if host_machine.system() == 'windows'
+    lexargs += [ '--wincompat' ]
+    args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '/Wv:18' ]
+endif
 
 if get_option('fuzzing')
     args += [ '-DFUZZING=1' ]
@@ -67,15 +83,12 @@ generic = declare_dependency(
     dependencies : gmp
 )
 
-flex = find_program('flex', version : '>=2.6')
-bison = find_program('bison', version : '>=3.5')
-
 lex = generator(flex, 
     output : [ '@BASENAME@-flex.c', '@BASENAME@-flex.h' ],
-    arguments : [ 
+    arguments : lexargs + [
         '--outfile=@OUTPUT0@', 
         '--header-file=@OUTPUT1@', 
-        '@INPUT@' 
+        '@INPUT@'
     ]
 )
 

@@ -138,10 +138,10 @@ char *nstrnorm(const char *str, size_t len) {
 vector_t *strsplit(const char *str, const char *sep) {
     vector_t *result = vector_new(4);
     char *save;
-    char *token = strtok_r((char *)str, sep, &save);
+    char *token = STRTOK_R((char *)str, sep, &save);
     while (token != NULL) {
         vector_push(&result, token);
-        token = strtok_r(NULL, sep, &save);
+        token = STRTOK_R(NULL, sep, &save);
     }
 
     return result;

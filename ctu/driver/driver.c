@@ -96,7 +96,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
 
     vector_t *sources = settings.sources;
     size_t len = vector_len(sources);
-    context_t all[len];
+    context_t *all = ALLOCA(sizeof(context_t) * len);
 
     logverbose("compiling %zu file(s)", len);
 

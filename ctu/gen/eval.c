@@ -171,10 +171,10 @@ static value_t *exec_binary(exec_t *exec, step_t step) {
         mpz_xor(result, lhs->digit, rhs->digit);
         return value_digit(node, step.type, result);
     case BINARY_SHL:
-        mpz_mul_2exp(result, lhs->digit, mpz_size(rhs->digit));
+        mpz_mul_2exp(result, lhs->digit, (mp_bitcnt_t)mpz_size(rhs->digit));
         return value_digit(node, step.type, result);
     case BINARY_SHR:
-        mpz_tdiv_q_2exp(result, lhs->digit, mpz_size(rhs->digit));
+        mpz_tdiv_q_2exp(result, lhs->digit, (mp_bitcnt_t)mpz_size(rhs->digit));
         return value_digit(node, step.type, result);
     case BINARY_BITAND:
         mpz_and(result, lhs->digit, rhs->digit);

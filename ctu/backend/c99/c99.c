@@ -127,7 +127,7 @@ static char *string_name(size_t idx) {
 
 static char *format_addr(const block_t *block) {
     if (block->kind == BLOCK_STRING) {
-        const block_t *real = block->data ?: block;
+        const block_t *real = block->data != NULL ? block->data : block;
         return string_name(real->idx);
     }
 

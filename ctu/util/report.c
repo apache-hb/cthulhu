@@ -159,7 +159,7 @@ static char *build_underline(char *source, where_t where, const char *note) {
 }
 
 /* stupid code but quick and simple */
-static size_t base10_length(line_t digit) {
+static int base10_length(line_t digit) {
     if (digit < 10) { return 1; } 
     else if (digit < 100) { return 2; } 
     else if (digit < 1000) { return 3; } 
@@ -208,7 +208,7 @@ static char *right_align(line_t line, int width) {
  */
 static char *format_single(const scan_t *scan, where_t where, const char *underline) {
     line_t first_line = where.first_line + 1;
-    size_t align = base10_length(first_line);
+    int align = base10_length(first_line);
 
     char *pad = padding(align);
     char *digit = right_align(first_line, align);
@@ -236,7 +236,7 @@ static char *format_single(const scan_t *scan, where_t where, const char *underl
  */
 static char *format_medium2(const scan_t *scan, where_t where, const char *underline) {
     line_t first_line = where.first_line + 1;
-    size_t align = base10_length(first_line);
+    int align = base10_length(first_line);
 
     char *pad = padding(align);
     char *digit = right_align(first_line, align);
@@ -268,7 +268,7 @@ static char *format_medium2(const scan_t *scan, where_t where, const char *under
  */
 static char *format_medium3(const scan_t *scan, where_t where, const char *underline) {
     line_t first_line = where.first_line + 1;
-    size_t align = base10_length(first_line);
+    int align = base10_length(first_line);
 
     char *pad = padding(align);
     char *digit = right_align(first_line, align);
@@ -304,7 +304,7 @@ static char *format_medium3(const scan_t *scan, where_t where, const char *under
 static char *format_large(const scan_t *scan, where_t where, const char *underline) {
     line_t first_line = where.first_line + 1;
     line_t last_line = where.last_line + 1;
-    size_t align = MAX(base10_length(first_line), base10_length(last_line)) + 1;
+    int align = MAX(base10_length(first_line), base10_length(last_line)) + 1;
 
     char *pad = padding(align);
     char *first_digit = right_align(first_line, align);

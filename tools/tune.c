@@ -15,7 +15,7 @@ static ns_t now(void) {
 }
 
 static void diff(const char *name, ns_t diff) {
-    printf("%s: %lu.%06lus\n", name, diff / 1000000000, diff % 1000000000);
+    printf("%s: %lu.%06lus\n", name, (unsigned long)(diff / 1000000000), (unsigned long)(diff % 1000000000));
 }
 
 #define STAGE(name, ...) { ns_t start = now(); { __VA_ARGS__ } ns_t end = now(); diff(name, end - start); }

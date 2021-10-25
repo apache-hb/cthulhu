@@ -2,10 +2,10 @@
 
 #include "ctu/util/report.h"
 #include "ctu/util/str.h"
-#include <unistd.h>
+#include "ctu/util/compat.h"
+
 #include <stdlib.h>
 #include <string.h>
-#include <libgen.h>
 
 static vector_t *includes = NULL;
 static map_t *cache = NULL;
@@ -24,11 +24,11 @@ static void trim_path(char *path) {
 }
 
 const char *find_include(const char *cwd, const char *path) {
-    char *base = realpath(ctu_strdup(cwd), ctu_malloc(PATH_MAX + 1));
+    char *base = compat_realpath(cwd);
     trim_path(base);
     char *search = format("%s/%s", base, path);
-    char *it = realpath(search, ctu_malloc(PATH_MAX + 1));
-    if (access(it, F_OK) != -1) {
+    char *it = compat_realpath(search);
+    if (compat_file_exists(it)) {
         return it;
     }
     
@@ -36,8 +36,8 @@ const char *find_include(const char *cwd, const char *path) {
     for (size_t i = 0; i < len; i++) {
         char *include = vector_get(includes, i);
         char *full = format("%s/%s", include, path);
-        char *real = realpath(full, ctu_malloc(PATH_MAX + 1));
-        if (access(real, F_OK) != -1) {
+        char *real = compat_realpath(full);
+        if (compat_file_exists(real)) {
             return real;
         }
     }

@@ -3,6 +3,7 @@
 #include "report.h"
 #include "str.h"
 #include "macros.h"
+#include "compat.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -93,11 +94,11 @@ char *ctu_noext(const char *path) {
 }
 
 file_t *ctu_fopen(const char *path, const char *mode) {
-    const char *full = realpath(path, ctu_malloc(PATH_MAX + 1));
+    const char *full = compat_realpath(path);
     logverbose("opening: %s", full);
     file_t *file = ctu_malloc(sizeof(file_t));
     file->path = full;
-    file->file = fopen(full, mode);
+    file->file = compat_fopen(full, mode);
     return file;
 }
 
@@ -130,7 +131,7 @@ void *ctu_mmap(file_t *fp) {
     }
 #else
     text = ctu_malloc(size + 1);
-    fread(text, size, 1, file);
+    fread(text, size, 1, fp->file);
     text[size] = '\0';
 #endif
 

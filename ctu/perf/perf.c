@@ -2,7 +2,7 @@
 
 static void do_ref(operand_t op) {
     if (op.kind == ADDRESS) {
-        op.block->data = (void*)((size_t)op.block->data) + 1;
+        op.block->data = (void*)((size_t)op.block->data + 1);
     }
 }
 
