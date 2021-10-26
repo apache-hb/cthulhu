@@ -48,6 +48,10 @@ ctu_t *ctu_string(scan_t *scan, where_t where, const char *str) {
     return ctu;
 }
 
+ctu_t *ctu_null(scan_t *scan, where_t where) {
+    return ctu_new(scan, where, CTU_NULL);
+}
+
 ctu_t *ctu_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *operand) {
     ctu_t *ctu = ctu_new(scan, where, CTU_UNARY);
 

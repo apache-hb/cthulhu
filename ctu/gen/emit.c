@@ -135,7 +135,7 @@ static const char *symbol_name(const lir_t *lir) {
 
     node_t *node = lir->node;
     where_t where = node->where;
-    return format("lambda%ld_%ld", where.first_line, where.first_column);
+    return format("anon%ld_%ld", where.first_line, where.first_column);
 }
 
 static block_t *init_block(lir_t *decl, const type_t *type) {
@@ -196,11 +196,24 @@ static void build_define(vector_t **strings, reports_t *reports, module_t *mod, 
     build_return(&ctx, body, op);
 }
 
+static operand_t compile_load(context_t *ctx, lir_t *lir, operand_t op) {
+    step_t step = step_with_type(OP_LOAD, lir->node, lir_type(lir));
+    step.src = op;
+    step.offset = operand_imm(ctx->reports, value_zero());
+    return add_step(ctx, step);
+}
+
 static operand_t emit_unary(context_t *ctx, lir_t *lir) {
-    operand_t operand = emit_lir(ctx, lir->operand);
+    unary_t unary = lir->unary;
+    switch (unary) {
+    case UNARY_ADDR: return emit_lir(ctx, lir->operand);
+    case UNARY_DEREF: return compile_load(ctx, lir, emit_lir(ctx, lir->operand));
+    default: break;
+    }
+
     step_t step = step_of(OP_UNARY, lir);
-    step.unary = lir->unary;
-    step.operand = operand;
+    step.unary = unary;
+    step.operand = emit_lir(ctx, lir->operand);
     return add_step(ctx, step);
 }
 
@@ -321,10 +334,7 @@ static operand_t emit_branch(context_t *ctx, lir_t *lir) {
 }
 
 static operand_t emit_name(context_t *ctx, lir_t *lir) {
-    step_t step = step_with_type(OP_LOAD, lir->node, lir_type(lir->it));
-    step.src = emit_lir(ctx, lir->it);
-    step.offset = operand_imm(ctx->reports, value_zero());
-    return add_step(ctx, step);
+    return compile_load(ctx, lir, emit_lir(ctx, lir->it));
 }
 
 static operand_t emit_call(context_t *ctx, lir_t *lir) {
@@ -394,12 +404,17 @@ static operand_t emit_alignof(context_t *ctx, lir_t *lir) {
     return add_step(ctx, step);
 }
 
+static operand_t emit_null(context_t *ctx, lir_t *lir) {
+    return operand_imm(ctx->reports, value_int(lir->node, lir_type(lir), 0));
+}
+
 static operand_t emit_lir(context_t *ctx, lir_t *lir) {
     switch (lir->leaf) {
     case LIR_UNARY: return emit_unary(ctx, lir);
     case LIR_BINARY: return emit_binary(ctx, lir);
     case LIR_DIGIT: return emit_digit(ctx, lir);
     case LIR_BOOL: return emit_bool(ctx, lir);
+    case LIR_NULL: return emit_null(ctx, lir);
     case LIR_STRING: return emit_string(ctx, lir);
     case LIR_STMTS: return emit_stmts(ctx, lir);
     case LIR_ASSIGN: return emit_assign(ctx, lir);

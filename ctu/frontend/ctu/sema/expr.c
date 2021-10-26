@@ -349,6 +349,10 @@ static lir_t *compile_lambda(sema_t *sema, ctu_t *expr) {
     return lambda;
 }
 
+static lir_t *compile_null(ctu_t *expr) {
+    return lir_null(expr->node, type_ptr(type_void()));
+}
+
 /* actually compiles an rvalue */
 lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
@@ -362,6 +366,7 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_STRING: return compile_string(expr);
     case CTU_CAST: return compile_cast(sema, expr);
     case CTU_LAMBDA: return compile_lambda(sema, expr);
+    case CTU_NULL: return compile_null(expr);
 
     default:
         ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);

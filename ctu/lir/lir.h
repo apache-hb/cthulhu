@@ -12,6 +12,7 @@ typedef enum {
     LIR_DIGIT, /// an integer literal
     LIR_STRING, /// a string literal
     LIR_BOOL, /// a boolean literal
+    LIR_NULL, /// a null literal
 
     LIR_NAME, /// read from an address
     LIR_ACCESS, /// get the address of a field in an aggregate type
@@ -255,6 +256,7 @@ lir_t *lir_int(node_t *node, const type_t *type, int digit);
 lir_t *lir_digit(node_t *node, const type_t *type, mpz_t digit);
 lir_t *lir_string(node_t *node, const type_t *type, const char *str);
 lir_t *lir_bool(node_t *node, const type_t *type, bool value);
+lir_t *lir_null(node_t *node, const type_t *type);
 
 lir_t *lir_access(node_t *node, const type_t *type, lir_t *it, size_t index);
 lir_t *lir_name(node_t *node, const type_t *type, lir_t *it);

@@ -52,6 +52,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     BREAK "`break`"
     LAMBDA "`lambda`"
     TYPE "`type`"
+    NIL "`null`"
     SEMI "`;`"
     ASSIGN "`=`"
     LPAREN "`(`"
@@ -152,7 +153,7 @@ attribute: AT attrib { $$ = vector_init($2); }
     ;
 
 attribs: attrib { $$ = vector_init($1); }
-    | attribs attrib { vector_push(&$1, $2); $$ = $1; }
+    | attribs COMMA attrib { vector_push(&$1, $3); $$ = $1; }
     ;
 
 attrib: IDENT { $$ = ctu_attrib(x, @$, $1, vector_new(0)); }
@@ -284,6 +285,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | YES { $$ = ctu_bool(x, @$, true); }
     | NO { $$ = ctu_bool(x, @$, false); }
     | STRING { $$ = ctu_string(x, @$, $1); }
+    | NIL { $$ = ctu_null(x, @$); }
     ;
 
 postfix: primary { $$ = $1; }

@@ -143,6 +143,14 @@ const char *value_to_string(reports_t *reports, const value_t *value) {
         return "literal";
     }
 
+    /**
+     * the only wait a pointer can be literal is if its the null pointer 
+     * this might change in the future but for now this works
+     */
+    if (is_pointer(type)) {
+        return format("(void*)0");
+    }
+
     ctu_assert(reports, "unknown value type `%s`", type_format(type));
 
     return "???";

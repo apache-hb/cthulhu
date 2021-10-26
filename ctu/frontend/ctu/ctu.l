@@ -40,6 +40,7 @@
 "import" { return IMPORT; }
 "lambda" { return LAMBDA; }
 "type" { return TYPE; }
+"null" { return NIL; }
 
 [$a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);

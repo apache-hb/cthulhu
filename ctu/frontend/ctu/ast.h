@@ -18,6 +18,7 @@ typedef enum {
     CTU_ACCESS,
     CTU_CAST,
     CTU_LAMBDA,
+    CTU_NULL,
 
     CTU_STMTS,
     CTU_RETURN,
@@ -132,6 +133,7 @@ ctu_t *ctu_digit(scan_t *scan, where_t where, mpz_t digit);
 ctu_t *ctu_path(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_bool(scan_t *scan, where_t where, bool value);
 ctu_t *ctu_string(scan_t *scan, where_t where, const char *str);
+ctu_t *ctu_null(scan_t *scan, where_t where);
 
 /* expressions */
 ctu_t *ctu_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *operand);
