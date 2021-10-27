@@ -138,9 +138,8 @@ static const char *symbol_name(const lir_t *lir) {
     return format("anon%ld_%ld", where.first_line, where.first_column);
 }
 
-static block_t *init_block(lir_t *decl, const type_t *type) {
+static block_t *init_block(const char *name, lir_t *decl, const type_t *type) {
     /* itanium only mangles functions */
-    const char *name = symbol_name(decl);
     block_t *block = new_define(name, decl->node, type, decl->attribs);
 
     if (lir_is(decl, LIR_DEFINE)) {
@@ -158,7 +157,13 @@ static block_t *init_block(lir_t *decl, const type_t *type) {
 }
 
 static block_t *block_declare(lir_t *lir) {
-    block_t *block = init_block(lir, lir_type(lir));
+    block_t *block = init_block(symbol_name(lir), lir, lir_type(lir));
+    lir->data = block;
+    return block;
+}
+
+static block_t *local_declare(lir_t *lir) {
+    block_t *block = init_block(get_name(lir), lir, lir_type(lir));
     lir->data = block;
     return block;
 }
@@ -188,7 +193,7 @@ static void build_define(vector_t **strings, reports_t *reports, module_t *mod, 
     vector_t *locals = define->locals;
 
     for (size_t i = 0; i < vector_len(locals); i++) {
-        block_declare(vector_get(locals, i));
+        local_declare(vector_get(locals, i));
     }
 
     lir_t *body = define->body;

@@ -325,10 +325,12 @@ static void write_locals(context_t *ctx, const block_t *block) {
     for (size_t i = 0; i < len; i++) {
         const block_t *local = vector_get(locals, i);
         const char *name = local->name;
-        const type_t *type = local->type;
-        const char *it = type_to_string(ctx->reports, type, name);
+        if (name != NULL) {
+            const type_t *type = local->type;
+            const char *it = type_to_string(ctx->reports, type, name);
 
-        stream_write(ctx->result, format("  %s;\n", it));
+            stream_write(ctx->result, format("  %s;\n", it));
+        }
     }
 }
 

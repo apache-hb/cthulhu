@@ -388,8 +388,16 @@ lir_t *compile_stmts(sema_t *sema, ctu_t *stmts) {
     return lir_stmts(stmts->node, result);
 }
 
+static lir_t *compile_noop(node_t *node) {
+    return lir_stmts(node, vector_new(0));
+}
+
 static lir_t *compile_local(sema_t *sema, ctu_t *stmt) {
     lir_t *value = local_value(sema, stmt);
+    if (is_discard(get_name(value))) {
+        return compile_noop(stmt->node);
+    }
+
     add_local(sema, value);
     if (!is_discard(stmt->name)) {
         add_var(sema, stmt->name, value);
@@ -397,10 +405,9 @@ static lir_t *compile_local(sema_t *sema, ctu_t *stmt) {
 
     if (value->init) {
         return lir_assign(stmt->node, value, value->init);
-    } 
+    }
 
-    /* basically a no-op */
-    return lir_stmts(stmt->node, vector_new(0));
+    return compile_noop(stmt->node);
 }
 
 static lir_t *compile_return(sema_t *sema, ctu_t *stmt) {
