@@ -15,7 +15,6 @@ typedef enum {
     LIR_NULL, /// a null literal
 
     LIR_NAME, /// read from an address
-    LIR_ACCESS, /// get the address of a field in an aggregate type
     LIR_BINARY, /// a binary operation
     LIR_UNARY, /// a uary operation
     LIR_CALL, /// calling an address with parameters
@@ -53,7 +52,7 @@ typedef struct lir_t {
     node_t *node;
 
     /* the type this node resolved to */
-    const type_t *type;
+    const type_t *_type;
 
     union {
         /**
@@ -258,15 +257,13 @@ lir_t *lir_string(node_t *node, const type_t *type, const char *str);
 lir_t *lir_bool(node_t *node, const type_t *type, bool value);
 lir_t *lir_null(node_t *node, const type_t *type);
 
-lir_t *lir_access(node_t *node, const type_t *type, lir_t *it, size_t index);
 lir_t *lir_name(node_t *node, const type_t *type, lir_t *it);
 
+lir_t *lir_convert(node_t *node, const type_t *type, lir_t *expr);
 lir_t *lir_binary(node_t *node, const type_t *type, binary_t binary, lir_t *lhs, lir_t *rhs);
 lir_t *lir_unary(node_t *node, const type_t *type, unary_t unary, lir_t *operand);
-lir_t *lir_call(node_t *node, 
-                const type_t *type, 
-                lir_t *func, 
-                vector_t *args);
+lir_t *lir_call(node_t *node, const type_t *type, lir_t *func, vector_t *args);
+lir_t *lir_index(node_t *node, const type_t *type, lir_t *it, lir_t *offset);
 
 lir_t *lir_detail_sizeof(node_t *node, const type_t *type);
 lir_t *lir_detail_alignof(node_t *node, const type_t *type);
@@ -301,6 +298,7 @@ bool lir_is(const lir_t *lir, leaf_t leaf);
 vector_t *lir_recurses(lir_t *lir, const lir_t *root);
 char *print_lir(const lir_t *lir);
 const type_t *lir_type(const lir_t *lir);
+void retype_lir(lir_t *lir, const type_t *type);
 
 bool has_name(const lir_t *lir);
 const char *get_name(const lir_t *lir);

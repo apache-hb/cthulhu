@@ -44,6 +44,10 @@ type_t *type_digit(sign_t sign, int_t kind) {
     return type_digit_with_name(NULL, sign, kind);
 }
 
+type_t *type_usize(void) {
+    return type_digit(UNSIGNED, TY_SIZE);
+}
+
 type_t *type_void(void) {
     return type_new(TY_VOID);
 }

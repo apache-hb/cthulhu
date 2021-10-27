@@ -15,10 +15,10 @@ typedef enum {
     CTU_UNARY,
     CTU_BINARY,
     CTU_CALL,
-    CTU_ACCESS,
     CTU_CAST,
     CTU_LAMBDA,
     CTU_NULL,
+    CTU_INDEX,
 
     CTU_STMTS,
     CTU_RETURN,
@@ -57,7 +57,10 @@ typedef struct ctu_t {
 
         const char *str;
 
-        struct ctu_t *ptr;
+        struct {
+            struct ctu_t *ptr;
+            bool subscript;
+        };
 
         struct {
             unary_t unary;
@@ -68,6 +71,11 @@ typedef struct ctu_t {
             struct ctu_t *object;
             const char *field;
             bool indirect;
+        };
+
+        struct {
+            struct ctu_t *array;
+            struct ctu_t *index;
         };
 
         struct {
@@ -139,9 +147,9 @@ ctu_t *ctu_null(scan_t *scan, where_t where);
 ctu_t *ctu_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *operand);
 ctu_t *ctu_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs);
 ctu_t *ctu_call(scan_t *scan, where_t where, ctu_t *func, vector_t *args);
-ctu_t *ctu_access(scan_t *scan, where_t where, ctu_t *object, const char *field, bool indirect);
 ctu_t *ctu_cast(scan_t *scan, where_t where, ctu_t *expr, ctu_t *type);
 ctu_t *ctu_lambda(scan_t *scan, where_t where, vector_t *params, ctu_t *result, ctu_t *body);
+ctu_t *ctu_index(scan_t *scan, where_t where, ctu_t *array, ctu_t *index);
 
 /* statements */
 ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts);
@@ -152,7 +160,7 @@ ctu_t *ctu_branch(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *
 ctu_t *ctu_break(scan_t *scan, where_t where);
 
 /* types */
-ctu_t *ctu_pointer(scan_t *scan, where_t where, ctu_t *ptr);
+ctu_t *ctu_pointer(scan_t *scan, where_t where, ctu_t *ptr, bool subscript);
 ctu_t *ctu_typename(scan_t *scan, where_t where, const char *name);
 ctu_t *ctu_typepath(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_closure(scan_t *scan, where_t where, vector_t *args, ctu_t *result);

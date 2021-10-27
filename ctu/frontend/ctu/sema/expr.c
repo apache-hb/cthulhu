@@ -219,8 +219,6 @@ static lir_t *compile_name(sema_t *sema, const char *name, ctu_t *expr) {
         return compile_define(func);
     }
 
-    printf("unresolved: %s in %s\n", name, sema->path);
-
     report(sema->reports, ERROR, expr->node, "failed to resolve `%s`", name);
     return lir_poison(expr->node, "unresolved name");
 }
@@ -254,42 +252,29 @@ static lir_t *compile_path(sema_t *sema, vector_t *path, ctu_t *expr) {
     return lir_poison(expr->node, "unresolved path");
 }
 
-static lir_t *compile_access(sema_t *sema, ctu_t *expr) {
-    lir_t *obj = compile_expr(sema, expr->object);
-    const type_t *type = lir_type(obj);
-    const type_t *aggregate = is_pointer(type) ? type->ptr : type;
-    
-    bool error = false;
-
-    if (is_pointer(type) && !expr->indirect) {
-        message_t *id = report(sema->reports, ERROR, expr->node, "cannot directly access pointer type `%s`", type_format(type));
-        report_underline(id, "use `->` for accessing pointers to aggregates");
-        error = true;
-    } else if (!is_pointer(type) && expr->indirect) {
-        message_t *id = report(sema->reports, ERROR, expr->node, "cannot indirectly access non-pointer type `%s`", type_format(type));
-        report_underline(id, "use `.` for accessing aggregates");
-        error = true;
-    }
-
-    if (!is_aggregate(aggregate) && !error) {
-        message_t *id = report(sema->reports, ERROR, expr->node, "only aggregate types can be accessed");
-        report_underline(id, "`%s` is not an aggregate type", type_format(type));
-        report_note(id, "user defined structs and unions are aggregate types");
-        error = true;
-    }
-
-    size_t field_index = field_offset(type, expr->field);
-    if (field_index == SIZE_MAX && !error) {
-        report(sema->reports, ERROR, expr->node, "type `%s` has no field named `%s`", type_format(aggregate), expr->field);
-    }
-
-    const type_t *field_type = get_field(aggregate, field_index);
-
-    return lir_access(expr->node, field_type, obj, field_index);
-}
-
 static lir_t *compile_string(ctu_t *expr) {
     return lir_string(expr->node, type_string(), expr->str);
+}
+
+static lir_t *compile_index(sema_t *sema, ctu_t *index) {
+    lir_t *expr = compile_lvalue(sema, index->array);
+    lir_t *subscript = compile_expr(sema, index->index);
+
+    lir_t *it = convert_expr(sema, subscript, type_usize());
+    if (it == NULL) {
+        report(sema->reports, ERROR, index->node, "index type must be convertible to `usize`");
+        return lir_poison(index->node, "invalid index type");
+    }
+
+    const type_t *exprtype = lir_type(expr);
+    if (!type_can_index(exprtype)) {
+        report(sema->reports, ERROR, index->node, "cannot index into type `%s`", type_format(exprtype));
+        return lir_poison(index->node, "invalid array type");
+    }
+
+    const type_t *subtype = index_type(exprtype);
+
+    return lir_index(index->node, subtype, expr, it);
 }
 
 static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
@@ -306,7 +291,7 @@ static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
         return lir_poison(expr->node, "malformed lvalue");
 
     case CTU_PATH: return compile_path(sema, expr->path, expr);
-    case CTU_ACCESS: return compile_access(sema, expr);
+    case CTU_INDEX: return compile_index(sema, expr);
 
     default:
         ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);
@@ -317,10 +302,14 @@ static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
 static lir_t *compile_cast(sema_t *sema, ctu_t *expr) {
     lir_t *it = compile_expr(sema, expr->src);
     type_t *type = compile_type(sema, expr->dst);
+    lir_t *cast = convert_expr(sema, it, type);
 
-    it->type = type;
+    if (cast == NULL) {
+        report(sema->reports, ERROR, expr->node, "cannot convert `%s` to `%s`", type_format(lir_type(it)), type_format(type));
+        return lir_poison(expr->node, "invalid cast");
+    }
 
-    return it;
+    return cast;
 }
 
 static lir_t *compile_lambda(sema_t *sema, ctu_t *expr) {
@@ -362,11 +351,11 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_BINARY: return compile_binary(sema, expr);
     case CTU_CALL: return compile_call(sema, expr);
     case CTU_PATH: return compile_path(sema, expr->path, expr);
-    case CTU_ACCESS: return name_expr(expr->node, compile_access(sema, expr));
     case CTU_STRING: return compile_string(expr);
     case CTU_CAST: return compile_cast(sema, expr);
     case CTU_LAMBDA: return compile_lambda(sema, expr);
     case CTU_NULL: return compile_null(expr);
+    case CTU_INDEX: return name_expr(expr->node, compile_index(sema, expr));
 
     default:
         ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);

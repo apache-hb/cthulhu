@@ -138,3 +138,9 @@ type_t *common_type(const type_t *lhs, const type_t *rhs) {
 
     return type_poison("cannot find common type");
 }
+
+lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *type) {
+    const type_t *exprtype = lir_type(expr);
+
+    
+}

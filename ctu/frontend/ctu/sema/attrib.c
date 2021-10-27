@@ -58,7 +58,7 @@ static void section_attrib(reports_t *reports, attrib_t *dst, vector_t *args) {
 static lir_t *sizeof_detail(sema_t *sema, type_t *type, ctu_t *ctu) {
     lir_t *lir = lir_forward(ctu->node, NULL, LIR_DEFINE, NULL);
     lir_define(sema->reports, lir,
-        type_closure(vector_new(0), type_digit(UNSIGNED, TY_SIZE)),
+        type_closure(vector_new(0), type_usize()),
         vector_new(0),
         lir_return(ctu->node, lir_detail_sizeof(ctu->node, type))
     );
@@ -71,7 +71,7 @@ static lir_t *sizeof_detail(sema_t *sema, type_t *type, ctu_t *ctu) {
 static lir_t *alignof_detail(sema_t *sema, type_t *type, ctu_t *ctu) {
     lir_t *lir = lir_forward(ctu->node, NULL, LIR_DEFINE, NULL);
     lir_define(sema->reports, lir,
-        type_closure(vector_new(0), type_digit(UNSIGNED, TY_SIZE)),
+        type_closure(vector_new(0), type_usize()),
         vector_new(0),
         lir_return(ctu->node, lir_detail_alignof(ctu->node, type))
     );

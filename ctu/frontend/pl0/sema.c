@@ -206,7 +206,7 @@ static lir_t *compile_assign(sema_t *sema, pl0_t *stmt) {
 
     lir_t *rhs = compile_expr(sema, stmt->src);
 
-    if (is_const(lhs->type)) {
+    if (is_const(lir_type(lhs))) {
         report(sema->reports, ERROR, node, "cannot assign to const value `%s`", name);
     }
 

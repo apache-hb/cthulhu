@@ -75,7 +75,8 @@ lir_t *compile_define(lir_t *lir) {
     }
     
     state_t *ctx = lir->ctx;
-    lir->type = realise_closure(ctx->sema, ctx->ctu);
+    const type_t *it = realise_closure(ctx->sema, ctx->ctu);
+    retype_lir(lir, it);
     return lir;
 }
 

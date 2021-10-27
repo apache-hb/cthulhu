@@ -64,6 +64,18 @@ bool is_varargs(const type_t *type) {
     return type->type == TY_VARARGS;
 }
 
+bool type_can_index(const type_t *type) {
+    return is_pointer(type);
+}
+
+const type_t *index_type(const type_t *type) {
+    if (!type_can_index(type)) {
+        return type_poison("invalid index type");
+    }
+
+    return type->ptr;
+}
+
 bool is_variadic(const type_t *type) {
     if (!is_closure(type)) {
         return false;

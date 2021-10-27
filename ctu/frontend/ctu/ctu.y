@@ -216,7 +216,8 @@ param: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
     ;
 
 type: path { $$ = ctu_typepath(x, @$, $1); }
-    | MUL type { $$ = ctu_pointer(x, @$, $2); }
+    | MUL type { $$ = ctu_pointer(x, @$, $2, false); }
+    | LSQUARE MUL RSQUARE type { $$ = ctu_pointer(x, @$, $4, true); }
     | closure { $$ = $1; }
     | VAR LPAREN type RPAREN { $$ = ctu_mutable(x, @$, $3); }
     ;
@@ -290,9 +291,10 @@ primary: LPAREN expr RPAREN { $$ = $2; }
 
 postfix: primary { $$ = $1; }
     | postfix LPAREN arglist RPAREN { $$ = ctu_call(x, @$, $1, $3); }
-    | postfix DOT IDENT { $$ = ctu_access(x, @$, $1, $3, false); }
-    | postfix ARROW IDENT { $$ = ctu_access(x, @$, $1, $3, true); }
+    //| postfix DOT IDENT { $$ = ctu_access(x, @$, $1, $3, false); }
+    //| postfix ARROW IDENT { $$ = ctu_access(x, @$, $1, $3, true); }
     | postfix AS type { $$ = ctu_cast(x, @$, $1, $3); }
+    | postfix LSQUARE expr RSQUARE { $$ = ctu_index(x, @$, $1, $3); }
     ;
 
 unary: postfix { $$ = $1; }

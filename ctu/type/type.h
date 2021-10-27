@@ -116,6 +116,7 @@ type_t *type_any(void);
  */
 type_t *type_digit(sign_t sign, int_t kind);
 type_t *type_digit_with_name(const char *name, sign_t sign, int_t kind);
+type_t *type_usize(void);
 
 /**
  * create a void type
@@ -210,6 +211,9 @@ size_t field_offset(const type_t *type, const char *name);
 const type_t *get_field(const type_t *type, size_t idx);
 
 const char *get_poison_type_message(const type_t *type);
+const type_t *index_type(const type_t *type);
+
+bool type_can_index(const type_t *type);
 
 /**
  * return a common type of lhs and rhs if possible.

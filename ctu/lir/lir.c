@@ -6,7 +6,7 @@ static lir_t *lir_new(node_t *node, const type_t *type, leaf_t leaf) {
     lir_t *lir = ctu_malloc(sizeof(lir_t));
     lir->node = node;
     lir->leaf = leaf;
-    lir->type = type;
+    lir->_type = type;
     lir->data = NULL;
     return lir;
 }
@@ -84,15 +84,6 @@ lir_t *lir_null(node_t *node, const type_t *type) {
     return lir_new(node, type, LIR_NULL);
 }
 
-lir_t *lir_access(node_t *node, const type_t *type, lir_t *it, size_t field) {
-    lir_t *lir = lir_new(node, type, LIR_ACCESS);
-
-    lir->it = it;
-    lir->offset = field;
-
-    return lir;
-}
-
 lir_t *lir_name(node_t *node, const type_t *type, lir_t *it) {
     lir_t *lir = lir_new(node, type, LIR_NAME);
 
@@ -130,7 +121,7 @@ lir_t *lir_call(node_t *node, const type_t *type, lir_t *func, vector_t *args) {
 }
 
 lir_t *lir_detail_sizeof(node_t *node, const type_t *type) {
-    lir_t *lir = lir_new(node, type_digit(UNSIGNED, TY_SIZE), LIR_DETAIL_SIZEOF);
+    lir_t *lir = lir_new(node, type_usize(), LIR_DETAIL_SIZEOF);
 
     lir->of = type;
 
@@ -138,7 +129,7 @@ lir_t *lir_detail_sizeof(node_t *node, const type_t *type) {
 }
 
 lir_t *lir_detail_alignof(node_t *node, const type_t *type) {
-    lir_t *lir = lir_new(node, type_digit(UNSIGNED, TY_SIZE), LIR_DETAIL_ALIGNOF);
+    lir_t *lir = lir_new(node, type_usize(), LIR_DETAIL_ALIGNOF);
 
     lir->of = type;
 
@@ -201,7 +192,7 @@ void lir_value(reports_t *reports, lir_t *dst, const type_t *type, lir_t *init) 
     }
 
     dst->leaf = LIR_VALUE;
-    dst->type = type;
+    dst->_type = type;
     dst->init = init;
 }
 
@@ -211,14 +202,14 @@ void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *lo
     }
 
     dst->leaf = LIR_DEFINE;
-    dst->type = type;
+    dst->_type = type;
     dst->locals = locals;
     dst->body = body;   
 }
 
 lir_t *lir_param(node_t *node, const char *name, const type_t *type, size_t index) {
     lir_t *lir = lir_decl(node, LIR_PARAM, name);
-    lir->type = type;
+    lir->_type = type;
     lir->index = index;
     return lir;
 }
@@ -283,7 +274,11 @@ vector_t *lir_recurses(lir_t *lir, const lir_t *root) {
 }
 
 const type_t *lir_type(const lir_t *lir) {
-    return lir->type;
+    return lir->_type;
+}
+
+void retype_lir(lir_t *lir, const type_t *type) {
+    lir->_type = type;
 }
 
 const char *get_name(const lir_t *lir) {

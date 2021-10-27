@@ -80,16 +80,6 @@ ctu_t *ctu_call(scan_t *scan, where_t where, ctu_t *func, vector_t *args) {
     return ctu;
 }
 
-ctu_t *ctu_access(scan_t *scan, where_t where, ctu_t *object, const char *field, bool indirect) {
-    ctu_t *ctu = ctu_new(scan, where, CTU_ACCESS);
-
-    ctu->object = object;
-    ctu->field = field;
-    ctu->indirect = indirect;
-
-    return ctu;
-}
-
 ctu_t *ctu_cast(scan_t *scan, where_t where, ctu_t *expr, ctu_t *type) {
     ctu_t *ctu = ctu_new(scan, where, CTU_CAST);
 
@@ -105,6 +95,15 @@ ctu_t *ctu_lambda(scan_t *scan, where_t where, vector_t *params, ctu_t *result, 
     ctu->params = params;
     ctu->result = result;
     ctu->body = body;
+
+    return ctu;
+}
+
+ctu_t *ctu_index(scan_t *scan, where_t where, ctu_t *array, ctu_t *index) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_INDEX);
+
+    ctu->array = array;
+    ctu->index = index;
 
     return ctu;
 }
@@ -155,12 +154,11 @@ ctu_t *ctu_break(scan_t *scan, where_t where) {
     return ctu_new(scan, where, CTU_BREAK);
 }
 
-ctu_t *ctu_pointer(scan_t *scan, where_t where, 
-                   ctu_t *ptr)
-{
+ctu_t *ctu_pointer(scan_t *scan, where_t where, ctu_t *ptr, bool subscript) {
     ctu_t *ctu = ctu_new(scan, where, CTU_POINTER);
 
     ctu->ptr = ptr;
+    ctu->subscript = subscript;
 
     return ctu;
 }
