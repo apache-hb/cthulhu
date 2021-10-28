@@ -5,69 +5,45 @@
 #include <stddef.h>
 
 // String literals
-const char *strtab0 = "x[%d] = %d\n";
 // Imported symbols
-extern void* malloc(size_t arg0);
-extern signed int printf(const signed char* arg0, ...);
 
 // Global forwarding
 
 // Function forwarding
-void main();
-size_t anon8_19();
+signed int main(signed int arg0, signed int arg1, _Bool arg2);
+_Bool a();
 
 // Global initialization
 
 // Function definitions
-void main() {
-  signed int* x;
-  signed int loop;
-  signed int i;
-  size_t vreg0 = (*&anon8_19)();
-  size_t vreg1 = vreg0 * (signed int)64;
-  void* vreg2 = (*&malloc)(vreg1);
-  signed int* vreg3 = (signed int*)vreg2;
-  *&x = vreg3;
-  *&loop = (signed int)0;
-block6: /* empty */;
-  signed int vreg7 = *&loop;
-  _Bool vreg8 = vreg7 < (signed int)64;
-  if (vreg8) { goto block10; } else { goto block22; }
-block10: /* empty */;
-  signed int* vreg11 = *&x;
-  signed int vreg12 = *&loop;
-  size_t vreg13 = (size_t)vreg12;
-  signed int* vreg14 = vreg11 + vreg13;
-  signed int vreg15 = *&loop;
-  *vreg14 = vreg15;
-  signed int vreg17 = *&loop;
-  signed int vreg18 = *&loop;
-  signed int vreg19 = vreg18 + (signed int)1;
-  *vreg17 = vreg19;
-  goto block6;
-block22: /* empty */;
-  *&i = (signed int)0;
-block24: /* empty */;
-  signed int vreg25 = *&i;
-  _Bool vreg26 = vreg25 < (signed int)64;
-  if (vreg26) { goto block28; } else { goto block41; }
-block28: /* empty */;
-  signed int vreg29 = *&i;
-  signed int* vreg30 = *&x;
-  signed int vreg31 = *&i;
-  size_t vreg32 = (size_t)vreg31;
-  signed int* vreg33 = vreg30 + vreg32;
-  signed int vreg34 = *vreg33;
-  signed int vreg35 = (*&printf)(strtab0, vreg29, vreg34);
-  signed int vreg36 = *&i;
-  signed int vreg37 = *&i;
-  signed int vreg38 = vreg37 + (signed int)1;
-  *vreg36 = vreg38;
-  goto block24;
-block41: /* empty */;
+signed int main(signed int arg0, signed int arg1, _Bool arg2) {
   return;
 }
-size_t anon8_19() {
-  size_t vreg0 = sizeof(signed int);
-  return vreg0;
+_Bool a() {
+  signed int x64;
+  signed int y98;
+  signed int y114;
+  signed int z134;
+  signed int vreg0 = (*&main)((signed int)0, (signed int)200, 0);
+  *&x64 = vreg0;
+  signed int vreg2 = *&x64;
+  _Bool vreg3 = vreg2 == (signed int)200;
+  if (vreg3) { goto block5; } else { goto block9; }
+block5: /* empty */;
+  signed int vreg6 = *&x64;
+  *&y98 = vreg6;
+  goto block9;
+block9: /* empty */;
+  signed int vreg10 = *&x64;
+  signed int vreg11 = *&x64;
+  signed int vreg12 = *&x64;
+  signed int vreg13 = vreg11 / vreg12;
+  signed int vreg14 = vreg10 + vreg13;
+  *&y114 = vreg14;
+  signed int vreg16 = *&x64;
+  signed int vreg17 = vreg16 * (signed int)100;
+  *&z134 = vreg17;
+  signed int vreg19 = *&y114;
+  _Bool vreg20 = vreg19 != (signed int)0;
+  return vreg20;
 }

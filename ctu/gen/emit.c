@@ -115,10 +115,15 @@ static operand_t build_return(context_t *ctx, lir_t *lir, operand_t op) {
     return add_step(ctx, step);
 }
 
+static const char *local_name(const lir_t *lir) {
+    where_t where = lir->node->where;
+    return format("%s%zu%zu", get_name(lir), where.first_line, where.first_column);
+}
+
 static block_t *lir_named(const lir_t *lir) {
     return new_block(
         BLOCK_SYMBOL, 
-        get_name(lir), 
+        local_name(lir), 
         lir->node, 
         lir_type(lir)
     );
@@ -163,7 +168,7 @@ static block_t *block_declare(lir_t *lir) {
 }
 
 static block_t *local_declare(lir_t *lir) {
-    block_t *block = init_block(get_name(lir), lir, lir_type(lir));
+    block_t *block = init_block(local_name(lir), lir, lir_type(lir));
     lir->data = block;
     return block;
 }
