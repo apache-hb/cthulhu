@@ -199,11 +199,11 @@ static lir_t *compile_call(sema_t *sema, ctu_t *expr) {
     return lir_call(expr->node, closure_result(fty), func, args);
 }
 
-static lir_t *name_expr(node_t *node, lir_t *lir) {
-    return lir_name(node, lir_type(lir), lir);
+static lir_t *read_expr(node_t *node, lir_t *lir) {
+    return lir_read(node, lir_type(lir), lir);
 }
 
-static lir_t *compile_name(sema_t *sema, const char *name, ctu_t *expr) {
+static lir_t *compile_read(sema_t *sema, const char *name, ctu_t *expr) {
     if (is_discard(name)) {
         report(sema->reports, ERROR, expr->node, "reading from a discarded identifier `%s`", name);
     }
@@ -211,7 +211,7 @@ static lir_t *compile_name(sema_t *sema, const char *name, ctu_t *expr) {
     lir_t *var = get_var(sema, name);
     if (var != NULL) {
         return lir_is(var, LIR_PARAM) 
-            ? var : name_expr(expr->node, compile_value(var));
+            ? var : read_expr(expr->node, compile_value(var));
     }
 
     lir_t *func = get_func(sema, name);
@@ -231,7 +231,7 @@ static lir_t *compile_path(sema_t *sema, vector_t *path, ctu_t *expr) {
     size_t len = vector_len(path);
 
     if (len == 1) {
-        return compile_name(sema, vector_head(path), expr);
+        return compile_read(sema, vector_head(path), expr);
     }
 
     sema_t *nest = get_module(sema, vector_head(path));
@@ -260,7 +260,7 @@ static lir_t *compile_index(sema_t *sema, ctu_t *index) {
     lir_t *expr = compile_lvalue(sema, index->array);
     lir_t *subscript = compile_expr(sema, index->index);
 
-    lir_t *it = convert_expr(sema, subscript, type_usize());
+    lir_t *it = implicit_convert_expr(sema, subscript, type_usize());
     if (it == NULL) {
         report(sema->reports, ERROR, index->node, "index type must be convertible to `usize`");
         return lir_poison(index->node, "invalid index type");
@@ -274,7 +274,7 @@ static lir_t *compile_index(sema_t *sema, ctu_t *index) {
 
     const type_t *subtype = index_type(exprtype);
 
-    return lir_index(index->node, subtype, expr, it);
+    return lir_offset(index->node, subtype, expr, it);
 }
 
 static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
@@ -302,7 +302,7 @@ static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
 static lir_t *compile_cast(sema_t *sema, ctu_t *expr) {
     lir_t *it = compile_expr(sema, expr->src);
     type_t *type = compile_type(sema, expr->dst);
-    lir_t *cast = convert_expr(sema, it, type);
+    lir_t *cast = explicit_convert_expr(sema, it, type);
 
     if (cast == NULL) {
         report(sema->reports, ERROR, expr->node, "cannot convert `%s` to `%s`", type_format(lir_type(it)), type_format(type));
@@ -355,7 +355,7 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_CAST: return compile_cast(sema, expr);
     case CTU_LAMBDA: return compile_lambda(sema, expr);
     case CTU_NULL: return compile_null(expr);
-    case CTU_INDEX: return name_expr(expr->node, compile_index(sema, expr));
+    case CTU_INDEX: return read_expr(expr->node, compile_index(sema, expr));
 
     default:
         ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);

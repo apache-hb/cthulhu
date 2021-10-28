@@ -10,8 +10,10 @@ typedef enum {
     OP_EMPTY,
     OP_UNARY,
     OP_BINARY,
+    OP_OFFSET,
     OP_CALL,
     OP_RETURN,
+    OP_CAST,
 
     OP_LOAD,
     OP_STORE,

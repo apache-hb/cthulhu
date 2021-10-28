@@ -1,8 +1,8 @@
-def set(x: *var(int)): void {
+def set(x: *var int): void {
     *x = 25;
 }
 
-def forward(x: var(int)) : void {
+def forward(x: var int) : void {
     set(&x);
 }
 

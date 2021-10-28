@@ -201,10 +201,10 @@ static void build_define(vector_t **strings, reports_t *reports, module_t *mod, 
     build_return(&ctx, body, op);
 }
 
-static operand_t compile_load(context_t *ctx, lir_t *lir, operand_t op) {
+static operand_t compile_load(context_t *ctx, lir_t *lir, operand_t op, operand_t off) {
     step_t step = step_with_type(OP_LOAD, lir->node, lir_type(lir));
     step.src = op;
-    step.offset = operand_imm(ctx->reports, value_zero());
+    step.offset = off;
     return add_step(ctx, step);
 }
 
@@ -212,7 +212,7 @@ static operand_t emit_unary(context_t *ctx, lir_t *lir) {
     unary_t unary = lir->unary;
     switch (unary) {
     case UNARY_ADDR: return emit_lir(ctx, lir->operand);
-    case UNARY_DEREF: return compile_load(ctx, lir, emit_lir(ctx, lir->operand));
+    case UNARY_DEREF: return compile_load(ctx, lir, emit_lir(ctx, lir->operand), operand_empty());
     default: break;
     }
 
@@ -338,8 +338,11 @@ static operand_t emit_branch(context_t *ctx, lir_t *lir) {
     return branch;
 }
 
-static operand_t emit_name(context_t *ctx, lir_t *lir) {
-    return compile_load(ctx, lir, emit_lir(ctx, lir->it));
+static operand_t emit_read(context_t *ctx, lir_t *lir) {
+    operand_t offset = lir->offset == NULL
+        ? operand_empty()
+        : emit_lir(ctx, lir->offset);
+    return compile_load(ctx, lir, emit_lir(ctx, lir->src), offset);
 }
 
 static operand_t emit_call(context_t *ctx, lir_t *lir) {
@@ -413,6 +416,22 @@ static operand_t emit_null(context_t *ctx, lir_t *lir) {
     return operand_imm(ctx->reports, value_int(lir->node, lir_type(lir), 0));
 }
 
+static operand_t emit_cast(context_t *ctx, lir_t *lir) {
+    operand_t it = emit_lir(ctx, lir->src);
+    step_t step = step_of(OP_CAST, lir);
+    step.src = it;
+    return add_step(ctx, step);
+}
+
+static operand_t emit_offset(context_t *ctx, lir_t *lir) {
+    operand_t it = emit_lir(ctx, lir->src);
+    operand_t offset = emit_lir(ctx, lir->offset);
+    step_t step = step_of(OP_OFFSET, lir);
+    step.src = it;
+    step.offset = offset;
+    return add_step(ctx, step);
+}
+
 static operand_t emit_lir(context_t *ctx, lir_t *lir) {
     switch (lir->leaf) {
     case LIR_UNARY: return emit_unary(ctx, lir);
@@ -425,7 +444,7 @@ static operand_t emit_lir(context_t *ctx, lir_t *lir) {
     case LIR_ASSIGN: return emit_assign(ctx, lir);
     case LIR_WHILE: return emit_while(ctx, lir);
     case LIR_BRANCH: return emit_branch(ctx, lir);
-    case LIR_NAME: return emit_name(ctx, lir);
+    case LIR_READ: return emit_read(ctx, lir);
     case LIR_CALL: return emit_call(ctx, lir);
     case LIR_VALUE: return emit_value(lir);
     case LIR_DEFINE: return emit_define(lir);
@@ -434,6 +453,8 @@ static operand_t emit_lir(context_t *ctx, lir_t *lir) {
     case LIR_POISON: return emit_poison(ctx, lir);
     case LIR_FORWARD: return emit_forward(ctx, lir);
     case LIR_BREAK: return emit_break(ctx, lir);
+    case LIR_CAST: return emit_cast(ctx, lir);
+    case LIR_OFFSET: return emit_offset(ctx, lir);
 
     case LIR_DETAIL_SIZEOF: return emit_sizeof(ctx, lir);
     case LIR_DETAIL_ALIGNOF: return emit_alignof(ctx, lir);

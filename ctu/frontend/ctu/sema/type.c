@@ -139,8 +139,55 @@ type_t *common_type(const type_t *lhs, const type_t *rhs) {
     return type_poison("cannot find common type");
 }
 
-lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *type) {
+static lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *type, bool implicit) {
     const type_t *exprtype = lir_type(expr);
 
-    
+    /**
+     * casting from a digit to another digit
+     */
+    if (is_digit(type) && is_digit(exprtype)) {
+        if (implicit) {
+            if (type->digit.kind < exprtype->digit.kind) {
+                report(sema->reports, WARNING, expr->node, "implicit truncation from `%s` to `%s`", type_format(exprtype), type_format(type));
+            }
+
+            if (type->digit.sign != exprtype->digit.sign) {
+                report(sema->reports, WARNING, expr->node, "implicit sign conversion from `%s` to `%s`", type_format(exprtype), type_format(type));
+            }
+        }
+
+        return lir_cast(expr->node, type, expr);
+    }
+
+    /**
+     * casting from a digit to a bool becomes `expr != 0`
+     */
+    if (is_bool(type) && is_digit(exprtype)) {
+        lir_t *zero = lir_int(expr->node, type_digit(SIGNED, TY_INT), 0);
+        return lir_binary(expr->node, type_bool(), BINARY_NEQ, expr, zero);
+    }
+
+    if (implicit) {
+        if (is_pointer(type) && is_pointer(exprtype)) {
+            if (is_voidptr(type) || is_voidptr(exprtype)) {
+                return expr;
+            }
+
+            report(sema->reports, ERROR, expr->node, "implicit conversion from `%s` to `%s`", type_format(exprtype), type_format(type));
+        }
+    } else {
+        if (is_pointer(type) && is_pointer(exprtype)) {
+            return lir_cast(expr->node, type, expr);
+        }
+    }
+
+    return NULL; 
+}
+
+lir_t *implicit_convert_expr(sema_t *sema, lir_t *expr, const type_t *type) {
+    return convert_expr(sema, expr, type, true);
+}
+
+lir_t *explicit_convert_expr(sema_t *sema, lir_t *expr, const type_t *type) {
+    return convert_expr(sema, expr, type, false);
 }

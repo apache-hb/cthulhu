@@ -1,0 +1,14 @@
+@mangle("malloc")
+def malloc(size: usize): *var void;
+
+@mangle("printf")
+def printf(format: *char, args: ...): int;
+
+@entry
+def main {
+    var x = malloc(int::sizeof() * 64) as *var int;
+
+    x[0] = 0;
+
+    printf("x[0] = %d\n", x[0]);
+}

@@ -24,12 +24,9 @@ static void add_builtin(const char *name, type_t *type, callback_t callback) {
     map_set(builtins, name, builtin);
 }
 
-static void add_detail(const char *name, type_t *type, detail_t detail) {
+static void add_detail(const char *name, detail_t detail) {
     builtin_t *builtin = ctu_malloc(sizeof(builtin_t));
-
-    builtin->type = type;
     builtin->detail = detail;
-
     map_set(details, name, builtin);
 }
 
@@ -119,14 +116,16 @@ static void apply_attrib(sema_t *sema, attrib_t *dst, ctu_t *attrib) {
 }
 
 void init_attribs(void) {
+    type_t *voidpfn = type_closure(vector_new(0), type_void());
+    type_t *strpfn = type_closure(vector_init(type_string()), type_void());
     builtins = map_new(MAP_SMALL);
-    add_builtin("entry", type_closure(vector_new(0), type_void()), entry_attrib);
-    add_builtin("mangle", type_closure(vector_init(type_string()), type_void()), mangle_attrib);
-    add_builtin("section", type_closure(vector_init(type_string()), type_void()), section_attrib);
+    add_builtin("entry", voidpfn, entry_attrib);
+    add_builtin("mangle", strpfn, mangle_attrib);
+    add_builtin("section", strpfn, section_attrib);
 
     details = map_new(MAP_SMALL);
-    add_detail("sizeof", NULL, sizeof_detail);
-    add_detail("alignof", NULL, alignof_detail);
+    add_detail("sizeof", sizeof_detail);
+    add_detail("alignof", alignof_detail);
 }
 
 void compile_attribs(sema_t *sema, lir_t *lir, ctu_t *ctu) {

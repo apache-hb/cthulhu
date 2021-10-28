@@ -124,7 +124,7 @@ static lir_t *compile_ident(sema_t *sema, pl0_t *expr) {
     lir_t *val = query_ident(sema, name);
 
     if (val != NULL) {
-        return lir_name(node, lir_type(val), val);
+        return lir_read(node, lir_type(val), val);
     }
 
     message_t *id = report(sema->reports, ERROR, node, "unknown variable name `%s`", name);

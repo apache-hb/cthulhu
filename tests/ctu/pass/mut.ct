@@ -1,4 +1,4 @@
-def main(argc: int, argv: **var(char)): int {
+def main(argc: int, argv: **var char): int {
     **argv = 25;
     return 0;
 }

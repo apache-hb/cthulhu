@@ -219,7 +219,7 @@ type: path { $$ = ctu_typepath(x, @$, $1); }
     | MUL type { $$ = ctu_pointer(x, @$, $2, false); }
     | LSQUARE MUL RSQUARE type { $$ = ctu_pointer(x, @$, $4, true); }
     | closure { $$ = $1; }
-    | VAR LPAREN type RPAREN { $$ = ctu_mutable(x, @$, $3); }
+    | VAR type { $$ = ctu_mutable(x, @$, $2); }
     ;
 
 closure: LPAREN typelist RPAREN ARROW type { $$ = ctu_closure(x, @$, $2, $5); }

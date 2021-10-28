@@ -84,10 +84,10 @@ lir_t *lir_null(node_t *node, const type_t *type) {
     return lir_new(node, type, LIR_NULL);
 }
 
-lir_t *lir_name(node_t *node, const type_t *type, lir_t *it) {
-    lir_t *lir = lir_new(node, type, LIR_NAME);
+lir_t *lir_read(node_t *node, const type_t *type, lir_t *src) {
+    lir_t *lir = lir_new(node, type, LIR_READ);
 
-    lir->it = it;
+    lir->src = src;
 
     return lir;
 }
@@ -98,6 +98,15 @@ lir_t *lir_binary(node_t *node, const type_t *type, binary_t binary, lir_t *lhs,
     lir->binary = binary;
     lir->lhs = lhs;
     lir->rhs = rhs;
+
+    return lir;
+}
+
+lir_t *lir_offset(node_t *node, const type_t *type, lir_t *src, lir_t *offset) {
+    lir_t *lir = lir_new(node, type, LIR_OFFSET);
+
+    lir->src = src;
+    lir->offset = offset;
 
     return lir;
 }
@@ -116,6 +125,14 @@ lir_t *lir_call(node_t *node, const type_t *type, lir_t *func, vector_t *args) {
 
     lir->func = func;
     lir->args = args;
+
+    return lir;
+}
+
+lir_t *lir_cast(node_t *node, const type_t *type, lir_t *expr) {
+    lir_t *lir = lir_new(node, type, LIR_CAST);
+
+    lir->src = expr;
 
     return lir;
 }
@@ -235,9 +252,21 @@ vector_t *lir_recurses(lir_t *lir, const lir_t *root) {
     }
 
     switch (lir->leaf) {
-    case LIR_NAME:
-        result = lir_recurses(lir->it, root);
-        source = lir->it;
+    case LIR_READ:
+        result = lir_recurses(lir->src, root);
+        source = lir->src;
+        break;
+
+    case LIR_OFFSET:
+        if ((result = lir_recurses(lir->src, root))) {
+            source = lir->src;
+            break;
+        }
+
+        if ((result = lir_recurses(lir->offset, root))) {
+            source = lir->offset;
+            break;
+        }
         break;
 
     case LIR_VALUE:

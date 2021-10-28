@@ -11,5 +11,8 @@ for f in glob(f'{testdir}/*.ct'):
         continue
     
     print(f'compiling {f}')
-    check_call([ ctc, f, '--speed', '--c99' ])
-    check_call([ cc, 'out.c', '-c' ])
+    try:
+        check_call([ ctc, f, '-gen', 'c99' ])
+        check_call([ cc, 'out.c', '-c' ])
+    except:
+        print(f'failed to compile {f}')

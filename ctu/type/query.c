@@ -56,6 +56,10 @@ bool is_pointer(const type_t *type) {
     return type->type == TY_PTR;
 }
 
+bool is_voidptr(const type_t *type) {
+    return is_pointer(type) && is_void(type->ptr);
+}
+
 bool is_closure(const type_t *type) {
     return type->type == TY_CLOSURE;
 }

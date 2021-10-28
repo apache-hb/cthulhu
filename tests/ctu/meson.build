@@ -26,7 +26,7 @@ fails = [
     'type-in-expr', 'uninit-global', 'void-var', 'weird', 'large',
     'recurse-lambda',
     'data.loop-complex', 'data.loop-newtype', 'data.loop-ptr',
-    'data.duplicate'
+    'data.duplicate', 'index'
 ]
 
 foreach case : fails
@@ -51,7 +51,7 @@ pass = [
     'simple', 'extern', 'fuzz-10', 'section', 'section-2', 'immediate-invoke',
     'funcs.fwd', 'funcs.single', 'funcs.stmts', 'lambda', 'data.string',
     'imports.first', 'imports.a',
-    'builtins.sizeof'
+    'builtins.sizeof', 'index'
 ]
 
 foreach case : pass

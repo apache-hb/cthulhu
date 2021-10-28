@@ -169,10 +169,15 @@ static char *format_return(reports_t *reports, step_t step) {
 static char *format_load(reports_t *reports, size_t idx, step_t step) {
     char *vreg = format_vreg(idx);
     const char *local = type_to_string(reports, step.type, vreg);
+    const char *src = format_operand(reports, step.src);
+    
+    operand_t offset = step.offset;
+    if (offset.kind != EMPTY) {
+        const char *off = format_operand(reports, offset);
+        return format("  %s = %s[%s];\n", local, src, off);
+    }
 
-    ctu_free(vreg);
-
-    return format("  %s = *%s;\n", local, format_operand(reports, step.src));
+    return format("  %s = *%s;\n", local, src);
 }
 
 static char *format_store(reports_t *reports, step_t step) {
@@ -268,8 +273,25 @@ static char *format_builtin(reports_t *reports, size_t idx, step_t step) {
     return format("  %s = %s(%s);\n", temp, builtin, type_to_string(reports, step.target, NULL));
 }
 
+static char *format_cast(reports_t *reports, size_t idx, step_t step) {
+    const char *vreg = format_vreg(idx);
+    const char *temp = type_to_string(reports, step.type, vreg);
+    const char *operand = format_operand(reports, step.src);
+
+    return format("  %s = (%s)%s;\n", temp, type_to_string(reports, step.type, NULL), operand);
+}
+
+static char *format_offset(reports_t *reports, size_t idx, step_t step) {
+    const char *vreg = format_vreg(idx);
+    const char *temp = type_to_string(reports, type_ptr(step.type), vreg);
+    const char *src = format_operand(reports, step.src);
+    const char *offset = format_operand(reports, step.offset);
+
+    return format("  %s = %s + %s;\n", temp, src, offset);
+}
+
 static char *select_step(context_t *ctx, size_t idx, step_t step) {
-switch (step.opcode) {
+    switch (step.opcode) {
     case OP_EMPTY: return NULL;
     case OP_BLOCK: 
         return format("block%zu: /* empty */;\n", idx); 
@@ -300,6 +322,12 @@ switch (step.opcode) {
 
     case OP_BUILTIN:
         return format_builtin(ctx->reports, idx, step);
+
+    case OP_CAST:
+        return format_cast(ctx->reports, idx, step);
+
+    case OP_OFFSET:
+        return format_offset(ctx->reports, idx, step);
 
     default:
         ctu_assert(ctx->reports, "unknown opcode: %d", step.opcode);

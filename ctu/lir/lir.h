@@ -14,10 +14,12 @@ typedef enum {
     LIR_BOOL, /// a boolean literal
     LIR_NULL, /// a null literal
 
-    LIR_NAME, /// read from an address
+    LIR_READ, /// read from an address
     LIR_BINARY, /// a binary operation
+    LIR_OFFSET, /// an offset operation
     LIR_UNARY, /// a uary operation
     LIR_CALL, /// calling an address with parameters
+    LIR_CAST, /// casting an expression to a type
 
     LIR_DETAIL_SIZEOF, /// sizeof(type)
     LIR_DETAIL_ALIGNOF, /// alignof(type)
@@ -88,25 +90,13 @@ typedef struct lir_t {
         const type_t *of;
 
         /**
-         * a name and an optional offset
-         * default the offset to 0, non-0 indicates
-         * array access
-         * 
-         * equivilent to loading from an address
-         */
-        struct {
-            struct lir_t *it;
-            size_t offset;
-        };
-
-        /**
-         * an assignment operation
-         * 
-         * equivilent to storing to an address
+         * either `dst[offset] = src;`
+         * or `src + offset`
          */
         struct {
             struct lir_t *dst;
             struct lir_t *src;
+            struct lir_t *offset;
         };
 
         /**
@@ -251,30 +241,104 @@ lir_t *lir_module(node_t *node,
                   vector_t *vars, 
                   vector_t *funcs);
 
+/**
+ * equivilent to an integer literal
+ */
 lir_t *lir_int(node_t *node, const type_t *type, int digit);
 lir_t *lir_digit(node_t *node, const type_t *type, mpz_t digit);
+
+/**
+ * equivilent to a string literal
+ */
 lir_t *lir_string(node_t *node, const type_t *type, const char *str);
+
+/**
+ * equivilent to a boolean literal
+ */
 lir_t *lir_bool(node_t *node, const type_t *type, bool value);
+
+/**
+ * equivilent to NULL
+ */
 lir_t *lir_null(node_t *node, const type_t *type);
 
-lir_t *lir_name(node_t *node, const type_t *type, lir_t *it);
+/**
+ * equivilent to `*addr`
+ */
+lir_t *lir_read(node_t *node, const type_t *type, lir_t *src);
 
+/**
+ * equivilent to `(type)expr`
+ */
 lir_t *lir_convert(node_t *node, const type_t *type, lir_t *expr);
-lir_t *lir_binary(node_t *node, const type_t *type, binary_t binary, lir_t *lhs, lir_t *rhs);
-lir_t *lir_unary(node_t *node, const type_t *type, unary_t unary, lir_t *operand);
-lir_t *lir_call(node_t *node, const type_t *type, lir_t *func, vector_t *args);
-lir_t *lir_index(node_t *node, const type_t *type, lir_t *it, lir_t *offset);
 
+/**
+ * a binary operation
+ * 
+ * `lhs op rhs`
+ */
+lir_t *lir_binary(node_t *node, const type_t *type, binary_t binary, lir_t *lhs, lir_t *rhs);
+
+/**
+ * equivilent to `src + offset`
+ */
+lir_t *lir_offset(node_t *node, const type_t *type, lir_t *src, lir_t *offset);
+
+/**
+ * `op operand`
+ */
+lir_t *lir_unary(node_t *node, const type_t *type, unary_t unary, lir_t *operand);
+
+/**
+ * `addr(args...)`
+ */
+lir_t *lir_call(node_t *node, const type_t *type, lir_t *func, vector_t *args);
+
+lir_t *lir_cast(node_t *node, const type_t *type, lir_t *expr);
+
+/**
+ * `sizeof(type)`
+ */
 lir_t *lir_detail_sizeof(node_t *node, const type_t *type);
+
+/**
+ * `_Alignof(type)`
+ */
 lir_t *lir_detail_alignof(node_t *node, const type_t *type);
 
+/**
+ * `*dst = src`
+ */
 lir_t *lir_assign(node_t *node, lir_t *dst, lir_t *src);
+
+/**
+ * `while (cond) then`
+ */
 lir_t *lir_while(node_t *node, lir_t *cond, lir_t *then);
+
+/**
+ * `if (cond) then else other`
+ */
 lir_t *lir_branch(node_t *node, lir_t *cond, lir_t *then, lir_t *other);
+
+/**
+ * `{ stmts... }`
+ */
 lir_t *lir_stmts(node_t *node, vector_t *stmts);
+
+/**
+ * `return` or `return operand`
+ */
 lir_t *lir_return(node_t *node, lir_t *operand);
+
+/**
+ * `break` or `goto loop`
+ */
 lir_t *lir_break(node_t *node, lir_t *loop);
 
+/**
+ * an error
+ */
 lir_t *lir_poison(node_t *node, const char *msg);
 
 void lir_value(reports_t *reports, 

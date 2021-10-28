@@ -126,6 +126,20 @@ static char *emit_builtin(size_t idx, step_t step) {
     return format("%%%zu = builtin %s %s", idx, builtin, target);
 }
 
+static char *emit_cast(size_t idx, step_t step) {
+    char *src = emit_operand(step.src);
+    char *target = type_format(step.type);
+
+    return format("%%%zu = cast %s %s", idx, target, src);
+}
+
+static char *emit_offset(size_t idx, step_t step) {
+    char *src = emit_operand(step.src);
+    char *offset = emit_operand(step.offset);
+
+    return format("%%%zu = offset %s +%s", idx, src, offset);
+}
+
 static char *emit_step(block_t *flow, size_t idx) {
     step_t step = flow->steps[idx];
     switch (step.opcode) {
@@ -142,6 +156,9 @@ static char *emit_step(block_t *flow, size_t idx) {
     case OP_JMP: return emit_jmp(step);
     case OP_BRANCH: return emit_branch(step);
     case OP_BLOCK: return emit_block(idx);
+
+    case OP_CAST: return emit_cast(idx, step);
+    case OP_OFFSET: return emit_offset(idx, step);
 
     default: return format("error %d", step.opcode);
     }

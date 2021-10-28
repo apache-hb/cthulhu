@@ -191,6 +191,7 @@ bool is_bool(const type_t *type);
 bool is_signed(const type_t *type);
 bool is_unsigned(const type_t *type);
 bool is_void(const type_t *type);
+bool is_voidptr(const type_t *type);
 bool is_poison(const type_t *type);
 bool is_pointer(const type_t *type);
 bool is_closure(const type_t *type);

@@ -1,0 +1,22 @@
+@mangle("malloc")
+def malloc(size: usize): *var void;
+
+@mangle("printf")
+def printf(format: *char, args: ...): int;
+
+@entry
+def main {
+    var x = malloc(int::sizeof() * 64) as [*]var int;
+
+    var loop = 0;
+    while loop < 64 {
+        x[loop] = loop;
+        loop = loop + 1;
+    }
+
+    var i = 0;
+    while i < 64 {
+        printf("x[%d] = %d\n", i, x[i]);
+        i = i + 1;
+    }
+}

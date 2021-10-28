@@ -53,6 +53,9 @@ static const char *void_to_string(const char *name) {
 
 static const char *ptr_to_string(reports_t *reports, const type_t *ptr, const char *name) {
     const char *type = type_to_string(reports, ptr, NULL);
+    if (is_const(ptr)) {
+        type = format("const %s", type);
+    }
     if (name != NULL) {
         return format("%s* %s", type, name);
     } else {

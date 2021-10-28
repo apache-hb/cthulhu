@@ -6,7 +6,7 @@ project('cthulhu', 'c',
         'c_std=gnu11',
         'warning_level=2', # bison generates code that warns on gcc at level 3
         'default_library=static'#,
-        #'werror=true'
+        #'werror=true' # werror has to be disabled on windows for mini-gmp to build
     ]
 )
 
@@ -22,7 +22,6 @@ src = [
 
     'ctu/lir/lir.c',
     'ctu/lir/sema.c',
-    'ctu/lir/print.c',
     'ctu/lir/abi.c',
     
     'ctu/type/type.c',
