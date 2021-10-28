@@ -10,40 +10,34 @@
 // Global forwarding
 
 // Function forwarding
-signed int main(signed int arg0, signed int arg1, _Bool arg2);
-_Bool a();
+signed int main();
+signed int fac(signed int arg0);
 
 // Global initialization
 
 // Function definitions
-signed int main(signed int arg0, signed int arg1, _Bool arg2) {
-  return;
+signed int main() {
+  signed int vreg0 = (*&fac)((signed int)5);
+  return vreg0;
 }
-_Bool a() {
-  signed int x64;
-  signed int y98;
-  signed int y114;
-  signed int z134;
-  signed int vreg0 = (*&main)((signed int)0, (signed int)200, 0);
-  *&x64 = vreg0;
-  signed int vreg2 = *&x64;
-  _Bool vreg3 = vreg2 == (signed int)200;
-  if (vreg3) { goto block5; } else { goto block9; }
-block5: /* empty */;
-  signed int vreg6 = *&x64;
-  *&y98 = vreg6;
-  goto block9;
-block9: /* empty */;
-  signed int vreg10 = *&x64;
-  signed int vreg11 = *&x64;
-  signed int vreg12 = *&x64;
-  signed int vreg13 = vreg11 / vreg12;
-  signed int vreg14 = vreg10 + vreg13;
-  *&y114 = vreg14;
-  signed int vreg16 = *&x64;
-  signed int vreg17 = vreg16 * (signed int)100;
-  *&z134 = vreg17;
-  signed int vreg19 = *&y114;
-  _Bool vreg20 = vreg19 != (signed int)0;
-  return vreg20;
+signed int fac(signed int arg0) {
+  signed int acc54;
+  signed int j74;
+  *&acc54 = (signed int)1;
+  *&j74 = (signed int)1;
+block2: /* empty */;
+  signed int vreg3 = *&j74;
+  _Bool vreg4 = vreg3 <= arg0;
+  if (vreg4) { goto block6; } else { goto block14; }
+block6: /* empty */;
+  signed int vreg7 = *&acc54;
+  signed int vreg8 = *&acc54;
+  signed int vreg9 = *&j74;
+  signed int vreg10 = vreg8 * vreg9;
+  signed int vreg11 = vreg10 ^ (signed int)1;
+  *vreg7 = vreg11;
+  goto block2;
+block14: /* empty */;
+  signed int vreg15 = *&acc54;
+  return vreg15;
 }

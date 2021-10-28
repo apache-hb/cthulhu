@@ -216,6 +216,7 @@ static const char *binary_op_to_string(binary_t op) {
 
     case BINARY_AND: return "&&";
     case BINARY_OR: return "||";
+    case BINARY_XOR: return "^";
 
     case BINARY_EQ: return "==";
     case BINARY_NEQ: return "!=";
