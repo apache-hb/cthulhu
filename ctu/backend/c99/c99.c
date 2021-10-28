@@ -40,7 +40,7 @@ static void forward_global(context_t *ctx, const block_t *block) {
     const type_t *type = block->type;
     const char *name = block->name;
 
-    const char *decl = type_to_string(ctx->reports, type, name);
+    const char *decl = type_to_string(ctx->reports, type, format("%s[1]", name));
 
     char *forward = format("%s;\n", decl);
 
@@ -53,7 +53,7 @@ static void forward_global(context_t *ctx, const block_t *block) {
 static void add_global(context_t *ctx, const block_t *block) {
     const type_t *type = block->type;
     const value_t *value = block->value;
-    const char *name = block->name;
+    const char *name = format("%s[1]", block->name);
 
     if (is_void(value->type)) {
         return;
@@ -62,7 +62,7 @@ static void add_global(context_t *ctx, const block_t *block) {
     const char *start = type_to_string(ctx->reports, type, name);
     const char *init = value_to_string(ctx->reports, value);
 
-    char *fmt = format("%s = %s;\n", start, init);
+    char *fmt = format("%s = { %s };\n", start, init);
 
     stream_write(ctx->result, fmt);
 
@@ -132,7 +132,7 @@ static char *format_addr(const block_t *block) {
         return string_name(real->idx);
     }
 
-    return format("&%s", block->name);
+    return format("%s", block->name);
 }
 
 static const char *format_operand(reports_t *reports, operand_t op) {
@@ -358,7 +358,7 @@ static void write_locals(context_t *ctx, const block_t *block) {
             const type_t *type = local->type;
             const char *it = type_to_string(ctx->reports, type, name);
 
-            stream_write(ctx->result, format("  %s;\n", it));
+            stream_write(ctx->result, format("  %s[1];\n", it));
         }
     }
 }

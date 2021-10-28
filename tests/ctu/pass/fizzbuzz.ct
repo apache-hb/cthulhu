@@ -1,8 +1,5 @@
-@mangle("puts")
-def puts($: str): int;
-
-@mangle("putd")
-def putd($: int): int;
+@mangle("printf")
+def printf(fmt: *char, args: ...): int;
 
 def fizzbuzz(i: int): void {
     var count = 0;
@@ -12,16 +9,15 @@ def fizzbuzz(i: int): void {
         }
 
         if count % 3 == 0 {
-            puts("fizz");
+            printf("fizz\n");
         }
 
         if count % 5 == 0 {
-            puts("buzz");
+            printf("buzz\n");
         }
 
         if (count % 3 != 0) && (count % 5 != 0) {
-            // putd(count); TODO: come back when printf is working
-            // printf depends on implementing varargs
+            printf("%d\n", count);
         }
 
         count = count + 1;

@@ -261,7 +261,8 @@ static operand_t emit_stmts(context_t *ctx, lir_t *lir) {
 }
 
 static operand_t emit_assign(context_t *ctx, lir_t *lir) {
-    operand_t dst = emit_lir(ctx, lir->dst);
+    lir_t *to = lir_is(lir->dst, LIR_UNARY) ? lir->dst->operand : lir->dst;
+    operand_t dst = emit_lir(ctx, to);
     operand_t src = emit_lir(ctx, lir->src);
 
     step_t step = step_of(OP_STORE, lir->dst);

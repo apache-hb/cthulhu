@@ -21,25 +21,31 @@ static lir_t *compile_bool(ctu_t *value) {
 }
 
 static lir_t *compile_unary(sema_t *sema, ctu_t *expr) {
-    lir_t *operand = compile_expr(sema, expr->operand);
-    const type_t *type = lir_type(operand);
+    lir_t *operand = lir_poison(expr->node, "unknown unary op");
+    const type_t *type = NULL;
     unary_t unary = expr->unary;
 
     switch (unary) {
     case UNARY_ABS: case UNARY_NEG:
+        operand = compile_expr(sema, expr->operand);
+        type = lir_type(operand);
         if (!is_integer(type)) {
             report(sema->reports, ERROR, expr->node, "unary math requires an integer operand, `%s` provided", type_format(type));
         }
         break;
-    case UNARY_ADDR:
-        type = type_ptr(type);
-        break;
     case UNARY_DEREF:
+        operand = compile_expr(sema, expr->operand);
+        type = lir_type(operand);
         if (!is_pointer(type)) {
             report(sema->reports, ERROR, expr->node, "unary dereference requires a pointer operand, `%s` provided", type_format(type));
         } else {
             type = type->ptr;
         }
+        break;
+    case UNARY_ADDR:
+        operand = compile_lvalue(sema, expr->operand);
+        type = lir_type(operand);
+        type = type_ptr(type);
         break;
     default:
         ctu_assert(sema->reports, "compile-unary unknown op %d", unary);
@@ -200,6 +206,10 @@ static lir_t *compile_call(sema_t *sema, ctu_t *expr) {
 }
 
 static lir_t *read_expr(node_t *node, lir_t *lir) {
+    if (lir_is(lir, LIR_PARAM)) {
+        return lir;
+    }
+
     return lir_read(node, lir_type(lir), lir);
 }
 
@@ -210,8 +220,7 @@ static lir_t *compile_read(sema_t *sema, const char *name, ctu_t *expr) {
     
     lir_t *var = get_var(sema, name);
     if (var != NULL) {
-        return lir_is(var, LIR_PARAM) 
-            ? var : read_expr(expr->node, compile_value(var));
+        return lir_is(var, LIR_PARAM) ? var : compile_value(var);
     }
 
     lir_t *func = get_func(sema, name);
@@ -350,12 +359,12 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_UNARY: return compile_unary(sema, expr);
     case CTU_BINARY: return compile_binary(sema, expr);
     case CTU_CALL: return compile_call(sema, expr);
-    case CTU_PATH: return compile_path(sema, expr->path, expr);
     case CTU_STRING: return compile_string(expr);
     case CTU_CAST: return compile_cast(sema, expr);
     case CTU_LAMBDA: return compile_lambda(sema, expr);
     case CTU_NULL: return compile_null(expr);
     case CTU_INDEX: return read_expr(expr->node, compile_index(sema, expr));
+    case CTU_PATH: return read_expr(expr->node, compile_path(sema, expr->path, expr));
 
     default:
         ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);
