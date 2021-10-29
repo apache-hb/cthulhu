@@ -218,6 +218,9 @@ static const char *binary_op_to_string(binary_t op) {
     case BINARY_OR: return "||";
     case BINARY_XOR: return "^";
 
+    case BINARY_BITAND: return "&";
+    case BINARY_BITOR: return "|";
+
     case BINARY_EQ: return "==";
     case BINARY_NEQ: return "!=";
     case BINARY_LT: return "<";
@@ -233,7 +236,8 @@ static const char *unary_op_to_string(unary_t op, const char *operand) {
     switch (op) {
     case UNARY_ABS: return format("abs(%s)", operand);
     case UNARY_NEG: return format("-%s", operand);
-    default: return "???";
+    case UNARY_DEREF: return format("*%s", operand);
+    default: return operand;
     }
 }
 
@@ -250,7 +254,12 @@ static char *format_binary(reports_t *reports, size_t idx, step_t step) {
 static char *format_unary(reports_t *reports, size_t idx, step_t step) {
     const char *vreg = format_vreg(idx);
     const char *temp = type_to_string(reports, step.type, vreg);
-    const char *operand = format_operand(reports, step.operand);
+    operand_t it = step.operand;
+    const char *operand = format_operand(reports, it);
+    if (step.unary == UNARY_ADDR && (it.kind == VREG || it.kind == ARG)) {
+        operand = format("&%s", operand);
+    }
+
     const char *op = unary_op_to_string(step.unary, operand);
 
     return format("  %s = %s;\n", temp, op);
@@ -356,9 +365,9 @@ static void write_locals(context_t *ctx, const block_t *block) {
         const char *name = local->name;
         if (name != NULL) {
             const type_t *type = local->type;
-            const char *it = type_to_string(ctx->reports, type, name);
+            const char *it = type_to_string(ctx->reports, type, format("%s[1]", name));
 
-            stream_write(ctx->result, format("  %s[1];\n", it));
+            stream_write(ctx->result, format("  %s;\n", it));
         }
     }
 }

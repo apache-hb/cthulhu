@@ -3,6 +3,7 @@
  * Generated from mnt::c::Users::ehb56::OneDrive::Documents::GitHub::ctulang::tests::ctu::pass
  */
 #include <stddef.h>
+#include <winsock.h>
 
 // String literals
 // Imported symbols
@@ -10,29 +11,13 @@
 // Global forwarding
 
 // Function forwarding
-signed int none();
-signed int thing();
+signed int main(signed int arg0, const signed char** arg1);
 
 // Global initialization
 
 // Function definitions
-signed int none() {
-  signed int a1114[1];
-  *a1114 = (signed int)0;
-  signed int vreg1 = *a1114;
-  return vreg1;
-}
-signed int thing() {
-  signed int a114[1];
-  signed int* a224[1];
-  signed int** a334[1];
-  *a114 = (signed int)0;
-  *a224 = a114;
-  *a334 = a224;
-  signed int** vreg3 = *a334;
-  signed int* vreg4 = *vreg3;
-  *vreg4 = (signed int)20;
-  signed int* vreg6 = *a224;
-  signed int vreg7 = *vreg6;
-  return vreg7;
+signed int main(signed int arg0, const signed char** arg1) {
+  signed char* vreg0 = *arg1;
+  *vreg0 = (signed int)25;
+  return (signed int)0;
 }

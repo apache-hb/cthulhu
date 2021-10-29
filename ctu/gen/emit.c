@@ -214,15 +214,8 @@ static operand_t compile_load(context_t *ctx, lir_t *lir, operand_t op, operand_
 }
 
 static operand_t emit_unary(context_t *ctx, lir_t *lir) {
-    unary_t unary = lir->unary;
-    switch (unary) {
-    case UNARY_ADDR: return emit_lir(ctx, lir->operand);
-    case UNARY_DEREF: return compile_load(ctx, lir, emit_lir(ctx, lir->operand), operand_empty());
-    default: break;
-    }
-
     step_t step = step_of(OP_UNARY, lir);
-    step.unary = unary;
+    step.unary = lir->unary;
     step.operand = emit_lir(ctx, lir->operand);
     return add_step(ctx, step);
 }
