@@ -59,10 +59,15 @@ type_t *type_closure(vector_t *args, type_t *result) {
     return type;
 }
 
-type_t *type_ptr(const type_t *to) {
+type_t *type_ptr_with_index(const type_t *ptr, bool index) {
     type_t *type = type_new(TY_PTR);
-    type->ptr = to;
+    type->ptr = ptr;
+    type->index = index;
     return type;
+}
+
+type_t *type_ptr(const type_t *to) {
+    return type_ptr_with_index(to, false);
 }
 
 type_t *type_string_with_name(const char *name) {

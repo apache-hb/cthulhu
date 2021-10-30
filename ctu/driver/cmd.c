@@ -15,10 +15,10 @@ static void print_help(const frontend_t *frontend) {
     printf("\t -v, --version: Print version information\n");
     printf("\t -gen, --generator: Override default backend code generator\n");
     printf("\t -V, --verbose: Enable verbose logging\n");
-    printf("\t-ir, --intermediate: Print IR\n");
-    printf("\t-O, --opt: set optimisation level");
-    printf("\t-P, --pass: specify optimisation passes to run\n");
-    printf("\t-o, --output: Specify output file\n");
+    printf("\t -ir, --intermediate: Print IR\n");
+    printf("\t -O, --opt: set optimisation level\n");
+    printf("\t -P, --pass: specify optimisation passes to run\n");
+    printf("\t -o, --output: Specify output file\n");
 
     exit(0);
 }
@@ -64,6 +64,7 @@ static int parse_arg(settings_t *settings, const frontend_t *frontend, int index
         settings->ir = true;
     } else if (MATCH(arg, "-o", "--output")) {
         settings->output = NEXT(index, argc, argv);
+        return 2;
     } else {
         report(settings->reports, WARNING, NULL, "unknown argument %s", arg);
     }

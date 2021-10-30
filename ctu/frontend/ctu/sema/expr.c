@@ -163,9 +163,35 @@ static lir_t *compile_binary(sema_t *sema, ctu_t *expr) {
     return lir_binary(expr->node, common, binary, lhs, rhs);
 }
 
+static lir_t *compile_lambda(sema_t *sema, ctu_t *expr) {
+    local_t save = move_state(sema);
+    sema_t *nest = new_sema(sema->reports, sema, SMALL_SIZES);
+
+    const type_t *type = lambda_type(sema, expr);
+    set_return(nest, type);
+    add_locals(nest, type, expr->params);
+
+    lir_t *body = compile_stmts(nest, expr->body);
+    vector_t *locals = move_locals(nest);
+
+    lir_t *lambda = ctu_forward(expr->node, NULL, LIR_DEFINE, NULL);
+    lir_define(sema->reports, lambda,
+        /* type = */ type,
+        /* locals = */ locals,
+        /* body = */ body
+    );
+
+    add_lambda(sema, lambda);
+
+    delete_sema(nest);
+    set_state(sema, save);
+
+    return lambda;
+}
+
 static lir_t *compile_call(sema_t *sema, ctu_t *expr) {
     size_t len = vector_len(expr->args);
-    lir_t *func = compile_expr(sema, expr->func);
+    lir_t *func = compile_lvalue(sema, expr->func);
     vector_t *args = vector_of(len);
     for (size_t i = 0; i < len; i++) {
         ctu_t *it = vector_get(expr->args, i);
@@ -206,7 +232,11 @@ static lir_t *compile_call(sema_t *sema, ctu_t *expr) {
 }
 
 static lir_t *read_expr(node_t *node, lir_t *lir) {
-    if (lir_is(lir, LIR_PARAM)) {
+    if (lir_is(lir, LIR_PARAM) || lir_is(lir, LIR_DEFINE)) {
+        return lir;
+    }
+
+    if (lir_is(lir, LIR_FORWARD) && lir->expected == LIR_DEFINE) {
         return lir;
     }
 
@@ -299,6 +329,7 @@ static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
         report(sema->reports, ERROR, expr->node, "expression is not an lvalue");
         return lir_poison(expr->node, "malformed lvalue");
 
+    case CTU_LAMBDA: return compile_lambda(sema, expr);
     case CTU_PATH: return compile_path(sema, expr->path, expr);
     case CTU_INDEX: return compile_index(sema, expr);
 
@@ -319,32 +350,6 @@ static lir_t *compile_cast(sema_t *sema, ctu_t *expr) {
     }
 
     return cast;
-}
-
-static lir_t *compile_lambda(sema_t *sema, ctu_t *expr) {
-    local_t save = move_state(sema);
-    sema_t *nest = new_sema(sema->reports, sema, SMALL_SIZES);
-
-    const type_t *type = lambda_type(sema, expr);
-    set_return(nest, type);
-    add_locals(nest, type, expr->params);
-
-    lir_t *body = compile_stmts(nest, expr->body);
-    vector_t *locals = move_locals(nest);
-
-    lir_t *lambda = ctu_forward(expr->node, NULL, LIR_DEFINE, NULL);
-    lir_define(sema->reports, lambda,
-        /* type = */ type,
-        /* locals = */ locals,
-        /* body = */ body
-    );
-
-    add_lambda(sema, lambda);
-
-    delete_sema(nest);
-    set_state(sema, save);
-
-    return lambda;
 }
 
 static lir_t *compile_null(ctu_t *expr) {

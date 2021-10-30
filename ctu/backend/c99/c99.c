@@ -470,7 +470,10 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
 
     stream_write(ctx.result, header);
 
-    stream_write(ctx.result, "#include <stddef.h>\n");
+    stream_write(ctx.result, 
+        "#include <stddef.h>\n"
+        "#include <stdlib.h>\n"
+    );
 
     ctu_free(header);
 

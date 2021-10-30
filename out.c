@@ -3,21 +3,31 @@
  * Generated from mnt::c::Users::ehb56::OneDrive::Documents::GitHub::ctulang::tests::ctu::pass
  */
 #include <stddef.h>
-#include <winsock.h>
+#include <stdlib.h>
 
 // String literals
+const char *strtab0 = "entry";
+const char *strtab1 = "custom_init";
 // Imported symbols
+extern signed int puts(const char *arg0);
 
 // Global forwarding
+__attribute__((section(".init_array")))
+void (*anon4_7[1])();
 
 // Function forwarding
-signed int main(signed int arg0, const signed char** arg1);
+void main();
+void custom_init();
 
 // Global initialization
+void (*anon4_7[1])() = { custom_init };
 
 // Function definitions
-signed int main(signed int arg0, const signed char** arg1) {
-  signed char* vreg0 = *arg1;
-  *vreg0 = (signed int)25;
-  return (signed int)0;
+void main() {
+  signed int vreg0 = (*puts)(strtab0);
+  return;
+}
+void custom_init() {
+  signed int vreg0 = (*puts)(strtab1);
+  return;
 }

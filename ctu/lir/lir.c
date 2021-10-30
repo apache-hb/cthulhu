@@ -88,6 +88,7 @@ lir_t *lir_read(node_t *node, const type_t *type, lir_t *src) {
     lir_t *lir = lir_new(node, type, LIR_READ);
 
     lir->src = src;
+    lir->offset = NULL;
 
     return lir;
 }

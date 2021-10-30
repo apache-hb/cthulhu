@@ -56,7 +56,7 @@ static type_t *compile_typepath(sema_t *sema, ctu_t *ctu) {
 
 static type_t *compile_pointer(sema_t *sema, ctu_t *ctu) {
     type_t *type = compile_type(sema, ctu->ptr);
-    return type_ptr(type);
+    return type_ptr_with_index(type, ctu->indirect);
 }
 
 static type_t *compile_closure(sema_t *sema, ctu_t *ctu) {

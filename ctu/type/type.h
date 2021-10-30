@@ -74,7 +74,10 @@ typedef struct type_t {
             struct type_t *result;
         };
 
-        const struct type_t *ptr;
+        struct {
+            const struct type_t *ptr;
+            bool index;
+        };
 
         vector_t *fields;
 
@@ -141,6 +144,7 @@ type_t *type_closure(vector_t *args, type_t *result);
  * @return a pointer type
  */
 type_t *type_ptr(const type_t *to);
+type_t *type_ptr_with_index(const type_t *ptr, bool index);
 
 /**
  * create a string type
