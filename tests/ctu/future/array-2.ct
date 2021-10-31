@@ -1,1 +1,5 @@
-var arr: [int:5 + 10];
+var arr: int * 10;
+
+struct Name {
+    field: (int ~ 10)[0..16]
+}

@@ -69,12 +69,12 @@ bool is_varargs(const type_t *type) {
 }
 
 bool type_can_index(const type_t *type) {
-    return is_pointer(type);
+    return is_pointer(type) && type->index;
 }
 
 const type_t *index_type(const type_t *type) {
     if (!type_can_index(type)) {
-        return type_poison("invalid index type");
+        return type_poison("type cannot index");
     }
 
     return type->ptr;

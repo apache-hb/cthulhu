@@ -1,1 +1,1 @@
-var x: [int:true];
+var x: [true]int;

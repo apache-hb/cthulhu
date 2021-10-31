@@ -105,6 +105,16 @@ static value_t *value_neg(value_t *v) {
     return value_digit(v->node, v->type, result);
 }
 
+static value_t *value_bitflip(value_t *v) {
+    if (!is_digit(v->type)) {
+        return value_poison("not a digit type");
+    }
+
+    mpz_t result;
+    mpz_com(result, v->digit);
+
+    return value_digit(v->node, v->type, result);
+}
 
 static value_t *exec_unary(exec_t *exec, step_t step) {
     value_t *operand = get_value(exec, step.operand);
@@ -112,6 +122,7 @@ static value_t *exec_unary(exec_t *exec, step_t step) {
     switch (step.unary) {
     case UNARY_ABS: return value_abs(operand);
     case UNARY_NEG: return value_neg(operand);
+    case UNARY_BITFLIP: return value_bitflip(operand);
 
     default:
         ctu_assert(exec->world->reports, "invalid unary operator");

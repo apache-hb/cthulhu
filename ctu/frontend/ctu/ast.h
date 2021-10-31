@@ -32,6 +32,7 @@ typedef enum {
     CTU_CLOSURE,
     CTU_MUTABLE,
     CTU_VARARGS,
+    CTU_ARRAY,
 
     CTU_VALUE,
     CTU_PARAM,
@@ -60,6 +61,11 @@ typedef struct ctu_t {
         struct {
             struct ctu_t *ptr;
             bool subscript;
+        };
+
+        struct {
+            struct ctu_t *arr;
+            struct ctu_t *size;
         };
 
         struct {
@@ -166,6 +172,7 @@ ctu_t *ctu_typepath(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_closure(scan_t *scan, where_t where, vector_t *args, ctu_t *result);
 ctu_t *ctu_mutable(scan_t *scan, where_t where, ctu_t *type);
 ctu_t *ctu_varargs(scan_t *scan, where_t where);
+ctu_t *ctu_array(scan_t *scan, where_t where, ctu_t *type, ctu_t *size);
 
 /* declarations */
 ctu_t *ctu_value(scan_t *scan, where_t where, 

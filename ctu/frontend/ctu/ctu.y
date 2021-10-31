@@ -86,6 +86,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     XOR "`^`"
     AND "`&&`"
     OR "`||`"
+    TILDE "`~`"
     AT "`@`"
     END 0 
 
@@ -218,6 +219,7 @@ param: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
 type: path { $$ = ctu_typepath(x, @$, $1); }
     | MUL type { $$ = ctu_pointer(x, @$, $2, false); }
     | LSQUARE MUL RSQUARE type { $$ = ctu_pointer(x, @$, $4, true); }
+    | LSQUARE expr RSQUARE type { $$ = ctu_array(x, @$, $4, $2); }
     | closure { $$ = $1; }
     | VAR type { $$ = ctu_mutable(x, @$, $2); }
     ;
@@ -302,6 +304,7 @@ unary: postfix { $$ = $1; }
     | SUB unary { $$ = ctu_unary(x, @$, UNARY_NEG, $2); }
     | BITAND unary { $$ = ctu_unary(x, @$, UNARY_ADDR, $2); }
     | MUL unary { $$ = ctu_unary(x, @$, UNARY_DEREF, $2); }
+    | TILDE unary { $$ = ctu_unary(x, @$, UNARY_BITFLIP, $2); }
     ;
 
 multiply: unary { $$ = $1; }

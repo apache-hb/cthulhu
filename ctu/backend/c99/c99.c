@@ -237,6 +237,7 @@ static const char *unary_op_to_string(unary_t op, const char *operand) {
     case UNARY_ABS: return format("abs(%s)", operand);
     case UNARY_NEG: return format("-%s", operand);
     case UNARY_DEREF: return format("*%s", operand);
+    case UNARY_BITFLIP: return format("~%s", operand);
     default: return operand;
     }
 }

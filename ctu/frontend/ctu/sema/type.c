@@ -85,6 +85,13 @@ static type_t *compile_mutable(sema_t *sema, ctu_t *ctu) {
     return type_mut(type, true);
 }
 
+static type_t *compile_array(sema_t *sema, ctu_t *ctu) {
+    UNUSED(sema);
+    UNUSED(ctu);
+
+    return type_poison("compile-array unimplemented");
+}
+
 type_t *compile_type(sema_t *sema, ctu_t *ctu) {
     switch (ctu->type) {
     case CTU_TYPEPATH:
@@ -97,6 +104,8 @@ type_t *compile_type(sema_t *sema, ctu_t *ctu) {
         return compile_mutable(sema, ctu);
     case CTU_VARARGS:
         return type_varargs();
+    case CTU_ARRAY:
+        return compile_array(sema, ctu);
 
     default:
         ctu_assert(sema->reports, "compile-type unknown type %d", ctu->type);

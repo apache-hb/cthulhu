@@ -6,28 +6,13 @@
 #include <stdlib.h>
 
 // String literals
-const char *strtab0 = "entry";
-const char *strtab1 = "custom_init";
 // Imported symbols
-extern signed int puts(const char *arg0);
 
 // Global forwarding
-__attribute__((section(".init_array")))
-void (*anon4_7[1])();
+...;
 
 // Function forwarding
-void main();
-void custom_init();
 
 // Global initialization
-void (*anon4_7[1])() = { custom_init };
 
 // Function definitions
-void main() {
-  signed int vreg0 = (*puts)(strtab0);
-  return;
-}
-void custom_init() {
-  signed int vreg0 = (*puts)(strtab1);
-  return;
-}

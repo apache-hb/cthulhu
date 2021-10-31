@@ -84,6 +84,7 @@
 "." { return DOT; }
 "->" { return ARROW; }
 "=>" { return WIDEARROW; }
+"~" { return TILDE; }
 
 "+" { return ADD; }
 "-" { return SUB; }

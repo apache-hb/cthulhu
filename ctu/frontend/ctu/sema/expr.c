@@ -27,6 +27,7 @@ static lir_t *compile_unary(sema_t *sema, ctu_t *expr) {
 
     switch (unary) {
     case UNARY_ABS: case UNARY_NEG:
+    case UNARY_BITFLIP:
         operand = compile_expr(sema, expr->operand);
         type = lir_type(operand);
         if (!is_integer(type)) {
