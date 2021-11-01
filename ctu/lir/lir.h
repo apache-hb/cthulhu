@@ -13,6 +13,7 @@ typedef enum {
     LIR_STRING, /// a string literal
     LIR_BOOL, /// a boolean literal
     LIR_NULL, /// a null literal
+    LIR_LIST, /// an array literal
 
     LIR_READ, /// read from an address
     LIR_BINARY, /// a binary operation
@@ -88,6 +89,11 @@ typedef struct lir_t {
          * as parameters
          */
         const type_t *of;
+
+        /**
+         * an array literal initializer
+         */
+        vector_t *elements;
 
         /**
          * either `dst[offset] = src;`
@@ -261,6 +267,8 @@ lir_t *lir_bool(node_t *node, const type_t *type, bool value);
  * equivilent to NULL
  */
 lir_t *lir_null(node_t *node, const type_t *type);
+
+lir_t *lir_list(node_t *node, const type_t *type, vector_t *elements);
 
 /**
  * equivilent to `*addr`

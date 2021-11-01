@@ -56,6 +56,10 @@ bool is_pointer(const type_t *type) {
     return type->type == TY_PTR;
 }
 
+bool is_array(const type_t *type) {
+    return type->type == TY_ARRAY;
+}
+
 bool is_voidptr(const type_t *type) {
     return is_pointer(type) && is_void(type->ptr);
 }
@@ -69,12 +73,16 @@ bool is_varargs(const type_t *type) {
 }
 
 bool type_can_index(const type_t *type) {
-    return is_pointer(type) && type->index;
+    return is_array(type) || (is_pointer(type) && type->index);
 }
 
 const type_t *index_type(const type_t *type) {
     if (!type_can_index(type)) {
         return type_poison("type cannot index");
+    }
+
+    if (is_array(type)) {
+        return type->elements;
     }
 
     return type->ptr;

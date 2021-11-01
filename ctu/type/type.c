@@ -70,6 +70,13 @@ type_t *type_ptr(const type_t *to) {
     return type_ptr_with_index(to, false);
 }
 
+type_t *type_array(const type_t *element, size_t len) {
+    type_t *type = type_new(TY_ARRAY);
+    type->elements = element;
+    type->len = len;
+    return type;
+}
+
 type_t *type_string_with_name(const char *name) {
     return new_detailed_type(TY_STRING, name, NULL);
 }
@@ -122,5 +129,10 @@ type_t *type_mut(const type_t *type, bool mut) {
     type_t *it = ctu_malloc(sizeof(type_t));
     memcpy(it, type, sizeof(type_t));
     it->mut = mut;
+
+    if (is_array(it)) {
+        it->elements = type_mut(it->elements, mut);
+    }
+    
     return it;
 }

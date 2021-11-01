@@ -357,6 +357,40 @@ static lir_t *compile_null(ctu_t *expr) {
     return lir_null(expr->node, type_ptr(type_void()));
 }
 
+static lir_t *compile_list(sema_t *sema, ctu_t *expr) {
+    const type_t *initial = NULL;
+    if (expr->of != NULL) {
+        initial = compile_type(sema, expr->of);
+    }
+
+    vector_t *items = expr->list;
+    size_t len = vector_len(items);
+    
+    vector_t *result = vector_of(len);
+    for (size_t i = 0; i < len; i++) {
+        ctu_t *item = vector_get(items, i);
+        lir_t *elem = compile_expr(sema, item);
+    
+        if (initial == NULL) {
+            initial = lir_type(elem);
+        } else {
+            lir_t *elemcvt = implicit_convert_expr(sema, elem, initial);
+            if (elemcvt == NULL) {
+                report(sema->reports, ERROR, elem->node, "cannot convert list initializer element from `%s` to `%s`",
+                    type_format(lir_type(elem)),
+                    type_format(initial)
+                );
+            } else {
+                elem = elemcvt;
+            }
+        }
+        
+        vector_set(result, i, elem);
+    }
+
+    return lir_list(expr->node, type_array(initial, len), result);
+}
+
 /* actually compiles an rvalue */
 lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
@@ -371,6 +405,7 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_NULL: return compile_null(expr);
     case CTU_INDEX: return read_expr(expr->node, compile_index(sema, expr));
     case CTU_PATH: return read_expr(expr->node, compile_path(sema, expr->path, expr));
+    case CTU_LIST: return compile_list(sema, expr);
 
     default:
         ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);

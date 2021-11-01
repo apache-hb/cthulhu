@@ -15,6 +15,7 @@ typedef enum {
     TY_BOOL, /// the boolean type
     TY_INTEGER, /// any integer type
     TY_PTR, /// a pointer to another type
+    TY_ARRAY, /// an array of a type
     TY_CLOSURE, /// a function signature
     TY_STRING, /// a string type, convertible to const char*
     TY_VARARGS, /// a variadic function signature
@@ -77,6 +78,11 @@ typedef struct type_t {
         struct {
             const struct type_t *ptr;
             bool index;
+        };
+
+        struct {
+            const struct type_t *elements;
+            size_t len;
         };
 
         vector_t *fields;
@@ -146,6 +152,8 @@ type_t *type_closure(vector_t *args, type_t *result);
 type_t *type_ptr(const type_t *to);
 type_t *type_ptr_with_index(const type_t *ptr, bool index);
 
+type_t *type_array(const type_t *element, size_t len);
+
 /**
  * create a string type
  * 
@@ -192,6 +200,7 @@ bool is_literal(const type_t *type);
 bool is_integer(const type_t *type);
 bool is_digit(const type_t *type);
 bool is_bool(const type_t *type);
+bool is_array(const type_t *type);
 bool is_signed(const type_t *type);
 bool is_unsigned(const type_t *type);
 bool is_void(const type_t *type);

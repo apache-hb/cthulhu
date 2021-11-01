@@ -52,10 +52,11 @@ ctu_t *ctu_null(scan_t *scan, where_t where) {
     return ctu_new(scan, where, CTU_NULL);
 }
 
-ctu_t *ctu_list(scan_t *scan, where_t where, vector_t *list) {
+ctu_t *ctu_list(scan_t *scan, where_t where, ctu_t *of, vector_t *list) {
     ctu_t *ctu = ctu_new(scan, where, CTU_LIST);
 
     ctu->list = list;
+    ctu->of = of;
 
     return ctu;
 }

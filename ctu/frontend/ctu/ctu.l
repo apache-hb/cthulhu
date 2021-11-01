@@ -79,6 +79,7 @@
 "[" { return LSQUARE; }
 "]" { return RSQUARE; }
 
+"!" { return NOT; }
 "," { return COMMA; }
 "..." { return ELLIPSIS; }
 "." { return DOT; }

@@ -84,6 +84,14 @@ lir_t *lir_null(node_t *node, const type_t *type) {
     return lir_new(node, type, LIR_NULL);
 }
 
+lir_t *lir_list(node_t *node, const type_t *type, vector_t *elements) {
+    lir_t *lir = lir_new(node, type, LIR_LIST);
+
+    lir->elements = elements;
+
+    return lir;
+}
+
 lir_t *lir_read(node_t *node, const type_t *type, lir_t *src) {
     lir_t *lir = lir_new(node, type, LIR_READ);
 

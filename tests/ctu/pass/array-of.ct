@@ -1,4 +1,4 @@
-export var x = [ 25, 64, 222 ];
+export var x = [ 25, 64, 222 ]!int;
 
 export def test(): void {
     x[0] = 0;

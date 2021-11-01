@@ -84,6 +84,9 @@ char *type_format(const type_t *type) {
     case TY_FORWARD:
         result = format("forward(%s)", type->name);
         break;
+    case TY_ARRAY:
+        result = format("array[%s * %zu]", type_format(type->elements), type->len);
+        break;
     }
 
     if (!is_const(type)) {

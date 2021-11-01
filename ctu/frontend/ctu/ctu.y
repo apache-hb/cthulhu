@@ -292,8 +292,8 @@ items: %empty { $$ = vector_new(0); }
     | itemlist { $$ = $1; }
     ;
 
-list: LSQUARE items RSQUARE { $$ = ctu_list(x, @$, $2); }
-    | LSQUARE items RSQUARE NOT type { $$ = ctu_list(x, @$, $2); }
+list: LSQUARE items RSQUARE { $$ = ctu_list(x, @$, NULL, $2); }
+    | LSQUARE items RSQUARE NOT type { $$ = ctu_list(x, @$, $5, $2); }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }
