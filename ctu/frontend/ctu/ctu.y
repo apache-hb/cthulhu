@@ -88,6 +88,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     OR "`||`"
     TILDE "`~`"
     AT "`@`"
+    NOT "`!`"
     END 0 
 
 %type<ctu>
@@ -292,6 +293,7 @@ items: %empty { $$ = vector_new(0); }
     ;
 
 list: LSQUARE items RSQUARE { $$ = ctu_list(x, @$, $2); }
+    | LSQUARE items RSQUARE NOT type { $$ = ctu_list(x, @$, $2); }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }
@@ -318,6 +320,7 @@ unary: postfix { $$ = $1; }
     | BITAND unary { $$ = ctu_unary(x, @$, UNARY_ADDR, $2); }
     | MUL unary { $$ = ctu_unary(x, @$, UNARY_DEREF, $2); }
     | TILDE unary { $$ = ctu_unary(x, @$, UNARY_BITFLIP, $2); }
+    | NOT unary { $$ = ctu_unary(x, @$, UNARY_NOT, $2); }
     ;
 
 multiply: unary { $$ = $1; }

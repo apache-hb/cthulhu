@@ -35,6 +35,7 @@ const char *unary_name(unary_t op) {
     case UNARY_ADDR: return "addr";
     case UNARY_DEREF: return "deref";
     case UNARY_BITFLIP: return "bitflip";
+    case UNARY_NOT: return "not";
     
     default: return "???";
     }

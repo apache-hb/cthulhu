@@ -34,7 +34,8 @@ typedef enum {
     UNARY_ADDR,
     UNARY_DEREF,
 
-    UNARY_BITFLIP
+    UNARY_BITFLIP,
+    UNARY_NOT
 } unary_t;
 
 //
