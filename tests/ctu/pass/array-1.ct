@@ -1,1 +1,1 @@
-var arr: [1]int;
+var arr: [int * 1];

@@ -1,4 +1,4 @@
 @entry
-def entry {
+def entry: int {
     return (lambda(i: int): int => i * i)(5);
 }

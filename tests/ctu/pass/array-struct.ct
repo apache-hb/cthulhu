@@ -1,5 +1,5 @@
 struct Thing {
-    field: [10]int
+    field: [int * 10]
 }
 
 export def main(argc: int, argv: *str): int {

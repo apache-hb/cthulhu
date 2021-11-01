@@ -218,8 +218,8 @@ param: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
 
 type: path { $$ = ctu_typepath(x, @$, $1); }
     | MUL type { $$ = ctu_pointer(x, @$, $2, false); }
-    | LSQUARE MUL RSQUARE type { $$ = ctu_pointer(x, @$, $4, true); }
-    | LSQUARE expr RSQUARE type { $$ = ctu_array(x, @$, $4, $2); }
+    | LSQUARE type RSQUARE { $$ = ctu_pointer(x, @$, $2, true); }
+    | LSQUARE type MUL expr RSQUARE { $$ = ctu_array(x, @$, $2, $4); }
     | closure { $$ = $1; }
     | VAR type { $$ = ctu_mutable(x, @$, $2); }
     ;

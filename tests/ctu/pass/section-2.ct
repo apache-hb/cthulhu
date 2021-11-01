@@ -2,7 +2,7 @@
 def puts($: str): int;
 
 @section(".init_array")
-export final $ = (lambda => puts("custom init"));
+export final $ = (lambda: int => puts("custom init"));
 
 @entry
-def entry = puts("entry");
+def entry: int = puts("entry");

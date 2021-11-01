@@ -56,7 +56,7 @@ static type_t *compile_typepath(sema_t *sema, ctu_t *ctu) {
 
 static type_t *compile_pointer(sema_t *sema, ctu_t *ctu) {
     type_t *type = compile_type(sema, ctu->ptr);
-    return type_ptr_with_index(type, ctu->indirect);
+    return type_ptr_with_index(type, ctu->subscript);
 }
 
 static type_t *compile_closure(sema_t *sema, ctu_t *ctu) {
@@ -190,7 +190,37 @@ static lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *type, bool i
         }
     }
 
-    return NULL; 
+    if (is_digit(type) && is_pointer(exprtype)) {
+        digit_t digit = type->digit;
+        if (digit.kind == TY_INTPTR) {
+            return lir_cast(expr->node, type, expr);
+        }
+        message_t *id = report(sema->reports, ERROR, expr->node, "invalid cast from `%s` to `%s`", type_format(exprtype), type_format(type));
+        report_note(id, "pointers can only be cast to `uintptr`");
+    }
+
+    if (is_pointer(type) && is_digit(exprtype)) {
+        digit_t digit = type->digit;
+        if (digit.kind == TY_INTPTR) {
+            return lir_cast(expr->node, type, expr);
+        }
+        message_t *id = report(sema->reports, ERROR, expr->node, "invalid cast from `%s` to `%s`", type_format(exprtype), type_format(type));
+        report_note(id, "only `uintptr` can be casted to a pointer");
+    }
+
+    if (is_void(type) && is_void(exprtype)) {
+        return expr;
+    }
+
+    if (is_string(type) && is_string(exprtype)) {
+        return expr;
+    }
+
+    if (is_bool(type) && is_bool(exprtype)) {
+        return expr;
+    }
+
+    return NULL;
 }
 
 lir_t *implicit_convert_expr(sema_t *sema, lir_t *expr, const type_t *type) {

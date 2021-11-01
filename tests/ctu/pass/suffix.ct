@@ -1,5 +1,0 @@
-def main(): usize {
-    var a = 500uz;
-
-    return a * 25u;
-}

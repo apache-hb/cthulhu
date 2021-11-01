@@ -11,7 +11,7 @@ static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr);
 
 static lir_t *compile_digit(ctu_t *digit) {
     return lir_digit(digit->node, 
-        /* type = */ type_digit(SIGNED, TY_INT), 
+        /* type = */ type_digit_with_name("int", SIGNED, TY_INT), 
         /* digit = */ digit->digit
     );
 }
@@ -169,7 +169,7 @@ static lir_t *compile_lambda(sema_t *sema, ctu_t *expr) {
     sema_t *nest = new_sema(sema->reports, sema, SMALL_SIZES);
 
     const type_t *type = lambda_type(sema, expr);
-    set_return(nest, type);
+    set_return(nest, closure_result(type));
     add_locals(nest, type, expr->params);
 
     lir_t *body = compile_stmts(nest, expr->body);
@@ -416,18 +416,29 @@ static lir_t *compile_local(sema_t *sema, ctu_t *stmt) {
 
 static lir_t *compile_return(sema_t *sema, ctu_t *stmt) {
     lir_t *operand = NULL;
+    lir_t *result = NULL;
     if (stmt->operand != NULL) {
         operand = compile_expr(sema, stmt->operand);
 
-        if (is_void(lir_type(operand))) {
+        const type_t *restype = get_return(sema);
+        result = implicit_convert_expr(sema, operand, restype);
+
+        if (result == NULL) {
+            report(sema->reports, ERROR, operand->node, 
+                "cannot return `%s` from a function that returns `%s`", 
+                type_format(lir_type(operand)), type_format(restype)
+            );
+        } else if (is_void(lir_type(result))) {
             vector_t *stmts = vector_new(1);
-            vector_push(&stmts, operand);
+            vector_push(&stmts, result);
             vector_push(&stmts, lir_return(stmt->node, NULL));
             return lir_stmts(stmt->node, stmts);
         }
-    }
 
-    return lir_return(stmt->node, operand);
+        return lir_return(stmt->node, result);
+    } else {
+        return lir_return(stmt->node, NULL);
+    }
 }
 
 static lir_t *compile_while(sema_t *sema, ctu_t *stmt) {
