@@ -11,6 +11,7 @@ typedef enum {
     CTU_PATH,
     CTU_BOOL,
     CTU_STRING,
+    CTU_LIST,
 
     CTU_UNARY,
     CTU_BINARY,
@@ -57,6 +58,8 @@ typedef struct ctu_t {
         const char *ident;
 
         const char *str;
+
+        vector_t *list;
 
         struct {
             struct ctu_t *ptr;
@@ -148,6 +151,7 @@ ctu_t *ctu_path(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_bool(scan_t *scan, where_t where, bool value);
 ctu_t *ctu_string(scan_t *scan, where_t where, const char *str);
 ctu_t *ctu_null(scan_t *scan, where_t where);
+ctu_t *ctu_list(scan_t *scan, where_t where, vector_t *list);
 
 /* expressions */
 ctu_t *ctu_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *operand);

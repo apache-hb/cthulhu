@@ -52,6 +52,14 @@ ctu_t *ctu_null(scan_t *scan, where_t where) {
     return ctu_new(scan, where, CTU_NULL);
 }
 
+ctu_t *ctu_list(scan_t *scan, where_t where, vector_t *list) {
+    ctu_t *ctu = ctu_new(scan, where, CTU_LIST);
+
+    ctu->list = list;
+
+    return ctu;
+}
+
 ctu_t *ctu_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *operand) {
     ctu_t *ctu = ctu_new(scan, where, CTU_UNARY);
 

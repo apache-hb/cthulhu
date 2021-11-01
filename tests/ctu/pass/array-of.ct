@@ -1,4 +1,4 @@
-export var x = [ 25, 64, 222 ] of usize;
+export var x = [ 25, 64, 222 ];
 
 export def test(): void {
     x[0] = 0;

@@ -94,12 +94,13 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     value decl declbase
     expr primary postfix unary multiply add compare equality shift bits xor and or
     statements stmt type param function return import while
-    assign attrib branch tail closure result funcbody lambda lambdabody newtype
+    assign attrib branch tail closure result funcbody lambda lambdabody newtype list
 
 %type<vector>
     unit stmtlist params paramlist args arglist imports
     attributes attriblist attribute attribs
     typelist types optparams importlist path
+    items itemlist
 
 %type<boolean>
     exported const
@@ -282,6 +283,17 @@ args: expr { $$ = vector_init($1); }
 lambda: LAMBDA optparams result lambdabody { $$ = ctu_lambda(x, @$, $2, $3, $4); }
     ;
 
+itemlist: expr { $$ = vector_init($1); }
+    | itemlist COMMA expr { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+items: %empty { $$ = vector_new(0); }
+    | itemlist { $$ = $1; }
+    ;
+
+list: LSQUARE items RSQUARE { $$ = ctu_list(x, @$, $2); }
+    ;
+
 primary: LPAREN expr RPAREN { $$ = $2; }
     | path { $$ = ctu_path(x, @$, $1); }
     | DIGIT { $$ = ctu_digit(x, @$, $1); }
@@ -289,6 +301,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | NO { $$ = ctu_bool(x, @$, false); }
     | STRING { $$ = ctu_string(x, @$, $1); }
     | NIL { $$ = ctu_null(x, @$); }
+    | list { $$ = $1; }
     ;
 
 postfix: primary { $$ = $1; }

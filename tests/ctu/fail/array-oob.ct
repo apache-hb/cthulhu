@@ -1,4 +1,4 @@
-var x = [25, 60, 75] of int;
+var x = [25, 60, 75];
 
 var y = x[0];
 var oob = x[3]; // oh no an out of bounds error!
