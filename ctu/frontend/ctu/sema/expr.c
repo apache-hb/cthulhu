@@ -34,6 +34,13 @@ static lir_t *compile_unary(sema_t *sema, ctu_t *expr) {
             report(sema->reports, ERROR, expr->node, "unary math requires an integer operand, `%s` provided", type_format(type));
         }
         break;
+    case UNARY_NOT:
+        operand = compile_expr(sema, expr->operand);
+        type = lir_type(operand);
+        if (!is_bool(type)) {
+            report(sema->reports, ERROR, expr->node, "unary not requires a boolean operand, `%s` provided", type_format(type));
+        }
+        break;
     case UNARY_DEREF:
         operand = compile_expr(sema, expr->operand);
         type = lir_type(operand);
@@ -317,46 +324,6 @@ static lir_t *compile_index(sema_t *sema, ctu_t *index) {
     return lir_offset(index->node, subtype, expr, it);
 }
 
-static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
-    switch (expr->type) {
-    case CTU_UNARY:
-        /* hacky but pretty at the same time */
-        if (expr->unary == UNARY_DEREF) {
-            return compile_unary(sema, expr);
-        }
-        // fallthrough
-    case CTU_DIGIT: case CTU_BOOL: case CTU_BINARY:
-    case CTU_CALL: case CTU_STRING:
-        report(sema->reports, ERROR, expr->node, "expression is not an lvalue");
-        return lir_poison(expr->node, "malformed lvalue");
-
-    case CTU_LAMBDA: return compile_lambda(sema, expr);
-    case CTU_PATH: return compile_path(sema, expr->path, expr);
-    case CTU_INDEX: return compile_index(sema, expr);
-
-    default:
-        ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);
-        return lir_poison(expr->node, "unimplemented");
-    }
-}
-
-static lir_t *compile_cast(sema_t *sema, ctu_t *expr) {
-    lir_t *it = compile_expr(sema, expr->src);
-    type_t *type = compile_type(sema, expr->dst);
-    lir_t *cast = explicit_convert_expr(sema, it, type);
-
-    if (cast == NULL) {
-        report(sema->reports, ERROR, expr->node, "cannot convert `%s` to `%s`", type_format(lir_type(it)), type_format(type));
-        return lir_poison(expr->node, "invalid cast");
-    }
-
-    return cast;
-}
-
-static lir_t *compile_null(ctu_t *expr) {
-    return lir_null(expr->node, type_ptr(type_void()));
-}
-
 static lir_t *compile_list(sema_t *sema, ctu_t *expr) {
     const type_t *initial = NULL;
     if (expr->of != NULL) {
@@ -389,6 +356,48 @@ static lir_t *compile_list(sema_t *sema, ctu_t *expr) {
     }
 
     return lir_list(expr->node, type_array(initial, len), result);
+}
+
+static lir_t *compile_null(ctu_t *expr) {
+    return lir_null(expr->node, type_ptr(type_void()));
+}
+
+static lir_t *compile_lvalue(sema_t *sema, ctu_t *expr) {
+    switch (expr->type) {
+    case CTU_UNARY:
+        /* hacky but pretty at the same time */
+        if (expr->unary == UNARY_DEREF) {
+            return compile_unary(sema, expr);
+        }
+        // fallthrough
+    case CTU_DIGIT: case CTU_BOOL: case CTU_BINARY:
+    case CTU_CALL: case CTU_STRING:
+        report(sema->reports, ERROR, expr->node, "expression is not an lvalue");
+        return lir_poison(expr->node, "malformed lvalue");
+
+    case CTU_LAMBDA: return compile_lambda(sema, expr);
+    case CTU_PATH: return compile_path(sema, expr->path, expr);
+    case CTU_INDEX: return compile_index(sema, expr);
+    case CTU_LIST: return compile_list(sema, expr);
+    case CTU_NULL: return compile_null(expr);
+
+    default:
+        ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);
+        return lir_poison(expr->node, "unimplemented");
+    }
+}
+
+static lir_t *compile_cast(sema_t *sema, ctu_t *expr) {
+    lir_t *it = compile_expr(sema, expr->src);
+    type_t *type = compile_type(sema, expr->dst);
+    lir_t *cast = explicit_convert_expr(sema, it, type);
+
+    if (cast == NULL) {
+        report(sema->reports, ERROR, expr->node, "cannot convert `%s` to `%s`", type_format(lir_type(it)), type_format(type));
+        return lir_poison(expr->node, "invalid cast");
+    }
+
+    return cast;
 }
 
 /* actually compiles an rvalue */
