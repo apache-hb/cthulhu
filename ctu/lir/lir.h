@@ -27,11 +27,13 @@ typedef enum {
 
     LIR_ASSIGN, /// assign from a value into an address
 
-    LIR_WHILE,
-    LIR_BRANCH,
-    LIR_STMTS,
-    LIR_RETURN,
-    LIR_BREAK,
+    LIR_WHILE, /// a while loop
+    LIR_BRANCH, /// an if-else statement
+    LIR_STMTS, /// more than one statement executed in order
+    LIR_RETURN, /// return a value or void from a function
+    LIR_BREAK, /// break from the current loop
+               /// optionally goto a label
+    LIR_LOCAL, /// declare a local
 
     LIR_VALUE,
     LIR_DEFINE,
@@ -218,7 +220,6 @@ typedef struct lir_t {
                  * a function
                  */
                 struct {
-                    vector_t *locals;
                     struct lir_t *body;
                 };
             };
@@ -357,10 +358,26 @@ void lir_value(reports_t *reports,
 void lir_define(reports_t *reports, 
                 lir_t *dst, 
                 const type_t *type, 
-                vector_t *locals, 
                 lir_t *body);
 
 lir_t *lir_param(node_t *node, const char *name, const type_t *type, size_t index);
+
+/**
+ * create a local value
+ * 
+ * @param node an optional location
+ * @param name an optional name
+ * @param type the type of the local
+ * @param init an optional initial value
+ * 
+ * @return the tree representing a local
+ */
+lir_t *lir_local(
+    node_t *node, 
+    const char *name, 
+    const type_t *type, 
+    lir_t *init
+);
 
 void lir_attribs(lir_t *dst, const attrib_t *attribs);
 

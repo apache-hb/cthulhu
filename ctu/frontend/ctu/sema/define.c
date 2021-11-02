@@ -26,7 +26,6 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
     }
 
     lir_t *body = NULL;
-    vector_t *locals = vector_new(0);
     const type_t *type = is_poison(lir_type(lir))
         ? realise_closure(sema, ctu)
         : lir_type(lir);
@@ -46,14 +45,11 @@ static void realise_define(sema_t *sema, lir_t *lir, ctu_t *ctu) {
 
         body = compile_stmts(nest, ctu->body);
 
-        locals = move_locals(sema);
-
         sema_delete(nest);
     }
 
     lir_define(sema->reports, lir, 
         /* type = */ type,
-        /* locals = */ locals,
         /* body = */ body
     );
 

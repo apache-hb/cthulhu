@@ -41,7 +41,7 @@ static lir_t *pl0_import_print(reports_t *reports, node_t *node) {
     const type_t *type = type_closure(args, type_digit(SIGNED, TY_INT));
     
     lir_t *func = lir_forward(node, "printf", LIR_DEFINE, NULL);
-    lir_define(reports, func, type, vector_new(0), NULL);
+    lir_define(reports, func, type, NULL);
     lir_attribs(func, &PRINT);
 
     return func;
@@ -302,16 +302,12 @@ static void compile_const(sema_t *sema, lir_t *lir) {
     );
 }
 
-static lir_t *build_var(sema_t *sema, pl0_t *node) {
+static lir_t *build_local(sema_t *sema, pl0_t *node) {
     char *name = pl0_name(node->name);
-    lir_t *lir = lir_forward(node->node, name, LIR_VALUE, NULL);
     const type_t *type = pl0_int(true);
     lir_t *init = pl0_num(node->node, 0);
 
-    lir_value(sema->reports, lir, 
-        /* type = */ type, 
-        /* init = */ init
-    );
+    lir_t *lir = lir_local(node->node, name, type, init);
     
     sema_set(sema, TAG_VARS, name, lir);
 
@@ -329,7 +325,8 @@ static void compile_var(sema_t *sema, lir_t *lir) {
 static void compile_proc(sema_t *sema, lir_t *lir) {
     pl0_t *node = lir->ctx;
     size_t nlocals = vector_len(node->locals);
-    vector_t *locals = vector_of(nlocals);
+    size_t nbody = vector_len(node->body);
+    vector_t *body = vector_of(nbody + nlocals);
 
     size_t sizes[TAG_MAX] = {
         [TAG_VARS] = nlocals,
@@ -341,22 +338,18 @@ static void compile_proc(sema_t *sema, lir_t *lir) {
 
     for (size_t i = 0; i < nlocals; i++) {
         pl0_t *local = vector_get(node->locals, i);
-        lir_t *var = build_var(nest, local);
-        vector_set(locals, i, var);
+        lir_t *var = build_local(nest, local);
+        vector_set(body, i, var);
     }
-
-    size_t nbody = vector_len(node->body);
-    vector_t *body = vector_of(nbody);
 
     for (size_t i = 0; i < nbody; i++) {
         pl0_t *it = vector_get(node->body, i);
         lir_t *stmt = compile_stmt(nest, it);
-        vector_set(body, i, stmt);
+        vector_set(body, i + nlocals, stmt);
     }
 
     lir_define(sema->reports, lir, 
         /* type = */ pl0_closure(), 
-        /* locals = */ locals,
         /* body = */ lir_stmts(node->node, body)
     );
 
@@ -379,7 +372,6 @@ static lir_t *compile_entry(sema_t *sema, pl0_t *body) {
 
     lir_define(sema->reports, entry,
         /* type = */ pl0_closure(),
-        /* locals = */ vector_of(0),
         /* body = */ lir_stmts(body->node, vector_init(stmts))
     );
 

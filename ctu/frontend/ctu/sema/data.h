@@ -15,7 +15,6 @@ typedef enum {
 } tag_t;
 
 typedef struct {
-    vector_t *locals; /// all locals in the current function
     const type_t *result; /// the return type of the current function
 } local_t;
 
@@ -45,9 +44,6 @@ void stack_leave(sema_t *sema, lir_t *lir);
 
 void set_return(sema_t *sema, const type_t *type);
 const type_t *get_return(sema_t *sema);
-
-void add_local(sema_t *sema, lir_t *lir);
-vector_t *move_locals(sema_t *sema);
 
 void add_extern(sema_t *sema, lir_t *lir);
 vector_t *move_externs(sema_t *sema);

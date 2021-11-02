@@ -6,7 +6,6 @@
 
 static local_t new_local(void) {
     local_t local = {
-        .locals = vector_new(8),
         .result = type_poison("uninitialized return type")
     };
 
@@ -183,18 +182,6 @@ void set_return(sema_t *sema, const type_t *type) {
 const type_t *get_return(sema_t *sema) {
     stack_t *data = sema_get_data(sema);
     return data->local.result;
-}
-
-void add_local(sema_t *sema, lir_t *lir) {
-    stack_t *data = sema_get_data(sema);
-    vector_push(&data->local.locals, lir);
-}
-
-vector_t *move_locals(sema_t *sema) {
-    stack_t *data = sema_get_data(sema);
-    vector_t *locals = data->local.locals;
-    data->local.locals = vector_new(16);
-    return locals;
 }
 
 void add_extern(sema_t *sema, lir_t *lir) {

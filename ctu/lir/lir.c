@@ -17,9 +17,10 @@ static const attrib_t DEFAULT_ATTRIBS = {
     .section = NULL
 };
 
-static lir_t *lir_decl(node_t *node, leaf_t leaf, const char *name) {
+static lir_t *lir_decl(node_t *node, leaf_t leaf, const char *name, const type_t *type) {
     lir_t *lir = lir_new(node, type_poison_with_node("forward declaration", node), leaf);
     lir->_name = name;
+    lir->_type = type;
     lir->attribs = &DEFAULT_ATTRIBS;
     return lir;
 }
@@ -29,7 +30,7 @@ void lir_attribs(lir_t *dst, const attrib_t *attribs) {
 }
 
 lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, void *ctx) {
-    lir_t *lir = lir_decl(node, LIR_FORWARD, name);
+    lir_t *lir = lir_decl(node, LIR_FORWARD, name, NULL);
     lir->expected = expected;
     lir->ctx = ctx;
     return lir;
@@ -212,6 +213,18 @@ lir_t *lir_break(node_t *node, lir_t *loop) {
     return lir;
 }
 
+lir_t *lir_local(
+    node_t *node, 
+    const char *name, 
+    const type_t *type, 
+    lir_t *init
+)
+{
+    lir_t *lir = lir_decl(node, LIR_LOCAL, name, type);
+    lir->init = init;
+    return lir;
+}
+
 void lir_value(reports_t *reports, lir_t *dst, const type_t *type, lir_t *init) {
     if (dst->leaf != LIR_FORWARD) {
         ctu_assert(reports, "lir-value already resolved");
@@ -222,20 +235,18 @@ void lir_value(reports_t *reports, lir_t *dst, const type_t *type, lir_t *init) 
     dst->init = init;
 }
 
-void lir_define(reports_t *reports, lir_t *dst, const type_t *type, vector_t *locals, lir_t *body) {
+void lir_define(reports_t *reports, lir_t *dst, const type_t *type, lir_t *body) {
     if (dst->leaf != LIR_FORWARD) {
         ctu_assert(reports, "lir-define already resolved");
     }
 
     dst->leaf = LIR_DEFINE;
     dst->_type = type;
-    dst->locals = locals;
     dst->body = body;   
 }
 
 lir_t *lir_param(node_t *node, const char *name, const type_t *type, size_t index) {
-    lir_t *lir = lir_decl(node, LIR_PARAM, name);
-    lir->_type = type;
+    lir_t *lir = lir_decl(node, LIR_PARAM, name, type);
     lir->index = index;
     return lir;
 }

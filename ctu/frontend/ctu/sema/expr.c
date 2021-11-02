@@ -180,12 +180,10 @@ static lir_t *compile_lambda(sema_t *sema, ctu_t *expr) {
     add_locals(nest, type, expr->params);
 
     lir_t *body = compile_stmts(nest, expr->body);
-    vector_t *locals = move_locals(nest);
 
     lir_t *lambda = ctu_forward(expr->node, NULL, LIR_DEFINE, NULL);
     lir_define(sema->reports, lambda,
         /* type = */ type,
-        /* locals = */ locals,
         /* body = */ body
     );
 
@@ -258,7 +256,11 @@ static lir_t *compile_read(sema_t *sema, const char *name, ctu_t *expr) {
     
     lir_t *var = get_var(sema, name);
     if (var != NULL) {
-        return lir_is(var, LIR_PARAM) ? var : compile_value(var);
+        if (lir_is(var, LIR_PARAM) || lir_is(var, LIR_LOCAL)) {
+            return var;
+        }
+
+        return compile_value(var);
     }
 
     lir_t *func = get_func(sema, name);
@@ -436,26 +438,14 @@ lir_t *compile_stmts(sema_t *sema, ctu_t *stmts) {
     return lir_stmts(stmts->node, result);
 }
 
-static lir_t *compile_noop(node_t *node) {
-    return lir_stmts(node, vector_new(0));
-}
-
 static lir_t *compile_local(sema_t *sema, ctu_t *stmt) {
     lir_t *value = local_value(sema, stmt);
-    if (is_discard(get_name(value))) {
-        return compile_noop(stmt->node);
-    }
-
-    add_local(sema, value);
+    
     if (!is_discard(stmt->name)) {
         add_var(sema, stmt->name, value);
     }
 
-    if (value->init) {
-        return lir_assign(stmt->node, value, value->init);
-    }
-
-    return compile_noop(stmt->node);
+    return value;
 }
 
 static lir_t *compile_return(sema_t *sema, ctu_t *stmt) {

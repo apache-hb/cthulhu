@@ -58,7 +58,17 @@ void build_value(sema_t *sema, lir_t *lir) {
 }
 
 lir_t *local_value(sema_t *sema, ctu_t *ctu) {
-    lir_t *value = ctu_forward(ctu->node, ctu->name, LIR_VALUE, state_new(sema, ctu));
-    realise_value(sema, value, ctu);
-    return value;
+    lir_t *init = ctu->value != NULL ? compile_expr(sema, ctu->value) : NULL;
+    const type_t *type = ctu->kind != NULL ? compile_type(ctu->kind) : lir_type(init);
+    lir_t *cvt = init != NULL ? implicit_convert_expr(sema, init, type) : init;
+    if (cvt == NULL) {
+        report(sema->reports, ERROR, ctu->node, "cannot initialize a local of type `%s` with an expression of type `%s`", 
+            type_format(type),
+            type_format(lir_type(init))
+        );
+    }
+
+    lir_t *lir = lir_local(ctu->node, ctu->name, type, init);
+
+    return lir;
 }

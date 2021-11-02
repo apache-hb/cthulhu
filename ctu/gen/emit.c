@@ -120,15 +120,6 @@ static const char *local_name(const lir_t *lir) {
     return format("%s%zu%zu", get_name(lir), where.first_line, where.first_column);
 }
 
-static block_t *lir_named(const lir_t *lir) {
-    return new_block(
-        BLOCK_SYMBOL, 
-        local_name(lir), 
-        lir->node, 
-        lir_type(lir)
-    );
-}
-
 static const char *symbol_name(const lir_t *lir) {
     if (lir->attribs->mangle != NULL) {
         return lir->attribs->mangle;
@@ -147,13 +138,7 @@ static block_t *init_block(const char *name, lir_t *decl, const type_t *type) {
     /* itanium only mangles functions */
     block_t *block = new_define(name, decl->node, type, decl->attribs);
 
-    if (lir_is(decl, LIR_DEFINE)) {
-        vector_t *locals = decl->locals;
-        block->locals = VECTOR_MAP(locals, lir_named);
-    } else {
-        block->locals = NULL;
-    }
-
+    block->locals = vector_new(4);
     block->len = 0;
     block->size = 16;
     block->steps = ctu_malloc(sizeof(step_t) * block->size);
@@ -163,12 +148,6 @@ static block_t *init_block(const char *name, lir_t *decl, const type_t *type) {
 
 static block_t *block_declare(lir_t *lir) {
     block_t *block = init_block(symbol_name(lir), lir, lir_type(lir));
-    lir->data = block;
-    return block;
-}
-
-static block_t *local_declare(lir_t *lir) {
-    block_t *block = init_block(local_name(lir), lir, lir_type(lir));
     lir->data = block;
     return block;
 }
@@ -194,12 +173,6 @@ static void build_block(vector_t **strings, reports_t *reports, module_t *mod, b
 
 static void build_define(vector_t **strings, reports_t *reports, module_t *mod, block_t *block, lir_t *define) {
     context_t ctx = { strings, mod, block, reports, oplist_new(4) };
-
-    vector_t *locals = define->locals;
-
-    for (size_t i = 0; i < vector_len(locals); i++) {
-        local_declare(vector_get(locals, i));
-    }
 
     lir_t *body = define->body;
     operand_t op = emit_lir(&ctx, body);
