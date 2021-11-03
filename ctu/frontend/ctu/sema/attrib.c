@@ -103,7 +103,7 @@ static void apply_attrib(sema_t *sema, attrib_t *dst, ctu_t *attrib) {
         lir_t *cast = implicit_convert_expr(sema, lir, param);
 
         if (cast == NULL) {
-            report(sema->reports, ERROR, attrib->node, "invalid parameter at %zu. found `%s` expected `%s`", i, type_format(type), type_format(param));
+            report(sema->reports, ERROR, attrib->node, "invalid parameter at %zu. found `%s` expected `%s`", i, ctu_type_format(type), ctu_type_format(param));
             error = true;
         }
     }

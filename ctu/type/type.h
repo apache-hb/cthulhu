@@ -228,6 +228,7 @@ const char *get_poison_type_message(const type_t *type);
 const type_t *index_type(const type_t *type);
 
 bool type_can_index(const type_t *type);
+bool type_is_indirect(const type_t *type);
 
 /**
  * return a common type of lhs and rhs if possible.

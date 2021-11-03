@@ -76,6 +76,12 @@ bool type_can_index(const type_t *type) {
     return is_array(type) || (is_pointer(type) && type->index);
 }
 
+bool type_is_indirect(const type_t *type) {
+    return is_pointer(type) 
+        || is_array(type) 
+        || is_closure(type);
+}
+
 const type_t *index_type(const type_t *type) {
     if (!type_can_index(type)) {
         return type_poison("type cannot index");

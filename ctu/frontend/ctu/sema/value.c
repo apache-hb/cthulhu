@@ -33,7 +33,7 @@ static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
 
     if (is_void(type)) {
         report(sema->reports, ERROR, ctu->node, "cannot initialize variable `%s` with type `%s`",
-            ctu->name, type_format(type)
+            ctu->name, ctu_type_format(type)
         );
     }
 
@@ -65,8 +65,8 @@ lir_t *local_value(sema_t *sema, ctu_t *ctu) {
         cvt = implicit_convert_expr(sema, init, type);
         if (cvt == NULL) {
             report(sema->reports, ERROR, ctu->node, "cannot initialize a local of type `%s` with an expression of type `%s`", 
-                type_format(type),
-                type_format(lir_type(init))
+                ctu_type_format(type),
+                ctu_type_format(lir_type(init))
             );
         }
     }

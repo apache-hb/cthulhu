@@ -155,17 +155,21 @@ static lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *type, bool i
         return expr;
     }
 
+    if (implicit && is_const(exprtype) && !is_const(type)) {
+        report(sema->reports, ERROR, expr->node, "implicitly discarding const");
+    }
+
     /**
      * casting from a digit to another digit
      */
     if (is_digit(type) && is_digit(exprtype)) {
         if (implicit) {
             if (type->digit.kind < exprtype->digit.kind) {
-                report(sema->reports, WARNING, expr->node, "implicit truncation from `%s` to `%s`", type_format(exprtype), type_format(type));
+                report(sema->reports, WARNING, expr->node, "implicit truncation from `%s` to `%s`", ctu_type_format(exprtype), ctu_type_format(type));
             }
 
             if (type->digit.sign != exprtype->digit.sign) {
-                report(sema->reports, WARNING, expr->node, "implicit sign conversion from `%s` to `%s`", type_format(exprtype), type_format(type));
+                report(sema->reports, WARNING, expr->node, "implicit sign conversion from `%s` to `%s`", ctu_type_format(exprtype), ctu_type_format(type));
             }
         }
 
@@ -180,24 +184,14 @@ static lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *type, bool i
         return lir_binary(expr->node, type_bool(), BINARY_NEQ, expr, zero);
     }
 
-    if (implicit) {
-        if (
-            (is_pointer(type) || is_array(type)) && 
-            (is_pointer(exprtype) || is_array(exprtype))
-        ) {
-            if (is_voidptr(type) || is_voidptr(exprtype)) {
-                return expr;
+    if (type_is_indirect(type) && type_is_indirect(exprtype)) {
+        if (implicit && !is_voidptr(type) && !is_voidptr(exprtype)) {
+            if (!(is_closure(type) && is_closure(exprtype))) {    
+                report(sema->reports, ERROR, expr->node, "implicit conversion from `%s` to `%s`", ctu_type_format(exprtype), ctu_type_format(type));
             }
+        }
 
-            report(sema->reports, ERROR, expr->node, "implicit conversion from `%s` to `%s`", type_format(exprtype), type_format(type));
-        }
-    } else {
-        if (
-            (is_pointer(type) || is_array(type)) && 
-            (is_pointer(exprtype) || is_array(exprtype))
-        ) {
-            return lir_cast(expr->node, type, expr);
-        }
+        return lir_cast(expr->node, type, expr);
     }
 
     if (is_digit(type) && is_pointer(exprtype)) {
@@ -239,4 +233,32 @@ lir_t *implicit_convert_expr(sema_t *sema, lir_t *expr, const type_t *type) {
 
 lir_t *explicit_convert_expr(sema_t *sema, lir_t *expr, const type_t *type) {
     return convert_expr(sema, expr, type, false);
+}
+
+static char *fmt_array(const type_t *type) {
+    return format("[%s * %zu]", ctu_type_format(type->elements), type->len);
+}
+
+static char *fmt_ptr(const type_t *type) {
+    if (type->index) {
+        return format("[%s]", ctu_type_format(type->ptr));
+    } else {
+        return format("*%s", ctu_type_format(type->ptr));
+    }
+}
+
+static char *fmt_closure(const type_t *type) {
+    char *result = ctu_type_format(type->result);
+    vector_t *args = VECTOR_MAP(type->args, ctu_type_format);
+    char *joined = strjoin(", ", args);
+    return format("(%s) -> %s", joined, result);
+}
+
+char *ctu_type_format(const type_t *type) {
+    switch (type->type) {
+    case TY_ARRAY: return fmt_array(type);
+    case TY_PTR: return fmt_ptr(type);
+    case TY_CLOSURE: return fmt_closure(type);
+    default: return type->name != NULL ? ctu_strdup(type->name) : NULL;
+    }
 }
