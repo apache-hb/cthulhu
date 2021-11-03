@@ -151,6 +151,10 @@ type_t *common_type(const type_t *lhs, const type_t *rhs) {
 static lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *type, bool implicit) {
     const type_t *exprtype = lir_type(expr);
 
+    if (exprtype == type) {
+        return expr;
+    }
+
     /**
      * casting from a digit to another digit
      */
@@ -177,7 +181,10 @@ static lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *type, bool i
     }
 
     if (implicit) {
-        if (is_pointer(type) && is_pointer(exprtype)) {
+        if (
+            (is_pointer(type) || is_array(type)) && 
+            (is_pointer(exprtype) || is_array(exprtype))
+        ) {
             if (is_voidptr(type) || is_voidptr(exprtype)) {
                 return expr;
             }
@@ -185,7 +192,10 @@ static lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *type, bool i
             report(sema->reports, ERROR, expr->node, "implicit conversion from `%s` to `%s`", type_format(exprtype), type_format(type));
         }
     } else {
-        if (is_pointer(type) && is_pointer(exprtype)) {
+        if (
+            (is_pointer(type) || is_array(type)) && 
+            (is_pointer(exprtype) || is_array(exprtype))
+        ) {
             return lir_cast(expr->node, type, expr);
         }
     }

@@ -1,5 +1,6 @@
 #include "attrib.h"
 #include "expr.h"
+#include "type.h"
 
 typedef void(*callback_t)(reports_t*, attrib_t*, vector_t*);
 typedef lir_t*(*detail_t)(sema_t*, type_t*, ctu_t*);
@@ -99,8 +100,9 @@ static void apply_attrib(sema_t *sema, attrib_t *dst, ctu_t *attrib) {
         lir_t *lir = vector_get(result, i);
         const type_t *type = lir_type(lir);
         const type_t *param = param_at(builtin->type, i);
+        lir_t *cast = implicit_convert_expr(sema, lir, param);
 
-        if (is_poison(types_common(type, param))) {
+        if (cast == NULL) {
             report(sema->reports, ERROR, attrib->node, "invalid parameter at %zu. found `%s` expected `%s`", i, type_format(type), type_format(param));
             error = true;
         }

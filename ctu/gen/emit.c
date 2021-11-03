@@ -65,10 +65,6 @@ static size_t push_step(block_t *block, step_t step) {
     return block->len++;
 }
 
-static value_t *value_zero(void) {
-    return value_int(NULL, type_digit(SIGNED, TY_SIZE), 0);
-}
-
 static step_t step_with_type(opcode_t op, const node_t *node, const type_t *type) {
     step_t step = {
         .opcode = op,
@@ -158,6 +154,12 @@ static block_t *import_symbol(lir_t *lir) {
     return block;
 }
 
+static block_t *local_declare(lir_t *lir) {
+    block_t *block = init_block(local_name(lir), lir, lir_type(lir));
+    lir->data = block;
+    return block;
+}
+
 static void build_block(vector_t **strings, reports_t *reports, module_t *mod, block_t *block, lir_t *body) {
     context_t ctx = { strings, mod, block, reports, oplist_new(4) };
 
@@ -226,17 +228,19 @@ static operand_t emit_stmts(context_t *ctx, lir_t *lir) {
     return operand_empty();
 }
 
+static operand_t compile_store(context_t *ctx, lir_t *lir, operand_t dst, operand_t src) {
+    step_t step = step_of(OP_STORE, lir);
+    step.dst = dst;
+    step.src = src;
+    return add_step(ctx, step);
+}
+
 static operand_t emit_assign(context_t *ctx, lir_t *lir) {
     lir_t *to = lir_is(lir->dst, LIR_UNARY) ? lir->dst->operand : lir->dst;
     operand_t dst = emit_lir(ctx, to);
     operand_t src = emit_lir(ctx, lir->src);
 
-    step_t step = step_of(OP_STORE, lir->dst);
-    step.dst = dst;
-    step.src = src;
-    step.offset = operand_imm(ctx->reports, value_zero());
-
-    return add_step(ctx, step);
+    return compile_store(ctx, lir->dst, dst, src);
 }
 
 static operand_t add_block(context_t *ctx, lir_t *lir) {
@@ -404,6 +408,23 @@ static operand_t emit_offset(context_t *ctx, lir_t *lir) {
     return add_step(ctx, step);
 }
 
+static operand_t emit_local(context_t *ctx, lir_t *lir) {
+    if (lir->data != NULL) {
+        return operand_address(lir->data);
+    }
+
+    block_t *local = local_declare(lir);
+    vector_push(&ctx->block->locals, local);
+    operand_t dst = operand_address(local);
+
+    if (lir->init) {
+        operand_t init = emit_lir(ctx, lir->init);
+        compile_store(ctx, lir, dst, init);
+    }
+
+    return dst;
+}
+
 static operand_t emit_lir(context_t *ctx, lir_t *lir) {
     switch (lir->leaf) {
     case LIR_UNARY: return emit_unary(ctx, lir);
@@ -419,6 +440,7 @@ static operand_t emit_lir(context_t *ctx, lir_t *lir) {
     case LIR_READ: return emit_read(ctx, lir);
     case LIR_CALL: return emit_call(ctx, lir);
     case LIR_VALUE: return emit_value(lir);
+    case LIR_LOCAL: return emit_local(ctx, lir);
     case LIR_DEFINE: return emit_define(lir);
     case LIR_PARAM: return emit_param(lir);
     case LIR_RETURN: return emit_return(ctx, lir);

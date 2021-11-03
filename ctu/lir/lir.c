@@ -18,9 +18,8 @@ static const attrib_t DEFAULT_ATTRIBS = {
 };
 
 static lir_t *lir_decl(node_t *node, leaf_t leaf, const char *name, const type_t *type) {
-    lir_t *lir = lir_new(node, type_poison_with_node("forward declaration", node), leaf);
+    lir_t *lir = lir_new(node, type, leaf);
     lir->_name = name;
-    lir->_type = type;
     lir->attribs = &DEFAULT_ATTRIBS;
     return lir;
 }
@@ -30,7 +29,7 @@ void lir_attribs(lir_t *dst, const attrib_t *attribs) {
 }
 
 lir_t *lir_forward(node_t *node, const char *name, leaf_t expected, void *ctx) {
-    lir_t *lir = lir_decl(node, LIR_FORWARD, name, NULL);
+    lir_t *lir = lir_decl(node, LIR_FORWARD, name, type_poison("forward declaration"));
     lir->expected = expected;
     lir->ctx = ctx;
     return lir;

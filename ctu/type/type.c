@@ -8,7 +8,7 @@
 static type_t *new_detailed_type(metatype_t meta, const char *name, const node_t *node) {
     type_t *type = ctu_malloc(sizeof(type_t));
     type->type = meta;
-    type->mut = false;
+    type->mut = true;
     type->name = name;
     type->node = node;
     return type;
