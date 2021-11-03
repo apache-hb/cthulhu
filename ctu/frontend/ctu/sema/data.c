@@ -162,8 +162,11 @@ sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decl
         }
     }
 
+    type_t *boolean = type_bool_with_name("bool");
+    data->boolean = boolean;
+
     add_builtin_type(sema, "void", type_void());
-    add_builtin_type(sema, "bool", type_bool_with_name("bool"));
+    add_builtin_type(sema, "bool", boolean);
     add_builtin_type(sema, "str", type_string_with_name("str"));
 
     set_cache(path, sema);
@@ -257,4 +260,9 @@ void set_path(sema_t *sema, vector_t *path) {
 vector_t *get_path(sema_t *sema) {
     stack_t *data = sema_get_data(sema);
     return data->path;
+}
+
+type_t *get_cached_bool_type(sema_t *sema) {
+    stack_t *data = sema_get_data(sema);
+    return data->boolean;
 }

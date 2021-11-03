@@ -177,7 +177,7 @@ ctu_t *ctu_pointer(scan_t *scan, where_t where, ctu_t *ptr, bool subscript);
 ctu_t *ctu_typename(scan_t *scan, where_t where, const char *name);
 ctu_t *ctu_typepath(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_closure(scan_t *scan, where_t where, vector_t *args, ctu_t *result);
-ctu_t *ctu_mutable(scan_t *scan, where_t where, ctu_t *type);
+ctu_t *ctu_mutable(scan_t *scan, where_t where, ctu_t *type, bool mut);
 ctu_t *ctu_varargs(scan_t *scan, where_t where);
 ctu_t *ctu_array(scan_t *scan, where_t where, ctu_t *type, ctu_t *size);
 

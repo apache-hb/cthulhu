@@ -24,6 +24,7 @@ typedef struct {
     ctu_t *tree;
     vector_t *stack;
     type_t *digits[TY_INT_TOTAL][SIGN_TOTAL];
+    type_t *boolean;
 
     local_t local; /// function local data
     vector_t *externs; /// all extern functions in the current module

@@ -42,7 +42,7 @@
 "type" { return TYPE; }
 "null" { return NIL; }
 
-[$a-zA-Z_][a-zA-Z0-9_]* {
+[a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);
     return IDENT;
 }
@@ -67,6 +67,7 @@
     return STRING;
 }
 
+"$" { return DISCARD; }
 ";" { return SEMI; }
 
 "::" { return COLON2; }

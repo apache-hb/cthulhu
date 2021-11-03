@@ -1,5 +1,5 @@
 export def main(): int {
-    var arr: [int * 10] = [ 25, 0, 50 ];
+    var arr: [int $ 10] = [ 25, 0, 50 ];
     final x = 2;
 
     arr[x] = 0;

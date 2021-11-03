@@ -193,10 +193,11 @@ ctu_t *ctu_closure(scan_t *scan, where_t where,
     return ctu;
 }
 
-ctu_t *ctu_mutable(scan_t *scan, where_t where, ctu_t *type) {
+ctu_t *ctu_mutable(scan_t *scan, where_t where, ctu_t *type, bool mut) {
     ctu_t *ctu = ctu_new(scan, where, CTU_MUTABLE);
 
     ctu->kind = type;
+    ctu->mut = mut;
 
     return ctu;
 }

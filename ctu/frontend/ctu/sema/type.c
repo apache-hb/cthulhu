@@ -82,7 +82,7 @@ static type_t *compile_mutable(sema_t *sema, ctu_t *ctu) {
         report_underline(id, "redundant mutable specifier");
     }
 
-    return type_mut(type, true);
+    return type_mut(type, ctu->mut);
 }
 
 static type_t *compile_array(sema_t *sema, ctu_t *ctu) {
@@ -148,79 +148,108 @@ type_t *common_type(const type_t *lhs, const type_t *rhs) {
     return type_poison("cannot find common type");
 }
 
-static lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *type, bool implicit) {
-    const type_t *exprtype = lir_type(expr);
+/**
+ * implicit rules:
+ *      var <- const 
+ *          then error "casting away mutability"
+ * 
+ *      digit <- digit when
+ *          dst.width < src.width 
+ *              then error "possible truncation"
+ *          dst.sign != src.sign
+ *              then error "lossy sign conversion"
+ *      
+ *      ptr <- digit when
+ *          src.width != INTPTR
+ *              then error "possible lossy conversion"
+ * 
+ *      ptr <- closure when
+ *          ptr.type != void
+ *              then error "can only convert closure to void pointer"
+ * 
+ *      ptr <- array when
+ *          ptr.type != array.type
+ *              then error "can only convert arrays to pointers of the same type"
+ * 
+ *      digit <- ptr when
+ *          dst.width != INTPTR
+ *              then error "can only convert pointers to intptrs"
+ * 
+ *      closure <- ptr
+ *          when src.type != void
+ *              then error "can only convert void pointers to closures"
+ * 
+ *      array <- ptr
+ *          when dst.type != src.type
+ *              then error "can only convert pointer to array when types are the same"
+ * 
+ *      bool <- digit
+ *          dst = src != 0
+ * 
+ *      
+ */
+static lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *dst, bool implicit) {
+    const type_t *src = lir_type(expr);
+    
+    if (dst == src) { return expr; }
 
-    if (exprtype == type) {
-        return expr;
+    /* warn about mutability being cast away */
+    if (implicit) {
+        if (!is_const(dst) && is_const(src)) {
+            report(sema->reports, WARNING, expr->node,
+                "implicitly removing const"
+            );
+        }
     }
 
-    if (implicit && is_const(exprtype) && !is_const(type)) {
-        report(sema->reports, ERROR, expr->node, "implicitly discarding const");
-    }
-
-    /**
-     * casting from a digit to another digit
-     */
-    if (is_digit(type) && is_digit(exprtype)) {
+    /* handle integer conversion */
+    if (is_digit(dst) && is_digit(src)) {
         if (implicit) {
-            if (type->digit.kind < exprtype->digit.kind) {
-                report(sema->reports, WARNING, expr->node, "implicit truncation from `%s` to `%s`", ctu_type_format(exprtype), ctu_type_format(type));
+            digit_t lhs = dst->digit;
+            digit_t rhs = src->digit;
+
+            if (lhs.kind < rhs.kind) {
+                report(sema->reports, WARNING, expr->node,
+                    "implicit integer truncation from `%s` to `%s`",
+                    ctu_type_format(src),
+                    ctu_type_format(dst)
+                );
             }
 
-            if (type->digit.sign != exprtype->digit.sign) {
-                report(sema->reports, WARNING, expr->node, "implicit sign conversion from `%s` to `%s`", ctu_type_format(exprtype), ctu_type_format(type));
-            }
-        }
-
-        return lir_cast(expr->node, type, expr);
-    }
-
-    /**
-     * casting from a digit to a bool becomes `expr != 0`
-     */
-    if (is_bool(type) && is_digit(exprtype)) {
-        lir_t *zero = lir_int(expr->node, type_digit(SIGNED, TY_INT), 0);
-        return lir_binary(expr->node, type_bool(), BINARY_NEQ, expr, zero);
-    }
-
-    if (type_is_indirect(type) && type_is_indirect(exprtype)) {
-        if (implicit && !is_voidptr(type) && !is_voidptr(exprtype)) {
-            if (!(is_closure(type) && is_closure(exprtype))) {    
-                report(sema->reports, ERROR, expr->node, "implicit conversion from `%s` to `%s`", ctu_type_format(exprtype), ctu_type_format(type));
+            if (lhs.sign != rhs.sign) {
+                report(sema->reports, WARNING, expr->node,
+                    "implicit sign conversion from `%s` to `%s`",
+                    ctu_type_format(src),
+                    ctu_type_format(dst)
+                );
             }
         }
 
-        return lir_cast(expr->node, type, expr);
+        return lir_cast(expr->node, dst, expr);
     }
 
-    if (is_digit(type) && is_pointer(exprtype)) {
-        digit_t digit = type->digit;
-        if (digit.kind == TY_INTPTR) {
-            return lir_cast(expr->node, type, expr);
-        }
-        message_t *id = report(sema->reports, ERROR, expr->node, "invalid cast from `%s` to `%s`", type_format(exprtype), type_format(type));
-        report_note(id, "pointers can only be cast to `uintptr`");
+    /* handle digit to bool conversion */
+    if (is_bool(dst) && is_digit(src)) {
+        lir_t *zero = lir_int(expr->node, src, 0);
+        lir_t *cmp = lir_binary(expr->node, get_cached_bool_type(sema), BINARY_NEQ, expr, zero);
+        return cmp;
     }
 
-    if (is_pointer(type) && is_digit(exprtype)) {
-        digit_t digit = type->digit;
-        if (digit.kind == TY_INTPTR) {
-            return lir_cast(expr->node, type, expr);
-        }
-        message_t *id = report(sema->reports, ERROR, expr->node, "invalid cast from `%s` to `%s`", type_format(exprtype), type_format(type));
-        report_note(id, "only `uintptr` can be casted to a pointer");
+    /* handle closure conversion */
+    if (is_closure(dst) && is_voidptr(src)) {
+        return lir_cast(expr->node, dst, expr);
     }
 
-    if (is_void(type) && is_void(exprtype)) {
-        return expr;
+    if (is_voidptr(dst) && is_closure(src)) {
+        return lir_cast(expr->node, dst, expr);
     }
 
-    if (is_string(type) && is_string(exprtype)) {
-        return expr;
-    }
-
-    if (is_bool(type) && is_bool(exprtype)) {
+    /* handle basic cases */
+    if (
+        (is_void(dst) && is_void(src)) ||
+        (is_bool(dst) && is_bool(src)) ||
+        (is_string(dst) && is_string(src))
+    ) {
         return expr;
     }
 

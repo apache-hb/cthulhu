@@ -37,6 +37,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     DIGIT "integer literal"
 
 %token
+    DISCARD "`$`"
     VAR "`var`"
     FINAL "`final`"
     DEF "`def`"
@@ -107,7 +108,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     exported const
 
 %type<ident>
-    alias
+    alias ident
 
 %start program
 
@@ -175,9 +176,9 @@ exported: %empty { $$ = false; }
     | EXPORT { $$ = true; }
     ;
 
-value: const IDENT ASSIGN expr SEMI { $$ = ctu_value(x, @$, $1, $2, NULL, $4); }
-    | const IDENT COLON type ASSIGN expr SEMI { $$ = ctu_value(x, @$, $1, $2, $4, $6); }
-    | const IDENT COLON type SEMI { $$ = ctu_value(x, @$, $1, $2, $4, NULL); }
+value: const ident ASSIGN expr SEMI { $$ = ctu_value(x, @$, $1, $2, NULL, $4); }
+    | const ident COLON type ASSIGN expr SEMI { $$ = ctu_value(x, @$, $1, $2, $4, $6); }
+    | const ident COLON type SEMI { $$ = ctu_value(x, @$, $1, $2, $4, NULL); }
     ;
 
 const: VAR { $$ = true; }
@@ -214,16 +215,16 @@ params: param { $$ = vector_init($1); }
     | params COMMA param { vector_push(&$1, $3); $$ = $1; }
     ;
 
-param: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
-    | IDENT COLON ELLIPSIS { $$ = ctu_param(x, @$, $1, ctu_varargs(x, @3)); }
+param: ident COLON type { $$ = ctu_param(x, @$, $1, $3); }
+    | ident COLON ELLIPSIS { $$ = ctu_param(x, @$, $1, ctu_varargs(x, @3)); }
     ;
 
 type: path { $$ = ctu_typepath(x, @$, $1); }
     | MUL type { $$ = ctu_pointer(x, @$, $2, false); }
     | LSQUARE type RSQUARE { $$ = ctu_pointer(x, @$, $2, true); }
-    | LSQUARE type MUL expr RSQUARE { $$ = ctu_array(x, @$, $2, $4); }
+    | LSQUARE type DISCARD expr RSQUARE { $$ = ctu_array(x, @$, $2, $4); }
     | closure { $$ = $1; }
-    | VAR type { $$ = ctu_mutable(x, @$, $2); }
+    | const type { $$ = ctu_mutable(x, @$, $2, $1); }
     ;
 
 closure: LPAREN typelist RPAREN ARROW type { $$ = ctu_closure(x, @$, $2, $5); }
@@ -371,5 +372,8 @@ or: and { $$ = $1; }
 expr: or { $$ = $1; }
     | lambda { $$ = $1; }
     ;
-    
+
+ident: IDENT { $$ = $1; }
+    | DISCARD { $$ = ctu_strdup("$"); }
+    ;
 %%
