@@ -97,6 +97,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     expr primary postfix unary multiply add compare equality shift bits xor and or
     statements stmt type param function return import while
     assign attrib branch tail closure result funcbody lambda lambdabody newtype list
+    int
 
 %type<vector>
     unit stmtlist params paramlist args arglist imports
@@ -222,7 +223,7 @@ param: ident COLON type { $$ = ctu_param(x, @$, $1, $3); }
 type: path { $$ = ctu_typepath(x, @$, $1); }
     | MUL type { $$ = ctu_pointer(x, @$, $2, false); }
     | LSQUARE type RSQUARE { $$ = ctu_pointer(x, @$, $2, true); }
-    | LSQUARE type DISCARD expr RSQUARE { $$ = ctu_array(x, @$, $2, $4); }
+    | LSQUARE type DISCARD int RSQUARE { $$ = ctu_array(x, @$, $2, $4); }
     | closure { $$ = $1; }
     | const type { $$ = ctu_mutable(x, @$, $2, $1); }
     ;
@@ -297,9 +298,12 @@ list: LSQUARE items RSQUARE { $$ = ctu_list(x, @$, NULL, $2); }
     | LSQUARE items RSQUARE NOT type { $$ = ctu_list(x, @$, $5, $2); }
     ;
 
+int: DIGIT { $$ = ctu_digit(x, @$, $1); }
+    ;
+
 primary: LPAREN expr RPAREN { $$ = $2; }
     | path { $$ = ctu_path(x, @$, $1); }
-    | DIGIT { $$ = ctu_digit(x, @$, $1); }
+    | int { $$ = $1; }
     | YES { $$ = ctu_bool(x, @$, true); }
     | NO { $$ = ctu_bool(x, @$, false); }
     | STRING { $$ = ctu_string(x, @$, $1); }

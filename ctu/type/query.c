@@ -259,3 +259,42 @@ const type_t *types_common(const type_t *lhs, const type_t *rhs) {
     char *err = format("cannot get common type of unrelated types (%s, %s)", type_format(lhs), type_format(rhs));
     return type_poison(err);
 }
+
+bool types_exact_equal(const type_t *lhs, const type_t *rhs) {
+    if (is_bool(lhs) && is_bool(rhs)) { return true; }
+    if (is_string(lhs) && is_string(rhs)) { return true; }
+    if (is_void(lhs) && is_void(rhs)) { return true; }
+
+    if (is_digit(lhs) && is_digit(rhs)) {
+        digit_t ld = lhs->digit;
+        digit_t rd = rhs->digit;
+
+        return ld.kind == rd.kind && ld.sign == rd.sign;
+    }
+
+    if (is_closure(lhs) && is_closure(rhs)) {
+        if (vector_len(lhs->args) != vector_len(rhs->args)) {
+            return false;
+        }
+
+        for (size_t i = 0; i < vector_len(lhs->args); i++) {
+            const type_t *larg = vector_get(lhs->args, i);
+            const type_t *rarg = vector_get(rhs->args, i);
+            if (!types_exact_equal(larg, rarg)) {
+                return false;
+            }
+        }
+
+        return types_exact_equal(lhs->result, rhs->result);
+    }
+
+    if (is_array(lhs) && is_array(rhs)) {
+        return lhs->len == rhs->len && types_exact_equal(lhs->elements, rhs->elements);
+    }
+
+    if (is_pointer(lhs) && is_pointer(rhs)) {
+        return types_exact_equal(lhs->ptr, rhs->ptr) && lhs->index == rhs->index;
+    }
+
+    return false;
+}

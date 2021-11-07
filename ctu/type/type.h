@@ -241,3 +241,5 @@ bool type_is_indirect(const type_t *type);
  * @return the common type of lhs and rhs
  */
 const type_t *types_common(const type_t *lhs, const type_t *rhs);
+
+bool types_exact_equal(const type_t *lhs, const type_t *rhs);

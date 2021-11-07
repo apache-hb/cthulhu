@@ -231,6 +231,9 @@ type_t *get_cached_digit_type(sema_t *sema, sign_t sign, int_t width) {
     return data->digits[width][sign];
 }
 
+type_t *get_cached_usize(sema_t *sema) {
+    return get_cached_digit_type(sema, UNSIGNED, TY_SIZE);
+}
 
 bool is_complete(sema_t *sema) {
     stack_t *data = sema_get_data(sema);

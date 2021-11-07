@@ -37,6 +37,17 @@ static void check_overflow(reports_t *reports, value_t *value) {
     }
 }
 
+static void init_locals(exec_t *exec) {
+    block_t *block = exec->block;
+    vector_t *all = block->locals;
+    size_t len = vector_len(all);
+
+    for (size_t i = 0; i < len; i++) {
+        block_t *local = vector_get(all, i);
+        value_t *value = default_value(local, i);
+    }
+}
+
 static exec_t exec_new(world_t *world, block_t *block) {
     size_t size = block->len;
 
@@ -49,8 +60,10 @@ static exec_t exec_new(world_t *world, block_t *block) {
         .world = world,
         .block = block,
         .values = values,
-        .result = NULL
+        .result = value_empty()
     };
+
+    init_locals(&exec);
 
     return exec;
 }
@@ -205,6 +218,42 @@ static value_t *exec_load(exec_t *exec, step_t step) {
     return eval_block(exec->world, val->block);
 }
 
+static value_t *exec_offset(exec_t *exec, step_t step) {
+    value_t *base = get_value(exec, step.src);
+    value_t *offset = get_value(exec, step.offset);
+
+    if (!is_array(base->type)) {
+        printf("%s\n", type_format(base->type));
+        return value_poison_with_node("not an array", step.node);
+    }
+
+    if (!is_digit(offset->type)) {
+        return value_poison_with_node("not an integer", step.node);
+    }
+
+    size_t ui = mpz_get_ui(offset->digit) + base->offset;
+    return value_offset(base->type, base->elements, ui);
+}
+
+static void exec_store(exec_t *exec, step_t step) {
+    value_t *dst = get_value(exec, step.dst);
+    value_t *src = get_value(exec, step.src);
+
+    if (!is_array(dst->type)) {
+        report(exec->world->reports, ERROR, step.node, "not an array `%s`", type_format(dst->type));
+        return;
+    }
+
+    size_t off = dst->offset;
+    vector_t *vec = dst->elements;
+    if (off > vector_len(vec)) {
+        report(exec->world->reports, ERROR, step.node, "out of bounds access %zu is greater than array size of %zu", off, vector_len(vec));
+        return;
+    }
+    
+    vector_set(vec, off, src);
+}
+
 static bool exec_step(exec_t *exec) {
     size_t here = exec->ip;
     
@@ -230,6 +279,14 @@ static bool exec_step(exec_t *exec) {
     case OP_JMP:
         exec->ip = get_label(exec, step.label);
         return exec->ip != SIZE_MAX;
+
+    case OP_OFFSET:
+        exec->values[here] = exec_offset(exec, step);
+        return true;
+
+    case OP_STORE:
+        exec_store(exec, step);
+        return true;
 
     case OP_EMPTY: 
     case OP_BLOCK:

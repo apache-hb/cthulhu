@@ -391,3 +391,5 @@ void retype_lir(lir_t *lir, const type_t *type);
 
 bool has_name(const lir_t *lir);
 const char *get_name(const lir_t *lir);
+
+extern const attrib_t DEFAULT_ATTRIBS;

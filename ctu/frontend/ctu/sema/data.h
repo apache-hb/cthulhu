@@ -74,6 +74,7 @@ bool is_discard(const char *name);
 type_t *get_cached_digit_type(sema_t *sema, sign_t sign, int_t width);
 type_t *get_cached_bool_type(sema_t *sema);
 type_t *get_cached_string_type(sema_t *sema);
+type_t *get_cached_usize(sema_t *sema);
 
 bool is_complete(sema_t *sema);
 void make_complete(sema_t *sema, lir_t *lir);

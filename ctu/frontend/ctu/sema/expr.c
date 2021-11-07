@@ -63,100 +63,132 @@ static lir_t *compile_unary(sema_t *sema, ctu_t *expr) {
     return lir_unary(expr->node, type, unary, operand);
 }
 
+static const type_t *common_math_digit(sema_t *sema, const type_t *lhs, const type_t *rhs) {
+    if (!is_digit(lhs) || !is_digit(rhs)) {
+        return NULL;
+    }
+
+    digit_t ldigit = lhs->digit;
+    digit_t rdigit = rhs->digit;
+
+    sign_t sign = (ldigit.sign == SIGNED || rdigit.sign == SIGNED) ? SIGNED : UNSIGNED;
+    int_t width = MAX(ldigit.kind, rdigit.kind);
+
+    return get_cached_digit_type(sema, sign, width);
+}
+
+static const type_t *common_bool(sema_t *sema, const type_t *lhs, const type_t *rhs) {
+    if (!is_bool(lhs) || !is_bool(rhs)) {
+        return NULL;
+    }
+
+    return get_cached_bool_type(sema);
+}
+
 /**
  * handle `==` and `!=` expressions
  */
-static const type_t *binary_equal(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
-    const type_t *type = common_type(lir_type(lhs), lir_type(rhs));
-    if (is_poison(type)) {
-        report(reports, ERROR, node, "cannot take equality of `%s` and `%s`",
+static const type_t *binary_equal(sema_t *sema, node_t *node, lir_t *lhs, lir_t *rhs) {
+    const type_t *type = common_math_digit(sema, lir_type(lhs), lir_type(rhs));
+    const type_t *common = type == NULL ? common_bool(sema, lir_type(lhs), lir_type(rhs)) : type;
+
+    if (common == NULL) {
+        report(sema->reports, ERROR, node, "cannot take equality of `%s` and `%s`",
             type_format(lir_type(lhs)),
             type_format(lir_type(rhs))
         );
+
+        return type_poison_with_node("invalid equality operands", node);
     }
 
-    return type_bool();
+    return common;
 }
 
 /**
  * handle `<`, `<=`, `>`, and `>=` expressions
  */
-static const type_t *binary_compare(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
-    const type_t *type = common_type(lir_type(lhs), lir_type(rhs));
-    if (!is_integer(type)) {
-        report(reports, ERROR, node, "cannot compare `%s` to `%s`", 
+static const type_t *binary_compare(sema_t *sema, node_t *node, lir_t *lhs, lir_t *rhs) {
+    const type_t *type = common_math_digit(sema, lir_type(lhs), lir_type(rhs));
+    if (type == NULL) {
+        report(sema->reports, ERROR, node, "cannot compare `%s` to `%s`", 
             type_format(lir_type(lhs)), 
             type_format(lir_type(rhs))
         );
     }
 
-    return type_bool();
+    return get_cached_bool_type(sema);
 }
 
 /**
  * handle `&&` and `||` expressions
  */
-static const type_t *binary_logic(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
-    const type_t *type = common_type(lir_type(lhs), lir_type(rhs));
-    if (!is_bool(type)) {
-        report(reports, ERROR, node, "cannot logically evaluate `%s` with `%s`", 
+static const type_t *binary_logic(sema_t *sema, node_t *node, lir_t *lhs, lir_t *rhs) {
+    const type_t *type = common_bool(sema, lir_type(lhs), lir_type(rhs));
+    if (type == NULL) {
+        report(sema->reports, ERROR, node, "cannot logically evaluate `%s` with `%s`", 
             type_format(lir_type(lhs)), 
             type_format(lir_type(rhs))
         );
+
+        return type_poison_with_node("invalid logic operands", node);
     }
 
-    return type_bool();
+    return type;
 }
 
 /**
  * handle `+`, `-`, `*`, and `/` expressions
  */
-static const type_t *binary_math(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
-    const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
-    if (!is_integer(type)) {
-        report(reports, ERROR, node, "cannot perform math operations on `%s` with `%s`",
+static const type_t *binary_math(sema_t *sema, node_t *node, lir_t *lhs, lir_t *rhs) {
+    const type_t *type = common_math_digit(sema, lir_type(lhs), lir_type(rhs));
+    if (type == NULL) {
+        report(sema->reports, ERROR, node, "cannot perform math operations on `%s` with `%s`",
             type_format(lir_type(lhs)),
             type_format(lir_type(rhs))
         );
+
+        return type_poison_with_node("invalid math operands", node);
     }
 
     return type;
 }
 
-static const type_t *binary_bits(reports_t *reports, node_t *node, lir_t *lhs, lir_t *rhs) {
-    const type_t *type = types_common(lir_type(lhs), lir_type(rhs));
-    if (!is_integer(type)) {
-        report(reports, ERROR, node, "cannot perform bitwise operations on `%s` with `%s`",
+static const type_t *binary_bits(sema_t *sema, node_t *node, lir_t *lhs, lir_t *rhs) {
+    const type_t *type = common_math_digit(sema, lir_type(lhs), lir_type(rhs));
+    if (type == NULL) {
+        report(sema->reports, ERROR, node, "cannot perform bitwise operations on `%s` with `%s`",
             type_format(lir_type(lhs)),
             type_format(lir_type(rhs))
         );
+        
+        return type_poison_with_node("invalid bitwise operands", node);
     }
 
     return type;
 }
 
-static const type_t *binary_type(reports_t *reports, node_t *node, binary_t binary, lir_t *lhs, lir_t *rhs) {
+static const type_t *binary_type(sema_t *sema, node_t *node, binary_t binary, lir_t *lhs, lir_t *rhs) {
     switch (binary) {
     case BINARY_EQ: case BINARY_NEQ:
-        return binary_equal(reports, node, lhs, rhs);
+        return binary_equal(sema, node, lhs, rhs);
     
     case BINARY_GT: case BINARY_GTE:
     case BINARY_LT: case BINARY_LTE:
-        return binary_compare(reports, node, lhs, rhs);
+        return binary_compare(sema, node, lhs, rhs);
 
     case BINARY_AND: case BINARY_OR:
-        return binary_logic(reports, node, lhs, rhs);
+        return binary_logic(sema, node, lhs, rhs);
 
     case BINARY_ADD: case BINARY_SUB:
     case BINARY_MUL: case BINARY_DIV: case BINARY_REM:
-        return binary_math(reports, node, lhs, rhs);
+        return binary_math(sema, node, lhs, rhs);
 
     case BINARY_SHL: case BINARY_SHR:
     case BINARY_BITAND: case BINARY_BITOR: case BINARY_XOR:
-        return binary_bits(reports, node, lhs, rhs);
+        return binary_bits(sema, node, lhs, rhs);
 
     default:
-        ctu_assert(reports, "binary-type unreachable %d", binary);
+        ctu_assert(sema->reports, "binary-type unreachable %d", binary);
         return type_poison_with_node("unreachable", node);
     }
 }
@@ -166,7 +198,7 @@ static lir_t *compile_binary(sema_t *sema, ctu_t *expr) {
     lir_t *rhs = compile_expr(sema, expr->rhs);
     binary_t binary = expr->binary;
 
-    const type_t *common = binary_type(sema->reports, expr->node, binary, lhs, rhs);
+    const type_t *common = binary_type(sema, expr->node, binary, lhs, rhs);
 
     return lir_binary(expr->node, common, binary, lhs, rhs);
 }
@@ -309,7 +341,7 @@ static lir_t *compile_index(sema_t *sema, ctu_t *index) {
     lir_t *expr = compile_lvalue(sema, index->array);
     lir_t *subscript = compile_expr(sema, index->index);
 
-    lir_t *it = implicit_convert_expr(sema, subscript, type_usize());
+    lir_t *it = implicit_convert_expr(sema, subscript, get_cached_usize(sema));
     if (it == NULL) {
         report(sema->reports, ERROR, index->node, "index type must be convertible to `usize`");
         return lir_poison(index->node, "invalid index type");

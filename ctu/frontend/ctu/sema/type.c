@@ -1,4 +1,5 @@
 #include "type.h"
+#include "expr.h"
 
 void forward_type(sema_t *sema, const char *name, ctu_t *ctu) {
     type_t *type = get_type(sema, name);
@@ -86,10 +87,14 @@ static type_t *compile_mutable(sema_t *sema, ctu_t *ctu) {
 }
 
 static type_t *compile_array(sema_t *sema, ctu_t *ctu) {
-    UNUSED(sema);
-    UNUSED(ctu);
+    lir_t *size = compile_expr(sema, ctu->size);
+    if (size->leaf != LIR_DIGIT) {
+        ctu_assert(sema->reports, "(ctu) array size must be a literal");
+        return type_poison_with_node("array size must be a literal", ctu->node);
+    }
 
-    return type_poison("compile-array unimplemented");
+    type_t *of = compile_type(sema, ctu->arr);
+    return type_array(of, mpz_get_ui(size->digit));
 }
 
 type_t *compile_type(sema_t *sema, ctu_t *ctu) {
@@ -191,14 +196,25 @@ type_t *common_type(const type_t *lhs, const type_t *rhs) {
 static lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *dst, bool implicit) {
     const type_t *src = lir_type(expr);
     
-    if (dst == src) { return expr; }
+    if (types_exact_equal(src, dst)) {
+        return expr;
+    }
+
+    if (is_array(dst) && is_array(src)) {
+        if (types_exact_equal(dst->elements, src->elements)) {
+            if (dst->len >= src->len) {
+                return expr;
+            }
+            report(sema->reports, WARNING, expr->node, "array shortened from `%zu` to `%zu`", src->len, dst->len);
+            return expr;
+        }
+        return NULL;
+    }
 
     /* warn about mutability being cast away */
     if (implicit) {
         if (!is_const(dst) && is_const(src)) {
-            report(sema->reports, WARNING, expr->node,
-                "implicitly removing const"
-            );
+            report(sema->reports, WARNING, expr->node, "implicitly removing const");
         }
     }
 
@@ -235,12 +251,11 @@ static lir_t *convert_expr(sema_t *sema, lir_t *expr, const type_t *dst, bool im
         return cmp;
     }
 
-    /* handle closure conversion */
-    if (is_closure(dst) && is_voidptr(src)) {
+    if (type_is_indirect(dst) && is_voidptr(src)) {
         return lir_cast(expr->node, dst, expr);
     }
 
-    if (is_voidptr(dst) && is_closure(src)) {
+    if (is_voidptr(dst) && type_is_indirect(src)) {
         return lir_cast(expr->node, dst, expr);
     }
 

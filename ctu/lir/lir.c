@@ -11,7 +11,7 @@ static lir_t *lir_new(node_t *node, const type_t *type, leaf_t leaf) {
     return lir;
 }
 
-static const attrib_t DEFAULT_ATTRIBS = {
+const attrib_t DEFAULT_ATTRIBS = {
     .visibility = PRIVATE,
     .mangle = NULL,
     .section = NULL

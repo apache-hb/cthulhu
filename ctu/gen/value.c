@@ -49,6 +49,17 @@ value_t *value_block(struct block_t *block) {
     return value;
 }
 
+value_t *value_offset(const type_t *type, vector_t *base, size_t offset) {
+    value_t *value = value_of(type, NULL);
+    value->elements = base;
+    value->offset = offset;
+    return value;
+}
+
+value_t *value_vector(const type_t *type, vector_t *elements) {
+    return value_offset(type, elements, 0);
+}
+
 value_t *value_empty(void) {
     return value_of(type_void(), NULL);
 }

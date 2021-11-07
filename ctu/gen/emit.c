@@ -130,9 +130,8 @@ static const char *symbol_name(const lir_t *lir) {
     return format("anon%ld_%ld", where.first_line, where.first_column);
 }
 
-static block_t *init_block(const char *name, lir_t *decl, const type_t *type) {
-    /* itanium only mangles functions */
-    block_t *block = new_define(name, decl->node, type, decl->attribs);
+static block_t *detailed_block(const char *name, const type_t *type, const attrib_t *attribs, const node_t *node) {
+    block_t *block = new_define(name, node, type, attribs);
 
     block->locals = vector_new(4);
     block->len = 0;
@@ -140,6 +139,10 @@ static block_t *init_block(const char *name, lir_t *decl, const type_t *type) {
     block->steps = ctu_malloc(sizeof(step_t) * block->size);
 
     return block;
+}
+
+static block_t *init_block(const char *name, lir_t *decl, const type_t *type) {
+    return detailed_block(name, type, decl->attribs, decl->node);
 }
 
 static block_t *block_declare(lir_t *lir) {
@@ -399,13 +402,17 @@ static operand_t emit_cast(context_t *ctx, lir_t *lir) {
     return add_step(ctx, step);
 }
 
+static operand_t compile_offset(context_t *ctx, lir_t *lir, operand_t base, operand_t offset) {
+    step_t step = step_of(OP_OFFSET, lir);
+    step.src = base;
+    step.offset = offset;
+    return add_step(ctx, step);
+}
+
 static operand_t emit_offset(context_t *ctx, lir_t *lir) {
     operand_t it = emit_lir(ctx, lir->src);
     operand_t offset = emit_lir(ctx, lir->offset);
-    step_t step = step_of(OP_OFFSET, lir);
-    step.src = it;
-    step.offset = offset;
-    return add_step(ctx, step);
+    return compile_offset(ctx, lir, it, offset);
 }
 
 static operand_t emit_local(context_t *ctx, lir_t *lir) {
@@ -420,6 +427,27 @@ static operand_t emit_local(context_t *ctx, lir_t *lir) {
     if (lir->init) {
         operand_t init = emit_lir(ctx, lir->init);
         compile_store(ctx, lir, dst, init);
+    }
+
+    return dst;
+}
+
+static operand_t emit_list(context_t *ctx, lir_t *lir) {
+    vector_t *list = lir->elements;
+    size_t len = vector_len(list);
+
+    block_t *block = detailed_block(NULL, lir_type(lir), &DEFAULT_ATTRIBS, lir->node);
+    vector_push(&ctx->block->locals, block);
+    operand_t dst = operand_address(block);
+
+    printf("emit-list: %s %zu\n", type_format(lir_type(lir)), len);
+
+    for (size_t i = 0; i < len; i++) {
+        lir_t *element = vector_get(list, i);
+        operand_t src = emit_lir(ctx, element);
+        operand_t idx = operand_imm(ctx->reports, value_int(element->node, type_usize(), i));
+        operand_t offset = compile_offset(ctx, lir, dst, idx);
+        compile_store(ctx, element, offset, src);
     }
 
     return dst;
@@ -449,6 +477,7 @@ static operand_t emit_lir(context_t *ctx, lir_t *lir) {
     case LIR_BREAK: return emit_break(ctx, lir);
     case LIR_CAST: return emit_cast(ctx, lir);
     case LIR_OFFSET: return emit_offset(ctx, lir);
+    case LIR_LIST: return emit_list(ctx, lir);
 
     case LIR_DETAIL_SIZEOF: return emit_sizeof(ctx, lir);
     case LIR_DETAIL_ALIGNOF: return emit_alignof(ctx, lir);
