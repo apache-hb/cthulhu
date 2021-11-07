@@ -37,6 +37,10 @@ static void check_overflow(reports_t *reports, value_t *value) {
     }
 }
 
+static value_t *default_value(block_t *block) {
+
+}
+
 static void init_locals(exec_t *exec) {
     block_t *block = exec->block;
     vector_t *all = block->locals;
@@ -44,7 +48,7 @@ static void init_locals(exec_t *exec) {
 
     for (size_t i = 0; i < len; i++) {
         block_t *local = vector_get(all, i);
-        value_t *value = default_value(local, i);
+        value_t *value = default_value(local);
     }
 }
 
