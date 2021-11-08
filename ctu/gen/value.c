@@ -44,7 +44,7 @@ value_t *value_ptr(const type_t *type, value_t *ptr) {
 }
 
 value_t *value_block(struct block_t *block) {
-    value_t *value = value_of(block->type, NULL);
+    value_t *value = value_of(block->type, block->node);
     value->block = block;
     return value;
 }
@@ -62,6 +62,15 @@ value_t *value_vector(const type_t *type, vector_t *elements) {
 
 value_t *value_empty(void) {
     return value_of(type_void(), NULL);
+}
+
+value_t *value_array(const type_t *type, size_t len) {
+    vector_t *init = vector_of(len);
+    for (size_t i = 0; i < len; i++) {
+        vector_set(init, i, value_empty());
+    }
+    
+    return value_vector(type, init);
 }
 
 char *value_format(const value_t *value) {
@@ -84,6 +93,18 @@ char *value_format(const value_t *value) {
 
     if (is_closure(type)) {
         return format("%s(&%s)", typestr, value->block->name);
+    }
+
+    if (is_array(type)) {
+        size_t len = static_array_length(type);
+        vector_t *parts = vector_of(len);
+        for (size_t i = 0; i < len; i++) {
+            value_t *elem = vector_get(value->elements, i);
+            char *fmt = value_format(elem);
+            vector_set(parts, i, fmt);
+        }
+        char *body = strjoin(", ", parts);
+        return format("%s(%zu[%s])", typestr, len, body);
     }
 
     /* trigraphs are fun */

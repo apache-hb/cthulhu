@@ -38,7 +38,12 @@ static void check_overflow(reports_t *reports, value_t *value) {
 }
 
 static value_t *default_value(block_t *block) {
-
+    const type_t *type = block->type;
+    const node_t *node = block->node;
+    if (is_array(type)) {
+        return value_array(type, static_array_length(type));
+    }
+    return value_of(type, node);
 }
 
 static void init_locals(exec_t *exec) {
@@ -49,6 +54,7 @@ static void init_locals(exec_t *exec) {
     for (size_t i = 0; i < len; i++) {
         block_t *local = vector_get(all, i);
         value_t *value = default_value(local);
+        local->value = value;
     }
 }
 
@@ -239,6 +245,10 @@ static value_t *exec_offset(exec_t *exec, step_t step) {
     return value_offset(base->type, base->elements, ui);
 }
 
+/**
+ * right now only arrays can generate store instructions
+ * in compile time contexts
+ */
 static void exec_store(exec_t *exec, step_t step) {
     value_t *dst = get_value(exec, step.dst);
     value_t *src = get_value(exec, step.src);
@@ -247,6 +257,8 @@ static void exec_store(exec_t *exec, step_t step) {
         report(exec->world->reports, ERROR, step.node, "not an array `%s`", type_format(dst->type));
         return;
     }
+
+    printf("exec-store[%zu]\n", exec->ip);
 
     size_t off = dst->offset;
     vector_t *vec = dst->elements;
@@ -333,6 +345,8 @@ static value_t *eval_block(world_t *world, block_t *block) {
 
 void eval_world(reports_t *reports, module_t *mod) {
     world_t world = { reports, mod };
+
+    module_print(stdout, mod);
 
     size_t nvars = vector_len(mod->vars);
     for (size_t i = 0; i < nvars; i++) {

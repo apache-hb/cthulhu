@@ -40,7 +40,7 @@ static char *closure_format(const type_t *type) {
 
 char *type_format(const type_t *type) {
     if (type == NULL) {
-        return ctu_strdup("(null)");
+        return ctu_strdup("(nil)");
     }
     
     char *result = NULL;

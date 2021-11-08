@@ -33,6 +33,7 @@ value_t *value_ptr(const type_t *type, value_t *ptr);
 value_t *value_block(struct block_t *block);
 value_t *value_vector(const type_t *type, vector_t *elements);
 value_t *value_offset(const type_t *type, vector_t *base, size_t offset);
+value_t *value_array(const type_t *type, size_t len);
 value_t *value_empty(void);
 
 char *value_format(const value_t *value);

@@ -226,6 +226,7 @@ const type_t *get_field(const type_t *type, size_t idx);
 
 const char *get_poison_type_message(const type_t *type);
 const type_t *index_type(const type_t *type);
+size_t static_array_length(const type_t *type);
 
 bool type_can_index(const type_t *type);
 bool type_is_indirect(const type_t *type);

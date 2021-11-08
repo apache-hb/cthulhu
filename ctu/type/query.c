@@ -182,6 +182,15 @@ bool is_union(const type_t *type) {
     return type->type == TY_UNION;
 }
 
+
+size_t static_array_length(const type_t *type) {
+    if (!is_array(type)) {
+        return SIZE_MAX;
+    }
+
+    return type->len;
+}
+
 size_t field_offset(const type_t *type, const char *name) {
     if (!is_aggregate(type)) {
         return SIZE_MAX;
