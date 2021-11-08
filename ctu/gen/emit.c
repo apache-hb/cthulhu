@@ -435,8 +435,10 @@ static operand_t emit_local(context_t *ctx, lir_t *lir) {
 static operand_t emit_list(context_t *ctx, lir_t *lir) {
     vector_t *list = lir->elements;
     size_t len = vector_len(list);
+    where_t where = lir->node->where;
+    char *name = format("array%zu%zu", where.first_line, where.first_column);
 
-    block_t *block = detailed_block(NULL, lir_type(lir), &DEFAULT_ATTRIBS, lir->node);
+    block_t *block = detailed_block(name, lir_type(lir), &DEFAULT_ATTRIBS, lir->node);
     vector_push(&ctx->block->locals, block);
     operand_t dst = operand_address(block);
 

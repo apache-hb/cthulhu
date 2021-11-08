@@ -43,6 +43,7 @@ static value_t *default_value(block_t *block) {
     if (is_array(type)) {
         return value_array(type, static_array_length(type));
     }
+
     return value_of(type, node);
 }
 
@@ -257,8 +258,6 @@ static void exec_store(exec_t *exec, step_t step) {
         report(exec->world->reports, ERROR, step.node, "not an array `%s`", type_format(dst->type));
         return;
     }
-
-    printf("exec-store[%zu]\n", exec->ip);
 
     size_t off = dst->offset;
     vector_t *vec = dst->elements;

@@ -44,6 +44,10 @@ value_t *value_ptr(const type_t *type, value_t *ptr) {
 }
 
 value_t *value_block(struct block_t *block) {
+    if (is_array(block->type)) {
+        return block->value;
+    }
+    
     value_t *value = value_of(block->type, block->node);
     value->block = block;
     return value;
@@ -56,10 +60,6 @@ value_t *value_offset(const type_t *type, vector_t *base, size_t offset) {
     return value;
 }
 
-value_t *value_vector(const type_t *type, vector_t *elements) {
-    return value_offset(type, elements, 0);
-}
-
 value_t *value_empty(void) {
     return value_of(type_void(), NULL);
 }
@@ -70,7 +70,7 @@ value_t *value_array(const type_t *type, size_t len) {
         vector_set(init, i, value_empty());
     }
     
-    return value_vector(type, init);
+    return value_offset(type, init, 0);
 }
 
 char *value_format(const value_t *value) {

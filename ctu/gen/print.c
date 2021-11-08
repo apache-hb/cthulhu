@@ -189,7 +189,7 @@ static void var_print(FILE *out, module_t *mod, size_t idx) {
     block_t *flow = vector_get(mod->vars, idx);
     const char *name = flow->name;
     
-    char *locals = emit_names("  locals", flow->locals);
+    char *locals = emit_names("locals", flow->locals);
     if (locals != NULL) {
         fprintf(out, "  %s\n", locals);
     }

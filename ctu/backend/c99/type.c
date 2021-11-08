@@ -81,6 +81,16 @@ static char *closure_to_string(reports_t *reports, const type_t *type, const cha
     }
 }
 
+static char *array_to_string(reports_t *reports, const type_t *type, const char *name) {
+    const char *element = type_to_string(reports, index_type(type), NULL);
+    size_t size = static_array_length(type);
+    if (name == NULL) {
+        return format("%s[%zu]", element, size);
+    } else {
+        return format("%s %s[%zu]", element, name, size);
+    }
+}
+
 const char *type_to_string(reports_t *reports, const type_t *type, const char *name) {
     if (is_digit(type)) {
         return digit_to_string(type->digit, name);
@@ -113,6 +123,10 @@ const char *type_to_string(reports_t *reports, const type_t *type, const char *n
 
     if (is_closure(type)) {
         return closure_to_string(reports, type, name);
+    }
+
+    if (is_array(type)) {
+        return array_to_string(reports, type, name);
     }
 
     ctu_assert(reports, "unknown type `%s`", type_format(type));
@@ -152,6 +166,10 @@ const char *value_to_string(reports_t *reports, const value_t *value) {
      */
     if (is_pointer(type)) {
         return format("(void*)0");
+    }
+
+    if (is_array(type)) {
+        return format("{%s}", strjoin(", ", value->elements));
     }
 
     ctu_assert(reports, "unknown value type `%s`", type_format(type));

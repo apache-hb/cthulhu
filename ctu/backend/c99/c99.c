@@ -7,6 +7,14 @@
 
 #include <string.h>
 
+static const char *global_name(reports_t *reports, const type_t *type, const char *name) {
+    if (is_array(type)) {
+        return type_to_string(reports, type, name);
+    }
+
+    return type_to_string(reports, type, format("%s[1]", name));
+}
+
 typedef struct {
     reports_t *reports;
     module_t *mod;
@@ -40,7 +48,7 @@ static void forward_global(context_t *ctx, const block_t *block) {
     const type_t *type = block->type;
     const char *name = block->name;
 
-    const char *decl = type_to_string(ctx->reports, type, format("%s[1]", name));
+    const char *decl = global_name(ctx->reports, type, name);
 
     char *forward = format("%s;\n", decl);
 
@@ -53,7 +61,7 @@ static void forward_global(context_t *ctx, const block_t *block) {
 static void add_global(context_t *ctx, const block_t *block) {
     const type_t *type = block->type;
     const value_t *value = block->value;
-    const char *name = format("%s[1]", block->name);
+    const char *name = global_name(ctx->reports, type, block->name);
 
     if (is_void(value->type)) {
         return;
@@ -366,7 +374,7 @@ static void write_locals(context_t *ctx, const block_t *block) {
         const char *name = local->name;
         if (name != NULL) {
             const type_t *type = local->type;
-            const char *it = type_to_string(ctx->reports, type, format("%s[1]", name));
+            const char *it = global_name(ctx->reports, type, name);
 
             stream_write(ctx->result, format("  %s;\n", it));
         }
