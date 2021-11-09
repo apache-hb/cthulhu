@@ -43,9 +43,19 @@ value_t *value_ptr(const type_t *type, value_t *ptr) {
     return value;
 }
 
+static value_t *value_string(const char *str) {
+    value_t *value = value_of(type_string(), NULL);
+    value->string = str;
+    return value;
+}
+
 value_t *value_block(struct block_t *block) {
     if (is_array(block->type)) {
         return block->value;
+    }
+
+    if (is_string(block->type)) {
+        return value_string(block->string);
     }
     
     value_t *value = value_of(block->type, block->node);
@@ -73,6 +83,10 @@ value_t *value_array(const type_t *type, size_t len) {
     return value_offset(type, init, 0);
 }
 
+value_t *value_dup(const value_t *val) {
+    return ctu_memdup(val, sizeof(value_t));
+}
+
 char *value_format(const value_t *value) {
     const type_t *type = value->type;
 
@@ -85,6 +99,10 @@ char *value_format(const value_t *value) {
     if (is_digit(type)) {
         char *str = mpz_get_str(NULL, 10, value->digit);
         return format("%s(%s)", typestr, str);
+    }
+
+    if (is_string(type)) {
+        return format("%s(%s)", typestr, value->string);
     }
 
     if (is_poison(type)) {

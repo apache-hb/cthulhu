@@ -134,6 +134,19 @@ const char *type_to_string(reports_t *reports, const type_t *type, const char *n
     return "...";
 }
 
+static char *format_array(reports_t *reports, vector_t *elements) {
+    size_t len = vector_len(elements);
+    vector_t *result = vector_of(len);
+
+    for (size_t i = 0; i < len; i++) {
+        value_t *val = vector_get(elements, i);
+        const char *fmt = value_to_string(reports, val);
+        vector_set(result, i, (char*)fmt);
+    }
+
+    return format("{%s}", strjoin(", ", result));
+}
+
 const char *value_to_string(reports_t *reports, const value_t *value) {
     const type_t *type = value->type;
     const char *cast = type_to_string(reports, type, NULL);
@@ -169,7 +182,7 @@ const char *value_to_string(reports_t *reports, const value_t *value) {
     }
 
     if (is_array(type)) {
-        return format("{%s}", strjoin(", ", value->elements));
+        return format_array(reports, value->elements);
     }
 
     ctu_assert(reports, "unknown value type `%s`", type_format(type));

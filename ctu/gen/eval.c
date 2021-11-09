@@ -226,6 +226,14 @@ static value_t *exec_binary(exec_t *exec, step_t step) {
 
 static value_t *exec_load(exec_t *exec, step_t step) {
     value_t *val = get_value(exec, step.src);
+    if (is_array(val->type)) {
+        return vector_get(val->elements, val->offset);
+    }
+
+    if (is_string(val->type)) {
+        return val;
+    }
+
     return eval_block(exec->world, val->block);
 }
 
@@ -269,6 +277,18 @@ static void exec_store(exec_t *exec, step_t step) {
     vector_set(vec, off, src);
 }
 
+static value_t *exec_cast(exec_t *exec, step_t step) {
+    value_t *src = get_value(exec, step.src);
+    value_t *dup = value_dup(src);
+    dup->type = step.type;
+    return dup;
+}
+
+static value_t *exec_return(exec_t *exec, step_t step) {
+    value_t *value = get_value(exec, step.operand);
+    return value;
+}
+
 static bool exec_step(exec_t *exec) {
     size_t here = exec->ip;
     
@@ -280,7 +300,7 @@ static bool exec_step(exec_t *exec) {
 
     switch (step.opcode) {
     case OP_RETURN:
-        exec->result = get_value(exec, step.operand);
+        exec->result = exec_return(exec, step);
         return false;
 
     case OP_UNARY:
@@ -303,7 +323,7 @@ static bool exec_step(exec_t *exec) {
         exec_store(exec, step);
         return true;
 
-    case OP_EMPTY: 
+    case OP_EMPTY:
     case OP_BLOCK:
         return true;
 
@@ -315,6 +335,10 @@ static bool exec_step(exec_t *exec) {
         report(exec->world->reports, ERROR, step.node, "can only call `compile` functions at compile time");
         exec->result = value_poison_with_node("invalid function colour", step.node);
         return false;
+
+    case OP_CAST:
+        exec->values[here] = exec_cast(exec, step);
+        return true;
 
     default:
         ctu_assert(exec->world->reports, "invalid opcode: %s[%zu] = %d", exec->block->name, exec->ip, step.opcode);

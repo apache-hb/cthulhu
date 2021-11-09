@@ -16,8 +16,10 @@ static char *emit_imm(const value_t *imm) {
         return format("%s", mpz_get_str(NULL, 10, imm->digit));
     } else if (is_bool(type)) {
         return ctu_strdup(imm->boolean ? "true" : "false");
+    } else if (is_pointer(type)) {
+        return ctu_strdup("nullptr");
     } else {
-        return NULL;
+        return "???";
     }
 }
 
@@ -267,8 +269,8 @@ static void strtab_print(FILE *out, vector_t *strtab) {
 
     fprintf(out, "strtab[%zu] {\n", len);
     for (size_t i = 0; i < len; i++) {
-        const char *str = vector_get(strtab, i);
-        fprintf(out, "  %zu: `%s`\n", i, strnorm(str));
+        block_t *block = vector_get(strtab, i);
+        fprintf(out, "  %zu: `%s`\n", i, strnorm(block->string));
     }
     fprintf(out, "}\n");
 }

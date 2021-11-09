@@ -107,7 +107,7 @@ char *strnorm(const char *str) {
         if (ctu_isprint(*str)) {
             *out++ = *str;
         } else {
-            out += sprintf(out, "\\x%02x", *str);
+            out += sprintf(out, "\\x%02x", *str & 0xFF);
         }
         str += 1;
     }

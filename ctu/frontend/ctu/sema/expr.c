@@ -101,7 +101,7 @@ static const type_t *binary_equal(sema_t *sema, node_t *node, lir_t *lhs, lir_t 
         return type_poison_with_node("invalid equality operands", node);
     }
 
-    return common;
+    return get_cached_bool_type(sema);
 }
 
 /**

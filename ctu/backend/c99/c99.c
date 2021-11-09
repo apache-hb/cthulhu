@@ -15,6 +15,14 @@ static const char *global_name(reports_t *reports, const type_t *type, const cha
     return type_to_string(reports, type, format("%s[1]", name));
 }
 
+static const char *global_value(reports_t *reports, const value_t *value) {
+    if (is_array(value->type)) {
+        return value_to_string(reports, value);
+    }
+    
+    return format("{%s}", value_to_string(reports, value));
+}
+
 typedef struct {
     reports_t *reports;
     module_t *mod;
@@ -61,16 +69,15 @@ static void forward_global(context_t *ctx, const block_t *block) {
 static void add_global(context_t *ctx, const block_t *block) {
     const type_t *type = block->type;
     const value_t *value = block->value;
-    const char *name = global_name(ctx->reports, type, block->name);
 
     if (is_void(value->type)) {
         return;
     }
 
-    const char *start = type_to_string(ctx->reports, type, name);
-    const char *init = value_to_string(ctx->reports, value);
+    const char *name = global_name(ctx->reports, type, block->name);
+    const char *init = global_value(ctx->reports, value);
 
-    char *fmt = format("%s = { %s };\n", start, init);
+    char *fmt = format("%s = %s;\n", name, init);
 
     stream_write(ctx->result, fmt);
 
@@ -312,41 +319,18 @@ static char *format_offset(reports_t *reports, size_t idx, step_t step) {
 static char *select_step(context_t *ctx, size_t idx, step_t step) {
     switch (step.opcode) {
     case OP_EMPTY: return NULL;
-    case OP_BLOCK: 
-        return format("block%zu: /* empty */;\n", idx); 
-
-    case OP_JMP:
-        return format("  goto %s;\n", format_operand(ctx->reports, step.label));
-
-    case OP_BRANCH:
-        return format_branch(ctx->reports, step);
-
-    case OP_RETURN:
-        return format_return(ctx->reports, step);
-
-    case OP_LOAD:
-        return format_load(ctx->reports, idx, step);
-
-    case OP_STORE:
-        return format_store(ctx->reports, step);
-
-    case OP_CALL:
-        return format_call(ctx->reports, idx, step);
-
-    case OP_UNARY:
-        return format_unary(ctx->reports, idx, step);
-
-    case OP_BINARY:
-        return format_binary(ctx->reports, idx, step);
-
-    case OP_BUILTIN:
-        return format_builtin(ctx->reports, idx, step);
-
-    case OP_CAST:
-        return format_cast(ctx->reports, idx, step);
-
-    case OP_OFFSET:
-        return format_offset(ctx->reports, idx, step);
+    case OP_BLOCK: return format("block%zu: /* empty */;\n", idx); 
+    case OP_JMP: return format("  goto %s;\n", format_operand(ctx->reports, step.label));
+    case OP_BRANCH: return format_branch(ctx->reports, step);
+    case OP_RETURN: return format_return(ctx->reports, step);
+    case OP_LOAD: return format_load(ctx->reports, idx, step);
+    case OP_STORE: return format_store(ctx->reports, step);
+    case OP_CALL: return format_call(ctx->reports, idx, step);
+    case OP_UNARY: return format_unary(ctx->reports, idx, step);
+    case OP_BINARY: return format_binary(ctx->reports, idx, step);
+    case OP_BUILTIN: return format_builtin(ctx->reports, idx, step);
+    case OP_CAST: return format_cast(ctx->reports, idx, step);
+    case OP_OFFSET: return format_offset(ctx->reports, idx, step);
 
     default:
         ctu_assert(ctx->reports, "unknown opcode: %d", step.opcode);

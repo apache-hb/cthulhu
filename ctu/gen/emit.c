@@ -32,7 +32,7 @@ static block_t *new_define(const char *name,
 }
 
 typedef struct {
-    vector_t **strings;
+    vector_t *strings;
     module_t *mod;
     block_t *block;
     reports_t *reports;
@@ -163,7 +163,7 @@ static block_t *local_declare(lir_t *lir) {
     return block;
 }
 
-static void build_block(vector_t **strings, reports_t *reports, module_t *mod, block_t *block, lir_t *body) {
+static vector_t *build_block(vector_t *strings, reports_t *reports, module_t *mod, block_t *block, lir_t *body) {
     context_t ctx = { strings, mod, block, reports, oplist_new(4) };
 
     if (body != NULL) {
@@ -174,14 +174,18 @@ static void build_block(vector_t **strings, reports_t *reports, module_t *mod, b
         step.operand = operand_empty();
         add_step(&ctx, step);
     }
+    
+    return ctx.strings;
 }
 
-static void build_define(vector_t **strings, reports_t *reports, module_t *mod, block_t *block, lir_t *define) {
+static vector_t *build_define(vector_t *strings, reports_t *reports, module_t *mod, block_t *block, lir_t *define) {
     context_t ctx = { strings, mod, block, reports, oplist_new(4) };
 
     lir_t *body = define->body;
     operand_t op = emit_lir(&ctx, body);
     build_return(&ctx, body, op);
+
+    return ctx.strings;
 }
 
 static operand_t compile_load(context_t *ctx, lir_t *lir, operand_t op, operand_t off) {
@@ -330,7 +334,8 @@ static operand_t emit_call(context_t *ctx, lir_t *lir) {
     
     for (size_t i = 0; i < len; i++) {
         lir_t *arg = vector_get(lir->args, i);
-        oplist_set(args, i, emit_lir(ctx, arg));
+        operand_t op = emit_lir(ctx, arg);
+        oplist_set(args, i, op);
     }
 
     operand_t func = emit_lir(ctx, lir->func);
@@ -344,9 +349,9 @@ static operand_t emit_call(context_t *ctx, lir_t *lir) {
 
 static operand_t emit_string(context_t *ctx, lir_t *lir) {
     block_t *str = new_block(BLOCK_STRING, NULL, lir->node, lir_type(lir));
-    str->idx = vector_len(*(ctx->strings));
+    str->idx = vector_len(ctx->strings);
     str->string = lir->str;
-    vector_push(ctx->strings, str);
+    vector_push(&ctx->strings, str);
     return operand_address(str);
 }
 
@@ -571,13 +576,13 @@ module_t *module_build(reports_t *reports, const char *base, vector_t *nodes) {
     for (size_t i = 0; i < nvars; i++) {
         lir_t *var = vector_get(vars, i);
         block_t *block = vector_get(varblocks, i);
-        build_block(&strings, reports, mod, block, var->init);
+        strings = build_block(strings, reports, mod, block, var->init);
     }
 
     for (size_t i = 0; i < nfuncs; i++) {
         lir_t *func = vector_get(funcs, i);
         block_t *block = vector_get(funcblocks, i);
-        build_define(&strings, reports, mod, block, func);
+        strings = build_define(strings, reports, mod, block, func);
     }
 
     mod->imports = symbols;
