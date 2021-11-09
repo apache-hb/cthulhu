@@ -82,13 +82,9 @@ static char *closure_to_string(reports_t *reports, const type_t *type, const cha
 }
 
 static char *array_to_string(reports_t *reports, const type_t *type, const char *name) {
-    const char *element = type_to_string(reports, index_type(type), NULL);
+    const char *element = type_to_string(reports, index_type(type), name);
     size_t size = static_array_length(type);
-    if (name == NULL) {
-        return format("%s[%zu]", element, size);
-    } else {
-        return format("%s %s[%zu]", element, name, size);
-    }
+    return format("%s[%zu]", element, size);
 }
 
 const char *type_to_string(reports_t *reports, const type_t *type, const char *name) {
