@@ -37,7 +37,16 @@ typedef struct {
     block_t *block;
     reports_t *reports;
     oplist_t *fixups;
+    vector_t *types;
 } context_t;
+
+static const type_t *get_lir_type(context_t *ctx, const lir_t *lir) {
+    const type_t *type = lir_type(lir);
+    if (!is_builtin_type(type)) {
+        vector_push(&ctx->types, (type_t*)type);
+    }
+    return type;
+}
 
 static void add_fixup(context_t *ctx, lir_t *dst, operand_t op) {
     if (dst != NULL) {
@@ -163,8 +172,21 @@ static block_t *local_declare(lir_t *lir) {
     return block;
 }
 
-static vector_t *build_block(vector_t *strings, reports_t *reports, module_t *mod, block_t *block, lir_t *body) {
-    context_t ctx = { strings, mod, block, reports, oplist_new(4) };
+static context_t new_context(reports_t *reports, vector_t *strings, module_t *mod, block_t *block) {
+    context_t ctx = {
+        .strings = strings,
+        .mod = mod,
+        .block = block,
+        .reports = reports,
+        .fixups = oplist_new(4),
+        .types = vector_new(4)
+    };
+
+    return ctx;
+}
+
+static context_t build_block(vector_t *strings, reports_t *reports, module_t *mod, block_t *block, lir_t *body) {
+    context_t ctx = new_context(reports, strings, mod, block);
 
     if (body != NULL) {
         operand_t op = emit_lir(&ctx, body);
@@ -175,17 +197,17 @@ static vector_t *build_block(vector_t *strings, reports_t *reports, module_t *mo
         add_step(&ctx, step);
     }
     
-    return ctx.strings;
+    return ctx;
 }
 
-static vector_t *build_define(vector_t *strings, reports_t *reports, module_t *mod, block_t *block, lir_t *define) {
-    context_t ctx = { strings, mod, block, reports, oplist_new(4) };
-
+static context_t build_define(vector_t *strings, reports_t *reports, module_t *mod, block_t *block, lir_t *define) {
+    context_t ctx = new_context(reports, strings, mod, block);
+    
     lir_t *body = define->body;
     operand_t op = emit_lir(&ctx, body);
     build_return(&ctx, body, op);
 
-    return ctx.strings;
+    return ctx;
 }
 
 static operand_t compile_load(context_t *ctx, lir_t *lir, operand_t op, operand_t off) {
@@ -547,6 +569,7 @@ module_t *module_build(reports_t *reports, const char *base, vector_t *nodes) {
 
     vector_t *varblocks = vector_of(nvars);
     vector_t *funcblocks = vector_of(nfuncs);
+    vector_t *types = vector_new(0);
 
     vector_t *strings = vector_new(4);
 
@@ -576,17 +599,22 @@ module_t *module_build(reports_t *reports, const char *base, vector_t *nodes) {
     for (size_t i = 0; i < nvars; i++) {
         lir_t *var = vector_get(vars, i);
         block_t *block = vector_get(varblocks, i);
-        strings = build_block(strings, reports, mod, block, var->init);
+        context_t ctx = build_block(strings, reports, mod, block, var->init);
+        strings = ctx.strings;
+        types = vector_join(types, ctx.types);
     }
 
     for (size_t i = 0; i < nfuncs; i++) {
         lir_t *func = vector_get(funcs, i);
         block_t *block = vector_get(funcblocks, i);
-        strings = build_define(strings, reports, mod, block, func);
+        context_t ctx = build_define(strings, reports, mod, block, func);
+        strings = ctx.strings;
+        types = vector_join(types, ctx.types);
     }
 
     mod->imports = symbols;
     mod->strtab = strings;
+    mod->types = types;
 
     return mod;
 }

@@ -1,0 +1,19 @@
+/// type aliases for windows types we use
+type HINSTANCE = *void;
+type HWND = *void;
+
+struct WNDCLASSEX {
+    
+}
+
+/// entrypoints dont need to have the same internal name
+/// as their public name
+@entry("wWinMain")
+export def windowsUnicodeMain(
+    hInstance: HINSTANCE, 
+    hPrevInstance: HINSTANCE, 
+    lpCmdLine: *wchar, 
+    nCmdShow: int
+): int {
+    return 0;
+}

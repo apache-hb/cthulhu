@@ -4,6 +4,15 @@
 
 #include <stdint.h>
 
+bool is_builtin_type(const type_t *type) {
+    return is_digit(type)
+        || is_bool(type)
+        || is_void(type)
+        || is_string(type)
+        || is_varargs(type)
+        || is_closure(type);
+}
+
 bool is_const(const type_t *type) {
     return !type->mut;
 }

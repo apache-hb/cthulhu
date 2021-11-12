@@ -1,0 +1,14 @@
+@mangle("safeDivide")
+export def safeDivide(a: int, b: int): int {
+    if b == 0 {
+        return 0;
+    }
+    
+    return a / b;
+}
+
+@layout("native")
+struct Point(x: int, y: int);
+
+@mangle("getStruct")
+def zeroPoint: Point = Point { x: 0, y: 0 };

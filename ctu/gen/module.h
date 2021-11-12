@@ -135,4 +135,6 @@ typedef struct {
 
     vector_t *strtab; /* vector_t<block_t<BLOCK_STRING>*> */
     vector_t *imports; /* vector_t<block_t<BLOCK_SYMBOL>*> */
+
+    vector_t *types; /// all user defined types
 } module_t;
