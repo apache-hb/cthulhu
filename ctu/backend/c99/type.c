@@ -81,10 +81,27 @@ static char *closure_to_string(reports_t *reports, const type_t *type, const cha
     }
 }
 
-static char *array_to_string(reports_t *reports, const type_t *type, const char *name) {
-    const char *element = type_to_string(reports, index_type(type), name);
-    size_t size = static_array_length(type);
-    return format("%s[%zu]", element, size);
+static const char *flatten_array(reports_t *reports, const type_t *type, const char *name) {
+    vector_t *sizes = vector_new(4);
+    const type_t *base = type;
+    while (is_array(base)) {
+        size_t size = static_array_length(base);
+        vector_push(&sizes, (void*)size);
+        base = index_type(base);
+    }
+
+    const char *inner = type_to_string(reports, base, name);
+    size_t len = vector_len(sizes);
+    for (size_t i = 0; i < len; i++) {
+        const size_t size = (const size_t)vector_get(sizes, i);
+        inner = format("%s[%zu]", inner, size);
+    }
+
+    return inner;
+}
+
+static const char *array_to_string(reports_t *reports, const type_t *type, const char *name) {
+    return flatten_array(reports, type, name);
 }
 
 const char *type_to_string(reports_t *reports, const type_t *type, const char *name) {

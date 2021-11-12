@@ -31,7 +31,7 @@ value_t *value_digit(const node_t *node, const type_t *type, mpz_t digit) {
     return value;
 }
 
-value_t *value_int(const node_t *node, const type_t *type, int digit) {
+value_t *value_int(const node_t *node, const type_t *type, long digit) {
     value_t *value = value_of(type, node);
     mpz_init_set_si(value->digit, digit);
     return value;

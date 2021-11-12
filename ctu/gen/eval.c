@@ -369,8 +369,6 @@ static value_t *eval_block(world_t *world, block_t *block) {
 void eval_world(reports_t *reports, module_t *mod) {
     world_t world = { reports, mod };
 
-    module_print(stdout, mod);
-
     size_t nvars = vector_len(mod->vars);
     for (size_t i = 0; i < nvars; i++) {
         block_t *var = vector_get(mod->vars, i);

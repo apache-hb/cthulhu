@@ -452,7 +452,7 @@ static operand_t emit_list(context_t *ctx, lir_t *lir) {
     for (size_t i = 0; i < len; i++) {
         lir_t *element = vector_get(list, i);
         operand_t src = emit_lir(ctx, element);
-        operand_t idx = operand_imm(ctx->reports, value_int(element->node, type_usize(), i));
+        operand_t idx = operand_imm(ctx->reports, value_int(element->node, type_usize(), (long)i));
         operand_t offset = compile_offset(ctx, lir, dst, idx);
         compile_store(ctx, element, offset, src);
     }
