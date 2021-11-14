@@ -4,6 +4,23 @@
 
 #include <ctype.h>
 
+static void types_print(FILE *out, vector_t *types) {
+    size_t len = vector_len(types);
+    if (len == 0) {
+        return;
+    }
+    
+    fprintf(out, "types[%zu] {\n", len);
+    for (size_t i = 0; i < len; i++) {
+        if (i != 0) {
+            fprintf(out, ",\n");
+        }
+        type_t *type = vector_get(types, i);
+        fprintf(out, "  [%zu] = %s", i, type_format(type));
+    }
+    fprintf(out, "}\n");
+}
+
 static char *emit_imm(const value_t *imm) {
     if (imm == NULL) {
         return "null";
@@ -294,6 +311,7 @@ void module_print(FILE *out, module_t *mod) {
     size_t nfuncs = vector_len(mod->funcs);
 
     fprintf(out, "module = %s\n", mod->name);
+    types_print(out, mod->types);
     imports_print(out, mod->imports);
     strtab_print(out, mod->strtab);
     values_print(out, mod, mod->vars);

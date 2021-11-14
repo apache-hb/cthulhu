@@ -232,6 +232,7 @@ bool type_can_index(const type_t *type);
 bool type_is_indirect(const type_t *type);
 
 bool is_builtin_type(const type_t *type);
+const type_t *underlying_type(const type_t *type);
 
 /**
  * return a common type of lhs and rhs if possible.

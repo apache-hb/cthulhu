@@ -13,6 +13,18 @@ bool is_builtin_type(const type_t *type) {
         || is_closure(type);
 }
 
+const type_t *underlying_type(const type_t *type) {
+    if (is_pointer(type)) {
+        return underlying_type(type->ptr);
+    }
+
+    if (is_array(type)) {
+        return underlying_type(index_type(type));
+    }
+
+    return type;
+}
+
 bool is_const(const type_t *type) {
     return !type->mut;
 }

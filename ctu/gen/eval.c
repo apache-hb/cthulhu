@@ -242,7 +242,6 @@ static value_t *exec_offset(exec_t *exec, step_t step) {
     value_t *offset = get_value(exec, step.offset);
 
     if (!is_array(base->type)) {
-        printf("%s\n", type_format(base->type));
         return value_poison_with_node("not an array", step.node);
     }
 

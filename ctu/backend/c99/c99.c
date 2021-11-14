@@ -46,6 +46,14 @@ static void free_c99_context(context_t ctx) {
     stream_delete(ctx.result);
 }
 
+static void add_types(context_t *ctx, vector_t *types) {
+    size_t len = vector_len(types);
+    for (size_t i = 0; i < len; i++) {
+        type_t *type = vector_get(types, i);
+        printf("type[%zu] = %s\n", i, type_format(type));
+    }
+}
+
 static void write_section(context_t *ctx, const attrib_t *attribs) {
     if (attribs->section != NULL) {
         stream_write(ctx->result, format("__attribute__((section(\"%s\")))\n", attribs->section));
@@ -470,6 +478,7 @@ bool c99_build(reports_t *reports, module_t *mod, const char *path) {
 
     ctu_free(header);
 
+    add_types(&ctx, mod->types);
     add_strings(&ctx, mod->strtab);
     add_imports(&ctx, mod->imports);
     forward_globals(&ctx, mod->vars);

@@ -40,10 +40,22 @@ typedef struct {
     vector_t *types;
 } context_t;
 
+static void add_type(context_t *ctx, const type_t *type) {
+    size_t len = vector_len(ctx->types);
+    for (size_t i = 0; i < len; i++) {
+        const type_t *at = vector_get(ctx->types, i);
+        if (types_exact_equal(at, type)) {
+            return;
+        }
+    }
+    vector_push(&ctx->types, (type_t*)type);
+}
+
 static const type_t *get_lir_type(context_t *ctx, const lir_t *lir) {
     const type_t *type = lir_type(lir);
-    if (!is_builtin_type(type)) {
-        vector_push(&ctx->types, (type_t*)type);
+    const type_t *underlying = underlying_type(type);
+    if (!is_builtin_type(underlying)) {
+        add_type(ctx, underlying);
     }
     return type;
 }
@@ -460,16 +472,15 @@ static operand_t emit_local(context_t *ctx, lir_t *lir) {
 }
 
 static operand_t emit_list(context_t *ctx, lir_t *lir) {
+    const type_t *type = get_lir_type(ctx, lir);
     vector_t *list = lir->elements;
     size_t len = vector_len(list);
     where_t where = lir->node->where;
     char *name = format("array%zu%zu", where.first_line, where.first_column);
 
-    block_t *block = detailed_block(name, lir_type(lir), &DEFAULT_ATTRIBS, lir->node);
+    block_t *block = detailed_block(name, type, &DEFAULT_ATTRIBS, lir->node);
     vector_push(&ctx->block->locals, block);
     operand_t dst = operand_address(block);
-
-    printf("emit-list: %s %zu\n", type_format(lir_type(lir)), len);
 
     for (size_t i = 0; i < len; i++) {
         lir_t *element = vector_get(list, i);
