@@ -41,23 +41,17 @@ typedef struct {
 } context_t;
 
 static void add_type(context_t *ctx, const type_t *type) {
+    if (!is_builtin_type(type)) { return; }
+    const type_t *actual = underlying_type(type);
+
     size_t len = vector_len(ctx->types);
     for (size_t i = 0; i < len; i++) {
         const type_t *at = vector_get(ctx->types, i);
-        if (types_exact_equal(at, type)) {
+        if (types_exact_equal(at, actual)) {
             return;
         }
     }
-    vector_push(&ctx->types, (type_t*)type);
-}
-
-static const type_t *get_lir_type(context_t *ctx, const lir_t *lir) {
-    const type_t *type = lir_type(lir);
-    const type_t *underlying = underlying_type(type);
-    if (!is_builtin_type(underlying)) {
-        add_type(ctx, underlying);
-    }
-    return type;
+    vector_push(&ctx->types, (type_t*)actual);
 }
 
 static void add_fixup(context_t *ctx, lir_t *dst, operand_t op) {
@@ -86,7 +80,9 @@ static size_t push_step(block_t *block, step_t step) {
     return block->len++;
 }
 
-static step_t step_with_type(opcode_t op, const node_t *node, const type_t *type) {
+static step_t step_with_type(context_t *ctx, opcode_t op, const node_t *node, const type_t *type) {
+    if (type != NULL) { add_type(ctx, type); }
+
     step_t step = {
         .opcode = op,
         .node = node,
@@ -96,12 +92,12 @@ static step_t step_with_type(opcode_t op, const node_t *node, const type_t *type
     return step;
 }
 
-static step_t step_of(opcode_t op, lir_t *lir) {
-    return step_with_type(op, lir->node, lir_type(lir));
+static step_t step_of(context_t *ctx, opcode_t op, lir_t *lir) {
+    return step_with_type(ctx, op, lir->node, lir_type(lir));
 }
 
-static step_t empty_step(opcode_t op) {
-    return step_with_type(op, NULL, NULL);
+static step_t empty_step(context_t *ctx, opcode_t op) {
+    return step_with_type(ctx, op, NULL, NULL);
 }
 
 static step_t *get_step(context_t *ctx, operand_t op) {
@@ -127,7 +123,7 @@ static operand_t add_label(context_t *ctx, step_t step) {
 static operand_t emit_lir(context_t *ctx, lir_t *lir);
 
 static operand_t build_return(context_t *ctx, lir_t *lir, operand_t op) {
-    step_t step = step_of(OP_RETURN, lir);
+    step_t step = step_of(ctx, OP_RETURN, lir);
     step.operand = op;
     return add_step(ctx, step);
 }
@@ -204,7 +200,7 @@ static context_t build_block(vector_t *strings, reports_t *reports, module_t *mo
         operand_t op = emit_lir(&ctx, body);
         build_return(&ctx, body, op);
     } else {
-        step_t step = step_with_type(OP_RETURN, NULL, type_void());
+        step_t step = step_with_type(&ctx, OP_RETURN, NULL, type_void());
         step.operand = operand_empty();
         add_step(&ctx, step);
     }
@@ -223,21 +219,21 @@ static context_t build_define(vector_t *strings, reports_t *reports, module_t *m
 }
 
 static operand_t compile_load(context_t *ctx, lir_t *lir, operand_t op, operand_t off) {
-    step_t step = step_with_type(OP_LOAD, lir->node, lir_type(lir));
+    step_t step = step_with_type(ctx, OP_LOAD, lir->node, lir_type(lir));
     step.src = op;
     step.offset = off;
     return add_step(ctx, step);
 }
 
 static operand_t emit_unary(context_t *ctx, lir_t *lir) {
-    step_t step = step_of(OP_UNARY, lir);
+    step_t step = step_of(ctx, OP_UNARY, lir);
     step.unary = lir->unary;
     step.operand = emit_lir(ctx, lir->operand);
     return add_step(ctx, step);
 }
 
 static operand_t emit_binary(context_t *ctx, lir_t *lir) {
-    step_t step = step_of(OP_BINARY, lir);
+    step_t step = step_of(ctx, OP_BINARY, lir);
     step.binary = lir->binary;
     step.lhs = emit_lir(ctx, lir->lhs);
     step.rhs = emit_lir(ctx, lir->rhs);
@@ -270,7 +266,7 @@ static operand_t emit_stmts(context_t *ctx, lir_t *lir) {
 }
 
 static operand_t compile_store(context_t *ctx, lir_t *lir, operand_t dst, operand_t src) {
-    step_t step = step_of(OP_STORE, lir);
+    step_t step = step_of(ctx, OP_STORE, lir);
     step.dst = dst;
     step.src = src;
     return add_step(ctx, step);
@@ -286,18 +282,18 @@ static operand_t emit_assign(context_t *ctx, lir_t *lir) {
 
 static operand_t add_block(context_t *ctx, lir_t *lir) {
     if (lir == NULL) {
-        return add_label(ctx, empty_step(OP_BLOCK));
+        return add_label(ctx, empty_step(ctx, OP_BLOCK));
     }
 
-    operand_t block = add_label(ctx, step_of(OP_BLOCK, lir));
+    operand_t block = add_label(ctx, step_of(ctx, OP_BLOCK, lir));
     emit_lir(ctx, lir);
     return block;
 }
 
 static operand_t emit_while(context_t *ctx, lir_t *lir) {
-    operand_t begin = add_label(ctx, step_of(OP_BLOCK, lir));
+    operand_t begin = add_label(ctx, step_of(ctx, OP_BLOCK, lir));
     
-    step_t step = step_of(OP_BRANCH, lir);
+    step_t step = step_of(ctx, OP_BRANCH, lir);
     step.cond = emit_lir(ctx, lir->cond);
     operand_t branch = add_label(ctx, step);
 
@@ -309,12 +305,12 @@ static operand_t emit_while(context_t *ctx, lir_t *lir) {
 
         operand_t body = add_block(ctx, lir->then);
 
-        step_t loop = step_of(OP_JMP, lir);
+        step_t loop = step_of(ctx, OP_JMP, lir);
         loop.label = begin;
         add_step(ctx, loop);
 
         /* create a vector of blocks that will later become fixups */
-        operand_t end = add_label(ctx, step_of(OP_BLOCK, lir));
+        operand_t end = add_label(ctx, step_of(ctx, OP_BLOCK, lir));
 
         step_t *it = get_step(ctx, branch);
         it->label = body;
@@ -333,13 +329,13 @@ static operand_t emit_while(context_t *ctx, lir_t *lir) {
 }
 
 static operand_t emit_branch(context_t *ctx, lir_t *lir) {
-    step_t step = step_of(OP_BRANCH, lir);
+    step_t step = step_of(ctx, OP_BRANCH, lir);
     step.cond = emit_lir(ctx, lir->cond);
     operand_t branch = add_label(ctx, step);
 
     operand_t yes = add_block(ctx, lir->then);
 
-    operand_t esc = add_label(ctx, step_with_type(OP_JMP, lir->node, NULL));
+    operand_t esc = add_label(ctx, step_with_type(ctx, OP_JMP, lir->node, NULL));
 
     operand_t no = add_block(ctx, lir->other);
 
@@ -374,7 +370,7 @@ static operand_t emit_call(context_t *ctx, lir_t *lir) {
 
     operand_t func = emit_lir(ctx, lir->func);
 
-    step_t step = step_with_type(OP_CALL, lir->node, lir_type(lir->func)->result);
+    step_t step = step_with_type(ctx, OP_CALL, lir->node, lir_type(lir->func)->result);
     step.func = func;
     step.args = args;
 
@@ -409,7 +405,7 @@ static operand_t emit_param(lir_t *lir) {
 }
 
 static operand_t emit_break(context_t *ctx, lir_t *lir) {
-    step_t step = step_of(OP_JMP, lir);
+    step_t step = step_of(ctx, OP_JMP, lir);
     step.label = operand_empty();
     operand_t jump = add_label(ctx, step);
     add_fixup(ctx, lir->loop, jump);
@@ -417,14 +413,14 @@ static operand_t emit_break(context_t *ctx, lir_t *lir) {
 }
 
 static operand_t emit_sizeof(context_t *ctx, lir_t *lir) {
-    step_t step = step_of(OP_BUILTIN, lir);
+    step_t step = step_of(ctx, OP_BUILTIN, lir);
     step.builtin = BUILTIN_SIZEOF;
     step.target = lir->of;
     return add_step(ctx, step);
 }
 
 static operand_t emit_alignof(context_t *ctx, lir_t *lir) {
-    step_t step = step_of(OP_BUILTIN, lir);
+    step_t step = step_of(ctx, OP_BUILTIN, lir);
     step.builtin = BUILTIN_ALIGNOF;
     step.target = lir->of;
     return add_step(ctx, step);
@@ -436,13 +432,13 @@ static operand_t emit_null(context_t *ctx, lir_t *lir) {
 
 static operand_t emit_cast(context_t *ctx, lir_t *lir) {
     operand_t it = emit_lir(ctx, lir->src);
-    step_t step = step_of(OP_CAST, lir);
+    step_t step = step_of(ctx, OP_CAST, lir);
     step.src = it;
     return add_step(ctx, step);
 }
 
 static operand_t compile_offset(context_t *ctx, lir_t *lir, operand_t base, operand_t offset) {
-    step_t step = step_of(OP_OFFSET, lir);
+    step_t step = step_of(ctx, OP_OFFSET, lir);
     step.src = base;
     step.offset = offset;
     return add_step(ctx, step);
@@ -472,7 +468,7 @@ static operand_t emit_local(context_t *ctx, lir_t *lir) {
 }
 
 static operand_t emit_list(context_t *ctx, lir_t *lir) {
-    const type_t *type = get_lir_type(ctx, lir);
+    const type_t *type = lir_type(lir);
     vector_t *list = lir->elements;
     size_t len = vector_len(list);
     where_t where = lir->node->where;

@@ -47,6 +47,8 @@ static void free_c99_context(context_t ctx) {
 }
 
 static void add_types(context_t *ctx, vector_t *types) {
+    UNUSED(ctx);
+    
     size_t len = vector_len(types);
     for (size_t i = 0; i < len; i++) {
         type_t *type = vector_get(types, i);
