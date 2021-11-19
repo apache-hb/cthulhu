@@ -15,7 +15,7 @@ static void types_print(FILE *out, vector_t *types) {
         if (i != 0) {
             fprintf(out, ",\n");
         }
-        type_t *type = vector_get(types, i);
+        const type_t *type = vector_get(types, i);
         fprintf(out, "  [%zu] = %s", i, type_format(type));
     }
     fprintf(out, "}\n");
