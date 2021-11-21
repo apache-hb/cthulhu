@@ -3,6 +3,6 @@ type I = int;
 def takeAlias(x: I): int = x as int;
 
 @entry
-def main {
-    takeAlias(I::new(1));
+def main: int {
+    return takeAlias(1 as I);
 }
