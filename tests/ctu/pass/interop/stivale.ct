@@ -52,7 +52,7 @@ struct stivale2_struct_tag_terminal {
 @section(".stivale2hdr")
 export final header = stivale2_header(
     entry_point: null,
-    stack: (stack as uintptr) + stack::sizeof(),
+    stack: (stack as uintptr) + sizeof stack,
     flags: (1 << 1) | (1 << 2),
     tags: &framebuffer_header
 );

@@ -21,6 +21,10 @@ typedef enum {
     CTU_NULL,
     CTU_INDEX,
 
+    /* special attributes */
+    CTU_SIZEOF,
+    CTU_ALIGNOF,
+
     CTU_STMTS,
     CTU_RETURN,
     CTU_WHILE,
@@ -163,6 +167,8 @@ ctu_t *ctu_call(scan_t *scan, where_t where, ctu_t *func, vector_t *args);
 ctu_t *ctu_cast(scan_t *scan, where_t where, ctu_t *expr, ctu_t *type);
 ctu_t *ctu_lambda(scan_t *scan, where_t where, vector_t *params, ctu_t *result, ctu_t *body);
 ctu_t *ctu_index(scan_t *scan, where_t where, ctu_t *array, ctu_t *index);
+ctu_t *ctu_sizeof(scan_t *scan, where_t where, ctu_t *type);
+ctu_t *ctu_alignof(scan_t *scan, where_t where, ctu_t *type);
 
 /* statements */
 ctu_t *ctu_stmts(scan_t *scan, where_t where, vector_t *stmts);

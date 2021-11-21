@@ -108,6 +108,22 @@ ctu_t *ctu_lambda(scan_t *scan, where_t where, vector_t *params, ctu_t *result, 
     return ctu;
 }
 
+static ctu_t *ctu_detail(scan_t *scan, where_t where, ctu_t *type, ctu_type_t kind) {
+    ctu_t *ctu = ctu_new(scan, where, kind);
+
+    ctu->of = type;
+
+    return ctu;
+}
+
+ctu_t *ctu_sizeof(scan_t *scan, where_t where, ctu_t *type) {
+    return ctu_detail(scan, where, type, CTU_SIZEOF);
+}
+
+ctu_t *ctu_alignof(scan_t *scan, where_t where, ctu_t *type) {
+    return ctu_detail(scan, where, type, CTU_ALIGNOF);
+}
+
 ctu_t *ctu_index(scan_t *scan, where_t where, ctu_t *array, ctu_t *index) {
     ctu_t *ctu = ctu_new(scan, where, CTU_INDEX);
 

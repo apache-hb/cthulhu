@@ -51,7 +51,7 @@ pass = [
     'simple', 'extern', 'fuzz-10', 'section', 'section-2', 'immediate-invoke',
     'funcs.fwd', 'funcs.single', 'funcs.stmts', 'lambda', 'data.string',
     'imports.first', 'imports.a',
-    'builtins.sizeof', 'index'
+    'builtins.sizeof', 'index', 'builtins.sizeof-complex'
 ]
 
 foreach case : pass

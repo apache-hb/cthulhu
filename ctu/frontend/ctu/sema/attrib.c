@@ -3,18 +3,13 @@
 #include "type.h"
 
 typedef void(*callback_t)(reports_t*, attrib_t*, vector_t*);
-typedef lir_t*(*detail_t)(sema_t*, type_t*, ctu_t*);
 
 typedef struct {
     type_t *type;
-    union {
-        callback_t callback;
-        detail_t detail;
-    };
+    callback_t callback;
 } builtin_t;
 
 static map_t *builtins = NULL;
-static map_t *details = NULL;
 
 static void add_builtin(const char *name, type_t *type, callback_t callback) {
     builtin_t *builtin = ctu_malloc(sizeof(builtin_t));
@@ -23,12 +18,6 @@ static void add_builtin(const char *name, type_t *type, callback_t callback) {
     builtin->callback = callback;
 
     map_set(builtins, name, builtin);
-}
-
-static void add_detail(const char *name, detail_t detail) {
-    builtin_t *builtin = ctu_malloc(sizeof(builtin_t));
-    builtin->detail = detail;
-    map_set(details, name, builtin);
 }
 
 static void entry_attrib(reports_t *reports, attrib_t *dst, vector_t *args) {
@@ -51,30 +40,6 @@ static void section_attrib(reports_t *reports, attrib_t *dst, vector_t *args) {
 
     lir_t *first = vector_get(args, 0);
     dst->section = first->str;
-}
-
-static lir_t *sizeof_detail(sema_t *sema, type_t *type, ctu_t *ctu) {
-    lir_t *lir = lir_forward(ctu->node, NULL, LIR_DEFINE, NULL);
-    lir_define(sema->reports, lir,
-        type_closure(vector_new(0), get_cached_usize(sema)),
-        lir_return(ctu->node, lir_detail_sizeof(ctu->node, type))
-    );
-
-    add_lambda(sema, lir);
-
-    return lir;
-}
-
-static lir_t *alignof_detail(sema_t *sema, type_t *type, ctu_t *ctu) {
-    lir_t *lir = lir_forward(ctu->node, NULL, LIR_DEFINE, NULL);
-    lir_define(sema->reports, lir,
-        type_closure(vector_new(0), get_cached_usize(sema)),
-        lir_return(ctu->node, lir_detail_alignof(ctu->node, type))
-    );
-
-    add_lambda(sema, lir);
-
-    return lir;
 }
 
 static void apply_attrib(sema_t *sema, attrib_t *dst, ctu_t *attrib) {
@@ -122,10 +87,6 @@ void init_attribs(void) {
     add_builtin("entry", voidpfn, entry_attrib);
     add_builtin("mangle", strpfn, mangle_attrib);
     add_builtin("section", strpfn, section_attrib);
-
-    details = map_new(MAP_SMALL);
-    add_detail("sizeof", sizeof_detail);
-    add_detail("alignof", alignof_detail);
 }
 
 void compile_attribs(sema_t *sema, lir_t *lir, ctu_t *ctu) {
@@ -141,14 +102,4 @@ void compile_attribs(sema_t *sema, lir_t *lir, ctu_t *ctu) {
     }
 
     lir_attribs(lir, attr);
-}
-
-lir_t *compile_detail(sema_t *sema, ctu_t *ctu, type_t *type, const char *detail) {
-    builtin_t *builtin = map_get(details, detail);
-    if (builtin == NULL) {
-        report(sema->reports, ERROR, ctu->node, "unknown detail `%s`", detail);
-        return lir_poison(ctu->node, "unknown detail");
-    }
-
-    return builtin->detail(sema, type, ctu);
 }

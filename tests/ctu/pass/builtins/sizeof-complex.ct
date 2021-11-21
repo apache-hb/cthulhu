@@ -1,0 +1,7 @@
+@mangle("printf")
+def print(fmt: str, args: ...): int;
+
+@entry
+def main {
+    print("sizeof int[64] = %zu\n", sizeof [int $ 64]);
+}

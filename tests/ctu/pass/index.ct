@@ -6,7 +6,7 @@ def printf(format: *char, args: ...): int;
 
 @entry
 def main {
-    var x = malloc(int::sizeof() * 64) as [int];
+    var x = malloc(sizeof int * 64) as [int];
 
     var loop = 0;
     while loop < 64 {

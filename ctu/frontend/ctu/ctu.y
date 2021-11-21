@@ -54,6 +54,13 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     LAMBDA "`lambda`"
     TYPE "`type`"
     NIL "`null`"
+
+    STRUCT "`struct`"
+    UNION "`union`"
+
+    SIZEOF "`sizeof`"
+    ALIGNOF "`alignof`"
+
     SEMI "`;`"
     ASSIGN "`=`"
     LPAREN "`(`"
@@ -312,6 +319,8 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     ;
 
 postfix: primary { $$ = $1; }
+    | SIZEOF type { $$ = ctu_sizeof(x, @$, $2); }
+    | ALIGNOF type { $$ = ctu_alignof(x, @$, $2); }
     | postfix LPAREN arglist RPAREN { $$ = ctu_call(x, @$, $1, $3); }
     //| postfix DOT IDENT { $$ = ctu_access(x, @$, $1, $3, false); }
     //| postfix ARROW IDENT { $$ = ctu_access(x, @$, $1, $3, true); }

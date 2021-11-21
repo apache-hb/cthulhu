@@ -16,7 +16,7 @@ static vector_t *pl0_analyze(reports_t *reports, void *data) {
 }
 
 static const frontend_t DRIVER = {
-    .version = "0.0.2",
+    .version = "1.0.0",
     .name = "PL/0",
     .open = (open_t)pl0_open,
     .parse = (parse_t)pl0_compile,

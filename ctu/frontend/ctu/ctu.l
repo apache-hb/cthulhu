@@ -41,6 +41,11 @@
 "lambda" { return LAMBDA; }
 "type" { return TYPE; }
 "null" { return NIL; }
+"struct" { return STRUCT; }
+"union" { return UNION; }
+
+"sizeof" { return SIZEOF; }
+"alignof" { return ALIGNOF; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);

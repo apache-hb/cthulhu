@@ -3,8 +3,8 @@ def print(fmt: str, args: ...): int;
 
 @entry
 def main: int {
-    print("sizeof(char) = %d\n", char::sizeof());
-    print("sizeof(short) = %d\n", short::sizeof());
-    print("sizeof(int) = %d\n", int::sizeof());
-    print("sizeof(long) = %d\n", long::sizeof());
+    print("sizeof(char) = %zu\n", sizeof char);
+    print("sizeof(short) = %zu\n", sizeof short);
+    print("sizeof(int) = %zu\n", sizeof int);
+    print("sizeof(long) = %zu\n", sizeof long);
 }

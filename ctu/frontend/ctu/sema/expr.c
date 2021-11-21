@@ -304,10 +304,6 @@ static lir_t *compile_read(sema_t *sema, const char *name, ctu_t *expr) {
     return lir_poison(expr->node, "unresolved name");
 }
 
-static lir_t *compile_builtin(sema_t *sema, type_t *type, ctu_t *expr, const char *detail) {
-    return compile_detail(sema, expr, type, detail);
-}
-
 static lir_t *compile_path(sema_t *sema, vector_t *path, ctu_t *expr) {
     size_t len = vector_len(path);
 
@@ -318,15 +314,6 @@ static lir_t *compile_path(sema_t *sema, vector_t *path, ctu_t *expr) {
     sema_t *nest = get_module(sema, vector_head(path));
     if (nest != NULL) {
         return compile_path(nest, vector_slice(path, 1, len), expr);
-    }
-
-    type_t *type = get_type(sema, vector_head(path));
-    if (type != NULL) {
-        if (len != 2) {
-            report(sema->reports, ERROR, expr->node, "cannot name a type or access a module through a type name");
-            return lir_poison(expr->node, "invalid path");
-        }
-        return compile_builtin(sema, type, expr, vector_tail(path));
     }
 
     report(sema->reports, ERROR, expr->node, "failed to find segment `%s`", (char*)vector_head(path));
@@ -434,6 +421,16 @@ static lir_t *compile_cast(sema_t *sema, ctu_t *expr) {
     return cast;
 }
 
+static lir_t *compile_sizeof(sema_t *sema, ctu_t *expr) {
+    const type_t *type = compile_type(sema, expr->of);
+    return lir_detail_sizeof(expr->node, type);
+}
+
+static lir_t *compile_alignof(sema_t *sema, ctu_t *expr) {
+    const type_t *type = compile_type(sema, expr->of);
+    return lir_detail_alignof(expr->node, type);
+}
+
 /* actually compiles an rvalue */
 lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     switch (expr->type) {
@@ -449,6 +446,8 @@ lir_t *compile_expr(sema_t *sema, ctu_t *expr) {
     case CTU_INDEX: return read_expr(expr->node, compile_index(sema, expr));
     case CTU_PATH: return read_expr(expr->node, compile_path(sema, expr->path, expr));
     case CTU_LIST: return compile_list(sema, expr);
+    case CTU_SIZEOF: return compile_sizeof(sema, expr);
+    case CTU_ALIGNOF: return compile_alignof(sema, expr);
 
     default:
         ctu_assert(sema->reports, "(ctu) compile-expr unimplemented expr type %d", expr->type);
