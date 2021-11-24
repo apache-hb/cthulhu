@@ -3,6 +3,7 @@
 #include "data.h"
 
 void forward_type(sema_t *sema, const char *name, ctu_t *ctu);
+void finish_type(sema_t *sema, ctu_t *ctu);
 void build_type(sema_t *sema, type_t *type);
 
 type_t *compile_type(sema_t *sema, ctu_t *ctu);

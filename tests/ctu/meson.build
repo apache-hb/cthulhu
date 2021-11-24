@@ -18,7 +18,7 @@ endforeach
 
 fails = [
     'array-2', 'array-oob', 'array-ref', 'array',
-    'bad-return', 'case-names', 'direct-index', 'div-0',
+    'bad-return', 'direct-index', 'div-0',
     'fuzz-1', 'implicit-bool-cast', 'incorrect-return1',
     'incorrect-return2', 'infinite-struct', 'invalid-char',
     'invalid-init', 'loop', 'nested-refs', 'no-init', 'recurse',
@@ -26,12 +26,12 @@ fails = [
     'type-in-expr', 'uninit-global', 'void-var', 'weird', 'large',
     'recurse-lambda',
     'data.loop-complex', 'data.loop-newtype', 'data.loop-ptr',
-    'data.duplicate', 'index'
+    'data.duplicate', 'index', 'data.newtype'
 ]
 
 foreach case : fails
     where = case.replace('.', '/')
-    path = dir/'fails'/where + '.ct'
+    path = dir/'fail'/where + '.ct'
     test('fail-' + case, ctc, 
         args : [ '-V', path, '-gen', 'c99', '-o', case + '.c' ], 
         suite : 'ctu',
@@ -51,7 +51,7 @@ pass = [
     'simple', 'extern', 'fuzz-10', 'section', 'section-2', 'immediate-invoke',
     'funcs.fwd', 'funcs.single', 'funcs.stmts', 'lambda', 'data.string',
     'imports.first', 'imports.a',
-    'builtins.sizeof', 'index', 'builtins.sizeof-complex'
+    'builtins.sizeof', 'index', 'builtins.sizeof-complex', 'data.newtype'
 ]
 
 foreach case : pass

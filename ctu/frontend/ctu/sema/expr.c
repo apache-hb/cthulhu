@@ -552,7 +552,10 @@ lir_t *compile_stmt(sema_t *sema, ctu_t *stmt) {
     case CTU_CALL: return compile_call(sema, stmt);
     case CTU_VALUE: return compile_local(sema, stmt);
 
-    case CTU_PATH:
+    case CTU_DIGIT: case CTU_BOOL: case CTU_STRING:
+    case CTU_PATH: case CTU_LIST: case CTU_UNARY:
+    case CTU_BINARY: case CTU_NULL: case CTU_LAMBDA:
+    case CTU_INDEX: case CTU_SIZEOF: case CTU_ALIGNOF:
         report(sema->reports, WARNING, stmt->node, "expression has no effect");
         return lir_stmts(stmt->node, vector_new(0));
 

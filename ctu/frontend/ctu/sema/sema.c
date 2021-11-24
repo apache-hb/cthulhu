@@ -66,6 +66,9 @@ static bool nonull(lir_t *lir) {
 }
 
 static lir_t *compile_decls(sema_t *sema, node_t *root) {
+    map_t *types = sema_tag(sema, TAG_USERTYPES);
+    MAP_APPLY(types, sema, build_type);
+
     map_t *vars = sema_tag(sema, TAG_GLOBALS);
     MAP_APPLY(vars, sema, build_value);
 
@@ -74,9 +77,6 @@ static lir_t *compile_decls(sema_t *sema, node_t *root) {
 
     vector_t *defs = MAP_COLLECT(funcs, nonull);
     vector_t *lambdas = move_lambdas(sema);
-
-    map_t *types = sema_tag(sema, TAG_USERTYPES);
-    MAP_APPLY(types, sema, build_type);
 
     lir_t *mod = lir_module(root, 
         /* externs = */ move_externs(sema),
