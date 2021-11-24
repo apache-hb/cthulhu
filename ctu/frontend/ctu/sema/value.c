@@ -17,17 +17,23 @@ static void realise_value(sema_t *sema, lir_t *lir, ctu_t *ctu) {
     const type_t *type = NULL;
     lir_t *init = NULL;
 
-    if (ctu->kind) {
+    if (ctu->kind != NULL) {
         type = compile_type(sema, ctu->kind);
     }
 
-    if (ctu->value) {
+    if (ctu->value != NULL) {
         init = compile_expr(sema, ctu->value);
 
         if (type == NULL) {
             type = lir_type(init);
         } else {
-            /* check conversion */
+            lir_t *actual = implicit_convert_expr(sema, init, type);
+            if (actual == NULL) {
+                report(sema->reports, ERROR, ctu->node, "cannot initialize value of type `%s` with expression of type `%s`",
+                    ctu_type_format(type),
+                    ctu_type_format(lir_type(init))
+                );
+            }
         }
     }
 
