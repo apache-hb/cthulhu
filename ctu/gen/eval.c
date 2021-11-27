@@ -374,3 +374,31 @@ void eval_world(reports_t *reports, module_t *mod) {
         eval_block(&world, var);
     }
 }
+
+static void validate_func(world_t *world, size_t i) {
+    block_t *block = vector_get(world->mod->funcs, i);
+    if (block == NULL) { return; }
+
+    const type_t *result = closure_result(block->type);
+
+    for (size_t i = 0; i < block->len; i++) {
+        step_t op = block->steps[i];
+        if (op.opcode == OP_RETURN) {
+            if (!types_exact_equal(result, op.type)) {
+                report(world->reports, ERROR, op.node, "incorrect return type, expected `%s` got `%s`",
+                    type_format(result),
+                    type_format(op.type)
+                );
+            }
+        }
+    }
+}
+
+void validate_world(reports_t *reports, module_t *ctx) {
+    world_t world = { reports, ctx };
+
+    size_t nfuncs = vector_len(ctx->funcs);
+    for (size_t i = 0; i < nfuncs; i++) {
+        validate_func(&world, i);
+    }
+}

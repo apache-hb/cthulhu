@@ -46,9 +46,10 @@ static bool has_refs(const block_t *block) {
     return count > 0;
 }
 
-void dead_function_elimination(reports_t *reports, module_t *mod) {
+bool dead_function_elimination(reports_t *reports, module_t *mod) {
     UNUSED(reports);
 
+    bool dirty = false;
     vector_t *funcs = mod->funcs;
     vector_t *vars = mod->vars;
     size_t flen = vector_len(funcs);
@@ -58,28 +59,37 @@ void dead_function_elimination(reports_t *reports, module_t *mod) {
 
     for (size_t i = 0; i < flen; i++) {
         block_t *func = vector_get(funcs, i);
+        if (func == NULL) { continue; }
         func->data = (void*)(uintptr_t)(can_be_removed(func->attribs));
     }
 
     for (size_t i = 0; i < flen; i++) {
         block_t *func = vector_get(funcs, i);
+        if (func == NULL) { continue; }
         mark_live_funcs(func);
     }
 
     for (size_t i = 0; i < vlen; i++) {
         block_t *var = vector_get(vars, i);
+        if (var == NULL) { continue; }
         mark_live_funcs(var);
     }
 
     for (size_t i = 0; i < flen; i++) {
         block_t *func = vector_get(funcs, i);
+        if (func == NULL) { continue; }
         if (!has_refs(func)) {
             vector_set(funcs, i, NULL);
+            dirty = true;
+            printf("dirty dead function\n");
         }
     }
+
+    return dirty;
 }
 
-static void delete_dead_steps(block_t *block) {
+static bool delete_dead_steps(block_t *block) {
+    bool dirty = false;
     bool removing = false;
     size_t len = block->len;
 
@@ -91,8 +101,10 @@ static void delete_dead_steps(block_t *block) {
             continue;
         }
 
-        if (removing) {
+        if (removing && step->opcode != OP_EMPTY) {
             step->opcode = OP_EMPTY;
+            dirty = true;
+            printf("dirty dead steps\n");
             continue;
         }
 
@@ -100,11 +112,14 @@ static void delete_dead_steps(block_t *block) {
             removing = true;
         }
     }
+
+    return dirty;
 }
 
-void dead_step_elimination(reports_t *reports, module_t *mod) {
+bool dead_step_elimination(reports_t *reports, module_t *mod) {
     UNUSED(reports);
 
+    bool dirty = false;
     vector_t *funcs = mod->funcs;
     size_t len = vector_len(funcs);
 
@@ -112,7 +127,88 @@ void dead_step_elimination(reports_t *reports, module_t *mod) {
 
     for (size_t i = 0; i < len; i++) {
         block_t *func = vector_get(funcs, i);
-        delete_dead_steps(func);
+        if (func == NULL) { continue; }
+        dirty = dirty || delete_dead_steps(func);
+    }
+
+    return dirty;
+}
+
+static void add_counter(bool *counts, operand_t op) {
+    if (op.kind != LABEL) { return; }
+
+    counts[op.label] = true;
+}
+
+static void add_counters(bool *counts, step_t step) {
+    switch (step.opcode) {
+    case OP_JMP: 
+        add_counter(counts, step.label); 
+        break;
+    case OP_BRANCH:
+        add_counter(counts, step.label);
+        add_counter(counts, step.other);
+        break;
+    default: break;
     }
 }
 
+static bool delete_dead_labels(block_t *block) {
+    bool dirty = false;
+    size_t len = block->len;
+    bool *counts = ctu_malloc(sizeof(bool) * len);
+    
+    for (size_t i = 0; i < len; i++) {
+        counts[i] = false;
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        step_t step = block->steps[i];
+        add_counters(counts, step);
+    }
+
+    for (size_t i = 0; i < len; i++) {
+        if (block->steps[i].opcode == OP_BLOCK && !counts[i]) {
+            block->steps[i].opcode = OP_EMPTY;
+            dirty = true;
+            printf("dirty dead label\n");
+        }
+    }
+
+    ctu_free(counts);
+
+    return dirty;
+}
+
+bool dead_label_elimination(reports_t *reports, module_t *mod) {
+    UNUSED(reports);
+
+    bool dirty = false;
+    size_t len = vector_len(mod->funcs);
+    for (size_t i = 0; i < len; i++) {
+        block_t *func = vector_get(mod->funcs, i);
+        if (func == NULL) { continue; }
+        dirty = dirty || delete_dead_labels(func);
+    }
+
+    return dirty;
+}
+
+void run_passes(reports_t *reports, module_t *ctx) {
+    bool needs_more_passes;
+
+    do {
+        needs_more_passes = false;
+        if (dead_step_elimination(reports, ctx)) {
+            needs_more_passes = true;
+        }
+
+        if (dead_label_elimination(reports, ctx)) {
+            needs_more_passes = true;
+        }
+
+        if (dead_function_elimination(reports, ctx)) {
+            needs_more_passes = true;
+        }
+    } while (needs_more_passes);
+}

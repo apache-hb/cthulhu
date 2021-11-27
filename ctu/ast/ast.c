@@ -9,11 +9,20 @@ node_t *node_new(scan_t *scan, where_t where) {
     return node;
 }
 
-node_t *node_merge(const node_t *lhs, const node_t *rhs) {
-    if (lhs == NULL || rhs == NULL) {
-        return NULL;
-    }
-    
+node_t *node_last_line(const node_t *node) {
+    where_t where = node->where;
+
+    where_t result = {
+        .first_line = where.last_line,
+        .first_column = 0,
+        .last_column = where.last_column,
+        .last_line = where.last_line
+    };
+
+    return node_new(node->scan, result);
+}
+
+node_t *node_merge(const node_t *lhs, const node_t *rhs) {    
     if (lhs->scan != rhs->scan) {
         return NULL;
     }

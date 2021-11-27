@@ -5,4 +5,4 @@ def f(y: int): int {
     var z: bool;
 }
 
-export def main(): int {}
+export def main(): int { return 0; }

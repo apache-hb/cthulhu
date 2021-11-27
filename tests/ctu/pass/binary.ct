@@ -1,5 +1,7 @@
 def main($: int, b: int, $: bool): int {
     final $ = b;
+
+    return 0;
 }
 
 // hello world

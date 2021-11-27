@@ -10,4 +10,5 @@ typedef struct {
 } node_t;
 
 node_t *node_new(WEAK scan_t *scan, where_t where) NONULL;
-node_t *node_merge(const node_t *lhs, const node_t *rhs);
+node_t *node_last_line(const node_t *node) NONULL;
+node_t *node_merge(const node_t *lhs, const node_t *rhs) NONULL;

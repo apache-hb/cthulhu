@@ -122,8 +122,16 @@ static operand_t add_label(context_t *ctx, step_t step) {
 
 static operand_t emit_lir(context_t *ctx, lir_t *lir);
 
-static operand_t build_return(context_t *ctx, lir_t *lir, operand_t op) {
-    step_t step = step_of(ctx, OP_RETURN, lir);
+static step_t new_return(context_t *ctx, const node_t *node, const type_t *type) {
+    if (type == NULL) {
+        report(ctx->reports, INTERNAL, node, "OP_RETURN type == NULL");
+    }
+
+    return step_with_type(ctx, OP_RETURN, node, type);
+}
+
+static operand_t build_return(context_t *ctx, const node_t *node, const type_t *type, operand_t op) {
+    step_t step = new_return(ctx, node, type);
     step.operand = op;
     return add_step(ctx, step);
 }
@@ -198,9 +206,9 @@ static context_t build_block(vector_t *strings, reports_t *reports, module_t *mo
 
     if (body != NULL) {
         operand_t op = emit_lir(&ctx, body);
-        build_return(&ctx, body, op);
+        build_return(&ctx, node_last_line(body->node), type_void(), op);
     } else {
-        step_t step = step_with_type(&ctx, OP_RETURN, NULL, type_void());
+        step_t step = new_return(&ctx, node_last_line(block->node), type_void());
         step.operand = operand_empty();
         add_step(&ctx, step);
     }
@@ -213,7 +221,7 @@ static context_t build_define(vector_t *strings, reports_t *reports, module_t *m
     
     lir_t *body = define->body;
     operand_t op = emit_lir(&ctx, body);
-    build_return(&ctx, body, op);
+    build_return(&ctx, node_last_line(body->node), type_void(), op);
 
     return ctx;
 }
@@ -396,8 +404,12 @@ static operand_t emit_poison(context_t *ctx, lir_t *lir) {
 }
 
 static operand_t emit_return(context_t *ctx, lir_t *lir) {
-    operand_t operand = lir->operand == NULL ? operand_empty() : emit_lir(ctx, lir->operand);
-    return build_return(ctx, lir, operand);
+    node_t *node = node_last_line(lir->node);
+    if (lir->operand == NULL) {
+        return build_return(ctx, node, type_void(), operand_empty());
+    } else {
+        return build_return(ctx, node, lir_type(lir->operand), emit_lir(ctx, lir->operand));
+    }
 }
 
 static operand_t emit_param(lir_t *lir) {

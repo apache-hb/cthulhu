@@ -181,7 +181,7 @@ lir_t *lir_while(node_t *node, lir_t *cond, lir_t *then) {
 }
 
 lir_t *lir_return(node_t *node, lir_t *operand) {
-    lir_t *lir = lir_new(node, NULL, LIR_RETURN);
+    lir_t *lir = lir_new(node, type_void(), LIR_RETURN);
     lir->operand = operand;
     return lir;
 }

@@ -5,4 +5,6 @@ def hello(): str {
 
 export def main(argc: int, argv: **char): int {
     final x = hello();
+
+    return 0;
 }

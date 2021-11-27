@@ -7,4 +7,6 @@ def main: int {
     print("sizeof(short) = %zu\n", sizeof short);
     print("sizeof(int) = %zu\n", sizeof int);
     print("sizeof(long) = %zu\n", sizeof long);
+
+    return 0;
 }
