@@ -226,6 +226,7 @@ static value_t *exec_binary(exec_t *exec, step_t step) {
 
 static value_t *exec_load(exec_t *exec, step_t step) {
     value_t *val = get_value(exec, step.src);
+        
     if (is_array(val->type)) {
         return vector_get(val->elements, val->offset);
     }
@@ -234,7 +235,12 @@ static value_t *exec_load(exec_t *exec, step_t step) {
         return val;
     }
 
-    return eval_block(exec->world, val->block);
+    value_t *result = eval_block(exec->world, val->block);
+    if (result->node == NULL) {
+        report(exec->world->reports, ERROR, step.node, "read from uninitialized value");
+    }
+
+    return result;
 }
 
 static value_t *exec_offset(exec_t *exec, step_t step) {

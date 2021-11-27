@@ -18,7 +18,7 @@ static void types_print(FILE *out, vector_t *types) {
         const type_t *type = vector_get(types, i);
         fprintf(out, "  [%zu] = %s", i, type_format(type));
     }
-    fprintf(out, "}\n");
+    fprintf(out, "\n}\n");
 }
 
 static char *emit_imm(const value_t *imm) {
@@ -239,6 +239,7 @@ static void var_print(FILE *out, module_t *mod, size_t idx) {
 
 static void func_print(FILE *out, module_t *mod, size_t idx) {
     block_t *flow = vector_get(mod->funcs, idx);
+    if (flow == NULL) { return; }
     const char *name = flow->name;
     
     char *locals = emit_names("locals", flow->locals);
