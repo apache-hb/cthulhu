@@ -1,0 +1,5 @@
+contract { 
+    assert (flags == 0 || flags == DXGI_CREATE_FACTORY_DEBUG);
+    assert (ppFactory != null);
+}
+def CreateDXGIFactory(flags: uint, riid: &GUID, ppFactory: **void): HRESULT;

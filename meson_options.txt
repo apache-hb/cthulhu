@@ -1,7 +1,7 @@
 option('languages', type : 'array',
     description : 'select which languages to compile',
-    choices : [ 'ctu', 'pl0', 'c' ],
-    value : [ 'ctu', 'pl0', 'c' ]
+    choices : [ 'ctu', 'pl0', 'c', 'brainfuck' ],
+    value : [ 'ctu', 'pl0' ]
 )
 
 option('backends', type : 'array',
