@@ -380,7 +380,9 @@ static lir_t *compile_entry(sema_t *sema, pl0_t *body) {
     return entry;
 }
 
-lir_t *pl0_sema(reports_t *reports, pl0_t *node) {
+lir_t *pl0_sema(reports_t *reports, settings_t *settings, pl0_t *node) {
+    UNUSED(settings);
+    
     vector_t *vars = node->globals;
     vector_t *consts = node->consts;
     vector_t *procs = node->procs;

@@ -39,6 +39,24 @@ const backend_t BACKEND_NULL = {
     .name = "NULL",
     .compile = (compile_t)null_build
 };
+
+arg_t *new_arg(
+    arg_type_t type, 
+    const char *name, 
+    const char *brief, 
+    const char *desc
+)
+{
+    arg_t *arg = ctu_malloc(sizeof(arg_t));
+
+    arg->type = type;
+    arg->name = name;
+    arg->brief = brief;
+    arg->desc = desc;
+
+    return arg;
+}
+
 const backend_t *select_backend(reports_t *reports, const char *name) {
     if (name == NULL) {
         report(reports, ERROR, NULL, "no backend specified");
@@ -116,7 +134,7 @@ int common_main(const frontend_t *frontend, int argc, char **argv) {
 
     for (size_t i = 0; i < len; i++) {
         context_t *ctx = all + i;
-        ctx->modules = frontend->analyze(ctx->reports, ctx->node);
+        ctx->modules = frontend->analyze(ctx->reports, &settings, ctx->node);
 
         max_report(&error, ctx->reports, format("analysis of `%s`", ctx->file->path));
     }

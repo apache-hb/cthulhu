@@ -1,6 +1,7 @@
 #include "scan.h"
 #include "sema.h"
 
+#include "ctu/driver/cmd.h"
 #include "ctu/driver/driver.h"
 #include "ctu/util/util.h"
 #include "ctu/util/report.h"
@@ -11,8 +12,8 @@ scan_t pl0_open(reports_t *reports, file_t *file) {
     return scan_file(reports, "PL/0", file);
 }
 
-static vector_t *pl0_analyze(reports_t *reports, void *data) {
-    return vector_init(pl0_sema(reports, data));
+static vector_t *pl0_analyze(reports_t *reports, settings_t *settings, void *data) {
+    return vector_init(pl0_sema(reports, settings, data));
 }
 
 static const frontend_t DRIVER = {

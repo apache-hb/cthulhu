@@ -118,7 +118,9 @@ lir_t *ctu_finish(sema_t *sema) {
     return compile_decls(sema, get_tree(sema)->node);
 }
 
-vector_t *ctu_analyze(reports_t *reports, ctu_t *ctu) {
+vector_t *ctu_analyze(reports_t *reports, settings_t *settings, ctu_t *ctu) {
+    UNUSED(settings);
+    
     ctu_sema(reports, ctu);
     vector_t *cache = cached_data();
     for (size_t i = 0; i < vector_len(cache); i++) {

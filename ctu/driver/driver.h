@@ -5,12 +5,34 @@
 #include "ctu/lir/lir.h"
 #include "ctu/gen/emit.h"
 
+struct settings_t;
+
 typedef scan_t(*open_t)(reports_t*, file_t*);
-typedef void*(*parse_t)(scan_t *);
+typedef void*(*parse_t)(scan_t*);
 
 /* return a vector of modules */
-typedef vector_t*(*analyze_t)(reports_t*, void*);
+typedef vector_t*(*analyze_t)(reports_t *, struct settings_t*, void*);
 typedef void(*init_t)(void);
+
+typedef enum {
+    ARG_BOOL,
+    ARG_UINT,
+    ARG_INT
+} arg_type_t;
+
+typedef struct {
+    const char *name;
+    const char *brief;
+    const char *desc;
+    arg_type_t type;
+} arg_t;
+
+arg_t *new_arg(
+    arg_type_t type, 
+    const char *name, 
+    const char *brief, 
+    const char *desc
+);
 
 typedef struct {
     const char *version;
@@ -19,6 +41,7 @@ typedef struct {
     open_t open;
     parse_t parse;
     analyze_t analyze;
+    vector_t *args; // map<string, arg_t>
 } frontend_t;
 
 typedef bool(*compile_t)(reports_t*, module_t*, const char*);

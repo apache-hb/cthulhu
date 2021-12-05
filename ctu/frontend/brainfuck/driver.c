@@ -1,3 +1,4 @@
+#include "ctu/driver/cmd.h"
 #include "ctu/driver/driver.h"
 #include "ctu/ast/compile.h"
 
@@ -40,9 +41,22 @@ static vector_t *bf_compile(scan_t *scan) {
     return compile_file(scan, &CALLBACKS);
 }
 
-static vector_t *bf_build(reports_t *reports, void *data) {
+enum {
+    BF_TAPE_SIZE = 0,
+    BF_MAX
+};
+
+static vector_t *bf_build(reports_t *reports, settings_t *settings, void *data) {
     UNUSED(reports);
+    UNUSED(settings);
     UNUSED(data);
+
+    size_t tape = 0x2000;
+    parsed_arg_t *arg = get_arg(reports, settings, BF_TAPE_SIZE, ARG_UINT);
+    if (arg != NULL) {
+        tape = mpz_get_ui(arg->digit);
+    }
+    printf("tape-size: %zu\n", tape);
 
     return vector_new(0);
 }
@@ -53,14 +67,19 @@ void bferror(where_t *where, void *state, scan_t *scan, const char *msg) {
     report(scan->reports, ERROR, node_new(scan, *where), "%s", msg);
 }
 
-static const frontend_t DRIVER = {
-    .version = "1.0.0",
-    .name = "brainfuck",
-    .open = (open_t)bf_open,
-    .parse = (parse_t)bf_compile,
-    .analyze = (analyze_t)bf_build
-};
-
 int main(int argc, char **argv) {
-    return common_main(&DRIVER, argc, argv);
+    vector_t *args = vector_of(BF_MAX);
+    arg_t *ts = new_arg(ARG_UINT, "--tape-size", "-TS", "Configure the number of cells in the tape");
+    vector_set(args, BF_TAPE_SIZE, ts);
+
+    const frontend_t driver = {
+        .version = "1.0.0",
+        .name = "brainfuck",
+        .open = (open_t)bf_open,
+        .parse = (parse_t)bf_compile,
+        .analyze = (analyze_t)bf_build,
+        .args = args
+    };
+
+    return common_main(&driver, argc, argv);
 }

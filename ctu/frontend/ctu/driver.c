@@ -10,7 +10,7 @@ static void ctu_init(void) {
     init_attribs();
 }
 
-static const frontend_t DRIVER = {
+static frontend_t DRIVER = {
     .version = "0.0.1",
     .name = "Cthulhu",
     .init = (init_t)ctu_init,
