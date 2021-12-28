@@ -15,7 +15,7 @@ c_t *c_parse(scan_t *scan) {
     return NULL;
 }
 
-vector_t *c_analyze(reports_t *reports, settings_t *settings, c_t *node) {
+vector_t *c_analyze(reports_t *reports, struct settings_t *settings, c_t *node) {
     UNUSED(reports);
     UNUSED(settings);
     UNUSED(node);
