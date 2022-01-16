@@ -13,10 +13,10 @@
  * 
  * @return the message 
  */
-message_t *report_shadow(WEAK reports_t *reports,
+message_t *report_shadow(reports_t *reports,
                         const char *name,
-                        WEAK const node_t *shadowed,
-                        WEAK const node_t *shadowing) NONULL;
+                        const node_t *shadowed,
+                        const node_t *shadowing) NONULL;
 
 /**
  * report that a defition is recursive
@@ -29,10 +29,10 @@ message_t *report_shadow(WEAK reports_t *reports,
  * 
  * @return the message
  */
-message_t *report_recursive(WEAK reports_t *reports,
-                            WEAK vector_t *stack,
-                            WEAK lir_t *root) NONULL;
+message_t *report_recursive(reports_t *reports,
+                            vector_t *stack,
+                            lir_t *root) NONULL;
 
-message_t *report_unknown_character(WEAK reports_t *reports,
-                                    WEAK node_t *node,
+message_t *report_unknown_character(reports_t *reports,
+                                    node_t *node,
                                     const char *str) NONULL;

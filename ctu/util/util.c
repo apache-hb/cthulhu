@@ -325,7 +325,7 @@ void *vector_tail(const vector_t *vector) {
     return vector->data[vector->used - 1];
 }
 
-void *vector_head(WEAK const vector_t *vector) {
+void *vector_head(const vector_t *vector) {
     return vector->data[0];
 }
 

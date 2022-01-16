@@ -39,11 +39,6 @@
 #define INNER_STR(x) #x
 #define STR(x) INNER_STR(x)
 
-#define WEAK /// this pointer does not own its data
-#define OWNED /// this pointer owns its data
-#define MOVE /// moves ownership of data
-#define NULLABLE /// pointer can be null
-
 #define COLOUR_RED "\x1B[1;31m"
 #define COLOUR_GREEN "\x1B[1;32m"
 #define COLOUR_YELLOW "\x1B[1;33m"

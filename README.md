@@ -28,7 +28,14 @@ ninja -C build test
   * pref - bytecode optimisation
   * type - generic type data
   * util - helper library
+  
+* tools - extra compiler development tools
+  * tune.c - performance tuning for optimal map sizes
 
+* tests - test cases
+* subprojects - dependencies
+  * mini-gmp - fallback in case system gmp is missing
+  
 ## Overview
 
 * lex + parse with flex and bison

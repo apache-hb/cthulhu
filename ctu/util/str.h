@@ -49,7 +49,7 @@ bool endswith(const char *str, const char *suffix) CONSTFN NONULL;
  * @param parts a vector of strings to join
  * @return the joined string
  */
-OWNED char *strjoin(const char *sep, WEAK vector_t *parts) NONULL;
+char *strjoin(const char *sep, vector_t *parts) NONULL;
 
 /**
  * repeat a string n times
@@ -110,7 +110,7 @@ bool streq(const char *lhs, const char *rhs) HOT CONSTFN NONULL;
 typedef struct {
     size_t len;
     size_t size;
-    OWNED char *data;
+    char *data;
 } stream_t;
 
 void stream_delete(stream_t *stream) NONULL;
