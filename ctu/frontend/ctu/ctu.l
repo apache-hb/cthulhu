@@ -28,24 +28,31 @@
 "def" { return DEF; }
 "var" { return VAR; }
 "final" { return FINAL; }
-"export" { return EXPORT; }
+
 "return" { return RETURN; }
 "if" { return IF; }
 "else" { return ELSE; }
 "while" { return WHILE; }
+"break" { return BREAK; }
+"continue" { return CONTINUE; }
+
 "true" { return YES; }
 "false" { return NO; }
-"as" { return AS; }
-"break" { return BREAK; }
-"import" { return IMPORT; }
-"lambda" { return LAMBDA; }
-"type" { return TYPE; }
 "null" { return NIL; }
-"struct" { return STRUCT; }
-"union" { return UNION; }
+
+"as" { return AS; }
 
 "sizeof" { return SIZEOF; }
 "alignof" { return ALIGNOF; }
+
+"module" { return MODULE; }
+"import" { return IMPORT; }
+"export" { return EXPORT; }
+
+"lambda" { return LAMBDA; }
+"type" { return TYPE; }
+"struct" { return STRUCT; }
+"union" { return UNION; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);

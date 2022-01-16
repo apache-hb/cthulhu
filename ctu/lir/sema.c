@@ -4,7 +4,6 @@
 #include "ctu/util/str.h"
 
 sema_t *sema_new(sema_t *parent, 
-                 const char *path,
                  reports_t *reports, 
                  size_t decls,
                  size_t *sizes) 
@@ -13,7 +12,6 @@ sema_t *sema_new(sema_t *parent,
     
     sema->parent = parent;
     sema->reports = reports;
-    sema->path = path;
 
     sema->decls = vector_of(decls);
     for (size_t i = 0; i < decls; i++) {

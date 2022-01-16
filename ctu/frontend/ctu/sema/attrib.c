@@ -24,6 +24,7 @@ static void entry_attrib(reports_t *reports, attrib_t *dst, vector_t *args) {
     UNUSED(reports);
     UNUSED(args);
 
+    // TODO: this only works for C
     dst->visibility = ENTRYPOINT;
     dst->mangle = "main";
 }

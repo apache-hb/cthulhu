@@ -81,7 +81,6 @@ bool dead_function_elimination(reports_t *reports, module_t *mod) {
         if (!has_refs(func)) {
             vector_set(funcs, i, NULL);
             dirty = true;
-            printf("dirty dead function\n");
         }
     }
 
@@ -104,7 +103,6 @@ static bool delete_dead_steps(block_t *block) {
         if (removing && step->opcode != OP_EMPTY) {
             step->opcode = OP_EMPTY;
             dirty = true;
-            printf("dirty dead steps\n");
             continue;
         }
 
@@ -171,7 +169,6 @@ static bool delete_dead_labels(block_t *block) {
         if (block->steps[i].opcode == OP_BLOCK && !counts[i]) {
             block->steps[i].opcode = OP_EMPTY;
             dirty = true;
-            printf("dirty dead label\n");
         }
     }
 

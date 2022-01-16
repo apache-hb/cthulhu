@@ -280,9 +280,10 @@ ctu_t *ctu_attrib(scan_t *scan, where_t where, const char *name, vector_t *param
     return ctu;
 }
 
-ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *imports, vector_t *decls) {
+ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *mod, vector_t *imports, vector_t *decls) {
     ctu_t *ctu = ctu_new(scan, where, CTU_MODULE);
 
+    ctu->mod = mod;
     ctu->imports = imports;
     ctu->decls = decls;
 

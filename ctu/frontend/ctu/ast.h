@@ -139,6 +139,7 @@ typedef struct ctu_t {
         };
 
         struct {
+            vector_t *mod;
             vector_t *imports;
             vector_t *decls;
         };
@@ -205,7 +206,7 @@ ctu_t *ctu_newtype(scan_t *scan, where_t where,
 ctu_t *ctu_attrib(scan_t *scan, where_t where, const char *name, vector_t *params);
 
 /* modules */
-ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *imports, vector_t *decls);
+ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *mod, vector_t *imports, vector_t *decls);
 
 ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, const char *alias);
 

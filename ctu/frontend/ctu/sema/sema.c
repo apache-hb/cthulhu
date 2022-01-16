@@ -99,10 +99,6 @@ sema_t *ctu_start(reports_t *reports, ctu_t *ctu) {
     vector_t *imports = ctu->imports;
     const char *path = ctu->node->scan->path;
     sema_t *sema = base_sema(reports, path, ctu, vector_len(decls), vector_len(imports));
-    vector_t *header = strsplit(ctu_noext(path), PATH_SEP);
-
-    /* TODO: find a better way of doing module names */
-    set_path(sema, header);
 
     add_imports(sema, imports);
     add_decls(sema, decls);

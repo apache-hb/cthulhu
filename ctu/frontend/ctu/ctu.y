@@ -41,19 +41,26 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     VAR "`var`"
     FINAL "`final`"
     DEF "`def`"
-    EXPORT "`export`"
+
     RETURN "`return`"
     IF "`if`"
     ELSE "`else`"
     WHILE "`while`"
+    BREAK "`break`"
+    CONTINUE "`continue`"
+
     AS "`as`"
+
+    MODULE "`module`"
     IMPORT "`import`"
+    EXPORT "`export`"
+
     YES "`true`"
     NO "`false`"
-    BREAK "`break`"
+    NIL "`null`"
+
     LAMBDA "`lambda`"
     TYPE "`type`"
-    NIL "`null`"
 
     STRUCT "`struct`"
     UNION "`union`"
@@ -110,7 +117,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     unit stmtlist params paramlist args arglist imports
     attributes attriblist attribute attribs
     typelist types optparams importlist path
-    items itemlist
+    items itemlist modname
 
 %type<boolean>
     exported const
@@ -122,8 +129,12 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %%
 
-program: importlist unit END 
-    { scan_export(x, ctu_module(x, @$, $1, $2)); }
+program: modname importlist unit END 
+    { scan_export(x, ctu_module(x, @$, $1, $2, $3)); }
+    ;
+
+modname: %empty { $$ = NULL; }
+    | MODULE path SEMI { $$ = $2; }
     ;
 
 importlist: %empty { $$ = vector_new(0); }
