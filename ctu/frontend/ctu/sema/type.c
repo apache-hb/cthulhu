@@ -36,6 +36,7 @@ void build_type(sema_t *sema, type_t *type) {
 }
 
 static type_t *compile_typepath(sema_t *sema, ctu_t *ctu) {
+#if 0
     size_t idx = 0;
     size_t len = vector_len(ctu->path);
     while (idx < len - 1) {
@@ -46,6 +47,7 @@ static type_t *compile_typepath(sema_t *sema, ctu_t *ctu) {
             return type_poison_with_node("unresolved type", ctu->node);
         }
     }
+#endif
 
     type_t *type = get_type(sema, vector_tail(ctu->path));
     if (type == NULL) {

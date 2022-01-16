@@ -2,8 +2,6 @@
 
 #include "ctu/util/report-ext.h"
 
-#include "ctu/driver/include.h"
-
 static local_t new_local(void) {
     local_t local = {
         .result = type_poison("uninitialized return type")
@@ -87,10 +85,6 @@ void add_type(sema_t *sema, const char *name, type_t *type) {
     sema_set(sema, TAG_USERTYPES, name, type);
 }
 
-void set_module(sema_t *sema, const char *name, sema_t *mod) {
-    sema_set(sema, TAG_IMPORTS, name, mod);
-}
-
 lir_t *get_var(sema_t *sema, const char *name) {
     return sema_get(sema, TAG_GLOBALS, name);
 }
@@ -106,10 +100,6 @@ type_t *get_type(sema_t *sema, const char *name) {
     }
 
     return sema_get(sema, TAG_USERTYPES, name);
-}
-
-sema_t *get_module(sema_t *sema, const char *name) {
-    return sema_get(sema, TAG_IMPORTS, name);
 }
 
 sema_t *new_sema(reports_t *reports, sema_t *parent, size_t *sizes) {
@@ -140,13 +130,12 @@ static const char *digit_name(sign_t sign, int_t width) {
     }
 }
 
-sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decls, size_t imports) {    
+sema_t *base_sema(reports_t *reports, ctu_t *tree, size_t decls) {    
     size_t sizes[TAG_MAX] = {
         [TAG_TYPES] = decls,
         [TAG_USERTYPES] = decls,
         [TAG_GLOBALS] = decls,
-        [TAG_FUNCS] = decls,
-        [TAG_IMPORTS] = imports
+        [TAG_FUNCS] = decls
     };
 
     sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
@@ -169,7 +158,6 @@ sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decl
     add_builtin_type(sema, "bool", boolean);
     add_builtin_type(sema, "str", type_string_with_name("str"));
 
-    set_cache(path, sema);
     return sema;
 }
 

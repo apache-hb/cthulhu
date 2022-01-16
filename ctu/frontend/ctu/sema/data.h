@@ -9,7 +9,6 @@ typedef enum {
     TAG_USERTYPES,
     TAG_GLOBALS,
     TAG_FUNCS,
-    TAG_IMPORTS,
 
     TAG_MAX
 } tag_t;
@@ -57,15 +56,13 @@ void set_state(sema_t *sema, local_t state);
 void add_var(sema_t *sema, const char *name, lir_t *lir);
 void add_func(sema_t *sema, const char *name, lir_t *lir);
 void add_type(sema_t *sema, const char *name, type_t *type);
-void set_module(sema_t *sema, const char *name, sema_t *mod);
 
 lir_t *get_var(sema_t *sema, const char *name);
 lir_t *get_func(sema_t *sema, const char *name);
 type_t *get_type(sema_t *sema, const char *name);
-sema_t *get_module(sema_t *sema, const char *name);
 
 sema_t *new_sema(reports_t *reports, sema_t *parent, size_t *sizes);
-sema_t *base_sema(reports_t *reports, const char *path, ctu_t *tree, size_t decls, size_t imports);
+sema_t *base_sema(reports_t *reports, ctu_t *tree, size_t decls);
 void delete_sema(sema_t *sema);
 
 bool is_discard(const char *name);

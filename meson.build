@@ -45,8 +45,7 @@ src = [
     'ctu/util/compat-platform.c'.replace('platform', target),
 
     'ctu/driver/driver.c',
-    'ctu/driver/cmd.c',
-    'ctu/driver/include.c'
+    'ctu/driver/cmd.c'
 ]
 
 gmp = dependency('gmp', 

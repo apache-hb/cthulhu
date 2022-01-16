@@ -311,10 +311,12 @@ static lir_t *compile_path(sema_t *sema, vector_t *path, ctu_t *expr) {
         return compile_read(sema, vector_head(path), expr);
     }
 
+#if 0
     sema_t *nest = get_module(sema, vector_head(path));
     if (nest != NULL) {
         return compile_path(nest, vector_slice(path, 1, len), expr);
     }
+#endif
 
     report(sema->reports, ERROR, expr->node, "failed to find segment `%s`", (char*)vector_head(path));
     return lir_poison(expr->node, "unresolved path");

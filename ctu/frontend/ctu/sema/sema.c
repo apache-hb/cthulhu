@@ -3,19 +3,9 @@
 #include "type.h"
 #include "value.h"
 #include "define.h"
-#include "import.h"
 
-#include "ctu/driver/include.h"
 #include "ctu/util/util.h"
 #include "ctu/util/report-ext.h"
-
-static void add_imports(sema_t *sema, vector_t *imports) {
-    size_t len = vector_len(imports);
-    for (size_t i = 0; i < len; i++) {
-        ctu_t *node = vector_get(imports, i);
-        compile_import(sema, node);
-    }
-}
 
 static leaf_t decl_leaf(ctu_t *ctu) {
     switch (ctu->type) {
@@ -96,11 +86,8 @@ lir_t *ctu_sema(reports_t *reports, ctu_t *ctu) {
 
 sema_t *ctu_start(reports_t *reports, ctu_t *ctu) {
     vector_t *decls = ctu->decls;
-    vector_t *imports = ctu->imports;
-    const char *path = ctu->node->scan->path;
-    sema_t *sema = base_sema(reports, path, ctu, vector_len(decls), vector_len(imports));
+    sema_t *sema = base_sema(reports, ctu, vector_len(decls));
 
-    add_imports(sema, imports);
     add_decls(sema, decls);
 
     return sema;
@@ -117,11 +104,7 @@ lir_t *ctu_finish(sema_t *sema) {
 vector_t *ctu_analyze(reports_t *reports, settings_t *settings, ctu_t *ctu) {
     UNUSED(settings);
     
-    ctu_sema(reports, ctu);
-    vector_t *cache = cached_data();
-    for (size_t i = 0; i < vector_len(cache); i++) {
-        sema_t *sema = vector_get(cache, i);
-        vector_set(cache, i, ctu_finish(sema));
-    }
+    lir_t *lir = ctu_sema(reports, ctu);
+    vector_t *cache = vector_init(lir);
     return cache;
 }

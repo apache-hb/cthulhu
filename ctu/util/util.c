@@ -73,32 +73,11 @@ void *ctu_memdup(const void *ptr, size_t size) {
     return out;
 }
 
-char *ctu_basepath(const char *path) {
-    char *base = ctu_strdup(path);
-    size_t len = strlen(base);
-    while (!endswith(base, PATH_SEP)) {
-        base[len--] = '\0';
-    }
-    base[len] = '\0';
-    return base;
-}
-
-char *ctu_noext(const char *path) {
-    char *base = ctu_strdup(path);
-    size_t len = strlen(base);
-    while (!endswith(base, ".")) {
-        base[len--] = '\0';
-    }
-    base[len] = '\0';
-    return base;
-}
-
 file_t *ctu_fopen(const char *path, const char *mode) {
-    const char *full = compat_realpath(path);
-    logverbose("opening: %s", full);
+    logverbose("opening: %s", path);
     file_t *file = ctu_malloc(sizeof(file_t));
-    file->path = full;
-    file->file = compat_fopen(full, mode);
+    file->path = path;
+    file->file = compat_fopen(path, mode);
     return file;
 }
 
