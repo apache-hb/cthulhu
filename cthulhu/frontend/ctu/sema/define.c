@@ -2,7 +2,6 @@
 #include "type.h"
 #include "expr.h"
 #include "attrib.h"
-#include "cthulhu/lir/abi.h"
 
 static const type_t *realise_closure(sema_t *sema, ctu_t *ctu) {
     vector_t *params = ctu->params;

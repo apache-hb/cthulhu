@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/ast/ops/ops.h"
+#include "cthulhu/ast/ops.h"
 #include "cthulhu/lir/attrib.h"
 
 #include "value.h"

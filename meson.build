@@ -17,12 +17,10 @@ src = [
     'cthulhu/ast/interop.c',
     'cthulhu/ast/ast.c',
     'cthulhu/ast/compile.c',
-
-    'cthulhu/ast/ops/ops.c',
+    'cthulhu/ast/ops.c',
 
     'cthulhu/lir/lir.c',
     'cthulhu/lir/sema.c',
-    'cthulhu/lir/abi.c',
     
     'cthulhu/type/type.c',
     'cthulhu/type/query.c',

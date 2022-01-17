@@ -1,7 +1,7 @@
 #pragma once
 
 #include "cthulhu/ast/ast.h"
-#include "cthulhu/ast/ops/ops.h"
+#include "cthulhu/ast/ops.h"
 #include "cthulhu/ast/scan.h"
 #include "cthulhu/util/util.h"
 

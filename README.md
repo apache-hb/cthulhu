@@ -18,8 +18,12 @@ ninja -C build test
 
 ## Layout
 
-* ctu - source
-  * ast - generic ast
+* cthulhu - source
+  * ast - generic ast parts
+    * scan - scanning structures, used for error reporting and lexing/parsing
+    * ops - unary and binary operators
+    * interop - glue code for working with flex and bison generators
+    * compile - glue code for compiling code with flex and bison
   * backend - all language backends from transpiling
   * driver - user facing driver and command line
   * frontend - all parser frontends
@@ -39,8 +43,9 @@ ninja -C build test
 ## Overview
 
 * lex + parse with flex and bison
-* symbol resolution, typechecking in semantic analysis
-* convert ast into typed ast for IR
+  * language specific ast is generated
+  * symbol resolution, typechecking in semantic analysis
+* convert language specific ast into typed ast for IR
 * convert typed ast into SSA
 * optimize SSA form
 * use backend to produce end library/executable from SSA 
