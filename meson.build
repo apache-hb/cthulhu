@@ -13,39 +13,39 @@ project('cthulhu', 'c',
 target = target_machine.system()
 
 src = [
-    'ctu/ast/scan.c',
-    'ctu/ast/interop.c',
-    'ctu/ast/ast.c',
-    'ctu/ast/compile.c',
+    'cthulhu/ast/scan.c',
+    'cthulhu/ast/interop.c',
+    'cthulhu/ast/ast.c',
+    'cthulhu/ast/compile.c',
 
-    'ctu/ast/ops/ops.c',
+    'cthulhu/ast/ops/ops.c',
 
-    'ctu/lir/lir.c',
-    'ctu/lir/sema.c',
-    'ctu/lir/abi.c',
+    'cthulhu/lir/lir.c',
+    'cthulhu/lir/sema.c',
+    'cthulhu/lir/abi.c',
     
-    'ctu/type/type.c',
-    'ctu/type/query.c',
-    'ctu/type/format.c',
+    'cthulhu/type/type.c',
+    'cthulhu/type/query.c',
+    'cthulhu/type/format.c',
     
-    'ctu/gen/emit.c',
-    'ctu/gen/value.c',
-    'ctu/gen/operand.c',
-    'ctu/gen/print.c',
-    'ctu/gen/eval.c',
+    'cthulhu/gen/emit.c',
+    'cthulhu/gen/value.c',
+    'cthulhu/gen/operand.c',
+    'cthulhu/gen/print.c',
+    'cthulhu/gen/eval.c',
 
-    'ctu/perf/perf.c',
+    'cthulhu/perf/perf.c',
 
-    'ctu/util/report.c',
-    'ctu/util/report-ext.c',
-    'ctu/util/str.c',
-    'ctu/util/util.c',
-    'ctu/util/optimal.c',
-    'ctu/util/panic.c',
-    'ctu/util/compat-platform.c'.replace('platform', target),
+    'cthulhu/util/report.c',
+    'cthulhu/util/report-ext.c',
+    'cthulhu/util/str.c',
+    'cthulhu/util/util.c',
+    'cthulhu/util/optimal.c',
+    'cthulhu/util/panic.c',
+    'cthulhu/util/compat-platform.c'.replace('platform', target),
 
-    'ctu/driver/driver.c',
-    'ctu/driver/cmd.c'
+    'cthulhu/driver/driver.c',
+    'cthulhu/driver/cmd.c'
 ]
 
 gmp = dependency('gmp', 
@@ -102,11 +102,11 @@ parse = generator(bison,
 options = [ generic ]
 
 foreach gen : get_option('backends')
-    subdir('ctu/backend'/gen)
+    subdir('cthulhu/backend'/gen)
 endforeach
 
 foreach lang : get_option('languages')
-    subdir('ctu/frontend'/lang)
+    subdir('cthulhu/frontend'/lang)
     subdir('tests'/lang)
 endforeach
 
