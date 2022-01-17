@@ -28,11 +28,18 @@ typedef enum {
     LIR_ASSIGN, /// assign from a value into an address
 
     LIR_WHILE, /// a while loop
+
     LIR_BRANCH, /// an if-else statement
+
     LIR_STMTS, /// more than one statement executed in order
+
     LIR_RETURN, /// return a value or void from a function
+
     LIR_BREAK, /// break from the current loop
                /// optionally goto a label
+
+    LIR_CONTINUE, /// continue from the current loop
+
     LIR_LOCAL, /// declare a local
 
     LIR_VALUE,
@@ -104,7 +111,7 @@ typedef struct lir_t {
         struct {
             struct lir_t *dst;
             struct lir_t *src;
-            struct lir_t *offset;
+            struct lir_t *offset; // can be NULL
         };
 
         /**
