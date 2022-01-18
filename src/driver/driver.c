@@ -13,7 +13,7 @@ static void print_version(driver_t driver) {
 }
 
 static void print_help(const char **argv) {
-    printf("usage: %s <file> [options...]\n", argv[0]);
+    printf("usage: %s <file> [module] [options...]\n", argv[0]);
     printf("options:\n");
     printf("  -h, --help    : print this help message\n");
     printf("  -v, --version : print version information\n");
@@ -49,6 +49,8 @@ int common_main(int argc, const char **argv, driver_t driver) {
     }
 
     const char *path = argv[1];
+    const char *mod = argc < 3 ? NULL : argv[2];
+
     file_t file = ctu_fopen(path, "rb");
     if (!file_valid(&file)) {
         report(reports, ERROR, NULL, "failed to open file: %s (%d)", strerror(errno), errno);
@@ -75,8 +77,20 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (status != 0) { return status; }
     CTASSERT(hlir != NULL, "driver.sema == NULL");
 
+    if (mod != NULL && hlir->mod != NULL) {
+        report(reports, WARNING, NULL, "module name already defined in source file, overriding this may not be desired");
+    }
+
+    if (hlir->mod == NULL) {
+        if (mod != NULL) {
+            hlir->mod = strdup(mod);
+        } else {
+            hlir->mod = ctu_filename(path);
+        }
+    }
+    
     // for now just debug the hlir
     hlir_debug(hlir);
 
-    return 0;
+    return end_reports(reports, SIZE_MAX, "compilation");
 }

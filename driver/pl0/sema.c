@@ -72,7 +72,14 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
         set_proc(sema, it->name, hlir_declare(it->node, it->name, HLIR_FUNCTION));
     }
 
+    vector_t *globals = vector_join(
+        map_values(sema_tag(sema, TAG_VARS)), 
+        map_values(sema_tag(sema, TAG_CONSTS))
+    );
+
+    vector_t *procs = map_values(sema_tag(sema, TAG_PROCS));
+
     sema_delete(sema);
 
-    return hlir_module(root->node, root->mod, vector_of(0), vector_of(0), vector_of(0));
+    return hlir_module(root->node, root->mod, vector_of(0), globals, procs);
 }

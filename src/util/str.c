@@ -32,6 +32,35 @@ char *formatv(const char *fmt, va_list args) {
     return out;
 }
 
+char *ctu_basepath(const char *path) {
+    char *base = ctu_strdup(path);
+    size_t len = strlen(base);
+    while (!endswith(base, PATH_SEP)) {
+        base[len--] = '\0';
+    }
+    base[len] = '\0';
+    return base;
+}
+
+char *ctu_noext(const char *path) {
+    char *base = ctu_strdup(path);
+    size_t len = strlen(base);
+    while (!endswith(base, ".")) {
+        base[len--] = '\0';
+    }
+    base[len] = '\0';
+    return base;
+}
+
+char *ctu_filename(const char *path) {
+    size_t idx = rfind(path, PATH_SEP);
+    if (idx == SIZE_MAX) {
+        return ctu_noext(path);
+    } else {
+        return ctu_noext(path + idx + 1);
+    }
+}
+
 bool startswith(const char *str, const char *prefix) {
     return strncmp(str, prefix, strlen(prefix)) == 0;
 }
