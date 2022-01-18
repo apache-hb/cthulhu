@@ -1,18 +1,7 @@
 option('languages', type : 'array',
     description : 'select which languages to compile',
-    choices : [ 'ctu', 'pl0', 'c', 'brainfuck' ],
+    choices : [ 'ctu', 'pl0' ],
     value : [ 'ctu', 'pl0' ]
-)
-
-option('backends', type : 'array',
-    description : 'select which backends to compile',
-    choices : [ 'null', 'c99', 'llvm', 'gcc' ],
-    value : [ 'null', 'c99' ]
-)
-
-option('fuzzing', type : 'boolean',
-    description : 'compile for persistent fuzzing',
-    value : false
 )
 
 option('tuning', type : 'boolean',

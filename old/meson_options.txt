@@ -1,0 +1,21 @@
+option('languages', type : 'array',
+    description : 'select which languages to compile',
+    choices : [ 'ctu', 'pl0', 'c', 'brainfuck' ],
+    value : [ 'ctu', 'pl0' ]
+)
+
+option('backends', type : 'array',
+    description : 'select which backends to compile',
+    choices : [ 'c99', 'json' ],
+    value : [ 'c99', 'json' ]
+)
+
+option('fuzzing', type : 'boolean',
+    description : 'compile for persistent fuzzing',
+    value : false
+)
+
+option('tuning', type : 'boolean',
+    description : 'compile tuning programs',
+    value : false
+)

@@ -1,0 +1,30 @@
+module std.vector;
+
+object Vector(T: type) {
+    type Self = Vector!T;
+
+    def new(size: in usize): Self {
+        var data = new T[size];
+
+        return Self {
+            .front = data,
+            .back = data,
+            .total = data + size
+        };
+    }
+
+    def delete(self: inout Self) {
+        delete[self.size()] self.front;
+    }
+
+    def length(self: in Self): usize 
+        = (self.back - self.front) as usize;
+    def size(self: in Self): usize 
+        = (self.total - self.front) as usize;
+
+
+
+    private var front: *T;
+    private var back: *T;
+    private var total: *T;
+}

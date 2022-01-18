@@ -1,0 +1,40 @@
+@MidlInterface("00000000-0000-0000-C000-000000000046")
+object IUnknown {
+    def QueryInterface(
+        riid: in IID, 
+        ppvObject: out **void
+    ): HRESULT;
+
+    def AddRef(): ULONG;
+    def Release(): ULONG;
+}
+
+@MidlInterface("c4fec28f-7966-4e95-9f94-f431cb56c3b8")
+object ID3D12Object : IUnknown {
+    def GetPrivateData(
+        guid: in REFGUID, 
+        pDataSize: inout *UINT, 
+        pData: out opt writes(pDataSize) *void
+    ): HRESULT;
+
+    def SetPrivateData(
+        guid: in REFGUID,
+        dataSize: in UINT,
+        pData: in opt reads(dataSize) *void
+    ): HRESULT;
+
+    def SetPrivateDataInterface(
+        guid: in REFGUID, 
+        pData: in opt *IUnknown
+    ): HRESULT;
+
+    def SetName(name: in LPCWSTR): HRESULT;
+}
+
+@MidlInterface("905db94b-a00c-4140-9df5-2b64ca9ea357")
+object ID3D12DeviceChild : ID3D12Object {
+    def GetDevice(
+        riid: in IID, 
+        ppvDevice: out opt **void
+    ): HRESULT;
+}

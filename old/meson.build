@@ -1,6 +1,6 @@
-project('cthulhu', [ 'c', 'cpp' ],
+project('cthulhu', 'c',
     license : 'APGLv3',
-    version : '0.0.4',
+    version : '0.0.3',
     meson_version : '>=0.58',
     default_options : [
         'c_std=gnu11',
@@ -13,27 +13,36 @@ project('cthulhu', [ 'c', 'cpp' ],
 target = target_machine.system()
 
 src = [
-    # command line
-    'src/driver/driver.c',
+    'cthulhu/ast/scan.c',
+    'cthulhu/ast/interop.c',
+    'cthulhu/ast/ast.c',
+    'cthulhu/ast/compile.c',
+    'cthulhu/ast/ops.c',
+
+    'cthulhu/lir/lir.c',
+    'cthulhu/lir/sema.c',
     
-    # ast data and flex/bison interop
-    'src/ast/scan.c',
-    'src/ast/interop.c',
-    'src/ast/ast.c',
-    'src/ast/compile.c',
-    'src/ast/ops.c',
+    'cthulhu/type/type.c',
+    'cthulhu/type/query.c',
+    'cthulhu/type/format.c',
+    
+    'cthulhu/gen/emit.c',
+    'cthulhu/gen/value.c',
+    'cthulhu/gen/operand.c',
+    'cthulhu/gen/print.c',
+    'cthulhu/gen/eval.c',
 
-    # error reporting
-    'src/util/report.c',
-    'src/util/report-ext.c',
+    'cthulhu/perf/perf.c',
 
-    # standard library
-    'src/util/str.c',
-    'src/util/util.c',
-    'src/util/optimal.c',
+    'cthulhu/util/report.c',
+    'cthulhu/util/report-ext.c',
+    'cthulhu/util/str.c',
+    'cthulhu/util/util.c',
+    'cthulhu/util/optimal.c',
+    'cthulhu/util/compat-platform.c'.replace('platform', target),
 
-    # platform glue
-    'src/util/compat-platform.c'.replace('platform', target),
+    'cthulhu/driver/driver.c',
+    'cthulhu/driver/cmd.c'
 ]
 
 gmp = dependency('gmp', 
@@ -54,15 +63,18 @@ if host_machine.system() == 'windows'
     args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '/Wv:18' ]
 endif
 
+if get_option('fuzzing')
+    args += [ '-DFUZZING=1' ]
+endif
+
 libgeneric = library('generic', src,
-    include_directories : 'include',
     c_args : args,
     dependencies : deps
 )
 
 generic = declare_dependency(
     link_with : libgeneric,
-    include_directories : 'include',
+    include_directories : '.',
     dependencies : gmp
 )
 
@@ -86,8 +98,12 @@ parse = generator(bison,
 
 options = [ generic ]
 
+foreach gen : get_option('backends')
+    subdir('cthulhu/backend'/gen)
+endforeach
+
 foreach lang : get_option('languages')
-    subdir('driver'/lang)
+    subdir('cthulhu/frontend'/lang)
     subdir('tests'/lang)
 endforeach
 
