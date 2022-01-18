@@ -16,6 +16,11 @@ src = [
     # command line
     'src/driver/driver.c',
     
+    # high level intermediate representation
+    'src/hlir/hlir.c',
+    'src/hlir/debug.c',
+    'src/hlir/sema.c',
+
     # ast data and flex/bison interop
     'src/ast/scan.c',
     'src/ast/interop.c',

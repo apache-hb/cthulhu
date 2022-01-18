@@ -95,10 +95,10 @@ typedef struct pl0_t {
             vector_t *consts;
 
             /* all mutable globals in the program */
-            vector_t *variables;
+            vector_t *globals;
 
             /* all procedures in the program */
-            vector_t *procedures;
+            vector_t *procs;
 
             /* the entry point function, if there is one */
             struct pl0_t *entry;
@@ -128,5 +128,5 @@ pl0_t *pl0_stmts(scan_t *scan, where_t where, vector_t *stmts);
 pl0_t *pl0_procedure(scan_t *scan, where_t where, const char *name, vector_t *locals, vector_t *body);
 pl0_t *pl0_value(scan_t *scan, where_t where, const char *name, pl0_t *value);
 
-pl0_t *pl0_module(scan_t *scan, where_t where, const char *mod, vector_t *consts, vector_t *variables, vector_t *procedures, pl0_t *entry);
+pl0_t *pl0_module(scan_t *scan, where_t where, const char *mod, vector_t *consts, vector_t *globals, vector_t *procs, pl0_t *entry);
 

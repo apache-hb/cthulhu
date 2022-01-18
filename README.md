@@ -17,3 +17,6 @@ wow this project got out of hand.
   * util - utility code
 * driver - compiler drivers
   * pl0 - pl0 language driver
+  
+# License
+Currently licensed under [AGPL3](LICENSE). Money can change this.
