@@ -25,6 +25,7 @@
 <COMMENT>\n ;
 <COMMENT>. ;
 
+(?i:module) { return MODULE; }
 (?i:const) { return CONST; }
 (?i:var) { return VAR; }
 (?i:procedure) { return PROCEDURE; }

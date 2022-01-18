@@ -40,6 +40,17 @@ static const char *hlir_type_name(hlir_type_t type) {
 
 static void hlir_emit(debug_t *dbg, const hlir_t *hlir);
 
+static char *hlir_str(const hlir_t *hlir) {
+    if (hlir == NULL) {
+        return ctu_strdup("empty");
+    }
+
+    switch (hlir->kind) {
+    case HLIR_DIGIT: return format("int(%s)", mpz_get_str(NULL, 10, hlir->digit));
+    default: return NULL;
+    }
+}
+
 static void hlir_emit_vec(debug_t *dbg, vector_t *vec, size_t len) {
     for (size_t i = 0; i < len; i++) {
         hlir_emit(dbg, vector_get(vec, i));
@@ -77,20 +88,28 @@ static void hlir_emit_declare(debug_t *dbg, const hlir_t *hlir) {
     dbg_line(dbg, format("[%zu]: declare(%s) = %s", index, hlir->name, hlir_type_name(hlir->expect)));
 }
 
+static void hlir_emit_value(debug_t *dbg, const hlir_t *hlir) {
+    size_t index = dbg_next(dbg);
+    dbg_line(dbg, format("[%zu]: value(%s) = %s", index, hlir->name, hlir_str(hlir->value)));
+}
+
 static void hlir_emit(debug_t *dbg, const hlir_t *hlir) {
     if (hlir == NULL) {
         return;
     }
 
-    switch (hlir->type) {
+    switch (hlir->kind) {
     case HLIR_DECLARE:
         hlir_emit_declare(dbg, hlir);
+        return;
+    case HLIR_VALUE:
+        hlir_emit_value(dbg, hlir);
         return;
     case HLIR_MODULE:
         hlir_emit_module(dbg, hlir);
         return;
     default:
-        dbg_line(dbg, format("unknown(%d)", (int)hlir->type));
+        dbg_line(dbg, format("unknown(%d)", (int)hlir->kind));
         return;
     }
 }

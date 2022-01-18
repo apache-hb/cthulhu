@@ -101,7 +101,7 @@ block: module consts vars procedures toplevel { $$ = pl0_module(x, @$, $1, $2, $
     ;
 
 module: %empty { $$ = NULL; }
-    | MODULE IDENT { $$ = $2; }
+    | MODULE IDENT SEMICOLON { $$ = $2; }
     ;
 
 toplevel: %empty { $$ = NULL; }

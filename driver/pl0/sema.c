@@ -42,12 +42,32 @@ static void set_var(sema_t *sema, size_t tag, const char *name, hlir_t *hlir) {
     sema_set(sema, tag, name, hlir);
 }
 
+static hlir_t *sema_expr(sema_t *sema, pl0_t *node) {
+    switch (node->type) {
+    case PL0_DIGIT: return hlir_digit(node->node, NULL, node->digit);
+    default: 
+        report(sema->reports, INTERNAL, node->node, "sema-expr");
+        return NULL;
+    }
+}
+
+static hlir_t *sema_value(sema_t *sema, pl0_t *node) {
+    hlir_t *init = node->value != NULL 
+        ? sema_expr(sema, node->value) 
+        : hlir_int(node->node, NULL, 0);
+    return hlir_value(node->node, NULL, node->name, init);
+}
+
 hlir_t *pl0_sema(reports_t *reports, void *node) {
     pl0_t *root = node;
 
     size_t num_consts = vector_len(root->consts);
     size_t num_globals = vector_len(root->globals);
     size_t num_procs = vector_len(root->procs);
+
+    vector_t *consts_decls = vector_of(num_consts);
+    vector_t *globals_decls = vector_of(num_globals);
+    vector_t *procs_decls = vector_of(num_procs);
 
     size_t sizes[TAG_MAX] = {
         [TAG_CONSTS] = num_consts,
@@ -57,19 +77,41 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
 
+    // forward declare all our declarations
     for (size_t i = 0; i < num_consts; i++) {
         pl0_t *it = vector_get(root->consts, i);
-        set_var(sema, TAG_CONSTS, it->name, hlir_declare(it->node, it->name, HLIR_VALUE));
+        hlir_t *hlir = hlir_declare(it->node, it->name, HLIR_VALUE);
+        set_var(sema, TAG_CONSTS, it->name, hlir);
+        vector_set(consts_decls, i, hlir);
     }
 
     for (size_t i = 0; i < num_globals; i++) {
         pl0_t *it = vector_get(root->globals, i);
-        set_var(sema, TAG_VARS, it->name, hlir_declare(it->node, it->name, HLIR_VALUE));
+        hlir_t *hlir = hlir_declare(it->node, it->name, HLIR_VALUE);
+        set_var(sema, TAG_VARS, it->name, hlir);
+        vector_set(globals_decls, i, hlir);
     }
 
     for (size_t i = 0; i < num_procs; i++) {
         pl0_t *it = vector_get(root->procs, i);
-        set_proc(sema, it->name, hlir_declare(it->node, it->name, HLIR_FUNCTION));
+        hlir_t *hlir = hlir_declare(it->node, it->name, HLIR_FUNCTION);
+        set_proc(sema, it->name, hlir);
+        vector_set(procs_decls, i, hlir);
+    }
+
+    // now compile all our declarations
+    for (size_t i = 0; i < num_consts; i++) {
+        pl0_t *it = vector_get(root->consts, i);
+        hlir_t *hlir = vector_get(consts_decls, i);
+        hlir_t *temp = sema_value(sema, it);
+        *hlir = *temp;
+    }
+
+    for (size_t i = 0; i < num_globals; i++) {
+        pl0_t *it = vector_get(root->globals, i);
+        hlir_t *hlir = vector_get(globals_decls, i);
+        hlir_t *temp = sema_value(sema, it);
+        *hlir = *temp;
     }
 
     vector_t *globals = vector_join(

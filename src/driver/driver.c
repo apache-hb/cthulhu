@@ -29,6 +29,21 @@ static bool find_arg(int argc, const char **argv, const char *arg) {
     return false;
 }
 
+static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, const char *mod) {
+    if (mod != NULL && hlir->mod != NULL) {
+        message_t *id = report(reports, WARNING, NULL, "module name already defined in source file, overriding this may not be desired");
+        report_note(id, "redefining `%s` to `%s`", hlir->mod, mod);
+    }
+
+    if (hlir->mod == NULL) {
+        if (mod != NULL) {
+            hlir->mod = strdup(mod);
+        } else {
+            hlir->mod = ctu_filename(path);
+        }
+    }
+}
+
 int common_main(int argc, const char **argv, driver_t driver) {
     if (find_arg(argc, argv, "--version") || find_arg(argc, argv, "-v")) {
         print_version(driver);
@@ -53,7 +68,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     file_t file = ctu_fopen(path, "rb");
     if (!file_valid(&file)) {
-        report(reports, ERROR, NULL, "failed to open file: %s (%d)", strerror(errno), errno);
+        report(reports, ERROR, NULL, "failed to open file: %s (errno %d)", strerror(errno), errno);
         return end_reports(reports, SIZE_MAX, "command line parsing");
     }
 
@@ -76,21 +91,13 @@ int common_main(int argc, const char **argv, driver_t driver) {
     status = end_reports(reports, SIZE_MAX, "semantic analysis");
     if (status != 0) { return status; }
     CTASSERT(hlir != NULL, "driver.sema == NULL");
-
-    if (mod != NULL && hlir->mod != NULL) {
-        report(reports, WARNING, NULL, "module name already defined in source file, overriding this may not be desired");
-    }
-
-    if (hlir->mod == NULL) {
-        if (mod != NULL) {
-            hlir->mod = strdup(mod);
-        } else {
-            hlir->mod = ctu_filename(path);
-        }
-    }
     
+    rename_module(reports, hlir, path, mod);
+    status = end_reports(reports, SIZE_MAX, "renaming module");
+    if (status != 0) { return status; }
+
     // for now just debug the hlir
     hlir_debug(hlir);
 
-    return end_reports(reports, SIZE_MAX, "compilation");
+    return status;
 }

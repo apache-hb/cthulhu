@@ -3,12 +3,12 @@ dir = meson.current_source_dir()
 pass = [
     'chain', 'const', 'consts', 'local',
     'prime', 'procedure', 'square', 'values', 'var',
-    'vars'
+    'vars', 'module'
 ]
 
 fail = [
     'case', 'crash', 'dumb', 'loop', 'recurse',
-    'space'
+    'space', 'syntax'
 ]
 
 foreach case : pass
