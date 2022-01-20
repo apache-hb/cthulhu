@@ -92,6 +92,26 @@ void map_set(map_t *map, const char *key, void *value) HOT NOTNULL(1, 2);
  */
 void map_apply(map_t *map, void *user, map_apply_t func) NOTNULL(1, 3);
 
+
+/**
+ * @brief set a field using a raw pointer rather than a string key
+ * 
+ * @param map the map to set the value in
+ * @param key the key to set the value for
+ * @param value the value to set
+ */
+void map_ptr_set(map_t *map, const void *key, void *value) HOT NOTNULL(1, 2);
+
+/**
+ * @brief get a field from a raw pointer rather than a string key
+ * 
+ * @param map the map to get the value from
+ * @param key the key to get the value for
+ * 
+ * @return the value for the key or NULL if the key is not found
+ */
+void *map_ptr_get(map_t *map, const void *key) HOT NOTNULL(1, 2);
+
 /**
  * a vector of non-owning pointers
  * 

@@ -9,6 +9,11 @@ node_t *node_new(scan_t *scan, where_t where) {
     return node;
 }
 
+node_t *node_builtin(scan_t *scan) {
+    where_t where = { 0, 0, 0, 0 };
+    return node_new(scan, where);
+}
+
 node_t *node_last_line(const node_t *node) {
     where_t where = node->where;
 

@@ -22,6 +22,13 @@ src = [
     'src/hlir/sema.c',
     'src/hlir/type.c',
 
+    # low level intermediate representation
+    'src/ssa/ssa.c',
+    'src/ssa/debug.c',
+
+    # code serialization
+    'src/emit/emit.c',
+
     # ast data and flex/bison interop
     'src/ast/scan.c',
     'src/ast/interop.c',
@@ -42,13 +49,15 @@ src = [
     'src/util/compat-platform.c'.replace('platform', target),
 ]
 
+json = subproject('cjson').get_variable('json')
+
 gmp = dependency('gmp', 
     not_found_message : 'no system gmp found, falling back to mini-gmp',
     fallback : [ 'mini-gmp', 'gmp' ]
 )
 
 args = []
-deps = [ gmp ]
+deps = [ gmp, json ]
 
 flex = find_program('flex', 'win_flex', version : '>=2.6')
 bison = find_program('bison', 'win_bison', version : '>=3.5')

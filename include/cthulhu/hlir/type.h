@@ -5,6 +5,8 @@
 
 typedef enum {
     TYPE_INTEGER,
+    TYPE_STRING,
+    TYPE_CLOSURE
 } metatype_t;
 
 typedef enum {
@@ -29,13 +31,30 @@ typedef struct {
     sign_t sign;
 } int_t;
 
+typedef enum {
+    STRING_ASCII,
+    STRING_UTF8,
+    STRING_UTF16,
+    STRING_UTF32
+} encoding_t;
+
 typedef struct {
+    struct type_t *result;
+    vector_t *params;
+    bool variadic;
+} closure_t;
+
+typedef struct type_t {
     metatype_t type;
     const node_t *node;
 
     union {
         int_t digit;
+        encoding_t encoding;
+        closure_t closure;
     };
 } type_t;
 
 type_t *type_integer(const node_t *node, width_t width, sign_t sign) NONULL;
+type_t *type_string(const node_t *node, encoding_t encoding) NONULL;
+type_t *type_closure(const node_t *node, type_t *result, vector_t *params, bool variadic) NONULL;

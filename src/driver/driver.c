@@ -3,6 +3,8 @@
 #include "cthulhu/util/str.h"
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/hlir/debug.h"
+#include "cthulhu/ssa/debug.h"
+#include "cthulhu/emit/emit.h"
 
 #include <stdio.h>
 #include <errno.h>
@@ -13,20 +15,68 @@ static void print_version(driver_t driver) {
 }
 
 static void print_help(const char **argv) {
-    printf("usage: %s <file> [module] [options...]\n", argv[0]);
+    printf("usage: %s <file> [options...]\n", argv[0]);
     printf("options:\n");
-    printf("  -h, --help    : print this help message\n");
-    printf("  -v, --version : print version information\n");
+    printf("  -h, --help        : print this help message\n");
+    printf("  -v, --version     : print version information\n");
+    printf("  -m, --module      : set module output name\n");
+    printf("  -dh, --debug-hlir : print HLIR debug tree\n");
+    printf("  -ds, --debug-ssa  : print SSA debug tree\n");
 }
 
-static bool find_arg(int argc, const char **argv, const char *arg) {
+static bool find_arg(int argc, const char **argv, const char *arg, const char *brief) {
     for (int i = 0; i < argc; i++) {
-        if (streq(argv[i], arg)) {
+        if (streq(argv[i], arg) || streq(argv[i], brief)) {
             return true;
         }
     }
 
     return false;
+}
+
+static const char *extract_arg(int argc, const char **argv, const char *arg, int idx) {
+    size_t len = strlen(arg);
+    if (startswith(argv[idx], arg)) {
+        char end = argv[idx][len];
+        if (end == '\0') {
+            if (idx >= argc) {
+                return NULL;
+            }
+
+            return argv[idx + 1];
+        } else if (end == '=') {
+            return argv[idx] + len + 1;
+        } else {
+            return argv[idx] + len;
+        }
+    }
+
+    return NULL;
+}
+
+static const char *get_arg(reports_t *reports, int argc, const char **argv, const char *arg, const char *brief) {
+    bool found = false;
+    const char *result = NULL;
+
+    for (int i = 0; i < argc; i++) {
+        if (startswith(argv[i], arg)) {
+            found = true;
+            result = extract_arg(argc, argv, arg, i);
+            break;
+        }
+
+        if (startswith(argv[i], brief)) {
+            found = true;
+            result = extract_arg(argc, argv, brief, i);
+            break;
+        }
+    }
+
+    if (result == NULL && found) {
+        report(reports, WARNING, NULL, "missing argument for %s", arg);
+    }
+
+    return result;
 }
 
 static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, const char *mod) {
@@ -45,16 +95,16 @@ static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, co
 }
 
 int common_main(int argc, const char **argv, driver_t driver) {
-    if (find_arg(argc, argv, "--version") || find_arg(argc, argv, "-v")) {
+    if (find_arg(argc, argv, "--version", "-v")) {
         print_version(driver);
         return 0;
     }
 
-    if (find_arg(argc, argv, "--help") || find_arg(argc, argv, "-h")) {
+    if (find_arg(argc, argv, "--help", "-h")) {
         print_help(argv);
         return 0;
     }
-    
+
     reports_t *reports = begin_reports();
     int status = 99;
 
@@ -63,8 +113,11 @@ int common_main(int argc, const char **argv, driver_t driver) {
         return end_reports(reports, SIZE_MAX, "command line parsing");
     }
 
+    bool debug_hlir = find_arg(argc, argv, "--debug-hlir","-dh");
+    bool debug_ssa = find_arg(argc, argv, "--debug-ssa", "-ds");
+    const char *mod_name = get_arg(reports, argc, argv, "--module", "-m");
+
     const char *path = argv[1];
-    const char *mod = argc < 3 ? NULL : argv[2];
 
     file_t file = ctu_fopen(path, "rb");
     if (!file_valid(&file)) {
@@ -92,12 +145,27 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (status != 0) { return status; }
     CTASSERT(hlir != NULL, "driver.sema == NULL");
     
-    rename_module(reports, hlir, path, mod);
+    rename_module(reports, hlir, path, mod_name);
     status = end_reports(reports, SIZE_MAX, "renaming module");
     if (status != 0) { return status; }
 
-    // for now just debug the hlir
-    hlir_debug(hlir);
+    if (debug_hlir) {
+        hlir_debug(hlir);
+    }
+
+    ssa_t *ssa = build_ssa(reports);
+    module_t *mod = build_module(ssa, hlir);
+    status = end_reports(reports, SIZE_MAX, "building module");
+    if (status != 0) { return status; }
+    CTASSERT(mod != NULL, "build_module == NULL");
+
+    if (debug_ssa) {
+        ssa_debug(mod);
+    }
+
+    emit_module(reports, mod);
+    status = end_reports(reports, SIZE_MAX, "emitting module");
+    if (status != 0) { return status; }
 
     return status;
 }

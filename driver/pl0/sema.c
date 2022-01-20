@@ -11,6 +11,22 @@ typedef enum {
     TAG_MAX
 } pl0_tag_t;
 
+static type_t *INT;
+static type_t *STRING;
+static hlir_t *PRINT;
+
+void pl0_init() {
+    scan_t *scan = scan_builtin("PL/0");
+    node_t *node = node_builtin(scan);
+    INT = type_integer(node, WIDTH_INT, SIGN_DEFAULT);
+    STRING = type_string(node, STRING_UTF8);
+
+    vector_t *args = vector_init(STRING);
+    type_t *closure = type_closure(node, INT, args, true);
+
+    PRINT = hlir_function(node, closure, "printf", NULL);
+}
+
 static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *shadowed, const node_t *shadowing) {
     message_t *id = report_shadow(reports, name, shadowed, shadowing);
     report_note(id, "PL/0 is case insensitive");
@@ -93,9 +109,21 @@ static hlir_t *sema_assign(sema_t *sema, pl0_t *node) {
     return hlir_assign(node->node, dst, src);
 }
 
+static hlir_t *sema_print(sema_t *sema, pl0_t *node) {
+    hlir_t *fmt = hlir_string(node->node, STRING, "%d\n");
+    hlir_t *hlir = sema_expr(sema, node->print);
+
+    vector_t *args = vector_new(2);
+    vector_push(&args, fmt);
+    vector_push(&args, hlir);
+
+    return hlir_call(node->node, INT, PRINT, args);
+}
+
 static hlir_t *sema_stmt(sema_t *sema, pl0_t *node) {
     switch (node->type) {
     case PL0_ASSIGN: return sema_assign(sema, node);
+    case PL0_PRINT: return sema_print(sema, node);
     default:
         report(sema->reports, INTERNAL, node->node, "sema-stmt");
         return NULL;

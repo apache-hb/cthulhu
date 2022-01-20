@@ -20,6 +20,12 @@ hlir_t *hlir_int(const node_t *node, const type_t *type, uintmax_t digit) {
     return hlir;
 }
 
+hlir_t *hlir_string(const node_t *node, const type_t *type, const char *str) {
+    hlir_t *hlir = hlir_new(node, HLIR_STRING, type);
+    hlir->string = str;
+    return hlir;
+}
+
 hlir_t *hlir_name(const node_t *node, const type_t *type, hlir_t *hlir) {
     hlir_t *name = hlir_new(node, HLIR_NAME, type);
     name->ident = hlir;
@@ -31,6 +37,13 @@ hlir_t *hlir_binary(const node_t *node, const type_t *type, hlir_t *lhs, hlir_t 
     hlir->lhs = lhs;
     hlir->rhs = rhs;
     hlir->binary = op;
+    return hlir;
+}
+
+hlir_t *hlir_call(const node_t *node, const type_t *type, hlir_t *function, vector_t *args) {
+    hlir_t *hlir = hlir_new(node, HLIR_CALL, type);
+    hlir->call = function;
+    hlir->args = args;
     return hlir;
 }
 

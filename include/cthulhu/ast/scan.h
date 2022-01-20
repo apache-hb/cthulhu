@@ -34,6 +34,8 @@ typedef struct {
     void *reports;
 } scan_t;
 
+scan_t *scan_builtin(const char *language);
+
 size_t scan_size(const scan_t *scan);
 const char *scan_text(const scan_t *scan);
 

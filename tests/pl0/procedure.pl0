@@ -2,7 +2,8 @@ var x;
 
 procedure set;
 begin
-    x := 25
+    x := 25;
+    ! x
 end;
 
 call set
