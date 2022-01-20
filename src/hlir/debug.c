@@ -42,7 +42,7 @@ static void hlir_emit(debug_t *dbg, const hlir_t *hlir);
 
 static char *hlir_str(const hlir_t *hlir) {
     if (hlir == NULL) {
-        return ctu_strdup("empty");
+        return ctu_strdup("<empty>");
     }
 
     switch (hlir->kind) {
@@ -50,6 +50,7 @@ static char *hlir_str(const hlir_t *hlir) {
     case HLIR_DIGIT: return format("int(%s)", mpz_get_str(NULL, 10, hlir->digit));
     case HLIR_NAME: return format("name(%s)", hlir->ident->name);
     case HLIR_BINARY: return format("binary(%s %s %s)", hlir_str(hlir->lhs), binary_name(hlir->binary), hlir_str(hlir->rhs));
+    case HLIR_CALL: return format("call(%s)", hlir->call->name);
     default: return NULL;
     }
 }

@@ -41,4 +41,9 @@ void ssa_debug(module_t *mod) {
         block_t *global = vector_get(mod->globals, i);
         block_debug(global);
     }
+    printf("; functions\n");
+    for (size_t i = 0; i < vector_len(mod->functions); i++) {
+        block_t *func = vector_get(mod->functions, i);
+        block_debug(func);
+    }
 }

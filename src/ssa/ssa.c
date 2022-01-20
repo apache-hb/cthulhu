@@ -17,16 +17,14 @@ static operand_t operand_value(const mpz_t value) {
     return operand;
 }
 
-static operand_t operand_int(int digit) {
-    operand_t operand = operand_new(OPERAND_VALUE);
-    mpz_init_set_si(operand.value, digit);
-    return operand;
-}
-
 static operand_t operand_block(block_t *block) {
     operand_t operand = operand_new(OPERAND_BLOCK);
     operand.block = block;
     return operand;
+}
+
+static operand_t operand_empty(void) {
+    return operand_new(OPERAND_EMPTY);
 }
 
 
@@ -94,12 +92,22 @@ static operand_t emit_binary(ssa_t *ssa, const hlir_t *hlir) {
     return add_vreg(ssa, step);
 }
 
+static operand_t emit_call(ssa_t *ssa, const hlir_t *hlir) {
+    operand_t call = emit_ssa(ssa, hlir->call);
+
+    return call;
+}
+
 static operand_t emit_ssa(ssa_t *ssa, const hlir_t *hlir) {
     switch (hlir->kind) {
     case HLIR_NAME: return emit_name(ssa, hlir);
     case HLIR_DIGIT: return emit_digit(hlir);
     case HLIR_BINARY: return emit_binary(ssa, hlir);
-    default: return operand_int(0);
+    case HLIR_CALL: return emit_call(ssa, hlir);
+    case HLIR_FUNCTION: return operand_block(map_ptr_get(ssa->blocks, hlir));
+    default: 
+        report(ssa->reports, INTERNAL, hlir->node, "unexpected hlir kind %d", hlir->kind);
+        return operand_empty();
     }
 }
 
@@ -108,6 +116,20 @@ static void compile_global(ssa_t *ssa, block_t *block, const hlir_t *hlir) {
 
     step_t ret = new_step(OP_RETURN, hlir->node);
     ret.value = emit_ssa(ssa, hlir->value);
+    push_step(ssa, ret);
+
+    ssa_end(ssa, block);
+}
+
+static void compile_function(ssa_t *ssa, block_t *block, const hlir_t *hlir) {
+    ssa_begin(ssa, 16);
+
+    for (size_t i = 0; i < vector_len(hlir->body); i++) {
+        const hlir_t *stmt = vector_get(hlir->body, i);
+        emit_ssa(ssa, stmt);
+    }
+    step_t ret = new_step(OP_RETURN, hlir->node);
+    ret.value = operand_empty();
     push_step(ssa, ret);
 
     ssa_end(ssa, block);
@@ -130,12 +152,14 @@ static block_t *begin_block(const hlir_t *hlir) {
 
 module_t *build_module(ssa_t *ssa, const hlir_t *hlir) {
     size_t nglobals = vector_len(hlir->globals);
+    size_t nfunctions = vector_len(hlir->defines);
 
     module_t *mod = ctu_malloc(sizeof(module_t));
 
     mod->name = hlir->mod;
     mod->source = hlir->node->scan;
     mod->globals = vector_of(nglobals);
+    mod->functions = vector_of(nfunctions);
 
     for (size_t i = 0; i < nglobals; i++) {
         hlir_t *global = vector_get(hlir->globals, i);
@@ -144,10 +168,23 @@ module_t *build_module(ssa_t *ssa, const hlir_t *hlir) {
         vector_set(mod->globals, i, block);
     }
 
+    for (size_t i = 0; i < nfunctions; i++) {
+        hlir_t *function = vector_get(hlir->defines, i);
+        block_t *block = begin_block(function);
+        map_ptr_set(ssa->blocks, function, block);
+        vector_set(mod->functions, i, block);
+    }
+
     for (size_t i = 0; i < nglobals; i++) {
         hlir_t *global = vector_get(hlir->globals, i);
         block_t *block = vector_get(mod->globals, i);
         compile_global(ssa, block, global);
+    }
+
+    for (size_t i = 0; i < nfunctions; i++) {
+        hlir_t *function = vector_get(hlir->defines, i);
+        block_t *block = vector_get(mod->functions, i);
+        compile_function(ssa, block, function);
     }
 
     return mod;

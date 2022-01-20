@@ -4,6 +4,7 @@
 #include "cthulhu/util/report.h"
 
 typedef enum {
+    OPERAND_EMPTY,
     OPERAND_VREG,
     OPERAND_VALUE,
     OPERAND_BLOCK
@@ -53,6 +54,7 @@ typedef struct {
     const scan_t *source;
 
     vector_t *globals;
+    vector_t *functions;
 } module_t;
 
 typedef struct {

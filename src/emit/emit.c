@@ -96,7 +96,7 @@ static cJSON *emit_block(reports_t *reports, block_t *block) {
     return json;
 }
 
-static cJSON *emit_globals(reports_t *reports, vector_t *vec) {
+static cJSON *emit_vector(reports_t *reports, vector_t *vec) {
     cJSON *globals = cJSON_CreateArray();
 
     for (size_t i = 0; i < vector_len(vec); i++) {
@@ -114,8 +114,11 @@ void emit_module(reports_t *reports, module_t *mod) {
     cJSON_AddStringToObject(root, "path", mod->source->path);
     cJSON_AddStringToObject(root, "lang", mod->source->language);
 
-    cJSON *globals = emit_globals(reports, mod->globals);
+    cJSON *globals = emit_vector(reports, mod->globals);
     cJSON_AddItemToObject(root, "globals", globals);
+
+    cJSON *functions = emit_vector(reports, mod->functions);
+    cJSON_AddItemToObject(root, "functions", functions);
 
     report(reports, NOTE, NULL, "%s", cJSON_Print(root));
 }
