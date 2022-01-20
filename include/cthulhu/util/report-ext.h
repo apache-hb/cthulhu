@@ -18,5 +18,5 @@ message_t *report_shadow(reports_t *reports,
                         const node_t *shadowing) NONULL;
 
 message_t *report_unknown_character(reports_t *reports,
-                                    node_t *node,
+                                    const node_t *node,
                                     const char *str) NONULL;

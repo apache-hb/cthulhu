@@ -12,7 +12,7 @@ message_t *report_shadow(reports_t *reports,
 }
 
 message_t *report_unknown_character(reports_t *reports,
-                                    node_t *node,
+                                    const node_t *node,
                                     const char *str)
 {
     where_t where = node->where;

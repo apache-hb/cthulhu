@@ -12,6 +12,7 @@ typedef enum {
     PL0_ODD,
     PL0_UNARY,
     PL0_BINARY,
+    PL0_COMPARE,
 
     PL0_ASSIGN,
     PL0_CALL,
@@ -28,7 +29,7 @@ typedef enum {
 
 typedef struct pl0_t {
     pl0_type_t type;
-    node_t *node;
+    const node_t *node;
 
     struct {
         /* integer literal */
@@ -49,11 +50,15 @@ typedef struct pl0_t {
             struct pl0_t *operand;
         };
 
-        /* a binary operation */
+        /* a binary or compare operation */
         struct {
-            binary_t binary;
             struct pl0_t *lhs;
             struct pl0_t *rhs;
+
+            union {
+                binary_t binary;
+                compare_t compare;
+            };
         };
 
         /* an assignment */
@@ -113,6 +118,8 @@ pl0_t *pl0_digit(scan_t *scan, where_t where, mpz_t digit);
 pl0_t *pl0_ident(scan_t *scan, where_t where, const char *ident);
 
 pl0_t *pl0_binary(scan_t *scan, where_t where, binary_t binary, pl0_t *lhs, pl0_t *rhs);
+pl0_t *pl0_compare(scan_t *scan, where_t where, compare_t compare, pl0_t *lhs, pl0_t *rhs);
+
 pl0_t *pl0_unary(scan_t *scan, where_t where, unary_t unary, pl0_t *operand);
 pl0_t *pl0_odd(scan_t *scan, where_t where, pl0_t *operand);
 

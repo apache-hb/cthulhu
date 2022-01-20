@@ -45,5 +45,3 @@ typedef struct {
     column_t first_column;
     column_t last_column;
 } where_t;
-
-extern const where_t nowhere;

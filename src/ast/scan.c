@@ -1,7 +1,5 @@
 #include "cthulhu/ast/scan.h"
 
-const where_t nowhere = { 0, 0, 0, 0 };
-
 size_t scan_size(const scan_t *scan) {
     return scan->source.size;
 }

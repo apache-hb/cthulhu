@@ -20,6 +20,7 @@ src = [
     'src/hlir/hlir.c',
     'src/hlir/debug.c',
     'src/hlir/sema.c',
+    'src/hlir/type.c',
 
     # ast data and flex/bison interop
     'src/ast/scan.c',

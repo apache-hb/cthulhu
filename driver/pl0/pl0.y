@@ -183,12 +183,12 @@ expr: unary { $$ = $1; }
     ;
 
 condition: ODD expr { $$ = pl0_odd(x, @$, $2); }
-    | expr EQUALS expr { $$ = pl0_binary(x, @$, BINARY_EQ, $1, $3); }
-    | expr NOTEQUAL expr { $$ = pl0_binary(x, @$, BINARY_NEQ, $1, $3); }
-    | expr LESS expr { $$ = pl0_binary(x, @$, BINARY_LT, $1, $3); }
-    | expr LESSEQ expr { $$ = pl0_binary(x, @$, BINARY_LTE, $1, $3); }
-    | expr GREATER expr { $$ = pl0_binary(x, @$, BINARY_GT, $1, $3); }
-    | expr GREATEQ expr { $$ = pl0_binary(x, @$, BINARY_GTE, $1, $3); }
+    | expr EQUALS expr { $$ = pl0_compare(x, @$, COMPARE_EQ, $1, $3); }
+    | expr NOTEQUAL expr { $$ = pl0_compare(x, @$, COMPARE_NEQ, $1, $3); }
+    | expr LESS expr { $$ = pl0_compare(x, @$, COMPARE_LT, $1, $3); }
+    | expr LESSEQ expr { $$ = pl0_compare(x, @$, COMPARE_LTE, $1, $3); }
+    | expr GREATER expr { $$ = pl0_compare(x, @$, COMPARE_GT, $1, $3); }
+    | expr GREATEQ expr { $$ = pl0_compare(x, @$, COMPARE_GTE, $1, $3); }
     ;
 
 number: NUMBER { $$ = pl0_digit(x, @$, $1); }

@@ -46,7 +46,10 @@ static char *hlir_str(const hlir_t *hlir) {
     }
 
     switch (hlir->kind) {
+    case HLIR_VALUE: return format("value(%s) = %s", hlir->name, hlir_str(hlir->value));
     case HLIR_DIGIT: return format("int(%s)", mpz_get_str(NULL, 10, hlir->digit));
+    case HLIR_NAME: return format("name(%s)", hlir->ident->name);
+    case HLIR_BINARY: return format("binary(%s %s %s)", hlir_str(hlir->lhs), binary_name(hlir->binary), hlir_str(hlir->rhs));
     default: return NULL;
     }
 }
@@ -93,6 +96,33 @@ static void hlir_emit_value(debug_t *dbg, const hlir_t *hlir) {
     dbg_line(dbg, format("[%zu]: value(%s) = %s", index, hlir->name, hlir_str(hlir->value)));
 }
 
+static void emit_stmt(debug_t *dbg, vector_t *vec, size_t idx) {
+    const hlir_t *hlir = vector_get(vec, idx);
+
+    switch (hlir->kind) {
+    case HLIR_ASSIGN:
+        dbg_line(dbg, format("assign(%s = %s)", hlir->dst->name, hlir_str(hlir->src)));
+        return;
+    default:
+        break;
+    }
+
+    char *step = hlir_str(vector_get(vec, idx));
+    dbg_line(dbg, format("%%%zu = %s", idx, step));
+}
+
+static void hlir_emit_function(debug_t *dbg, const hlir_t *hlir) {
+    size_t index = dbg_next(dbg);
+
+    dbg_line(dbg, format("[%zu]: function(%s) {", index, hlir->name));
+    dbg_indent(dbg);
+        for (size_t i = 0; i < vector_len(hlir->body); i++) {
+            emit_stmt(dbg, hlir->body, i);
+        }
+    dbg_dedent(dbg);
+    dbg_line(dbg, "}");
+}
+
 static void hlir_emit(debug_t *dbg, const hlir_t *hlir) {
     if (hlir == NULL) {
         return;
@@ -104,6 +134,9 @@ static void hlir_emit(debug_t *dbg, const hlir_t *hlir) {
         return;
     case HLIR_VALUE:
         hlir_emit_value(dbg, hlir);
+        return;
+    case HLIR_FUNCTION:
+        hlir_emit_function(dbg, hlir);
         return;
     case HLIR_MODULE:
         hlir_emit_module(dbg, hlir);

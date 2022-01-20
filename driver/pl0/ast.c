@@ -28,6 +28,14 @@ pl0_t *pl0_binary(scan_t *scan, where_t where, binary_t binary, pl0_t *lhs, pl0_
     return node;
 }
 
+pl0_t *pl0_compare(scan_t *scan, where_t where, compare_t compare, pl0_t *lhs, pl0_t *rhs) {
+    pl0_t *node = pl0_new(scan, where, PL0_COMPARE);
+    node->compare = compare;
+    node->lhs = lhs;
+    node->rhs = rhs;
+    return node;
+}
+
 pl0_t *pl0_unary(scan_t *scan, where_t where, unary_t unary, pl0_t *operand) {
     pl0_t *node = pl0_new(scan, where, PL0_UNARY);
     node->unary = unary;
