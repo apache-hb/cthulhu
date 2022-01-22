@@ -3,7 +3,7 @@
 #include "cthulhu/ast/ast.h"
 #include "cthulhu/ast/ops.h"
 
-#include "type.h"
+#include "cthulhu/data/type.h"
 
 #include <gmp.h>
 

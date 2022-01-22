@@ -12,17 +12,19 @@ typedef enum {
 } pl0_tag_t;
 
 static type_t *INT;
+static type_t *VOID;
 static type_t *STRING;
 static hlir_t *PRINT;
 
 void pl0_init() {
     scan_t *scan = scan_builtin("PL/0");
     node_t *node = node_builtin(scan);
-    INT = type_integer(node, "integer", WIDTH_INT, SIGN_DEFAULT);
-    STRING = type_string(node, "string", STRING_UTF8);
+    INT = type_integer(node, "integer", WIDTH_INT, SIGN_SIGNED);
+    VOID = type_void(node, "void");
+    STRING = type_string(node, "string");
 
-    vector_t *args = vector_init(STRING);
-    type_t *closure = type_closure(node, "printf", INT, args, true);
+    // printf :: (string, ...) -> int
+    type_t *closure = type_closure(node, "printf", vector_init(STRING), INT, true);
 
     PRINT = hlir_function(node, closure, "printf", NULL);
 }
@@ -72,7 +74,7 @@ static hlir_t *sema_binary(sema_t *sema, pl0_t *node) {
     hlir_t *lhs = sema_expr(sema, node->lhs);
     hlir_t *rhs = sema_expr(sema, node->rhs);
 
-    return hlir_binary(node->node, NULL, lhs, rhs, node->binary);
+    return hlir_binary(node->node, INT, lhs, rhs, node->binary);
 }
 
 static hlir_t *sema_name(sema_t *sema, pl0_t *node) {
@@ -82,13 +84,12 @@ static hlir_t *sema_name(sema_t *sema, pl0_t *node) {
         return hlir_error(node->node, NULL);
     }
 
-    // TODO: this will break eventually
-    return hlir_name(node->node, NULL, hlir);
+    return hlir_name(node->node, INT, hlir);
 }
 
 static hlir_t *sema_expr(sema_t *sema, pl0_t *node) {
     switch (node->type) {
-    case PL0_DIGIT: return hlir_digit(node->node, NULL, node->digit);
+    case PL0_DIGIT: return hlir_digit(node->node, INT, node->digit);
     case PL0_BINARY: return sema_binary(sema, node);
     case PL0_IDENT: return sema_name(sema, node);
     default: 
@@ -133,7 +134,7 @@ static hlir_t *sema_stmt(sema_t *sema, pl0_t *node) {
 static hlir_t *sema_value(sema_t *sema, pl0_t *node) {
     hlir_t *init = node->value != NULL 
         ? sema_expr(sema, node->value) 
-        : hlir_int(node->node, NULL, 0);
+        : hlir_int(node->node, INT, 0);
     return hlir_value(node->node, NULL, node->name, init);
 }
 
@@ -164,8 +165,8 @@ static hlir_t *sema_proc(sema_t *sema, pl0_t *node) {
 
     sema_delete(nest);
 
-    // TODO: function signatures
-    return hlir_function(node->node, NULL, node->name, stmts);
+    type_t *signature = type_closure(node->node, format("%s-signature", node->name), vector_of(0), VOID, false);
+    return hlir_function(node->node, signature, node->name, stmts);
 }
 
 hlir_t *pl0_sema(reports_t *reports, void *node) {
@@ -237,8 +238,9 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     );
 
     vector_t *procs = map_values(sema_tag(sema, TAG_PROCS));
+    vector_t *imports = vector_init(PRINT);
 
     sema_delete(sema);
 
-    return hlir_module(root->node, root->mod, vector_of(0), globals, procs);
+    return hlir_module(root->node, root->mod, imports, globals, procs);
 }

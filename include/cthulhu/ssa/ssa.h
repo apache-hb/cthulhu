@@ -3,7 +3,7 @@
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/util/report.h"
 
-#include "value.h"
+#include "cthulhu/data/value.h"
 
 typedef enum {
     OPERAND_EMPTY,
@@ -48,6 +48,11 @@ typedef struct {
             operand_t lhs;
             operand_t rhs;
             binary_t binary;
+        };
+
+        struct {
+            operand_t dst;
+            operand_t src;
         };
     };
 } step_t;

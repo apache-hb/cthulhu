@@ -10,6 +10,11 @@
 #include <stdlib.h>
 #include <gmp.h>
 
+#define CTU_INVALID_FILE (NULL)
+#define CTU_EMPTY_KEY (NULL)
+#define CTU_EMPTY_CHAIN (NULL)
+#define CTU_NO_VALUE (NULL)
+
 #define MALLOC(size) malloc(size)
 #define REALLOC(ptr, size) realloc(ptr, size)
 #define FREE(ptr) free(ptr)
@@ -90,7 +95,7 @@ void ctu_close(file_t *fp) {
 }
 
 bool file_valid(file_t *fp) {
-    return fp->file != NULL;
+    return fp->file != CTU_INVALID_FILE;
 }
 
 size_t ctu_read(void *dst, size_t total, file_t *fp) {
@@ -146,7 +151,7 @@ static bucket_t *bucket_new(const char *key, void *value) {
     bucket_t *entry = ctu_malloc(sizeof(bucket_t));
     entry->key = key;
     entry->value = value;
-    entry->next = NULL;
+    entry->next = CTU_EMPTY_CHAIN;
     return entry;
 }
 
@@ -159,7 +164,7 @@ HOT static void *entry_get(const bucket_t *entry, const char *key) {
         return entry_get(entry->next, key);
     }
 
-    return NULL;
+    return CTU_NO_VALUE;
 }
 
 HOT static void *entry_get_ptr(const bucket_t *entry, const void *key) {
@@ -171,7 +176,7 @@ HOT static void *entry_get_ptr(const bucket_t *entry, const void *key) {
         return entry_get(entry->next, key);
     }
 
-    return NULL;
+    return CTU_NO_VALUE;
 }
 
 static size_t ptrhash(uintptr_t key) {
@@ -203,8 +208,8 @@ HOT static bucket_t *map_bucket_ptr(map_t *map, const void *key) {
 
 static void clear_keys(bucket_t *buckets, size_t size) {
     for (size_t i = 0; i < size; i++) {
-        buckets[i].key = NULL;
-        buckets[i].next = NULL;
+        buckets[i].key = CTU_EMPTY_KEY;
+        buckets[i].next = CTU_EMPTY_CHAIN;
     }
 }
 
@@ -228,40 +233,40 @@ void *map_get(map_t *map, const char *key) {
 void map_set(map_t *map, const char *key, void *value) {
     bucket_t *entry = map_bucket(map, key);
 
-    while (entry != NULL) {
-        if (entry->key == NULL) {
+    while (entry != CTU_EMPTY_CHAIN) {
+        if (entry->key == CTU_EMPTY_KEY) {
             entry->key = key;
             entry->value = value;
             return;
         } else if (streq(entry->key, key)) {
             entry->value = value;
             return;
-        } else if (entry->next != NULL) {
-            entry = entry->next;
         } else {
             entry->next = bucket_new(key, value);
             return;
         }
+        
+        entry = entry->next;
     }
 }
 
 void map_ptr_set(map_t *map, const void *key, void *value) {
     bucket_t *entry = map_bucket_ptr(map, key);
 
-    while (entry != NULL) {
-        if (entry->key == NULL) {
+    while (entry != CTU_EMPTY_CHAIN) {
+        if (entry->key == CTU_EMPTY_KEY) {
             entry->key = key;
             entry->value = value;
             return;
         } else if (entry->key == key) {
             entry->value = value;
             return;
-        } else if (entry->next != NULL) {
-            entry = entry->next;
         } else {
             entry->next = bucket_new(key, value);
             return;
         }
+
+        entry = entry->next;
     }
 }
 

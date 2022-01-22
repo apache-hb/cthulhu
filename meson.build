@@ -16,16 +16,18 @@ src = [
     # command line
     'src/driver/driver.c',
     
+    # data and type structures
+    'src/data/type.c',
+    'src/data/value.c',
+    
     # high level intermediate representation
     'src/hlir/hlir.c',
     'src/hlir/debug.c',
     'src/hlir/sema.c',
-    'src/hlir/type.c',
 
     # low level intermediate representation
     'src/ssa/ssa.c',
     'src/ssa/debug.c',
-    'src/ssa/value.c',
 
     # code serialization
     'src/emit/emit.c',
@@ -79,7 +81,7 @@ libgeneric = library('generic', src,
 generic = declare_dependency(
     link_with : libgeneric,
     include_directories : 'include',
-    dependencies : gmp
+    dependencies : deps
 )
 
 lex = generator(flex, 

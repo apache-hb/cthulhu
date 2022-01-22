@@ -34,6 +34,8 @@ static cJSON *emit_operand(reports_t *reports, operand_t op) {
         cJSON_AddStringToObject(json, "type", "block");
         cJSON_AddStringToObject(json, "name", op.block->name);
         break;
+    case OPERAND_EMPTY:
+        return NULL;
     default:
         report(reports, INTERNAL, NULL, "unknown operand type %d", op.type);
         cJSON_AddStringToObject(json, "type", "unknown");
@@ -66,6 +68,26 @@ static cJSON *emit_return(reports_t *reports, step_t step) {
     return result;
 }
 
+static cJSON *emit_store(reports_t *reports, step_t step) {
+    cJSON *result = cJSON_CreateObject();
+    cJSON_AddStringToObject(result, "op", "store");
+    cJSON_AddItemToObject(result, "dst", emit_operand(reports, step.dst));
+    cJSON_AddItemToObject(result, "src", emit_operand(reports, step.src));
+    return result;
+}
+
+static cJSON *emit_call(reports_t *reports, step_t step) {
+    cJSON *args = cJSON_CreateArray();
+    for (size_t i = 0; i < step.total; i++) {
+        cJSON_AddItemToArray(args, emit_operand(reports, step.operands[i]));
+    }
+    cJSON *result = cJSON_CreateObject();
+    cJSON_AddStringToObject(result, "op", "call");
+    cJSON_AddItemToObject(result, "call", emit_operand(reports, step.call));
+    cJSON_AddItemToObject(result, "args", args);
+    return result;
+}
+
 static cJSON *emit_step(reports_t *reports, step_t step) {
     cJSON *result;
     switch (step.type) {
@@ -77,6 +99,12 @@ static cJSON *emit_step(reports_t *reports, step_t step) {
         break;
     case OP_RETURN: 
         result = emit_return(reports, step);
+        break;
+    case OP_STORE:
+        result = emit_store(reports, step);
+        break;
+    case OP_CALL:
+        result = emit_call(reports, step);
         break;
 
     default:

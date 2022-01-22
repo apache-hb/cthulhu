@@ -115,6 +115,11 @@ static void emit_stmt(debug_t *dbg, vector_t *vec, size_t idx) {
 static void hlir_emit_function(debug_t *dbg, const hlir_t *hlir) {
     size_t index = dbg_next(dbg);
 
+    if (hlir->body == NULL) {
+        dbg_line(dbg, format("[%zu]: function(%s) = extern", index, hlir->name));
+        return;
+    }
+    
     dbg_line(dbg, format("[%zu]: function(%s) {", index, hlir->name));
     dbg_indent(dbg);
         for (size_t i = 0; i < vector_len(hlir->body); i++) {

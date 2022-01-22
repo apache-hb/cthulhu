@@ -125,14 +125,24 @@ char *strnorm(const char *str) {
     size_t len = 0;
     const char *temp = str;
     while (*temp != '\0') {
-        len += (ctu_isprint(*temp) ? 1 : 4);
-        temp += 1;
+        char c = *temp++;
+
+        if (c == '\n') {
+            len += 2;
+        } else if (ctu_isprint(c)) {
+            len += 1;
+        } else {
+            len += 4;
+        }
     }
 
     char *buf = ctu_malloc(len + 1);
     char *out = buf;
     while (*str != '\0') {
-        if (ctu_isprint(*str)) {
+        if (*str == '\n') {
+            *out++ = '\\';
+            *out++ = 'n';
+        } else if (ctu_isprint(*str)) {
             *out++ = *str;
         } else {
             out += sprintf(out, "\\x%02x", *str & 0xFF);

@@ -1,8 +1,12 @@
 #include "cthulhu/ssa/debug.h"
 
 static char *value_debug(const value_t *value) {
+    if (value == NULL || value->type == NULL) {
+        return "null";
+    }
+
     if (is_string(value->type)) {
-        return ctu_strdup(value->str);
+        return format("\"%s\"", strnorm(value->string));
     }
 
     if (is_integer(value->type)) {
@@ -14,6 +18,7 @@ static char *value_debug(const value_t *value) {
 
 static char *operand_debug(operand_t operand) {
     switch (operand.type) {
+    case OPERAND_EMPTY: return format("empty");
     case OPERAND_VREG: return format("%%%zu", operand.vreg);
     case OPERAND_BLOCK: return format("&%s", operand.block->name);
     case OPERAND_VALUE: return value_debug(operand.value);
@@ -26,11 +31,24 @@ static void step_debug(size_t idx, step_t step) {
     case OP_LOAD: 
         printf("  %%%zu = load %s\n", idx, operand_debug(step.value));
         break;
+    case OP_CALL:
+        printf("  %%%zu = call %s(", idx, operand_debug(step.call));
+        for (size_t i = 0; i < step.total; i++) {
+            printf("%s", operand_debug(step.operands[i]));
+            if (i != step.total - 1) {
+                printf(", ");
+            }
+        }
+        printf(")\n");
+        break;
     case OP_BINARY:
         printf("  %%%zu = %s %s %s\n", idx, binary_name(step.binary), operand_debug(step.lhs), operand_debug(step.rhs));
         break;
     case OP_RETURN:
         printf("  ret %s\n", operand_debug(step.value));
+        break;
+    case OP_STORE:
+        printf("  store %s %s\n", operand_debug(step.dst), operand_debug(step.src));
         break;
     default:
         printf("  %%%zu = <%d>\n", idx, step.type);

@@ -21,7 +21,7 @@ static void diff(const char *name, ns_t diff) {
 #define STAGE(name, ...) { ns_t start = now(); { __VA_ARGS__ } ns_t end = now(); diff(name, end - start); }
 
 /* a precalculated array of unique names */
-vector_t *idents = NULL;
+static vector_t *idents = NULL;
 
 static const char *NAMES[] = {
     "Zero", "One", "Two", "Three",

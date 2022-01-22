@@ -19,7 +19,7 @@ static operand_t operand_digit(const type_t *type, const node_t *node, const mpz
 
 static operand_t operand_string(const type_t *type, const node_t *node, const char *string) {
     operand_t operand = operand_new(OPERAND_VALUE);
-    operand.value = value_str(type, node, string);
+    operand.value = value_string(type, node, string);
     return operand;
 }
 
@@ -75,9 +75,8 @@ static step_t new_step(step_type_t type, const node_t *node) {
 static operand_t emit_ssa(ssa_t *ssa, const hlir_t *hlir);
 
 static operand_t emit_name(ssa_t *ssa, const hlir_t *hlir) {
-    block_t *block = map_ptr_get(ssa->blocks, hlir->ident);
     step_t step = new_step(OP_LOAD, hlir->node);
-    step.value = operand_block(block);
+    step.value = emit_ssa(ssa, hlir->ident);
     return add_vreg(ssa, step);
 }
 
@@ -126,10 +125,28 @@ static operand_t emit_assign(ssa_t *ssa, const hlir_t *hlir) {
     operand_t src = emit_ssa(ssa, hlir->src);
 
     step_t step = new_step(OP_STORE, hlir->node);
-    step.lhs = dst;
-    step.rhs = src;
+    step.dst = dst;
+    step.src = src;
 
     return add_vreg(ssa, step);
+}
+
+static operand_t emit_function(ssa_t *ssa, const hlir_t *hlir) {
+    block_t *block = map_ptr_get(ssa->blocks, hlir);
+    if (block == NULL) {
+        report(ssa->reports, INTERNAL, hlir->node, "block is NULL");
+    }
+
+    return operand_block(block);
+}
+
+static operand_t emit_value(ssa_t *ssa, const hlir_t *hlir) {
+    block_t *block = map_ptr_get(ssa->blocks, hlir);
+    if (block == NULL) {
+        report(ssa->reports, INTERNAL, hlir->node, "block is NULL");
+    }
+    
+    return operand_block(block);
 }
 
 static operand_t emit_ssa(ssa_t *ssa, const hlir_t *hlir) {
@@ -139,9 +156,9 @@ static operand_t emit_ssa(ssa_t *ssa, const hlir_t *hlir) {
     case HLIR_STRING: return emit_string(hlir);
     case HLIR_BINARY: return emit_binary(ssa, hlir);
     case HLIR_CALL: return emit_call(ssa, hlir);
-    case HLIR_FUNCTION: return operand_block(map_ptr_get(ssa->blocks, hlir));
+    case HLIR_FUNCTION: return emit_function(ssa, hlir);
     case HLIR_ASSIGN: return emit_assign(ssa, hlir);
-    case HLIR_VALUE: return operand_block(map_ptr_get(ssa->blocks, hlir));
+    case HLIR_VALUE: return emit_value(ssa, hlir);
     default: 
         report(ssa->reports, INTERNAL, hlir->node, "unexpected hlir kind %d", hlir->kind);
         return operand_empty();
@@ -190,6 +207,7 @@ static block_t *begin_block(const hlir_t *hlir) {
 module_t *build_module(ssa_t *ssa, const hlir_t *hlir) {
     size_t nglobals = vector_len(hlir->globals);
     size_t nfunctions = vector_len(hlir->defines);
+    size_t nimports = vector_len(hlir->imports);
 
     module_t *mod = ctu_malloc(sizeof(module_t));
 
@@ -197,6 +215,12 @@ module_t *build_module(ssa_t *ssa, const hlir_t *hlir) {
     mod->source = hlir->node->scan;
     mod->globals = vector_of(nglobals);
     mod->functions = vector_of(nfunctions);
+
+    for (size_t i = 0; i < nimports; i++) {
+        hlir_t *obj = vector_get(hlir->imports, i);
+        block_t *block = begin_block(obj);
+        map_ptr_set(ssa->blocks, obj, block);
+    }
 
     for (size_t i = 0; i < nglobals; i++) {
         hlir_t *global = vector_get(hlir->globals, i);
