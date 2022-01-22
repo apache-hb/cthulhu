@@ -42,22 +42,14 @@ static operand_t operand_empty(void) {
 
 
 static void ssa_begin(ssa_t *ssa, size_t length) {
-    ssa->locals = vector_new(16);
     ssa->steps = ctu_malloc(sizeof(step_t) * length);
     ssa->length = length;
     ssa->used = 0;
 }
 
 static void ssa_end(ssa_t *ssa, block_t *block) {
-    block->locals = ssa->locals;
     block->steps = ssa->steps;
     block->length = ssa->used;
-
-    ssa->locals = NULL;
-}
-
-static bool ssa_in_function(ssa_t *ssa) {
-    return ssa->locals != NULL;
 }
 
 static size_t push_step(ssa_t *ssa, step_t step) {
@@ -176,14 +168,6 @@ static operand_t emit_function(ssa_t *ssa, const hlir_t *hlir) {
 }
 
 static operand_t emit_value(ssa_t *ssa, const hlir_t *hlir) {
-    if (ssa_in_function(ssa)) {
-        if (hlir->value != NULL) {
-            operand_t val = emit_ssa(ssa, hlir->value);
-            step_t store = new_step(OP_STORE, hlir->node);
-            store.src = val;
-
-        }
-    }
     block_t *block = map_ptr_get(ssa->blocks, hlir);
     if (block == NULL) {
         report(ssa->reports, INTERNAL, hlir->node, "block is NULL");
@@ -372,7 +356,6 @@ ssa_t *build_ssa(reports_t *reports) {
 
     ssa->reports = reports;
     ssa->blocks = optimal_map(1024);
-    ssa->locals = NULL;
 
     return ssa;
 }

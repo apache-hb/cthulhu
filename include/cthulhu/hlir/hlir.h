@@ -28,6 +28,7 @@ typedef enum {
     HLIR_VALUE, /// a value
     HLIR_FUNCTION, /// a function
     HLIR_DECLARE, /// forward declaration
+    HLIR_LOCAL, /// a local variable
 
     HLIR_MODULE, /// a compilation unit
 
@@ -138,6 +139,7 @@ hlir_t *hlir_stmts(const node_t *node, vector_t *stmts);
 hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other);
 
 hlir_t *hlir_value(const node_t *node, const type_t *type, const char *name, hlir_t *value);
+hlir_t *hlir_local(const node_t *node, const type_t *type, const char *name, hlir_t *value);
 hlir_t *hlir_function(const node_t *node, const type_t *type, const char *name, vector_t *body);
 
 hlir_t *hlir_declare(const node_t *node, const char *name, hlir_type_t expect);

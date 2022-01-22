@@ -90,6 +90,13 @@ hlir_t *hlir_value(const node_t *node, const type_t *type, const char *name, hli
     return hlir;
 }
 
+hlir_t *hlir_local(const node_t *node, const type_t *type, const char *name, hlir_t *value) {
+    hlir_t *hlir = hlir_new(node, HLIR_LOCAL, type);
+    hlir->name = name;
+    hlir->value = value;
+    return hlir;
+}
+
 hlir_t *hlir_function(const node_t *node, const type_t *type, const char *name, vector_t *body) {
     hlir_t *hlir = hlir_new(node, HLIR_FUNCTION, type);
     hlir->name = name;

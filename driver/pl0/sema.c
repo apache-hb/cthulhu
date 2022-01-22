@@ -216,7 +216,11 @@ static hlir_t *sema_value(sema_t *sema, pl0_t *node) {
     hlir_t *init = node->value != NULL 
         ? sema_expr(sema, node->value) 
         : hlir_int(node->node, INT, 0);
-    return hlir_value(node->node, NULL, node->name, init);
+    return hlir_value(node->node, INT, node->name, init);
+}
+
+static hlir_t *sema_local(pl0_t *node) {
+    return hlir_local(node->node, INT, node->name, hlir_int(node->node, INT, 0));
 }
 
 static hlir_t *sema_proc(sema_t *sema, pl0_t *node) {
@@ -233,7 +237,7 @@ static hlir_t *sema_proc(sema_t *sema, pl0_t *node) {
     vector_t *stmts = vector_of(num_locals);
     for (size_t i = 0; i < num_locals; i++) {
         pl0_t *local = vector_get(node->locals, i);
-        hlir_t *hlir = sema_value(nest, local);
+        hlir_t *hlir = sema_local(local);
         set_var(nest, TAG_VARS, local->name, hlir);
         vector_set(stmts, i, hlir);
     }

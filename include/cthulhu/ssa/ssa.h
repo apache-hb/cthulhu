@@ -28,6 +28,7 @@ typedef enum {
     OP_LOAD, // vreg = *addr
     OP_CALL, // vreg = func(args...)
     OP_BINARY, // vreg = lhs op rhs
+    OP_LOCAL, // allocate space on the stack
 
     OP_LABEL, // label:
     OP_BRANCH, // if (cond) goto true else goto false
@@ -75,9 +76,6 @@ typedef struct {
 typedef struct block_t {
     const char *name;
 
-    // a vector of block_t containing all local variables
-    vector_t *locals;
-
     size_t length;
     step_t *steps;
 } block_t;
@@ -93,7 +91,6 @@ typedef struct {
 typedef struct {
     reports_t *reports;
 
-    vector_t *locals;
     map_t *blocks;
 
     step_t *steps;
