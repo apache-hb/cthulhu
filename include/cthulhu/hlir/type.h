@@ -46,6 +46,7 @@ typedef struct {
 
 typedef struct type_t {
     metatype_t type;
+    const char *name;
     const node_t *node;
 
     union {
@@ -55,6 +56,11 @@ typedef struct type_t {
     };
 } type_t;
 
-type_t *type_integer(const node_t *node, width_t width, sign_t sign) NONULL;
-type_t *type_string(const node_t *node, encoding_t encoding) NONULL;
-type_t *type_closure(const node_t *node, type_t *result, vector_t *params, bool variadic) NONULL;
+type_t *type_integer(const node_t *node, const char *name, width_t width, sign_t sign) NONULL;
+type_t *type_string(const node_t *node, const char *name, encoding_t encoding) NONULL;
+type_t *type_closure(const node_t *node, const char *name, type_t *result, vector_t *params, bool variadic) NONULL;
+
+bool is_integer(const type_t *type) NONULL;
+bool is_string(const type_t *type) NONULL;
+bool is_closure(const type_t *type) NONULL;
+bool is_variadic(const type_t *type) NONULL;

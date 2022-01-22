@@ -18,11 +18,11 @@ static hlir_t *PRINT;
 void pl0_init() {
     scan_t *scan = scan_builtin("PL/0");
     node_t *node = node_builtin(scan);
-    INT = type_integer(node, WIDTH_INT, SIGN_DEFAULT);
-    STRING = type_string(node, STRING_UTF8);
+    INT = type_integer(node, "integer", WIDTH_INT, SIGN_DEFAULT);
+    STRING = type_string(node, "string", STRING_UTF8);
 
     vector_t *args = vector_init(STRING);
-    type_t *closure = type_closure(node, INT, args, true);
+    type_t *closure = type_closure(node, "printf", INT, args, true);
 
     PRINT = hlir_function(node, closure, "printf", NULL);
 }

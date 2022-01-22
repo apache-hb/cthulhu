@@ -11,9 +11,15 @@ static operand_t operand_vreg(size_t vreg) {
     return operand;
 }
 
-static operand_t operand_value(const mpz_t value) {
+static operand_t operand_digit(const type_t *type, const node_t *node, const mpz_t value) {
     operand_t operand = operand_new(OPERAND_VALUE);
-    mpz_init_set(operand.value, value);
+    operand.value = value_digit(type, node, value);
+    return operand;
+}
+
+static operand_t operand_string(const type_t *type, const node_t *node, const char *string) {
+    operand_t operand = operand_new(OPERAND_VALUE);
+    operand.value = value_str(type, node, string);
     return operand;
 }
 
@@ -76,7 +82,11 @@ static operand_t emit_name(ssa_t *ssa, const hlir_t *hlir) {
 }
 
 static operand_t emit_digit(const hlir_t *hlir) {
-    return operand_value(hlir->digit);
+    return operand_digit(hlir->type, hlir->node, hlir->digit);
+}
+
+static operand_t emit_string(const hlir_t *hlir) {
+    return operand_string(hlir->type, hlir->node, hlir->string);
 }
 
 static operand_t emit_binary(ssa_t *ssa, const hlir_t *hlir) {
@@ -95,16 +105,43 @@ static operand_t emit_binary(ssa_t *ssa, const hlir_t *hlir) {
 static operand_t emit_call(ssa_t *ssa, const hlir_t *hlir) {
     operand_t call = emit_ssa(ssa, hlir->call);
 
-    return call;
+    vector_t *args = hlir->args;
+    size_t len = vector_len(args);
+
+    operand_t *operands = ctu_malloc(sizeof(operand_t) * len);
+    for (size_t i = 0; i < len; i++) {
+        operands[i] = emit_ssa(ssa, vector_get(args, i));
+    }
+
+    step_t step = new_step(OP_CALL, hlir->node);
+    step.call = call;
+    step.operands = operands;
+    step.total = len;
+
+    return add_vreg(ssa, step);
+}
+
+static operand_t emit_assign(ssa_t *ssa, const hlir_t *hlir) {
+    operand_t dst = emit_ssa(ssa, hlir->dst);
+    operand_t src = emit_ssa(ssa, hlir->src);
+
+    step_t step = new_step(OP_STORE, hlir->node);
+    step.lhs = dst;
+    step.rhs = src;
+
+    return add_vreg(ssa, step);
 }
 
 static operand_t emit_ssa(ssa_t *ssa, const hlir_t *hlir) {
     switch (hlir->kind) {
     case HLIR_NAME: return emit_name(ssa, hlir);
     case HLIR_DIGIT: return emit_digit(hlir);
+    case HLIR_STRING: return emit_string(hlir);
     case HLIR_BINARY: return emit_binary(ssa, hlir);
     case HLIR_CALL: return emit_call(ssa, hlir);
     case HLIR_FUNCTION: return operand_block(map_ptr_get(ssa->blocks, hlir));
+    case HLIR_ASSIGN: return emit_assign(ssa, hlir);
+    case HLIR_VALUE: return operand_block(map_ptr_get(ssa->blocks, hlir));
     default: 
         report(ssa->reports, INTERNAL, hlir->node, "unexpected hlir kind %d", hlir->kind);
         return operand_empty();

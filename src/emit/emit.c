@@ -11,6 +11,13 @@ static cJSON *emit_span(const node_t *node) {
     return span;
 }
 
+static cJSON *emit_value(reports_t *reports, const value_t *value) {
+    UNUSED(reports);
+    cJSON *json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "name", value->type->name);
+    return json;
+}
+
 static cJSON *emit_operand(reports_t *reports, operand_t op) {
     cJSON *json = cJSON_CreateObject();
 
@@ -21,7 +28,7 @@ static cJSON *emit_operand(reports_t *reports, operand_t op) {
         break;
     case OPERAND_VALUE:
         cJSON_AddStringToObject(json, "type", "value");
-        cJSON_AddNumberToObject(json, "value", mpz_get_si(op.value));
+        cJSON_AddItemToObject(json, "value", emit_value(reports, op.value));
         break;
     case OPERAND_BLOCK:
         cJSON_AddStringToObject(json, "type", "block");

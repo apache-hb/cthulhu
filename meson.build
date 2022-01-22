@@ -25,6 +25,7 @@ src = [
     # low level intermediate representation
     'src/ssa/ssa.c',
     'src/ssa/debug.c',
+    'src/ssa/value.c',
 
     # code serialization
     'src/emit/emit.c',

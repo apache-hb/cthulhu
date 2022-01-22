@@ -3,6 +3,8 @@
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/util/report.h"
 
+#include "value.h"
+
 typedef enum {
     OPERAND_EMPTY,
     OPERAND_VREG,
@@ -15,15 +17,17 @@ typedef struct {
 
     union {
         size_t vreg;
-        mpz_t value;
+        value_t *value;
         struct block_t *block;
     };
 } operand_t;
 
 typedef enum {
     OP_LOAD,
+    OP_CALL,
     OP_BINARY,
 
+    OP_STORE,
     OP_RETURN
 } step_type_t;
 
@@ -33,6 +37,12 @@ typedef struct {
 
     union {
         operand_t value;
+
+        struct {
+            operand_t call;
+            operand_t *operands;
+            size_t total;
+        };
 
         struct {
             operand_t lhs;

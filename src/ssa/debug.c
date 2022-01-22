@@ -1,10 +1,22 @@
 #include "cthulhu/ssa/debug.h"
 
+static char *value_debug(const value_t *value) {
+    if (is_string(value->type)) {
+        return ctu_strdup(value->str);
+    }
+
+    if (is_integer(value->type)) {
+        return mpz_get_str(NULL, 10, value->digit);
+    }
+    
+    return NULL;
+}
+
 static char *operand_debug(operand_t operand) {
     switch (operand.type) {
     case OPERAND_VREG: return format("%%%zu", operand.vreg);
     case OPERAND_BLOCK: return format("&%s", operand.block->name);
-    case OPERAND_VALUE: return mpz_get_str(NULL, 10, operand.value);
+    case OPERAND_VALUE: return value_debug(operand.value);
     default: return format("<%d>", operand.type);
     }
 }
