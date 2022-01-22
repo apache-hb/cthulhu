@@ -190,7 +190,7 @@ static cJSON *emit_vector(reports_t *reports, vector_t *vec) {
     return globals;
 }
 
-void emit_module(reports_t *reports, module_t *mod) {
+void emit_ssa(reports_t *reports, module_t *mod) {
     cJSON *root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "name", mod->name);
     cJSON_AddStringToObject(root, "path", mod->source->path);
@@ -202,5 +202,5 @@ void emit_module(reports_t *reports, module_t *mod) {
     cJSON *functions = emit_vector(reports, mod->functions);
     cJSON_AddItemToObject(root, "functions", functions);
 
-    report(reports, NOTE, NULL, "%s", cJSON_Print(root));
+    //report(reports, NOTE, NULL, "%s", cJSON_Print(root));
 }

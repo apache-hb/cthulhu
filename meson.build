@@ -30,7 +30,7 @@ src = [
     'src/ssa/debug.c',
 
     # code serialization
-    'src/emit/emit.c',
+    'src/emit/emit-ssa.c',
 
     # ast data and flex/bison interop
     'src/ast/scan.c',
@@ -110,7 +110,7 @@ foreach lang : get_option('languages')
 endforeach
 
 if get_option('tuning')
-    tune = executable('tune', [ 'tools/tune.c' ],
+    tune = executable('tune-map', [ 'tools/tune-map.c' ],
         dependencies : generic
     )
 endif

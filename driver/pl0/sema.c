@@ -234,7 +234,7 @@ static hlir_t *sema_proc(sema_t *sema, pl0_t *node) {
     for (size_t i = 0; i < num_locals; i++) {
         pl0_t *local = vector_get(node->locals, i);
         hlir_t *hlir = sema_value(nest, local);
-        set_var(sema, TAG_VARS, local->name, hlir);
+        set_var(nest, TAG_VARS, local->name, hlir);
         vector_set(stmts, i, hlir);
     }
 

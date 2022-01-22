@@ -167,8 +167,8 @@ int common_main(int argc, const char **argv, driver_t driver) {
         ssa_debug(mod);
     }
 
-    emit_module(reports, mod);
-    status = end_reports(reports, SIZE_MAX, "emitting module");
+    emit_ssa(reports, mod);
+    status = end_reports(reports, SIZE_MAX, "emitting ssa module");
     if (status != 0) { return status; }
 
     return status;
