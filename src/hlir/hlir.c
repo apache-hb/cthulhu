@@ -47,10 +47,39 @@ hlir_t *hlir_call(const node_t *node, const type_t *type, hlir_t *function, vect
     return hlir;
 }
 
+hlir_t *hlir_compare(const node_t *node, const type_t *type, hlir_t *lhs, hlir_t *rhs, compare_t op) {
+    hlir_t *hlir = hlir_new(node, HLIR_COMPARE, type);
+    hlir->lhs = lhs;
+    hlir->rhs = rhs;
+    hlir->compare = op;
+    return hlir;
+}
+
+hlir_t *hlir_stmts(const node_t *node, vector_t *stmts) {
+    hlir_t *hlir = hlir_new(node, HLIR_STMTS, NULL);
+    hlir->stmts = stmts;
+    return hlir;
+}
+
 hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src) {
     hlir_t *hlir = hlir_new(node, HLIR_ASSIGN, NULL);
     hlir->lhs = dst;
     hlir->rhs = src;
+    return hlir;
+}
+
+hlir_t *hlir_while(const node_t *node, hlir_t *cond, hlir_t *body) {
+    hlir_t *hlir = hlir_new(node, HLIR_WHILE, NULL);
+    hlir->cond = cond;
+    hlir->then = body;
+    return hlir;
+}
+
+hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other) {
+    hlir_t *hlir = hlir_new(node, HLIR_BRANCH, NULL);
+    hlir->cond = cond;
+    hlir->then = then;
+    hlir->other = other;
     return hlir;
 }
 

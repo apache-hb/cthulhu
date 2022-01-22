@@ -33,6 +33,10 @@ type_t *type_void(const node_t *node, const char *name) {
     return type_new(node, name, TYPE_VOID);
 }
 
+type_t *type_boolean(const node_t *node, const char *name) {
+    return type_new(node, name, TYPE_BOOLEAN);
+}
+
 bool type_is(const type_t *type, typeof_t of) {
     return type->type == of;
 }

@@ -51,12 +51,13 @@ static char *hlir_str(const hlir_t *hlir) {
     case HLIR_NAME: return format("name(%s)", hlir->ident->name);
     case HLIR_BINARY: return format("binary(%s %s %s)", hlir_str(hlir->lhs), binary_name(hlir->binary), hlir_str(hlir->rhs));
     case HLIR_CALL: return format("call(%s)", hlir->call->name);
-    default: return NULL;
+    case HLIR_COMPARE: return format("compare(%s %s %s)", hlir_str(hlir->lhs), compare_name(hlir->compare), hlir_str(hlir->rhs));
+    default: return format("<%d>", hlir->kind);
     }
 }
 
-static void hlir_emit_vec(debug_t *dbg, vector_t *vec, size_t len) {
-    for (size_t i = 0; i < len; i++) {
+static void hlir_emit_vec(debug_t *dbg, vector_t *vec) {
+    for (size_t i = 0; i < vector_len(vec); i++) {
         hlir_emit(dbg, vector_get(vec, i));
     }
 }
@@ -72,7 +73,7 @@ static void dbg_section(debug_t *dbg, const char *name, vector_t *vec) {
     dbg_reset(dbg);
     dbg_line(dbg, format("%s(%zu) {", name, len));
     dbg_indent(dbg);
-        hlir_emit_vec(dbg, vec, len);
+        hlir_emit_vec(dbg, vec);
     dbg_dedent(dbg);
     dbg_line(dbg, "}");
 }
@@ -97,19 +98,62 @@ static void hlir_emit_value(debug_t *dbg, const hlir_t *hlir) {
     dbg_line(dbg, format("[%zu]: value(%s) = %s", index, hlir->name, hlir_str(hlir->value)));
 }
 
-static void emit_stmt(debug_t *dbg, vector_t *vec, size_t idx) {
-    const hlir_t *hlir = vector_get(vec, idx);
+static void hlir_emit(debug_t *dbg, const hlir_t *hlir);
+static void emit_stmt(debug_t *dbg, const hlir_t *hlir);
 
+static void hlir_emit_stmts(debug_t *dbg, vector_t *vec) {
+    for (size_t i = 0; i < vector_len(vec); i++) {
+        const hlir_t *stmt = vector_get(vec, i);
+        emit_stmt(dbg, stmt);
+    }
+}
+
+static void hlir_emit_branch(debug_t *dbg, const hlir_t *hlir) {
+    dbg_line(dbg, format("branch(%s) {", hlir_str(hlir->cond)));
+    dbg_indent(dbg);
+        emit_stmt(dbg, hlir->then);
+    dbg_dedent(dbg);
+    
+    if (hlir->other == NULL) {
+        dbg_line(dbg, "}");
+        return;
+    }
+
+    dbg_line(dbg, "} else {");
+    dbg_indent(dbg);
+        emit_stmt(dbg, hlir->other);
+    dbg_dedent(dbg);
+    dbg_line(dbg, "}");
+}
+
+static void hlir_emit_while(debug_t *dbg, const hlir_t *hlir) {
+    dbg_line(dbg, format("while(%s) {", hlir_str(hlir->cond)));
+    dbg_indent(dbg);
+        emit_stmt(dbg, hlir->then);
+    dbg_dedent(dbg);
+    dbg_line(dbg, "}");
+}
+
+static void emit_stmt(debug_t *dbg, const hlir_t *hlir) {
     switch (hlir->kind) {
     case HLIR_ASSIGN:
         dbg_line(dbg, format("assign(%s = %s)", hlir->dst->name, hlir_str(hlir->src)));
+        return;
+    case HLIR_BRANCH:
+        hlir_emit_branch(dbg, hlir);
+        return;
+    case HLIR_WHILE:
+        hlir_emit_while(dbg, hlir);
+        return;
+    case HLIR_STMTS:
+        hlir_emit_stmts(dbg, hlir->stmts);
         return;
     default:
         break;
     }
 
-    char *step = hlir_str(vector_get(vec, idx));
-    dbg_line(dbg, format("%%%zu = %s", idx, step));
+    char *step = hlir_str(hlir);
+    dbg_line(dbg, format("%%%zu = %s", dbg_next(dbg), step));
 }
 
 static void hlir_emit_function(debug_t *dbg, const hlir_t *hlir) {
@@ -122,9 +166,7 @@ static void hlir_emit_function(debug_t *dbg, const hlir_t *hlir) {
     
     dbg_line(dbg, format("[%zu]: function(%s) {", index, hlir->name));
     dbg_indent(dbg);
-        for (size_t i = 0; i < vector_len(hlir->body); i++) {
-            emit_stmt(dbg, hlir->body, i);
-        }
+        hlir_emit_stmts(dbg, hlir->body);
     dbg_dedent(dbg);
     dbg_line(dbg, "}");
 }

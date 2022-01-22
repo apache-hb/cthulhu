@@ -29,6 +29,12 @@ static operand_t operand_block(block_t *block) {
     return operand;
 }
 
+static operand_t operand_label(size_t index) {
+    operand_t operand = operand_new(OPERAND_LABEL);
+    operand.label = index;
+    return operand;
+}
+
 static operand_t operand_empty(void) {
     return operand_new(OPERAND_EMPTY);
 }
@@ -58,11 +64,6 @@ static size_t push_step(ssa_t *ssa, step_t step) {
     return ssa->used - 1;
 }
 
-static operand_t add_vreg(ssa_t *ssa, step_t step) {
-    size_t vreg = push_step(ssa, step);
-    return operand_vreg(vreg);
-}
-
 static step_t new_step(step_type_t type, const node_t *node) {
     step_t step = {
         .type = type,
@@ -70,6 +71,34 @@ static step_t new_step(step_type_t type, const node_t *node) {
     };
 
     return step;
+}
+
+static operand_t add_label(ssa_t *ssa, const node_t *node) {
+    step_t step = new_step(OP_LABEL, node);
+    size_t index = push_step(ssa, step);
+    return operand_label(index);
+}
+
+static operand_t add_branch(ssa_t *ssa, const node_t *node, operand_t cond) {
+    step_t step = new_step(OP_BRANCH, node);
+    step.cond = cond;
+    size_t index = push_step(ssa, step);
+    return operand_label(index);
+}
+
+static operand_t add_vreg(ssa_t *ssa, step_t step) {
+    size_t vreg = push_step(ssa, step);
+    return operand_vreg(vreg);
+}
+
+static operand_t add_jmp(ssa_t *ssa, const node_t *node) {
+    size_t index = push_step(ssa, new_step(OP_JMP, node));
+    return operand_label(index);
+}
+
+static step_t *get_step(ssa_t *ssa, operand_t label) {
+    CTASSERT(label.type == OPERAND_LABEL, "label operand expected");
+    return &ssa->steps[label.label];
 }
 
 static operand_t emit_ssa(ssa_t *ssa, const hlir_t *hlir);
@@ -149,6 +178,75 @@ static operand_t emit_value(ssa_t *ssa, const hlir_t *hlir) {
     return operand_block(block);
 }
 
+static operand_t emit_stmts(ssa_t *ssa, const hlir_t *hlir) {
+    for (size_t i = 0; i < vector_len(hlir->stmts); i++) {
+        emit_ssa(ssa, vector_get(hlir->stmts, i));
+    }
+    return operand_empty();
+}
+
+static operand_t emit_while(ssa_t *ssa, const hlir_t *hlir) {
+    operand_t start = add_label(ssa, hlir->node);
+    operand_t cond = emit_ssa(ssa, hlir->cond);
+    operand_t branch = add_branch(ssa, hlir->node, cond);
+
+    operand_t body = add_label(ssa, hlir->node);
+    
+    emit_ssa(ssa, hlir->then);
+    operand_t jmp = add_jmp(ssa, hlir->node);
+
+    operand_t end = add_label(ssa, hlir->node);
+
+    step_t *step = get_step(ssa, branch);
+    step->then = body;
+    step->other = end;
+
+    step_t *step2 = get_step(ssa, jmp);
+    step2->dst = start;
+
+    return operand_empty();
+}
+
+static operand_t emit_branch(ssa_t *ssa, const hlir_t *hlir) {
+    operand_t cond = emit_ssa(ssa, hlir->cond);
+    operand_t branch = add_branch(ssa, hlir->node, cond);
+
+    operand_t then = add_label(ssa, hlir->node);
+
+    emit_ssa(ssa, hlir->then);
+    operand_t jmp = add_jmp(ssa, hlir->node);
+
+    operand_t other = add_label(ssa, hlir->node);
+    
+    if (hlir->other != NULL) {
+        emit_ssa(ssa, hlir->other);
+    }
+
+    operand_t end = add_label(ssa, hlir->node);
+
+    step_t *step = get_step(ssa, branch);
+    step->then = then;
+    step->other = other;
+
+    step_t *step2 = get_step(ssa, jmp);
+    step2->dst = end;
+
+    return operand_empty();
+}
+
+static operand_t emit_compare(ssa_t *ssa, const hlir_t *hlir) {
+    operand_t lhs = emit_ssa(ssa, hlir->lhs);
+    operand_t rhs = emit_ssa(ssa, hlir->rhs);
+
+    step_t step = new_step(OP_COMPARE, hlir->node);
+
+    step.lhs = lhs;
+    step.rhs = rhs;
+    step.compare = hlir->compare;
+
+    return add_vreg(ssa, step);
+}
+
 static operand_t emit_ssa(ssa_t *ssa, const hlir_t *hlir) {
     switch (hlir->kind) {
     case HLIR_NAME: return emit_name(ssa, hlir);
@@ -159,6 +257,10 @@ static operand_t emit_ssa(ssa_t *ssa, const hlir_t *hlir) {
     case HLIR_FUNCTION: return emit_function(ssa, hlir);
     case HLIR_ASSIGN: return emit_assign(ssa, hlir);
     case HLIR_VALUE: return emit_value(ssa, hlir);
+    case HLIR_STMTS: return emit_stmts(ssa, hlir);
+    case HLIR_WHILE: return emit_while(ssa, hlir);
+    case HLIR_BRANCH: return emit_branch(ssa, hlir);
+    case HLIR_COMPARE: return emit_compare(ssa, hlir);
     default: 
         report(ssa->reports, INTERNAL, hlir->node, "unexpected hlir kind %d", hlir->kind);
         return operand_empty();

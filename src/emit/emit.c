@@ -34,6 +34,10 @@ static cJSON *emit_operand(reports_t *reports, operand_t op) {
         cJSON_AddStringToObject(json, "type", "block");
         cJSON_AddStringToObject(json, "name", op.block->name);
         break;
+    case OPERAND_LABEL:
+        cJSON_AddStringToObject(json, "type", "label");
+        cJSON_AddNumberToObject(json, "name", op.label);
+        break;
     case OPERAND_EMPTY:
         return NULL;
     default:
@@ -88,6 +92,37 @@ static cJSON *emit_call(reports_t *reports, step_t step) {
     return result;
 }
 
+static cJSON *emit_label() {
+    cJSON *result = cJSON_CreateObject();
+    cJSON_AddStringToObject(result, "op", "label");
+    return result;
+}
+
+static cJSON *emit_branch(reports_t *reports, step_t step) {
+    cJSON *result = cJSON_CreateObject();
+    cJSON_AddStringToObject(result, "op", "branch");
+    cJSON_AddItemToObject(result, "cond", emit_operand(reports, step.cond));
+    cJSON_AddItemToObject(result, "true", emit_operand(reports, step.then));
+    cJSON_AddItemToObject(result, "false", emit_operand(reports, step.other));
+    return result;
+}
+
+static cJSON *emit_compare(reports_t *reports, step_t step) {
+    cJSON *result = cJSON_CreateObject();
+    cJSON_AddStringToObject(result, "op", "compare");
+    cJSON_AddItemToObject(result, "lhs", emit_operand(reports, step.lhs));
+    cJSON_AddItemToObject(result, "rhs", emit_operand(reports, step.rhs));
+    cJSON_AddStringToObject(result, "compare", compare_name(step.compare));
+    return result;
+}
+
+static cJSON *emit_jump(reports_t *reports, step_t step) {
+    cJSON *result = cJSON_CreateObject();
+    cJSON_AddStringToObject(result, "op", "jump");
+    cJSON_AddItemToObject(result, "dst", emit_operand(reports, step.dst));
+    return result;
+}
+
 static cJSON *emit_step(reports_t *reports, step_t step) {
     cJSON *result;
     switch (step.type) {
@@ -105,6 +140,18 @@ static cJSON *emit_step(reports_t *reports, step_t step) {
         break;
     case OP_CALL:
         result = emit_call(reports, step);
+        break;
+    case OP_COMPARE:
+        result = emit_compare(reports, step);
+        break;
+    case OP_LABEL:
+        result = emit_label();
+        break;
+    case OP_BRANCH:
+        result = emit_branch(reports, step);
+        break;
+    case OP_JMP:
+        result = emit_jump(reports, step);
         break;
 
     default:

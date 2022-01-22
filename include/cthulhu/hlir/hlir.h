@@ -16,9 +16,13 @@ typedef enum {
     HLIR_NAME, /// a reference to a name
     HLIR_BINARY, /// a binary operation
     HLIR_CALL, /// a call to a procedure
+    HLIR_COMPARE, /// a comparison operation
 
     /* statements */
     HLIR_ASSIGN, /// an assignment
+    HLIR_WHILE, /// a while loop
+    HLIR_STMTS, /// a sequence of statements
+    HLIR_BRANCH, /// a conditional branch
 
     /* declarations */
     HLIR_VALUE, /// a value
@@ -49,7 +53,11 @@ typedef struct hlir_t {
         struct {
             struct hlir_t *lhs;
             struct hlir_t *rhs;
-            binary_t binary;
+
+            union {
+                binary_t binary;
+                compare_t compare;
+            };
         };
 
         /* a call to a procedure */
@@ -64,6 +72,14 @@ typedef struct hlir_t {
         struct {
             struct hlir_t *dst;
             struct hlir_t *src;
+        };
+
+        vector_t *stmts;
+
+        struct {
+            struct hlir_t *cond;
+            struct hlir_t *then;
+            struct hlir_t *other;
         };
 
         /* any named declaration */
@@ -114,7 +130,12 @@ hlir_t *hlir_name(const node_t *node, const type_t *type, hlir_t *hlir);
 hlir_t *hlir_binary(const node_t *node, const type_t *type, hlir_t *lhs, hlir_t *rhs, binary_t op);
 hlir_t *hlir_call(const node_t *node, const type_t *type, hlir_t *function, vector_t *args);
 
+hlir_t *hlir_compare(const node_t *node, const type_t *type, hlir_t *lhs, hlir_t *rhs, compare_t op);
+
 hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src);
+hlir_t *hlir_while(const node_t *node, hlir_t *cond, hlir_t *body);
+hlir_t *hlir_stmts(const node_t *node, vector_t *stmts);
+hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other);
 
 hlir_t *hlir_value(const node_t *node, const type_t *type, const char *name, hlir_t *value);
 hlir_t *hlir_function(const node_t *node, const type_t *type, const char *name, vector_t *body);

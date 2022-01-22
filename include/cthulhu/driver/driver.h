@@ -14,4 +14,6 @@ typedef struct {
     sema_t sema;
 } driver_t;
 
+void common_init(void);
+
 int common_main(int argc, const char **argv, driver_t driver);

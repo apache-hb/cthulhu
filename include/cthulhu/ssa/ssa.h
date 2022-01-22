@@ -9,7 +9,8 @@ typedef enum {
     OPERAND_EMPTY,
     OPERAND_VREG,
     OPERAND_VALUE,
-    OPERAND_BLOCK
+    OPERAND_BLOCK,
+    OPERAND_LABEL
 } operand_type_t;
 
 typedef struct {
@@ -17,18 +18,23 @@ typedef struct {
 
     union {
         size_t vreg;
+        size_t label;
         value_t *value;
         struct block_t *block;
     };
 } operand_t;
 
 typedef enum {
-    OP_LOAD,
-    OP_CALL,
-    OP_BINARY,
+    OP_LOAD, // vreg = *addr
+    OP_CALL, // vreg = func(args...)
+    OP_BINARY, // vreg = lhs op rhs
 
-    OP_STORE,
-    OP_RETURN
+    OP_LABEL, // label:
+    OP_BRANCH, // if (cond) goto true else goto false
+    OP_COMPARE, // vreg =  (lhs op rhs)
+    OP_JMP, // goto label
+    OP_STORE, // *addr = vreg
+    OP_RETURN // return vreg
 } step_type_t;
 
 typedef struct {
@@ -47,18 +53,30 @@ typedef struct {
         struct {
             operand_t lhs;
             operand_t rhs;
-            binary_t binary;
+            union {
+                binary_t binary;
+                compare_t compare;
+            };
         };
 
         struct {
             operand_t dst;
             operand_t src;
         };
+
+        struct {
+            operand_t cond;
+            operand_t then;
+            operand_t other;
+        };
     };
 } step_t;
 
 typedef struct block_t {
     const char *name;
+
+    // a vector of block_t containing all local variables
+    vector_t *locals;
 
     size_t length;
     step_t *steps;
@@ -75,6 +93,7 @@ typedef struct {
 typedef struct {
     reports_t *reports;
 
+    vector_t *locals;
     map_t *blocks;
 
     step_t *steps;

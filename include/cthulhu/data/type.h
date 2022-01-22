@@ -6,7 +6,8 @@ typedef enum {
     TYPE_INTEGER,
     TYPE_STRING,
     TYPE_CLOSURE,
-    TYPE_VOID
+    TYPE_VOID,
+    TYPE_BOOLEAN
 } typeof_t;
 
 typedef enum {
@@ -44,7 +45,8 @@ typedef struct type_t {
     };
 } type_t;
 
-type_t *type_void(const node_t *node, const char *name);
+type_t *type_boolean(const node_t *node, const char *name) NONULL;
+type_t *type_void(const node_t *node, const char *name) NONULL;
 type_t *type_integer(const node_t *node, const char *name, width_t width, sign_t sign) NONULL;
 type_t *type_string(const node_t *node, const char *name) NONULL;
 type_t *type_closure(const node_t *node, const char *name, vector_t *params, type_t *result, bool variadic) NONULL;

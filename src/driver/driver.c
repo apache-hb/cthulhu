@@ -94,6 +94,10 @@ static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, co
     }
 }
 
+void common_init(void) {
+    init_gmp();
+}
+
 int common_main(int argc, const char **argv, driver_t driver) {
     if (find_arg(argc, argv, "--version", "-v")) {
         print_version(driver);

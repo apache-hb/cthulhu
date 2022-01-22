@@ -12,6 +12,7 @@ typedef enum {
 } pl0_tag_t;
 
 static type_t *INT;
+static type_t *BOOL;
 static type_t *VOID;
 static type_t *STRING;
 static hlir_t *PRINT;
@@ -19,7 +20,9 @@ static hlir_t *PRINT;
 void pl0_init() {
     scan_t *scan = scan_builtin("PL/0");
     node_t *node = node_builtin(scan);
+
     INT = type_integer(node, "integer", WIDTH_INT, SIGN_SIGNED);
+    BOOL = type_boolean(node, "boolean");
     VOID = type_void(node, "void");
     STRING = type_string(node, "string");
 
@@ -56,6 +59,10 @@ static void set_proc(sema_t *sema, const char *name, hlir_t *proc) {
     }
 
     sema_set(sema, TAG_PROCS, name, proc);
+}
+
+static hlir_t *get_proc(sema_t *sema, const char *name) {
+    return sema_get(sema, TAG_PROCS, name);
 }
 
 static void set_var(sema_t *sema, size_t tag, const char *name, hlir_t *hlir) {
@@ -121,10 +128,84 @@ static hlir_t *sema_print(sema_t *sema, pl0_t *node) {
     return hlir_call(node->node, INT, PRINT, args);
 }
 
+static hlir_t *sema_odd(sema_t *sema, pl0_t *node) {
+    hlir_t *operand = sema_expr(sema, node->operand);
+
+    // `# expr` in pl0 is `expr % 2 != 0` in hlir 
+    hlir_t *two = hlir_int(node->node, INT, 2);
+    hlir_t *zero = hlir_int(node->node, INT, 0);
+    hlir_t *mod = hlir_binary(node->node, INT, operand, two, BINARY_REM);
+    hlir_t *eq = hlir_compare(node->node, BOOL, mod, zero, COMPARE_NEQ);
+
+    return eq;
+}
+
+static hlir_t *sema_compare(sema_t *sema, pl0_t *node) {
+    hlir_t *lhs = sema_expr(sema, node->lhs);
+    hlir_t *rhs = sema_expr(sema, node->rhs);
+
+    return hlir_compare(node->node, BOOL, lhs, rhs, node->compare);
+}
+ 
+static hlir_t *sema_call(sema_t *sema, pl0_t *node) {
+    hlir_t *proc = get_proc(sema, node->procedure);
+    if (proc == NULL) {
+        report_pl0_unresolved(sema->reports, node->node, node->procedure);
+        return hlir_error(node->node, NULL);
+    }
+
+    return hlir_call(node->node, VOID, proc, vector_of(0));
+}
+
+static hlir_t *sema_cond(sema_t *sema, pl0_t *node) {
+    switch (node->type) {
+    case PL0_ODD: return sema_odd(sema, node);
+    case PL0_COMPARE: return sema_compare(sema, node);
+    default:
+        report(sema->reports, INTERNAL, node->node, "sema-cond");
+        return NULL;
+    }
+}
+
+static hlir_t *sema_stmt(sema_t *sema, pl0_t *node);
+
+static hlir_t *sema_stmts(sema_t *sema, pl0_t *node) {
+    vector_t *stmts = node->stmts;
+
+    size_t len = vector_len(stmts);
+    vector_t *result = vector_of(len);
+
+    for (size_t i = 0; i < len; i++) {
+        pl0_t *stmt = vector_get(stmts, i);
+        hlir_t *hlir = sema_stmt(sema, stmt);
+        vector_set(result, i, hlir);
+    }
+
+    return hlir_stmts(node->node, result);
+}
+
+static hlir_t *sema_loop(sema_t *sema, pl0_t *node) {
+    hlir_t *cond = sema_cond(sema, node->cond);
+    hlir_t *body = sema_stmt(sema, node->then);
+
+    return hlir_while(node->node, cond, body);
+}
+
+static hlir_t *sema_branch(sema_t *sema, pl0_t *node) {
+    hlir_t *cond = sema_cond(sema, node->cond);
+    hlir_t *then = sema_stmt(sema, node->then);
+
+    return hlir_branch(node->node, cond, then, NULL);
+}
+
 static hlir_t *sema_stmt(sema_t *sema, pl0_t *node) {
     switch (node->type) {
     case PL0_ASSIGN: return sema_assign(sema, node);
     case PL0_PRINT: return sema_print(sema, node);
+    case PL0_LOOP: return sema_loop(sema, node);
+    case PL0_CALL: return sema_call(sema, node);
+    case PL0_BRANCH: return sema_branch(sema, node);
+    case PL0_STMTS: return sema_stmts(sema, node);
     default:
         report(sema->reports, INTERNAL, node->node, "sema-stmt");
         return NULL;

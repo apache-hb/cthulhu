@@ -139,15 +139,15 @@ char *strnorm(const char *str) {
     char *buf = ctu_malloc(len + 1);
     char *out = buf;
     while (*str != '\0') {
-        if (*str == '\n') {
+        char c = *str++ & 0xFF;
+        if (c == '\n') {
             *out++ = '\\';
             *out++ = 'n';
-        } else if (ctu_isprint(*str)) {
-            *out++ = *str;
+        } else if (ctu_isprint(c)) {
+            *out++ = c;
         } else {
-            out += sprintf(out, "\\x%02x", *str & 0xFF);
+            out += sprintf(out, "\\x%02x", c & 0xFF);
         }
-        str += 1;
     }
     *out = '\0';
 
