@@ -17,6 +17,10 @@ type_t *type_boolean(const char *name) {
     return type_new(TYPE_BOOLEAN, name);
 }
 
+type_t *type_string(const char *name) {
+    return type_new(TYPE_STRING, name);
+}
+
 type_t *type_error(const char *error) {
     return type_new(TYPE_ERROR, error);
 }

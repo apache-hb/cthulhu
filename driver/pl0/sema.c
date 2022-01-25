@@ -16,9 +16,7 @@ void pl0_init(void) {
     STRING = type_string("string");
 
     FMT = hlir_literal(NULL, value_string(STRING, "%d\n"));
-
-    PRINT = hlir_new_function(NULL, "printf");
-    hlir_build_function(PRINT, NULL);
+    PRINT = hlir_import_function(NULL, "printf");
 }
 
 typedef enum {
@@ -157,7 +155,7 @@ static hlir_t *sema_loop(sema_t *sema, pl0_t *node) {
 }
 
 static hlir_t *sema_print(sema_t *sema, pl0_t *node) {
-    hlir_t *expr = sema_expr(sema, node->operand);
+    hlir_t *expr = sema_expr(sema, node->print);
     
     vector_t *args = vector_of(2);
     vector_set(args, 0, FMT);
@@ -217,8 +215,26 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node) {
     }
 }
 
-static hlir_t *sema_proc(sema_t *sema, pl0_t *node) {
-    return sema_vector(sema, node->node, node->body);
+static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node) {
+    size_t nlocals = vector_len(node->locals);
+    size_t sizes[TAG_MAX] = {
+        [TAG_VALUES] = nlocals
+    };
+
+    sema_t *nest = sema_new(sema, sema->reports, TAG_MAX, sizes);
+
+    for (size_t i = 0; i < nlocals; i++) {
+        pl0_t *local = vector_get(node->locals, i);
+        hlir_t *it = hlir_value(local->node, local->name, NULL);
+        hlir_add_local(hlir, it);
+        set_var(nest, TAG_VALUES, local->name, it);
+    }
+
+    hlir_t *body = sema_vector(nest, node->node, node->body);
+
+    sema_delete(nest);
+
+    hlir_build_function(hlir, body);
 }
 
 hlir_t *pl0_sema(reports_t *reports, void *node) {
@@ -280,8 +296,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     for (size_t i = 0; i < nprocs; i++) {
         pl0_t *it = vector_get(root->procs, i);
         hlir_t *hlir = vector_get(procs, i);
-        sema_set_data(sema, hlir); // set our data to the current function
-        hlir_build_function(hlir, sema_proc(sema, it));
+        sema_proc(sema, hlir, it);
     }
 
     hlir_t *mod = hlir_new_module(root->node, root->mod);

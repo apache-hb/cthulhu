@@ -23,3 +23,9 @@ value_t *value_digit(const type_t *type, mpz_t digit) {
     mpz_init_set(value->integer, digit);
     return value;
 }
+
+value_t *value_string(const type_t *type, const char *string) {
+    value_t *value = value_new(type);
+    value->string = string;
+    return value;
+}

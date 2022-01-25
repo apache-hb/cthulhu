@@ -148,6 +148,10 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (status != 0) { return status; }
     CTASSERT(hlir != NULL, "driver.sema == NULL");
 
+    check_module(reports, hlir);
+    status = end_reports(reports, SIZE_MAX, "module checking");
+    if (status != 0) { return status; }
+
 #if 0
     rename_module(reports, hlir, path, mod_name);
     status = end_reports(reports, SIZE_MAX, "renaming module");

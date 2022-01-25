@@ -23,6 +23,9 @@ typedef enum {
     HLIR_VALUE,
     HLIR_MODULE,
 
+    HLIR_IMPORT_FUNCTION,
+    HLIR_IMPORT_VALUE,
+
     HLIR_ERROR
 } hlir_type_t;
 
@@ -114,5 +117,10 @@ void hlir_build_function(hlir_t *self, hlir_t *body);
 hlir_t *hlir_new_value(const node_t *node, const char *name);
 void hlir_build_value(hlir_t *self, hlir_t *value);
 
+hlir_t *hlir_value(const node_t *node, const char *name, hlir_t *value);
+
 hlir_t *hlir_new_module(const node_t *node, const char *name);
 void hlir_build_module(hlir_t *self, vector_t *imports, vector_t *values, vector_t *functions);
+
+hlir_t *hlir_import_function(const node_t *node, const char *name);
+hlir_t *hlir_import_value(const node_t *node, const char *name);

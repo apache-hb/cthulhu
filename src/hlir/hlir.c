@@ -118,6 +118,12 @@ void hlir_build_value(hlir_t *self, hlir_t *value) {
     self->value = value;
 }
 
+hlir_t *hlir_value(const node_t *node, const char *name, hlir_t *value) {
+    hlir_t *self = hlir_new_value(node, name);
+    hlir_build_value(self, value);
+    return self;
+}
+
 // building modules
 
 hlir_t *hlir_new_module(const node_t *node, const char *name) {
@@ -128,4 +134,12 @@ void hlir_build_module(hlir_t *self, vector_t *imports, vector_t *values, vector
     self->imports = imports;
     self->globals = values;
     self->defines = functions;
+}
+
+hlir_t *hlir_import_function(const node_t *node, const char *name) {
+    return hlir_new_decl(node, name, &FAILURE, HLIR_IMPORT_FUNCTION);
+}
+
+hlir_t *hlir_import_value(const node_t *node, const char *name) {
+    return hlir_new_decl(node, name, &FAILURE, HLIR_IMPORT_VALUE);
 }

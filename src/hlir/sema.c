@@ -50,3 +50,66 @@ hlir_t *sema_get(sema_t *sema, size_t tag, const char *name) {
 map_t *sema_tag(sema_t *sema, size_t tag) {
     return vector_get(sema->decls, tag);
 }
+
+static void report_recursion(reports_t *reports, vector_t *stack) {
+    hlir_t *top = vector_tail(stack);
+    message_t *id = report(reports, ERROR, top->node, "recursive global variable computation");
+    for (size_t i = 0; i < vector_len(stack); i++) {
+        hlir_t *hlir = vector_get(stack, i);
+        report_append(id, hlir->node, "trace `%zu`", i);
+    }
+}
+
+static bool find_recursion(reports_t *reports, vector_t *vec, hlir_t *hlir) {
+    for (size_t i = 0; i < vector_len(vec); i++) {
+        hlir_t *item = vector_get(vec, i);
+        if (item != hlir) { continue; }
+
+        report_recursion(reports, vec);
+        return true;
+    }
+
+    return false;
+}
+
+static void check_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) {
+    if (hlir == NULL) { return; }
+    if (find_recursion(reports, *stack, hlir)) { return; }
+
+    vector_push(stack, hlir);
+
+    switch (hlir->type) {
+    case HLIR_NAME:
+        check_recursion(reports, stack, hlir->read);
+        break;
+    case HLIR_VALUE:
+        check_recursion(reports, stack, hlir->value);
+        break;
+    case HLIR_BINARY: case HLIR_COMPARE:
+        check_recursion(reports, stack, hlir->lhs);
+        check_recursion(reports, stack, hlir->rhs);
+        break;
+    case HLIR_CALL:
+        check_recursion(reports, stack, hlir->call);
+        for (size_t i = 0; i < vector_len(hlir->args); i++) {
+            hlir_t *arg = vector_get(hlir->args, i);
+            check_recursion(reports, stack, arg);
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    vector_drop(stack);
+}
+
+void check_module(reports_t *reports, hlir_t *mod) {
+    size_t nvars = vector_len(mod->globals);
+
+    for (size_t i = 0; i < nvars; i++) {
+        hlir_t *var = vector_get(mod->globals, i);
+        vector_t *vec = vector_new(16);
+        check_recursion(reports, &vec, var);
+    }
+}

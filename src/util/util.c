@@ -368,6 +368,10 @@ void vector_push(vector_t **vector, void *value) {
     VEC->data[VEC->used++] = value;
 }
 
+void vector_drop(vector_t **vector) {
+    VEC->used -= 1;
+}
+
 void *vector_pop(vector_t *vector) {
     return vector->data[--vector->used];
 }

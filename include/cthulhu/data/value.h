@@ -13,6 +13,7 @@ typedef struct value_t {
     union {
         mpz_t integer;
         bool boolean;
+        const char *string;
     };
 } value_t;
 
@@ -35,3 +36,5 @@ value_t *value_digit(const type_t *type, mpz_t digit);
  * @return value_t* the new literal
  */
 value_t *value_integer(const type_t *type, int digit);
+
+value_t *value_string(const type_t *type, const char *string);

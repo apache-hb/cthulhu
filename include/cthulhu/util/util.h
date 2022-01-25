@@ -179,6 +179,8 @@ vector_t *vector_init(void *value) ALLOC(vector_delete);
  */
 void vector_push(vector_t **vector, void *value) NOTNULL(1);
 
+void vector_drop(vector_t **vector) NONULL;
+
 /**
  * pop the last element from a vector.
  * calling on an empty vector is invalid.
