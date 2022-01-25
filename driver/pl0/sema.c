@@ -299,6 +299,13 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
         sema_proc(sema, hlir, it);
     }
 
+    if (root->entry) {
+        hlir_t *hlir = hlir_new_function(root->node, "main");
+        hlir_t *body = sema_stmt(sema, root->entry);
+        hlir_build_function(hlir, body);
+        vector_push(&procs, hlir);
+    }
+
     hlir_t *mod = hlir_new_module(root->node, root->mod);
     hlir_build_module(mod, vector_of(0), vector_join(consts, globals), procs);
     sema_delete(sema);
