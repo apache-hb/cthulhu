@@ -20,11 +20,15 @@
 #define FREE(ptr) free(ptr)
 
 void *ctu_malloc(size_t size) {
-    return MALLOC(size);
+    void *ptr = MALLOC(size);
+    CTASSERT(ptr != NULL, "ctu-malloc failed");
+    return ptr;
 }
 
 void *ctu_realloc(void *ptr, size_t size) {
-    return REALLOC(ptr, size);
+    void *data = REALLOC(ptr, size);
+    CTASSERT(data != NULL, "ctu-realloc failed");
+    return data;
 }
 
 void ctu_free(void *ptr) {

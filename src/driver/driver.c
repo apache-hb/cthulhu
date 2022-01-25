@@ -2,9 +2,6 @@
 
 #include "cthulhu/util/str.h"
 #include "cthulhu/ast/compile.h"
-#include "cthulhu/hlir/debug.h"
-#include "cthulhu/ssa/debug.h"
-#include "cthulhu/emit/emit.h"
 
 #include <stdio.h>
 #include <errno.h>
@@ -79,6 +76,7 @@ static const char *get_arg(reports_t *reports, int argc, const char **argv, cons
     return result;
 }
 
+#if 0
 static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, const char *mod) {
     if (mod != NULL && hlir->mod != NULL) {
         message_t *id = report(reports, WARNING, NULL, "module name already defined in source file, overriding this may not be desired");
@@ -93,6 +91,7 @@ static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, co
         }
     }
 }
+#endif
 
 void common_init(void) {
     init_gmp();
@@ -148,7 +147,8 @@ int common_main(int argc, const char **argv, driver_t driver) {
     status = end_reports(reports, SIZE_MAX, "semantic analysis");
     if (status != 0) { return status; }
     CTASSERT(hlir != NULL, "driver.sema == NULL");
-    
+
+#if 0
     rename_module(reports, hlir, path, mod_name);
     status = end_reports(reports, SIZE_MAX, "renaming module");
     if (status != 0) { return status; }
@@ -170,6 +170,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
     emit_ssa(reports, mod);
     status = end_reports(reports, SIZE_MAX, "emitting ssa module");
     if (status != 0) { return status; }
+#endif
 
     return status;
 }

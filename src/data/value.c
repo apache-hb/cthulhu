@@ -1,21 +1,25 @@
 #include "cthulhu/data/value.h"
 
-static value_t *value_new(const type_t *type, const node_t *node) {
-    CTASSERT(type != NULL, "values cannot have no type");
+#include "cthulhu/util/util.h"
+
+const type_t *typeof_value(const value_t *value) {
+    return value->type;
+}
+
+static value_t *value_new(const type_t *type) {
     value_t *value = ctu_malloc(sizeof(value_t));
     value->type = type;
-    value->node = node;
     return value;
 }
 
-value_t *value_string(const type_t *type, const node_t *node, const char *str) {
-    value_t *value = value_new(type, node);
-    value->string = str;
+value_t *value_integer(const type_t *type, int digit) {
+    value_t *value = value_new(type);
+    mpz_init_set_si(value->integer, digit);
     return value;
 }
 
-value_t *value_digit(const type_t *type, const node_t *node, const mpz_t digit) {
-    value_t *value = value_new(type, node);
-    mpz_init_set(value->digit, digit);
+value_t *value_digit(const type_t *type, mpz_t digit) {
+    value_t *value = value_new(type);
+    mpz_init_set(value->integer, digit);
     return value;
 }

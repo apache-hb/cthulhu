@@ -16,21 +16,13 @@ src = [
     # command line
     'src/driver/driver.c',
     
-    # data and type structures
+    # type and literals
     'src/data/type.c',
     'src/data/value.c',
-    
+
     # high level intermediate representation
-    'src/hlir/hlir.c',
-    'src/hlir/debug.c',
     'src/hlir/sema.c',
-
-    # low level intermediate representation
-    'src/ssa/ssa.c',
-    'src/ssa/debug.c',
-
-    # code serialization
-    'src/emit/emit-ssa.c',
+    'src/hlir/hlir.c',
 
     # ast data and flex/bison interop
     'src/ast/scan.c',

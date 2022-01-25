@@ -1,56 +1,48 @@
 #pragma once
 
-#include "cthulhu/ast/ast.h"
 #include "cthulhu/ast/ops.h"
-
-#include "cthulhu/data/type.h"
-
-#include <gmp.h>
+#include "cthulhu/ast/ast.h"
+#include "cthulhu/data/value.h"
 
 typedef enum {
-    /* literals */
-    HLIR_DIGIT, /// a digit
-    HLIR_STRING, /// a string literal
+    HLIR_LITERAL,
 
-    /* expressions */
-    HLIR_NAME, /// a reference to a name
-    HLIR_BINARY, /// a binary operation
-    HLIR_CALL, /// a call to a procedure
-    HLIR_COMPARE, /// a comparison operation
+    HLIR_NAME,
 
-    /* statements */
-    HLIR_ASSIGN, /// an assignment
-    HLIR_WHILE, /// a while loop
-    HLIR_STMTS, /// a sequence of statements
-    HLIR_BRANCH, /// a conditional branch
+    HLIR_BINARY,
+    HLIR_COMPARE,
 
-    /* declarations */
-    HLIR_VALUE, /// a value
-    HLIR_FUNCTION, /// a function
-    HLIR_DECLARE, /// forward declaration
-    HLIR_LOCAL, /// a local variable
+    HLIR_CALL,
 
-    HLIR_MODULE, /// a compilation unit
+    HLIR_STMTS,
+    HLIR_BRANCH,
+    HLIR_LOOP,
+    HLIR_ASSIGN,
 
-    HLIR_ERROR /// a compilation error
+    HLIR_FUNCTION,
+    HLIR_VALUE,
+    HLIR_MODULE,
+
+    HLIR_ERROR
 } hlir_type_t;
 
 typedef struct hlir_t {
-    hlir_type_t kind;
-    const node_t *node;
-    const type_t *type;
+    hlir_type_t type; // the type of this node
+    const node_t *node; // the node span of this hlir
+    const type_t *of; // the type this hlir evaluates to
 
     union {
-        /* a digit */
-        mpz_t digit;
+        struct hlir_t *read;
 
-        /* a string */
-        const char *string;
+        value_t *literal;
 
-        /* a reference to a name */
-        struct hlir_t *ident;
+        vector_t *stmts;
 
-        /* a binary operation. lhs op rhs */
+        struct {
+            struct hlir_t *call;
+            vector_t *args;
+        };
+
         struct {
             struct hlir_t *lhs;
             struct hlir_t *rhs;
@@ -61,21 +53,10 @@ typedef struct hlir_t {
             };
         };
 
-        /* a call to a procedure */
-        struct {
-            /* the procedure to call */
-            struct hlir_t *call;
-            /* the arguments to pass */
-            vector_t *args;
-        };
-
-        /* an assignment. lhs = rhs */
         struct {
             struct hlir_t *dst;
             struct hlir_t *src;
         };
-
-        vector_t *stmts;
 
         struct {
             struct hlir_t *cond;
@@ -83,66 +64,55 @@ typedef struct hlir_t {
             struct hlir_t *other;
         };
 
-        /* any named declaration */
         struct {
-            /* the name of the declaration */
+            /* the name of this declaration */
             const char *name;
 
-            union {
-                /* the type this is expected to take when complete */
-                hlir_type_t expect;
+            /* the local variables if this is function */
+            vector_t *locals;
 
-                /* the value this evaluates to */
+            union {
+                /* the body of this function */
+                struct hlir_t *body;
+
+                /* the initial value */
                 struct hlir_t *value;
 
-                /* the function this evaluates to */
                 struct {
-                    /* the body of the function, a list of statements */
-                    vector_t *body;
+                    vector_t *imports;
+                    vector_t *defines;
+                    vector_t *globals;
                 };
             };
         };
 
-        /* HLIR_MODULE */
-        struct {
-            /* the module name */
-            const char *mod;
-
-            /* all symbols this module imports */
-            vector_t *imports;
-
-            /* all variables defined in this module */
-            vector_t *globals;
-
-            /* all functions defined in this module */
-            vector_t *defines;
-        };
+        const char *error;
     };
-
-    void *data;
 } hlir_t;
 
-hlir_t *hlir_digit(const node_t *node, const type_t *type, mpz_t digit);
-hlir_t *hlir_int(const node_t *node, const type_t *type, uintmax_t digit);
-hlir_t *hlir_string(const node_t *node, const type_t *type, const char *str);
+const type_t *typeof_hlir(const hlir_t *self);
 
-hlir_t *hlir_name(const node_t *node, const type_t *type, hlir_t *hlir);
+hlir_t *hlir_error(const node_t *node, const char *error);
 
-hlir_t *hlir_binary(const node_t *node, const type_t *type, hlir_t *lhs, hlir_t *rhs, binary_t op);
-hlir_t *hlir_call(const node_t *node, const type_t *type, hlir_t *function, vector_t *args);
+hlir_t *hlir_literal(const node_t *node, value_t *value);
+hlir_t *hlir_name(const node_t *node, hlir_t *read);
 
-hlir_t *hlir_compare(const node_t *node, const type_t *type, hlir_t *lhs, hlir_t *rhs, compare_t op);
+hlir_t *hlir_binary(const node_t *node, const type_t *type, binary_t binary, hlir_t *lhs, hlir_t *rhs);
+hlir_t *hlir_compare(const node_t *node, const type_t *type, compare_t compare, hlir_t *lhs, hlir_t *rhs);
 
-hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src);
-hlir_t *hlir_while(const node_t *node, hlir_t *cond, hlir_t *body);
+hlir_t *hlir_call(const node_t *node, hlir_t *call, vector_t *args);
+
 hlir_t *hlir_stmts(const node_t *node, vector_t *stmts);
 hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other);
+hlir_t *hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other);
+hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src);
 
-hlir_t *hlir_value(const node_t *node, const type_t *type, const char *name, hlir_t *value);
-hlir_t *hlir_local(const node_t *node, const type_t *type, const char *name, hlir_t *value);
-hlir_t *hlir_function(const node_t *node, const type_t *type, const char *name, vector_t *body);
+hlir_t *hlir_new_function(const node_t *node, const char *name);
+void hlir_add_local(hlir_t *self, hlir_t *local);
+void hlir_build_function(hlir_t *self, hlir_t *body);
 
-hlir_t *hlir_declare(const node_t *node, const char *name, hlir_type_t expect);
+hlir_t *hlir_new_value(const node_t *node, const char *name);
+void hlir_build_value(hlir_t *self, hlir_t *value);
 
-hlir_t *hlir_module(const node_t *node, const char *mod, vector_t *imports, vector_t *globals, vector_t *defines);
-hlir_t *hlir_error(const node_t *node, const type_t *type);
+hlir_t *hlir_new_module(const node_t *node, const char *name);
+void hlir_build_module(hlir_t *self, vector_t *imports, vector_t *values, vector_t *functions);

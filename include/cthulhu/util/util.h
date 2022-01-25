@@ -17,26 +17,39 @@ char *ctu_strdup(const char *str) NONULL ALLOC(ctu_free);
 char *ctu_strndup(const char *str, size_t len) NONULL ALLOC(ctu_free);
 void *ctu_memdup(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 
+/**
+ * @brief init gmp with our own allocation functions
+ */
 void init_gmp(void);
 
+/**
+ * @brief box a value onto the heap from the stack
+ * 
+ * @param ptr the value to box
+ * @param size the size of the value
+ * 
+ * @return the boxed value
+ * 
+ * @see #MACRO(box) should be used to use this
+ */
 void *ctu_box(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 #define BOX(name) ctu_box(&name, sizeof(name))
 
+typedef struct bucket_t {
+    const char *key; /// can actually be any pointer but we keep it as a const char* for convenience
+    void *value; /// any pointer value
+    struct bucket_t *next; /// the next bucket in the chain
+} bucket_t;
+
 /**
- * a hashmap of strings to pointers
+ * a hashmap
  * 
  * freeing the map will not free the keys or the values.
  * these need to be freed beforehand by the owner of the container.
  */
-typedef struct bucket_t {
-    const char *key;
-    void *value;
-    struct bucket_t *next;
-} bucket_t;
-
 typedef struct {
-    size_t size;
-    bucket_t data[];
+    size_t size; /// the number of buckets in the toplevel
+    bucket_t data[]; /// the buckets
 } map_t;
 
 typedef void(*map_apply_t)(void *user, void *value);
@@ -120,9 +133,9 @@ void *map_ptr_get(map_t *map, const void *key) HOT NOTNULL(1, 2);
  * only the vector itself is freed.
  */
 typedef struct {
-    size_t size;
-    size_t used;
-    void *data[];
+    size_t size; /// the total number of allocated elements
+    size_t used; /// the number of elements in use
+    void *data[]; /// the data
 } vector_t;
 
 /**
@@ -204,6 +217,13 @@ void *vector_get(const vector_t *vector, size_t index) CONSTFN NOTNULL(1);
  */
 void *vector_tail(const vector_t *vector) CONSTFN NONULL;
 
+/**
+ * @brief get the first element from a vector.
+ * calling on an empty vector is invalid.
+ * 
+ * @param vector the vector to get from
+ * @return void* the value of the first element
+ */
 void *vector_head(const vector_t *vector) CONSTFN NONULL;
 
 /**
@@ -231,7 +251,22 @@ size_t vector_len(const vector_t *vector) CONSTFN NONULL;
  */
 vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) NONULL ALLOC(vector_delete);
 
+/**
+ * @brief create a new vector given a front and back index
+ * 
+ * @param vector the vector to take a slice of
+ * @param start the first index to include
+ * @param end  the last index to include
+ * @return vector_t* the new vector
+ */
 vector_t *vector_slice(vector_t *vector, size_t start, size_t end) NONULL;
+
+/**
+ * @brief collect a vector of vectors into a single vector
+ * 
+ * @param vectors the vectors
+ * @return vector_t* the merged vector
+ */
 vector_t *vector_collect(vector_t *vectors);
 
 /**
