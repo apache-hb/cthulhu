@@ -80,7 +80,7 @@ hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *othe
 hlir_t *hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other) {
     hlir_t *self = hlir_new(node, &FAILURE, HLIR_LOOP);
     self->cond = cond;
-    self->body = body;
+    self->then = body;
     self->other = other;
     return self;
 }

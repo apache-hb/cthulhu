@@ -149,9 +149,9 @@ int common_main(int argc, const char **argv, driver_t driver) {
     status = end_reports(reports, SIZE_MAX, "module checking");
     if (status != 0) { return status; }
 
-    if (debug_hlir) {
-        emit_tree(hlir);
-    }
+    emit_tree(reports, hlir);
+    status = end_reports(reports, SIZE_MAX, "emitting");
+    if (status != 0) { return status; }
 
 #if 0
 
