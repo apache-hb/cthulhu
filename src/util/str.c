@@ -121,33 +121,40 @@ static bool ctu_isprint(char c) {
     return isprint(c) || c == 0x0A;
 }
 
+static size_t normlen(char c) {
+    if (c == '\n') {
+        return 2;
+    } else if (ctu_isprint(c)) {
+        return 1;
+    } else {
+        return 4;
+    }
+}
+
+static size_t normstr(char *out, char c) {
+    if (c == '\n') {
+        out[0] = '\\';
+        out[1] = 'n';
+        return 2;
+    } else if (ctu_isprint(c)) {
+        out[0] = c;
+        return 1;
+    } else {
+        return sprintf(out, "\\x%02x", c & 0xFF);
+    }
+}
+
 char *strnorm(const char *str) {
     size_t len = 0;
     const char *temp = str;
     while (*temp != '\0') {
-        char c = *temp++;
-
-        if (c == '\n') {
-            len += 2;
-        } else if (ctu_isprint(c)) {
-            len += 1;
-        } else {
-            len += 4;
-        }
+        len += normlen(*temp++);
     }
 
     char *buf = ctu_malloc(len + 1);
     char *out = buf;
     while (*str != '\0') {
-        char c = *str++ & 0xFF;
-        if (c == '\n') {
-            *out++ = '\\';
-            *out++ = 'n';
-        } else if (ctu_isprint(c)) {
-            *out++ = c;
-        } else {
-            out += sprintf(out, "\\x%02x", c & 0xFF);
-        }
+        out += normstr(out, *str++);
     }
     *out = '\0';
 
@@ -157,17 +164,13 @@ char *strnorm(const char *str) {
 char *nstrnorm(const char *str, size_t len) {
     size_t outlen = 1;
     for (size_t i = 0; i < len; i++) {
-        outlen += (ctu_isprint(str[i]) ? 1 : 4);
+        outlen += normlen(str[i]);
     }
 
     char *buf = ctu_malloc(outlen + 1);
     char *out = buf;
     for (size_t i = 0; i < len; i++) {
-        if (ctu_isprint(str[i])) {
-            *out++ = str[i];
-        } else {
-            out += sprintf(out, "\\x%02x", str[i] & 0xFF);
-        }
+        out += normstr(out, str[i]);
     }
 
     *out = '\0';
@@ -202,7 +205,6 @@ bool streq(const char *lhs, const char *rhs) {
        with interned strings */
     return lhs == rhs || strcmp(lhs, rhs) == 0;
 }
-
 
 char *strslice(const char *str, size_t start, size_t end) {
     size_t bytes = end - start;

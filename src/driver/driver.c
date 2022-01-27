@@ -2,6 +2,8 @@
 
 #include "cthulhu/util/str.h"
 #include "cthulhu/ast/compile.h"
+#include "cthulhu/hlir/sema.h"
+#include "cthulhu/emit/emit.h"
 
 #include <stdio.h>
 #include <errno.h>
@@ -76,22 +78,16 @@ static const char *get_arg(reports_t *reports, int argc, const char **argv, cons
     return result;
 }
 
-#if 0
 static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, const char *mod) {
-    if (mod != NULL && hlir->mod != NULL) {
+    if (mod != NULL && hlir->name != NULL) {
         message_t *id = report(reports, WARNING, NULL, "module name already defined in source file, overriding this may not be desired");
-        report_note(id, "redefining `%s` to `%s`", hlir->mod, mod);
+        report_note(id, "redefining `%s` to `%s`", hlir->name, mod);
     }
 
-    if (hlir->mod == NULL) {
-        if (mod != NULL) {
-            hlir->mod = strdup(mod);
-        } else {
-            hlir->mod = ctu_filename(path);
-        }
+    if (hlir->name == NULL) {
+        hlir->name = (mod != NULL) ? ctu_strdup(mod) : ctu_filename(path);
     }
 }
-#endif
 
 void common_init(void) {
     init_gmp();
@@ -148,18 +144,16 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (status != 0) { return status; }
     CTASSERT(hlir != NULL, "driver.sema == NULL");
 
+    rename_module(reports, hlir, path, mod_name);
     check_module(reports, hlir);
     status = end_reports(reports, SIZE_MAX, "module checking");
     if (status != 0) { return status; }
 
-#if 0
-    rename_module(reports, hlir, path, mod_name);
-    status = end_reports(reports, SIZE_MAX, "renaming module");
-    if (status != 0) { return status; }
-
     if (debug_hlir) {
-        hlir_debug(hlir);
+        emit_tree(hlir);
     }
+
+#if 0
 
     ssa_t *ssa = build_ssa(reports);
     module_t *mod = build_module(ssa, hlir);

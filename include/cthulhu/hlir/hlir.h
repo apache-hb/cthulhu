@@ -85,6 +85,7 @@ typedef struct hlir_t {
                     vector_t *imports;
                     vector_t *defines;
                     vector_t *globals;
+                    vector_t *types;
                 };
             };
         };
@@ -110,17 +111,27 @@ hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *othe
 hlir_t *hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other);
 hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src);
 
-hlir_t *hlir_new_function(const node_t *node, const char *name);
+hlir_t *hlir_new_function(const node_t *node, const char *name, const type_t *type);
 void hlir_add_local(hlir_t *self, hlir_t *local);
 void hlir_build_function(hlir_t *self, hlir_t *body);
 
-hlir_t *hlir_new_value(const node_t *node, const char *name);
+hlir_t *hlir_new_value(const node_t *node, const char *name, const type_t *type);
 void hlir_build_value(hlir_t *self, hlir_t *value);
 
-hlir_t *hlir_value(const node_t *node, const char *name, hlir_t *value);
+hlir_t *hlir_value(const node_t *node, const char *name, const type_t *type, hlir_t *value);
 
 hlir_t *hlir_new_module(const node_t *node, const char *name);
-void hlir_build_module(hlir_t *self, vector_t *imports, vector_t *values, vector_t *functions);
 
-hlir_t *hlir_import_function(const node_t *node, const char *name);
-hlir_t *hlir_import_value(const node_t *node, const char *name);
+/**
+ * @brief finalize a module and provide it with data
+ * 
+ * @param self the module to finish
+ * @param imports all imported symbols
+ * @param values all globals defined in this module
+ * @param functions all functions defined in this module
+ * @param types all types defined in this module
+ */
+void hlir_build_module(hlir_t *self, vector_t *imports, vector_t *values, vector_t *functions, vector_t *types);
+
+hlir_t *hlir_import_function(const node_t *node, const char *name, const type_t *type);
+hlir_t *hlir_import_value(const node_t *node, const char *name, const type_t *type);

@@ -5,13 +5,13 @@
 #include "cthulhu/hlir/hlir.h"
 
 typedef void*(*parse_t)(scan_t*);
-typedef hlir_t*(*sema_t)(reports_t*, void*);
+typedef hlir_t*(*analyze_t)(reports_t*, void*);
 
 typedef struct {
     const char *name;
     const char *version;
     parse_t parse;
-    sema_t sema;
+    analyze_t sema;
 } driver_t;
 
 void common_init(void);

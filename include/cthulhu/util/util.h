@@ -105,7 +105,6 @@ void map_set(map_t *map, const char *key, void *value) HOT NOTNULL(1, 2);
  */
 void map_apply(map_t *map, void *user, map_apply_t func) NOTNULL(1, 3);
 
-
 /**
  * @brief set a field using a raw pointer rather than a string key
  * 
@@ -113,7 +112,7 @@ void map_apply(map_t *map, void *user, map_apply_t func) NOTNULL(1, 3);
  * @param key the key to set the value for
  * @param value the value to set
  */
-void map_ptr_set(map_t *map, const void *key, void *value) HOT NOTNULL(1, 2);
+void map_set_ptr(map_t *map, const void *key, void *value) HOT NOTNULL(1, 2);
 
 /**
  * @brief get a field from a raw pointer rather than a string key
@@ -123,7 +122,7 @@ void map_ptr_set(map_t *map, const void *key, void *value) HOT NOTNULL(1, 2);
  * 
  * @return the value for the key or NULL if the key is not found
  */
-void *map_ptr_get(map_t *map, const void *key) HOT NOTNULL(1, 2);
+void *map_get_ptr(map_t *map, const void *key) HOT NOTNULL(1, 2);
 
 /**
  * a vector of non-owning pointers
@@ -179,6 +178,11 @@ vector_t *vector_init(void *value) ALLOC(vector_delete);
  */
 void vector_push(vector_t **vector, void *value) NOTNULL(1);
 
+/**
+ * @brief remove the last element from a vector. invalid on empty vectors
+ * 
+ * @param vector the vector to drop an item from
+ */
 void vector_drop(vector_t **vector) NONULL;
 
 /**

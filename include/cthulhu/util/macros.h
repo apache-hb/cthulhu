@@ -19,6 +19,16 @@
 #   define POISON(...)
 #endif
 
+#if defined(__clang__)
+#   define ASSUME(expr) __builtin_assume(expr)
+#elif defined(__GNUC__)
+#   define ASSUME(expr) do { if (!(expr)) __builtin_unreachable(); } while (0)
+#elif defined(_MSC_VER)
+#   define ASSUME(expr) __assume(expr)
+#else
+#   define ASSUME(expr)
+#endif
+
 #if defined(_WIN32)
 #   define CTU_WINDOWS 1
 #elif defined(__linux__)

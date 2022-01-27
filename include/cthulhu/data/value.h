@@ -1,10 +1,7 @@
 #pragma once
 
-#include "cthulhu/util/macros.h"
-
 #include "type.h"
 
-#include <stdbool.h>
 #include <gmp.h>
 
 typedef struct value_t {

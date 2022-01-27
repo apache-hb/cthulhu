@@ -171,18 +171,6 @@ HOT static void *entry_get(const bucket_t *entry, const char *key) {
     return CTU_NO_VALUE;
 }
 
-HOT static void *entry_get_ptr(const bucket_t *entry, const void *key) {
-    if (entry->key == key) {
-        return entry->value;
-    }
-
-    if (entry->next) {
-        return entry_get(entry->next, key);
-    }
-
-    return CTU_NO_VALUE;
-}
-
 static size_t ptrhash(uintptr_t key) {
     key = (~key) + (key << 18);
     key ^= key >> 31;
@@ -199,6 +187,8 @@ static bucket_t *get_bucket(map_t *map, size_t hash) {
     return entry;
 }
 
+
+
 /* find which bucket a key should be in */
 HOT static bucket_t *map_bucket(map_t *map, const char *key) {
     size_t hash = strhash(key);
@@ -210,6 +200,44 @@ HOT static bucket_t *map_bucket_ptr(map_t *map, const void *key) {
     return get_bucket(map, hash);
 }
 
+HOT static void *entry_get_ptr(const bucket_t *entry, const void *key) {
+    if (entry->key == key) {
+        return entry->value;
+    }
+
+    if (entry->next) {
+        return entry_get(entry->next, key);
+    }
+
+    return CTU_NO_VALUE;
+}
+
+void map_set_ptr(map_t *map, const void *key, void *value) {
+    bucket_t *entry = map_bucket_ptr(map, key);
+
+    while (entry != CTU_EMPTY_CHAIN) {
+        if (entry->key == CTU_EMPTY_KEY) {
+            entry->key = key;
+            entry->value = value;
+            return;
+        } else if (entry->key == key) {
+            entry->value = value;
+            return;
+        } else {
+            entry->next = bucket_new(key, value);
+            return;
+        }
+
+        entry = entry->next;
+    }
+}
+
+void *map_get_ptr(map_t *map, const void *key) {
+    bucket_t *bucket = map_bucket_ptr(map, key);
+    return entry_get_ptr(bucket, key);
+}
+
+
 static void clear_keys(bucket_t *buckets, size_t size) {
     for (size_t i = 0; i < size; i++) {
         buckets[i].key = CTU_EMPTY_KEY;
@@ -220,6 +248,8 @@ static void clear_keys(bucket_t *buckets, size_t size) {
 // map public api
 
 map_t *map_new(map_size_t size) {
+    ASSUME(size > 0);
+
     map_t *map = ctu_malloc(sizeof_map(size));
 
     map->size = size;
@@ -252,31 +282,6 @@ void map_set(map_t *map, const char *key, void *value) {
         
         entry = entry->next;
     }
-}
-
-void map_ptr_set(map_t *map, const void *key, void *value) {
-    bucket_t *entry = map_bucket_ptr(map, key);
-
-    while (entry != CTU_EMPTY_CHAIN) {
-        if (entry->key == CTU_EMPTY_KEY) {
-            entry->key = key;
-            entry->value = value;
-            return;
-        } else if (entry->key == key) {
-            entry->value = value;
-            return;
-        } else {
-            entry->next = bucket_new(key, value);
-            return;
-        }
-
-        entry = entry->next;
-    }
-}
-
-void *map_ptr_get(map_t *map, const void *key) {
-    bucket_t *bucket = map_bucket_ptr(map, key);
-    return entry_get_ptr(bucket, key);
 }
 
 void map_apply(map_t *map, void *user, map_apply_t func) {

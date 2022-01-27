@@ -6,6 +6,8 @@
 static type_t *INTEGER;
 static type_t *BOOLEAN;
 static type_t *STRING;
+static type_t *VOID;
+static type_t *SIGNATURE;
 
 static hlir_t *PRINT;
 static hlir_t *FMT;
@@ -15,8 +17,11 @@ void pl0_init(void) {
     BOOLEAN = type_boolean("boolean");
     STRING = type_string("string");
 
+    VOID = type_void("void");
+    SIGNATURE = type_signature("signature", VOID, vector_of(0));
+
     FMT = hlir_literal(NULL, value_string(STRING, "%d\n"));
-    PRINT = hlir_import_function(NULL, "printf");
+    PRINT = hlir_import_function(NULL, "printf", SIGNATURE);
 }
 
 typedef enum {
@@ -225,7 +230,7 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node) {
 
     for (size_t i = 0; i < nlocals; i++) {
         pl0_t *local = vector_get(node->locals, i);
-        hlir_t *it = hlir_value(local->node, local->name, NULL);
+        hlir_t *it = hlir_value(local->node, local->name, INTEGER, NULL);
         hlir_add_local(hlir, it);
         set_var(nest, TAG_VALUES, local->name, it);
     }
@@ -260,21 +265,21 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     for (size_t i = 0; i < nconsts; i++) {
         pl0_t *it = vector_get(root->consts, i);
-        hlir_t *hlir = hlir_new_value(it->node, it->name);
+        hlir_t *hlir = hlir_new_value(it->node, it->name, INTEGER);
         set_var(sema, TAG_CONSTS, it->name, hlir);
         vector_set(consts, i, hlir);
     }
 
     for (size_t i = 0; i < nglobals; i++) {
         pl0_t *it = vector_get(root->globals, i);
-        hlir_t *hlir = hlir_new_value(it->node, it->name);
+        hlir_t *hlir = hlir_new_value(it->node, it->name, INTEGER);
         set_var(sema, TAG_VALUES, it->name, hlir);
         vector_set(globals, i, hlir);
     }
 
     for (size_t i = 0; i < nprocs; i++) {
         pl0_t *it = vector_get(root->procs, i);
-        hlir_t *hlir = hlir_new_function(it->node, it->name);
+        hlir_t *hlir = hlir_new_function(it->node, it->name, SIGNATURE);
         set_proc(sema, it->name, hlir);
         vector_set(procs, i, hlir);
     }
@@ -300,14 +305,21 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     }
 
     if (root->entry) {
-        hlir_t *hlir = hlir_new_function(root->node, "main");
+        hlir_t *hlir = hlir_new_function(root->node, root->mod, SIGNATURE);
         hlir_t *body = sema_stmt(sema, root->entry);
         hlir_build_function(hlir, body);
         vector_push(&procs, hlir);
     }
 
+    vector_t *types = vector_new(5);
+    vector_push(&types, INTEGER);
+    vector_push(&types, BOOLEAN);
+    vector_push(&types, STRING);
+    vector_push(&types, VOID);
+    vector_push(&types, SIGNATURE);
+
     hlir_t *mod = hlir_new_module(root->node, root->mod);
-    hlir_build_module(mod, vector_of(0), vector_join(consts, globals), procs);
+    hlir_build_module(mod, vector_init(PRINT), vector_join(consts, globals), procs, types);
     sema_delete(sema);
     return mod;
 }

@@ -1,6 +1,6 @@
 #include "cthulhu/hlir/hlir.h"
 
-static const type_t FAILURE = { .type = TYPE_ERROR, .name = "INTERNAL FAILURE" };
+static const type_t FAILURE = { .type = TYPE_ERROR, .name = "INTERNAL FAILURE", NULL };
 
 static hlir_t *hlir_new(const node_t *node, const type_t *of, hlir_type_t type) {
     hlir_t *self = ctu_malloc(sizeof(hlir_t));
@@ -94,8 +94,8 @@ hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src) {
 
 // building functions
 
-hlir_t *hlir_new_function(const node_t *node, const char *name) {
-    hlir_t *hlir = hlir_new_decl(node, name, &FAILURE, HLIR_FUNCTION);
+hlir_t *hlir_new_function(const node_t *node, const char *name, const type_t *type) {
+    hlir_t *hlir = hlir_new_decl(node, name, type, HLIR_FUNCTION);
     hlir->locals = vector_new(0);
     return hlir;
 }
@@ -110,16 +110,16 @@ void hlir_build_function(hlir_t *self, hlir_t *body) {
 
 // building values
 
-hlir_t *hlir_new_value(const node_t *node, const char *name) {
-    return hlir_new_decl(node, name, &FAILURE, HLIR_VALUE);
+hlir_t *hlir_new_value(const node_t *node, const char *name, const type_t *type) {
+    return hlir_new_decl(node, name, type, HLIR_VALUE);
 }
 
 void hlir_build_value(hlir_t *self, hlir_t *value) {
     self->value = value;
 }
 
-hlir_t *hlir_value(const node_t *node, const char *name, hlir_t *value) {
-    hlir_t *self = hlir_new_value(node, name);
+hlir_t *hlir_value(const node_t *node, const char *name, const type_t *type, hlir_t *value) {
+    hlir_t *self = hlir_new_value(node, name, type);
     hlir_build_value(self, value);
     return self;
 }
@@ -130,16 +130,17 @@ hlir_t *hlir_new_module(const node_t *node, const char *name) {
     return hlir_new_decl(node, name, &FAILURE, HLIR_MODULE);
 }
 
-void hlir_build_module(hlir_t *self, vector_t *imports, vector_t *values, vector_t *functions) {
+void hlir_build_module(hlir_t *self, vector_t *imports, vector_t *values, vector_t *functions, vector_t *types) {
     self->imports = imports;
     self->globals = values;
     self->defines = functions;
+    self->types = types;
 }
 
-hlir_t *hlir_import_function(const node_t *node, const char *name) {
-    return hlir_new_decl(node, name, &FAILURE, HLIR_IMPORT_FUNCTION);
+hlir_t *hlir_import_function(const node_t *node, const char *name, const type_t *type) {
+    return hlir_new_decl(node, name, type, HLIR_IMPORT_FUNCTION);
 }
 
-hlir_t *hlir_import_value(const node_t *node, const char *name) {
-    return hlir_new_decl(node, name, &FAILURE, HLIR_IMPORT_VALUE);
+hlir_t *hlir_import_value(const node_t *node, const char *name, const type_t *type) {
+    return hlir_new_decl(node, name, type, HLIR_IMPORT_VALUE);
 }
