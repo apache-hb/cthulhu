@@ -149,8 +149,12 @@ int common_main(int argc, const char **argv, driver_t driver) {
     status = end_reports(reports, SIZE_MAX, "module checking");
     if (status != 0) { return status; }
 
-    emit_tree(reports, hlir);
-    status = end_reports(reports, SIZE_MAX, "emitting");
+    json_emit_tree(reports, hlir);
+    status = end_reports(reports, SIZE_MAX, "emitting json");
+    if (status != 0) { return status; }
+
+    c89_emit_tree(reports, hlir);
+    status = end_reports(reports, SIZE_MAX, "emitting c89");
     if (status != 0) { return status; }
 
 #if 0

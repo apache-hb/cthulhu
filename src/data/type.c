@@ -60,3 +60,7 @@ bool type_is_void(const type_t *type) {
 bool type_is_signature(const type_t *type) {
     return type_is(type, TYPE_SIGNATURE);
 }
+
+const char *type_get_name(const type_t *type) {
+    return type->name;
+}

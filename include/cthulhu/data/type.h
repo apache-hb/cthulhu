@@ -42,3 +42,5 @@ bool type_is_boolean(const type_t *type);
 bool type_is_string(const type_t *type);
 bool type_is_void(const type_t *type);
 bool type_is_signature(const type_t *type);
+
+const char *type_get_name(const type_t *type);

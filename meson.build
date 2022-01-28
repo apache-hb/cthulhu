@@ -24,8 +24,9 @@ src = [
     'src/hlir/sema.c',
     'src/hlir/hlir.c',
 
-    # json output
-    'src/emit/tree.c',
+    # tree output
+    'src/emit/json.c',
+    'src/emit/c89.c',
 
     # ast data and flex/bison interop
     'src/ast/scan.c',

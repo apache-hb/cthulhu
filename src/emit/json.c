@@ -351,7 +351,7 @@ static cJSON *emit_function(emit_t *emit, size_t idx, const hlir_t *hlir) {
     return json;
 }
 
-void emit_tree(reports_t *reports, const hlir_t *hlir) {
+void json_emit_tree(reports_t *reports, const hlir_t *hlir) {
     size_t ntypes = vector_len(hlir->types);
     size_t nglobals = vector_len(hlir->globals);
     size_t nfunctions = vector_len(hlir->defines);
