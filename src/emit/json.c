@@ -58,6 +58,7 @@ static cJSON *emit_type(emit_t *emit, size_t idx, const type_t *hlir) {
             cJSON_AddItemToArray(params, cJSON_CreateNumber(get_type(emit, param)));
         }
         cJSON_AddItemToObject(type, "params", params);
+        cJSON_AddBoolToObject(type, "variadic", hlir->variadic);
     }
 
     add_location(type, hlir->node);

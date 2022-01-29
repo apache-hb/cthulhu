@@ -21,6 +21,9 @@ static void print_help(const char **argv) {
     printf("  -m, --module      : set module output name\n");
     printf("  -dh, --debug-hlir : print HLIR debug tree\n");
     printf("  -ds, --debug-ssa  : print SSA debug tree\n");
+    printf("  -out, --output    : set output format\n");
+    printf("                    | options: json, c89\n");
+    printf("                    | default: c89\n");
 }
 
 static bool find_arg(int argc, const char **argv, const char *arg, const char *brief) {
@@ -115,6 +118,8 @@ int common_main(int argc, const char **argv, driver_t driver) {
     bool debug_hlir = find_arg(argc, argv, "--debug-hlir","-dh");
     bool debug_ssa = find_arg(argc, argv, "--debug-ssa", "-ds");
     const char *mod_name = get_arg(reports, argc, argv, "--module", "-m");
+    const char *out = get_arg(reports, argc, argv, "--output", "-out");
+    if (out == NULL) { out = "c89"; }
 
     const char *path = argv[1];
 
@@ -149,13 +154,18 @@ int common_main(int argc, const char **argv, driver_t driver) {
     status = end_reports(reports, SIZE_MAX, "module checking");
     if (status != 0) { return status; }
 
-    json_emit_tree(reports, hlir);
-    status = end_reports(reports, SIZE_MAX, "emitting json");
-    if (status != 0) { return status; }
-
-    c89_emit_tree(reports, hlir);
-    status = end_reports(reports, SIZE_MAX, "emitting c89");
-    if (status != 0) { return status; }
+    if (streq("json", out)) {
+        json_emit_tree(reports, hlir);
+        status = end_reports(reports, SIZE_MAX, "emitting json");
+        if (status != 0) { return status; }
+    } else if (streq("c89", out)) {
+        c89_emit_tree(reports, hlir);
+        status = end_reports(reports, SIZE_MAX, "emitting c89");
+        if (status != 0) { return status; }
+    } else {
+        report(reports, ERROR, NULL, "unknown output format: %s", out);
+        status = end_reports(reports, SIZE_MAX, "command line parsing");
+    }
 
 #if 0
 

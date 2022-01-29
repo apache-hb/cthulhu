@@ -26,10 +26,11 @@ type_t *type_void(const char *name) {
     return type_new(TYPE_VOID, name, NULL);
 }
 
-type_t *type_signature(const char *name, type_t *result, vector_t *params) {
+type_t *type_signature(const char *name, type_t *result, vector_t *params, bool variadic) {
     type_t *type = type_new(TYPE_SIGNATURE, name, NULL);
     type->result = result;
     type->params = params;
+    type->variadic = variadic;
     return type;
 }
 

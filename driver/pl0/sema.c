@@ -16,12 +16,14 @@ void pl0_init(void) {
     INTEGER = type_integer("integer");
     BOOLEAN = type_boolean("boolean");
     STRING = type_string("string");
-
     VOID = type_void("void");
-    SIGNATURE = type_signature("signature", VOID, vector_of(0));
+
+    SIGNATURE = type_signature("signature", VOID, vector_of(0), false);
+
+    type_t *PRINTF = type_signature("printf", INTEGER, vector_init(STRING), true);
 
     FMT = hlir_literal(NULL, value_string(STRING, "%d\n"));
-    PRINT = hlir_import_function(NULL, "printf", SIGNATURE);
+    PRINT = hlir_import_function(NULL, "printf", PRINTF);
 }
 
 typedef enum {
@@ -52,6 +54,12 @@ static hlir_t *get_var(sema_t *sema, const char *name) {
 }
 
 static void set_proc(sema_t *sema, const char *name, hlir_t *proc) {
+    /* kinda hacky but works well enough */
+    if (streq(name, "main")) {
+        report(sema->reports, ERROR, proc->node, "main is a reserved name");
+        return;
+    }
+
     hlir_t *other = sema_get(sema, TAG_PROCS, name);
     if (other != NULL) {
         report_pl0_shadowing(sema->reports, name, other->node, proc->node);
@@ -305,7 +313,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     }
 
     if (root->entry) {
-        hlir_t *hlir = hlir_new_function(root->node, root->mod, SIGNATURE);
+        hlir_t *hlir = hlir_new_function(root->node, "main", SIGNATURE);
         hlir_t *body = sema_stmt(sema, root->entry);
         hlir_build_function(hlir, body);
         vector_push(&procs, hlir);
@@ -316,7 +324,6 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     vector_push(&types, BOOLEAN);
     vector_push(&types, STRING);
     vector_push(&types, VOID);
-    vector_push(&types, SIGNATURE);
 
     hlir_t *mod = hlir_new_module(root->node, root->mod);
     hlir_build_module(mod, vector_init(PRINT), vector_join(consts, globals), procs, types);

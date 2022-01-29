@@ -25,6 +25,7 @@ typedef struct type_t {
         struct {
             struct type_t *result;
             vector_t *params;
+            bool variadic;
         };
     };
 } type_t;
@@ -33,7 +34,7 @@ type_t *type_integer(const char *name);
 type_t *type_boolean(const char *name);
 type_t *type_string(const char *name);
 type_t *type_void(const char *name);
-type_t *type_signature(const char *name, type_t *result, vector_t *params);
+type_t *type_signature(const char *name, type_t *result, vector_t *params, bool variadic);
 
 type_t *type_error(const char *error, const node_t *node);
 
