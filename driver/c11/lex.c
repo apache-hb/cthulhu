@@ -247,3 +247,11 @@ c11_token_t c11_lexer_next(c11_lexer_t *lexer) {
 c11_token_t c11_lexer_peek(c11_lexer_t *lexer) {
     return lexer->token;
 }
+
+bool tok_is_key(c11_token_t tok, c11_keyword_t keyword) {
+    return tok.type == TOK_KEYWORD && tok.keyword == keyword;
+}
+
+bool tok_is_ident(c11_token_t tok) {
+    return tok.type == TOK_IDENT;
+}

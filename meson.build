@@ -113,3 +113,10 @@ if get_option('tuning')
         dependencies : generic
     )
 endif
+
+aws = dependency('aws-sdk-cpp', required : get_option('aws-lambda'))
+if aws.found()
+    executable('lambda', [ 'tools/lambda.c' ],
+        dependencies : [ aws, generic ]
+    )
+endif

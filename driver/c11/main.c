@@ -29,6 +29,7 @@ int main(int argc, const char **argv) {
     common_init();
 
     c11_keyword_init();
+    c11_init_types();
     
     return common_main(argc, argv, DRIVER);
 }

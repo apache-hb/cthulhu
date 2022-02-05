@@ -34,6 +34,12 @@ type_t *type_signature(const char *name, type_t *result, vector_t *params, bool 
     return type;
 }
 
+type_t *type_pointer(const char *name, type_t *base, const node_t *node) {
+    type_t *type = type_new(TYPE_POINTER, name, node);
+    type->base = base;
+    return type;
+}
+
 type_t *type_error(const char *error, const node_t *node) {
     return type_new(TYPE_ERROR, error, node);
 }

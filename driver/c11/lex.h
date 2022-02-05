@@ -78,3 +78,6 @@ c11_lexer_t *c11_lexer_new(scan_t *scan);
 
 c11_token_t c11_lexer_next(c11_lexer_t *lexer);
 c11_token_t c11_lexer_peek(c11_lexer_t *lexer);
+
+bool tok_is_key(c11_token_t tok, c11_keyword_t keyword);
+bool tok_is_ident(c11_token_t tok);

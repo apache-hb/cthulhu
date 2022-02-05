@@ -8,3 +8,8 @@ option('tuning', type : 'boolean',
     description : 'compile tuning programs',
     value : false
 )
+
+option('aws-lambda', type : 'feature',
+    description : 'build lambda functions',
+    value : 'auto'
+)

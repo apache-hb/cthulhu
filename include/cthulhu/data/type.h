@@ -11,6 +11,7 @@ typedef enum {
 
     // user defined types
     TYPE_SIGNATURE,
+    TYPE_POINTER,
 
     // error type
     TYPE_ERROR
@@ -22,6 +23,8 @@ typedef struct type_t {
     const node_t *node; // where this type was defined, NULL if builtin
 
     union {
+        struct type_t *base;
+
         struct {
             struct type_t *result;
             vector_t *params;
@@ -35,6 +38,7 @@ type_t *type_boolean(const char *name);
 type_t *type_string(const char *name);
 type_t *type_void(const char *name);
 type_t *type_signature(const char *name, type_t *result, vector_t *params, bool variadic);
+type_t *type_pointer(const char *name, type_t *base, const node_t *node);
 
 type_t *type_error(const char *error, const node_t *node);
 
