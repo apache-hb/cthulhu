@@ -23,6 +23,8 @@ void c11_keyword_init(void) {
 
     add_keyword("const", KEY_CONST);
     add_keyword("volatile", KEY_VOLATILE);
+
+    add_keyword("extern", KEY_EXTERN);
 }
 
 static bool isident1(char c) {

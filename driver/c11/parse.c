@@ -28,6 +28,17 @@ static size_t BODY_SIZES[TAG_MAX] = {
     [TAG_VARS] = MAP_SMALL
 };
 
+static void add_top_level(sema_t *sema, size_t tag, const char *name, hlir_t *hlir) {
+    hlir_t *other = sema_get(sema, tag, name);
+    if (other != NULL) {
+        message_t *id = report(sema->reports, ERROR, hlir->node, "redefinition of %s", name);
+        report_append(id, other->node, "previously defined here");
+        return;
+    }
+
+    sema_set(sema, tag, name, hlir);
+}
+
 static type_t *VOID = NULL;
 
 void c11_init_types(void) {
@@ -94,6 +105,12 @@ static type_t *parse_type_specifier(sema_t *sema, c11_token_t front) {
 }
 
 static bool parse_decl(sema_t *sema, c11_token_t tok) {
+    bool is_extern = false;
+    if (tok_is_key(tok, KEY_EXTERN)) {
+        is_extern = true;
+        tok = next_token(sema);
+    }
+
     type_t *type = parse_type_specifier(sema, tok);
     if (type == NULL) {
         report(sema->reports, ERROR, tok.node, "expected type specifier");
@@ -105,6 +122,9 @@ static bool parse_decl(sema_t *sema, c11_token_t tok) {
         report(sema->reports, ERROR, result.tok.node, "expected declaration name");
         return false;
     }
+
+    hlir_t *hlir = hlir_new_value(tok.node, result.ident, type);
+    add_top_level(sema, TAG_VARS, result.ident, hlir);
 
     return true;
 }
@@ -128,19 +148,6 @@ hlir_t *c11_compile(reports_t *reports, scan_t *scan) {
 
     while (c11_parse_decl(sema)) {
         // empty
-    }
-
-    while (true) {
-        c11_token_t tok = c11_lexer_next(lex);
-        message_t *id = report(reports, NOTE, tok.node, "token: %d", tok.type);
-        if (tok.type == TOK_IDENT) {
-            report_underline(id, "id: %s", tok.ident);
-        } else if (tok.type == TOK_INVALID) {
-            report_underline(id, "error: %s", tok.error);
-        }
-        if (tok.type == TOK_EOF || tok.type == TOK_INVALID) {
-            break;
-        }
     }
 
     return NULL;

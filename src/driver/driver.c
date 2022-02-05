@@ -115,8 +115,8 @@ int common_main(int argc, const char **argv, driver_t driver) {
         return end_reports(reports, SIZE_MAX, "command line parsing");
     }
 
-    bool debug_hlir = find_arg(argc, argv, "--debug-hlir","-dh");
-    bool debug_ssa = find_arg(argc, argv, "--debug-ssa", "-ds");
+    //bool debug_hlir = find_arg(argc, argv, "--debug-hlir","-dh");
+    //bool debug_ssa = find_arg(argc, argv, "--debug-ssa", "-ds");
     const char *mod_name = get_arg(reports, argc, argv, "--module", "-m");
     const char *out = get_arg(reports, argc, argv, "--output", "-out");
     if (out == NULL) { out = "c89"; }

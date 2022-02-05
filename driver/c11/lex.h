@@ -18,6 +18,8 @@ typedef enum {
     KEY_CONST,
     KEY_VOLATILE,
 
+    KEY_EXTERN,
+
     KEY_LPAREN,
     KEY_RPAREN,
 
