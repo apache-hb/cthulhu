@@ -4,7 +4,7 @@
 #include "cthulhu/util/io.h"
 #include "cthulhu/hlir/hlir.h"
 
-typedef void*(*parse_t)(scan_t*);
+typedef void*(*parse_t)(reports_t*, scan_t*);
 typedef hlir_t*(*analyze_t)(reports_t*, void*);
 
 typedef struct {

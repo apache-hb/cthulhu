@@ -11,6 +11,7 @@ project('cthulhu', [ 'c', 'cpp' ],
 )
 
 target = target_machine.system()
+cc = meson.get_compiler('c')
 
 src = [
     # command line
@@ -48,6 +49,8 @@ src = [
     'src/util/compat-platform.c'.replace('platform', target),
 ]
 
+math = cc.find_library('m')
+
 json = subproject('cjson').get_variable('json')
 
 gmp = dependency('gmp', 
@@ -56,7 +59,7 @@ gmp = dependency('gmp',
 )
 
 args = []
-deps = [ gmp, json ]
+deps = [ gmp, json, math ]
 
 flex = find_program('flex', 'win_flex', version : '>=2.6')
 bison = find_program('bison', 'win_bison', version : '>=3.5')

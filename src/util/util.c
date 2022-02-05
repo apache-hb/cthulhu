@@ -21,7 +21,7 @@
 
 void *ctu_malloc(size_t size) {
     void *ptr = MALLOC(size);
-    CTASSERT(ptr != NULL, "ctu-malloc failed");
+    CTASSERTF(ptr != NULL, "ctu-malloc of %zu bytes failed", size);
     return ptr;
 }
 

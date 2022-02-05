@@ -34,7 +34,9 @@ static callbacks_t CALLBACKS = {
     .destroy = destroy
 };
 
-void *pl0_parse(scan_t *scan) {
+void *pl0_parse(reports_t *reports, scan_t *scan) {
+    UNUSED(reports);
+    
     return compile_file(scan, &CALLBACKS);
 }
 

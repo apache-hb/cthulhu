@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 bool verbose = false;
 
@@ -159,23 +160,7 @@ static char *build_underline(char *source, where_t where, const char *note) {
 
 /* stupid code but quick and simple */
 static int base10_length(line_t digit) {
-    if (digit < 10) { return 1; } 
-    else if (digit < 100) { return 2; } 
-    else if (digit < 1000) { return 3; } 
-    else if (digit < 10000) { return 4; } 
-    else if (digit < 100000) { return 5; } 
-    else if (digit < 1000000) { return 6; }
-    else if (digit < 10000000) { return 7; }
-    else if (digit < 100000000) { return 8; }
-    else if (digit < 1000000000) { return 9; }
-    else if (digit < 10000000000) { return 10; }
-    else if (digit < 100000000000) { return 11; }
-    else if (digit < 1000000000000) { return 12; }
-    else if (digit < 10000000000000) { return 13; }
-    else if (digit < 100000000000000) { return 14; }
-    else if (digit < 1000000000000000) { return 15; }
-    else if (digit < 10000000000000000) { return 16; }
-    else { return 17; }
+    return ceil(log10(digit)) + 1;
 }
 
 static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {

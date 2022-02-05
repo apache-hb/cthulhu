@@ -137,7 +137,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     // parse the source file
 
-    void *node = driver.parse(&scan);
+    void *node = driver.parse(reports, &scan);
     status = end_reports(reports, SIZE_MAX, "parsing");
     if (status != 0) { return status; }
     CTASSERT(node != NULL, "driver.parse == NULL");
@@ -157,32 +157,13 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (streq("json", out)) {
         json_emit_tree(reports, hlir);
         status = end_reports(reports, SIZE_MAX, "emitting json");
-        if (status != 0) { return status; }
     } else if (streq("c89", out)) {
         c89_emit_tree(reports, hlir);
         status = end_reports(reports, SIZE_MAX, "emitting c89");
-        if (status != 0) { return status; }
     } else {
         report(reports, ERROR, NULL, "unknown output format: %s", out);
         status = end_reports(reports, SIZE_MAX, "command line parsing");
     }
-
-#if 0
-
-    ssa_t *ssa = build_ssa(reports);
-    module_t *mod = build_module(ssa, hlir);
-    status = end_reports(reports, SIZE_MAX, "building module");
-    if (status != 0) { return status; }
-    CTASSERT(mod != NULL, "build_module == NULL");
-
-    if (debug_ssa) {
-        ssa_debug(mod);
-    }
-
-    emit_ssa(reports, mod);
-    status = end_reports(reports, SIZE_MAX, "emitting ssa module");
-    if (status != 0) { return status; }
-#endif
 
     return status;
 }
