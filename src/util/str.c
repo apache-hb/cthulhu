@@ -118,13 +118,14 @@ char *strmul(const char *str, size_t times) {
 }
 
 static bool ctu_isprint(char c) {
+    if (c == '\n' || c == '\t' || c == '\f' || c == '\r' || c == '\v') {
+        return false;
+    }
     return isprint(c) || c == 0x0A;
 }
 
 static size_t normlen(char c) {
-    if (c == '\n') {
-        return 2;
-    } else if (ctu_isprint(c)) {
+    if (ctu_isprint(c)) {
         return 1;
     } else {
         return 4;
@@ -132,11 +133,7 @@ static size_t normlen(char c) {
 }
 
 static size_t normstr(char *out, char c) {
-    if (c == '\n') {
-        out[0] = '\\';
-        out[1] = 'n';
-        return 2;
-    } else if (ctu_isprint(c)) {
+    if (ctu_isprint(c)) {
         out[0] = c;
         return 1;
     } else {
