@@ -96,37 +96,52 @@ static type_t *parse_trailing_type_parts(sema_t *sema, type_t *inner) {
     return inner;
 }
 
-static type_t *parse_type_specifier(sema_t *sema, c11_token_t front) {
-    if (tok_is_key(front, KEY_VOID)) {
-        return parse_trailing_type_parts(sema, VOID);
-    }
-
-    return NULL;
-}
-
-static bool parse_decl(sema_t *sema, c11_token_t tok) {
+static type_t *parse_type_specifier(sema_t *sema, c11_token_t tok) {
     bool is_extern = false;
     if (tok_is_key(tok, KEY_EXTERN)) {
         is_extern = true;
         tok = next_token(sema);
     }
 
+    bool is_const = false;
+    if (tok_is_key(tok, KEY_CONST)) {
+        is_const = true;
+        tok = next_token(sema);
+    }
+
+    if (tok_is_key(tok, KEY_VOID)) {
+        return VOID;
+    }
+
+    return NULL;
+}
+
+static bool parse_decl(sema_t *sema, c11_token_t tok) {
     type_t *type = parse_type_specifier(sema, tok);
-    if (type == NULL) {
-        report(sema->reports, ERROR, tok.node, "expected type specifier");
+
+    while (true) {
+        type_t *inner = parse_trailing_type_parts(sema, type);
+        ident_result_t name = get_ident(sema);
+        if (name.ident == NULL) {
+            report(sema->reports, ERROR, name.tok.node, "expected identifier");
+            return false;
+        }
+
+        hlir_t *decl = hlir_new_value(tok.node, name.ident, inner);
+        hlir_build_value(decl, NULL);
+        add_top_level(sema, TAG_VARS, name.ident, decl);
+
+        if (eat_key(sema, KEY_SEMICOLON, NULL)) {
+            return true;
+        }
+
+        if (eat_key(sema, KEY_COMMA, NULL)) {
+            continue;
+        }
+
+        report(sema->reports, ERROR, tok.node, "expected ';' or ','");
         return false;
     }
-
-    ident_result_t result = get_ident(sema);
-    if (result.ident == NULL) {
-        report(sema->reports, ERROR, result.tok.node, "expected declaration name");
-        return false;
-    }
-
-    hlir_t *hlir = hlir_new_value(tok.node, result.ident, type);
-    add_top_level(sema, TAG_VARS, result.ident, hlir);
-
-    return true;
 }
 
 static bool c11_parse_decl(sema_t *sema) {

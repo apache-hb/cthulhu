@@ -35,12 +35,7 @@ static bool isident2(char c) {
     return isalnum(c) || c == '_';
 }
 
-static where_t NOWHERE = {
-    0, 
-    0,
-    0,
-    0
-};
+static where_t NOWHERE = { 0, 0, 0, 0 };
 
 static c11_token_t new_token(c11_token_type_t type, node_t *node) {
     c11_token_t token = {
