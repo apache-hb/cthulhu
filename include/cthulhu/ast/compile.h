@@ -13,6 +13,9 @@ scan_t scan_file(reports_t *reports, const char *language, file_t *file);
 /* set the export data */
 void scan_export(scan_t *scan, void *data);
 
+/* get the export data */
+void *scan_get(scan_t *scan);
+
 typedef struct {
     // yylex_init_extra
     int(*init)(scan_t *extra, void *scanner);

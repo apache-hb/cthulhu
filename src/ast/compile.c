@@ -55,6 +55,10 @@ void scan_export(scan_t *scan, void *data) {
     scan->data = data;
 }
 
+void *scan_get(scan_t *scan) {
+    return scan->data;
+}
+
 void *compile_string(scan_t *extra, callbacks_t *callbacks) {
     int err;
     void *scanner;
