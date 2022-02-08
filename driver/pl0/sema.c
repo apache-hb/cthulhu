@@ -12,6 +12,9 @@ static type_t *SIGNATURE;
 static hlir_t *PRINT;
 static hlir_t *FMT;
 
+static const hlir_attributes_t *IMPORTED;
+static const hlir_attributes_t *EXPORTED;
+
 void pl0_init(void) {
     INTEGER = type_integer("integer");
     BOOLEAN = type_boolean("boolean");
@@ -19,11 +22,14 @@ void pl0_init(void) {
     VOID = type_void("void");
 
     SIGNATURE = type_signature("signature", VOID, vector_of(0), false);
+    IMPORTED = hlir_new_attributes(LINK_IMPORTED);
+    EXPORTED = hlir_new_attributes(LINK_EXPORTED);
 
     type_t *PRINTF = type_signature("printf", INTEGER, vector_init(STRING), true);
 
     FMT = hlir_literal(NULL, value_string(STRING, "%d\n"));
-    PRINT = hlir_import_function(NULL, "printf", PRINTF);
+    PRINT = hlir_new_function(NULL, "printf", PRINTF);
+    hlir_set_attributes(PRINT, IMPORTED);
 }
 
 typedef enum {
@@ -316,8 +322,11 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
         hlir_t *hlir = hlir_new_function(root->node, "main", SIGNATURE);
         hlir_t *body = sema_stmt(sema, root->entry);
         hlir_build_function(hlir, body);
+        hlir_set_attributes(hlir, EXPORTED);
         vector_push(&procs, hlir);
     }
+
+    vector_push(&procs, PRINT);
 
     vector_t *types = vector_new(5);
     vector_push(&types, INTEGER);
@@ -326,7 +335,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     vector_push(&types, VOID);
 
     hlir_t *mod = hlir_new_module(root->node, root->mod);
-    hlir_build_module(mod, vector_init(PRINT), vector_join(consts, globals), procs, types);
+    hlir_build_module(mod, vector_join(consts, globals), procs, types);
     sema_delete(sema);
     return mod;
 }

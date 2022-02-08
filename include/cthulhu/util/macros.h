@@ -29,6 +29,8 @@
 #   define ASSUME(expr)
 #endif
 
+#define UNREACHABLE() ASSUME(false)
+
 #if defined(_WIN32)
 #   define CTU_WINDOWS 1
 #elif defined(__linux__)

@@ -252,3 +252,7 @@ bool tok_is_key(c11_token_t tok, c11_keyword_t keyword) {
 bool tok_is_ident(c11_token_t tok) {
     return tok.type == TOK_IDENT;
 }
+
+bool tok_is_eof(c11_token_t tok) {
+    return tok.type == TOK_EOF;
+}

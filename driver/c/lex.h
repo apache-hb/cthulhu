@@ -83,3 +83,4 @@ c11_token_t c11_lexer_peek(c11_lexer_t *lexer);
 
 bool tok_is_key(c11_token_t tok, c11_keyword_t keyword);
 bool tok_is_ident(c11_token_t tok);
+bool tok_is_eof(c11_token_t tok);

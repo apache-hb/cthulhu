@@ -1,7 +1,7 @@
 option('languages', type : 'array',
     description : 'select which languages to compile',
-    choices : [ 'ctu', 'pl0', 'c11' ],
-    value : [ 'ctu', 'pl0', 'c11' ]
+    choices : [ 'ctu', 'pl0', 'c' ],
+    value : [ 'ctu', 'pl0', 'c' ]
 )
 
 option('tuning', type : 'boolean',

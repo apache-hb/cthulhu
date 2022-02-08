@@ -8,7 +8,6 @@ typedef struct {
     map_t *locals; // map of local to its index
     map_t *globals; // map of global to its index
     map_t *functions;
-    map_t *imports;
 } emit_t;
 
 static const char *metatype_to_string(emit_t *emit, const type_t *type) {
@@ -81,6 +80,21 @@ static cJSON *emit_value(emit_t *emit, const value_t *value) {
         cJSON_AddStringToObject(json, "value", "unknown");
     }
 
+    return json;
+}
+
+static const char *linkage_name(hlir_linkage_t linkage) {
+    switch (linkage) {
+    case LINK_EXPORTED: return "exported";
+    case LINK_IMPORTED: return "imported";
+    case LINK_INTERNAL: return "internal";
+    default: UNREACHABLE();
+    }
+}
+
+static cJSON *emit_attribs(const hlir_attributes_t *attribs) {
+    cJSON *json = cJSON_CreateObject();
+    cJSON_AddStringToObject(json, "linkage", linkage_name(attribs->linkage));
     return json;
 }
 
@@ -162,19 +176,6 @@ static cJSON *lookup_function(emit_t *emit, const hlir_t *hlir) {
     return emit_unimplemented(hlir);
 }
 
-static cJSON *lookup_imported_function(emit_t *emit, const hlir_t *hlir) {
-    size_t idx = (size_t)map_get_ptr(emit->imports, hlir);
-    if (idx != 0) {
-        cJSON *json = cJSON_CreateObject();
-        cJSON_AddStringToObject(json, "kind", "imported_function");
-        cJSON_AddNumberToObject(json, "index", idx);
-        return json;
-    }
-
-    ctu_assert(emit->reports, "failed imported function lookup");
-    return emit_unimplemented(hlir);
-}
-
 static cJSON *emit_expr(emit_t *emit, const hlir_t *hlir) {
     cJSON *result = NULL;
 
@@ -187,9 +188,6 @@ static cJSON *emit_expr(emit_t *emit, const hlir_t *hlir) {
         break;
     case HLIR_FUNCTION:
         result = lookup_function(emit, hlir);
-        break;
-    case HLIR_IMPORT_FUNCTION:
-        result = lookup_imported_function(emit, hlir);
         break;
     case HLIR_BINARY:
         result = emit_binary(emit, hlir);
@@ -217,32 +215,12 @@ static cJSON *emit_global(emit_t *emit, map_t *map, size_t index, const hlir_t *
     cJSON_AddStringToObject(value, "kind", "value");
     cJSON_AddStringToObject(value, "name", hlir->name);
     cJSON_AddNumberToObject(value, "type", get_type(emit, hlir->of));
+    cJSON_AddItemToObject(value, "attribs", emit_attribs(hlir->attributes));
+
     if (hlir->value != NULL) {
         cJSON_AddItemToObject(value, "value", emit_expr(emit, hlir->value));
     }
     add_location(value, hlir->node);
-    return value;
-}
-
-static cJSON *emit_import(emit_t *emit, size_t idx, const hlir_t *hlir) {
-    map_set_ptr(emit->imports, hlir, (void*)(uintptr_t)idx);
-    cJSON *value = cJSON_CreateObject();
-
-    switch (hlir->type) {
-    case HLIR_IMPORT_FUNCTION:
-        cJSON_AddStringToObject(value, "kind", "function");
-        break;
-    case HLIR_IMPORT_VALUE:
-        cJSON_AddStringToObject(value, "kind", "value");
-        break;
-    default:
-        ctu_assert(emit->reports, "unknown import type");
-        cJSON_AddStringToObject(value, "kind", "unknown");
-        break;
-    }
-
-    cJSON_AddStringToObject(value, "name", hlir->name);
-    cJSON_AddNumberToObject(value, "type", get_type(emit, hlir->of));
     return value;
 }
 
@@ -337,6 +315,7 @@ static cJSON *emit_function(emit_t *emit, size_t idx, const hlir_t *hlir) {
     cJSON_AddStringToObject(json, "kind", "function");
     cJSON_AddStringToObject(json, "name", hlir->name);
     cJSON_AddNumberToObject(json, "type", get_type(emit, hlir->of));
+    cJSON_AddItemToObject(json, "attribs", emit_attribs(hlir->attributes));
 
     size_t nlocals = vector_len(hlir->locals);
     cJSON *locals = cJSON_CreateArray();
@@ -356,14 +335,12 @@ void json_emit_tree(reports_t *reports, const hlir_t *hlir) {
     size_t ntypes = vector_len(hlir->types);
     size_t nglobals = vector_len(hlir->globals);
     size_t nfunctions = vector_len(hlir->defines);
-    size_t nimports = vector_len(hlir->imports);
 
     emit_t emit = {
         .reports = reports,
         .types = optimal_map(ntypes),
         .globals = optimal_map(nglobals),
-        .functions = optimal_map(nfunctions),
-        .imports = optimal_map(nimports),
+        .functions = optimal_map(nfunctions)
     };
 
     cJSON *types = cJSON_CreateArray();
@@ -373,15 +350,6 @@ void json_emit_tree(reports_t *reports, const hlir_t *hlir) {
         const type_t *type = vector_get(hlir->types, i);
         cJSON *json = emit_type(&emit, i + 1, type);
         cJSON_AddItemToArray(types, json);
-    }
-
-    cJSON *imports = cJSON_CreateArray();
-    cJSON_AddItemToArray(imports, cJSON_CreateNull());
-
-    for (size_t i = 0; i < nimports; i++) {
-        const hlir_t *it = vector_get(hlir->imports, i);
-        cJSON *json = emit_import(&emit, i + 1, it);
-        cJSON_AddItemToArray(imports, json);
     }
 
     cJSON *globals = cJSON_CreateArray();
@@ -408,7 +376,6 @@ void json_emit_tree(reports_t *reports, const hlir_t *hlir) {
 
     cJSON *json = cJSON_CreateObject();
     cJSON_AddItemToObject(json, "types", types);
-    cJSON_AddItemToObject(json, "imports", imports);
     cJSON_AddItemToObject(json, "globals", globals);
     cJSON_AddItemToObject(json, "functions", functions);
 

@@ -117,6 +117,10 @@ static type_t *parse_type_specifier(sema_t *sema, c11_token_t tok) {
 }
 
 static bool parse_decl(sema_t *sema, c11_token_t tok) {
+    if (tok_is_eof(tok)) {
+        return false;
+    }
+    
     type_t *type = parse_type_specifier(sema, tok);
 
     while (true) {
@@ -131,11 +135,11 @@ static bool parse_decl(sema_t *sema, c11_token_t tok) {
         hlir_build_value(decl, NULL);
         add_top_level(sema, TAG_VARS, name.ident, decl);
 
-        if (eat_key(sema, KEY_SEMICOLON, NULL)) {
+        if (eat_key(sema, KEY_SEMICOLON, &tok)) {
             return true;
         }
 
-        if (eat_key(sema, KEY_COMMA, NULL)) {
+        if (eat_key(sema, KEY_COMMA, &tok)) {
             continue;
         }
 

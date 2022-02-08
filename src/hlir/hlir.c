@@ -10,9 +10,14 @@ static hlir_t *hlir_new(const node_t *node, const type_t *of, hlir_type_t type) 
     return self;
 }
 
+static const hlir_attributes_t DEFAULT_ATTRIBS = {
+    .linkage = LINK_INTERNAL
+};
+
 static hlir_t *hlir_new_decl(const node_t *node, const char *name, const type_t *of, hlir_type_t type) {
     hlir_t *hlir = hlir_new(node, of, type);
     hlir->name = name;
+    hlir->attributes = &DEFAULT_ATTRIBS;
     return hlir;
 }
 
@@ -130,17 +135,12 @@ hlir_t *hlir_new_module(const node_t *node, const char *name) {
     return hlir_new_decl(node, name, &FAILURE, HLIR_MODULE);
 }
 
-void hlir_build_module(hlir_t *self, vector_t *imports, vector_t *values, vector_t *functions, vector_t *types) {
-    self->imports = imports;
+void hlir_build_module(hlir_t *self, vector_t *values, vector_t *functions, vector_t *types) {
     self->globals = values;
     self->defines = functions;
     self->types = types;
 }
 
-hlir_t *hlir_import_function(const node_t *node, const char *name, const type_t *type) {
-    return hlir_new_decl(node, name, type, HLIR_IMPORT_FUNCTION);
-}
-
-hlir_t *hlir_import_value(const node_t *node, const char *name, const type_t *type) {
-    return hlir_new_decl(node, name, type, HLIR_IMPORT_VALUE);
+void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes) {
+    self->attributes = attributes;
 }

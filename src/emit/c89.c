@@ -60,9 +60,9 @@ static void emit_value_import(const hlir_t *hlir) {
 
 static void emit_import_decl(reports_t *reports, const hlir_t *hlir) {
     switch (hlir->type) {
-    case HLIR_IMPORT_FUNCTION:
+    case HLIR_FUNCTION:
         return emit_function_import(hlir);
-    case HLIR_IMPORT_VALUE:
+    case HLIR_VALUE:
         return emit_value_import(hlir);
     default:
         ctu_assert(reports, "invalid import type");
@@ -114,8 +114,6 @@ static char *emit_call(reports_t *reports, const hlir_t *hlir) {
 
 static char *emit_expr(reports_t *reports, const hlir_t *hlir) {
     switch (hlir->type) {
-    case HLIR_IMPORT_FUNCTION:
-    case HLIR_IMPORT_VALUE:
     case HLIR_FUNCTION:
     case HLIR_VALUE:
         return ctu_strdup(hlir->name);
@@ -238,31 +236,48 @@ void c89_emit_tree(reports_t *reports, const hlir_t *hlir) {
         emit_type_decl(reports, type);
     }
 
-    size_t nimports = vector_len(hlir->imports);
-    for (size_t i = 0; i < nimports; i++) {
-        const hlir_t *import = vector_get(hlir->imports, i);
+    size_t nglobals = vector_len(hlir->globals);
+    size_t nprocs = vector_len(hlir->defines);
+
+    for (size_t i = 0; i < nglobals; i++) {
+        const hlir_t *import = vector_get(hlir->globals, i);
+        if (!hlir_is_imported(import)) { continue; }
+
         emit_import_decl(reports, import);
     }
 
-    size_t nglobals = vector_len(hlir->globals);
-    size_t nprocs = vector_len(hlir->defines);
+    for (size_t i = 0; i < nprocs; i++) {
+        const hlir_t *import = vector_get(hlir->defines, i);
+        if (!hlir_is_imported(import)) { continue; }
+
+        emit_import_decl(reports, import);
+    }
+
     for (size_t i = 0; i < nglobals; i++) {
         const hlir_t *global = vector_get(hlir->globals, i);
+        if (hlir_is_imported(global)) { continue; }
+        
         fwd_global(global);
     }
 
     for (size_t i = 0; i < nprocs; i++) {
         const hlir_t *proc = vector_get(hlir->defines, i);
+        if (hlir_is_imported(proc)) { continue; }
+
         fwd_proc(proc);
     }
 
     for (size_t i = 0; i < nglobals; i++) {
         const hlir_t *global = vector_get(hlir->globals, i);
+        if (hlir_is_imported(global)) { continue; }
+
         emit_global(reports, global);
     }
     
     for (size_t i = 0; i < nprocs; i++) {
         const hlir_t *proc = vector_get(hlir->defines, i);
+        if (hlir_is_imported(proc)) { continue; }
+
         emit_proc(reports, proc);
     }
 }

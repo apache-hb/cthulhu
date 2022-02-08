@@ -4,6 +4,8 @@
 #include "cthulhu/ast/ast.h"
 #include "cthulhu/data/value.h"
 
+#include "attribs.h"
+
 typedef enum {
     HLIR_LITERAL,
 
@@ -22,9 +24,6 @@ typedef enum {
     HLIR_FUNCTION,
     HLIR_VALUE,
     HLIR_MODULE,
-
-    HLIR_IMPORT_FUNCTION,
-    HLIR_IMPORT_VALUE,
 
     HLIR_ERROR
 } hlir_type_t;
@@ -71,6 +70,9 @@ typedef struct hlir_t {
             /* the name of this declaration */
             const char *name;
 
+            /* any attributes this declaration has */
+            const hlir_attributes_t *attributes;
+
             /* the local variables if this is function */
             vector_t *locals;
 
@@ -82,7 +84,6 @@ typedef struct hlir_t {
                 struct hlir_t *value;
 
                 struct {
-                    vector_t *imports;
                     vector_t *defines;
                     vector_t *globals;
                     vector_t *types;
@@ -122,6 +123,9 @@ hlir_t *hlir_value(const node_t *node, const char *name, const type_t *type, hli
 
 hlir_t *hlir_new_module(const node_t *node, const char *name);
 
+void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes);
+bool hlir_is_imported(const hlir_t *self);
+
 /**
  * @brief finalize a module and provide it with data
  * 
@@ -131,7 +135,4 @@ hlir_t *hlir_new_module(const node_t *node, const char *name);
  * @param functions all functions defined in this module
  * @param types all types defined in this module
  */
-void hlir_build_module(hlir_t *self, vector_t *imports, vector_t *values, vector_t *functions, vector_t *types);
-
-hlir_t *hlir_import_function(const node_t *node, const char *name, const type_t *type);
-hlir_t *hlir_import_value(const node_t *node, const char *name, const type_t *type);
+void hlir_build_module(hlir_t *self, vector_t *values, vector_t *functions, vector_t *types);

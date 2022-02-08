@@ -23,6 +23,7 @@ src = [
 
     # high level intermediate representation
     'src/hlir/sema.c',
+    'src/hlir/attribs.c',
     'src/hlir/hlir.c',
 
     # tree output
