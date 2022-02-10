@@ -88,6 +88,12 @@ const char *common_prefix(vector_t *strings) CONSTFN NONULL;
 
 size_t rfind(const char *str, const char *sub) CONSTFN NONULL;
 
+size_t strcount(const char *str, const char *sub) CONSTFN NONULL;
+
+char *replacestr(const char *str, const char *sub, const char *repl) NONULL;
+
+char *strmove(char *dst, const char *src) NONULL;
+
 /**
  * hash a string into a size_t
  * 

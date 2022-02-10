@@ -102,6 +102,7 @@ hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src) {
 hlir_t *hlir_new_function(const node_t *node, const char *name, const type_t *type) {
     hlir_t *hlir = hlir_new_decl(node, name, type, HLIR_FUNCTION);
     hlir->locals = vector_new(0);
+    hlir->body = NULL;
     return hlir;
 }
 

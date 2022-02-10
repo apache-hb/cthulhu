@@ -77,6 +77,10 @@ bool endswith(const char *str, const char *suffix) {
 
 char *strjoin(const char *sep, vector_t *parts) {
     size_t all = vector_len(parts);
+    if (all == 1) {
+        return vector_get(parts, 0);
+    }
+
     size_t len = 0;
     size_t seplen = strlen(sep);
     for (size_t i = 0; i < all; i++) {
@@ -195,6 +199,32 @@ size_t strhash(const char *str) {
     }
 
     return hash;
+}
+
+size_t strcount(const char *str, const char *sub) {
+    size_t count = 0;
+    while (*str++) {
+        if (strncmp(str, sub, strlen(sub)) == 0) {
+            count++;
+        }
+    }
+    return count;
+}
+
+char *replacestr(const char *str, const char *sub, const char *repl) {
+    vector_t *split = strsplit(str, sub);
+    return strjoin(repl, split);
+}
+
+char *strmove(char *dst, const char *src) {
+	char *save = dst;
+
+    while ((*dst = *src)) {
+        dst += 1;
+        src += 1;
+    }
+
+	return save;
 }
 
 bool streq(const char *lhs, const char *rhs) {

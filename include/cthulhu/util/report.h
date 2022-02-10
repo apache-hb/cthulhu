@@ -13,7 +13,9 @@ typedef enum {
     INTERNAL, /// an invalid state has been reached internally
     ERROR, /// a user issue that prevents the program from continuing
     WARNING, // a user issue that may be resolved
-    NOTE // a notification for logging
+    NOTE, // a notification for logging
+
+    LEVEL_TOTAL
 } level_t;
 
 typedef struct {

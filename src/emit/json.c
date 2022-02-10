@@ -42,6 +42,19 @@ static size_t get_type(emit_t *emit, const type_t *type) {
     return (size_t)map_get_ptr(emit->types, type);
 }
 
+static const char *SIGN_STR[SIGN_TOTAL] = {
+    [SIGN_UNSIGNED] = "unsigned",
+    [SIGN_SIGNED] = "signed",
+    [SIGN_DEFAULT] = "default",
+};
+
+static const char *WIDTH_STR[DIGIT_TOTAL] = {
+    [DIGIT_CHAR] = "char",
+    [DIGIT_SHORT] = "short",
+    [DIGIT_INT] = "int",
+    [DIGIT_LONG] = "long",
+};
+
 static cJSON *emit_type(emit_t *emit, size_t idx, const type_t *hlir) {
     map_set_ptr(emit->types, hlir, (void*)(uintptr_t)idx);
 
@@ -58,6 +71,9 @@ static cJSON *emit_type(emit_t *emit, size_t idx, const type_t *hlir) {
         }
         cJSON_AddItemToObject(type, "params", params);
         cJSON_AddBoolToObject(type, "variadic", hlir->variadic);
+    } else if (type_is_integer(hlir)) {
+        cJSON_AddStringToObject(type, "sign", SIGN_STR[hlir->sign]);
+        cJSON_AddStringToObject(type, "width", WIDTH_STR[hlir->width]);
     }
 
     add_location(type, hlir->node);
@@ -172,7 +188,7 @@ static cJSON *lookup_function(emit_t *emit, const hlir_t *hlir) {
         return json;
     }
 
-    ctu_assert(emit->reports, "failed function lookup");
+    ctu_assert(emit->reports, "failed function lookup for %s", hlir->name);
     return emit_unimplemented(hlir);
 }
 
@@ -326,7 +342,10 @@ static cJSON *emit_function(emit_t *emit, size_t idx, const hlir_t *hlir) {
         cJSON_AddItemToArray(locals, item);
     }
 
-    cJSON_AddItemToObject(json, "body", emit_stmt(emit, hlir->body));
+    if (!hlir_is_imported(hlir)) {
+        cJSON_AddItemToObject(json, "body", emit_stmt(emit, hlir->body));
+    }
+    
     add_location(json, hlir->node);
     return json;
 }
@@ -366,13 +385,17 @@ void json_emit_tree(reports_t *reports, const hlir_t *hlir) {
 
     for (size_t i = 0; i < nfunctions; i++) {
         const hlir_t *function = vector_get(hlir->defines, i);
+        map_set_ptr(emit.functions, function, (void*)(uintptr_t)i + 1);
+    }
+
+    for (size_t i = 0; i < nfunctions; i++) {
+        const hlir_t *function = vector_get(hlir->defines, i);
         size_t nlocals = vector_len(function->locals);
         emit.locals = optimal_map(nlocals);
 
         cJSON *json = emit_function(&emit, i + 1, function);
         cJSON_AddItemToArray(functions, json);
     }
-
 
     cJSON *json = cJSON_CreateObject();
     cJSON_AddItemToObject(json, "types", types);

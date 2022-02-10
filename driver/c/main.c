@@ -39,8 +39,9 @@ static callbacks_t CALLBACKS = {
 };
 
 void *cc_parse(reports_t *reports, scan_t *scan) {
-    UNUSED(reports);
-    
+    context_t *context = new_context(reports);
+    scan_export(scan, context);
+
     return compile_file(scan, &CALLBACKS);
 }
 

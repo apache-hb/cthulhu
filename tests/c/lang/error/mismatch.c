@@ -1,0 +1,2 @@
+signed x;
+unsigned x;

@@ -18,16 +18,24 @@ static part_t *part_new(char *message, const node_t *node) {
     return part;
 }
 
-static const char *report_level(level_t level) {
-    switch (level) {
-    case INTERNAL: return COLOUR_CYAN "ice" COLOUR_RESET;
-    case ERROR: return COLOUR_RED "error" COLOUR_RESET;
-    case WARNING: return COLOUR_YELLOW "warning" COLOUR_RESET;
-    case NOTE: return COLOUR_GREEN "note" COLOUR_RESET;
+typedef struct {
+    const char *plain;
+    const char *coloured;
+} level_format_t;
 
-    default: 
-        return COLOUR_PURPLE "unknown" COLOUR_RESET;
-    }
+static level_format_t FORMATS[LEVEL_TOTAL] = {
+    [INTERNAL] = { "internal", COLOUR_CYAN "ice" COLOUR_RESET },
+    [ERROR] = { "error", COLOUR_RED "error" COLOUR_RESET },
+    [WARNING] = { "warning", COLOUR_YELLOW "warning" COLOUR_RESET },
+    [NOTE] = { "note", COLOUR_GREEN "note" COLOUR_RESET },
+};
+
+static const char *report_level_str(level_t level) {
+    return FORMATS[level].plain;
+}
+
+static const char *report_level(level_t level) {
+    return FORMATS[level].coloured;
 }
 
 static bool is_multiline_report(where_t where) {
@@ -135,6 +143,7 @@ static char *build_underline(char *source, where_t where, const char *note) {
 
     size_t width = MAX(back - front, 1);
     size_t len = note ? strlen(note) : 0;
+
     char *str = ctu_malloc(back + width + len + 2);
 
     column_t idx = 0;
@@ -148,6 +157,7 @@ static char *build_underline(char *source, where_t where, const char *note) {
     str[idx] = '^';
     memset(str + idx + 1, '~', width - 1);
     str[idx + width] = ' ';
+    
     if (note) {
         memcpy(str + idx + width + 1, note, len);
         str[idx + width + len + 1] = '\0';
@@ -355,7 +365,15 @@ static void report_part(const char *base, message_t *message, part_t *part) {
 }
 
 static void send_note(const char *note) {
-    fprintf(stderr, "%s: %s\n", report_level(NOTE), note);
+    const char *level = report_level_str(NOTE);
+    size_t len = strlen(level);
+
+    // +2 for the `: ` in the final print
+    char *padding = format("\n%s", strmul(" ", len + 2));
+    
+    char *aligned = replacestr(note, "\n", padding);
+
+    fprintf(stderr, "%s: %s\n", report_level(NOTE), aligned);
 }
 
 static bool report_send(const char *base, message_t *message) {

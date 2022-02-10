@@ -11,7 +11,14 @@ static type_t *type_new(metatype_t meta, const char *name, const node_t *node) {
 }
 
 type_t *type_integer(const char *name) {
-    return type_new(TYPE_INTEGER, name, NULL);
+    return type_digit(name, NULL, SIGN_DEFAULT, DIGIT_INT);
+}
+
+type_t *type_digit(const char *name, const node_t *node, sign_t sign, digit_t width) {
+    type_t *type = type_new(TYPE_INTEGER, name, node);
+    type->sign = sign;
+    type->width = width;
+    return type;
 }
 
 type_t *type_boolean(const char *name) {

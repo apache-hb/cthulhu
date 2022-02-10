@@ -8,6 +8,7 @@ static type_t *BOOLEAN;
 static type_t *STRING;
 static type_t *VOID;
 static type_t *SIGNATURE;
+static type_t *PRINTF;
 
 static hlir_t *PRINT;
 static hlir_t *FMT;
@@ -16,16 +17,16 @@ static const hlir_attributes_t *IMPORTED;
 static const hlir_attributes_t *EXPORTED;
 
 void pl0_init(void) {
+    IMPORTED = hlir_new_attributes(LINK_IMPORTED);
+    EXPORTED = hlir_new_attributes(LINK_EXPORTED);
+
     INTEGER = type_integer("integer");
     BOOLEAN = type_boolean("boolean");
     STRING = type_string("string");
     VOID = type_void("void");
 
     SIGNATURE = type_signature("signature", VOID, vector_of(0), false);
-    IMPORTED = hlir_new_attributes(LINK_IMPORTED);
-    EXPORTED = hlir_new_attributes(LINK_EXPORTED);
-
-    type_t *PRINTF = type_signature("printf", INTEGER, vector_init(STRING), true);
+    PRINTF = type_signature("printf", INTEGER, vector_init(STRING), true);
 
     FMT = hlir_literal(NULL, value_string(STRING, "%d\n"));
     PRINT = hlir_new_function(NULL, "printf", PRINTF);
@@ -333,6 +334,8 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     vector_push(&types, BOOLEAN);
     vector_push(&types, STRING);
     vector_push(&types, VOID);
+    vector_push(&types, SIGNATURE);
+    vector_push(&types, PRINTF);
 
     hlir_t *mod = hlir_new_module(root->node, root->mod);
     hlir_build_module(mod, vector_join(consts, globals), procs, types);

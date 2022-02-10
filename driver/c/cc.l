@@ -25,9 +25,24 @@
 <COMMENT>\n ;
 <COMMENT>. ;
 
+"::" { return COLON2; }
+";" { return SEMI; }
+"," { return COMMA; }
+
+"_Module" { return MODULE; }
+"_Import" { return IMPORT; }
+
+"signed" { return SIGNED; }
+"unsigned" { return UNSIGNED; }
+
+[1-9][0-9]* {
+    mpz_init_set_str(yylval->mpz, yytext, 10);
+    return DIGIT;
+}
+
 [a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);
-    return TYPENAME;
+    return IDENT;
 }
 
 . { report_unknown_character(yyextra->reports, node_new(yyextra, *yylloc), yytext); }

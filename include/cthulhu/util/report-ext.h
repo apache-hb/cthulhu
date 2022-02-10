@@ -2,6 +2,8 @@
 
 #include "report.h"
 
+char *node_string(const node_t *node);
+
 /**
  * report a shadowing error
  * 

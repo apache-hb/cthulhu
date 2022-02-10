@@ -1,5 +1,14 @@
 #include "cthulhu/util/report-ext.h"
 
+char *node_string(const node_t *node) {
+    scan_t *scan = node->scan;
+    where_t where = node->where;
+    
+    return format("%s source [%s:%ld:%ld]",
+        scan->language, scan->path, 
+        where.first_line + 1, where.first_column
+    );
+}
 
 message_t *report_shadow(reports_t *reports,
                         const char *name,
