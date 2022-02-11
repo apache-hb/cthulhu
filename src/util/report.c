@@ -129,7 +129,7 @@ static char *extract_line(const scan_t *scan, line_t line) {
     return nstrnorm(str, (size_t)(out - str));
 }
 
-static char *build_underline(char *source, where_t where, const char *note) {
+static char *build_underline(const char *source, where_t where, const char *note) {
     column_t front = where.first_column;
     column_t back = where.last_column;
 
@@ -137,11 +137,17 @@ static char *build_underline(char *source, where_t where, const char *note) {
         back = strlen(source);
     }
 
-    if (front >= back) {
+    if (front > back) {
         front = back;
     }
 
     size_t width = MAX(back - front, 1);
+
+    // allocate space for the underline
+    // +1 for the space
+    // +1 for the null terminator
+    // char *padding = ctu_malloc(back + width + 1 + 1);
+
     size_t len = note ? strlen(note) : 0;
 
     char *str = ctu_malloc(back + width + len + 2);

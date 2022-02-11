@@ -25,15 +25,34 @@
 <COMMENT>\n ;
 <COMMENT>. ;
 
+"..." { return DOT3; }
+"." { return DOT; }
+
 "::" { return COLON2; }
 ";" { return SEMI; }
 "," { return COMMA; }
+"*" { return STAR; }
+
+"(" { return LPAREN; }
+")" { return RPAREN; }
+
+"{" { return LBRACE; }
+"}" { return RBRACE; }
 
 "_Module" { return MODULE; }
 "_Import" { return IMPORT; }
 
+"char" { return CHAR; }
+"short" { return SHORT; }
+"int" { return INT; }
+"long" { return LONG; }
+
 "signed" { return SIGNED; }
 "unsigned" { return UNSIGNED; }
+
+"extern" { return EXTERN; }
+"static" { return STATIC; }
+"auto" { return AUTO; }
 
 [1-9][0-9]* {
     mpz_init_set_str(yylval->mpz, yytext, 10);

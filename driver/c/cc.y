@@ -56,13 +56,25 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     SIGNED "signed"
     UNSIGNED "unsigned"
 
+    CHAR "char"
+    SHORT "short"
+    INT "int"
+    LONG "long"
+
     SEMI ";"
     COMMA ","
     COLON2 "::"
     ASSIGN "="
+    STAR "*"
+
+    DOT3 "..."
+    DOT "."
 
     LBRACE "{"
     RBRACE "}"
+
+    LPAREN "("
+    RPAREN ")"
 
 %type<vector>
     path varlist
@@ -74,10 +86,13 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     var
 
 %type<type>
-    type
+    type elaborate_type opt_type
 
 %type<sign>
     sign
+
+%type<digit>
+    inttype
 
 %type<ast>
     expr
@@ -86,13 +101,15 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %%
 
-program: modspec decls { cc_finish(x, @$); };
+program: modspec { cc_finish(x, @$); }
+       | modspec decls { cc_finish(x, @$); }
+       ;
 
 decls: decl | decls decl ;
 
 decl: vardecl ;
 
-vardecl: storage type varlist SEMI { cc_vardecl(x, $1, $2, $3); }
+vardecl: storage opt_type varlist SEMI { cc_vardecl(x, $1, $3); }
        ;
 
 storage: %empty { $$ = LINK_EXPORTED; }
@@ -105,15 +122,33 @@ varlist: var { $$ = vector_init($1); }
        | varlist COMMA var { vector_push(&$1, $3); $$ = $1; }
        ;
 
-var: IDENT { $$ = new_vardecl(x, @$, $1, NULL); }
-   | IDENT ASSIGN expr { $$ = new_vardecl(x, @$, $1, $3); }
+var: elaborate_type IDENT { $$ = new_vardecl(x, @$, $1, $2, NULL); }
+   | elaborate_type IDENT ASSIGN expr { $$ = new_vardecl(x, @$, $1, $2, $4); }
    ;
 
-/* TODO */
+elaborate_type: %empty { $$ = get_current_type(x); }
+              | STAR elaborate_type { $$ = type_pointer("pointer", get_current_type(x), node_new(x, @$)); }
+              ;
+
+opt_type: %empty { $$ = default_int(x, node_new(x, @$)); }
+        | type { $$ = $1; }
+        ;
+
 type: TYPENAME { $$ = NULL; }
-    /* TODO: simplify this */
-    | sign { $$ = type_digit(get_name_for_sign($1), node_new(x, @$), $1, DIGIT_INT); }
+    | sign { $$ = type_digit(get_name_for_sign($1), node_new(x, @$), $1, DIGIT_INT); set_current_type(x, $$); }
+    | inttype { $$ = type_digit(get_name_for_inttype($1), node_new(x, @$), SIGN_DEFAULT, $1); set_current_type(x, $$); }
+    | sign inttype { $$ = type_digit(get_name_for_digit($1, $2), node_new(x, @$), $1, $2); set_current_type(x, $$); }
     ;
+
+inttype: CHAR { $$ = DIGIT_CHAR; }
+       | SHORT { $$ = DIGIT_SHORT; }
+       | INT { $$ = DIGIT_INT; }
+       | LONG { $$ = DIGIT_LONG; }
+       | SHORT INT { $$ = DIGIT_SHORT; }
+       | LONG INT { $$ = DIGIT_LONG; }
+       | LONG LONG { $$ = DIGIT_LONG; }
+       | LONG LONG INT { $$ = DIGIT_LONG; }
+       ;
 
 sign: SIGNED { $$ = SIGN_SIGNED; }
     | UNSIGNED { $$ = SIGN_UNSIGNED; }

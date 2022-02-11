@@ -120,14 +120,14 @@ void *ctu_mmap(file_t *fp) {
 #ifndef _WIN32
     int fd = fileno(fp->file);
     text = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (text == MAP_FAILED) {
-        text = NULL;
+    if (text != MAP_FAILED) {
+        return text;
     }
-#else
+#endif
+
     text = ctu_malloc(size + 1);
     fread(text, size, 1, fp->file);
     text[size] = '\0';
-#endif
 
     return text;
 }

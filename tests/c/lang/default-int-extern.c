@@ -1,0 +1,1 @@
+extern printf(const char*, ...);

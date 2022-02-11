@@ -88,13 +88,34 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast) {
 context_t *new_context(reports_t *reports) {
     context_t *ctx = ctu_malloc(sizeof(context_t));
     ctx->path = NULL;
+    ctx->current = NULL;
+    ctx->default_int = type_integer("default-int");
     ctx->sema = sema_new(NULL, reports, TAG_MAX, GLOBAL_SIZES);
     return ctx;
 }
 
-vardecl_t *new_vardecl(scan_t *scan, where_t where, char *name, ast_t *init) {
+void set_current_type(scan_t *scan, type_t *type) {
+    context_t *ctx = get_context(scan);
+    ctx->current = type;
+}
+
+type_t *get_current_type(scan_t *scan) {
+    context_t *ctx = get_context(scan);
+    return ctx->current;
+}
+
+type_t *default_int(scan_t *scan, const node_t *node) {
+    context_t *ctx = get_context(scan);
+    ctx->current = ctx->default_int;
+
+    report(get_reports(scan), WARNING, node, "default int is deprecated, use an explicit type instead");
+    return ctx->default_int;
+}
+
+vardecl_t *new_vardecl(scan_t *scan, where_t where, type_t *type, char *name, ast_t *init) {
     vardecl_t *decl = ctu_malloc(sizeof(vardecl_t));
     decl->name = name;
+    decl->type = type;
     decl->node = node_new(scan, where);
     decl->init = init;
     return decl;
@@ -105,14 +126,14 @@ void cc_module(scan_t *scan, vector_t *path) {
     ctx->path = strjoin(".", path);
 }
 
-void cc_vardecl(scan_t *scan, hlir_linkage_t storage, type_t *type, vector_t *decls) {
+void cc_vardecl(scan_t *scan, hlir_linkage_t storage, vector_t *decls) {
     size_t len = vector_len(decls);
     hlir_attributes_t *attribs = hlir_new_attributes(storage);
 
     for (size_t i = 0; i < len; i++) {
         vardecl_t *decl = vector_get(decls, i);
 
-        hlir_t *hlir = hlir_new_value(decl->node, decl->name, type);
+        hlir_t *hlir = hlir_new_value(decl->node, decl->name, decl->type);
         hlir_set_attributes(hlir, attribs);
 
         if (decl->init == NULL) {
@@ -132,14 +153,4 @@ void cc_finish(scan_t *scan, where_t where) {
     hlir_build_module(hlir, vector_of(0), vector_of(0), vector_of(0));
 
     scan_export(scan, hlir); 
-}
-
-static const char *SIGN_NAMES[SIGN_TOTAL] = {
-    [SIGN_SIGNED] = "signed",
-    [SIGN_UNSIGNED] = "unsigned",
-    [SIGN_DEFAULT] = "default"
-};
-
-const char *get_name_for_sign(sign_t sign) {
-    return SIGN_NAMES[sign];
 }
