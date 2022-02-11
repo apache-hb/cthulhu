@@ -2,7 +2,16 @@ dir = meson.current_source_dir()
 
 pass = [
     'lang/multi', 'lang/module', 'lang/hello',
-    'lang/simple', 'lang/vars', 'lang/empty'
+    'lang/simple', 'lang/vars', 'lang/empty',
+
+    'lang/inttypes/all',
+    'lang/inttypes/simple',
+    'lang/inttypes/char',
+    'lang/inttypes/short',
+    'lang/inttypes/int',
+    'lang/inttypes/long',
+    'lang/inttypes/longlong',
+    'lang/inttypes/sign',
 ]
 
 fail = [

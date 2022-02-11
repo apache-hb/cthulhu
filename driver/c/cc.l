@@ -28,6 +28,7 @@
 "..." { return DOT3; }
 "." { return DOT; }
 
+"=" { return ASSIGN; }
 "::" { return COLON2; }
 ";" { return SEMI; }
 "," { return COMMA; }
@@ -54,7 +55,14 @@
 "static" { return STATIC; }
 "auto" { return AUTO; }
 
+[0][0-9]* {
+    // octal digit
+    mpz_init_set_str(yylval->mpz, yytext, 8);
+    return DIGIT;
+}
+
 [1-9][0-9]* {
+    // base 10 digit
     mpz_init_set_str(yylval->mpz, yytext, 10);
     return DIGIT;
 }

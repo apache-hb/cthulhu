@@ -150,7 +150,10 @@ void cc_finish(scan_t *scan, where_t where) {
     context_t *ctx = get_context(scan);
 
     hlir_t *hlir = hlir_new_module(node_new(scan, where), ctx->path);
-    hlir_build_module(hlir, vector_of(0), vector_of(0), vector_of(0));
+    
+    vector_t *vars = map_values(sema_tag(get_sema(scan), TAG_VARS));
 
-    scan_export(scan, hlir); 
+    hlir_build_module(hlir, vars, vector_of(0), vector_of(0));
+
+    scan_export(scan, hlir);
 }
