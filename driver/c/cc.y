@@ -149,7 +149,7 @@ param: full_type opt_name { $$ = new_param(x, @$, $1, $2); }
      ;
 
 funcbody: SEMI { $$ = NULL; }
-        | LBRACE RBRACE { $$ = vector_new(0); }
+        | LBRACE stmts RBRACE { $$ = vector_new(0); }
         ;
 
 storage: %empty { set_storage(x, LINK_EXPORTED); }
@@ -220,6 +220,14 @@ unary: postfix { $$ = $1; }
 
 expr: unary { $$ = $1; }
     ;
+
+stmt: expr SEMI
+    | LBRACE stmts RBRACE
+    ;
+
+stmts: stmt
+     | stmts stmt
+     ;
 
 modspec: %empty
        | MODULE path SEMI { cc_module(x, $2); }

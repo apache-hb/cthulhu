@@ -13,6 +13,19 @@ ast_t *ast_digit(scan_t *scan, where_t where, mpz_t digit) {
     return ast;
 }
 
+ast_t *ast_ident(scan_t *scan, where_t where, const char *ident) {
+    ast_t *ast = new_ast(AST_IDENT, scan, where);
+    ast->ident = ident;
+    return ast;
+}
+
+ast_t *ast_unary(scan_t *scan, where_t where, ast_t *operand, unary_t unary) {
+    ast_t *ast = new_ast(AST_UNARY, scan, where);
+    ast->unary = unary;
+    ast->operand = operand;
+    return ast;
+}
+
 static const char *NAMES[DIGIT_TOTAL][SIGN_TOTAL] = {
     [DIGIT_CHAR] = { 
         [SIGN_DEFAULT] = "char",

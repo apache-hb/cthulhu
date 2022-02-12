@@ -7,15 +7,24 @@
 #include "cthulhu/data/type.h"
 
 typedef enum {
-    AST_DIGIT
+    AST_DIGIT,
+    AST_IDENT,
+    AST_UNARY
 } astof_t;
 
-typedef struct {
+typedef struct ast_t {
     astof_t type;
     node_t *node;
 
     union {
-        mpz_t digit;  
+        mpz_t digit;
+
+        const char *ident;
+
+        struct {
+            struct ast_t *operand;
+            unary_t unary;
+        };
     };
 } ast_t;
 
