@@ -89,6 +89,7 @@ const char *common_prefix(vector_t *strings) CONSTFN NONULL;
 size_t rfind(const char *str, const char *sub) CONSTFN NONULL;
 
 size_t strcount(const char *str, const char *sub) CONSTFN NONULL;
+bool strcontains(const char *str, const char *sub) CONSTFN NONULL;
 
 char *replacestr(const char *str, const char *sub, const char *repl) NONULL;
 

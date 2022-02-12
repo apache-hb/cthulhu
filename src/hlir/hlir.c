@@ -117,10 +117,11 @@ void hlir_build_function(hlir_t *self, hlir_t *body) {
 // building values
 
 hlir_t *hlir_new_value(const node_t *node, const char *name, const type_t *type) {
-    return hlir_new_decl(node, name, type, HLIR_VALUE);
+    return hlir_new_decl(node, name, type, HLIR_FORWARD);
 }
 
 void hlir_build_value(hlir_t *self, hlir_t *value) {
+    self->type = HLIR_VALUE;
     self->value = value;
 }
 

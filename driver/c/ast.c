@@ -13,29 +13,39 @@ ast_t *ast_digit(scan_t *scan, where_t where, mpz_t digit) {
     return ast;
 }
 
-
-
-static const char *SIGN_NAMES[SIGN_TOTAL] = {
-    [SIGN_SIGNED] = "signed",
-    [SIGN_UNSIGNED] = "unsigned",
-    [SIGN_DEFAULT] = ""
+static const char *NAMES[DIGIT_TOTAL][SIGN_TOTAL] = {
+    [DIGIT_CHAR] = { 
+        [SIGN_DEFAULT] = "char",
+        [SIGN_UNSIGNED] = "unsigned char",
+        [SIGN_SIGNED] = "signed char"
+    },
+    [DIGIT_SHORT] = { 
+        [SIGN_DEFAULT] = "short",
+        [SIGN_UNSIGNED] = "unsigned short",
+        [SIGN_SIGNED] = "signed short"
+    },
+    [DIGIT_INT] = { 
+        [SIGN_DEFAULT] = "int",
+        [SIGN_UNSIGNED] = "unsigned int",
+        [SIGN_SIGNED] = "signed int"
+    },
+    [DIGIT_LONG] = { 
+        [SIGN_DEFAULT] = "long",
+        [SIGN_UNSIGNED] = "unsigned long",
+        [SIGN_SIGNED] = "signed long"
+    }
 };
 
-static const char *DIGIT_NAMES[DIGIT_TOTAL] = {
-    [DIGIT_CHAR] = "char",
-    [DIGIT_SHORT] = "short",
-    [DIGIT_INT] = "int",
-    [DIGIT_LONG] = "long"
-};
+static type_t *DIGITS[SIGN_TOTAL][DIGIT_TOTAL];
 
-const char *get_name_for_sign(sign_t sign) {
-    return SIGN_NAMES[sign];
+void init_types(void) {
+    for (int sign = 0; sign < SIGN_TOTAL; sign++) {
+        for (int digit = 0; digit < DIGIT_TOTAL; digit++) {
+            DIGITS[sign][digit] = type_digit(NAMES[digit][sign], NULL, sign, digit);
+        }
+    }
 }
 
-const char *get_name_for_inttype(digit_t digit) {
-    return DIGIT_NAMES[digit];
-}
-
-const char *get_name_for_digit(sign_t sign, digit_t digit) {
-    return format("%s %s", get_name_for_sign(sign), get_name_for_inttype(digit));
+type_t *get_digit(sign_t sign, digit_t digit) {
+    return DIGITS[sign][digit];
 }

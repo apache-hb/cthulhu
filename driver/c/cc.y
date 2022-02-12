@@ -135,9 +135,9 @@ opt_type: %empty { $$ = default_int(x, node_new(x, @$)); }
         ;
 
 type: TYPENAME { $$ = NULL; }
-    | sign { $$ = type_digit(get_name_for_sign($1), node_new(x, @$), $1, DIGIT_INT); set_current_type(x, $$); }
-    | inttype { $$ = type_digit(get_name_for_inttype($1), node_new(x, @$), SIGN_DEFAULT, $1); set_current_type(x, $$); }
-    | sign inttype { $$ = type_digit(get_name_for_digit($1, $2), node_new(x, @$), $1, $2); set_current_type(x, $$); }
+    | sign { $$ = get_digit($1, DIGIT_INT); set_current_type(x, $$); }
+    | inttype { $$ = get_digit(SIGN_DEFAULT, $1); set_current_type(x, $$); }
+    | sign inttype { $$ = get_digit($1, $2); set_current_type(x, $$); }
     ;
 
 inttype: CHAR { $$ = DIGIT_CHAR; }

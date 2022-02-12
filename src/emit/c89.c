@@ -1,31 +1,55 @@
 #include "cthulhu/emit/emit.h"
 
-static char *get_type(const type_t *type) {
-    return format("type_%s", type->name);
+static char *fmt_type_name(const type_t *type) {
+    const char *base = type_get_name(type);
+    base = replacestr(base, "_", "__");
+    if (strcontains(base, "-") || strcontains(base, " ")) {
+        base = replacestr(base, "-", "_");
+        base = replacestr(base, " ", "_");
+    }
+    return format("type_%s", base);
 }
 
 static char *emit_signature(const type_t *type) {
     const char *args = "void";
     if (vector_len(type->params) > 0) {
-        vector_t *params = VECTOR_MAP(type->params, get_type);
+        vector_t *params = VECTOR_MAP(type->params, fmt_type_name);
         args = strjoin(", ", params);
     }
-    return format("%s(*type_%s)(%s%s)", get_type(type->result), type_get_name(type), args, type->variadic ? ", ..." : "");
+    return format("%s(*%s)(%s%s)", fmt_type_name(type->result), fmt_type_name(type), args, type->variadic ? ", ..." : "");
+}
+
+static const char *sign_name(sign_t sign) {
+    switch (sign) {
+    case SIGN_UNSIGNED: return " unsigned";
+    case SIGN_SIGNED: return " signed";
+    default: return "";
+    }
+}
+
+static const char *digit_name(digit_t digit) {
+    switch (digit) {
+    case DIGIT_CHAR: return "char";
+    case DIGIT_SHORT: return "short";
+    case DIGIT_INT: return "int";
+    case DIGIT_LONG: return "long long";
+    default: return "";
+    }
 }
 
 static void emit_type_decl(reports_t *reports, const type_t *type) {
     switch (type->type) {
     case TYPE_INTEGER:
-        printf("typedef int type_%s;\n", type->name);
+        printf("typedef%s %s %s;\n", sign_name(type->sign), digit_name(type->width), fmt_type_name(type));
         break;
     case TYPE_BOOLEAN:
-        printf("typedef bool type_%s;\n", type->name);
+        printf("typedef bool %s;\n", fmt_type_name(type));
         break;
     case TYPE_STRING:
-        printf("typedef const char *type_%s;\n", type->name);
+        printf("typedef const char *%s;\n", fmt_type_name(type));
         break;
     case TYPE_VOID:
-        printf("typedef void type_%s;\n", type->name);
+        printf("typedef void %s;\n", fmt_type_name(type));
         break;
     case TYPE_SIGNATURE:
         printf("typedef %s;\n", emit_signature(type));
@@ -42,7 +66,7 @@ static char *get_type_params(const type_t *sig) {
         return sig->variadic ? "..." : "void";
     }
 
-    vector_t *types = VECTOR_MAP(sig->params, get_type);
+    vector_t *types = VECTOR_MAP(sig->params, fmt_type_name);
     char *base = strjoin(", ", types);
     if (sig->variadic) {
         base = format("%s, ...", base);
@@ -51,11 +75,11 @@ static char *get_type_params(const type_t *sig) {
 }
 
 static void emit_function_import(const hlir_t *hlir) {
-    printf("extern %s %s(%s);\n", get_type(hlir->of->result), hlir->name, get_type_params(hlir->of));
+    printf("extern %s %s(%s);\n", fmt_type_name(hlir->of->result), hlir->name, get_type_params(hlir->of));
 }
 
 static void emit_value_import(const hlir_t *hlir) {
-    printf("extern %s %s;\n", get_type(hlir->of), hlir->name);
+    printf("extern %s %s;\n", fmt_type_name(hlir->of), hlir->name);
 }
 
 static void emit_import_decl(reports_t *reports, const hlir_t *hlir) {
@@ -200,25 +224,27 @@ static void emit_stmt(reports_t *reports, const hlir_t *hlir) {
 }
 
 static void fwd_global(const hlir_t *hlir) {
-    printf("%s %s[1];\n", get_type(hlir->of), hlir->name);
+    printf("%s %s[1];\n", fmt_type_name(hlir->of), hlir->name);
 }
 
 static void emit_global(reports_t *reports, const hlir_t *hlir) {
-    printf("%s %s[1] = { %s };\n", get_type(hlir->of), hlir->name, emit_expr(reports, hlir->value));
+    if (hlir->type != HLIR_VALUE) { return; }
+
+    printf("%s %s[1] = { %s };\n", fmt_type_name(hlir->of), hlir->name, emit_expr(reports, hlir->value));
 }
 
 static void fwd_proc(const hlir_t *hlir) {
-    printf("%s %s(%s);\n", get_type(hlir->of->result), hlir->name, get_type_params(hlir->of));
+    printf("%s %s(%s);\n", fmt_type_name(hlir->of->result), hlir->name, get_type_params(hlir->of));
 }
 
 static void emit_proc(reports_t *reports, const hlir_t *hlir) {
     vector_t *locals = hlir->locals;
 
-    printf("%s %s(%s) {\n", get_type(hlir->of->result), hlir->name, get_type_params(hlir->of));
+    printf("%s %s(%s) {\n", fmt_type_name(hlir->of->result), hlir->name, get_type_params(hlir->of));
 
     for (size_t i = 0; i < vector_len(locals); i++) {
         const hlir_t *local = vector_get(locals, i);
-        printf("\t%s %s[1];\n", get_type(local->of), local->name);
+        printf("\t%s %s[1];\n", fmt_type_name(local->of), local->name);
     }
 
     emit_stmt(reports, hlir->body);

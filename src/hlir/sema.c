@@ -109,6 +109,8 @@ void check_module(reports_t *reports, hlir_t *mod) {
 
     for (size_t i = 0; i < nvars; i++) {
         hlir_t *var = vector_get(mod->globals, i);
+        if (var->type != HLIR_VALUE) { continue; }
+        
         vector_t *vec = vector_new(16);
         check_recursion(reports, &vec, var);
     }

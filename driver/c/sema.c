@@ -71,7 +71,7 @@ static void add_decl(scan_t *scan, tag_t tag, const char *name, hlir_t *decl) {
 }
 
 static hlir_t *sema_digit(ast_t *ast) {
-    return hlir_literal(ast->node, value_digit(NULL, ast->digit));
+    return hlir_literal(ast->node, value_digit(get_digit(SIGN_DEFAULT, DIGIT_INT), ast->digit));
 }
 
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast) {
@@ -89,7 +89,7 @@ context_t *new_context(reports_t *reports) {
     context_t *ctx = ctu_malloc(sizeof(context_t));
     ctx->path = NULL;
     ctx->current = NULL;
-    ctx->default_int = type_integer("default-int");
+    ctx->default_int = get_digit(SIGN_DEFAULT, DIGIT_INT);
     ctx->sema = sema_new(NULL, reports, TAG_MAX, GLOBAL_SIZES);
     return ctx;
 }
@@ -150,10 +150,19 @@ void cc_finish(scan_t *scan, where_t where) {
     context_t *ctx = get_context(scan);
 
     hlir_t *hlir = hlir_new_module(node_new(scan, where), ctx->path);
-    
+
     vector_t *vars = map_values(sema_tag(get_sema(scan), TAG_VARS));
 
-    hlir_build_module(hlir, vars, vector_of(0), vector_of(0));
+    // collect up the default int types
+    vector_t *types = vector_new(SIGN_TOTAL * DIGIT_TOTAL);
+    for (int sign = 0; sign < SIGN_TOTAL; sign++) {
+        for (int digit = 0; digit < DIGIT_TOTAL; digit++) {
+            type_t *type = get_digit(sign, digit);
+            vector_push(&types, type);
+        }
+    }
+
+    hlir_build_module(hlir, vars, vector_of(0), types);
 
     scan_export(scan, hlir);
 }

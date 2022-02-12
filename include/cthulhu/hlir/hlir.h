@@ -21,6 +21,7 @@ typedef enum {
     HLIR_LOOP,
     HLIR_ASSIGN,
 
+    HLIR_FORWARD,
     HLIR_FUNCTION,
     HLIR_VALUE,
     HLIR_MODULE,
@@ -73,12 +74,14 @@ typedef struct hlir_t {
             /* any attributes this declaration has */
             const hlir_attributes_t *attributes;
 
-            /* the local variables if this is function */
-            vector_t *locals;
-
             union {
-                /* the body of this function */
-                struct hlir_t *body;
+                struct {
+                    /* the local variables */
+                    vector_t *locals;
+
+                    /* the body of this function */
+                    struct hlir_t *body;
+                };
 
                 /* the initial value */
                 struct hlir_t *value;

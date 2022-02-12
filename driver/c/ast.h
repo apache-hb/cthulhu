@@ -20,6 +20,5 @@ typedef struct {
 
 ast_t *ast_digit(scan_t *scan, where_t where, mpz_t digit);
 
-const char *get_name_for_sign(sign_t sign);
-const char *get_name_for_inttype(digit_t digit);
-const char *get_name_for_digit(sign_t sign, digit_t digit);
+void init_types(void);
+type_t *get_digit(sign_t sign, digit_t digit);

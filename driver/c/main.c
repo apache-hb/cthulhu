@@ -63,5 +63,7 @@ static driver_t DRIVER = {
 int main(int argc, const char **argv) {
     common_init();
 
+    init_types();
+
     return common_main(argc, argv, DRIVER);
 }
