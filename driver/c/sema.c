@@ -133,6 +133,11 @@ void cc_vardecl(scan_t *scan, hlir_linkage_t storage, vector_t *decls) {
     for (size_t i = 0; i < len; i++) {
         vardecl_t *decl = vector_get(decls, i);
 
+        if (type_is_void(decl->type)) {
+            report(get_reports(scan), ERROR, decl->node, "variable `%s` cannot have void type", decl->name);
+            continue;
+        }
+
         hlir_t *hlir = hlir_new_value(decl->node, decl->name, decl->type);
         hlir_set_attributes(hlir, attribs);
 

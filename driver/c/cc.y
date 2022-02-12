@@ -61,6 +61,9 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     INT "int"
     LONG "long"
 
+    BOOL "_Bool"
+    VOID "void"
+
     SEMI ";"
     COMMA ","
     COLON2 "::"
@@ -138,6 +141,8 @@ type: TYPENAME { $$ = NULL; }
     | sign { $$ = get_digit($1, DIGIT_INT); set_current_type(x, $$); }
     | inttype { $$ = get_digit(SIGN_DEFAULT, $1); set_current_type(x, $$); }
     | sign inttype { $$ = get_digit($1, $2); set_current_type(x, $$); }
+    | VOID { $$ = get_void(); set_current_type(x, $$); }
+    | BOOL { $$ = get_bool(); set_current_type(x, $$); }
     ;
 
 inttype: CHAR { $$ = DIGIT_CHAR; }

@@ -37,6 +37,8 @@ static const char *NAMES[DIGIT_TOTAL][SIGN_TOTAL] = {
 };
 
 static type_t *DIGITS[SIGN_TOTAL][DIGIT_TOTAL];
+static type_t *VOID_TYPE;
+static type_t *BOOL_TYPE;
 
 void init_types(void) {
     for (int sign = 0; sign < SIGN_TOTAL; sign++) {
@@ -44,8 +46,19 @@ void init_types(void) {
             DIGITS[sign][digit] = type_digit(NAMES[digit][sign], NULL, sign, digit);
         }
     }
+
+    VOID_TYPE = type_void("void");
+    BOOL_TYPE = type_boolean("_Bool");
 }
 
 type_t *get_digit(sign_t sign, digit_t digit) {
     return DIGITS[sign][digit];
+}
+
+type_t *get_void(void) {
+    return VOID_TYPE;
+}
+
+type_t *get_bool(void) {
+    return BOOL_TYPE;
 }

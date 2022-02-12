@@ -12,10 +12,12 @@ pass = [
     'lang/inttypes/long',
     'lang/inttypes/longlong',
     'lang/inttypes/sign',
+
+    'lang/integral-types/bool'
 ]
 
 fail = [
-    'lang/error/mismatch'
+    'lang/error/mismatch', 'lang/integral-types/void'
 ]
 
 foreach case : pass

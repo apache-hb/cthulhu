@@ -43,6 +43,9 @@
 "_Module" { return MODULE; }
 "_Import" { return IMPORT; }
 
+"_Bool" { return BOOL; }
+"void" { return VOID; }
+
 "char" { return CHAR; }
 "short" { return SHORT; }
 "int" { return INT; }

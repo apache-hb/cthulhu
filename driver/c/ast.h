@@ -22,3 +22,5 @@ ast_t *ast_digit(scan_t *scan, where_t where, mpz_t digit);
 
 void init_types(void);
 type_t *get_digit(sign_t sign, digit_t digit);
+type_t *get_void(void);
+type_t *get_bool(void);
