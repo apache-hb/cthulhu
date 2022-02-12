@@ -89,7 +89,7 @@ static void emit_import_decl(reports_t *reports, const hlir_t *hlir) {
     case HLIR_VALUE:
         return emit_value_import(hlir);
     default:
-        ctu_assert(reports, "invalid import type");
+        ctu_assert(reports, "invalid import type %d", hlir->type);
         break;
     }
 }

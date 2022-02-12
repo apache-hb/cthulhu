@@ -75,6 +75,9 @@ typedef struct hlir_t {
             const hlir_attributes_t *attributes;
 
             union {
+                /* the type this is expected to be */
+                hlir_type_t expected;
+
                 struct {
                     /* the local variables */
                     vector_t *locals;

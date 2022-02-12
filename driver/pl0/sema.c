@@ -31,6 +31,7 @@ void pl0_init(void) {
     FMT = hlir_literal(NULL, value_string(STRING, "%d\n"));
     PRINT = hlir_new_function(NULL, "printf", PRINTF);
     hlir_set_attributes(PRINT, IMPORTED);
+    hlir_build_function(PRINT, NULL);
 }
 
 typedef enum {

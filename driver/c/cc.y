@@ -31,8 +31,10 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     digit_t digit;
     sign_t sign;
 
-    hlir_linkage_t storage;
     vardecl_t *vardecl;
+    param_t *param;
+
+    param_pack_t *param_pack;
 
     mpz_t mpz;
 }
@@ -64,10 +66,16 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     BOOL "_Bool"
     VOID "void"
 
+    CONST "const"
+    VOLATILE "volatile"
+
     SEMI ";"
     COMMA ","
     COLON2 "::"
     ASSIGN "="
+
+    ADD "+"
+    SUB "-"
     STAR "*"
 
     DOT3 "..."
@@ -81,15 +89,13 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<vector>
     path varlist
-
-%type<storage>
-    storage
+    params funcbody
 
 %type<vardecl>
     var
 
 %type<type>
-    type elaborate_type opt_type
+    type elaborate_type opt_type full_type integral
 
 %type<sign>
     sign
@@ -98,7 +104,16 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     inttype
 
 %type<ast>
-    expr
+    expr primary postfix unary
+
+%type<param>
+    param
+
+%type<ident>
+    opt_name
+
+%type<param_pack>
+    opt_params_with_varargs
 
 %start program
 
@@ -110,15 +125,37 @@ program: modspec { cc_finish(x, @$); }
 
 decls: decl | decls decl ;
 
-decl: vardecl ;
+decl: storage opt_type declbody 
+    ;
 
-vardecl: storage opt_type varlist SEMI { cc_vardecl(x, $1, $3); }
-       ;
+declbody: varlist SEMI { cc_vardecl(x, $1); }
+        | elaborate_type IDENT LPAREN opt_params_with_varargs RPAREN funcbody { cc_funcdecl(x, node_new(x, @$), $2, $4, $6); }
+        ;
 
-storage: %empty { $$ = LINK_EXPORTED; }
-       | EXTERN { $$ = LINK_IMPORTED; }
-       | STATIC { $$ = LINK_INTERNAL; }
-       | AUTO { $$ = LINK_EXPORTED; }
+opt_params_with_varargs: params { $$ = new_param_pack($1, false); }
+                       | params COMMA DOT3 { $$ = new_param_pack($1, true); }
+                       | %empty { $$ = new_param_pack(vector_new(0), true); }
+                       ;
+
+params: param { $$ = vector_init($1); }
+      | params COMMA param { vector_push(&$1, $3); $$ = $1; }
+      ;
+
+opt_name: %empty { $$ = NULL; }
+        | IDENT { $$ = $1; }
+        ;
+
+param: full_type opt_name { $$ = new_param(x, @$, $1, $2); }
+     ;
+
+funcbody: SEMI { $$ = NULL; }
+        | LBRACE RBRACE { $$ = vector_new(0); }
+        ;
+
+storage: %empty { set_storage(x, LINK_EXPORTED); }
+       | EXTERN { set_storage(x, LINK_IMPORTED); }
+       | STATIC { set_storage(x, LINK_INTERNAL); }
+       | AUTO { set_storage(x, LINK_EXPORTED); }
        ;
 
 varlist: var { $$ = vector_init($1); }
@@ -129,16 +166,25 @@ var: elaborate_type IDENT { $$ = new_vardecl(x, @$, $1, $2, NULL); }
    | elaborate_type IDENT ASSIGN expr { $$ = new_vardecl(x, @$, $1, $2, $4); }
    ;
 
-elaborate_type: %empty { $$ = get_current_type(x); }
-              | STAR elaborate_type { $$ = type_pointer("pointer", get_current_type(x), node_new(x, @$)); }
-              ;
+full_type: type elaborate_type { $$ = $2; }
+         ;
 
 opt_type: %empty { $$ = default_int(x, node_new(x, @$)); }
         | type { $$ = $1; }
         ;
 
-type: TYPENAME { $$ = NULL; }
-    | sign { $$ = get_digit($1, DIGIT_INT); set_current_type(x, $$); }
+elaborate_type: %empty { $$ = get_current_type(x); }
+              | STAR elaborate_type { $$ = type_pointer("pointer", get_current_type(x), node_new(x, @$)); }
+              ;
+
+type: opt_mods integral { $$ = $2; }
+    | integral { $$ = $1; }
+    ;
+
+opt_mods: typemod | opt_mods typemod ;
+typemod: CONST | VOLATILE ;
+
+integral: sign { $$ = get_digit($1, DIGIT_INT); set_current_type(x, $$); }
     | inttype { $$ = get_digit(SIGN_DEFAULT, $1); set_current_type(x, $$); }
     | sign inttype { $$ = get_digit($1, $2); set_current_type(x, $$); }
     | VOID { $$ = get_void(); set_current_type(x, $$); }
@@ -159,8 +205,20 @@ sign: SIGNED { $$ = SIGN_SIGNED; }
     | UNSIGNED { $$ = SIGN_UNSIGNED; }
     ;
 
-/* TODO */
-expr: DIGIT { $$ = ast_digit(x, @$, $1); } 
+primary: DIGIT { $$ = ast_digit(x, @$, $1); } 
+       | IDENT { $$ = ast_ident(x, @$, $1); }
+       ;
+
+postfix: primary { $$ = $1; }
+       | postfix LPAREN RPAREN { $$ = $1; }
+       ;
+
+unary: postfix { $$ = $1; }
+     | ADD unary { $$ = ast_unary(x, @$, $2, UNARY_ABS); }
+     | SUB unary { $$ = ast_unary(x, @$, $2, UNARY_NEG); }
+     ;
+
+expr: unary { $$ = $1; }
     ;
 
 modspec: %empty

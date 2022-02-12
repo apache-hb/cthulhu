@@ -32,19 +32,38 @@ void sema_set(sema_t *sema, size_t tag, const char *name, hlir_t *hlir) {
     map_set(map, name, hlir);
 }
 
-hlir_t *sema_get(sema_t *sema, size_t tag, const char *name) {
+typedef struct {
+    hlir_t *result;
+    size_t depth;
+} sema_query_t;
+
+static sema_query_t sema_inner_get(sema_t *sema, size_t tag, const char *name) {
     map_t *map = sema_tag(sema, tag);
 
     hlir_t *hlir = map_get(map, name);
     if (hlir != NULL) {
-        return hlir;
+        sema_query_t result = { hlir, 0 };
+        return result;
     }
 
     if (sema->parent != NULL) {
-        return sema_get(sema->parent, tag, name);
+        sema_query_t result = sema_inner_get(sema->parent, tag, name);
+        result.depth += 1;
+        return result;
     }
 
-    return NULL;
+    sema_query_t result = { NULL, 0 };
+    return result;
+}
+
+hlir_t *sema_get(sema_t *sema, size_t tag, const char *name) {
+    return sema_inner_get(sema, tag, name).result;
+}
+
+hlir_t *sema_get_with_depth(sema_t *sema, size_t tag, const char *name, size_t *depth) {
+    sema_query_t result = sema_inner_get(sema, tag, name);
+    *depth = result.depth;
+    return result.result;
 }
 
 map_t *sema_tag(sema_t *sema, size_t tag) {
@@ -110,7 +129,7 @@ void check_module(reports_t *reports, hlir_t *mod) {
     for (size_t i = 0; i < nvars; i++) {
         hlir_t *var = vector_get(mod->globals, i);
         if (var->type != HLIR_VALUE) { continue; }
-        
+
         vector_t *vec = vector_new(16);
         check_recursion(reports, &vec, var);
     }

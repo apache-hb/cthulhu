@@ -47,24 +47,69 @@ static hlir_t *get_decl(scan_t *scan, tag_t tag, const char *name) {
     return sema_get(get_sema(scan), tag, name);
 }
 
+static hlir_t *get_named_decl(scan_t *scan, const char *name) {
+    hlir_t *value = get_decl(scan, TAG_VARS, name);
+    if (value != NULL) { return value; }
+
+    hlir_t *proc = get_decl(scan, TAG_PROCS, name);
+    if (proc != NULL) { return proc; }
+
+    return NULL;
+}
+
+static bool is_or_will_become(const hlir_t *decl, hlir_type_t type) {
+    if (decl->type == HLIR_FORWARD) {
+        return decl->expected == type;
+    }
+
+    return decl->type == type;
+}
+
+static void report_duplicate(reports_t *reports, const hlir_t *decl, const hlir_t *prev) {
+    message_t *id = report(reports, ERROR, decl->node, "duplicate declaration of %s with different types", decl->name);
+    report_append(id, prev->node, "previous declaration");
+    report_note(id, "previously defined with `%s`\nredefinition with `%s`", type_to_string(prev->of), type_to_string(decl->of));
+}
+
+static void report_different_symbol(reports_t *reports, const hlir_t *decl, const hlir_t *prev) {
+    message_t *id = report(reports, ERROR, decl->node, "duplicate declaration of %s with different symbol types", decl->name);
+    report_append(id, prev->node, "previous declaration");
+    report_note(id, "previously defined with `%s`\nredefinition with `%s`", type_to_string(prev->of), type_to_string(decl->of));
+}
+
 static void fwd_decl(scan_t *scan, tag_t tag, const char *name, hlir_t *decl) {
-    hlir_t *other = get_decl(scan, tag, name);
-    if (other != NULL && !types_equal(decl->of, other->of)) {
-        message_t *id = report(get_reports(scan), ERROR, decl->node, "duplicate declaration of %s with different types", name);
-        report_append(id, other->node, "previous declaration");
-        report_note(id, "previously defined with `%s`\nredefinition with `%s`", type_to_string(other->of), type_to_string(decl->of));
-        return;
+    CTASSERT(decl->type == HLIR_FORWARD, "can only forward declare a forward decl");
+
+    hlir_t *other = get_named_decl(scan, name);
+    if (other != NULL) {
+        if (!types_equal(decl->of, other->of)) {
+            report_duplicate(get_reports(scan), decl, other);
+            return;
+        }
+
+        if (is_or_will_become(other, decl->expected)) {
+            report_different_symbol(get_reports(scan), decl, other);
+            return;
+        }
     }
 
     sema_set(get_sema(scan), tag, name, decl);
 }
 
 static void add_decl(scan_t *scan, tag_t tag, const char *name, hlir_t *decl) {
-    hlir_t *other = get_decl(scan, tag, name);
+    CTASSERT(decl->type != HLIR_FORWARD, "can only declare a non-forward decl");
+
+    hlir_t *other = get_named_decl(scan, name);
     if (other != NULL) {
-        message_t *id = report(get_reports(scan), ERROR, decl->node, "duplicate declaration of %s", name);
-        report_append(id, other->node, "previous declaration");
-        return;
+        if (!types_equal(decl->of, other->of)) {
+            report_duplicate(get_reports(scan), decl, other);
+            return;
+        }
+
+        if (is_or_will_become(other, decl->expected)) {
+            report_different_symbol(get_reports(scan), decl, other);
+            return;
+        }
     }
 
     sema_set(get_sema(scan), tag, name, decl);
@@ -91,6 +136,7 @@ context_t *new_context(reports_t *reports) {
     ctx->current = NULL;
     ctx->default_int = get_digit(SIGN_DEFAULT, DIGIT_INT);
     ctx->sema = sema_new(NULL, reports, TAG_MAX, GLOBAL_SIZES);
+    ctx->linkage = LINK_EXPORTED;
     return ctx;
 }
 
@@ -102,6 +148,16 @@ void set_current_type(scan_t *scan, type_t *type) {
 type_t *get_current_type(scan_t *scan) {
     context_t *ctx = get_context(scan);
     return ctx->current;
+}
+
+void set_storage(scan_t *scan, hlir_linkage_t storage) {
+    context_t *ctx = get_context(scan);
+    ctx->linkage = storage;
+}
+
+hlir_linkage_t get_storage(scan_t *scan) {
+    context_t *ctx = get_context(scan);
+    return ctx->linkage;
 }
 
 type_t *default_int(scan_t *scan, const node_t *node) {
@@ -121,12 +177,28 @@ vardecl_t *new_vardecl(scan_t *scan, where_t where, type_t *type, char *name, as
     return decl;
 }
 
+param_t *new_param(scan_t *scan, where_t where, type_t *type, char *name) {
+    param_t *param = ctu_malloc(sizeof(param_t));
+    param->name = name;
+    param->type = type;
+    param->node = node_new(scan, where);
+    return param;
+}
+
+param_pack_t *new_param_pack(vector_t *params, bool variadic) {
+    param_pack_t *pack = ctu_malloc(sizeof(param_pack_t));
+    pack->params = params;
+    pack->variadic = variadic;
+    return pack;
+}
+
 void cc_module(scan_t *scan, vector_t *path) {
     context_t *ctx = scan_get(scan);
     ctx->path = strjoin(".", path);
 }
 
-void cc_vardecl(scan_t *scan, hlir_linkage_t storage, vector_t *decls) {
+void cc_vardecl(scan_t *scan, vector_t *decls) {
+    hlir_linkage_t storage = get_storage(scan);
     size_t len = vector_len(decls);
     hlir_attributes_t *attribs = hlir_new_attributes(storage);
 
@@ -148,6 +220,19 @@ void cc_vardecl(scan_t *scan, hlir_linkage_t storage, vector_t *decls) {
             hlir_build_value(hlir, init);
             add_decl(scan, TAG_VARS, decl->name, hlir);
         }
+    }
+}
+
+void cc_funcdecl(scan_t *scan, const node_t *node, char *ident, param_pack_t *params, vector_t *body) {
+    UNUSED(body);
+
+    hlir_t *hlir = hlir_new_function(node, ident, type_void("void"));
+
+    if (body == NULL) {
+        fwd_decl(scan, TAG_PROCS, ident, hlir);
+    } else {
+        hlir_build_function(hlir, NULL);
+        add_decl(scan, TAG_PROCS, ident, hlir);
     }
 }
 

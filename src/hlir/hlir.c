@@ -21,6 +21,14 @@ static hlir_t *hlir_new_decl(const node_t *node, const char *name, const type_t 
     return hlir;
 }
 
+static hlir_t *hlir_new_forward(const node_t *node, const char *name, const type_t *of, hlir_type_t expect) {
+    hlir_t *hlir = hlir_new(node, of, HLIR_FORWARD);
+    hlir->name = name;
+    hlir->expected = expect;
+    hlir->attributes = &DEFAULT_ATTRIBS;
+    return hlir;
+}
+
 const type_t *typeof_node(const hlir_t *hlir) {
     return hlir->of;
 }
@@ -100,7 +108,7 @@ hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src) {
 // building functions
 
 hlir_t *hlir_new_function(const node_t *node, const char *name, const type_t *type) {
-    hlir_t *hlir = hlir_new_decl(node, name, type, HLIR_FUNCTION);
+    hlir_t *hlir = hlir_new_forward(node, name, type, HLIR_FUNCTION);
     hlir->locals = vector_new(0);
     hlir->body = NULL;
     return hlir;
@@ -111,13 +119,14 @@ void hlir_add_local(hlir_t *self, hlir_t *local) {
 }
 
 void hlir_build_function(hlir_t *self, hlir_t *body) {
+    self->type = HLIR_FUNCTION;
     self->body = body;
 }
 
 // building values
 
 hlir_t *hlir_new_value(const node_t *node, const char *name, const type_t *type) {
-    return hlir_new_decl(node, name, type, HLIR_FORWARD);
+    return hlir_new_forward(node, name, type, HLIR_VALUE);
 }
 
 void hlir_build_value(hlir_t *self, hlir_t *value) {

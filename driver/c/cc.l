@@ -54,6 +54,9 @@
 "signed" { return SIGNED; }
 "unsigned" { return UNSIGNED; }
 
+"const" { return CONST; }
+"volatile" { return VOLATILE; }
+
 "extern" { return EXTERN; }
 "static" { return STATIC; }
 "auto" { return AUTO; }
