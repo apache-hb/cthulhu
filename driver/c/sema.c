@@ -39,19 +39,19 @@ static sema_t *get_sema(scan_t *scan) {
     return get_context(scan)->sema;
 }
 
+static sema_t *current_sema(context_t *ctx) {
+    return vector_tail(ctx->stack);
+}
+
 static reports_t *get_reports(scan_t *scan) {
     return get_sema(scan)->reports;
 }
 
-static hlir_t *get_decl(scan_t *scan, tag_t tag, const char *name) {
-    return sema_get(get_sema(scan), tag, name);
-}
-
-static hlir_t *get_named_decl(scan_t *scan, const char *name) {
-    hlir_t *value = get_decl(scan, TAG_VARS, name);
+static hlir_t *get_named_decl(sema_t *sema, const char *name) {
+    hlir_t *value = sema_get(sema, TAG_VARS, name);
     if (value != NULL) { return value; }
 
-    hlir_t *proc = get_decl(scan, TAG_PROCS, name);
+    hlir_t *proc = sema_get(sema, TAG_PROCS, name);
     if (proc != NULL) { return proc; }
 
     return NULL;
@@ -80,7 +80,10 @@ static void report_different_symbol(reports_t *reports, const hlir_t *decl, cons
 static void fwd_decl(scan_t *scan, tag_t tag, const char *name, hlir_t *decl) {
     CTASSERT(decl->type == HLIR_FORWARD, "can only forward declare a forward decl");
 
-    hlir_t *other = get_named_decl(scan, name);
+    context_t *ctx = get_context(scan);
+    sema_t *sema = current_sema(ctx);
+
+    hlir_t *other = get_named_decl(sema, name);
     if (other != NULL) {
         if (!types_equal(decl->of, other->of)) {
             report_duplicate(get_reports(scan), decl, other);
@@ -93,13 +96,16 @@ static void fwd_decl(scan_t *scan, tag_t tag, const char *name, hlir_t *decl) {
         }
     }
 
-    sema_set(get_sema(scan), tag, name, decl);
+    sema_set(sema, tag, name, decl);
 }
 
 static void add_decl(scan_t *scan, tag_t tag, const char *name, hlir_t *decl) {
     CTASSERT(decl->type != HLIR_FORWARD, "can only declare a non-forward decl");
 
-    hlir_t *other = get_named_decl(scan, name);
+    context_t *ctx = get_context(scan);
+    sema_t *sema = current_sema(ctx);
+
+    hlir_t *other = get_named_decl(sema, name);
     if (other != NULL) {
         if (!types_equal(decl->of, other->of)) {
             report_duplicate(get_reports(scan), decl, other);
@@ -112,18 +118,42 @@ static void add_decl(scan_t *scan, tag_t tag, const char *name, hlir_t *decl) {
         }
     }
 
-    sema_set(get_sema(scan), tag, name, decl);
+    sema_set(sema, tag, name, decl);
 }
+
+static hlir_t *sema_expr(sema_t *sema, ast_t *ast);
 
 static hlir_t *sema_digit(ast_t *ast) {
     return hlir_literal(ast->node, value_digit(get_digit(SIGN_DEFAULT, DIGIT_INT), ast->digit));
 }
 
-static hlir_t *sema_expr(sema_t *sema, ast_t *ast) {
-    UNUSED(sema);
+static hlir_t *sema_name(sema_t *sema, ast_t *ast) {
+    hlir_t *decl = get_named_decl(sema, ast->ident);
+    if (decl == NULL) {
+        report(sema->reports, ERROR, ast->node, "unresolved identifier `%s`", ast->ident);
+    }
+    return hlir_name(ast->node, decl);
+}
 
+static hlir_t *sema_unary(sema_t *sema, ast_t *ast) {
+    hlir_t *operand = sema_expr(sema, ast->operand);
+
+    return hlir_unary(ast->node, operand->of, operand, ast->unary);
+}
+
+static hlir_t *sema_binary(sema_t *sema, ast_t *ast) {
+    hlir_t *lhs = sema_expr(sema, ast->lhs);
+    hlir_t *rhs = sema_expr(sema, ast->rhs);
+
+    return hlir_binary(ast->node, lhs->of, ast->binary, lhs, rhs);
+}
+
+static hlir_t *sema_expr(sema_t *sema, ast_t *ast) {
     switch (ast->type) {
     case AST_DIGIT: return sema_digit(ast);
+    case AST_IDENT: return sema_name(sema, ast);
+    case AST_UNARY: return sema_unary(sema, ast);
+    case AST_BINARY: return sema_binary(sema, ast);
     default: 
         ctu_assert(sema->reports, "sema-expr %d", ast->type);
         return NULL;
@@ -131,12 +161,18 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast) {
 }
 
 context_t *new_context(reports_t *reports) {
+    sema_t *sema = sema_new(NULL, reports, TAG_MAX, GLOBAL_SIZES);
+
     context_t *ctx = ctu_malloc(sizeof(context_t));
     ctx->path = NULL;
+    ctx->linkage = LINK_EXPORTED;
+    
     ctx->current = NULL;
     ctx->default_int = get_digit(SIGN_DEFAULT, DIGIT_INT);
-    ctx->sema = sema_new(NULL, reports, TAG_MAX, GLOBAL_SIZES);
-    ctx->linkage = LINK_EXPORTED;
+    
+    ctx->sema = sema;
+    ctx->stack = vector_init(sema);
+
     return ctx;
 }
 
@@ -198,9 +234,13 @@ void cc_module(scan_t *scan, vector_t *path) {
 }
 
 void cc_vardecl(scan_t *scan, vector_t *decls) {
+    context_t *ctx = get_context(scan);
+
+    sema_t *sema = current_sema(ctx);
     hlir_linkage_t storage = get_storage(scan);
     size_t len = vector_len(decls);
     hlir_attributes_t *attribs = hlir_new_attributes(storage);
+
 
     for (size_t i = 0; i < len; i++) {
         vardecl_t *decl = vector_get(decls, i);
@@ -216,7 +256,7 @@ void cc_vardecl(scan_t *scan, vector_t *decls) {
         if (decl->init == NULL) {
             fwd_decl(scan, TAG_VARS, decl->name, hlir);
         } else {
-            hlir_t *init = sema_expr(get_sema(scan), decl->init);
+            hlir_t *init = sema_expr(sema, decl->init);
             hlir_build_value(hlir, init);
             add_decl(scan, TAG_VARS, decl->name, hlir);
         }
@@ -238,10 +278,11 @@ void cc_funcdecl(scan_t *scan, const node_t *node, char *ident, param_pack_t *pa
 
 void cc_finish(scan_t *scan, where_t where) {
     context_t *ctx = get_context(scan);
+    sema_t *sema = current_sema(ctx);
 
     hlir_t *hlir = hlir_new_module(node_new(scan, where), ctx->path);
 
-    vector_t *vars = map_values(sema_tag(get_sema(scan), TAG_VARS));
+    vector_t *vars = map_values(sema_tag(sema, TAG_VARS));
 
     // collect up the default int types
     vector_t *types = vector_new(SIGN_TOTAL * DIGIT_TOTAL);

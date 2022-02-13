@@ -25,14 +25,21 @@
 <COMMENT>\n ;
 <COMMENT>. ;
 
+"+" { return ADD; }
+"-" { return SUB; }
+"*" { return STAR; }
+"/" { return DIV; }
+"%" { return REM; }
+
 "..." { return DOT3; }
 "." { return DOT; }
 
 "=" { return ASSIGN; }
+":" { return COLON; }
 "::" { return COLON2; }
 ";" { return SEMI; }
 "," { return COMMA; }
-"*" { return STAR; }
+"?" { return QUESTION; }
 
 "(" { return LPAREN; }
 ")" { return RPAREN; }
@@ -68,9 +75,23 @@
 }
 
 [1-9][0-9]* {
-    // base 10 digit
     mpz_init_set_str(yylval->mpz, yytext, 10);
     return DIGIT;
+}
+
+"0b"[01]+ { 
+    mpz_init_set_str(yylval->mpz, yytext + 2, 2);
+    return DIGIT;
+}
+
+"0x"[0-9a-fA-F]+ {
+    mpz_init_set_str(yylval->mpz, yytext + 2, 16);
+    return DIGIT;
+}
+
+\"(\\.|[^"\\])*\" { 
+    yylval->ident = ctu_strndup(yytext + 1, yyleng - 2);
+    return STRING;
 }
 
 [a-zA-Z_][a-zA-Z0-9_]* {

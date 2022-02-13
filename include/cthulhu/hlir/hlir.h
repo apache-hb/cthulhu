@@ -11,6 +11,7 @@ typedef enum {
 
     HLIR_NAME,
 
+    HLIR_UNARY,
     HLIR_BINARY,
     HLIR_COMPARE,
 
@@ -44,6 +45,11 @@ typedef struct hlir_t {
         struct {
             struct hlir_t *call;
             vector_t *args;
+        };
+
+        struct {
+            struct hlir_t *operand;
+            unary_t unary;
         };
 
         struct {
@@ -108,6 +114,7 @@ hlir_t *hlir_error(const node_t *node, const char *error);
 hlir_t *hlir_literal(const node_t *node, value_t *value);
 hlir_t *hlir_name(const node_t *node, hlir_t *read);
 
+hlir_t *hlir_unary(const node_t *node, const type_t *type, hlir_t *operand, unary_t unary);
 hlir_t *hlir_binary(const node_t *node, const type_t *type, binary_t binary, hlir_t *lhs, hlir_t *rhs);
 hlir_t *hlir_compare(const node_t *node, const type_t *type, compare_t compare, hlir_t *lhs, hlir_t *rhs);
 

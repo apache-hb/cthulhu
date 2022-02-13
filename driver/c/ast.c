@@ -19,10 +19,24 @@ ast_t *ast_ident(scan_t *scan, where_t where, const char *ident) {
     return ast;
 }
 
+ast_t *ast_string(scan_t *scan, where_t where, const char *string) {
+    ast_t *ast = new_ast(AST_STRING, scan, where);
+    ast->ident = string;
+    return ast;
+}
+
 ast_t *ast_unary(scan_t *scan, where_t where, ast_t *operand, unary_t unary) {
     ast_t *ast = new_ast(AST_UNARY, scan, where);
     ast->unary = unary;
     ast->operand = operand;
+    return ast;
+}
+
+ast_t *ast_binary(scan_t *scan, where_t where, ast_t *lhs, ast_t *rhs, binary_t binary) {
+    ast_t *ast = new_ast(AST_BINARY, scan, where);
+    ast->binary = binary;
+    ast->lhs = lhs;
+    ast->rhs = rhs;
     return ast;
 }
 

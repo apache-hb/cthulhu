@@ -42,6 +42,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %token<ident>
     IDENT "identifier"
     TYPENAME "typename"
+    STRING "string"
 
 %token<mpz>
     DIGIT "integer literal"
@@ -73,10 +74,14 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     COMMA ","
     COLON2 "::"
     ASSIGN "="
+    QUESTION "?"
+    COLON ":"
 
     ADD "+"
     SUB "-"
     STAR "*"
+    DIV "/"
+    REM "%"
 
     DOT3 "..."
     DOT "."
@@ -90,6 +95,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<vector>
     path varlist
     params funcbody
+    opt_args args
 
 %type<vardecl>
     var
@@ -104,7 +110,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     inttype
 
 %type<ast>
-    expr primary postfix unary
+    expr primary postfix unary mul add
 
 %type<param>
     param
@@ -119,8 +125,8 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %%
 
-program: modspec { cc_finish(x, @$); }
-       | modspec decls { cc_finish(x, @$); }
+program: modspec opt_imports { cc_finish(x, @$); }
+       | modspec opt_imports decls { cc_finish(x, @$); }
        ;
 
 decls: decl | decls decl ;
@@ -207,18 +213,38 @@ sign: SIGNED { $$ = SIGN_SIGNED; }
 
 primary: DIGIT { $$ = ast_digit(x, @$, $1); } 
        | IDENT { $$ = ast_ident(x, @$, $1); }
+       | STRING { $$ = ast_string(x, @$, $1); }
        ;
 
 postfix: primary { $$ = $1; }
-       | postfix LPAREN RPAREN { $$ = $1; }
+       | postfix LPAREN opt_args RPAREN { $$ = $1; }
        ;
+
+opt_args: %empty { $$ = vector_new(0); }
+    | args { $$ = $1; }
+    ;
+
+args: expr { $$ = vector_init($1); }
+    | args COMMA expr { vector_push(&$1, $3); $$ = $1; }
+    ;
 
 unary: postfix { $$ = $1; }
      | ADD unary { $$ = ast_unary(x, @$, $2, UNARY_ABS); }
      | SUB unary { $$ = ast_unary(x, @$, $2, UNARY_NEG); }
      ;
 
-expr: unary { $$ = $1; }
+mul: unary { $$ = $1; }
+    | mul STAR unary { $$ = ast_binary(x, @$, $1, $3, BINARY_MUL); }
+    | mul DIV unary { $$ = ast_binary(x, @$, $1, $3, BINARY_DIV); }
+    | mul REM unary { $$ = ast_binary(x, @$, $1, $3, BINARY_REM); }
+    ;
+
+add: mul { $$ = $1; }
+    | add ADD mul { $$ = ast_binary(x, @$, $1, $3, BINARY_ADD); }
+    | add SUB mul { $$ = ast_binary(x, @$, $1, $3, BINARY_SUB); }
+    ;
+
+expr: add { $$ = $1; }
     ;
 
 stmt: expr SEMI
@@ -232,6 +258,10 @@ stmts: stmt
 modspec: %empty
        | MODULE path SEMI { cc_module(x, $2); }
        ;
+
+opt_imports: %empty | imports ;
+imports: import | imports import ;
+import: IMPORT path SEMI ;
 
 path: IDENT { $$ = vector_init($1); }
     | path COLON2 IDENT { vector_push(&$1, $3); $$ = $1; }

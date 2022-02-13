@@ -29,12 +29,25 @@ typedef struct {
 
 param_pack_t *new_param_pack(vector_t *params, bool variadic);
 
+// our C parsing state machine
 typedef struct {
+    // the path to this file
     char *path;
+
+    // the current specified linkage type
     hlir_linkage_t linkage;
+    
+    // the currently set type
     type_t *current;
+
+    // the global default int type
     type_t *default_int;
+
+    // the toplevel sema context
     sema_t *sema;
+
+    // the sema context stack
+    vector_t *stack;
 } context_t;
 
 context_t *new_context(reports_t *reports);

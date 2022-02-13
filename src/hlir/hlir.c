@@ -53,6 +53,13 @@ hlir_t *hlir_name(const node_t *node, hlir_t *read) {
     return self;
 }
 
+hlir_t *hlir_unary(const node_t *node, const type_t *type, hlir_t *operand, unary_t unary) {
+    hlir_t *self = hlir_new(node, type, HLIR_UNARY);
+    self->unary = unary;
+    self->operand = operand;
+    return self;
+}
+
 hlir_t *hlir_binary(const node_t *node, const type_t *type, binary_t binary, hlir_t *lhs, hlir_t *rhs) {
     hlir_t *self = hlir_new(node, type, HLIR_BINARY);
     self->lhs = lhs;
