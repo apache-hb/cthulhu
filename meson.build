@@ -115,9 +115,9 @@ if get_option('tuning')
     )
 endif
 
-aws = dependency('aws-sdk-cpp', required : get_option('aws-lambda'))
+aws = subproject('aws', required : get_option('aws'))
 if aws.found()
     executable('lambda', [ 'tools/lambda.c' ],
-        dependencies : [ aws, generic ]
+        dependencies : [ aws.get_variable('aws'), generic ]
     )
 endif

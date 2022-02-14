@@ -9,7 +9,7 @@ option('tuning', type : 'boolean',
     value : false
 )
 
-option('aws-lambda', type : 'feature',
-    description : 'build lambda functions',
+option('aws', type : 'feature',
+    description : 'enable aws runtime support',
     value : 'auto'
 )
