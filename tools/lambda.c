@@ -15,7 +15,7 @@ int main(int argc, const char **argv) {
     error = aws_next_event(&runtime, &event);
     if (error != AWS_OK) { return 1; }
 
-    error = aws_respond(&runtime, "Hello, world!");
+    error = aws_respond(&runtime, &event, "Hello, world!");
     if (error != AWS_OK) { return 1; }
 
     delete_aws_runtime(&runtime);

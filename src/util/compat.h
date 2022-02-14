@@ -7,3 +7,4 @@
 
 FILE *compat_fopen(const char *path, const char *mode);
 bool compat_file_exists(const char *path);
+const char *compat_realpath(const char *path);

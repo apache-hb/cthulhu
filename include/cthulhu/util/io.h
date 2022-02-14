@@ -28,3 +28,4 @@ void *ctu_mmap(file_t *fp) NONULL;
 char *ctu_basepath(const char *path) NONULL;
 char *ctu_noext(const char *path) NONULL;
 char *ctu_filename(const char *path) NONULL;
+char *ctu_pathjoin(const char *path, const char *file) NONULL;

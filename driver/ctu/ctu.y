@@ -4,19 +4,19 @@
 %parse-param { void *scan } { scan_t *x }
 %locations
 %expect 0
-%define api.prefix {cc}
+%define api.prefix {ctu}
 
 %code requires {
-    #define YYSTYPE CCSTYPE
-    #define YYLTYPE CCLTYPE
+    #define YYSTYPE CTUSTYPE
+    #define YYLTYPE CTULTYPE
     
     #include "scan.h"
 }
 
 %{
 #include "scan.h"
-int cclex();
-void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
+int ctulex();
+void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 
 %start program

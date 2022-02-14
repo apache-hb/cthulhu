@@ -4,10 +4,11 @@
 %option noyyalloc noyyrealloc noyyfree
 %option reentrant bison-bridge bison-locations
 %option never-interactive batch
-%option prefix="cc"
+%option prefix="ctu"
 
 %{
-#include "cc-bison.h"
+#include "ctu-bison.h"
+#include "scan.h"
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/report-ext.h"
 #include "cthulhu/ast/interop.h"
@@ -28,4 +29,4 @@
 
 %%
 
-FLEX_MEMORY(ccalloc, ccrealloc, ccfree)
+FLEX_MEMORY(ctualloc, cturealloc, ctufree)

@@ -16,3 +16,11 @@ FILE *compat_fopen(const char *path, const char *mode) {
 bool compat_file_exists(const char *path) {
     return GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES;
 }
+
+const char *compat_realpath(const char *path) {
+    char full[MAX_PATH];
+
+    GetFullPathName(path, MAX_PATH, full, NULL);
+
+    return ctu_strdup(full);
+}

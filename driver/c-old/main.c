@@ -1,8 +1,6 @@
 #include "cthulhu/driver/driver.h"
 #include "cthulhu/ast/compile.h"
 
-#include "cpp.h"
-
 #include "cc-bison.h"
 #include "cc-flex.h"
 
@@ -41,17 +39,18 @@ static callbacks_t CALLBACKS = {
 };
 
 void *cc_parse(reports_t *reports, scan_t *scan) {
-    scan_t *complete = run_cpp(reports, scan);
-    if (!complete) { return NULL; }
+    context_t *context = new_context(reports);
+    scan_export(scan, context);
 
-    return compile_file(complete, &CALLBACKS);
+    return compile_file(scan, &CALLBACKS);
 }
 
 /**
  * just forward the hlir
  */
 static hlir_t *cc_sema(reports_t *reports, void *ast) {
-    return NULL;
+    UNUSED(reports);
+    return ast;
 }
 
 static driver_t DRIVER = {
@@ -63,6 +62,8 @@ static driver_t DRIVER = {
 
 int main(int argc, const char **argv) {
     common_init();
+
+    init_types();
 
     return common_main(argc, argv, DRIVER);
 }

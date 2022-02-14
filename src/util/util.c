@@ -83,10 +83,14 @@ void *ctu_memdup(const void *ptr, size_t size) {
     return out;
 }
 
+char *ctu_pathjoin(const char *path, const char *file) {
+    return format("%s" PATH_SEP "%s", path, file);
+}
+
 file_t ctu_fopen(const char *path, const char *mode) {
     logverbose("opening: %s", path);
     file_t file = {
-        .path = path,
+        .path = compat_realpath(path),
         .file = compat_fopen(path, mode)
     };
     return file;
