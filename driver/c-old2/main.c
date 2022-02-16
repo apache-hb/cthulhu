@@ -1,6 +1,8 @@
 #include "cthulhu/driver/driver.h"
 #include "cthulhu/ast/compile.h"
 
+#include "cpp.h"
+
 #include "cc-bison.h"
 #include "cc-flex.h"
 
@@ -39,7 +41,10 @@ static callbacks_t CALLBACKS = {
 };
 
 void *cc_parse(reports_t *reports, scan_t *scan) {
-    return compile_file(scan, &CALLBACKS);
+    scan_t *complete = run_cpp(reports, scan);
+    if (!complete) { return NULL; }
+
+    return compile_file(complete, &CALLBACKS);
 }
 
 /**

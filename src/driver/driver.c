@@ -18,9 +18,10 @@ static void print_help(const char **argv) {
     printf("options:\n");
     printf("  -h, --help        : print this help message\n");
     printf("  -v, --version     : print version information\n");
+    printf("  -V, --verbose     : enable verbose logging\n");
     printf("  -m, --module      : set module output name\n");
-    printf("  -dh, --debug-hlir : print HLIR debug tree\n");
-    printf("  -ds, --debug-ssa  : print SSA debug tree\n");
+    //printf("  -dh, --debug-hlir : print HLIR debug tree\n");
+    //printf("  -ds, --debug-ssa  : print SSA debug tree\n");
     printf("  -out, --output    : set output format\n");
     printf("                    | options: json, c89\n");
     printf("                    | default: c89\n");
@@ -107,6 +108,10 @@ int common_main(int argc, const char **argv, driver_t driver) {
         return 0;
     }
 
+    if (find_arg(argc, argv, "--verbose", "-V")) {
+        verbose = true;
+    }
+
     reports_t *reports = begin_reports();
     int status = 99;
 
@@ -115,8 +120,6 @@ int common_main(int argc, const char **argv, driver_t driver) {
         return end_reports(reports, SIZE_MAX, "command line parsing");
     }
 
-    //bool debug_hlir = find_arg(argc, argv, "--debug-hlir","-dh");
-    //bool debug_ssa = find_arg(argc, argv, "--debug-ssa", "-ds");
     const char *mod_name = get_arg(reports, argc, argv, "--module", "-m");
     const char *out = get_arg(reports, argc, argv, "--output", "-out");
     if (out == NULL) { out = "c89"; }
