@@ -11,6 +11,7 @@
     #define YYLTYPE CTULTYPE
     
     #include "scan.h"
+    #include "ast.h"
 }
 
 %{
@@ -20,13 +21,23 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 
 %union {
+    bool boolean;
     char *ident;
     mpz_t mpz;
+
+    ast_t *ast;
+    vector_t *vector;
 }
 
-%token
+%token<ident>
     IDENT "identifier"
+
+%token<mpz>
     INTEGER "integer literal"
+
+%token<boolean>
+    BOOLEAN "boolean literal"
+
 
 %token
     AT "`@`"
@@ -96,8 +107,6 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     LAMBDA "`lambda`"
     AS "`as`"
 
-    YES "`true`"
-    NO "`false`"
     NIL "`null`"
 
     MATCH "`match`"
@@ -134,35 +143,84 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     OFFSETOF "`offsetof`"
     TYPEOF "`typeof`"
     UUIDOF "`uuidof`"
+
+%type<ast>
+    primary postfix unary expr
+    or and xor bits shift equality compare add mul
+
+    type
+
+%type<vector>
+    path
+
 %start program
 
 %%
 
-program: optmodspec optimports optdecls ;
+program: expr ;
 
-optdecls: %empty | decls ;
-decls: decl | decls decl ;
-decl: define ;
+path: IDENT { $$ = vector_init($1); }
+    | path COLON2 IDENT { vector_push(&$1, $3); $$ = $1; }
+    ;
 
-define: DEF IDENT optparams optresult optbody ;
+type: path { $$ = ast_type(x, @$, $1); }
+    | MUL type { $$ = ast_pointer(x, @$, $2); }
+    | BITAND type { $$ = ast_reference(x, @$, $2); }
+    ;
 
-optparams: %empty | params ;
-params: LPAREN RPAREN ;
+primary: path { $$ = ast_name(x, @$, $1); }
+    | INTEGER { $$ = ast_digit(x, @$, $1); }
+    | BOOLEAN { $$ = ast_boolean(x, @$, $1); }
+    | LPAREN expr RPAREN { $$ = $2; }
+    ;
 
-optresult: %empty | result ;
-result: COLON type ;
+postfix: primary { $$ = $1; }
+    | postfix AS type { $$ = ast_cast(x, @$, $1, $3); }
+    ;
 
-optbody: SEMICOLON ;
+unary: postfix { $$ = $1; }
+    | ADD unary { $$ = ast_unary(x, @$, $2, UNARY_ABS); }
+    | SUB unary { $$ = ast_unary(x, @$, $2, UNARY_NEG); }
+    ;
 
-optmodspec: %empty | modspec ;
-modspec: MODULE path SEMICOLON ;
+mul: unary { $$ = $1; }
+    | mul MUL unary { $$ = ast_binary(x, @$, $1, $3, BINARY_MUL); }
+    | mul DIV unary { $$ = ast_binary(x, @$, $1, $3, BINARY_DIV); }
+    | mul MOD unary { $$ = ast_binary(x, @$, $1, $3, BINARY_REM); }
+    ;
 
-optimports: %empty | imports ;
-imports: import | imports import ;
-import: IMPORT path SEMICOLON ;
+add: mul { $$ = $1; }
+    | add ADD mul { $$ = ast_binary(x, @$, $1, $3, BINARY_ADD); }
+    | add SUB mul { $$ = ast_binary(x, @$, $1, $3, BINARY_SUB); }
+    ;
 
-path: IDENT | path COLON2 IDENT ;
+compare: add { $$ = $1; }
+    ;
 
-type: IDENT ;
+equality: compare { $$ = $1; }
+    ;
+
+shift: equality { $$ = $1; }
+    | shift LSHIFT equality { $$ = ast_binary(x, @$, $1, $3, BINARY_SHL); }
+    | shift RSHIFT equality { $$ = ast_binary(x, @$, $1, $3, BINARY_SHR); }
+    ;
+
+bits: shift { $$ = $1; }
+    | bits BITAND shift { $$ = ast_binary(x, @$, $1, $3, BINARY_AND); }
+    | bits BITOR shift { $$ = ast_binary(x, @$, $1, $3, BINARY_OR); }
+    ;
+
+xor: bits { $$ = $1; }
+    | xor BITXOR bits { $$ = ast_binary(x, @$, $1, $3, BINARY_XOR); }
+    ;
+
+and: xor { $$ = $1; }
+    ;
+
+or: and { $$ = $1; }
+    ;
+
+expr: or { $$ = $1; }
+    ;
 
 %%

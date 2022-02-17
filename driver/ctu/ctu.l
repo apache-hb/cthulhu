@@ -107,8 +107,6 @@
 "lambda" { return LAMBDA; }
 "as" { return AS; }
 
-"true" { return YES; }
-"false" { return NO; }
 "null" { return NIL; }
 
 "__match" { return MATCH; }
@@ -145,6 +143,16 @@
 "__offsetof" { return OFFSETOF; }
 "__typeof" { return TYPEOF; }
 "__uuidof" { return UUIDOF; }
+
+"true" { 
+    yylval->boolean = true;
+    return BOOLEAN;
+}
+
+"false" { 
+    yylval->boolean = false;
+    return BOOLEAN;
+}
 
 "$" { 
     yylval->ident = NULL;
