@@ -51,7 +51,7 @@ scan_t scan_file(reports_t *reports, const char *language, file_t *file) {
     return scan;
 }
 
-void scan_export(scan_t *scan, void *data) {
+void scan_set(scan_t *scan, void *data) {
     scan->data = data;
 }
 

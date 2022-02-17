@@ -11,7 +11,7 @@ scan_t scan_string(reports_t *reports, const char *language, const char *path, c
 scan_t scan_file(reports_t *reports, const char *language, file_t *file);
 
 /* set the export data */
-void scan_export(scan_t *scan, void *data);
+void scan_set(scan_t *scan, void *data);
 
 /* get the export data */
 void *scan_get(scan_t *scan);

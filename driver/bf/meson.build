@@ -1,6 +1,6 @@
 src = [ 'main.c' ]
 
-ctcc = executable('ctcc', src,
+bfc = executable('bfc', src,
     dependencies : generic,
     install : true
 )

@@ -94,7 +94,7 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %%
 
-program: block DOT { scan_export(x, $1); }
+program: block DOT { scan_set(x, $1); }
     ;
 
 block: module consts vars procedures toplevel { $$ = pl0_module(x, @$, $1, $2, $3, $4, $5); }

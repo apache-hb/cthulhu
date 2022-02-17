@@ -1,23 +1,23 @@
 dir = meson.current_source_dir()
 
 pass = [
-    'lang/multi', 'lang/module', 'lang/hello',
-    'lang/simple', 'lang/vars', 'lang/empty',
+    'multi', 'module', 'hello',
+    'simple', 'vars', 'empty',
 
-    'lang/inttypes/all',
-    'lang/inttypes/simple',
-    'lang/inttypes/char',
-    'lang/inttypes/short',
-    'lang/inttypes/int',
-    'lang/inttypes/long',
-    'lang/inttypes/longlong',
-    'lang/inttypes/sign',
+    'inttypes/all',
+    'inttypes/simple',
+    'inttypes/char',
+    'inttypes/short',
+    'inttypes/int',
+    'inttypes/long',
+    'inttypes/longlong',
+    'inttypes/sign',
 
-    'lang/integral-types/bool'
+    'integral-types/bool'
 ]
 
 fail = [
-    'lang/error/mismatch', 'lang/integral-types/void'
+    'error/mismatch', 'integral-types/void'
 ]
 
 foreach case : pass
