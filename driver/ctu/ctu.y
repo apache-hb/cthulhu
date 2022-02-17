@@ -138,6 +138,31 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %%
 
-program: %empty ;
+program: optmodspec optimports optdecls ;
+
+optdecls: %empty | decls ;
+decls: decl | decls decl ;
+decl: define ;
+
+define: DEF IDENT optparams optresult optbody ;
+
+optparams: %empty | params ;
+params: LPAREN RPAREN ;
+
+optresult: %empty | result ;
+result: COLON type ;
+
+optbody: SEMICOLON ;
+
+optmodspec: %empty | modspec ;
+modspec: MODULE path SEMICOLON ;
+
+optimports: %empty | imports ;
+imports: import | imports import ;
+import: IMPORT path SEMICOLON ;
+
+path: IDENT | path COLON2 IDENT ;
+
+type: IDENT ;
 
 %%
