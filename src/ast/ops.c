@@ -7,10 +7,13 @@ static operand_name_t binary_operands[] = {
     [BINARY_DIV] = { "div", "/" },
     [BINARY_REM] = { "rem", "%" },
 
+    [BINARY_AND] = { "and", "&&" },
+    [BINARY_OR] = { "or", "||" },
+
     [BINARY_SHL] = { "shl", "<<" },
     [BINARY_SHR] = { "shr", ">>" },
-    [BINARY_AND] = { "bitand", "&" },
-    [BINARY_OR] = { "bitor", "|" },
+    [BINARY_BITAND] = { "bitand", "&" },
+    [BINARY_BITOR] = { "bitor", "|" },
     [BINARY_XOR] = { "xor", "^" }
 };
 
@@ -21,10 +24,7 @@ static operand_name_t compare_operands[] = {
     [COMPARE_LT] = { "lt", "<" },
     [COMPARE_LTE] = { "le", "<=" },
     [COMPARE_GT] = { "gt", ">" },
-    [COMPARE_GTE] = { "ge", ">=" },
-    
-    [COMPARE_AND] = { "and", "&&" },
-    [COMPARE_OR] = { "or", "||" }
+    [COMPARE_GTE] = { "ge", ">=" }
 };
 
 static operand_name_t unary_operands[] = {

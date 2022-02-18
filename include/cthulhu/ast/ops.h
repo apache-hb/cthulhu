@@ -11,8 +11,11 @@ typedef enum {
     BINARY_DIV,
     BINARY_REM,
 
-    BINARY_AND, // bitwise and
-    BINARY_OR, // bitwise or
+    BINARY_AND, // logical and
+    BINARY_OR, // logical or
+
+    BINARY_BITAND, // bitwise and
+    BINARY_BITOR, // bitwise or
     BINARY_XOR, // bitwise xor
     BINARY_SHL, // bitwise shift left
     BINARY_SHR, // bitwise shift right
@@ -28,9 +31,6 @@ typedef enum {
     COMPARE_LTE, // <=
     COMPARE_GT, // >
     COMPARE_GTE, // >=
-
-    COMPARE_AND, // &&
-    COMPARE_OR, // ||
 
     COMPARE_LAST_ENTRY
 } compare_t;

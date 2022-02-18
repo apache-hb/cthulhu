@@ -6,45 +6,68 @@
 #include "cthulhu/ast/ast.h"
 
 typedef enum {
+    AST_PROGRAM,
+    AST_MODULE,
+
+    AST_VAR,
+    AST_DEF,
+
+    AST_NAME,
     AST_DIGIT,
-    AST_BOOL,
+    AST_CAST
 } astof_t;
 
+typedef enum {
+    ATT_NAME,
+    ATT_PTR
+} attof_t;
+
+typedef struct att_t {
+    attof_t of;
+    node_t *node;
+
+    union {
+        vector_t *path;
+        struct att_t *ptr;
+    };
+} att_t;
+
 typedef struct ast_t {
-    astof_t type;
+    astof_t of;
     node_t *node;
 
     union {
         mpz_t digit;
-        bool boolean;
-
-        vector_t *parts;
+        
+        vector_t *path;
 
         struct {
             struct ast_t *operand;
-            unary_t unary;
+            struct att_t *cast;
         };
 
         struct {
-            struct ast_t *lhs;
-            struct ast_t *rhs;
+            struct ast_t *modspec;
+            vector_t *decls;
+        };
 
-            union {
-                binary_t binary;
-                compare_t compare;
-            };
+        struct {
+            char *name;
+
+            struct att_t *type;
+            struct ast_t *init;
         };
     };
 } ast_t;
 
-ast_t *ast_name(scan_t *scan, where_t where, vector_t *path);
-ast_t *ast_digit(scan_t *scan, where_t where, mpz_t digit);
-ast_t *ast_boolean(scan_t *scan, where_t where, bool boolean);
-ast_t *ast_unary(scan_t *scan, where_t where, ast_t *operand, unary_t unary);
-ast_t *ast_binary(scan_t *scan, where_t where, ast_t *lhs, ast_t *rhs, binary_t binary);
-ast_t *ast_compare(scan_t *scan, where_t where, ast_t *lhs, ast_t *rhs, compare_t compare);
-ast_t *ast_cast(scan_t *scan, where_t where, ast_t *operand, ast_t *type);
+ast_t *ast_module(scan_t *scan, where_t where, vector_t *path);
+ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *decls);
 
-ast_t *ast_type(scan_t *scan, where_t where, vector_t *path);
-ast_t *ast_pointer(scan_t *scan, where_t where, ast_t *operand);
-ast_t *ast_reference(scan_t *scan, where_t where, ast_t *operand);
+ast_t *ast_vardecl(scan_t *scan, where_t where, char *name, att_t *type, ast_t *init);
+
+ast_t *ast_name(scan_t *scan, where_t where, vector_t *path);
+ast_t *ast_digit(scan_t *scan, where_t where, mpz_t value);
+ast_t *ast_cast(scan_t *scan, where_t where, ast_t *operand, att_t *cast);
+
+att_t *att_name(scan_t *scan, where_t where, vector_t *path);
+att_t *att_ptr(scan_t *scan, where_t where, att_t *ptr);

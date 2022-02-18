@@ -35,3 +35,5 @@ value_t *value_digit(const type_t *type, mpz_t digit);
 value_t *value_integer(const type_t *type, int digit);
 
 value_t *value_string(const type_t *type, const char *string);
+
+value_t *value_bool(const type_t *type, bool boolean);

@@ -29,3 +29,9 @@ value_t *value_string(const type_t *type, const char *string) {
     value->string = string;
     return value;
 }
+
+value_t *value_bool(const type_t *type, bool boolean) {
+    value_t *value = value_new(type);
+    value->boolean = boolean;
+    return value;
+}

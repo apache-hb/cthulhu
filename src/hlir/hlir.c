@@ -29,7 +29,7 @@ static hlir_t *hlir_new_forward(const node_t *node, const char *name, const type
     return hlir;
 }
 
-const type_t *typeof_node(const hlir_t *hlir) {
+const type_t *typeof_hlir(const hlir_t *hlir) {
     return hlir->of;
 }
 
@@ -48,7 +48,7 @@ hlir_t *hlir_literal(const node_t *node, value_t *value) {
 }
 
 hlir_t *hlir_name(const node_t *node, hlir_t *read) {
-    hlir_t *self = hlir_new(node, typeof_node(read), HLIR_NAME);
+    hlir_t *self = hlir_new(node, typeof_hlir(read), HLIR_NAME);
     self->read = read;
     return self;
 }

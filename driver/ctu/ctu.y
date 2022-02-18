@@ -26,6 +26,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     mpz_t mpz;
 
     ast_t *ast;
+    att_t *att;
     vector_t *vector;
 }
 
@@ -145,32 +146,42 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     UUIDOF "`uuidof`"
 
 %type<ast>
-    primary postfix unary expr
-    or and xor bits shift equality compare add mul
+    modspec decl vardecl 
+    expr primary postfix
 
+%type<att>
     type
 
 %type<vector>
-    path
+    path decls decllist
 
 %start program
 
 %%
 
-program: expr ;
-
-path: IDENT { $$ = vector_init($1); }
-    | path COLON2 IDENT { vector_push(&$1, $3); $$ = $1; }
+program: modspec decls { scan_set(x, ast_program(x, @$, $1, $2)); }
     ;
 
-type: path { $$ = ast_type(x, @$, $1); }
-    | MUL type { $$ = ast_pointer(x, @$, $2); }
-    | BITAND type { $$ = ast_reference(x, @$, $2); }
+decls: %empty { $$ = NULL; }
+    | decllist { $$ = $1; }
+    ;
+
+decllist: decl { $$ = vector_init($1); }
+    | decllist decl { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+decl: vardecl { $$ = $1; }
+    ;
+
+vardecl: VAR IDENT EQUALS expr SEMICOLON { $$ = ast_vardecl(x, @$, $2, NULL, $4); }
+    ;
+
+modspec: %empty { $$ = NULL; }
+    | MODULE path SEMICOLON { $$ = ast_module(x, @$, $2); }
     ;
 
 primary: path { $$ = ast_name(x, @$, $1); }
     | INTEGER { $$ = ast_digit(x, @$, $1); }
-    | BOOLEAN { $$ = ast_boolean(x, @$, $1); }
     | LPAREN expr RPAREN { $$ = $2; }
     ;
 
@@ -178,49 +189,16 @@ postfix: primary { $$ = $1; }
     | postfix AS type { $$ = ast_cast(x, @$, $1, $3); }
     ;
 
-unary: postfix { $$ = $1; }
-    | ADD unary { $$ = ast_unary(x, @$, $2, UNARY_ABS); }
-    | SUB unary { $$ = ast_unary(x, @$, $2, UNARY_NEG); }
+expr: postfix { $$ = $1; }
     ;
 
-mul: unary { $$ = $1; }
-    | mul MUL unary { $$ = ast_binary(x, @$, $1, $3, BINARY_MUL); }
-    | mul DIV unary { $$ = ast_binary(x, @$, $1, $3, BINARY_DIV); }
-    | mul MOD unary { $$ = ast_binary(x, @$, $1, $3, BINARY_REM); }
+type: path { $$ = att_name(x, @$, $1); }
+    | MUL type { $$ = att_ptr(x, @$, $2); }
+    | LPAREN type RPAREN { $$ = $2; }
     ;
 
-add: mul { $$ = $1; }
-    | add ADD mul { $$ = ast_binary(x, @$, $1, $3, BINARY_ADD); }
-    | add SUB mul { $$ = ast_binary(x, @$, $1, $3, BINARY_SUB); }
-    ;
-
-compare: add { $$ = $1; }
-    ;
-
-equality: compare { $$ = $1; }
-    ;
-
-shift: equality { $$ = $1; }
-    | shift LSHIFT equality { $$ = ast_binary(x, @$, $1, $3, BINARY_SHL); }
-    | shift RSHIFT equality { $$ = ast_binary(x, @$, $1, $3, BINARY_SHR); }
-    ;
-
-bits: shift { $$ = $1; }
-    | bits BITAND shift { $$ = ast_binary(x, @$, $1, $3, BINARY_AND); }
-    | bits BITOR shift { $$ = ast_binary(x, @$, $1, $3, BINARY_OR); }
-    ;
-
-xor: bits { $$ = $1; }
-    | xor BITXOR bits { $$ = ast_binary(x, @$, $1, $3, BINARY_XOR); }
-    ;
-
-and: xor { $$ = $1; }
-    ;
-
-or: and { $$ = $1; }
-    ;
-
-expr: or { $$ = $1; }
+path: IDENT { $$ = vector_init($1); }
+    | path COLON2 IDENT { vector_push(&$1, $3); $$ = $1; }
     ;
 
 %%

@@ -6,9 +6,6 @@
 
 #define CTULTYPE where_t
 
-typedef struct {
-    size_t depth; // template depth
-} lex_extra_t;
-
+void init_scan(scan_t *scan);
 void enter_template(scan_t *scan);
 size_t exit_template(scan_t *scan);

@@ -1,7 +1,7 @@
 project('aws', 'c')
 
 curl = dependency('libcurl')
-cjson = subproject('cjson').get_variable('cjson')
+cjson = subproject('cjson').get_variable('json')
 
 deps = [ curl, cjson ]
 src = [ 'aws/runtime.c', ]
