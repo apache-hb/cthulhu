@@ -56,11 +56,11 @@ static sema_query_t sema_inner_get(sema_t *sema, size_t tag, const char *name) {
     return result;
 }
 
-hlir_t *sema_get(sema_t *sema, size_t tag, const char *name) {
+void *sema_get(sema_t *sema, size_t tag, const char *name) {
     return sema_inner_get(sema, tag, name).result;
 }
 
-hlir_t *sema_get_with_depth(sema_t *sema, size_t tag, const char *name, size_t *depth) {
+void *sema_get_with_depth(sema_t *sema, size_t tag, const char *name, size_t *depth) {
     sema_query_t result = sema_inner_get(sema, tag, name);
     *depth = result.depth;
     return result.result;
