@@ -9,43 +9,48 @@ typedef enum {
     AST_PROGRAM,
     AST_MODULE,
 
-    AST_VAR,
-    AST_DEF,
+    /* intermediate types */
+    AST_TYPELIST,
+    AST_FIELD,
 
-    AST_NAME,
-    AST_DIGIT,
-    AST_CAST
+    /* types */
+    AST_TYPENAME,
+    AST_POINTER,
+    AST_CLOSURE,
+    AST_ARRAY,
+
+    /* type declarations */
+    AST_TYPEALIAS,
+    AST_UNIONDECL,
+    AST_STRUCTDECL
 } astof_t;
-
-typedef enum {
-    ATT_NAME,
-    ATT_PTR
-} attof_t;
-
-typedef struct att_t {
-    attof_t of;
-    node_t *node;
-
-    union {
-        vector_t *path;
-        struct att_t *ptr;
-    };
-} att_t;
 
 typedef struct ast_t {
     astof_t of;
     node_t *node;
 
     union {
-        mpz_t digit;
-        
+        /* AST_TYPENAME|AST_MODULE */
         vector_t *path;
 
+        /* AST_POINTER|AST_ARRAY */
         struct {
-            struct ast_t *operand;
-            struct att_t *cast;
+            struct ast_t *type;
+
+            union {
+                bool indexable;
+                struct ast_t *size;
+            };
         };
 
+        /* AST_CLOSURE|AST_TYPELIST */
+        struct {
+            vector_t *params;
+            struct ast_t *result;
+            bool variadic;
+        };
+
+        /* AST_PROGRAM */
         struct {
             struct ast_t *modspec;
             vector_t *decls;
@@ -54,8 +59,16 @@ typedef struct ast_t {
         struct {
             char *name;
 
-            struct att_t *type;
-            struct ast_t *init;
+            union {
+                /* AST_TYPEALIAS */
+                struct ast_t *alias;
+
+                /* AST_FIELD */
+                struct ast_t *field;
+
+                /* AST_UNIONDECL|AST_STRUCTDECL */
+                vector_t *fields;
+            };
         };
     };
 } ast_t;
@@ -63,11 +76,14 @@ typedef struct ast_t {
 ast_t *ast_module(scan_t *scan, where_t where, vector_t *path);
 ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *decls);
 
-ast_t *ast_vardecl(scan_t *scan, where_t where, char *name, att_t *type, ast_t *init);
+ast_t *ast_typename(scan_t *scan, where_t where, vector_t *path);
+ast_t *ast_pointer(scan_t *scan, where_t where, ast_t *type, bool indexable);
+ast_t *ast_array(scan_t *scan, where_t where, ast_t *type, ast_t *size);
+ast_t *ast_closure(scan_t *scan, where_t where, ast_t *args, ast_t *type);
+ast_t *ast_typelist(vector_t *types, bool variadic);
 
-ast_t *ast_name(scan_t *scan, where_t where, vector_t *path);
-ast_t *ast_digit(scan_t *scan, where_t where, mpz_t value);
-ast_t *ast_cast(scan_t *scan, where_t where, ast_t *operand, att_t *cast);
+ast_t *ast_typealias(scan_t *scan, where_t where, char *name, ast_t *type);
+ast_t *ast_structdecl(scan_t *scan, where_t where, char *name, vector_t *fields);
+ast_t *ast_uniondecl(scan_t *scan, where_t where, char *name, vector_t *fields);
 
-att_t *att_name(scan_t *scan, where_t where, vector_t *path);
-att_t *att_ptr(scan_t *scan, where_t where, att_t *ptr);
+ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type);

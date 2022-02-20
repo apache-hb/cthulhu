@@ -1,8 +1,11 @@
 #include "runtime.h"
 
-#include "cjson/cJSON.h"
+#include "cJSON.h"
 
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdarg.h>
 
 typedef struct {
     char *data;
@@ -28,15 +31,6 @@ static void chunk_write(void *data, size_t size, size_t scale, void *user) {
     chunk->data[chunk->size] = '\0';
 }
 
-static char *format(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    char *str = formatv(fmt, args);
-    va_end(args);
-
-    return str;
-}
-
 static char *formatv(const char *fmt, va_list args) {
     /* make a copy of the args for the second format */
     va_list again;
@@ -50,6 +44,15 @@ static char *formatv(const char *fmt, va_list args) {
     vsnprintf(out, len, fmt, again);
 
     return out;
+}
+
+static char *format(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char *str = formatv(fmt, args);
+    va_end(args);
+
+    return str;
 }
 
 aws_error_t new_aws_runtime(aws_runtime_t *runtime, const char *endpoint) {

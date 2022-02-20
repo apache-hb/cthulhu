@@ -10,14 +10,14 @@ typedef struct {
     map_t *functions;
 } emit_t;
 
-static const char *metatype_to_string(emit_t *emit, const type_t *type) {
+static const char *metatype_to_string(emit_t *emit, const hlir_t *type) {
     switch (type->type) {
-    case TYPE_BOOLEAN: return "boolean";
-    case TYPE_INTEGER: return "integer";
-    case TYPE_STRING: return "string";
-    case TYPE_VOID: return "void";
-    case TYPE_SIGNATURE: return "signature";
-    case TYPE_ERROR: return "error";
+    case HLIR_BOOL: return "boolean";
+    case HLIR_DIGIT: return "integer";
+    case HLIR_STRING: return "string";
+    case HLIR_VOID: return "void";
+    case HLIR_CLOSURE: return "signature";
+    case HLIR_ERROR: return "error";
     default: 
         ctu_assert(emit->reports, "unknown metatype");
         return "unknown";
@@ -38,7 +38,7 @@ static void add_location(cJSON *json, const node_t *node) {
     cJSON_AddItemToObject(json, "span", span);
 }
 
-static size_t get_type(emit_t *emit, const type_t *type) {
+static size_t get_type(emit_t *emit, const hlir_t *type) {
     return (size_t)map_get_ptr(emit->types, type);
 }
 
@@ -55,23 +55,24 @@ static const char *WIDTH_STR[DIGIT_TOTAL] = {
     [DIGIT_LONG] = "long",
 };
 
-static cJSON *emit_type(emit_t *emit, size_t idx, const type_t *hlir) {
+static cJSON *emit_type(emit_t *emit, size_t idx, const hlir_t *hlir) {
     map_set_ptr(emit->types, hlir, (void*)(uintptr_t)idx);
 
     cJSON *type = cJSON_CreateObject();
     cJSON_AddStringToObject(type, "type", metatype_to_string(emit, hlir));
     cJSON_AddStringToObject(type, "name", hlir->name);
 
-    if (type_is_signature(hlir)) {
-        cJSON_AddNumberToObject(type, "result", get_type(emit, hlir->result));
+    if (hlir_is(hlir, HLIR_CLOSURE)) {
+        cJSON_AddNumberToObject(type, "result", get_type(emit, closure_result(hlir)));
         cJSON *params = cJSON_CreateArray();
-        for (size_t i = 0; i < vector_len(hlir->params); i++) {
-            const type_t *param = vector_get(hlir->params, i);
+        vector_t *vec = closure_params(hlir);
+        for (size_t i = 0; i < vector_len(vec); i++) {
+            const hlir_t *param = vector_get(vec, i);
             cJSON_AddItemToArray(params, cJSON_CreateNumber(get_type(emit, param)));
         }
         cJSON_AddItemToObject(type, "params", params);
-        cJSON_AddBoolToObject(type, "variadic", hlir->variadic);
-    } else if (type_is_integer(hlir)) {
+        cJSON_AddBoolToObject(type, "variadic", closure_variadic(hlir));
+    } else if (hlir_is(hlir, HLIR_DIGIT)) {
         cJSON_AddStringToObject(type, "sign", SIGN_STR[hlir->sign]);
         cJSON_AddStringToObject(type, "width", WIDTH_STR[hlir->width]);
     }
@@ -79,24 +80,6 @@ static cJSON *emit_type(emit_t *emit, size_t idx, const type_t *hlir) {
     add_location(type, hlir->node);
 
     return type;
-}
-
-static cJSON *emit_value(emit_t *emit, const value_t *value) {
-    cJSON *json = cJSON_CreateObject();
-    cJSON_AddNumberToObject(json, "type", get_type(emit, value->type));
-
-    if (type_is_boolean(value->type)) {
-        cJSON_AddBoolToObject(json, "value", value->boolean);
-    } else if (type_is_integer(value->type)) {
-        cJSON_AddNumberToObject(json, "value", mpz_get_si(value->integer));
-    } else if (type_is_string(value->type)) {
-        cJSON_AddStringToObject(json, "value", value->string);
-    } else {
-        ctu_assert(emit->reports, "unknown value type");
-        cJSON_AddStringToObject(json, "value", "unknown");
-    }
-
-    return json;
 }
 
 static const char *linkage_name(hlir_linkage_t linkage) {
@@ -114,10 +97,27 @@ static cJSON *emit_attribs(const hlir_attributes_t *attribs) {
     return json;
 }
 
-static cJSON *emit_literal(emit_t *emit, const hlir_t *hlir) {
+static cJSON *emit_digit(emit_t *emit, const hlir_t *hlir) {
     cJSON *literal = cJSON_CreateObject();
-    cJSON_AddStringToObject(literal, "kind", "literal");
-    cJSON_AddItemToObject(literal, "value", emit_value(emit, hlir->literal));
+    cJSON_AddStringToObject(literal, "kind", "int-literal");
+    cJSON_AddNumberToObject(literal, "type", get_type(emit, typeof_hlir(hlir)));
+    cJSON_AddNumberToObject(literal, "value", mpz_get_si(hlir->digit));
+    return literal;
+}
+
+static cJSON *emit_bool(emit_t *emit, const hlir_t *hlir) {
+    cJSON *literal = cJSON_CreateObject();
+    cJSON_AddStringToObject(literal, "kind", "bool-literal");
+    cJSON_AddNumberToObject(literal, "type", get_type(emit, typeof_hlir(hlir)));
+    cJSON_AddBoolToObject(literal, "value", hlir->boolean);
+    return literal;
+}
+
+static cJSON *emit_string(emit_t *emit, const hlir_t *hlir) {
+    cJSON *literal = cJSON_CreateObject();
+    cJSON_AddStringToObject(literal, "kind", "string-literal");
+    cJSON_AddNumberToObject(literal, "type", get_type(emit, typeof_hlir(hlir)));
+    cJSON_AddStringToObject(literal, "value", hlir->string);
     return literal;
 }
 
@@ -196,8 +196,14 @@ static cJSON *emit_expr(emit_t *emit, const hlir_t *hlir) {
     cJSON *result = NULL;
 
     switch (hlir->type) {
-    case HLIR_LITERAL:
-        result = emit_literal(emit, hlir);
+    case HLIR_DIGIT_LITERAL:
+        result = emit_digit(emit, hlir);
+        break;
+    case HLIR_BOOL_LITERAL:
+        result = emit_bool(emit, hlir);
+        break;
+    case HLIR_STRING_LITERAL:
+        result = emit_string(emit, hlir);
         break;
     case HLIR_VALUE:
         result = lookup_value(emit, hlir);
@@ -230,7 +236,7 @@ static cJSON *emit_global(emit_t *emit, map_t *map, size_t index, const hlir_t *
     cJSON *value = cJSON_CreateObject();
     cJSON_AddStringToObject(value, "kind", "value");
     cJSON_AddStringToObject(value, "name", hlir->name);
-    cJSON_AddNumberToObject(value, "type", get_type(emit, hlir->of));
+    cJSON_AddNumberToObject(value, "type", get_type(emit, typeof_hlir(hlir)));
     cJSON_AddItemToObject(value, "attribs", emit_attribs(hlir->attributes));
 
     if (hlir->value != NULL) {
@@ -330,7 +336,7 @@ static cJSON *emit_function(emit_t *emit, size_t idx, const hlir_t *hlir) {
     cJSON *json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "kind", "function");
     cJSON_AddStringToObject(json, "name", hlir->name);
-    cJSON_AddNumberToObject(json, "type", get_type(emit, hlir->of));
+    cJSON_AddNumberToObject(json, "type", get_type(emit, typeof_hlir(hlir)));
     cJSON_AddItemToObject(json, "attribs", emit_attribs(hlir->attributes));
 
     size_t nlocals = vector_len(hlir->locals);
@@ -366,7 +372,7 @@ void json_emit_tree(reports_t *reports, const hlir_t *hlir) {
     cJSON_AddItemToArray(types, cJSON_CreateNull());
 
     for (size_t i = 0; i < ntypes; i++) {
-        const type_t *type = vector_get(hlir->types, i);
+        const hlir_t *type = vector_get(hlir->types, i);
         cJSON *json = emit_type(&emit, i + 1, type);
         cJSON_AddItemToArray(types, json);
     }

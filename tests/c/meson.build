@@ -1,3 +1,5 @@
+subdir_done()
+
 dir = meson.current_source_dir()
 
 pass = [

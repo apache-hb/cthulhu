@@ -1,0 +1,2 @@
+struct A(a: *A);
+struct B(a: *A);

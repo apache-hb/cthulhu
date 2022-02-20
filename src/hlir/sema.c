@@ -27,9 +27,9 @@ void *sema_get_data(sema_t *sema) {
     return sema->data;
 }
 
-void sema_set(sema_t *sema, size_t tag, const char *name, hlir_t *hlir) {
+void sema_set(sema_t *sema, size_t tag, const char *name, void *data) {
     map_t *map = sema_tag(sema, tag);
-    map_set(map, name, hlir);
+    map_set(map, name, data);
 }
 
 typedef struct {

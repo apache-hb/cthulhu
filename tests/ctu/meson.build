@@ -1,20 +1,20 @@
-# dir = meson.current_source_dir()
+dir = meson.current_source_dir()
 
-# crashes = [ 
-#     'fuzz-1', 'fuzz-2', 'fuzz-3', 'fuzz-4', 'fuzz-5',
-#     'fuzz-6', 'fuzz-7', 'fuzz-8', 'fuzz-9',
-#     'overflow.1', 'overflow.2', 'overflow.3', 'overflow.4', 'overflow.5'
-# ]
+crashes = [ 
+    'fuzz-1', 'fuzz-2', 'fuzz-3', 'fuzz-4', 'fuzz-5',
+    'fuzz-6', 'fuzz-7', 'fuzz-8', 'fuzz-9',
+    'overflow.1', 'overflow.2', 'overflow.3', 'overflow.4', 'overflow.5'
+]
 
-# foreach case : crashes
-#     where = case.replace('.', '/')
-#     path = dir/'crashes'/where + '.ct'
-#     test('crash-' + case, ctc, 
-#         args : [ '-V', path, '-gen', 'c99', '-o', case + '.c' ], 
-#         suite : 'ctu',
-#         should_fail : true
-#     )
-# endforeach
+foreach case : crashes
+    where = case.replace('.', '/')
+    path = dir/'crashes'/where + '.ct'
+    test('crash-' + case, ctc, 
+        args : [ '-V', path, '-gen', 'c99', '-o', case + '.c' ], 
+        suite : 'ctu',
+        should_fail : true
+    )
+endforeach
 
 # fails = [
 #     'array-2', 'array-oob', 'array-ref', 'array',

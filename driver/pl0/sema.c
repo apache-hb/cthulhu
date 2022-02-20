@@ -3,12 +3,10 @@
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/util/report-ext.h"
 
-static type_t *INTEGER;
-static type_t *BOOLEAN;
-static type_t *STRING;
-static type_t *VOID;
-static type_t *SIGNATURE;
-static type_t *PRINTF;
+static hlir_t *INTEGER;
+static hlir_t *BOOLEAN;
+static hlir_t *STRING;
+static hlir_t *VOID;
 
 static hlir_t *PRINT;
 static hlir_t *FMT;
@@ -20,16 +18,13 @@ void pl0_init(void) {
     IMPORTED = hlir_new_attributes(LINK_IMPORTED);
     EXPORTED = hlir_new_attributes(LINK_EXPORTED);
 
-    INTEGER = type_integer("integer");
-    BOOLEAN = type_boolean("boolean");
-    STRING = type_string("string");
-    VOID = type_void("void");
+    INTEGER = hlir_digit(NULL, "integer", DIGIT_INT, SIGN_DEFAULT);
+    BOOLEAN = hlir_bool(NULL, "boolean");
+    STRING = hlir_string(NULL, "string");
+    VOID = hlir_void(NULL, "void");
 
-    SIGNATURE = type_signature("signature", VOID, vector_of(0), false);
-    PRINTF = type_signature("printf", INTEGER, vector_init(STRING), true);
-
-    FMT = hlir_literal(NULL, value_string(STRING, "%d\n"));
-    PRINT = hlir_new_function(NULL, "printf", PRINTF);
+    FMT = hlir_string_literal(NULL, STRING, "%d\n");
+    PRINT = hlir_new_function(NULL, "printf", vector_init(STRING), INTEGER, true);
     hlir_set_attributes(PRINT, IMPORTED);
     hlir_build_function(PRINT, NULL);
 }
@@ -96,7 +91,7 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node);
 static hlir_t *sema_stmt(sema_t *sema, pl0_t *node);
 
 static hlir_t *sema_digit(pl0_t *node) {
-    return hlir_literal(node->node, value_digit(INTEGER, node->digit));
+    return hlir_digit_literal(node->node, INTEGER, node->digit);
 }
 
 static hlir_t *sema_ident(sema_t *sema, pl0_t *node) {
@@ -202,8 +197,7 @@ static hlir_t *sema_stmt(sema_t *sema, pl0_t *node) {
 static hlir_t *sema_value(sema_t *sema, pl0_t *node) {
     pl0_t *val = node->value;
     if (val == NULL) {
-        value_t *zero = value_integer(INTEGER, 0);
-        return hlir_literal(node->node, zero);
+        return hlir_int_literal(node->node, INTEGER, 0);
     } else {
         return sema_expr(sema, val);
     }
@@ -211,8 +205,8 @@ static hlir_t *sema_value(sema_t *sema, pl0_t *node) {
 
 static hlir_t *sema_odd(sema_t *sema, pl0_t *node) {
     hlir_t *val = sema_expr(sema, node->operand);
-    hlir_t *two = hlir_literal(node->node, value_integer(INTEGER, 2));
-    hlir_t *one = hlir_literal(node->node, value_integer(INTEGER, 1));
+    hlir_t *two = hlir_int_literal(node->node, INTEGER, 2);
+    hlir_t *one = hlir_int_literal(node->node, INTEGER, 1);
     hlir_t *rem = hlir_binary(node->node, INTEGER, BINARY_REM, val, two);
     hlir_t *eq = hlir_compare(node->node, BOOLEAN, COMPARE_EQ, rem, one);
 
@@ -295,7 +289,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     for (size_t i = 0; i < nprocs; i++) {
         pl0_t *it = vector_get(root->procs, i);
-        hlir_t *hlir = hlir_new_function(it->node, it->name, SIGNATURE);
+        hlir_t *hlir = hlir_new_function(it->node, it->name, vector_of(0), VOID, false);
         set_proc(sema, it->name, hlir);
         vector_set(procs, i, hlir);
     }
@@ -321,7 +315,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     }
 
     if (root->entry) {
-        hlir_t *hlir = hlir_new_function(root->node, "main", SIGNATURE);
+        hlir_t *hlir = hlir_new_function(root->node, "main", vector_of(0), VOID, false);
         hlir_t *body = sema_stmt(sema, root->entry);
         hlir_build_function(hlir, body);
         hlir_set_attributes(hlir, EXPORTED);
@@ -335,8 +329,6 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     vector_push(&types, BOOLEAN);
     vector_push(&types, STRING);
     vector_push(&types, VOID);
-    vector_push(&types, SIGNATURE);
-    vector_push(&types, PRINTF);
 
     hlir_t *mod = hlir_new_module(root->node, root->mod);
     hlir_build_module(mod, vector_join(consts, globals), procs, types);

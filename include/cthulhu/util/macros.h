@@ -92,3 +92,21 @@ void ctpanic(const char *msg, ...);
 #   define CTASSERT(expr, msg)
 #   define CTASSERTF(expr, msg, ...)
 #endif
+
+#if __has_include(<sal.h>)
+#   define IN _In_
+#   define IN_OPT _In_opt_
+#   define OUT _Out_
+#   define OUT_OPT _Out_opt_
+#   define INOUT _Inout_
+#   define INOUT_OPT _Inout_opt_
+#   define MAYBE _Ret_maybenull_ 
+#else
+#   define IN
+#   define IN_OPT
+#   define OUT
+#   define OUT_OPT
+#   define INOUT
+#   define INOUT_OPT
+#   define MAYBE
+#endif

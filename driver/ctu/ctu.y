@@ -12,10 +12,20 @@
     
     #include "scan.h"
     #include "ast.h"
+
+
+    #undef IN
+    #undef OUT
+    #undef INOUT
 }
 
 %{
 #include "scan.h"
+
+#undef IN
+#undef OUT
+#undef INOUT
+
 int ctulex();
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
@@ -26,7 +36,6 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     mpz_t mpz;
 
     ast_t *ast;
-    att_t *att;
     vector_t *vector;
 }
 
@@ -47,6 +56,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     SEMICOLON "`;`"
     COMMA "`,`"
     DOT "`.`"
+    DOT3 "`...`"
     LSHIFT "`<<`"
     RSHIFT "`>>`"
 
@@ -146,14 +156,14 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     UUIDOF "`uuidof`"
 
 %type<ast>
-    modspec decl vardecl 
-    expr primary postfix
-
-%type<att>
-    type
+    modspec decl 
+    typealias structdecl uniondecl
+    field type types opttypes
 
 %type<vector>
     path decls decllist
+    fieldlist aggregates
+    typelist
 
 %start program
 
@@ -170,31 +180,52 @@ decllist: decl { $$ = vector_init($1); }
     | decllist decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: vardecl { $$ = $1; }
+decl: typealias { $$ = $1; }
+    | structdecl { $$ = $1; }
+    | uniondecl { $$ = $1; }
     ;
 
-vardecl: VAR IDENT EQUALS expr SEMICOLON { $$ = ast_vardecl(x, @$, $2, NULL, $4); }
+typealias: TYPE IDENT EQUALS type SEMICOLON { $$ = ast_typealias(x, @$, $2, $4); }
+    ;
+
+structdecl: STRUCT IDENT aggregates { $$ = ast_structdecl(x, @$, $2, $3); }
+    ;
+
+uniondecl: UNION IDENT aggregates { $$ = ast_uniondecl(x, @$, $2, $3); }
+    ;
+
+aggregates: SEMICOLON { $$ = vector_of(0); }
+    | LPAREN fieldlist RPAREN SEMICOLON { $$ = $2; }
+    ;
+
+fieldlist: field { $$ = vector_init($1); }
+    | fieldlist COMMA field { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+field: IDENT COLON type { $$ = ast_field(x, @$, $1, $3); }
     ;
 
 modspec: %empty { $$ = NULL; }
     | MODULE path SEMICOLON { $$ = ast_module(x, @$, $2); }
     ;
 
-primary: path { $$ = ast_name(x, @$, $1); }
-    | INTEGER { $$ = ast_digit(x, @$, $1); }
-    | LPAREN expr RPAREN { $$ = $2; }
-    ;
-
-postfix: primary { $$ = $1; }
-    | postfix AS type { $$ = ast_cast(x, @$, $1, $3); }
-    ;
-
-expr: postfix { $$ = $1; }
-    ;
-
-type: path { $$ = att_name(x, @$, $1); }
-    | MUL type { $$ = att_ptr(x, @$, $2); }
+type: path { $$ = ast_typename(x, @$, $1); }
+    | MUL type { $$ = ast_pointer(x, @$, $2, false); }
+    | LSQUARE MUL RSQUARE type { $$ = ast_pointer(x, @$, $4, true); }
+    | DEF LPAREN opttypes RPAREN COLON2 type { $$ = ast_closure(x, @$, $3, $6); } 
     | LPAREN type RPAREN { $$ = $2; }
+    ;
+
+opttypes: %empty { $$ = ast_typelist(vector_of(0), false); }
+    | types { $$ = $1; }
+    ;
+
+types: typelist { $$ = ast_typelist($1, false); }
+    | typelist COMMA DOT3 { $$ = ast_typelist($1, true); }
+    ;
+
+typelist: type { $$ = vector_init($1); }
+    | typelist COMMA type { vector_push(&$1, $3); $$ = $1; }
     ;
 
 path: IDENT { $$ = vector_init($1); }

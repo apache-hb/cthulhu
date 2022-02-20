@@ -17,14 +17,15 @@ src = [
     # command line
     'src/driver/driver.c',
     
-    # type and literals
-    'src/data/type.c',
-    'src/data/value.c',
-
     # high level intermediate representation
     'src/hlir/sema.c',
     'src/hlir/attribs.c',
+    
+    'src/hlir/type.c',
+    'src/hlir/value.c',
     'src/hlir/hlir.c',
+
+    'src/hlir/common.c',
 
     # tree output
     'src/emit/json.c',
