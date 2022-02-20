@@ -160,6 +160,12 @@ typedef struct hlir_t {
                     bool variadic;
                 };
 
+                /* pointer type */
+                struct {
+                    struct hlir_t *ptr;
+                    bool indexable;
+                };
+
                 ///
                 /// all declarations
                 ///
@@ -289,7 +295,7 @@ hlir_t *hlir_closure(IN_OPT const node_t *node,
  */
 hlir_t *hlir_pointer(IN_OPT const node_t *node, 
                      IN_OPT const char *name, 
-                     IN const hlir_t *type, 
+                     IN hlir_t *type, 
                      bool indexable);
 
 ///

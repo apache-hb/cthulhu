@@ -14,6 +14,30 @@ hlir_t *hlir_error(const node_t *node, const char *error) {
     return self;
 }
 
+hlir_t *hlir_digit_literal(const node_t *node, const hlir_t *type, mpz_t value) {
+    hlir_t *self = hlir_new(node, type, HLIR_DIGIT_LITERAL);
+    mpz_init_set(self->digit, value);
+    return self;
+}
+
+hlir_t *hlir_int_literal(const node_t *node, const hlir_t *type, int value) {
+    hlir_t *self = hlir_new(node, type, HLIR_DIGIT_LITERAL);
+    mpz_init_set_si(self->digit, value);
+    return self;
+}
+
+hlir_t *hlir_bool_literal(const node_t *node, const hlir_t *type, bool value) {
+    hlir_t *self = hlir_new(node, type, HLIR_BOOL_LITERAL);
+    self->boolean = value;
+    return self;
+}
+
+hlir_t *hlir_string_literal(const node_t *node, const hlir_t *type, const char *value) {
+    hlir_t *self = hlir_new(node, type, HLIR_STRING_LITERAL);
+    self->string = value;
+    return self;
+}
+
 hlir_t *hlir_name(const node_t *node, hlir_t *read) {
     hlir_t *self = hlir_new(node, typeof_hlir(read), HLIR_NAME);
     self->read = read;
