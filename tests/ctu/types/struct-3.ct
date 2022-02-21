@@ -1,1 +1,3 @@
-struct A(a: *A);
+struct A {
+    a: *A;
+}

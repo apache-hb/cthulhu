@@ -67,15 +67,39 @@ static void sema_alias(sema_t *sema, hlir_t *decl, ast_t *ast) {
 }
 
 static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast) {
-    UNUSED(sema);
-    UNUSED(decl);
-    UNUSED(ast);
+    vector_t *fields = ast->fields;
+    size_t len = vector_len(fields);
+    set_t *names = set_new(len);
+
+    for (size_t i = 0; i < len; i++) {
+        ast_t *field = vector_get(fields, i);
+        const char *name = field->name;
+
+        if (set_contains(names, name)) {
+            report(sema->reports, ERROR, field->node, "field '%s' already defined", name);
+            continue;
+        }
+
+        set_add(names, name);
+    }
 }
 
 static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast) {
-    UNUSED(sema);
-    UNUSED(decl);
-    UNUSED(ast);
+    vector_t *fields = ast->fields;
+    size_t len = vector_len(fields);
+    set_t *names = set_new(len);
+
+    for (size_t i = 0; i < len; i++) {
+        ast_t *field = vector_get(fields, i);
+        const char *name = field->name;
+
+        if (set_contains(names, name)) {
+            report(sema->reports, ERROR, field->node, "field '%s' already defined", name);
+            continue;
+        }
+
+        set_add(names, name);
+    }
 }
 
 static void sema_decl(sema_t *sema, ast_t *ast) {
@@ -139,6 +163,7 @@ static void fwd_decl(sema_t *sema, ast_t *ast) {
 
 static void add_basic_types(sema_t *sema) {
     add_decl(sema, TAG_TYPES, "bool", hlir_bool(NULL, "bool"));
+    add_decl(sema, TAG_TYPES, "str", hlir_string(NULL, "str"));
 
     add_decl(sema, TAG_TYPES, "char", hlir_digit(NULL, "char", DIGIT_CHAR, SIGN_SIGNED));
     add_decl(sema, TAG_TYPES, "uchar", hlir_digit(NULL, "uchar", DIGIT_CHAR, SIGN_UNSIGNED));

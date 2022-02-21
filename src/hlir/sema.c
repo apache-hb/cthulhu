@@ -70,21 +70,21 @@ map_t *sema_tag(sema_t *sema, size_t tag) {
     return vector_get(sema->decls, tag);
 }
 
-static void report_recursion(reports_t *reports, vector_t *stack) {
+static void report_recursion(reports_t *reports, vector_t *stack, const char *msg) {
     hlir_t *top = vector_tail(stack);
-    message_t *id = report(reports, ERROR, top->node, "recursive global variable computation");
+    message_t *id = report(reports, ERROR, top->node, "%s", msg);
     for (size_t i = 0; i < vector_len(stack); i++) {
         hlir_t *hlir = vector_get(stack, i);
         report_append(id, hlir->node, "trace `%zu`", i);
     }
 }
 
-static bool find_recursion(reports_t *reports, vector_t *vec, hlir_t *hlir) {
+static bool find_recursion(reports_t *reports, vector_t *vec, hlir_t *hlir, const char *msg) {
     for (size_t i = 0; i < vector_len(vec); i++) {
         hlir_t *item = vector_get(vec, i);
         if (item != hlir) { continue; }
 
-        report_recursion(reports, vec);
+        report_recursion(reports, vec, msg);
         return true;
     }
 
@@ -93,7 +93,7 @@ static bool find_recursion(reports_t *reports, vector_t *vec, hlir_t *hlir) {
 
 static void check_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) {
     if (hlir == NULL) { return; }
-    if (find_recursion(reports, *stack, hlir)) { return; }
+    if (find_recursion(reports, *stack, hlir, "recursive variable computation")) { return; }
 
     vector_push(stack, hlir);
 
@@ -117,6 +117,51 @@ static void check_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) 
         break;
 
     default:
+        ctu_assert(reports, "check-recursion unexpected hlir type");
+        break;
+    }
+
+    vector_drop(stack);
+}
+
+static void check_type_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) {
+    if (hlir == NULL) { return; }
+    if (find_recursion(reports, *stack, hlir, "recursive type definition")) { return; }
+
+    vector_push(stack, hlir);
+
+    switch (hlir->type) {
+    case HLIR_POINTER:
+        check_type_recursion(reports, stack, hlir->ptr);
+        break;
+
+    case HLIR_CLOSURE:
+        check_type_recursion(reports, stack, hlir->result);
+        for (size_t i = 0; i < vector_len(hlir->params); i++) {
+            hlir_t *param = vector_get(hlir->params, i);
+            check_type_recursion(reports, stack, param);
+        }
+        break;
+    
+    case HLIR_ALIAS:
+        check_type_recursion(reports, stack, hlir->alias);
+        break;
+
+    case HLIR_STRUCT: case HLIR_UNION:
+        for (size_t i = 0; i < vector_len(hlir->fields); i++) {
+            hlir_t *field = vector_get(hlir->fields, i);
+            check_type_recursion(reports, stack, field);
+        }
+        break;
+    
+    case HLIR_DIGIT:
+    case HLIR_BOOL:
+    case HLIR_STRING:
+    case HLIR_VOID:
+        break;
+
+    default:
+        ctu_assert(reports, "check-type-recursion unexpected hlir type");
         break;
     }
 
@@ -125,11 +170,16 @@ static void check_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) 
 
 void check_module(reports_t *reports, hlir_t *mod) {
     size_t nvars = vector_len(mod->globals);
+    size_t ntypes = vector_len(mod->types);
+
+    for (size_t i = 0; i < ntypes; i++) {
+        hlir_t *type = vector_get(mod->types, i);
+        vector_t *vec = vector_new(16);
+        check_type_recursion(reports, &vec, type);
+    }
 
     for (size_t i = 0; i < nvars; i++) {
         hlir_t *var = vector_get(mod->globals, i);
-        if (var->type != HLIR_VALUE) { continue; }
-
         vector_t *vec = vector_new(16);
         check_recursion(reports, &vec, var);
     }

@@ -1,3 +1,5 @@
-struct B;
+struct B {}
 
-struct A(b: *B);
+struct A {
+    b: *B;
+}

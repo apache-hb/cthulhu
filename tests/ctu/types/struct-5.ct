@@ -1,2 +1,8 @@
-struct A(a: *A);
-struct B(a: *A);
+struct A { 
+    a: *A; 
+}
+
+struct B { 
+    a: *A; 
+}
+

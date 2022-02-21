@@ -35,6 +35,26 @@ void init_gmp(void);
 void *ctu_box(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 #define BOX(name) ctu_box(&name, sizeof(name))
 
+/**
+ * a hashset
+ */
+
+typedef struct item_t {
+    const char *key;
+    struct item_t *next;
+} item_t;
+
+typedef struct {
+    size_t size;
+    item_t items[];
+} set_t;
+
+set_t *set_new(size_t size);
+void set_delete(set_t *set);
+
+const char* set_add(set_t *set, const char *key);
+bool set_contains(set_t *set, const char *key);
+
 typedef struct bucket_t {
     const char *key; /// can actually be any pointer but we keep it as a const char* for convenience
     void *value; /// any pointer value

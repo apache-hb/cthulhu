@@ -194,15 +194,14 @@ structdecl: STRUCT IDENT aggregates { $$ = ast_structdecl(x, @$, $2, $3); }
 uniondecl: UNION IDENT aggregates { $$ = ast_uniondecl(x, @$, $2, $3); }
     ;
 
-aggregates: SEMICOLON { $$ = vector_of(0); }
-    | LPAREN fieldlist RPAREN SEMICOLON { $$ = $2; }
+aggregates: LBRACE fieldlist RBRACE { $$ = $2; }
     ;
 
 fieldlist: field { $$ = vector_init($1); }
-    | fieldlist COMMA field { vector_push(&$1, $3); $$ = $1; }
+    | fieldlist field { vector_push(&$1, $2); $$ = $1; }
     ;
 
-field: IDENT COLON type { $$ = ast_field(x, @$, $1, $3); }
+field: IDENT COLON type SEMICOLON { $$ = ast_field(x, @$, $1, $3); }
     ;
 
 modspec: %empty { $$ = NULL; }

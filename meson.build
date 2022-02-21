@@ -45,6 +45,7 @@ src = [
     # standard library
     'src/util/str.c',
     'src/util/util.c',
+    'src/util/set.c',
     'src/util/optimal.c',
 
     # platform glue
