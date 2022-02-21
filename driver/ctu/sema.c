@@ -45,8 +45,16 @@ static hlir_t *sema_array(sema_t *sema, ast_t *ast) {
 
 static hlir_t *sema_closure(sema_t *sema, ast_t *ast) {
     hlir_t *result = sema_type(sema, ast->result);
+    size_t len = vector_len(ast->params);
+    vector_t *params = vector_new(len);
 
-    return hlir_error(ast->node, "closure not implemented");
+    for (size_t i = 0; i < len; i++) {
+        ast_t *param = vector_get(ast->params, i);
+        hlir_t *type = sema_type(sema, param);
+        vector_set(params, i, type);
+    }
+
+    return hlir_closure(ast->node, NULL, params, result, ast->variadic);
 }
 
 static hlir_t *sema_type(sema_t *sema, ast_t *ast) {
@@ -82,6 +90,8 @@ static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast) {
 
         set_add(names, name);
     }
+
+    hlir_build_struct(decl);
 }
 
 static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast) {
@@ -100,6 +110,8 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast) {
 
         set_add(names, name);
     }
+
+    hlir_build_union(decl);
 }
 
 static void sema_decl(sema_t *sema, ast_t *ast) {
