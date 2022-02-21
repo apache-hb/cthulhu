@@ -64,7 +64,7 @@ ast_t *ast_typelist(vector_t *types, bool variadic) {
 
 ast_t *ast_typealias(scan_t *scan, where_t where, char *name, ast_t *type) {
     ast_t *ast = ast_decl(AST_TYPEALIAS, name, scan, where);
-    ast->type = type;
+    ast->alias = type;
     return ast;
 }
 

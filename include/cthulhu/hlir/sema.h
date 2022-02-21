@@ -30,3 +30,4 @@ void *sema_get_with_depth(sema_t *sema, size_t tag, const char *name, size_t *de
 map_t *sema_tag(sema_t *sema, size_t tag);
 
 void check_module(reports_t *reports, hlir_t *mod);
+void check_type(reports_t *reports, hlir_t *type);

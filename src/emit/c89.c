@@ -54,8 +54,11 @@ static void emit_type_decl(reports_t *reports, const hlir_t *type) {
     case HLIR_CLOSURE:
         printf("typedef %s;\n", emit_signature(type));
         break;
+    case HLIR_ALIAS:
+        printf("typedef %s %s;\n", fmt_type_name(type->alias), fmt_type_name(type));
+        break;
     default:
-        ctu_assert(reports, "invalid type");
+        ctu_assert(reports, "invalid type %d", type->type);
         break;
     }
 }

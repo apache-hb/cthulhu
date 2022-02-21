@@ -271,20 +271,20 @@ void *map_get(map_t *map, const char *key) {
 void map_set(map_t *map, const char *key, void *value) {
     bucket_t *entry = map_bucket(map, key);
 
-    while (entry != CTU_EMPTY_CHAIN) {
-        if (entry->key == CTU_EMPTY_KEY) {
+    while (true) {
+        if (entry->key == NULL) {
             entry->key = key;
             entry->value = value;
-            return;
+            break;
         } else if (streq(entry->key, key)) {
             entry->value = value;
-            return;
+            break;
+        } else if (entry->next != NULL) {
+            entry = entry->next;
         } else {
             entry->next = bucket_new(key, value);
-            return;
+            break;
         }
-        
-        entry = entry->next;
     }
 }
 

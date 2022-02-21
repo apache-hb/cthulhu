@@ -13,18 +13,23 @@ typedef enum {
     TAG_MAX
 } tag_t;
 
-static tag_t TAGOF[] = {
-    [AST_TYPEALIAS] = TAG_TYPES,
-    [AST_STRUCTDECL] = TAG_TYPES,
-    [AST_UNIONDECL] = TAG_TYPES
-};
-
 static hlir_t *sema_type(sema_t *sema, ast_t *ast);
 
 static hlir_t *sema_typename(sema_t *sema, ast_t *ast) {
-    UNUSED(sema);
+    size_t len = vector_len(ast->path);
+    if (len > 1) {
+        ctu_assert(sema->reports, "typename path can only be 1 element long currently");
+        return hlir_error(ast->node, "typename path can only be 1 element long currently");
+    }
 
-    return hlir_error(ast->node, "typename not unimplemented");
+    const char *name = vector_tail(ast->path);
+    hlir_t *decl = sema_get(sema, TAG_TYPES, name);
+    if (decl == NULL) {
+        report(sema->reports, ERROR, ast->node, "type '%s' not found", name);
+        return hlir_error(ast->node, "type not found");
+    }
+
+    return decl;
 }
 
 static hlir_t *sema_pointer(sema_t *sema, ast_t *ast) {
@@ -39,7 +44,7 @@ static hlir_t *sema_array(sema_t *sema, ast_t *ast) {
 }
 
 static hlir_t *sema_closure(sema_t *sema, ast_t *ast) {
-    UNUSED(sema);
+    hlir_t *result = sema_type(sema, ast->result);
 
     return hlir_error(ast->node, "closure not implemented");
 }
@@ -57,9 +62,8 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast) {
 }
 
 static void sema_alias(sema_t *sema, hlir_t *decl, ast_t *ast) {
-    UNUSED(sema);
-    UNUSED(decl);
-    UNUSED(ast);
+    hlir_t *type = sema_type(sema, ast->alias);
+    hlir_build_alias(decl, type);
 }
 
 static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast) {
@@ -75,22 +79,21 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast) {
 }
 
 static void sema_decl(sema_t *sema, ast_t *ast) {
-    hlir_t *decl = sema_get(sema, TAGOF[ast->of], ast->name);
-    if (decl->type != HLIR_FORWARD) {
-        report(sema->reports, ERROR, ast->node, "redeclaration of `%s`", ast->name);
-        return;
-    }
+    hlir_t *decl;
 
     switch (ast->of) {
     case AST_TYPEALIAS:
+        decl = sema_get(sema, TAG_TYPES, ast->name);
         sema_alias(sema, decl, ast);
         break;
 
     case AST_STRUCTDECL:
+        decl = sema_get(sema, TAG_TYPES, ast->name);
         sema_struct(sema, decl, ast);
         break;
 
     case AST_UNIONDECL:
+        decl = sema_get(sema, TAG_TYPES, ast->name);
         sema_union(sema, decl, ast);
         break;
 
@@ -109,8 +112,9 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl) {
     sema_set(sema, tag, name, decl);
 }
 
-static hlir_t *fwd_decl(sema_t *sema, ast_t *ast) {
+static void fwd_decl(sema_t *sema, ast_t *ast) {
     hlir_t *decl;
+
     switch (ast->of) {
     case AST_STRUCTDECL:
         decl = hlir_new_struct(ast->node, ast->name);
@@ -129,26 +133,24 @@ static hlir_t *fwd_decl(sema_t *sema, ast_t *ast) {
     
     default:
         ctu_assert(sema->reports, "unexpected ast of type %d", ast->of);
-        return hlir_error(ast->node, "unexpected ast of type");
+        break;
     }
-
-    return decl;
 }
 
 static void add_basic_types(sema_t *sema) {
-    sema_set(sema, TAG_TYPES, "bool", hlir_bool(NULL, "bool"));
+    add_decl(sema, TAG_TYPES, "bool", hlir_bool(NULL, "bool"));
 
-    sema_set(sema, TAG_TYPES, "char", hlir_digit(NULL, "char", DIGIT_CHAR, SIGN_SIGNED));
-    sema_set(sema, TAG_TYPES, "uchar", hlir_digit(NULL, "uchar", DIGIT_CHAR, SIGN_UNSIGNED));
+    add_decl(sema, TAG_TYPES, "char", hlir_digit(NULL, "char", DIGIT_CHAR, SIGN_SIGNED));
+    add_decl(sema, TAG_TYPES, "uchar", hlir_digit(NULL, "uchar", DIGIT_CHAR, SIGN_UNSIGNED));
 
-    sema_set(sema, TAG_TYPES, "short", hlir_digit(NULL, "short", DIGIT_SHORT, SIGN_SIGNED));
-    sema_set(sema, TAG_TYPES, "ushort", hlir_digit(NULL, "ushort", DIGIT_SHORT, SIGN_UNSIGNED));
+    add_decl(sema, TAG_TYPES, "short", hlir_digit(NULL, "short", DIGIT_SHORT, SIGN_SIGNED));
+    add_decl(sema, TAG_TYPES, "ushort", hlir_digit(NULL, "ushort", DIGIT_SHORT, SIGN_UNSIGNED));
 
-    sema_set(sema, TAG_TYPES, "int", hlir_digit(NULL, "int", DIGIT_INT, SIGN_SIGNED));
-    sema_set(sema, TAG_TYPES, "uint", hlir_digit(NULL, "uint", DIGIT_INT, SIGN_UNSIGNED));
+    add_decl(sema, TAG_TYPES, "int", hlir_digit(NULL, "int", DIGIT_INT, SIGN_SIGNED));
+    add_decl(sema, TAG_TYPES, "uint", hlir_digit(NULL, "uint", DIGIT_INT, SIGN_UNSIGNED));
 
-    sema_set(sema, TAG_TYPES, "long", hlir_digit(NULL, "long", DIGIT_LONG, SIGN_SIGNED));
-    sema_set(sema, TAG_TYPES, "ulong", hlir_digit(NULL, "ulong", DIGIT_LONG, SIGN_UNSIGNED));
+    add_decl(sema, TAG_TYPES, "long", hlir_digit(NULL, "long", DIGIT_LONG, SIGN_SIGNED));
+    add_decl(sema, TAG_TYPES, "ulong", hlir_digit(NULL, "ulong", DIGIT_LONG, SIGN_UNSIGNED));
 }
 
 hlir_t *ctu_sema(reports_t *reports, void *ast) {
@@ -175,10 +177,12 @@ hlir_t *ctu_sema(reports_t *reports, void *ast) {
         sema_decl(sema, vector_get(root->decls, i));
     }
 
-    sema_delete(sema);
-
     hlir_t *mod = hlir_new_module(root->node, "todo");
-    hlir_build_module(mod, vector_of(0), vector_of(0), vector_of(0));
+
+    vector_t *values = map_values(sema_tag(sema, TAG_TYPES));
+    hlir_build_module(mod, vector_of(0), vector_of(0), values);
+
+    sema_delete(sema);
 
     return mod;
 }

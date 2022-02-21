@@ -310,7 +310,6 @@ hlir_t *hlir_int_literal(IN_OPT const node_t *node,
                          IN_OPT const hlir_t *type,
                          int value);
 
-
 hlir_t *hlir_bool_literal(IN const node_t *node, 
                           IN const hlir_t *type, 
                           bool value);
@@ -346,20 +345,17 @@ hlir_t *hlir_new_struct(const node_t *node, const char *name);
 hlir_t *hlir_new_union(const node_t *node, const char *name);
 hlir_t *hlir_new_alias(const node_t *node, const char *name);
 
-
 void hlir_add_local(hlir_t *self, hlir_t *local);
-void hlir_build_function(hlir_t *self, hlir_t *body);
-
-void hlir_build_value(hlir_t *self, hlir_t *value);
-hlir_t *hlir_value(const node_t *node, const char *name, const hlir_t *type, hlir_t *value);
-
-
 void hlir_add_field(hlir_t *self, hlir_t *field);
+
+void hlir_build_function(hlir_t *self, hlir_t *body);
+void hlir_build_value(hlir_t *self, hlir_t *value);
 
 void hlir_build_struct(hlir_t *hlir);
 void hlir_build_union(hlir_t *hlir);
-
 void hlir_build_alias(hlir_t *self, hlir_t *type);
+
+hlir_t *hlir_value(const node_t *node, const char *name, const hlir_t *type, hlir_t *value);
 
 void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes);
 
