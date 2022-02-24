@@ -79,7 +79,7 @@ static void report_recursion(reports_t *reports, vector_t *stack, const char *ms
     }
 }
 
-static bool find_recursion(reports_t *reports, vector_t *vec, hlir_t *hlir, const char *msg) {
+static bool find_recursion(reports_t *reports, vector_t *vec, const hlir_t *hlir, const char *msg) {
     for (size_t i = 0; i < vector_len(vec); i++) {
         hlir_t *item = vector_get(vec, i);
         if (item != hlir) { continue; }
@@ -124,11 +124,11 @@ static void check_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) 
     vector_drop(stack);
 }
 
-static void check_type_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) {
+static void check_type_recursion(reports_t *reports, vector_t **stack, const hlir_t *hlir) {
     if (hlir == NULL) { return; }
     if (find_recursion(reports, *stack, hlir, "recursive type definition")) { return; }
 
-    vector_push(stack, hlir);
+    vector_push(stack, (hlir_t*)hlir);
 
     switch (hlir->type) {
     case HLIR_POINTER:
@@ -154,6 +154,10 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, hlir_t *h
         }
         break;
     
+    case HLIR_FIELD:
+        check_type_recursion(reports, stack, typeof_hlir(hlir));
+        break;
+
     case HLIR_DIGIT:
     case HLIR_BOOL:
     case HLIR_STRING:
@@ -161,7 +165,7 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, hlir_t *h
         break;
 
     default:
-        ctu_assert(reports, "check-type-recursion unexpected hlir type");
+        ctu_assert(reports, "check-type-recursion unexpected hlir type %d", hlir->type);
         break;
     }
 

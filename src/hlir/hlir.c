@@ -156,6 +156,10 @@ hlir_t *hlir_new_union(const node_t *node, const char *name) {
     return self;
 }
 
+hlir_t *hlir_field(const node_t *node, const hlir_t *type, const char *name) {
+    return hlir_new_decl(node, name, type, HLIR_FIELD);
+}
+
 void hlir_add_field(hlir_t *self, hlir_t *field) {
     vector_push(&self->fields, field);
 }

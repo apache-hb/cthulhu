@@ -82,6 +82,6 @@ ast_t *ast_uniondecl(scan_t *scan, where_t where, char *name, vector_t *fields) 
 
 ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type) {
     ast_t *ast = ast_decl(AST_FIELD, name, scan, where);
-    ast->type = type;
+    ast->field = type;
     return ast;
 }

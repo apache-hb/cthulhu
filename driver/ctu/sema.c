@@ -89,7 +89,12 @@ static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast) {
         }
 
         set_add(names, name);
+
+        hlir_t *type = sema_type(sema, field->field);
+        hlir_t *entry = hlir_field(field->node, type, name);
+        hlir_add_field(decl, entry);
     }
+
 
     hlir_build_struct(decl);
 }
@@ -109,6 +114,10 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast) {
         }
 
         set_add(names, name);
+
+        hlir_t *type = sema_type(sema, field->field);
+        hlir_t *entry = hlir_field(field->node, type, name);
+        hlir_add_field(decl, entry);
     }
 
     hlir_build_union(decl);

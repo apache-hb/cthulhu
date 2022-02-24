@@ -43,6 +43,8 @@ typedef enum {
     HLIR_VALUE,
     HLIR_MODULE,
 
+    HLIR_FIELD,
+
     HLIR_ERROR
 } hlir_type_t;
 
@@ -330,6 +332,7 @@ hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *othe
 hlir_t *hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other);
 hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src);
 
+hlir_t *hlir_field(const node_t *node, const hlir_t *type, const char *name);
 
 hlir_t *hlir_new_module(IN const node_t *node, 
                         IN const char *name);
