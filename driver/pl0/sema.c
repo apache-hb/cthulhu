@@ -15,16 +15,18 @@ static const hlir_attributes_t *IMPORTED;
 static const hlir_attributes_t *EXPORTED;
 
 void pl0_init(void) {
+    const node_t *node = node_builtin();
+
     IMPORTED = hlir_new_attributes(LINK_IMPORTED);
     EXPORTED = hlir_new_attributes(LINK_EXPORTED);
 
-    INTEGER = hlir_digit(NULL, "integer", DIGIT_INT, SIGN_DEFAULT);
-    BOOLEAN = hlir_bool(NULL, "boolean");
-    STRING = hlir_string(NULL, "string");
-    VOID = hlir_void(NULL, "void");
+    INTEGER = hlir_digit(node, "integer", DIGIT_INT, SIGN_DEFAULT);
+    BOOLEAN = hlir_bool(node, "boolean");
+    STRING = hlir_string(node, "string");
+    VOID = hlir_void(node, "void");
 
-    FMT = hlir_string_literal(NULL, STRING, "%d\n");
-    PRINT = hlir_new_function(NULL, "printf", vector_init(STRING), INTEGER, true);
+    FMT = hlir_string_literal(node, STRING, "%d\n");
+    PRINT = hlir_new_function(node, "printf", vector_init(STRING), INTEGER, true);
     hlir_set_attributes(PRINT, IMPORTED);
     hlir_build_function(PRINT, NULL);
 }

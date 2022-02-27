@@ -60,6 +60,8 @@ aws_error_t new_aws_runtime(aws_runtime_t *runtime, const char *endpoint) {
     if (curl == NULL) { return AWS_CURL_FAILED; }
 
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 0);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 1);
 
     runtime->endpoint = endpoint;
     runtime->curl = curl;
@@ -90,6 +92,16 @@ aws_error_t aws_next_event(aws_runtime_t *runtime, aws_event_t *event) {
 
 aws_error_t aws_respond(aws_runtime_t *runtime, aws_event_t *event, const char *response) {
     char *url = format("http://%s/2018-06-01/runtime/invocation/%s/response", runtime->endpoint, event->request);
+    CURLcode res;
 
     curl_easy_setopt(runtime->curl, CURLOPT_URL, url);
+    curl_easy_setopt(runtime->curl, CURLOPT_POST, 1);
+
+    curl_easy_setopt(runtime->curl, CURLOPT_POSTFIELDSIZE, strlen(response));
+    curl_easy_setopt(runtime->curl, CURLOPT_POSTFIELDS, response);
+
+    res = curl_easy_perform(runtime->curl);
+    if (res != CURLE_OK) { return AWS_CURL_FAILED; }
+
+    return AWS_OK;
 }

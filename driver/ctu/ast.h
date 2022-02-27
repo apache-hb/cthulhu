@@ -27,7 +27,7 @@ typedef enum {
 
 typedef struct ast_t {
     astof_t of;
-    node_t *node;
+    const node_t *node;
 
     union {
         /* AST_TYPENAME|AST_MODULE */

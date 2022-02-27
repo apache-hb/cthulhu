@@ -183,20 +183,22 @@ static void fwd_decl(sema_t *sema, ast_t *ast) {
 }
 
 static void add_basic_types(sema_t *sema) {
-    add_decl(sema, TAG_TYPES, "bool", hlir_bool(NULL, "bool"));
-    add_decl(sema, TAG_TYPES, "str", hlir_string(NULL, "str"));
+    const node_t *node = node_builtin();
 
-    add_decl(sema, TAG_TYPES, "char", hlir_digit(NULL, "char", DIGIT_CHAR, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "uchar", hlir_digit(NULL, "uchar", DIGIT_CHAR, SIGN_UNSIGNED));
+    add_decl(sema, TAG_TYPES, "bool", hlir_bool(node, "bool"));
+    add_decl(sema, TAG_TYPES, "str", hlir_string(node, "str"));
 
-    add_decl(sema, TAG_TYPES, "short", hlir_digit(NULL, "short", DIGIT_SHORT, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "ushort", hlir_digit(NULL, "ushort", DIGIT_SHORT, SIGN_UNSIGNED));
+    add_decl(sema, TAG_TYPES, "char", hlir_digit(node, "char", DIGIT_CHAR, SIGN_SIGNED));
+    add_decl(sema, TAG_TYPES, "uchar", hlir_digit(node, "uchar", DIGIT_CHAR, SIGN_UNSIGNED));
 
-    add_decl(sema, TAG_TYPES, "int", hlir_digit(NULL, "int", DIGIT_INT, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "uint", hlir_digit(NULL, "uint", DIGIT_INT, SIGN_UNSIGNED));
+    add_decl(sema, TAG_TYPES, "short", hlir_digit(node, "short", DIGIT_SHORT, SIGN_SIGNED));
+    add_decl(sema, TAG_TYPES, "ushort", hlir_digit(node, "ushort", DIGIT_SHORT, SIGN_UNSIGNED));
 
-    add_decl(sema, TAG_TYPES, "long", hlir_digit(NULL, "long", DIGIT_LONG, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "ulong", hlir_digit(NULL, "ulong", DIGIT_LONG, SIGN_UNSIGNED));
+    add_decl(sema, TAG_TYPES, "int", hlir_digit(node, "int", DIGIT_INT, SIGN_SIGNED));
+    add_decl(sema, TAG_TYPES, "uint", hlir_digit(node, "uint", DIGIT_INT, SIGN_UNSIGNED));
+
+    add_decl(sema, TAG_TYPES, "long", hlir_digit(node, "long", DIGIT_LONG, SIGN_SIGNED));
+    add_decl(sema, TAG_TYPES, "ulong", hlir_digit(node, "ulong", DIGIT_LONG, SIGN_UNSIGNED));
 }
 
 hlir_t *ctu_sema(reports_t *reports, void *ast) {
