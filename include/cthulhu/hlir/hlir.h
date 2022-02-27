@@ -199,6 +199,12 @@ typedef struct hlir_t {
 } hlir_t;
 
 ///
+/// init functions
+///
+
+void init_hlir(void);
+
+///
 /// querys
 ///
 

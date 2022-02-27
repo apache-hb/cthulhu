@@ -4,6 +4,9 @@ const hlir_attributes_t DEFAULT_ATTRIBS = {
     .linkage = LINK_INTERNAL
 };
 
+hlir_t *TYPE = NULL;
+hlir_t *INVALID = NULL;
+
 hlir_t *hlir_new(const node_t *node, const hlir_t *of, hlir_type_t type) {
     hlir_t *self = ctu_malloc(sizeof(hlir_t));
     self->type = type;
@@ -17,6 +20,13 @@ hlir_t *hlir_new_decl(const node_t *node, const char *name, const hlir_t *of, hl
     hlir->name = name;
     hlir->attributes = &DEFAULT_ATTRIBS;
     return hlir;
+}
+
+void init_hlir(void) {
+    TYPE = hlir_new(NULL, NULL, HLIR_TYPE);
+    TYPE->of = TYPE;
+
+    INVALID = hlir_error(NULL, "invalid hlir node");
 }
 
 // accessors

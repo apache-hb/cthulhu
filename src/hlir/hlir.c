@@ -9,7 +9,7 @@ static hlir_t *hlir_new_forward(const node_t *node, const char *name, const hlir
 }
 
 hlir_t *hlir_error(const node_t *node, const char *error) {
-    hlir_t *self = hlir_new(node, NULL, HLIR_ERROR);
+    hlir_t *self = hlir_new(node, TYPE, HLIR_ERROR);
     self->error = error;
     return self;
 }
@@ -75,13 +75,13 @@ hlir_t *hlir_call(const node_t *node, hlir_t *call, vector_t *args) {
 }
 
 hlir_t *hlir_stmts(const node_t *node, vector_t *stmts) {
-    hlir_t *self = hlir_new(node, NULL, HLIR_STMTS);
+    hlir_t *self = hlir_new(node, INVALID, HLIR_STMTS);
     self->stmts = stmts;
     return self;
 }
 
 hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other) {
-    hlir_t *self = hlir_new(node, NULL, HLIR_BRANCH);
+    hlir_t *self = hlir_new(node, INVALID, HLIR_BRANCH);
     self->cond = cond;
     self->then = then;
     self->other = other;
@@ -89,7 +89,7 @@ hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *othe
 }
 
 hlir_t *hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other) {
-    hlir_t *self = hlir_new(node, NULL, HLIR_LOOP);
+    hlir_t *self = hlir_new(node, INVALID, HLIR_LOOP);
     self->cond = cond;
     self->then = body;
     self->other = other;
@@ -97,7 +97,7 @@ hlir_t *hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other)
 }
 
 hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src) {
-    hlir_t *self = hlir_new(node, NULL, HLIR_ASSIGN);
+    hlir_t *self = hlir_new(node, INVALID, HLIR_ASSIGN);
     self->dst = dst;
     self->src = src;
     return self;
@@ -185,7 +185,7 @@ void hlir_build_alias(hlir_t *self, hlir_t *type) {
 // building modules
 
 hlir_t *hlir_new_module(const node_t *node, const char *name) {
-    return hlir_new_decl(node, name, NULL, HLIR_MODULE);
+    return hlir_new_decl(node, name, INVALID, HLIR_MODULE);
 }
 
 void hlir_build_module(hlir_t *self, vector_t *values, vector_t *functions, vector_t *types) {

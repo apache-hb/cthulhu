@@ -120,6 +120,8 @@ int common_main(int argc, const char **argv, driver_t driver) {
         return end_reports(reports, SIZE_MAX, "command line parsing");
     }
 
+    init_hlir();
+
     const char *mod_name = get_arg(reports, argc, argv, "--module", "-m");
     const char *out = get_arg(reports, argc, argv, "--output", "-out");
     if (out == NULL) { out = "c89"; }

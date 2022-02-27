@@ -116,8 +116,13 @@ static void check_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) 
         }
         break;
 
+    case HLIR_DIGIT_LITERAL:
+    case HLIR_BOOL_LITERAL:
+    case HLIR_STRING_LITERAL:
+        break;
+
     default:
-        ctu_assert(reports, "check-recursion unexpected hlir type");
+        ctu_assert(reports, "check-recursion unexpected hlir type %d", hlir->type);
         break;
     }
 
