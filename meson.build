@@ -1,6 +1,6 @@
 project('cthulhu', [ 'c', 'cpp' ],
     license : 'APGLv3',
-    version : '0.0.4',
+    version : '0.0.5',
     meson_version : '>=0.58',
     default_options : [
         'c_std=gnu11',
@@ -117,9 +117,11 @@ if get_option('tuning')
     )
 endif
 
-aws = subproject('aws', required : get_option('aws'))
-if aws.found()
+awsopt = subproject('aws', required : get_option('aws'))
+if awsopt.found()
+    miniz = subproject('miniz').get_variable('miniz')
+    aws = awsopt.get_variable('aws')
     executable('lambda', [ 'tools/lambda.c' ],
-        dependencies : [ aws.get_variable('aws'), generic ]
+        dependencies : [ generic, aws, miniz ]
     )
 endif

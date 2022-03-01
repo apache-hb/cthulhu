@@ -7,6 +7,8 @@
 #include <string.h>
 #include <stdarg.h>
 
+#define VERSION "2018-06-01"
+
 typedef struct {
     char *data;
     size_t size;
@@ -62,6 +64,10 @@ aws_error_t new_aws_runtime(aws_runtime_t *runtime, const char *endpoint) {
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 0);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 1);
+    
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+    curl_easy_setopt(curl, CURLOPT_TCP_NODELAY, 1L);
+    curl_easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 
     runtime->endpoint = endpoint;
     runtime->curl = curl;
@@ -74,11 +80,11 @@ void delete_aws_runtime(aws_runtime_t *runtime) {
 }
 
 aws_error_t aws_next_event(aws_runtime_t *runtime, aws_event_t *event) {
-    char *url = format("http://%s/2018-06-01/runtime/invocation/next", runtime->endpoint);
+    char *url = format("http://%s/" VERSION "/runtime/invocation/next", runtime->endpoint);
     CURLcode res;
     chunk_t chunk = new_chunk(0x1000);
 
-    curl_easy_setopt(runtime->curl, CURLOPT_URL, runtime->endpoint);
+    curl_easy_setopt(runtime->curl, CURLOPT_URL, url);
     curl_easy_setopt(runtime->curl, CURLOPT_WRITEFUNCTION, chunk_write);
     curl_easy_setopt(runtime->curl, CURLOPT_WRITEDATA, &chunk);
 
@@ -91,7 +97,7 @@ aws_error_t aws_next_event(aws_runtime_t *runtime, aws_event_t *event) {
 }
 
 aws_error_t aws_respond(aws_runtime_t *runtime, aws_event_t *event, const char *response) {
-    char *url = format("http://%s/2018-06-01/runtime/invocation/%s/response", runtime->endpoint, event->request);
+    char *url = format("http://%s/" VERSION "/runtime/invocation/%s/response", runtime->endpoint, event->request);
     CURLcode res;
 
     curl_easy_setopt(runtime->curl, CURLOPT_URL, url);
@@ -103,5 +109,13 @@ aws_error_t aws_respond(aws_runtime_t *runtime, aws_event_t *event, const char *
     res = curl_easy_perform(runtime->curl);
     if (res != CURLE_OK) { return AWS_CURL_FAILED; }
 
+    return AWS_OK;
+}
+
+aws_error_t aws_init_error(aws_runtime_t *runtime, const char *error, const char *type, const char **stack, size_t elements) {
+    return AWS_OK;
+}
+
+aws_error_t aws_invoke_error(aws_runtime_t *runtime, const char *error, const char *type, const char **stack, size_t elements) {
     return AWS_OK;
 }
