@@ -63,10 +63,6 @@ gmp = dependency('gmp',
 
 args = []
 deps = [ gmp, json, math ]
-
-flex = find_program('flex', 'win_flex', version : '>=2.6')
-bison = find_program('bison', 'win_bison', version : '>=3.5')
-
 lexargs = []
 
 if host_machine.system() == 'windows'
@@ -86,6 +82,35 @@ generic = declare_dependency(
     dependencies : deps
 )
 
+options = { 'generic': generic }
+
+awsopt = subproject('aws', required : get_option('aws'))
+if awsopt.found()
+    miniz = subproject('miniz').get_variable('miniz')
+    executable('lambda', [ 'tools/create-lambda.c' ],
+        dependencies : [ generic, miniz ]
+    )
+
+    aws = awsopt.get_variable('aws')
+
+    libaws = library('aws', src,
+        include_directories : 'include',
+        c_args : args + [ '-DHAVE_AWS=1' ],
+        dependencies : deps + [ aws ]
+    )
+
+    awsdep = declare_dependency(
+        link_with : libaws,
+        include_directories : 'include',
+        dependencies : deps + [ aws ]
+    )
+
+    options += { 'aws': awsdep }
+endif
+
+flex = find_program('flex', 'win_flex', version : '>=2.6')
+bison = find_program('bison', 'win_bison', version : '>=3.5')
+
 lex = generator(flex, 
     output : [ '@BASENAME@-flex.c', '@BASENAME@-flex.h' ],
     arguments : lexargs + [
@@ -104,24 +129,13 @@ parse = generator(bison,
     ]
 )
 
-options = [ generic ]
-
-foreach lang : get_option('languages')
-    subdir('driver'/lang)
-    subdir('tests'/lang)
-endforeach
-
 if get_option('tuning')
     tune = executable('tune-map', [ 'tools/tune-map.c' ],
         dependencies : generic
     )
 endif
 
-awsopt = subproject('aws', required : get_option('aws'))
-if awsopt.found()
-    miniz = subproject('miniz').get_variable('miniz')
-    aws = awsopt.get_variable('aws')
-    executable('lambda', [ 'tools/lambda.c' ],
-        dependencies : [ generic, aws, miniz ]
-    )
-endif
+foreach lang : get_option('languages')
+    subdir('driver'/lang)
+    subdir('tests'/lang)
+endforeach

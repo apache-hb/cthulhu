@@ -57,9 +57,13 @@ static char *format(const char *fmt, ...) {
     return str;
 }
 
-aws_error_t new_aws_runtime(aws_runtime_t *runtime, const char *endpoint) {
+aws_error_t new_aws_runtime(aws_runtime_t *runtime, const char *endpoint, const char *cert) {
     CURL *curl = curl_easy_init();
     if (curl == NULL) { return AWS_CURL_FAILED; }
+
+    if (cert != NULL) {
+        curl_easy_setopt(curl, CURLOPT_CAINFO, cert);
+    }
 
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, true);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 0);

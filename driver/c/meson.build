@@ -1,6 +1,8 @@
 src = [ 'main.c' ]
 
-ctcc = executable('ctcc', src,
-    dependencies : generic,
-    install : true
-)
+foreach name, dep : options
+    ctcc = executable('ctcc-@0@'.format(name), src,
+        dependencies : dep,
+        install : true
+    )
+endforeach

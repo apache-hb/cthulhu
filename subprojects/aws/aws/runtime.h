@@ -26,7 +26,7 @@ typedef enum {
 /// our specific functions
 ///
 
-aws_error_t new_aws_runtime(aws_runtime_t *runtime, const char *endpoint);
+aws_error_t new_aws_runtime(aws_runtime_t *runtime, const char *endpoint, const char *cert);
 void delete_aws_runtime(aws_runtime_t *runtime);
 
 ///

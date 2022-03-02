@@ -97,6 +97,23 @@ void common_init(void) {
     init_gmp();
 }
 
+typedef enum {
+    OUTPUT_C89,
+    OUTPUT_JSON
+} output_t;
+
+static output_t parse_target(reports_t *reports, const char *target) {
+    if (streq(target, "c89")) {
+        return OUTPUT_C89;
+    } else if (streq(target, "json")) {
+        return OUTPUT_JSON;
+    } else {
+        message_t *id = report(reports, WARNING, NULL, "unknown output target `%s`", target);
+        report_note(id, "defaulting to `c89`");
+        return OUTPUT_C89;
+    }
+}
+
 int common_main(int argc, const char **argv, driver_t driver) {
     if (find_arg(argc, argv, "--version", "-v")) {
         print_version(driver);
@@ -125,6 +142,10 @@ int common_main(int argc, const char **argv, driver_t driver) {
     const char *mod_name = get_arg(reports, argc, argv, "--module", "-m");
     const char *out = get_arg(reports, argc, argv, "--output", "-out");
     if (out == NULL) { out = "c89"; }
+    
+    output_t target = parse_target(reports, out);
+    status = end_reports(reports, SIZE_MAX, "command line parsing");
+    if (status != 0) { return status; }
 
     const char *path = argv[1];
 
@@ -159,15 +180,17 @@ int common_main(int argc, const char **argv, driver_t driver) {
     status = end_reports(reports, SIZE_MAX, "module checking");
     if (status != 0) { return status; }
 
-    if (streq("json", out)) {
-        json_emit_tree(reports, hlir);
-        status = end_reports(reports, SIZE_MAX, "emitting json");
-    } else if (streq("c89", out)) {
+    switch (target) {
+    case OUTPUT_C89:
         c89_emit_tree(reports, hlir);
         status = end_reports(reports, SIZE_MAX, "emitting c89");
-    } else {
-        report(reports, ERROR, NULL, "unknown output format: %s", out);
-        status = end_reports(reports, SIZE_MAX, "command line parsing");
+        break;
+    case OUTPUT_JSON:
+        json_emit_tree(reports, hlir);
+        status = end_reports(reports, SIZE_MAX, "emitting json");
+        break;
+    default:
+        UNREACHABLE();
     }
 
     return status;
