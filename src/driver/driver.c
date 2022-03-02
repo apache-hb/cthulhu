@@ -144,7 +144,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (out == NULL) { out = "c89"; }
     
     output_t target = parse_target(reports, out);
-    status = end_reports(reports, SIZE_MAX, "command line parsing");
+    status = end_reports(reports, SIZE_MAX, "target parsing");
     if (status != 0) { return status; }
 
     const char *path = argv[1];
