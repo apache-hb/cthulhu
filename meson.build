@@ -87,7 +87,7 @@ options = { 'generic': generic }
 awsopt = subproject('aws', required : get_option('aws'))
 if awsopt.found()
     miniz = subproject('miniz').get_variable('miniz')
-    executable('lambda', [ 'tools/create-lambda.c' ],
+    executable('create-lambda', [ 'tools/create-lambda.c' ],
         dependencies : [ generic, miniz ]
     )
 
@@ -106,6 +106,8 @@ if awsopt.found()
     )
 
     options += { 'aws': awsdep }
+
+    subdir('tests/aws')
 endif
 
 flex = find_program('flex', 'win_flex', version : '>=2.6')

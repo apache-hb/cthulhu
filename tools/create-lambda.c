@@ -6,7 +6,7 @@
 const char *boostrap = 
     "#!/bin/sh\n" // set the shebang
     "set -euo pipefail\n" // set the shell to exit on error and pipefail
-    "exec $LAMBDA_TASK_ROOT/function" // execute the function
+    "exec $LAMBDA_TASK_ROOT/function $AWS_LAMBDA_RUNTIME_API" // execute the function with the first argument being the endpoint
 ;
 
 int main(int argc, const char **argv) {
@@ -24,6 +24,8 @@ int main(int argc, const char **argv) {
     fread(buffer, size, 1, data);
     fclose(data);
 
+    remove("lambda.zip");
+
     mz_bool status = mz_zip_add_mem_to_archive_file_in_place(
         "lambda.zip", "function", buffer, size, 
         NULL, 0, MZ_BEST_COMPRESSION
@@ -35,7 +37,7 @@ int main(int argc, const char **argv) {
     }
 
     status = mz_zip_add_mem_to_archive_file_in_place(
-        "lambda.zip", "bootstrap.sh", boostrap, strlen(boostrap), 
+        "lambda.zip", "bootstrap", boostrap, strlen(boostrap), 
         NULL, 0, MZ_BEST_COMPRESSION
     );
 
