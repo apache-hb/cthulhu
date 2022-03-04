@@ -20,8 +20,6 @@ static void print_help(const char **argv) {
     printf("  -v, --version     : print version information\n");
     printf("  -V, --verbose     : enable verbose logging\n");
     printf("  -m, --module      : set module output name\n");
-    //printf("  -dh, --debug-hlir : print HLIR debug tree\n");
-    //printf("  -ds, --debug-ssa  : print SSA debug tree\n");
     printf("  -out, --output    : set output format\n");
     printf("                    | options: json, c89\n");
     printf("                    | default: c89\n");

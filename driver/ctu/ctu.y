@@ -157,7 +157,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<ast>
     modspec decl 
-    typealias structdecl uniondecl
+    structdecl uniondecl
     field type types opttypes
 
 %type<vector>
@@ -180,12 +180,8 @@ decllist: decl { $$ = vector_init($1); }
     | decllist decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: typealias { $$ = $1; }
-    | structdecl { $$ = $1; }
+decl: structdecl { $$ = $1; }
     | uniondecl { $$ = $1; }
-    ;
-
-typealias: TYPE IDENT EQUALS type SEMICOLON { $$ = ast_typealias(x, @$, $2, $4); }
     ;
 
 structdecl: STRUCT IDENT aggregates { $$ = ast_structdecl(x, @$, $2, $3); }

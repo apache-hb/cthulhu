@@ -82,7 +82,7 @@ generic = declare_dependency(
     dependencies : deps
 )
 
-options = { 'generic': generic }
+options = { '': generic }
 
 awsopt = subproject('aws', required : get_option('aws'))
 if awsopt.found()
@@ -105,7 +105,7 @@ if awsopt.found()
         dependencies : deps + [ aws ]
     )
 
-    options += { 'aws': awsdep }
+    options += { '-aws': awsdep }
 
     subdir('tests/aws')
 endif

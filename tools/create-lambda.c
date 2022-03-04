@@ -11,11 +11,14 @@ const char *boostrap =
 
 int main(int argc, const char **argv) {
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s <file>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <file> [output]\n", argv[0]);
         return 1;
     }
 
-    FILE *data = fopen(argv[1], "rb");
+    const char *file = argv[1];
+    const char *output = argc > 2 ? argv[2] : "lambda.zip";
+
+    FILE *data = fopen(file, "rb");
     fseek(data, 0, SEEK_END);
     size_t size = ftell(data);
     fseek(data, 0, SEEK_SET);
@@ -24,10 +27,10 @@ int main(int argc, const char **argv) {
     fread(buffer, size, 1, data);
     fclose(data);
 
-    remove("lambda.zip");
+    remove(output);
 
     mz_bool status = mz_zip_add_mem_to_archive_file_in_place(
-        "lambda.zip", "function", buffer, size, 
+        output, "function", buffer, size, 
         NULL, 0, MZ_BEST_COMPRESSION
     );
 
@@ -37,7 +40,7 @@ int main(int argc, const char **argv) {
     }
 
     status = mz_zip_add_mem_to_archive_file_in_place(
-        "lambda.zip", "bootstrap", boostrap, strlen(boostrap), 
+        output, "bootstrap", boostrap, strlen(boostrap), 
         NULL, 0, MZ_BEST_COMPRESSION
     );
 

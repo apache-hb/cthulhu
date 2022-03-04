@@ -20,7 +20,6 @@ typedef enum {
     AST_ARRAY,
 
     /* type declarations */
-    AST_TYPEALIAS,
     AST_UNIONDECL,
     AST_STRUCTDECL
 } astof_t;
@@ -60,9 +59,6 @@ typedef struct ast_t {
             char *name;
 
             union {
-                /* AST_TYPEALIAS */
-                struct ast_t *alias;
-
                 /* AST_FIELD */
                 struct ast_t *field;
 
@@ -82,7 +78,6 @@ ast_t *ast_array(scan_t *scan, where_t where, ast_t *type, ast_t *size);
 ast_t *ast_closure(scan_t *scan, where_t where, ast_t *args, ast_t *type);
 ast_t *ast_typelist(vector_t *types, bool variadic);
 
-ast_t *ast_typealias(scan_t *scan, where_t where, char *name, ast_t *type);
 ast_t *ast_structdecl(scan_t *scan, where_t where, char *name, vector_t *fields);
 ast_t *ast_uniondecl(scan_t *scan, where_t where, char *name, vector_t *fields);
 

@@ -33,3 +33,10 @@ hlir_t *hlir_pointer(const node_t *node, const char *name, hlir_t *ptr, bool ind
     hlir->indexable = indexable;
     return hlir;
 }
+
+hlir_t *hlir_array(const node_t *node, const char *name, hlir_t *element, hlir_t *length) {
+    hlir_t *hlir = hlir_new_decl(node, name, TYPE, HLIR_ARRAY);
+    hlir->element = element;
+    hlir->length = length;
+    return hlir;
+}

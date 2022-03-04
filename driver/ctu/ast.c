@@ -62,12 +62,6 @@ ast_t *ast_typelist(vector_t *types, bool variadic) {
     return ast;
 }
 
-ast_t *ast_typealias(scan_t *scan, where_t where, char *name, ast_t *type) {
-    ast_t *ast = ast_decl(AST_TYPEALIAS, name, scan, where);
-    ast->alias = type;
-    return ast;
-}
-
 ast_t *ast_structdecl(scan_t *scan, where_t where, char *name, vector_t *fields) {
     ast_t *ast = ast_decl(AST_STRUCTDECL, name, scan, where);
     ast->fields = fields;

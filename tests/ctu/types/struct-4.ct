@@ -1,4 +1,6 @@
-struct B {}
+struct B {
+    field: int;
+}
 
 struct A {
     b: *B;

@@ -28,13 +28,13 @@ typedef enum {
     /* types */
     HLIR_STRUCT, // a c-like struct
     HLIR_UNION, // a c-like union
-    HLIR_ALIAS, // an alias to another type
     HLIR_DIGIT, // an integer type
     HLIR_BOOL, // a boolean type
     HLIR_STRING, // a string type
     HLIR_VOID, // the void type
     HLIR_CLOSURE, // the type of a function signature
     HLIR_POINTER, // a pointer to another type
+    HLIR_ARRAY, // an array of another type
     HLIR_TYPE, // the type of all types
 
     /* declarations */
@@ -53,6 +53,9 @@ typedef enum {
     DIGIT_SHORT,
     DIGIT_INT,
     DIGIT_LONG,
+
+    DIGIT_SIZE,
+    DIGIT_PTR,
 
     DIGIT_TOTAL
 } digit_t;
@@ -166,6 +169,12 @@ typedef struct hlir_t {
                 struct {
                     struct hlir_t *ptr;
                     bool indexable;
+                };
+
+                /* array type */
+                struct {
+                    struct hlir_t *element;
+                    struct hlir_t *length;
                 };
 
                 ///
@@ -305,6 +314,20 @@ hlir_t *hlir_pointer(IN_OPT const node_t *node,
                      IN_OPT const char *name, 
                      IN hlir_t *type, 
                      bool indexable);
+
+/**
+ * @brief construct a new array type
+ * 
+ * @param node the node where this type was defined
+ * @param name the name of this array type
+ * @param element the element type of this array
+ * @param length the length of this array
+ * @return hlir_t* the constructed array type
+ */
+hlir_t *hlir_array(IN_OPT const node_t *node, 
+                   IN_OPT const char *name, 
+                   IN hlir_t *element, 
+                   IN hlir_t *length);
 
 ///
 /// expression constructors

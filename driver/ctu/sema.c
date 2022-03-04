@@ -69,11 +69,6 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast) {
     }
 }
 
-static void sema_alias(sema_t *sema, hlir_t *decl, ast_t *ast) {
-    hlir_t *type = sema_type(sema, ast->alias);
-    hlir_build_alias(decl, type);
-}
-
 static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast) {
     vector_t *fields = ast->fields;
     size_t len = vector_len(fields);
@@ -127,11 +122,6 @@ static void sema_decl(sema_t *sema, ast_t *ast) {
     hlir_t *decl;
 
     switch (ast->of) {
-    case AST_TYPEALIAS:
-        decl = sema_get(sema, TAG_TYPES, ast->name);
-        sema_alias(sema, decl, ast);
-        break;
-
     case AST_STRUCTDECL:
         decl = sema_get(sema, TAG_TYPES, ast->name);
         sema_struct(sema, decl, ast);
@@ -171,11 +161,6 @@ static void fwd_decl(sema_t *sema, ast_t *ast) {
         add_decl(sema, TAG_TYPES, ast->name, decl);
         break;
 
-    case AST_TYPEALIAS:
-        decl = hlir_new_alias(ast->node, ast->name);
-        add_decl(sema, TAG_TYPES, ast->name, decl);
-        break;
-    
     default:
         ctu_assert(sema->reports, "unexpected ast of type %d", ast->of);
         break;

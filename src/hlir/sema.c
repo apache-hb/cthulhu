@@ -147,10 +147,6 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
             check_type_recursion(reports, stack, param);
         }
         break;
-    
-    case HLIR_ALIAS:
-        check_type_recursion(reports, stack, hlir->alias);
-        break;
 
     case HLIR_STRUCT: case HLIR_UNION:
         for (size_t i = 0; i < vector_len(hlir->fields); i++) {

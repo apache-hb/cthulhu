@@ -41,7 +41,7 @@ static void emit_struct(const hlir_t *type) {
     printf("typedef struct %s {\n", fmt_type_name(type));
     for (size_t i = 0; i < vector_len(type->fields); i++) {
         const hlir_t *field = vector_get(type->fields, i);
-        printf("    %s %s;\n", fmt_type_name(field), nameof_hlir(field));
+        printf("    %s %s;\n", fmt_type_name(field->of), nameof_hlir(field));
     }
     printf("} %s;\n", fmt_type_name(type));
 }
@@ -62,9 +62,6 @@ static void emit_type_decl(reports_t *reports, const hlir_t *type) {
         break;
     case HLIR_CLOSURE:
         printf("typedef %s;\n", emit_signature(type));
-        break;
-    case HLIR_ALIAS:
-        printf("typedef %s %s;\n", fmt_type_name(type->alias), fmt_type_name(type));
         break;
     case HLIR_STRUCT:
         emit_struct(type);

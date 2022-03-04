@@ -172,16 +172,6 @@ void hlir_build_union(hlir_t *hlir) {
     hlir->type = HLIR_UNION;
 }
 
-hlir_t *hlir_new_alias(const node_t *node, const char *name) {
-    return hlir_new_forward(node, name, NULL, HLIR_ALIAS);
-}
-
-void hlir_build_alias(hlir_t *self, hlir_t *type) {
-    self->type = HLIR_ALIAS;
-    self->alias = type;
-}
-
-
 // building modules
 
 hlir_t *hlir_new_module(const node_t *node, const char *name) {
