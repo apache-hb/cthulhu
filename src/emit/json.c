@@ -82,18 +82,20 @@ static cJSON *emit_type(emit_t *emit, size_t idx, const hlir_t *hlir) {
     return type;
 }
 
-static const char *linkage_name(hlir_linkage_t linkage) {
+static const char *linkage_name(reports_t *reports, hlir_linkage_t linkage) {
     switch (linkage) {
     case LINK_EXPORTED: return "exported";
     case LINK_IMPORTED: return "imported";
     case LINK_INTERNAL: return "internal";
-    default: UNREACHABLE();
+    default: 
+        ctu_assert(reports, "unknown linkage %d", linkage);
+        return "unknown";
     }
 }
 
-static cJSON *emit_attribs(const hlir_attributes_t *attribs) {
+static cJSON *emit_attribs(reports_t *reports, const hlir_attributes_t *attribs) {
     cJSON *json = cJSON_CreateObject();
-    cJSON_AddStringToObject(json, "linkage", linkage_name(attribs->linkage));
+    cJSON_AddStringToObject(json, "linkage", linkage_name(reports, attribs->linkage));
     return json;
 }
 
@@ -237,7 +239,7 @@ static cJSON *emit_global(emit_t *emit, map_t *map, size_t index, const hlir_t *
     cJSON_AddStringToObject(value, "kind", "value");
     cJSON_AddStringToObject(value, "name", hlir->name);
     cJSON_AddNumberToObject(value, "type", get_type(emit, typeof_hlir(hlir)));
-    cJSON_AddItemToObject(value, "attribs", emit_attribs(hlir->attributes));
+    cJSON_AddItemToObject(value, "attribs", emit_attribs(emit->reports, hlir->attributes));
 
     if (hlir->value != NULL) {
         cJSON_AddItemToObject(value, "value", emit_expr(emit, hlir->value));
@@ -337,7 +339,7 @@ static cJSON *emit_function(emit_t *emit, size_t idx, const hlir_t *hlir) {
     cJSON_AddStringToObject(json, "kind", "function");
     cJSON_AddStringToObject(json, "name", hlir->name);
     cJSON_AddNumberToObject(json, "type", get_type(emit, typeof_hlir(hlir)));
-    cJSON_AddItemToObject(json, "attribs", emit_attribs(hlir->attributes));
+    cJSON_AddItemToObject(json, "attribs", emit_attribs(emit->reports, hlir->attributes));
 
     size_t nlocals = vector_len(hlir->locals);
     cJSON *locals = cJSON_CreateArray();

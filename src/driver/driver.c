@@ -188,7 +188,9 @@ int common_main(int argc, const char **argv, driver_t driver) {
         status = end_reports(reports, SIZE_MAX, "emitting json");
         break;
     default:
-        UNREACHABLE();
+        report(reports, ERROR, NULL, "unknown target %d selected", target);
+        status = end_reports(reports, SIZE_MAX, "emitting");
+        break;
     }
 
     return status;
