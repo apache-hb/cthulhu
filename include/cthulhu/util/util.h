@@ -287,6 +287,10 @@ vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) NONULL ALLOC(vec
  */
 vector_t *vector_slice(vector_t *vector, size_t start, size_t end) NONULL;
 
+typedef bool(*vector_cmp_t)(const void *, const void *);
+
+size_t vector_find(vector_t *vector, const void *element, vector_cmp_t cmp) CONSTFN NOTNULL(1);
+
 /**
  * @brief collect a vector of vectors into a single vector
  * 

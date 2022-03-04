@@ -146,9 +146,6 @@ typedef struct hlir_t {
                 /// all types
                 ///
 
-                /* the aliased type */
-                struct hlir_t *alias;
-
                 /* the aggregate members */
                 vector_t *fields;
                 

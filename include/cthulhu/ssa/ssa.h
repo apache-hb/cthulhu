@@ -4,9 +4,11 @@
 #include "cthulhu/hlir/hlir.h"
 
 typedef enum {
-    OP_VREG,
-    OP_IMM,
-    OP_ADDR
+    OP_VREG, // a virtual register from within the block
+    OP_IMM, // an immediate value
+    OP_ADDR, // an address of another block
+
+    OP_EMPTY // nothing
 } optype_t;
 
 typedef struct {
@@ -20,17 +22,35 @@ typedef struct {
 } operand_t;
 
 typedef enum {
-    STEP_LOAD,
-    STEP_STORE,
-    STEP_RETURN
+    STEP_LOAD, // vreg = *src
+    STEP_STORE, // *dst = src
+
+    STEP_BRANCH, // if (cond) goto target else goto other
+    STEP_JUMP, // goto target
+
+    STEP_RETURN // ret result
 } opcode_t;
 
 typedef struct {
     opcode_t op;
 
     union {
-        operand_t src;
-        operand_t dst;
+        // STEP_LOAD uses only `src`
+        // STEP_STORE uses both `src` and `dst`
+        struct {
+            operand_t dst;
+            operand_t src;
+        };
+
+        // STEP_JUMP only uses `target`
+        // STEP_BRANCH uses all 3
+        struct {
+            operand_t cond;
+            operand_t target;
+            operand_t other;
+        };
+
+        // STEP_RETURN return value
         operand_t result;
     };
 } step_t;

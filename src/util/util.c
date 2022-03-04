@@ -409,6 +409,22 @@ size_t vector_len(const vector_t *vector) {
     return vector->used;
 }
 
+static bool default_cmp(const void *lhs, const void *rhs) {
+    return lhs == rhs;
+}
+
+size_t vector_find(vector_t *vector, const void *element, vector_cmp_t cmp) {
+    if (cmp == NULL) { cmp = default_cmp; }
+
+    for (size_t i = 0; i < vector_len(vector); i++) {
+        if (cmp(vector_get(vector, i), element)) {
+            return i;
+        }
+    }
+
+    return SIZE_MAX;
+}
+
 vector_t *vector_slice(vector_t *vector, size_t start, size_t end) {
     vector_t *result = vector_of(end - start);
     for (size_t i = start; i < end; i++) {
