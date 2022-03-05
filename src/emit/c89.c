@@ -10,8 +10,68 @@ static char *fmt_type_name(const hlir_t *type) {
     return format("type_%s", base);
 }
 
-static char *emit_type(const hlir_t *type, const char *name) {
-    
+static const char *emit_type(reports_t *reports, const hlir_t *type, const char *name);
+static char *emit_expr(reports_t *reports, const hlir_t *hlir);
+
+static const char *emit_bool(const char *name) {
+    return name != NULL ? format("_Bool %s", name) : "_Bool";
+}
+
+static const char *emit_void(const char *name) {
+    return name != NULL ? format("void %s", name) : "void";
+}
+
+static const char *emit_ptr(reports_t *reports, const hlir_t *type, const char *name) {
+    const char *base = emit_type(reports, type->ptr, NULL);
+    return name != NULL ? format("%s *%s", base, name) : base;
+}
+
+static const char *emit_array(reports_t *reports, const hlir_t *type, const char *name) {
+    const char *base = emit_type(reports, type->element, NULL);
+    char *length = emit_expr(reports, type->length);
+
+    return name != NULL ? format("%s %s[%s]", base, name, length) 
+                        : format("%s[%s]", base, length);
+}
+
+static const char *SIGNS[SIGN_TOTAL] = {
+    [SIGN_DEFAULT] = "",
+    [SIGN_SIGNED] = "signed ",
+    [SIGN_UNSIGNED] = "unsigned "
+};
+
+static const char *DIGITS[DIGIT_TOTAL] = {
+    [DIGIT_CHAR] = "char",
+    [DIGIT_SHORT] = "short",
+    [DIGIT_INT] = "int",
+    [DIGIT_LONG] = "long",
+    [DIGIT_SIZE] = "size_t",
+    [DIGIT_PTR] = "intptr_t"
+};
+
+static char *emit_digit(const hlir_t *type, const char *name) {
+    char *digit = format("%s%s", SIGNS[type->sign], DIGITS[type->width]);
+    return name != NULL ? format("%s %s", digit, name) : digit;
+}
+
+static char *emit_string(const char *name) {
+    return name != NULL ? format("const char *%s", name) : "char *";
+}
+
+static const char *emit_type(reports_t *reports, const hlir_t *type, const char *name) {
+    switch (type->type) {
+    case HLIR_BOOL: return emit_bool(name);
+    case HLIR_VOID: return emit_void(name);
+    case HLIR_DIGIT: return emit_digit(type, name);
+    case HLIR_STRING: return emit_string(name);
+
+    case HLIR_POINTER: return emit_ptr(reports, type, name);
+    case HLIR_ARRAY: return emit_array(reports, type, name);
+
+    default:
+        ctu_assert(reports, "cannot emit type %d", type->type);
+        return "error";
+    }
 }
 
 static char *emit_signature(const hlir_t *type) {
@@ -21,24 +81,6 @@ static char *emit_signature(const hlir_t *type) {
         args = strjoin(", ", params);
     }
     return format("%s(*%s)(%s%s)", fmt_type_name(type->result), fmt_type_name(type), args, type->variadic ? ", ..." : "");
-}
-
-static const char *sign_name(sign_t sign) {
-    switch (sign) {
-    case SIGN_UNSIGNED: return " unsigned";
-    case SIGN_SIGNED: return " signed";
-    default: return "";
-    }
-}
-
-static const char *digit_name(digit_t digit) {
-    switch (digit) {
-    case DIGIT_CHAR: return "char";
-    case DIGIT_SHORT: return "short";
-    case DIGIT_INT: return "int";
-    case DIGIT_LONG: return "long long";
-    default: return "";
-    }
 }
 
 static void emit_struct(const hlir_t *type) {
@@ -53,16 +95,10 @@ static void emit_struct(const hlir_t *type) {
 static void emit_type_decl(reports_t *reports, const hlir_t *type) {
     switch (type->type) {
     case HLIR_DIGIT:
-        printf("typedef%s %s %s;\n", sign_name(type->sign), digit_name(type->width), fmt_type_name(type));
-        break;
     case HLIR_BOOL:
-        printf("typedef _Bool %s;\n", fmt_type_name(type));
-        break;
     case HLIR_STRING:
-        printf("typedef const char *%s;\n", fmt_type_name(type));
-        break;
     case HLIR_VOID:
-        printf("typedef void %s;\n", fmt_type_name(type));
+        printf("typedef %s;\n", emit_type(reports, type, nameof_hlir(type)));
         break;
     case HLIR_CLOSURE:
         printf("typedef %s;\n", emit_signature(type));
@@ -109,8 +145,6 @@ static void emit_import_decl(reports_t *reports, const hlir_t *hlir) {
         break;
     }
 }
-
-static char *emit_expr(reports_t *reports, const hlir_t *hlir);
 
 static char *emit_binary(reports_t *reports, const hlir_t *hlir) {
     char *lhs = emit_expr(reports, hlir->lhs);
