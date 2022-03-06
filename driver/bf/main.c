@@ -11,6 +11,43 @@ void *bf_parse(reports_t *reports, scan_t *scan) {
     hlir_t *tape = hlir_value(NULL, "tape", TAPE, NULL);
     hlir_t *cursor = hlir_value(NULL, "cursor", CURSOR, hlir_int_literal(NULL, CURSOR, 0));
 
+    where_t where = { 0, 0, 0, 0 };
+    node_t *node = node_new(scan, where);
+
+    hlir_t *entry = hlir_new_function(node, "main", vector_of(0), hlir_void(node, "void"), false);
+
+    vector_t *stmts = vector_new(scan_size(scan));
+
+    const char *text = scan_text(scan);
+    while (true) {
+        hlir_t *hlir = NULL;
+        switch (*text++) {
+        case '>':
+            hlir = hlir_assign(node, cursor, hlir_add(node, cursor, hlir_int_literal(node, CURSOR, 1)));
+            break;
+        case '<':
+            hlir = hlir_assign(node, cursor, hlir_sub(node, cursor, hlir_int_literal(node, CURSOR, 1)));
+            break;
+        case '+':
+        case '-':
+        case '.':
+        case ',':
+        case '[':
+        case ']':
+        
+        default:
+            /* everything else is a comment */
+            break;
+        }
+
+        if (hlir != NULL) {
+            vector_push(&stmts, hlir);
+        }
+    }
+
+    hlir_t *body = hlir_stmts(node, stmts);
+    hlir_build_function(entry, body);
+
     return NULL;
 }
 

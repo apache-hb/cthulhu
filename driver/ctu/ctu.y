@@ -57,6 +57,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     COMMA "`,`"
     DOT "`.`"
     DOT3 "`...`"
+    ARROW "`->`"
     LSHIFT "`<<`"
     RSHIFT "`>>`"
 
@@ -155,6 +156,14 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     TYPEOF "`typeof`"
     UUIDOF "`uuidof`"
 
+    TRY "`try`"
+    CATCH "`catch`"
+    FINALLY "`finally`"
+    THROW "`throw`"
+
+    COMPILED "`compile`"
+    STATIC "`static`"
+
 %type<ast>
     modspec decl 
     structdecl uniondecl
@@ -207,7 +216,7 @@ modspec: %empty { $$ = NULL; }
 type: path { $$ = ast_typename(x, @$, $1); }
     | MUL type { $$ = ast_pointer(x, @$, $2, false); }
     | LSQUARE MUL RSQUARE type { $$ = ast_pointer(x, @$, $4, true); }
-    | DEF LPAREN opttypes RPAREN COLON2 type { $$ = ast_closure(x, @$, $3, $6); } 
+    | DEF LPAREN opttypes RPAREN ARROW type { $$ = ast_closure(x, @$, $3, $6); } 
     | LPAREN type RPAREN { $$ = $2; }
     ;
 

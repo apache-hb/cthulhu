@@ -137,7 +137,7 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
 
     switch (hlir->type) {
     case HLIR_POINTER:
-        check_type_recursion(reports, stack, hlir->ptr);
+        // check_type_recursion(reports, stack, hlir->ptr);
         break;
 
     case HLIR_CLOSURE:

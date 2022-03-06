@@ -29,6 +29,8 @@
 <COMMENT>\n ;
 <COMMENT>. ;
 
+"->" { return ARROW; }
+
 "!<" { 
     enter_template(yyextra);
     return BEGIN_TEMPLATE;
@@ -136,6 +138,16 @@
 "__async" { return ASYNC; }
 "__await" { return AWAIT; }
 "__yield" { return YIELD; }
+
+"__compile" { return COMPILED; }
+"__static" { return COMPILED; }
+
+"__try" { return TRY; }
+"__catch" { return CATCH; }
+"__finally" { return FINALLY; }
+"__throw" { return THROW; }
+"__raise" { return THROW; }
+"__except" { return THROW; }
 
 "__contract" { return CONTRACT; }
 "__requires" { return REQUIRES; }

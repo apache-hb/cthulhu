@@ -10,11 +10,28 @@ foreach case : crashes
     where = case.replace('.', '/')
     path = dir/'crashes'/where + '.ct'
     test('crash-' + case, ctc, 
-        args : [ '-V', path, '-gen', 'c99', '-o', case + '.c' ], 
+        args : [ path ], 
         suite : 'ctu',
         should_fail : true
     )
 endforeach
+
+passes = [
+    'types.struct-2',
+    'types.struct-3',
+    'types.struct-4',
+    'types.struct-5'
+]
+
+foreach case : passes
+    where = case.replace('.', '/')
+    path = dir/where + '.ct'
+    test('pass-' + case, ctc, 
+        args : [ path ], 
+        suite : 'ctu'
+    )
+endforeach
+
 
 # fails = [
 #     'array-2', 'array-oob', 'array-ref', 'array',

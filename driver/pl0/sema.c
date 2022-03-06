@@ -326,14 +326,8 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     vector_push(&procs, PRINT);
 
-    vector_t *types = vector_new(5);
-    vector_push(&types, INTEGER);
-    vector_push(&types, BOOLEAN);
-    vector_push(&types, STRING);
-    vector_push(&types, VOID);
-
     hlir_t *mod = hlir_new_module(root->node, root->mod);
-    hlir_build_module(mod, vector_join(consts, globals), procs, types);
+    hlir_build_module(mod, vector_join(consts, globals), procs, vector_of(0));
     sema_delete(sema);
     return mod;
 }
