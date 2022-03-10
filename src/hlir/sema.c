@@ -170,13 +170,22 @@ static bool find_type_recursion(reports_t *reports, vector_t **vec, const hlir_t
     return true;
 }
 
-static const hlir_t *chase(const hlir_t *hlir) {
+#define DEPTH_LIMIT 128
+
+static const hlir_t *chase(reports_t *reports, const hlir_t *hlir) {
+    size_t depth = 0;
     while (true) {
         switch (hlir->type) {
         case HLIR_POINTER: hlir = hlir->ptr; break;
         case HLIR_ALIAS: hlir = hlir->alias; break;
         case HLIR_FIELD: hlir = typeof_hlir(hlir); break;
         default: return hlir;
+        }
+
+        if (depth++ > DEPTH_LIMIT) {
+            message_t *id = report(reports, ERROR, hlir->node, "type definition recurses too deep");
+            report_note(id, "type definition recurses beyond %d levels", DEPTH_LIMIT);
+            return NULL;
         }
     }
 }
@@ -186,7 +195,7 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
 
     switch (hlir->type) {
     case HLIR_POINTER:
-        find_type_recursion(reports, stack, chase(hlir), false, true);
+        find_type_recursion(reports, stack, chase(reports, hlir), false, true);
         break;
 
     case HLIR_CLOSURE:
