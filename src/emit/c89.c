@@ -102,6 +102,8 @@ static const char *emit_type(reports_t *reports, const hlir_t *type, const char 
     case HLIR_STRUCT: return emit_struct(type, name);
     case HLIR_UNION: return emit_union(type, name);
 
+    case HLIR_ALIAS: return emit_type(reports, type->alias, name);
+
     default:
         ctu_assert(reports, "cannot emit type %d", type->type);
         return "error";
@@ -319,6 +321,10 @@ static void visit_type(reports_t *reports, vector_t **result, const hlir_t *type
     case HLIR_POINTER: case HLIR_ARRAY:
         break;
 
+    case HLIR_ALIAS:
+        visit_type(reports, result, type->alias);
+        break;
+
     case HLIR_FIELD:
         visit_type(reports, result, typeof_hlir(type));
         break;
@@ -339,7 +345,7 @@ static void visit_type(reports_t *reports, vector_t **result, const hlir_t *type
 
     default:
         ctu_assert(reports, "invalid type to sort %d", type->type);
-    } 
+    }
 }
 
 static vector_t *sorted_types(reports_t *reports, vector_t *types) {

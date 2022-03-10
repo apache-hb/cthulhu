@@ -14,11 +14,15 @@ static ns_t now(void) {
     return ts.tv_sec * 1000000000 + ts.tv_nsec;
 }
 
-static void diff(const char *name, ns_t diff) {
+static void diff(size_t len, size_t prime, ns_t diff) {
+    printf("avg items=%zu,size=%zu: %lu.%06lus\n", len, prime, (unsigned long)(diff / 1000000000), (unsigned long)(diff % 1000000000));
+}
+
+static void diff2(const char *name, ns_t diff) {
     printf("%s: %lu.%06lus\n", name, (unsigned long)(diff / 1000000000), (unsigned long)(diff % 1000000000));
 }
 
-#define STAGE(name, ...) { ns_t start = now(); { __VA_ARGS__ } ns_t end = now(); diff(name, end - start); }
+#define STAGE(name, ...) { ns_t start = now(); { __VA_ARGS__ } ns_t end = now(); diff2(name, end - start); }
 
 /* a precalculated array of unique names */
 static vector_t *idents = NULL;
@@ -100,12 +104,12 @@ static ns_t time_prime(size_t len, size_t prime) {
     return end - start;
 }
 
-static size_t min_index(vector_t *vec) {
+static size_t min_index(ns_t *times, size_t len) {
     size_t idx = 0;
     
     ns_t low = SIZE_MAX;
-    for (size_t i = 0; i < vector_len(vec); i++) {
-        ns_t time = (ns_t)vector_get(vec, i);
+    for (size_t i = 0; i < len; i++) {
+        ns_t time = times[i];
 
         if (low > time) {
             low = time;
@@ -141,18 +145,19 @@ static ns_t avg_runs(size_t len, size_t size) {
     return sum / AVG_RUNS;
 }
 
-static void time_primes(size_t len) {
-    size_t all = sizeof(MERSENNE) / sizeof(size_t);
+#define PRIMES (sizeof(MERSENNE) / sizeof(size_t))
 
-    vector_t *times = vector_new(all);
+static size_t time_primes(size_t len) {
+    ns_t times[PRIMES];
+    size_t used = 0;
 
     ns_t last = SIZE_MAX / 2;
 
-    for (size_t i = 0; i < all; i++) {
+    for (size_t i = 0; i < PRIMES; i++) {
         size_t prime = MERSENNE[i];
         if (prime < (len / 100)) {
             printf("skipping size=%zu for len=%zu\n", prime, len);
-            vector_push(&times, (void *)SIZE_MAX);
+            times[used++] = SIZE_MAX;
             continue;
         }
 
@@ -160,15 +165,13 @@ static void time_primes(size_t len) {
         
         if (avg == 0) {
             printf("\naborting size=%zu for len=%zu due to long run\n", prime, len);
-            vector_push(&times, (void *)SIZE_MAX);
+            times[used++] = SIZE_MAX;
             continue;
         }
 
-        char *name = format("avg items=%zu,size=%zu", len, prime);
-        diff(name, avg);
-        ctu_free(name);
+        diff(len, prime, avg);
         
-        vector_push(&times, (void *)avg);
+        times[used++] = avg;
 
         if ((last * 2) < avg) {
             printf("passed reasonable end\n");
@@ -178,24 +181,49 @@ static void time_primes(size_t len) {
         last = avg;
     }
 
-    size_t idx = min_index(times);
+    size_t idx = min_index(times, used);
     size_t prime = MERSENNE[idx];
 
-    printf("===\n=== winner for items=%zu is size=%zu\n===\n", len, prime);
+    return prime;
 }
 
 static size_t RUNS[] = {
     1, 10, 100, 1000, 10000, 100000, 500000, 1000000
 };
 
+#define TOTAL_RUNS (sizeof(RUNS) / sizeof(size_t))
+
+static counters_t counters[TOTAL_RUNS];
+static size_t winners[TOTAL_RUNS];
+
 int main(void) {
     STAGE("init", {
         init_globals(1000000);
     });
 
-    size_t total = sizeof(RUNS) / sizeof(size_t);
-    for (size_t i = 0; i < total; i++) {
+    reset_counters();
+
+    for (size_t i = 0; i < TOTAL_RUNS; i++) {
         size_t len = RUNS[i];
-        time_primes(len);
+        winners[i] = time_primes(len);
+        counters[i] = reset_counters();
+    }
+
+    for (size_t i = 0; i < TOTAL_RUNS; i++) {
+        size_t len = RUNS[i];
+        size_t prime = winners[i];
+        printf("===\n=== winner for items=%zu is size=%zu\n===\n", len, prime);
+
+        counters_t mem = counters[i];
+        printf(
+            "memory stats for size %zu:\n"
+            "\tmallocs   : %zu\n"
+            "\treallocs  : %zu\n"
+            "\tfrees     : %zu\n"
+            "\tpeak usage: %zu\n",
+            len,
+            mem.mallocs, mem.reallocs, mem.frees, 
+            mem.peak
+        );
     }
 }

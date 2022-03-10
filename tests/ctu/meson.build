@@ -17,10 +17,11 @@ foreach case : crashes
 endforeach
 
 passes = [
-    'types.struct-2',
-    'types.struct-3',
-    'types.struct-4',
-    'types.struct-5'
+    'types.alias-0', 'types.alias-3',
+    'types.closure-0',
+    'types.mixed-1', 'types.mixed-2',
+    'types.struct-2', 'types.struct-3', 'types.struct-4',
+    'types.struct-5', 'types.struct-6'
 ]
 
 foreach case : passes
@@ -32,6 +33,20 @@ foreach case : passes
     )
 endforeach
 
+fails = [
+    'types.alias-1', 'types.alias-2',
+    'types.mixed-0'
+]
+
+foreach case : fails
+    where = case.replace('.', '/')
+    path = dir/where + '.ct'
+    test('pass-' + case, ctc, 
+        args : [ path ], 
+        suite : 'ctu',
+        should_fail : true
+    )
+endforeach
 
 # fails = [
 #     'array-2', 'array-oob', 'array-ref', 'array',

@@ -3,7 +3,7 @@ project('cthulhu', [ 'c', 'cpp' ],
     version : '0.0.5',
     meson_version : '>=0.58',
     default_options : [
-        'c_std=gnu11',
+        'c_std=c99',
         'warning_level=2', # bison generates code that warns on gcc at level 3
         'default_library=static'#,
         #'werror=true' # werror has to be disabled on windows for mini-gmp to build
@@ -65,6 +65,11 @@ args = []
 deps = [ gmp, json, math ]
 lexargs = []
 
+tuning = get_option('tuning')
+if tuning
+    args += [ '-DENABLE_TUNING=1' ]
+endif
+
 if host_machine.system() == 'windows'
     lexargs += [ '--wincompat' ]
     args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '/Wv:18' ]
@@ -79,7 +84,8 @@ libgeneric = library('generic', src,
 generic = declare_dependency(
     link_with : libgeneric,
     include_directories : 'include',
-    dependencies : deps
+    dependencies : deps,
+    compile_args : args
 )
 
 options = { '': generic }
@@ -131,7 +137,7 @@ parse = generator(bison,
     ]
 )
 
-if get_option('tuning')
+if tuning
     tune = executable('tune-map', [ 'tools/tune-map.c' ],
         dependencies : generic
     )

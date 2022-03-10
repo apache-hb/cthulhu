@@ -18,6 +18,7 @@ typedef enum {
     HLIR_BINARY, // lhs op rhs
     HLIR_COMPARE, // lhs op rhs
     HLIR_CALL, // expr(args...)
+    HLIR_ARRAY_INIT, // { expr, expr, ... }
 
     /* statements */
     HLIR_STMTS, // a list of statements
@@ -36,6 +37,7 @@ typedef enum {
     HLIR_POINTER, // a pointer to another type
     HLIR_ARRAY, // an array of another type
     HLIR_TYPE, // the type of all types
+    HLIR_ALIAS, // an alias for another type
 
     /* declarations */
     HLIR_FORWARD,
@@ -145,6 +147,8 @@ typedef struct hlir_t {
                 ///
                 /// all types
                 ///
+
+                struct hlir_t *alias;
 
                 /* the aggregate members */
                 vector_t *fields;

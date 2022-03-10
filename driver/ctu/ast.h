@@ -21,7 +21,8 @@ typedef enum {
 
     /* type declarations */
     AST_UNIONDECL,
-    AST_STRUCTDECL
+    AST_STRUCTDECL,
+    AST_ALIASDECL
 } astof_t;
 
 typedef struct ast_t {
@@ -64,6 +65,9 @@ typedef struct ast_t {
 
                 /* AST_UNIONDECL|AST_STRUCTDECL */
                 vector_t *fields;
+
+                /* AST_ALIASDECL */
+                struct ast_t *alias;
             };
         };
     };
@@ -80,5 +84,6 @@ ast_t *ast_typelist(vector_t *types, bool variadic);
 
 ast_t *ast_structdecl(scan_t *scan, where_t where, char *name, vector_t *fields);
 ast_t *ast_uniondecl(scan_t *scan, where_t where, char *name, vector_t *fields);
+ast_t *ast_typealias(scan_t *scan, where_t where, char *name, ast_t *type);
 
 ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type);

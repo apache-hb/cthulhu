@@ -79,12 +79,13 @@ static void report_recursion(reports_t *reports, vector_t *stack, const char *ms
     }
 }
 
-static bool find_recursion(reports_t *reports, vector_t *vec, const hlir_t *hlir, const char *msg) {
-    for (size_t i = 0; i < vector_len(vec); i++) {
-        hlir_t *item = vector_get(vec, i);
+static bool find_recursion(reports_t *reports, vector_t **vec, const hlir_t *hlir, const char *msg) {
+    vector_t *stack = *vec;
+    for (size_t i = 0; i < vector_len(stack); i++) {
+        hlir_t *item = vector_get(stack, i);
         if (item != hlir) { continue; }
 
-        report_recursion(reports, vec, msg);
+        report_recursion(reports, stack, msg);
         return true;
     }
 
@@ -93,7 +94,7 @@ static bool find_recursion(reports_t *reports, vector_t *vec, const hlir_t *hlir
 
 static void check_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) {
     if (hlir == NULL) { return; }
-    if (find_recursion(reports, *stack, hlir, "recursive variable computation")) { return; }
+    if (find_recursion(reports, stack, hlir, "recursive variable computation")) { return; }
 
     vector_push(stack, hlir);
 
@@ -129,32 +130,90 @@ static void check_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) 
     vector_drop(stack);
 }
 
+typedef struct {
+    const hlir_t *hlir;
+    bool nesting;
+} entry_t;
+
+static entry_t *new_entry(const hlir_t *hlir, bool nesting) {
+    entry_t *entry = ctu_malloc(sizeof(entry_t));
+    entry->hlir = hlir;
+    entry->nesting = nesting;
+    return entry;
+}
+
+static void report_type_recursion(reports_t *reports, vector_t *stack) {
+    entry_t *top = vector_tail(stack);
+    message_t *id = report(reports, ERROR, top->hlir->node, "%s", "recursive type definition");
+    for (size_t i = 0; i < vector_len(stack); i++) {
+        entry_t *entry = vector_get(stack, i);
+        report_append(id, entry->hlir->node, "trace `%zu`", i);
+    }
+}
+
+static bool find_type_recursion(reports_t *reports, vector_t **vec, const hlir_t *hlir, bool nesting, bool opaque) {
+    vector_t *stack = *vec;
+    for (size_t i = 0; i < vector_len(stack); i++) {
+        entry_t *item = vector_get(stack, i);
+        if (item->hlir == hlir) { 
+            if (item->nesting && opaque) {
+                break;
+            }
+
+            report_type_recursion(reports, stack);
+            return false;
+        }
+    }
+
+    vector_push(vec, new_entry(hlir, nesting));
+
+    return true;
+}
+
+static const hlir_t *chase(const hlir_t *hlir) {
+    while (true) {
+        switch (hlir->type) {
+        case HLIR_POINTER: hlir = hlir->ptr; break;
+        case HLIR_ALIAS: hlir = hlir->alias; break;
+        case HLIR_FIELD: hlir = typeof_hlir(hlir); break;
+        default: return hlir;
+        }
+    }
+}
+
 static void check_type_recursion(reports_t *reports, vector_t **stack, const hlir_t *hlir) {
     if (hlir == NULL) { return; }
-    if (find_recursion(reports, *stack, hlir, "recursive type definition")) { return; }
-
-    vector_push(stack, (hlir_t*)hlir);
 
     switch (hlir->type) {
     case HLIR_POINTER:
-        // check_type_recursion(reports, stack, hlir->ptr);
+        find_type_recursion(reports, stack, chase(hlir), false, true);
         break;
 
     case HLIR_CLOSURE:
-        check_type_recursion(reports, stack, hlir->result);
-        for (size_t i = 0; i < vector_len(hlir->params); i++) {
-            hlir_t *param = vector_get(hlir->params, i);
-            check_type_recursion(reports, stack, param);
+        if (find_type_recursion(reports, stack, hlir, false, true)) {
+            check_type_recursion(reports, stack, hlir->result);
+            for (size_t i = 0; i < vector_len(hlir->params); i++) {
+                hlir_t *param = vector_get(hlir->params, i);
+                check_type_recursion(reports, stack, param);
+            }
         }
         break;
 
     case HLIR_STRUCT: case HLIR_UNION:
-        for (size_t i = 0; i < vector_len(hlir->fields); i++) {
-            hlir_t *field = vector_get(hlir->fields, i);
-            check_type_recursion(reports, stack, field);
+        if (find_type_recursion(reports, stack, hlir, true, false)) {
+            for (size_t i = 0; i < vector_len(hlir->fields); i++) {
+                hlir_t *field = vector_get(hlir->fields, i);
+                check_type_recursion(reports, stack, field);
+            }
         }
         break;
     
+    case HLIR_ALIAS:
+        if (find_type_recursion(reports, stack, hlir, false, false)) {
+            check_type_recursion(reports, stack, hlir->alias);
+        }
+        break;
+
     case HLIR_FIELD:
         check_type_recursion(reports, stack, typeof_hlir(hlir));
         break;

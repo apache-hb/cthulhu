@@ -1,0 +1,6 @@
+type x = *y;
+
+// has finite size
+struct y {
+    field: x;
+}

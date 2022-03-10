@@ -118,6 +118,11 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast) {
     hlir_build_union(decl);
 }
 
+static void sema_alias(sema_t *sema, hlir_t *decl, ast_t *ast) {
+    hlir_t *type = sema_type(sema, ast->alias);
+    hlir_build_alias(decl, type);
+}
+
 static void sema_decl(sema_t *sema, ast_t *ast) {
     hlir_t *decl;
 
@@ -130,6 +135,11 @@ static void sema_decl(sema_t *sema, ast_t *ast) {
     case AST_UNIONDECL:
         decl = sema_get(sema, TAG_TYPES, ast->name);
         sema_union(sema, decl, ast);
+        break;
+
+    case AST_ALIASDECL:
+        decl = sema_get(sema, TAG_TYPES, ast->name);
+        sema_alias(sema, decl, ast);
         break;
 
     default:
@@ -158,6 +168,11 @@ static void fwd_decl(sema_t *sema, ast_t *ast) {
 
     case AST_UNIONDECL:
         decl = hlir_new_union(ast->node, ast->name);
+        add_decl(sema, TAG_TYPES, ast->name, decl);
+        break;
+
+    case AST_ALIASDECL:
+        decl = hlir_new_alias(ast->node, ast->name);
         add_decl(sema, TAG_TYPES, ast->name, decl);
         break;
 

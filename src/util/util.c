@@ -15,9 +15,79 @@
 #define CTU_EMPTY_CHAIN (NULL)
 #define CTU_NO_VALUE (NULL)
 
-#define MALLOC(size) malloc(size)
-#define REALLOC(ptr, size) realloc(ptr, size)
-#define FREE(ptr) free(ptr)
+#if ENABLE_TUNING
+#   include <malloc.h>
+
+static counters_t counters = { 
+    .mallocs = 0, 
+    .reallocs = 0,
+    .frees = 0,
+
+    .current = 0,
+    .peak = 0
+};
+
+counters_t get_counters(void) {
+    return counters;
+}
+
+counters_t reset_counters(void) {
+    counters_t out = counters;
+
+    counters.mallocs = 0;
+    counters.reallocs = 0;
+    counters.frees = 0;
+    counters.current = 0;
+    counters.peak = 0;
+
+    return out;
+}
+
+static void adjust_memory_stats(ssize_t size) {
+    counters.current += size;
+    if (counters.current > counters.peak) {
+        counters.peak = counters.current;
+    }
+}
+
+static void *tuning_malloc(size_t size) {
+    counters.mallocs++;
+    void *result = malloc(size);
+
+    adjust_memory_stats(malloc_usable_size(result));
+
+    return result;
+}
+
+static void *tuning_realloc(void *ptr, size_t size) {
+    counters.reallocs++;
+
+    adjust_memory_stats(-malloc_usable_size(ptr));
+
+    void *result = realloc(ptr, size);
+
+    adjust_memory_stats(malloc_usable_size(result));
+
+    return result;
+}
+
+static void tuning_free(void *ptr) {
+    counters.frees++;
+
+    adjust_memory_stats(-malloc_usable_size(ptr));
+
+    free(ptr);
+}
+
+#   define MALLOC(size) tuning_malloc(size)
+#   define REALLOC(ptr, size) tuning_realloc(ptr, size)
+#   define FREE(ptr) tuning_free(ptr)
+
+#else
+#   define MALLOC(size) malloc(size)
+#   define REALLOC(ptr, size) realloc(ptr, size)
+#   define FREE(ptr) free(ptr)
+#endif
 
 void *ctu_malloc(size_t size) {
     void *ptr = MALLOC(size);

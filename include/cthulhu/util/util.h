@@ -17,6 +17,19 @@ char *ctu_strdup(const char *str) NONULL ALLOC(ctu_free);
 char *ctu_strndup(const char *str, size_t len) NONULL ALLOC(ctu_free);
 void *ctu_memdup(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 
+#if ENABLE_TUNING
+typedef struct {
+    size_t mallocs; // calls to malloc
+    size_t reallocs; // calls to realloc
+    size_t frees; // calls to free
+
+    size_t current; // current memory allocated
+    size_t peak; // peak memory allocated
+} counters_t;
+counters_t get_counters(void);
+counters_t reset_counters(void);
+#endif
+
 /**
  * @brief init gmp with our own allocation functions
  */
