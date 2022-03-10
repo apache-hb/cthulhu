@@ -170,10 +170,11 @@ static bool find_type_recursion(reports_t *reports, vector_t **vec, const hlir_t
     return true;
 }
 
-#define DEPTH_LIMIT 128
+#define DEPTH_LIMIT 128 // this is what a release deadline looks like :^)
 
 static const hlir_t *chase(reports_t *reports, const hlir_t *hlir) {
     size_t depth = 0;
+
     while (true) {
         switch (hlir->type) {
         case HLIR_POINTER: hlir = hlir->ptr; break;
