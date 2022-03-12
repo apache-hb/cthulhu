@@ -3,7 +3,7 @@ project('cthulhu', [ 'c', 'cpp' ],
     version : '0.0.5',
     meson_version : '>=0.58',
     default_options : [
-        'c_std=c99',
+        'c_std=c11',
         'warning_level=2', # bison generates code that warns on gcc at level 3
         'default_library=static'#,
         #'werror=true' # werror has to be disabled on windows for mini-gmp to build

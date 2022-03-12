@@ -15,10 +15,17 @@ static ast_t *ast_decl(astof_t of, char *name, scan_t *scan, where_t where) {
     return ast;
 }
 
-ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *decls) {
+ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *imports, vector_t *decls) {
     ast_t *ast = ast_new(AST_PROGRAM, scan, where);
     ast->modspec = modspec;
+    ast->imports = imports;
     ast->decls = decls;
+    return ast;
+}
+
+ast_t *ast_import(scan_t *scan, where_t where, vector_t *path) {
+    ast_t *ast = ast_new(AST_IMPORT, scan, where);
+    ast->path = path;
     return ast;
 }
 

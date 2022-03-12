@@ -1,40 +1,50 @@
 @MidlInterface("00000000-0000-0000-C000-000000000046")
 object IUnknown {
-    def QueryInterface(
-        riid: in IID, 
-        ppvObject: out **void
-    ): HRESULT;
-
+    def QueryInterface(riid: REFIID, ppvObject: **IUnknown): HRESULT;
     def AddRef(): ULONG;
     def Release(): ULONG;
 }
 
 @MidlInterface("c4fec28f-7966-4e95-9f94-f431cb56c3b8")
 object ID3D12Object : IUnknown {
-    def GetPrivateData(
-        guid: in REFGUID, 
-        pDataSize: inout *UINT, 
-        pData: out opt writes(pDataSize) *void
-    ): HRESULT;
+    def GetPrivateData(guid: REFGUID, pDataSize: *UINT, pData: *void): HRESULT;
 
-    def SetPrivateData(
-        guid: in REFGUID,
-        dataSize: in UINT,
-        pData: in opt reads(dataSize) *void
-    ): HRESULT;
+    def SetPrivateData(guid: REFGUID, dataSize: UINT, pData: *void): HRESULT;
 
-    def SetPrivateDataInterface(
-        guid: in REFGUID, 
-        pData: in opt *IUnknown
-    ): HRESULT;
+    def SetPrivateDataInterface(guid: REFGUID, pData: *IUnknown): HRESULT;
 
-    def SetName(name: in LPCWSTR): HRESULT;
+    def SetName(name: LPCWSTR): HRESULT;
 }
 
 @MidlInterface("905db94b-a00c-4140-9df5-2b64ca9ea357")
 object ID3D12DeviceChild : ID3D12Object {
-    def GetDevice(
-        riid: in IID, 
-        ppvDevice: out opt **void
-    ): HRESULT;
+    def GetDevice(riid: REFIID, ppvDevice: **ID3D12Device): HRESULT;
+}
+
+@layout(native)
+variant D3D12_COMMAND_QUEUE_FLAGS : enum {
+    D3D12_COMMAND_QUEUE_FLAG_NONE = 0,
+    D3D12_COMMAND_QUEUE_FLAG_DISABLE_GPU_TIMEOUT = (1 << 0)
+}
+
+@layout(native)
+variant D3D12_COMMAND_QUEUE_PRIORITY : enum {
+    D3D12_COMMAND_QUEUE_PRIORITY_NORMAL = 0,
+    D3D12_COMMAND_QUEUE_PRIORITY_HIGH = 100,
+    D3D12_COMMAND_QUEUE_PRIORITY_GLOBAL_REALTIME = 10000
+}
+
+@layout(native)
+struct D3D12_COMMAND_QUEUE_DESC {
+    Type: D3D12_COMMAND_LIST_TYPE;
+    Priority: INT;
+    Flags: D3D12_COMMAND_QUEUE_FLAGS;
+    NodeMask: UINT;
+}
+
+@MidlInterface("189819f1-1db6-4b57-be54-1821339b85f7")
+object ID3D12Device : ID3D12Object {
+    def GetNodeCount(): UINT;
+
+    def CreateCommandQueue(pDesc: *D3D12_COMMAND_QUEUE_DESC, riid: REFIID, ppCommandQueue: **void): HRESULT;
 }

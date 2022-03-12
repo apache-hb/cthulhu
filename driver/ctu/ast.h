@@ -7,6 +7,7 @@
 
 typedef enum {
     AST_PROGRAM,
+    AST_IMPORT,
     AST_MODULE,
 
     /* intermediate types */
@@ -53,6 +54,7 @@ typedef struct ast_t {
         /* AST_PROGRAM */
         struct {
             struct ast_t *modspec;
+            vector_t *imports;
             vector_t *decls;
         };
 
@@ -74,7 +76,8 @@ typedef struct ast_t {
 } ast_t;
 
 ast_t *ast_module(scan_t *scan, where_t where, vector_t *path);
-ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *decls);
+ast_t *ast_import(scan_t *scan, where_t where, vector_t *path);
+ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *imports, vector_t *decls);
 
 ast_t *ast_typename(scan_t *scan, where_t where, vector_t *path);
 ast_t *ast_pointer(scan_t *scan, where_t where, ast_t *type, bool indexable);

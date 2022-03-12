@@ -40,6 +40,7 @@
 #endif
 
 #define NORETURN _Noreturn
+#define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
 
 /// macros with functionality
 #define MAX(L, R) ((L) > (R) ? (L) : (R)) 

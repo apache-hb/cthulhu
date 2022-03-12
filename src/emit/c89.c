@@ -284,28 +284,34 @@ static void emit_stmt(reports_t *reports, const hlir_t *hlir) {
     }
 }
 
-static void fwd_global(const hlir_t *hlir) {
-    printf("%s %s[1];\n", fmt_type_name(hlir->of), hlir->name);
+static const char *emit_hlir_type(reports_t *reports, const hlir_t *hlir) {
+    return emit_type(reports, typeof_hlir(hlir), nameof_hlir(hlir));
+}
+
+static void fwd_global(reports_t *reports, const hlir_t *hlir) {
+    printf("%s[1];\n", emit_hlir_type(reports, hlir));
 }
 
 static void emit_global(reports_t *reports, const hlir_t *hlir) {
     if (hlir->type != HLIR_VALUE) { return; }
 
-    printf("%s %s[1] = { %s };\n", fmt_type_name(hlir->of), hlir->name, emit_expr(reports, hlir->value));
+    printf("%s[1] = { %s };\n", emit_hlir_type(reports, hlir), emit_expr(reports, hlir->value));
 }
 
-static void fwd_proc(const hlir_t *hlir) {
-    printf("%s %s(%s);\n", fmt_type_name(hlir->of->result), hlir->name, get_type_params(hlir->of));
+static void fwd_proc(reports_t *reports, const hlir_t *hlir) {
+    const hlir_t *type = typeof_hlir(hlir);
+    printf("%s(%s);\n", emit_type(reports, type->result, nameof_hlir(hlir)), get_type_params(type));
 }
 
 static void emit_proc(reports_t *reports, const hlir_t *hlir) {
     vector_t *locals = hlir->locals;
+    const hlir_t *type = typeof_hlir(hlir);
 
-    printf("%s %s(%s) {\n", fmt_type_name(hlir->of->result), hlir->name, get_type_params(hlir->of));
+    printf("%s(%s) {\n", emit_type(reports, type->result, nameof_hlir(hlir)), get_type_params(type));
 
     for (size_t i = 0; i < vector_len(locals); i++) {
         const hlir_t *local = vector_get(locals, i);
-        printf("\t%s %s[1];\n", fmt_type_name(typeof_hlir(local)), local->name);
+        printf("\t%s[1];\n", emit_hlir_type(reports, local));
     }
 
     emit_stmt(reports, hlir->body);
@@ -393,14 +399,14 @@ void c89_emit_tree(reports_t *reports, const hlir_t *hlir) {
         const hlir_t *global = vector_get(hlir->globals, i);
         if (hlir_is_imported(global)) { continue; }
         
-        fwd_global(global);
+        fwd_global(reports, global);
     }
 
     for (size_t i = 0; i < nprocs; i++) {
         const hlir_t *proc = vector_get(hlir->defines, i);
         if (hlir_is_imported(proc)) { continue; }
 
-        fwd_proc(proc);
+        fwd_proc(reports, proc);
     }
 
     for (size_t i = 0; i < nglobals; i++) {

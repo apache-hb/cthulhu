@@ -168,18 +168,29 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     modspec decl 
     structdecl uniondecl
     field type types opttypes
-    aliasdecl
+    aliasdecl import
 
 %type<vector>
     path decls decllist
     fieldlist aggregates
-    typelist
+    typelist imports importlist
 
 %start program
 
 %%
 
-program: modspec decls { scan_set(x, ast_program(x, @$, $1, $2)); }
+program: modspec imports decls { scan_set(x, ast_program(x, @$, $1, $2, $3)); }
+    ;
+
+imports: %empty { $$ = vector_new(0); }
+    | importlist { $$ = $1; }
+    ;
+
+importlist: import { $$ = vector_init($1); }
+    | importlist import { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+import: IMPORT path SEMICOLON { $$ = ast_import(x, @$, $2); }
     ;
 
 decls: %empty { $$ = NULL; }

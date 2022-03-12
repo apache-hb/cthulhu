@@ -199,6 +199,12 @@ static void add_basic_types(sema_t *sema) {
 
     add_decl(sema, TAG_TYPES, "long", hlir_digit(node, "long", DIGIT_LONG, SIGN_SIGNED));
     add_decl(sema, TAG_TYPES, "ulong", hlir_digit(node, "ulong", DIGIT_LONG, SIGN_UNSIGNED));
+
+    // enable the below later
+
+    // special types for interfacing with C
+    // sysv says that enums are signed ints
+    // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", DIGIT_INT, SIGN_SIGNED));
 }
 
 hlir_t *ctu_sema(reports_t *reports, void *ast) {
