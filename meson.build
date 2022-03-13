@@ -31,6 +31,10 @@ src = [
     'src/emit/json.c',
     'src/emit/c89.c',
 
+    # serialization
+    'src/loader/load.c',
+    'src/loader/save.c',
+
     # ast data and flex/bison interop
     'src/ast/scan.c',
     'src/ast/interop.c',
