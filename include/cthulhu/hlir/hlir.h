@@ -47,7 +47,9 @@ typedef enum {
 
     HLIR_FIELD,
 
-    HLIR_ERROR
+    HLIR_ERROR,
+
+    HLIR_TOTAL
 } hlir_type_t;
 
 typedef enum {
@@ -108,7 +110,6 @@ typedef struct hlir_t {
                 compare_t compare;
             };
         };
-
 
         /* HLIR_CALL */
         struct {
@@ -223,6 +224,7 @@ MAYBE const char *nameof_hlir(IN const hlir_t *self);
 bool hlir_is_imported(const hlir_t *self);
 bool hlir_is(const hlir_t *self, hlir_type_t type);
 bool hlir_can_be(const hlir_t *self, hlir_type_t type);
+bool hlir_is_sentinel(const hlir_t *self);
 
 vector_t *closure_params(const hlir_t *self);
 bool closure_variadic(const hlir_t *self);

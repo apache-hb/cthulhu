@@ -1,3 +1,5 @@
+#define _POSIX_SOURCE
+
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/io.h"
 #include "cthulhu/util/report.h"
@@ -274,7 +276,7 @@ HOT static bucket_t *map_bucket_ptr(map_t *map, const void *key) {
     return get_bucket(map, hash);
 }
 
-HOT static void *entry_get_ptr(const bucket_t *entry, const void *key) {
+HOT static void *entry_get_ptr(const bucket_t *entry, const void *key, void *other) {
     if (entry->key == key) {
         return entry->value;
     }
@@ -283,7 +285,7 @@ HOT static void *entry_get_ptr(const bucket_t *entry, const void *key) {
         return entry_get(entry->next, key);
     }
 
-    return CTU_NO_VALUE;
+    return other;
 }
 
 void map_set_ptr(map_t *map, const void *key, void *value) {
@@ -307,10 +309,13 @@ void map_set_ptr(map_t *map, const void *key, void *value) {
 }
 
 void *map_get_ptr(map_t *map, const void *key) {
-    bucket_t *bucket = map_bucket_ptr(map, key);
-    return entry_get_ptr(bucket, key);
+    return map_get_ptr_default(map, key, NULL);
 }
 
+void *map_get_ptr_default(map_t *map, const void *key, void *other) {
+    bucket_t *bucket = map_bucket_ptr(map, key);
+    return entry_get_ptr(bucket, key, other);
+}
 
 static void clear_keys(bucket_t *buckets, size_t size) {
     for (size_t i = 0; i < size; i++) {
@@ -445,6 +450,16 @@ void vector_delete(vector_t *vector) {
 void vector_push(vector_t **vector, void *value) {
     vector_ensure(vector, VEC->used + 1);
     VEC->data[VEC->used++] = value;
+}
+
+void vector_write(vector_t **vector, const char *str, bool term) {
+    vector_write_bytes(vector, str, strlen(str) + (term ? 1 : 0));
+}
+
+void vector_write_bytes(vector_t **vector, const void *ptr, size_t size) {
+    vector_ensure(vector, VEC->used + size);
+    memcpy(VEC->data + VEC->used, ptr, size);
+    VEC->used += size;
 }
 
 void vector_drop(vector_t **vector) {

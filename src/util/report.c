@@ -426,8 +426,14 @@ static const char *paths_base(vector_t *messages) {
 }
 
 int end_reports(reports_t *reports, size_t total, const char *name) {
+    total -= 1;
+
     size_t internal = 0;
     size_t fatal = 0;
+    
+    size_t suppressed_fatal = 0;
+    size_t suppressed_warnings = 0;
+
     int result = 0;
 
     size_t errors = vector_len(reports->messages);
@@ -446,8 +452,18 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
             break;
         }
 
-        if (i >= total) {
-            continue;
+        if (i > total && message->level != INTERNAL) { 
+            switch (message->level) {
+            case ERROR:
+                suppressed_fatal += 1;
+                break;
+            case WARNING:
+                suppressed_warnings += 1;
+                break;
+            default:
+                break;
+            }
+            continue; 
         }
 
         report_send(common, message);
@@ -456,11 +472,13 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
     if (internal > 0) {
         fprintf(stderr, "%zu internal error(s) encountered during %s stage\n", internal, name);
         result = 99;
-        printf("\a");
     } else if (fatal > 0) {
         fprintf(stderr, "%zu fatal error(s) encountered during %s stage\n", fatal, name);
         result = 1;
-        printf("\a");
+    }
+
+    if (suppressed_warnings > 0 || suppressed_fatal > 0) {
+        fprintf(stderr, "%zu extra warning(s) and %zu extra error(s) suppressed\n", suppressed_warnings, suppressed_fatal);
     }
 
     reports->messages = vector_new(0);

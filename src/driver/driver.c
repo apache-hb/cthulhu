@@ -4,10 +4,13 @@
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/emit/emit.h"
+#include "cthulhu/loader/loader.h"
 
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+
+#define DEFAULT_REPORT_LIMIT 20
 
 static void print_version(driver_t driver) {
     printf("%s: %s\n", driver.name, driver.version);
@@ -15,14 +18,21 @@ static void print_version(driver_t driver) {
 
 static void print_help(const char **argv) {
     printf("usage: %s <file> [options...]\n", argv[0]);
-    printf("options:\n");
+    printf("general options:\n");
     printf("  -h, --help        : print this help message\n");
     printf("  -v, --version     : print version information\n");
     printf("  -V, --verbose     : enable verbose logging\n");
     printf("  -m, --module      : set module output name\n");
-    printf("  -out, --output    : set output format\n");
+    printf("  -bc, --bytecode   : compile to bytecode\n");
+    printf("  -o, --output      : set output file name\n");
+    printf("  -t, --target      : set output format\n");
     printf("                    | options: json, c89\n");
     printf("                    | default: c89\n");
+    printf("---\n");
+    printf("warning options:\n");
+    printf("  -Wlimit=<digit>   : set warning limit\n");
+    printf("                   | options: 0 = infinite\n");
+    printf("                   | default: %d\n", DEFAULT_REPORT_LIMIT);
 }
 
 static bool find_arg(int argc, const char **argv, const char *arg, const char *brief) {
@@ -66,7 +76,7 @@ static const char *get_arg(reports_t *reports, int argc, const char **argv, cons
             break;
         }
 
-        if (startswith(argv[i], brief)) {
+        if (brief != NULL && startswith(argv[i], brief)) {
             found = true;
             result = extract_arg(argc, argv, brief, i);
             break;
@@ -91,8 +101,33 @@ static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, co
     }
 }
 
+static size_t get_limit(reports_t *reports, const char **argv, int argc) {
+    const char *input = get_arg(reports, argc, argv, "-Wlimit", NULL);
+    if (input == NULL) {
+        return DEFAULT_REPORT_LIMIT;
+    }
+
+    mpz_t limit;
+    mpz_init_set_str(limit, input, 10);
+    if (!mpz_fits_uint_p(limit)) {
+        report(reports, WARNING, NULL, "warning limit `%s` is too large, defaulting to %d", input, DEFAULT_REPORT_LIMIT);
+        return DEFAULT_REPORT_LIMIT;
+    }
+
+    if (mpz_sgn(limit) < 0) {
+        report(reports, WARNING, NULL, "warning limit `%s` is negative, defaulting to %d", input, DEFAULT_REPORT_LIMIT);
+        return DEFAULT_REPORT_LIMIT;
+    }
+
+    size_t result = mpz_get_ui(limit);
+    mpz_clear(limit);
+
+    return result > 0 ? result : SIZE_MAX;
+}
+
 void common_init(void) {
     init_gmp();
+    init_hlir();
 }
 
 typedef enum {
@@ -135,14 +170,29 @@ int common_main(int argc, const char **argv, driver_t driver) {
         return end_reports(reports, SIZE_MAX, "command line parsing");
     }
 
-    init_hlir();
+    size_t limit = get_limit(reports, argv, argc);
+    status = end_reports(reports, limit, "command line parsing");
+    if (status != 0) { return status; }
+
+    bool bytecode = find_arg(argc, argv, "--bytecode", "-bc");
 
     const char *mod_name = get_arg(reports, argc, argv, "--module", "-m");
     const char *out = get_arg(reports, argc, argv, "--output", "-out");
-    if (out == NULL) { out = "c89"; }
+    if (out == NULL) {
+        out = "a.out";
+    }
     
-    output_t target = parse_target(reports, out);
-    status = end_reports(reports, SIZE_MAX, "target parsing");
+    const char *target = get_arg(reports, argc, argv, "--target", "-t");
+
+    if (target == NULL) { 
+        target = "c89";
+    } else if (bytecode) {
+        report(reports, ERROR, NULL, "cannot specify target format when compiling to bytecode");
+        return end_reports(reports, limit, "command line parsing");
+    }
+    
+    output_t result = parse_target(reports, target);
+    status = end_reports(reports, limit, "target parsing");
     if (status != 0) { return status; }
 
     const char *path = argv[1];
@@ -150,46 +200,56 @@ int common_main(int argc, const char **argv, driver_t driver) {
     file_t file = ctu_fopen(path, "rb");
     if (!file_valid(&file)) {
         report(reports, ERROR, NULL, "failed to open file: %s (errno %d)", strerror(errno), errno);
-        return end_reports(reports, SIZE_MAX, "command line parsing");
+        return end_reports(reports, limit, "command line parsing");
     }
 
     // create our scanner, this must be retained for the duration of the program
 
     scan_t scan = scan_file(reports, driver.name, &file);
-    status = end_reports(reports, SIZE_MAX, "scanning");
+    status = end_reports(reports, limit, "scanning");
     if (status != 0) { return status; }
 
     // parse the source file
 
     void *node = driver.parse(reports, &scan);
-    status = end_reports(reports, SIZE_MAX, "parsing");
+    status = end_reports(reports, limit, "parsing");
     if (status != 0) { return status; }
     CTASSERT(node != NULL, "driver.parse == NULL");
 
     // convert the language ast to hlir
 
     hlir_t *hlir = driver.sema(reports, node);
-    status = end_reports(reports, SIZE_MAX, "semantic analysis");
+    status = end_reports(reports, limit, "semantic analysis");
     if (status != 0) { return status; }
     CTASSERT(hlir != NULL, "driver.sema == NULL");
 
     rename_module(reports, hlir, path, mod_name);
     check_module(reports, hlir);
-    status = end_reports(reports, SIZE_MAX, "module checking");
+    status = end_reports(reports, limit, "module checking");
     if (status != 0) { return status; }
 
-    switch (target) {
+    if (bytecode) {
+        save_module(reports, hlir, out);
+        status = end_reports(reports, limit, "bytecode generation");
+        
+        load_module(reports, out);
+        status = end_reports(reports, limit, "bytecode loading");
+        
+        return status;
+    }
+
+    switch (result) {
     case OUTPUT_C89:
         c89_emit_tree(reports, hlir);
-        status = end_reports(reports, SIZE_MAX, "emitting c89");
+        status = end_reports(reports, limit, "emitting c89");
         break;
     case OUTPUT_JSON:
         json_emit_tree(reports, hlir);
-        status = end_reports(reports, SIZE_MAX, "emitting json");
+        status = end_reports(reports, limit, "emitting json");
         break;
     default:
-        report(reports, ERROR, NULL, "unknown target %d selected", target);
-        status = end_reports(reports, SIZE_MAX, "emitting");
+        report(reports, ERROR, NULL, "unknown target %d selected", result);
+        status = end_reports(reports, limit, "emitting");
         break;
     }
 

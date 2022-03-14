@@ -25,6 +25,7 @@ hlir_t *hlir_new_decl(const node_t *node, const char *name, const hlir_t *of, hl
 void init_hlir(void) {
     TYPE = hlir_new(NULL, NULL, HLIR_TYPE);
     TYPE->of = TYPE;
+    TYPE->name = "type";
 
     INVALID = hlir_error(NULL, "invalid hlir node");
 }
@@ -49,6 +50,10 @@ bool hlir_is(const hlir_t *self, hlir_type_t type) {
 
 bool hlir_can_be(const hlir_t *self, hlir_type_t type) {
     return self->type == type || (self->type == HLIR_FORWARD && self->expected == type);
+}
+
+bool hlir_is_sentinel(const hlir_t *self) {
+    return self == INVALID;
 }
 
 vector_t *closure_params(const hlir_t *self) {

@@ -1,8 +1,6 @@
 #include "common.h"
 
 hlir_t *load_module(reports_t *reports, const char *path) {
-    UNUSED(module);
-
     file_t file = ctu_fopen(path, "rb");
     if (!file_valid(&file)) { return NULL; }
 
@@ -23,6 +21,23 @@ hlir_t *load_module(reports_t *reports, const char *path) {
             VERSION_MINOR(CURRENT_VERSION)
         );
         return NULL;
+    }
+
+    logverbose(
+        "loaded ir file: %s\n"
+        " - magic: %x\n"
+        " - version: %d.%d.%d\n"
+        " - strings: %d\n"
+        " - spans: %d",
+        path, header.magic,
+        VERSION_MAJOR(header.version), VERSION_MINOR(header.version), VERSION_PATCH(header.version),
+        header.strings,
+        header.spans
+    );
+
+    logverbose("counters:");
+    for (int i = 0; i < HLIR_TOTAL; i++) {
+        logverbose(" counter[%d] %d", i, header.counts[i] - sizeof(header_t));
     }
 
     return NULL;

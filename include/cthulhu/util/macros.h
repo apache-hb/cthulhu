@@ -8,7 +8,9 @@
 #   define CONSTFN __attribute__((const))
 #   define HOT __attribute__((hot))
 #   define ALLOC(release) __attribute__((malloc(release)))
-#   define POISON(...) _Pragma GCC poison __VA_ARGS__
+#   define DO_PRAGMA_INNER(x) _Pragma(#x)
+#   define DO_PRAGMA(x) DO_PRAGMA_INNER(x)
+#   define POISON(...) DO_PRAGMA(GCC poison __VA_ARGS__)
 #else
 #   define PRINT(fmt, args)
 #   define NONULL
@@ -19,12 +21,28 @@
 #   define POISON(...)
 #endif
 
+/**
+ * the BEGIN_PACKED, END_PACKED, and PACKED macros are used to pack structs
+ * sadly 3 different macros are needed because msvc only uses pragma(pack)
+ * and clang only uses __attribute__((packed)), hence we need to use both.
+ * could we please agree on a common way to do this?
+ */
+
 #if defined(__clang__)
 #   define ASSUME(expr) __builtin_assume(expr)
+#   define BEGIN_PACKED
+#   define END_PACKED
+#   define PACKED __attribute__((packed))
 #elif defined(__GNUC__)
 #   define ASSUME(expr) do { if (!(expr)) __builtin_unreachable(); } while (0)
+#   define BEGIN_PACKED
+#   define END_PACKED
+#   define PACKED __attribute__((packed))
 #elif defined(_MSC_VER)
 #   define ASSUME(expr) __assume(expr)
+#   define BEGIN_PACKED __pragma(pack(push, 1))
+#   define END_PACKED __pragma(pack(pop))
+#   define PACKED 
 #else
 #   define ASSUME(expr)
 #endif

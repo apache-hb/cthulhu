@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "sizes.h"
 #include "macros.h"
@@ -155,7 +156,9 @@ void map_set_ptr(map_t *map, const void *key, void *value) HOT NOTNULL(1, 2);
  * 
  * @return the value for the key or NULL if the key is not found
  */
-void *map_get_ptr(map_t *map, const void *key) HOT NOTNULL(1, 2);
+void *map_get_ptr(map_t *map, const void *key) HOT NONULL;
+
+void *map_get_ptr_default(map_t *map, const void *key, void *other) HOT NOTNULL(1, 2);
 
 /**
  * a vector of non-owning pointers
@@ -210,6 +213,9 @@ vector_t *vector_init(void *value) ALLOC(vector_delete);
  * @param value the value to push onto the vector
  */
 void vector_push(vector_t **vector, void *value) NOTNULL(1);
+
+void vector_write(vector_t **vector, const char *str, bool term) NONULL;
+void vector_write_bytes(vector_t **vector, const void *ptr, size_t size) NONULL;
 
 /**
  * @brief remove the last element from a vector. invalid on empty vectors
