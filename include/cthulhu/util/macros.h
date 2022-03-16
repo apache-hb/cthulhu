@@ -30,19 +30,19 @@
 
 #if defined(__clang__)
 #   define ASSUME(expr) __builtin_assume(expr)
-#   define BEGIN_PACKED
+#   define BEGIN_PACKED(align)
 #   define END_PACKED
-#   define PACKED __attribute__((packed))
+#   define PACKED(align) __attribute__((aligned(align), packed))
 #elif defined(__GNUC__)
 #   define ASSUME(expr) do { if (!(expr)) __builtin_unreachable(); } while (0)
-#   define BEGIN_PACKED
+#   define BEGIN_PACKED(align)
 #   define END_PACKED
-#   define PACKED __attribute__((packed))
+#   define PACKED(align) __attribute__((aligned(align), packed))
 #elif defined(_MSC_VER)
 #   define ASSUME(expr) __assume(expr)
-#   define BEGIN_PACKED __pragma(pack(push, 1))
+#   define BEGIN_PACKED(align) __pragma(pack(push, align))
 #   define END_PACKED __pragma(pack(pop))
-#   define PACKED 
+#   define PACKED(align)
 #else
 #   define ASSUME(expr)
 #endif
@@ -63,6 +63,8 @@
 /// macros with functionality
 #define MAX(L, R) ((L) > (R) ? (L) : (R)) 
 #define MIN(L, R) ((L) < (R) ? (L) : (R)) 
+
+#define ROUND2(val, mul) (((val + mul - 1) / mul) * mul)
 
 /// macros for readability
 #define UNUSED(x) ((void)(x))

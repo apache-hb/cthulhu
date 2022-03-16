@@ -10,8 +10,8 @@ typedef struct {
     vector_t *arrays; // array table
     offset_t nspans;
 
-    offset_t offsets[HLIR_TOTAL]; // total number of each node type
-    vector_t *nodes[HLIR_TOTAL]; // all nodes of each type
+    offset_t offsets[TOTAL_COUNTS]; // total number of each node type
+    vector_t *nodes[TOTAL_COUNTS]; // all nodes of each type
 } writer_t;
 
 #define WRITE_NODE(type, name, ...) do { name data = __VA_ARGS__; vector_write_bytes(&writer->nodes[type], &data, sizeof(data)); } while (0)
@@ -219,7 +219,7 @@ void save_module(reports_t *reports, hlir_t *module, const char *path) {
         .nspans = 0
     };
     
-    for (int i = 0; i < HLIR_TOTAL; i++) {
+    for (int i = 0; i < TOTAL_COUNTS; i++) {
         writer.offsets[i] = 0;
         writer.nodes[i] = vector_new(0x1000);
     }
@@ -234,7 +234,7 @@ void save_module(reports_t *reports, hlir_t *module, const char *path) {
     };
 
     size_t offset = 0;
-    for (int i = 0; i < HLIR_TOTAL; i++) {
+    for (int i = 0; i < TOTAL_COUNTS; i++) {
         header.counts[i] = offset + sizeof(header_t);
         offset += vector_len(writer.nodes[i]);
     }
@@ -244,7 +244,7 @@ void save_module(reports_t *reports, hlir_t *module, const char *path) {
     fwrite(vector_data(writer.strings), vector_len(writer.strings), 1, file.file);
     fwrite(vector_data(writer.spans), vector_len(writer.spans), 1, file.file);
 
-    for (int i = 0; i < HLIR_TOTAL; i++) {
+    for (int i = 0; i < TOTAL_COUNTS; i++) {
         fwrite(vector_data(writer.nodes[i]), vector_len(writer.nodes[i]), 1, file.file);
     }
 

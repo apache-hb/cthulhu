@@ -36,7 +36,7 @@ hlir_t *load_module(reports_t *reports, const char *path) {
     );
 
     logverbose("counters:");
-    for (int i = 0; i < HLIR_TOTAL; i++) {
+    for (int i = 0; i < TOTAL_COUNTS; i++) {
         logverbose(" counter[%d] %d", i, header.counts[i] - sizeof(header_t));
     }
 
