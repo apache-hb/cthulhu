@@ -28,13 +28,6 @@ scan_t scan_string(reports_t *reports, const char *language, const char *path, c
     return scan;
 }
 
-static size_t file_size(FILE *fd) {
-    fseek(fd, 0, SEEK_END);
-    size_t size = ftell(fd);
-    fseek(fd, 0, SEEK_SET);
-    return size;
-}
-
 scan_t scan_file(reports_t *reports, const char *language, file_t *file) {
     FILE *fd = file->file;
     size_t size = file_size(fd);

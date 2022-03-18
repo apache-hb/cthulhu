@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include <string.h>
+
 typedef struct {
     reports_t *reports; // report sink
     
@@ -8,7 +10,6 @@ typedef struct {
     vector_t *strings; // string table
     vector_t *spans; // span table
     vector_t *arrays; // array table
-    offset_t nspans;
 
     offset_t offsets[TOTAL_COUNTS]; // total number of each node type
     vector_t *nodes[TOTAL_COUNTS]; // all nodes of each type
@@ -47,7 +48,7 @@ static offset_t save_node_array(writer_t *writer, vector_t *vector) {
 
     ctu_free(array);
 
-    return vector_len(writer->arrays);
+    return vector_len(writer->arrays) - size;
 }
 
 static offset_t save_string(writer_t *writer, const char *str) {
@@ -55,8 +56,10 @@ static offset_t save_string(writer_t *writer, const char *str) {
         return UINT32_MAX;
     }
 
-    vector_write(&writer->strings, str, true);
-    return vector_len(writer->strings);
+    size_t len = strlen(str) + 1;
+
+    vector_write_bytes(&writer->strings, str, len);
+    return vector_len(writer->strings) - len - 1;
 }
 
 static offset_t save_span(writer_t *writer, const node_t *node) {
@@ -64,7 +67,7 @@ static offset_t save_span(writer_t *writer, const node_t *node) {
         return UINT32_MAX;
     }
     vector_write_bytes(&writer->spans, &node->where, sizeof(node->where));
-    return writer->nspans++;
+    return vector_len(writer->spans) - sizeof(node->where);
 }
 
 static node_header_t build_header(writer_t *writer, const node_t *node, node_index_t type) {
@@ -117,6 +120,7 @@ static void save_module_node(writer_t *writer, const hlir_t *node) {
     offset_t globals = save_node_array(writer, node->globals);
     WRITE_NODE(HLIR_MODULE, module_node_t, {
         .header = new_header(writer, node),
+        .name = save_string(writer, node->name),
         .globals = globals
     });
 }
@@ -215,8 +219,7 @@ void save_module(reports_t *reports, hlir_t *module, const char *path) {
         .data = map_new(MAP_MASSIVE),
         .strings = vector_new(0x1000),
         .spans = vector_new(0x1000 * sizeof(where_t)),
-        .arrays = vector_new(0x1000),
-        .nspans = 0
+        .arrays = vector_new(0x1000)
     };
     
     for (int i = 0; i < TOTAL_COUNTS; i++) {
@@ -226,23 +229,33 @@ void save_module(reports_t *reports, hlir_t *module, const char *path) {
 
     save_node(&writer, module);
 
+    size_t nstrings = vector_len(writer.strings);
+    size_t nspans = vector_len(writer.spans);
+    size_t narrays = vector_len(writer.arrays);
+
     header_t header = {
         .magic = HEADER_MAGIC,
         .version = CURRENT_VERSION,
         .strings = sizeof(header_t),
-        .spans = sizeof(header_t) + vector_len(writer.strings)
+        .spans = sizeof(header_t) + nstrings,
+        .arrays = sizeof(header_t) + nstrings + nspans
     };
 
-    size_t offset = 0;
+    size_t offset = sizeof(header_t) + nstrings + nspans + narrays;
     for (int i = 0; i < TOTAL_COUNTS; i++) {
-        header.counts[i] = offset + sizeof(header_t);
-        offset += vector_len(writer.nodes[i]);
+        size_t len = vector_len(writer.nodes[i]);
+
+        header.offsets[i] = offset;
+        header.counts[i] = get_node_count(reports, len, i);
+
+        offset += len;
     }
 
     fwrite(&header, sizeof(header), 1, file.file);
 
     fwrite(vector_data(writer.strings), vector_len(writer.strings), 1, file.file);
     fwrite(vector_data(writer.spans), vector_len(writer.spans), 1, file.file);
+    fwrite(vector_data(writer.arrays), vector_len(writer.arrays), 1, file.file);
 
     for (int i = 0; i < TOTAL_COUNTS; i++) {
         fwrite(vector_data(writer.nodes[i]), vector_len(writer.nodes[i]), 1, file.file);

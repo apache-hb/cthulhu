@@ -34,6 +34,7 @@ src = [
     # serialization
     'src/loader/load.c',
     'src/loader/save.c',
+    'src/loader/common.c',
 
     # ast data and flex/bison interop
     'src/ast/scan.c',

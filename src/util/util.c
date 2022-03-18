@@ -182,7 +182,7 @@ size_t ctu_read(void *dst, size_t total, file_t *fp) {
     return fread(dst, 1, total, fp->file);
 }
 
-static size_t file_size(FILE *fd) {
+size_t file_size(FILE *fd) {
     fseek(fd, 0, SEEK_END);
     size_t size = ftell(fd);
     fseek(fd, 0, SEEK_SET);

@@ -11,7 +11,10 @@
  *  - nodes
  *  - counts
  * nodes:
- *  - arrays of node data
+ *  - array of spans
+ *  - array of strings
+ *  - array of sparse arrays
+ *  - array of node data
  */
 
 #define NEW_VERSION(major, minor, patch) ((major << 24) | (minor << 16) | patch)
@@ -32,6 +35,7 @@ STATIC_ASSERT(HLIR_TOTAL <= UINT8_MAX, "hlir_t has too many types");
 BEGIN_PACKED(STRUCT_ALIGN)
 
 typedef uint32_t offset_t;
+typedef uint32_t length_t;
 
 typedef struct PACKED(STRUCT_ALIGN) {
     uint32_t magic;
@@ -39,12 +43,14 @@ typedef struct PACKED(STRUCT_ALIGN) {
 
     offset_t strings; // absolute offset of the string table
     offset_t spans; // absolute offset of the span table
-    offset_t counts[TOTAL_COUNTS]; // node counters
+    offset_t arrays; // absolute offset of the sparse array table
+    offset_t offsets[TOTAL_COUNTS]; // node offsets
+    length_t counts[TOTAL_COUNTS]; // node counts
 } header_t;
 
 typedef struct PACKED(STRUCT_ALIGN) {
     offset_t offset; // absolute offset from start of file
-    offset_t count; // number of entries in this array
+    length_t count; // number of entries in this array
 } array_t;
 
 typedef struct PACKED(STRUCT_ALIGN) {
@@ -54,11 +60,11 @@ typedef struct PACKED(STRUCT_ALIGN) {
 
 typedef struct PACKED(STRUCT_ALIGN) {
     uint8_t type; // index into counts.nodes
-    offset_t index; // which node from the array to use
+    length_t index; // which node from the array to use
 } node_index_t;
 
 typedef struct PACKED(STRUCT_ALIGN) {
-    uint32_t size;
+    length_t size;
     node_index_t offsets[];
 } node_array_t;
 
@@ -90,6 +96,7 @@ typedef struct PACKED(STRUCT_ALIGN) {
 
 typedef struct PACKED(STRUCT_ALIGN) {
     node_header_t header;
+    offset_t name;
     offset_t globals;
     offset_t types;
 } module_node_t;
@@ -105,5 +112,8 @@ typedef struct PACKED(STRUCT_ALIGN) {
     node_header_t header;
     offset_t name;
 } metatype_node_t;
+
+size_t get_node_size(reports_t *reports, uint8_t type);
+size_t get_node_count(reports_t *reports, length_t bytes, uint8_t type);
 
 END_PACKED
