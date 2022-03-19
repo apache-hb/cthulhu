@@ -16,5 +16,5 @@ option('tuning', type : 'boolean',
 
 option('aws', type : 'feature',
     description : 'enable aws runtime support',
-    value : 'auto'
+    value : 'disabled'
 )

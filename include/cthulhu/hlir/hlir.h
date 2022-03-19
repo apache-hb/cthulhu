@@ -7,6 +7,9 @@
 
 #include <gmp.h>
 
+/**
+ * if anything in this file is changed update the loader
+ */
 typedef enum {
     /* expressions */
     HLIR_DIGIT_LITERAL, // an integer literal

@@ -264,13 +264,16 @@ size_t stream_len(stream_t *stream) {
 }
 
 void stream_write(stream_t *stream, const char *str) {
-    size_t len = strlen(str);
+    stream_write_bytes(stream, str, strlen(str));
+}
+
+void stream_write_bytes(stream_t *stream, const void *bytes, size_t len) {
     if (stream->len + len > stream->size) {
         stream->size = stream->len + len;
         stream->data = ctu_realloc(stream->data, stream->size + 1);
     }
 
-    strcpy(stream->data + stream->len, str);
+    memcpy(stream->data + stream->len, bytes, len);
     stream->len += len;
 }
 

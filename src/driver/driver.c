@@ -133,9 +133,9 @@ void common_init(void) {
 typedef enum {
     OUTPUT_C89,
     OUTPUT_JSON
-} output_t;
+} target_t;
 
-static output_t parse_target(reports_t *reports, const char *target) {
+static target_t parse_target(reports_t *reports, const char *target) {
     if (streq(target, "c89")) {
         return OUTPUT_C89;
     } else if (streq(target, "json")) {
@@ -191,7 +191,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
         return end_reports(reports, limit, "command line parsing");
     }
     
-    output_t result = parse_target(reports, target);
+    target_t result = parse_target(reports, target);
     status = end_reports(reports, limit, "target parsing");
     if (status != 0) { return status; }
 
@@ -232,10 +232,10 @@ int common_main(int argc, const char **argv, driver_t driver) {
         save_module(reports, hlir, out);
         status = end_reports(reports, limit, "bytecode generation");
         
-        load_module(reports, out);
+        hlir = load_module(reports, out);
         status = end_reports(reports, limit, "bytecode loading");
         
-        return status;
+        // return status;
     }
 
     switch (result) {

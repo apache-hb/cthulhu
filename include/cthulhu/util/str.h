@@ -124,4 +124,5 @@ void stream_delete(stream_t *stream) NONULL;
 stream_t *stream_new(size_t size) ALLOC(stream_delete);
 size_t stream_len(stream_t *stream) CONSTFN NONULL;
 void stream_write(stream_t *stream, const char *str) NONULL;
+void stream_write_bytes(stream_t *stream, const void *bytes, size_t len) NONULL;
 const char *stream_data(const stream_t *stream) CONSTFN NONULL;

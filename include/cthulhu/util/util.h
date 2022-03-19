@@ -214,9 +214,6 @@ vector_t *vector_init(void *value) ALLOC(vector_delete);
  */
 void vector_push(vector_t **vector, void *value) NOTNULL(1);
 
-void vector_write(vector_t **vector, const char *str, bool term) NONULL;
-void vector_write_bytes(vector_t **vector, const void *ptr, size_t size) NONULL;
-
 /**
  * @brief remove the last element from a vector. invalid on empty vectors
  * 

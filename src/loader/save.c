@@ -2,264 +2,66 @@
 
 #include <string.h>
 
-typedef struct {
-    reports_t *reports; // report sink
+void begin_save(data_t *out, reports_t *reports, const format_t *format, const char *path) {
+    begin_data(out, reports, format, path);
     
-    map_t *data; // map of node -> id
+    size_t len = format->types;
 
-    vector_t *strings; // string table
-    vector_t *spans; // span table
-    vector_t *arrays; // array table
+    out->strings = stream_new(0x1000);
 
-    offset_t offsets[TOTAL_COUNTS]; // total number of each node type
-    vector_t *nodes[TOTAL_COUNTS]; // all nodes of each type
-} writer_t;
-
-#define WRITE_NODE(type, name, ...) do { name data = __VA_ARGS__; vector_write_bytes(&writer->nodes[type], &data, sizeof(data)); } while (0)
-
-static node_index_t EMPTY_NODE = {
-    .type = UINT8_MAX,
-    .index = 0
-};
-
-static node_index_t save_node(writer_t *writer, const hlir_t *node);
-
-static node_index_t save_opt_node(writer_t *writer, const hlir_t *node) {
-    node_index_t index = EMPTY_NODE;
-    
-    if (node) {
-        index = save_node(writer, node);
-    }
-
-    return index;
-}
-
-static offset_t save_node_array(writer_t *writer, vector_t *vector) {
-    size_t len = vector_len(vector);
-    size_t size = sizeof(node_array_t) + (sizeof(node_index_t) * len);
-    node_array_t *array = ctu_malloc(size);
-    array->size = len;
+    out->records = ctu_malloc(sizeof(stream_t*) * len);
+    out->counts = ctu_malloc(sizeof(size_t) * len);
 
     for (size_t i = 0; i < len; i++) {
-        array->offsets[i] = save_node(writer, vector_get(vector, i));
+        out->records[i] = stream_new(0x1000);
+        out->counts[i] = 0;
     }
-
-    vector_write_bytes(&writer->arrays, array, size);
-
-    ctu_free(array);
-
-    return vector_len(writer->arrays) - size;
 }
 
-static offset_t save_string(writer_t *writer, const char *str) {
-    if (str == NULL) {
-        return UINT32_MAX;
-    }
+void end_save(data_t *out) {
 
+}
+
+static size_t write_string(stream_t *vec, const char *str) {
     size_t len = strlen(str) + 1;
+    size_t result = stream_len(vec);
 
-    vector_write_bytes(&writer->strings, str, len);
-    return vector_len(writer->strings) - len - 1;
+    stream_write_bytes(vec, str, len);
+
+    return result;
 }
 
-static offset_t save_span(writer_t *writer, const node_t *node) {
-    if (node == NULL) {
-        return UINT32_MAX;
+index_t write_entry(data_t *out, size_t type, const record_t *record) {
+    size_t len = record->layout->length;
+    stream_t *dst = out->records[type];
+
+    for (size_t i = 0; i < len; i++) {
+        field_t field = record->layout->fields[i];
+        value_t val = record->values[i];
+
+        size_t str;
+        char *gmp;
+        switch (field) {
+        case FIELD_STRING:
+            str = write_string(out->strings, val.string);
+            stream_write_bytes(dst, &str, sizeof(size_t));
+            break;
+        case FIELD_INT:
+            gmp = mpz_get_str(NULL, DIGIT_BASE, val.digit);
+            str = write_string(out->strings, gmp);
+            stream_write_bytes(dst, &str, sizeof(size_t));
+            break;
+        case FIELD_BOOL:
+            stream_write_bytes(dst, &val.boolean, sizeof(bool));
+            break;
+        case FIELD_REFERENCE:
+            stream_write_bytes(dst, &val.reference, sizeof(index_t));
+            break;
+        }
     }
-    vector_write_bytes(&writer->spans, &node->where, sizeof(node->where));
-    return vector_len(writer->spans) - sizeof(node->where);
-}
 
-static node_header_t build_header(writer_t *writer, const node_t *node, node_index_t type) {
-    node_header_t header = {
-        .span = save_span(writer, node),
-        .type = type
-    };
-
-    return header;
-}
-
-static node_header_t new_header(writer_t *writer, const hlir_t *node) {
-    const hlir_t *kind = typeof_hlir(node);
-    node_index_t type = EMPTY_NODE;
-    
-    if (!hlir_is_sentinel(kind)) {
-        type = save_node(writer, kind);
-    }
-
-    return build_header(writer, node->node, type);
-}
-
-static void save_bool_literal(writer_t *writer, const hlir_t *node) {
-    WRITE_NODE(HLIR_BOOL_LITERAL, bool_node_t, {
-        .header = new_header(writer, node),
-        .value = node->boolean
-    });
-}
-
-static void save_digit_literal(writer_t *writer, const hlir_t *node) {
-    char *digit = mpz_get_str(NULL, DIGIT_BASE, node->digit);
-    offset_t offset = save_string(writer, digit);
-
-    WRITE_NODE(HLIR_DIGIT_LITERAL, digit_node_t, {
-        .header = new_header(writer, node),
-        .digit = offset
-    });
-}
-
-static void save_string_literal(writer_t *writer, const hlir_t *node) {
-    offset_t offset = save_string(writer, node->string);
-
-    WRITE_NODE(HLIR_STRING_LITERAL, string_node_t, {
-        .header = new_header(writer, node),
-        .string = offset
-    });
-}
-
-static void save_module_node(writer_t *writer, const hlir_t *node) {
-    offset_t globals = save_node_array(writer, node->globals);
-    WRITE_NODE(HLIR_MODULE, module_node_t, {
-        .header = new_header(writer, node),
-        .name = save_string(writer, node->name),
-        .globals = globals
-    });
-}
-
-static void save_value_node(writer_t *writer, const hlir_t *node) {
-    offset_t name = save_string(writer, node->name);
-    node_index_t init = save_opt_node(writer, node->value);
-    
-    WRITE_NODE(HLIR_VALUE, value_node_t, {
-        .header = new_header(writer, node),
-        .name = name,
-        .init = init
-    });
-}
-
-static void save_digit_type(writer_t *writer, const hlir_t *node) {
-    WRITE_NODE(HLIR_DIGIT, digit_type_node_t, {
-        .header = new_header(writer, node),
-        .name = save_string(writer, node->name),
-        .width = node->width,
-        .sign = node->sign
-    });
-}
-
-static void save_type_type(writer_t *writer, const hlir_t *node) {
-    WRITE_NODE(HLIR_TYPE, metatype_node_t, {
-        .header = build_header(writer, node->node, EMPTY_NODE),
-        .name = save_string(writer, node->name)
-    });
-}
-
-static node_index_t save_node(writer_t *writer, const hlir_t *node) {
-    hlir_type_t type = node->type;
-    uintptr_t id = (uintptr_t)map_get_ptr_default(writer->data, node, (void*)SIZE_MAX);
-
-    node_index_t index = {
-        .type = type,
-        .index = id
-    };
-
-    if (id != SIZE_MAX) { return index; }
-
-    index.index = writer->offsets[type]++;
-    map_set_ptr(writer->data, node, (void*)id);
-
-    switch (type) {
-    case HLIR_BOOL_LITERAL: 
-        save_bool_literal(writer, node);
-        break;
-    case HLIR_DIGIT_LITERAL:
-        save_digit_literal(writer, node);
-        break;
-    case HLIR_STRING_LITERAL:
-        save_string_literal(writer, node);
-        break;
-
-    case HLIR_DIGIT:
-        save_digit_type(writer, node);
-        break;
-    case HLIR_TYPE:
-        save_type_type(writer, node);
-        break;
-
-    case HLIR_VALUE:
-        save_value_node(writer, node);
-        break;
-
-    case HLIR_MODULE:
-        save_module_node(writer, node);
-        break;
-
-    case HLIR_ERROR: {
-        message_t *id = report(writer->reports, INTERNAL, node->node, "error node should never appear in output");
-        report_note(id, "error: %s", node->error);
-        break;
-    }
-    
-    default:
-        ctu_assert(writer->reports, "unhandled node type: %d", type);
-    }
+    size_t offset = out->counts[type]++;
+    index_t index = { type, offset };
 
     return index;
-}
-
-void save_module(reports_t *reports, hlir_t *module, const char *path) {
-    UNUSED(module);
-
-    file_t file = ctu_fopen(path, "wb");
-    if (!file_valid(&file)) { 
-        report(reports, ERROR, NULL, "could not open file: %s (errno %d)", path, errno);
-        return; 
-    }
-
-    writer_t writer = {
-        .reports = reports,
-        .data = map_new(MAP_MASSIVE),
-        .strings = vector_new(0x1000),
-        .spans = vector_new(0x1000 * sizeof(where_t)),
-        .arrays = vector_new(0x1000)
-    };
-    
-    for (int i = 0; i < TOTAL_COUNTS; i++) {
-        writer.offsets[i] = 0;
-        writer.nodes[i] = vector_new(0x1000);
-    }
-
-    save_node(&writer, module);
-
-    size_t nstrings = vector_len(writer.strings);
-    size_t nspans = vector_len(writer.spans);
-    size_t narrays = vector_len(writer.arrays);
-
-    header_t header = {
-        .magic = HEADER_MAGIC,
-        .version = CURRENT_VERSION,
-        .strings = sizeof(header_t),
-        .spans = sizeof(header_t) + nstrings,
-        .arrays = sizeof(header_t) + nstrings + nspans
-    };
-
-    size_t offset = sizeof(header_t) + nstrings + nspans + narrays;
-    for (int i = 0; i < TOTAL_COUNTS; i++) {
-        size_t len = vector_len(writer.nodes[i]);
-
-        header.offsets[i] = offset;
-        header.counts[i] = get_node_count(reports, len, i);
-
-        offset += len;
-    }
-
-    fwrite(&header, sizeof(header), 1, file.file);
-
-    fwrite(vector_data(writer.strings), vector_len(writer.strings), 1, file.file);
-    fwrite(vector_data(writer.spans), vector_len(writer.spans), 1, file.file);
-    fwrite(vector_data(writer.arrays), vector_len(writer.arrays), 1, file.file);
-
-    for (int i = 0; i < TOTAL_COUNTS; i++) {
-        fwrite(vector_data(writer.nodes[i]), vector_len(writer.nodes[i]), 1, file.file);
-    }
-
-    ctu_close(&file);
 }

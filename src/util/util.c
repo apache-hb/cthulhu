@@ -282,7 +282,7 @@ HOT static void *entry_get_ptr(const bucket_t *entry, const void *key, void *oth
     }
 
     if (entry->next) {
-        return entry_get(entry->next, key);
+        return entry_get_ptr(entry->next, key, other);
     }
 
     return other;
@@ -291,8 +291,8 @@ HOT static void *entry_get_ptr(const bucket_t *entry, const void *key, void *oth
 void map_set_ptr(map_t *map, const void *key, void *value) {
     bucket_t *entry = map_bucket_ptr(map, key);
 
-    while (entry != CTU_EMPTY_CHAIN) {
-        if (entry->key == CTU_EMPTY_KEY) {
+    while (entry) {
+        if (!entry->key) {
             entry->key = key;
             entry->value = value;
             return;
@@ -450,16 +450,6 @@ void vector_delete(vector_t *vector) {
 void vector_push(vector_t **vector, void *value) {
     vector_ensure(vector, VEC->used + 1);
     VEC->data[VEC->used++] = value;
-}
-
-void vector_write(vector_t **vector, const char *str, bool term) {
-    vector_write_bytes(vector, str, strlen(str) + (term ? 1 : 0));
-}
-
-void vector_write_bytes(vector_t **vector, const void *ptr, size_t size) {
-    vector_ensure(vector, VEC->used + size);
-    memcpy(VEC->data + VEC->used, ptr, size);
-    VEC->used += size;
 }
 
 void vector_drop(vector_t **vector) {
