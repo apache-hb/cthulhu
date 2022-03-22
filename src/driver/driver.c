@@ -4,7 +4,7 @@
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/emit/emit.h"
-#include "cthulhu/loader/loader.h"
+#include "cthulhu/loader/hlir.h"
 
 #include <stdio.h>
 #include <errno.h>

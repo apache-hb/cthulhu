@@ -20,16 +20,14 @@ size_t layout_size(layout_t layout) {
     return result;
 }
 
-void begin_data(data_t *data, reports_t *reports, const format_t *format, const char *path) {
-    size_t len = format->types;
+void begin_data(data_t *data, header_t header) {
+    size_t len = header.format->types;
 
-    data->reports = reports;
-    data->format = format;
-    data->path = path;
+    data->header = header;
 
     data->sizes = ctu_malloc(sizeof(size_t) * len);
 
     for (size_t i = 0; i < len; i++) {
-        data->sizes[i] = layout_size(format->layouts[i]);
+        data->sizes[i] = layout_size(header.format->layouts[i]);
     }
 }

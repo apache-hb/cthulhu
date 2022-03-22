@@ -16,6 +16,7 @@ void *ctu_malloc(size_t size) ALLOC(ctu_free);
 void *ctu_realloc(void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 char *ctu_strdup(const char *str) NONULL ALLOC(ctu_free);
 char *ctu_strndup(const char *str, size_t len) NONULL ALLOC(ctu_free);
+char *ctu_strdup_len(const char *str, size_t *len) NONULL ALLOC(ctu_free);
 void *ctu_memdup(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 
 #if ENABLE_TUNING
