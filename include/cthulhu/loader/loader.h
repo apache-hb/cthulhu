@@ -23,12 +23,32 @@ typedef struct {
     offset_t offset;
 } index_t;
 
+typedef struct {
+    offset_t offset;
+    offset_t length;
+} array_t;
+
 typedef union {
     const char *string;
     mpz_t digit;
     bool_t boolean;
     index_t reference;
+    array_t array;
 } value_t;
+
+value_t string_value(const char *string);
+value_t digit_value(mpz_t digit);
+value_t int_value(int64_t digit);
+value_t bool_value(bool boolean);
+value_t reference_value(index_t reference);
+value_t array_value(array_t array);
+
+const char *get_string(value_t value);
+void get_digit(mpz_t mpz, value_t value);
+int64_t get_int(value_t value);
+bool get_bool(value_t value);
+index_t get_reference(value_t value);
+array_t get_array(value_t value);
 
 typedef struct layout_t {
     size_t length;
@@ -51,6 +71,8 @@ typedef struct {
 #define LAYOUT(name, array) { .length = sizeof(array) / sizeof(field_t), .fields = array }
 #define FORMAT(head, array) { .header = head, .types = sizeof(array) / sizeof(layout_t), .layouts = array }
 
+#define FIELDLEN(name) (sizeof(name) / sizeof(field_t))
+
 #define NEW_VERSION(major, minor, patch) ((major << 24) | (minor << 16) | patch)
 
 #define VERSION_MAJOR(version) ((version >> 24) & 0xFF)
@@ -72,7 +94,9 @@ typedef struct {
     union {
         // data needed for writing
         struct {
+            stream_t *stream; // the global stream that everything eventually ends up in
             stream_t *strings; // the string table
+            stream_t *arrays; // the array table
             stream_t **records; // all our serialized data per type
         };
 
@@ -80,6 +104,7 @@ typedef struct {
         struct {
             const char *data; // the raw data
             size_t string; // string table offset
+            size_t array; // array table offset
             size_t *offsets; // the offset table
         };
     };
@@ -91,9 +116,11 @@ typedef struct {
 void begin_save(data_t *out, header_t header);
 void end_save(data_t *out);
 
-index_t write_entry(data_t *out, type_t type, const record_t *record);
+index_t write_entry(data_t *out, type_t type, const value_t *values);
+array_t write_array(data_t *out, index_t *indices, size_t len);
 
 bool begin_load(data_t *in, header_t header);
 void end_load(data_t *in);
 
-bool read_entry(data_t *in, index_t index, record_t *record);
+bool read_entry(data_t *in, index_t index, value_t *values);
+bool read_array(data_t *in, array_t array, index_t *indices);

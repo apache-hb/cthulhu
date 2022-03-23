@@ -170,7 +170,7 @@ char *ctu_pathjoin(const char *path, const char *file) {
 file_t ctu_fopen(const char *path, const char *mode) {
     logverbose("opening: %s", path);
     file_t file = {
-        .path = compat_realpath(path),
+        .path = ctu_realpath(path),
         .file = compat_fopen(path, mode)
     };
     return file;

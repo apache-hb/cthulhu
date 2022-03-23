@@ -6,18 +6,29 @@
  * internal layout of a saved file
  * 
  * header:
- *  - magic
- *  - submagic
- *  - version
+ *  - basic header
  *  - specific header
  *  - count array for each type
  *  - offset array for each type
  *  - string table
+ *  - array table
  *  - data tables
  */
 
 #define DIGIT_BASE 26
 #define FILE_MAGIC 0xB00B
+
+BEGIN_PACKED(2)
+
+typedef struct PACKED(2) {
+    magic_t magic;
+    submagic_t submagic;
+    semver_t semver;
+    offset_t strings;
+    offset_t arrays;
+} basic_header_t;
+
+END_PACKED
 
 size_t layout_size(layout_t layout);
 

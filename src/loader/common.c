@@ -31,3 +31,63 @@ void begin_data(data_t *data, header_t header) {
         data->sizes[i] = layout_size(header.format->layouts[i]);
     }
 }
+
+value_t string_value(const char *string) {
+    value_t result;
+    result.string = string;
+    return result;
+}
+
+value_t digit_value(mpz_t digit) {
+    value_t result;
+    mpz_init_set(result.digit, digit);
+    return result;
+}
+
+value_t int_value(int64_t digit) {
+    value_t result;
+    mpz_init_set_si(result.digit, digit);
+    return result;
+}
+
+value_t bool_value(bool boolean) {
+    value_t result;
+    result.boolean = boolean;
+    return result;
+}
+
+value_t reference_value(index_t reference) {
+    value_t result;
+    result.reference = reference;
+    return result;
+}
+
+value_t array_value(array_t array) {
+    value_t result;
+    result.array = array;
+    return result;
+}
+
+const char *get_string(value_t value) {
+    return value.string;
+}
+
+void get_digit(mpz_t mpz, value_t value) {
+    mpz_init_set(mpz, value.digit);
+}
+
+int64_t get_int(value_t value) {
+    return mpz_get_si(value.digit);
+}
+
+bool get_bool(value_t value) {
+    return value.boolean;
+}
+
+index_t get_reference(value_t value) {
+    return value.reference;
+}
+
+array_t get_array(value_t value) {
+    return value.array;
+}

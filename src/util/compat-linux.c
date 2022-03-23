@@ -16,7 +16,7 @@ bool compat_file_exists(const char *path) {
     return access(path, F_OK) != -1;
 }
 
-const char *compat_realpath(const char *path) {
+char *ctu_realpath(const char *path) {
     char full[PATH_MAX + 1];
     realpath(path, full);
     return ctu_strdup(full);
