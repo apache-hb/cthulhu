@@ -383,6 +383,7 @@ void c89_emit_tree(reports_t *reports, const hlir_t *hlir) {
 
     for (size_t i = 0; i < nglobals; i++) {
         const hlir_t *import = vector_get(hlir->globals, i);
+        logverbose("import %s", nameof_hlir(import));
         if (!hlir_is_imported(import)) { continue; }
 
         emit_import_decl(reports, import);

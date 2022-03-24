@@ -3,7 +3,9 @@
 typedef enum {
     LINK_IMPORTED,
     LINK_EXPORTED,
-    LINK_INTERNAL
+    LINK_INTERNAL,
+
+    LINK_TOTAL
 } hlir_linkage_t;
 
 typedef struct {

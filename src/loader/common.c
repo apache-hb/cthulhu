@@ -32,6 +32,10 @@ void begin_data(data_t *data, header_t header) {
     }
 }
 
+void end_data(data_t *data) {
+    ctu_free(data->sizes);
+}
+
 value_t string_value(const char *string) {
     value_t result;
     result.string = string;

@@ -21,6 +21,7 @@ static void write_data(stream_t *strings, stream_t *dst, layout_t layout, const 
 
         offset_t str;
         char *gmp;
+        
         switch (field) {
         case FIELD_STRING:
             str = write_string(strings, val.string);

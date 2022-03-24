@@ -8,6 +8,7 @@
 
 typedef enum {
     SPAN_INDEX = HLIR_TOTAL,
+    ATTRIBUTE_INDEX,
     LAYOUTS_TOTAL
 } hlir_layouts_t;
 
@@ -37,6 +38,22 @@ static const field_t MODULE_FIELDS[] = {
 };
 static const layout_t MODULE_LAYOUT = LAYOUT("module", MODULE_FIELDS);
 
+enum { VALUE_SPAN, VALUE_ATTRIBS, VALUE_NAME, VALUE_TYPE, VALUE_INIT };
+static const field_t VALUE_FIELDS[] = {
+    [VALUE_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [VALUE_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
+    [VALUE_NAME] = FIELD("name", FIELD_STRING),
+    [VALUE_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [VALUE_INIT] = FIELD("init", FIELD_REFERENCE)
+};
+static const layout_t VALUE_LAYOUT = LAYOUT("value", VALUE_FIELDS);
+
+enum { ATTRIB_LINKAGE };
+static const field_t ATTRIB_FIELDS[] = {
+    [ATTRIB_LINKAGE] = FIELD("linkage", FIELD_INT)
+};
+static const layout_t ATTRIB_LAYOUT = LAYOUT("attributes", ATTRIB_FIELDS);
+
 #if 0
 enum { DIGIT_LITERAL_SPAN, DIGIT_LITERAL_TYPE, DIGIT_LITERAL_VALUE };
 static const field_t DIGIT_LITERAL_FIELDS[] = {
@@ -57,7 +74,10 @@ static const layout_t STRING_LITERAL_LAYOUT = LAYOUT("string-literal", STRING_FI
 
 static const layout_t TYPES[LAYOUTS_TOTAL] = {
     [SPAN_INDEX] = SPAN_LAYOUT,
+    [ATTRIBUTE_INDEX] = ATTRIB_LAYOUT,
+
     [HLIR_MODULE] = MODULE_LAYOUT,
+    [HLIR_VALUE] = VALUE_LAYOUT
 
 #if 0
     [HLIR_DIGIT_LITERAL] = DIGIT_LITERAL_LAYOUT,
@@ -93,6 +113,13 @@ static node_t *load_span(load_t *load, index_t index) {
     return node_new(load->scan, where);
 }
 
+static hlir_attributes_t *load_attributes(load_t *load, index_t index) {
+    value_t values[FIELDLEN(ATTRIB_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_new_attributes(get_int(values[ATTRIB_LINKAGE]));
+}
+
 static hlir_t *load_node(load_t *load, index_t index);
 
 static vector_t *load_array(load_t *load, array_t array) {
@@ -124,12 +151,32 @@ static hlir_t *load_module_node(load_t *load, index_t index) {
     return hlir;
 }
 
+static hlir_t *load_value_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(VALUE_FIELDS)];
+    read_entry(load->data, index, values);
+
+    const node_t *node = load_span(load, get_reference(values[VALUE_SPAN]));
+    const char *name = get_string(values[VALUE_NAME]);
+    hlir_attributes_t *attributes = load_attributes(load, get_reference(values[VALUE_ATTRIBS]));
+    hlir_t *type = load_node(load, get_reference(values[VALUE_TYPE]));
+    hlir_t *init = load_node(load, get_reference(values[VALUE_INIT]));
+
+    hlir_t *hlir = hlir_new_value(node, name, type);
+    hlir_build_value(hlir, init);
+    hlir_set_attributes(hlir, attributes);
+
+    return hlir;
+}
+
 static hlir_t *load_node(load_t *load, index_t index) {
     switch (index.type) {
     case HLIR_MODULE:
         return load_module_node(load, index);
-    
+    case HLIR_VALUE:
+        return load_value_node(load, index);
+
     default:
+        ctu_assert(load->data->header.reports, "unknown node type %d", index.type);
         return NULL;
     }
 }
@@ -195,6 +242,14 @@ static index_t save_span(data_t *data, const node_t *node) {
     return write_entry(data, SPAN_INDEX, values);
 }
 
+static index_t save_attributes(data_t *data, const hlir_attributes_t *attributes) {
+    value_t values[FIELDLEN(ATTRIB_FIELDS)] = {
+        [ATTRIB_LINKAGE] = int_value(attributes->linkage)
+    };
+
+    return write_entry(data, ATTRIBUTE_INDEX, values);
+}
+
 static index_t save_node(data_t *data, const hlir_t *hlir);
 
 static array_t save_array(data_t *data, vector_t *vec) {
@@ -221,13 +276,32 @@ static index_t save_module_node(data_t *data, const hlir_t *hlir) {
     return write_entry(data, HLIR_MODULE, values);
 }
 
+static index_t save_value_node(data_t *data, const hlir_t *hlir) {
+    index_t span = save_span(data, hlir->node);
+    index_t attribs = save_attributes(data, hlir->attributes);
+    index_t type = save_node(data, typeof_hlir(hlir));
+    index_t init = save_node(data, hlir->value);
+    
+    value_t values[] = {
+        [VALUE_SPAN] = reference_value(span),
+        [VALUE_NAME] = string_value(hlir->name),
+        [VALUE_ATTRIBS] = reference_value(attribs),
+        [VALUE_TYPE] = reference_value(type),
+        [VALUE_INIT] = reference_value(init)
+    };
+    
+    return write_entry(data, HLIR_VALUE, values);
+}
+
 static index_t save_node(data_t *data, const hlir_t *hlir) {
     switch (hlir->type) {
     case HLIR_MODULE:
         return save_module_node(data, hlir);
-    
+    case HLIR_VALUE:
+        return save_value_node(data, hlir);
+
     default:
-        return (index_t){ 0 };
+        return (index_t){ SIZE_MAX, SIZE_MAX };
     }
 }
 

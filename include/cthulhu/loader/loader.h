@@ -28,6 +28,9 @@ typedef struct {
     offset_t length;
 } array_t;
 
+#define NULL_INDEX ((index_t){SIZE_MAX, SIZE_MAX})
+#define NULL_ARRAY ((array_t){SIZE_MAX, SIZE_MAX})
+
 typedef union {
     const char *string;
     mpz_t digit;

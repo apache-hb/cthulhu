@@ -108,7 +108,7 @@ bool begin_load(data_t *in, header_t header) {
 }
 
 void end_load(data_t *in) {
-
+    end_data(in);
 }
 
 bool read_entry(data_t *in, index_t index, value_t *values) {

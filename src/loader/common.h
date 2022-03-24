@@ -32,7 +32,5 @@ END_PACKED
 
 size_t layout_size(layout_t layout);
 
-void begin_data(
-    data_t *data, 
-    header_t header
-);
+void begin_data(data_t *data, header_t header);
+void end_data(data_t *data);
