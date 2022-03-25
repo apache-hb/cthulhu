@@ -6,6 +6,7 @@ static size_t field_size(field_t field) {
     case FIELD_INT: return sizeof(size_t);
     case FIELD_BOOL: return sizeof(bool);
     case FIELD_REFERENCE: return sizeof(index_t);
+    case FIELD_ARRAY: return sizeof(array_t);
     default: return 0;
     }
 }
@@ -42,7 +43,7 @@ value_t string_value(const char *string) {
     return result;
 }
 
-value_t digit_value(mpz_t digit) {
+value_t digit_value(const mpz_t digit) {
     value_t result;
     mpz_init_set(result.digit, digit);
     return result;

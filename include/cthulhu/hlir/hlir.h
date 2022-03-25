@@ -233,6 +233,9 @@ vector_t *closure_params(const hlir_t *self);
 bool closure_variadic(const hlir_t *self);
 const hlir_t *closure_result(const hlir_t *self);
 
+const char *sign_name(sign_t sign);
+const char *digit_name(digit_t digit);
+
 /**
  * @brief create an error
  * 

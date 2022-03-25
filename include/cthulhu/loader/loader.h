@@ -28,8 +28,8 @@ typedef struct {
     offset_t length;
 } array_t;
 
-#define NULL_INDEX ((index_t){SIZE_MAX, SIZE_MAX})
-#define NULL_ARRAY ((array_t){SIZE_MAX, SIZE_MAX})
+#define NULL_INDEX ((index_t){UINT32_MAX, UINT64_MAX})
+#define NULL_ARRAY ((array_t){UINT64_MAX, UINT64_MAX})
 
 typedef union {
     const char *string;
@@ -40,7 +40,7 @@ typedef union {
 } value_t;
 
 value_t string_value(const char *string);
-value_t digit_value(mpz_t digit);
+value_t digit_value(const mpz_t digit);
 value_t int_value(int64_t digit);
 value_t bool_value(bool boolean);
 value_t reference_value(index_t reference);
@@ -99,6 +99,7 @@ typedef struct {
         struct {
             stream_t *stream; // the global stream that everything eventually ends up in
             stream_t *strings; // the string table
+            map_t *cache; // string offset cache
             stream_t *arrays; // the array table
             stream_t **records; // all our serialized data per type
         };

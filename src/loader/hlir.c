@@ -12,11 +12,19 @@ typedef enum {
     LAYOUTS_TOTAL
 } hlir_layouts_t;
 
+typedef enum {
+    SOURCE_PATH,
+    SOURCE_TEXT,
+
+    SOURCE_TOTAL
+} source_kind_t;
+
 // header data
-enum { HEADER_LANGUAGE, HEADER_PATH };
+enum { HEADER_LANGUAGE, HEADER_PATH, HEADER_SOURCE };
 static const field_t HEADER_FIELDS[] = {
     [HEADER_LANGUAGE] = FIELD("language", FIELD_STRING),
-    [HEADER_PATH] = FIELD("path", FIELD_STRING)
+    [HEADER_PATH] = FIELD("path", FIELD_STRING),
+    [HEADER_SOURCE] = FIELD("source", FIELD_STRING)
 };
 static const layout_t HEADER_LAYOUT = LAYOUT("header", HEADER_FIELDS);
 
@@ -54,7 +62,6 @@ static const field_t ATTRIB_FIELDS[] = {
 };
 static const layout_t ATTRIB_LAYOUT = LAYOUT("attributes", ATTRIB_FIELDS);
 
-#if 0
 enum { DIGIT_LITERAL_SPAN, DIGIT_LITERAL_TYPE, DIGIT_LITERAL_VALUE };
 static const field_t DIGIT_LITERAL_FIELDS[] = {
     [DIGIT_LITERAL_SPAN] = FIELD("span", FIELD_REFERENCE),
@@ -63,6 +70,16 @@ static const field_t DIGIT_LITERAL_FIELDS[] = {
 };
 static const layout_t DIGIT_LITERAL_LAYOUT = LAYOUT("digit-literal", DIGIT_LITERAL_FIELDS);
 
+enum { DIGIT_SPAN, DIGIT_NAME, DIGIT_SIGN, DIGIT_WIDTH };
+static const field_t DIGIT_FIELDS[] = {
+    [DIGIT_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [DIGIT_NAME] = FIELD("name", FIELD_STRING),
+    [DIGIT_SIGN] = FIELD("sign", FIELD_INT),
+    [DIGIT_WIDTH] = FIELD("width", FIELD_INT)
+};
+static const layout_t DIGIT_LAYOUT = LAYOUT("digit", DIGIT_FIELDS);
+
+#if 0
 enum { STRING_LITERAL_SPAN, STRING_LITERAL_TYPE, STRING_LITERAL_VALUE };
 static const field_t STRING_FIELDS[] = {
     [STRING_LITERAL_SPAN] = FIELD("span", FIELD_REFERENCE),
@@ -77,7 +94,11 @@ static const layout_t TYPES[LAYOUTS_TOTAL] = {
     [ATTRIBUTE_INDEX] = ATTRIB_LAYOUT,
 
     [HLIR_MODULE] = MODULE_LAYOUT,
-    [HLIR_VALUE] = VALUE_LAYOUT
+    [HLIR_VALUE] = VALUE_LAYOUT,
+
+    [HLIR_DIGIT_LITERAL] = DIGIT_LITERAL_LAYOUT,
+
+    [HLIR_DIGIT] = DIGIT_LAYOUT
 
 #if 0
     [HLIR_DIGIT_LITERAL] = DIGIT_LITERAL_LAYOUT,
@@ -95,6 +116,7 @@ static const format_t GLOBAL = FORMAT(HEADER_LAYOUT, TYPES);
 ///
 
 typedef struct {
+    reports_t *reports;
     scan_t *scan;
     data_t *data;
 } load_t;
@@ -120,7 +142,7 @@ static hlir_attributes_t *load_attributes(load_t *load, index_t index) {
     return hlir_new_attributes(get_int(values[ATTRIB_LINKAGE]));
 }
 
-static hlir_t *load_node(load_t *load, index_t index);
+static hlir_t *load_node(load_t *load, index_t index, const char *trace);
 
 static vector_t *load_array(load_t *load, array_t array) {
     size_t len = array.length;
@@ -130,7 +152,7 @@ static vector_t *load_array(load_t *load, array_t array) {
     read_array(load->data, array, indices);
 
     for (size_t i = 0; i < len; i++) {
-        hlir_t *hlir = load_node(load, indices[i]);
+        hlir_t *hlir = load_node(load, indices[i], format("array@%zu[%zu + %zu]", array.offset, array.length, i));
         vector_set(vec, i, hlir);
     }
 
@@ -158,8 +180,8 @@ static hlir_t *load_value_node(load_t *load, index_t index) {
     const node_t *node = load_span(load, get_reference(values[VALUE_SPAN]));
     const char *name = get_string(values[VALUE_NAME]);
     hlir_attributes_t *attributes = load_attributes(load, get_reference(values[VALUE_ATTRIBS]));
-    hlir_t *type = load_node(load, get_reference(values[VALUE_TYPE]));
-    hlir_t *init = load_node(load, get_reference(values[VALUE_INIT]));
+    hlir_t *type = load_node(load, get_reference(values[VALUE_TYPE]), "load value type");
+    hlir_t *init = load_node(load, get_reference(values[VALUE_INIT]), "load value init");
 
     hlir_t *hlir = hlir_new_value(node, name, type);
     hlir_build_value(hlir, init);
@@ -168,25 +190,67 @@ static hlir_t *load_value_node(load_t *load, index_t index) {
     return hlir;
 }
 
-static hlir_t *load_node(load_t *load, index_t index) {
+static hlir_t *load_digit_literal_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(DIGIT_LITERAL_FIELDS)];
+    read_entry(load->data, index, values);
+
+    const node_t *node = load_span(load, get_reference(values[DIGIT_LITERAL_SPAN]));
+    const hlir_t *type = load_node(load, get_reference(values[DIGIT_LITERAL_TYPE]), "load digit literal type");
+    
+    mpz_t digit;
+    get_digit(digit, values[DIGIT_LITERAL_VALUE]);
+
+    hlir_t *hlir = hlir_digit_literal(node, type, digit);
+
+    return hlir;
+}
+
+static hlir_t *load_digit_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(DIGIT_FIELDS)];
+    read_entry(load->data, index, values);
+
+    const node_t *node = load_span(load, get_reference(values[DIGIT_SPAN]));
+    const char *name = get_string(values[DIGIT_NAME]);
+    sign_t sign = get_int(values[DIGIT_SIGN]);
+    digit_t width = get_int(values[DIGIT_WIDTH]);
+
+    hlir_t *hlir = hlir_digit(node, name, width, sign);
+
+    return hlir;
+}
+
+static hlir_t *load_node(load_t *load, index_t index, const char *trace) {
     switch (index.type) {
     case HLIR_MODULE:
         return load_module_node(load, index);
     case HLIR_VALUE:
         return load_value_node(load, index);
 
+    case HLIR_DIGIT_LITERAL:
+        return load_digit_literal_node(load, index);
+
+    case HLIR_DIGIT:    
+        return load_digit_node(load, index);
+
     default:
-        ctu_assert(load->data->header.reports, "unknown node type %d", index.type);
+        ctu_assert(load->reports, "loading unknown node type %d due to %s", index.type, trace);
         return NULL;
     }
 }
 
-hlir_t *load_module(reports_t *reports, const char *path) {
-    value_t values[] = {
-        [HEADER_LANGUAGE] = string_value("hlir"),
-        [HEADER_PATH] = string_value(path)
-    };
+static scan_t make_scanner(reports_t *reports, const char *lang, const char *path, const char *source) {
+    if (source != NULL) {
+        return scan_string(reports, lang, path, source);
+    }
 
+    file_t file = ctu_fopen(path, "r");
+    file_t *fp = BOX(file);
+
+    return scan_file(reports, lang, fp);
+}
+
+hlir_t *load_module(reports_t *reports, const char *path) {
+    value_t values[FIELDLEN(HEADER_FIELDS)];
     record_t record = {
         .layout = &HEADER_LAYOUT,
         .values = values
@@ -205,21 +269,20 @@ hlir_t *load_module(reports_t *reports, const char *path) {
     begin_load(&data, header);
     
     const char *language = get_string(data.header.header.values[HEADER_LANGUAGE]);
-    const char *source = get_string(data.header.header.values[HEADER_PATH]);
+    const char *where = get_string(data.header.header.values[HEADER_PATH]);
+    const char *source = get_string(data.header.header.values[HEADER_SOURCE]);
 
-    logverbose("loading(lang=%s, path=%s)", language, source);
+    logverbose("loading(lang=%s, path=%s, source=%s)", language, where, source != NULL ? "embedded" : "external");
 
-    file_t file = ctu_fopen(source, "r");
-    file_t *fp = BOX(file);
-
-    scan_t scan = scan_file(reports, language, fp);
+    scan_t scan = make_scanner(reports, language, where, source);
 
     load_t load = {
+        .reports = reports,
         .scan = BOX(scan),
         .data = &data
     };
     index_t index = { .type = HLIR_MODULE };
-    hlir_t *hlir = load_node(&load, index);
+    hlir_t *hlir = load_node(&load, index, "root load");
 
     end_load(&data);
 
@@ -230,8 +293,9 @@ hlir_t *load_module(reports_t *reports, const char *path) {
 /// hlir saving
 ///
 
-
 static index_t save_span(data_t *data, const node_t *node) {
+    if (node == NULL) { return NULL_INDEX; }
+
     value_t values[FIELDLEN(SPAN_FIELDS)] = {
         [SPAN_FIRST_LINE] = int_value(node->where.first_line),
         [SPAN_FIRST_COLUMN] = int_value(node->where.first_column),
@@ -260,7 +324,9 @@ static array_t save_array(data_t *data, vector_t *vec) {
         indices[i] = save_node(data, vector_get(vec, i));
     }
 
-    return write_array(data, indices, len);
+    array_t array = write_array(data, indices, len);
+
+    return array;
 }
 
 static index_t save_module_node(data_t *data, const hlir_t *hlir) {
@@ -293,6 +359,32 @@ static index_t save_value_node(data_t *data, const hlir_t *hlir) {
     return write_entry(data, HLIR_VALUE, values);
 }
 
+static index_t save_digit_literal_node(data_t *data, const hlir_t *hlir) {
+    index_t span = save_span(data, hlir->node);
+    index_t type = save_node(data, typeof_hlir(hlir));
+    
+    value_t values[] = {
+        [DIGIT_LITERAL_SPAN] = reference_value(span),
+        [DIGIT_LITERAL_TYPE] = reference_value(type),
+        [DIGIT_LITERAL_VALUE] = digit_value(hlir->digit)
+    };
+
+    return write_entry(data, HLIR_DIGIT_LITERAL, values);
+}
+
+static index_t save_digit_node(data_t *data, const hlir_t *hlir) {
+    index_t span = save_span(data, hlir->node);
+    
+    value_t values[] = {
+        [DIGIT_SPAN] = reference_value(span),
+        [DIGIT_NAME] = string_value(hlir->name),
+        [DIGIT_SIGN] = int_value(hlir->sign),
+        [DIGIT_WIDTH] = int_value(hlir->width)
+    };
+
+    return write_entry(data, HLIR_DIGIT, values);
+}
+
 static index_t save_node(data_t *data, const hlir_t *hlir) {
     switch (hlir->type) {
     case HLIR_MODULE:
@@ -300,16 +392,33 @@ static index_t save_node(data_t *data, const hlir_t *hlir) {
     case HLIR_VALUE:
         return save_value_node(data, hlir);
 
+    case HLIR_DIGIT_LITERAL:
+        return save_digit_literal_node(data, hlir);
+
+    case HLIR_DIGIT:
+        return save_digit_node(data, hlir);
+
+    case HLIR_TYPE:
+        return NULL_INDEX;
+
     default:
-        return (index_t){ SIZE_MAX, SIZE_MAX };
+        ctu_assert(data->header.reports, "saving unknown node type %d", hlir->type);
+        return NULL_INDEX;
     }
 }
 
-void save_module(reports_t *reports, hlir_t *module, const char *path) {
+void save_module(reports_t *reports, save_settings_t *settings, hlir_t *module, const char *path) {
+    scan_t *scan = module->node->scan;
+
     value_t values[] = {
-        { .string = "hlir" },
-        { .string = ctu_realpath(path) }
+        [HEADER_LANGUAGE] = string_value(scan->language),
+        [HEADER_PATH] = string_value(scan->path),
+        [HEADER_SOURCE] = string_value(NULL)
     };
+
+    if (settings->embed_source) {
+        values[HEADER_SOURCE] = string_value(scan_text(scan));
+    }
 
     record_t record = {
         .layout = &HEADER_LAYOUT,

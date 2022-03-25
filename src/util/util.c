@@ -243,16 +243,16 @@ static bucket_t *bucket_new(const char *key, void *value) {
     return entry;
 }
 
-HOT static void *entry_get(const bucket_t *entry, const char *key) {
+HOT static void *entry_get(const bucket_t *entry, const char *key, void *other) {
     if (entry->key && streq(entry->key, key)) {
         return entry->value;
     }
 
     if (entry->next) {
-        return entry_get(entry->next, key);
+        return entry_get(entry->next, key, other);
     }
 
-    return CTU_NO_VALUE;
+    return other;
 }
 
 static size_t ptrhash(uintptr_t key) {
@@ -346,9 +346,13 @@ map_t *map_new(map_size_t size) {
     return map;
 }
 
+void *map_get_default(map_t *map, const char *key, void *other) {
+    bucket_t *bucket = map_bucket(map, key);
+    return entry_get(bucket, key, other);
+}
+
 void *map_get(map_t *map, const char *key) {
-    bucket_t *entry = map_bucket(map, key);
-    return entry_get(entry, key);
+    return map_get_default(map, key, NULL);
 }
 
 void map_set(map_t *map, const char *key, void *value) {

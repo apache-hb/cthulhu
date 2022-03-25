@@ -122,6 +122,8 @@ map_t *optimal_map(size_t size);
  */
 void *map_get(map_t *map, const char *key) HOT CONSTFN NONULL;
 
+void *map_get_default(map_t *map, const char *key, void *other) HOT CONSTFN NOTNULL(1, 2);
+
 /**
  * set or overwrite a value in a map
  * 

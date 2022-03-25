@@ -31,6 +31,9 @@ src = [
     'src/emit/json.c',
     'src/emit/c89.c',
 
+    # debugging views
+    'src/debug/hlir.c',
+
     # serialization
     'src/loader/load.c',
     'src/loader/save.c',
@@ -71,6 +74,7 @@ args = []
 deps = [ gmp, json, math ]
 lexargs = []
 
+tools = get_option('tools')
 tuning = get_option('tuning')
 if tuning
     args += [ '-DENABLE_TUNING=1' ]
@@ -145,6 +149,12 @@ parse = generator(bison,
 
 if tuning
     tune = executable('tune-map', [ 'tools/tune-map.c' ],
+        dependencies : generic
+    )
+endif
+
+if tools
+    executable('load-hlir', [ 'tools/load-hlir.c' ],
         dependencies : generic
     )
 endif

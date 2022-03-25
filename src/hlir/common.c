@@ -73,3 +73,26 @@ const hlir_t *closure_result(const hlir_t *self) {
 
     return self->result;
 }
+
+static const char *SIGN_NAMES[SIGN_TOTAL] = {
+    [SIGN_DEFAULT] = "default",
+    [SIGN_UNSIGNED] = "unsigned",
+    [SIGN_SIGNED] = "signed"
+};
+
+static const char *DIGIT_NAMES[DIGIT_TOTAL] = {
+    [DIGIT_CHAR] = "char",
+    [DIGIT_SHORT] = "short",
+    [DIGIT_INT] = "int",
+    [DIGIT_LONG] = "long",
+    [DIGIT_SIZE] = "size",
+    [DIGIT_PTR] = "intptr"
+};
+
+const char *sign_name(sign_t sign) {
+    return SIGN_NAMES[sign];
+}
+
+const char *digit_name(digit_t digit) {
+    return DIGIT_NAMES[digit];
+}

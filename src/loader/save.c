@@ -3,16 +3,23 @@
 #include <string.h>
 #include <errno.h>
 
-static offset_t write_string(stream_t *vec, const char *str) {
-    size_t len = strlen(str) + 1;
-    size_t result = stream_len(vec);
+static offset_t write_string(data_t *data, const char *str) {
+    if (str == NULL) { return UINT64_MAX; }
 
-    stream_write_bytes(vec, str, len);
+    uintptr_t offset = (uintptr_t)map_get_default(data->cache, str, (void*)UINTPTR_MAX);
+    if (offset != UINTPTR_MAX) { return offset; }
+
+    size_t len = strlen(str) + 1;
+    size_t result = stream_len(data->strings);
+
+    stream_write_bytes(data->strings, str, len);
+
+    map_set(data->cache, str, (void*)result);
 
     return result;
 }
 
-static void write_data(stream_t *strings, stream_t *dst, layout_t layout, const value_t *values) {
+static void write_data(data_t *data, stream_t *dst, layout_t layout, const value_t *values) {
     size_t len = layout.length;
 
     for (size_t i = 0; i < len; i++) {
@@ -24,12 +31,12 @@ static void write_data(stream_t *strings, stream_t *dst, layout_t layout, const 
         
         switch (field) {
         case FIELD_STRING:
-            str = write_string(strings, val.string);
+            str = write_string(data, val.string);
             stream_write_bytes(dst, &str, sizeof(offset_t));
             break;
         case FIELD_INT:
             gmp = mpz_get_str(NULL, DIGIT_BASE, val.digit);
-            str = write_string(strings, gmp);
+            str = write_string(data, gmp);
             stream_write_bytes(dst, &str, sizeof(offset_t));
             break;
         case FIELD_BOOL:
@@ -53,6 +60,7 @@ void begin_save(data_t *out, header_t header) {
     out->strings = stream_new(0x1000);
     out->arrays = stream_new(0x1000);
     out->stream = stream_new(0x1000);
+    out->cache = map_new(MAP_MASSIVE);
 
     out->records = ctu_malloc(sizeof(stream_t*) * len);
     out->counts = ctu_malloc(sizeof(size_t) * len);
@@ -62,7 +70,7 @@ void begin_save(data_t *out, header_t header) {
         out->counts[i] = 0;
     }
 
-    write_data(out->strings, out->stream, *header.header.layout, header.header.values);
+    write_data(out, out->stream, *header.header.layout, header.header.values);
 }
 
 void end_save(data_t *out) {
@@ -72,12 +80,13 @@ void end_save(data_t *out) {
     size_t subheader = layout_size(*config.header.layout);
 
     stream_write(out->strings, "");
-    size_t nstrings = stream_len(out->strings);
-    size_t narrays = stream_len(out->arrays);
-    size_t ncounts = (sizeof(offset_t) * len);
-    size_t noffsets = (sizeof(offset_t) * len);
-    size_t nheader = sizeof(basic_header_t) + subheader;
-    size_t offset = nheader + noffsets + ncounts + nstrings + narrays;
+
+    size_t nstrings = stream_len(out->strings); // total length of the string table
+    size_t narrays = stream_len(out->arrays); // total length of the array table
+    size_t ncounts = (sizeof(offset_t) * len); // number of bytes used for counts
+    size_t noffsets = (sizeof(offset_t) * len); // number of bytes used for offsets
+    size_t nheader = sizeof(basic_header_t) + subheader; // number of bytes used for the full header
+    size_t offset = nheader + noffsets + ncounts + nstrings + narrays; // total offset of the user data
 
     basic_header_t basic = {
         .magic = FILE_MAGIC,
@@ -86,8 +95,6 @@ void end_save(data_t *out) {
         .strings = nheader + noffsets + ncounts,
         .arrays = nheader + noffsets + ncounts + nstrings,
     };
-
-    logverbose("header(strings=%llu,arrays=%llu)", basic.strings, basic.arrays);
 
     // write our basic header
     stream_write_bytes(header, &basic, sizeof(basic_header_t));
@@ -101,7 +108,7 @@ void end_save(data_t *out) {
     }
 
     // write the offset array
-    size_t cursor = offset;
+    offset_t cursor = offset;
     for (size_t i = 0; i < len; i++) {
         stream_write_bytes(header, &cursor, sizeof(offset_t));
         cursor += (out->counts[i] * out->sizes[i]);
@@ -132,7 +139,7 @@ index_t write_entry(data_t *out, type_t type, const value_t *values) {
     stream_t *dst = out->records[type];
     layout_t layout = out->header.format->layouts[type];
 
-    write_data(out->strings, dst, layout, values);
+    write_data(out, dst, layout, values);
 
     offset_t offset = out->counts[type]++;
     index_t index = { type, offset };

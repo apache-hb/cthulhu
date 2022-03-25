@@ -23,7 +23,6 @@ static void print_help(const char **argv) {
     printf("  -v, --version     : print version information\n");
     printf("  -V, --verbose     : enable verbose logging\n");
     printf("  -m, --module      : set module output name\n");
-    printf("  -bc, --bytecode   : compile to bytecode\n");
     printf("  -o, --output      : set output file name\n");
     printf("  -t, --target      : set output format\n");
     printf("                    | options: json, c89\n");
@@ -33,11 +32,19 @@ static void print_help(const char **argv) {
     printf("  -Wlimit=<digit>   : set warning limit\n");
     printf("                   | options: 0 = infinite\n");
     printf("                   | default: %d\n", DEFAULT_REPORT_LIMIT);
+    printf("---\n");
+    printf("bytecode options:\n");
+    printf("  -bc, --bytecode   : enable bytecode generation\n");
+    printf("  -Bembed           : embed source in bytecode\n");
+}
+
+static bool streq_nullable(const char *lhs, const char *rhs) {
+    return lhs != NULL && rhs != NULL && streq(lhs, rhs);
 }
 
 static bool find_arg(int argc, const char **argv, const char *arg, const char *brief) {
     for (int i = 0; i < argc; i++) {
-        if (streq(argv[i], arg) || streq(argv[i], brief)) {
+        if (streq_nullable(argv[i], arg) || streq_nullable(argv[i], brief)) {
             return true;
         }
     }
@@ -175,6 +182,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (status != 0) { return status; }
 
     bool bytecode = find_arg(argc, argv, "--bytecode", "-bc");
+    bool embed_bc = find_arg(argc, argv, "-Bembed", NULL);
 
     const char *mod_name = get_arg(reports, argc, argv, "--module", "-m");
     const char *out = get_arg(reports, argc, argv, "--output", "-out");
@@ -229,7 +237,9 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (status != 0) { return status; }
 
     if (bytecode) {
-        save_module(reports, hlir, out);
+        save_settings_t settings = { .embed_source = embed_bc };
+
+        save_module(reports, &settings, hlir, out);
         status = end_reports(reports, limit, "bytecode generation");
         
         hlir = load_module(reports, out);

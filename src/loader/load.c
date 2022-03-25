@@ -10,16 +10,12 @@ static void read_bytes(data_t *data, void *dst, size_t *cursor, size_t size) {
 static char *read_string(data_t *in, size_t* cursor) {
     offset_t offset;
     read_bytes(in, &offset, cursor, sizeof(offset_t));
-    char *str = ctu_strdup(in->data + in->string + offset);
+    if (offset == UINT64_MAX) { return NULL; }
 
-    logverbose("string@%x = `%s`", in->string + offset, str);
-
-    return str;
+    return ctu_strdup(in->data + in->string + offset);
 }
 
 static value_t read_value(data_t *in, field_t field, size_t *offset) {
-    logverbose("read(type=%d,offset=%zu)", field, *offset);
-
     char *tmp;
     value_t value;
 
@@ -71,8 +67,6 @@ bool begin_load(data_t *in, header_t header) {
     in->string = basic.strings;
     in->array = basic.arrays;
 
-    logverbose("loaded(strings=%llu,array=%llu)", basic.strings, basic.arrays);
-
     if (basic.magic != FILE_MAGIC) {
         report(header.reports, ERROR, NULL, "invalid magic number. found %x, expected %x", basic.magic, FILE_MAGIC);
         return false;
@@ -94,6 +88,7 @@ bool begin_load(data_t *in, header_t header) {
     }
 
     read_data(in, &header.header, cursor);
+    cursor += layout_size(*header.header.layout);
 
     offset_t *counts = ctu_malloc(sizeof(offset_t) * len);
     offset_t *offsets = ctu_malloc(sizeof(offset_t) * len);
@@ -113,20 +108,18 @@ void end_load(data_t *in) {
 
 bool read_entry(data_t *in, index_t index, value_t *values) {
     size_t type = index.type;
-    size_t where = in->offsets[type] + (index.offset * in->sizes[type]);
+    size_t offset = in->offsets[type] + (index.offset * in->sizes[type]);
     layout_t layout = in->header.format->layouts[type];
     size_t len = layout.length;
 
-    logverbose("read(offset=%zu, size=%zu)", in->offsets[type], in->sizes[type]);
-
     for (size_t i = 0; i < len; i++) {
-        values[i] = read_value(in, layout.fields[i], &where);
+        values[i] = read_value(in, layout.fields[i], &offset);
     }
 
     return true;
 }
 
 bool read_array(data_t *in, array_t array, index_t *indices) {
-    memcpy(indices, in->data + array.offset, sizeof(index_t) * array.length);
+    memcpy(indices, in->data + in->array + array.offset, sizeof(index_t) * array.length);
     return true;
 }

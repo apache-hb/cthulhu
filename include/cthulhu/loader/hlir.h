@@ -1,5 +1,9 @@
 #include "loader.h"
 
+typedef struct {
+    bool embed_source;
+} save_settings_t;
+
 /**
  * @brief attempt to load a module from a given file
  * 
@@ -16,4 +20,4 @@ hlir_t *load_module(reports_t *reports, const char *path);
  * @param module the module to save
  * @param path where to save the module
  */
-void save_module(reports_t *reports, hlir_t *module, const char *path);
+void save_module(reports_t *reports, save_settings_t *settings, hlir_t *module, const char *path);
