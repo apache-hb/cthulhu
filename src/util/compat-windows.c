@@ -1,8 +1,13 @@
 #include "compat.h"
-#include "util.h"
+#include "cthulhu/util/util.h"
+
+// god would have given us a better way to do this
+#pragma warning(push, 0)
 
 #include <stdio.h>
 #include <windows.h>
+
+#pragma warning(pop)
 
 FILE *compat_fopen(const char *path, const char *mode) {
     FILE *file;

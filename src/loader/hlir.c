@@ -19,7 +19,14 @@ typedef enum {
     SOURCE_TOTAL
 } source_kind_t;
 
-// header data
+#define INDICES(SPAN, ...) \
+    enum { SPAN, __VA_ARGS__ }; \
+    STATIC_ASSERT(SPAN == 0, "span: " STR(SPAN) " must always come first");
+
+///
+/// non-hlir types
+///
+
 enum { HEADER_LANGUAGE, HEADER_PATH, HEADER_SOURCE };
 static const field_t HEADER_FIELDS[] = {
     [HEADER_LANGUAGE] = FIELD("language", FIELD_STRING),
@@ -28,7 +35,6 @@ static const field_t HEADER_FIELDS[] = {
 };
 static const layout_t HEADER_LAYOUT = LAYOUT("header", HEADER_FIELDS);
 
-// span data
 enum { SPAN_FIRST_LINE, SPAN_FIRST_COLUMN, SPAN_LAST_LINE, SPAN_LAST_COLUMN };
 static const field_t SPAN_FIELDS[] = {
     [SPAN_FIRST_LINE] = FIELD("first-line", FIELD_INT),
@@ -38,15 +44,189 @@ static const field_t SPAN_FIELDS[] = {
 };
 static const layout_t SPAN_LAYOUT = LAYOUT("span", SPAN_FIELDS);
 
-enum { MODULE_SPAN, MODULE_NAME, MODULE_GLOBALS };
-static const field_t MODULE_FIELDS[] = {
-    [MODULE_SPAN] = FIELD("span", FIELD_REFERENCE),
-    [MODULE_NAME] = FIELD("name", FIELD_STRING),
-    [MODULE_GLOBALS] = FIELD("globals", FIELD_ARRAY)
+enum { ATTRIB_LINKAGE };
+static const field_t ATTRIB_FIELDS[] = {
+    [ATTRIB_LINKAGE] = FIELD("linkage", FIELD_INT)
 };
-static const layout_t MODULE_LAYOUT = LAYOUT("module", MODULE_FIELDS);
+static const layout_t ATTRIB_LAYOUT = LAYOUT("attributes", ATTRIB_FIELDS);
 
-enum { VALUE_SPAN, VALUE_ATTRIBS, VALUE_NAME, VALUE_TYPE, VALUE_INIT };
+///
+/// expressions
+///
+
+INDICES(DIGIT_LITERAL_SPAN, DIGIT_LITERAL_TYPE, DIGIT_LITERAL_VALUE);
+static const field_t DIGIT_LITERAL_FIELDS[] = {
+    [DIGIT_LITERAL_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [DIGIT_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [DIGIT_LITERAL_VALUE] = FIELD("value", FIELD_INT)
+};
+static const layout_t DIGIT_LITERAL_LAYOUT = LAYOUT("digit-literal", DIGIT_LITERAL_FIELDS);
+
+INDICES(BOOL_LITERAL_SPAN, BOOL_LITERAL_TYPE, BOOL_LITERAL_VALUE);
+static const field_t BOOL_LITERAL_FIELDS[] = {
+    [BOOL_LITERAL_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [BOOL_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [BOOL_LITERAL_VALUE] = FIELD("value", FIELD_BOOL)
+};
+static const layout_t BOOL_LITERAL_LAYOUT = LAYOUT("bool-literal", BOOL_LITERAL_FIELDS);
+
+INDICES(STRING_LITERAL_SPAN, STRING_LITERAL_TYPE, STRING_LITERAL_VALUE);
+static const field_t STRING_LITERAL_FIELDS[] = {
+    [STRING_LITERAL_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [STRING_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [STRING_LITERAL_VALUE] = FIELD("value", FIELD_STRING)
+};
+static const layout_t STRING_LITERAL_LAYOUT = LAYOUT("string-literal", STRING_LITERAL_FIELDS);
+
+INDICES(NAME_SPAN, NAME_EXPR);
+static const field_t NAME_FIELDS[] = {
+    [NAME_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [NAME_EXPR] = FIELD("expr", FIELD_REFERENCE)
+};
+static const layout_t NAME_LAYOUT = LAYOUT("name", NAME_FIELDS);
+
+INDICES(UNARY_SPAN, UNARY_TYPE, UNARY_OP, UNARY_EXPR);
+static const field_t UNARY_FIELDS[] = {
+    [UNARY_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [UNARY_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [UNARY_OP] = FIELD("op", FIELD_INT),
+    [UNARY_EXPR] = FIELD("expr", FIELD_REFERENCE)
+};
+static const layout_t UNARY_LAYOUT = LAYOUT("unary", UNARY_FIELDS);
+
+INDICES(BINARY_SPAN, BINARY_TYPE, BINARY_OP, BINARY_LHS, BINARY_RHS);
+static const field_t BINARY_FIELDS[] = {
+    [BINARY_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [BINARY_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [BINARY_OP] = FIELD("op", FIELD_INT),
+    [BINARY_LHS] = FIELD("lhs", FIELD_REFERENCE),
+    [BINARY_RHS] = FIELD("rhs", FIELD_REFERENCE)
+};
+static const layout_t BINARY_LAYOUT = LAYOUT("binary", BINARY_FIELDS);
+
+INDICES(COMPARE_SPAN, COMPARE_TYPE, COMPARE_OP, COMPARE_LHS, COMPARE_RHS);
+static const field_t COMPARE_FIELDS[] = {
+    [COMPARE_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [COMPARE_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [COMPARE_OP] = FIELD("op", FIELD_INT),
+    [COMPARE_LHS] = FIELD("lhs", FIELD_REFERENCE),
+    [COMPARE_RHS] = FIELD("rhs", FIELD_REFERENCE)
+};
+static const layout_t COMPARE_LAYOUT = LAYOUT("compare", COMPARE_FIELDS);
+
+INDICES(CALL_SPAN, CALL_EXPR, CALL_ARGS);
+static const field_t CALL_FIELDS[] = {
+    [CALL_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [CALL_EXPR] = FIELD("expr", FIELD_REFERENCE),
+    [CALL_ARGS] = FIELD("args", FIELD_ARRAY)
+};
+static const layout_t CALL_LAYOUT = LAYOUT("call", CALL_FIELDS);
+
+///
+/// statements
+///
+INDICES(STMTS_SPAN, STMTS_OPS);
+static const field_t STMTS_FIELDS[] = {
+    [STMTS_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [STMTS_OPS] = FIELD("ops", FIELD_ARRAY)
+};
+static const layout_t STMTS_LAYOUT = LAYOUT("stmts", STMTS_FIELDS);
+
+INDICES(BRANCH_SPAN, BRANCH_COND, BRANCH_THEN, BRANCH_ELSE);
+static const field_t BRANCH_FIELDS[] = {
+    [BRANCH_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [BRANCH_COND] = FIELD("cond", FIELD_REFERENCE),
+    [BRANCH_THEN] = FIELD("then", FIELD_REFERENCE),
+    [BRANCH_ELSE] = FIELD("else", FIELD_REFERENCE)
+};
+static const layout_t BRANCH_LAYOUT = LAYOUT("branch", BRANCH_FIELDS);
+
+INDICES(LOOP_SPAN, LOOP_COND, LOOP_BODY, LOOP_ELSE);
+static const field_t LOOP_FIELDS[] = {
+    [LOOP_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [LOOP_COND] = FIELD("cond", FIELD_REFERENCE),
+    [LOOP_BODY] = FIELD("body", FIELD_REFERENCE),
+    [LOOP_ELSE] = FIELD("else", FIELD_REFERENCE)
+};
+static const layout_t LOOP_LAYOUT = LAYOUT("loop", LOOP_FIELDS);
+
+INDICES(ASSIGN_SPAN, ASSIGN_DST, ASSIGN_SRC);
+static const field_t ASSIGN_FIELDS[] = {
+    [ASSIGN_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [ASSIGN_DST] = FIELD("dst", FIELD_REFERENCE),
+    [ASSIGN_SRC] = FIELD("src", FIELD_REFERENCE)
+};
+static const layout_t ASSIGN_LAYOUT = LAYOUT("assign", ASSIGN_FIELDS);
+
+///
+/// types
+///
+
+INDICES(DIGIT_SPAN, DIGIT_NAME, DIGIT_SIGN, DIGIT_WIDTH);
+static const field_t DIGIT_FIELDS[] = {
+    [DIGIT_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [DIGIT_NAME] = FIELD("name", FIELD_STRING),
+    [DIGIT_SIGN] = FIELD("sign", FIELD_INT),
+    [DIGIT_WIDTH] = FIELD("width", FIELD_INT)
+};
+static const layout_t DIGIT_LAYOUT = LAYOUT("digit", DIGIT_FIELDS);
+
+INDICES(BOOL_SPAN, BOOL_TYPE, BOOL_NAME);
+static const field_t BOOL_FIELDS[] = {
+    [BOOL_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [BOOL_NAME] = FIELD("name", FIELD_STRING)
+};
+static const layout_t BOOL_LAYOUT = LAYOUT("bool", BOOL_FIELDS);
+
+INDICES(STRING_SPAN, STRING_NAME);
+static const field_t STRING_FIELDS[] = {
+    [STRING_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [STRING_NAME] = FIELD("name", FIELD_STRING)
+};
+static const layout_t STRING_LAYOUT = LAYOUT("string", STRING_FIELDS);
+
+INDICES(VOID_SPAN, VOID_NAME);
+static const field_t VOID_FIELDS[] = {
+    [VOID_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [VOID_NAME] = FIELD("name", FIELD_STRING)
+};
+static const layout_t VOID_LAYOUT = LAYOUT("void", VOID_FIELDS);
+
+INDICES(CLOSURE_SPAN, CLOSURE_NAME, CLOSURE_ARGS, CLOSURE_RESULT, CLOSURE_VARIADIC);
+static const field_t CLOSURE_FIELDS[] = {
+    [CLOSURE_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [CLOSURE_NAME] = FIELD("name", FIELD_STRING),
+    [CLOSURE_ARGS] = FIELD("args", FIELD_ARRAY),
+    [CLOSURE_RESULT] = FIELD("result", FIELD_REFERENCE),
+    [CLOSURE_VARIADIC] = FIELD("variadic", FIELD_BOOL)
+};
+static const layout_t CLOSURE_LAYOUT = LAYOUT("closure", CLOSURE_FIELDS);
+
+INDICES(POINTER_SPAN, POINTER_NAME, POINTER_TYPE, POINTER_INDEXABLE);
+static const field_t POINTER_FIELDS[] = {
+    [POINTER_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [POINTER_NAME] = FIELD("name", FIELD_STRING),
+    [POINTER_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [POINTER_INDEXABLE] = FIELD("indexable", FIELD_BOOL)
+};
+static const layout_t POINTER_LAYOUT = LAYOUT("pointer", POINTER_FIELDS);
+
+INDICES(ARRAY_SPAN, ARRAY_NAME, ARRAY_TYPE, ARRAY_LENGTH);
+static const field_t ARRAY_FIELDS[] = {
+    [ARRAY_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [ARRAY_NAME] = FIELD("name", FIELD_STRING),
+    [ARRAY_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [ARRAY_LENGTH] = FIELD("length", FIELD_INT)
+};
+static const layout_t ARRAY_LAYOUT = LAYOUT("array", ARRAY_FIELDS);
+
+// HLIR_TYPE is omitted
+
+///
+/// declarations
+///
+
+INDICES(VALUE_SPAN, VALUE_ATTRIBS, VALUE_NAME, VALUE_TYPE, VALUE_INIT);
 static const field_t VALUE_FIELDS[] = {
     [VALUE_SPAN] = FIELD("span", FIELD_REFERENCE),
     [VALUE_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
@@ -56,60 +236,68 @@ static const field_t VALUE_FIELDS[] = {
 };
 static const layout_t VALUE_LAYOUT = LAYOUT("value", VALUE_FIELDS);
 
-enum { ATTRIB_LINKAGE };
-static const field_t ATTRIB_FIELDS[] = {
-    [ATTRIB_LINKAGE] = FIELD("linkage", FIELD_INT)
+INDICES(FUNCTION_SPAN, FUNCTION_ATTRIBS, FUNCTION_NAME, FUNCTION_TYPE, FUNCTION_LOCALS, FUNCTION_BODY);
+static const field_t FUNCTION_FIELDS[] = {
+    [FUNCTION_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [FUNCTION_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
+    [FUNCTION_NAME] = FIELD("name", FIELD_STRING),
+    [FUNCTION_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [FUNCTION_LOCALS] = FIELD("locals", FIELD_ARRAY),
+    [FUNCTION_BODY] = FIELD("body", FIELD_REFERENCE)
 };
-static const layout_t ATTRIB_LAYOUT = LAYOUT("attributes", ATTRIB_FIELDS);
+static const layout_t FUNCTION_LAYOUT = LAYOUT("function", FUNCTION_FIELDS);
 
-enum { DIGIT_LITERAL_SPAN, DIGIT_LITERAL_TYPE, DIGIT_LITERAL_VALUE };
-static const field_t DIGIT_LITERAL_FIELDS[] = {
-    [DIGIT_LITERAL_SPAN] = FIELD("span", FIELD_REFERENCE),
-    [DIGIT_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
-    [DIGIT_LITERAL_VALUE] = FIELD("value", FIELD_INT)
+INDICES(MODULE_SPAN, MODULE_NAME, MODULE_TYPES, MODULE_GLOBALS, MODULE_FUNCTIONS);
+static const field_t MODULE_FIELDS[] = {
+    [MODULE_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [MODULE_NAME] = FIELD("name", FIELD_STRING),
+    [MODULE_TYPES] = FIELD("types", FIELD_ARRAY),
+    [MODULE_GLOBALS] = FIELD("globals", FIELD_ARRAY),
+    [MODULE_FUNCTIONS] = FIELD("functions", FIELD_ARRAY)
 };
-static const layout_t DIGIT_LITERAL_LAYOUT = LAYOUT("digit-literal", DIGIT_LITERAL_FIELDS);
+static const layout_t MODULE_LAYOUT = LAYOUT("module", MODULE_FIELDS);
 
-enum { DIGIT_SPAN, DIGIT_NAME, DIGIT_SIGN, DIGIT_WIDTH };
-static const field_t DIGIT_FIELDS[] = {
-    [DIGIT_SPAN] = FIELD("span", FIELD_REFERENCE),
-    [DIGIT_NAME] = FIELD("name", FIELD_STRING),
-    [DIGIT_SIGN] = FIELD("sign", FIELD_INT),
-    [DIGIT_WIDTH] = FIELD("width", FIELD_INT)
-};
-static const layout_t DIGIT_LAYOUT = LAYOUT("digit", DIGIT_FIELDS);
+///
+/// final type table
+///
 
-#if 0
-enum { STRING_LITERAL_SPAN, STRING_LITERAL_TYPE, STRING_LITERAL_VALUE };
-static const field_t STRING_FIELDS[] = {
-    [STRING_LITERAL_SPAN] = FIELD("span", FIELD_REFERENCE),
-    [STRING_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
-    [STRING_LITERAL_VALUE] = FIELD("value", FIELD_STRING)
-};
-static const layout_t STRING_LITERAL_LAYOUT = LAYOUT("string-literal", STRING_FIELDS);
-#endif
-
-static const layout_t TYPES[LAYOUTS_TOTAL] = {
+static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
     [SPAN_INDEX] = SPAN_LAYOUT,
     [ATTRIBUTE_INDEX] = ATTRIB_LAYOUT,
 
-    [HLIR_MODULE] = MODULE_LAYOUT,
+    [HLIR_DIGIT_LITERAL] = DIGIT_LITERAL_LAYOUT,
+    [HLIR_BOOL_LITERAL] = BOOL_LITERAL_LAYOUT,
+    [HLIR_STRING_LITERAL] = STRING_LITERAL_LAYOUT,
+
+    [HLIR_NAME] = NAME_LAYOUT,
+    [HLIR_UNARY] = UNARY_LAYOUT,
+    [HLIR_BINARY] = BINARY_LAYOUT,
+    [HLIR_COMPARE] = COMPARE_LAYOUT,
+    [HLIR_CALL] = CALL_LAYOUT,
+
+    [HLIR_STMTS] = STMTS_LAYOUT,
+    [HLIR_BRANCH] = BRANCH_LAYOUT,
+    [HLIR_LOOP] = LOOP_LAYOUT,
+    [HLIR_ASSIGN] = ASSIGN_LAYOUT,
+
+    [HLIR_DIGIT] = DIGIT_LAYOUT,
+    [HLIR_BOOL] = BOOL_LAYOUT,
+    [HLIR_STRING] = STRING_LAYOUT,
+    [HLIR_VOID] = VOID_LAYOUT,
+    [HLIR_CLOSURE] = CLOSURE_LAYOUT,
+    [HLIR_POINTER] = POINTER_LAYOUT,
+    [HLIR_ARRAY] = ARRAY_LAYOUT,
+    
     [HLIR_VALUE] = VALUE_LAYOUT,
+    [HLIR_FUNCTION] = FUNCTION_LAYOUT,
 
-    [HLIR_DIGIT_LITERAL] = DIGIT_LITERAL_LAYOUT,
-
-    [HLIR_DIGIT] = DIGIT_LAYOUT
-
-#if 0
-    [HLIR_DIGIT_LITERAL] = DIGIT_LITERAL_LAYOUT,
-    [HLIR_STRING_LITERAL] = STRING_LITERAL_LAYOUT
-#endif
+    [HLIR_MODULE] = MODULE_LAYOUT
 };
 
-static const format_t GLOBAL = FORMAT(HEADER_LAYOUT, TYPES);
+static const format_t GLOBAL = FORMAT(HEADER_LAYOUT, ALL_TYPES);
 
 #define HLIR_SUBMAGIC 0x484C4952 // 'HLIR'
-#define HLIR_VERSION NEW_VERSION(0, 0, 1)
+#define HLIR_VERSION NEW_VERSION(0, 1, 0)
 
 ///
 /// hlir loading 
@@ -135,14 +323,27 @@ static node_t *load_span(load_t *load, index_t index) {
     return node_new(load->scan, where);
 }
 
-static hlir_attributes_t *load_attributes(load_t *load, index_t index) {
+static hlir_attributes_t *load_attributes(load_t *load, value_t value) {
     value_t values[FIELDLEN(ATTRIB_FIELDS)];
-    read_entry(load->data, index, values);
+    read_entry(load->data, get_reference(value), values);
 
     return hlir_new_attributes(get_int(values[ATTRIB_LINKAGE]));
 }
 
 static hlir_t *load_node(load_t *load, index_t index, const char *trace);
+
+static hlir_t *load_opt_node(load_t *load, index_t index, const char *trace) {
+    if (index.type == UINT32_MAX) { return NULL; }
+
+    return load_node(load, index, trace);
+}
+
+static node_t *get_span(load_t *load, value_t *values) {
+    return load_span(load, get_reference(values[0])); // the ENUM_FIELDS macro makes sure that values[0] is a span
+}
+
+#define GET_REF(load, values, name) load_node(load, get_reference(values[name]), "loading " #name)
+#define GET_REF_OPT(load, values, name) load_opt_node(load, get_reference(values[name]), "loading " #name)
 
 static vector_t *load_array(load_t *load, array_t array) {
     size_t len = array.length;
@@ -159,78 +360,323 @@ static vector_t *load_array(load_t *load, array_t array) {
     return vec;
 }
 
-static hlir_t *load_module_node(load_t *load, index_t index) {
-    value_t values[FIELDLEN(MODULE_FIELDS)];
+static vector_t *get_arr(load_t *load, value_t value) {
+    return load_array(load, get_array(value));
+}
+
+// expressions
+
+static hlir_t *load_digit_literal_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(DIGIT_LITERAL_FIELDS)];
     read_entry(load->data, index, values);
 
-    const node_t *node = load_span(load, get_reference(values[MODULE_SPAN]));
-    const char *name = get_string(values[MODULE_NAME]);
-    vector_t *globals = load_array(load, get_array(values[MODULE_GLOBALS]));
+    mpz_t digit;
+    get_digit(digit, values[DIGIT_LITERAL_VALUE]);
 
-    hlir_t *hlir = hlir_new_module(node, name);
-    hlir_build_module(hlir, globals, vector_of(0), vector_of(0));
+    return hlir_digit_literal(
+        get_span(load, values), 
+        GET_REF(load, values, DIGIT_LITERAL_TYPE), 
+        digit
+    );
+}
 
-    return hlir;
+static hlir_t *load_bool_literal_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(BOOL_LITERAL_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_bool_literal(
+        get_span(load, values), 
+        GET_REF(load, values, BOOL_LITERAL_TYPE), 
+        get_bool(values[BOOL_LITERAL_VALUE])
+    );
+}
+
+static hlir_t *load_string_literal_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(STRING_LITERAL_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_string_literal(
+        get_span(load, values), 
+        GET_REF(load, values, STRING_LITERAL_TYPE), 
+        get_string(values[STRING_LITERAL_VALUE])
+    );
+}
+
+static hlir_t *load_name_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(NAME_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_name(
+        get_span(load, values),
+        GET_REF(load, values, NAME_EXPR)
+    );
+}
+
+static hlir_t *load_unary_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(UNARY_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_unary(
+        get_span(load, values),
+        GET_REF(load, values, UNARY_TYPE),
+        GET_REF(load, values, UNARY_EXPR),
+        get_int(values[UNARY_OP])
+    );
+}
+
+static hlir_t *load_binary_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(BINARY_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_binary(
+        get_span(load, values),
+        GET_REF(load, values, BINARY_TYPE),
+        get_int(values[BINARY_OP]),
+        GET_REF(load, values, BINARY_LHS),
+        GET_REF(load, values, BINARY_RHS)
+    );
+}
+
+static hlir_t *load_compare_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(COMPARE_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_compare(
+        get_span(load, values),
+        GET_REF(load, values, COMPARE_TYPE),
+        get_int(values[COMPARE_OP]),
+        GET_REF(load, values, COMPARE_LHS),
+        GET_REF(load, values, COMPARE_RHS)
+    );
+}
+
+static hlir_t *load_call_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(CALL_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_call(
+        get_span(load, values),
+        GET_REF(load, values, CALL_EXPR),
+        get_arr(load, values[CALL_ARGS])
+    );
+}
+
+// statements
+
+static hlir_t *load_stmts_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(STMTS_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_stmts(
+        get_span(load, values),
+        get_arr(load, values[STMTS_OPS])
+    );
+}
+
+static hlir_t *load_branch_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(BRANCH_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_branch(
+        get_span(load, values),
+        GET_REF(load, values, BRANCH_COND),
+        GET_REF(load, values, BRANCH_THEN),
+        GET_REF_OPT(load, values, BRANCH_ELSE)
+    );
+}
+
+static hlir_t *load_loop_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(LOOP_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_loop(
+        get_span(load, values),
+        GET_REF(load, values, LOOP_COND),
+        GET_REF(load, values, LOOP_BODY),
+        GET_REF_OPT(load, values, LOOP_ELSE)
+    );
+}
+
+static hlir_t *load_assign_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(ASSIGN_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_assign(
+        get_span(load, values),
+        GET_REF(load, values, ASSIGN_DST),
+        GET_REF(load, values, ASSIGN_SRC)
+    );
+}
+
+// types
+
+static hlir_t *load_digit_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(DIGIT_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_digit(
+        get_span(load, values), 
+        get_string(values[DIGIT_NAME]), 
+        get_int(values[DIGIT_SIGN]), 
+        get_int(values[DIGIT_WIDTH])
+    );
+}
+
+static hlir_t *load_bool_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(BOOL_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_bool(
+        get_span(load, values), 
+        get_string(values[BOOL_NAME])
+    );
+}
+
+static hlir_t *load_string_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(STRING_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_string(
+        get_span(load, values), 
+        get_string(values[STRING_NAME])
+    );
+}
+
+static hlir_t *load_void_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(VOID_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_void(
+        get_span(load, values), 
+        get_string(values[VOID_NAME])
+    );
+}
+
+static hlir_t *load_closure_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(CLOSURE_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_closure(
+        get_span(load, values), 
+        get_string(values[CLOSURE_NAME]),
+        get_arr(load, values[CLOSURE_ARGS]),
+        GET_REF(load, values, CLOSURE_RESULT),
+        get_bool(values[CLOSURE_VARIADIC])
+    );
+}
+
+static hlir_t *load_pointer_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(POINTER_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_pointer(
+        get_span(load, values), 
+        get_string(values[POINTER_NAME]),
+        GET_REF(load, values, POINTER_TYPE),
+        get_bool(values[POINTER_INDEXABLE])
+    );
+}
+
+static hlir_t *load_array_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(ARRAY_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_array(
+        get_span(load, values), 
+        get_string(values[ARRAY_NAME]),
+        GET_REF(load, values, ARRAY_TYPE),
+        GET_REF(load, values, ARRAY_LENGTH)
+    );
 }
 
 static hlir_t *load_value_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(VALUE_FIELDS)];
     read_entry(load->data, index, values);
 
-    const node_t *node = load_span(load, get_reference(values[VALUE_SPAN]));
-    const char *name = get_string(values[VALUE_NAME]);
-    hlir_attributes_t *attributes = load_attributes(load, get_reference(values[VALUE_ATTRIBS]));
-    hlir_t *type = load_node(load, get_reference(values[VALUE_TYPE]), "load value type");
-    hlir_t *init = load_node(load, get_reference(values[VALUE_INIT]), "load value init");
+    hlir_t *hlir = hlir_new_value(
+        get_span(load, values), 
+        get_string(values[VALUE_NAME]), 
+        GET_REF(load, values, VALUE_TYPE)
+    );
 
-    hlir_t *hlir = hlir_new_value(node, name, type);
-    hlir_build_value(hlir, init);
-    hlir_set_attributes(hlir, attributes);
-
-    return hlir;
-}
-
-static hlir_t *load_digit_literal_node(load_t *load, index_t index) {
-    value_t values[FIELDLEN(DIGIT_LITERAL_FIELDS)];
-    read_entry(load->data, index, values);
-
-    const node_t *node = load_span(load, get_reference(values[DIGIT_LITERAL_SPAN]));
-    const hlir_t *type = load_node(load, get_reference(values[DIGIT_LITERAL_TYPE]), "load digit literal type");
-    
-    mpz_t digit;
-    get_digit(digit, values[DIGIT_LITERAL_VALUE]);
-
-    hlir_t *hlir = hlir_digit_literal(node, type, digit);
+    hlir_build_value(hlir, GET_REF_OPT(load, values, VALUE_INIT));
+    hlir_set_attributes(hlir, load_attributes(load, values[VALUE_ATTRIBS]));
 
     return hlir;
 }
 
-static hlir_t *load_digit_node(load_t *load, index_t index) {
-    value_t values[FIELDLEN(DIGIT_FIELDS)];
+static hlir_t *load_function_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(FUNCTION_FIELDS)];
     read_entry(load->data, index, values);
 
-    const node_t *node = load_span(load, get_reference(values[DIGIT_SPAN]));
-    const char *name = get_string(values[DIGIT_NAME]);
-    sign_t sign = get_int(values[DIGIT_SIGN]);
-    digit_t width = get_int(values[DIGIT_WIDTH]);
+    hlir_t *type = GET_REF(load, values, FUNCTION_TYPE);
+    vector_t *locals = get_arr(load, values[FUNCTION_LOCALS]);
 
-    hlir_t *hlir = hlir_digit(node, name, width, sign);
+    hlir_t *hlir = hlir_new_function(
+        get_span(load, values), 
+        get_string(values[FUNCTION_NAME]), 
+        closure_params(type),
+        closure_result(type),
+        closure_variadic(type)
+    );
+
+    for (size_t i = 0; i < vector_len(locals); i++) {
+        hlir_add_local(hlir, vector_get(locals, i));
+    }
+
+    hlir_build_function(hlir, GET_REF_OPT(load, values, FUNCTION_BODY));
+    hlir_set_attributes(hlir, load_attributes(load, values[FUNCTION_ATTRIBS]));
+
+    return hlir;
+}
+
+static hlir_t *load_module_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(MODULE_FIELDS)];
+    read_entry(load->data, index, values);
+
+    hlir_t *hlir = hlir_new_module(get_span(load, values), get_string(values[MODULE_NAME]));
+    hlir_build_module(hlir, 
+        get_arr(load, values[MODULE_GLOBALS]), 
+        get_arr(load, values[MODULE_FUNCTIONS]), 
+        get_arr(load, values[MODULE_TYPES])
+    );
 
     return hlir;
 }
 
 static hlir_t *load_node(load_t *load, index_t index, const char *trace) {
     switch (index.type) {
-    case HLIR_MODULE:
-        return load_module_node(load, index);
-    case HLIR_VALUE:
-        return load_value_node(load, index);
+    /* expressions */
+    case HLIR_DIGIT_LITERAL: return load_digit_literal_node(load, index);
+    case HLIR_BOOL_LITERAL: return load_bool_literal_node(load, index);
+    case HLIR_STRING_LITERAL: return load_string_literal_node(load, index);
 
-    case HLIR_DIGIT_LITERAL:
-        return load_digit_literal_node(load, index);
+    case HLIR_NAME: return load_name_node(load, index);
+    case HLIR_UNARY: return load_unary_node(load, index);
+    case HLIR_BINARY: return load_binary_node(load, index);
+    case HLIR_COMPARE: return load_compare_node(load, index);
+    case HLIR_CALL: return load_call_node(load, index);
 
-    case HLIR_DIGIT:    
-        return load_digit_node(load, index);
+    /* statements */
+    case HLIR_STMTS: return load_stmts_node(load, index);
+    case HLIR_BRANCH: return load_branch_node(load, index);
+    case HLIR_LOOP: return load_loop_node(load, index);
+    case HLIR_ASSIGN: return load_assign_node(load, index);
+
+    /* types */
+    case HLIR_DIGIT: return load_digit_node(load, index);
+    case HLIR_BOOL: return load_bool_node(load, index);
+    case HLIR_STRING: return load_string_node(load, index);
+    case HLIR_VOID: return load_void_node(load, index);
+    case HLIR_CLOSURE: return load_closure_node(load, index);
+    case HLIR_POINTER: return load_pointer_node(load, index);
+    case HLIR_ARRAY: return load_array_node(load, index);
+
+    /* declarations */
+    case HLIR_VALUE: return load_value_node(load, index);
+    case HLIR_FUNCTION: return load_function_node(load, index);
+
+    case HLIR_MODULE: return load_module_node(load, index);
 
     default:
         ctu_assert(load->reports, "loading unknown node type %d due to %s", index.type, trace);
@@ -316,6 +762,28 @@ static index_t save_attributes(data_t *data, const hlir_attributes_t *attributes
 
 static index_t save_node(data_t *data, const hlir_t *hlir);
 
+static value_t make_ref(data_t *data, const hlir_t *hlir) {
+    index_t index = save_node(data, hlir);
+    return reference_value(index);
+}
+
+static value_t make_ref_opt(data_t *data, const hlir_t *hlir) {
+    if (hlir == NULL) { return reference_value(NULL_INDEX); }
+
+    index_t index = save_node(data, hlir);
+    return reference_value(index);
+}
+
+static value_t span_ref(data_t *data, const hlir_t *hlir) {
+    index_t index = save_span(data, hlir->node);
+    return reference_value(index);
+}
+
+static value_t attrib_ref(data_t *data, const hlir_t *hlir) {
+    index_t index = save_attributes(data, hlir->attributes);
+    return reference_value(index);
+}
+
 static array_t save_array(data_t *data, vector_t *vec) {
     size_t len = vector_len(vec);
     index_t *indices = ctu_malloc(sizeof(index_t) * len);
@@ -329,54 +797,144 @@ static array_t save_array(data_t *data, vector_t *vec) {
     return array;
 }
 
-static index_t save_module_node(data_t *data, const hlir_t *hlir) {
-    index_t span = save_span(data, hlir->node);
-    array_t globals = save_array(data, hlir->globals);
-    
-    value_t values[] = {
-        [MODULE_SPAN] = reference_value(span),
-        [MODULE_NAME] = string_value(hlir->name),
-        [MODULE_GLOBALS] = array_value(globals)
-    };
-    
-    return write_entry(data, HLIR_MODULE, values);
-}
-
-static index_t save_value_node(data_t *data, const hlir_t *hlir) {
-    index_t span = save_span(data, hlir->node);
-    index_t attribs = save_attributes(data, hlir->attributes);
-    index_t type = save_node(data, typeof_hlir(hlir));
-    index_t init = save_node(data, hlir->value);
-    
-    value_t values[] = {
-        [VALUE_SPAN] = reference_value(span),
-        [VALUE_NAME] = string_value(hlir->name),
-        [VALUE_ATTRIBS] = reference_value(attribs),
-        [VALUE_TYPE] = reference_value(type),
-        [VALUE_INIT] = reference_value(init)
-    };
-    
-    return write_entry(data, HLIR_VALUE, values);
-}
+// expressions
 
 static index_t save_digit_literal_node(data_t *data, const hlir_t *hlir) {
-    index_t span = save_span(data, hlir->node);
-    index_t type = save_node(data, typeof_hlir(hlir));
-    
     value_t values[] = {
-        [DIGIT_LITERAL_SPAN] = reference_value(span),
-        [DIGIT_LITERAL_TYPE] = reference_value(type),
+        [DIGIT_LITERAL_SPAN] = span_ref(data, hlir),
+        [DIGIT_LITERAL_TYPE] = make_ref(data, typeof_hlir(hlir)),
         [DIGIT_LITERAL_VALUE] = digit_value(hlir->digit)
     };
 
     return write_entry(data, HLIR_DIGIT_LITERAL, values);
 }
 
-static index_t save_digit_node(data_t *data, const hlir_t *hlir) {
-    index_t span = save_span(data, hlir->node);
-    
+static index_t save_bool_literal_node(data_t *data, const hlir_t *hlir) {
     value_t values[] = {
-        [DIGIT_SPAN] = reference_value(span),
+        [BOOL_LITERAL_SPAN] = span_ref(data, hlir),
+        [BOOL_LITERAL_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [BOOL_LITERAL_VALUE] = bool_value(hlir->boolean)
+    };
+
+    return write_entry(data, HLIR_BOOL_LITERAL, values);
+}
+
+static index_t save_string_literal_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [STRING_LITERAL_SPAN] = span_ref(data, hlir),
+        [STRING_LITERAL_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [STRING_LITERAL_VALUE] = string_value(hlir->string)
+    };
+
+    return write_entry(data, HLIR_STRING_LITERAL, values);
+}
+
+static index_t save_name_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [NAME_SPAN] = span_ref(data, hlir),
+        [NAME_EXPR] = make_ref(data, hlir->read)
+    };
+
+    return write_entry(data, HLIR_NAME, values);
+}
+
+static index_t save_unary_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [UNARY_SPAN] = span_ref(data, hlir),
+        [UNARY_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [UNARY_OP] = int_value(hlir->unary),
+        [UNARY_EXPR] = make_ref(data, hlir->operand)
+    };
+
+    return write_entry(data, HLIR_UNARY, values);
+}
+
+static index_t save_binary_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [BINARY_SPAN] = span_ref(data, hlir),
+        [BINARY_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [BINARY_OP] = int_value(hlir->binary),
+        [BINARY_LHS] = make_ref(data, hlir->lhs),
+        [BINARY_RHS] = make_ref(data, hlir->rhs)
+    };
+
+    return write_entry(data, HLIR_BINARY, values);
+}
+
+static index_t save_compare_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [COMPARE_SPAN] = span_ref(data, hlir),
+        [COMPARE_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [COMPARE_OP] = int_value(hlir->compare),
+        [COMPARE_LHS] = make_ref(data, hlir->lhs),
+        [COMPARE_RHS] = make_ref(data, hlir->rhs)
+    };
+
+    return write_entry(data, HLIR_COMPARE, values);
+}
+
+static index_t save_call_node(data_t *data, const hlir_t *hlir) {
+    array_t args = save_array(data, hlir->args);
+
+    value_t values[] = {
+        [CALL_SPAN] = span_ref(data, hlir),
+        [CALL_EXPR] = make_ref(data, hlir->call),
+        [CALL_ARGS] = array_value(args)
+    };
+
+    return write_entry(data, HLIR_CALL, values);
+}
+
+// statements
+
+static index_t save_stmts_node(data_t *data, const hlir_t *hlir) {
+    array_t stmts = save_array(data, hlir->stmts);
+
+    value_t values[] = {
+        [STMTS_SPAN] = span_ref(data, hlir),
+        [STMTS_OPS] = array_value(stmts)
+    };
+
+    return write_entry(data, HLIR_STMTS, values);
+}
+
+static index_t save_branch_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [BRANCH_SPAN] = span_ref(data, hlir),
+        [BRANCH_COND] = make_ref(data, hlir->cond),
+        [BRANCH_THEN] = make_ref(data, hlir->then),
+        [BRANCH_ELSE] = make_ref_opt(data, hlir->other)
+    };
+    
+    return write_entry(data, HLIR_BRANCH, values);
+}
+
+static index_t save_loop_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [LOOP_SPAN] = span_ref(data, hlir),
+        [LOOP_COND] = make_ref(data, hlir->cond),
+        [LOOP_BODY] = make_ref(data, hlir->then),
+        [LOOP_ELSE] = make_ref_opt(data, hlir->other)
+    };
+
+    return write_entry(data, HLIR_LOOP, values);
+}
+
+static index_t save_assign_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [ASSIGN_SPAN] = span_ref(data, hlir),
+        [ASSIGN_DST] = make_ref(data, hlir->dst),
+        [ASSIGN_SRC] = make_ref(data, hlir->src)
+    };
+
+    return write_entry(data, HLIR_ASSIGN, values);
+}
+
+// types
+
+static index_t save_digit_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [DIGIT_SPAN] = span_ref(data, hlir),
         [DIGIT_NAME] = string_value(hlir->name),
         [DIGIT_SIGN] = int_value(hlir->sign),
         [DIGIT_WIDTH] = int_value(hlir->width)
@@ -385,24 +943,151 @@ static index_t save_digit_node(data_t *data, const hlir_t *hlir) {
     return write_entry(data, HLIR_DIGIT, values);
 }
 
+static index_t save_bool_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [BOOL_SPAN] = span_ref(data, hlir),
+        [BOOL_NAME] = string_value(hlir->name)
+    };
+
+    return write_entry(data, HLIR_BOOL, values);
+}
+
+static index_t save_string_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [STRING_SPAN] = span_ref(data, hlir),
+        [STRING_NAME] = string_value(hlir->name)
+    };
+
+    return write_entry(data, HLIR_STRING, values);
+}
+
+static index_t save_void_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [VOID_SPAN] = span_ref(data, hlir),
+        [VOID_NAME] = string_value(hlir->name)
+    };
+
+    return write_entry(data, HLIR_VOID, values);
+}
+
+static index_t save_closure_node(data_t *data, const hlir_t *hlir) {
+    array_t args = save_array(data, hlir->params);
+
+    value_t values[] = {
+        [CLOSURE_SPAN] = span_ref(data, hlir),
+        [CLOSURE_NAME] = string_value(hlir->name),
+        [CLOSURE_ARGS] = array_value(args),
+        [CLOSURE_RESULT] = make_ref(data, hlir->result),
+        [CLOSURE_VARIADIC] = bool_value(hlir->variadic)
+    };
+
+    return write_entry(data, HLIR_CLOSURE, values);
+}
+
+static index_t save_pointer_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [POINTER_SPAN] = span_ref(data, hlir),
+        [POINTER_NAME] = string_value(hlir->name),
+        [POINTER_TYPE] = make_ref(data, hlir->ptr),
+        [POINTER_INDEXABLE] = bool_value(hlir->indexable)
+    };
+
+    return write_entry(data, HLIR_POINTER, values);
+}
+
+static index_t save_array_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [ARRAY_SPAN] = span_ref(data, hlir),
+        [ARRAY_NAME] = string_value(hlir->name),
+        [ARRAY_TYPE] = make_ref(data, hlir->element),
+        [ARRAY_LENGTH] = make_ref(data, hlir->length)
+    };
+
+    return write_entry(data, HLIR_ARRAY, values);
+}
+
+/// declarations
+
+static index_t save_value_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [VALUE_SPAN] = span_ref(data, hlir),
+        [VALUE_ATTRIBS] = attrib_ref(data, hlir),
+        [VALUE_NAME] = string_value(hlir->name),
+        [VALUE_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [VALUE_INIT] = make_ref_opt(data, hlir->value)
+    };
+    
+    return write_entry(data, HLIR_VALUE, values);
+}
+
+static index_t save_function_node(data_t *data, const hlir_t *hlir) {
+    array_t locals = save_array(data, hlir->locals);
+
+    value_t values[] = {
+        [FUNCTION_SPAN] = span_ref(data, hlir),
+        [FUNCTION_ATTRIBS] = attrib_ref(data, hlir),
+        [FUNCTION_NAME] = string_value(hlir->name),
+        [FUNCTION_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [FUNCTION_LOCALS] = array_value(locals),
+        [FUNCTION_BODY] = make_ref_opt(data, hlir->body)
+    };
+
+    return write_entry(data, HLIR_FUNCTION, values);
+}
+
+static index_t save_module_node(data_t *data, const hlir_t *hlir) {
+    array_t types = save_array(data, hlir->types);
+    array_t globals = save_array(data, hlir->globals);
+    array_t functions = save_array(data, hlir->functions);
+    
+    value_t values[] = {
+        [MODULE_SPAN] = span_ref(data, hlir),
+        [MODULE_NAME] = string_value(hlir->name),
+        [MODULE_TYPES] = array_value(types),
+        [MODULE_GLOBALS] = array_value(globals),
+        [MODULE_FUNCTIONS] = array_value(functions)
+    };
+    
+    return write_entry(data, HLIR_MODULE, values);
+}
+
 static index_t save_node(data_t *data, const hlir_t *hlir) {
     switch (hlir->type) {
-    case HLIR_MODULE:
-        return save_module_node(data, hlir);
-    case HLIR_VALUE:
-        return save_value_node(data, hlir);
+    /* expressions */
+    case HLIR_DIGIT_LITERAL: return save_digit_literal_node(data, hlir);
+    case HLIR_BOOL_LITERAL: return save_bool_literal_node(data, hlir);
+    case HLIR_STRING_LITERAL: return save_string_literal_node(data, hlir);
 
-    case HLIR_DIGIT_LITERAL:
-        return save_digit_literal_node(data, hlir);
+    case HLIR_NAME: return save_name_node(data, hlir);
+    case HLIR_UNARY: return save_unary_node(data, hlir);
+    case HLIR_BINARY: return save_binary_node(data, hlir);
+    case HLIR_COMPARE: return save_compare_node(data, hlir);
+    case HLIR_CALL: return save_call_node(data, hlir);
 
-    case HLIR_DIGIT:
-        return save_digit_node(data, hlir);
+    /* statements */
+    case HLIR_STMTS: return save_stmts_node(data, hlir);
+    case HLIR_BRANCH: return save_branch_node(data, hlir);
+    case HLIR_LOOP: return save_loop_node(data, hlir);
+    case HLIR_ASSIGN: return save_assign_node(data, hlir);
 
-    case HLIR_TYPE:
-        return NULL_INDEX;
+    /* types */
+    case HLIR_DIGIT: return save_digit_node(data, hlir);
+    case HLIR_BOOL: return save_bool_node(data, hlir);
+    case HLIR_STRING: return save_string_node(data, hlir);
+    case HLIR_VOID: return save_void_node(data, hlir);
+    case HLIR_CLOSURE: return save_closure_node(data, hlir);
+    case HLIR_POINTER: return save_pointer_node(data, hlir);
+    case HLIR_ARRAY: return save_array_node(data, hlir);
+    case HLIR_TYPE: return NULL_INDEX;
+
+    /* declarations */
+    case HLIR_VALUE: return save_value_node(data, hlir);
+    case HLIR_FUNCTION: return save_function_node(data, hlir);
+
+    case HLIR_MODULE: return save_module_node(data, hlir);
 
     default:
-        ctu_assert(data->header.reports, "saving unknown node type %d", hlir->type);
+        ctu_assert(data->header.reports, "saving unknown node type %u", hlir->type);
         return NULL_INDEX;
     }
 }

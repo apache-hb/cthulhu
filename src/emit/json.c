@@ -361,7 +361,7 @@ static cJSON *emit_function(emit_t *emit, size_t idx, const hlir_t *hlir) {
 void json_emit_tree(reports_t *reports, const hlir_t *hlir) {
     size_t ntypes = vector_len(hlir->types);
     size_t nglobals = vector_len(hlir->globals);
-    size_t nfunctions = vector_len(hlir->defines);
+    size_t nfunctions = vector_len(hlir->functions);
 
     emit_t emit = {
         .reports = reports,
@@ -392,12 +392,12 @@ void json_emit_tree(reports_t *reports, const hlir_t *hlir) {
     cJSON_AddItemToArray(functions, cJSON_CreateNull());
 
     for (size_t i = 0; i < nfunctions; i++) {
-        const hlir_t *function = vector_get(hlir->defines, i);
+        const hlir_t *function = vector_get(hlir->functions, i);
         map_set_ptr(emit.functions, function, (void*)(uintptr_t)i + 1);
     }
 
     for (size_t i = 0; i < nfunctions; i++) {
-        const hlir_t *function = vector_get(hlir->defines, i);
+        const hlir_t *function = vector_get(hlir->functions, i);
         size_t nlocals = vector_len(function->locals);
         emit.locals = optimal_map(nlocals);
 

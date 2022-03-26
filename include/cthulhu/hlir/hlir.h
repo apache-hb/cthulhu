@@ -166,7 +166,7 @@ typedef struct hlir_t {
                 /* closure type */
                 struct {
                     vector_t *params;
-                    struct hlir_t *result;
+                    const struct hlir_t *result;
                     bool variadic;
                 };
 
@@ -201,7 +201,7 @@ typedef struct hlir_t {
                 struct hlir_t *value;
 
                 struct {
-                    vector_t *defines;
+                    vector_t *functions;
                     vector_t *globals;
                     vector_t *types;
                 };
@@ -307,7 +307,7 @@ hlir_t *hlir_void(IN_OPT const node_t *node,
 hlir_t *hlir_closure(IN_OPT const node_t *node, 
                      IN_OPT const char *name, 
                      IN vector_t *params, 
-                     IN hlir_t *result, 
+                     IN const hlir_t *result, 
                      bool variadic);
 
 /**
@@ -378,7 +378,7 @@ hlir_t *hlir_new_module(IN const node_t *node,
 hlir_t *hlir_new_function(IN const node_t *node, 
                           IN const char *name,
                           IN vector_t *params,
-                          IN hlir_t *result,
+                          IN const hlir_t *result,
                           bool variadic);
 
 hlir_t *hlir_new_value(const node_t *node, const char *name, const hlir_t *type);

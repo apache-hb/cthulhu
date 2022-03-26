@@ -30,8 +30,8 @@ static void print_help(const char **argv) {
     printf("---\n");
     printf("warning options:\n");
     printf("  -Wlimit=<digit>   : set warning limit\n");
-    printf("                   | options: 0 = infinite\n");
-    printf("                   | default: %d\n", DEFAULT_REPORT_LIMIT);
+    printf("                    | options: 0 = infinite\n");
+    printf("                    | default: %d\n", DEFAULT_REPORT_LIMIT);
     printf("---\n");
     printf("bytecode options:\n");
     printf("  -bc, --bytecode   : enable bytecode generation\n");

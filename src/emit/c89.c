@@ -379,7 +379,7 @@ void c89_emit_tree(reports_t *reports, const hlir_t *hlir) {
     }
 
     size_t nglobals = vector_len(hlir->globals);
-    size_t nprocs = vector_len(hlir->defines);
+    size_t nprocs = vector_len(hlir->functions);
 
     for (size_t i = 0; i < nglobals; i++) {
         const hlir_t *import = vector_get(hlir->globals, i);
@@ -389,7 +389,7 @@ void c89_emit_tree(reports_t *reports, const hlir_t *hlir) {
     }
 
     for (size_t i = 0; i < nprocs; i++) {
-        const hlir_t *import = vector_get(hlir->defines, i);
+        const hlir_t *import = vector_get(hlir->functions, i);
         if (!hlir_is_imported(import)) { continue; }
 
         emit_import_decl(reports, import);
@@ -403,7 +403,7 @@ void c89_emit_tree(reports_t *reports, const hlir_t *hlir) {
     }
 
     for (size_t i = 0; i < nprocs; i++) {
-        const hlir_t *proc = vector_get(hlir->defines, i);
+        const hlir_t *proc = vector_get(hlir->functions, i);
         if (hlir_is_imported(proc)) { continue; }
 
         fwd_proc(reports, proc);
@@ -417,7 +417,7 @@ void c89_emit_tree(reports_t *reports, const hlir_t *hlir) {
     }
     
     for (size_t i = 0; i < nprocs; i++) {
-        const hlir_t *proc = vector_get(hlir->defines, i);
+        const hlir_t *proc = vector_get(hlir->functions, i);
         if (hlir_is_imported(proc)) { continue; }
 
         emit_proc(reports, proc);

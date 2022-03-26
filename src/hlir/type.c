@@ -19,7 +19,7 @@ hlir_t *hlir_void(const node_t *node, const char *name) {
     return hlir_new_decl(node, name, TYPE, HLIR_VOID);
 }
 
-hlir_t *hlir_closure(const node_t *node, const char *name, vector_t *params, hlir_t *result, bool variadic) {
+hlir_t *hlir_closure(const node_t *node, const char *name, vector_t *params, const hlir_t *result, bool variadic) {
     hlir_t *hlir = hlir_new_decl(node, name, TYPE, HLIR_CLOSURE);
     hlir->params = params;
     hlir->result = result;

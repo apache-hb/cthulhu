@@ -108,7 +108,7 @@ hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src) {
 hlir_t *hlir_new_function(const node_t *node, 
                           const char *name, 
                           vector_t *params,
-                          hlir_t *result,
+                          const hlir_t *result,
                           bool variadic) {
     
     hlir_t *type = hlir_closure(node, name, params, result, variadic);
@@ -190,7 +190,7 @@ hlir_t *hlir_new_module(const node_t *node, const char *name) {
 
 void hlir_build_module(hlir_t *self, vector_t *values, vector_t *functions, vector_t *types) {
     self->globals = values;
-    self->defines = functions;
+    self->functions = functions;
     self->types = types;
 }
 

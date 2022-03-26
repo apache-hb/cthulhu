@@ -11,6 +11,7 @@ project('cthulhu', [ 'c', 'cpp' ],
 )
 
 target = target_machine.system()
+host = host_machine.system()
 cc = meson.get_compiler('c')
 
 src = [
@@ -58,10 +59,8 @@ src = [
     'src/util/optimal.c',
 
     # platform glue
-    'src/util/compat-platform.c'.replace('platform', target),
+    'src/util/compat-platform.c'.replace('platform', target)
 ]
-
-math = cc.find_library('m')
 
 json = subproject('cjson').get_variable('json')
 
@@ -71,8 +70,12 @@ gmp = dependency('gmp',
 )
 
 args = []
-deps = [ gmp, json, math ]
+deps = [ gmp, json ]
 lexargs = []
+
+if host != 'windows'
+    deps += [ cc.find_library('m') ]
+endif
 
 tools = get_option('tools')
 tuning = get_option('tuning')
@@ -80,7 +83,7 @@ if tuning
     args += [ '-DENABLE_TUNING=1' ]
 endif
 
-if host_machine.system() == 'windows'
+if host == 'windows'
     lexargs += [ '--wincompat' ]
     args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '/Wv:18' ]
 endif
