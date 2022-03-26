@@ -51,7 +51,7 @@ static const field_t ATTRIB_FIELDS[] = {
 static const layout_t ATTRIB_LAYOUT = LAYOUT("attributes", ATTRIB_FIELDS);
 
 ///
-/// expressions
+/// literals
 ///
 
 INDICES(DIGIT_LITERAL_SPAN, DIGIT_LITERAL_TYPE, DIGIT_LITERAL_VALUE);
@@ -77,6 +77,10 @@ static const field_t STRING_LITERAL_FIELDS[] = {
     [STRING_LITERAL_VALUE] = FIELD("value", FIELD_STRING)
 };
 static const layout_t STRING_LITERAL_LAYOUT = LAYOUT("string-literal", STRING_LITERAL_FIELDS);
+
+///
+/// expressions
+///
 
 INDICES(NAME_SPAN, NAME_EXPR);
 static const field_t NAME_FIELDS[] = {
@@ -646,11 +650,12 @@ static hlir_t *load_module_node(load_t *load, index_t index) {
 
 static hlir_t *load_node(load_t *load, index_t index, const char *trace) {
     switch (index.type) {
-    /* expressions */
+    /* literals */
     case HLIR_DIGIT_LITERAL: return load_digit_literal_node(load, index);
     case HLIR_BOOL_LITERAL: return load_bool_literal_node(load, index);
     case HLIR_STRING_LITERAL: return load_string_literal_node(load, index);
 
+    /* expressions */
     case HLIR_NAME: return load_name_node(load, index);
     case HLIR_UNARY: return load_unary_node(load, index);
     case HLIR_BINARY: return load_binary_node(load, index);
@@ -1053,11 +1058,12 @@ static index_t save_module_node(data_t *data, const hlir_t *hlir) {
 
 static index_t save_node(data_t *data, const hlir_t *hlir) {
     switch (hlir->type) {
-    /* expressions */
+    /* literals */
     case HLIR_DIGIT_LITERAL: return save_digit_literal_node(data, hlir);
     case HLIR_BOOL_LITERAL: return save_bool_literal_node(data, hlir);
     case HLIR_STRING_LITERAL: return save_string_literal_node(data, hlir);
 
+    /* expressions */
     case HLIR_NAME: return save_name_node(data, hlir);
     case HLIR_UNARY: return save_unary_node(data, hlir);
     case HLIR_BINARY: return save_binary_node(data, hlir);

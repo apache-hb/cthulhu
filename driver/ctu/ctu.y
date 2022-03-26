@@ -169,11 +169,13 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     structdecl uniondecl
     field type types opttypes
     aliasdecl import
+    variantdecl
 
 %type<vector>
     path decls decllist
     fieldlist aggregates
     typelist imports importlist
+    variants variantlist
 
 %start program
 
@@ -204,6 +206,7 @@ decllist: decl { $$ = vector_init($1); }
 decl: structdecl { $$ = $1; }
     | uniondecl { $$ = $1; }
     | aliasdecl { $$ = $1; }
+    | variantdecl { $$ = $1; }
     ;
 
 aliasdecl: TYPE IDENT EQUALS type SEMICOLON { $$ = ast_typealias(x, @$, $2, $4); }
@@ -213,6 +216,17 @@ structdecl: STRUCT IDENT aggregates { $$ = ast_structdecl(x, @$, $2, $3); }
     ;
 
 uniondecl: UNION IDENT aggregates { $$ = ast_uniondecl(x, @$, $2, $3); }
+    ;
+
+variantdecl: VARIANT IDENT LBRACE variants RBRACE { $$ = ast_variantdecl(x, @$, $2, $4); }
+    ;
+
+variants: %empty { $$ = vector_new(0); }
+    | variantlist { $$ = $1; }
+    ;
+
+variantlist: IDENT { $$ = vector_init($1); }
+    | variantlist IDENT { vector_push(&$1, $2); $$ = $1; }
     ;
 
 aggregates: LBRACE fieldlist RBRACE { $$ = $2; }

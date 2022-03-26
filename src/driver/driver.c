@@ -27,6 +27,7 @@ static void print_help(const char **argv) {
     printf("  -t, --target      : set output format\n");
     printf("                    | options: json, c89\n");
     printf("                    | default: c89\n");
+    printf("  -P, --search      : add library search path\n");
     printf("---\n");
     printf("warning options:\n");
     printf("  -Wlimit=<digit>   : set warning limit\n");
@@ -97,6 +98,30 @@ static const char *get_arg(reports_t *reports, int argc, const char **argv, cons
     return result;
 }
 
+static vector_t *collect_args(int argc, const char **argv, const char *prefix, const char *brief) {
+    vector_t *result = vector_new(argc - 1);
+
+    for (int i = 1; i < argc; i++) {
+        if (startswith(argv[i], prefix)) {
+            const char *arg = extract_arg(argc, argv, prefix, i);
+            if (arg != NULL) {
+                vector_push(&result, (char*)arg);
+                continue;
+            }
+        }
+
+        if (brief != NULL && startswith(argv[i], brief)) {
+            const char *arg = extract_arg(argc, argv, brief, i);
+            if (arg != NULL) {
+                vector_push(&result, (char*)arg);
+                continue;
+            }
+        }
+    }
+
+    return result;
+}
+
 static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, const char *mod) {
     if (mod != NULL && hlir->name != NULL) {
         message_t *id = report(reports, WARNING, NULL, "module name already defined in source file, overriding this may not be desired");
@@ -154,6 +179,20 @@ static target_t parse_target(reports_t *reports, const char *target) {
     }
 }
 
+static vector_t *search_paths = NULL;
+
+static void add_search_path(const char *path) {
+    vector_push(&search_paths, ctu_strdup(path));
+}
+
+static void init_search_path(const char *stdlib) {
+    search_paths = vector_new(32);
+
+    if (stdlib != NULL) {
+        add_search_path(stdlib);
+    }
+}
+
 int common_main(int argc, const char **argv, driver_t driver) {
     if (find_arg(argc, argv, "--version", "-v")) {
         print_version(driver);
@@ -171,6 +210,13 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     reports_t *reports = begin_reports();
     int status = 99;
+
+    init_search_path(driver.stdlib_path);
+
+    vector_t *extra_paths = collect_args(argc, argv, "-P", "--search");
+    for (size_t i = 0; i < vector_len(extra_paths); i++) {
+        add_search_path(vector_get(extra_paths, i));
+    }
 
     if (argc < 2) {
         report(reports, ERROR, NULL, "no file specified");
@@ -264,4 +310,9 @@ int common_main(int argc, const char **argv, driver_t driver) {
     }
 
     return status;
+}
+
+hlir_t *find_module(vector_t *path) {
+    UNUSED(path);
+    return NULL;
 }

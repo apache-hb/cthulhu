@@ -26,8 +26,12 @@ typedef struct {
     const char *version;
     parse_t parse;
     analyze_t sema;
+
+    const char *stdlib_path;
 } driver_t;
 
 void common_init(void);
 
 int common_main(int argc, const char **argv, driver_t driver);
+
+hlir_t *find_module(vector_t *path);
