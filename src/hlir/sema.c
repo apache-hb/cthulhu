@@ -245,16 +245,19 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
 void check_module(reports_t *reports, hlir_t *mod) {
     size_t nvars = vector_len(mod->globals);
     size_t ntypes = vector_len(mod->types);
+    vector_t *vec = vector_new(16);
 
     for (size_t i = 0; i < ntypes; i++) {
         hlir_t *type = vector_get(mod->types, i);
-        vector_t *vec = vector_new(16);
         check_type_recursion(reports, &vec, type);
+
+        vector_reset(vec);
     }
 
     for (size_t i = 0; i < nvars; i++) {
         hlir_t *var = vector_get(mod->globals, i);
-        vector_t *vec = vector_new(16);
         check_recursion(reports, &vec, var);
+
+        vector_reset(vec);
     }
 }

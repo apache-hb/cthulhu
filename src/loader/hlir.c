@@ -346,8 +346,8 @@ static node_t *get_span(load_t *load, value_t *values) {
     return load_span(load, get_reference(values[0])); // the ENUM_FIELDS macro makes sure that values[0] is a span
 }
 
-#define GET_REF(load, values, name) load_node(load, get_reference(values[name]), "loading " #name)
-#define GET_REF_OPT(load, values, name) load_opt_node(load, get_reference(values[name]), "loading " #name)
+#define GET_REF(load, values, name) load_node(load, get_reference((values)[name]), "loading " #name)
+#define GET_REF_OPT(load, values, name) load_opt_node(load, get_reference((values)[name]), "loading " #name)
 
 static vector_t *load_array(load_t *load, array_t array) {
     size_t len = array.length;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <corecrt.h>
 #include <stdarg.h>
 
 #include "macros.h"
@@ -84,7 +85,7 @@ char *strslice(const char *str, size_t start, size_t end) CONSTFN NONULL;
 
 vector_t *strsplit(const char *str, const char *sep) CONSTFN NONULL;
 
-const char *common_prefix(vector_t *strings) CONSTFN NONULL;
+const char *common_prefix(vector_t *args) CONSTFN NONULL;
 
 size_t rfind(const char *str, const char *sub) CONSTFN NONULL;
 
@@ -94,6 +95,8 @@ bool strcontains(const char *str, const char *sub) CONSTFN NONULL;
 char *replacestr(const char *str, const char *sub, const char *repl) NONULL;
 
 char *strmove(char *dst, const char *src) NONULL;
+
+char *ctu_strerror(errno_t err) CONSTFN;
 
 /**
  * hash a string into a size_t

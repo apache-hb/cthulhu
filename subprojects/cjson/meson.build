@@ -1,4 +1,6 @@
-project('cJSON', 'c')
+project('cJSON', 'c',
+    version : '1.5.17'
+)
 
 args = []
 

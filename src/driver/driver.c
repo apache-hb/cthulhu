@@ -63,11 +63,13 @@ static const char *extract_arg(int argc, const char **argv, const char *arg, int
             }
 
             return argv[idx + 1];
-        } else if (end == '=') {
+        } 
+        
+        if (end == '=') {
             return argv[idx] + len + 1;
-        } else {
-            return argv[idx] + len;
-        }
+        } 
+
+        return argv[idx] + len;
     }
 
     return NULL;
@@ -170,13 +172,15 @@ typedef enum {
 static target_t parse_target(reports_t *reports, const char *target) {
     if (streq(target, "c89")) {
         return OUTPUT_C89;
-    } else if (streq(target, "json")) {
+    }  
+    
+    if (streq(target, "json")) {
         return OUTPUT_JSON;
-    } else {
-        message_t *id = report(reports, WARNING, NULL, "unknown output target `%s`", target);
-        report_note(id, "defaulting to `c89`");
-        return OUTPUT_C89;
     }
+
+    message_t *id = report(reports, WARNING, NULL, "unknown output target `%s`", target);
+    report_note(id, "defaulting to `c89`");
+    return OUTPUT_C89;
 }
 
 static vector_t *search_paths = NULL;
@@ -253,7 +257,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     file_t file = ctu_fopen(path, "rb");
     if (!file_valid(&file)) {
-        report(reports, ERROR, NULL, "failed to open file: %s (errno %d)", strerror(errno), errno);
+        report(reports, ERROR, NULL, "failed to open file: %s (errno %d)", ctu_strerror(errno), errno);
         return end_reports(reports, limit, "command line parsing");
     }
 

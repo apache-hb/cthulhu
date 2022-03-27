@@ -1,4 +1,5 @@
 project('mini-gmp', 'c',
+    version : '6.0.0',
     license : 'LGPLv3'
 )
 

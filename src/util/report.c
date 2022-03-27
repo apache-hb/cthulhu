@@ -53,12 +53,12 @@ static char *format_location(const char *base, const scan_t *scan, where_t where
             where.first_line + 1, where.first_column,
             where.last_line + 1, where.last_column
         );
-    } else {
-        return format("%s source [%s:%ld:%ld]",
-            scan->language, scan->path + strlen(base), 
-            where.first_line + 1, where.first_column
-        );
     }
+
+    return format("%s source [%s:%ld:%ld]",
+        scan->language, scan->path + strlen(base), 
+        where.first_line + 1, where.first_column
+    );
 }
 
 static void report_scanner(const char *base, const node_t *node) {
@@ -174,7 +174,6 @@ static char *build_underline(const char *source, where_t where, const char *note
     return str;
 }
 
-/* stupid code but quick and simple */
 static int base10_length(line_t digit) {
     return ceil(log10(digit)) + 1;
 }

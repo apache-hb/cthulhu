@@ -51,9 +51,13 @@ const char* set_add(set_t *set, const char *key) {
         if (item->key == NULL) {
             item->key = key;
             return key;
-        } else if (streq(item->key, key)) {
+        } 
+        
+        if (streq(item->key, key)) {
             return item->key;
-        } else if (item->next != NULL) {
+        } 
+        
+        if (item->next != NULL) {
             item = item->next;
         } else {
             item->next = item_new(key);
@@ -68,9 +72,13 @@ bool set_contains(set_t *set, const char *key) {
     while (true) {
         if (item->key == NULL) {
             return false;
-        } else if (streq(item->key, key)) {
+        } 
+        
+        if (streq(item->key, key)) {
             return true;
-        } else if (item->next != NULL) {
+        } 
+        
+        if (item->next != NULL) {
             item = item->next;
         } else {
             return false;

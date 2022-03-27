@@ -1,6 +1,6 @@
 project('cthulhu', [ 'c', 'cpp' ],
     license : 'APGLv3',
-    version : '0.0.5',
+    version : '0.1.0',
     meson_version : '>=0.58',
     default_options : [
         'c_std=c11',

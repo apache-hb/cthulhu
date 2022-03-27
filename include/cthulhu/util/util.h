@@ -310,6 +310,8 @@ typedef bool(*vector_cmp_t)(const void *, const void *);
 
 size_t vector_find(vector_t *vector, const void *element, vector_cmp_t cmp) CONSTFN NOTNULL(1);
 
+void vector_reset(vector_t *vec) NONULL;
+
 /**
  * @brief collect a vector of vectors into a single vector
  * 

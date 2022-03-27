@@ -12,11 +12,6 @@
 #include <stdlib.h>
 #include <gmp.h>
 
-#define CTU_INVALID_FILE (NULL)
-#define CTU_EMPTY_KEY (NULL)
-#define CTU_EMPTY_CHAIN (NULL)
-#define CTU_NO_VALUE (NULL)
-
 #if ENABLE_TUNING
 #   include <malloc.h>
 
@@ -183,7 +178,7 @@ void ctu_close(file_t *fp) {
 }
 
 bool file_valid(file_t *fp) {
-    return fp->file != CTU_INVALID_FILE;
+    return fp->file != NULL;
 }
 
 size_t ctu_read(void *dst, size_t total, file_t *fp) {
@@ -239,7 +234,7 @@ static bucket_t *bucket_new(const char *key, void *value) {
     bucket_t *entry = ctu_malloc(sizeof(bucket_t));
     entry->key = key;
     entry->value = value;
-    entry->next = CTU_EMPTY_CHAIN;
+    entry->next = NULL;
     return entry;
 }
 
@@ -300,14 +295,18 @@ void map_set_ptr(map_t *map, const void *key, void *value) {
     bucket_t *entry = map_bucket_ptr(map, key);
 
     while (entry) {
-        if (!entry->key) {
+        if (entry->key == NULL) {
             entry->key = key;
             entry->value = value;
             return;
-        } else if (entry->key == key) {
+        } 
+        
+        if (entry->key == key) {
             entry->value = value;
             return;
-        } else {
+        } 
+        
+        if (entry->next == NULL) {
             entry->next = bucket_new(key, value);
             return;
         }
@@ -327,8 +326,8 @@ void *map_get_ptr_default(map_t *map, const void *key, void *other) {
 
 static void clear_keys(bucket_t *buckets, size_t size) {
     for (size_t i = 0; i < size; i++) {
-        buckets[i].key = CTU_EMPTY_KEY;
-        buckets[i].next = CTU_EMPTY_CHAIN;
+        buckets[i].key = NULL;
+        buckets[i].next = NULL;
     }
 }
 
@@ -363,15 +362,20 @@ void map_set(map_t *map, const char *key, void *value) {
             entry->key = key;
             entry->value = value;
             break;
-        } else if (streq(entry->key, key)) {
+        }  
+        
+        if (streq(entry->key, key)) {
             entry->value = value;
             break;
-        } else if (entry->next != NULL) {
-            entry = entry->next;
-        } else {
+        } 
+        
+        if (entry->next == NULL) {
             entry->next = bucket_new(key, value);
             break;
-        }
+            entry = entry->next;
+        } 
+
+        entry = entry->next;
     }
 }
 
@@ -572,4 +576,8 @@ vector_t *vector_collect(vector_t *vectors) {
     }
 
     return out;
+}
+
+void vector_reset(vector_t *vec) {
+    vec->used = 0;
 }

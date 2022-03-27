@@ -1,7 +1,10 @@
+#define __STDC_WANT_LIB_EXT1__ 1
+
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/io.h"
 
+#include <corecrt.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -56,9 +59,9 @@ char *ctu_filename(const char *path) {
     size_t idx = rfind(path, PATH_SEP);
     if (idx == SIZE_MAX) {
         return ctu_noext(path);
-    } else {
-        return ctu_noext(path + idx + 1);
     }
+    
+    return ctu_noext(path + idx + 1);
 }
 
 bool startswith(const char *str, const char *prefix) {
@@ -129,20 +132,16 @@ static bool ctu_isprint(char c) {
 }
 
 static size_t normlen(char c) {
-    if (ctu_isprint(c)) {
-        return 1;
-    } else {
-        return 4;
-    }
+    return ctu_isprint(c) ? 1 : 4;
 }
 
 static size_t normstr(char *out, char c) {
     if (ctu_isprint(c)) {
         out[0] = c;
         return 1;
-    } else {
-        return sprintf(out, "\\x%02x", c & 0xFF);
     }
+    
+    return sprintf(out, "\\x%02x", c & 0xFF);
 }
 
 char *strnorm(const char *str) {
@@ -214,6 +213,12 @@ size_t strcount(const char *str, const char *sub) {
 
 bool strcontains(const char *str, const char *sub) {
     return strstr(str, sub) != NULL;
+}
+
+char *ctu_strerror(errno_t err) {
+    char *buf = ctu_malloc(RSIZE_MAX);
+    strerror_s(buf, RSIZE_MAX, err);
+    return buf;
 }
 
 char *replacestr(const char *str, const char *sub, const char *repl) {
@@ -307,11 +312,7 @@ const char *common_prefix(vector_t *args) {
     for (size_t i = 0; i < min; i++) {
         for (size_t j = 1; j < len; j++) {
             if (strings[j][i] != strings[0][i]) {
-                if (i == 0) {
-                    return "";
-                } else {
-                    return ctu_strndup(strings[0], i);
-                }
+                return i == 0 ? "" : ctu_strndup(strings[0], i);
             }
         }
     }

@@ -1471,7 +1471,7 @@ mpz_set_si (mpz_t r, signed long int x)
 	mpz_set_ui (r, GMP_NEG_CAST (unsigned long int, x));
 	mpz_neg (r, r);
       }
-  else
+    else
     {
       r->_mp_size = -1;
       MPZ_REALLOC (r, 1)[0] = GMP_NEG_CAST (unsigned long int, x);
