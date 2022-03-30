@@ -71,16 +71,16 @@ typedef struct {
 } format_t;
 
 #define FIELD(name, type) type
-#define LAYOUT(name, array) { .length = sizeof(array) / sizeof(field_t), .fields = array }
-#define FORMAT(head, array) { .header = head, .types = sizeof(array) / sizeof(layout_t), .layouts = array }
+#define LAYOUT(name, array) { .length = sizeof(array) / sizeof(field_t), .fields = (array) }
+#define FORMAT(head, array) { .header = (head), .types = sizeof(array) / sizeof(layout_t), .layouts = (array) }
 
 #define FIELDLEN(name) (sizeof(name) / sizeof(field_t))
 
-#define NEW_VERSION(major, minor, patch) ((major << 24) | (minor << 16) | patch)
+#define NEW_VERSION(major, minor, patch) (((major) << 24) | ((minor) << 16) | (patch))
 
-#define VERSION_MAJOR(version) ((version >> 24) & 0xFF)
-#define VERSION_MINOR(version) ((version >> 16) & 0xFF)
-#define VERSION_PATCH(version) (version & 0xFFFF)
+#define VERSION_MAJOR(version) (((version) >> 24) & 0xFF)
+#define VERSION_MINOR(version) (((version) >> 16) & 0xFF)
+#define VERSION_PATCH(version) ((version) & 0xFFFF)
 
 typedef struct {
     reports_t *reports; // report sink

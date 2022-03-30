@@ -433,7 +433,7 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
     size_t suppressed_fatal = 0;
     size_t suppressed_warnings = 0;
 
-    int result = 0;
+    int result = EXIT_OK;
 
     size_t errors = vector_len(reports->messages);
     const char *common = paths_base(reports->messages);
@@ -470,17 +470,17 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
 
     if (internal > 0) {
         fprintf(stderr, "%zu internal error(s) encountered during %s stage\n", internal, name);
-        result = 99;
+        result = EXIT_INTERAL;
     } else if (fatal > 0) {
         fprintf(stderr, "%zu fatal error(s) encountered during %s stage\n", fatal, name);
-        result = 1;
+        result = EXIT_ERROR;
     }
 
     if (suppressed_warnings > 0 || suppressed_fatal > 0) {
         fprintf(stderr, "%zu extra warning(s) and %zu extra error(s) suppressed\n", suppressed_warnings, suppressed_fatal);
     }
 
-    reports->messages = vector_new(0);
+    vector_reset(reports->messages);
 
     return result;
 }

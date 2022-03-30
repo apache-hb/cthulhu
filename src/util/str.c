@@ -1,10 +1,7 @@
-#define __STDC_WANT_LIB_EXT1__ 1
-
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/io.h"
 
-#include <corecrt.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -215,9 +212,9 @@ bool strcontains(const char *str, const char *sub) {
     return strstr(str, sub) != NULL;
 }
 
-char *ctu_strerror(errno_t err) {
-    char *buf = ctu_malloc(RSIZE_MAX);
-    strerror_s(buf, RSIZE_MAX, err);
+char *ctu_strerror(int err) {
+    char *buf = ctu_malloc(256);
+    STRERROR_R(err, buf, 256);
     return buf;
 }
 

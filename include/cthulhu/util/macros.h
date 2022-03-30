@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __APPLE__
+#   error __APPLE__
+#endif
+
 /// decorators with meaning to the compiler
 #if __GNUC__ >= 11
 #   define PRINT(fmt, args) __attribute__((format(printf, fmt, args)))
@@ -95,11 +99,13 @@
 #if CTU_WINDOWS
 #   define ALLOCA(size) _alloca(size)
 #   define STRTOK_R(str, delim, save) strtok_s(str, delim, save)
+#   define STRERROR_R(err, buf, len) strerror_s(buf, len, err)
 #   define PATH_LEN MAX_PATH
 #else 
 #   include <alloca.h>
 #   define ALLOCA(size) alloca(size)
 #   define STRTOK_R(str, delim, save) strtok_r(str, delim, save)
+#   define STRERROR_R(err, buf, len) strerror_r(err, buf, len)
 #   define PATH_LEN PATH_MAX
 #endif
 

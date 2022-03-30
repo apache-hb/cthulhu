@@ -1,5 +1,6 @@
 #include "cthulhu/driver/driver.h"
 
+#include "cthulhu/util/report.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/hlir/sema.h"
@@ -213,7 +214,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
     }
 
     reports_t *reports = begin_reports();
-    int status = 99;
+    int status = EXIT_INTERAL;
 
     init_search_path(driver.stdlib_path);
 

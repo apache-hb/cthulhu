@@ -217,7 +217,7 @@ void ctpanic(const char *msg, ...) {
     vfprintf(stderr, msg, args);
     va_end(args);
 
-    exit(99);
+    exit(EXIT_INTERAL);
 }
 
 // map internals

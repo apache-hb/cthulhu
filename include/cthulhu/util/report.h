@@ -9,6 +9,10 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+#define EXIT_OK 0
+#define EXIT_ERROR 1
+#define EXIT_INTERAL 99
+
 typedef enum {
     INTERNAL, /// an invalid state has been reached internally
     ERROR, /// a user issue that prevents the program from continuing

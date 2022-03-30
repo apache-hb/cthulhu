@@ -1,6 +1,6 @@
 #pragma once
 
-#include <corecrt.h>
+#include <errno.h>
 #include <stdarg.h>
 
 #include "macros.h"
@@ -96,7 +96,7 @@ char *replacestr(const char *str, const char *sub, const char *repl) NONULL;
 
 char *strmove(char *dst, const char *src) NONULL;
 
-char *ctu_strerror(errno_t err) CONSTFN;
+char *ctu_strerror(int err) CONSTFN;
 
 /**
  * hash a string into a size_t
