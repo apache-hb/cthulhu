@@ -1,6 +1,20 @@
 # Cthulhu
 wow this project got out of hand.
 
+## Building
+
+* build dependencies
+  * `meson`
+  * `ninja-build`
+  * `flex`
+  * `bison`
+  * `pkg-config`
+  * `build-essential`
+  * `libgmp-dev` (optional)
+
+* runtime dependencies
+  * `libgmp` (optional)
+
 ## Structure
 
 * src - private source & header files

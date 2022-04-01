@@ -3,7 +3,7 @@ project('cthulhu', [ 'c', 'cpp' ],
     version : '0.1.0',
     meson_version : '>=0.58',
     default_options : [
-        'c_std=gnu11',
+        'c_std=gnu99',
         'warning_level=2', # bison generates code that warns on gcc at level 3
         'default_library=static'#,
         #'werror=true' # werror has to be disabled on windows for mini-gmp to build
@@ -31,6 +31,7 @@ src = [
     # tree output
     'src/emit/json.c',
     'src/emit/c89.c',
+    'src/emit/wasm.c',
 
     # debugging views
     'src/debug/hlir.c',
