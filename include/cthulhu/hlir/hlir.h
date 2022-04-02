@@ -43,6 +43,10 @@ typedef enum {
     HLIR_ALIAS, // an alias for another type
 
     /* declarations */
+    HLIR_LOCAL,
+    HLIR_PARAM,
+    HLIR_GLOBAL,
+
     HLIR_FORWARD,
     HLIR_FUNCTION,
     HLIR_VALUE,
@@ -200,6 +204,9 @@ typedef struct hlir_t {
                 /* the initial value */
                 struct hlir_t *value;
 
+                /* the index of this local */
+                size_t index;
+
                 struct {
                     vector_t *functions;
                     vector_t *globals;
@@ -211,12 +218,6 @@ typedef struct hlir_t {
         const char *error;
     };
 } hlir_t;
-
-///
-/// init functions
-///
-
-void init_hlir(void);
 
 ///
 /// querys
@@ -246,97 +247,6 @@ const char *digit_name(digit_t digit);
 hlir_t *hlir_error(IN const node_t *node, 
                    IN_OPT const char *error);
 
-///
-/// type constructors
-///
-
-/**
- * @brief create a new integer type
- * 
- * @param node where this type was defined
- * @param name the name of this integer type
- * @param width the width of this integer type
- * @param sign the sign of this integer type
- * @return hlir_t* the constructed integer type
- */
-hlir_t *hlir_digit(IN_OPT const node_t *node, 
-                   IN_OPT const char *name, 
-                   digit_t width, 
-                   sign_t sign);
-
-/**
- * @brief construct a new bool type
- * 
- * @param node the node where this type was defined
- * @param name the name of this bool type
- * @return hlir_t* the constructed bool type
- */
-hlir_t *hlir_bool(IN_OPT const node_t *node, 
-                  IN_OPT const char *name);
-
-/**
- * @brief construct a new string type
- * 
- * @param node the node where this type was defined
- * @param name the name of this string type
- * @return hlir_t* the constructed string type
- */
-hlir_t *hlir_string(IN_OPT const node_t *node, 
-                    IN_OPT const char *name);
-
-/**
- * @brief construct a new void type
- * 
- * @param node the node where this type was defined
- * @param name the name of this void type
- * @return hlir_t* 
- */
-hlir_t *hlir_void(IN_OPT const node_t *node, 
-                  IN_OPT const char *name);
-
-/**
- * @brief construct a new closure type
- * 
- * @param node the node where this type was defined
- * @param name the name of this closure type
- * @param params the parameters of this closure type
- * @param result the result of this closure type
- * @param variadic is this a variadic function?
- * @return hlir_t* the constructed closure type
- */
-hlir_t *hlir_closure(IN_OPT const node_t *node, 
-                     IN_OPT const char *name, 
-                     IN vector_t *params, 
-                     IN const hlir_t *result, 
-                     bool variadic);
-
-/**
- * @brief construct a new pointer type
- * 
- * @param node the node where this type was defined
- * @param name the name of this pointer type
- * @param type the type this pointer points to
- * @param indexable can this pointer be indexed?
- * @return hlir_t* the constructed pointer type
- */
-hlir_t *hlir_pointer(IN_OPT const node_t *node, 
-                     IN_OPT const char *name, 
-                     IN hlir_t *type, 
-                     bool indexable);
-
-/**
- * @brief construct a new array type
- * 
- * @param node the node where this type was defined
- * @param name the name of this array type
- * @param element the element type of this array
- * @param length the length of this array
- * @return hlir_t* the constructed array type
- */
-hlir_t *hlir_array(IN_OPT const node_t *node, 
-                   IN_OPT const char *name, 
-                   IN hlir_t *element, 
-                   IN hlir_t *length);
 
 ///
 /// expression constructors
@@ -387,6 +297,12 @@ hlir_t *hlir_new_union(const node_t *node, const char *name);
 hlir_t *hlir_new_alias(const node_t *node, const char *name);
 
 void hlir_add_local(hlir_t *self, hlir_t *local);
+hlir_t *hlir_local(const node_t *node, const char *name, const hlir_t *type);
+hlir_t *hlir_local_with_index(const node_t *node, const char *name, const hlir_t *type, size_t index);
+hlir_t *hlir_new_local(hlir_t *self, const node_t *node, const char *name, const hlir_t *type);
+
+hlir_t *hlir_new_global(const node_t *node, const char *name, const hlir_t *type, const hlir_t *value);
+
 void hlir_add_field(hlir_t *self, hlir_t *field);
 
 void hlir_build_function(hlir_t *self, hlir_t *body);

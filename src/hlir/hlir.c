@@ -119,7 +119,31 @@ hlir_t *hlir_new_function(const node_t *node,
 }
 
 void hlir_add_local(hlir_t *self, hlir_t *local) {
+    CTASSERTF(local->type == HLIR_LOCAL, "add-local expects local, found %d instead", local->type);
+    CTASSERTF(local->index == SIZE_MAX || vector_len(self->locals) == local->index, "add-local expects unset index, found %zu instead", local->index);
     vector_push(&self->locals, local);
+}
+
+hlir_t *hlir_local_with_index(const node_t *node, const char *name, const hlir_t *type, size_t index) {
+    hlir_t *hlir = hlir_new_decl(node, name, type, HLIR_LOCAL);
+    hlir->index = index;
+    return hlir;
+}
+
+hlir_t *hlir_local(const node_t *node, const char *name, const hlir_t *type) {
+    return hlir_local_with_index(node, name, type, SIZE_MAX);
+}
+
+hlir_t *hlir_new_local(hlir_t *self, const node_t *node, const char *name, const hlir_t *type) {
+    hlir_t *hlir = hlir_local(node, name, type);
+    vector_push(&self->locals, hlir);
+    return hlir;
+}
+
+hlir_t *hlir_new_global(const node_t *node, const char *name, const hlir_t *type, const hlir_t *value) {
+    hlir_t *hlir = hlir_new_decl(node, name, type, HLIR_GLOBAL);
+    hlir->value = value;
+    return hlir;
 }
 
 void hlir_build_function(hlir_t *self, hlir_t *body) {

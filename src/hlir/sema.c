@@ -102,7 +102,7 @@ static void check_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) 
     case HLIR_NAME:
         check_recursion(reports, stack, hlir->read);
         break;
-    case HLIR_VALUE:
+    case HLIR_GLOBAL:
         check_recursion(reports, stack, hlir->value);
         break;
     case HLIR_BINARY: case HLIR_COMPARE:

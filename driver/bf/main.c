@@ -8,8 +8,8 @@ void *bf_parse(reports_t *reports, scan_t *scan) {
     UNUSED(reports);
     UNUSED(scan);
 
-    hlir_t *tape = hlir_value(NULL, "tape", TAPE, NULL);
-    hlir_t *cursor = hlir_value(NULL, "cursor", CURSOR, hlir_int_literal(NULL, CURSOR, 0));
+    hlir_t *tape = hlir_new_global(NULL, "tape", TAPE, NULL);
+    hlir_t *cursor = hlir_new_global(NULL, "cursor", CURSOR, hlir_int_literal(NULL, CURSOR, 0));
 
     where_t where = { 0, 0, 0, 0 };
     node_t *node = node_new(scan, where);

@@ -113,12 +113,12 @@ NORETURN PRINT(1, 2)
 void ctpanic(const char *msg, ...);
 
 #if !defined(NDEBUG) && !defined(_NDEBUG)
-#   define CTASSERT(expr, msg) if (!(expr)) { ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" STR(__FILE__) ":" STR(__LINE__) "]: " msg "\n"); }
-#   define CTASSERTF(expr, msg, ...) if (!(expr)) { ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" STR(__FILE__) ":" STR(__LINE__) "]: " msg "\n", __VA_ARGS__); }
+#   define CTASSERT(expr, msg) do { if (!(expr)) { ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" STR(__FILE__) ":" STR(__LINE__) "]: " msg "\n"); } } while (0)
+#   define CTASSERTF(expr, msg, ...) do { if (!(expr)) { ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" STR(__FILE__) ":" STR(__LINE__) "]: " msg "\n", __VA_ARGS__); } } while (0)
 #   define union struct
 #else
-#   define CTASSERT(expr, msg)
-#   define CTASSERTF(expr, msg, ...)
+#   define CTASSERT(expr, msg) do { } while (0)
+#   define CTASSERTF(expr, msg, ...) do { } while (0)
 #endif
 
 #if __has_include(<sal.h>)

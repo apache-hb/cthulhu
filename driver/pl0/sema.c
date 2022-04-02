@@ -242,8 +242,7 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node) {
 
     for (size_t i = 0; i < nlocals; i++) {
         pl0_t *local = vector_get(node->locals, i);
-        hlir_t *it = hlir_value(local->node, local->name, INTEGER, NULL);
-        hlir_add_local(hlir, it);
+        hlir_t *it = hlir_new_local(hlir, local->node, local->name, INTEGER);
         set_var(nest, TAG_VALUES, local->name, it);
     }
 

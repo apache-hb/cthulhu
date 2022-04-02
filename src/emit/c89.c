@@ -196,7 +196,7 @@ static char *emit_call(reports_t *reports, const hlir_t *hlir) {
 static char *emit_expr(reports_t *reports, const hlir_t *hlir) {
     switch (hlir->type) {
     case HLIR_FUNCTION:
-    case HLIR_VALUE:
+    case HLIR_VALUE: case HLIR_LOCAL:
         return ctu_strdup(hlir->name);
     case HLIR_BINARY:
         return emit_binary(reports, hlir);
