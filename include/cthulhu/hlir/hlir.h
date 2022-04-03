@@ -155,7 +155,7 @@ typedef struct hlir_t {
                 /// all types
                 ///
 
-                struct hlir_t *alias;
+                const struct hlir_t *alias;
 
                 /* the aggregate members */
                 vector_t *fields;

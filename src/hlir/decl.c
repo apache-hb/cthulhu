@@ -35,7 +35,7 @@ hlir_t *hlir_begin_struct(const node_t *node, const char *name) {
     return hlir_begin_aggregate(node, name, HLIR_STRUCT);
 }
 
-hlir_t *hlir_build_struct(hlir_t *self) {
+void hlir_build_struct(hlir_t *self) {
     hlir_finish(self, HLIR_STRUCT);
 }
 
@@ -53,7 +53,7 @@ hlir_t *hlir_begin_union(const node_t *node, const char *name) {
     return hlir_begin_aggregate(node, name, HLIR_UNION);
 }
 
-hlir_t *hlir_build_union(hlir_t *self) {
+void hlir_build_union(hlir_t *self) {
     hlir_finish(self, HLIR_UNION);
 }
 
@@ -81,7 +81,7 @@ hlir_t *hlir_begin_alias(const node_t *node, const char *name) {
     return hlir_new_forward(node, name, TYPE, HLIR_ALIAS);
 }
 
-hlir_t *hlir_build_alias(hlir_t *self, const hlir_t *type) {
+void hlir_build_alias(hlir_t *self, const hlir_t *type) {
     hlir_finish(self, HLIR_ALIAS);
     self->alias = type;
 }

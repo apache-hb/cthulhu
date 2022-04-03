@@ -323,6 +323,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     }
 
     if (root->entry != NULL) {
+        hlir_t *body = sema_stmt(sema, root->entry);
         signature_t signature = {
             .params = vector_of(0),
             .result = VOID,

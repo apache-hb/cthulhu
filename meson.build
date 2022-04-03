@@ -25,6 +25,7 @@ src = [
     'src/hlir/type.c',
     'src/hlir/value.c',
     'src/hlir/hlir.c',
+    'src/hlir/decl.c',
 
     'src/hlir/common.c',
 

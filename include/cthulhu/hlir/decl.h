@@ -5,7 +5,7 @@
 ///
 
 hlir_t *hlir_begin_struct(const node_t *node, const char *name);
-hlir_t *hlir_build_struct(hlir_t *self);
+void hlir_build_struct(hlir_t *self);
 hlir_t *hlir_struct(const node_t *node, const char *name, vector_t *fields);
 
 ///
@@ -13,7 +13,7 @@ hlir_t *hlir_struct(const node_t *node, const char *name, vector_t *fields);
 ///
 
 hlir_t *hlir_begin_union(const node_t *node, const char *name);
-hlir_t *hlir_build_union(hlir_t *self);
+void hlir_build_union(hlir_t *self);
 hlir_t *hlir_union(const node_t *node, const char *name, vector_t *fields);
 
 ///
@@ -27,7 +27,7 @@ void hlir_add_field(hlir_t *self, hlir_t *field);
 ///
 
 hlir_t *hlir_begin_alias(const node_t *node, const char *name);
-hlir_t *hlir_build_alias(hlir_t *self, const hlir_t *type);
+void hlir_build_alias(hlir_t *self, const hlir_t *type);
 hlir_t *hlir_alias(const node_t *node, const char *name, const hlir_t *type);
 
 ///
