@@ -92,11 +92,11 @@ static bool find_recursion(reports_t *reports, vector_t **vec, const hlir_t *hli
     return false;
 }
 
-static void check_recursion(reports_t *reports, vector_t **stack, hlir_t *hlir) {
+static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *hlir) {
     if (hlir == NULL) { return; }
     if (find_recursion(reports, stack, hlir, "recursive variable computation")) { return; }
 
-    vector_push(stack, hlir);
+    vector_push(stack, (hlir_t*)hlir);
 
     switch (hlir->type) {
     case HLIR_NAME:

@@ -1,5 +1,7 @@
 #include "cthulhu/driver/driver.h"
 
+#include "cthulhu/hlir/decl.h"
+
 static const hlir_t *CURSOR = NULL;
 static const hlir_t *CELL = NULL;
 static const hlir_t *TAPE = NULL;
@@ -13,8 +15,6 @@ void *bf_parse(reports_t *reports, scan_t *scan) {
 
     where_t where = { 0, 0, 0, 0 };
     node_t *node = node_new(scan, where);
-
-    hlir_t *entry = hlir_new_function(node, "main", vector_of(0), hlir_void(node, "void"), false);
 
     vector_t *stmts = vector_new(scan_size(scan));
 
@@ -46,7 +46,13 @@ void *bf_parse(reports_t *reports, scan_t *scan) {
     }
 
     hlir_t *body = hlir_stmts(node, stmts);
-    hlir_build_function(entry, body);
+
+    signature_t signature = {
+        .params = vector_new(0),
+        .result = hlir_void(node, "void"),
+        .variadic = false
+    };
+    hlir_t *entry = hlir_function(node, "main", signature, vector_of(0), body);
 
     return NULL;
 }

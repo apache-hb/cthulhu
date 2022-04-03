@@ -2,6 +2,8 @@
 #include "ast.h"
 
 #include "cthulhu/hlir/hlir.h"
+#include "cthulhu/hlir/type.h"
+#include "cthulhu/hlir/decl.h"
 #include "cthulhu/util/report-ext.h"
 
 typedef enum {
@@ -162,17 +164,17 @@ static void fwd_decl(sema_t *sema, ast_t *ast) {
 
     switch (ast->of) {
     case AST_STRUCTDECL:
-        decl = hlir_new_struct(ast->node, ast->name);
+        decl = hlir_begin_struct(ast->node, ast->name);
         add_decl(sema, TAG_TYPES, ast->name, decl);
         break;
 
     case AST_UNIONDECL:
-        decl = hlir_new_union(ast->node, ast->name);
+        decl = hlir_begin_union(ast->node, ast->name);
         add_decl(sema, TAG_TYPES, ast->name, decl);
         break;
 
     case AST_ALIASDECL:
-        decl = hlir_new_alias(ast->node, ast->name);
+        decl = hlir_begin_alias(ast->node, ast->name);
         add_decl(sema, TAG_TYPES, ast->name, decl);
         break;
 
@@ -231,10 +233,8 @@ hlir_t *ctu_sema(reports_t *reports, void *ast) {
         sema_decl(sema, vector_get(root->decls, i));
     }
 
-    hlir_t *mod = hlir_new_module(root->node, "todo");
-
     vector_t *values = map_values(sema_tag(sema, TAG_TYPES));
-    hlir_build_module(mod, vector_of(0), vector_of(0), values);
+    hlir_t *mod = hlir_module(root->node, "todo", vector_of(0), values, vector_of(0));
 
     sema_delete(sema);
 

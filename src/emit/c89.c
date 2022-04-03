@@ -162,7 +162,7 @@ static void emit_import_decl(reports_t *reports, const hlir_t *hlir) {
     switch (hlir->type) {
     case HLIR_FUNCTION:
         return emit_function_import(hlir);
-    case HLIR_VALUE:
+    case HLIR_GLOBAL:
         return emit_value_import(hlir);
     default:
         ctu_assert(reports, "invalid import type %d", hlir->type);
@@ -196,7 +196,7 @@ static char *emit_call(reports_t *reports, const hlir_t *hlir) {
 static char *emit_expr(reports_t *reports, const hlir_t *hlir) {
     switch (hlir->type) {
     case HLIR_FUNCTION:
-    case HLIR_VALUE: case HLIR_LOCAL:
+    case HLIR_GLOBAL: case HLIR_LOCAL:
         return ctu_strdup(hlir->name);
     case HLIR_BINARY:
         return emit_binary(reports, hlir);
@@ -293,7 +293,7 @@ static void fwd_global(reports_t *reports, const hlir_t *hlir) {
 }
 
 static void emit_global(reports_t *reports, const hlir_t *hlir) {
-    if (hlir->type != HLIR_VALUE) { return; }
+    if (hlir->type != HLIR_GLOBAL) { return; }
 
     printf("%s[1] = { %s };\n", emit_hlir_type(reports, hlir), emit_expr(reports, hlir->value));
 }

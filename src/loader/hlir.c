@@ -1,5 +1,8 @@
 #include "cthulhu/loader/hlir.h"
 
+#include "cthulhu/hlir/type.h"
+#include "cthulhu/hlir/decl.h"
+
 #include "cthulhu/ast/compile.h"
 
 ///
@@ -230,16 +233,6 @@ static const layout_t ARRAY_LAYOUT = LAYOUT("array", ARRAY_FIELDS);
 /// declarations
 ///
 
-INDICES(VALUE_SPAN, VALUE_ATTRIBS, VALUE_NAME, VALUE_TYPE, VALUE_INIT);
-static const field_t VALUE_FIELDS[] = {
-    [VALUE_SPAN] = FIELD("span", FIELD_REFERENCE),
-    [VALUE_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
-    [VALUE_NAME] = FIELD("name", FIELD_STRING),
-    [VALUE_TYPE] = FIELD("type", FIELD_REFERENCE),
-    [VALUE_INIT] = FIELD("init", FIELD_REFERENCE)
-};
-static const layout_t VALUE_LAYOUT = LAYOUT("value", VALUE_FIELDS);
-
 INDICES(LOCAL_SPAN, LOCAL_ATTRIBS, LOCAL_NAME, LOCAL_TYPE, LOCAL_INDEX);
 static const field_t LOCAL_FIELDS[] = {
     [LOCAL_SPAN] = FIELD("span", FIELD_REFERENCE),
@@ -312,7 +305,6 @@ static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
     [HLIR_POINTER] = POINTER_LAYOUT,
     [HLIR_ARRAY] = ARRAY_LAYOUT,
     
-    [HLIR_VALUE] = VALUE_LAYOUT,
     [HLIR_LOCAL] = LOCAL_LAYOUT,
     [HLIR_GLOBAL] = GLOBAL_LAYOUT,
     [HLIR_FUNCTION] = FUNCTION_LAYOUT,
@@ -615,22 +607,6 @@ static hlir_t *load_array_node(load_t *load, index_t index) {
     );
 }
 
-static hlir_t *load_value_node(load_t *load, index_t index) {
-    value_t values[FIELDLEN(VALUE_FIELDS)];
-    read_entry(load->data, index, values);
-
-    hlir_t *hlir = hlir_new_value(
-        get_span(load, values), 
-        get_string(values[VALUE_NAME]), 
-        GET_REF(load, values, VALUE_TYPE)
-    );
-
-    hlir_build_value(hlir, GET_REF_OPT(load, values, VALUE_INIT));
-    hlir_set_attributes(hlir, load_attributes(load, values[VALUE_ATTRIBS]));
-
-    return hlir;
-}
-
 static hlir_t *load_local_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(LOCAL_FIELDS)];
     read_entry(load->data, index, values);
@@ -647,7 +623,7 @@ static hlir_t *load_global_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(GLOBAL_FIELDS)];
     read_entry(load->data, index, values);
 
-    return hlir_new_global(
+    return hlir_global(
         get_span(load, values), 
         get_string(values[GLOBAL_NAME]), 
         GET_REF(load, values, GLOBAL_TYPE),
@@ -684,14 +660,13 @@ static hlir_t *load_module_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(MODULE_FIELDS)];
     read_entry(load->data, index, values);
 
-    hlir_t *hlir = hlir_new_module(get_span(load, values), get_string(values[MODULE_NAME]));
-    hlir_build_module(hlir, 
+    return hlir_module(
+        get_span(load, values), 
+        get_string(values[MODULE_NAME]),
+        get_arr(load, values[MODULE_TYPES]),
         get_arr(load, values[MODULE_GLOBALS]), 
-        get_arr(load, values[MODULE_FUNCTIONS]), 
-        get_arr(load, values[MODULE_TYPES])
+        get_arr(load, values[MODULE_FUNCTIONS])
     );
-
-    return hlir;
 }
 
 static hlir_t *load_node(load_t *load, index_t index, const char *trace) {
@@ -724,7 +699,6 @@ static hlir_t *load_node(load_t *load, index_t index, const char *trace) {
     case HLIR_ARRAY: return load_array_node(load, index);
 
     /* declarations */
-    case HLIR_VALUE: return load_value_node(load, index);
     case HLIR_LOCAL: return load_local_node(load, index);
     case HLIR_GLOBAL: return load_global_node(load, index);
     case HLIR_FUNCTION: return load_function_node(load, index);
@@ -1061,18 +1035,6 @@ static index_t save_array_node(data_t *data, const hlir_t *hlir) {
 
 /// declarations
 
-static index_t save_value_node(data_t *data, const hlir_t *hlir) {
-    value_t values[] = {
-        [VALUE_SPAN] = span_ref(data, hlir),
-        [VALUE_ATTRIBS] = attrib_ref(data, hlir),
-        [VALUE_NAME] = string_value(hlir->name),
-        [VALUE_TYPE] = make_ref(data, typeof_hlir(hlir)),
-        [VALUE_INIT] = make_ref_opt(data, hlir->value)
-    };
-    
-    return write_entry(data, HLIR_VALUE, values);
-}
-
 static index_t save_local_node(data_t *data, const hlir_t *hlir) {
     value_t values[] = {
         [LOCAL_SPAN] = span_ref(data, hlir),
@@ -1159,7 +1121,6 @@ static index_t save_node(data_t *data, const hlir_t *hlir) {
     case HLIR_TYPE: return NULL_INDEX;
 
     /* declarations */
-    case HLIR_VALUE: return save_value_node(data, hlir);
     case HLIR_LOCAL: return save_local_node(data, hlir);
     case HLIR_GLOBAL: return save_global_node(data, hlir);
     case HLIR_FUNCTION: return save_function_node(data, hlir);

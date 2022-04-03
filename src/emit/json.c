@@ -207,7 +207,7 @@ static cJSON *emit_expr(emit_t *emit, const hlir_t *hlir) {
     case HLIR_STRING_LITERAL:
         result = emit_string(emit, hlir);
         break;
-    case HLIR_VALUE:
+    case HLIR_GLOBAL:
         result = lookup_value(emit, hlir);
         break;
     case HLIR_FUNCTION:

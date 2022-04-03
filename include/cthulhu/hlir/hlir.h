@@ -49,7 +49,6 @@ typedef enum {
 
     HLIR_FORWARD,
     HLIR_FUNCTION,
-    HLIR_VALUE,
     HLIR_MODULE,
 
     HLIR_FIELD,
@@ -202,7 +201,7 @@ typedef struct hlir_t {
                 };
 
                 /* the initial value */
-                struct hlir_t *value;
+                const struct hlir_t *value;
 
                 /* the index of this local */
                 size_t index;
@@ -224,7 +223,7 @@ typedef struct hlir_t {
 ///
 
 const hlir_t *typeof_hlir(IN const hlir_t *self);
-MAYBE const char *nameof_hlir(IN const hlir_t *self);
+const char *nameof_hlir(IN const hlir_t *self);
 bool hlir_is_imported(const hlir_t *self);
 bool hlir_is(const hlir_t *self, hlir_type_t type);
 bool hlir_can_be(const hlir_t *self, hlir_type_t type);
@@ -244,9 +243,7 @@ const char *digit_name(digit_t digit);
  * @param error the error message
  * @return hlir_t* the error node
  */
-hlir_t *hlir_error(IN const node_t *node, 
-                   IN_OPT const char *error);
-
+hlir_t *hlir_error(IN const node_t *node, IN_OPT const char *error);
 
 ///
 /// expression constructors
@@ -282,47 +279,4 @@ hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src);
 
 hlir_t *hlir_field(const node_t *node, const hlir_t *type, const char *name);
 
-hlir_t *hlir_new_module(IN const node_t *node, 
-                        IN const char *name);
-
-hlir_t *hlir_new_function(IN const node_t *node, 
-                          IN const char *name,
-                          IN vector_t *params,
-                          IN const hlir_t *result,
-                          bool variadic);
-
-hlir_t *hlir_new_value(const node_t *node, const char *name, const hlir_t *type);
-hlir_t *hlir_new_struct(const node_t *node, const char *name);
-hlir_t *hlir_new_union(const node_t *node, const char *name);
-hlir_t *hlir_new_alias(const node_t *node, const char *name);
-
-void hlir_add_local(hlir_t *self, hlir_t *local);
-hlir_t *hlir_local(const node_t *node, const char *name, const hlir_t *type);
-hlir_t *hlir_local_with_index(const node_t *node, const char *name, const hlir_t *type, size_t index);
-hlir_t *hlir_new_local(hlir_t *self, const node_t *node, const char *name, const hlir_t *type);
-
-hlir_t *hlir_new_global(const node_t *node, const char *name, const hlir_t *type, const hlir_t *value);
-
-void hlir_add_field(hlir_t *self, hlir_t *field);
-
-void hlir_build_function(hlir_t *self, hlir_t *body);
-void hlir_build_value(hlir_t *self, hlir_t *value);
-
-void hlir_build_struct(hlir_t *hlir);
-void hlir_build_union(hlir_t *hlir);
-void hlir_build_alias(hlir_t *self, hlir_t *type);
-
-hlir_t *hlir_value(const node_t *node, const char *name, const hlir_t *type, hlir_t *value);
-
 void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes);
-
-/**
- * @brief finalize a module and provide it with data
- * 
- * @param self the module to finish
- * @param imports all imported symbols
- * @param values all globals defined in this module
- * @param functions all functions defined in this module
- * @param types all types defined in this module
- */
-void hlir_build_module(hlir_t *self, vector_t *values, vector_t *functions, vector_t *types);

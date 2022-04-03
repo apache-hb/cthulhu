@@ -1,12 +1,6 @@
 #include "common.h"
 
-static hlir_t *hlir_new_forward(const node_t *node, const char *name, const hlir_t *of, hlir_type_t expect) {
-    hlir_t *hlir = hlir_new(node, of, HLIR_FORWARD);
-    hlir->name = name;
-    hlir->expected = expect;
-    hlir->attributes = &DEFAULT_ATTRIBS;
-    return hlir;
-}
+#include "cthulhu/hlir/type.h"
 
 hlir_t *hlir_error(const node_t *node, const char *error) {
     hlir_t *self = hlir_new(node, TYPE, HLIR_ERROR);
@@ -103,120 +97,13 @@ hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src) {
     return self;
 }
 
-// building functions
-
-hlir_t *hlir_new_function(const node_t *node, 
-                          const char *name, 
-                          vector_t *params,
-                          const hlir_t *result,
-                          bool variadic) {
-    
-    hlir_t *type = hlir_closure(node, name, params, result, variadic);
-    hlir_t *hlir = hlir_new_forward(node, name, type, HLIR_FUNCTION);
-    hlir->locals = vector_new(0);
-    hlir->body = NULL;
-    return hlir;
-}
-
-void hlir_add_local(hlir_t *self, hlir_t *local) {
-    CTASSERTF(local->type == HLIR_LOCAL, "add-local expects local, found %d instead", local->type);
-    CTASSERTF(local->index == SIZE_MAX || vector_len(self->locals) == local->index, "add-local expects unset index, found %zu instead", local->index);
-    vector_push(&self->locals, local);
-}
-
-hlir_t *hlir_local_with_index(const node_t *node, const char *name, const hlir_t *type, size_t index) {
-    hlir_t *hlir = hlir_new_decl(node, name, type, HLIR_LOCAL);
-    hlir->index = index;
-    return hlir;
-}
-
-hlir_t *hlir_local(const node_t *node, const char *name, const hlir_t *type) {
-    return hlir_local_with_index(node, name, type, SIZE_MAX);
-}
-
-hlir_t *hlir_new_local(hlir_t *self, const node_t *node, const char *name, const hlir_t *type) {
-    hlir_t *hlir = hlir_local(node, name, type);
-    vector_push(&self->locals, hlir);
-    return hlir;
-}
-
-hlir_t *hlir_new_global(const node_t *node, const char *name, const hlir_t *type, const hlir_t *value) {
-    hlir_t *hlir = hlir_new_decl(node, name, type, HLIR_GLOBAL);
-    hlir->value = value;
-    return hlir;
-}
-
-void hlir_build_function(hlir_t *self, hlir_t *body) {
-    self->type = HLIR_FUNCTION;
-    self->body = body;
-}
-
 // building values
-
-hlir_t *hlir_new_value(const node_t *node, const char *name, const hlir_t *type) {
-    return hlir_new_forward(node, name, type, HLIR_VALUE);
-}
-
-void hlir_build_value(hlir_t *self, hlir_t *value) {
-    self->type = HLIR_VALUE;
-    self->value = value;
-}
-
-hlir_t *hlir_value(const node_t *node, const char *name, const hlir_t *type, hlir_t *value) {
-    hlir_t *self = hlir_new_value(node, name, type);
-    hlir_build_value(self, value);
-    return self;
-}
-
-hlir_t *hlir_new_struct(const node_t *node, const char *name) {
-    hlir_t *self = hlir_new_forward(node, name, NULL, HLIR_STRUCT);
-    self->fields = vector_new(4);
-    return self;
-}
-
-hlir_t *hlir_new_union(const node_t *node, const char *name) {
-    hlir_t *self = hlir_new_forward(node, name, NULL, HLIR_UNION);
-    self->fields = vector_new(4);
-    return self;
-}
-
-hlir_t *hlir_new_alias(const node_t *node, const char *name) {
-    hlir_t *self = hlir_new_forward(node, name, NULL, HLIR_ALIAS);
-    return self;
-}
 
 hlir_t *hlir_field(const node_t *node, const hlir_t *type, const char *name) {
     return hlir_new_decl(node, name, type, HLIR_FIELD);
 }
 
-void hlir_add_field(hlir_t *self, hlir_t *field) {
-    vector_push(&self->fields, field);
-}
-
-void hlir_build_struct(hlir_t *hlir) {
-    hlir->type = HLIR_STRUCT;
-}
-
-void hlir_build_union(hlir_t *hlir) {
-    hlir->type = HLIR_UNION;
-}
-
-void hlir_build_alias(hlir_t *self, hlir_t *type) {
-    self->type = HLIR_ALIAS;
-    self->alias = type;
-}
-
 // building modules
-
-hlir_t *hlir_new_module(const node_t *node, const char *name) {
-    return hlir_new_decl(node, name, INVALID, HLIR_MODULE);
-}
-
-void hlir_build_module(hlir_t *self, vector_t *values, vector_t *functions, vector_t *types) {
-    self->globals = values;
-    self->functions = functions;
-    self->types = types;
-}
 
 void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes) {
     self->attributes = attributes;

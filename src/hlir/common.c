@@ -22,6 +22,12 @@ hlir_t *hlir_new_decl(const node_t *node, const char *name, const hlir_t *of, hl
     return hlir;
 }
 
+hlir_t *hlir_new_forward(const node_t *node, const char *name, const hlir_t *of, hlir_type_t expect) {
+    hlir_t *hlir = hlir_new_decl(node, name, of, HLIR_FORWARD);
+    hlir->expected = expect;
+    return hlir;
+}
+
 void init_hlir(void) {
     TYPE = hlir_new(NULL, NULL, HLIR_TYPE);
     TYPE->of = TYPE;

@@ -1,5 +1,7 @@
 #include "sema.h"
 
+#include "cthulhu/hlir/type.h"
+#include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/util/report-ext.h"
 
@@ -26,9 +28,14 @@ void pl0_init(void) {
     VOID = hlir_void(node, "void");
 
     FMT = hlir_string_literal(node, STRING, "%d\n");
-    PRINT = hlir_new_function(node, "printf", vector_init(STRING), INTEGER, true);
+
+    signature_t signature = {
+        .params = vector_init(STRING),
+        .result = INTEGER,
+        .variadic = true
+    };
+    PRINT = hlir_function(node, "printf", signature, vector_of(0), NULL);
     hlir_set_attributes(PRINT, IMPORTED);
-    hlir_build_function(PRINT, NULL);
 }
 
 typedef enum {
@@ -276,14 +283,14 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     for (size_t i = 0; i < nconsts; i++) {
         pl0_t *it = vector_get(root->consts, i);
-        hlir_t *hlir = hlir_new_value(it->node, it->name, INTEGER);
+        hlir_t *hlir = hlir_begin_global(it->node, it->name, INTEGER);
         set_var(sema, TAG_CONSTS, it->name, hlir);
         vector_set(consts, i, hlir);
     }
 
     for (size_t i = 0; i < nglobals; i++) {
         pl0_t *it = vector_get(root->globals, i);
-        hlir_t *hlir = hlir_new_value(it->node, it->name, INTEGER);
+        hlir_t *hlir = hlir_begin_global(it->node, it->name, INTEGER);
         set_var(sema, TAG_VALUES, it->name, hlir);
         vector_set(globals, i, hlir);
     }
@@ -300,13 +307,13 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     for (size_t i = 0; i < nconsts; i++) {
         pl0_t *it = vector_get(root->consts, i);
         hlir_t *hlir = vector_get(consts, i);
-        hlir_build_value(hlir, sema_value(sema, it));
+        hlir_build_global(hlir, sema_value(sema, it));
     }
 
     for (size_t i = 0; i < nglobals; i++) {
         pl0_t *it = vector_get(root->globals, i);
         hlir_t *hlir = vector_get(globals, i);
-        hlir_build_value(hlir, sema_value(sema, it));
+        hlir_build_global(hlir, sema_value(sema, it));
     }
 
     for (size_t i = 0; i < nprocs; i++) {
@@ -315,18 +322,22 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
         sema_proc(sema, hlir, it);
     }
 
-    if (root->entry) {
-        hlir_t *hlir = hlir_new_function(root->node, "main", vector_of(0), VOID, false);
-        hlir_t *body = sema_stmt(sema, root->entry);
-        hlir_build_function(hlir, body);
+    if (root->entry != NULL) {
+        signature_t signature = {
+            .params = vector_of(0),
+            .result = VOID,
+            .variadic = false
+        };
+        hlir_t *hlir = hlir_function(root->node, "main", signature, vector_of(0), body);
         hlir_set_attributes(hlir, EXPORTED);
         vector_push(&procs, hlir);
     }
 
     vector_push(&procs, PRINT);
 
-    hlir_t *mod = hlir_new_module(root->node, root->mod);
-    hlir_build_module(mod, vector_join(consts, globals), procs, vector_of(0));
+    hlir_t *mod = hlir_module(root->node, root->mod, vector_of(0), vector_join(consts, globals), procs);
+    
     sema_delete(sema);
+    
     return mod;
 }

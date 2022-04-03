@@ -171,7 +171,7 @@ static void emit_node(wasm_t *wasm, const hlir_t *node) {
         emit_digit_literal_node(wasm, node);
         break;
 
-    case HLIR_VALUE:
+    case HLIR_GLOBAL:
         emit_value_node(wasm, node);
         break;
 

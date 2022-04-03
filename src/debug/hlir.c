@@ -120,7 +120,7 @@ static void debug_node(write_t *out, const char *tag, bool detail, const hlir_t 
 
     /* decls */
 
-    case HLIR_VALUE:
+    case HLIR_GLOBAL:
         write(out, tag, format("value `%s`", nameof_hlir(hlir)));
         if (detail) {
             into(out);

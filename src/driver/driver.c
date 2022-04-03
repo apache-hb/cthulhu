@@ -1,5 +1,7 @@
 #include "cthulhu/driver/driver.h"
 
+#include "cthulhu/hlir/init.h"
+
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/ast/compile.h"
