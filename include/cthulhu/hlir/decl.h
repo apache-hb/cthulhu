@@ -27,7 +27,7 @@ void hlir_add_field(hlir_t *self, hlir_t *field);
 ///
 
 hlir_t *hlir_begin_alias(const node_t *node, const char *name);
-void hlir_build_alias(hlir_t *self, const hlir_t *type);
+void hlir_build_alias(hlir_t *self, const hlir_t *alias);
 hlir_t *hlir_alias(const node_t *node, const char *name, const hlir_t *type);
 
 ///
@@ -43,6 +43,7 @@ hlir_t *hlir_global(const node_t *node, const char *name, const hlir_t *type, co
 ///
 
 hlir_t *hlir_local(const node_t *node, const char *name, const hlir_t *type);
+hlir_t *hlir_indexed_local(const node_t *node, const char *name, size_t index, const hlir_t *type);
 
 ///
 /// function builders
@@ -55,15 +56,14 @@ typedef struct {
 } signature_t;
 
 hlir_t *hlir_begin_function(const node_t *node, const char *name, signature_t signature);
-void hlir_build_function(hlir_t *self, const hlir_t *body);
-hlir_t *hlir_function(const node_t *node, const char *name, signature_t signature, vector_t *locals, const hlir_t *body);
+void hlir_build_function(hlir_t *self, hlir_t *body);
+hlir_t *hlir_function(const node_t *node, const char *name, signature_t signature, vector_t *locals, hlir_t *body);
 
 ///
 /// extra function details
 ///
 
-void hlir_add_local(hlir_t *self, const hlir_t *local);
-hlir_t *hlir_get_param(const hlir_t *self, const char *name);
+void hlir_add_local(hlir_t *self, hlir_t *local);
 
 ///
 /// module builders

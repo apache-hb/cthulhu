@@ -21,7 +21,6 @@ typedef enum {
     HLIR_BINARY, // lhs op rhs
     HLIR_COMPARE, // lhs op rhs
     HLIR_CALL, // expr(args...)
-    HLIR_ARRAY_INIT, // { expr, expr, ... }
 
     /* statements */
     HLIR_STMTS, // a list of statements
@@ -56,7 +55,7 @@ typedef enum {
     HLIR_ERROR,
 
     HLIR_TOTAL
-} hlir_type_t;
+} hlir_kind_t;
 
 typedef enum {
     DIGIT_CHAR,
@@ -79,7 +78,7 @@ typedef enum {
 } sign_t;
 
 typedef struct hlir_t {
-    hlir_type_t type; // the type of this node
+    hlir_kind_t type; // the type of this node
     const node_t *node; // the node span of this hlir
     const struct hlir_t *of; // the type this hlir evaluates to
 
@@ -166,11 +165,22 @@ typedef struct hlir_t {
                     sign_t sign;
                 };
 
-                /* closure type */
+                /* either a closure type or a function */
                 struct {
                     vector_t *params;
                     const struct hlir_t *result;
                     bool variadic;
+                    
+                    /* the local variables */
+                    vector_t *locals;
+
+                    union {
+                        /* the body of this function */
+                        struct hlir_t *body;
+
+                        /* the type this is expected to be */
+                        hlir_kind_t expected;
+                    };
                 };
 
                 /* pointer type */
@@ -188,17 +198,6 @@ typedef struct hlir_t {
                 ///
                 /// all declarations
                 ///
-
-                /* the type this is expected to be */
-                hlir_type_t expected;
-
-                struct {
-                    /* the local variables */
-                    vector_t *locals;
-
-                    /* the body of this function */
-                    struct hlir_t *body;
-                };
 
                 /* the initial value */
                 const struct hlir_t *value;
@@ -222,19 +221,13 @@ typedef struct hlir_t {
 /// querys
 ///
 
-const hlir_t *typeof_hlir(IN const hlir_t *self);
-const char *nameof_hlir(IN const hlir_t *self);
 bool hlir_is_imported(const hlir_t *self);
-bool hlir_is(const hlir_t *self, hlir_type_t type);
-bool hlir_can_be(const hlir_t *self, hlir_type_t type);
+bool hlir_can_be(const hlir_t *self, hlir_kind_t type);
 bool hlir_is_sentinel(const hlir_t *self);
 
 vector_t *closure_params(const hlir_t *self);
 bool closure_variadic(const hlir_t *self);
 const hlir_t *closure_result(const hlir_t *self);
-
-const char *sign_name(sign_t sign);
-const char *digit_name(digit_t digit);
 
 /**
  * @brief create an error

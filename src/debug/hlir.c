@@ -1,4 +1,5 @@
 #include "cthulhu/debug/hlir.h"
+#include "cthulhu/hlir/query.h"
 
 typedef struct {
     reports_t *reports;
@@ -94,23 +95,23 @@ static void debug_node(write_t *out, const char *tag, bool detail, const hlir_t 
     /* types */
 
     case HLIR_DIGIT:
-        write(out, tag, format("digit `%s` (sign = %s, width = %s)", nameof_hlir(hlir), sign_name(hlir->sign), digit_name(hlir->width)));
+        write(out, tag, format("digit `%s` (sign = %s, width = %s)", get_hlir_name(hlir), hlir_sign_to_string(hlir->sign), hlir_digit_to_string(hlir->width)));
         break;
 
     case HLIR_BOOL:
-        write(out, tag, format("bool `%s`", nameof_hlir(hlir)));
+        write(out, tag, format("bool `%s`", get_hlir_name(hlir)));
         break;
     
     case HLIR_STRING:
-        write(out, tag, format("string `%s`", nameof_hlir(hlir)));
+        write(out, tag, format("string `%s`", get_hlir_name(hlir)));
         break;
 
     case HLIR_VOID:
-        write(out, tag, format("void `%s`", nameof_hlir(hlir)));
+        write(out, tag, format("void `%s`", get_hlir_name(hlir)));
         break;
 
     case HLIR_CLOSURE:
-        write(out, tag, format("closure `%s`", nameof_hlir(hlir)));
+        write(out, tag, format("closure `%s`", get_hlir_name(hlir)));
         into(out);
             debug_vec(out, hlir->params, false, "params");
             debug_node(out, "result", false, hlir->result);
@@ -121,19 +122,19 @@ static void debug_node(write_t *out, const char *tag, bool detail, const hlir_t 
     /* decls */
 
     case HLIR_GLOBAL:
-        write(out, tag, format("value `%s`", nameof_hlir(hlir)));
+        write(out, tag, format("value `%s`", get_hlir_name(hlir)));
         if (detail) {
             into(out);
-                debug_node(out, "type", true, typeof_hlir(hlir));
+                debug_node(out, "type", true, get_hlir_type(hlir));
                 debug_node(out, "value", true, hlir->value);
             outof(out);
         }
         break;
 
     case HLIR_FUNCTION:
-        write(out, tag, format("function `%s`", nameof_hlir(hlir)));
+        write(out, tag, format("function `%s`", get_hlir_name(hlir)));
         into(out);
-            debug_node(out, "signature", true, typeof_hlir(hlir));
+            debug_node(out, "signature", true, get_hlir_type(hlir));
         outof(out);
         debug_vec(out, hlir->locals, true, "locals");
         into(out);
@@ -142,7 +143,7 @@ static void debug_node(write_t *out, const char *tag, bool detail, const hlir_t 
         break;
 
     case HLIR_MODULE:
-        write(out, tag, format("module `%s`", nameof_hlir(hlir)));
+        write(out, tag, format("module `%s`", get_hlir_name(hlir)));
         debug_vec(out, hlir->types, true, "types");
         debug_vec(out, hlir->globals, true, "globals");
         debug_vec(out, hlir->functions, true, "functions");

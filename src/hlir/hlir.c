@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "cthulhu/hlir/type.h"
+#include "cthulhu/hlir/query.h"
 
 hlir_t *hlir_error(const node_t *node, const char *error) {
     hlir_t *self = hlir_new(node, TYPE, HLIR_ERROR);
@@ -33,7 +34,7 @@ hlir_t *hlir_string_literal(const node_t *node, const hlir_t *type, const char *
 }
 
 hlir_t *hlir_name(const node_t *node, hlir_t *read) {
-    hlir_t *self = hlir_new(node, typeof_hlir(read), HLIR_NAME);
+    hlir_t *self = hlir_new(node, get_hlir_type(read), HLIR_NAME);
     self->read = read;
     return self;
 }

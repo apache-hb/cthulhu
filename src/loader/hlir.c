@@ -2,8 +2,10 @@
 
 #include "cthulhu/hlir/type.h"
 #include "cthulhu/hlir/decl.h"
+#include "cthulhu/hlir/query.h"
 
 #include "cthulhu/ast/compile.h"
+#include "version.h"
 
 ///
 /// layouts
@@ -253,12 +255,14 @@ static const field_t GLOBAL_FIELDS[] = {
 };
 static const layout_t GLOBAL_LAYOUT = LAYOUT("global", GLOBAL_FIELDS);
 
-INDICES(FUNCTION_SPAN, FUNCTION_ATTRIBS, FUNCTION_NAME, FUNCTION_TYPE, FUNCTION_LOCALS, FUNCTION_BODY);
+INDICES(FUNCTION_SPAN, FUNCTION_ATTRIBS, FUNCTION_NAME, FUNCTION_PARAMS, FUNCTION_RESULT, FUNCTION_VARIADIC, FUNCTION_LOCALS, FUNCTION_BODY);
 static const field_t FUNCTION_FIELDS[] = {
     [FUNCTION_SPAN] = FIELD("span", FIELD_REFERENCE),
     [FUNCTION_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
     [FUNCTION_NAME] = FIELD("name", FIELD_STRING),
-    [FUNCTION_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [FUNCTION_PARAMS] = FIELD("params", FIELD_ARRAY),
+    [FUNCTION_RESULT] = FIELD("result", FIELD_REFERENCE),
+    [FUNCTION_VARIADIC] = FIELD("variadic", FIELD_BOOL),
     [FUNCTION_LOCALS] = FIELD("locals", FIELD_ARRAY),
     [FUNCTION_BODY] = FIELD("body", FIELD_REFERENCE)
 };
@@ -315,7 +319,7 @@ static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
 static const format_t GLOBAL = FORMAT(HEADER_LAYOUT, ALL_TYPES);
 
 #define HLIR_SUBMAGIC 0x484C4952 // 'HLIR'
-#define HLIR_VERSION NEW_VERSION(0, 1, 0)
+#define HLIR_VERSION NEW_VERSION(CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH)
 
 ///
 /// hlir loading 
@@ -611,11 +615,11 @@ static hlir_t *load_local_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(LOCAL_FIELDS)];
     read_entry(load->data, index, values);
 
-    return hlir_local_with_index(
+    return hlir_indexed_local(
         get_span(load, values), 
         get_string(values[LOCAL_NAME]), 
-        GET_REF(load, values, LOCAL_TYPE),
-        get_int(values[LOCAL_INDEX])
+        get_int(values[LOCAL_INDEX]),
+        GET_REF(load, values, LOCAL_TYPE)
     );
 }
 
@@ -635,22 +639,20 @@ static hlir_t *load_function_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(FUNCTION_FIELDS)];
     read_entry(load->data, index, values);
 
-    hlir_t *type = GET_REF(load, values, FUNCTION_TYPE);
-    vector_t *locals = get_arr(load, values[FUNCTION_LOCALS]);
+    signature_t signature = {
+        .params = get_arr(load, values[FUNCTION_PARAMS]),
+        .result = GET_REF(load, values, FUNCTION_RESULT),
+        .variadic = get_bool(values[FUNCTION_VARIADIC])
+    };
 
-    hlir_t *hlir = hlir_new_function(
+    hlir_t *hlir = hlir_function(
         get_span(load, values), 
         get_string(values[FUNCTION_NAME]), 
-        closure_params(type),
-        closure_result(type),
-        closure_variadic(type)
+        signature,
+        get_arr(load, values[FUNCTION_LOCALS]),
+        GET_REF_OPT(load, values, FUNCTION_BODY)
     );
 
-    for (size_t i = 0; i < vector_len(locals); i++) {
-        hlir_add_local(hlir, vector_get(locals, i));
-    }
-
-    hlir_build_function(hlir, GET_REF_OPT(load, values, FUNCTION_BODY));
     hlir_set_attributes(hlir, load_attributes(load, values[FUNCTION_ATTRIBS]));
 
     return hlir;
@@ -829,7 +831,7 @@ static array_t save_array(data_t *data, vector_t *vec) {
 static index_t save_digit_literal_node(data_t *data, const hlir_t *hlir) {
     value_t values[] = {
         [DIGIT_LITERAL_SPAN] = span_ref(data, hlir),
-        [DIGIT_LITERAL_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [DIGIT_LITERAL_TYPE] = make_ref(data, get_hlir_type(hlir)),
         [DIGIT_LITERAL_VALUE] = digit_value(hlir->digit)
     };
 
@@ -839,7 +841,7 @@ static index_t save_digit_literal_node(data_t *data, const hlir_t *hlir) {
 static index_t save_bool_literal_node(data_t *data, const hlir_t *hlir) {
     value_t values[] = {
         [BOOL_LITERAL_SPAN] = span_ref(data, hlir),
-        [BOOL_LITERAL_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [BOOL_LITERAL_TYPE] = make_ref(data, get_hlir_type(hlir)),
         [BOOL_LITERAL_VALUE] = bool_value(hlir->boolean)
     };
 
@@ -849,7 +851,7 @@ static index_t save_bool_literal_node(data_t *data, const hlir_t *hlir) {
 static index_t save_string_literal_node(data_t *data, const hlir_t *hlir) {
     value_t values[] = {
         [STRING_LITERAL_SPAN] = span_ref(data, hlir),
-        [STRING_LITERAL_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [STRING_LITERAL_TYPE] = make_ref(data, get_hlir_type(hlir)),
         [STRING_LITERAL_VALUE] = string_value(hlir->string)
     };
 
@@ -868,7 +870,7 @@ static index_t save_name_node(data_t *data, const hlir_t *hlir) {
 static index_t save_unary_node(data_t *data, const hlir_t *hlir) {
     value_t values[] = {
         [UNARY_SPAN] = span_ref(data, hlir),
-        [UNARY_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [UNARY_TYPE] = make_ref(data, get_hlir_type(hlir)),
         [UNARY_OP] = int_value(hlir->unary),
         [UNARY_EXPR] = make_ref(data, hlir->operand)
     };
@@ -879,7 +881,7 @@ static index_t save_unary_node(data_t *data, const hlir_t *hlir) {
 static index_t save_binary_node(data_t *data, const hlir_t *hlir) {
     value_t values[] = {
         [BINARY_SPAN] = span_ref(data, hlir),
-        [BINARY_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [BINARY_TYPE] = make_ref(data, get_hlir_type(hlir)),
         [BINARY_OP] = int_value(hlir->binary),
         [BINARY_LHS] = make_ref(data, hlir->lhs),
         [BINARY_RHS] = make_ref(data, hlir->rhs)
@@ -891,7 +893,7 @@ static index_t save_binary_node(data_t *data, const hlir_t *hlir) {
 static index_t save_compare_node(data_t *data, const hlir_t *hlir) {
     value_t values[] = {
         [COMPARE_SPAN] = span_ref(data, hlir),
-        [COMPARE_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [COMPARE_TYPE] = make_ref(data, get_hlir_type(hlir)),
         [COMPARE_OP] = int_value(hlir->compare),
         [COMPARE_LHS] = make_ref(data, hlir->lhs),
         [COMPARE_RHS] = make_ref(data, hlir->rhs)
@@ -1040,7 +1042,7 @@ static index_t save_local_node(data_t *data, const hlir_t *hlir) {
         [LOCAL_SPAN] = span_ref(data, hlir),
         [LOCAL_ATTRIBS] = attrib_ref(data, hlir),
         [LOCAL_NAME] = string_value(hlir->name),
-        [LOCAL_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [LOCAL_TYPE] = make_ref(data, get_hlir_type(hlir)),
         [LOCAL_INDEX] = int_value(hlir->index)
     };
     
@@ -1052,7 +1054,7 @@ static index_t save_global_node(data_t *data, const hlir_t *hlir) {
         [GLOBAL_SPAN] = span_ref(data, hlir),
         [GLOBAL_ATTRIBS] = attrib_ref(data, hlir),
         [GLOBAL_NAME] = string_value(hlir->name),
-        [GLOBAL_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [GLOBAL_TYPE] = make_ref(data, get_hlir_type(hlir)),
         [GLOBAL_INIT] = make_ref_opt(data, hlir->value)
     };
     
@@ -1061,12 +1063,15 @@ static index_t save_global_node(data_t *data, const hlir_t *hlir) {
 
 static index_t save_function_node(data_t *data, const hlir_t *hlir) {
     array_t locals = save_array(data, hlir->locals);
+    array_t params = save_array(data, hlir->params);
 
     value_t values[] = {
         [FUNCTION_SPAN] = span_ref(data, hlir),
         [FUNCTION_ATTRIBS] = attrib_ref(data, hlir),
         [FUNCTION_NAME] = string_value(hlir->name),
-        [FUNCTION_TYPE] = make_ref(data, typeof_hlir(hlir)),
+        [FUNCTION_PARAMS] = array_value(params),
+        [FUNCTION_RESULT] = make_ref(data, hlir->result),
+        [FUNCTION_VARIADIC] = bool_value(hlir->variadic),
         [FUNCTION_LOCALS] = array_value(locals),
         [FUNCTION_BODY] = make_ref_opt(data, hlir->body)
     };

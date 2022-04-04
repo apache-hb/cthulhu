@@ -1,7 +1,8 @@
 #include "cthulhu/emit/emit.h"
+#include "cthulhu/hlir/query.h"
 
 static char *fmt_type_name(const hlir_t *type) {
-    const char *base = nameof_hlir(type);
+    const char *base = get_hlir_name(type);
     base = replacestr(base, "_", "__");
     if (strcontains(base, "-") || strcontains(base, " ")) {
         base = replacestr(base, "-", "_");
@@ -115,7 +116,7 @@ static void emit_aggregate_decl(reports_t *reports, const hlir_t *type, const ch
     printf("%s %s {\n", kind, name);
     for (size_t i = 0; i < vector_len(type->fields); i++) {
         const hlir_t *field = vector_get(type->fields, i);
-        printf("    %s;\n", emit_type(reports, typeof_hlir(field), nameof_hlir(field)));
+        printf("    %s;\n", emit_type(reports, get_hlir_type(field), get_hlir_name(field)));
     }
     printf("};\n");
 }
@@ -151,7 +152,7 @@ static char *get_type_params(const hlir_t *sig) {
 }
 
 static void emit_function_import(const hlir_t *hlir) {
-    printf("extern %s %s(%s);\n", fmt_type_name(hlir->of->result), hlir->name, get_type_params(hlir->of));
+    printf("extern %s %s(%s);\n", fmt_type_name(hlir->result), hlir->name, get_type_params(hlir));
 }
 
 static void emit_value_import(const hlir_t *hlir) {
@@ -285,7 +286,7 @@ static void emit_stmt(reports_t *reports, const hlir_t *hlir) {
 }
 
 static const char *emit_hlir_type(reports_t *reports, const hlir_t *hlir) {
-    return emit_type(reports, typeof_hlir(hlir), nameof_hlir(hlir));
+    return emit_type(reports, get_hlir_type(hlir), get_hlir_name(hlir));
 }
 
 static void fwd_global(reports_t *reports, const hlir_t *hlir) {
@@ -299,15 +300,13 @@ static void emit_global(reports_t *reports, const hlir_t *hlir) {
 }
 
 static void fwd_proc(reports_t *reports, const hlir_t *hlir) {
-    const hlir_t *type = typeof_hlir(hlir);
-    printf("%s(%s);\n", emit_type(reports, type->result, nameof_hlir(hlir)), get_type_params(type));
+    printf("%s(%s);\n", emit_type(reports, hlir->result, get_hlir_name(hlir)), get_type_params(hlir));
 }
 
 static void emit_proc(reports_t *reports, const hlir_t *hlir) {
     vector_t *locals = hlir->locals;
-    const hlir_t *type = typeof_hlir(hlir);
 
-    printf("%s(%s) {\n", emit_type(reports, type->result, nameof_hlir(hlir)), get_type_params(type));
+    printf("%s(%s) {\n", emit_type(reports, hlir->result, get_hlir_name(hlir)), get_type_params(hlir));
 
     for (size_t i = 0; i < vector_len(locals); i++) {
         const hlir_t *local = vector_get(locals, i);
@@ -332,7 +331,7 @@ static void visit_type(reports_t *reports, vector_t **result, const hlir_t *type
         break;
 
     case HLIR_FIELD:
-        visit_type(reports, result, typeof_hlir(type));
+        visit_type(reports, result, get_hlir_type(type));
         break;
     
     case HLIR_CLOSURE:

@@ -1,4 +1,5 @@
 #include "cthulhu/emit/emit.h"
+#include "cthulhu/hlir/query.h"
 
 #include "cJSON.h"
 
@@ -102,7 +103,7 @@ static cJSON *emit_attribs(reports_t *reports, const hlir_attributes_t *attribs)
 static cJSON *emit_digit(emit_t *emit, const hlir_t *hlir) {
     cJSON *literal = cJSON_CreateObject();
     cJSON_AddStringToObject(literal, "kind", "int-literal");
-    cJSON_AddNumberToObject(literal, "type", get_type(emit, typeof_hlir(hlir)));
+    cJSON_AddNumberToObject(literal, "type", get_type(emit, get_hlir_type(hlir)));
     cJSON_AddNumberToObject(literal, "value", mpz_get_si(hlir->digit));
     return literal;
 }
@@ -110,7 +111,7 @@ static cJSON *emit_digit(emit_t *emit, const hlir_t *hlir) {
 static cJSON *emit_bool(emit_t *emit, const hlir_t *hlir) {
     cJSON *literal = cJSON_CreateObject();
     cJSON_AddStringToObject(literal, "kind", "bool-literal");
-    cJSON_AddNumberToObject(literal, "type", get_type(emit, typeof_hlir(hlir)));
+    cJSON_AddNumberToObject(literal, "type", get_type(emit, get_hlir_type(hlir)));
     cJSON_AddBoolToObject(literal, "value", hlir->boolean);
     return literal;
 }
@@ -118,7 +119,7 @@ static cJSON *emit_bool(emit_t *emit, const hlir_t *hlir) {
 static cJSON *emit_string(emit_t *emit, const hlir_t *hlir) {
     cJSON *literal = cJSON_CreateObject();
     cJSON_AddStringToObject(literal, "kind", "string-literal");
-    cJSON_AddNumberToObject(literal, "type", get_type(emit, typeof_hlir(hlir)));
+    cJSON_AddNumberToObject(literal, "type", get_type(emit, get_hlir_type(hlir)));
     cJSON_AddStringToObject(literal, "value", hlir->string);
     return literal;
 }
@@ -238,7 +239,7 @@ static cJSON *emit_global(emit_t *emit, map_t *map, size_t index, const hlir_t *
     cJSON *value = cJSON_CreateObject();
     cJSON_AddStringToObject(value, "kind", "value");
     cJSON_AddStringToObject(value, "name", hlir->name);
-    cJSON_AddNumberToObject(value, "type", get_type(emit, typeof_hlir(hlir)));
+    cJSON_AddNumberToObject(value, "type", get_type(emit, get_hlir_type(hlir)));
     cJSON_AddItemToObject(value, "attribs", emit_attribs(emit->reports, hlir->attributes));
 
     if (hlir->value != NULL) {
@@ -338,7 +339,7 @@ static cJSON *emit_function(emit_t *emit, size_t idx, const hlir_t *hlir) {
     cJSON *json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "kind", "function");
     cJSON_AddStringToObject(json, "name", hlir->name);
-    cJSON_AddNumberToObject(json, "type", get_type(emit, typeof_hlir(hlir)));
+    cJSON_AddNumberToObject(json, "type", get_type(emit, get_hlir_type(hlir)));
     cJSON_AddItemToObject(json, "attribs", emit_attribs(emit->reports, hlir->attributes));
 
     size_t nlocals = vector_len(hlir->locals);

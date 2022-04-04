@@ -1,5 +1,6 @@
 #include "cthulhu/emit/emit.h"
 #include "cthulhu/hlir/hlir.h"
+#include "cthulhu/hlir/query.h"
 #include "cthulhu/util/report.h"
 
 typedef struct {
@@ -99,9 +100,9 @@ static void emit_function_node(wasm_t *wasm, const hlir_t *node) {
         return;
     }
 
-    wasm_begin(wasm, format("func $%s", nameof_hlir(node)));
+    wasm_begin(wasm, format("func $%s", get_hlir_name(node)));
 
-    const hlir_t *signature = typeof_hlir(node);
+    const hlir_t *signature = get_hlir_type(node);
 
     for (size_t i = 0; i < vector_len(signature->params); i++) {
         const hlir_t *param = vector_get(signature->params, i);
@@ -111,7 +112,7 @@ static void emit_function_node(wasm_t *wasm, const hlir_t *node) {
 
     for (size_t i = 0; i < vector_len(node->locals); i++) {
         const hlir_t *local = vector_get(node->locals, i);
-        char *type = emit_type(wasm, typeof_hlir(local));
+        char *type = emit_type(wasm, get_hlir_type(local));
         wasm_write(wasm, format("(local %s)", type));
     }
 
@@ -135,17 +136,18 @@ static void emit_stmts_node(wasm_t *wasm, const hlir_t *node) {
 static void emit_assign_node(wasm_t *wasm, const hlir_t *node) {
     emit_node(wasm, node->src);
 
-    const hlir_t *type = typeof_hlir(node->dst);
+    const hlir_t *type = get_hlir_type(node->dst);
     char *str = emit_type(wasm, type);
-    wasm_write(wasm, format("%s.store %s", str, nameof_hlir(node->dst)));
+    wasm_write(wasm, format("%s.store %s", str, get_hlir_name(node->dst)));
 }
 
 static void emit_digit_literal_node(wasm_t *wasm, const hlir_t *node) {
-    char *str = emit_type(wasm, typeof_hlir(node));
+    char *str = emit_type(wasm, get_hlir_type(node));
     wasm_write(wasm, format("%s.const %s", str, mpz_get_str(NULL, 10, node->digit)));
 }
 
 static void emit_value_node(wasm_t *wasm, const hlir_t *node) {
+    UNUSED(node);
     wasm_begin(wasm, "global");
 }
 

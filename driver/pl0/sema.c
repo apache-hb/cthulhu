@@ -249,8 +249,9 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node) {
 
     for (size_t i = 0; i < nlocals; i++) {
         pl0_t *local = vector_get(node->locals, i);
-        hlir_t *it = hlir_new_local(hlir, local->node, local->name, INTEGER);
+        hlir_t *it = hlir_local(local->node, local->name, INTEGER);
         set_var(nest, TAG_VALUES, local->name, it);
+        hlir_add_local(hlir, it);
     }
 
     hlir_t *body = sema_vector(nest, node->node, node->body);
@@ -297,7 +298,12 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     for (size_t i = 0; i < nprocs; i++) {
         pl0_t *it = vector_get(root->procs, i);
-        hlir_t *hlir = hlir_new_function(it->node, it->name, vector_of(0), VOID, false);
+        signature_t signature = {
+            .params = vector_of(0),
+            .result = VOID,
+            .variadic = false
+        };
+        hlir_t *hlir = hlir_begin_function(it->node, it->name, signature);
         set_proc(sema, it->name, hlir);
         vector_set(procs, i, hlir);
     }

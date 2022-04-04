@@ -1,25 +1,26 @@
 #include "cthulhu/hlir/decl.h"
+#include "cthulhu/hlir/query.h"
 
 #include "common.h"
 
 #define CHECK_NULL(expr) CTASSERT(expr != NULL, "null pointer")
-#define IS_AGGREGATE(type) (type == HLIR_STRUCT || type == HLIR_UNION)
+#define IS_AGGREGATE(hlir) (hlis_is_or_will_be(hlir, HLIR_STRUCT) || hlis_is_or_will_be(hlir, HLIR_UNION))
 
 ///
 /// builder functions
 ///
 
-static hlir_t *hlir_begin_aggregate_with_fields(const node_t *node, const char *name, vector_t *fields, hlir_type_t type) {
+static hlir_t *hlir_begin_aggregate_with_fields(const node_t *node, const char *name, vector_t *fields, hlir_kind_t type) {
     hlir_t *self = hlir_new_forward(node, name, TYPE, type);
     self->fields = fields;
     return self;
 }
 
-static hlir_t *hlir_begin_aggregate(const node_t *node, const char *name, hlir_type_t type) {
+static hlir_t *hlir_begin_aggregate(const node_t *node, const char *name, hlir_kind_t type) {
     return hlir_begin_aggregate_with_fields(node, name, vector_new(4), type);
 }
 
-static void hlir_finish(hlir_t *self, hlir_type_t type) {
+static void hlir_finish(hlir_t *self, hlir_kind_t type) {
     CHECK_NULL(self);
     CTASSERT(hlir_is(self, HLIR_FORWARD), "hlir-finish called on non-forward hlir");
     CTASSERT(self->expected == type, "hlir-finish called with wrong type");
@@ -69,7 +70,7 @@ hlir_t *hlir_union(const node_t *node, const char *name, vector_t *fields) {
 
 void hlir_add_field(hlir_t *self, hlir_t *field) {
     CHECK_NULL(self);
-    CTASSERT(IS_AGGREGATE(self->type), "hlir-add-field called on non-aggregate hlir");
+    CTASSERT(IS_AGGREGATE(self), "hlir-add-field called on non-aggregate hlir");
     vector_push(&self->fields, field);
 }
 
@@ -83,7 +84,7 @@ hlir_t *hlir_begin_alias(const node_t *node, const char *name) {
 
 void hlir_build_alias(hlir_t *self, const hlir_t *type) {
     hlir_finish(self, HLIR_ALIAS);
-    self->alias = type;
+    self->alias = alias;
 }
 
 hlir_t *hlir_alias(const node_t *node, const char *name, const hlir_t *type) {
@@ -109,17 +110,45 @@ hlir_t *hlir_global(const node_t *node, const char *name, const hlir_t *type, co
 
 
 
-hlir_t *hlir_local(const node_t *node, const char *name, const hlir_t *type);
+hlir_t *hlir_local(const node_t *node, const char *name, const hlir_t *type) {
+    return hlir_indexed_local(node, name, SIZE_MAX, type);
+}
+
+hlir_t *hlir_indexed_local(const node_t *node, const char *name, size_t index, const hlir_t *type) {
+    hlir_t *self = hlir_new_decl(node, name, type, HLIR_LOCAL);
+    self->index = index;
+    return self;
+}
+
+static hlir_t *hlir_begin_function_with_locals(const node_t *node, const char *name, vector_t *locals, signature_t signature) {
+    hlir_t *self = hlir_new_forward(node, name, TYPE, HLIR_FUNCTION);
+    self->params = signature.params;
+    self->result = signature.result;
+    self->variadic = signature.variadic;
+    self->locals = locals;
+    return self;
+}
+
+hlir_t *hlir_begin_function(const node_t *node, const char *name, signature_t signature) {
+    return hlir_begin_function_with_locals(node, name, vector_new(4), signature);
+}
+
+void hlir_build_function(hlir_t *self, hlir_t *body) {
+    hlir_finish(self, HLIR_FUNCTION);
+    self->body = body;
+}
+
+hlir_t *hlir_function(const node_t *node, const char *name, signature_t signature, vector_t *locals, hlir_t *body) {
+    hlir_t *self = hlir_begin_function_with_locals(node, name, locals, signature);
+    hlir_build_function(self, body);
+    return self;
+}
 
 
-hlir_t *hlir_begin_function(const node_t *node, const char *name, signature_t signature);
-void hlir_build_function(hlir_t *self, const hlir_t *body);
-hlir_t *hlir_function(const node_t *node, const char *name, signature_t signature, vector_t *locals, const hlir_t *body);
-
-
-
-void hlir_add_local(hlir_t *self, const hlir_t *local);
-hlir_t *hlir_get_param(const hlir_t *self, const char *name);
+void hlir_add_local(hlir_t *self, hlir_t *local) {
+    CTASSERT(hlir_will_be(self, HLIR_FUNCTION), "hlir-add-local called on non-function hlir");
+    vector_push(&self->locals, local);
+}
 
 hlir_t *hlir_begin_module(const node_t *node, const char *name) {
     return hlir_new_forward(node, name, NULL, HLIR_MODULE);

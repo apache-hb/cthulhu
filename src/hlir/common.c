@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "cthulhu/hlir/query.h"
+
 const hlir_attributes_t DEFAULT_ATTRIBS = {
     .linkage = LINK_INTERNAL
 };
@@ -7,22 +9,22 @@ const hlir_attributes_t DEFAULT_ATTRIBS = {
 hlir_t *TYPE = NULL;
 hlir_t *INVALID = NULL;
 
-hlir_t *hlir_new(const node_t *node, const hlir_t *of, hlir_type_t type) {
+hlir_t *hlir_new(const node_t *node, const hlir_t *of, hlir_kind_t kind) {
     hlir_t *self = ctu_malloc(sizeof(hlir_t));
-    self->type = type;
+    self->type = kind;
     self->node = node;
     self->of = of;
     return self;
 }
 
-hlir_t *hlir_new_decl(const node_t *node, const char *name, const hlir_t *of, hlir_type_t type) {
-    hlir_t *hlir = hlir_new(node, of, type);
+hlir_t *hlir_new_decl(const node_t *node, const char *name, const hlir_t *of, hlir_kind_t kind) {
+    hlir_t *hlir = hlir_new(node, of, kind);
     hlir->name = name;
     hlir->attributes = &DEFAULT_ATTRIBS;
     return hlir;
 }
 
-hlir_t *hlir_new_forward(const node_t *node, const char *name, const hlir_t *of, hlir_type_t expect) {
+hlir_t *hlir_new_forward(const node_t *node, const char *name, const hlir_t *of, hlir_kind_t expect) {
     hlir_t *hlir = hlir_new_decl(node, name, of, HLIR_FORWARD);
     hlir->expected = expect;
     return hlir;
@@ -38,24 +40,13 @@ void init_hlir(void) {
 
 // accessors
 
-const hlir_t *typeof_hlir(const hlir_t *hlir) {
-    return hlir->of;
-}
-
-const char *nameof_hlir(const hlir_t *self) {
-    return self->name;
-}
-
 bool hlir_is_imported(const hlir_t *self) {
     return self->attributes->linkage == LINK_IMPORTED;
 }
 
-bool hlir_is(const hlir_t *self, hlir_type_t type) {
-    return self->type == type;
-}
-
-bool hlir_can_be(const hlir_t *self, hlir_type_t type) {
-    return self->type == type || (self->type == HLIR_FORWARD && self->expected == type);
+bool hlir_can_be(const hlir_t *self, hlir_kind_t type) {
+    if (hlir_is(self, type)) { return true; }
+    return hlir_is(self, HLIR_FORWARD) && self->expected == type;
 }
 
 bool hlir_is_sentinel(const hlir_t *self) {

@@ -5,14 +5,29 @@ project('cthulhu', [ 'c', 'cpp' ],
     default_options : [
         'c_std=gnu99',
         'warning_level=2', # bison generates code that warns on gcc at level 3
-        'default_library=static'#,
-        #'werror=true' # werror has to be disabled on windows for mini-gmp to build
+        'default_library=static',
+        'werror=true' # werror has to be disabled on windows for mini-gmp to build
     ]
 )
 
+version = meson.project_version()
 target = target_machine.system()
 host = host_machine.system()
 cc = meson.get_compiler('c')
+
+parts = version.split('.')
+
+config = {
+    'major': parts[0].to_int(),
+    'minor': parts[1].to_int(),
+    'patch': parts[2].to_int(),
+}
+
+configure_file(
+    input : 'data/version.h.in',
+    output : 'version.h',
+    configuration : config
+)
 
 src = [
     # command line
@@ -26,6 +41,7 @@ src = [
     'src/hlir/value.c',
     'src/hlir/hlir.c',
     'src/hlir/decl.c',
+    'src/hlir/query.c',
 
     'src/hlir/common.c',
 

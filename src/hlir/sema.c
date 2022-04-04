@@ -1,4 +1,5 @@
 #include "cthulhu/hlir/sema.h"
+#include "cthulhu/hlir/query.h"
 
 sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes) {
     sema_t *sema = ctu_malloc(sizeof(sema_t));
@@ -102,19 +103,12 @@ static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *
     case HLIR_NAME:
         check_recursion(reports, stack, hlir->read);
         break;
-    case HLIR_GLOBAL:
+    case HLIR_GLOBAL: case HLIR_LOCAL:
         check_recursion(reports, stack, hlir->value);
         break;
     case HLIR_BINARY: case HLIR_COMPARE:
         check_recursion(reports, stack, hlir->lhs);
         check_recursion(reports, stack, hlir->rhs);
-        break;
-    case HLIR_CALL:
-        check_recursion(reports, stack, hlir->call);
-        for (size_t i = 0; i < vector_len(hlir->args); i++) {
-            hlir_t *arg = vector_get(hlir->args, i);
-            check_recursion(reports, stack, arg);
-        }
         break;
 
     case HLIR_DIGIT_LITERAL:
@@ -123,7 +117,7 @@ static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *
         break;
 
     default:
-        ctu_assert(reports, "check-recursion unexpected hlir type %d", hlir->type);
+        ctu_assert(reports, "check-recursion unexpected hlir type %s", hlir_kind_to_string(get_hlir_kind(hlir)));
         break;
     }
 
@@ -179,7 +173,7 @@ static const hlir_t *chase(reports_t *reports, const hlir_t *hlir) {
         switch (hlir->type) {
         case HLIR_POINTER: hlir = hlir->ptr; break;
         case HLIR_ALIAS: hlir = hlir->alias; break;
-        case HLIR_FIELD: hlir = typeof_hlir(hlir); break;
+        case HLIR_FIELD: hlir = get_hlir_type(hlir); break;
         default: return hlir;
         }
 
@@ -199,7 +193,7 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
         find_type_recursion(reports, stack, chase(reports, hlir), false, true);
         break;
 
-    case HLIR_CLOSURE:
+    case HLIR_CLOSURE: case HLIR_FUNCTION:
         if (find_type_recursion(reports, stack, hlir, false, true)) {
             check_type_recursion(reports, stack, hlir->result);
             for (size_t i = 0; i < vector_len(hlir->params); i++) {
@@ -225,7 +219,7 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
         break;
 
     case HLIR_FIELD:
-        check_type_recursion(reports, stack, typeof_hlir(hlir));
+        check_type_recursion(reports, stack, get_hlir_type(hlir));
         break;
 
     case HLIR_DIGIT:
@@ -235,7 +229,7 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
         break;
 
     default:
-        ctu_assert(reports, "check-type-recursion unexpected hlir type %d", hlir->type);
+        ctu_assert(reports, "check-type-recursion unexpected hlir type %s", hlir_kind_to_string(get_hlir_kind(hlir)));
         break;
     }
 
@@ -256,6 +250,7 @@ void check_module(reports_t *reports, hlir_t *mod) {
 
     for (size_t i = 0; i < nvars; i++) {
         hlir_t *var = vector_get(mod->globals, i);
+        CTASSERTF(hlir_is(var, HLIR_GLOBAL), "check-module polluted: global `%s` is %s, not global", get_hlir_name(var), hlir_kind_to_string(get_hlir_kind(var)));
         check_recursion(reports, &vec, var);
 
         vector_reset(vec);
