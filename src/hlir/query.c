@@ -16,6 +16,7 @@ static bool has_name(hlir_kind_t kind) {
     case HLIR_TYPE:
     case HLIR_ALIAS:
 
+    case HLIR_FIELD:
     case HLIR_FUNCTION:
     case HLIR_GLOBAL:
     case HLIR_LOCAL:
@@ -49,13 +50,15 @@ const hlir_t *get_hlir_type(const hlir_t *hlir) {
 
 const char *get_hlir_name(const hlir_t *hlir) {
     CHECK_NULL(hlir);
-    CTASSERTF(has_name(get_hlir_kind(hlir)), "hlir_t type %d has no name", get_hlir_kind(hlir));
+    hlir_kind_t kind = get_hlir_kind(hlir);
+    CTASSERTF(has_name(kind), "hlir_t %s has no name", hlir_kind_to_string(kind));
     return hlir->name;
 }
 
 const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir) {
     CHECK_NULL(hlir);
-    CTASSERTF(has_attribs(get_hlir_kind(hlir)), "hlir_t type %d has no attributes", get_hlir_kind(hlir));
+    hlir_kind_t kind = get_hlir_kind(hlir);
+    CTASSERTF(has_attribs(kind), "hlir_t %s has no attributes", hlir_kind_to_string(kind));
     return hlir->attributes;
 }
 

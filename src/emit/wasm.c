@@ -30,9 +30,13 @@ static void wasm_begin(wasm_t *wasm, const char *str) {
 }
 
 static void wasm_end(wasm_t *wasm) {
-    stream_write(wasm->stream, ")\n");
-
     wasm_dedent(wasm);
+
+    for (size_t i = 0; i < wasm->depth; i++) {
+        stream_write(wasm->stream, "  ");
+    }
+
+    stream_write(wasm->stream, ")\n");
 }
 
 static void wasm_write(wasm_t *wasm, const char *str) {
@@ -102,10 +106,8 @@ static void emit_function_node(wasm_t *wasm, const hlir_t *node) {
 
     wasm_begin(wasm, format("func $%s", get_hlir_name(node)));
 
-    const hlir_t *signature = get_hlir_type(node);
-
-    for (size_t i = 0; i < vector_len(signature->params); i++) {
-        const hlir_t *param = vector_get(signature->params, i);
+    for (size_t i = 0; i < vector_len(node->params); i++) {
+        const hlir_t *param = vector_get(node->params, i);
         char *type = emit_type(wasm, param);
         wasm_write(wasm, format("(param %s)", type));
     }
@@ -113,11 +115,11 @@ static void emit_function_node(wasm_t *wasm, const hlir_t *node) {
     for (size_t i = 0; i < vector_len(node->locals); i++) {
         const hlir_t *local = vector_get(node->locals, i);
         char *type = emit_type(wasm, get_hlir_type(local));
-        wasm_write(wasm, format("(local %s)", type));
+        wasm_write(wasm, format("(local $%s %s)", get_hlir_name(local), type));
     }
 
-    if (!hlir_is(signature->result, HLIR_VOID)) {
-        char *result = emit_type(wasm, signature->result);
+    if (!hlir_is(node->result, HLIR_VOID)) {
+        char *result = emit_type(wasm, node->result);
         wasm_write(wasm, format("(result %s)", result));
     }
 
@@ -136,9 +138,21 @@ static void emit_stmts_node(wasm_t *wasm, const hlir_t *node) {
 static void emit_assign_node(wasm_t *wasm, const hlir_t *node) {
     emit_node(wasm, node->src);
 
-    const hlir_t *type = get_hlir_type(node->dst);
-    char *str = emit_type(wasm, type);
-    wasm_write(wasm, format("%s.store %s", str, get_hlir_name(node->dst)));
+    hlir_kind_t kind = get_hlir_kind(node->dst);
+
+    switch (kind) {
+    case HLIR_GLOBAL:
+        wasm_write(wasm, format("global.set $%s", get_hlir_name(node->dst)));
+        break;
+
+    case HLIR_LOCAL:
+        wasm_write(wasm, format("local.set $%s", get_hlir_name(node->dst)));
+        break;
+
+    default:
+        ctu_assert(wasm->reports, "unhandled assign to %s", hlir_kind_to_string(kind));
+        break;
+    }
 }
 
 static void emit_digit_literal_node(wasm_t *wasm, const hlir_t *node) {
@@ -147,12 +161,119 @@ static void emit_digit_literal_node(wasm_t *wasm, const hlir_t *node) {
 }
 
 static void emit_value_node(wasm_t *wasm, const hlir_t *node) {
-    UNUSED(node);
-    wasm_begin(wasm, "global");
+    const char *name = get_hlir_name(node);
+    char *type = emit_type(wasm, get_hlir_type(node));
+    wasm_begin(wasm, format("global $%s %s", name, type));
+
+    if (node->value != NULL) {
+        emit_node(wasm, node->value);
+    } else {
+        wasm_write(wasm, format("(%s.const 0)", type));
+    }
+
+    wasm_end(wasm);
+}
+
+static void emit_loop_node(wasm_t *wasm, const hlir_t *node) {
+    emit_node(wasm, node->cond);
+    wasm_write(wasm, "br_if 0");
+
+    wasm_begin(wasm, "loop");
+    emit_node(wasm, node->then);
+
+    emit_node(wasm, node->cond);
+    wasm_write(wasm, "br_if 0");
+
+    wasm_end(wasm);
+}
+
+static const char *COMPARES[COMPARE_TOTAL] = {
+    [COMPARE_EQ] = "eq",
+    [COMPARE_NEQ] = "ne",
+    [COMPARE_LT] = "lt_s",
+    [COMPARE_LTE] = "le_s",
+    [COMPARE_GT] = "gt_s",
+    [COMPARE_GTE] = "ge_s"
+};
+
+static const char *BINARIES[BINARY_TOTAL] = {
+    [BINARY_ADD] = "add",
+    [BINARY_SUB] = "sub",
+    [BINARY_MUL] = "mul",
+    [BINARY_DIV] = "div_s",
+    [BINARY_REM] = "rem_s",
+
+    [BINARY_BITAND] = "and",
+    [BINARY_BITOR] = "or",
+    [BINARY_XOR] = "xor",
+
+    [BINARY_SHL] = "shl",
+    [BINARY_SHR] = "shr_s"
+};
+
+static void emit_compare_node(wasm_t *wasm, const hlir_t *node) {
+    emit_node(wasm, node->lhs);
+    emit_node(wasm, node->rhs);
+
+    char *type = emit_type(wasm, get_hlir_type(node->lhs)); // TODO: check both sides
+    wasm_write(wasm, format("%s.%s", type, COMPARES[node->compare]));
+}
+
+static void emit_binary_node(wasm_t *wasm, const hlir_t *node) {
+    emit_node(wasm, node->lhs);
+    emit_node(wasm, node->rhs);
+
+    char *type = emit_type(wasm, get_hlir_type(node->lhs)); // TODO: check both sides
+    wasm_write(wasm, format("%s.%s", type, BINARIES[node->binary]));
+}
+
+static void emit_name_node(wasm_t *wasm, const hlir_t *node) {
+    const hlir_t *val = node->read;
+    switch (get_hlir_kind(val)) {
+    case HLIR_GLOBAL:
+        wasm_write(wasm, format("global.get $%s", get_hlir_name(val)));
+        break;
+
+    case HLIR_LOCAL:
+        wasm_write(wasm, format("local.get $%s", get_hlir_name(val)));
+        break;
+
+    default:
+        ctu_assert(wasm->reports, "unhandled name node %s", hlir_kind_to_string(get_hlir_kind(val)));
+        break;
+    }
+}
+
+static void emit_call_node(wasm_t *wasm, const hlir_t *node) {
+    for (size_t i = 0; i < vector_len(node->args); i++) {
+        emit_node(wasm, vector_get(node->args, i));
+    }
+
+    if (get_hlir_kind(node->call) == HLIR_FUNCTION) {
+        wasm_write(wasm, format("call $%s", get_hlir_name(node->call)));
+    } else {
+        ctu_assert(wasm->reports, "unhandled call node %s", hlir_kind_to_string(get_hlir_kind(node->call)));
+    }
+}
+
+static void emit_branch_node(wasm_t *wasm, const hlir_t *node) {
+    emit_node(wasm, node->cond);
+    wasm_write(wasm, "br_if 0");
+
+    wasm_begin(wasm, "then");
+    emit_node(wasm, node->then);
+    wasm_end(wasm);
+
+    if (node->other != NULL) {
+        wasm_begin(wasm, "else");
+        emit_node(wasm, node->other);
+        wasm_end(wasm);
+    }
 }
 
 static void emit_node(wasm_t *wasm, const hlir_t *node) {
-    switch (node->type) {
+    hlir_kind_t kind = get_hlir_kind(node);
+    switch (kind) {
     case HLIR_MODULE:
         emit_module_node(wasm, node);
         break;
@@ -177,8 +298,32 @@ static void emit_node(wasm_t *wasm, const hlir_t *node) {
         emit_value_node(wasm, node);
         break;
 
+    case HLIR_LOOP:
+        emit_loop_node(wasm, node);
+        break;
+
+    case HLIR_COMPARE:
+        emit_compare_node(wasm, node);
+        break;
+
+    case HLIR_BINARY:
+        emit_binary_node(wasm, node);
+        break;
+
+    case HLIR_NAME:
+        emit_name_node(wasm, node);
+        break;
+
+    case HLIR_CALL:
+        emit_call_node(wasm, node);
+        break;
+
+    case HLIR_BRANCH:
+        emit_branch_node(wasm, node);
+        break;
+
     default:
-        ctu_assert(wasm->reports, "unhandled node type %d", node->type);
+        ctu_assert(wasm->reports, "unhandled %s node", hlir_kind_to_string(kind));
         break;
     }
 }

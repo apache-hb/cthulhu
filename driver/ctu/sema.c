@@ -234,7 +234,8 @@ hlir_t *ctu_sema(reports_t *reports, void *ast) {
     }
 
     vector_t *values = map_values(sema_tag(sema, TAG_VARS));
-    hlir_t *mod = hlir_module(root->node, "todo", vector_of(0), values, vector_of(0));
+    vector_t *types = map_values(sema_tag(sema, TAG_TYPES));
+    hlir_t *mod = hlir_module(root->node, "todo", types, values, vector_of(0));
 
     sema_delete(sema);
 

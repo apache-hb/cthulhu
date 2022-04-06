@@ -20,7 +20,7 @@ typedef enum {
     BINARY_SHL, // bitwise shift left
     BINARY_SHR, // bitwise shift right
 
-    BINARY_LAST_ENTRY
+    BINARY_TOTAL
 } binary_t;
 
 typedef enum {
@@ -32,7 +32,7 @@ typedef enum {
     COMPARE_GT, // >
     COMPARE_GTE, // >=
 
-    COMPARE_LAST_ENTRY
+    COMPARE_TOTAL
 } compare_t;
 
 typedef enum {
@@ -42,7 +42,7 @@ typedef enum {
     UNARY_BITFLIP,
     UNARY_NOT,
 
-    UNARY_LAST_ENTRY
+    UNARY_TOTAL
 } unary_t;
 
 //

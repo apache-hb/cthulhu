@@ -170,7 +170,7 @@ static const hlir_t *chase(reports_t *reports, const hlir_t *hlir) {
     size_t depth = 0;
 
     while (true) {
-        switch (hlir->type) {
+        switch (get_hlir_kind(hlir)) {
         case HLIR_POINTER: hlir = hlir->ptr; break;
         case HLIR_ALIAS: hlir = hlir->alias; break;
         case HLIR_FIELD: hlir = get_hlir_type(hlir); break;

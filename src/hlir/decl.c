@@ -82,7 +82,7 @@ hlir_t *hlir_begin_alias(const node_t *node, const char *name) {
     return hlir_new_forward(node, name, TYPE, HLIR_ALIAS);
 }
 
-void hlir_build_alias(hlir_t *self, const hlir_t *type) {
+void hlir_build_alias(hlir_t *self, const hlir_t *alias) {
     hlir_finish(self, HLIR_ALIAS);
     self->alias = alias;
 }
