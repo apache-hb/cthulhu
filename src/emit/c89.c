@@ -89,7 +89,8 @@ static char *emit_closure(reports_t *reports, const hlir_t *type, const char *na
 }
 
 static const char *emit_type(reports_t *reports, const hlir_t *type, const char *name) {
-    switch (type->type) {
+    hlir_kind_t kind = get_hlir_kind(type);
+    switch (kind) {
     case HLIR_BOOL: return emit_bool(name);
     case HLIR_VOID: return emit_void(name);
     case HLIR_DIGIT: return emit_digit(type, name);
@@ -106,7 +107,7 @@ static const char *emit_type(reports_t *reports, const hlir_t *type, const char 
     case HLIR_ALIAS: return emit_type(reports, type->alias, name);
 
     default:
-        ctu_assert(reports, "cannot emit type %d", type->type);
+        ctu_assert(reports, "cannot emit %s as a type", hlir_kind_to_string(kind));
         return "error";
     }
 }
@@ -137,13 +138,19 @@ static void emit_type_decl(reports_t *reports, const hlir_t *type) {
     }
 }
 
-static char *get_type_params(const hlir_t *sig) {
+static char *get_type_params(reports_t *reports, const hlir_t *sig) {
     size_t len = vector_len(sig->params);
     if (len == 0) {
         return sig->variadic ? "..." : "void";
     }
 
-    vector_t *types = VECTOR_MAP(sig->params, fmt_type_name);
+    vector_t *types = vector_of(len);
+    for (size_t i = 0; i < len; i++) {
+        const hlir_t *param = vector_get(sig->params, i);
+        const char *type = emit_type(reports, param, NULL);
+        vector_set(types, i, (char*)type);
+    }
+
     char *base = strjoin(", ", types);
     if (sig->variadic) {
         base = format("%s, ...", base);
@@ -151,20 +158,22 @@ static char *get_type_params(const hlir_t *sig) {
     return base;
 }
 
-static void emit_function_import(const hlir_t *hlir) {
-    printf("extern %s %s(%s);\n", fmt_type_name(hlir->result), hlir->name, get_type_params(hlir));
+static void emit_function_import(reports_t *reports, const hlir_t *hlir) {
+    const char *type = emit_type(reports, hlir->result, get_hlir_name(hlir));
+    printf("extern %s(%s);\n", type, get_type_params(reports, hlir));
 }
 
-static void emit_value_import(const hlir_t *hlir) {
-    printf("extern %s %s;\n", fmt_type_name(hlir->of), hlir->name);
+static void emit_value_import(reports_t *reports, const hlir_t *hlir) {
+    const char *type = emit_type(reports, hlir, get_hlir_name(hlir));
+    printf("extern %s;\n", type);
 }
 
 static void emit_import_decl(reports_t *reports, const hlir_t *hlir) {
     switch (hlir->type) {
     case HLIR_FUNCTION:
-        return emit_function_import(hlir);
+        return emit_function_import(reports, hlir);
     case HLIR_GLOBAL:
-        return emit_value_import(hlir);
+        return emit_value_import(reports, hlir);
     default:
         ctu_assert(reports, "invalid import type %d", hlir->type);
         break;
@@ -300,13 +309,18 @@ static void emit_global(reports_t *reports, const hlir_t *hlir) {
 }
 
 static void fwd_proc(reports_t *reports, const hlir_t *hlir) {
-    printf("%s(%s);\n", emit_type(reports, hlir->result, get_hlir_name(hlir)), get_type_params(hlir));
+    const char *type = emit_type(reports, hlir->result, get_hlir_name(hlir));
+    const char *params = get_type_params(reports, hlir);
+
+    printf("%s(%s);\n", type, params);
 }
 
 static void emit_proc(reports_t *reports, const hlir_t *hlir) {
     vector_t *locals = hlir->locals;
 
-    printf("%s(%s) {\n", emit_type(reports, hlir->result, get_hlir_name(hlir)), get_type_params(hlir));
+    const char *type = emit_type(reports, hlir->result, get_hlir_name(hlir));
+    const char *params = get_type_params(reports, hlir);
+    printf("%s(%s) {\n", type, params);
 
     for (size_t i = 0; i < vector_len(locals); i++) {
         const hlir_t *local = vector_get(locals, i);

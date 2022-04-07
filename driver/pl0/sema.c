@@ -342,7 +342,9 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     vector_push(&procs, PRINT);
 
-    hlir_t *mod = hlir_module(root->node, root->mod, vector_of(0), vector_join(consts, globals), procs);
+    const char *modname = root->mod == NULL ? ctu_filename(root->node->scan->path) : root->mod;
+
+    hlir_t *mod = hlir_module(root->node, modname, vector_of(0), vector_join(consts, globals), procs);
     
     sema_delete(sema);
     
