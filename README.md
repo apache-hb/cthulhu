@@ -23,5 +23,20 @@ wow this project got out of hand.
   * `ctu` - cthulhu language frontend
 * `include/cthulhu` - public interface
   * `ast` - tools for generating an ast components used by drivers
-  
+  * `driver` - common frontend command line and parsing
+  * `emit` - tree writing
+  * `hlir` - common typed ast
+  * `loader` - binary loading and unloading
+  * `ssa` - future ssa interface
+  * `util` - common utilities
 * `src` - common framework implementation
+* `subprojects` - 3rd & 1st party dependencies
+  * `aws` - C implementation of the aws lambda runtime api
+  * `cjson` - C json parsing
+  * `mini-gmp` - fallback gmp library if system gmp isnt installed
+  * `miniz` - zip compression library
+* `tests` - langauge tests
+* `tools` - tools
+  * `create-lambda` - create a lambda from a function
+  * `tune-map` - map runtime perf tuning
+  
