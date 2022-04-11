@@ -18,8 +18,3 @@ option('aws', type : 'feature',
     description : 'enable aws runtime support',
     value : 'disabled'
 )
-
-option('tools', type : 'boolean',
-    description : 'compile helper tools',
-    value : 'true'
-)

@@ -17,20 +17,11 @@ wow this project got out of hand.
 
 ## Structure
 
-* src - private source & header files
-  * ast - flex and bison glue code
-  * driver - common frontend code
-  * lir - lisp like intermediate format
-  * ssa - ssa intermediate format
-  * util - utility code
-* include/cthulhu - public headers
-  * ast - flex and bison glue
-  * driver - common frontend code
-  * lir - lisp like intermediate format
-  * ssa - ssa intermediate format
-  * util - utility code
-* driver - compiler drivers
-  * pl0 - pl0 language driver
+* `data` - data files used to build the compiler
+* `driver` - language frontends
+  * `pl0` - example pl0 frontend, good for referencing how to use the common framework
+  * `ctu` - cthulhu language frontend
+* `include/cthulhu` - public interface
+  * `ast` - tools for generating an ast components used by drivers
   
-# License
-Currently licensed under [AGPL3](LICENSE). Money can change this.
+* `src` - common framework implementation

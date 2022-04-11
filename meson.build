@@ -49,9 +49,6 @@ src = [
     'src/emit/c89.c',
     'src/emit/wasm.c',
 
-    # debugging views
-    'src/debug/hlir.c',
-
     # serialization
     'src/loader/load.c',
     'src/loader/save.c',
@@ -169,12 +166,6 @@ parse = generator(bison,
 
 if tuning
     tune = executable('tune-map', [ 'tools/tune-map.c' ],
-        dependencies : generic
-    )
-endif
-
-if tools
-    executable('load-hlir', [ 'tools/load-hlir.c' ],
         dependencies : generic
     )
 endif
