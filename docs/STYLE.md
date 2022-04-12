@@ -28,6 +28,7 @@ void* data; // not this
 ```
 * use `const` whenever its easy to do so
 * use west const
+* use `#pragma once` over include guards
 
 ## banned features
 * no VLAs & `alloca`, hard to debug, easy to crash

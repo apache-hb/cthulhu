@@ -1,21 +1,11 @@
 #pragma once
 
 #include "cthulhu/util/report.h"
-
 #include "scan.h"
 
-/* create a scanner from a string */
-scan_t scan_string(reports_t *reports, const char *language, const char *path, const char *text);
-
-/* create a scanner from a file */
-scan_t scan_file(reports_t *reports, const char *language, file_t *file);
-
-/* set the export data */
-void scan_set(scan_t *scan, void *data);
-
-/* get the export data */
-void *scan_get(scan_t *scan);
-
+/**
+ * scanner function callbacks for flex and bison
+ */
 typedef struct {
     // yylex_init_extra
     int(*init)(scan_t *extra, void *scanner);
@@ -32,6 +22,43 @@ typedef struct {
     // yylex_destroy
     void(*destroy)(void *scanner);
 } callbacks_t;
+
+/**
+ * @brief create a scanner from a source string
+ * 
+ * @param reports the reporting sink
+ * @param language the language this file contains
+ * @param path the path to the file
+ * @param text the source text inside the file
+ * @return the populated scanner
+ */
+scan_t scan_string(reports_t *reports, const char *language, const char *path, const char *text);
+
+/**
+ * @brief create a scanner from a file
+ * 
+ * @param reports the reporting sink
+ * @param language the language this file contains
+ * @param file a file object
+ * @return the populated scanner
+ */
+scan_t scan_file(reports_t *reports, const char *language, file_t *file);
+
+/**
+ * @brief set scanner user data
+ * 
+ * @param scan the scanner
+ * @param data the user data
+ */
+void scan_set(scan_t *scan, void *data);
+
+/**
+ * @brief retrieve scanner user data
+ * 
+ * @param scan the scanner
+ * @return the user data
+ */
+void *scan_get(scan_t *scan);
 
 /**
  * @brief compile a string into a language specific ast
