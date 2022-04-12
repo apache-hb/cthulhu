@@ -33,8 +33,19 @@ typedef struct {
     const char *stdlib_path;
 } driver_t;
 
+/**
+ * @brief initialize the common runtime, always the first function a driver should call
+ */
 void common_init(void);
 
+/**
+ * @brief process the command line and run the compiler
+ * 
+ * @param argc argc from main
+ * @param argv argv from main
+ * @param driver information about the driver being run
+ * @return int an exit code
+ */
 int common_main(int argc, const char **argv, driver_t driver);
 
 hlir_t *find_module(sema_t *sema, const char *path);

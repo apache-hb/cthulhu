@@ -5,6 +5,9 @@
 * complete wat support
   * how do strings work
 
+* document more stuff
+  * other people have to contribute now
+
 ## Optional items
 
 * add json support to bytecode generation
