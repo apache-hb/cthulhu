@@ -91,7 +91,6 @@ if host != 'windows'
     deps += [ cc.find_library('m') ]
 endif
 
-tools = get_option('tools')
 tuning = get_option('tuning')
 if tuning
     args += [ '-DENABLE_TUNING=1' ]

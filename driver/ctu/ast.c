@@ -35,6 +35,18 @@ ast_t *ast_module(scan_t *scan, where_t where, vector_t *path) {
     return ast;
 }
 
+ast_t *ast_digit(scan_t *scan, where_t where, mpz_t value) {
+    ast_t *ast = ast_new(AST_DIGIT, scan, where);
+    mpz_init_set(ast->digit, value);
+    return ast;
+}
+
+ast_t *ast_name(scan_t *scan, where_t where, vector_t *path) {
+    ast_t *ast = ast_new(AST_TYPENAME, scan, where);
+    ast->path = path;
+    return ast;
+}
+
 ast_t *ast_typename(scan_t *scan, where_t where, vector_t *path) {
     ast_t *ast = ast_new(AST_TYPENAME, scan, where);
     ast->path = path;
@@ -48,7 +60,7 @@ ast_t *ast_pointer(scan_t *scan, where_t where, ast_t *type, bool indexable) {
     return ast;
 }
 
-ast_t *ast_array(scan_t *scan, where_t where, ast_t *type, ast_t *size) {
+ast_t *ast_array(scan_t *scan, where_t where, ast_t *size, ast_t *type) {
     ast_t *ast = ast_new(AST_ARRAY, scan, where);
     ast->type = type;
     ast->size = size;

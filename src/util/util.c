@@ -324,6 +324,16 @@ void *map_get_ptr_default(map_t *map, const void *key, void *other) {
     return entry_get_ptr(bucket, key, other);
 }
 
+void map_copy_by_string(map_t *dst, map_t *src) {
+    for (size_t i = 0; i < src->size; i++) {
+        bucket_t *entry = &src->data[i];
+        while (entry && entry->key) {
+            map_set(dst, entry->key, entry->value);
+            entry = entry->next;
+        }
+    }
+}
+
 static void clear_keys(bucket_t *buckets, size_t size) {
     for (size_t i = 0; i < size; i++) {
         buckets[i].key = NULL;

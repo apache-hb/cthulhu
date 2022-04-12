@@ -125,6 +125,11 @@ static void sema_alias(sema_t *sema, hlir_t *decl, ast_t *ast) {
     hlir_build_alias(decl, type);
 }
 
+static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast) {
+    report(sema->reports, INTERNAL, ast->node, "variant not implemented");
+    hlir_build_struct(decl);
+}
+
 static void sema_decl(sema_t *sema, ast_t *ast) {
     hlir_t *decl;
 
@@ -144,8 +149,14 @@ static void sema_decl(sema_t *sema, ast_t *ast) {
         sema_alias(sema, decl, ast);
         break;
 
+    case AST_VARIANTDECL:
+        decl = sema_get(sema, TAG_TYPES, ast->name);
+        sema_variant(sema, decl, ast);
+        break;
+
     default:
         ctu_assert(sema->reports, "unexpected ast of type %d", ast->of);
+        break;
     }
 }
 
@@ -175,6 +186,11 @@ static void fwd_decl(sema_t *sema, ast_t *ast) {
 
     case AST_ALIASDECL:
         decl = hlir_begin_alias(ast->node, ast->name);
+        add_decl(sema, TAG_TYPES, ast->name, decl);
+        break;
+
+    case AST_VARIANTDECL:
+        decl = hlir_begin_struct(ast->node, ast->name);
         add_decl(sema, TAG_TYPES, ast->name, decl);
         break;
 

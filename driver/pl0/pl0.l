@@ -26,6 +26,7 @@
 <COMMENT>. ;
 
 (?i:module) { return MODULE; }
+(?i:import) { return IMPORT; }
 (?i:const) { return CONST; }
 (?i:var) { return VAR; }
 (?i:procedure) { return PROCEDURE; }

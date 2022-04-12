@@ -1,0 +1,6 @@
+variant direction {
+    north
+    east
+    south
+    west
+}

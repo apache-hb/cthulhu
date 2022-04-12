@@ -142,6 +142,8 @@ void map_set(map_t *map, const char *key, void *value) HOT NOTNULL(1, 2);
  */
 void map_apply(map_t *map, void *user, map_apply_t func) NOTNULL(1, 3);
 
+void map_copy_by_string(map_t *dst, map_t *src) NONULL;
+
 /**
  * @brief set a field using a raw pointer rather than a string key
  * 

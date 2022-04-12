@@ -16,7 +16,7 @@ void *pl0_parse(reports_t *reports, scan_t *scan) {
 
 static driver_t DRIVER = {
     .name = "PL/0",
-    .version = "2.0.0",
+    .version = "2.1.0",
     .parse = pl0_parse,
     .sema = pl0_sema
 };

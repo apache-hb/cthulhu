@@ -26,7 +26,7 @@ static void print_help(const char **argv) {
     printf("  -v, --version     : print version information\n");
     printf("  -V, --verbose     : enable verbose logging\n");
     printf("  -m, --module      : set module output name\n");
-    printf("  -o, --output      : set output file name\n");
+    printf("  -out, --output    : set output file name\n");
     printf("  -t, --target      : set output format\n");
     printf("                    | options: json, c89, wasm\n");
     printf("                    | default: c89\n");
@@ -299,11 +299,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
         save_module(reports, &settings, hlir, out);
         status = end_reports(reports, limit, "bytecode generation");
-        
-        hlir = load_module(reports, out);
-        status = end_reports(reports, limit, "bytecode loading");
-        
-        // return status;
+        return status;
     }
 
     switch (result) {
@@ -328,7 +324,9 @@ int common_main(int argc, const char **argv, driver_t driver) {
     return status;
 }
 
-hlir_t *find_module(vector_t *path) {
-    UNUSED(path);
+hlir_t *find_module(sema_t *sema, const char *path) {
+    hlir_t *hlir = load_module(sema->reports, format("%s.co", path));
+    if (hlir != NULL) { return hlir; }
+
     return NULL;
 }

@@ -1,8 +1,10 @@
 #include "sema.h"
 
+#include "cthulhu/driver/driver.h"
 #include "cthulhu/hlir/type.h"
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/sema.h"
+#include "cthulhu/hlir/query.h"
 #include "cthulhu/util/report-ext.h"
 
 static hlir_t *INTEGER;
@@ -39,9 +41,9 @@ void pl0_init(void) {
 }
 
 typedef enum {
-    TAG_VALUES,
-    TAG_CONSTS,
-    TAG_PROCS,
+    TAG_VALUES, // hlir_t*
+    TAG_CONSTS, // hlir_t*
+    TAG_PROCS, // hlir_t*
 
     TAG_MAX
 } tag_t;
@@ -261,16 +263,40 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node) {
     hlir_build_function(hlir, body);
 }
 
+static void insert_module(sema_t *sema, vector_t **globals, vector_t **procs, pl0_t *name, hlir_t *hlir) {
+    if (!hlir_is(hlir, HLIR_MODULE)) {
+        report(sema->reports, ERROR, name->node, "cannot load corrupted module `%s`", name->ident);
+        return;
+    }
+
+    size_t nglobals = vector_len(hlir->globals);
+    size_t nprocs = vector_len(hlir->functions);
+
+    // TODO: seperate global consts and global vars
+    for (size_t i = 0; i < nglobals; i++) {
+        hlir_t *global = vector_get(hlir->globals, i);
+        set_var(sema, TAG_VALUES, get_hlir_name(global), global);
+        vector_push(globals, global);
+    }
+
+    for (size_t i = 0; i < nprocs; i++) {
+        hlir_t *proc = vector_get(hlir->functions, i);
+        set_proc(sema, get_hlir_name(proc), proc);
+        vector_push(procs, proc);
+    }
+}
+
 hlir_t *pl0_sema(reports_t *reports, void *node) {
     pl0_t *root = node;
 
     size_t nconsts = vector_len(root->consts);
     size_t nglobals = vector_len(root->globals);
     size_t nprocs = vector_len(root->procs);
+    size_t nimports = vector_len(root->imports);
 
-    vector_t *consts = vector_of(nconsts);
-    vector_t *globals = vector_of(nglobals);
-    vector_t *procs = vector_of(nprocs);
+    vector_t *consts = vector_new(nconsts);
+    vector_t *globals = vector_new(nglobals);
+    vector_t *procs = vector_new(nprocs);
 
     size_t sizes[TAG_MAX] = {
         [TAG_CONSTS] = nconsts,
@@ -281,19 +307,18 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
     
     // forward declare everything
-
     for (size_t i = 0; i < nconsts; i++) {
         pl0_t *it = vector_get(root->consts, i);
         hlir_t *hlir = hlir_begin_global(it->node, it->name, INTEGER);
         set_var(sema, TAG_CONSTS, it->name, hlir);
-        vector_set(consts, i, hlir);
+        vector_push(&consts, hlir);
     }
 
     for (size_t i = 0; i < nglobals; i++) {
         pl0_t *it = vector_get(root->globals, i);
         hlir_t *hlir = hlir_begin_global(it->node, it->name, INTEGER);
         set_var(sema, TAG_VALUES, it->name, hlir);
-        vector_set(globals, i, hlir);
+        vector_push(&globals, hlir);
     }
 
     for (size_t i = 0; i < nprocs; i++) {
@@ -305,7 +330,19 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
         };
         hlir_t *hlir = hlir_begin_function(it->node, it->name, signature);
         set_proc(sema, it->name, hlir);
-        vector_set(procs, i, hlir);
+        vector_push(&procs, hlir);
+    }
+
+    for (size_t i = 0; i < nimports; i++) {
+        pl0_t *name = vector_get(root->imports, i);
+        hlir_t *lib = find_module(sema, name->ident);
+        
+        if (lib == NULL) {
+            report(sema->reports, ERROR, NULL, "cannot import `%s`, failed to find module", name->ident);
+            continue;
+        }
+
+        insert_module(sema, &globals, &procs, name, lib);
     }
 
     // compile everything

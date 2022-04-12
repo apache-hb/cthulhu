@@ -7,6 +7,7 @@
 !*.c
 !*.h
 !*.inc
+!data/version.h.in
 
 # dont ignore flex and bison files
 !*.y

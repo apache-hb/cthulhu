@@ -35,7 +35,7 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
     NUMBER "number"
 
 %type<pl0>
-    number factor term expr math mul
+    number factor term expr math mul ident
     unary condition
     block init procedure name
     statement statements toplevel
@@ -46,6 +46,8 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
     procedures
     stmtlist
     proclist
+    imports
+    idents
 
 %type<ident>
     module
@@ -75,6 +77,7 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %token
     MODULE "module"
+    IMPORT "import"
     CONST "const"
     VAR "var"
     PROCEDURE "procedure"
@@ -97,7 +100,15 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 program: block DOT { scan_set(x, $1); }
     ;
 
-block: module consts vars procedures toplevel { $$ = pl0_module(x, @$, $1, $2, $3, $4, $5); }
+block: module imports consts vars procedures toplevel { $$ = pl0_module(x, @$, $1, $2, $3, $4, $5, $6); }
+    ;
+
+imports: %empty { $$ = vector_of(0); }
+    |  IMPORT idents SEMICOLON { $$ = $2; }
+    ;
+
+idents: ident { $$ = vector_init($1); }
+    | idents COMMA ident { vector_push(&$1, $3); $$ = $1; }
     ;
 
 module: %empty { $$ = NULL; }
@@ -156,7 +167,10 @@ stmtlist: statement { $$ = vector_init($1); }
     | stmtlist SEMICOLON statement { vector_push(&$1, $3); $$ = $1; }
     ;
 
-factor: IDENT { $$ = pl0_ident(x, @$, $1); }
+ident: IDENT { $$ = pl0_ident(x, @$, $1); }
+    ;
+
+factor: ident { $$ = $1; }
     | number { $$ = $1; }
     | LPAREN expr RPAREN { $$ = $2; }
     ;

@@ -3,6 +3,7 @@
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/io.h"
 #include "cthulhu/hlir/hlir.h"
+#include "cthulhu/hlir/sema.h"
 
 #define CT_CALLBACKS(id, prefix) \
     static int prefix##_##id##_##init(scan_t *extra, void *scanner) { return prefix##lex_init_extra(extra, scanner); } \
@@ -20,12 +21,14 @@
 
 typedef void*(*parse_t)(reports_t*, scan_t*);
 typedef hlir_t*(*analyze_t)(reports_t*, void*);
+typedef sema_t*(*build_module_t)(reports_t*, hlir_t*);
 
 typedef struct {
     const char *name;
     const char *version;
     parse_t parse;
     analyze_t sema;
+    build_module_t build;
 
     const char *stdlib_path;
 } driver_t;
@@ -34,4 +37,4 @@ void common_init(void);
 
 int common_main(int argc, const char **argv, driver_t driver);
 
-hlir_t *find_module(vector_t *path);
+hlir_t *find_module(sema_t *sema, const char *path);

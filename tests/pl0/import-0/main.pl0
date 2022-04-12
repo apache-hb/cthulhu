@@ -1,0 +1,14 @@
+module main;
+
+import lib;
+
+procedure entry;
+begin
+    lhs := 25;
+    rhs := 50;
+    call add;
+    ! result
+end;
+
+call entry
+.

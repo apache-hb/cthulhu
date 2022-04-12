@@ -166,10 +166,9 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<ast>
     modspec decl 
-    structdecl uniondecl
-    field type types opttypes
-    aliasdecl import
-    variantdecl
+    structdecl uniondecl variantdecl aliasdecl
+    field type types opttypes import
+    expr primary
 
 %type<vector>
     path decls decllist
@@ -246,6 +245,7 @@ modspec: %empty { $$ = NULL; }
 type: path { $$ = ast_typename(x, @$, $1); }
     | MUL type { $$ = ast_pointer(x, @$, $2, false); }
     | LSQUARE MUL RSQUARE type { $$ = ast_pointer(x, @$, $4, true); }
+    | LSQUARE expr RSQUARE type { $$ = ast_array(x, @$, $2, $4); }
     | DEF LPAREN opttypes RPAREN ARROW type { $$ = ast_closure(x, @$, $3, $6); } 
     | LPAREN type RPAREN { $$ = $2; }
     ;
@@ -260,6 +260,14 @@ types: typelist { $$ = ast_typelist($1, false); }
 
 typelist: type { $$ = vector_init($1); }
     | typelist COMMA type { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+primary: LPAREN expr RPAREN { $$ = $2; }
+    | INTEGER { $$ = ast_digit(x, @$, $1); }
+    | path { $$ = ast_name(x, @$, $1); }
+    ;
+
+expr: primary { $$ = $1; }
     ;
 
 path: IDENT { $$ = vector_init($1); }
