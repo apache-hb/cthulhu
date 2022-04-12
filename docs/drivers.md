@@ -28,4 +28,4 @@ int main(int argc, const char **argv) {
 }
 ```
 
-Now you need to implement `my_parse_function` and `my_typecheck_function`. TODO
+Now you need to implement `my_parse_function` and `my_typecheck_function`. TODO, for now refer to `drivers/pl0`
