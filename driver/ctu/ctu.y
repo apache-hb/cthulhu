@@ -168,7 +168,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     modspec decl 
     structdecl uniondecl variantdecl aliasdecl
     field type types opttypes import
-    expr primary
+    expr primary variant
 
 %type<vector>
     path decls decllist
@@ -224,8 +224,11 @@ variants: %empty { $$ = vector_new(0); }
     | variantlist { $$ = $1; }
     ;
 
-variantlist: IDENT { $$ = vector_init($1); }
-    | variantlist IDENT { vector_push(&$1, $2); $$ = $1; }
+variantlist: variant { $$ = vector_init($1); }
+    | variantlist COMMA variant { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+variant: IDENT { $$ = ast_case(x, @$, $1); }
     ;
 
 aggregates: LBRACE fieldlist RBRACE { $$ = $2; }

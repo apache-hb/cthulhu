@@ -35,7 +35,7 @@ endforeach
 
 fails = [
     'types.alias-1', 'types.alias-2',
-    'types.mixed-0'
+    'types.mixed-0', 'types.discard', 'types.discard-2'
 ]
 
 foreach case : fails

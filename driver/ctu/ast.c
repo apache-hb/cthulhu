@@ -110,3 +110,9 @@ ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type) {
     ast->field = type;
     return ast;
 }
+
+ast_t *ast_case(scan_t *scan, where_t where, char *name) {
+    ast_t *ast = ast_new(AST_CASE, scan, where);
+    ast->name = name;
+    return ast;
+}

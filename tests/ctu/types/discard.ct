@@ -1,0 +1,5 @@
+struct {
+    i: int;
+    $: char;
+    c: char;
+}

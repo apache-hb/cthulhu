@@ -17,6 +17,7 @@ typedef enum {
     /* intermediate types */
     AST_TYPELIST,
     AST_FIELD,
+    AST_CASE,
 
     /* types */
     AST_TYPENAME,
@@ -112,3 +113,4 @@ ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, vector_t *fields
 /// extra type data
 
 ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type);
+ast_t *ast_case(scan_t *scan, where_t where, char *name);

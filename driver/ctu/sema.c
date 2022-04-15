@@ -15,6 +15,10 @@ typedef enum {
     TAG_MAX
 } tag_t;
 
+static bool is_discard_ident(const char *id) {
+    return id == NULL || streq(id, "$");
+}
+
 static hlir_t *sema_type(sema_t *sema, ast_t *ast);
 
 static hlir_t *sema_typename(sema_t *sema, ast_t *ast) {
@@ -80,18 +84,19 @@ static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast) {
         ast_t *field = vector_get(fields, i);
         const char *name = field->name;
 
-        if (set_contains(names, name)) {
-            report(sema->reports, ERROR, field->node, "field '%s' already defined", name);
-            continue;
-        }
+        if (!is_discard_ident(name)) {
+            if (set_contains(names, name)) {
+                report(sema->reports, ERROR, field->node, "field '%s' already defined", name);
+                continue;
+            }
 
-        set_add(names, name);
+            set_add(names, name);
+        }
 
         hlir_t *type = sema_type(sema, field->field);
         hlir_t *entry = hlir_field(field->node, type, name);
         hlir_add_field(decl, entry);
     }
-
 
     hlir_build_struct(decl);
 }
@@ -105,12 +110,14 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast) {
         ast_t *field = vector_get(fields, i);
         const char *name = field->name;
 
-        if (set_contains(names, name)) {
-            report(sema->reports, ERROR, field->node, "field '%s' already defined", name);
-            continue;
-        }
+        if (!is_discard_ident(name)) {
+            if (set_contains(names, name)) {
+                report(sema->reports, ERROR, field->node, "field '%s' already defined", name);
+                continue;
+            }
 
-        set_add(names, name);
+            set_add(names, name);
+        }
 
         hlir_t *type = sema_type(sema, field->field);
         hlir_t *entry = hlir_field(field->node, type, name);
@@ -127,6 +134,10 @@ static void sema_alias(sema_t *sema, hlir_t *decl, ast_t *ast) {
 
 static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast) {
     report(sema->reports, INTERNAL, ast->node, "variant not implemented");
+    hlir_t *tag = hlir_digit(ast->node, format("%s_tag", ast->name), DIGIT_INT, SIGN_UNSIGNED);
+    hlir_t *field = hlir_field(ast->node, tag, "tag");
+    hlir_add_field(decl, field);
+
     hlir_build_struct(decl);
 }
 
@@ -161,6 +172,11 @@ static void sema_decl(sema_t *sema, ast_t *ast) {
 }
 
 static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl) {
+    if (is_discard_ident(name)) {
+        report(sema->reports, ERROR, decl->node, "discarding declaration");
+        return;
+    }
+
     hlir_t *other = sema_get(sema, tag, name);
     if (other != NULL) {
         report_shadow(sema->reports, name, decl->node, other->node);
@@ -176,28 +192,26 @@ static void fwd_decl(sema_t *sema, ast_t *ast) {
     switch (ast->of) {
     case AST_STRUCTDECL:
         decl = hlir_begin_struct(ast->node, ast->name);
-        add_decl(sema, TAG_TYPES, ast->name, decl);
         break;
 
     case AST_UNIONDECL:
         decl = hlir_begin_union(ast->node, ast->name);
-        add_decl(sema, TAG_TYPES, ast->name, decl);
         break;
 
     case AST_ALIASDECL:
         decl = hlir_begin_alias(ast->node, ast->name);
-        add_decl(sema, TAG_TYPES, ast->name, decl);
         break;
 
     case AST_VARIANTDECL:
         decl = hlir_begin_struct(ast->node, ast->name);
-        add_decl(sema, TAG_TYPES, ast->name, decl);
         break;
 
     default:
         ctu_assert(sema->reports, "unexpected ast of type %d", ast->of);
-        break;
+        return;
     }
+
+    add_decl(sema, TAG_TYPES, ast->name, decl);
 }
 
 static void add_basic_types(sema_t *sema) {
