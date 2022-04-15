@@ -49,9 +49,10 @@ static const field_t SPAN_FIELDS[] = {
 };
 static const layout_t SPAN_LAYOUT = LAYOUT("span", SPAN_FIELDS);
 
-enum { ATTRIB_LINKAGE };
+enum { ATTRIB_LINKAGE, ATTRIB_TAGS };
 static const field_t ATTRIB_FIELDS[] = {
-    [ATTRIB_LINKAGE] = FIELD("linkage", FIELD_INT)
+    [ATTRIB_LINKAGE] = FIELD("linkage", FIELD_INT),
+    [ATTRIB_TAGS] = FIELD("tags", FIELD_INT)
 };
 static const layout_t ATTRIB_LAYOUT = LAYOUT("attributes", ATTRIB_FIELDS);
 
@@ -366,16 +367,19 @@ static const format_t GLOBAL = FORMAT(HEADER_LAYOUT, ALL_TYPES);
 /// hlir loading 
 ///
 
+#define READ_OR_RETURN(data, index, values) do { bool result = read_entry(data, index, values); if (!result) return false; } while (0)
+
 typedef struct {
     reports_t *reports;
     scan_t *scan;
     data_t *data;
 } load_t;
 
-static node_t *load_span(load_t *load, index_t index) {
+static const node_t *load_span(load_t *load, index_t index) {
     value_t values[FIELDLEN(SPAN_FIELDS)];
-    read_entry(load->data, index, values);
-    
+    bool ok = read_entry(load->data, index, values);
+    if (!ok) { return node_builtin(); }
+
     where_t where = {
         .first_line = get_int(values[SPAN_FIRST_LINE]),
         .first_column = get_int(values[SPAN_FIRST_COLUMN]),
@@ -388,9 +392,12 @@ static node_t *load_span(load_t *load, index_t index) {
 
 static hlir_attributes_t *load_attributes(load_t *load, value_t value) {
     value_t values[FIELDLEN(ATTRIB_FIELDS)];
-    read_entry(load->data, get_reference(value), values);
+    READ_OR_RETURN(load->data, get_reference(value), values);
 
-    return hlir_new_attributes(get_int(values[ATTRIB_LINKAGE]));
+    return hlir_attributes(
+        get_int(values[ATTRIB_LINKAGE]),
+        get_int(values[ATTRIB_TAGS])
+    );
 }
 
 static hlir_t *load_node(load_t *load, index_t index, const char *trace);
@@ -401,7 +408,7 @@ static hlir_t *load_opt_node(load_t *load, index_t index, const char *trace) {
     return load_node(load, index, trace);
 }
 
-static node_t *get_span(load_t *load, value_t *values) {
+static const node_t *get_span(load_t *load, value_t *values) {
     return load_span(load, get_reference(values[0])); // the ENUM_FIELDS macro makes sure that values[0] is a span
 }
 
@@ -431,7 +438,7 @@ static vector_t *get_arr(load_t *load, value_t value) {
 
 static hlir_t *load_digit_literal_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(DIGIT_LITERAL_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     mpz_t digit;
     get_digit(digit, values[DIGIT_LITERAL_VALUE]);
@@ -445,7 +452,7 @@ static hlir_t *load_digit_literal_node(load_t *load, index_t index) {
 
 static hlir_t *load_bool_literal_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(BOOL_LITERAL_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_bool_literal(
         get_span(load, values), 
@@ -456,7 +463,7 @@ static hlir_t *load_bool_literal_node(load_t *load, index_t index) {
 
 static hlir_t *load_string_literal_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(STRING_LITERAL_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_string_literal(
         get_span(load, values), 
@@ -467,7 +474,7 @@ static hlir_t *load_string_literal_node(load_t *load, index_t index) {
 
 static hlir_t *load_name_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(NAME_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_name(
         get_span(load, values),
@@ -477,7 +484,7 @@ static hlir_t *load_name_node(load_t *load, index_t index) {
 
 static hlir_t *load_unary_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(UNARY_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_unary(
         get_span(load, values),
@@ -489,7 +496,7 @@ static hlir_t *load_unary_node(load_t *load, index_t index) {
 
 static hlir_t *load_binary_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(BINARY_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_binary(
         get_span(load, values),
@@ -502,7 +509,7 @@ static hlir_t *load_binary_node(load_t *load, index_t index) {
 
 static hlir_t *load_compare_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(COMPARE_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_compare(
         get_span(load, values),
@@ -515,7 +522,7 @@ static hlir_t *load_compare_node(load_t *load, index_t index) {
 
 static hlir_t *load_call_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(CALL_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_call(
         get_span(load, values),
@@ -528,7 +535,7 @@ static hlir_t *load_call_node(load_t *load, index_t index) {
 
 static hlir_t *load_stmts_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(STMTS_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_stmts(
         get_span(load, values),
@@ -538,7 +545,7 @@ static hlir_t *load_stmts_node(load_t *load, index_t index) {
 
 static hlir_t *load_branch_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(BRANCH_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_branch(
         get_span(load, values),
@@ -550,7 +557,7 @@ static hlir_t *load_branch_node(load_t *load, index_t index) {
 
 static hlir_t *load_loop_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(LOOP_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_loop(
         get_span(load, values),
@@ -562,7 +569,7 @@ static hlir_t *load_loop_node(load_t *load, index_t index) {
 
 static hlir_t *load_assign_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(ASSIGN_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_assign(
         get_span(load, values),
@@ -575,7 +582,7 @@ static hlir_t *load_assign_node(load_t *load, index_t index) {
 
 static hlir_t *load_digit_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(DIGIT_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_digit(
         get_span(load, values), 
@@ -587,7 +594,7 @@ static hlir_t *load_digit_node(load_t *load, index_t index) {
 
 static hlir_t *load_bool_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(BOOL_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_bool(
         get_span(load, values), 
@@ -597,7 +604,7 @@ static hlir_t *load_bool_node(load_t *load, index_t index) {
 
 static hlir_t *load_string_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(STRING_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_string(
         get_span(load, values), 
@@ -607,7 +614,7 @@ static hlir_t *load_string_node(load_t *load, index_t index) {
 
 static hlir_t *load_void_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(VOID_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_void(
         get_span(load, values), 
@@ -617,7 +624,7 @@ static hlir_t *load_void_node(load_t *load, index_t index) {
 
 static hlir_t *load_closure_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(CLOSURE_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_closure(
         get_span(load, values), 
@@ -630,7 +637,7 @@ static hlir_t *load_closure_node(load_t *load, index_t index) {
 
 static hlir_t *load_pointer_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(POINTER_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_pointer(
         get_span(load, values), 
@@ -642,7 +649,7 @@ static hlir_t *load_pointer_node(load_t *load, index_t index) {
 
 static hlir_t *load_array_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(ARRAY_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_array(
         get_span(load, values), 
@@ -654,7 +661,7 @@ static hlir_t *load_array_node(load_t *load, index_t index) {
 
 static hlir_t *load_local_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(LOCAL_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_indexed_local(
         get_span(load, values), 
@@ -666,7 +673,7 @@ static hlir_t *load_local_node(load_t *load, index_t index) {
 
 static hlir_t *load_global_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(GLOBAL_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     hlir_t *hlir = hlir_global(
         get_span(load, values), 
@@ -682,7 +689,7 @@ static hlir_t *load_global_node(load_t *load, index_t index) {
 
 static hlir_t *load_function_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(FUNCTION_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     signature_t signature = {
         .params = get_arr(load, values[FUNCTION_PARAMS]),
@@ -705,7 +712,7 @@ static hlir_t *load_function_node(load_t *load, index_t index) {
 
 static hlir_t *load_struct_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(STRUCT_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     hlir_t *hlir = hlir_struct(
         get_span(load, values), 
@@ -720,7 +727,7 @@ static hlir_t *load_struct_node(load_t *load, index_t index) {
 
 static hlir_t *load_union_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(UNION_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     hlir_t *hlir = hlir_union(
         get_span(load, values), 
@@ -735,7 +742,7 @@ static hlir_t *load_union_node(load_t *load, index_t index) {
 
 static hlir_t *load_alias_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(ALIAS_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     hlir_t *hlir = hlir_alias(
         get_span(load, values), 
@@ -751,7 +758,7 @@ static hlir_t *load_alias_node(load_t *load, index_t index) {
 
 static hlir_t *load_field_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(FIELD_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_field(
         get_span(load, values), 
@@ -762,7 +769,7 @@ static hlir_t *load_field_node(load_t *load, index_t index) {
 
 static hlir_t *load_module_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(MODULE_FIELDS)];
-    read_entry(load->data, index, values);
+    READ_OR_RETURN(load->data, index, values);
 
     return hlir_module(
         get_span(load, values), 
@@ -848,7 +855,8 @@ hlir_t *load_module(reports_t *reports, const char *path) {
     };
 
     data_t data;
-    begin_load(&data, header);
+    bool ok = begin_load(&data, header);
+    if (!ok) { return NULL; }
     
     const char *language = get_string(data.header.header.values[HEADER_LANGUAGE]);
     const char *where = get_string(data.header.header.values[HEADER_PATH]);
@@ -890,7 +898,8 @@ static index_t save_span(data_t *data, const node_t *node) {
 
 static index_t save_attributes(data_t *data, const hlir_attributes_t *attributes) {
     value_t values[FIELDLEN(ATTRIB_FIELDS)] = {
-        [ATTRIB_LINKAGE] = int_value(attributes->linkage)
+        [ATTRIB_LINKAGE] = int_value(attributes->linkage),
+        [ATTRIB_TAGS] = int_value(attributes->tags)
     };
 
     return write_entry(data, ATTRIBUTE_INDEX, values);

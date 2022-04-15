@@ -1,6 +1,6 @@
 project('cthulhu', [ 'c', 'cpp' ],
     license : 'APGLv3',
-    version : '0.1.0',
+    version : '0.2.0',
     meson_version : '>=0.58',
     default_options : [
         'c_std=gnu99',
@@ -29,9 +29,57 @@ configure_file(
     configuration : config
 )
 
+json = subproject('cjson').get_variable('json')
+
+gmp = dependency('gmp', 
+    not_found_message : 'no system gmp found, falling back to mini-gmp',
+    fallback : [ 'mini-gmp', 'gmp' ]
+)
+
+args = []
+deps = [ gmp, json ]
+lexargs = []
+
+if host != 'windows'
+    deps += [ cc.find_library('m') ]
+endif
+
+tuning = get_option('tuning')
+if tuning
+    args += [ '-DENABLE_TUNING=1' ]
+endif
+
+if host == 'windows'
+    lexargs += [ '--wincompat' ]
+    args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '/Wv:18' ]
+endif
+
+flex = find_program('flex', 'win_flex', version : '>=2.6')
+bison = find_program('bison', 'win_bison', version : '>=3.5')
+
+lex = generator(flex, 
+    output : [ '@BASENAME@-flex.c', '@BASENAME@-flex.h' ],
+    arguments : lexargs + [
+        '--outfile=@OUTPUT0@', 
+        '--header-file=@OUTPUT1@', 
+        '@INPUT@'
+    ]
+)
+
+parse = generator(bison,
+    output : [ '@BASENAME@-bison.c', '@BASENAME@-bison.h' ],
+    arguments : [ 
+        '-d', '@INPUT@', '-Wdeprecated', '-v',
+        '--output=@OUTPUT0@', 
+        '--defines=@OUTPUT1@' 
+    ]
+)
+
 src = [
     # command line
     'src/driver/driver.c',
+    lex.process('src/driver/cmd.l'),
+    parse.process('src/driver/cmd.y'),
     
     # high level intermediate representation
     'src/hlir/sema.c',
@@ -76,31 +124,6 @@ src = [
     'src/util/compat-platform.c'.replace('platform', target)
 ]
 
-json = subproject('cjson').get_variable('json')
-
-gmp = dependency('gmp', 
-    not_found_message : 'no system gmp found, falling back to mini-gmp',
-    fallback : [ 'mini-gmp', 'gmp' ]
-)
-
-args = []
-deps = [ gmp, json ]
-lexargs = []
-
-if host != 'windows'
-    deps += [ cc.find_library('m') ]
-endif
-
-tuning = get_option('tuning')
-if tuning
-    args += [ '-DENABLE_TUNING=1' ]
-endif
-
-if host == 'windows'
-    lexargs += [ '--wincompat' ]
-    args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '/Wv:18' ]
-endif
-
 libgeneric = library('generic', src,
     include_directories : 'include',
     c_args : args,
@@ -141,27 +164,6 @@ if awsopt.found()
 
     subdir('tests/aws')
 endif
-
-flex = find_program('flex', 'win_flex', version : '>=2.6')
-bison = find_program('bison', 'win_bison', version : '>=3.5')
-
-lex = generator(flex, 
-    output : [ '@BASENAME@-flex.c', '@BASENAME@-flex.h' ],
-    arguments : lexargs + [
-        '--outfile=@OUTPUT0@', 
-        '--header-file=@OUTPUT1@', 
-        '@INPUT@'
-    ]
-)
-
-parse = generator(bison,
-    output : [ '@BASENAME@-bison.c', '@BASENAME@-bison.h' ],
-    arguments : [ 
-        '-d', '@INPUT@', '-Wdeprecated', '-v',
-        '--output=@OUTPUT0@', 
-        '--defines=@OUTPUT1@' 
-    ]
-)
 
 if tuning
     tune = executable('tune-map', [ 'tools/tune-map.c' ],

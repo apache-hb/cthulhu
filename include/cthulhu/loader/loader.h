@@ -107,6 +107,7 @@ typedef struct {
         // data needed for reading
         struct {
             const char *data; // the raw data
+            size_t length; // the length of the data
             size_t string; // string table offset
             size_t array; // array table offset
             size_t *offsets; // the offset table

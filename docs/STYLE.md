@@ -29,10 +29,12 @@ void* data; // not this
 * use `const` whenever its easy to do so
 * use west const
 * use `#pragma once` over include guards
+* use `#define` for constant values
+* use `enum` for defining related constant values
 
 ## banned features
 * no VLAs & `alloca`, hard to debug, easy to crash
-* no volatile, it doesnt do what you think it does
+* no `volatile`, it doesnt do what you think it does
 * no compiler specific extensions
 * no mutable global state, all code must be reentrant and thread safe
 * no inline asm

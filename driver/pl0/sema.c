@@ -21,8 +21,8 @@ static const hlir_attributes_t *EXPORTED;
 void pl0_init(void) {
     const node_t *node = node_builtin();
 
-    IMPORTED = hlir_new_attributes(LINK_IMPORTED);
-    EXPORTED = hlir_new_attributes(LINK_EXPORTED);
+    IMPORTED = hlir_linkage(LINK_IMPORTED);
+    EXPORTED = hlir_linkage(LINK_EXPORTED);
 
     INTEGER = hlir_digit(node, "integer", DIGIT_INT, SIGN_DEFAULT);
     BOOLEAN = hlir_bool(node, "boolean");

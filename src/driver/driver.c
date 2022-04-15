@@ -325,7 +325,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
 }
 
 hlir_t *find_module(sema_t *sema, const char *path) {
-    hlir_t *hlir = load_module(sema->reports, format("%s.co", path));
+    hlir_t *hlir = load_module(sema->reports, format("%s.hlir", path));
     if (hlir != NULL) { return hlir; }
 
     return NULL;
