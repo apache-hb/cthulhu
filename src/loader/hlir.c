@@ -268,6 +268,42 @@ static const field_t FUNCTION_FIELDS[] = {
 };
 static const layout_t FUNCTION_LAYOUT = LAYOUT("function", FUNCTION_FIELDS);
 
+INDICES(STRUCT_SPAN, STRUCT_ATTRIBS, STRUCT_NAME, STRUCT_ITEMS);
+static const field_t STRUCT_FIELDS[] = {
+    [STRUCT_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [STRUCT_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
+    [STRUCT_NAME] = FIELD("name", FIELD_STRING),
+    [STRUCT_ITEMS] = FIELD("items", FIELD_ARRAY)
+};
+static const layout_t STRUCT_LAYOUT = LAYOUT("struct", STRUCT_FIELDS);
+
+INDICES(UNION_SPAN, UNION_ATTRIBS, UNION_NAME, UNION_ITEMS);
+static const field_t UNION_FIELDS[] = {
+    [UNION_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [UNION_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
+    [UNION_NAME] = FIELD("name", FIELD_STRING),
+    [UNION_ITEMS] = FIELD("items", FIELD_ARRAY)
+};
+static const layout_t UNION_LAYOUT = LAYOUT("union", UNION_FIELDS);
+
+INDICES(ALIAS_SPAN, ALIAS_ATTRIBS, ALIAS_NAME, ALIAS_TYPE, ALIAS_NEWTYPE);
+static const field_t ALIAS_FIELDS[] = {
+    [ALIAS_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [ALIAS_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
+    [ALIAS_NAME] = FIELD("name", FIELD_STRING),
+    [ALIAS_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [ALIAS_NEWTYPE] = FIELD("newtype", FIELD_BOOL)
+};
+static const layout_t ALIAS_LAYOUT = LAYOUT("alias", ALIAS_FIELDS);
+
+INDICES(FIELD_SPAN, FIELD_NAME, FIELD_TYPE);
+static const field_t FIELD_FIELDS[] = {
+    [FIELD_SPAN] = FIELD("span", FIELD_REFERENCE),
+    [FIELD_NAME] = FIELD("name", FIELD_STRING),
+    [FIELD_TYPE] = FIELD("type", FIELD_REFERENCE)
+};
+static const layout_t FIELD_LAYOUT = LAYOUT("field", FIELD_FIELDS);
+
 INDICES(MODULE_SPAN, MODULE_NAME, MODULE_TYPES, MODULE_GLOBALS, MODULE_FUNCTIONS);
 static const field_t MODULE_FIELDS[] = {
     [MODULE_SPAN] = FIELD("span", FIELD_REFERENCE),
@@ -309,6 +345,11 @@ static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
     [HLIR_POINTER] = POINTER_LAYOUT,
     [HLIR_ARRAY] = ARRAY_LAYOUT,
     
+    [HLIR_STRUCT] = STRUCT_LAYOUT,
+    [HLIR_UNION] = UNION_LAYOUT,
+    [HLIR_ALIAS] = ALIAS_LAYOUT,
+    [HLIR_FIELD] = FIELD_LAYOUT,
+
     [HLIR_LOCAL] = LOCAL_LAYOUT,
     [HLIR_GLOBAL] = GLOBAL_LAYOUT,
     [HLIR_FUNCTION] = FUNCTION_LAYOUT,
@@ -627,12 +668,16 @@ static hlir_t *load_global_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(GLOBAL_FIELDS)];
     read_entry(load->data, index, values);
 
-    return hlir_global(
+    hlir_t *hlir = hlir_global(
         get_span(load, values), 
         get_string(values[GLOBAL_NAME]), 
         GET_REF(load, values, GLOBAL_TYPE),
         GET_REF_OPT(load, values, GLOBAL_INIT)
     );
+
+    hlir_set_attributes(hlir, load_attributes(load, values[GLOBAL_ATTRIBS]));
+
+    return hlir;
 }
 
 static hlir_t *load_function_node(load_t *load, index_t index) {
@@ -656,6 +701,63 @@ static hlir_t *load_function_node(load_t *load, index_t index) {
     hlir_set_attributes(hlir, load_attributes(load, values[FUNCTION_ATTRIBS]));
 
     return hlir;
+}
+
+static hlir_t *load_struct_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(STRUCT_FIELDS)];
+    read_entry(load->data, index, values);
+
+    hlir_t *hlir = hlir_struct(
+        get_span(load, values), 
+        get_string(values[STRUCT_NAME]), 
+        get_arr(load, values[STRUCT_ITEMS])
+    );
+
+    hlir_set_attributes(hlir, load_attributes(load, values[STRUCT_ATTRIBS]));
+
+    return hlir;
+}
+
+static hlir_t *load_union_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(UNION_FIELDS)];
+    read_entry(load->data, index, values);
+
+    hlir_t *hlir = hlir_union(
+        get_span(load, values), 
+        get_string(values[UNION_NAME]), 
+        get_arr(load, values[UNION_ITEMS])
+    );
+
+    hlir_set_attributes(hlir, load_attributes(load, values[UNION_ATTRIBS]));
+
+    return hlir;
+}
+
+static hlir_t *load_alias_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(ALIAS_FIELDS)];
+    read_entry(load->data, index, values);
+
+    hlir_t *hlir = hlir_alias(
+        get_span(load, values), 
+        get_string(values[ALIAS_NAME]), 
+        GET_REF(load, values, ALIAS_TYPE),
+        get_bool(values[ALIAS_NEWTYPE])
+    );
+
+    hlir_set_attributes(hlir, load_attributes(load, values[ALIAS_ATTRIBS]));
+
+    return hlir;
+}
+
+static hlir_t *load_field_node(load_t *load, index_t index) {
+    value_t values[FIELDLEN(FIELD_FIELDS)];
+    read_entry(load->data, index, values);
+
+    return hlir_field(
+        get_span(load, values), 
+        GET_REF(load, values, FIELD_TYPE),
+        get_string(values[FIELD_NAME])
+    );
 }
 
 static hlir_t *load_module_node(load_t *load, index_t index) {
@@ -704,6 +806,11 @@ static hlir_t *load_node(load_t *load, index_t index, const char *trace) {
     case HLIR_LOCAL: return load_local_node(load, index);
     case HLIR_GLOBAL: return load_global_node(load, index);
     case HLIR_FUNCTION: return load_function_node(load, index);
+
+    case HLIR_STRUCT: return load_struct_node(load, index);
+    case HLIR_UNION: return load_union_node(load, index);
+    case HLIR_ALIAS: return load_alias_node(load, index);
+    case HLIR_FIELD: return load_field_node(load, index);
 
     case HLIR_MODULE: return load_module_node(load, index);
 
@@ -1079,6 +1186,53 @@ static index_t save_function_node(data_t *data, const hlir_t *hlir) {
     return write_entry(data, HLIR_FUNCTION, values);
 }
 
+static index_t save_struct_node(data_t *data, const hlir_t *hlir) {
+    array_t fields = save_array(data, hlir->fields);
+
+    value_t values[] = {
+        [STRUCT_SPAN] = span_ref(data, hlir),
+        [STRUCT_ATTRIBS] = attrib_ref(data, hlir),
+        [STRUCT_NAME] = string_value(hlir->name),
+        [STRUCT_ITEMS] = array_value(fields)
+    };
+
+    return write_entry(data, HLIR_STRUCT, values);
+}
+
+static index_t save_union_node(data_t *data, const hlir_t *hlir) {
+    array_t fields = save_array(data, hlir->fields);
+
+    value_t values[] = {
+        [UNION_SPAN] = span_ref(data, hlir),
+        [UNION_ATTRIBS] = attrib_ref(data, hlir),
+        [UNION_NAME] = string_value(hlir->name),
+        [UNION_ITEMS] = array_value(fields)
+    };
+
+    return write_entry(data, HLIR_UNION, values);
+}
+
+static index_t save_alias_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [ALIAS_SPAN] = span_ref(data, hlir),
+        [ALIAS_ATTRIBS] = attrib_ref(data, hlir),
+        [ALIAS_NAME] = string_value(hlir->name),
+        [ALIAS_TYPE] = make_ref(data, hlir->alias)
+    };
+
+    return write_entry(data, HLIR_ALIAS, values);
+}
+
+static index_t save_field_node(data_t *data, const hlir_t *hlir) {
+    value_t values[] = {
+        [FIELD_SPAN] = span_ref(data, hlir),
+        [FIELD_NAME] = string_value(hlir->name),
+        [FIELD_TYPE] = make_ref(data, get_hlir_type(hlir))
+    };
+
+    return write_entry(data, HLIR_FIELD, values);
+}
+
 static index_t save_module_node(data_t *data, const hlir_t *hlir) {
     array_t types = save_array(data, hlir->types);
     array_t globals = save_array(data, hlir->globals);
@@ -1129,6 +1283,11 @@ static index_t save_node(data_t *data, const hlir_t *hlir) {
     case HLIR_LOCAL: return save_local_node(data, hlir);
     case HLIR_GLOBAL: return save_global_node(data, hlir);
     case HLIR_FUNCTION: return save_function_node(data, hlir);
+
+    case HLIR_STRUCT: return save_struct_node(data, hlir);
+    case HLIR_UNION: return save_union_node(data, hlir);
+    case HLIR_ALIAS: return save_alias_node(data, hlir);
+    case HLIR_FIELD: return save_field_node(data, hlir);
 
     case HLIR_MODULE: return save_module_node(data, hlir);
 

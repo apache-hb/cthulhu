@@ -27,8 +27,8 @@ void hlir_add_field(hlir_t *self, hlir_t *field);
 ///
 
 hlir_t *hlir_begin_alias(const node_t *node, const char *name);
-void hlir_build_alias(hlir_t *self, const hlir_t *alias);
-hlir_t *hlir_alias(const node_t *node, const char *name, const hlir_t *type);
+void hlir_build_alias(hlir_t *self, const hlir_t *alias, bool newtype);
+hlir_t *hlir_alias(const node_t *node, const char *name, const hlir_t *type, bool newtype);
 
 ///
 /// global builders

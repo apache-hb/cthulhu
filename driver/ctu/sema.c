@@ -129,7 +129,7 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast) {
 
 static void sema_alias(sema_t *sema, hlir_t *decl, ast_t *ast) {
     hlir_t *type = sema_type(sema, ast->alias);
-    hlir_build_alias(decl, type);
+    hlir_build_alias(decl, type, false);
 }
 
 static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast) {
