@@ -456,7 +456,7 @@ static hlir_t *load_bool_literal_node(load_t *load, index_t index) {
 
     return hlir_bool_literal(
         get_span(load, values), 
-        GET_REF(load, values, BOOL_LITERAL_TYPE), 
+        GET_REF(load, values, BOOL_LITERAL_TYPE),
         get_bool(values[BOOL_LITERAL_VALUE])
     );
 }
@@ -466,8 +466,8 @@ static hlir_t *load_string_literal_node(load_t *load, index_t index) {
     READ_OR_RETURN(load->data, index, values);
 
     return hlir_string_literal(
-        get_span(load, values), 
-        GET_REF(load, values, STRING_LITERAL_TYPE), 
+        get_span(load, values),
+        GET_REF(load, values, STRING_LITERAL_TYPE),
         get_string(values[STRING_LITERAL_VALUE])
     );
 }
