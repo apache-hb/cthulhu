@@ -14,7 +14,6 @@
  *
  * we pick a few arbitrary primes
  */
-typedef size_t map_size_t;
 
 #define MAP_SMALL 7 /// optimal for maps with less than 10 items
 #define MAP_BIG 97 /// optimal for maps with 100 or more items

@@ -11,6 +11,7 @@ wow this project got out of hand.
   * `pkg-config`
   * `build-essential`
   * `libgmp-dev` (optional)
+  * `doxygen` (optional)
 
 * runtime dependencies
   * `libgmp` (optional)

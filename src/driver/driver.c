@@ -4,6 +4,7 @@
 
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/str.h"
+#include "cthulhu/util/vector.h"
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/emit/emit.h"

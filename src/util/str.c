@@ -209,6 +209,8 @@ size_t strcount(const char *str, const char *sub) {
 }
 
 bool strcontains(const char *str, const char *sub) {
+    if (sub[0] == '\0') { return false; }
+    
     return strstr(str, sub) != NULL;
 }
 

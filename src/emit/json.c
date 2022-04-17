@@ -1,5 +1,6 @@
 #include "cthulhu/emit/emit.h"
 #include "cthulhu/hlir/query.h"
+#include "cthulhu/util/map.h"
 
 #include "cJSON.h"
 

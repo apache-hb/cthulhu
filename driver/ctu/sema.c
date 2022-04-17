@@ -4,7 +4,9 @@
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/type.h"
 #include "cthulhu/hlir/decl.h"
+
 #include "cthulhu/util/report-ext.h"
+#include "cthulhu/util/set.h"
 
 typedef enum {
     TAG_VARS, // hlir_t*

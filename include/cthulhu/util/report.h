@@ -4,6 +4,7 @@
 
 #include "macros.h"
 #include "util.h"
+#include "vector.h"
 
 #include <stdbool.h>
 #include <stddef.h>

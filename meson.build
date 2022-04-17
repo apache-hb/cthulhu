@@ -1,4 +1,4 @@
-project('cthulhu', [ 'c', 'cpp' ],
+project('cthulhu', 'c',
     license : 'APGLv3',
     version : '0.2.0',
     meson_version : '>=0.58',
@@ -175,3 +175,17 @@ foreach lang : get_option('languages')
     subdir('driver'/lang)
     subdir('tests'/lang)
 endforeach
+
+subdir('tests/unit-tests')
+
+doxygen = find_program('doxygen', required : get_option('doxygen'))
+
+if doxygen.found()
+    configure_file(
+        input : 'data/Doxyfile.in',
+        output : 'Doxyfile',
+        configuration : config
+    )
+
+    run_target('docs', command : [doxygen, meson.current_build_dir() / 'Doxyfile'])
+endif

@@ -2,6 +2,7 @@
 
 #include "cthulhu/util/report.h"
 #include "cthulhu/hlir/hlir.h"
+#include "cthulhu/util/map.h"
 
 typedef uint64_t offset_t;
 typedef uint32_t type_t;

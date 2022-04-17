@@ -5,6 +5,7 @@
 
 #include "macros.h"
 #include "util.h"
+#include "vector.h"
 
 /**
  * format a string with printf-like syntax

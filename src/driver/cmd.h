@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cthulhu/util/util.h"
+#include "cthulhu/util/vector.h"
 
 #include <gmp.h>
 #include <stdbool.h>
@@ -34,5 +35,6 @@ typedef enum {
 
 cmd_flag_t get_flag(const char *name);
 
-
+void add_option(cmd_flag_t flag, option_t *option);
+void add_file(const char *file);
 void init_cmd(void);

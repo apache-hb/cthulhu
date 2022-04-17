@@ -2,6 +2,7 @@
 
 #include "cthulhu/ast/ops.h"
 #include "cthulhu/ast/ast.h"
+#include "cthulhu/util/vector.h"
 
 #include "attribs.h"
 
@@ -239,27 +240,27 @@ const hlir_t *closure_result(const hlir_t *self);
  * @param error the error message
  * @return hlir_t* the error node
  */
-hlir_t *hlir_error(IN const node_t *node, IN_OPT const char *error);
+hlir_t *hlir_error(const node_t *node, const char *error);
 
 ///
 /// expression constructors
 ///
 
-hlir_t *hlir_digit_literal(IN const node_t *node, 
-                           IN const hlir_t *type, 
-                           IN mpz_t value);
+hlir_t *hlir_digit_literal(const node_t *node, 
+                           const hlir_t *type, 
+                           mpz_t value);
 
-hlir_t *hlir_int_literal(IN_OPT const node_t *node,
-                         IN_OPT const hlir_t *type,
+hlir_t *hlir_int_literal(const node_t *node,
+                         const hlir_t *type,
                          int value);
 
-hlir_t *hlir_bool_literal(IN const node_t *node, 
-                          IN const hlir_t *type, 
+hlir_t *hlir_bool_literal(const node_t *node, 
+                          const hlir_t *type, 
                           bool value);
 
-hlir_t *hlir_string_literal(IN const node_t *node,
-                            IN const hlir_t *type,
-                            IN const char *value);
+hlir_t *hlir_string_literal(const node_t *node,
+                            const hlir_t *type,
+                            const char *value);
 
 hlir_t *hlir_name(const node_t *node, hlir_t *read);
 

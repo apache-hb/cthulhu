@@ -12,19 +12,10 @@
     
     #include "scan.h"
     #include "ast.h"
-
-
-    #undef IN
-    #undef OUT
-    #undef INOUT
 }
 
 %{
 #include "scan.h"
-
-#undef IN
-#undef OUT
-#undef INOUT
 
 int ctulex();
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);

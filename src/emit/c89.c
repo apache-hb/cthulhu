@@ -332,7 +332,7 @@ static void emit_proc(reports_t *reports, const hlir_t *hlir) {
 }
 
 static void visit_type(reports_t *reports, vector_t **result, const hlir_t *type) {
-    if (vector_find(*result, type, NULL) != SIZE_MAX) { return; }
+    if (vector_find(*result, type) != SIZE_MAX) { return; }
 
     switch (type->type) {
     case HLIR_VOID: case HLIR_DIGIT:

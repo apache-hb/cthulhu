@@ -13,8 +13,8 @@
  * @param sign the sign of this integer type
  * @return hlir_t* the constructed integer type
  */
-hlir_t *hlir_digit(IN_OPT const node_t *node, 
-                   IN_OPT const char *name, 
+hlir_t *hlir_digit(const node_t *node, 
+                   const char *name, 
                    digit_t width, 
                    sign_t sign);
 
@@ -25,8 +25,8 @@ hlir_t *hlir_digit(IN_OPT const node_t *node,
  * @param name the name of this bool type
  * @return hlir_t* the constructed bool type
  */
-hlir_t *hlir_bool(IN_OPT const node_t *node, 
-                  IN_OPT const char *name);
+hlir_t *hlir_bool(const node_t *node, 
+                  const char *name);
 
 /**
  * @brief construct a new string type
@@ -35,8 +35,8 @@ hlir_t *hlir_bool(IN_OPT const node_t *node,
  * @param name the name of this string type
  * @return hlir_t* the constructed string type
  */
-hlir_t *hlir_string(IN_OPT const node_t *node, 
-                    IN_OPT const char *name);
+hlir_t *hlir_string(const node_t *node, 
+                    const char *name);
 
 /**
  * @brief construct a new void type
@@ -45,8 +45,8 @@ hlir_t *hlir_string(IN_OPT const node_t *node,
  * @param name the name of this void type
  * @return hlir_t* 
  */
-hlir_t *hlir_void(IN_OPT const node_t *node, 
-                  IN_OPT const char *name);
+hlir_t *hlir_void(const node_t *node, 
+                  const char *name);
 
 /**
  * @brief construct a new closure type
@@ -58,10 +58,10 @@ hlir_t *hlir_void(IN_OPT const node_t *node,
  * @param variadic is this a variadic function?
  * @return hlir_t* the constructed closure type
  */
-hlir_t *hlir_closure(IN_OPT const node_t *node, 
-                     IN_OPT const char *name, 
-                     IN vector_t *params, 
-                     IN const hlir_t *result, 
+hlir_t *hlir_closure(const node_t *node, 
+                     const char *name, 
+                     vector_t *params, 
+                     const hlir_t *result, 
                      bool variadic);
 
 /**
@@ -73,9 +73,9 @@ hlir_t *hlir_closure(IN_OPT const node_t *node,
  * @param indexable can this pointer be indexed?
  * @return hlir_t* the constructed pointer type
  */
-hlir_t *hlir_pointer(IN_OPT const node_t *node, 
-                     IN_OPT const char *name, 
-                     IN hlir_t *type, 
+hlir_t *hlir_pointer(const node_t *node, 
+                     const char *name, 
+                     hlir_t *type, 
                      bool indexable);
 
 /**
@@ -87,7 +87,7 @@ hlir_t *hlir_pointer(IN_OPT const node_t *node,
  * @param length the length of this array
  * @return hlir_t* the constructed array type
  */
-hlir_t *hlir_array(IN_OPT const node_t *node, 
-                   IN_OPT const char *name, 
-                   IN hlir_t *element, 
-                   IN hlir_t *length);
+hlir_t *hlir_array(const node_t *node, 
+                   const char *name, 
+                   hlir_t *element, 
+                   hlir_t *length);

@@ -18,3 +18,8 @@ option('aws', type : 'feature',
     description : 'enable aws runtime support',
     value : 'disabled'
 )
+
+option('doxygen', type : 'feature',
+    description : 'build doxygen docs',
+    value : 'auto'
+)

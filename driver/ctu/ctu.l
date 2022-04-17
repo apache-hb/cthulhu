@@ -12,10 +12,6 @@
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/report-ext.h"
 #include "cthulhu/ast/interop.h"
-
-#undef IN
-#undef OUT
-#undef INOUT
 %}
 
 %x COMMENT

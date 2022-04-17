@@ -4,6 +4,7 @@
 #include "cthulhu/util/io.h"
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/str.h"
+#include "cthulhu/util/map.h"
 #include "cthulhu/util/macros.h"
 
 #include "compat.h"
@@ -226,7 +227,7 @@ void ctpanic(const char *msg, ...) {
  * maps end with a flexible array.
  * calcuate the actual size of the map to malloc
  */
-static size_t sizeof_map(map_size_t size) {
+static size_t sizeof_map(size_t size) {
     return sizeof(map_t) + (size * sizeof(bucket_t));
 }
 
@@ -324,16 +325,6 @@ void *map_get_ptr_default(map_t *map, const void *key, void *other) {
     return entry_get_ptr(bucket, key, other);
 }
 
-void map_copy_by_string(map_t *dst, map_t *src) {
-    for (size_t i = 0; i < src->size; i++) {
-        bucket_t *entry = &src->data[i];
-        while (entry && entry->key) {
-            map_set(dst, entry->key, entry->value);
-            entry = entry->next;
-        }
-    }
-}
-
 static void clear_keys(bucket_t *buckets, size_t size) {
     for (size_t i = 0; i < size; i++) {
         buckets[i].key = NULL;
@@ -343,7 +334,7 @@ static void clear_keys(bucket_t *buckets, size_t size) {
 
 // map public api
 
-map_t *map_new(map_size_t size) {
+map_t *map_new(size_t size) {
     ASSUME(size > 0);
 
     map_t *map = ctu_malloc(sizeof_map(size));
@@ -387,33 +378,6 @@ void map_set(map_t *map, const char *key, void *value) {
 
         entry = entry->next;
     }
-}
-
-void map_apply(map_t *map, void *user, map_apply_t func) {
-    for (size_t i = 0; i < map->size; i++) {
-        bucket_t *entry = &map->data[i];
-        while (entry && entry->key) {
-            func(user, entry->value);
-            entry = entry->next;
-        }
-    }
-}
-
-vector_t *map_collect(map_t *map, map_collect_t filter) {
-    vector_t *result = vector_new(map->size);
-    
-    for (size_t i = 0; i < map->size; i++) {
-        bucket_t *entry = &map->data[i];
-        while (entry && entry->key) {
-            if (filter(entry->value)) {
-                vector_push(&result, entry->value);
-            }
-
-            entry = entry->next;
-        }
-    }
-    
-    return result;
 }
 
 vector_t *map_values(map_t *map) {
@@ -510,15 +474,9 @@ size_t vector_len(const vector_t *vector) {
     return vector->used;
 }
 
-static bool default_cmp(const void *lhs, const void *rhs) {
-    return lhs == rhs;
-}
-
-size_t vector_find(vector_t *vector, const void *element, vector_cmp_t cmp) {
-    if (cmp == NULL) { cmp = default_cmp; }
-
+size_t vector_find(vector_t *vector, const void *element) {
     for (size_t i = 0; i < vector_len(vector); i++) {
-        if (cmp(vector_get(vector, i), element)) {
+        if (vector_get(vector, i) == element) {
             return i;
         }
     }

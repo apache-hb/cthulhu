@@ -30,6 +30,19 @@
  * sadly 3 different macros are needed because msvc only uses pragma(pack)
  * and clang only uses __attribute__((packed)), hence we need to use both.
  * could we please agree on a common way to do this?
+ * 
+ * example usage
+ * @code{.cpp}
+ * #define PACKING_WIDTH 2
+ * BEGIN_PACKED(PACKING_WIDTH)
+ * 
+ * typedef struct PACKED(2) {
+ *   void *data;
+ *   char field;
+ * } my_packed_struct_t;
+ * 
+ * END_PACKED
+ * @endcode
  */
 
 #if defined(__clang__)
@@ -49,6 +62,9 @@
 #   define PACKED(align)
 #else
 #   define ASSUME(expr)
+#   define BEGIN_PACKED(align) _Pragma("warning \"current compiler doesnt support packing\"")
+#   define END_PACKED
+#   define PACKED(align)
 #endif
 
 #define UNREACHABLE() ASSUME(false)
@@ -68,7 +84,19 @@
 #define MAX(L, R) ((L) > (R) ? (L) : (R)) 
 #define MIN(L, R) ((L) < (R) ? (L) : (R)) 
 
-#define ROUND2(val, mul) (((val + mul - 1) / mul) * mul)
+#define ROUND2(val, mul) ((((val) + (mul) - 1) / (mul)) * (mul))
+
+
+/**
+ * @def ROUND2(value, multiple)
+ * rounds @a value up to the nearest multiple of @a multiple
+ * 
+ * @def MAX(lhs, rhs)
+ * returns the maximum of @a lhs and @a rhs
+ * 
+ * @def MIN(lhs, rhs)
+ * returns the minimum of @a lhs and @a rhs
+ */
 
 /// macros for readability
 #define UNUSED(x) ((void)(x))
@@ -83,6 +111,21 @@
 #define COLOUR_PURPLE "\x1B[1;35m"
 #define COLOUR_CYAN "\x1B[1;36m"
 #define COLOUR_RESET "\x1B[0m"
+
+/**
+ * @defgroup ColourMacros ANSI escape string colour macros
+ * 
+ * @{
+ * @def COLOUR_RED ANSI escape string for red
+ * @def COLOUR_GREEN ANSI escape string for green
+ * @def COLOUR_YELLOW ANSI escape string for yellow
+ * @def COLOUR_BLUE ANSI escape string for blue
+ * @def COLOUR_PURPLE ANSI escape string for purple
+ * @def COLOUR_CYAN ANSI escape string for cyan
+ * @def COLOUR_RESET ANSI escape string to reset colour
+ * @}
+ * 
+ */
 
 /// macros for headers
 #ifndef _POSIX_C_SOURCE
@@ -119,22 +162,4 @@ void ctpanic(const char *msg, ...);
 #else
 #   define CTASSERT(expr, msg) do { } while (0)
 #   define CTASSERTF(expr, msg, ...) do { } while (0)
-#endif
-
-#if __has_include(<sal.h>)
-#   define IN _In_
-#   define IN_OPT _In_opt_
-#   define OUT _Out_
-#   define OUT_OPT _Out_opt_
-#   define INOUT _Inout_
-#   define INOUT_OPT _Inout_opt_
-#   define MAYBE _Ret_maybenull_ 
-#else
-#   define IN
-#   define IN_OPT
-#   define OUT
-#   define OUT_OPT
-#   define INOUT
-#   define INOUT_OPT
-#   define MAYBE
 #endif
