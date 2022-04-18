@@ -37,6 +37,11 @@
   * would get us on the compiler framework map so to speak
   * would save us money in the long run with lambda runtimes
 
+* static analysis support
+  * makes it easier to find code defects
+  * helps optimisations
+  * if we get a C frontend it will help us find defects in the compiler itself
+
 * rework command line parsing
   * instead of manually scanning the command line we should use flex & bison
     * a touch overkill perhaps
