@@ -116,7 +116,7 @@ static const char *KINDS[HLIR_TOTAL] = {
     [HLIR_STRING_LITERAL] = "string-literal",
 
     [HLIR_NAME] = "name",
-    [HLIR_UNARY] "unary",
+    [HLIR_UNARY] = "unary",
     [HLIR_BINARY] = "binary", 
     [HLIR_COMPARE] = "compare",
     [HLIR_CALL] = "call",

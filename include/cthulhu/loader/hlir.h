@@ -17,6 +17,7 @@ hlir_t *load_module(reports_t *reports, const char *path);
  * @brief save a module to a file
  * 
  * @param reports report sink
+ * @param settings settings for saving
  * @param module the module to save
  * @param path where to save the module
  */

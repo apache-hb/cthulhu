@@ -3,17 +3,20 @@
 #include "macros.h"
 #include <stddef.h>
 
+/**
+ * @brief a node in a chain of set entries
+ */
 typedef struct item_t {
-    const char *key;
-    struct item_t *next;
+    const char *key; ///< the key to this bucket
+    struct item_t *next; ///< the next bucket in the chain
 } item_t;
 
 /**
  * @brief a hashset of strings
  */
 typedef struct {
-    size_t size; /// the number of buckets
-    item_t items[]; /// the buckets
+    size_t size; ///< the number of buckets
+    FIELD_SIZE(size) item_t items[]; ///< the buckets
 } set_t;
 
 /**

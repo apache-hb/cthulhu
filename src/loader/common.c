@@ -49,7 +49,7 @@ value_t digit_value(const mpz_t digit) {
     return result;
 }
 
-value_t int_value(int64_t digit) {
+value_t int_value(signed long digit) {
     value_t result;
     mpz_init_set_si(result.digit, digit);
     return result;

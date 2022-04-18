@@ -1,9 +1,8 @@
 #pragma once
 
-//
-// unary and binary operands
-//
-
+/**
+ * @brief all binary operators
+ */
 typedef enum {
     BINARY_ADD,
     BINARY_SUB,
@@ -23,6 +22,9 @@ typedef enum {
     BINARY_TOTAL
 } binary_t;
 
+/**
+ * @brief all comparison operators
+ */
 typedef enum {
     COMPARE_EQ, // ==
     COMPARE_NEQ, // !=
@@ -35,6 +37,9 @@ typedef enum {
     COMPARE_TOTAL
 } compare_t;
 
+/**
+ * @brief all unary operators
+ */
 typedef enum {
     UNARY_NEG,
     UNARY_ABS,
@@ -45,23 +50,50 @@ typedef enum {
     UNARY_TOTAL
 } unary_t;
 
-//
-// get the pretty name of a unary or binary operand
-//
-
-typedef struct {
-    const char *name;
-    const char *symbol;
-} operand_name_t;
-
-operand_name_t binary_operand_name(binary_t op);
-operand_name_t compare_operand_name(compare_t op);
-operand_name_t unary_operand_name(unary_t op);
-
+/**
+ * @brief get the name of a binary operator
+ * 
+ * @param op the binary operator
+ * @return the name
+ */
 const char *binary_name(binary_t op);
+
+/**
+ * @brief get the name of a unary operator
+ * 
+ * @param op the unary operator
+ * @return the name
+ */
 const char *compare_name(compare_t op);
+
+/**
+ * @brief get the name of a unary operator
+ * 
+ * @param op the unary operator
+ * @return the name
+ */
 const char *unary_name(unary_t op);
 
+/**
+ * @brief get the C symbol for a binary operator
+ * 
+ * @param op the binary operator
+ * @return the equivalent C symbol for the operator
+ */
 const char *binary_symbol(binary_t op);
+
+/**
+ * @brief get the C symbol for a unary operator
+ * 
+ * @param op the unary operator
+ * @return the equivalent C symbol for the operator
+ */
 const char *compare_symbol(compare_t op);
+
+/**
+ * @brief get the C symbol for a unary operator
+ * 
+ * @param op the unary operator
+ * @return the equivalent C symbol for the operator
+ */
 const char *unary_symbol(unary_t op);

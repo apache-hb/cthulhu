@@ -9,29 +9,26 @@
 typedef int64_t line_t;
 typedef int64_t column_t;
 
+/**
+ * @brief source text
+ */
 typedef struct {
-    size_t size;
-    const char *text;
+    size_t size; ///< the number of bytes in the text
+    const char *text; ///< the text itself
 } text_t;
 
+struct reports_t;
+
+/**
+ * @brief a source file
+ */
 typedef struct {
-    /* the language name */
-    const char *language;
-
-    /* path to the file */
-    const char *path;
-
-    /* whatever the file creates by parsing */
-    void *data;
-
-    /* our source text */
-    text_t source;
-
-    /* how much of the text has been read */
-    size_t offset;
-
-    /* actually reports_t * but forward declaration pains */
-    void *reports;
+    const char *language;       ///< the language this file contains
+    const char *path;           ///< the path to this file
+    void *data;                 ///< user data pointer
+    text_t source;              ///< the source text in this file
+    size_t offset;              ///< how much of this file has been parsed
+    struct reports_t *reports;  ///< the reporting sink for this file
 } scan_t;
 
 size_t scan_size(const scan_t *scan);

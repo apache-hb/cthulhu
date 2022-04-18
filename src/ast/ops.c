@@ -1,5 +1,10 @@
 #include "cthulhu/ast/ops.h"
 
+typedef struct {
+    const char *name;
+    const char *symbol;
+} operand_name_t;
+
 static operand_name_t binary_operands[] = {
     [BINARY_ADD] = { "add", "+" },
     [BINARY_SUB] = { "sub", "-" },
@@ -37,15 +42,15 @@ static operand_name_t unary_operands[] = {
 
 // operand accessors
 
-operand_name_t binary_operand_name(binary_t op) {
+static operand_name_t binary_operand_name(binary_t op) {
     return binary_operands[op];
 }
 
-operand_name_t compare_operand_name(compare_t op) {
+static operand_name_t compare_operand_name(compare_t op) {
     return compare_operands[op];
 }
 
-operand_name_t unary_operand_name(unary_t op) {
+static operand_name_t unary_operand_name(unary_t op) {
     return unary_operands[op];
 }
 

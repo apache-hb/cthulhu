@@ -14,11 +14,23 @@
 #define EXIT_ERROR 1
 #define EXIT_INTERAL 99
 
+/**
+ * @defgroup ErrorCodes Error code macros
+ * @{
+ * @def EXIT_OK no compiler errors or internal errors
+ * @def EXIT_ERROR only compiler errors
+ * @def EXIT_INTERAL internal errors occured
+ * @}
+ */
+
+/**
+ * @brief the severity of a message
+ */
 typedef enum {
-    INTERNAL, /// an invalid state has been reached internally
-    ERROR, /// a user issue that prevents the program from continuing
-    WARNING, // a user issue that may be resolved
-    NOTE, // a notification for logging
+    INTERNAL, ///< an invalid state has been reached internally
+    ERROR, ///< a user issue that prevents the program from continuing
+    WARNING, ///< a user issue that may be resolved
+    NOTE, ///< a notification for logging
 
     LEVEL_TOTAL
 } level_t;
@@ -45,8 +57,14 @@ typedef struct {
     char *note;
 } message_t;
 
-typedef struct {
-    vector_t *messages;
+/**
+ * @brief an error reporting sink
+ */
+typedef struct reports_t {
+    /**
+     * an array of all messages in the sink
+     */
+    vector_t *messages; 
 } reports_t;
 
 /**
@@ -63,14 +81,17 @@ reports_t *begin_reports(void);
  * @param limit the maximum number of errors to report
  * @param name the name of this report
  * 
- * @return an exit code
+ * @return an exit code.
+ *         EXIT_OK if the sink only contains warnings or notes.
+ *         EXIT_ERROR if the sink contained any errors.
+ *         EXIT_INTERAL if the sink contained an internal error.
  */
-int end_reports(reports_t *reports, 
-                size_t limit, 
+int end_reports(reports_t *reports,
+                size_t limit,
                 const char *name) NOTNULL(1, 3);
 
 /**
- * push an internal compiler error into a reporting context
+ * @brief push an internal compiler error into a reporting context
  * 
  * @param reports the reporting context
  * @param fmt the format string

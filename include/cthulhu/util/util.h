@@ -45,7 +45,11 @@ void init_gmp(void);
  * 
  * @return the boxed value
  * 
- * @see #MACRO(box) should be used to use this
+ * @see BOX should be used to use this
  */
 void *ctu_box(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 #define BOX(name) ctu_box(&name, sizeof(name))
+
+/**
+ * @def BOX(name) box a value onto the heap from the stack
+ */

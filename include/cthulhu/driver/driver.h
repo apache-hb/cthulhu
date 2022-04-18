@@ -44,7 +44,7 @@ void common_init(void);
  * @param argc argc from main
  * @param argv argv from main
  * @param driver information about the driver being run
- * @return int an exit code
+ * @return an exit code to return from main
  */
 int common_main(int argc, const char **argv, driver_t driver);
 

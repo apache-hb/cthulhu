@@ -25,8 +25,7 @@ typedef enum {
 } source_kind_t;
 
 #define INDICES(SPAN, ...) \
-    enum { SPAN, __VA_ARGS__ }; \
-    STATIC_ASSERT(SPAN == 0, "span: " STR(SPAN) " must always come first");
+    enum { SPAN, __VA_ARGS__ };
 
 ///
 /// non-hlir types

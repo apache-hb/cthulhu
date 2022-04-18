@@ -42,7 +42,7 @@ typedef union {
 
 value_t string_value(const char *string);
 value_t digit_value(const mpz_t digit);
-value_t int_value(int64_t digit);
+value_t int_value(signed long digit);
 value_t bool_value(bool boolean);
 value_t reference_value(index_t reference);
 value_t array_value(array_t array);

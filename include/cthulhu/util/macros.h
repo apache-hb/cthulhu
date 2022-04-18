@@ -50,21 +50,25 @@
 #   define BEGIN_PACKED(align)
 #   define END_PACKED
 #   define PACKED(align) __attribute__((aligned(align), packed))
+#   define NORETURN _Noreturn
 #elif defined(__GNUC__)
 #   define ASSUME(expr) do { if (!(expr)) __builtin_unreachable(); } while (0)
 #   define BEGIN_PACKED(align)
 #   define END_PACKED
 #   define PACKED(align) __attribute__((aligned(align), packed))
+#   define NORETURN _Noreturn
 #elif defined(_MSC_VER)
 #   define ASSUME(expr) __assume(expr)
 #   define BEGIN_PACKED(align) __pragma(pack(push, align))
 #   define END_PACKED __pragma(pack(pop))
 #   define PACKED(align)
+#   define NORETURN __declspec(noreturn)
 #else
 #   define ASSUME(expr)
 #   define BEGIN_PACKED(align) _Pragma("warning \"current compiler doesnt support packing\"")
 #   define END_PACKED
 #   define PACKED(align)
+#   define NORETURN
 #endif
 
 #define UNREACHABLE() ASSUME(false)
@@ -77,7 +81,6 @@
 #   error "unknown platform"
 #endif
 
-#define NORETURN _Noreturn
 #define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
 
 /// macros with functionality
@@ -162,4 +165,17 @@ void ctpanic(const char *msg, ...);
 #else
 #   define CTASSERT(expr, msg) do { } while (0)
 #   define CTASSERTF(expr, msg, ...) do { } while (0)
+#endif
+
+#if __has_include(<sal.h>)
+#   include <sal.h>
+#   define FIELD_SIZE(expr) _Field_size_(expr)
+#   define FIELD_RANGE(min, max) _Field_range_(min, max)
+#   define NODISCARD _Check_return_
+#   define IN_RANGE(min, max) _In_range_(min, max)
+#else
+#   define FIELD_SIZE(expr)
+#   define FIELD_RANGE(min, max)
+#   define NODISCARD
+#   define IN_RANGE(min, max)
 #endif

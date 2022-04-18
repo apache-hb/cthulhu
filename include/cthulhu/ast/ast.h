@@ -3,13 +3,12 @@
 #include "scan.h"
 #include "cthulhu/util/macros.h"
 
-/* a position in a source file */
+/** 
+ * a position in a source file 
+ */
 typedef struct {
-    /* the scanner that this node is in */
-    scan_t *scan;
-
-    /* where in the source text this node is */
-    where_t where;
+    scan_t *scan; ///< the source file
+    where_t where; ///< the location of this node in the source file
 } node_t;
 
 /**

@@ -6,7 +6,7 @@ project('cthulhu', 'c',
         'c_std=gnu99',
         'warning_level=2', # bison generates code that warns on gcc at level 3
         'default_library=static',
-        'werror=true' # werror has to be disabled on windows for mini-gmp to build
+        'werror=true'
     ]
 )
 
@@ -16,11 +16,13 @@ host = host_machine.system()
 cc = meson.get_compiler('c')
 
 parts = version.split('.')
+cwd = meson.current_source_dir()
 
 config = {
     'major': parts[0].to_int(),
     'minor': parts[1].to_int(),
     'patch': parts[2].to_int(),
+    'source': cwd/'src' + ' ' + cwd/'include' + ' ' + cwd/'driver'
 }
 
 configure_file(
@@ -39,6 +41,7 @@ gmp = dependency('gmp',
 args = []
 deps = [ gmp, json ]
 lexargs = []
+parseargs = []
 
 if host != 'windows'
     deps += [ cc.find_library('m') ]
@@ -52,10 +55,12 @@ endif
 if host == 'windows'
     lexargs += [ '--wincompat' ]
     args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '/Wv:18' ]
+else
+    parseargs += [ '-Wdeprecated' ]
 endif
 
 flex = find_program('flex', 'win_flex', version : '>=2.6')
-bison = find_program('bison', 'win_bison', version : '>=3.5')
+bison = find_program('bison', 'win_bison', version : host == 'windows' ? '>=2.6' : '>=3.5')
 
 lex = generator(flex, 
     output : [ '@BASENAME@-flex.c', '@BASENAME@-flex.h' ],
@@ -68,8 +73,8 @@ lex = generator(flex,
 
 parse = generator(bison,
     output : [ '@BASENAME@-bison.c', '@BASENAME@-bison.h' ],
-    arguments : [ 
-        '-d', '@INPUT@', '-Wdeprecated', '-v',
+    arguments : parseargs + [ 
+        '-d', '@INPUT@', '-v',
         '--output=@OUTPUT0@', 
         '--defines=@OUTPUT1@' 
     ]
@@ -78,8 +83,6 @@ parse = generator(bison,
 src = [
     # command line
     'src/driver/driver.c',
-    lex.process('src/driver/cmd.l'),
-    parse.process('src/driver/cmd.y'),
     
     # high level intermediate representation
     'src/hlir/sema.c',

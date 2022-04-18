@@ -4,6 +4,9 @@
 
 #include "cJSON.h"
 
+#define cJSON_AddDigitToObject(self, str, expr) cJSON_AddNumberToObject(self, str, (double)expr)
+#define cJSON_CreateDigit(expr) cJSON_CreateNumber((double)expr)
+
 typedef struct {
     reports_t *reports;
     map_t *types; // map of type to its index
@@ -32,10 +35,10 @@ static void add_location(cJSON *json, const node_t *node) {
     where_t where = node->where;
 
     cJSON *span = cJSON_CreateObject();
-    cJSON_AddNumberToObject(span, "first-line", where.first_line);
-    cJSON_AddNumberToObject(span, "first-column", where.first_column);
-    cJSON_AddNumberToObject(span, "last-line", where.last_line);
-    cJSON_AddNumberToObject(span, "last-column", where.last_column);
+    cJSON_AddDigitToObject(span, "first-line", where.first_line);
+    cJSON_AddDigitToObject(span, "first-column", where.first_column);
+    cJSON_AddDigitToObject(span, "last-line", where.last_line);
+    cJSON_AddDigitToObject(span, "last-column", where.last_column);
 
     cJSON_AddItemToObject(json, "span", span);
 }
@@ -65,12 +68,12 @@ static cJSON *emit_type(emit_t *emit, size_t idx, const hlir_t *hlir) {
     cJSON_AddStringToObject(type, "name", hlir->name);
 
     if (hlir_is(hlir, HLIR_CLOSURE)) {
-        cJSON_AddNumberToObject(type, "result", get_type(emit, closure_result(hlir)));
+        cJSON_AddDigitToObject(type, "result", get_type(emit, closure_result(hlir)));
         cJSON *params = cJSON_CreateArray();
         vector_t *vec = closure_params(hlir);
         for (size_t i = 0; i < vector_len(vec); i++) {
             const hlir_t *param = vector_get(vec, i);
-            cJSON_AddItemToArray(params, cJSON_CreateNumber(get_type(emit, param)));
+            cJSON_AddItemToArray(params, cJSON_CreateDigit(get_type(emit, param)));
         }
         cJSON_AddItemToObject(type, "params", params);
         cJSON_AddBoolToObject(type, "variadic", closure_variadic(hlir));
@@ -104,15 +107,15 @@ static cJSON *emit_attribs(reports_t *reports, const hlir_attributes_t *attribs)
 static cJSON *emit_digit(emit_t *emit, const hlir_t *hlir) {
     cJSON *literal = cJSON_CreateObject();
     cJSON_AddStringToObject(literal, "kind", "int-literal");
-    cJSON_AddNumberToObject(literal, "type", get_type(emit, get_hlir_type(hlir)));
-    cJSON_AddNumberToObject(literal, "value", mpz_get_si(hlir->digit));
+    cJSON_AddDigitToObject(literal, "type", get_type(emit, get_hlir_type(hlir)));
+    cJSON_AddDigitToObject(literal, "value", mpz_get_si(hlir->digit));
     return literal;
 }
 
 static cJSON *emit_bool(emit_t *emit, const hlir_t *hlir) {
     cJSON *literal = cJSON_CreateObject();
     cJSON_AddStringToObject(literal, "kind", "bool-literal");
-    cJSON_AddNumberToObject(literal, "type", get_type(emit, get_hlir_type(hlir)));
+    cJSON_AddDigitToObject(literal, "type", get_type(emit, get_hlir_type(hlir)));
     cJSON_AddBoolToObject(literal, "value", hlir->boolean);
     return literal;
 }
@@ -120,7 +123,7 @@ static cJSON *emit_bool(emit_t *emit, const hlir_t *hlir) {
 static cJSON *emit_string(emit_t *emit, const hlir_t *hlir) {
     cJSON *literal = cJSON_CreateObject();
     cJSON_AddStringToObject(literal, "kind", "string-literal");
-    cJSON_AddNumberToObject(literal, "type", get_type(emit, get_hlir_type(hlir)));
+    cJSON_AddDigitToObject(literal, "type", get_type(emit, get_hlir_type(hlir)));
     cJSON_AddStringToObject(literal, "value", hlir->string);
     return literal;
 }
@@ -128,7 +131,7 @@ static cJSON *emit_string(emit_t *emit, const hlir_t *hlir) {
 static cJSON *emit_unimplemented(const hlir_t *hlir) {
     cJSON *json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "kind", "unimplemented");
-    cJSON_AddNumberToObject(json, "type", hlir->type);
+    cJSON_AddDigitToObject(json, "type", hlir->type);
     return json;
 }
 
@@ -137,7 +140,7 @@ static cJSON *lookup_value(emit_t *emit, const hlir_t *hlir) {
     if (global != 0) {
         cJSON *json = cJSON_CreateObject();
         cJSON_AddStringToObject(json, "kind", "global");
-        cJSON_AddNumberToObject(json, "index", global);
+        cJSON_AddDigitToObject(json, "index", global);
         return json;
     }
 
@@ -145,7 +148,7 @@ static cJSON *lookup_value(emit_t *emit, const hlir_t *hlir) {
     if (local != 0) {
         cJSON *json = cJSON_CreateObject();
         cJSON_AddStringToObject(json, "kind", "local");
-        cJSON_AddNumberToObject(json, "index", local);
+        cJSON_AddDigitToObject(json, "index", local);
         return json;
     }
 
@@ -188,7 +191,7 @@ static cJSON *lookup_function(emit_t *emit, const hlir_t *hlir) {
     if (idx != 0) {
         cJSON *json = cJSON_CreateObject();
         cJSON_AddStringToObject(json, "kind", "function");
-        cJSON_AddNumberToObject(json, "index", idx);
+        cJSON_AddDigitToObject(json, "index", idx);
         return json;
     }
 
@@ -240,7 +243,7 @@ static cJSON *emit_global(emit_t *emit, map_t *map, size_t index, const hlir_t *
     cJSON *value = cJSON_CreateObject();
     cJSON_AddStringToObject(value, "kind", "value");
     cJSON_AddStringToObject(value, "name", hlir->name);
-    cJSON_AddNumberToObject(value, "type", get_type(emit, get_hlir_type(hlir)));
+    cJSON_AddDigitToObject(value, "type", get_type(emit, get_hlir_type(hlir)));
     cJSON_AddItemToObject(value, "attribs", emit_attribs(emit->reports, hlir->attributes));
 
     if (hlir->value != NULL) {
@@ -340,7 +343,7 @@ static cJSON *emit_function(emit_t *emit, size_t idx, const hlir_t *hlir) {
     cJSON *json = cJSON_CreateObject();
     cJSON_AddStringToObject(json, "kind", "function");
     cJSON_AddStringToObject(json, "name", hlir->name);
-    cJSON_AddNumberToObject(json, "type", get_type(emit, get_hlir_type(hlir)));
+    cJSON_AddDigitToObject(json, "type", get_type(emit, get_hlir_type(hlir)));
     cJSON_AddItemToObject(json, "attribs", emit_attribs(emit->reports, hlir->attributes));
 
     size_t nlocals = vector_len(hlir->locals);
@@ -395,7 +398,7 @@ void json_emit_tree(reports_t *reports, const hlir_t *hlir) {
 
     for (size_t i = 0; i < nfunctions; i++) {
         const hlir_t *function = vector_get(hlir->functions, i);
-        map_set_ptr(emit.functions, function, (void*)(uintptr_t)i + 1);
+        map_set_ptr(emit.functions, function, (void*)((uintptr_t)(i + 1)));
     }
 
     for (size_t i = 0; i < nfunctions; i++) {
