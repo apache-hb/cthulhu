@@ -172,8 +172,10 @@ static void emit_import_decl(reports_t *reports, const hlir_t *hlir) {
     switch (hlir->type) {
     case HLIR_FUNCTION:
         emit_function_import(reports, hlir);
+        break;
     case HLIR_GLOBAL:
         emit_value_import(reports, hlir);
+        break;
     default:
         ctu_assert(reports, "invalid import type %d", hlir->type);
         break;

@@ -16,7 +16,7 @@ typedef struct item_t {
  */
 typedef struct {
     size_t size; ///< the number of buckets
-    FIELD_SIZE(size) item_t items[]; ///< the buckets
+    item_t items[]; ///< the buckets
 } set_t;
 
 /**

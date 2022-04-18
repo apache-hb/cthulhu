@@ -166,16 +166,3 @@ void ctpanic(const char *msg, ...);
 #   define CTASSERT(expr, msg) do { } while (0)
 #   define CTASSERTF(expr, msg, ...) do { } while (0)
 #endif
-
-#if __has_include(<sal.h>)
-#   include <sal.h>
-#   define FIELD_SIZE(expr) _Field_size_(expr)
-#   define FIELD_RANGE(min, max) _Field_range_(min, max)
-#   define NODISCARD _Check_return_
-#   define IN_RANGE(min, max) _In_range_(min, max)
-#else
-#   define FIELD_SIZE(expr)
-#   define FIELD_RANGE(min, max)
-#   define NODISCARD
-#   define IN_RANGE(min, max)
-#endif

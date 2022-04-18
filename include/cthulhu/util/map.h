@@ -20,7 +20,7 @@ typedef struct bucket_t {
  */
 typedef struct {
     size_t size; ///< the number of buckets in the toplevel
-    FIELD_SIZE(size) bucket_t data[]; ///< the buckets
+    bucket_t data[]; ///< the buckets
 } map_t;
 
 /**

@@ -15,7 +15,7 @@ typedef void*(*vector_apply_t)(void *value);
 typedef struct {
     size_t size; ///< the total number of allocated elements
     size_t used; ///< the number of elements in use
-    FIELD_SIZE(size) FIELD_RANGE(0, used) void *data[]; ///< the data
+    void *data[]; ///< the data
 } vector_t;
 
 /**
@@ -31,7 +31,7 @@ void vector_delete(vector_t *vector) NONULL;
  * @param size the initial amount of allocated memory
  * @return a new vector
  */
-NODISCARD vector_t *vector_new(size_t size) ALLOC(vector_delete);
+vector_t *vector_new(size_t size) ALLOC(vector_delete);
 
 /**
  * create a new vector with a specified size
@@ -39,7 +39,7 @@ NODISCARD vector_t *vector_new(size_t size) ALLOC(vector_delete);
  * @param len the initial size of the vector
  * @return a new vector
  */
-NODISCARD vector_t *vector_of(size_t len) ALLOC(vector_delete);
+vector_t *vector_of(size_t len) ALLOC(vector_delete);
 
 /**
  * create a vector with a single item
@@ -47,7 +47,7 @@ NODISCARD vector_t *vector_of(size_t len) ALLOC(vector_delete);
  * @param value the initial element
  * @return the new vector
  */
-NODISCARD vector_t *vector_init(void *value) ALLOC(vector_delete);
+vector_t *vector_init(void *value) ALLOC(vector_delete);
 
 /**
  * push an element onto the end of a vector
@@ -73,7 +73,7 @@ void vector_drop(vector_t **vector) NONULL;
  * @param vector the vector to take from
  * @return the value of the last element
  */
-NODISCARD void *vector_pop(vector_t *vector) NONULL;
+void *vector_pop(vector_t *vector) NONULL;
 
 /**
  * set an element in a vector by index.
@@ -93,7 +93,7 @@ void vector_set(vector_t *vector, size_t index, void *value) NOTNULL(1);
  * @param index the index to query
  * @return the value at index
  */
-NODISCARD void *vector_get(const vector_t *vector, size_t index) CONSTFN NOTNULL(1);
+void *vector_get(const vector_t *vector, size_t index) CONSTFN NOTNULL(1);
 
 /**
  * get the last element from a vector.
@@ -102,7 +102,7 @@ NODISCARD void *vector_get(const vector_t *vector, size_t index) CONSTFN NOTNULL
  * @param vector the vector to get from
  * @return the value of the last element
  */
-NODISCARD void *vector_tail(const vector_t *vector) CONSTFN NONULL;
+void *vector_tail(const vector_t *vector) CONSTFN NONULL;
 
 /**
  * @brief get the first element from a vector.
@@ -111,7 +111,7 @@ NODISCARD void *vector_tail(const vector_t *vector) CONSTFN NONULL;
  * @param vector the vector to get from
  * @return void* the value of the first element
  */
-NODISCARD void *vector_head(const vector_t *vector) CONSTFN NONULL;
+void *vector_head(const vector_t *vector) CONSTFN NONULL;
 
 /**
  * get the contents pointer of a vector.
@@ -119,7 +119,7 @@ NODISCARD void *vector_head(const vector_t *vector) CONSTFN NONULL;
  * @param vector the vector to get the contents of
  * @return the contents pointer
  */
-NODISCARD void **vector_data(vector_t *vector) CONSTFN NONULL;
+void **vector_data(vector_t *vector) CONSTFN NONULL;
 
 /**
  * get the length of a vector
@@ -127,7 +127,7 @@ NODISCARD void **vector_data(vector_t *vector) CONSTFN NONULL;
  * @param vector the vector to get the length of
  * @return the active size of the vector
  */
-NODISCARD size_t vector_len(const vector_t *vector) CONSTFN NONULL;
+size_t vector_len(const vector_t *vector) CONSTFN NONULL;
 
 /**
  * join two vectors together into a new vector.
@@ -136,7 +136,7 @@ NODISCARD size_t vector_len(const vector_t *vector) CONSTFN NONULL;
  * @param rhs the right vector
  * @return the new vector
  */
-NODISCARD vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) NONULL ALLOC(vector_delete);
+vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) NONULL ALLOC(vector_delete);
 
 /**
  * @brief create a new vector given a front and back index
@@ -146,13 +146,9 @@ NODISCARD vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) NONULL
  * @param end  the last index to include
  * @return vector_t* the new vector
  */
-NODISCARD vector_t *vector_slice(
-    vector_t *vector, 
-    IN_RANGE(0, vector->used) size_t start, 
-    IN_RANGE(start, vector->used) size_t end
-) NONULL;
+vector_t *vector_slice(vector_t *vector, size_t start, size_t end) NONULL;
 
-NODISCARD size_t vector_find(vector_t *vector, const void *element) CONSTFN NOTNULL(1);
+size_t vector_find(vector_t *vector, const void *element) CONSTFN NOTNULL(1);
 
 void vector_reset(vector_t *vec) NONULL;
 
@@ -162,7 +158,7 @@ void vector_reset(vector_t *vec) NONULL;
  * @param vectors the vectors
  * @return vector_t* the merged vector
  */
-NODISCARD vector_t *vector_collect(vector_t *vectors) NONULL ALLOC(vector_delete);
+vector_t *vector_collect(vector_t *vectors) NONULL ALLOC(vector_delete);
 
 /**
  * return a new vector after applying a function to all elements
@@ -171,6 +167,6 @@ NODISCARD vector_t *vector_collect(vector_t *vectors) NONULL ALLOC(vector_delete
  * @param func the function to apply
  * @return the new vector
  */
-NODISCARD vector_t *vector_map(const vector_t *vector, vector_apply_t func) NONULL ALLOC(vector_delete);
+vector_t *vector_map(const vector_t *vector, vector_apply_t func) NONULL ALLOC(vector_delete);
 
 #define VECTOR_MAP(vector, func) vector_map(vector, (vector_apply_t)func)
