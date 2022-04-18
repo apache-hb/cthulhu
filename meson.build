@@ -31,15 +31,13 @@ configure_file(
     configuration : config
 )
 
-json = subproject('cjson').get_variable('json')
-
 gmp = dependency('gmp', 
     not_found_message : 'no system gmp found, falling back to mini-gmp',
     fallback : [ 'mini-gmp', 'gmp' ]
 )
 
 args = []
-deps = [ gmp, json ]
+deps = [ gmp ]
 lexargs = []
 parseargs = []
 
@@ -96,7 +94,6 @@ src = [
     'src/hlir/common.c',
 
     # tree output
-    'src/emit/json.c',
     'src/emit/c89.c',
     'src/emit/wasm.c',
 

@@ -33,7 +33,6 @@ wow this project got out of hand.
 * `src` - common framework implementation
 * `subprojects` - 3rd & 1st party dependencies
   * `aws` - C implementation of the aws lambda runtime api
-  * `cjson` - C json parsing
   * `mini-gmp` - fallback gmp library if system gmp isnt installed
   * `miniz` - zip compression library
 * `tests` - langauge tests

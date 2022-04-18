@@ -29,7 +29,7 @@ static void print_help(const char **argv) {
     printf("  -m, --module      : set module output name\n");
     printf("  -out, --output    : set output file name\n");
     printf("  -t, --target      : set output format\n");
-    printf("                    | options: json, c89, wasm\n");
+    printf("                    | options: c89, wasm\n");
     printf("                    | default: c89\n");
     printf("  -P, --search      : add library search path\n");
     printf("---\n");
@@ -170,7 +170,6 @@ void common_init(void) {
 
 typedef enum {
     OUTPUT_C89,
-    OUTPUT_JSON,
     OUTPUT_WASM
 } target_t;
 
@@ -178,10 +177,6 @@ static target_t parse_target(reports_t *reports, const char *target) {
     if (streq(target, "c89")) {
         return OUTPUT_C89;
     }  
-    
-    if (streq(target, "json")) {
-        return OUTPUT_JSON;
-    }
 
     if (streq(target, "wasm")) {
         return OUTPUT_WASM;
@@ -307,10 +302,6 @@ int common_main(int argc, const char **argv, driver_t driver) {
     case OUTPUT_C89:
         c89_emit_tree(reports, hlir);
         status = end_reports(reports, limit, "emitting c89");
-        break;
-    case OUTPUT_JSON:
-        json_emit_tree(reports, hlir);
-        status = end_reports(reports, limit, "emitting json");
         break;
     case OUTPUT_WASM:
         wasm_emit_tree(reports, hlir);

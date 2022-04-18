@@ -8,10 +8,20 @@
 * document more stuff
   * other people have to contribute now
 
-## Optional items
+* extract most of `generic` into subprojects
+  * better seperation of code into more logical blocks
+  * makes it easier to generate variations of the compiler
+  * required for plugins
 
-* add json support to bytecode generation
-  * this would allow us to remove json as a target
+* create plugin system
+  * this would allow our secret sauce to be kept closed source
+  * while the majority of the framework would be open source
+    * other people can fix our bugs for us
+    * brownie points for being open source
+    * means we can use libraries like libgccjit
+    * my work will remain available to me even after the summer ends
+
+## Optional items
 
 * add ssa emitter
   * direct asm/wasm output would be preferrable to relying on C/wat2wasm
