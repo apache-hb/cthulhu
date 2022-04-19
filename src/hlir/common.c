@@ -44,15 +44,6 @@ bool hlir_is_imported(const hlir_t *self) {
     return self->attributes->linkage == LINK_IMPORTED;
 }
 
-bool hlir_can_be(const hlir_t *self, hlir_kind_t type) {
-    if (hlir_is(self, type)) { return true; }
-    return hlir_is(self, HLIR_FORWARD) && self->expected == type;
-}
-
-bool hlir_is_sentinel(const hlir_t *self) {
-    return self == INVALID;
-}
-
 vector_t *closure_params(const hlir_t *self) {
     CTASSERT(self->type == HLIR_CLOSURE, "closure-params(self->type != HLIR_CLOSURE)");
 

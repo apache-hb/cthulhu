@@ -3,6 +3,11 @@
 #include "scan.h"
 #include "cthulhu/util/macros.h"
 
+/**
+ * @defgroup LocationTracking AST location tracking
+ * @{
+ */
+
 /** 
  * a position in a source file 
  */
@@ -27,3 +32,5 @@ node_t *node_new(scan_t *scan, where_t where) NONULL;
  * @return the builtin node
  */
 const node_t *node_builtin(void);
+
+/** @} */

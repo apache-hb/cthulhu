@@ -106,29 +106,20 @@
 
 #define INNER_STR(x) #x
 #define STR(x) INNER_STR(x)
-
-#define COLOUR_RED "\x1B[1;31m"
-#define COLOUR_GREEN "\x1B[1;32m"
-#define COLOUR_YELLOW "\x1B[1;33m"
-#define COLOUR_BLUE "\x1B[1;34m"
-#define COLOUR_PURPLE "\x1B[1;35m"
-#define COLOUR_CYAN "\x1B[1;36m"
-#define COLOUR_RESET "\x1B[0m"
-
 /**
  * @defgroup ColourMacros ANSI escape string colour macros
- * 
  * @{
- * @def COLOUR_RED ANSI escape string for red
- * @def COLOUR_GREEN ANSI escape string for green
- * @def COLOUR_YELLOW ANSI escape string for yellow
- * @def COLOUR_BLUE ANSI escape string for blue
- * @def COLOUR_PURPLE ANSI escape string for purple
- * @def COLOUR_CYAN ANSI escape string for cyan
- * @def COLOUR_RESET ANSI escape string to reset colour
- * @}
- * 
  */
+
+#define COLOUR_RED "\x1B[1;31m" ///< ANSI escape string for red
+#define COLOUR_GREEN "\x1B[1;32m" ///< ANSI escape string for green
+#define COLOUR_YELLOW "\x1B[1;33m" ///< ANSI escape string for yellow
+#define COLOUR_BLUE "\x1B[1;34m" ///< ANSI escape string for blue
+#define COLOUR_PURPLE "\x1B[1;35m" ///< ANSI escape string for purple
+#define COLOUR_CYAN "\x1B[1;36m" ///< ANSI escape string for cyan
+#define COLOUR_RESET "\x1B[0m" ///< ANSI escape reset
+
+/** @} */
 
 /// macros for headers
 #ifndef _POSIX_C_SOURCE

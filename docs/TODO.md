@@ -5,6 +5,9 @@
 * complete wat support
   * how do strings work
 
+* add wasm support
+  * run wat2wasm on the output is not great
+
 * document more stuff
   * other people have to contribute now
 

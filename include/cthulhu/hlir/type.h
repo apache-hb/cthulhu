@@ -1,8 +1,9 @@
 #include "hlir.h"
 
-///
-/// type constructors
-///
+/**
+ * @defgroup HlirTypeConstructors HLIR 
+ * 
+ */
 
 /**
  * @brief create a new integer type

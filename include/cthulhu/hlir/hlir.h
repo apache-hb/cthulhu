@@ -9,131 +9,121 @@
 #include <gmp.h>
 
 /**
- * if anything in this file is changed update the loader
+ * @defgroup Hlir HLIR (High Level Intermediate Representation)
+ * @{
+ */
+
+/**
+ * the tag for a hlir node
  */
 typedef enum {
-    /* expressions */
-    HLIR_DIGIT_LITERAL, // an integer literal
-    HLIR_BOOL_LITERAL, // a boolean literal
-    HLIR_STRING_LITERAL, // a string literal
+    HLIR_DIGIT_LITERAL, ///< an integer literal
+    HLIR_BOOL_LITERAL, ///< a boolean literal
+    HLIR_STRING_LITERAL, ///< a string literal
 
-    HLIR_NAME, // expr[offset]
-    HLIR_UNARY, // op expr
-    HLIR_BINARY, // lhs op rhs
-    HLIR_COMPARE, // lhs op rhs
-    HLIR_CALL, // expr(args...)
+    HLIR_NAME, ///< a load operation
+    HLIR_UNARY, ///< a unary operation
+    HLIR_BINARY, ///< a binary operation
+    HLIR_COMPARE, ///< a comparison operation
+    HLIR_CALL, ///< a function call
 
-    /* statements */
-    HLIR_STMTS, // a list of statements
-    HLIR_BRANCH, // if (cond) { then } else { other }
-    HLIR_LOOP, // while (cond) { body } else { other }
-    HLIR_ASSIGN, // lhs[offset] = rhs
+    HLIR_STMTS, ///< a list of statements
+    HLIR_BRANCH, ///< a conditional branch
+    HLIR_LOOP, ///< a loop on a condition
+    HLIR_ASSIGN, ///< an assignment
 
-    /* types */
-    HLIR_STRUCT, // a c-like struct
-    HLIR_UNION, // a c-like union
-    HLIR_DIGIT, // an integer type
-    HLIR_BOOL, // a boolean type
-    HLIR_STRING, // a string type
-    HLIR_VOID, // the void type
-    HLIR_CLOSURE, // the type of a function signature
-    HLIR_POINTER, // a pointer to another type
-    HLIR_ARRAY, // an array of another type
-    HLIR_TYPE, // the type of all types
-    HLIR_ALIAS, // an alias for another type
+    HLIR_STRUCT, ///< a record type
+    HLIR_UNION, ///< an untagged union type
+    HLIR_DIGIT, ///< any integer type
+    HLIR_BOOL, ///< the boolean type
+    HLIR_STRING, ///< any string type
+    HLIR_VOID, ///< the void type
+    HLIR_CLOSURE, ///< the type of a function signature
+    HLIR_POINTER, ///< a pointer to another type
+    HLIR_ARRAY, ///< an array of another type
+    HLIR_TYPE, ///< the type of all types
+    HLIR_ALIAS, ///< an alias for another type
 
-    /* declarations */
-    HLIR_LOCAL,
-    HLIR_PARAM,
-    HLIR_GLOBAL,
+    HLIR_LOCAL, ///< a local variable
+    HLIR_PARAM, ///< a function parameter
+    HLIR_GLOBAL, ///< a global variable
 
-    HLIR_FORWARD,
-    HLIR_FUNCTION,
-    HLIR_MODULE,
+    HLIR_FORWARD, ///< a forward declaration, should never appear in the final module
+    HLIR_FUNCTION, ///< a function definition
+    HLIR_MODULE, ///< the toplevel module definition
 
-    HLIR_FIELD,
+    HLIR_FIELD, ///< a field in a record
 
-    HLIR_ERROR,
+    HLIR_ERROR, ///< a compilation error
 
     HLIR_TOTAL
 } hlir_kind_t;
 
+/**
+ * @brief the width of an integer type
+ */
 typedef enum {
-    DIGIT_CHAR,
-    DIGIT_SHORT,
-    DIGIT_INT,
-    DIGIT_LONG,
+    DIGIT_CHAR, ///< a range of at least -127 to 127 if signed or 0 to 255 if unsigned
+    DIGIT_SHORT, ///< a range of at least -32767 to 32767 if signed or 0 to 65535 if unsigned
+    DIGIT_INT, ///< a range of at least -2147483647 to 2147483647 if signed or 0 to 4294967295 if unsigned
+    DIGIT_LONG, ///< a range of at least -9223372036854775807 to 9223372036854775807 if signed or 0 to 18446744073709551615 if unsigned
 
-    DIGIT_SIZE,
-    DIGIT_PTR,
+    DIGIT_SIZE, ///< the size of any type
+    DIGIT_PTR, ///< the same width as a pointer
 
     DIGIT_TOTAL
 } digit_t;
 
+/**
+ * @brief the sign of an integer type
+ */
 typedef enum {
-    SIGN_SIGNED,
-    SIGN_UNSIGNED,
-    SIGN_DEFAULT,
+    SIGN_SIGNED, ///< a signed type
+    SIGN_UNSIGNED, ///< an unsigned type
+    SIGN_DEFAULT, ///< the default sign for a type
 
     SIGN_TOTAL
 } sign_t;
 
+/**
+ * @brief an hlir node
+ */
 typedef struct hlir_t {
-    hlir_kind_t type; // the type of this node
-    const node_t *node; // the node span of this hlir
-    const struct hlir_t *of; // the type this hlir evaluates to
+    hlir_kind_t type; ///< the type of this node
+    const node_t *node; ///< the source location that generated this node
+    const struct hlir_t *of; ///< the type this hlir evaluates to
 
     union {
-        ///
-        /// all expressions
-        ///
-        
-        /* HLIR_DIGIT_LITERAL */
-        mpz_t digit;
+        mpz_t digit; ///< the value of this integer literal. active if type == HLIR_DIGIT_LITERAL
+        bool boolean; ///< the value of this boolean literal. active if type == HLIR_BOOL_LITERAL
+        const char *string; ///< the value of this string literal. active if type == HLIR_STRING_LITERAL
+        struct hlir_t *read; ///< the name of this load operation. active if type == HLIR_NAME
 
-        /* HLIR_BOOL_LITERAL */
-        bool boolean;
-
-        /* HLIR_STRING_LITERAL */
-        const char *string;
-
-        /* HLIR_NAME */
-        struct hlir_t *read;
-
-        /* HLIR_UNARY */
         struct {
-            struct hlir_t *operand;
-            unary_t unary;
+            struct hlir_t *operand; ///< the operand of this unary operation. active if type == HLIR_UNARY
+            unary_t unary; ///< the unary operation to perform
         };
 
-        /* HLIR_BINARY|HLIR_COMPARE */
         struct {
-            struct hlir_t *lhs;
-            struct hlir_t *rhs;
+            struct hlir_t *lhs; ///< the left operand of this operation. active if type == HLIR_BINARY || type == HLIR_COMPARE
+            struct hlir_t *rhs; ///< the right operand of this operation. active if type == HLIR_BINARY || type == HLIR_COMPARE
 
             union {
-                binary_t binary;
-                compare_t compare;
+                binary_t binary; ///< the binary operation to perform. active if type == HLIR_BINARY
+                compare_t compare; ///< the comparison operation to perform. active if type == HLIR_COMPARE
             };
         };
 
-        /* HLIR_CALL */
         struct {
-            struct hlir_t *call;
-            vector_t *args;
+            struct hlir_t *call; ///< the function to call. active if type == HLIR_CALL
+            vector_t *args; ///< the arguments to pass to the function.
         };
 
-        ///
-        /// all statements
-        ///
+        vector_t *stmts; ///< the statements in this block. active if type == HLIR_STMTS
 
-        /* HLIR_STMTS */
-        vector_t *stmts;
-
-        /* HLIR_ASSIGN */
         struct {
-            struct hlir_t *dst;
-            struct hlir_t *src;
+            struct hlir_t *dst; ///< the destination of this assignment. active if type == HLIR_ASSIGN
+            struct hlir_t *src; ///< the source of this assignment.
         };
 
         /* HLIR_BRANCH|HLIR_LOOP */
@@ -221,17 +211,57 @@ typedef struct hlir_t {
     };
 } hlir_t;
 
+/** @} */
+
 ///
 /// querys
 ///
 
-bool hlir_is_imported(const hlir_t *self);
-bool hlir_can_be(const hlir_t *self, hlir_kind_t type);
-bool hlir_is_sentinel(const hlir_t *self);
+/**
+ * @defgroup HlirQuerys HLIR querys
+ * @ingroup Hlir
+ * @{ 
+ */
 
+/**
+ * @brief check if an hlir node is imported from another module
+ * 
+ * @param self the declaration to check
+ * @return true if the declaration is imported
+ */
+bool hlir_is_imported(const hlir_t *self);
+
+/**
+ * @brief get the params of a function. only valid to call on HLIR_FUNCTION and HLIR_CLOSURE
+ * 
+ * @param self the function to get the params of
+ * @return the params of the function
+ */
 vector_t *closure_params(const hlir_t *self);
+
+/**
+ * @brief check if a function is variadic. only valid to call on HLIR_FUNCTION and HLIR_CLOSURE
+ * 
+ * @param self the function to check
+ * @return true if the function is variadic
+ */
 bool closure_variadic(const hlir_t *self);
+
+/**
+ * @brief get the return type of a function. only valid to call on HLIR_FUNCTION and HLIR_CLOSURE
+ * 
+ * @param self the function to get the return type of
+ * @return the return type of the function
+ */
 const hlir_t *closure_result(const hlir_t *self);
+
+/** @} */
+
+/**
+ * @defgroup HlirConstructors HLIR constructors
+ * @ingroup Hlir
+ * @{
+ */
 
 /**
  * @brief create an error
@@ -276,4 +306,12 @@ hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src);
 
 hlir_t *hlir_field(const node_t *node, const hlir_t *type, const char *name);
 
-void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes);
+/** @} */
+
+/**
+ * @brief set the attributes of a declaration or a type. only valid for declarations and types.
+ * 
+ * @param self the declaration or type to set the attributes of
+ * @param attributes the attributes to set
+ */
+void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes) NONULL;
