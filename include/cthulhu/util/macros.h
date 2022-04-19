@@ -26,6 +26,7 @@
 #endif
 
 /**
+ * @defgroup Packing Struct packing macros
  * the BEGIN_PACKED, END_PACKED, and PACKED macros are used to pack structs
  * sadly 3 different macros are needed because msvc only uses pragma(pack)
  * and clang only uses __attribute__((packed)), hence we need to use both.
@@ -36,13 +37,19 @@
  * #define PACKING_WIDTH 2
  * BEGIN_PACKED(PACKING_WIDTH)
  * 
- * typedef struct PACKED(2) {
+ * typedef struct PACKED(PACKING_WIDTH) {
  *   void *data;
  *   char field;
  * } my_packed_struct_t;
  * 
  * END_PACKED
  * @endcode
+ * 
+ * @{
+ * @def BEGIN_PACKED(align) begin a struct packing area with @a align alignment
+ * @def END_PACKED end a struct packing area
+ * @def PACKED(align) mark a struct inside a packing area as packed to @a align
+ * @}
  */
 
 #if defined(__clang__)

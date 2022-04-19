@@ -1,8 +1,9 @@
 #include "hlir.h"
 
 /**
- * @defgroup HlirTypeConstructors HLIR 
- * 
+ * @defgroup HlirTypeConstructors HLIR type constructors
+ * @ingroup Hlir
+ * @{
  */
 
 /**
@@ -92,3 +93,5 @@ hlir_t *hlir_array(const node_t *node,
                    const char *name, 
                    hlir_t *element, 
                    hlir_t *length);
+
+/** @} */
