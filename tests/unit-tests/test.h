@@ -16,14 +16,14 @@ static const char *RESULTS[TEST_RESULT_TOTAL] = {
     [TEST_PASSED] = "PASSED",
     [TEST_FAILED] = "FAILED",
     [TEST_SKIPPED] = "SKIPPED",
-    [TEST_ERROR] = "ERROR",
+    [TEST_ERROR] = "ERROR"
 };
 
 static int CODES[TEST_RESULT_TOTAL] = {
     [TEST_PASSED] = 0,
     [TEST_FAILED] = 1,
     [TEST_SKIPPED] = 77,
-    [TEST_ERROR] = 99,
+    [TEST_ERROR] = 99
 };
 
 typedef struct {

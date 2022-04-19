@@ -27,6 +27,11 @@
   * i dont know how s3 buckets work
   * i am too scared of spending my life savings in 5 seconds
 
+* properly abstract file IO
+  * current file IO doesnt work on windows
+  * need to abstract over in memory files and on disk files better
+  * need to create distinction between binary files and text files
+
 ## Optional items
 
 * add ssa emitter
@@ -51,3 +56,6 @@
     * xml
     * json
     * yaml (ideally not this)
+
+* make util functions more verbose
+  * its getting a bit hard to reason about what some functions are doing based on name alone now
