@@ -27,6 +27,8 @@
 
 /**
  * @defgroup Packing Struct packing macros
+ * @brief cross compiler compatible struct packing macros
+ * 
  * the BEGIN_PACKED, END_PACKED, and PACKED macros are used to pack structs
  * sadly 3 different macros are needed because msvc only uses pragma(pack)
  * and clang only uses __attribute__((packed)), hence we need to use both.
