@@ -1,5 +1,5 @@
 project('cthulhu', 'c',
-    license : 'APGLv3',
+    license : 'GPLv3',
     version : '0.2.0',
     meson_version : '>=0.58',
     default_options : [
