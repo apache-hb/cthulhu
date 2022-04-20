@@ -21,6 +21,7 @@
 !*.md
 !*.build
 !meson_options.txt
+!Doxyfile.in
 
 # dont ignore scripts
 !*.py

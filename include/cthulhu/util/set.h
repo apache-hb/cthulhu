@@ -26,7 +26,28 @@ typedef struct {
  * @return set_t* 
  */
 set_t *set_new(size_t size);
+
+/**
+ * @brief delete a set
+ * 
+ * @param set the set to delete
+ */
 void set_delete(set_t *set);
 
+/**
+ * @brief add a string to a set
+ * 
+ * @param set the set to add to
+ * @param key the key to add
+ * @return a pointer to the deduplicated key
+ */
 const char* set_add(set_t *set, const char *key);
+
+/**
+ * @brief check if a set contains a key
+ * 
+ * @param set the set to check
+ * @param key the key to check
+ * @return true if the set contains the key
+ */
 bool set_contains(set_t *set, const char *key);

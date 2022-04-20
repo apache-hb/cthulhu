@@ -145,14 +145,6 @@ char *ctu_strndup(const char *str, size_t len) {
     return out;
 }
 
-char *ctu_strdup_len(const char *str, size_t *len) {
-    size_t bytes = strlen(str) + 1;
-    char *out = ctu_malloc(bytes);
-    memcpy(out, str, bytes);
-    *len = bytes;
-    return out;
-}
-
 void *ctu_memdup(const void *ptr, size_t size) {
     void *out = ctu_malloc(size);
     memcpy(out, ptr, size);
