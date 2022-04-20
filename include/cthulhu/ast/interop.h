@@ -4,6 +4,7 @@
 
 /**
  * @defgroup FlexBisonMacros Flex and Bison helper macros
+ * @brief Helper macros for flex and bison driver frontends
  * @{
  */
 

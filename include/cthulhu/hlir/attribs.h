@@ -2,6 +2,7 @@
 
 /**
  * @defgroup HlirAttributes HLIR Declaration attributes
+ * @brief attributes to attatch to declarations and types
  * @{
  */
 

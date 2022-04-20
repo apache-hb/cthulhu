@@ -2,7 +2,8 @@
 
 /**
  * @defgroup HlirTypeConstructors HLIR type constructors
- * @ingroup Hlir
+ * @ingroup HlirConstructors
+ * @brief HLIR constructors for builtin types.
  * @{
  */
 

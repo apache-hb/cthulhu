@@ -10,6 +10,7 @@
 
 /**
  * @defgroup Hlir HLIR (High Level Intermediate Representation)
+ * @brief a high level typed ast format
  * @{
  */
 
@@ -220,6 +221,7 @@ typedef struct hlir_t {
 /**
  * @defgroup HlirQuerys HLIR querys
  * @ingroup Hlir
+ * @brief information queries for HLIR nodes
  * @{ 
  */
 
@@ -260,6 +262,7 @@ const hlir_t *closure_result(const hlir_t *self);
 /**
  * @defgroup HlirConstructors HLIR constructors
  * @ingroup Hlir
+ * @brief constructors for HLIR nodes
  * @{
  */
 

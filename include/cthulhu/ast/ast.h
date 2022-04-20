@@ -5,6 +5,7 @@
 
 /**
  * @defgroup LocationTracking AST location tracking
+ * @brief AST source position tracking
  * @{
  */
 

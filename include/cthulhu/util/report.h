@@ -10,18 +10,17 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-#define EXIT_OK 0
-#define EXIT_ERROR 1
-#define EXIT_INTERAL 99
-
 /**
  * @defgroup ErrorCodes Error code macros
+ * @brief exit codes that line up with GNU standard codes
  * @{
- * @def EXIT_OK no compiler errors or internal errors
- * @def EXIT_ERROR only compiler errors
- * @def EXIT_INTERAL internal errors occured
- * @}
  */
+
+#define EXIT_OK 0       ///< no compiler errors or internal errors
+#define EXIT_ERROR 1    ///< only compiler errors occurred
+#define EXIT_INTERAL 99 ///< at least one internal error occured
+
+/** @} */
 
 /**
  * @brief the severity of a message

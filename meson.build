@@ -4,7 +4,7 @@ project('cthulhu', 'c',
     meson_version : '>=0.58',
     default_options : [
         'c_std=gnu99',
-        'warning_level=2', # bison generates code that warns on gcc at level 3
+        'warning_level=2', # we use unnamed structs
         'default_library=static',
         'werror=true'
     ]
