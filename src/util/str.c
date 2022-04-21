@@ -32,16 +32,6 @@ char *formatv(const char *fmt, va_list args) {
     return out;
 }
 
-char *ctu_basepath(const char *path) {
-    char *base = ctu_strdup(path);
-    size_t len = strlen(base);
-    while (!endswith(base, PATH_SEP)) {
-        base[len--] = '\0';
-    }
-    base[len] = '\0';
-    return base;
-}
-
 char *ctu_noext(const char *path) {
     char *base = ctu_strdup(path);
     size_t len = strlen(base);

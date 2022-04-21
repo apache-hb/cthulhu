@@ -831,10 +831,8 @@ static scan_t make_scanner(reports_t *reports, const char *lang, const char *pat
         return scan_string(reports, lang, path, source);
     }
 
-    file_t file = ctu_fopen(path, "r");
-    file_t *fp = BOX(file);
-
-    return scan_file(reports, lang, fp);
+    file_t *file = file_new(path, TEXT, READ);
+    return scan_file(reports, lang, file);
 }
 
 hlir_t *load_module(reports_t *reports, const char *path) {

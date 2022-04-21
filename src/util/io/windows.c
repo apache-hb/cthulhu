@@ -8,27 +8,27 @@ typedef struct {
 
 static const file_ops_t OPS;
 
-#define TOTAL_SIZE (sizeof(ctu_file_t) + sizeof(windows_file_t))
+#define TOTAL_SIZE (sizeof(file_t) + sizeof(windows_file_t))
 
 #define SELF(file) ((windows_file_t*)file->data)
 
-static size_t windows_read(ctu_file_t *self, void *dst, size_t total) {
+static size_t windows_read(file_t *self, void *dst, size_t total) {
 
 }
 
-static size_t windows_write(ctu_file_t *self, const void *src, size_t total) {
+static size_t windows_write(file_t *self, const void *src, size_t total) {
 
 }
 
-static size_t windows_seek(ctu_file_t *self, size_t offset) {
+static size_t windows_seek(file_t *self, size_t offset) {
 
 }
 
-static size_t windows_size(ctu_file_t *self) {
+static size_t windows_size(file_t *self) {
 
 }
 
-static size_t windows_tell(ctu_file_t *self) {
+static size_t windows_tell(file_t *self) {
 
 }
 
@@ -67,10 +67,14 @@ static char *get_absolute(const char *path) {
     return out;
 }
 
-void platform_close(ctu_file_t *file) {
+void platform_close(file_t *file) {
 
 }
 
-void platform_open(ctu_file_t **file, const char *path, contents_t format, access_t access) {
+void platform_open(file_t **file, const char *path, contents_t format, access_t access) {
 
+}
+
+bool file_exists(const char *path) {
+    return GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES;
 }

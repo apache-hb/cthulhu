@@ -7,8 +7,6 @@
 #include "cthulhu/util/map.h"
 #include "cthulhu/util/macros.h"
 
-#include "compat.h"
-
 #include <string.h>
 #include <stdlib.h>
 #include <gmp.h>
@@ -149,59 +147,6 @@ void *ctu_memdup(const void *ptr, size_t size) {
     void *out = ctu_malloc(size);
     memcpy(out, ptr, size);
     return out;
-}
-
-char *ctu_pathjoin(const char *path, const char *file) {
-    return format("%s" PATH_SEP "%s", path, file);
-}
-
-file_t ctu_fopen(const char *path, const char *mode) {
-    logverbose("opening: %s", path);
-    file_t file = {
-        .path = ctu_realpath(path),
-        .file = compat_fopen(path, mode)
-    };
-    return file;
-}
-
-void ctu_close(file_t *fp) {
-    if (fp->file) {
-        fclose(fp->file);
-    }
-}
-
-bool file_valid(file_t *fp) {
-    return fp->file != NULL;
-}
-
-size_t ctu_read(void *dst, size_t total, file_t *fp) {
-    return fread(dst, 1, total, fp->file);
-}
-
-size_t file_size(FILE *fd) {
-    fseek(fd, 0, SEEK_END);
-    size_t size = ftell(fd);
-    fseek(fd, 0, SEEK_SET);
-    return size;
-}
-
-void *ctu_mmap(file_t *fp) {
-    char *text;
-    size_t size = file_size(fp->file);
-
-#ifndef _WIN32
-    int fd = fileno(fp->file);
-    text = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (text != MAP_FAILED) {
-        return text;
-    }
-#endif
-
-    text = ctu_malloc(size + 1);
-    fread(text, size, 1, fp->file);
-    text[size] = '\0';
-
-    return text;
 }
 
 void ctpanic(const char *msg, ...) {

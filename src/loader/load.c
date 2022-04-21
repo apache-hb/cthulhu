@@ -66,11 +66,11 @@ bool begin_load(data_t *in, header_t header) {
     begin_data(in, header);
     const char *path = header.path;
 
-    ctu_file_t *file = file_new(path, BINARY, READ);
+    file_t *file = file_new(path, BINARY, READ);
     if (!file_ok(file)) { return false; }
 
     in->data = file_map(file);
-    in->length = _file_size(file);
+    in->length = file_size(file);
 
     offset_t cursor = 0;
     size_t len = NUM_TYPES(header);

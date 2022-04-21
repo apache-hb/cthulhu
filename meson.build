@@ -122,10 +122,7 @@ src = [
 
     'src/util/io/common.c',
     'src/util/io/memory.c',
-    'src/util/io/platform.c'.replace('platform', target),
-
-    # platform glue
-    'src/util/compat-platform.c'.replace('platform', target)
+    'src/util/io/platform.c'.replace('platform', target)
 ]
 
 libgeneric = library('generic', src,

@@ -259,15 +259,15 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     const char *path = argv[1];
 
-    file_t file = ctu_fopen(path, "rb");
-    if (!file_valid(&file)) {
+    file_t *file = file_new(path, TEXT, READ);
+    if (!file_ok(file)) {
         report(reports, ERROR, NULL, "failed to open file: %s (errno %d)", ctu_strerror(errno), errno);
         return end_reports(reports, limit, "command line parsing");
     }
 
     // create our scanner, this must be retained for the duration of the program
 
-    scan_t scan = scan_file(reports, driver.name, &file);
+    scan_t scan = scan_file(reports, driver.name, file);
     status = end_reports(reports, limit, "scanning");
     if (status != 0) { return status; }
 

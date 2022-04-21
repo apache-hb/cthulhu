@@ -13,34 +13,18 @@
 #   define PATH_SEP "/"
 #endif
 
-typedef struct {
-    const char *path;
-    FILE *file;
-} file_t;
-
-void ctu_close(file_t *fp) NONULL;
-file_t ctu_fopen(const char *path, const char *mode) NONULL;
-bool file_valid(file_t *fp) CONSTFN NONULL;
-size_t file_size(FILE *fd);
-
-size_t ctu_read(void *dst, size_t total, file_t *fp) NONULL;
-void *ctu_mmap(file_t *fp) NONULL;
-
-char *ctu_basepath(const char *path) NONULL;
 char *ctu_noext(const char *path) NONULL;
 char *ctu_filename(const char *path) NONULL;
-char *ctu_pathjoin(const char *path, const char *file) NONULL;
-char *ctu_realpath(const char *path) NONULL;
 
-struct ctu_file_t;
+struct file_t;
 
-typedef size_t(*file_read_t)(struct ctu_file_t *self, void *dst, size_t total);
-typedef size_t(*file_write_t)(struct ctu_file_t *self, const void *src, size_t total);
-typedef size_t(*file_seek_t)(struct ctu_file_t *self, size_t offset);
-typedef size_t(*file_size_t)(struct ctu_file_t *self);
-typedef size_t(*file_tell_t)(struct ctu_file_t *self);
-typedef void*(*file_map_t)(struct ctu_file_t *self);
-typedef bool(*file_ok_t)(struct ctu_file_t *self);
+typedef size_t(*file_read_t)(struct file_t *self, void *dst, size_t total);
+typedef size_t(*file_write_t)(struct file_t *self, const void *src, size_t total);
+typedef size_t(*file_seek_t)(struct file_t *self, size_t offset);
+typedef size_t(*file_size_t)(struct file_t *self);
+typedef size_t(*file_tell_t)(struct file_t *self);
+typedef void*(*file_map_t)(struct file_t *self);
+typedef bool(*file_ok_t)(struct file_t *self);
 
 typedef struct {
     file_read_t read;
@@ -68,7 +52,7 @@ typedef enum {
     MEMORY
 } file_type_t;
 
-typedef struct ctu_file_t {
+typedef struct file_t {
     const char *path;
     contents_t format;
     access_t access;
@@ -76,17 +60,19 @@ typedef struct ctu_file_t {
 
     const file_ops_t *ops;
     char data[];
-} ctu_file_t;
+} file_t;
 
-void close_file(ctu_file_t *file) NONULL;
+void close_file(file_t *file) NONULL;
 
-ctu_file_t *file_new(const char *path, contents_t format, access_t access) NONULL ALLOC(ctu_close);
-ctu_file_t *memory_new(const char *name, size_t size, contents_t format, access_t access) NONULL ALLOC(ctu_close);
+file_t *file_new(const char *path, contents_t format, access_t access) NONULL ALLOC(close_file);
+file_t *memory_new(const char *name, size_t size, contents_t format, access_t access) NONULL ALLOC(close_file);
 
-size_t file_read(ctu_file_t *file, void *dst, size_t total) NONULL;
-size_t file_write(ctu_file_t *file, const void *src, size_t total) NONULL;
-size_t file_seek(ctu_file_t *file, size_t offset) NONULL;
-size_t _file_size(ctu_file_t *file) NONULL;
-size_t file_tell(ctu_file_t *file) NONULL;
-void *file_map(ctu_file_t *file) NONULL;
-bool file_ok(ctu_file_t *file) CONSTFN NONULL;
+size_t file_read(file_t *file, void *dst, size_t total) NONULL;
+size_t file_write(file_t *file, const void *src, size_t total) NONULL;
+size_t file_seek(file_t *file, size_t offset) NONULL;
+size_t file_size(file_t *file) NONULL;
+size_t file_tell(file_t *file) NONULL;
+void *file_map(file_t *file) NONULL;
+bool file_ok(file_t *file) CONSTFN NONULL;
+
+bool file_exists(const char *path) NONULL;

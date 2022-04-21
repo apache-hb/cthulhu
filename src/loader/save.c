@@ -123,16 +123,16 @@ void end_save(data_t *out) {
         stream_write_bytes(header, stream_data(out->records[i]), size);
     }
 
-    file_t file = ctu_fopen(out->header.path, "wb");
+    file_t *file = file_new(out->header.path, BINARY, WRITE);
 
-    if (!file_valid(&file)) {
+    if (!file_ok(file)) {
         report(out->header.reports, ERROR, NULL, "failed to open file %s (errno %d)", out->header.path, errno);
         return;
     }
 
-    fwrite(stream_data(header), 1, stream_len(header), file.file);
+    file_write(file, stream_data(header), stream_len(header));
 
-    ctu_close(&file);
+    close_file(file);
 }
 
 index_t write_entry(data_t *out, type_t type, const value_t *values) {

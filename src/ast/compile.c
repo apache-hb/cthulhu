@@ -29,16 +29,19 @@ scan_t scan_string(reports_t *reports, const char *language, const char *path, c
 }
 
 scan_t scan_file(reports_t *reports, const char *language, file_t *file) {
-    FILE *fd = file->file;
-    size_t size = file_size(fd);
+    size_t size = file_size(file);
+    char *text = file_map(file);
     scan_t scan = scan_new(reports, language, file->path);
-    scan.data = fd;
+    text_t source = { 
+        .size = size, 
+        .text = text 
+    };
 
-    char *text;
-    if (!(text = ctu_mmap(file))) {
-        ctu_assert(reports, "failed to mmap file");
+    if (text == NULL) {
+        report(reports, ERROR, NULL, "failed to map file: %s", strerror(errno));
     }
-    text_t source = { .size = size, .text = text };
+
+    scan.data = file;
     scan.source = source;
 
     return scan;
