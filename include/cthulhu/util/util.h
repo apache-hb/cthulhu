@@ -10,49 +10,6 @@
 #include "sizes.h"
 #include "macros.h"
 
-#if ENABLE_TUNING
-
-/**
- * @defgroup Tuning Memory allocation statistics
- * @brief Memory allocation statistics for tuning
- * 
- * when ENABLE_TUNING is defined, memory allocation statistics are collected.
- * these are only collected for calls to @ref ctu_malloc and @ref ctu_realloc.
- * hence these functions should be used instead of their stdlib equivalents.
- * @{
- */
-
-typedef atomic_size_t count_t; ///< atomic memory counter type
-
-/**
- * allocation statistics
- */
-typedef struct {
-    count_t mallocs;     ///< calls to malloc
-    count_t reallocs;    ///< calls to realloc
-    count_t frees;       ///< calls to free
-
-    count_t current;     ///< current memory allocated
-    count_t peak;        ///< peak memory allocated
-} counters_t;
-
-/**
- * @brief get the current memory allocation statistics
- * 
- * @return the current memory allocation statistics
- */
-counters_t get_counters(void);
-
-/**
- * @brief get the current memory allocation statistics and reset them
- * 
- * @return the current memory allocation statistics
- */
-counters_t reset_counters(void);
-
-/** @} */
-#endif
-
 /**
  * @defgroup Memory General case memory managment
  * @{
@@ -150,3 +107,47 @@ void init_gmp(void);
  */
 void *ctu_box(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
 #define BOX(name) ctu_box(&name, sizeof(name)) ///< box a value onto the heap from the stack
+
+
+#if ENABLE_TUNING
+
+/**
+ * @defgroup Tuning Memory allocation statistics
+ * @brief Memory allocation statistics for tuning
+ * 
+ * when ENABLE_TUNING is defined, memory allocation statistics are collected.
+ * these are only collected for calls to @ref ctu_malloc and @ref ctu_realloc.
+ * hence these functions should be used instead of their stdlib equivalents.
+ * @{
+ */
+
+typedef atomic_size_t count_t; ///< atomic memory counter type
+
+/**
+ * allocation statistics
+ */
+typedef struct {
+    count_t mallocs;     ///< calls to malloc
+    count_t reallocs;    ///< calls to realloc
+    count_t frees;       ///< calls to free
+
+    count_t current;     ///< current memory allocated
+    count_t peak;        ///< peak memory allocated
+} counters_t;
+
+/**
+ * @brief get the current memory allocation statistics
+ * 
+ * @return the current memory allocation statistics
+ */
+counters_t get_counters(void);
+
+/**
+ * @brief get the current memory allocation statistics and reset them
+ * 
+ * @return the current memory allocation statistics
+ */
+counters_t reset_counters(void);
+
+/** @} */
+#endif
