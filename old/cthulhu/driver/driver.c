@@ -47,9 +47,9 @@ const backend_t *select_backend(reports_t *reports, const char *name) {
         report(reports, ERROR, NULL, "no backend specified");
     }
 
-    if (streq(name, "c99")) {
+    if (str_equal(name, "c99")) {
         return &BACKEND_C99;
-    } else if (streq(name, "json")) {
+    } else if (str_equal(name, "json")) {
         return &BACKEND_JSON;
     } else {
         report(reports, ERROR, NULL, "unknown backend: %s", name);

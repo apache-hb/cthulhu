@@ -62,7 +62,7 @@ static char *long_name_for(size_t digit) {
 
     vector_flip(id);
 
-    char *out = strjoin("_", id);
+    char *out = str_join("_", id);
 
     vector_delete(id);
 

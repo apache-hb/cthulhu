@@ -220,7 +220,7 @@ size_t field_offset(const type_t *type, const char *name) {
     size_t len = vector_len(type->fields);
     for (size_t i = 0; i < len; i++) {
         aggregate_field_t *field = vector_get(type->fields, i);
-        if (streq(field->name, name)) {
+        if (str_equal(field->name, name)) {
             return i;
         }
     }

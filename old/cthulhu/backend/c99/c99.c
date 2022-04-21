@@ -135,7 +135,7 @@ static char *format_function(reports_t *reports, const block_t *block) {
     
     const char *decl = type_to_string(reports, type->result, name);
 
-    return format("%s(%s)", decl, strjoin(", ", params));
+    return format("%s(%s)", decl, str_join(", ", params));
 }
 
 static void forward_block(context_t *ctx, const block_t *block) {
@@ -228,7 +228,7 @@ static char *format_call(reports_t *reports, size_t idx, step_t step) {
         vector_set(params, i, (char*)param);
     }
 
-    return format("  %s(*%s)(%s);\n", init, call, strjoin(", ", params));
+    return format("  %s(*%s)(%s);\n", init, call, str_join(", ", params));
 }
 
 static const char *binary_op_to_string(binary_t op) {
@@ -432,7 +432,7 @@ static void add_strings(context_t *ctx, vector_t *strings) {
             map_set(ctx->strings, block->string, block);
             block->data = NULL;
             char *name = string_name(block->idx);
-            char *str = strnorm(block->string);
+            char *str = str_normalize(block->string);
             char *fmt = format("const char *%s = \"%s\";\n", name, str);
             stream_write(ctx->result, fmt);
         }

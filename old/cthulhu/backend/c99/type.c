@@ -72,7 +72,7 @@ static char *closure_to_string(reports_t *reports, const type_t *type, const cha
     }
 
     const char *result = type_to_string(reports, closure_result(type), NULL);
-    char *args = strjoin(", ", params);
+    char *args = str_join(", ", params);
 
     if (name != NULL) {
         return format("%s (*%s)(%s)", result, name, args);
@@ -157,7 +157,7 @@ static char *format_array(reports_t *reports, vector_t *elements) {
         vector_set(result, i, (char*)fmt);
     }
 
-    return format("{%s}", strjoin(", ", result));
+    return format("{%s}", str_join(", ", result));
 }
 
 const char *value_to_string(reports_t *reports, const value_t *value) {
@@ -174,7 +174,7 @@ const char *value_to_string(reports_t *reports, const value_t *value) {
     }
 
     if (is_string(type)) {
-        return format("\"%s\"", strnorm(value->string));
+        return format("\"%s\"", str_normalize(value->string));
     }
 
     if (is_closure(type)) {

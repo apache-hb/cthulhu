@@ -177,7 +177,7 @@ static bucket_t *bucket_new(const char *key, void *value) {
 }
 
 HOT static void *entry_get(const bucket_t *entry, const char *key, void *other) {
-    if (entry->key && streq(entry->key, key)) {
+    if (entry->key && str_equal(entry->key, key)) {
         return entry->value;
     }
 
@@ -302,7 +302,7 @@ void map_set(map_t *map, const char *key, void *value) {
             break;
         }  
         
-        if (streq(entry->key, key)) {
+        if (str_equal(entry->key, key)) {
             entry->value = value;
             break;
         } 

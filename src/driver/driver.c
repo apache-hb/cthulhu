@@ -44,7 +44,7 @@ static void print_help(const char **argv) {
 }
 
 static bool streq_nullable(const char *lhs, const char *rhs) {
-    return lhs != NULL && rhs != NULL && streq(lhs, rhs);
+    return lhs != NULL && rhs != NULL && str_equal(lhs, rhs);
 }
 
 static bool find_arg(int argc, const char **argv, const char *arg, const char *brief) {
@@ -59,7 +59,7 @@ static bool find_arg(int argc, const char **argv, const char *arg, const char *b
 
 static const char *extract_arg(int argc, const char **argv, const char *arg, int idx) {
     size_t len = strlen(arg);
-    if (startswith(argv[idx], arg)) {
+    if (str_startswith(argv[idx], arg)) {
         char end = argv[idx][len];
         if (end == '\0') {
             if (idx >= argc) {
@@ -84,13 +84,13 @@ static const char *get_arg(reports_t *reports, int argc, const char **argv, cons
     const char *result = NULL;
 
     for (int i = 0; i < argc; i++) {
-        if (startswith(argv[i], arg)) {
+        if (str_startswith(argv[i], arg)) {
             found = true;
             result = extract_arg(argc, argv, arg, i);
             break;
         }
 
-        if (brief != NULL && startswith(argv[i], brief)) {
+        if (brief != NULL && str_startswith(argv[i], brief)) {
             found = true;
             result = extract_arg(argc, argv, brief, i);
             break;
@@ -108,7 +108,7 @@ static vector_t *collect_args(int argc, const char **argv, const char *prefix, c
     vector_t *result = vector_new(argc - 1);
 
     for (int i = 1; i < argc; i++) {
-        if (startswith(argv[i], prefix)) {
+        if (str_startswith(argv[i], prefix)) {
             const char *arg = extract_arg(argc, argv, prefix, i);
             if (arg != NULL) {
                 vector_push(&result, (char*)arg);
@@ -116,7 +116,7 @@ static vector_t *collect_args(int argc, const char **argv, const char *prefix, c
             }
         }
 
-        if (brief != NULL && startswith(argv[i], brief)) {
+        if (brief != NULL && str_startswith(argv[i], brief)) {
             const char *arg = extract_arg(argc, argv, brief, i);
             if (arg != NULL) {
                 vector_push(&result, (char*)arg);
@@ -174,11 +174,11 @@ typedef enum {
 } target_t;
 
 static target_t parse_target(reports_t *reports, const char *target) {
-    if (streq(target, "c89")) {
+    if (str_equal(target, "c89")) {
         return OUTPUT_C89;
     }  
 
-    if (streq(target, "wasm")) {
+    if (str_equal(target, "wasm")) {
         return OUTPUT_WASM;
     }
 

@@ -2,10 +2,8 @@
 
 #include "report.h"
 
-char *node_string(const node_t *node);
-
 /**
- * report a shadowing error
+ * @brief report a shadowing error
  * 
  * @param reports the report sink
  * @param name the name of the shadowed symbol
@@ -19,6 +17,15 @@ message_t *report_shadow(reports_t *reports,
                         const node_t *shadowed,
                         const node_t *shadowing) NONULL;
 
+/**
+ * @brief report one or more unknown characters in a file
+ * 
+ * @param reports the report sink
+ * @param node the location of the unknown characters
+ * @param str the string containing the unknown characters
+ * 
+ * @return the message
+ */
 message_t *report_unknown_character(reports_t *reports,
                                     const node_t *node,
                                     const char *str) NONULL;

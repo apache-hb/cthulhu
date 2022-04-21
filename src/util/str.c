@@ -35,7 +35,7 @@ char *formatv(const char *fmt, va_list args) {
 char *ctu_noext(const char *path) {
     char *base = ctu_strdup(path);
     size_t len = strlen(base);
-    while (!endswith(base, ".")) {
+    while (!str_endswith(base, ".")) {
         base[len--] = '\0';
     }
     base[len] = '\0';
@@ -43,7 +43,7 @@ char *ctu_noext(const char *path) {
 }
 
 char *ctu_filename(const char *path) {
-    size_t idx = rfind(path, PATH_SEP);
+    size_t idx = str_rfind(path, PATH_SEP);
     if (idx == SIZE_MAX) {
         return ctu_noext(path);
     }
@@ -51,11 +51,11 @@ char *ctu_filename(const char *path) {
     return ctu_noext(path + idx + 1);
 }
 
-bool startswith(const char *str, const char *prefix) {
+bool str_startswith(const char *str, const char *prefix) {
     return strncmp(str, prefix, strlen(prefix)) == 0;
 }
 
-bool endswith(const char *str, const char *suffix) {
+bool str_endswith(const char *str, const char *suffix) {
     size_t lenstr = strlen(str);
     size_t lensuffix = strlen(suffix);
     if (lensuffix > lenstr) {
@@ -65,7 +65,7 @@ bool endswith(const char *str, const char *suffix) {
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
-char *strjoin(const char *sep, vector_t *parts) {
+char *str_join(const char *sep, vector_t *parts) {
     size_t all = vector_len(parts);
     if (all == 1) {
         return vector_get(parts, 0);
@@ -100,7 +100,7 @@ char *strjoin(const char *sep, vector_t *parts) {
     return out;
 }
 
-char *strmul(const char *str, size_t times) {
+char *str_repeat(const char *str, size_t times) {
     size_t len = strlen(str);
     size_t outlen = len * times;
     char *out = ctu_malloc(outlen + 1);
@@ -119,10 +119,35 @@ static bool ctu_isprint(char c) {
 }
 
 static size_t normlen(char c) {
-    return ctu_isprint(c) ? 1 : 4;
+    switch (c) {
+    case '\\':
+    case '\'':
+    case '\"':
+        return 2;
+    default:
+        return ctu_isprint(c) ? 1 : 4;
+    }
 }
 
 static size_t normstr(char *out, char c) {
+    if (c == '\\') {
+        out[0] = '\\';
+        out[1] = '\\';
+        return 2;
+    }
+
+    if (c == '\'') {
+        out[0] = '\\';
+        out[1] = '\'';
+        return 2;
+    }
+
+    if (c == '\"') {
+        out[0] = '\\';
+        out[1] = '\"';
+        return 2;
+    }
+
     if (ctu_isprint(c)) {
         out[0] = c;
         return 1;
@@ -131,7 +156,7 @@ static size_t normstr(char *out, char c) {
     return sprintf(out, "\\x%02x", c & 0xFF);
 }
 
-char *strnorm(const char *str) {
+char *str_normalize(const char *str) {
     size_t len = 0;
     const char *temp = str;
     while (*temp != '\0') {
@@ -148,7 +173,7 @@ char *strnorm(const char *str) {
     return buf;
 }
 
-char *nstrnorm(const char *str, size_t len) {
+char *str_normalizen(const char *str, size_t len) {
     size_t outlen = 1;
     for (size_t i = 0; i < len; i++) {
         outlen += normlen(str[i]);
@@ -164,7 +189,7 @@ char *nstrnorm(const char *str, size_t len) {
     return buf;
 }
 
-vector_t *strsplit(const char *str, const char *sep) {
+vector_t *str_split(const char *str, const char *sep) {
     char *temp = ctu_strdup(str);
     vector_t *result = vector_new(4);
     char *save = NULL;
@@ -188,7 +213,7 @@ size_t strhash(const char *str) {
     return hash;
 }
 
-size_t strcount(const char *str, const char *sub) {
+size_t str_count(const char *str, const char *sub) {
     size_t count = 0;
     while (*str++) {
         if (strncmp(str, sub, strlen(sub)) == 0) {
@@ -198,7 +223,7 @@ size_t strcount(const char *str, const char *sub) {
     return count;
 }
 
-bool strcontains(const char *str, const char *sub) {
+bool str_contains(const char *str, const char *sub) {
     if (sub[0] == '\0') { return false; }
     
     return strstr(str, sub) != NULL;
@@ -210,29 +235,18 @@ char *ctu_strerror(int err) {
     return buf;
 }
 
-char *replacestr(const char *str, const char *sub, const char *repl) {
-    vector_t *split = strsplit(str, sub);
-    return strjoin(repl, split);
+char *str_replace(const char *str, const char *sub, const char *repl) {
+    vector_t *split = str_split(str, sub);
+    return str_join(repl, split);
 }
 
-char *strmove(char *dst, const char *src) {
-	char *save = dst;
-
-    while ((*dst = *src)) {
-        dst += 1;
-        src += 1;
-    }
-
-	return save;
-}
-
-bool streq(const char *lhs, const char *rhs) {
+bool str_equal(const char *lhs, const char *rhs) {
     /* compare pointers as well for better perf
        with interned strings */
     return lhs == rhs || strcmp(lhs, rhs) == 0;
 }
 
-char *strslice(const char *str, size_t start, size_t end) {
+char *str_substring(const char *str, size_t start, size_t end) {
     size_t bytes = end - start;
     return ctu_strndup(str + start, bytes);
 }
@@ -288,7 +302,7 @@ const char *common_prefix(vector_t *args) {
 
     for (size_t i = 0; i < len; i++) {
         char *arg = vector_get(args, i);
-        size_t len = rfind(arg, PATH_SEP) + 1;
+        size_t len = str_rfind(arg, PATH_SEP) + 1;
         strings[i] = ctu_strndup(arg, len);
 
         min = MIN(min, len);
@@ -309,7 +323,7 @@ const char *common_prefix(vector_t *args) {
     return ctu_strndup(strings[0], min);
 }
 
-size_t rfind(const char *str, const char *sub) {
+size_t str_rfind(const char *str, const char *sub) {
     size_t len = strlen(str);
     size_t sublen = strlen(sub);
     while (len--) {

@@ -296,7 +296,7 @@ static char *fmt_ptr(const type_t *type) {
 static char *fmt_closure(const type_t *type) {
     char *result = ctu_type_format(type->result);
     vector_t *args = VECTOR_MAP(type->args, ctu_type_format);
-    char *joined = strjoin(", ", args);
+    char *joined = str_join(", ", args);
     return format("(%s) -> %s", joined, result);
 }
 

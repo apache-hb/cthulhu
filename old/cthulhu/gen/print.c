@@ -126,7 +126,7 @@ static char *emit_call(size_t idx, step_t step) {
         vector_set(args, i, arg);
     }
 
-    return format("%%%zu = call %s (%s)", idx, func, strjoin(", ", args));
+    return format("%%%zu = call %s (%s)", idx, func, str_join(", ", args));
 }
 
 static const char *get_builtin_name(builtin_t builtin) {
@@ -201,7 +201,7 @@ static char *emit_names(const char *set, vector_t *locals) {
         vector_set(all, i, fmt);
     }
 
-    return format("%s = { %s }", set, strjoin(", ", all));
+    return format("%s = { %s }", set, str_join(", ", all));
 }
 
 static void var_print(FILE *out, module_t *mod, size_t idx) {
@@ -288,7 +288,7 @@ static void strtab_print(FILE *out, vector_t *strtab) {
     fprintf(out, "strtab[%zu] {\n", len);
     for (size_t i = 0; i < len; i++) {
         block_t *block = vector_get(strtab, i);
-        fprintf(out, "  %zu: `%s`\n", i, strnorm(block->string));
+        fprintf(out, "  %zu: `%s`\n", i, str_normalize(block->string));
     }
     fprintf(out, "}\n");
 }

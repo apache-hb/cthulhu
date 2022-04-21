@@ -31,7 +31,7 @@ static char *closure_format(const type_t *type) {
         vector_set(args, i, type_format(arg));
     }
 
-    char *all = strjoin(", ", args);
+    char *all = str_join(", ", args);
 
     char *result = type_format(type->result);
 

@@ -23,6 +23,41 @@
 /** @} */
 
 /**
+ * @defgroup ErrorApi Error reporting sink
+ * @brief error reporting sink api
+ * 
+ * an error reporting sink should be used in any code that has a chance of failing.
+ * when an error occurs, an error should be pushed into the sink, and a sentinel value
+ * should be returned from the function.
+ * 
+ * these errors should then later be reported using @ref end_reports. if this function
+ * returns a value other than @ref EXIT_OK. the application should then clean up and
+ * exit with the returned error code.
+ * 
+ * @code{.c}
+ * // improper usage of the error sink api
+ * int do_something_badly(reports_t *reports, int data) {
+ *   if (data < 0) {
+ *      report(reports, ERROR, NULL, "data must be positive");
+ *      abort(); // NO, this means the error messages will never be printed
+ *  }
+ *  return data * 2;
+ * }
+ * 
+ * // proper usage
+ * int do_something_well(reports_t *reports, int data) {
+ *   if (data < 0) {
+ *     report(reports, ERROR, NULL, "data must be positive");
+ *     return INT_MAX; // an obvious error code is returned rather than exiting 
+ *   }
+ *   return data * 2;
+ * }
+ * @endcode
+ * 
+ * @{
+ */
+
+/**
  * @brief the severity of a message
  */
 typedef enum {
@@ -34,11 +69,17 @@ typedef enum {
     LEVEL_TOTAL
 } level_t;
 
+/**
+ * @brief part of an error message
+ */
 typedef struct {
-    char *message;
-    const node_t *node;
+    char *message;      ///< associated message
+    const node_t *node; ///< associated node
 } part_t;
 
+/**
+ * @brief an error message
+ */
 typedef struct {
     /* the level of this error */
     level_t level;
@@ -60,10 +101,7 @@ typedef struct {
  * @brief an error reporting sink
  */
 typedef struct reports_t {
-    /**
-     * an array of all messages in the sink
-     */
-    vector_t *messages; 
+    vector_t *messages; ///< all messages in the sink
 } reports_t;
 
 /**
@@ -154,6 +192,14 @@ PRINT(2, 3)
 void report_note(message_t *message, 
                   const char *fmt, ...) NOTNULL(1, 2);
 
+/** @} */
+
+/**
+ * @defgroup Verbose Verbose output
+ * @brief verbose output
+ * @{
+ */
+
 /**
  * whether logverbose should print or not
  * 
@@ -169,3 +215,5 @@ extern bool verbose;
  * @param ... arguments
  */
 void logverbose(const char *fmt, ...) NOTNULL(1);
+
+/** @} */

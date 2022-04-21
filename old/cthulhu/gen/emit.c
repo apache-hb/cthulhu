@@ -575,8 +575,8 @@ static vector_t *collect_imports(vector_t *vec) {
 }
 
 static char *module_name(const char *base) {
-    vector_t *parts = strsplit(base, PATH_SEP);
-    return strjoin("::", parts);
+    vector_t *parts = str_split(base, PATH_SEP);
+    return str_join("::", parts);
 }
 
 module_t *module_build(reports_t *reports, const char *base, vector_t *nodes) {

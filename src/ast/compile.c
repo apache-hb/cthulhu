@@ -38,7 +38,7 @@ scan_t scan_file(reports_t *reports, const char *language, file_t *file) {
     };
 
     if (text == NULL) {
-        report(reports, ERROR, NULL, "failed to map file: %s", strerror(errno));
+        report(reports, ERROR, NULL, "failed to map file: %s", ctu_strerror(errno));
     }
 
     scan.data = file;

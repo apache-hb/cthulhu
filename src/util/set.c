@@ -54,7 +54,7 @@ const char* set_add(set_t *set, const char *key) {
             return key;
         } 
         
-        if (streq(item->key, key)) {
+        if (str_equal(item->key, key)) {
             return item->key;
         } 
         
@@ -75,7 +75,7 @@ bool set_contains(set_t *set, const char *key) {
             return false;
         } 
         
-        if (streq(item->key, key)) {
+        if (str_equal(item->key, key)) {
             return true;
         } 
         

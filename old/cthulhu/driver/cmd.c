@@ -56,9 +56,9 @@ static int parse_user_arg(settings_t *settings, size_t index, const arg_t *arg, 
     printf("type: %s\n", format_arg_type(arg->type));
     switch (arg->type) {
     case ARG_BOOL:
-        if (streq(part, "true") || streq(part, "1")) {
+        if (str_equal(part, "true") || str_equal(part, "1")) {
             parsed->boolean = true;
-        } else if (streq(part, "false") || streq(part, "0")) {
+        } else if (str_equal(part, "false") || str_equal(part, "0")) {
             parsed->boolean = false;
         } else {
             report(settings->reports, WARNING, NULL, "invalid boolean value '%s', defaulting to false", part);
@@ -94,13 +94,13 @@ static int parse_user_arg(settings_t *settings, size_t index, const arg_t *arg, 
     return skip;
 }
 
-#define MATCH(arg, a, b) (startswith(arg, a) || startswith(arg, b))
+#define MATCH(arg, a, b) (str_startswith(arg, a) || str_startswith(arg, b))
 #define NEXT(idx, argc, argv) (idx + 1 >= argc ? NULL : argv[idx + 1])
 
 static int parse_arg(settings_t *settings, const frontend_t *frontend, int index, int argc, char **argv) {
     const char *arg = argv[index];
     
-    if (!startswith(arg, "-")) {
+    if (!str_startswith(arg, "-")) {
         file_t fp = ctu_fopen(arg, "rb");
 
         if (!file_valid(&fp)) {

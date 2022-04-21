@@ -126,7 +126,7 @@ static char *extract_line(const scan_t *scan, line_t line) {
     }
     *out = '\0';
 
-    return nstrnorm(str, (size_t)(out - str));
+    return str_normalizen(str, (size_t)(out - str));
 }
 
 static char *build_underline(const char *source, where_t where, const char *note) {
@@ -374,9 +374,9 @@ static void send_note(const char *note) {
     size_t len = strlen(level);
 
     // +2 for the `: ` in the final print
-    char *padding = format("\n%s", strmul(" ", len + 2));
+    char *padding = format("\n%s", str_repeat(" ", len + 2));
     
-    char *aligned = replacestr(note, "\n", padding);
+    char *aligned = str_replace(note, "\n", padding);
 
     fprintf(stderr, "%s: %s\n", report_level(NOTE), aligned);
 }

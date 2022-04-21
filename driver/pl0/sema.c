@@ -69,7 +69,7 @@ static hlir_t *get_var(sema_t *sema, const char *name) {
 
 static void set_proc(sema_t *sema, const char *name, hlir_t *proc) {
     /* kinda hacky but works well enough */
-    if (streq(name, "main")) {
+    if (str_equal(name, "main")) {
         report(sema->reports, ERROR, proc->node, "main is a reserved name");
         return;
     }

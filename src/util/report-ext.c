@@ -1,15 +1,5 @@
 #include "cthulhu/util/report-ext.h"
 
-char *node_string(const node_t *node) {
-    scan_t *scan = node->scan;
-    where_t where = node->where;
-    
-    return format("%s source [%s:%ld:%ld]",
-        scan->language, scan->path, 
-        where.first_line + 1, where.first_column
-    );
-}
-
 message_t *report_shadow(reports_t *reports,
                         const char *name,
                         const node_t *shadowed,
@@ -27,7 +17,7 @@ message_t *report_unknown_character(reports_t *reports,
     where_t where = node->where;
 
     column_t width = where.last_column - where.first_column;
-    char *normal = nstrnorm(str, MAX(width, 1));
+    char *normal = str_normalizen(str, MAX(width, 1));
     message_t *id = report(reports, ERROR, node, "unknown character `%s`", normal);
     
     return id;

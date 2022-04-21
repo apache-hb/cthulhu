@@ -18,7 +18,7 @@ typedef enum {
 } tag_t;
 
 static bool is_discard_ident(const char *id) {
-    return id == NULL || streq(id, "$");
+    return id == NULL || str_equal(id, "$");
 }
 
 static hlir_t *sema_type(sema_t *sema, ast_t *ast);

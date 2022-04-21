@@ -121,7 +121,7 @@ char *value_format(const value_t *value) {
             char *fmt = value_format(elem);
             vector_set(parts, i, fmt);
         }
-        char *body = strjoin(", ", parts);
+        char *body = str_join(", ", parts);
         return format("%s(%zu[%s])", typestr, len, body);
     }
 

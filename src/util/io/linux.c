@@ -12,6 +12,7 @@ typedef struct {
 } unix_file_t;
 
 #define SELF(file) ((unix_file_t*)file->data)
+#define TOTAL_SIZE (sizeof(file_t) + sizeof(unix_file_t))
 
 static char *get_absolute(const char *path) {
     long size = pathconf(path, _PC_PATH_MAX);
@@ -82,8 +83,6 @@ static const file_ops_t OPS = {
     .mapped = unix_map,
     .ok = unix_ok
 };
-
-#define TOTAL_SIZE (sizeof(file_t) + sizeof(unix_file_t))
 
 void platform_close(file_t *file) {
     unix_file_t *self = SELF(file);

@@ -3,10 +3,10 @@
 
 static char *fmt_type_name(const hlir_t *type) {
     const char *base = get_hlir_name(type);
-    base = replacestr(base, "_", "__");
-    if (strcontains(base, "-") || strcontains(base, " ")) {
-        base = replacestr(base, "-", "_");
-        base = replacestr(base, " ", "_");
+    base = str_replace(base, "_", "__");
+    if (str_contains(base, "-") || str_contains(base, " ")) {
+        base = str_replace(base, "-", "_");
+        base = str_replace(base, " ", "_");
     }
     return format("type_%s", base);
 }
@@ -81,7 +81,7 @@ static char *emit_closure(reports_t *reports, const hlir_t *type, const char *na
             const char *kind = emit_type(reports, param, NULL);
             vector_set(params, i, (void*)kind);
         }
-        args = strjoin(", ", params);
+        args = str_join(", ", params);
     }
 
     return name != NULL ? format("%s (*%s)(%s)", result, name, args) 
@@ -151,7 +151,7 @@ static char *get_type_params(reports_t *reports, const hlir_t *sig) {
         vector_set(types, i, (char*)type);
     }
 
-    char *base = strjoin(", ", types);
+    char *base = str_join(", ", types);
     if (sig->variadic) {
         base = format("%s, ...", base);
     }
@@ -200,7 +200,7 @@ static char *emit_call(reports_t *reports, const hlir_t *hlir) {
     for (size_t i = 0; i < len; i++) {
         vector_set(args, i, emit_expr(reports, vector_get(hlir->args, i)));
     }
-    char *joined = strjoin(", ", args);
+    char *joined = str_join(", ", args);
 
     return format("%s(%s)", call, joined);
 }
@@ -219,7 +219,7 @@ static char *emit_expr(reports_t *reports, const hlir_t *hlir) {
     case HLIR_BOOL_LITERAL:
         return hlir->boolean ? "1" : "0";
     case HLIR_STRING_LITERAL:
-        return format("\"%s\"", strnorm(hlir->string));
+        return format("\"%s\"", str_normalize(hlir->string));
     case HLIR_CALL:
         return emit_call(reports, hlir);
     default:
