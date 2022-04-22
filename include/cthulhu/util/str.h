@@ -1,6 +1,5 @@
 #pragma once
 
-#include <errno.h>
 #include <stdarg.h>
 
 #include "macros.h"
@@ -24,7 +23,8 @@
  * @return the formatted string
  */
 PRINT(1, 2)
-char *format(const char *fmt, ...) NOTNULL(1);
+NODISCARD RET_STR
+char *format(FORMAT_STR const char *fmt, ...) NOTNULL(1);
 
 /**
  * @brief format a string with a @a va_list
@@ -36,7 +36,8 @@ char *format(const char *fmt, ...) NOTNULL(1);
  * 
  * @return the formatted string
  */
-char *formatv(const char *fmt, va_list args) NONULL;
+NODISCARD RET_STR
+char *formatv(FORMAT_STR const char *fmt, va_list args) NONULL;
 
 /**
  * @brief see if a string starts with a prefix
@@ -48,7 +49,8 @@ char *formatv(const char *fmt, va_list args) NONULL;
  * 
  * @return if str starts with prefix
  */
-bool str_startswith(const char *str, const char *prefix) CONSTFN NONULL;
+NODISCARD
+bool str_startswith(IN_STR const char *str, IN_STR const char *prefix) CONSTFN NONULL;
 
 /**
  * check if a string ends with a substring
@@ -58,7 +60,8 @@ bool str_startswith(const char *str, const char *prefix) CONSTFN NONULL;
  * 
  * @return if str ends with suffix
  */
-bool str_endswith(const char *str, const char *suffix) CONSTFN NONULL;
+NODISCARD
+bool str_endswith(IN_STR const char *str, IN_STR const char *suffix) CONSTFN NONULL;
 
 /**
  * @brief join strings 
@@ -70,7 +73,8 @@ bool str_endswith(const char *str, const char *suffix) CONSTFN NONULL;
  * 
  * @return the joined string
  */
-char *str_join(const char *sep, vector_t *parts) NONULL;
+NODISCARD RET_STR
+char *str_join(IN_STR const char *sep, IN_NOTNULL vector_t *parts) NONULL;
 
 /**
  * @brief repeat a string
@@ -82,7 +86,8 @@ char *str_join(const char *sep, vector_t *parts) NONULL;
  * 
  * @return the repeated string
  */
-char *str_repeat(const char *str, size_t times) NOTNULL(1);
+NODISCARD RET_STR
+char *str_repeat(IN_STR const char *str, size_t times) NOTNULL(1);
 
 /**
  * @brief turn a string into a C string literal
@@ -93,7 +98,8 @@ char *str_repeat(const char *str, size_t times) NOTNULL(1);
  * 
  * @return the normalized string
  */
-char *str_normalize(const char *str) NONULL;
+NODISCARD RET_STR
+char *str_normalize(IN_STR const char *str) NONULL;
 
 /**
  * @brief turn a string with length into a C string literal
@@ -105,7 +111,9 @@ char *str_normalize(const char *str) NONULL;
  * 
  * @return the normalized string
  */
-char *str_normalizen(const char *str, size_t len) CONSTFN NONULL;
+RESULT(strlen(return) == MIN(strlen(str), len))
+NODISCARD RET_STR
+char *str_normalizen(IN_STR const char *str, size_t len) CONSTFN NONULL;
 
 /**
  * @brief split a string into a vector by a separator
@@ -118,7 +126,9 @@ char *str_normalizen(const char *str, size_t len) CONSTFN NONULL;
  * 
  * @return the substrings
  */
-vector_t *str_split(const char *str, const char *sep) CONSTFN NONULL;
+ALWAYS(strlen(sep) > 0)
+NODISCARD RET_VALID
+vector_t *str_split(IN_STR const char *str, IN_STR const char *sep) CONSTFN NONULL;
 
 /**
  * @brief find the longest common prefix of a vector of paths
@@ -129,6 +139,8 @@ vector_t *str_split(const char *str, const char *sep) CONSTFN NONULL;
  * 
  * @return the common prefix
  */
+ALWAYS(args->used > 0)
+NODISCARD RET_STR
 const char *common_prefix(vector_t *args) CONSTFN NONULL;
 
 /**
@@ -139,7 +151,10 @@ const char *common_prefix(vector_t *args) CONSTFN NONULL;
  * 
  * @return the index of the last instance of @a sub in @a str, or SIZE_MAX if sub is not found
  */
-size_t str_rfind(const char *str, const char *sub) CONSTFN NONULL;
+ALWAYS(strlen(sub) > 0)
+RESULT(return <= strlen(str))
+NODISCARD
+size_t str_rfind(IN_STR const char *str, IN_STR const char *sub) CONSTFN NONULL;
 
 /**
  * @brief check if a string contains a substring
@@ -149,7 +164,9 @@ size_t str_rfind(const char *str, const char *sub) CONSTFN NONULL;
  * 
  * @return if @a sub is found in @a str
  */ 
-bool str_contains(const char *str, const char *sub) CONSTFN NONULL;
+ALWAYS(strlen(sub) > 0)
+NODISCARD
+bool str_contains(IN_STR const char *str, IN_STR const char *sub) CONSTFN NONULL;
 
 /**
  * @brief replace all instances of a substring in a string
@@ -160,7 +177,9 @@ bool str_contains(const char *str, const char *sub) CONSTFN NONULL;
  * 
  * @return a copy of @a str with all instances of @a sub replaced with @a repl
  */
-char *str_replace(const char *str, const char *sub, const char *repl) NONULL;
+ALWAYS(strlen(sub) > 0)
+NODISCARD RET_STR
+char *str_replace(IN_STR const char *str, IN_STR const char *sub, IN_STR const char *repl) NONULL;
 
 /**
  * @brief hash a string
@@ -169,7 +188,8 @@ char *str_replace(const char *str, const char *sub, const char *repl) NONULL;
  * 
  * @return the hash
  */
-size_t strhash(const char *str) CONSTFN NONULL;
+NODISCARD
+size_t strhash(IN_STR const char *str) CONSTFN NONULL;
 
 /**
  * @brief compare strings equality
@@ -181,7 +201,8 @@ size_t strhash(const char *str) CONSTFN NONULL;
  * 
  * @return if the strings are equal
  */
-bool str_equal(const char *lhs, const char *rhs) HOT CONSTFN NONULL;
+NODISCARD
+bool str_equal(IN_STR const char *lhs, IN_STR const char *rhs) HOT CONSTFN NONULL;
 
 /** @} */
 

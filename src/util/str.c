@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <stdint.h>
 
+USE_ANNOTATIONS
 char *format(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -17,15 +18,17 @@ char *format(const char *fmt, ...) {
     return str;
 }
 
+USE_ANNOTATIONS
 char *formatv(const char *fmt, va_list args) {
     /* make a copy of the args for the second format */
     va_list again;
     va_copy(again, args);
 
     /* get the number of bytes needed to format */
-    int len = vsnprintf(NULL, 0, fmt, args) + 1;
+    int len = vsnprintf(NULL, 0, fmt, args);
 
-    char *out = ctu_malloc(len);
+    CTASSERT(len > 0, "vsnprintf returned a negative value");
+    char *out = ctu_malloc(len + 1);
 
     vsnprintf(out, len, fmt, again);
 
@@ -51,10 +54,12 @@ char *ctu_filename(const char *path) {
     return ctu_noext(path + idx + 1);
 }
 
+USE_ANNOTATIONS
 bool str_startswith(const char *str, const char *prefix) {
     return strncmp(str, prefix, strlen(prefix)) == 0;
 }
 
+USE_ANNOTATIONS
 bool str_endswith(const char *str, const char *suffix) {
     size_t lenstr = strlen(str);
     size_t lensuffix = strlen(suffix);
@@ -65,8 +70,14 @@ bool str_endswith(const char *str, const char *suffix) {
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
+USE_ANNOTATIONS
 char *str_join(const char *sep, vector_t *parts) {
     size_t all = vector_len(parts);
+
+    if (all == 0) {
+        return ctu_strdup("");
+    }
+
     if (all == 1) {
         return vector_get(parts, 0);
     }
@@ -100,6 +111,7 @@ char *str_join(const char *sep, vector_t *parts) {
     return out;
 }
 
+USE_ANNOTATIONS
 char *str_repeat(const char *str, size_t times) {
     size_t len = strlen(str);
     size_t outlen = len * times;
@@ -156,6 +168,7 @@ static size_t normstr(char *out, char c) {
     return sprintf(out, "\\x%02x", c & 0xFF);
 }
 
+USE_ANNOTATIONS
 char *str_normalize(const char *str) {
     size_t len = 0;
     const char *temp = str;
@@ -173,6 +186,7 @@ char *str_normalize(const char *str) {
     return buf;
 }
 
+USE_ANNOTATIONS
 char *str_normalizen(const char *str, size_t len) {
     size_t outlen = 1;
     size_t actual = 0;
@@ -190,9 +204,9 @@ char *str_normalizen(const char *str, size_t len) {
     return buf;
 }
 
+USE_ANNOTATIONS
 vector_t *str_split(const char *str, const char *sep) {
     size_t seplen = strlen(sep);
-    CTASSERT(seplen > 0, "sep must not be empty");
     vector_t *result = vector_new(4);
 
     // store the start of the current token
@@ -219,6 +233,7 @@ vector_t *str_split(const char *str, const char *sep) {
     return result;
 }
 
+USE_ANNOTATIONS
 size_t strhash(const char *str) {
     size_t hash = 0;
 
@@ -230,25 +245,23 @@ size_t strhash(const char *str) {
     return hash;
 }
 
+USE_ANNOTATIONS
 bool str_contains(const char *str, const char *sub) {
-    CTASSERT(strlen(sub) > 0, "sub must not be empty");
-
     return strstr(str, sub) != NULL;
 }
 
+USE_ANNOTATIONS
 char *str_replace(const char *str, const char *sub, const char *repl) {
-    CTASSERT(strlen(sub) > 0, "sub must not be empty");
-
     vector_t *split = str_split(str, sub);
     return str_join(repl, split);
 }
 
+USE_ANNOTATIONS
 bool str_equal(const char *lhs, const char *rhs) {
     /* compare pointers as well for better perf
        with interned strings */
     return lhs == rhs || strcmp(lhs, rhs) == 0;
 }
-
 
 stream_t *stream_new(size_t size) {
     stream_t *out = ctu_malloc(sizeof(stream_t));

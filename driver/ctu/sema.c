@@ -54,7 +54,7 @@ static hlir_t *sema_array(sema_t *sema, ast_t *ast) {
 static hlir_t *sema_closure(sema_t *sema, ast_t *ast) {
     hlir_t *result = sema_type(sema, ast->result);
     size_t len = vector_len(ast->params);
-    vector_t *params = vector_new(len);
+    vector_t *params = vector_of(len);
 
     for (size_t i = 0; i < len; i++) {
         ast_t *param = vector_get(ast->params, i);
@@ -91,7 +91,7 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
                 continue;
             }
 
-            set_add(names, name);
+            (void)set_add(names, name);
         }
 
         hlir_t *type = sema_type(sema, field->field);

@@ -8,7 +8,7 @@
  * @brief a node in a chain of set entries
  */
 typedef struct item_t {
-    const char *key; ///< the key to this bucket
+    FIELD_STR const char *key; ///< the key to this bucket
     struct item_t *next; ///< the next bucket in the chain
 } item_t;
 
@@ -16,7 +16,10 @@ typedef struct item_t {
  * @brief a hashset of strings
  */
 typedef struct {
+    FIELD_RANGE(>, 0)
     size_t size; ///< the number of buckets
+    
+    FIELD_SIZE(size)
     item_t items[]; ///< the buckets
 } set_t;
 
@@ -26,7 +29,8 @@ typedef struct {
  * @param size the number of buckets
  * @return the created set
  */
-NODISCARD RESULT_VALID
+RESULT(return->size >= size)
+NODISCARD RET_VALID
 set_t *set_new(IN_RANGE(>, 0) size_t size);
 
 /**
@@ -43,11 +47,8 @@ void set_delete(IN_NOTNULL set_t *set);
  * @param key the key to add
  * @return a pointer to the deduplicated key
  */
-RESULT_NOTNULL_STRING
-const char* set_add(
-    IN_NOTNULL set_t *set, 
-    IN_NOTNULL_STRING const char *key
-);
+NODISCARD RET_STR
+const char* set_add(IN_NOTNULL set_t *set, IN_STR const char *key);
 
 /**
  * @brief check if a set contains a key
@@ -57,7 +58,4 @@ const char* set_add(
  * @return true if the set contains the key
  */
 NODISCARD
-bool set_contains(
-    IN_NOTNULL set_t *set, 
-    IN_NOTNULL_STRING const char *key
-);
+bool set_contains(IN_NOTNULL set_t *set, IN_STR const char *key);

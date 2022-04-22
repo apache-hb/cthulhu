@@ -19,8 +19,8 @@ static item_t *get_bucket(set_t *set, const char *key) {
     return &set->items[index];
 }
 
-NODISCARD RESULT_VALID
-set_t *set_new(IN_RANGE(>, 0) size_t size) {    
+USE_ANNOTATIONS
+set_t *set_new(size_t size) {    
     size_t bytes = set_size(size);
 
     set_t *set = ctu_malloc(bytes);
@@ -33,7 +33,8 @@ set_t *set_new(IN_RANGE(>, 0) size_t size) {
     return set;
 }
 
-void set_delete(IN_NOTNULL set_t *set) {
+USE_ANNOTATIONS
+void set_delete(set_t *set) {
     for (size_t i = 0; i < set->size; i++) {
         item_t *item = &set->items[i];
         while (item->next != NULL) {
@@ -46,8 +47,8 @@ void set_delete(IN_NOTNULL set_t *set) {
     ctu_free(set);
 }
 
-RESULT_NOTNULL_STRING
-const char* set_add(IN_NOTNULL set_t *set, IN_NOTNULL_STRING const char *key) {
+USE_ANNOTATIONS
+const char* set_add(set_t *set, const char *key) {
     item_t *item = get_bucket(set, key);
 
     while (true) {
@@ -69,8 +70,8 @@ const char* set_add(IN_NOTNULL set_t *set, IN_NOTNULL_STRING const char *key) {
     } 
 }
 
-NODISCARD
-bool set_contains(IN_NOTNULL set_t *set, IN_NOTNULL_STRING const char *key) {
+USE_ANNOTATIONS
+bool set_contains(set_t *set, const char *key) {
     item_t *item = get_bucket(set, key);
 
     while (true) {

@@ -41,6 +41,10 @@ see https://www.gnu.org/licenses/.  */
    mpn/generic/sbpi1_div_qr.c, mpn/generic/sub_n.c,
    mpn/generic/submul_1.c. */
 
+#ifdef _WIN32
+# pragma warning(push, 0)
+#endif
+
 #include <assert.h>
 #include <ctype.h>
 #include <limits.h>

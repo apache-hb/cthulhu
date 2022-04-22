@@ -47,7 +47,6 @@ static bucket_t *get_bucket(map_t *map, size_t hash) {
     return entry;
 }
 
-/* find which bucket a key should be in */
 HOT static bucket_t *map_bucket(map_t *map, const char *key) {
     size_t hash = strhash(key);
     return get_bucket(map, hash);
@@ -70,6 +69,14 @@ HOT static void *entry_get_ptr(const bucket_t *entry, const void *key, void *oth
     return other;
 }
 
+static void clear_keys(bucket_t *buckets, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        buckets[i].key = NULL;
+        buckets[i].next = NULL;
+    }
+}
+
+USE_ANNOTATIONS
 void map_set_ptr(map_t *map, const void *key, void *value) {
     bucket_t *entry = map_bucket_ptr(map, key);
 
@@ -94,27 +101,19 @@ void map_set_ptr(map_t *map, const void *key, void *value) {
     }
 }
 
+USE_ANNOTATIONS
 void *map_get_ptr(map_t *map, const void *key) {
     return map_get_ptr_default(map, key, NULL);
 }
 
+USE_ANNOTATIONS
 void *map_get_ptr_default(map_t *map, const void *key, void *other) {
     bucket_t *bucket = map_bucket_ptr(map, key);
     return entry_get_ptr(bucket, key, other);
 }
 
-static void clear_keys(bucket_t *buckets, size_t size) {
-    for (size_t i = 0; i < size; i++) {
-        buckets[i].key = NULL;
-        buckets[i].next = NULL;
-    }
-}
-
-// map public api
-
+USE_ANNOTATIONS
 map_t *map_new(size_t size) {
-    CTASSERT(size > 0, "map size must be greater than 0");
-
     map_t *map = ctu_malloc(sizeof_map(size));
 
     map->size = size;
@@ -124,15 +123,18 @@ map_t *map_new(size_t size) {
     return map;
 }
 
+USE_ANNOTATIONS
 void *map_get_default(map_t *map, const char *key, void *other) {
     bucket_t *bucket = map_bucket(map, key);
     return entry_get(bucket, key, other);
 }
 
+USE_ANNOTATIONS
 void *map_get(map_t *map, const char *key) {
     return map_get_default(map, key, NULL);
 }
 
+USE_ANNOTATIONS
 void map_set(map_t *map, const char *key, void *value) {
     bucket_t *entry = map_bucket(map, key);
 
@@ -158,6 +160,7 @@ void map_set(map_t *map, const char *key, void *value) {
     }
 }
 
+USE_ANNOTATIONS
 vector_t *map_values(map_t *map) {
     vector_t *result = vector_new(map->size);
 

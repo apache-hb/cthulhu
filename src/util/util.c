@@ -85,22 +85,26 @@ static void tuning_free(void *ptr) {
 #   define FREE(ptr) free(ptr)
 #endif
 
+USE_ANNOTATIONS
 void *ctu_malloc(size_t size) {
     void *ptr = MALLOC(size);
     CTASSERTF(ptr != NULL, "ctu-malloc of %zu bytes failed", size);
     return ptr;
 }
 
+USE_ANNOTATIONS
 void *ctu_realloc(void *ptr, size_t size) {
     void *data = REALLOC(ptr, size);
     CTASSERT(data != NULL, "ctu-realloc failed");
     return data;
 }
 
+USE_ANNOTATIONS
 void ctu_free(void *ptr) {
     FREE(ptr);
 }
 
+USE_ANNOTATIONS
 void *ctu_box(const void *ptr, size_t size) {
     void *box = ctu_malloc(size);
     memcpy(box, ptr, size);
@@ -129,6 +133,7 @@ void init_gmp(void) {
     );
 }
 
+USE_ANNOTATIONS
 char *ctu_strdup(const char *str) {
     size_t len = strlen(str) + 1;
     char *out = ctu_malloc(len);
@@ -136,6 +141,7 @@ char *ctu_strdup(const char *str) {
     return out;
 }
 
+USE_ANNOTATIONS
 char *ctu_strndup(const char *str, size_t len) {
     char *out = ctu_malloc(len + 1);
     memcpy(out, str, len);
@@ -143,6 +149,7 @@ char *ctu_strndup(const char *str, size_t len) {
     return out;
 }
 
+USE_ANNOTATIONS
 void *ctu_memdup(const void *ptr, size_t size) {
     void *out = ctu_malloc(size);
     memcpy(out, ptr, size);

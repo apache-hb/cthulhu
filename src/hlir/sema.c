@@ -121,7 +121,7 @@ static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *
         break;
     }
 
-    vector_drop(stack);
+    vector_drop(*stack);
 }
 
 typedef struct {
@@ -233,7 +233,7 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
         break;
     }
 
-    vector_drop(stack);
+    vector_drop(*stack);
 }
 
 void check_module(reports_t *reports, hlir_t *mod) {

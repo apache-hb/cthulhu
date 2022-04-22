@@ -60,7 +60,7 @@ void begin_save(data_t *out, header_t header) {
     out->strings = stream_new(0x1000);
     out->arrays = stream_new(0x1000);
     out->stream = stream_new(0x1000);
-    out->cache = map_new(MAP_MASSIVE);
+    out->cache = map_new(1007); // TODO: carry some more data around to better tune this
 
     out->records = ctu_malloc(sizeof(stream_t*) * len);
     out->counts = ctu_malloc(sizeof(size_t) * len);

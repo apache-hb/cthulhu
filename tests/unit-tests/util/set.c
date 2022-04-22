@@ -16,7 +16,7 @@ static const char *ITEMS[] = {
 TEST(test_set_clashes, {
     set_t *set = set_new(3);
     for (size_t i = 0; i < TOTAL_ITEMS; i++) {
-        set_add(set, ITEMS[i]);
+        (void)set_add(set, ITEMS[i]);
     }
 
     for (size_t i = 0; i < TOTAL_ITEMS; i++) {

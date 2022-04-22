@@ -7,7 +7,6 @@
 #   include <stdatomic.h>
 #endif
 
-#include "sizes.h"
 #include "macros.h"
 
 /**
@@ -20,7 +19,7 @@
  * 
  * @param ptr a pointer to valid memory allocated from @ref ctu_malloc
  */
-void ctu_free(void *ptr) NONULL;
+void ctu_free(IN_NOTNULL POST_INVALID void *ptr) NONULL;
 
 /**
  * @brief allocate memory
@@ -32,7 +31,8 @@ void ctu_free(void *ptr) NONULL;
  * 
  * @return the allocated memory
  */
-void *ctu_malloc(size_t size) ALLOC(ctu_free);
+NODISCARD POST_WRITEABLE(size)
+void *ctu_malloc(IN_RANGE(>, 0) size_t size) ALLOC(ctu_free);
 
 /**
  * @brief reallocate memory
@@ -47,7 +47,8 @@ void *ctu_malloc(size_t size) ALLOC(ctu_free);
  * 
  * @return the reallocated pointer
  */
-void *ctu_realloc(void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
+NODISCARD POST_WRITEABLE(size)
+void *ctu_realloc(POST_INVALID IN_READS(size) void *ptr, IN_RANGE(>, 0) size_t size) NOTNULL(1) ALLOC(ctu_free);
 
 /**
  * @brief allocate a copy of a string
@@ -59,7 +60,8 @@ void *ctu_realloc(void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
  * 
  * @return the allocated copy of the string
  */
-char *ctu_strdup(const char *str) NONULL ALLOC(ctu_free);
+NODISCARD RET_STR
+char *ctu_strdup(IN_STR const char *str) NONULL ALLOC(ctu_free);
 
 /**
  * @brief allocate a copy of a string with a maximum length
@@ -72,7 +74,8 @@ char *ctu_strdup(const char *str) NONULL ALLOC(ctu_free);
  * 
  * @return the allocated copy of the string
  */
-char *ctu_strndup(const char *str, size_t len) NONULL ALLOC(ctu_free);
+NODISCARD RET_STR
+char *ctu_strndup(IN_READS(MIN(strlen(str), len)) const char *str, size_t len) NONULL ALLOC(ctu_free);
 
 /**
  * @brief duplicate a memory region
@@ -86,7 +89,8 @@ char *ctu_strndup(const char *str, size_t len) NONULL ALLOC(ctu_free);
  * 
  * @return the duplicated memory
  */
-void *ctu_memdup(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
+NODISCARD POST_WRITEABLE(size)
+void *ctu_memdup(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size) NOTNULL(1) ALLOC(ctu_free);
 
 /** @} */
 
@@ -105,9 +109,9 @@ void init_gmp(void);
  * 
  * @see BOX should be used to use this
  */
-void *ctu_box(const void *ptr, size_t size) NOTNULL(1) ALLOC(ctu_free);
+NODISCARD POST_WRITEABLE(size)
+void *ctu_box(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size) NOTNULL(1) ALLOC(ctu_free);
 #define BOX(name) ctu_box(&name, sizeof(name)) ///< box a value onto the heap from the stack
-
 
 #if ENABLE_TUNING
 
