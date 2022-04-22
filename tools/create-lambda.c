@@ -1,7 +1,6 @@
 #include "miniz/miniz.h"
 
 #include <stdlib.h>
-#include <stdnoreturn.h>
 
 const char *boostrap = 
     "#!/bin/sh\n" // set the shebang

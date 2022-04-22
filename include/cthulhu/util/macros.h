@@ -46,25 +46,25 @@
 #   define BEGIN_PACKED(align)
 #   define END_PACKED
 #   define PACKED(align) __attribute__((aligned(align), packed))
-#   define NORETURN _Noreturn
+#   define NORETURN _Noreturn void
 #elif defined(__GNUC__)
 #   define ASSUME(expr) do { if (!(expr)) __builtin_unreachable(); } while (0)
 #   define BEGIN_PACKED(align)
 #   define END_PACKED
 #   define PACKED(align) __attribute__((aligned(align), packed))
-#   define NORETURN _Noreturn
+#   define NORETURN _Noreturn void
 #elif defined(_MSC_VER)
 #   define ASSUME(expr) __assume(expr)
 #   define BEGIN_PACKED(align) __pragma(pack(push, align))
 #   define END_PACKED __pragma(pack(pop))
 #   define PACKED(align)
-#   define NORETURN __declspec(noreturn)
+#   define NORETURN __declspec(noreturn) void
 #else
 #   define ASSUME(expr)
 #   define BEGIN_PACKED(align) _Pragma("warning \"current compiler doesnt support packing\"")
 #   define END_PACKED
 #   define PACKED(align)
-#   define NORETURN
+#   define NORETURN void
 #endif
 
 #define UNREACHABLE() ASSUME(false)
@@ -132,8 +132,7 @@
 #   define PATH_LEN PATH_MAX
 #endif
 
-NORETURN
-void ctpanic(const char *msg, ...);
+NORETURN ctpanic(const char *msg, ...);
 
 #if !defined(NDEBUG) && !defined(_NDEBUG)
 #   define CTASSERT(expr, msg) do { if (!(expr)) { ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" __FILE__ ":" STR(__LINE__) "]: " msg "\n"); } } while (0)
