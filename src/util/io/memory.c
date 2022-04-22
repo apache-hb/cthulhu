@@ -73,7 +73,6 @@ static file_ops_t OPS = {
 
 void memory_close(file_t *file) {
     ctu_free(SELF(file)->data);
-    ctu_free(file);
 }
 
 void memory_open(file_t **file, const char *name, size_t size, contents_t format, access_t access) {

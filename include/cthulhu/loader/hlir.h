@@ -22,3 +22,5 @@ hlir_t *load_module(reports_t *reports, const char *path);
  * @param path where to save the module
  */
 void save_module(reports_t *reports, save_settings_t *settings, hlir_t *module, const char *path);
+
+bool is_hlir_module(const char *path);

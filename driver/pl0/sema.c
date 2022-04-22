@@ -18,11 +18,17 @@ static hlir_t *FMT;
 static const hlir_attributes_t *IMPORTED;
 static const hlir_attributes_t *EXPORTED;
 
+static const hlir_attributes_t *CONST;
+static const hlir_attributes_t *VAR;
+
 void pl0_init(void) {
     const node_t *node = node_builtin();
 
     IMPORTED = hlir_linkage(LINK_IMPORTED);
     EXPORTED = hlir_linkage(LINK_EXPORTED);
+
+    CONST = hlir_attributes(LINK_EXPORTED, TAG_CONST);
+    VAR = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS);
 
     INTEGER = hlir_digit(node, "integer", DIGIT_INT, SIGN_DEFAULT);
     BOOLEAN = hlir_bool(node, "boolean");
@@ -171,6 +177,16 @@ static hlir_t *sema_assign(sema_t *sema, pl0_t *node) {
     hlir_t *dst = get_var(sema, node->dst);
     hlir_t *src = sema_expr(sema, node->src);
 
+    if (dst == NULL) {
+        return hlir_error(node->node, "unresolved variable");
+    }
+
+    const hlir_attributes_t *attrs = get_hlir_attributes(dst);
+
+    if (attrs->tags & TAG_CONST) {
+        report(sema->reports, ERROR, node->node, "cannot assign to constant value");
+    }
+
     return hlir_assign(node->node, dst, src);
 }
 
@@ -263,7 +279,7 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node) {
     hlir_build_function(hlir, body);
 }
 
-static void insert_module(sema_t *sema, vector_t **globals, vector_t **procs, pl0_t *name, hlir_t *hlir) {
+static void insert_module(sema_t *sema, vector_t **globals, vector_t **consts, vector_t **procs, pl0_t *name, hlir_t *hlir) {
     if (!hlir_is(hlir, HLIR_MODULE)) {
         report(sema->reports, ERROR, name->node, "cannot load corrupted module `%s`", name->ident);
         return;
@@ -272,11 +288,22 @@ static void insert_module(sema_t *sema, vector_t **globals, vector_t **procs, pl
     size_t nglobals = vector_len(hlir->globals);
     size_t nprocs = vector_len(hlir->functions);
 
-    // TODO: seperate global consts and global vars
     for (size_t i = 0; i < nglobals; i++) {
         hlir_t *global = vector_get(hlir->globals, i);
-        set_var(sema, TAG_VALUES, get_hlir_name(global), global);
-        vector_push(globals, global);
+        const hlir_attributes_t *attribs = get_hlir_attributes(global);
+        vector_t **dst;
+        tag_t tag;
+
+        if (attribs->tags & TAG_CONST) {
+            dst = consts;
+            tag = TAG_CONSTS;
+        } else {
+            dst = globals;
+            tag = TAG_VALUES;
+        }
+
+        set_var(sema, tag, get_hlir_name(global), global);
+        vector_push(dst, global);
     }
 
     for (size_t i = 0; i < nprocs; i++) {
@@ -309,14 +336,20 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     // forward declare everything
     for (size_t i = 0; i < nconsts; i++) {
         pl0_t *it = vector_get(root->consts, i);
+
         hlir_t *hlir = hlir_begin_global(it->node, it->name, INTEGER);
+        hlir_set_attributes(hlir, CONST);
+
         set_var(sema, TAG_CONSTS, it->name, hlir);
         vector_push(&consts, hlir);
     }
 
     for (size_t i = 0; i < nglobals; i++) {
         pl0_t *it = vector_get(root->globals, i);
+
         hlir_t *hlir = hlir_begin_global(it->node, it->name, INTEGER);
+        hlir_set_attributes(hlir, VAR);
+
         set_var(sema, TAG_VALUES, it->name, hlir);
         vector_push(&globals, hlir);
     }
@@ -328,7 +361,10 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
             .result = VOID,
             .variadic = false
         };
+        
         hlir_t *hlir = hlir_begin_function(it->node, it->name, signature);
+        hlir_set_attributes(hlir, EXPORTED);
+
         set_proc(sema, it->name, hlir);
         vector_push(&procs, hlir);
     }
@@ -342,7 +378,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
             continue;
         }
 
-        insert_module(sema, &globals, &procs, name, lib);
+        insert_module(sema, &globals, &consts, &procs, name, lib);
     }
 
     // compile everything

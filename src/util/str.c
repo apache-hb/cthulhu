@@ -23,10 +23,9 @@ char *formatv(const char *fmt, va_list args) {
     va_copy(again, args);
 
     /* get the number of bytes needed to format */
-    int len = vsnprintf(NULL, 0, fmt, args);
+    int len = vsnprintf(NULL, 0, fmt, args) + 1;
 
-    CTASSERT(len > 0, "vsnprintf returned a negative value");
-    char *out = ctu_malloc(len + 1);
+    char *out = ctu_malloc(len);
 
     vsnprintf(out, len, fmt, again);
 

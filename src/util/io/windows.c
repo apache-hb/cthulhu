@@ -198,7 +198,6 @@ void platform_close(file_t *file) {
         FlushFileBuffers(self->handle);
     }
     CloseHandle(self->handle);
-    ctu_free(file);
 }
 
 void platform_open(file_t **file, const char *path, contents_t format, access_t access) {

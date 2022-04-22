@@ -320,7 +320,7 @@ static const layout_t MODULE_LAYOUT = LAYOUT("module", MODULE_FIELDS);
 ///
 /// final type table
 ///
-#if 0
+
 static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
     [SPAN_INDEX] = SPAN_LAYOUT,
     [ATTRIBUTE_INDEX] = ATTRIB_LAYOUT,
@@ -360,13 +360,9 @@ static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
     [HLIR_MODULE] = MODULE_LAYOUT
 };
 
-static const format_t GLOBAL = {
-    .header = &HEADER_LAYOUT,
-    .types = LAYOUTS_TOTAL,
-    .layouts = ALL_TYPES
-};
-#endif
+static const format_t GLOBAL = FORMAT(&HEADER_LAYOUT, ALL_TYPES);
 
+#if 0
 static format_t *get_format(void) {
     layout_t *all_types = ctu_malloc(sizeof(layout_t) * LAYOUTS_TOTAL);
 
@@ -415,6 +411,7 @@ static format_t *get_format(void) {
 
     return BOX(fmt);
 }
+#endif
 
 #define HLIR_SUBMAGIC 0x484C4952 // 'HLIR'
 #define HLIR_VERSION NEW_VERSION(CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH)
@@ -901,7 +898,7 @@ hlir_t *load_module(reports_t *reports, const char *path) {
 
     header_t header = { 
         .reports = reports,
-        .format = get_format(),
+        .format = &GLOBAL,
         .path = path,
         .header = record,
         .submagic = HLIR_SUBMAGIC,
@@ -1380,7 +1377,7 @@ void save_module(reports_t *reports, save_settings_t *settings, hlir_t *module, 
 
     header_t header = { 
         .reports = reports,
-        .format = get_format(),
+        .format = &GLOBAL,
         .path = path,
         .header = record,
         .submagic = HLIR_SUBMAGIC,
@@ -1393,4 +1390,8 @@ void save_module(reports_t *reports, save_settings_t *settings, hlir_t *module, 
     save_node(&data, module);
 
     end_save(&data);
+}
+
+bool is_hlir_module(const char *path) {
+    return is_loadable(path, HLIR_SUBMAGIC, HLIR_VERSION);
 }

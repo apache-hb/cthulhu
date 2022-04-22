@@ -31,6 +31,7 @@ static bool has_attribs(hlir_kind_t kind) {
     switch (kind) {
     case HLIR_FUNCTION:
     case HLIR_GLOBAL:
+    case HLIR_LOCAL:
         return true;
 
     default:

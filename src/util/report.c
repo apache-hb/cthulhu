@@ -110,7 +110,6 @@ static char *extract_line(const scan_t *scan, line_t line) {
      * while windows line endings might technically be more correct
      * it doesnt make them any less painful to handle
      */
-    CTASSERT(len > 0, "len is 0");
     char *str = ctu_malloc(len + 1);
     char *out = str;
     for (size_t i = 0; i < len; i++) {

@@ -23,7 +23,7 @@ static void print_version(driver_t driver) {
 }
 
 static void print_help(const char **argv) {
-    printf("usage: %s <file> [options...]\n", argv[0]);
+    printf("usage: %s <files & objects...> [options...]\n", argv[0]);
     printf("general options:\n");
     printf("  -h, --help        : print this help message\n");
     printf("  -v, --version     : print version information\n");
@@ -33,7 +33,6 @@ static void print_help(const char **argv) {
     printf("  -t, --target      : set output format\n");
     printf("                    | options: c89, wasm\n");
     printf("                    | default: c89\n");
-    printf("  -P, --search      : add library search path\n");
     printf("---\n");
     printf("warning options:\n");
     printf("  -Wlimit=<digit>   : set warning limit\n");
@@ -189,20 +188,6 @@ static target_t parse_target(reports_t *reports, const char *target) {
     return OUTPUT_C89;
 }
 
-static vector_t *search_paths = NULL;
-
-static void add_search_path(const char *path) {
-    vector_push(&search_paths, ctu_strdup(path));
-}
-
-static void init_search_path(const char *stdlib) {
-    search_paths = vector_new(32);
-
-    if (stdlib != NULL) {
-        add_search_path(stdlib);
-    }
-}
-
 int common_main(int argc, const char **argv, driver_t driver) {
     if (find_arg(argc, argv, "--version", "-v")) {
         print_version(driver);
@@ -220,13 +205,6 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     reports_t *reports = begin_reports();
     int status = EXIT_INTERAL;
-
-    init_search_path(driver.stdlib_path);
-
-    vector_t *extra_paths = collect_args(argc, argv, "-P", "--search");
-    for (size_t i = 0; i < vector_len(extra_paths); i++) {
-        add_search_path(vector_get(extra_paths, i));
-    }
 
     if (argc < 2) {
         report(reports, ERROR, NULL, "no file specified");

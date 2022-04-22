@@ -1,0 +1,12 @@
+module main;
+
+import constant;
+
+procedure entry;
+begin
+    C := 5;
+    ! C
+end;
+
+call entry
+.

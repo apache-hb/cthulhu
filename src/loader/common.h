@@ -34,3 +34,4 @@ size_t layout_size(layout_t layout);
 
 void begin_data(data_t *data, header_t header);
 void end_data(data_t *data);
+bool is_loadable(const char *path, uint32_t submagic, uint32_t version);

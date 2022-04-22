@@ -1,0 +1,5 @@
+module constant;
+
+const C = 25;
+
+.

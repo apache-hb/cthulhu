@@ -29,8 +29,6 @@ typedef struct {
     parse_t parse;
     analyze_t sema;
     build_module_t build;
-
-    const char *stdlib_path;
 } driver_t;
 
 /**

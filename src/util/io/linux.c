@@ -87,7 +87,6 @@ static const file_ops_t OPS = {
 void platform_close(file_t *file) {
     unix_file_t *self = SELF(file);
     fclose(self->file);
-    ctu_free(file);
 }
 
 void platform_open(file_t **file, const char *path, contents_t format, access_t access) {

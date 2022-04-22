@@ -65,6 +65,35 @@ static void read_data(data_t *in, const record_t *record, size_t offset) {
     }
 }
 
+static const char *compatible_version(uint32_t file, uint32_t expected) {
+    if (VERSION_MAJOR(expected) != VERSION_MAJOR(file)) {
+        return "major";
+    }
+
+    if (VERSION_MINOR(expected) != VERSION_MINOR(file)) {
+        return "minor";
+    }
+
+    return NULL;
+}
+
+bool is_loadable(const char *path, uint32_t submagic, uint32_t version) {
+    file_t *file = file_new(path, BINARY, READ);
+    if (!file_ok(file)) { return false; }
+
+    basic_header_t basic;
+    size_t read = file_read_bytes(file, &basic, sizeof(basic_header_t));
+    if (read < sizeof(basic_header_t)) { return false; }
+
+    if (basic.magic != FILE_MAGIC) { return false; }
+    if (basic.submagic != submagic) { return false; }
+    if (compatible_version(basic.semver, version) != NULL) { return false; }
+
+    file_close(file);
+
+    return true;
+}
+
 #define NUM_TYPES(header) (header.format->types)
 
 bool begin_load(data_t *in, header_t header) {
@@ -100,13 +129,12 @@ bool begin_load(data_t *in, header_t header) {
         return false;
     }
 
-    if (VERSION_MAJOR(basic.semver) != VERSION_MAJOR(header.semver)) {
-        report(header.reports, ERROR, NULL, "[%s] invalid major version. found %d, expected %d", path, VERSION_MAJOR(basic.semver), VERSION_MAJOR(header.semver));
-        return false;
-    }
-
-    if (VERSION_MINOR(basic.semver) != VERSION_MINOR(header.semver)) {
-        report(header.reports, ERROR, NULL, "[%s] invalid minor version. found %d, expected %d", path, VERSION_MINOR(basic.semver), VERSION_MINOR(header.semver));
+    const char *err = compatible_version(basic.semver, header.semver);
+    if (err != NULL) {
+        report(header.reports, ERROR, NULL, "[%s] incompatible version. found %d.%d.%d, expected %d.%d.%d", path, 
+            VERSION_MAJOR(basic.semver), VERSION_MINOR(basic.semver), VERSION_PATCH(basic.semver), 
+            VERSION_MAJOR(header.semver), VERSION_MINOR(header.semver), VERSION_PATCH(header.semver)
+        );
         return false;
     }
 
