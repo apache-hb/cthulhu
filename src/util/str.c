@@ -236,12 +236,6 @@ bool str_contains(const char *str, const char *sub) {
     return strstr(str, sub) != NULL;
 }
 
-char *ctu_strerror(int err) {
-    char *buf = ctu_malloc(256);
-    STRERROR_R(err, buf, 256);
-    return buf;
-}
-
 char *str_replace(const char *str, const char *sub, const char *repl) {
     CTASSERT(strlen(sub) > 0, "sub must not be empty");
 

@@ -6,6 +6,10 @@
 %expect 0
 %define api.prefix {ctu}
 
+%code top {
+    #include "cthulhu/ast/interop.h"
+}
+
 %code requires {
     #define YYSTYPE CTUSTYPE
     #define YYLTYPE CTULTYPE
@@ -16,7 +20,6 @@
 
 %{
 #include "scan.h"
-
 int ctulex();
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}

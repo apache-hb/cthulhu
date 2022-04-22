@@ -4,6 +4,40 @@
 #   error __APPLE__
 #endif
 
+#if __has_include(<sal.h>)
+#   include <sal.h>
+#   define DISABLE_SAL __pragma(warning(push, 1)) \
+    __pragma(warning(disable : 6011 6240 6262 6387 28199 28278))
+#   define NODISCARD _Must_inspect_result_ 
+#   define IN_RANGE(lhs, rhs) _In_range_(lhs, rhs)
+
+#   define IN_NOTNULL _In_
+#   define IN_NULLABLE _In_opt_
+#   define IN_NOTNULL_STRING _In_z_
+#   define IN_NULLABLE_STRING _In_z_opt_
+
+#   define RESULT_NOTNULL _Ret_notnull_
+#   define RESULT_NULLABLE _Ret_maybenull_
+#   define RESULT_VALID _Ret_valid_
+#   define RESULT_NOTNULL_STRING _Ret_z_
+#   define RESULT_NULLABLE_STRING _Ret_maybenull_z_
+#else
+#   define DISABLE_SAL
+#   define NODISCARD
+#   define IN_RANGE(lhs, rhs)
+
+#   define IN_NOTNULL
+#   define IN_NULLABLE
+#   define IN_NOTNULL_STRING
+#   define IN_NULLABLE_STRING
+
+#   define RESULT_NOTNULL
+#   define RESULT_NULLABLE
+#   define RESULT_VALID
+#   define RESULT_NOTNULL_STRING
+#   define RESULT_NULLABLE_STRING 
+#endif
+
 /// decorators with meaning to the compiler
 #if __GNUC__ >= 11
 #   define PRINT(fmt, args) __attribute__((format(printf, fmt, args)))
@@ -23,17 +57,6 @@
 #   define HOT
 #   define ALLOC(release)
 #   define POISON(...)
-#endif
-
-#if __has_include(<sal.h>)
-#   include <sal.h>
-#   define DISABLE_SAL __pragma(warning(push)) __pragma(warning(disable : 6011 6387))
-#   define NODISCARD _Must_inspect_result_ 
-#   define IN_RANGE(lhs, rhs) _In_range_(lhs, rhs)
-#elif __GNUC__ >= 11
-#   define DISABLE_SAL
-#   define NODISCARD
-#   define IN_RANGE(lhs, rhs)
 #endif
 
 /**
@@ -158,14 +181,10 @@
 
 #if CTU_WINDOWS
 #   define ALLOCA(size) _alloca(size)
-#   define STRTOK_R(str, delim, save) strtok_s(str, delim, save)
-#   define STRERROR_R(err, buf, len) strerror_s(buf, len, err)
 #   define PATH_LEN MAX_PATH
 #else 
 #   include <alloca.h>
 #   define ALLOCA(size) alloca(size)
-#   define STRTOK_R(str, delim, save) strtok_r(str, delim, save)
-#   define STRERROR_R(err, buf, len) strerror_r(err, buf, len)
 #   define PATH_LEN PATH_MAX
 #endif
 

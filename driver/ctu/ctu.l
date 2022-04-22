@@ -12,9 +12,6 @@
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/report-ext.h"
 #include "cthulhu/ast/interop.h"
-#include "cthulhu/util/macros.h"
-
-DISABLE_SAL
 %}
 
 %x COMMENT

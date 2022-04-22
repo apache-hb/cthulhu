@@ -1,9 +1,12 @@
+#define COMPILER_SOURCE 1
+
+#include "cthulhu/util/error.h"
+#include "cthulhu/ast/interop.h"
+#include "cthulhu/ast/compile.h"
+
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/macros.h"
-
-#include "cthulhu/ast/compile.h"
-#include "cthulhu/ast/interop.h"
 
 #include <errno.h>
 #include <string.h>
@@ -38,7 +41,8 @@ scan_t scan_file(reports_t *reports, const char *language, file_t *file) {
     };
 
     if (text == NULL) {
-        report(reports, ERROR, NULL, "failed to map file: %s", ctu_strerror(errno));
+        ctu_errno_t err = ctu_last_error();
+        report(reports, ERROR, NULL, "failed to map file: %s", ctu_err_string(err));
     }
 
     scan.data = file;

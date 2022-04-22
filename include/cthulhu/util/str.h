@@ -163,14 +163,6 @@ bool str_contains(const char *str, const char *sub) CONSTFN NONULL;
 char *str_replace(const char *str, const char *sub, const char *repl) NONULL;
 
 /**
- * @brief turn an errno code into a string
- * 
- * @param err the errno code
- * @return the string representation of @a err
- */
-char *ctu_strerror(int err) CONSTFN;
-
-/**
  * @brief hash a string
  * 
  * @param str the string to hash

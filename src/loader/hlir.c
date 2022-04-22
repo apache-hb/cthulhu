@@ -941,10 +941,10 @@ static index_t save_span(data_t *data, const node_t *node) {
     if (node == NULL) { return NULL_INDEX; }
 
     value_t values[FIELDLEN(SPAN_FIELDS)] = {
-        [SPAN_FIRST_LINE] = int_value(node->where.first_line),
-        [SPAN_FIRST_COLUMN] = int_value(node->where.first_column),
-        [SPAN_LAST_LINE] = int_value(node->where.last_line),
-        [SPAN_LAST_COLUMN] = int_value(node->where.last_column)
+        [SPAN_FIRST_LINE] = int_value((long)node->where.first_line),
+        [SPAN_FIRST_COLUMN] = int_value((long)node->where.first_column),
+        [SPAN_LAST_LINE] = int_value((long)node->where.last_line),
+        [SPAN_LAST_COLUMN] = int_value((long)node->where.last_column)
     };
     
     return write_entry(data, SPAN_INDEX, values);
@@ -1213,7 +1213,7 @@ static index_t save_local_node(data_t *data, const hlir_t *hlir) {
         [LOCAL_ATTRIBS] = attrib_ref(data, hlir),
         [LOCAL_NAME] = string_value(hlir->name),
         [LOCAL_TYPE] = make_ref(data, get_hlir_type(hlir)),
-        [LOCAL_INDEX] = int_value(hlir->index)
+        [LOCAL_INDEX] = int_value((long)hlir->index)
     };
     
     return write_entry(data, HLIR_LOCAL, values);

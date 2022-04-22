@@ -1,3 +1,5 @@
+#include "cthulhu/util/error.h"
+
 #include "cthulhu/driver/driver.h"
 
 #include "cthulhu/hlir/init.h"
@@ -261,7 +263,8 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     file_t *file = file_new(path, TEXT, READ);
     if (!file_ok(file)) {
-        report(reports, ERROR, NULL, "failed to open file: %s (errno %d)", ctu_strerror(errno), errno);
+        ctu_errno_t error = ctu_last_error();
+        report(reports, ERROR, NULL, "failed to open file: %s", ctu_err_string(error));
         return end_reports(reports, limit, "command line parsing");
     }
 

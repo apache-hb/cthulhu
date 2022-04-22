@@ -1,4 +1,5 @@
 #include "cthulhu/util/str.h"
+#include "cthulhu/util/io.h"
 #include "test.h"
 
 #include <string.h>
@@ -166,11 +167,11 @@ TEST(test_string_common_prefix, {
     SHOULD_PASS("no common prefix", str_equal(no_common_prefix, ""));
 
     vector_t *common = vector_of(2);
-    vector_set(common, 0, "hello/stuff");
-    vector_set(common, 1, "hello/world");
+    vector_set(common, 0, "hello" PATH_SEP "stuff");
+    vector_set(common, 1, "hello" PATH_SEP" world");
 
     const char *some_prefix = common_prefix(common);
-    SHOULD_PASS("common prefix", str_equal(some_prefix, "hello/"));
+    SHOULD_PASS("common prefix", str_equal(some_prefix, "hello" PATH_SEP));
 })
 
 TEST(test_string_rfind, {
@@ -185,6 +186,17 @@ TEST(test_string_equal, {
     SHOULD_FAIL("not equal", str_equal("hello", "world"));
 })
 
+TEST(test_string_replace, {
+    char *nothing = str_replace("hello", "world", "");
+    SHOULD_PASS("replace nothing", str_equal(nothing, "hello"));
+
+    char *hello = str_replace("hello", "hello", "world");
+    SHOULD_PASS("replace hello", str_equal(hello, "world"));
+
+    char *newlines = str_replace("hello\nworld", "\n", "world");
+    SHOULD_PASS("replace newlines", str_equal(newlines, "helloworldworld"));
+})
+
 HARNESS("strings", {
     ENTRY("string str_startswith", test_string_startswith),
     ENTRY("string str_endswith", test_string_endswith),
@@ -196,5 +208,6 @@ HARNESS("strings", {
     ENTRY("string split", test_string_split),
     ENTRY("string common_prefix", test_string_common_prefix),
     ENTRY("string rfind", test_string_rfind),
-    ENTRY("string equal", test_string_equal)
+    ENTRY("string equal", test_string_equal),
+    ENTRY("string replace", test_string_replace)
 })

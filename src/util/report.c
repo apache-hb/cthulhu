@@ -175,7 +175,7 @@ static char *build_underline(const char *source, where_t where, const char *note
 }
 
 static int base10_length(line_t digit) {
-    return ceil(log10(digit)) + 1;
+    return (int)ceil(log10((double)digit)) + 1;
 }
 
 static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {

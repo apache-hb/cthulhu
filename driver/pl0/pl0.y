@@ -6,6 +6,10 @@
 %expect 0
 %define api.prefix {pl0}
 
+%code top {
+    #include "cthulhu/ast/interop.h"
+}
+
 %code requires {
     #define YYSTYPE PL0STYPE
     #define YYLTYPE PL0LTYPE

@@ -1,10 +1,11 @@
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-
-#include <stdint.h>
+#include "cthulhu/util/giga-windows.h"
 
 #include "common.h"
+
+#include "cthulhu/util/str.h"
+#include "cthulhu/util/error.h"
+
+#include <stdint.h>
 
 typedef struct {
     HANDLE handle;
@@ -42,7 +43,7 @@ static size_t windows_write(file_t *self, const void *src, size_t total) {
     BOOL result = WriteFile(
         /* hFile = */ file->handle,
         /* lpBuffer = */ src,
-        /* nNumberOfBytesToWrite = */ total,
+        /* nNumberOfBytesToWrite = */ (DWORD)total,
         /* lpNumberOfBytesWritten = */ &written,
         /* lpOverlapped = */ NULL
     );
@@ -104,6 +105,9 @@ static void *windows_map(file_t *self) {
     windows_file_t *file = SELF(self);
     HANDLE handle = file->handle;
 
+    // file mapping names cant have \\ in them
+    LPCSTR name = str_replace(self->path, "\\", "-");
+
     DWORD protect = (self->access & WRITE) ? PAGE_READWRITE : PAGE_READONLY;
 
     HANDLE mapping = CreateFileMappingA(
@@ -112,8 +116,11 @@ static void *windows_map(file_t *self) {
         /* flProtect = */ protect,
         /* dwMaximumSizeHigh = */ 0,
         /* dwMaximumSizeLow = */ 0, // we want everything mapped
-        /* lpName = */ self->path   // get an existing mapping if it exists
+        /* lpName = */ name   // get an existing mapping if it exists
     );
+
+    ctu_errno_t err = ctu_last_error();
+    printf("map: %p %s\n", mapping, ctu_err_string(err));
 
     if (GetLastError() == ERROR_FILE_INVALID) { return NULL; }
     if (mapping == NULL) { return NULL; }
@@ -127,6 +134,9 @@ static void *windows_map(file_t *self) {
         /* dwFileOffsetLow = */ 0,      // start at the beginning
         /* dwNumberOfBytesToMap = */ 0  // and map the entire file
     );
+
+    ctu_errno_t err2 = ctu_last_error();
+    printf("view: %s\n", ctu_err_string(err2));
 
     return ptr;
 }
@@ -146,20 +156,24 @@ static const file_ops_t OPS = {
     .ok = windows_ok
 };
 
+#define UTF8_CODEPAGE 65001
+
 static char *get_absolute(const char *path) {
     // the following is needed so we are aware of paths longer than MAX_PATH
     // GetFullPathNameA doesnt work on paths longer than MAX_PATH
     // but GetFullPathNameW does
 
+    char *correctEndings = str_replace(path, "/", "\\");
+
     // convert our path to a wide string
-    size_t len = strlen(path);
-    int mbsize = MultiByteToWideChar(CP_UTF8, 0, path, (int)len, NULL, 0);
+    size_t len = strlen(correctEndings);
+    int mbsize = MultiByteToWideChar(UTF8_CODEPAGE, 0, correctEndings, (int)len, NULL, 0);
     LPWSTR total = ctu_malloc(sizeof(WCHAR));
-    MultiByteToWideChar(CP_UTF8, 0, path, (int)len, total, mbsize);
+    MultiByteToWideChar(UTF8_CODEPAGE, 0, correctEndings, (int)len, total, mbsize);
 
     // use the wide string to get the full path
     DWORD size = GetFullPathNameW(total, 0, NULL, NULL);
-    LPWSTR result = ctu_malloc(size + 1);
+    LPWSTR result = ctu_malloc((size + 1) * sizeof(WCHAR));
     GetFullPathNameW(total, size, result, NULL);
 
     // turn the wide string back into a utf-8 string
@@ -208,6 +222,9 @@ void platform_open(file_t **file, const char *path, contents_t format, access_t 
         /* dwFlagsAndAttributes = */ flags,
         /* hTemplateFile = */ NULL
     );
+
+    ctu_errno_t err = ctu_last_error();
+    printf("%s: %s\n", absolute, ctu_err_string(err));
 
     windows_file_t *data = SELF(self);
     data->handle = handle;

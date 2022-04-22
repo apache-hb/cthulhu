@@ -20,6 +20,7 @@ cc = meson.get_compiler('c')
 
 parts = version.split('.')
 cwd = meson.current_source_dir()
+bld = meson.current_build_dir()
 
 config = {
     'major': parts[0].to_int(),
@@ -52,7 +53,10 @@ if host == 'windows'
     lexargs += [ '--wincompat' ]
     args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '/Wv:18' ]
     if analyze
-        args += [ '/analyze' ]
+        args += [
+            '/external:W0', '/external:I' + bld, 
+            '/analyze', '/analyze:external-'
+        ]
     endif
 else
     parseargs += [ '-Wdeprecated' ]
@@ -123,6 +127,7 @@ src = [
     'src/util/map.c',
     'src/util/vec.c',
     'src/util/optimal.c',
+    'src/util/platform/target.c'.replace('target', target),
 
     'src/util/io/common.c',
     'src/util/io/memory.c',

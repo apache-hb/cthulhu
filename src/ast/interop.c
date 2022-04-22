@@ -3,6 +3,8 @@
 
 #include <string.h>
 
+#define COMPILER_SOURCE 1
+
 #include "cthulhu/ast/interop.h"
 
 void flex_action(where_t *where, const char *text) {

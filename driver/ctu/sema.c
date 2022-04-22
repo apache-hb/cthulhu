@@ -77,8 +77,7 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast) {
     }
 }
 
-static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast) {
-    vector_t *fields = ast->fields;
+static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir_t *decl) {
     size_t len = vector_len(fields);
     set_t *names = set_new(len);
 
@@ -99,32 +98,22 @@ static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast) {
         hlir_t *entry = hlir_field(field->node, type, name);
         hlir_add_field(decl, entry);
     }
+
+    set_delete(names);
+}
+
+static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast) {
+    vector_t *fields = ast->fields;
+
+    check_duplicates_and_add_fields(sema, fields, decl);
 
     hlir_build_struct(decl);
 }
 
 static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast) {
     vector_t *fields = ast->fields;
-    size_t len = vector_len(fields);
-    set_t *names = set_new(len);
-
-    for (size_t i = 0; i < len; i++) {
-        ast_t *field = vector_get(fields, i);
-        const char *name = field->name;
-
-        if (!is_discard_ident(name)) {
-            if (set_contains(names, name)) {
-                report(sema->reports, ERROR, field->node, "field '%s' already defined", name);
-                continue;
-            }
-
-            set_add(names, name);
-        }
-
-        hlir_t *type = sema_type(sema, field->field);
-        hlir_t *entry = hlir_field(field->node, type, name);
-        hlir_add_field(decl, entry);
-    }
+    
+    check_duplicates_and_add_fields(sema, fields, decl);
 
     hlir_build_union(decl);
 }
