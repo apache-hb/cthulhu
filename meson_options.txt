@@ -23,3 +23,8 @@ option('doxygen', type : 'feature',
     description : 'build doxygen docs',
     value : 'auto'
 )
+
+option('analyze', type : 'boolean',
+    description : 'enable code analysis under msvc',
+    value : true
+)

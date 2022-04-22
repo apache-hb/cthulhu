@@ -175,13 +175,14 @@ char *str_normalize(const char *str) {
 
 char *str_normalizen(const char *str, size_t len) {
     size_t outlen = 1;
-    for (size_t i = 0; i < len; i++) {
-        outlen += normlen(str[i]);
+    size_t actual = 0;
+    for (; actual < len && str[actual]; actual++) {
+        outlen += normlen(str[actual]);
     }
 
     char *buf = ctu_malloc(outlen + 1);
     char *out = buf;
-    for (size_t i = 0; i < len; i++) {
+    for (size_t i = 0; i < actual; i++) {
         out += normstr(out, str[i]);
     }
 
@@ -190,14 +191,30 @@ char *str_normalizen(const char *str, size_t len) {
 }
 
 vector_t *str_split(const char *str, const char *sep) {
-    char *temp = ctu_strdup(str);
+    size_t seplen = strlen(sep);
+    CTASSERT(seplen > 0, "sep must not be empty");
     vector_t *result = vector_new(4);
-    char *save = NULL;
-    char *token = STRTOK_R(temp, sep, &save);
-    while (token != NULL) {
-        vector_push(&result, token);
-        token = STRTOK_R(NULL, sep, &save);
+
+    // store the start of the current token
+    // continue until a seperator is found
+    // then push that token to the vector
+    // and start the next token
+
+    const char *token = str;
+    const char *cursor = str;
+    
+    while (*cursor) {
+        if (!str_startswith(cursor, sep)) {
+            cursor += 1;
+            continue;
+        }
+
+        vector_push(&result, ctu_strndup(token, cursor - token));
+        token = cursor + seplen;
+        cursor += seplen;
     }
+
+    vector_push(&result, ctu_strndup(token, cursor - token));
 
     return result;
 }
@@ -213,19 +230,9 @@ size_t strhash(const char *str) {
     return hash;
 }
 
-size_t str_count(const char *str, const char *sub) {
-    size_t count = 0;
-    while (*str++) {
-        if (strncmp(str, sub, strlen(sub)) == 0) {
-            count++;
-        }
-    }
-    return count;
-}
-
 bool str_contains(const char *str, const char *sub) {
-    if (sub[0] == '\0') { return false; }
-    
+    CTASSERT(strlen(sub) > 0, "sub must not be empty");
+
     return strstr(str, sub) != NULL;
 }
 
@@ -236,6 +243,8 @@ char *ctu_strerror(int err) {
 }
 
 char *str_replace(const char *str, const char *sub, const char *repl) {
+    CTASSERT(strlen(sub) > 0, "sub must not be empty");
+
     vector_t *split = str_split(str, sub);
     return str_join(repl, split);
 }
@@ -246,10 +255,6 @@ bool str_equal(const char *lhs, const char *rhs) {
     return lhs == rhs || strcmp(lhs, rhs) == 0;
 }
 
-char *str_substring(const char *str, size_t start, size_t end) {
-    size_t bytes = end - start;
-    return ctu_strndup(str + start, bytes);
-}
 
 stream_t *stream_new(size_t size) {
     stream_t *out = ctu_malloc(sizeof(stream_t));
@@ -296,23 +301,29 @@ const char *stream_data(const stream_t *stream) {
  */
 const char *common_prefix(vector_t *args) {
     size_t len = vector_len(args);
+    CTASSERT(len > 0, "must have at least one argument");
+
+    if (len == 1) {
+        return vector_get(args, 0);
+    }
+
     char **strings = ctu_malloc(len * sizeof(char*));
 
-    size_t min = SIZE_MAX;
+    size_t lower = SIZE_MAX;
 
     for (size_t i = 0; i < len; i++) {
         char *arg = vector_get(args, i);
-        size_t len = str_rfind(arg, PATH_SEP) + 1;
-        strings[i] = ctu_strndup(arg, len);
+        size_t find = str_rfind(arg, PATH_SEP) + 1;
+        strings[i] = ctu_strndup(arg, find);
 
-        min = MIN(min, len);
+        lower = MIN(lower, find);
     }
 
-    if (min == 0 || min == SIZE_MAX) {
+    if (lower == 0 || lower == SIZE_MAX) {
         return "";
     }
 
-    for (size_t i = 0; i < min; i++) {
+    for (size_t i = 0; i < lower; i++) {
         for (size_t j = 1; j < len; j++) {
             if (strings[j][i] != strings[0][i]) {
                 return i == 0 ? "" : ctu_strndup(strings[0], i);
@@ -320,12 +331,16 @@ const char *common_prefix(vector_t *args) {
         }
     }
 
-    return ctu_strndup(strings[0], min);
+    return ctu_strndup(strings[0], lower);
 }
 
 size_t str_rfind(const char *str, const char *sub) {
     size_t len = strlen(str);
     size_t sublen = strlen(sub);
+
+    CTASSERT(len > 0, "str must not be empty");
+    CTASSERT(sublen > 0, "sub must not be empty");
+    
     while (len--) {
         if (strncmp(str + len, sub, sublen) == 0) {
             return len;

@@ -108,19 +108,6 @@ char *str_normalize(const char *str) NONULL;
 char *str_normalizen(const char *str, size_t len) CONSTFN NONULL;
 
 /**
- * @brief get a substring
- * 
- * get a substring from a string
- * 
- * @param str the string to get the substring from
- * @param start the starting index
- * @param end the last index
- * 
- * @return the substring
- */
-char *str_substring(const char *str, size_t start, size_t end) CONSTFN NONULL;
-
-/**
  * @brief split a string into a vector by a separator
  * 
  * @note the seperator is not included in the resulting substrings.
@@ -134,11 +121,11 @@ char *str_substring(const char *str, size_t start, size_t end) CONSTFN NONULL;
 vector_t *str_split(const char *str, const char *sep) CONSTFN NONULL;
 
 /**
- * @brief find the longest common prefix of a vector of strings
+ * @brief find the longest common prefix of a vector of paths
  * 
  * @note if no common prefix is found, the empty string is returned.
  * 
- * @param args the vector of strings to find the common prefix of
+ * @param args the vector of paths to find the common prefix of
  * 
  * @return the common prefix
  */
@@ -153,16 +140,6 @@ const char *common_prefix(vector_t *args) CONSTFN NONULL;
  * @return the index of the last instance of @a sub in @a str, or SIZE_MAX if sub is not found
  */
 size_t str_rfind(const char *str, const char *sub) CONSTFN NONULL;
-
-/**
- * @brief count the number of instances of a substring in a string
- * 
- * @param str the string to search
- * @param sub the substring to search for
- * 
- * @return number of instances of @a sub in @a str
- */ 
-size_t str_count(const char *str, const char *sub) CONSTFN NONULL;
 
 /**
  * @brief check if a string contains a substring

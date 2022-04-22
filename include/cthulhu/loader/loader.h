@@ -54,18 +54,18 @@ bool get_bool(value_t value);
 index_t get_reference(value_t value);
 array_t get_array(value_t value);
 
-typedef struct layout_t {
+typedef struct {
     size_t length;
     const field_t *fields;
 } layout_t;
 
-typedef struct record_t {
+typedef struct {
     const layout_t *layout;
     value_t *values;
 } record_t;
 
 typedef struct {
-    layout_t header;
+    const layout_t *header;
 
     size_t types;
     const layout_t *layouts;

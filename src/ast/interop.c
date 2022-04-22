@@ -1,8 +1,9 @@
-#include "cthulhu/ast/interop.h"
+#include "cthulhu/util/util.h"
+#include "cthulhu/util/macros.h"
 
 #include <string.h>
 
-#include "cthulhu/util/util.h"
+#include "cthulhu/ast/interop.h"
 
 void flex_action(where_t *where, const char *text) {
     where->first_line = where->last_line;

@@ -2,6 +2,7 @@
 
 #include "macros.h"
 #include <stddef.h>
+#include <stdbool.h>
 
 /**
  * @brief a node in a chain of set entries

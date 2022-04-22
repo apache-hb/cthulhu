@@ -45,6 +45,11 @@ static value_t read_value(data_t *in, field_t field, size_t *offset) {
     case FIELD_ARRAY:
         ok = read_bytes(in, &value.array, offset, sizeof(array_t));
         break;
+
+    default:
+        report(in->header.reports, ERROR, NULL, "invalid field type %d", field);
+        ok = false;
+        break;
     }
 
     if (!ok) { return reference_value(NULL_INDEX); }

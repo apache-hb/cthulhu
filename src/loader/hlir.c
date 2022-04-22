@@ -12,8 +12,11 @@
 ///
 
 typedef enum {
-    SPAN_INDEX = HLIR_TOTAL,
+    LAYOUTS_START = HLIR_TOTAL,
+
+    SPAN_INDEX,
     ATTRIBUTE_INDEX,
+    
     LAYOUTS_TOTAL
 } hlir_layouts_t;
 
@@ -317,7 +320,7 @@ static const layout_t MODULE_LAYOUT = LAYOUT("module", MODULE_FIELDS);
 ///
 /// final type table
 ///
-
+#if 0
 static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
     [SPAN_INDEX] = SPAN_LAYOUT,
     [ATTRIBUTE_INDEX] = ATTRIB_LAYOUT,
@@ -357,7 +360,61 @@ static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
     [HLIR_MODULE] = MODULE_LAYOUT
 };
 
-static const format_t GLOBAL = FORMAT(HEADER_LAYOUT, ALL_TYPES);
+static const format_t GLOBAL = {
+    .header = &HEADER_LAYOUT,
+    .types = LAYOUTS_TOTAL,
+    .layouts = ALL_TYPES
+};
+#endif
+
+static format_t *get_format(void) {
+    layout_t *all_types = ctu_malloc(sizeof(layout_t) * LAYOUTS_TOTAL);
+
+    all_types[SPAN_INDEX] = SPAN_LAYOUT;
+    all_types[ATTRIBUTE_INDEX] = ATTRIB_LAYOUT;
+
+    all_types[HLIR_DIGIT_LITERAL] = DIGIT_LITERAL_LAYOUT;
+    all_types[HLIR_BOOL_LITERAL] = BOOL_LITERAL_LAYOUT;
+    all_types[HLIR_STRING_LITERAL] = STRING_LITERAL_LAYOUT;
+
+    all_types[HLIR_NAME] = NAME_LAYOUT;
+    all_types[HLIR_UNARY] = UNARY_LAYOUT;
+    all_types[HLIR_BINARY] = BINARY_LAYOUT;
+    all_types[HLIR_COMPARE] = COMPARE_LAYOUT;
+    all_types[HLIR_CALL] = CALL_LAYOUT;
+
+    all_types[HLIR_STMTS] = STMTS_LAYOUT;
+    all_types[HLIR_BRANCH] = BRANCH_LAYOUT;
+    all_types[HLIR_LOOP] = LOOP_LAYOUT;
+    all_types[HLIR_ASSIGN] = ASSIGN_LAYOUT;
+
+    all_types[HLIR_DIGIT] = DIGIT_LAYOUT;
+    all_types[HLIR_BOOL] = BOOL_LAYOUT;
+    all_types[HLIR_STRING] = STRING_LAYOUT;
+    all_types[HLIR_VOID] = VOID_LAYOUT;
+    all_types[HLIR_CLOSURE] = CLOSURE_LAYOUT;
+    all_types[HLIR_POINTER] = POINTER_LAYOUT;
+    all_types[HLIR_ARRAY] = ARRAY_LAYOUT;
+    
+    all_types[HLIR_STRUCT] = STRUCT_LAYOUT;
+    all_types[HLIR_UNION] = UNION_LAYOUT;
+    all_types[HLIR_ALIAS] = ALIAS_LAYOUT;
+    all_types[HLIR_FIELD] = FIELD_LAYOUT;
+
+    all_types[HLIR_LOCAL] = LOCAL_LAYOUT;
+    all_types[HLIR_GLOBAL] = GLOBAL_LAYOUT;
+    all_types[HLIR_FUNCTION] = FUNCTION_LAYOUT;
+
+    all_types[HLIR_MODULE] = MODULE_LAYOUT;
+
+    format_t fmt = {
+        .header = &HEADER_LAYOUT,
+        .types = LAYOUTS_TOTAL,
+        .layouts = all_types
+    };
+
+    return BOX(fmt);
+}
 
 #define HLIR_SUBMAGIC 0x484C4952 // 'HLIR'
 #define HLIR_VERSION NEW_VERSION(CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH)
@@ -844,7 +901,7 @@ hlir_t *load_module(reports_t *reports, const char *path) {
 
     header_t header = { 
         .reports = reports,
-        .format = &GLOBAL,
+        .format = get_format(),
         .path = path,
         .header = record,
         .submagic = HLIR_SUBMAGIC,
@@ -1323,7 +1380,7 @@ void save_module(reports_t *reports, save_settings_t *settings, hlir_t *module, 
 
     header_t header = { 
         .reports = reports,
-        .format = &GLOBAL,
+        .format = get_format(),
         .path = path,
         .header = record,
         .submagic = HLIR_SUBMAGIC,

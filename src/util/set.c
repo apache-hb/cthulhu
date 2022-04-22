@@ -20,6 +20,8 @@ static item_t *get_bucket(set_t *set, const char *key) {
 }
 
 set_t *set_new(size_t size) {
+    CTASSERT(size > 0, "set size must be greater than 0");
+    
     size_t bytes = set_size(size);
 
     set_t *set = ctu_malloc(bytes);

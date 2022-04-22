@@ -10,6 +10,9 @@ project('cthulhu', 'c',
     ]
 )
 
+analyze = get_option('analyze')
+tuning = get_option('tuning')
+
 version = meson.project_version()
 target = target_machine.system()
 host = host_machine.system()
@@ -41,11 +44,6 @@ deps = [ gmp ]
 lexargs = []
 parseargs = []
 
-if host != 'windows'
-    deps += [ cc.find_library('m') ]
-endif
-
-tuning = get_option('tuning')
 if tuning
     args += [ '-DENABLE_TUNING=1' ]
 endif
@@ -53,8 +51,12 @@ endif
 if host == 'windows'
     lexargs += [ '--wincompat' ]
     args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '/Wv:18' ]
+    if analyze
+        args += [ '/analyze' ]
+    endif
 else
     parseargs += [ '-Wdeprecated' ]
+    deps += [ cc.find_library('m') ]
 endif
 
 flex = find_program('flex', 'win_flex', version : '>=2.6')
@@ -118,6 +120,8 @@ src = [
     'src/util/str.c',
     'src/util/util.c',
     'src/util/set.c',
+    'src/util/map.c',
+    'src/util/vec.c',
     'src/util/optimal.c',
 
     'src/util/io/common.c',

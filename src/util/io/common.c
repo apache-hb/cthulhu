@@ -22,7 +22,10 @@ file_t *memory_new(const char *name, size_t size, contents_t format, access_t ac
 }
 
 void close_file(file_t *file) {
-    CLOSES[file->backing](file);
+    if (file_ok(file)) { 
+        CLOSES[file->backing](file);
+    }
+    
     ctu_free(file);
 }
 

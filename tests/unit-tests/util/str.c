@@ -1,6 +1,9 @@
 #include "cthulhu/util/str.h"
 #include "test.h"
 
+#include <string.h>
+#include <stdint.h>
+
 TEST(test_string_startswith, {
     SHOULD_PASS("empty strings", str_startswith("", ""));
     SHOULD_FAIL("empty string", str_startswith("", "string"));
@@ -20,8 +23,6 @@ TEST(test_string_endswith, {
 })
 
 TEST(test_string_contains, {
-    SHOULD_FAIL("empty strings", str_contains("", ""));
-    SHOULD_FAIL("empty substring", str_contains("string", ""));
     SHOULD_FAIL("empty search", str_contains("", "string"));
 
     SHOULD_FAIL("no match", str_contains("string", "search"));
@@ -89,7 +90,6 @@ TEST(test_string_normalize, {
     SHOULD_PASS("normalized equals", str_equal(normalized, "hello world"));
 
     char *newline = str_normalize("hello\nworld");
-    printf("%s\n", newline);
     SHOULD_PASS("newline equals", str_equal(newline, "hello\\x0aworld"));
 
     for (size_t i = 0; i < ESCAPE_SIZE; i++) {
@@ -99,10 +99,90 @@ TEST(test_string_normalize, {
 
         char *result = str_normalize(input);
 
-        printf("%s\n", result);
         char *name = format("escaped %s equal", escape->unescaped);
         SHOULD_PASS(name, str_equal(expected, result));
     }
+})
+
+TEST(test_string_normalizen, {
+    char *longer = str_normalizen("hello world", 900);
+    SHOULD_PASS("normalized equals", str_equal(longer, "hello world"));
+
+    char *shorter = str_normalizen("hello world", 5);
+    SHOULD_PASS("normalized equals", str_equal(shorter, "hello"));
+
+    char *normalized = str_normalizen("hello world", 12);
+    SHOULD_PASS("normalized equals", str_equal(normalized, "hello world"));
+
+    char *newline = str_normalizen("hello\nworld", 12);
+    SHOULD_PASS("newline equals", str_equal(newline, "hello\\x0aworld"));
+
+    for (size_t i = 0; i < ESCAPE_SIZE; i++) {
+        pair_t *escape = &ESCAPES[i];
+        char *input = format("hello %c world", escape->escaped);
+        char *expected = format("hello %s world", escape->unescaped);
+
+        char *result = str_normalizen(input, strlen(input));
+
+        char *name = format("escaped %s equal", escape->unescaped);
+        SHOULD_PASS(name, str_equal(expected, result));
+    }
+})
+
+TEST(test_string_split, {
+    vector_t *hello = str_split("hello world", " ");
+    SHOULD_PASS("length is 2", vector_len(hello) == 2);
+    SHOULD_PASS("first is hello", str_equal(vector_get(hello, 0), "hello"));
+    SHOULD_PASS("second is world", str_equal(vector_get(hello, 1), "world"));
+
+    vector_t *nothing = str_split("three different words", "something");
+    SHOULD_PASS("length is 1", vector_len(nothing) == 1);
+    SHOULD_PASS("nothing contains one element", str_equal(vector_get(nothing, 0), "three different words"));
+
+    vector_t *repeat = str_split("some,,,text", ",");
+    SHOULD_PASS("length is 4", vector_len(repeat) == 4);
+    SHOULD_PASS("first is some", str_equal(vector_get(repeat, 0), "some"));
+    SHOULD_PASS("second is empty", str_equal(vector_get(repeat, 1), ""));
+    SHOULD_PASS("third is empty", str_equal(vector_get(repeat, 2), ""));
+    SHOULD_PASS("fourth is text", str_equal(vector_get(repeat, 3), "text"));
+
+    vector_t *end = str_split("some text,,", ",");
+    SHOULD_PASS("length is 3", vector_len(end) == 3);
+    SHOULD_PASS("first is some text", str_equal(vector_get(end, 0), "some text"));
+    SHOULD_PASS("second is empty", str_equal(vector_get(end, 1), ""));
+    SHOULD_PASS("third is empty", str_equal(vector_get(end, 2), ""));
+})
+
+TEST(test_string_common_prefix, {
+    vector_t *one_arg = vector_init((char*)"hello");
+    const char *one_prefix = common_prefix(one_arg);
+    SHOULD_PASS("one arg prefix", str_equal(one_prefix, "hello"));
+
+    vector_t *no_common = vector_of(2);
+    vector_set(no_common, 0, "hello");
+    vector_set(no_common, 1, "world/world2");
+
+    const char *no_common_prefix = common_prefix(no_common);
+    SHOULD_PASS("no common prefix", str_equal(no_common_prefix, ""));
+
+    vector_t *common = vector_of(2);
+    vector_set(common, 0, "hello/stuff");
+    vector_set(common, 1, "hello/world");
+
+    const char *some_prefix = common_prefix(common);
+    SHOULD_PASS("common prefix", str_equal(some_prefix, "hello/"));
+})
+
+TEST(test_string_rfind, {
+    SHOULD_PASS("rfind no match", str_rfind("hello", "world") == SIZE_MAX);
+    SHOULD_PASS("rfind match", str_rfind("hello world", "world") == 6);
+    SHOULD_PASS("rfind match last", str_rfind("hello hello hello", "hello") == 12);
+    SHOULD_PASS("rfind match last with bits", str_rfind("hello hello world", "hello") == 6);
+})
+
+TEST(test_string_equal, {
+    SHOULD_PASS("equal", str_equal("hello", "hello"));
+    SHOULD_FAIL("not equal", str_equal("hello", "world"));
 })
 
 HARNESS("strings", {
@@ -111,5 +191,10 @@ HARNESS("strings", {
     ENTRY("string contains", test_string_contains),
     ENTRY("string join", test_string_join),
     ENTRY("string repeat", test_string_repeat),
-    ENTRY("string normalize", test_string_normalize)
+    ENTRY("string normalize", test_string_normalize),
+    ENTRY("string normalizen", test_string_normalizen),
+    ENTRY("string split", test_string_split),
+    ENTRY("string common_prefix", test_string_common_prefix),
+    ENTRY("string rfind", test_string_rfind),
+    ENTRY("string equal", test_string_equal)
 })

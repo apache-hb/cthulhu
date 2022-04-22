@@ -54,7 +54,7 @@ static int run_tests(const char *suite, const test_t *tests, size_t total) {
 }
 
 #define HARNESS(name, ...) \
-    static test_t TESTS[] = __VA_ARGS__; \
-    int main() { \
-        return run_tests(name, TESTS, sizeof(TESTS) / sizeof(test_t)); \
+    int main(void) { \
+        test_t all[] = __VA_ARGS__; \
+        return run_tests(name, all, sizeof(all) / sizeof(test_t)); \
     }

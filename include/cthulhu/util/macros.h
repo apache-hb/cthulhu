@@ -25,6 +25,17 @@
 #   define POISON(...)
 #endif
 
+#if __has_include(<sal.h>)
+#   include <sal.h>
+#   define DISABLE_SAL __pragma(warning(push)) __pragma(warning(disable : 6011 6387))
+#   define NODISCARD _Must_inspect_result_ 
+#   define IN_RANGE(lhs, rhs) _In_range_(lhs, rhs)
+#elif __GNUC__ >= 11
+#   define DISABLE_SAL
+#   define NODISCARD
+#   define IN_RANGE(lhs, rhs)
+#endif
+
 /**
  * @defgroup Packing Struct packing macros
  * @brief cross compiler compatible struct packing macros
