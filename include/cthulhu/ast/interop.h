@@ -20,7 +20,7 @@ DISABLE_SAL
  * @param where a pointer to the current location
  * @param text current source text
  */
-void flex_action(where_t *where, const char *text) NONULL;
+void flex_action(where_t *where, const char *text);
 
 /**
  * @brief retrevies more input for flex
@@ -30,14 +30,14 @@ void flex_action(where_t *where, const char *text) NONULL;
  * @param size total number of characters to write
  * @return number of characters written
  */
-int flex_input(scan_t *scan, char *out, int size) NONULL;
+int flex_input(scan_t *scan, char *out, int size);
 
 /**
  * @brief initialize source location tracking
  * 
  * @param where the source location to initialize
  */
-void flex_init(where_t *where) NONULL;
+void flex_init(where_t *where);
 
 
 /**

@@ -10,14 +10,9 @@
  * freeing the vector does not free the data it references internally.
  * only the vector itself is freed.
  */
-typedef struct STRUCT_SIZE(sizeof(vector_t) + size * sizeof(void*)) {
-    FIELD_RANGE(>=, used)
+typedef struct {
     size_t size; ///< the total number of allocated elements
-    
-    FIELD_RANGE(<=, size)
     size_t used; ///< the number of elements in use
-    
-    FIELD_SIZE(size) 
     void *data[]; ///< the data
 } vector_t;
 
@@ -26,7 +21,7 @@ typedef struct STRUCT_SIZE(sizeof(vector_t) + size * sizeof(void*)) {
  * 
  * @param vector the vector to release
  */
-void vector_delete(IN_NOTNULL vector_t *vector) NONULL;
+void vector_delete(vector_t *vector);
 
 /**
  * create a new vector.
@@ -34,10 +29,7 @@ void vector_delete(IN_NOTNULL vector_t *vector) NONULL;
  * @param size the initial amount of allocated memory
  * @return a new vector
  */
-RESULT(return->size >= size)
-RESULT(return->used == 0)
-NODISCARD RET_VALID
-vector_t *vector_new(size_t size) ALLOC(vector_delete);
+vector_t *vector_new(size_t size);
 
 /**
  * create a new vector with a specified size
@@ -45,10 +37,7 @@ vector_t *vector_new(size_t size) ALLOC(vector_delete);
  * @param len the initial size of the vector
  * @return a new vector
  */
-RESULT(return->size >= len)
-RESULT(return->used == len)
-NODISCARD RET_VALID
-vector_t *vector_of(size_t len) ALLOC(vector_delete);
+vector_t *vector_of(size_t len);
 
 /**
  * create a vector with a single item
@@ -56,10 +45,7 @@ vector_t *vector_of(size_t len) ALLOC(vector_delete);
  * @param value the initial element
  * @return the new vector
  */
-RESULT(return->size >= 1)
-RESULT(return->used == 1)
-NODISCARD RET_VALID
-vector_t *vector_init(void *value) ALLOC(vector_delete);
+vector_t *vector_init(void *value);
 
 /**
  * push an element onto the end of a vector
@@ -69,15 +55,14 @@ vector_t *vector_init(void *value) ALLOC(vector_delete);
  * 
  * @param value the value to push onto the vector
  */
-void vector_push(IN_NOTNULL vector_t **vector, void *value) NOTNULL(1);
+void vector_push(vector_t **vector, void *value);
 
 /**
  * @brief remove the last element from a vector. invalid on empty vectors
  * 
  * @param vector the vector to drop an item from
  */
-ALWAYS(vector->used > 0)
-void vector_drop(IN_NOTNULL vector_t *vector) NONULL;
+void vector_drop(vector_t *vector);
 
 /**
  * set an element in a vector by index.
@@ -87,7 +72,7 @@ void vector_drop(IN_NOTNULL vector_t *vector) NONULL;
  * @param index the index to place the value
  * @param value the value to place
  */
-void vector_set(IN_NOTNULL vector_t *vector, IN_RANGE(<=, vector->used) size_t index, void *value) NOTNULL(1);
+void vector_set(vector_t *vector, size_t index, void *value);
 
 /**
  * get an element from a vector by index.
@@ -97,8 +82,7 @@ void vector_set(IN_NOTNULL vector_t *vector, IN_RANGE(<=, vector->used) size_t i
  * @param index the index to query
  * @return the value at index
  */
-NODISCARD
-void *vector_get(IN_NOTNULL const vector_t *vector, IN_RANGE(<=, vector->used) size_t index) CONSTFN NOTNULL(1);
+void *vector_get(const vector_t *vector, size_t index);
 
 /**
  * get the last element from a vector.
@@ -107,9 +91,7 @@ void *vector_get(IN_NOTNULL const vector_t *vector, IN_RANGE(<=, vector->used) s
  * @param vector the vector to get from
  * @return the value of the last element
  */
-ALWAYS(vector->used > 0)
-NODISCARD
-void *vector_tail(IN_NOTNULL const vector_t *vector) CONSTFN NONULL;
+void *vector_tail(const vector_t *vector);
 
 /**
  * get the length of a vector
@@ -117,9 +99,7 @@ void *vector_tail(IN_NOTNULL const vector_t *vector) CONSTFN NONULL;
  * @param vector the vector to get the length of
  * @return the active size of the vector
  */
-RESULT(return <= vector->size)
-NODISCARD
-size_t vector_len(IN_NOTNULL const vector_t *vector) CONSTFN NONULL;
+size_t vector_len(const vector_t *vector);
 
 /**
  * join two vectors together into a new vector.
@@ -128,13 +108,8 @@ size_t vector_len(IN_NOTNULL const vector_t *vector) CONSTFN NONULL;
  * @param rhs the right vector
  * @return the new vector
  */
-RESULT(return->used == lhs->used + rhs->used)
-NODISCARD RET_VALID
-vector_t *vector_join(IN_NOTNULL const vector_t *lhs, IN_NOTNULL const vector_t *rhs) NONULL ALLOC(vector_delete);
+vector_t *vector_join(const vector_t *lhs, const vector_t *rhs);
 
-RESULT(return <= vector->used)
-NODISCARD
-size_t vector_find(IN_NOTNULL vector_t *vector, const void *element) CONSTFN NOTNULL(1);
+size_t vector_find(vector_t *vector, const void *element);
 
-RESULT(vec->used == 0)
-void vector_reset(IN_NOTNULL vector_t *vec) NONULL;
+void vector_reset(vector_t *vec);

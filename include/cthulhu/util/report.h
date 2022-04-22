@@ -125,7 +125,7 @@ reports_t *begin_reports(void);
  */
 int end_reports(reports_t *reports,
                 size_t limit,
-                const char *name) NOTNULL(1, 3);
+                const char *name);
 
 /**
  * @brief push an internal compiler error into a reporting context
@@ -136,9 +136,8 @@ int end_reports(reports_t *reports,
  * 
  * @return a message object to attach extra data to
  */
-PRINT(2, 3)
 message_t *ctu_assert(reports_t *reports, 
-                   const char *fmt, ...) NOTNULL(1, 2);
+                   const char *fmt, ...);
 
 /**
  * push a compiler message into a reporting context
@@ -151,11 +150,10 @@ message_t *ctu_assert(reports_t *reports,
  * 
  * @return a message object to attach extra data to
  */
-PRINT(4, 5)
 message_t *report(reports_t *reports, 
                    level_t level, 
                    const node_t *node, 
-                   const char *fmt, ...) NOTNULL(1, 4);
+                   const char *fmt, ...);
 
 /**
  * add another part to a message
@@ -165,10 +163,9 @@ message_t *report(reports_t *reports,
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-PRINT(3, 4)
 void report_append(message_t *message, 
                     const node_t *node, 
-                    const char *fmt, ...) NOTNULL(1, 3);
+                    const char *fmt, ...);
 
 /**
  * add an underline message to an existing message
@@ -177,9 +174,8 @@ void report_append(message_t *message,
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-PRINT(2, 3)
 void report_underline(message_t *message, 
-                      const char *fmt, ...) NOTNULL(1, 2);
+                      const char *fmt, ...);
 
 /**
  * add a note to an existing message
@@ -188,9 +184,7 @@ void report_underline(message_t *message,
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-PRINT(2, 3)
-void report_note(message_t *message, 
-                  const char *fmt, ...) NOTNULL(1, 2);
+void report_note(message_t *message, const char *fmt, ...);
 
 /** @} */
 
@@ -214,6 +208,6 @@ extern bool verbose;
  * @param fmt format string
  * @param ... arguments
  */
-void logverbose(const char *fmt, ...) NOTNULL(1);
+void logverbose(const char *fmt, ...);
 
 /** @} */

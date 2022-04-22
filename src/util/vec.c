@@ -19,7 +19,6 @@ static void vector_ensure(vector_t **vector, size_t size) {
 
 // vector public api
 
-USE_ANNOTATIONS
 vector_t *vector_new(size_t size) {
     vector_t *vector = ctu_malloc(vector_size(size));
     
@@ -29,57 +28,47 @@ vector_t *vector_new(size_t size) {
     return vector;
 }
 
-USE_ANNOTATIONS
 vector_t *vector_of(size_t len) {
     vector_t *vector = vector_new(len);
     vector->used = len;
     return vector;
 }
 
-USE_ANNOTATIONS
 vector_t *vector_init(void *value) {
     vector_t *vector = vector_of(1);
     vector_set(vector, 0, value);
     return vector;
 }
 
-USE_ANNOTATIONS
 void vector_delete(vector_t *vector) {
     ctu_free(vector);
 }
 
-USE_ANNOTATIONS
 void vector_push(vector_t **vector, void *value) {
     vector_ensure(vector, VEC->used + 1);
     VEC->data[VEC->used++] = value;
 }
 
-USE_ANNOTATIONS
 void vector_drop(vector_t *vector) {
     vector->used -= 1;
 }
 
-USE_ANNOTATIONS
 void vector_set(vector_t *vector, size_t index, void *value) {
     vector->data[index] = value;
 }
 
-USE_ANNOTATIONS
 void *vector_get(const vector_t *vector, size_t index) {
     return vector->data[index];
 }
 
-USE_ANNOTATIONS
 void *vector_tail(const vector_t *vector) {
     return vector->data[vector->used - 1];
 }
 
-USE_ANNOTATIONS
 size_t vector_len(const vector_t *vector) {
     return vector->used;
 }
 
-USE_ANNOTATIONS
 size_t vector_find(vector_t *vector, const void *element) {
     for (size_t i = 0; i < vector_len(vector); i++) {
         if (vector_get(vector, i) == element) {
@@ -90,7 +79,6 @@ size_t vector_find(vector_t *vector, const void *element) {
     return SIZE_MAX;
 }
 
-USE_ANNOTATIONS
 vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) {
     size_t lhs_len = vector_len(lhs);
     size_t rhs_len = vector_len(rhs);
@@ -111,7 +99,6 @@ vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) {
     return out;
 }
 
-USE_ANNOTATIONS
 void vector_reset(vector_t *vec) {
     vec->used = 0;
 }

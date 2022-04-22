@@ -42,7 +42,7 @@ typedef struct {
  * @param scan the scanner to get the length of
  * @return the number of characters in the source file
  */
-size_t scan_size(const scan_t *scan) NONULL;
+size_t scan_size(const scan_t *scan);
 
 /**
  * @brief get the source text of a source file
@@ -50,7 +50,7 @@ size_t scan_size(const scan_t *scan) NONULL;
  * @param scan the scanner to query
  * @return the null terminated source text
  */
-const char *scan_text(const scan_t *scan) NONULL;
+const char *scan_text(const scan_t *scan);
 
 /** 
  * @brief a location inside a scanner 

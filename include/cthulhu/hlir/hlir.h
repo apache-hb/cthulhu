@@ -317,4 +317,4 @@ hlir_t *hlir_field(const node_t *node, const hlir_t *type, const char *name);
  * @param self the declaration or type to set the attributes of
  * @param attributes the attributes to set
  */
-void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes) NONULL;
+void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes);

@@ -13,7 +13,7 @@
  * @{
  */
 
-#ifdef CTU_WINDOWS
+#ifdef _WIN32
 #   define PATH_SEP "\\" ///< path separator
 #else
 #   define PATH_SEP "/" ///< path separator
@@ -25,7 +25,7 @@
  * @param path the path to the file
  * @return the path without the extension
  */
-char *ctu_noext(const char *path) NONULL;
+char *ctu_noext(const char *path);
 
 /**
  * @brief the name of a file without its path
@@ -33,7 +33,7 @@ char *ctu_noext(const char *path) NONULL;
  * @param path the path to the file
  * @return the name of the file without its path
  */
-char *ctu_filename(const char *path) NONULL;
+char *ctu_filename(const char *path);
 
 struct file_t;
 
@@ -170,7 +170,7 @@ typedef struct file_t {
  * 
  * @param file the file handle to close
  */
-void close_file(file_t *file) NONULL;
+void close_file(file_t *file);
 
 /**
  * @brief open a file
@@ -181,7 +181,7 @@ void close_file(file_t *file) NONULL;
  * 
  * @return a file handle
  */
-file_t *file_new(const char *path, contents_t format, access_t access) NONULL ALLOC(close_file);
+file_t *file_new(const char *path, contents_t format, access_t access);
 
 /**
  * @brief open a memory stream
@@ -193,7 +193,7 @@ file_t *file_new(const char *path, contents_t format, access_t access) NONULL AL
  * 
  * @return a file handle
  */
-file_t *memory_new(const char *name, size_t size, contents_t format, access_t access) NONULL ALLOC(close_file);
+file_t *memory_new(const char *name, size_t size, contents_t format, access_t access);
 
 /**
  * @brief read from a file
@@ -204,7 +204,7 @@ file_t *memory_new(const char *name, size_t size, contents_t format, access_t ac
  * 
  * @return the number of bytes read
  */
-size_t file_read(file_t *file, void *dst, size_t total) NONULL;
+size_t file_read(file_t *file, void *dst, size_t total);
 
 /**
  * @brief write to a file
@@ -215,7 +215,7 @@ size_t file_read(file_t *file, void *dst, size_t total) NONULL;
  * 
  * @return the number of bytes written
  */
-size_t file_write(file_t *file, const void *src, size_t total) NONULL;
+size_t file_write(file_t *file, const void *src, size_t total);
 
 /**
  * @brief seek to a position in a file
@@ -225,7 +225,7 @@ size_t file_write(file_t *file, const void *src, size_t total) NONULL;
  * 
  * @return the new offset
  */
-size_t file_seek(file_t *file, size_t offset) NONULL;
+size_t file_seek(file_t *file, size_t offset);
 
 /**
  * @brief get the size of a file
@@ -234,7 +234,7 @@ size_t file_seek(file_t *file, size_t offset) NONULL;
  * 
  * @return the size of the file
  */
-size_t file_size(file_t *file) NONULL;
+size_t file_size(file_t *file);
 
 /**
  * @brief get the current position of the file
@@ -243,7 +243,7 @@ size_t file_size(file_t *file) NONULL;
  * 
  * @return the current position in the file
  */
-size_t file_tell(file_t *file) NONULL;
+size_t file_tell(file_t *file);
 
 /**
  * @brief map a file into memory
@@ -252,7 +252,7 @@ size_t file_tell(file_t *file) NONULL;
  * 
  * @return the mapped memory or NULL if the mapping failed
  */
-void *file_map(file_t *file) NONULL;
+void *file_map(file_t *file);
 
 /**
  * @brief check if a file handle is valid
@@ -261,7 +261,7 @@ void *file_map(file_t *file) NONULL;
  * 
  * @return true if the file handle is valid
  */ 
-bool file_ok(file_t *file) CONSTFN NONULL;
+bool file_ok(file_t *file);
 
 /**
  * @brief check if a file exists
@@ -270,6 +270,6 @@ bool file_ok(file_t *file) CONSTFN NONULL;
  * 
  * @return true if the file exists
  */
-bool file_exists(const char *path) NONULL;
+bool file_exists(const char *path);
 
 /** @} */

@@ -19,7 +19,6 @@ static item_t *get_bucket(set_t *set, const char *key) {
     return &set->items[index];
 }
 
-USE_ANNOTATIONS
 set_t *set_new(size_t size) {    
     size_t bytes = set_size(size);
 
@@ -33,7 +32,6 @@ set_t *set_new(size_t size) {
     return set;
 }
 
-USE_ANNOTATIONS
 void set_delete(set_t *set) {
     for (size_t i = 0; i < set->size; i++) {
         item_t *item = &set->items[i];
@@ -47,7 +45,6 @@ void set_delete(set_t *set) {
     ctu_free(set);
 }
 
-USE_ANNOTATIONS
 const char* set_add(set_t *set, const char *key) {
     item_t *item = get_bucket(set, key);
 
@@ -70,7 +67,6 @@ const char* set_add(set_t *set, const char *key) {
     } 
 }
 
-USE_ANNOTATIONS
 bool set_contains(set_t *set, const char *key) {
     item_t *item = get_bucket(set, key);
 

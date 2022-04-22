@@ -8,7 +8,6 @@
 #include <ctype.h>
 #include <stdint.h>
 
-USE_ANNOTATIONS
 char *format(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -18,7 +17,6 @@ char *format(const char *fmt, ...) {
     return str;
 }
 
-USE_ANNOTATIONS
 char *formatv(const char *fmt, va_list args) {
     /* make a copy of the args for the second format */
     va_list again;
@@ -54,12 +52,10 @@ char *ctu_filename(const char *path) {
     return ctu_noext(path + idx + 1);
 }
 
-USE_ANNOTATIONS
 bool str_startswith(const char *str, const char *prefix) {
     return strncmp(str, prefix, strlen(prefix)) == 0;
 }
 
-USE_ANNOTATIONS
 bool str_endswith(const char *str, const char *suffix) {
     size_t lenstr = strlen(str);
     size_t lensuffix = strlen(suffix);
@@ -70,7 +66,6 @@ bool str_endswith(const char *str, const char *suffix) {
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
-USE_ANNOTATIONS
 char *str_join(const char *sep, vector_t *parts) {
     size_t all = vector_len(parts);
 
@@ -111,7 +106,6 @@ char *str_join(const char *sep, vector_t *parts) {
     return out;
 }
 
-USE_ANNOTATIONS
 char *str_repeat(const char *str, size_t times) {
     size_t len = strlen(str);
     size_t outlen = len * times;
@@ -168,7 +162,6 @@ static size_t normstr(char *out, char c) {
     return sprintf(out, "\\x%02x", c & 0xFF);
 }
 
-USE_ANNOTATIONS
 char *str_normalize(const char *str) {
     size_t len = 0;
     const char *temp = str;
@@ -186,7 +179,6 @@ char *str_normalize(const char *str) {
     return buf;
 }
 
-USE_ANNOTATIONS
 char *str_normalizen(const char *str, size_t len) {
     size_t outlen = 1;
     size_t actual = 0;
@@ -204,7 +196,6 @@ char *str_normalizen(const char *str, size_t len) {
     return buf;
 }
 
-USE_ANNOTATIONS
 vector_t *str_split(const char *str, const char *sep) {
     size_t seplen = strlen(sep);
     vector_t *result = vector_new(4);
@@ -233,7 +224,6 @@ vector_t *str_split(const char *str, const char *sep) {
     return result;
 }
 
-USE_ANNOTATIONS
 size_t strhash(const char *str) {
     size_t hash = 0;
 
@@ -245,18 +235,15 @@ size_t strhash(const char *str) {
     return hash;
 }
 
-USE_ANNOTATIONS
 bool str_contains(const char *str, const char *sub) {
     return strstr(str, sub) != NULL;
 }
 
-USE_ANNOTATIONS
 char *str_replace(const char *str, const char *sub, const char *repl) {
     vector_t *split = str_split(str, sub);
     return str_join(repl, split);
 }
 
-USE_ANNOTATIONS
 bool str_equal(const char *lhs, const char *rhs) {
     /* compare pointers as well for better perf
        with interned strings */

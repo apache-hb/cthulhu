@@ -29,7 +29,7 @@ static bucket_t *bucket_new(const char *key, void *value) {
     return entry;
 }
 
-HOT static void *entry_get(const bucket_t *entry, const char *key, void *other) {
+static void *entry_get(const bucket_t *entry, const char *key, void *other) {
     if (entry->key && str_equal(entry->key, key)) {
         return entry->value;
     }
@@ -47,17 +47,17 @@ static bucket_t *get_bucket(map_t *map, size_t hash) {
     return entry;
 }
 
-HOT static bucket_t *map_bucket(map_t *map, const char *key) {
+static bucket_t *map_bucket(map_t *map, const char *key) {
     size_t hash = strhash(key);
     return get_bucket(map, hash);
 }
 
-HOT static bucket_t *map_bucket_ptr(map_t *map, const void *key) {
+static bucket_t *map_bucket_ptr(map_t *map, const void *key) {
     size_t hash = ptr_hash((uintptr_t)key);
     return get_bucket(map, hash);
 }
 
-HOT static void *entry_get_ptr(const bucket_t *entry, const void *key, void *other) {
+static void *entry_get_ptr(const bucket_t *entry, const void *key, void *other) {
     if (entry->key == key) {
         return entry->value;
     }
@@ -76,7 +76,6 @@ static void clear_keys(bucket_t *buckets, size_t size) {
     }
 }
 
-USE_ANNOTATIONS
 void map_set_ptr(map_t *map, const void *key, void *value) {
     bucket_t *entry = map_bucket_ptr(map, key);
 
@@ -101,18 +100,15 @@ void map_set_ptr(map_t *map, const void *key, void *value) {
     }
 }
 
-USE_ANNOTATIONS
 void *map_get_ptr(map_t *map, const void *key) {
     return map_get_ptr_default(map, key, NULL);
 }
 
-USE_ANNOTATIONS
 void *map_get_ptr_default(map_t *map, const void *key, void *other) {
     bucket_t *bucket = map_bucket_ptr(map, key);
     return entry_get_ptr(bucket, key, other);
 }
 
-USE_ANNOTATIONS
 map_t *map_new(size_t size) {
     map_t *map = ctu_malloc(sizeof_map(size));
 
@@ -123,18 +119,15 @@ map_t *map_new(size_t size) {
     return map;
 }
 
-USE_ANNOTATIONS
 void *map_get_default(map_t *map, const char *key, void *other) {
     bucket_t *bucket = map_bucket(map, key);
     return entry_get(bucket, key, other);
 }
 
-USE_ANNOTATIONS
 void *map_get(map_t *map, const char *key) {
     return map_get_default(map, key, NULL);
 }
 
-USE_ANNOTATIONS
 void map_set(map_t *map, const char *key, void *value) {
     bucket_t *entry = map_bucket(map, key);
 
@@ -160,7 +153,6 @@ void map_set(map_t *map, const char *key, void *value) {
     }
 }
 
-USE_ANNOTATIONS
 vector_t *map_values(map_t *map) {
     vector_t *result = vector_new(map->size);
 

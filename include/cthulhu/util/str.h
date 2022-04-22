@@ -22,9 +22,7 @@
  * 
  * @return the formatted string
  */
-PRINT(1, 2)
-NODISCARD RET_STR
-char *format(FORMAT_STR const char *fmt, ...) NOTNULL(1);
+char *format(const char *fmt, ...);
 
 /**
  * @brief format a string with a @a va_list
@@ -36,8 +34,7 @@ char *format(FORMAT_STR const char *fmt, ...) NOTNULL(1);
  * 
  * @return the formatted string
  */
-NODISCARD RET_STR
-char *formatv(FORMAT_STR const char *fmt, va_list args) NONULL;
+char *formatv(const char *fmt, va_list args);
 
 /**
  * @brief see if a string starts with a prefix
@@ -49,8 +46,7 @@ char *formatv(FORMAT_STR const char *fmt, va_list args) NONULL;
  * 
  * @return if str starts with prefix
  */
-NODISCARD
-bool str_startswith(IN_STR const char *str, IN_STR const char *prefix) CONSTFN NONULL;
+bool str_startswith(const char *str, const char *prefix);
 
 /**
  * check if a string ends with a substring
@@ -60,8 +56,7 @@ bool str_startswith(IN_STR const char *str, IN_STR const char *prefix) CONSTFN N
  * 
  * @return if str ends with suffix
  */
-NODISCARD
-bool str_endswith(IN_STR const char *str, IN_STR const char *suffix) CONSTFN NONULL;
+bool str_endswith(const char *str, const char *suffix);
 
 /**
  * @brief join strings 
@@ -73,8 +68,7 @@ bool str_endswith(IN_STR const char *str, IN_STR const char *suffix) CONSTFN NON
  * 
  * @return the joined string
  */
-NODISCARD RET_STR
-char *str_join(IN_STR const char *sep, IN_NOTNULL vector_t *parts) NONULL;
+char *str_join(const char *sep, vector_t *parts);
 
 /**
  * @brief repeat a string
@@ -86,8 +80,7 @@ char *str_join(IN_STR const char *sep, IN_NOTNULL vector_t *parts) NONULL;
  * 
  * @return the repeated string
  */
-NODISCARD RET_STR
-char *str_repeat(IN_STR const char *str, size_t times) NOTNULL(1);
+char *str_repeat(const char *str, size_t times);
 
 /**
  * @brief turn a string into a C string literal
@@ -98,8 +91,7 @@ char *str_repeat(IN_STR const char *str, size_t times) NOTNULL(1);
  * 
  * @return the normalized string
  */
-NODISCARD RET_STR
-char *str_normalize(IN_STR const char *str) NONULL;
+char *str_normalize(const char *str);
 
 /**
  * @brief turn a string with length into a C string literal
@@ -111,9 +103,7 @@ char *str_normalize(IN_STR const char *str) NONULL;
  * 
  * @return the normalized string
  */
-RESULT(strlen(return) == MIN(strlen(str), len))
-NODISCARD RET_STR
-char *str_normalizen(IN_STR const char *str, size_t len) CONSTFN NONULL;
+char *str_normalizen(const char *str, size_t len);
 
 /**
  * @brief split a string into a vector by a separator
@@ -126,9 +116,7 @@ char *str_normalizen(IN_STR const char *str, size_t len) CONSTFN NONULL;
  * 
  * @return the substrings
  */
-ALWAYS(strlen(sep) > 0)
-NODISCARD RET_VALID
-vector_t *str_split(IN_STR const char *str, IN_STR const char *sep) CONSTFN NONULL;
+vector_t *str_split(const char *str, const char *sep);
 
 /**
  * @brief find the longest common prefix of a vector of paths
@@ -139,9 +127,7 @@ vector_t *str_split(IN_STR const char *str, IN_STR const char *sep) CONSTFN NONU
  * 
  * @return the common prefix
  */
-ALWAYS(args->used > 0)
-NODISCARD RET_STR
-const char *common_prefix(vector_t *args) CONSTFN NONULL;
+const char *common_prefix(vector_t *args);
 
 /**
  * @brief find the last instance of a substring in a string
@@ -151,10 +137,7 @@ const char *common_prefix(vector_t *args) CONSTFN NONULL;
  * 
  * @return the index of the last instance of @a sub in @a str, or SIZE_MAX if sub is not found
  */
-ALWAYS(strlen(sub) > 0)
-RESULT(return <= strlen(str))
-NODISCARD
-size_t str_rfind(IN_STR const char *str, IN_STR const char *sub) CONSTFN NONULL;
+size_t str_rfind(const char *str, const char *sub);
 
 /**
  * @brief check if a string contains a substring
@@ -164,9 +147,7 @@ size_t str_rfind(IN_STR const char *str, IN_STR const char *sub) CONSTFN NONULL;
  * 
  * @return if @a sub is found in @a str
  */ 
-ALWAYS(strlen(sub) > 0)
-NODISCARD
-bool str_contains(IN_STR const char *str, IN_STR const char *sub) CONSTFN NONULL;
+bool str_contains(const char *str, const char *sub);
 
 /**
  * @brief replace all instances of a substring in a string
@@ -177,9 +158,7 @@ bool str_contains(IN_STR const char *str, IN_STR const char *sub) CONSTFN NONULL
  * 
  * @return a copy of @a str with all instances of @a sub replaced with @a repl
  */
-ALWAYS(strlen(sub) > 0)
-NODISCARD RET_STR
-char *str_replace(IN_STR const char *str, IN_STR const char *sub, IN_STR const char *repl) NONULL;
+char *str_replace(const char *str, const char *sub, const char *repl);
 
 /**
  * @brief hash a string
@@ -188,8 +167,7 @@ char *str_replace(IN_STR const char *str, IN_STR const char *sub, IN_STR const c
  * 
  * @return the hash
  */
-NODISCARD
-size_t strhash(IN_STR const char *str) CONSTFN NONULL;
+size_t strhash(const char *str);
 
 /**
  * @brief compare strings equality
@@ -201,8 +179,7 @@ size_t strhash(IN_STR const char *str) CONSTFN NONULL;
  * 
  * @return if the strings are equal
  */
-NODISCARD
-bool str_equal(IN_STR const char *lhs, IN_STR const char *rhs) HOT CONSTFN NONULL;
+bool str_equal(const char *lhs, const char *rhs);
 
 /** @} */
 
@@ -212,9 +189,9 @@ typedef struct {
     char *data;
 } stream_t;
 
-void stream_delete(stream_t *stream) NONULL;
-stream_t *stream_new(size_t size) ALLOC(stream_delete);
-size_t stream_len(stream_t *stream) CONSTFN NONULL;
-void stream_write(stream_t *stream, const char *str) NONULL;
-void stream_write_bytes(stream_t *stream, const void *bytes, size_t len) NONULL;
-const char *stream_data(const stream_t *stream) CONSTFN NONULL;
+void stream_delete(stream_t *stream);
+stream_t *stream_new(size_t size);
+size_t stream_len(stream_t *stream);
+void stream_write(stream_t *stream, const char *str);
+void stream_write_bytes(stream_t *stream, const void *bytes, size_t len);
+const char *stream_data(const stream_t *stream);

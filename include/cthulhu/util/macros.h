@@ -8,97 +8,8 @@
 #   include <sal.h>
 #   define DISABLE_SAL __pragma(warning(push, 1)) \
     __pragma(warning(disable : 6011 6240 6262 6387 28199 28278))
-
-#   define NODISCARD _Check_return_
-
-#   define IN_RANGE(lhs, rhs) _In_range_(lhs, rhs)
-#   define IN_READS(expr) _In_reads_(expr)
-#   define IN_READS_STR(expr) _In_reads_z_(expr)
-
-#   define OUT_WRITES(expr) _Out_writes_(expr)
-#   define OUT_WRITES_STR(expr) _Out_writes_z_(expr)
-#   define OUT_WRITES_ALL(expr) _Out_writes_all_(expr)
-
-#   define IN_NOTNULL _In_
-#   define IN_NULLABLE _In_opt_
-#   define IN_STR _In_z_
-#   define IN_NULLABLE_STR _In_z_opt_
-
-#   define RET_NOTNULL _Ret_notnull_
-#   define RET_NULLABLE _Ret_maybenull_
-#   define RET_VALID _Ret_valid_
-#   define RET_STR _Ret_z_
-#   define RET_NULLABLE_STR _Ret_maybenull_z_
-
-#   define STRUCT_SIZE(expr) _Struct_size_bytes_(expr)
-#   define FIELD_SIZE(expr) _Field_size_(expr)
-#   define FIELD_STR _Field_z_
-#   define FIELD_RANGE(lhs, rhs) _Field_range_(lhs, rhs)
-#   define USE_ANNOTATIONS _Use_decl_annotations_
-
-#   define PRE_READABLE(expr) _Pre_readable_byte_size_(expr)
-#   define PRE_WRITEABLE(expr) _Pre_writable_byte_size_(expr)
-
-#   define POST_READABLE(expr) _Post_readable_byte_size_(expr)
-#   define POST_WRITEABLE(expr) _Post_writable_byte_size_(expr)
-
-#   define POST_INVALID _Post_invalid_
-
-#   define ALWAYS(expr) _Pre_satisfies_(expr)
-#   define RESULT(expr) _Post_satisfies_(expr)
-#   define AT(param, expr) _At_(param, expr)
-#   define INPUT(expr) _Old_(expr)
-#   define FORMAT_STR _Printf_format_string_
 #else
 #   define DISABLE_SAL
-
-#   define NODISCARD
-
-#   define IN_RANGE(lhs, rhs)
-#   define IN_NOTNULL
-#   define IN_NULLABLE
-#   define IN_NOTNULL_STRING
-#   define IN_NULLABLE_STRING
-
-#   define RET_NOTNULL
-#   define RET_NULLABLE
-#   define RET_VALID
-#   define RET_NOTNULL_STRING
-#   define RET_NULLABLE_STRING 
-
-#   define STRUCT_SIZE(expr)
-#   define FIELD_SIZE(expr)
-#   define FIELD_STR
-#   define FIELD_RANGE(lhs, rhs)
-#   define USE_ANNOTATIONS
-
-#   define PRE_READABLE(expr)
-#   define PRE_WRITEABLE(expr)
-#   define ALWAYS(expr)
-#   define RESULT(expr)
-#   define AT(param, expr)
-#   define INPUT(expr)
-#endif
-
-/// decorators with meaning to the compiler
-#if __GNUC__ >= 11
-#   define PRINT(fmt, args) __attribute__((format(printf, fmt, args)))
-#   define NONULL __attribute__((nonnull))
-#   define NOTNULL(...) __attribute__((nonnull(__VA_ARGS__)))
-#   define CONSTFN __attribute__((const))
-#   define HOT __attribute__((hot))
-#   define ALLOC(release) __attribute__((malloc(release)))
-#   define DO_PRAGMA_INNER(x) _Pragma(#x)
-#   define DO_PRAGMA(x) DO_PRAGMA_INNER(x)
-#   define POISON(...) DO_PRAGMA(GCC poison __VA_ARGS__)
-#else
-#   define PRINT(fmt, args)
-#   define NONULL
-#   define NOTNULL(...)
-#   define CONSTFN
-#   define HOT
-#   define ALLOC(release)
-#   define POISON(...)
 #endif
 
 /**
@@ -158,14 +69,6 @@
 
 #define UNREACHABLE() ASSUME(false)
 
-#if defined(_WIN32)
-#   define CTU_WINDOWS 1
-#elif defined(__linux__)
-#   define CTU_LINUX 1
-#else
-#   error "unknown platform"
-#endif
-
 #define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
 
 /// macros with functionality
@@ -173,7 +76,6 @@
 #define MIN(L, R) ((L) < (R) ? (L) : (R)) 
 
 #define ROUND2(val, mul) ((((val) + (mul) - 1) / (mul)) * (mul))
-
 
 /**
  * @def ROUND2(value, multiple)
@@ -216,12 +118,12 @@
 
 #ifndef _DEFAULT_SOURCE
 #   define _DEFAULT_SOURCE
-#   if !CTU_WINDOWS
+#   ifndef _WIN32
 #       include <sys/mman.h>
 #   endif
 #endif
 
-#if CTU_WINDOWS
+#ifdef _WIN32
 #   define ALLOCA(size) _alloca(size)
 #   define PATH_LEN MAX_PATH
 #else 
@@ -230,7 +132,7 @@
 #   define PATH_LEN PATH_MAX
 #endif
 
-NORETURN PRINT(1, 2)
+NORETURN
 void ctpanic(const char *msg, ...);
 
 #if !defined(NDEBUG) && !defined(_NDEBUG)

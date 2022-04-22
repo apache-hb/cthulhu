@@ -19,7 +19,7 @@
  * 
  * @param ptr a pointer to valid memory allocated from @ref ctu_malloc
  */
-void ctu_free(IN_NOTNULL POST_INVALID void *ptr) NONULL;
+void ctu_free(void *ptr);
 
 /**
  * @brief allocate memory
@@ -31,8 +31,7 @@ void ctu_free(IN_NOTNULL POST_INVALID void *ptr) NONULL;
  * 
  * @return the allocated memory
  */
-NODISCARD POST_WRITEABLE(size)
-void *ctu_malloc(IN_RANGE(>, 0) size_t size) ALLOC(ctu_free);
+void *ctu_malloc(size_t size);
 
 /**
  * @brief reallocate memory
@@ -47,8 +46,7 @@ void *ctu_malloc(IN_RANGE(>, 0) size_t size) ALLOC(ctu_free);
  * 
  * @return the reallocated pointer
  */
-NODISCARD POST_WRITEABLE(size)
-void *ctu_realloc(POST_INVALID IN_READS(size) void *ptr, IN_RANGE(>, 0) size_t size) NOTNULL(1) ALLOC(ctu_free);
+void *ctu_realloc(void *ptr, size_t size);
 
 /**
  * @brief allocate a copy of a string
@@ -60,8 +58,7 @@ void *ctu_realloc(POST_INVALID IN_READS(size) void *ptr, IN_RANGE(>, 0) size_t s
  * 
  * @return the allocated copy of the string
  */
-NODISCARD RET_STR
-char *ctu_strdup(IN_STR const char *str) NONULL ALLOC(ctu_free);
+char *ctu_strdup(const char *str);
 
 /**
  * @brief allocate a copy of a string with a maximum length
@@ -74,8 +71,7 @@ char *ctu_strdup(IN_STR const char *str) NONULL ALLOC(ctu_free);
  * 
  * @return the allocated copy of the string
  */
-NODISCARD RET_STR
-char *ctu_strndup(IN_READS(MIN(strlen(str), len)) const char *str, size_t len) NONULL ALLOC(ctu_free);
+char *ctu_strndup(const char *str, size_t len);
 
 /**
  * @brief duplicate a memory region
@@ -89,8 +85,7 @@ char *ctu_strndup(IN_READS(MIN(strlen(str), len)) const char *str, size_t len) N
  * 
  * @return the duplicated memory
  */
-NODISCARD POST_WRITEABLE(size)
-void *ctu_memdup(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size) NOTNULL(1) ALLOC(ctu_free);
+void *ctu_memdup(const void *ptr, size_t size);
 
 /** @} */
 
@@ -109,8 +104,7 @@ void init_gmp(void);
  * 
  * @see BOX should be used to use this
  */
-NODISCARD POST_WRITEABLE(size)
-void *ctu_box(IN_READS(size) const void *ptr, IN_RANGE(>, 0) size_t size) NOTNULL(1) ALLOC(ctu_free);
+void *ctu_box(const void *ptr, size_t size);
 #define BOX(name) ctu_box(&name, sizeof(name)) ///< box a value onto the heap from the stack
 
 #if ENABLE_TUNING

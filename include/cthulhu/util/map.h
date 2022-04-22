@@ -7,9 +7,7 @@
  * a bucket in a hashmap
  */
 typedef struct bucket_t {
-    FIELD_STR 
     const char *key; ///< can actually be any pointer but we keep it as a const char* for convenience
-    
     void *value; ///< any pointer value
     struct bucket_t *next; ///< the next bucket in the chain
 } bucket_t;
@@ -20,11 +18,8 @@ typedef struct bucket_t {
  * freeing the map will not free the keys or the values.
  * these need to be freed beforehand by the owner of the container.
  */
-typedef STRUCT_SIZE(sizeof(map_t) + size * sizeof(bucket_t)) struct {
-    FIELD_RANGE(>, 0)
+typedef struct {
     size_t size; ///< the number of buckets in the toplevel
-    
-    FIELD_SIZE(size)
     bucket_t data[]; ///< the buckets
 } map_t;
 
@@ -37,8 +32,7 @@ typedef STRUCT_SIZE(sizeof(map_t) + size * sizeof(bucket_t)) struct {
  * 
  * @return a new map
  */
-NODISCARD RET_NOTNULL
-map_t *map_new(IN_RANGE(>, 0) size_t size);
+map_t *map_new(size_t size);
 
 /**
  * create a map with an optimal number of buckets 
@@ -48,7 +42,6 @@ map_t *map_new(IN_RANGE(>, 0) size_t size);
  * 
  * @return a new map
  */
-NODISCARD RET_NOTNULL
 map_t *optimal_map(size_t size);
 
 /**
@@ -58,7 +51,7 @@ map_t *optimal_map(size_t size);
  * @param key the key to set the value for
  * @param value the value to set
  */
-void map_set(IN_NOTNULL map_t *map, IN_STR const char *key, void *value) HOT NOTNULL(1, 2);
+void map_set(map_t *map, const char *key, void *value);
 
 /**
  * get a value from a map
@@ -68,8 +61,7 @@ void map_set(IN_NOTNULL map_t *map, IN_STR const char *key, void *value) HOT NOT
  * 
  * @return the value for the key or NULL if the key is not found
  */
-NODISCARD RET_NOTNULL
-void *map_get(IN_NOTNULL map_t *map, IN_STR const char *key) HOT CONSTFN NONULL;
+void *map_get(map_t *map, const char *key);
 
 /**
  * @brief get a value from a map or a default value if the key is not found
@@ -80,8 +72,7 @@ void *map_get(IN_NOTNULL map_t *map, IN_STR const char *key) HOT CONSTFN NONULL;
  * 
  * @return the value for the key or the default value if the key is not found
  */
-NODISCARD
-void *map_get_default(IN_NOTNULL map_t *map, IN_STR const char *key, void *other) HOT CONSTFN NOTNULL(1, 2);
+void *map_get_default(map_t *map, const char *key, void *other);
 
 /**
  * @brief set a field using a raw pointer rather than a string key
@@ -90,7 +81,7 @@ void *map_get_default(IN_NOTNULL map_t *map, IN_STR const char *key, void *other
  * @param key the key to set the value for
  * @param value the value to set
  */
-void map_set_ptr(IN_NOTNULL map_t *map, IN_NOTNULL const void *key, void *value) HOT NOTNULL(1, 2);
+void map_set_ptr(map_t *map, const void *key, void *value);
 
 /**
  * @brief get a field from a raw pointer rather than a string key
@@ -100,8 +91,7 @@ void map_set_ptr(IN_NOTNULL map_t *map, IN_NOTNULL const void *key, void *value)
  * 
  * @return the value for the key or NULL if the key is not found
  */
-NODISCARD
-void *map_get_ptr(IN_NOTNULL map_t *map, IN_NOTNULL const void *key) HOT NONULL;
+void *map_get_ptr(map_t *map, const void *key);
 
 /**
  * @brief get a field from a raw pointer rather than a string key or a default value if the key is not found
@@ -112,8 +102,7 @@ void *map_get_ptr(IN_NOTNULL map_t *map, IN_NOTNULL const void *key) HOT NONULL;
  * 
  * @return the value for the key or the default value if the key is not found
  */
-NODISCARD
-void *map_get_ptr_default(map_t *map, IN_NOTNULL const void *key, void *other) HOT NOTNULL(1, 2);
+void *map_get_ptr_default(map_t *map, const void *key, void *other);
 
 /**
  * @brief collect all the values in a map into a vector
@@ -122,5 +111,4 @@ void *map_get_ptr_default(map_t *map, IN_NOTNULL const void *key, void *other) H
  * 
  * @return a vector containing all the values
  */
-NODISCARD RET_NOTNULL
-vector_t *map_values(IN_NOTNULL map_t *map) NONULL ALLOC(vector_delete);
+vector_t *map_values(map_t *map);
