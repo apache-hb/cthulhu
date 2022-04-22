@@ -2,6 +2,7 @@
 
 #include "common.h"
 
+#include "cthulhu/util/util.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/error.h"
 
@@ -102,11 +103,14 @@ static size_t windows_tell(file_t *self) {
 }
 
 static void *windows_map(file_t *self) {
-    windows_file_t *file = SELF(self);
-    HANDLE handle = file->handle;
+    size_t size = windows_size(self);
+    void *data = ctu_malloc(size);
+    windows_read(self, data, size);
+    return data;
 
+#if 0
     // file mapping names cant have \\ in them
-    LPCSTR name = str_replace(self->path, "\\", "-");
+    // LPCSTR name = str_replace(self->path, "\\", "-");
 
     DWORD protect = (self->access & WRITE) ? PAGE_READWRITE : PAGE_READONLY;
 
@@ -116,7 +120,7 @@ static void *windows_map(file_t *self) {
         /* flProtect = */ protect,
         /* dwMaximumSizeHigh = */ 0,
         /* dwMaximumSizeLow = */ 0, // we want everything mapped
-        /* lpName = */ name   // get an existing mapping if it exists
+        /* lpName = */ NULL
     );
 
     ctu_errno_t err = ctu_last_error();
@@ -139,6 +143,7 @@ static void *windows_map(file_t *self) {
     printf("view: %s\n", ctu_err_string(err2));
 
     return ptr;
+#endif
 }
 
 static bool windows_ok(file_t *self) {
