@@ -55,29 +55,29 @@ void *scan_get(scan_t *scan) {
     return scan->data;
 }
 
-void *compile_string(scan_t *extra, callbacks_t *callbacks) {
+void *compile_string(scan_t *scan, callbacks_t *callbacks) {
     int err;
     void *scanner;
     void *state;
 
-    if ((err = callbacks->init(extra, &scanner))) {
-        ctu_assert(extra->reports, "failed to init parser for %s due to %d", extra->path, err);
+    if ((err = callbacks->init(scan, &scanner))) {
+        ctu_assert(scan->reports, "failed to init parser for %s due to %d", scan->path, err);
         return NULL;
     }
 
-    if (!(state = callbacks->scan(scan_text(extra), scanner))) {
-        report(extra->reports, ERROR, NULL, "failed to scan %s", extra->path);
+    if (!(state = callbacks->scan(scan_text(scan), scanner))) {
+        report(scan->reports, ERROR, NULL, "failed to scan %s", scan->path);
         return NULL;
     }
 
-    if ((err = callbacks->parse(scanner, extra))) {
-        report(extra->reports, ERROR, NULL, "failed to parse %s", extra->path);
+    if ((err = callbacks->parse(scan, scanner))) {
+        report(scan->reports, ERROR, NULL, "failed to parse %s", scan->path);
         return NULL;
     }
 
     callbacks->destroy(scanner);
 
-    return extra->data;
+    return scan->data;
 }
 
 void *compile_file(scan_t *scan, callbacks_t *callbacks) {

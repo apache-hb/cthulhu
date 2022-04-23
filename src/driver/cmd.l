@@ -25,15 +25,17 @@
     return SHORT_OPT; 
 }
 
-"enable" { return ENABLE; }
-"disable" { return DISABLE; }
-
 [a-zA-Z][a-zA-Z0-9]* { 
     yylval->ident = ctu_strdup(yytext);
     return IDENT; 
 }
 
-[0-9]+ { 
+[a-zA-Z][.a-zA-Z0-9]* { 
+    yylval->ident = ctu_strdup(yytext);
+    return PATH; 
+}
+
+[0-9]+ {
     return NUMBER; 
 }
 
@@ -41,4 +43,4 @@
 
 %%
 
-FLEX_MEMORY(pl0alloc, pl0realloc, pl0free)
+FLEX_MEMORY(cmdalloc, cmdrealloc, cmdfree)

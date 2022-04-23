@@ -1,28 +1,31 @@
-#ifndef FLAG
-#   define FLAG(group, name, type, desc, ...)
+#ifndef DEFAULT_REPORT_LIMIT
+#   define DEFAULT_REPORT_LIMIT 20
 #endif
 
-#ifndef GROUP
-#   define GROUP(name, desc)
+#ifndef COMMAND
+#   define COMMAND(id, type, initial, description, ...)
 #endif
 
-GROUP(GENERAL, "general options")
-GROUP(WARN, "warning options")
-GROUP(OUTPUT, "output options")
+#ifndef SECTION
+#   define SECTION(id)
+#endif
 
-FLAG(GENERAL, PRINT_HELP_MESSAGE, POSITIONAL, "print this message", "-h", "--help", "-?")
-FLAG(GENERAL, PRINT_VERSION_INFO, POSITIONAL, "print version information", "-v", "--version")
-FLAG(GENERAL, ENABLE_VERBOSE_LOGGING, POSITIONAL, "enable verbose logging", "-V", "--verbose")
-FLAG(GENERAL, MODULE_NAME, STRING, "set module name", "-m", "--module")
-FLAG(GENERAL, SEARCH_PATH, STRING, "add search path", "-I", "--include")
+SECTION("general")
 
-FLAG(WARN, DISABLE_WARNINGS, POSITIONAL, "disable all warnings", "-w0", "--no-warnings")
-FLAG(WARN, WARNING_LIMIT, INT, "set warning limit", "-Wlimit")
-FLAG(WARN, WARNING_AS_ERROR, POSITIONAL, "warnings as errors", "-Werror")
+COMMAND(printHelp, bool, false, "print this help message", { "--help", "-h", "/?" })
+COMMAND(printVersion, bool, false, "print the version number", { "--version", "-v" })
 
-FLAG(OUTPUT, OUTPUT_FORMAT, STRING, "set output format", "-f", "--format")
-FLAG(OUTPUT, OUTPUT_PATH, STRING, "set output path", "-o", "--output")
-FLAG(OUTPUT, TARGET_ARCH, STRING, "set target architecture", "-a", "--arch")
+SECTION("reporting")
 
-#undef GROUP
-#undef FLAG
+COMMAND(verboseLogging, bool, false, "print verbose information", { "-Wverbose" })
+COMMAND(warningLimit, int, DEFAULT_REPORT_LIMIT, "limit the number of reported errors", { "--Wlimit" })
+
+SECTION("codegen")
+
+COMMAND(enableBytecode, bool, false, "enable bytecode generation", { "-B" })
+COMMAND(embedSource, bool, false, "embed the source code in the bytecode", { "-Bembed" })
+COMMAND(moduleName, const char *, NULL, "override default module name", { "-Bmodule" })
+COMMAND(outputFile, const char *, NULL, "override default output file", { "-O" })
+
+#undef COMMAND
+#undef SECTION

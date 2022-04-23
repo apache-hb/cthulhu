@@ -1,6 +1,7 @@
 #include "cthulhu/util/error.h"
 
 #include "cthulhu/driver/driver.h"
+#include "cmd.h"
 
 #include "cthulhu/hlir/init.h"
 
@@ -12,13 +13,9 @@
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/vector.h"
 
-
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
-
-
-#define DEFAULT_REPORT_LIMIT 20
 
 static void print_version(driver_t driver) {
     printf("%s: %s\n", driver.name, driver.version);
@@ -237,9 +234,9 @@ int common_main(int argc, const char **argv, driver_t driver) {
     }
 
     bool bytecode = find_arg(argc, argv, "--bytecode", "-bc");
-    bool embed_bc = find_arg(argc, argv, "-Bembed", NULL);
+    bool embedSource = find_arg(argc, argv, "-Bembed", NULL);
 
-    const char *mod_name = get_arg(reports, argc, argv, "--module", "-m");
+    const char *moduleName = get_arg(reports, argc, argv, "--module", "-m");
     const char *out = get_arg(reports, argc, argv, "--output", "-out");
     if (out == NULL) {
         out = "a.out";
@@ -295,7 +292,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
     }
     CTASSERT(hlir != NULL, "driver.sema == NULL");
 
-    rename_module(reports, hlir, path, mod_name);
+    rename_module(reports, hlir, path, moduleName);
     check_module(reports, hlir);
     status = end_reports(reports, limit, "module checking");
     if (status != 0) {
@@ -303,7 +300,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
     }
 
     if (bytecode) {
-        save_settings_t settings = {.embedSource = embed_bc};
+        save_settings_t settings = {.embedSource = embedSource};
 
         save_module(reports, &settings, hlir, out);
         status = end_reports(reports, limit, "bytecode generation");

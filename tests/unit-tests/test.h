@@ -19,7 +19,7 @@ static const char *kResultNames[TEST_RESULT_TOTAL] = {
     [TEST_ERROR] = "ERROR"
 };
 
-static int CODES[TEST_RESULT_TOTAL] = {
+static int kErrorCodes[TEST_RESULT_TOTAL] = {
     [TEST_PASSED] = 0,
     [TEST_FAILED] = 1,
     [TEST_SKIPPED] = 77,
@@ -50,11 +50,12 @@ static int run_tests(const char *suite, const test_t *tests, size_t total) {
     }
 
     printf("suite %s %s\n", suite, kResultNames[result]);
-    return CODES[result];
+    return kErrorCodes[result];
 }
 
 #define HARNESS(name, ...) \
     int main(void) { \
+        setbuf(stdout, NULL); \
         test_t all[] = __VA_ARGS__; \
         return run_tests(name, all, sizeof(all) / sizeof(test_t)); \
     }

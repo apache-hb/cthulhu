@@ -87,6 +87,7 @@ parse = generator(bison,
 src = [
     # command line
     'src/driver/driver.c',
+    'src/driver/cmd.c',
     lex.process('src/driver/cmd.l'),
     parse.process('src/driver/cmd.y'),
     

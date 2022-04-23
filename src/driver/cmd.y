@@ -14,7 +14,6 @@
     #include "src/driver/cmd.h"
     #define YYSTYPE CMDSTYPE
     #define YYLTYPE CMDLTYPE
-    #define CMDLTYPE_IS_DECLARED
 }
 
 %{
@@ -24,10 +23,7 @@ void cmderror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 
 %union {
-    option_t *option;
-    cmd_flag_t flag;
-
-    const char *ident;
+    char *ident;
     mpz_t number;
 }
 
@@ -43,17 +39,8 @@ void cmderror(where_t *where, void *state, scan_t *scan, const char *msg);
 %token
     ASSIGN "="
 
-    ENABLE "enable"
-    DISABLE "disable"
-
 %type<ident>
     file
-
-%type<flag>
-    flag
-
-%type<option>
-    option
 
 %start entry
 
@@ -62,22 +49,20 @@ void cmderror(where_t *where, void *state, scan_t *scan, const char *msg);
 entry: %empty | arguments ;
 arguments: argument | arguments argument ;
 
-argument: file { add_file($1); }
-    | flag { add_option($1, NULL); }
-    | flag option { add_option($1, $2); }
-    | flag ASSIGN option { add_option($1, $3); }
+argument: file { cmd_add_file(scan_get(x), $1); }
+    | flag { }
+    | flag option { }
+    | flag ASSIGN option { }
     ;
 
 file: PATH ;
 
-flag: LONG_OPT { $$ = get_flag($1); }
-    | SHORT_OPT { $$ = get_flag($1); }
+flag: LONG_OPT { }
+    | SHORT_OPT { }
     ;
 
-option: IDENT { $$ = string_option($1); }
-    | NUMBER { $$ = number_option($1); }
-    | ENABLE { $$ = bool_option(true); }
-    | DISABLE { $$ = bool_option(false); }
+option: IDENT { }
+    | NUMBER { }
     ;
 
 %%

@@ -21,14 +21,12 @@
 
 typedef void *(*parse_t)(reports_t *, scan_t *);
 typedef hlir_t *(*analyze_t)(reports_t *, void *);
-typedef sema_t *(*build_module_t)(reports_t *, hlir_t *);
 
 typedef struct {
     const char *name;
     const char *version;
     parse_t parse;
     analyze_t sema;
-    build_module_t build;
 } driver_t;
 
 /**
