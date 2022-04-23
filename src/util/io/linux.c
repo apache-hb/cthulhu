@@ -2,16 +2,16 @@
 
 #include "cthulhu/util/str.h"
 
-#include <stdio.h>
-#include <unistd.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 typedef struct {
     FILE *file;
 } unix_file_t;
 
-#define SELF(file) ((unix_file_t*)file->data)
+#define SELF(file) ((unix_file_t *)file->data)
 #define TOTAL_SIZE (sizeof(file_t) + sizeof(unix_file_t))
 
 static char *get_absolute(const char *path) {
@@ -65,7 +65,7 @@ static void *unix_map(file_t *self) {
     int prot = self->access == READ ? PROT_READ : PROT_READ | PROT_WRITE;
     size_t len = unix_size(self);
     void *ptr = mmap(NULL, len, prot, MAP_PRIVATE, fd, 0);
-    
+
     return ptr == MAP_FAILED ? NULL : ptr;
 }
 
@@ -81,7 +81,7 @@ static const file_ops_t kFileOps = {
     .size = unix_size,
     .tell = unix_tell,
     .mapped = unix_map,
-    .ok = unix_ok
+    .ok = unix_ok,
 };
 
 void platform_close(file_t *file) {
@@ -96,11 +96,11 @@ void platform_open(file_t **file, const char *path, contents_t format, access_t 
     self->access = access;
     self->backing = FD;
     self->ops = &kFileOps;
-    
+
     char mode[] = {
         access == WRITE ? 'w' : 'r',
         format == BINARY ? 'b' : '\0',
-        '\0'
+        '\0',
     };
     unix_file_t *nix = SELF(self);
     nix->file = fopen(path, mode);

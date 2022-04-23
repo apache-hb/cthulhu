@@ -1,8 +1,9 @@
 #pragma once
 
-#include "cthulhu/util/report.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/util/map.h"
+#include "cthulhu/util/report.h"
+
 
 typedef uint64_t offset_t;
 typedef uint32_t type_t;
@@ -29,8 +30,8 @@ typedef struct {
     offset_t length;
 } array_t;
 
-#define NULL_INDEX ((index_t){UINT32_MAX, UINT64_MAX})
-#define NULL_ARRAY ((array_t){UINT64_MAX, UINT64_MAX})
+#define NULL_INDEX ((index_t) {UINT32_MAX, UINT64_MAX})
+#define NULL_ARRAY ((array_t) {UINT64_MAX, UINT64_MAX})
 
 typedef union {
     const char *string;
@@ -72,8 +73,10 @@ typedef struct {
 } format_t;
 
 #define FIELD(name, type) type
-#define LAYOUT(name, array) { .length = sizeof(array) / sizeof(field_t), .fields = (array) }
-#define FORMAT(head, array) { .header = (head), .types = sizeof(array) / sizeof(layout_t), .layouts = (array) }
+#define LAYOUT(name, array) \
+    { .length = sizeof(array) / sizeof(field_t), .fields = (array) }
+#define FORMAT(head, array) \
+    { .header = (head), .types = sizeof(array) / sizeof(layout_t), .layouts = (array) }
 
 #define FIELDLEN(name) (sizeof(name) / sizeof(field_t))
 
@@ -81,15 +84,15 @@ typedef struct {
 
 #define VERSION_MAJOR(version) (((version) >> 24) & 0xFF)
 #define VERSION_MINOR(version) (((version) >> 16) & 0xFF)
-#define VERSION_PATCH(version) ((version) & 0xFFFF)
+#define VERSION_PATCH(version) ((version)&0xFFFF)
 
 typedef struct {
-    reports_t *reports; // report sink
+    reports_t *reports;     // report sink
     const format_t *format; // a description of the data we're dealing with
-    const char *path; // where is this data
-    record_t header; // our expected data header
-    submagic_t submagic; // submagic for this data
-    semver_t semver; // semver for this data
+    const char *path;       // where is this data
+    record_t header;        // our expected data header
+    submagic_t submagic;    // submagic for this data
+    semver_t semver;        // semver for this data
 } header_t;
 
 typedef struct {
@@ -98,25 +101,25 @@ typedef struct {
     union {
         // data needed for writing
         struct {
-            stream_t *stream; // the global stream that everything eventually ends up in
-            stream_t *strings; // the string table
-            map_t *cache; // string offset cache
-            stream_t *arrays; // the array table
+            stream_t *stream;   // the global stream that everything eventually ends up in
+            stream_t *strings;  // the string table
+            map_t *cache;       // string offset cache
+            stream_t *arrays;   // the array table
             stream_t **records; // all our serialized data per type
         };
 
         // data needed for reading
         struct {
             const char *data; // the raw data
-            size_t length; // the length of the data
-            size_t string; // string table offset
-            size_t array; // array table offset
-            size_t *offsets; // the offset table
+            size_t length;    // the length of the data
+            size_t string;    // string table offset
+            size_t array;     // array table offset
+            size_t *offsets;  // the offset table
         };
     };
 
     size_t *counts; // the amount of records per type
-    size_t *sizes; // the size of each type
+    size_t *sizes;  // the size of each type
 } data_t;
 
 void begin_save(data_t *out, header_t header);

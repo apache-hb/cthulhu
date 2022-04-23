@@ -21,7 +21,7 @@ static size_t sizeof_map(size_t size) {
     return sizeof(map_t) + (size * sizeof(bucket_t));
 }
 
-static bucket_t *bucket_new(const char *key, void *value) { 
+static bucket_t *bucket_new(const char *key, void *value) {
     bucket_t *entry = ctu_malloc(sizeof(bucket_t));
     entry->key = key;
     entry->value = value;
@@ -84,13 +84,13 @@ void map_set_ptr(map_t *map, const void *key, void *value) {
             entry->key = key;
             entry->value = value;
             return;
-        } 
-        
+        }
+
         if (entry->key == key) {
             entry->value = value;
             return;
-        } 
-        
+        }
+
         if (entry->next == NULL) {
             entry->next = bucket_new(key, value);
             return;
@@ -136,18 +136,18 @@ void map_set(map_t *map, const char *key, void *value) {
             entry->key = key;
             entry->value = value;
             break;
-        }  
-        
+        }
+
         if (str_equal(entry->key, key)) {
             entry->value = value;
             break;
-        } 
-        
+        }
+
         if (entry->next == NULL) {
             entry->next = bucket_new(key, value);
             break;
             entry = entry->next;
-        } 
+        }
 
         entry = entry->next;
     }

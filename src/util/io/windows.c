@@ -2,9 +2,9 @@
 
 #include "common.h"
 
-#include "cthulhu/util/util.h"
-#include "cthulhu/util/str.h"
 #include "cthulhu/util/error.h"
+#include "cthulhu/util/str.h"
+#include "cthulhu/util/util.h"
 
 #include <stdint.h>
 
@@ -14,7 +14,7 @@ typedef struct {
 
 #define TOTAL_SIZE (sizeof(file_t) + sizeof(windows_file_t))
 
-#define SELF(file) ((windows_file_t*)file->data)
+#define SELF(file) ((windows_file_t *)(file)->data)
 
 static size_t windows_read(file_t *self, void *dst, size_t total) {
     CTASSERTF(total < UINT32_MAX, "cannot read > DWORD_MAX, attempted read of %zu", total);
@@ -26,10 +26,11 @@ static size_t windows_read(file_t *self, void *dst, size_t total) {
         /* lpBuffer = */ dst,
         /* nNumberOfBytesToRead = */ (DWORD)total,
         /* lpNumberOfBytesRead = */ &read,
-        /* lpOverlapped = */ NULL
-    );
+        /* lpOverlapped = */ NULL);
 
-    if (!result) { return 0; }
+    if (!result) {
+        return 0;
+    }
 
     return read;
 }
@@ -44,58 +45,62 @@ static size_t windows_write(file_t *self, const void *src, size_t total) {
         /* lpBuffer = */ src,
         /* nNumberOfBytesToWrite = */ (DWORD)total,
         /* lpNumberOfBytesWritten = */ &written,
-        /* lpOverlapped = */ NULL
-    );
+        /* lpOverlapped = */ NULL);
 
-    if (!result) { return 0; }
+    if (!result) {
+        return 0;
+    }
 
     return written;
 }
 
 static size_t windows_seek(file_t *self, size_t offset) {
     windows_file_t *file = SELF(self);
-    LARGE_INTEGER distanceToMove = { .QuadPart = offset };
+    LARGE_INTEGER distanceToMove = {.QuadPart = (LONGLONG)offset};
     LARGE_INTEGER newPosition;
-    
+
     BOOL result = SetFilePointerEx(
         /* hFile = */ file->handle,
         /* liDistanceToMove = */ distanceToMove,
         /* lpNewFilePointer = */ &newPosition,
-        /* dwMoveMethod = */ FILE_BEGIN
-    );
+        /* dwMoveMethod = */ FILE_BEGIN);
 
-    if (!result) { return SIZE_MAX; }
+    if (!result) {
+        return SIZE_MAX;
+    }
 
     return newPosition.QuadPart;
 }
 
 static size_t windows_size(file_t *self) {
     windows_file_t *file = SELF(self);
-    LARGE_INTEGER size = { .QuadPart = 0 };
+    LARGE_INTEGER size = {.QuadPart = 0};
 
     BOOL result = GetFileSizeEx(
         /* hFile = */ file->handle,
-        /* lpFileSize = */ &size
-    );
+        /* lpFileSize = */ &size);
 
-    if (!result) { return SIZE_MAX; }
+    if (!result) {
+        return SIZE_MAX;
+    }
 
     return size.QuadPart;
 }
 
 static size_t windows_tell(file_t *self) {
     windows_file_t *file = SELF(self);
-    LARGE_INTEGER distanceToMove = { .QuadPart = 0 };
-    LARGE_INTEGER newPosition = { .QuadPart = 0 };
-    
+    LARGE_INTEGER distanceToMove = {.QuadPart = 0};
+    LARGE_INTEGER newPosition = {.QuadPart = 0};
+
     BOOL result = SetFilePointerEx(
         /* hFile = */ file->handle,
         /* lpDistanceToMove = */ distanceToMove,
         /* lpNewFilePointer = */ &newPosition,
-        /* dwMoveMethod = */ FILE_CURRENT
-    );
+        /* dwMoveMethod = */ FILE_CURRENT);
 
-    if (!result) { return SIZE_MAX; }
+    if (!result) {
+        return SIZE_MAX;
+    }
 
     return newPosition.QuadPart;
 }
@@ -156,7 +161,7 @@ static const file_ops_t kFileOps = {
     .size = windows_size,
     .tell = windows_tell,
     .mapped = windows_map,
-    .ok = windows_ok
+    .ok = windows_ok,
 };
 
 #define UTF8_CODEPAGE 65001
@@ -207,10 +212,8 @@ void platform_open(file_t **file, const char *path, contents_t format, access_t 
     self->backing = FD;
     self->ops = &kFileOps;
 
-    DWORD desiredAccess = (access & READ ? GENERIC_READ : 0)
-                        | (access & WRITE ? GENERIC_WRITE : 0)
-                        ;
-    
+    DWORD desiredAccess = (access & READ ? GENERIC_READ : 0) | (access & WRITE ? GENERIC_WRITE : 0);
+
     DWORD createDisposition = (access & WRITE) ? CREATE_ALWAYS : OPEN_EXISTING;
 
     DWORD flags = FILE_ATTRIBUTE_NORMAL;
@@ -222,8 +225,7 @@ void platform_open(file_t **file, const char *path, contents_t format, access_t 
         /* lpSecurityAttributes = */ NULL,
         /* dwCreationDisposition = */ createDisposition,
         /* dwFlagsAndAttributes = */ flags,
-        /* hTemplateFile = */ NULL
-    );
+        /* hTemplateFile = */ NULL);
 
     ctu_errno_t err = ctu_last_error();
     printf("%s: %s\n", absolute, ctu_err_string(err));

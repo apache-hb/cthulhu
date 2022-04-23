@@ -1,12 +1,14 @@
 #include "cthulhu/util/str.h"
-#include "cthulhu/util/util.h"
 #include "cthulhu/util/io.h"
+#include "cthulhu/util/util.h"
 
+
+#include <ctype.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
-#include <stdint.h>
+
 
 char *format(const char *fmt, ...) {
     va_list args;
@@ -47,7 +49,7 @@ char *ctu_filename(const char *path) {
     if (idx == SIZE_MAX) {
         return ctu_noext(path);
     }
-    
+
     return ctu_noext(path + idx + 1);
 }
 
@@ -157,7 +159,7 @@ static size_t normstr(char *out, char c) {
         out[0] = c;
         return 1;
     }
-    
+
     return sprintf(out, "\\x%02x", c & 0xFF);
 }
 
@@ -206,7 +208,7 @@ vector_t *str_split(const char *str, const char *sep) {
 
     const char *token = str;
     const char *cursor = str;
-    
+
     while (*cursor) {
         if (!str_startswith(cursor, sep)) {
             cursor += 1;
@@ -289,7 +291,7 @@ const char *stream_data(const stream_t *stream) {
 
 /**
  * modified version of https://rosettacode.org/wiki/Longest_common_prefix#C
- * 
+ *
  * expects a list of file paths
  */
 const char *common_prefix(vector_t *args) {
@@ -300,7 +302,7 @@ const char *common_prefix(vector_t *args) {
         return vector_get(args, 0);
     }
 
-    char **strings = ctu_malloc(len * sizeof(char*));
+    char **strings = ctu_malloc(len * sizeof(char *));
 
     size_t lower = SIZE_MAX;
 
@@ -333,7 +335,7 @@ size_t str_rfind(const char *str, const char *sub) {
 
     CTASSERT(len > 0, "str must not be empty");
     CTASSERT(sublen > 0, "sub must not be empty");
-    
+
     while (len--) {
         if (strncmp(str + len, sub, sublen) == 0) {
             return len;

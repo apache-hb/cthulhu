@@ -52,7 +52,7 @@ static const char *get_width(wasm_t *wasm, digit_t digit) {
     switch (digit) {
     case DIGIT_CHAR:
     case DIGIT_SHORT:
-    case DIGIT_INT: 
+    case DIGIT_INT:
         return "32";
 
     case DIGIT_LONG:
@@ -76,8 +76,9 @@ static char *emit_wasm_digit(wasm_t *wasm, const hlir_t *node) {
 
 static char *emit_wasm_type(wasm_t *wasm, const hlir_t *node) {
     switch (node->type) {
-    case HLIR_DIGIT: return emit_wasm_digit(wasm, node);
-    default: 
+    case HLIR_DIGIT:
+        return emit_wasm_digit(wasm, node);
+    default:
         ctu_assert(wasm->reports, "emit-type unknown type %d", node->type);
         return ctu_strdup("error");
     }
@@ -122,7 +123,6 @@ static void emit_function_node(wasm_t *wasm, const hlir_t *node) {
         char *result = emit_wasm_type(wasm, node->result);
         wasm_write(wasm, format("(result %s)", result));
     }
-
 
     emit_node(wasm, node->body);
 
@@ -188,28 +188,15 @@ static void emit_loop_node(wasm_t *wasm, const hlir_t *node) {
 }
 
 static const char *kCompareNames[COMPARE_TOTAL] = {
-    [COMPARE_EQ] = "eq",
-    [COMPARE_NEQ] = "ne",
-    [COMPARE_LT] = "lt_s",
-    [COMPARE_LTE] = "le_s",
-    [COMPARE_GT] = "gt_s",
-    [COMPARE_GTE] = "ge_s"
-};
+    [COMPARE_EQ] = "eq",    [COMPARE_NEQ] = "ne",  [COMPARE_LT] = "lt_s",
+    [COMPARE_LTE] = "le_s", [COMPARE_GT] = "gt_s", [COMPARE_GTE] = "ge_s"};
 
-static const char *kBinaryNames[BINARY_TOTAL] = {
-    [BINARY_ADD] = "add",
-    [BINARY_SUB] = "sub",
-    [BINARY_MUL] = "mul",
-    [BINARY_DIV] = "div_s",
-    [BINARY_REM] = "rem_s",
+static const char *kBinaryNames[BINARY_TOTAL] = {[BINARY_ADD] = "add",    [BINARY_SUB] = "sub",   [BINARY_MUL] = "mul",
+                                                 [BINARY_DIV] = "div_s",  [BINARY_REM] = "rem_s",
 
-    [BINARY_BITAND] = "and",
-    [BINARY_BITOR] = "or",
-    [BINARY_XOR] = "xor",
+                                                 [BINARY_BITAND] = "and", [BINARY_BITOR] = "or",  [BINARY_XOR] = "xor",
 
-    [BINARY_SHL] = "shl",
-    [BINARY_SHR] = "shr_s"
-};
+                                                 [BINARY_SHL] = "shl",    [BINARY_SHR] = "shr_s"};
 
 static void emit_compare_node(wasm_t *wasm, const hlir_t *node) {
     emit_node(wasm, node->lhs);
@@ -329,7 +316,7 @@ static void emit_node(wasm_t *wasm, const hlir_t *node) {
 }
 
 void wasm_emit_tree(reports_t *reports, const hlir_t *hlir) {
-    wasm_t wasm = { reports, stream_new(0x1000), 0 };
+    wasm_t wasm = {reports, stream_new(0x1000), 0};
     emit_node(&wasm, hlir);
 
     printf("%s", stream_data(wasm.stream));

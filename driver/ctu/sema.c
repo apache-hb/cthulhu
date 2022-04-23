@@ -1,17 +1,18 @@
 #include "sema.h"
 #include "ast.h"
 
+#include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/type.h"
-#include "cthulhu/hlir/decl.h"
+
 
 #include "cthulhu/util/report-ext.h"
 #include "cthulhu/util/set.h"
 
 typedef enum {
-    TAG_VARS, // hlir_t*
-    TAG_PROCS, // hlir_t*
-    TAG_TYPES, // hlir_t*
+    TAG_VARS,    // hlir_t*
+    TAG_PROCS,   // hlir_t*
+    TAG_TYPES,   // hlir_t*
     TAG_MODULES, // sema_t*
 
     TAG_MAX
@@ -67,10 +68,14 @@ static hlir_t *sema_closure(sema_t *sema, ast_t *ast) {
 
 static hlir_t *sema_type(sema_t *sema, ast_t *ast) {
     switch (ast->of) {
-    case AST_TYPENAME: return sema_typename(sema, ast);
-    case AST_POINTER: return sema_pointer(sema, ast);
-    case AST_ARRAY: return sema_array(sema, ast);
-    case AST_CLOSURE: return sema_closure(sema, ast);
+    case AST_TYPENAME:
+        return sema_typename(sema, ast);
+    case AST_POINTER:
+        return sema_pointer(sema, ast);
+    case AST_ARRAY:
+        return sema_array(sema, ast);
+    case AST_CLOSURE:
+        return sema_closure(sema, ast);
     default:
         ctu_assert(sema->reports, "unknown sema-type: %d", ast->of);
         return hlir_error(ast->node, "unknown sema-type");
@@ -112,7 +117,7 @@ static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast) {
 
 static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast) {
     vector_t *fields = ast->fields;
-    
+
     check_duplicates_and_add_fields(sema, fields, decl);
 
     hlir_build_union(decl);
@@ -235,17 +240,12 @@ hlir_t *ctu_sema(reports_t *reports, void *ast) {
 
     size_t ndecls = vector_len(root->decls);
 
-    size_t sizes[] = {
-        [TAG_VARS] = ndecls,
-        [TAG_PROCS] = ndecls,
-        [TAG_TYPES] = ndecls,
-        [TAG_MODULES] = ndecls
-    };
+    size_t sizes[] = {[TAG_VARS] = ndecls, [TAG_PROCS] = ndecls, [TAG_TYPES] = ndecls, [TAG_MODULES] = ndecls};
 
     sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
 
     add_basic_types(sema);
-    
+
     for (size_t i = 0; i < ndecls; i++) {
         fwd_decl(sema, vector_get(root->decls, i));
     }

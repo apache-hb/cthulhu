@@ -31,24 +31,15 @@ static const char *emit_array(reports_t *reports, const hlir_t *type, const char
     const char *base = emit_c89_type(reports, type->element, NULL);
     char *length = emit_expr(reports, type->length);
 
-    return name != NULL ? format("%s %s[%s]", base, name, length) 
-                        : format("%s[%s]", base, length);
+    return name != NULL ? format("%s %s[%s]", base, name, length) : format("%s[%s]", base, length);
 }
 
 static const char *kC89SignNames[SIGN_TOTAL] = {
-    [SIGN_DEFAULT] = "",
-    [SIGN_SIGNED] = "signed ",
-    [SIGN_UNSIGNED] = "unsigned "
-};
+    [SIGN_DEFAULT] = "", [SIGN_SIGNED] = "signed ", [SIGN_UNSIGNED] = "unsigned "};
 
 static const char *kC89DigitNames[DIGIT_TOTAL] = {
-    [DIGIT_CHAR] = "char",
-    [DIGIT_SHORT] = "short",
-    [DIGIT_INT] = "int",
-    [DIGIT_LONG] = "long",
-    [DIGIT_SIZE] = "size_t",
-    [DIGIT_PTR] = "intptr_t"
-};
+    [DIGIT_CHAR] = "char", [DIGIT_SHORT] = "short", [DIGIT_INT] = "int",
+    [DIGIT_LONG] = "long", [DIGIT_SIZE] = "size_t", [DIGIT_PTR] = "intptr_t"};
 
 static char *emit_c89_digit(const hlir_t *type, const char *name) {
     char *digit = format("%s%s", kC89SignNames[type->sign], kC89DigitNames[type->width]);
@@ -79,32 +70,41 @@ static char *emit_closure(reports_t *reports, const hlir_t *type, const char *na
         for (size_t i = 0; i < len; i++) {
             const hlir_t *param = vector_get(type->params, i);
             const char *kind = emit_c89_type(reports, param, NULL);
-            vector_set(params, i, (void*)kind);
+            vector_set(params, i, (void *)kind);
         }
         args = str_join(", ", params);
     }
 
-    return name != NULL ? format("%s (*%s)(%s)", result, name, args) 
-                        : format("%s (*)(%s)", result, args);
+    return name != NULL ? format("%s (*%s)(%s)", result, name, args) : format("%s (*)(%s)", result, args);
 }
 
 static const char *emit_c89_type(reports_t *reports, const hlir_t *type, const char *name) {
     hlir_kind_t kind = get_hlir_kind(type);
     switch (kind) {
-    case HLIR_BOOL: return emit_bool(name);
-    case HLIR_VOID: return emit_void(name);
-    case HLIR_DIGIT: return emit_c89_digit(type, name);
-    case HLIR_STRING: return emit_string(name);
+    case HLIR_BOOL:
+        return emit_bool(name);
+    case HLIR_VOID:
+        return emit_void(name);
+    case HLIR_DIGIT:
+        return emit_c89_digit(type, name);
+    case HLIR_STRING:
+        return emit_string(name);
 
-    case HLIR_POINTER: return emit_ptr(reports, type, name);
-    case HLIR_ARRAY: return emit_array(reports, type, name);
+    case HLIR_POINTER:
+        return emit_ptr(reports, type, name);
+    case HLIR_ARRAY:
+        return emit_array(reports, type, name);
 
-    case HLIR_CLOSURE: return emit_closure(reports, type, name);
+    case HLIR_CLOSURE:
+        return emit_closure(reports, type, name);
 
-    case HLIR_STRUCT: return emit_struct(type, name);
-    case HLIR_UNION: return emit_union(type, name);
+    case HLIR_STRUCT:
+        return emit_struct(type, name);
+    case HLIR_UNION:
+        return emit_union(type, name);
 
-    case HLIR_ALIAS: return emit_c89_type(reports, type->alias, name);
+    case HLIR_ALIAS:
+        return emit_c89_type(reports, type->alias, name);
 
     default:
         ctu_assert(reports, "cannot emit %s as a type", hlir_kind_to_string(kind));
@@ -127,7 +127,7 @@ static void emit_type_decl(reports_t *reports, const hlir_t *type) {
     case HLIR_STRUCT:
         emit_aggregate_decl(reports, type, "struct");
         break;
-        
+
     case HLIR_UNION:
         emit_aggregate_decl(reports, type, "union");
         break;
@@ -148,7 +148,7 @@ static char *get_type_params(reports_t *reports, const hlir_t *sig) {
     for (size_t i = 0; i < len; i++) {
         const hlir_t *param = vector_get(sig->params, i);
         const char *type = emit_c89_type(reports, param, NULL);
-        vector_set(types, i, (char*)type);
+        vector_set(types, i, (char *)type);
     }
 
     char *base = str_join(", ", types);
@@ -208,7 +208,8 @@ static char *emit_call(reports_t *reports, const hlir_t *hlir) {
 static char *emit_expr(reports_t *reports, const hlir_t *hlir) {
     switch (hlir->type) {
     case HLIR_FUNCTION:
-    case HLIR_GLOBAL: case HLIR_LOCAL:
+    case HLIR_GLOBAL:
+    case HLIR_LOCAL:
         return ctu_strdup(hlir->name);
     case HLIR_BINARY:
         return emit_binary(reports, hlir);
@@ -275,8 +276,8 @@ static void emit_loop(reports_t *reports, const hlir_t *hlir) {
 
 static void emit_stmt(reports_t *reports, const hlir_t *hlir) {
     switch (hlir->type) {
-    case HLIR_STMTS: 
-        emit_stmts(reports, hlir); 
+    case HLIR_STMTS:
+        emit_stmts(reports, hlir);
         break;
     case HLIR_ASSIGN:
         emit_assign(reports, hlir);
@@ -305,7 +306,9 @@ static void fwd_global(reports_t *reports, const hlir_t *hlir) {
 }
 
 static void emit_global(reports_t *reports, const hlir_t *hlir) {
-    if (hlir->type != HLIR_GLOBAL) { return; }
+    if (hlir->type != HLIR_GLOBAL) {
+        return;
+    }
 
     printf("%s[1] = { %s };\n", emit_hlir_type(reports, hlir), emit_expr(reports, hlir->value));
 }
@@ -334,12 +337,17 @@ static void emit_proc(reports_t *reports, const hlir_t *hlir) {
 }
 
 static void visit_type(reports_t *reports, vector_t **result, const hlir_t *type) {
-    if (vector_find(*result, type) != SIZE_MAX) { return; }
+    if (vector_find(*result, type) != SIZE_MAX) {
+        return;
+    }
 
     switch (type->type) {
-    case HLIR_VOID: case HLIR_DIGIT:
-    case HLIR_BOOL: case HLIR_STRING:
-    case HLIR_POINTER: case HLIR_ARRAY:
+    case HLIR_VOID:
+    case HLIR_DIGIT:
+    case HLIR_BOOL:
+    case HLIR_STRING:
+    case HLIR_POINTER:
+    case HLIR_ARRAY:
         break;
 
     case HLIR_ALIAS:
@@ -349,19 +357,20 @@ static void visit_type(reports_t *reports, vector_t **result, const hlir_t *type
     case HLIR_FIELD:
         visit_type(reports, result, get_hlir_type(type));
         break;
-    
+
     case HLIR_CLOSURE:
         visit_type(reports, result, type->result);
         for (size_t i = 0; i < vector_len(type->params); i++) {
             visit_type(reports, result, vector_get(type->params, i));
         }
         break;
-    
-    case HLIR_STRUCT: case HLIR_UNION:
+
+    case HLIR_STRUCT:
+    case HLIR_UNION:
         for (size_t i = 0; i < vector_len(type->fields); i++) {
             visit_type(reports, result, vector_get(type->fields, i));
         }
-        vector_push(result, (void*)type);
+        vector_push(result, (void *)type);
         break;
 
     default:
@@ -384,7 +393,7 @@ void c89_emit_tree(reports_t *reports, const hlir_t *hlir) {
     printf("// generated by %s\n", hlir->node->scan->path);
     printf("\n");
 
-    // this actually sorts and also removes types that 
+    // this actually sorts and also removes types that
     // we dont need to declare in our C code
     vector_t *types = sorted_types(reports, hlir->types);
     size_t ntypes = vector_len(types);
@@ -398,42 +407,54 @@ void c89_emit_tree(reports_t *reports, const hlir_t *hlir) {
 
     for (size_t i = 0; i < nglobals; i++) {
         const hlir_t *import = vector_get(hlir->globals, i);
-        if (!hlir_is_imported(import)) { continue; }
+        if (!hlir_is_imported(import)) {
+            continue;
+        }
 
         emit_import_decl(reports, import);
     }
 
     for (size_t i = 0; i < nprocs; i++) {
         const hlir_t *import = vector_get(hlir->functions, i);
-        if (!hlir_is_imported(import)) { continue; }
+        if (!hlir_is_imported(import)) {
+            continue;
+        }
 
         emit_import_decl(reports, import);
     }
 
     for (size_t i = 0; i < nglobals; i++) {
         const hlir_t *global = vector_get(hlir->globals, i);
-        if (hlir_is_imported(global)) { continue; }
-        
+        if (hlir_is_imported(global)) {
+            continue;
+        }
+
         fwd_global(reports, global);
     }
 
     for (size_t i = 0; i < nprocs; i++) {
         const hlir_t *proc = vector_get(hlir->functions, i);
-        if (hlir_is_imported(proc)) { continue; }
+        if (hlir_is_imported(proc)) {
+            continue;
+        }
 
         fwd_proc(reports, proc);
     }
 
     for (size_t i = 0; i < nglobals; i++) {
         const hlir_t *global = vector_get(hlir->globals, i);
-        if (hlir_is_imported(global)) { continue; }
+        if (hlir_is_imported(global)) {
+            continue;
+        }
 
         emit_global(reports, global);
     }
-    
+
     for (size_t i = 0; i < nprocs; i++) {
         const hlir_t *proc = vector_get(hlir->functions, i);
-        if (hlir_is_imported(proc)) { continue; }
+        if (hlir_is_imported(proc)) {
+            continue;
+        }
 
         emit_proc(reports, proc);
     }

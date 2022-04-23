@@ -1,7 +1,8 @@
 #include "common.h"
 
-#include "cthulhu/hlir/type.h"
 #include "cthulhu/hlir/query.h"
+#include "cthulhu/hlir/type.h"
+
 
 hlir_t *hlir_error(const node_t *node, const char *error) {
     hlir_t *self = hlir_new(node, kMetaType, HLIR_ERROR);

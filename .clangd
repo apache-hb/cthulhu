@@ -1,0 +1,29 @@
+InlayHints:
+  Enabled: Yes
+  ParameterNames: Yes
+  
+Hover:
+  ShowAKA: No
+
+Diagnostics:
+  ClangTidy:
+    Add: [performance*, portability*, bugprone*,readability-identifier-naming]
+    CheckOptions:
+      readability-identifier-naming.VariableCase: camelBack
+      readability-identifier-naming.ParameterCase: camelBack
+      readability-identifier-naming.MemberCase: camelBack
+
+      readability-identifier-naming.StaticConstantCase: CamelCase
+      readability-identifier-naming.StaticConstantPrefix: k
+
+      readability-identifier-naming.UnionCase: lower_case
+      readability-identifier-naming.UnionSuffx: _t
+
+      readability-identifier-naming.StructCase: lower_case
+      readability-identifier-naming.StructSuffx: _t
+
+      readability-identifier-naming.EnumCase: lower_case
+      readability-identifier-naming.EnumSuffix: _t
+
+      readability-identifier-naming.TypedefCase: lower_case
+      readability-identifier-naming.TypedefSuffix: _t

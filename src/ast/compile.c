@@ -1,29 +1,28 @@
 #define COMPILER_SOURCE 1
 
-#include "cthulhu/util/error.h"
-#include "cthulhu/ast/interop.h"
 #include "cthulhu/ast/compile.h"
+#include "cthulhu/ast/interop.h"
+#include "cthulhu/util/error.h"
 
-#include "cthulhu/util/util.h"
-#include "cthulhu/util/report.h"
+
 #include "cthulhu/util/macros.h"
+#include "cthulhu/util/report.h"
+#include "cthulhu/util/util.h"
+
 
 #include <errno.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+
 
 static scan_t scan_new(reports_t *reports, const char *language, const char *path) {
-    scan_t scan = {
-        .language = language,
-        .path = path,
-        .reports = reports
-    };
+    scan_t scan = {.language = language, .path = path, .reports = reports};
 
     return scan;
 }
 
 scan_t scan_string(reports_t *reports, const char *language, const char *path, const char *text) {
-    text_t source = { .size = strlen(text), .text = text };
+    text_t source = {.size = strlen(text), .text = text};
     scan_t scan = scan_new(reports, language, path);
 
     scan.source = source;
@@ -35,10 +34,7 @@ scan_t scan_file(reports_t *reports, const char *language, file_t *file) {
     size_t size = file_size(file);
     char *text = file_map(file);
     scan_t scan = scan_new(reports, language, file->path);
-    text_t source = { 
-        .size = size, 
-        .text = text 
-    };
+    text_t source = {.size = size, .text = text};
 
     if (text == NULL) {
         ctu_errno_t err = ctu_last_error();
@@ -94,7 +90,7 @@ void *compile_file(scan_t *scan, callbacks_t *callbacks) {
         return NULL;
     }
 
-    callbacks->set_in(fd, state);
+    callbacks->setIn(fd, state);
 
     if ((err = callbacks->parse(scan, state))) {
         return NULL;

@@ -1,20 +1,24 @@
 #include "common.h"
 
-#include <string.h>
 #include <errno.h>
+#include <string.h>
 
 static offset_t write_string(data_t *data, const char *str) {
-    if (str == NULL) { return UINT64_MAX; }
+    if (str == NULL) {
+        return UINT64_MAX;
+    }
 
-    uintptr_t offset = (uintptr_t)map_get_default(data->cache, str, (void*)UINTPTR_MAX);
-    if (offset != UINTPTR_MAX) { return offset; }
+    uintptr_t offset = (uintptr_t)map_get_default(data->cache, str, (void *)UINTPTR_MAX);
+    if (offset != UINTPTR_MAX) {
+        return offset;
+    }
 
     size_t len = strlen(str) + 1;
     size_t result = stream_len(data->strings);
 
     stream_write_bytes(data->strings, str, len);
 
-    map_set(data->cache, str, (void*)result);
+    map_set(data->cache, str, (void *)result);
 
     return result;
 }
@@ -28,7 +32,7 @@ static void write_data(data_t *data, stream_t *dst, layout_t layout, const value
 
         offset_t str;
         char *gmp;
-        
+
         switch (field) {
         case FIELD_STRING:
             str = write_string(data, val.string);
@@ -62,7 +66,7 @@ void begin_save(data_t *out, header_t header) {
     out->stream = stream_new(0x1000);
     out->cache = map_new(1007); // TODO: carry some more data around to better tune this
 
-    out->records = ctu_malloc(sizeof(stream_t*) * len);
+    out->records = ctu_malloc(sizeof(stream_t *) * len);
     out->counts = ctu_malloc(sizeof(size_t) * len);
 
     for (size_t i = 0; i < len; i++) {
@@ -81,11 +85,11 @@ void end_save(data_t *out) {
 
     stream_write(out->strings, "");
 
-    size_t nstrings = stream_len(out->strings); // total length of the string table
-    size_t narrays = stream_len(out->arrays); // total length of the array table
-    size_t ncounts = (sizeof(offset_t) * len); // number of bytes used for counts
-    size_t noffsets = (sizeof(offset_t) * len); // number of bytes used for offsets
-    size_t nheader = sizeof(basic_header_t) + subheader; // number of bytes used for the full header
+    size_t nstrings = stream_len(out->strings);                 // total length of the string table
+    size_t narrays = stream_len(out->arrays);                   // total length of the array table
+    size_t ncounts = (sizeof(offset_t) * len);                         // number of bytes used for counts
+    size_t noffsets = (sizeof(offset_t) * len);                        // number of bytes used for offsets
+    size_t nheader = sizeof(basic_header_t) + subheader;               // number of bytes used for the full header
     size_t offset = nheader + noffsets + ncounts + nstrings + narrays; // total offset of the user data
 
     basic_header_t basic = {
@@ -142,18 +146,15 @@ index_t write_entry(data_t *out, type_t type, const value_t *values) {
     write_data(out, dst, layout, values);
 
     offset_t offset = out->counts[type]++;
-    index_t index = { type, offset };
+    index_t index = {type, offset};
 
     return index;
 }
 
 array_t write_array(data_t *out, index_t *indices, size_t len) {
-    array_t result = {
-        .length = len,
-        .offset = stream_len(out->arrays)
-    };
+    array_t result = {.length = len, .offset = stream_len(out->arrays)};
 
     stream_write_bytes(out->arrays, indices, sizeof(index_t) * len);
-    
+
     return result;
 }

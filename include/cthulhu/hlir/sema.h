@@ -1,8 +1,9 @@
 #pragma once
 
-#include "cthulhu/util/report.h"
 #include "cthulhu/util/map.h"
+#include "cthulhu/util/report.h"
 #include "hlir.h"
+
 
 typedef struct sema_t {
     struct sema_t *parent;

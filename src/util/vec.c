@@ -1,7 +1,6 @@
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/vector.h"
 
-
 #include <stdint.h>
 
 static size_t vector_size(size_t size) {
@@ -81,20 +80,20 @@ size_t vector_find(vector_t *vector, const void *element) {
 }
 
 vector_t *vector_join(const vector_t *lhs, const vector_t *rhs) {
-    size_t lhs_len = vector_len(lhs);
-    size_t rhs_len = vector_len(rhs);
+    size_t lhsLength = vector_len(lhs);
+    size_t rhsLength = vector_len(rhs);
 
-    size_t len = lhs_len + rhs_len;
+    size_t len = lhsLength + rhsLength;
 
     vector_t *out = vector_new(len);
     out->used = len;
 
-    for (size_t i = 0; i < lhs_len; i++) {
+    for (size_t i = 0; i < lhsLength; i++) {
         vector_set(out, i, vector_get(lhs, i));
     }
 
-    for (size_t i = 0; i < rhs_len; i++) {
-        vector_set(out, lhs_len + i, vector_get(rhs, i));
+    for (size_t i = 0; i < rhsLength; i++) {
+        vector_set(out, lhsLength + i, vector_get(rhs, i));
     }
 
     return out;

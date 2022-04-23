@@ -2,15 +2,12 @@
 
 #include <stdint.h>
 
-static size_t SIZES[] = {
-    10, 100, 1000, 10000, 50000,
-    100000, 250000, 500000, 750000,
-    1000000
-};
+static size_t kSizeAnchors[] = {10, 100, 1000, 10000, 50000, 100000, 250000, 500000, 750000, 1000000};
+#define TOTAL_SIZE_ANCHORS (sizeof(kSizeAnchors) / sizeof(size_t))
 
-/** 
- * select a magic constant from our tuning data 
- * 
+/**
+ * select a magic constant from our tuning data
+ *
  * see tools/tune.c for more information
  */
 static size_t bucket_for_size(size_t size) {
@@ -24,11 +21,14 @@ static size_t bucket_for_size(size_t size) {
     case 10000:
         return 21701;
 
-    case 50000: case 100000: 
-    case 250000: case 500000:
+    case 50000:
+    case 100000:
+    case 250000:
+    case 500000:
         return 216091;
-    
-    case 750000: case 1000000: 
+
+    case 750000:
+    case 1000000:
         return 756839;
 
     default:
@@ -46,12 +46,12 @@ static size_t sabs(size_t lhs, size_t rhs) {
 static size_t nearest_const(size_t size) {
     size_t num = 0;
     size_t distance = SIZE_MAX;
-    
-    for (size_t i = 0; i < sizeof(SIZES) / sizeof(size_t); i++) {
-        size_t d = sabs(size, SIZES[i]);
+
+    for (size_t i = 0; i < TOTAL_SIZE_ANCHORS; i++) {
+        size_t d = sabs(size, kSizeAnchors[i]);
         if (d < distance) {
             distance = d;
-            num = SIZES[i];
+            num = kSizeAnchors[i];
         } else {
             break;
         }

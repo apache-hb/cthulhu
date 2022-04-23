@@ -2,12 +2,17 @@
 
 static size_t field_size(field_t field) {
     switch (field) {
-    case FIELD_STRING: return sizeof(size_t);
-    case FIELD_INT: return sizeof(size_t);
-    case FIELD_BOOL: return sizeof(bool);
-    case FIELD_REFERENCE: return sizeof(index_t);
-    case FIELD_ARRAY: return sizeof(array_t);
-    default: return 0;
+    case FIELD_STRING:
+    case FIELD_INT:
+        return sizeof(size_t);
+    case FIELD_BOOL:
+        return sizeof(bool);
+    case FIELD_REFERENCE:
+        return sizeof(index_t);
+    case FIELD_ARRAY:
+        return sizeof(array_t);
+    default:
+        return 0;
     }
 }
 

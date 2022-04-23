@@ -27,7 +27,7 @@ void vector_delete(vector_t *vector);
 
 /**
  * @brief create a new vector.
- * 
+ *
  * creates a vector with a length of 0.
  *
  * @param size the initial amount of allocated memory
@@ -56,7 +56,7 @@ vector_t *vector_init(void *value);
 
 /**
  * @brief add an element to the end of the vector
- * 
+ *
  * push an element onto the end of a vector
  *
  * @param vector a pointer to a vector returned by vector_new.
@@ -87,7 +87,7 @@ void vector_set(vector_t *vector, size_t index, void *value);
 
 /**
  * @brief read from a vector by index.
- * 
+ *
  * get an element from a vector by index.
  * index must not be out of range.
  *
@@ -99,7 +99,7 @@ void *vector_get(const vector_t *vector, size_t index);
 
 /**
  * @brief get a vectors last element
- * 
+ *
  * get the last element from a vector.
  * calling on an empty vector is invalid.
  *
@@ -110,7 +110,7 @@ void *vector_tail(const vector_t *vector);
 
 /**
  * @brief get vector length
- * 
+ *
  * get the length of a vector
  *
  * @param vector the vector to get the length of
@@ -131,7 +131,7 @@ vector_t *vector_join(const vector_t *lhs, const vector_t *rhs);
 
 /**
  * @brief find an element in a vector
- * 
+ *
  * searches by pointer equality.
  *
  * @param vector the vector to search
@@ -142,7 +142,7 @@ size_t vector_find(vector_t *vector, const void *element);
 
 /**
  * @brief reset the length of a vector
- * 
+ *
  * @param vec the vector to clear
  */
 void vector_reset(vector_t *vec);

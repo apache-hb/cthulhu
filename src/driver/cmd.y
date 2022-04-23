@@ -11,10 +11,10 @@
 }
 
 %code requires {
+    #include "src/driver/cmd.h"
     #define YYSTYPE CMDSTYPE
     #define YYLTYPE CMDLTYPE
-    
-    #include "src/driver/cmd.h"
+    #define CMDLTYPE_IS_DECLARED
 }
 
 %{

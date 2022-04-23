@@ -2,8 +2,9 @@
 
 #include <gmp.h>
 
-#include "cthulhu/ast/ops.h"
 #include "cthulhu/ast/ast.h"
+#include "cthulhu/ast/ops.h"
+
 
 typedef enum {
     AST_PROGRAM,

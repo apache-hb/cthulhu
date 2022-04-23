@@ -1,13 +1,15 @@
 #include "cthulhu/util/report.h"
-#include "cthulhu/util/util.h"
 #include "cthulhu/util/str.h"
+#include "cthulhu/util/util.h"
+
 
 #include "cthulhu/ast/scan.h"
 
-#include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 bool verbose = false;
 
@@ -23,42 +25,37 @@ typedef struct {
     const char *coloured;
 } level_format_t;
 
-static level_format_t FORMATS[LEVEL_TOTAL] = {
-    [INTERNAL] = { "internal", COLOUR_CYAN "ice" COLOUR_RESET },
-    [ERROR] = { "error", COLOUR_RED "error" COLOUR_RESET },
-    [WARNING] = { "warning", COLOUR_YELLOW "warning" COLOUR_RESET },
-    [NOTE] = { "note", COLOUR_GREEN "note" COLOUR_RESET },
+static level_format_t kFormats[LEVEL_TOTAL] = {
+    [INTERNAL] = {"internal", COLOUR_CYAN "ice" COLOUR_RESET},
+    [ERROR] = {"error", COLOUR_RED "error" COLOUR_RESET},
+    [WARNING] = {"warning", COLOUR_YELLOW "warning" COLOUR_RESET},
+    [NOTE] = {"note", COLOUR_GREEN "note" COLOUR_RESET},
 };
 
 static const char *report_level_str(level_t level) {
-    return FORMATS[level].plain;
+    return kFormats[level].plain;
 }
 
 static const char *report_level(level_t level) {
-    return FORMATS[level].coloured;
+    return kFormats[level].coloured;
 }
 
 static bool is_multiline_report(where_t where) {
-    return where.last_line > where.first_line;
+    return where.lastLine > where.firstLine;
 }
 
 static size_t total_lines(where_t where) {
-    return where.last_line - where.first_line;
+    return where.lastLine - where.firstLine;
 }
 
 static char *format_location(const char *base, const scan_t *scan, where_t where) {
     if (is_multiline_report(where)) {
-        return format("%s source [%s:%ld:%ld-%ld:%ld]",
-            scan->language, scan->path + strlen(base), 
-            where.first_line + 1, where.first_column,
-            where.last_line + 1, where.last_column
-        );
+        return format("%s source [%s:%ld:%ld-%ld:%ld]", scan->language, scan->path + strlen(base), where.firstLine + 1,
+                      where.firstColumn, where.lastLine + 1, where.lastColumn);
     }
 
-    return format("%s source [%s:%ld:%ld]",
-        scan->language, scan->path + strlen(base), 
-        where.first_line + 1, where.first_column
-    );
+    return format("%s source [%s:%ld:%ld]", scan->language, scan->path + strlen(base), where.firstLine + 1,
+                  where.firstColumn);
 }
 
 static void report_scanner(const char *base, const node_t *node) {
@@ -96,7 +93,7 @@ static char *extract_line(const scan_t *scan, line_t line) {
             break;
         }
     }
-    
+
     size_t len = 0;
     while (source.size > start + len) {
         char c = source.text[start + len];
@@ -106,7 +103,7 @@ static char *extract_line(const scan_t *scan, line_t line) {
         len += 1;
     }
 
-    /** 
+    /**
      * while windows line endings might technically be more correct
      * it doesnt make them any less painful to handle
      */
@@ -121,7 +118,7 @@ static char *extract_line(const scan_t *scan, line_t line) {
         if (c == '\0') {
             break;
         }
-        
+
         *out++ = c;
     }
     *out = '\0';
@@ -130,10 +127,10 @@ static char *extract_line(const scan_t *scan, line_t line) {
 }
 
 static char *build_underline(const char *source, where_t where, const char *note) {
-    column_t front = where.first_column;
-    column_t back = where.last_column;
+    column_t front = where.firstColumn;
+    column_t back = where.lastColumn;
 
-    if (where.first_line < where.last_line) {
+    if (where.firstLine < where.lastLine) {
         back = strlen(source);
     }
 
@@ -163,7 +160,7 @@ static char *build_underline(const char *source, where_t where, const char *note
     str[idx] = '^';
     memset(str + idx + 1, '~', width - 1);
     str[idx + width] = ' ';
-    
+
     if (note) {
         memcpy(str + idx + width + 1, note, len);
         str[idx + width + len + 1] = '\0';
@@ -188,7 +185,7 @@ static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts) {
             continue;
         }
 
-        len = MAX(len, base10_length(part->node->where.first_line + 1));
+        len = MAX(len, base10_length(part->node->where.firstLine + 1));
     }
 
     return len;
@@ -200,33 +197,29 @@ static char *right_align(line_t line, int width) {
 
 /**
  * formats a source span for a single line
- * 
+ *
  *      |
  *  line| source text
  *      | ^~~~~~ underline message
  */
 static char *format_single(const scan_t *scan, where_t where, const char *underline) {
-    line_t first_line = where.first_line + 1;
-    int align = base10_length(first_line);
+    line_t firstLine = where.firstLine + 1;
+    int align = base10_length(firstLine);
 
     char *pad = padding(align);
-    char *digit = right_align(first_line, align);
+    char *digit = right_align(firstLine, align);
 
-    char *first_source = extract_line(scan, where.first_line);
+    char *firstLineOfSource = extract_line(scan, where.firstLine);
 
-    return format(
-        " %s|\n"
-        " %s| %s\n"
-        " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
-        pad,
-        digit, first_source,
-        pad, build_underline(first_source, where, underline)
-    );
+    return format(" %s|\n"
+                  " %s| %s\n"
+                  " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+                  pad, digit, firstLineOfSource, pad, build_underline(firstLineOfSource, where, underline));
 }
 
 /**
  * formats a source span for 2 lines
- * 
+ *
  *       |
  *  line1> source text 1
  *       > source text on the next line
@@ -234,30 +227,24 @@ static char *format_single(const scan_t *scan, where_t where, const char *underl
  *       |
  */
 static char *format_medium2(const scan_t *scan, where_t where, const char *underline) {
-    line_t first_line = where.first_line + 1;
-    int align = base10_length(first_line);
+    line_t firstLine = where.firstLine + 1;
+    int align = base10_length(firstLine);
 
     char *pad = padding(align);
-    char *digit = right_align(first_line, align);
+    char *digit = right_align(firstLine, align);
 
-    char *first_source = extract_line(scan, where.first_line);
-    char *last_source = extract_line(scan, where.last_line);
+    char *firstLineOfSource = extract_line(scan, where.firstLine);
+    char *lastLineOfSource = extract_line(scan, where.lastLine);
 
-    return format(
-        " %s|\n"
-        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
-        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
-        " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
-        pad,
-        digit, first_source,
-        pad, last_source,
-        pad, build_underline(last_source, where, underline)
-    );
+    return format(" %s|\n"
+                  " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
+                  " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+                  pad, digit, firstLineOfSource, pad, lastLineOfSource, pad, build_underline(lastLineOfSource, where, underline));
 }
 
 /**
  * formats a source span for 3 lines
- * 
+ *
  *       |
  *  line1> source text 1
  *       > source text on the next line
@@ -266,33 +253,26 @@ static char *format_medium2(const scan_t *scan, where_t where, const char *under
  *       |
  */
 static char *format_medium3(const scan_t *scan, where_t where, const char *underline) {
-    line_t first_line = where.first_line + 1;
-    int align = base10_length(first_line);
+    line_t firstLine = where.firstLine + 1;
+    int align = base10_length(firstLine);
 
     char *pad = padding(align);
-    char *digit = right_align(first_line, align);
+    char *digit = right_align(firstLine, align);
 
-    char *first_source = extract_line(scan, where.first_line);
-    char *middle_source = extract_line(scan, where.first_line + 1);
-    char *last_source = extract_line(scan, where.last_line);
+    char *firstLineOfSource = extract_line(scan, where.firstLine);
+    char *secondLineOfSource = extract_line(scan, where.firstLine + 1);
+    char *lastLineOfSource = extract_line(scan, where.lastLine);
 
-    return format(
-        " %s|\n"
-        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
-        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
-        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
-        " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
-        pad,
-        digit, first_source,
-        pad, middle_source,
-        pad, last_source,
-        pad, build_underline(last_source, where, underline)
-    );
+    return format(" %s|\n"
+                  " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
+                  " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+                  pad, digit, firstLineOfSource, pad, secondLineOfSource, pad, lastLineOfSource, pad,
+                  build_underline(lastLineOfSource, where, underline));
 }
 
 /**
  * formats a source span for more than 3 lines
- * 
+ *
  *       |
  *  line1> source text 1
  *       > ...
@@ -301,37 +281,34 @@ static char *format_medium3(const scan_t *scan, where_t where, const char *under
  *       |
  */
 static char *format_large(const scan_t *scan, where_t where, const char *underline) {
-    line_t first_line = where.first_line + 1;
-    line_t last_line = where.last_line + 1;
-    int align = MAX(base10_length(first_line), base10_length(last_line)) + 1;
+    line_t firstLine = where.firstLine + 1;
+    line_t lastLine = where.lastLine + 1;
+    int align = MAX(base10_length(firstLine), base10_length(lastLine)) + 1;
 
     char *pad = padding(align);
-    char *first_digit = right_align(first_line, align);
-    char *last_digit = right_align(last_line, align);
+    char *alignedFirstDigit = right_align(firstLine, align);
+    char *alignedLastDigit = right_align(lastLine, align);
 
-    char *first_source = extract_line(scan, where.first_line);
-    char *last_source = extract_line(scan, where.last_line);
+    char *firstSourceLine = extract_line(scan, where.firstLine);
+    char *lastSourceLine = extract_line(scan, where.lastLine);
 
-    return format(
-        " %s|\n"
-        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
-        " %s>" COLOUR_PURPLE " ...\n" COLOUR_RESET
-        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
-        " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
-        pad,
-        first_digit, first_source,
-        pad,
-        last_digit, last_source,
-        pad, build_underline(last_source, where, underline)
-    );
+    return format(" %s|\n"
+                  " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE " ...\n" COLOUR_RESET
+                  " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+                  pad, alignedFirstDigit, firstSourceLine, pad, alignedLastDigit, lastSourceLine, pad,
+                  build_underline(lastSourceLine, where, underline));
 }
 
 static char *format_source(const scan_t *scan, where_t where, const char *underline) {
     switch (total_lines(where)) {
-    case 0: return format_single(scan, where, underline);
-    case 1: return format_medium2(scan, where, underline);
-    case 2: return format_medium3(scan, where, underline);
-    default: return format_large(scan, where, underline);
+    case 0:
+        return format_single(scan, where, underline);
+    case 1:
+        return format_medium2(scan, where, underline);
+    case 2:
+        return format_medium3(scan, where, underline);
+    default:
+        return format_large(scan, where, underline);
     }
 }
 
@@ -354,7 +331,7 @@ static void report_part(const char *base, message_t *message, part_t *part) {
     const scan_t *scan = node->scan;
     where_t where = node->where;
 
-    line_t start = where.first_line;
+    line_t start = where.firstLine;
 
     size_t longest = longest_line(scan, start + 1, message->parts);
     char *pad = padding(longest);
@@ -375,7 +352,7 @@ static void send_note(const char *note) {
 
     // +2 for the `: ` in the final print
     char *padding = format("\n%s", str_repeat(" ", len + 2));
-    
+
     char *aligned = str_replace(note, "\n", padding);
 
     fprintf(stderr, "%s: %s\n", report_level(NOTE), aligned);
@@ -409,14 +386,14 @@ static const char *paths_base(vector_t *messages) {
     for (size_t i = 0; i < len; i++) {
         message_t *message = vector_get(messages, i);
         if (message->node != NULL) {
-            vector_push(&result, (char*)message->node->scan->path);
+            vector_push(&result, (char *)message->node->scan->path);
         }
 
         vector_t *parts = message->parts;
         for (size_t j = 0; j < vector_len(parts); j++) {
             part_t *part = vector_get(parts, j);
             if (part->node != NULL) {
-                vector_push(&result, (char*)part->node->scan->path);
+                vector_push(&result, (char *)part->node->scan->path);
             }
         }
     }
@@ -429,9 +406,9 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
 
     size_t internal = 0;
     size_t fatal = 0;
-    
-    size_t suppressed_fatal = 0;
-    size_t suppressed_warnings = 0;
+
+    size_t fatalMessagesSuppressed = 0;
+    size_t warningsSuppressed = 0;
 
     int result = EXIT_OK;
 
@@ -441,7 +418,7 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
     for (size_t i = 0; i < errors; i++) {
         message_t *message = vector_get(reports->messages, i);
         switch (message->level) {
-        case INTERNAL: 
+        case INTERNAL:
             internal += 1;
             break;
         case ERROR:
@@ -451,18 +428,18 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
             break;
         }
 
-        if (i > total && message->level != INTERNAL) { 
+        if (i > total && message->level != INTERNAL) {
             switch (message->level) {
             case ERROR:
-                suppressed_fatal += 1;
+                fatalMessagesSuppressed += 1;
                 break;
             case WARNING:
-                suppressed_warnings += 1;
+                warningsSuppressed += 1;
                 break;
             default:
                 break;
             }
-            continue; 
+            continue;
         }
 
         report_send(common, message);
@@ -476,8 +453,9 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
         result = EXIT_ERROR;
     }
 
-    if (suppressed_warnings > 0 || suppressed_fatal > 0) {
-        fprintf(stderr, "%zu extra warning(s) and %zu extra error(s) suppressed\n", suppressed_warnings, suppressed_fatal);
+    if (warningsSuppressed > 0 || fatalMessagesSuppressed > 0) {
+        fprintf(stderr, "%zu extra warning(s) and %zu extra error(s) suppressed\n", warningsSuppressed,
+                fatalMessagesSuppressed);
     }
 
     vector_reset(reports->messages);
@@ -485,12 +463,7 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
     return result;
 }
 
-static message_t *report_push(reports_t *reports,
-                              level_t level,
-                              const node_t *node, 
-                              const char *fmt, 
-                              va_list args)
-{
+static message_t *report_push(reports_t *reports, level_t level, const node_t *node, const char *fmt, va_list args) {
     char *str = formatv(fmt, args);
     message_t *message = ctu_malloc(sizeof(message_t));
 
@@ -498,7 +471,7 @@ static message_t *report_push(reports_t *reports,
     message->parts = vector_new(1);
     message->message = str;
     message->underline = NULL;
-    
+
     message->node = node;
 
     message->note = NULL;

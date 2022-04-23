@@ -10,7 +10,7 @@ typedef struct {
 } memory_file_t;
 
 #define TOTAL_SIZE (sizeof(file_t) + sizeof(memory_file_t))
-#define SELF(file) ((memory_file_t*)file->data)
+#define SELF(file) ((memory_file_t *)(file)->data)
 
 static size_t mem_read(file_t *self, void *dst, size_t total) {
     memory_file_t *file = SELF(self);
@@ -61,14 +61,14 @@ static bool mem_ok(file_t *self) {
     return true;
 }
 
-static file_ops_t OPS = { 
+static file_ops_t kMemoryOps = {
     .read = mem_read,
     .write = mem_write,
     .seek = mem_seek,
     .size = mem_size,
     .tell = mem_tell,
     .mapped = mem_map,
-    .ok = mem_ok
+    .ok = mem_ok,
 };
 
 void memory_close(file_t *file) {
@@ -81,7 +81,7 @@ void memory_open(file_t **file, const char *name, size_t size, contents_t format
     self->format = format;
     self->access = access;
     self->backing = MEMORY;
-    self->ops = &OPS;
+    self->ops = &kMemoryOps;
 
     memory_file_t *mem = SELF(self);
     mem->data = ctu_malloc(size);

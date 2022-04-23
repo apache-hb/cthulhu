@@ -1,6 +1,6 @@
 #include "ast.h"
 
-static where_t NOWHERE = { 0, 0, 0, 0 };
+static const where_t kNowhere = {0, 0, 0, 0};
 
 static ast_t *ast_new(astof_t of, scan_t *scan, where_t where) {
     ast_t *ast = ctu_malloc(sizeof(ast_t));
@@ -75,7 +75,7 @@ ast_t *ast_closure(scan_t *scan, where_t where, ast_t *args, ast_t *type) {
 }
 
 ast_t *ast_typelist(vector_t *types, bool variadic) {
-    ast_t *ast = ast_new(AST_TYPELIST, NULL, NOWHERE);
+    ast_t *ast = ast_new(AST_TYPELIST, NULL, kNowhere);
     ast->params = types;
     ast->variadic = variadic;
     return ast;

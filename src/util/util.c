@@ -2,26 +2,26 @@
 
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/io.h"
+#include "cthulhu/util/macros.h"
+#include "cthulhu/util/map.h"
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/str.h"
-#include "cthulhu/util/map.h"
-#include "cthulhu/util/macros.h"
 
-#include <string.h>
-#include <stdlib.h>
+
 #include <gmp.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 #if ENABLE_TUNING
-#   include <malloc.h>
+#    include <malloc.h>
 
-static counters_t counters = { 
-    .mallocs = 0, 
-    .reallocs = 0,
-    .frees = 0,
+static counters_t counters = {.mallocs = 0,
+                              .reallocs = 0,
+                              .frees = 0,
 
-    .current = 0,
-    .peak = 0
-};
+                              .current = 0,
+                              .peak = 0};
 
 counters_t get_counters(void) {
     return counters;
@@ -75,14 +75,14 @@ static void tuning_free(void *ptr) {
     free(ptr);
 }
 
-#   define MALLOC(size) tuning_malloc(size)
-#   define REALLOC(ptr, size) tuning_realloc(ptr, size)
-#   define FREE(ptr) tuning_free(ptr)
+#    define MALLOC(size)       tuning_malloc(size)
+#    define REALLOC(ptr, size) tuning_realloc(ptr, size)
+#    define FREE(ptr)          tuning_free(ptr)
 
 #else
-#   define MALLOC(size) malloc(size)
-#   define REALLOC(ptr, size) realloc(ptr, size)
-#   define FREE(ptr) free(ptr)
+#    define MALLOC(size)       malloc(size)
+#    define REALLOC(ptr, size) realloc(ptr, size)
+#    define FREE(ptr)          free(ptr)
 #endif
 
 void *ctu_malloc(size_t size) {
@@ -122,11 +122,7 @@ static void ctu_gmp_free(void *ptr, size_t size) {
 }
 
 void init_gmp(void) {
-    mp_set_memory_functions(
-        ctu_gmp_malloc, 
-        ctu_gmp_realloc, 
-        ctu_gmp_free
-    );
+    mp_set_memory_functions(ctu_gmp_malloc, ctu_gmp_realloc, ctu_gmp_free);
 }
 
 char *ctu_strdup(const char *str) {

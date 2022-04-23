@@ -1,5 +1,6 @@
-#include "cthulhu/util/util.h"
 #include "cthulhu/util/macros.h"
+#include "cthulhu/util/util.h"
+
 
 #include <string.h>
 
@@ -8,15 +9,15 @@
 #include "cthulhu/ast/interop.h"
 
 void flex_action(where_t *where, const char *text) {
-    where->first_line = where->last_line;
-    where->first_column = where->last_column;
+    where->firstLine = where->lastLine;
+    where->firstColumn = where->lastColumn;
 
     for (int64_t i = 0; text[i]; i++) {
         if (text[i] == '\n') {
-            where->last_line += 1;
-            where->last_column = 0;
+            where->lastLine += 1;
+            where->lastColumn = 0;
         } else {
-            where->last_column += 1;
+            where->lastColumn += 1;
         }
     }
 }
@@ -32,6 +33,6 @@ int flex_input(scan_t *scan, char *out, int size) {
 }
 
 void flex_init(where_t *where) {
-    where->first_line = 0;
-    where->last_line = 0;
+    where->firstLine = 0;
+    where->lastLine = 0;
 }

@@ -1,19 +1,6 @@
 # Styleguide
 
-## Naming
-
-* all functions are `snake_case`
-* all variables are `camelCase`
-* all constants are `kPascalCase`
-* all macros are `SCREAMING_SNAKE_CASE`
-* all types and typedefs are `snake_case` and suffixed with `_t`
-
 ## declarations
-* pointer stars are on the right side of declarations
-```c
-void *data; // do this
-void* data; // not this
-```
 * new and delete methods should be named `type_new` and `type_delete` respectivley
 * files should be organised in the same order
 ```c
@@ -28,7 +15,6 @@ void* data; // not this
 // implementations
 ```
 * use `const` whenever its easy to do so
-* use west const
 * use `#pragma once` over include guards
 * use `#define` for constant values
 * use `enum` for defining related constant values
@@ -36,6 +22,6 @@ void* data; // not this
 ## banned features
 * no VLAs & `alloca`, hard to debug, easy to crash
 * no `volatile`, it doesnt do what you think it does
-* no compiler specific extensions
+* no compiler specific extensions without ifdef guards
 * no mutable global state, all code must be reentrant and thread safe
 * no inline asm

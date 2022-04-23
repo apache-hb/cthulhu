@@ -22,6 +22,8 @@
 !*.build
 !meson_options.txt
 !Doxyfile.in
+!.clangd
+!.clang-format
 
 # dont ignore scripts
 !*.py

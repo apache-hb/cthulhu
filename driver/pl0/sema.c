@@ -1,11 +1,12 @@
 #include "sema.h"
 
 #include "cthulhu/driver/driver.h"
-#include "cthulhu/hlir/type.h"
 #include "cthulhu/hlir/decl.h"
-#include "cthulhu/hlir/sema.h"
 #include "cthulhu/hlir/query.h"
+#include "cthulhu/hlir/sema.h"
+#include "cthulhu/hlir/type.h"
 #include "cthulhu/util/report-ext.h"
+
 
 static hlir_t *kIntegerType;
 static hlir_t *kBoolType;
@@ -37,11 +38,7 @@ void pl0_init(void) {
 
     kFmtString = hlir_string_literal(node, kStringType, "%d\n");
 
-    signature_t signature = {
-        .params = vector_init(kStringType),
-        .result = kIntegerType,
-        .variadic = true
-    };
+    signature_t signature = {.params = vector_init(kStringType), .result = kIntegerType, .variadic = true};
     kPrint = hlir_function(node, "printf", signature, vector_of(0), NULL);
     hlir_set_attributes(kPrint, kImported);
 }
@@ -49,12 +46,13 @@ void pl0_init(void) {
 typedef enum {
     TAG_VALUES, // hlir_t*
     TAG_CONSTS, // hlir_t*
-    TAG_PROCS, // hlir_t*
+    TAG_PROCS,  // hlir_t*
 
     TAG_MAX
 } tag_t;
 
-static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *shadowed, const node_t *shadowing) {
+static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *shadowed,
+                                 const node_t *shadowing) {
     message_t *id = report_shadow(reports, name, shadowed, shadowing);
     report_note(id, "PL/0 is case insensitive");
 }
@@ -64,11 +62,15 @@ static void report_pl0_unresolved(reports_t *reports, const node_t *node, const 
 }
 
 static hlir_t *get_var(sema_t *sema, const char *name) {
-    hlir_t *const_hlir = sema_get(sema, TAG_CONSTS, name);
-    if (const_hlir != NULL) { return const_hlir; }
+    hlir_t *constHlir = sema_get(sema, TAG_CONSTS, name);
+    if (constHlir != NULL) {
+        return constHlir;
+    }
 
-    hlir_t *var_hlir = sema_get(sema, TAG_VALUES, name);
-    if (var_hlir != NULL) { return var_hlir; }
+    hlir_t *varHlir = sema_get(sema, TAG_VALUES, name);
+    if (varHlir != NULL) {
+        return varHlir;
+    }
 
     return NULL;
 }
@@ -128,9 +130,12 @@ static hlir_t *sema_binary(sema_t *sema, pl0_t *node) {
 
 static hlir_t *sema_expr(sema_t *sema, pl0_t *node) {
     switch (node->type) {
-    case PL0_DIGIT: return sema_digit(node);
-    case PL0_IDENT: return sema_ident(sema, node);
-    case PL0_BINARY: return sema_binary(sema, node);
+    case PL0_DIGIT:
+        return sema_digit(node);
+    case PL0_IDENT:
+        return sema_ident(sema, node);
+    case PL0_BINARY:
+        return sema_binary(sema, node);
     default:
         report(sema->reports, INTERNAL, node->node, "sema-expr: %d", node->type);
         return hlir_error(node->node, "sema-expr");
@@ -199,7 +204,7 @@ static hlir_t *sema_loop(sema_t *sema, pl0_t *node) {
 
 static hlir_t *sema_print(sema_t *sema, pl0_t *node) {
     hlir_t *expr = sema_expr(sema, node->print);
-    
+
     vector_t *args = vector_of(2);
     vector_set(args, 0, kFmtString);
     vector_set(args, 1, expr);
@@ -209,12 +214,18 @@ static hlir_t *sema_print(sema_t *sema, pl0_t *node) {
 
 static hlir_t *sema_stmt(sema_t *sema, pl0_t *node) {
     switch (node->type) {
-    case PL0_STMTS: return sema_stmts(sema, node);
-    case PL0_CALL: return sema_call(sema, node);
-    case PL0_BRANCH: return sema_branch(sema, node);
-    case PL0_LOOP: return sema_loop(sema, node);
-    case PL0_ASSIGN: return sema_assign(sema, node);
-    case PL0_PRINT: return sema_print(sema, node);
+    case PL0_STMTS:
+        return sema_stmts(sema, node);
+    case PL0_CALL:
+        return sema_call(sema, node);
+    case PL0_BRANCH:
+        return sema_branch(sema, node);
+    case PL0_LOOP:
+        return sema_loop(sema, node);
+    case PL0_ASSIGN:
+        return sema_assign(sema, node);
+    case PL0_PRINT:
+        return sema_print(sema, node);
     default:
         report(sema->reports, INTERNAL, node->node, "sema-stmt: %d", node->type);
         return hlir_error(node->node, "sema-stmt");
@@ -249,8 +260,10 @@ static hlir_t *sema_comp(sema_t *sema, pl0_t *node) {
 
 static hlir_t *sema_compare(sema_t *sema, pl0_t *node) {
     switch (node->type) {
-    case PL0_ODD: return sema_odd(sema, node);
-    case PL0_COMPARE: return sema_comp(sema, node);
+    case PL0_ODD:
+        return sema_odd(sema, node);
+    case PL0_COMPARE:
+        return sema_comp(sema, node);
     default:
         report(sema->reports, INTERNAL, node->node, "sema-compare: %d", node->type);
         return hlir_error(node->node, "sema-compare");
@@ -259,9 +272,7 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node) {
 
 static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node) {
     size_t nlocals = vector_len(node->locals);
-    size_t sizes[TAG_MAX] = {
-        [TAG_VALUES] = nlocals
-    };
+    size_t sizes[TAG_MAX] = {[TAG_VALUES] = nlocals};
 
     sema_t *nest = sema_new(sema, sema->reports, TAG_MAX, sizes);
 
@@ -279,7 +290,8 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node) {
     hlir_build_function(hlir, body);
 }
 
-static void insert_module(sema_t *sema, vector_t **globals, vector_t **consts, vector_t **procs, pl0_t *name, hlir_t *hlir) {
+static void insert_module(sema_t *sema, vector_t **globals, vector_t **consts, vector_t **procs, pl0_t *name,
+                          hlir_t *hlir) {
     if (!hlir_is(hlir, HLIR_MODULE)) {
         report(sema->reports, ERROR, name->node, "cannot load corrupted module `%s`", name->ident);
         return;
@@ -325,14 +337,10 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     vector_t *globals = vector_new(nglobals);
     vector_t *procs = vector_new(nprocs);
 
-    size_t sizes[TAG_MAX] = {
-        [TAG_CONSTS] = nconsts,
-        [TAG_VALUES] = nglobals,
-        [TAG_PROCS] = nprocs
-    };
+    size_t sizes[TAG_MAX] = {[TAG_CONSTS] = nconsts, [TAG_VALUES] = nglobals, [TAG_PROCS] = nprocs};
 
     sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
-    
+
     // forward declare everything
     for (size_t i = 0; i < nconsts; i++) {
         pl0_t *it = vector_get(root->consts, i);
@@ -356,12 +364,8 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     for (size_t i = 0; i < nprocs; i++) {
         pl0_t *it = vector_get(root->procs, i);
-        signature_t signature = {
-            .params = vector_of(0),
-            .result = kVoidType,
-            .variadic = false
-        };
-        
+        signature_t signature = {.params = vector_of(0), .result = kVoidType, .variadic = false};
+
         hlir_t *hlir = hlir_begin_function(it->node, it->name, signature);
         hlir_set_attributes(hlir, kExported);
 
@@ -372,7 +376,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     for (size_t i = 0; i < nimports; i++) {
         pl0_t *name = vector_get(root->imports, i);
         hlir_t *lib = find_module(sema, name->ident);
-        
+
         if (lib == NULL) {
             report(sema->reports, ERROR, NULL, "cannot import `%s`, failed to find module", name->ident);
             continue;
@@ -403,11 +407,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     if (root->entry != NULL) {
         hlir_t *body = sema_stmt(sema, root->entry);
-        signature_t signature = {
-            .params = vector_of(0),
-            .result = kVoidType,
-            .variadic = false
-        };
+        signature_t signature = {.params = vector_of(0), .result = kVoidType, .variadic = false};
         hlir_t *hlir = hlir_function(root->node, "main", signature, vector_of(0), body);
         hlir_set_attributes(hlir, kExported);
         vector_push(&procs, hlir);
@@ -417,8 +417,8 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     const char *modname = root->mod == NULL ? ctu_filename(root->node->scan->path) : root->mod;
     hlir_t *mod = hlir_module(root->node, modname, vector_of(0), vector_join(consts, globals), procs);
-    
+
     sema_delete(sema);
-    
+
     return mod;
 }

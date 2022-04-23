@@ -3,14 +3,14 @@
 
 #include "common.h"
 
-#define CHECK_NULL(expr) CTASSERT(expr != NULL, "null pointer")
 #define IS_AGGREGATE(hlir) (hlis_is_or_will_be(hlir, HLIR_STRUCT) || hlis_is_or_will_be(hlir, HLIR_UNION))
 
 ///
 /// builder functions
 ///
 
-static hlir_t *hlir_begin_aggregate_with_fields(const node_t *node, const char *name, vector_t *fields, hlir_kind_t type) {
+static hlir_t *hlir_begin_aggregate_with_fields(const node_t *node, const char *name, vector_t *fields,
+                                                hlir_kind_t type) {
     hlir_t *self = hlir_new_forward(node, name, kMetaType, type);
     self->fields = fields;
     return self;
@@ -109,8 +109,6 @@ hlir_t *hlir_global(const node_t *node, const char *name, const hlir_t *type, co
     return self;
 }
 
-
-
 hlir_t *hlir_local(const node_t *node, const char *name, const hlir_t *type) {
     return hlir_indexed_local(node, name, SIZE_MAX, type);
 }
@@ -121,7 +119,8 @@ hlir_t *hlir_indexed_local(const node_t *node, const char *name, size_t index, c
     return self;
 }
 
-static hlir_t *hlir_begin_function_with_locals(const node_t *node, const char *name, vector_t *locals, signature_t signature) {
+static hlir_t *hlir_begin_function_with_locals(const node_t *node, const char *name, vector_t *locals,
+                                               signature_t signature) {
     hlir_t *self = hlir_new_forward(node, name, kMetaType, HLIR_FUNCTION);
     self->params = signature.params;
     self->result = signature.result;
@@ -144,7 +143,6 @@ hlir_t *hlir_function(const node_t *node, const char *name, signature_t signatur
     hlir_build_function(self, body);
     return self;
 }
-
 
 void hlir_add_local(hlir_t *self, hlir_t *local) {
     CTASSERT(hlir_will_be(self, HLIR_FUNCTION), "hlir-add-local called on non-function hlir");

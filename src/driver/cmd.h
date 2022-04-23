@@ -1,8 +1,9 @@
 #pragma once
 
+#include "cthulhu/ast/compile.h"
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/vector.h"
-#include "cthulhu/ast/compile.h"
+
 
 #include <gmp.h>
 #include <stdbool.h>
@@ -10,7 +11,11 @@
 typedef vector_t *flag_t;
 
 typedef struct {
-    enum option_type_t { OPT_STRING, OPT_BOOL, OPT_INT } type;
+    enum option_type_t {
+        OPT_STRING,
+        OPT_BOOL,
+        OPT_INT
+    } type;
     union {
         const char *string;
         bool boolean;

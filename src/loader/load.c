@@ -4,9 +4,9 @@
 #include <string.h>
 
 static bool read_bytes(data_t *data, void *dst, size_t *cursor, size_t size) {
-    if (data->length < *cursor + size) { 
+    if (data->length < *cursor + size) {
         report(data->header.reports, ERROR, NULL, "out of bounds read at %zu", *cursor);
-        return false; 
+        return false;
     }
 
     memcpy(dst, data->data + *cursor, size);
@@ -15,11 +15,15 @@ static bool read_bytes(data_t *data, void *dst, size_t *cursor, size_t size) {
     return true;
 }
 
-static char *read_string(data_t *in, size_t* cursor) {
+static char *read_string(data_t *in, size_t *cursor) {
     offset_t offset;
     bool ok = read_bytes(in, &offset, cursor, sizeof(offset_t));
-    if (!ok) { return NULL; }
-    if (offset == UINT64_MAX) { return NULL; }
+    if (!ok) {
+        return NULL;
+    }
+    if (offset == UINT64_MAX) {
+        return NULL;
+    }
 
     return ctu_strdup(in->data + in->string + offset);
 }
@@ -53,7 +57,9 @@ static value_t read_value(data_t *in, field_t field, size_t *offset) {
         break;
     }
 
-    if (!ok) { return reference_value(NULL_INDEX); }
+    if (!ok) {
+        return reference_value(NULL_INDEX);
+    }
 
     return value;
 }
@@ -80,29 +86,41 @@ static const char *compatible_version(uint32_t file, uint32_t expected) {
 
 bool is_loadable(const char *path, uint32_t submagic, uint32_t version) {
     file_t *file = file_new(path, BINARY, READ);
-    if (!file_ok(file)) { return false; }
+    if (!file_ok(file)) {
+        return false;
+    }
 
     basic_header_t basic;
     size_t read = file_read(file, &basic, sizeof(basic_header_t));
-    if (read < sizeof(basic_header_t)) { return false; }
+    if (read < sizeof(basic_header_t)) {
+        return false;
+    }
 
-    if (basic.magic != FILE_MAGIC) { return false; }
-    if (basic.submagic != submagic) { return false; }
-    if (compatible_version(basic.semver, version) != NULL) { return false; }
+    if (basic.magic != FILE_MAGIC) {
+        return false;
+    }
+    if (basic.submagic != submagic) {
+        return false;
+    }
+    if (compatible_version(basic.semver, version) != NULL) {
+        return false;
+    }
 
     close_file(file);
 
     return true;
 }
 
-#define NUM_TYPES(header) (header.format->types)
+#define NUM_TYPES(header) ((header).format->types)
 
 bool begin_load(data_t *in, header_t header) {
     begin_data(in, header);
     const char *path = header.path;
 
     file_t *file = file_new(path, BINARY, READ);
-    if (!file_ok(file)) { return false; }
+    if (!file_ok(file)) {
+        return false;
+    }
 
     in->data = file_map(file);
     in->length = file_size(file);
@@ -112,30 +130,31 @@ bool begin_load(data_t *in, header_t header) {
 
     basic_header_t basic;
     bool ok = read_bytes(in, &basic, &cursor, sizeof(basic_header_t));
-    if (!ok) { 
+    if (!ok) {
         report(header.reports, ERROR, NULL, "failed to read basic header");
-        return false; 
+        return false;
     }
 
     in->string = basic.strings;
     in->array = basic.arrays;
 
     if (basic.magic != FILE_MAGIC) {
-        report(header.reports, ERROR, NULL, "[%s] invalid magic number. found %x, expected %x", path, basic.magic, FILE_MAGIC);
+        report(header.reports, ERROR, NULL, "[%s] invalid magic number. found %x, expected %x", path, basic.magic,
+               FILE_MAGIC);
         return false;
     }
 
     if (basic.submagic != header.submagic) {
-        report(header.reports, ERROR, NULL, "[%s] invalid submagic number. found %x, expected %x", path, basic.submagic, header.submagic);
+        report(header.reports, ERROR, NULL, "[%s] invalid submagic number. found %x, expected %x", path, basic.submagic,
+               header.submagic);
         return false;
     }
 
     const char *err = compatible_version(basic.semver, header.semver);
     if (err != NULL) {
-        report(header.reports, ERROR, NULL, "[%s] incompatible version. found %d.%d.%d, expected %d.%d.%d", path, 
-            VERSION_MAJOR(basic.semver), VERSION_MINOR(basic.semver), VERSION_PATCH(basic.semver), 
-            VERSION_MAJOR(header.semver), VERSION_MINOR(header.semver), VERSION_PATCH(header.semver)
-        );
+        report(header.reports, ERROR, NULL, "[%s] incompatible version. found %d.%d.%d, expected %d.%d.%d", path,
+               VERSION_MAJOR(basic.semver), VERSION_MINOR(basic.semver), VERSION_PATCH(basic.semver),
+               VERSION_MAJOR(header.semver), VERSION_MINOR(header.semver), VERSION_PATCH(header.semver));
         return false;
     }
 
@@ -146,15 +165,15 @@ bool begin_load(data_t *in, header_t header) {
     offset_t *offsets = ctu_malloc(sizeof(offset_t) * len);
 
     ok = read_bytes(in, counts, &cursor, sizeof(offset_t) * len);
-    if (!ok) { 
+    if (!ok) {
         report(header.reports, ERROR, NULL, "failed to read count array");
-        return false; 
+        return false;
     }
 
     ok = read_bytes(in, offsets, &cursor, sizeof(offset_t) * len);
-    if (!ok) { 
+    if (!ok) {
         report(header.reports, ERROR, NULL, "failed to read offset array");
-        return false; 
+        return false;
     }
 
     in->counts = counts;
@@ -177,7 +196,7 @@ bool read_entry(data_t *in, index_t index, value_t *values) {
 
     size_t scale = in->sizes[type] * index.offset;
     size_t offset = in->offsets[type] + scale;
-    
+
     if (offset > in->length) {
         report(in->header.reports, ERROR, NULL, "invalid offset %zu", offset);
         return false;

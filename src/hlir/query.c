@@ -10,8 +10,8 @@ static bool has_name(hlir_kind_t kind) {
     case HLIR_BOOL:
     case HLIR_STRING:
     case HLIR_VOID:
-    
-    // unsure about closure, pointer, and array
+
+        // unsure about closure, pointer, and array
 
     case HLIR_TYPE:
     case HLIR_ALIAS:
@@ -101,7 +101,7 @@ bool hlir_is_decl(const hlir_t *hlir) {
     case HLIR_FUNCTION:
     case HLIR_GLOBAL:
         return true;
-    
+
     default:
         return false;
     }
@@ -118,7 +118,7 @@ static const char *kKindNames[HLIR_TOTAL] = {
 
     [HLIR_NAME] = "name",
     [HLIR_UNARY] = "unary",
-    [HLIR_BINARY] = "binary", 
+    [HLIR_BINARY] = "binary",
     [HLIR_COMPARE] = "compare",
     [HLIR_CALL] = "call",
 
@@ -132,11 +132,11 @@ static const char *kKindNames[HLIR_TOTAL] = {
     [HLIR_DIGIT] = "digit-type",
     [HLIR_BOOL] = "bool-type",
     [HLIR_STRING] = "string-type",
-    [HLIR_VOID] = "void-type", 
-    [HLIR_CLOSURE] = "closure-type", 
-    [HLIR_POINTER] = "pointer-type", 
+    [HLIR_VOID] = "void-type",
+    [HLIR_CLOSURE] = "closure-type",
+    [HLIR_POINTER] = "pointer-type",
     [HLIR_ARRAY] = "array-type",
-    [HLIR_TYPE] = "metatype", 
+    [HLIR_TYPE] = "metatype",
     [HLIR_ALIAS] = "alias-type",
 
     [HLIR_LOCAL] = "local",
@@ -149,23 +149,18 @@ static const char *kKindNames[HLIR_TOTAL] = {
 
     [HLIR_FIELD] = "field",
 
-    [HLIR_ERROR] = "internal-error"
+    [HLIR_ERROR] = "internal-error",
 };
 
 static const char *kDigitNames[DIGIT_TOTAL] = {
-    [DIGIT_CHAR] = "char",
-    [DIGIT_SHORT] = "short",
-    [DIGIT_INT] = "int",
-    [DIGIT_LONG] = "long",
-
-    [DIGIT_SIZE] = "size",
-    [DIGIT_PTR] = "intptr"
+    [DIGIT_CHAR] = "char", [DIGIT_SHORT] = "short", [DIGIT_INT] = "int",
+    [DIGIT_LONG] = "long", [DIGIT_SIZE] = "size",   [DIGIT_PTR] = "intptr",
 };
 
 static const char *kSignNames[SIGN_TOTAL] = {
     [SIGN_SIGNED] = "signed",
     [SIGN_UNSIGNED] = "unsigned",
-    [SIGN_DEFAULT] = "default"
+    [SIGN_DEFAULT] = "default",
 };
 
 const char *hlir_kind_to_string(hlir_kind_t kind) {

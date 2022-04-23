@@ -1,8 +1,8 @@
 #include "common.h"
 
-static file_close_t CLOSES[] = {
+static file_close_t kFileCloseCallbacks[] = {
     [FD] = platform_close,
-    [MEMORY] = memory_close
+    [MEMORY] = memory_close,
 };
 
 file_t *file_new(const char *path, contents_t format, access_t access) {
@@ -22,10 +22,10 @@ file_t *memory_new(const char *name, size_t size, contents_t format, access_t ac
 }
 
 void close_file(file_t *file) {
-    if (file_ok(file)) { 
-        CLOSES[file->backing](file);
+    if (file_ok(file)) {
+        kFileCloseCallbacks[file->backing](file);
     }
-    
+
     ctu_free(file);
 }
 

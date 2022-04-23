@@ -4,17 +4,19 @@
 
 #include "cthulhu/hlir/init.h"
 
+#include "cthulhu/ast/compile.h"
+#include "cthulhu/emit/emit.h"
+#include "cthulhu/hlir/sema.h"
+#include "cthulhu/loader/hlir.h"
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/vector.h"
-#include "cthulhu/ast/compile.h"
-#include "cthulhu/hlir/sema.h"
-#include "cthulhu/emit/emit.h"
-#include "cthulhu/loader/hlir.h"
 
-#include <stdio.h>
+
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
+
 
 #define DEFAULT_REPORT_LIMIT 20
 
@@ -68,11 +70,11 @@ static const char *extract_arg(int argc, const char **argv, const char *arg, int
             }
 
             return argv[idx + 1];
-        } 
-        
+        }
+
         if (end == '=') {
             return argv[idx] + len + 1;
-        } 
+        }
 
         return argv[idx] + len;
     }
@@ -112,7 +114,7 @@ static vector_t *collect_args(int argc, const char **argv, const char *prefix, c
         if (str_startswith(argv[i], prefix)) {
             const char *arg = extract_arg(argc, argv, prefix, i);
             if (arg != NULL) {
-                vector_push(&result, (char*)arg);
+                vector_push(&result, (char *)arg);
                 continue;
             }
         }
@@ -120,7 +122,7 @@ static vector_t *collect_args(int argc, const char **argv, const char *prefix, c
         if (brief != NULL && str_startswith(argv[i], brief)) {
             const char *arg = extract_arg(argc, argv, brief, i);
             if (arg != NULL) {
-                vector_push(&result, (char*)arg);
+                vector_push(&result, (char *)arg);
                 continue;
             }
         }
@@ -131,7 +133,8 @@ static vector_t *collect_args(int argc, const char **argv, const char *prefix, c
 
 static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, const char *mod) {
     if (mod != NULL && hlir->name != NULL) {
-        message_t *id = report(reports, WARNING, NULL, "module name already defined in source file, overriding this may not be desired");
+        message_t *id = report(reports, WARNING, NULL,
+                               "module name already defined in source file, overriding this may not be desired");
         report_note(id, "redefining `%s` to `%s`", hlir->name, mod);
     }
 
@@ -149,7 +152,8 @@ static size_t get_limit(reports_t *reports, const char **argv, int argc) {
     mpz_t limit;
     mpz_init_set_str(limit, input, 10);
     if (!mpz_fits_uint_p(limit)) {
-        report(reports, WARNING, NULL, "warning limit `%s` is too large, defaulting to %d", input, DEFAULT_REPORT_LIMIT);
+        report(reports, WARNING, NULL, "warning limit `%s` is too large, defaulting to %d", input,
+               DEFAULT_REPORT_LIMIT);
         return DEFAULT_REPORT_LIMIT;
     }
 
@@ -177,7 +181,7 @@ typedef enum {
 static target_t parse_target(reports_t *reports, const char *target) {
     if (str_equal(target, "c89")) {
         return OUTPUT_C89;
-    }  
+    }
 
     if (str_equal(target, "wasm")) {
         return OUTPUT_WASM;
@@ -192,7 +196,7 @@ static char *collect_commandline(int argc, const char **argv) {
     CTASSERT(argc > 0, "argc must be greater than 0");
     vector_t *vec = vector_of(argc - 1);
     for (int i = 1; i < argc; i++) {
-        vector_set(vec, i - 1, (char*)argv[i]);
+        vector_set(vec, i - 1, (char *)argv[i]);
     }
     char *out = str_join(" ", vec);
     vector_delete(vec);
@@ -228,7 +232,9 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     size_t limit = get_limit(reports, argv, argc);
     status = end_reports(reports, limit, "command line parsing");
-    if (status != 0) { return status; }
+    if (status != 0) {
+        return status;
+    }
 
     bool bytecode = find_arg(argc, argv, "--bytecode", "-bc");
     bool embed_bc = find_arg(argc, argv, "-Bembed", NULL);
@@ -238,19 +244,21 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (out == NULL) {
         out = "a.out";
     }
-    
+
     const char *target = get_arg(reports, argc, argv, "--target", "-t");
 
-    if (target == NULL) { 
+    if (target == NULL) {
         target = "c89";
     } else if (bytecode) {
         report(reports, ERROR, NULL, "cannot specify target format when compiling to bytecode");
         return end_reports(reports, limit, "command line parsing");
     }
-    
+
     target_t result = parse_target(reports, target);
     status = end_reports(reports, limit, "target parsing");
-    if (status != 0) { return status; }
+    if (status != 0) {
+        return status;
+    }
 
     const char *path = argv[1];
 
@@ -265,29 +273,37 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     scan_t scan = scan_file(reports, driver.name, file);
     status = end_reports(reports, limit, "scanning");
-    if (status != 0) { return status; }
+    if (status != 0) {
+        return status;
+    }
 
     // parse the source file
 
     void *node = driver.parse(reports, &scan);
     status = end_reports(reports, limit, "parsing");
-    if (status != 0) { return status; }
+    if (status != 0) {
+        return status;
+    }
     CTASSERT(node != NULL, "driver.parse == NULL");
 
     // convert the language ast to hlir
 
     hlir_t *hlir = driver.sema(reports, node);
     status = end_reports(reports, limit, "semantic analysis");
-    if (status != 0) { return status; }
+    if (status != 0) {
+        return status;
+    }
     CTASSERT(hlir != NULL, "driver.sema == NULL");
 
     rename_module(reports, hlir, path, mod_name);
     check_module(reports, hlir);
     status = end_reports(reports, limit, "module checking");
-    if (status != 0) { return status; }
+    if (status != 0) {
+        return status;
+    }
 
     if (bytecode) {
-        save_settings_t settings = { .embed_source = embed_bc };
+        save_settings_t settings = {.embedSource = embed_bc};
 
         save_module(reports, &settings, hlir, out);
         status = end_reports(reports, limit, "bytecode generation");
@@ -314,7 +330,9 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
 hlir_t *find_module(sema_t *sema, const char *path) {
     hlir_t *hlir = load_module(sema->reports, format("%s.hlir", path));
-    if (hlir != NULL) { return hlir; }
+    if (hlir != NULL) {
+        return hlir;
+    }
 
     return NULL;
 }

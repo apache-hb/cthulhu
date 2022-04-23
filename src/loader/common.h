@@ -4,7 +4,7 @@
 
 /**
  * internal layout of a saved file
- * 
+ *
  * header:
  *  - basic header
  *  - specific header

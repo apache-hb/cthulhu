@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-
 /**
  * @defgroup FileApi File stream API
  * @brief file and memory stream API

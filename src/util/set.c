@@ -1,6 +1,7 @@
-#include "cthulhu/util/util.h"
-#include "cthulhu/util/str.h"
 #include "cthulhu/util/set.h"
+#include "cthulhu/util/str.h"
+#include "cthulhu/util/util.h"
+
 
 static size_t set_size(size_t size) {
     return sizeof(set_t) + (sizeof(item_t) * size);
@@ -19,7 +20,7 @@ static item_t *get_bucket(set_t *set, const char *key) {
     return &set->items[index];
 }
 
-set_t *set_new(size_t size) {    
+set_t *set_new(size_t size) {
     size_t bytes = set_size(size);
 
     set_t *set = ctu_malloc(bytes);
@@ -45,26 +46,26 @@ void set_delete(set_t *set) {
     ctu_free(set);
 }
 
-const char* set_add(set_t *set, const char *key) {
+const char *set_add(set_t *set, const char *key) {
     item_t *item = get_bucket(set, key);
 
     while (true) {
         if (item->key == NULL) {
             item->key = key;
             return key;
-        } 
-        
+        }
+
         if (str_equal(item->key, key)) {
             return item->key;
-        } 
-        
+        }
+
         if (item->next != NULL) {
             item = item->next;
         } else {
             item->next = item_new(key);
             return key;
         }
-    } 
+    }
 }
 
 bool set_contains(set_t *set, const char *key) {
@@ -73,16 +74,16 @@ bool set_contains(set_t *set, const char *key) {
     while (true) {
         if (item->key == NULL) {
             return false;
-        } 
-        
+        }
+
         if (str_equal(item->key, key)) {
             return true;
-        } 
-        
+        }
+
         if (item->next != NULL) {
             item = item->next;
         } else {
             return false;
         }
-    } 
+    }
 }
