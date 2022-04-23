@@ -11,7 +11,7 @@
 ///
 
 static hlir_t *hlir_begin_aggregate_with_fields(const node_t *node, const char *name, vector_t *fields, hlir_kind_t type) {
-    hlir_t *self = hlir_new_forward(node, name, TYPE, type);
+    hlir_t *self = hlir_new_forward(node, name, kMetaType, type);
     self->fields = fields;
     return self;
 }
@@ -79,7 +79,7 @@ void hlir_add_field(hlir_t *self, hlir_t *field) {
 ///
 
 hlir_t *hlir_begin_alias(const node_t *node, const char *name) {
-    return hlir_new_forward(node, name, TYPE, HLIR_ALIAS);
+    return hlir_new_forward(node, name, kMetaType, HLIR_ALIAS);
 }
 
 void hlir_build_alias(hlir_t *self, const hlir_t *alias, bool newtype) {
@@ -122,7 +122,7 @@ hlir_t *hlir_indexed_local(const node_t *node, const char *name, size_t index, c
 }
 
 static hlir_t *hlir_begin_function_with_locals(const node_t *node, const char *name, vector_t *locals, signature_t signature) {
-    hlir_t *self = hlir_new_forward(node, name, TYPE, HLIR_FUNCTION);
+    hlir_t *self = hlir_new_forward(node, name, kMetaType, HLIR_FUNCTION);
     self->params = signature.params;
     self->result = signature.result;
     self->variadic = signature.variadic;

@@ -188,7 +188,22 @@ static target_t parse_target(reports_t *reports, const char *target) {
     return OUTPUT_C89;
 }
 
+static char *collect_commandline(int argc, const char **argv) {
+    CTASSERT(argc > 0, "argc must be greater than 0");
+    vector_t *vec = vector_of(argc - 1);
+    for (int i = 1; i < argc; i++) {
+        vector_set(vec, i - 1, (char*)argv[i]);
+    }
+    char *out = str_join(" ", vec);
+    vector_delete(vec);
+    return out;
+}
+
 int common_main(int argc, const char **argv, driver_t driver) {
+    char *args = collect_commandline(argc, argv);
+    (void)args;
+    (void)collect_args;
+
     if (find_arg(argc, argv, "--version", "-v")) {
         print_version(driver);
         return 0;

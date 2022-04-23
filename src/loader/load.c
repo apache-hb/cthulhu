@@ -1,4 +1,5 @@
 #include "common.h"
+#include "cthulhu/util/io.h"
 
 #include <string.h>
 
@@ -82,14 +83,14 @@ bool is_loadable(const char *path, uint32_t submagic, uint32_t version) {
     if (!file_ok(file)) { return false; }
 
     basic_header_t basic;
-    size_t read = file_read_bytes(file, &basic, sizeof(basic_header_t));
+    size_t read = file_read(file, &basic, sizeof(basic_header_t));
     if (read < sizeof(basic_header_t)) { return false; }
 
     if (basic.magic != FILE_MAGIC) { return false; }
     if (basic.submagic != submagic) { return false; }
     if (compatible_version(basic.semver, version) != NULL) { return false; }
 
-    file_close(file);
+    close_file(file);
 
     return true;
 }

@@ -12,7 +12,7 @@ typedef enum {
     TEST_RESULT_TOTAL
 } test_result_t;
 
-static const char *RESULTS[TEST_RESULT_TOTAL] = {
+static const char *kResultNames[TEST_RESULT_TOTAL] = {
     [TEST_PASSED] = "PASSED",
     [TEST_FAILED] = "FAILED",
     [TEST_SKIPPED] = "SKIPPED",
@@ -46,10 +46,10 @@ static int run_tests(const char *suite, const test_t *tests, size_t total) {
         test_t test = tests[i];
         test_result_t res = test.test();
         result = (res == TEST_PASSED) ? result : res;
-        printf("test %s %s\n", tests[i].name, RESULTS[res]);
+        printf("test %s %s\n", tests[i].name, kResultNames[res]);
     }
 
-    printf("suite %s %s\n", suite, RESULTS[result]);
+    printf("suite %s %s\n", suite, kResultNames[result]);
     return CODES[result];
 }
 

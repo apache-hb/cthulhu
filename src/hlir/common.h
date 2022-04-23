@@ -1,8 +1,7 @@
 #include "cthulhu/hlir/hlir.h"
 
-extern const hlir_attributes_t DEFAULT_ATTRIBS;
-extern hlir_t *TYPE;
-extern hlir_t *INVALID;
+extern hlir_t *kMetaType;
+extern hlir_t *kInvalidNode;
 
 hlir_t *hlir_new(const node_t *node, 
                  const hlir_t *of, 

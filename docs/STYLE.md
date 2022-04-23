@@ -3,7 +3,8 @@
 ## Naming
 
 * all functions are `snake_case`
-* all constants are `SCREAMING_SNAKE_CASE`
+* all variables are `camelCase`
+* all constants are `kPascalCase`
 * all macros are `SCREAMING_SNAKE_CASE`
 * all types and typedefs are `snake_case` and suffixed with `_t`
 

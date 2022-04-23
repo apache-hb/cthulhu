@@ -1,5 +1,6 @@
-#include "cthulhu/util/vector.h"
 #include "cthulhu/util/util.h"
+#include "cthulhu/util/vector.h"
+
 
 #include <stdint.h>
 
@@ -21,7 +22,7 @@ static void vector_ensure(vector_t **vector, size_t size) {
 
 vector_t *vector_new(size_t size) {
     vector_t *vector = ctu_malloc(vector_size(size));
-    
+
     vector->size = size;
     vector->used = 0;
 

@@ -74,7 +74,7 @@ static bool unix_ok(file_t *self) {
     return file->file != NULL;
 }
 
-static const file_ops_t OPS = {
+static const file_ops_t kFileOps = {
     .read = unix_read,
     .write = unix_write,
     .seek = unix_seek,
@@ -95,7 +95,7 @@ void platform_open(file_t **file, const char *path, contents_t format, access_t 
     self->format = format;
     self->access = access;
     self->backing = FD;
-    self->ops = &OPS;
+    self->ops = &kFileOps;
     
     char mode[] = {
         access == WRITE ? 'w' : 'r',

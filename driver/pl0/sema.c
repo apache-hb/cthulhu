@@ -7,43 +7,43 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/util/report-ext.h"
 
-static hlir_t *INTEGER;
-static hlir_t *BOOLEAN;
-static hlir_t *STRING;
-static hlir_t *VOID;
+static hlir_t *kIntegerType;
+static hlir_t *kBoolType;
+static hlir_t *kStringType;
+static hlir_t *kVoidType;
 
-static hlir_t *PRINT;
-static hlir_t *FMT;
+static hlir_t *kPrint;
+static hlir_t *kFmtString;
 
-static const hlir_attributes_t *IMPORTED;
-static const hlir_attributes_t *EXPORTED;
+static const hlir_attributes_t *kImported;
+static const hlir_attributes_t *kExported;
 
-static const hlir_attributes_t *CONST;
-static const hlir_attributes_t *VAR;
+static const hlir_attributes_t *kConst;
+static const hlir_attributes_t *kMutable;
 
 void pl0_init(void) {
     const node_t *node = node_builtin();
 
-    IMPORTED = hlir_linkage(LINK_IMPORTED);
-    EXPORTED = hlir_linkage(LINK_EXPORTED);
+    kImported = hlir_linkage(LINK_IMPORTED);
+    kExported = hlir_linkage(LINK_EXPORTED);
 
-    CONST = hlir_attributes(LINK_EXPORTED, TAG_CONST);
-    VAR = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS);
+    kConst = hlir_attributes(LINK_EXPORTED, TAG_CONST);
+    kMutable = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS);
 
-    INTEGER = hlir_digit(node, "integer", DIGIT_INT, SIGN_DEFAULT);
-    BOOLEAN = hlir_bool(node, "boolean");
-    STRING = hlir_string(node, "string");
-    VOID = hlir_void(node, "void");
+    kIntegerType = hlir_digit(node, "integer", DIGIT_INT, SIGN_DEFAULT);
+    kBoolType = hlir_bool(node, "boolean");
+    kStringType = hlir_string(node, "string");
+    kVoidType = hlir_void(node, "void");
 
-    FMT = hlir_string_literal(node, STRING, "%d\n");
+    kFmtString = hlir_string_literal(node, kStringType, "%d\n");
 
     signature_t signature = {
-        .params = vector_init(STRING),
-        .result = INTEGER,
+        .params = vector_init(kStringType),
+        .result = kIntegerType,
         .variadic = true
     };
-    PRINT = hlir_function(node, "printf", signature, vector_of(0), NULL);
-    hlir_set_attributes(PRINT, IMPORTED);
+    kPrint = hlir_function(node, "printf", signature, vector_of(0), NULL);
+    hlir_set_attributes(kPrint, kImported);
 }
 
 typedef enum {
@@ -108,7 +108,7 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node);
 static hlir_t *sema_stmt(sema_t *sema, pl0_t *node);
 
 static hlir_t *sema_digit(pl0_t *node) {
-    return hlir_digit_literal(node->node, INTEGER, node->digit);
+    return hlir_digit_literal(node->node, kIntegerType, node->digit);
 }
 
 static hlir_t *sema_ident(sema_t *sema, pl0_t *node) {
@@ -123,7 +123,7 @@ static hlir_t *sema_ident(sema_t *sema, pl0_t *node) {
 static hlir_t *sema_binary(sema_t *sema, pl0_t *node) {
     hlir_t *lhs = sema_expr(sema, node->lhs);
     hlir_t *rhs = sema_expr(sema, node->rhs);
-    return hlir_binary(node->node, INTEGER, node->binary, lhs, rhs);
+    return hlir_binary(node->node, kIntegerType, node->binary, lhs, rhs);
 }
 
 static hlir_t *sema_expr(sema_t *sema, pl0_t *node) {
@@ -201,10 +201,10 @@ static hlir_t *sema_print(sema_t *sema, pl0_t *node) {
     hlir_t *expr = sema_expr(sema, node->print);
     
     vector_t *args = vector_of(2);
-    vector_set(args, 0, FMT);
+    vector_set(args, 0, kFmtString);
     vector_set(args, 1, expr);
 
-    return hlir_call(node->node, PRINT, args);
+    return hlir_call(node->node, kPrint, args);
 }
 
 static hlir_t *sema_stmt(sema_t *sema, pl0_t *node) {
@@ -224,7 +224,7 @@ static hlir_t *sema_stmt(sema_t *sema, pl0_t *node) {
 static hlir_t *sema_value(sema_t *sema, pl0_t *node) {
     pl0_t *val = node->value;
     if (val == NULL) {
-        return hlir_int_literal(node->node, INTEGER, 0);
+        return hlir_int_literal(node->node, kIntegerType, 0);
     } else {
         return sema_expr(sema, val);
     }
@@ -232,10 +232,10 @@ static hlir_t *sema_value(sema_t *sema, pl0_t *node) {
 
 static hlir_t *sema_odd(sema_t *sema, pl0_t *node) {
     hlir_t *val = sema_expr(sema, node->operand);
-    hlir_t *two = hlir_int_literal(node->node, INTEGER, 2);
-    hlir_t *one = hlir_int_literal(node->node, INTEGER, 1);
-    hlir_t *rem = hlir_binary(node->node, INTEGER, BINARY_REM, val, two);
-    hlir_t *eq = hlir_compare(node->node, BOOLEAN, COMPARE_EQ, rem, one);
+    hlir_t *two = hlir_int_literal(node->node, kIntegerType, 2);
+    hlir_t *one = hlir_int_literal(node->node, kIntegerType, 1);
+    hlir_t *rem = hlir_binary(node->node, kIntegerType, BINARY_REM, val, two);
+    hlir_t *eq = hlir_compare(node->node, kBoolType, COMPARE_EQ, rem, one);
 
     return eq;
 }
@@ -244,7 +244,7 @@ static hlir_t *sema_comp(sema_t *sema, pl0_t *node) {
     hlir_t *lhs = sema_expr(sema, node->lhs);
     hlir_t *rhs = sema_expr(sema, node->rhs);
 
-    return hlir_compare(node->node, BOOLEAN, node->compare, lhs, rhs);
+    return hlir_compare(node->node, kBoolType, node->compare, lhs, rhs);
 }
 
 static hlir_t *sema_compare(sema_t *sema, pl0_t *node) {
@@ -267,7 +267,7 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node) {
 
     for (size_t i = 0; i < nlocals; i++) {
         pl0_t *local = vector_get(node->locals, i);
-        hlir_t *it = hlir_local(local->node, local->name, INTEGER);
+        hlir_t *it = hlir_local(local->node, local->name, kIntegerType);
         set_var(nest, TAG_VALUES, local->name, it);
         hlir_add_local(hlir, it);
     }
@@ -337,8 +337,8 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     for (size_t i = 0; i < nconsts; i++) {
         pl0_t *it = vector_get(root->consts, i);
 
-        hlir_t *hlir = hlir_begin_global(it->node, it->name, INTEGER);
-        hlir_set_attributes(hlir, CONST);
+        hlir_t *hlir = hlir_begin_global(it->node, it->name, kIntegerType);
+        hlir_set_attributes(hlir, kConst);
 
         set_var(sema, TAG_CONSTS, it->name, hlir);
         vector_push(&consts, hlir);
@@ -347,8 +347,8 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     for (size_t i = 0; i < nglobals; i++) {
         pl0_t *it = vector_get(root->globals, i);
 
-        hlir_t *hlir = hlir_begin_global(it->node, it->name, INTEGER);
-        hlir_set_attributes(hlir, VAR);
+        hlir_t *hlir = hlir_begin_global(it->node, it->name, kIntegerType);
+        hlir_set_attributes(hlir, kMutable);
 
         set_var(sema, TAG_VALUES, it->name, hlir);
         vector_push(&globals, hlir);
@@ -358,12 +358,12 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
         pl0_t *it = vector_get(root->procs, i);
         signature_t signature = {
             .params = vector_of(0),
-            .result = VOID,
+            .result = kVoidType,
             .variadic = false
         };
         
         hlir_t *hlir = hlir_begin_function(it->node, it->name, signature);
-        hlir_set_attributes(hlir, EXPORTED);
+        hlir_set_attributes(hlir, kExported);
 
         set_proc(sema, it->name, hlir);
         vector_push(&procs, hlir);
@@ -405,15 +405,15 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
         hlir_t *body = sema_stmt(sema, root->entry);
         signature_t signature = {
             .params = vector_of(0),
-            .result = VOID,
+            .result = kVoidType,
             .variadic = false
         };
         hlir_t *hlir = hlir_function(root->node, "main", signature, vector_of(0), body);
-        hlir_set_attributes(hlir, EXPORTED);
+        hlir_set_attributes(hlir, kExported);
         vector_push(&procs, hlir);
     }
 
-    vector_push(&procs, PRINT);
+    vector_push(&procs, kPrint);
 
     const char *modname = root->mod == NULL ? ctu_filename(root->node->scan->path) : root->mod;
     hlir_t *mod = hlir_module(root->node, modname, vector_of(0), vector_join(consts, globals), procs);

@@ -1,15 +1,26 @@
 %define parse.error verbose
+%define api.pure full
+%lex-param { void *scan }
+%parse-param { void *scan } { scan_t *x }
+%locations
 %expect 0
 %define api.prefix {cmd}
 
+%code top {
+    #include "cthulhu/ast/interop.h"
+}
+
 %code requires {
+    #define YYSTYPE CMDSTYPE
+    #define YYLTYPE CMDLTYPE
+    
     #include "src/driver/cmd.h"
 }
 
 %{
 #include "src/driver/cmd.h"
 int cmdlex();
-void cmderror(const char *msg);
+void cmderror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 
 %union {

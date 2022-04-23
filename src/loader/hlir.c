@@ -6,6 +6,7 @@
 
 #include "cthulhu/ast/compile.h"
 #include "version.h"
+#include "common.h"
 
 ///
 /// layouts
@@ -35,67 +36,67 @@ typedef enum {
 ///
 
 enum { HEADER_LANGUAGE, HEADER_PATH, HEADER_SOURCE };
-static const field_t HEADER_FIELDS[] = {
+static const field_t kHeaderFields[] = {
     [HEADER_LANGUAGE] = FIELD("language", FIELD_STRING),
     [HEADER_PATH] = FIELD("path", FIELD_STRING),
     [HEADER_SOURCE] = FIELD("source", FIELD_STRING)
 };
-static const layout_t HEADER_LAYOUT = LAYOUT("header", HEADER_FIELDS);
+static const layout_t kHeaderLayout = LAYOUT("header", kHeaderFields);
 
 enum { SPAN_FIRST_LINE, SPAN_FIRST_COLUMN, SPAN_LAST_LINE, SPAN_LAST_COLUMN };
-static const field_t SPAN_FIELDS[] = {
+static const field_t kSpanFields[] = {
     [SPAN_FIRST_LINE] = FIELD("first-line", FIELD_INT),
     [SPAN_FIRST_COLUMN] = FIELD("first-column", FIELD_INT),
     [SPAN_LAST_LINE] = FIELD("last-line", FIELD_INT),
     [SPAN_LAST_COLUMN] = FIELD("last-column", FIELD_INT)
 };
-static const layout_t SPAN_LAYOUT = LAYOUT("span", SPAN_FIELDS);
+static const layout_t kSpanLayout = LAYOUT("span", kSpanFields);
 
 enum { ATTRIB_LINKAGE, ATTRIB_TAGS };
-static const field_t ATTRIB_FIELDS[] = {
+static const field_t kAttribFields[] = {
     [ATTRIB_LINKAGE] = FIELD("linkage", FIELD_INT),
     [ATTRIB_TAGS] = FIELD("tags", FIELD_INT)
 };
-static const layout_t ATTRIB_LAYOUT = LAYOUT("attributes", ATTRIB_FIELDS);
+static const layout_t kAttribLayout = LAYOUT("attributes", kAttribFields);
 
 ///
 /// literals
 ///
 
 INDICES(DIGIT_LITERAL_SPAN, DIGIT_LITERAL_TYPE, DIGIT_LITERAL_VALUE);
-static const field_t DIGIT_LITERAL_FIELDS[] = {
+static const field_t kDigitLiteralFields[] = {
     [DIGIT_LITERAL_SPAN] = FIELD("span", FIELD_REFERENCE),
     [DIGIT_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
     [DIGIT_LITERAL_VALUE] = FIELD("value", FIELD_INT)
 };
-static const layout_t DIGIT_LITERAL_LAYOUT = LAYOUT("digit-literal", DIGIT_LITERAL_FIELDS);
+static const layout_t kDigitLiteralLayout = LAYOUT("digit-literal", kDigitLiteralFields);
 
 INDICES(BOOL_LITERAL_SPAN, BOOL_LITERAL_TYPE, BOOL_LITERAL_VALUE);
-static const field_t BOOL_LITERAL_FIELDS[] = {
+static const field_t kBoolLiteralFields[] = {
     [BOOL_LITERAL_SPAN] = FIELD("span", FIELD_REFERENCE),
     [BOOL_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
     [BOOL_LITERAL_VALUE] = FIELD("value", FIELD_BOOL)
 };
-static const layout_t BOOL_LITERAL_LAYOUT = LAYOUT("bool-literal", BOOL_LITERAL_FIELDS);
+static const layout_t kBoolLiteralLayout = LAYOUT("bool-literal", kBoolLiteralFields);
 
 INDICES(STRING_LITERAL_SPAN, STRING_LITERAL_TYPE, STRING_LITERAL_VALUE);
-static const field_t STRING_LITERAL_FIELDS[] = {
+static const field_t kStringLiteralFields[] = {
     [STRING_LITERAL_SPAN] = FIELD("span", FIELD_REFERENCE),
     [STRING_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
     [STRING_LITERAL_VALUE] = FIELD("value", FIELD_STRING)
 };
-static const layout_t STRING_LITERAL_LAYOUT = LAYOUT("string-literal", STRING_LITERAL_FIELDS);
+static const layout_t kStringLiteralLayout = LAYOUT("string-literal", kStringLiteralFields);
 
 ///
 /// expressions
 ///
 
 INDICES(NAME_SPAN, NAME_EXPR);
-static const field_t NAME_FIELDS[] = {
+static const field_t kNameFields[] = {
     [NAME_SPAN] = FIELD("span", FIELD_REFERENCE),
     [NAME_EXPR] = FIELD("expr", FIELD_REFERENCE)
 };
-static const layout_t NAME_LAYOUT = LAYOUT("name", NAME_FIELDS);
+static const layout_t kNameLayout = LAYOUT("name", kNameFields);
 
 INDICES(UNARY_SPAN, UNARY_TYPE, UNARY_OP, UNARY_EXPR);
 static const field_t UNARY_FIELDS[] = {
@@ -321,15 +322,16 @@ static const layout_t MODULE_LAYOUT = LAYOUT("module", MODULE_FIELDS);
 /// final type table
 ///
 
+#ifndef _WIN32
 static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
-    [SPAN_INDEX] = SPAN_LAYOUT,
-    [ATTRIBUTE_INDEX] = ATTRIB_LAYOUT,
+    [SPAN_INDEX] = kSpanLayout,
+    [ATTRIBUTE_INDEX] = kAttribLayout,
 
-    [HLIR_DIGIT_LITERAL] = DIGIT_LITERAL_LAYOUT,
-    [HLIR_BOOL_LITERAL] = BOOL_LITERAL_LAYOUT,
-    [HLIR_STRING_LITERAL] = STRING_LITERAL_LAYOUT,
+    [HLIR_DIGIT_LITERAL] = kDigitLiteralLayout,
+    [HLIR_BOOL_LITERAL] = kBoolLiteralLayout,
+    [HLIR_STRING_LITERAL] = kStringLiteralLayout,
 
-    [HLIR_NAME] = NAME_LAYOUT,
+    [HLIR_NAME] = kNameLayout,
     [HLIR_UNARY] = UNARY_LAYOUT,
     [HLIR_BINARY] = BINARY_LAYOUT,
     [HLIR_COMPARE] = COMPARE_LAYOUT,
@@ -360,20 +362,25 @@ static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
     [HLIR_MODULE] = MODULE_LAYOUT
 };
 
-static const format_t GLOBAL = FORMAT(&HEADER_LAYOUT, ALL_TYPES);
+static const format_t GLOBAL = FORMAT(&kHeaderLayout, ALL_TYPES);
 
-#if 0
-static format_t *get_format(void) {
+static const format_t *get_format(void) {
+    return &GLOBAL;
+}
+
+#else
+
+static const format_t *get_format(void) {
     layout_t *all_types = ctu_malloc(sizeof(layout_t) * LAYOUTS_TOTAL);
 
-    all_types[SPAN_INDEX] = SPAN_LAYOUT;
-    all_types[ATTRIBUTE_INDEX] = ATTRIB_LAYOUT;
+    all_types[SPAN_INDEX] = kSpanLayout;
+    all_types[ATTRIBUTE_INDEX] = kAttribLayout;
 
-    all_types[HLIR_DIGIT_LITERAL] = DIGIT_LITERAL_LAYOUT;
-    all_types[HLIR_BOOL_LITERAL] = BOOL_LITERAL_LAYOUT;
-    all_types[HLIR_STRING_LITERAL] = STRING_LITERAL_LAYOUT;
+    all_types[HLIR_DIGIT_LITERAL] = kDigitLiteralLayout;
+    all_types[HLIR_BOOL_LITERAL] = kBoolLiteralLayout;
+    all_types[HLIR_STRING_LITERAL] = kStringLiteralLayout;
 
-    all_types[HLIR_NAME] = NAME_LAYOUT;
+    all_types[HLIR_NAME] = kNameLayout;
     all_types[HLIR_UNARY] = UNARY_LAYOUT;
     all_types[HLIR_BINARY] = BINARY_LAYOUT;
     all_types[HLIR_COMPARE] = COMPARE_LAYOUT;
@@ -404,7 +411,7 @@ static format_t *get_format(void) {
     all_types[HLIR_MODULE] = MODULE_LAYOUT;
 
     format_t fmt = {
-        .header = &HEADER_LAYOUT,
+        .header = &kHeaderLayout,
         .types = LAYOUTS_TOTAL,
         .layouts = all_types
     };
@@ -429,7 +436,7 @@ typedef struct {
 } load_t;
 
 static const node_t *load_span(load_t *load, index_t index) {
-    value_t values[FIELDLEN(SPAN_FIELDS)];
+    value_t values[FIELDLEN(kSpanFields)];
     bool ok = read_entry(load->data, index, values);
     if (!ok) { return node_builtin(); }
 
@@ -444,7 +451,7 @@ static const node_t *load_span(load_t *load, index_t index) {
 }
 
 static hlir_attributes_t *load_attributes(load_t *load, value_t value) {
-    value_t values[FIELDLEN(ATTRIB_FIELDS)];
+    value_t values[FIELDLEN(kAttribFields)];
     READ_OR_RETURN(load->data, get_reference(value), values);
 
     return hlir_attributes(
@@ -490,7 +497,7 @@ static vector_t *get_arr(load_t *load, value_t value) {
 // expressions
 
 static hlir_t *load_digit_literal_node(load_t *load, index_t index) {
-    value_t values[FIELDLEN(DIGIT_LITERAL_FIELDS)];
+    value_t values[FIELDLEN(kDigitLiteralFields)];
     READ_OR_RETURN(load->data, index, values);
 
     mpz_t digit;
@@ -504,7 +511,7 @@ static hlir_t *load_digit_literal_node(load_t *load, index_t index) {
 }
 
 static hlir_t *load_bool_literal_node(load_t *load, index_t index) {
-    value_t values[FIELDLEN(BOOL_LITERAL_FIELDS)];
+    value_t values[FIELDLEN(kBoolLiteralFields)];
     READ_OR_RETURN(load->data, index, values);
 
     return hlir_bool_literal(
@@ -515,7 +522,7 @@ static hlir_t *load_bool_literal_node(load_t *load, index_t index) {
 }
 
 static hlir_t *load_string_literal_node(load_t *load, index_t index) {
-    value_t values[FIELDLEN(STRING_LITERAL_FIELDS)];
+    value_t values[FIELDLEN(kStringLiteralFields)];
     READ_OR_RETURN(load->data, index, values);
 
     return hlir_string_literal(
@@ -526,7 +533,7 @@ static hlir_t *load_string_literal_node(load_t *load, index_t index) {
 }
 
 static hlir_t *load_name_node(load_t *load, index_t index) {
-    value_t values[FIELDLEN(NAME_FIELDS)];
+    value_t values[FIELDLEN(kNameFields)];
     READ_OR_RETURN(load->data, index, values);
 
     return hlir_name(
@@ -890,15 +897,15 @@ static scan_t make_scanner(reports_t *reports, const char *lang, const char *pat
 }
 
 hlir_t *load_module(reports_t *reports, const char *path) {
-    value_t values[FIELDLEN(HEADER_FIELDS)];
+    value_t values[FIELDLEN(kHeaderFields)];
     record_t record = {
-        .layout = &HEADER_LAYOUT,
+        .layout = &kHeaderLayout,
         .values = values
     };
 
     header_t header = { 
         .reports = reports,
-        .format = &GLOBAL,
+        .format = get_format(),
         .path = path,
         .header = record,
         .submagic = HLIR_SUBMAGIC,
@@ -937,7 +944,7 @@ hlir_t *load_module(reports_t *reports, const char *path) {
 static index_t save_span(data_t *data, const node_t *node) {
     if (node == NULL) { return NULL_INDEX; }
 
-    value_t values[FIELDLEN(SPAN_FIELDS)] = {
+    value_t values[FIELDLEN(kSpanFields)] = {
         [SPAN_FIRST_LINE] = int_value((long)node->where.first_line),
         [SPAN_FIRST_COLUMN] = int_value((long)node->where.first_column),
         [SPAN_LAST_LINE] = int_value((long)node->where.last_line),
@@ -948,7 +955,7 @@ static index_t save_span(data_t *data, const node_t *node) {
 }
 
 static index_t save_attributes(data_t *data, const hlir_attributes_t *attributes) {
-    value_t values[FIELDLEN(ATTRIB_FIELDS)] = {
+    value_t values[FIELDLEN(kAttribFields)] = {
         [ATTRIB_LINKAGE] = int_value(attributes->linkage),
         [ATTRIB_TAGS] = int_value(attributes->tags)
     };
@@ -1371,13 +1378,13 @@ void save_module(reports_t *reports, save_settings_t *settings, hlir_t *module, 
     }
 
     record_t record = {
-        .layout = &HEADER_LAYOUT,
+        .layout = &kHeaderLayout,
         .values = values
     };
 
     header_t header = { 
         .reports = reports,
-        .format = &GLOBAL,
+        .format = get_format(),
         .path = path,
         .header = record,
         .submagic = HLIR_SUBMAGIC,

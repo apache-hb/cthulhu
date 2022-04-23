@@ -4,7 +4,7 @@
 #include "cthulhu/hlir/query.h"
 
 hlir_t *hlir_error(const node_t *node, const char *error) {
-    hlir_t *self = hlir_new(node, TYPE, HLIR_ERROR);
+    hlir_t *self = hlir_new(node, kMetaType, HLIR_ERROR);
     self->error = error;
     return self;
 }
@@ -70,13 +70,13 @@ hlir_t *hlir_call(const node_t *node, hlir_t *call, vector_t *args) {
 }
 
 hlir_t *hlir_stmts(const node_t *node, vector_t *stmts) {
-    hlir_t *self = hlir_new(node, INVALID, HLIR_STMTS);
+    hlir_t *self = hlir_new(node, kInvalidNode, HLIR_STMTS);
     self->stmts = stmts;
     return self;
 }
 
 hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other) {
-    hlir_t *self = hlir_new(node, INVALID, HLIR_BRANCH);
+    hlir_t *self = hlir_new(node, kInvalidNode, HLIR_BRANCH);
     self->cond = cond;
     self->then = then;
     self->other = other;
@@ -84,7 +84,7 @@ hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *othe
 }
 
 hlir_t *hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other) {
-    hlir_t *self = hlir_new(node, INVALID, HLIR_LOOP);
+    hlir_t *self = hlir_new(node, kInvalidNode, HLIR_LOOP);
     self->cond = cond;
     self->then = body;
     self->other = other;
@@ -92,7 +92,7 @@ hlir_t *hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other)
 }
 
 hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src) {
-    hlir_t *self = hlir_new(node, INVALID, HLIR_ASSIGN);
+    hlir_t *self = hlir_new(node, kInvalidNode, HLIR_ASSIGN);
     self->dst = dst;
     self->src = src;
     return self;

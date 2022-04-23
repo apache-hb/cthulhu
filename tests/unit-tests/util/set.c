@@ -2,7 +2,7 @@
 #include "cthulhu/util/str.h"
 #include "test.h"
 
-static const char *ITEMS[] = {
+static const char *kSetItems[] = {
     "a", "b", "c", "d", "e", "f", 
     "g", "h", "i", "j", "k", "l", 
     "m", "n", "o", "p", "q", "r", 
@@ -11,17 +11,17 @@ static const char *ITEMS[] = {
     "4", "5", "6", "7", "8", "9"
 };
 
-#define TOTAL_ITEMS (sizeof(ITEMS) / sizeof(const char *))
+#define TOTAL_ITEMS (sizeof(kSetItems) / sizeof(const char *))
 
 TEST(test_set_clashes, {
     set_t *set = set_new(3);
     for (size_t i = 0; i < TOTAL_ITEMS; i++) {
-        (void)set_add(set, ITEMS[i]);
+        (void)set_add(set, kSetItems[i]);
     }
 
     for (size_t i = 0; i < TOTAL_ITEMS; i++) {
-        char *name = format("%s in set", ITEMS[i]);
-        SHOULD_PASS(name, set_contains(set, ITEMS[i]));
+        char *name = format("%s in set", kSetItems[i]);
+        SHOULD_PASS(name, set_contains(set, kSetItems[i]));
     }
 })
 

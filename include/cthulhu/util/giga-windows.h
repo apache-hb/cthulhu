@@ -1,7 +1,7 @@
 #pragma once
 /**
  * @brief https://www.youtube.com/watch?v=aDLByVeefEM
- * 
+ *
  * windows.h breaks all kinds of stuff, lots of defines are needed
  * to make it not break everything.
  */

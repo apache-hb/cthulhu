@@ -11,7 +11,7 @@ static char *fmt_type_name(const hlir_t *type) {
     return format("type_%s", base);
 }
 
-static const char *emit_type(reports_t *reports, const hlir_t *type, const char *name);
+static const char *emit_c89_type(reports_t *reports, const hlir_t *type, const char *name);
 static char *emit_expr(reports_t *reports, const hlir_t *hlir);
 
 static const char *emit_bool(const char *name) {
@@ -23,25 +23,25 @@ static const char *emit_void(const char *name) {
 }
 
 static const char *emit_ptr(reports_t *reports, const hlir_t *type, const char *name) {
-    const char *base = emit_type(reports, type->ptr, NULL);
+    const char *base = emit_c89_type(reports, type->ptr, NULL);
     return name != NULL ? format("%s *%s", base, name) : base;
 }
 
 static const char *emit_array(reports_t *reports, const hlir_t *type, const char *name) {
-    const char *base = emit_type(reports, type->element, NULL);
+    const char *base = emit_c89_type(reports, type->element, NULL);
     char *length = emit_expr(reports, type->length);
 
     return name != NULL ? format("%s %s[%s]", base, name, length) 
                         : format("%s[%s]", base, length);
 }
 
-static const char *SIGNS[SIGN_TOTAL] = {
+static const char *kC89SignNames[SIGN_TOTAL] = {
     [SIGN_DEFAULT] = "",
     [SIGN_SIGNED] = "signed ",
     [SIGN_UNSIGNED] = "unsigned "
 };
 
-static const char *DIGITS[DIGIT_TOTAL] = {
+static const char *kC89DigitNames[DIGIT_TOTAL] = {
     [DIGIT_CHAR] = "char",
     [DIGIT_SHORT] = "short",
     [DIGIT_INT] = "int",
@@ -50,8 +50,8 @@ static const char *DIGITS[DIGIT_TOTAL] = {
     [DIGIT_PTR] = "intptr_t"
 };
 
-static char *emit_digit(const hlir_t *type, const char *name) {
-    char *digit = format("%s%s", SIGNS[type->sign], DIGITS[type->width]);
+static char *emit_c89_digit(const hlir_t *type, const char *name) {
+    char *digit = format("%s%s", kC89SignNames[type->sign], kC89DigitNames[type->width]);
     return name != NULL ? format("%s %s", digit, name) : digit;
 }
 
@@ -70,7 +70,7 @@ static char *emit_union(const hlir_t *type, const char *name) {
 }
 
 static char *emit_closure(reports_t *reports, const hlir_t *type, const char *name) {
-    const char *result = emit_type(reports, type->result, NULL);
+    const char *result = emit_c89_type(reports, type->result, NULL);
 
     const char *args = "void";
     size_t len = vector_len(type->params);
@@ -78,7 +78,7 @@ static char *emit_closure(reports_t *reports, const hlir_t *type, const char *na
         vector_t *params = vector_of(len);
         for (size_t i = 0; i < len; i++) {
             const hlir_t *param = vector_get(type->params, i);
-            const char *kind = emit_type(reports, param, NULL);
+            const char *kind = emit_c89_type(reports, param, NULL);
             vector_set(params, i, (void*)kind);
         }
         args = str_join(", ", params);
@@ -88,12 +88,12 @@ static char *emit_closure(reports_t *reports, const hlir_t *type, const char *na
                         : format("%s (*)(%s)", result, args);
 }
 
-static const char *emit_type(reports_t *reports, const hlir_t *type, const char *name) {
+static const char *emit_c89_type(reports_t *reports, const hlir_t *type, const char *name) {
     hlir_kind_t kind = get_hlir_kind(type);
     switch (kind) {
     case HLIR_BOOL: return emit_bool(name);
     case HLIR_VOID: return emit_void(name);
-    case HLIR_DIGIT: return emit_digit(type, name);
+    case HLIR_DIGIT: return emit_c89_digit(type, name);
     case HLIR_STRING: return emit_string(name);
 
     case HLIR_POINTER: return emit_ptr(reports, type, name);
@@ -104,7 +104,7 @@ static const char *emit_type(reports_t *reports, const hlir_t *type, const char 
     case HLIR_STRUCT: return emit_struct(type, name);
     case HLIR_UNION: return emit_union(type, name);
 
-    case HLIR_ALIAS: return emit_type(reports, type->alias, name);
+    case HLIR_ALIAS: return emit_c89_type(reports, type->alias, name);
 
     default:
         ctu_assert(reports, "cannot emit %s as a type", hlir_kind_to_string(kind));
@@ -117,7 +117,7 @@ static void emit_aggregate_decl(reports_t *reports, const hlir_t *type, const ch
     printf("%s %s {\n", kind, name);
     for (size_t i = 0; i < vector_len(type->fields); i++) {
         const hlir_t *field = vector_get(type->fields, i);
-        printf("    %s;\n", emit_type(reports, get_hlir_type(field), get_hlir_name(field)));
+        printf("    %s;\n", emit_c89_type(reports, get_hlir_type(field), get_hlir_name(field)));
     }
     printf("};\n");
 }
@@ -147,7 +147,7 @@ static char *get_type_params(reports_t *reports, const hlir_t *sig) {
     vector_t *types = vector_of(len);
     for (size_t i = 0; i < len; i++) {
         const hlir_t *param = vector_get(sig->params, i);
-        const char *type = emit_type(reports, param, NULL);
+        const char *type = emit_c89_type(reports, param, NULL);
         vector_set(types, i, (char*)type);
     }
 
@@ -159,12 +159,12 @@ static char *get_type_params(reports_t *reports, const hlir_t *sig) {
 }
 
 static void emit_function_import(reports_t *reports, const hlir_t *hlir) {
-    const char *type = emit_type(reports, hlir->result, get_hlir_name(hlir));
+    const char *type = emit_c89_type(reports, hlir->result, get_hlir_name(hlir));
     printf("extern %s(%s);\n", type, get_type_params(reports, hlir));
 }
 
 static void emit_value_import(reports_t *reports, const hlir_t *hlir) {
-    const char *type = emit_type(reports, hlir, get_hlir_name(hlir));
+    const char *type = emit_c89_type(reports, hlir, get_hlir_name(hlir));
     printf("extern %s;\n", type);
 }
 
@@ -297,7 +297,7 @@ static void emit_stmt(reports_t *reports, const hlir_t *hlir) {
 }
 
 static const char *emit_hlir_type(reports_t *reports, const hlir_t *hlir) {
-    return emit_type(reports, get_hlir_type(hlir), get_hlir_name(hlir));
+    return emit_c89_type(reports, get_hlir_type(hlir), get_hlir_name(hlir));
 }
 
 static void fwd_global(reports_t *reports, const hlir_t *hlir) {
@@ -311,7 +311,7 @@ static void emit_global(reports_t *reports, const hlir_t *hlir) {
 }
 
 static void fwd_proc(reports_t *reports, const hlir_t *hlir) {
-    const char *type = emit_type(reports, hlir->result, get_hlir_name(hlir));
+    const char *type = emit_c89_type(reports, hlir->result, get_hlir_name(hlir));
     const char *params = get_type_params(reports, hlir);
 
     printf("%s(%s);\n", type, params);
@@ -320,7 +320,7 @@ static void fwd_proc(reports_t *reports, const hlir_t *hlir) {
 static void emit_proc(reports_t *reports, const hlir_t *hlir) {
     vector_t *locals = hlir->locals;
 
-    const char *type = emit_type(reports, hlir->result, get_hlir_name(hlir));
+    const char *type = emit_c89_type(reports, hlir->result, get_hlir_name(hlir));
     const char *params = get_type_params(reports, hlir);
     printf("%s(%s) {\n", type, params);
 

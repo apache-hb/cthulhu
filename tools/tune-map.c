@@ -27,7 +27,7 @@ static void diff2(const char *name, ns_t diff) {
 /* a precalculated array of unique names */
 static vector_t *idents = NULL;
 
-static const char *NAMES[] = {
+static const char *kNumbers[] = {
     "Zero", "One", "Two", "Three",
     "Four", "Five", "Six", "Seven",
     "Eight", "Nine"
@@ -56,7 +56,7 @@ static char *long_name_for(size_t digit) {
 
     while (digit != 0) {
         size_t rem = digit % 10;
-        vector_push(&id, (char*)NAMES[rem]);
+        vector_push(&id, (char*)kNumbers[rem]);
         digit = digit / 10;
     }
 

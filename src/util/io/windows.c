@@ -12,8 +12,6 @@ typedef struct {
     HANDLE handle;
 } windows_file_t;
 
-static const file_ops_t OPS;
-
 #define TOTAL_SIZE (sizeof(file_t) + sizeof(windows_file_t))
 
 #define SELF(file) ((windows_file_t*)file->data)
@@ -151,7 +149,7 @@ static bool windows_ok(file_t *self) {
     return file->handle != INVALID_HANDLE_VALUE;
 }
 
-static const file_ops_t OPS = {
+static const file_ops_t kFileOps = {
     .read = windows_read,
     .write = windows_write,
     .seek = windows_seek,
@@ -207,7 +205,7 @@ void platform_open(file_t **file, const char *path, contents_t format, access_t 
     self->format = format;
     self->access = access;
     self->backing = FD;
-    self->ops = &OPS;
+    self->ops = &kFileOps;
 
     DWORD desiredAccess = (access & READ ? GENERIC_READ : 0)
                         | (access & WRITE ? GENERIC_WRITE : 0)

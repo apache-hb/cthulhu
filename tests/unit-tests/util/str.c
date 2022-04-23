@@ -32,16 +32,16 @@ TEST(test_string_contains, {
     SHOULD_FAIL("larger search", str_contains("string", "strings"));
 })
 
-static const char *PARTS[] = {
+static const char *kStringParts[] = {
     "zero", "one", "two", "three", "four", 
     "five", "six", "seven", "eight", "nine"
 };
-#define PARTS_SIZE (sizeof(PARTS) / sizeof(const char *))
+#define PARTS_SIZE (sizeof(kStringParts) / sizeof(const char *))
 
 TEST(test_string_join, {
     vector_t *parts = vector_of(PARTS_SIZE);
     for (size_t i = 0; i < PARTS_SIZE; i++) {
-        vector_set(parts, i, (char*)PARTS[i]);
+        vector_set(parts, i, (char*)kStringParts[i]);
     }
     char *joined_parts = str_join("-", parts);
     SHOULD_PASS("joined equals", str_equal(joined_parts, "zero-one-two-three-four-five-six-seven-eight-nine"));

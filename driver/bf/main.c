@@ -2,16 +2,16 @@
 
 #include "cthulhu/hlir/decl.h"
 
-static const hlir_t *CURSOR = NULL;
-static const hlir_t *CELL = NULL;
-static const hlir_t *TAPE = NULL;
+static const hlir_t *kCursor = NULL;
+static const hlir_t *kCell = NULL;
+static const hlir_t *kTape = NULL;
 
 void *bf_parse(reports_t *reports, scan_t *scan) {
     UNUSED(reports);
     UNUSED(scan);
 
-    hlir_t *tape = hlir_new_global(NULL, "tape", TAPE, NULL);
-    hlir_t *cursor = hlir_new_global(NULL, "cursor", CURSOR, hlir_int_literal(NULL, CURSOR, 0));
+    hlir_t *tape = hlir_new_global(NULL, "tape", kTape, NULL);
+    hlir_t *cursor = hlir_new_global(NULL, "cursor", kCursor, hlir_int_literal(NULL, kCursor, 0));
 
     where_t where = { 0, 0, 0, 0 };
     node_t *node = node_new(scan, where);
@@ -23,10 +23,10 @@ void *bf_parse(reports_t *reports, scan_t *scan) {
         hlir_t *hlir = NULL;
         switch (*text++) {
         case '>':
-            hlir = hlir_assign(node, cursor, hlir_add(node, cursor, hlir_int_literal(node, CURSOR, 1)));
+            hlir = hlir_assign(node, cursor, hlir_add(node, cursor, hlir_int_literal(node, kCursor, 1)));
             break;
         case '<':
-            hlir = hlir_assign(node, cursor, hlir_sub(node, cursor, hlir_int_literal(node, CURSOR, 1)));
+            hlir = hlir_assign(node, cursor, hlir_sub(node, cursor, hlir_int_literal(node, kCursor, 1)));
             break;
         case '+':
         case '-':
@@ -63,7 +63,7 @@ static hlir_t *bf_sema(reports_t *reports, void *ast) {
     return ast;
 }
 
-static const driver_t DRIVER = {
+static const driver_t kDriver = {
     .name = "brainfuck",
     .version = "1.0.0",
     .parse = bf_parse,
@@ -73,11 +73,11 @@ static const driver_t DRIVER = {
 int main(int argc, const char **argv) {
     common_init();
 
-    CURSOR = hlir_digit(NULL, "size", DIGIT_SIZE, SIGN_UNSIGNED);
-    const hlir_t *length = hlir_int_literal(NULL, CURSOR, 0x4000);
+    kCursor = hlir_digit(NULL, "size", DIGIT_SIZE, SIGN_UNSIGNED);
+    const hlir_t *length = hlir_int_literal(NULL, kCursor, 0x4000);
 
-    CELL = hlir_digit(NULL, "cell", DIGIT_CHAR, SIGN_UNSIGNED);
-    TAPE = hlir_array(NULL, "tape", CELL, length);
+    kCell = hlir_digit(NULL, "cell", DIGIT_CHAR, SIGN_UNSIGNED);
+    kTape = hlir_array(NULL, "tape", kCell, length);
 
-    return common_main(argc, argv, DRIVER);
+    return common_main(argc, argv, kDriver);
 }

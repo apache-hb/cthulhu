@@ -111,7 +111,7 @@ bool hlir_is_decl(const hlir_t *hlir) {
 /// debugging
 ///
 
-static const char *KINDS[HLIR_TOTAL] = {
+static const char *kKindNames[HLIR_TOTAL] = {
     [HLIR_DIGIT_LITERAL] = "digit-literal",
     [HLIR_BOOL_LITERAL] = "bool-literal",
     [HLIR_STRING_LITERAL] = "string-literal",
@@ -152,7 +152,7 @@ static const char *KINDS[HLIR_TOTAL] = {
     [HLIR_ERROR] = "internal-error"
 };
 
-static const char *DIGITS[DIGIT_TOTAL] = {
+static const char *kDigitNames[DIGIT_TOTAL] = {
     [DIGIT_CHAR] = "char",
     [DIGIT_SHORT] = "short",
     [DIGIT_INT] = "int",
@@ -162,20 +162,20 @@ static const char *DIGITS[DIGIT_TOTAL] = {
     [DIGIT_PTR] = "intptr"
 };
 
-static const char *SIGNS[SIGN_TOTAL] = {
+static const char *kSignNames[SIGN_TOTAL] = {
     [SIGN_SIGNED] = "signed",
     [SIGN_UNSIGNED] = "unsigned",
     [SIGN_DEFAULT] = "default"
 };
 
 const char *hlir_kind_to_string(hlir_kind_t kind) {
-    return KINDS[kind];
+    return kKindNames[kind];
 }
 
 const char *hlir_sign_to_string(sign_t sign) {
-    return SIGNS[sign];
+    return kSignNames[sign];
 }
 
 const char *hlir_digit_to_string(digit_t digit) {
-    return DIGITS[digit];
+    return kDigitNames[digit];
 }
