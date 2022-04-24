@@ -13,8 +13,8 @@ TEST(test_cmd_files, {
     }
 
     SHOULD_PASS("parse one file status", result == 0);
-    SHOULD_PASS("has one file", vector_len(commands.sources) == 1);
-    SHOULD_PASS("has correct file", str_equal(vector_get(commands.sources, 0), "hello.test"));
+    SHOULD_PASS("has one file", vector_len(commands.files) == 1);
+    SHOULD_PASS("has correct file", str_equal(vector_get(commands.files, 0), "hello.test"));
 
     {
         const char *argv[] = { "test-harness", "hello.test", "world.test", "foo.bar" };
@@ -23,10 +23,10 @@ TEST(test_cmd_files, {
     }
 
     SHOULD_PASS("parse two files status", result == 0);
-    SHOULD_PASS("has 3 files", vector_len(commands.sources) == 3);
-    SHOULD_PASS("has correct first file", str_equal(vector_get(commands.sources, 0), "hello.test"));
-    SHOULD_PASS("has correct second file", str_equal(vector_get(commands.sources, 1), "world.test"));
-    SHOULD_PASS("has correct third file", str_equal(vector_get(commands.sources, 2), "foo.bar"));
+    SHOULD_PASS("has 3 files", vector_len(commands.files) == 3);
+    SHOULD_PASS("has correct first file", str_equal(vector_get(commands.files, 0), "hello.test"));
+    SHOULD_PASS("has correct second file", str_equal(vector_get(commands.files, 1), "world.test"));
+    SHOULD_PASS("has correct third file", str_equal(vector_get(commands.files, 2), "foo.bar"));
 })
 
 TEST(test_args, {
@@ -40,7 +40,7 @@ TEST(test_args, {
     }
 
     SHOULD_PASS("parse one help status", result == 0);
-    SHOULD_PASS("has no files", vector_len(commands.sources) == 0);
+    SHOULD_PASS("has no files", vector_len(commands.files) == 0);
     SHOULD_PASS("has help", commands.printHelp);
 
     {
@@ -50,7 +50,7 @@ TEST(test_args, {
     }
 
     SHOULD_PASS("parse two helps status", result == 0);
-    SHOULD_PASS("has no files", vector_len(commands.sources) == 0);
+    SHOULD_PASS("has no files", vector_len(commands.files) == 0);
     SHOULD_PASS("has help", commands.printHelp);
 
     {
@@ -60,7 +60,7 @@ TEST(test_args, {
     }
 
     SHOULD_PASS("parse version status", result == 0);
-    SHOULD_PASS("has no files", vector_len(commands.sources) == 0);
+    SHOULD_PASS("has no files", vector_len(commands.files) == 0);
     SHOULD_PASS("has version", commands.printVersion);
 })
 
@@ -76,7 +76,7 @@ TEST(test_multiple_args, {
     }
 
     SHOULD_PASS("parse two args status", result == 0);
-    SHOULD_PASS("has no files", vector_len(commands.sources) == 0);
+    SHOULD_PASS("has no files", vector_len(commands.files) == 0);
     SHOULD_PASS("has help", commands.printHelp);
     SHOULD_PASS("has version", commands.printVersion);
 })
@@ -93,7 +93,7 @@ TEST(test_string_arg, {
     }
 
     SHOULD_PASS("parse module status", result == 0);
-    SHOULD_PASS("module has no files", vector_len(commands.sources) == 0);
+    SHOULD_PASS("module has no files", vector_len(commands.files) == 0);
     SHOULD_PASS("has module name", str_equal(commands.moduleName, "foo"));
 
     {
@@ -103,7 +103,7 @@ TEST(test_string_arg, {
     }
 
     SHOULD_PASS("parse module equals status", result == 0);
-    SHOULD_PASS("module equals has no files", vector_len(commands.sources) == 0);
+    SHOULD_PASS("module equals has no files", vector_len(commands.files) == 0);
     SHOULD_PASS("has module name", str_equal(commands.moduleName, "foo"));
 })
 
@@ -119,9 +119,9 @@ TEST(test_opt_and_string, {
     }
 
     SHOULD_PASS("parse opt and string status", result == 0);
-    SHOULD_PASS("has one files", vector_len(commands.sources) == 1);
+    SHOULD_PASS("has one files", vector_len(commands.files) == 1);
     SHOULD_PASS("has help", commands.printHelp);
-    SHOULD_PASS("has correct file", str_equal(vector_get(commands.sources, 0), "hello.test"));
+    SHOULD_PASS("has correct file", str_equal(vector_get(commands.files, 0), "hello.test"));
 })
 
 HARNESS("cmd", {

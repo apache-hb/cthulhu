@@ -12,104 +12,108 @@
 
 CT_CALLBACKS(kCallbacks, cmd);
 
-static map_t *offsets = NULL;
+static bool flag_matches(const char *flag, size_t total, const char **names) {
+    for (size_t i = 0; i < total; i++) {
+        if (str_equal(flag, names[i])) {
+            return true;
+        }
+    }
 
-static flag_t *flag_new(size_t offset, flag_type_t type, const char *name) {
-    flag_t *flag = ctu_malloc(sizeof(flag_t));
-    flag->offset = offset;
-    flag->type = type;
-    flag->name = name;
+    return false;
+}
+
+static flag_t flag_new(const char *name, bool *setByUser, flag_type_t type, void *data) {
+    flag_t flag = {.name = name, .setByUser = setByUser, .type = type, .data = data};
     return flag;
 }
 
-static void cmd_init(void) {
-    if (offsets != NULL) {
-        return;
+static flag_t flag_empty(void) {
+    return flag_new(NULL, NULL, FLAG_NONE, NULL);
+}
+
+static bool check_and_set_flag(commands_t *commands, flag_t flag) {
+    if (*flag.setByUser) {
+        report(commands->reports, WARNING, NULL, "flag `%s` already set", flag.name);
+        return true;
     }
 
-    offsets = map_new(64);
-#define COMMAND(name, type, initial, description, ...)                             \
-    do {                                                                           \
-        const char *names[] = __VA_ARGS__;                                         \
-        size_t total = sizeof(names) / sizeof(const char *);                       \
-        flag_t *flag = flag_new(offsetof(commands_t, name), CMD_##type, names[0]); \
-        for (size_t i = 0; i < total; i++) {                                       \
-            map_set(offsets, names[i], flag);                                      \
-        }                                                                          \
+    *flag.setByUser = true;
+    return false;
+}
+
+static bool should_skip_flag(flag_t flag) {
+    return flag.name == NULL && flag.type == FLAG_NONE;
+}
+
+static const char *kFlagTypes[FLAG_NONE] = {
+    [FLAG_BOOL] = "boolean",
+    [FLAG_INT] = "integer",
+    [FLAG_STRING] = "string",
+};
+
+static flag_t pop_current_flag(commands_t *commands, flag_type_t type) {
+    flag_t flag = commands->currentFlag;
+    commands->currentFlag = flag_empty();
+
+    /* if this is a positional flag, we should set it when we pop it */
+    if (flag.type == FLAG_BOOL) {
+        check_and_set_flag(commands, flag);
+        *(bool *)flag.data = true;
+        return flag_empty();
+    }
+
+    if (flag.type != type) {
+        if (flag.name == NULL) {
+            return flag_empty();
+        }
+
+        report(commands->reports, WARNING, NULL, "flag `%s` requires a %s, but %s was provided", flag.name, kFlagTypes[flag.type], kFlagTypes[type]);
+        return flag_empty();
+    }
+
+    return flag;
+}
+
+void cmd_begin_flag(commands_t *commands, const char *flag) {
+    pop_current_flag(commands, FLAG_BOOL);
+
+#define TYPE_BOOL   FLAG_BOOL
+#define TYPE_STRING FLAG_STRING
+#define TYPE_INT    FLAG_INT
+#define COMMAND(name, type, initial, description, ...)                                                     \
+    do {                                                                                                   \
+        const char *names[] = __VA_ARGS__;                                                                 \
+        size_t total = sizeof(names) / sizeof(const char *);                                               \
+        if (flag_matches(flag, total, names)) {                                                            \
+            commands->currentFlag = flag_new(names[0], &commands->name##SetByUser, type, &commands->name); \
+            return;                                                                                        \
+        }                                                                                                  \
     } while (0);
 #include "flags.inc"
 }
 
-void cmd_add_file(commands_t *commands, char *path) {
-    vector_push(&commands->sources, path);
+void cmd_push_int(commands_t *commands, mpz_t value) {
+    flag_t flag = pop_current_flag(commands, FLAG_INT);
+    if (should_skip_flag(flag)) { return; }
+    if (check_and_set_flag(commands, flag)) { return; }
+
+    (*(int *)flag.data) = mpz_get_si(value);
 }
 
-void cmd_set_flag(commands_t *commands, flag_t *flag) {
-    if (flag == NULL) {
+void cmd_push_str(commands_t *commands, char *value) {
+    flag_t flag = pop_current_flag(commands, FLAG_STRING);
+
+    // if the string is set without a flag its a file
+    if (flag.type == FLAG_NONE) {
+        vector_push(&commands->files, value);
         return;
     }
 
-    if (flag->type != CMD_bool) {
-        report(commands->reports, WARNING, NULL, "flag `%s` requires a value", flag->name);
+    if (check_and_set_flag(commands, flag)) {
         return;
     }
 
-    bool *boolean = (bool *)((char *)commands + flag->offset);
-
-    if (*boolean) {
-        report(commands->reports, WARNING, NULL, "flag `%s` already set", flag->name);
-        return;
-    }
-
-    *boolean = true;
-}
-
-void cmd_set_option(commands_t *commands, flag_t *flag, option_t option) {
-    if (flag == NULL) {
-        report(commands->reports, WARNING, NULL, "unknown flag `%s`", flag->name);
-        return;
-    }
-
-    if (flag->type != option.type) {
-        report(commands->reports, WARNING, NULL, "incorrect argument type passed for `%s`", flag->name);
-        return;
-    }
-
-    void *value = (void *)((char *)commands + flag->offset);
-    switch (option.type) {
-    case CMD_string:
-        *(char **)value = option.string;
-        break;
-    case CMD_int:
-        *(int *)value = mpz_get_si(option.mpz);
-        break;
-    default:
-        cmd_set_flag(commands, flag);
-        break;
-    }
-}
-
-flag_t *cmd_get_flag(commands_t *commands, const char *str) {
-    flag_t *flag = map_get(offsets, str);
-
-    if (flag == NULL) {
-        report(commands->reports, ERROR, NULL, "unknown flag %s", str);
-        return NULL;
-    }
-
-    return flag;
-}
-
-option_t option_ident(char *str) {
-    option_t option = {.type = CMD_string, .string = str};
-    return option;
-}
-
-option_t option_number(mpz_t mpz) {
-    option_t option = {.type = CMD_int};
-
-    mpz_init_set(option.mpz, mpz);
-    return option;
+    *(char **)flag.data = value;
 }
 
 void cmderror(where_t *where, void *state, scan_t *scan, const char *msg) {
@@ -123,13 +127,10 @@ static char *join_args(int argc, const char **argv) {
     for (int i = 1; i < argc; i++) {
         vector_set(vec, i - 1, (char *)argv[i]);
     }
-    // join with the bell to make the lexers job easier
-    return str_join("\b", vec);
+    return str_join(" ", vec);
 }
 
 int parse_commandline(reports_t *reports, commands_t *commands, int argc, const char **argv) {
-    cmd_init();
-
     char *args = join_args(argc, argv);
 
     scan_t scan = scan_string(reports, "command-line", "<command-line>", args);
@@ -139,21 +140,22 @@ int parse_commandline(reports_t *reports, commands_t *commands, int argc, const 
         return status;
     }
 
-    commands->sources = vector_new(8);
+    /* setup the commands data */
+#define COMMAND(name, type, initial, description, ...) \
+    do {                                               \
+        commands->name##SetByUser = false;             \
+        commands->name = initial;                      \
+    } while (0);
+#include "flags.inc"
+
     commands->reports = reports;
+    commands->currentFlag = flag_empty();
+    commands->files = vector_new(8);
 
     scan_set(&scan, commands);
     compile_string(&scan, &kCallbacks);
 
-    /* set default values if they werent specified */
-    /* isnt it great that everything converts to 0 in c */
-#define COMMAND(name, type, initial, description, ...) \
-    do {                                               \
-        if (commands->name == 0) {                     \
-            commands->name = initial;                  \
-        }                                              \
-    } while (0);
-#include "flags.inc"
+    pop_current_flag(commands, FLAG_BOOL);
 
     status = end_reports(reports, commands->warningLimit, "command line parsing");
     if (status != 0) {

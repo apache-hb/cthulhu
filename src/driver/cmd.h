@@ -5,49 +5,40 @@
 
 #include <gmp.h>
 
-typedef bool cmd_bool_t;
-typedef char *cmd_string_t;
-typedef int cmd_int_t;
-
-typedef struct {
-    reports_t *reports;
-    vector_t *sources; ///< source files
-
-#define COMMAND(name, type, initial, description, ...) cmd_##type##_t name;
-#include "flags.inc"
-} commands_t;
-
 typedef enum {
-    // we break style here because of how the command line flags are defined
-    // see flags.inc
-    CMD_bool,
-    CMD_string,
-    CMD_int
+    FLAG_BOOL,
+    FLAG_STRING,
+    FLAG_INT,
+
+    FLAG_NONE
 } flag_type_t;
 
 typedef struct {
     const char *name;
-    size_t offset;
+    bool *setByUser;
     flag_type_t type;
+    void *data;
 } flag_t;
 
 typedef struct {
-    flag_type_t type;
-    union {
-        char *string;
-        mpz_t mpz;
-    };
-} option_t;
+    reports_t *reports;
+    flag_t currentFlag;
+
+    vector_t *files; ///< all files provided by the user
+                     ///  can be source and library files
+
+#define TYPE_BOOL bool
+#define TYPE_INT int
+#define TYPE_STRING char *
+#define COMMAND(name, type, initial, description, ...) type name; bool name##SetByUser;
+#include "flags.inc"
+} commands_t;
 
 int parse_commandline(reports_t *reports, commands_t *commands, int argc, const char **argv);
 
-void cmd_add_file(commands_t *commands, char *path);
-void cmd_set_flag(commands_t *commands, flag_t *flag);
-void cmd_set_option(commands_t *commands, flag_t *flag, option_t option);
+void cmd_begin_flag(commands_t *commands, const char *name);
 
-flag_t *cmd_get_flag(commands_t *commands, const char *str);
-
-option_t option_ident(char *str);
-option_t option_number(mpz_t mpz);
+void cmd_push_int(commands_t *commands, mpz_t value);
+void cmd_push_str(commands_t *commands, char *value);
 
 #define CMDLTYPE where_t

@@ -46,73 +46,6 @@ static void print_help(const char **argv) {
     } while (0);
 
 #include "flags.inc"
-#if 0
-    printf("general options:\n");
-    printf("  -h, --help        : print this help message\n");
-    printf("  -v, --version     : print version information\n");
-    printf("  -V, --verbose     : enable verbose logging\n");
-    printf("  -m, --module      : set module output name\n");
-    printf("  -out, --output    : set output file name\n");
-    printf("  -t, --target      : set output format\n");
-    printf("                    | options: c89, wasm\n");
-    printf("                    | default: c89\n");
-    printf("---\n");
-    printf("warning options:\n");
-    printf("  -Wlimit=<digit>   : set warning limit\n");
-    printf("                    | options: 0 = infinite\n");
-    printf("                    | default: %d\n", DEFAULT_REPORT_LIMIT);
-    printf("---\n");
-    printf("bytecode options:\n");
-    printf("  -bc, --bytecode   : enable bytecode generation\n");
-    printf("  -Bembed           : embed source in bytecode\n");
-#endif
-}
-
-static const char *extract_arg(int argc, const char **argv, const char *arg, int idx) {
-    size_t len = strlen(arg);
-    if (str_startswith(argv[idx], arg)) {
-        char end = argv[idx][len];
-        if (end == '\0') {
-            if (idx >= argc) {
-                return NULL;
-            }
-
-            return argv[idx + 1];
-        }
-
-        if (end == '=') {
-            return argv[idx] + len + 1;
-        }
-
-        return argv[idx] + len;
-    }
-
-    return NULL;
-}
-
-static const char *get_arg(reports_t *reports, int argc, const char **argv, const char *arg, const char *brief) {
-    bool found = false;
-    const char *result = NULL;
-
-    for (int i = 0; i < argc; i++) {
-        if (str_startswith(argv[i], arg)) {
-            found = true;
-            result = extract_arg(argc, argv, arg, i);
-            break;
-        }
-
-        if (brief != NULL && str_startswith(argv[i], brief)) {
-            found = true;
-            result = extract_arg(argc, argv, brief, i);
-            break;
-        }
-    }
-
-    if (result == NULL && found) {
-        report(reports, WARNING, NULL, "missing argument for %s", arg);
-    }
-
-    return result;
 }
 
 static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, const char *mod) {
@@ -158,7 +91,14 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (status != 0) { return status; }
 
     verbose = commands.verboseLogging;
+
     size_t limit = commands.warningLimit;
+    const char *target = commands.outputTarget;
+    const char *outFile = commands.outputFile;
+
+    if (outFile == NULL) {
+        outFile = commands.enableBytecode ? "mod.hlir" : "a.out";
+    }
 
     if (commands.printHelp) {
         print_help(argv);
@@ -168,20 +108,6 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (commands.printVersion) {
         print_version(driver);
         return 0;
-    }
-
-    const char *out = get_arg(reports, argc, argv, "--output", "-out");
-    if (out == NULL) {
-        out = "a.out";
-    }
-
-    const char *target = get_arg(reports, argc, argv, "--target", "-t");
-
-    if (target == NULL) {
-        target = "c89";
-    } else if (commands.enableBytecode) {
-        report(reports, ERROR, NULL, "cannot specify target format when compiling to bytecode");
-        return end_reports(reports, limit, "command line parsing");
     }
 
     target_t result = parse_target(reports, target);
@@ -235,7 +161,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
     if (commands.enableBytecode) {
         save_settings_t settings = {.embedSource = commands.embedSource };
 
-        save_module(reports, &settings, hlir, out);
+        save_module(reports, &settings, hlir, outFile);
         status = end_reports(reports, limit, "bytecode generation");
         return status;
     }

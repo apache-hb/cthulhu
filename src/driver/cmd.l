@@ -46,8 +46,6 @@ ALNUMDASH [a-zA-Z0-9-]
     return IDENT; 
 }
 
-\b { return SEP; }
-
 . { report_unknown_character(yyextra->reports, node_new(yyextra, *yylloc), yytext); }
 
 %%
