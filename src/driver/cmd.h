@@ -5,8 +5,7 @@
 
 #include <gmp.h>
 
-typedef enum
-{
+typedef enum {
     FLAG_BOOL,
     FLAG_STRING,
     FLAG_INT,

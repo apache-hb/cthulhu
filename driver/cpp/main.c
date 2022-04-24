@@ -15,14 +15,14 @@ static hlir_t *cpp_sema(reports_t *reports, void *ast) {
 }
 
 static driver_t DRIVER = {
-    .name = "c-pre-processor",
+    .name = "cpp",
     .version = "1.0.0",
     .parse = cpp_parse,
-    .sema = cpp_sema
+    .sema = cpp_sema,
 };
 
 int main(int argc, const char **argv) {
     common_init();
-    
+
     return common_main(argc, argv, DRIVER);
 }

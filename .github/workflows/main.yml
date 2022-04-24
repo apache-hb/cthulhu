@@ -30,4 +30,3 @@ jobs:
         with:
           clang-format-version: '13'
           check-path: ${{ matrix.path }}
-          fallback-style: 'Microsoft'

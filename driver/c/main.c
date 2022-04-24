@@ -1,5 +1,5 @@
-#include "cthulhu/driver/driver.h"
 #include "cthulhu/ast/compile.h"
+#include "cthulhu/driver/driver.h"
 
 void *cc_parse(reports_t *reports, scan_t *scan) {
     UNUSED(reports);
@@ -19,7 +19,7 @@ static driver_t DRIVER = {
     .name = "C",
     .version = "1.0.0",
     .parse = cc_parse,
-    .sema = cc_sema
+    .sema = cc_sema,
 };
 
 int main(int argc, const char **argv) {

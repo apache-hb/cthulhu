@@ -13,7 +13,7 @@ void *bf_parse(reports_t *reports, scan_t *scan) {
     hlir_t *tape = hlir_new_global(NULL, "tape", kTape, NULL);
     hlir_t *cursor = hlir_new_global(NULL, "cursor", kCursor, hlir_int_literal(NULL, kCursor, 0));
 
-    where_t where = { 0, 0, 0, 0 };
+    where_t where = {0, 0, 0, 0};
     node_t *node = node_new(scan, where);
 
     vector_t *stmts = vector_new(scan_size(scan));
@@ -34,7 +34,7 @@ void *bf_parse(reports_t *reports, scan_t *scan) {
         case ',':
         case '[':
         case ']':
-        
+
         default:
             /* everything else is a comment */
             break;
@@ -47,11 +47,7 @@ void *bf_parse(reports_t *reports, scan_t *scan) {
 
     hlir_t *body = hlir_stmts(node, stmts);
 
-    signature_t signature = {
-        .params = vector_new(0),
-        .result = hlir_void(node, "void"),
-        .variadic = false
-    };
+    signature_t signature = {.params = vector_new(0), .result = hlir_void(node, "void"), .variadic = false};
     hlir_t *entry = hlir_function(node, "main", signature, vector_of(0), body);
 
     return NULL;
@@ -63,12 +59,7 @@ static hlir_t *bf_sema(reports_t *reports, void *ast) {
     return ast;
 }
 
-static const driver_t kDriver = {
-    .name = "brainfuck",
-    .version = "1.0.0",
-    .parse = bf_parse,
-    .sema = bf_sema
-};
+static const driver_t kDriver = {.name = "brainfuck", .version = "1.0.0", .parse = bf_parse, .sema = bf_sema};
 
 int main(int argc, const char **argv) {
     common_init();

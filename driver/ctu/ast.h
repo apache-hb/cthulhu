@@ -5,7 +5,6 @@
 #include "cthulhu/ast/ast.h"
 #include "cthulhu/ast/ops.h"
 
-
 typedef enum {
     AST_PROGRAM,
     AST_IMPORT,
