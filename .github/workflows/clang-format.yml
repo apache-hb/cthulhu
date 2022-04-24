@@ -6,12 +6,12 @@ on:
       - 'src/**'
       - 'include/**'
       - 'driver/**'
-    pull_request:
-      branches: [master]
-      paths:
-        - 'src/**'
-        - 'include/**'
-        - 'driver/**'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - 'include/**'
+      - 'driver/**'
 
 jobs:
   formatting-check:
