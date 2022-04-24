@@ -12,9 +12,17 @@
 
 CT_CALLBACKS(kCallbacks, cmd);
 
-static bool flag_matches(const char *flag, size_t total, const char **names) {
+static bool flag_matches(commands_t *commands, flag_t currentFlag, const char *flag, size_t total, const char **names) {
+    size_t flagLen = strlen(flag);
     for (size_t i = 0; i < total; i++) {
-        if (str_equal(flag, names[i])) {
+        if (str_startswith(flag, names[i])) {
+            size_t nameLen = strlen(names[i]);
+            commands->currentFlag = currentFlag;
+
+            if (flagLen > nameLen) {
+                char *restOfFlag = ctu_strdup(flag + nameLen);
+                cmd_push_str(commands, restOfFlag);
+            }
             return true;
         }
     }
@@ -46,7 +54,7 @@ static bool should_skip_flag(flag_t flag) {
 }
 
 static const char *kFlagTypes[FLAG_NONE] = {
-    [FLAG_BOOL] = "boolean",
+    [FLAG_BOOL] = "positional",
     [FLAG_INT] = "integer",
     [FLAG_STRING] = "string",
 };
@@ -67,7 +75,8 @@ static flag_t pop_current_flag(commands_t *commands, flag_type_t type) {
             return flag_empty();
         }
 
-        report(commands->reports, WARNING, NULL, "flag `%s` requires a %s, but %s was provided", flag.name, kFlagTypes[flag.type], kFlagTypes[type]);
+        report(commands->reports, WARNING, NULL, "flag `%s` requires a %s, but was treated as a %s flag", flag.name,
+               kFlagTypes[flag.type], kFlagTypes[type]);
         return flag_empty();
     }
 
@@ -80,22 +89,28 @@ void cmd_begin_flag(commands_t *commands, const char *flag) {
 #define TYPE_BOOL   FLAG_BOOL
 #define TYPE_STRING FLAG_STRING
 #define TYPE_INT    FLAG_INT
-#define COMMAND(name, type, initial, description, ...)                                                     \
-    do {                                                                                                   \
-        const char *names[] = __VA_ARGS__;                                                                 \
-        size_t total = sizeof(names) / sizeof(const char *);                                               \
-        if (flag_matches(flag, total, names)) {                                                            \
-            commands->currentFlag = flag_new(names[0], &commands->name##SetByUser, type, &commands->name); \
-            return;                                                                                        \
-        }                                                                                                  \
+#define COMMAND(name, type, initial, description, ...)                                              \
+    do {                                                                                            \
+        const char *names[] = __VA_ARGS__;                                                          \
+        size_t total = sizeof(names) / sizeof(const char *);                                        \
+        flag_t currentFlag = flag_new(names[0], &commands->name##SetByUser, type, &commands->name); \
+        if (flag_matches(commands, currentFlag, flag, total, names)) {                              \
+            return;                                                                                 \
+        }                                                                                           \
     } while (0);
 #include "flags.inc"
+
+    report(commands->reports, WARNING, NULL, "unknown flag `%s`", flag);
 }
 
 void cmd_push_int(commands_t *commands, mpz_t value) {
     flag_t flag = pop_current_flag(commands, FLAG_INT);
-    if (should_skip_flag(flag)) { return; }
-    if (check_and_set_flag(commands, flag)) { return; }
+    if (should_skip_flag(flag)) {
+        return;
+    }
+    if (check_and_set_flag(commands, flag)) {
+        return;
+    }
 
     (*(int *)flag.data) = mpz_get_si(value);
 }

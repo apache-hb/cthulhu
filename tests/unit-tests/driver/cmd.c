@@ -107,6 +107,22 @@ TEST(test_string_arg, {
     SHOULD_PASS("has module name", str_equal(commands.moduleName, "foo"));
 })
 
+TEST(test_joined_arg, {
+    reports_t *reports = begin_reports();
+    commands_t commands = { 0 };
+    int result;
+
+    {
+        const char *argv[] = { "test-harness", "-otest" };
+        int argc = 2;
+        result = parse_commandline(reports, &commands, argc, argv);
+    }
+
+    SHOULD_PASS("parse output status", result == 0);
+    SHOULD_PASS("output has no files", vector_len(commands.files) == 0);
+    SHOULD_PASS("has output name", str_equal(commands.outputFile, "test"));
+})
+
 TEST(test_opt_and_string, {
     reports_t *reports = begin_reports();
     commands_t commands = { 0 };
@@ -127,6 +143,7 @@ TEST(test_opt_and_string, {
 HARNESS("cmd", {
     ENTRY("file input", test_cmd_files),
     ENTRY("args", test_args),
+    ENTRY("joined arg", test_joined_arg),
     ENTRY("multiple args", test_multiple_args),
     ENTRY("string arg", test_string_arg),
     ENTRY("opt and string", test_opt_and_string),
