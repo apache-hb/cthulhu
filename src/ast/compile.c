@@ -1,8 +1,11 @@
 #define COMPILER_SOURCE 1
 
+// error.h must be included first due to windows fuckery
+// clang-format off
+#include "cthulhu/util/error.h"
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/ast/interop.h"
-#include "cthulhu/util/error.h"
+//clang-format on
 
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/report.h"
