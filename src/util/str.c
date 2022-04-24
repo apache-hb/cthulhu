@@ -2,13 +2,11 @@
 #include "cthulhu/util/io.h"
 #include "cthulhu/util/util.h"
 
-
 #include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
 
 char *format(const char *fmt, ...) {
     va_list args;

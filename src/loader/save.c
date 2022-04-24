@@ -85,8 +85,8 @@ void end_save(data_t *out) {
 
     stream_write(out->strings, "");
 
-    size_t nstrings = stream_len(out->strings);                 // total length of the string table
-    size_t narrays = stream_len(out->arrays);                   // total length of the array table
+    size_t nstrings = stream_len(out->strings);                        // total length of the string table
+    size_t narrays = stream_len(out->arrays);                          // total length of the array table
     size_t ncounts = (sizeof(offset_t) * len);                         // number of bytes used for counts
     size_t noffsets = (sizeof(offset_t) * len);                        // number of bytes used for offsets
     size_t nheader = sizeof(basic_header_t) + subheader;               // number of bytes used for the full header

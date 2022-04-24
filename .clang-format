@@ -1,21 +1,16 @@
 ---
-BasedOnStyle: Microsoft
-AlignConsecutiveMacros: 'true'
-AlignConsecutiveDeclarations: 'false'
+BasedOnStyle: LLVM
+AlignConsecutiveMacros: true
+AlignConsecutiveDeclarations: false
 AlignEscapedNewlines: Left
-AllowAllArgumentsOnNextLine: 'true'
+AllowAllArgumentsOnNextLine: true
 AllowShortIfStatementsOnASingleLine: WithoutElse
-BreakBeforeBraces: Attach
-PointerAlignment: Right
-SortIncludes: 'true'
-SortUsingDeclarations: 'true'
+AllowShortFunctionsOnASingleLine: Empty
+SortIncludes: true
 SpaceBeforeParens: ControlStatements
-UseTab: Never
-InsertBraces: 'true'
 IndentPPDirectives: AfterHash
-QualifierAlignment: Custom
-QualifierOrder: ['static', 'inline', 'volatile', 'const', 'type']
 IndentWidth: 4
-UseTab: Never
-SpaceBeforeCpp11BracedList: 'true'
+SpaceBeforeCpp11BracedList: true
+ColumnLimit: 120
+BreakBeforeBraces: Attach
 ...

@@ -7,11 +7,9 @@
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/str.h"
 
-
 #include <gmp.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 #if ENABLE_TUNING
 #    include <malloc.h>

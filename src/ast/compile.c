@@ -1,19 +1,16 @@
 #define COMPILER_SOURCE 1
 
-#include "cthulhu/util/error.h"
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/ast/interop.h"
-
+#include "cthulhu/util/error.h"
 
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/util.h"
 
-
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 static scan_t scan_new(reports_t *reports, const char *language, const char *path) {
     scan_t scan = {.language = language, .path = path, .reports = reports};

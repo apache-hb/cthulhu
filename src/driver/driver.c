@@ -50,7 +50,8 @@ static void print_help(const char **argv) {
 static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, const char *mod) {
     if (mod != NULL && hlir->name != NULL) {
         message_t *id = report(reports, WARNING, NULL,
-                               "module name already defined in source file, overriding this may not be desired");
+                               "module name already defined in source file, "
+                               "overriding this may not be desired");
         report_note(id, "redefining `%s` to `%s`", hlir->name, mod);
     }
 
@@ -66,11 +67,7 @@ void common_init(void) {
     init_hlir();
 }
 
-typedef enum
-{
-    OUTPUT_C89,
-    OUTPUT_WASM
-} target_t;
+typedef enum { OUTPUT_C89, OUTPUT_WASM } target_t;
 
 static target_t parse_target(reports_t *reports, const char *target) {
     if (str_equal(target, "c89")) {

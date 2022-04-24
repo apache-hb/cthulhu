@@ -2,7 +2,6 @@
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/util.h"
 
-
 static size_t set_size(size_t size) {
     return sizeof(set_t) + (sizeof(item_t) * size);
 }

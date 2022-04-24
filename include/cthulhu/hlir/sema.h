@@ -4,7 +4,6 @@
 #include "cthulhu/util/report.h"
 #include "hlir.h"
 
-
 typedef struct sema_t {
     struct sema_t *parent;
     reports_t *reports;

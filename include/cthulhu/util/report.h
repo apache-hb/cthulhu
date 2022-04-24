@@ -10,7 +10,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-
 /**
  * @defgroup ErrorCodes Error code macros
  * @brief exit codes that line up with GNU standard codes
@@ -27,13 +26,13 @@
  * @defgroup ErrorApi Error reporting sink
  * @brief error reporting sink api
  *
- * an error reporting sink should be used in any code that has a chance of failing.
- * when an error occurs, an error should be pushed into the sink, and a sentinel value
- * should be returned from the function.
+ * an error reporting sink should be used in any code that has a chance of
+ * failing. when an error occurs, an error should be pushed into the sink, and a
+ * sentinel value should be returned from the function.
  *
- * these errors should then later be reported using @ref end_reports. if this function
- * returns a value other than @ref EXIT_OK. the application should then clean up and
- * exit with the returned error code.
+ * these errors should then later be reported using @ref end_reports. if this
+ * function returns a value other than @ref EXIT_OK. the application should then
+ * clean up and exit with the returned error code.
  *
  * @code{.c}
  * // improper usage of the error sink api

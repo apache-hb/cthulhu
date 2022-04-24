@@ -2,14 +2,12 @@
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/util.h"
 
-
 #include "cthulhu/ast/scan.h"
 
 #include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 bool verbose = false;
 
@@ -237,7 +235,8 @@ static char *format_medium2(const scan_t *scan, where_t where, const char *under
     return format(" %s|\n"
                   " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
                   " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
-                  pad, digit, firstLineOfSource, pad, lastLineOfSource, pad, build_underline(lastLineOfSource, where, underline));
+                  pad, digit, firstLineOfSource, pad, lastLineOfSource, pad,
+                  build_underline(lastLineOfSource, where, underline));
 }
 
 /**

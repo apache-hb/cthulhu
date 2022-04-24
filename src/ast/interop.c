@@ -1,7 +1,6 @@
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/util.h"
 
-
 #include <string.h>
 
 #define COMPILER_SOURCE 1

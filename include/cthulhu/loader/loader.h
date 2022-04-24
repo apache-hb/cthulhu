@@ -4,7 +4,6 @@
 #include "cthulhu/util/map.h"
 #include "cthulhu/util/report.h"
 
-
 typedef uint64_t offset_t;
 typedef uint32_t type_t;
 typedef uint32_t magic_t;
@@ -12,13 +11,7 @@ typedef uint32_t submagic_t;
 typedef uint32_t semver_t;
 typedef uint8_t bool_t;
 
-typedef enum {
-    FIELD_STRING,
-    FIELD_INT,
-    FIELD_BOOL,
-    FIELD_REFERENCE,
-    FIELD_ARRAY
-} field_t;
+typedef enum { FIELD_STRING, FIELD_INT, FIELD_BOOL, FIELD_REFERENCE, FIELD_ARRAY } field_t;
 
 typedef struct {
     type_t type;
@@ -101,7 +94,8 @@ typedef struct {
     union {
         // data needed for writing
         struct {
-            stream_t *stream;   // the global stream that everything eventually ends up in
+            stream_t *stream;   // the global stream that everything eventually
+                                // ends up in
             stream_t *strings;  // the string table
             map_t *cache;       // string offset cache
             stream_t *arrays;   // the array table

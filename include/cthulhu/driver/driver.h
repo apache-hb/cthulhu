@@ -13,7 +13,7 @@
     static void prefix##_##id##_destroy(void *scanner) { prefix##lex_destroy(scanner); }                               \
     static callbacks_t id = {                                                                                          \
         .init = prefix##_##id##_##init,                                                                                \
-        .setIn = prefix##_##id##_set_in,                                                                              \
+        .setIn = prefix##_##id##_set_in,                                                                               \
         .parse = prefix##_##id##_parse,                                                                                \
         .scan = prefix##_##id##_scan,                                                                                  \
         .destroy = prefix##_##id##_destroy,                                                                            \
@@ -30,7 +30,8 @@ typedef struct {
 } driver_t;
 
 /**
- * @brief initialize the common runtime, always the first function a driver should call
+ * @brief initialize the common runtime, always the first function a driver
+ * should call
  */
 void common_init(void);
 

@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-
 /**
  * @brief a node in a chain of set entries
  */

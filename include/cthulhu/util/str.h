@@ -109,7 +109,8 @@ char *str_normalizen(const char *str, size_t len);
  * @brief split a string into a vector by a separator
  *
  * @note the seperator is not included in the resulting substrings.
- * @note if no separator is found, the entire string is returned in the vectors first element.
+ * @note if no separator is found, the entire string is returned in the vectors
+ * first element.
  *
  * @param str the string to split
  * @param sep the separator to split by
@@ -135,7 +136,8 @@ const char *common_prefix(vector_t *args);
  * @param str the string to search
  * @param sub the substring to search for
  *
- * @return the index of the last instance of @a sub in @a str, or SIZE_MAX if sub is not found
+ * @return the index of the last instance of @a sub in @a str, or SIZE_MAX if
+ * sub is not found
  */
 size_t str_rfind(const char *str, const char *sub);
 

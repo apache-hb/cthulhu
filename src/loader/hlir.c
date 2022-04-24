@@ -28,21 +28,13 @@ typedef enum {
     SOURCE_TOTAL
 } source_kind_t;
 
-#define INDICES(SPAN, ...) \
-    enum {                 \
-        SPAN,              \
-        __VA_ARGS__        \
-    };
+#define INDICES(SPAN, ...) enum { SPAN, __VA_ARGS__ };
 
 ///
 /// non-hlir types
 ///
 
-enum {
-    HEADER_LANGUAGE,
-    HEADER_PATH,
-    HEADER_SOURCE
-};
+enum { HEADER_LANGUAGE, HEADER_PATH, HEADER_SOURCE };
 static const field_t kHeaderFields[] = {
     [HEADER_LANGUAGE] = FIELD("language", FIELD_STRING),
     [HEADER_PATH] = FIELD("path", FIELD_STRING),
@@ -50,12 +42,7 @@ static const field_t kHeaderFields[] = {
 };
 static const layout_t kHeaderLayout = LAYOUT("header", kHeaderFields);
 
-enum {
-    SPAN_FIRST_LINE,
-    SPAN_FIRST_COLUMN,
-    SPAN_LAST_LINE,
-    SPAN_LAST_COLUMN
-};
+enum { SPAN_FIRST_LINE, SPAN_FIRST_COLUMN, SPAN_LAST_LINE, SPAN_LAST_COLUMN };
 static const field_t kSpanFields[] = {
     [SPAN_FIRST_LINE] = FIELD("first-line", FIELD_INT),
     [SPAN_FIRST_COLUMN] = FIELD("first-column", FIELD_INT),
@@ -64,10 +51,7 @@ static const field_t kSpanFields[] = {
 };
 static const layout_t kSpanLayout = LAYOUT("span", kSpanFields);
 
-enum {
-    ATTRIB_LINKAGE,
-    ATTRIB_TAGS
-};
+enum { ATTRIB_LINKAGE, ATTRIB_TAGS };
 static const field_t kAttribFields[] = {
     [ATTRIB_LINKAGE] = FIELD("linkage", FIELD_INT),
     [ATTRIB_TAGS] = FIELD("tags", FIELD_INT),
