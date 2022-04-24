@@ -55,9 +55,11 @@ static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, co
         report_note(id, "redefining `%s` to `%s`", hlir->name, mod);
     }
 
-    if (hlir->name == NULL) {
-        hlir->name = (mod != NULL) ? ctu_strdup(mod) : ctu_filename(path);
+    if (hlir->name != NULL) {
+        return;
     }
+    
+    hlir->name = (mod != NULL) ? ctu_strdup(mod) : ctu_filename(path);
 }
 
 void common_init(void) {
