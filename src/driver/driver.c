@@ -1,7 +1,8 @@
 #include "cthulhu/util/error.h"
 
-#include "cthulhu/driver/driver.h"
 #include "cmd.h"
+#include "cthulhu/driver/driver.h"
+
 
 #include "cthulhu/hlir/init.h"
 
@@ -12,6 +13,7 @@
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/vector.h"
+#include "src/driver/cmd.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -21,8 +23,30 @@ static void print_version(driver_t driver) {
     printf("%s: %s\n", driver.name, driver.version);
 }
 
+static char *join_names(const char **names, size_t num) {
+    vector_t *vec = vector_of(num);
+
+    for (size_t i = 0; i < num; i++) {
+        vector_set(vec, i, (char *)names[i]);
+    }
+
+    return str_join(", ", vec);
+}
+
 static void print_help(const char **argv) {
-    printf("usage: %s <files & objects...> [options...]\n", argv[0]);
+    printf("usage: %s <files... & objects... & options...>\n", argv[0]);
+
+#define SECTION(id) printf("%s options:\n", id);
+#define COMMAND(name, type, initial, description, ...)       \
+    do {                                                     \
+        const char *names[] = __VA_ARGS__;                   \
+        size_t total = sizeof(names) / sizeof(const char *); \
+        const char *parts = join_names(names, total);        \
+        printf("  %-20s : %s\n", parts, description);        \
+    } while (0);
+
+#include "flags.inc"
+#if 0
     printf("general options:\n");
     printf("  -h, --help        : print this help message\n");
     printf("  -v, --version     : print version information\n");
@@ -41,20 +65,7 @@ static void print_help(const char **argv) {
     printf("bytecode options:\n");
     printf("  -bc, --bytecode   : enable bytecode generation\n");
     printf("  -Bembed           : embed source in bytecode\n");
-}
-
-static bool streq_nullable(const char *lhs, const char *rhs) {
-    return lhs != NULL && rhs != NULL && str_equal(lhs, rhs);
-}
-
-static bool find_arg(int argc, const char **argv, const char *arg, const char *brief) {
-    for (int i = 0; i < argc; i++) {
-        if (streq_nullable(argv[i], arg) || streq_nullable(argv[i], brief)) {
-            return true;
-        }
-    }
-
-    return false;
+#endif
 }
 
 static const char *extract_arg(int argc, const char **argv, const char *arg, int idx) {
@@ -104,30 +115,6 @@ static const char *get_arg(reports_t *reports, int argc, const char **argv, cons
     return result;
 }
 
-static vector_t *collect_args(int argc, const char **argv, const char *prefix, const char *brief) {
-    vector_t *result = vector_new(argc - 1);
-
-    for (int i = 1; i < argc; i++) {
-        if (str_startswith(argv[i], prefix)) {
-            const char *arg = extract_arg(argc, argv, prefix, i);
-            if (arg != NULL) {
-                vector_push(&result, (char *)arg);
-                continue;
-            }
-        }
-
-        if (brief != NULL && str_startswith(argv[i], brief)) {
-            const char *arg = extract_arg(argc, argv, brief, i);
-            if (arg != NULL) {
-                vector_push(&result, (char *)arg);
-                continue;
-            }
-        }
-    }
-
-    return result;
-}
-
 static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, const char *mod) {
     if (mod != NULL && hlir->name != NULL) {
         message_t *id = report(reports, WARNING, NULL,
@@ -138,31 +125,6 @@ static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, co
     if (hlir->name == NULL) {
         hlir->name = (mod != NULL) ? ctu_strdup(mod) : ctu_filename(path);
     }
-}
-
-static size_t get_limit(reports_t *reports, const char **argv, int argc) {
-    const char *input = get_arg(reports, argc, argv, "-Wlimit", NULL);
-    if (input == NULL) {
-        return DEFAULT_REPORT_LIMIT;
-    }
-
-    mpz_t limit;
-    mpz_init_set_str(limit, input, 10);
-    if (!mpz_fits_uint_p(limit)) {
-        report(reports, WARNING, NULL, "warning limit `%s` is too large, defaulting to %d", input,
-               DEFAULT_REPORT_LIMIT);
-        return DEFAULT_REPORT_LIMIT;
-    }
-
-    if (mpz_sgn(limit) < 0) {
-        report(reports, WARNING, NULL, "warning limit `%s` is negative, defaulting to %d", input, DEFAULT_REPORT_LIMIT);
-        return DEFAULT_REPORT_LIMIT;
-    }
-
-    size_t result = mpz_get_ui(limit);
-    mpz_clear(limit);
-
-    return result > 0 ? result : SIZE_MAX;
 }
 
 void common_init(void) {
@@ -189,54 +151,25 @@ static target_t parse_target(reports_t *reports, const char *target) {
     return OUTPUT_C89;
 }
 
-static char *collect_commandline(int argc, const char **argv) {
-    CTASSERT(argc > 0, "argc must be greater than 0");
-    vector_t *vec = vector_of(argc - 1);
-    for (int i = 1; i < argc; i++) {
-        vector_set(vec, i - 1, (char *)argv[i]);
-    }
-    char *out = str_join(" ", vec);
-    vector_delete(vec);
-    return out;
-}
-
 int common_main(int argc, const char **argv, driver_t driver) {
-    char *args = collect_commandline(argc, argv);
-    (void)args;
-    (void)collect_args;
+    reports_t *reports = begin_reports();
+    commands_t commands = { 0 };
+    int status = parse_commandline(reports, &commands, argc, argv);
+    if (status != 0) { return status; }
 
-    if (find_arg(argc, argv, "--version", "-v")) {
-        print_version(driver);
-        return 0;
-    }
+    verbose = commands.verboseLogging;
+    size_t limit = commands.warningLimit;
 
-    if (find_arg(argc, argv, "--help", "-h")) {
+    if (commands.printHelp) {
         print_help(argv);
         return 0;
     }
 
-    if (find_arg(argc, argv, "--verbose", "-V")) {
-        verbose = true;
+    if (commands.printVersion) {
+        print_version(driver);
+        return 0;
     }
 
-    reports_t *reports = begin_reports();
-    int status = EXIT_INTERAL;
-
-    if (argc < 2) {
-        report(reports, ERROR, NULL, "no file specified");
-        return end_reports(reports, SIZE_MAX, "command line parsing");
-    }
-
-    size_t limit = get_limit(reports, argv, argc);
-    status = end_reports(reports, limit, "command line parsing");
-    if (status != 0) {
-        return status;
-    }
-
-    bool bytecode = find_arg(argc, argv, "--bytecode", "-bc");
-    bool embedSource = find_arg(argc, argv, "-Bembed", NULL);
-
-    const char *moduleName = get_arg(reports, argc, argv, "--module", "-m");
     const char *out = get_arg(reports, argc, argv, "--output", "-out");
     if (out == NULL) {
         out = "a.out";
@@ -246,7 +179,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     if (target == NULL) {
         target = "c89";
-    } else if (bytecode) {
+    } else if (commands.enableBytecode) {
         report(reports, ERROR, NULL, "cannot specify target format when compiling to bytecode");
         return end_reports(reports, limit, "command line parsing");
     }
@@ -292,15 +225,15 @@ int common_main(int argc, const char **argv, driver_t driver) {
     }
     CTASSERT(hlir != NULL, "driver.sema == NULL");
 
-    rename_module(reports, hlir, path, moduleName);
+    rename_module(reports, hlir, path, commands.moduleName);
     check_module(reports, hlir);
     status = end_reports(reports, limit, "module checking");
     if (status != 0) {
         return status;
     }
 
-    if (bytecode) {
-        save_settings_t settings = {.embedSource = embedSource};
+    if (commands.enableBytecode) {
+        save_settings_t settings = {.embedSource = commands.embedSource };
 
         save_module(reports, &settings, hlir, out);
         status = end_reports(reports, limit, "bytecode generation");

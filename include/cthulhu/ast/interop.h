@@ -85,6 +85,7 @@ void flex_init(where_t *where);
     }                                                                 \
     inline void free(void *ptr, yyscan_t scanner) {                   \
         UNUSED(scanner);                                              \
+        if (ptr == NULL) return;                                      \
         ctu_free(ptr);                                                \
     }
 

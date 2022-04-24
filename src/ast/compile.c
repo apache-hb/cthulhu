@@ -1,8 +1,8 @@
 #define COMPILER_SOURCE 1
 
+#include "cthulhu/util/error.h"
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/ast/interop.h"
-#include "cthulhu/util/error.h"
 
 
 #include "cthulhu/util/macros.h"

@@ -92,19 +92,21 @@ void *ctu_malloc(size_t size) {
 }
 
 void *ctu_realloc(void *ptr, size_t size) {
+    CTASSERT(ptr != NULL, "ctu-realloc called with NULL pointer");
     void *data = REALLOC(ptr, size);
     CTASSERT(data != NULL, "ctu-realloc failed");
     return data;
 }
 
 void ctu_free(void *ptr) {
+    CTASSERT(ptr != NULL, "ctu-free called with NULL pointer");
     FREE(ptr);
 }
 
-void *ctu_box(const void *ptr, size_t size) {
-    void *box = ctu_malloc(size);
-    memcpy(box, ptr, size);
-    return box;
+void *ctu_memdup(const void *ptr, size_t size) {
+    void *out = ctu_malloc(size);
+    memcpy(out, ptr, size);
+    return out;
 }
 
 static void *ctu_gmp_malloc(size_t size) {
@@ -139,17 +141,11 @@ char *ctu_strndup(const char *str, size_t len) {
     return out;
 }
 
-void *ctu_memdup(const void *ptr, size_t size) {
-    void *out = ctu_malloc(size);
-    memcpy(out, ptr, size);
-    return out;
-}
-
 void ctpanic(const char *msg, ...) {
     va_list args;
     va_start(args, msg);
     vfprintf(stderr, msg, args);
     va_end(args);
 
-    exit(EXIT_INTERAL);
+    abort();
 }

@@ -12,32 +12,41 @@
 #include "cthulhu/ast/interop.h"
 %}
 
+LETTER [a-zA-Z]
+ALNUMDASH [a-zA-Z0-9-]
+
 %%
 
 [ \r\n\t] ;
 
-\-\-[a-zA-Z][a-zA-Z0-9]* {
-    yylval->ident = ctu_strdup(yytext + 2); 
-    return LONG_OPT; 
-}
-\-[a-zA-Z][a-zA-Z0-9]* { 
-    yylval->ident = ctu_strdup(yytext + 1);
-    return SHORT_OPT; 
+"=" { return ASSIGN; }
+
+[-]+{LETTER}{ALNUMDASH}* {
+    yylval->ident = ctu_strdup(yytext); 
+    return OPT; 
 }
 
-[a-zA-Z][a-zA-Z0-9]* { 
+[0-9]+ {
+    mpz_init_set_str(yylval->number, yytext, 10);
+    return NUMBER; 
+}
+
+"0x"[0-9a-fA-F]+ {
+    mpz_init_set_str(yylval->number, yytext + 2, 16);
+    return NUMBER;
+}
+
+"0b"[01]+ {
+    mpz_init_set_str(yylval->number, yytext + 2, 2);
+    return NUMBER;
+}
+
+[a-zA-Z0-9_./\\\-]+ { 
     yylval->ident = ctu_strdup(yytext);
     return IDENT; 
 }
 
-[a-zA-Z][.a-zA-Z0-9]* { 
-    yylval->ident = ctu_strdup(yytext);
-    return PATH; 
-}
-
-[0-9]+ {
-    return NUMBER; 
-}
+\b { return SEP; }
 
 . { report_unknown_character(yyextra->reports, node_new(yyextra, *yylloc), yytext); }
 

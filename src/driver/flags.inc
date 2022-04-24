@@ -12,20 +12,20 @@
 
 SECTION("general")
 
-COMMAND(printHelp, bool, false, "print this help message", { "--help", "-h", "/?" })
+COMMAND(printHelp, bool, false, "print this help message", { "--help", "-h" })
 COMMAND(printVersion, bool, false, "print the version number", { "--version", "-v" })
 
 SECTION("reporting")
 
 COMMAND(verboseLogging, bool, false, "print verbose information", { "-Wverbose" })
-COMMAND(warningLimit, int, DEFAULT_REPORT_LIMIT, "limit the number of reported errors", { "--Wlimit" })
+COMMAND(warningLimit, int, DEFAULT_REPORT_LIMIT, "limit the number of reported errors", { "-Wlimit" })
 
 SECTION("codegen")
 
 COMMAND(enableBytecode, bool, false, "enable bytecode generation", { "-B" })
 COMMAND(embedSource, bool, false, "embed the source code in the bytecode", { "-Bembed" })
-COMMAND(moduleName, const char *, NULL, "override default module name", { "-Bmodule" })
-COMMAND(outputFile, const char *, NULL, "override default output file", { "-O" })
+COMMAND(moduleName, string, NULL, "override default module name", { "-Bmodule" })
+COMMAND(outputFile, string, NULL, "override default output file", { "-O" })
 
 #undef COMMAND
 #undef SECTION

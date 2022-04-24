@@ -94,18 +94,7 @@ void *ctu_memdup(const void *ptr, size_t size);
  */
 void init_gmp(void);
 
-/**
- * @brief box a value onto the heap from the stack
- *
- * @param ptr the value to box
- * @param size the size of the value
- *
- * @return the boxed value
- *
- * @see BOX should be used to use this
- */
-void *ctu_box(const void *ptr, size_t size);
-#define BOX(name) ctu_box(&(name), sizeof(name)) ///< box a value onto the heap from the stack
+#define BOX(name) ctu_memdup(&(name), sizeof(name)) ///< box a value onto the heap from the stack
 
 #if ENABLE_TUNING
 

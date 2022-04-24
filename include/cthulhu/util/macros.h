@@ -41,35 +41,26 @@
  */
 
 #if defined(__clang__)
-#    define ASSUME(expr) __builtin_assume(expr)
 #    define BEGIN_PACKED(align)
 #    define END_PACKED
 #    define PACKED(align) __attribute__((aligned(align), packed))
 #    define NORETURN      _Noreturn void
 #elif defined(__GNUC__)
-#    define ASSUME(expr)                          \
-        do {                                      \
-            if (!(expr)) __builtin_unreachable(); \
-        } while (0)
 #    define BEGIN_PACKED(align)
 #    define END_PACKED
 #    define PACKED(align) __attribute__((aligned(align), packed))
 #    define NORETURN      _Noreturn void
 #elif defined(_MSC_VER)
-#    define ASSUME(expr)        __assume(expr)
 #    define BEGIN_PACKED(align) __pragma(pack(push, align))
 #    define END_PACKED          __pragma(pack(pop))
 #    define PACKED(align)
 #    define NORETURN __declspec(noreturn) void
 #else
-#    define ASSUME(expr)
 #    define BEGIN_PACKED(align) _Pragma("warning \"current compiler doesnt support packing\"")
 #    define END_PACKED
 #    define PACKED(align)
 #    define NORETURN void
 #endif
-
-#define UNREACHABLE() ASSUME(false)
 
 #define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
 
@@ -77,12 +68,7 @@
 #define MAX(L, R) ((L) > (R) ? (L) : (R))
 #define MIN(L, R) ((L) < (R) ? (L) : (R))
 
-#define ROUND2(val, mul) ((((val) + (mul)-1) / (mul)) * (mul))
-
 /**
- * @def ROUND2(value, multiple)
- * rounds @a value up to the nearest multiple of @a multiple
- *
  * @def MAX(lhs, rhs)
  * returns the maximum of @a lhs and @a rhs
  *
@@ -123,15 +109,6 @@
 #    ifndef _WIN32
 #        include <sys/mman.h>
 #    endif
-#endif
-
-#ifdef _WIN32
-#    define ALLOCA(size) _alloca(size)
-#    define PATH_LEN     MAX_PATH
-#else
-#    include <alloca.h>
-#    define ALLOCA(size) alloca(size)
-#    define PATH_LEN     PATH_MAX
 #endif
 
 NORETURN ctpanic(const char *msg, ...);

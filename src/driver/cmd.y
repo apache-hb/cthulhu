@@ -23,15 +23,17 @@ void cmderror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 
 %union {
+    flag_t *flag;
+    option_t option;
+
     char *ident;
     mpz_t number;
 }
 
 %token<ident>
     IDENT "identifier"
-    PATH "path"
-    LONG_OPT "--"
-    SHORT_OPT "-"
+    OPT "-"
+    SEP
 
 %token<number>
     NUMBER "number"
@@ -39,30 +41,30 @@ void cmderror(where_t *where, void *state, scan_t *scan, const char *msg);
 %token
     ASSIGN "="
 
-%type<ident>
-    file
+%type<flag>
+    flag
+
+%type<option>
+    option
 
 %start entry
 
 %%
 
 entry: %empty | arguments ;
-arguments: argument | arguments argument ;
+arguments: argument | arguments SEP argument ;
 
-argument: file { cmd_add_file(scan_get(x), $1); }
-    | flag { }
-    | flag option { }
-    | flag ASSIGN option { }
+argument: IDENT { cmd_add_file(scan_get(x), $1); }
+    | flag { cmd_set_flag(scan_get(x), $1); }
+    | flag option { cmd_set_option(scan_get(x), $1, $2); }
+    | flag ASSIGN option { cmd_set_option(scan_get(x), $1, $3); }
     ;
 
-file: PATH ;
-
-flag: LONG_OPT { }
-    | SHORT_OPT { }
+flag: OPT { $$ = cmd_get_flag(scan_get(x), $1); }
     ;
 
-option: IDENT { }
-    | NUMBER { }
+option: IDENT { $$ = option_ident($1); }
+    | NUMBER { $$ = option_number($1); }
     ;
 
 %%

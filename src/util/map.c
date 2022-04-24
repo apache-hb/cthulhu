@@ -3,16 +3,6 @@
 
 #include <stdint.h>
 
-static size_t ptr_hash(uintptr_t key) {
-    key = (~key) + (key << 18);
-    key ^= key >> 31;
-    key *= 21;
-    key ^= key >> 11;
-    key += key << 6;
-    key ^= key >> 22;
-    return 0xFFFFFFFF & key;
-}
-
 /**
  * maps end with a flexible array.
  * calcuate the actual size of the map to malloc
@@ -52,61 +42,11 @@ static bucket_t *map_bucket(map_t *map, const char *key) {
     return get_bucket(map, hash);
 }
 
-static bucket_t *map_bucket_ptr(map_t *map, const void *key) {
-    size_t hash = ptr_hash((uintptr_t)key);
-    return get_bucket(map, hash);
-}
-
-static void *entry_get_ptr(const bucket_t *entry, const void *key, void *other) {
-    if (entry->key == key) {
-        return entry->value;
-    }
-
-    if (entry->next) {
-        return entry_get_ptr(entry->next, key, other);
-    }
-
-    return other;
-}
-
 static void clear_keys(bucket_t *buckets, size_t size) {
     for (size_t i = 0; i < size; i++) {
         buckets[i].key = NULL;
         buckets[i].next = NULL;
     }
-}
-
-void map_set_ptr(map_t *map, const void *key, void *value) {
-    bucket_t *entry = map_bucket_ptr(map, key);
-
-    while (entry) {
-        if (entry->key == NULL) {
-            entry->key = key;
-            entry->value = value;
-            return;
-        }
-
-        if (entry->key == key) {
-            entry->value = value;
-            return;
-        }
-
-        if (entry->next == NULL) {
-            entry->next = bucket_new(key, value);
-            return;
-        }
-
-        entry = entry->next;
-    }
-}
-
-void *map_get_ptr(map_t *map, const void *key) {
-    return map_get_ptr_default(map, key, NULL);
-}
-
-void *map_get_ptr_default(map_t *map, const void *key, void *other) {
-    bucket_t *bucket = map_bucket_ptr(map, key);
-    return entry_get_ptr(bucket, key, other);
 }
 
 map_t *map_new(size_t size) {

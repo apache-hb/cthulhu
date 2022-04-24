@@ -140,13 +140,11 @@ static char *build_underline(const char *source, where_t where, const char *note
 
     size_t width = MAX(back - front, 1);
 
+    size_t len = note ? strlen(note) : 0;
+
     // allocate space for the underline
     // +1 for the space
     // +1 for the null terminator
-    // char *padding = ctu_malloc(back + width + 1 + 1);
-
-    size_t len = note ? strlen(note) : 0;
-
     char *str = ctu_malloc(back + width + len + 2);
 
     column_t idx = 0;

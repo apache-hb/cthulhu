@@ -7,7 +7,7 @@
  * a bucket in a hashmap
  */
 typedef struct bucket_t {
-    const char *key;       ///< can actually be any pointer but we keep it as a const char* for convenience
+    const char *key;       ///< the key
     void *value;           ///< any pointer value
     struct bucket_t *next; ///< the next bucket in the chain
 } bucket_t;
@@ -73,36 +73,6 @@ void *map_get(map_t *map, const char *key);
  * @return the value for the key or the default value if the key is not found
  */
 void *map_get_default(map_t *map, const char *key, void *other);
-
-/**
- * @brief set a field using a raw pointer rather than a string key
- *
- * @param map the map to set the value in
- * @param key the key to set the value for
- * @param value the value to set
- */
-void map_set_ptr(map_t *map, const void *key, void *value);
-
-/**
- * @brief get a field from a raw pointer rather than a string key
- *
- * @param map the map to get the value from
- * @param key the key to get the value for
- *
- * @return the value for the key or NULL if the key is not found
- */
-void *map_get_ptr(map_t *map, const void *key);
-
-/**
- * @brief get a field from a raw pointer rather than a string key or a default value if the key is not found
- *
- * @param map the map to get the value from
- * @param key the key to get the value for
- * @param other the default value to return if the key is not found
- *
- * @return the value for the key or the default value if the key is not found
- */
-void *map_get_ptr_default(map_t *map, const void *key, void *other);
 
 /**
  * @brief collect all the values in a map into a vector
