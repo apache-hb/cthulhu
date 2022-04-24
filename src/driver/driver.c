@@ -3,7 +3,6 @@
 #include "cmd.h"
 #include "cthulhu/driver/driver.h"
 
-
 #include "cthulhu/hlir/init.h"
 
 #include "cthulhu/ast/compile.h"
@@ -58,7 +57,7 @@ static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, co
     if (hlir->name != NULL) {
         return;
     }
-    
+
     hlir->name = (mod != NULL) ? ctu_strdup(mod) : ctu_filename(path);
 }
 
@@ -67,7 +66,8 @@ void common_init(void) {
     init_hlir();
 }
 
-typedef enum {
+typedef enum
+{
     OUTPUT_C89,
     OUTPUT_WASM
 } target_t;
@@ -88,9 +88,11 @@ static target_t parse_target(reports_t *reports, const char *target) {
 
 int common_main(int argc, const char **argv, driver_t driver) {
     reports_t *reports = begin_reports();
-    commands_t commands = { 0 };
+    commands_t commands = {0};
     int status = parse_commandline(reports, &commands, argc, argv);
-    if (status != 0) { return status; }
+    if (status != 0) {
+        return status;
+    }
 
     verbose = commands.verboseLogging;
 
@@ -161,7 +163,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
     }
 
     if (commands.enableBytecode) {
-        save_settings_t settings = {.embedSource = commands.embedSource };
+        save_settings_t settings = {.embedSource = commands.embedSource};
 
         save_module(reports, &settings, hlir, outFile);
         status = end_reports(reports, limit, "bytecode generation");

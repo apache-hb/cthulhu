@@ -21,9 +21,12 @@
 !*.md
 !*.build
 !meson_options.txt
+
+# dont ignore config files
 !Doxyfile.in
 !.clangd
 !.clang-format
+!.github/workflows/*.yml
 
 # dont ignore scripts
 !*.py
