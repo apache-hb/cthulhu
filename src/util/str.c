@@ -29,6 +29,8 @@ char *formatv(const char *fmt, va_list args) {
 
     vsnprintf(out, len, fmt, again);
 
+    va_end(again);
+
     return out;
 }
 

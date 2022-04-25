@@ -61,7 +61,7 @@ void *compile_string(scan_t *scan, callbacks_t *callbacks) {
     void *state;
 
     if ((err = callbacks->init(scan, &scanner))) {
-        ctu_assert(scan->reports, "failed to init parser for %s due to %d", scan->path, err);
+        ctu_assert(scan->reports, "failed to init parser for %s: %d", scan->path, err);
         return NULL;
     }
 
@@ -71,10 +71,11 @@ void *compile_string(scan_t *scan, callbacks_t *callbacks) {
     }
 
     if ((err = callbacks->parse(scan, scanner))) {
-        report(scan->reports, ERROR, NULL, "failed to parse %s", scan->path);
+        report(scan->reports, ERROR, NULL, "failed to parse %s: %d", scan->path, err);
         return NULL;
     }
 
+    callbacks->destroyBuffer(state, scanner);
     callbacks->destroy(scanner);
 
     return scan->data;

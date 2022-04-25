@@ -7,11 +7,12 @@
  * scanner function callbacks for flex and bison
  */
 typedef struct {
-    int (*init)(scan_t *extra, void *scanner);      ///< yylex_init_extra
-    void (*setIn)(FILE *fd, void *scanner);         ///< yyset_in
-    int (*parse)(scan_t *extra, void *scanner);     ///< yyparse
-    void *(*scan)(const char *text, void *scanner); ///< yy_scan_string
-    void (*destroy)(void *scanner);                 ///< yylex_destroy
+    int (*init)(scan_t *extra, void *scanner);          ///< yylex_init_extra
+    void (*setIn)(FILE *fd, void *scanner);             ///< yyset_in
+    int (*parse)(scan_t *extra, void *scanner);         ///< yyparse
+    void *(*scan)(const char *text, void *scanner);     ///< yy_scan_string
+    void (*destroyBuffer)(void *buffer, void *scanner); ///< yy_delete_buffer
+    void (*destroy)(void *scanner);                     ///< yylex_destroy
 } callbacks_t;
 
 /**

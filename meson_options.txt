@@ -28,3 +28,9 @@ option('analyze', type : 'boolean',
     description : 'enable code analysis under msvc',
     value : true
 )
+
+option('plugins', type : 'array',
+    description : 'select which plugins to compile',
+    choices : [ 'example' ],
+    value : [ 'example' ]
+)

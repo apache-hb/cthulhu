@@ -18,6 +18,9 @@
     static void *prefix##_##id##_scan(const char *text, void *scanner) { \
         return prefix##_scan_string(text, scanner);                      \
     }                                                                    \
+    static void prefix##_##id##_delete(void *buffer, void *scanner) {    \
+        prefix##_delete_buffer(buffer, scanner);                         \
+    }                                                                    \
     static void prefix##_##id##_destroy(void *scanner) {                 \
         prefix##lex_destroy(scanner);                                    \
     }                                                                    \
@@ -26,6 +29,7 @@
         .setIn = prefix##_##id##_set_in,                                 \
         .parse = prefix##_##id##_parse,                                  \
         .scan = prefix##_##id##_scan,                                    \
+        .destroyBuffer = prefix##_##id##_delete,                         \
         .destroy = prefix##_##id##_destroy,                              \
     }
 

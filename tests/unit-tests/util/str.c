@@ -71,7 +71,7 @@ typedef struct {
     const char *unescaped;
 } pair_t;
 
-static pair_t ESCAPES[] = {  
+static pair_t kEscapes[] = {  
     { '\a', "\\x07" },
     { '\b', "\\x08" },
     { '\f', "\\x0c" },
@@ -84,7 +84,7 @@ static pair_t ESCAPES[] = {
     { '\"', "\\\"" },
 };
 
-#define ESCAPE_SIZE (sizeof(ESCAPES) / sizeof(pair_t))
+#define ESCAPE_SIZE (sizeof(kEscapes) / sizeof(pair_t))
 
 TEST(test_string_normalize, {
     char *normalized = str_normalize("hello world");
@@ -94,7 +94,7 @@ TEST(test_string_normalize, {
     SHOULD_PASS("newline equals", str_equal(newline, "hello\\x0aworld"));
 
     for (size_t i = 0; i < ESCAPE_SIZE; i++) {
-        pair_t *escape = &ESCAPES[i];
+        pair_t *escape = &kEscapes[i];
         char *input = format("hello %c world", escape->escaped);
         char *expected = format("hello %s world", escape->unescaped);
 
@@ -119,7 +119,7 @@ TEST(test_string_normalizen, {
     SHOULD_PASS("newline equals", str_equal(newline, "hello\\x0aworld"));
 
     for (size_t i = 0; i < ESCAPE_SIZE; i++) {
-        pair_t *escape = &ESCAPES[i];
+        pair_t *escape = &kEscapes[i];
         char *input = format("hello %c world", escape->escaped);
         char *expected = format("hello %s world", escape->unescaped);
 

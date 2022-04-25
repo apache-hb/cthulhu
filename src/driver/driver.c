@@ -2,8 +2,8 @@
 
 #include "cmd.h"
 #include "cthulhu/driver/driver.h"
-
 #include "cthulhu/hlir/init.h"
+#include "plugins.h"
 
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/emit/emit.h"
@@ -13,6 +13,7 @@
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/vector.h"
 #include "src/driver/cmd.h"
+#include "src/driver/plugins.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -67,6 +68,13 @@ void common_init(void) {
     init_hlir();
 }
 
+typedef struct {
+    file_t *file;
+    scan_t scanner;
+    void *node;
+    hlir_t *hlir;
+} context_t;
+
 typedef enum { OUTPUT_C89, OUTPUT_WASM } target_t;
 
 static target_t parse_target(reports_t *reports, const char *target) {
@@ -93,6 +101,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     verbose = commands.verboseLogging;
 
+    vector_t *files = commands.files;
     size_t limit = commands.warningLimit;
     const char *target = commands.outputTarget;
     const char *outFile = commands.outputFile;
@@ -111,46 +120,100 @@ int common_main(int argc, const char **argv, driver_t driver) {
         return 0;
     }
 
+    vector_t *plugins = vector_new(0); // all plugins
+    vector_t *modules = vector_new(0); // all library bytecode modules
+    vector_t *sources = vector_new(0); // all source files
+
+    for (size_t i = 0; i < vector_len(files); i++) {
+        const char *path = vector_get(files, i);
+        plugin_handle_t *handle = is_plugin(path);
+        if (handle != NULL) {
+            vector_push(&plugins, handle);
+            continue;
+        }
+
+        if (is_hlir_module(path)) {
+            vector_push(&modules, (char *)path);
+            continue;
+        }
+
+        vector_push(&sources, (char *)path);
+    }
+
+    for (size_t i = 0; i < vector_len(plugins); i++) {
+        plugin_handle_t *handle = vector_get(plugins, i);
+        if (!plugin_load(reports, handle)) {
+            continue;
+        }
+
+        if (handle->init != NULL) {
+            plugin_t plugin = {.reports = reports};
+            handle->init(&plugin);
+        }
+    }
+
     target_t result = parse_target(reports, target);
     status = end_reports(reports, limit, "target parsing");
     if (status != 0) {
         return status;
     }
 
-    const char *path = argv[1];
+    size_t numSources = vector_len(sources);
+    vector_t *contexts = vector_of(numSources);
 
-    file_t *file = file_new(path, TEXT, READ);
-    if (!file_ok(file)) {
-        ctu_errno_t error = ctu_last_error();
-        report(reports, ERROR, NULL, "failed to open file: %s", ctu_err_string(error));
-        return end_reports(reports, limit, "command line parsing");
+    for (size_t i = 0; i < numSources; i++) {
+        const char *path = vector_get(sources, i);
+
+        context_t *ctx = ctu_malloc(sizeof(context_t));
+
+        file_t *file = file_new(path, TEXT, READ);
+        if (!file_ok(file)) {
+            ctu_errno_t err = ctu_last_error();
+            report(reports, ERROR, NULL, "failed to open file: %s", ctu_err_string(error));
+            continue;
+        }
+
+        ctx->file = file;
+        vector_set(contexts, i, ctx);
     }
 
-    // create our scanner, this must be retained for the duration of the program
-
-    scan_t scan = scan_file(reports, driver.name, file);
-    status = end_reports(reports, limit, "scanning");
+    status = end_reports(reports, limit, "opening files");
     if (status != 0) {
         return status;
     }
 
-    // parse the source file
+    for (size_t i = 0; i < numSources; i++) {
+        context_t *ctx = vector_get(contexts, i);
+        ctx->scanner = scan_file(reports, driver.name, ctx->file);
+    }
 
-    void *node = driver.parse(reports, &scan);
+    status = end_reports(reports, limit, "scanning files");
+    if (status != 0) {
+        return status;
+    }
+
+    for (size_t i = 0; i < numSources; i++) {
+        context_t *ctx = vector_get(contexts, i);
+        ctx->node = driver.parse(reports, &ctx->scanner);
+    }
+
     status = end_reports(reports, limit, "parsing");
     if (status != 0) {
         return status;
     }
-    CTASSERT(node != NULL, "driver.parse == NULL");
 
-    // convert the language ast to hlir
+    for (size_t i = 0; i < numSources; i++) {
+        context_t *ctx = vector_get(contexts, i);
+        CTASSERT(ctx->node != NULL, "node should not be NULL");
+        ctx->hlir = driver.sema(reports, ctx->node);
+    }
 
-    hlir_t *hlir = driver.sema(reports, node);
     status = end_reports(reports, limit, "semantic analysis");
     if (status != 0) {
         return status;
     }
-    CTASSERT(hlir != NULL, "driver.sema == NULL");
+
+    // TODO: merge modules together
 
     rename_module(reports, hlir, path, commands.moduleName);
     check_module(reports, hlir);

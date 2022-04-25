@@ -60,7 +60,7 @@ if host == 'windows'
     endif
 else
     parseargs += [ '-Wdeprecated' ]
-    deps += [ cc.find_library('m') ]
+    deps += [ cc.find_library('m'), cc.find_library('dl') ]
 endif
 
 flex = find_program('flex', 'win_flex', version : '>=2.6')
@@ -88,6 +88,7 @@ src = [
     # command line
     'src/driver/driver.c',
     'src/driver/cmd.c',
+    'src/driver/plugins.c',
     lex.process('src/driver/cmd.l'),
     parse.process('src/driver/cmd.y'),
     
@@ -187,6 +188,10 @@ endif
 foreach lang : get_option('languages')
     subdir('driver'/lang)
     subdir('tests'/lang)
+endforeach
+
+foreach plugin : get_option('plugins')
+    subdir('plugins'/plugin)
 endforeach
 
 subdir('tests/unit-tests')

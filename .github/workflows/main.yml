@@ -6,16 +6,18 @@ on:
       - 'src/**'
       - 'include/**'
       - 'driver/**'
+      - 'plugins/**'
   pull_request:
     branches: [master]
     paths:
       - 'src/**'
       - 'include/**'
       - 'driver/**'
+      - 'plugins/**'
 
 jobs:
   formatting-check:
-    name: Formatting Check
+    name: Formatting Checks
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -23,6 +25,7 @@ jobs:
           - 'src'
           - 'include'
           - 'driver'
+          - 'plugins'
     steps:
       - uses: actions/checkout@v2
       - name: Run clang-format style check
