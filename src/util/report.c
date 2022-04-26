@@ -24,10 +24,10 @@ typedef struct {
 } level_format_t;
 
 static level_format_t kFormats[LEVEL_TOTAL] = {
-    [INTERNAL] = {"internal", COLOUR_CYAN "ice" COLOUR_RESET},
-    [ERROR] = {"error", COLOUR_RED "error" COLOUR_RESET},
-    [WARNING] = {"warning", COLOUR_YELLOW "warning" COLOUR_RESET},
-    [NOTE] = {"note", COLOUR_GREEN "note" COLOUR_RESET},
+    [INTERNAL] = { "internal", COLOUR_CYAN "ice" COLOUR_RESET },
+    [ERROR] = { "error", COLOUR_RED "error" COLOUR_RESET },
+    [WARNING] = { "warning", COLOUR_YELLOW "warning" COLOUR_RESET },
+    [NOTE] = { "note", COLOUR_GREEN "note" COLOUR_RESET },
 };
 
 static const char *report_level_str(level_t level) {

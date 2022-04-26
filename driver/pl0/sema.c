@@ -37,7 +37,7 @@ void pl0_init(void) {
 
     kFmtString = hlir_string_literal(node, kStringType, "%d\n");
 
-    signature_t signature = {.params = vector_init(kStringType), .result = kIntegerType, .variadic = true};
+    signature_t signature = { .params = vector_init(kStringType), .result = kIntegerType, .variadic = true };
     kPrint = hlir_function(node, "printf", signature, vector_of(0), NULL);
     hlir_set_attributes(kPrint, kImported);
 }
@@ -271,7 +271,7 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node) {
 
 static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node) {
     size_t nlocals = vector_len(node->locals);
-    size_t sizes[TAG_MAX] = {[TAG_VALUES] = nlocals};
+    size_t sizes[TAG_MAX] = { [TAG_VALUES] = nlocals };
 
     sema_t *nest = sema_new(sema, sema->reports, TAG_MAX, sizes);
 
@@ -336,7 +336,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
     vector_t *globals = vector_new(nglobals);
     vector_t *procs = vector_new(nprocs);
 
-    size_t sizes[TAG_MAX] = {[TAG_CONSTS] = nconsts, [TAG_VALUES] = nglobals, [TAG_PROCS] = nprocs};
+    size_t sizes[TAG_MAX] = { [TAG_CONSTS] = nconsts, [TAG_VALUES] = nglobals, [TAG_PROCS] = nprocs };
 
     sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
 
@@ -363,7 +363,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     for (size_t i = 0; i < nprocs; i++) {
         pl0_t *it = vector_get(root->procs, i);
-        signature_t signature = {.params = vector_of(0), .result = kVoidType, .variadic = false};
+        signature_t signature = { .params = vector_of(0), .result = kVoidType, .variadic = false };
 
         hlir_t *hlir = hlir_begin_function(it->node, it->name, signature);
         hlir_set_attributes(hlir, kExported);
@@ -406,7 +406,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     if (root->entry != NULL) {
         hlir_t *body = sema_stmt(sema, root->entry);
-        signature_t signature = {.params = vector_of(0), .result = kVoidType, .variadic = false};
+        signature_t signature = { .params = vector_of(0), .result = kVoidType, .variadic = false };
         hlir_t *hlir = hlir_function(root->node, "main", signature, vector_of(0), body);
         hlir_set_attributes(hlir, kExported);
         vector_push(&procs, hlir);

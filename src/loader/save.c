@@ -73,31 +73,27 @@ void begin_save(data_t *out, header_t header) {
         out->records[i] = stream_new(0x1000);
         out->counts[i] = 0;
     }
-
-    write_data(out, out->stream, *header.header.layout, header.header.values);
 }
 
 void end_save(data_t *out) {
     stream_t *header = stream_new(0x100);
     header_t config = out->header;
     size_t len = config.format->types;
-    size_t subheader = layout_size(*config.header.layout);
 
     stream_write(out->strings, "");
 
-    size_t nstrings = stream_len(out->strings);                        // total length of the string table
-    size_t narrays = stream_len(out->arrays);                          // total length of the array table
-    size_t ncounts = (sizeof(offset_t) * len);                         // number of bytes used for counts
-    size_t noffsets = (sizeof(offset_t) * len);                        // number of bytes used for offsets
-    size_t nheader = sizeof(basic_header_t) + subheader;               // number of bytes used for the full header
-    size_t offset = nheader + noffsets + ncounts + nstrings + narrays; // total offset of the user data
+    size_t nstrings = stream_len(out->strings);              // total length of the string table
+    size_t narrays = stream_len(out->arrays);                // total length of the array table
+    size_t ncounts = (sizeof(offset_t) * len);               // number of bytes used for counts
+    size_t noffsets = (sizeof(offset_t) * len);              // number of bytes used for offsets
+    size_t offset = noffsets + ncounts + nstrings + narrays; // total offset of the user data
 
     basic_header_t basic = {
         .magic = FILE_MAGIC,
         .submagic = config.submagic,
         .semver = config.semver,
-        .strings = nheader + noffsets + ncounts,
-        .arrays = nheader + noffsets + ncounts + nstrings,
+        .strings = noffsets + ncounts,
+        .arrays = noffsets + ncounts + nstrings,
     };
 
     // write our basic header
@@ -146,13 +142,13 @@ index_t write_entry(data_t *out, type_t type, const value_t *values) {
     write_data(out, dst, layout, values);
 
     offset_t offset = out->counts[type]++;
-    index_t index = {type, offset};
+    index_t index = { type, offset };
 
     return index;
 }
 
 array_t write_array(data_t *out, index_t *indices, size_t len) {
-    array_t result = {.length = len, .offset = stream_len(out->arrays)};
+    array_t result = { .length = len, .offset = stream_len(out->arrays) };
 
     stream_write_bytes(out->arrays, indices, sizeof(index_t) * len);
 

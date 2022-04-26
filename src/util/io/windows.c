@@ -56,7 +56,7 @@ static size_t windows_write(file_t *self, const void *src, size_t total) {
 
 static size_t windows_seek(file_t *self, size_t offset) {
     windows_file_t *file = SELF(self);
-    LARGE_INTEGER distanceToMove = {.QuadPart = (LONGLONG)offset};
+    LARGE_INTEGER distanceToMove = { .QuadPart = (LONGLONG)offset };
     LARGE_INTEGER newPosition;
 
     BOOL result = SetFilePointerEx(
@@ -74,7 +74,7 @@ static size_t windows_seek(file_t *self, size_t offset) {
 
 static size_t windows_size(file_t *self) {
     windows_file_t *file = SELF(self);
-    LARGE_INTEGER size = {.QuadPart = 0};
+    LARGE_INTEGER size = { .QuadPart = 0 };
 
     BOOL result = GetFileSizeEx(
         /* hFile = */ file->handle,
@@ -89,8 +89,8 @@ static size_t windows_size(file_t *self) {
 
 static size_t windows_tell(file_t *self) {
     windows_file_t *file = SELF(self);
-    LARGE_INTEGER distanceToMove = {.QuadPart = 0};
-    LARGE_INTEGER newPosition = {.QuadPart = 0};
+    LARGE_INTEGER distanceToMove = { .QuadPart = 0 };
+    LARGE_INTEGER newPosition = { .QuadPart = 0 };
 
     BOOL result = SetFilePointerEx(
         /* hFile = */ file->handle,

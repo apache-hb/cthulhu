@@ -35,11 +35,13 @@ static const char *emit_array(reports_t *reports, const hlir_t *type, const char
 }
 
 static const char *kC89SignNames[SIGN_TOTAL] = {
-    [SIGN_DEFAULT] = "", [SIGN_SIGNED] = "signed ", [SIGN_UNSIGNED] = "unsigned "};
+    [SIGN_DEFAULT] = "", [SIGN_SIGNED] = "signed ", [SIGN_UNSIGNED] = "unsigned "
+};
 
 static const char *kC89DigitNames[DIGIT_TOTAL] = {
     [DIGIT_CHAR] = "char", [DIGIT_SHORT] = "short", [DIGIT_INT] = "int",
-    [DIGIT_LONG] = "long", [DIGIT_SIZE] = "size_t", [DIGIT_PTR] = "intptr_t"};
+    [DIGIT_LONG] = "long", [DIGIT_SIZE] = "size_t", [DIGIT_PTR] = "intptr_t"
+};
 
 static char *emit_c89_digit(const hlir_t *type, const char *name) {
     char *digit = format("%s%s", kC89SignNames[type->sign], kC89DigitNames[type->width]);

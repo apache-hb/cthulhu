@@ -43,7 +43,7 @@ static sema_query_t sema_inner_get(sema_t *sema, size_t tag, const char *name) {
 
     hlir_t *hlir = map_get(map, name);
     if (hlir != NULL) {
-        sema_query_t result = {hlir, 0};
+        sema_query_t result = { hlir, 0 };
         return result;
     }
 
@@ -53,7 +53,7 @@ static sema_query_t sema_inner_get(sema_t *sema, size_t tag, const char *name) {
         return result;
     }
 
-    sema_query_t result = {NULL, 0};
+    sema_query_t result = { NULL, 0 };
     return result;
 }
 

@@ -23,8 +23,8 @@ typedef struct {
     offset_t length;
 } array_t;
 
-#define NULL_INDEX ((index_t) {UINT32_MAX, UINT64_MAX})
-#define NULL_ARRAY ((array_t) {UINT64_MAX, UINT64_MAX})
+#define NULL_INDEX ((index_t) { UINT32_MAX, UINT64_MAX })
+#define NULL_ARRAY ((array_t) { UINT64_MAX, UINT64_MAX })
 
 typedef union {
     const char *string;
@@ -83,7 +83,6 @@ typedef struct {
     reports_t *reports;     // report sink
     const format_t *format; // a description of the data we're dealing with
     const char *path;       // where is this data
-    record_t header;        // our expected data header
     submagic_t submagic;    // submagic for this data
     semver_t semver;        // semver for this data
 } header_t;

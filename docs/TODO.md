@@ -35,6 +35,9 @@
   * need to abstract over in memory files and on disk files better
   * need to create distinction between binary files and text files
 
+* general code cleanup
+  * this is a forever task
+
 ## Optional items
 
 * add ssa emitter

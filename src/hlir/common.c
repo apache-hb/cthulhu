@@ -2,7 +2,7 @@
 
 #include "cthulhu/hlir/query.h"
 
-static const hlir_attributes_t kDefaultAttributes = {.linkage = LINK_INTERNAL, .tags = DEFAULT_TAGS};
+static const hlir_attributes_t kDefaultAttributes = { .linkage = LINK_INTERNAL, .tags = DEFAULT_TAGS };
 
 hlir_t *kMetaType = NULL;
 hlir_t *kInvalidNode = NULL;

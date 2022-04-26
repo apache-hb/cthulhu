@@ -3,6 +3,7 @@
 #include "cmd.h"
 #include "cthulhu/driver/driver.h"
 #include "cthulhu/hlir/init.h"
+#include "cthulhu/util/io.h"
 #include "plugins.h"
 
 #include "cthulhu/ast/compile.h"
@@ -48,19 +49,9 @@ static void print_help(const char **argv) {
 #include "flags.inc"
 }
 
-static void rename_module(reports_t *reports, hlir_t *hlir, const char *path, const char *mod) {
-    if (mod != NULL && hlir->name != NULL) {
-        message_t *id = report(reports, WARNING, NULL,
-                               "module name already defined in source file, "
-                               "overriding this may not be desired");
-        report_note(id, "redefining `%s` to `%s`", hlir->name, mod);
-    }
-
-    if (hlir->name != NULL) {
-        return;
-    }
-
-    hlir->name = (mod != NULL) ? ctu_strdup(mod) : ctu_filename(path);
+static void rename_module(reports_t *reports, hlir_t *hlir, const char *path) {
+    if (hlir->name != NULL) { return; }
+    hlir->name = ctu_filename(path);
 }
 
 void common_init(void) {
@@ -93,7 +84,7 @@ static target_t parse_target(reports_t *reports, const char *target) {
 
 int common_main(int argc, const char **argv, driver_t driver) {
     reports_t *reports = begin_reports();
-    commands_t commands = {0};
+    commands_t commands = { 0 };
     int status = parse_commandline(reports, &commands, argc, argv);
     if (status != 0) {
         return status;
@@ -147,7 +138,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
         }
 
         if (handle->init != NULL) {
-            plugin_t plugin = {.reports = reports};
+            plugin_t plugin = { .reports = reports };
             handle->init(&plugin);
         }
     }
@@ -169,7 +160,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
         file_t *file = file_new(path, TEXT, READ);
         if (!file_ok(file)) {
             ctu_errno_t err = ctu_last_error();
-            report(reports, ERROR, NULL, "failed to open file: %s", ctu_err_string(error));
+            report(reports, ERROR, NULL, "failed to open file: %s", ctu_err_string(err));
             continue;
         }
 
@@ -213,19 +204,28 @@ int common_main(int argc, const char **argv, driver_t driver) {
         return status;
     }
 
-    // TODO: merge modules together
+    for (size_t i = 0; i < numSources; i++) {
+        context_t *ctx = vector_get(contexts, i);
+        const char *path = vector_get(sources, i);
+        rename_module(reports, ctx->hlir, path);
+        check_module(reports, ctx->hlir);
+    }
 
-    rename_module(reports, hlir, path, commands.moduleName);
-    check_module(reports, hlir);
     status = end_reports(reports, limit, "module checking");
     if (status != 0) {
         return status;
     }
 
     if (commands.enableBytecode) {
-        save_settings_t settings = {.embedSource = commands.embedSource};
+        vector_t *bytecodeModules = vector_of(numSources);
+        for (size_t i = 0; i < numSources; i++) {
+            context_t *ctx = vector_get(contexts, i);
+            vector_set(bytecodeModules, i, ctx->hlir);
+        }
 
-        save_module(reports, &settings, hlir, outFile);
+        save_settings_t settings = { .embedSource = commands.embedSource };
+
+        save_modules(reports, &settings, bytecodeModules, outFile);
         status = end_reports(reports, limit, "bytecode generation");
         return status;
     }
@@ -249,10 +249,8 @@ int common_main(int argc, const char **argv, driver_t driver) {
 }
 
 hlir_t *find_module(sema_t *sema, const char *path) {
-    hlir_t *hlir = load_module(sema->reports, format("%s.hlir", path));
-    if (hlir != NULL) {
-        return hlir;
-    }
+    vector_t *modules = load_modules(sema->reports, format("%s.hlir", path));
+    size_t numModules = vector_len(modules);
 
     return NULL;
 }

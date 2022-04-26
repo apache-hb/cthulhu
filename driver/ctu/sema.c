@@ -239,7 +239,7 @@ hlir_t *ctu_sema(reports_t *reports, void *ast) {
 
     size_t ndecls = vector_len(root->decls);
 
-    size_t sizes[] = {[TAG_VARS] = ndecls, [TAG_PROCS] = ndecls, [TAG_TYPES] = ndecls, [TAG_MODULES] = ndecls};
+    size_t sizes[] = { [TAG_VARS] = ndecls, [TAG_PROCS] = ndecls, [TAG_TYPES] = ndecls, [TAG_MODULES] = ndecls };
 
     sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
 

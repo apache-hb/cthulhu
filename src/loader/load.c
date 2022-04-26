@@ -64,14 +64,6 @@ static value_t read_value(data_t *in, field_t field, size_t *offset) {
     return value;
 }
 
-static void read_data(data_t *in, const record_t *record, size_t offset) {
-    size_t len = record->layout->length;
-
-    for (size_t i = 0; i < len; i++) {
-        record->values[i] = read_value(in, record->layout->fields[i], &offset);
-    }
-}
-
 static const char *compatible_version(uint32_t file, uint32_t expected) {
     if (VERSION_MAJOR(expected) != VERSION_MAJOR(file)) {
         return "major";
@@ -157,9 +149,6 @@ bool begin_load(data_t *in, header_t header) {
                VERSION_MAJOR(header.semver), VERSION_MINOR(header.semver), VERSION_PATCH(header.semver));
         return false;
     }
-
-    read_data(in, &header.header, cursor);
-    cursor += layout_size(*header.header.layout);
 
     offset_t *counts = ctu_malloc(sizeof(offset_t) * len);
     offset_t *offsets = ctu_malloc(sizeof(offset_t) * len);

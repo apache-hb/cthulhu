@@ -14,12 +14,14 @@
 #if ENABLE_TUNING
 #    include <malloc.h>
 
-static counters_t counters = {.mallocs = 0,
-                              .reallocs = 0,
-                              .frees = 0,
+static counters_t counters = {
+    .mallocs = 0,
+    .reallocs = 0,
+    .frees = 0,
 
-                              .current = 0,
-                              .peak = 0};
+    .current = 0,
+    .peak = 0,
+};
 
 counters_t get_counters(void) {
     return counters;

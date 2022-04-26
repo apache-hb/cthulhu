@@ -31,7 +31,7 @@ static bool flag_matches(commands_t *commands, flag_t currentFlag, const char *f
 }
 
 static flag_t flag_new(const char *name, bool *setByUser, flag_type_t type, void *data) {
-    flag_t flag = {.name = name, .setByUser = setByUser, .type = type, .data = data};
+    flag_t flag = { .name = name, .setByUser = setByUser, .type = type, .data = data };
     return flag;
 }
 

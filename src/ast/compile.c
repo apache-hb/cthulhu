@@ -47,6 +47,13 @@ scan_t scan_file(reports_t *reports, const char *language, file_t *file) {
     return scan;
 }
 
+scan_t scan_without_source(reports_t *reports, const char *language, const char *path) {
+    scan_t scan = scan_new(reports, language, path);
+    text_t source = {.size = 0, .text = ""};
+    scan.source = source;
+    return scan;
+}
+
 void scan_set(scan_t *scan, void *data) {
     scan->data = data;
 }

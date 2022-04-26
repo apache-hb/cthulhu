@@ -11,6 +11,7 @@ SpaceBeforeParens: ControlStatements
 IndentPPDirectives: AfterHash
 IndentWidth: 4
 SpaceBeforeCpp11BracedList: true
+Cpp11BracedListStyle: false
 ColumnLimit: 120
 BreakBeforeBraces: Attach
 ...
