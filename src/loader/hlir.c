@@ -439,11 +439,11 @@ static const format_t *get_format(void) {
 /// hlir loading
 ///
 
-#define READ_OR_RETURN(data, index, values)            \
-    do {                                               \
-        report(load->reports, NOTE, NULL, "%s:%d", __FILE__, __LINE__);        \
-        bool result = read_entry(data, index, values); \
-        if (!result) return false;                     \
+#define READ_OR_RETURN(data, index, values)                             \
+    do {                                                                \
+        report(load->reports, NOTE, NULL, "%s:%d", __FILE__, __LINE__); \
+        bool result = read_entry(data, index, values);                  \
+        if (!result) return false;                                      \
     } while (0)
 
 typedef struct {
@@ -993,6 +993,8 @@ static index_t save_digit_literal_node(data_t *data, const hlir_t *hlir) {
         [DIGIT_LITERAL_VALUE] = digit_value(hlir->digit),
     };
 
+    CTASSERTF(values[DIGIT_LITERAL_TYPE].reference.type != NULL_TYPE, "%s:%d", __FILE__, __LINE__);
+
     return write_entry(data, HLIR_DIGIT_LITERAL, values);
 }
 
@@ -1003,6 +1005,8 @@ static index_t save_bool_literal_node(data_t *data, const hlir_t *hlir) {
         [BOOL_LITERAL_VALUE] = bool_value(hlir->boolean),
     };
 
+    CTASSERTF(values[BOOL_LITERAL_TYPE].reference.type != NULL_TYPE, "%s:%d", __FILE__, __LINE__);
+
     return write_entry(data, HLIR_BOOL_LITERAL, values);
 }
 
@@ -1012,6 +1016,8 @@ static index_t save_string_literal_node(data_t *data, const hlir_t *hlir) {
         [STRING_LITERAL_TYPE] = make_ref(data, get_hlir_type(hlir)),
         [STRING_LITERAL_VALUE] = string_value(hlir->string),
     };
+
+    CTASSERTF(values[STRING_LITERAL_TYPE].reference.type != NULL_TYPE, "%s:%d", __FILE__, __LINE__);
 
     return write_entry(data, HLIR_STRING_LITERAL, values);
 }

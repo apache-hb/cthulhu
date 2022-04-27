@@ -15,7 +15,8 @@ typedef enum { FIELD_STRING,
                FIELD_INT,
                FIELD_BOOL,
                FIELD_REFERENCE,
-               FIELD_ARRAY, } field_t;
+               FIELD_ARRAY,
+} field_t;
 
 typedef struct {
     type_t type;
@@ -27,7 +28,7 @@ typedef struct {
     offset_t length;
 } array_t;
 
-#define NULL_TYPE ((type_t)UINT32_MAX - 128)
+#define NULL_TYPE   ((type_t)UINT32_MAX - 128)
 #define NULL_OFFSET ((offset_t)UINT32_MAX - 128)
 
 #define NULL_INDEX ((index_t) { NULL_TYPE, NULL_OFFSET })

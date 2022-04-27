@@ -2,10 +2,18 @@
 
 #include "cthulhu/util/report.h"
 
-typedef enum { OPTION_BOOL,
-               OPTION_STRING,
-               OPTION_INT,
-               OPTION_VECTOR } option_type_t;
+typedef enum {
+    OPTION_BOOL,
+    OPTION_STRING,
+    OPTION_INT,
+    OPTION_VECTOR,
+} option_type_t;
+
+typedef enum {
+    PLUGIN_CHECK_MODULE,
+    PLUGIN_LOAD_MODULE,
+    PLUGIN_SAVE_MODULE
+} callback_t;
 
 typedef union {
     bool boolean;
