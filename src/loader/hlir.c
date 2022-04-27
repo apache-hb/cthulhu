@@ -1,5 +1,7 @@
 #include "cthulhu/loader/hlir.h"
 
+#include "cthulhu/ast/ast.h"
+#include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
@@ -33,29 +35,25 @@ typedef enum {
     SOURCE_TOTAL
 } source_kind_t;
 
-#define INDICES(SPAN, ...) enum { SPAN, __VA_ARGS__ };
+#define ELEMENTS(...)      enum { __VA_ARGS__ };
+#define INDICES(SPAN, ...) enum { SPAN, \
+                                  __VA_ARGS__ };
 
 ///
 /// non-hlir types
 ///
 
-enum { HEADER_LANGUAGE, HEADER_PATH, HEADER_SOURCE };
-static const field_t kHeaderFields[] = {
-    [HEADER_LANGUAGE] = FIELD("language", FIELD_STRING),
-    [HEADER_PATH] = FIELD("path", FIELD_STRING),
-    [HEADER_SOURCE] = FIELD("source", FIELD_STRING),
-};
-static const layout_t kHeaderLayout = LAYOUT("header", kHeaderFields);
-
-enum { NODE_FIRST_LINE, NODE_FIRST_COLUMN, NODE_LAST_LINE, NODE_LAST_COLUMN, NODE_SCAN };
+ELEMENTS(NODE_FIRST_LINE, NODE_FIRST_COLUMN, NODE_LAST_LINE, NODE_LAST_COLUMN, NODE_SCAN);
 static const field_t kNodeFields[] = {
-    [NODE_FIRST_LINE] = FIELD("first-line", FIELD_INT), [NODE_FIRST_COLUMN] = FIELD("first-column", FIELD_INT),
-    [NODE_LAST_LINE] = FIELD("last-line", FIELD_INT),   [NODE_LAST_COLUMN] = FIELD("last-column", FIELD_INT),
+    [NODE_FIRST_LINE] = FIELD("first-line", FIELD_INT),
+    [NODE_FIRST_COLUMN] = FIELD("first-column", FIELD_INT),
+    [NODE_LAST_LINE] = FIELD("last-line", FIELD_INT),
+    [NODE_LAST_COLUMN] = FIELD("last-column", FIELD_INT),
     [NODE_SCAN] = FIELD("scan", FIELD_REFERENCE),
 };
 static const layout_t kNodeLayout = LAYOUT("node", kNodeFields);
 
-enum { SCAN_PATH, SCAN_LANGUAGE, SCAN_SOURCE };
+ELEMENTS(SCAN_PATH, SCAN_LANGUAGE, SCAN_SOURCE);
 static const field_t kScanFields[] = {
     [SCAN_PATH] = FIELD("path", FIELD_STRING),
     [SCAN_LANGUAGE] = FIELD("language", FIELD_STRING),
@@ -63,10 +61,11 @@ static const field_t kScanFields[] = {
 };
 static const layout_t kScanLayout = LAYOUT("scan", kScanFields);
 
-enum { ATTRIB_LINKAGE, ATTRIB_TAGS };
+ELEMENTS(ATTRIB_LINKAGE, ATTRIB_TAGS, ATTRIB_MANGLE);
 static const field_t kAttribFields[] = {
     [ATTRIB_LINKAGE] = FIELD("linkage", FIELD_INT),
     [ATTRIB_TAGS] = FIELD("tags", FIELD_INT),
+    [ATTRIB_MANGLE] = FIELD("mangle", FIELD_STRING),
 };
 static const layout_t kAttribLayout = LAYOUT("attributes", kAttribFields);
 
@@ -120,16 +119,20 @@ static const layout_t kUnaryLayout = LAYOUT("unary", kUnaryFields);
 
 INDICES(BINARY_NODE, BINARY_TYPE, BINARY_OP, BINARY_LHS, BINARY_RHS);
 static const field_t kBinaryFields[] = {
-    [BINARY_NODE] = FIELD("node", FIELD_REFERENCE), [BINARY_TYPE] = FIELD("type", FIELD_REFERENCE),
-    [BINARY_OP] = FIELD("op", FIELD_INT),           [BINARY_LHS] = FIELD("lhs", FIELD_REFERENCE),
+    [BINARY_NODE] = FIELD("node", FIELD_REFERENCE),
+    [BINARY_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [BINARY_OP] = FIELD("op", FIELD_INT),
+    [BINARY_LHS] = FIELD("lhs", FIELD_REFERENCE),
     [BINARY_RHS] = FIELD("rhs", FIELD_REFERENCE),
 };
 static const layout_t kBinaryLayout = LAYOUT("binary", kBinaryFields);
 
 INDICES(COMPARE_NODE, COMPARE_TYPE, COMPARE_OP, COMPARE_LHS, COMPARE_RHS);
 static const field_t kCompareFields[] = {
-    [COMPARE_NODE] = FIELD("node", FIELD_REFERENCE), [COMPARE_TYPE] = FIELD("type", FIELD_REFERENCE),
-    [COMPARE_OP] = FIELD("op", FIELD_INT),           [COMPARE_LHS] = FIELD("lhs", FIELD_REFERENCE),
+    [COMPARE_NODE] = FIELD("node", FIELD_REFERENCE),
+    [COMPARE_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [COMPARE_OP] = FIELD("op", FIELD_INT),
+    [COMPARE_LHS] = FIELD("lhs", FIELD_REFERENCE),
     [COMPARE_RHS] = FIELD("rhs", FIELD_REFERENCE),
 };
 static const layout_t kCompareLayout = LAYOUT("compare", kCompareFields);
@@ -214,8 +217,10 @@ static const layout_t kVoidLayout = LAYOUT("void", kVoidFields);
 
 INDICES(CLOSURE_NODE, CLOSURE_NAME, CLOSURE_ARGS, CLOSURE_RESULT, CLOSURE_VARIADIC);
 static const field_t kClosureFields[] = {
-    [CLOSURE_NODE] = FIELD("node", FIELD_REFERENCE),    [CLOSURE_NAME] = FIELD("name", FIELD_STRING),
-    [CLOSURE_ARGS] = FIELD("args", FIELD_ARRAY),        [CLOSURE_RESULT] = FIELD("result", FIELD_REFERENCE),
+    [CLOSURE_NODE] = FIELD("node", FIELD_REFERENCE),
+    [CLOSURE_NAME] = FIELD("name", FIELD_STRING),
+    [CLOSURE_ARGS] = FIELD("args", FIELD_ARRAY),
+    [CLOSURE_RESULT] = FIELD("result", FIELD_REFERENCE),
     [CLOSURE_VARIADIC] = FIELD("variadic", FIELD_BOOL),
 };
 static const layout_t kClosureLayout = LAYOUT("closure", kClosureFields);
@@ -246,16 +251,20 @@ static const layout_t kArrayLayout = LAYOUT("array", kArrayFields);
 
 INDICES(LOCAL_NODE, LOCAL_ATTRIBS, LOCAL_NAME, LOCAL_TYPE, LOCAL_INDEX);
 static const field_t kLocalFields[] = {
-    [LOCAL_NODE] = FIELD("node", FIELD_REFERENCE), [LOCAL_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
-    [LOCAL_NAME] = FIELD("name", FIELD_STRING),    [LOCAL_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [LOCAL_NODE] = FIELD("node", FIELD_REFERENCE),
+    [LOCAL_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
+    [LOCAL_NAME] = FIELD("name", FIELD_STRING),
+    [LOCAL_TYPE] = FIELD("type", FIELD_REFERENCE),
     [LOCAL_INDEX] = FIELD("index", FIELD_INT),
 };
 static const layout_t kLocalLayout = LAYOUT("local", kLocalFields);
 
 INDICES(GLOBAL_NODE, GLOBAL_ATTRIBS, GLOBAL_NAME, GLOBAL_TYPE, GLOBAL_INIT);
 static const field_t kGlobalFields[] = {
-    [GLOBAL_NODE] = FIELD("node", FIELD_REFERENCE), [GLOBAL_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
-    [GLOBAL_NAME] = FIELD("name", FIELD_STRING),    [GLOBAL_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [GLOBAL_NODE] = FIELD("node", FIELD_REFERENCE),
+    [GLOBAL_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
+    [GLOBAL_NAME] = FIELD("name", FIELD_STRING),
+    [GLOBAL_TYPE] = FIELD("type", FIELD_REFERENCE),
     [GLOBAL_INIT] = FIELD("init", FIELD_REFERENCE),
 };
 static const layout_t kGlobalLayout = LAYOUT("global", kGlobalFields);
@@ -263,10 +272,14 @@ static const layout_t kGlobalLayout = LAYOUT("global", kGlobalFields);
 INDICES(FUNCTION_NODE, FUNCTION_ATTRIBS, FUNCTION_NAME, FUNCTION_PARAMS, FUNCTION_RESULT, FUNCTION_VARIADIC,
         FUNCTION_LOCALS, FUNCTION_BODY);
 static const field_t kFunctionFields[] = {
-    [FUNCTION_NODE] = FIELD("node", FIELD_REFERENCE),     [FUNCTION_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
-    [FUNCTION_NAME] = FIELD("name", FIELD_STRING),        [FUNCTION_PARAMS] = FIELD("params", FIELD_ARRAY),
-    [FUNCTION_RESULT] = FIELD("result", FIELD_REFERENCE), [FUNCTION_VARIADIC] = FIELD("variadic", FIELD_BOOL),
-    [FUNCTION_LOCALS] = FIELD("locals", FIELD_ARRAY),     [FUNCTION_BODY] = FIELD("body", FIELD_REFERENCE),
+    [FUNCTION_NODE] = FIELD("node", FIELD_REFERENCE),
+    [FUNCTION_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
+    [FUNCTION_NAME] = FIELD("name", FIELD_STRING),
+    [FUNCTION_PARAMS] = FIELD("params", FIELD_ARRAY),
+    [FUNCTION_RESULT] = FIELD("result", FIELD_REFERENCE),
+    [FUNCTION_VARIADIC] = FIELD("variadic", FIELD_BOOL),
+    [FUNCTION_LOCALS] = FIELD("locals", FIELD_ARRAY),
+    [FUNCTION_BODY] = FIELD("body", FIELD_REFERENCE),
 };
 static const layout_t kFunctionLayout = LAYOUT("function", kFunctionFields);
 
@@ -290,8 +303,10 @@ static const layout_t kUnionLayout = LAYOUT("union", kUnionFields);
 
 INDICES(ALIAS_NODE, ALIAS_ATTRIBS, ALIAS_NAME, ALIAS_TYPE, ALIAS_NEWTYPE);
 static const field_t kAliasFields[] = {
-    [ALIAS_NODE] = FIELD("node", FIELD_REFERENCE),  [ALIAS_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
-    [ALIAS_NAME] = FIELD("name", FIELD_STRING),     [ALIAS_TYPE] = FIELD("type", FIELD_REFERENCE),
+    [ALIAS_NODE] = FIELD("node", FIELD_REFERENCE),
+    [ALIAS_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
+    [ALIAS_NAME] = FIELD("name", FIELD_STRING),
+    [ALIAS_TYPE] = FIELD("type", FIELD_REFERENCE),
     [ALIAS_NEWTYPE] = FIELD("newtype", FIELD_BOOL),
 };
 static const layout_t kAliasLayout = LAYOUT("alias", kAliasFields);
@@ -306,8 +321,10 @@ static const layout_t kFieldLayout = LAYOUT("field", kFieldFields);
 
 INDICES(MODULE_NODE, MODULE_NAME, MODULE_TYPES, MODULE_GLOBALS, MODULE_FUNCTIONS);
 static const field_t kModuleFields[] = {
-    [MODULE_NODE] = FIELD("node", FIELD_REFERENCE),       [MODULE_NAME] = FIELD("name", FIELD_STRING),
-    [MODULE_TYPES] = FIELD("types", FIELD_ARRAY),         [MODULE_GLOBALS] = FIELD("globals", FIELD_ARRAY),
+    [MODULE_NODE] = FIELD("node", FIELD_REFERENCE),
+    [MODULE_NAME] = FIELD("name", FIELD_STRING),
+    [MODULE_TYPES] = FIELD("types", FIELD_ARRAY),
+    [MODULE_GLOBALS] = FIELD("globals", FIELD_ARRAY),
     [MODULE_FUNCTIONS] = FIELD("functions", FIELD_ARRAY),
 };
 static const layout_t kModuleLayout = LAYOUT("module", kModuleFields);
@@ -357,7 +374,7 @@ static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
     [HLIR_MODULE] = kModuleLayout,
 };
 
-static const format_t GLOBAL = FORMAT(&kHeaderLayout, ALL_TYPES);
+static const format_t GLOBAL = FORMAT(ALL_TYPES);
 
 static const format_t *get_format(void) {
     return &GLOBAL;
@@ -407,7 +424,6 @@ static const format_t *get_format(void) {
     allTypes[HLIR_MODULE] = kModuleLayout;
 
     format_t fmt = {
-        .header = &kHeaderLayout,
         .types = LAYOUTS_TOTAL,
         .layouts = allTypes,
     };
@@ -425,6 +441,7 @@ static const format_t *get_format(void) {
 
 #define READ_OR_RETURN(data, index, values)            \
     do {                                               \
+        report(load->reports, NOTE, NULL, "%s:%d", __FILE__, __LINE__);        \
         bool result = read_entry(data, index, values); \
         if (!result) return false;                     \
     } while (0)
@@ -492,13 +509,16 @@ static hlir_attributes_t *load_attributes(load_t *load, value_t value) {
     value_t values[FIELDLEN(kAttribFields)];
     READ_OR_RETURN(load->data, get_reference(value), values);
 
-    return hlir_attributes(get_int(values[ATTRIB_LINKAGE]), get_int(values[ATTRIB_TAGS]));
+    hlir_linkage_t linkage = get_int(values[ATTRIB_LINKAGE]);
+    hlir_tags_t tags = get_int(values[ATTRIB_TAGS]);
+    const char *mangle = get_string(values[ATTRIB_MANGLE]);
+    return hlir_attributes(linkage, tags, mangle);
 }
 
 static hlir_t *load_node(load_t *load, index_t index, const char *trace);
 
 static hlir_t *load_opt_node(load_t *load, index_t index, const char *trace) {
-    if (index.type == UINT32_MAX) {
+    if (index.type == NULL_TYPE) {
         return NULL;
     }
 
@@ -847,33 +867,6 @@ static hlir_t *load_node(load_t *load, index_t index, const char *trace) {
     }
 }
 
-hlir_t *load_module(reports_t *reports, const char *path) {
-    header_t header = {
-        .reports = reports,
-        .format = get_format(),
-        .path = path,
-        .submagic = HLIR_SUBMAGIC,
-        .semver = HLIR_VERSION,
-    };
-
-    data_t data;
-    bool ok = begin_load(&data, header);
-    if (!ok) {
-        return NULL;
-    }
-
-    load_t load = {
-        .reports = reports,
-        .data = &data,
-    };
-    index_t index = { .type = HLIR_MODULE };
-    hlir_t *hlir = load_node(&load, index, "root load");
-
-    end_load(&data);
-
-    return hlir;
-}
-
 vector_t *load_modules(reports_t *reports, const char *path) {
     header_t header = {
         .reports = reports,
@@ -897,12 +890,17 @@ vector_t *load_modules(reports_t *reports, const char *path) {
         .data = &data,
     };
 
-    index_t index = { .type = HLIR_MODULE };
-    hlir_t *hlir = load_node(&load, index, "root load");
+    vector_t *modules = vector_of(totalModules);
+
+    for (size_t i = 0; i < totalModules; i++) {
+        index_t index = { .type = HLIR_MODULE, .offset = i };
+        hlir_t *hlir = load_node(&load, index, "module load");
+        vector_set(modules, i, hlir);
+    }
 
     end_load(&data);
 
-    return hlir;
+    return modules;
 }
 
 ///
@@ -920,7 +918,7 @@ static index_t save_scan(data_t *data, const scan_t *scan) {
 }
 
 static index_t save_span(data_t *data, const node_t *node) {
-    if (node == NULL) {
+    if (node == NULL || node == node_builtin()) {
         return NULL_INDEX;
     }
 
@@ -941,6 +939,7 @@ static index_t save_attributes(data_t *data, const hlir_attributes_t *attributes
     value_t values[FIELDLEN(kAttribFields)] = {
         [ATTRIB_LINKAGE] = int_value(attributes->linkage),
         [ATTRIB_TAGS] = int_value(attributes->tags),
+        [ATTRIB_MANGLE] = string_value(attributes->mangle),
     };
 
     return write_entry(data, ATTRIBUTE_INDEX, values);
@@ -1039,8 +1038,10 @@ static index_t save_unary_node(data_t *data, const hlir_t *hlir) {
 
 static index_t save_binary_node(data_t *data, const hlir_t *hlir) {
     value_t values[] = {
-        [BINARY_NODE] = span_ref(data, hlir),     [BINARY_TYPE] = make_ref(data, get_hlir_type(hlir)),
-        [BINARY_OP] = int_value(hlir->binary),    [BINARY_LHS] = make_ref(data, hlir->lhs),
+        [BINARY_NODE] = span_ref(data, hlir),
+        [BINARY_TYPE] = make_ref(data, get_hlir_type(hlir)),
+        [BINARY_OP] = int_value(hlir->binary),
+        [BINARY_LHS] = make_ref(data, hlir->lhs),
         [BINARY_RHS] = make_ref(data, hlir->rhs),
     };
 
@@ -1049,8 +1050,10 @@ static index_t save_binary_node(data_t *data, const hlir_t *hlir) {
 
 static index_t save_compare_node(data_t *data, const hlir_t *hlir) {
     value_t values[] = {
-        [COMPARE_NODE] = span_ref(data, hlir),     [COMPARE_TYPE] = make_ref(data, get_hlir_type(hlir)),
-        [COMPARE_OP] = int_value(hlir->compare),   [COMPARE_LHS] = make_ref(data, hlir->lhs),
+        [COMPARE_NODE] = span_ref(data, hlir),
+        [COMPARE_TYPE] = make_ref(data, get_hlir_type(hlir)),
+        [COMPARE_OP] = int_value(hlir->compare),
+        [COMPARE_LHS] = make_ref(data, hlir->lhs),
         [COMPARE_RHS] = make_ref(data, hlir->rhs),
     };
 
@@ -1123,7 +1126,6 @@ static index_t save_digit_node(data_t *data, const hlir_t *hlir) {
         [DIGIT_SIGN] = int_value(hlir->sign),
         [DIGIT_WIDTH] = int_value(hlir->width),
     };
-
     return write_entry(data, HLIR_DIGIT, values);
 }
 
@@ -1194,8 +1196,10 @@ static index_t save_array_node(data_t *data, const hlir_t *hlir) {
 
 static index_t save_local_node(data_t *data, const hlir_t *hlir) {
     value_t values[] = {
-        [LOCAL_NODE] = span_ref(data, hlir),          [LOCAL_ATTRIBS] = attrib_ref(data, hlir),
-        [LOCAL_NAME] = string_value(hlir->name),      [LOCAL_TYPE] = make_ref(data, get_hlir_type(hlir)),
+        [LOCAL_NODE] = span_ref(data, hlir),
+        [LOCAL_ATTRIBS] = attrib_ref(data, hlir),
+        [LOCAL_NAME] = string_value(hlir->name),
+        [LOCAL_TYPE] = make_ref(data, get_hlir_type(hlir)),
         [LOCAL_INDEX] = int_value((long)hlir->index),
     };
 
@@ -1219,10 +1223,14 @@ static index_t save_function_node(data_t *data, const hlir_t *hlir) {
     array_t params = save_array(data, hlir->params);
 
     value_t values[] = {
-        [FUNCTION_NODE] = span_ref(data, hlir),           [FUNCTION_ATTRIBS] = attrib_ref(data, hlir),
-        [FUNCTION_NAME] = string_value(hlir->name),       [FUNCTION_PARAMS] = array_value(params),
-        [FUNCTION_RESULT] = make_ref(data, hlir->result), [FUNCTION_VARIADIC] = bool_value(hlir->variadic),
-        [FUNCTION_LOCALS] = array_value(locals),          [FUNCTION_BODY] = make_ref_opt(data, hlir->body),
+        [FUNCTION_NODE] = span_ref(data, hlir),
+        [FUNCTION_ATTRIBS] = attrib_ref(data, hlir),
+        [FUNCTION_NAME] = string_value(hlir->name),
+        [FUNCTION_PARAMS] = array_value(params),
+        [FUNCTION_RESULT] = make_ref(data, hlir->result),
+        [FUNCTION_VARIADIC] = bool_value(hlir->variadic),
+        [FUNCTION_LOCALS] = array_value(locals),
+        [FUNCTION_BODY] = make_ref_opt(data, hlir->body),
     };
 
     return write_entry(data, HLIR_FUNCTION, values);
@@ -1281,8 +1289,10 @@ static index_t save_module_node(data_t *data, const hlir_t *hlir) {
     array_t functions = save_array(data, hlir->functions);
 
     value_t values[] = {
-        [MODULE_NODE] = span_ref(data, hlir),        [MODULE_NAME] = string_value(hlir->name),
-        [MODULE_TYPES] = array_value(types),         [MODULE_GLOBALS] = array_value(globals),
+        [MODULE_NODE] = span_ref(data, hlir),
+        [MODULE_NAME] = string_value(hlir->name),
+        [MODULE_TYPES] = array_value(types),
+        [MODULE_GLOBALS] = array_value(globals),
         [MODULE_FUNCTIONS] = array_value(functions),
     };
 
@@ -1363,25 +1373,6 @@ static index_t save_node(data_t *data, const hlir_t *hlir) {
         ctu_assert(data->header.reports, "saving unknown node type %u", hlir->type);
         return NULL_INDEX;
     }
-}
-
-void save_module(reports_t *reports, save_settings_t *settings, hlir_t *module, const char *path) {
-    UNUSED(settings);
-
-    header_t header = {
-        .reports = reports,
-        .format = get_format(),
-        .path = path,
-        .submagic = HLIR_SUBMAGIC,
-        .semver = HLIR_VERSION,
-    };
-
-    data_t data;
-    begin_save(&data, header);
-
-    save_node(&data, module);
-
-    end_save(&data);
 }
 
 void save_modules(reports_t *reports, save_settings_t *settings, vector_t *modules, const char *path) {

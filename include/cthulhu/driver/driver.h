@@ -33,8 +33,15 @@
         .destroy = prefix##_##id##_destroy,                              \
     }
 
-typedef void *(*parse_t)(reports_t *, scan_t *);
-typedef hlir_t *(*analyze_t)(reports_t *, void *);
+typedef struct {
+    reports_t *reports;
+    map_t *modules;
+} runtime_t;
+
+hlir_t *find_module(runtime_t *runtime, const char *path);
+
+typedef void *(*parse_t)(runtime_t *, scan_t *);
+typedef hlir_t *(*analyze_t)(runtime_t *, void *);
 
 typedef struct {
     const char *name;
@@ -58,5 +65,3 @@ void common_init(void);
  * @return an exit code to return from main
  */
 int common_main(int argc, const char **argv, driver_t driver);
-
-hlir_t *find_module(sema_t *sema, const char *path);

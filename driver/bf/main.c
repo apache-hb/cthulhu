@@ -59,7 +59,12 @@ static hlir_t *bf_sema(reports_t *reports, void *ast) {
     return ast;
 }
 
-static const driver_t kDriver = { .name = "brainfuck", .version = "1.0.0", .parse = bf_parse, .sema = bf_sema };
+static const driver_t kDriver = {
+    .name = "brainfuck",
+    .version = "1.0.0",
+    .parse = bf_parse,
+    .sema = bf_sema,
+};
 
 int main(int argc, const char **argv) {
     common_init();

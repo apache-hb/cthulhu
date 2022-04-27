@@ -8,8 +8,8 @@
 
 CT_CALLBACKS(kCallbacks, pl0);
 
-void *pl0_parse(reports_t *reports, scan_t *scan) {
-    UNUSED(reports);
+void *pl0_parse(runtime_t *runtime, scan_t *scan) {
+    UNUSED(runtime);
 
     return compile_file(scan, &kCallbacks);
 }

@@ -234,14 +234,14 @@ static void add_basic_types(sema_t *sema) {
     // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", DIGIT_INT, SIGN_SIGNED));
 }
 
-hlir_t *ctu_sema(reports_t *reports, void *ast) {
+hlir_t *ctu_sema(runtime_t *runtime, void *ast) {
     ast_t *root = ast;
 
     size_t ndecls = vector_len(root->decls);
 
     size_t sizes[] = { [TAG_VARS] = ndecls, [TAG_PROCS] = ndecls, [TAG_TYPES] = ndecls, [TAG_MODULES] = ndecls };
 
-    sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
+    sema_t *sema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
 
     add_basic_types(sema);
 

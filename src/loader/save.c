@@ -1,11 +1,12 @@
 #include "common.h"
+#include "cthulhu/util/str.h"
 
 #include <errno.h>
 #include <string.h>
 
 static offset_t write_string(data_t *data, const char *str) {
     if (str == NULL) {
-        return UINT64_MAX;
+        return NULL_OFFSET;
     }
 
     uintptr_t offset = (uintptr_t)map_get_default(data->cache, str, (void *)UINTPTR_MAX);
@@ -32,7 +33,6 @@ static void write_data(data_t *data, stream_t *dst, layout_t layout, const value
 
         offset_t str;
         char *gmp;
-
         switch (field) {
         case FIELD_STRING:
             str = write_string(data, val.string);
@@ -76,12 +76,12 @@ void begin_save(data_t *out, header_t header) {
 }
 
 void end_save(data_t *out) {
-    stream_t *header = stream_new(0x100);
     header_t config = out->header;
     size_t len = config.format->types;
 
     stream_write(out->strings, "");
 
+    size_t base = sizeof(basic_header_t);
     size_t nstrings = stream_len(out->strings);              // total length of the string table
     size_t narrays = stream_len(out->arrays);                // total length of the array table
     size_t ncounts = (sizeof(offset_t) * len);               // number of bytes used for counts
@@ -92,15 +92,14 @@ void end_save(data_t *out) {
         .magic = FILE_MAGIC,
         .submagic = config.submagic,
         .semver = config.semver,
-        .strings = noffsets + ncounts,
-        .arrays = noffsets + ncounts + nstrings,
+        .strings = base + noffsets + ncounts,
+        .arrays = base + noffsets + ncounts + nstrings,
     };
+
+    stream_t *header = stream_new(offset);
 
     // write our basic header
     stream_write_bytes(header, &basic, sizeof(basic_header_t));
-
-    // write user header
-    stream_write_bytes(header, stream_data(out->stream), stream_len(out->stream));
 
     // write the count array
     for (size_t i = 0; i < len; i++) {
@@ -118,9 +117,13 @@ void end_save(data_t *out) {
     stream_write_bytes(header, stream_data(out->strings), nstrings);
     stream_write_bytes(header, stream_data(out->arrays), narrays);
 
+    // write the records
     for (size_t i = 0; i < len; i++) {
         size_t size = out->counts[i] * out->sizes[i];
-        stream_write_bytes(header, stream_data(out->records[i]), size);
+        if (size == 0) continue;
+
+        const char *bytes = stream_data(out->records[i]);
+        stream_write_bytes(header, bytes, size);
     }
 
     file_t *file = file_new(out->header.path, BINARY, WRITE);

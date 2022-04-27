@@ -8,8 +8,8 @@
 
 CT_CALLBACKS(kCallbacks, ctu);
 
-static void *ctu_parse(reports_t *reports, scan_t *scan) {
-    UNUSED(reports);
+static void *ctu_parse(runtime_t *runtime, scan_t *scan) {
+    UNUSED(runtime);
 
     init_scan(scan);
 

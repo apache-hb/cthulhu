@@ -29,6 +29,15 @@ static bool has_name(hlir_kind_t kind) {
 
 static bool has_attribs(hlir_kind_t kind) {
     switch (kind) {
+    case HLIR_STRUCT:
+    case HLIR_UNION:
+    case HLIR_ALIAS:
+    case HLIR_DIGIT:
+    case HLIR_BOOL:
+    case HLIR_STRING:
+    case HLIR_VOID:
+        return true;
+
     case HLIR_FUNCTION:
     case HLIR_GLOBAL:
     case HLIR_LOCAL:
@@ -153,8 +162,12 @@ static const char *kKindNames[HLIR_TOTAL] = {
 };
 
 static const char *kDigitNames[DIGIT_TOTAL] = {
-    [DIGIT_CHAR] = "char", [DIGIT_SHORT] = "short", [DIGIT_INT] = "int",
-    [DIGIT_LONG] = "long", [DIGIT_SIZE] = "size",   [DIGIT_PTR] = "intptr",
+    [DIGIT_CHAR] = "char",
+    [DIGIT_SHORT] = "short",
+    [DIGIT_INT] = "int",
+    [DIGIT_LONG] = "long",
+    [DIGIT_SIZE] = "size",
+    [DIGIT_PTR] = "intptr",
 };
 
 static const char *kSignNames[SIGN_TOTAL] = {

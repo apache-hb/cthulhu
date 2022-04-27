@@ -6,7 +6,7 @@ static size_t field_size(field_t field) {
     case FIELD_INT:
         return sizeof(size_t);
     case FIELD_BOOL:
-        return sizeof(bool);
+        return sizeof(bool_t);
     case FIELD_REFERENCE:
         return sizeof(index_t);
     case FIELD_ARRAY:

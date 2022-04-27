@@ -1,5 +1,10 @@
 #include "cthulhu/hlir/sema.h"
+#include "cthulhu/hlir/attribs.h"
+#include "cthulhu/hlir/decl.h"
+#include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
+#include "cthulhu/util/report.h"
+#include "cthulhu/util/util.h"
 
 sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes) {
     sema_t *sema = ctu_malloc(sizeof(sema_t));
@@ -255,24 +260,50 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
     vector_drop(*stack);
 }
 
+static void check_attribute(reports_t *reports, hlir_t *hlir) {
+    const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
+
+    if (attribs->mangle != NULL && attribs->linkage == LINK_INTERNAL) {
+        message_t *id = report(reports, WARNING, hlir->node, "cannot change name mangling of internal symbols");
+        report_note(id, "attribute will not be mangled");
+
+        hlir_attributes_t *newAttribs = ctu_memdup(attribs, sizeof(hlir_attributes_t));
+        newAttribs->mangle = NULL;
+        hlir_set_attributes(hlir, newAttribs);
+    }
+}
+
 void check_module(reports_t *reports, hlir_t *mod) {
-    size_t nvars = vector_len(mod->globals);
-    size_t ntypes = vector_len(mod->types);
-    vector_t *vec = vector_new(16);
+    size_t totalGlobals = vector_len(mod->globals);
+    size_t totalTypes = vector_len(mod->types);
+    size_t totalFunctions = vector_len(mod->functions);
+    vector_t *recursionStack = vector_new(16);
 
-    for (size_t i = 0; i < ntypes; i++) {
+    for (size_t i = 0; i < totalTypes; i++) {
         hlir_t *type = vector_get(mod->types, i);
-        check_type_recursion(reports, &vec, type);
+        check_type_recursion(reports, &recursionStack, type);
 
-        vector_reset(vec);
+        vector_reset(recursionStack);
     }
 
-    for (size_t i = 0; i < nvars; i++) {
+    for (size_t i = 0; i < totalGlobals; i++) {
         hlir_t *var = vector_get(mod->globals, i);
         CTASSERTF(hlir_is(var, HLIR_GLOBAL), "check-module polluted: global `%s` is %s, not global", get_hlir_name(var),
                   hlir_kind_to_string(get_hlir_kind(var)));
-        check_recursion(reports, &vec, var);
+        check_recursion(reports, &recursionStack, var);
 
-        vector_reset(vec);
+        vector_reset(recursionStack);
     }
+
+#define CHECK_ATTRIBUTES_FOR_ARRAY(length, vector) \
+    do {                                           \
+        for (size_t i = 0; i < length; i++) {      \
+            hlir_t *var = vector_get(vector, i);   \
+            check_attribute(reports, var);         \
+        }                                          \
+    } while (0)
+
+    CHECK_ATTRIBUTES_FOR_ARRAY(totalGlobals, mod->globals);
+    CHECK_ATTRIBUTES_FOR_ARRAY(totalTypes, mod->types);
+    CHECK_ATTRIBUTES_FOR_ARRAY(totalFunctions, mod->functions);
 }

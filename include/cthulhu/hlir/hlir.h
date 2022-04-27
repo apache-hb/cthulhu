@@ -322,12 +322,3 @@ hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src);
 hlir_t *hlir_field(const node_t *node, const hlir_t *type, const char *name);
 
 /** @} */
-
-/**
- * @brief set the attributes of a declaration or a type. only valid for
- * declarations and types.
- *
- * @param self the declaration or type to set the attributes of
- * @param attributes the attributes to set
- */
-void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes);

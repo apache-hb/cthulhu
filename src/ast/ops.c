@@ -6,20 +6,30 @@ typedef struct {
 } operand_name_t;
 
 static operand_name_t binary_operands[] = {
-    [BINARY_ADD] = { "add", "+" },     [BINARY_SUB] = { "sub", "-" },  [BINARY_MUL] = { "mul", "*" },
-    [BINARY_DIV] = { "div", "/" },     [BINARY_REM] = { "rem", "%" },
+    [BINARY_ADD] = { "add", "+" },
+    [BINARY_SUB] = { "sub", "-" },
+    [BINARY_MUL] = { "mul", "*" },
+    [BINARY_DIV] = { "div", "/" },
+    [BINARY_REM] = { "rem", "%" },
 
-    [BINARY_AND] = { "and", "&&" },    [BINARY_OR] = { "or", "||" },
+    [BINARY_AND] = { "and", "&&" },
+    [BINARY_OR] = { "or", "||" },
 
-    [BINARY_SHL] = { "shl", "<<" },    [BINARY_SHR] = { "shr", ">>" }, [BINARY_BITAND] = { "bitand", "&" },
-    [BINARY_BITOR] = { "bitor", "|" }, [BINARY_XOR] = { "xor", "^" },
+    [BINARY_SHL] = { "shl", "<<" },
+    [BINARY_SHR] = { "shr", ">>" },
+    [BINARY_BITAND] = { "bitand", "&" },
+    [BINARY_BITOR] = { "bitor", "|" },
+    [BINARY_XOR] = { "xor", "^" },
 };
 
 static operand_name_t compare_operands[] = {
-    [COMPARE_EQ] = { "eq", "==" }, [COMPARE_NEQ] = { "ne", "!=" },
+    [COMPARE_EQ] = { "eq", "==" },
+    [COMPARE_NEQ] = { "ne", "!=" },
 
-    [COMPARE_LT] = { "lt", "<" },  [COMPARE_LTE] = { "le", "<=" },
-    [COMPARE_GT] = { "gt", ">" },  [COMPARE_GTE] = { "ge", ">=" },
+    [COMPARE_LT] = { "lt", "<" },
+    [COMPARE_LTE] = { "le", "<=" },
+    [COMPARE_GT] = { "gt", ">" },
+    [COMPARE_GTE] = { "ge", ">=" },
 };
 
 static operand_name_t unary_operands[] = {

@@ -7,7 +7,6 @@
  *
  * header:
  *  - basic header
- *  - specific header
  *  - count array for each type
  *  - offset array for each type
  *  - string table

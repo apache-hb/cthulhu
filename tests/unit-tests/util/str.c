@@ -106,17 +106,14 @@ TEST(test_string_normalize, {
 })
 
 TEST(test_string_normalizen, {
-    char *longer = str_normalizen("hello world", 900);
-    SHOULD_PASS("normalized equals", str_equal(longer, "hello world"));
-
     char *shorter = str_normalizen("hello world", 5);
     SHOULD_PASS("normalized equals", str_equal(shorter, "hello"));
 
     char *normalized = str_normalizen("hello world", 12);
-    SHOULD_PASS("normalized equals", str_equal(normalized, "hello world"));
+    SHOULD_PASS("normalized equals", str_equal(normalized, "hello world\\0"));
 
     char *newline = str_normalizen("hello\nworld", 12);
-    SHOULD_PASS("newline equals", str_equal(newline, "hello\\x0aworld"));
+    SHOULD_PASS("newline equals", str_equal(newline, "hello\\x0aworld\\0"));
 
     for (size_t i = 0; i < ESCAPE_SIZE; i++) {
         pair_t *escape = &kEscapes[i];

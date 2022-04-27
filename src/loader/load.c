@@ -1,5 +1,7 @@
 #include "common.h"
+#include "cthulhu/loader/loader.h"
 #include "cthulhu/util/io.h"
+#include "cthulhu/util/str.h"
 
 #include <string.h>
 
@@ -18,10 +20,7 @@ static bool read_bytes(data_t *data, void *dst, size_t *cursor, size_t size) {
 static char *read_string(data_t *in, size_t *cursor) {
     offset_t offset;
     bool ok = read_bytes(in, &offset, cursor, sizeof(offset_t));
-    if (!ok) {
-        return NULL;
-    }
-    if (offset == UINT64_MAX) {
+    if (!ok || offset == NULL_OFFSET) {
         return NULL;
     }
 
@@ -58,6 +57,7 @@ static value_t read_value(data_t *in, field_t field, size_t *offset) {
     }
 
     if (!ok) {
+        report(in->header.reports, ERROR, NULL, "failed to read value");
         return reference_value(NULL_INDEX);
     }
 
@@ -184,7 +184,7 @@ bool read_entry(data_t *in, index_t index, value_t *values) {
     }
 
     size_t scale = in->sizes[type] * index.offset;
-    size_t offset = in->offsets[type] + scale;
+    size_t offset = in->offsets[type] + scale + sizeof(basic_header_t);
 
     if (offset > in->length) {
         report(in->header.reports, ERROR, NULL, "invalid offset %zu", offset);

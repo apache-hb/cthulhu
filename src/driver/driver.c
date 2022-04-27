@@ -49,8 +49,10 @@ static void print_help(const char **argv) {
 #include "flags.inc"
 }
 
-static void rename_module(reports_t *reports, hlir_t *hlir, const char *path) {
-    if (hlir->name != NULL) { return; }
+static void rename_module(hlir_t *hlir, const char *path) {
+    if (hlir->name != NULL) {
+        return;
+    }
     hlir->name = ctu_filename(path);
 }
 
@@ -66,8 +68,10 @@ typedef struct {
     hlir_t *hlir;
 } context_t;
 
-typedef enum { OUTPUT_C89, OUTPUT_WASM } target_t;
+typedef enum { OUTPUT_C89,
+               OUTPUT_WASM } target_t;
 
+#if 0
 static target_t parse_target(reports_t *reports, const char *target) {
     if (str_equal(target, "c89")) {
         return OUTPUT_C89;
@@ -81,6 +85,7 @@ static target_t parse_target(reports_t *reports, const char *target) {
     report_note(id, "defaulting to `c89`");
     return OUTPUT_C89;
 }
+#endif
 
 int common_main(int argc, const char **argv, driver_t driver) {
     reports_t *reports = begin_reports();
@@ -94,7 +99,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     vector_t *files = commands.files;
     size_t limit = commands.warningLimit;
-    const char *target = commands.outputTarget;
+    // const char *target = commands.outputTarget;
     const char *outFile = commands.outputFile;
 
     if (outFile == NULL) {
@@ -131,6 +136,22 @@ int common_main(int argc, const char **argv, driver_t driver) {
         vector_push(&sources, (char *)path);
     }
 
+    size_t totalModules = vector_len(modules);
+    runtime_t runtime = {
+        .reports = reports,
+        .modules = optimal_map(totalModules),
+    };
+
+    for (size_t i = 0; i < totalModules; i++) {
+        const char *path = vector_get(modules, i);
+        vector_t *moduleItems = load_modules(reports, path);
+        size_t numItems = vector_len(moduleItems);
+        for (size_t j = 0; j < numItems; j++) {
+            hlir_t *hlir = vector_get(moduleItems, j);
+            map_set(runtime.modules, hlir->name, hlir);
+        }
+    }
+
     for (size_t i = 0; i < vector_len(plugins); i++) {
         plugin_handle_t *handle = vector_get(plugins, i);
         if (!plugin_load(reports, handle)) {
@@ -141,12 +162,6 @@ int common_main(int argc, const char **argv, driver_t driver) {
             plugin_t plugin = { .reports = reports };
             handle->init(&plugin);
         }
-    }
-
-    target_t result = parse_target(reports, target);
-    status = end_reports(reports, limit, "target parsing");
-    if (status != 0) {
-        return status;
     }
 
     size_t numSources = vector_len(sources);
@@ -185,7 +200,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
 
     for (size_t i = 0; i < numSources; i++) {
         context_t *ctx = vector_get(contexts, i);
-        ctx->node = driver.parse(reports, &ctx->scanner);
+        ctx->node = driver.parse(&runtime, &ctx->scanner);
     }
 
     status = end_reports(reports, limit, "parsing");
@@ -196,7 +211,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
     for (size_t i = 0; i < numSources; i++) {
         context_t *ctx = vector_get(contexts, i);
         CTASSERT(ctx->node != NULL, "node should not be NULL");
-        ctx->hlir = driver.sema(reports, ctx->node);
+        ctx->hlir = driver.sema(&runtime, ctx->node);
     }
 
     status = end_reports(reports, limit, "semantic analysis");
@@ -207,7 +222,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
     for (size_t i = 0; i < numSources; i++) {
         context_t *ctx = vector_get(contexts, i);
         const char *path = vector_get(sources, i);
-        rename_module(reports, ctx->hlir, path);
+        rename_module(ctx->hlir, path);
         check_module(reports, ctx->hlir);
     }
 
@@ -230,6 +245,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
         return status;
     }
 
+#if 0
     switch (result) {
     case OUTPUT_C89:
         c89_emit_tree(reports, hlir);
@@ -244,13 +260,11 @@ int common_main(int argc, const char **argv, driver_t driver) {
         status = end_reports(reports, limit, "emitting");
         break;
     }
+#endif
 
     return status;
 }
 
-hlir_t *find_module(sema_t *sema, const char *path) {
-    vector_t *modules = load_modules(sema->reports, format("%s.hlir", path));
-    size_t numModules = vector_len(modules);
-
-    return NULL;
+hlir_t *find_module(runtime_t *runtime, const char *path) {
+    return map_get(runtime->modules, path);
 }

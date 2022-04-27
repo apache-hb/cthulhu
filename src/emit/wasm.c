@@ -188,16 +188,17 @@ static void emit_loop_node(wasm_t *wasm, const hlir_t *node) {
 }
 
 static const char *kCompareNames[COMPARE_TOTAL] = {
-    [COMPARE_EQ] = "eq",    [COMPARE_NEQ] = "ne",  [COMPARE_LT] = "lt_s",
-    [COMPARE_LTE] = "le_s", [COMPARE_GT] = "gt_s", [COMPARE_GTE] = "ge_s"
+    [COMPARE_EQ] = "eq", [COMPARE_NEQ] = "ne", [COMPARE_LT] = "lt_s", [COMPARE_LTE] = "le_s", [COMPARE_GT] = "gt_s", [COMPARE_GTE] = "ge_s"
 };
 
-static const char *kBinaryNames[BINARY_TOTAL] = { [BINARY_ADD] = "add",    [BINARY_SUB] = "sub",   [BINARY_MUL] = "mul",
-                                                  [BINARY_DIV] = "div_s",  [BINARY_REM] = "rem_s",
+static const char *kBinaryNames[BINARY_TOTAL] = { [BINARY_ADD] = "add", [BINARY_SUB] = "sub", [BINARY_MUL] = "mul", [BINARY_DIV] = "div_s", [BINARY_REM] = "rem_s",
 
-                                                  [BINARY_BITAND] = "and", [BINARY_BITOR] = "or",  [BINARY_XOR] = "xor",
+                                                  [BINARY_BITAND] = "and",
+                                                  [BINARY_BITOR] = "or",
+                                                  [BINARY_XOR] = "xor",
 
-                                                  [BINARY_SHL] = "shl",    [BINARY_SHR] = "shr_s" };
+                                                  [BINARY_SHL] = "shl",
+                                                  [BINARY_SHR] = "shr_s" };
 
 static void emit_compare_node(wasm_t *wasm, const hlir_t *node) {
     emit_node(wasm, node->lhs);

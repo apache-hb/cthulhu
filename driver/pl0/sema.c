@@ -1,6 +1,7 @@
 #include "sema.h"
 
 #include "cthulhu/driver/driver.h"
+#include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/sema.h"
@@ -15,7 +16,6 @@ static hlir_t *kVoidType;
 static hlir_t *kPrint;
 static hlir_t *kFmtString;
 
-static const hlir_attributes_t *kImported;
 static const hlir_attributes_t *kExported;
 
 static const hlir_attributes_t *kConst;
@@ -24,11 +24,10 @@ static const hlir_attributes_t *kMutable;
 void pl0_init(void) {
     const node_t *node = node_builtin();
 
-    kImported = hlir_linkage(LINK_IMPORTED);
     kExported = hlir_linkage(LINK_EXPORTED);
 
-    kConst = hlir_attributes(LINK_EXPORTED, TAG_CONST);
-    kMutable = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS);
+    kConst = hlir_attributes(LINK_EXPORTED, TAG_CONST, NULL);
+    kMutable = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS, NULL);
 
     kIntegerType = hlir_digit(node, "integer", DIGIT_INT, SIGN_DEFAULT);
     kBoolType = hlir_bool(node, "boolean");
@@ -37,9 +36,10 @@ void pl0_init(void) {
 
     kFmtString = hlir_string_literal(node, kStringType, "%d\n");
 
+    const hlir_attributes_t *printAttributes = hlir_attributes(LINK_IMPORTED, DEFAULT_TAGS, "printf");
     signature_t signature = { .params = vector_init(kStringType), .result = kIntegerType, .variadic = true };
     kPrint = hlir_function(node, "printf", signature, vector_of(0), NULL);
-    hlir_set_attributes(kPrint, kImported);
+    hlir_set_attributes(kPrint, printAttributes);
 }
 
 typedef enum {
@@ -324,7 +324,7 @@ static void insert_module(sema_t *sema, vector_t **globals, vector_t **consts, v
     }
 }
 
-hlir_t *pl0_sema(reports_t *reports, void *node) {
+hlir_t *pl0_sema(runtime_t *runtime, void *node) {
     pl0_t *root = node;
 
     size_t nconsts = vector_len(root->consts);
@@ -338,7 +338,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     size_t sizes[TAG_MAX] = { [TAG_CONSTS] = nconsts, [TAG_VALUES] = nglobals, [TAG_PROCS] = nprocs };
 
-    sema_t *sema = sema_new(NULL, reports, TAG_MAX, sizes);
+    sema_t *sema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
 
     // forward declare everything
     for (size_t i = 0; i < nconsts; i++) {
@@ -374,7 +374,7 @@ hlir_t *pl0_sema(reports_t *reports, void *node) {
 
     for (size_t i = 0; i < nimports; i++) {
         pl0_t *name = vector_get(root->imports, i);
-        hlir_t *lib = find_module(sema, name->ident);
+        hlir_t *lib = find_module(runtime, name->ident);
 
         if (lib == NULL) {
             report(sema->reports, ERROR, NULL, "cannot import `%s`, failed to find module", name->ident);

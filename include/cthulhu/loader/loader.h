@@ -11,7 +11,11 @@ typedef uint32_t submagic_t;
 typedef uint32_t semver_t;
 typedef uint8_t bool_t;
 
-typedef enum { FIELD_STRING, FIELD_INT, FIELD_BOOL, FIELD_REFERENCE, FIELD_ARRAY } field_t;
+typedef enum { FIELD_STRING,
+               FIELD_INT,
+               FIELD_BOOL,
+               FIELD_REFERENCE,
+               FIELD_ARRAY, } field_t;
 
 typedef struct {
     type_t type;
@@ -23,7 +27,10 @@ typedef struct {
     offset_t length;
 } array_t;
 
-#define NULL_INDEX ((index_t) { UINT32_MAX, UINT64_MAX })
+#define NULL_TYPE ((type_t)UINT32_MAX - 128)
+#define NULL_OFFSET ((offset_t)UINT32_MAX - 128)
+
+#define NULL_INDEX ((index_t) { NULL_TYPE, NULL_OFFSET })
 #define NULL_ARRAY ((array_t) { UINT64_MAX, UINT64_MAX })
 
 typedef union {
@@ -59,8 +66,6 @@ typedef struct {
 } record_t;
 
 typedef struct {
-    const layout_t *header;
-
     size_t types;
     const layout_t *layouts;
 } format_t;
@@ -68,8 +73,8 @@ typedef struct {
 #define FIELD(name, type) type
 #define LAYOUT(name, array) \
     { .length = sizeof(array) / sizeof(field_t), .fields = (array) }
-#define FORMAT(head, array) \
-    { .header = (head), .types = sizeof(array) / sizeof(layout_t), .layouts = (array) }
+#define FORMAT(array) \
+    { .types = sizeof(array) / sizeof(layout_t), .layouts = (array) }
 
 #define FIELDLEN(name) (sizeof(name) / sizeof(field_t))
 

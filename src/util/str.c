@@ -127,6 +127,7 @@ static bool ctu_isprint(char c) {
 
 static size_t normlen(char c) {
     switch (c) {
+    case '\0':
     case '\\':
     case '\'':
     case '\"':
@@ -152,6 +153,12 @@ static size_t normstr(char *out, char c) {
     if (c == '\"') {
         out[0] = '\\';
         out[1] = '\"';
+        return 2;
+    }
+
+    if (c == '\0') {
+        out[0] = '\\';
+        out[1] = '0';
         return 2;
     }
 
@@ -183,7 +190,7 @@ char *str_normalize(const char *str) {
 char *str_normalizen(const char *str, size_t len) {
     size_t outlen = 1;
     size_t actual = 0;
-    for (; actual < len && str[actual]; actual++) {
+    for (; actual < len; actual++) {
         outlen += normlen(str[actual]);
     }
 
