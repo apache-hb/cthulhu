@@ -9,7 +9,8 @@ hlir_t *hlir_error(const node_t *node, const char *error) {
     return self;
 }
 
-hlir_t *hlir_digit_literal(const node_t *node, const hlir_t *type, mpz_t value) {
+hlir_t *
+hlir_digit_literal(const node_t *node, const hlir_t *type, mpz_t value) {
     hlir_t *self = hlir_new(node, type, HLIR_DIGIT_LITERAL);
     mpz_init_set(self->digit, value);
     return self;
@@ -27,7 +28,8 @@ hlir_t *hlir_bool_literal(const node_t *node, const hlir_t *type, bool value) {
     return self;
 }
 
-hlir_t *hlir_string_literal(const node_t *node, const hlir_t *type, const char *value) {
+hlir_t *
+hlir_string_literal(const node_t *node, const hlir_t *type, const char *value) {
     hlir_t *self = hlir_new(node, type, HLIR_STRING_LITERAL);
     self->string = value;
     return self;
@@ -39,14 +41,17 @@ hlir_t *hlir_name(const node_t *node, hlir_t *read) {
     return self;
 }
 
-hlir_t *hlir_unary(const node_t *node, const hlir_t *type, hlir_t *operand, unary_t unary) {
+hlir_t *hlir_unary(
+    const node_t *node, const hlir_t *type, hlir_t *operand, unary_t unary) {
     hlir_t *self = hlir_new(node, type, HLIR_UNARY);
     self->unary = unary;
     self->operand = operand;
     return self;
 }
 
-hlir_t *hlir_binary(const node_t *node, const hlir_t *type, binary_t binary, hlir_t *lhs, hlir_t *rhs) {
+hlir_t *hlir_binary(
+    const node_t *node, const hlir_t *type, binary_t binary, hlir_t *lhs,
+    hlir_t *rhs) {
     hlir_t *self = hlir_new(node, type, HLIR_BINARY);
     self->lhs = lhs;
     self->rhs = rhs;
@@ -54,7 +59,9 @@ hlir_t *hlir_binary(const node_t *node, const hlir_t *type, binary_t binary, hli
     return self;
 }
 
-hlir_t *hlir_compare(const node_t *node, const hlir_t *type, compare_t compare, hlir_t *lhs, hlir_t *rhs) {
+hlir_t *hlir_compare(
+    const node_t *node, const hlir_t *type, compare_t compare, hlir_t *lhs,
+    hlir_t *rhs) {
     hlir_t *self = hlir_new(node, type, HLIR_COMPARE);
     self->lhs = lhs;
     self->rhs = rhs;
@@ -75,7 +82,8 @@ hlir_t *hlir_stmts(const node_t *node, vector_t *stmts) {
     return self;
 }
 
-hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other) {
+hlir_t *
+hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other) {
     hlir_t *self = hlir_new(node, kInvalidNode, HLIR_BRANCH);
     self->cond = cond;
     self->then = then;
@@ -83,7 +91,8 @@ hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *othe
     return self;
 }
 
-hlir_t *hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other) {
+hlir_t *
+hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other) {
     hlir_t *self = hlir_new(node, kInvalidNode, HLIR_LOOP);
     self->cond = cond;
     self->then = body;

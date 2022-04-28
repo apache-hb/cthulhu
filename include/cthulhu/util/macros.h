@@ -6,7 +6,9 @@
 
 #if __has_include(<sal.h>)
 #    include <sal.h>
-#    define DISABLE_SAL __pragma(warning(push, 1)) __pragma(warning(disable : 6011 6240 6262 6387 28199 28278))
+#    define DISABLE_SAL            \
+        __pragma(warning(push, 1)) \
+            __pragma(warning(disable : 6011 6240 6262 6387 28199 28278))
 #else
 #    define DISABLE_SAL
 #endif
@@ -56,7 +58,8 @@
 #    define PACKED(align)
 #    define NORETURN __declspec(noreturn) void
 #else
-#    define BEGIN_PACKED(align) _Pragma("warning \"current compiler doesnt support packing\"")
+#    define BEGIN_PACKED(align) \
+        _Pragma("warning \"current compiler doesnt support packing\"")
 #    define END_PACKED
 #    define PACKED(align)
 #    define NORETURN void
@@ -114,18 +117,21 @@
 NORETURN ctpanic(const char *msg, ...);
 
 #if !defined(NDEBUG) && !defined(_NDEBUG)
-#    define CTASSERT(expr, msg)                                                                            \
-        do {                                                                                               \
-            if (!(expr)) {                                                                                 \
-                ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" __FILE__ ":" STR(__LINE__) "]: " msg "\n"); \
-            }                                                                                              \
+#    define CTASSERT(expr, msg)                                         \
+        do {                                                            \
+            if (!(expr)) {                                              \
+                ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" __FILE__ \
+                                    ":" STR(__LINE__) "]: " msg "\n");  \
+            }                                                           \
         } while (0)
-#    define CTASSERTF(expr, msg, ...)                                                                     \
-        do {                                                                                              \
-            if (!(expr)) {                                                                                \
-                ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" __FILE__ ":" STR(__LINE__) "]: " msg "\n", \
-                        __VA_ARGS__);                                                                     \
-            }                                                                                             \
+#    define CTASSERTF(expr, msg, ...)                               \
+        do {                                                        \
+            if (!(expr)) {                                          \
+                ctpanic(                                            \
+                    COLOUR_CYAN "assert" COLOUR_RESET " [" __FILE__ \
+                                ":" STR(__LINE__) "]: " msg "\n",   \
+                    __VA_ARGS__);                                   \
+            }                                                       \
         } while (0)
 #    define union struct
 #else

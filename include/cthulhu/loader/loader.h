@@ -11,11 +11,12 @@ typedef uint32_t submagic_t;
 typedef uint32_t semver_t;
 typedef uint8_t bool_t;
 
-typedef enum { FIELD_STRING,
-               FIELD_INT,
-               FIELD_BOOL,
-               FIELD_REFERENCE,
-               FIELD_ARRAY,
+typedef enum {
+    FIELD_STRING,
+    FIELD_INT,
+    FIELD_BOOL,
+    FIELD_REFERENCE,
+    FIELD_ARRAY,
 } field_t;
 
 typedef struct {
@@ -79,7 +80,8 @@ typedef struct {
 
 #define FIELDLEN(name) (sizeof(name) / sizeof(field_t))
 
-#define NEW_VERSION(major, minor, patch) (((major) << 24) | ((minor) << 16) | (patch))
+#define NEW_VERSION(major, minor, patch) \
+    (((major) << 24) | ((minor) << 16) | (patch))
 
 #define VERSION_MAJOR(version) (((version) >> 24) & 0xFF)
 #define VERSION_MINOR(version) (((version) >> 16) & 0xFF)

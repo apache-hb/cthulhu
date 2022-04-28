@@ -193,7 +193,8 @@ file_t *file_new(const char *path, contents_t format, access_t access);
  *
  * @return a file handle
  */
-file_t *memory_new(const char *name, size_t size, contents_t format, access_t access);
+file_t *
+memory_new(const char *name, size_t size, contents_t format, access_t access);
 
 /**
  * @brief read from a file

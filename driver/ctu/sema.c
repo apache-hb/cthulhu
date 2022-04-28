@@ -26,8 +26,11 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast);
 static hlir_t *sema_typename(sema_t *sema, ast_t *ast) {
     size_t len = vector_len(ast->path);
     if (len > 1) {
-        ctu_assert(sema->reports, "typename path can only be 1 element long currently");
-        return hlir_error(ast->node, "typename path can only be 1 element long currently");
+        ctu_assert(
+            sema->reports,
+            "typename path can only be 1 element long currently");
+        return hlir_error(
+            ast->node, "typename path can only be 1 element long currently");
     }
 
     const char *name = vector_tail(ast->path);
@@ -81,7 +84,8 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast) {
     }
 }
 
-static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir_t *decl) {
+static void
+check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir_t *decl) {
     size_t len = vector_len(fields);
     set_t *names = set_new(len);
 
@@ -91,7 +95,12 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
 
         if (!is_discard_ident(name)) {
             if (set_contains(names, name)) {
-                report(sema->reports, ERROR, field->node, "field '%s' already defined", name);
+                report(
+                    sema->reports,
+                    ERROR,
+                    field->node,
+                    "field '%s' already defined",
+                    name);
                 continue;
             }
 
@@ -129,7 +138,8 @@ static void sema_alias(sema_t *sema, hlir_t *decl, ast_t *ast) {
 
 static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast) {
     report(sema->reports, INTERNAL, ast->node, "variant not implemented");
-    hlir_t *tag = hlir_digit(ast->node, format("%s_tag", ast->name), DIGIT_INT, SIGN_UNSIGNED);
+    hlir_t *tag = hlir_digit(
+        ast->node, format("%s_tag", ast->name), DIGIT_INT, SIGN_UNSIGNED);
     hlir_t *field = hlir_field(ast->node, tag, "tag");
     hlir_add_field(decl, field);
 
@@ -215,23 +225,56 @@ static void add_basic_types(sema_t *sema) {
     add_decl(sema, TAG_TYPES, "bool", hlir_bool(node, "bool"));
     add_decl(sema, TAG_TYPES, "str", hlir_string(node, "str"));
 
-    add_decl(sema, TAG_TYPES, "char", hlir_digit(node, "char", DIGIT_CHAR, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "uchar", hlir_digit(node, "uchar", DIGIT_CHAR, SIGN_UNSIGNED));
+    add_decl(
+        sema,
+        TAG_TYPES,
+        "char",
+        hlir_digit(node, "char", DIGIT_CHAR, SIGN_SIGNED));
+    add_decl(
+        sema,
+        TAG_TYPES,
+        "uchar",
+        hlir_digit(node, "uchar", DIGIT_CHAR, SIGN_UNSIGNED));
 
-    add_decl(sema, TAG_TYPES, "short", hlir_digit(node, "short", DIGIT_SHORT, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "ushort", hlir_digit(node, "ushort", DIGIT_SHORT, SIGN_UNSIGNED));
+    add_decl(
+        sema,
+        TAG_TYPES,
+        "short",
+        hlir_digit(node, "short", DIGIT_SHORT, SIGN_SIGNED));
+    add_decl(
+        sema,
+        TAG_TYPES,
+        "ushort",
+        hlir_digit(node, "ushort", DIGIT_SHORT, SIGN_UNSIGNED));
 
-    add_decl(sema, TAG_TYPES, "int", hlir_digit(node, "int", DIGIT_INT, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "uint", hlir_digit(node, "uint", DIGIT_INT, SIGN_UNSIGNED));
+    add_decl(
+        sema,
+        TAG_TYPES,
+        "int",
+        hlir_digit(node, "int", DIGIT_INT, SIGN_SIGNED));
+    add_decl(
+        sema,
+        TAG_TYPES,
+        "uint",
+        hlir_digit(node, "uint", DIGIT_INT, SIGN_UNSIGNED));
 
-    add_decl(sema, TAG_TYPES, "long", hlir_digit(node, "long", DIGIT_LONG, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "ulong", hlir_digit(node, "ulong", DIGIT_LONG, SIGN_UNSIGNED));
+    add_decl(
+        sema,
+        TAG_TYPES,
+        "long",
+        hlir_digit(node, "long", DIGIT_LONG, SIGN_SIGNED));
+    add_decl(
+        sema,
+        TAG_TYPES,
+        "ulong",
+        hlir_digit(node, "ulong", DIGIT_LONG, SIGN_UNSIGNED));
 
     // enable the below later
 
     // special types for interfacing with C
     // sysv says that enums are signed ints
-    // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", DIGIT_INT, SIGN_SIGNED));
+    // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", DIGIT_INT,
+    // SIGN_SIGNED));
 }
 
 hlir_t *ctu_sema(runtime_t *runtime, void *ast) {
@@ -239,7 +282,10 @@ hlir_t *ctu_sema(runtime_t *runtime, void *ast) {
 
     size_t ndecls = vector_len(root->decls);
 
-    size_t sizes[] = { [TAG_VARS] = ndecls, [TAG_PROCS] = ndecls, [TAG_TYPES] = ndecls, [TAG_MODULES] = ndecls };
+    size_t sizes[] = { [TAG_VARS] = ndecls,
+                       [TAG_PROCS] = ndecls,
+                       [TAG_TYPES] = ndecls,
+                       [TAG_MODULES] = ndecls };
 
     sema_t *sema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
 

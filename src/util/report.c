@@ -46,14 +46,25 @@ static size_t total_lines(where_t where) {
     return where.lastLine - where.firstLine;
 }
 
-static char *format_location(const char *base, const scan_t *scan, where_t where) {
+static char *
+format_location(const char *base, const scan_t *scan, where_t where) {
     if (is_multiline_report(where)) {
-        return format("%s source [%s:%ld:%ld-%ld:%ld]", scan->language, scan->path + strlen(base), where.firstLine + 1,
-                      where.firstColumn, where.lastLine + 1, where.lastColumn);
+        return format(
+            "%s source [%s:%ld:%ld-%ld:%ld]",
+            scan->language,
+            scan->path + strlen(base),
+            where.firstLine + 1,
+            where.firstColumn,
+            where.lastLine + 1,
+            where.lastColumn);
     }
 
-    return format("%s source [%s:%ld:%ld]", scan->language, scan->path + strlen(base), where.firstLine + 1,
-                  where.firstColumn);
+    return format(
+        "%s source [%s:%ld:%ld]",
+        scan->language,
+        scan->path + strlen(base),
+        where.firstLine + 1,
+        where.firstColumn);
 }
 
 static void report_scanner(const char *base, const node_t *node) {
@@ -124,7 +135,8 @@ static char *extract_line(const scan_t *scan, line_t line) {
     return str_normalizen(str, (size_t)(out - str));
 }
 
-static char *build_underline(const char *source, where_t where, const char *note) {
+static char *
+build_underline(const char *source, where_t where, const char *note) {
     column_t front = where.firstColumn;
     column_t back = where.lastColumn;
 
@@ -198,7 +210,8 @@ static char *right_align(line_t line, int width) {
  *  line| source text
  *      | ^~~~~~ underline message
  */
-static char *format_single(const scan_t *scan, where_t where, const char *underline) {
+static char *
+format_single(const scan_t *scan, where_t where, const char *underline) {
     line_t firstLine = where.firstLine + 1;
     int align = base10_length(firstLine);
 
@@ -207,10 +220,15 @@ static char *format_single(const scan_t *scan, where_t where, const char *underl
 
     char *firstLineOfSource = extract_line(scan, where.firstLine);
 
-    return format(" %s|\n"
-                  " %s| %s\n"
-                  " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
-                  pad, digit, firstLineOfSource, pad, build_underline(firstLineOfSource, where, underline));
+    return format(
+        " %s|\n"
+        " %s| %s\n"
+        " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+        pad,
+        digit,
+        firstLineOfSource,
+        pad,
+        build_underline(firstLineOfSource, where, underline));
 }
 
 /**
@@ -222,7 +240,8 @@ static char *format_single(const scan_t *scan, where_t where, const char *underl
  *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
  *       |
  */
-static char *format_medium2(const scan_t *scan, where_t where, const char *underline) {
+static char *
+format_medium2(const scan_t *scan, where_t where, const char *underline) {
     line_t firstLine = where.firstLine + 1;
     int align = base10_length(firstLine);
 
@@ -232,11 +251,17 @@ static char *format_medium2(const scan_t *scan, where_t where, const char *under
     char *firstLineOfSource = extract_line(scan, where.firstLine);
     char *lastLineOfSource = extract_line(scan, where.lastLine);
 
-    return format(" %s|\n"
-                  " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
-                  " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
-                  pad, digit, firstLineOfSource, pad, lastLineOfSource, pad,
-                  build_underline(lastLineOfSource, where, underline));
+    return format(
+        " %s|\n"
+        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE
+        " %s\n" COLOUR_RESET " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+        pad,
+        digit,
+        firstLineOfSource,
+        pad,
+        lastLineOfSource,
+        pad,
+        build_underline(lastLineOfSource, where, underline));
 }
 
 /**
@@ -249,7 +274,8 @@ static char *format_medium2(const scan_t *scan, where_t where, const char *under
  *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
  *       |
  */
-static char *format_medium3(const scan_t *scan, where_t where, const char *underline) {
+static char *
+format_medium3(const scan_t *scan, where_t where, const char *underline) {
     line_t firstLine = where.firstLine + 1;
     int align = base10_length(firstLine);
 
@@ -260,11 +286,20 @@ static char *format_medium3(const scan_t *scan, where_t where, const char *under
     char *secondLineOfSource = extract_line(scan, where.firstLine + 1);
     char *lastLineOfSource = extract_line(scan, where.lastLine);
 
-    return format(" %s|\n"
-                  " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
-                  " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
-                  pad, digit, firstLineOfSource, pad, secondLineOfSource, pad, lastLineOfSource, pad,
-                  build_underline(lastLineOfSource, where, underline));
+    return format(
+        " %s|\n"
+        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE
+        " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
+        " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+        pad,
+        digit,
+        firstLineOfSource,
+        pad,
+        secondLineOfSource,
+        pad,
+        lastLineOfSource,
+        pad,
+        build_underline(lastLineOfSource, where, underline));
 }
 
 /**
@@ -277,7 +312,8 @@ static char *format_medium3(const scan_t *scan, where_t where, const char *under
  *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
  *       |
  */
-static char *format_large(const scan_t *scan, where_t where, const char *underline) {
+static char *
+format_large(const scan_t *scan, where_t where, const char *underline) {
     line_t firstLine = where.firstLine + 1;
     line_t lastLine = where.lastLine + 1;
     int align = MAX(base10_length(firstLine), base10_length(lastLine)) + 1;
@@ -289,14 +325,23 @@ static char *format_large(const scan_t *scan, where_t where, const char *underli
     char *firstSourceLine = extract_line(scan, where.firstLine);
     char *lastSourceLine = extract_line(scan, where.lastLine);
 
-    return format(" %s|\n"
-                  " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE " ...\n" COLOUR_RESET
-                  " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
-                  pad, alignedFirstDigit, firstSourceLine, pad, alignedLastDigit, lastSourceLine, pad,
-                  build_underline(lastSourceLine, where, underline));
+    return format(
+        " %s|\n"
+        " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET " %s>" COLOUR_PURPLE
+        " ...\n" COLOUR_RESET " %s>" COLOUR_PURPLE " %s\n" COLOUR_RESET
+        " %s|" COLOUR_PURPLE " %s\n" COLOUR_RESET,
+        pad,
+        alignedFirstDigit,
+        firstSourceLine,
+        pad,
+        alignedLastDigit,
+        lastSourceLine,
+        pad,
+        build_underline(lastSourceLine, where, underline));
 }
 
-static char *format_source(const scan_t *scan, where_t where, const char *underline) {
+static char *
+format_source(const scan_t *scan, where_t where, const char *underline) {
     switch (total_lines(where)) {
     case 0:
         return format_single(scan, where, underline);
@@ -443,16 +488,27 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
     }
 
     if (internal > 0) {
-        fprintf(stderr, "%zu internal error(s) encountered during %s stage\n", internal, name);
+        fprintf(
+            stderr,
+            "%zu internal error(s) encountered during %s stage\n",
+            internal,
+            name);
         result = EXIT_INTERAL;
     } else if (fatal > 0) {
-        fprintf(stderr, "%zu fatal error(s) encountered during %s stage\n", fatal, name);
+        fprintf(
+            stderr,
+            "%zu fatal error(s) encountered during %s stage\n",
+            fatal,
+            name);
         result = EXIT_ERROR;
     }
 
     if (warningsSuppressed > 0 || fatalMessagesSuppressed > 0) {
-        fprintf(stderr, "%zu extra warning(s) and %zu extra error(s) suppressed\n", warningsSuppressed,
-                fatalMessagesSuppressed);
+        fprintf(
+            stderr,
+            "%zu extra warning(s) and %zu extra error(s) suppressed\n",
+            warningsSuppressed,
+            fatalMessagesSuppressed);
     }
 
     vector_reset(reports->messages);
@@ -460,7 +516,9 @@ int end_reports(reports_t *reports, size_t total, const char *name) {
     return result;
 }
 
-static message_t *report_push(reports_t *reports, level_t level, const node_t *node, const char *fmt, va_list args) {
+static message_t *report_push(
+    reports_t *reports, level_t level, const node_t *node, const char *fmt,
+    va_list args) {
     char *str = formatv(fmt, args);
     message_t *message = ctu_malloc(sizeof(message_t));
 
@@ -486,7 +544,9 @@ message_t *ctu_assert(reports_t *reports, const char *fmt, ...) {
     return message;
 }
 
-message_t *report(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...) {
+message_t *report(
+    reports_t *reports, level_t level, const node_t *node, const char *fmt,
+    ...) {
     va_list args;
     va_start(args, fmt);
 
@@ -497,7 +557,8 @@ message_t *report(reports_t *reports, level_t level, const node_t *node, const c
     return msg;
 }
 
-void report_append(message_t *message, const node_t *node, const char *fmt, ...) {
+void report_append(
+    message_t *message, const node_t *node, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     char *str = formatv(fmt, args);

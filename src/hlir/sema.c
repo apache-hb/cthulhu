@@ -6,7 +6,8 @@
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/util.h"
 
-sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes) {
+sema_t *
+sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes) {
     sema_t *sema = ctu_malloc(sizeof(sema_t));
 
     sema->parent = parent;
@@ -66,7 +67,8 @@ void *sema_get(sema_t *sema, size_t tag, const char *name) {
     return sema_inner_get(sema, tag, name).result;
 }
 
-void *sema_get_with_depth(sema_t *sema, size_t tag, const char *name, size_t *depth) {
+void *
+sema_get_with_depth(sema_t *sema, size_t tag, const char *name, size_t *depth) {
     sema_query_t result = sema_inner_get(sema, tag, name);
     *depth = result.depth;
     return result.result;
@@ -76,7 +78,8 @@ map_t *sema_tag(sema_t *sema, size_t tag) {
     return vector_get(sema->decls, tag);
 }
 
-static void report_recursion(reports_t *reports, vector_t *stack, const char *msg) {
+static void
+report_recursion(reports_t *reports, vector_t *stack, const char *msg) {
     hlir_t *top = vector_tail(stack);
     message_t *id = report(reports, ERROR, top->node, "%s", msg);
     for (size_t i = 0; i < vector_len(stack); i++) {
@@ -85,7 +88,8 @@ static void report_recursion(reports_t *reports, vector_t *stack, const char *ms
     }
 }
 
-static bool find_recursion(reports_t *reports, vector_t **vec, const hlir_t *hlir, const char *msg) {
+static bool find_recursion(
+    reports_t *reports, vector_t **vec, const hlir_t *hlir, const char *msg) {
     vector_t *stack = *vec;
     for (size_t i = 0; i < vector_len(stack); i++) {
         hlir_t *item = vector_get(stack, i);
@@ -100,11 +104,13 @@ static bool find_recursion(reports_t *reports, vector_t **vec, const hlir_t *hli
     return false;
 }
 
-static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *hlir) {
+static void
+check_recursion(reports_t *reports, vector_t **stack, const hlir_t *hlir) {
     if (hlir == NULL) {
         return;
     }
-    if (find_recursion(reports, stack, hlir, "recursive variable computation")) {
+    if (find_recursion(
+            reports, stack, hlir, "recursive variable computation")) {
         return;
     }
 
@@ -130,7 +136,10 @@ static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *
         break;
 
     default:
-        ctu_assert(reports, "check-recursion unexpected hlir type %s", hlir_kind_to_string(get_hlir_kind(hlir)));
+        ctu_assert(
+            reports,
+            "check-recursion unexpected hlir type %s",
+            hlir_kind_to_string(get_hlir_kind(hlir)));
         break;
     }
 
@@ -151,14 +160,17 @@ static entry_t *new_entry(const hlir_t *hlir, bool nesting) {
 
 static void report_type_recursion(reports_t *reports, vector_t *stack) {
     entry_t *top = vector_tail(stack);
-    message_t *id = report(reports, ERROR, top->hlir->node, "%s", "recursive type definition");
+    message_t *id = report(
+        reports, ERROR, top->hlir->node, "%s", "recursive type definition");
     for (size_t i = 0; i < vector_len(stack); i++) {
         entry_t *entry = vector_get(stack, i);
         report_append(id, entry->hlir->node, "trace `%zu`", i);
     }
 }
 
-static bool find_type_recursion(reports_t *reports, vector_t **vec, const hlir_t *hlir, bool nesting, bool opaque) {
+static bool find_type_recursion(
+    reports_t *reports, vector_t **vec, const hlir_t *hlir, bool nesting,
+    bool opaque) {
     vector_t *stack = *vec;
     for (size_t i = 0; i < vector_len(stack); i++) {
         entry_t *item = vector_get(stack, i);
@@ -198,14 +210,20 @@ static const hlir_t *chase(reports_t *reports, const hlir_t *hlir) {
         }
 
         if (depth++ > DEPTH_LIMIT) {
-            message_t *id = report(reports, ERROR, hlir->node, "type definition recurses too deep");
-            report_note(id, "type definition recurses beyond %d levels", DEPTH_LIMIT);
+            message_t *id = report(
+                reports,
+                ERROR,
+                hlir->node,
+                "type definition recurses too deep");
+            report_note(
+                id, "type definition recurses beyond %d levels", DEPTH_LIMIT);
             return NULL;
         }
     }
 }
 
-static void check_type_recursion(reports_t *reports, vector_t **stack, const hlir_t *hlir) {
+static void
+check_type_recursion(reports_t *reports, vector_t **stack, const hlir_t *hlir) {
     if (hlir == NULL) {
         return;
     }
@@ -253,7 +271,10 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
         break;
 
     default:
-        ctu_assert(reports, "check-type-recursion unexpected hlir type %s", hlir_kind_to_string(get_hlir_kind(hlir)));
+        ctu_assert(
+            reports,
+            "check-type-recursion unexpected hlir type %s",
+            hlir_kind_to_string(get_hlir_kind(hlir)));
         break;
     }
 
@@ -264,10 +285,15 @@ static void check_attribute(reports_t *reports, hlir_t *hlir) {
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
 
     if (attribs->mangle != NULL && attribs->linkage == LINK_INTERNAL) {
-        message_t *id = report(reports, WARNING, hlir->node, "cannot change name mangling of internal symbols");
+        message_t *id = report(
+            reports,
+            WARNING,
+            hlir->node,
+            "cannot change name mangling of internal symbols");
         report_note(id, "attribute will not be mangled");
 
-        hlir_attributes_t *newAttribs = ctu_memdup(attribs, sizeof(hlir_attributes_t));
+        hlir_attributes_t *newAttribs =
+            ctu_memdup(attribs, sizeof(hlir_attributes_t));
         newAttribs->mangle = NULL;
         hlir_set_attributes(hlir, newAttribs);
     }
@@ -288,8 +314,11 @@ void check_module(reports_t *reports, hlir_t *mod) {
 
     for (size_t i = 0; i < totalGlobals; i++) {
         hlir_t *var = vector_get(mod->globals, i);
-        CTASSERTF(hlir_is(var, HLIR_GLOBAL), "check-module polluted: global `%s` is %s, not global", get_hlir_name(var),
-                  hlir_kind_to_string(get_hlir_kind(var)));
+        CTASSERTF(
+            hlir_is(var, HLIR_GLOBAL),
+            "check-module polluted: global `%s` is %s, not global",
+            get_hlir_name(var),
+            hlir_kind_to_string(get_hlir_kind(var)));
         check_recursion(reports, &recursionStack, var);
 
         vector_reset(recursionStack);

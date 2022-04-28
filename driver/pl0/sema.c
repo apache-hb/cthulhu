@@ -36,8 +36,11 @@ void pl0_init(void) {
 
     kFmtString = hlir_string_literal(node, kStringType, "%d\n");
 
-    const hlir_attributes_t *printAttributes = hlir_attributes(LINK_IMPORTED, DEFAULT_TAGS, "printf");
-    signature_t signature = { .params = vector_init(kStringType), .result = kIntegerType, .variadic = true };
+    const hlir_attributes_t *printAttributes =
+        hlir_attributes(LINK_IMPORTED, DEFAULT_TAGS, "printf");
+    signature_t signature = { .params = vector_init(kStringType),
+                              .result = kIntegerType,
+                              .variadic = true };
     kPrint = hlir_function(node, "printf", signature, vector_of(0), NULL);
     hlir_set_attributes(kPrint, printAttributes);
 }
@@ -50,13 +53,15 @@ typedef enum {
     TAG_MAX
 } tag_t;
 
-static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *shadowed,
-                                 const node_t *shadowing) {
+static void report_pl0_shadowing(
+    reports_t *reports, const char *name, const node_t *shadowed,
+    const node_t *shadowing) {
     message_t *id = report_shadow(reports, name, shadowed, shadowing);
     report_note(id, "PL/0 is case insensitive");
 }
 
-static void report_pl0_unresolved(reports_t *reports, const node_t *node, const char *name) {
+static void report_pl0_unresolved(
+    reports_t *reports, const node_t *node, const char *name) {
     report(reports, ERROR, node, "unresolved reference to `%s`", name);
 }
 
@@ -136,7 +141,8 @@ static hlir_t *sema_expr(sema_t *sema, pl0_t *node) {
     case PL0_BINARY:
         return sema_binary(sema, node);
     default:
-        report(sema->reports, INTERNAL, node->node, "sema-expr: %d", node->type);
+        report(
+            sema->reports, INTERNAL, node->node, "sema-expr: %d", node->type);
         return hlir_error(node->node, "sema-expr");
     }
 }
@@ -188,7 +194,11 @@ static hlir_t *sema_assign(sema_t *sema, pl0_t *node) {
     const hlir_attributes_t *attrs = get_hlir_attributes(dst);
 
     if (attrs->tags & TAG_CONST) {
-        report(sema->reports, ERROR, node->node, "cannot assign to constant value");
+        report(
+            sema->reports,
+            ERROR,
+            node->node,
+            "cannot assign to constant value");
     }
 
     return hlir_assign(node->node, dst, src);
@@ -226,7 +236,8 @@ static hlir_t *sema_stmt(sema_t *sema, pl0_t *node) {
     case PL0_PRINT:
         return sema_print(sema, node);
     default:
-        report(sema->reports, INTERNAL, node->node, "sema-stmt: %d", node->type);
+        report(
+            sema->reports, INTERNAL, node->node, "sema-stmt: %d", node->type);
         return hlir_error(node->node, "sema-stmt");
     }
 }
@@ -264,7 +275,12 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node) {
     case PL0_COMPARE:
         return sema_comp(sema, node);
     default:
-        report(sema->reports, INTERNAL, node->node, "sema-compare: %d", node->type);
+        report(
+            sema->reports,
+            INTERNAL,
+            node->node,
+            "sema-compare: %d",
+            node->type);
         return hlir_error(node->node, "sema-compare");
     }
 }
@@ -289,10 +305,16 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node) {
     hlir_build_function(hlir, body);
 }
 
-static void insert_module(sema_t *sema, vector_t **globals, vector_t **consts, vector_t **procs, pl0_t *name,
-                          hlir_t *hlir) {
+static void insert_module(
+    sema_t *sema, vector_t **globals, vector_t **consts, vector_t **procs,
+    pl0_t *name, hlir_t *hlir) {
     if (!hlir_is(hlir, HLIR_MODULE)) {
-        report(sema->reports, ERROR, name->node, "cannot load corrupted module `%s`", name->ident);
+        report(
+            sema->reports,
+            ERROR,
+            name->node,
+            "cannot load corrupted module `%s`",
+            name->ident);
         return;
     }
 
@@ -336,7 +358,9 @@ hlir_t *pl0_sema(runtime_t *runtime, void *node) {
     vector_t *globals = vector_new(nglobals);
     vector_t *procs = vector_new(nprocs);
 
-    size_t sizes[TAG_MAX] = { [TAG_CONSTS] = nconsts, [TAG_VALUES] = nglobals, [TAG_PROCS] = nprocs };
+    size_t sizes[TAG_MAX] = {
+        [TAG_CONSTS] = nconsts, [TAG_VALUES] = nglobals, [TAG_PROCS] = nprocs
+    };
 
     sema_t *sema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
 
@@ -363,7 +387,9 @@ hlir_t *pl0_sema(runtime_t *runtime, void *node) {
 
     for (size_t i = 0; i < nprocs; i++) {
         pl0_t *it = vector_get(root->procs, i);
-        signature_t signature = { .params = vector_of(0), .result = kVoidType, .variadic = false };
+        signature_t signature = { .params = vector_of(0),
+                                  .result = kVoidType,
+                                  .variadic = false };
 
         hlir_t *hlir = hlir_begin_function(it->node, it->name, signature);
         hlir_set_attributes(hlir, kExported);
@@ -377,7 +403,12 @@ hlir_t *pl0_sema(runtime_t *runtime, void *node) {
         hlir_t *lib = find_module(runtime, name->ident);
 
         if (lib == NULL) {
-            report(sema->reports, ERROR, NULL, "cannot import `%s`, failed to find module", name->ident);
+            report(
+                sema->reports,
+                ERROR,
+                NULL,
+                "cannot import `%s`, failed to find module",
+                name->ident);
             continue;
         }
 
@@ -406,16 +437,21 @@ hlir_t *pl0_sema(runtime_t *runtime, void *node) {
 
     if (root->entry != NULL) {
         hlir_t *body = sema_stmt(sema, root->entry);
-        signature_t signature = { .params = vector_of(0), .result = kVoidType, .variadic = false };
-        hlir_t *hlir = hlir_function(root->node, "main", signature, vector_of(0), body);
+        signature_t signature = { .params = vector_of(0),
+                                  .result = kVoidType,
+                                  .variadic = false };
+        hlir_t *hlir =
+            hlir_function(root->node, "main", signature, vector_of(0), body);
         hlir_set_attributes(hlir, kExported);
         vector_push(&procs, hlir);
     }
 
     vector_push(&procs, kPrint);
 
-    const char *modname = root->mod == NULL ? ctu_filename(root->node->scan->path) : root->mod;
-    hlir_t *mod = hlir_module(root->node, modname, vector_of(0), vector_join(consts, globals), procs);
+    const char *modname =
+        root->mod == NULL ? ctu_filename(root->node->scan->path) : root->mod;
+    hlir_t *mod = hlir_module(
+        root->node, modname, vector_of(0), vector_join(consts, globals), procs);
 
     sema_delete(sema);
 

@@ -24,7 +24,9 @@ typedef struct {
  * @param text the source text inside the file
  * @return the populated scanner
  */
-scan_t scan_string(reports_t *reports, const char *language, const char *path, const char *text);
+scan_t scan_string(
+    reports_t *reports, const char *language, const char *path,
+    const char *text);
 
 /**
  * @brief create a scanner from a file
@@ -36,7 +38,8 @@ scan_t scan_string(reports_t *reports, const char *language, const char *path, c
  */
 scan_t scan_file(reports_t *reports, const char *language, file_t *file);
 
-scan_t scan_without_source(reports_t *reports, const char *language, const char *path);
+scan_t
+scan_without_source(reports_t *reports, const char *language, const char *path);
 
 /**
  * @brief set scanner user data

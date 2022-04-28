@@ -88,7 +88,9 @@ typedef struct ast_t {
 
 ast_t *ast_module(scan_t *scan, where_t where, vector_t *path);
 ast_t *ast_import(scan_t *scan, where_t where, vector_t *path);
-ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *imports, vector_t *decls);
+ast_t *ast_program(
+    scan_t *scan, where_t where, ast_t *modspec, vector_t *imports,
+    vector_t *decls);
 
 /// expressions
 
@@ -105,10 +107,12 @@ ast_t *ast_typelist(vector_t *types, bool variadic);
 
 /// type declarations
 
-ast_t *ast_structdecl(scan_t *scan, where_t where, char *name, vector_t *fields);
+ast_t *
+ast_structdecl(scan_t *scan, where_t where, char *name, vector_t *fields);
 ast_t *ast_uniondecl(scan_t *scan, where_t where, char *name, vector_t *fields);
 ast_t *ast_typealias(scan_t *scan, where_t where, char *name, ast_t *type);
-ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, vector_t *fields);
+ast_t *
+ast_variantdecl(scan_t *scan, where_t where, char *name, vector_t *fields);
 
 /// extra type data
 

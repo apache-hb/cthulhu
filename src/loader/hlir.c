@@ -43,7 +43,9 @@ typedef enum {
 /// non-hlir types
 ///
 
-ELEMENTS(NODE_FIRST_LINE, NODE_FIRST_COLUMN, NODE_LAST_LINE, NODE_LAST_COLUMN, NODE_SCAN);
+ELEMENTS(
+    NODE_FIRST_LINE, NODE_FIRST_COLUMN, NODE_LAST_LINE, NODE_LAST_COLUMN,
+    NODE_SCAN);
 static const field_t kNodeFields[] = {
     [NODE_FIRST_LINE] = FIELD("first-line", FIELD_INT),
     [NODE_FIRST_COLUMN] = FIELD("first-column", FIELD_INT),
@@ -79,7 +81,8 @@ static const field_t kDigitLiteralFields[] = {
     [DIGIT_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
     [DIGIT_LITERAL_VALUE] = FIELD("value", FIELD_INT),
 };
-static const layout_t kDigitLiteralLayout = LAYOUT("digit-literal", kDigitLiteralFields);
+static const layout_t kDigitLiteralLayout =
+    LAYOUT("digit-literal", kDigitLiteralFields);
 
 INDICES(BOOL_LITERAL_NODE, BOOL_LITERAL_TYPE, BOOL_LITERAL_VALUE);
 static const field_t kBoolLiteralFields[] = {
@@ -87,7 +90,8 @@ static const field_t kBoolLiteralFields[] = {
     [BOOL_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
     [BOOL_LITERAL_VALUE] = FIELD("value", FIELD_BOOL),
 };
-static const layout_t kBoolLiteralLayout = LAYOUT("bool-literal", kBoolLiteralFields);
+static const layout_t kBoolLiteralLayout =
+    LAYOUT("bool-literal", kBoolLiteralFields);
 
 INDICES(STRING_LITERAL_NODE, STRING_LITERAL_TYPE, STRING_LITERAL_VALUE);
 static const field_t kStringLiteralFields[] = {
@@ -95,7 +99,8 @@ static const field_t kStringLiteralFields[] = {
     [STRING_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
     [STRING_LITERAL_VALUE] = FIELD("value", FIELD_STRING),
 };
-static const layout_t kStringLiteralLayout = LAYOUT("string-literal", kStringLiteralFields);
+static const layout_t kStringLiteralLayout =
+    LAYOUT("string-literal", kStringLiteralFields);
 
 ///
 /// expressions
@@ -215,7 +220,8 @@ static const field_t kVoidFields[] = {
 };
 static const layout_t kVoidLayout = LAYOUT("void", kVoidFields);
 
-INDICES(CLOSURE_NODE, CLOSURE_NAME, CLOSURE_ARGS, CLOSURE_RESULT, CLOSURE_VARIADIC);
+INDICES(
+    CLOSURE_NODE, CLOSURE_NAME, CLOSURE_ARGS, CLOSURE_RESULT, CLOSURE_VARIADIC);
 static const field_t kClosureFields[] = {
     [CLOSURE_NODE] = FIELD("node", FIELD_REFERENCE),
     [CLOSURE_NAME] = FIELD("name", FIELD_STRING),
@@ -269,8 +275,9 @@ static const field_t kGlobalFields[] = {
 };
 static const layout_t kGlobalLayout = LAYOUT("global", kGlobalFields);
 
-INDICES(FUNCTION_NODE, FUNCTION_ATTRIBS, FUNCTION_NAME, FUNCTION_PARAMS, FUNCTION_RESULT, FUNCTION_VARIADIC,
-        FUNCTION_LOCALS, FUNCTION_BODY);
+INDICES(
+    FUNCTION_NODE, FUNCTION_ATTRIBS, FUNCTION_NAME, FUNCTION_PARAMS,
+    FUNCTION_RESULT, FUNCTION_VARIADIC, FUNCTION_LOCALS, FUNCTION_BODY);
 static const field_t kFunctionFields[] = {
     [FUNCTION_NODE] = FIELD("node", FIELD_REFERENCE),
     [FUNCTION_ATTRIBS] = FIELD("attribs", FIELD_REFERENCE),
@@ -319,7 +326,8 @@ static const field_t kFieldFields[] = {
 };
 static const layout_t kFieldLayout = LAYOUT("field", kFieldFields);
 
-INDICES(MODULE_NODE, MODULE_NAME, MODULE_TYPES, MODULE_GLOBALS, MODULE_FUNCTIONS);
+INDICES(
+    MODULE_NODE, MODULE_NAME, MODULE_TYPES, MODULE_GLOBALS, MODULE_FUNCTIONS);
 static const field_t kModuleFields[] = {
     [MODULE_NODE] = FIELD("node", FIELD_REFERENCE),
     [MODULE_NAME] = FIELD("name", FIELD_STRING),
@@ -441,6 +449,10 @@ static const format_t *get_format(void) {
 
 #define READ_OR_RETURN(data, index, values)                             \
     do {                                                                \
+        if ((index).type == NULL_TYPE) {                                \
+            report(load->reports, ERROR, NULL, "broken load");          \
+            return false;                                               \
+        }                                                               \
         report(load->reports, NOTE, NULL, "%s:%d", __FILE__, __LINE__); \
         bool result = read_entry(data, index, values);                  \
         if (!result) return false;                                      \
@@ -526,11 +538,14 @@ static hlir_t *load_opt_node(load_t *load, index_t index, const char *trace) {
 }
 
 static const node_t *get_span(load_t *load, value_t *values) {
-    return get_node(load, get_reference(values[0])); // values[0] is always a span
+    return get_node(
+        load, get_reference(values[0])); // values[0] is always a span
 }
 
-#define GET_REF(load, values, name)     load_node(load, get_reference((values)[name]), "loading " #name)
-#define GET_REF_OPT(load, values, name) load_opt_node(load, get_reference((values)[name]), "loading " #name)
+#define GET_REF(load, values, name) \
+    load_node(load, get_reference((values)[name]), "loading " #name)
+#define GET_REF_OPT(load, values, name) \
+    load_opt_node(load, get_reference((values)[name]), "loading " #name)
 
 static vector_t *load_array(load_t *load, array_t array) {
     size_t len = array.length;
@@ -540,7 +555,9 @@ static vector_t *load_array(load_t *load, array_t array) {
     read_array(load->data, array, indices);
 
     for (size_t i = 0; i < len; i++) {
-        hlir_t *hlir = load_node(load, indices[i], format("array@%zu[%zu + %zu]", array.offset, array.length, i));
+        char *name =
+            format("array@%zu[%zu + %zu]", array.offset, array.length, i);
+        hlir_t *hlir = load_node(load, indices[i], name);
         vector_set(vec, i, hlir);
     }
 
@@ -560,23 +577,30 @@ static hlir_t *load_digit_literal_node(load_t *load, index_t index) {
     mpz_t digit;
     get_digit(digit, values[DIGIT_LITERAL_VALUE]);
 
-    return hlir_digit_literal(get_span(load, values), GET_REF(load, values, DIGIT_LITERAL_TYPE), digit);
+    return hlir_digit_literal(
+        get_span(load, values),
+        GET_REF(load, values, DIGIT_LITERAL_TYPE),
+        digit);
 }
 
 static hlir_t *load_bool_literal_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kBoolLiteralFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_bool_literal(get_span(load, values), GET_REF(load, values, BOOL_LITERAL_TYPE),
-                             get_bool(values[BOOL_LITERAL_VALUE]));
+    return hlir_bool_literal(
+        get_span(load, values),
+        GET_REF(load, values, BOOL_LITERAL_TYPE),
+        get_bool(values[BOOL_LITERAL_VALUE]));
 }
 
 static hlir_t *load_string_literal_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kStringLiteralFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_string_literal(get_span(load, values), GET_REF(load, values, STRING_LITERAL_TYPE),
-                               get_string(values[STRING_LITERAL_VALUE]));
+    return hlir_string_literal(
+        get_span(load, values),
+        GET_REF(load, values, STRING_LITERAL_TYPE),
+        get_string(values[STRING_LITERAL_VALUE]));
 }
 
 static hlir_t *load_name_node(load_t *load, index_t index) {
@@ -590,31 +614,45 @@ static hlir_t *load_unary_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kUnaryFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_unary(get_span(load, values), GET_REF(load, values, UNARY_TYPE), GET_REF(load, values, UNARY_EXPR),
-                      get_int(values[UNARY_OP]));
+    return hlir_unary(
+        get_span(load, values),
+        GET_REF(load, values, UNARY_TYPE),
+        GET_REF(load, values, UNARY_EXPR),
+        get_int(values[UNARY_OP]));
 }
 
 static hlir_t *load_binary_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kBinaryFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_binary(get_span(load, values), GET_REF(load, values, BINARY_TYPE), get_int(values[BINARY_OP]),
-                       GET_REF(load, values, BINARY_LHS), GET_REF(load, values, BINARY_RHS));
+    return hlir_binary(
+        get_span(load, values),
+        GET_REF(load, values, BINARY_TYPE),
+        get_int(values[BINARY_OP]),
+        GET_REF(load, values, BINARY_LHS),
+        GET_REF(load, values, BINARY_RHS));
 }
 
 static hlir_t *load_compare_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kCompareFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_compare(get_span(load, values), GET_REF(load, values, COMPARE_TYPE), get_int(values[COMPARE_OP]),
-                        GET_REF(load, values, COMPARE_LHS), GET_REF(load, values, COMPARE_RHS));
+    return hlir_compare(
+        get_span(load, values),
+        GET_REF(load, values, COMPARE_TYPE),
+        get_int(values[COMPARE_OP]),
+        GET_REF(load, values, COMPARE_LHS),
+        GET_REF(load, values, COMPARE_RHS));
 }
 
 static hlir_t *load_call_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kCallFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_call(get_span(load, values), GET_REF(load, values, CALL_EXPR), get_arr(load, values[CALL_ARGS]));
+    return hlir_call(
+        get_span(load, values),
+        GET_REF(load, values, CALL_EXPR),
+        get_arr(load, values[CALL_ARGS]));
 }
 
 // statements
@@ -630,23 +668,32 @@ static hlir_t *load_branch_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kBranchFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_branch(get_span(load, values), GET_REF(load, values, BRANCH_COND), GET_REF(load, values, BRANCH_THEN),
-                       GET_REF_OPT(load, values, BRANCH_ELSE));
+    return hlir_branch(
+        get_span(load, values),
+        GET_REF(load, values, BRANCH_COND),
+        GET_REF(load, values, BRANCH_THEN),
+        GET_REF_OPT(load, values, BRANCH_ELSE));
 }
 
 static hlir_t *load_loop_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kLoopFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_loop(get_span(load, values), GET_REF(load, values, LOOP_COND), GET_REF(load, values, LOOP_BODY),
-                     GET_REF_OPT(load, values, LOOP_ELSE));
+    return hlir_loop(
+        get_span(load, values),
+        GET_REF(load, values, LOOP_COND),
+        GET_REF(load, values, LOOP_BODY),
+        GET_REF_OPT(load, values, LOOP_ELSE));
 }
 
 static hlir_t *load_assign_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kAssignFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_assign(get_span(load, values), GET_REF(load, values, ASSIGN_DST), GET_REF(load, values, ASSIGN_SRC));
+    return hlir_assign(
+        get_span(load, values),
+        GET_REF(load, values, ASSIGN_DST),
+        GET_REF(load, values, ASSIGN_SRC));
 }
 
 // types
@@ -655,8 +702,11 @@ static hlir_t *load_digit_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kDigitFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_digit(get_span(load, values), get_string(values[DIGIT_NAME]), get_int(values[DIGIT_SIGN]),
-                      get_int(values[DIGIT_WIDTH]));
+    return hlir_digit(
+        get_span(load, values),
+        get_string(values[DIGIT_NAME]),
+        get_int(values[DIGIT_SIGN]),
+        get_int(values[DIGIT_WIDTH]));
 }
 
 static hlir_t *load_bool_node(load_t *load, index_t index) {
@@ -684,40 +734,56 @@ static hlir_t *load_closure_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kClosureFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_closure(get_span(load, values), get_string(values[CLOSURE_NAME]), get_arr(load, values[CLOSURE_ARGS]),
-                        GET_REF(load, values, CLOSURE_RESULT), get_bool(values[CLOSURE_VARIADIC]));
+    return hlir_closure(
+        get_span(load, values),
+        get_string(values[CLOSURE_NAME]),
+        get_arr(load, values[CLOSURE_ARGS]),
+        GET_REF(load, values, CLOSURE_RESULT),
+        get_bool(values[CLOSURE_VARIADIC]));
 }
 
 static hlir_t *load_pointer_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kPointerFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_pointer(get_span(load, values), get_string(values[POINTER_NAME]), GET_REF(load, values, POINTER_TYPE),
-                        get_bool(values[POINTER_INDEXABLE]));
+    return hlir_pointer(
+        get_span(load, values),
+        get_string(values[POINTER_NAME]),
+        GET_REF(load, values, POINTER_TYPE),
+        get_bool(values[POINTER_INDEXABLE]));
 }
 
 static hlir_t *load_array_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kArrayFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_array(get_span(load, values), get_string(values[ARRAY_NAME]), GET_REF(load, values, ARRAY_TYPE),
-                      GET_REF(load, values, ARRAY_LENGTH));
+    return hlir_array(
+        get_span(load, values),
+        get_string(values[ARRAY_NAME]),
+        GET_REF(load, values, ARRAY_TYPE),
+        GET_REF(load, values, ARRAY_LENGTH));
 }
 
 static hlir_t *load_local_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kLocalFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_indexed_local(get_span(load, values), get_string(values[LOCAL_NAME]), get_int(values[LOCAL_INDEX]),
-                              GET_REF(load, values, LOCAL_TYPE));
+    return hlir_indexed_local(
+        get_span(load, values),
+        get_string(values[LOCAL_NAME]),
+        get_int(values[LOCAL_INDEX]),
+        GET_REF(load, values, LOCAL_TYPE));
 }
 
 static hlir_t *load_global_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kGlobalFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    hlir_t *hlir = hlir_global(get_span(load, values), get_string(values[GLOBAL_NAME]),
-                               GET_REF(load, values, GLOBAL_TYPE), GET_REF_OPT(load, values, GLOBAL_INIT));
+    hlir_t *hlir = hlir_global(
+        get_span(load, values),
+        get_string(values[GLOBAL_NAME]),
+        GET_REF(load, values, GLOBAL_TYPE),
+        GET_REF_OPT(load, values, GLOBAL_INIT));
 
     hlir_set_attributes(hlir, load_attributes(load, values[GLOBAL_ATTRIBS]));
 
@@ -734,8 +800,12 @@ static hlir_t *load_function_node(load_t *load, index_t index) {
         .variadic = get_bool(values[FUNCTION_VARIADIC]),
     };
 
-    hlir_t *hlir = hlir_function(get_span(load, values), get_string(values[FUNCTION_NAME]), signature,
-                                 get_arr(load, values[FUNCTION_LOCALS]), GET_REF_OPT(load, values, FUNCTION_BODY));
+    hlir_t *hlir = hlir_function(
+        get_span(load, values),
+        get_string(values[FUNCTION_NAME]),
+        signature,
+        get_arr(load, values[FUNCTION_LOCALS]),
+        GET_REF_OPT(load, values, FUNCTION_BODY));
 
     hlir_set_attributes(hlir, load_attributes(load, values[FUNCTION_ATTRIBS]));
 
@@ -746,8 +816,10 @@ static hlir_t *load_struct_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kStructFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    hlir_t *hlir =
-        hlir_struct(get_span(load, values), get_string(values[STRUCT_NAME]), get_arr(load, values[STRUCT_ITEMS]));
+    hlir_t *hlir = hlir_struct(
+        get_span(load, values),
+        get_string(values[STRUCT_NAME]),
+        get_arr(load, values[STRUCT_ITEMS]));
 
     hlir_set_attributes(hlir, load_attributes(load, values[STRUCT_ATTRIBS]));
 
@@ -758,8 +830,10 @@ static hlir_t *load_union_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kUnionFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    hlir_t *hlir =
-        hlir_union(get_span(load, values), get_string(values[UNION_NAME]), get_arr(load, values[UNION_ITEMS]));
+    hlir_t *hlir = hlir_union(
+        get_span(load, values),
+        get_string(values[UNION_NAME]),
+        get_arr(load, values[UNION_ITEMS]));
 
     hlir_set_attributes(hlir, load_attributes(load, values[UNION_ATTRIBS]));
 
@@ -770,8 +844,11 @@ static hlir_t *load_alias_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kAliasFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    hlir_t *hlir = hlir_alias(get_span(load, values), get_string(values[ALIAS_NAME]), GET_REF(load, values, ALIAS_TYPE),
-                              get_bool(values[ALIAS_NEWTYPE]));
+    hlir_t *hlir = hlir_alias(
+        get_span(load, values),
+        get_string(values[ALIAS_NAME]),
+        GET_REF(load, values, ALIAS_TYPE),
+        get_bool(values[ALIAS_NEWTYPE]));
 
     hlir_set_attributes(hlir, load_attributes(load, values[ALIAS_ATTRIBS]));
 
@@ -782,15 +859,22 @@ static hlir_t *load_field_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kFieldFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_field(get_span(load, values), GET_REF(load, values, FIELD_TYPE), get_string(values[FIELD_NAME]));
+    return hlir_field(
+        get_span(load, values),
+        GET_REF(load, values, FIELD_TYPE),
+        get_string(values[FIELD_NAME]));
 }
 
 static hlir_t *load_module_node(load_t *load, index_t index) {
     value_t values[FIELDLEN(kModuleFields)];
     READ_OR_RETURN(load->data, index, values);
 
-    return hlir_module(get_span(load, values), get_string(values[MODULE_NAME]), get_arr(load, values[MODULE_TYPES]),
-                       get_arr(load, values[MODULE_GLOBALS]), get_arr(load, values[MODULE_FUNCTIONS]));
+    return hlir_module(
+        get_span(load, values),
+        get_string(values[MODULE_NAME]),
+        get_arr(load, values[MODULE_TYPES]),
+        get_arr(load, values[MODULE_GLOBALS]),
+        get_arr(load, values[MODULE_FUNCTIONS]));
 }
 
 static hlir_t *load_node(load_t *load, index_t index, const char *trace) {
@@ -862,7 +946,11 @@ static hlir_t *load_node(load_t *load, index_t index, const char *trace) {
         return load_module_node(load, index);
 
     default:
-        ctu_assert(load->reports, "loading unknown node type %d due to %s", index.type, trace);
+        ctu_assert(
+            load->reports,
+            "loading unknown node type %d due to %s",
+            index.type,
+            trace);
         return NULL;
     }
 }
@@ -935,7 +1023,8 @@ static index_t save_span(data_t *data, const node_t *node) {
     return write_entry(data, NODE_INDEX, values);
 }
 
-static index_t save_attributes(data_t *data, const hlir_attributes_t *attributes) {
+static index_t
+save_attributes(data_t *data, const hlir_attributes_t *attributes) {
     value_t values[FIELDLEN(kAttribFields)] = {
         [ATTRIB_LINKAGE] = int_value(attributes->linkage),
         [ATTRIB_TAGS] = int_value(attributes->tags),
@@ -993,7 +1082,11 @@ static index_t save_digit_literal_node(data_t *data, const hlir_t *hlir) {
         [DIGIT_LITERAL_VALUE] = digit_value(hlir->digit),
     };
 
-    CTASSERTF(values[DIGIT_LITERAL_TYPE].reference.type != NULL_TYPE, "%s:%d", __FILE__, __LINE__);
+    CTASSERTF(
+        values[DIGIT_LITERAL_TYPE].reference.type != NULL_TYPE,
+        "%s:%d",
+        __FILE__,
+        __LINE__);
 
     return write_entry(data, HLIR_DIGIT_LITERAL, values);
 }
@@ -1005,7 +1098,11 @@ static index_t save_bool_literal_node(data_t *data, const hlir_t *hlir) {
         [BOOL_LITERAL_VALUE] = bool_value(hlir->boolean),
     };
 
-    CTASSERTF(values[BOOL_LITERAL_TYPE].reference.type != NULL_TYPE, "%s:%d", __FILE__, __LINE__);
+    CTASSERTF(
+        values[BOOL_LITERAL_TYPE].reference.type != NULL_TYPE,
+        "%s:%d",
+        __FILE__,
+        __LINE__);
 
     return write_entry(data, HLIR_BOOL_LITERAL, values);
 }
@@ -1017,7 +1114,11 @@ static index_t save_string_literal_node(data_t *data, const hlir_t *hlir) {
         [STRING_LITERAL_VALUE] = string_value(hlir->string),
     };
 
-    CTASSERTF(values[STRING_LITERAL_TYPE].reference.type != NULL_TYPE, "%s:%d", __FILE__, __LINE__);
+    CTASSERTF(
+        values[STRING_LITERAL_TYPE].reference.type != NULL_TYPE,
+        "%s:%d",
+        __FILE__,
+        __LINE__);
 
     return write_entry(data, HLIR_STRING_LITERAL, values);
 }
@@ -1376,12 +1477,15 @@ static index_t save_node(data_t *data, const hlir_t *hlir) {
         return save_module_node(data, hlir);
 
     default:
-        ctu_assert(data->header.reports, "saving unknown node type %u", hlir->type);
+        ctu_assert(
+            data->header.reports, "saving unknown node type %u", hlir->type);
         return NULL_INDEX;
     }
 }
 
-void save_modules(reports_t *reports, save_settings_t *settings, vector_t *modules, const char *path) {
+void save_modules(
+    reports_t *reports, save_settings_t *settings, vector_t *modules,
+    const char *path) {
     UNUSED(settings);
 
     header_t header = {

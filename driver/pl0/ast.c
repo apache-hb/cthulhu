@@ -19,7 +19,8 @@ pl0_t *pl0_ident(scan_t *scan, where_t where, const char *ident) {
     return node;
 }
 
-pl0_t *pl0_binary(scan_t *scan, where_t where, binary_t binary, pl0_t *lhs, pl0_t *rhs) {
+pl0_t *pl0_binary(
+    scan_t *scan, where_t where, binary_t binary, pl0_t *lhs, pl0_t *rhs) {
     pl0_t *node = pl0_new(scan, where, PL0_BINARY);
     node->binary = binary;
     node->lhs = lhs;
@@ -27,7 +28,8 @@ pl0_t *pl0_binary(scan_t *scan, where_t where, binary_t binary, pl0_t *lhs, pl0_
     return node;
 }
 
-pl0_t *pl0_compare(scan_t *scan, where_t where, compare_t compare, pl0_t *lhs, pl0_t *rhs) {
+pl0_t *pl0_compare(
+    scan_t *scan, where_t where, compare_t compare, pl0_t *lhs, pl0_t *rhs) {
     pl0_t *node = pl0_new(scan, where, PL0_COMPARE);
     node->compare = compare;
     node->lhs = lhs;
@@ -87,7 +89,9 @@ pl0_t *pl0_stmts(scan_t *scan, where_t where, vector_t *stmts) {
     return node;
 }
 
-pl0_t *pl0_procedure(scan_t *scan, where_t where, const char *name, vector_t *locals, vector_t *body) {
+pl0_t *pl0_procedure(
+    scan_t *scan, where_t where, const char *name, vector_t *locals,
+    vector_t *body) {
     pl0_t *node = pl0_new(scan, where, PL0_PROCEDURE);
     node->name = name;
     node->locals = locals;
@@ -102,8 +106,9 @@ pl0_t *pl0_value(scan_t *scan, where_t where, const char *name, pl0_t *value) {
     return node;
 }
 
-pl0_t *pl0_module(scan_t *scan, where_t where, const char *mod, vector_t *imports, vector_t *consts, vector_t *globals,
-                  vector_t *procs, pl0_t *entry) {
+pl0_t *pl0_module(
+    scan_t *scan, where_t where, const char *mod, vector_t *imports,
+    vector_t *consts, vector_t *globals, vector_t *procs, pl0_t *entry) {
     pl0_t *node = pl0_new(scan, where, PL0_MODULE);
     node->mod = mod;
     node->imports = imports;

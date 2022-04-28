@@ -117,10 +117,12 @@ typedef struct hlir_t {
         };
 
         struct {
-            struct hlir_t *lhs; ///< the left operand of this operation. active if type ==
-                                ///< HLIR_BINARY || type == HLIR_COMPARE
-            struct hlir_t *rhs; ///< the right operand of this operation. active if type
-                                ///< == HLIR_BINARY || type == HLIR_COMPARE
+            struct hlir_t
+                *lhs; ///< the left operand of this operation. active if type ==
+                      ///< HLIR_BINARY || type == HLIR_COMPARE
+            struct hlir_t
+                *rhs; ///< the right operand of this operation. active if type
+                      ///< == HLIR_BINARY || type == HLIR_COMPARE
 
             union {
                 binary_t binary;   ///< the binary operation to perform. active if
@@ -131,8 +133,9 @@ typedef struct hlir_t {
         };
 
         struct {
-            struct hlir_t *call; ///< the function to call. active if type == HLIR_CALL
-            vector_t *args;      ///< the arguments to pass to the function.
+            struct hlir_t
+                *call;      ///< the function to call. active if type == HLIR_CALL
+            vector_t *args; ///< the arguments to pass to the function.
         };
 
         vector_t *stmts; ///< the statements in this block. active if type ==
@@ -305,18 +308,26 @@ hlir_t *hlir_int_literal(const node_t *node, const hlir_t *type, int value);
 
 hlir_t *hlir_bool_literal(const node_t *node, const hlir_t *type, bool value);
 
-hlir_t *hlir_string_literal(const node_t *node, const hlir_t *type, const char *value);
+hlir_t *
+hlir_string_literal(const node_t *node, const hlir_t *type, const char *value);
 
 hlir_t *hlir_name(const node_t *node, hlir_t *read);
 
-hlir_t *hlir_unary(const node_t *node, const hlir_t *type, hlir_t *operand, unary_t unary);
-hlir_t *hlir_binary(const node_t *node, const hlir_t *type, binary_t binary, hlir_t *lhs, hlir_t *rhs);
-hlir_t *hlir_compare(const node_t *node, const hlir_t *type, compare_t compare, hlir_t *lhs, hlir_t *rhs);
+hlir_t *hlir_unary(
+    const node_t *node, const hlir_t *type, hlir_t *operand, unary_t unary);
+hlir_t *hlir_binary(
+    const node_t *node, const hlir_t *type, binary_t binary, hlir_t *lhs,
+    hlir_t *rhs);
+hlir_t *hlir_compare(
+    const node_t *node, const hlir_t *type, compare_t compare, hlir_t *lhs,
+    hlir_t *rhs);
 hlir_t *hlir_call(const node_t *node, hlir_t *call, vector_t *args);
 
 hlir_t *hlir_stmts(const node_t *node, vector_t *stmts);
-hlir_t *hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other);
-hlir_t *hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other);
+hlir_t *
+hlir_branch(const node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other);
+hlir_t *
+hlir_loop(const node_t *node, hlir_t *cond, hlir_t *body, hlir_t *other);
 hlir_t *hlir_assign(const node_t *node, hlir_t *dst, hlir_t *src);
 
 hlir_t *hlir_field(const node_t *node, const hlir_t *type, const char *name);

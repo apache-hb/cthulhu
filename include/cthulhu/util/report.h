@@ -147,7 +147,9 @@ message_t *ctu_assert(reports_t *reports, const char *fmt, ...);
  *
  * @return a message object to attach extra data to
  */
-message_t *report(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...);
+message_t *report(
+    reports_t *reports, level_t level, const node_t *node, const char *fmt,
+    ...);
 
 /**
  * add another part to a message
@@ -157,7 +159,8 @@ message_t *report(reports_t *reports, level_t level, const node_t *node, const c
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-void report_append(message_t *message, const node_t *node, const char *fmt, ...);
+void report_append(
+    message_t *message, const node_t *node, const char *fmt, ...);
 
 /**
  * add an underline message to an existing message

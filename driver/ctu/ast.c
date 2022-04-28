@@ -15,7 +15,9 @@ static ast_t *ast_decl(astof_t of, char *name, scan_t *scan, where_t where) {
     return ast;
 }
 
-ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *imports, vector_t *decls) {
+ast_t *ast_program(
+    scan_t *scan, where_t where, ast_t *modspec, vector_t *imports,
+    vector_t *decls) {
     ast_t *ast = ast_new(AST_PROGRAM, scan, where);
     ast->modspec = modspec;
     ast->imports = imports;
@@ -81,13 +83,15 @@ ast_t *ast_typelist(vector_t *types, bool variadic) {
     return ast;
 }
 
-ast_t *ast_structdecl(scan_t *scan, where_t where, char *name, vector_t *fields) {
+ast_t *
+ast_structdecl(scan_t *scan, where_t where, char *name, vector_t *fields) {
     ast_t *ast = ast_decl(AST_STRUCTDECL, name, scan, where);
     ast->fields = fields;
     return ast;
 }
 
-ast_t *ast_uniondecl(scan_t *scan, where_t where, char *name, vector_t *fields) {
+ast_t *
+ast_uniondecl(scan_t *scan, where_t where, char *name, vector_t *fields) {
     ast_t *ast = ast_decl(AST_UNIONDECL, name, scan, where);
     ast->fields = fields;
     return ast;
@@ -99,7 +103,8 @@ ast_t *ast_typealias(scan_t *scan, where_t where, char *name, ast_t *type) {
     return ast;
 }
 
-ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, vector_t *fields) {
+ast_t *
+ast_variantdecl(scan_t *scan, where_t where, char *name, vector_t *fields) {
     ast_t *ast = ast_decl(AST_VARIANTDECL, name, scan, where);
     ast->fields = fields;
     return ast;

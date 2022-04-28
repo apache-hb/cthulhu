@@ -7,7 +7,12 @@
 
 static bool read_bytes(data_t *data, void *dst, size_t *cursor, size_t size) {
     if (data->length < *cursor + size) {
-        report(data->header.reports, ERROR, NULL, "out of bounds read at %zu", *cursor);
+        report(
+            data->header.reports,
+            ERROR,
+            NULL,
+            "out of bounds read at %zu",
+            *cursor);
         return false;
     }
 
@@ -131,22 +136,43 @@ bool begin_load(data_t *in, header_t header) {
     in->array = basic.arrays;
 
     if (basic.magic != FILE_MAGIC) {
-        report(header.reports, ERROR, NULL, "[%s] invalid magic number. found %x, expected %x", path, basic.magic,
-               FILE_MAGIC);
+        report(
+            header.reports,
+            ERROR,
+            NULL,
+            "[%s] invalid magic number. found %x, expected %x",
+            path,
+            basic.magic,
+            FILE_MAGIC);
         return false;
     }
 
     if (basic.submagic != header.submagic) {
-        report(header.reports, ERROR, NULL, "[%s] invalid submagic number. found %x, expected %x", path, basic.submagic,
-               header.submagic);
+        report(
+            header.reports,
+            ERROR,
+            NULL,
+            "[%s] invalid submagic number. found %x, expected %x",
+            path,
+            basic.submagic,
+            header.submagic);
         return false;
     }
 
     const char *err = compatible_version(basic.semver, header.semver);
     if (err != NULL) {
-        report(header.reports, ERROR, NULL, "[%s] incompatible version. found %d.%d.%d, expected %d.%d.%d", path,
-               VERSION_MAJOR(basic.semver), VERSION_MINOR(basic.semver), VERSION_PATCH(basic.semver),
-               VERSION_MAJOR(header.semver), VERSION_MINOR(header.semver), VERSION_PATCH(header.semver));
+        report(
+            header.reports,
+            ERROR,
+            NULL,
+            "[%s] incompatible version. found %d.%d.%d, expected %d.%d.%d",
+            path,
+            VERSION_MAJOR(basic.semver),
+            VERSION_MINOR(basic.semver),
+            VERSION_PATCH(basic.semver),
+            VERSION_MAJOR(header.semver),
+            VERSION_MINOR(header.semver),
+            VERSION_PATCH(header.semver));
         return false;
     }
 
@@ -202,6 +228,9 @@ bool read_entry(data_t *in, index_t index, value_t *values) {
 }
 
 bool read_array(data_t *in, array_t array, index_t *indices) {
-    memcpy(indices, in->data + in->array + array.offset, sizeof(index_t) * array.length);
+    memcpy(
+        indices,
+        in->data + in->array + array.offset,
+        sizeof(index_t) * array.length);
     return true;
 }

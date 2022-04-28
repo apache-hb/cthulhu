@@ -9,7 +9,8 @@ static offset_t write_string(data_t *data, const char *str) {
         return NULL_OFFSET;
     }
 
-    uintptr_t offset = (uintptr_t)map_get_default(data->cache, str, (void *)UINTPTR_MAX);
+    uintptr_t offset =
+        (uintptr_t)map_get_default(data->cache, str, (void *)UINTPTR_MAX);
     if (offset != UINTPTR_MAX) {
         return offset;
     }
@@ -24,7 +25,8 @@ static offset_t write_string(data_t *data, const char *str) {
     return result;
 }
 
-static void write_data(data_t *data, stream_t *dst, layout_t layout, const value_t *values) {
+static void write_data(
+    data_t *data, stream_t *dst, layout_t layout, const value_t *values) {
     size_t len = layout.length;
 
     for (size_t i = 0; i < len; i++) {
@@ -64,7 +66,8 @@ void begin_save(data_t *out, header_t header) {
     out->strings = stream_new(0x1000);
     out->arrays = stream_new(0x1000);
     out->stream = stream_new(0x1000);
-    out->cache = map_new(1007); // TODO: carry some more data around to better tune this
+    out->cache =
+        map_new(1007); // TODO: carry some more data around to better tune this
 
     out->records = ctu_malloc(sizeof(stream_t *) * len);
     out->counts = ctu_malloc(sizeof(size_t) * len);
@@ -82,11 +85,15 @@ void end_save(data_t *out) {
     stream_write(out->strings, "");
 
     size_t base = sizeof(basic_header_t);
-    size_t nstrings = stream_len(out->strings);              // total length of the string table
-    size_t narrays = stream_len(out->arrays);                // total length of the array table
-    size_t ncounts = (sizeof(offset_t) * len);               // number of bytes used for counts
-    size_t noffsets = (sizeof(offset_t) * len);              // number of bytes used for offsets
-    size_t offset = noffsets + ncounts + nstrings + narrays; // total offset of the user data
+    size_t nstrings =
+        stream_len(out->strings);             // total length of the string table
+    size_t narrays = stream_len(out->arrays); // total length of the array table
+    size_t ncounts =
+        (sizeof(offset_t) * len); // number of bytes used for counts
+    size_t noffsets =
+        (sizeof(offset_t) * len); // number of bytes used for offsets
+    size_t offset = noffsets + ncounts + nstrings +
+                    narrays; // total offset of the user data
 
     basic_header_t basic = {
         .magic = FILE_MAGIC,
@@ -129,7 +136,13 @@ void end_save(data_t *out) {
     file_t *file = file_new(out->header.path, BINARY, WRITE);
 
     if (!file_ok(file)) {
-        report(out->header.reports, ERROR, NULL, "failed to open file %s (errno %d)", out->header.path, errno);
+        report(
+            out->header.reports,
+            ERROR,
+            NULL,
+            "failed to open file %s (errno %d)",
+            out->header.path,
+            errno);
         return;
     }
 

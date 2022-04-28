@@ -89,7 +89,8 @@ void platform_close(file_t *file) {
     fclose(self->file);
 }
 
-void platform_open(file_t **file, const char *path, contents_t format, access_t access) {
+void platform_open(
+    file_t **file, const char *path, contents_t format, access_t access) {
     file_t *self = ctu_malloc(TOTAL_SIZE);
     self->path = get_absolute(path);
     self->format = format;

@@ -13,7 +13,8 @@ file_t *file_new(const char *path, contents_t format, access_t access) {
     return self;
 }
 
-file_t *memory_new(const char *name, size_t size, contents_t format, access_t access) {
+file_t *
+memory_new(const char *name, size_t size, contents_t format, access_t access) {
     file_t *self;
 
     memory_open(&self, name, size, format, access);

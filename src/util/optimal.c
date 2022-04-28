@@ -2,7 +2,8 @@
 
 #include <stdint.h>
 
-static size_t kSizeAnchors[] = { 10, 100, 1000, 10000, 50000, 100000, 250000, 500000, 750000, 1000000 };
+static size_t kSizeAnchors[] = { 10, 100, 1000, 10000, 50000,
+                                 100000, 250000, 500000, 750000, 1000000 };
 #define TOTAL_SIZE_ANCHORS (sizeof(kSizeAnchors) / sizeof(size_t))
 
 /**

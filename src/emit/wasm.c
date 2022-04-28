@@ -150,14 +150,16 @@ static void emit_assign_node(wasm_t *wasm, const hlir_t *node) {
         break;
 
     default:
-        ctu_assert(wasm->reports, "unhandled assign to %s", hlir_kind_to_string(kind));
+        ctu_assert(
+            wasm->reports, "unhandled assign to %s", hlir_kind_to_string(kind));
         break;
     }
 }
 
 static void emit_digit_literal_node(wasm_t *wasm, const hlir_t *node) {
     char *str = emit_wasm_type(wasm, get_hlir_type(node));
-    wasm_write(wasm, format("%s.const %s", str, mpz_get_str(NULL, 10, node->digit)));
+    wasm_write(
+        wasm, format("%s.const %s", str, mpz_get_str(NULL, 10, node->digit)));
 }
 
 static void emit_value_node(wasm_t *wasm, const hlir_t *node) {
@@ -191,20 +193,23 @@ static const char *kCompareNames[COMPARE_TOTAL] = {
     [COMPARE_EQ] = "eq", [COMPARE_NEQ] = "ne", [COMPARE_LT] = "lt_s", [COMPARE_LTE] = "le_s", [COMPARE_GT] = "gt_s", [COMPARE_GTE] = "ge_s"
 };
 
-static const char *kBinaryNames[BINARY_TOTAL] = { [BINARY_ADD] = "add", [BINARY_SUB] = "sub", [BINARY_MUL] = "mul", [BINARY_DIV] = "div_s", [BINARY_REM] = "rem_s",
+static const char *kBinaryNames[BINARY_TOTAL] = {
+    [BINARY_ADD] = "add", [BINARY_SUB] = "sub", [BINARY_MUL] = "mul", [BINARY_DIV] = "div_s", [BINARY_REM] = "rem_s",
 
-                                                  [BINARY_BITAND] = "and",
-                                                  [BINARY_BITOR] = "or",
-                                                  [BINARY_XOR] = "xor",
+    [BINARY_BITAND] = "and",
+    [BINARY_BITOR] = "or",
+    [BINARY_XOR] = "xor",
 
-                                                  [BINARY_SHL] = "shl",
-                                                  [BINARY_SHR] = "shr_s" };
+    [BINARY_SHL] = "shl",
+    [BINARY_SHR] = "shr_s"
+};
 
 static void emit_compare_node(wasm_t *wasm, const hlir_t *node) {
     emit_node(wasm, node->lhs);
     emit_node(wasm, node->rhs);
 
-    char *type = emit_wasm_type(wasm, get_hlir_type(node->lhs)); // TODO: check both sides
+    char *type = emit_wasm_type(
+        wasm, get_hlir_type(node->lhs)); // TODO: check both sides
     wasm_write(wasm, format("%s.%s", type, kCompareNames[node->compare]));
 }
 
@@ -212,7 +217,8 @@ static void emit_binary_node(wasm_t *wasm, const hlir_t *node) {
     emit_node(wasm, node->lhs);
     emit_node(wasm, node->rhs);
 
-    char *type = emit_wasm_type(wasm, get_hlir_type(node->lhs)); // TODO: check both sides
+    char *type = emit_wasm_type(
+        wasm, get_hlir_type(node->lhs)); // TODO: check both sides
     wasm_write(wasm, format("%s.%s", type, kBinaryNames[node->binary]));
 }
 
@@ -228,7 +234,10 @@ static void emit_name_node(wasm_t *wasm, const hlir_t *node) {
         break;
 
     default:
-        ctu_assert(wasm->reports, "unhandled name node %s", hlir_kind_to_string(get_hlir_kind(val)));
+        ctu_assert(
+            wasm->reports,
+            "unhandled name node %s",
+            hlir_kind_to_string(get_hlir_kind(val)));
         break;
     }
 }
@@ -241,7 +250,10 @@ static void emit_call_node(wasm_t *wasm, const hlir_t *node) {
     if (get_hlir_kind(node->call) == HLIR_FUNCTION) {
         wasm_write(wasm, format("call $%s", get_hlir_name(node->call)));
     } else {
-        ctu_assert(wasm->reports, "unhandled call node %s", hlir_kind_to_string(get_hlir_kind(node->call)));
+        ctu_assert(
+            wasm->reports,
+            "unhandled call node %s",
+            hlir_kind_to_string(get_hlir_kind(node->call)));
     }
 }
 
@@ -312,7 +324,8 @@ static void emit_node(wasm_t *wasm, const hlir_t *node) {
         break;
 
     default:
-        ctu_assert(wasm->reports, "unhandled %s node", hlir_kind_to_string(kind));
+        ctu_assert(
+            wasm->reports, "unhandled %s node", hlir_kind_to_string(kind));
         break;
     }
 }

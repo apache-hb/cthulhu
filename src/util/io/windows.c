@@ -17,7 +17,10 @@ typedef struct {
 #define SELF(file) ((windows_file_t *)(file)->data)
 
 static size_t windows_read(file_t *self, void *dst, size_t total) {
-    CTASSERTF(total < UINT32_MAX, "cannot read > DWORD_MAX, attempted read of %zu", total);
+    CTASSERTF(
+        total < UINT32_MAX,
+        "cannot read > DWORD_MAX, attempted read of %zu",
+        total);
     windows_file_t *file = SELF(self);
     DWORD read;
 
@@ -36,7 +39,10 @@ static size_t windows_read(file_t *self, void *dst, size_t total) {
 }
 
 static size_t windows_write(file_t *self, const void *src, size_t total) {
-    CTASSERTF(total < UINT32_MAX, "cannot write > DWORD_MAX, attempted write of %zu", total);
+    CTASSERTF(
+        total < UINT32_MAX,
+        "cannot write > DWORD_MAX, attempted write of %zu",
+        total);
     windows_file_t *file = SELF(self);
     DWORD written = 0;
 
@@ -175,9 +181,11 @@ static char *get_absolute(const char *path) {
 
     // convert our path to a wide string
     size_t len = strlen(correctEndings);
-    int mbsize = MultiByteToWideChar(UTF8_CODEPAGE, 0, correctEndings, (int)len, NULL, 0);
+    int mbsize = MultiByteToWideChar(
+        UTF8_CODEPAGE, 0, correctEndings, (int)len, NULL, 0);
     LPWSTR total = ctu_malloc(sizeof(WCHAR));
-    MultiByteToWideChar(UTF8_CODEPAGE, 0, correctEndings, (int)len, total, mbsize);
+    MultiByteToWideChar(
+        UTF8_CODEPAGE, 0, correctEndings, (int)len, total, mbsize);
 
     // use the wide string to get the full path
     DWORD size = GetFullPathNameW(total, 0, NULL, NULL);
@@ -203,7 +211,8 @@ void platform_close(file_t *file) {
     CloseHandle(self->handle);
 }
 
-void platform_open(file_t **file, const char *path, contents_t format, access_t access) {
+void platform_open(
+    file_t **file, const char *path, contents_t format, access_t access) {
     char *absolute = get_absolute(path);
     file_t *self = ctu_malloc(TOTAL_SIZE);
     self->path = absolute;
@@ -212,7 +221,8 @@ void platform_open(file_t **file, const char *path, contents_t format, access_t 
     self->backing = FD;
     self->ops = &kFileOps;
 
-    DWORD desiredAccess = (access & READ ? GENERIC_READ : 0) | (access & WRITE ? GENERIC_WRITE : 0);
+    DWORD desiredAccess = (access & READ ? GENERIC_READ : 0) |
+                          (access & WRITE ? GENERIC_WRITE : 0);
 
     DWORD createDisposition = (access & WRITE) ? CREATE_ALWAYS : OPEN_EXISTING;
 

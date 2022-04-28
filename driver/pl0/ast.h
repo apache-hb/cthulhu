@@ -120,8 +120,10 @@ typedef struct pl0_t {
 pl0_t *pl0_digit(scan_t *scan, where_t where, mpz_t digit);
 pl0_t *pl0_ident(scan_t *scan, where_t where, const char *ident);
 
-pl0_t *pl0_binary(scan_t *scan, where_t where, binary_t binary, pl0_t *lhs, pl0_t *rhs);
-pl0_t *pl0_compare(scan_t *scan, where_t where, compare_t compare, pl0_t *lhs, pl0_t *rhs);
+pl0_t *pl0_binary(
+    scan_t *scan, where_t where, binary_t binary, pl0_t *lhs, pl0_t *rhs);
+pl0_t *pl0_compare(
+    scan_t *scan, where_t where, compare_t compare, pl0_t *lhs, pl0_t *rhs);
 
 pl0_t *pl0_unary(scan_t *scan, where_t where, unary_t unary, pl0_t *operand);
 pl0_t *pl0_odd(scan_t *scan, where_t where, pl0_t *operand);
@@ -135,8 +137,11 @@ pl0_t *pl0_loop(scan_t *scan, where_t where, pl0_t *cond, pl0_t *body);
 
 pl0_t *pl0_stmts(scan_t *scan, where_t where, vector_t *stmts);
 
-pl0_t *pl0_procedure(scan_t *scan, where_t where, const char *name, vector_t *locals, vector_t *body);
+pl0_t *pl0_procedure(
+    scan_t *scan, where_t where, const char *name, vector_t *locals,
+    vector_t *body);
 pl0_t *pl0_value(scan_t *scan, where_t where, const char *name, pl0_t *value);
 
-pl0_t *pl0_module(scan_t *scan, where_t where, const char *mod, vector_t *imports, vector_t *consts, vector_t *globals,
-                  vector_t *procs, pl0_t *entry);
+pl0_t *pl0_module(
+    scan_t *scan, where_t where, const char *mod, vector_t *imports,
+    vector_t *consts, vector_t *globals, vector_t *procs, pl0_t *entry);

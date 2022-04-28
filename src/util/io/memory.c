@@ -75,7 +75,9 @@ void memory_close(file_t *file) {
     ctu_free(SELF(file)->data);
 }
 
-void memory_open(file_t **file, const char *name, size_t size, contents_t format, access_t access) {
+void memory_open(
+    file_t **file, const char *name, size_t size, contents_t format,
+    access_t access) {
     file_t *self = ctu_malloc(TOTAL_SIZE);
     self->path = name;
     self->format = format;

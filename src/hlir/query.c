@@ -61,14 +61,18 @@ const hlir_t *get_hlir_type(const hlir_t *hlir) {
 const char *get_hlir_name(const hlir_t *hlir) {
     CHECK_NULL(hlir);
     hlir_kind_t kind = get_hlir_kind(hlir);
-    CTASSERTF(has_name(kind), "hlir_t %s has no name", hlir_kind_to_string(kind));
+    CTASSERTF(
+        has_name(kind), "hlir_t %s has no name", hlir_kind_to_string(kind));
     return hlir->name;
 }
 
 const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir) {
     CHECK_NULL(hlir);
     hlir_kind_t kind = get_hlir_kind(hlir);
-    CTASSERTF(has_attribs(kind), "hlir_t %s has no attributes", hlir_kind_to_string(kind));
+    CTASSERTF(
+        has_attribs(kind),
+        "hlir_t %s has no attributes",
+        hlir_kind_to_string(kind));
     return hlir->attributes;
 }
 

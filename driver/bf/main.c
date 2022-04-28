@@ -23,10 +23,16 @@ void *bf_parse(reports_t *reports, scan_t *scan) {
         hlir_t *hlir = NULL;
         switch (*text++) {
         case '>':
-            hlir = hlir_assign(node, cursor, hlir_add(node, cursor, hlir_int_literal(node, kCursor, 1)));
+            hlir = hlir_assign(
+                node,
+                cursor,
+                hlir_add(node, cursor, hlir_int_literal(node, kCursor, 1)));
             break;
         case '<':
-            hlir = hlir_assign(node, cursor, hlir_sub(node, cursor, hlir_int_literal(node, kCursor, 1)));
+            hlir = hlir_assign(
+                node,
+                cursor,
+                hlir_sub(node, cursor, hlir_int_literal(node, kCursor, 1)));
             break;
         case '+':
         case '-':
@@ -47,7 +53,9 @@ void *bf_parse(reports_t *reports, scan_t *scan) {
 
     hlir_t *body = hlir_stmts(node, stmts);
 
-    signature_t signature = { .params = vector_new(0), .result = hlir_void(node, "void"), .variadic = false };
+    signature_t signature = { .params = vector_new(0),
+                              .result = hlir_void(node, "void"),
+                              .variadic = false };
     hlir_t *entry = hlir_function(node, "main", signature, vector_of(0), body);
 
     return NULL;

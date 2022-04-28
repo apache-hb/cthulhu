@@ -24,11 +24,13 @@ typedef enum {
  * @brief any modifiers for a type
  */
 typedef enum {
-    TAG_CONST = (1 << 0),    ///< this type is const, and cannot be modified or assigned
-    TAG_VOLATILE = (1 << 1), ///< this type is volatile, all modifications, assigns,
-                             ///  and accesses are treated as side effects
-    TAG_ATOMIC = (1 << 2),   ///< this type is atomic, treated the same as
-                             ///< volatile but also synchronizes
+    TAG_CONST =
+        (1 << 0), ///< this type is const, and cannot be modified or assigned
+    TAG_VOLATILE =
+        (1 << 1),          ///< this type is volatile, all modifications, assigns,
+                           ///  and accesses are treated as side effects
+    TAG_ATOMIC = (1 << 2), ///< this type is atomic, treated the same as
+                           ///< volatile but also synchronizes
 
     TAG_TOTAL
 } hlir_tags_t;
@@ -52,7 +54,8 @@ typedef struct {
  * @param tags the tags of the declaration
  * @return a new attributes object
  */
-hlir_attributes_t *hlir_attributes(hlir_linkage_t linkage, hlir_tags_t tags, const char *name);
+hlir_attributes_t *
+hlir_attributes(hlir_linkage_t linkage, hlir_tags_t tags, const char *name);
 
 /**
  * @brief create a new attributes object with the default tags

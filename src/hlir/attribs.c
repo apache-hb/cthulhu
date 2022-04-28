@@ -1,6 +1,7 @@
 #include "cthulhu/hlir/hlir.h"
 
-hlir_attributes_t *hlir_attributes(hlir_linkage_t linkage, hlir_tags_t tags, const char *name) {
+hlir_attributes_t *
+hlir_attributes(hlir_linkage_t linkage, hlir_tags_t tags, const char *name) {
     hlir_attributes_t *attributes = ctu_malloc(sizeof(hlir_attributes_t));
     attributes->linkage = linkage;
     attributes->tags = tags;

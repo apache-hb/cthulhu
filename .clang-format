@@ -2,6 +2,7 @@
 BasedOnStyle: LLVM
 AlignConsecutiveMacros: true
 AlignConsecutiveDeclarations: false
+AlignTrailingComments: true
 AlignEscapedNewlines: Left
 AllowAllArgumentsOnNextLine: true
 AllowShortIfStatementsOnASingleLine: WithoutElse

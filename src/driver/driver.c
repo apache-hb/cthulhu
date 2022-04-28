@@ -119,10 +119,11 @@ int common_main(int argc, const char **argv, driver_t driver) {
     vector_t *plugins = vector_new(0); // all plugins
     vector_t *modules = vector_new(0); // all library bytecode modules
     vector_t *sources = vector_new(0); // all source files
+    size_t pluginIdCounter = 0;
 
     for (size_t i = 0; i < vector_len(files); i++) {
         const char *path = vector_get(files, i);
-        plugin_handle_t *handle = is_plugin(path);
+        plugin_handle_t *handle = is_plugin(&pluginIdCounter, path);
         if (handle != NULL) {
             vector_push(&plugins, handle);
             continue;
@@ -159,8 +160,7 @@ int common_main(int argc, const char **argv, driver_t driver) {
         }
 
         if (handle->init != NULL) {
-            plugin_t plugin = { .reports = reports };
-            handle->init(&plugin);
+            handle->init(&handle->plugin);
         }
     }
 
@@ -175,7 +175,12 @@ int common_main(int argc, const char **argv, driver_t driver) {
         file_t *file = file_new(path, TEXT, READ);
         if (!file_ok(file)) {
             ctu_errno_t err = ctu_last_error();
-            report(reports, ERROR, NULL, "failed to open file: %s", ctu_err_string(err));
+            report(
+                reports,
+                ERROR,
+                NULL,
+                "failed to open file: %s",
+                ctu_err_string(err));
             continue;
         }
 
