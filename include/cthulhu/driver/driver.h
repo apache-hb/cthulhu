@@ -50,6 +50,22 @@ typedef struct {
     analyze_t sema;
 } driver_t;
 
+// TODO: we need to move to this model of compilation
+// to support circular imports in languages that want it
+#if 0
+typedef void *(*parse_t)(runtime_t *, scan_t *);
+typedef hlir_t *(*declare_t)(runtime_t *, void *);
+typedef hlir_t *(*analyze_t)(runtime_t *, hlir_t *);
+
+typedef struct {
+    const char *name;
+    const char *version;
+    parse_t parseSource;
+    declare_t forwardDeclare;
+    analyze_t analyzeModule;
+} driver_t;
+#endif
+
 /**
  * @brief initialize the common runtime, always the first function a driver
  * should call
