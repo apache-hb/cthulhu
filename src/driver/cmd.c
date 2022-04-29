@@ -7,7 +7,7 @@
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/map.h"
 #include "cthulhu/util/str.h"
-#include "mini-gmp.h"
+#include <gmp.h>
 #include "src/driver/cmd.h"
 
 CT_CALLBACKS(kCallbacks, cmd);
