@@ -5,7 +5,8 @@
 
 #include <gmp.h>
 
-typedef enum {
+typedef enum
+{
     FLAG_BOOL,
     FLAG_STRING,
     FLAG_INT,
@@ -13,25 +14,27 @@ typedef enum {
     FLAG_NONE
 } flag_type_t;
 
-typedef struct {
+typedef struct
+{
     const char *name;
     bool *setByUser;
     flag_type_t type;
     void *data;
 } flag_t;
 
-typedef struct {
+typedef struct
+{
     reports_t *reports;
     flag_t currentFlag;
 
     vector_t *files; ///< all files provided by the user
                      ///  can be source and library files
 
-#define TYPE_BOOL   bool
-#define TYPE_INT    int
+#define TYPE_BOOL bool
+#define TYPE_INT int
 #define TYPE_STRING char *
-#define COMMAND(name, type, initial, description, ...) \
-    type name;                                         \
+#define COMMAND(name, type, initial, description, ...)                                                                 \
+    type name;                                                                                                         \
     bool name##SetByUser;
 #include "flags.inc"
 } commands_t;

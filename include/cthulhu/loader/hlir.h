@@ -1,6 +1,7 @@
 #include "loader.h"
 
-typedef struct {
+typedef struct
+{
     bool embedSource;
 } save_settings_t;
 

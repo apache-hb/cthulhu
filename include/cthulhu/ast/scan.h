@@ -17,7 +17,8 @@ typedef int64_t column_t; ///< column number
 /**
  * @brief source text
  */
-typedef struct {
+typedef struct
+{
     size_t size;      ///< the number of bytes in the text
     const char *text; ///< the text itself
 } text_t;
@@ -27,7 +28,8 @@ struct reports_t;
 /**
  * @brief a source file
  */
-typedef struct {
+typedef struct
+{
     const char *language;      ///< the language this file contains
     const char *path;          ///< the path to this file
     void *data;                ///< user data pointer
@@ -55,7 +57,8 @@ const char *scan_text(const scan_t *scan);
 /**
  * @brief a location inside a scanner
  */
-typedef struct {
+typedef struct
+{
     line_t firstLine; ///< the first line of the location
     line_t lastLine;  ///< the last line of the location
 

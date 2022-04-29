@@ -3,7 +3,8 @@
 /**
  * @brief all binary operators
  */
-typedef enum {
+typedef enum
+{
     BINARY_ADD, ///< lhs + rhs
     BINARY_SUB, ///< lhs - rhs
     BINARY_MUL, ///< lhs * rhs
@@ -25,7 +26,8 @@ typedef enum {
 /**
  * @brief all comparison operators
  */
-typedef enum {
+typedef enum
+{
     COMPARE_EQ,  ///< lhs == rhs
     COMPARE_NEQ, ///< lhs != rhs
 
@@ -40,7 +42,8 @@ typedef enum {
 /**
  * @brief all unary operators
  */
-typedef enum {
+typedef enum
+{
     UNARY_NEG, ///< -operand
     UNARY_ABS, ///< abs(operand)
 

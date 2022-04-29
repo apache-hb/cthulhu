@@ -16,8 +16,8 @@
  * @{
  */
 
-#define EXIT_OK      0  ///< no compiler errors or internal errors
-#define EXIT_ERROR   1  ///< only compiler errors occurred
+#define EXIT_OK 0       ///< no compiler errors or internal errors
+#define EXIT_ERROR 1    ///< only compiler errors occurred
 #define EXIT_INTERAL 99 ///< at least one internal error occured
 
 /** @} */
@@ -60,7 +60,8 @@
 /**
  * @brief the severity of a message
  */
-typedef enum {
+typedef enum
+{
     INTERNAL, ///< an invalid state has been reached internally
     ERROR,    ///< a user issue that prevents the program from continuing
     WARNING,  ///< a user issue that may be resolved
@@ -72,7 +73,8 @@ typedef enum {
 /**
  * @brief part of an error message
  */
-typedef struct {
+typedef struct
+{
     char *message;      ///< associated message
     const node_t *node; ///< associated node
 } part_t;
@@ -80,7 +82,8 @@ typedef struct {
 /**
  * @brief an error message
  */
-typedef struct {
+typedef struct
+{
     /* the level of this error */
     level_t level;
 
@@ -100,7 +103,8 @@ typedef struct {
 /**
  * @brief an error reporting sink
  */
-typedef struct reports_t {
+typedef struct reports_t
+{
     vector_t *messages; ///< all messages in the sink
 } reports_t;
 
@@ -147,9 +151,7 @@ message_t *ctu_assert(reports_t *reports, const char *fmt, ...);
  *
  * @return a message object to attach extra data to
  */
-message_t *report(
-    reports_t *reports, level_t level, const node_t *node, const char *fmt,
-    ...);
+message_t *report(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...);
 
 /**
  * add another part to a message
@@ -159,8 +161,7 @@ message_t *report(
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-void report_append(
-    message_t *message, const node_t *node, const char *fmt, ...);
+void report_append(message_t *message, const node_t *node, const char *fmt, ...);
 
 /**
  * add an underline message to an existing message

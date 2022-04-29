@@ -5,7 +5,8 @@
 
 #include <gmp.h>
 
-typedef enum {
+typedef enum
+{
     PL0_DIGIT,
     PL0_IDENT,
 
@@ -27,11 +28,13 @@ typedef enum {
     PL0_MODULE
 } pl0_type_t;
 
-typedef struct pl0_t {
+typedef struct pl0_t
+{
     pl0_type_t type;
     const node_t *node;
 
-    struct {
+    struct
+    {
         /* integer literal */
         mpz_t digit;
 
@@ -45,13 +48,15 @@ typedef struct pl0_t {
         struct pl0_t *print;
 
         /* a unary operation */
-        struct {
+        struct
+        {
             unary_t unary;
             struct pl0_t *operand;
         };
 
         /* a binary or compare operation */
-        struct {
+        struct
+        {
             struct pl0_t *lhs;
             struct pl0_t *rhs;
 
@@ -62,13 +67,15 @@ typedef struct pl0_t {
         };
 
         /* an assignment */
-        struct {
+        struct
+        {
             const char *dst;
             struct pl0_t *src;
         };
 
         /* a conditional branch */
-        struct {
+        struct
+        {
             struct pl0_t *cond;
             struct pl0_t *then;
         };
@@ -77,12 +84,14 @@ typedef struct pl0_t {
         vector_t *stmts;
 
         /* a declaration */
-        struct {
+        struct
+        {
             const char *name;
 
             union {
                 /* a procedure */
-                struct {
+                struct
+                {
                     /* the procedures local variables */
                     vector_t *locals;
 
@@ -95,7 +104,8 @@ typedef struct pl0_t {
             };
         };
 
-        struct {
+        struct
+        {
             /* all immutable globals in the program */
             vector_t *consts;
 
@@ -120,10 +130,8 @@ typedef struct pl0_t {
 pl0_t *pl0_digit(scan_t *scan, where_t where, mpz_t digit);
 pl0_t *pl0_ident(scan_t *scan, where_t where, const char *ident);
 
-pl0_t *pl0_binary(
-    scan_t *scan, where_t where, binary_t binary, pl0_t *lhs, pl0_t *rhs);
-pl0_t *pl0_compare(
-    scan_t *scan, where_t where, compare_t compare, pl0_t *lhs, pl0_t *rhs);
+pl0_t *pl0_binary(scan_t *scan, where_t where, binary_t binary, pl0_t *lhs, pl0_t *rhs);
+pl0_t *pl0_compare(scan_t *scan, where_t where, compare_t compare, pl0_t *lhs, pl0_t *rhs);
 
 pl0_t *pl0_unary(scan_t *scan, where_t where, unary_t unary, pl0_t *operand);
 pl0_t *pl0_odd(scan_t *scan, where_t where, pl0_t *operand);
@@ -137,11 +145,8 @@ pl0_t *pl0_loop(scan_t *scan, where_t where, pl0_t *cond, pl0_t *body);
 
 pl0_t *pl0_stmts(scan_t *scan, where_t where, vector_t *stmts);
 
-pl0_t *pl0_procedure(
-    scan_t *scan, where_t where, const char *name, vector_t *locals,
-    vector_t *body);
+pl0_t *pl0_procedure(scan_t *scan, where_t where, const char *name, vector_t *locals, vector_t *body);
 pl0_t *pl0_value(scan_t *scan, where_t where, const char *name, pl0_t *value);
 
-pl0_t *pl0_module(
-    scan_t *scan, where_t where, const char *mod, vector_t *imports,
-    vector_t *consts, vector_t *globals, vector_t *procs, pl0_t *entry);
+pl0_t *pl0_module(scan_t *scan, where_t where, const char *mod, vector_t *imports, vector_t *consts, vector_t *globals,
+                  vector_t *procs, pl0_t *entry);

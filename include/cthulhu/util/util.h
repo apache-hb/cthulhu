@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #if ENABLE_TUNING
-#    include <stdatomic.h>
+#include <stdatomic.h>
 #endif
 
 #include "macros.h"
@@ -94,9 +94,7 @@ void *ctu_memdup(const void *ptr, size_t size);
  */
 void init_gmp(void);
 
-#define BOX(name) \
-    ctu_memdup(   \
-        &(name), sizeof(name)) ///< box a value onto the heap from the stack
+#define BOX(name) ctu_memdup(&(name), sizeof(name)) ///< box a value onto the heap from the stack
 
 #if ENABLE_TUNING
 
@@ -115,7 +113,8 @@ typedef atomic_size_t count_t; ///< atomic memory counter type
 /**
  * allocation statistics
  */
-typedef struct {
+typedef struct
+{
     count_t mallocs;  ///< calls to malloc
     count_t reallocs; ///< calls to realloc
     count_t frees;    ///< calls to free

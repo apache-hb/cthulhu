@@ -14,9 +14,9 @@
  */
 
 #ifdef _WIN32
-#    define PATH_SEP "\\" ///< path separator
+#define PATH_SEP "\\" ///< path separator
 #else
-#    define PATH_SEP "/" ///< path separator
+#define PATH_SEP "/" ///< path separator
 #endif
 
 /**
@@ -117,7 +117,8 @@ typedef bool (*file_ok_t)(struct file_t *self);
 /**
  * @brief file operation callbacks
  */
-typedef struct {
+typedef struct
+{
     file_read_t read;   ///< read callback
     file_write_t write; ///< write callback
     file_seek_t seek;   ///< seek callback
@@ -130,7 +131,8 @@ typedef struct {
 /**
  * @brief the type of contents in a file stream
  */
-typedef enum {
+typedef enum
+{
     BINARY, ///< binary file
     TEXT    ///< text file
 } contents_t;
@@ -138,7 +140,8 @@ typedef enum {
 /**
  * @brief file permissions
  */
-typedef enum {
+typedef enum
+{
     READ = (1 << 0),  ///< read permission
     WRITE = (1 << 1), ///< write permission
     EXEC = (1 << 2)   ///< execute permission
@@ -147,7 +150,8 @@ typedef enum {
 /**
  * @brief the file backing type
  */
-typedef enum {
+typedef enum
+{
     FD,    ///< file descriptor
     MEMORY ///< in memory file
 } file_type_t;
@@ -155,7 +159,8 @@ typedef enum {
 /**
  * @brief generic file stream
  */
-typedef struct file_t {
+typedef struct file_t
+{
     const char *path;    ///< the path to the file
     contents_t format;   ///< the type of contents in the file
     access_t access;     ///< the permissions of the file
@@ -193,8 +198,7 @@ file_t *file_new(const char *path, contents_t format, access_t access);
  *
  * @return a file handle
  */
-file_t *
-memory_new(const char *name, size_t size, contents_t format, access_t access);
+file_t *memory_new(const char *name, size_t size, contents_t format, access_t access);
 
 /**
  * @brief read from a file

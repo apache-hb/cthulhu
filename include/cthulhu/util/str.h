@@ -185,7 +185,8 @@ bool str_equal(const char *lhs, const char *rhs);
 
 /** @} */
 
-typedef struct {
+typedef struct
+{
     size_t len;
     size_t size;
     char *data;

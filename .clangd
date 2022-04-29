@@ -18,10 +18,10 @@ Diagnostics:
       readability-identifier-naming.StaticConstantPrefix: k
 
       readability-identifier-naming.UnionCase: lower_case
-      readability-identifier-naming.UnionSuffx: _t
+      readability-identifier-naming.UnionSuffix: _t
 
       readability-identifier-naming.StructCase: lower_case
-      readability-identifier-naming.StructSuffx: _t
+      readability-identifier-naming.StructSuffix: _t
 
       readability-identifier-naming.EnumCase: lower_case
       readability-identifier-naming.EnumSuffix: _t

@@ -10,7 +10,8 @@
  * freeing the vector does not free the data it references internally.
  * only the vector itself is freed.
  */
-typedef struct {
+typedef struct
+{
     size_t size;  ///< the total number of allocated elements
     size_t used;  ///< the number of elements in use
     void *data[]; ///< the data

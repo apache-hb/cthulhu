@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cthulhu/loader/loader.h"
+#include "cthulhu/util/version-def.h"
 
 /**
  * internal layout of a saved file
@@ -19,7 +20,8 @@
 
 BEGIN_PACKED(2)
 
-typedef struct PACKED(2) {
+typedef struct PACKED(2)
+{
     magic_t magic;
     submagic_t submagic;
     semver_t semver;

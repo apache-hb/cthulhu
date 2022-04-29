@@ -6,7 +6,8 @@
 /**
  * a bucket in a hashmap
  */
-typedef struct bucket_t {
+typedef struct bucket_t
+{
     const char *key;       ///< the key
     void *value;           ///< any pointer value
     struct bucket_t *next; ///< the next bucket in the chain
@@ -18,7 +19,8 @@ typedef struct bucket_t {
  * freeing the map will not free the keys or the values.
  * these need to be freed beforehand by the owner of the container.
  */
-typedef struct {
+typedef struct
+{
     size_t size;     ///< the number of buckets in the toplevel
     bucket_t data[]; ///< the buckets
 } map_t;

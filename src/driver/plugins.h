@@ -5,7 +5,8 @@
 
 typedef void (*plugin_init_t)(plugin_t *);
 
-typedef struct {
+typedef struct
+{
     void *handle;
     const char *path;
 

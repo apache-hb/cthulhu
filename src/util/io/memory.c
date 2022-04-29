@@ -2,7 +2,8 @@
 
 #include <string.h>
 
-typedef struct {
+typedef struct
+{
     char *data;
     size_t size;
     size_t used;
@@ -12,7 +13,8 @@ typedef struct {
 #define TOTAL_SIZE (sizeof(file_t) + sizeof(memory_file_t))
 #define SELF(file) ((memory_file_t *)(file)->data)
 
-static size_t mem_read(file_t *self, void *dst, size_t total) {
+static size_t mem_read(file_t *self, void *dst, size_t total)
+{
     memory_file_t *file = SELF(self);
     size_t read = MIN(total, file->used - file->cursor);
     memcpy(dst, file->data + file->cursor, read);
@@ -20,9 +22,11 @@ static size_t mem_read(file_t *self, void *dst, size_t total) {
     return read;
 }
 
-static size_t mem_write(file_t *self, const void *src, size_t total) {
+static size_t mem_write(file_t *self, const void *src, size_t total)
+{
     memory_file_t *file = SELF(self);
-    if (file->cursor + total > file->size) {
+    if (file->cursor + total > file->size)
+    {
         size_t resize = MAX(file->size * 2, file->cursor + total);
         file->data = ctu_realloc(file->data, resize);
         file->size = resize;
@@ -34,29 +38,34 @@ static size_t mem_write(file_t *self, const void *src, size_t total) {
     return total;
 }
 
-static size_t mem_seek(file_t *self, size_t offset) {
+static size_t mem_seek(file_t *self, size_t offset)
+{
     memory_file_t *file = SELF(self);
     size_t cursor = MIN(offset, file->used);
     file->cursor = cursor;
     return cursor;
 }
 
-static size_t mem_size(file_t *self) {
+static size_t mem_size(file_t *self)
+{
     memory_file_t *file = SELF(self);
     return file->used;
 }
 
-static size_t mem_tell(file_t *self) {
+static size_t mem_tell(file_t *self)
+{
     memory_file_t *file = SELF(self);
     return file->cursor;
 }
 
-static void *mem_map(file_t *self) {
+static void *mem_map(file_t *self)
+{
     memory_file_t *file = SELF(self);
     return file->data;
 }
 
-static bool mem_ok(file_t *self) {
+static bool mem_ok(file_t *self)
+{
     UNUSED(self);
     return true;
 }
@@ -71,13 +80,13 @@ static file_ops_t kMemoryOps = {
     .ok = mem_ok,
 };
 
-void memory_close(file_t *file) {
+void memory_close(file_t *file)
+{
     ctu_free(SELF(file)->data);
 }
 
-void memory_open(
-    file_t **file, const char *name, size_t size, contents_t format,
-    access_t access) {
+void memory_open(file_t **file, const char *name, size_t size, contents_t format, access_t access)
+{
     file_t *self = ctu_malloc(TOTAL_SIZE);
     self->path = name;
     self->format = format;

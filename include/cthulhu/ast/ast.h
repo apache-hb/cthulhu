@@ -12,7 +12,8 @@
 /**
  * a position in a source file
  */
-typedef struct {
+typedef struct
+{
     scan_t *scan;  ///< the source file
     where_t where; ///< the location of this node in the source file
 } node_t;

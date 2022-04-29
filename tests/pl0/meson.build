@@ -28,25 +28,17 @@ foreach case : fail
     )
 endforeach
 
-# imp0 = custom_target('import-0-lib',
-#     input : dir/'import-0/lib.pl0',
-#     output : 'lib.hlir',
-#     command : [ pl0c, '@INPUT@', '--bytecode', '--output', '@OUTPUT@' ]
+# pl0gen = generator(pl0c,
+#     output : [ '@BASENAME@.hlir' ],
+#     arguments : [ '@INPUT@', '-Benable', '-O', '@OUTPUT@' ]
 # )
 
 # test('pass-import-0', pl0c,
-#     args : [ dir/'import-0/main.pl0', imp0 ],
+#     args : [ dir/'import-0/main.pl0', pl0gen.process(dir/'import-0/lib.pl0') ],
 #     suite : 'pl0'
 # )
 
-# imp1 = custom_target('import-1-lib',
-#     input : dir/'import-1/constant.pl0',
-#     output : 'constant.hlir',
-#     command : [ pl0c, '@INPUT@', '--bytecode', '--output', '@OUTPUT@' ]
-# )
-
 # test('pass-import-1', pl0c,
-#     args : [ dir/'import-1/main.pl0', imp1 ],
-#     suite : 'pl0',
-#     should_fail : true
+#     args : [ dir/'import-1/main.pl0', pl0gen.process(dir/'import-1/lib.pl0') ],
+#     suite : 'pl0'
 # )

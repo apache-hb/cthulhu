@@ -11,7 +11,8 @@ typedef uint32_t submagic_t;
 typedef uint32_t semver_t;
 typedef uint8_t bool_t;
 
-typedef enum {
+typedef enum
+{
     FIELD_STRING,
     FIELD_INT,
     FIELD_BOOL,
@@ -19,21 +20,23 @@ typedef enum {
     FIELD_ARRAY,
 } field_t;
 
-typedef struct {
+typedef struct
+{
     type_t type;
     offset_t offset;
 } index_t;
 
-typedef struct {
+typedef struct
+{
     offset_t offset;
     offset_t length;
 } array_t;
 
-#define NULL_TYPE   ((type_t)UINT32_MAX - 128)
+#define NULL_TYPE ((type_t)UINT32_MAX - 128)
 #define NULL_OFFSET ((offset_t)UINT32_MAX - 128)
 
-#define NULL_INDEX ((index_t) { NULL_TYPE, NULL_OFFSET })
-#define NULL_ARRAY ((array_t) { UINT64_MAX, UINT64_MAX })
+#define NULL_INDEX ((index_t){NULL_TYPE, NULL_OFFSET})
+#define NULL_ARRAY ((array_t){UINT64_MAX, UINT64_MAX})
 
 typedef union {
     const char *string;
@@ -57,37 +60,38 @@ bool get_bool(value_t value);
 index_t get_reference(value_t value);
 array_t get_array(value_t value);
 
-typedef struct {
+typedef struct
+{
     size_t length;
     const field_t *fields;
 } layout_t;
 
-typedef struct {
+typedef struct
+{
     const layout_t *layout;
     value_t *values;
 } record_t;
 
-typedef struct {
+typedef struct
+{
     size_t types;
     const layout_t *layouts;
 } format_t;
 
 #define FIELD(name, type) type
-#define LAYOUT(name, array) \
-    { .length = sizeof(array) / sizeof(field_t), .fields = (array) }
-#define FORMAT(array) \
-    { .types = sizeof(array) / sizeof(layout_t), .layouts = (array) }
+#define LAYOUT(name, array)                                                                                            \
+    {                                                                                                                  \
+        .length = sizeof(array) / sizeof(field_t), .fields = (array)                                                   \
+    }
+#define FORMAT(array)                                                                                                  \
+    {                                                                                                                  \
+        .types = sizeof(array) / sizeof(layout_t), .layouts = (array)                                                  \
+    }
 
 #define FIELDLEN(name) (sizeof(name) / sizeof(field_t))
 
-#define NEW_VERSION(major, minor, patch) \
-    (((major) << 24) | ((minor) << 16) | (patch))
-
-#define VERSION_MAJOR(version) (((version) >> 24) & 0xFF)
-#define VERSION_MINOR(version) (((version) >> 16) & 0xFF)
-#define VERSION_PATCH(version) ((version)&0xFFFF)
-
-typedef struct {
+typedef struct
+{
     reports_t *reports;     // report sink
     const format_t *format; // a description of the data we're dealing with
     const char *path;       // where is this data
@@ -95,12 +99,14 @@ typedef struct {
     semver_t semver;        // semver for this data
 } header_t;
 
-typedef struct {
+typedef struct
+{
     header_t header;
 
     union {
         // data needed for writing
-        struct {
+        struct
+        {
             stream_t *stream;   // the global stream that everything eventually
                                 // ends up in
             stream_t *strings;  // the string table
@@ -110,7 +116,8 @@ typedef struct {
         };
 
         // data needed for reading
-        struct {
+        struct
+        {
             const char *data; // the raw data
             size_t length;    // the length of the data
             size_t string;    // string table offset

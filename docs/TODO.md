@@ -65,3 +65,10 @@
 
 * make util functions more verbose
   * its getting a bit hard to reason about what some functions are doing based on name alone now
+
+* move over to an existing style guide
+  * the vulkan one looks decent
+  * maybe microsoft
+
+* properly prefix the entire compiler
+  * will make writing plugins easier in the future

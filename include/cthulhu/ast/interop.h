@@ -1,7 +1,7 @@
 #pragma once
 
 #if !COMPILER_SOURCE
-#    include "cthulhu/util/macros.h"
+#include "cthulhu/util/macros.h"
 DISABLE_SAL
 #endif
 
@@ -47,23 +47,28 @@ void flex_init(where_t *where);
 /**
  * used to read input from flex and bison
  */
-#define YY_INPUT(buffer, result, size)          \
-    result = flex_input(yyextra, buffer, size); \
-    if ((result) <= 0) {                        \
-        (result) = YY_NULL;                     \
+#define YY_INPUT(buffer, result, size)                                                                                 \
+    result = flex_input(yyextra, buffer, size);                                                                        \
+    if ((result) <= 0)                                                                                                 \
+    {                                                                                                                  \
+        (result) = YY_NULL;                                                                                            \
     }
 
-#define YYLLOC_DEFAULT(current, rhs, offset)                      \
-    do {                                                          \
-        if (offset) {                                             \
-            (current).firstLine = YYRHSLOC(rhs, 1).firstLine;     \
-            (current).firstColumn = YYRHSLOC(rhs, 1).firstColumn; \
-            (current).lastLine = YYRHSLOC(rhs, 1).lastLine;       \
-            (current).lastColumn = YYRHSLOC(rhs, 1).lastColumn;   \
-        } else {                                                  \
-            (current).firstLine = YYRHSLOC(rhs, 0).firstLine;     \
-            (current).firstColumn = YYRHSLOC(rhs, 0).firstColumn; \
-        }                                                         \
+#define YYLLOC_DEFAULT(current, rhs, offset)                                                                           \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        if (offset)                                                                                                    \
+        {                                                                                                              \
+            (current).firstLine = YYRHSLOC(rhs, 1).firstLine;                                                          \
+            (current).firstColumn = YYRHSLOC(rhs, 1).firstColumn;                                                      \
+            (current).lastLine = YYRHSLOC(rhs, 1).lastLine;                                                            \
+            (current).lastColumn = YYRHSLOC(rhs, 1).lastColumn;                                                        \
+        }                                                                                                              \
+        else                                                                                                           \
+        {                                                                                                              \
+            (current).firstLine = YYRHSLOC(rhs, 0).firstLine;                                                          \
+            (current).firstColumn = YYRHSLOC(rhs, 0).firstColumn;                                                      \
+        }                                                                                                              \
     } while (0)
 
 /**
@@ -74,19 +79,23 @@ void flex_init(where_t *where);
 /**
  * used to route memory for flex and bison though cthulhu allocators
  */
-#define FLEX_MEMORY(alloc, realloc, free)                             \
-    inline void *alloc(size_t size, yyscan_t scanner) {               \
-        UNUSED(scanner);                                              \
-        return ctu_malloc(size);                                      \
-    }                                                                 \
-    inline void *realloc(void *ptr, size_t bytes, yyscan_t scanner) { \
-        UNUSED(scanner);                                              \
-        return ctu_realloc(ptr, bytes);                               \
-    }                                                                 \
-    inline void free(void *ptr, yyscan_t scanner) {                   \
-        UNUSED(scanner);                                              \
-        if (ptr == NULL) return;                                      \
-        ctu_free(ptr);                                                \
+#define FLEX_MEMORY(alloc, realloc, free)                                                                              \
+    inline void *alloc(size_t size, yyscan_t scanner)                                                                  \
+    {                                                                                                                  \
+        UNUSED(scanner);                                                                                               \
+        return ctu_malloc(size);                                                                                       \
+    }                                                                                                                  \
+    inline void *realloc(void *ptr, size_t bytes, yyscan_t scanner)                                                    \
+    {                                                                                                                  \
+        UNUSED(scanner);                                                                                               \
+        return ctu_realloc(ptr, bytes);                                                                                \
+    }                                                                                                                  \
+    inline void free(void *ptr, yyscan_t scanner)                                                                      \
+    {                                                                                                                  \
+        UNUSED(scanner);                                                                                               \
+        if (ptr == NULL)                                                                                               \
+            return;                                                                                                    \
+        ctu_free(ptr);                                                                                                 \
     }
 
 /** @} */

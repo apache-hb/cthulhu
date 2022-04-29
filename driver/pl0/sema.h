@@ -6,4 +6,7 @@
 #include "cthulhu/util/report.h"
 
 void pl0_init();
-hlir_t *pl0_sema(runtime_t *runtime, void *node);
+
+void pl0_forward_decls(runtime_t *runtime, compile_t *compile);
+void pl0_process_imports(runtime_t *runtime, compile_t *compile);
+void pl0_compile_module(runtime_t *runtime, compile_t *compile);
