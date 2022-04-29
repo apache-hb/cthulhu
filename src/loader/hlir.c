@@ -323,7 +323,8 @@ static const layout_t kModuleLayout = LAYOUT("module", kModuleFields);
 /// final type table
 ///
 
-#ifndef _WIN32
+// if clang could stop pretending its gcc when it isnt that would be nice
+#if defined(__GNUC__) && !defined(__clang__)
 static const layout_t ALL_TYPES[LAYOUTS_TOTAL] = {
     [NODE_INDEX] = kNodeLayout,
     [SCAN_INDEX] = kScanLayout,
