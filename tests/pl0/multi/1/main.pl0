@@ -1,0 +1,16 @@
+module main;
+
+import lhs, rhs;
+
+const LIMIT = 25;
+var x;
+
+procedure entry;
+begin
+    x := 0;
+    call lhs;
+    ! x
+end;
+
+call entry
+.

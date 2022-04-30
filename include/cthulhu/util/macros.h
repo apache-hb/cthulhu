@@ -114,7 +114,7 @@
 
 NORETURN ctpanic(const char *msg, ...);
 
-#if !defined(NDEBUG) && !defined(_NDEBUG)
+#if ENABLE_DEBUG
 #define CTASSERT(expr, msg)                                                                                            \
     do                                                                                                                 \
     {                                                                                                                  \

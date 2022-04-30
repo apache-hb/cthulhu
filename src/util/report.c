@@ -1,4 +1,5 @@
 #include "cthulhu/util/report.h"
+#include "cthulhu/ast/ast.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/util.h"
 
@@ -10,6 +11,11 @@
 #include <string.h>
 
 bool verbose = false;
+
+static bool is_valid_node(const node_t *node)
+{
+    return node != NULL && node != node_builtin();
+}
 
 static part_t *part_new(char *message, const node_t *node)
 {
@@ -77,7 +83,7 @@ static void report_header(const char *base, message_t *message)
 
     fprintf(stderr, "%s: %s\n", lvl, message->message);
 
-    if (message->node)
+    if (is_valid_node(message->node))
     {
         report_scanner(base, message->node);
     }
@@ -351,7 +357,7 @@ static char *format_source(const scan_t *scan, where_t where, const char *underl
 static void report_source(message_t *message)
 {
     const node_t *node = message->node;
-    if (!node)
+    if (!is_valid_node(node))
     {
         return;
     }
@@ -432,7 +438,7 @@ static const char *paths_base(vector_t *messages)
     for (size_t i = 0; i < len; i++)
     {
         message_t *message = vector_get(messages, i);
-        if (message->node != NULL)
+        if (is_valid_node(message->node))
         {
             vector_push(&result, (char *)message->node->scan->path);
         }
@@ -441,14 +447,24 @@ static const char *paths_base(vector_t *messages)
         for (size_t j = 0; j < vector_len(parts); j++)
         {
             part_t *part = vector_get(parts, j);
-            if (part->node != NULL)
+            if (is_valid_node(part->node))
             {
                 vector_push(&result, (char *)part->node->scan->path);
             }
         }
     }
 
-    return vector_len(result) > 0 ? common_prefix(result) : "";
+    if (vector_len(result) == 0)
+    {
+        return "";
+    }
+
+    if (vector_len(result) == 1)
+    {
+        return ctu_filename(vector_get(result, 0));
+    }
+
+    return common_prefix(result);
 }
 
 int end_reports(reports_t *reports, size_t total, const char *name)

@@ -8,26 +8,18 @@
 
 CT_CALLBACKS(kCallbacks, ctu);
 
-static void *ctu_parse(runtime_t *runtime, scan_t *scan)
-{
-    UNUSED(runtime);
-
-    init_scan(scan);
-
-    return compile_file(scan, &kCallbacks);
-}
-
 void ctu_parse_file(runtime_t *runtime, compile_t *compile)
 {
+    UNUSED(runtime);
     compile->ast = compile_file(compile->scanner, &kCallbacks);
 }
 
-static const driver_t kDriverEx = {
+static const driver_t kDriver = {
     .name = "Cthulhu",
     .version = NEW_VERSION(1, 0, 0),
     .fnParseFile = ctu_parse_file,
     .fnForwardDecls = ctu_forward_decls,
-    .fnImportModules = ctu_process_imports,
+    .fnResolveImports = ctu_process_imports,
     .fnCompileModule = ctu_compile_module,
 };
 

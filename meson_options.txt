@@ -6,7 +6,7 @@
 option('languages', type : 'array',
     description : 'select which languages to compile',
     choices : [ 'ctu', 'pl0', 'c', 'cpp', 'bf' ],
-    value : [ 'pl0' ]
+    value : [ 'ctu', 'pl0' ]
 )
 
 option('tuning', type : 'boolean',
@@ -25,7 +25,7 @@ option('doxygen', type : 'feature',
 )
 
 option('analyze', type : 'boolean',
-    description : 'enable code analysis under msvc',
+    description : 'enable code analysis',
     value : true
 )
 

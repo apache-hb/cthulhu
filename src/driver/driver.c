@@ -150,7 +150,7 @@ int common_main(int argc, const char **argv, driver_t driver)
 
     if (outFile == NULL)
     {
-        outFile = commands.enableBytecode ? "mod.hlir" : "a.out";
+        outFile = commands.enableBytecode ? "mod.hlir" : "out.c";
     }
 
     if (commands.printHelp)
@@ -200,6 +200,7 @@ int common_main(int argc, const char **argv, driver_t driver)
         const char *path = vector_get(modules, i);
         vector_t *moduleItems = load_modules(reports, path);
         size_t numItems = vector_len(moduleItems);
+
         for (size_t j = 0; j < numItems; j++)
         {
             hlir_t *hlir = vector_get(moduleItems, j);
@@ -229,6 +230,8 @@ int common_main(int argc, const char **argv, driver_t driver)
         const char *path = vector_get(sources, i);
 
         context_t *ctx = ctu_malloc(sizeof(context_t));
+        ctx->compileContext.ast = NULL;
+        ctx->compileContext.hlirModule = NULL;
 
         file_t *file = file_new(path, TEXT, READ);
         if (!file_ok(file))
@@ -262,6 +265,8 @@ int common_main(int argc, const char **argv, driver_t driver)
     FOR_EACH_SOURCE(i, ctx, {
         const char *path = vector_get(sources, i);
         hlir_t *hlirModule = ctx->compileContext.hlirModule;
+        CTASSERTF(hlirModule != NULL, "module %s is null", path);
+
         rename_module(hlirModule, path);
         map_set(runtime.modules, get_hlir_name(hlirModule), hlirModule);
     })
@@ -293,24 +298,35 @@ int common_main(int argc, const char **argv, driver_t driver)
         return status;
     }
 
-#if 0
-    switch (result) {
-    case OUTPUT_C89:
-        c89_emit_tree(reports, hlir);
-        status = end_reports(reports, limit, "emitting c89");
-        break;
-    case OUTPUT_WASM:
-        wasm_emit_tree(reports, hlir);
-        status = end_reports(reports, limit, "emitting wasm");
-        break;
-    default:
-        report(reports, ERROR, NULL, "unknown target %d selected", result);
-        status = end_reports(reports, limit, "emitting");
-        break;
-    }
-#endif
+    vector_t *allModules = vector_new(numSources + totalModules);
 
-    return status;
+    for (size_t i = 0; i < numSources; i++)
+    {
+        context_t *ctx = vector_get(contexts, i);
+        hlir_t *hlirModule = ctx->compileContext.hlirModule;
+        vector_push(&allModules, hlirModule);
+    }
+
+    for (size_t i = 0; i < totalModules; i++)
+    {
+        const char *path = vector_get(modules, i);
+        hlir_t *hlirModule = map_get(runtime.modules, path);
+        vector_push(&allModules, hlirModule);
+    }
+
+    file_t *out = file_new(outFile, TEXT, WRITE);
+
+    if (!file_ok(out))
+    {
+        ctu_errno_t err = ctu_last_error();
+        report(reports, ERROR, NULL, "failed to open file: %s", ctu_err_string(err));
+        return status;
+    }
+
+    c89_emit_modules(reports, allModules, out);
+    close_file(out);
+
+    return end_reports(reports, limit, "emitting code");
 }
 
 hlir_t *find_module(runtime_t *runtime, const char *path)

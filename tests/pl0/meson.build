@@ -11,6 +11,11 @@ fail = [
     'space', 'syntax'
 ]
 
+multi = {
+    '0': [ 'lib', 'main' ],
+    '1': [ 'lhs', 'rhs', 'main' ]
+}
+
 foreach case : pass
     path = dir/case + '.pl0'
     test('pass-' + case, pl0c, 
@@ -25,6 +30,18 @@ foreach case : fail
         args : [ path ], 
         suite : 'pl0',
         should_fail : true
+    )
+endforeach
+
+foreach case, files : multi
+    paths = []
+    foreach file : files
+        paths += [ dir/'multi'/case/file + '.pl0' ]
+    endforeach
+
+    test('pass-multi-' + case, pl0c,
+        args : paths,
+        suite : 'pl0'
     )
 endforeach
 

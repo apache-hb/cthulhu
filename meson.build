@@ -17,6 +17,7 @@ version = meson.project_version()
 target = target_machine.system()
 host = host_machine.system()
 cc = meson.get_compiler('c')
+buildtype = get_option('buildtype')
 
 parts = version.split('.')
 cwd = meson.current_source_dir()
@@ -49,9 +50,14 @@ if tuning
     args += [ '-DENABLE_TUNING=1' ]
 endif
 
+if buildtype.startswith('debug')
+    args += [ '-DENABLE_DEBUG=1' ]
+endif
+
 if host == 'windows'
     lexargs += [ '--wincompat' ]
     args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '/Wv:18' ]
+
     if analyze
         args += [
             '/external:W0', '/external:I' + bld, 
@@ -61,6 +67,17 @@ if host == 'windows'
 else
     parseargs += [ '-Wdeprecated' ]
     deps += [ cc.find_library('m'), cc.find_library('dl') ]
+
+    if analyze and cc.get_id() == 'gcc'
+        args += [ 
+            '-Wanalyzer-double-fclose',
+            '-Wanalyzer-double-free',
+            '-Wanalyzer-free-of-non-heap',
+            '-Wanalyzer-mismatching-deallocation',
+            '-Wanalyzer-null-dereference',
+            '-Wanalyzer-use-after-free'
+        ]
+    endif
 endif
 
 flex = find_program('flex', 'win_flex', version : '>=2.6')

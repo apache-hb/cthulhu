@@ -8,7 +8,7 @@
  */
 typedef struct bucket_t
 {
-    const char *key;       ///< the key
+    const void *key;       ///< the key
     void *value;           ///< any pointer value
     struct bucket_t *next; ///< the next bucket in the chain
 } bucket_t;
@@ -75,6 +75,10 @@ void *map_get(map_t *map, const char *key);
  * @return the value for the key or the default value if the key is not found
  */
 void *map_get_default(map_t *map, const char *key, void *other);
+
+void map_set_ptr(map_t *map, const void *key, void *value);
+void *map_get_ptr(map_t *map, const void *key);
+void *map_get_default_ptr(map_t *map, const void *key, void *other);
 
 /**
  * @brief collect all the values in a map into a vector

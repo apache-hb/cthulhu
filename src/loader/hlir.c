@@ -97,11 +97,12 @@ static const field_t kBoolLiteralFields[] = {
 };
 static const layout_t kBoolLiteralLayout = LAYOUT("bool-literal", kBoolLiteralFields);
 
-INDICES(STRING_LITERAL_NODE, STRING_LITERAL_TYPE, STRING_LITERAL_VALUE);
+INDICES(STRING_LITERAL_NODE, STRING_LITERAL_TYPE, STRING_LITERAL_VALUE, STRING_LITERAL_LENGTH);
 static const field_t kStringLiteralFields[] = {
     [STRING_LITERAL_NODE] = FIELD("node", FIELD_REFERENCE),
     [STRING_LITERAL_TYPE] = FIELD("type", FIELD_REFERENCE),
     [STRING_LITERAL_VALUE] = FIELD("value", FIELD_STRING),
+    [STRING_LITERAL_LENGTH] = FIELD("length", FIELD_INT),
 };
 static const layout_t kStringLiteralLayout = LAYOUT("string-literal", kStringLiteralFields);
 
@@ -594,7 +595,7 @@ static hlir_t *load_string_literal_node(load_t *load, index_t index)
     READ_OR_RETURN(load->data, index, values);
 
     return hlir_string_literal(get_span(load, values), GET_REF(load, values, STRING_LITERAL_TYPE),
-                               get_string(values[STRING_LITERAL_VALUE]));
+                               get_string(values[STRING_LITERAL_VALUE]), get_int(values[STRING_LITERAL_LENGTH]));
 }
 
 static hlir_t *load_name_node(load_t *load, index_t index)
@@ -1017,7 +1018,8 @@ static value_t make_ref_opt(data_t *data, const hlir_t *hlir)
 
 static value_t span_ref(data_t *data, const hlir_t *hlir)
 {
-    index_t index = save_span(data, hlir->node);
+    const node_t *node = get_hlir_node(hlir);
+    index_t index = save_span(data, node);
     return reference_value(index);
 }
 
@@ -1076,6 +1078,7 @@ static index_t save_string_literal_node(data_t *data, const hlir_t *hlir)
         [STRING_LITERAL_NODE] = span_ref(data, hlir),
         [STRING_LITERAL_TYPE] = make_ref(data, get_hlir_type(hlir)),
         [STRING_LITERAL_VALUE] = string_value(hlir->string),
+        [STRING_LITERAL_LENGTH] = int_value((long)hlir->stringLength),
     };
 
     CTASSERTF(values[STRING_LITERAL_TYPE].reference.type != NULL_TYPE, "%s:%d", __FILE__, __LINE__);

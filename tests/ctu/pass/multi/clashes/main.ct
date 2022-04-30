@@ -1,0 +1,7 @@
+import lib;
+
+var digit = 25;
+
+export def main(argc: int, argv: [*]str): int {
+    return digit + getDigit();
+}

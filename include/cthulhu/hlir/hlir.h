@@ -79,6 +79,7 @@ typedef enum
 
     DIGIT_SIZE, ///< the size of any type
     DIGIT_PTR,  ///< the same width as a pointer
+    DIGIT_MAX,  ///< the largest native platform integer
 
     DIGIT_TOTAL
 } digit_t;
@@ -90,7 +91,6 @@ typedef enum
 {
     SIGN_SIGNED,   ///< a signed type
     SIGN_UNSIGNED, ///< an unsigned type
-    SIGN_DEFAULT,  ///< the default sign for a type
 
     SIGN_TOTAL
 } sign_t;
@@ -101,16 +101,21 @@ typedef enum
 typedef struct hlir_t
 {
     hlir_kind_t type;        ///< the type of this node
-    const node_t *node;      ///< the source location that generated this node
+    const node_t *location;  ///< the source location that generated this node
     const struct hlir_t *of; ///< the type this hlir evaluates to
 
     union {
-        mpz_t digit;         ///< the value of this integer literal. active if type ==
-                             ///< HLIR_DIGIT_LITERAL
-        bool boolean;        ///< the value of this boolean literal. active if type ==
-                             ///< HLIR_BOOL_LITERAL
-        const char *string;  ///< the value of this string literal. active if
-                             ///< type == HLIR_STRING_LITERAL
+        mpz_t digit;  ///< the value of this integer literal. active if type ==
+                      ///< HLIR_DIGIT_LITERAL
+        bool boolean; ///< the value of this boolean literal. active if type ==
+                      ///< HLIR_BOOL_LITERAL
+        struct
+        {
+            const char *string;  ///< the value of this string literal. active if
+                                 ///< type == HLIR_STRING_LITERAL
+            size_t stringLength; ///< the length of the string
+        };
+
         struct hlir_t *read; ///< the name of this load operation. active if
                              ///< type == HLIR_NAME
 
@@ -167,6 +172,9 @@ typedef struct hlir_t
 
             /* any attributes this declaration has */
             const hlir_attributes_t *attributes;
+
+            const struct hlir_t *parentDecl; ///< the module that contains this
+                                             ///< declaration
 
             union {
                 ///
@@ -321,7 +329,7 @@ hlir_t *hlir_int_literal(const node_t *node, const hlir_t *type, int value);
 
 hlir_t *hlir_bool_literal(const node_t *node, const hlir_t *type, bool value);
 
-hlir_t *hlir_string_literal(const node_t *node, const hlir_t *type, const char *value);
+hlir_t *hlir_string_literal(const node_t *node, const hlir_t *type, const char *value, size_t length);
 
 hlir_t *hlir_name(const node_t *node, hlir_t *read);
 

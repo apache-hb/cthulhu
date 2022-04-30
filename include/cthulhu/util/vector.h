@@ -128,7 +128,9 @@ size_t vector_len(const vector_t *vector);
  * @param rhs the right vector
  * @return the new vector
  */
-vector_t *vector_join(const vector_t *lhs, const vector_t *rhs);
+vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs);
+
+vector_t *vector_join(vector_t *vectors);
 
 /**
  * @brief find an element in a vector

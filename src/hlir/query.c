@@ -43,8 +43,11 @@ static bool has_attribs(hlir_kind_t kind)
     case HLIR_DIGIT:
     case HLIR_BOOL:
     case HLIR_STRING:
+    case HLIR_POINTER:
     case HLIR_VOID:
+    case HLIR_CLOSURE:
 
+    case HLIR_FIELD:
     case HLIR_FORWARD:
     case HLIR_FUNCTION:
     case HLIR_GLOBAL:
@@ -70,18 +73,36 @@ const hlir_t *get_hlir_type(const hlir_t *hlir)
 
 const char *get_hlir_name(const hlir_t *hlir)
 {
+#if ENABLE_DEBUG
     CHECK_NULL(hlir);
     hlir_kind_t kind = get_hlir_kind(hlir);
     CTASSERTF(has_name(kind), "hlir_t %s has no name", hlir_kind_to_string(kind));
+#endif
+
     return hlir->name;
 }
 
 const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir)
 {
+#if ENABLE_DEBUG
     CHECK_NULL(hlir);
     hlir_kind_t kind = get_hlir_kind(hlir);
     CTASSERTF(has_attribs(kind), "hlir_t %s has no attributes", hlir_kind_to_string(kind));
+#endif
+
     return hlir->attributes;
+}
+
+const node_t *get_hlir_node(const hlir_t *hlir)
+{
+    CHECK_NULL(hlir);
+    return hlir->location;
+}
+
+const hlir_t *get_hlir_parent(const hlir_t *hlir)
+{
+    CHECK_NULL(hlir);
+    return hlir->parentDecl;
 }
 
 bool hlir_is(const hlir_t *hlir, hlir_kind_t kind)
@@ -185,11 +206,7 @@ static const char *kDigitNames[DIGIT_TOTAL] = {
     [DIGIT_LONG] = "long", [DIGIT_SIZE] = "size",   [DIGIT_PTR] = "intptr",
 };
 
-static const char *kSignNames[SIGN_TOTAL] = {
-    [SIGN_SIGNED] = "signed",
-    [SIGN_UNSIGNED] = "unsigned",
-    [SIGN_DEFAULT] = "default",
-};
+static const char *kSignNames[SIGN_TOTAL] = {[SIGN_SIGNED] = "signed", [SIGN_UNSIGNED] = "unsigned"};
 
 const char *hlir_kind_to_string(hlir_kind_t kind)
 {

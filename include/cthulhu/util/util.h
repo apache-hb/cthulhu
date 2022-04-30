@@ -89,6 +89,8 @@ void *ctu_memdup(const void *ptr, size_t size);
 
 /** @} */
 
+size_t ptrhash(const void *ptr);
+
 /**
  * @brief init gmp with our own allocation functions
  */

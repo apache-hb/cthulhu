@@ -95,7 +95,7 @@ size_t vector_find(vector_t *vector, const void *element)
     return SIZE_MAX;
 }
 
-vector_t *vector_join(const vector_t *lhs, const vector_t *rhs)
+vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs)
 {
     size_t lhsLength = vector_len(lhs);
     size_t rhsLength = vector_len(rhs);
@@ -116,6 +116,33 @@ vector_t *vector_join(const vector_t *lhs, const vector_t *rhs)
     }
 
     return out;
+}
+
+vector_t *vector_join(vector_t *vectors)
+{
+    size_t totalLength = 0;
+    size_t vecLength = vector_len(vectors);
+
+    for (size_t i = 0; i < vecLength; i++)
+    {
+        totalLength += vector_len(vector_get(vectors, i));
+    }
+
+    vector_t *result = vector_of(totalLength);
+    size_t offset = 0;
+
+    for (size_t i = 0; i < vecLength; i++)
+    {
+        vector_t *vector = vector_get(vectors, i);
+        size_t length = vector_len(vector);
+
+        for (size_t j = 0; j < length; j++)
+        {
+            vector_set(result, offset++, vector_get(vector, j));
+        }
+    }
+
+    return result;
 }
 
 void vector_reset(vector_t *vec)

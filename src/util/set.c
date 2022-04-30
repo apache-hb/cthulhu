@@ -22,6 +22,13 @@ static item_t *get_bucket(set_t *set, const char *key)
     return &set->items[index];
 }
 
+static item_t *get_bucket_ptr(set_t *set, const void *key)
+{
+    size_t hash = ptrhash(key);
+    size_t index = hash % set->size;
+    return &set->items[index];
+}
+
 set_t *set_new(size_t size)
 {
     size_t bytes = set_size(size);
@@ -106,5 +113,77 @@ bool set_contains(set_t *set, const char *key)
         {
             return false;
         }
+    }
+}
+
+const void *set_add_ptr(set_t *set, const void *key)
+{
+    item_t *item = get_bucket_ptr(set, key);
+
+    while (true)
+    {
+        if (item->key == NULL)
+        {
+            item->key = key;
+            return key;
+        }
+
+        if (item->key == key)
+        {
+            return item->key;
+        }
+
+        if (item->next != NULL)
+        {
+            item = item->next;
+        }
+        else
+        {
+            item->next = item_new(key);
+            return key;
+        }
+    }
+}
+
+bool set_contains_ptr(set_t *set, const void *key)
+{
+    item_t *item = get_bucket_ptr(set, key);
+
+    while (true)
+    {
+        if (item->key == NULL)
+        {
+            return false;
+        }
+
+        if (item->key == key)
+        {
+            return true;
+        }
+
+        if (item->next != NULL)
+        {
+            item = item->next;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
+
+void set_reset(set_t *set)
+{
+    for (size_t i = 0; i < set->size; i++)
+    {
+        item_t *item = &set->items[i];
+        while (item->next != NULL)
+        {
+            item_t *next = item->next;
+            item->next = next->next;
+            ctu_free(next);
+        }
+        item->next = NULL;
+        item->key = NULL;
     }
 }

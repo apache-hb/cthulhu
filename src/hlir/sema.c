@@ -92,11 +92,14 @@ map_t *sema_tag(sema_t *sema, size_t tag)
 static void report_recursion(reports_t *reports, vector_t *stack, const char *msg)
 {
     hlir_t *top = vector_tail(stack);
-    message_t *id = report(reports, ERROR, top->node, "%s", msg);
+    const node_t *topNode = get_hlir_node(top);
+    message_t *id = report(reports, ERROR, topNode, "%s", msg);
+
     for (size_t i = 0; i < vector_len(stack); i++)
     {
         hlir_t *hlir = vector_get(stack, i);
-        report_append(id, hlir->node, "trace `%zu`", i);
+        const node_t *node = get_hlir_node(hlir);
+        report_append(id, node, "trace `%zu`", i);
     }
 }
 
@@ -176,11 +179,14 @@ static entry_t *new_entry(const hlir_t *hlir, bool nesting)
 static void report_type_recursion(reports_t *reports, vector_t *stack)
 {
     entry_t *top = vector_tail(stack);
-    message_t *id = report(reports, ERROR, top->hlir->node, "%s", "recursive type definition");
+    const node_t *topNode = get_hlir_node(top->hlir);
+    message_t *id = report(reports, ERROR, topNode, "%s", "recursive type definition");
+
     for (size_t i = 0; i < vector_len(stack); i++)
     {
         entry_t *entry = vector_get(stack, i);
-        report_append(id, entry->hlir->node, "trace `%zu`", i);
+        const node_t *node = get_hlir_node(entry->hlir);
+        report_append(id, node, "trace `%zu`", i);
     }
 }
 
@@ -232,7 +238,8 @@ static const hlir_t *chase(reports_t *reports, const hlir_t *hlir)
 
         if (depth++ > DEPTH_LIMIT)
         {
-            message_t *id = report(reports, ERROR, hlir->node, "type definition recurses too deep");
+            const node_t *node = get_hlir_node(hlir);
+            message_t *id = report(reports, ERROR, node, "type definition recurses too deep");
             report_note(id, "type definition recurses beyond %d levels", DEPTH_LIMIT);
             return NULL;
         }
@@ -308,7 +315,8 @@ static void check_attribute(reports_t *reports, hlir_t *hlir)
 
     if (attribs->mangle != NULL && attribs->linkage == LINK_INTERNAL)
     {
-        message_t *id = report(reports, WARNING, hlir->node, "cannot change name mangling of internal symbols");
+        const node_t *node = get_hlir_node(hlir);
+        message_t *id = report(reports, WARNING, node, "cannot change name mangling of internal symbols");
         report_note(id, "attribute will not be mangled");
 
         hlir_attributes_t *newAttribs = ctu_memdup(attribs, sizeof(hlir_attributes_t));

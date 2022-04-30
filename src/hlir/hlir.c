@@ -31,10 +31,11 @@ hlir_t *hlir_bool_literal(const node_t *node, const hlir_t *type, bool value)
     return self;
 }
 
-hlir_t *hlir_string_literal(const node_t *node, const hlir_t *type, const char *value)
+hlir_t *hlir_string_literal(const node_t *node, const hlir_t *type, const char *value, size_t length)
 {
     hlir_t *self = hlir_new(node, type, HLIR_STRING_LITERAL);
     self->string = value;
+    self->stringLength = length;
     return self;
 }
 
@@ -124,4 +125,9 @@ hlir_t *hlir_field(const node_t *node, const hlir_t *type, const char *name)
 void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes)
 {
     self->attributes = attributes;
+}
+
+void hlir_set_parent(hlir_t *self, const hlir_t *parent)
+{
+    self->parentDecl = parent;
 }

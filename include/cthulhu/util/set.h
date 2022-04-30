@@ -9,7 +9,7 @@
  */
 typedef struct item_t
 {
-    const char *key;     ///< the key to this bucket
+    const void *key;     ///< the key to this bucket
     struct item_t *next; ///< the next bucket in the chain
 } item_t;
 
@@ -54,3 +54,8 @@ const char *set_add(set_t *set, const char *key);
  * @return true if the set contains the key
  */
 bool set_contains(set_t *set, const char *key);
+
+const void *set_add_ptr(set_t *set, const void *key);
+bool set_contains_ptr(set_t *set, const void *key);
+
+void set_reset(set_t *set);

@@ -1,0 +1,4 @@
+// private declaration shouldnt be visible
+var digit = 40;
+
+export def getDigit(): int = digit;

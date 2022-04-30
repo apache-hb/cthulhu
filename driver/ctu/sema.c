@@ -3,10 +3,12 @@
 
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/hlir.h"
+#include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/type.h"
 
 #include "cthulhu/util/report-ext.h"
 #include "cthulhu/util/set.h"
+#include "cthulhu/util/str.h"
 
 typedef enum
 {
@@ -17,6 +19,12 @@ typedef enum
 
     TAG_MAX
 } tag_t;
+
+typedef struct
+{
+    size_t totalDecls;
+    hlir_t *parentModule;
+} sema_data_t;
 
 static bool is_discard_ident(const char *id)
 {
@@ -115,6 +123,8 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
 
         hlir_t *type = sema_type(sema, field->field);
         hlir_t *entry = hlir_field(field->node, type, name);
+        hlir_set_parent(entry, decl);
+
         hlir_add_field(decl, entry);
     }
 
@@ -191,14 +201,17 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
 {
     if (is_discard_ident(name))
     {
-        report(sema->reports, ERROR, decl->node, "discarding declaration");
+        const node_t *node = get_hlir_node(decl);
+        report(sema->reports, ERROR, node, "discarding declaration");
         return;
     }
 
     hlir_t *other = sema_get(sema, tag, name);
     if (other != NULL)
     {
-        report_shadow(sema->reports, name, decl->node, other->node);
+        const node_t *node = get_hlir_node(decl);
+        const node_t *otherNode = get_hlir_node(other);
+        report_shadow(sema->reports, name, node, otherNode);
         return;
     }
 
@@ -232,6 +245,9 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
         return;
     }
 
+    sema_data_t *semaData = sema_get_data(sema);
+
+    hlir_set_parent(decl, semaData->parentModule);
     add_decl(sema, TAG_TYPES, ast->name, decl);
 }
 
@@ -262,42 +278,6 @@ static void add_basic_types(sema_t *sema)
     // SIGN_SIGNED));
 }
 
-hlir_t *ctu_sema(runtime_t *runtime, void *ast)
-{
-    ast_t *root = ast;
-
-    size_t ndecls = vector_len(root->decls);
-
-    size_t sizes[] = {
-        [TAG_VARS] = ndecls,
-        [TAG_PROCS] = ndecls,
-        [TAG_TYPES] = ndecls,
-        [TAG_MODULES] = ndecls,
-    };
-
-    sema_t *sema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
-
-    add_basic_types(sema);
-
-    for (size_t i = 0; i < ndecls; i++)
-    {
-        fwd_decl(sema, vector_get(root->decls, i));
-    }
-
-    for (size_t i = 0; i < ndecls; i++)
-    {
-        sema_decl(sema, vector_get(root->decls, i));
-    }
-
-    vector_t *values = map_values(sema_tag(sema, TAG_VARS));
-    vector_t *types = map_values(sema_tag(sema, TAG_TYPES));
-    hlir_t *mod = hlir_module(root->node, "todo", types, values, vector_of(0));
-
-    sema_delete(sema);
-
-    return mod;
-}
-
 void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
 {
     ast_t *root = compile->ast;
@@ -312,13 +292,59 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
 
     sema_t *sema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
 
+    char *name = NULL;
+    if (root->modspec != NULL)
+    {
+        name = str_join(".", root->modspec->path);
+    }
+
+    hlir_t *mod = hlir_module(root->node, name, vector_of(0), vector_of(0), vector_of(0));
+
+    sema_data_t semaData = {.totalDecls = totalDecls, .parentModule = mod};
+
+    sema_set_data(sema, BOX(semaData));
+
     add_basic_types(sema);
 
     for (size_t i = 0; i < totalDecls; i++)
     {
-        fwd_decl(sema, vector_get(root->decls, i));
+        ast_t *decl = vector_get(root->decls, i);
+        fwd_decl(sema, decl);
     }
+
+    vector_t *types = map_values(sema_tag(sema, TAG_TYPES));
+    vector_t *globals = map_values(sema_tag(sema, TAG_VARS));
+    vector_t *procs = map_values(sema_tag(sema, TAG_PROCS));
+
+    hlir_update_module(mod, types, globals, procs);
+
+    compile->sema = sema;
+    compile->hlirModule = mod;
 }
 
-void ctu_process_imports(runtime_t *runtime, compile_t *compile);
-void ctu_compile_module(runtime_t *runtime, compile_t *compile);
+void ctu_process_imports(runtime_t *runtime, compile_t *compile)
+{
+    UNUSED(runtime);
+    UNUSED(compile);
+}
+
+void ctu_compile_module(runtime_t *runtime, compile_t *compile)
+{
+    UNUSED(runtime);
+
+    ast_t *root = compile->ast;
+    sema_t *sema = compile->sema;
+    sema_data_t *data = sema_get_data(sema);
+
+    for (size_t i = 0; i < data->totalDecls; i++)
+    {
+        ast_t *decl = vector_get(root->decls, i);
+        sema_decl(sema, decl);
+    }
+
+    vector_t *types = map_values(sema_tag(sema, TAG_TYPES));
+    vector_t *globals = map_values(sema_tag(sema, TAG_VARS));
+    vector_t *procs = map_values(sema_tag(sema, TAG_PROCS));
+
+    hlir_update_module(compile->hlirModule, types, globals, procs);
+}
