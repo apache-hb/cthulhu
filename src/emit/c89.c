@@ -16,13 +16,30 @@ typedef struct
     reports_t *reports;
     file_t *output;
 
+    size_t depth;
+
     // map of hlir -> string
     map_t *mangledNames;
 } c89_emit_t;
 
 static void write_string(c89_emit_t *emit, const char *str, ...)
 {
+    for (size_t i = 0; i < emit->depth; i++)
+    {
+        file_write(emit->output, "  ", 2);
+    }
+
     file_write(emit->output, str, strlen(str));
+}
+
+static void begin_indent(c89_emit_t *emit)
+{
+    emit->depth++;
+}
+
+static void end_indent(c89_emit_t *emit)
+{
+    emit->depth--;
 }
 
 static char *c89_mangle_section(const char *section)
@@ -305,14 +322,24 @@ static void c89_emit_branch(c89_emit_t *emit, const hlir_t *hlir)
 {
     const char *cond = c89_emit_expr(emit, hlir->cond);
 
-    WRITE_STRINGF(emit, "if (%s)\n{\n", cond);
+    WRITE_STRINGF(emit, "if (%s)\n", cond);
+    WRITE_STRING(emit, "{\n");
+
+    begin_indent(emit);
     c89_emit_stmt(emit, hlir->then);
+    end_indent(emit);
+
     WRITE_STRING(emit, "}\n");
 
     if (hlir->other != NULL)
     {
-        WRITE_STRING(emit, "else\n{\n");
+        WRITE_STRING(emit, "else\n");
+        WRITE_STRING(emit, "{\n");
+
+        begin_indent(emit);
         c89_emit_stmt(emit, hlir->other);
+        end_indent(emit);
+
         WRITE_STRING(emit, "}\n");
     }
 }
@@ -340,8 +367,13 @@ static void c89_emit_loop(c89_emit_t *emit, const hlir_t *hlir)
 {
     const char *cond = c89_emit_expr(emit, hlir->cond);
 
-    WRITE_STRINGF(emit, "while (%s)\n{\n", cond);
+    WRITE_STRINGF(emit, "while (%s)\n", cond);
+    WRITE_STRING(emit, "{\n");
+
+    begin_indent(emit);
     c89_emit_stmt(emit, hlir->then);
+    end_indent(emit);
+
     WRITE_STRING(emit, "}\n");
 }
 
@@ -663,7 +695,7 @@ static void c89_emit_types(c89_emit_t *emit, vector_t *modules)
 }
 
 static const char *kLinkageModifiers[LINK_TOTAL] = {
-    [LINK_IMPORTED] = "extern ", [LINK_INTERNAL] = "static ", [LINK_EXPORTED] = ""};
+    [LINK_IMPORTED] = "extern ", [LINK_INTERNAL] = "static ", [LINK_EXPORTED] = "",};
 
 static void c89_forward_global(c89_emit_t *emit, const hlir_t *hlir)
 {
@@ -773,7 +805,22 @@ static void c89_emit_function(c89_emit_t *emit, const hlir_t *function)
 
     WRITE_STRING(emit, "\n{\n");
 
+    begin_indent(emit);
+
+    vector_t *locals = function->locals;
+    size_t numLocals = vector_len(locals);
+    
+    for (size_t i = 0; i < numLocals; i++)
+    {
+        hlir_t *local = vector_get(locals, i);
+        const char *name = get_hlir_name(local);
+        const char *type = c89_emit_type(emit, get_hlir_type(local), name);
+        WRITE_STRINGF(emit, "%s[1];\n", type);
+    }
+
     c89_emit_stmt(emit, function->body);
+
+    end_indent(emit);
 
     WRITE_STRING(emit, "}\n");
 }
@@ -835,6 +882,7 @@ void c89_emit_modules(reports_t *reports, vector_t *modules, file_t *output)
 
     // then use the total number of types to create a fast map
     emit.mangledNames = optimal_map(totalDecls);
+    emit.depth = 0;
 
     c89_emit_types(&emit, modules);
 
