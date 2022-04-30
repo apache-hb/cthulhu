@@ -695,7 +695,10 @@ static void c89_emit_types(c89_emit_t *emit, vector_t *modules)
 }
 
 static const char *kLinkageModifiers[LINK_TOTAL] = {
-    [LINK_IMPORTED] = "extern ", [LINK_INTERNAL] = "static ", [LINK_EXPORTED] = "",};
+    [LINK_IMPORTED] = "extern ",
+    [LINK_INTERNAL] = "static ",
+    [LINK_EXPORTED] = "",
+};
 
 static void c89_forward_global(c89_emit_t *emit, const hlir_t *hlir)
 {
@@ -774,8 +777,6 @@ static void c89_function_header(c89_emit_t *emit, const hlir_t *function)
     const char *params = c89_emit_params(emit, closureParams);
     const char *linkage = kLinkageModifiers[attribs->linkage];
 
-    printf("emit function %s %s %p\n", get_hlir_name(function), name, function);
-
     if (vector_len(closureParams) == 0)
     {
         const char *variaidc = closure_variadic(function) ? "" : "void";
@@ -809,7 +810,7 @@ static void c89_emit_function(c89_emit_t *emit, const hlir_t *function)
 
     vector_t *locals = function->locals;
     size_t numLocals = vector_len(locals);
-    
+
     for (size_t i = 0; i < numLocals; i++)
     {
         hlir_t *local = vector_get(locals, i);

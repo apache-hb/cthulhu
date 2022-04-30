@@ -3,6 +3,8 @@
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 
+#if ENABLE_DEBUG
+
 static bool has_name(hlir_kind_t kind)
 {
     switch (kind)
@@ -58,6 +60,8 @@ static bool has_attribs(hlir_kind_t kind)
         return false;
     }
 }
+
+#endif
 
 hlir_kind_t get_hlir_kind(const hlir_t *hlir)
 {
