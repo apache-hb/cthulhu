@@ -5,4 +5,9 @@ a plugin must export `const plugin_info_t kPluginInfo`
 
 a plugin must be named `%s.plugin.so` or `%s.plugin.dll` where `%s` is the plugin name.
 
-a plugin may provide a function called `void ctPluginInit(void)` that is called upon startup
+## Function listing
+```c
+void ctPluginInit(plugin_t *info);
+
+
+``` 

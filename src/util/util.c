@@ -12,7 +12,7 @@
 #include <string.h>
 
 #if ENABLE_TUNING
-#include <malloc.h>
+#    include <malloc.h>
 
 static counters_t counters = {
     .mallocs = 0,
@@ -82,14 +82,14 @@ static void tuning_free(void *ptr)
     free(ptr);
 }
 
-#define MALLOC(size) tuning_malloc(size)
-#define REALLOC(ptr, size) tuning_realloc(ptr, size)
-#define FREE(ptr) tuning_free(ptr)
+#    define MALLOC(size) tuning_malloc(size)
+#    define REALLOC(ptr, size) tuning_realloc(ptr, size)
+#    define FREE(ptr) tuning_free(ptr)
 
 #else
-#define MALLOC(size) malloc(size)
-#define REALLOC(ptr, size) realloc(ptr, size)
-#define FREE(ptr) free(ptr)
+#    define MALLOC(size) malloc(size)
+#    define REALLOC(ptr, size) realloc(ptr, size)
+#    define FREE(ptr) free(ptr)
 #endif
 
 void *ctu_malloc(size_t size)

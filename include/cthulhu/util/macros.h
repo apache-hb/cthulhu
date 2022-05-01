@@ -1,14 +1,22 @@
 #pragma once
 
 #ifdef __APPLE__
-#error __APPLE__
+#    error __APPLE__
 #endif
 
 #if __has_include(<sal.h>)
-#include <sal.h>
-#define DISABLE_SAL __pragma(warning(push, 1)) __pragma(warning(disable : 6011 6240 6262 6387 28199 28278))
+#    include <sal.h>
+#    define DISABLE_SAL __pragma(warning(push, 1)) __pragma(warning(disable : 6011 6240 6262 6387 28199 28278))
+#    define RETURN_TYPE_SUCCESS(expr) _Return_type_success_(expr)
 #else
-#define DISABLE_SAL
+#    define DISABLE_SAL
+#    define RETURN_TYPE_SUCCESS(expr)
+#endif
+
+#ifdef __GNUC__
+#    define PURE __attribute__((pure))
+#else
+#    define PURE
 #endif
 
 /**
@@ -41,25 +49,25 @@
  */
 
 #if defined(__clang__)
-#define BEGIN_PACKED(align)
-#define END_PACKED
-#define PACKED(align) __attribute__((aligned(align), packed))
-#define NORETURN _Noreturn void
+#    define BEGIN_PACKED(align)
+#    define END_PACKED
+#    define PACKED(align) __attribute__((aligned(align), packed))
+#    define NORETURN _Noreturn void
 #elif defined(__GNUC__)
-#define BEGIN_PACKED(align)
-#define END_PACKED
-#define PACKED(align) __attribute__((aligned(align), packed))
-#define NORETURN _Noreturn void
+#    define BEGIN_PACKED(align)
+#    define END_PACKED
+#    define PACKED(align) __attribute__((aligned(align), packed))
+#    define NORETURN _Noreturn void
 #elif defined(_MSC_VER)
-#define BEGIN_PACKED(align) __pragma(pack(push, align))
-#define END_PACKED __pragma(pack(pop))
-#define PACKED(align)
-#define NORETURN __declspec(noreturn) void
+#    define BEGIN_PACKED(align) __pragma(pack(push, align))
+#    define END_PACKED __pragma(pack(pop))
+#    define PACKED(align)
+#    define NORETURN __declspec(noreturn) void
 #else
-#define BEGIN_PACKED(align) _Pragma("warning \"current compiler doesnt support packing\"")
-#define END_PACKED
-#define PACKED(align)
-#define NORETURN void
+#    define BEGIN_PACKED(align) _Pragma("warning \"current compiler doesnt support packing\"")
+#    define END_PACKED
+#    define PACKED(align)
+#    define NORETURN void
 #endif
 
 #define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
@@ -102,43 +110,44 @@
 
 /// macros for headers
 #ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200112L
+#    define _POSIX_C_SOURCE 200112L
 #endif
 
 #ifndef _DEFAULT_SOURCE
-#define _DEFAULT_SOURCE
-#ifndef _WIN32
-#include <sys/mman.h>
-#endif
+#    define _DEFAULT_SOURCE
+#    ifndef _WIN32
+#        include <sys/mman.h>
+#    endif
 #endif
 
 NORETURN ctpanic(const char *msg, ...);
 
 #if ENABLE_DEBUG
-#define CTASSERT(expr, msg)                                                                                            \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if (!(expr))                                                                                                   \
+#    define CTASSERT(expr, msg)                                                                                        \
+        do                                                                                                             \
         {                                                                                                              \
-            ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" __FILE__ ":" STR(__LINE__) "]: " msg "\n");                 \
-        }                                                                                                              \
-    } while (0)
-#define CTASSERTF(expr, msg, ...)                                                                                      \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if (!(expr))                                                                                                   \
+            if (!(expr))                                                                                               \
+            {                                                                                                          \
+                ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" __FILE__ ":" STR(__LINE__) "]: " msg "\n");             \
+            }                                                                                                          \
+        } while (0)
+#    define CTASSERTF(expr, msg, ...)                                                                                  \
+        do                                                                                                             \
         {                                                                                                              \
-            ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" __FILE__ ":" STR(__LINE__) "]: " msg "\n", __VA_ARGS__);    \
-        }                                                                                                              \
-    } while (0)
-#define union struct
+            if (!(expr))                                                                                               \
+            {                                                                                                          \
+                ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" __FILE__ ":" STR(__LINE__) "]: " msg "\n",              \
+                        __VA_ARGS__);                                                                                  \
+            }                                                                                                          \
+        } while (0)
+#    define union struct
 #else
-#define CTASSERT(expr, msg)                                                                                            \
-    do                                                                                                                 \
-    {                                                                                                                  \
-    } while (0)
-#define CTASSERTF(expr, msg, ...)                                                                                      \
-    do                                                                                                                 \
-    {                                                                                                                  \
-    } while (0)
+#    define CTASSERT(expr, msg)                                                                                        \
+        do                                                                                                             \
+        {                                                                                                              \
+        } while (0)
+#    define CTASSERTF(expr, msg, ...)                                                                                  \
+        do                                                                                                             \
+        {                                                                                                              \
+        } while (0)
 #endif

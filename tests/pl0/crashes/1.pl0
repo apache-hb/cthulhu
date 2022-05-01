@@ -1,0 +1,10 @@
+module lib;
+
+var lhs, rhs, rzsult;procedure add;
+var tmp;
+begin tmp := 
+lhs + rhs;
+    result := tmp
+end;
+
+.

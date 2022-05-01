@@ -106,17 +106,21 @@ char *str_join(const char *sep, vector_t *parts)
     char *out = ctu_malloc(len + 1);
     size_t idx = 0;
 
+    size_t remaining = len;
     for (size_t i = 0; i < all; i++)
     {
         if (i != 0)
         {
-            strcpy(out + idx, sep);
+            memcpy(out + idx,sep, MIN(remaining, seplen));
             idx += seplen;
+            remaining -= seplen;
         }
 
         const char *part = vector_get(parts, i);
-        strcpy(out + idx, part);
-        idx += strlen(part);
+        size_t partLength = strlen(part);
+        memcpy(out + idx, part, MIN(remaining, partLength));
+        idx += partLength;
+        remaining -= partLength;
     }
 
     out[idx] = 0;
@@ -128,9 +132,11 @@ char *str_repeat(const char *str, size_t times)
     size_t len = strlen(str);
     size_t outlen = len * times;
     char *out = ctu_malloc(outlen + 1);
+    size_t remaining = outlen;
     for (size_t i = 0; i < times; i++)
     {
-        strcpy(out + i * len, str);
+        memcpy(out + i * len, str, MIN(remaining, len));
+        remaining -= len;
     }
     out[outlen] = 0;
     return out;
@@ -195,7 +201,7 @@ static size_t normstr(char *out, char c)
         return 1;
     }
 
-    return sprintf(out, "\\x%02x", c & 0xFF);
+    return snprintf(out, 5, "\\x%02x", c & 0xFF);
 }
 
 char *str_normalize(const char *str)

@@ -1,4 +1,4 @@
-#include "cthulhu/util/error.h"
+#include "src/platform/platform.h"
 
 #include "cmd.h"
 #include "cthulhu/driver/driver.h"
@@ -236,8 +236,8 @@ int common_main(int argc, const char **argv, driver_t driver)
         file_t *file = file_new(path, TEXT, READ);
         if (!file_ok(file))
         {
-            ctu_errno_t err = ctu_last_error();
-            report(reports, ERROR, NULL, "failed to open file: %s", ctu_err_string(err));
+            error_t err = native_get_last_error();
+            report(reports, ERROR, NULL, "failed to open file: %s", native_error_to_string(err));
             continue;
         }
 
@@ -318,8 +318,8 @@ int common_main(int argc, const char **argv, driver_t driver)
 
     if (!file_ok(out))
     {
-        ctu_errno_t err = ctu_last_error();
-        report(reports, ERROR, NULL, "failed to open file: %s", ctu_err_string(err));
+        error_t err = native_get_last_error();
+        report(reports, ERROR, NULL, "failed to open file: %s", native_error_to_string(err));
         return status;
     }
 

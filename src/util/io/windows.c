@@ -1,8 +1,5 @@
-#include "cthulhu/util/giga-windows.h"
-
 #include "common.h"
 
-#include "cthulhu/util/error.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/util.h"
 
@@ -198,9 +195,14 @@ static char *get_absolute(const char *path)
     LPWSTR result = ctu_malloc((size + 1) * sizeof(WCHAR));
     GetFullPathNameW(total, size, result, NULL);
 
+    size_t converted = 0;
     // turn the wide string back into a utf-8 string
     char *out = ctu_malloc(size + 1);
-    wcstombs(out, result, size);
+    errno_t err = wcstombs_s(&converted, out, size + 1, result, size);
+    if (err != 0)
+    {
+        out = "";
+    }
 
     // free the memory we dont need anymore
     ctu_free(result);
@@ -244,8 +246,8 @@ void platform_open(file_t **file, const char *path, contents_t format, access_t 
         /* dwFlagsAndAttributes = */ flags,
         /* hTemplateFile = */ NULL);
 
-    ctu_errno_t err = ctu_last_error();
-    printf("%s: %s\n", absolute, ctu_err_string(err));
+    error_t err = native_get_last_error();
+    printf("%s: %s\n", absolute, native_error_to_string(err));
 
     windows_file_t *data = SELF(self);
     data->handle = handle;

@@ -142,6 +142,12 @@ static hlir_t *sema_binary(sema_t *sema, pl0_t *node)
     return hlir_binary(node->node, kIntegerType, node->binary, lhs, rhs);
 }
 
+static hlir_t *sema_unary(sema_t *sema, pl0_t *node)
+{
+    hlir_t *operand = sema_expr(sema, node->operand);
+    return hlir_unary(node->node, kIntegerType, operand, node->unary);
+}
+
 static hlir_t *sema_expr(sema_t *sema, pl0_t *node)
 {
     switch (node->type)
@@ -152,6 +158,8 @@ static hlir_t *sema_expr(sema_t *sema, pl0_t *node)
         return sema_ident(sema, node);
     case PL0_BINARY:
         return sema_binary(sema, node);
+    case PL0_UNARY:
+        return sema_unary(sema, node);
     default:
         report(sema->reports, INTERNAL, node->node, "sema-expr: %d", node->type);
         return hlir_error(node->node, "sema-expr");
@@ -207,6 +215,7 @@ static hlir_t *sema_assign(sema_t *sema, pl0_t *node)
 
     if (dst == NULL)
     {
+        report_pl0_unresolved(sema->reports, node->node, node->dst);
         return hlir_error(node->node, "unresolved variable");
     }
 

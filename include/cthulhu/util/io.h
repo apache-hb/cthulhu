@@ -14,9 +14,9 @@
  */
 
 #ifdef _WIN32
-#define PATH_SEP "\\" ///< path separator
+#    define PATH_SEP "\\" ///< path separator
 #else
-#define PATH_SEP "/" ///< path separator
+#    define PATH_SEP "/" ///< path separator
 #endif
 
 /**

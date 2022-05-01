@@ -1,11 +1,8 @@
 #define COMPILER_SOURCE 1
 
-// error.h must be included first due to windows fuckery
-// clang-format off
-#include "cthulhu/util/error.h"
+#include "src/platform/platform.h"
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/ast/interop.h"
-//clang-format on
 
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/report.h"
@@ -37,8 +34,8 @@ scan_t scan_file(reports_t *reports, const char *language, file_t *file) {
     text_t source = {.size = size, .text = text};
 
     if (text == NULL) {
-        ctu_errno_t err = ctu_last_error();
-        report(reports, ERROR, NULL, "failed to map file: %s", ctu_err_string(err));
+        error_t err = native_get_last_error();
+        report(reports, ERROR, NULL, "failed to map file: %s", native_error_to_string(err));
     }
 
     scan.data = file;

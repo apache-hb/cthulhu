@@ -1,5 +1,6 @@
 #pragma once
 
+#include "src/platform/platform.h"
 #include "cthulhu/util/io.h"
 
 typedef void (*file_open_t)(file_t **file, const char *path, contents_t format, access_t access);

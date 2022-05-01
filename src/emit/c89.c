@@ -55,12 +55,12 @@ static char *c89_mangle_decl_name(const hlir_t *hlir)
     while (parent != NULL)
     {
         const char *name = get_hlir_name(parent);
-        vector_t *parts = str_split(name, ".");
+        vector_t *split = str_split(name, ".");
         size_t totalParts = vector_len(parts);
 
         for (size_t i = 0; i < totalParts; i++)
         {
-            char *part = vector_get(parts, i);
+            char *part = vector_get(split, i);
             char *mangled = c89_mangle_section(part);
             vector_push(&parts, mangled);
         }
@@ -383,16 +383,20 @@ static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
     switch (kind)
     {
     case HLIR_STMTS:
-        return c89_emit_stmts(emit, hlir);
+        c89_emit_stmts(emit, hlir);
+        break;
 
     case HLIR_ASSIGN:
-        return c89_emit_assign(emit, hlir);
+        c89_emit_assign(emit, hlir);
+        break;
 
     case HLIR_BRANCH:
-        return c89_emit_branch(emit, hlir);
+        c89_emit_branch(emit, hlir);
+        break;
 
     case HLIR_LOOP:
-        return c89_emit_loop(emit, hlir);
+        c89_emit_loop(emit, hlir);
+        break;
 
     case HLIR_CALL:
         WRITE_STRING(emit, c89_emit_call(emit, hlir));

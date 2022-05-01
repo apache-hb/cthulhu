@@ -3,7 +3,7 @@ project('cthulhu', 'c',
     version : '0.2.0',
     meson_version : '>=0.58',
     default_options : [
-        'c_std=gnu99',
+        'c_std=gnu11',
         'warning_level=2', # we use unnamed structs
         'default_library=static',
         'werror=true'
@@ -56,7 +56,7 @@ endif
 
 if host == 'windows'
     lexargs += [ '--wincompat' ]
-    args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '/Wv:18' ]
+    args += [ '/Wv:18' ]
 
     if analyze
         args += [
@@ -148,7 +148,9 @@ src = [
     'src/util/map.c',
     'src/util/vec.c',
     'src/util/optimal.c',
-    'src/util/platform/target.c'.replace('target', target),
+
+    # platform specific code
+    'src/platform/target.c'.replace('target', target),
 
     'src/util/io/common.c',
     'src/util/io/memory.c',

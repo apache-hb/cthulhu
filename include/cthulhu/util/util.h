@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #if ENABLE_TUNING
-#include <stdatomic.h>
+#    include <stdatomic.h>
 #endif
 
 #include "macros.h"

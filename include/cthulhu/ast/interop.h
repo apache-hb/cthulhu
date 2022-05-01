@@ -1,7 +1,7 @@
 #pragma once
 
 #if !COMPILER_SOURCE
-#include "cthulhu/util/macros.h"
+#    include "cthulhu/util/macros.h"
 DISABLE_SAL
 #endif
 

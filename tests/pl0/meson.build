@@ -11,6 +11,16 @@ fail = [
     'space', 'syntax'
 ]
 
+crashes = {
+    '0': false, '1': false, '2': false,
+    '3': false, '4': false, '5': false, '6': false,
+    '7': false, '8': false, '9': false, '10': false,
+    '11': false, '12': false, '13': false, '14': false,
+    '15': false, '16': false, '17': false, '18': false,
+    '19': false, '20': true, '21': false, '22': false, 
+    '23': false, '24': false, '25': false, '26': false,
+}
+
 multi = {
     '0': [ 'lib', 'main' ],
     '1': [ 'lhs', 'rhs', 'main' ]
@@ -42,6 +52,15 @@ foreach case, files : multi
     test('pass-multi-' + case, pl0c,
         args : paths,
         suite : 'pl0'
+    )
+endforeach
+
+foreach case, success : crashes
+    path = dir/'crashes'/case + '.pl0'
+    test('crash-' + case, pl0c,
+        args : [ path ],
+        suite : 'pl0',
+        should_fail : not success
     )
 endforeach
 

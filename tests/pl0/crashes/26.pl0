@@ -1,0 +1,8 @@
+module main;procedure entry;
+begin
+lhs := 26;s := 50;
+    !-result
+end;
+
+call entry
+.
