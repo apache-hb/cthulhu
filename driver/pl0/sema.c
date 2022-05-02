@@ -403,7 +403,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     vector_t *globals = vector_new(totalGlobals);
     vector_t *procs = vector_new(totalFunctions);
 
-    const char *moduleName = root->mod == NULL ? ctu_filename(root->node->scan->path) : root->mod;
+    const char *moduleName = root->mod == NULL ? str_filename(root->node->scan->path) : root->mod;
     hlir_t *mod = hlir_module(root->node, moduleName, vector_of(0), vector_of(0), vector_of(0));
 
     size_t sizes[TAG_MAX] = {

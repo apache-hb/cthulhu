@@ -1,14 +1,14 @@
 #pragma once
 
-#include "src/platform/platform.h"
 #include "cthulhu/plugins/plugin.h"
+#include "cthulhu/util/library.h"
 #include "cthulhu/util/report.h"
 
 typedef void (*plugin_init_t)(plugin_t *);
 
 typedef struct
 {
-    library_handle_t libraryHandle;
+    library_t libraryHandle;
     const char *path;
 
     plugin_info_t *info;

@@ -7,6 +7,7 @@
 
 #include <ctype.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -461,7 +462,7 @@ static const char *paths_base(vector_t *messages)
 
     if (vector_len(result) == 1)
     {
-        return ctu_filename(vector_get(result, 0));
+        return str_filename(vector_get(result, 0));
     }
 
     return common_prefix(result);

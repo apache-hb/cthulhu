@@ -3,6 +3,8 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/util/report.h"
 
+#include <stdio.h>
+
 typedef struct
 {
     reports_t *reports;

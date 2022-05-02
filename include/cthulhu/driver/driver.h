@@ -2,7 +2,6 @@
 
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/sema.h"
-#include "cthulhu/util/io.h"
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/version-def.h"
 

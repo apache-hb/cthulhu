@@ -149,12 +149,12 @@ src = [
     'src/util/vec.c',
     'src/util/optimal.c',
 
+    'src/util/defs.c',
+    'src/util/file.c',
+    'src/util/library.c',
+
     # platform specific code
     'src/platform/target.c'.replace('target', target),
-
-    'src/util/io/common.c',
-    'src/util/io/memory.c',
-    'src/util/io/platform.c'.replace('platform', target)
 ]
 
 libgeneric = library('generic', src,

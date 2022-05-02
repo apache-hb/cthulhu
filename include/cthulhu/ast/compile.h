@@ -1,7 +1,10 @@
 #pragma once
 
+#include "cthulhu/util/file.h"
 #include "cthulhu/util/report.h"
 #include "scan.h"
+
+#include <stdio.h>
 
 /**
  * scanner function callbacks for flex and bison
@@ -35,7 +38,7 @@ scan_t scan_string(reports_t *reports, const char *language, const char *path, c
  * @param file a file object
  * @return the populated scanner
  */
-scan_t scan_file(reports_t *reports, const char *language, file_t *file);
+scan_t scan_file(reports_t *reports, const char *language, file_t file);
 
 scan_t scan_without_source(reports_t *reports, const char *language, const char *path);
 

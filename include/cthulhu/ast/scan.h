@@ -1,6 +1,5 @@
 #pragma once
 
-#include "cthulhu/util/io.h"
 #include "cthulhu/util/str.h"
 
 #include <stddef.h>

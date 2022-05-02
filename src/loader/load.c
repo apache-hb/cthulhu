@@ -1,6 +1,6 @@
 #include "common.h"
 #include "cthulhu/loader/loader.h"
-#include "cthulhu/util/io.h"
+#include "cthulhu/util/file.h"
 #include "cthulhu/util/str.h"
 
 #include <string.h>
@@ -88,14 +88,22 @@ static const char *compatible_version(uint32_t file, uint32_t expected)
 
 bool is_loadable(const char *path, uint32_t submagic, uint32_t version)
 {
-    file_t *file = file_new(path, BINARY, READ);
-    if (!file_ok(file))
+    error_t error = 0;
+    file_t handle = file_open(path, FILE_BINARY, &error);
+
+    if (error != 0)
     {
         return false;
     }
 
     basic_header_t basic;
-    size_t read = file_read(file, &basic, sizeof(basic_header_t));
+    size_t read = file_read(handle, &basic, sizeof(basic), &error);
+
+    if (error != 0)
+    {
+        return false;
+    }
+
     if (read < sizeof(basic_header_t))
     {
         return false;
@@ -105,16 +113,18 @@ bool is_loadable(const char *path, uint32_t submagic, uint32_t version)
     {
         return false;
     }
+
     if (basic.submagic != submagic)
     {
         return false;
     }
+
     if (compatible_version(basic.semver, version) != NULL)
     {
         return false;
     }
 
-    close_file(file);
+    file_close(handle);
 
     return true;
 }
@@ -126,14 +136,16 @@ bool begin_load(data_t *in, header_t header)
     begin_data(in, header);
     const char *path = header.path;
 
-    file_t *file = file_new(path, BINARY, READ);
-    if (!file_ok(file))
+    error_t error = 0;
+
+    file_t file = file_open(path, FILE_BINARY, &error);
+    if (error != 0)
     {
         return false;
     }
 
-    in->data = file_map(file);
-    in->length = file_size(file);
+    in->data = file_map(file, &error);
+    in->length = file_size(file, &error);
 
     offset_t cursor = 0;
     size_t len = NUM_TYPES(header);

@@ -10,7 +10,6 @@
 #include "common.h"
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/loader/loader.h"
-#include "cthulhu/util/io.h"
 #include "cthulhu/util/map.h"
 #include "version.h"
 
@@ -477,8 +476,10 @@ static scan_t *load_scan(load_t *load, index_t index)
         return scanner;
     }
 
-    file_t *file = file_new(path, TEXT, READ);
-    if (file_ok(file))
+    error_t error = 0;
+
+    file_t file = file_open(path, 0, &error);
+    if (error != 0)
     {
         scan_t scan = scan_file(load->reports, language, file);
         scanner = BOX(scan);

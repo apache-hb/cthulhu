@@ -14,7 +14,7 @@
 typedef struct
 {
     reports_t *reports;
-    file_t *output;
+    file_t output;
 
     size_t depth;
 
@@ -24,12 +24,13 @@ typedef struct
 
 static void write_string(c89_emit_t *emit, const char *str, ...)
 {
+    error_t error = 0;
     for (size_t i = 0; i < emit->depth; i++)
     {
-        file_write(emit->output, "  ", 2);
+        file_write(emit->output, "  ", 2, &error);
     }
 
-    file_write(emit->output, str, strlen(str));
+    file_write(emit->output, str, strlen(str), &error);
 }
 
 static void begin_indent(c89_emit_t *emit)
@@ -869,7 +870,7 @@ static void c89_emit_functions(c89_emit_t *emit, size_t totalDecls, vector_t *mo
     }
 }
 
-void c89_emit_modules(reports_t *reports, vector_t *modules, file_t *output)
+void c89_emit_modules(reports_t *reports, vector_t *modules, file_t output)
 {
     c89_emit_t emit = {.reports = reports, .output = output};
 

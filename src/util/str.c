@@ -1,5 +1,5 @@
 #include "cthulhu/util/str.h"
-#include "cthulhu/util/io.h"
+#include "cthulhu/util/defs.h"
 #include "cthulhu/util/util.h"
 
 #include <ctype.h>
@@ -36,7 +36,7 @@ char *formatv(const char *fmt, va_list args)
     return out;
 }
 
-char *ctu_noext(const char *path)
+char *str_noext(const char *path)
 {
     char *base = ctu_strdup(path);
     size_t len = strlen(base);
@@ -48,15 +48,15 @@ char *ctu_noext(const char *path)
     return base;
 }
 
-char *ctu_filename(const char *path)
+char *str_filename(const char *path)
 {
     size_t idx = str_rfind(path, PATH_SEP);
     if (idx == SIZE_MAX)
     {
-        return ctu_noext(path);
+        return str_noext(path);
     }
 
-    return ctu_noext(path + idx + 1);
+    return str_noext(path + idx + 1);
 }
 
 bool str_startswith(const char *str, const char *prefix)
@@ -111,7 +111,7 @@ char *str_join(const char *sep, vector_t *parts)
     {
         if (i != 0)
         {
-            memcpy(out + idx,sep, MIN(remaining, seplen));
+            memcpy(out + idx, sep, MIN(remaining, seplen));
             idx += seplen;
             remaining -= seplen;
         }

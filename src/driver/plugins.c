@@ -1,6 +1,4 @@
 #include "plugins.h"
-#include "src/platform/platform.h"
-#include "cthulhu/util/report.h"
 #include "cthulhu/util/util.h"
 #include "src/driver/plugins.h"
 
@@ -9,9 +7,9 @@
 
 plugin_handle_t *is_plugin(size_t *id, const char *filename)
 {
-    error_t error = ERROR_SUCCESS;
-    library_handle_t handle = native_library_open(filename, &error);
-    if (error != ERROR_SUCCESS)
+    error_t error = 0;
+    library_t handle = library_open(filename, &error);
+    if (error != 0 || handle == NULL)
     {
         return NULL;
     }
@@ -25,10 +23,10 @@ plugin_handle_t *is_plugin(size_t *id, const char *filename)
 
 bool plugin_load(reports_t *reports, plugin_handle_t *handle)
 {
-    error_t error = ERROR_SUCCESS;
-    plugin_info_t *info = native_library_get_symbol(handle->libraryHandle, PLUGIN_INFO_NAME, &error);
-    
-    if (error != ERROR_SUCCESS)
+    error_t error = 0;
+    plugin_info_t *info = library_get(handle->libraryHandle, PLUGIN_INFO_NAME, &error);
+
+    if (error != 0 || info == NULL)
     {
         report(reports, WARNING, NULL, "failed to load plugin %s: missing plugin info", handle->path);
         return false;
@@ -40,7 +38,7 @@ bool plugin_load(reports_t *reports, plugin_handle_t *handle)
     logverbose(" license: %s", info->license);
 
     handle->info = info;
-    handle->init = native_library_get_symbol(handle->libraryHandle, PLUGIN_INIT_NAME, &error);
+    handle->init = library_get(handle->libraryHandle, PLUGIN_INIT_NAME, &error);
 
     handle->plugin.reports = reports;
 

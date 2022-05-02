@@ -1,9 +1,6 @@
-#include "src/platform/platform.h"
-
-#include "cmd.h"
 #include "cthulhu/driver/driver.h"
+#include "cmd.h"
 #include "cthulhu/hlir/init.h"
-#include "cthulhu/util/io.h"
 #include "cthulhu/util/version-def.h"
 #include "plugins.h"
 
@@ -65,7 +62,7 @@ static void rename_module(hlir_t *hlir, const char *path)
     {
         return;
     }
-    hlir->name = ctu_filename(path);
+    hlir->name = str_filename(path);
 }
 
 void common_init(void)
@@ -76,7 +73,7 @@ void common_init(void)
 
 typedef struct
 {
-    file_t *file;
+    file_t file;
     scan_t scanner;
 
     compile_t compileContext;
@@ -233,15 +230,17 @@ int common_main(int argc, const char **argv, driver_t driver)
         ctx->compileContext.ast = NULL;
         ctx->compileContext.hlirModule = NULL;
 
-        file_t *file = file_new(path, TEXT, READ);
-        if (!file_ok(file))
+        error_t error = 0;
+        file_t handle = file_open(path, 0, &error);
+
+        if (error != 0)
         {
-            error_t err = native_get_last_error();
-            report(reports, ERROR, NULL, "failed to open file: %s", native_error_to_string(err));
+            message_t *id = report(reports, ERROR, NULL, "failed to open file `%s`", path);
+            report_note(id, "%s", error_string(error));
             continue;
         }
 
-        ctx->file = file;
+        ctx->file = handle;
         vector_set(contexts, i, ctx);
     }
 
@@ -314,17 +313,18 @@ int common_main(int argc, const char **argv, driver_t driver)
         vector_push(&allModules, hlirModule);
     }
 
-    file_t *out = file_new(outFile, TEXT, WRITE);
+    error_t error = 0;
+    file_t out = file_open(outFile, FILE_WRITE, &error);
 
-    if (!file_ok(out))
+    if (error != 0)
     {
-        error_t err = native_get_last_error();
-        report(reports, ERROR, NULL, "failed to open file: %s", native_error_to_string(err));
+        message_t *id = report(reports, ERROR, NULL, "failed to open file `%s`", outFile);
+        report_note(id, "%s", error_string(error));
         return status;
     }
 
     c89_emit_modules(reports, allModules, out);
-    close_file(out);
+    file_close(out);
 
     return end_reports(reports, limit, "emitting code");
 }

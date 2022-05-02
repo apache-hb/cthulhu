@@ -1,4 +1,5 @@
 #include "common.h"
+#include "cthulhu/util/file.h"
 #include "cthulhu/util/str.h"
 
 #include <errno.h>
@@ -139,17 +140,19 @@ void end_save(data_t *out)
         stream_write_bytes(header, bytes, size);
     }
 
-    file_t *file = file_new(out->header.path, BINARY, WRITE);
+    error_t error = 0;
+    file_t handle = file_open(out->header.path, FILE_BINARY, &error);
 
-    if (!file_ok(file))
+    if (error != 0)
     {
-        report(out->header.reports, ERROR, NULL, "failed to open file %s (errno %d)", out->header.path, errno);
+        message_t *id = report(out->header.reports, ERROR, NULL, "failed to open file %s", out->header.path);
+        report_note(id, "%s", error_string(error));
         return;
     }
 
-    file_write(file, stream_data(header), stream_len(header));
+    file_write(handle, stream_data(header), stream_len(header), &error);
 
-    close_file(file);
+    file_close(handle);
 }
 
 index_t write_entry(data_t *out, type_t type, const value_t *values)
