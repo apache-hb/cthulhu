@@ -70,15 +70,17 @@ else
     parseargs += [ '-Wdeprecated' ]
     deps += [ cc.find_library('m'), cc.find_library('dl') ]
 
-    if analyze and cc.get_id() == 'gcc'
-        args += [ 
-            '-Wanalyzer-double-fclose',
-            '-Wanalyzer-double-free',
-            '-Wanalyzer-free-of-non-heap',
-            '-Wanalyzer-mismatching-deallocation',
-            '-Wanalyzer-null-dereference',
-            '-Wanalyzer-use-after-free'
-        ]
+    analyze_args = [ 
+        '-Wanalyzer-double-fclose',
+        '-Wanalyzer-double-free',
+        '-Wanalyzer-free-of-non-heap',
+        '-Wanalyzer-mismatching-deallocation',
+        '-Wanalyzer-null-dereference',
+        '-Wanalyzer-use-after-free'
+    ]
+
+    if analyze and cc.has_multi_arguments(analyze_args)
+        args += analyze_args
     endif
 endif
 

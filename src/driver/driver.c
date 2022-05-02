@@ -193,6 +193,8 @@ int common_main(int argc, const char **argv, driver_t driver)
         .modules = optimal_map(totalModules),
     };
 
+    vector_t *loadedModules = vector_new(totalModules);
+
     for (size_t i = 0; i < totalModules; i++)
     {
         const char *path = vector_get(modules, i);
@@ -202,6 +204,7 @@ int common_main(int argc, const char **argv, driver_t driver)
         for (size_t j = 0; j < numItems; j++)
         {
             hlir_t *hlir = vector_get(moduleItems, j);
+            vector_push(&loadedModules, hlir);
             map_set(runtime.modules, hlir->name, hlir);
         }
     }
@@ -287,8 +290,14 @@ int common_main(int argc, const char **argv, driver_t driver)
         vector_t *bytecodeModules = vector_of(numSources);
         FOR_EACH_SOURCE(i, ctx, {
             hlir_t *hlirModule = ctx->compileContext.hlirModule;
-            vector_push(&bytecodeModules, hlirModule);
+            vector_set(bytecodeModules, i, hlirModule);
         })
+
+        for (size_t i = 0; i < totalModules; i++)
+        {
+            hlir_t *hlir = vector_get(loadedModules, i);
+            vector_push(&bytecodeModules, hlir);
+        }
 
         // and save them to our intermediate format
         save_settings_t settings = {.embedSource = commands.embedSource};
