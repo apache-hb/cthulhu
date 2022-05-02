@@ -139,6 +139,7 @@ int common_main(int argc, const char **argv, driver_t driver)
     }
 
     verbose = commands.verboseLogging;
+    logverbose("setup verbose logging");
 
     vector_t *files = commands.files;
     size_t limit = commands.warningLimit;
@@ -325,6 +326,8 @@ int common_main(int argc, const char **argv, driver_t driver)
 
     c89_emit_modules(reports, allModules, out);
     file_close(out);
+
+    logverbose("finished compiling %zu modules", vector_len(allModules));
 
     return end_reports(reports, limit, "emitting code");
 }

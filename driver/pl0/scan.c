@@ -2,14 +2,27 @@
 
 #include "cthulhu/util/report.h"
 
-#include <ctype.h>
+static char safe_tolower(int c)
+{
+    if (c >= 'A' && c <= 'Z')
+    {
+        return (c + 'a' - 'A') & CHAR_MAX;
+    }
+
+    if (CHAR_MIN <= c && c <= CHAR_MAX)
+    {
+        return c;
+    }
+
+    return '\0';
+}
 
 char *pl0_normalize(const char *ident)
 {
     char *out = ctu_strdup(ident);
     for (char *p = out; *p; ++p)
     {
-        *p = tolower(*p);
+        *p = safe_tolower(*p);
     }
     return out;
 }

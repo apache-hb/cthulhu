@@ -2,7 +2,6 @@
 #include "cthulhu/util/defs.h"
 #include "cthulhu/util/util.h"
 
-#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -142,13 +141,19 @@ char *str_repeat(const char *str, size_t times)
     return out;
 }
 
-static bool ctu_isprint(char c)
+static bool safe_isprint(char c)
 {
     if (c == '\n' || c == '\t' || c == '\f' || c == '\r' || c == '\v')
     {
         return false;
     }
-    return isprint(c) || c == 0x0A;
+    
+    if (c > 0x1F && c != 0x7F)
+    {
+        return true;
+    }
+
+    return false;
 }
 
 static size_t normlen(char c)
@@ -161,7 +166,7 @@ static size_t normlen(char c)
     case '\"':
         return 2;
     default:
-        return ctu_isprint(c) ? 1 : 4;
+        return safe_isprint(c) ? 1 : 4;
     }
 }
 
@@ -195,7 +200,7 @@ static size_t normstr(char *out, char c)
         return 2;
     }
 
-    if (ctu_isprint(c))
+    if (safe_isprint(c))
     {
         out[0] = c;
         return 1;

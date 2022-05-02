@@ -5,6 +5,6 @@
 
 char *error_string(error_t error)
 {
-    native_error_t nativeError = error;
+    native_error_t nativeError = (native_error_t)error;
     return native_error_to_string(nativeError);
 }

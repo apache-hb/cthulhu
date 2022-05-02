@@ -5,7 +5,6 @@
 
 #include "cthulhu/ast/scan.h"
 
-#include <ctype.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -152,6 +151,18 @@ static char *extract_line(const scan_t *scan, line_t line)
     return str_normalizen(str, (size_t)(out - str));
 }
 
+static bool safe_isspace(int c)
+{
+    switch (c)
+    {
+    case ' ': case '\t': case '\r': case '\n':
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 static char *build_underline(const char *source, where_t where, const char *note)
 {
     column_t front = where.firstColumn;
@@ -182,7 +193,7 @@ static char *build_underline(const char *source, where_t where, const char *note
     while (front > idx)
     {
         char c = source[idx];
-        str[idx++] = isspace(c) ? c : ' ';
+        str[idx++] = safe_isspace(c) ? c : ' ';
     }
 
     str[idx] = '^';
@@ -455,14 +466,9 @@ static const char *paths_base(vector_t *messages)
         }
     }
 
-    if (vector_len(result) == 0)
+    if (vector_len(result) <= 1)
     {
         return "";
-    }
-
-    if (vector_len(result) == 1)
-    {
-        return str_filename(vector_get(result, 0));
     }
 
     return common_prefix(result);

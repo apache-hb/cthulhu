@@ -49,7 +49,7 @@
 #    define INVALID_FILE_HANDLE INVALID_HANDLE_VALUE
 #    define LIBRARY_HANDLE_TYPE HMODULE
 #    define FILE_HANDLE_TYPE HANDLE
-#    define FILE_SIZE_TYPE DWORD
+#    define FILE_SIZE_TYPE LONGLONG
 #    define FILE_POS_TYPE DWORD
 #    define FILE_READ_TYPE DWORD
 #    define FILE_WRITE_TYPE DWORD
@@ -72,9 +72,9 @@
 
 #include <stdbool.h>
 
-typedef RETURN_TYPE_SUCCESS(return != INVALID_LIBRARY_HANDLE) LIBRARY_HANDLE_TYPE library_handle_t;
-typedef RETURN_TYPE_SUCCESS(return != INVALID_FILE_HANDLE) FILE_HANDLE_TYPE file_handle_t;
-typedef RETURN_TYPE_SUCCESS(return != 0) ERROR_TYPE native_error_t;
+typedef LIBRARY_HANDLE_TYPE library_handle_t;
+typedef FILE_HANDLE_TYPE file_handle_t;
+typedef ERROR_TYPE native_error_t;
 typedef FILE_SIZE_TYPE file_size_t;
 typedef FILE_POS_TYPE file_pos_t;
 typedef FILE_READ_TYPE file_read_t;
@@ -103,8 +103,8 @@ void *native_library_get_symbol(library_handle_t handle, const char *symbol, nat
 file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_error_t *error);
 void native_file_close(file_handle_t handle);
 
-file_read_t native_file_read(file_handle_t handle, void *buffer, file_size_t size, native_error_t *error);
-file_write_t native_file_write(file_handle_t handle, const void *buffer, file_size_t size, native_error_t *error);
+file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t size, native_error_t *error);
+file_write_t native_file_write(file_handle_t handle, const void *buffer, file_write_t size, native_error_t *error);
 
 file_size_t native_file_size(file_handle_t handle, native_error_t *error);
 

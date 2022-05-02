@@ -6,6 +6,8 @@
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/util.h"
 
+#include <string.h>
+
 sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes)
 {
     sema_t *sema = ctu_malloc(sizeof(sema_t));
@@ -325,6 +327,16 @@ static void check_attribute(reports_t *reports, hlir_t *hlir)
     }
 }
 
+static void check_identifier_isnt_empty(reports_t *reports, const hlir_t *ident)
+{
+    const char *name = get_hlir_name(ident);
+    if (strlen(name) == 0)
+    {
+        const node_t *node = get_hlir_node(ident);
+        report(reports, ERROR, node, "empty identifier");
+    }
+}
+
 void check_module(reports_t *reports, hlir_t *mod)
 {
     size_t totalGlobals = vector_len(mod->globals);
@@ -335,6 +347,8 @@ void check_module(reports_t *reports, hlir_t *mod)
     for (size_t i = 0; i < totalTypes; i++)
     {
         hlir_t *type = vector_get(mod->types, i);
+
+        check_identifier_isnt_empty(reports, type);
         check_type_recursion(reports, &recursionStack, type);
 
         vector_reset(recursionStack);
@@ -343,6 +357,7 @@ void check_module(reports_t *reports, hlir_t *mod)
     for (size_t i = 0; i < totalGlobals; i++)
     {
         hlir_t *var = vector_get(mod->globals, i);
+        check_identifier_isnt_empty(reports, var);
         CTASSERTF(hlir_is(var, HLIR_GLOBAL), "check-module polluted: global `%s` is %s, not global", get_hlir_name(var),
                   hlir_kind_to_string(get_hlir_kind(var)));
         check_recursion(reports, &recursionStack, var);
@@ -357,6 +372,7 @@ void check_module(reports_t *reports, hlir_t *mod)
         {                                                                                                              \
             hlir_t *var = vector_get(vector, i);                                                                       \
             check_attribute(reports, var);                                                                             \
+            check_identifier_isnt_empty(reports, var); \
         }                                                                                                              \
     } while (0)
 

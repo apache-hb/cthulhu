@@ -378,6 +378,11 @@ static const format_t *get_format(void)
 {
     layout_t *allTypes = ctu_malloc(sizeof(layout_t) * LAYOUTS_TOTAL);
 
+    for (size_t i = 0; i < LAYOUTS_TOTAL; i++) {
+        layout_t layout = { 0 };
+        allTypes[i] = layout;
+    }
+
     allTypes[NODE_INDEX] = kNodeLayout;
     allTypes[SCAN_INDEX] = kScanLayout;
     allTypes[ATTRIBUTE_INDEX] = kAttribLayout;

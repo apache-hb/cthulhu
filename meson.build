@@ -41,6 +41,7 @@ gmp = dependency('gmp',
     fallback : [ 'mini-gmp', 'gmp' ]
 )
 
+links = []
 args = []
 deps = [ gmp ]
 lexargs = []
@@ -55,6 +56,7 @@ if buildtype.startswith('debug')
 endif
 
 if host == 'windows'
+    links += [ 'setargv.obj' ]
     lexargs += [ '--wincompat' ]
     args += [ '/Wv:18' ]
 
@@ -167,7 +169,8 @@ generic = declare_dependency(
     link_with : libgeneric,
     include_directories : 'include',
     dependencies : deps,
-    compile_args : args
+    compile_args : args,
+    link_args : links
 )
 
 options = { '': generic }

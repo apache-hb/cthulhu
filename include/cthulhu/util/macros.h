@@ -7,10 +7,8 @@
 #if __has_include(<sal.h>)
 #    include <sal.h>
 #    define DISABLE_SAL __pragma(warning(push, 1)) __pragma(warning(disable : 6011 6240 6262 6387 28199 28278))
-#    define RETURN_TYPE_SUCCESS(expr) _Return_type_success_(expr)
 #else
 #    define DISABLE_SAL
-#    define RETURN_TYPE_SUCCESS(expr)
 #endif
 
 #ifdef __GNUC__

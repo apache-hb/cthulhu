@@ -1,8 +1,10 @@
 #define I_WILL_BE_INCLUDING_PLATFORM_CODE
 
+// clang-format: off
+#include "src/platform/platform.h"
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/str.h"
-#include "src/platform/platform.h"
+// clang-format: on
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
 
@@ -47,7 +49,7 @@ file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t
     file_handle_t handle = CreateFile(
         /* lpFileName = */ path,
         /* dwDesiredAccess = */ access,
-        /* dwShareMode = */ 0,
+        /* dwShareMode = */ FILE_SHARE_READ,
         /* lpSecurityAttributes = */ NULL,
         /* dwCreationDisposition = */ disposition,
         /* dwFlagsAndAttributes = */ FILE_ATTRIBUTE_NORMAL,
@@ -66,7 +68,7 @@ void native_file_close(file_handle_t handle)
     CloseHandle(handle);
 }
 
-file_read_t native_file_read(file_handle_t handle, void *buffer, file_size_t size, native_error_t *error)
+file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t size, native_error_t *error)
 {
     DWORD readSize;
     BOOL result = ReadFile(handle, buffer, size, &readSize, NULL);
@@ -79,7 +81,7 @@ file_read_t native_file_read(file_handle_t handle, void *buffer, file_size_t siz
     return readSize;
 }
 
-file_write_t native_file_write(file_handle_t handle, const void *buffer, file_size_t size, native_error_t *error)
+file_write_t native_file_write(file_handle_t handle, const void *buffer, file_write_t size, native_error_t *error)
 {
     DWORD writtenSize = 0;
     BOOL result = WriteFile(handle, buffer, size, &writtenSize, NULL);
@@ -141,8 +143,14 @@ char *native_error_to_string(native_error_t error)
 {
     char buffer[0x1000] = {0};
 
-    DWORD written = FormatMessage(FORMAT_FLAGS, NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buffer,
-                                  sizeof(buffer), NULL);
+    DWORD written = FormatMessage(
+        /* dwFlags = */ FORMAT_FLAGS, 
+        /* lpSource = */ NULL, 
+        /* dwMessageId = */ error, 
+        /* dwLanguageId = */ MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
+        /* lpBuffer = */ buffer,
+        /* nSize = */ sizeof(buffer), 
+        /* Arguments = */ NULL);
 
     if (written == 0)
     {
@@ -156,6 +164,7 @@ char *native_error_to_string(native_error_t error)
         {
             memcpy(buffer + i, buffer + i + 1, written - i);
             used--;
+            i--;
         }
     }
 
