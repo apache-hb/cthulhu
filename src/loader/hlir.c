@@ -458,6 +458,12 @@ typedef struct
     data_t *data;
 } load_t;
 
+typedef struct
+{
+    data_t *data;
+    map_t *nodes;
+} hlir_save_t;
+
 static scan_t *load_scan(load_t *load, index_t index)
 {
     value_t values[FIELDLEN(kScanFields)];
@@ -961,18 +967,26 @@ vector_t *load_modules(reports_t *reports, const char *path)
 /// hlir saving
 ///
 
-static index_t save_scan(data_t *data, const scan_t *scan)
+static index_t save_scan(hlir_save_t *data, const scan_t *scan)
 {
+    index_t *index = map_get_ptr(data->nodes, scan);
+    if (index != NULL)
+    {
+        return *index;
+    }
+
     value_t values[FIELDLEN(kScanFields)] = {
         [SCAN_PATH] = string_value(scan->path),
         [SCAN_LANGUAGE] = string_value(scan->language),
         [SCAN_SOURCE] = string_value(scan->source.text),
     };
 
-    return write_entry(data, SCAN_INDEX, values);
+    index_t idx = write_entry(data->data, SCAN_INDEX, values);
+    map_set_ptr(data->nodes, scan, BOX(idx));
+    return idx;
 }
 
-static index_t save_span(data_t *data, const node_t *node)
+static index_t save_span(hlir_save_t *data, const node_t *node)
 {
     if (node == NULL || node == node_builtin())
     {
@@ -989,10 +1003,10 @@ static index_t save_span(data_t *data, const node_t *node)
         [NODE_SCAN] = reference_value(scan),
     };
 
-    return write_entry(data, NODE_INDEX, values);
+    return write_entry(data->data, NODE_INDEX, values);
 }
 
-static index_t save_attributes(data_t *data, const hlir_attributes_t *attributes)
+static index_t save_attributes(hlir_save_t *data, const hlir_attributes_t *attributes)
 {
     value_t values[FIELDLEN(kAttribFields)] = {
         [ATTRIB_LINKAGE] = int_value(attributes->linkage),
@@ -1000,18 +1014,18 @@ static index_t save_attributes(data_t *data, const hlir_attributes_t *attributes
         [ATTRIB_MANGLE] = string_value(attributes->mangle),
     };
 
-    return write_entry(data, ATTRIBUTE_INDEX, values);
+    return write_entry(data->data, ATTRIBUTE_INDEX, values);
 }
 
-static index_t save_node(data_t *data, const hlir_t *hlir);
+static index_t save_node(hlir_save_t *data, const hlir_t *hlir);
 
-static value_t make_ref(data_t *data, const hlir_t *hlir)
+static value_t make_ref(hlir_save_t *data, const hlir_t *hlir)
 {
     index_t index = save_node(data, hlir);
     return reference_value(index);
 }
 
-static value_t make_ref_opt(data_t *data, const hlir_t *hlir)
+static value_t make_ref_opt(hlir_save_t *data, const hlir_t *hlir)
 {
     if (hlir == NULL)
     {
@@ -1022,20 +1036,20 @@ static value_t make_ref_opt(data_t *data, const hlir_t *hlir)
     return reference_value(index);
 }
 
-static value_t span_ref(data_t *data, const hlir_t *hlir)
+static value_t span_ref(hlir_save_t *data, const hlir_t *hlir)
 {
     const node_t *node = get_hlir_node(hlir);
     index_t index = save_span(data, node);
     return reference_value(index);
 }
 
-static value_t attrib_ref(data_t *data, const hlir_t *hlir)
+static value_t attrib_ref(hlir_save_t *data, const hlir_t *hlir)
 {
     index_t index = save_attributes(data, hlir->attributes);
     return reference_value(index);
 }
 
-static array_t save_array(data_t *data, vector_t *vec)
+static array_t save_array(hlir_save_t *data, vector_t *vec)
 {
     size_t len = vector_len(vec);
     index_t *indices = ctu_malloc(sizeof(index_t) * len);
@@ -1045,14 +1059,14 @@ static array_t save_array(data_t *data, vector_t *vec)
         indices[i] = save_node(data, vector_get(vec, i));
     }
 
-    array_t array = write_array(data, indices, len);
+    array_t array = write_array(data->data, indices, len);
 
     return array;
 }
 
 // expressions
 
-static index_t save_digit_literal_node(data_t *data, const hlir_t *hlir)
+static index_t save_digit_literal_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [DIGIT_LITERAL_NODE] = span_ref(data, hlir),
@@ -1060,12 +1074,10 @@ static index_t save_digit_literal_node(data_t *data, const hlir_t *hlir)
         [DIGIT_LITERAL_VALUE] = digit_value(hlir->digit),
     };
 
-    CTASSERTF(values[DIGIT_LITERAL_TYPE].reference.type != NULL_TYPE, "%s:%d", __FILE__, __LINE__);
-
-    return write_entry(data, HLIR_DIGIT_LITERAL, values);
+    return write_entry(data->data, HLIR_DIGIT_LITERAL, values);
 }
 
-static index_t save_bool_literal_node(data_t *data, const hlir_t *hlir)
+static index_t save_bool_literal_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [BOOL_LITERAL_NODE] = span_ref(data, hlir),
@@ -1073,12 +1085,10 @@ static index_t save_bool_literal_node(data_t *data, const hlir_t *hlir)
         [BOOL_LITERAL_VALUE] = bool_value(hlir->boolean),
     };
 
-    CTASSERTF(values[BOOL_LITERAL_TYPE].reference.type != NULL_TYPE, "%s:%d", __FILE__, __LINE__);
-
-    return write_entry(data, HLIR_BOOL_LITERAL, values);
+    return write_entry(data->data, HLIR_BOOL_LITERAL, values);
 }
 
-static index_t save_string_literal_node(data_t *data, const hlir_t *hlir)
+static index_t save_string_literal_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [STRING_LITERAL_NODE] = span_ref(data, hlir),
@@ -1087,22 +1097,20 @@ static index_t save_string_literal_node(data_t *data, const hlir_t *hlir)
         [STRING_LITERAL_LENGTH] = int_value((long)hlir->stringLength),
     };
 
-    CTASSERTF(values[STRING_LITERAL_TYPE].reference.type != NULL_TYPE, "%s:%d", __FILE__, __LINE__);
-
-    return write_entry(data, HLIR_STRING_LITERAL, values);
+    return write_entry(data->data, HLIR_STRING_LITERAL, values);
 }
 
-static index_t save_name_node(data_t *data, const hlir_t *hlir)
+static index_t save_name_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [NAME_NODE] = span_ref(data, hlir),
         [NAME_EXPR] = make_ref(data, hlir->read),
     };
 
-    return write_entry(data, HLIR_NAME, values);
+    return write_entry(data->data, HLIR_NAME, values);
 }
 
-static index_t save_unary_node(data_t *data, const hlir_t *hlir)
+static index_t save_unary_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [UNARY_NODE] = span_ref(data, hlir),
@@ -1111,10 +1119,10 @@ static index_t save_unary_node(data_t *data, const hlir_t *hlir)
         [UNARY_EXPR] = make_ref(data, hlir->operand),
     };
 
-    return write_entry(data, HLIR_UNARY, values);
+    return write_entry(data->data, HLIR_UNARY, values);
 }
 
-static index_t save_binary_node(data_t *data, const hlir_t *hlir)
+static index_t save_binary_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [BINARY_NODE] = span_ref(data, hlir),     [BINARY_TYPE] = make_ref(data, get_hlir_type(hlir)),
@@ -1122,10 +1130,10 @@ static index_t save_binary_node(data_t *data, const hlir_t *hlir)
         [BINARY_RHS] = make_ref(data, hlir->rhs),
     };
 
-    return write_entry(data, HLIR_BINARY, values);
+    return write_entry(data->data, HLIR_BINARY, values);
 }
 
-static index_t save_compare_node(data_t *data, const hlir_t *hlir)
+static index_t save_compare_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [COMPARE_NODE] = span_ref(data, hlir),     [COMPARE_TYPE] = make_ref(data, get_hlir_type(hlir)),
@@ -1133,10 +1141,10 @@ static index_t save_compare_node(data_t *data, const hlir_t *hlir)
         [COMPARE_RHS] = make_ref(data, hlir->rhs),
     };
 
-    return write_entry(data, HLIR_COMPARE, values);
+    return write_entry(data->data, HLIR_COMPARE, values);
 }
 
-static index_t save_call_node(data_t *data, const hlir_t *hlir)
+static index_t save_call_node(hlir_save_t *data, const hlir_t *hlir)
 {
     array_t args = save_array(data, hlir->args);
 
@@ -1146,12 +1154,12 @@ static index_t save_call_node(data_t *data, const hlir_t *hlir)
         [CALL_ARGS] = array_value(args),
     };
 
-    return write_entry(data, HLIR_CALL, values);
+    return write_entry(data->data, HLIR_CALL, values);
 }
 
 // statements
 
-static index_t save_stmts_node(data_t *data, const hlir_t *hlir)
+static index_t save_stmts_node(hlir_save_t *data, const hlir_t *hlir)
 {
     array_t stmts = save_array(data, hlir->stmts);
 
@@ -1160,10 +1168,10 @@ static index_t save_stmts_node(data_t *data, const hlir_t *hlir)
         [STMTS_OPS] = array_value(stmts),
     };
 
-    return write_entry(data, HLIR_STMTS, values);
+    return write_entry(data->data, HLIR_STMTS, values);
 }
 
-static index_t save_branch_node(data_t *data, const hlir_t *hlir)
+static index_t save_branch_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [BRANCH_NODE] = span_ref(data, hlir),
@@ -1172,10 +1180,10 @@ static index_t save_branch_node(data_t *data, const hlir_t *hlir)
         [BRANCH_ELSE] = make_ref_opt(data, hlir->other),
     };
 
-    return write_entry(data, HLIR_BRANCH, values);
+    return write_entry(data->data, HLIR_BRANCH, values);
 }
 
-static index_t save_loop_node(data_t *data, const hlir_t *hlir)
+static index_t save_loop_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [LOOP_NODE] = span_ref(data, hlir),
@@ -1184,10 +1192,10 @@ static index_t save_loop_node(data_t *data, const hlir_t *hlir)
         [LOOP_ELSE] = make_ref_opt(data, hlir->other),
     };
 
-    return write_entry(data, HLIR_LOOP, values);
+    return write_entry(data->data, HLIR_LOOP, values);
 }
 
-static index_t save_assign_node(data_t *data, const hlir_t *hlir)
+static index_t save_assign_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [ASSIGN_NODE] = span_ref(data, hlir),
@@ -1195,12 +1203,12 @@ static index_t save_assign_node(data_t *data, const hlir_t *hlir)
         [ASSIGN_SRC] = make_ref(data, hlir->src),
     };
 
-    return write_entry(data, HLIR_ASSIGN, values);
+    return write_entry(data->data, HLIR_ASSIGN, values);
 }
 
 // types
 
-static index_t save_digit_node(data_t *data, const hlir_t *hlir)
+static index_t save_digit_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [DIGIT_NODE] = span_ref(data, hlir),
@@ -1208,40 +1216,40 @@ static index_t save_digit_node(data_t *data, const hlir_t *hlir)
         [DIGIT_SIGN] = int_value(hlir->sign),
         [DIGIT_WIDTH] = int_value(hlir->width),
     };
-    return write_entry(data, HLIR_DIGIT, values);
+    return write_entry(data->data, HLIR_DIGIT, values);
 }
 
-static index_t save_bool_node(data_t *data, const hlir_t *hlir)
+static index_t save_bool_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [BOOL_NODE] = span_ref(data, hlir),
         [BOOL_NAME] = string_value(hlir->name),
     };
 
-    return write_entry(data, HLIR_BOOL, values);
+    return write_entry(data->data, HLIR_BOOL, values);
 }
 
-static index_t save_string_node(data_t *data, const hlir_t *hlir)
+static index_t save_string_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [STRING_NODE] = span_ref(data, hlir),
         [STRING_NAME] = string_value(hlir->name),
     };
 
-    return write_entry(data, HLIR_STRING, values);
+    return write_entry(data->data, HLIR_STRING, values);
 }
 
-static index_t save_void_node(data_t *data, const hlir_t *hlir)
+static index_t save_void_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [VOID_NODE] = span_ref(data, hlir),
         [VOID_NAME] = string_value(hlir->name),
     };
 
-    return write_entry(data, HLIR_VOID, values);
+    return write_entry(data->data, HLIR_VOID, values);
 }
 
-static index_t save_closure_node(data_t *data, const hlir_t *hlir)
+static index_t save_closure_node(hlir_save_t *data, const hlir_t *hlir)
 {
     array_t args = save_array(data, hlir->params);
 
@@ -1253,10 +1261,10 @@ static index_t save_closure_node(data_t *data, const hlir_t *hlir)
         [CLOSURE_VARIADIC] = bool_value(hlir->variadic),
     };
 
-    return write_entry(data, HLIR_CLOSURE, values);
+    return write_entry(data->data, HLIR_CLOSURE, values);
 }
 
-static index_t save_pointer_node(data_t *data, const hlir_t *hlir)
+static index_t save_pointer_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [POINTER_NODE] = span_ref(data, hlir),
@@ -1265,10 +1273,10 @@ static index_t save_pointer_node(data_t *data, const hlir_t *hlir)
         [POINTER_INDEXABLE] = bool_value(hlir->indexable),
     };
 
-    return write_entry(data, HLIR_POINTER, values);
+    return write_entry(data->data, HLIR_POINTER, values);
 }
 
-static index_t save_array_node(data_t *data, const hlir_t *hlir)
+static index_t save_array_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [ARRAY_NODE] = span_ref(data, hlir),
@@ -1277,12 +1285,12 @@ static index_t save_array_node(data_t *data, const hlir_t *hlir)
         [ARRAY_LENGTH] = make_ref(data, hlir->length),
     };
 
-    return write_entry(data, HLIR_ARRAY, values);
+    return write_entry(data->data, HLIR_ARRAY, values);
 }
 
 /// declarations
 
-static index_t save_local_node(data_t *data, const hlir_t *hlir)
+static index_t save_local_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [LOCAL_NODE] = span_ref(data, hlir),          [LOCAL_ATTRIBS] = attrib_ref(data, hlir),
@@ -1290,10 +1298,10 @@ static index_t save_local_node(data_t *data, const hlir_t *hlir)
         [LOCAL_INDEX] = int_value((long)hlir->index),
     };
 
-    return write_entry(data, HLIR_LOCAL, values);
+    return write_entry(data->data, HLIR_LOCAL, values);
 }
 
-static index_t save_global_node(data_t *data, const hlir_t *hlir)
+static index_t save_global_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [GLOBAL_NODE] = span_ref(data, hlir),
@@ -1303,10 +1311,10 @@ static index_t save_global_node(data_t *data, const hlir_t *hlir)
         [GLOBAL_INIT] = make_ref_opt(data, hlir->value),
     };
 
-    return write_entry(data, HLIR_GLOBAL, values);
+    return write_entry(data->data, HLIR_GLOBAL, values);
 }
 
-static index_t save_function_node(data_t *data, const hlir_t *hlir)
+static index_t save_function_node(hlir_save_t *data, const hlir_t *hlir)
 {
     array_t locals = save_array(data, hlir->locals);
     array_t params = save_array(data, hlir->params);
@@ -1318,10 +1326,10 @@ static index_t save_function_node(data_t *data, const hlir_t *hlir)
         [FUNCTION_LOCALS] = array_value(locals),          [FUNCTION_BODY] = make_ref_opt(data, hlir->body),
     };
 
-    return write_entry(data, HLIR_FUNCTION, values);
+    return write_entry(data->data, HLIR_FUNCTION, values);
 }
 
-static index_t save_struct_node(data_t *data, const hlir_t *hlir)
+static index_t save_struct_node(hlir_save_t *data, const hlir_t *hlir)
 {
     array_t fields = save_array(data, hlir->fields);
 
@@ -1332,10 +1340,10 @@ static index_t save_struct_node(data_t *data, const hlir_t *hlir)
         [STRUCT_ITEMS] = array_value(fields),
     };
 
-    return write_entry(data, HLIR_STRUCT, values);
+    return write_entry(data->data, HLIR_STRUCT, values);
 }
 
-static index_t save_union_node(data_t *data, const hlir_t *hlir)
+static index_t save_union_node(hlir_save_t *data, const hlir_t *hlir)
 {
     array_t fields = save_array(data, hlir->fields);
 
@@ -1346,10 +1354,10 @@ static index_t save_union_node(data_t *data, const hlir_t *hlir)
         [UNION_ITEMS] = array_value(fields),
     };
 
-    return write_entry(data, HLIR_UNION, values);
+    return write_entry(data->data, HLIR_UNION, values);
 }
 
-static index_t save_alias_node(data_t *data, const hlir_t *hlir)
+static index_t save_alias_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [ALIAS_NODE] = span_ref(data, hlir),
@@ -1358,10 +1366,10 @@ static index_t save_alias_node(data_t *data, const hlir_t *hlir)
         [ALIAS_TYPE] = make_ref(data, hlir->alias),
     };
 
-    return write_entry(data, HLIR_ALIAS, values);
+    return write_entry(data->data, HLIR_ALIAS, values);
 }
 
-static index_t save_field_node(data_t *data, const hlir_t *hlir)
+static index_t save_field_node(hlir_save_t *data, const hlir_t *hlir)
 {
     value_t values[] = {
         [FIELD_NODE] = span_ref(data, hlir),
@@ -1369,10 +1377,10 @@ static index_t save_field_node(data_t *data, const hlir_t *hlir)
         [FIELD_TYPE] = make_ref(data, get_hlir_type(hlir)),
     };
 
-    return write_entry(data, HLIR_FIELD, values);
+    return write_entry(data->data, HLIR_FIELD, values);
 }
 
-static index_t save_module_node(data_t *data, const hlir_t *hlir)
+static index_t save_module_node(hlir_save_t *data, const hlir_t *hlir)
 {
     array_t types = save_array(data, hlir->types);
     array_t globals = save_array(data, hlir->globals);
@@ -1384,10 +1392,10 @@ static index_t save_module_node(data_t *data, const hlir_t *hlir)
         [MODULE_FUNCTIONS] = array_value(functions),
     };
 
-    return write_entry(data, HLIR_MODULE, values);
+    return write_entry(data->data, HLIR_MODULE, values);
 }
 
-static index_t save_node(data_t *data, const hlir_t *hlir)
+static index_t save_node_inner(hlir_save_t *data, const hlir_t *hlir)
 {
     switch (hlir->type)
     {
@@ -1460,9 +1468,22 @@ static index_t save_node(data_t *data, const hlir_t *hlir)
         return save_module_node(data, hlir);
 
     default:
-        ctu_assert(data->header.reports, "saving unknown node type %u", hlir->type);
+        ctu_assert(data->data->header.reports, "saving unknown node type %u", hlir->type);
         return NULL_INDEX;
     }
+}
+
+static index_t save_node(hlir_save_t *data, const hlir_t *hlir)
+{
+    index_t *idx = map_get_ptr(data->nodes, hlir);
+    if (idx != NULL)
+    {
+        return *idx;
+    }
+
+    index_t result = save_node_inner(data, hlir);
+    map_set_ptr(data->nodes, hlir, BOX(result));
+    return result;
 }
 
 void save_modules(reports_t *reports, save_settings_t *settings, vector_t *modules, const char *path)
@@ -1480,11 +1501,16 @@ void save_modules(reports_t *reports, save_settings_t *settings, vector_t *modul
     data_t data;
     begin_save(&data, header);
 
+    hlir_save_t save = {
+        .data = &data,
+        .nodes = map_new(131071)
+    };
+
     size_t totalModules = vector_len(modules);
     for (size_t i = 0; i < totalModules; i++)
     {
         hlir_t *module = vector_get(modules, i);
-        save_node(&data, module);
+        save_node(&save, module);
     }
 
     end_save(&data);

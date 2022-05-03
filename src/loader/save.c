@@ -44,6 +44,7 @@ static void write_data(data_t *data, stream_t *dst, layout_t layout, const value
         case FIELD_STRING:
             str = write_string(data, val.string);
             stream_write_bytes(dst, &str, sizeof(offset_t));
+            logverbose("  write-str (%s)", val.string);
             break;
         case FIELD_INT:
             gmp = mpz_get_str(NULL, DIGIT_BASE, val.digit);
@@ -55,6 +56,7 @@ static void write_data(data_t *data, stream_t *dst, layout_t layout, const value
             break;
         case FIELD_REFERENCE:
             stream_write_bytes(dst, &val.reference, sizeof(index_t));
+            logverbose("  write-ref (%zu, %zu)", val.reference.type, val.reference.offset);
             break;
         case FIELD_ARRAY:
             stream_write_bytes(dst, &val.array, sizeof(array_t));
@@ -160,6 +162,7 @@ index_t write_entry(data_t *out, type_t type, const value_t *values)
     stream_t *dst = out->records[type];
     layout_t layout = out->header.format->layouts[type];
 
+    logverbose("write-entry (%zu)", type);
     write_data(out, dst, layout, values);
 
     offset_t offset = out->counts[type]++;

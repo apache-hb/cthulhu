@@ -7,6 +7,7 @@ wow this project got out of hand.
 meson build # configure build directory
 ninja -C build # build compiler and drivers
 ninja -C build docs # build documentation
+ninja -C build test # build and run tests
 ```
 
 ## Dependencies

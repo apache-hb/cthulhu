@@ -33,7 +33,7 @@ bool plugin_load(reports_t *reports, plugin_handle_t *handle)
     }
 
     logverbose("loaded plugin %s", info->name);
-    logverbose(" version: %s", info->version);
+    logverbose(" version: %d.%d.%d", VERSION_MAJOR(info->version), VERSION_MINOR(info->version), VERSION_PATCH(info->version));
     logverbose(" description: %s", info->description);
     logverbose(" license: %s", info->license);
 

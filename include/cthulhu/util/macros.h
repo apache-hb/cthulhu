@@ -48,22 +48,22 @@
 
 #if defined(__clang__)
 #    define BEGIN_PACKED(align)
-#    define END_PACKED
+#    define END_PACKED()
 #    define PACKED(align) __attribute__((aligned(align), packed))
 #    define NORETURN _Noreturn void
 #elif defined(__GNUC__)
 #    define BEGIN_PACKED(align)
-#    define END_PACKED
+#    define END_PACKED()
 #    define PACKED(align) __attribute__((aligned(align), packed))
 #    define NORETURN _Noreturn void
 #elif defined(_MSC_VER)
 #    define BEGIN_PACKED(align) __pragma(pack(push, align))
-#    define END_PACKED __pragma(pack(pop))
+#    define END_PACKED() __pragma(pack(pop))
 #    define PACKED(align)
 #    define NORETURN __declspec(noreturn) void
 #else
 #    define BEGIN_PACKED(align) _Pragma("warning \"current compiler doesnt support packing\"")
-#    define END_PACKED
+#    define END_PACKED()
 #    define PACKED(align)
 #    define NORETURN void
 #endif

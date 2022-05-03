@@ -29,7 +29,7 @@ typedef struct PACKED(2)
     offset_t arrays;
 } basic_header_t;
 
-END_PACKED
+END_PACKED()
 
 size_t layout_size(layout_t layout);
 

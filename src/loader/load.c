@@ -216,9 +216,15 @@ bool read_entry(data_t *in, index_t index, value_t *values)
 {
     size_t type = index.type;
 
+    if (index.type == NULL_TYPE || index.offset == NULL_OFFSET)
+    {
+        report(in->header.reports, ERROR, NULL, "null read attempted");
+        return false;
+    }
+
     if (type > NUM_TYPES(in->header))
     {
-        report(in->header.reports, ERROR, NULL, "invalid type index %zu", type);
+        report(in->header.reports, ERROR, NULL, "invalid type index 0x%zx", type);
         return false;
     }
 

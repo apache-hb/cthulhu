@@ -143,7 +143,7 @@ static void *entry_get_ptr(const bucket_t *entry, const void *key, void *other)
 
     if (entry->next)
     {
-        return entry_get(entry->next, key, other);
+        return entry_get_ptr(entry->next, key, other);
     }
 
     return other;

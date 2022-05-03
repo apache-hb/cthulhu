@@ -3,6 +3,7 @@
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/plugins/plugin.h"
 #include "cthulhu/util/report.h"
+#include "cthulhu/util/version-def.h"
 
 typedef enum
 {
@@ -37,7 +38,7 @@ typedef struct
 typedef struct
 {
     const char *name;
-    const char *version;
+    version_t version;
     const char *description;
     const char *license;
 } plugin_info_t;

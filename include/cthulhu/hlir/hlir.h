@@ -104,7 +104,8 @@ typedef struct hlir_t
     const node_t *location;  ///< the source location that generated this node
     const struct hlir_t *of; ///< the type this hlir evaluates to
 
-    union {
+    union 
+    {
         mpz_t digit;  ///< the value of this integer literal. active if type ==
                       ///< HLIR_DIGIT_LITERAL
         bool boolean; ///< the value of this boolean literal. active if type ==
@@ -133,7 +134,8 @@ typedef struct hlir_t
             struct hlir_t *rhs; ///< the right operand of this operation. active if type
                                 ///< == HLIR_BINARY || type == HLIR_COMPARE
 
-            union {
+            union 
+            {
                 binary_t binary;   ///< the binary operation to perform. active if
                                    ///< type == HLIR_BINARY
                 compare_t compare; ///< the comparison operation to perform.
@@ -176,7 +178,8 @@ typedef struct hlir_t
             const struct hlir_t *parentDecl; ///< the module that contains this
                                              ///< declaration
 
-            union {
+            union 
+            {
                 ///
                 /// all types
                 ///
@@ -207,7 +210,8 @@ typedef struct hlir_t
                     /* the local variables */
                     vector_t *locals;
 
-                    union {
+                    union 
+                    {
                         /* the body of this function */
                         struct hlir_t *body;
 
