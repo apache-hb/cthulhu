@@ -887,7 +887,7 @@ void c89_emit_modules(reports_t *reports, vector_t *modules, file_t output)
     }
 
     // then use the total number of types to create a fast map
-    emit.mangledNames = optimal_map(totalDecls);
+    emit.mangledNames = map_optimal(totalDecls);
     emit.depth = 0;
 
     c89_emit_types(&emit, modules);

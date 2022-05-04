@@ -110,6 +110,7 @@ src = [
     'src/driver/driver.c',
     'src/driver/cmd.c',
     'src/driver/plugins.c',
+    'src/driver/switch.c',
     lex.process('src/driver/cmd.l'),
     parse.process('src/driver/cmd.y'),
     

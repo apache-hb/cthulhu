@@ -3,7 +3,7 @@
 #include "platform.h"
 
 #include "cthulhu/util/str.h"
-#include "src/platform/platform.h"
+#include "platform.h"
 #include <errno.h>
 #include <string.h>
 #include <sys/mman.h>

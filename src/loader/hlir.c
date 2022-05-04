@@ -945,7 +945,7 @@ vector_t *load_modules(reports_t *reports, const char *path)
 
     load_t load = {
         .reports = reports,
-        .scanners = optimal_map(totalModules),
+        .scanners = map_optimal(totalModules),
         .data = &data,
     };
 

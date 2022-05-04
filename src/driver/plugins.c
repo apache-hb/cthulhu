@@ -1,6 +1,6 @@
 #include "plugins.h"
 #include "cthulhu/util/util.h"
-#include "src/driver/plugins.h"
+#include "plugins.h"
 
 #define PLUGIN_INFO_NAME "kPluginInfo"
 #define PLUGIN_INIT_NAME "ctPluginInit"

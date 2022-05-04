@@ -44,7 +44,7 @@ map_t *map_new(size_t size);
  *
  * @return a new map
  */
-map_t *optimal_map(size_t size);
+map_t *map_optimal(size_t size);
 
 /**
  * set or overwrite a value in a map

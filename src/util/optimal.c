@@ -76,7 +76,7 @@ static size_t select_best_size(size_t size)
     return bucket;
 }
 
-map_t *optimal_map(size_t size)
+map_t *map_optimal(size_t size)
 {
     size_t bucket = select_best_size(size);
     return map_new(bucket);

@@ -12,8 +12,9 @@
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/vector.h"
-#include "src/driver/cmd.h"
-#include "src/driver/plugins.h"
+#include "cmd.h"
+#include "plugins.h"
+#include "switch.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -82,24 +83,14 @@ typedef struct
 typedef enum
 {
     OUTPUT_C89,
-    OUTPUT_WASM
+    OUTPUT_WASM,
+    OUTPUT_TOTAL
 } target_t;
 
-#if 0
-static target_t parse_target(reports_t *reports, const char *target) {
-    if (str_equal(target, "c89")) {
-        return OUTPUT_C89;
-    }
-
-    if (str_equal(target, "wasm")) {
-        return OUTPUT_WASM;
-    }
-
-    message_t *id = report(reports, WARNING, NULL, "unknown output target `%s`", target);
-    report_note(id, "defaulting to `c89`");
-    return OUTPUT_C89;
-}
-#endif
+static const map_pair_t kTargetNames[] = {
+    STRING_CASE("c89", OUTPUT_C89),
+    STRING_CASE("wasm", OUTPUT_WASM),
+};
 
 #define END_STAGE(name)                                                                                                \
     do                                                                                                                 \
@@ -143,12 +134,37 @@ int common_main(int argc, const char **argv, driver_t driver)
 
     vector_t *files = commands.files;
     size_t limit = commands.warningLimit;
-    // const char *target = commands.outputTarget;
+    const char *targetName = commands.outputTarget;
     const char *outFile = commands.outputFile;
+
+    target_t target = MATCH_CASE(targetName, kTargetNames);
+
+    if (target >= OUTPUT_TOTAL)
+    {
+        report(reports, ERROR, NULL, "invalid output target: %s", targetName);
+    }
 
     if (outFile == NULL)
     {
-        outFile = commands.enableBytecode ? "mod.hlir" : "out.c";
+        if (commands.enableBytecode)
+        {
+            outFile = "mod.hlir";
+        }
+        else
+        {
+            switch (target)
+            {
+            case OUTPUT_C89:
+                outFile = "out.c";
+                break;
+            case OUTPUT_WASM:
+                outFile = "out.wasm";
+                break;
+
+            default:
+                break;
+            }
+        }
     }
 
     if (commands.printHelp)
@@ -162,6 +178,8 @@ int common_main(int argc, const char **argv, driver_t driver)
         print_version(driver);
         return 0;
     }
+
+    END_STAGE("commandline");
 
     vector_t *plugins = vector_new(0); // all plugins
     vector_t *modules = vector_new(0); // all library bytecode modules
@@ -190,7 +208,7 @@ int common_main(int argc, const char **argv, driver_t driver)
     size_t totalModules = vector_len(modules);
     runtime_t runtime = {
         .reports = reports,
-        .modules = optimal_map(totalModules),
+        .modules = map_optimal(totalModules),
     };
 
     vector_t *loadedModules = vector_new(totalModules);
@@ -333,7 +351,19 @@ int common_main(int argc, const char **argv, driver_t driver)
         return status;
     }
 
-    c89_emit_modules(reports, allModules, out);
+    switch (target)
+    {
+    case OUTPUT_C89:
+        c89_emit_modules(reports, allModules, out);
+        break;
+    case OUTPUT_WASM:
+        wasm_emit_modules(reports, allModules, out);
+        break;
+
+    default:
+        report(reports, ERROR, NULL, "unsupported output format");
+    }
+
     file_close(out);
 
     logverbose("finished compiling %zu modules", vector_len(allModules));

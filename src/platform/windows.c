@@ -1,7 +1,7 @@
 #define I_WILL_BE_INCLUDING_PLATFORM_CODE
 
 // clang-format: off
-#include "src/platform/platform.h"
+#include "platform.h"
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/str.h"
 // clang-format: on
