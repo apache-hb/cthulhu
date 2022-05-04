@@ -372,7 +372,7 @@ void check_module(reports_t *reports, hlir_t *mod)
         {                                                                                                              \
             hlir_t *var = vector_get(vector, i);                                                                       \
             check_attribute(reports, var);                                                                             \
-            check_identifier_isnt_empty(reports, var); \
+            check_identifier_isnt_empty(reports, var);                                                                 \
         }                                                                                                              \
     } while (0)
 

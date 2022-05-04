@@ -4,6 +4,7 @@
 #include "cthulhu/util/version-def.h"
 #include "plugins.h"
 
+#include "cmd.h"
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/emit/emit.h"
 #include "cthulhu/hlir/query.h"
@@ -12,7 +13,6 @@
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/vector.h"
-#include "cmd.h"
 #include "plugins.h"
 #include "switch.h"
 

@@ -57,7 +57,8 @@ static uint8_t wasm_encode_value_type(wasm_t *wasm, const hlir_t *hlir)
 
     switch (hlir->width)
     {
-    case DIGIT_CHAR: case DIGIT_SHORT:
+    case DIGIT_CHAR:
+    case DIGIT_SHORT:
     case DIGIT_INT:
         return 0x7F;
     case DIGIT_LONG:
@@ -97,7 +98,7 @@ static void wasm_emit_function(wasm_t *wasm, const hlir_t *hlir)
 
     stream_write_bytes(wasm->typeSection, &kFuncType, sizeof(kFuncType));
     wasm_write_array_length(wasm->typeSection, (uint32_t)totalParams);
-    
+
     for (size_t i = 0; i < totalParams; i++)
     {
         hlir_t *param = vector_get(params, i);
@@ -119,8 +120,8 @@ static void wasm_emit_function(wasm_t *wasm, const hlir_t *hlir)
     }
 }
 
-static const uint8_t kWasmMagic[] = { '\0', 'a', 's', 'm' };
-static const uint8_t kWasmVersion[] = { 1, 0, 0, 0 };
+static const uint8_t kWasmMagic[] = {'\0', 'a', 's', 'm'};
+static const uint8_t kWasmVersion[] = {1, 0, 0, 0};
 
 static void wasm_write_section(file_t file, stream_t *stream, uint8_t type)
 {
@@ -157,11 +158,11 @@ void wasm_emit_modules(reports_t *reports, vector_t *modules, file_t output)
         }
     }
 
-    for (size_t i = 0; i < totalModules; i++) 
+    for (size_t i = 0; i < totalModules; i++)
     {
         hlir_t *mod = vector_get(modules, i);
         vector_t *functions = mod->functions;
-        
+
         for (size_t j = 0; j < vector_len(functions); j++)
         {
             hlir_t *function = vector_get(functions, j);

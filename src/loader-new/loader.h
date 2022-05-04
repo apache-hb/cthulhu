@@ -6,7 +6,7 @@
 
 /**
  * file layout
- * 
+ *
  * - header: header_t
  * - offset table: uint64_t[]
  * - string table: char[]
@@ -19,29 +19,29 @@
 
 BEGIN_PACKED(PACKING)
 
-typedef struct PACKED(PACKING) 
+typedef struct PACKED(PACKING)
 {
-    uint64_t magic; // global magic number
+    uint64_t magic;    // global magic number
     version_t version; // version of the file format
     uint32_t submagic; // content specific magic number
-    uint32_t strings; // total size of the string table
+    uint32_t strings;  // total size of the string table
 } header_t;
 
-typedef struct PACKED(PACKING) 
+typedef struct PACKED(PACKING)
 {
-    uint32_t index; // index into the array table
+    uint32_t index;  // index into the array table
     uint32_t length; // number of elements to read
 } array_t;
 
-typedef struct PACKED(PACKING) 
+typedef struct PACKED(PACKING)
 {
-    uint32_t type; // index into offset table
+    uint32_t type;  // index into offset table
     uint32_t index; // number of elements into the offset table
 } entry_t;
 
 END_PACKED()
 
-typedef enum 
+typedef enum
 {
     TYPE_STRING,
     TYPE_ARRAY,
@@ -50,13 +50,13 @@ typedef enum
     TYPE_INT
 } element_t;
 
-typedef struct 
+typedef struct
 {
     size_t size;
     const element_t *elements;
 } layout_t;
 
-typedef struct 
+typedef struct
 {
     uint32_t submagic;
 
@@ -65,8 +65,14 @@ typedef struct
 } format_t;
 
 #define ENTRY(name, type) type
-#define LAYOUT(name, elements) { .size = sizeof(elements) / sizeof(element_t), .elements = elements }
-#define FORMAT(submagic, layouts) { .submagic = submagic, .size = sizeof(layouts) / sizeof(layout_t), .layouts = layouts }
+#define LAYOUT(name, elements)                                                                                         \
+    {                                                                                                                  \
+        .size = sizeof(elements) / sizeof(element_t), .elements = elements                                             \
+    }
+#define FORMAT(submagic, layouts)                                                                                      \
+    {                                                                                                                  \
+        .submagic = submagic, .size = sizeof(layouts) / sizeof(layout_t), .layouts = layouts                           \
+    }
 
 typedef struct
 {

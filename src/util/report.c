@@ -155,7 +155,10 @@ static bool safe_isspace(int c)
 {
     switch (c)
     {
-    case ' ': case '\t': case '\r': case '\n':
+    case ' ':
+    case '\t':
+    case '\r':
+    case '\n':
         return true;
 
     default:

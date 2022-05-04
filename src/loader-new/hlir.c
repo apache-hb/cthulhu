@@ -2,7 +2,12 @@
 
 #include "cthulhu/hlir/hlir.h"
 
-#define INDICES(span, ...) enum { span, __VA_ARGS__ };
+#define INDICES(span, ...)                                                                                             \
+    enum                                                                                                               \
+    {                                                                                                                  \
+        span,                                                                                                          \
+        __VA_ARGS__                                                                                                    \
+    };
 
 typedef enum
 {
@@ -11,4 +16,3 @@ typedef enum
     INDEX_SCANNER,
     INDEX_TOTAL
 } index_t;
-

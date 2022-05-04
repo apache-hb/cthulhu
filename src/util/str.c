@@ -147,7 +147,7 @@ static bool safe_isprint(char c)
     {
         return false;
     }
-    
+
     if (c > 0x1F && c != 0x7F)
     {
         return true;

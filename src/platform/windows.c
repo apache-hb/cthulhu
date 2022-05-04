@@ -1,9 +1,9 @@
 #define I_WILL_BE_INCLUDING_PLATFORM_CODE
 
 // clang-format: off
-#include "platform.h"
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/str.h"
+#include "platform.h"
 // clang-format: on
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
@@ -144,12 +144,12 @@ char *native_error_to_string(native_error_t error)
     char buffer[0x1000] = {0};
 
     DWORD written = FormatMessage(
-        /* dwFlags = */ FORMAT_FLAGS, 
-        /* lpSource = */ NULL, 
-        /* dwMessageId = */ error, 
-        /* dwLanguageId = */ MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
+        /* dwFlags = */ FORMAT_FLAGS,
+        /* lpSource = */ NULL,
+        /* dwMessageId = */ error,
+        /* dwLanguageId = */ MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         /* lpBuffer = */ buffer,
-        /* nSize = */ sizeof(buffer), 
+        /* nSize = */ sizeof(buffer),
         /* Arguments = */ NULL);
 
     if (written == 0)

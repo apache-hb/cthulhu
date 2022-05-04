@@ -28,6 +28,7 @@ jobs:
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: test
+          meson-version: 0.58.0
   formatting-check:
     name: Formatting Checks
     runs-on: ubuntu-latest

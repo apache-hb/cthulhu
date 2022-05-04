@@ -378,8 +378,9 @@ static const format_t *get_format(void)
 {
     layout_t *allTypes = ctu_malloc(sizeof(layout_t) * LAYOUTS_TOTAL);
 
-    for (size_t i = 0; i < LAYOUTS_TOTAL; i++) {
-        layout_t layout = { 0 };
+    for (size_t i = 0; i < LAYOUTS_TOTAL; i++)
+    {
+        layout_t layout = {0};
         allTypes[i] = layout;
     }
 
@@ -1501,10 +1502,7 @@ void save_modules(reports_t *reports, save_settings_t *settings, vector_t *modul
     data_t data;
     begin_save(&data, header);
 
-    hlir_save_t save = {
-        .data = &data,
-        .nodes = map_new(131071)
-    };
+    hlir_save_t save = {.data = &data, .nodes = map_new(131071)};
 
     size_t totalModules = vector_len(modules);
     for (size_t i = 0; i < totalModules; i++)

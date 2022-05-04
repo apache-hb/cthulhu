@@ -2,7 +2,10 @@
 
 #include "cthulhu/util/map.h"
 
-#define STRING_CASE(name, val) { name, val }
+#define STRING_CASE(name, val)                                                                                         \
+    {                                                                                                                  \
+        name, val                                                                                                      \
+    }
 #define MATCH_CASE(name, ...) match_case(name, sizeof(__VA_ARGS__) / sizeof(map_pair_t), __VA_ARGS__)
 
 typedef struct
