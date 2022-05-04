@@ -119,6 +119,27 @@ static const map_pair_t kTargetNames[] = {
         END_STAGE(name);                                                                                               \
     } while (0)
 
+static const char *get_output_name(target_t target, bool bytecode)
+{
+    if (bytecode)
+    {
+        return "mod.hlir";
+    }
+    
+    switch (target)
+    {
+    case OUTPUT_C89:
+        return "out.c";
+        break;
+    case OUTPUT_WASM:
+        return "out.wasm";
+        break;
+
+    default:
+        return NULL;
+    }
+}
+
 int common_main(int argc, const char **argv, driver_t driver)
 {
     reports_t *reports = begin_reports();
@@ -146,25 +167,7 @@ int common_main(int argc, const char **argv, driver_t driver)
 
     if (outFile == NULL)
     {
-        if (commands.enableBytecode)
-        {
-            outFile = "mod.hlir";
-        }
-        else
-        {
-            switch (target)
-            {
-            case OUTPUT_C89:
-                outFile = "out.c";
-                break;
-            case OUTPUT_WASM:
-                outFile = "out.wasm";
-                break;
-
-            default:
-                break;
-            }
-        }
+        outFile = get_output_name(target, commands.enableBytecode);
     }
 
     if (commands.printHelp)
