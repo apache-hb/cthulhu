@@ -16,6 +16,18 @@ on:
       - 'plugins/**'
 
 jobs:
+  run-tests:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    name: Run Test Suite
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          action: test
   formatting-check:
     name: Formatting Checks
     runs-on: ubuntu-latest

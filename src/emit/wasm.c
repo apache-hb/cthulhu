@@ -64,7 +64,7 @@ static uint8_t wasm_encode_value_type(wasm_t *wasm, const hlir_t *hlir)
         return 0x7E;
 
     default:
-        report(wasm->reports, ERROR, node, "unsupported digit type %s", hlir_digit_to_string(kind));
+        report(wasm->reports, ERROR, node, "unsupported digit type %s", hlir_digit_to_string(hlir->width));
         return 0x00;
     }
 }
@@ -96,7 +96,7 @@ static void wasm_emit_function(wasm_t *wasm, const hlir_t *hlir)
     size_t totalParams = vector_len(params);
 
     stream_write_bytes(wasm->typeSection, &kFuncType, sizeof(kFuncType));
-    wasm_write_array_length(wasm->typeSection, totalParams);
+    wasm_write_array_length(wasm->typeSection, (uint32_t)totalParams);
     
     for (size_t i = 0; i < totalParams; i++)
     {
@@ -125,7 +125,7 @@ static const uint8_t kWasmVersion[] = { 1, 0, 0, 0 };
 static void wasm_write_section(file_t file, stream_t *stream, uint8_t type)
 {
     error_t error = 0;
-    uint32_t size = stream_len(stream);
+    uint32_t size = (uint32_t)stream_len(stream);
 
     file_write(file, &type, sizeof(type), &error);
     file_write(file, &size, sizeof(size), &error);

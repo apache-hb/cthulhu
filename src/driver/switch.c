@@ -10,7 +10,7 @@ map_t *map_from_pairs(size_t size, const map_pair_t *pairs)
     for (size_t i = 0; i < size; i++)
     {
         map_pair_t pair = pairs[i];
-        map_set(map, pair.key, pair.value);
+        map_set(map, pair.key, (void*)(intptr_t)pair.value);
     }
 
     return map;
@@ -18,7 +18,7 @@ map_t *map_from_pairs(size_t size, const map_pair_t *pairs)
 
 int get_case(map_t *map, const char *key)
 {
-    return (uintptr_t)map_get_default(map, key, (void*)INT_MAX);
+    return (int)(uintptr_t)map_get_default(map, key, (void*)INT_MAX);
 }
 
 int match_case(const char *key, size_t numPairs, const map_pair_t *pairs) 
