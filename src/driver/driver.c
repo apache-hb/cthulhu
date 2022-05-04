@@ -125,7 +125,7 @@ static const char *get_output_name(target_t target, bool bytecode)
     {
         return "mod.hlir";
     }
-    
+
     switch (target)
     {
     case OUTPUT_C89:
