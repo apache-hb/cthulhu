@@ -68,11 +68,12 @@ static const field_t kScanFields[] = {
 };
 static const layout_t kScanLayout = LAYOUT("scan", kScanFields);
 
-ELEMENTS(ATTRIB_LINKAGE, ATTRIB_TAGS, ATTRIB_MANGLE);
+ELEMENTS(ATTRIB_LINKAGE, ATTRIB_TAGS, ATTRIB_MANGLE, ATTRIB_MODULE);
 static const field_t kAttribFields[] = {
     [ATTRIB_LINKAGE] = FIELD("linkage", FIELD_INT),
     [ATTRIB_TAGS] = FIELD("tags", FIELD_INT),
     [ATTRIB_MANGLE] = FIELD("mangle", FIELD_STRING),
+    [ATTRIB_MODULE] = FIELD("module", FIELD_STRING),
 };
 static const layout_t kAttribLayout = LAYOUT("attributes", kAttribFields);
 
@@ -534,7 +535,8 @@ static hlir_attributes_t *load_attributes(load_t *load, value_t value)
     hlir_linkage_t linkage = get_int(values[ATTRIB_LINKAGE]);
     hlir_tags_t tags = get_int(values[ATTRIB_TAGS]);
     const char *mangle = get_string(values[ATTRIB_MANGLE]);
-    return hlir_attributes(linkage, tags, mangle);
+    const char *module = get_string(values[ATTRIB_MODULE]);
+    return hlir_attributes(linkage, tags, mangle, module);
 }
 
 static hlir_t *load_node(load_t *load, index_t index, const char *trace);
@@ -1013,6 +1015,7 @@ static index_t save_attributes(hlir_save_t *data, const hlir_attributes_t *attri
         [ATTRIB_LINKAGE] = int_value(attributes->linkage),
         [ATTRIB_TAGS] = int_value(attributes->tags),
         [ATTRIB_MANGLE] = string_value(attributes->mangle),
+        [ATTRIB_MODULE] = string_value(attributes->module),
     };
 
     return write_entry(data->data, ATTRIBUTE_INDEX, values);

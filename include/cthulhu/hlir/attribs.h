@@ -43,6 +43,8 @@ typedef struct
     hlir_linkage_t linkage; ///< the visibility of the current declaration
     hlir_tags_t tags;       ///< any modifiers for the current declaration
     const char *mangle;     ///< the name to use for the current declaration
+    const char *module;     ///< the module name this comes from if its an external
+                            ///< declaration
 } hlir_attributes_t;
 
 #define DEFAULT_LINKAGE (LINK_INTERNAL) ///< the default linkage for a declaration
@@ -55,7 +57,7 @@ typedef struct
  * @param tags the tags of the declaration
  * @return a new attributes object
  */
-hlir_attributes_t *hlir_attributes(hlir_linkage_t linkage, hlir_tags_t tags, const char *name);
+hlir_attributes_t *hlir_attributes(hlir_linkage_t linkage, hlir_tags_t tags, const char *name, const char *module);
 
 /**
  * @brief create a new attributes object with the default tags

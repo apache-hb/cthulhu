@@ -28,8 +28,8 @@ void pl0_init(void)
 
     kExported = hlir_linkage(LINK_EXPORTED);
 
-    kConst = hlir_attributes(LINK_EXPORTED, TAG_CONST, NULL);
-    kMutable = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS, NULL);
+    kConst = hlir_attributes(LINK_EXPORTED, TAG_CONST, NULL, NULL);
+    kMutable = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS, NULL, NULL);
 
     kIntegerType = hlir_digit(node, "integer", DIGIT_INT, SIGN_SIGNED);
     kBoolType = hlir_bool(node, "boolean");
@@ -38,7 +38,7 @@ void pl0_init(void)
 
     kFmtString = hlir_string_literal(node, kStringType, "%d\n", 3);
 
-    const hlir_attributes_t *printAttributes = hlir_attributes(LINK_IMPORTED, DEFAULT_TAGS, "printf");
+    const hlir_attributes_t *printAttributes = hlir_attributes(LINK_IMPORTED, DEFAULT_TAGS, "printf", NULL);
     signature_t signature = {.params = vector_init(kStringType), .result = kIntegerType, .variadic = true};
     kPrint = hlir_function(node, "printf", signature, vector_of(0), NULL);
     hlir_set_attributes(kPrint, printAttributes);
@@ -532,7 +532,7 @@ void pl0_compile_module(runtime_t *runtime, compile_t *compile)
             .result = kVoidType,
             .variadic = false,
         };
-        const hlir_attributes_t *attribs = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS, "main");
+        const hlir_attributes_t *attribs = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS, "main", NULL);
         const char *modName = get_hlir_name(compile->hlirModule);
 
         hlir_t *hlir = hlir_function(root->node, modName, signature, vector_of(0), body);
