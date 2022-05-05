@@ -63,6 +63,7 @@ static hlir_t *sema_array(sema_t *sema, ast_t *ast)
 {
     UNUSED(sema);
 
+    report(sema->reports, ERROR, ast->node, "array not implemented");
     return hlir_error(ast->node, "array not implemented");
 }
 
@@ -95,7 +96,7 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast)
     case AST_CLOSURE:
         return sema_closure(sema, ast);
     default:
-        ctu_assert(sema->reports, "unknown sema-type: %d", ast->of);
+        report(sema->reports, INTERNAL, ast->node, "unknown sema-type: %d", ast->of);
         return hlir_error(ast->node, "unknown sema-type");
     }
 }
@@ -118,7 +119,7 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
                 continue;
             }
 
-            (void)set_add(names, name);
+            set_add(names, name);
         }
 
         hlir_t *type = sema_type(sema, field->field);
@@ -161,6 +162,15 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_t *tag = hlir_digit(ast->node, format("%s_tag", ast->name), DIGIT_INT, SIGN_UNSIGNED);
     hlir_t *field = hlir_field(ast->node, tag, "tag");
     hlir_add_field(decl, field);
+
+    hlir_t *innerUnion = hlir_begin_union(ast->node, format("%s_inner", ast->name));
+
+    check_duplicates_and_add_fields(sema, ast->fields, innerUnion);
+
+    hlir_build_union(innerUnion);
+    hlir_set_parent(innerUnion, decl);
+
+    hlir_add_field(decl, innerUnion);
 
     hlir_build_struct(decl);
 }
@@ -251,6 +261,26 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
     add_decl(sema, TAG_TYPES, ast->name, decl);
 }
 
+typedef struct
+{
+    const char *name;
+    digit_t width;
+    sign_t sign;
+} basic_digit_t;
+
+static const basic_digit_t kBasicDigits[] = {
+    {"char", DIGIT_CHAR, SIGN_SIGNED},
+    {"uchar", DIGIT_CHAR, SIGN_UNSIGNED},
+    {"short", DIGIT_SHORT, SIGN_SIGNED},
+    {"ushort", DIGIT_SHORT, SIGN_UNSIGNED},
+    {"int", DIGIT_INT, SIGN_SIGNED},
+    {"uint", DIGIT_INT, SIGN_UNSIGNED},
+    {"long", DIGIT_LONG, SIGN_SIGNED},
+    {"ulong", DIGIT_LONG, SIGN_UNSIGNED},
+};
+
+#define TOTAL_BASIC_DIGITS (sizeof(kBasicDigits) / sizeof(basic_digit_t))
+
 static void add_basic_types(sema_t *sema)
 {
     const node_t *node = node_builtin();
@@ -258,24 +288,17 @@ static void add_basic_types(sema_t *sema)
     add_decl(sema, TAG_TYPES, "bool", hlir_bool(node, "bool"));
     add_decl(sema, TAG_TYPES, "str", hlir_string(node, "str"));
 
-    add_decl(sema, TAG_TYPES, "char", hlir_digit(node, "char", DIGIT_CHAR, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "uchar", hlir_digit(node, "uchar", DIGIT_CHAR, SIGN_UNSIGNED));
-
-    add_decl(sema, TAG_TYPES, "short", hlir_digit(node, "short", DIGIT_SHORT, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "ushort", hlir_digit(node, "ushort", DIGIT_SHORT, SIGN_UNSIGNED));
-
-    add_decl(sema, TAG_TYPES, "int", hlir_digit(node, "int", DIGIT_INT, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "uint", hlir_digit(node, "uint", DIGIT_INT, SIGN_UNSIGNED));
-
-    add_decl(sema, TAG_TYPES, "long", hlir_digit(node, "long", DIGIT_LONG, SIGN_SIGNED));
-    add_decl(sema, TAG_TYPES, "ulong", hlir_digit(node, "ulong", DIGIT_LONG, SIGN_UNSIGNED));
+    for (size_t i = 0; i < TOTAL_BASIC_DIGITS; i++)
+    {
+        const basic_digit_t *basicDigit = &kBasicDigits[i];
+        hlir_t *digit = hlir_digit(node, basicDigit->name, basicDigit->width, basicDigit->sign);
+        add_decl(sema, TAG_TYPES, basicDigit->name, digit);
+    }
 
     // enable the below later
 
     // special types for interfacing with C
-    // sysv says that enums are signed ints
-    // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", DIGIT_INT,
-    // SIGN_SIGNED));
+    // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", DIGIT_INT, SIGN_SIGNED));
 }
 
 void ctu_forward_decls(runtime_t *runtime, compile_t *compile)

@@ -1,0 +1,2 @@
+type a = b;
+type b = a;

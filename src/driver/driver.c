@@ -354,13 +354,17 @@ int common_main(int argc, const char **argv, driver_t driver)
         return status;
     }
 
+    wasm_settings_t wasmSettings = {
+        .defaultModule = commands.defaultWasmModule
+    };
+
     switch (target)
     {
     case OUTPUT_C89:
         c89_emit_modules(reports, allModules, out);
         break;
     case OUTPUT_WASM:
-        wasm_emit_modules(reports, allModules, out);
+        wasm_emit_modules(reports, allModules, out, wasmSettings);
         break;
 
     default:

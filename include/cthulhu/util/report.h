@@ -138,7 +138,7 @@ int end_reports(reports_t *reports, size_t limit, const char *name);
  *
  * @return a message object to attach extra data to
  */
-message_t *ctu_assert(reports_t *reports, const char *fmt, ...);
+message_t *ctu_assert(reports_t *reports, FORMAT_STRING const char *fmt, ...) FORMAT_ATTRIBUTE(2, 3);
 
 /**
  * push a compiler message into a reporting context
@@ -151,7 +151,7 @@ message_t *ctu_assert(reports_t *reports, const char *fmt, ...);
  *
  * @return a message object to attach extra data to
  */
-message_t *report(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...);
+message_t *report(reports_t *reports, level_t level, const node_t *node, FORMAT_STRING const char *fmt, ...) FORMAT_ATTRIBUTE(4, 5);
 
 /**
  * add another part to a message
@@ -161,7 +161,7 @@ message_t *report(reports_t *reports, level_t level, const node_t *node, const c
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-void report_append(message_t *message, const node_t *node, const char *fmt, ...);
+void report_append(message_t *message, const node_t *node, FORMAT_STRING const char *fmt, ...) FORMAT_ATTRIBUTE(3, 4);
 
 /**
  * add an underline message to an existing message
@@ -170,7 +170,7 @@ void report_append(message_t *message, const node_t *node, const char *fmt, ...)
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-void report_underline(message_t *message, const char *fmt, ...);
+void report_underline(message_t *message, FORMAT_STRING const char *fmt, ...) FORMAT_ATTRIBUTE(2, 3);
 
 /**
  * add a note to an existing message
@@ -179,7 +179,7 @@ void report_underline(message_t *message, const char *fmt, ...);
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-void report_note(message_t *message, const char *fmt, ...);
+void report_note(message_t *message, FORMAT_STRING const char *fmt, ...) FORMAT_ATTRIBUTE(2, 3);
 
 /** @} */
 
@@ -203,6 +203,6 @@ extern bool verbose;
  * @param fmt format string
  * @param ... arguments
  */
-void logverbose(const char *fmt, ...);
+void logverbose(FORMAT_STRING const char *fmt, ...) FORMAT_ATTRIBUTE(1, 2);
 
 /** @} */

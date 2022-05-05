@@ -488,6 +488,12 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
             continue;
         }
 
+        if (lib == compile->hlirModule)
+        {
+            report(sema->reports, ERROR, importDecl->node, "module cannot import itself");
+            continue;
+        }
+
         insert_module(sema, &semaData->globals, &semaData->consts, &semaData->procs, importDecl, lib);
     }
 

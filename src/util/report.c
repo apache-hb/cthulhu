@@ -566,6 +566,7 @@ static message_t *report_push(reports_t *reports, level_t level, const node_t *n
     return message;
 }
 
+USE_DECL
 message_t *ctu_assert(reports_t *reports, const char *fmt, ...)
 {
     va_list args;
@@ -576,6 +577,7 @@ message_t *ctu_assert(reports_t *reports, const char *fmt, ...)
     return message;
 }
 
+USE_DECL
 message_t *report(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...)
 {
     va_list args;
@@ -588,6 +590,7 @@ message_t *report(reports_t *reports, level_t level, const node_t *node, const c
     return msg;
 }
 
+USE_DECL
 void report_append(message_t *message, const node_t *node, const char *fmt, ...)
 {
     va_list args;
@@ -598,6 +601,7 @@ void report_append(message_t *message, const node_t *node, const char *fmt, ...)
     vector_push(&message->parts, part_new(str, node));
 }
 
+USE_DECL
 void report_underline(message_t *message, const char *fmt, ...)
 {
     va_list args;
@@ -608,6 +612,7 @@ void report_underline(message_t *message, const char *fmt, ...)
     message->underline = msg;
 }
 
+USE_DECL
 void report_note(message_t *message, const char *fmt, ...)
 {
     va_list args;
@@ -618,6 +623,7 @@ void report_note(message_t *message, const char *fmt, ...)
     message->note = msg;
 }
 
+USE_DECL
 void logverbose(const char *fmt, ...)
 {
     if (!verbose)

@@ -22,7 +22,7 @@ typedef struct
     map_t *mangledNames;
 } c89_emit_t;
 
-static void write_string(c89_emit_t *emit, const char *str, ...)
+static void write_string(c89_emit_t *emit, const char *str)
 {
     error_t error = 0;
     for (size_t i = 0; i < emit->depth; i++)

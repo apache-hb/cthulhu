@@ -7,14 +7,26 @@
 #if __has_include(<sal.h>)
 #    include <sal.h>
 #    define DISABLE_SAL __pragma(warning(push, 1)) __pragma(warning(disable : 6011 6240 6262 6387 28199 28278))
-#else
+#    define FORMAT_STRING _Printf_format_string_
+#    define USE_DECL _Use_decl_annotations_
+#elif __GNUC__ >= 11
+#    define FORMAT_ATTRIBUTE(a, b) __attribute__((format(printf, a, b)))
+#endif
+
+#ifndef DISABLE_SAL
 #    define DISABLE_SAL
 #endif
 
-#ifdef __GNUC__
-#    define PURE __attribute__((pure))
-#else
-#    define PURE
+#ifndef FORMAT_STRING
+#    define FORMAT_STRING
+#endif
+
+#ifndef FORMAT_ATTRIBUTE
+#    define FORMAT_ATTRIBUTE(a, b)
+#endif
+
+#ifndef USE_DECL
+#    define USE_DECL
 #endif
 
 /**
@@ -118,7 +130,7 @@
 #    endif
 #endif
 
-NORETURN ctpanic(const char *msg, ...);
+NORETURN ctpanic(FORMAT_STRING const char *msg, ...) FORMAT_ATTRIBUTE(1, 2);
 
 #if ENABLE_DEBUG
 #    define CTASSERT(expr, msg)                                                                                        \

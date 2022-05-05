@@ -56,6 +56,7 @@ typedef struct
 {
     reports_t *reports;
     file_t file;
+    wasm_settings_t settings;
 
     map_t *symbolIndices;
 
@@ -132,6 +133,11 @@ static void wasm_set_symbol_index(wasm_t *wasm, const hlir_t *symbol, uintptr_t 
     map_set_ptr(wasm->symbolIndices, symbol, (void *)index);
 }
 
+static uintptr_t wasm_get_symbol_index(wasm_t *wasm, const hlir_t *symbol)
+{
+    return (uintptr_t)map_get_ptr(wasm->symbolIndices, symbol);
+}
+
 static void wasm_write_to_section(wasm_t *wasm, wasm_section_t section, const void *data, size_t size)
 {
     stream_write_bytes(wasm->sections[section], data, size);
@@ -140,6 +146,96 @@ static void wasm_write_to_section(wasm_t *wasm, wasm_section_t section, const vo
 static void wasm_stream_write(wasm_stream_t *stream, const void *data, size_t size)
 {
     wasm_write_to_section(stream->wasm, stream->section, data, size);
+}
+
+static void wasm_write_op(wasm_stream_t *stream, uint8_t op)
+{
+    wasm_stream_write(stream, &op, sizeof(op));
+}
+
+static void wasm_write_unsigned(wasm_stream_t *stream, uint64_t value)
+{
+    leb128_t leb = ui_leb128(value);
+    wasm_stream_write(stream, leb.buffer, leb.length);
+}
+
+static void wasm_write_signed(wasm_stream_t *stream, uint64_t value)
+{
+    leb128_t leb = si_leb128(value);
+    wasm_stream_write(stream, leb.buffer, leb.length);
+}
+
+static void wasm_write_name(wasm_stream_t *stream, const char *name)
+{
+    size_t len = strlen(name);
+    wasm_write_unsigned(stream, len);
+    wasm_stream_write(stream, name, len);
+}
+
+static const char *wasm_mangle_name(const hlir_t *hlir)
+{
+    const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
+    if (attribs->mangle != NULL)
+    {
+        return attribs->mangle;
+    }
+
+    const char *result = get_hlir_name(hlir);
+    const hlir_t *parent = get_hlir_parent(hlir);
+    
+    while (parent != NULL)
+    {
+        const char *parentName = get_hlir_name(parent);
+        result = format("%s::%s", parentName, result);
+        parent = get_hlir_parent(parent);
+    }
+
+    return result;
+}
+
+static uint8_t wasm_get_exportdesc(wasm_t *wasm, const hlir_t *hlir)
+{
+    hlir_kind_t kind = get_hlir_kind(hlir);
+
+    switch (kind)
+    {
+    case HLIR_GLOBAL: 
+        return WASM_EXPORTDESC_GLOBAL;
+
+    case HLIR_FUNCTION: 
+        return WASM_EXPORTDESC_FUNC;
+
+    default:
+        report(wasm->reports, INTERNAL, get_hlir_node(hlir), "unsupported export type %s", hlir_kind_to_string(kind));
+        return 0xFF;
+    }
+}
+
+static void wasm_write_export(wasm_t *wasm, const hlir_t *symbol)
+{
+    uint8_t exportDesc = wasm_get_exportdesc(wasm, symbol);
+    const char *name = wasm_mangle_name(symbol);
+
+    wasm_stream_t stream = { .wasm = wasm, .section = WASM_EXPORT_SECTION };
+
+    wasm_write_name(&stream, name);
+    wasm_write_op(&stream, exportDesc);
+    wasm_write_unsigned(&stream, wasm_get_symbol_index(wasm, symbol));
+}
+
+static void wasm_write_import(wasm_t *wasm, const hlir_t *symbol)
+{
+    const hlir_attributes_t *attribs = get_hlir_attributes(symbol);
+    uint8_t importDesc = wasm_get_exportdesc(wasm, symbol);
+    const char *name = wasm_mangle_name(symbol);
+    const char *module = attribs->module;
+
+    wasm_stream_t stream = { .wasm = wasm, .section = WASM_IMPORT_SECTION };
+
+    wasm_write_name(&stream, module != NULL ? module : wasm->settings.defaultModule);
+    wasm_write_name(&stream, name);
+    wasm_write_op(&stream, importDesc);
+    wasm_write_unsigned(&stream, wasm_get_symbol_index(wasm, symbol));
 }
 
 // https://webassembly.github.io/spec/core/binary/types.html#binary-mut
@@ -200,23 +296,6 @@ static uint8_t wasm_get_valtype(wasm_t *wasm, const hlir_t *hlir)
     }
 }
 
-static void wasm_write_op(wasm_stream_t *stream, uint8_t op)
-{
-    wasm_stream_write(stream, &op, sizeof(op));
-}
-
-static void wasm_write_unsigned(wasm_stream_t *stream, uint64_t value)
-{
-    leb128_t leb = ui_leb128(value);
-    wasm_stream_write(stream, leb.buffer, leb.length);
-}
-
-static void wasm_write_signed(wasm_stream_t *stream, uint64_t value)
-{
-    leb128_t leb = si_leb128(value);
-    wasm_stream_write(stream, leb.buffer, leb.length);
-}
-
 static void wasm_emit_digit_literal(wasm_stream_t *stream, const hlir_t *hlir)
 {
     const hlir_t *type = get_hlir_type(hlir);
@@ -257,9 +336,24 @@ static void wasm_emit_expr(wasm_stream_t *stream, const hlir_t *hlir)
 // https://webassembly.github.io/spec/core/binary/types.html#binary-globaltype
 static void wasm_emit_global_type(wasm_stream_t *stream, const hlir_t *hlir)
 {
+    const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
+    switch (attribs->linkage)
+    {
+    case LINK_EXPORTED:
+        wasm_write_export(stream->wasm, hlir);
+        break;
+
+    case LINK_IMPORTED:
+        wasm_write_import(stream->wasm, hlir);
+        return;
+
+    default:
+        break;
+    }
+
     const hlir_t *type = get_hlir_type(hlir);
-    const hlir_attributes_t *attrbs = get_hlir_attributes(type);
-    uint8_t mut = wasm_get_mut(stream->wasm, hlir, attrbs->tags);
+    const hlir_attributes_t *typeAttribs = get_hlir_attributes(type);
+    uint8_t mut = wasm_get_mut(stream->wasm, hlir, typeAttribs->tags);
     uint8_t valtype = wasm_get_valtype(stream->wasm, type);
 
     uint8_t vals[] = {valtype, mut};
@@ -299,7 +393,7 @@ static void wasm_write_section(wasm_t *wasm, wasm_section_t section, uint32_t en
     file_write(file, stream_data(stream), size, &error);
 }
 
-void wasm_emit_modules(reports_t *reports, vector_t *modules, file_t output)
+void wasm_emit_modules(reports_t *reports, vector_t *modules, file_t output, wasm_settings_t settings)
 {
     // first we collect the total number of symbols we have to we can make an 
     // optimal symbol table size for better performance on larger programs
@@ -311,6 +405,7 @@ void wasm_emit_modules(reports_t *reports, vector_t *modules, file_t output)
     wasm_t wasm = {
         .reports = reports,
         .file = output,
+        .settings = settings,
 
         // use the size generated earlier to make a map
         .symbolIndices = map_optimal(totalSymbols),
@@ -341,7 +436,7 @@ void wasm_emit_modules(reports_t *reports, vector_t *modules, file_t output)
     // now we actually emit the globals and functions
 
     FOR_EACH_ITEM_IN_MODULES(globals, global, modules, { 
-        wasm_emit_global(&wasm, global); 
+        wasm_emit_global(&wasm, global);
     });
 
 #if 0

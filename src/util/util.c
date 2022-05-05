@@ -158,6 +158,7 @@ char *ctu_strndup(const char *str, size_t len)
     return out;
 }
 
+USE_DECL
 void ctpanic(const char *msg, ...)
 {
     va_list args;
