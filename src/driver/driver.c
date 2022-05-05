@@ -345,7 +345,7 @@ int common_main(int argc, const char **argv, driver_t driver)
     }
 
     error_t error = 0;
-    file_t out = file_open(outFile, FILE_WRITE, &error);
+    file_t out = file_open(outFile, FILE_WRITE | FILE_BINARY, &error);
 
     if (error != 0)
     {
