@@ -1,0 +1,4 @@
+union A {
+    b: int;
+    b: bool;
+}

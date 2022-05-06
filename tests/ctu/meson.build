@@ -22,7 +22,8 @@ tests = {
             'alias-to-self',
             'infinite-size',
             'no-elements',
-            'discard-struct'
+            'discard-struct',
+            'duplicate-element'
         ],
         'pass': [
             'multiple-elements',
@@ -30,6 +31,18 @@ tests = {
             'recursive',
             'single-element',
             'discard-element'
+        ]
+    },
+    'types.union': {
+        'fail': [
+            'discard-union',
+            'no-elements',
+            'duplicate-element',
+            'infinite-size'
+        ],
+        'pass': [
+            'multiple-elements',
+            'single-element'
         ]
     },
     'types.closure': {
@@ -41,6 +54,17 @@ tests = {
             'one-param',
             'many-params',
             'return-closure'
+        ]
+    },
+    'types.variant': {
+        'fail': [
+            'duplicate-name',
+            'discard-name'
+        ],
+        'pass': [
+            'many-elements',
+            'one-element',
+            'no-elements'
         ]
     }
 }

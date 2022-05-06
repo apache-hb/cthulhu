@@ -392,10 +392,10 @@ static void wasm_write_section(wasm_t *wasm, wasm_section_t section, uint32_t en
     leb128_t actualEntries = ui_leb128(entries);
     leb128_t actualLength = ui_leb128(size + actualEntries.length);
 
-    file_write(file, &sec, sizeof(sec), &error); // N:byte section id
-    file_write(file, actualLength.buffer, actualLength.length, &error); // size:u32 contents size
+    file_write(file, &sec, sizeof(sec), &error);                          // N:byte section id
+    file_write(file, actualLength.buffer, actualLength.length, &error);   // size:u32 contents size
     file_write(file, actualEntries.buffer, actualEntries.length, &error); // n:u32 number of entries
-    file_write(file, stream_data(stream), size, &error); // x:B bytes of data
+    file_write(file, stream_data(stream), size, &error);                  // x:B bytes of data
 }
 
 void wasm_emit_modules(reports_t *reports, vector_t *modules, file_t output, wasm_settings_t settings)

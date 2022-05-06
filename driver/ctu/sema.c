@@ -127,6 +127,11 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
             set_add(names, name);
         }
 
+        if (field->field == NULL)
+        {
+            continue;
+        }
+
         hlir_t *type = sema_type(sema, field->field);
         hlir_t *entry = hlir_field(field->node, type, name);
         hlir_set_parent(entry, decl);
@@ -161,23 +166,58 @@ static void sema_alias(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_build_alias(decl, type, false);
 }
 
+/**
+ * variants are internally represented as
+ * struct {
+ *   tag_type tag;
+ *   union {
+ *      fields...
+ *   }
+ * }
+ */
 static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
-    report(sema->reports, INTERNAL, ast->node, "variant not implemented");
-    hlir_t *tag = hlir_digit(ast->node, format("%s_tag", ast->name), DIGIT_INT, SIGN_UNSIGNED);
-    hlir_t *field = hlir_field(ast->node, tag, "tag");
-    hlir_add_field(decl, field);
+    // build the tag
+    {
+        // create the variant tag
+        char *tagName = format("%s_tag", ast->name);
+        hlir_t *tag = hlir_digit(ast->node, tagName, DIGIT_INT, SIGN_UNSIGNED);
+        
+        // create the field container for the tag
+        hlir_t *field = hlir_field(ast->node, tag, "tag");
+        hlir_set_parent(field, decl);
 
-    hlir_t *innerUnion = hlir_begin_union(ast->node, format("%s_inner", ast->name));
+        // add the field to the struct
+        hlir_add_field(decl, field);
+    }
 
-    check_duplicates_and_add_fields(sema, ast->fields, innerUnion);
+    // build the data
+    {
+        // create the variant data holder
+        char *unionName = format("%s_data", ast->name);
+        hlir_t *innerUnion = hlir_begin_union(ast->node, unionName);
 
-    hlir_build_union(innerUnion);
-    hlir_set_parent(innerUnion, decl);
+        // add all fields with data to the union
+        check_duplicates_and_add_fields(sema, ast->fields, innerUnion);
 
-    hlir_add_field(decl, innerUnion);
+        // then build the union and set its parent
+        hlir_build_union(innerUnion);
+        hlir_set_parent(innerUnion, decl);
 
+        logverbose("inner: %s %zu", innerUnion->name, vector_len(innerUnion->fields));
+
+        // create the field container for the union
+        hlir_t *dataField = hlir_field(ast->node, innerUnion, "data");
+        hlir_set_parent(dataField, decl);
+        
+        // add the field to the struct
+        hlir_add_field(decl, dataField);
+    }
+
+    // add the variant to the struct
     hlir_build_struct(decl);
+
+    logverbose("len: %s %zu", get_hlir_name(decl), vector_len(decl->fields));
 }
 
 static void sema_decl(sema_t *sema, ast_t *ast)

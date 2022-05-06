@@ -195,6 +195,7 @@ static void report_type_recursion(reports_t *reports, vector_t *stack)
 static bool find_type_recursion(reports_t *reports, vector_t **vec, const hlir_t *hlir, bool nesting, bool opaque)
 {
     vector_t *stack = *vec;
+    logverbose("stack: %p %zu", stack, vector_len(stack));
     for (size_t i = 0; i < vector_len(stack); i++)
     {
         entry_t *item = vector_get(stack, i);
@@ -210,7 +211,9 @@ static bool find_type_recursion(reports_t *reports, vector_t **vec, const hlir_t
         }
     }
 
+    logverbose("push %p", *vec);
     vector_push(vec, new_entry(hlir, nesting));
+    logverbose("done %p", *vec);
 
     return true;
 }
@@ -255,7 +258,8 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
         return;
     }
 
-    switch (hlir->type)
+    hlir_kind_t kind = get_hlir_kind(hlir);
+    switch (kind)
     {
     case HLIR_POINTER:
         find_type_recursion(reports, stack, chase(reports, hlir), false, true);
@@ -295,17 +299,18 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
 
     case HLIR_FIELD:
         check_type_recursion(reports, stack, get_hlir_type(hlir));
-        break;
+        return;
 
     case HLIR_DIGIT:
     case HLIR_BOOL:
     case HLIR_STRING:
     case HLIR_VOID:
-        break;
+        return; // it is important to return rather than break
+                // in cases where find_type_recursion isnt called
 
     default:
         ctu_assert(reports, "check-type-recursion unexpected hlir type %s", hlir_kind_to_string(get_hlir_kind(hlir)));
-        break;
+        return;
     }
 
     vector_drop(*stack);

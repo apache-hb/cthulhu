@@ -59,6 +59,7 @@ void vector_push(vector_t **vector, void *value)
 
 void vector_drop(vector_t *vector)
 {
+    CTASSERT(vector_len(vector) > 0, "vector-drop: vector is empty");
     vector->used -= 1;
 }
 

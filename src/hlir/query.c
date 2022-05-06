@@ -15,6 +15,7 @@ static bool has_name(hlir_kind_t kind)
     case HLIR_BOOL:
     case HLIR_STRING:
     case HLIR_VOID:
+    case HLIR_CLOSURE:
 
         // unsure about closure, pointer, and array
 

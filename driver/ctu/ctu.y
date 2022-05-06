@@ -222,7 +222,8 @@ variantlist: variant { $$ = vector_init($1); }
     | variantlist COMMA variant { vector_push(&$1, $3); $$ = $1; }
     ;
 
-variant: IDENT { $$ = ast_case(x, @$, $1); }
+variant: IDENT { $$ = ast_field(x, @$, $1, NULL); }
+    | IDENT LPAREN type RPAREN { $$ = ast_field(x, @$, $1, $3); }
     ;
 
 aggregates: LBRACE fieldlist RBRACE { $$ = $2; }

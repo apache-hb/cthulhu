@@ -81,6 +81,7 @@ void hlir_add_field(hlir_t *self, hlir_t *field)
 {
     CHECK_NULL(self);
     CTASSERT(IS_AGGREGATE(self), "hlir-add-field called on non-aggregate hlir");
+    CTASSERT(hlir_is(field, HLIR_FIELD), "hlir-add-field called with non-field hlir");
     vector_push(&self->fields, field);
 }
 
