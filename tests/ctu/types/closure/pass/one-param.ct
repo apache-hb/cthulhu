@@ -1,0 +1,1 @@
+type Closure = def(int) -> void;

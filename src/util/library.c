@@ -1,8 +1,9 @@
-#include "cthulhu/util/library.h"
-
 #define I_WILL_BE_INCLUDING_PLATFORM_CODE
 
+// clang-format off
 #include "src/platform/platform.h"
+#include "cthulhu/util/library.h"
+// clang-format on
 
 library_t library_open(const char *path, error_t *error)
 {

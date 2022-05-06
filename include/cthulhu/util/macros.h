@@ -9,8 +9,10 @@
 #    define DISABLE_SAL __pragma(warning(push, 1)) __pragma(warning(disable : 6011 6240 6262 6387 28199 28278))
 #    define FORMAT_STRING _Printf_format_string_
 #    define USE_DECL _Use_decl_annotations_
+#    define NODISCARD _Must_inspect_result_
 #elif __GNUC__ >= 11
 #    define FORMAT_ATTRIBUTE(a, b) __attribute__((format(printf, a, b)))
+#    define NODISCARD __attribute__((warn_unused_result))
 #endif
 
 #ifndef DISABLE_SAL
@@ -27,6 +29,10 @@
 
 #ifndef USE_DECL
 #    define USE_DECL
+#endif
+
+#ifndef NODISCARD
+#    define NODISCARD
 #endif
 
 /**

@@ -1,0 +1,5 @@
+type Self = Data;
+
+struct Data {
+    self: Self;
+}

@@ -5,7 +5,8 @@
 #include <string.h>
 
 /**
- * this file is based off the <a href="https://webassembly.github.io/spec/core/binary/index.html">wasm binary format specification</a>
+ * this file is based off the <a href="https://webassembly.github.io/spec/core/binary/index.html">wasm binary format
+ * specification</a>
  */
 
 // https://webassembly.github.io/spec/core/binary/modules.html#sections
@@ -52,7 +53,7 @@ static const uint8_t kWasmVersion[] = {1, 0, 0, 0};
         }                                                                                                              \
     })
 
-typedef struct 
+typedef struct
 {
     reports_t *reports;
     file_t file;
@@ -60,7 +61,7 @@ typedef struct
 
     map_t *symbolIndices;
 
-    size_t totalGlobals;
+    uint32_t totalGlobals;
 
     stream_t *sections[WASM_SECTION_TOTAL];
 } wasm_t;
@@ -91,17 +92,19 @@ typedef struct
 #define WASM_EXPORTDESC_MEMORY 0x02
 #define WASM_EXPORTDESC_GLOBAL 0x03
 
-typedef struct {
+typedef struct
+{
     uint8_t buffer[16];
     size_t length;
 } leb128_t;
 
 static leb128_t ui_leb128(uint64_t value)
 {
-    leb128_t result = { 0 };
+    leb128_t result = {0};
 
     bool more = true;
-    do {
+    do
+    {
         uint8_t c = value & 0x7F;
         value >>= 7;
         more = value != 0;
@@ -114,10 +117,11 @@ static leb128_t ui_leb128(uint64_t value)
 
 static leb128_t si_leb128(int64_t value)
 {
-    leb128_t result = { 0 };
+    leb128_t result = {0};
 
     bool more = true;
-    do {
+    do
+    {
         uint8_t c = value & 0x7F;
         value >>= 7;
         more = c & 0x40 ? value != -1 : value != 0;
@@ -182,7 +186,7 @@ static const char *wasm_mangle_name(const hlir_t *hlir)
 
     const char *result = get_hlir_name(hlir);
     const hlir_t *parent = get_hlir_parent(hlir);
-    
+
     while (parent != NULL)
     {
         const char *parentName = get_hlir_name(parent);
@@ -199,10 +203,10 @@ static uint8_t wasm_get_exportdesc(wasm_t *wasm, const hlir_t *hlir)
 
     switch (kind)
     {
-    case HLIR_GLOBAL: 
+    case HLIR_GLOBAL:
         return WASM_EXPORTDESC_GLOBAL;
 
-    case HLIR_FUNCTION: 
+    case HLIR_FUNCTION:
         return WASM_EXPORTDESC_FUNC;
 
     default:
@@ -216,7 +220,7 @@ static void wasm_write_export(wasm_t *wasm, const hlir_t *symbol)
     uint8_t exportDesc = wasm_get_exportdesc(wasm, symbol);
     const char *name = wasm_mangle_name(symbol);
 
-    wasm_stream_t stream = { .wasm = wasm, .section = WASM_EXPORT_SECTION };
+    wasm_stream_t stream = {.wasm = wasm, .section = WASM_EXPORT_SECTION};
 
     wasm_write_name(&stream, name);
     wasm_write_op(&stream, exportDesc);
@@ -230,7 +234,7 @@ static void wasm_write_import(wasm_t *wasm, const hlir_t *symbol)
     const char *name = wasm_mangle_name(symbol);
     const char *module = attribs->module;
 
-    wasm_stream_t stream = { .wasm = wasm, .section = WASM_IMPORT_SECTION };
+    wasm_stream_t stream = {.wasm = wasm, .section = WASM_IMPORT_SECTION};
 
     wasm_write_name(&stream, module != NULL ? module : wasm->settings.defaultModule);
     wasm_write_name(&stream, name);
@@ -307,7 +311,7 @@ static void wasm_emit_digit_literal(wasm_stream_t *stream, const hlir_t *hlir)
     }
 
     wasm_write_op(stream, kind == WASM_NUMTYPE_I32 ? WASM_INST_I32_CONST : WASM_INST_I64_CONST);
-    
+
     if (type->sign == SIGN_UNSIGNED)
     {
         wasm_write_unsigned(stream, mpz_get_ui(hlir->digit));
@@ -328,7 +332,8 @@ static void wasm_emit_expr(wasm_stream_t *stream, const hlir_t *hlir)
         break;
 
     default:
-        report(stream->wasm->reports, INTERNAL, get_hlir_node(hlir), "unsupported expression %s", hlir_kind_to_string(kind));
+        report(stream->wasm->reports, INTERNAL, get_hlir_node(hlir), "unsupported expression %s",
+               hlir_kind_to_string(kind));
         break;
     }
 }
@@ -366,7 +371,7 @@ static void wasm_emit_global(wasm_t *wasm, const hlir_t *hlir)
     wasm_stream_t stream = {.wasm = wasm, .section = WASM_GLOBAL_SECTION};
     wasm_emit_global_type(&stream, hlir);
     wasm_emit_expr(&stream, hlir->value);
-    
+
     wasm_write_op(&stream, WASM_INST_END);
 
     wasm->totalGlobals += 1;
@@ -378,7 +383,7 @@ static void wasm_write_section(wasm_t *wasm, wasm_section_t section, uint32_t en
     uint32_t size = (uint32_t)stream_len(stream);
     uint8_t sec = (uint8_t)section;
 
-    logverbose("writing section %d (%d bytes)", section, size);
+    logverbose("writing section %d (%u bytes)", section, size);
 
     error_t error = 0;
 
@@ -395,7 +400,7 @@ static void wasm_write_section(wasm_t *wasm, wasm_section_t section, uint32_t en
 
 void wasm_emit_modules(reports_t *reports, vector_t *modules, file_t output, wasm_settings_t settings)
 {
-    // first we collect the total number of symbols we have to we can make an 
+    // first we collect the total number of symbols we have to we can make an
     // optimal symbol table size for better performance on larger programs
     size_t totalSymbols = 0;
     FOR_EACH_MODULE(modules, mod, { totalSymbols += vector_len(mod->globals); });
@@ -418,26 +423,21 @@ void wasm_emit_modules(reports_t *reports, vector_t *modules, file_t output, was
 
     //
     // wasm requires the index of a function to be known
-    // before we can emit a call to it. so here we go over 
+    // before we can emit a call to it. so here we go over
     // every function and global to get their indices
     //
 
     uintptr_t totalGlobals = 0;
     uintptr_t totalFunctions = 0;
 
-    FOR_EACH_ITEM_IN_MODULES(globals, global, modules, { 
-        wasm_set_symbol_index(&wasm, global, totalGlobals++); 
-    });
+    FOR_EACH_ITEM_IN_MODULES(globals, global, modules, { wasm_set_symbol_index(&wasm, global, totalGlobals++); });
 
-    FOR_EACH_ITEM_IN_MODULES(functions, function, modules, { 
-        wasm_set_symbol_index(&wasm, function, totalFunctions++); 
-    });
+    FOR_EACH_ITEM_IN_MODULES(functions, function, modules,
+                             { wasm_set_symbol_index(&wasm, function, totalFunctions++); });
 
     // now we actually emit the globals and functions
 
-    FOR_EACH_ITEM_IN_MODULES(globals, global, modules, { 
-        wasm_emit_global(&wasm, global);
-    });
+    FOR_EACH_ITEM_IN_MODULES(globals, global, modules, { wasm_emit_global(&wasm, global); });
 
 #if 0
     FOR_EACH_ITEM_IN_MODULES(functions, function, modules, { 

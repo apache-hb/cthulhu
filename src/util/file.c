@@ -1,7 +1,9 @@
 #define I_WILL_BE_INCLUDING_PLATFORM_CODE
 
-#include "cthulhu/util/file.h"
+// clang-format off
 #include "src/platform/platform.h"
+#include "cthulhu/util/file.h"
+// clang-format on
 
 file_t file_open(const char *path, file_flags_t flags, error_t *error)
 {
@@ -46,6 +48,7 @@ size_t file_size(file_t file, error_t *error)
     return result;
 }
 
+USE_DECL
 const void *file_map(file_t file, error_t *error)
 {
     native_error_t nativeError = 0;

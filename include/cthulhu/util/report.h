@@ -151,7 +151,8 @@ message_t *ctu_assert(reports_t *reports, FORMAT_STRING const char *fmt, ...) FO
  *
  * @return a message object to attach extra data to
  */
-message_t *report(reports_t *reports, level_t level, const node_t *node, FORMAT_STRING const char *fmt, ...) FORMAT_ATTRIBUTE(4, 5);
+message_t *report(reports_t *reports, level_t level, const node_t *node, FORMAT_STRING const char *fmt, ...)
+    FORMAT_ATTRIBUTE(4, 5);
 
 /**
  * add another part to a message

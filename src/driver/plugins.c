@@ -32,9 +32,12 @@ bool plugin_load(reports_t *reports, plugin_handle_t *handle)
         return false;
     }
 
+    unsigned major = VERSION_MAJOR(info->version);
+    unsigned minor = VERSION_MINOR(info->version);
+    unsigned patch = VERSION_PATCH(info->version);
+
     logverbose("loaded plugin %s", info->name);
-    logverbose(" version: %d.%d.%d", VERSION_MAJOR(info->version), VERSION_MINOR(info->version),
-               VERSION_PATCH(info->version));
+    logverbose(" version: %u.%u.%u", major, minor, patch);
     logverbose(" description: %s", info->description);
     logverbose(" license: %s", info->license);
 

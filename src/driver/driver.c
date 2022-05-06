@@ -354,9 +354,7 @@ int common_main(int argc, const char **argv, driver_t driver)
         return status;
     }
 
-    wasm_settings_t wasmSettings = {
-        .defaultModule = commands.defaultWasmModule
-    };
+    wasm_settings_t wasmSettings = {.defaultModule = commands.defaultWasmModule};
 
     switch (target)
     {

@@ -78,6 +78,11 @@ static hlir_t *sema_closure(sema_t *sema, ast_t *ast)
         ast_t *param = vector_get(ast->params, i);
         hlir_t *type = sema_type(sema, param);
         vector_set(params, i, type);
+
+        if (hlir_is(type, HLIR_VOID))
+        {
+            report(sema->reports, ERROR, param->node, "void parameter");
+        }
     }
 
     return hlir_closure(ast->node, NULL, params, result, ast->variadic);
@@ -269,14 +274,9 @@ typedef struct
 } basic_digit_t;
 
 static const basic_digit_t kBasicDigits[] = {
-    {"char", DIGIT_CHAR, SIGN_SIGNED},
-    {"uchar", DIGIT_CHAR, SIGN_UNSIGNED},
-    {"short", DIGIT_SHORT, SIGN_SIGNED},
-    {"ushort", DIGIT_SHORT, SIGN_UNSIGNED},
-    {"int", DIGIT_INT, SIGN_SIGNED},
-    {"uint", DIGIT_INT, SIGN_UNSIGNED},
-    {"long", DIGIT_LONG, SIGN_SIGNED},
-    {"ulong", DIGIT_LONG, SIGN_UNSIGNED},
+    {"char", DIGIT_CHAR, SIGN_SIGNED},      {"uchar", DIGIT_CHAR, SIGN_UNSIGNED}, {"short", DIGIT_SHORT, SIGN_SIGNED},
+    {"ushort", DIGIT_SHORT, SIGN_UNSIGNED}, {"int", DIGIT_INT, SIGN_SIGNED},      {"uint", DIGIT_INT, SIGN_UNSIGNED},
+    {"long", DIGIT_LONG, SIGN_SIGNED},      {"ulong", DIGIT_LONG, SIGN_UNSIGNED},
 };
 
 #define TOTAL_BASIC_DIGITS (sizeof(kBasicDigits) / sizeof(basic_digit_t))
@@ -284,6 +284,8 @@ static const basic_digit_t kBasicDigits[] = {
 static void add_basic_types(sema_t *sema)
 {
     const node_t *node = node_builtin();
+
+    add_decl(sema, TAG_TYPES, "void", hlir_void(node, "void"));
 
     add_decl(sema, TAG_TYPES, "bool", hlir_bool(node, "bool"));
     add_decl(sema, TAG_TYPES, "str", hlir_string(node, "str"));

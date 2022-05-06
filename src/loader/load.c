@@ -178,7 +178,7 @@ bool begin_load(data_t *in, header_t header)
     const char *err = compatible_version(basic.semver, header.semver);
     if (err != NULL)
     {
-        report(header.reports, ERROR, NULL, "[%s] incompatible version. found %d.%d.%d, expected %d.%d.%d", path,
+        report(header.reports, ERROR, NULL, "[%s] incompatible version. found %u.%u.%u, expected %u.%u.%u", path,
                VERSION_MAJOR(basic.semver), VERSION_MINOR(basic.semver), VERSION_PATCH(basic.semver),
                VERSION_MAJOR(header.semver), VERSION_MINOR(header.semver), VERSION_PATCH(header.semver));
         return false;

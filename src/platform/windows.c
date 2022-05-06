@@ -1,10 +1,10 @@
 #define I_WILL_BE_INCLUDING_PLATFORM_CODE
 
-// clang-format: off
+// clang-format off
+#include "platform.h"
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/str.h"
-#include "platform.h"
-// clang-format: on
+// clang-format on
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
 

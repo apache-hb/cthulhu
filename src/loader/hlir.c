@@ -922,7 +922,7 @@ static hlir_t *load_node(load_t *load, index_t index, const char *trace)
         return load_module_node(load, index);
 
     default:
-        ctu_assert(load->reports, "loading unknown node type %d due to %s", index.type, trace);
+        ctu_assert(load->reports, "loading unknown node type %u due to %s", index.type, trace);
         return NULL;
     }
 }
@@ -1401,7 +1401,8 @@ static index_t save_module_node(hlir_save_t *data, const hlir_t *hlir)
 
 static index_t save_node_inner(hlir_save_t *data, const hlir_t *hlir)
 {
-    switch (hlir->type)
+    hlir_kind_t kind = get_hlir_kind(hlir);
+    switch (kind)
     {
     /* literals */
     case HLIR_DIGIT_LITERAL:
@@ -1472,7 +1473,7 @@ static index_t save_node_inner(hlir_save_t *data, const hlir_t *hlir)
         return save_module_node(data, hlir);
 
     default:
-        ctu_assert(data->data->header.reports, "saving unknown node type %u", hlir->type);
+        ctu_assert(data->data->header.reports, "saving unknown node type %s", hlir_kind_to_string(kind));
         return NULL_INDEX;
     }
 }

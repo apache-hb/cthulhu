@@ -6,13 +6,41 @@ tests = {
             'discard-alias-name', 
             'infinite-size-alias',
             'looped-pointer-alias',
-            'multiple-pointer-loops'
+            'multiple-pointer-loops',
+            'duplicate-names',
+            'pointer-loop'
         ],
         'pass': [
             'chained-aliases',
             'index-alias',
             'multiple-aliases',
             'single-alias'
+        ]
+    },
+    'types.struct': {
+        'fail': [
+            'alias-to-self',
+            'infinite-size',
+            'no-elements',
+            'discard-struct'
+        ],
+        'pass': [
+            'multiple-elements',
+            'mutural-recursion',
+            'recursive',
+            'single-element',
+            'discard-element'
+        ]
+    },
+    'types.closure': {
+        'fail': [
+            'void-param'
+        ],
+        'pass': [
+            'no-params',
+            'one-param',
+            'many-params',
+            'return-closure'
         ]
     }
 }

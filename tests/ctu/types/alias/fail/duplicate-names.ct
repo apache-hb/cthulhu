@@ -1,0 +1,2 @@
+type A = int;
+type A = bool;

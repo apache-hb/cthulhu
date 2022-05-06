@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cthulhu/util/defs.h"
+#include "cthulhu/util/macros.h"
 
 typedef struct
 {
@@ -24,6 +25,5 @@ size_t file_write(file_t file, const void *buffer, size_t size, error_t *error);
 
 size_t file_size(file_t file, error_t *error);
 
+NODISCARD
 const void *file_map(file_t file, error_t *error);
-
-char *error_string(error_t error);
