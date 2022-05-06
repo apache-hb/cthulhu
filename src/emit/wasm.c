@@ -62,6 +62,7 @@ typedef struct
     map_t *symbolIndices;
 
     uint32_t totalGlobals;
+    uint32_t totalExports;
 
     stream_t *sections[WASM_SECTION_TOTAL];
 } wasm_t;
@@ -346,6 +347,7 @@ static void wasm_emit_global_type(wasm_stream_t *stream, const hlir_t *hlir)
     {
     case LINK_EXPORTED:
         wasm_write_export(stream->wasm, hlir);
+        stream->wasm->totalExports += 1;
         break;
 
     case LINK_IMPORTED:
@@ -387,15 +389,13 @@ static void wasm_write_section(wasm_t *wasm, wasm_section_t section, uint32_t en
 
     error_t error = 0;
 
-    file_write(file, &sec, sizeof(sec), &error);
-
-    leb128_t actualLength = ui_leb128(size + 1);
-    file_write(file, actualLength.buffer, actualLength.length, &error);
-
     leb128_t actualEntries = ui_leb128(entries);
-    file_write(file, actualEntries.buffer, actualEntries.length, &error);
+    leb128_t actualLength = ui_leb128(size + actualEntries.length);
 
-    file_write(file, stream_data(stream), size, &error);
+    file_write(file, &sec, sizeof(sec), &error); // N:byte section id
+    file_write(file, actualLength.buffer, actualLength.length, &error); // size:u32 contents size
+    file_write(file, actualEntries.buffer, actualEntries.length, &error); // n:u32 number of entries
+    file_write(file, stream_data(stream), size, &error); // x:B bytes of data
 }
 
 void wasm_emit_modules(reports_t *reports, vector_t *modules, file_t output, wasm_settings_t settings)
@@ -453,4 +453,5 @@ void wasm_emit_modules(reports_t *reports, vector_t *modules, file_t output, was
     file_write(output, kWasmVersion, sizeof(kWasmVersion), &error);
 
     wasm_write_section(&wasm, WASM_GLOBAL_SECTION, wasm.totalGlobals, output);
+    wasm_write_section(&wasm, WASM_EXPORT_SECTION, wasm.totalExports, output);
 }
