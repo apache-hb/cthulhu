@@ -13,6 +13,7 @@ typedef struct
 
     plugin_info_t *info;
     plugin_init_t init;
+    
     plugin_t plugin;
 } plugin_handle_t;
 

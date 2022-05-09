@@ -6,10 +6,9 @@
 
 #include "cmd.h"
 #include "cthulhu/ast/compile.h"
-#include "cthulhu/emit/emit.h"
+#include "cthulhu/emit/c89.h"
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/sema.h"
-#include "cthulhu/loader/hlir.h"
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/vector.h"
@@ -187,7 +186,7 @@ int common_main(int argc, const char **argv, driver_t driver)
     END_STAGE("commandline");
 
     vector_t *plugins = vector_new(0); // all plugins
-    vector_t *modules = vector_new(0); // all library bytecode modules
+    //vector_t *modules = vector_new(0); // all library bytecode modules
     vector_t *sources = vector_new(0); // all source files
     size_t pluginIdCounter = 0;
 
@@ -201,21 +200,24 @@ int common_main(int argc, const char **argv, driver_t driver)
             continue;
         }
 
+#if 0
         if (is_hlir_module(path))
         {
             vector_push(&modules, (char *)path);
             continue;
         }
+#endif
 
         vector_push(&sources, (char *)path);
     }
 
-    size_t totalModules = vector_len(modules);
+    // size_t totalModules = vector_len(modules);
     runtime_t runtime = {
         .reports = reports,
-        .modules = map_optimal(totalModules),
+        .modules = map_optimal(64),
     };
 
+#if 0
     vector_t *loadedModules = vector_new(totalModules);
 
     for (size_t i = 0; i < totalModules; i++)
@@ -231,6 +233,7 @@ int common_main(int argc, const char **argv, driver_t driver)
             map_set(runtime.modules, hlir->name, hlir);
         }
     }
+#endif
 
     for (size_t i = 0; i < vector_len(plugins); i++)
     {
@@ -307,6 +310,7 @@ int common_main(int argc, const char **argv, driver_t driver)
 
     END_STAGE("checking modules");
 
+#if 0
     if (commands.enableBytecode)
     {
         // collect all modules together
@@ -329,8 +333,9 @@ int common_main(int argc, const char **argv, driver_t driver)
         END_STAGE("module renaming");
         return status;
     }
+#endif
 
-    vector_t *allModules = vector_new(numSources + totalModules);
+    vector_t *allModules = vector_new(numSources/* + totalModules */);
 
     for (size_t i = 0; i < numSources; i++)
     {
@@ -339,12 +344,14 @@ int common_main(int argc, const char **argv, driver_t driver)
         vector_push(&allModules, hlirModule);
     }
 
+#if 0
     for (size_t i = 0; i < totalModules; i++)
     {
         const char *path = vector_get(modules, i);
         hlir_t *hlirModule = map_get(runtime.modules, path);
         vector_push(&allModules, hlirModule);
     }
+#endif
 
     error_t error = 0;
     file_t out = file_open(outFile, FILE_WRITE | FILE_BINARY, &error);
@@ -356,6 +363,9 @@ int common_main(int argc, const char **argv, driver_t driver)
         return status;
     }
 
+    c89_emit_modules(reports, allModules, out);
+
+#if 0
     wasm_settings_t wasmSettings = {.defaultModule = commands.defaultWasmModule};
 
     switch (target)
@@ -370,6 +380,7 @@ int common_main(int argc, const char **argv, driver_t driver)
     default:
         report(reports, ERROR, NULL, "unsupported output format");
     }
+#endif
 
     file_close(out);
 

@@ -1,11 +1,9 @@
 # ctu - cthulhu
 # pl0 - pl/0
-# c - c11
-# c - c preprocessor
 # bf - brainfuck
 option('languages', type : 'array',
     description : 'select which languages to compile',
-    choices : [ 'ctu', 'pl0', 'c', 'cpp', 'bf' ],
+    choices : [ 'ctu', 'pl0', 'bf' ],
     value : [ 'ctu', 'pl0' ]
 )
 
