@@ -195,7 +195,6 @@ static void report_type_recursion(reports_t *reports, vector_t *stack)
 static bool find_type_recursion(reports_t *reports, vector_t **vec, const hlir_t *hlir, bool nesting, bool opaque)
 {
     vector_t *stack = *vec;
-    logverbose("stack: %p %zu", stack, vector_len(stack));
     for (size_t i = 0; i < vector_len(stack); i++)
     {
         entry_t *item = vector_get(stack, i);
@@ -211,9 +210,7 @@ static bool find_type_recursion(reports_t *reports, vector_t **vec, const hlir_t
         }
     }
 
-    logverbose("push %p", *vec);
     vector_push(vec, new_entry(hlir, nesting));
-    logverbose("done %p", *vec);
 
     return true;
 }

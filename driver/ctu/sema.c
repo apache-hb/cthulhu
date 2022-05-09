@@ -204,8 +204,6 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
         hlir_build_union(innerUnion);
         hlir_set_parent(innerUnion, decl);
 
-        logverbose("inner: %s %zu", innerUnion->name, vector_len(innerUnion->fields));
-
         // create the field container for the union
         hlir_t *dataField = hlir_field(ast->node, innerUnion, "data");
         hlir_set_parent(dataField, decl);
@@ -216,8 +214,6 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
 
     // add the variant to the struct
     hlir_build_struct(decl);
-
-    logverbose("len: %s %zu", get_hlir_name(decl), vector_len(decl->fields));
 }
 
 static void sema_decl(sema_t *sema, ast_t *ast)

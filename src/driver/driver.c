@@ -95,7 +95,7 @@ static const map_pair_t kTargetNames[] = {
 #define END_STAGE(name)                                                                                                \
     do                                                                                                                 \
     {                                                                                                                  \
-        status = end_reports(reports, limit, name);                                                                    \
+        status = end_reports(reports, name, &reportSettings);                                                                    \
         if (status != 0)                                                                                               \
         {                                                                                                              \
             return status;                                                                                             \
@@ -150,11 +150,15 @@ int common_main(int argc, const char **argv, driver_t driver)
         return status;
     }
 
+    end_report_settings_t reportSettings = {
+        .limit = commands.warningLimit,
+        .warningsAreErrors = commands.warningsAsErrors
+    };
+
     verbose = commands.verboseLogging;
     logverbose("setup verbose logging");
 
     vector_t *files = commands.files;
-    size_t limit = commands.warningLimit;
     const char *targetName = commands.outputTarget;
     const char *outFile = commands.outputFile;
 
@@ -373,7 +377,7 @@ int common_main(int argc, const char **argv, driver_t driver)
 
     logverbose("finished compiling %zu modules", vector_len(allModules));
 
-    return end_reports(reports, limit, "emitting code");
+    return end_reports(reports, "emitting code", &reportSettings);
 }
 
 hlir_t *find_module(runtime_t *runtime, const char *path)

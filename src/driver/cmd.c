@@ -176,7 +176,12 @@ int parse_commandline(reports_t *reports, commands_t *commands, int argc, const 
 
     scan_t scan = scan_string(reports, "command-line", "<command-line>", args);
 
-    int status = end_reports(reports, DEFAULT_REPORT_LIMIT, "command line parsing");
+    end_report_settings_t reportSettings = {
+        .limit = DEFAULT_REPORT_LIMIT,
+        .warningsAreErrors = false
+    };
+
+    int status = end_reports(reports, "command line parsing", &reportSettings);
     if (status != 0)
     {
         return status;
@@ -200,7 +205,10 @@ int parse_commandline(reports_t *reports, commands_t *commands, int argc, const 
 
     pop_current_flag(commands, FLAG_BOOL);
 
-    status = end_reports(reports, commands->warningLimit, "command line parsing");
+    reportSettings.limit = commands->warningLimit;
+    reportSettings.warningsAreErrors = commands->warningsAsErrors;
+
+    status = end_reports(reports, "command line parsing", &reportSettings);
     if (status != 0)
     {
         return status;

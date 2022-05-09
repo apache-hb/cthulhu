@@ -477,9 +477,9 @@ static const char *paths_base(vector_t *messages)
     return common_prefix(result);
 }
 
-int end_reports(reports_t *reports, size_t total, const char *name)
+int end_reports(reports_t *reports, const char *name, const end_report_settings_t *settings)
 {
-    total -= 1;
+    size_t total = settings->limit - 1;
 
     size_t internal = 0;
     size_t fatal = 0;
@@ -495,6 +495,12 @@ int end_reports(reports_t *reports, size_t total, const char *name)
     for (size_t i = 0; i < errors; i++)
     {
         message_t *message = vector_get(reports->messages, i);
+        
+        if (settings->warningsAreErrors && message->level == WARNING)
+        {
+            message->level = ERROR;
+        }
+
         switch (message->level)
         {
         case INTERNAL:

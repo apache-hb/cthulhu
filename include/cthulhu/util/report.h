@@ -115,6 +115,12 @@ typedef struct reports_t
  */
 reports_t *begin_reports(void);
 
+typedef struct
+{
+    size_t limit;
+    bool warningsAreErrors;
+} end_report_settings_t;
+
 /**
  * flush a reporting context and return an exit code
  *
@@ -127,7 +133,7 @@ reports_t *begin_reports(void);
  *         EXIT_ERROR if the sink contained any errors.
  *         EXIT_INTERAL if the sink contained an internal error.
  */
-int end_reports(reports_t *reports, size_t limit, const char *name);
+int end_reports(reports_t *reports, const char *name, const end_report_settings_t *settings);
 
 /**
  * @brief push an internal compiler error into a reporting context

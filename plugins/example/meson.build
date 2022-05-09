@@ -1,3 +1,3 @@
-example = shared_library('example', 'hello.c',
+example = shared_module('example-plugin', 'hello.c',
     dependencies : generic
 )

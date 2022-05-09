@@ -220,6 +220,7 @@ foreach plugin : get_option('plugins')
 endforeach
 
 subdir('tests/unit-tests')
+subdir('tests/plugins')
 
 doxygen = find_program('doxygen', required : get_option('doxygen'))
 
