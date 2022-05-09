@@ -95,7 +95,7 @@ static const map_pair_t kTargetNames[] = {
 #define END_STAGE(name)                                                                                                \
     do                                                                                                                 \
     {                                                                                                                  \
-        status = end_reports(reports, name, &reportSettings);                                                                    \
+        status = end_reports(reports, name, &reportSettings);                                                          \
         if (status != 0)                                                                                               \
         {                                                                                                              \
             return status;                                                                                             \
@@ -150,10 +150,8 @@ int common_main(int argc, const char **argv, driver_t driver)
         return status;
     }
 
-    end_report_settings_t reportSettings = {
-        .limit = commands.warningLimit,
-        .warningsAreErrors = commands.warningsAsErrors
-    };
+    end_report_settings_t reportSettings = {.limit = commands.warningLimit,
+                                            .warningsAreErrors = commands.warningsAsErrors};
 
     verbose = commands.verboseLogging;
     logverbose("setup verbose logging");

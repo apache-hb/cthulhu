@@ -8,6 +8,10 @@
 
 ## Blocking items
 
+* continue cthulhu frontend work
+  * more ideal for testing codegen features
+  * will be used for intermediate language runtime glue libraries
+
 * add wasm support
   * run wat2wasm on the output is not great
 

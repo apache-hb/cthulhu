@@ -182,7 +182,7 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
         // create the variant tag
         char *tagName = format("%s_tag", ast->name);
         hlir_t *tag = hlir_digit(ast->node, tagName, DIGIT_INT, SIGN_UNSIGNED);
-        
+
         // create the field container for the tag
         hlir_t *field = hlir_field(ast->node, tag, "tag");
         hlir_set_parent(field, decl);
@@ -207,7 +207,7 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
         // create the field container for the union
         hlir_t *dataField = hlir_field(ast->node, innerUnion, "data");
         hlir_set_parent(dataField, decl);
-        
+
         // add the field to the struct
         hlir_add_field(decl, dataField);
     }

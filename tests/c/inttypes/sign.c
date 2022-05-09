@@ -1,2 +1,0 @@
-signed s;
-unsigned u;

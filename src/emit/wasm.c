@@ -86,6 +86,9 @@ typedef struct
 #define WASM_INST_I32_CONST 0x41
 #define WASM_INST_I64_CONST 0x42
 
+#define WASM_INST_I32_ADD 0x6A
+#define WASM_INST_I64_ADD 0x7C
+
 #define WASM_INST_END 0x0B
 
 #define WASM_EXPORTDESC_FUNC 0x00
@@ -301,6 +304,8 @@ static uint8_t wasm_get_valtype(wasm_t *wasm, const hlir_t *hlir)
     }
 }
 
+static void wasm_emit_expr(wasm_stream_t *stream, const hlir_t *hlir);
+
 static void wasm_emit_digit_literal(wasm_stream_t *stream, const hlir_t *hlir)
 {
     const hlir_t *type = get_hlir_type(hlir);
@@ -323,6 +328,22 @@ static void wasm_emit_digit_literal(wasm_stream_t *stream, const hlir_t *hlir)
     }
 }
 
+static void wasm_emit_binary(wasm_stream_t *stream, const hlir_t *hlir)
+{
+    const hlir_t *type = get_hlir_type(hlir);
+    uint8_t kind = wasm_get_numtype(stream->wasm, type);
+
+    if (kind == 0xFF)
+    {
+        return;
+    }
+
+    wasm_emit_expr(stream, hlir->lhs);
+    wasm_emit_expr(stream, hlir->rhs);
+
+    wasm_write_op(stream, kind == WASM_NUMTYPE_I32 ? WASM_INST_I32_ADD : WASM_INST_I64_ADD);
+}
+
 static void wasm_emit_expr(wasm_stream_t *stream, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -330,6 +351,10 @@ static void wasm_emit_expr(wasm_stream_t *stream, const hlir_t *hlir)
     {
     case HLIR_DIGIT_LITERAL:
         wasm_emit_digit_literal(stream, hlir);
+        break;
+
+    case HLIR_BINARY:
+        wasm_emit_binary(stream, hlir);
         break;
 
     default:

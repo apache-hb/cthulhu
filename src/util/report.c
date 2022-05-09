@@ -495,7 +495,7 @@ int end_reports(reports_t *reports, const char *name, const end_report_settings_
     for (size_t i = 0; i < errors; i++)
     {
         message_t *message = vector_get(reports->messages, i);
-        
+
         if (settings->warningsAreErrors && message->level == WARNING)
         {
             message->level = ERROR;
