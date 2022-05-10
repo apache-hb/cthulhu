@@ -177,17 +177,16 @@ foreach lang : get_option('languages')
 endforeach
 
 foreach interface : get_option('interfaces')
-    subdir(interface.replace('.', '/'))
+    subdir('interface'/interface)
 endforeach
 
 foreach interface : get_option('interfaces')
-    path = 'tests/interfaces'/interface.replace('.', '/')
-    if fs.is_dir(path)
-        subdir(path)
-    else
-        message('skipping tests for' + interface)
-    endif
+    subdir('tests/interface'/interface)
 endforeach
+
+if fs.is_dir('vendor')
+    subdir('vendor')
+endif
 
 subdir('tests/harness')
 

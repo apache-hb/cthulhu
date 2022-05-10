@@ -29,5 +29,5 @@ option('analyze', type : 'boolean',
 
 option('interfaces', type : 'array',
     description : 'select which frontend interfaces to enable',
-    value : [ 'interface.cmd' ]
+    value : [ 'cmd' ]
 )
