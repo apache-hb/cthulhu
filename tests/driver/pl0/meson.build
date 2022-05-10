@@ -1,4 +1,5 @@
 dir = meson.current_source_dir()
+pl0c = harness['pl0c']
 
 pass = [
     'chain', 'const', 'consts', 'local',

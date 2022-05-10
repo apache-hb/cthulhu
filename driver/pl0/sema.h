@@ -1,8 +1,8 @@
 #pragma once
 
 #include "ast.h"
-#include "cthulhu/interface/runtime.h"
 #include "cthulhu/hlir/hlir.h"
+#include "cthulhu/interface/runtime.h"
 #include "cthulhu/util/report.h"
 
 void pl0_init(runtime_t *runtime);

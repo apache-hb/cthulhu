@@ -35,20 +35,6 @@
 #    define NODISCARD
 #endif
 
-#ifdef __cplusplus
-#define CTHULHU_EXTERN extern "C"
-#else
-#define CTHULHU_EXTERN extern
-#endif
-
-#ifdef _WIN32
-#    define CTHULHU_API __declspec(dllexport) CTHULHU_EXTERN
-#elif defined(__GNUC__) || defined(__clang__)
-#    define CTHULHU_API __attribute__((visibility("default"))) CTHULHU_EXTERN
-#else
-#    define CTHULHU_API CTHULHU_EXTERN
-#endif
-
 /**
  * @defgroup Packing Struct packing macros
  * @brief cross compiler compatible struct packing macros

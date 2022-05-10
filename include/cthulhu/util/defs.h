@@ -1,7 +1,7 @@
 #pragma once
 
 #include "cthulhu/util/macros.h"
-typedef size_t error_t;
+typedef size_t cerror_t;
 
 #ifdef _WIN32
 #    define PATH_SEP "\\"
@@ -10,4 +10,4 @@ typedef size_t error_t;
 #endif
 
 NODISCARD
-char *error_string(error_t error);
+char *error_string(cerror_t error);

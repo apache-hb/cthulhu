@@ -41,6 +41,8 @@ void stream_write_bytes(stream_t *stream, const void *bytes, size_t len)
 
     memcpy(stream->data + stream->len, bytes, len);
     stream->len += len;
+
+    stream->data[stream->len] = 0;
 }
 
 const char *stream_data(const stream_t *stream)

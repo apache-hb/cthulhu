@@ -53,7 +53,7 @@
 #    define FILE_POS_TYPE DWORD
 #    define FILE_READ_TYPE DWORD
 #    define FILE_WRITE_TYPE DWORD
-#    define ERROR_TYPE DWORD
+#    define cerror_tYPE DWORD
 #else
 #    include <dlfcn.h>
 #    include <stdio.h>
@@ -65,7 +65,7 @@
 #    define FILE_POS_TYPE size_t
 #    define FILE_READ_TYPE size_t
 #    define FILE_WRITE_TYPE size_t
-#    define ERROR_TYPE int
+#    define cerror_tYPE int
 #endif
 
 #include "cthulhu/util/macros.h"
@@ -74,7 +74,7 @@
 
 typedef LIBRARY_HANDLE_TYPE library_handle_t;
 typedef FILE_HANDLE_TYPE file_handle_t;
-typedef ERROR_TYPE native_error_t;
+typedef cerror_tYPE native_cerror_t;
 typedef FILE_SIZE_TYPE file_size_t;
 typedef FILE_POS_TYPE file_pos_t;
 typedef FILE_READ_TYPE file_read_t;
@@ -96,19 +96,19 @@ typedef enum
     MODE_TOTAL
 } file_mode_t;
 
-library_handle_t native_library_open(const char *path, native_error_t *error);
+library_handle_t native_library_open(const char *path, native_cerror_t *error);
 void native_library_close(library_handle_t handle);
-void *native_library_get_symbol(library_handle_t handle, const char *symbol, native_error_t *error);
+void *native_library_get_symbol(library_handle_t handle, const char *symbol, native_cerror_t *error);
 
-file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_error_t *error);
+file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error);
 void native_file_close(file_handle_t handle);
 
-file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t size, native_error_t *error);
-file_write_t native_file_write(file_handle_t handle, const void *buffer, file_write_t size, native_error_t *error);
+file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t size, native_cerror_t *error);
+file_write_t native_file_write(file_handle_t handle, const void *buffer, file_write_t size, native_cerror_t *error);
 
-file_size_t native_file_size(file_handle_t handle, native_error_t *error);
+file_size_t native_file_size(file_handle_t handle, native_cerror_t *error);
 
-const void *native_file_map(file_handle_t handle, native_error_t *error);
+const void *native_file_map(file_handle_t handle, native_cerror_t *error);
 
-char *native_error_to_string(native_error_t error);
-native_error_t native_get_last_error(void);
+char *native_cerror_to_string(native_cerror_t error);
+native_cerror_t native_get_last_error(void);

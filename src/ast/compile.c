@@ -31,7 +31,7 @@ scan_t scan_string(reports_t *reports, const char *language, const char *path, c
 
 scan_t scan_file(reports_t *reports, const char *language, file_t file)
 {
-    error_t error = 0;
+    cerror_t error = 0;
     size_t size = file_size(file, &error);
     const char *text = file_map(file, &error);
     scan_t scan = scan_new(reports, language, file.path);

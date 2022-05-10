@@ -1,12 +1,12 @@
 #include "sema.h"
 
 #include "ast.h"
-#include "cthulhu/interface/runtime.h"
 #include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/hlir/type.h"
+#include "cthulhu/interface/runtime.h"
 #include "cthulhu/util/report-ext.h"
 
 static hlir_t *kIntegerType;
@@ -500,8 +500,7 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
         insert_module(sema, &semaData->globals, &semaData->consts, &semaData->procs, importDecl, lib);
     }
 
-    hlir_update_module(self, self->types,
-                       vector_merge(semaData->consts, semaData->globals), semaData->procs);
+    hlir_update_module(self, self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
 }
 
 void pl0_compile_module(runtime_t *runtime, compile_t *compile)
@@ -554,6 +553,5 @@ void pl0_compile_module(runtime_t *runtime, compile_t *compile)
 
     vector_push(&semaData->procs, kPrint);
 
-    hlir_update_module(self, self->types,
-                       vector_merge(semaData->consts, semaData->globals), semaData->procs);
+    hlir_update_module(self, self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
 }

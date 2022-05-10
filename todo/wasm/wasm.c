@@ -626,7 +626,7 @@ static void wasm_write_section(wasm_t *wasm, wasm_section_t section, uint32_t en
 
     logverbose("writing section %d (%u bytes)", section, size);
 
-    error_t error = 0;
+    cerror_t error = 0;
 
     leb128_t actualEntries = ui_leb128(entries);
     leb128_t actualLength = ui_leb128(size + actualEntries.length);
@@ -683,7 +683,7 @@ void wasm_emit_modules(reports_t *reports, vector_t *modules, file_t output, was
     });
 
     // now write the sections into the final output stream
-    error_t error = 0;
+    cerror_t error = 0;
 
     // header first
     file_write(output, kWasmMagic, sizeof(kWasmMagic), &error);

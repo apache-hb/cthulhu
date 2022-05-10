@@ -37,13 +37,14 @@ char *formatv(const char *fmt, va_list args)
 
 char *str_noext(const char *path)
 {
+    size_t idx = str_rfind(path, ".");
     char *base = ctu_strdup(path);
-    size_t len = strlen(base);
-    while (!str_endswith(base, "."))
+    if (idx == SIZE_MAX)
     {
-        base[len--] = '\0';
+        return base;
     }
-    base[len] = '\0';
+
+    base[idx] = '\0';
     return base;
 }
 

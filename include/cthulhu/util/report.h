@@ -16,8 +16,8 @@
  * @{
  */
 
-#define EXIT_OK 0       ///< no compiler errors or internal errors
-#define EXIT_ERROR 1    ///< only compiler errors occurred
+#define EXIT_OK 0        ///< no compiler errors or internal errors
+#define EXIT_ERROR 1     ///< only compiler errors occurred
 #define EXIT_INTERNAL 99 ///< at least one internal error occured
 
 /** @} */

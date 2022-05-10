@@ -140,7 +140,7 @@ void end_save(data_t *out)
         stream_write_bytes(header, bytes, size);
     }
 
-    error_t error = 0;
+    cerror_t error = 0;
     file_t handle = file_open(out->header.path, FILE_BINARY | FILE_WRITE, &error);
 
     if (error != 0)

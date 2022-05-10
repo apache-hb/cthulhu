@@ -1,6 +1,6 @@
-#include "cthulhu/interface/runtime.h"
 #include "cmd.h"
 #include "cthulhu/hlir/init.h"
+#include "cthulhu/interface/runtime.h"
 #include "cthulhu/util/version-def.h"
 
 #include "cmd.h"
@@ -77,8 +77,7 @@ int main(int argc, const char **argv)
         return status;
     }
 
-    report_config_t reportSettings = {.limit = commands.warningLimit,
-                                            .warningsAreErrors = commands.warningsAsErrors};
+    report_config_t reportConfig = {.limit = commands.warningLimit, .warningsAreErrors = commands.warningsAsErrors,};
 
     verbose = commands.verboseLogging;
     logverbose("setup verbose logging");
@@ -98,25 +97,27 @@ int main(int argc, const char **argv)
         return 0;
     }
 
-    END_STAGE("commandline");
+    size_t totalFiles = vector_len(files);
+    vector_t *sources = vector_of(totalFiles);
+    for (size_t i = 0; i < totalFiles; i++)
+    {
+        const char *file = vector_get(files, i);
+        source_t *source = source_file(file);
+        vector_set(sources, i, source);
+    }
 
-    report_config_t reportConfig = {
-        .limit = commands.warningLimit,
-        .warningsAreErrors = commands.warningsAsErrors,
-    };
+    status = end_reports(reports, "command line parsing", &reportConfig);
+    if (status != 0)
+    {
+        return status;
+    }
 
-    config_t config = {
-        .reportConfig = reportConfig
-    };
+    config_t config = {.reportConfig = reportConfig};
 
-    cthulhu_t *cthulhu = cthulhu_new(driver, files, config);
+    cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
 
-    int(*steps[])(cthulhu_t*) = {
-        cthulhu_init,
-        cthulhu_parse,
-        cthulhu_forward,
-        cthulhu_resolve,
-        cthulhu_compile
+    cthulhu_step_t steps[] = {
+        cthulhu_init, cthulhu_parse, cthulhu_forward, cthulhu_resolve, cthulhu_compile,
     };
 
     size_t totalSteps = sizeof(steps) / sizeof(cthulhu_step_t);
@@ -132,7 +133,7 @@ int main(int argc, const char **argv)
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
 
-    error_t error = 0;
+    cerror_t error = 0;
     file_t out = file_open(outFile, FILE_WRITE | FILE_BINARY, &error);
 
     if (error != 0)
@@ -142,11 +143,12 @@ int main(int argc, const char **argv)
         return status;
     }
 
-    c89_emit_modules(reports, allModules, out);
+    stream_t *stream = c89_emit_modules(reports, allModules);
+    file_write(out, stream_data(stream), stream_len(stream), &error);
 
     file_close(out);
 
     logverbose("finished compiling %zu modules", vector_len(allModules));
 
-    return end_reports(reports, "emitting code", &reportSettings);
+    return end_reports(reports, "emitting code", &reportConfig);
 }

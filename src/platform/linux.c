@@ -9,7 +9,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-library_handle_t native_library_open(const char *path, native_error_t *error)
+library_handle_t native_library_open(const char *path, native_cerror_t *error)
 {
     library_handle_t handle = dlopen(path, RTLD_LAZY);
 
@@ -26,7 +26,7 @@ void native_library_close(library_handle_t handle)
     dlclose(handle);
 }
 
-void *native_library_get_symbol(library_handle_t handle, const char *symbol, native_error_t *error)
+void *native_library_get_symbol(library_handle_t handle, const char *symbol, native_cerror_t *error)
 {
     void *ptr = dlsym(handle, symbol);
 
@@ -43,7 +43,7 @@ static const char *kOpenModes[MODE_TOTAL][FORMAT_TOTAL] = {
     [MODE_WRITE] = {[FORMAT_TEXT] = "w", [FORMAT_BINARY] = "wb"},
 };
 
-file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_error_t *error)
+file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error)
 {
     file_handle_t handle = fopen(path, kOpenModes[mode][format]);
 
@@ -60,7 +60,7 @@ void native_file_close(file_handle_t handle)
     fclose(handle);
 }
 
-file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t size, native_error_t *error)
+file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t size, native_cerror_t *error)
 {
     size_t read = fread(buffer, 1, size, handle);
 
@@ -72,7 +72,7 @@ file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t siz
     return read;
 }
 
-file_write_t native_file_write(file_handle_t handle, const void *buffer, file_size_t size, native_error_t *error)
+file_write_t native_file_write(file_handle_t handle, const void *buffer, file_size_t size, native_cerror_t *error)
 {
     file_write_t written = fwrite(buffer, 1, size, handle);
 
@@ -84,7 +84,7 @@ file_write_t native_file_write(file_handle_t handle, const void *buffer, file_si
     return written;
 }
 
-file_size_t native_file_size(file_handle_t handle, native_error_t *error)
+file_size_t native_file_size(file_handle_t handle, native_cerror_t *error)
 {
     struct stat st;
     int fd = fileno(handle);
@@ -98,7 +98,7 @@ file_size_t native_file_size(file_handle_t handle, native_error_t *error)
     return st.st_size;
 }
 
-const void *native_file_map(file_handle_t handle, native_error_t *error)
+const void *native_file_map(file_handle_t handle, native_cerror_t *error)
 {
     file_size_t size = native_file_size(handle, error);
     if (*error != 0)
@@ -118,7 +118,7 @@ const void *native_file_map(file_handle_t handle, native_error_t *error)
     return ptr;
 }
 
-char *native_error_to_string(native_error_t error)
+char *native_cerror_to_string(native_cerror_t error)
 {
     char buffer[256];
     int result = strerror_r(error, buffer, sizeof(buffer));
@@ -131,7 +131,7 @@ char *native_error_to_string(native_error_t error)
     return ctu_strdup(buffer);
 }
 
-native_error_t native_get_last_error(void)
+native_cerror_t native_get_last_error(void)
 {
     return errno;
 }

@@ -6,8 +6,8 @@
 // clang-format on
 
 USE_DECL
-char *error_string(error_t error)
+char *error_string(cerror_t error)
 {
-    native_error_t nativeError = (native_error_t)error;
-    return native_error_to_string(nativeError);
+    native_cerror_t nativeError = (native_cerror_t)error;
+    return native_cerror_to_string(nativeError);
 }

@@ -8,13 +8,14 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/util/set.h"
 #include "cthulhu/util/str.h"
+#include "cthulhu/util/stream.h"
 
 #include <string.h>
 
 typedef struct
 {
     reports_t *reports;
-    file_t output;
+    stream_t *output;
 
     size_t depth;
 
@@ -24,13 +25,12 @@ typedef struct
 
 static void write_string(c89_emit_t *emit, const char *str)
 {
-    error_t error = 0;
     for (size_t i = 0; i < emit->depth; i++)
     {
-        file_write(emit->output, "  ", 2, &error);
+        stream_write(emit->output, "  ");
     }
 
-    file_write(emit->output, str, strlen(str), &error);
+    stream_write(emit->output, str);
 }
 
 static void begin_indent(c89_emit_t *emit)
@@ -870,9 +870,9 @@ static void c89_emit_functions(c89_emit_t *emit, size_t totalDecls, vector_t *mo
     }
 }
 
-void c89_emit_modules(reports_t *reports, vector_t *modules, file_t output)
+stream_t *c89_emit_modules(reports_t *reports, vector_t *modules)
 {
-    c89_emit_t emit = {.reports = reports, .output = output};
+    c89_emit_t emit = {.reports = reports, .output = stream_new(0x1000)};
 
     size_t totalDecls = 0;
     size_t totalModules = vector_len(modules);
@@ -895,4 +895,6 @@ void c89_emit_modules(reports_t *reports, vector_t *modules, file_t output)
     c89_emit_globals(&emit, totalDecls, modules);
 
     c89_emit_functions(&emit, totalDecls, modules);
+
+    return emit.output;
 }

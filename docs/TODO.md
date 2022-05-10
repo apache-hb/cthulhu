@@ -5,8 +5,8 @@
 * run compiler on aws lambda
   * wasm backend
 
-* get c++ compat working
-  * the aws lambda sdk is c++
+* rewrite the aws lambda c++ api in C
+  * it makes the rest of the compiler hard to manage
 
 ## Blocking items
 

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "cthulhu/util/macros.h"
+#include <stddef.h>
+
 typedef struct
 {
     size_t len;

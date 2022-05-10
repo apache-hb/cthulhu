@@ -489,7 +489,7 @@ static scan_t *load_scan(load_t *load, index_t index)
         return scanner;
     }
 
-    error_t error = 0;
+    cerror_t error = 0;
 
     file_t file = file_open(path, 0, &error);
     if (error != 0)

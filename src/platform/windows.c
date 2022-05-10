@@ -13,7 +13,7 @@ STATIC_ASSERT(sizeof(file_handle_t) == sizeof(void *), "file_handle_t and void* 
 
 // library api
 
-library_handle_t native_library_open(const char *path, native_error_t *error)
+library_handle_t native_library_open(const char *path, native_cerror_t *error)
 {
     library_handle_t handle = LoadLibrary(path);
 
@@ -30,7 +30,7 @@ void native_library_close(library_handle_t handle)
     FreeLibrary(handle);
 }
 
-void *native_library_get_symbol(library_handle_t handle, const char *symbol, native_error_t *error)
+void *native_library_get_symbol(library_handle_t handle, const char *symbol, native_cerror_t *error)
 {
     void *ptr = GetProcAddress(handle, symbol);
 
@@ -42,7 +42,7 @@ void *native_library_get_symbol(library_handle_t handle, const char *symbol, nat
     return ptr;
 }
 
-file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_error_t *error)
+file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error)
 {
     DWORD access = (mode == MODE_READ) ? GENERIC_READ : GENERIC_WRITE;
     DWORD disposition = (mode == MODE_READ) ? OPEN_EXISTING : CREATE_ALWAYS;
@@ -68,7 +68,7 @@ void native_file_close(file_handle_t handle)
     CloseHandle(handle);
 }
 
-file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t size, native_error_t *error)
+file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t size, native_cerror_t *error)
 {
     DWORD readSize;
     BOOL result = ReadFile(handle, buffer, size, &readSize, NULL);
@@ -81,7 +81,7 @@ file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t siz
     return readSize;
 }
 
-file_write_t native_file_write(file_handle_t handle, const void *buffer, file_write_t size, native_error_t *error)
+file_write_t native_file_write(file_handle_t handle, const void *buffer, file_write_t size, native_cerror_t *error)
 {
     DWORD writtenSize = 0;
     BOOL result = WriteFile(handle, buffer, size, &writtenSize, NULL);
@@ -94,7 +94,7 @@ file_write_t native_file_write(file_handle_t handle, const void *buffer, file_wr
     return writtenSize;
 }
 
-file_size_t native_file_size(file_handle_t handle, native_error_t *error)
+file_size_t native_file_size(file_handle_t handle, native_cerror_t *error)
 {
     LARGE_INTEGER size;
     BOOL result = GetFileSizeEx(handle, &size);
@@ -107,7 +107,7 @@ file_size_t native_file_size(file_handle_t handle, native_error_t *error)
     return size.QuadPart;
 }
 
-const void *native_file_map(file_handle_t handle, native_error_t *error)
+const void *native_file_map(file_handle_t handle, native_cerror_t *error)
 {
     HANDLE mapping = CreateFileMapping(
         /* hFile = */ handle,
@@ -139,7 +139,7 @@ const void *native_file_map(file_handle_t handle, native_error_t *error)
     return file;
 }
 
-char *native_error_to_string(native_error_t error)
+char *native_cerror_to_string(native_cerror_t error)
 {
     char buffer[0x1000] = {0};
 
@@ -171,7 +171,7 @@ char *native_error_to_string(native_error_t error)
     return ctu_strndup(buffer, used);
 }
 
-native_error_t native_get_last_error(void)
+native_cerror_t native_get_last_error(void)
 {
     return GetLastError();
 }

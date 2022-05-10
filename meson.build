@@ -138,6 +138,7 @@ src = [
 
     # standard library
     'src/util/str.c',
+    'src/util/stream.c',
     'src/util/util.c',
     'src/util/set.c',
     'src/util/map.c',
@@ -167,7 +168,6 @@ generic = declare_dependency(
 
 message('enabled interfaces:', get_option('interfaces'))
 message('enabled languages:', get_option('languages'))
-message('enabled plugins:', get_option('plugins'))
 
 langs = {}
 interfaces = {}
@@ -189,8 +189,10 @@ foreach interface : get_option('interfaces')
     endif
 endforeach
 
+subdir('tests/harness')
+
 foreach lang : get_option('languages')
-    # subdir('tests/driver'/lang)
+    subdir('tests/driver'/lang)
 endforeach
 
 subdir('tests/unit-tests')
