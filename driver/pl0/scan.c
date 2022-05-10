@@ -1,6 +1,6 @@
 #include "scan.h"
 
-#include "cthulhu/util/report.h"
+#include "cthulhu/report/report.h"
 
 static char safe_tolower(int c)
 {

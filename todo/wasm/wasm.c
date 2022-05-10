@@ -624,8 +624,6 @@ static void wasm_write_section(wasm_t *wasm, wasm_section_t section, uint32_t en
     uint32_t size = (uint32_t)stream_len(stream);
     uint8_t sec = (uint8_t)section;
 
-    logverbose("writing section %d (%u bytes)", section, size);
-
     cerror_t error = 0;
 
     leb128_t actualEntries = ui_leb128(entries);

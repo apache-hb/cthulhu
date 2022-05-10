@@ -7,7 +7,7 @@
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/hlir/type.h"
 #include "cthulhu/interface/runtime.h"
-#include "cthulhu/util/report-ext.h"
+#include "cthulhu/report/report-ext.h"
 
 static hlir_t *kIntegerType;
 static hlir_t *kBoolType;

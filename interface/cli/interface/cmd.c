@@ -178,7 +178,7 @@ int parse_commandline(reports_t *reports, commands_t *commands, int argc, const 
 
     report_config_t reportSettings = {.limit = DEFAULT_REPORT_LIMIT, .warningsAreErrors = false};
 
-    int status = end_reports(reports, "command line parsing", &reportSettings);
+    int status = end_reports(reports, "command line parsing", reportSettings);
     if (status != 0)
     {
         return status;
@@ -205,7 +205,7 @@ int parse_commandline(reports_t *reports, commands_t *commands, int argc, const 
     reportSettings.limit = commands->warningLimit;
     reportSettings.warningsAreErrors = commands->warningsAsErrors;
 
-    status = end_reports(reports, "command line parsing", &reportSettings);
+    status = end_reports(reports, "command line parsing", reportSettings);
     if (status != 0)
     {
         return status;

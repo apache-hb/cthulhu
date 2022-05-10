@@ -99,8 +99,6 @@ static char *padding(size_t len)
 
 static char *extract_line(const scan_t *scan, line_t line)
 {
-    logverbose("%s:%d", __FILE__, __LINE__);
-
     size_t start = 0;
     text_t source = scan->source;
     while (start < source.size && line > 0)
@@ -170,8 +168,6 @@ static bool safe_isspace(int c)
 
 static char *build_underline(const char *source, where_t where, const char *note)
 {
-    logverbose("%s:%d", __FILE__, __LINE__);
-
     column_t front = where.firstColumn;
     column_t back = where.lastColumn;
 
@@ -481,9 +477,9 @@ static const char *paths_base(vector_t *messages)
     return common_prefix(result);
 }
 
-int end_reports(reports_t *reports, const char *name, const report_config_t *settings)
+int end_reports(reports_t *reports, const char *name, report_config_t settings)
 {
-    size_t total = settings->limit - 1;
+    size_t total = settings.limit - 1;
 
     size_t internal = 0;
     size_t fatal = 0;
@@ -500,7 +496,7 @@ int end_reports(reports_t *reports, const char *name, const report_config_t *set
     {
         message_t *message = vector_get(reports->messages, i);
 
-        if (settings->warningsAreErrors && message->level == WARNING)
+        if (settings.warningsAreErrors && message->level == WARNING)
         {
             message->level = ERROR;
         }
@@ -547,15 +543,11 @@ int end_reports(reports_t *reports, const char *name, const report_config_t *set
         result = EXIT_ERROR;
     }
 
-    logverbose("%s:%d", __FILE__, __LINE__);
-
     if (warningsSuppressed > 0 || fatalMessagesSuppressed > 0)
     {
         fprintf(stderr, "%zu extra warning(s) and %zu extra error(s) suppressed\n", warningsSuppressed,
                 fatalMessagesSuppressed);
     }
-
-    logverbose("%s:%d", __FILE__, __LINE__);
 
     vector_reset(reports->messages);
 
@@ -649,4 +641,6 @@ void logverbose(const char *fmt, ...)
     va_start(args, fmt);
     fprintf(stderr, "%s: %s\n", report_level(NOTE), formatv(fmt, args));
     va_end(args);
+    
+    fflush(stderr);
 }

@@ -133,7 +133,7 @@ typedef struct
  *         EXIT_ERROR if the sink contained any errors.
  *         EXIT_INTERAL if the sink contained an internal error.
  */
-int end_reports(reports_t *reports, const char *name, const report_config_t *settings);
+int end_reports(reports_t *reports, const char *name, report_config_t settings);
 
 /**
  * @brief push an internal compiler error into a reporting context

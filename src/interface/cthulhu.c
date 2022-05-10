@@ -2,11 +2,11 @@
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/interface/interface.h"
 #include "cthulhu/interface/runtime.h"
-#include "cthulhu/util/report.h"
+#include "cthulhu/report/report.h"
 
 static int report_errors(cthulhu_t *cthulhu, const char *name)
 {
-    int status = end_reports(cthulhu->reports, name, &cthulhu->config.reportConfig);
+    int status = end_reports(cthulhu->reports, name, cthulhu->config.reportConfig);
     cthulhu->status = status;
     return status;
 }

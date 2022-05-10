@@ -2,24 +2,16 @@
 
 ## Urgent items
 
-* run compiler on aws lambda
-  * wasm backend
+* wasm backend
+  * this is going to need ssa
 
-* rewrite the aws lambda c++ api in C
-  * it makes the rest of the compiler hard to manage
+* s3 api
 
 ## Blocking items
 
 * rework logging 
   * need custom sinks for aws lambda to be usable
   * will these be intergrated with interfaces or a seperate entity
-
-* continue cthulhu frontend work
-  * more ideal for testing codegen features
-  * will be used for intermediate language runtime glue libraries
-
-* add wasm support
-  * run wat2wasm on the output is not great
 
 * document more stuff
   * other people have to contribute now
@@ -37,18 +29,16 @@
   * this would also allow for codegen shims to be added in
     * makes gathering metrics possible and exensible
 
-* get this all running inside aws lambda
-  * i dont know how s3 buckets work
-  * i am too scared of spending my life savings in 5 seconds
-
 * general code cleanup
   * this is a forever task
 
 ## Optional items
 
-* NIH a C lambda api rather than use the C++ one
-  * serious gains for deploy size. upwards of 90% smaller lambdas
-  * and compile times. easily 95% faster compile times
+* better debug tools
+
+* more test coverage
+
+* dedicated fuzzing frontends
 
 * add ssa emitter
   * direct asm/wasm output would be preferrable to relying on C/wat2wasm

@@ -3,7 +3,7 @@
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/util/file.h"
-#include "cthulhu/util/report.h"
+#include "cthulhu/report/report.h"
 #include "cthulhu/util/version-def.h"
 
 ///

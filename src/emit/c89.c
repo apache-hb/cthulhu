@@ -3,7 +3,7 @@
 #include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/util/map.h"
-#include "cthulhu/util/report.h"
+#include "cthulhu/report/report.h"
 
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/util/set.h"

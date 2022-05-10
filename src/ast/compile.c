@@ -5,7 +5,7 @@
 #include "cthulhu/util/file.h"
 
 #include "cthulhu/util/macros.h"
-#include "cthulhu/util/report.h"
+#include "cthulhu/report/report.h"
 #include "cthulhu/util/util.h"
 
 #include <errno.h>

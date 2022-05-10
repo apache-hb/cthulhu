@@ -133,8 +133,8 @@ src = [
     'src/ast/ops.c',
 
     # error reporting
-    'src/util/report.c',
-    'src/util/report-ext.c',
+    'src/report/report.c',
+    'src/report/report-ext.c',
 
     # standard library
     'src/util/str.c',

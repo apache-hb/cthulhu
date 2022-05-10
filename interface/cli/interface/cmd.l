@@ -8,7 +8,7 @@
 
 %{
 #include "cmd-bison.h"
-#include "cthulhu/util/report-ext.h"
+#include "cthulhu/report/report-ext.h"
 #include "cthulhu/ast/interop.h"
 %}
 

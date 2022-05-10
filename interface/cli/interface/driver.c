@@ -8,7 +8,7 @@
 #include "cthulhu/emit/c89.h"
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/sema.h"
-#include "cthulhu/util/report.h"
+#include "cthulhu/report/report.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/vector.h"
 
@@ -52,16 +52,6 @@ static void print_help(const char **argv)
 
 #include "flags.inc"
 }
-
-#define END_STAGE(name)                                                                                                \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        status = end_reports(reports, name, &reportSettings);                                                          \
-        if (status != 0)                                                                                               \
-        {                                                                                                              \
-            return status;                                                                                             \
-        }                                                                                                              \
-    } while (0)
 
 int main(int argc, const char **argv)
 {
@@ -109,7 +99,7 @@ int main(int argc, const char **argv)
         vector_set(sources, i, source);
     }
 
-    status = end_reports(reports, "command line parsing", &reportConfig);
+    status = end_reports(reports, "command line parsing", reportConfig);
     if (status != 0)
     {
         return status;
@@ -128,12 +118,10 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < totalSteps; i++)
     {
         status = steps[i](cthulhu);
-        logverbose("status: %d", status);
         if (status != 0)
         {
             return status;
         }
-        logverbose("%s:%d", __FILE__, __LINE__);
     }
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
@@ -148,21 +136,11 @@ int main(int argc, const char **argv)
         return EXIT_ERROR;
     }
 
-    logverbose("%s:%d", __FILE__, __LINE__);
-
     stream_t *stream = c89_emit_modules(reports, allModules);
     
-    logverbose("%s:%d", __FILE__, __LINE__);
-
     file_write(out, stream_data(stream), stream_len(stream), &error);
-
-    logverbose("%s:%d", __FILE__, __LINE__);
 
     file_close(out);
 
-    logverbose("finished compiling %zu modules", vector_len(allModules));
-
-
-
-    return end_reports(reports, "emitting code", &reportConfig);
+    return end_reports(reports, "emitting code", reportConfig);
 }

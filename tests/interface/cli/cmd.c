@@ -1,5 +1,5 @@
 #include "interface/cmd.h"
-#include "cthulhu/util/report.h"
+#include "cthulhu/report/report.h"
 #include "ct-test.h"
 
 TEST(test_cmd_files, {
