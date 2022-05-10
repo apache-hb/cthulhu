@@ -32,3 +32,8 @@ option('plugins', type : 'array',
     choices : [ 'example' ],
     value : [ 'example' ]
 )
+
+option('interfaces', type : 'array',
+    description : 'select which frontend interfaces to enable',
+    value : [ 'interface.cmd' ]
+)

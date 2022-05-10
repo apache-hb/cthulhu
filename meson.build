@@ -1,9 +1,10 @@
-project('cthulhu', 'c',
-    license : 'GPLv3',
-    version : '0.2.0',
+project('cthulhu', [ 'c', 'cpp' ],
+    license : 'LGPLv3',
+    version : '0.2.1',
     meson_version : '>=0.58',
     default_options : [
         'c_std=gnu11',
+        'cpp_std=c++17',
         'warning_level=2', # we use unnamed structs
         'default_library=static',
         'werror=true'
@@ -41,7 +42,6 @@ gmp = dependency('gmp',
     fallback : [ 'mini-gmp', 'gmp' ]
 )
 
-links = []
 args = []
 deps = [ gmp ]
 lexargs = []
@@ -56,7 +56,6 @@ if buildtype.startswith('debug')
 endif
 
 if host == 'windows'
-    links += [ 'setargv.obj' ]
     lexargs += [ '--wincompat' ]
     args += [ '/Wv:18' ]
 
@@ -106,14 +105,6 @@ parse = generator(bison,
 )
 
 src = [
-    # command line
-    'src/driver/driver.c',
-    'src/driver/cmd.c',
-    'src/driver/plugins.c',
-    'src/driver/switch.c',
-    lex.process('src/driver/cmd.l'),
-    parse.process('src/driver/cmd.y'),
-    
     # high level intermediate representation
     'src/hlir/sema.c',
     'src/hlir/attribs.c',
@@ -124,6 +115,8 @@ src = [
     'src/hlir/query.c',
 
     'src/hlir/common.c',
+
+    'src/driver/driver.c',
 
     # tree output
     'src/emit/c89.c',
@@ -165,47 +158,22 @@ generic = declare_dependency(
     link_with : libgeneric,
     include_directories : 'include',
     dependencies : deps,
-    compile_args : args,
-    link_args : links
+    compile_args : args
 )
 
-options = { '': generic }
+message('enabled interfaces:', get_option('interfaces'))
+message('enabled languages:', get_option('languages'))
+message('enabled plugins:', get_option('plugins'))
 
-awsopt = subproject('aws', required : get_option('aws'))
-if awsopt.found()
-    miniz = subproject('miniz').get_variable('miniz')
-    executable('create-lambda', [ 'tools/create-lambda.c' ],
-        dependencies : [ generic, miniz ]
-    )
-
-    aws = awsopt.get_variable('aws')
-
-    libaws = library('aws', src,
-        include_directories : 'include',
-        c_args : args + [ '-DHAVE_AWS=1' ],
-        dependencies : deps + [ aws ]
-    )
-
-    awsdep = declare_dependency(
-        link_with : libaws,
-        include_directories : 'include',
-        dependencies : deps + [ aws ]
-    )
-
-    options += { '-aws': awsdep }
-
-    subdir('tests/aws')
-endif
-
-if tuning
-    tune = executable('tune-map', [ 'tools/tune-map.c' ],
-        dependencies : generic
-    )
-endif
+langs = {}
 
 foreach lang : get_option('languages')
     subdir('driver'/lang)
-    subdir('tests'/lang)
+    #subdir('tests'/lang)
+endforeach
+
+foreach interface : get_option('interfaces')
+    subdir(interface.replace('.', '/'))
 endforeach
 
 foreach plugin : get_option('plugins')
@@ -213,7 +181,13 @@ foreach plugin : get_option('plugins')
 endforeach
 
 subdir('tests/unit-tests')
-subdir('tests/plugins')
+#subdir('tests/plugins')
+
+if tuning
+    tune = executable('tune-map', [ 'tools/tune-map.c' ],
+        dependencies : generic
+    )
+endif
 
 doxygen = find_program('doxygen', required : get_option('doxygen'))
 

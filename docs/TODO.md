@@ -4,7 +4,9 @@
 
 * run compiler on aws lambda
   * wasm backend
-  * port to lambda if needed
+
+* get c++ compat working
+  * the aws lambda sdk is c++
 
 ## Blocking items
 
@@ -40,6 +42,10 @@
 
 ## Optional items
 
+* NIH a C lambda api rather than use the C++ one
+  * serious gains for deploy size. upwards of 90% smaller lambdas
+  * and compile times. easily 95% faster compile times
+
 * add ssa emitter
   * direct asm/wasm output would be preferrable to relying on C/wat2wasm
 
@@ -52,9 +58,6 @@
   * makes it easier to find code defects
   * helps optimisations
   * if we get a C frontend it will help us find defects in the compiler itself
-
-* make util functions more verbose
-  * its getting a bit hard to reason about what some functions are doing based on name alone now
 
 * properly prefix the entire compiler
   * will make writing plugins easier in the future

@@ -35,6 +35,20 @@
 #    define NODISCARD
 #endif
 
+#ifdef __cplusplus
+#define CTHULHU_EXTERN extern "C"
+#else
+#define CTHULHU_EXTERN extern
+#endif
+
+#ifdef _WIN32
+#    define CTHULHU_API __declspec(dllexport) CTHULHU_EXTERN
+#elif defined(__GNUC__) || defined(__clang__)
+#    define CTHULHU_API __attribute__((visibility("default"))) CTHULHU_EXTERN
+#else
+#    define CTHULHU_API CTHULHU_EXTERN
+#endif
+
 /**
  * @defgroup Packing Struct packing macros
  * @brief cross compiler compatible struct packing macros
@@ -64,26 +78,38 @@
  * @}
  */
 
+#ifdef __cplusplus
+#    define NORETURN [[noreturn]] void
+#endif
+
 #if defined(__clang__)
 #    define BEGIN_PACKED(align)
 #    define END_PACKED()
 #    define PACKED(align) __attribute__((aligned(align), packed))
-#    define NORETURN _Noreturn void
+#    ifndef NORETURN
+#        define NORETURN _Noreturn void
+#    endif
 #elif defined(__GNUC__)
 #    define BEGIN_PACKED(align)
 #    define END_PACKED()
 #    define PACKED(align) __attribute__((aligned(align), packed))
-#    define NORETURN _Noreturn void
+#    ifndef NORETURN
+#        define NORETURN _Noreturn void
+#    endif
 #elif defined(_MSC_VER)
 #    define BEGIN_PACKED(align) __pragma(pack(push, align))
 #    define END_PACKED() __pragma(pack(pop))
 #    define PACKED(align)
-#    define NORETURN __declspec(noreturn) void
+#    ifndef NORETURN
+#        define NORETURN __declspec(noreturn) void
+#    endif
 #else
 #    define BEGIN_PACKED(align) _Pragma("warning \"current compiler doesnt support packing\"")
 #    define END_PACKED()
 #    define PACKED(align)
-#    define NORETURN void
+#    ifndef NORETURN
+#        define NORETURN void
+#    endif
 #endif
 
 #define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)

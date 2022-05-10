@@ -1,5 +1,6 @@
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/driver/driver.h"
+#include "cthulhu/driver/interface.h"
 
 #include "sema.h"
 
@@ -14,18 +15,17 @@ void ctu_parse_file(runtime_t *runtime, compile_t *compile)
     compile->ast = compile_file(compile->scanner, &kCallbacks);
 }
 
-static const driver_t kDriver = {
+const driver_t kDriver = {
     .name = "Cthulhu",
     .version = NEW_VERSION(1, 0, 0),
+
     .fnParseFile = ctu_parse_file,
     .fnForwardDecls = ctu_forward_decls,
     .fnResolveImports = ctu_process_imports,
     .fnCompileModule = ctu_compile_module,
 };
 
-int main(int argc, const char **argv)
+driver_t get_driver()
 {
-    common_init();
-
-    return common_main(argc, argv, kDriver);
+    return kDriver;
 }

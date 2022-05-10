@@ -1,8 +1,15 @@
-src = [ lex.process('pl0.l'), parse.process('pl0.y'), 'main.c', 'scan.c', 'ast.c', 'sema.c' ]
+src = [ 
+    'main.c', 
+    'scan.c', 
+    'ast.c', 
+    'sema.c',
+    lex.process('pl0.l'), 
+    parse.process('pl0.y')
+]
 
-foreach name, dep : options
-    pl0c = executable('pl0c@0@'.format(name), src,
-        dependencies : dep,
-        install : true
-    )
-endforeach
+pl0c = library('pl0c', src,
+    dependencies : generic,
+    install : true
+)
+
+langs += { 'pl0c': declare_dependency(link_with : pl0c) }

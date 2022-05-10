@@ -1,9 +1,6 @@
 #pragma once
 
-#include "cthulhu/hlir/hlir.h"
-#include "cthulhu/hlir/sema.h"
-#include "cthulhu/util/report.h"
-#include "cthulhu/util/version-def.h"
+#include "cthulhu/driver/interface.h"
 
 #define CT_CALLBACKS(id, prefix)                                                                                       \
     static int prefix##_##id##_##init(scan_t *extra, void *scanner)                                                    \
@@ -39,67 +36,17 @@
         .destroy = prefix##_##id##_destroy,                                                                            \
     }
 
-typedef struct
-{
-    reports_t *reports;
-    map_t *modules;
-} runtime_t;
-
-hlir_t *find_module(runtime_t *runtime, const char *path);
-
-// TODO: how are we going to model circular imports?
-// * we need to sanitize after each step, and all steps happen in order
-//   this is going to require alot of memory barriers sadly
-// - open all files and register all the modules at once
-// - forward declare everything in all files at once
-// - resolve all imports in all files at once
-// - check for collisions
-// - go through and compile each file
-
-typedef struct
-{
-    scan_t *scanner;
-    void *ast;
-    const char *moduleName;
-    hlir_t *hlirModule;
-    sema_t *sema;
-} compile_t;
-
-// parse and register a module
-typedef void (*parse_file_t)(runtime_t *, compile_t *);
-
-// forward declare all exports
-typedef void (*forward_decls_t)(runtime_t *, compile_t *);
-
-// process all imports
-typedef void (*import_modules_t)(runtime_t *, compile_t *);
-
-// compile the file
-typedef void (*compile_module_t)(runtime_t *, compile_t *);
-
-typedef struct
-{
-    const char *name;
-    version_t version;
-
-    parse_file_t fnParseFile;
-    forward_decls_t fnForwardDecls;
-    import_modules_t fnResolveImports;
-    compile_module_t fnCompileModule;
-} driver_t;
-
 /**
- * @brief initialize the common runtime, always the first function a driver
+ * @brief initialize the common runtime, always the first function an interface
  * should call
  */
 void common_init(void);
 
 /**
- * @brief process the command line and run the compiler
+ * @brief find a module by name
  *
- * @param argc argc from main
- * @param argv argv from main
- * @param driver information about the driver being run
- * @return an exit code to return from main
+ * @param runtime the runtime to take the module from
+ * @param path the name of the module
+ * @return hlir_t* a module if one was found otherwise NULL
  */
-int common_main(int argc, const char **argv, driver_t driver);
+hlir_t *find_module(runtime_t *runtime, const char *path);

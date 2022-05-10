@@ -22,8 +22,10 @@ static const hlir_attributes_t *kExported;
 static const hlir_attributes_t *kConst;
 static const hlir_attributes_t *kMutable;
 
-void pl0_init(void)
+void pl0_init(runtime_t *runtime)
 {
+    UNUSED(runtime);
+
     const node_t *node = node_builtin();
 
     kExported = hlir_linkage(LINK_EXPORTED);

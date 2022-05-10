@@ -30,22 +30,26 @@ ninja -C build test # build and run tests
 * `data` - data files used to build the compiler
 * `driver` - language frontends
   * `pl0` - example pl0 frontend, good for referencing how to use the common framework
-  * `ctu` - cthulhu language frontend
+  * `ctu` - cthulhu language frontend (TODO)
+
+* `interface`
+  * `cmd` - command line user interface
+  * `gui` - graphical user interface (TODO)
+
 * `include/cthulhu` - public interface
   * `ast` - tools for generating an ast components used by drivers
-  * `driver` - common frontend command line and parsing
   * `emit` - tree writing
   * `hlir` - common typed ast
-  * `loader` - binary loading and unloading
-  * `ssa` - future ssa interface
   * `util` - common utilities
+
 * `src` - common framework implementation
+
 * `subprojects` - 3rd & 1st party dependencies
-  * `aws` - C implementation of the aws lambda runtime api
   * `cjson` - json serialization + deserialization library
   * `mini-gmp` - fallback gmp library if system gmp isnt installed
-  * `miniz` - zip compression library
+
 * `tests` - langauge tests
+
 * `tools` - tools
   * `create-lambda` - create a lambda from a function
   * `tune-map` - map runtime perf tuning

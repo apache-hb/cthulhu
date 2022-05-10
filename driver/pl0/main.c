@@ -1,5 +1,6 @@
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/driver/driver.h"
+#include "cthulhu/driver/interface.h"
 
 #include "sema.h"
 
@@ -22,20 +23,18 @@ static void pl0_parse_file(runtime_t *runtime, compile_t *compile)
     compile->ast = compile_file(compile->scanner, &kCallbacks);
 }
 
-static const driver_t kDriver = {
+const driver_t kDriver = {
     .name = "PL/0",
     .version = NEW_VERSION(2, 2, 0),
+
+    .fnInitCompiler = pl0_init,
     .fnParseFile = pl0_parse_file,
     .fnForwardDecls = pl0_forward_decls,
     .fnResolveImports = pl0_process_imports,
     .fnCompileModule = pl0_compile_module,
 };
 
-int main(int argc, const char **argv)
+driver_t get_driver(void)
 {
-    common_init();
-
-    pl0_init();
-
-    return common_main(argc, argv, kDriver);
+    return kDriver;
 }

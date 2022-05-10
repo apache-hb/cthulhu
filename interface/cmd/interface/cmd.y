@@ -11,13 +11,13 @@
 }
 
 %code requires {
-    #include "src/driver/cmd.h"
+    #include "interface/cmd.h"
     #define YYSTYPE CMDSTYPE
     #define YYLTYPE CMDLTYPE
 }
 
 %{
-#include "src/driver/cmd.h"
+#include "interface/cmd.h"
 int cmdlex();
 void cmderror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
