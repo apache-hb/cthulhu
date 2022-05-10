@@ -77,7 +77,10 @@ int main(int argc, const char **argv)
         return status;
     }
 
-    report_config_t reportConfig = {.limit = commands.warningLimit, .warningsAreErrors = commands.warningsAsErrors,};
+    report_config_t reportConfig = {
+        .limit = commands.warningLimit,
+        .warningsAreErrors = commands.warningsAsErrors,
+    };
 
     verbose = commands.verboseLogging;
     logverbose("setup verbose logging");

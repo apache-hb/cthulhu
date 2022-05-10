@@ -88,3 +88,5 @@ void *map_get_default_ptr(map_t *map, const void *key, void *other);
  * @return a vector containing all the values
  */
 vector_t *map_values(map_t *map);
+
+void map_reset(map_t *map);

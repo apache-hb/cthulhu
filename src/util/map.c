@@ -188,3 +188,8 @@ void *map_get_default_ptr(map_t *map, const void *key, void *other)
     bucket_t *bucket = map_bucket_ptr(map, key);
     return entry_get_ptr(bucket, key, other);
 }
+
+void map_reset(map_t *map)
+{
+    clear_keys(map->data, map->size);
+}

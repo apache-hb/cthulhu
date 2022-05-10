@@ -359,6 +359,30 @@ const char *common_prefix(vector_t *args)
     return ctu_strndup(strings[0], lower);
 }
 
+size_t str_find(const char *str, const char *sub)
+{
+    size_t len = strlen(str);
+    size_t sublen = strlen(sub);
+
+    CTASSERT(len > 0, "str must be non-empty");
+    CTASSERT(sublen > 0, "sub must be non-empty");
+
+    if (sublen > len)
+    {
+        return SIZE_MAX;
+    }
+
+    for (size_t i = 0; i < len - sublen; i++)
+    {
+        if (strncmp(str + i, sub, sublen) == 0)
+        {
+            return i;
+        }
+    }
+
+    return SIZE_MAX;
+}
+
 size_t str_rfind(const char *str, const char *sub)
 {
     size_t len = strlen(str);
@@ -376,4 +400,38 @@ size_t str_rfind(const char *str, const char *sub)
     }
 
     return SIZE_MAX;
+}
+
+static bool char_is_any_of(char c, const char *chars)
+{
+    for (; *chars; chars++)
+    {
+        if (*chars == c)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+char *str_trim(const char *str, const char *chars)
+{
+    const char *tmp = str;
+
+    // strip from front
+    while (*tmp && char_is_any_of(*tmp, chars))
+    {
+        tmp++;
+    }
+
+    size_t remaining = strlen(tmp);
+
+    // strip from back
+    while (remaining > 0 && char_is_any_of(tmp[remaining - 1], chars))
+    {
+        remaining--;
+    }
+
+    return ctu_strndup(tmp, remaining);
 }

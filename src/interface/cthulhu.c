@@ -59,7 +59,7 @@ cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
     CTASSERT(driver.fnForwardDecls != NULL, "driver must implement fnForwardDecls");
     CTASSERT(driver.fnResolveImports != NULL, "driver must implement fnResolveImports");
     CTASSERT(driver.fnCompileModule != NULL, "driver must implement fnCompileModule");
-    
+
     size_t totalSources = vector_len(sources);
     reports_t *reports = begin_reports();
     runtime_t runtime = runtime_new(reports, totalSources);
@@ -104,7 +104,9 @@ static scan_t *make_scanner_from_string(cthulhu_t *cthulhu, source_t *source)
 static scan_t *make_scanner_from_source(cthulhu_t *cthulhu, source_t *source)
 {
     scan_t *(*make[])(cthulhu_t *, source_t *) = {
-        [SOURCE_FILE] = make_scanner_from_file, [SOURCE_STRING] = make_scanner_from_string,};
+        [SOURCE_FILE] = make_scanner_from_file,
+        [SOURCE_STRING] = make_scanner_from_string,
+    };
 
     return make[source->kind](cthulhu, source);
 }

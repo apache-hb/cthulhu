@@ -130,6 +130,8 @@ vector_t *str_split(const char *str, const char *sep);
  */
 const char *common_prefix(vector_t *args);
 
+size_t str_find(const char *str, const char *sub);
+
 /**
  * @brief find the last instance of a substring in a string
  *
@@ -161,6 +163,8 @@ bool str_contains(const char *str, const char *sub);
  * @return a copy of @a str with all instances of @a sub replaced with @a repl
  */
 char *str_replace(const char *str, const char *sub, const char *repl);
+
+char *str_trim(const char *str, const char *chars);
 
 /**
  * @brief hash a string

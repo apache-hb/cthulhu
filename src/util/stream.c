@@ -49,3 +49,9 @@ const char *stream_data(const stream_t *stream)
 {
     return stream->data;
 }
+
+void stream_reset(stream_t *stream)
+{
+    stream->len = 0;
+    stream->data[0] = 0;
+}
