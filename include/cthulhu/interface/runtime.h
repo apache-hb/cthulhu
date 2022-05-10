@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/driver/interface.h"
+#include "cthulhu/interface/interface.h"
 
 ///
 /// code required by drivers
@@ -49,3 +49,5 @@
  * @return hlir_t* a module if one was found otherwise NULL
  */
 hlir_t *find_module(runtime_t *runtime, const char *path);
+
+void add_module(runtime_t *runtime, hlir_t *hlir);

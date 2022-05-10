@@ -4,7 +4,7 @@
 #include "cmd-flex.h"
 #include "cmd.h"
 #include "cthulhu/ast/compile.h"
-#include "cthulhu/driver/driver.h"
+#include "cthulhu/interface/runtime.h"
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/map.h"
 #include "cthulhu/util/str.h"
@@ -176,7 +176,7 @@ int parse_commandline(reports_t *reports, commands_t *commands, int argc, const 
 
     scan_t scan = scan_string(reports, "command-line", "<command-line>", args);
 
-    end_report_settings_t reportSettings = {.limit = DEFAULT_REPORT_LIMIT, .warningsAreErrors = false};
+    report_config_t reportSettings = {.limit = DEFAULT_REPORT_LIMIT, .warningsAreErrors = false};
 
     int status = end_reports(reports, "command line parsing", &reportSettings);
     if (status != 0)

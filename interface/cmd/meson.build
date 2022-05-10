@@ -1,8 +1,5 @@
 src = [
-    # command line
     'interface/cmd.c',
-    'interface/plugins.c',
-    'interface/switch.c',
     lex.process('interface/cmd.l'),
     parse.process('interface/cmd.y')
 ]

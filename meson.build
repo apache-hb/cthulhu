@@ -113,10 +113,11 @@ src = [
     'src/hlir/hlir.c',
     'src/hlir/decl.c',
     'src/hlir/query.c',
-
     'src/hlir/common.c',
 
-    'src/driver/driver.c',
+    # common frontend components
+    'src/interface/runtime.c',
+    'src/interface/cthulhu.c',
 
     # tree output
     'src/emit/c89.c',
@@ -166,20 +167,15 @@ message('enabled languages:', get_option('languages'))
 message('enabled plugins:', get_option('plugins'))
 
 langs = {}
+interfaces = {}
 
 foreach lang : get_option('languages')
     subdir('driver'/lang)
 endforeach
 
-foreach plugin : get_option('plugins')
-    subdir('plugins'/plugin)
-endforeach
-
 foreach interface : get_option('interfaces')
     subdir(interface.replace('.', '/'))
 endforeach
-
-subdir('interface/test-harness')
 
 cttest = subproject('ct-test').get_variable('cttest')
 fs = import('fs')
@@ -194,11 +190,10 @@ foreach interface : get_option('interfaces')
 endforeach
 
 foreach lang : get_option('languages')
-    #subdir('tests/driver'/lang)
+    # subdir('tests/driver'/lang)
 endforeach
 
 subdir('tests/unit-tests')
-#subdir('tests/plugins')
 
 if tuning
     tune = executable('tune-map', [ 'tools/tune-map.c' ],

@@ -39,13 +39,7 @@ COMMAND(warningLimit, TYPE_INT, DEFAULT_REPORT_LIMIT, "limit the number of repor
 
 SECTION("codegen")
 
-COMMAND(enableBytecode, TYPE_BOOL, false, "enable bytecode generation", { "-Benable" })
-COMMAND(embedSource, TYPE_BOOL, false, "embed the source code in the bytecode", { "-Bembed" })
-COMMAND(moduleName, TYPE_STRING, NULL, "override default module name", { "-Bmodule" })
 COMMAND(outputFile, TYPE_STRING, NULL, "override default output file name", { "-o" })
-COMMAND(outputTarget, TYPE_STRING, "c89", "specify target triple <arch>-<platform>", { "-T" })
-
-COMMAND(defaultWasmModule, TYPE_STRING, "env", "specify default wasm import module", { "-WM", "--wasm-module" })
 
 #undef COMMAND
 #undef SECTION

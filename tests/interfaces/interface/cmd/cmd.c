@@ -87,24 +87,24 @@ TEST(test_string_arg, {
     int result;
 
     {
-        const char *argv[] = { "test-harness", "-Bmodule", "foo" };
+        const char *argv[] = { "test-harness", "-o", "foo" };
         int argc = 3;
         result = parse_commandline(reports, &commands, argc, argv);
     }
 
     SHOULD_PASS("parse module status", result == 0);
     SHOULD_PASS("module has no files", vector_len(commands.files) == 0);
-    SHOULD_PASS("has module name", str_equal(commands.moduleName, "foo"));
+    SHOULD_PASS("has module name", str_equal(commands.outputFile, "foo"));
 
     {
-        const char *argv[] = { "test-harness", "-Bmodule=foo" };
+        const char *argv[] = { "test-harness", "-o=module" };
         int argc = 2;
         result = parse_commandline(reports, &commands, argc, argv);
     }
 
     SHOULD_PASS("parse module equals status", result == 0);
     SHOULD_PASS("module equals has no files", vector_len(commands.files) == 0);
-    SHOULD_PASS("has module name", str_equal(commands.moduleName, "foo"));
+    SHOULD_PASS("has module name", str_equal(commands.outputFile, "module"));
 })
 
 TEST(test_joined_arg, {

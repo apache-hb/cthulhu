@@ -55,7 +55,13 @@ typedef struct
 
 typedef struct
 {
+    report_config_t reportConfig;
+} config_t;
+
+typedef struct
+{
     driver_t driver;
+    config_t config;
     
     int status;
 
@@ -65,16 +71,19 @@ typedef struct
     vector_t *compiles;
 
     vector_t *sources;
-    vector_t *plugins;
 } cthulhu_t;
 
-cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, vector_t *plugins);
+cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config);
+
+typedef int(*cthulhu_step_t)(cthulhu_t*);
 
 int cthulhu_init(cthulhu_t *cthulhu);
 int cthulhu_parse(cthulhu_t *cthulhu);
 int cthulhu_forward(cthulhu_t *cthulhu);
 int cthulhu_resolve(cthulhu_t *cthulhu);
 int cthulhu_compile(cthulhu_t *cthulhu);
+
+vector_t *cthulhu_get_modules(cthulhu_t *cthulhu);
 
 /**
  * @brief initialize the common runtime, always the first function an interface

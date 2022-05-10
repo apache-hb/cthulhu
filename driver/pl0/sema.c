@@ -1,7 +1,7 @@
 #include "sema.h"
 
 #include "ast.h"
-#include "cthulhu/driver/driver.h"
+#include "cthulhu/interface/runtime.h"
 #include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/query.h"

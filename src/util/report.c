@@ -477,7 +477,7 @@ static const char *paths_base(vector_t *messages)
     return common_prefix(result);
 }
 
-int end_reports(reports_t *reports, const char *name, const end_report_settings_t *settings)
+int end_reports(reports_t *reports, const char *name, const report_config_t *settings)
 {
     size_t total = settings->limit - 1;
 

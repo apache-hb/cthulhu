@@ -1,4 +1,4 @@
-#include "cthulhu/plugins/plugin.h"
+#include "cthulhu/interface/plugin.h"
 
 PLUGIN_INFO("hello", NEW_VERSION(1, 0, 1), "example plugin", "GPLv3");
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ast.h"
-#include "cthulhu/driver/driver.h"
+#include "cthulhu/interface/runtime.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/util/report.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/driver/driver.h"
+#include "cthulhu/interface/runtime.h"
 #include "cthulhu/hlir/sema.h"
 
 void ctu_forward_decls(runtime_t *runtime, compile_t *compile);
