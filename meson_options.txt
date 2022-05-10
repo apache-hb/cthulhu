@@ -27,12 +27,6 @@ option('analyze', type : 'boolean',
     value : true
 )
 
-option('plugins', type : 'array',
-    description : 'select which plugins to compile',
-    choices : [ 'example' ],
-    value : [ 'example' ]
-)
-
 option('interfaces', type : 'array',
     description : 'select which frontend interfaces to enable',
     value : [ 'interface.cmd' ]

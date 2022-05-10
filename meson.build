@@ -42,6 +42,9 @@ gmp = dependency('gmp',
     fallback : [ 'mini-gmp', 'gmp' ]
 )
 
+cttest = subproject('ct-test').get_variable('cttest')
+fs = import('fs')
+
 args = []
 deps = [ gmp ]
 lexargs = []
@@ -176,9 +179,6 @@ endforeach
 foreach interface : get_option('interfaces')
     subdir(interface.replace('.', '/'))
 endforeach
-
-cttest = subproject('ct-test').get_variable('cttest')
-fs = import('fs')
 
 foreach interface : get_option('interfaces')
     path = 'tests/interfaces'/interface.replace('.', '/')
