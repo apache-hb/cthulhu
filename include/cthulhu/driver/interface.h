@@ -4,6 +4,7 @@
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/version-def.h"
+#include "cthulhu/util/file.h"
 
 ///
 /// code required by interfaces
@@ -17,7 +18,9 @@ typedef struct
 
 typedef struct
 {
+    file_t file;
     scan_t *scanner;
+
     void *ast;
     const char *moduleName;
     hlir_t *hlir;
@@ -49,6 +52,35 @@ typedef struct
     import_modules_t fnResolveImports;
     compile_module_t fnCompileModule;
 } driver_t;
+
+typedef struct
+{
+    driver_t driver;
+    
+    int status;
+
+    reports_t *reports;
+
+    runtime_t runtime;
+    vector_t *compiles;
+
+    vector_t *sources;
+    vector_t *plugins;
+} cthulhu_t;
+
+cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, vector_t *plugins);
+
+int cthulhu_init(cthulhu_t *cthulhu);
+int cthulhu_parse(cthulhu_t *cthulhu);
+int cthulhu_forward(cthulhu_t *cthulhu);
+int cthulhu_resolve(cthulhu_t *cthulhu);
+int cthulhu_compile(cthulhu_t *cthulhu);
+
+/**
+ * @brief initialize the common runtime, always the first function an interface
+ * should call
+ */
+void common_init(void);
 
 // interface implemented by the language driver
 

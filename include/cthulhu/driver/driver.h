@@ -42,12 +42,6 @@
     }
 
 /**
- * @brief initialize the common runtime, always the first function an interface
- * should call
- */
-void common_init(void);
-
-/**
  * @brief find a module by name
  *
  * @param runtime the runtime to take the module from

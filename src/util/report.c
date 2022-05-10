@@ -535,7 +535,7 @@ int end_reports(reports_t *reports, const char *name, const end_report_settings_
     if (internal > 0)
     {
         fprintf(stderr, "%zu internal error(s) encountered during %s stage\n", internal, name);
-        result = EXIT_INTERAL;
+        result = EXIT_INTERNAL;
     }
     else if (fatal > 0)
     {
