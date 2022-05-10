@@ -6,7 +6,7 @@ src = [
 
 links = host != 'windows' ? [] : [ 'setargv.obj' ]
 
-libcmd = library('cmd-interface', src,
+libcmd = library('cli-interface', src,
     dependencies : generic
 )
 

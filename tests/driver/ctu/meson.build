@@ -86,7 +86,7 @@ foreach case, tests : tests
 
     foreach name : fails
         path = dir/where/'fail'/name + '.ct'
-        test('pass-' + case + '-' + name, ctc,
+        test('fail-' + case + '-' + name, ctc,
             args : [ path ],
             suite : 'ctu',
             should_fail : true

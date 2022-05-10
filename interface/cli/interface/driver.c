@@ -128,10 +128,12 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < totalSteps; i++)
     {
         status = steps[i](cthulhu);
+        logverbose("status: %d", status);
         if (status != 0)
         {
             return status;
         }
+        logverbose("%s:%d", __FILE__, __LINE__);
     }
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
@@ -143,15 +145,24 @@ int main(int argc, const char **argv)
     {
         message_t *id = report(reports, ERROR, NULL, "failed to open file `%s`", outFile);
         report_note(id, "%s", error_string(error));
-        return status;
+        return EXIT_ERROR;
     }
 
+    logverbose("%s:%d", __FILE__, __LINE__);
+
     stream_t *stream = c89_emit_modules(reports, allModules);
+    
+    logverbose("%s:%d", __FILE__, __LINE__);
+
     file_write(out, stream_data(stream), stream_len(stream), &error);
+
+    logverbose("%s:%d", __FILE__, __LINE__);
 
     file_close(out);
 
     logverbose("finished compiling %zu modules", vector_len(allModules));
+
+
 
     return end_reports(reports, "emitting code", &reportConfig);
 }

@@ -99,6 +99,8 @@ static char *padding(size_t len)
 
 static char *extract_line(const scan_t *scan, line_t line)
 {
+    logverbose("%s:%d", __FILE__, __LINE__);
+
     size_t start = 0;
     text_t source = scan->source;
     while (start < source.size && line > 0)
@@ -168,6 +170,8 @@ static bool safe_isspace(int c)
 
 static char *build_underline(const char *source, where_t where, const char *note)
 {
+    logverbose("%s:%d", __FILE__, __LINE__);
+
     column_t front = where.firstColumn;
     column_t back = where.lastColumn;
 
@@ -543,11 +547,15 @@ int end_reports(reports_t *reports, const char *name, const report_config_t *set
         result = EXIT_ERROR;
     }
 
+    logverbose("%s:%d", __FILE__, __LINE__);
+
     if (warningsSuppressed > 0 || fatalMessagesSuppressed > 0)
     {
         fprintf(stderr, "%zu extra warning(s) and %zu extra error(s) suppressed\n", warningsSuppressed,
                 fatalMessagesSuppressed);
     }
+
+    logverbose("%s:%d", __FILE__, __LINE__);
 
     vector_reset(reports->messages);
 

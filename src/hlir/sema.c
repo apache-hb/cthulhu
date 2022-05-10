@@ -184,11 +184,18 @@ static void report_type_recursion(reports_t *reports, vector_t *stack)
     const node_t *topNode = get_hlir_node(top->hlir);
     message_t *id = report(reports, ERROR, topNode, "%s", "recursive type definition");
 
+    size_t trace = 0;
+
     for (size_t i = 0; i < vector_len(stack); i++)
     {
         entry_t *entry = vector_get(stack, i);
+        if (entry == NULL)
+        {
+            continue;
+        }
+
         const node_t *node = get_hlir_node(entry->hlir);
-        report_append(id, node, "trace `%zu`", i);
+        report_append(id, node, "trace `%zu`", trace++);
     }
 }
 
@@ -198,6 +205,11 @@ static bool find_type_recursion(reports_t *reports, vector_t **vec, const hlir_t
     for (size_t i = 0; i < vector_len(stack); i++)
     {
         entry_t *item = vector_get(stack, i);
+        if (item == NULL)
+        {
+            continue;
+        }
+
         if (item->hlir == hlir)
         {
             if (item->nesting && opaque)
@@ -206,6 +218,8 @@ static bool find_type_recursion(reports_t *reports, vector_t **vec, const hlir_t
             }
 
             report_type_recursion(reports, stack);
+
+            vector_push(vec, NULL); // TODO: find a prettier way of keeping the stack intact
             return false;
         }
     }
@@ -256,15 +270,16 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
     }
 
     hlir_kind_t kind = get_hlir_kind(hlir);
+    bool result = true;
     switch (kind)
     {
     case HLIR_POINTER:
-        find_type_recursion(reports, stack, chase(reports, hlir), false, true);
+        result = find_type_recursion(reports, stack, chase(reports, hlir), false, true);
         break;
 
     case HLIR_CLOSURE:
     case HLIR_FUNCTION:
-        if (find_type_recursion(reports, stack, hlir, false, true))
+        if ((result = find_type_recursion(reports, stack, hlir, false, true)))
         {
             check_type_recursion(reports, stack, hlir->result);
             for (size_t i = 0; i < vector_len(hlir->params); i++)
@@ -277,7 +292,7 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
 
     case HLIR_STRUCT:
     case HLIR_UNION:
-        if (find_type_recursion(reports, stack, hlir, true, false))
+        if ((result = find_type_recursion(reports, stack, hlir, true, false)))
         {
             for (size_t i = 0; i < vector_len(hlir->fields); i++)
             {

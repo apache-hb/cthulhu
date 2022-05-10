@@ -13,7 +13,7 @@ int main(int argc, const char **argv)
         vector_set(sources, i - 1, source);
     }
 
-    report_config_t reportConfig = {.limit = SIZE_MAX, .warningsAreErrors = false,};
+    report_config_t reportConfig = {.limit = 20, .warningsAreErrors = false,};
     config_t config = {.reportConfig = reportConfig};
 
     cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
