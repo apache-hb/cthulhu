@@ -1,6 +1,6 @@
 #include "cthulhu/util/set.h"
 #include "cthulhu/util/str.h"
-#include "test.h"
+#include "ct-test.h"
 
 static const char *kSetItems[] = {
     "a", "b", "c", "d", "e", "f", 

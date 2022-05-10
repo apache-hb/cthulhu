@@ -169,19 +169,26 @@ langs = {}
 
 foreach lang : get_option('languages')
     subdir('driver'/lang)
-    #subdir('tests'/lang)
-endforeach
-
-foreach interface : get_option('interfaces')
-    subdir(interface.replace('.', '/'))
 endforeach
 
 foreach plugin : get_option('plugins')
     subdir('plugins'/plugin)
 endforeach
 
+foreach interface : get_option('interfaces')
+    subdir(interface.replace('.', '/'))
+endforeach
+
+subdir('interface/test-harness')
+
+cttest = subproject('ct-test').get_variable('cttest')
+
+foreach lang : get_option('languages')
+    subdir('tests/driver'/lang)
+endforeach
+
 subdir('tests/unit-tests')
-#subdir('tests/plugins')
+subdir('tests/plugins')
 
 if tuning
     tune = executable('tune-map', [ 'tools/tune-map.c' ],

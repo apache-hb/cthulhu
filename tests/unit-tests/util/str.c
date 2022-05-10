@@ -1,6 +1,6 @@
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/defs.h"
-#include "test.h"
+#include "ct-test.h"
 
 #include <string.h>
 #include <stdint.h>

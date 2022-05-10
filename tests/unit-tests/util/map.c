@@ -1,5 +1,5 @@
 #include "cthulhu/util/map.h"
-#include "test.h"
+#include "ct-test.h"
 
 static const char *kSetItems[] = {
     "a", "b", "c", "d", "e", "f", 

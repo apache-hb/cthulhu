@@ -3,7 +3,7 @@
 # bf - brainfuck
 option('languages', type : 'array',
     description : 'select which languages to compile',
-    choices : [ 'ctu', 'pl0', 'bf' ],
+    choices : [ 'ctu', 'pl0' ],
     value : [ 'ctu', 'pl0' ]
 )
 

@@ -1,6 +1,5 @@
 src = [
     # command line
-    'interface/driver.c',
     'interface/cmd.c',
     'interface/plugins.c',
     'interface/switch.c',
@@ -10,9 +9,18 @@ src = [
 
 links = host != 'windows' ? [] : [ 'setargv.obj' ]
 
+libcmd = library('cmd-interface', src,
+    dependencies : generic
+)
+
+cmd = declare_dependency(
+    link_with : libcmd,
+    dependencies : generic
+)
+
 foreach name, lib : langs
-    interface = executable(name, src,
+    interface = executable(name, 'interface/driver.c',
         export_dynamic : true,
-        dependencies : [ generic, lib ]
+        dependencies : [ cmd, lib ]
     )
 endforeach

@@ -2,6 +2,11 @@
 
 #include "cthulhu/driver/interface.h"
 
+///
+/// code required by drivers
+/// this is provided by the generic framework
+///
+
 #define CT_CALLBACKS(id, prefix)                                                                                       \
     static int prefix##_##id##_##init(scan_t *extra, void *scanner)                                                    \
     {                                                                                                                  \
