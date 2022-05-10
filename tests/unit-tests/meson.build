@@ -6,9 +6,8 @@ foreach case : all
     where = case.replace('.', '/')
     path = dir/where + '.c'
 
-    it = executable(case, path, 
-        dependencies : [ generic, cttest ],
-        include_directories : 'tests'
+    it = executable(case, path,
+        dependencies : [ generic, cttest ]
     )
 
     test('test-' + case, it, suite : 'unit-tests')

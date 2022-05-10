@@ -5,6 +5,10 @@
 #include "cthulhu/util/report.h"
 #include "cthulhu/util/version-def.h"
 
+///
+/// code required by interfaces
+///
+
 typedef struct
 {
     reports_t *reports;
@@ -16,7 +20,7 @@ typedef struct
     scan_t *scanner;
     void *ast;
     const char *moduleName;
-    hlir_t *hlirModule;
+    hlir_t *hlir;
     sema_t *sema;
 } compile_t;
 

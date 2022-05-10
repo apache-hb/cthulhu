@@ -380,7 +380,7 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
     hlir_update_module(mod, types, globals, procs);
 
     compile->sema = sema;
-    compile->hlirModule = mod;
+    compile->hlir = mod;
 }
 
 void ctu_process_imports(runtime_t *runtime, compile_t *compile)
@@ -407,5 +407,5 @@ void ctu_compile_module(runtime_t *runtime, compile_t *compile)
     vector_t *globals = map_values(sema_tag(sema, TAG_VARS));
     vector_t *procs = map_values(sema_tag(sema, TAG_PROCS));
 
-    hlir_update_module(compile->hlirModule, types, globals, procs);
+    hlir_update_module(compile->hlir, types, globals, procs);
 }

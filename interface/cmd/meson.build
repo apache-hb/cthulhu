@@ -15,6 +15,7 @@ libcmd = library('cmd-interface', src,
 
 cmd = declare_dependency(
     link_with : libcmd,
+    include_directories : '.',
     dependencies : generic
 )
 

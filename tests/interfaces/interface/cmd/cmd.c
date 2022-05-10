@@ -1,6 +1,6 @@
-#include "../../../src/driver/cmd.h"
+#include "interface/cmd.h"
 #include "cthulhu/util/report.h"
-#include "test.h"
+#include "ct-test.h"
 
 TEST(test_cmd_files, {
     reports_t *reports = begin_reports();

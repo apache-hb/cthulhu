@@ -10,6 +10,10 @@
 
 ## Blocking items
 
+* rework logging 
+  * need custom sinks for aws lambda to be usable
+  * will these be intergrated with interfaces or a seperate entity
+
 * continue cthulhu frontend work
   * more ideal for testing codegen features
   * will be used for intermediate language runtime glue libraries

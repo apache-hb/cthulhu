@@ -182,13 +182,23 @@ endforeach
 subdir('interface/test-harness')
 
 cttest = subproject('ct-test').get_variable('cttest')
+fs = import('fs')
+
+foreach interface : get_option('interfaces')
+    path = 'tests/interfaces'/interface.replace('.', '/')
+    if fs.is_dir(path)
+        subdir(path)
+    else
+        message('skipping tests for' + interface)
+    endif
+endforeach
 
 foreach lang : get_option('languages')
-    subdir('tests/driver'/lang)
+    #subdir('tests/driver'/lang)
 endforeach
 
 subdir('tests/unit-tests')
-subdir('tests/plugins')
+#subdir('tests/plugins')
 
 if tuning
     tune = executable('tune-map', [ 'tools/tune-map.c' ],

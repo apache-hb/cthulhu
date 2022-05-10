@@ -256,7 +256,7 @@ int main(int argc, const char **argv)
 
         context_t *ctx = ctu_malloc(sizeof(context_t));
         ctx->compileContext.ast = NULL;
-        ctx->compileContext.hlirModule = NULL;
+        ctx->compileContext.hlir = NULL;
 
         error_t error = 0;
         file_t handle = file_open(path, 0, &error);
@@ -291,11 +291,11 @@ int main(int argc, const char **argv)
     // now rename all modules and add them to the import map
     FOR_EACH_SOURCE(i, ctx, {
         const char *path = vector_get(sources, i);
-        hlir_t *hlirModule = ctx->compileContext.hlirModule;
-        CTASSERTF(hlirModule != NULL, "module %s is null", path);
+        hlir_t *hlir = ctx->compileContext.hlir;
+        CTASSERTF(hlir != NULL, "module %s is null", path);
 
-        rename_module(hlirModule, path);
-        map_set(runtime.modules, get_hlir_name(hlirModule), hlirModule);
+        rename_module(hlir, path);
+        map_set(runtime.modules, get_hlir_name(hlir), hlir);
     })
 
     // now resolve all imports
@@ -304,7 +304,7 @@ int main(int argc, const char **argv)
     // now compile all modules
     DO_COMPILATION_STEP(fnCompileModule, "compiling modules", {});
 
-    FOR_EACH_SOURCE(i, ctx, { check_module(reports, ctx->compileContext.hlirModule); })
+    FOR_EACH_SOURCE(i, ctx, { check_module(reports, ctx->compileContext.hlir); })
 
     END_STAGE("checking modules");
 
@@ -338,8 +338,8 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < numSources; i++)
     {
         context_t *ctx = vector_get(contexts, i);
-        hlir_t *hlirModule = ctx->compileContext.hlirModule;
-        vector_push(&allModules, hlirModule);
+        hlir_t *hlir = ctx->compileContext.hlir;
+        vector_push(&allModules, hlir);
     }
 
 #if 0

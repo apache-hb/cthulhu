@@ -467,7 +467,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
 
     hlir_update_module(mod, vector_of(0), vector_merge(globals, consts), procs);
 
-    compile->hlirModule = mod;
+    compile->hlir = mod;
     compile->sema = sema;
 }
 
@@ -476,6 +476,7 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
     pl0_t *root = compile->ast;
     sema_t *sema = compile->sema;
     sema_data_t *semaData = sema_get_data(sema);
+    hlir_t *self = compile->hlir;
 
     size_t totalImports = vector_len(root->imports);
     for (size_t i = 0; i < totalImports; i++)
@@ -490,7 +491,7 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
             continue;
         }
 
-        if (lib == compile->hlirModule)
+        if (lib == self)
         {
             report(sema->reports, ERROR, importDecl->node, "module cannot import itself");
             continue;
@@ -499,7 +500,7 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
         insert_module(sema, &semaData->globals, &semaData->consts, &semaData->procs, importDecl, lib);
     }
 
-    hlir_update_module(compile->hlirModule, compile->hlirModule->types,
+    hlir_update_module(self, self->types,
                        vector_merge(semaData->consts, semaData->globals), semaData->procs);
 }
 
@@ -509,6 +510,7 @@ void pl0_compile_module(runtime_t *runtime, compile_t *compile)
 
     pl0_t *root = compile->ast;
     sema_t *sema = compile->sema;
+    hlir_t *self = compile->hlir;
     sema_data_t *semaData = sema_get_data(sema);
 
     for (size_t i = 0; i < semaData->totalConsts; i++)
@@ -541,17 +543,17 @@ void pl0_compile_module(runtime_t *runtime, compile_t *compile)
             .variadic = false,
         };
         const hlir_attributes_t *attribs = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS, "main", NULL);
-        const char *modName = get_hlir_name(compile->hlirModule);
+        const char *modName = get_hlir_name(compile->hlir);
 
         hlir_t *hlir = hlir_function(root->node, modName, signature, vector_of(0), body);
         hlir_set_attributes(hlir, attribs);
-        hlir_set_parent(hlir, compile->hlirModule);
+        hlir_set_parent(hlir, self);
 
         vector_push(&semaData->procs, hlir);
     }
 
     vector_push(&semaData->procs, kPrint);
 
-    hlir_update_module(compile->hlirModule, compile->hlirModule->types,
+    hlir_update_module(self, self->types,
                        vector_merge(semaData->consts, semaData->globals), semaData->procs);
 }
