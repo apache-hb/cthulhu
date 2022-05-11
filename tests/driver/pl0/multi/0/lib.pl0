@@ -8,5 +8,4 @@ begin
     tmp := lhs + rhs;
     result := tmp
 end;
-
 .

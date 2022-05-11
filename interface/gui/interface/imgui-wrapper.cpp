@@ -18,8 +18,6 @@ struct WrapperContext
     bool shouldQuit = false;
 };
 
-auto kPl0LangDef = getPl0LanguageDefinition();
-
 void *imgui_init(GLFWwindow *window)
 {
     IMGUI_CHECKVERSION();

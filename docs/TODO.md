@@ -6,8 +6,11 @@
   * this is going to need ssa
 
 * s3 api
+* aws lambda work
 
 ## Blocking items
+
+* reorg pl0 tests
 
 * rework logging 
   * need custom sinks for aws lambda to be usable
