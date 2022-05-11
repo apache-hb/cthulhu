@@ -12,4 +12,4 @@ ctc = library('ctc', src,
     install : true
 )
 
-langs += { 'ctc': declare_dependency(link_with : ctc) }
+langs += { 'ctu': declare_dependency(link_with : ctc) }

@@ -1,5 +1,7 @@
 #include "cthulhu/util/report-ext.h"
 
+#include "cthulhu/util/str.h"
+
 message_t *report_shadow(reports_t *reports, const char *name, const node_t *shadowed, const node_t *shadowing)
 {
     message_t *id = report(reports, ERROR, shadowing, "redefinition of `%s`", name);

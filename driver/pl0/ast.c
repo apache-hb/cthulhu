@@ -1,5 +1,7 @@
 #include "ast.h"
 
+#include "cthulhu/util/util.h"
+
 pl0_t *pl0_new(scan_t *scan, where_t where, pl0_type_t type)
 {
     pl0_t *node = ctu_malloc(sizeof(pl0_t));

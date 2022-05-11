@@ -1,6 +1,5 @@
 #pragma once
 
-#include "cthulhu/util/macros.h"
 #include "scan.h"
 
 /**

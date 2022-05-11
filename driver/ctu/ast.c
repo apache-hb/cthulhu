@@ -1,5 +1,7 @@
 #include "ast.h"
 
+#include "cthulhu/util/util.h"
+
 static const where_t kNowhere = {0, 0, 0, 0};
 
 static ast_t *ast_new(astof_t of, scan_t *scan, where_t where)

@@ -27,6 +27,11 @@ option('analyze', type : 'boolean',
     value : true
 )
 
+option('fuzzing', type : 'feature',
+    description : 'enable fuzzing support',
+    value : 'auto'
+)
+
 option('interfaces', type : 'array',
     description : 'select which frontend interfaces to enable',
     choices : [ 'cli', 'gui' ],

@@ -17,8 +17,7 @@ cmd = declare_dependency(
 )
 
 foreach name, lib : langs
-    interface = executable(name, 'interface/driver.c',
-        export_dynamic : true,
+    executable(name, 'interface/main.c',
         dependencies : [ cmd, lib ]
     )
 endforeach

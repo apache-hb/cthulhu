@@ -13,7 +13,7 @@ wrapper = library('imgui-wrapper', src,
 )
 
 foreach name, lib : langs
-    executable(name, 'interface/driver.c',
+    executable(name, 'interface/main.c',
         link_with : wrapper,
         dependencies : [ generic, lib, core, impl, glfw, glad ]
     )

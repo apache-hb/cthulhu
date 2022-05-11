@@ -6,7 +6,7 @@ typedef struct
     const char *symbol;
 } operand_name_t;
 
-static operand_name_t binary_operands[] = {
+static const operand_name_t kBinaryOperands[] = {
     [BINARY_ADD] = {"add", "+"},     [BINARY_SUB] = {"sub", "-"},  [BINARY_MUL] = {"mul", "*"},
     [BINARY_DIV] = {"div", "/"},     [BINARY_REM] = {"rem", "%"},
 
@@ -16,13 +16,13 @@ static operand_name_t binary_operands[] = {
     [BINARY_BITOR] = {"bitor", "|"}, [BINARY_XOR] = {"xor", "^"},
 };
 
-static operand_name_t compare_operands[] = {
+static const operand_name_t kCompareOperands[] = {
     [COMPARE_EQ] = {"eq", "=="}, [COMPARE_NEQ] = {"ne", "!="},
 
     [COMPARE_LT] = {"lt", "<"},  [COMPARE_LTE] = {"le", "<="}, [COMPARE_GT] = {"gt", ">"}, [COMPARE_GTE] = {"ge", ">="},
 };
 
-static operand_name_t unary_operands[] = {
+static const operand_name_t kUnaryOperands[] = {
     [UNARY_NEG] = {"neg", "-"},
     [UNARY_ABS] = {"abs", "abs"},
 
@@ -34,17 +34,17 @@ static operand_name_t unary_operands[] = {
 
 static operand_name_t binary_operand_name(binary_t op)
 {
-    return binary_operands[op];
+    return kBinaryOperands[op];
 }
 
 static operand_name_t compare_operand_name(compare_t op)
 {
-    return compare_operands[op];
+    return kCompareOperands[op];
 }
 
 static operand_name_t unary_operand_name(unary_t op)
 {
-    return unary_operands[op];
+    return kUnaryOperands[op];
 }
 
 // name accessors

@@ -12,4 +12,4 @@ pl0c = library('pl0c', src,
     install : true
 )
 
-langs += { 'pl0c': declare_dependency(link_with : pl0c) }
+langs += { 'pl0': declare_dependency(link_with : pl0c) }

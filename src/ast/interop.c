@@ -1,5 +1,4 @@
 #include "cthulhu/util/macros.h"
-#include "cthulhu/util/util.h"
 
 #include <string.h>
 

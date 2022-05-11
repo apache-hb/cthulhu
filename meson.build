@@ -202,6 +202,23 @@ if tuning
     )
 endif
 
+afl = find_program('afl-fuzz', required : get_option('fuzzing'))
+
+if afl.found()
+    subdir('tests/fuzzing')
+
+    foreach lang, interface : fuzzers
+        here = meson.current_source_dir()
+        input = here/'tests/driver'/lang/'fuzzing-input'
+        cmd = [ afl, '-i', input, '-o', 'fuzz-out-' + lang, '-m', 'none', '-d', '--', interface.full_path(), '@@']
+        run_target('fuzz-' + lang, 
+            command : cmd,
+            depends : interface,
+            env : { 'AFL_CRASH_EXITCODE': '99' }
+        )
+    endforeach
+endif
+
 doxygen = find_program('doxygen', required : get_option('doxygen'))
 
 if doxygen.found()

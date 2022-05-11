@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "cthulhu/ast/ast.h"
 #include "cthulhu/ast/ops.h"
 #include "cthulhu/util/vector.h"

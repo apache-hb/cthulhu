@@ -8,6 +8,7 @@
 #include "cthulhu/hlir/type.h"
 #include "cthulhu/interface/runtime.h"
 #include "cthulhu/report/report-ext.h"
+#include "cthulhu/util/str.h"
 
 static hlir_t *kIntegerType;
 static hlir_t *kBoolType;

@@ -1,5 +1,5 @@
 dir = meson.current_source_dir()
-ctc = harness['ctc']
+ctc = harness['ctu']
 
 tests = {
     'types.alias': {
