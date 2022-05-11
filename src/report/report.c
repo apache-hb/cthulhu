@@ -641,6 +641,6 @@ void logverbose(const char *fmt, ...)
     va_start(args, fmt);
     fprintf(stderr, "%s: %s\n", report_level(NOTE), formatv(fmt, args));
     va_end(args);
-    
+
     fflush(stderr);
 }

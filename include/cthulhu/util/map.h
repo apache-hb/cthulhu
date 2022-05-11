@@ -1,8 +1,8 @@
 #pragma once
 
 #include "vector.h"
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 /**
  * a bucket in a hashmap
@@ -100,7 +100,7 @@ typedef struct
 {
     map_t *map;
     size_t index;
-    
+
     bucket_t *bucket;
     bucket_t *next;
 } map_iter_t;

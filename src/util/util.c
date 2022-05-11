@@ -1,9 +1,9 @@
 #define _POSIX_SOURCE
 
 #include "cthulhu/util/util.h"
+#include "cthulhu/report/report.h"
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/map.h"
-#include "cthulhu/report/report.h"
 #include "cthulhu/util/str.h"
 
 #include <gmp.h>

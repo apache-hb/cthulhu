@@ -48,7 +48,12 @@ ninja -C build test # build and run tests
   * `cjson` - json serialization + deserialization library
   * `mini-gmp` - fallback gmp library if system gmp isnt installed
 
-* `tests` - langauge tests
+* `tests` - tests
+  * `driver` - language specific tests
+  * `interface` - interface specific tests
+  * `unit-tests` - compiler code unit tests
+  * `harness` - language test harness interface
+  * `fuzzing` - fuzzing interface
 
 * `tools` - tools
   * `create-lambda` - create a lambda from a function

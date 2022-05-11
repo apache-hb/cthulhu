@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cthulhu/util/map.h"
 #include "cthulhu/report/report.h"
+#include "cthulhu/util/map.h"
 #include "hlir.h"
 
 typedef struct sema_t

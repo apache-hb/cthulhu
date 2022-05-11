@@ -137,7 +137,7 @@ int main(int argc, const char **argv)
     }
 
     stream_t *stream = c89_emit_modules(reports, allModules);
-    
+
     file_write(out, stream_data(stream), stream_len(stream), &error);
 
     file_close(out);

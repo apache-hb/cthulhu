@@ -206,10 +206,7 @@ static bucket_t *get_next_bucket(map_t *map, size_t *index, bucket_t *bucket)
             result = &map->data[*index++];
         }
 
-        if (
-            (result != NULL && result->key != NULL)
-            || *index > map->size
-        )
+        if ((result != NULL && result->key != NULL) || *index > map->size)
         {
             break;
         }

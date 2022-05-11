@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cthulhu/util/file.h"
 #include "cthulhu/report/report.h"
+#include "cthulhu/util/file.h"
 #include "scan.h"
 
 #include <stdio.h>

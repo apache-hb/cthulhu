@@ -4,14 +4,14 @@
 
 #include "cthulhu/report/report.h"
 
-static void framebuffer_size(GLFWwindow *window, int width, int height) 
+static void framebuffer_size(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
 
-static void error_callback(int error, const char *description) 
+static void error_callback(int error, const char *description)
 {
-    fprintf(stderr,"GLFW error: %s", description);
+    fprintf(stderr, "GLFW error: %s", description);
 }
 
 int main()
@@ -56,9 +56,9 @@ int main()
 
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        
+
         imgui_render(ctx);
-    	
+
         glfwSwapBuffers(window);
     }
 
