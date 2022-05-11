@@ -189,6 +189,66 @@ void *map_get_default_ptr(map_t *map, const void *key, void *other)
     return entry_get_ptr(bucket, key, other);
 }
 
+static bucket_t *get_next_bucket(map_t *map, size_t *index, bucket_t *bucket)
+{
+    bucket_t *result = NULL;
+
+    while (true)
+    {
+        if (bucket->next != NULL)
+        {
+            // if the chain has a bucket use that
+            result = bucket->next;
+        }
+        else if (*index <= map->size)
+        {
+            // otherwise go to the next element in the map if there is one
+            result = &map->data[*index++];
+        }
+
+        if (
+            (result != NULL && result->key != NULL)
+            || *index > map->size
+        )
+        {
+            break;
+        }
+    }
+
+    return result;
+}
+
+map_iter_t map_iter(map_t *map)
+{
+    map_iter_t iter = {
+        .map = map,
+        .index = 0,
+        .bucket = &map->data[0],
+    };
+
+    iter.next = get_next_bucket(map, &iter.index, iter.bucket);
+
+    return iter;
+}
+
+map_entry_t map_next(map_iter_t *iter)
+{
+    map_entry_t entry = {
+        .key = iter->bucket->key,
+        .value = iter->bucket->value,
+    };
+
+    iter->bucket = iter->next;
+    iter->next = get_next_bucket(iter->map, &iter->index, iter->bucket);
+
+    return entry;
+}
+
+bool map_has_next(map_iter_t *iter)
+{
+    return iter->next != NULL;
+}
+
 void map_reset(map_t *map)
 {
     clear_keys(map->data, map->size);
