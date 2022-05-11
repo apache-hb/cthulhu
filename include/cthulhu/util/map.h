@@ -2,6 +2,7 @@
 
 #include "vector.h"
 #include <stddef.h>
+#include <stdbool.h>
 
 /**
  * a bucket in a hashmap
@@ -88,5 +89,26 @@ void *map_get_default_ptr(map_t *map, const void *key, void *other);
  * @return a vector containing all the values
  */
 vector_t *map_values(map_t *map);
+
+typedef struct
+{
+    const void *key;
+    void *value;
+} map_entry_t;
+
+typedef struct
+{
+    map_t *map;
+    size_t index;
+    
+    bucket_t *bucket;
+    bucket_t *next;
+} map_iter_t;
+
+map_iter_t map_iter(map_t *map);
+
+map_entry_t map_next(map_iter_t *iter);
+
+bool map_has_next(map_iter_t *iter);
 
 void map_reset(map_t *map);
