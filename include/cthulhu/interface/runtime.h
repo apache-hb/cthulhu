@@ -46,8 +46,8 @@
  *
  * @param runtime the runtime to take the module from
  * @param path the name of the module
- * @return hlir_t* a module if one was found otherwise NULL
+ * @return sema_t* a module if one was found otherwise NULL
  */
-hlir_t *find_module(runtime_t *runtime, const char *path);
+sema_t *find_module(runtime_t *runtime, const char *path);
 
-void add_module(runtime_t *runtime, hlir_t *hlir);
+void add_module(runtime_t *runtime, const char *name, sema_t *sema);

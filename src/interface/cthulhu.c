@@ -1,4 +1,5 @@
 #include "cthulhu/ast/compile.h"
+#include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/interface/interface.h"
 #include "cthulhu/interface/runtime.h"
@@ -176,7 +177,7 @@ int cthulhu_forward(cthulhu_t *cthulhu)
         hlir_t *hlir = ctx->hlir;
 
         rename_module(hlir, source->path);
-        add_module(&cthulhu->runtime, hlir);
+        add_module(&cthulhu->runtime, get_hlir_name(hlir), ctx->sema);
     }
 
     return report_errors(cthulhu, "forwarding declarations");

@@ -10,13 +10,12 @@ void common_init(void)
     init_hlir();
 }
 
-hlir_t *find_module(runtime_t *runtime, const char *path)
+sema_t *find_module(runtime_t *runtime, const char *path)
 {
     return map_get(runtime->modules, path);
 }
 
-void add_module(runtime_t *runtime, hlir_t *hlir)
+void add_module(runtime_t *runtime, const char *name, sema_t *sema)
 {
-    logverbose("adding module `%s`", get_hlir_name(hlir));
-    map_set(runtime->modules, get_hlir_name(hlir), hlir);
+    map_set(runtime->modules, name, sema);
 }

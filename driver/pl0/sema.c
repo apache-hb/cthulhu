@@ -342,14 +342,10 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
 }
 
 static void insert_module(sema_t *sema, vector_t **globals, vector_t **consts, vector_t **procs, pl0_t *name,
-                          hlir_t *hlir)
+                          sema_t *hlir)
 {
-    if (!hlir_is(hlir, HLIR_MODULE))
-    {
-        report(sema->reports, ERROR, name->node, "cannot load corrupted module `%s`", name->ident);
-        return;
-    }
-
+    // TODO: reimplement
+#if 0
     size_t nglobals = vector_len(hlir->globals);
     size_t nprocs = vector_len(hlir->functions);
 
@@ -381,6 +377,7 @@ static void insert_module(sema_t *sema, vector_t **globals, vector_t **consts, v
         set_proc(sema, get_hlir_name(proc), proc);
         vector_push(procs, proc);
     }
+#endif
 }
 
 typedef struct
@@ -477,14 +474,13 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
     pl0_t *root = compile->ast;
     sema_t *sema = compile->sema;
     sema_data_t *semaData = sema_get_data(sema);
-    hlir_t *self = compile->hlir;
 
     size_t totalImports = vector_len(root->imports);
     for (size_t i = 0; i < totalImports; i++)
     {
         pl0_t *importDecl = vector_get(root->imports, i);
         const char *pathToImport = importDecl->ident;
-        hlir_t *lib = find_module(runtime, pathToImport);
+        sema_t *lib = find_module(runtime, pathToImport);
 
         if (lib == NULL)
         {
@@ -492,7 +488,7 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
             continue;
         }
 
-        if (lib == self)
+        if (lib == sema)
         {
             report(sema->reports, ERROR, importDecl->node, "module cannot import itself");
             continue;

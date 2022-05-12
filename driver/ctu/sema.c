@@ -12,10 +12,10 @@
 
 typedef enum
 {
-    TAG_VARS,    // hlir_t*
-    TAG_PROCS,   // hlir_t*
-    TAG_TYPES,   // hlir_t*
-    TAG_MODULES, // sema_t*
+    TAG_VARS,       // hlir_t*
+    TAG_PROCS,      // hlir_t*
+    TAG_TYPES,      // hlir_t*
+    TAG_MODULES,    // sema_t*
     TAG_NAMESPACES, // sema_t*
 
     TAG_MAX
@@ -37,14 +37,23 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast);
 static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
 {
     size_t len = vector_len(ast->path);
-    if (len > 1)
+    sema_t *current = sema;
+    for (size_t i = 0; i < len - 1; i++)
     {
-        ctu_assert(sema->reports, "typename path can only be 1 element long currently");
-        return hlir_error(ast->node, "typename path can only be 1 element long currently");
+        const char *name = vector_get(ast->path, i);
+        sema_t *next = sema_get(current, TAG_NAMESPACES, name);
+
+        if (next == NULL)
+        {
+            report(sema->reports, ERROR, ast->node, "unknown namespace `%s`", name);
+            return hlir_error(ast->node, "unknown namespace");
+        }
+
+        current = next;
     }
 
     const char *name = vector_tail(ast->path);
-    hlir_t *decl = sema_get(sema, TAG_TYPES, name);
+    hlir_t *decl = sema_get(current, TAG_TYPES, name);
     if (decl == NULL)
     {
         report(sema->reports, ERROR, ast->node, "type '%s' not found", name);
@@ -345,14 +354,15 @@ static char *make_import_name(vector_t *vec)
     return str_join(".", vec);
 }
 
-static void import_namespaced_decls(sema_t *sema, ast_t *import, hlir_t *mod)
+static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
 {
     const char *name = vector_tail(import->path);
-    hlir_t *previous = sema_get(sema, TAG_NAMESPACES, name);
+    sema_t *previous = sema_get(sema, TAG_NAMESPACES, name);
 
     if (previous != NULL)
     {
-        message_t *id = report(sema->reports, ERROR, import->node, "a module was already imported under the name `%s`", name);
+        message_t *id =
+            report(sema->reports, ERROR, import->node, "a module was already imported under the name `%s`", name);
         report_note(id, "use module aliases to avoid name collisions");
         return;
     }
@@ -419,14 +429,14 @@ void ctu_process_imports(runtime_t *runtime, compile_t *compile)
         ast_t *import = vector_get(imports, i);
         char *name = make_import_name(import->path);
 
-        hlir_t *mod = find_module(runtime, name);
+        sema_t *mod = find_module(runtime, name);
         if (mod == NULL)
         {
             report(runtime->reports, ERROR, import->node, "module '%s' not found", name);
             continue;
         }
 
-        if (mod == compile->hlir)
+        if (mod == sema)
         {
             report(runtime->reports, WARNING, import->node, "module cannot import itself");
             continue;
