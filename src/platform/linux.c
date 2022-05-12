@@ -106,6 +106,12 @@ const void *native_file_map(file_handle_t handle, native_cerror_t *error)
         return NULL;
     }
 
+    // technically valid for our uses
+    if (size == 0)
+    {
+        return "";
+    }
+
     int fd = fileno(handle);
     void *ptr = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
 

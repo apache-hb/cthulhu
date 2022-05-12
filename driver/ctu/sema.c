@@ -16,6 +16,7 @@ typedef enum
     TAG_PROCS,   // hlir_t*
     TAG_TYPES,   // hlir_t*
     TAG_MODULES, // sema_t*
+    TAG_NAMESPACES, // sema_t*
 
     TAG_MAX
 } tag_t;
@@ -339,6 +340,26 @@ static void add_basic_types(sema_t *sema)
     // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", DIGIT_INT, SIGN_SIGNED));
 }
 
+static char *make_import_name(vector_t *vec)
+{
+    return str_join(".", vec);
+}
+
+static void import_namespaced_decls(sema_t *sema, ast_t *import, hlir_t *mod)
+{
+    const char *name = vector_tail(import->path);
+    hlir_t *previous = sema_get(sema, TAG_NAMESPACES, name);
+
+    if (previous != NULL)
+    {
+        message_t *id = report(sema->reports, ERROR, import->node, "a module was already imported under the name `%s`", name);
+        report_note(id, "use module aliases to avoid name collisions");
+        return;
+    }
+
+    sema_set(sema, TAG_NAMESPACES, name, mod);
+}
+
 void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
 {
     ast_t *root = compile->ast;
@@ -349,6 +370,7 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
         [TAG_PROCS] = totalDecls,
         [TAG_TYPES] = totalDecls,
         [TAG_MODULES] = totalDecls,
+        [TAG_NAMESPACES] = vector_len(root->imports),
     };
 
     sema_t *sema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
@@ -356,7 +378,8 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
     char *name = NULL;
     if (root->modspec != NULL)
     {
-        name = str_join(".", root->modspec->path);
+        name = make_import_name(root->modspec->path);
+        logverbose("name `%s`", name);
     }
 
     hlir_t *mod = hlir_module(root->node, name, vector_of(0), vector_of(0), vector_of(0));
@@ -385,8 +408,32 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
 
 void ctu_process_imports(runtime_t *runtime, compile_t *compile)
 {
-    UNUSED(runtime);
-    UNUSED(compile);
+    ast_t *root = compile->ast;
+    sema_t *sema = compile->sema;
+
+    vector_t *imports = root->imports;
+    size_t totalImports = vector_len(imports);
+
+    for (size_t i = 0; i < totalImports; i++)
+    {
+        ast_t *import = vector_get(imports, i);
+        char *name = make_import_name(import->path);
+
+        hlir_t *mod = find_module(runtime, name);
+        if (mod == NULL)
+        {
+            report(runtime->reports, ERROR, import->node, "module '%s' not found", name);
+            continue;
+        }
+
+        if (mod == compile->hlir)
+        {
+            report(runtime->reports, WARNING, import->node, "module cannot import itself");
+            continue;
+        }
+
+        import_namespaced_decls(sema, import, mod);
+    }
 }
 
 void ctu_compile_module(runtime_t *runtime, compile_t *compile)

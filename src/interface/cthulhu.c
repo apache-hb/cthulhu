@@ -23,7 +23,12 @@ static void rename_module(hlir_t *hlir, const char *path)
     {
         return;
     }
+
     hlir->name = str_filename(path);
+
+    logverbose("path %s", path);
+    logverbose("filename %s", str_filename(path));
+    logverbose("renamed module to `%s`", hlir->name);
 }
 
 static runtime_t runtime_new(reports_t *reports, size_t size)
@@ -166,11 +171,11 @@ int cthulhu_forward(cthulhu_t *cthulhu)
 
     for (size_t i = 0; i < totalSources; i++)
     {
-        const char *path = vector_get(cthulhu->sources, i);
+        source_t *source = vector_get(cthulhu->sources, i);
         compile_t *ctx = vector_get(cthulhu->compiles, i);
         hlir_t *hlir = ctx->hlir;
 
-        rename_module(hlir, path);
+        rename_module(hlir, source->path);
         add_module(&cthulhu->runtime, hlir);
     }
 

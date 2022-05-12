@@ -1,10 +1,10 @@
 #pragma once
 
-#include <gmp.h>
-
 #include "cthulhu/ast/ast.h"
 #include "cthulhu/ast/ops.h"
 #include "cthulhu/util/vector.h"
+
+#include <gmp.h>
 
 #include <stdbool.h>
 

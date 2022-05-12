@@ -70,6 +70,21 @@ tests = {
     }
 }
 
+cases = {
+    'imports': {
+        'fails': {
+            'missing-import': [ 'main' ],
+            'duplicate-name': [ 'main', 'lib', 'subdir/lib' ],
+            'duplicate-import': [ 'main', 'lib' ]
+        },
+        'passes': { 
+            'no-imports': [ 'main' ],
+            'single-import': [ 'main', 'lib' ],
+            'circular-import': [ 'main', 'left', 'right' ]
+        }
+    }
+}
+
 foreach case, tests : tests
     passes = tests['pass']
     fails = tests['fail']
@@ -90,6 +105,40 @@ foreach case, tests : tests
             args : [ path ],
             suite : 'ctu',
             should_fail : true
+        )
+    endforeach
+endforeach
+
+foreach name, data : cases
+    fails = data['fails']
+    passes = data['passes']
+
+    foreach id, src : fails
+        root = dir/name/'fail'/id
+        sources = []
+
+        foreach file : src
+            sources += [ root/file + '.ct' ]
+        endforeach
+
+        test('fail-' + name + '-' + id, ctc,
+            args : sources,
+            suite : 'ctu',
+            should_fail : true
+        )
+    endforeach
+
+    foreach id, src : passes
+        root = dir/name/'pass'/id
+        sources = []
+
+        foreach file : src
+            sources += [ root/file + '.ct' ]
+        endforeach
+
+        test('pass-' + name + '-' + id, ctc,
+            args : sources,
+            suite : 'ctu'
         )
     endforeach
 endforeach

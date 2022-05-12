@@ -188,7 +188,7 @@ importlist: import { $$ = vector_init($1); }
 import: IMPORT path SEMICOLON { $$ = ast_import(x, @$, $2); }
     ;
 
-decls: %empty { $$ = NULL; }
+decls: %empty { $$ = vector_new(0); }
     | decllist { $$ = $1; }
     ;
 
