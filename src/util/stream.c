@@ -15,6 +15,13 @@ stream_t *stream_new(size_t size)
     return out;
 }
 
+stream_t *stream_of(const char *str)
+{
+    stream_t *out = stream_new(strlen(str));
+    stream_write(out, str);
+    return out;
+}
+
 void stream_delete(stream_t *stream)
 {
     ctu_free(stream->data);

@@ -383,13 +383,10 @@ size_t str_find(const char *str, const char *sub)
     return SIZE_MAX;
 }
 
-size_t str_rfind(const char *str, const char *sub)
+static size_t str_rfind_inner(const char *str, size_t len, const char *sub, size_t sublen)
 {
-    size_t len = strlen(str);
-    size_t sublen = strlen(sub);
-
-    CTASSERT(len > 0, "str must not be empty");
-    CTASSERT(sublen > 0, "sub must not be empty");
+    CTASSERT(len > 0, "str must be non-empty");
+    CTASSERT(sublen > 0, "sub must be non-empty");
 
     while (len--)
     {
@@ -400,6 +397,21 @@ size_t str_rfind(const char *str, const char *sub)
     }
 
     return SIZE_MAX;
+}
+
+size_t str_rfind(const char *str, const char *sub)
+{
+    size_t len = strlen(str);
+    size_t sublen = strlen(sub);
+
+    return str_rfind_inner(str, len, sub, sublen);
+}
+
+size_t str_rfindn(const char *str, size_t len, const char *sub)
+{
+    size_t sublen = strlen(sub);
+
+    return str_rfind_inner(str, len, sub, sublen);
 }
 
 static bool char_is_any_of(char c, const char *chars)
