@@ -195,18 +195,18 @@ static bucket_t *get_next_bucket(map_t *map, size_t *index, bucket_t *bucket)
 
     while (true)
     {
-        if (bucket->next != NULL)
+        if (bucket && bucket->next != NULL)
         {
             // if the chain has a bucket use that
             result = bucket->next;
         }
-        else if (*index <= map->size)
+        else if (*index < map->size)
         {
             // otherwise go to the next element in the map if there is one
-            result = &map->data[*index++];
+            result = &map->data[(*index)++];
         }
 
-        if ((result != NULL && result->key != NULL) || *index > map->size)
+        if ((result != NULL && result->key != NULL) || *index >= map->size)
         {
             break;
         }
@@ -220,9 +220,9 @@ map_iter_t map_iter(map_t *map)
     map_iter_t iter = {
         .map = map,
         .index = 0,
-        .bucket = &map->data[0],
     };
 
+    iter.bucket = get_next_bucket(map, &iter.index, NULL);
     iter.next = get_next_bucket(map, &iter.index, iter.bucket);
 
     return iter;
@@ -243,7 +243,7 @@ map_entry_t map_next(map_iter_t *iter)
 
 bool map_has_next(map_iter_t *iter)
 {
-    return iter->next != NULL;
+    return iter->bucket != NULL && iter->next != NULL;
 }
 
 void map_reset(map_t *map)

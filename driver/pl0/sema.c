@@ -341,43 +341,29 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
     hlir_build_function(hlir, body);
 }
 
-static void insert_module(sema_t *sema, vector_t **globals, vector_t **consts, vector_t **procs, pl0_t *name,
-                          sema_t *hlir)
+static void insert_module(sema_t *sema, sema_t *other)
 {
-    // TODO: reimplement
-#if 0
-    size_t nglobals = vector_len(hlir->globals);
-    size_t nprocs = vector_len(hlir->functions);
+    map_iter_t otherValues = map_iter(sema_tag(other, TAG_VALUES));
+    map_iter_t otherConsts = map_iter(sema_tag(other, TAG_CONSTS));
+    map_iter_t otherProcs = map_iter(sema_tag(other, TAG_PROCS));
 
-    for (size_t i = 0; i < nglobals; i++)
+    while (map_has_next(&otherValues))
     {
-        hlir_t *global = vector_get(hlir->globals, i);
-        const hlir_attributes_t *attribs = get_hlir_attributes(global);
-        vector_t **dst;
-        tag_t tag;
-
-        if (attribs->tags & TAG_CONST)
-        {
-            dst = consts;
-            tag = TAG_CONSTS;
-        }
-        else
-        {
-            dst = globals;
-            tag = TAG_VALUES;
-        }
-
-        set_var(sema, tag, get_hlir_name(global), global);
-        vector_push(dst, global);
+        hlir_t *decl = map_next(&otherValues).value;
+        set_var(sema, TAG_VALUES, get_hlir_name(decl), decl);
     }
 
-    for (size_t i = 0; i < nprocs; i++)
+    while (map_has_next(&otherConsts))
     {
-        hlir_t *proc = vector_get(hlir->functions, i);
-        set_proc(sema, get_hlir_name(proc), proc);
-        vector_push(procs, proc);
+        hlir_t *decl = map_next(&otherConsts).value;
+        set_var(sema, TAG_CONSTS, get_hlir_name(decl), decl);
     }
-#endif
+
+    while (map_has_next(&otherProcs))
+    {
+        hlir_t *decl = map_next(&otherProcs).value;
+        set_var(sema, TAG_PROCS, get_hlir_name(decl), decl);
+    }
 }
 
 typedef struct
@@ -473,7 +459,6 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
 {
     pl0_t *root = compile->ast;
     sema_t *sema = compile->sema;
-    sema_data_t *semaData = sema_get_data(sema);
 
     size_t totalImports = vector_len(root->imports);
     for (size_t i = 0; i < totalImports; i++)
@@ -494,10 +479,8 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
             continue;
         }
 
-        insert_module(sema, &semaData->globals, &semaData->consts, &semaData->procs, importDecl, lib);
+        insert_module(sema, lib);
     }
-
-    hlir_update_module(self, self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
 }
 
 void pl0_compile_module(runtime_t *runtime, compile_t *compile)
