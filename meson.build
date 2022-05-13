@@ -5,6 +5,8 @@ project('cthulhu', [ 'c', 'cpp' ],
     default_options : [
         'c_std=gnu11',
         'cpp_std=c++17',
+        'cpp_eh=none',
+        'cpp_rtti=false',
         'warning_level=2', # we use unnamed structs
         'default_library=static',
         'werror=true'
