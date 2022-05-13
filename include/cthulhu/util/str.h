@@ -192,4 +192,6 @@ bool str_equal(const char *lhs, const char *rhs);
 char *str_filename(const char *path);
 char *str_noext(const char *path);
 
+#define STR_WHITESPACE " \t\n\r"
+
 /** @} */
