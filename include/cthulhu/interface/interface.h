@@ -5,6 +5,7 @@
 #include "cthulhu/report/report.h"
 #include "cthulhu/util/file.h"
 #include "cthulhu/util/version-def.h"
+#include "cthulhu/util/alloc.h"
 
 ///
 /// code required by interfaces
@@ -69,6 +70,7 @@ typedef struct
 typedef struct
 {
     report_config_t reportConfig;
+    alloc_config_t allocConfig;
 } config_t;
 
 typedef struct

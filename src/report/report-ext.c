@@ -11,7 +11,7 @@ message_t *report_shadow(reports_t *reports, const char *name, const node_t *sha
 
 message_t *report_unknown_character(reports_t *reports, const node_t *node, const char *str)
 {
-    where_t where = node->where;
+    where_t where = get_node_location(node);
 
     column_t width = where.lastColumn - where.firstColumn;
     char *normal = str_normalizen(str, MAX(width, 1));

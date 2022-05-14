@@ -13,8 +13,19 @@ int main(int argc, const char **argv)
         vector_set(sources, i - 1, source);
     }
 
-    report_config_t reportConfig = {.limit = 20, .warningsAreErrors = false,};
-    config_t config = {.reportConfig = reportConfig};
+    report_config_t reportConfig = {
+        .limit = 20, 
+        .warningsAreErrors = false,
+    };
+
+    alloc_config_t allocConfig = {
+        .nothing = NULL,
+    };
+
+    config_t config = {
+        .reportConfig = reportConfig,
+        .allocConfig = allocConfig,
+    };
 
     cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
 

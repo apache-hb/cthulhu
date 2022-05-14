@@ -5,6 +5,9 @@
 
 int main(int argc, const char **argv)
 {
+    UNUSED(argc);
+    UNUSED(argv);
+    
     common_init();
 
     driver_t driver = get_driver();
@@ -13,7 +16,11 @@ int main(int argc, const char **argv)
 
     report_config_t reportConfig = {
         .limit = 100,
-        .warningsAreErrors = false
+        .warningsAreErrors = false,
+    };
+
+    alloc_config_t allocConfig = {
+        .nothing = NULL,
     };
 
     verbose = true;
@@ -23,7 +30,10 @@ int main(int argc, const char **argv)
     source_t *src = source_file(argv[1]);
     vector_t *sources = vector_init(src);
 
-    config_t config = {.reportConfig = reportConfig};
+    config_t config = {
+        .reportConfig = reportConfig,
+        .allocConfig = allocConfig,
+    };
 
     cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
 

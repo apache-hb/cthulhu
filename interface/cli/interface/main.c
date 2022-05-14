@@ -72,6 +72,10 @@ int main(int argc, const char **argv)
         .warningsAreErrors = commands.warningsAsErrors,
     };
 
+    alloc_config_t allocConfig = {
+        .nothing = NULL
+    };
+
     verbose = commands.verboseLogging;
     logverbose("setup verbose logging");
 
@@ -105,7 +109,10 @@ int main(int argc, const char **argv)
         return status;
     }
 
-    config_t config = {.reportConfig = reportConfig};
+    config_t config = {
+        .reportConfig = reportConfig,
+        .allocConfig = allocConfig,
+    };
 
     cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
 

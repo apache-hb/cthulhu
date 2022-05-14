@@ -53,7 +53,7 @@
 #    define FILE_POS_TYPE DWORD
 #    define FILE_READ_TYPE DWORD
 #    define FILE_WRITE_TYPE DWORD
-#    define cerror_tYPE DWORD
+#    define CERROR_TYPE DWORD
 #else
 #    include <dlfcn.h>
 #    include <stdio.h>
@@ -65,7 +65,7 @@
 #    define FILE_POS_TYPE size_t
 #    define FILE_READ_TYPE size_t
 #    define FILE_WRITE_TYPE size_t
-#    define cerror_tYPE int
+#    define CERROR_TYPE int
 #endif
 
 #include "cthulhu/util/macros.h"
@@ -74,7 +74,7 @@
 
 typedef LIBRARY_HANDLE_TYPE library_handle_t;
 typedef FILE_HANDLE_TYPE file_handle_t;
-typedef cerror_tYPE native_cerror_t;
+typedef CERROR_TYPE native_cerror_t;
 typedef FILE_SIZE_TYPE file_size_t;
 typedef FILE_POS_TYPE file_pos_t;
 typedef FILE_READ_TYPE file_read_t;

@@ -13,7 +13,7 @@ hlir_t *kInvalidNode = NULL;
 
 hlir_t *hlir_new(const node_t *node, const hlir_t *of, hlir_kind_t kind)
 {
-    CTASSERTF(node != NULL, "hlir location for %s must be non-NULL", hlir_kind_to_string(kind));
+    CTASSERTF(node != node_invalid(), "hlir location for %s must be valid", hlir_kind_to_string(kind));
 
     hlir_t *self = ctu_malloc(sizeof(hlir_t));
     self->type = kind;

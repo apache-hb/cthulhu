@@ -2,6 +2,8 @@
 
 #include "scan.h"
 
+#include <stdbool.h>
+
 /**
  * @defgroup LocationTracking AST location tracking
  * @brief AST source position tracking
@@ -16,6 +18,9 @@ typedef struct
     scan_t *scan;  ///< the source file
     where_t where; ///< the location of this node in the source file
 } node_t;
+
+const scan_t *get_node_scanner(const node_t *node);
+where_t get_node_location(const node_t *node);
 
 /**
  * @brief create a new node in a given file at a given location
@@ -35,5 +40,7 @@ node_t *node_new(scan_t *scan, where_t where);
  * @return the builtin node
  */
 const node_t *node_builtin(void);
+
+const node_t *node_invalid(void);
 
 /** @} */

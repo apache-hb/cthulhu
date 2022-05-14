@@ -9,7 +9,8 @@ project('cthulhu', [ 'c', 'cpp' ],
         'cpp_rtti=false',
         'warning_level=2', # we use unnamed structs
         'default_library=static',
-        'werror=true'
+        'werror=true',
+        'b_lto=true'
     ]
 )
 

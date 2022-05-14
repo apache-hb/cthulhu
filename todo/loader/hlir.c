@@ -996,13 +996,16 @@ static index_t save_span(hlir_save_t *data, const node_t *node)
         return NULL_INDEX;
     }
 
-    index_t scan = save_scan(data, node->scan);
+    scan_t *scanner = get_node_scanner(node);
+    index_t scan = save_scan(data, scanner);
+
+    where_t where = get_node_location(node);
 
     value_t values[FIELDLEN(kNodeFields)] = {
-        [NODE_FIRST_LINE] = int_value((long)node->where.firstLine),
-        [NODE_FIRST_COLUMN] = int_value((long)node->where.firstColumn),
-        [NODE_LAST_LINE] = int_value((long)node->where.lastLine),
-        [NODE_LAST_COLUMN] = int_value((long)node->where.lastColumn),
+        [NODE_FIRST_LINE] = int_value((long)where.firstLine),
+        [NODE_FIRST_COLUMN] = int_value((long)where.firstColumn),
+        [NODE_LAST_LINE] = int_value((long)where.lastLine),
+        [NODE_LAST_COLUMN] = int_value((long)where.lastColumn),
         [NODE_SCAN] = reference_value(scan),
     };
 

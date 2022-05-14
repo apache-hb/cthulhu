@@ -72,8 +72,8 @@ static char *format_location(const char *base, const scan_t *scan, where_t where
 
 static void report_scanner(const char *base, const node_t *node)
 {
-    const scan_t *scan = node->scan;
-    where_t where = node->where;
+    const scan_t *scan = get_node_scanner(node);
+    where_t where = get_node_location(node);
     fprintf(stderr, " => %s\n", format_location(base, scan, where));
 }
 
@@ -229,12 +229,15 @@ static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts)
     {
         part_t *part = vector_get(parts, i);
 
-        if (part->node->scan != scan)
+        const scan_t *self = get_node_scanner(part->node);
+
+        if (self != scan)
         {
             continue;
         }
 
-        len = MAX(len, base10_length(part->node->where.firstLine + 1));
+        where_t where = get_node_location(part->node);
+        len = MAX(len, base10_length(where.firstLine + 1));
     }
 
     return len;
@@ -377,8 +380,8 @@ static void report_source(message_t *message)
         return;
     }
 
-    const scan_t *scan = node->scan;
-    where_t where = node->where;
+    const scan_t *scan = get_node_scanner(node);
+    where_t where = get_node_location(node);
 
     fprintf(stderr, "%s", format_source(scan, where, message->underline));
 }
@@ -388,15 +391,15 @@ static void report_part(const char *base, message_t *message, part_t *part)
     char *msg = part->message;
 
     const node_t *node = part->node;
-    const scan_t *scan = node->scan;
-    where_t where = node->where;
+    const scan_t *scan = get_node_scanner(node);
+    where_t where = get_node_location(node);
 
     line_t start = where.firstLine;
 
     size_t longest = longest_line(scan, start + 1, message->parts);
     char *pad = padding(longest);
 
-    if (message->node->scan != scan)
+    if (get_node_scanner(message->node) != scan)
     {
         report_scanner(base, part->node);
     }
@@ -455,7 +458,8 @@ static const char *paths_base(vector_t *messages)
         message_t *message = vector_get(messages, i);
         if (is_valid_node(message->node))
         {
-            vector_push(&result, (char *)message->node->scan->path);
+            const scan_t *scan = get_node_scanner(message->node);
+            vector_push(&result, (char *)scan->path);
         }
 
         vector_t *parts = message->parts;
@@ -464,7 +468,8 @@ static const char *paths_base(vector_t *messages)
             part_t *part = vector_get(parts, j);
             if (is_valid_node(part->node))
             {
-                vector_push(&result, (char *)part->node->scan->path);
+                const scan_t *scan = get_node_scanner(message->node);
+                vector_push(&result, (char *)scan->path);
             }
         }
     }
