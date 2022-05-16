@@ -2,6 +2,7 @@
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/util.h"
 
+NODISCARD
 static size_t set_size(size_t size)
 {
     return sizeof(set_t) + (sizeof(item_t) * size);
@@ -29,6 +30,7 @@ static item_t *get_bucket_ptr(set_t *set, const void *key)
     return &set->items[index];
 }
 
+USE_DECL
 set_t *set_new(size_t size)
 {
     size_t bytes = set_size(size);
@@ -89,6 +91,7 @@ const char *set_add(set_t *set, const char *key)
     }
 }
 
+USE_DECL
 bool set_contains(set_t *set, const char *key)
 {
     item_t *item = get_bucket(set, key);
@@ -145,6 +148,7 @@ const void *set_add_ptr(set_t *set, const void *key)
     }
 }
 
+USE_DECL
 bool set_contains_ptr(set_t *set, const void *key)
 {
     item_t *item = get_bucket_ptr(set, key);

@@ -19,7 +19,7 @@ typedef struct item_t
 typedef struct
 {
     size_t size;    ///< the number of buckets
-    item_t items[]; ///< the buckets
+    FIELD_SIZE(size) item_t items[]; ///< the buckets
 } set_t;
 
 /**
@@ -28,6 +28,7 @@ typedef struct
  * @param size the number of buckets
  * @return the created set
  */
+NODISCARD
 set_t *set_new(size_t size);
 
 /**
@@ -53,9 +54,12 @@ const char *set_add(set_t *set, const char *key);
  * @param key the key to check
  * @return true if the set contains the key
  */
+NODISCARD
 bool set_contains(set_t *set, const char *key);
 
 const void *set_add_ptr(set_t *set, const void *key);
+
+NODISCARD
 bool set_contains_ptr(set_t *set, const void *key);
 
 void set_reset(set_t *set);

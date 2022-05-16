@@ -1,104 +1,10 @@
 #pragma once
 
-#ifdef __APPLE__
-#    error __APPLE__
-#endif
-
-#if __has_include(<sal.h>)
-#    include <sal.h>
-#    define DISABLE_SAL __pragma(warning(push, 1)) __pragma(warning(disable : 6011 6240 6262 6387 28199 28278))
-#    define FORMAT_STRING _Printf_format_string_
-#    define USE_DECL _Use_decl_annotations_
-#    define NODISCARD _Must_inspect_result_
-#elif __GNUC__ >= 11
-#    define FORMAT_ATTRIBUTE(a, b) __attribute__((format(printf, a, b)))
-#    define NODISCARD __attribute__((warn_unused_result))
-#endif
-
-#ifndef DISABLE_SAL
-#    define DISABLE_SAL
-#endif
-
-#ifndef FORMAT_STRING
-#    define FORMAT_STRING
-#endif
-
-#ifndef FORMAT_ATTRIBUTE
-#    define FORMAT_ATTRIBUTE(a, b)
-#endif
-
-#ifndef USE_DECL
-#    define USE_DECL
-#endif
-
-#ifndef NODISCARD
-#    define NODISCARD
-#endif
-
-/**
- * @defgroup Packing Struct packing macros
- * @brief cross compiler compatible struct packing macros
- *
- * the BEGIN_PACKED, END_PACKED, and PACKED macros are used to pack structs
- * sadly 3 different macros are needed because msvc only uses pragma(pack)
- * and clang only uses __attribute__((packed)), hence we need to use both.
- * could we please agree on a common way to do this?
- *
- * example usage
- * @code{.cpp}
- * #define PACKING_WIDTH 2
- * BEGIN_PACKED(PACKING_WIDTH)
- *
- * typedef struct PACKED(PACKING_WIDTH) {
- *   void *data;
- *   char field;
- * } my_packed_struct_t;
- *
- * END_PACKED
- * @endcode
- *
- * @{
- * @def BEGIN_PACKED(align) begin a struct packing area with @a align alignment
- * @def END_PACKED end a struct packing area
- * @def PACKED(align) mark a struct inside a packing area as packed to @a align
- * @}
- */
-
-#ifdef __cplusplus
-#    define NORETURN [[noreturn]] void
-#endif
-
-#if defined(__clang__)
-#    define BEGIN_PACKED(align)
-#    define END_PACKED()
-#    define PACKED(align) __attribute__((aligned(align), packed))
-#    ifndef NORETURN
-#        define NORETURN _Noreturn void
-#    endif
-#elif defined(__GNUC__)
-#    define BEGIN_PACKED(align)
-#    define END_PACKED()
-#    define PACKED(align) __attribute__((aligned(align), packed))
-#    ifndef NORETURN
-#        define NORETURN _Noreturn void
-#    endif
-#elif defined(_MSC_VER)
-#    define BEGIN_PACKED(align) __pragma(pack(push, align))
-#    define END_PACKED() __pragma(pack(pop))
-#    define PACKED(align)
-#    ifndef NORETURN
-#        define NORETURN __declspec(noreturn) void
-#    endif
-#else
-#    define BEGIN_PACKED(align) _Pragma("warning \"current compiler doesnt support packing\"")
-#    define END_PACKED()
-#    define PACKED(align)
-#    ifndef NORETURN
-#        define NORETURN void
-#    endif
-#endif
+#include "cthulhu/util/analyze.h"
 
 #define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
+
+#define UNREACHABLE() ASSUME(false)
 
 /// macros with functionality
 #define MAX(L, R) ((L) > (R) ? (L) : (R))
@@ -139,13 +45,6 @@
 /// macros for headers
 #ifndef _POSIX_C_SOURCE
 #    define _POSIX_C_SOURCE 200112L
-#endif
-
-#ifndef _DEFAULT_SOURCE
-#    define _DEFAULT_SOURCE
-#    ifndef _WIN32
-#        include <sys/mman.h>
-#    endif
 #endif
 
 NORETURN ctpanic(FORMAT_STRING const char *msg, ...) FORMAT_ATTRIBUTE(1, 2);

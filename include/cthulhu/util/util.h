@@ -31,6 +31,7 @@ void ctu_free(void *ptr);
  *
  * @return the allocated memory
  */
+NODISCARD
 void *ctu_malloc(size_t size);
 
 /**
@@ -46,6 +47,7 @@ void *ctu_malloc(size_t size);
  *
  * @return the reallocated pointer
  */
+NODISCARD
 void *ctu_realloc(void *ptr, size_t size);
 
 /**
@@ -58,6 +60,7 @@ void *ctu_realloc(void *ptr, size_t size);
  *
  * @return the allocated copy of the string
  */
+NODISCARD
 char *ctu_strdup(const char *str);
 
 /**
@@ -71,6 +74,7 @@ char *ctu_strdup(const char *str);
  *
  * @return the allocated copy of the string
  */
+NODISCARD
 char *ctu_strndup(const char *str, size_t len);
 
 /**
@@ -85,10 +89,12 @@ char *ctu_strndup(const char *str, size_t len);
  *
  * @return the duplicated memory
  */
+NODISCARD
 void *ctu_memdup(const void *ptr, size_t size);
 
 /** @} */
 
+NODISCARD
 size_t ptrhash(const void *ptr);
 
 /**

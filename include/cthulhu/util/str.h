@@ -103,7 +103,7 @@ char *str_normalize(const char *str);
  *
  * @return the normalized string
  */
-char *str_normalizen(const char *str, size_t len);
+char *str_normalizen(IN_READS(len) const char *str, size_t len);
 
 /**
  * @brief split a string into a vector by a separator
@@ -143,7 +143,7 @@ size_t str_find(const char *str, const char *sub);
  */
 size_t str_rfind(const char *str, const char *sub);
 
-size_t str_rfindn(const char *str, size_t len, const char *sub);
+size_t str_rfindn(IN_READS(len) const char *str, size_t len, const char *sub);
 
 /**
  * @brief check if a string contains a substring

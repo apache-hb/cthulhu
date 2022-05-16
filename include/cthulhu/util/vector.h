@@ -14,7 +14,7 @@ typedef struct
 {
     size_t size;  ///< the total number of allocated elements
     size_t used;  ///< the number of elements in use
-    void *data[]; ///< the data
+    FIELD_SIZE(size) void *data[]; ///< the data
 } vector_t;
 
 /**
@@ -34,6 +34,7 @@ void vector_delete(vector_t *vector);
  * @param size the initial amount of allocated memory
  * @return a new vector
  */
+NODISCARD
 vector_t *vector_new(size_t size);
 
 /**
@@ -45,6 +46,7 @@ vector_t *vector_new(size_t size);
  * @param len the initial size of the vector
  * @return a new vector
  */
+NODISCARD
 vector_t *vector_of(size_t len);
 
 /**
@@ -53,6 +55,7 @@ vector_t *vector_of(size_t len);
  * @param value the initial element
  * @return the new vector
  */
+NODISCARD
 vector_t *vector_init(void *value);
 
 /**
@@ -96,6 +99,7 @@ void vector_set(vector_t *vector, size_t index, void *value);
  * @param index the index to query
  * @return the value at index
  */
+NODISCARD
 void *vector_get(const vector_t *vector, size_t index);
 
 /**
@@ -107,6 +111,7 @@ void *vector_get(const vector_t *vector, size_t index);
  * @param vector the vector to get from
  * @return the value of the last element
  */
+NODISCARD
 void *vector_tail(const vector_t *vector);
 
 /**
@@ -117,6 +122,7 @@ void *vector_tail(const vector_t *vector);
  * @param vector the vector to get the length of
  * @return the active size of the vector
  */
+NODISCARD
 size_t vector_len(const vector_t *vector);
 
 /**
@@ -141,6 +147,7 @@ vector_t *vector_join(vector_t *vectors);
  * @param element the element to search for
  * @return the index of the element of @a SIZE_MAX if not found
  */
+NODISCARD
 size_t vector_find(vector_t *vector, const void *element);
 
 /**

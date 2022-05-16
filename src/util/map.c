@@ -5,6 +5,7 @@
 
 // generic map functions
 
+NODISCARD
 static size_t sizeof_map(size_t size)
 {
     return sizeof(map_t) + (size * sizeof(bucket_t));
@@ -35,6 +36,7 @@ static void clear_keys(bucket_t *buckets, size_t size)
     }
 }
 
+USE_DECL
 map_t *map_new(size_t size)
 {
     map_t *map = ctu_malloc(sizeof_map(size));
@@ -46,6 +48,7 @@ map_t *map_new(size_t size)
     return map;
 }
 
+USE_DECL
 vector_t *map_values(map_t *map)
 {
     vector_t *result = vector_new(map->size);
@@ -92,6 +95,7 @@ void *map_get_default(map_t *map, const char *key, void *other)
     return entry_get(bucket, key, other);
 }
 
+USE_DECL
 void *map_get(map_t *map, const char *key)
 {
     return map_get_default(map, key, NULL);
@@ -215,6 +219,7 @@ static bucket_t *get_next_bucket(map_t *map, size_t *index, bucket_t *bucket)
     return result;
 }
 
+USE_DECL
 map_iter_t map_iter(map_t *map)
 {
     map_iter_t iter = {
@@ -228,6 +233,7 @@ map_iter_t map_iter(map_t *map)
     return iter;
 }
 
+USE_DECL
 map_entry_t map_next(map_iter_t *iter)
 {
     map_entry_t entry = {
@@ -241,6 +247,7 @@ map_entry_t map_next(map_iter_t *iter)
     return entry;
 }
 
+USE_DECL
 bool map_has_next(map_iter_t *iter)
 {
     return iter->bucket != NULL && iter->next != NULL;

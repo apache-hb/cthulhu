@@ -76,6 +76,7 @@ static size_t select_best_size(size_t size)
     return bucket;
 }
 
+USE_DECL
 map_t *map_optimal(size_t size)
 {
     size_t bucket = select_best_size(size);

@@ -23,7 +23,7 @@ typedef struct bucket_t
 typedef struct
 {
     size_t size;     ///< the number of buckets in the toplevel
-    bucket_t data[]; ///< the buckets
+    FIELD_SIZE(size) bucket_t data[]; ///< the buckets
 } map_t;
 
 /**
@@ -35,6 +35,7 @@ typedef struct
  *
  * @return a new map
  */
+NODISCARD
 map_t *map_new(size_t size);
 
 /**
@@ -45,6 +46,7 @@ map_t *map_new(size_t size);
  *
  * @return a new map
  */
+NODISCARD
 map_t *map_optimal(size_t size);
 
 /**
@@ -64,6 +66,7 @@ void map_set(map_t *map, const char *key, void *value);
  *
  * @return the value for the key or NULL if the key is not found
  */
+NODISCARD
 void *map_get(map_t *map, const char *key);
 
 /**
@@ -88,6 +91,7 @@ void *map_get_default_ptr(map_t *map, const void *key, void *other);
  *
  * @return a vector containing all the values
  */
+NODISCARD
 vector_t *map_values(map_t *map);
 
 typedef struct
@@ -105,10 +109,13 @@ typedef struct
     bucket_t *next;
 } map_iter_t;
 
+NODISCARD
 map_iter_t map_iter(map_t *map);
 
+NODISCARD
 map_entry_t map_next(map_iter_t *iter);
 
+NODISCARD
 bool map_has_next(map_iter_t *iter);
 
 void map_reset(map_t *map);

@@ -2,7 +2,7 @@
 
 typedef struct
 {
-    
+    void *nothing;
 } alloc_t;
 
 typedef struct

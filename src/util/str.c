@@ -230,6 +230,7 @@ char *str_normalize(const char *str)
     return buf;
 }
 
+USE_DECL
 char *str_normalizen(const char *str, size_t len)
 {
     size_t outlen = 1;
@@ -407,6 +408,7 @@ size_t str_rfind(const char *str, const char *sub)
     return str_rfind_inner(str, len, sub, sublen);
 }
 
+USE_DECL
 size_t str_rfindn(const char *str, size_t len, const char *sub)
 {
     size_t sublen = strlen(sub);

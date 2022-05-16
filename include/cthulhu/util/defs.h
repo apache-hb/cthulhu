@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cthulhu/util/macros.h"
-#include "cthulhu/util/alloc.h"
 typedef size_t cerror_t;
 
 #ifdef _WIN32
@@ -11,4 +10,4 @@ typedef size_t cerror_t;
 #endif
 
 NODISCARD
-char *error_string(alloc_t *alloc, cerror_t error);
+char *error_string(cerror_t error);

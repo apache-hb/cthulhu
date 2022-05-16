@@ -47,6 +47,10 @@ ninja -C build test # build and run tests
 * `subprojects` - 3rd & 1st party dependencies
   * `cjson` - json serialization + deserialization library
   * `mini-gmp` - fallback gmp library if system gmp isnt installed
+  * `ct-test` - testing framework
+  * `glad` - gl loader for gui interface
+  * `glfw` - windowing library for gui interface
+  * `imgui` - ui library for gui interface
 
 * `tests` - tests
   * `driver` - language specific tests
@@ -56,5 +60,4 @@ ninja -C build test # build and run tests
   * `fuzzing` - fuzzing interface
 
 * `tools` - tools
-  * `create-lambda` - create a lambda from a function
   * `tune-map` - map runtime perf tuning

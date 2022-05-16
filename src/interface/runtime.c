@@ -8,7 +8,7 @@
 
 void common_init(void)
 {
-    setbuf(stdout, NULL);
+    setvbuf(stdout, NULL, _IONBF, 0);
     init_gmp();
     init_hlir();
 }

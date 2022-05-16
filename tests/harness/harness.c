@@ -19,7 +19,7 @@ int main(int argc, const char **argv)
     };
 
     alloc_config_t allocConfig = {
-        .nothing = NULL,
+        0
     };
 
     config_t config = {

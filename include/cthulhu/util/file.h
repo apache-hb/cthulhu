@@ -2,6 +2,7 @@
 
 #include "cthulhu/util/defs.h"
 #include "cthulhu/util/macros.h"
+#include "cthulhu/report/report.h"
 
 typedef struct
 {

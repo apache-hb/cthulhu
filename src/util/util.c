@@ -92,6 +92,7 @@ static void tuning_free(void *ptr)
 #    define FREE(ptr) free(ptr)
 #endif
 
+USE_DECL
 void *ctu_malloc(size_t size)
 {
     void *ptr = MALLOC(size);
@@ -99,6 +100,7 @@ void *ctu_malloc(size_t size)
     return ptr;
 }
 
+USE_DECL
 void *ctu_realloc(void *ptr, size_t size)
 {
     CTASSERT(ptr != NULL, "ctu-realloc called with NULL pointer");
@@ -113,6 +115,7 @@ void ctu_free(void *ptr)
     FREE(ptr);
 }
 
+USE_DECL
 void *ctu_memdup(const void *ptr, size_t size)
 {
     void *out = ctu_malloc(size);
@@ -142,6 +145,7 @@ void init_gmp(void)
     mp_set_memory_functions(ctu_gmp_malloc, ctu_gmp_realloc, ctu_gmp_free);
 }
 
+USE_DECL
 char *ctu_strdup(const char *str)
 {
     size_t len = strlen(str) + 1;
@@ -150,6 +154,7 @@ char *ctu_strdup(const char *str)
     return out;
 }
 
+USE_DECL
 char *ctu_strndup(const char *str, size_t len)
 {
     char *out = ctu_malloc(len + 1);
@@ -169,6 +174,7 @@ void ctpanic(const char *msg, ...)
     abort();
 }
 
+USE_DECL
 size_t ptrhash(const void *ptr)
 {
     uintptr_t key = (uintptr_t)ptr;

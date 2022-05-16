@@ -22,6 +22,7 @@ static void vector_ensure(vector_t **vector, size_t size)
 
 // vector public api
 
+USE_DECL
 vector_t *vector_new(size_t size)
 {
     vector_t *vector = ctu_malloc(vector_size(size));
@@ -32,6 +33,7 @@ vector_t *vector_new(size_t size)
     return vector;
 }
 
+USE_DECL
 vector_t *vector_of(size_t len)
 {
     vector_t *vector = vector_new(len);
@@ -39,6 +41,7 @@ vector_t *vector_of(size_t len)
     return vector;
 }
 
+USE_DECL
 vector_t *vector_init(void *value)
 {
     vector_t *vector = vector_of(1);
@@ -68,21 +71,25 @@ void vector_set(vector_t *vector, size_t index, void *value)
     vector->data[index] = value;
 }
 
+USE_DECL
 void *vector_get(const vector_t *vector, size_t index)
 {
     return vector->data[index];
 }
 
+USE_DECL
 void *vector_tail(const vector_t *vector)
 {
     return vector->data[vector->used - 1];
 }
 
+USE_DECL
 size_t vector_len(const vector_t *vector)
 {
     return vector->used;
 }
 
+USE_DECL
 size_t vector_find(vector_t *vector, const void *element)
 {
     for (size_t i = 0; i < vector_len(vector); i++)

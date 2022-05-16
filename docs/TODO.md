@@ -10,10 +10,12 @@
 
 ## Blocking items
 
+* take logging in more places
+
 * reorg pl0 tests
 
 * rework logging 
-  * need custom sinks for aws lambda to be usable
+  * need custom sinks for multiple interfaces
   * will these be intergrated with interfaces or a seperate entity
 
 * document more stuff
