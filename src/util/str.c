@@ -299,7 +299,6 @@ size_t strhash(const char *str)
 
     while (*str)
     {
-        // hash = 31 * hash + (*str++ & 0xff);
         hash = (hash << 5) - hash + *str++;
     }
 
