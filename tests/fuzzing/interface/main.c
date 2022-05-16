@@ -19,10 +19,6 @@ int main(int argc, const char **argv)
         .warningsAreErrors = false,
     };
 
-    alloc_config_t allocConfig = {
-        
-    };
-
     verbose = true;
 
     CTASSERT(argc == 2, "must provide one argument");
@@ -32,7 +28,6 @@ int main(int argc, const char **argv)
 
     config_t config = {
         .reportConfig = reportConfig,
-        .allocConfig = allocConfig,
     };
 
     cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);

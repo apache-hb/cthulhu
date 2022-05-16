@@ -18,13 +18,9 @@ int main(int argc, const char **argv)
         .warningsAreErrors = false,
     };
 
-    alloc_config_t allocConfig = {
-        0
-    };
 
     config_t config = {
         .reportConfig = reportConfig,
-        .allocConfig = allocConfig,
     };
 
     cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
