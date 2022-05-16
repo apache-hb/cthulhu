@@ -441,6 +441,7 @@ static bool report_send(const char *base, message_t *message)
     return message->level <= ERROR;
 }
 
+USE_DECL
 reports_t *begin_reports(void)
 {
     reports_t *reports = ctu_malloc(sizeof(reports_t));
@@ -482,6 +483,7 @@ static const char *paths_base(vector_t *messages)
     return common_prefix(result);
 }
 
+USE_DECL
 int end_reports(reports_t *reports, const char *name, report_config_t settings)
 {
     size_t total = settings.limit - 1;

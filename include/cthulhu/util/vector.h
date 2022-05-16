@@ -134,8 +134,10 @@ size_t vector_len(const vector_t *vector);
  * @param rhs the right vector
  * @return the new vector
  */
+NODISCARD
 vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs);
 
+NODISCARD
 vector_t *vector_join(vector_t *vectors);
 
 /**

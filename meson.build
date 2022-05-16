@@ -9,8 +9,7 @@ project('cthulhu', [ 'c', 'cpp' ],
         'cpp_rtti=false',
         'warning_level=2', # we use unnamed structs
         'default_library=static',
-        'werror=true',
-        'b_lto=true'
+        'werror=true'
     ]
 )
 
@@ -145,7 +144,7 @@ src = [
     'src/util/util.c',
     'src/util/set.c',
     'src/util/map.c',
-    'src/util/vec.c',
+    'src/util/vector.c',
     'src/util/optimal.c',
 
     'src/util/defs.c',

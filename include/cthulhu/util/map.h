@@ -96,17 +96,17 @@ vector_t *map_values(map_t *map);
 
 typedef struct
 {
-    const void *key;
-    void *value;
+    const void *key; ///< the key of this entry
+    void *value; ///< the value of this entry
 } map_entry_t;
 
 typedef struct
 {
-    map_t *map;
-    size_t index;
+    map_t *map; ///< the map being iterated over
+    size_t index; ///< current top level bucket index
 
-    bucket_t *bucket;
-    bucket_t *next;
+    bucket_t *bucket; ///< the current bucket
+    bucket_t *next; ///< the next bucket in the chain
 } map_iter_t;
 
 NODISCARD

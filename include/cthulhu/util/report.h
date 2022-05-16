@@ -113,6 +113,7 @@ typedef struct reports_t
  *
  * @return the new context
  */
+NODISCARD
 reports_t *begin_reports(void);
 
 typedef struct
@@ -133,6 +134,7 @@ typedef struct
  *         EXIT_ERROR if the sink contained any errors.
  *         EXIT_INTERAL if the sink contained an internal error.
  */
+NODISCARD
 int end_reports(reports_t *reports, const char *name, report_config_t settings);
 
 /**

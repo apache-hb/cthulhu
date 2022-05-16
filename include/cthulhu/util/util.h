@@ -90,7 +90,7 @@ char *ctu_strndup(const char *str, size_t len);
  * @return the duplicated memory
  */
 NODISCARD
-void *ctu_memdup(const void *ptr, size_t size);
+void *ctu_memdup(IN_READS(size) const void *ptr, size_t size);
 
 /** @} */
 

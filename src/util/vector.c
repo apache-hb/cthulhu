@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+NODISCARD
 static size_t vector_size(size_t size)
 {
     return sizeof(vector_t) + (size * sizeof(void *));
@@ -103,6 +104,7 @@ size_t vector_find(vector_t *vector, const void *element)
     return SIZE_MAX;
 }
 
+USE_DECL
 vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs)
 {
     size_t lhsLength = vector_len(lhs);
@@ -126,6 +128,7 @@ vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs)
     return out;
 }
 
+USE_DECL
 vector_t *vector_join(vector_t *vectors)
 {
     size_t totalLength = 0;

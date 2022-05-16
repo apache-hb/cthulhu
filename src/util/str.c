@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
+USE_DECL
 char *format(const char *fmt, ...)
 {
     va_list args;
@@ -17,6 +18,7 @@ char *format(const char *fmt, ...)
     return str;
 }
 
+USE_DECL
 char *formatv(const char *fmt, va_list args)
 {
     /* make a copy of the args for the second format */
@@ -35,6 +37,7 @@ char *formatv(const char *fmt, va_list args)
     return out;
 }
 
+USE_DECL
 char *str_noext(const char *path)
 {
     size_t idx = str_rfind(path, ".");
@@ -48,6 +51,7 @@ char *str_noext(const char *path)
     return base;
 }
 
+USE_DECL
 char *str_filename(const char *path)
 {
     size_t idx = str_rfind(path, PATH_SEP);
@@ -59,11 +63,13 @@ char *str_filename(const char *path)
     return str_noext(path + idx + 1);
 }
 
+USE_DECL
 bool str_startswith(const char *str, const char *prefix)
 {
     return strncmp(str, prefix, strlen(prefix)) == 0;
 }
 
+USE_DECL
 bool str_endswith(const char *str, const char *suffix)
 {
     size_t lenstr = strlen(str);
@@ -76,6 +82,7 @@ bool str_endswith(const char *str, const char *suffix)
     return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 }
 
+USE_DECL
 char *str_join(const char *sep, vector_t *parts)
 {
     size_t all = vector_len(parts);
@@ -127,6 +134,7 @@ char *str_join(const char *sep, vector_t *parts)
     return out;
 }
 
+USE_DECL
 char *str_repeat(const char *str, size_t times)
 {
     size_t len = strlen(str);
@@ -210,6 +218,7 @@ static size_t normstr(char *out, char c)
     return snprintf(out, 5, "\\x%02x", c & 0xFF);
 }
 
+USE_DECL
 char *str_normalize(const char *str)
 {
     size_t len = 0;
@@ -251,6 +260,7 @@ char *str_normalizen(const char *str, size_t len)
     return buf;
 }
 
+USE_DECL
 vector_t *str_split(const char *str, const char *sep)
 {
     size_t seplen = strlen(sep);
@@ -282,6 +292,7 @@ vector_t *str_split(const char *str, const char *sep)
     return result;
 }
 
+USE_DECL
 size_t strhash(const char *str)
 {
     size_t hash = 0;
@@ -295,17 +306,20 @@ size_t strhash(const char *str)
     return hash;
 }
 
+USE_DECL
 bool str_contains(const char *str, const char *sub)
 {
     return strstr(str, sub) != NULL;
 }
 
+USE_DECL
 char *str_replace(const char *str, const char *sub, const char *repl)
 {
     vector_t *split = str_split(str, sub);
     return str_join(repl, split);
 }
 
+USE_DECL
 bool str_equal(const char *lhs, const char *rhs)
 {
     /* compare pointers as well for better perf
@@ -318,6 +332,7 @@ bool str_equal(const char *lhs, const char *rhs)
  *
  * expects a list of file paths
  */
+USE_DECL
 const char *common_prefix(vector_t *args)
 {
     size_t len = vector_len(args);
@@ -360,6 +375,7 @@ const char *common_prefix(vector_t *args)
     return ctu_strndup(strings[0], lower);
 }
 
+USE_DECL
 size_t str_find(const char *str, const char *sub)
 {
     size_t len = strlen(str);
@@ -400,6 +416,7 @@ static size_t str_rfind_inner(const char *str, size_t len, const char *sub, size
     return SIZE_MAX;
 }
 
+USE_DECL
 size_t str_rfind(const char *str, const char *sub)
 {
     size_t len = strlen(str);
@@ -429,6 +446,7 @@ static bool char_is_any_of(char c, const char *chars)
     return false;
 }
 
+USE_DECL
 char *str_trim(const char *str, const char *chars)
 {
     const char *tmp = str;

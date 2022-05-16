@@ -22,6 +22,7 @@
  *
  * @return the formatted string
  */
+NODISCARD
 char *format(const char *fmt, ...);
 
 /**
@@ -34,6 +35,7 @@ char *format(const char *fmt, ...);
  *
  * @return the formatted string
  */
+NODISCARD
 char *formatv(const char *fmt, va_list args);
 
 /**
@@ -46,6 +48,7 @@ char *formatv(const char *fmt, va_list args);
  *
  * @return if str starts with prefix
  */
+NODISCARD
 bool str_startswith(const char *str, const char *prefix);
 
 /**
@@ -56,6 +59,7 @@ bool str_startswith(const char *str, const char *prefix);
  *
  * @return if str ends with suffix
  */
+NODISCARD
 bool str_endswith(const char *str, const char *suffix);
 
 /**
@@ -68,6 +72,7 @@ bool str_endswith(const char *str, const char *suffix);
  *
  * @return the joined string
  */
+NODISCARD
 char *str_join(const char *sep, vector_t *parts);
 
 /**
@@ -80,6 +85,7 @@ char *str_join(const char *sep, vector_t *parts);
  *
  * @return the repeated string
  */
+NODISCARD
 char *str_repeat(const char *str, size_t times);
 
 /**
@@ -91,6 +97,7 @@ char *str_repeat(const char *str, size_t times);
  *
  * @return the normalized string
  */
+NODISCARD
 char *str_normalize(const char *str);
 
 /**
@@ -103,6 +110,7 @@ char *str_normalize(const char *str);
  *
  * @return the normalized string
  */
+NODISCARD
 char *str_normalizen(IN_READS(len) const char *str, size_t len);
 
 /**
@@ -117,6 +125,7 @@ char *str_normalizen(IN_READS(len) const char *str, size_t len);
  *
  * @return the substrings
  */
+NODISCARD
 vector_t *str_split(const char *str, const char *sep);
 
 /**
@@ -128,8 +137,10 @@ vector_t *str_split(const char *str, const char *sep);
  *
  * @return the common prefix
  */
+NODISCARD
 const char *common_prefix(vector_t *args);
 
+NODISCARD
 size_t str_find(const char *str, const char *sub);
 
 /**
@@ -141,8 +152,10 @@ size_t str_find(const char *str, const char *sub);
  * @return the index of the last instance of @a sub in @a str, or SIZE_MAX if
  * sub is not found
  */
+NODISCARD
 size_t str_rfind(const char *str, const char *sub);
 
+NODISCARD
 size_t str_rfindn(IN_READS(len) const char *str, size_t len, const char *sub);
 
 /**
@@ -153,6 +166,7 @@ size_t str_rfindn(IN_READS(len) const char *str, size_t len, const char *sub);
  *
  * @return if @a sub is found in @a str
  */
+NODISCARD
 bool str_contains(const char *str, const char *sub);
 
 /**
@@ -164,8 +178,10 @@ bool str_contains(const char *str, const char *sub);
  *
  * @return a copy of @a str with all instances of @a sub replaced with @a repl
  */
+NODISCARD
 char *str_replace(const char *str, const char *sub, const char *repl);
 
+NODISCARD
 char *str_trim(const char *str, const char *chars);
 
 /**
@@ -175,6 +191,7 @@ char *str_trim(const char *str, const char *chars);
  *
  * @return the hash
  */
+NODISCARD
 size_t strhash(const char *str);
 
 /**
@@ -187,9 +204,13 @@ size_t strhash(const char *str);
  *
  * @return if the strings are equal
  */
+NODISCARD
 bool str_equal(const char *lhs, const char *rhs);
 
+NODISCARD
 char *str_filename(const char *path);
+
+NODISCARD
 char *str_noext(const char *path);
 
 #define STR_WHITESPACE " \t\n\r"
