@@ -1,6 +1,3 @@
-# ctu - cthulhu
-# pl0 - pl/0
-# bf - brainfuck
 option('languages', type : 'array',
     description : 'select which languages to compile',
     choices : [ 'ctu', 'pl0' ],
@@ -10,11 +7,6 @@ option('languages', type : 'array',
 option('tuning', type : 'boolean',
     description : 'compile tuning programs',
     value : false
-)
-
-option('aws', type : 'feature',
-    description : 'enable aws runtime support',
-    value : 'disabled'
 )
 
 option('doxygen', type : 'feature',

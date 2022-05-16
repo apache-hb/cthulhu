@@ -92,7 +92,7 @@ const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir)
 #if ENABLE_DEBUG
     CHECK_NULL(hlir);
     hlir_kind_t kind = get_hlir_kind(hlir);
-    CTASSERTF(has_attribs(kind), "hlir_t %s has no attributes", hlir_kind_to_string(kind));
+    CTASSERTF(has_attribs(kind), "hlir %s has no attributes", hlir_kind_to_string(kind));
 #endif
 
     return hlir->attributes;
