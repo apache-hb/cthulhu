@@ -62,8 +62,14 @@ endif
 
 if host == 'windows'
     lexargs += [ '--wincompat' ]
-    args += [ '/Wv:18' ]
+else
+    parseargs += [ '-Wdeprecated' ]
+    deps += [ cc.find_library('m'), cc.find_library('dl') ]
+endif
 
+if cc.get_id() == 'msvc'
+    args += [ '/Wv:18' ]
+    
     if analyze
         args += [
             '/external:W0', '/external:I' + bld, 
@@ -71,9 +77,6 @@ if host == 'windows'
         ]
     endif
 else
-    parseargs += [ '-Wdeprecated' ]
-    deps += [ cc.find_library('m'), cc.find_library('dl') ]
-
     analyze_args = [ 
         '-Wanalyzer-double-fclose',
         '-Wanalyzer-double-free',
@@ -180,9 +183,6 @@ endforeach
 
 foreach interface : get_option('interfaces')
     subdir('interface'/interface)
-endforeach
-
-foreach interface : get_option('interfaces')
     subdir('tests/interface'/interface)
 endforeach
 

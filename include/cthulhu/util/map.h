@@ -22,7 +22,7 @@ typedef struct bucket_t
  */
 typedef struct
 {
-    size_t size;     ///< the number of buckets in the toplevel
+    size_t size;                      ///< the number of buckets in the toplevel
     FIELD_SIZE(size) bucket_t data[]; ///< the buckets
 } map_t;
 
@@ -97,16 +97,16 @@ vector_t *map_values(map_t *map);
 typedef struct
 {
     const void *key; ///< the key of this entry
-    void *value; ///< the value of this entry
+    void *value;     ///< the value of this entry
 } map_entry_t;
 
 typedef struct
 {
-    map_t *map; ///< the map being iterated over
+    map_t *map;   ///< the map being iterated over
     size_t index; ///< current top level bucket index
 
     bucket_t *bucket; ///< the current bucket
-    bucket_t *next; ///< the next bucket in the chain
+    bucket_t *next;   ///< the next bucket in the chain
 } map_iter_t;
 
 NODISCARD

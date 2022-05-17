@@ -12,8 +12,8 @@
  */
 typedef struct
 {
-    size_t size;  ///< the total number of allocated elements
-    size_t used;  ///< the number of elements in use
+    size_t size;                   ///< the total number of allocated elements
+    size_t used;                   ///< the number of elements in use
     FIELD_SIZE(size) void *data[]; ///< the data
 } vector_t;
 
