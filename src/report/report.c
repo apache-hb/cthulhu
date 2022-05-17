@@ -1,4 +1,4 @@
-#include "cthulhu/util/report.h"
+#include "cthulhu/report/report.h"
 #include "cthulhu/ast/ast.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/util.h"

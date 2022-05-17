@@ -62,6 +62,10 @@ endif
 
 if host == 'windows'
     lexargs += [ '--wincompat' ]
+
+    if cc.get_id() != 'msvc'
+        args += [ '-D__USE_MINGW_ANSI_STDIO=1' ]
+    endif
 else
     parseargs += [ '-Wdeprecated' ]
     deps += [ cc.find_library('m'), cc.find_library('dl') ]
@@ -69,7 +73,7 @@ endif
 
 if cc.get_id() == 'msvc'
     args += [ '/Wv:18' ]
-    
+
     if analyze
         args += [
             '/external:W0', '/external:I' + bld, 
