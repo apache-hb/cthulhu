@@ -1,0 +1,1 @@
+type thing = [5 + 2 * 3]int;

@@ -67,6 +67,16 @@ tests = {
             'one-element',
             'no-elements'
         ]
+    },
+    'types.array': {
+        'fail': [
+            
+        ],
+        'pass': [
+            #'simple',
+            #'2d',
+            #'expr-size'
+        ]
     }
 }
 
