@@ -1,0 +1,2 @@
+const a = 25, b = a, c = a + b;
+.

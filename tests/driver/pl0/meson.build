@@ -1,16 +1,57 @@
 dir = meson.current_source_dir()
 pl0c = harness['pl0']
 
-pass = [
-    'chain', 'const', 'consts', 'local',
-    'prime', 'procedure', 'square', 'values', 'var',
-    'vars', 'module'
-]
-
-fail = [
-    'case', 'crash', 'dumb', 'loop', 'recurse',
-    'space', 'syntax'
-]
+tests = {
+    'consts': {
+        'pass': [
+            'chain-init',
+            'case-insensitive-lookup',
+            'many-elements',
+            'single-element'
+        ],
+        'fail': [
+            'case-insensitive',
+            'complex-loop',
+            'duplicate-names',
+            'loop-init',
+            'simple-loop-init'
+        ]
+    },
+    'values': {
+        'pass': [
+            'multiple-names',
+            'single-name'
+        ],
+        'fail': [
+            'case-insensitive-duplicate',
+            'duplicate-name',
+            'shadow-const'
+        ]
+    },
+    'procedures': {
+        'pass': [
+            'call',
+            'mutual-recurse',
+            'recurse'
+        ],
+        'fail': [
+            'case-insensitive',
+            'proc-shadow',
+            'shadow-const',
+            'shadow-local',
+            'shadow-var'
+        ]
+    },
+    'programs': {
+        'pass': [
+            'prime',
+            'square'
+        ],
+        'fail': [
+            'crash'
+        ]
+    }
+}
 
 crashes = {
     '0': false, '1': false, '2': false,
@@ -27,21 +68,28 @@ multi = {
     '1': [ 'lhs', 'rhs', 'main' ]
 }
 
-foreach case : pass
-    path = dir/case + '.pl0'
-    test('pass-' + case, pl0c, 
-        args : [ path ], 
-        suite : 'pl0'
-    )
-endforeach
+foreach case, tests : tests
+    passes = tests['pass']
+    fails = tests['fail']
 
-foreach case : fail
-    path = dir/case + '.pl0'
-    test('fail-' + case, pl0c, 
-        args : [ path ], 
-        suite : 'pl0',
-        should_fail : true
-    )
+    where = case.replace('.', '/')
+
+    foreach name : passes
+        path = dir/where/'pass'/name + '.pl0'
+        test('pass-' + case + '-' + name, pl0c,
+            args : [ path ],
+            suite : 'pl0'
+        )
+    endforeach
+
+    foreach name : fails
+        path = dir/where/'fail'/name + '.pl0'
+        test('fail-' + case + '-' + name, pl0c,
+            args : [ path ],
+            suite : 'pl0',
+            should_fail : true
+        )
+    endforeach
 endforeach
 
 foreach case, files : multi
@@ -64,18 +112,3 @@ foreach case, success : crashes
         should_fail : not success
     )
 endforeach
-
-# pl0gen = generator(pl0c,
-#     output : [ '@BASENAME@.hlir' ],
-#     arguments : [ '@INPUT@', '-Benable', '-O', '@OUTPUT@' ]
-# )
-
-# test('pass-import-0', pl0c,
-#     args : [ dir/'import-0/main.pl0', pl0gen.process(dir/'import-0/lib.pl0') ],
-#     suite : 'pl0'
-# )
-
-# test('pass-import-1', pl0c,
-#     args : [ dir/'import-1/main.pl0', pl0gen.process(dir/'import-1/lib.pl0') ],
-#     suite : 'pl0'
-# )
