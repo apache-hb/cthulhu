@@ -73,6 +73,9 @@ static hlir_t *sema_array(sema_t *sema, ast_t *ast)
 {
     UNUSED(sema);
 
+    // hlir_t *size = sema_expr(sema, ast->size);
+    // hlir_t *type = sema_type(sema, ast->type);
+
     report(sema->reports, ERROR, ast->node, "array not implemented");
     return hlir_error(ast->node, "array not implemented");
 }
