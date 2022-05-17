@@ -24,7 +24,7 @@ void *imgui_init(GLFWwindow *window)
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
 
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -53,7 +53,7 @@ void imgui_cleanup(void *ctx)
 
 void imgui_new_frame(void *ctx)
 {
-    auto *wrapper = reinterpret_cast<WrapperContext*>(ctx);
+    auto *wrapper = reinterpret_cast<WrapperContext *>(ctx);
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -70,19 +70,15 @@ void imgui_new_frame(void *ctx)
     // because it would be confusing to have two docking targets within each others.
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
     ImGui::SetNextWindowViewport(viewport->ID);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
-    windowFlags |= ImGuiWindowFlags_NoTitleBar 
-                | ImGuiWindowFlags_NoCollapse 
-                | ImGuiWindowFlags_NoResize 
-                | ImGuiWindowFlags_NoMove
-                | ImGuiWindowFlags_NoBringToFrontOnFocus 
-                | ImGuiWindowFlags_NoNavFocus;
+    windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+                   ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
     if (dockFlags & ImGuiDockNodeFlags_PassthruCentralNode)
     {
@@ -93,7 +89,7 @@ void imgui_new_frame(void *ctx)
 
     ImGui::PopStyleVar(2);
 
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
     {
         ImGuiID dockId = ImGui::GetID("MyDockSpace");
@@ -106,7 +102,6 @@ void imgui_new_frame(void *ctx)
         {
             if (ImGui::MenuItem("New"))
             {
-
             }
 
             if (ImGui::MenuItem("Open"))
@@ -116,7 +111,6 @@ void imgui_new_frame(void *ctx)
 
             if (ImGui::MenuItem("Save"))
             {
-
             }
 
             if (ImGui::MenuItem("Quit", NULL, false, true))
@@ -146,6 +140,6 @@ void imgui_render(void *ctx)
 
 bool imgui_should_quit(void *ctx)
 {
-    auto *wrapper = reinterpret_cast<WrapperContext*>(ctx);
+    auto *wrapper = reinterpret_cast<WrapperContext *>(ctx);
     return wrapper->shouldQuit;
 }
