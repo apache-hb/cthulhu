@@ -34,6 +34,8 @@ static bool is_discard_ident(const char *id)
 
 static hlir_t *sema_type(sema_t *sema, ast_t *ast);
 
+static hlir_t *sema_expr(sema_t *sema, ast_t *ast);
+
 static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
 {
     size_t len = vector_len(ast->path);
