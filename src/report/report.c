@@ -89,9 +89,9 @@ static void report_header(const char *base, message_t *message)
     }
 }
 
-static char *padding(size_t len)
+static char *padding(alloc_t *alloc, size_t len)
 {
-    char *str = ctu_malloc(len + 1);
+    char *str = alloc_new(alloc, len + 1, "padding", NULL);
     memset(str, ' ', len);
     str[len] = '\0';
     return str;
@@ -216,6 +216,8 @@ static char *build_underline(const char *source, where_t where, const char *note
     return str;
 }
 
+#define MAX_BASE10_LEN 32 // 32 digits is enough for a 64 bit integer and its null terminator
+
 static int base10_length(line_t digit)
 {
     return (int)ceil(log10((double)digit)) + 1;
@@ -255,12 +257,15 @@ static char *right_align(line_t line, int width)
  *  line| source text
  *      | ^~~~~~ underline message
  */
-static char *format_single(const scan_t *scan, where_t where, const char *underline)
+static char *format_single(alloc_t *alloc, node_t node, const char *underline)
 {
+    where_t where = get_node_location(node);
+    const scan_t *scan = get_node_scanner(node);
+
     line_t firstLine = where.firstLine + 1;
     int align = base10_length(firstLine);
 
-    char *pad = padding(align);
+    char *pad = padding(alloc, align);
     char *digit = right_align(firstLine, align);
 
     char *firstLineOfSource = extract_line(scan, where.firstLine);
@@ -280,12 +285,15 @@ static char *format_single(const scan_t *scan, where_t where, const char *underl
  *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
  *       |
  */
-static char *format_medium2(const scan_t *scan, where_t where, const char *underline)
+static char *format_medium2(alloc_t *alloc, node_t node, const char *underline)
 {
+    where_t where = get_node_location(node);
+    const scan_t *scan = get_node_scanner(node);
+
     line_t firstLine = where.firstLine + 1;
     int align = base10_length(firstLine);
 
-    char *pad = padding(align);
+    char *pad = padding(alloc, align);
     char *digit = right_align(firstLine, align);
 
     char *firstLineOfSource = extract_line(scan, where.firstLine);
@@ -308,12 +316,15 @@ static char *format_medium2(const scan_t *scan, where_t where, const char *under
  *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
  *       |
  */
-static char *format_medium3(const scan_t *scan, where_t where, const char *underline)
+static char *format_medium3(alloc_t *alloc, node_t node, const char *underline)
 {
+    where_t where = get_node_location(node);
+    const scan_t *scan = get_node_scanner(node);
+
     line_t firstLine = where.firstLine + 1;
     int align = base10_length(firstLine);
 
-    char *pad = padding(align);
+    char *pad = padding(alloc, align);
     char *digit = right_align(firstLine, align);
 
     char *firstLineOfSource = extract_line(scan, where.firstLine);
@@ -337,13 +348,16 @@ static char *format_medium3(const scan_t *scan, where_t where, const char *under
  *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
  *       |
  */
-static char *format_large(const scan_t *scan, where_t where, const char *underline)
+static char *format_large(alloc_t *alloc, node_t node, const char *underline)
 {
+    where_t where = get_node_location(node);
+    const scan_t *scan = get_node_scanner(node);
+
     line_t firstLine = where.firstLine + 1;
     line_t lastLine = where.lastLine + 1;
     int align = MAX(base10_length(firstLine), base10_length(lastLine)) + 1;
 
-    char *pad = padding(align);
+    char *pad = padding(alloc, align);
     char *alignedFirstDigit = right_align(firstLine, align);
     char *alignedLastDigit = right_align(lastLine, align);
 
@@ -357,22 +371,22 @@ static char *format_large(const scan_t *scan, where_t where, const char *underli
                   build_underline(lastSourceLine, where, underline));
 }
 
-static char *format_source(const scan_t *scan, where_t where, const char *underline)
+static char *format_source(alloc_t *alloc, node_t node, const char *underline)
 {
-    switch (total_lines(where))
+    switch (total_lines(get_node_location(node)))
     {
     case 0:
-        return format_single(scan, where, underline);
+        return format_single(alloc, node, underline);
     case 1:
-        return format_medium2(scan, where, underline);
+        return format_medium2(alloc, node, underline);
     case 2:
-        return format_medium3(scan, where, underline);
+        return format_medium3(alloc, node, underline);
     default:
-        return format_large(scan, where, underline);
+        return format_large(alloc, node, underline);
     }
 }
 
-static void report_source(message_t *message)
+static void report_source(alloc_t *alloc, message_t *message)
 {
     node_t node = message->node;
     if (!is_valid_node(node))
@@ -380,13 +394,10 @@ static void report_source(message_t *message)
         return;
     }
 
-    const scan_t *scan = get_node_scanner(node);
-    where_t where = get_node_location(node);
-
-    fprintf(stderr, "%s", format_source(scan, where, message->underline));
+    fprintf(stderr, "%s", format_source(alloc, node, message->underline));
 }
 
-static void report_part(const char *base, message_t *message, part_t *part)
+static void report_part(alloc_t *alloc, const char *base, message_t *message, part_t *part)
 {
     char *msg = part->message;
 
@@ -397,7 +408,7 @@ static void report_part(const char *base, message_t *message, part_t *part)
     line_t start = where.firstLine;
 
     size_t longest = longest_line(scan, start + 1, message->parts);
-    char *pad = padding(longest);
+    char *pad = padding(alloc, longest);
 
     if (get_node_scanner(message->node) != scan)
     {
@@ -408,7 +419,7 @@ static void report_part(const char *base, message_t *message, part_t *part)
     {
         char *loc = format_location(base, scan, where);
         fprintf(stderr, "%s> %s\n", pad, loc);
-        fprintf(stderr, "%s", format_source(scan, where, msg));
+        fprintf(stderr, "%s", format_source(alloc, message->node, msg));
     }
 }
 
@@ -425,14 +436,14 @@ static void send_note(const char *note)
     fprintf(stderr, "%s: %s\n", report_level(NOTE), aligned);
 }
 
-static bool report_send(const char *base, message_t *message)
+static bool report_send(alloc_t *alloc, const char *base, message_t *message)
 {
     report_header(base, message);
-    report_source(message);
+    report_source(alloc, message);
 
     for (size_t i = 0; i < vector_len(message->parts); i++)
     {
-        report_part(base, message, vector_get(message->parts, i));
+        report_part(alloc, base, message, vector_get(message->parts, i));
     }
 
     if (message->note)
@@ -444,10 +455,15 @@ static bool report_send(const char *base, message_t *message)
 }
 
 USE_DECL
-reports_t *begin_reports(void)
+reports_t *begin_reports(alloc_t *alloc)
 {
-    reports_t *reports = ctu_malloc(sizeof(reports_t));
+    // TODO: move to failable allocation
+    alloc_t *wrapped = alloc_rusty(alloc);
+
+    reports_t *reports = alloc_new(wrapped, sizeof(reports_t), "begin-reports", NULL);
     reports->messages = vector_new(32);
+    reports->alloc = wrapped;
+
     return reports;
 }
 
@@ -538,7 +554,7 @@ int end_reports(reports_t *reports, const char *name, report_config_t settings)
             continue;
         }
 
-        report_send(common, message);
+        report_send(reports->alloc, common, message);
     }
 
     if (internal > 0)
@@ -566,7 +582,7 @@ int end_reports(reports_t *reports, const char *name, report_config_t settings)
 static message_t *report_push(reports_t *reports, level_t level, node_t node, const char *fmt, va_list args)
 {
     char *str = formatv(fmt, args);
-    message_t *message = ctu_malloc(sizeof(message_t));
+    message_t *message = alloc_new(reports->alloc, sizeof(message_t), "report-push", reports);
 
     message->level = level;
     message->parts = vector_new(1);

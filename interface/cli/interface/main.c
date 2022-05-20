@@ -59,7 +59,7 @@ int main(int argc, const char **argv)
 
     driver_t driver = get_driver();
 
-    reports_t *reports = begin_reports();
+    reports_t *reports = begin_reports(alloc_global());
     commands_t commands = {0};
     int status = parse_commandline(reports, &commands, argc, argv);
     if (status != 0)
@@ -70,6 +70,11 @@ int main(int argc, const char **argv)
     report_config_t reportConfig = {
         .limit = commands.warningLimit,
         .warningsAreErrors = commands.warningsAsErrors,
+    };
+
+    alloc_config_t allocConfig = {
+        .generalAlloc = alloc_global(),
+        .reportAlloc = alloc_global(),
     };
 
     verbose = commands.verboseLogging;
@@ -95,7 +100,7 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < totalFiles; i++)
     {
         const char *file = vector_get(files, i);
-        source_t *source = source_file(file);
+        source_t *source = source_file(allocConfig.generalAlloc, file);
         vector_set(sources, i, source);
     }
 
@@ -107,6 +112,7 @@ int main(int argc, const char **argv)
 
     config_t config = {
         .reportConfig = reportConfig,
+        .allocConfig = allocConfig,
     };
 
     cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);

@@ -3,6 +3,10 @@
 
 #include "cthulhu/emit/c89.h"
 
+// 16 pages should be enough to report a few errors to
+#define REPORT_MEMORY (0x1000 * 16)
+static char kReportMemory[REPORT_MEMORY];
+
 int main(int argc, const char **argv)
 {
     UNUSED(argc);
@@ -12,8 +16,6 @@ int main(int argc, const char **argv)
 
     driver_t driver = get_driver();
 
-    reports_t *reports = begin_reports();
-
     report_config_t reportConfig = {
         .limit = 100,
         .warningsAreErrors = false,
@@ -21,13 +23,19 @@ int main(int argc, const char **argv)
 
     verbose = true;
 
+    alloc_config_t allocConfig = {
+        .generalAlloc = alloc_global(),
+        .reportAlloc = alloc_bump(kReportMemory, sizeof(kReportMemory)),
+    };
+
     CTASSERT(argc == 2, "must provide one argument");
 
-    source_t *src = source_file(argv[1]);
+    source_t *src = source_file(allocConfig.generalAlloc, argv[1]);
     vector_t *sources = vector_init(src);
 
     config_t config = {
         .reportConfig = reportConfig,
+        .allocConfig = allocConfig,
     };
 
     cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
@@ -49,7 +57,7 @@ int main(int argc, const char **argv)
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
 
-    c89_emit_modules(reports, allModules);
+    c89_emit_modules(cthulhu->reports, allModules);
 
-    return end_reports(reports, "codegen", reportConfig);
+    return end_reports(cthulhu->reports, "codegen", reportConfig);
 }

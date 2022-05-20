@@ -4,7 +4,7 @@
 #include "cthulhu/util/str.h"
 
 TEST(test_cmd_files, {
-    reports_t *reports = begin_reports();
+    reports_t *reports = begin_reports(alloc_global());
     commands_t commands = { 0 };
     int result;
     {
@@ -31,7 +31,7 @@ TEST(test_cmd_files, {
 })
 
 TEST(test_args, {
-    reports_t *reports = begin_reports();
+    reports_t *reports = begin_reports(alloc_global());
     commands_t commands = { 0 };
     int result;
     {
@@ -66,7 +66,7 @@ TEST(test_args, {
 })
 
 TEST(test_multiple_args, {
-    reports_t *reports = begin_reports();
+    reports_t *reports = begin_reports(alloc_global());
     commands_t commands = { 0 };
     int result;
 
@@ -83,7 +83,7 @@ TEST(test_multiple_args, {
 })
 
 TEST(test_string_arg, {
-    reports_t *reports = begin_reports();
+    reports_t *reports = begin_reports(alloc_global());
     commands_t commands = { 0 };
     int result;
 
@@ -109,7 +109,7 @@ TEST(test_string_arg, {
 })
 
 TEST(test_joined_arg, {
-    reports_t *reports = begin_reports();
+    reports_t *reports = begin_reports(alloc_global());
     commands_t commands = { 0 };
     int result;
 
@@ -125,7 +125,7 @@ TEST(test_joined_arg, {
 })
 
 TEST(test_opt_and_string, {
-    reports_t *reports = begin_reports();
+    reports_t *reports = begin_reports(alloc_global());
     commands_t commands = { 0 };
     int result;
 

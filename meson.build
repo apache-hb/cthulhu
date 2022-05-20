@@ -52,7 +52,7 @@ deps = [ gmp ]
 lexargs = []
 parseargs = []
 
-if tuning
+if tuning.enabled()
     args += [ '-DENABLE_TUNING=1' ]
 endif
 
@@ -90,7 +90,7 @@ else
         '-Wanalyzer-use-after-free'
     ]
 
-    if analyze and cc.has_multi_arguments(analyze_args)
+    if analyze.require(cc.has_multi_arguments(analyze_args), error_message : 'analyze requires a gcc version that supports analyzer').enabled()
         args += analyze_args
     endif
 endif
@@ -144,6 +144,12 @@ src = [
     # error reporting
     'src/report/report.c',
     'src/report/report-ext.c',
+
+    # allocators
+    'src/util/alloc/alloc.c',
+    'src/util/alloc/global.c',
+    'src/util/alloc/bump.c',
+    'src/util/alloc/rusty.c',
 
     # standard library
     'src/util/str.c',
@@ -202,7 +208,7 @@ endforeach
 
 subdir('tests/unit-tests')
 
-if tuning
+if tuning.enabled()
     tune = executable('tune-map', [ 'tools/tune-map.c' ],
         dependencies : generic
     )

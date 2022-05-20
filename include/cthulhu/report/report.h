@@ -5,6 +5,7 @@
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/vector.h"
+#include "cthulhu/util/alloc.h"
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -105,6 +106,7 @@ typedef struct
  */
 typedef struct reports_t
 {
+    alloc_t *alloc;
     vector_t *messages; ///< all messages in the sink
 } reports_t;
 
@@ -113,7 +115,7 @@ typedef struct reports_t
  *
  * @return the new context
  */
-reports_t *begin_reports(void);
+reports_t *begin_reports(alloc_t *alloc);
 
 typedef struct
 {

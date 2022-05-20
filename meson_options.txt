@@ -4,9 +4,9 @@ option('languages', type : 'array',
     value : [ 'ctu', 'pl0' ]
 )
 
-option('tuning', type : 'boolean',
+option('tuning', type : 'feature',
     description : 'compile tuning programs',
-    value : false
+    value : 'auto'
 )
 
 option('doxygen', type : 'feature',
@@ -14,9 +14,9 @@ option('doxygen', type : 'feature',
     value : 'auto'
 )
 
-option('analyze', type : 'boolean',
+option('analyze', type : 'feature',
     description : 'enable code analysis',
-    value : true
+    value : 'auto'
 )
 
 option('fuzzing', type : 'feature',
