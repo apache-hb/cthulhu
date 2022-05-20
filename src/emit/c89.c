@@ -72,7 +72,12 @@ static char *c89_mangle_decl_name(const hlir_t *hlir)
     char *joinedParts = str_join("", parts);
     const char *name = get_hlir_name(hlir);
 
-    return format("_Z%s%s", joinedParts, name);
+    if (name == NULL)
+    {
+        name = ""; // TODO: generate a unique id per anonymous field
+    }
+
+    return format("_Z%s%zu%s", joinedParts, strlen(name), name);
 }
 
 static const char *c89_mangle_name(c89_emit_t *emit, const hlir_t *hlir)
@@ -582,6 +587,7 @@ static void c89_emit_typedef(c89_emit_t *emit, const hlir_t *hlir)
 
     default:
         ctu_assert(emit->reports, "cannot emit typedef for %s", hlir_kind_to_string(kind));
+        break;
     }
 }
 
