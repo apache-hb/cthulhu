@@ -1,8 +1,10 @@
 #pragma once
 
-#include "vector.h"
-#include <stdbool.h>
+#include "cthulhu/util/vector.h"
+#include "cthulhu/util/alloc.h"
+
 #include <stddef.h>
+#include <stdbool.h>
 
 /**
  * a bucket in a hashmap
@@ -22,6 +24,7 @@ typedef struct bucket_t
  */
 typedef struct
 {
+    alloc_t *alloc;
     size_t size;                      ///< the number of buckets in the toplevel
     FIELD_SIZE(size) bucket_t data[]; ///< the buckets
 } map_t;
@@ -36,7 +39,7 @@ typedef struct
  * @return a new map
  */
 NODISCARD
-map_t *map_new(size_t size);
+map_t *map_new(size_t size, alloc_t *alloc);
 
 /**
  * create a map with an optimal number of buckets
@@ -47,7 +50,7 @@ map_t *map_new(size_t size);
  * @return a new map
  */
 NODISCARD
-map_t *map_optimal(size_t size);
+map_t *map_optimal(size_t size, alloc_t *alloc);
 
 /**
  * set or overwrite a value in a map

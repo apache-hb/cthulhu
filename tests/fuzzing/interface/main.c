@@ -26,6 +26,7 @@ int main(int argc, const char **argv)
     alloc_config_t allocConfig = {
         .generalAlloc = alloc_global(),
         .reportAlloc = alloc_bump(kReportMemory, sizeof(kReportMemory)),
+        .runtimeAlloc = alloc_global(),
     };
 
     CTASSERT(argc == 2, "must provide one argument");

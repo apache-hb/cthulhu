@@ -1,6 +1,7 @@
 #include "cthulhu/util/alloc.h"
 
 #include "cthulhu/util/macros.h"
+#include "cthulhu/report/report.h"
 
 void *alloc_new(alloc_t *alloc, size_t size, const char *name, const void *parent)
 {

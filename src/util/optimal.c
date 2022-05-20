@@ -77,8 +77,8 @@ static size_t select_best_size(size_t size)
 }
 
 USE_DECL
-map_t *map_optimal(size_t size)
+map_t *map_optimal(size_t size, alloc_t *alloc)
 {
     size_t bucket = select_best_size(size);
-    return map_new(bucket);
+    return map_new(bucket, alloc);
 }

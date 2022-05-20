@@ -12,6 +12,7 @@
 
 typedef struct
 {
+    alloc_t *alloc;
     reports_t *reports;
     map_t *modules;
 } runtime_t;
@@ -70,6 +71,7 @@ typedef struct
 {
     alloc_t *generalAlloc;
     alloc_t *reportAlloc;
+    alloc_t *runtimeAlloc; // TODO: this should be per source
 } alloc_config_t;
 
 typedef struct

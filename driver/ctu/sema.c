@@ -102,7 +102,7 @@ void ctu_init_compiler(runtime_t *runtime)
         [TAG_MODULES] = 1
     };
 
-    kRootSema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
+    kRootSema = sema_new(NULL, runtime->reports, runtime->alloc, TAG_MAX, sizes);
 
     node_t node = node_builtin();
 
@@ -253,7 +253,7 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
 static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir_t *decl)
 {
     size_t len = vector_len(fields);
-    set_t *names = set_new(len);
+    set_t *names = set_new(len, sema->alloc);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -280,8 +280,6 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
         hlir_t *entry = hlir_field(field->node, type, name);
         hlir_add_field(decl, entry);
     }
-
-    set_delete(names);
 }
 
 static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast)
@@ -396,8 +394,6 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
         return;
     }
 
-    logverbose("add %s", name);
-
     hlir_t *other = sema_get(sema, tag, name);
     if (other != NULL)
     {
@@ -476,7 +472,7 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
         [TAG_MODULES] = vector_len(root->imports),
     };
 
-    sema_t *sema = sema_new(kRootSema, runtime->reports, TAG_MAX, sizes);
+    sema_t *sema = sema_new(kRootSema, runtime->reports, runtime->alloc, TAG_MAX, sizes);
 
     char *name = NULL;
     if (root->modspec != NULL)

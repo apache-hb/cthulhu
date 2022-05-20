@@ -75,6 +75,7 @@ int main(int argc, const char **argv)
     alloc_config_t allocConfig = {
         .generalAlloc = alloc_global(),
         .reportAlloc = alloc_global(),
+        .runtimeAlloc = alloc_global(),
     };
 
     verbose = commands.verboseLogging;

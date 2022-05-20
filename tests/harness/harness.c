@@ -12,7 +12,8 @@ int main(int argc, const char **argv)
 
     alloc_config_t allocConfig = {
         .generalAlloc = alloc_global(),
-        .reportAlloc = alloc_global()
+        .reportAlloc = alloc_global(),
+        .runtimeAlloc = alloc_global(),
     };
 
     vector_t *sources = vector_of(argc - 1);

@@ -37,9 +37,13 @@ static void rename_module(hlir_t *hlir, const char *path)
     logverbose("renamed module to `%s`", hlir->name);
 }
 
-static runtime_t runtime_new(reports_t *reports, size_t size)
+static runtime_t runtime_new(alloc_t *alloc, reports_t *reports, size_t size)
 {
-    runtime_t runtime = {.reports = reports, .modules = map_optimal(size)};
+    runtime_t runtime = {
+        .alloc = alloc,
+        .reports = reports, 
+        .modules = map_optimal(size, alloc),
+    };
 
     return runtime;
 }
@@ -72,13 +76,12 @@ cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
     CTASSERT(driver.fnResolveImports != NULL, "driver must implement fnResolveImports");
     CTASSERT(driver.fnCompileModule != NULL, "driver must implement fnCompileModule");
 
-    size_t totalSources = vector_len(sources);
+    cthulhu_t *cthulhu = alloc_new(config.allocConfig.generalAlloc, sizeof(cthulhu_t), "cthulhu", NULL);
+
     reports_t *reports = begin_reports(config.allocConfig.reportAlloc);
-    runtime_t runtime = runtime_new(reports, totalSources);
-
-    alloc_t *generalAlloc = config.allocConfig.generalAlloc;
-
-    cthulhu_t *cthulhu = alloc_new(generalAlloc, sizeof(cthulhu_t), "cthulhu", NULL);
+    
+    size_t totalSources = vector_len(sources);
+    runtime_t runtime = runtime_new(config.allocConfig.runtimeAlloc, reports, totalSources);
 
     cthulhu->driver = driver;
     cthulhu->config = config;

@@ -2,10 +2,6 @@
 
 #include <stddef.h>
 
-#ifdef ALLOC_DEBUG
-#   include "cthulhu/util/map.h"
-#endif
-
 typedef void *(*alloc_malloc_t)(void *self, size_t size);
 typedef void *(*alloc_realloc_t)(void *self, void *ptr, size_t newSize, size_t oldSize);
 typedef void (*alloc_free_t)(void *self, void *ptr, size_t size);
