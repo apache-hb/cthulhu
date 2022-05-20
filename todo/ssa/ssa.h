@@ -37,7 +37,7 @@ typedef struct
 
 typedef struct ssa_step_t
 {
-    const node_t *node; ///< the node that created this step
+    node_t node; ///< the node that created this step
     const hlir_t *type; ///< the resulting type of this step
 
     ssa_opcode_t opcode;
@@ -68,7 +68,7 @@ typedef struct ssa_flow_t
 {
     struct ssa_module_t *parent; ///< the module this flow is *implemented* in
 
-    const node_t *node; ///< where this flow is implemented
+    node_t node; ///< where this flow is implemented
     const hlir_t *type; ///< the type signature of this flow
 
     ssa_step_t *steps; ///< the steps in this flow
@@ -79,7 +79,7 @@ typedef struct ssa_flow_t
 typedef struct ssa_module_t
 {
     const char *moduleName; ///< name of this module
-    const node_t *node;     ///< node that this module is associated with
+    node_t node;     ///< node that this module is associated with
 
     map_t *modules; ///< modules that this module depends on
                     ///  these can be recursive

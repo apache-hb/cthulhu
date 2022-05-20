@@ -16,7 +16,6 @@ typedef enum
     TAG_PROCS,      // hlir_t*
     TAG_TYPES,      // hlir_t*
     TAG_MODULES,    // sema_t*
-    TAG_NAMESPACES, // sema_t*
 
     TAG_MAX
 } tag_t;
@@ -26,6 +25,102 @@ typedef struct
     size_t totalDecls;
     hlir_t *parentModule;
 } sema_data_t;
+
+static const char *kDigitNames[SIGN_TOTAL][DIGIT_TOTAL] = {
+    [SIGN_SIGNED] = {
+        [DIGIT_CHAR] = "char",
+        [DIGIT_SHORT] = "short",
+        [DIGIT_INT] = "int",
+        [DIGIT_LONG] = "long",
+
+        [DIGIT_PTR] = "intptr",
+        [DIGIT_SIZE] = "size",
+        [DIGIT_MAX] = "intmax"
+    },
+    [SIGN_UNSIGNED] = {
+        [DIGIT_CHAR] = "uchar",
+        [DIGIT_SHORT] = "ushort",
+        [DIGIT_INT] = "uint",
+        [DIGIT_LONG] = "ulong",
+
+        [DIGIT_PTR] = "uintptr",
+        [DIGIT_SIZE] = "usize",
+        [DIGIT_MAX] = "uintmax"
+    }
+};
+
+static hlir_t *kVoidType = NULL;
+static hlir_t *kBoolType = NULL;
+static hlir_t *kStringType = NULL;
+static hlir_t *kDigitTypes[SIGN_TOTAL * DIGIT_TOTAL];
+
+#define DIGIT_INDEX(sign, digit) ((sign) * DIGIT_TOTAL + (digit))
+
+static hlir_t *get_digit_type(sign_t sign, digit_t digit)
+{
+    return kDigitTypes[DIGIT_INDEX(sign, digit)];
+}
+
+static const char *get_digit_name(sign_t sign, digit_t digit)
+{
+    return kDigitNames[sign][digit];
+}
+
+static sema_t *kRootSema = NULL;
+
+static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl);
+
+static void add_basic_types(sema_t *sema)
+{
+    add_decl(sema, TAG_TYPES, "void", kVoidType);
+    add_decl(sema, TAG_TYPES, "bool", kBoolType);
+    add_decl(sema, TAG_TYPES, "str", kStringType);
+
+    for (int sign = 0; sign < SIGN_TOTAL; sign++)
+    {
+        for (int digit = 0; digit < DIGIT_TOTAL; digit++)
+        {
+            const char *name = get_digit_name(sign, digit);
+            hlir_t *type = get_digit_type(sign, digit);
+            
+            add_decl(sema, TAG_TYPES, name, type);
+        }
+    }
+
+    // enable the below later
+
+    // special types for interfacing with C
+    // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", DIGIT_INT, SIGN_SIGNED));
+}
+
+void ctu_init_compiler(runtime_t *runtime)
+{
+    size_t sizes[TAG_MAX] = {
+        [TAG_VARS] = 1,
+        [TAG_PROCS] = 1,
+        [TAG_TYPES] = 32,
+        [TAG_MODULES] = 1
+    };
+
+    kRootSema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
+
+    node_t node = node_builtin();
+
+    kVoidType = hlir_void(node, "void");
+    kBoolType = hlir_bool(node, "bool");
+    kStringType = hlir_string(node, "str");
+
+    for (int sign = 0; sign < SIGN_TOTAL; sign++)
+    {
+        for (int digit = 0; digit < DIGIT_TOTAL; digit++)
+        {
+            const char *name = get_digit_name(sign, digit);
+            kDigitTypes[DIGIT_INDEX(sign, digit)] = hlir_digit(node, name, digit, sign);
+        }
+    }
+
+    add_basic_types(kRootSema);
+}
 
 static bool is_discard_ident(const char *id)
 {
@@ -43,7 +138,7 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *name = vector_get(ast->path, i);
-        sema_t *next = sema_get(current, TAG_NAMESPACES, name);
+        sema_t *next = sema_get(current, TAG_MODULES, name);
 
         if (next == NULL)
         {
@@ -55,14 +150,19 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
     }
 
     const char *name = vector_tail(ast->path);
-    hlir_t *decl = sema_get(current, TAG_TYPES, name);
-    if (decl == NULL)
+    while (current != NULL)
     {
-        report(sema->reports, ERROR, ast->node, "type '%s' not found", name);
-        return hlir_error(ast->node, "type not found");
+        hlir_t *decl = sema_get(current, TAG_TYPES, name);
+        if (decl != NULL)
+        {
+            return decl;
+        }
+
+        current = current->parent;
     }
 
-    return decl;
+    report(sema->reports, ERROR, ast->node, "type '%s' not found", name);
+    return hlir_error(ast->node, "type not found");
 }
 
 static hlir_t *sema_pointer(sema_t *sema, ast_t *ast)
@@ -75,11 +175,10 @@ static hlir_t *sema_array(sema_t *sema, ast_t *ast)
 {
     UNUSED(sema);
 
-    // hlir_t *size = sema_expr(sema, ast->size);
-    // hlir_t *type = sema_type(sema, ast->type);
+    hlir_t *size = sema_expr(sema, ast->size);
+    hlir_t *type = sema_type(sema, ast->type);
 
-    report(sema->reports, ERROR, ast->node, "array not implemented");
-    return hlir_error(ast->node, "array not implemented");
+    return hlir_array(ast->node, NULL, type, size);
 }
 
 static hlir_t *sema_closure(sema_t *sema, ast_t *ast)
@@ -121,6 +220,36 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast)
     }
 }
 
+static hlir_t *sema_digit(ast_t *ast)
+{
+    // TODO: check if the digit is in range
+    // TODO: digit suffixes should be added later
+    // TODO: or maybe we want untyped literals?
+
+    const hlir_t *type = get_digit_type(SIGN_SIGNED, DIGIT_INT);
+    return hlir_digit_literal(ast->node, type, ast->digit);
+}
+
+static hlir_t *sema_bool(ast_t *ast)
+{
+    return hlir_bool_literal(ast->node, kBoolType, ast->boolean);
+}
+
+static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
+{
+    switch (ast->of)
+    {
+    case AST_DIGIT:
+        return sema_digit(ast);
+    case AST_BOOL:
+        return sema_bool(ast);
+
+    default:
+        report(sema->reports, INTERNAL, ast->node, "unknown sema-expr: %d", ast->of);
+        return hlir_error(ast->node, "unknown sema-expr");
+    }
+}
+
 static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir_t *decl)
 {
     size_t len = vector_len(fields);
@@ -149,8 +278,6 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
 
         hlir_t *type = sema_type(sema, field->field);
         hlir_t *entry = hlir_field(field->node, type, name);
-        hlir_set_parent(entry, decl);
-
         hlir_add_field(decl, entry);
     }
 
@@ -200,8 +327,6 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
 
         // create the field container for the tag
         hlir_t *field = hlir_field(ast->node, tag, "tag");
-        hlir_set_parent(field, decl);
-
         // add the field to the struct
         hlir_add_field(decl, field);
     }
@@ -221,7 +346,6 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
 
         // create the field container for the union
         hlir_t *dataField = hlir_field(ast->node, innerUnion, "data");
-        hlir_set_parent(dataField, decl);
 
         // add the field to the struct
         hlir_add_field(decl, dataField);
@@ -267,16 +391,18 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
 {
     if (is_discard_ident(name))
     {
-        const node_t *node = get_hlir_node(decl);
+        node_t node = get_hlir_node(decl);
         report(sema->reports, ERROR, node, "discarding declaration");
         return;
     }
 
+    logverbose("add %s", name);
+
     hlir_t *other = sema_get(sema, tag, name);
     if (other != NULL)
     {
-        const node_t *node = get_hlir_node(decl);
-        const node_t *otherNode = get_hlir_node(other);
+        node_t node = get_hlir_node(decl);
+        node_t otherNode = get_hlir_node(other);
         report_shadow(sema->reports, name, node, otherNode);
         return;
     }
@@ -317,43 +443,6 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
     add_decl(sema, TAG_TYPES, ast->name, decl);
 }
 
-typedef struct
-{
-    const char *name;
-    digit_t width;
-    sign_t sign;
-} basic_digit_t;
-
-static const basic_digit_t kBasicDigits[] = {
-    {"char", DIGIT_CHAR, SIGN_SIGNED},      {"uchar", DIGIT_CHAR, SIGN_UNSIGNED}, {"short", DIGIT_SHORT, SIGN_SIGNED},
-    {"ushort", DIGIT_SHORT, SIGN_UNSIGNED}, {"int", DIGIT_INT, SIGN_SIGNED},      {"uint", DIGIT_INT, SIGN_UNSIGNED},
-    {"long", DIGIT_LONG, SIGN_SIGNED},      {"ulong", DIGIT_LONG, SIGN_UNSIGNED},
-};
-
-#define TOTAL_BASIC_DIGITS (sizeof(kBasicDigits) / sizeof(basic_digit_t))
-
-static void add_basic_types(sema_t *sema)
-{
-    const node_t *node = node_builtin();
-
-    add_decl(sema, TAG_TYPES, "void", hlir_void(node, "void"));
-
-    add_decl(sema, TAG_TYPES, "bool", hlir_bool(node, "bool"));
-    add_decl(sema, TAG_TYPES, "str", hlir_string(node, "str"));
-
-    for (size_t i = 0; i < TOTAL_BASIC_DIGITS; i++)
-    {
-        const basic_digit_t *basicDigit = &kBasicDigits[i];
-        hlir_t *digit = hlir_digit(node, basicDigit->name, basicDigit->width, basicDigit->sign);
-        add_decl(sema, TAG_TYPES, basicDigit->name, digit);
-    }
-
-    // enable the below later
-
-    // special types for interfacing with C
-    // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", DIGIT_INT, SIGN_SIGNED));
-}
-
 static char *make_import_name(vector_t *vec)
 {
     return str_join(".", vec);
@@ -362,7 +451,7 @@ static char *make_import_name(vector_t *vec)
 static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
 {
     const char *name = vector_tail(import->path);
-    sema_t *previous = sema_get(sema, TAG_NAMESPACES, name);
+    sema_t *previous = sema_get(sema, TAG_MODULES, name);
 
     if (previous != NULL)
     {
@@ -372,7 +461,7 @@ static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
         return;
     }
 
-    sema_set(sema, TAG_NAMESPACES, name, mod);
+    sema_set(sema, TAG_MODULES, name, mod);
 }
 
 void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
@@ -384,17 +473,15 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
         [TAG_VARS] = totalDecls,
         [TAG_PROCS] = totalDecls,
         [TAG_TYPES] = totalDecls,
-        [TAG_MODULES] = totalDecls,
-        [TAG_NAMESPACES] = vector_len(root->imports),
+        [TAG_MODULES] = vector_len(root->imports),
     };
 
-    sema_t *sema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
+    sema_t *sema = sema_new(kRootSema, runtime->reports, TAG_MAX, sizes);
 
     char *name = NULL;
     if (root->modspec != NULL)
     {
         name = make_import_name(root->modspec->path);
-        logverbose("name `%s`", name);
     }
 
     hlir_t *mod = hlir_module(root->node, name, vector_of(0), vector_of(0), vector_of(0));
@@ -402,8 +489,6 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
     sema_data_t semaData = {.totalDecls = totalDecls, .parentModule = mod};
 
     sema_set_data(sema, BOX(semaData));
-
-    add_basic_types(sema);
 
     for (size_t i = 0; i < totalDecls; i++)
     {

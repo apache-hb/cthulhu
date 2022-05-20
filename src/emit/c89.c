@@ -537,7 +537,7 @@ static const char *c89_emit_type(c89_emit_t *emit, const hlir_t *hlir, const cha
 
     if (attribs->tags & TAG_ATOMIC)
     {
-        const node_t *node = get_hlir_node(hlir);
+        node_t node = get_hlir_node(hlir);
         report(emit->reports, WARNING, node, "atomic types are not supported yet");
     }
 

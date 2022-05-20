@@ -11,10 +11,8 @@ static const hlir_attributes_t kDefaultAttributes = {.linkage = LINK_INTERNAL, .
 hlir_t *kMetaType = NULL;
 hlir_t *kInvalidNode = NULL;
 
-hlir_t *hlir_new(const node_t *node, const hlir_t *of, hlir_kind_t kind)
+hlir_t *hlir_new(node_t node, const hlir_t *of, hlir_kind_t kind)
 {
-    CTASSERTF(node != node_invalid(), "hlir location for %s must be valid", hlir_kind_to_string(kind));
-
     hlir_t *self = ctu_malloc(sizeof(hlir_t));
     self->type = kind;
     self->location = node;
@@ -22,7 +20,7 @@ hlir_t *hlir_new(const node_t *node, const hlir_t *of, hlir_kind_t kind)
     return self;
 }
 
-hlir_t *hlir_new_decl(const node_t *node, const char *name, const hlir_t *of, hlir_kind_t kind)
+hlir_t *hlir_new_decl(node_t node, const char *name, const hlir_t *of, hlir_kind_t kind)
 {
     hlir_t *hlir = hlir_new(node, of, kind);
     hlir->name = name;
@@ -31,7 +29,7 @@ hlir_t *hlir_new_decl(const node_t *node, const char *name, const hlir_t *of, hl
     return hlir;
 }
 
-hlir_t *hlir_new_forward(const node_t *node, const char *name, const hlir_t *of, hlir_kind_t expect)
+hlir_t *hlir_new_forward(node_t node, const char *name, const hlir_t *of, hlir_kind_t expect)
 {
     hlir_t *hlir = hlir_new_decl(node, name, of, HLIR_FORWARD);
     hlir->expected = expect;

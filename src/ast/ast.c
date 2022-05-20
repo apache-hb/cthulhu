@@ -2,36 +2,37 @@
 
 #include "cthulhu/util/util.h"
 
-static const node_t kBuiltinNode = {.scan = NULL, .where = {0, 0, 0, 0}};
-
-node_t *node_new(scan_t *scan, where_t where)
+typedef struct
 {
-    node_t *node = ctu_malloc(sizeof(node_t));
+    scan_t *scan;  ///< the source file
+    where_t where; ///< the location of this node in the source file
+} node_data_t;
+
+static const node_data_t kBuiltinNode = {.scan = NULL, .where = {0, 0, 0, 0}};
+
+node_t node_new(scan_t *scan, where_t where)
+{
+    node_data_t *node = ctu_malloc(sizeof(node_data_t));
     node->scan = scan;
     node->where = where;
     return node;
 }
 
-const scan_t *get_node_scanner(const node_t *node)
+const scan_t *get_node_scanner(node_t node)
 {
-    CTASSERT(node != node_invalid(), "get-scanner on invalid node");
+    const node_data_t *self = node;
 
-    return node->scan;
+    return self->scan;
 }
 
-where_t get_node_location(const node_t *node)
+where_t get_node_location(node_t node)
 {
-    CTASSERT(node != node_invalid(), "get-location on invalid node");
+    const node_data_t *self = node;
 
-    return node->where;
+    return self->where;
 }
 
-const node_t *node_builtin(void)
+node_t node_builtin(void)
 {
     return &kBuiltinNode;
-}
-
-const node_t *node_invalid(void)
-{
-    return NULL;
 }

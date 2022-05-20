@@ -27,7 +27,7 @@ void pl0_init(runtime_t *runtime)
 {
     UNUSED(runtime);
 
-    const node_t *node = node_builtin();
+    node_t node = node_builtin();
 
     kExported = hlir_linkage(LINK_EXPORTED);
 
@@ -56,13 +56,13 @@ typedef enum
     TAG_MAX
 } tag_t;
 
-static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *shadowed, const node_t *shadowing)
+static void report_pl0_shadowing(reports_t *reports, const char *name, node_t shadowed, node_t shadowing)
 {
     message_t *id = report_shadow(reports, name, shadowed, shadowing);
     report_note(id, "PL/0 is case insensitive");
 }
 
-static void report_pl0_unresolved(reports_t *reports, const node_t *node, const char *name)
+static void report_pl0_unresolved(reports_t *reports, node_t node, const char *name)
 {
     report(reports, ERROR, node, "unresolved reference to `%s`", name);
 }
@@ -89,8 +89,8 @@ static void set_proc(sema_t *sema, const char *name, hlir_t *proc)
     hlir_t *other = sema_get(sema, TAG_PROCS, name);
     if (other != NULL && other != proc)
     {
-        const node_t *node = get_hlir_node(proc);
-        const node_t *otherNode = get_hlir_node(other);
+        node_t node = get_hlir_node(proc);
+        node_t otherNode = get_hlir_node(other);
         report_pl0_shadowing(sema->reports, name, node, otherNode);
         return;
     }
@@ -108,8 +108,8 @@ static void set_var(sema_t *sema, size_t tag, const char *name, hlir_t *hlir)
     hlir_t *other = get_var(sema, name);
     if (other != NULL && other != hlir)
     {
-        const node_t *node = get_hlir_node(hlir);
-        const node_t *otherNode = get_hlir_node(other);
+        node_t node = get_hlir_node(hlir);
+        node_t otherNode = get_hlir_node(other);
 
         report_pl0_shadowing(sema->reports, name, node, otherNode);
         return;
@@ -169,7 +169,7 @@ static hlir_t *sema_expr(sema_t *sema, pl0_t *node)
     }
 }
 
-static hlir_t *sema_vector(sema_t *sema, const node_t *node, vector_t *body)
+static hlir_t *sema_vector(sema_t *sema, node_t node, vector_t *body)
 {
     size_t len = vector_len(body);
     vector_t *result = vector_of(len);

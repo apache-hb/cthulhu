@@ -98,7 +98,7 @@ const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir)
     return hlir->attributes;
 }
 
-const node_t *get_hlir_node(const hlir_t *hlir)
+node_t get_hlir_node(const hlir_t *hlir)
 {
     CHECK_NULL(hlir);
     return hlir->location;

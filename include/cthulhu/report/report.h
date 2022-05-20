@@ -76,7 +76,7 @@ typedef enum
 typedef struct
 {
     char *message;      ///< associated message
-    const node_t *node; ///< associated node
+    node_t node; ///< associated node
 } part_t;
 
 /**
@@ -94,7 +94,7 @@ typedef struct
     vector_t *parts;
 
     /* source and location, if node is NULL then location is ignored */
-    const node_t *node;
+    node_t node;
 
     /* extra note */
     char *note;
@@ -157,7 +157,7 @@ message_t *ctu_assert(reports_t *reports, FORMAT_STRING const char *fmt, ...) FO
  *
  * @return a message object to attach extra data to
  */
-message_t *report(reports_t *reports, level_t level, const node_t *node, FORMAT_STRING const char *fmt, ...)
+message_t *report(reports_t *reports, level_t level, node_t node, FORMAT_STRING const char *fmt, ...)
     FORMAT_ATTRIBUTE(4, 5);
 
 /**
@@ -168,7 +168,7 @@ message_t *report(reports_t *reports, level_t level, const node_t *node, FORMAT_
  * @param fmt the format string
  * @param ... the arguments to the format string
  */
-void report_append(message_t *message, const node_t *node, FORMAT_STRING const char *fmt, ...) FORMAT_ATTRIBUTE(3, 4);
+void report_append(message_t *message, node_t node, FORMAT_STRING const char *fmt, ...) FORMAT_ATTRIBUTE(3, 4);
 
 /**
  * add an underline message to an existing message

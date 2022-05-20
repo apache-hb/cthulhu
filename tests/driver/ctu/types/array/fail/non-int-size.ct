@@ -1,0 +1,1 @@
+type arr = [true]int;

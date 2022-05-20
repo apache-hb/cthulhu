@@ -5,8 +5,13 @@
 * wasm backend
   * this is going to need ssa
 
-* s3 api
-* aws lambda work
+* get rid of hlir parent data from the frontend
+  * belongs either in the middle or backend
+  * probably collected in the backend with some utility provided by common tools
+
+* make hlir reentrant
+  * this will be an important thing to test so reentrant code is needed
+  * this will also make it allocator aware
 
 ## Blocking items
 

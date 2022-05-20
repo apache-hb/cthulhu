@@ -94,13 +94,13 @@ map_t *sema_tag(sema_t *sema, size_t tag)
 static void report_recursion(reports_t *reports, vector_t *stack, const char *msg)
 {
     hlir_t *top = vector_tail(stack);
-    const node_t *topNode = get_hlir_node(top);
+    node_t topNode = get_hlir_node(top);
     message_t *id = report(reports, ERROR, topNode, "%s", msg);
 
     for (size_t i = 0; i < vector_len(stack); i++)
     {
         hlir_t *hlir = vector_get(stack, i);
-        const node_t *node = get_hlir_node(hlir);
+        node_t node = get_hlir_node(hlir);
         report_append(id, node, "trace `%zu`", i);
     }
 }
@@ -181,7 +181,7 @@ static entry_t *new_entry(const hlir_t *hlir, bool nesting)
 static void report_type_recursion(reports_t *reports, vector_t *stack)
 {
     entry_t *top = vector_tail(stack);
-    const node_t *topNode = get_hlir_node(top->hlir);
+    node_t topNode = get_hlir_node(top->hlir);
     message_t *id = report(reports, ERROR, topNode, "%s", "recursive type definition");
 
     size_t trace = 0;
@@ -194,7 +194,7 @@ static void report_type_recursion(reports_t *reports, vector_t *stack)
             continue;
         }
 
-        const node_t *node = get_hlir_node(entry->hlir);
+        node_t node = get_hlir_node(entry->hlir);
         report_append(id, node, "trace `%zu`", trace++);
     }
 }
@@ -254,7 +254,7 @@ static const hlir_t *chase(reports_t *reports, const hlir_t *hlir)
 
         if (depth++ > DEPTH_LIMIT)
         {
-            const node_t *node = get_hlir_node(hlir);
+            node_t node = get_hlir_node(hlir);
             message_t *id = report(reports, ERROR, node, "type definition recurses too deep");
             report_note(id, "type definition recurses beyond %d levels", DEPTH_LIMIT);
             return NULL;
@@ -273,6 +273,10 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
     bool result = true;
     switch (kind)
     {
+    case HLIR_ARRAY:
+        result = find_type_recursion(reports, stack, chase(reports, hlir->element), false, true);
+        break;
+
     case HLIR_POINTER:
         result = find_type_recursion(reports, stack, chase(reports, hlir), false, true);
         break;
@@ -334,7 +338,7 @@ static void check_attribute(reports_t *reports, hlir_t *hlir)
 
     if (attribs->mangle != NULL && attribs->linkage == LINK_INTERNAL)
     {
-        const node_t *node = get_hlir_node(hlir);
+        node_t node = get_hlir_node(hlir);
         message_t *id = report(reports, WARNING, node, "cannot change name mangling of internal symbols");
         report_note(id, "attribute will not be mangled");
 
@@ -349,8 +353,63 @@ static void check_identifier_isnt_empty(reports_t *reports, const hlir_t *ident)
     const char *name = get_hlir_name(ident);
     if (strlen(name) == 0)
     {
-        const node_t *node = get_hlir_node(ident);
+        node_t node = get_hlir_node(ident);
         report(reports, ERROR, node, "empty identifier");
+    }
+}
+
+static hlir_t *validate_constexpr(reports_t *reports, hlir_t *expr)
+{
+    hlir_kind_t kind = get_hlir_kind(expr);
+
+    hlir_t *result = NULL;
+    switch (kind)
+    {
+    case HLIR_DIGIT_LITERAL:
+    case HLIR_BOOL_LITERAL:
+    case HLIR_STRING_LITERAL:
+        return NULL;
+
+    case HLIR_COMPARE:
+    case HLIR_BINARY:
+        if ((result = validate_constexpr(reports, expr->lhs)))
+        {
+            return result;
+        }
+        
+        if ((result = validate_constexpr(reports, expr->rhs)))
+        {
+            return result;
+        }
+
+        return NULL;
+    default:
+        report(reports, INTERNAL, get_hlir_node(expr), "unexpected constexpr type %s", hlir_kind_to_string(kind));
+        return NULL;
+    }
+}
+
+static void validate_type(reports_t *reports, hlir_t *type)
+{
+    if (!hlir_is(type, HLIR_ARRAY))
+    {
+        return;
+    }
+
+    hlir_t *length = type->length;
+    hlir_t *err = validate_constexpr(reports, length);
+
+    if (err != NULL)
+    {
+        node_t node = get_hlir_node(type);
+        report(reports, ERROR, node, "array length must be a constant expression");
+    }
+
+    const hlir_t *lengthType = get_hlir_type(length);
+    if (!hlir_is(lengthType, HLIR_DIGIT))
+    {
+        node_t node = get_hlir_node(lengthType);
+        report(reports, ERROR, node, "array length must be an integer");
     }
 }
 
@@ -367,6 +426,7 @@ void check_module(reports_t *reports, hlir_t *mod)
 
         check_identifier_isnt_empty(reports, type);
         check_type_recursion(reports, &recursionStack, type);
+        validate_type(reports, type);
 
         vector_reset(recursionStack);
     }

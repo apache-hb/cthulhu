@@ -506,7 +506,7 @@ static scan_t *load_scan(load_t *load, index_t index)
     return scanner;
 }
 
-static const node_t *get_node(load_t *load, index_t index)
+static node_t get_node(load_t *load, index_t index)
 {
     value_t values[FIELDLEN(kNodeFields)];
     bool ok = read_entry(load->data, index, values);
@@ -551,7 +551,7 @@ static hlir_t *load_opt_node(load_t *load, index_t index, const char *trace)
     return load_node(load, index, trace);
 }
 
-static const node_t *get_span(load_t *load, value_t *values)
+static node_t get_span(load_t *load, value_t *values)
 {
     return get_node(load, get_reference(values[0])); // values[0] is always a span
 }
@@ -989,7 +989,7 @@ static index_t save_scan(hlir_save_t *data, const scan_t *scan)
     return idx;
 }
 
-static index_t save_span(hlir_save_t *data, const node_t *node)
+static index_t save_span(hlir_save_t *data, node_t node)
 {
     if (node == NULL || node == node_builtin())
     {
@@ -1045,7 +1045,7 @@ static value_t make_ref_opt(hlir_save_t *data, const hlir_t *hlir)
 
 static value_t span_ref(hlir_save_t *data, const hlir_t *hlir)
 {
-    const node_t *node = get_hlir_node(hlir);
+    node_t node = get_hlir_node(hlir);
     index_t index = save_span(data, node);
     return reference_value(index);
 }

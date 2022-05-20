@@ -12,12 +12,12 @@
 
 bool verbose = false;
 
-static bool is_valid_node(const node_t *node)
+static bool is_valid_node(node_t node)
 {
     return node != NULL && node != node_builtin();
 }
 
-static part_t *part_new(char *message, const node_t *node)
+static part_t *part_new(char *message, node_t node)
 {
     part_t *part = ctu_malloc(sizeof(part_t));
     part->message = message;
@@ -70,7 +70,7 @@ static char *format_location(const char *base, const scan_t *scan, where_t where
                   where.firstColumn);
 }
 
-static void report_scanner(const char *base, const node_t *node)
+static void report_scanner(const char *base, node_t node)
 {
     const scan_t *scan = get_node_scanner(node);
     where_t where = get_node_location(node);
@@ -374,7 +374,7 @@ static char *format_source(const scan_t *scan, where_t where, const char *underl
 
 static void report_source(message_t *message)
 {
-    const node_t *node = message->node;
+    node_t node = message->node;
     if (!is_valid_node(node))
     {
         return;
@@ -390,7 +390,7 @@ static void report_part(const char *base, message_t *message, part_t *part)
 {
     char *msg = part->message;
 
-    const node_t *node = part->node;
+    node_t node = part->node;
     const scan_t *scan = get_node_scanner(node);
     where_t where = get_node_location(node);
 
@@ -404,10 +404,12 @@ static void report_part(const char *base, message_t *message, part_t *part)
         report_scanner(base, part->node);
     }
 
-    char *loc = format_location(base, scan, where);
-
-    fprintf(stderr, "%s> %s\n", pad, loc);
-    fprintf(stderr, "%s", format_source(scan, where, msg));
+    if (is_valid_node(message->node))
+    {
+        char *loc = format_location(base, scan, where);
+        fprintf(stderr, "%s> %s\n", pad, loc);
+        fprintf(stderr, "%s", format_source(scan, where, msg));
+    }
 }
 
 static void send_note(const char *note)
@@ -561,7 +563,7 @@ int end_reports(reports_t *reports, const char *name, report_config_t settings)
     return result;
 }
 
-static message_t *report_push(reports_t *reports, level_t level, const node_t *node, const char *fmt, va_list args)
+static message_t *report_push(reports_t *reports, level_t level, node_t node, const char *fmt, va_list args)
 {
     char *str = formatv(fmt, args);
     message_t *message = ctu_malloc(sizeof(message_t));
@@ -591,7 +593,7 @@ message_t *ctu_assert(reports_t *reports, const char *fmt, ...)
 }
 
 USE_DECL
-message_t *report(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...)
+message_t *report(reports_t *reports, level_t level, node_t node, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -604,7 +606,7 @@ message_t *report(reports_t *reports, level_t level, const node_t *node, const c
 }
 
 USE_DECL
-void report_append(message_t *message, const node_t *node, const char *fmt, ...)
+void report_append(message_t *message, node_t node, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);

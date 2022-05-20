@@ -49,6 +49,13 @@ ast_t *ast_digit(scan_t *scan, where_t where, mpz_t value)
     return ast;
 }
 
+ast_t *ast_bool(scan_t *scan, where_t where, bool value)
+{
+    ast_t *ast = ast_new(AST_BOOL, scan, where);
+    ast->boolean = value;
+    return ast;
+}
+
 ast_t *ast_name(scan_t *scan, where_t where, vector_t *path)
 {
     ast_t *ast = ast_new(AST_TYPENAME, scan, where);

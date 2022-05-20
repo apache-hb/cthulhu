@@ -263,6 +263,7 @@ typelist: type { $$ = vector_init($1); }
 primary: LPAREN expr RPAREN { $$ = $2; }
     | INTEGER { $$ = ast_digit(x, @$, $1); }
     | path { $$ = ast_name(x, @$, $1); }
+    | BOOLEAN { $$ = ast_bool(x, @$, $1); }
     ;
 
 expr: primary { $$ = $1; }

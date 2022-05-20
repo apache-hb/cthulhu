@@ -8,7 +8,7 @@ hlir_kind_t get_hlir_kind(const hlir_t *hlir);
 const hlir_t *get_hlir_type(const hlir_t *hlir);
 const char *get_hlir_name(const hlir_t *hlir);
 const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir);
-const node_t *get_hlir_node(const hlir_t *hlir);
+node_t get_hlir_node(const hlir_t *hlir);
 const hlir_t *get_hlir_parent(const hlir_t *hlir);
 bool hlir_is(const hlir_t *hlir, hlir_kind_t kind);
 bool hlir_will_be(const hlir_t *hlir, hlir_kind_t kind);
