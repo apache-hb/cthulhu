@@ -13,12 +13,12 @@ static const char *kSetItems[] = {
 #define TOTAL_ITEMS (sizeof(kSetItems) / sizeof(const char *))
 
 TEST(test_map_construction, {
-    map_t *map = map_new(64, alloc_global());
+    map_t *map = map_new(64);
     SHOULD_PASS("map is not null", map != NULL);
 })
 
 TEST(test_map_insertion, {
-    map_t *map = map_new(64, alloc_global());
+    map_t *map = map_new(64);
 
     for (size_t i = 0; i < TOTAL_ITEMS; i++) {
         map_set(map, kSetItems[i], (char*)kSetItems[i]);
@@ -30,7 +30,7 @@ TEST(test_map_insertion, {
 })
 
 TEST(test_map_default, {
-    map_t *map = map_new(64, alloc_global());
+    map_t *map = map_new(64);
     char world[] = "world";
 
     /* pointer equality is on purpose */

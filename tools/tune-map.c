@@ -93,7 +93,7 @@ static size_t MERSENNE[] = {
 static ns_t time_prime(size_t len, size_t prime) {
     ns_t start = now();
     
-    map_t *map = map_new(prime, alloc_global());
+    map_t *map = map_new(prime);
     for (size_t i = 0; i < len; i++) {
         char *ident = vector_get(idents, i);
         map_set(map, ident, ident);

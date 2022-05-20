@@ -1,7 +1,7 @@
 #pragma once
 
 #include "cthulhu/util/macros.h"
-#include "cthulhu/util/alloc.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -19,7 +19,6 @@ typedef struct item_t
  */
 typedef struct
 {
-    alloc_t *alloc;
     size_t size;                     ///< the number of buckets
     FIELD_SIZE(size) item_t items[]; ///< the buckets
 } set_t;
@@ -31,7 +30,7 @@ typedef struct
  * @return the created set
  */
 NODISCARD
-set_t *set_new(size_t size, alloc_t *alloc);
+set_t *set_new(size_t size);
 
 /**
  * @brief add a string to a set

@@ -6,11 +6,6 @@
 #include "cthulhu/report/report.h"
 #include "cthulhu/util/str.h"
 
-static alloc_t *get_general_allocator(cthulhu_t *cthulhu)
-{
-    return cthulhu->config.allocConfig.generalAlloc;
-}
-
 static int report_errors(cthulhu_t *cthulhu, const char *name)
 {
     int status = end_reports(cthulhu->reports, name, cthulhu->config.reportConfig);
@@ -37,33 +32,32 @@ static void rename_module(hlir_t *hlir, const char *path)
     logverbose("renamed module to `%s`", hlir->name);
 }
 
-static runtime_t runtime_new(alloc_t *alloc, reports_t *reports, size_t size)
+static runtime_t runtime_new(reports_t *reports, size_t size)
 {
     runtime_t runtime = {
-        .alloc = alloc,
         .reports = reports, 
-        .modules = map_optimal(size, alloc),
+        .modules = map_optimal(size),
     };
 
     return runtime;
 }
 
-static source_t *source_of_kind(alloc_t *alloc, source_kind_t kind, const char *path)
+static source_t *source_of_kind(source_kind_t kind, const char *path)
 {
-    source_t *source = alloc_new(alloc, sizeof(source_t), path, NULL);
+    source_t *source = ctu_malloc(sizeof(source_t));
     source->kind = kind;
     source->path = path;
     return source;
 }
 
-source_t *source_file(alloc_t *alloc, const char *path)
+source_t *source_file(const char *path)
 {
-    return source_of_kind(alloc, SOURCE_FILE, path);
+    return source_of_kind(SOURCE_FILE, path);
 }
 
-source_t *source_string(alloc_t *alloc, const char *path, const char *string)
+source_t *source_string(const char *path, const char *string)
 {
-    source_t *source = source_of_kind(alloc, SOURCE_STRING, path);
+    source_t *source = source_of_kind(SOURCE_STRING, path);
     source->string = string;
     return source;
 }
@@ -76,12 +70,12 @@ cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
     CTASSERT(driver.fnResolveImports != NULL, "driver must implement fnResolveImports");
     CTASSERT(driver.fnCompileModule != NULL, "driver must implement fnCompileModule");
 
-    cthulhu_t *cthulhu = alloc_new(config.allocConfig.generalAlloc, sizeof(cthulhu_t), "cthulhu", NULL);
+    cthulhu_t *cthulhu = ctu_malloc(sizeof(cthulhu_t));
 
-    reports_t *reports = begin_reports(config.allocConfig.reportAlloc);
-    
+    reports_t *reports = begin_reports();
+
     size_t totalSources = vector_len(sources);
-    runtime_t runtime = runtime_new(config.allocConfig.runtimeAlloc, reports, totalSources);
+    runtime_t runtime = runtime_new(reports, totalSources);
 
     cthulhu->driver = driver;
     cthulhu->config = config;
@@ -130,7 +124,6 @@ static scan_t *make_scanner_from_source(cthulhu_t *cthulhu, source_t *source)
 
 int cthulhu_init(cthulhu_t *cthulhu)
 {
-    alloc_t *alloc = get_general_allocator(cthulhu);
     cthulhu->driver.fnInitCompiler(&cthulhu->runtime);
 
     size_t totalSources = vector_len(cthulhu->sources);
@@ -141,7 +134,7 @@ int cthulhu_init(cthulhu_t *cthulhu)
     {
         source_t *source = vector_get(cthulhu->sources, i);
 
-        compile_t *ctx = alloc_new(alloc, sizeof(compile_t), "compile", cthulhu);
+        compile_t *ctx = ctu_malloc(sizeof(compile_t));
         ctx->ast = NULL;
         ctx->hlir = NULL;
         ctx->source = source;

@@ -11,9 +11,9 @@ static size_t sizeof_map(size_t size)
     return sizeof(map_t) + (size * sizeof(bucket_t));
 }
 
-static bucket_t *bucket_new(const bucket_t *parent, alloc_t *alloc, const char *key, void *value)
+static bucket_t *bucket_new(const char *key, void *value)
 {
-    bucket_t *entry = alloc_new(alloc, sizeof(bucket_t), "bucket-new", parent);
+    bucket_t *entry = ctu_malloc(sizeof(bucket_t));
     entry->key = key;
     entry->value = value;
     entry->next = NULL;
@@ -37,12 +37,11 @@ static void clear_keys(bucket_t *buckets, size_t size)
 }
 
 USE_DECL
-map_t *map_new(size_t size, alloc_t *alloc)
+map_t *map_new(size_t size)
 {
-    map_t *map = alloc_new(alloc, sizeof_map(size), "map-new", NULL);
+    map_t *map = ctu_malloc(sizeof_map(size));
 
     map->size = size;
-    map->alloc = alloc;
 
     clear_keys(map->data, size);
 
@@ -123,7 +122,7 @@ void map_set(map_t *map, const char *key, void *value)
 
         if (entry->next == NULL)
         {
-            entry->next = bucket_new(entry, map->alloc, key, value);
+            entry->next = bucket_new(key, value);
             break;
         }
 
@@ -175,7 +174,7 @@ void map_set_ptr(map_t *map, const void *key, void *value)
 
         if (entry->next == NULL)
         {
-            entry->next = bucket_new(entry, map->alloc, key, value);
+            entry->next = bucket_new(key, value);
             break;
         }
 

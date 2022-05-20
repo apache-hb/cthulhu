@@ -8,36 +8,17 @@
 
 #include <string.h>
 
-static alloc_t *get_desired_alloc(sema_t *parent, alloc_t *provided)
+sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes)
 {
-    if (provided != NULL)
-    {
-        return provided;
-    }
-
-    if (parent == NULL)
-    {
-        return NULL;
-    }
-
-    return parent->alloc;
-}
-
-sema_t *sema_new(sema_t *parent, reports_t *reports, alloc_t *alloc, size_t decls, size_t *sizes)
-{
-    alloc_t *actual = get_desired_alloc(parent, alloc);
-    CTASSERT(actual != NULL, "sema-new alloc must not be NULL");
-
-    sema_t *sema = alloc_new(actual, sizeof(sema_t), "alloc-new", parent);
+    sema_t *sema = ctu_malloc(sizeof(sema_t));
 
     sema->parent = parent;
     sema->reports = reports;
-    sema->alloc = actual;
 
     sema->decls = vector_of(decls);
     for (size_t i = 0; i < decls; i++)
     {
-        map_t *map = map_optimal(sizes[i], actual);
+        map_t *map = map_optimal(sizes[i]);
         vector_set(sema->decls, i, map);
     }
 

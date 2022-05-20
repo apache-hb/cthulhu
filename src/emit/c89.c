@@ -675,7 +675,7 @@ static vector_t *sort_types(c89_emit_t *emit, vector_t *modules)
 
     vector_t *result = vector_new(totalTypes);
 
-    set_t *uniqueTypes = set_new(totalTypes, alloc_global());
+    set_t *uniqueTypes = set_new(totalTypes);
 
     for (size_t i = 0; i < totalTypes; i++)
     {
@@ -740,7 +740,7 @@ static void c89_emit_global(c89_emit_t *emit, const hlir_t *hlir)
 static void c89_emit_globals(c89_emit_t *emit, size_t totalDecls, vector_t *modules)
 {
     size_t totalModules = vector_len(modules);
-    set_t *uniqueGlobals = set_new(totalDecls, alloc_global());
+    set_t *uniqueGlobals = set_new(totalDecls);
 
     for (size_t i = 0; i < totalModules; i++)
     {
@@ -840,7 +840,7 @@ static void c89_emit_function(c89_emit_t *emit, const hlir_t *function)
 static void c89_emit_functions(c89_emit_t *emit, size_t totalDecls, vector_t *modules)
 {
     size_t totalModules = vector_len(modules);
-    set_t *uniqueFunctions = set_new(totalDecls, alloc_global());
+    set_t *uniqueFunctions = set_new(totalDecls);
 
     for (size_t i = 0; i < totalModules; i++)
     {
@@ -893,7 +893,7 @@ stream_t *c89_emit_modules(reports_t *reports, vector_t *modules)
     }
 
     // then use the total number of types to create a fast map
-    emit.mangledNames = map_optimal(totalDecls, alloc_global());
+    emit.mangledNames = map_optimal(totalDecls);
     emit.depth = 0;
 
     c89_emit_types(&emit, modules);

@@ -8,7 +8,6 @@ typedef struct sema_t
 {
     struct sema_t *parent;
     reports_t *reports;
-    alloc_t *alloc;
 
     /**
      * an array of maps
@@ -19,7 +18,7 @@ typedef struct sema_t
     void *data;
 } sema_t;
 
-sema_t *sema_new(sema_t *parent, reports_t *reports, alloc_t *alloc, size_t decls, size_t *sizes);
+sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes);
 
 void sema_delete(sema_t *sema);
 

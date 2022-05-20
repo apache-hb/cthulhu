@@ -324,7 +324,7 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
     size_t nlocals = vector_len(node->locals);
     size_t sizes[TAG_MAX] = {[TAG_VALUES] = nlocals};
 
-    sema_t *nest = sema_new(sema, sema->reports, NULL, TAG_MAX, sizes);
+    sema_t *nest = sema_new(sema, sema->reports, TAG_MAX, sizes);
 
     for (size_t i = 0; i < nlocals; i++)
     {
@@ -399,7 +399,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
         [TAG_PROCS] = totalFunctions,
     };
 
-    sema_t *sema = sema_new(NULL, runtime->reports, runtime->alloc, TAG_MAX, sizes);
+    sema_t *sema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
 
     // forward declare everything
     for (size_t i = 0; i < totalConsts; i++)

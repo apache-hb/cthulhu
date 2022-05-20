@@ -145,12 +145,6 @@ src = [
     'src/report/report.c',
     'src/report/report-ext.c',
 
-    # allocators
-    'src/util/alloc/alloc.c',
-    'src/util/alloc/global.c',
-    'src/util/alloc/bump.c',
-    'src/util/alloc/rusty.c',
-
     # standard library
     'src/util/str.c',
     'src/util/stream.c',
