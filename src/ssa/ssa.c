@@ -4,6 +4,7 @@
 
 typedef struct
 {
+    reports_t *reports;
     map_t *symbols; // map<hlir, flow>
 } ssa_emit_t;
 
@@ -63,6 +64,45 @@ static size_t calc_total_decls(vector_t *modules)
     return total;
 }
 
+static void compile_global(ssa_emit_t *emit, const hlir_t *hlir, flow_t *flow)
+{
+
+}
+
+static void compile_function(ssa_emit_t *emit, const hlir_t *hlir, flow_t *flow)
+{
+    
+}
+
+static void compile_flow(ssa_emit_t *emit, const hlir_t *hlir, flow_t *flow)
+{
+    hlir_kind_t kind = get_hlir_kind(hlir);
+    switch (kind)
+    {
+    case HLIR_GLOBAL:
+        compile_global(emit, hlir, flow);
+        break;
+    case HLIR_FUNCTION:
+        compile_function(emit, hlir, flow);
+        break;
+    
+    default:
+        report(emit->reports, INTERNAL, get_hlir_node(hlir), "cannot compile flow for %s", hlir_kind_to_string(kind));
+        break;
+    }
+}
+
+static void compile_flows(ssa_emit_t *emit)
+{
+    map_iter_t iter = map_iter(emit->symbols);
+
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        compile_flow(emit, entry.key, entry.value);
+    }
+}
+
 vector_t *ssa_compile(reports_t *reports, vector_t *modules)
 {
     size_t totalModules = vector_len(modules);
@@ -80,4 +120,6 @@ vector_t *ssa_compile(reports_t *reports, vector_t *modules)
         ssa_t *ssa = ssa_new(&emit, mod);
         vector_set(ssaModules, i, ssa);
     }
+
+    compile_flows(&emit);
 }

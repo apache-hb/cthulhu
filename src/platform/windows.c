@@ -157,18 +157,7 @@ char *native_cerror_to_string(native_cerror_t error)
         return ctu_strdup("unknown error");
     }
 
-    DWORD used = written;
-    for (DWORD i = 0; i < used; i++)
-    {
-        if (buffer[i] == '\n' || buffer[i] == '\r')
-        {
-            memcpy(buffer + i, buffer + i + 1, written - i);
-            used--;
-            i--;
-        }
-    }
-
-    return ctu_strndup(buffer, used);
+    return str_erase(buffer, written, "\n\r");
 }
 
 native_cerror_t native_get_last_error(void)

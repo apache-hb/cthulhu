@@ -65,11 +65,20 @@ typedef struct
     };
 } step_t;
 
+typedef struct
+{
+    size_t size;
+    size_t used;
+    step_t *steps;
+} step_list_t;
+
 typedef struct flow_t
 {
     const char *name;
     const hlir_t *type;
     node_t node;
+
+    step_list_t steps;
 } flow_t;
 
 typedef struct

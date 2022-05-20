@@ -446,12 +446,12 @@ static bool char_is_any_of(char c, const char *chars)
 }
 
 USE_DECL
-char *str_trim(const char *str, const char *chars)
+char *str_trim(const char *str, const char *letters)
 {
     const char *tmp = str;
 
     // strip from front
-    while (*tmp && char_is_any_of(*tmp, chars))
+    while (*tmp && char_is_any_of(*tmp, letters))
     {
         tmp++;
     }
@@ -459,10 +459,29 @@ char *str_trim(const char *str, const char *chars)
     size_t remaining = strlen(tmp);
 
     // strip from back
-    while (remaining > 0 && char_is_any_of(tmp[remaining - 1], chars))
+    while (remaining > 0 && char_is_any_of(tmp[remaining - 1], letters))
     {
         remaining--;
     }
 
     return ctu_strndup(tmp, remaining);
+}
+
+USE_DECL
+char *str_erase(const char *str, size_t len, const char *letters)
+{
+    char *result = ctu_strndup(str, len);
+
+    size_t used = len;
+    for (size_t i = 0; i < used; i++)
+    {
+        if (char_is_any_of(result[i], letters))
+        {
+            memcpy(result + i, result + i + 1, len - i);
+            used--;
+            i--;
+        }
+    }
+
+    return result;
 }

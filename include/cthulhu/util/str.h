@@ -182,7 +182,10 @@ NODISCARD
 char *str_replace(const char *str, const char *sub, const char *repl);
 
 NODISCARD
-char *str_trim(const char *str, const char *chars);
+char *str_trim(const char *str, const char *letters);
+
+NODISCARD
+char *str_erase(const char *str, size_t len, const char *letters);
 
 /**
  * @brief hash a string
