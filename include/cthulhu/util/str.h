@@ -23,7 +23,7 @@
  * @return the formatted string
  */
 NODISCARD
-char *format(const char *fmt, ...);
+char *format(FORMAT_STRING const char *fmt, ...) FORMAT_ATTRIBUTE(1, 2);
 
 /**
  * @brief format a string with a @a va_list

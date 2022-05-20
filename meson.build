@@ -74,7 +74,7 @@ endif
 if cc.get_id() == 'msvc'
     args += [ '/Wv:18' ]
 
-    if analyze
+    if analyze.enabled()
         args += [
             '/external:W0', '/external:I' + bld, 
             '/analyze', '/analyze:external-'
