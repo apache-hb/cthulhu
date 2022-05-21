@@ -197,7 +197,7 @@ endif
 subdir('tests/harness')
 
 foreach lang : get_option('languages')
-    subdir('tests/driver'/lang)
+    subdir('tests/lang'/lang)
 endforeach
 
 subdir('tests/unit-tests')
