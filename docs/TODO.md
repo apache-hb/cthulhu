@@ -17,7 +17,9 @@
 
 * take logging in more places
 
-* reorg pl0 tests
+* custom allocator support
+
+* timing
 
 * rework logging 
   * need custom sinks for multiple interfaces

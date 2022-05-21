@@ -33,6 +33,7 @@ typedef struct
 typedef enum
 {
     OP_EMPTY,
+    OP_RETURN,
     OP_CONST,
     OP_UNARY,
     OP_BINARY,
@@ -91,3 +92,5 @@ typedef struct
 } ssa_t;
 
 vector_t *ssa_compile(reports_t *reports, vector_t *modules);
+
+void ssa_print(const ssa_t *ssa);

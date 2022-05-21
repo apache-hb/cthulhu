@@ -1,7 +1,7 @@
 project('cthulhu', [ 'c', 'cpp' ],
     license : 'LGPLv3',
     version : '0.2.1',
-    meson_version : '>=0.58',
+    meson_version : '>=0.59',
     default_options : [
         'c_std=gnu11',
         'cpp_std=c++17',
@@ -130,6 +130,10 @@ src = [
     # common frontend components
     'src/interface/runtime.c',
     'src/interface/cthulhu.c',
+
+    # ssa 
+    'src/ssa/ssa.c',
+    'src/ssa/print.c',
 
     # tree output
     'src/emit/c89.c',

@@ -37,8 +37,44 @@ TEST(test_map_default, {
     SHOULD_PASS("gets default value", map_get_default(map, "hello", world) == world);
 })
 
+TEST(test_map_insertion_ptr, {
+    map_t *map = map_new(64);
+
+    for (size_t i = 0; i < TOTAL_ITEMS; i++) {
+        map_set_ptr(map, kSetItems[i], (char*)kSetItems[i]);
+    }
+
+    for (size_t i = 0; i < TOTAL_ITEMS; i++) {
+        SHOULD_PASS("map has item", map_get_ptr(map, kSetItems[i]) != NULL);
+    }
+})
+
+TEST(test_map_iter, {
+    map_t *map = map_new(64);
+
+    for (size_t i = 0; i < TOTAL_ITEMS; i++) {
+        map_set_ptr(map, kSetItems[i], (char*)kSetItems[i]);
+    }
+
+    size_t items = 0;
+
+    map_iter_t iter = map_iter(map);
+
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        SHOULD_PASS("map has item", entry.key != NULL);
+        SHOULD_PASS("map has item", entry.value != NULL);
+        items++;
+    }
+
+    SHOULD_PASS("map has items", items == TOTAL_ITEMS);
+})
+
 HARNESS("maps", {
     ENTRY("construction", test_map_construction),
     ENTRY("insertion", test_map_insertion),
     ENTRY("defaults", test_map_default),
+    ENTRY("insertion-ptr", test_map_insertion_ptr),
+    ENTRY("iter", test_map_iter)
 })

@@ -11,7 +11,7 @@ static size_t sizeof_map(size_t size)
     return sizeof(map_t) + (size * sizeof(bucket_t));
 }
 
-static bucket_t *bucket_new(const char *key, void *value)
+static bucket_t *bucket_new(const void *key, void *value)
 {
     bucket_t *entry = ctu_malloc(sizeof(bucket_t));
     entry->key = key;
@@ -193,42 +193,78 @@ void *map_get_default_ptr(map_t *map, const void *key, void *other)
     return entry_get_ptr(bucket, key, other);
 }
 
-static bucket_t *get_next_bucket(map_t *map, size_t *index, bucket_t *bucket)
+static bucket_t *next_in_chain(bucket_t *entry)
 {
-    bucket_t *result = NULL;
-
-    while (true)
+    if (entry == NULL || entry->key == NULL)
     {
-        if (bucket && bucket->next != NULL)
-        {
-            // if the chain has a bucket use that
-            result = bucket->next;
-        }
-        else if (*index < map->size)
-        {
-            // otherwise go to the next element in the map if there is one
-            result = &map->data[(*index)++];
-        }
+        return NULL;
+    }
 
-        if ((result != NULL && result->key != NULL) || *index >= map->size)
+    while (entry->next != NULL)
+    {
+        entry = entry->next;
+
+        if (entry->key != NULL)
         {
-            break;
+            return entry;
         }
     }
 
-    return result;
+    return NULL;
+}
+
+/**
+ * @brief get the next bucket for an iterator
+ * 
+ * @param map the map being iterated
+ * @param index the current toplevel bucket index
+ * @param previous the previous bucket that was returned
+ * @return bucket_t* the next bucket or NULL if there are no more buckets
+ */
+static bucket_t *find_next_bucket(map_t *map, size_t *index, bucket_t *previous)
+{
+    bucket_t *entry = next_in_chain(previous);
+    if (entry != NULL)
+    {
+        return entry;
+    }
+
+    size_t i = *index;
+
+    while (i < map->size)
+    {
+        entry = &map->data[i++];
+        if (entry->key != NULL)
+        {
+            *index = i;
+            return entry;
+        }
+
+        entry = next_in_chain(entry);
+        if (entry != NULL)
+        {
+            *index = i;
+            return entry;
+        }
+    }
+
+    return NULL;
 }
 
 USE_DECL
 map_iter_t map_iter(map_t *map)
 {
+    size_t index = 0;
+
+    bucket_t *bucket = find_next_bucket(map, &index, NULL);
+    bucket_t *next = find_next_bucket(map, &index, bucket);
+
     map_iter_t iter = {
         .map = map,
-        .index = 0,
+        .index = index,
+        .bucket = bucket,
+        .next = next,
     };
-
-    iter.bucket = get_next_bucket(map, &iter.index, NULL);
-    iter.next = get_next_bucket(map, &iter.index, iter.bucket);
 
     return iter;
 }
@@ -237,12 +273,12 @@ USE_DECL
 map_entry_t map_next(map_iter_t *iter)
 {
     map_entry_t entry = {
-        .key = iter->bucket->key,
-        .value = iter->bucket->value,
+        iter->bucket->key,
+        iter->bucket->value,
     };
-
+    
     iter->bucket = iter->next;
-    iter->next = get_next_bucket(iter->map, &iter->index, iter->bucket);
+    iter->next = find_next_bucket(iter->map, &iter->index, iter->bucket);
 
     return entry;
 }
@@ -250,7 +286,7 @@ map_entry_t map_next(map_iter_t *iter)
 USE_DECL
 bool map_has_next(map_iter_t *iter)
 {
-    return iter->bucket != NULL && iter->next != NULL;
+    return iter->bucket != NULL;
 }
 
 void map_reset(map_t *map)
