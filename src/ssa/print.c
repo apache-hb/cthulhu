@@ -89,11 +89,11 @@ void ssa_print(const ssa_t *ssa)
 
     printf("  globals:\n");
 
-    map_iter_t iter = map_iter(ssa->globals);
+    map_iter_t globalIter = map_iter(ssa->globals);
 
-    while (map_has_next(&iter))
+    while (map_has_next(&globalIter))
     {
-        map_entry_t entry = map_next(&iter);
+        map_entry_t entry = map_next(&globalIter);
         
         const char *name = entry.key;
         const flow_t *flow = entry.value;
