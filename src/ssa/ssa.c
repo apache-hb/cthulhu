@@ -124,6 +124,7 @@ static step_t *get_step(step_list_t *list, size_t vreg)
 }
 
 static operand_t emit_expr(ssa_emit_t *emit, step_list_t *list, const hlir_t *expr);
+static operand_t emit_stmt(ssa_emit_t *emit, step_list_t *list, const hlir_t *stmt);
 
 static operand_t emit_digit_literal(const hlir_t *expr)
 {
@@ -169,6 +170,36 @@ static operand_t emit_expr(ssa_emit_t *emit, step_list_t *list, const hlir_t *ex
     }
 }
 
+static operand_t emit_stmts(ssa_emit_t *emit, step_list_t *list, const hlir_t *stmts)
+{
+    for (size_t i = 0; i < vector_len(stmts->stmts); i++)
+    {
+        const hlir_t *stmt = vector_get(stmts->stmts, i);
+        emit_stmt(emit, list, stmt);
+    }
+
+    return operand_empty(stmts);
+}
+
+static operand_t emit_stmt(ssa_emit_t *emit, step_list_t *list, const hlir_t *stmt)
+{
+    hlir_kind_t kind = get_hlir_kind(stmt);
+    switch (kind)
+    {
+    case HLIR_STMTS:
+        return emit_stmts(emit, list, stmt);
+
+    case HLIR_BOOL_LITERAL:
+    case HLIR_DIGIT_LITERAL:
+    case HLIR_STRING_LITERAL:
+        return emit_expr(emit, list, stmt);
+
+    default:
+        report(emit->reports, INTERNAL, get_hlir_node(stmt), "unhandled statement kind %s", hlir_kind_to_string(kind));
+        return operand_empty(stmt);
+    }
+}
+
 static void compile_global(ssa_emit_t *emit, const hlir_t *hlir, flow_t *flow)
 {
     operand_t op = emit_expr(emit, &flow->steps, hlir->value);
@@ -180,9 +211,16 @@ static void compile_global(ssa_emit_t *emit, const hlir_t *hlir, flow_t *flow)
 
 static void compile_function(ssa_emit_t *emit, const hlir_t *hlir, flow_t *flow)
 {
-    UNUSED(emit);
-    UNUSED(hlir);
-    UNUSED(flow);
+    if (hlir->body == NULL)
+    {
+        return;
+    }
+    
+    operand_t op = emit_stmt(emit, &flow->steps, hlir->body);
+    size_t ret = add_step(&flow->steps, hlir, OP_RETURN);
+
+    step_t *step = get_step(&flow->steps, ret);
+    step->operand = op;
 }
 
 static void compile_flow(ssa_emit_t *emit, const hlir_t *hlir, flow_t *flow)
