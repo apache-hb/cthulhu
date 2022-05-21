@@ -11,7 +11,6 @@
 #include "cthulhu/report/report.h"
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/vector.h"
-#include "cthulhu/ssa/ssa.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -132,20 +131,6 @@ int main(int argc, const char **argv)
     }
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
-
-    vector_t *ssaModules = ssa_compile(reports, allModules);
-
-    status = end_reports(reports, "ssa compilation", reportConfig);
-    if (status != 0)
-    {
-        return status;
-    }
-
-    for (size_t i = 0; i < vector_len(ssaModules); i++)
-    {
-        ssa_t *ssa = vector_get(ssaModules, i);
-        ssa_print(ssa);
-    }
 
     cerror_t error = 0;
     file_t out = file_open(outFile, FILE_WRITE | FILE_BINARY, &error);

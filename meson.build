@@ -131,10 +131,6 @@ src = [
     'src/interface/runtime.c',
     'src/interface/cthulhu.c',
 
-    # ssa 
-    'src/ssa/ssa.c',
-    'src/ssa/print.c',
-
     # tree output
     'src/emit/c89.c',
 
