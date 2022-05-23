@@ -42,6 +42,16 @@ ast_t *ast_module(scan_t *scan, where_t where, vector_t *path)
     return ast;
 }
 
+ast_t *ast_funcdecl(scan_t *scan, where_t where, char *name, ast_t *params, ast_t *result, ast_t *body)
+{
+    ast_t *ast = ast_new(AST_FUNCDECL, scan, where);
+    ast->name = name;
+    ast->paramList = params;
+    ast->returnType = result;
+    ast->body = body;
+    return ast;
+}
+
 ast_t *ast_digit(scan_t *scan, where_t where, mpz_t value)
 {
     ast_t *ast = ast_new(AST_DIGIT, scan, where);
@@ -60,6 +70,15 @@ ast_t *ast_name(scan_t *scan, where_t where, vector_t *path)
 {
     ast_t *ast = ast_new(AST_TYPENAME, scan, where);
     ast->path = path;
+    return ast;
+}
+
+ast_t *ast_binary(scan_t *scan, where_t where, binary_t binary, ast_t *lhs, ast_t *rhs)
+{
+    ast_t *ast = ast_new(AST_BINARY, scan, where);
+    ast->binary = binary;
+    ast->lhs = lhs;
+    ast->rhs = rhs;
     return ast;
 }
 

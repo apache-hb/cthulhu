@@ -75,8 +75,8 @@ typedef enum
  */
 typedef struct
 {
-    char *message;      ///< associated message
-    node_t node; ///< associated node
+    char *message; ///< associated message
+    node_t node;   ///< associated node
 } part_t;
 
 /**

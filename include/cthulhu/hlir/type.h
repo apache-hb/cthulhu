@@ -1,5 +1,7 @@
 #include "hlir.h"
 
+#include "cthulhu/report/report.h"
+
 /**
  * @defgroup HlirTypeConstructors HLIR type constructors
  * @ingroup HlirConstructors
@@ -77,6 +79,6 @@ hlir_t *hlir_pointer(node_t node, const char *name, hlir_t *type, bool indexable
  * @param length the length of this array
  * @return hlir_t* the constructed array type
  */
-hlir_t *hlir_array(node_t node, const char *name, hlir_t *element, hlir_t *length);
+hlir_t *hlir_array(reports_t *reports, node_t node, const char *name, hlir_t *element, hlir_t *length);
 
 /** @} */

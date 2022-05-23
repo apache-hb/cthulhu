@@ -161,8 +161,12 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<ast>
     modspec decl 
     structdecl uniondecl variantdecl aliasdecl
-    field type types opttypes import
-    expr primary variant
+    field variant 
+    funcdecl funcbody
+    type types opttypes import
+    expr postfix unary multiply add 
+    compare equality shift bits xor and or
+    primary
 
 %type<vector>
     path decls decllist
@@ -200,6 +204,14 @@ decl: structdecl { $$ = $1; }
     | uniondecl { $$ = $1; }
     | aliasdecl { $$ = $1; }
     | variantdecl { $$ = $1; }
+    | funcdecl { $$ = $1; }
+    ;
+
+funcdecl: DEF IDENT funcbody { $$ = ast_funcdecl(x, @$, $2, NULL, NULL, $3); }
+    ;
+
+funcbody: SEMICOLON { $$ = NULL; }
+    | EQUALS expr SEMICOLON { $$ = $2; }
     ;
 
 aliasdecl: TYPE IDENT EQUALS type SEMICOLON { $$ = ast_typealias(x, @$, $2, $4); }
@@ -266,7 +278,45 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | BOOLEAN { $$ = ast_bool(x, @$, $1); }
     ;
 
-expr: primary { $$ = $1; }
+postfix: primary { $$ = $1; }
+    ;
+
+unary: postfix { $$ = $1; }
+    ;
+
+multiply: unary { $$ = $1; }
+    | multiply MUL unary { $$ = ast_binary(x, @$, BINARY_MUL, $1, $3); }
+    | multiply DIV unary { $$ = ast_binary(x, @$, BINARY_DIV, $1, $3); }
+    | multiply MOD unary { $$ = ast_binary(x, @$, BINARY_REM, $1, $3); }
+    ;
+
+add: multiply { $$ = $1; }
+    | add ADD multiply { $$ = ast_binary(x, @$, BINARY_ADD, $1, $3); }
+    | add SUB multiply { $$ = ast_binary(x, @$, BINARY_SUB, $1, $3); }
+    ;
+
+compare: add { $$ = $1; }
+    ;
+
+equality: compare { $$ = $1; }
+    ;
+
+shift: equality { $$ = $1; }
+    ;
+
+bits: shift { $$ = $1; }
+    ;
+
+xor: bits { $$ = $1; }
+    ;
+
+and: xor { $$ = $1; }
+    ;
+
+or: and { $$ = $1; }
+    ;
+
+expr: or { $$ = $1; }
     ;
 
 path: IDENT { $$ = vector_init($1); }

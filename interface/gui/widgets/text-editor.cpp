@@ -300,9 +300,9 @@ void TextEditor::AddUndo(UndoRecord &aValue)
     // printf("AddUndo: (@%d.%d) +\'%s' [%d.%d .. %d.%d], -\'%s', [%d.%d .. %d.%d] (@%d.%d)\n",
     //	aValue.mBefore.mCursorPosition.mLine, aValue.mBefore.mCursorPosition.mColumn,
     //	aValue.mAdded.c_str(), aValue.mAddedStart.mLine, aValue.mAddedStart.mColumn, aValue.mAddedEnd.mLine,
-    //aValue.mAddedEnd.mColumn, 	aValue.mRemoved.c_str(), aValue.mRemovedStart.mLine, aValue.mRemovedStart.mColumn,
-    //aValue.mRemovedEnd.mLine, aValue.mRemovedEnd.mColumn, 	aValue.mAfter.mCursorPosition.mLine,
-    //aValue.mAfter.mCursorPosition.mColumn
+    // aValue.mAddedEnd.mColumn, 	aValue.mRemoved.c_str(), aValue.mRemovedStart.mLine, aValue.mRemovedStart.mColumn,
+    // aValue.mRemovedEnd.mLine, aValue.mRemovedEnd.mColumn, 	aValue.mAfter.mCursorPosition.mLine,
+    // aValue.mAfter.mCursorPosition.mColumn
     //	);
 
     mUndoBuffer.resize((size_t)(mUndoIndex + 1));

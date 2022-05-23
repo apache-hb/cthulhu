@@ -19,6 +19,8 @@ typedef enum
     AST_BOOL,
     AST_NAME,
 
+    AST_BINARY,
+
     /* intermediate types */
     AST_TYPELIST,
     AST_FIELD,
@@ -34,7 +36,10 @@ typedef enum
     AST_UNIONDECL,
     AST_STRUCTDECL,
     AST_ALIASDECL,
-    AST_VARIANTDECL
+    AST_VARIANTDECL,
+
+    /* declarations */
+    AST_FUNCDECL
 } astof_t;
 
 typedef struct ast_t
@@ -51,6 +56,13 @@ typedef struct ast_t
 
         /* AST_BOOL */
         bool boolean;
+
+        struct
+        {
+            binary_t binary;
+            struct ast_t *lhs;
+            struct ast_t *rhs;
+        };
 
         /* AST_POINTER|AST_ARRAY */
         struct
@@ -92,6 +104,14 @@ typedef struct ast_t
 
                 /* AST_ALIASDECL */
                 struct ast_t *alias;
+
+                /* AST_FUNCDECL */
+                struct
+                {
+                    struct ast_t *paramList;
+                    struct ast_t *returnType;
+                    struct ast_t *body;
+                };
             };
         };
     };
@@ -103,11 +123,17 @@ ast_t *ast_module(scan_t *scan, where_t where, vector_t *path);
 ast_t *ast_import(scan_t *scan, where_t where, vector_t *path);
 ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *imports, vector_t *decls);
 
+/// declarations
+
+ast_t *ast_funcdecl(scan_t *scan, where_t where, char *name, ast_t *params, ast_t *result, ast_t *body);
+
 /// expressions
 
 ast_t *ast_digit(scan_t *scan, where_t where, mpz_t value);
 ast_t *ast_bool(scan_t *scan, where_t where, bool value);
 ast_t *ast_name(scan_t *scan, where_t where, vector_t *path);
+
+ast_t *ast_binary(scan_t *scan, where_t where, binary_t binary, ast_t *lhs, ast_t *rhs);
 
 /// types
 

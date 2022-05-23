@@ -126,6 +126,7 @@ src = [
     'src/hlir/decl.c',
     'src/hlir/query.c',
     'src/hlir/common.c',
+    'src/hlir/validate.c',
 
     # common frontend components
     'src/interface/runtime.c',

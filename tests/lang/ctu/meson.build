@@ -70,12 +70,12 @@ tests = {
     },
     'types.array': {
         'fail': [
-            # 'non-int-size'
+            'non-int-size'
         ],
         'pass': [
             'simple',
             '2d',
-            #'expr-size'
+            'expr-size'
         ]
     }
 }

@@ -9,8 +9,7 @@
 /// builder functions
 ///
 
-static hlir_t *hlir_begin_aggregate_with_fields(node_t node, const char *name, vector_t *fields,
-                                                hlir_kind_t type)
+static hlir_t *hlir_begin_aggregate_with_fields(node_t node, const char *name, vector_t *fields, hlir_kind_t type)
 {
     hlir_t *self = hlir_new_forward(node, name, kMetaType, type);
     self->fields = fields;
@@ -140,8 +139,7 @@ hlir_t *hlir_indexed_local(node_t node, const char *name, size_t index, const hl
     return self;
 }
 
-static hlir_t *hlir_begin_function_with_locals(node_t node, const char *name, vector_t *locals,
-                                               signature_t signature)
+static hlir_t *hlir_begin_function_with_locals(node_t node, const char *name, vector_t *locals, signature_t signature)
 {
     hlir_t *self = hlir_new_forward(node, name, kMetaType, HLIR_FUNCTION);
     self->params = signature.params;

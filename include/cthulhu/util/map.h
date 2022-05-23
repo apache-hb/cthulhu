@@ -2,8 +2,8 @@
 
 #include "cthulhu/util/vector.h"
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 /**
  * a bucket in a hashmap

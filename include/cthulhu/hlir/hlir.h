@@ -103,7 +103,7 @@ typedef enum
 typedef struct hlir_t
 {
     hlir_kind_t type;        ///< the type of this node
-    node_t location;  ///< the source location that generated this node
+    node_t location;         ///< the source location that generated this node
     const struct hlir_t *of; ///< the type this hlir evaluates to
 
     union {

@@ -215,7 +215,7 @@ static bucket_t *next_in_chain(bucket_t *entry)
 
 /**
  * @brief get the next bucket for an iterator
- * 
+ *
  * @param map the map being iterated
  * @param index the current toplevel bucket index
  * @param previous the previous bucket that was returned
@@ -276,7 +276,7 @@ map_entry_t map_next(map_iter_t *iter)
         iter->bucket->key,
         iter->bucket->value,
     };
-    
+
     iter->bucket = iter->next;
     iter->next = find_next_bucket(iter->map, &iter->index, iter->bucket);
 

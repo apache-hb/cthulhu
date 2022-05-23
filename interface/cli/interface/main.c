@@ -112,11 +112,11 @@ int main(int argc, const char **argv)
     cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
 
     cthulhu_step_t steps[] = {
-        cthulhu_init, // init cthulhu instance
-        cthulhu_parse,  // parse source files
-        cthulhu_forward,  // forward declarations
-        cthulhu_resolve,  // resolve declarations
-        cthulhu_compile,  // compile to hlir
+        cthulhu_init,    // init cthulhu instance
+        cthulhu_parse,   // parse source files
+        cthulhu_forward, // forward declarations
+        cthulhu_resolve, // resolve declarations
+        cthulhu_compile, // compile to hlir
     };
 
     size_t totalSteps = sizeof(steps) / sizeof(cthulhu_step_t);

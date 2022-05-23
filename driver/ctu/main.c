@@ -12,7 +12,7 @@ CT_CALLBACKS(kCallbacks, ctu);
 void ctu_parse_file(runtime_t *runtime, compile_t *compile)
 {
     UNUSED(runtime);
-    
+
     init_scan(compile->scanner);
     compile->ast = compile_file(compile->scanner, &kCallbacks);
 }

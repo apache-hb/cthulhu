@@ -36,3 +36,13 @@ node_t node_builtin(void)
 {
     return &kBuiltinNode;
 }
+
+node_t node_invalid(void)
+{
+    return NULL;
+}
+
+bool node_is_valid(node_t node)
+{
+    return node != node_invalid();
+}

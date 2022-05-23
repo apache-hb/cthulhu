@@ -12,10 +12,10 @@
 
 typedef enum
 {
-    TAG_VARS,       // hlir_t*
-    TAG_PROCS,      // hlir_t*
-    TAG_TYPES,      // hlir_t*
-    TAG_MODULES,    // sema_t*
+    TAG_VARS,    // hlir_t*
+    TAG_PROCS,   // hlir_t*
+    TAG_TYPES,   // hlir_t*
+    TAG_MODULES, // sema_t*
 
     TAG_MAX
 } tag_t;
@@ -27,26 +27,28 @@ typedef struct
 } sema_data_t;
 
 static const char *kDigitNames[SIGN_TOTAL][DIGIT_TOTAL] = {
-    [SIGN_SIGNED] = {
-        [DIGIT_CHAR] = "char",
-        [DIGIT_SHORT] = "short",
-        [DIGIT_INT] = "int",
-        [DIGIT_LONG] = "long",
+    [SIGN_SIGNED] =
+        {
+            [DIGIT_CHAR] = "char",
+            [DIGIT_SHORT] = "short",
+            [DIGIT_INT] = "int",
+            [DIGIT_LONG] = "long",
 
-        [DIGIT_PTR] = "intptr",
-        [DIGIT_SIZE] = "size",
-        [DIGIT_MAX] = "intmax"
-    },
-    [SIGN_UNSIGNED] = {
-        [DIGIT_CHAR] = "uchar",
-        [DIGIT_SHORT] = "ushort",
-        [DIGIT_INT] = "uint",
-        [DIGIT_LONG] = "ulong",
+            [DIGIT_PTR] = "intptr",
+            [DIGIT_SIZE] = "size",
+            [DIGIT_MAX] = "intmax",
+        },
+    [SIGN_UNSIGNED] =
+        {
+            [DIGIT_CHAR] = "uchar",
+            [DIGIT_SHORT] = "ushort",
+            [DIGIT_INT] = "uint",
+            [DIGIT_LONG] = "ulong",
 
-        [DIGIT_PTR] = "uintptr",
-        [DIGIT_SIZE] = "usize",
-        [DIGIT_MAX] = "uintmax"
-    }
+            [DIGIT_PTR] = "uintptr",
+            [DIGIT_SIZE] = "usize",
+            [DIGIT_MAX] = "uintmax",
+        },
 };
 
 static hlir_t *kVoidType = NULL;
@@ -54,7 +56,7 @@ static hlir_t *kBoolType = NULL;
 static hlir_t *kStringType = NULL;
 static hlir_t *kDigitTypes[SIGN_TOTAL * DIGIT_TOTAL];
 
-#define DIGIT_INDEX(sign, digit) ((sign) * DIGIT_TOTAL + (digit))
+#define DIGIT_INDEX(sign, digit) ((sign)*DIGIT_TOTAL + (digit))
 
 static hlir_t *get_digit_type(sign_t sign, digit_t digit)
 {
@@ -67,6 +69,21 @@ static const char *get_digit_name(sign_t sign, digit_t digit)
 }
 
 static sema_t *kRootSema = NULL;
+
+static hlir_t *get_common_type(node_t node, const hlir_t *lhs, const hlir_t *rhs)
+{
+    if (hlir_is(lhs, HLIR_DIGIT) && hlir_is(rhs, HLIR_DIGIT))
+    {
+        // get the largest size
+        digit_t width = MAX(lhs->width, rhs->width);
+        // if either is signed the result is signed
+        sign_t sign = (lhs->sign == SIGN_SIGNED || rhs->sign == SIGN_SIGNED) ? SIGN_SIGNED : SIGN_UNSIGNED;
+
+        return get_digit_type(sign, width);
+    }
+
+    return hlir_error(node, "unknown common type");
+}
 
 static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl);
 
@@ -82,7 +99,7 @@ static void add_basic_types(sema_t *sema)
         {
             const char *name = get_digit_name(sign, digit);
             hlir_t *type = get_digit_type(sign, digit);
-            
+
             add_decl(sema, TAG_TYPES, name, type);
         }
     }
@@ -95,12 +112,7 @@ static void add_basic_types(sema_t *sema)
 
 void ctu_init_compiler(runtime_t *runtime)
 {
-    size_t sizes[TAG_MAX] = {
-        [TAG_VARS] = 1,
-        [TAG_PROCS] = 1,
-        [TAG_TYPES] = 32,
-        [TAG_MODULES] = 1
-    };
+    size_t sizes[TAG_MAX] = {[TAG_VARS] = 1, [TAG_PROCS] = 1, [TAG_TYPES] = 32, [TAG_MODULES] = 1,};
 
     kRootSema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
 
@@ -173,12 +185,10 @@ static hlir_t *sema_pointer(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_array(sema_t *sema, ast_t *ast)
 {
-    UNUSED(sema);
-
     hlir_t *size = sema_expr(sema, ast->size);
     hlir_t *type = sema_type(sema, ast->type);
 
-    return hlir_array(ast->node, NULL, type, size);
+    return hlir_array(sema->reports, ast->node, NULL, type, size);
 }
 
 static hlir_t *sema_closure(sema_t *sema, ast_t *ast)
@@ -235,6 +245,21 @@ static hlir_t *sema_bool(ast_t *ast)
     return hlir_bool_literal(ast->node, kBoolType, ast->boolean);
 }
 
+static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
+{
+    hlir_t *lhs = sema_expr(sema, ast->lhs);
+    hlir_t *rhs = sema_expr(sema, ast->rhs);
+
+    hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
+
+    if (!hlir_is(type, HLIR_DIGIT))
+    {
+        report(sema->reports, ERROR, ast->node, "cannot perform binary operations on %s", get_hlir_name(type));
+    }
+
+    return hlir_binary(ast->node, type, ast->binary, lhs, rhs);
+}
+
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
 {
     switch (ast->of)
@@ -243,6 +268,8 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_digit(ast);
     case AST_BOOL:
         return sema_bool(ast);
+    case AST_BINARY:
+        return sema_binary(sema, ast);
 
     default:
         report(sema->reports, INTERNAL, ast->node, "unknown sema-expr: %d", ast->of);

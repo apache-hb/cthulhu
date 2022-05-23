@@ -35,7 +35,7 @@ static void rename_module(hlir_t *hlir, const char *path)
 static runtime_t runtime_new(reports_t *reports, size_t size)
 {
     runtime_t runtime = {
-        .reports = reports, 
+        .reports = reports,
         .modules = map_optimal(size),
     };
 

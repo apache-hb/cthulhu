@@ -351,65 +351,10 @@ static void check_attribute(reports_t *reports, hlir_t *hlir)
 static void check_identifier_isnt_empty(reports_t *reports, const hlir_t *ident)
 {
     const char *name = get_hlir_name(ident);
-    if (strlen(name) == 0)
+    if (name == NULL || strlen(name) == 0)
     {
         node_t node = get_hlir_node(ident);
         report(reports, ERROR, node, "empty identifier");
-    }
-}
-
-static hlir_t *validate_constexpr(reports_t *reports, hlir_t *expr)
-{
-    hlir_kind_t kind = get_hlir_kind(expr);
-
-    hlir_t *result = NULL;
-    switch (kind)
-    {
-    case HLIR_DIGIT_LITERAL:
-    case HLIR_BOOL_LITERAL:
-    case HLIR_STRING_LITERAL:
-        return NULL;
-
-    case HLIR_COMPARE:
-    case HLIR_BINARY:
-        if ((result = validate_constexpr(reports, expr->lhs)))
-        {
-            return result;
-        }
-        
-        if ((result = validate_constexpr(reports, expr->rhs)))
-        {
-            return result;
-        }
-
-        return NULL;
-    default:
-        report(reports, INTERNAL, get_hlir_node(expr), "unexpected constexpr type %s", hlir_kind_to_string(kind));
-        return NULL;
-    }
-}
-
-static void validate_type(reports_t *reports, hlir_t *type)
-{
-    if (!hlir_is(type, HLIR_ARRAY))
-    {
-        return;
-    }
-
-    hlir_t *length = type->length;
-    hlir_t *err = validate_constexpr(reports, length);
-
-    if (err != NULL)
-    {
-        node_t node = get_hlir_node(type);
-        report(reports, ERROR, node, "array length must be a constant expression");
-    }
-
-    const hlir_t *lengthType = get_hlir_type(length);
-    if (!hlir_is(lengthType, HLIR_DIGIT))
-    {
-        node_t node = get_hlir_node(lengthType);
-        report(reports, ERROR, node, "array length must be an integer");
     }
 }
 
@@ -426,7 +371,6 @@ void check_module(reports_t *reports, hlir_t *mod)
 
         check_identifier_isnt_empty(reports, type);
         check_type_recursion(reports, &recursionStack, type);
-        validate_type(reports, type);
 
         vector_reset(recursionStack);
     }

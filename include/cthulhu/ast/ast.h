@@ -37,4 +37,8 @@ node_t node_new(scan_t *scan, where_t where);
  */
 node_t node_builtin(void);
 
+node_t node_invalid(void);
+
+bool node_is_valid(node_t node);
+
 /** @} */
