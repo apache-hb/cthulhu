@@ -9,6 +9,8 @@
 
 #include <string.h>
 
+#include "driver/ctu/ast.h"
+
 static scan_t scan_new(reports_t *reports, const char *language, const char *path)
 {
     scan_t scan = {.language = language, .path = path, .reports = reports};
@@ -36,7 +38,7 @@ scan_t scan_file(reports_t *reports, const char *language, file_t file)
 
     if (text == NULL || error != 0)
     {
-        report(reports, ERROR, NULL, "failed to map file: %s", error_string(error));
+        report(reports, ERROR, node_invalid(), "failed to map file: %s", error_string(error));
     }
 
     scan.data = BOX(file);
@@ -55,11 +57,13 @@ scan_t scan_without_source(reports_t *reports, const char *language, const char 
 
 void scan_set(scan_t *scan, void *data)
 {
+    logverbose("[scan-set] %p", data);
     scan->data = data;
 }
 
 void *scan_get(scan_t *scan)
 {
+    logverbose("[scan-get] %p", scan->data);
     return scan->data;
 }
 
@@ -77,42 +81,54 @@ void *compile_string(scan_t *scan, callbacks_t *callbacks)
 
     if (!(state = callbacks->scan(scan_text(scan), scanner)))
     {
-        report(scan->reports, ERROR, NULL, "failed to scan %s", scan->path);
+        report(scan->reports, ERROR, node_invalid(), "failed to scan %s", scan->path);
         return NULL;
     }
 
     if ((err = callbacks->parse(scan, scanner)))
     {
-        report(scan->reports, ERROR, NULL, "failed to parse %s: %d", scan->path, err);
+        report(scan->reports, ERROR, node_invalid(), "failed to parse %s: %d", scan->path, err);
         return NULL;
     }
 
     callbacks->destroyBuffer(state, scanner);
     callbacks->destroy(scanner);
 
-    return scan->data;
+    return scan_get(scan);
 }
+
+#define DUMP_AST(scanner) do { ast_t *ast = scan_get(scanner); logverbose("[ast] %p", ast->decls); } while (0)
 
 void *compile_file(scan_t *scan, callbacks_t *callbacks)
 {
-    FILE *fd = scan->data;
+    FILE *fd = scan_get(scan);
 
-    int err;
-    void *state;
+    int err = 0;
+    void *state = NULL;
+
+    logverbose("[compile-file] %p", scan_get(scan));
 
     if ((err = callbacks->init(scan, &state)))
     {
         return NULL;
     }
 
+    logverbose("[compile-file] %p", scan_get(scan));
+
     callbacks->setIn(fd, state);
+
+    logverbose("[compile-file] %p", scan_get(scan));
 
     if ((err = callbacks->parse(scan, state)))
     {
         return NULL;
     }
 
+    DUMP_AST(scan);
+
     callbacks->destroy(state);
 
-    return scan->data;
+    DUMP_AST(scan);
+
+    return scan_get(scan);
 }

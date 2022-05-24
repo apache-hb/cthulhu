@@ -98,7 +98,7 @@ static scan_t *make_scanner_from_file(cthulhu_t *cthulhu, source_t *source)
 
     if (error != 0)
     {
-        message_t *id = report(cthulhu->reports, ERROR, NULL, "failed to open file `%s`", source->path);
+        message_t *id = report(cthulhu->reports, ERROR, node_invalid(), "failed to open file `%s`", source->path);
         report_note(id, "%s", error_string(error));
         return NULL;
     }
@@ -154,7 +154,9 @@ int cthulhu_parse(cthulhu_t *cthulhu)
     for (size_t i = 0; i < totalSources; i++)
     {
         compile_t *ctx = vector_get(cthulhu->compiles, i);
-        cthulhu->driver.fnParseFile(&cthulhu->runtime, ctx);
+        ctx->ast = cthulhu->driver.fnParseFile(&cthulhu->runtime, ctx);
+        logverbose("[cthulhu-parse] compile %p", ctx);
+        logverbose("[cthulhu-parse] ast: %p", ctx->ast);
     }
 
     return report_errors(cthulhu, "parsing sources");

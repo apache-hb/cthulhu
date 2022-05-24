@@ -591,9 +591,9 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
 {
     ast_t *root = compile->ast;
 
-    logverbose("compile: %p", compile);
-    logverbose("root: %p", root);
-    logverbose("decls: %p", root->decls);
+    logverbose("[forward-decls] compile: %p", compile);
+    logverbose("[forward-decls] root: %p", root);
+    logverbose("[forward-decls] decls: %p", root->decls);
 
     size_t totalDecls = vector_len(root->decls);
     size_t sizes[TAG_MAX] = {

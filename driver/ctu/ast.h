@@ -52,7 +52,7 @@ typedef struct ast_t
     astof_t of;
     node_t node;
 
-    union {
+    struct {
         /* AST_TYPENAME|AST_MODULE */
         vector_t *path;
 
@@ -177,6 +177,8 @@ ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, vector_t *fields
 
 ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type);
 ast_t *ast_param(scan_t *scan, where_t where, char *name, ast_t *type);
+
+extern void *program;
 
 /// inner ast types
 

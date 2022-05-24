@@ -14,7 +14,7 @@ bool verbose = false;
 
 static bool is_valid_node(node_t node)
 {
-    return node != NULL && node != node_builtin();
+    return node_is_valid(node) && node != node_builtin();
 }
 
 static part_t *part_new(char *message, node_t node)
@@ -597,7 +597,7 @@ message_t *ctu_assert(reports_t *reports, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    message_t *message = report_push(reports, INTERNAL, NULL, fmt, args);
+    message_t *message = report_push(reports, INTERNAL, node_invalid(), fmt, args);
     va_end(args);
 
     return message;

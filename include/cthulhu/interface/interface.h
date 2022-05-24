@@ -43,7 +43,7 @@ typedef struct
 typedef void (*init_compiler_t)(runtime_t *);
 
 // parse and register a module
-typedef void (*parse_file_t)(runtime_t *, compile_t *);
+typedef void *(*parse_file_t)(runtime_t *, compile_t *);
 
 // forward declare all exports
 typedef void (*forward_decls_t)(runtime_t *, compile_t *);

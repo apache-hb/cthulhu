@@ -187,7 +187,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %%
 
-program: modspec imports decls { scan_set(x, ast_program(x, @$, $1, $2, $3)); }
+program: modspec imports decls { program = ast_program(x, @$, $1, $2, $3); scan_set(x, ast_program(x, @$, $1, $2, $3)); }
     ;
 
 imports: %empty { $$ = vector_new(0); }

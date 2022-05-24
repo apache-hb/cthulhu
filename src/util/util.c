@@ -111,7 +111,7 @@ void *ctu_realloc(void *ptr, size_t size)
 void ctu_free(void *ptr)
 {
     CTASSERT(ptr != NULL, "ctu-free called with NULL pointer");
-    FREE(ptr);
+    /* FREE(ptr); */
 }
 
 USE_DECL

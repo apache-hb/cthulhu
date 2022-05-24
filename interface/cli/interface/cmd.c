@@ -48,7 +48,7 @@ static bool check_and_set_flag(commands_t *commands, flag_t flag)
 {
     if (*flag.setByUser)
     {
-        report(commands->reports, WARNING, NULL, "flag `%s` already set", flag.name);
+        report(commands->reports, WARNING, node_invalid(), "flag `%s` already set", flag.name);
         return true;
     }
 
@@ -87,7 +87,7 @@ static flag_t pop_current_flag(commands_t *commands, flag_type_t type)
 
     if (flag.type != type)
     {
-        report(commands->reports, WARNING, NULL, "flag `%s` requires a %s, but was treated as a %s flag", flag.name,
+        report(commands->reports, WARNING, node_invalid(), "flag `%s` requires a %s, but was treated as a %s flag", flag.name,
                kFlagTypes[flag.type], kFlagTypes[type]);
         return flag_empty();
     }
@@ -115,7 +115,7 @@ void cmd_begin_flag(commands_t *commands, const char *flag)
     } while (0);
 #include "flags.inc"
 
-    report(commands->reports, WARNING, NULL, "unknown flag `%s`", flag);
+    report(commands->reports, WARNING, node_invalid(), "unknown flag `%s`", flag);
 }
 
 void cmd_push_int(commands_t *commands, mpz_t value)

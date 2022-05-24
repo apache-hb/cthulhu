@@ -13,7 +13,7 @@
 /**
  * a position in a source file
  */
-typedef const void *node_t;
+typedef unsigned node_t; // TODO: these should all take a context
 
 const scan_t *get_node_scanner(node_t node);
 where_t get_node_location(node_t node);
