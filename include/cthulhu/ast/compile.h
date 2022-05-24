@@ -43,22 +43,6 @@ scan_t scan_file(reports_t *reports, const char *language, file_t file);
 scan_t scan_without_source(reports_t *reports, const char *language, const char *path);
 
 /**
- * @brief set scanner user data
- *
- * @param scan the scanner
- * @param data the user data
- */
-void scan_set(scan_t *scan, void *data);
-
-/**
- * @brief retrieve scanner user data
- *
- * @param scan the scanner
- * @return the user data
- */
-void *scan_get(scan_t *scan);
-
-/**
  * @brief compile a string into a language specific ast
  *
  * @param extra the sanner being used

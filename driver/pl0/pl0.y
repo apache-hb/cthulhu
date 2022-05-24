@@ -11,12 +11,11 @@
 }
 
 %code requires {
-    #define YYSTYPE PL0STYPE
-    #define YYLTYPE PL0LTYPE
-    
     #include "scan.h"
     #include "ast.h"
-    #include "cthulhu/ast/compile.h"
+    
+    #define YYSTYPE PL0STYPE
+    #define YYLTYPE PL0LTYPE
 }
 
 %{

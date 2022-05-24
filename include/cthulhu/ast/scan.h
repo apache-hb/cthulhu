@@ -50,6 +50,22 @@ size_t scan_size(const scan_t *scan);
 const char *scan_text(const scan_t *scan);
 
 /**
+ * @brief set scanner user data
+ *
+ * @param scan the scanner
+ * @param data the user data
+ */
+void scan_set(scan_t *scan, void *data);
+
+/**
+ * @brief retrieve scanner user data
+ *
+ * @param scan the scanner
+ * @return the user data
+ */
+void *scan_get(scan_t *scan);
+
+/**
  * @brief a location inside a scanner
  */
 typedef struct

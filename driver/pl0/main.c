@@ -13,7 +13,7 @@ static void *pl0_parse_file(runtime_t *runtime, compile_t *compile)
 {
     UNUSED(runtime);
 
-    return compile_file(compile->scanner, &kCallbacks);
+    return compile_string(compile->scanner, &kCallbacks);
 }
 
 const driver_t kDriver = {

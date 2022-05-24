@@ -16,7 +16,7 @@ static void *ctu_parse_file(runtime_t *runtime, compile_t *compile)
     UNUSED(runtime);
 
     init_scan(compile->scanner);
-    ast_t *ast = compile_file(compile->scanner, &kCallbacks);
+    ast_t *ast = compile_string(compile->scanner, &kCallbacks);
 
     logverbose("[parse-file] ast: %p", ast);
     logverbose("[parse-file] decls: %p", ast->decls);

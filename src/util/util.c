@@ -1,5 +1,3 @@
-#define _POSIX_SOURCE
-
 #include "cthulhu/util/util.h"
 #include "cthulhu/util/macros.h"
 

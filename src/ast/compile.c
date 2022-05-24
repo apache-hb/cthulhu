@@ -13,14 +13,14 @@
 
 static scan_t scan_new(reports_t *reports, const char *language, const char *path)
 {
-    scan_t scan = {.language = language, .path = path, .reports = reports};
+    scan_t scan = {.language = language, .path = path, .reports = reports,};
 
     return scan;
 }
 
 scan_t scan_string(reports_t *reports, const char *language, const char *path, const char *text)
 {
-    text_t source = {.size = strlen(text), .text = text};
+    text_t source = {.size = strlen(text), .text = text,};
     scan_t scan = scan_new(reports, language, path);
 
     scan.source = source;
@@ -41,7 +41,6 @@ scan_t scan_file(reports_t *reports, const char *language, file_t file)
         report(reports, ERROR, node_invalid(), "failed to map file: %s", error_string(error));
     }
 
-    scan.data = BOX(file);
     scan.source = source;
 
     return scan;
@@ -53,18 +52,6 @@ scan_t scan_without_source(reports_t *reports, const char *language, const char 
     text_t source = {.size = 0, .text = ""};
     scan.source = source;
     return scan;
-}
-
-void scan_set(scan_t *scan, void *data)
-{
-    logverbose("[scan-set] %p", data);
-    scan->data = data;
-}
-
-void *scan_get(scan_t *scan)
-{
-    logverbose("[scan-get] %p", scan->data);
-    return scan->data;
 }
 
 void *compile_string(scan_t *scan, callbacks_t *callbacks)

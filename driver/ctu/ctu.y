@@ -11,13 +11,11 @@
 }
 
 %code requires {
-    #define YYSTYPE CTUSTYPE
-    #define YYLTYPE CTULTYPE
-    
     #include "scan.h"
     #include "ast.h"
-
-    #include "cthulhu/ast/compile.h"
+    
+    #define YYSTYPE CTUSTYPE
+    #define YYLTYPE CTULTYPE
 }
 
 %{
