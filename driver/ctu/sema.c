@@ -512,18 +512,19 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
 static hlir_t *begin_function(sema_t *sema, ast_t *ast)
 {
     hlir_t *result = kVoidType;
-    if (ast->ret != NULL)
+    ast_t *signature = ast->signature;
+    if (signature->result != NULL)
     {
-        result = sema_type(sema, ast->ret);
+        result = sema_type(sema, signature->result);
     }
 
-    signature_t signature = {
+    signature_t sig = {
         .params = vector_new(0),
         .result = result,
         .variadic = false
     };
 
-    return hlir_begin_function(ast->node, ast->name, signature);
+    return hlir_begin_function(ast->node, ast->name, sig);
 }
 
 static void fwd_decl(sema_t *sema, ast_t *ast)
@@ -590,8 +591,12 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
 {
     ast_t *root = compile->ast;
 
+    logverbose("compile: %p", compile);
+    logverbose("root: %p", root);
+    logverbose("decls: %p", root->decls);
+
     size_t totalDecls = vector_len(root->decls);
-    size_t sizes[] = {
+    size_t sizes[TAG_MAX] = {
         [TAG_VARS] = totalDecls,
         [TAG_PROCS] = totalDecls,
         [TAG_TYPES] = totalDecls,

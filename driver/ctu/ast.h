@@ -27,9 +27,9 @@ typedef enum
     AST_RETURN,
 
     /* intermediate types */
-    AST_TYPELIST,
     AST_FIELD,
     AST_CASE,
+    AST_PARAM,
 
     /* types */
     AST_TYPENAME,
@@ -88,7 +88,7 @@ typedef struct ast_t
             };
         };
 
-        /* AST_CLOSURE|AST_TYPELIST */
+        /* AST_CLOSURE */
         struct
         {
             vector_t *params;
@@ -121,10 +121,13 @@ typedef struct ast_t
                 /* AST_ALIASDECL */
                 struct ast_t *alias;
 
+                /* AST_PARAM */
+                struct ast_t *param;
+
                 /* AST_FUNCDECL */
                 struct
                 {
-                    struct ast_t *ret;
+                    struct ast_t *signature;
                     struct ast_t *body;
                 };
             };
@@ -140,7 +143,7 @@ ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *import
 
 /// declarations
 
-ast_t *ast_funcdecl(scan_t *scan, where_t where, char *name, ast_t *ret, ast_t *body);
+ast_t *ast_funcdecl(scan_t *scan, where_t where, char *name, ast_t *signature, ast_t *body);
 
 /// expressions
 
@@ -161,8 +164,7 @@ ast_t *ast_return(scan_t *scan, where_t where, ast_t *expr);
 ast_t *ast_typename(scan_t *scan, where_t where, vector_t *path);
 ast_t *ast_pointer(scan_t *scan, where_t where, ast_t *type, bool indexable);
 ast_t *ast_array(scan_t *scan, where_t where, ast_t *size, ast_t *type);
-ast_t *ast_closure(scan_t *scan, where_t where, ast_t *args, ast_t *type);
-ast_t *ast_typelist(vector_t *types, bool variadic);
+ast_t *ast_closure(scan_t *scan, where_t where, vector_t *params, bool variadic, ast_t *type);
 
 /// type declarations
 
@@ -174,3 +176,14 @@ ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, vector_t *fields
 /// extra type data
 
 ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type);
+ast_t *ast_param(scan_t *scan, where_t where, char *name, ast_t *type);
+
+/// inner ast types
+
+typedef struct 
+{
+    vector_t *params;
+    bool variadic;
+} funcparams_t;
+
+funcparams_t funcparams_new(vector_t *params, bool variadic);

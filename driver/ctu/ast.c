@@ -1,8 +1,7 @@
 #include "ast.h"
 
 #include "cthulhu/util/util.h"
-
-static const where_t kNowhere = {0, 0, 0, 0};
+#include "cthulhu/report/report.h"
 
 static ast_t *ast_new(astof_t of, scan_t *scan, where_t where)
 {
@@ -25,6 +24,8 @@ ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *import
     ast->modspec = modspec;
     ast->imports = imports;
     ast->decls = decls;
+    logverbose("decls: %p", ast->decls);
+    logverbose("program: %p", ast);
     return ast;
 }
 
@@ -42,11 +43,11 @@ ast_t *ast_module(scan_t *scan, where_t where, vector_t *path)
     return ast;
 }
 
-ast_t *ast_funcdecl(scan_t *scan, where_t where, char *name, ast_t *ret, ast_t *body)
+ast_t *ast_funcdecl(scan_t *scan, where_t where, char *name, ast_t *signature, ast_t *body)
 {
     ast_t *ast = ast_new(AST_FUNCDECL, scan, where);
     ast->name = name;
-    ast->ret = ret;
+    ast->signature = signature;
     ast->body = body;
     return ast;
 }
@@ -118,19 +119,12 @@ ast_t *ast_array(scan_t *scan, where_t where, ast_t *size, ast_t *type)
     return ast;
 }
 
-ast_t *ast_closure(scan_t *scan, where_t where, ast_t *args, ast_t *type)
+ast_t *ast_closure(scan_t *scan, where_t where, vector_t *params, bool variadic, ast_t *type)
 {
-    args->of = AST_CLOSURE;
-    args->node = node_new(scan, where);
-    args->result = type;
-    return args;
-}
-
-ast_t *ast_typelist(vector_t *types, bool variadic)
-{
-    ast_t *ast = ast_new(AST_TYPELIST, NULL, kNowhere);
-    ast->params = types;
+    ast_t *ast = ast_new(AST_CLOSURE, scan, where);
+    ast->params = params;
     ast->variadic = variadic;
+    ast->result = type;
     return ast;
 }
 
@@ -167,4 +161,21 @@ ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type)
     ast_t *ast = ast_decl(AST_FIELD, name, scan, where);
     ast->field = type;
     return ast;
+}
+
+ast_t *ast_param(scan_t *scan, where_t where, char *name, ast_t *type)
+{
+    ast_t *ast = ast_decl(AST_PARAM, name, scan, where);
+    ast->param = type;
+    return ast;
+}
+
+funcparams_t funcparams_new(vector_t *params, bool variadic)
+{
+    funcparams_t result = {
+        .params = params,
+        .variadic = variadic
+    };
+
+    return result;
 }

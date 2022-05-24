@@ -15,6 +15,8 @@ void ctu_parse_file(runtime_t *runtime, compile_t *compile)
 
     init_scan(compile->scanner);
     compile->ast = compile_file(compile->scanner, &kCallbacks);
+    logverbose("ast: %p", compile->ast);
+    logverbose("compile: %p", compile);
 }
 
 const driver_t kDriver = {
