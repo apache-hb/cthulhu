@@ -5,6 +5,7 @@
 #include "cthulhu/hlir/query.h"
 
 #include "cthulhu/util/util.h"
+#include "cthulhu/util/macros.h"
 
 static const hlir_attributes_t kDefaultAttributes = {.linkage = LINK_INTERNAL, .tags = DEFAULT_TAGS};
 

@@ -1,7 +1,6 @@
 #include "cthulhu/emit/c89.h"
 #include "cthulhu/ast/ops.h"
 #include "cthulhu/hlir/attribs.h"
-#include "cthulhu/hlir/hlir.h"
 #include "cthulhu/report/report.h"
 #include "cthulhu/util/map.h"
 
@@ -383,6 +382,18 @@ static void c89_emit_loop(c89_emit_t *emit, const hlir_t *hlir)
     WRITE_STRING(emit, "}\n");
 }
 
+static void c89_emit_return(c89_emit_t *emit, const hlir_t *hlir)
+{
+    if (hlir->result != NULL)
+    {
+        WRITE_STRINGF(emit, "return %s;\n", c89_emit_expr(emit, hlir->result));
+    }
+    else
+    {
+        WRITE_STRING(emit, "return;\n");
+    }
+}
+
 static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -406,6 +417,10 @@ static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
 
     case HLIR_CALL:
         WRITE_STRING(emit, c89_emit_call(emit, hlir));
+        break;
+
+    case HLIR_RETURN:
+        c89_emit_return(emit, hlir);
         break;
 
     default:

@@ -1,8 +1,6 @@
 #pragma once
 
-#include "cthulhu/ast/compile.h"
-
-#include <gmp.h>
+#include "cthulhu/ast/scan.h"
 
 #define CTULTYPE where_t
 

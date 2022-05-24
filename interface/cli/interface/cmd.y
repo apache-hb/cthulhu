@@ -11,6 +11,7 @@
 }
 
 %code requires {
+    #include "cthulhu/ast/compile.h"
     #include "interface/cmd.h"
     #define YYSTYPE CMDSTYPE
     #define YYLTYPE CMDLTYPE

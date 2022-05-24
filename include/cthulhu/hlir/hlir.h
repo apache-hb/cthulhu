@@ -35,6 +35,7 @@ typedef enum
     HLIR_BRANCH, ///< a conditional branch
     HLIR_LOOP,   ///< a loop on a condition
     HLIR_ASSIGN, ///< an assignment
+    HLIR_RETURN, ///< a return statement
 
     HLIR_STRUCT,  ///< a record type
     HLIR_UNION,   ///< an untagged union type
@@ -344,6 +345,7 @@ hlir_t *hlir_stmts(node_t node, vector_t *stmts);
 hlir_t *hlir_branch(node_t node, hlir_t *cond, hlir_t *then, hlir_t *other);
 hlir_t *hlir_loop(node_t node, hlir_t *cond, hlir_t *body, hlir_t *other);
 hlir_t *hlir_assign(node_t node, hlir_t *dst, hlir_t *src);
+hlir_t *hlir_return(node_t node, hlir_t *result);
 
 hlir_t *hlir_field(node_t node, const hlir_t *type, const char *name);
 

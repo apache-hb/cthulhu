@@ -5,6 +5,8 @@
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/type.h"
+#include "cthulhu/util/util.h"
+#include "cthulhu/interface/runtime.h"
 
 #include "cthulhu/report/report-ext.h"
 #include "cthulhu/util/set.h"
@@ -277,6 +279,47 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
     }
 }
 
+static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt);
+
+static hlir_t *sema_stmts(sema_t *sema, ast_t *stmts)
+{
+    size_t len = vector_len(stmts->stmts);
+
+    vector_t *result = vector_of(len);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        ast_t *stmt = vector_get(stmts->stmts, i);
+        hlir_t *hlir = sema_stmt(sema, stmt);
+        vector_set(result, i, hlir);
+    }
+
+    return hlir_stmts(stmts->node, result);
+}
+
+static hlir_t *sema_return(sema_t *sema, ast_t *ast)
+{
+    hlir_t *result = sema_expr(sema, ast->operand);
+
+    return hlir_return(ast->node, result);
+}
+
+static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
+{
+    switch (stmt->of)
+    {
+    case AST_RETURN:
+        return sema_return(sema, stmt);
+
+    case AST_STMTS:
+        return sema_stmts(sema, stmt);
+
+    default:
+        report(sema->reports, INTERNAL, stmt->node, "unknown sema-stmt: %d", stmt->of);
+        return hlir_error(stmt->node, "unknown sema-stmt");
+    }
+}
+
 static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir_t *decl)
 {
     size_t len = vector_len(fields);
@@ -380,6 +423,34 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_build_struct(decl);
 }
 
+static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
+{
+    UNUSED(sema);
+
+    hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? LINK_IMPORTED : LINK_EXPORTED, 0, NULL, NULL);
+    hlir_t *body = NULL;
+    if (ast->body == NULL)
+    {
+        body = hlir_stmts(ast->node, vector_new(0));
+    }
+    else
+    {
+        size_t tags[TAG_MAX] = {
+            [TAG_VARS] = 32,
+            [TAG_PROCS] = 32,
+            [TAG_TYPES] = 32,
+            [TAG_MODULES] = 32
+        };
+
+        sema_t *nest = sema_new(sema, NULL, TAG_MAX, tags);
+
+        body = sema_stmts(nest, ast->body);
+    }
+
+    hlir_build_function(decl, body);
+    hlir_set_attributes(decl, attribs);
+}
+
 static void sema_decl(sema_t *sema, ast_t *ast)
 {
     hlir_t *decl;
@@ -404,6 +475,11 @@ static void sema_decl(sema_t *sema, ast_t *ast)
     case AST_VARIANTDECL:
         decl = sema_get(sema, TAG_TYPES, ast->name);
         sema_variant(sema, decl, ast);
+        break;
+
+    case AST_FUNCDECL:
+        decl = sema_get(sema, TAG_PROCS, ast->name);
+        sema_func(sema, decl, ast);
         break;
 
     default:
@@ -433,9 +509,27 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
     sema_set(sema, tag, name, decl);
 }
 
+static hlir_t *begin_function(sema_t *sema, ast_t *ast)
+{
+    hlir_t *result = kVoidType;
+    if (ast->ret != NULL)
+    {
+        result = sema_type(sema, ast->ret);
+    }
+
+    signature_t signature = {
+        .params = vector_new(0),
+        .result = result,
+        .variadic = false
+    };
+
+    return hlir_begin_function(ast->node, ast->name, signature);
+}
+
 static void fwd_decl(sema_t *sema, ast_t *ast)
 {
     hlir_t *decl;
+    tag_t tag = TAG_TYPES;
 
     switch (ast->of)
     {
@@ -455,6 +549,11 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
         decl = hlir_begin_struct(ast->node, ast->name);
         break;
 
+    case AST_FUNCDECL:
+        decl = begin_function(sema, ast);
+        tag = TAG_PROCS;
+        break;
+
     default:
         ctu_assert(sema->reports, "unexpected ast of type %d", ast->of);
         return;
@@ -463,7 +562,7 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
     sema_data_t *semaData = sema_get_data(sema);
 
     hlir_set_parent(decl, semaData->parentModule);
-    add_decl(sema, TAG_TYPES, ast->name, decl);
+    add_decl(sema, tag, ast->name, decl);
 }
 
 static char *make_import_name(vector_t *vec)

@@ -20,8 +20,6 @@ typedef struct
     const char *text; ///< the text itself
 } text_t;
 
-struct reports_t;
-
 /**
  * @brief a source file
  */

@@ -5,6 +5,7 @@
 #include "cthulhu/util/library.h"
 // clang-format on
 
+USE_DECL
 library_t library_open(const char *path, cerror_t *error)
 {
     native_cerror_t nativeError = 0;
@@ -18,6 +19,7 @@ void library_close(library_t library)
     native_library_close(library);
 }
 
+USE_DECL
 void *library_get(library_t library, const char *symbol, cerror_t *error)
 {
     native_cerror_t nativeError = 0;

@@ -1,7 +1,6 @@
 #pragma once
 
-#include "cthulhu/hlir/sema.h"
-#include "cthulhu/interface/runtime.h"
+#include "cthulhu/interface/interface.h"
 
 void ctu_init_compiler(runtime_t *runtime);
 void ctu_forward_decls(runtime_t *runtime, compile_t *compile);

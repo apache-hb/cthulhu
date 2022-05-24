@@ -1,5 +1,6 @@
 #include "cthulhu/util/set.h"
 #include "cthulhu/util/str.h"
+#include "cthulhu/util/util.h"
 #include "ct-test.h"
 
 static const char *kSetItems[] = {
@@ -16,7 +17,7 @@ static const char *kSetItems[] = {
 TEST(test_set_clashes, {
     set_t *set = set_new(3);
     for (size_t i = 0; i < TOTAL_ITEMS; i++) {
-        (void)set_add(set, kSetItems[i]);
+        set_add(set, kSetItems[i]);
     }
 
     for (size_t i = 0; i < TOTAL_ITEMS; i++) {

@@ -42,12 +42,11 @@ ast_t *ast_module(scan_t *scan, where_t where, vector_t *path)
     return ast;
 }
 
-ast_t *ast_funcdecl(scan_t *scan, where_t where, char *name, ast_t *params, ast_t *result, ast_t *body)
+ast_t *ast_funcdecl(scan_t *scan, where_t where, char *name, ast_t *ret, ast_t *body)
 {
     ast_t *ast = ast_new(AST_FUNCDECL, scan, where);
     ast->name = name;
-    ast->paramList = params;
-    ast->returnType = result;
+    ast->ret = ret;
     ast->body = body;
     return ast;
 }
@@ -79,6 +78,20 @@ ast_t *ast_binary(scan_t *scan, where_t where, binary_t binary, ast_t *lhs, ast_
     ast->binary = binary;
     ast->lhs = lhs;
     ast->rhs = rhs;
+    return ast;
+}
+
+ast_t *ast_stmts(scan_t *scan, where_t where, vector_t *stmts)
+{
+    ast_t *ast = ast_new(AST_STMTS, scan, where);
+    ast->stmts = stmts;
+    return ast;
+}
+
+ast_t *ast_return(scan_t *scan, where_t where, ast_t *expr)
+{
+    ast_t *ast = ast_new(AST_RETURN, scan, where);
+    ast->operand = expr;
     return ast;
 }
 

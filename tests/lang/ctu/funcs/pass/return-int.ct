@@ -1,0 +1,3 @@
+def getInt: int {
+    return 99;
+}

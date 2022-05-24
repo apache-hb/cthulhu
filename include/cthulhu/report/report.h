@@ -2,11 +2,8 @@
 
 #include "cthulhu/ast/ast.h"
 
-#include "cthulhu/util/macros.h"
-#include "cthulhu/util/util.h"
 #include "cthulhu/util/vector.h"
 
-#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 

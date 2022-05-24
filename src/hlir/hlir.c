@@ -1,7 +1,6 @@
 #include "common.h"
 
 #include "cthulhu/hlir/query.h"
-#include "cthulhu/hlir/type.h"
 
 hlir_t *hlir_error(node_t node, const char *error)
 {
@@ -110,6 +109,13 @@ hlir_t *hlir_assign(node_t node, hlir_t *dst, hlir_t *src)
     hlir_t *self = hlir_new(node, kInvalidNode, HLIR_ASSIGN);
     self->dst = dst;
     self->src = src;
+    return self;
+}
+
+hlir_t *hlir_return(node_t node, hlir_t *result)
+{
+    hlir_t *self = hlir_new(node, kInvalidNode, HLIR_RETURN);
+    self->result = result;
     return self;
 }
 

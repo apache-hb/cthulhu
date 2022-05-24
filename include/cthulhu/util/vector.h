@@ -1,6 +1,6 @@
 #pragma once
 
-#include "macros.h"
+#include "cthulhu/util/analyze.h"
 #include <stddef.h>
 
 /**

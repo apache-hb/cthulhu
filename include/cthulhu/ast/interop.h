@@ -5,6 +5,7 @@
 DISABLE_SAL
 #endif
 
+#include "cthulhu/util/util.h"
 #include "scan.h"
 
 /**

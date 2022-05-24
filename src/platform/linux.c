@@ -3,12 +3,14 @@
 #include "platform.h"
 
 #include "cthulhu/util/str.h"
+#include "cthulhu/util/util.h"
 #include "platform.h"
 #include <errno.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
+USE_DECL
 library_handle_t native_library_open(const char *path, native_cerror_t *error)
 {
     library_handle_t handle = dlopen(path, RTLD_LAZY);
@@ -26,6 +28,7 @@ void native_library_close(library_handle_t handle)
     dlclose(handle);
 }
 
+USE_DECL
 void *native_library_get_symbol(library_handle_t handle, const char *symbol, native_cerror_t *error)
 {
     void *ptr = dlsym(handle, symbol);
@@ -43,6 +46,7 @@ static const char *kOpenModes[MODE_TOTAL][FORMAT_TOTAL] = {
     [MODE_WRITE] = {[FORMAT_TEXT] = "w", [FORMAT_BINARY] = "wb"},
 };
 
+USE_DECL
 file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error)
 {
     file_handle_t handle = fopen(path, kOpenModes[mode][format]);
@@ -84,6 +88,7 @@ file_write_t native_file_write(file_handle_t handle, const void *buffer, file_si
     return written;
 }
 
+USE_DECL
 file_size_t native_file_size(file_handle_t handle, native_cerror_t *error)
 {
     struct stat st;
@@ -98,6 +103,7 @@ file_size_t native_file_size(file_handle_t handle, native_cerror_t *error)
     return st.st_size;
 }
 
+USE_DECL
 const void *native_file_map(file_handle_t handle, native_cerror_t *error)
 {
     file_size_t size = native_file_size(handle, error);
@@ -124,6 +130,7 @@ const void *native_file_map(file_handle_t handle, native_cerror_t *error)
     return ptr;
 }
 
+USE_DECL
 char *native_cerror_to_string(native_cerror_t error)
 {
     char buffer[256];
@@ -137,6 +144,7 @@ char *native_cerror_to_string(native_cerror_t error)
     return ctu_strdup(buffer);
 }
 
+USE_DECL
 native_cerror_t native_get_last_error(void)
 {
     return errno;

@@ -5,6 +5,7 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/report/report.h"
 #include "cthulhu/util/util.h"
+#include "cthulhu/util/macros.h"
 
 #include <string.h>
 

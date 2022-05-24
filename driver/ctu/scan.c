@@ -1,5 +1,8 @@
 #include "scan.h"
 
+#include "cthulhu/util/util.h"
+#include "cthulhu/ast/compile.h"
+
 typedef struct
 {
     size_t depth; // template depth

@@ -5,11 +5,8 @@
 #include "cthulhu/util/file.h"
 
 #include "cthulhu/report/report.h"
-#include "cthulhu/util/macros.h"
 #include "cthulhu/util/util.h"
 
-#include <errno.h>
-#include <stdlib.h>
 #include <string.h>
 
 static scan_t scan_new(reports_t *reports, const char *language, const char *path)

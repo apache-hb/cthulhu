@@ -16,6 +16,8 @@
     
     #include "scan.h"
     #include "ast.h"
+
+    #include "cthulhu/ast/compile.h"
 }
 
 %{
@@ -162,7 +164,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     modspec decl 
     structdecl uniondecl variantdecl aliasdecl
     field variant 
-    funcdecl funcbody
+    funcdecl funcresult funcbody
+    stmt stmts
     type types opttypes import
     expr postfix unary multiply add 
     compare equality shift bits xor and or
@@ -173,6 +176,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     fieldlist aggregates
     typelist imports importlist
     variants variantlist
+    stmtlist
 
 %start program
 
@@ -207,11 +211,16 @@ decl: structdecl { $$ = $1; }
     | funcdecl { $$ = $1; }
     ;
 
-funcdecl: DEF IDENT funcbody { $$ = ast_funcdecl(x, @$, $2, NULL, NULL, $3); }
+funcdecl: DEF IDENT funcresult funcbody { $$ = ast_funcdecl(x, @$, $2, $3, $4); }
+    ;
+
+funcresult: %empty { $$ = NULL; }
+    | COLON type { $$ = $2; }
     ;
 
 funcbody: SEMICOLON { $$ = NULL; }
-    | EQUALS expr SEMICOLON { $$ = $2; }
+    | EQUALS expr SEMICOLON { $$ = ast_stmts(x, @$, vector_init(ast_return(x, @2, $2))); }
+    | stmts { $$ = $1; }
     ;
 
 aliasdecl: TYPE IDENT EQUALS type SEMICOLON { $$ = ast_typealias(x, @$, $2, $4); }
@@ -250,6 +259,18 @@ field: IDENT COLON type SEMICOLON { $$ = ast_field(x, @$, $1, $3); }
 
 modspec: %empty { $$ = NULL; }
     | MODULE path SEMICOLON { $$ = ast_module(x, @$, $2); }
+    ;
+
+stmtlist: stmt { $$ = vector_init($1); }
+    | stmtlist stmt { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+stmts: LBRACE RBRACE { $$ = ast_stmts(x, @$, vector_of(0)); }
+    | LBRACE stmtlist RBRACE { $$ = ast_stmts(x, @$, $2); }
+    ;
+
+stmt: stmts { $$ = $1; }
+    | RETURN expr SEMICOLON { $$ = ast_return(x, @$, $2); }
     ;
 
 type: path { $$ = ast_typename(x, @$, $1); }

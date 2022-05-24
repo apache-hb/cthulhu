@@ -1,15 +1,14 @@
 #define _POSIX_SOURCE
 
 #include "cthulhu/util/util.h"
-#include "cthulhu/report/report.h"
 #include "cthulhu/util/macros.h"
-#include "cthulhu/util/map.h"
-#include "cthulhu/util/str.h"
 
 #include <gmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <stdarg.h>
 
 #if ENABLE_TUNING
 #    include <malloc.h>

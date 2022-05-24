@@ -13,13 +13,24 @@
   * this will be an important thing to test so reentrant code is needed
   * this will also make it allocator aware
 
+* add ssa emitter
+  * direct asm/wasm output would be preferrable to relying on C/wat2wasm
+
 ## Blocking items
 
 * take logging in more places
 
 * custom allocator support
 
-* timing
+* timing support
+
+* custom flex + bison to support generating texmate/vim/emacs grammars
+  * this will be a big one
+  * should also have pretty big payoff
+  * may even be able to drop them both as deps
+
+* rework location tracking for reporting
+  * allow nested underlines and multiple location spans
 
 * rework logging 
   * need custom sinks for multiple interfaces
@@ -51,9 +62,6 @@
 * more test coverage
 
 * dedicated fuzzing frontends
-
-* add ssa emitter
-  * direct asm/wasm output would be preferrable to relying on C/wat2wasm
 
 * optimisation passes
   * more speed never hurts

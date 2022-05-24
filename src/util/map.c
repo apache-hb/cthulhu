@@ -1,7 +1,6 @@
 #include "cthulhu/util/map.h"
 #include "cthulhu/util/str.h"
-
-#include <stdint.h>
+#include "cthulhu/util/util.h"
 
 // generic map functions
 

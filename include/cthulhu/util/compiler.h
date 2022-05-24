@@ -65,10 +65,3 @@
 #        define NORETURN __declspec(noreturn) void
 #    endif
 #endif
-
-#ifndef _DEFAULT_SOURCE
-#    define _DEFAULT_SOURCE
-#    if !OS_WINDOWS
-#        include <sys/mman.h>
-#    endif
-#endif

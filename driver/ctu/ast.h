@@ -19,7 +19,12 @@ typedef enum
     AST_BOOL,
     AST_NAME,
 
+    AST_UNARY,
     AST_BINARY,
+
+    /* statements */
+    AST_STMTS,
+    AST_RETURN,
 
     /* intermediate types */
     AST_TYPELIST,
@@ -57,11 +62,19 @@ typedef struct ast_t
         /* AST_BOOL */
         bool boolean;
 
+        /* AST_BINARY */
         struct
         {
             binary_t binary;
             struct ast_t *lhs;
             struct ast_t *rhs;
+        };
+
+        /* AST_UNARY|AST_RETURN */
+        struct
+        {
+            unary_t unary;
+            struct ast_t *operand;
         };
 
         /* AST_POINTER|AST_ARRAY */
@@ -91,6 +104,9 @@ typedef struct ast_t
             vector_t *decls;
         };
 
+        /* AST_STMTS */
+        vector_t *stmts;
+
         struct
         {
             char *name;
@@ -108,8 +124,7 @@ typedef struct ast_t
                 /* AST_FUNCDECL */
                 struct
                 {
-                    struct ast_t *paramList;
-                    struct ast_t *returnType;
+                    struct ast_t *ret;
                     struct ast_t *body;
                 };
             };
@@ -125,7 +140,7 @@ ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *import
 
 /// declarations
 
-ast_t *ast_funcdecl(scan_t *scan, where_t where, char *name, ast_t *params, ast_t *result, ast_t *body);
+ast_t *ast_funcdecl(scan_t *scan, where_t where, char *name, ast_t *ret, ast_t *body);
 
 /// expressions
 
@@ -133,7 +148,13 @@ ast_t *ast_digit(scan_t *scan, where_t where, mpz_t value);
 ast_t *ast_bool(scan_t *scan, where_t where, bool value);
 ast_t *ast_name(scan_t *scan, where_t where, vector_t *path);
 
+ast_t *ast_unary(scan_t *scan, where_t where, unary_t op, ast_t *operand);
 ast_t *ast_binary(scan_t *scan, where_t where, binary_t binary, ast_t *lhs, ast_t *rhs);
+
+/// statements
+
+ast_t *ast_stmts(scan_t *scan, where_t where, vector_t *stmts);
+ast_t *ast_return(scan_t *scan, where_t where, ast_t *expr);
 
 /// types
 

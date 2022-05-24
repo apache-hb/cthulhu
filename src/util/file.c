@@ -5,6 +5,7 @@
 #include "cthulhu/util/file.h"
 // clang-format on
 
+USE_DECL
 file_t file_open(const char *path, file_flags_t flags, cerror_t *error)
 {
     file_format_t fmt = (flags & FILE_BINARY) ? FORMAT_BINARY : FORMAT_TEXT;
@@ -40,6 +41,7 @@ size_t file_write(file_t file, const void *buffer, size_t size, cerror_t *error)
     return result;
 }
 
+USE_DECL
 size_t file_size(file_t file, cerror_t *error)
 {
     native_cerror_t nativeError = 0;

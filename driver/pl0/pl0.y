@@ -16,6 +16,7 @@
     
     #include "scan.h"
     #include "ast.h"
+    #include "cthulhu/ast/compile.h"
 }
 
 %{

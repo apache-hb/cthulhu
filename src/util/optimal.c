@@ -10,6 +10,7 @@ static size_t kSizeAnchors[] = {10, 100, 1000, 10000, 50000, 100000, 250000, 500
  *
  * see tools/tune.c for more information
  */
+
 static size_t bucket_for_size(size_t size)
 {
     switch (size)

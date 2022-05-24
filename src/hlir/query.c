@@ -180,6 +180,7 @@ static const char *kKindNames[HLIR_TOTAL] = {
     [HLIR_BRANCH] = "branch",
     [HLIR_LOOP] = "loop",
     [HLIR_ASSIGN] = "assign",
+    [HLIR_RETURN] = "return",
 
     [HLIR_STRUCT] = "struct-type",
     [HLIR_UNION] = "union-type",

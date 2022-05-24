@@ -1,0 +1,5 @@
+struct Hello {
+    field: int;
+}
+
+def getHello: Hello;

@@ -2,12 +2,11 @@
 
 #include "cmd-bison.h"
 #include "cmd-flex.h"
-#include "cmd.h"
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/interface/runtime.h"
 #include "cthulhu/util/macros.h"
-#include "cthulhu/util/map.h"
 #include "cthulhu/util/str.h"
+#include "cthulhu/util/util.h"
 #include <gmp.h>
 
 CT_CALLBACKS(kCallbacks, cmd);

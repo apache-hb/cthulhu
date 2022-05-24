@@ -96,19 +96,28 @@ typedef enum
     MODE_TOTAL
 } file_mode_t;
 
+NODISCARD
 library_handle_t native_library_open(const char *path, native_cerror_t *error);
 void native_library_close(library_handle_t handle);
+
+NODISCARD
 void *native_library_get_symbol(library_handle_t handle, const char *symbol, native_cerror_t *error);
 
+NODISCARD
 file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error);
 void native_file_close(file_handle_t handle);
 
 file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t size, native_cerror_t *error);
 file_write_t native_file_write(file_handle_t handle, const void *buffer, file_write_t size, native_cerror_t *error);
 
+NODISCARD
 file_size_t native_file_size(file_handle_t handle, native_cerror_t *error);
 
+NODISCARD
 const void *native_file_map(file_handle_t handle, native_cerror_t *error);
 
+NODISCARD
 char *native_cerror_to_string(native_cerror_t error);
+
+NODISCARD
 native_cerror_t native_get_last_error(void);

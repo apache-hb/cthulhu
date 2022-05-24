@@ -1,7 +1,6 @@
 #include "cthulhu/interface/runtime.h"
 
 #include "cthulhu/hlir/init.h"
-#include "cthulhu/hlir/query.h"
 #include "cthulhu/util/util.h"
 
 #include <stdio.h>

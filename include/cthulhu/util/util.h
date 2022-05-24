@@ -1,13 +1,12 @@
 #pragma once
 
-#include <stdbool.h>
 #include <stdlib.h>
 
 #if ENABLE_TUNING
 #    include <stdatomic.h>
 #endif
 
-#include "macros.h"
+#include "analyze.h"
 
 /**
  * @defgroup Memory General case memory managment

@@ -4,6 +4,7 @@
 #include "platform.h"
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/str.h"
+#include "cthulhu/util/util.h"
 // clang-format on
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
@@ -13,6 +14,7 @@ STATIC_ASSERT(sizeof(file_handle_t) == sizeof(void *), "file_handle_t and void* 
 
 // library api
 
+USE_DECL
 library_handle_t native_library_open(const char *path, native_cerror_t *error)
 {
     library_handle_t handle = LoadLibrary(path);
@@ -30,6 +32,7 @@ void native_library_close(library_handle_t handle)
     FreeLibrary(handle);
 }
 
+USE_DECL
 void *native_library_get_symbol(library_handle_t handle, const char *symbol, native_cerror_t *error)
 {
     void *ptr = GetProcAddress(handle, symbol);
@@ -42,6 +45,7 @@ void *native_library_get_symbol(library_handle_t handle, const char *symbol, nat
     return ptr;
 }
 
+USE_DECL
 file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error)
 {
     DWORD access = (mode == MODE_READ) ? GENERIC_READ : GENERIC_WRITE;
@@ -94,6 +98,7 @@ file_write_t native_file_write(file_handle_t handle, const void *buffer, file_wr
     return writtenSize;
 }
 
+USE_DECL
 file_size_t native_file_size(file_handle_t handle, native_cerror_t *error)
 {
     LARGE_INTEGER size;
@@ -107,6 +112,7 @@ file_size_t native_file_size(file_handle_t handle, native_cerror_t *error)
     return size.QuadPart;
 }
 
+USE_DECL
 const void *native_file_map(file_handle_t handle, native_cerror_t *error)
 {
     HANDLE mapping = CreateFileMapping(
@@ -139,6 +145,7 @@ const void *native_file_map(file_handle_t handle, native_cerror_t *error)
     return file;
 }
 
+USE_DECL
 char *native_cerror_to_string(native_cerror_t error)
 {
     char buffer[0x1000] = {0};
@@ -160,6 +167,7 @@ char *native_cerror_to_string(native_cerror_t error)
     return str_erase(buffer, written, "\n\r");
 }
 
+USE_DECL
 native_cerror_t native_get_last_error(void)
 {
     return GetLastError();
