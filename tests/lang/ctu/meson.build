@@ -77,6 +77,21 @@ tests = {
             '2d',
             'expr-size'
         ]
+    },
+    'funcs': {
+        'fail': [
+            'ret-invalid'
+        ],
+        'pass': [
+            'decl-arg',
+            'empty-body',
+            'empty',
+            'int-return',
+            'many-args',
+            'return-int',
+            'type-return',
+            'use-arg'
+        ]
     }
 }
 

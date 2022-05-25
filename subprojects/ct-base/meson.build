@@ -1,0 +1,2 @@
+project('ct-base', 'c')
+

@@ -9,17 +9,6 @@
   * belongs either in the middle or backend
   * probably collected in the backend with some utility provided by common tools
 
-* make hlir reentrant
-  * this will be an important thing to test so reentrant code is needed
-  * this will also make it allocator aware
-
-* add ssa emitter
-  * direct asm/wasm output would be preferrable to relying on C/wat2wasm
-
-* add better coverage support
-  * either here in tree or into meson
-  * its pretty shit and cant be configured right now
-
 ## Blocking items
 
 * take logging in more places
@@ -58,6 +47,21 @@
 
 * general code cleanup
   * this is a forever task
+
+* make hlir reentrant
+  * this will be an important thing to test so reentrant code is needed
+  * this will also make it allocator aware
+
+* add ssa emitter
+  * direct asm/wasm output would be preferrable to relying on C/wat2wasm
+
+* add better coverage support
+  * either here in tree or into meson
+  * its pretty shit and cant be configured right now
+
+* extract the command line parser out into its own library
+  * this means all the tools can share the same parser
+  * blocked by extracting generic
 
 ## Optional items
 

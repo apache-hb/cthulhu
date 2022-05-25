@@ -231,7 +231,7 @@ paramlist: param { $$ = vector_init($1); }
     | paramlist COMMA param { vector_push(&$1, $3); $$ = $1; }
     ;
 
-param: IDENT type { $$ = ast_param(x, @$, $1, $2); }
+param: IDENT COLON type { $$ = ast_param(x, @$, $1, $3); }
     ;
 
 funcbody: SEMICOLON { $$ = NULL; }
