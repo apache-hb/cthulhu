@@ -67,7 +67,6 @@ NORETURN ctpanic(FORMAT_STRING const char *msg, ...) FORMAT_ATTRIBUTE(1, 2);
                         __VA_ARGS__);                                                                                  \
             }                                                                                                          \
         } while (0)
-#    define union struct
 #else
 #    define CTASSERT(expr, msg)                                                                                        \
         do                                                                                                             \

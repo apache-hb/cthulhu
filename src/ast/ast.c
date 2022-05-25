@@ -9,7 +9,7 @@ typedef struct
     where_t where; ///< the location of this node in the source file
 } node_data_t;
 
-#define TOTAL_NODES 0x1000
+#define TOTAL_NODES (0x1000 * 64) // TODO: make this configurable
 
 static node_data_t kNodeData[TOTAL_NODES] = {0};
 static node_t kNodeOffset = 0;
