@@ -16,6 +16,10 @@
 * add ssa emitter
   * direct asm/wasm output would be preferrable to relying on C/wat2wasm
 
+* add better coverage support
+  * either here in tree or into meson
+  * its pretty shit and cant be configured right now
+
 ## Blocking items
 
 * take logging in more places
