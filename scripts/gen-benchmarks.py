@@ -7,6 +7,7 @@ languages = [
     ('c', 'void {name}(void) {{ }}', '\n', ''),
     ('cpp', 'void {name}(void) {{ }}', '\n', ''),
     ('pl0', 'procedure {name}; begin ! 0 end;', '\n', '.'),
+    ('ctu', 'def {name} {{ }}', '\n', '')
 ]
 
 for ext, template, newline, end in languages:
