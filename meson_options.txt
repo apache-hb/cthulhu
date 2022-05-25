@@ -19,11 +19,6 @@ option('analyze', type : 'feature',
     value : 'auto'
 )
 
-option('valgrind', type : 'feature',
-    description : 'enable valgrind runtime support',
-    value : 'auto'
-)
-
 option('fuzzing', type : 'feature',
     description : 'enable fuzzing support',
     value : 'auto'

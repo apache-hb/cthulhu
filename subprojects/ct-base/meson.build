@@ -1,2 +1,0 @@
-project('ct-base', 'c')
-
