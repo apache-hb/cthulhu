@@ -1,6 +1,6 @@
-#include "cthulhu/util/str.h"
-#include "cthulhu/util/defs.h"
-#include "cthulhu/util/util.h"
+#include "std/str.h"
+#include "base/util.h"
+#include "base/macros.h"
 
 #include <stddef.h>
 #include <stdint.h>

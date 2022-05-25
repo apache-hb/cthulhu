@@ -2,7 +2,7 @@
 
 #include "cthulhu/ast/ast.h"
 
-#include "cthulhu/util/vector.h"
+#include "std/vector.h"
 
 #include <stdbool.h>
 #include <stddef.h>

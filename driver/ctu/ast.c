@@ -1,6 +1,6 @@
 #include "ast.h"
 
-#include "cthulhu/util/util.h"
+#include "base/util.h"
 
 static ast_t *ast_new(astof_t of, scan_t *scan, where_t where)
 {

@@ -1,8 +1,8 @@
 #include "scan.h"
 
 #include "cthulhu/report/report.h"
-#include "cthulhu/util/util.h"
-#include "cthulhu/util/macros.h"
+#include "base/util.h"
+#include "base/macros.h"
 
 typedef struct
 {

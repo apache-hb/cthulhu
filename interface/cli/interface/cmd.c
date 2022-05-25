@@ -4,9 +4,9 @@
 #include "cmd-flex.h"
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/interface/runtime.h"
-#include "cthulhu/util/macros.h"
-#include "cthulhu/util/str.h"
-#include "cthulhu/util/util.h"
+#include "base/macros.h"
+#include "std/str.h"
+#include "base/util.h"
 #include <gmp.h>
 
 CT_CALLBACKS(kCallbacks, cmd);

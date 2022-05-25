@@ -1,6 +1,6 @@
 #include "ast.h"
 
-#include "cthulhu/util/util.h"
+#include "base/util.h"
 
 pl0_t *pl0_new(scan_t *scan, where_t where, pl0_type_t type)
 {

@@ -6,11 +6,11 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/type.h"
 #include "cthulhu/interface/runtime.h"
-#include "cthulhu/util/util.h"
+#include "base/util.h"
 
 #include "cthulhu/report/report-ext.h"
-#include "cthulhu/util/set.h"
-#include "cthulhu/util/str.h"
+#include "std/set.h"
+#include "std/str.h"
 
 typedef enum
 {

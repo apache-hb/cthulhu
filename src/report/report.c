@@ -1,10 +1,10 @@
 #include "cthulhu/report/report.h"
 #include "cthulhu/ast/ast.h"
-#include "cthulhu/util/str.h"
-#include "cthulhu/util/util.h"
+#include "std/str.h"
+#include "base/util.h"
 
 #include "cthulhu/ast/scan.h"
-#include "cthulhu/util/macros.h"
+#include "base/macros.h"
 
 #include <math.h>
 #include <stdio.h>

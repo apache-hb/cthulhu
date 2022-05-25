@@ -2,11 +2,11 @@
 #include "cthulhu/hlir/ops.h"
 #include "cthulhu/hlir/attribs.h"
 #include "cthulhu/report/report.h"
-#include "cthulhu/util/map.h"
+#include "std/map.h"
 
 #include "cthulhu/hlir/query.h"
-#include "cthulhu/util/set.h"
-#include "cthulhu/util/str.h"
+#include "std/set.h"
+#include "std/str.h"
 #include "cthulhu/util/stream.h"
 
 #include <string.h>

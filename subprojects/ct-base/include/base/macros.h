@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/util/analyze.h"
+#include "base/analyze.h"
 
 #define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
 

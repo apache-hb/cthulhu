@@ -1,0 +1,5 @@
+option('tuning', type : 'feature',
+    description : 'compile tuning programs',
+    value : 'auto',
+    yield : true
+)

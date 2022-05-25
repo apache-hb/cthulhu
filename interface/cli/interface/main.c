@@ -4,8 +4,8 @@
 
 #include "cthulhu/emit/c89.h"
 #include "cthulhu/report/report.h"
-#include "cthulhu/util/str.h"
-#include "cthulhu/util/vector.h"
+#include "std/str.h"
+#include "std/vector.h"
 
 #include <stdio.h>
 
