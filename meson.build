@@ -54,13 +54,7 @@ deps = [ gmp, ctbase, ctstd, ctplatform ]
 lexargs = []
 parseargs = []
 
-<<<<<<< HEAD
-if tuning.enabled()
-    args += [ '-DENABLE_TUNING=1' ]
-endif
-=======
 fs = import('fs')
->>>>>>> parent of ef37446 (Revert "extract more stuff out to subprojects")
 
 if buildtype.startswith('debug')
     args += [ '-DENABLE_DEBUG=1' ]

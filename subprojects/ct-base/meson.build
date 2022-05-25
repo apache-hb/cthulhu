@@ -1,8 +1,6 @@
 project('ct-base', 'c')
 
-src = [
-    'src/base.c'
-]
+src = [ 'src/base.c' ]
 
 args = []
 
