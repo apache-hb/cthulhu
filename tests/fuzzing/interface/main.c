@@ -1,4 +1,4 @@
-#include "cthulhu/util/macros.h"
+#include "base/macros.h"
 #include "cthulhu/interface/interface.h"
 
 #include "cthulhu/emit/c89.h"

@@ -1,5 +1,5 @@
-#include "cthulhu/util/str.h"
-#include "cthulhu/util/util.h"
+#include "std/str.h"
+#include "base/util.h"
 
 #include <time.h>
 #include <stdio.h>

@@ -1,5 +1,5 @@
 #include "cthulhu/util/stream.h"
-#include "cthulhu/util/util.h"
+#include "base/util.h"
 
 #include <string.h>
 

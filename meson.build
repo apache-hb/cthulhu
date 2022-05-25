@@ -45,16 +45,22 @@ gmp = dependency('gmp',
 )
 
 cttest = subproject('ct-test').get_variable('cttest')
-fs = import('fs')
+ctbase = subproject('ct-base').get_variable('base')
+ctstd = subproject('ct-std').get_variable('std')
+ctplatform = subproject('ct-platform').get_variable('platform')
 
 args = []
-deps = [ gmp ]
+deps = [ gmp, ctbase, ctstd, ctplatform ]
 lexargs = []
 parseargs = []
 
+<<<<<<< HEAD
 if tuning.enabled()
     args += [ '-DENABLE_TUNING=1' ]
 endif
+=======
+fs = import('fs')
+>>>>>>> parent of ef37446 (Revert "extract more stuff out to subprojects")
 
 if buildtype.startswith('debug')
     args += [ '-DENABLE_DEBUG=1' ]
@@ -147,20 +153,7 @@ src = [
     'src/report/report-ext.c',
 
     # standard library
-    'src/util/str.c',
-    'src/util/stream.c',
-    'src/util/util.c',
-    'src/util/set.c',
-    'src/util/map.c',
-    'src/util/vector.c',
-    'src/util/optimal.c',
-
-    'src/util/defs.c',
-    'src/util/file.c',
-    'src/util/library.c',
-
-    # platform specific code
-    'src/platform/target.c'.replace('target', target),
+    'src/util/stream.c'
 ]
 
 libgeneric = library('generic', src,

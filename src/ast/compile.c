@@ -2,7 +2,7 @@
 
 #include "cthulhu/ast/compile.h"
 #include "cthulhu/ast/interop.h"
-#include "cthulhu/util/file.h"
+#include "platform/file.h"
 
 #include "cthulhu/report/report.h"
 

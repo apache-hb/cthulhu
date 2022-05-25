@@ -1,5 +1,5 @@
-#include "cthulhu/util/str.h"
-#include "cthulhu/util/defs.h"
+#include "std/str.h"
+#include "platform/error.h"
 #include "ct-test.h"
 
 #include <string.h>

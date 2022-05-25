@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/util/analyze.h"
+#include "base/analyze.h"
 #include <stddef.h>
 
 typedef struct
