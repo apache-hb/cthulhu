@@ -27,10 +27,6 @@ static void rename_module(hlir_t *hlir, const char *path)
     }
 
     hlir->name = str_filename(path);
-
-    logverbose("path %s", path);
-    logverbose("filename %s", str_filename(path));
-    logverbose("renamed module to `%s`", hlir->name);
 }
 
 static runtime_t runtime_new(reports_t *reports, size_t size)
@@ -155,8 +151,6 @@ int cthulhu_parse(cthulhu_t *cthulhu)
     {
         compile_t *ctx = vector_get(cthulhu->compiles, i);
         ctx->ast = cthulhu->driver.fnParseFile(&cthulhu->runtime, ctx);
-        logverbose("[cthulhu-parse] compile %p", ctx);
-        logverbose("[cthulhu-parse] ast: %p", ctx->ast);
     }
 
     return report_errors(cthulhu, "parsing sources");

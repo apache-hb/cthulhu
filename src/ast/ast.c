@@ -1,7 +1,7 @@
 #include "cthulhu/ast/ast.h"
 
-#include "cthulhu/util/util.h"
 #include "cthulhu/util/macros.h"
+#include "cthulhu/util/util.h"
 #include <limits.h>
 
 typedef struct
@@ -12,7 +12,7 @@ typedef struct
 
 #define TOTAL_NODES 0x1000
 
-static node_data_t kNodeData[TOTAL_NODES] = { 0 };
+static node_data_t kNodeData[TOTAL_NODES] = {0};
 static node_t kNodeOffset = 0;
 
 #define INVALID_NODE UINT_MAX

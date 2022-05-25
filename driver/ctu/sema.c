@@ -5,8 +5,8 @@
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/type.h"
-#include "cthulhu/util/util.h"
 #include "cthulhu/interface/runtime.h"
+#include "cthulhu/util/util.h"
 
 #include "cthulhu/report/report-ext.h"
 #include "cthulhu/util/set.h"
@@ -114,7 +114,12 @@ static void add_basic_types(sema_t *sema)
 
 void ctu_init_compiler(runtime_t *runtime)
 {
-    size_t sizes[TAG_MAX] = {[TAG_VARS] = 1, [TAG_PROCS] = 1, [TAG_TYPES] = 32, [TAG_MODULES] = 1,};
+    size_t sizes[TAG_MAX] = {
+        [TAG_VARS] = 1,
+        [TAG_PROCS] = 1,
+        [TAG_TYPES] = 32,
+        [TAG_MODULES] = 1,
+    };
 
     kRootSema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
 
@@ -435,12 +440,7 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     }
     else
     {
-        size_t tags[TAG_MAX] = {
-            [TAG_VARS] = 32,
-            [TAG_PROCS] = 32,
-            [TAG_TYPES] = 32,
-            [TAG_MODULES] = 32
-        };
+        size_t tags[TAG_MAX] = {[TAG_VARS] = 32, [TAG_PROCS] = 32, [TAG_TYPES] = 32, [TAG_MODULES] = 32};
 
         sema_t *nest = sema_new(sema, NULL, TAG_MAX, tags);
 
@@ -518,11 +518,7 @@ static hlir_t *begin_function(sema_t *sema, ast_t *ast)
         result = sema_type(sema, signature->result);
     }
 
-    signature_t sig = {
-        .params = vector_new(0),
-        .result = result,
-        .variadic = false
-    };
+    signature_t sig = {.params = vector_new(0), .result = result, .variadic = false};
 
     return hlir_begin_function(ast->node, ast->name, sig);
 }
@@ -591,9 +587,7 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
 {
     ast_t *root = compile->ast;
 
-    logverbose("[forward-decls] compile: %p", compile);
-    logverbose("[forward-decls] root: %p", root);
-    logverbose("[forward-decls] decls: %p", root->decls);
+    logverbose("decls: %p", root->decls);
 
     size_t totalDecls = vector_len(root->decls);
     size_t sizes[TAG_MAX] = {

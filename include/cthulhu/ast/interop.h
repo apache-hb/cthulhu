@@ -80,18 +80,18 @@ void flex_init(where_t *where);
 /**
  * used to route memory for flex and bison though cthulhu allocators
  */
-#define FLEX_MEMORY(alloc, resize, release)                                                                              \
+#define FLEX_MEMORY(alloc, resize, release)                                                                            \
     inline void *alloc(size_t size, yyscan_t scanner)                                                                  \
     {                                                                                                                  \
         UNUSED(scanner);                                                                                               \
         return ctu_malloc(size);                                                                                       \
     }                                                                                                                  \
-    inline void *resize(void *ptr, size_t bytes, yyscan_t scanner)                                                    \
+    inline void *resize(void *ptr, size_t bytes, yyscan_t scanner)                                                     \
     {                                                                                                                  \
         UNUSED(scanner);                                                                                               \
         return ctu_realloc(ptr, bytes);                                                                                \
     }                                                                                                                  \
-    inline void release(void *ptr, yyscan_t scanner)                                                                      \
+    inline void release(void *ptr, yyscan_t scanner)                                                                   \
     {                                                                                                                  \
         UNUSED(scanner);                                                                                               \
         if (ptr == NULL)                                                                                               \

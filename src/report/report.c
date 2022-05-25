@@ -3,8 +3,8 @@
 #include "cthulhu/util/str.h"
 #include "cthulhu/util/util.h"
 
-#include "cthulhu/util/macros.h"
 #include "cthulhu/ast/scan.h"
+#include "cthulhu/util/macros.h"
 
 #include <math.h>
 #include <stdio.h>

@@ -87,8 +87,8 @@ static flag_t pop_current_flag(commands_t *commands, flag_type_t type)
 
     if (flag.type != type)
     {
-        report(commands->reports, WARNING, node_invalid(), "flag `%s` requires a %s, but was treated as a %s flag", flag.name,
-               kFlagTypes[flag.type], kFlagTypes[type]);
+        report(commands->reports, WARNING, node_invalid(), "flag `%s` requires a %s, but was treated as a %s flag",
+               flag.name, kFlagTypes[flag.type], kFlagTypes[type]);
         return flag_empty();
     }
 

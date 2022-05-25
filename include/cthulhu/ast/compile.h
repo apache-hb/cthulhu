@@ -11,12 +11,11 @@
  */
 typedef struct
 {
-    int (*init)(scan_t *extra, void *scanner);          ///< yylex_init_extra
-    void (*setIn)(FILE *fd, void *scanner);             ///< yyset_in
-    int (*parse)(scan_t *extra, void *scanner);         ///< yyparse
-    void *(*scan)(const char *text, void *scanner);     ///< yy_scan_string
-    void (*destroyBuffer)(void *buffer, void *scanner); ///< yy_delete_buffer
-    void (*destroy)(void *scanner);                     ///< yylex_destroy
+    int (*init)(scan_t *extra, void *scanner);                   ///< yylex_init_extra
+    int (*parse)(void *scanner, scan_t *extra);                  ///< yyparse
+    void *(*scan)(const char *text, size_t size, void *scanner); ///< yy_scan_string
+    void (*destroyBuffer)(void *buffer, void *scanner);          ///< yy_delete_buffer
+    void (*destroy)(void *scanner);                              ///< yylex_destroy
 } callbacks_t;
 
 /**
@@ -50,12 +49,3 @@ scan_t scan_without_source(reports_t *reports, const char *language, const char 
  * @return void* a pointer to the compiled ast
  */
 void *compile_string(scan_t *extra, callbacks_t *callbacks);
-
-/**
- * @brief compile a file to a language specific ast
- *
- * @param extra the scanner being used
- * @param callbacks the flex/bison callbacks
- * @return void* a pointer to the compiled ast
- */
-void *compile_file(scan_t *extra, callbacks_t *callbacks);

@@ -1,6 +1,6 @@
 #include "cthulhu/util/vector.h"
-#include "cthulhu/util/util.h"
 #include "cthulhu/util/macros.h"
+#include "cthulhu/util/util.h"
 
 #include <stdint.h>
 

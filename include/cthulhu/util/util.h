@@ -103,6 +103,13 @@ void init_gmp(void);
 
 #define BOX(name) ctu_memdup(&(name), sizeof(name)) ///< box a value onto the heap from the stack
 
+#if ENABLE_VALGRIND
+#    include <valgrind/memcheck.h>
+#    include <valgrind/valgrind.h>
+#else
+#    define VALGRIND_MAKE_MEM_NOACCESS(ptr, size)
+#endif
+
 #if ENABLE_TUNING
 
 /**

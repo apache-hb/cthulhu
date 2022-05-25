@@ -44,6 +44,8 @@ gmp = dependency('gmp',
     fallback : [ 'mini-gmp', 'gmp' ]
 )
 
+valgrind = dependency('valgrind', required : get_option('valgrind'))
+
 cttest = subproject('ct-test').get_variable('cttest')
 fs = import('fs')
 
@@ -51,6 +53,11 @@ args = []
 deps = [ gmp ]
 lexargs = []
 parseargs = []
+
+if valgrind.found()
+    deps += [ valgrind ]
+    args += [ '-DENABLE_VALGRIND=1' ]
+endif
 
 if tuning.enabled()
     args += [ '-DENABLE_TUNING=1' ]

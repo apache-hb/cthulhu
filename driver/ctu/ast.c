@@ -1,16 +1,10 @@
 #include "ast.h"
 
 #include "cthulhu/util/util.h"
-#include "cthulhu/report/report.h"
-
-#include <string.h>
-
-void *program = NULL;
 
 static ast_t *ast_new(astof_t of, scan_t *scan, where_t where)
 {
     ast_t *ast = ctu_malloc(sizeof(ast_t));
-    memset(ast, 0xFF, sizeof(ast_t));
     ast->of = of;
     ast->node = node_new(scan, where);
     return ast;
@@ -29,8 +23,6 @@ ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *import
     ast->modspec = modspec;
     ast->imports = imports;
     ast->decls = decls;
-    logverbose("[ast-program] program: %p", ast);
-    logverbose("[ast-program] decls: %p %p", decls, ast->decls);
     return ast;
 }
 
@@ -177,10 +169,7 @@ ast_t *ast_param(scan_t *scan, where_t where, char *name, ast_t *type)
 
 funcparams_t funcparams_new(vector_t *params, bool variadic)
 {
-    funcparams_t result = {
-        .params = params,
-        .variadic = variadic
-    };
+    funcparams_t result = {.params = params, .variadic = variadic};
 
     return result;
 }

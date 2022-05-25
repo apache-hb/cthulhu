@@ -1,7 +1,7 @@
 #include "scan.h"
 
-#include "cthulhu/util/util.h"
 #include "cthulhu/ast/compile.h"
+#include "cthulhu/util/util.h"
 
 typedef struct
 {

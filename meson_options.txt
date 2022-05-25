@@ -15,7 +15,12 @@ option('doxygen', type : 'feature',
 )
 
 option('analyze', type : 'feature',
-    description : 'enable code analysis',
+    description : 'enable static code analysis',
+    value : 'auto'
+)
+
+option('valgrind', type : 'feature',
+    description : 'enable valgrind runtime support',
     value : 'auto'
 )
 

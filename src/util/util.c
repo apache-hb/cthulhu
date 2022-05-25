@@ -1,12 +1,13 @@
 #include "cthulhu/util/util.h"
+#include "cthulhu/report/report.h"
 #include "cthulhu/util/macros.h"
 
 #include <gmp.h>
+#include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-#include <stdarg.h>
 
 #if ENABLE_TUNING
 #    include <malloc.h>
