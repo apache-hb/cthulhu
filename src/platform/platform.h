@@ -1,8 +1,10 @@
 #pragma once
 
-#include "base/compiler.h"
+#ifndef I_WILL_BE_INCLUDING_PLATFORM_CODE
+#    error "you should not directly include this header"
+#endif
 
-#ifdef OS_WINDOWS
+#ifdef _WIN32
 #    define NOMINMAX
 #    define WIN32_LEAN_AND_MEAN
 #    define NOGDICAPMASKS
@@ -66,7 +68,7 @@
 #    define CERROR_TYPE int
 #endif
 
-#include "base/macros.h"
+#include "cthulhu/util/macros.h"
 
 #include <stdbool.h>
 

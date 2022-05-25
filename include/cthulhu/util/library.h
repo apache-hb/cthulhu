@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform/error.h"
+#include "cthulhu/util/defs.h"
 
 typedef void *library_t;
 

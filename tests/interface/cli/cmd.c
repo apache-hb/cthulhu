@@ -1,7 +1,7 @@
 #include "interface/cmd.h"
 #include "cthulhu/report/report.h"
 #include "ct-test.h"
-#include "std/str.h"
+#include "cthulhu/util/str.h"
 
 TEST(test_cmd_files, {
     reports_t *reports = begin_reports();

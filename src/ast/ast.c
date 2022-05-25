@@ -1,6 +1,6 @@
 #include "cthulhu/ast/ast.h"
 
-#include "base/macros.h"
+#include "cthulhu/util/macros.h"
 #include <limits.h>
 
 typedef struct

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/analyze.h"
+#include "cthulhu/util/analyze.h"
 
 #include <stdbool.h>
 #include <stddef.h>

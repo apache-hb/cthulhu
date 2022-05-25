@@ -1,7 +1,7 @@
 #pragma once
 
-#include "platform/error.h"
-#include "base/macros.h"
+#include "cthulhu/util/defs.h"
+#include "cthulhu/util/macros.h"
 
 typedef struct
 {

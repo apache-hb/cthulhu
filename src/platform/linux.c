@@ -1,7 +1,9 @@
+#define I_WILL_BE_INCLUDING_PLATFORM_CODE
+
 #include "platform.h"
 
-#include "std/str.h"
-#include "base/util.h"
+#include "cthulhu/util/str.h"
+#include "cthulhu/util/util.h"
 #include "platform.h"
 #include <errno.h>
 #include <string.h>

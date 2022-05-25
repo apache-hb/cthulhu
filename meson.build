@@ -44,17 +44,24 @@ gmp = dependency('gmp',
     fallback : [ 'mini-gmp', 'gmp' ]
 )
 
+valgrind = dependency('valgrind', required : get_option('valgrind'))
+
 cttest = subproject('ct-test').get_variable('cttest')
-ctbase = subproject('ct-base').get_variable('base')
-ctstd = subproject('ct-std').get_variable('std')
-ctplatform = subproject('ct-platform').get_variable('platform')
+fs = import('fs')
 
 args = []
-deps = [ gmp, ctbase, ctstd, ctplatform ]
+deps = [ gmp ]
 lexargs = []
 parseargs = []
 
-fs = import('fs')
+if valgrind.found()
+    deps += [ valgrind ]
+    args += [ '-DENABLE_VALGRIND=1' ]
+endif
+
+if tuning.enabled()
+    args += [ '-DENABLE_TUNING=1' ]
+endif
 
 if buildtype.startswith('debug')
     args += [ '-DENABLE_DEBUG=1' ]
@@ -147,7 +154,20 @@ src = [
     'src/report/report-ext.c',
 
     # standard library
-    'src/util/stream.c'
+    'src/util/str.c',
+    'src/util/stream.c',
+    'src/util/util.c',
+    'src/util/set.c',
+    'src/util/map.c',
+    'src/util/vector.c',
+    'src/util/optimal.c',
+
+    'src/util/defs.c',
+    'src/util/file.c',
+    'src/util/library.c',
+
+    # platform specific code
+    'src/platform/target.c'.replace('target', target),
 ]
 
 libgeneric = library('generic', src,

@@ -4,7 +4,7 @@
 
 #include "cthulhu/ast/ast.h"
 #include "cthulhu/hlir/ops.h"
-#include "std/vector.h"
+#include "cthulhu/util/vector.h"
 
 #include "attribs.h"
 

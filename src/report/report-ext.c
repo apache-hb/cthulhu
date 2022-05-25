@@ -1,7 +1,7 @@
 #include "cthulhu/report/report-ext.h"
 
-#include "base/macros.h"
-#include "std/str.h"
+#include "cthulhu/util/macros.h"
+#include "cthulhu/util/str.h"
 
 message_t *report_shadow(reports_t *reports, const char *name, node_t shadowed, node_t shadowing)
 {

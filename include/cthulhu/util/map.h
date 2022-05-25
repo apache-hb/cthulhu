@@ -1,6 +1,6 @@
 #pragma once
 
-#include "std/vector.h"
+#include "cthulhu/util/vector.h"
 
 #include <stdbool.h>
 #include <stddef.h>

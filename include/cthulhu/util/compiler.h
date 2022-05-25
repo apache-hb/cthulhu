@@ -65,9 +65,3 @@
 #        define NORETURN __declspec(noreturn) void
 #    endif
 #endif
-
-#ifdef OS_WINDOWS
-#    define PATH_SEP "\\"
-#else
-#    define PATH_SEP "/"
-#endif

@@ -1,11 +1,11 @@
 #pragma once
 
 #if !COMPILER_SOURCE
-#    include "base/macros.h"
+#    include "cthulhu/util/macros.h"
 DISABLE_SAL
 #endif
 
-#include "base/util.h"
+#include "cthulhu/util/util.h"
 #include "scan.h"
 
 /**

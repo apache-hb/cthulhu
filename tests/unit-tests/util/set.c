@@ -1,6 +1,6 @@
-#include "std/set.h"
-#include "std/str.h"
-#include "base/util.h"
+#include "cthulhu/util/set.h"
+#include "cthulhu/util/str.h"
+#include "cthulhu/util/util.h"
 #include "ct-test.h"
 
 static const char *kSetItems[] = {

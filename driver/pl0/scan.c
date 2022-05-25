@@ -1,8 +1,8 @@
 #include "scan.h"
 
 #include "cthulhu/report/report.h"
-#include "base/macros.h"
-#include "base/util.h"
+#include "cthulhu/util/macros.h"
+#include "cthulhu/util/util.h"
 
 #include <limits.h>
 

@@ -1,5 +1,5 @@
 #include "cthulhu/hlir/attribs.h"
-#include "base/util.h"
+#include "cthulhu/util/util.h"
 
 hlir_attributes_t *hlir_attributes(hlir_linkage_t linkage, hlir_tags_t tags, const char *name, const char *module)
 {

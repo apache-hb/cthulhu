@@ -1,6 +1,6 @@
-#include "std/map.h"
-#include "std/str.h"
-#include "base/util.h"
+#include "cthulhu/util/map.h"
+#include "cthulhu/util/str.h"
+#include "cthulhu/util/util.h"
 
 // generic map functions
 
