@@ -5,7 +5,8 @@
 #include "cthulhu/util/file.h"
 
 #include "cthulhu/report/report.h"
-#include "cthulhu/util/util.h"
+
+#include "driver/ctu/ast.h"
 
 #include <string.h>
 
@@ -61,6 +62,8 @@ scan_t scan_without_source(reports_t *reports, const char *language, const char 
 
 void *compile_string(scan_t *extra, callbacks_t *callbacks)
 {
+    logverbose("[%s:%d] extra: %p", __FILE__, __LINE__, extra->data);
+    
     int err = 0;
     void *scanner = NULL;
     void *state = NULL;
@@ -71,11 +74,15 @@ void *compile_string(scan_t *extra, callbacks_t *callbacks)
         return NULL;
     }
 
+    logverbose("[%s:%d] extra: %p", __FILE__, __LINE__, extra->data);
+
     if (!(state = callbacks->scan(scan_text(extra), scan_size(extra), scanner)))
     {
         report(extra->reports, ERROR, node_invalid(), "failed to scan %s", extra->path);
         return NULL;
     }
+
+    logverbose("[%s:%d] extra: %p", __FILE__, __LINE__, extra->data);
 
     if ((err = callbacks->parse(scanner, extra)))
     {
@@ -83,8 +90,15 @@ void *compile_string(scan_t *extra, callbacks_t *callbacks)
         return NULL;
     }
 
+    logverbose("[%s:%d] extra: %p", __FILE__, __LINE__, extra->data);
+    ast_t *ast = extra->data;
+    logverbose("[%s:%d] decls: %p", __FILE__, __LINE__, ast->decls);
+
     callbacks->destroyBuffer(state, scanner);
     callbacks->destroy(scanner);
+
+    logverbose("[%s:%d] extra: %p", __FILE__, __LINE__, extra->data);
+    logverbose("[%s:%d] decls: %p", __FILE__, __LINE__, ast->decls);
 
     return scan_get(extra);
 }

@@ -1,4 +1,4 @@
-#include "cthulhu/ast/ops.h"
+#include "cthulhu/hlir/ops.h"
 
 typedef struct
 {

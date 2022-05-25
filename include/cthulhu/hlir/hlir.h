@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 #include "cthulhu/ast/ast.h"
-#include "cthulhu/ast/ops.h"
+#include "cthulhu/hlir/ops.h"
 #include "cthulhu/util/vector.h"
 
 #include "attribs.h"

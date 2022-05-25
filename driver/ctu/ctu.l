@@ -8,8 +8,6 @@
 
 %{
 #include "ctu-bison.h"
-#include "scan.h"
-#include "cthulhu/report/report.h"
 #include "cthulhu/report/report-ext.h"
 #include "cthulhu/ast/interop.h"
 %}

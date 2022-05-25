@@ -19,7 +19,6 @@
 }
 
 %{
-#include "scan.h"
 int pl0lex();
 void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 %}

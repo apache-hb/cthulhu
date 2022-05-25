@@ -131,6 +131,7 @@ src = [
     'src/hlir/type.c',
     'src/hlir/hlir.c',
     'src/hlir/decl.c',
+    'src/hlir/ops.c',
     'src/hlir/query.c',
     'src/hlir/common.c',
     'src/hlir/validate.c',
@@ -147,7 +148,6 @@ src = [
     'src/ast/interop.c',
     'src/ast/ast.c',
     'src/ast/compile.c',
-    'src/ast/ops.c',
 
     # error reporting
     'src/report/report.c',

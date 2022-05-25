@@ -11,15 +11,13 @@
 }
 
 %code requires {
-    #include "scan.h"
     #include "ast.h"
-    
+    #include "scan.h"
     #define YYSTYPE CTUSTYPE
     #define YYLTYPE CTULTYPE
 }
 
 %{
-#include "scan.h"
 int ctulex();
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}

@@ -1,5 +1,5 @@
 #include "cthulhu/emit/c89.h"
-#include "cthulhu/ast/ops.h"
+#include "cthulhu/hlir/ops.h"
 #include "cthulhu/hlir/attribs.h"
 #include "cthulhu/report/report.h"
 #include "cthulhu/util/map.h"

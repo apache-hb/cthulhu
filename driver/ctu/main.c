@@ -7,8 +7,6 @@
 #include "ctu-bison.h"
 #include "ctu-flex.h"
 
-#include <malloc.h>
-
 CT_CALLBACKS(kCallbacks, ctu);
 
 static void *ctu_parse_file(runtime_t *runtime, compile_t *compile)

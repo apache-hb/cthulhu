@@ -1,5 +1,4 @@
 #include "cthulhu/util/util.h"
-#include "cthulhu/report/report.h"
 #include "cthulhu/util/macros.h"
 
 #include <gmp.h>

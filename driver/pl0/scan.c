@@ -4,6 +4,8 @@
 #include "cthulhu/util/macros.h"
 #include "cthulhu/util/util.h"
 
+#include <limits.h>
+
 static char safe_tolower(int c)
 {
     if (c >= 'A' && c <= 'Z')
