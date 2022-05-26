@@ -5,7 +5,7 @@
 
 typedef struct
 {
-    scan_t *scan;  ///< the source file
+    const scan_t *scan;  ///< the source file
     where_t where; ///< the location of this node in the source file
 } node_data_t;
 
@@ -17,7 +17,7 @@ static node_t kNodeOffset = 0;
 #define INVALID_NODE UINT_MAX
 #define BUILTIN_NODE (UINT_MAX - 1)
 
-node_t node_new(scan_t *scan, where_t where)
+node_t node_new(const scan_t *scan, where_t where)
 {
     node_t offset = kNodeOffset++;
 

@@ -49,7 +49,14 @@
 }
 
 \"(\\.|[^"\\])*\" { 
+    /* a string that doesnt include its own quotes in the output */
     yylval->text = ctu_strndup(yytext + 1, yyleng - 2);
+    return STRING;
+}
+
+"q"\"(\\.|[^"\\])*\" { 
+    /* a string that includes its own quotes in the output */
+    yylval->text = ctu_strndup(yytext + 1, yyleng - 1);
     return STRING;
 }
 

@@ -5,7 +5,7 @@
 
 #include "cthulhu/report/report.h"
 
-static ast_t *ast_new(scan_t *scan, where_t where, ast_kind_t kind)
+static ast_t *ast_new(const scan_t *scan, where_t where, ast_kind_t kind)
 {
     ast_t *ast = ctu_malloc(sizeof(ast_t));
     ast->node = node_new(scan, where);
@@ -65,7 +65,7 @@ ast_t *ast_string(scan_t *scan, where_t where, char *string)
     return ast;
 }
 
-ast_t *ast_ident(scan_t *scan, where_t where, char *ident)
+ast_t *ast_ident(const scan_t *scan, where_t where, char *ident)
 {
     ast_t *ast = ast_new(scan, where, AST_IDENT);
     ast->string = ident;
