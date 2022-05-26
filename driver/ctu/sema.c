@@ -267,6 +267,41 @@ static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
     return hlir_binary(ast->node, type, ast->binary, lhs, rhs);
 }
 
+static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
+{
+    sema_t *current = sema;
+    for (size_t i = 0; i < vector_len(ast->path) - 1; i++)
+    {
+        const char *name = vector_get(ast->path, i);
+        sema_t *next = sema_get(current, TAG_MODULES, name);
+
+        if (next == NULL)
+        {
+            report(sema->reports, ERROR, ast->node, "unknown namespace `%s`", name);
+            return hlir_error(ast->node, "unknown namespace");
+        }
+
+        current = next;
+    }
+
+    const char *name = vector_tail(ast->path);
+
+    hlir_t *var = sema_get(current, TAG_VARS, name);
+    if (var != NULL)
+    {
+        return var;
+    }
+
+    hlir_t *func = sema_get(sema, TAG_PROCS, name);
+    if (func != NULL)
+    {
+        return func;
+    }
+
+    report(sema->reports, ERROR, ast->node, "unknown identifier '%s'", name);
+    return hlir_error(ast->node, "unknown identifier");
+}
+
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
 {
     switch (ast->of)
@@ -277,6 +312,9 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_bool(ast);
     case AST_BINARY:
         return sema_binary(sema, ast);
+
+    case AST_NAME:
+        return sema_ident(sema, ast);
 
     default:
         report(sema->reports, INTERNAL, ast->node, "unknown sema-expr: %d", ast->of);
@@ -428,6 +466,17 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_build_struct(decl);
 }
 
+static void sema_params(sema_t *sema, vector_t *params)
+{
+    size_t len = vector_len(params);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        hlir_t *param = vector_get(params, i);
+        add_decl(sema, TAG_VARS, get_hlir_name(param), param);
+    }
+}
+
 static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
     UNUSED(sema);
@@ -440,9 +489,11 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     }
     else
     {
-        size_t tags[TAG_MAX] = {[TAG_VARS] = 32, [TAG_PROCS] = 32, [TAG_TYPES] = 32, [TAG_MODULES] = 32};
+        size_t tags[TAG_MAX] = {[TAG_VARS] = 32, [TAG_PROCS] = 32, [TAG_TYPES] = 32, [TAG_MODULES] = 32,};
 
-        sema_t *nest = sema_new(sema, NULL, TAG_MAX, tags);
+        sema_t *nest = sema_new(sema, sema->reports, TAG_MAX, tags);
+
+        sema_params(nest, decl->params);
 
         body = sema_stmts(nest, ast->body);
     }
@@ -518,7 +569,22 @@ static hlir_t *begin_function(sema_t *sema, ast_t *ast)
         result = sema_type(sema, signature->result);
     }
 
-    signature_t sig = {.params = vector_new(0), .result = result, .variadic = false};
+    size_t len = vector_len(signature->params);
+    vector_t *params = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        ast_t *param = vector_get(signature->params, i);
+
+        const char *name = param->name;
+        ast_t *type = param->param;
+
+        const hlir_t *hlir = sema_type(sema, type);
+        hlir_t *entry = hlir_param(param->node, name, hlir);
+
+        vector_set(params, i, entry);
+    }
+
+    signature_t sig = {.params = params, .result = result, .variadic = false};
 
     return hlir_begin_function(ast->node, ast->name, sig);
 }

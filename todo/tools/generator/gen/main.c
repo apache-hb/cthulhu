@@ -63,6 +63,12 @@ int main(int argc, const char **argv)
         return 1;
     }
 
+    status = end_reports(reports, "emitting", reportConfig);
+    if (status != EXIT_OK)
+    {
+        return status;
+    }
+
     map_iter_t iter = map_iter(result);
     while (map_has_next(&iter))
     {
@@ -76,7 +82,7 @@ int main(int argc, const char **argv)
         file_write(file, stream_data(data), stream_len(data), &err);
     }
 
-    return EXIT_OK;
+    return end_reports(reports, "writing", reportConfig);
 }
 
 void generror(where_t *where, void *state, scan_t *scan, const char *msg)

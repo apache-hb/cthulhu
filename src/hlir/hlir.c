@@ -5,7 +5,7 @@
 hlir_t *hlir_error(node_t node, const char *error)
 {
     hlir_t *self = hlir_new(node, kMetaType, HLIR_ERROR);
-    self->error = error;
+    self->name = error;
     return self;
 }
 

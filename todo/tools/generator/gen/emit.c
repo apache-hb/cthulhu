@@ -14,7 +14,7 @@ static const char *kTypeNames[AST_TOTAL] = {
 
 static const char *expect_string(reports_t *reports, ast_t *ast)
 {
-    if (ast->kind != AST_STRING)
+    if (ast->kind != AST_STRING && ast->kind != AST_IDENT)
     {
         report(reports, ERROR, ast->node, "expected string, got %s instead", kTypeNames[ast->kind]);
         return "";
@@ -102,13 +102,13 @@ static vector_t *get_vector(reports_t *reports, map_t *map, const char *key, boo
 }
 
 static const char *kLexerOptions = 
-    "%option extra-type=\"scan_t*\"\n"
-    "%option yylineno 8bit nodefault\n"
-    "%option noyywrap noinput nounput\n"
-    "%option noyyalloc noyyrealloc noyyfree\n"
-    "%option reentrant bison-bridge bison-locations\n"
-    "%option never-interactive batch\n"
-    "%option prefix=\"%s\"\n"
+    "%%option extra-type=\"scan_t*\"\n"
+    "%%option yylineno 8bit nodefault\n"
+    "%%option noyywrap noinput nounput\n"
+    "%%option noyyalloc noyyrealloc noyyfree\n"
+    "%%option reentrant bison-bridge bison-locations\n"
+    "%%option never-interactive batch\n"
+    "%%option prefix=\"%s\"\n"
 ;
 
 static void write_include(stream_t *stream, const char *path)
@@ -116,7 +116,7 @@ static void write_include(stream_t *stream, const char *path)
     stream_write(stream, format("#include \"%s\"\n", path));
 }
 
-static void write_rules(reports_t *reports, stream_t *stream, vector_t *rules)
+static void write_flex_rules(reports_t *reports, stream_t *stream, vector_t *rules)
 {
     if (rules == NULL)
     {
@@ -139,7 +139,22 @@ static void write_rules(reports_t *reports, stream_t *stream, vector_t *rules)
         const char *name = expect_string(reports, vector_get(rule, 1));
         const char *exec = len > 2 ? expect_string(reports, vector_get(rule, 2)) : "";
 
-        stream_write(stream, format("%s { %s return %s; }\n", pattern, exec, name));
+        if (str_equal(pattern, "base2"))
+        {
+            stream_write(stream, format("\"0b\"[01]+ { mpz_init_set_str(yylval->digit, yytext + 2, 2); return %s; }\n", name));
+        }
+        else if (str_equal(pattern, "base10"))
+        {
+            stream_write(stream, format("[0-9]+ { mpz_init_set_str(yylval->digit, yytext, 10); return %s; }\n", name));
+        }
+        else if (str_equal(pattern, "base16"))
+        {
+            stream_write(stream, format("\"0x\"[0-9a-fA-F]+ { mpz_init_set_str(yylval->digit, yytext + 2, 16); return %s; }\n", name));
+        }
+        else
+        {
+            stream_write(stream, format("%s { %s return %s; }\n", pattern, exec, name));
+        }
     }
 }
 
@@ -148,27 +163,30 @@ static stream_t *emit_lexer(reports_t *reports, ast_t *ast)
     stream_t *out = stream_new(0x1000);
 
     const char *prefix = get_string(reports, ast->config, "prefix", false);
-    const char *whitespace = get_string(reports, ast->config, "whitespace", false);
+    const char *whitespace = get_string(reports, ast->lexer, "whitespace", false);
 
     // header includes
-    vector_t *includes = get_vector(reports, ast->config, "includes", true);
+    vector_t *includes = get_vector(reports, ast->lexer, "includes", true);
     
     // comments
-    vector_t *lineComments = get_vector(reports, ast->config, "line-comments", true);
-    vector_t *blockComments = get_vector(reports, ast->config, "block-comments", true);
+    vector_t *lineComments = get_vector(reports, ast->lexer, "line-comments", true);
+    vector_t *blockComments = get_vector(reports, ast->lexer, "block-comments", true);
 
     // actual symbols
-    vector_t *keywords = get_vector(reports, ast->config, "keywords", false);
-    vector_t *tokens = get_vector(reports, ast->config, "symbols", false);
-    vector_t *digits = get_vector(reports, ast->config, "digits", false);
-    vector_t *strings = get_vector(reports, ast->config, "strings", false);
-    vector_t *idents = get_vector(reports, ast->config, "idents", false);
+    vector_t *keywords = get_vector(reports, ast->lexer, "keywords", false);
+    vector_t *tokens = get_vector(reports, ast->lexer, "symbols", false);
+    vector_t *digits = get_vector(reports, ast->lexer, "digits", true);
+    vector_t *strings = get_vector(reports, ast->lexer, "strings", true);
+    vector_t *idents = get_vector(reports, ast->lexer, "idents", true);
 
     stream_write(out, format(kLexerOptions, prefix));
 
-    stream_write(out, "%{\n");
+    stream_write(out, "\n%{\n");
 
+    // these are always needed
     write_include(out, format("%s-bison.h", prefix));
+    write_include(out, "cthulhu/ast/interop.h");
+    write_include(out, "cthulhu/report/report-ext.h");
 
     if (includes != NULL)
     {
@@ -179,23 +197,23 @@ static stream_t *emit_lexer(reports_t *reports, ast_t *ast)
         }
     }
 
-    stream_write(out, "%}\n");
+    stream_write(out, "%}\n\n");
 
     if (blockComments != NULL)
     {
-        stream_write(out, "%x COMMENT\n"); // TODO: generate state per block comment type
+        stream_write(out, "%x COMMENT\n\n"); // TODO: generate state per block comment type
     }
 
     stream_write(out, "%%\n");
 
-    stream_write(out, format("%s ;", whitespace));
+    stream_write(out, format("%s ;\n", whitespace));
 
     if (lineComments != NULL)
     {
         for (size_t i = 0; i < vector_len(lineComments); i++)
         {
             ast_t *comment = vector_get(lineComments, i);
-            stream_write(out, format("%s.* ;", expect_string(reports, comment)));
+            stream_write(out, format("%s.* ;\n", expect_string(reports, comment)));
         }
     }
 
@@ -217,13 +235,13 @@ static stream_t *emit_lexer(reports_t *reports, ast_t *ast)
         }
     }
 
-    write_rules(reports, out, keywords);
-    write_rules(reports, out, tokens);
-    write_rules(reports, out, digits);
-    write_rules(reports, out, strings);
-    write_rules(reports, out, idents);
+    write_flex_rules(reports, out, keywords);
+    write_flex_rules(reports, out, tokens);
+    write_flex_rules(reports, out, digits);
+    write_flex_rules(reports, out, strings);
+    write_flex_rules(reports, out, idents);
 
-    stream_write(out, ". { report_unknown_character(yyextra->reports, node_new(yyextra, *yylloc), yytext); }\n");
+    stream_write(out, "\n. { report_unknown_character(yyextra->reports, node_new(yyextra, *yylloc), yytext); }\n");
 
     stream_write(out, "%%\n");
 
@@ -233,11 +251,61 @@ static stream_t *emit_lexer(reports_t *reports, ast_t *ast)
     return out;
 }
 
+static const char *kErrorHandler =
+    "void %serror(where_t *where, void *state, scan_t *scan, const char *msg)\n"
+    "{\n"
+    "    UNUSED(state);\n"
+    "    report(scan->reports, ERROR, node_new(scan, *where), \"%%s\", msg);\n"
+    "}\n"
+;
+
+static stream_t *emit_source(reports_t *reports, ast_t *ast)
+{
+    stream_t *out = stream_new(0x1000);
+
+    const char *prefix = get_string(reports, ast->config, "prefix", false);
+
+    write_include(out, "cthulhu/report/report.h");
+    write_include(out, "cthulhu/ast/ast.h");
+    write_include(out, "base/macros.h");
+
+    stream_write(out, "\n");
+    stream_write(out, format(kErrorHandler, prefix));
+
+    return out;
+}
+
+static stream_t *emit_header(reports_t *reports, ast_t *ast)
+{
+    stream_t *out = stream_new(0x1000);
+
+    const char *prefix = get_string(reports, ast->config, "prefix", false);
+
+    write_include(out, "cthulhu/ast/ast.h");
+
+    stream_write(out, "\n");
+    stream_write(out, format("#define %sLTYPE where_t", str_upper(prefix)));
+    return out;
+}
+
+static stream_t *emit_parser(reports_t *reports, ast_t *ast)
+{
+    stream_t *out = stream_new(0x1000);
+
+    UNUSED(reports);
+    UNUSED(ast);
+
+    return out;
+}
+
 map_t *emit_compiler(reports_t *reports, ast_t *ast)
 {
     map_t *map = map_new(0x10);
 
     map_set(map, "out.l", emit_lexer(reports, ast));
+    map_set(map, "out.y", emit_parser(reports, ast));
+    map_set(map, "out.c", emit_source(reports, ast));
+    map_set(map, "out.h", emit_header(reports, ast));
 
     return map;
 }

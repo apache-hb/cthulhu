@@ -13,11 +13,21 @@ static ast_t *ast_new(const scan_t *scan, where_t where, ast_kind_t kind)
     return ast;
 }
 
-ast_t *ast_grammar(scan_t *scan, where_t where, map_t *config, map_t *lexer)
+ast_t *ast_grammar(scan_t *scan, where_t where, map_t *config, map_t *lexer, map_t *parser, vector_t *rules)
 {
     ast_t *ast = ast_new(scan, where, AST_GRAMMAR);
     ast->config = config;
     ast->lexer = lexer;
+    ast->parser = parser;
+    ast->rules = rules;
+    return ast;
+}
+
+ast_t *ast_rule(scan_t *scan, where_t where, char *name, vector_t *body)
+{
+    ast_t *ast = ast_new(scan, where, AST_RULE);
+    ast->rule = name;
+    ast->body = body;
     return ast;
 }
 

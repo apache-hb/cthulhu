@@ -18,7 +18,7 @@
 [ \r\n\t] ;
 "//".* ;
 
-"{{"(^"}}"|[^\\])*"}}" {
+"{{"(\\.|[^"\\])*"}}" {
     /* god knows how exactly this regex works */
     /* this doesnt like when \\ is in the middle of a codeblock */
     /* but C doesnt have that so who cares lol */
@@ -39,9 +39,14 @@
 ":=" { return ASSIGN; }
 "::" { return COLON2; }
 
+"::=" { return RULE; }
+"+" { return PLUS; }
+"*" { return STAR; }
+"|" { return PIPE; }
+"?" { return QUESTION; }
+
 "config" { return CONFIG; }
 "lexer" { return LEXER; }
-"parser" { return PARSER; }
 
 [a-zA-Z_][a-zA-Z0-9_-]* {
     yylval->text = ctu_strdup(yytext);

@@ -129,14 +129,12 @@ hlir_t *hlir_global(node_t node, const char *name, const hlir_t *type, const hli
 
 hlir_t *hlir_local(node_t node, const char *name, const hlir_t *type)
 {
-    return hlir_indexed_local(node, name, SIZE_MAX, type);
+    return hlir_new_decl(node, name, type, HLIR_LOCAL);
 }
 
-hlir_t *hlir_indexed_local(node_t node, const char *name, size_t index, const hlir_t *type)
+hlir_t *hlir_param(node_t node, const char *name, const hlir_t *type)
 {
-    hlir_t *self = hlir_new_decl(node, name, type, HLIR_LOCAL);
-    self->index = index;
-    return self;
+    return hlir_new_decl(node, name, type, HLIR_PARAM);
 }
 
 static hlir_t *hlir_begin_function_with_locals(node_t node, const char *name, vector_t *locals, signature_t signature)

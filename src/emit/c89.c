@@ -47,7 +47,122 @@ static char *c89_mangle_section(const char *section)
     return format("%zu%s", strlen(section), section);
 }
 
-static char *c89_mangle_decl_name(const hlir_t *hlir)
+static const char *kDigitMangles[SIGN_TOTAL][DIGIT_TOTAL] = {
+    [SIGN_SIGNED] = {
+        [DIGIT_CHAR] = "a",
+        [DIGIT_SHORT] = "s",
+        [DIGIT_INT] = "i",
+        [DIGIT_LONG] = "x",
+
+        [DIGIT_PTR] = "x", // TODO: only right for 64-bit
+        [DIGIT_MAX] = "n",
+        [DIGIT_SIZE] = "x"
+    },
+    [SIGN_UNSIGNED] = {
+        [DIGIT_CHAR] = "h",
+        [DIGIT_SHORT] = "t",
+        [DIGIT_INT] = "j",
+        [DIGIT_LONG] = "y",
+
+        [DIGIT_PTR] = "y",
+        [DIGIT_MAX] = "o",
+        [DIGIT_SIZE] = "y",
+    },
+};
+
+static const char *c89_mangle_type(c89_emit_t *emit, const hlir_t *type);
+
+static const char *c89_mangle_pointer(c89_emit_t *emit, const hlir_t *type)
+{
+    const char *mangled = c89_mangle_type(emit, type);
+    return format("P%s", mangled);
+}
+
+static const char *c89_mangle_digit(const hlir_t *type)
+{
+    digit_t width = type->width;
+    sign_t sign = type->sign;
+
+    return kDigitMangles[sign][width];
+}
+
+static const char *c89_mangle_qualified(const hlir_t *type)
+{
+    vector_t *parts = vector_new(4);
+    const hlir_t *parent = get_hlir_parent(type);
+
+    while (parent != NULL)
+    {
+        const char *name = get_hlir_name(parent);
+        vector_t *split = str_split(name, ".");
+        size_t totalParts = vector_len(parts);
+
+        for (size_t i = 0; i < totalParts; i++)
+        {
+            char *part = vector_get(split, i);
+            char *mangled = c89_mangle_section(part);
+            vector_push(&parts, mangled);
+        }
+
+        parent = get_hlir_parent(parent);
+    }
+
+    char *joinedParts = str_join("", parts);
+
+    const char *name = get_hlir_name(type);
+
+    return format("%s%zu%s", joinedParts, strlen(name), name);
+}
+
+static const char *c89_mangle_type(c89_emit_t *emit, const hlir_t *type)
+{
+    hlir_kind_t kind = get_hlir_kind(type);
+    switch (kind)
+    {
+    case HLIR_DIGIT:
+        return c89_mangle_digit(type);
+
+    case HLIR_VOID:
+        return "v";
+    case HLIR_BOOL:
+        return "b";
+
+    case HLIR_POINTER:
+        return c89_mangle_pointer(emit, type);
+
+    case HLIR_ALIAS:
+    case HLIR_STRUCT:
+    case HLIR_UNION:
+        return c89_mangle_qualified(type);
+
+    case HLIR_PARAM:
+        return c89_mangle_type(emit, get_hlir_type(type));
+
+    case HLIR_STRING:
+        return "Pc";
+
+    default:
+        report(emit->reports, ERROR, get_hlir_node(type), "cannot mangle %s", hlir_kind_to_string(kind));
+        return "";
+    }
+}
+
+static char *c89_mangle_params(c89_emit_t *emit, vector_t *params)
+{
+    size_t len = vector_len(params);
+    vector_t *parts = vector_of(len);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        hlir_t *param = vector_get(params, i);
+        const char *mangled = c89_mangle_type(emit, param);
+        vector_set(parts, i, (char*)mangled);
+    }
+
+    return str_join("", parts);
+}
+
+static char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
 {
     vector_t *parts = vector_new(4);
     const hlir_t *parent = get_hlir_parent(hlir);
@@ -70,13 +185,19 @@ static char *c89_mangle_decl_name(const hlir_t *hlir)
 
     char *joinedParts = str_join("", parts);
     const char *name = get_hlir_name(hlir);
+    const char *typesig = "";
+
+    if (hlir_is(hlir, HLIR_FUNCTION))
+    {
+        typesig = c89_mangle_params(emit, closure_params(hlir));
+    }
 
     if (name == NULL)
     {
         name = ""; // TODO: generate a unique id per anonymous field
     }
 
-    return format("_Z%s%zu%s", joinedParts, strlen(name), name);
+    return format("_Z%s%zu%s%s", joinedParts, strlen(name), name, typesig);
 }
 
 static const char *c89_mangle_name(c89_emit_t *emit, const hlir_t *hlir)
@@ -100,7 +221,7 @@ static const char *c89_mangle_name(c89_emit_t *emit, const hlir_t *hlir)
         return result;
     }
 
-    char *mangledName = c89_mangle_decl_name(hlir);
+    char *mangledName = c89_mangle_decl_name(emit, hlir);
     map_set_ptr(emit->mangledNames, hlir, mangledName);
     return mangledName;
 }
@@ -251,7 +372,7 @@ static const char *c89_emit_params(c89_emit_t *emit, vector_t *params)
     {
         const hlir_t *param = vector_get(params, i);
         const char *paramType = c89_emit_type(emit, param, NULL);
-        vector_set(paramTypes, i, (void *)paramType);
+        vector_set(paramTypes, i, (char*)paramType);
     }
 
     return str_join(", ", paramTypes);
@@ -299,6 +420,9 @@ static const char *c89_emit_inner_type(c89_emit_t *emit, const hlir_t *hlir, con
         return c89_emit_aggregate_type(emit, hlir, name, "struct");
     case HLIR_UNION:
         return c89_emit_aggregate_type(emit, hlir, name, "union");
+
+    case HLIR_PARAM:
+        return c89_emit_type(emit, get_hlir_type(hlir), name);
 
     default:
         ctu_assert(emit->reports, "cannot emit %s as a type", hlir_kind_to_string(kind));
@@ -529,7 +653,11 @@ static const char *c89_emit_expr(c89_emit_t *emit, const hlir_t *hlir)
     case HLIR_GLOBAL:
         return c89_mangle_name(emit, hlir);
 
+        // TODO: these should be managled to not clash with globals
     case HLIR_LOCAL:
+        return get_hlir_name(hlir);
+
+    case HLIR_PARAM:
         return get_hlir_name(hlir);
 
     case HLIR_FUNCTION:
@@ -791,6 +919,25 @@ static void c89_emit_globals(c89_emit_t *emit, size_t totalDecls, vector_t *modu
     }
 }
 
+static const char *c89_fmt_params(c89_emit_t *emit, vector_t *params)
+{
+    size_t len = vector_len(params);
+    if (len == 0)
+    {
+        return "";
+    }
+
+    vector_t *result = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const hlir_t *param = vector_get(params, i);
+        const char *type = c89_emit_type(emit, get_hlir_type(param), get_hlir_name(param));
+        vector_set(result, i, (void *)type);
+    }
+
+    return str_join(", ", result);
+}
+
 static void c89_function_header(c89_emit_t *emit, const hlir_t *function)
 {
     const hlir_attributes_t *attribs = get_hlir_attributes(function);
@@ -800,7 +947,7 @@ static void c89_function_header(c89_emit_t *emit, const hlir_t *function)
 
     // TODO: return type cannot be array
     const char *result = c89_emit_type(emit, closure_result(function), name);
-    const char *params = c89_emit_params(emit, closureParams);
+    const char *params = c89_fmt_params(emit, closureParams);
     const char *linkage = kLinkageModifiers[attribs->linkage];
 
     if (vector_len(closureParams) == 0)

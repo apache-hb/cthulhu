@@ -43,7 +43,12 @@ hlir_t *hlir_global(node_t node, const char *name, const hlir_t *type, const hli
 ///
 
 hlir_t *hlir_local(node_t node, const char *name, const hlir_t *type);
-hlir_t *hlir_indexed_local(node_t node, const char *name, size_t index, const hlir_t *type);
+
+///
+/// param builders
+///
+
+hlir_t *hlir_param(node_t node, const char *name, const hlir_t *type);
 
 ///
 /// function builders

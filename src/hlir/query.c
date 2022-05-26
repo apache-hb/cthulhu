@@ -25,8 +25,12 @@ static bool has_name(hlir_kind_t kind)
     case HLIR_FORWARD:
     case HLIR_FIELD:
     case HLIR_FUNCTION:
+
     case HLIR_GLOBAL:
     case HLIR_LOCAL:
+    case HLIR_PARAM:
+
+    case HLIR_ERROR:
 
     case HLIR_MODULE:
         return true;
@@ -53,8 +57,10 @@ static bool has_attribs(hlir_kind_t kind)
     case HLIR_FIELD:
     case HLIR_FORWARD:
     case HLIR_FUNCTION:
+
     case HLIR_GLOBAL:
     case HLIR_LOCAL:
+    case HLIR_PARAM:
         return true;
 
     default:

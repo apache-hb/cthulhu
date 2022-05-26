@@ -240,9 +240,6 @@ typedef struct hlir_t
                 /* the initial value */
                 const struct hlir_t *value;
 
-                /* the index of this local */
-                size_t index;
-
                 struct
                 {
                     vector_t *functions;
@@ -251,8 +248,6 @@ typedef struct hlir_t
                 };
             };
         };
-
-        const char *error;
     };
 } hlir_t;
 

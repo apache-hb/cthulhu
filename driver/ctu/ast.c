@@ -65,7 +65,7 @@ ast_t *ast_bool(scan_t *scan, where_t where, bool value)
 
 ast_t *ast_name(scan_t *scan, where_t where, vector_t *path)
 {
-    ast_t *ast = ast_new(AST_TYPENAME, scan, where);
+    ast_t *ast = ast_new(AST_NAME, scan, where);
     ast->path = path;
     return ast;
 }

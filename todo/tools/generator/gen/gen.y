@@ -54,21 +54,41 @@ void generror(where_t *where, void *state, scan_t *scan, const char *msg);
     ASSIGN ":="
     COLON2 "::"
 
+    RULE "::="
+    PLUS "+"
+    STAR "*"
+    QUESTION "?"
+    PIPE "|"
+
 %type<ast>
-    value configItem sequence 
+    value configItem sequence rule
 
 %type<vector>
     vector optVectorBody vectorBody configBody
-    sequenceBody
+    sequenceBody rules body
 
 %type<map>
-    config lexer
+    config lexer parser
 
 %start grammar
 
 %%
 
-grammar: config lexer { scan_set(x, ast_grammar(x, @$, $1, $2)); }
+grammar: config lexer parser rules { scan_set(x, ast_grammar(x, @$, $1, $2, $3, $4)); }
+    ;
+
+rules: rule { $$ = vector_init($1); }
+    | rules rule { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+rule: IDENT RULE body CODE { $$ = ast_rule(x, @$, $1, $3); }
+    ;
+
+body: IDENT { $$ = vector_init($1); }
+    | body IDENT { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+parser: PARSER LBRACE configBody RBRACE { $$ = build_map(x, @$, $3); }
     ;
 
 lexer: LEXER LBRACE configBody RBRACE { $$ = build_map(x, @$, $3); }
@@ -106,7 +126,7 @@ optVectorBody: %empty { $$ = vector_new(0); }
     ;
 
 vectorBody: value { $$ = vector_init($1); }
-    | vectorBody COMMA value { vector_push(&$1, $3); $$ = $1; }
+    | vectorBody value { vector_push(&$1, $2); $$ = $1; }
     ;
 
 %%

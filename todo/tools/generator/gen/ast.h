@@ -10,6 +10,8 @@ typedef enum
 {
     AST_GRAMMAR,
 
+    AST_RULE,
+
     AST_MAP,
     AST_VECTOR,
     AST_STRING,
@@ -39,13 +41,23 @@ typedef struct ast_t
 
         struct
         {
+            char *rule;
+            vector_t *body;
+        };
+
+        struct
+        {
             map_t *config;
             map_t *lexer;
+            map_t *parser;
+            vector_t *rules;
         };
     };
 } ast_t;
 
-ast_t *ast_grammar(scan_t *scan, where_t where, map_t *config, map_t *lexer);
+ast_t *ast_grammar(scan_t *scan, where_t where, map_t *config, map_t *lexer, map_t *parser, vector_t *rules);
+
+ast_t *ast_rule(scan_t *scan, where_t where, char *name, vector_t *body);
 
 map_t *build_map(scan_t *scan, where_t where, vector_t *entries);
 ast_t *ast_vector(scan_t *scan, where_t where, vector_t *vector);
