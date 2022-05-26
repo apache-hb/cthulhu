@@ -28,7 +28,7 @@ void stream_delete(stream_t *stream)
     ctu_free(stream);
 }
 
-size_t stream_len(stream_t *stream)
+size_t stream_len(const stream_t *stream)
 {
     return stream->len;
 }

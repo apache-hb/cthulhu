@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 USE_DECL
 char *format(const char *fmt, ...)
@@ -481,6 +482,21 @@ char *str_erase(const char *str, size_t len, const char *letters)
             used--;
             i--;
         }
+    }
+
+    return result;
+}
+
+USE_DECL
+char *str_upper(const char *str)
+{
+    char *result = ctu_strdup(str);
+    char *temp = result;
+
+    while (*temp)
+    {
+        *temp = toupper(*temp);
+        temp += 1;
     }
 
     return result;

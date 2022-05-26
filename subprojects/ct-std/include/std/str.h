@@ -215,6 +215,9 @@ char *str_filename(const char *path);
 NODISCARD
 char *str_noext(const char *path);
 
+NODISCARD
+char *str_upper(const char *str);
+
 #define STR_WHITESPACE " \t\n\r"
 
 /** @} */

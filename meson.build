@@ -163,6 +163,8 @@ generic = declare_dependency(
     compile_args : args
 )
 
+subdir('tools/generator')
+
 message('enabled interfaces:', get_option('interfaces'))
 message('enabled languages:', get_option('languages'))
 

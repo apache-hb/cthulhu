@@ -106,7 +106,7 @@ program: block DOT { scan_set(x, $1); }
 block: module imports consts vars procedures toplevel { $$ = pl0_module(x, @$, $1, $2, $3, $4, $5, $6); }
     ;
 
-imports: %empty { $$ = vector_of(0); }
+imports: %empty { $$ = vector_new(0); }
     |  IMPORT idents SEMICOLON { $$ = $2; }
     ;
 
