@@ -1,5 +1,5 @@
 %option extra-type="scan_t*"
-%option yylineno 8bit nodefault
+%option 8bit nodefault
 %option noyywrap noinput nounput
 %option noyyalloc noyyrealloc noyyfree
 %option reentrant bison-bridge bison-locations

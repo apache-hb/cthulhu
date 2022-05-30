@@ -45,12 +45,9 @@ gmp = dependency('gmp',
 )
 
 cttest = subproject('ct-test').get_variable('cttest')
-ctbase = subproject('ct-base').get_variable('base')
-ctstd = subproject('ct-std').get_variable('std')
-ctplatform = subproject('ct-platform').get_variable('platform')
 
 args = []
-deps = [ gmp, ctbase, ctstd, ctplatform ]
+deps = [ gmp ]
 lexargs = []
 parseargs = []
 
@@ -116,52 +113,11 @@ parse = generator(bison,
     ]
 )
 
-src = [
-    # high level intermediate representation
-    'src/hlir/sema.c',
-    'src/hlir/attribs.c',
-    
-    'src/hlir/type.c',
-    'src/hlir/hlir.c',
-    'src/hlir/decl.c',
-    'src/hlir/ops.c',
-    'src/hlir/query.c',
-    'src/hlir/common.c',
-    'src/hlir/validate.c',
+# common helper libraries used by compiler, tools, interfaces, and drivers
+subdir('common')
 
-    # common frontend components
-    'src/interface/runtime.c',
-    'src/interface/cthulhu.c',
-
-    # tree output
-    'src/emit/c89.c',
-
-    # ast data and flex/bison interop
-    'src/ast/scan.c',
-    'src/ast/interop.c',
-    'src/ast/ast.c',
-    'src/ast/compile.c',
-
-    # error reporting
-    'src/report/report.c',
-    'src/report/report-ext.c',
-
-    # standard library
-    'src/util/stream.c'
-]
-
-libgeneric = library('generic', src,
-    include_directories : 'include',
-    c_args : args,
-    dependencies : deps
-)
-
-generic = declare_dependency(
-    link_with : libgeneric,
-    include_directories : 'include',
-    dependencies : deps,
-    compile_args : args
-)
+# common compiler libraries used by interfaces and drivers
+subdir('cthulhu')
 
 message('enabled interfaces:', get_option('interfaces'))
 message('enabled languages:', get_option('languages'))

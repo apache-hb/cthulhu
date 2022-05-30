@@ -103,7 +103,7 @@ static vector_t *get_vector(reports_t *reports, map_t *map, const char *key, boo
 
 static const char *kLexerOptions = 
     "%%option extra-type=\"scan_t*\"\n"
-    "%%option yylineno 8bit nodefault\n"
+    "%%option 8bit nodefault\n"
     "%%option noyywrap noinput nounput\n"
     "%%option noyyalloc noyyrealloc noyyfree\n"
     "%%option reentrant bison-bridge bison-locations\n"
