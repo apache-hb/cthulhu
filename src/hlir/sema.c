@@ -333,19 +333,68 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
     vector_drop(*stack);
 }
 
-static void check_attribute(reports_t *reports, hlir_t *hlir)
+static bool can_mangle_name(hlir_linkage_t linkage)
+{
+    switch (linkage)
+    {
+    case LINK_INTERNAL: // it makes no sense to mangle internal symbols
+    case LINK_ENTRY_GUI: // these are defined by the platform and cannot be mangled
+    case LINK_ENTRY_CLI:
+        return false;
+
+    default: // everything else is fair game
+        return true;
+    }
+}
+
+static const char *kLinkageNames[LINK_TOTAL] = {
+    [LINK_INTERNAL] = "a symbol with internal linkage", 
+    [LINK_ENTRY_GUI] = "the gui entry point",
+    [LINK_ENTRY_CLI] = "the cli entry point",
+};
+
+static void report_multiple_entry(check_t *ctx, const hlir_t *hlir, const hlir_t *prev, const char *name)
+{
+    node_t newNode = get_hlir_node(hlir);
+    node_t prevNode = get_hlir_node(prev);
+
+    message_t *id = report(ctx->reports, ERROR, newNode, "multiple %s entry points defined", name);
+    report_append(id, prevNode, "previously defined here");
+}
+
+static void check_attribute(check_t *ctx, hlir_t *hlir)
 {
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
 
-    if (attribs->mangle != NULL && attribs->linkage == LINK_INTERNAL)
+    if (attribs->mangle != NULL && !can_mangle_name(attribs->linkage))
     {
         node_t node = get_hlir_node(hlir);
-        message_t *id = report(reports, WARNING, node, "cannot change name mangling of internal symbols");
+        message_t *id = report(ctx->reports, WARNING, node, "cannot change name mangling of %s", kLinkageNames[attribs->linkage]);
         report_note(id, "attribute will not be mangled");
 
         hlir_attributes_t *newAttribs = ctu_memdup(attribs, sizeof(hlir_attributes_t));
         newAttribs->mangle = NULL;
         hlir_set_attributes(hlir, newAttribs);
+    }
+
+    if (attribs->linkage == LINK_ENTRY_CLI)
+    {
+        if (ctx->cliEntryPoint != NULL)
+        {
+            report_multiple_entry(ctx, hlir, ctx->cliEntryPoint, "cli");
+        }
+
+        ctx->cliEntryPoint = hlir;
+    }
+
+    if (attribs->linkage == LINK_ENTRY_GUI)
+    {
+        if (ctx->guiEntryPoint != NULL)
+        {
+            report_multiple_entry(ctx, hlir, ctx->guiEntryPoint, "gui");
+        }
+
+        ctx->guiEntryPoint = hlir;
     }
 }
 
@@ -359,8 +408,10 @@ static void check_identifier_isnt_empty(reports_t *reports, const hlir_t *ident)
     }
 }
 
-void check_module(reports_t *reports, hlir_t *mod)
+void check_module(check_t *check, hlir_t *mod)
 {
+    reports_t *reports = check->reports;
+
     size_t totalGlobals = vector_len(mod->globals);
     size_t totalTypes = vector_len(mod->types);
     size_t totalFunctions = vector_len(mod->functions);
@@ -393,7 +444,7 @@ void check_module(reports_t *reports, hlir_t *mod)
         for (size_t i = 0; i < (length); i++)                                                                          \
         {                                                                                                              \
             hlir_t *var = vector_get(vector, i);                                                                       \
-            check_attribute(reports, var);                                                                             \
+            check_attribute(check, var);                                                                             \
             check_identifier_isnt_empty(reports, var);                                                                 \
         }                                                                                                              \
     } while (0)

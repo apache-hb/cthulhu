@@ -80,7 +80,8 @@ tests = {
     },
     'funcs': {
         'fail': [
-            'ret-invalid'
+            'ret-invalid',
+            'dup-arg'
         ],
         'pass': [
             'decl-arg',
@@ -90,7 +91,9 @@ tests = {
             'many-args',
             'return-int',
             'type-return',
-            'use-arg'
+            'use-arg',
+            'infinite-loop',
+            'loop-else'
         ]
     }
 }

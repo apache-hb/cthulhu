@@ -64,8 +64,18 @@ crashes = {
 }
 
 multi = {
-    '0': [ 'lib', 'main' ],
-    '1': [ 'lhs', 'rhs', 'main' ]
+    'multi.0': {
+        'pass': true,
+        'files': [ 'lib', 'main' ],
+    },
+    'multi.1': {
+        'pass': true,
+        'files': [ 'lhs', 'rhs', 'main' ]
+    },
+    'multi.multiple-entries': {
+        'pass': false,
+        'files': [ 'main1', 'main2' ]
+    }
 }
 
 foreach case, tests : tests
@@ -92,15 +102,16 @@ foreach case, tests : tests
     endforeach
 endforeach
 
-foreach case, files : multi
+foreach case, cfg : multi
     paths = []
-    foreach file : files
-        paths += [ dir/'multi'/case/file + '.pl0' ]
+    foreach file : cfg['files']
+        paths += [ dir/case.replace('.', '/')/file + '.pl0' ]
     endforeach
 
     test('pass-multi-' + case, pl0c,
         args : paths,
-        suite : 'pl0'
+        suite : 'pl0',
+        should_fail : not cfg['pass']
     )
 endforeach
 

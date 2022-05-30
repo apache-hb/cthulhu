@@ -39,5 +39,7 @@ int flex_input(scan_t *scan, char *out, int size)
 void flex_init(where_t *where)
 {
     where->firstLine = 0;
+    where->firstColumn = 0;
     where->lastLine = 0;
+    where->lastColumn = 0;
 }

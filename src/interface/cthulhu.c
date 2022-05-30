@@ -212,10 +212,14 @@ int cthulhu_compile(cthulhu_t *cthulhu)
         return cthulhu->status;
     }
 
+    check_t check = {
+        .reports = cthulhu->reports,
+    };
+
     for (size_t i = 0; i < totalSources; i++)
     {
         compile_t *ctx = vector_get(cthulhu->compiles, i);
-        check_module(cthulhu->reports, ctx->hlir);
+        check_module(&check, ctx->hlir);
     }
 
     return report_errors(cthulhu, "validation");

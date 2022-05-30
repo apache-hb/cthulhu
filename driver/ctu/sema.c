@@ -267,6 +267,21 @@ static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
     return hlir_binary(ast->node, type, ast->binary, lhs, rhs);
 }
 
+static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
+{
+    hlir_t *lhs = sema_expr(sema, ast->lhs);
+    hlir_t *rhs = sema_expr(sema, ast->rhs);
+
+    hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
+
+    if (!hlir_is(type, HLIR_DIGIT))
+    {
+        report(sema->reports, ERROR, ast->node, "cannot perform comparison on %s", get_hlir_name(type));
+    }
+
+    return hlir_compare(ast->node, kBoolType, ast->compare, lhs, rhs);
+}
+
 static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 {
     sema_t *current = sema;
@@ -312,7 +327,8 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_bool(ast);
     case AST_BINARY:
         return sema_binary(sema, ast);
-
+    case AST_COMPARE:
+        return sema_compare(sema, ast);
     case AST_NAME:
         return sema_ident(sema, ast);
 
@@ -347,6 +363,30 @@ static hlir_t *sema_return(sema_t *sema, ast_t *ast)
     return hlir_return(ast->node, result);
 }
 
+static hlir_t *sema_while(sema_t *sema, ast_t *ast)
+{
+    hlir_t *cond = sema_expr(sema, ast->cond);
+
+    size_t sizes[TAG_MAX] = {
+        [TAG_VARS] = 32,
+        [TAG_PROCS] = 32,
+        [TAG_MODULES] = 32,
+    };
+    
+    sema_t *nestThen = sema_new(sema, sema->reports, TAG_MAX, sizes);
+
+    hlir_t *then = sema_stmt(nestThen, ast->then);
+    hlir_t *other = NULL;
+
+    if (ast->other != NULL)
+    {
+        sema_t *nextOther = sema_new(sema, sema->reports, TAG_MAX, sizes);
+        other = sema_stmt(nextOther, ast->other);
+    }
+
+    return hlir_loop(ast->node, cond, then, other);
+}
+
 static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
 {
     switch (stmt->of)
@@ -356,6 +396,9 @@ static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
 
     case AST_STMTS:
         return sema_stmts(sema, stmt);
+
+    case AST_WHILE:
+        return sema_while(sema, stmt);
 
     default:
         report(sema->reports, INTERNAL, stmt->node, "unknown sema-stmt: %d", stmt->of);
@@ -483,18 +526,18 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
 
     hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? LINK_IMPORTED : LINK_EXPORTED, 0, NULL, NULL);
     hlir_t *body = NULL;
+
+    size_t tags[TAG_MAX] = {[TAG_VARS] = 32, [TAG_PROCS] = 32, [TAG_TYPES] = 32, [TAG_MODULES] = 32,};
+
+    sema_t *nest = sema_new(sema, sema->reports, TAG_MAX, tags);
+    sema_params(nest, decl->params);
+
     if (ast->body == NULL)
     {
         body = hlir_stmts(ast->node, vector_new(0));
     }
     else
     {
-        size_t tags[TAG_MAX] = {[TAG_VARS] = 32, [TAG_PROCS] = 32, [TAG_TYPES] = 32, [TAG_MODULES] = 32,};
-
-        sema_t *nest = sema_new(sema, sema->reports, TAG_MAX, tags);
-
-        sema_params(nest, decl->params);
-
         body = sema_stmts(nest, ast->body);
     }
 
@@ -652,8 +695,6 @@ static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
 void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
 {
     ast_t *root = compile->ast;
-
-    logverbose("decls: %p", root->decls);
 
     size_t totalDecls = vector_len(root->decls);
     size_t sizes[TAG_MAX] = {

@@ -523,7 +523,9 @@ void pl0_compile_module(runtime_t *runtime, compile_t *compile)
             .result = kVoidType,
             .variadic = false,
         };
-        const hlir_attributes_t *attribs = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS, "main", NULL);
+
+        // this is the entry point, we only support cli entry points in pl/0 for now
+        const hlir_attributes_t *attribs = hlir_attributes(LINK_ENTRY_CLI, DEFAULT_TAGS, NULL, NULL);
         const char *modName = get_hlir_name(compile->hlir);
 
         hlir_t *hlir = hlir_function(root->node, modName, signature, vector_of(0), body);

@@ -30,5 +30,14 @@ void *sema_get(sema_t *sema, size_t tag, const char *name);
 void *sema_get_with_depth(sema_t *sema, size_t tag, const char *name, size_t *depth);
 map_t *sema_tag(sema_t *sema, size_t tag);
 
-void check_module(reports_t *reports, hlir_t *mod);
-void check_type(reports_t *reports, hlir_t *type);
+typedef struct
+{
+    reports_t *reports;
+
+    // keep pointers to the entry points for error reporting
+    // we can only have one of each
+    const hlir_t *cliEntryPoint;
+    const hlir_t *guiEntryPoint;
+} check_t;
+
+void check_module(check_t *check, hlir_t *mod);

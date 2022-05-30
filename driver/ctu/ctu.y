@@ -167,7 +167,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     type import
     expr postfix unary multiply add 
     compare equality shift bits xor and or
-    primary
+    primary else
 
 %type<vector>
     path decls decllist
@@ -287,6 +287,13 @@ stmts: LBRACE RBRACE { $$ = ast_stmts(x, @$, vector_of(0)); }
 
 stmt: stmts { $$ = $1; }
     | RETURN expr SEMICOLON { $$ = ast_return(x, @$, $2); }
+    | WHILE expr stmts else { $$ = ast_while(x, @$, $2, $3, $4); }
+    | BREAK SEMICOLON { $$ = ast_break(x, @$); }
+    | CONTINUE SEMICOLON { $$ = ast_continue(x, @$); }
+    ;
+
+else: %empty { $$ = NULL; }
+    | ELSE stmts { $$ = $2; }
     ;
 
 type: path { $$ = ast_typename(x, @$, $1); }
@@ -333,6 +340,10 @@ add: multiply { $$ = $1; }
     ;
 
 compare: add { $$ = $1; }
+    | compare LT add { $$ = ast_compare(x, @$, COMPARE_LT, $1, $3); }
+    | compare GT add { $$ = ast_compare(x, @$, COMPARE_GT, $1, $3); }
+    | compare LTE add { $$ = ast_compare(x, @$, COMPARE_LTE, $1, $3); }
+    | compare GTE add { $$ = ast_compare(x, @$, COMPARE_GTE, $1, $3); }
     ;
 
 equality: compare { $$ = $1; }

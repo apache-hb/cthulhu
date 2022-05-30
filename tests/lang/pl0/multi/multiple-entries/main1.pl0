@@ -1,0 +1,6 @@
+procedure hello1;
+begin
+    ! 25
+end;
+
+call hello1.

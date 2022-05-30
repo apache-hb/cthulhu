@@ -7,6 +7,7 @@
 #include "cthulhu/hlir/query.h"
 #include "std/set.h"
 #include "std/str.h"
+#include "base/util.h"
 #include "cthulhu/util/stream.h"
 
 #include <string.h>
@@ -72,9 +73,29 @@ static const char *kDigitMangles[SIGN_TOTAL][DIGIT_TOTAL] = {
 
 static const char *c89_mangle_type(c89_emit_t *emit, const hlir_t *type);
 
+static char *get_cv_qualifiers(const hlir_t *type)
+{
+    const hlir_attributes_t *attribs = get_hlir_attributes(type);
+
+    char quals[3] = "";
+    size_t idx = 0;
+
+    if (attribs->tags & TAG_VOLATILE)
+    {
+        quals[idx++] = 'V';
+    }
+
+    if (attribs->tags & TAG_CONST)
+    {
+        quals[idx++] = 'K';
+    }
+
+    return ctu_strdup(quals);
+}
+
 static const char *c89_mangle_pointer(c89_emit_t *emit, const hlir_t *type)
 {
-    const char *mangled = c89_mangle_type(emit, type);
+    const char *mangled = c89_mangle_type(emit, type->ptr);
     return format("P%s", mangled);
 }
 
@@ -114,7 +135,7 @@ static const char *c89_mangle_qualified(const hlir_t *type)
     return format("%s%zu%s", joinedParts, strlen(name), name);
 }
 
-static const char *c89_mangle_type(c89_emit_t *emit, const hlir_t *type)
+static const char *c89_mangle_type_inner(c89_emit_t *emit, const hlir_t *type)
 {
     hlir_kind_t kind = get_hlir_kind(type);
     switch (kind)
@@ -139,12 +160,18 @@ static const char *c89_mangle_type(c89_emit_t *emit, const hlir_t *type)
         return c89_mangle_type(emit, get_hlir_type(type));
 
     case HLIR_STRING:
-        return "Pc";
+        return "KPc"; // const char *
 
     default:
         report(emit->reports, ERROR, get_hlir_node(type), "cannot mangle %s", hlir_kind_to_string(kind));
         return "";
     }
+}
+
+static const char *c89_mangle_type(c89_emit_t *emit, const hlir_t *type)
+{
+    const char *mangled = c89_mangle_type_inner(emit, type);
+    return format("%s%s", get_cv_qualifiers(type), mangled);
 }
 
 static char *c89_mangle_params(c89_emit_t *emit, vector_t *params)
@@ -496,14 +523,38 @@ static void c89_emit_loop(c89_emit_t *emit, const hlir_t *hlir)
 {
     const char *cond = c89_emit_expr(emit, hlir->cond);
 
+    const node_t node = get_hlir_node(hlir);
+    where_t where = get_node_location(node);
+
+    if (hlir->other != NULL)
+    {
+        WRITE_STRINGF(emit, "int used_loop%ld_%ld = 0;\n", where.firstLine, where.firstColumn);
+    }
+
     WRITE_STRINGF(emit, "while (%s)\n", cond);
     WRITE_STRING(emit, "{\n");
 
     begin_indent(emit);
+
+    if (hlir->other != NULL)
+    {
+        WRITE_STRINGF(emit, "used_loop%ld_%ld = 1;\n", where.firstLine, where.firstColumn);
+    }
+
     c89_emit_stmt(emit, hlir->then);
     end_indent(emit);
 
     WRITE_STRING(emit, "}\n");
+
+    if (hlir->other != NULL)
+    {
+        WRITE_STRINGF(emit, "if (!used_loop%ld_%ld)\n", where.firstLine, where.firstColumn);
+        WRITE_STRING(emit, "{\n");
+        begin_indent(emit);
+        c89_emit_stmt(emit, hlir->other);
+        end_indent(emit);
+        WRITE_STRING(emit, "}\n");
+    }
 }
 
 static void c89_emit_return(c89_emit_t *emit, const hlir_t *hlir)

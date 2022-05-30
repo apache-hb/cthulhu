@@ -21,10 +21,14 @@ typedef enum
 
     AST_UNARY,
     AST_BINARY,
+    AST_COMPARE,
 
     /* statements */
     AST_STMTS,
     AST_RETURN,
+    AST_WHILE,
+    AST_BREAK,
+    AST_CONTINUE,
 
     /* intermediate types */
     AST_FIELD,
@@ -65,7 +69,11 @@ typedef struct ast_t
         /* AST_BINARY */
         struct
         {
-            binary_t binary;
+            union {
+                binary_t binary;
+                compare_t compare;
+            };
+
             struct ast_t *lhs;
             struct ast_t *rhs;
         };
@@ -94,6 +102,14 @@ typedef struct ast_t
             vector_t *params;
             struct ast_t *result;
             bool variadic;
+        };
+
+        /* AST_WHILE */
+        struct
+        {
+            struct ast_t *cond;
+            struct ast_t *then;
+            struct ast_t *other;
         };
 
         /* AST_PROGRAM */
@@ -153,11 +169,16 @@ ast_t *ast_name(scan_t *scan, where_t where, vector_t *path);
 
 ast_t *ast_unary(scan_t *scan, where_t where, unary_t op, ast_t *operand);
 ast_t *ast_binary(scan_t *scan, where_t where, binary_t binary, ast_t *lhs, ast_t *rhs);
+ast_t *ast_compare(scan_t *scan, where_t where, compare_t compare, ast_t *lhs, ast_t *rhs);
 
 /// statements
 
 ast_t *ast_stmts(scan_t *scan, where_t where, vector_t *stmts);
 ast_t *ast_return(scan_t *scan, where_t where, ast_t *expr);
+ast_t *ast_while(scan_t *scan, where_t where, ast_t *cond, ast_t *body, ast_t *other);
+
+ast_t *ast_break(scan_t *scan, where_t where);
+ast_t *ast_continue(scan_t *scan, where_t where);
 
 /// types
 

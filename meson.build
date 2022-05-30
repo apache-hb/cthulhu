@@ -201,8 +201,8 @@ afl = find_program('afl-fuzz', required : get_option('fuzzing'))
 if afl.found()
     subdir('tests/fuzzing')
 
+    here = meson.current_source_dir()
     foreach lang, interface : fuzzers
-        here = meson.current_source_dir()
         input = here/'tests/driver'/lang/'fuzzing-input'
         cmd = [ afl, '-i', input, '-o', 'fuzz-out-' + lang, '-m', 'none', '-d', '--', interface.full_path(), '@@']
         run_target('fuzz-' + lang, 

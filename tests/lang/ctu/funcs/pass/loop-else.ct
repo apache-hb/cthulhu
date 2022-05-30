@@ -1,0 +1,7 @@
+def main(argc: int, argv: [*]str): int {
+    while argc > 3 {
+
+    } else {
+
+    }
+}

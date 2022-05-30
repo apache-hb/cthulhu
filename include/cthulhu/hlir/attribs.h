@@ -18,6 +18,9 @@ typedef enum
     LINK_INTERNAL, ///< this declaration is internal, and is not visible outside
                    ///< of this compilation unit
 
+    LINK_ENTRY_CLI, ///< standard cli entry point
+    LINK_ENTRY_GUI, ///< windows gui entry point
+
     LINK_TOTAL
 } hlir_linkage_t;
 

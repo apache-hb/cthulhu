@@ -79,6 +79,15 @@ ast_t *ast_binary(scan_t *scan, where_t where, binary_t binary, ast_t *lhs, ast_
     return ast;
 }
 
+ast_t *ast_compare(scan_t *scan, where_t where, compare_t compare, ast_t *lhs, ast_t *rhs)
+{
+    ast_t *ast = ast_new(AST_COMPARE, scan, where);
+    ast->compare = compare;
+    ast->lhs = lhs;
+    ast->rhs = rhs;
+    return ast;
+}
+
 ast_t *ast_stmts(scan_t *scan, where_t where, vector_t *stmts)
 {
     ast_t *ast = ast_new(AST_STMTS, scan, where);
@@ -91,6 +100,25 @@ ast_t *ast_return(scan_t *scan, where_t where, ast_t *expr)
     ast_t *ast = ast_new(AST_RETURN, scan, where);
     ast->operand = expr;
     return ast;
+}
+
+ast_t *ast_while(scan_t *scan, where_t where, ast_t *cond, ast_t *body, ast_t *other)
+{
+    ast_t *ast = ast_new(AST_WHILE, scan, where);
+    ast->cond = cond;
+    ast->then = body;
+    ast->other = other;
+    return ast;
+}
+
+ast_t *ast_break(scan_t *scan, where_t where)
+{
+    return ast_new(AST_BREAK, scan, where);
+}
+
+ast_t *ast_continue(scan_t *scan, where_t where)
+{
+    return ast_new(AST_CONTINUE, scan, where);
 }
 
 ast_t *ast_typename(scan_t *scan, where_t where, vector_t *path)
