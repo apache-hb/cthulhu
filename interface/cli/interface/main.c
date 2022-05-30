@@ -1,6 +1,6 @@
 #include "cmd.h"
 #include "cthulhu/interface/interface.h"
-#include "cthulhu/util/version-def.h"
+#include "base/version-def.h"
 
 #include "cthulhu/emit/c89.h"
 #include "cthulhu/report/report.h"

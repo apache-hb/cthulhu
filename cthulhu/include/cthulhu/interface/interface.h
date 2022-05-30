@@ -4,7 +4,7 @@
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/report/report.h"
 #include "platform/file.h"
-#include "cthulhu/util/version-def.h"
+#include "base/version-def.h"
 
 ///
 /// code required by interfaces

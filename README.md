@@ -36,13 +36,18 @@ ninja -C build test # build and run tests
   * `cmd` - command line user interface
   * `gui` - graphical user interface (TODO)
 
-* `include/cthulhu` - public interface
-  * `ast` - tools for generating an ast components used by drivers
-  * `emit` - tree writing
-  * `hlir` - common typed ast
-  * `util` - common utilities
+* `common` - common code
+  * `include/base` - memory allocation library
+  * `include/std` - collections and data structures
+  * `include/platform` - platform detail wrappers
+  * `include/cmd` - command line parsing library
 
-* `src` - common framework implementation
+* `cthulhu` - compiler framework library
+  * `include/cthulhu` - public interface
+    * `ast` - tools for generating an ast components used by drivers
+    * `emit` - tree writing
+    * `hlir` - common typed ast
+    * `util` - common utilities
 
 * `subprojects` - 3rd & 1st party dependencies
   * `cjson` - json serialization + deserialization library

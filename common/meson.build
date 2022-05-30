@@ -1,12 +1,12 @@
-src = [ 'src/base/base.c' ]
-
-libbase = library('base', src, 
+libbase = library('base', [ 'src/base/base.c' ], 
     c_args : args,
+    dependencies : deps,
     include_directories : 'include'
 )
 
 base = declare_dependency(
     link_with : libbase, 
+    dependencies : deps,
     include_directories : 'include'
 )
 
@@ -49,4 +49,21 @@ platform = declare_dependency(
     include_directories : 'include'
 )
 
+src = [
+    'src/report/report.c',
+    'src/report/report-ext.c'
+]
+
 deps += [ base, std, platform ]
+
+libargparse = library('argparse', [ 'src/argparse/argparse.c' ], 
+    c_args : args, 
+    dependencies : deps,
+    include_directories : 'include'
+)
+
+argparse = declare_dependency(
+    link_with : libargparse, 
+    dependencies : deps, 
+    include_directories : 'include'
+)
