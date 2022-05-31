@@ -1,4 +1,4 @@
-#include "cthulhu/util/stream.h"
+#include "std/stream.h"
 #include "base/util.h"
 
 #include <string.h>

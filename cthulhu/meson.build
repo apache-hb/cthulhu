@@ -15,10 +15,7 @@ src = [
     'src/interface/cthulhu.c',
 
     # tree output
-    'src/emit/c89.c',
-
-    # standard library
-    'src/util/stream.c'
+    'src/emit/c89.c'
 ]
 
 libgeneric = library('generic', src,

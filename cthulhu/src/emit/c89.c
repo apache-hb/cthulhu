@@ -8,7 +8,7 @@
 #include "std/set.h"
 #include "std/str.h"
 #include "base/util.h"
-#include "cthulhu/util/stream.h"
+#include "std/stream.h"
 
 #include <string.h>
 

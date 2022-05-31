@@ -55,7 +55,7 @@ int main()
         imgui_new_frame(ctx);
 
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOUR_BUFFER_BIT);
 
         imgui_render(ctx);
 
