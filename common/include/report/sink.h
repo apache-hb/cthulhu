@@ -19,7 +19,6 @@
 
 /** @} */
 
-
 /**
  * @brief the severity of a message
  */
@@ -70,10 +69,16 @@ typedef struct
 } report_config_t;
 
 typedef bool (*report_begin_t)(void *user);
+typedef void (*report_end_t)(void *user, const char *name, const report_config_t *config);
 typedef void (*report_add_t)(void *user, const message_t *message);
-typedef void (*report_end_t)(void *user, const char *name, report_config_t *config);
 
 typedef struct 
 {
-    void *user;
-} report_sink_t;
+    report_begin_t begin;
+    report_end_t end;
+    report_add_t add;
+
+    char user[];
+} sink_t;
+
+sink_t *sink_console(bool colour);
