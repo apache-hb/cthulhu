@@ -7,11 +7,11 @@
 %define api.prefix {cmd}
 
 %code top {
-    #include "interop/flex.h"
+    #include "interop/interop.h"
 }
 
 %code requires {
-    #include "interface/cmd.h"
+    #include "argparse/argparse.h"
     #define YYSTYPE CMDSTYPE
     #define YYLTYPE CMDLTYPE
 }

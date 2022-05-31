@@ -7,13 +7,13 @@ src = [
 links = host != 'windows' ? [] : [ 'setargv.obj' ]
 
 libcmd = library('cli-interface', src,
-    dependencies : generic
+    dependencies : [ generic, deps ]
 )
 
 cmd = declare_dependency(
     link_with : libcmd,
     include_directories : '.',
-    dependencies : generic
+    dependencies : [ generic, deps ]
 )
 
 foreach name, lib : langs

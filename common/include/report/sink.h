@@ -1,5 +1,7 @@
 #pragma once
 
+#include "scan/node.h"
+
 #include "std/vector.h"
 
 #include <stddef.h>

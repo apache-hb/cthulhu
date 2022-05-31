@@ -1,13 +1,13 @@
 %define parse.error verbose
 %define api.pure full
 %lex-param { void *scan }
-%parse-param { void *scan } { scan_t *x }
+%parse-param { void *scan } { scan_t x }
 %locations
 %expect 0
 %define api.prefix {pl0}
 
 %code top {
-    #include "cthulhu/ast/interop.h"
+    #include "interop/flex.h"
 }
 
 %code requires {
@@ -20,7 +20,7 @@
 
 %{
 int pl0lex();
-void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
+void pl0error(where_t *where, void *state, scan_t scan, const char *msg);
 %}
 
 %union {

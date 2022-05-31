@@ -1,7 +1,5 @@
 #pragma once
 
-#include "cthulhu/ast/ast.h"
-
 #include "sink.h"
 
 /**

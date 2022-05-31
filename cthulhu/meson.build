@@ -17,16 +17,6 @@ src = [
     # tree output
     'src/emit/c89.c',
 
-    # ast data and flex/bison interop
-    'src/ast/scan.c',
-    'src/ast/interop.c',
-    'src/ast/ast.c',
-    'src/ast/compile.c',
-
-    # error reporting
-    'src/report/report.c',
-    'src/report/report-ext.c',
-
     # standard library
     'src/util/stream.c'
 ]

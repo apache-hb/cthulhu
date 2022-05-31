@@ -164,11 +164,11 @@ TEST(test_string_common_prefix, {
     SHOULD_PASS("no common prefix", str_equal(no_common_prefix, ""));
 
     vector_t *common = vector_of(2);
-    vector_set(common, 0, "hello" PATH_SEP "stuff");
-    vector_set(common, 1, "hello" PATH_SEP" world");
+    vector_set(common, 0, "hello" NATIVE_PATH_SEPARATOR "stuff");
+    vector_set(common, 1, "hello" NATIVE_PATH_SEPARATOR" world");
 
     const char *some_prefix = common_prefix(common);
-    SHOULD_PASS("common prefix", str_equal(some_prefix, "hello" PATH_SEP));
+    SHOULD_PASS("common prefix", str_equal(some_prefix, "hello" NATIVE_PATH_SEPARATOR));
 })
 
 TEST(test_string_rfind, {

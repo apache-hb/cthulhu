@@ -14,10 +14,12 @@ void common_init(void)
 
 sema_t *find_module(runtime_t *runtime, const char *path)
 {
+    logverbose("getting module %s", path);
     return map_get(runtime->modules, path);
 }
 
 void add_module(runtime_t *runtime, const char *name, sema_t *sema)
 {
+    logverbose("adding module %s", name);
     map_set(runtime->modules, name, sema);
 }

@@ -1,4 +1,4 @@
-#include "cthulhu/ast/compile.h"
+#include "scan/compile.h"
 #include "cthulhu/interface/interface.h"
 #include "cthulhu/interface/runtime.h"
 
@@ -14,7 +14,7 @@ static void *ctu_parse_file(runtime_t *runtime, compile_t *compile)
     UNUSED(runtime);
 
     init_scan(compile->scanner);
-    return compile_string(compile->scanner, &kCallbacks);
+    return compile_scanner(compile->scanner, &kCallbacks);
 }
 
 const driver_t kDriver = {

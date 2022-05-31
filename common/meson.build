@@ -51,10 +51,38 @@ platform = declare_dependency(
 
 src = [
     'src/report/report.c',
-    'src/report/report-ext.c'
+    'src/report/report-ext.c',
+    'src/scan/node.c',
+    'src/scan/scan.c',
+    'src/scan/compile.c'
 ]
 
-deps += [ base, std, platform ]
+# this is both libreport and libscan as they depend on each other
+liblocation = library('location', src, 
+    c_args : args, 
+    dependencies : std,
+    include_directories : 'include'
+)
+
+location = declare_dependency(
+    link_with : liblocation, 
+    dependencies : std, 
+    include_directories : 'include'
+)
+
+libinterop = library('interop', [ 'src/interop/flex.c' ],
+    c_args : args,
+    dependencies : std,
+    include_directories : 'include'
+)
+
+interop = declare_dependency(
+    link_with : libinterop, 
+    dependencies : std, 
+    include_directories : 'include'
+)
+
+deps += [ base, std, platform, location, interop ]
 
 libargparse = library('argparse', [ 'src/argparse/argparse.c' ], 
     c_args : args, 

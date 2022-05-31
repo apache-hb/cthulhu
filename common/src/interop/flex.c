@@ -4,7 +4,7 @@
 
 #define COMPILER_SOURCE 1
 
-#include "cthulhu/ast/interop.h"
+#include "interop/flex.h"
 
 void flex_action(where_t *where, const char *text)
 {
@@ -25,13 +25,14 @@ void flex_action(where_t *where, const char *text)
     }
 }
 
-int flex_input(scan_t *scan, char *out, int size)
+int flex_input(scan_t scan, char *out, int size)
 {
-    int total = MIN((int)(scan_size(scan) - scan->offset), size);
+    size_t remainingSize = scan_size(scan) - scan_offset(scan);
+    int total = MIN((int)remainingSize, size);
 
-    memcpy(out, scan_text(scan) + scan->offset, total);
+    memcpy(out, scan_text(scan) + scan_offset(scan), total);
 
-    scan->offset += total;
+    scan_advance(scan, total);
 
     return total;
 }

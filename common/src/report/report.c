@@ -1,9 +1,9 @@
-#include "cthulhu/report/report.h"
-#include "cthulhu/ast/ast.h"
+#include "report/report.h"
+#include "scan/node.h"
 #include "std/str.h"
 #include "base/util.h"
 
-#include "cthulhu/ast/scan.h"
+#include "scan/node.h"
 #include "base/macros.h"
 
 #include <math.h>
@@ -58,21 +58,23 @@ static size_t total_lines(where_t where)
     return where.lastLine - where.firstLine;
 }
 
-static char *format_location(const char *base, const scan_t *scan, where_t where)
+static char *format_location(const char *base, scan_t scan, where_t where)
 {
+    const char *language = scan_language(scan);
+    const char *path = scan_path(scan);
     if (is_multiline_report(where))
     {
-        return format("%s source [%s:%ld:%ld-%ld:%ld]", scan->language, scan->path + strlen(base), where.firstLine + 1,
+        return format("%s source [%s:%ld:%ld-%ld:%ld]", language, path + strlen(base), where.firstLine + 1,
                       where.firstColumn, where.lastLine + 1, where.lastColumn);
     }
 
-    return format("%s source [%s:%ld:%ld]", scan->language, scan->path + strlen(base), where.firstLine + 1,
+    return format("%s source [%s:%ld:%ld]", language, path + strlen(base), where.firstLine + 1,
                   where.firstColumn);
 }
 
 static void report_scanner(const char *base, node_t node)
 {
-    const scan_t *scan = get_node_scanner(node);
+    scan_t scan = get_node_scanner(node);
     where_t where = get_node_location(node);
     fprintf(stderr, " => %s\n", format_location(base, scan, where));
 }
@@ -97,10 +99,10 @@ static char *padding(size_t len)
     return str;
 }
 
-static char *extract_line(const scan_t *scan, line_t line)
+static char *extract_line(const scan_t scan, line_t line)
 {
     size_t start = 0;
-    text_t source = scan->source;
+    text_t source = scan_source(scan);
     while (start < source.size && line > 0)
     {
         char c = source.text[start++];
@@ -223,7 +225,7 @@ static int base10_length(line_t digit)
     return (int)ceil(log10((double)digit)) + 1;
 }
 
-static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts)
+static size_t longest_line(const scan_t scan, line_t init, vector_t *parts)
 {
     int len = base10_length(init);
 
@@ -231,7 +233,7 @@ static size_t longest_line(const scan_t *scan, line_t init, vector_t *parts)
     {
         part_t *part = vector_get(parts, i);
 
-        const scan_t *self = get_node_scanner(part->node);
+        const scan_t self = get_node_scanner(part->node);
 
         if (self != scan)
         {
@@ -260,7 +262,7 @@ static char *right_align(line_t line, int width)
 static char *format_single(node_t node, const char *underline)
 {
     where_t where = get_node_location(node);
-    const scan_t *scan = get_node_scanner(node);
+    const scan_t scan = get_node_scanner(node);
 
     line_t firstLine = where.firstLine + 1;
     int align = base10_length(firstLine);
@@ -288,7 +290,7 @@ static char *format_single(node_t node, const char *underline)
 static char *format_medium2(node_t node, const char *underline)
 {
     where_t where = get_node_location(node);
-    const scan_t *scan = get_node_scanner(node);
+    const scan_t scan = get_node_scanner(node);
 
     line_t firstLine = where.firstLine + 1;
     int align = base10_length(firstLine);
@@ -319,7 +321,7 @@ static char *format_medium2(node_t node, const char *underline)
 static char *format_medium3(node_t node, const char *underline)
 {
     where_t where = get_node_location(node);
-    const scan_t *scan = get_node_scanner(node);
+    const scan_t scan = get_node_scanner(node);
 
     line_t firstLine = where.firstLine + 1;
     int align = base10_length(firstLine);
@@ -351,7 +353,7 @@ static char *format_medium3(node_t node, const char *underline)
 static char *format_large(node_t node, const char *underline)
 {
     where_t where = get_node_location(node);
-    const scan_t *scan = get_node_scanner(node);
+    const scan_t scan = get_node_scanner(node);
 
     line_t firstLine = where.firstLine + 1;
     line_t lastLine = where.lastLine + 1;
@@ -402,7 +404,7 @@ static void report_part(const char *base, message_t *message, part_t *part)
     char *msg = part->message;
 
     node_t node = part->node;
-    const scan_t *scan = get_node_scanner(node);
+    const scan_t scan = get_node_scanner(node);
     where_t where = get_node_location(node);
 
     line_t start = where.firstLine;
@@ -472,8 +474,8 @@ static const char *paths_base(vector_t *messages)
         message_t *message = vector_get(messages, i);
         if (is_valid_node(message->node))
         {
-            const scan_t *scan = get_node_scanner(message->node);
-            vector_push(&result, (char *)scan->path);
+            const scan_t scan = get_node_scanner(message->node);
+            vector_push(&result, (char *)scan_path(scan));
         }
 
         vector_t *parts = message->parts;
@@ -482,8 +484,8 @@ static const char *paths_base(vector_t *messages)
             part_t *part = vector_get(parts, j);
             if (is_valid_node(part->node))
             {
-                const scan_t *scan = get_node_scanner(message->node);
-                vector_push(&result, (char *)scan->path);
+                const scan_t scan = get_node_scanner(message->node);
+                vector_push(&result, (char *)scan_path(scan));
             }
         }
     }

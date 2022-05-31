@@ -3,7 +3,7 @@
 #include "base/version-def.h"
 
 #include "cthulhu/emit/c89.h"
-#include "cthulhu/report/report.h"
+#include "report/report.h"
 #include "std/str.h"
 #include "std/vector.h"
 

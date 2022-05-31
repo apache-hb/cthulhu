@@ -1,9 +1,9 @@
-#include "cthulhu/ast/compile.h"
+#include "scan/compile.h"
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/interface/interface.h"
 #include "cthulhu/interface/runtime.h"
-#include "cthulhu/report/report.h"
+#include "report/report.h"
 #include "std/str.h"
 #include "base/util.h"
 
@@ -87,7 +87,7 @@ cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
     return cthulhu;
 }
 
-static scan_t *make_scanner_from_file(cthulhu_t *cthulhu, source_t *source)
+static scan_t make_scanner_from_file(cthulhu_t *cthulhu, source_t *source)
 {
     cerror_t error = 0;
     file_t handle = file_open(source->path, 0, &error);
@@ -96,22 +96,20 @@ static scan_t *make_scanner_from_file(cthulhu_t *cthulhu, source_t *source)
     {
         message_t *id = report(cthulhu->reports, ERROR, node_invalid(), "failed to open file `%s`", source->path);
         report_note(id, "%s", error_string(error));
-        return NULL;
+        return scan_invalid();
     }
 
-    scan_t scanner = scan_file(cthulhu->reports, cthulhu->driver.name, handle);
-    return BOX(scanner);
+    return scan_file(cthulhu->reports, cthulhu->driver.name, handle);
 }
 
-static scan_t *make_scanner_from_string(cthulhu_t *cthulhu, source_t *source)
+static scan_t make_scanner_from_string(cthulhu_t *cthulhu, source_t *source)
 {
-    scan_t scanner = scan_string(cthulhu->reports, cthulhu->driver.name, source->path, source->string);
-    return BOX(scanner);
+    return scan_string(cthulhu->reports, cthulhu->driver.name, source->path, source->string);
 }
 
-static scan_t *make_scanner_from_source(cthulhu_t *cthulhu, source_t *source)
+static scan_t make_scanner_from_source(cthulhu_t *cthulhu, source_t *source)
 {
-    scan_t *(*make[])(cthulhu_t *, source_t *) = {
+    scan_t (*make[])(cthulhu_t *, source_t *) = {
         [SOURCE_FILE] = make_scanner_from_file,
         [SOURCE_STRING] = make_scanner_from_string,
     };

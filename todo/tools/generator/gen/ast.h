@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cthulhu/ast/scan.h"
-#include "cthulhu/ast/ast.h"
+#include "scan/scan.h"
+#include "scan/node.h"
 
 #include "std/vector.h"
 #include "std/map.h"
@@ -55,14 +55,14 @@ typedef struct ast_t
     };
 } ast_t;
 
-ast_t *ast_grammar(scan_t *scan, where_t where, map_t *config, map_t *lexer, map_t *parser, vector_t *rules);
+ast_t *ast_grammar(scan_t scan, where_t where, map_t *config, map_t *lexer, map_t *parser, vector_t *rules);
 
-ast_t *ast_rule(scan_t *scan, where_t where, char *name, vector_t *body);
+ast_t *ast_rule(scan_t scan, where_t where, char *name, vector_t *body);
 
-map_t *build_map(scan_t *scan, where_t where, vector_t *entries);
-ast_t *ast_vector(scan_t *scan, where_t where, vector_t *vector);
-ast_t *ast_pair(scan_t *scan, where_t where, char *key, ast_t *value);
-ast_t *ast_string(scan_t *scan, where_t where, char *string);
-ast_t *ast_ident(const scan_t *scan, where_t where, char *ident);
+map_t *build_map(scan_t scan, where_t where, vector_t *entries);
+ast_t *ast_vector(scan_t scan, where_t where, vector_t *vector);
+ast_t *ast_pair(scan_t scan, where_t where, char *key, ast_t *value);
+ast_t *ast_string(scan_t scan, where_t where, char *string);
+ast_t *ast_ident(scan_t scan, where_t where, char *ident);
 
 #define GENLTYPE where_t

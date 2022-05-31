@@ -4,6 +4,7 @@ int main(int argc, const char **argv)
 {
     common_init();
     driver_t driver = get_driver();
+    verbose = true;
     
     report_config_t reportConfig = {
         .limit = 20, 

@@ -38,6 +38,34 @@ char *formatv(const char *fmt, va_list args)
     return out;
 }
 
+static bool char_is_any_of(char c, const char *chars)
+{
+    for (; *chars; chars++)
+    {
+        if (*chars == c)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static size_t str_rfind_any(const char *str, const char *letters)
+{
+    size_t i = strlen(str);
+    while (i > 0)
+    {
+        i--;
+        if (char_is_any_of(str[i], letters))
+        {
+            return i;
+        }
+    }
+
+    return SIZE_MAX;
+}
+
 USE_DECL
 char *str_noext(const char *path)
 {
@@ -55,7 +83,7 @@ char *str_noext(const char *path)
 USE_DECL
 char *str_filename(const char *path)
 {
-    size_t idx = str_rfind(path, PATH_SEP);
+    size_t idx = str_rfind_any(path, PATH_SEPERATORS);
     if (idx == SIZE_MAX)
     {
         return str_noext(path);
@@ -350,7 +378,7 @@ const char *common_prefix(vector_t *args)
     for (size_t i = 0; i < len; i++)
     {
         char *arg = vector_get(args, i);
-        size_t find = str_rfind(arg, PATH_SEP) + 1;
+        size_t find = str_rfind_any(arg, PATH_SEPERATORS) + 1;
         strings[i] = ctu_strndup(arg, find);
 
         lower = MIN(lower, find);
@@ -431,19 +459,6 @@ size_t str_rfindn(const char *str, size_t len, const char *sub)
     size_t sublen = strlen(sub);
 
     return str_rfind_inner(str, len, sub, sublen);
-}
-
-static bool char_is_any_of(char c, const char *chars)
-{
-    for (; *chars; chars++)
-    {
-        if (*chars == c)
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 USE_DECL

@@ -51,7 +51,7 @@
 #    define FILE_POS_TYPE DWORD
 #    define FILE_READ_TYPE DWORD
 #    define FILE_WRITE_TYPE DWORD
-#    define CERROR_TYPE DWORD
+#    define CERROR_TYPE HRESULT
 #else
 #    include <dlfcn.h>
 #    include <stdio.h>

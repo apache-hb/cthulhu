@@ -2,7 +2,7 @@
 
 #include "cmd-bison.h"
 #include "cmd-flex.h"
-#include "cthulhu/ast/compile.h"
+#include "scan/compile.h"
 #include "cthulhu/interface/runtime.h"
 #include "base/macros.h"
 #include "std/str.h"
@@ -152,11 +152,11 @@ void cmd_push_str(commands_t *commands, char *value)
     *(char **)flag.data = value;
 }
 
-void cmderror(where_t *where, void *state, scan_t *scan, const char *msg)
+void cmderror(where_t *where, void *state, scan_t scan, const char *msg)
 {
     UNUSED(state);
 
-    report(scan->reports, ERROR, node_new(scan, *where), "%s", msg);
+    report(scan_reports(scan), ERROR, node_new(scan, *where), "%s", msg);
 }
 
 static char *join_args(int argc, const char **argv)
@@ -196,8 +196,8 @@ int parse_commandline(reports_t *reports, commands_t *commands, int argc, const 
     commands->currentFlag = flag_empty();
     commands->files = vector_new(8);
 
-    scan_set(&scan, commands);
-    compile_string(&scan, &kCallbacks);
+    scan_set(scan, commands);
+    compile_scanner(scan, &kCallbacks);
 
     pop_current_flag(commands, FLAG_BOOL);
 

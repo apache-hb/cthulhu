@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/report/report.h"
+#include "report/report.h"
 #include "std/map.h"
 #include "hlir.h"
 

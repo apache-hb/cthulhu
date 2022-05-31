@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "cthulhu/report/report.h"
+#include "report/report.h"
 
 static void framebuffer_size(GLFWwindow *window, int width, int height)
 {

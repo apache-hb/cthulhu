@@ -6,7 +6,7 @@ DISABLE_SAL
 #endif
 
 #include "base/util.h"
-#include "scan.h"
+#include "scan/node.h"
 
 /**
  * @defgroup FlexBisonMacros Flex and Bison helper macros
@@ -31,7 +31,7 @@ void flex_action(where_t *where, const char *text);
  * @param size total number of characters to write
  * @return number of characters written
  */
-int flex_input(scan_t *scan, char *out, int size);
+int flex_input(scan_t scan, char *out, int size);
 
 /**
  * @brief initialize source location tracking

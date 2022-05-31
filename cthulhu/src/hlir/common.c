@@ -1,6 +1,6 @@
 #include "common.h"
 
-#include "cthulhu/ast/ast.h"
+#include "scan/node.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 

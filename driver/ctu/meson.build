@@ -8,7 +8,7 @@ src = [
 ]
 
 ctc = library('ctc', src,
-    dependencies : generic,
+    dependencies : [ generic, interop ],
     install : true
 )
 

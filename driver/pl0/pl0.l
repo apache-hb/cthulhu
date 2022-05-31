@@ -1,4 +1,4 @@
-%option extra-type="scan_t*"
+%option extra-type="scan_t"
 %option 8bit nodefault
 %option noyywrap noinput nounput
 %option noyyalloc noyyrealloc noyyfree
@@ -9,8 +9,8 @@
 %{
 #include "pl0-bison.h"
 #include "scan.h"
-#include "cthulhu/report/report-ext.h"
-#include "cthulhu/ast/interop.h"
+#include "report/report-ext.h"
+#include "interop/flex.h"
 %}
 
 %x COMMENT
@@ -72,7 +72,7 @@
 
 "!" { return PRINT; }
 
-. { report_unknown_character(yyextra->reports, node_new(yyextra, *yylloc), yytext); }
+. { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }
 
 %%
 

@@ -67,7 +67,9 @@
 #endif
 
 #ifdef OS_WINDOWS
-#    define PATH_SEP "\\"
+#    define NATIVE_PATH_SEPARATOR "\\"
+#    define PATH_SEPERATORS "\\/"
 #else
-#    define PATH_SEP "/"
+#    define NATIVE_PATH_SEPARATOR "/"
+#    define PATH_SEPERATORS "/"
 #endif

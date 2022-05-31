@@ -1,6 +1,6 @@
 #include "cthulhu/loader/hlir.h"
 
-#include "cthulhu/ast/ast.h"
+#include "scan/node.h"
 #include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/hlir.h"
@@ -8,7 +8,7 @@
 #include "cthulhu/hlir/type.h"
 
 #include "common.h"
-#include "cthulhu/ast/compile.h"
+#include "scan/compile.h"
 #include "cthulhu/loader/loader.h"
 #include "cthulhu/util/map.h"
 #include "version.h"
@@ -466,7 +466,7 @@ typedef struct
     map_t *nodes;
 } hlir_save_t;
 
-static scan_t *load_scan(load_t *load, index_t index)
+static scan_t load_scan(load_t *load, index_t index)
 {
     value_t values[FIELDLEN(kScanFields)];
     READ_OR_RETURN(load->data, index, values);
@@ -475,7 +475,7 @@ static scan_t *load_scan(load_t *load, index_t index)
     const char *language = get_string(values[SCAN_LANGUAGE]);
     const char *source = get_string(values[SCAN_SOURCE]);
 
-    scan_t *scanner = map_get(load->scanners, path);
+    scan_t scanner = map_get(load->scanners, path);
     if (scanner != NULL)
     {
         return scanner;
@@ -515,7 +515,7 @@ static node_t get_node(load_t *load, index_t index)
         return node_builtin();
     }
 
-    scan_t *scan = load_scan(load, get_reference(values[NODE_SCAN]));
+    scan_t scan = load_scan(load, get_reference(values[NODE_SCAN]));
 
     where_t where = {
         .firstLine = get_int(values[NODE_FIRST_LINE]),
@@ -970,7 +970,7 @@ vector_t *load_modules(reports_t *reports, const char *path)
 /// hlir saving
 ///
 
-static index_t save_scan(hlir_save_t *data, const scan_t *scan)
+static index_t save_scan(hlir_save_t *data, const scan_t scan)
 {
     index_t *index = map_get_ptr(data->nodes, scan);
     if (index != NULL)
@@ -996,7 +996,7 @@ static index_t save_span(hlir_save_t *data, node_t node)
         return NULL_INDEX;
     }
 
-    scan_t *scanner = get_node_scanner(node);
+    scan_t scanner = get_node_scanner(node);
     index_t scan = save_scan(data, scanner);
 
     where_t where = get_node_location(node);

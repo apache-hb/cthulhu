@@ -1,4 +1,4 @@
-%option extra-type="scan_t*"
+%option extra-type="scan_t"
 %option 8bit nodefault
 %option noyywrap noinput nounput
 %option noyyalloc noyyrealloc noyyfree
@@ -9,8 +9,8 @@
 %{
 #include "gen-bison.h"
 #include "base/util.h"
-#include "cthulhu/ast/interop.h"
-#include "cthulhu/report/report-ext.h"
+#include "interop/interop.h"
+#include "report/report-ext.h"
 %}
 
 %%

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/ast/scan.h"
+#include "scan/node.h"
 
 char *pl0_normalize(const char *ident);
 

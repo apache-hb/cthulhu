@@ -8,7 +8,7 @@
 #include "cthulhu/interface/runtime.h"
 #include "base/util.h"
 
-#include "cthulhu/report/report-ext.h"
+#include "report/report-ext.h"
 #include "std/set.h"
 #include "std/str.h"
 

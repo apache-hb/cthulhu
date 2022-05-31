@@ -136,10 +136,10 @@ char *native_cerror_to_string(native_cerror_t error)
 
     if (result != 0)
     {
-        return format("unknown error %d", error);
+        return format("unknown error (errno %d)", error);
     }
 
-    return ctu_strdup(buffer);
+    return format("%s (errno %d)", buffer, error);
 }
 
 USE_DECL

@@ -3,7 +3,7 @@
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
-#include "cthulhu/report/report.h"
+#include "report/report.h"
 #include "base/macros.h"
 #include "base/util.h"
 

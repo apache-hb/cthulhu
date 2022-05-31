@@ -3,9 +3,9 @@
 #include "base/util.h"
 #include "base/macros.h"
 
-#include "cthulhu/report/report.h"
+#include "report/report.h"
 
-static ast_t *ast_new(const scan_t *scan, where_t where, ast_kind_t kind)
+static ast_t *ast_new(const scan_t scan, where_t where, ast_kind_t kind)
 {
     ast_t *ast = ctu_malloc(sizeof(ast_t));
     ast->node = node_new(scan, where);
@@ -13,7 +13,7 @@ static ast_t *ast_new(const scan_t *scan, where_t where, ast_kind_t kind)
     return ast;
 }
 
-ast_t *ast_grammar(scan_t *scan, where_t where, map_t *config, map_t *lexer, map_t *parser, vector_t *rules)
+ast_t *ast_grammar(scan_t scan, where_t where, map_t *config, map_t *lexer, map_t *parser, vector_t *rules)
 {
     ast_t *ast = ast_new(scan, where, AST_GRAMMAR);
     ast->config = config;
@@ -23,7 +23,7 @@ ast_t *ast_grammar(scan_t *scan, where_t where, map_t *config, map_t *lexer, map
     return ast;
 }
 
-ast_t *ast_rule(scan_t *scan, where_t where, char *name, vector_t *body)
+ast_t *ast_rule(scan_t scan, where_t where, char *name, vector_t *body)
 {
     ast_t *ast = ast_new(scan, where, AST_RULE);
     ast->rule = name;
@@ -31,7 +31,7 @@ ast_t *ast_rule(scan_t *scan, where_t where, char *name, vector_t *body)
     return ast;
 }
 
-map_t *build_map(scan_t *scan, where_t where, vector_t *entries)
+map_t *build_map(scan_t scan, where_t where, vector_t *entries)
 {
     size_t len = vector_len(entries);
     map_t *map = map_optimal(len);
@@ -44,7 +44,7 @@ map_t *build_map(scan_t *scan, where_t where, vector_t *entries)
         ast_t *old = map_get(map, entry->key);
         if (old != NULL)
         {
-            report(scan->reports, ERROR, node_new(scan, where), "duplicate entry `%s`", entry->key);
+            report(scan_reports(scan), ERROR, node_new(scan, where), "duplicate entry `%s`", entry->key);
         }
 
         map_set(map, entry->key, entry->value);
@@ -53,14 +53,14 @@ map_t *build_map(scan_t *scan, where_t where, vector_t *entries)
     return map;
 }
 
-ast_t *ast_vector(scan_t *scan, where_t where, vector_t *vector)
+ast_t *ast_vector(scan_t scan, where_t where, vector_t *vector)
 {
     ast_t *ast = ast_new(scan, where, AST_VECTOR);
     ast->vector = vector;
     return ast;
 }
 
-ast_t *ast_pair(scan_t *scan, where_t where, char *key, ast_t *value)
+ast_t *ast_pair(scan_t scan, where_t where, char *key, ast_t *value)
 {
     ast_t *ast = ast_new(scan, where, AST_PAIR);
     ast->key = key;
@@ -68,14 +68,14 @@ ast_t *ast_pair(scan_t *scan, where_t where, char *key, ast_t *value)
     return ast;
 }
 
-ast_t *ast_string(scan_t *scan, where_t where, char *string)
+ast_t *ast_string(scan_t scan, where_t where, char *string)
 {
     ast_t *ast = ast_new(scan, where, AST_STRING);
     ast->string = string;
     return ast;
 }
 
-ast_t *ast_ident(const scan_t *scan, where_t where, char *ident)
+ast_t *ast_ident(const scan_t scan, where_t where, char *ident)
 {
     ast_t *ast = ast_new(scan, where, AST_IDENT);
     ast->string = ident;

@@ -2,7 +2,7 @@
 
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/sema.h"
-#include "cthulhu/report/report.h"
+#include "report/report.h"
 #include "platform/file.h"
 #include "base/version-def.h"
 
@@ -32,7 +32,7 @@ typedef struct
 typedef struct
 {
     source_t *source;
-    scan_t *scanner;
+    scan_t scanner;
 
     void *ast;
     const char *moduleName;

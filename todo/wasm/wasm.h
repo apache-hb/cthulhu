@@ -2,7 +2,7 @@
 
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/util/file.h"
-#include "cthulhu/report/report.h"
+#include "report/report.h"
 
 typedef struct
 {

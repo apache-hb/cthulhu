@@ -102,7 +102,7 @@ static vector_t *get_vector(reports_t *reports, map_t *map, const char *key, boo
 }
 
 static const char *kLexerOptions = 
-    "%%option extra-type=\"scan_t*\"\n"
+    "%%option extra-type=\"scan_t\"\n"
     "%%option 8bit nodefault\n"
     "%%option noyywrap noinput nounput\n"
     "%%option noyyalloc noyyrealloc noyyfree\n"
@@ -185,8 +185,8 @@ static stream_t *emit_lexer(reports_t *reports, ast_t *ast)
 
     // these are always needed
     write_include(out, format("%s-bison.h", prefix));
-    write_include(out, "cthulhu/ast/interop.h");
-    write_include(out, "cthulhu/report/report-ext.h");
+    write_include(out, "interop/interop.h");
+    write_include(out, "report/report-ext.h");
 
     if (includes != NULL)
     {
@@ -252,10 +252,10 @@ static stream_t *emit_lexer(reports_t *reports, ast_t *ast)
 }
 
 static const char *kErrorHandler =
-    "void %serror(where_t *where, void *state, scan_t *scan, const char *msg)\n"
+    "void %serror(where_t *where, void *state, scan_t scan, const char *msg)\n"
     "{\n"
     "    UNUSED(state);\n"
-    "    report(scan->reports, ERROR, node_new(scan, *where), \"%%s\", msg);\n"
+    "    report(scan_reports(scan), ERROR, node_new(scan, *where), \"%%s\", msg);\n"
     "}\n"
 ;
 
@@ -265,8 +265,8 @@ static stream_t *emit_source(reports_t *reports, ast_t *ast)
 
     const char *prefix = get_string(reports, ast->config, "prefix", false);
 
-    write_include(out, "cthulhu/report/report.h");
-    write_include(out, "cthulhu/ast/ast.h");
+    write_include(out, "report/report.h");
+    write_include(out, "scan/node.h");
     write_include(out, "base/macros.h");
 
     stream_write(out, "\n");
@@ -281,7 +281,7 @@ static stream_t *emit_header(reports_t *reports, ast_t *ast)
 
     const char *prefix = get_string(reports, ast->config, "prefix", false);
 
-    write_include(out, "cthulhu/ast/ast.h");
+    write_include(out, "scan/node.h");
 
     stream_write(out, "\n");
     stream_write(out, format("#define %sLTYPE where_t", str_upper(prefix)));

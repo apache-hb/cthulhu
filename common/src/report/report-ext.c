@@ -1,4 +1,4 @@
-#include "cthulhu/report/report-ext.h"
+#include "report/report-ext.h"
 
 #include "base/macros.h"
 #include "std/str.h"

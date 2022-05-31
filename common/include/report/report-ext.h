@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/report/report.h"
+#include "report/report.h"
 
 /**
  * @brief report a shadowing error

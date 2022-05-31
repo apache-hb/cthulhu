@@ -1,6 +1,6 @@
 #include "hlir.h"
 
-#include "cthulhu/report/report.h"
+#include "report/report.h"
 
 /**
  * @defgroup HlirTypeConstructors HLIR type constructors

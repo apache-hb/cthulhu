@@ -2,7 +2,7 @@
 #include "emit.h"
 
 #include "cthulhu/interface/interface.h"
-#include "cthulhu/ast/compile.h"
+#include "scan/compile.h"
 #include "platform/file.h"
 #include "cthulhu/interface/runtime.h"
 
@@ -39,7 +39,7 @@ int main(int argc, const char **argv)
     cerror_t err = 0;
     file_t file = file_open(input, FILE_READ | FILE_TEXT, &err);
     scan_t scan = scan_file(reports, "gentool", file);
-    ast_t *ast = compile_string(&scan, &kCallbacks);
+    ast_t *ast = compile_scanner(scan, &kCallbacks);
 
     int status = end_reports(reports, "compiling", reportConfig);
     if (status != EXIT_OK)
@@ -85,9 +85,9 @@ int main(int argc, const char **argv)
     return end_reports(reports, "writing", reportConfig);
 }
 
-void generror(where_t *where, void *state, scan_t *scan, const char *msg)
+void generror(where_t *where, void *state, scan_t scan, const char *msg)
 {
     UNUSED(state);
 
-    report(scan->reports, ERROR, node_new(scan, *where), "%s", msg);
+    report(scan_reports(scan), ERROR, node_new(scan, *where), "%s", msg);
 }

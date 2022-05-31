@@ -113,6 +113,12 @@ file_size_t native_file_size(file_handle_t handle, native_cerror_t *error)
 USE_DECL
 const void *native_file_map(file_handle_t handle, native_cerror_t *error)
 {
+    file_size_t size = native_file_size(handle, error);
+    if (size == 0)
+    {
+        return "";
+    }
+    
     HANDLE mapping = CreateFileMapping(
         /* hFile = */ handle,
         /* lpFileMappingAttributes = */ NULL,
@@ -159,14 +165,15 @@ char *native_cerror_to_string(native_cerror_t error)
 
     if (written == 0)
     {
-        return ctu_strdup("unknown error");
+        return format("unknown error (0x%08X)", error);
     }
 
-    return str_erase(buffer, written, "\n\r");
+    char *cleaned = str_erase(buffer, written, "\n\r");
+    return format("%s (0x%08X)", cleaned, error);
 }
 
 USE_DECL
 native_cerror_t native_get_last_error(void)
 {
-    return GetLastError();
+    return HRESULT_FROM_WIN32(GetLastError());
 }

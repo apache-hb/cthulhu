@@ -1,6 +1,6 @@
 #include "cthulhu/hlir/hlir.h"
 
-#include "cthulhu/report/report.h"
+#include "report/report.h"
 #include "base/macros.h"
 
 extern hlir_t *kMetaType;

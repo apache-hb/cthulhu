@@ -7,7 +7,7 @@
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/hlir/type.h"
 #include "cthulhu/interface/runtime.h"
-#include "cthulhu/report/report-ext.h"
+#include "report/report-ext.h"
 #include "std/str.h"
 #include "base/util.h"
 
@@ -390,8 +390,8 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     vector_t *globals = vector_new(totalGlobals);
     vector_t *procs = vector_new(totalFunctions);
 
-    const scan_t *thisScanner = get_node_scanner(root->node);
-    const char *moduleName = root->mod == NULL ? str_filename(thisScanner->path) : root->mod;
+    scan_t thisScanner = get_node_scanner(root->node);
+    const char *moduleName = root->mod == NULL ? str_filename(scan_path(thisScanner)) : root->mod;
     hlir_t *mod = hlir_module(root->node, moduleName, vector_of(0), vector_of(0), vector_of(0));
 
     size_t sizes[TAG_MAX] = {

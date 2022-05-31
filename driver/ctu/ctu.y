@@ -1,13 +1,13 @@
 %define parse.error verbose
 %define api.pure full
 %lex-param { void *scan }
-%parse-param { void *scan } { scan_t *x }
+%parse-param { void *scan } { scan_t x }
 %locations
 %expect 0
 %define api.prefix {ctu}
 
 %code top {
-    #include "cthulhu/ast/interop.h"
+    #include "interop/flex.h"
 }
 
 %code requires {
@@ -19,7 +19,7 @@
 
 %{
 int ctulex();
-void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
+void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
 %}
 
 %union {
