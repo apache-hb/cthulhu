@@ -7,11 +7,11 @@
 %define api.prefix {cmd}
 
 %code top {
-    #include "interop/interop.h"
+    #include "interop/flex.h"
 }
 
 %code requires {
-    #include "argparse/argparse.h"
+    #include "argparse/common.h"
     #define YYSTYPE CMDSTYPE
     #define YYLTYPE CMDLTYPE
 }
@@ -48,11 +48,11 @@ argument: flag
     | flag ASSIGN option
     ;
 
-flag: OPT { cmd_begin_flag(scan_get(x), $1); }
+flag: OPT { argparse_begin_flag(scan_get(x), $1); }
     ;
 
-option: IDENT { cmd_push_str(scan_get(x), $1); }
-    | NUMBER { cmd_push_int(scan_get(x), $1); }
+option: IDENT { argparse_push_string(scan_get(x), $1); }
+    | NUMBER { argparse_push_digit(scan_get(x), $1); }
     ;
 
 %%

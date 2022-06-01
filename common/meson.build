@@ -85,10 +85,16 @@ interop = declare_dependency(
 
 deps += [ base, std, platform, location, interop ]
 
-libargparse = library('argparse', [ 'src/argparse/argparse.c' ], 
+src = [ 
+    'src/argparse/argparse.c',
+    lex.process('src/argparse/cmd.l'),
+    parse.process('src/argparse/cmd.y')
+]
+
+libargparse = library('argparse', src, 
     c_args : args, 
     dependencies : deps,
-    include_directories : 'include'
+    include_directories : [ 'include', 'src' ]
 )
 
 argparse = declare_dependency(

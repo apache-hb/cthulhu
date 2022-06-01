@@ -7,12 +7,13 @@
 #include "base/version-def.h"
 #include "std/vector.h"
 #include "std/map.h"
+#include "report/report.h"
 
 typedef enum
 {
     PARAM_BOOL, // either a positional argument or a boolean flag
     PARAM_STRING, // a string of some sort
-    PARAM_INT,
+    PARAM_INT, // an integer
 } param_kind_t;
 
 typedef struct arg_t
@@ -36,20 +37,20 @@ typedef struct
 
 typedef struct
 {
-    const char *argv;
+    const char **argv;
     int argc;
     
     const char *description;
     version_t version;
 
-    vector_t *warnings;
+    reports_t *reports;
 
     vector_t *args;
 } arg_parse_config_t;
 
 typedef struct
 {
-    bool success;
+    int exitCode; ///< if non-zero, the program should exit with this code
     map_t *params; ///< provided parameters
     vector_t *extra; ///< provided files 
 } arg_parse_result_t;

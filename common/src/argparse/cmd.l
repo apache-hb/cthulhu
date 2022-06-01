@@ -9,7 +9,7 @@
 %{
 #include "cmd-bison.h"
 #include "report/report-ext.h"
-#include "interop/interop.h"
+#include "interop/flex.h"
 %}
 
 LETTER [a-zA-Z]
@@ -46,7 +46,12 @@ ALNUMDASH [a-zA-Z0-9-]
     return IDENT; 
 }
 
-. { report_unknown_character(yyextra->reports, node_new(yyextra, *yylloc), yytext); }
+\"(\\.|[^"\\])*\" { 
+    yylval->ident = ctu_strndup(yytext + 1, yyleng - 2);
+    return IDENT;
+}
+
+. { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }
 
 %%
 
