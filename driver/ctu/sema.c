@@ -87,7 +87,33 @@ static hlir_t *get_common_type(node_t node, const hlir_t *lhs, const hlir_t *rhs
     return hlir_error(node, "unknown common type");
 }
 
-static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl);
+static bool is_discard_ident(const char *id)
+{
+    return id == NULL || str_equal(id, "$");
+}
+
+static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
+{
+    node_t node = get_hlir_node(decl);
+
+    if (is_discard_ident(name))
+    {
+        report(sema->reports, ERROR, node, "discarding declaration");
+        return;
+    }
+
+    // was this already declared?
+    hlir_t *other = sema_get(sema, tag, name);
+    if (other != NULL)
+    {
+        // if it was report it and dont add this new one
+        node_t otherNode = get_hlir_node(other);
+        report_shadow(sema->reports, name, otherNode, node);
+        return;
+    }
+
+    sema_set(sema, tag, name, decl);
+}
 
 static void add_basic_types(sema_t *sema)
 {
@@ -139,11 +165,6 @@ void ctu_init_compiler(runtime_t *runtime)
     }
 
     add_basic_types(kRootSema);
-}
-
-static bool is_discard_ident(const char *id)
-{
-    return id == NULL || str_equal(id, "$");
 }
 
 static hlir_t *sema_type(sema_t *sema, ast_t *ast);
@@ -409,7 +430,7 @@ static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
 static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir_t *decl)
 {
     size_t len = vector_len(fields);
-    set_t *names = set_new(len);
+    map_t *names = map_optimal(len);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -418,13 +439,14 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
 
         if (!is_discard_ident(name))
         {
-            if (set_contains(names, name))
+            const ast_t *previous = map_get(names, name);
+            if (previous != NULL)
             {
-                report(sema->reports, ERROR, field->node, "field '%s' already defined", name);
+                report_shadow(sema->reports, name, previous->node, field->node);
                 continue;
             }
 
-            set_add(names, name);
+            map_set(names, name, field);
         }
 
         if (field->field == NULL)
@@ -522,8 +544,6 @@ static void sema_params(sema_t *sema, vector_t *params)
 
 static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
-    UNUSED(sema);
-
     hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? LINK_IMPORTED : LINK_EXPORTED, 0, NULL, NULL);
     hlir_t *body = NULL;
 
@@ -580,27 +600,6 @@ static void sema_decl(sema_t *sema, ast_t *ast)
         ctu_assert(sema->reports, "unexpected ast of type %d", ast->of);
         break;
     }
-}
-
-static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
-{
-    if (is_discard_ident(name))
-    {
-        node_t node = get_hlir_node(decl);
-        report(sema->reports, ERROR, node, "discarding declaration");
-        return;
-    }
-
-    hlir_t *other = sema_get(sema, tag, name);
-    if (other != NULL)
-    {
-        node_t node = get_hlir_node(decl);
-        node_t otherNode = get_hlir_node(other);
-        report_shadow(sema->reports, name, node, otherNode);
-        return;
-    }
-
-    sema_set(sema, tag, name, decl);
 }
 
 static hlir_t *begin_function(sema_t *sema, ast_t *ast)

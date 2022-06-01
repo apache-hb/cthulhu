@@ -57,9 +57,9 @@ typedef enum
     TAG_MAX
 } tag_t;
 
-static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t shadowed, const node_t shadowing)
+static void report_pl0_shadowing(reports_t *reports, const char *name, node_t prevDefinition, node_t newDefinition)
 {
-    message_t *id = report_shadow(reports, name, shadowed, shadowing);
+    message_t *id = report_shadow(reports, name, prevDefinition, newDefinition);
     report_note(id, "PL/0 is case insensitive");
 }
 
@@ -92,7 +92,7 @@ static void set_proc(sema_t *sema, const char *name, hlir_t *proc)
     {
         const node_t node = get_hlir_node(proc);
         const node_t otherNode = get_hlir_node(other);
-        report_pl0_shadowing(sema->reports, name, node, otherNode);
+        report_pl0_shadowing(sema->reports, name, otherNode, node);
         return;
     }
 
@@ -112,7 +112,7 @@ static void set_var(sema_t *sema, size_t tag, const char *name, hlir_t *hlir)
         const node_t node = get_hlir_node(hlir);
         const node_t otherNode = get_hlir_node(other);
 
-        report_pl0_shadowing(sema->reports, name, node, otherNode);
+        report_pl0_shadowing(sema->reports, name, otherNode, node);
         return;
     }
 

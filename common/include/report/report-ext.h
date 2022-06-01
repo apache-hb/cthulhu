@@ -7,12 +7,12 @@
  *
  * @param reports the report sink
  * @param name the name of the shadowed symbol
- * @param shadowed the shadowed symbol
- * @param shadowing the shadowing symbol
+ * @param prevDefinition the previous symbol definition
+ * @param newDefinition the new symbol definition
  *
  * @return the message
  */
-message_t *report_shadow(reports_t *reports, const char *name, node_t shadowed, node_t shadowing);
+message_t *report_shadow(reports_t *reports, const char *name, node_t prevDefinition, node_t newDefinition);
 
 /**
  * @brief report one or more unknown characters in a file

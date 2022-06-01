@@ -3,10 +3,10 @@
 #include "base/macros.h"
 #include "std/str.h"
 
-message_t *report_shadow(reports_t *reports, const char *name, node_t shadowed, node_t shadowing)
+message_t *report_shadow(reports_t *reports, const char *name, node_t prevDefinition, node_t newDefinition)
 {
-    message_t *id = report(reports, ERROR, shadowing, "redefinition of `%s`", name);
-    report_append(id, shadowed, "previous definition");
+    message_t *id = report(reports, ERROR, newDefinition, "redefinition of `%s`", name);
+    report_append(id, prevDefinition, "previous definition");
     return id;
 }
 
