@@ -14,15 +14,24 @@ typedef enum
     PARAM_BOOL, // either a positional argument or a boolean flag
     PARAM_STRING, // a string of some sort
     PARAM_INT, // an integer
+
+    PARAM_TOTAL
 } param_kind_t;
 
-typedef struct arg_t
+typedef struct
 {
     const char **names;
     size_t totalNames;
     const char *desc;
     param_kind_t kind;
 } param_t;
+
+typedef struct 
+{
+    const char *name;
+    const char *desc;
+    vector_t *params;
+} group_t;
 
 typedef struct
 {
@@ -45,7 +54,7 @@ typedef struct
 
     reports_t *reports;
 
-    vector_t *args;
+    vector_t *groups; ///< vec<group_t>
 } arg_parse_config_t;
 
 typedef struct
@@ -59,4 +68,12 @@ long get_digit_arg(const arg_t *arg, long other);
 const char *get_string_arg(const arg_t *arg, const char *other);
 bool get_bool_arg(const arg_t *arg, bool other);
 
+group_t *new_group(const char *name, const char *desc, vector_t *params);
+param_t *new_param(param_kind_t kind, const char *desc, const char **names, size_t total);
 arg_parse_result_t arg_parse(const arg_parse_config_t *config);
+
+#define ADD_FLAG(params, kind, desc, ...) do { \
+    static const char *names[] = __VA_ARGS__; \
+    param_t *param = new_param(kind, desc, names, sizeof(names) / sizeof(const char *)); \
+    vector_push(&params, param); \
+    } while (0)

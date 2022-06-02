@@ -1,49 +1,21 @@
-#include "cmd.h"
-#include "cthulhu/interface/interface.h"
-#include "base/version-def.h"
+#include "argparse/argparse.h"
 
-#include "cthulhu/emit/c89.h"
-#include "report/report.h"
 #include "std/str.h"
-#include "std/vector.h"
 
-#include <stdio.h>
+#include "cthulhu/interface/interface.h"
 
-static void print_version(driver_t driver)
+static group_t *codegen_group(void)
 {
-    int major = VERSION_MAJOR(driver.version);
-    int minor = VERSION_MINOR(driver.version);
-    int patch = VERSION_PATCH(driver.version);
-    printf("%s: %d.%d.%d\n", driver.name, major, minor, patch);
+    vector_t *params = vector_new(32);
+    ADD_FLAG(params, PARAM_STRING, "output file name", { "-o", "--output" });
+    return new_group("codegen", "code generation options", params);
 }
 
-static char *join_names(const char **names, size_t num)
+static vector_t *build_groups(void)
 {
-    vector_t *vec = vector_of(num);
-
-    for (size_t i = 0; i < num; i++)
-    {
-        vector_set(vec, i, (char *)names[i]);
-    }
-
-    return str_join(", ", vec);
-}
-
-static void print_help(const char **argv)
-{
-    printf("usage: %s <files... & objects... & options...>\n", argv[0]);
-
-#define SECTION(id) printf("%s options:\n", id);
-#define COMMAND(name, type, initial, description, ...)                                                                 \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        const char *names[] = __VA_ARGS__;                                                                             \
-        size_t total = sizeof(names) / sizeof(const char *);                                                           \
-        const char *parts = join_names(names, total);                                                                  \
-        printf("  %-20s : %s\n", parts, description);                                                                  \
-    } while (0);
-
-#include "flags.inc"
+    vector_t *result = vector_new(64);
+    vector_push(&result, codegen_group());
+    return result;
 }
 
 int main(int argc, const char **argv)
@@ -53,93 +25,23 @@ int main(int argc, const char **argv)
     driver_t driver = get_driver();
 
     reports_t *reports = begin_reports();
-    commands_t commands = {0};
-    int status = parse_commandline(reports, &commands, argc, argv);
-    if (status != 0)
-    {
-        return status;
-    }
 
-    report_config_t reportConfig = {
-        .limit = commands.warningLimit,
-        .warningsAreErrors = commands.warningsAsErrors,
+    arg_parse_config_t config = {
+        .argc = argc,
+        .argv = argv,
+
+        .description = format("%s command line interface", driver.name),
+        .version = driver.version,
+
+        .reports = reports,
+
+        .groups = build_groups(),
     };
 
-    verbose = commands.verboseLogging;
-    logverbose("setup verbose logging");
+    arg_parse_result_t result = arg_parse(&config);
 
-    vector_t *files = commands.files;
-    const char *outFile = commands.outputFile == NULL ? "out.c" : commands.outputFile;
-
-    if (commands.printHelp)
+    if (result.exitCode != EXIT_OK)
     {
-        print_help(argv);
-        return 0;
+        return result.exitCode;
     }
-
-    if (commands.printVersion)
-    {
-        print_version(driver);
-        return 0;
-    }
-
-    size_t totalFiles = vector_len(files);
-    vector_t *sources = vector_of(totalFiles);
-    for (size_t i = 0; i < totalFiles; i++)
-    {
-        const char *file = vector_get(files, i);
-        source_t *source = source_file(file);
-        vector_set(sources, i, source);
-    }
-
-    status = end_reports(reports, "command line parsing", reportConfig);
-    if (status != 0)
-    {
-        return status;
-    }
-
-    config_t config = {
-        .reportConfig = reportConfig,
-    };
-
-    cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
-
-    cthulhu_step_t steps[] = {
-        cthulhu_init,    // init cthulhu instance
-        cthulhu_parse,   // parse source files
-        cthulhu_forward, // forward declarations
-        cthulhu_resolve, // resolve declarations
-        cthulhu_compile, // compile to hlir
-    };
-
-    size_t totalSteps = sizeof(steps) / sizeof(cthulhu_step_t);
-
-    for (size_t i = 0; i < totalSteps; i++)
-    {
-        status = steps[i](cthulhu);
-        if (status != 0)
-        {
-            return status;
-        }
-    }
-
-    vector_t *allModules = cthulhu_get_modules(cthulhu);
-
-    cerror_t error = 0;
-    file_t out = file_open(outFile, FILE_WRITE | FILE_BINARY, &error);
-
-    if (error != 0)
-    {
-        message_t *id = report(reports, ERROR, node_invalid(), "failed to open file `%s`", outFile);
-        report_note(id, "%s", error_string(error));
-        return EXIT_ERROR;
-    }
-
-    stream_t *stream = c89_emit_modules(reports, allModules);
-
-    file_write(out, stream_data(stream), stream_len(stream), &error);
-
-    file_close(out);
-
-    return end_reports(reports, "emitting code", reportConfig);
 }

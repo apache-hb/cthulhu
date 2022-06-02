@@ -87,6 +87,7 @@ deps += [ base, std, platform, location, interop ]
 
 src = [ 
     'src/argparse/argparse.c',
+    'src/argparse/common.c',
     lex.process('src/argparse/cmd.l'),
     parse.process('src/argparse/cmd.y')
 ]

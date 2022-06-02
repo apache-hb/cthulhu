@@ -108,7 +108,7 @@
 "lambda" { return LAMBDA; }
 "as" { return AS; }
 
-"null" { return NIL; }
+"__null" { return NIL; }
 
 "__match" { return MATCH; }
 "__default" { return DEFAULT; }

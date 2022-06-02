@@ -131,7 +131,7 @@ endforeach
 
 foreach interface : get_option('interfaces')
     subdir('interface'/interface)
-    subdir('tests/interface'/interface)
+    #subdir('tests/interface'/interface)
 endforeach
 
 if fs.is_dir('vendor')
