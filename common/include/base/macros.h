@@ -68,12 +68,6 @@ NORETURN ctpanic(FORMAT_STRING const char *msg, ...) FORMAT_ATTRIBUTE(1, 2);
             }                                                                                                          \
         } while (0)
 #else
-#    define CTASSERT(expr, msg)                                                                                        \
-        do                                                                                                             \
-        {                                                                                                              \
-        } while (0)
-#    define CTASSERTF(expr, msg, ...)                                                                                  \
-        do                                                                                                             \
-        {                                                                                                              \
-        } while (0)
+#    define CTASSERT(expr, msg) ASSUME(expr)
+#    define CTASSERTF(expr, msg, ...) ASSUME(expr)
 #endif

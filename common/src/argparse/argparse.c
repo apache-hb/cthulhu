@@ -22,6 +22,23 @@ void cmderror(where_t *where, void *state, scan_t scan, const char *msg)
     report(scan_reports(scan), ERROR, node_new(scan, *where), "%s", msg);
 }
 
+typedef struct
+{
+    // general group
+    param_t *printHelp;
+    param_t *printVersion;
+
+    // reporting group
+    param_t *verboseLogging;
+    param_t *fatalWarnings;
+    param_t *reportLimit;
+} argparse_inner_options_t;
+
+static argparse_inner_options_t get_inner_options(argparse_t *argparse)
+{
+    
+}
+
 static group_t *group_general(void)
 {
     vector_t *params = vector_new(32);
@@ -64,9 +81,16 @@ static argparse_t new_argparse(const arg_parse_config_t *config)
 
 static arg_t *new_arg(param_t *param)
 {
+    CTASSERT(param->generatedArg == NULL, "param already has an associated arg");
+    
+    // fill in arg info
     arg_t *arg = ctu_malloc(sizeof(arg_t));
     arg->kind = param->kind;
     arg->setByUser = false;
+    
+    // link the arg to the parameter
+    param->generatedArg = arg;
+
     return arg;
 }
 
@@ -109,11 +133,14 @@ param_t *new_param(param_kind_t kind, const char *desc, const char **names, size
     result->desc = desc;
     result->names = names;
     result->totalNames = total;
+    result->generatedArg = NULL;
     return result;
 }
 
-long get_digit_arg(const arg_t *arg, long other)
+long get_digit_arg(const param_t *param, long other)
 {
+    const arg_t *arg = param->generatedArg;
+
     CTASSERT(arg != NULL, "arg is NULL");
     CTASSERT(arg->kind == PARAM_INT, "arg must be an integer");
 
@@ -128,8 +155,10 @@ long get_digit_arg(const arg_t *arg, long other)
     return mpz_get_si(arg->digit);
 }
 
-const char *get_string_arg(const arg_t *arg, const char *other)
+const char *get_string_arg(const param_t *param, const char *other)
 {
+    const arg_t *arg = param->generatedArg;
+    
     CTASSERT(arg != NULL, "arg is NULL");
     CTASSERT(arg->kind == PARAM_STRING, "arg must be a string");
 
@@ -141,8 +170,10 @@ const char *get_string_arg(const arg_t *arg, const char *other)
     return arg->string;
 }
 
-bool get_bool_arg(const arg_t *arg, bool other)
+bool get_bool_arg(const param_t *param, bool other)
 {
+    const arg_t *arg = param->generatedArg;
+    
     CTASSERT(arg != NULL, "arg is NULL");
     CTASSERT(arg->kind == PARAM_BOOL, "arg must be a boolean");
 
@@ -203,9 +234,6 @@ static int process_args(const arg_parse_config_t *config, argparse_t argparse, r
     {
         return result;
     }
-
-    const arg_t *helpArg = map_get(argparse.params, "--help");
-    const arg_t *versionArg = map_get(argparse.params, "--version");
 
     bool printHelp = get_bool_arg(helpArg, false);
     bool printVersion = get_bool_arg(versionArg, false);

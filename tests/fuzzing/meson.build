@@ -2,7 +2,7 @@ fuzzers = {}
 
 foreach name, lib : langs
     interface = executable(name, 'interface/main.c',
-        dependencies : [ cmd, lib ]
+        dependencies : [ generic, lib ]
     )
 
     fuzzers += { name: interface }

@@ -134,17 +134,12 @@ foreach interface : get_option('interfaces')
     #subdir('tests/interface'/interface)
 endforeach
 
-if fs.is_dir('vendor')
-    subdir('vendor')
-endif
-
 subdir('tests/harness')
+subdir('tests/unit-tests')
 
 foreach lang : get_option('languages')
     subdir('tests/lang'/lang)
 endforeach
-
-subdir('tests/unit-tests')
 
 if tuning.enabled()
     tune = executable('tune-map', [ 'tools/tune-map.c' ],

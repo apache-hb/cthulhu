@@ -73,3 +73,9 @@
 #    define NATIVE_PATH_SEPARATOR "/"
 #    define PATH_SEPERATORS "/"
 #endif
+
+#ifdef CC_MSVC
+#   define ASSUME(expr) __assume(expr)
+#else
+#   define ASSUME(expr) __builtin_assume(expr)
+#endif

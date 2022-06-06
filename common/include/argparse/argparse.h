@@ -20,21 +20,6 @@ typedef enum
 
 typedef struct
 {
-    const char **names;
-    size_t totalNames;
-    const char *desc;
-    param_kind_t kind;
-} param_t;
-
-typedef struct 
-{
-    const char *name;
-    const char *desc;
-    vector_t *params;
-} group_t;
-
-typedef struct
-{
     param_kind_t kind;
     bool setByUser;
     union {
@@ -43,6 +28,23 @@ typedef struct
         bool boolean;
     };
 } arg_t;
+
+typedef struct
+{
+    const char **names;
+    size_t totalNames;
+    const char *desc;
+    param_kind_t kind;
+
+    const arg_t *generatedArg; ///< the argument that this parameter generates
+} param_t;
+
+typedef struct 
+{
+    const char *name;
+    const char *desc;
+    vector_t *params;
+} group_t;
 
 typedef struct
 {
@@ -64,9 +66,9 @@ typedef struct
     vector_t *extra; ///< provided files 
 } arg_parse_result_t;
 
-long get_digit_arg(const arg_t *arg, long other);
-const char *get_string_arg(const arg_t *arg, const char *other);
-bool get_bool_arg(const arg_t *arg, bool other);
+long get_digit_arg(const param_t *arg, long other);
+const char *get_string_arg(const param_t *arg, const char *other);
+bool get_bool_arg(const param_t *arg, bool other);
 
 group_t *new_group(const char *name, const char *desc, vector_t *params);
 param_t *new_param(param_kind_t kind, const char *desc, const char **names, size_t total);
