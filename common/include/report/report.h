@@ -105,6 +105,8 @@ typedef struct
     bool warningsAreErrors;
 } report_config_t;
 
+#define DEFAULT_REPORT_CONFIG { .limit = SIZE_MAX, .warningsAreErrors = false }
+
 /**
  * @brief an error reporting sink
  */

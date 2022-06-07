@@ -47,14 +47,19 @@ static void argparse_flush(argparse_t *argparse)
     argparse->currentName = NULL;
 }
 
-void argparse_begin_flag(argparse_t *argparse, const char *name)
+void argparse_end_flag(argparse_t *argparse)
 {
     if (argparse_check(argparse, PARAM_BOOL))
     {
         argparse->currentFlag->boolean = true;
         argparse_flush(argparse);
     }
+}
 
+void argparse_begin_flag(argparse_t *argparse, const char *name)
+{
+    argparse_end_flag(argparse);
+    
     arg_t *arg = map_get(argparse->params, name);
     if (arg == NULL)
     {

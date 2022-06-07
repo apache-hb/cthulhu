@@ -4,19 +4,10 @@
 
 #include "cthulhu/interface/interface.h"
 
-static group_t *codegen_group(void)
-{
-    vector_t *params = vector_new(32);
-    ADD_FLAG(params, PARAM_STRING, "output file name", { "-o", "--output" });
-    return new_group("codegen", "code generation options", params);
-}
+#include "cthulhu/emit/c89.h"
 
-static vector_t *build_groups(void)
-{
-    vector_t *result = vector_new(64);
-    vector_push(&result, codegen_group());
-    return result;
-}
+static const char *kOutputFileNames[] = { "-o", "--ouput" };
+#define TOTAL_OUTPUT_FILE_NAMES (sizeof(kOutputFileNames) / sizeof(const char *))
 
 int main(int argc, const char **argv)
 {
@@ -24,9 +15,14 @@ int main(int argc, const char **argv)
 
     driver_t driver = get_driver();
 
+    param_t *outputFileNameParam = new_param(PARAM_STRING, "output file name", kOutputFileNames, TOTAL_OUTPUT_FILE_NAMES);
+    group_t *codegenGroup = new_group("codegen", "code generation options", vector_init(outputFileNameParam));
+
     reports_t *reports = begin_reports();
 
-    arg_parse_config_t config = {
+    report_config_t reportConfig = DEFAULT_REPORT_CONFIG;
+
+    arg_parse_config_t argparseConfig = {
         .argc = argc,
         .argv = argv,
 
@@ -35,17 +31,17 @@ int main(int argc, const char **argv)
 
         .reports = reports,
 
-        .groups = build_groups(),
+        .groups = vector_init(codegenGroup),
     };
 
-    arg_parse_result_t result = arg_parse(&config);
+    arg_parse_result_t result = arg_parse(&argparseConfig);
 
     if (result.exitCode != EXIT_OK)
     {
         return result.exitCode;
     }
 
-    const char *outFile = get_string_arg(result, )
+    const char *outFile = get_string_arg(outputFileNameParam, "out.c");
 
     size_t totalFiles = vector_len(result.extra);
     vector_t *sources = vector_of(totalFiles);

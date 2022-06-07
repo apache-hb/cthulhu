@@ -32,27 +32,51 @@ typedef struct
     param_t *verboseLogging;
     param_t *fatalWarnings;
     param_t *reportLimit;
-} argparse_inner_options_t;
+} argparse_state_t;
 
-static argparse_inner_options_t get_inner_options(argparse_t *argparse)
+static const char *kHelpArgs[] = { "-h", "--help", "-?" };
+#define TOTAL_HELP_ARGS (sizeof(kHelpArgs) / sizeof(const char *))
+
+static const char *kVersionArgs[] = { "-v", "--version" };
+#define TOTAL_VERSION_ARGS (sizeof(kVersionArgs) / sizeof(const char *))
+
+static const char *kVerboseLoggingArgs[] = { "-Wverbose" };
+#define TOTAL_VERBOSE_LOGGING_ARGS (sizeof(kVerboseLoggingArgs) / sizeof(const char *))
+
+static const char *kFatalWarningsArgs[] = { "-Werror" };
+#define TOTAL_FATAL_WARNINGS_ARGS (sizeof(kFatalWarningsArgs) / sizeof(const char *))
+
+static const char *kReportLimitArgs[] = { "-Wlimit" };
+#define TOTAL_REPORT_LIMIT_ARGS (sizeof(kReportLimitArgs) / sizeof(const char *))
+
+static argparse_state_t state_new(void)
 {
-    
+    argparse_state_t state = {
+        .printHelp = new_param(PARAM_BOOL, "print this help message", kHelpArgs, TOTAL_HELP_ARGS),
+        .printVersion = new_param(PARAM_BOOL, "print the version number", kVersionArgs, TOTAL_VERSION_ARGS),
+
+        .verboseLogging = new_param(PARAM_BOOL, "enable verbose logging", kVerboseLoggingArgs, TOTAL_VERBOSE_LOGGING_ARGS),
+        .fatalWarnings = new_param(PARAM_BOOL, "enable fatal warnings", kFatalWarningsArgs, TOTAL_FATAL_WARNINGS_ARGS),
+        .reportLimit = new_param(PARAM_INT, "set the report limit", kReportLimitArgs, TOTAL_REPORT_LIMIT_ARGS),
+    };
+
+    return state;
 }
 
-static group_t *group_general(void)
+static group_t *group_general(const argparse_state_t *state)
 {
-    vector_t *params = vector_new(32);
-    ADD_FLAG(params, PARAM_BOOL, "print help message", { "-h", "--help", "-?" });
-    ADD_FLAG(params, PARAM_BOOL, "print version", { "-v", "--version" });
+    vector_t *params = vector_new(4);
+    vector_push(&params, state->printHelp);
+    vector_push(&params, state->printVersion);
     return new_group("general", "general options", params);
 }
 
-static group_t *group_reporting(void)
+static group_t *group_reporting(const argparse_state_t *state)
 {
-    vector_t *params = vector_new(32);
-    ADD_FLAG(params, PARAM_BOOL, "enable verbose logging", { "-Wverbose" });
-    ADD_FLAG(params, PARAM_BOOL, "all warnings are errors", { "-Werror" });
-    ADD_FLAG(params, PARAM_INT, "limit the number of reports printed", { "-Wlimit" });
+    vector_t *params = vector_new(4);
+    vector_push(&params, state->verboseLogging);
+    vector_push(&params, state->fatalWarnings);
+    vector_push(&params, state->reportLimit);
     return new_group("reporting", "reporting options", params);
 }
 
@@ -73,7 +97,6 @@ static argparse_t new_argparse(const arg_parse_config_t *config)
         .reports = config->reports,
         .params = map_optimal(total_arg_names(config->groups)),
         .extra = vector_new(config->argc - 1),
-        .groups = config->groups,
     };
 
     return result;
@@ -102,7 +125,6 @@ static void add_group(map_t *map, group_t *group)
         arg_t *arg = new_arg(param);
         for (size_t j = 0; j < param->totalNames; j++)
         {
-            printf("arg: %p %s\n", param->names[j], param->names[j]);
             map_set(map, param->names[j], arg);
         }
     }
@@ -205,13 +227,11 @@ static char *join_names(const param_t *param)
     return str_join(", ", vec);
 }
 
-static void print_help(const arg_parse_config_t *config)
+static void print_group_help(vector_t *groups)
 {
-    printf("usage: %s [options & files]\n", config->argv[0]);
-
-    for (size_t i = 0; i < vector_len(config->groups); i++)
+    for (size_t i = 0; i < vector_len(groups); i++)
     {
-        group_t *group = vector_get(config->groups, i);
+        group_t *group = vector_get(groups, i);
         printf("%s - %s\n", group->name, group->desc);
         for (size_t j = 0; j < vector_len(group->params); j++)
         {
@@ -222,12 +242,20 @@ static void print_help(const arg_parse_config_t *config)
     }
 }
 
+static void print_help(const arg_parse_config_t *config, vector_t *defaultGroups)
+{
+    printf("usage: %s [options & files]\n", config->argv[0]);
+
+    print_group_help(defaultGroups);
+    print_group_help(config->groups);
+}
+
 static void print_version(const arg_parse_config_t *config)
 {
     printf("version: %u.%u.%u\n", VERSION_MAJOR(config->version), VERSION_MINOR(config->version), VERSION_PATCH(config->version));
 }
 
-static int process_args(const arg_parse_config_t *config, argparse_t argparse, report_config_t reportConfig)
+static int process_general_args(const arg_parse_config_t *config, vector_t *groups, argparse_state_t state, argparse_t argparse, report_config_t reportConfig)
 {
     int result = end_reports(argparse.reports, "command line parsing", reportConfig);
     if (result != EXIT_OK)
@@ -235,12 +263,12 @@ static int process_args(const arg_parse_config_t *config, argparse_t argparse, r
         return result;
     }
 
-    bool printHelp = get_bool_arg(helpArg, false);
-    bool printVersion = get_bool_arg(versionArg, false);
+    bool printHelp = get_bool_arg(state.printHelp, false);
+    bool printVersion = get_bool_arg(state.printVersion, false);
 
     if (printHelp)
     {
-        print_help(config);
+        print_help(config, groups);
     }
 
     if (printVersion)
@@ -267,6 +295,7 @@ arg_parse_result_t arg_parse(const arg_parse_config_t *config)
     {
         arg_parse_result_t result = {
             .exitCode = status,
+            .reportConfig = DEFAULT_REPORT_CONFIG
         };
 
         return result;
@@ -274,20 +303,27 @@ arg_parse_result_t arg_parse(const arg_parse_config_t *config)
 
     argparse_t argparse = new_argparse(config);
 
-    add_group(argparse.params, group_general());
-    add_group(argparse.params, group_reporting());
+    argparse_state_t state = state_new();
 
+    vector_t *groups = vector_new(2);
+    vector_push(&groups, group_general(&state));
+    vector_push(&groups, group_reporting(&state));
+
+    add_groups(argparse.params, groups);
     add_groups(argparse.params, config->groups);
 
     scan_set(scan, &argparse);
     compile_scanner(scan, &kCallbacks);
 
-    int exitCode = process_args(config, argparse, reportConfig);
+    argparse_end_flag(&argparse);
+
+    int exitCode = process_general_args(config, groups, state, argparse, reportConfig);
 
     arg_parse_result_t result = {
         .exitCode = exitCode,
         .params = argparse.params,
-        .extra = argparse.extra
+        .extra = argparse.extra,
+        .reportConfig = reportConfig
     };
 
     return result;

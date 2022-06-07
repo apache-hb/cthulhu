@@ -61,7 +61,10 @@ typedef struct
 
 typedef struct
 {
-    int exitCode; ///< if non-zero, the program should exit with this code
+    int exitCode; ///< if not INT_MAX, the program should exit with this code
+
+    report_config_t reportConfig; ///< user configured report config
+
     map_t *params; ///< provided parameters
     vector_t *extra; ///< provided files 
 } arg_parse_result_t;
