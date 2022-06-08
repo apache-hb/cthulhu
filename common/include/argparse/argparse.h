@@ -37,6 +37,7 @@ typedef struct
     param_kind_t kind;
 
     const arg_t *generatedArg; ///< the argument that this parameter generates
+                               /// TODO: this should be reworked 
 } param_t;
 
 typedef struct 
