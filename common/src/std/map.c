@@ -2,6 +2,28 @@
 #include "std/str.h"
 #include "base/util.h"
 
+/**
+ * a bucket in a hashmap
+ */
+typedef struct bucket_t
+{
+    const void *key;       ///< the key
+    void *value;           ///< any pointer value
+    struct bucket_t *next; ///< the next bucket in the chain
+} bucket_t;
+
+/**
+ * a hashmap
+ *
+ * freeing the map will not free the keys or the values.
+ * these need to be freed beforehand by the owner of the container.
+ */
+typedef struct map_t
+{
+    size_t size;                      ///< the number of buckets in the toplevel
+    FIELD_SIZE(size) bucket_t data[]; ///< the buckets
+} map_t;
+
 // generic map functions
 
 NODISCARD

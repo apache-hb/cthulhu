@@ -3,6 +3,8 @@
 #include "base/analyze.h"
 #include <stddef.h>
 
+BEGIN_API
+
 typedef struct
 {
     size_t len;
@@ -19,3 +21,5 @@ void stream_write_bytes(stream_t *stream, IN_READS(len) const void *bytes, size_
 const char *stream_data(const stream_t *stream);
 
 void stream_reset(stream_t *stream);
+
+END_API

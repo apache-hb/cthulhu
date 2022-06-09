@@ -1,12 +1,9 @@
-project('cthulhu', [ 'c', 'cpp' ],
+project('cthulhu', [ 'c' ],
     license : 'LGPLv3',
     version : '0.2.1',
     meson_version : '>=0.59',
     default_options : [
         'c_std=gnu11',
-        'cpp_std=c++17',
-        'cpp_eh=none',
-        'cpp_rtti=false',
         'warning_level=2', # we use unnamed structs
         'default_library=static',
         'werror=true'
@@ -43,8 +40,6 @@ gmp = dependency('gmp',
     not_found_message : 'no system gmp found, falling back to mini-gmp',
     fallback : [ 'mini-gmp', 'gmp' ]
 )
-
-cttest = subproject('ct-test').get_variable('cttest')
 
 args = []
 deps = [ gmp ]
@@ -131,7 +126,6 @@ endforeach
 
 foreach interface : get_option('interfaces')
     subdir('interface'/interface)
-    #subdir('tests/interface'/interface)
 endforeach
 
 subdir('tests/harness')

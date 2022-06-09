@@ -8,6 +8,8 @@
 
 #include "analyze.h"
 
+BEGIN_API
+
 /**
  * @defgroup Memory General case memory managment
  * @{
@@ -146,3 +148,5 @@ counters_t reset_counters(void);
 
 /** @} */
 #endif
+
+END_API

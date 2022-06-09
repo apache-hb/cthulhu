@@ -2,6 +2,21 @@
 #include "std/str.h"
 #include "base/util.h"
 
+/**
+ * @brief a node in a chain of set entries
+ */
+typedef struct item_t
+{
+    const void *key;     ///< the key to this bucket
+    struct item_t *next; ///< the next bucket in the chain
+} item_t;
+
+typedef struct set_t
+{
+    size_t size;                     ///< the number of buckets
+    FIELD_SIZE(size) item_t items[]; ///< the buckets
+} set_t;
+
 NODISCARD
 static size_t set_size(size_t size)
 {

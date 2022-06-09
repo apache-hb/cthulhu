@@ -50,6 +50,10 @@
  * @}
  */
 
+#ifdef __cplusplus
+#   define NORETURN [[noreturn]] void
+#endif
+
 #if CC_CLANG || CC_GNU
 #    define BEGIN_PACKED(align)
 #    define END_PACKED()
@@ -78,4 +82,12 @@
 #   define ASSUME(expr) __assume(expr)
 #else
 #   define ASSUME(expr) __builtin_assume(expr)
+#endif
+
+#ifdef __cplusplus
+#    define BEGIN_API extern "C" {
+#    define END_API }
+#else
+#    define BEGIN_API
+#    define END_API
 #endif

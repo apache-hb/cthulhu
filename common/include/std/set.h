@@ -5,23 +5,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-/**
- * @brief a node in a chain of set entries
- */
-typedef struct item_t
-{
-    const void *key;     ///< the key to this bucket
-    struct item_t *next; ///< the next bucket in the chain
-} item_t;
+BEGIN_API
 
 /**
  * @brief a hashset of strings
  */
-typedef struct
-{
-    size_t size;                     ///< the number of buckets
-    FIELD_SIZE(size) item_t items[]; ///< the buckets
-} set_t;
+typedef struct set_t set_t;
 
 /**
  * @brief create a new set with a given number of buckets
@@ -57,3 +46,5 @@ NODISCARD
 bool set_contains_ptr(set_t *set, const void *key);
 
 void set_reset(set_t *set);
+
+END_API

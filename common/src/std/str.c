@@ -403,31 +403,6 @@ const char *common_prefix(vector_t *args)
     return ctu_strndup(strings[0], lower);
 }
 
-USE_DECL
-size_t str_find(const char *str, const char *sub)
-{
-    size_t len = strlen(str);
-    size_t sublen = strlen(sub);
-
-    CTASSERT(len > 0, "str must be non-empty");
-    CTASSERT(sublen > 0, "sub must be non-empty");
-
-    if (sublen > len)
-    {
-        return SIZE_MAX;
-    }
-
-    for (size_t i = 0; i < len - sublen; i++)
-    {
-        if (strncmp(str + i, sub, sublen) == 0)
-        {
-            return i;
-        }
-    }
-
-    return SIZE_MAX;
-}
-
 static size_t str_rfind_inner(const char *str, size_t len, const char *sub, size_t sublen)
 {
     CTASSERT(len > 0, "str must be non-empty");

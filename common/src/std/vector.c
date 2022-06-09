@@ -4,6 +4,20 @@
 
 #include <stdint.h>
 
+/**
+ * a vector of non-owning pointers
+ *
+ * all elements in the vector must fit into a pointer each.
+ * freeing the vector does not free the data it references internally.
+ * only the vector itself is freed.
+ */
+typedef struct vector_t
+{
+    size_t size;                   ///< the total number of allocated elements
+    size_t used;                   ///< the number of elements in use
+    FIELD_SIZE(size) void *data[]; ///< the data
+} vector_t;
+
 NODISCARD
 static size_t vector_size(size_t size)
 {

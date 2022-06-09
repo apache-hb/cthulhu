@@ -5,6 +5,8 @@
 
 #include "vector.h"
 
+BEGIN_API
+
 /**
  * @defgroup StringUtils String utility functions
  * @brief string manipulation and processing functions
@@ -139,9 +141,6 @@ vector_t *str_split(const char *str, const char *sep);
 NODISCARD
 const char *common_prefix(vector_t *args);
 
-NODISCARD
-size_t str_find(const char *str, const char *sub);
-
 /**
  * @brief find the last instance of a substring in a string
  *
@@ -221,3 +220,5 @@ char *str_upper(const char *str);
 #define STR_WHITESPACE " \t\n\r"
 
 /** @} */
+
+END_API

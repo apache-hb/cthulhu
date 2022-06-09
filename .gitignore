@@ -4,6 +4,7 @@
 
 # dont ignore source files
 !*.cpp
+!*.hpp
 !*.c
 !*.h
 !*.inc

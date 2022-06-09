@@ -3,6 +3,8 @@
 #include "base/analyze.h"
 #include <stddef.h>
 
+BEGIN_API
+
 /**
  * a vector of non-owning pointers
  *
@@ -10,12 +12,7 @@
  * freeing the vector does not free the data it references internally.
  * only the vector itself is freed.
  */
-typedef struct
-{
-    size_t size;                   ///< the total number of allocated elements
-    size_t used;                   ///< the number of elements in use
-    FIELD_SIZE(size) void *data[]; ///< the data
-} vector_t;
+typedef struct vector_t vector_t;
 
 /**
  * @brief release a vector
@@ -158,3 +155,5 @@ size_t vector_find(vector_t *vector, const void *element);
  * @param vec the vector to clear
  */
 void vector_reset(vector_t *vec);
+
+END_API

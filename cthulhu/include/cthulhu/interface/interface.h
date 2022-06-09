@@ -6,6 +6,8 @@
 #include "platform/file.h"
 #include "base/version-def.h"
 
+BEGIN_API
+
 ///
 /// code required by interfaces
 ///
@@ -110,3 +112,5 @@ void common_init(void);
 // interface implemented by the language driver
 
 driver_t get_driver(void);
+
+END_API
