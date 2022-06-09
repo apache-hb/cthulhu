@@ -15,8 +15,8 @@ ninja -C build test # build and run tests
 * build dependencies
   * `meson`
   * `ninja-build`
-  * `flex`
-  * `bison`
+  * `flex + bison`
+    * on windows install the `winflexbison3` package over `winflexbison` from choco
   * `pkg-config`
   * `build-essential`
   * `libgmp-dev` (optional)
@@ -27,7 +27,8 @@ ninja -C build test # build and run tests
 
 ## Structure
 
-* `data` - data files used to build the compiler
+* `data` - various data files
+
 * `driver` - language frontends
   * `pl0` - example pl0 frontend, good for referencing how to use the common framework
   * `ctu` - cthulhu language frontend (TODO)
@@ -36,15 +37,18 @@ ninja -C build test # build and run tests
   * `cmd` - command line user interface
   * `gui` - graphical user interface (TODO)
 
-* `common` - common code
-  * `include/base` - memory allocation library
-  * `include/std` - collections and data structures
-  * `include/platform` - platform detail wrappers
-  * `include/cmd` - command line parsing library
+* `common/include` - common code
+  * `base` - memory allocation library
+  * `std` - collections and data structures
+  * `platform` - platform detail wrappers
+  * `cmd` - command line parsing library
+  * `report` - error reporting tools
+  * `argparse` - argument parsing
+  * `scan` - flex & bison scanning tools
+  * `interop` - flex & bison helper functions
 
 * `cthulhu` - compiler framework library
   * `include/cthulhu` - public interface
-    * `ast` - tools for generating an ast components used by drivers
     * `emit` - tree writing
     * `hlir` - common typed ast
     * `util` - common utilities
