@@ -1,12 +1,11 @@
 #pragma once
 
-#include <gmp.h>
-
 #include <stdbool.h>
 
 #include "base/version-def.h"
 #include "std/vector.h"
 #include "std/map.h"
+
 #include "report/report.h"
 
 typedef enum
@@ -18,68 +17,80 @@ typedef enum
     PARAM_TOTAL
 } param_kind_t;
 
-typedef struct
+/**
+ * a user provided argument from the command line
+ */
+typedef struct 
 {
     param_kind_t kind;
     bool setByUser;
     union {
-        mpz_t digit;
+        long digit;
         const char *string;
         bool boolean;
     };
 } arg_t;
 
+/**
+ * an option that can be specified on the command line 
+ */
 typedef struct
 {
     const char **names;
     size_t totalNames;
-    const char *desc;
+    const char *description;
     param_kind_t kind;
-
-    const arg_t *generatedArg; ///< the argument that this parameter generates
-                               /// TODO: this should be reworked 
 } param_t;
 
-typedef struct 
+typedef struct
 {
     const char *name;
-    const char *desc;
+    const char *description;
+
     vector_t *params;
 } group_t;
 
 typedef struct
 {
-    const char **argv;
     int argc;
-    
+    const char **argv;
+
     const char *description;
     version_t version;
 
     reports_t *reports;
 
-    vector_t *groups; ///< vec<group_t>
-} arg_parse_config_t;
+    vector_t *groups;
+} argparse_config_t;
 
 typedef struct
 {
-    int exitCode; ///< if not INT_MAX, the program should exit with this code
+    int exitCode;
 
-    report_config_t reportConfig; ///< user configured report config
+    bool verboseEnabled;
+    size_t reportLimit;
+    bool warningsAsErrors;
 
-    map_t *params; ///< provided parameters
-    vector_t *extra; ///< provided files 
-} arg_parse_result_t;
+    map_t *params;
 
-long get_digit_arg(const param_t *arg, long other);
-const char *get_string_arg(const param_t *arg, const char *other);
-bool get_bool_arg(const param_t *arg, bool other);
+    vector_t *files;
+
+    /// private data
+    reports_t *reports;
+    const char *currentName;
+    arg_t *currentArg;
+} argparse_t;
+
+param_t *int_param(const char *desc, const char **names, size_t total);
+param_t *string_param(const char *desc, const char **names, size_t total);
+param_t *bool_param(const char *desc, const char **names, size_t total);
 
 group_t *new_group(const char *name, const char *desc, vector_t *params);
-param_t *new_param(param_kind_t kind, const char *desc, const char **names, size_t total);
-arg_parse_result_t arg_parse(const arg_parse_config_t *config);
 
-#define ADD_FLAG(params, kind, desc, ...) do { \
-    static const char *names[] = __VA_ARGS__; \
-    param_t *param = new_param(kind, desc, names, sizeof(names) / sizeof(const char *)); \
-    vector_push(&params, param); \
-    } while (0)
+long get_digit(const argparse_t *argparse, const param_t *arg, long other);
+const char *get_string(const argparse_t *argparse, const param_t *arg, const char *other);
+bool get_bool(const argparse_t *argparse, const param_t *arg, bool other);
+
+argparse_t parse_args(const argparse_config_t *config);
+
+bool should_exit(const argparse_t *argparse);

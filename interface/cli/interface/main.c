@@ -15,16 +15,16 @@ int main(int argc, const char **argv)
 
     driver_t driver = get_driver();
 
-    param_t *outputFileNameParam = new_param(PARAM_STRING, "output file name", kOutputFileNames, TOTAL_OUTPUT_FILE_NAMES);
+    param_t *outputFileNameParam = string_param("output file name", kOutputFileNames, TOTAL_OUTPUT_FILE_NAMES);
     group_t *codegenGroup = new_group("codegen", "code generation options", vector_init(outputFileNameParam));
 
     reports_t *reports = begin_reports();
 
     report_config_t reportConfig = DEFAULT_REPORT_CONFIG;
 
-    arg_parse_config_t argparseConfig = {
-        .argc = argc,
+    argparse_config_t argparseConfig = {
         .argv = argv,
+        .argc = argc,
 
         .description = format("%s command line interface", driver.name),
         .version = driver.version,
@@ -34,20 +34,20 @@ int main(int argc, const char **argv)
         .groups = vector_init(codegenGroup),
     };
 
-    arg_parse_result_t result = arg_parse(&argparseConfig);
+    argparse_t result = parse_args(&argparseConfig);
 
-    if (result.exitCode != EXIT_OK)
+    if (should_exit(&result))
     {
         return result.exitCode;
     }
 
-    const char *outFile = get_string_arg(outputFileNameParam, "out.c");
+    const char *outFile = get_string(&result, outputFileNameParam, "out.c");
 
-    size_t totalFiles = vector_len(result.extra);
+    size_t totalFiles = vector_len(result.files);
     vector_t *sources = vector_of(totalFiles);
     for (size_t i = 0; i < totalFiles; i++)
     {
-        const char *file = vector_get(result.extra, i);
+        const char *file = vector_get(result.files, i);
         source_t *source = source_file(file);
         vector_set(sources, i, source);
     }
