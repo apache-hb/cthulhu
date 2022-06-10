@@ -4,8 +4,10 @@
 #include "cthulhu/interface/interface.h"
 #include "cthulhu/interface/runtime.h"
 #include "report/report.h"
+
 #include "std/str.h"
 #include "base/util.h"
+#include "base/macros.h"
 
 static int report_errors(cthulhu_t *cthulhu, const char *name)
 {

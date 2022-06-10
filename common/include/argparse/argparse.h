@@ -3,10 +3,10 @@
 #include <stdbool.h>
 
 #include "base/version-def.h"
-#include "std/vector.h"
-#include "std/map.h"
 
-#include "report/report.h"
+typedef struct reports_t reports_t;
+typedef struct vector_t vector_t;
+typedef struct map_t map_t;
 
 typedef enum
 {
@@ -63,7 +63,7 @@ typedef struct
     vector_t *groups;
 } argparse_config_t;
 
-typedef struct
+typedef struct argparse_t
 {
     int exitCode;
 

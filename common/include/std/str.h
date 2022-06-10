@@ -1,11 +1,13 @@
 #pragma once
 
+#include "base/analyze.h"
+
 #include <stdarg.h>
 #include <stdbool.h>
 
-#include "vector.h"
-
 BEGIN_API
+
+typedef struct vector_t vector_t;
 
 /**
  * @defgroup StringUtils String utility functions

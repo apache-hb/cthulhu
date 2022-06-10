@@ -4,9 +4,13 @@
 #include "base/macros.h"
 #include "base/util.h"
 
+#include "std/map.h"
+#include "std/vector.h"
 #include "std/str.h"
 
 #include "scan/compile.h"
+
+#include "report/report.h"
 
 #include "cmd-bison.h"
 #include "cmd-flex.h"

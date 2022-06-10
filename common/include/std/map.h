@@ -1,11 +1,13 @@
 #pragma once
 
-#include "std/vector.h"
+#include "base/analyze.h"
 
 #include <stdbool.h>
 #include <stddef.h>
 
 BEGIN_API
+
+typedef struct vector_t vector_t;
 
 typedef struct bucket_t bucket_t;
 typedef struct map_t map_t;

@@ -4,6 +4,8 @@
 
 #include "sema.h"
 
+#include "base/macros.h"
+
 #include "pl0-bison.h"
 #include "pl0-flex.h"
 

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "base/macros.h"
+#include "base/analyze.h"
+
 typedef size_t cerror_t;
 
 NODISCARD

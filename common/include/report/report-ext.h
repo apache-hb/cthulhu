@@ -1,6 +1,8 @@
 #pragma once
 
-#include "report/report.h"
+#include "scan/node.h"
+
+typedef struct message_t message_t;
 
 /**
  * @brief report a shadowing error

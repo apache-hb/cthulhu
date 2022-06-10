@@ -1,4 +1,5 @@
 #include "std/map.h"
+#include "std/vector.h"
 #include "std/str.h"
 #include "base/util.h"
 

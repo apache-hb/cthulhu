@@ -1,7 +1,6 @@
 #pragma once
 
 #include "platform/error.h"
-#include "base/macros.h"
 
 typedef struct
 {

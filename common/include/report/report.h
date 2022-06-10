@@ -2,13 +2,11 @@
 
 #include "scan/node.h"
 
-#include "std/vector.h"
-#include "std/stream.h"
-
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdio.h>
 
+typedef struct vector_t vector_t;
 
 /**
  * @defgroup ErrorApi Error reporting sink
@@ -70,7 +68,7 @@ typedef struct
 /**
  * @brief an error message
  */
-typedef struct
+typedef struct message_t
 {
     /* the level of this error */
     level_t level;

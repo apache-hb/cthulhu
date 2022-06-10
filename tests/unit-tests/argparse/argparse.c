@@ -1,5 +1,7 @@
 #include "base/macros.h"
 #include "argparse/argparse.h" 
+#include "report/report.h"
+#include "std/vector.h"
 #include "ct-test.h"
 
 static const report_config_t kReportConfig = {

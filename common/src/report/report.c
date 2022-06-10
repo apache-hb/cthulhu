@@ -1,6 +1,7 @@
 #include "report/report.h"
 #include "scan/node.h"
 #include "std/str.h"
+#include "std/vector.h"
 #include "base/util.h"
 
 #include "scan/node.h"

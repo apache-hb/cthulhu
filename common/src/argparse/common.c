@@ -1,5 +1,11 @@
 #include "common.h"
 
+#include "argparse/argparse.h"
+#include "report/report.h"
+
+#include "std/map.h"
+#include "std/vector.h"
+
 #include <limits.h>
 
 static const char *kFlagTypes[PARAM_TOTAL] = {

@@ -6,7 +6,9 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/type.h"
 #include "cthulhu/interface/runtime.h"
+
 #include "base/util.h"
+#include "base/macros.h"
 
 #include "report/report-ext.h"
 #include "std/set.h"

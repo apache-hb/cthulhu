@@ -1,6 +1,5 @@
 #include "scan/scan.h"
 
-#include "report/report.h"
 #include "platform/file.h"
 
 /**

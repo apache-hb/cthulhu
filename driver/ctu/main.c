@@ -4,6 +4,8 @@
 
 #include "sema.h"
 
+#include "base/macros.h"
+
 #include "ctu-bison.h"
 #include "ctu-flex.h"
 

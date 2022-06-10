@@ -1,5 +1,7 @@
 #include "scan/compile.h"
 
+#include "report/report.h"
+
 void *compile_scanner(scan_t extra, callbacks_t *callbacks)
 {    
     int err = 0;

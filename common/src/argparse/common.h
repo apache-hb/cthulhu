@@ -4,9 +4,9 @@
 
 #include "scan/node.h"
 
-#include "argparse/argparse.h"
-
 #define CMDLTYPE where_t
+
+typedef struct argparse_t argparse_t;
 
 void argparse_begin_flag(argparse_t *argparse, const char *name);
 void argparse_push_string(argparse_t *argparse, const char *value);

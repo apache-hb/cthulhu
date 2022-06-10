@@ -1,4 +1,5 @@
 #include "std/str.h"
+#include "std/vector.h"
 #include "base/util.h"
 #include "base/macros.h"
 

@@ -1,5 +1,7 @@
 #include "report/report-ext.h"
 
+#include "report/report.h"
+
 #include "base/macros.h"
 #include "std/str.h"
 

@@ -1,4 +1,5 @@
 #include "std/str.h"
+#include "std/vector.h"
 #include "platform/error.h"
 #include "ct-test.h"
 
