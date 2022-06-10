@@ -35,6 +35,7 @@ src = [
     'src/platform/error.c',
     'src/platform/file.c',
     'src/platform/library.c',
+    'src/platform/segfault.c',
     'src/platform/platform/target.c'.replace('target', target)
 ]
 

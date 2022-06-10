@@ -9,17 +9,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-/**
- * @defgroup ErrorCodes Error code macros
- * @brief exit codes that line up with GNU standard codes
- * @{
- */
-
-#define EXIT_OK 0        ///< no compiler errors or internal errors
-#define EXIT_ERROR 1     ///< only compiler errors occurred
-#define EXIT_INTERNAL 99 ///< at least one internal error occured
-
-/** @} */
 
 /**
  * @defgroup ErrorApi Error reporting sink

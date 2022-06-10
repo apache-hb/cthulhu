@@ -3,11 +3,14 @@
 #include "cthulhu/hlir/init.h"
 #include "base/util.h"
 
+#include "platform/segfault.h"
+
 #include <stdio.h>
 
 void common_init(void)
 {
     setvbuf(stdout, NULL, _IONBF, 0);
+    install_segfault();
     init_gmp();
     init_hlir();
 }

@@ -1,3 +1,4 @@
+#include "base/macros.h"
 #include "argparse/argparse.h" 
 #include "ct-test.h"
 

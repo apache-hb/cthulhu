@@ -5,6 +5,7 @@
 #include "platform.h"
 #include <errno.h>
 #include <string.h>
+#include <signal.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -140,6 +141,17 @@ char *native_cerror_to_string(native_cerror_t error)
     }
 
     return format("%s (errno %d)", buffer, error);
+}
+
+static void sigsegv_handler(int sig)
+{
+    fprintf(stderr, COLOUR_CYAN "[segfault]" COLOUR_RESET ": this is a compiler bug");
+    exit(EXIT_INTERNAL);
+}
+
+void native_install_segfault(void)
+{
+    signal(SIGSEGV, sigsegv_handler);
 }
 
 USE_DECL

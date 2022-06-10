@@ -3,6 +3,10 @@
 #include "base/macros.h"
 #include "std/str.h"
 #include "base/util.h"
+#include <stdio.h>
+#include <excpt.h>
+#include <processthreadsapi.h>
+#include <winbase.h>
 // clang-format on
 
 #define FORMAT_FLAGS (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS)
@@ -170,6 +174,23 @@ char *native_cerror_to_string(native_cerror_t error)
 
     char *cleaned = str_erase(buffer, written, "\n\r");
     return format("%s (0x%08X)", cleaned, error);
+}
+
+static LONG WINAPI exception_filter(LPEXCEPTION_POINTERS info)
+{
+    PEXCEPTION_RECORD record = info->ExceptionRecord;
+    if (record->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
+    {
+        fprintf(stderr, COLOUR_CYAN "[segfault]" COLOUR_RESET ": this is a compiler bug");
+        ExitProcess(EXIT_INTERNAL);
+    }
+    
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+void native_install_segfault(void)
+{
+    AddVectoredExceptionHandler(1, exception_filter);
 }
 
 USE_DECL
