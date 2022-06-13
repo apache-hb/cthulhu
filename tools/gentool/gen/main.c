@@ -62,5 +62,5 @@ int main(int argc, const char **argv)
     file_t fd = file_open(file, FILE_READ | FILE_TEXT, &err);
     
     scan_t scan = scan_file(reports, "gen-tool", fd);
-    void *data = compile_scanner(scan, &kCallbacks);
+    ast_t *data = compile_scanner(scan, &kCallbacks);
 }
