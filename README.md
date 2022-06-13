@@ -16,7 +16,7 @@ ninja -C build test # build and run tests
   * `meson`
   * `ninja-build`
   * `flex + bison`
-    * on windows install the `winflexbison3` package over `winflexbison` from choco
+    * on windows install the `winflexbison3` package instead of `winflexbison` from choco
   * `pkg-config`
   * `build-essential`
   * `libgmp-dev` (optional)

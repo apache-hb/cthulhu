@@ -46,7 +46,7 @@ where_t get_node_location(node_t node);
  * @param where the location of this node
  * @return the created node
  */
-NODISCARD
+NODISCARD CONSTFN
 node_t node_new(scan_t scan, where_t where);
 
 NODISCARD CONSTFN

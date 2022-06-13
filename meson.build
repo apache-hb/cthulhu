@@ -114,6 +114,9 @@ subdir('common')
 # common compiler libraries used by interfaces and drivers
 subdir('cthulhu')
 
+# compiler generator tool
+subdir('tools/gentool')
+
 message('enabled interfaces:', get_option('interfaces'))
 message('enabled languages:', get_option('languages'))
 
