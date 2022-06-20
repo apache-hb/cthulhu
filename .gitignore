@@ -13,6 +13,7 @@
 # dont ignore flex and bison files
 !*.y
 !*.l
+!*.gen
 
 # dont ignore test files
 !*.pl0

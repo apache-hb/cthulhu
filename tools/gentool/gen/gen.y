@@ -25,10 +25,31 @@ void generror(where_t *where, void *state, scan_t scan, const char *msg);
     char *ident;
 }
 
+%token<ident>
+    IDENT "identifier"
+
+%token
+    CONFIG "config"
+    TOKENS "tokens"
+    GRAMMAR "grammar"
+
+    ASSIGN ":="
+
+    LBRACE "{"
+    RBRACE "}"
+
 %start entry
 
 %%
 
-entry: ;
+entry: config tokens grammar ;
+
+config: CONFIG LBRACE RBRACE ;
+
+tokens: TOKENS LBRACE RBRACE ;
+
+grammar: GRAMMAR LBRACE RBRACE ;
+
+map: IDENT ASSIGN IDENT ;
 
 %%
