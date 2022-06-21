@@ -19,6 +19,7 @@
 "config" { return CONFIG; }
 "tokens" { return TOKENS; }
 "grammar" { return GRAMMAR; }
+"tree" { return TREE; }
 
 ":=" { return ASSIGN; }
 

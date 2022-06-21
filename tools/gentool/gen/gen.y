@@ -32,6 +32,7 @@ void generror(where_t *where, void *state, scan_t scan, const char *msg);
     CONFIG "config"
     TOKENS "tokens"
     GRAMMAR "grammar"
+    TREE "tree"
 
     ASSIGN ":="
 
@@ -42,14 +43,20 @@ void generror(where_t *where, void *state, scan_t scan, const char *msg);
 
 %%
 
-entry: config tokens grammar ;
+entry: config tokens grammar ast ;
 
-config: CONFIG LBRACE RBRACE ;
+config: CONFIG map ;
 
-tokens: TOKENS LBRACE RBRACE ;
+tokens: TOKENS map ;
 
-grammar: GRAMMAR LBRACE RBRACE ;
+grammar: GRAMMAR map ;
 
-map: IDENT ASSIGN IDENT ;
+ast : TREE IDENT map ;
+
+map: LBRACE fields RBRACE ;
+
+fields: field | fields field ;
+
+field: IDENT ASSIGN IDENT ;
 
 %%
