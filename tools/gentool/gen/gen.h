@@ -3,6 +3,9 @@
 #include "scan/node.h"
 
 #include "std/map.h"
+#include "std/vector.h"
+
+#include <gmp.h>
 
 #define GENLTYPE where_t
 
@@ -10,8 +13,10 @@ typedef enum {
     AST_ROOT,
 
     AST_CONFIG,
-    AST_TOKENS,
-    AST_GRAMMAR
+
+    AST_STRING,
+    AST_IDENT,
+    AST_DIGIT
 } ast_kind_t;
 
 typedef struct ast_t {
@@ -29,8 +34,18 @@ typedef struct ast_t {
     };
 } ast_t;
 
-ast_t *ast_root(node_t node, ast_t *config);
+typedef struct {
+    const char *key;
+    ast_t *value;
+} pair_t;
 
-ast_t *ast_config(node_t node);
-ast_t *ast_tokens(node_t node);
-ast_t *ast_grammar(node_t node);
+ast_t *ast_root(scan_t scan, where_t where, ast_t *config);
+
+ast_t *ast_config(scan_t scan, where_t where, map_t *fields);
+
+map_t *collect_map(vector_t *fields);
+pair_t *pair_new(const char *key, struct ast_t *ast);
+
+ast_t *ast_string(scan_t scan, where_t where, const char *str);
+ast_t *ast_ident(scan_t scan, where_t where, const char *str);
+ast_t *ast_digit(scan_t scan, where_t where, mpz_t digit);

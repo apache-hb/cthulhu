@@ -22,11 +22,21 @@ void generror(where_t *where, void *state, scan_t scan, const char *msg);
 %}
 
 %union {
-    char *ident;
+    ast_t *ast;
+    map_t *map;
+    vector_t *vector;
+    pair_t *pair;
+
+    char *str;
+    mpz_t digit;
 }
 
-%token<ident>
+%token<str>
     IDENT "identifier"
+    STRING "string literal"
+
+%token<digit>
+    DIGIT "digit literal"
 
 %token
     CONFIG "config"
@@ -35,28 +45,47 @@ void generror(where_t *where, void *state, scan_t scan, const char *msg);
     TREE "tree"
 
     ASSIGN ":="
+    RULE "::="
 
     LBRACE "{"
     RBRACE "}"
+
+%type<ast>
+    config
+    expr
+
+%type<map>
+    map
+
+%type<vector>
+    fields
+
+%type<pair>
+    field
 
 %start entry
 
 %%
 
-entry: config tokens grammar ast ;
+entry: config { scan_set(x, ast_root(x, @$, $1)); }
+    ;
 
-config: CONFIG map ;
+config: CONFIG map { $$ = ast_config(x, @$, $2); }
+    ;
 
-tokens: TOKENS map ;
+map: LBRACE fields RBRACE { $$ = collect_map($2); }
+    ;
 
-grammar: GRAMMAR map ;
+fields: field { $$ = vector_init($1); }
+    | fields field { vector_push(&$1, $2); $$ = $1; }
+    ;
 
-ast : TREE IDENT map ;
+field: IDENT ASSIGN expr { $$ = pair_new($1, $3); }
+    ;
 
-map: LBRACE fields RBRACE ;
-
-fields: field | fields field ;
-
-field: IDENT ASSIGN IDENT ;
+expr: STRING { $$ = ast_string(x, @$, $1); }
+    | IDENT { $$ = ast_string(x, @$, $1); }
+    | DIGIT { $$ = ast_digit(x, @$, $1); }
+    ;
 
 %%

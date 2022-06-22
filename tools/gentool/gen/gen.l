@@ -26,7 +26,7 @@
 "{" { return LBRACE; }
 "}" { return RBRACE; }
 
-[a-zA-Z_-][a-zA-Z0-9_-]* { yylval->ident = ctu_strdup(yytext); return IDENT; }
+[a-zA-Z_-][a-zA-Z0-9_-]* { yylval->str = ctu_strdup(yytext); return IDENT; }
 
 . { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }
 
