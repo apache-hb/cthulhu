@@ -38,14 +38,13 @@ ninja -C build test # build and run tests
   * `gui` - graphical user interface (TODO)
 
 * `common/include` - common code
+  * `argparse` - command line parsing library
   * `base` - memory allocation library
-  * `std` - collections and data structures
-  * `platform` - platform detail wrappers
-  * `cmd` - command line parsing library
-  * `report` - error reporting tools
-  * `argparse` - argument parsing
-  * `scan` - flex & bison scanning tools
   * `interop` - flex & bison helper functions
+  * `platform` - platform detail wrappers
+  * `report` - error reporting tools
+  * `scan` - flex & bison scanning tools
+  * `std` - collections and data structures
 
 * `cthulhu` - compiler framework library
   * `include/cthulhu` - public interface
