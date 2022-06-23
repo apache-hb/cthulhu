@@ -92,7 +92,7 @@ cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
 static scan_t make_scanner_from_file(cthulhu_t *cthulhu, source_t *source)
 {
     cerror_t error = 0;
-    file_t handle = file_open(source->path, 0, &error);
+    file_t handle = file_open(source->path, FILE_READ | FILE_TEXT, &error);
 
     if (error != 0)
     {

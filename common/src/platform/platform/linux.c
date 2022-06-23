@@ -43,7 +43,18 @@ void *native_library_get_symbol(library_handle_t handle, const char *symbol, nat
 USE_DECL
 native_cerror_t native_make_directory(const char *path)
 {
-    return mkdir(path, 0755);
+    int res = mkdir(path, 0755);
+    
+    if (res == -1)
+    {
+        native_cerror_t err = native_get_last_error();
+        if (err != EEXIST)
+        {
+            return err;
+        }
+    }
+
+    return 0;
 }
 
 static const char *kOpenModes[MODE_TOTAL][FORMAT_TOTAL] = {
@@ -55,8 +66,6 @@ USE_DECL
 file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error)
 {
     file_handle_t handle = fopen(path, kOpenModes[mode][format]);
-
-    printf("%s %s %p\n", path, kOpenModes[mode][format], handle);
 
     if (handle == NULL)
     {

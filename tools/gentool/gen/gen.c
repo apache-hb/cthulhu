@@ -3,6 +3,9 @@
 #include "base/macros.h"
 #include "base/util.h"
 
+#include "std/map.h"
+#include "std/vector.h"
+
 #include "report/report.h"
 
 void generror(where_t *where, void *state, scan_t scan, const char *msg)

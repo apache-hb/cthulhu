@@ -3,6 +3,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
+// TODO: find a better way to init stuff, this currently means we depend on cthulhu
+//       when the tests only need common
+#include "cthulhu/interface/runtime.h"
+
 typedef enum {
     TEST_PASSED,
     TEST_FAILED,
@@ -40,6 +44,8 @@ typedef struct {
 #define ENTRY(name, func) (test_t){name, func}
 
 static int run_tests(const char *suite, const test_t *tests, size_t total) {
+    common_init();
+
     test_result_t result = TEST_PASSED;
     
     for (size_t i = 0; i < total; i++) {

@@ -12,6 +12,7 @@
 
 %code requires {
     #include "gen/gen.h"
+    #include "std/vector.h"
     #define YYLTYPE GENLTYPE
     #define YYSTYPE GENSTYPE
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "platform/error.h"
 
 typedef struct
@@ -25,6 +27,9 @@ void file_close(file_t file);
 
 size_t file_read(file_t file, void *buffer, size_t size, cerror_t *error);
 size_t file_write(file_t file, const void *buffer, size_t size, cerror_t *error);
+
+NODISCARD
+bool file_valid(file_t file);
 
 NODISCARD
 size_t file_size(file_t file, cerror_t *error);

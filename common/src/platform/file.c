@@ -47,6 +47,12 @@ void file_close(file_t file)
     native_file_close(file.handle);
 }
 
+USE_DECL
+bool file_valid(file_t file)
+{
+    return file.handle != INVALID_FILE_HANDLE;
+}
+
 size_t file_read(file_t file, void *buffer, size_t size, cerror_t *error)
 {
     native_cerror_t nativeError = 0;

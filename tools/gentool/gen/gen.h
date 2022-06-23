@@ -2,10 +2,10 @@
 
 #include "scan/node.h"
 
-#include "std/map.h"
-#include "std/vector.h"
-
 #include <gmp.h>
+
+typedef struct map_t map_t;
+typedef struct vector_t vector_t;
 
 #define GENLTYPE where_t
 

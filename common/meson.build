@@ -84,8 +84,6 @@ interop = declare_dependency(
     include_directories : 'include'
 )
 
-deps += [ base, std, platform, location, interop ]
-
 src = [ 
     'src/argparse/argparse.c',
     'src/argparse/common.c',
@@ -104,3 +102,5 @@ argparse = declare_dependency(
     dependencies : deps, 
     include_directories : 'include'
 )
+
+deps += [ base, std, platform, location, interop, argparse ]

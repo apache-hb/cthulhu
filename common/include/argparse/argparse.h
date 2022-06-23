@@ -92,6 +92,8 @@ long get_digit(const argparse_t *argparse, const param_t *arg, long other);
 const char *get_string(const argparse_t *argparse, const param_t *arg, const char *other);
 bool get_bool(const argparse_t *argparse, const param_t *arg, bool other);
 
+void argparse_init(void);
+
 argparse_t parse_args(const argparse_config_t *config);
 
 bool should_exit(const argparse_t *argparse);

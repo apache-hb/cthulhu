@@ -11,7 +11,8 @@
 
 #include "cthulhu/interface/interface.h"
 
-#include "gen/emit.h"
+#include "emit.h"
+#include "util.h"
 
 #include "gen-bison.h"
 #include "gen-flex.h"
@@ -19,18 +20,8 @@
 static const char *kBaseNames[] = { "-bn", "--basename" };
 #define TOTAL_BASE_NAMES (sizeof(kBaseNames) / sizeof(const char *))
 
-static file_t check_open(reports_t *reports, const char *path, file_flags_t mode)
-{
-    cerror_t err = 0;
-    file_t result = file_open(path, mode, &err);
-
-    if (err != 0)
-    {
-        report_errno(reports, format("failed to open '%s'", path), err);
-    }
-
-    return result;
-}
+static const char *kEnableVsCode[] = { "-vsc", "--vscode" };
+#define TOTAL_ENABLE_VSCODE_NAMES (sizeof(kEnableVsCode) / sizeof(const char *))
 
 CT_CALLBACKS(kCallbacks, gen);
 
@@ -39,7 +30,13 @@ int main(int argc, const char **argv)
     common_init();
 
     param_t *baseNameParam = string_param("base output path", kBaseNames, TOTAL_BASE_NAMES);
-    group_t *codegenGroup = new_group("codegen", "code generation options", vector_init(baseNameParam));
+    param_t *enableVsCodeParam = bool_param("generate a vscode grammar project", kEnableVsCode, TOTAL_ENABLE_VSCODE_NAMES);
+
+    vector_t *vec = vector_new(2);
+    vector_push(&vec, baseNameParam);
+    vector_push(&vec, enableVsCodeParam);
+
+    group_t *codegenGroup = new_group("codegen", "code generation options", vec);
 
     reports_t *reports = begin_reports();
 
@@ -86,7 +83,7 @@ int main(int argc, const char **argv)
     scan_t scan = scan_file(reports, "gen-tool", fd);
     ast_t *data = compile_scanner(scan, &kCallbacks);
 
-    const char *path = get_string(&result, baseNameParam, "gen");
+    const char *path = get_string(&result, baseNameParam, "genout");
 
     cerror_t err = make_directory(path);
     if (err != 0)
@@ -94,21 +91,11 @@ int main(int argc, const char **argv)
         report_errno(reports, format("failed to create directory '%s'", path), err);
     }
 
-    file_t header = check_open(reports, format("%s" NATIVE_PATH_SEPARATOR "ast.gen.h", path), FILE_WRITE | FILE_TEXT);
-    file_t source = check_open(reports, format("%s" NATIVE_PATH_SEPARATOR "ast.gen.c", path), FILE_WRITE | FILE_TEXT);
-
-    status = end_reports(reports, "opening outputs", newConfig);
-    if (status != EXIT_OK)
-    {
-        return status;
-    }
-
     emit_t config = {
         .reports = reports,
         .root = data,
         .path = path,
-        .header = header,
-        .source = source
+        .enableVsCode = get_bool(&result, enableVsCodeParam, false)
     };
 
     emit(&config);

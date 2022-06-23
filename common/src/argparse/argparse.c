@@ -60,7 +60,7 @@ static param_t *new_param(param_kind_t kind, const char *desc, const char **name
     return result;
 }
 
-static void argparse_init(void)
+void argparse_init(void)
 {
     static bool init = false;
     if (init)
@@ -299,7 +299,6 @@ bool should_exit(const argparse_t *argparse)
 
 argparse_t parse_args(const argparse_config_t *config)
 {
-    argparse_init();
     argparse_t argparse = new_argparse(config);
 
     char *args = join_args(config->argc, config->argv);

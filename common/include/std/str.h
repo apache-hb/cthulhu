@@ -156,6 +156,14 @@ const char *common_prefix(vector_t *args);
 NODISCARD
 size_t str_rfind(const char *str, const char *sub);
 
+/**
+ * @brief find the last instance of a substring in a string with provided length
+ * 
+ * @param str the string to search
+ * @param len the length of @a str
+ * @param sub the substring to search for
+ * @return the index of the last instance of @a sub in @a str, or SIZE_MAX 
+ */
 NODISCARD
 size_t str_rfindn(IN_READS(len) const char *str, size_t len, const char *sub);
 
@@ -182,11 +190,26 @@ bool str_contains(const char *str, const char *sub);
 NODISCARD
 char *str_replace(const char *str, const char *sub, const char *repl);
 
+/**
+ * @brief trim leading and trailing characters from a string
+ * 
+ * @param str the string to trim
+ * @param letters the letters to be removed
+ * @return the trimmed string
+ */
 NODISCARD
 char *str_trim(const char *str, const char *letters);
 
+/**
+ * @brief remove all instances of @a letters from @a str
+ * 
+ * @param str the string to erase letters from
+ * @param len the length of @a str
+ * @param letters the letters to erase
+ * @return the string with letters removed
+ */
 NODISCARD
-char *str_erase(const char *str, size_t len, const char *letters);
+char *str_erase(IN_READS(len) const char *str, size_t len, const char *letters);
 
 /**
  * @brief hash a string
@@ -211,16 +234,34 @@ size_t strhash(const char *str);
 NODISCARD
 bool str_equal(const char *lhs, const char *rhs);
 
+/**
+ * @brief get the filename from @a path
+ * 
+ * @param path the path to get the filename from
+ * @return the filename extracted from @a path
+ */
 NODISCARD
 char *str_filename(const char *path);
 
+/**
+ * @brief remove the last file extension from a path
+ * 
+ * @param path the path to remove the extension from
+ * @return the @a path with the last extension removed
+ */
 NODISCARD
 char *str_noext(const char *path);
 
+/**
+ * @brief uppercase an ascii string
+ * 
+ * @param str the string
+ * @return @a str with all lowercase charaters replaced with uppercase
+ */
 NODISCARD
 char *str_upper(const char *str);
 
-#define STR_WHITESPACE " \t\n\r"
+#define STR_WHITESPACE " \t\n\r" //< all whitespace charaters
 
 /** @} */
 
