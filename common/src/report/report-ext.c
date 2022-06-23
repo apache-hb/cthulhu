@@ -22,3 +22,10 @@ message_t *report_unknown_character(reports_t *reports, node_t node, const char 
 
     return id;
 }
+
+message_t *report_errno(reports_t *reports, const char *msg, cerror_t err)
+{
+    message_t *id = report(reports, ERROR, node_invalid(), "%s", msg);
+    report_note(id, "%s", error_string(err));
+    return id;
+}

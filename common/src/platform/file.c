@@ -4,10 +4,34 @@
 // clang-format on
 
 USE_DECL
+cerror_t make_directory(const char *path)
+{
+    return native_make_directory(path);
+}
+
+static file_format_t get_format(file_flags_t flags)
+{
+    file_flags_t fmt = flags & (FILE_TEXT | FILE_BINARY);
+    CTASSERT(fmt, "no file format specified");
+    CTASSERT(fmt == FILE_TEXT || fmt == FILE_BINARY, "invalid file format flags");
+    
+    return (fmt == FILE_TEXT) ? FORMAT_TEXT : FORMAT_BINARY;
+}
+
+static file_mode_t get_mode(file_flags_t flags)
+{
+    file_flags_t fmt = flags & (FILE_READ | FILE_WRITE);
+    CTASSERT(fmt, "no open mode specified");
+    CTASSERT(fmt == FILE_READ || fmt == FILE_WRITE, "invalid open mode flags");
+
+    return (fmt == FILE_READ) ? MODE_READ : MODE_WRITE;
+}
+
+USE_DECL
 file_t file_open(const char *path, file_flags_t flags, cerror_t *error)
 {
-    file_format_t fmt = (flags & FILE_BINARY) ? FORMAT_BINARY : FORMAT_TEXT;
-    file_mode_t mode = (flags & FILE_WRITE) ? MODE_WRITE : MODE_READ;
+    file_format_t fmt = get_format(flags);
+    file_mode_t mode = get_mode(flags);
 
     native_cerror_t nativeError = 0;
     file_handle_t result = native_file_open(path, mode, fmt, &nativeError);

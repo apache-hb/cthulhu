@@ -106,6 +106,9 @@ void *native_library_get_symbol(library_handle_t handle, const char *symbol, nat
 /// file api
 
 NODISCARD
+native_cerror_t native_make_directory(const char *path);
+
+NODISCARD
 file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error);
 void native_file_close(file_handle_t handle);
 

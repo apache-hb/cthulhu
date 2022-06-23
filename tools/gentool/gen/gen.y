@@ -73,7 +73,7 @@ entry: config { scan_set(x, ast_root(x, @$, $1)); }
 config: CONFIG map { $$ = ast_config(x, @$, $2); }
     ;
 
-map: LBRACE fields RBRACE { $$ = collect_map($2); }
+map: LBRACE fields RBRACE { $$ = collect_map(x, $2); }
     ;
 
 fields: field { $$ = vector_init($1); }

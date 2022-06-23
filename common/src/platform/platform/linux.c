@@ -40,6 +40,12 @@ void *native_library_get_symbol(library_handle_t handle, const char *symbol, nat
     return ptr;
 }
 
+USE_DECL
+native_cerror_t native_make_directory(const char *path)
+{
+    return mkdir(path, 0755);
+}
+
 static const char *kOpenModes[MODE_TOTAL][FORMAT_TOTAL] = {
     [MODE_READ] = {[FORMAT_TEXT] = "r", [FORMAT_BINARY] = "rb"},
     [MODE_WRITE] = {[FORMAT_TEXT] = "w", [FORMAT_BINARY] = "wb"},
@@ -49,6 +55,8 @@ USE_DECL
 file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error)
 {
     file_handle_t handle = fopen(path, kOpenModes[mode][format]);
+
+    printf("%s %s %p\n", path, kOpenModes[mode][format], handle);
 
     if (handle == NULL)
     {
@@ -143,15 +151,17 @@ char *native_cerror_to_string(native_cerror_t error)
     return format("%s (errno %d)", buffer, error);
 }
 
-static void sigsegv_handler(int sig)
+static void signal_handler(int sig)
 {
-    fprintf(stderr, COLOUR_CYAN "[segfault]" COLOUR_RESET ": this is a compiler bug");
+    UNUSED(sig);
+
+    fprintf(stderr, COLOUR_CYAN "[signal:%d]" COLOUR_RESET ": unhandled signal\n", sig);
     exit(EXIT_INTERNAL);
 }
 
 void native_install_segfault(void)
 {
-    signal(SIGSEGV, sigsegv_handler);
+    signal(SIGSEGV, signal_handler);
 }
 
 USE_DECL

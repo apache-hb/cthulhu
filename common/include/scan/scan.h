@@ -21,7 +21,6 @@ const char *scan_path(scan_t scan);
 NODISCARD CONSTFN
 void *scan_get(scan_t scan);
 
-NODISCARD CONSTFN
 void scan_set(scan_t scan, void *value);
 
 NODISCARD CONSTFN
@@ -36,7 +35,6 @@ text_t scan_source(scan_t scan);
 NODISCARD CONSTFN
 size_t scan_offset(scan_t scan);
 
-NODISCARD CONSTFN
 void scan_advance(scan_t scan, size_t offset);
 
 NODISCARD CONSTFN

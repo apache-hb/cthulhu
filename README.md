@@ -1,15 +1,6 @@
 # Cthulhu
 wow this project got out of hand.
 
-## Building
-
-```sh
-meson build # configure build directory
-ninja -C build # build compiler and drivers
-ninja -C build docs # build documentation
-ninja -C build test # build and run tests
-```
-
 ## Dependencies
 
 * build dependencies
@@ -24,6 +15,15 @@ ninja -C build test # build and run tests
 
 * runtime dependencies
   * `libgmp` (optional)
+
+## Building
+
+```sh
+meson build # configure build directory
+ninja -C build # build compiler and drivers
+ninja -C build docs # build documentation
+ninja -C build test # build and run tests
+```
 
 ## Structure
 
@@ -62,11 +62,10 @@ ninja -C build test # build and run tests
   * `imgui` - ui library for gui interface
 
 * `tests` - tests
-  * `driver` - language specific tests
+  * `lang` - language specific tests
   * `interface` - interface specific tests
   * `unit-tests` - compiler code unit tests
   * `harness` - language test harness interface
-  * `fuzzing` - fuzzing interface
 
 * `tools` - tools
   * `tune-map` - map runtime perf tuning

@@ -1,4 +1,4 @@
-src = [ 'gen/main.c', 'gen/gen.c', lex.process('gen/gen.l'), parse.process('gen/gen.y') ]
+src = [ 'gen/main.c', 'gen/gen.c', 'gen/emit.c', lex.process('gen/gen.l'), parse.process('gen/gen.y') ]
 
 gentool = executable('gentool', src,
     include_directories : 'gen',

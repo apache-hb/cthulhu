@@ -31,6 +31,9 @@ typedef struct ast_t {
         };
 
         map_t *fields;
+
+        const char *str;
+        mpz_t digit;
     };
 } ast_t;
 
@@ -43,7 +46,7 @@ ast_t *ast_root(scan_t scan, where_t where, ast_t *config);
 
 ast_t *ast_config(scan_t scan, where_t where, map_t *fields);
 
-map_t *collect_map(vector_t *fields);
+map_t *collect_map(scan_t scan, vector_t *fields);
 pair_t *pair_new(const char *key, struct ast_t *ast);
 
 ast_t *ast_string(scan_t scan, where_t where, const char *str);

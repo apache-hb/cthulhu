@@ -2,6 +2,8 @@
 
 #include "scan/node.h"
 
+#include "platform/error.h"
+
 typedef struct message_t message_t;
 
 /**
@@ -26,3 +28,5 @@ message_t *report_shadow(reports_t *reports, const char *name, node_t prevDefini
  * @return the message
  */
 message_t *report_unknown_character(reports_t *reports, node_t node, const char *str);
+
+message_t *report_errno(reports_t *reports, const char *msg, cerror_t err);

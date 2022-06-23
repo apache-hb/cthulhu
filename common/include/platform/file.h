@@ -17,6 +17,9 @@ typedef enum
 } file_flags_t;
 
 NODISCARD
+cerror_t make_directory(const char *path);
+
+NODISCARD
 file_t file_open(const char *path, file_flags_t flags, cerror_t *error);
 void file_close(file_t file);
 

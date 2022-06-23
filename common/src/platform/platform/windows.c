@@ -47,6 +47,50 @@ void *native_library_get_symbol(library_handle_t handle, const char *symbol, nat
     return ptr;
 }
 
+NODISCARD
+static wchar_t *widen_string(const char *str)
+{
+    int len = (int)strlen(str);
+    int needed = MultiByteToWideChar(CP_UTF8, 0, str, len, NULL, 0);
+    
+    size_t bytes = sizeof(wchar_t) * (needed + 1);
+    wchar_t *result = ctu_malloc(bytes);
+    memset(result, 0, bytes);
+    
+    MultiByteToWideChar(CP_UTF8, 0, str, len, result, needed);
+    return result;
+}
+
+NODISCARD
+static char *get_current_directory(void)
+{
+    DWORD needed = GetCurrentDirectoryA(0, NULL) + 1;
+    char *result = ctu_malloc(needed);
+    memset(result, 0, needed);
+    GetCurrentDirectoryA(needed, result);
+    return result;
+}
+
+USE_DECL
+native_cerror_t native_make_directory(const char *path)
+{
+    char *cwd = get_current_directory();
+    wchar_t *dir = widen_string(format("\\\\?\\%s" NATIVE_PATH_SEPARATOR "%s", cwd, path));
+    BOOL ok = CreateDirectoryW(dir, NULL);
+
+    if (!ok)
+    {
+        native_cerror_t err = native_get_last_error();
+
+        if (err != HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS))
+        {
+            return err;
+        }
+    }
+
+    return 0;
+}
+
 USE_DECL
 file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error)
 {
@@ -181,9 +225,11 @@ static LONG WINAPI exception_filter(LPEXCEPTION_POINTERS info)
     PEXCEPTION_RECORD record = info->ExceptionRecord;
     if (record->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
     {
-        fprintf(stderr, COLOUR_CYAN "[segfault]" COLOUR_RESET ": this is a compiler bug");
+        fprintf(stderr, COLOUR_CYAN "[segfault]" COLOUR_RESET ": this is a compiler bug\n");
         ExitProcess(EXIT_INTERNAL);
     }
+    
+    fprintf(stderr, COLOUR_CYAN "[signal:0x%lX]" COLOUR_RESET ": unhandled signal\n", record->ExceptionCode);
     
     return EXCEPTION_CONTINUE_SEARCH;
 }
