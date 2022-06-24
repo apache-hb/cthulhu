@@ -89,6 +89,8 @@ void argparse_push_string(argparse_t *argparse, const char *value)
     }
     else
     {
+        argparse_end_flag(argparse);
+    
         vector_push(&argparse->files, (char*)value);
     }
 }

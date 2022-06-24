@@ -52,7 +52,7 @@ char *formatv(const char *fmt, va_list args);
  *
  * @return if str starts with prefix
  */
-NODISCARD
+NODISCARD CONSTFN
 bool str_startswith(const char *str, const char *prefix);
 
 /**
@@ -63,7 +63,7 @@ bool str_startswith(const char *str, const char *prefix);
  *
  * @return if str ends with suffix
  */
-NODISCARD
+NODISCARD CONSTFN
 bool str_endswith(const char *str, const char *suffix);
 
 /**
@@ -153,7 +153,7 @@ const char *common_prefix(vector_t *args);
  * @return the index of the last instance of @a sub in @a str, or SIZE_MAX if
  * sub is not found
  */
-NODISCARD
+NODISCARD CONSTFN
 size_t str_rfind(const char *str, const char *sub);
 
 /**
@@ -164,7 +164,7 @@ size_t str_rfind(const char *str, const char *sub);
  * @param sub the substring to search for
  * @return the index of the last instance of @a sub in @a str, or SIZE_MAX 
  */
-NODISCARD
+NODISCARD CONSTFN
 size_t str_rfindn(IN_READS(len) const char *str, size_t len, const char *sub);
 
 /**
@@ -175,7 +175,7 @@ size_t str_rfindn(IN_READS(len) const char *str, size_t len, const char *sub);
  *
  * @return if @a sub is found in @a str
  */
-NODISCARD
+NODISCARD CONSTFN
 bool str_contains(const char *str, const char *sub);
 
 /**
@@ -218,7 +218,7 @@ char *str_erase(IN_READS(len) const char *str, size_t len, const char *letters);
  *
  * @return the hash
  */
-NODISCARD
+NODISCARD CONSTFN
 size_t strhash(const char *str);
 
 /**
@@ -231,7 +231,7 @@ size_t strhash(const char *str);
  *
  * @return if the strings are equal
  */
-NODISCARD
+NODISCARD CONSTFN
 bool str_equal(const char *lhs, const char *rhs);
 
 /**

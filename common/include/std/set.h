@@ -37,12 +37,12 @@ const char *set_add(set_t *set, const char *key);
  * @param key the key to check
  * @return true if the set contains the key
  */
-NODISCARD
+NODISCARD CONSTFN
 bool set_contains(set_t *set, const char *key);
 
 const void *set_add_ptr(set_t *set, const void *key);
 
-NODISCARD
+NODISCARD CONSTFN
 bool set_contains_ptr(set_t *set, const void *key);
 
 void set_reset(set_t *set);

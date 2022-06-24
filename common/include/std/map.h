@@ -52,7 +52,7 @@ void map_set(map_t *map, const char *key, void *value);
  *
  * @return the value for the key or NULL if the key is not found
  */
-NODISCARD
+NODISCARD CONSTFN
 void *map_get(map_t *map, const char *key);
 
 /**
@@ -64,10 +64,15 @@ void *map_get(map_t *map, const char *key);
  *
  * @return the value for the key or the default value if the key is not found
  */
+NODISCARD CONSTFN
 void *map_get_default(map_t *map, const char *key, void *other);
 
 void map_set_ptr(map_t *map, const void *key, void *value);
+
+NODISCARD CONSTFN
 void *map_get_ptr(map_t *map, const void *key);
+
+NODISCARD CONSTFN
 void *map_get_default_ptr(map_t *map, const void *key, void *other);
 
 /**
@@ -80,13 +85,13 @@ void *map_get_default_ptr(map_t *map, const void *key, void *other);
 NODISCARD
 vector_t *map_values(map_t *map);
 
-typedef struct
+typedef struct map_entry_t
 {
     const void *key; ///< the key of this entry
     void *value;     ///< the value of this entry
 } map_entry_t;
 
-typedef struct
+typedef struct map_iter_t
 {
     map_t *map;   ///< the map being iterated over
     size_t index; ///< current top level bucket index
@@ -95,13 +100,13 @@ typedef struct
     bucket_t *next;   ///< the next bucket in the chain
 } map_iter_t;
 
-NODISCARD
+NODISCARD CONSTFN
 map_iter_t map_iter(map_t *map);
 
-NODISCARD
+NODISCARD CONSTFN
 map_entry_t map_next(map_iter_t *iter);
 
-NODISCARD
+NODISCARD CONSTFN
 bool map_has_next(map_iter_t *iter);
 
 void map_reset(map_t *map);

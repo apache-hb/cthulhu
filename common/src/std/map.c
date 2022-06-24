@@ -27,7 +27,6 @@ typedef struct map_t
 
 // generic map functions
 
-NODISCARD
 static size_t sizeof_map(size_t size)
 {
     return sizeof(map_t) + (size * sizeof(bucket_t));
@@ -111,6 +110,7 @@ static void *entry_get(const bucket_t *entry, const char *key, void *other)
     return other;
 }
 
+USE_DECL
 void *map_get_default(map_t *map, const char *key, void *other)
 {
     bucket_t *bucket = map_bucket_str(map, key);
@@ -204,11 +204,13 @@ void map_set_ptr(map_t *map, const void *key, void *value)
     }
 }
 
+USE_DECL
 void *map_get_ptr(map_t *map, const void *key)
 {
     return map_get_default_ptr(map, key, NULL);
 }
 
+USE_DECL
 void *map_get_default_ptr(map_t *map, const void *key, void *other)
 {
     bucket_t *bucket = map_bucket_ptr(map, key);

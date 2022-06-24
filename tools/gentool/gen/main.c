@@ -83,7 +83,7 @@ int main(int argc, const char **argv)
     scan_t scan = scan_file(reports, "gen-tool", fd);
     ast_t *data = compile_scanner(scan, &kCallbacks);
 
-    const char *path = get_string(&result, baseNameParam, "genout");
+    const char *path = get_string_arg(&result, baseNameParam, "genout");
 
     cerror_t err = make_directory(path);
     if (err != 0)
@@ -95,7 +95,7 @@ int main(int argc, const char **argv)
         .reports = reports,
         .root = data,
         .path = path,
-        .enableVsCode = get_bool(&result, enableVsCodeParam, false)
+        .enableVsCode = get_bool_arg(&result, enableVsCodeParam, false)
     };
 
     emit(&config);

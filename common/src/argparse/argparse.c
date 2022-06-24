@@ -101,6 +101,7 @@ static size_t total_arg_names(vector_t *groups)
 
 static argparse_t new_argparse(const argparse_config_t *config)
 {
+    size_t totalNames = total_arg_names(config->groups);
     argparse_t result = {
         .exitCode = INT_MAX,
         
@@ -108,7 +109,8 @@ static argparse_t new_argparse(const argparse_config_t *config)
         .reportLimit = 20,
         .warningsAsErrors = false,
 
-        .params = map_optimal(total_arg_names(config->groups)),
+        .params = map_optimal(totalNames),
+        .lookup = map_optimal(totalNames),
 
         .files = vector_new(config->argc - 1),
 
@@ -126,7 +128,12 @@ static void add_arg(argparse_t *ctx, param_t *param)
     result->kind = param->kind;
     result->setByUser = false;
     
-    map_set_ptr(ctx->params, param, result);
+    map_set_ptr(ctx->lookup, param, result);
+
+    for (size_t i = 0; i < param->totalNames; i++)
+    {
+        map_set(ctx->params, param->names[i], result);
+    }
 }
 
 static void add_group(argparse_t *argparse, group_t *group)
@@ -147,21 +154,25 @@ static void add_groups(argparse_t *argparse, vector_t *groups)
     }
 }
 
+USE_DECL
 param_t *int_param(const char *desc, const char **names, size_t total)
 {
     return new_param(PARAM_INT, desc, names, total);
 }
 
+USE_DECL
 param_t *string_param(const char *desc, const char **names, size_t total)
 {
     return new_param(PARAM_STRING, desc, names, total);
 }
 
+USE_DECL
 param_t *bool_param(const char *desc, const char **names, size_t total)
 {
     return new_param(PARAM_BOOL, desc, names, total);
 }
 
+USE_DECL
 group_t *new_group(const char *name, const char *desc, vector_t *params) 
 {
     group_t *result = ctu_malloc(sizeof(group_t));
@@ -171,9 +182,10 @@ group_t *new_group(const char *name, const char *desc, vector_t *params)
     return result;
 }
 
-long get_digit(const argparse_t *argparse, const param_t *arg, long other) 
+USE_DECL
+long get_digit_arg(const argparse_t *argparse, const param_t *arg, long other) 
 {
-    arg_t *associated = map_get_ptr(argparse->params, arg);
+    arg_t *associated = map_get_ptr(argparse->lookup, arg);
     CTASSERT(associated != NULL, "parameter not found");
     CTASSERT(associated->kind == PARAM_INT, "parameter is not an integer");
 
@@ -185,9 +197,10 @@ long get_digit(const argparse_t *argparse, const param_t *arg, long other)
     return associated->digit;
 }
 
-const char *get_string(const argparse_t *argparse, const param_t *arg, const char *other)
+USE_DECL
+const char *get_string_arg(const argparse_t *argparse, const param_t *arg, const char *other)
 {
-    arg_t *associated = map_get_ptr(argparse->params, arg);
+    arg_t *associated = map_get_ptr(argparse->lookup, arg);
     CTASSERT(associated != NULL, "parameter not found");
     CTASSERT(associated->kind == PARAM_STRING, "parameter is not a string");
 
@@ -199,9 +212,10 @@ const char *get_string(const argparse_t *argparse, const param_t *arg, const cha
     return associated->string;
 }
 
-bool get_bool(const argparse_t *argparse, const param_t *arg, bool other)
+USE_DECL
+bool get_bool_arg(const argparse_t *argparse, const param_t *arg, bool other)
 {
-    arg_t *associated = map_get_ptr(argparse->params, arg);
+    arg_t *associated = map_get_ptr(argparse->lookup, arg);
     CTASSERT(associated != NULL, "parameter not found");
     CTASSERT(associated->kind == PARAM_BOOL, "parameter is not a boolean");
 
@@ -276,27 +290,44 @@ static int process_general_args(const argparse_config_t *config, argparse_t *arg
         return result;
     }
 
-    bool printHelp = get_bool(argparse, kHelpParam, false);
-    bool printVersion = get_bool(argparse, kVersionParam, false);
+    bool printHelp = get_bool_arg(argparse, kHelpParam, false);
+    bool printVersion = get_bool_arg(argparse, kVersionParam, false);
+    bool logVerbose = get_bool_arg(argparse, kVerboseLoggingParam, false);
+
+    long reportLimit = get_digit_arg(argparse, kReportLimitParam, 20);
+    bool warningsAsErrors = get_bool_arg(argparse, kFatalWarningsParam, false);
+
+    argparse->reportLimit = reportLimit;
+    argparse->warningsAsErrors = warningsAsErrors;
+
+    if (logVerbose)
+    {
+        verbose = true;
+        logverbose("enabled verbose logging");
+    }
 
     if (printHelp)
     {
         print_help(config);
+        return EXIT_OK;
     }
 
     if (printVersion)
     {
         print_version(config);
+        return EXIT_OK;
     }
 
     return INT_MAX;
 }
 
+USE_DECL
 bool should_exit(const argparse_t *argparse)
 {
     return argparse->exitCode != INT_MAX;
 }
 
+USE_DECL
 argparse_t parse_args(const argparse_config_t *config)
 {
     argparse_t argparse = new_argparse(config);

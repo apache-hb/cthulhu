@@ -91,22 +91,47 @@ static void emit_source(emit_t *config, file_t file)
     WRITE(write_to, "}\n");
 }
 
+static const char *kCategories[] = { "Programming Languages" };
+#define TOTAL_CATEGORIES (sizeof(kCategories) / sizeof(const char *))
+
 // generate package.json
 static void emit_vscode_package(emit_t *config, file_t file)
 {
+    map_t *cfg = config->root->config->fields;
+    const char *name = get_string(config->reports, cfg, CONFIG_NAME);
+    const char *desc = get_string(config->reports, cfg, CONFIG_DESC);
+    const char *ver = get_string(config->reports, cfg, CONFIG_VERSION);
+
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "name", config->id);
+    cJSON_AddStringToObject(root, "displayName", name);
+    cJSON_AddStringToObject(root, "description", desc);
+    cJSON_AddStringToObject(root, "version", ver);
+
+    cJSON *engines = cJSON_CreateObject();
+    cJSON_AddStringToObject(engines, "vscode", "^1.68.0");
+    cJSON_AddItemToObject(root, "engines", engines);
+
+    cJSON *categories = cJSON_CreateStringArray(kCategories, TOTAL_CATEGORIES);
+    cJSON_AddItemToObject(root, "categories", categories);
     
+    // TODO: complete impl
+
+    WRITE(write_to, cJSON_Print(root));
 }
 
 // generate language-configuration.json
 static void emit_vscode_language(emit_t *config, file_t file)
 {
-    
+    UNUSED(config);
+    UNUSED(file);
 }
 
 // generate id.tmlang.json
 static void emit_vscode_textmate(emit_t *config, file_t file)
 {
-    
+    UNUSED(config);
+    UNUSED(file);
 }
 
 static void emit_vscode(emit_t *config)

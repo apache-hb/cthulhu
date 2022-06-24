@@ -43,7 +43,7 @@ int main(int argc, const char **argv)
         return result.exitCode;
     }
 
-    const char *outFile = get_string(&result, outputFileNameParam, "out.c");
+    const char *outFile = get_string_arg(&result, outputFileNameParam, "out.c");
 
     size_t totalFiles = vector_len(result.files);
     vector_t *sources = vector_of(totalFiles);
