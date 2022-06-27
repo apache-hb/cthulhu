@@ -85,6 +85,9 @@ void *map_get_default_ptr(map_t *map, const void *key, void *other);
 NODISCARD
 vector_t *map_values(map_t *map);
 
+NODISCARD
+vector_t *map_entries(map_t *map);
+
 typedef struct map_entry_t
 {
     const void *key; ///< the key of this entry

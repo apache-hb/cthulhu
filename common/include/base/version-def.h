@@ -8,4 +8,7 @@
 #define VERSION_MINOR(version) (((version) >> 16) & 0xFF)
 #define VERSION_PATCH(version) ((version)&0xFFFF)
 
-typedef uint_least32_t version_t;
+typedef uint_fast32_t version_t;
+
+#define PRI_VERSION PRIuFAST32
+

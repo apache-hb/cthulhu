@@ -61,29 +61,33 @@ static bool write_to(emit_t *emit, file_t file, const char *fmt, ...)
     return true;
 }
 
-static bool emit_include(emit_t *emit, file_t file, const char *path)
+static bool emit_include(emit_t *emit, file_t file, const char *path, const char *pre)
 {
-    return write_to(emit, file, "#include \"%s\"\n", path);
+    return write_to(emit, file, "%s#include \"%s\"\n", pre, path);
 }
 
 #define CHECK(expr) do { if (!(expr)) { return; } } while (0)
 #define WRITE(fn, ...) CHECK(fn(config, file, __VA_ARGS__))
+#define WRITE_LINE() WRITE(write_to, "\n")
 
 static void emit_header(emit_t *config, file_t file)
 {
     WRITE(write_to, "#pragma once\n");
-    WRITE(write_to, "\n");
-    WRITE(emit_include, "scan/node.h");
-    WRITE(write_to, "\n");
+    
+    WRITE_LINE();
+    WRITE(emit_include, "scan/node.h", "");
+
+    WRITE_LINE();
     WRITE(write_to, "#define %sLTYPE where_t\n", config->upperId);
 }
 
 static void emit_source(emit_t *config, file_t file)
 {
-    WRITE(emit_include, "ast.gen.h");
-    WRITE(emit_include, "base/macros.h");
-    WRITE(emit_include, "report/report.h");
-    WRITE(write_to, "\n");
+    WRITE(emit_include, "ast.gen.h", "");
+    WRITE(emit_include, "base/macros.h", "");
+    WRITE(emit_include, "report/report.h", "");
+
+    WRITE_LINE();
     WRITE(write_to, "void %serror(where_t *where, void *state, scan_t scan, const char *msg)\n", config->id);
     WRITE(write_to, "{\n");
     WRITE(write_to, "\tUNUSED(state);\n");
@@ -91,8 +95,93 @@ static void emit_source(emit_t *config, file_t file)
     WRITE(write_to, "}\n");
 }
 
-static const char *kCategories[] = { "Programming Languages" };
-#define TOTAL_CATEGORIES (sizeof(kCategories) / sizeof(const char *))
+
+static bool write_attr(emit_t *config, file_t file, const char *cfg, const char *body)
+{
+    return write_to(config, file, "%%%s %s\n", cfg, body);
+}
+
+static bool write_option(emit_t *config, file_t file, const char *options)
+{
+    return write_attr(config, file, "option", options);
+}
+
+static void emit_flex(emit_t *config, file_t file)
+{
+    WRITE(write_option, "extra-type=\"scan_t\"");
+    WRITE(write_option, "8bit nodefault");
+    WRITE(write_option, "noyywrap noinput nounput");
+    WRITE(write_option, "noyyalloc noyyrealloc noyyfree");
+    WRITE(write_option, "reentrant bison-bridge bison-locations");
+    WRITE(write_option, "never-interactive batch");
+    WRITE(write_option, format("prefix=\"%s\"", config->id));
+
+    WRITE_LINE();
+    WRITE(write_to, "%%{\n");
+    WRITE(emit_include, "gen-bison.h", "");
+    WRITE(emit_include, "report/report-ext.h", "");
+    WRITE(emit_include, "interop/flex.h", "");
+    WRITE(write_to, "%%}\n");
+
+    WRITE_LINE();
+    WRITE(write_to, "%%%%\n");
+
+    WRITE(write_to, ". { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }\n");
+    WRITE(write_to, "%%%%\n");
+
+    WRITE_LINE();
+    WRITE(write_to, "FLEX_MEMORY(%salloc, %srealloc, %sfree)\n", config->id, config->id, config->id);
+}
+
+static void emit_bison(emit_t *config, file_t file)
+{
+    WRITE(write_attr, "define", "parse.error verbose");
+    WRITE(write_attr, "define", "api.pure full");
+    WRITE(write_attr, "lex-param", "{ void *scan }");
+    WRITE(write_attr, "parse-param", "{ void *scan } { scan_t x }");
+    WRITE(write_attr, "locations", "");
+    WRITE(write_attr, "expect", "0");
+    WRITE(write_attr, "define", format("api.prefix {%s}", config->id));
+
+    WRITE_LINE();
+    WRITE(write_attr, "code", "top {");
+    WRITE(emit_include, "interop/flex.h", "\t");
+    WRITE(write_to, "}\n");
+
+    WRITE_LINE();
+    WRITE(write_attr, "code", "requires {");
+    WRITE(emit_include, "ast.gen.h", "\t");
+    WRITE(write_to, "\t#define YYLTYPE %sLTYPE\n", config->upperId);
+    WRITE(write_to, "\t#define YYSTYLE %sSTYPE\n", config->upperId);
+    WRITE(write_to, "}\n");
+
+    WRITE_LINE();
+    WRITE(write_to, "%%{\n");
+    WRITE(write_to, "int %slex();\n", config->id);
+    WRITE(write_to, "void %serror(where_t *where, void *state, scan_t scan, const char *msg);\n", config->id);
+    WRITE(write_to, "%%}\n");
+
+    WRITE_LINE();
+    WRITE(write_to, "%%%%\n");
+    WRITE(write_to, "%%%%\n");
+}
+
+#define KEY(x) "\"" x "\""
+#define IS ": "
+#define STRING(x) "\"" x "\""
+#define ARRAY(x) "[" x "]"
+#define NL ",\n"
+
+static const char *kPackageJson = 
+    "{\n"
+    "\t" KEY("name") IS STRING("${id}") NL
+    "\t" KEY("displayName") IS STRING("${name}") NL
+    "\t" KEY("description") IS STRING("${desc}") NL
+    "\t" KEY("version") IS STRING("${version}") NL
+    "\t" KEY("engines") IS ARRAY(STRING("^1.68.0")) NL
+    "\t" KEY("categories") IS ARRAY(STRING("Programming Languages"))
+    "}\n"
+;
 
 // generate package.json
 static void emit_vscode_package(emit_t *config, file_t file)
@@ -102,22 +191,15 @@ static void emit_vscode_package(emit_t *config, file_t file)
     const char *desc = get_string(config->reports, cfg, CONFIG_DESC);
     const char *ver = get_string(config->reports, cfg, CONFIG_VERSION);
 
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "name", config->id);
-    cJSON_AddStringToObject(root, "displayName", name);
-    cJSON_AddStringToObject(root, "description", desc);
-    cJSON_AddStringToObject(root, "version", ver);
+    map_t *replace = map_optimal(32);
+    map_set(replace, "${id}", (char*)config->id);
+    map_set(replace, "${name}", (char*)name);
+    map_set(replace, "${version}", (char*)ver);
+    map_set(replace, "${desc}", (char*)desc);
 
-    cJSON *engines = cJSON_CreateObject();
-    cJSON_AddStringToObject(engines, "vscode", "^1.68.0");
-    cJSON_AddItemToObject(root, "engines", engines);
+    const char *result = str_replace_many(kPackageJson, replace);
 
-    cJSON *categories = cJSON_CreateStringArray(kCategories, TOTAL_CATEGORIES);
-    cJSON_AddItemToObject(root, "categories", categories);
-    
-    // TODO: complete impl
-
-    WRITE(write_to, cJSON_Print(root));
+    WRITE(write_to, "%s\n", result);
 }
 
 // generate language-configuration.json
@@ -175,18 +257,22 @@ void emit(emit_t *config)
     file_t header = check_open(config->reports, format("%s" NATIVE_PATH_SEPARATOR "ast.gen.h", config->path), FILE_WRITE | FILE_TEXT);
     file_t source = check_open(config->reports, format("%s" NATIVE_PATH_SEPARATOR "ast.gen.c", config->path), FILE_WRITE | FILE_TEXT);
 
-    if (file_valid(header)) 
-    {
-        emit_header(config, header);
-        file_close(header);
-    }
-    
-    if (file_valid(source)) 
-    {
-        emit_source(config, source);
-        file_close(source);
-    }
+    file_t flex = check_open(config->reports, format("%s" NATIVE_PATH_SEPARATOR "ast.l", config->path), FILE_WRITE | FILE_TEXT);
+    file_t bison = check_open(config->reports, format("%s" NATIVE_PATH_SEPARATOR "ast.y", config->path), FILE_WRITE | FILE_TEXT);
 
+#define EMIT_FILE(file, fn) do { \
+    if (file_valid(file)) { \
+        fn(config, file); \
+        write_to(config, file, "\n"); \
+        file_close(file); \
+        } \
+    } while (0)
+
+    EMIT_FILE(header, emit_header);
+    EMIT_FILE(source, emit_source);
+    EMIT_FILE(flex, emit_flex);
+    EMIT_FILE(bison, emit_bison);
+    
     if (config->enableVsCode) 
     {
         emit_vscode(config);

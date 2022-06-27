@@ -37,6 +37,13 @@ ast_t *ast_config(scan_t scan, where_t where, map_t *fields)
     return ast;
 }
 
+ast_t *ast_tokens(scan_t scan, where_t where, map_t *fields)
+{
+    ast_t *ast = ast_new(scan, where, AST_TOKENS);
+    ast->fields = fields;
+    return ast;
+}
+
 map_t *collect_map(scan_t scan, vector_t *fields) 
 {
     size_t len = vector_len(fields);

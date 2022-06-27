@@ -16,7 +16,7 @@
 typedef uint_fast64_t line_t;   ///< line number
 typedef uint_fast64_t column_t; ///< column number
 
-/*
+/**
  * @brief a location inside a scanner
  */
 typedef struct

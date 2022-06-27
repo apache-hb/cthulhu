@@ -1,3 +1,10 @@
 config {
     id := pl0
+    name := "PL/0"
+    desc := "The PL/0 tutorial language"
+    version := "1.1.0"
+}
+
+tokens {
+    ignore := re([ \t\r\v\n\f])
 }

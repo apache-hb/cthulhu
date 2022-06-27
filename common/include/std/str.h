@@ -9,6 +9,7 @@
 BEGIN_API
 
 typedef struct vector_t vector_t;
+typedef struct map_t map_t;
 
 /**
  * @defgroup StringUtils String utility functions
@@ -189,6 +190,9 @@ bool str_contains(const char *str, const char *sub);
  */
 NODISCARD
 char *str_replace(const char *str, const char *sub, const char *repl);
+
+NODISCARD
+char *str_replace_many(const char *str, map_t *repl);
 
 /**
  * @brief trim leading and trailing characters from a string

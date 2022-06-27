@@ -92,6 +92,8 @@ static void tuning_free(void *ptr)
 USE_DECL
 void *ctu_malloc(size_t size)
 {
+    CTASSERT(size > 0, "ctu-malloc length must be > 0");
+
     void *ptr = MALLOC(size);
     CTASSERTF(ptr != NULL, "ctu-malloc of %zu bytes failed", size);
     return ptr;

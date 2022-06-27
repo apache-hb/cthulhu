@@ -12,9 +12,13 @@
 #include "interop/flex.h"
 %}
 
+ESCAPES  (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
+WS [ \t\r\v\n\f]
+
 %%
 
-[ \t\r\n] ;
+{WS} ;
+"//".* ; 
 
 "config" { return CONFIG; }
 "tokens" { return TOKENS; }
@@ -27,6 +31,11 @@
 "}" { return RBRACE; }
 
 [a-zA-Z_-][a-zA-Z0-9_-]* { yylval->str = ctu_strdup(yytext); return IDENT; }
+
+\"([^"\\\n]|{ESCAPES})*\" {
+	yylval->str = ctu_strndup(yytext + 1, yyleng - 2);
+    return STRING;
+}
 
 . { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }
 

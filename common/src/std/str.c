@@ -1,5 +1,7 @@
 #include "std/str.h"
 #include "std/vector.h"
+#include "std/map.h"
+
 #include "base/util.h"
 #include "base/macros.h"
 
@@ -346,6 +348,65 @@ char *str_replace(const char *str, const char *sub, const char *repl)
 {
     vector_t *split = str_split(str, sub);
     return str_join(repl, split);
+}
+
+USE_DECL
+char *str_replace_many(const char *str, map_t *repl)
+{
+    size_t len = 0;
+    vector_t *pairs = map_entries(repl);
+    size_t totalPairs = vector_len(pairs);
+
+    const char *iter = str;
+    while (*iter) 
+    {
+        for (size_t i = 0; i < totalPairs; i++) 
+        {
+            const map_entry_t *entry = vector_get(pairs, i);
+            
+            if (str_startswith(iter, entry->key))
+            {
+                len += strlen(entry->value);
+                iter += strlen(entry->key);
+                break;
+            }
+            else
+            {
+                continue;
+            }
+
+            iter += 1;
+        }
+    }
+    
+    char *out = ctu_malloc(len + 1);
+
+    size_t offset = 0;
+    for (size_t i = 0; i < len;)
+    {
+        for (size_t j = 0; j < totalPairs; j++)
+        {
+            const map_entry_t *entry = vector_get(pairs, i);
+            if (str_startswith(str + i, entry->key))
+            {
+                memcpy(out + offset, entry->value, strlen(entry->value));
+                i += strlen(entry->key);
+                offset += strlen(entry->value);
+                break;
+            }
+            else
+            {
+                continue;
+            }
+
+            offset += 1;
+            i += 1;
+        }
+    }
+
+    out[len] = '\0';
+
+    return out;
 }
 
 USE_DECL

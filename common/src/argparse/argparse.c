@@ -274,7 +274,7 @@ static void print_help(const argparse_config_t *config)
 
 static void print_version(const argparse_config_t *config)
 {
-    printf("version: %u.%u.%u\n", VERSION_MAJOR(config->version), VERSION_MINOR(config->version), VERSION_PATCH(config->version));
+    printf("version: %" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION "\n", VERSION_MAJOR(config->version), VERSION_MINOR(config->version), VERSION_PATCH(config->version));
 }
 
 static int process_general_args(const argparse_config_t *config, argparse_t *argparse)

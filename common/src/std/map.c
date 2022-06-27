@@ -69,20 +69,45 @@ map_t *map_new(size_t size)
     return map;
 }
 
+#define MAP_FOREACH_APPLY(self, item, ...) \
+    do { \
+        for (size_t i = 0; i < self->size; i++) { \
+            bucket_t *item = &self->data[i]; \
+            while (item && item->key) { \
+                __VA_ARGS__; \
+                item = item->next; \
+            } \
+        } \
+    } while (0)
+
 USE_DECL
 vector_t *map_values(map_t *map)
 {
     vector_t *result = vector_new(map->size);
 
-    for (size_t i = 0; i < map->size; i++)
-    {
-        bucket_t *entry = &map->data[i];
-        while (entry && entry->key)
-        {
-            vector_push(&result, entry->value);
-            entry = entry->next;
-        }
-    }
+    MAP_FOREACH_APPLY(map, entry, {
+        vector_push(&result, entry->value);
+    });
+
+    return result;
+}
+
+static map_entry_t *new_entry(const char *key, void *value)
+{
+    map_entry_t *entry = ctu_malloc(sizeof(map_entry_t));
+    entry->key = key;
+    entry->value = value;
+    return entry;
+}
+
+USE_DECL
+vector_t *map_entries(map_t *map)
+{
+    vector_t *result = vector_new(map->size);
+
+    MAP_FOREACH_APPLY(map, entry, {
+        vector_push(&result, new_entry(entry->key, entry->value));
+    });
 
     return result;
 }

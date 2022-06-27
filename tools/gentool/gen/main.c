@@ -83,6 +83,12 @@ int main(int argc, const char **argv)
     scan_t scan = scan_file(reports, "gen-tool", fd);
     ast_t *data = compile_scanner(scan, &kCallbacks);
 
+    status = end_reports(reports, "parsing config", newConfig);
+    if (status != EXIT_OK)
+    {
+        return status;
+    }
+
     const char *path = get_string_arg(&result, baseNameParam, "genout");
 
     cerror_t err = make_directory(path);

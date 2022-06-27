@@ -195,6 +195,17 @@ TEST(test_string_replace, {
     SHOULD_PASS("replace newlines", str_equal(newlines, "helloworldworld"));
 })
 
+TEST(test_string_replace_many, {
+    map_t *entries = map_optimal(64);
+    map_set(entries, "hello", "world");
+    map_set(entries, "world", "hello");
+    map_set(entries, "!", "?");
+    map_set(entries, " ", "___");
+
+    char *result = str_replace_many("hello world!", entries);
+    SHOULD_PASS("replace all correctly", str_equal(result, "world___hello?"));
+})
+
 HARNESS("strings", {
     ENTRY("string str_startswith", test_string_startswith),
     ENTRY("string str_endswith", test_string_endswith),
@@ -207,5 +218,6 @@ HARNESS("strings", {
     ENTRY("string common_prefix", test_string_common_prefix),
     ENTRY("string rfind", test_string_rfind),
     ENTRY("string equal", test_string_equal),
-    ENTRY("string replace", test_string_replace)
+    ENTRY("string replace", test_string_replace),
+    ENTRY("string replace_many", test_string_replace_many)
 })

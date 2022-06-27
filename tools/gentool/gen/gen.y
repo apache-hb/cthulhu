@@ -53,6 +53,7 @@ void generror(where_t *where, void *state, scan_t scan, const char *msg);
 
 %type<ast>
     config
+    tokens
     expr
 
 %type<map>
@@ -68,10 +69,13 @@ void generror(where_t *where, void *state, scan_t scan, const char *msg);
 
 %%
 
-entry: config { scan_set(x, ast_root(x, @$, $1)); }
+entry: config tokens { scan_set(x, ast_root(x, @$, $1)); }
     ;
 
 config: CONFIG map { $$ = ast_config(x, @$, $2); }
+    ;
+
+tokens: TOKENS map { $$ = ast_tokens(x, @$, $2); }
     ;
 
 map: LBRACE fields RBRACE { $$ = collect_map(x, $2); }

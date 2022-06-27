@@ -7,11 +7,8 @@ project('mini-gmp', 'c',
     ]
 )
 
-args = []
-
 lib = library('gmp', [ 'mini-gmp.c' ],
-    include_directories : '.',
-    c_args : args
+    include_directories : '.'
 )
 
 gmp = declare_dependency(

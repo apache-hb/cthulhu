@@ -81,7 +81,7 @@
 #ifdef CC_MSVC
 #   define ASSUME(expr) __assume(expr)
 #else
-#   define ASSUME(expr) __builtin_assume(expr)
+#    define ASSUME(expr) do { if (!(expr)) { __builtin_unreachable(); } } while (0) 
 #endif
 
 #ifdef __cplusplus

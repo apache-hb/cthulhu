@@ -13,6 +13,7 @@ typedef struct {
 
     bool enableVsCode;
 
+    // private data
     const char *id;
     const char *upperId;
 } emit_t;

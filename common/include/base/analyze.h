@@ -36,9 +36,3 @@
 #ifndef NODISCARD
 #    define NODISCARD
 #endif
-
-#if CC_MSVC
-#    define ASSUME(expr) __assume(expr)
-#elif CC_CLANG || CC_GNU
-#    define ASSUME(expr) __builtin_assume(expr)
-#endif
