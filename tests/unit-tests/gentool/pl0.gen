@@ -6,5 +6,5 @@ config {
 }
 
 tokens {
-    ignore := re([ \t\r\v\n\f])
+    ignore := re [ \t\r\v\n\f]
 }

@@ -170,6 +170,7 @@ static void emit_bison(emit_t *config, file_t file)
 #define IS ": "
 #define STRING(x) "\"" x "\""
 #define ARRAY(x) "[" x "]"
+#define OBJECT(x) "{" x "}"
 #define NL ",\n"
 
 static const char *kPackageJson = 
@@ -178,8 +179,8 @@ static const char *kPackageJson =
     "\t" KEY("displayName") IS STRING("${name}") NL
     "\t" KEY("description") IS STRING("${desc}") NL
     "\t" KEY("version") IS STRING("${version}") NL
-    "\t" KEY("engines") IS ARRAY(STRING("^1.68.0")) NL
-    "\t" KEY("categories") IS ARRAY(STRING("Programming Languages"))
+    "\t" KEY("engines") IS OBJECT(KEY("vscode") IS STRING("^1.68.0")) NL
+    "\t" KEY("categories") IS ARRAY(STRING("Programming Languages")) "\n"
     "}\n"
 ;
 

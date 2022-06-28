@@ -204,6 +204,9 @@ char *str_replace_many(const char *str, map_t *repl);
 NODISCARD
 char *str_trim(const char *str, const char *letters);
 
+NODISCARD
+char *str_trim_len(const char *str, size_t len, const char *letters);
+
 /**
  * @brief remove all instances of @a letters from @a str
  * 
@@ -265,7 +268,7 @@ char *str_noext(const char *path);
 NODISCARD
 char *str_upper(const char *str);
 
-#define STR_WHITESPACE " \t\n\r" //< all whitespace charaters
+#define STR_WHITESPACE " \t\r\v\n\f" //< all whitespace charaters
 
 /** @} */
 

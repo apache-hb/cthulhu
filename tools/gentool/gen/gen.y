@@ -35,6 +35,7 @@ void generror(where_t *where, void *state, scan_t scan, const char *msg);
 %token<str>
     IDENT "identifier"
     STRING "string literal"
+    REGEX "regex literal"
 
 %token<digit>
     DIGIT "digit literal"
@@ -50,6 +51,12 @@ void generror(where_t *where, void *state, scan_t scan, const char *msg);
 
     LBRACE "{"
     RBRACE "}"
+
+    LPAREN "("
+    RPAREN ")"
+
+    LSQUARE "["
+    RSQUARE "]"
 
 %type<ast>
     config
@@ -91,6 +98,7 @@ field: IDENT ASSIGN expr { $$ = pair_new($1, $3); }
 expr: STRING { $$ = ast_string(x, @$, $1); }
     | IDENT { $$ = ast_string(x, @$, $1); }
     | DIGIT { $$ = ast_digit(x, @$, $1); }
+    | REGEX { $$ = ast_string(x, @$, $1); }
     ;
 
 %%
