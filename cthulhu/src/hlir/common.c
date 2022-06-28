@@ -1,8 +1,8 @@
 #include "common.h"
 
-#include "scan/node.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
+#include "scan/node.h"
 
 #include "base/macros.h"
 #include "base/util.h"

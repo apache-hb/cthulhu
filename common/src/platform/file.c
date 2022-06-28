@@ -14,7 +14,7 @@ static file_format_t get_format(file_flags_t flags)
     file_flags_t fmt = flags & (FILE_TEXT | FILE_BINARY);
     CTASSERT(fmt, "no file format specified");
     CTASSERT(fmt == FILE_TEXT || fmt == FILE_BINARY, "invalid file format flags");
-    
+
     return (fmt == FILE_TEXT) ? FORMAT_TEXT : FORMAT_BINARY;
 }
 

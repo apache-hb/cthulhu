@@ -53,8 +53,7 @@ char *formatv(const char *fmt, va_list args);
  *
  * @return if str starts with prefix
  */
-NODISCARD CONSTFN
-bool str_startswith(const char *str, const char *prefix);
+NODISCARD CONSTFN bool str_startswith(const char *str, const char *prefix);
 
 /**
  * check if a string ends with a substring
@@ -64,8 +63,7 @@ bool str_startswith(const char *str, const char *prefix);
  *
  * @return if str ends with suffix
  */
-NODISCARD CONSTFN
-bool str_endswith(const char *str, const char *suffix);
+NODISCARD CONSTFN bool str_endswith(const char *str, const char *suffix);
 
 /**
  * @brief join strings
@@ -154,19 +152,17 @@ const char *common_prefix(vector_t *args);
  * @return the index of the last instance of @a sub in @a str, or SIZE_MAX if
  * sub is not found
  */
-NODISCARD CONSTFN
-size_t str_rfind(const char *str, const char *sub);
+NODISCARD CONSTFN size_t str_rfind(const char *str, const char *sub);
 
 /**
  * @brief find the last instance of a substring in a string with provided length
- * 
+ *
  * @param str the string to search
  * @param len the length of @a str
  * @param sub the substring to search for
- * @return the index of the last instance of @a sub in @a str, or SIZE_MAX 
+ * @return the index of the last instance of @a sub in @a str, or SIZE_MAX
  */
-NODISCARD CONSTFN
-size_t str_rfindn(IN_READS(len) const char *str, size_t len, const char *sub);
+NODISCARD CONSTFN size_t str_rfindn(IN_READS(len) const char *str, size_t len, const char *sub);
 
 /**
  * @brief check if a string contains a substring
@@ -176,8 +172,7 @@ size_t str_rfindn(IN_READS(len) const char *str, size_t len, const char *sub);
  *
  * @return if @a sub is found in @a str
  */
-NODISCARD CONSTFN
-bool str_contains(const char *str, const char *sub);
+NODISCARD CONSTFN bool str_contains(const char *str, const char *sub);
 
 /**
  * @brief replace all instances of a substring in a string
@@ -196,7 +191,7 @@ char *str_replace_many(const char *str, map_t *repl);
 
 /**
  * @brief trim leading and trailing characters from a string
- * 
+ *
  * @param str the string to trim
  * @param letters the letters to be removed
  * @return the trimmed string
@@ -209,7 +204,7 @@ char *str_trim_len(const char *str, size_t len, const char *letters);
 
 /**
  * @brief remove all instances of @a letters from @a str
- * 
+ *
  * @param str the string to erase letters from
  * @param len the length of @a str
  * @param letters the letters to erase
@@ -225,8 +220,7 @@ char *str_erase(IN_READS(len) const char *str, size_t len, const char *letters);
  *
  * @return the hash
  */
-NODISCARD CONSTFN
-size_t strhash(const char *str);
+NODISCARD CONSTFN size_t strhash(const char *str);
 
 /**
  * @brief compare strings equality
@@ -238,12 +232,11 @@ size_t strhash(const char *str);
  *
  * @return if the strings are equal
  */
-NODISCARD CONSTFN
-bool str_equal(const char *lhs, const char *rhs);
+NODISCARD CONSTFN bool str_equal(const char *lhs, const char *rhs);
 
 /**
  * @brief get the filename from @a path
- * 
+ *
  * @param path the path to get the filename from
  * @return the filename extracted from @a path
  */
@@ -252,7 +245,7 @@ char *str_filename(const char *path);
 
 /**
  * @brief remove the last file extension from a path
- * 
+ *
  * @param path the path to remove the extension from
  * @return the @a path with the last extension removed
  */
@@ -261,7 +254,7 @@ char *str_noext(const char *path);
 
 /**
  * @brief uppercase an ascii string
- * 
+ *
  * @param str the string
  * @return @a str with all lowercase charaters replaced with uppercase
  */

@@ -1,6 +1,6 @@
-#include "scan/compile.h"
 #include "cthulhu/interface/interface.h"
 #include "cthulhu/interface/runtime.h"
+#include "scan/compile.h"
 
 #include "sema.h"
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "scan/node.h"
 #include "cthulhu/hlir/ops.h"
+#include "scan/node.h"
 #include "std/vector.h"
 
 #include <gmp.h>

@@ -1,7 +1,7 @@
 #include "cthulhu/interface/runtime.h"
 
-#include "cthulhu/hlir/init.h"
 #include "base/util.h"
+#include "cthulhu/hlir/init.h"
 
 #include "argparse/argparse.h"
 

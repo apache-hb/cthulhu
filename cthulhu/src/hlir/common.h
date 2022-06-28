@@ -1,7 +1,7 @@
 #include "cthulhu/hlir/hlir.h"
 
-#include "report/report.h"
 #include "base/macros.h"
+#include "report/report.h"
 
 extern hlir_t *kMetaType;
 extern hlir_t *kInvalidNode;

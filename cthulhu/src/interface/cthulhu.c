@@ -1,13 +1,13 @@
-#include "scan/compile.h"
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/interface/interface.h"
 #include "cthulhu/interface/runtime.h"
 #include "report/report.h"
+#include "scan/compile.h"
 
-#include "std/str.h"
-#include "base/util.h"
 #include "base/macros.h"
+#include "base/util.h"
+#include "std/str.h"
 
 static int report_errors(cthulhu_t *cthulhu, const char *name)
 {

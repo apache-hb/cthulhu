@@ -1,15 +1,15 @@
 #include "std/str.h"
-#include "std/vector.h"
 #include "std/map.h"
+#include "std/vector.h"
 
-#include "base/util.h"
 #include "base/macros.h"
+#include "base/util.h"
 
+#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
 
 USE_DECL
 char *format(const char *fmt, ...)
@@ -371,7 +371,7 @@ char *str_replace_many(const char *str, map_t *repl)
     vector_t *pairs = map_entries(repl);
 
     const char *iter = str;
-    while (*iter) 
+    while (*iter)
     {
         const map_entry_t *entry = find_matching_key(pairs, iter);
         if (entry != NULL)
@@ -385,7 +385,7 @@ char *str_replace_many(const char *str, map_t *repl)
             iter += 1;
         }
     }
-    
+
     char *out = ctu_malloc(len + 1);
 
     size_t offset = 0; // offset into input string

@@ -4,8 +4,8 @@
 
 #include "base/macros.h"
 
-#include "report/report.h"
 #include "report/report-ext.h"
+#include "report/report.h"
 
 #include "scan/compile.h"
 
@@ -17,10 +17,10 @@
 #include "gen-bison.h"
 #include "gen-flex.h"
 
-static const char *kBaseNames[] = { "-bn", "--basename" };
+static const char *kBaseNames[] = {"-bn", "--basename"};
 #define TOTAL_BASE_NAMES (sizeof(kBaseNames) / sizeof(const char *))
 
-static const char *kEnableVsCode[] = { "-vsc", "--vscode" };
+static const char *kEnableVsCode[] = {"-vsc", "--vscode"};
 #define TOTAL_ENABLE_VSCODE_NAMES (sizeof(kEnableVsCode) / sizeof(const char *))
 
 CT_CALLBACKS(kCallbacks, gen);
@@ -30,7 +30,8 @@ int main(int argc, const char **argv)
     common_init();
 
     param_t *baseNameParam = string_param("base output path", kBaseNames, TOTAL_BASE_NAMES);
-    param_t *enableVsCodeParam = bool_param("generate a vscode grammar project", kEnableVsCode, TOTAL_ENABLE_VSCODE_NAMES);
+    param_t *enableVsCodeParam =
+        bool_param("generate a vscode grammar project", kEnableVsCode, TOTAL_ENABLE_VSCODE_NAMES);
 
     vector_t *vec = vector_new(2);
     vector_push(&vec, baseNameParam);
@@ -59,10 +60,7 @@ int main(int argc, const char **argv)
         return result.exitCode;
     }
 
-    report_config_t newConfig = {
-        .limit = result.reportLimit,
-        .warningsAreErrors = result.warningsAsErrors
-    };
+    report_config_t newConfig = {.limit = result.reportLimit, .warningsAreErrors = result.warningsAsErrors};
 
     size_t totalFiles = vector_len(result.files);
     if (totalFiles != 1)
@@ -73,7 +71,7 @@ int main(int argc, const char **argv)
 
     const char *file = vector_get(result.files, 0);
     file_t fd = check_open(reports, file, FILE_READ | FILE_TEXT);
-    
+
     int status = end_reports(reports, "opening source", newConfig);
     if (status != EXIT_OK)
     {
@@ -97,12 +95,10 @@ int main(int argc, const char **argv)
         report_errno(reports, format("failed to create directory '%s'", path), err);
     }
 
-    emit_t config = {
-        .reports = reports,
-        .root = data,
-        .path = path,
-        .enableVsCode = get_bool_arg(&result, enableVsCodeParam, false)
-    };
+    emit_t config = {.reports = reports,
+                     .root = data,
+                     .path = path,
+                     .enableVsCode = get_bool_arg(&result, enableVsCodeParam, false)};
 
     emit(&config);
 

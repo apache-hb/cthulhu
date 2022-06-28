@@ -25,8 +25,8 @@ static bool argparse_check(argparse_t *argparse, param_kind_t kind)
     param_kind_t flagKind = currentArg->kind;
     if (flagKind != kind)
     {
-        report(argparse->reports, WARNING, node_invalid(), "flag %s expected a %s, got %s",
-            argparse->currentName, kFlagTypes[kind], kFlagTypes[flagKind]);
+        report(argparse->reports, WARNING, node_invalid(), "flag %s expected a %s, got %s", argparse->currentName,
+               kFlagTypes[kind], kFlagTypes[flagKind]);
 
         argparse->currentArg = NULL;
         argparse->currentName = NULL;
@@ -68,7 +68,7 @@ void argparse_end_flag(argparse_t *argparse)
 void argparse_begin_flag(argparse_t *argparse, const char *name)
 {
     argparse_end_flag(argparse);
-    
+
     arg_t *arg = map_get(argparse->params, name);
     if (arg == NULL)
     {
@@ -90,7 +90,7 @@ void argparse_push_string(argparse_t *argparse, const char *value)
     else
     {
         argparse_end_flag(argparse);
-        vector_push(&argparse->files, (char*)value);
+        vector_push(&argparse->files, (char *)value);
     }
 }
 
@@ -101,11 +101,12 @@ void argparse_push_digit(argparse_t *argparse, mpz_t value)
         long digit = mpz_get_si(value);
         if (!mpz_fits_slong_p(value))
         {
-            message_t *id = report(argparse->reports, WARNING, node_invalid(), "flag `%s` passed digit %s, which is out of range [%ld, %ld]",
-                argparse->currentName, mpz_get_str(NULL, 10, value), LONG_MIN, LONG_MAX);
+            message_t *id = report(argparse->reports, WARNING, node_invalid(),
+                                   "flag `%s` passed digit %s, which is out of range [%ld, %ld]", argparse->currentName,
+                                   mpz_get_str(NULL, 10, value), LONG_MIN, LONG_MAX);
             report_note(id, "value truncated to %ld", digit);
         }
-        
+
         argparse->currentArg->digit = digit;
         argparse_flush(argparse);
     }

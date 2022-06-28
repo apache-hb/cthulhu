@@ -1,8 +1,8 @@
 #include "scan.h"
 
-#include "report/report.h"
 #include "base/macros.h"
 #include "base/util.h"
+#include "report/report.h"
 
 #include <limits.h>
 

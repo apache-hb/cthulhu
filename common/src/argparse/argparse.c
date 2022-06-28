@@ -5,8 +5,8 @@
 #include "base/util.h"
 
 #include "std/map.h"
-#include "std/vector.h"
 #include "std/str.h"
+#include "std/vector.h"
 
 #include "scan/compile.h"
 
@@ -26,19 +26,19 @@ void cmderror(where_t *where, void *state, scan_t scan, const char *msg)
     report(scan_reports(scan), ERROR, node_new(scan, *where), "%s", msg);
 }
 
-static const char *kHelpArgs[] = { "-h", "--help", "-?" };
+static const char *kHelpArgs[] = {"-h", "--help", "-?"};
 #define TOTAL_HELP_ARGS (sizeof(kHelpArgs) / sizeof(const char *))
 
-static const char *kVersionArgs[] = { "-v", "--version" };
+static const char *kVersionArgs[] = {"-v", "--version"};
 #define TOTAL_VERSION_ARGS (sizeof(kVersionArgs) / sizeof(const char *))
 
-static const char *kVerboseLoggingArgs[] = { "-Wverbose" };
+static const char *kVerboseLoggingArgs[] = {"-Wverbose"};
 #define TOTAL_VERBOSE_LOGGING_ARGS (sizeof(kVerboseLoggingArgs) / sizeof(const char *))
 
-static const char *kFatalWarningsArgs[] = { "-Werror" };
+static const char *kFatalWarningsArgs[] = {"-Werror"};
 #define TOTAL_FATAL_WARNINGS_ARGS (sizeof(kFatalWarningsArgs) / sizeof(const char *))
 
-static const char *kReportLimitArgs[] = { "-Wlimit" };
+static const char *kReportLimitArgs[] = {"-Wlimit"};
 #define TOTAL_REPORT_LIMIT_ARGS (sizeof(kReportLimitArgs) / sizeof(const char *))
 
 static param_t *kHelpParam = NULL;
@@ -95,22 +95,20 @@ static size_t total_arg_names(vector_t *groups)
 static argparse_t new_argparse(const argparse_config_t *config)
 {
     size_t totalNames = total_arg_names(config->groups);
-    argparse_t result = {
-        .exitCode = INT_MAX,
-        
-        .verboseEnabled = false,
-        .reportLimit = 20,
-        .warningsAsErrors = false,
+    argparse_t result = {.exitCode = INT_MAX,
 
-        .params = map_optimal(totalNames),
-        .lookup = map_optimal(totalNames),
+                         .verboseEnabled = false,
+                         .reportLimit = 20,
+                         .warningsAsErrors = false,
 
-        .files = vector_new(config->argc - 1),
+                         .params = map_optimal(totalNames),
+                         .lookup = map_optimal(totalNames),
 
-        .reports = config->reports,
-        .currentName = NULL,
-        .currentArg = NULL
-    };
+                         .files = vector_new(config->argc - 1),
+
+                         .reports = config->reports,
+                         .currentName = NULL,
+                         .currentArg = NULL};
 
     return result;
 }
@@ -120,7 +118,7 @@ static void add_arg(argparse_t *ctx, param_t *param)
     arg_t *result = ctu_malloc(sizeof(arg_t));
     result->kind = param->kind;
     result->setByUser = false;
-    
+
     map_set_ptr(ctx->lookup, param, result);
 
     for (size_t i = 0; i < param->totalNames; i++)
@@ -166,7 +164,7 @@ param_t *bool_param(const char *desc, const char **names, size_t total)
 }
 
 USE_DECL
-group_t *new_group(const char *name, const char *desc, vector_t *params) 
+group_t *new_group(const char *name, const char *desc, vector_t *params)
 {
     group_t *result = ctu_malloc(sizeof(group_t));
     result->name = name;
@@ -176,7 +174,7 @@ group_t *new_group(const char *name, const char *desc, vector_t *params)
 }
 
 USE_DECL
-long get_digit_arg(const argparse_t *argparse, const param_t *arg, long other) 
+long get_digit_arg(const argparse_t *argparse, const param_t *arg, long other)
 {
     arg_t *associated = map_get_ptr(argparse->lookup, arg);
     CTASSERT(associated != NULL, "parameter not found");
@@ -235,7 +233,7 @@ static char *join_names(const param_t *param)
     vector_t *vec = vector_of(param->totalNames);
     for (size_t i = 0; i < param->totalNames; i++)
     {
-        vector_set(vec, i, (char*)param->names[i]);
+        vector_set(vec, i, (char *)param->names[i]);
     }
     return str_join(", ", vec);
 }
@@ -267,15 +265,13 @@ static void print_help(const argparse_config_t *config)
 
 static void print_version(const argparse_config_t *config)
 {
-    printf("version: %" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION "\n", VERSION_MAJOR(config->version), VERSION_MINOR(config->version), VERSION_PATCH(config->version));
+    printf("version: %" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION "\n", VERSION_MAJOR(config->version),
+           VERSION_MINOR(config->version), VERSION_PATCH(config->version));
 }
 
 static int process_general_args(const argparse_config_t *config, argparse_t *argparse)
 {
-    report_config_t reportConfig = {
-        .limit = argparse->reportLimit,
-        .warningsAreErrors = argparse->warningsAsErrors
-    };
+    report_config_t reportConfig = {.limit = argparse->reportLimit, .warningsAreErrors = argparse->warningsAsErrors};
 
     int result = end_reports(argparse->reports, "command line parsing", reportConfig);
     if (result != EXIT_OK)

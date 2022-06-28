@@ -11,4 +11,3 @@
 typedef uint_fast32_t version_t;
 
 #define PRI_VERSION PRIuFAST32
-

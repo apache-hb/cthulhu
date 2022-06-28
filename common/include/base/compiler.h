@@ -51,7 +51,7 @@
  */
 
 #ifdef __cplusplus
-#   define NORETURN [[noreturn]] void
+#    define NORETURN [[noreturn]] void
 #endif
 
 #if CC_CLANG || CC_GNU
@@ -79,15 +79,24 @@
 #endif
 
 #ifdef CC_MSVC
-#   define ASSUME(expr) __assume(expr)
+#    define ASSUME(expr) __assume(expr)
 #else
-#    define ASSUME(expr) do { if (!(expr)) { __builtin_unreachable(); } } while (0) 
+#    define ASSUME(expr)                                                                                               \
+        do                                                                                                             \
+        {                                                                                                              \
+            if (!(expr))                                                                                               \
+            {                                                                                                          \
+                __builtin_unreachable();                                                                               \
+            }                                                                                                          \
+        } while (0)
 #endif
 
+// clang-format off
 #ifdef __cplusplus
-#    define BEGIN_API extern "C" {
+#    define BEGIN_API extern "C"  {
 #    define END_API }
 #else
 #    define BEGIN_API
 #    define END_API
 #endif
+// clang-format on

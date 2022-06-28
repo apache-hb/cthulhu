@@ -1,11 +1,11 @@
 #include "report/report.h"
+#include "base/util.h"
 #include "scan/node.h"
 #include "std/str.h"
 #include "std/vector.h"
-#include "base/util.h"
 
-#include "scan/node.h"
 #include "base/macros.h"
+#include "scan/node.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -69,8 +69,7 @@ static char *format_location(const char *base, scan_t scan, where_t where)
                       where.firstColumn, where.lastLine + 1, where.lastColumn);
     }
 
-    return format("%s source [%s:%ld:%ld]", language, path + strlen(base), where.firstLine + 1,
-                  where.firstColumn);
+    return format("%s source [%s:%ld:%ld]", language, path + strlen(base), where.firstLine + 1, where.firstColumn);
 }
 
 static void report_scanner(const char *base, node_t node)

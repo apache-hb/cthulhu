@@ -5,8 +5,8 @@
 
 #include "base/macros.h"
 
-#include <string.h>
 #include <limits.h>
+#include <string.h>
 
 typedef struct
 {
@@ -93,7 +93,6 @@ scan_t scan_invalid(void)
 {
     return UINT_MAX;
 }
-
 
 static scan_t scan_new(reports_t *reports, const char *language, const char *path, text_t source)
 {

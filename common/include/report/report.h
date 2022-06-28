@@ -2,8 +2,8 @@
 
 #include "scan/node.h"
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 
 typedef struct vector_t vector_t;
@@ -92,7 +92,10 @@ typedef struct
     bool warningsAreErrors;
 } report_config_t;
 
-#define DEFAULT_REPORT_CONFIG { .limit = SIZE_MAX, .warningsAreErrors = false }
+#define DEFAULT_REPORT_CONFIG                                                                                          \
+    {                                                                                                                  \
+        .limit = SIZE_MAX, .warningsAreErrors = false                                                                  \
+    }
 
 /**
  * @brief an error reporting sink

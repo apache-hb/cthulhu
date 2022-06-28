@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "base/version-def.h"
 #include "base/analyze.h"
+#include "base/version-def.h"
 
 typedef struct reports_t reports_t;
 typedef struct vector_t vector_t;
@@ -12,9 +12,9 @@ typedef struct map_t map_t;
 
 typedef enum
 {
-    PARAM_BOOL, // either a positional argument or a boolean flag
+    PARAM_BOOL,   // either a positional argument or a boolean flag
     PARAM_STRING, // a string of some sort
-    PARAM_INT, // an integer
+    PARAM_INT,    // an integer
 
     PARAM_TOTAL
 } param_kind_t;
@@ -22,7 +22,7 @@ typedef enum
 /**
  * a user provided argument from the command line
  */
-typedef struct 
+typedef struct
 {
     param_kind_t kind;
     bool setByUser;
@@ -34,7 +34,7 @@ typedef struct
 } arg_t;
 
 /**
- * an option that can be specified on the command line 
+ * an option that can be specified on the command line
  */
 typedef struct
 {
@@ -96,19 +96,14 @@ param_t *bool_param(const char *desc, const char **names, size_t total);
 NODISCARD
 group_t *new_group(const char *name, const char *desc, vector_t *params);
 
-NODISCARD CONSTFN
-long get_digit_arg(const argparse_t *argparse, const param_t *arg, long other);
+NODISCARD CONSTFN long get_digit_arg(const argparse_t *argparse, const param_t *arg, long other);
 
-NODISCARD CONSTFN
-const char *get_string_arg(const argparse_t *argparse, const param_t *arg, const char *other);
+NODISCARD CONSTFN const char *get_string_arg(const argparse_t *argparse, const param_t *arg, const char *other);
 
-NODISCARD CONSTFN
-bool get_bool_arg(const argparse_t *argparse, const param_t *arg, bool other);
+NODISCARD CONSTFN bool get_bool_arg(const argparse_t *argparse, const param_t *arg, bool other);
 
 void argparse_init(void);
 
-NODISCARD CONSTFN
-argparse_t parse_args(const argparse_config_t *config);
+NODISCARD CONSTFN argparse_t parse_args(const argparse_config_t *config);
 
-NODISCARD CONSTFN
-bool should_exit(const argparse_t *argparse);
+NODISCARD CONSTFN bool should_exit(const argparse_t *argparse);

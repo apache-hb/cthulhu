@@ -2,8 +2,8 @@
 
 #include <stdbool.h>
 
-#include "scan/node.h"
 #include "cthulhu/hlir/ops.h"
+#include "scan/node.h"
 #include "std/vector.h"
 
 #include "attribs.h"

@@ -9,7 +9,8 @@ typedef struct vector_t vector_t;
 
 #define GENLTYPE where_t
 
-typedef enum {
+typedef enum
+{
     AST_ROOT,
 
     AST_CONFIG,
@@ -20,12 +21,14 @@ typedef enum {
     AST_DIGIT
 } ast_kind_t;
 
-typedef struct ast_t {
+typedef struct ast_t
+{
     ast_kind_t kind;
     node_t node;
 
     union {
-        struct {
+        struct
+        {
             struct ast_t *config;
             struct ast_t *tokens;
             struct ast_t *grammar;
@@ -38,7 +41,8 @@ typedef struct ast_t {
     };
 } ast_t;
 
-typedef struct {
+typedef struct
+{
     const char *key;
     ast_t *value;
 } pair_t;

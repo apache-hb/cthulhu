@@ -4,28 +4,28 @@
 
 #include <string.h>
 
-#include "std/str.h"
 #include "std/map.h"
+#include "std/str.h"
 
 #include "base/macros.h"
 
-#include "report/report.h"
 #include "report/report-ext.h"
+#include "report/report.h"
 
 #include "cJSON.h"
 
-#define CONFIG_NAME "name" /// the user facing name of the language
-#define CONFIG_VERSION "version" /// the version of this language
+#define CONFIG_NAME "name"           /// the user facing name of the language
+#define CONFIG_VERSION "version"     /// the version of this language
 #define CONFIG_CHANGELOG "changelog" /// relative path to the changelog file
-#define CONFIG_ID "id" /// the internal name of this language
-#define CONFIG_DESC "desc" /// short description of the language
-#define CONFIG_EXTS "exts" /// possible file extensions for this language
+#define CONFIG_ID "id"               /// the internal name of this language
+#define CONFIG_DESC "desc"           /// short description of the language
+#define CONFIG_EXTS "exts"           /// possible file extensions for this language
 
 static const char *get_string(reports_t *reports, map_t *map, const char *field)
 {
     const ast_t *value = map_get(map, field);
-    
-    if (value == NULL) 
+
+    if (value == NULL)
     {
         report(reports, ERROR, node_invalid(), "missing field '%s'", field);
         return "";
@@ -66,14 +66,21 @@ static bool emit_include(emit_t *emit, file_t file, const char *path, const char
     return write_to(emit, file, "%s#include \"%s\"\n", pre, path);
 }
 
-#define CHECK(expr) do { if (!(expr)) { return; } } while (0)
+#define CHECK(expr)                                                                                                    \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        if (!(expr))                                                                                                   \
+        {                                                                                                              \
+            return;                                                                                                    \
+        }                                                                                                              \
+    } while (0)
 #define WRITE(fn, ...) CHECK(fn(config, file, __VA_ARGS__))
 #define WRITE_LINE() WRITE(write_to, "\n")
 
 static void emit_header(emit_t *config, file_t file)
 {
     WRITE(write_to, "#pragma once\n");
-    
+
     WRITE_LINE();
     WRITE(emit_include, "scan/node.h", "");
 
@@ -94,7 +101,6 @@ static void emit_source(emit_t *config, file_t file)
     WRITE(write_to, "\treport(scan_reports(scan), ERROR, node_new(scan, *where), \"%%s\", msg);\n");
     WRITE(write_to, "}\n");
 }
-
 
 static bool write_attr(emit_t *config, file_t file, const char *cfg, const char *body)
 {
@@ -173,16 +179,18 @@ static void emit_bison(emit_t *config, file_t file)
 #define OBJECT(x) "{" x "}"
 #define NL ",\n"
 
-static const char *kPackageJson = 
+// clang-format off
+static const char *kPackageJson =
     "{\n"
-    "\t" KEY("name") IS STRING("${id}") NL
-    "\t" KEY("displayName") IS STRING("${name}") NL
-    "\t" KEY("description") IS STRING("${desc}") NL
-    "\t" KEY("version") IS STRING("${version}") NL
-    "\t" KEY("engines") IS OBJECT(KEY("vscode") IS STRING("^1.68.0")) NL
+    "\t" KEY("name") IS STRING("${id}") NL 
+    "\t" KEY("displayName") IS STRING("${name}") NL 
+    "\t" KEY("description") IS STRING("${desc}") NL 
+    "\t" KEY("version") IS STRING("${version}") NL 
+    "\t" KEY("engines") IS OBJECT(KEY("vscode") IS STRING("^1.68.0")) NL 
     "\t" KEY("categories") IS ARRAY(STRING("Programming Languages")) "\n"
     "}\n"
 ;
+// clang-format on
 
 // generate package.json
 static void emit_vscode_package(emit_t *config, file_t file)
@@ -193,10 +201,10 @@ static void emit_vscode_package(emit_t *config, file_t file)
     const char *ver = get_string(config->reports, cfg, CONFIG_VERSION);
 
     map_t *replace = map_optimal(32);
-    map_set(replace, "${id}", (char*)config->id);
-    map_set(replace, "${name}", (char*)name);
-    map_set(replace, "${version}", (char*)ver);
-    map_set(replace, "${desc}", (char*)desc);
+    map_set(replace, "${id}", (char *)config->id);
+    map_set(replace, "${name}", (char *)name);
+    map_set(replace, "${version}", (char *)ver);
+    map_set(replace, "${desc}", (char *)desc);
 
     const char *result = str_replace_many(kPackageJson, replace);
 
@@ -221,15 +229,19 @@ static void emit_vscode(emit_t *config)
 {
     const char *root = format("%s" NATIVE_PATH_SEPARATOR "%s", config->path, config->id);
     cerror_t err = make_directory(root);
-    if (err != 0) 
+    if (err != 0)
     {
         report_errno(config->reports, "failed to make vscode directory", err);
         return;
     }
 
-    file_t package = check_open(config->reports, format("%s" NATIVE_PATH_SEPARATOR "package.json", root), FILE_WRITE | FILE_TEXT);
-    file_t language = check_open(config->reports, format("%s" NATIVE_PATH_SEPARATOR "language-configuration.json", root), FILE_WRITE | FILE_TEXT);
-    file_t tmlang = check_open(config->reports, format("%s" NATIVE_PATH_SEPARATOR "%s.tmlang.json", root, config->id), FILE_WRITE | FILE_TEXT);
+    char *packagePath = format("%s" NATIVE_PATH_SEPARATOR "package.json", root);
+    char *languagePath = format("%s" NATIVE_PATH_SEPARATOR "language-configuration.json", root);
+    char *tmlangPath = format("%s" NATIVE_PATH_SEPARATOR "%s.tmlang.json", root, config->id);
+
+    file_t package = check_open(config->reports, packagePath, FILE_WRITE | FILE_TEXT);
+    file_t language = check_open(config->reports, languagePath, FILE_WRITE | FILE_TEXT);
+    file_t tmlang = check_open(config->reports, tmlangPath, FILE_WRITE | FILE_TEXT);
 
     if (file_valid(package))
     {
@@ -255,26 +267,34 @@ void emit(emit_t *config)
     config->id = get_string(config->reports, config->root->config->fields, CONFIG_ID);
     config->upperId = str_upper(config->id);
 
-    file_t header = check_open(config->reports, format("%s" NATIVE_PATH_SEPARATOR "ast.gen.h", config->path), FILE_WRITE | FILE_TEXT);
-    file_t source = check_open(config->reports, format("%s" NATIVE_PATH_SEPARATOR "ast.gen.c", config->path), FILE_WRITE | FILE_TEXT);
+    char *headerPath = format("%s" NATIVE_PATH_SEPARATOR "ast.gen.h", config->path);
+    char *sourcePath = format("%s" NATIVE_PATH_SEPARATOR "ast.gen.c", config->path);
+    char *flexPath = format("%s" NATIVE_PATH_SEPARATOR "ast.l", config->path);
+    char *bisonPath = format("%s" NATIVE_PATH_SEPARATOR "ast.y", config->path);
 
-    file_t flex = check_open(config->reports, format("%s" NATIVE_PATH_SEPARATOR "ast.l", config->path), FILE_WRITE | FILE_TEXT);
-    file_t bison = check_open(config->reports, format("%s" NATIVE_PATH_SEPARATOR "ast.y", config->path), FILE_WRITE | FILE_TEXT);
+    file_t header = check_open(config->reports, headerPath, FILE_WRITE | FILE_TEXT);
+    file_t source = check_open(config->reports, sourcePath, FILE_WRITE | FILE_TEXT);
 
-#define EMIT_FILE(file, fn) do { \
-    if (file_valid(file)) { \
-        fn(config, file); \
-        write_to(config, file, "\n"); \
-        file_close(file); \
-        } \
+    file_t flex = check_open(config->reports, flexPath, FILE_WRITE | FILE_TEXT);
+    file_t bison = check_open(config->reports, bisonPath, FILE_WRITE | FILE_TEXT);
+
+#define EMIT_FILE(file, fn)                                                                                            \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        if (file_valid(file))                                                                                          \
+        {                                                                                                              \
+            fn(config, file);                                                                                          \
+            write_to(config, file, "\n");                                                                              \
+            file_close(file);                                                                                          \
+        }                                                                                                              \
     } while (0)
 
     EMIT_FILE(header, emit_header);
     EMIT_FILE(source, emit_source);
     EMIT_FILE(flex, emit_flex);
     EMIT_FILE(bison, emit_bison);
-    
-    if (config->enableVsCode) 
+
+    if (config->enableVsCode)
     {
         emit_vscode(config);
     }

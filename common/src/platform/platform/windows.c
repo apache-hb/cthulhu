@@ -52,11 +52,11 @@ static wchar_t *widen_string(const char *str)
 {
     int len = (int)strlen(str);
     int needed = MultiByteToWideChar(CP_UTF8, 0, str, len, NULL, 0);
-    
+
     size_t bytes = sizeof(wchar_t) * (needed + 1);
     wchar_t *result = ctu_malloc(bytes);
     memset(result, 0, bytes);
-    
+
     MultiByteToWideChar(CP_UTF8, 0, str, len, result, needed);
     return result;
 }
@@ -166,7 +166,7 @@ const void *native_file_map(file_handle_t handle, native_cerror_t *error)
     {
         return "";
     }
-    
+
     HANDLE mapping = CreateFileMapping(
         /* hFile = */ handle,
         /* lpFileMappingAttributes = */ NULL,
@@ -228,9 +228,9 @@ static LONG WINAPI exception_filter(LPEXCEPTION_POINTERS info)
         fprintf(stderr, COLOUR_CYAN "[segfault]" COLOUR_RESET ": this is a compiler bug\n");
         ExitProcess(EXIT_INTERNAL);
     }
-    
+
     fprintf(stderr, COLOUR_CYAN "[signal:0x%lX]" COLOUR_RESET ": unhandled signal\n", record->ExceptionCode);
-    
+
     return EXCEPTION_CONTINUE_SEARCH;
 }
 

@@ -7,8 +7,8 @@
 #include "cthulhu/hlir/type.h"
 #include "cthulhu/interface/runtime.h"
 
-#include "base/util.h"
 #include "base/macros.h"
+#include "base/util.h"
 
 #include "report/report-ext.h"
 #include "std/set.h"
@@ -395,7 +395,7 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
         [TAG_PROCS] = 32,
         [TAG_MODULES] = 32,
     };
-    
+
     sema_t *nestThen = sema_new(sema, sema->reports, TAG_MAX, sizes);
 
     hlir_t *then = sema_stmt(nestThen, ast->then);
@@ -549,7 +549,12 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? LINK_IMPORTED : LINK_EXPORTED, 0, NULL, NULL);
     hlir_t *body = NULL;
 
-    size_t tags[TAG_MAX] = {[TAG_VARS] = 32, [TAG_PROCS] = 32, [TAG_TYPES] = 32, [TAG_MODULES] = 32,};
+    size_t tags[TAG_MAX] = {
+        [TAG_VARS] = 32,
+        [TAG_PROCS] = 32,
+        [TAG_TYPES] = 32,
+        [TAG_MODULES] = 32,
+    };
 
     sema_t *nest = sema_new(sema, sema->reports, TAG_MAX, tags);
     sema_params(nest, decl->params);

@@ -5,7 +5,8 @@
 typedef struct reports_t reports_t;
 typedef struct ast_t ast_t;
 
-typedef struct {
+typedef struct
+{
     reports_t *reports;
     const ast_t *root;
 

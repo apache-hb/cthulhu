@@ -1,7 +1,7 @@
 #pragma once
 
-#include "scan/node.h"
 #include "cthulhu/hlir/ops.h"
+#include "scan/node.h"
 #include "std/vector.h"
 
 #include <gmp.h>
@@ -34,8 +34,7 @@ typedef struct pl0_t
     pl0_type_t type;
     node_t node;
 
-    union
-    {
+    union {
         /* integer literal */
         mpz_t digit;
 

@@ -1,5 +1,5 @@
-#include "base/util.h"
 #include "base/macros.h"
+#include "base/util.h"
 
 #include <gmp.h>
 #include <stdarg.h>

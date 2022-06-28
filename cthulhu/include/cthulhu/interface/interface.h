@@ -1,10 +1,10 @@
 #pragma once
 
+#include "base/version-def.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/sema.h"
-#include "report/report.h"
 #include "platform/file.h"
-#include "base/version-def.h"
+#include "report/report.h"
 
 BEGIN_API
 

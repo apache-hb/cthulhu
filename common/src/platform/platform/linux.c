@@ -1,11 +1,11 @@
 #include "platform.h"
 
-#include "std/str.h"
 #include "base/util.h"
 #include "platform.h"
+#include "std/str.h"
 #include <errno.h>
-#include <string.h>
 #include <signal.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -44,7 +44,7 @@ USE_DECL
 native_cerror_t native_make_directory(const char *path)
 {
     int res = mkdir(path, 0755);
-    
+
     if (res == -1)
     {
         native_cerror_t err = native_get_last_error();

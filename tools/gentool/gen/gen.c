@@ -44,7 +44,7 @@ ast_t *ast_tokens(scan_t scan, where_t where, map_t *fields)
     return ast;
 }
 
-map_t *collect_map(scan_t scan, vector_t *fields) 
+map_t *collect_map(scan_t scan, vector_t *fields)
 {
     size_t len = vector_len(fields);
     map_t *result = map_optimal(len);
@@ -64,7 +64,7 @@ map_t *collect_map(scan_t scan, vector_t *fields)
     return result;
 }
 
-pair_t *pair_new(const char *key, struct ast_t *ast) 
+pair_t *pair_new(const char *key, struct ast_t *ast)
 {
     pair_t *pair = ctu_malloc(sizeof(pair_t));
     pair->key = key;

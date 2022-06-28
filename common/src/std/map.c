@@ -1,7 +1,7 @@
 #include "std/map.h"
-#include "std/vector.h"
-#include "std/str.h"
 #include "base/util.h"
+#include "std/str.h"
+#include "std/vector.h"
 
 /**
  * a bucket in a hashmap
@@ -69,15 +69,18 @@ map_t *map_new(size_t size)
     return map;
 }
 
-#define MAP_FOREACH_APPLY(self, item, ...) \
-    do { \
-        for (size_t i = 0; i < self->size; i++) { \
-            bucket_t *item = &self->data[i]; \
-            while (item && item->key) { \
-                __VA_ARGS__; \
-                item = item->next; \
-            } \
-        } \
+#define MAP_FOREACH_APPLY(self, item, ...)                                                                             \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        for (size_t i = 0; i < self->size; i++)                                                                        \
+        {                                                                                                              \
+            bucket_t *item = &self->data[i];                                                                           \
+            while (item && item->key)                                                                                  \
+            {                                                                                                          \
+                __VA_ARGS__;                                                                                           \
+                item = item->next;                                                                                     \
+            }                                                                                                          \
+        }                                                                                                              \
     } while (0)
 
 USE_DECL
@@ -85,9 +88,7 @@ vector_t *map_values(map_t *map)
 {
     vector_t *result = vector_new(map->size);
 
-    MAP_FOREACH_APPLY(map, entry, {
-        vector_push(&result, entry->value);
-    });
+    MAP_FOREACH_APPLY(map, entry, { vector_push(&result, entry->value); });
 
     return result;
 }
@@ -105,9 +106,7 @@ vector_t *map_entries(map_t *map)
 {
     vector_t *result = vector_new(map->size);
 
-    MAP_FOREACH_APPLY(map, entry, {
-        vector_push(&result, new_entry(entry->key, entry->value));
-    });
+    MAP_FOREACH_APPLY(map, entry, { vector_push(&result, new_entry(entry->key, entry->value)); });
 
     return result;
 }

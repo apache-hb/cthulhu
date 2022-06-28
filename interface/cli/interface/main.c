@@ -8,7 +8,7 @@
 
 #include "cthulhu/emit/c89.h"
 
-static const char *kOutputFileNames[] = { "-o", "--output" };
+static const char *kOutputFileNames[] = {"-o", "--output"};
 #define TOTAL_OUTPUT_FILE_NAMES (sizeof(kOutputFileNames) / sizeof(const char *))
 
 int main(int argc, const char **argv)

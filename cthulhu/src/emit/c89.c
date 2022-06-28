@@ -1,13 +1,13 @@
 #include "cthulhu/emit/c89.h"
-#include "cthulhu/hlir/ops.h"
 #include "cthulhu/hlir/attribs.h"
+#include "cthulhu/hlir/ops.h"
 #include "report/report.h"
 #include "std/map.h"
 
+#include "base/util.h"
 #include "cthulhu/hlir/query.h"
 #include "std/set.h"
 #include "std/str.h"
-#include "base/util.h"
 #include "std/stream.h"
 
 #include <string.h>
@@ -49,26 +49,25 @@ static char *c89_mangle_section(const char *section)
 }
 
 static const char *kDigitMangles[SIGN_TOTAL][DIGIT_TOTAL] = {
-    [SIGN_SIGNED] = {
-        [DIGIT_CHAR] = "a",
-        [DIGIT_SHORT] = "s",
-        [DIGIT_INT] = "i",
-        [DIGIT_LONG] = "x",
+    [SIGN_SIGNED] = {[DIGIT_CHAR] = "a",
+                     [DIGIT_SHORT] = "s",
+                     [DIGIT_INT] = "i",
+                     [DIGIT_LONG] = "x",
 
-        [DIGIT_PTR] = "x", // TODO: only right for 64-bit
-        [DIGIT_MAX] = "n",
-        [DIGIT_SIZE] = "x"
-    },
-    [SIGN_UNSIGNED] = {
-        [DIGIT_CHAR] = "h",
-        [DIGIT_SHORT] = "t",
-        [DIGIT_INT] = "j",
-        [DIGIT_LONG] = "y",
+                     [DIGIT_PTR] = "x", // TODO: only right for 64-bit
+                     [DIGIT_MAX] = "n",
+                     [DIGIT_SIZE] = "x"},
+    [SIGN_UNSIGNED] =
+        {
+            [DIGIT_CHAR] = "h",
+            [DIGIT_SHORT] = "t",
+            [DIGIT_INT] = "j",
+            [DIGIT_LONG] = "y",
 
-        [DIGIT_PTR] = "y",
-        [DIGIT_MAX] = "o",
-        [DIGIT_SIZE] = "y",
-    },
+            [DIGIT_PTR] = "y",
+            [DIGIT_MAX] = "o",
+            [DIGIT_SIZE] = "y",
+        },
 };
 
 static const char *c89_mangle_type(c89_emit_t *emit, const hlir_t *type);
@@ -183,7 +182,7 @@ static char *c89_mangle_params(c89_emit_t *emit, vector_t *params)
     {
         hlir_t *param = vector_get(params, i);
         const char *mangled = c89_mangle_type(emit, param);
-        vector_set(parts, i, (char*)mangled);
+        vector_set(parts, i, (char *)mangled);
     }
 
     return str_join("", parts);
@@ -399,7 +398,7 @@ static const char *c89_emit_params(c89_emit_t *emit, vector_t *params)
     {
         const hlir_t *param = vector_get(params, i);
         const char *paramType = c89_emit_type(emit, param, NULL);
-        vector_set(paramTypes, i, (char*)paramType);
+        vector_set(paramTypes, i, (char *)paramType);
     }
 
     return str_join(", ", paramTypes);

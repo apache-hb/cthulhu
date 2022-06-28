@@ -1,6 +1,6 @@
 #include "std/set.h"
-#include "std/str.h"
 #include "base/util.h"
+#include "std/str.h"
 
 /**
  * @brief a node in a chain of set entries

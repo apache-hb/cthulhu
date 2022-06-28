@@ -1,8 +1,8 @@
 #pragma once
 
+#include "hlir.h"
 #include "report/report.h"
 #include "std/map.h"
-#include "hlir.h"
 
 typedef struct sema_t
 {

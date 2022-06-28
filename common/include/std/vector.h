@@ -96,8 +96,7 @@ void vector_set(vector_t *vector, size_t index, void *value);
  * @param index the index to query
  * @return the value at index
  */
-NODISCARD CONSTFN
-void *vector_get(const vector_t *vector, size_t index);
+NODISCARD CONSTFN void *vector_get(const vector_t *vector, size_t index);
 
 /**
  * @brief get a vectors last element
@@ -108,8 +107,7 @@ void *vector_get(const vector_t *vector, size_t index);
  * @param vector the vector to get from
  * @return the value of the last element
  */
-NODISCARD CONSTFN
-void *vector_tail(const vector_t *vector);
+NODISCARD CONSTFN void *vector_tail(const vector_t *vector);
 
 /**
  * @brief get vector length
@@ -119,8 +117,7 @@ void *vector_tail(const vector_t *vector);
  * @param vector the vector to get the length of
  * @return the active size of the vector
  */
-NODISCARD CONSTFN
-size_t vector_len(const vector_t *vector);
+NODISCARD CONSTFN size_t vector_len(const vector_t *vector);
 
 /**
  * @brief join two vectors
@@ -146,8 +143,7 @@ vector_t *vector_join(vector_t *vectors);
  * @param element the element to search for
  * @return the index of the element of @a SIZE_MAX if not found
  */
-NODISCARD CONSTFN
-size_t vector_find(vector_t *vector, const void *element);
+NODISCARD CONSTFN size_t vector_find(vector_t *vector, const void *element);
 
 /**
  * @brief reset the length of a vector

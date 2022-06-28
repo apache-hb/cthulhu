@@ -1,11 +1,11 @@
 #include "cthulhu/hlir/sema.h"
+#include "base/macros.h"
+#include "base/util.h"
 #include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 #include "report/report.h"
-#include "base/macros.h"
-#include "base/util.h"
 
 #include <string.h>
 
@@ -337,7 +337,7 @@ static bool can_mangle_name(hlir_linkage_t linkage)
 {
     switch (linkage)
     {
-    case LINK_INTERNAL: // it makes no sense to mangle internal symbols
+    case LINK_INTERNAL:  // it makes no sense to mangle internal symbols
     case LINK_ENTRY_GUI: // these are defined by the platform and cannot be mangled
     case LINK_ENTRY_CLI:
         return false;
@@ -348,7 +348,7 @@ static bool can_mangle_name(hlir_linkage_t linkage)
 }
 
 static const char *kLinkageNames[LINK_TOTAL] = {
-    [LINK_INTERNAL] = "a symbol with internal linkage", 
+    [LINK_INTERNAL] = "a symbol with internal linkage",
     [LINK_ENTRY_GUI] = "the gui entry point",
     [LINK_ENTRY_CLI] = "the cli entry point",
 };
@@ -369,7 +369,8 @@ static void check_attribute(check_t *ctx, hlir_t *hlir)
     if (attribs->mangle != NULL && !can_mangle_name(attribs->linkage))
     {
         node_t node = get_hlir_node(hlir);
-        message_t *id = report(ctx->reports, WARNING, node, "cannot change name mangling of %s", kLinkageNames[attribs->linkage]);
+        message_t *id =
+            report(ctx->reports, WARNING, node, "cannot change name mangling of %s", kLinkageNames[attribs->linkage]);
         report_note(id, "attribute will not be mangled");
 
         hlir_attributes_t *newAttribs = ctu_memdup(attribs, sizeof(hlir_attributes_t));
@@ -444,7 +445,7 @@ void check_module(check_t *check, hlir_t *mod)
         for (size_t i = 0; i < (length); i++)                                                                          \
         {                                                                                                              \
             hlir_t *var = vector_get(vector, i);                                                                       \
-            check_attribute(check, var);                                                                             \
+            check_attribute(check, var);                                                                               \
             check_identifier_isnt_empty(reports, var);                                                                 \
         }                                                                                                              \
     } while (0)

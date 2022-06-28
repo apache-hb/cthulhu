@@ -4,7 +4,7 @@
 // clang-format on
 
 #ifndef __has_feature
-#   define __has_feature(...) 0
+#    define __has_feature(...) 0
 #endif
 
 #define ADDRSAN_ENABLED ((__SANITIZE_ADDRESS__ != 0) || __has_feature(address_sanitizer))
@@ -13,6 +13,6 @@
 void install_segfault(void)
 {
 #if !ADDRSAN_ENABLED
-    native_install_segfault();   
+    native_install_segfault();
 #endif
 }
