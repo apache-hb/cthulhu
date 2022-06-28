@@ -60,6 +60,7 @@ void argparse_end_flag(argparse_t *argparse)
 {
     if (argparse_check(argparse, PARAM_BOOL))
     {
+        printf("argparse-end: %s\n", argparse->currentName);
         argparse->currentArg->boolean = true;
         argparse_flush(argparse);
     }
@@ -78,6 +79,8 @@ void argparse_begin_flag(argparse_t *argparse, const char *name)
 
     argparse->currentName = name;
     argparse->currentArg = arg;
+
+    printf("argparse-begin: %s\n", argparse->currentName);
 }
 
 void argparse_push_string(argparse_t *argparse, const char *value)
@@ -90,7 +93,6 @@ void argparse_push_string(argparse_t *argparse, const char *value)
     else
     {
         argparse_end_flag(argparse);
-    
         vector_push(&argparse->files, (char*)value);
     }
 }

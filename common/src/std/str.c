@@ -350,57 +350,57 @@ char *str_replace(const char *str, const char *sub, const char *repl)
     return str_join(repl, split);
 }
 
+static const map_entry_t *find_matching_key(vector_t *pairs, const char *str)
+{
+    for (size_t i = 0; i < vector_len(pairs); i++)
+    {
+        const map_entry_t *entry = vector_get(pairs, i);
+        if (str_startswith(str, entry->key))
+        {
+            return entry;
+        }
+    }
+
+    return NULL;
+}
+
 USE_DECL
 char *str_replace_many(const char *str, map_t *repl)
 {
     size_t len = 0;
     vector_t *pairs = map_entries(repl);
-    size_t totalPairs = vector_len(pairs);
 
     const char *iter = str;
     while (*iter) 
     {
-        for (size_t i = 0; i < totalPairs; i++) 
+        const map_entry_t *entry = find_matching_key(pairs, iter);
+        if (entry != NULL)
         {
-            const map_entry_t *entry = vector_get(pairs, i);
-            
-            if (str_startswith(iter, entry->key))
-            {
-                len += strlen(entry->value);
-                iter += strlen(entry->key);
-                break;
-            }
-            else
-            {
-                continue;
-            }
-
+            len += strlen(entry->value);
+            iter += strlen(entry->key);
+        }
+        else
+        {
+            len += 1;
             iter += 1;
         }
     }
     
     char *out = ctu_malloc(len + 1);
 
-    size_t offset = 0;
+    size_t offset = 0; // offset into input string
     for (size_t i = 0; i < len;)
     {
-        for (size_t j = 0; j < totalPairs; j++)
+        const map_entry_t *entry = find_matching_key(pairs, str + offset);
+        if (entry != NULL)
         {
-            const map_entry_t *entry = vector_get(pairs, i);
-            if (str_startswith(str + i, entry->key))
-            {
-                memcpy(out + offset, entry->value, strlen(entry->value));
-                i += strlen(entry->key);
-                offset += strlen(entry->value);
-                break;
-            }
-            else
-            {
-                continue;
-            }
-
-            offset += 1;
-            i += 1;
+            memcpy(out + i, entry->value, strlen(entry->value));
+            i += strlen(entry->value);
+            offset += strlen(entry->key);
+        }
+        else
+        {
+            out[i++] = str[offset++];
         }
     }
 

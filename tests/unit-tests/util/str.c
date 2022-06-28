@@ -203,6 +203,7 @@ TEST(test_string_replace_many, {
     map_set(entries, " ", "___");
 
     char *result = str_replace_many("hello world!", entries);
+    printf("result: %s\n", result);
     SHOULD_PASS("replace all correctly", str_equal(result, "world___hello?"));
 })
 

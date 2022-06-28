@@ -65,7 +65,7 @@ TEST(test_extra_args, {
     group_t *group = new_group("test group", "test group desc", vector_init(param));
     
     const char *argv[] = { "argparse-test", "--help", "hello.txt", "--param" };
-    const int argc = 2;
+    const int argc = 4;
 
     argparse_config_t config = {
         .argv = argv,
@@ -81,7 +81,7 @@ TEST(test_extra_args, {
 
     argparse_t result = parse_args(&config);
 
-    SHOULD_PASS("no extra files", vector_len(result.files) == 0);
+    SHOULD_PASS("no extra files", vector_len(result.files) == 1);
     SHOULD_PASS("has param", get_bool_arg(&result, param, false));
 })
 

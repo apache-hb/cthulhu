@@ -62,13 +62,6 @@ static param_t *new_param(param_kind_t kind, const char *desc, const char **name
 
 void argparse_init(void)
 {
-    static bool init = false;
-    if (init)
-    {
-        init = true;
-        return;
-    }
-
     kHelpParam = bool_param("print this help message", kHelpArgs, TOTAL_HELP_ARGS);
     kVersionParam = bool_param("print the version number", kVersionArgs, TOTAL_VERSION_ARGS);
 

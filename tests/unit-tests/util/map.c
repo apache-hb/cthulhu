@@ -1,4 +1,5 @@
 #include "std/map.h"
+#include "std/str.h"
 #include "ct-test.h"
 
 static const char *kSetItems[] = {
@@ -52,7 +53,8 @@ TEST(test_map_insertion_ptr, {
 TEST(test_map_iter, {
     map_t *map = map_new(64);
 
-    for (size_t i = 0; i < TOTAL_ITEMS; i++) {
+    for (size_t i = 0; i < TOTAL_ITEMS; i++) 
+    {
         map_set_ptr(map, kSetItems[i], (char*)kSetItems[i]);
     }
 
@@ -71,10 +73,29 @@ TEST(test_map_iter, {
     SHOULD_PASS("map has items", items == TOTAL_ITEMS);
 })
 
+TEST(test_map_entries, {
+    map_t *map = map_new(64);
+    for (size_t i = 0; i < TOTAL_ITEMS; i++) 
+    {
+        map_set(map, kSetItems[i], (char*)kSetItems[i]);
+    }
+
+    vector_t *entries = map_entries(map);
+
+    SHOULD_PASS("correct entry count", vector_len(entries) == TOTAL_ITEMS);
+
+    for (size_t i = 0; i < vector_len(entries); i++)
+    {
+        map_entry_t *entry = vector_get(entries, i);
+        SHOULD_PASS("map entry correct", str_equal(entry->key, entry->value));
+    }
+})
+
 HARNESS("maps", {
     ENTRY("construction", test_map_construction),
     ENTRY("insertion", test_map_insertion),
     ENTRY("defaults", test_map_default),
     ENTRY("insertion-ptr", test_map_insertion_ptr),
-    ENTRY("iter", test_map_iter)
+    ENTRY("iter", test_map_iter),
+    ENTRY("entries", test_map_entries)
 })

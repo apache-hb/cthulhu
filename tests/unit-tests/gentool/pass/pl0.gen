@@ -1,0 +1,18 @@
+config {
+    lang := "pl0"
+    ext := [ "pl0" ]
+}
+
+tokens {
+    whitespace(regex([ \t\r\n]))
+
+    line-comment("//")
+    block-comment("/*", "*/")
+
+    pair("{" :: LBRACE, "}" :: RBRACE)
+    pair("[" :: LSQUARE, "]" :: RSQUARE)
+}
+
+grammar {
+
+}
