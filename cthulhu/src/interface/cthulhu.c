@@ -51,12 +51,12 @@ static source_t *source_of_kind(source_kind_t kind, const char *path)
 
 source_t *source_file(const char *path)
 {
-    return source_of_kind(SOURCE_FILE, path);
+    return source_of_kind(eSourceFile, path);
 }
 
 source_t *source_string(const char *path, const char *string)
 {
-    source_t *source = source_of_kind(SOURCE_STRING, path);
+    source_t *source = source_of_kind(eSourceString, path);
     source->string = string;
     return source;
 }
@@ -112,8 +112,8 @@ static scan_t make_scanner_from_string(cthulhu_t *cthulhu, source_t *source)
 static scan_t make_scanner_from_source(cthulhu_t *cthulhu, source_t *source)
 {
     scan_t (*make[])(cthulhu_t *, source_t *) = {
-        [SOURCE_FILE] = make_scanner_from_file,
-        [SOURCE_STRING] = make_scanner_from_string,
+        [eSourceFile] = make_scanner_from_file,
+        [eSourceString] = make_scanner_from_string,
     };
 
     return make[source->kind](cthulhu, source);

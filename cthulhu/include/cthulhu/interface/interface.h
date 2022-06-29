@@ -20,8 +20,8 @@ typedef struct
 
 typedef enum
 {
-    SOURCE_STRING,
-    SOURCE_FILE
+    eSourceString,
+    eSourceFile
 } source_kind_t;
 
 typedef struct
