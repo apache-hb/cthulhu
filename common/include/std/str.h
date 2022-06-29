@@ -199,9 +199,6 @@ char *str_replace_many(const char *str, map_t *repl);
 NODISCARD
 char *str_trim(const char *str, const char *letters);
 
-NODISCARD
-char *str_trim_len(const char *str, size_t len, const char *letters);
-
 /**
  * @brief remove all instances of @a letters from @a str
  *

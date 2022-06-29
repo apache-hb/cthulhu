@@ -3,8 +3,12 @@ config {
     name := "PL/0"
     desc := "The PL/0 tutorial language"
     version := "1.1.0"
+    exts := [ ".pl0" ]
 }
 
 tokens {
+    line-comment := "#"
+    block-comment := ("/#" "#/")
+
     ignore := re [ \t\r\v\n\f]
 }

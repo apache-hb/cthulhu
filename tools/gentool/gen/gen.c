@@ -23,10 +23,11 @@ static ast_t *ast_new(scan_t scan, where_t where, ast_kind_t kind)
     return ast;
 }
 
-ast_t *ast_root(scan_t scan, where_t where, ast_t *config)
+ast_t *ast_root(scan_t scan, where_t where, ast_t *config, ast_t *tokens)
 {
     ast_t *ast = ast_new(scan, where, AST_ROOT);
     ast->config = config;
+    ast->tokens = tokens;
     return ast;
 }
 
@@ -90,5 +91,27 @@ ast_t *ast_digit(scan_t scan, where_t where, mpz_t digit)
 {
     ast_t *ast = ast_new(scan, where, AST_DIGIT);
     mpz_init_set(ast->digit, digit);
+    return ast;
+}
+
+ast_t *ast_regex(scan_t scan, where_t where, const char *re)
+{
+    ast_t *ast = ast_new(scan, where, AST_REGEX);
+    ast->str = re;
+    return ast;
+}
+
+ast_t *ast_pair(scan_t scan, where_t where, ast_t *lhs, ast_t *rhs)
+{
+    ast_t *ast = ast_new(scan, where, AST_PAIR);
+    ast->lhs = lhs;
+    ast->rhs = rhs;
+    return ast;
+}
+
+ast_t *ast_array(scan_t scan, where_t where, vector_t *elems)
+{
+    ast_t *ast = ast_new(scan, where, AST_ARRAY);
+    ast->vec = elems;
     return ast;
 }

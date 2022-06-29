@@ -521,36 +521,6 @@ char *str_trim(const char *str, const char *letters)
 }
 
 USE_DECL
-char *str_trim_len(const char *str, size_t len, const char *letters)
-{
-    size_t front = 0;
-
-    for (size_t i = 0; i < len; i++)
-    {
-        if (!char_is_any_of(str[i], letters))
-        {
-            break;
-        }
-
-        front = i;
-    }
-
-    size_t total = len - front;
-
-    for (size_t i = len; i >= front; i--)
-    {
-        if (!char_is_any_of(str[i - 1], letters))
-        {
-            break;
-        }
-
-        total -= 1;
-    }
-
-    return ctu_strndup(str + front, total);
-}
-
-USE_DECL
 char *str_erase(const char *str, size_t len, const char *letters)
 {
     char *result = ctu_strndup(str, len);

@@ -13,7 +13,7 @@
 #include "std/str.h"
 %}
 
-ESCAPES  (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
+ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 WS [ \t\r\v\n\f]
 
 %%
@@ -37,8 +37,8 @@ WS [ \t\r\v\n\f]
 "[" { return LSQUARE; }
 "]" { return RSQUARE; }
 
-"re"{WS}*[^\n]+ {
-	yylval->str = str_trim_len(yytext + 2, yyleng - 2, STR_WHITESPACE);
+"re"[^\n]+ {
+	yylval->str = str_trim(yytext + 2, STR_WHITESPACE);
     return REGEX;
 }
 
@@ -48,7 +48,6 @@ WS [ \t\r\v\n\f]
 	yylval->str = ctu_strndup(yytext + 1, yyleng - 2);
     return STRING;
 }
-
 
 . { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }
 

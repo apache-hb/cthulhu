@@ -68,6 +68,7 @@ void generror(where_t *where, void *state, scan_t scan, const char *msg);
 
 %type<vector>
     fields
+    exprs
 
 %type<pair>
     field
@@ -76,7 +77,7 @@ void generror(where_t *where, void *state, scan_t scan, const char *msg);
 
 %%
 
-entry: config tokens { scan_set(x, ast_root(x, @$, $1)); }
+entry: config tokens { scan_set(x, ast_root(x, @$, $1, $2)); }
     ;
 
 config: CONFIG map { $$ = ast_config(x, @$, $2); }
@@ -99,6 +100,12 @@ expr: STRING { $$ = ast_string(x, @$, $1); }
     | IDENT { $$ = ast_string(x, @$, $1); }
     | DIGIT { $$ = ast_digit(x, @$, $1); }
     | REGEX { $$ = ast_string(x, @$, $1); }
+    | LPAREN expr expr RPAREN { $$ = ast_pair(x, @$, $2, $3); }
+    | LSQUARE exprs RSQUARE { $$ = ast_array(x, @$, $2); }
+    ;
+
+exprs: expr { $$ = vector_init($1); }
+    | exprs expr { vector_push(&$1, $2); $$ = $1; }
     ;
 
 %%
