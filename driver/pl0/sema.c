@@ -37,7 +37,7 @@ void pl0_init(runtime_t *runtime)
     kConst = hlir_attributes(eLinkExported, eTagConst, NULL, NULL);
     kMutable = hlir_attributes(eLinkExported, DEFAULT_TAGS, NULL, NULL);
 
-    kIntegerType = hlir_digit(node, "integer", DIGIT_INT, SIGN_SIGNED);
+    kIntegerType = hlir_digit(node, "integer", eInt, eSigned);
     kBoolType = hlir_bool(node, "boolean");
     kStringType = hlir_string(node, "string");
     kVoidType = hlir_void(node, "void");

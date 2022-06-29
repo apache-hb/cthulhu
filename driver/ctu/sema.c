@@ -30,37 +30,37 @@ typedef struct
     hlir_t *parentModule;
 } sema_data_t;
 
-static const char *kDigitNames[SIGN_TOTAL][DIGIT_TOTAL] = {
-    [SIGN_SIGNED] =
+static const char *kDigitNames[eSignTotal][eDigitTotal] = {
+    [eSigned] =
         {
-            [DIGIT_CHAR] = "char",
-            [DIGIT_SHORT] = "short",
-            [DIGIT_INT] = "int",
-            [DIGIT_LONG] = "long",
+            [eChar] = "char",
+            [eShort] = "short",
+            [eInt] = "int",
+            [eLong] = "long",
 
-            [DIGIT_PTR] = "intptr",
-            [DIGIT_SIZE] = "size",
-            [DIGIT_MAX] = "intmax",
+            [eIntPtr] = "intptr",
+            [eIntSize] = "size",
+            [eIntMax] = "intmax",
         },
-    [SIGN_UNSIGNED] =
+    [eUnsigned] =
         {
-            [DIGIT_CHAR] = "uchar",
-            [DIGIT_SHORT] = "ushort",
-            [DIGIT_INT] = "uint",
-            [DIGIT_LONG] = "ulong",
+            [eChar] = "uchar",
+            [eShort] = "ushort",
+            [eInt] = "uint",
+            [eLong] = "ulong",
 
-            [DIGIT_PTR] = "uintptr",
-            [DIGIT_SIZE] = "usize",
-            [DIGIT_MAX] = "uintmax",
+            [eIntPtr] = "uintptr",
+            [eIntSize] = "usize",
+            [eIntMax] = "uintmax",
         },
 };
 
 static hlir_t *kVoidType = NULL;
 static hlir_t *kBoolType = NULL;
 static hlir_t *kStringType = NULL;
-static hlir_t *kDigitTypes[SIGN_TOTAL * DIGIT_TOTAL];
+static hlir_t *kDigitTypes[eSignTotal * eDigitTotal];
 
-#define DIGIT_INDEX(sign, digit) ((sign)*DIGIT_TOTAL + (digit))
+#define DIGIT_INDEX(sign, digit) ((sign)*eDigitTotal + (digit))
 
 static hlir_t *get_digit_type(sign_t sign, digit_t digit)
 {
@@ -81,7 +81,7 @@ static hlir_t *get_common_type(node_t node, const hlir_t *lhs, const hlir_t *rhs
         // get the largest size
         digit_t width = MAX(lhs->width, rhs->width);
         // if either is signed the result is signed
-        sign_t sign = (lhs->sign == SIGN_SIGNED || rhs->sign == SIGN_SIGNED) ? SIGN_SIGNED : SIGN_UNSIGNED;
+        sign_t sign = (lhs->sign == eSigned || rhs->sign == eSigned) ? eSigned : eUnsigned;
 
         return get_digit_type(sign, width);
     }
@@ -123,9 +123,9 @@ static void add_basic_types(sema_t *sema)
     add_decl(sema, TAG_TYPES, "bool", kBoolType);
     add_decl(sema, TAG_TYPES, "str", kStringType);
 
-    for (int sign = 0; sign < SIGN_TOTAL; sign++)
+    for (int sign = 0; sign < eSignTotal; sign++)
     {
-        for (int digit = 0; digit < DIGIT_TOTAL; digit++)
+        for (int digit = 0; digit < eDigitTotal; digit++)
         {
             const char *name = get_digit_name(sign, digit);
             hlir_t *type = get_digit_type(sign, digit);
@@ -137,7 +137,7 @@ static void add_basic_types(sema_t *sema)
     // enable the below later
 
     // special types for interfacing with C
-    // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", DIGIT_INT, SIGN_SIGNED));
+    // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", eInt, eSigned));
 }
 
 void ctu_init_compiler(runtime_t *runtime)
@@ -157,9 +157,9 @@ void ctu_init_compiler(runtime_t *runtime)
     kBoolType = hlir_bool(node, "bool");
     kStringType = hlir_string(node, "str");
 
-    for (int sign = 0; sign < SIGN_TOTAL; sign++)
+    for (int sign = 0; sign < eSignTotal; sign++)
     {
-        for (int digit = 0; digit < DIGIT_TOTAL; digit++)
+        for (int digit = 0; digit < eDigitTotal; digit++)
         {
             const char *name = get_digit_name(sign, digit);
             kDigitTypes[DIGIT_INDEX(sign, digit)] = hlir_digit(node, name, digit, sign);
@@ -266,7 +266,7 @@ static hlir_t *sema_digit(ast_t *ast)
     // TODO: digit suffixes should be added later
     // TODO: or maybe we want untyped literals?
 
-    const hlir_t *type = get_digit_type(SIGN_SIGNED, DIGIT_INT);
+    const hlir_t *type = get_digit_type(eSigned, eInt);
     return hlir_digit_literal(ast->node, type, ast->digit);
 }
 
@@ -501,7 +501,7 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
     {
         // create the variant tag
         char *tagName = format("%s_tag", ast->name);
-        hlir_t *tag = hlir_digit(ast->node, tagName, DIGIT_INT, SIGN_UNSIGNED);
+        hlir_t *tag = hlir_digit(ast->node, tagName, eInt, eUnsigned);
 
         // create the field container for the tag
         hlir_t *field = hlir_field(ast->node, tag, "tag");

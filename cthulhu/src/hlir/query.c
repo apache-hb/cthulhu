@@ -213,12 +213,12 @@ static const char *kKindNames[HLIR_TOTAL] = {
     [HLIR_ERROR] = "internal-error",
 };
 
-static const char *kDigitNames[DIGIT_TOTAL] = {
-    [DIGIT_CHAR] = "char", [DIGIT_SHORT] = "short", [DIGIT_INT] = "int",
-    [DIGIT_LONG] = "long", [DIGIT_SIZE] = "size",   [DIGIT_PTR] = "intptr",
+static const char *kDigitNames[eDigitTotal] = {
+    [eChar] = "char", [eShort] = "short", [eInt] = "int",
+    [eLong] = "long", [eIntSize] = "size",   [eIntPtr] = "intptr",
 };
 
-static const char *kSignNames[SIGN_TOTAL] = {[SIGN_SIGNED] = "signed", [SIGN_UNSIGNED] = "unsigned"};
+static const char *kSignNames[eSignTotal] = {[eSigned] = "signed", [eUnsigned] = "unsigned"};
 
 const char *hlir_kind_to_string(hlir_kind_t kind)
 {

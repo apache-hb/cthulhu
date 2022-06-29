@@ -48,25 +48,25 @@ static char *c89_mangle_section(const char *section)
     return format("%zu%s", strlen(section), section);
 }
 
-static const char *kDigitMangles[SIGN_TOTAL][DIGIT_TOTAL] = {
-    [SIGN_SIGNED] = {[DIGIT_CHAR] = "a",
-                     [DIGIT_SHORT] = "s",
-                     [DIGIT_INT] = "i",
-                     [DIGIT_LONG] = "x",
+static const char *kDigitMangles[eSignTotal][eDigitTotal] = {
+    [eSigned] = {[eChar] = "a",
+                     [eShort] = "s",
+                     [eInt] = "i",
+                     [eLong] = "x",
 
-                     [DIGIT_PTR] = "x", // TODO: only right for 64-bit
-                     [DIGIT_MAX] = "n",
-                     [DIGIT_SIZE] = "x"},
-    [SIGN_UNSIGNED] =
+                     [eIntPtr] = "x", // TODO: only right for 64-bit
+                     [eIntMax] = "n",
+                     [eIntSize] = "x"},
+    [eUnsigned] =
         {
-            [DIGIT_CHAR] = "h",
-            [DIGIT_SHORT] = "t",
-            [DIGIT_INT] = "j",
-            [DIGIT_LONG] = "y",
+            [eChar] = "h",
+            [eShort] = "t",
+            [eInt] = "j",
+            [eLong] = "y",
 
-            [DIGIT_PTR] = "y",
-            [DIGIT_MAX] = "o",
-            [DIGIT_SIZE] = "y",
+            [eIntPtr] = "y",
+            [eIntMax] = "o",
+            [eIntSize] = "y",
         },
 };
 
@@ -283,16 +283,16 @@ static const char *c89_emit_void_type(const char *name)
     }
 }
 
-static const char *kC89SignNames[SIGN_TOTAL] = {
-    [SIGN_UNSIGNED] = "unsigned",
-    [SIGN_SIGNED] = "signed",
+static const char *kC89SignNames[eSignTotal] = {
+    [eUnsigned] = "unsigned",
+    [eSigned] = "signed",
 };
 
-static const char *kC89DigitNames[DIGIT_TOTAL] = {
-    [DIGIT_CHAR] = "char",
-    [DIGIT_SHORT] = "short",
-    [DIGIT_INT] = "int",
-    [DIGIT_LONG] = "long",
+static const char *kC89DigitNames[eDigitTotal] = {
+    [eChar] = "char",
+    [eShort] = "short",
+    [eInt] = "int",
+    [eLong] = "long",
 };
 
 static const char *c89_get_digit_symbol(const hlir_t *digit)
@@ -302,12 +302,12 @@ static const char *c89_get_digit_symbol(const hlir_t *digit)
 
     switch (width)
     {
-    case DIGIT_SIZE:
-        return sign == SIGN_UNSIGNED ? "size_t" : "ssize_t";
-    case DIGIT_PTR:
-        return sign == SIGN_UNSIGNED ? "uintptr_t" : "intptr_t";
-    case DIGIT_MAX:
-        return sign == SIGN_UNSIGNED ? "uintmax_t" : "intmax_t";
+    case eIntSize:
+        return sign == eUnsigned ? "size_t" : "ssize_t";
+    case eIntPtr:
+        return sign == eUnsigned ? "uintptr_t" : "intptr_t";
+    case eIntMax:
+        return sign == eUnsigned ? "uintmax_t" : "intmax_t";
 
     default:
         return format("%s %s", kC89SignNames[sign], kC89DigitNames[width]);
@@ -611,16 +611,16 @@ static const char *c89_emit_digit_literal(c89_emit_t *emit, const hlir_t *hlir)
 
     switch (width)
     {
-    case DIGIT_CHAR:
-    case DIGIT_SHORT:
-    case DIGIT_INT:
-        return format("%s%s", mpz_get_str(NULL, 10, hlir->digit), sign == SIGN_UNSIGNED ? "u" : "");
+    case eChar:
+    case eShort:
+    case eInt:
+        return format("%s%s", mpz_get_str(NULL, 10, hlir->digit), sign == eUnsigned ? "u" : "");
 
-    case DIGIT_LONG:
-        return format("%s%s", mpz_get_str(NULL, 10, hlir->digit), sign == SIGN_UNSIGNED ? "ull" : "ll");
+    case eLong:
+        return format("%s%s", mpz_get_str(NULL, 10, hlir->digit), sign == eUnsigned ? "ull" : "ll");
 
-    case DIGIT_MAX:
-        return format("%s(%s)", sign == SIGN_UNSIGNED ? "UINTMAX_C" : "INTMAX_C", mpz_get_str(NULL, 10, hlir->digit));
+    case eIntMax:
+        return format("%s(%s)", sign == eUnsigned ? "UINTMAX_C" : "INTMAX_C", mpz_get_str(NULL, 10, hlir->digit));
 
     default:
         ctu_assert(emit->reports, "digit literal with (%s, %s) not supported", hlir_sign_to_string(sign),

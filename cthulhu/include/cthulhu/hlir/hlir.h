@@ -70,21 +70,21 @@ typedef enum
  */
 typedef enum
 {
-    DIGIT_CHAR,  ///< a range of at least -127 to 127 if signed or 0 to 255 if
+    eChar,  ///< a range of at least -127 to 127 if signed or 0 to 255 if
                  ///< unsigned
-    DIGIT_SHORT, ///< a range of at least -32767 to 32767 if signed or 0 to
+    eShort, ///< a range of at least -32767 to 32767 if signed or 0 to
                  ///< 65535 if unsigned
-    DIGIT_INT,   ///< a range of at least -2147483647 to 2147483647 if signed or 0
+    eInt,   ///< a range of at least -2147483647 to 2147483647 if signed or 0
                  ///< to 4294967295 if unsigned
-    DIGIT_LONG,  ///< a range of at least -9223372036854775807 to
+    eLong,  ///< a range of at least -9223372036854775807 to
                  ///< 9223372036854775807 if signed or 0 to 18446744073709551615
                  ///< if unsigned
 
-    DIGIT_SIZE, ///< the size of any type
-    DIGIT_PTR,  ///< the same width as a pointer
-    DIGIT_MAX,  ///< the largest native platform integer
+    eIntSize, ///< the size of any type
+    eIntPtr,  ///< the same width as a pointer
+    eIntMax,  ///< the largest native platform integer
 
-    DIGIT_TOTAL
+    eDigitTotal
 } digit_t;
 
 /**
@@ -92,10 +92,10 @@ typedef enum
  */
 typedef enum
 {
-    SIGN_SIGNED,   ///< a signed type
-    SIGN_UNSIGNED, ///< an unsigned type
+    eSigned,   ///< a signed type
+    eUnsigned, ///< an unsigned type
 
-    SIGN_TOTAL
+    eSignTotal
 } sign_t;
 
 /**
