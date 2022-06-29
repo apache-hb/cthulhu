@@ -32,11 +32,11 @@ typedef struct
     const char *coloured;
 } level_format_t;
 
-static level_format_t kFormats[LEVEL_TOTAL] = {
-    [INTERNAL] = {"internal", COLOUR_CYAN "ice" COLOUR_RESET},
-    [ERROR] = {"error", COLOUR_RED "error" COLOUR_RESET},
-    [WARNING] = {"warning", COLOUR_YELLOW "warning" COLOUR_RESET},
-    [NOTE] = {"note", COLOUR_GREEN "note" COLOUR_RESET},
+static level_format_t kFormats[eLevelTotal] = {
+    [eInternal] = {"internal", COLOUR_CYAN "ice" COLOUR_RESET},
+    [eFatal] = {"error", COLOUR_RED "error" COLOUR_RESET},
+    [eWarn] = {"warning", COLOUR_YELLOW "warning" COLOUR_RESET},
+    [eInfo] = {"note", COLOUR_GREEN "note" COLOUR_RESET},
 };
 
 static const char *report_level_str(level_t level)
@@ -427,7 +427,7 @@ static void report_part(const char *base, message_t *message, part_t *part)
 
 static void send_note(const char *note)
 {
-    const char *level = report_level_str(NOTE);
+    const char *level = report_level_str(eInfo);
     size_t len = strlen(level);
 
     // +2 for the `: ` in the final print
@@ -435,7 +435,7 @@ static void send_note(const char *note)
 
     char *aligned = str_replace(note, "\n", padding);
 
-    fprintf(stderr, "%s: %s\n", report_level(NOTE), aligned);
+    fprintf(stderr, "%s: %s\n", report_level(eInfo), aligned);
 }
 
 static bool report_send(const char *base, message_t *message)
@@ -453,7 +453,7 @@ static bool report_send(const char *base, message_t *message)
         send_note(message->note);
     }
 
-    return message->level <= ERROR;
+    return message->level <= eFatal;
 }
 
 USE_DECL
@@ -518,31 +518,31 @@ int end_reports(reports_t *reports, const char *name, report_config_t settings)
     {
         message_t *message = vector_get(reports->messages, i);
 
-        if (settings.warningsAreErrors && message->level == WARNING)
+        if (settings.warningsAreErrors && message->level == eWarn)
         {
-            message->level = ERROR;
+            message->level = eFatal;
         }
 
         switch (message->level)
         {
-        case INTERNAL:
+        case eInternal:
             internal += 1;
             break;
-        case ERROR:
+        case eFatal:
             fatal += 1;
             break;
         default:
             break;
         }
 
-        if (i > total && message->level != INTERNAL)
+        if (i > total && message->level != eInternal)
         {
             switch (message->level)
             {
-            case ERROR:
+            case eFatal:
                 fatalMessagesSuppressed += 1;
                 break;
-            case WARNING:
+            case eWarn:
                 warningsSuppressed += 1;
                 break;
             default:
@@ -599,7 +599,7 @@ message_t *ctu_assert(reports_t *reports, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    message_t *message = report_push(reports, INTERNAL, node_invalid(), fmt, args);
+    message_t *message = report_push(reports, eInternal, node_invalid(), fmt, args);
     va_end(args);
 
     return message;
@@ -661,7 +661,7 @@ void logverbose(const char *fmt, ...)
 
     va_list args;
     va_start(args, fmt);
-    fprintf(stderr, "%s: %s\n", report_level(NOTE), formatv(fmt, args));
+    fprintf(stderr, "%s: %s\n", report_level(eInfo), formatv(fmt, args));
     va_end(args);
 
     fflush(stderr);

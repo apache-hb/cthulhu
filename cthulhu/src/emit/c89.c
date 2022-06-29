@@ -162,7 +162,7 @@ static const char *c89_mangle_type_inner(c89_emit_t *emit, const hlir_t *type)
         return "KPc"; // const char *
 
     default:
-        report(emit->reports, ERROR, get_hlir_node(type), "cannot mangle %s", hlir_kind_to_string(kind));
+        report(emit->reports, eFatal, get_hlir_node(type), "cannot mangle %s", hlir_kind_to_string(kind));
         return "";
     }
 }
@@ -231,7 +231,7 @@ static const char *c89_mangle_name(c89_emit_t *emit, const hlir_t *hlir)
 #if ENABLE_DEBUG
     if (hlir->parentDecl == NULL && !hlir_is_imported(hlir))
     {
-        report(emit->reports, INTERNAL, get_hlir_node(hlir), "decl %s must have a parent decl", get_hlir_name(hlir));
+        report(emit->reports, eInternal, get_hlir_node(hlir), "decl %s must have a parent decl", get_hlir_name(hlir));
     }
 #endif
 
@@ -736,7 +736,7 @@ static const char *c89_emit_type(c89_emit_t *emit, const hlir_t *hlir, const cha
     if (attribs->tags & eTagAtomic)
     {
         node_t node = get_hlir_node(hlir);
-        report(emit->reports, WARNING, node, "atomic types are not supported yet");
+        report(emit->reports, eWarn, node, "atomic types are not supported yet");
     }
 
     if (attribs->tags & eTagVolatile)

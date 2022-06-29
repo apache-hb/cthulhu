@@ -19,13 +19,13 @@ void *compile_scanner(scan_t extra, callbacks_t *callbacks)
 
     if (!(state = callbacks->scan(scan_text(extra), scan_size(extra), scanner)))
     {
-        report(reports, ERROR, node_invalid(), "failed to scan %s", path);
+        report(reports, eFatal, node_invalid(), "failed to scan %s", path);
         return NULL;
     }
 
     if ((err = callbacks->parse(scanner, extra)))
     {
-        report(reports, ERROR, node_invalid(), "failed to parse %s: %d", path, err);
+        report(reports, eFatal, node_invalid(), "failed to parse %s: %d", path, err);
         return NULL;
     }
 

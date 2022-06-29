@@ -48,7 +48,7 @@ hlir_t *hlir_array(reports_t *reports, node_t node, const char *name, hlir_t *el
     node_t error = check_const_expr(reports, length);
     if (node_is_valid(error))
     {
-        report(reports, ERROR, error, "array length must be a constant expression");
+        report(reports, eFatal, error, "array length must be a constant expression");
         return hlir_error(node, "array length must be a constant expression");
     }
 
@@ -56,7 +56,7 @@ hlir_t *hlir_array(reports_t *reports, node_t node, const char *name, hlir_t *el
 
     if (!hlir_is(lengthType, HLIR_DIGIT))
     {
-        report(reports, ERROR, get_hlir_node(length), "array length must be a digit");
+        report(reports, eFatal, get_hlir_node(length), "array length must be a digit");
         return hlir_error(node, "array length must be a digit");
     }
 

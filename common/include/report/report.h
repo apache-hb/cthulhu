@@ -24,7 +24,7 @@ typedef struct vector_t vector_t;
  * // improper usage of the error sink api
  * int do_something_badly(reports_t *reports, int data) {
  *   if (data < 0) {
- *      report(reports, ERROR, NULL, "data must be positive");
+ *      report(reports, eFatal, NULL, "data must be positive");
  *      abort(); // NO, this means the error messages will never be printed
  *  }
  *  return data * 2;
@@ -33,7 +33,7 @@ typedef struct vector_t vector_t;
  * // proper usage
  * int do_something_well(reports_t *reports, int data) {
  *   if (data < 0) {
- *     report(reports, ERROR, NULL, "data must be positive");
+ *     report(reports, eFatal, NULL, "data must be positive");
  *     return INT_MAX; // an obvious error code is returned rather than exiting
  *   }
  *   return data * 2;
@@ -48,12 +48,12 @@ typedef struct vector_t vector_t;
  */
 typedef enum
 {
-    INTERNAL, ///< an invalid state has been reached internally
-    ERROR,    ///< a user issue that prevents the program from continuing
-    WARNING,  ///< a user issue that may be resolved
-    NOTE,     ///< a notification for logging
+    eInternal, ///< an invalid state has been reached internally
+    eFatal,    ///< a user issue that prevents the program from continuing
+    eWarn,  ///< a user issue that may be resolved
+    eInfo,     ///< a notification for logging
 
-    LEVEL_TOTAL
+    eLevelTotal
 } level_t;
 
 /**

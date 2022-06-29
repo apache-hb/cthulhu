@@ -25,7 +25,7 @@ static bool argparse_check(argparse_t *argparse, param_kind_t kind)
     param_kind_t flagKind = currentArg->kind;
     if (flagKind != kind)
     {
-        report(argparse->reports, WARNING, node_invalid(), "flag %s expected a %s, got %s", argparse->currentName,
+        report(argparse->reports, eWarn, node_invalid(), "flag %s expected a %s, got %s", argparse->currentName,
                kFlagTypes[kind], kFlagTypes[flagKind]);
 
         argparse->currentArg = NULL;
@@ -36,7 +36,7 @@ static bool argparse_check(argparse_t *argparse, param_kind_t kind)
 
     if (currentArg->setByUser)
     {
-        report(argparse->reports, WARNING, node_invalid(), "flag `%s` already set", argparse->currentName);
+        report(argparse->reports, eWarn, node_invalid(), "flag `%s` already set", argparse->currentName);
         argparse->currentArg = NULL;
         argparse->currentName = NULL;
         return false;
@@ -72,7 +72,7 @@ void argparse_begin_flag(argparse_t *argparse, const char *name)
     arg_t *arg = map_get(argparse->params, name);
     if (arg == NULL)
     {
-        report(argparse->reports, WARNING, node_invalid(), "unknown flag '%s'", name);
+        report(argparse->reports, eWarn, node_invalid(), "unknown flag '%s'", name);
         return;
     }
 
@@ -101,7 +101,7 @@ void argparse_push_digit(argparse_t *argparse, mpz_t value)
         long digit = mpz_get_si(value);
         if (!mpz_fits_slong_p(value))
         {
-            message_t *id = report(argparse->reports, WARNING, node_invalid(),
+            message_t *id = report(argparse->reports, eWarn, node_invalid(),
                                    "flag `%s` passed digit %s, which is out of range [%ld, %ld]", argparse->currentName,
                                    mpz_get_str(NULL, 10, value), LONG_MIN, LONG_MAX);
             report_note(id, "value truncated to %ld", digit);

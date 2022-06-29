@@ -100,7 +100,7 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
 
     if (is_discard_ident(name))
     {
-        report(sema->reports, ERROR, node, "discarding declaration");
+        report(sema->reports, eFatal, node, "discarding declaration");
         return;
     }
 
@@ -184,7 +184,7 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
 
         if (next == NULL)
         {
-            report(sema->reports, ERROR, ast->node, "unknown namespace `%s`", name);
+            report(sema->reports, eFatal, ast->node, "unknown namespace `%s`", name);
             return hlir_error(ast->node, "unknown namespace");
         }
 
@@ -203,7 +203,7 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
         current = current->parent;
     }
 
-    report(sema->reports, ERROR, ast->node, "type '%s' not found", name);
+    report(sema->reports, eFatal, ast->node, "type '%s' not found", name);
     return hlir_error(ast->node, "type not found");
 }
 
@@ -235,7 +235,7 @@ static hlir_t *sema_closure(sema_t *sema, ast_t *ast)
 
         if (hlir_is(type, HLIR_VOID))
         {
-            report(sema->reports, ERROR, param->node, "void parameter");
+            report(sema->reports, eFatal, param->node, "void parameter");
         }
     }
 
@@ -255,7 +255,7 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast)
     case AST_CLOSURE:
         return sema_closure(sema, ast);
     default:
-        report(sema->reports, INTERNAL, ast->node, "unknown sema-type: %d", ast->of);
+        report(sema->reports, eInternal, ast->node, "unknown sema-type: %d", ast->of);
         return hlir_error(ast->node, "unknown sema-type");
     }
 }
@@ -284,7 +284,7 @@ static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
 
     if (!hlir_is(type, HLIR_DIGIT))
     {
-        report(sema->reports, ERROR, ast->node, "cannot perform binary operations on %s", get_hlir_name(type));
+        report(sema->reports, eFatal, ast->node, "cannot perform binary operations on %s", get_hlir_name(type));
     }
 
     return hlir_binary(ast->node, type, ast->binary, lhs, rhs);
@@ -299,7 +299,7 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
 
     if (!hlir_is(type, HLIR_DIGIT))
     {
-        report(sema->reports, ERROR, ast->node, "cannot perform comparison on %s", get_hlir_name(type));
+        report(sema->reports, eFatal, ast->node, "cannot perform comparison on %s", get_hlir_name(type));
     }
 
     return hlir_compare(ast->node, kBoolType, ast->compare, lhs, rhs);
@@ -315,7 +315,7 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 
         if (next == NULL)
         {
-            report(sema->reports, ERROR, ast->node, "unknown namespace `%s`", name);
+            report(sema->reports, eFatal, ast->node, "unknown namespace `%s`", name);
             return hlir_error(ast->node, "unknown namespace");
         }
 
@@ -336,7 +336,7 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
         return func;
     }
 
-    report(sema->reports, ERROR, ast->node, "unknown identifier '%s'", name);
+    report(sema->reports, eFatal, ast->node, "unknown identifier '%s'", name);
     return hlir_error(ast->node, "unknown identifier");
 }
 
@@ -356,7 +356,7 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_ident(sema, ast);
 
     default:
-        report(sema->reports, INTERNAL, ast->node, "unknown sema-expr: %d", ast->of);
+        report(sema->reports, eInternal, ast->node, "unknown sema-expr: %d", ast->of);
         return hlir_error(ast->node, "unknown sema-expr");
     }
 }
@@ -425,7 +425,7 @@ static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
         return sema_while(sema, stmt);
 
     default:
-        report(sema->reports, INTERNAL, stmt->node, "unknown sema-stmt: %d", stmt->of);
+        report(sema->reports, eInternal, stmt->node, "unknown sema-stmt: %d", stmt->of);
         return hlir_error(stmt->node, "unknown sema-stmt");
     }
 }
@@ -691,7 +691,7 @@ static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
     if (previous != NULL)
     {
         message_t *id =
-            report(sema->reports, ERROR, import->node, "a module was already imported under the name `%s`", name);
+            report(sema->reports, eFatal, import->node, "a module was already imported under the name `%s`", name);
         report_note(id, "use module aliases to avoid name collisions");
         return;
     }
@@ -757,13 +757,13 @@ void ctu_process_imports(runtime_t *runtime, compile_t *compile)
         sema_t *mod = find_module(runtime, name);
         if (mod == NULL)
         {
-            report(runtime->reports, ERROR, import->node, "module '%s' not found", name);
+            report(runtime->reports, eFatal, import->node, "module '%s' not found", name);
             continue;
         }
 
         if (mod == sema)
         {
-            report(runtime->reports, WARNING, import->node, "module cannot import itself");
+            report(runtime->reports, eWarn, import->node, "module cannot import itself");
             continue;
         }
 

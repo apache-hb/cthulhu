@@ -96,7 +96,7 @@ static scan_t make_scanner_from_file(cthulhu_t *cthulhu, source_t *source)
 
     if (error != 0)
     {
-        message_t *id = report(cthulhu->reports, ERROR, node_invalid(), "failed to open file `%s`", source->path);
+        message_t *id = report(cthulhu->reports, eFatal, node_invalid(), "failed to open file `%s`", source->path);
         report_note(id, "%s", error_string(error));
         return scan_invalid();
     }

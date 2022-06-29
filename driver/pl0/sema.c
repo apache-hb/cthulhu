@@ -67,7 +67,7 @@ static void report_pl0_shadowing(reports_t *reports, const char *name, node_t pr
 
 static void report_pl0_unresolved(reports_t *reports, const node_t node, const char *name)
 {
-    report(reports, ERROR, node, "unresolved reference to `%s`", name);
+    report(reports, eFatal, node, "unresolved reference to `%s`", name);
 }
 
 static hlir_t *get_var(sema_t *sema, const char *name)
@@ -167,7 +167,7 @@ static hlir_t *sema_expr(sema_t *sema, pl0_t *node)
     case PL0_UNARY:
         return sema_unary(sema, node);
     default:
-        report(sema->reports, INTERNAL, node->node, "sema-expr: %d", node->type);
+        report(sema->reports, eInternal, node->node, "sema-expr: %d", node->type);
         return hlir_error(node->node, "sema-expr");
     }
 }
@@ -229,7 +229,7 @@ static hlir_t *sema_assign(sema_t *sema, pl0_t *node)
 
     if (attrs->tags & eTagConst)
     {
-        report(sema->reports, ERROR, node->node, "cannot assign to constant value");
+        report(sema->reports, eFatal, node->node, "cannot assign to constant value");
     }
 
     return hlir_assign(node->node, dst, src);
@@ -271,7 +271,7 @@ static hlir_t *sema_stmt(sema_t *sema, pl0_t *node)
     case PL0_PRINT:
         return sema_print(sema, node);
     default:
-        report(sema->reports, INTERNAL, node->node, "sema-stmt: %d", node->type);
+        report(sema->reports, eInternal, node->node, "sema-stmt: %d", node->type);
         return hlir_error(node->node, "sema-stmt");
     }
 }
@@ -317,7 +317,7 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node)
     case PL0_COMPARE:
         return sema_comp(sema, node);
     default:
-        report(sema->reports, INTERNAL, node->node, "sema-compare: %d", node->type);
+        report(sema->reports, eInternal, node->node, "sema-compare: %d", node->type);
         return hlir_error(node->node, "sema-compare");
     }
 }
@@ -473,13 +473,13 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
 
         if (lib == NULL)
         {
-            report(sema->reports, ERROR, importDecl->node, "cannot import `%s`, failed to find module", pathToImport);
+            report(sema->reports, eFatal, importDecl->node, "cannot import `%s`, failed to find module", pathToImport);
             continue;
         }
 
         if (lib == sema)
         {
-            report(sema->reports, ERROR, importDecl->node, "module cannot import itself");
+            report(sema->reports, eFatal, importDecl->node, "module cannot import itself");
             continue;
         }
 

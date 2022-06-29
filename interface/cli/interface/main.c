@@ -92,7 +92,7 @@ int main(int argc, const char **argv)
 
     if (error != 0)
     {
-        message_t *id = report(reports, ERROR, node_invalid(), "failed to open file `%s`", outFile);
+        message_t *id = report(reports, eFatal, node_invalid(), "failed to open file `%s`", outFile);
         report_note(id, "%s", error_string(error));
         return EXIT_ERROR;
     }

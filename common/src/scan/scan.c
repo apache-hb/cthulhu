@@ -126,7 +126,7 @@ scan_t scan_file(reports_t *reports, const char *language, file_t file)
 
     if (text == NULL || error != 0)
     {
-        report(reports, ERROR, node_invalid(), "failed to map file: %s", error_string(error));
+        report(reports, eFatal, node_invalid(), "failed to map file: %s", error_string(error));
     }
 
     return scan_new(reports, language, file.path, source);

@@ -37,7 +37,7 @@ node_t check_const_expr(reports_t *reports, const hlir_t *expr)
         return get_hlir_node(expr);
 
     default:
-        report(reports, INTERNAL, get_hlir_node(expr), "check-const unexpected expression kind %s",
+        report(reports, eInternal, get_hlir_node(expr), "check-const unexpected expression kind %s",
                hlir_kind_to_string(kind));
         return get_hlir_node(expr);
     }

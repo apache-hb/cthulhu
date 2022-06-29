@@ -96,7 +96,7 @@ static void report_recursion(reports_t *reports, vector_t *stack, const char *ms
 {
     hlir_t *top = vector_tail(stack);
     node_t topNode = get_hlir_node(top);
-    message_t *id = report(reports, ERROR, topNode, "%s", msg);
+    message_t *id = report(reports, eFatal, topNode, "%s", msg);
 
     for (size_t i = 0; i < vector_len(stack); i++)
     {
@@ -183,7 +183,7 @@ static void report_type_recursion(reports_t *reports, vector_t *stack)
 {
     entry_t *top = vector_tail(stack);
     node_t topNode = get_hlir_node(top->hlir);
-    message_t *id = report(reports, ERROR, topNode, "%s", "recursive type definition");
+    message_t *id = report(reports, eFatal, topNode, "%s", "recursive type definition");
 
     size_t trace = 0;
 
@@ -256,7 +256,7 @@ static const hlir_t *chase(reports_t *reports, const hlir_t *hlir)
         if (depth++ > DEPTH_LIMIT)
         {
             node_t node = get_hlir_node(hlir);
-            message_t *id = report(reports, ERROR, node, "type definition recurses too deep");
+            message_t *id = report(reports, eFatal, node, "type definition recurses too deep");
             report_note(id, "type definition recurses beyond %d levels", DEPTH_LIMIT);
             return NULL;
         }
@@ -358,7 +358,7 @@ static void report_multiple_entry(check_t *ctx, const hlir_t *hlir, const hlir_t
     node_t newNode = get_hlir_node(hlir);
     node_t prevNode = get_hlir_node(prev);
 
-    message_t *id = report(ctx->reports, ERROR, newNode, "multiple %s entry points defined", name);
+    message_t *id = report(ctx->reports, eFatal, newNode, "multiple %s entry points defined", name);
     report_append(id, prevNode, "previously defined here");
 }
 
@@ -370,7 +370,7 @@ static void check_attribute(check_t *ctx, hlir_t *hlir)
     {
         node_t node = get_hlir_node(hlir);
         message_t *id =
-            report(ctx->reports, WARNING, node, "cannot change name mangling of %s", kLinkageNames[attribs->linkage]);
+            report(ctx->reports, eWarn, node, "cannot change name mangling of %s", kLinkageNames[attribs->linkage]);
         report_note(id, "attribute will not be mangled");
 
         hlir_attributes_t *newAttribs = ctu_memdup(attribs, sizeof(hlir_attributes_t));
@@ -405,7 +405,7 @@ static void check_identifier_isnt_empty(reports_t *reports, const hlir_t *ident)
     if (name == NULL || strlen(name) == 0)
     {
         node_t node = get_hlir_node(ident);
-        report(reports, ERROR, node, "empty identifier");
+        report(reports, eFatal, node, "empty identifier");
     }
 }
 

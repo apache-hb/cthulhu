@@ -20,7 +20,7 @@ static const char *kResultNames[eTestTotal] = {
     [eTestPassed] = "PASSED",
     [eTestFailed] = "FAILED",
     [eTestSkipped] = "SKIPPED",
-    [eTestError] = "ERROR"
+    [eTestError] = "eFatal"
 };
 
 static int kErrorCodes[eTestTotal] = {
