@@ -898,10 +898,10 @@ static void c89_emit_types(c89_emit_t *emit, vector_t *modules)
     }
 }
 
-static const char *kLinkageModifiers[LINK_TOTAL] = {
-    [LINK_IMPORTED] = "extern ",
-    [LINK_INTERNAL] = "static ",
-    [LINK_EXPORTED] = "",
+static const char *kLinkageModifiers[eLinkTotal] = {
+    [eLinkImported] = "extern ",
+    [eLinkInternal] = "static ",
+    [eLinkExported] = "",
 };
 
 static void c89_forward_global(c89_emit_t *emit, const hlir_t *hlir)

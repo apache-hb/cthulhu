@@ -546,7 +546,7 @@ static void sema_params(sema_t *sema, vector_t *params)
 
 static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
-    hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? LINK_IMPORTED : LINK_EXPORTED, 0, NULL, NULL);
+    hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? eLinkImported : eLinkExported, 0, NULL, NULL);
     hlir_t *body = NULL;
 
     size_t tags[TAG_MAX] = {

@@ -337,9 +337,9 @@ static bool can_mangle_name(hlir_linkage_t linkage)
 {
     switch (linkage)
     {
-    case LINK_INTERNAL:  // it makes no sense to mangle internal symbols
-    case LINK_ENTRY_GUI: // these are defined by the platform and cannot be mangled
-    case LINK_ENTRY_CLI:
+    case eLinkInternal:  // it makes no sense to mangle internal symbols
+    case eLinkEntryGui: // these are defined by the platform and cannot be mangled
+    case eLinkEntryCli:
         return false;
 
     default: // everything else is fair game
@@ -347,10 +347,10 @@ static bool can_mangle_name(hlir_linkage_t linkage)
     }
 }
 
-static const char *kLinkageNames[LINK_TOTAL] = {
-    [LINK_INTERNAL] = "a symbol with internal linkage",
-    [LINK_ENTRY_GUI] = "the gui entry point",
-    [LINK_ENTRY_CLI] = "the cli entry point",
+static const char *kLinkageNames[eLinkTotal] = {
+    [eLinkInternal] = "a symbol with internal linkage",
+    [eLinkEntryGui] = "the gui entry point",
+    [eLinkEntryCli] = "the cli entry point",
 };
 
 static void report_multiple_entry(check_t *ctx, const hlir_t *hlir, const hlir_t *prev, const char *name)
@@ -378,7 +378,7 @@ static void check_attribute(check_t *ctx, hlir_t *hlir)
         hlir_set_attributes(hlir, newAttribs);
     }
 
-    if (attribs->linkage == LINK_ENTRY_CLI)
+    if (attribs->linkage == eLinkEntryCli)
     {
         if (ctx->cliEntryPoint != NULL)
         {
@@ -388,7 +388,7 @@ static void check_attribute(check_t *ctx, hlir_t *hlir)
         ctx->cliEntryPoint = hlir;
     }
 
-    if (attribs->linkage == LINK_ENTRY_GUI)
+    if (attribs->linkage == eLinkEntryGui)
     {
         if (ctx->guiEntryPoint != NULL)
         {

@@ -11,17 +11,17 @@
  */
 typedef enum
 {
-    LINK_IMPORTED, ///< this declaration is external, and is not part of this
+    eLinkImported, ///< this declaration is external, and is not part of this
                    ///< compilation unit
-    LINK_EXPORTED, ///< this declaration is internal, and is visibile outside of
+    eLinkExported, ///< this declaration is internal, and is visibile outside of
                    ///< this compilation unit
-    LINK_INTERNAL, ///< this declaration is internal, and is not visible outside
+    eLinkInternal, ///< this declaration is internal, and is not visible outside
                    ///< of this compilation unit
 
-    LINK_ENTRY_CLI, ///< standard cli entry point
-    LINK_ENTRY_GUI, ///< windows gui entry point
+    eLinkEntryCli, ///< standard cli entry point
+    eLinkEntryGui, ///< windows gui entry point
 
-    LINK_TOTAL
+    eLinkTotal
 } hlir_linkage_t;
 
 /**
@@ -50,7 +50,7 @@ typedef struct
                             ///< declaration
 } hlir_attributes_t;
 
-#define DEFAULT_LINKAGE (LINK_INTERNAL) ///< the default linkage for a declaration
+#define DEFAULT_LINKAGE (eLinkInternal) ///< the default linkage for a declaration
 #define DEFAULT_TAGS (0)                ///< the default tags for a declaration
 
 /**

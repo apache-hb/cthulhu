@@ -7,7 +7,7 @@
 #include "base/macros.h"
 #include "base/util.h"
 
-static const hlir_attributes_t kDefaultAttributes = {.linkage = LINK_INTERNAL, .tags = DEFAULT_TAGS};
+static const hlir_attributes_t kDefaultAttributes = {.linkage = eLinkInternal, .tags = DEFAULT_TAGS};
 
 hlir_t *kMetaType = NULL;
 hlir_t *kInvalidNode = NULL;
@@ -50,7 +50,7 @@ void init_hlir(void)
 
 bool hlir_is_imported(const hlir_t *self)
 {
-    return self->attributes->linkage == LINK_IMPORTED;
+    return self->attributes->linkage == eLinkImported;
 }
 
 #if ENABLE_DEBUG

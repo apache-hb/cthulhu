@@ -32,10 +32,10 @@ void pl0_init(runtime_t *runtime)
 
     const node_t node = node_builtin();
 
-    kExported = hlir_linkage(LINK_EXPORTED);
+    kExported = hlir_linkage(eLinkExported);
 
-    kConst = hlir_attributes(LINK_EXPORTED, eTagConst, NULL, NULL);
-    kMutable = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS, NULL, NULL);
+    kConst = hlir_attributes(eLinkExported, eTagConst, NULL, NULL);
+    kMutable = hlir_attributes(eLinkExported, DEFAULT_TAGS, NULL, NULL);
 
     kIntegerType = hlir_digit(node, "integer", DIGIT_INT, SIGN_SIGNED);
     kBoolType = hlir_bool(node, "boolean");
@@ -44,7 +44,7 @@ void pl0_init(runtime_t *runtime)
 
     kFmtString = hlir_string_literal(node, kStringType, "%d\n", 3);
 
-    const hlir_attributes_t *printAttributes = hlir_attributes(LINK_IMPORTED, DEFAULT_TAGS, "printf", NULL);
+    const hlir_attributes_t *printAttributes = hlir_attributes(eLinkImported, DEFAULT_TAGS, "printf", NULL);
     signature_t signature = {.params = vector_init(kStringType), .result = kIntegerType, .variadic = true};
     kPrint = hlir_function(node, "printf", signature, vector_of(0), NULL);
     hlir_set_attributes(kPrint, printAttributes);
@@ -527,7 +527,7 @@ void pl0_compile_module(runtime_t *runtime, compile_t *compile)
         };
 
         // this is the entry point, we only support cli entry points in pl/0 for now
-        const hlir_attributes_t *attribs = hlir_attributes(LINK_ENTRY_CLI, DEFAULT_TAGS, NULL, NULL);
+        const hlir_attributes_t *attribs = hlir_attributes(eLinkEntryCli, DEFAULT_TAGS, NULL, NULL);
         const char *modName = get_hlir_name(compile->hlir);
 
         hlir_t *hlir = hlir_function(root->node, modName, signature, vector_of(0), body);
