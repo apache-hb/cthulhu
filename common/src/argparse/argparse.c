@@ -148,19 +148,19 @@ static void add_groups(argparse_t *argparse, vector_t *groups)
 USE_DECL
 param_t *int_param(const char *desc, const char **names, size_t total)
 {
-    return new_param(PARAM_INT, desc, names, total);
+    return new_param(eParamInt, desc, names, total);
 }
 
 USE_DECL
 param_t *string_param(const char *desc, const char **names, size_t total)
 {
-    return new_param(PARAM_STRING, desc, names, total);
+    return new_param(eParamString, desc, names, total);
 }
 
 USE_DECL
 param_t *bool_param(const char *desc, const char **names, size_t total)
 {
-    return new_param(PARAM_BOOL, desc, names, total);
+    return new_param(eParamBool, desc, names, total);
 }
 
 USE_DECL
@@ -178,7 +178,7 @@ long get_digit_arg(const argparse_t *argparse, const param_t *arg, long other)
 {
     arg_t *associated = map_get_ptr(argparse->lookup, arg);
     CTASSERT(associated != NULL, "parameter not found");
-    CTASSERT(associated->kind == PARAM_INT, "parameter is not an integer");
+    CTASSERT(associated->kind == eParamInt, "parameter is not an integer");
 
     if (!associated->setByUser)
     {
@@ -193,7 +193,7 @@ const char *get_string_arg(const argparse_t *argparse, const param_t *arg, const
 {
     arg_t *associated = map_get_ptr(argparse->lookup, arg);
     CTASSERT(associated != NULL, "parameter not found");
-    CTASSERT(associated->kind == PARAM_STRING, "parameter is not a string");
+    CTASSERT(associated->kind == eParamString, "parameter is not a string");
 
     if (!associated->setByUser)
     {
@@ -208,7 +208,7 @@ bool get_bool_arg(const argparse_t *argparse, const param_t *arg, bool other)
 {
     arg_t *associated = map_get_ptr(argparse->lookup, arg);
     CTASSERT(associated != NULL, "parameter not found");
-    CTASSERT(associated->kind == PARAM_BOOL, "parameter is not a boolean");
+    CTASSERT(associated->kind == eParamBool, "parameter is not a boolean");
 
     if (!associated->setByUser)
     {

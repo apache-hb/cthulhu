@@ -12,11 +12,11 @@ typedef struct map_t map_t;
 
 typedef enum
 {
-    PARAM_BOOL,   // either a positional argument or a boolean flag
-    PARAM_STRING, // a string of some sort
-    PARAM_INT,    // an integer
+    eParamBool,   // either a positional argument or a boolean flag
+    eParamString, // a string of some sort
+    eParamInt,    // an integer
 
-    PARAM_TOTAL
+    eParamTotal
 } param_kind_t;
 
 /**

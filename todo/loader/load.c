@@ -89,7 +89,7 @@ static const char *compatible_version(uint32_t file, uint32_t expected)
 bool is_loadable(const char *path, uint32_t submagic, uint32_t version)
 {
     cerror_t error = 0;
-    file_t handle = file_open(path, FILE_BINARY, &error);
+    file_t handle = file_open(path, eFileBinary, &error);
 
     if (error != 0)
     {
@@ -138,7 +138,7 @@ bool begin_load(data_t *in, header_t header)
 
     cerror_t error = 0;
 
-    file_t file = file_open(path, FILE_BINARY, &error);
+    file_t file = file_open(path, eFileBinary, &error);
     if (error != 0)
     {
         return false;

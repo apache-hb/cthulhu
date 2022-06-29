@@ -70,7 +70,7 @@ int main(int argc, const char **argv)
     }
 
     const char *file = vector_get(result.files, 0);
-    file_t fd = check_open(reports, file, FILE_READ | FILE_TEXT);
+    file_t fd = check_open(reports, file, eFileRead | eFileText);
 
     int status = end_reports(reports, "opening source", newConfig);
     if (status != EXIT_OK)

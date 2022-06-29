@@ -26,5 +26,8 @@ Diagnostics:
       readability-identifier-naming.EnumCase: lower_case
       readability-identifier-naming.EnumSuffix: _t
 
+      readability-identifier-naming.EnumConstantCase: CamelCase
+      readability-identifier-naming.EnumConstantPrefix: e
+
       readability-identifier-naming.TypedefCase: lower_case
       readability-identifier-naming.TypedefSuffix: _t

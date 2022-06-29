@@ -11,20 +11,20 @@ cerror_t make_directory(const char *path)
 
 static file_format_t get_format(file_flags_t flags)
 {
-    file_flags_t fmt = flags & (FILE_TEXT | FILE_BINARY);
+    file_flags_t fmt = flags & (eFileText | eFileBinary);
     CTASSERT(fmt, "no file format specified");
-    CTASSERT(fmt == FILE_TEXT || fmt == FILE_BINARY, "invalid file format flags");
+    CTASSERT(fmt == eFileText || fmt == eFileBinary, "invalid file format flags");
 
-    return (fmt == FILE_TEXT) ? FORMAT_TEXT : FORMAT_BINARY;
+    return (fmt == eFileText) ? FORMAT_TEXT : FORMAT_BINARY;
 }
 
 static file_mode_t get_mode(file_flags_t flags)
 {
-    file_flags_t fmt = flags & (FILE_READ | FILE_WRITE);
+    file_flags_t fmt = flags & (eFileRead | eFileWrite);
     CTASSERT(fmt, "no open mode specified");
-    CTASSERT(fmt == FILE_READ || fmt == FILE_WRITE, "invalid open mode flags");
+    CTASSERT(fmt == eFileRead || fmt == eFileWrite, "invalid open mode flags");
 
-    return (fmt == FILE_READ) ? MODE_READ : MODE_WRITE;
+    return (fmt == eFileRead) ? MODE_READ : MODE_WRITE;
 }
 
 USE_DECL

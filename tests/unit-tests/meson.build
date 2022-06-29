@@ -14,8 +14,6 @@ foreach case : all
     test('test-' + case, it, suite : 'unit-tests')
 endforeach
 
-subdir('gentool')
-
 # currently disabled, meson has no way of detecting that a test
 # has exiting with a specific exit code
 # segfault = executable('segfault', dir/'platform/segfault.c',

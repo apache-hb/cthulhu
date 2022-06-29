@@ -459,9 +459,9 @@ static void emit_vscode(emit_t *config)
     char *languagePath = format("%s" NATIVE_PATH_SEPARATOR "language-configuration.json", root);
     char *tmlangPath = format("%s" NATIVE_PATH_SEPARATOR "%s.tmlang.json", root, config->id);
 
-    file_t package = check_open(config->reports, packagePath, FILE_WRITE | FILE_TEXT);
-    file_t language = check_open(config->reports, languagePath, FILE_WRITE | FILE_TEXT);
-    file_t tmlang = check_open(config->reports, tmlangPath, FILE_WRITE | FILE_TEXT);
+    file_t package = check_open(config->reports, packagePath, eFileWrite | eFileText);
+    file_t language = check_open(config->reports, languagePath, eFileWrite | eFileText);
+    file_t tmlang = check_open(config->reports, tmlangPath, eFileWrite | eFileText);
 
     EMIT_FILE(package, emit_vscode_package);
     EMIT_FILE(language, emit_vscode_language);
@@ -478,11 +478,11 @@ void emit(emit_t *config)
     char *flexPath = format("%s" NATIVE_PATH_SEPARATOR "ast.l", config->path);
     char *bisonPath = format("%s" NATIVE_PATH_SEPARATOR "ast.y", config->path);
 
-    file_t header = check_open(config->reports, headerPath, FILE_WRITE | FILE_TEXT);
-    file_t source = check_open(config->reports, sourcePath, FILE_WRITE | FILE_TEXT);
+    file_t header = check_open(config->reports, headerPath, eFileWrite | eFileText);
+    file_t source = check_open(config->reports, sourcePath, eFileWrite | eFileText);
 
-    file_t flex = check_open(config->reports, flexPath, FILE_WRITE | FILE_TEXT);
-    file_t bison = check_open(config->reports, bisonPath, FILE_WRITE | FILE_TEXT);
+    file_t flex = check_open(config->reports, flexPath, eFileWrite | eFileText);
+    file_t bison = check_open(config->reports, bisonPath, eFileWrite | eFileText);
 
     EMIT_FILE(header, emit_header);
     EMIT_FILE(source, emit_source);

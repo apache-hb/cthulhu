@@ -8,10 +8,10 @@
 
 #include <limits.h>
 
-static const char *kFlagTypes[PARAM_TOTAL] = {
-    [PARAM_BOOL] = "boolean",
-    [PARAM_STRING] = "string",
-    [PARAM_INT] = "integer",
+static const char *kFlagTypes[eParamTotal] = {
+    [eParamBool] = "boolean",
+    [eParamString] = "string",
+    [eParamInt] = "integer",
 };
 
 static bool argparse_check(argparse_t *argparse, param_kind_t kind)
@@ -58,7 +58,7 @@ static void argparse_flush(argparse_t *argparse)
 
 void argparse_end_flag(argparse_t *argparse)
 {
-    if (argparse_check(argparse, PARAM_BOOL))
+    if (argparse_check(argparse, eParamBool))
     {
         argparse->currentArg->boolean = true;
         argparse_flush(argparse);
@@ -82,7 +82,7 @@ void argparse_begin_flag(argparse_t *argparse, const char *name)
 
 void argparse_push_string(argparse_t *argparse, const char *value)
 {
-    if (argparse_check(argparse, PARAM_STRING))
+    if (argparse_check(argparse, eParamString))
     {
         argparse->currentArg->string = value;
         argparse_flush(argparse);
@@ -96,7 +96,7 @@ void argparse_push_string(argparse_t *argparse, const char *value)
 
 void argparse_push_digit(argparse_t *argparse, mpz_t value)
 {
-    if (argparse_check(argparse, PARAM_INT))
+    if (argparse_check(argparse, eParamInt))
     {
         long digit = mpz_get_si(value);
         if (!mpz_fits_slong_p(value))

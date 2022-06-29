@@ -88,7 +88,7 @@ int main(int argc, const char **argv)
     vector_t *allModules = cthulhu_get_modules(cthulhu);
 
     cerror_t error = 0;
-    file_t out = file_open(outFile, FILE_WRITE | FILE_BINARY, &error);
+    file_t out = file_open(outFile, eFileWrite | eFileBinary, &error);
 
     if (error != 0)
     {

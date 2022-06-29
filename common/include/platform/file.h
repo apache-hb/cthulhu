@@ -13,10 +13,10 @@ typedef struct
 
 typedef enum
 {
-    FILE_READ = (1 << 0),
-    FILE_WRITE = (1 << 1),
-    FILE_BINARY = (1 << 2),
-    FILE_TEXT = (1 << 3),
+    eFileRead = (1 << 0),
+    eFileWrite = (1 << 1),
+    eFileBinary = (1 << 2),
+    eFileText = (1 << 3),
 } file_flags_t;
 
 NODISCARD

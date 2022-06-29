@@ -49,7 +49,7 @@
 #    define FILE_HANDLE_TYPE HANDLE
 #    define FILE_SIZE_TYPE LONGLONG
 #    define FILE_POS_TYPE DWORD
-#    define FILE_READ_TYPE DWORD
+#    define eFileRead_TYPE DWORD
 #    define FILE_WRITE_TYPE DWORD
 #    define CERROR_TYPE HRESULT
 #else
@@ -61,7 +61,7 @@
 #    define FILE_HANDLE_TYPE FILE *
 #    define FILE_SIZE_TYPE size_t
 #    define FILE_POS_TYPE size_t
-#    define FILE_READ_TYPE size_t
+#    define eFileRead_TYPE size_t
 #    define FILE_WRITE_TYPE size_t
 #    define CERROR_TYPE int
 #endif
@@ -75,7 +75,7 @@ typedef FILE_HANDLE_TYPE file_handle_t;
 typedef CERROR_TYPE native_cerror_t;
 typedef FILE_SIZE_TYPE file_size_t;
 typedef FILE_POS_TYPE file_pos_t;
-typedef FILE_READ_TYPE file_read_t;
+typedef eFileRead_TYPE file_read_t;
 typedef FILE_WRITE_TYPE file_write_t;
 
 typedef enum

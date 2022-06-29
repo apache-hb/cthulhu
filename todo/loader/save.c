@@ -141,7 +141,7 @@ void end_save(data_t *out)
     }
 
     cerror_t error = 0;
-    file_t handle = file_open(out->header.path, FILE_BINARY | FILE_WRITE, &error);
+    file_t handle = file_open(out->header.path, eFileBinary | eFileWrite, &error);
 
     if (error != 0)
     {
