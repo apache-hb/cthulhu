@@ -57,9 +57,9 @@ native_cerror_t native_make_directory(const char *path)
     return 0;
 }
 
-static const char *kOpenModes[MODE_TOTAL][FORMAT_TOTAL] = {
-    [MODE_READ] = {[FORMAT_TEXT] = "r", [FORMAT_BINARY] = "rb"},
-    [MODE_WRITE] = {[FORMAT_TEXT] = "w", [FORMAT_BINARY] = "wb"},
+static const char *kOpenModes[eModeTotal][eFormatTotal] = {
+    [eModeRead] = {[eFormatText] = "r", [eFormatBinary] = "rb"},
+    [eModeWrite] = {[eFormatText] = "w", [eFormatBinary] = "wb"},
 };
 
 USE_DECL

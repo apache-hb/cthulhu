@@ -34,8 +34,6 @@ typedef enum
                              ///  and accesses are treated as side effects
     eTagAtomic = (1 << 2),   ///< this type is atomic, treated the same as
                              ///< volatile but also synchronizes
-
-    eTagTotal
 } hlir_tags_t;
 
 /**

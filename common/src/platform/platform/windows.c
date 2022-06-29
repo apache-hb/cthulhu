@@ -94,8 +94,8 @@ native_cerror_t native_make_directory(const char *path)
 USE_DECL
 file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error)
 {
-    DWORD access = (mode == MODE_READ) ? GENERIC_READ : GENERIC_WRITE;
-    DWORD disposition = (mode == MODE_READ) ? OPEN_EXISTING : CREATE_ALWAYS;
+    DWORD access = (mode == eModeRead) ? GENERIC_READ : GENERIC_WRITE;
+    DWORD disposition = (mode == eModeRead) ? OPEN_EXISTING : CREATE_ALWAYS;
     file_handle_t handle = CreateFile(
         /* lpFileName = */ path,
         /* dwDesiredAccess = */ access,

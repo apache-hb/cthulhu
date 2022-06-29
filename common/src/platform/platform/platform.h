@@ -80,18 +80,18 @@ typedef FILE_WRITE_TYPE file_write_t;
 
 typedef enum
 {
-    FORMAT_BINARY,
-    FORMAT_TEXT,
+    eFormatBinary,
+    eFormatText,
 
-    FORMAT_TOTAL
+    eFormatTotal
 } file_format_t;
 
 typedef enum
 {
-    MODE_READ,
-    MODE_WRITE,
+    eModeRead,
+    eModeWrite,
 
-    MODE_TOTAL
+    eModeTotal
 } file_mode_t;
 
 /// library api

@@ -52,11 +52,11 @@ void pl0_init(runtime_t *runtime)
 
 typedef enum
 {
-    TAG_VALUES, // hlir_t*
-    TAG_CONSTS, // hlir_t*
-    TAG_PROCS,  // hlir_t*
+    eTagValues, // hlir_t*
+    eTagConsts, // hlir_t*
+    eTagProcs,  // hlir_t*
 
-    TAG_MAX
+    eTagMax
 } tag_t;
 
 static void report_pl0_shadowing(reports_t *reports, const char *name, node_t prevDefinition, node_t newDefinition)
@@ -72,13 +72,13 @@ static void report_pl0_unresolved(reports_t *reports, const node_t node, const c
 
 static hlir_t *get_var(sema_t *sema, const char *name)
 {
-    hlir_t *constHlir = sema_get(sema, TAG_CONSTS, name);
+    hlir_t *constHlir = sema_get(sema, eTagConsts, name);
     if (constHlir != NULL)
     {
         return constHlir;
     }
 
-    hlir_t *varHlir = sema_get(sema, TAG_VALUES, name);
+    hlir_t *varHlir = sema_get(sema, eTagValues, name);
     if (varHlir != NULL)
     {
         return varHlir;
@@ -89,7 +89,7 @@ static hlir_t *get_var(sema_t *sema, const char *name)
 
 static void set_proc(sema_t *sema, const char *name, hlir_t *proc)
 {
-    hlir_t *other = sema_get(sema, TAG_PROCS, name);
+    hlir_t *other = sema_get(sema, eTagProcs, name);
     if (other != NULL && other != proc)
     {
         const node_t node = get_hlir_node(proc);
@@ -98,12 +98,12 @@ static void set_proc(sema_t *sema, const char *name, hlir_t *proc)
         return;
     }
 
-    sema_set(sema, TAG_PROCS, name, proc);
+    sema_set(sema, eTagProcs, name, proc);
 }
 
 static hlir_t *get_proc(sema_t *sema, const char *name)
 {
-    return sema_get(sema, TAG_PROCS, name);
+    return sema_get(sema, eTagProcs, name);
 }
 
 static void set_var(sema_t *sema, size_t tag, const char *name, hlir_t *hlir)
@@ -325,15 +325,15 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node)
 static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
 {
     size_t nlocals = vector_len(node->locals);
-    size_t sizes[TAG_MAX] = {[TAG_VALUES] = nlocals};
+    size_t sizes[eTagMax] = {[eTagValues] = nlocals};
 
-    sema_t *nest = sema_new(sema, sema->reports, TAG_MAX, sizes);
+    sema_t *nest = sema_new(sema, sema->reports, eTagMax, sizes);
 
     for (size_t i = 0; i < nlocals; i++)
     {
         pl0_t *local = vector_get(node->locals, i);
         hlir_t *it = hlir_local(local->node, local->name, kIntegerType);
-        set_var(nest, TAG_VALUES, local->name, it);
+        set_var(nest, eTagValues, local->name, it);
         hlir_add_local(hlir, it);
     }
 
@@ -346,26 +346,26 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
 
 static void insert_module(sema_t *sema, sema_t *other)
 {
-    map_iter_t otherValues = map_iter(sema_tag(other, TAG_VALUES));
-    map_iter_t otherConsts = map_iter(sema_tag(other, TAG_CONSTS));
-    map_iter_t otherProcs = map_iter(sema_tag(other, TAG_PROCS));
+    map_iter_t otherValues = map_iter(sema_tag(other, eTagValues));
+    map_iter_t otherConsts = map_iter(sema_tag(other, eTagConsts));
+    map_iter_t otherProcs = map_iter(sema_tag(other, eTagProcs));
 
     while (map_has_next(&otherValues))
     {
         hlir_t *decl = map_next(&otherValues).value;
-        set_var(sema, TAG_VALUES, get_hlir_name(decl), decl);
+        set_var(sema, eTagValues, get_hlir_name(decl), decl);
     }
 
     while (map_has_next(&otherConsts))
     {
         hlir_t *decl = map_next(&otherConsts).value;
-        set_var(sema, TAG_CONSTS, get_hlir_name(decl), decl);
+        set_var(sema, eTagConsts, get_hlir_name(decl), decl);
     }
 
     while (map_has_next(&otherProcs))
     {
         hlir_t *decl = map_next(&otherProcs).value;
-        set_var(sema, TAG_PROCS, get_hlir_name(decl), decl);
+        set_var(sema, eTagProcs, get_hlir_name(decl), decl);
     }
 }
 
@@ -396,13 +396,13 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     const char *moduleName = root->mod == NULL ? str_filename(scan_path(thisScanner)) : root->mod;
     hlir_t *mod = hlir_module(root->node, moduleName, vector_of(0), vector_of(0), vector_of(0));
 
-    size_t sizes[TAG_MAX] = {
-        [TAG_CONSTS] = totalConsts,
-        [TAG_VALUES] = totalGlobals,
-        [TAG_PROCS] = totalFunctions,
+    size_t sizes[eTagMax] = {
+        [eTagConsts] = totalConsts,
+        [eTagValues] = totalGlobals,
+        [eTagProcs] = totalFunctions,
     };
 
-    sema_t *sema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
+    sema_t *sema = sema_new(NULL, runtime->reports, eTagMax, sizes);
 
     // forward declare everything
     for (size_t i = 0; i < totalConsts; i++)
@@ -413,7 +413,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
         hlir_set_attributes(hlir, kConst);
         hlir_set_parent(hlir, mod);
 
-        set_var(sema, TAG_CONSTS, it->name, hlir);
+        set_var(sema, eTagConsts, it->name, hlir);
         vector_push(&consts, hlir);
     }
 
@@ -425,7 +425,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
         hlir_set_attributes(hlir, kMutable);
         hlir_set_parent(hlir, mod);
 
-        set_var(sema, TAG_VALUES, it->name, hlir);
+        set_var(sema, eTagValues, it->name, hlir);
         vector_push(&globals, hlir);
     }
 

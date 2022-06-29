@@ -16,12 +16,12 @@
 
 typedef enum
 {
-    TAG_VARS,    // hlir_t*
-    TAG_PROCS,   // hlir_t*
-    TAG_TYPES,   // hlir_t*
-    TAG_MODULES, // sema_t*
+    eTagValues,    // hlir_t*
+    eTagProcs,   // hlir_t*
+    eTagTypes,   // hlir_t*
+    eTagModules, // sema_t*
 
-    TAG_MAX
+    eTagTotal
 } tag_t;
 
 typedef struct
@@ -119,9 +119,9 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
 
 static void add_basic_types(sema_t *sema)
 {
-    add_decl(sema, TAG_TYPES, "void", kVoidType);
-    add_decl(sema, TAG_TYPES, "bool", kBoolType);
-    add_decl(sema, TAG_TYPES, "str", kStringType);
+    add_decl(sema, eTagTypes, "void", kVoidType);
+    add_decl(sema, eTagTypes, "bool", kBoolType);
+    add_decl(sema, eTagTypes, "str", kStringType);
 
     for (int sign = 0; sign < eSignTotal; sign++)
     {
@@ -130,26 +130,26 @@ static void add_basic_types(sema_t *sema)
             const char *name = get_digit_name(sign, digit);
             hlir_t *type = get_digit_type(sign, digit);
 
-            add_decl(sema, TAG_TYPES, name, type);
+            add_decl(sema, eTagTypes, name, type);
         }
     }
 
     // enable the below later
 
     // special types for interfacing with C
-    // add_decl(sema, TAG_TYPES, "enum", hlir_digit(node, "enum", eInt, eSigned));
+    // add_decl(sema, eTagTypes, "enum", hlir_digit(node, "enum", eInt, eSigned));
 }
 
 void ctu_init_compiler(runtime_t *runtime)
 {
-    size_t sizes[TAG_MAX] = {
-        [TAG_VARS] = 1,
-        [TAG_PROCS] = 1,
-        [TAG_TYPES] = 32,
-        [TAG_MODULES] = 1,
+    size_t sizes[eTagTotal] = {
+        [eTagValues] = 1,
+        [eTagProcs] = 1,
+        [eTagTypes] = 32,
+        [eTagModules] = 1,
     };
 
-    kRootSema = sema_new(NULL, runtime->reports, TAG_MAX, sizes);
+    kRootSema = sema_new(NULL, runtime->reports, eTagTotal, sizes);
 
     node_t node = node_builtin();
 
@@ -180,7 +180,7 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *name = vector_get(ast->path, i);
-        sema_t *next = sema_get(current, TAG_MODULES, name);
+        sema_t *next = sema_get(current, eTagModules, name);
 
         if (next == NULL)
         {
@@ -194,7 +194,7 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
     const char *name = vector_tail(ast->path);
     while (current != NULL)
     {
-        hlir_t *decl = sema_get(current, TAG_TYPES, name);
+        hlir_t *decl = sema_get(current, eTagTypes, name);
         if (decl != NULL)
         {
             return decl;
@@ -311,7 +311,7 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
     for (size_t i = 0; i < vector_len(ast->path) - 1; i++)
     {
         const char *name = vector_get(ast->path, i);
-        sema_t *next = sema_get(current, TAG_MODULES, name);
+        sema_t *next = sema_get(current, eTagModules, name);
 
         if (next == NULL)
         {
@@ -324,13 +324,13 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 
     const char *name = vector_tail(ast->path);
 
-    hlir_t *var = sema_get(current, TAG_VARS, name);
+    hlir_t *var = sema_get(current, eTagValues, name);
     if (var != NULL)
     {
         return var;
     }
 
-    hlir_t *func = sema_get(sema, TAG_PROCS, name);
+    hlir_t *func = sema_get(sema, eTagProcs, name);
     if (func != NULL)
     {
         return func;
@@ -390,20 +390,21 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
 {
     hlir_t *cond = sema_expr(sema, ast->cond);
 
-    size_t sizes[TAG_MAX] = {
-        [TAG_VARS] = 32,
-        [TAG_PROCS] = 32,
-        [TAG_MODULES] = 32,
+    size_t sizes[eTagTotal] = {
+        [eTagValues] = 32,
+        [eTagProcs] = 32,
+        [eTagTypes] = 32,
+        [eTagModules] = 32,
     };
 
-    sema_t *nestThen = sema_new(sema, sema->reports, TAG_MAX, sizes);
+    sema_t *nestThen = sema_new(sema, sema->reports, eTagTotal, sizes);
 
     hlir_t *then = sema_stmt(nestThen, ast->then);
     hlir_t *other = NULL;
 
     if (ast->other != NULL)
     {
-        sema_t *nextOther = sema_new(sema, sema->reports, TAG_MAX, sizes);
+        sema_t *nextOther = sema_new(sema, sema->reports, eTagTotal, sizes);
         other = sema_stmt(nextOther, ast->other);
     }
 
@@ -540,7 +541,7 @@ static void sema_params(sema_t *sema, vector_t *params)
     for (size_t i = 0; i < len; i++)
     {
         hlir_t *param = vector_get(params, i);
-        add_decl(sema, TAG_VARS, get_hlir_name(param), param);
+        add_decl(sema, eTagValues, get_hlir_name(param), param);
     }
 }
 
@@ -549,14 +550,14 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? eLinkImported : eLinkExported, 0, NULL, NULL);
     hlir_t *body = NULL;
 
-    size_t tags[TAG_MAX] = {
-        [TAG_VARS] = 32,
-        [TAG_PROCS] = 32,
-        [TAG_TYPES] = 32,
-        [TAG_MODULES] = 32,
+    size_t tags[eTagTotal] = {
+        [eTagValues] = 32,
+        [eTagProcs] = 32,
+        [eTagTypes] = 32,
+        [eTagModules] = 32,
     };
 
-    sema_t *nest = sema_new(sema, sema->reports, TAG_MAX, tags);
+    sema_t *nest = sema_new(sema, sema->reports, eTagTotal, tags);
     sema_params(nest, decl->params);
 
     if (ast->body == NULL)
@@ -579,27 +580,27 @@ static void sema_decl(sema_t *sema, ast_t *ast)
     switch (ast->of)
     {
     case AST_STRUCTDECL:
-        decl = sema_get(sema, TAG_TYPES, ast->name);
+        decl = sema_get(sema, eTagTypes, ast->name);
         sema_struct(sema, decl, ast);
         break;
 
     case AST_UNIONDECL:
-        decl = sema_get(sema, TAG_TYPES, ast->name);
+        decl = sema_get(sema, eTagTypes, ast->name);
         sema_union(sema, decl, ast);
         break;
 
     case AST_ALIASDECL:
-        decl = sema_get(sema, TAG_TYPES, ast->name);
+        decl = sema_get(sema, eTagTypes, ast->name);
         sema_alias(sema, decl, ast);
         break;
 
     case AST_VARIANTDECL:
-        decl = sema_get(sema, TAG_TYPES, ast->name);
+        decl = sema_get(sema, eTagTypes, ast->name);
         sema_variant(sema, decl, ast);
         break;
 
     case AST_FUNCDECL:
-        decl = sema_get(sema, TAG_PROCS, ast->name);
+        decl = sema_get(sema, eTagProcs, ast->name);
         sema_func(sema, decl, ast);
         break;
 
@@ -641,7 +642,7 @@ static hlir_t *begin_function(sema_t *sema, ast_t *ast)
 static void fwd_decl(sema_t *sema, ast_t *ast)
 {
     hlir_t *decl;
-    tag_t tag = TAG_TYPES;
+    tag_t tag = eTagTypes;
 
     switch (ast->of)
     {
@@ -663,7 +664,7 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
 
     case AST_FUNCDECL:
         decl = begin_function(sema, ast);
-        tag = TAG_PROCS;
+        tag = eTagProcs;
         break;
 
     default:
@@ -685,7 +686,7 @@ static char *make_import_name(vector_t *vec)
 static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
 {
     const char *name = vector_tail(import->path);
-    sema_t *previous = sema_get(sema, TAG_MODULES, name);
+    sema_t *previous = sema_get(sema, eTagModules, name);
 
     if (previous != NULL)
     {
@@ -695,7 +696,7 @@ static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
         return;
     }
 
-    sema_set(sema, TAG_MODULES, name, mod);
+    sema_set(sema, eTagModules, name, mod);
 }
 
 void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
@@ -703,14 +704,14 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
     ast_t *root = compile->ast;
 
     size_t totalDecls = vector_len(root->decls);
-    size_t sizes[TAG_MAX] = {
-        [TAG_VARS] = totalDecls,
-        [TAG_PROCS] = totalDecls,
-        [TAG_TYPES] = totalDecls,
-        [TAG_MODULES] = vector_len(root->imports),
+    size_t sizes[eTagTotal] = {
+        [eTagValues] = totalDecls,
+        [eTagProcs] = totalDecls,
+        [eTagTypes] = totalDecls,
+        [eTagModules] = vector_len(root->imports),
     };
 
-    sema_t *sema = sema_new(kRootSema, runtime->reports, TAG_MAX, sizes);
+    sema_t *sema = sema_new(kRootSema, runtime->reports, eTagTotal, sizes);
 
     char *name = NULL;
     if (root->modspec != NULL)
@@ -730,9 +731,9 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
         fwd_decl(sema, decl);
     }
 
-    vector_t *types = map_values(sema_tag(sema, TAG_TYPES));
-    vector_t *globals = map_values(sema_tag(sema, TAG_VARS));
-    vector_t *procs = map_values(sema_tag(sema, TAG_PROCS));
+    vector_t *types = map_values(sema_tag(sema, eTagTypes));
+    vector_t *globals = map_values(sema_tag(sema, eTagValues));
+    vector_t *procs = map_values(sema_tag(sema, eTagProcs));
 
     hlir_update_module(mod, types, globals, procs);
 
@@ -784,9 +785,9 @@ void ctu_compile_module(runtime_t *runtime, compile_t *compile)
         sema_decl(sema, decl);
     }
 
-    vector_t *types = map_values(sema_tag(sema, TAG_TYPES));
-    vector_t *globals = map_values(sema_tag(sema, TAG_VARS));
-    vector_t *procs = map_values(sema_tag(sema, TAG_PROCS));
+    vector_t *types = map_values(sema_tag(sema, eTagTypes));
+    vector_t *globals = map_values(sema_tag(sema, eTagValues));
+    vector_t *procs = map_values(sema_tag(sema, eTagProcs));
 
     hlir_update_module(compile->hlir, types, globals, procs);
 }

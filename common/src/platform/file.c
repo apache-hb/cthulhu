@@ -15,7 +15,7 @@ static file_format_t get_format(file_flags_t flags)
     CTASSERT(fmt, "no file format specified");
     CTASSERT(fmt == eFileText || fmt == eFileBinary, "invalid file format flags");
 
-    return (fmt == eFileText) ? FORMAT_TEXT : FORMAT_BINARY;
+    return (fmt == eFileText) ? eFormatText : eFormatBinary;
 }
 
 static file_mode_t get_mode(file_flags_t flags)
@@ -24,7 +24,7 @@ static file_mode_t get_mode(file_flags_t flags)
     CTASSERT(fmt, "no open mode specified");
     CTASSERT(fmt == eFileRead || fmt == eFileWrite, "invalid open mode flags");
 
-    return (fmt == eFileRead) ? MODE_READ : MODE_WRITE;
+    return (fmt == eFileRead) ? eModeRead : eModeWrite;
 }
 
 USE_DECL
