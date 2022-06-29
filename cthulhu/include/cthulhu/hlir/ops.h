@@ -5,22 +5,22 @@
  */
 typedef enum
 {
-    BINARY_ADD, ///< lhs + rhs
-    BINARY_SUB, ///< lhs - rhs
-    BINARY_MUL, ///< lhs * rhs
-    BINARY_DIV, ///< lhs / rhs
-    BINARY_REM, ///< lhs % rhs
+    eBinaryAdd, ///< lhs + rhs
+    eBinarySub, ///< lhs - rhs
+    eBinaryMul, ///< lhs * rhs
+    eBinaryDiv, ///< lhs / rhs
+    eBinaryRem, ///< lhs % rhs
 
-    BINARY_AND, ///< lhs && rhs
-    BINARY_OR,  ///< lhs || rhs
+    eBinaryAnd, ///< lhs && rhs
+    eBinaryOr,  ///< lhs || rhs
 
-    BINARY_BITAND, ///< lhs & rhs
-    BINARY_BITOR,  ///< lhs | rhs
-    BINARY_XOR,    ///< lhs ^ rhs
-    BINARY_SHL,    ///< lhs << rhs
-    BINARY_SHR,    ///< lhs >> rhs
+    eBinaryBitAnd, ///< lhs & rhs
+    eBinaryBitOr,  ///< lhs | rhs
+    eBinaryXor,    ///< lhs ^ rhs
+    eBinaryShl,    ///< lhs << rhs
+    eBinaryShr,    ///< lhs >> rhs
 
-    BINARY_TOTAL
+    eBinaryTotal
 } binary_t;
 
 /**
@@ -28,15 +28,15 @@ typedef enum
  */
 typedef enum
 {
-    COMPARE_EQ,  ///< lhs == rhs
-    COMPARE_NEQ, ///< lhs != rhs
+    eCompareEq,  ///< lhs == rhs
+    eCompareNeq, ///< lhs != rhs
 
-    COMPARE_LT,  ///< lhs < rhs
-    COMPARE_LTE, ///< lhs <= rhs
-    COMPARE_GT,  ///< lhs > rhs
-    COMPARE_GTE, ///< lhs >= rhs
+    eCompareLt,  ///< lhs < rhs
+    eCompareLte, ///< lhs <= rhs
+    eCompareGt,  ///< lhs > rhs
+    eCompareGte, ///< lhs >= rhs
 
-    COMPARE_TOTAL
+    eCompareTotal
 } compare_t;
 
 /**
@@ -44,13 +44,13 @@ typedef enum
  */
 typedef enum
 {
-    UNARY_NEG, ///< -operand
-    UNARY_ABS, ///< abs(operand)
+    eUnaryNeg, ///< -operand
+    eUnaryAbs, ///< abs(operand)
 
-    UNARY_BITFLIP, ///< ~operand
-    UNARY_NOT,     ///< !operand
+    eUnaryBitflip, ///< ~operand
+    eUnaryNot,     ///< !operand
 
-    UNARY_TOTAL
+    eUnaryTotal
 } unary_t;
 
 /**

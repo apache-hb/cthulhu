@@ -179,33 +179,33 @@ factor: ident { $$ = $1; }
     ;
 
 term: factor { $$ = $1; }
-    | factor DIV term { $$ = pl0_binary(x, @$, BINARY_DIV, $1, $3); }
+    | factor DIV term { $$ = pl0_binary(x, @$, eBinaryDiv, $1, $3); }
     ;
 
 mul: term { $$ = $1; }
-    | term MUL mul { $$ = pl0_binary(x, @$, BINARY_MUL, $1, $3); }
+    | term MUL mul { $$ = pl0_binary(x, @$, eBinaryMul, $1, $3); }
     ;
 
 math: mul { $$ = $1; }
-    | mul ADD math { $$ = pl0_binary(x, @$, BINARY_ADD, $1, $3); }
-    | mul SUB math { $$ = pl0_binary(x, @$, BINARY_SUB, $1, $3); }
+    | mul ADD math { $$ = pl0_binary(x, @$, eBinaryAdd, $1, $3); }
+    | mul SUB math { $$ = pl0_binary(x, @$, eBinarySub, $1, $3); }
     ;
 
 unary: math { $$ = $1; }
-    | SUB unary { $$ = pl0_unary(x, @$, UNARY_NEG, $2); }
-    | ADD unary { $$ = pl0_unary(x, @$, UNARY_ABS, $2); }
+    | SUB unary { $$ = pl0_unary(x, @$, eUnaryNeg, $2); }
+    | ADD unary { $$ = pl0_unary(x, @$, eUnaryAbs, $2); }
     ;
 
 expr: unary { $$ = $1; }
     ;
 
 condition: ODD expr { $$ = pl0_odd(x, @$, $2); }
-    | expr EQUALS expr { $$ = pl0_compare(x, @$, COMPARE_EQ, $1, $3); }
-    | expr NOTEQUAL expr { $$ = pl0_compare(x, @$, COMPARE_NEQ, $1, $3); }
-    | expr LESS expr { $$ = pl0_compare(x, @$, COMPARE_LT, $1, $3); }
-    | expr LESSEQ expr { $$ = pl0_compare(x, @$, COMPARE_LTE, $1, $3); }
-    | expr GREATER expr { $$ = pl0_compare(x, @$, COMPARE_GT, $1, $3); }
-    | expr GREATEQ expr { $$ = pl0_compare(x, @$, COMPARE_GTE, $1, $3); }
+    | expr EQUALS expr { $$ = pl0_compare(x, @$, eCompareEq, $1, $3); }
+    | expr NOTEQUAL expr { $$ = pl0_compare(x, @$, eCompareNeq, $1, $3); }
+    | expr LESS expr { $$ = pl0_compare(x, @$, eCompareLt, $1, $3); }
+    | expr LESSEQ expr { $$ = pl0_compare(x, @$, eCompareLte, $1, $3); }
+    | expr GREATER expr { $$ = pl0_compare(x, @$, eCompareGt, $1, $3); }
+    | expr GREATEQ expr { $$ = pl0_compare(x, @$, eCompareGte, $1, $3); }
     ;
 
 number: NUMBER { $$ = pl0_digit(x, @$, $1); }

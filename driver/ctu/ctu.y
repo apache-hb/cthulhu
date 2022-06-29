@@ -329,21 +329,21 @@ unary: postfix { $$ = $1; }
     ;
 
 multiply: unary { $$ = $1; }
-    | multiply MUL unary { $$ = ast_binary(x, @$, BINARY_MUL, $1, $3); }
-    | multiply DIV unary { $$ = ast_binary(x, @$, BINARY_DIV, $1, $3); }
-    | multiply MOD unary { $$ = ast_binary(x, @$, BINARY_REM, $1, $3); }
+    | multiply MUL unary { $$ = ast_binary(x, @$, eBinaryMul, $1, $3); }
+    | multiply DIV unary { $$ = ast_binary(x, @$, eBinaryDiv, $1, $3); }
+    | multiply MOD unary { $$ = ast_binary(x, @$, eBinaryRem, $1, $3); }
     ;
 
 add: multiply { $$ = $1; }
-    | add ADD multiply { $$ = ast_binary(x, @$, BINARY_ADD, $1, $3); }
-    | add SUB multiply { $$ = ast_binary(x, @$, BINARY_SUB, $1, $3); }
+    | add ADD multiply { $$ = ast_binary(x, @$, eBinaryAdd, $1, $3); }
+    | add SUB multiply { $$ = ast_binary(x, @$, eBinarySub, $1, $3); }
     ;
 
 compare: add { $$ = $1; }
-    | compare LT add { $$ = ast_compare(x, @$, COMPARE_LT, $1, $3); }
-    | compare GT add { $$ = ast_compare(x, @$, COMPARE_GT, $1, $3); }
-    | compare LTE add { $$ = ast_compare(x, @$, COMPARE_LTE, $1, $3); }
-    | compare GTE add { $$ = ast_compare(x, @$, COMPARE_GTE, $1, $3); }
+    | compare LT add { $$ = ast_compare(x, @$, eCompareLt, $1, $3); }
+    | compare GT add { $$ = ast_compare(x, @$, eCompareGt, $1, $3); }
+    | compare LTE add { $$ = ast_compare(x, @$, eCompareLte, $1, $3); }
+    | compare GTE add { $$ = ast_compare(x, @$, eCompareGte, $1, $3); }
     ;
 
 equality: compare { $$ = $1; }

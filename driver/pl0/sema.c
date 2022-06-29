@@ -294,8 +294,8 @@ static hlir_t *sema_odd(sema_t *sema, pl0_t *node)
     hlir_t *val = sema_expr(sema, node->operand);
     hlir_t *two = hlir_int_literal(node->node, kIntegerType, 2);
     hlir_t *one = hlir_int_literal(node->node, kIntegerType, 1);
-    hlir_t *rem = hlir_binary(node->node, kIntegerType, BINARY_REM, val, two);
-    hlir_t *eq = hlir_compare(node->node, kBoolType, COMPARE_EQ, rem, one);
+    hlir_t *rem = hlir_binary(node->node, kIntegerType, eBinaryRem, val, two);
+    hlir_t *eq = hlir_compare(node->node, kBoolType, eCompareEq, rem, one);
 
     return eq;
 }

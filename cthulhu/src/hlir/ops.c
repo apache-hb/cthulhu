@@ -6,28 +6,28 @@ typedef struct
     const char *symbol;
 } operand_name_t;
 
-static const operand_name_t kBinaryOperands[] = {
-    [BINARY_ADD] = {"add", "+"},     [BINARY_SUB] = {"sub", "-"},  [BINARY_MUL] = {"mul", "*"},
-    [BINARY_DIV] = {"div", "/"},     [BINARY_REM] = {"rem", "%"},
+static const operand_name_t kBinaryOperands[eBinaryTotal] = {
+    [eBinaryAdd] = {"add", "+"},     [eBinarySub] = {"sub", "-"},  [eBinaryMul] = {"mul", "*"},
+    [eBinaryDiv] = {"div", "/"},     [eBinaryRem] = {"rem", "%"},
 
-    [BINARY_AND] = {"and", "&&"},    [BINARY_OR] = {"or", "||"},
+    [eBinaryAnd] = {"and", "&&"},    [eBinaryOr] = {"or", "||"},
 
-    [BINARY_SHL] = {"shl", "<<"},    [BINARY_SHR] = {"shr", ">>"}, [BINARY_BITAND] = {"bitand", "&"},
-    [BINARY_BITOR] = {"bitor", "|"}, [BINARY_XOR] = {"xor", "^"},
+    [eBinaryShl] = {"shl", "<<"},    [eBinaryShr] = {"shr", ">>"}, [eBinaryBitAnd] = {"bitand", "&"},
+    [eBinaryBitOr] = {"bitor", "|"}, [eBinaryXor] = {"xor", "^"},
 };
 
-static const operand_name_t kCompareOperands[] = {
-    [COMPARE_EQ] = {"eq", "=="}, [COMPARE_NEQ] = {"ne", "!="},
+static const operand_name_t kCompareOperands[eCompareTotal] = {
+    [eCompareEq] = {"eq", "=="}, [eCompareNeq] = {"ne", "!="},
 
-    [COMPARE_LT] = {"lt", "<"},  [COMPARE_LTE] = {"le", "<="}, [COMPARE_GT] = {"gt", ">"}, [COMPARE_GTE] = {"ge", ">="},
+    [eCompareLt] = {"lt", "<"},  [eCompareLte] = {"le", "<="}, [eCompareGt] = {"gt", ">"}, [eCompareGte] = {"ge", ">="},
 };
 
-static const operand_name_t kUnaryOperands[] = {
-    [UNARY_NEG] = {"neg", "-"},
-    [UNARY_ABS] = {"abs", "abs"},
+static const operand_name_t kUnaryOperands[eUnaryTotal] = {
+    [eUnaryNeg] = {"neg", "-"},
+    [eUnaryAbs] = {"abs", "abs"},
 
-    [UNARY_BITFLIP] = {"bitflip", "~"},
-    [UNARY_NOT] = {"not", "!"},
+    [eUnaryBitflip] = {"bitflip", "~"},
+    [eUnaryNot] = {"not", "!"},
 };
 
 // operand accessors

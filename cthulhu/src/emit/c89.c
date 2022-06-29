@@ -654,7 +654,7 @@ static const char *c89_emit_unary(c89_emit_t *emit, const hlir_t *hlir)
 {
     const char *operand = c89_emit_expr(emit, hlir->operand);
 
-    if (hlir->unary == UNARY_ABS)
+    if (hlir->unary == eUnaryAbs)
     {
         return format("llabs(%s)", operand);
     }
