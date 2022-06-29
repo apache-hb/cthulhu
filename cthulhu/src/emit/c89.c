@@ -79,12 +79,12 @@ static char *get_cv_qualifiers(const hlir_t *type)
     char quals[3] = "";
     size_t idx = 0;
 
-    if (attribs->tags & TAG_VOLATILE)
+    if (attribs->tags & eTagVolatile)
     {
         quals[idx++] = 'V';
     }
 
-    if (attribs->tags & TAG_CONST)
+    if (attribs->tags & eTagConst)
     {
         quals[idx++] = 'K';
     }
@@ -728,18 +728,18 @@ static const char *c89_emit_type(c89_emit_t *emit, const hlir_t *hlir, const cha
     const char *inner = c89_emit_inner_type(emit, hlir, name);
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
 
-    if (attribs->tags & TAG_CONST && kind != HLIR_STRING)
+    if (attribs->tags & eTagConst && kind != HLIR_STRING)
     {
         inner = format("const %s", inner);
     }
 
-    if (attribs->tags & TAG_ATOMIC)
+    if (attribs->tags & eTagAtomic)
     {
         node_t node = get_hlir_node(hlir);
         report(emit->reports, WARNING, node, "atomic types are not supported yet");
     }
 
-    if (attribs->tags & TAG_VOLATILE)
+    if (attribs->tags & eTagVolatile)
     {
         inner = format("volatile %s", inner);
     }

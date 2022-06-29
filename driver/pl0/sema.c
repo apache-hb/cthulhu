@@ -34,7 +34,7 @@ void pl0_init(runtime_t *runtime)
 
     kExported = hlir_linkage(LINK_EXPORTED);
 
-    kConst = hlir_attributes(LINK_EXPORTED, TAG_CONST, NULL, NULL);
+    kConst = hlir_attributes(LINK_EXPORTED, eTagConst, NULL, NULL);
     kMutable = hlir_attributes(LINK_EXPORTED, DEFAULT_TAGS, NULL, NULL);
 
     kIntegerType = hlir_digit(node, "integer", DIGIT_INT, SIGN_SIGNED);
@@ -227,7 +227,7 @@ static hlir_t *sema_assign(sema_t *sema, pl0_t *node)
 
     const hlir_attributes_t *attrs = get_hlir_attributes(dst);
 
-    if (attrs->tags & TAG_CONST)
+    if (attrs->tags & eTagConst)
     {
         report(sema->reports, ERROR, node->node, "cannot assign to constant value");
     }

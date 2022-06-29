@@ -29,13 +29,13 @@ typedef enum
  */
 typedef enum
 {
-    TAG_CONST = (1 << 0),    ///< this type is const, and cannot be modified or assigned
-    TAG_VOLATILE = (1 << 1), ///< this type is volatile, all modifications, assigns,
+    eTagConst = (1 << 0),    ///< this type is const, and cannot be modified or assigned
+    eTagVolatile = (1 << 1), ///< this type is volatile, all modifications, assigns,
                              ///  and accesses are treated as side effects
-    TAG_ATOMIC = (1 << 2),   ///< this type is atomic, treated the same as
+    eTagAtomic = (1 << 2),   ///< this type is atomic, treated the same as
                              ///< volatile but also synchronizes
 
-    TAG_TOTAL
+    eTagTotal
 } hlir_tags_t;
 
 /**
