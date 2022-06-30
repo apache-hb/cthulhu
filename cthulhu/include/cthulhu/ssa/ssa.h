@@ -7,10 +7,10 @@ typedef struct hlir_t hlir_t;
 
 typedef enum
 {
-    OP_EMPTY, // an empty operand
-    OP_IMM,   // an immediate value
-    OP_REG,   // a register index
-    OP_REF    // a symbol reference
+    eOperandEmpty, // an empty operand
+    eOperandImm,   // an immediate value
+    eOperandReg,   // a register index
+    eOperandRef    // a symbol reference
 } opkind_t;
 
 typedef struct
@@ -18,7 +18,7 @@ typedef struct
     opkind_t kind;
 
     union {
-        const hlir_t *imm;
+        const hlir_t *value;
         size_t reg;
         struct flow_t *ref;
     };
@@ -26,18 +26,20 @@ typedef struct
 
 typedef enum
 {
-    OP_RETURN,
-    OP_CALL,
-    OP_BINARY,
-    OP_COMPARE,
-    OP_JMP,
-    OP_COND
+    eOpReturn,
+    eOpValue,
+    eOpCall,
+    eOpBinary,
+    eOpCompare,
+    eOpJmp,
+    eOpCond
 } opcode_t;
 
 typedef struct
 {
     opcode_t op;
     node_t node;
+    const hlir_t *type;
 
     union {
         struct
@@ -76,6 +78,7 @@ typedef struct
 typedef struct flow_t
 {
     node_t node;
+    const hlir_t *type;
 
     step_t *steps;
     size_t len;
