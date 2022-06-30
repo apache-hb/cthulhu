@@ -50,7 +50,7 @@ typedef enum
 {
     eInternal, ///< an invalid state has been reached internally
     eFatal,    ///< a user issue that prevents the program from continuing
-    eWarn,  ///< a user issue that may be resolved
+    eWarn,     ///< a user issue that may be resolved
     eInfo,     ///< a notification for logging
 
     eLevelTotal

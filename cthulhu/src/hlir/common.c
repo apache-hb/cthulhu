@@ -32,14 +32,14 @@ hlir_t *hlir_new_decl(node_t node, const char *name, const hlir_t *of, hlir_kind
 
 hlir_t *hlir_new_forward(node_t node, const char *name, const hlir_t *of, hlir_kind_t expect)
 {
-    hlir_t *hlir = hlir_new_decl(node, name, of, HLIR_FORWARD);
+    hlir_t *hlir = hlir_new_decl(node, name, of, eHlirForward);
     hlir->expected = expect;
     return hlir;
 }
 
 void init_hlir(void)
 {
-    kMetaType = hlir_new(node_builtin(), NULL, HLIR_TYPE);
+    kMetaType = hlir_new(node_builtin(), NULL, eHlirType);
     kMetaType->of = kMetaType;
     kMetaType->name = "type";
 
@@ -56,7 +56,7 @@ bool hlir_is_imported(const hlir_t *self)
 #if ENABLE_DEBUG
 static bool is_signature(const hlir_kind_t kind)
 {
-    return kind == HLIR_CLOSURE || kind == HLIR_FUNCTION;
+    return kind == eHlirClosure || kind == eHlirFunction;
 }
 #endif
 

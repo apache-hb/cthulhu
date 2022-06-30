@@ -50,13 +50,13 @@ static char *c89_mangle_section(const char *section)
 
 static const char *kDigitMangles[eSignTotal][eDigitTotal] = {
     [eSigned] = {[eChar] = "a",
-                     [eShort] = "s",
-                     [eInt] = "i",
-                     [eLong] = "x",
+                 [eShort] = "s",
+                 [eInt] = "i",
+                 [eLong] = "x",
 
-                     [eIntPtr] = "x", // TODO: only right for 64-bit
-                     [eIntMax] = "n",
-                     [eIntSize] = "x"},
+                 [eIntPtr] = "x", // TODO: only right for 64-bit
+                 [eIntMax] = "n",
+                 [eIntSize] = "x"},
     [eUnsigned] =
         {
             [eChar] = "h",
@@ -139,26 +139,26 @@ static const char *c89_mangle_type_inner(c89_emit_t *emit, const hlir_t *type)
     hlir_kind_t kind = get_hlir_kind(type);
     switch (kind)
     {
-    case HLIR_DIGIT:
+    case eHlirDigit:
         return c89_mangle_digit(type);
 
-    case HLIR_VOID:
+    case eHlirVoid:
         return "v";
-    case HLIR_BOOL:
+    case eHlirBool:
         return "b";
 
-    case HLIR_POINTER:
+    case eHlirPointer:
         return c89_mangle_pointer(emit, type);
 
-    case HLIR_ALIAS:
-    case HLIR_STRUCT:
-    case HLIR_UNION:
+    case eHlirAlias:
+    case eHlirStruct:
+    case eHlirUnion:
         return c89_mangle_qualified(type);
 
-    case HLIR_PARAM:
+    case eHlirParam:
         return c89_mangle_type(emit, get_hlir_type(type));
 
-    case HLIR_STRING:
+    case eHlirString:
         return "KPc"; // const char *
 
     default:
@@ -213,7 +213,7 @@ static char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
     const char *name = get_hlir_name(hlir);
     const char *typesig = "";
 
-    if (hlir_is(hlir, HLIR_FUNCTION))
+    if (hlir_is(hlir, eHlirFunction))
     {
         typesig = c89_mangle_params(emit, closure_params(hlir));
     }
@@ -256,7 +256,8 @@ static const char *c89_mangle_name(c89_emit_t *emit, const hlir_t *hlir)
 #define WRITE_STRING(emit, str) write_string(emit, str)
 
 static const char *c89_emit_type(c89_emit_t *emit, const hlir_t *hlir, const char *name);
-static const char *c89_emit_expr(c89_emit_t *emit, const hlir_t *hlir);
+static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir);
+static const char *c89_emit_lvalue(c89_emit_t *emit, const hlir_t *hlir);
 static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir);
 
 static const char *c89_emit_bool_type(const char *name)
@@ -357,7 +358,7 @@ static const char *c89_emit_pointer_type(c89_emit_t *emit, const hlir_t *hlir, c
 static const char *c89_emit_array_type(c89_emit_t *emit, const hlir_t *hlir, const char *name)
 {
     const char *inner = c89_emit_type(emit, hlir->element, NULL);
-    const char *length = c89_emit_expr(emit, hlir->length);
+    const char *length = c89_emit_rvalue(emit, hlir->length);
 
     if (name == NULL)
     {
@@ -424,30 +425,30 @@ static const char *c89_emit_inner_type(c89_emit_t *emit, const hlir_t *hlir, con
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
     {
-    case HLIR_BOOL:
+    case eHlirBool:
         return c89_emit_bool_type(name);
-    case HLIR_VOID:
+    case eHlirVoid:
         return c89_emit_void_type(name);
-    case HLIR_DIGIT:
+    case eHlirDigit:
         return c89_emit_digit_type(hlir, name);
-    case HLIR_STRING:
+    case eHlirString:
         return c89_emit_string_type(name);
-    case HLIR_POINTER:
+    case eHlirPointer:
         return c89_emit_pointer_type(emit, hlir, name);
-    case HLIR_ARRAY:
+    case eHlirArray:
         return c89_emit_array_type(emit, hlir, name);
-    case HLIR_CLOSURE:
+    case eHlirClosure:
         return c89_emit_closure_type(emit, hlir, name);
 
-    case HLIR_ALIAS:
+    case eHlirAlias:
         return c89_emit_type(emit, hlir->alias, name);
 
-    case HLIR_STRUCT:
+    case eHlirStruct:
         return c89_emit_aggregate_type(emit, hlir, name, "struct");
-    case HLIR_UNION:
+    case eHlirUnion:
         return c89_emit_aggregate_type(emit, hlir, name, "union");
 
-    case HLIR_PARAM:
+    case eHlirParam:
         return c89_emit_type(emit, get_hlir_type(hlir), name);
 
     default:
@@ -467,15 +468,15 @@ static void c89_emit_stmts(c89_emit_t *emit, const hlir_t *hlir)
 
 static void c89_emit_assign(c89_emit_t *emit, const hlir_t *hlir)
 {
-    const char *dst = c89_emit_expr(emit, hlir->dst);
-    const char *src = c89_emit_expr(emit, hlir->src);
+    const char *dst = c89_emit_lvalue(emit, hlir->dst);
+    const char *src = c89_emit_rvalue(emit, hlir->src);
 
-    WRITE_STRINGF(emit, "%s[0] = %s;\n", dst, src);
+    WRITE_STRINGF(emit, "%s = %s;\n", dst, src);
 }
 
 static void c89_emit_branch(c89_emit_t *emit, const hlir_t *hlir)
 {
-    const char *cond = c89_emit_expr(emit, hlir->cond);
+    const char *cond = c89_emit_rvalue(emit, hlir->cond);
 
     WRITE_STRINGF(emit, "if (%s)\n", cond);
     WRITE_STRING(emit, "{\n");
@@ -501,7 +502,7 @@ static void c89_emit_branch(c89_emit_t *emit, const hlir_t *hlir)
 
 static const char *c89_emit_call(c89_emit_t *emit, const hlir_t *hlir)
 {
-    const char *func = c89_emit_expr(emit, hlir->call);
+    const char *func = c89_emit_rvalue(emit, hlir->call);
 
     size_t totalParams = vector_len(hlir->args);
     vector_t *params = vector_of(totalParams);
@@ -509,7 +510,7 @@ static const char *c89_emit_call(c89_emit_t *emit, const hlir_t *hlir)
     for (size_t i = 0; i < totalParams; i++)
     {
         const hlir_t *param = vector_get(hlir->args, i);
-        const char *expr = c89_emit_expr(emit, param);
+        const char *expr = c89_emit_rvalue(emit, param);
         vector_set(params, i, (void *)expr);
     }
 
@@ -520,7 +521,7 @@ static const char *c89_emit_call(c89_emit_t *emit, const hlir_t *hlir)
 
 static void c89_emit_loop(c89_emit_t *emit, const hlir_t *hlir)
 {
-    const char *cond = c89_emit_expr(emit, hlir->cond);
+    const char *cond = c89_emit_rvalue(emit, hlir->cond);
 
     const node_t node = get_hlir_node(hlir);
     where_t where = get_node_location(node);
@@ -560,7 +561,7 @@ static void c89_emit_return(c89_emit_t *emit, const hlir_t *hlir)
 {
     if (hlir->result != NULL)
     {
-        WRITE_STRINGF(emit, "return %s;\n", c89_emit_expr(emit, hlir->result));
+        WRITE_STRINGF(emit, "return %s;\n", c89_emit_rvalue(emit, hlir->result));
     }
     else
     {
@@ -573,27 +574,27 @@ static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
     {
-    case HLIR_STMTS:
+    case eHlirStmts:
         c89_emit_stmts(emit, hlir);
         break;
 
-    case HLIR_ASSIGN:
+    case eHlirAssign:
         c89_emit_assign(emit, hlir);
         break;
 
-    case HLIR_BRANCH:
+    case eHlirBranch:
         c89_emit_branch(emit, hlir);
         break;
 
-    case HLIR_LOOP:
+    case eHlirLoop:
         c89_emit_loop(emit, hlir);
         break;
 
-    case HLIR_CALL:
+    case eHlirCall:
         WRITE_STRING(emit, c89_emit_call(emit, hlir));
         break;
 
-    case HLIR_RETURN:
+    case eHlirReturn:
         c89_emit_return(emit, hlir);
         break;
 
@@ -642,8 +643,8 @@ static const char *c89_emit_string_literal(const hlir_t *hlir)
 
 static const char *c89_emit_binary(c89_emit_t *emit, const hlir_t *hlir)
 {
-    const char *lhs = c89_emit_expr(emit, hlir->lhs);
-    const char *rhs = c89_emit_expr(emit, hlir->rhs);
+    const char *lhs = c89_emit_rvalue(emit, hlir->lhs);
+    const char *rhs = c89_emit_rvalue(emit, hlir->rhs);
 
     const char *op = binary_symbol(hlir->binary);
 
@@ -652,7 +653,7 @@ static const char *c89_emit_binary(c89_emit_t *emit, const hlir_t *hlir)
 
 static const char *c89_emit_unary(c89_emit_t *emit, const hlir_t *hlir)
 {
-    const char *operand = c89_emit_expr(emit, hlir->operand);
+    const char *operand = c89_emit_rvalue(emit, hlir->operand);
 
     if (hlir->unary == eUnaryAbs)
     {
@@ -665,8 +666,8 @@ static const char *c89_emit_unary(c89_emit_t *emit, const hlir_t *hlir)
 
 static const char *c89_emit_compare(c89_emit_t *emit, const hlir_t *hlir)
 {
-    const char *lhs = c89_emit_expr(emit, hlir->lhs);
-    const char *rhs = c89_emit_expr(emit, hlir->rhs);
+    const char *lhs = c89_emit_rvalue(emit, hlir->lhs);
+    const char *rhs = c89_emit_rvalue(emit, hlir->rhs);
 
     const char *op = compare_symbol(hlir->compare);
     return format("(%s %s %s)", lhs, op, rhs);
@@ -674,50 +675,81 @@ static const char *c89_emit_compare(c89_emit_t *emit, const hlir_t *hlir)
 
 static const char *c89_emit_name(c89_emit_t *emit, const hlir_t *hlir)
 {
-    const char *name = c89_emit_expr(emit, hlir->read);
+    const char *name = c89_emit_rvalue(emit, hlir->read);
     return format("%s[0]", name);
 }
 
-static const char *c89_emit_expr(c89_emit_t *emit, const hlir_t *hlir)
+static const char *c89_emit_local_rvalue(const hlir_t *hlir)
+{
+    return format("%s[0]", hlir->name);
+}
+
+static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
     {
-    case HLIR_DIGIT_LITERAL:
+    case eHlirLiteralDigit:
         return c89_emit_digit_literal(emit, hlir);
-    case HLIR_BOOL_LITERAL:
+    case eHlirLiteralBool:
         return c89_emit_bool_literal(hlir);
-    case HLIR_STRING_LITERAL:
+    case eHlirLiteralString:
         return c89_emit_string_literal(hlir);
 
-    case HLIR_NAME:
+    case eHlirName:
         return c89_emit_name(emit, hlir);
 
-    case HLIR_UNARY:
+    case eHlirUnary:
         return c89_emit_unary(emit, hlir);
-    case HLIR_BINARY:
+    case eHlirBinary:
         return c89_emit_binary(emit, hlir);
-    case HLIR_COMPARE:
+    case eHlirCompare:
         return c89_emit_compare(emit, hlir);
 
-    case HLIR_GLOBAL:
+    case eHlirGlobal:
         return c89_mangle_name(emit, hlir);
 
         // TODO: these should be managled to not clash with globals
-    case HLIR_LOCAL:
+    case eHlirLocal:
+        return c89_emit_local_rvalue(hlir);
+    case eHlirParam:
         return get_hlir_name(hlir);
 
-    case HLIR_PARAM:
-        return get_hlir_name(hlir);
-
-    case HLIR_FUNCTION:
+    case eHlirFunction:
         return c89_mangle_name(emit, hlir);
 
-    case HLIR_CALL:
+    case eHlirCall:
         return c89_emit_call(emit, hlir);
 
     default:
-        ctu_assert(emit->reports, "cannot emit expr for %s", hlir_kind_to_string(kind));
+        ctu_assert(emit->reports, "cannot emit rvalue for %s", hlir_kind_to_string(kind));
+        return "error";
+    }
+}
+
+static const char *c89_emit_name_lvalue(const hlir_t *hlir)
+{
+    return format("%s[0]", get_hlir_name(hlir));
+}
+
+static const char *c89_emit_lvalue(c89_emit_t *emit, const hlir_t *hlir)
+{
+    hlir_kind_t kind = get_hlir_kind(hlir);
+    switch (kind)
+    {
+    case eHlirName:
+    case eHlirLocal:
+        return c89_emit_name_lvalue(hlir);
+
+    case eHlirGlobal:
+        return c89_mangle_name(emit, hlir);
+
+        // TODO: these should be managled to not clash with globals
+    case eHlirParam:
+        return get_hlir_name(hlir);
+
+    default:
+        ctu_assert(emit->reports, "cannot emit lvalue for %s", hlir_kind_to_string(kind));
         return "error";
     }
 }
@@ -728,7 +760,7 @@ static const char *c89_emit_type(c89_emit_t *emit, const hlir_t *hlir, const cha
     const char *inner = c89_emit_inner_type(emit, hlir, name);
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
 
-    if (attribs->tags & eTagConst && kind != HLIR_STRING)
+    if (attribs->tags & eTagConst && kind != eHlirString)
     {
         inner = format("const %s", inner);
     }
@@ -770,11 +802,11 @@ static void c89_emit_typedef(c89_emit_t *emit, const hlir_t *hlir)
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
     {
-    case HLIR_STRUCT:
+    case eHlirStruct:
         c89_emit_aggregate_decl(emit, hlir, "struct");
         break;
 
-    case HLIR_UNION:
+    case eHlirUnion:
         c89_emit_aggregate_decl(emit, hlir, "union");
         break;
 
@@ -798,23 +830,23 @@ static void visit_type(c89_emit_t *emit, vector_t **result, const hlir_t *hlir)
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
     {
-    case HLIR_VOID:
-    case HLIR_DIGIT:
-    case HLIR_BOOL:
-    case HLIR_STRING:
-    case HLIR_POINTER:
-    case HLIR_ARRAY:
+    case eHlirVoid:
+    case eHlirDigit:
+    case eHlirBool:
+    case eHlirString:
+    case eHlirPointer:
+    case eHlirArray:
         break;
 
-    case HLIR_ALIAS:
+    case eHlirAlias:
         visit_type(emit, result, hlir->alias);
         break;
 
-    case HLIR_FIELD:
+    case eHlirField:
         visit_type(emit, result, get_hlir_type(hlir));
         break;
 
-    case HLIR_CLOSURE:
+    case eHlirClosure:
         res = closure_result(hlir);
         params = closure_params(hlir);
         visit_type(emit, result, res);
@@ -825,8 +857,8 @@ static void visit_type(c89_emit_t *emit, vector_t **result, const hlir_t *hlir)
         }
         break;
 
-    case HLIR_STRUCT:
-    case HLIR_UNION:
+    case eHlirStruct:
+    case eHlirUnion:
         fields = hlir->fields;
         for (size_t i = 0; i < vector_len(fields); i++)
         {
@@ -924,7 +956,7 @@ static void c89_emit_global(c89_emit_t *emit, const hlir_t *hlir)
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
     const char *name = c89_mangle_name(emit, hlir);
     const char *type = c89_emit_type(emit, get_hlir_type(hlir), name);
-    const char *expr = c89_emit_expr(emit, hlir->value);
+    const char *expr = c89_emit_rvalue(emit, hlir->value);
     const char *linkage = kLinkageModifiers[attribs->linkage];
 
     WRITE_STRINGF(emit, "%s%s[1] = { %s };\n", linkage, type, expr);

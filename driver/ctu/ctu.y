@@ -25,6 +25,11 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
 %union {
     bool boolean;
     char *ident;
+    struct {
+        char *data;
+        size_t length;
+    } string;
+
     mpz_t mpz;
 
     ast_t *ast;
@@ -35,12 +40,14 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
 %token<ident>
     IDENT "identifier"
 
+%token<string>
+    STRING "string literal"
+
 %token<mpz>
     INTEGER "integer literal"
 
 %token<boolean>
     BOOLEAN "boolean literal"
-
 
 %token
     AT "`@`"
@@ -94,6 +101,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     DEF "`def`"
     VAR "`var`"
     FINAL "`final`"
+    CONST "`const`"
 
     OBJECT "`object`"
     STRUCT "`struct`"
@@ -158,10 +166,12 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     STATIC "`static`"
 
 %type<ast>
-    modspec decl 
+    modspec decl innerdecl
+    attrib
     structdecl uniondecl variantdecl aliasdecl
     field variant 
     funcdecl funcresult funcbody funcsig
+    vardecl
     param
     stmt stmts
     type import
@@ -175,9 +185,13 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     typelist imports importlist
     variants variantlist
     stmtlist paramlist
+    args
 
 %type<funcparams>
     funcparams opttypes types
+
+%type<boolean>
+    mut
 
 %start program
 
@@ -205,14 +219,29 @@ decllist: decl { $$ = vector_init($1); }
     | decllist decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: structdecl { $$ = $1; }
+decl: innerdecl { $$ = $1; }
+    | attrib innerdecl { $2->attrib = $1; $$ = $2; }
+    ;
+
+attrib: AT IDENT LPAREN args RPAREN { $$ = ast_attribute(x, @$, $2, $4); }
+    ;
+
+innerdecl: structdecl { $$ = $1; }
     | uniondecl { $$ = $1; }
     | aliasdecl { $$ = $1; }
     | variantdecl { $$ = $1; }
     | funcdecl { $$ = $1; }
+    | vardecl { $$ = $1; }
     ;
 
-funcdecl: DEF IDENT funcsig funcbody { $$ = ast_funcdecl(x, @$, $2, $3, $4); }
+funcdecl: DEF IDENT funcsig funcbody { $$ = ast_function(x, @$, $2, $3, $4); }
+    ;
+
+vardecl: mut IDENT EQUALS expr SEMICOLON { $$ = ast_variable(x, @$, $2, $1, $4); }
+    ;
+
+mut: VAR { $$ = true; }
+    | CONST { $$ = false; }
     ;
 
 funcsig: funcparams funcresult { $$ = ast_closure(x, @$, $1.params, $1.variadic, $2); }
@@ -290,6 +319,8 @@ stmt: stmts { $$ = $1; }
     | WHILE expr stmts else { $$ = ast_while(x, @$, $2, $3, $4); }
     | BREAK SEMICOLON { $$ = ast_break(x, @$); }
     | CONTINUE SEMICOLON { $$ = ast_continue(x, @$); }
+    | vardecl { $$ = $1; }
+    | expr SEMICOLON { $$ = $1; }
     ;
 
 else: %empty { $$ = NULL; }
@@ -320,9 +351,11 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | INTEGER { $$ = ast_digit(x, @$, $1); }
     | path { $$ = ast_name(x, @$, $1); }
     | BOOLEAN { $$ = ast_bool(x, @$, $1); }
+    | STRING { $$ = ast_string(x, @$, $1.data, $1.length); }
     ;
 
 postfix: primary { $$ = $1; }
+    | postfix LPAREN args RPAREN { $$ = ast_call(x, @$, $1, $3); }
     ;
 
 unary: postfix { $$ = $1; }
@@ -366,6 +399,10 @@ or: and { $$ = $1; }
 
 expr: or { $$ = $1; }
     ;
+
+args: expr { $$ = vector_init($1); }
+    | args COMMA expr { vector_push(&$1, $3); $$ = $1; }
+    ; 
 
 path: IDENT { $$ = vector_init($1); }
     | path COLON2 IDENT { vector_push(&$1, $3); $$ = $1; }

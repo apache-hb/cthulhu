@@ -10,45 +10,50 @@
 
 typedef enum
 {
-    AST_PROGRAM,
-    AST_IMPORT,
-    AST_MODULE,
+    eAstProgram,
+    eAstImport,
+    eAstModule,
+    eAstAttribute,
 
     /* expressions */
-    AST_DIGIT,
-    AST_BOOL,
-    AST_NAME,
+    eAstDigit,
+    eAstBool,
+    eAstName,
+    eAstString,
 
-    AST_UNARY,
-    AST_BINARY,
-    AST_COMPARE,
+    eAstUnary,
+    eAstBinary,
+    eAstCompare,
+
+    eAstCall,
 
     /* statements */
-    AST_STMTS,
-    AST_RETURN,
-    AST_WHILE,
-    AST_BREAK,
-    AST_CONTINUE,
+    eAstStmts,
+    eAstReturn,
+    eAstWhile,
+    eAstBreak,
+    eAstContinue,
 
     /* intermediate types */
-    AST_FIELD,
-    AST_CASE,
-    AST_PARAM,
+    eAstField,
+    eAstCase,
+    eAstParam,
 
     /* types */
-    AST_TYPENAME,
-    AST_POINTER,
-    AST_CLOSURE,
-    AST_ARRAY,
+    eAstTypename,
+    eAstPointer,
+    eAstClosure,
+    eAstArray,
 
     /* type declarations */
-    AST_UNIONDECL,
-    AST_STRUCTDECL,
-    AST_ALIASDECL,
-    AST_VARIANTDECL,
+    eAstDeclUnion,
+    eAstDeclStruct,
+    eAstDeclAlias,
+    eAstDeclVariant,
 
     /* declarations */
-    AST_FUNCDECL
+    eAstFunction,
+    eAstVariable
 } astof_t;
 
 typedef struct ast_t
@@ -57,16 +62,22 @@ typedef struct ast_t
     node_t node;
 
     union {
-        /* AST_TYPENAME|AST_MODULE */
+        /* eAstTypename|eAstModule */
         vector_t *path;
 
-        /* AST_DIGIT */
+        /* eAstDigit */
         mpz_t digit;
 
-        /* AST_BOOL */
+        /* eAstBool */
         bool boolean;
 
-        /* AST_BINARY */
+        /* eAstString */
+        struct {
+            char *string;
+            size_t length;
+        };
+
+        /* eAstBinary */
         struct
         {
             union {
@@ -78,14 +89,14 @@ typedef struct ast_t
             struct ast_t *rhs;
         };
 
-        /* AST_UNARY|AST_RETURN */
+        /* eAstUnary|eAstReturn */
         struct
         {
             unary_t unary;
             struct ast_t *operand;
         };
 
-        /* AST_POINTER|AST_ARRAY */
+        /* eAstPointer|eAstArray */
         struct
         {
             struct ast_t *type;
@@ -96,7 +107,7 @@ typedef struct ast_t
             };
         };
 
-        /* AST_CLOSURE */
+        /* eAstClosure */
         struct
         {
             vector_t *params;
@@ -104,7 +115,7 @@ typedef struct ast_t
             bool variadic;
         };
 
-        /* AST_WHILE */
+        /* eAstWhile */
         struct
         {
             struct ast_t *cond;
@@ -112,7 +123,7 @@ typedef struct ast_t
             struct ast_t *other;
         };
 
-        /* AST_PROGRAM */
+        /* eAstProgram */
         struct
         {
             struct ast_t *modspec;
@@ -120,27 +131,44 @@ typedef struct ast_t
             vector_t *decls;
         };
 
-        /* AST_STMTS */
+        struct
+        {
+            struct ast_t *call;
+            vector_t *args;
+        };
+
+        /* eAstStmts */
         vector_t *stmts;
 
         struct
         {
             char *name;
+            struct ast_t *attrib;
 
             union {
-                /* AST_FIELD */
+                /* eAstField */
                 struct ast_t *field;
 
-                /* AST_UNIONDECL|AST_STRUCTDECL|AST_VARIANTDECL */
+                /* eAstDeclUnion|eAstDeclStruct|eAstDeclVariant */
                 vector_t *fields;
 
-                /* AST_ALIASDECL */
+                /* eAstDeclAlias */
                 struct ast_t *alias;
 
-                /* AST_PARAM */
+                /* eAstParam */
                 struct ast_t *param;
 
-                /* AST_FUNCDECL */
+                /* eAstAttribute */
+                vector_t *config;
+
+                /* eAstVariable */
+                struct 
+                {
+                    bool mut;
+                    struct ast_t *init;
+                };
+
+                /* eAstFunction */
                 struct
                 {
                     struct ast_t *signature;
@@ -157,19 +185,25 @@ ast_t *ast_module(scan_t scan, where_t where, vector_t *path);
 ast_t *ast_import(scan_t scan, where_t where, vector_t *path);
 ast_t *ast_program(scan_t scan, where_t where, ast_t *modspec, vector_t *imports, vector_t *decls);
 
+ast_t *ast_attribute(scan_t scan, where_t where, char *name, vector_t *args);
+
 /// declarations
 
-ast_t *ast_funcdecl(scan_t scan, where_t where, char *name, ast_t *signature, ast_t *body);
+ast_t *ast_function(scan_t scan, where_t where, char *name, ast_t *signature, ast_t *body);
+ast_t *ast_variable(scan_t scan, where_t where, char *name, bool mut, ast_t *init);
 
 /// expressions
 
 ast_t *ast_digit(scan_t scan, where_t where, mpz_t value);
 ast_t *ast_bool(scan_t scan, where_t where, bool value);
 ast_t *ast_name(scan_t scan, where_t where, vector_t *path);
+ast_t *ast_string(scan_t scan, where_t where, char *str, size_t len);
 
 ast_t *ast_unary(scan_t scan, where_t where, unary_t op, ast_t *operand);
 ast_t *ast_binary(scan_t scan, where_t where, binary_t binary, ast_t *lhs, ast_t *rhs);
 ast_t *ast_compare(scan_t scan, where_t where, compare_t compare, ast_t *lhs, ast_t *rhs);
+
+ast_t *ast_call(scan_t scan, where_t where, ast_t *call, vector_t *args);
 
 /// statements
 

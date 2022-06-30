@@ -16,7 +16,7 @@
 
 typedef enum
 {
-    eTagValues,    // hlir_t*
+    eTagValues,  // hlir_t*
     eTagProcs,   // hlir_t*
     eTagTypes,   // hlir_t*
     eTagModules, // sema_t*
@@ -28,7 +28,21 @@ typedef struct
 {
     size_t totalDecls;
     hlir_t *parentModule;
+    hlir_t *currentFunction;
 } sema_data_t;
+
+static void set_current_function(sema_t *sema, hlir_t *function)
+{
+    sema_data_t *data = ctu_malloc(sizeof(sema_data_t));
+    data->currentFunction = function;
+    sema_set_data(sema, data);
+}
+
+static hlir_t *get_current_function(sema_t *sema)
+{
+    sema_data_t *data = sema_get_data(sema);
+    return data->currentFunction;
+}
 
 static const char *kDigitNames[eSignTotal][eDigitTotal] = {
     [eSigned] =
@@ -76,7 +90,7 @@ static sema_t *kRootSema = NULL;
 
 static hlir_t *get_common_type(node_t node, const hlir_t *lhs, const hlir_t *rhs)
 {
-    if (hlir_is(lhs, HLIR_DIGIT) && hlir_is(rhs, HLIR_DIGIT))
+    if (hlir_is(lhs, eHlirDigit) && hlir_is(rhs, eHlirDigit))
     {
         // get the largest size
         digit_t width = MAX(lhs->width, rhs->width);
@@ -135,6 +149,9 @@ static void add_basic_types(sema_t *sema)
     }
 
     // enable the below later
+
+    // noreturn type for exit/abort/terminate etc
+    // add_decl(sema, eTagTypes, "noreturn", hlir_noreturn(node, "noreturn"));
 
     // special types for interfacing with C
     // add_decl(sema, eTagTypes, "enum", hlir_digit(node, "enum", eInt, eSigned));
@@ -233,7 +250,7 @@ static hlir_t *sema_closure(sema_t *sema, ast_t *ast)
         hlir_t *type = sema_type(sema, param);
         vector_set(params, i, type);
 
-        if (hlir_is(type, HLIR_VOID))
+        if (hlir_is(type, eHlirVoid))
         {
             report(sema->reports, eFatal, param->node, "void parameter");
         }
@@ -246,13 +263,13 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast)
 {
     switch (ast->of)
     {
-    case AST_TYPENAME:
+    case eAstTypename:
         return sema_typename(sema, ast);
-    case AST_POINTER:
+    case eAstPointer:
         return sema_pointer(sema, ast);
-    case AST_ARRAY:
+    case eAstArray:
         return sema_array(sema, ast);
-    case AST_CLOSURE:
+    case eAstClosure:
         return sema_closure(sema, ast);
     default:
         report(sema->reports, eInternal, ast->node, "unknown sema-type: %d", ast->of);
@@ -275,6 +292,11 @@ static hlir_t *sema_bool(ast_t *ast)
     return hlir_bool_literal(ast->node, kBoolType, ast->boolean);
 }
 
+static hlir_t *sema_string(ast_t *ast)
+{
+    return hlir_string_literal(ast->node, kStringType, ast->string, ast->length);
+}
+
 static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
 {
     hlir_t *lhs = sema_expr(sema, ast->lhs);
@@ -282,7 +304,7 @@ static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
 
     hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
 
-    if (!hlir_is(type, HLIR_DIGIT))
+    if (!hlir_is(type, eHlirDigit))
     {
         report(sema->reports, eFatal, ast->node, "cannot perform binary operations on %s", get_hlir_name(type));
     }
@@ -297,7 +319,7 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
 
     hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
 
-    if (!hlir_is(type, HLIR_DIGIT))
+    if (!hlir_is(type, eHlirDigit))
     {
         report(sema->reports, eFatal, ast->node, "cannot perform comparison on %s", get_hlir_name(type));
     }
@@ -340,20 +362,57 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
     return hlir_error(ast->node, "unknown identifier");
 }
 
+static hlir_t *implicit_cast(sema_t *sema, hlir_t *expr, hlir_t *type)
+{
+    UNUSED(sema);
+    UNUSED(expr);
+    UNUSED(type);
+    return expr; // TODO: check type
+}
+
+static hlir_t *sema_call(sema_t *sema, ast_t *ast)
+{
+    hlir_t *call = sema_expr(sema, ast->call);
+    if (!hlir_is(call, eHlirFunction))
+    {
+        message_t *id = report(sema->reports, eFatal, ast->node, "can only call function types");
+        report_underline(id, "%s", hlir_kind_to_string(get_hlir_kind(call)));
+        return hlir_error(ast->node, "invalid callable");
+    }
+
+    size_t len = vector_len(ast->args);
+    vector_t *args = vector_of(len);
+    vector_t *params = closure_params(call);
+    for (size_t i = 0; i < len; i++)
+    {
+        ast_t *arg = vector_get(ast->args, i);
+        hlir_t *hlir = sema_expr(sema, arg);
+        hlir_t *expectedType = vector_get(params, i);
+        hlir_t *cast = implicit_cast(sema, hlir, expectedType);
+        vector_set(args, i, cast);
+    }
+
+    return hlir_call(ast->node, call, args);
+}
+
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
 {
     switch (ast->of)
     {
-    case AST_DIGIT:
+    case eAstDigit:
         return sema_digit(ast);
-    case AST_BOOL:
+    case eAstBool:
         return sema_bool(ast);
-    case AST_BINARY:
+    case eAstString:
+        return sema_string(ast);
+    case eAstBinary:
         return sema_binary(sema, ast);
-    case AST_COMPARE:
+    case eAstCompare:
         return sema_compare(sema, ast);
-    case AST_NAME:
+    case eAstName:
         return sema_ident(sema, ast);
+    case eAstCall:
+        return sema_call(sema, ast);
 
     default:
         report(sema->reports, eInternal, ast->node, "unknown sema-expr: %d", ast->of);
@@ -411,18 +470,33 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     return hlir_loop(ast->node, cond, then, other);
 }
 
+static hlir_t *sema_local(sema_t *sema, ast_t *stmt)
+{
+    hlir_t *init = sema_expr(sema, stmt->init);
+    hlir_t *local = hlir_local(stmt->node, stmt->name, get_hlir_type(init));
+    add_decl(sema, eTagValues, stmt->name, local);
+    hlir_add_local(get_current_function(sema), local);
+    return hlir_assign(get_hlir_node(init), local, init);
+}
+
 static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
 {
     switch (stmt->of)
     {
-    case AST_RETURN:
+    case eAstReturn:
         return sema_return(sema, stmt);
 
-    case AST_STMTS:
+    case eAstStmts:
         return sema_stmts(sema, stmt);
 
-    case AST_WHILE:
+    case eAstWhile:
         return sema_while(sema, stmt);
+
+    case eAstCall:
+        return sema_expr(sema, stmt);
+
+    case eAstVariable:
+        return sema_local(sema, stmt);
 
     default:
         report(sema->reports, eInternal, stmt->node, "unknown sema-stmt: %d", stmt->of);
@@ -558,6 +632,7 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     };
 
     sema_t *nest = sema_new(sema, sema->reports, eTagTotal, tags);
+    set_current_function(nest, decl);
     sema_params(nest, decl->params);
 
     if (ast->body == NULL)
@@ -579,27 +654,27 @@ static void sema_decl(sema_t *sema, ast_t *ast)
 
     switch (ast->of)
     {
-    case AST_STRUCTDECL:
+    case eAstDeclStruct:
         decl = sema_get(sema, eTagTypes, ast->name);
         sema_struct(sema, decl, ast);
         break;
 
-    case AST_UNIONDECL:
+    case eAstDeclUnion:
         decl = sema_get(sema, eTagTypes, ast->name);
         sema_union(sema, decl, ast);
         break;
 
-    case AST_ALIASDECL:
+    case eAstDeclAlias:
         decl = sema_get(sema, eTagTypes, ast->name);
         sema_alias(sema, decl, ast);
         break;
 
-    case AST_VARIANTDECL:
+    case eAstDeclVariant:
         decl = sema_get(sema, eTagTypes, ast->name);
         sema_variant(sema, decl, ast);
         break;
 
-    case AST_FUNCDECL:
+    case eAstFunction:
         decl = sema_get(sema, eTagProcs, ast->name);
         sema_func(sema, decl, ast);
         break;
@@ -646,23 +721,23 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
 
     switch (ast->of)
     {
-    case AST_STRUCTDECL:
+    case eAstDeclStruct:
         decl = hlir_begin_struct(ast->node, ast->name);
         break;
 
-    case AST_UNIONDECL:
+    case eAstDeclUnion:
         decl = hlir_begin_union(ast->node, ast->name);
         break;
 
-    case AST_ALIASDECL:
+    case eAstDeclAlias:
         decl = hlir_begin_alias(ast->node, ast->name);
         break;
 
-    case AST_VARIANTDECL:
+    case eAstDeclVariant:
         decl = hlir_begin_struct(ast->node, ast->name);
         break;
 
-    case AST_FUNCDECL:
+    case eAstFunction:
         decl = begin_function(sema, ast);
         tag = eTagProcs;
         break;

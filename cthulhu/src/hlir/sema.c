@@ -139,22 +139,22 @@ static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *
 
     switch (hlir->type)
     {
-    case HLIR_NAME:
+    case eHlirName:
         check_recursion(reports, stack, hlir->read);
         break;
-    case HLIR_GLOBAL:
-    case HLIR_LOCAL:
+    case eHlirGlobal:
+    case eHlirLocal:
         check_recursion(reports, stack, hlir->value);
         break;
-    case HLIR_BINARY:
-    case HLIR_COMPARE:
+    case eHlirBinary:
+    case eHlirCompare:
         check_recursion(reports, stack, hlir->lhs);
         check_recursion(reports, stack, hlir->rhs);
         break;
 
-    case HLIR_DIGIT_LITERAL:
-    case HLIR_BOOL_LITERAL:
-    case HLIR_STRING_LITERAL:
+    case eHlirLiteralDigit:
+    case eHlirLiteralBool:
+    case eHlirLiteralString:
         break;
 
     default:
@@ -240,13 +240,13 @@ static const hlir_t *chase(reports_t *reports, const hlir_t *hlir)
     {
         switch (get_hlir_kind(hlir))
         {
-        case HLIR_POINTER:
+        case eHlirPointer:
             hlir = hlir->ptr;
             break;
-        case HLIR_ALIAS:
+        case eHlirAlias:
             hlir = hlir->alias;
             break;
-        case HLIR_FIELD:
+        case eHlirField:
             hlir = get_hlir_type(hlir);
             break;
         default:
@@ -274,16 +274,16 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
     bool result = true;
     switch (kind)
     {
-    case HLIR_ARRAY:
+    case eHlirArray:
         result = find_type_recursion(reports, stack, chase(reports, hlir->element), false, true);
         break;
 
-    case HLIR_POINTER:
+    case eHlirPointer:
         result = find_type_recursion(reports, stack, chase(reports, hlir), false, true);
         break;
 
-    case HLIR_CLOSURE:
-    case HLIR_FUNCTION:
+    case eHlirClosure:
+    case eHlirFunction:
         if ((result = find_type_recursion(reports, stack, hlir, false, true)))
         {
             check_type_recursion(reports, stack, hlir->result);
@@ -295,8 +295,8 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
         }
         break;
 
-    case HLIR_STRUCT:
-    case HLIR_UNION:
+    case eHlirStruct:
+    case eHlirUnion:
         if ((result = find_type_recursion(reports, stack, hlir, true, false)))
         {
             for (size_t i = 0; i < vector_len(hlir->fields); i++)
@@ -307,21 +307,21 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
         }
         break;
 
-    case HLIR_ALIAS:
+    case eHlirAlias:
         if (find_type_recursion(reports, stack, hlir, false, false))
         {
             check_type_recursion(reports, stack, hlir->alias);
         }
         break;
 
-    case HLIR_FIELD:
+    case eHlirField:
         check_type_recursion(reports, stack, get_hlir_type(hlir));
         return;
 
-    case HLIR_DIGIT:
-    case HLIR_BOOL:
-    case HLIR_STRING:
-    case HLIR_VOID:
+    case eHlirDigit:
+    case eHlirBool:
+    case eHlirString:
+    case eHlirVoid:
         return; // it is important to return rather than break
                 // in cases where find_type_recursion isnt called
 
@@ -337,7 +337,7 @@ static bool can_mangle_name(hlir_linkage_t linkage)
 {
     switch (linkage)
     {
-    case eLinkInternal:  // it makes no sense to mangle internal symbols
+    case eLinkInternal: // it makes no sense to mangle internal symbols
     case eLinkEntryGui: // these are defined by the platform and cannot be mangled
     case eLinkEntryCli:
         return false;
@@ -432,7 +432,7 @@ void check_module(check_t *check, hlir_t *mod)
     {
         hlir_t *var = vector_get(mod->globals, i);
         check_identifier_isnt_empty(reports, var);
-        CTASSERTF(hlir_is(var, HLIR_GLOBAL), "check-module polluted: global `%s` is %s, not global", get_hlir_name(var),
+        CTASSERTF(hlir_is(var, eHlirGlobal), "check-module polluted: global `%s` is %s, not global", get_hlir_name(var),
                   hlir_kind_to_string(get_hlir_kind(var)));
         check_recursion(reports, &recursionStack, var);
 

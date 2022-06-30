@@ -158,13 +158,13 @@ static hlir_t *sema_expr(sema_t *sema, pl0_t *node)
 {
     switch (node->type)
     {
-    case PL0_DIGIT:
+    case ePl0Digit:
         return sema_digit(node);
-    case PL0_IDENT:
+    case ePl0Ident:
         return sema_ident(sema, node);
-    case PL0_BINARY:
+    case ePl0Binary:
         return sema_binary(sema, node);
-    case PL0_UNARY:
+    case ePl0Unary:
         return sema_unary(sema, node);
     default:
         report(sema->reports, eInternal, node->node, "sema-expr: %d", node->type);
@@ -258,17 +258,17 @@ static hlir_t *sema_stmt(sema_t *sema, pl0_t *node)
 {
     switch (node->type)
     {
-    case PL0_STMTS:
+    case ePl0Stmts:
         return sema_stmts(sema, node);
-    case PL0_CALL:
+    case ePl0Call:
         return sema_call(sema, node);
-    case PL0_BRANCH:
+    case ePl0Branch:
         return sema_branch(sema, node);
-    case PL0_LOOP:
+    case ePl0Loop:
         return sema_loop(sema, node);
-    case PL0_ASSIGN:
+    case ePl0Assign:
         return sema_assign(sema, node);
-    case PL0_PRINT:
+    case ePl0Print:
         return sema_print(sema, node);
     default:
         report(sema->reports, eInternal, node->node, "sema-stmt: %d", node->type);
@@ -312,9 +312,9 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node)
 {
     switch (node->type)
     {
-    case PL0_ODD:
+    case ePl0Odd:
         return sema_odd(sema, node);
-    case PL0_COMPARE:
+    case ePl0Compare:
         return sema_comp(sema, node);
     default:
         report(sema->reports, eInternal, node->node, "sema-compare: %d", node->type);

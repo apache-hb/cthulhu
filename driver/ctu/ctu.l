@@ -14,9 +14,12 @@
 
 %x COMMENT
 
+ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
+WS [ \t\r\v\n\f]
+
 %%
 
-[ \r\n\t] ;
+{WS} ;
 "//".* ;
 "/*" { BEGIN(COMMENT); }
 <COMMENT>"*/" { BEGIN(INITIAL); }
@@ -90,6 +93,7 @@
 "def" { return DEF; }
 "var" { return VAR; }
 "final" { return FINAL; }
+"const" { return CONST; }
 
 "object" { return OBJECT; }
 "struct" { return STRUCT; }
@@ -188,6 +192,12 @@
 [0-9]+ {
     mpz_init_set_str(yylval->mpz, yytext, 10);
     return INTEGER;
+}
+
+\"([^"\\\n]|{ESCAPES})*\" {
+	yylval->string.data = ctu_strndup(yytext + 1, yyleng - 2);
+    yylval->string.length = yyleng - 2;
+    return STRING;
 }
 
 . { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }

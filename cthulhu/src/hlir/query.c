@@ -9,30 +9,30 @@ static bool has_name(hlir_kind_t kind)
 {
     switch (kind)
     {
-    case HLIR_STRUCT:
-    case HLIR_UNION:
-    case HLIR_DIGIT:
-    case HLIR_BOOL:
-    case HLIR_STRING:
-    case HLIR_VOID:
-    case HLIR_CLOSURE:
+    case eHlirStruct:
+    case eHlirUnion:
+    case eHlirDigit:
+    case eHlirBool:
+    case eHlirString:
+    case eHlirVoid:
+    case eHlirClosure:
 
         // unsure about closure, pointer, and array
 
-    case HLIR_TYPE:
-    case HLIR_ALIAS:
+    case eHlirType:
+    case eHlirAlias:
 
-    case HLIR_FORWARD:
-    case HLIR_FIELD:
-    case HLIR_FUNCTION:
+    case eHlirForward:
+    case eHlirField:
+    case eHlirFunction:
 
-    case HLIR_GLOBAL:
-    case HLIR_LOCAL:
-    case HLIR_PARAM:
+    case eHlirGlobal:
+    case eHlirLocal:
+    case eHlirParam:
 
-    case HLIR_ERROR:
+    case eHlirError:
 
-    case HLIR_MODULE:
+    case eHlirModule:
         return true;
 
     default:
@@ -44,23 +44,23 @@ static bool has_attribs(hlir_kind_t kind)
 {
     switch (kind)
     {
-    case HLIR_STRUCT:
-    case HLIR_UNION:
-    case HLIR_ALIAS:
-    case HLIR_DIGIT:
-    case HLIR_BOOL:
-    case HLIR_STRING:
-    case HLIR_POINTER:
-    case HLIR_VOID:
-    case HLIR_CLOSURE:
+    case eHlirStruct:
+    case eHlirUnion:
+    case eHlirAlias:
+    case eHlirDigit:
+    case eHlirBool:
+    case eHlirString:
+    case eHlirPointer:
+    case eHlirVoid:
+    case eHlirClosure:
 
-    case HLIR_FIELD:
-    case HLIR_FORWARD:
-    case HLIR_FUNCTION:
+    case eHlirField:
+    case eHlirForward:
+    case eHlirFunction:
 
-    case HLIR_GLOBAL:
-    case HLIR_LOCAL:
-    case HLIR_PARAM:
+    case eHlirGlobal:
+    case eHlirLocal:
+    case eHlirParam:
         return true;
 
     default:
@@ -123,7 +123,7 @@ bool hlir_is(const hlir_t *hlir, hlir_kind_t kind)
 
 bool hlir_will_be(const hlir_t *hlir, hlir_kind_t kind)
 {
-    return hlir_is(hlir, HLIR_FORWARD) && hlir->expected == kind;
+    return hlir_is(hlir, eHlirForward) && hlir->expected == kind;
 }
 
 bool hlis_is_or_will_be(const hlir_t *hlir, hlir_kind_t kind)
@@ -139,14 +139,14 @@ bool hlir_is_type(const hlir_t *hlir)
 {
     switch (get_hlir_kind(hlir))
     {
-    case HLIR_STRUCT:
-    case HLIR_UNION:
-    case HLIR_DIGIT:
-    case HLIR_BOOL:
-    case HLIR_STRING:
-    case HLIR_VOID:
-    case HLIR_TYPE:
-    case HLIR_ALIAS:
+    case eHlirStruct:
+    case eHlirUnion:
+    case eHlirDigit:
+    case eHlirBool:
+    case eHlirString:
+    case eHlirVoid:
+    case eHlirType:
+    case eHlirAlias:
         return true;
 
     default:
@@ -158,8 +158,8 @@ bool hlir_is_decl(const hlir_t *hlir)
 {
     switch (get_hlir_kind(hlir))
     {
-    case HLIR_FUNCTION:
-    case HLIR_GLOBAL:
+    case eHlirFunction:
+    case eHlirGlobal:
         return true;
 
     default:
@@ -171,51 +171,50 @@ bool hlir_is_decl(const hlir_t *hlir)
 /// debugging
 ///
 
-static const char *kKindNames[HLIR_TOTAL] = {
-    [HLIR_DIGIT_LITERAL] = "digit-literal",
-    [HLIR_BOOL_LITERAL] = "bool-literal",
-    [HLIR_STRING_LITERAL] = "string-literal",
+static const char *kKindNames[eHlirTotal] = {
+    [eHlirLiteralDigit] = "digit-literal",
+    [eHlirLiteralBool] = "bool-literal",
+    [eHlirLiteralString] = "string-literal",
 
-    [HLIR_NAME] = "name",
-    [HLIR_UNARY] = "unary",
-    [HLIR_BINARY] = "binary",
-    [HLIR_COMPARE] = "compare",
-    [HLIR_CALL] = "call",
+    [eHlirName] = "name",
+    [eHlirUnary] = "unary",
+    [eHlirBinary] = "binary",
+    [eHlirCompare] = "compare",
+    [eHlirCall] = "call",
 
-    [HLIR_STMTS] = "stmt-list",
-    [HLIR_BRANCH] = "branch",
-    [HLIR_LOOP] = "loop",
-    [HLIR_ASSIGN] = "assign",
-    [HLIR_RETURN] = "return",
+    [eHlirStmts] = "stmt-list",
+    [eHlirBranch] = "branch",
+    [eHlirLoop] = "loop",
+    [eHlirAssign] = "assign",
+    [eHlirReturn] = "return",
 
-    [HLIR_STRUCT] = "struct-type",
-    [HLIR_UNION] = "union-type",
-    [HLIR_DIGIT] = "digit-type",
-    [HLIR_BOOL] = "bool-type",
-    [HLIR_STRING] = "string-type",
-    [HLIR_VOID] = "void-type",
-    [HLIR_CLOSURE] = "closure-type",
-    [HLIR_POINTER] = "pointer-type",
-    [HLIR_ARRAY] = "array-type",
-    [HLIR_TYPE] = "metatype",
-    [HLIR_ALIAS] = "alias-type",
+    [eHlirStruct] = "struct-type",
+    [eHlirUnion] = "union-type",
+    [eHlirDigit] = "digit-type",
+    [eHlirBool] = "bool-type",
+    [eHlirString] = "string-type",
+    [eHlirVoid] = "void-type",
+    [eHlirClosure] = "closure-type",
+    [eHlirPointer] = "pointer-type",
+    [eHlirArray] = "array-type",
+    [eHlirType] = "metatype",
+    [eHlirAlias] = "alias-type",
 
-    [HLIR_LOCAL] = "local",
-    [HLIR_PARAM] = "param",
-    [HLIR_GLOBAL] = "global",
+    [eHlirLocal] = "local",
+    [eHlirParam] = "param",
+    [eHlirGlobal] = "global",
 
-    [HLIR_FORWARD] = "forward",
-    [HLIR_FUNCTION] = "function",
-    [HLIR_MODULE] = "module",
+    [eHlirForward] = "forward",
+    [eHlirFunction] = "function",
+    [eHlirModule] = "module",
 
-    [HLIR_FIELD] = "field",
+    [eHlirField] = "field",
 
-    [HLIR_ERROR] = "internal-error",
+    [eHlirError] = "internal-error",
 };
 
 static const char *kDigitNames[eDigitTotal] = {
-    [eChar] = "char", [eShort] = "short", [eInt] = "int",
-    [eLong] = "long", [eIntSize] = "size",   [eIntPtr] = "intptr",
+    [eChar] = "char", [eShort] = "short", [eInt] = "int", [eLong] = "long", [eIntSize] = "size", [eIntPtr] = "intptr",
 };
 
 static const char *kSignNames[eSignTotal] = {[eSigned] = "signed", [eUnsigned] = "unsigned"};

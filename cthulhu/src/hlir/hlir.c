@@ -4,35 +4,35 @@
 
 hlir_t *hlir_error(node_t node, const char *error)
 {
-    hlir_t *self = hlir_new(node, kMetaType, HLIR_ERROR);
+    hlir_t *self = hlir_new(node, kMetaType, eHlirError);
     self->name = error;
     return self;
 }
 
 hlir_t *hlir_digit_literal(node_t node, const hlir_t *type, mpz_t value)
 {
-    hlir_t *self = hlir_new(node, type, HLIR_DIGIT_LITERAL);
+    hlir_t *self = hlir_new(node, type, eHlirLiteralDigit);
     mpz_init_set(self->digit, value);
     return self;
 }
 
 hlir_t *hlir_int_literal(node_t node, const hlir_t *type, int value)
 {
-    hlir_t *self = hlir_new(node, type, HLIR_DIGIT_LITERAL);
+    hlir_t *self = hlir_new(node, type, eHlirLiteralDigit);
     mpz_init_set_si(self->digit, value);
     return self;
 }
 
 hlir_t *hlir_bool_literal(node_t node, const hlir_t *type, bool value)
 {
-    hlir_t *self = hlir_new(node, type, HLIR_BOOL_LITERAL);
+    hlir_t *self = hlir_new(node, type, eHlirLiteralBool);
     self->boolean = value;
     return self;
 }
 
 hlir_t *hlir_string_literal(node_t node, const hlir_t *type, const char *value, size_t length)
 {
-    hlir_t *self = hlir_new(node, type, HLIR_STRING_LITERAL);
+    hlir_t *self = hlir_new(node, type, eHlirLiteralString);
     self->string = value;
     self->stringLength = length;
     return self;
@@ -40,14 +40,14 @@ hlir_t *hlir_string_literal(node_t node, const hlir_t *type, const char *value, 
 
 hlir_t *hlir_name(node_t node, hlir_t *read)
 {
-    hlir_t *self = hlir_new(node, get_hlir_type(read), HLIR_NAME);
+    hlir_t *self = hlir_new(node, get_hlir_type(read), eHlirName);
     self->read = read;
     return self;
 }
 
 hlir_t *hlir_unary(node_t node, const hlir_t *type, hlir_t *operand, unary_t unary)
 {
-    hlir_t *self = hlir_new(node, type, HLIR_UNARY);
+    hlir_t *self = hlir_new(node, type, eHlirUnary);
     self->unary = unary;
     self->operand = operand;
     return self;
@@ -55,7 +55,7 @@ hlir_t *hlir_unary(node_t node, const hlir_t *type, hlir_t *operand, unary_t una
 
 hlir_t *hlir_binary(node_t node, const hlir_t *type, binary_t binary, hlir_t *lhs, hlir_t *rhs)
 {
-    hlir_t *self = hlir_new(node, type, HLIR_BINARY);
+    hlir_t *self = hlir_new(node, type, eHlirBinary);
     self->lhs = lhs;
     self->rhs = rhs;
     self->binary = binary;
@@ -64,7 +64,7 @@ hlir_t *hlir_binary(node_t node, const hlir_t *type, binary_t binary, hlir_t *lh
 
 hlir_t *hlir_compare(node_t node, const hlir_t *type, compare_t compare, hlir_t *lhs, hlir_t *rhs)
 {
-    hlir_t *self = hlir_new(node, type, HLIR_COMPARE);
+    hlir_t *self = hlir_new(node, type, eHlirCompare);
     self->lhs = lhs;
     self->rhs = rhs;
     self->compare = compare;
@@ -73,7 +73,8 @@ hlir_t *hlir_compare(node_t node, const hlir_t *type, compare_t compare, hlir_t 
 
 hlir_t *hlir_call(node_t node, hlir_t *call, vector_t *args)
 {
-    hlir_t *self = hlir_new(node, NULL, HLIR_CALL);
+    const hlir_t *signature = get_hlir_type(call);
+    hlir_t *self = hlir_new(node, closure_result(signature), eHlirCall);
     self->call = call;
     self->args = args;
     return self;
@@ -81,14 +82,14 @@ hlir_t *hlir_call(node_t node, hlir_t *call, vector_t *args)
 
 hlir_t *hlir_stmts(node_t node, vector_t *stmts)
 {
-    hlir_t *self = hlir_new(node, kInvalidNode, HLIR_STMTS);
+    hlir_t *self = hlir_new(node, kInvalidNode, eHlirStmts);
     self->stmts = stmts;
     return self;
 }
 
 hlir_t *hlir_branch(node_t node, hlir_t *cond, hlir_t *then, hlir_t *other)
 {
-    hlir_t *self = hlir_new(node, kInvalidNode, HLIR_BRANCH);
+    hlir_t *self = hlir_new(node, kInvalidNode, eHlirBranch);
     self->cond = cond;
     self->then = then;
     self->other = other;
@@ -97,7 +98,7 @@ hlir_t *hlir_branch(node_t node, hlir_t *cond, hlir_t *then, hlir_t *other)
 
 hlir_t *hlir_loop(node_t node, hlir_t *cond, hlir_t *body, hlir_t *other)
 {
-    hlir_t *self = hlir_new(node, kInvalidNode, HLIR_LOOP);
+    hlir_t *self = hlir_new(node, kInvalidNode, eHlirLoop);
     self->cond = cond;
     self->then = body;
     self->other = other;
@@ -106,7 +107,7 @@ hlir_t *hlir_loop(node_t node, hlir_t *cond, hlir_t *body, hlir_t *other)
 
 hlir_t *hlir_assign(node_t node, hlir_t *dst, hlir_t *src)
 {
-    hlir_t *self = hlir_new(node, kInvalidNode, HLIR_ASSIGN);
+    hlir_t *self = hlir_new(node, kInvalidNode, eHlirAssign);
     self->dst = dst;
     self->src = src;
     return self;
@@ -114,7 +115,7 @@ hlir_t *hlir_assign(node_t node, hlir_t *dst, hlir_t *src)
 
 hlir_t *hlir_return(node_t node, hlir_t *result)
 {
-    hlir_t *self = hlir_new(node, kInvalidNode, HLIR_RETURN);
+    hlir_t *self = hlir_new(node, kInvalidNode, eHlirReturn);
     self->result = result;
     return self;
 }
@@ -123,7 +124,7 @@ hlir_t *hlir_return(node_t node, hlir_t *result)
 
 hlir_t *hlir_field(node_t node, const hlir_t *type, const char *name)
 {
-    return hlir_new_decl(node, name, type, HLIR_FIELD);
+    return hlir_new_decl(node, name, type, eHlirField);
 }
 
 // building modules

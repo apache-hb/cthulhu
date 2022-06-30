@@ -170,6 +170,9 @@ void ctpanic(const char *msg, ...)
     vfprintf(stderr, msg, args);
     va_end(args);
 
+    volatile int *i = NULL;
+    *i = 25;
+
     abort();
 }
 

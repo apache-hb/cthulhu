@@ -22,48 +22,48 @@
  */
 typedef enum
 {
-    HLIR_DIGIT_LITERAL,  ///< an integer literal
-    HLIR_BOOL_LITERAL,   ///< a boolean literal
-    HLIR_STRING_LITERAL, ///< a string literal
+    eHlirLiteralDigit,  ///< an integer literal
+    eHlirLiteralBool,   ///< a boolean literal
+    eHlirLiteralString, ///< a string literal
 
-    HLIR_NAME,    ///< a load operation
-    HLIR_UNARY,   ///< a unary operation
-    HLIR_BINARY,  ///< a binary operation
-    HLIR_COMPARE, ///< a comparison operation
-    HLIR_CALL,    ///< a function call
+    eHlirName,    ///< a load operation
+    eHlirUnary,   ///< a unary operation
+    eHlirBinary,  ///< a binary operation
+    eHlirCompare, ///< a comparison operation
+    eHlirCall,    ///< a function call
 
-    HLIR_STMTS,  ///< a list of statements
-    HLIR_BRANCH, ///< a conditional branch
-    HLIR_LOOP,   ///< a loop on a condition
-    HLIR_ASSIGN, ///< an assignment
-    HLIR_RETURN, ///< a return statement
+    eHlirStmts,  ///< a list of statements
+    eHlirBranch, ///< a conditional branch
+    eHlirLoop,   ///< a loop on a condition
+    eHlirAssign, ///< an assignment
+    eHlirReturn, ///< a return statement
 
-    HLIR_STRUCT,  ///< a record type
-    HLIR_UNION,   ///< an untagged union type
-    HLIR_DIGIT,   ///< any integer type
-    HLIR_BOOL,    ///< the boolean type
-    HLIR_STRING,  ///< any string type
-    HLIR_VOID,    ///< the void type
-    HLIR_CLOSURE, ///< the type of a function signature
-    HLIR_POINTER, ///< a pointer to another type
-    HLIR_ARRAY,   ///< an array of another type
-    HLIR_TYPE,    ///< the type of all types
-    HLIR_ALIAS,   ///< an alias for another type
+    eHlirStruct,  ///< a record type
+    eHlirUnion,   ///< an untagged union type
+    eHlirDigit,   ///< any integer type
+    eHlirBool,    ///< the boolean type
+    eHlirString,  ///< any string type
+    eHlirVoid,    ///< the void type
+    eHlirClosure, ///< the type of a function signature
+    eHlirPointer, ///< a pointer to another type
+    eHlirArray,   ///< an array of another type
+    eHlirType,    ///< the type of all types
+    eHlirAlias,   ///< an alias for another type
 
-    HLIR_LOCAL,  ///< a local variable
-    HLIR_PARAM,  ///< a function parameter
-    HLIR_GLOBAL, ///< a global variable
+    eHlirLocal,  ///< a local variable
+    eHlirParam,  ///< a function parameter
+    eHlirGlobal, ///< a global variable
 
-    HLIR_FORWARD,  ///< a forward declaration, should never appear in the final
+    eHlirForward,  ///< a forward declaration, should never appear in the final
                    ///< module
-    HLIR_FUNCTION, ///< a function definition
-    HLIR_MODULE,   ///< the toplevel module definition
+    eHlirFunction, ///< a function definition
+    eHlirModule,   ///< the toplevel module definition
 
-    HLIR_FIELD, ///< a field in a record
+    eHlirField, ///< a field in a record
 
-    HLIR_ERROR, ///< a compilation error
+    eHlirError, ///< a compilation error
 
-    HLIR_TOTAL
+    eHlirTotal
 } hlir_kind_t;
 
 /**
@@ -77,58 +77,58 @@ typedef struct hlir_t
 
     union {
         mpz_t digit;  ///< the value of this integer literal. active if type ==
-                      ///< HLIR_DIGIT_LITERAL
+                      ///< eHlirLiteralDigit
         bool boolean; ///< the value of this boolean literal. active if type ==
-                      ///< HLIR_BOOL_LITERAL
+                      ///< eHlirLiteralBool
         struct
         {
             const char *string;  ///< the value of this string literal. active if
-                                 ///< type == HLIR_STRING_LITERAL
+                                 ///< type == eHlirLiteralString
             size_t stringLength; ///< the length of the string
         };
 
         struct hlir_t *read; ///< the name of this load operation. active if
-                             ///< type == HLIR_NAME
+                             ///< type == eHlirName
 
         struct
         {
             struct hlir_t *operand; ///< the operand of this unary operation.
-                                    ///< active if type == HLIR_UNARY
+                                    ///< active if type == eHlirUnary
             unary_t unary;          ///< the unary operation to perform
         };
 
         struct
         {
             struct hlir_t *lhs; ///< the left operand of this operation. active if type ==
-                                ///< HLIR_BINARY || type == HLIR_COMPARE
+                                ///< eHlirBinary || type == eHlirCompare
             struct hlir_t *rhs; ///< the right operand of this operation. active if type
-                                ///< == HLIR_BINARY || type == HLIR_COMPARE
+                                ///< == eHlirBinary || type == eHlirCompare
 
             union {
                 binary_t binary;   ///< the binary operation to perform. active if
-                                   ///< type == HLIR_BINARY
+                                   ///< type == eHlirBinary
                 compare_t compare; ///< the comparison operation to perform.
-                                   ///< active if type == HLIR_COMPARE
+                                   ///< active if type == eHlirCompare
             };
         };
 
         struct
         {
-            struct hlir_t *call; ///< the function to call. active if type == HLIR_CALL
+            struct hlir_t *call; ///< the function to call. active if type == eHlirCall
             vector_t *args;      ///< the arguments to pass to the function.
         };
 
         vector_t *stmts; ///< the statements in this block. active if type ==
-                         ///< HLIR_STMTS
+                         ///< eHlirStmts
 
         struct
         {
             struct hlir_t *dst; ///< the destination of this assignment. active
-                                ///< if type == HLIR_ASSIGN
+                                ///< if type == eHlirAssign
             struct hlir_t *src; ///< the source of this assignment.
         };
 
-        /* HLIR_BRANCH|HLIR_LOOP */
+        /* eHlirBranch|eHlirLoop */
         struct
         {
             struct hlir_t *cond;
@@ -241,8 +241,8 @@ typedef struct hlir_t
 bool hlir_is_imported(const hlir_t *self);
 
 /**
- * @brief get the params of a function. only valid to call on HLIR_FUNCTION and
- * HLIR_CLOSURE
+ * @brief get the params of a function. only valid to call on eHlirFunction and
+ * eHlirClosure
  *
  * @param self the function to get the params of
  * @return the params of the function
@@ -250,8 +250,8 @@ bool hlir_is_imported(const hlir_t *self);
 vector_t *closure_params(const hlir_t *self);
 
 /**
- * @brief check if a function is variadic. only valid to call on HLIR_FUNCTION
- * and HLIR_CLOSURE
+ * @brief check if a function is variadic. only valid to call on eHlirFunction
+ * and eHlirClosure
  *
  * @param self the function to check
  * @return true if the function is variadic
@@ -259,8 +259,8 @@ vector_t *closure_params(const hlir_t *self);
 bool closure_variadic(const hlir_t *self);
 
 /**
- * @brief get the return type of a function. only valid to call on HLIR_FUNCTION
- * and HLIR_CLOSURE
+ * @brief get the return type of a function. only valid to call on eHlirFunction
+ * and eHlirClosure
  *
  * @param self the function to get the return type of
  * @return the return type of the function

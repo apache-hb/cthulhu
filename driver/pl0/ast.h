@@ -8,25 +8,25 @@
 
 typedef enum
 {
-    PL0_DIGIT,
-    PL0_IDENT,
+    ePl0Digit,
+    ePl0Ident,
 
-    PL0_ODD,
-    PL0_UNARY,
-    PL0_BINARY,
-    PL0_COMPARE,
+    ePl0Odd,
+    ePl0Unary,
+    ePl0Binary,
+    ePl0Compare,
 
-    PL0_ASSIGN,
-    PL0_CALL,
-    PL0_BRANCH,
-    PL0_LOOP,
-    PL0_PRINT,
-    PL0_STMTS,
+    ePl0Assign,
+    ePl0Call,
+    ePl0Branch,
+    ePl0Loop,
+    ePl0Print,
+    ePl0Stmts,
 
-    PL0_VALUE,
-    PL0_PROCEDURE,
+    ePl0Value,
+    ePl0Procedure,
 
-    PL0_MODULE
+    ePl0Module
 } pl0_type_t;
 
 typedef struct pl0_t
