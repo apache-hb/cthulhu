@@ -72,7 +72,8 @@ typedef struct ast_t
         bool boolean;
 
         /* eAstString */
-        struct {
+        struct
+        {
             char *string;
             size_t length;
         };
@@ -162,7 +163,7 @@ typedef struct ast_t
                 vector_t *config;
 
                 /* eAstVariable */
-                struct 
+                struct
                 {
                     bool mut;
                     struct ast_t *init;

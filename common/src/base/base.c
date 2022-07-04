@@ -1,6 +1,6 @@
 #include "base/macros.h"
-#include "base/util.h"
 #include "base/tuning.h"
+#include "base/util.h"
 
 #include <gmp.h>
 #include <stdarg.h>

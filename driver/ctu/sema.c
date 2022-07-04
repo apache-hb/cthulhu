@@ -20,6 +20,7 @@ typedef enum
     eTagProcs,   // hlir_t*
     eTagTypes,   // hlir_t*
     eTagModules, // sema_t*
+    eTagAttribs, // hlir_t*
 
     eTagTotal
 } tag_t;
@@ -648,6 +649,7 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_set_attributes(decl, attribs);
 }
 
+// TODO: clean this all up
 static void sema_attrib(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
     ast_t *attrib = ast->attrib;
@@ -688,6 +690,11 @@ static void sema_attrib(sema_t *sema, hlir_t *decl, ast_t *ast)
         }
 
         const hlir_attributes_t *previous = get_hlir_attributes(decl);
+        if (hlir_is_imported(decl))
+        {
+            report(sema->reports, eFatal, ast->node, "entrypoint must have a body");
+        }
+
         hlir_set_attributes(decl, hlir_attributes(entry, previous->tags, previous->mangle, previous->module));
     }
     else if (str_equal(attrib->name, "extern"))
@@ -700,6 +707,12 @@ static void sema_attrib(sema_t *sema, hlir_t *decl, ast_t *ast)
     {
         report(sema->reports, eFatal, attrib->node, "unknown attribute `%s`", attrib->name);
     }
+}
+
+static void sema_value(sema_t *sema, hlir_t *decl, ast_t *ast)
+{
+    hlir_t *init = sema_expr(sema, ast->init);
+    hlir_build_global(decl, init);
 }
 
 static void sema_decl(sema_t *sema, ast_t *ast)
@@ -731,6 +744,11 @@ static void sema_decl(sema_t *sema, ast_t *ast)
     case eAstFunction:
         decl = sema_get(sema, eTagProcs, ast->name);
         sema_func(sema, decl, ast);
+        break;
+
+    case eAstVariable:
+        decl = sema_get(sema, eTagValues, ast->name);
+        sema_value(sema, decl, ast);
         break;
 
     default:
@@ -799,6 +817,11 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
     case eAstFunction:
         decl = begin_function(sema, ast);
         tag = eTagProcs;
+        break;
+
+    case eAstVariable:
+        decl = hlir_begin_global(ast->node, ast->name, hlir_error(ast->node, "unresolved type"));
+        tag = eTagValues;
         break;
 
     default:

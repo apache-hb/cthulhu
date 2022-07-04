@@ -1,0 +1,4 @@
+@entry(cli)
+def main: int {
+    
+}

@@ -59,7 +59,8 @@ static bool is_signature(const hlir_t *hlir)
     return kind == eHlirClosure || kind == eHlirFunction || hlir_will_be(hlir, eHlirFunction);
 }
 
-#define ENSURE_VALID_CLOSURE(hlir, str) CTASSERTF(is_signature(hlir), str "(%s)", hlir_kind_to_string(get_hlir_kind(hlir)))
+#define ENSURE_VALID_CLOSURE(hlir, str)                                                                                \
+    CTASSERTF(is_signature(hlir), str "(%s)", hlir_kind_to_string(get_hlir_kind(hlir)))
 
 vector_t *closure_params(const hlir_t *self)
 {

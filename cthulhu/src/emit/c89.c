@@ -4,8 +4,8 @@
 #include "report/report.h"
 #include "std/map.h"
 
-#include "base/util.h"
 #include "base/macros.h"
+#include "base/util.h"
 #include "cthulhu/hlir/query.h"
 #include "std/set.h"
 #include "std/str.h"
@@ -229,7 +229,8 @@ static char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
 
 static const char *c89_mangle_name(c89_emit_t *emit, const hlir_t *hlir)
 {
-    CTASSERTF((hlir->parentDecl == NULL ? hlir_is_imported(hlir) : true), "decl '%s' must have a parent decl", get_hlir_name(hlir));
+    CTASSERTF((hlir->parentDecl == NULL ? hlir_is_imported(hlir) : true), "decl '%s' must have a parent decl",
+              get_hlir_name(hlir));
 
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
     if (attribs->mangle != NULL)
@@ -930,9 +931,12 @@ static const char *c89_get_linkage(hlir_linkage_t linkage)
 {
     switch (linkage)
     {
-    case eLinkImported: return "extern ";
-    case eLinkInternal: return "static ";
-    case eLinkExported: return "";
+    case eLinkImported:
+        return "extern ";
+    case eLinkInternal:
+        return "static ";
+    case eLinkExported:
+        return "";
     default:
         CTASSERT(false, "unknown linkage");
         return "";

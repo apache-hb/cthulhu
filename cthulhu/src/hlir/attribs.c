@@ -20,3 +20,8 @@ hlir_attributes_t *hlir_tags(hlir_tags_t tags)
 {
     return hlir_attributes(DEFAULT_LINKAGE, tags, NULL, NULL);
 }
+
+bool is_entry_point(hlir_linkage_t linkage)
+{
+    return linkage == eLinkEntryCli || linkage == eLinkEntryGui;
+}

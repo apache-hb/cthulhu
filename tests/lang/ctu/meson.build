@@ -95,6 +95,15 @@ tests = {
             'infinite-loop',
             'loop-else'
         ]
+    },
+    'attribs': {
+        'pass': [],
+        'fail': [
+            'entry-var',
+            'imported-entry',
+            'invalid-attribute',
+            'multiple-entry'
+        ]
     }
 }
 

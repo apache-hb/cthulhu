@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 /**
  * @defgroup HlirAttributes HLIR Declaration attributes
  * @brief attributes to attatch to declarations and types
@@ -75,5 +77,7 @@ hlir_attributes_t *hlir_linkage(hlir_linkage_t linkage);
  * @return the new attributes object
  */
 hlir_attributes_t *hlir_tags(hlir_tags_t tags);
+
+bool is_entry_point(hlir_linkage_t linkage);
 
 /** @} */
