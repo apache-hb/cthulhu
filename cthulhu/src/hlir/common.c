@@ -50,42 +50,34 @@ void init_hlir(void)
 
 bool hlir_is_imported(const hlir_t *self)
 {
-    return self->attributes->linkage == eLinkImported;
+    return get_hlir_attributes(self)->linkage == eLinkImported;
 }
 
-#if ENABLE_DEBUG
-static bool is_signature(const hlir_kind_t kind)
+static bool is_signature(const hlir_t *hlir)
 {
-    return kind == eHlirClosure || kind == eHlirFunction;
+    hlir_kind_t kind = get_hlir_kind(hlir);
+    return kind == eHlirClosure || kind == eHlirFunction || hlir_will_be(hlir, eHlirFunction);
 }
-#endif
+
+#define ENSURE_VALID_CLOSURE(hlir, str) CTASSERTF(is_signature(hlir), str "(%s)", hlir_kind_to_string(get_hlir_kind(hlir)))
 
 vector_t *closure_params(const hlir_t *self)
 {
-#if ENABLE_DEBUG
-    hlir_kind_t kind = get_hlir_kind(self);
-    CTASSERTF(is_signature(kind), "closure-params(%s)", hlir_kind_to_string(kind));
-#endif
+    ENSURE_VALID_CLOSURE(self, "closure-params");
 
     return self->params;
 }
 
 bool closure_variadic(const hlir_t *self)
 {
-#if ENABLE_DEBUG
-    hlir_kind_t kind = get_hlir_kind(self);
-    CTASSERTF(is_signature(kind), "closure-variadic(%s)", hlir_kind_to_string(kind));
-#endif
+    ENSURE_VALID_CLOSURE(self, "closure-variadic");
 
     return self->variadic;
 }
 
 const hlir_t *closure_result(const hlir_t *self)
 {
-#if ENABLE_DEBUG
-    hlir_kind_t kind = get_hlir_kind(self);
-    CTASSERTF(is_signature(kind), "closure-result(%s)", hlir_kind_to_string(kind));
-#endif
+    ENSURE_VALID_CLOSURE(self, "closure-result");
 
     return self->result;
 }

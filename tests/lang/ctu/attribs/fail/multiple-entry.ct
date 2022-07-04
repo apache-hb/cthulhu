@@ -1,0 +1,5 @@
+@entry(cli)
+def entry1 {}
+
+@entry(cli)
+def entry2 {}

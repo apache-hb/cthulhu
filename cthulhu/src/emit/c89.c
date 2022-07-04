@@ -5,6 +5,7 @@
 #include "std/map.h"
 
 #include "base/util.h"
+#include "base/macros.h"
 #include "cthulhu/hlir/query.h"
 #include "std/set.h"
 #include "std/str.h"
@@ -228,12 +229,7 @@ static char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
 
 static const char *c89_mangle_name(c89_emit_t *emit, const hlir_t *hlir)
 {
-#if ENABLE_DEBUG
-    if (hlir->parentDecl == NULL && !hlir_is_imported(hlir))
-    {
-        report(emit->reports, eInternal, get_hlir_node(hlir), "decl %s must have a parent decl", get_hlir_name(hlir));
-    }
-#endif
+    CTASSERTF((hlir->parentDecl == NULL ? hlir_is_imported(hlir) : true), "decl '%s' must have a parent decl", get_hlir_name(hlir));
 
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
     if (attribs->mangle != NULL)
@@ -930,17 +926,24 @@ static void c89_emit_types(c89_emit_t *emit, vector_t *modules)
     }
 }
 
-static const char *kLinkageModifiers[eLinkTotal] = {
-    [eLinkImported] = "extern ",
-    [eLinkInternal] = "static ",
-    [eLinkExported] = "",
-};
+static const char *c89_get_linkage(hlir_linkage_t linkage)
+{
+    switch (linkage)
+    {
+    case eLinkImported: return "extern ";
+    case eLinkInternal: return "static ";
+    case eLinkExported: return "";
+    default:
+        CTASSERT(false, "unknown linkage");
+        return "";
+    }
+}
 
 static void c89_forward_global(c89_emit_t *emit, const hlir_t *hlir)
 {
     const char *name = c89_mangle_name(emit, hlir);
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
-    const char *linkage = kLinkageModifiers[attribs->linkage];
+    const char *linkage = c89_get_linkage(attribs->linkage);
     const char *type = c89_emit_type(emit, get_hlir_type(hlir), name);
 
     WRITE_STRINGF(emit, "%s%s[1];\n", linkage, type);
@@ -957,7 +960,7 @@ static void c89_emit_global(c89_emit_t *emit, const hlir_t *hlir)
     const char *name = c89_mangle_name(emit, hlir);
     const char *type = c89_emit_type(emit, get_hlir_type(hlir), name);
     const char *expr = c89_emit_rvalue(emit, hlir->value);
-    const char *linkage = kLinkageModifiers[attribs->linkage];
+    const char *linkage = c89_get_linkage(attribs->linkage);
 
     WRITE_STRINGF(emit, "%s%s[1] = { %s };\n", linkage, type, expr);
 }
@@ -1023,14 +1026,21 @@ static const char *c89_fmt_params(c89_emit_t *emit, vector_t *params)
 static void c89_function_header(c89_emit_t *emit, const hlir_t *function)
 {
     const hlir_attributes_t *attribs = get_hlir_attributes(function);
-    const char *name = c89_mangle_name(emit, function);
-
     vector_t *closureParams = closure_params(function);
+    const char *name = "main";
 
     // TODO: return type cannot be array
+    const char *params = "void";
+    const char *linkage = "";
+
+    if (attribs->linkage != eLinkEntryCli)
+    {
+        name = c89_mangle_name(emit, function);
+        params = c89_fmt_params(emit, closureParams);
+        linkage = c89_get_linkage(attribs->linkage);
+    }
+
     const char *result = c89_emit_type(emit, closure_result(function), name);
-    const char *params = c89_fmt_params(emit, closureParams);
-    const char *linkage = kLinkageModifiers[attribs->linkage];
 
     if (vector_len(closureParams) == 0)
     {

@@ -1,7 +1,7 @@
-@abi(platform) 
+@extern
 def puts(s: str): int;
 
-@abi(platform) 
+@extern
 def exit(code: int): void;
 
 @entry(cli)

@@ -378,6 +378,8 @@ static void check_attribute(check_t *ctx, hlir_t *hlir)
         hlir_set_attributes(hlir, newAttribs);
     }
 
+    bool isEntry = false;
+
     if (attribs->linkage == eLinkEntryCli)
     {
         if (ctx->cliEntryPoint != NULL)
@@ -386,6 +388,7 @@ static void check_attribute(check_t *ctx, hlir_t *hlir)
         }
 
         ctx->cliEntryPoint = hlir;
+        isEntry = true;
     }
 
     if (attribs->linkage == eLinkEntryGui)
@@ -396,6 +399,12 @@ static void check_attribute(check_t *ctx, hlir_t *hlir)
         }
 
         ctx->guiEntryPoint = hlir;
+        isEntry = true;
+    }
+
+    if (isEntry && !hlir_is(hlir, eHlirFunction))
+    {
+        report(ctx->reports, eFatal, get_hlir_node(hlir), "only functions can be declared as entry points");
     }
 }
 

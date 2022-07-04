@@ -1,0 +1,2 @@
+@entry(cli)
+const x = 25;

@@ -97,6 +97,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     MODULE "`module`"
     IMPORT "`import`"
     EXPORT "`export`"
+    USING "`using`"
 
     DEF "`def`"
     VAR "`var`"
@@ -185,7 +186,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     typelist imports importlist
     variants variantlist
     stmtlist paramlist
-    args
+    args attrargs argbody
 
 %type<funcparams>
     funcparams opttypes types
@@ -223,7 +224,11 @@ decl: innerdecl { $$ = $1; }
     | attrib innerdecl { $2->attrib = $1; $$ = $2; }
     ;
 
-attrib: AT IDENT LPAREN args RPAREN { $$ = ast_attribute(x, @$, $2, $4); }
+attrib: AT IDENT attrargs { $$ = ast_attribute(x, @$, $2, $3); } 
+    ;
+
+attrargs: %empty { $$ = vector_new(0); }
+    | LPAREN args RPAREN { $$ = $2; }
     ;
 
 innerdecl: structdecl { $$ = $1; }
@@ -400,8 +405,12 @@ or: and { $$ = $1; }
 expr: or { $$ = $1; }
     ;
 
-args: expr { $$ = vector_init($1); }
-    | args COMMA expr { vector_push(&$1, $3); $$ = $1; }
+argbody: expr { $$ = vector_init($1); }
+    | argbody COMMA expr { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+args: %empty { $$ = vector_new(0); }
+    | argbody { $$ = $1; } 
     ; 
 
 path: IDENT { $$ = vector_init($1); }

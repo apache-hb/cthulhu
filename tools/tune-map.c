@@ -1,5 +1,8 @@
 #include "base/util.h"
+#include "base/tuning.h"
 #include "std/str.h"
+#include "std/vector.h"
+#include "std/map.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -165,7 +168,7 @@ static ns_t avg_runs(size_t len, size_t size)
 
 static size_t RUNS[] = {1, 10, 100, 1000, 10000, 100000, 500000, 1000000};
 
-static counters_t MAX_COUNTERS = {.mallocs = SIZE_MAX,
+static counters_t kMaxCounters = {.mallocs = SIZE_MAX,
                                   .reallocs = SIZE_MAX,
                                   .frees = SIZE_MAX,
 
@@ -192,7 +195,7 @@ static void time_primes(size_t self, size_t len)
         {
             printf("skipping size=%zu for len=%zu\n", prime, len);
             times[self][used++] = SIZE_MAX;
-            counters[self][i] = MAX_COUNTERS;
+            counters[self][i] = kMaxCounters;
             continue;
         }
 
@@ -202,7 +205,7 @@ static void time_primes(size_t self, size_t len)
         {
             printf("\naborting size=%zu for len=%zu due to long run\n", prime, len);
             times[self][used++] = SIZE_MAX;
-            counters[self][i] = MAX_COUNTERS;
+            counters[self][i] = kMaxCounters;
             continue;
         }
 
@@ -222,7 +225,7 @@ static void time_primes(size_t self, size_t len)
 
     for (; i < PRIMES; i++)
     {
-        counters[self][i] = MAX_COUNTERS;
+        counters[self][i] = kMaxCounters;
     }
 
     size_t idx = min_index(times[self], used);
@@ -265,10 +268,10 @@ static counters_t avg_counters(size_t i)
 typedef struct
 {
     counters_t most;
-    size_t most_idx;
+    size_t mostIndex;
 
     counters_t least;
-    size_t least_idx;
+    size_t leastIdx;
 } count_pair_t;
 
 static count_pair_t most_allocs(size_t i)
@@ -288,13 +291,13 @@ static count_pair_t most_allocs(size_t i)
         if (out.most.mallocs < c.mallocs)
         {
             out.most = c;
-            out.most_idx = j;
+            out.mostIndex = j;
         }
 
         if (out.least.mallocs > c.mallocs)
         {
             out.least = c;
-            out.least_idx = j;
+            out.leastIdx = j;
         }
     }
 
@@ -318,13 +321,13 @@ static count_pair_t most_memory(size_t i)
         if (out.most.peak < c.peak)
         {
             out.most = c;
-            out.most_idx = j;
+            out.mostIndex = j;
         }
 
         if (out.least.peak > c.peak)
         {
             out.least = c;
-            out.least_idx = j;
+            out.leastIdx = j;
         }
     }
 
@@ -352,15 +355,15 @@ int main(void)
         count_pair_t malls = most_allocs(i);
         count_pair_t peaks = most_memory(i);
 
-        counters_t peak_malls = malls.most;
-        counters_t least_malls = malls.least;
+        counters_t peakMallocs = malls.most;
+        counters_t leastMallocs = malls.least;
 
-        counters_t peak_peaks = peaks.most;
-        counters_t least_peaks = peaks.least;
+        counters_t peakPeaks = peaks.most;
+        counters_t leastPeaks = peaks.least;
 
-        ns_t least_malls_time = times[i][malls.least_idx];
-        ns_t least_peaks_time = times[i][peaks.least_idx];
-        ns_t best_time = times[i][min_index(times[i], PRIMES)];
+        ns_t leastMallocsTime = times[i][malls.leastIdx];
+        ns_t leastPeaksTime = times[i][peaks.leastIdx];
+        ns_t bestTime = times[i][min_index(times[i], PRIMES)];
 
         printf("stats for size: %zu\n"
                "performance stats:\n"
@@ -376,13 +379,13 @@ int main(void)
                "\treallocs  : %-15zu | %-15zu %-15zu | %-15zu %-15zu\n"
                "\tfrees     : %-15zu | %-15zu %-15zu | %-15zu %-15zu\n"
                "\tpeak usage: %-15zu | %-15zu %-15zu | %-15zu %-15zu\n",
-               len, prime, (unsigned long)(best_time / 1000000000), (unsigned long)(best_time % 1000000000),
-               (unsigned long)(least_peaks_time / 1000000000), (unsigned long)(least_peaks_time % 1000000000),
-               (unsigned long)(least_malls_time / 1000000000), (unsigned long)(least_malls_time % 1000000000),
-               MERSENNE[malls.most_idx], MERSENNE[malls.least_idx], MERSENNE[peaks.most_idx], MERSENNE[peaks.least_idx],
-               avg.mallocs, peak_malls.mallocs, least_malls.mallocs, peak_peaks.mallocs, least_peaks.mallocs,
-               avg.reallocs, peak_malls.reallocs, least_malls.reallocs, peak_peaks.reallocs, least_peaks.reallocs,
-               avg.frees, peak_malls.frees, least_malls.frees, peak_peaks.frees, least_peaks.frees, avg.peak,
-               peak_malls.peak, least_malls.peak, peak_peaks.peak, least_peaks.peak);
+               len, prime, (unsigned long)(bestTime / 1000000000), (unsigned long)(bestTime % 1000000000),
+               (unsigned long)(leastPeaksTime / 1000000000), (unsigned long)(leastPeaksTime % 1000000000),
+               (unsigned long)(leastMallocsTime / 1000000000), (unsigned long)(leastMallocsTime % 1000000000),
+               MERSENNE[malls.mostIndex], MERSENNE[malls.leastIdx], MERSENNE[peaks.mostIndex], MERSENNE[peaks.leastIdx],
+               avg.mallocs, peakMallocs.mallocs, leastMallocs.mallocs, peakPeaks.mallocs, leastPeaks.mallocs,
+               avg.reallocs, peakMallocs.reallocs, leastMallocs.reallocs, peakPeaks.reallocs, leastPeaks.reallocs,
+               avg.frees, peakMallocs.frees, leastMallocs.frees, peakPeaks.frees, leastPeaks.frees, avg.peak,
+               peakMallocs.peak, leastMallocs.peak, peakPeaks.peak, leastPeaks.peak);
     }
 }

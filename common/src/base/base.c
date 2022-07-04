@@ -1,5 +1,6 @@
 #include "base/macros.h"
 #include "base/util.h"
+#include "base/tuning.h"
 
 #include <gmp.h>
 #include <stdarg.h>
@@ -10,6 +11,7 @@
 
 #if ENABLE_TUNING
 #    include <malloc.h>
+#    include <sys/types.h>
 
 static counters_t counters = {
     .mallocs = 0,

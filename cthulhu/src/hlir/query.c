@@ -3,8 +3,6 @@
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 
-#if ENABLE_DEBUG
-
 static bool has_name(hlir_kind_t kind)
 {
     switch (kind)
@@ -68,8 +66,6 @@ static bool has_attribs(hlir_kind_t kind)
     }
 }
 
-#endif
-
 hlir_kind_t get_hlir_kind(const hlir_t *hlir)
 {
     CHECK_NULL(hlir);
@@ -84,22 +80,18 @@ const hlir_t *get_hlir_type(const hlir_t *hlir)
 
 const char *get_hlir_name(const hlir_t *hlir)
 {
-#if ENABLE_DEBUG
     CHECK_NULL(hlir);
     hlir_kind_t kind = get_hlir_kind(hlir);
     CTASSERTF(has_name(kind), "hlir_t %s has no name", hlir_kind_to_string(kind));
-#endif
 
     return hlir->name;
 }
 
 const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir)
 {
-#if ENABLE_DEBUG
     CHECK_NULL(hlir);
     hlir_kind_t kind = get_hlir_kind(hlir);
     CTASSERTF(has_attribs(kind), "hlir %s has no attributes", hlir_kind_to_string(kind));
-#endif
 
     return hlir->attributes;
 }

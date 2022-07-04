@@ -48,6 +48,10 @@ parseargs = []
 
 fs = import('fs')
 
+if tuning.enabled()
+    args += [ '-DENABLE_TUNING=1' ]
+endif
+
 if buildtype.startswith('debug')
     args += [ '-DENABLE_DEBUG=1' ]
 endif

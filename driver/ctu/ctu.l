@@ -89,6 +89,7 @@ WS [ \t\r\v\n\f]
 "module" { return MODULE; }
 "import" { return IMPORT; }
 "export" { return EXPORT; }
+"using" { return USING; }
 
 "def" { return DEF; }
 "var" { return VAR; }
