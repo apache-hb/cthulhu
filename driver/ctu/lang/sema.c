@@ -1,5 +1,7 @@
 #include "sema.h"
+#include "attribs.h"
 #include "ast.h"
+
 
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/hlir.h"
@@ -13,17 +15,6 @@
 #include "report/report-ext.h"
 #include "std/set.h"
 #include "std/str.h"
-
-typedef enum
-{
-    eTagValues,  // hlir_t*
-    eTagProcs,   // hlir_t*
-    eTagTypes,   // hlir_t*
-    eTagModules, // sema_t*
-    eTagAttribs, // hlir_t*
-
-    eTagTotal
-} tag_t;
 
 typedef struct
 {
@@ -622,7 +613,7 @@ static void sema_params(sema_t *sema, vector_t *params)
 
 static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
-    hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? eLinkImported : eLinkExported, 0, NULL, NULL);
+    hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? eLinkImported : eLinkExported, 0, NULL);
     hlir_t *body = NULL;
 
     size_t tags[eTagTotal] = {
@@ -647,66 +638,6 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
 
     hlir_build_function(decl, body);
     hlir_set_attributes(decl, attribs);
-}
-
-// TODO: clean this all up
-static void sema_attrib(sema_t *sema, hlir_t *decl, ast_t *ast)
-{
-    ast_t *attrib = ast->attrib;
-    // TODO: userspace attribute support
-    if (str_equal(attrib->name, "entry"))
-    {
-        if (!hlir_is(decl, eHlirFunction))
-        {
-            report(sema->reports, eFatal, ast->node, "entrypoint attribute can only apply to functions");
-            return;
-        }
-
-        vector_t *config = attrib->config;
-        hlir_linkage_t entry = eLinkEntryCli;
-        if (vector_len(config) > 0)
-        {
-            ast_t *first = vector_get(config, 0);
-            if (first->of != eAstName)
-            {
-                report(sema->reports, eFatal, first->node, "entrypoint must be either 'cli' or 'gui'");
-            }
-            else
-            {
-                const char *id = vector_get(first->path, 0);
-                if (str_equal(id, "cli"))
-                {
-                    entry = eLinkEntryCli;
-                }
-                else if (str_equal(id, "gui"))
-                {
-                    entry = eLinkEntryGui;
-                }
-                else
-                {
-                    report(sema->reports, eFatal, first->node, "entrypoint must be either 'cli' or 'gui'");
-                }
-            }
-        }
-
-        const hlir_attributes_t *previous = get_hlir_attributes(decl);
-        if (hlir_is_imported(decl))
-        {
-            report(sema->reports, eFatal, ast->node, "entrypoint must have a body");
-        }
-
-        hlir_set_attributes(decl, hlir_attributes(entry, previous->tags, previous->mangle, previous->module));
-    }
-    else if (str_equal(attrib->name, "extern"))
-    {
-        // TODO: proper arguments
-        const hlir_attributes_t *previous = get_hlir_attributes(decl);
-        hlir_set_attributes(decl, hlir_attributes(eLinkImported, previous->tags, decl->name, previous->module));
-    }
-    else
-    {
-        report(sema->reports, eFatal, attrib->node, "unknown attribute `%s`", attrib->name);
-    }
 }
 
 static void sema_value(sema_t *sema, hlir_t *decl, ast_t *ast)
@@ -753,13 +684,10 @@ static void sema_decl(sema_t *sema, ast_t *ast)
 
     default:
         ctu_assert(sema->reports, "unexpected ast of type %d", ast->of);
-        break;
+        return;
     }
 
-    if (ast->attrib != NULL)
-    {
-        sema_attrib(sema, decl, ast);
-    }
+    apply_attributes(sema, decl, ast);
 }
 
 static hlir_t *begin_function(sema_t *sema, ast_t *ast)
@@ -869,6 +797,7 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
     };
 
     sema_t *sema = sema_new(kRootSema, runtime->reports, eTagTotal, sizes);
+    add_builtin_attribs(sema);
 
     char *name = NULL;
     if (root->modspec != NULL)

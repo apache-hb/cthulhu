@@ -15,6 +15,10 @@ int main(int argc, const char **argv)
 {
     common_init();
 
+    // TODO: dynamically link to the language driver
+    // this should be an option at build time so we
+    // only need to build one of each interface
+    // rather than one of each interface for each driver
     driver_t driver = get_driver();
 
     param_t *outputFileNameParam = string_param("output file name", kOutputFileNames, TOTAL_OUTPUT_FILE_NAMES);

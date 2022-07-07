@@ -513,7 +513,7 @@ static const char *c89_emit_call(c89_emit_t *emit, const hlir_t *hlir)
 
     const char *paramString = str_join(", ", params);
 
-    return format("%s(%s);\n", func, paramString);
+    return format("(%s(%s))", func, paramString);
 }
 
 static void c89_emit_loop(c89_emit_t *emit, const hlir_t *hlir)
@@ -525,7 +525,7 @@ static void c89_emit_loop(c89_emit_t *emit, const hlir_t *hlir)
 
     if (hlir->other != NULL)
     {
-        WRITE_STRINGF(emit, "int used_loop%ld_%ld = 0;\n", where.firstLine, where.firstColumn);
+        WRITE_STRINGF(emit, "int __used_loop%ld_%ld = 0;\n", where.firstLine, where.firstColumn);
     }
 
     WRITE_STRINGF(emit, "while (%s)\n", cond);
@@ -535,7 +535,7 @@ static void c89_emit_loop(c89_emit_t *emit, const hlir_t *hlir)
 
     if (hlir->other != NULL)
     {
-        WRITE_STRINGF(emit, "used_loop%ld_%ld = 1;\n", where.firstLine, where.firstColumn);
+        WRITE_STRINGF(emit, "__used_loop%ld_%ld = 1;\n", where.firstLine, where.firstColumn);
     }
 
     c89_emit_stmt(emit, hlir->then);
@@ -545,7 +545,7 @@ static void c89_emit_loop(c89_emit_t *emit, const hlir_t *hlir)
 
     if (hlir->other != NULL)
     {
-        WRITE_STRINGF(emit, "if (!used_loop%ld_%ld)\n", where.firstLine, where.firstColumn);
+        WRITE_STRINGF(emit, "if (!__used_loop%ld_%ld)\n", where.firstLine, where.firstColumn);
         WRITE_STRING(emit, "{\n");
         begin_indent(emit);
         c89_emit_stmt(emit, hlir->other);
@@ -588,7 +588,7 @@ static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
         break;
 
     case eHlirCall:
-        WRITE_STRING(emit, c89_emit_call(emit, hlir));
+        WRITE_STRINGF(emit, "%s;\n", c89_emit_call(emit, hlir));
         break;
 
     case eHlirReturn:
