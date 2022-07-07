@@ -1037,14 +1037,14 @@ static void c89_function_header(c89_emit_t *emit, const hlir_t *function)
     const char *params = "void";
     const char *linkage = "";
 
+    const char *result = "int main";
     if (attribs->linkage != eLinkEntryCli)
     {
         name = c89_mangle_name(emit, function);
         params = c89_fmt_params(emit, closureParams);
         linkage = c89_get_linkage(attribs->linkage);
+        result = c89_emit_type(emit, closure_result(function), name);
     }
-
-    const char *result = c89_emit_type(emit, closure_result(function), name);
 
     if (vector_len(closureParams) == 0)
     {

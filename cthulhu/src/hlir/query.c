@@ -225,3 +225,26 @@ const char *hlir_digit_to_string(digit_t digit)
 {
     return kDigitNames[digit];
 }
+
+bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
+{
+    hlir_kind_t lhsKind = get_hlir_kind(lhs);
+    hlir_kind_t rhsKind = get_hlir_kind(rhs);
+    if (lhsKind != rhsKind)
+    {
+        return false;
+    }
+
+    switch (lhsKind)
+    {
+    case eHlirDigit:
+        return lhs->digit == rhs->digit && lhs->sign == rhs->sign;
+    case eHlirString: // TODO: update this when we have multiple string encodings
+    case eHlirBool:
+        return true;
+
+    default:
+        CTASSERT(false, "unknown type");
+        return false;
+    }
+}

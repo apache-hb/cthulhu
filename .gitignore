@@ -42,3 +42,4 @@ temp/
 fuzz-*/
 afl*/
 genout*/
+out.c

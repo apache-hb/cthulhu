@@ -29,6 +29,8 @@ NODISCARD PUREFN bool hlis_is_or_will_be(const hlir_t *hlir, hlir_kind_t kind);
 bool hlir_is_type(const hlir_t *hlir);
 bool hlir_is_decl(const hlir_t *hlir);
 
+bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs);
+
 ///
 /// debugging queries
 ///

@@ -354,14 +354,6 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
     return hlir_error(ast->node, "unknown identifier");
 }
 
-static hlir_t *implicit_cast(sema_t *sema, hlir_t *expr, hlir_t *type)
-{
-    UNUSED(sema);
-    UNUSED(expr);
-    UNUSED(type);
-    return expr; // TODO: check type
-}
-
 static hlir_t *sema_call(sema_t *sema, ast_t *ast)
 {
     hlir_t *call = sema_expr(sema, ast->call);
@@ -380,8 +372,11 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
         ast_t *arg = vector_get(ast->args, i);
         hlir_t *hlir = sema_expr(sema, arg);
         hlir_t *expectedType = vector_get(params, i);
-        hlir_t *cast = implicit_cast(sema, hlir, expectedType);
-        vector_set(args, i, cast);
+        if (!hlir_types_equal(get_hlir_type(hlir), expectedType))
+        {
+            report(sema->reports, eFatal, arg->node, "incorrect argument type");
+        }
+        vector_set(args, i, hlir);
     }
 
     return hlir_call(ast->node, call, args);
@@ -719,6 +714,12 @@ static hlir_t *begin_function(sema_t *sema, ast_t *ast)
     return hlir_begin_function(ast->node, ast->name, sig);
 }
 
+static hlir_t *begin_global(sema_t *sema, ast_t *ast)
+{
+    UNUSED(sema);
+    return hlir_begin_global(ast->node, ast->name, hlir_error(ast->node, "unresolved type"));
+}
+
 static void fwd_decl(sema_t *sema, ast_t *ast)
 {
     hlir_t *decl;
@@ -748,7 +749,7 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
         break;
 
     case eAstVariable:
-        decl = hlir_begin_global(ast->node, ast->name, hlir_error(ast->node, "unresolved type"));
+        decl = begin_global(sema, ast);
         tag = eTagValues;
         break;
 
