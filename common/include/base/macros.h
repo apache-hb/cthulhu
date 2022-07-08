@@ -59,6 +59,12 @@
 #    define _POSIX_C_SOURCE 200112L
 #endif
 
+#ifndef __has_feature
+#    define __has_feature(...) 0
+#endif
+
+#define ADDRSAN_ENABLED ((__SANITIZE_ADDRESS__ != 0) || __has_feature(address_sanitizer))
+
 NORETURN ctpanic(FORMAT_STRING const char *msg, ...) FORMAT_ATTRIBUTE(1, 2);
 
 #if ENABLE_DEBUG

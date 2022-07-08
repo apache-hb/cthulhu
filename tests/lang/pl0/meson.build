@@ -45,7 +45,8 @@ tests = {
     'programs': {
         'pass': [
             'prime',
-            'square'
+            'square',
+            'empty'
         ],
         'fail': [
             'crash'
@@ -61,6 +62,7 @@ crashes = {
     '15': false, '16': false, '17': false, '18': false,
     '19': false, '20': true, '21': false, '22': false, 
     '23': false, '24': false, '25': false, '26': false,
+    '27': true, '28': true, '29': true
 }
 
 multi = {

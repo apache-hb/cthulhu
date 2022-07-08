@@ -1020,7 +1020,7 @@ static const char *c89_fmt_params(c89_emit_t *emit, vector_t *params)
     for (size_t i = 0; i < len; i++)
     {
         const hlir_t *param = vector_get(params, i);
-        const char *type = c89_emit_type(emit, get_hlir_type(param), get_hlir_name(param));
+        const char *type = c89_emit_type(emit, param, get_hlir_name(param));
         vector_set(result, i, (void *)type);
     }
 

@@ -1,3 +1,3 @@
 tmux \
-    new-session 'scripts/run-afl-instance.sh tests/pl0/multi/0 pl0 pl0/pl0c ; bash' \; \
-    split-window -h 'scripts/run-afl-instance.sh tests/ctu/types/alias/pass ctu ctu/ctc ; bash' \;
+    new-session 'scripts/run-afl-instance.sh tests/lang/pl0/fuzzing-input pl0 pl0 ; bash' \; \
+    split-window -h 'scripts/run-afl-instance.sh tests/lang/ctu/fuzzing-input ctu ctu ; bash' \;

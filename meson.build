@@ -1,6 +1,6 @@
 project('cthulhu', [ 'c' ],
     license : 'LGPLv3',
-    version : '0.2.1',
+    version : '0.2.2',
     meson_version : '>=0.59',
     default_options : [
         'c_std=gnu11',
@@ -152,7 +152,7 @@ if afl.found()
 
     here = meson.current_source_dir()
     foreach lang, interface : fuzzers
-        input = here/'tests/driver'/lang/'fuzzing-input'
+        input = here/'tests/lang'/lang/'fuzzing-input'
         cmd = [ afl, '-i', input, '-o', 'fuzz-out-' + lang, '-m', 'none', '-d', '--', interface.full_path(), '@@']
         run_target('fuzz-' + lang, 
             command : cmd,

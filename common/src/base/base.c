@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if ADDRSAN_ENABLED
+#   include <signal.h>
+#endif
+
 #if ENABLE_TUNING
 #    include <malloc.h>
 #    include <sys/types.h>
@@ -172,7 +176,12 @@ void ctpanic(const char *msg, ...)
     vfprintf(stderr, msg, args);
     va_end(args);
 
+#if ADDRSAN_ENABLED
+    raise(SIGSEGV);
+    exit(EXIT_INTERNAL);
+#else
     abort();
+#endif
 }
 
 USE_DECL
