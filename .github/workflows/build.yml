@@ -3,17 +3,17 @@ on:
   push:
     branches: [master]
     paths:
-      - 'src/**'
-      - 'include/**'
+      - 'common/**'
+      - 'cthulhu/**'
       - 'driver/**'
-      - 'plugins/**'
+      - 'interface/**'
   pull_request:
     branches: [master]
     paths:
-      - 'src/**'
-      - 'include/**'
+      - 'common/**'
+      - 'cthulhu/**'
       - 'driver/**'
-      - 'plugins/**'
+      - 'interface/**'
 
 jobs:
   run-tests:
@@ -31,4 +31,4 @@ jobs:
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: test
-          meson-version: 0.58.0
+          meson-version: 0.59.0
