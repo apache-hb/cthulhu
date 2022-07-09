@@ -1,6 +1,6 @@
 #include "sema.h"
-#include "attribs.h"
 #include "ast.h"
+#include "attribs.h"
 #include "repr.h"
 
 #include "cthulhu/hlir/decl.h"
@@ -155,12 +155,7 @@ static void add_basic_types(sema_t *sema)
 void ctu_init_compiler(runtime_t *runtime)
 {
     size_t sizes[eTagTotal] = {
-        [eTagValues] = 1,
-        [eTagProcs] = 1,
-        [eTagTypes] = 32,
-        [eTagModules] = 1,
-        [eTagAttribs] = 1
-    };
+        [eTagValues] = 1, [eTagProcs] = 1, [eTagTypes] = 32, [eTagModules] = 1, [eTagAttribs] = 1};
 
     kRootSema = sema_new(NULL, runtime->reports, eTagTotal, sizes);
 
@@ -305,7 +300,8 @@ static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
 
     if (!hlir_is(type, eHlirDigit))
     {
-        report(sema->reports, eFatal, ast->node, "cannot perform binary operations on %s", ctu_repr(sema->reports, type, true));
+        report(sema->reports, eFatal, ast->node, "cannot perform binary operations on %s",
+               ctu_repr(sema->reports, type, true));
     }
 
     return hlir_binary(ast->node, type, ast->binary, lhs, rhs);
@@ -320,7 +316,8 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
 
     if (!hlir_is(type, eHlirDigit))
     {
-        report(sema->reports, eFatal, ast->node, "cannot perform comparison operations on %s", ctu_repr(sema->reports, type, true));
+        report(sema->reports, eFatal, ast->node, "cannot perform comparison operations on %s",
+               ctu_repr(sema->reports, type, true));
     }
 
     return hlir_compare(ast->node, kBoolType, ast->compare, lhs, rhs);
@@ -383,7 +380,8 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
 
         if (!hlir_types_equal(argType, expectedType))
         {
-            message_t *id = report(sema->reports, eFatal, arg->node, "incorrect argument type `%s`", ctu_repr(sema->reports, argType, true));
+            message_t *id = report(sema->reports, eFatal, arg->node, "incorrect argument type `%s`",
+                                   ctu_repr(sema->reports, argType, true));
             report_note(id, "expecting '%s' instead", ctu_repr(sema->reports, expectedType, true));
         }
 
@@ -448,12 +446,7 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     hlir_t *cond = sema_expr(sema, ast->cond);
 
     size_t sizes[eTagTotal] = {
-        [eTagValues] = 32,
-        [eTagProcs] = 32,
-        [eTagTypes] = 32,
-        [eTagModules] = 1,
-        [eTagAttribs] = 1
-    };
+        [eTagValues] = 32, [eTagProcs] = 32, [eTagTypes] = 32, [eTagModules] = 1, [eTagAttribs] = 1};
 
     sema_t *nestThen = sema_new(sema, sema->reports, eTagTotal, sizes);
 
@@ -484,7 +477,8 @@ static hlir_t *sema_local(sema_t *sema, ast_t *stmt)
     if ((stmt->init != NULL && stmt->expected != NULL) && !hlir_types_equal(type, get_hlir_type(init)))
     {
         message_t *id = report(sema->reports, eFatal, stmt->node, "incompatible initializer and explicit type");
-        report_underline(id, "found '%s', expected '%s'", ctu_repr(sema->reports, type, true), ctu_repr(sema->reports, get_hlir_type(init), true));
+        report_underline(id, "found '%s', expected '%s'", ctu_repr(sema->reports, type, true),
+                         ctu_repr(sema->reports, get_hlir_type(init), true));
         return hlir_error(stmt->node, "invalid local declaration");
     }
 
@@ -648,12 +642,7 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_t *body = NULL;
 
     size_t tags[eTagTotal] = {
-        [eTagValues] = 32,
-        [eTagProcs] = 32,
-        [eTagTypes] = 32,
-        [eTagModules] = 32,
-        [eTagAttribs] = 32
-    };
+        [eTagValues] = 32, [eTagProcs] = 32, [eTagTypes] = 32, [eTagModules] = 32, [eTagAttribs] = 32};
 
     sema_t *nest = sema_new(sema, sema->reports, eTagTotal, tags);
     set_current_function(nest, decl);
@@ -680,7 +669,8 @@ static void sema_value(sema_t *sema, hlir_t *decl, ast_t *ast)
     if ((ast->expected && ast->init) && !hlir_types_equal(type, get_hlir_type(init)))
     {
         message_t *id = report(sema->reports, eFatal, ast->node, "invalid initializer type");
-        report_underline(id, "found '%s', expected '%s'", ctu_repr(sema->reports, get_hlir_type(init), true), ctu_repr(sema->reports, type, true));
+        report_underline(id, "found '%s', expected '%s'", ctu_repr(sema->reports, get_hlir_type(init), true),
+                         ctu_repr(sema->reports, type, true));
         return;
     }
 
@@ -836,13 +826,11 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
     ast_t *root = compile->ast;
 
     size_t totalDecls = vector_len(root->decls);
-    size_t sizes[eTagTotal] = {
-        [eTagValues] = totalDecls,
-        [eTagProcs] = totalDecls,
-        [eTagTypes] = totalDecls,
-        [eTagModules] = vector_len(root->imports),
-        [eTagAttribs] = totalDecls
-    };
+    size_t sizes[eTagTotal] = {[eTagValues] = totalDecls,
+                               [eTagProcs] = totalDecls,
+                               [eTagTypes] = totalDecls,
+                               [eTagModules] = vector_len(root->imports),
+                               [eTagAttribs] = totalDecls};
 
     sema_t *sema = sema_new(kRootSema, runtime->reports, eTagTotal, sizes);
     add_builtin_attribs(sema);

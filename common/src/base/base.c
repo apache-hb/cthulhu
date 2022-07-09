@@ -10,7 +10,7 @@
 #include <string.h>
 
 #if ADDRSAN_ENABLED
-#   include <signal.h>
+#    include <signal.h>
 #endif
 
 #if ENABLE_TUNING

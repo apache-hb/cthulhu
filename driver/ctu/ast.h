@@ -154,7 +154,8 @@ typedef struct ast_t
                 vector_t *fields;
 
                 /* eAstDeclAlias */
-                struct {
+                struct
+                {
                     bool newtype;
                     struct ast_t *alias;
                 };

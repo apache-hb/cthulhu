@@ -250,7 +250,7 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
     {
         return true;
     }
-    
+
     hlir_kind_t lhsKind = get_hlir_kind(actualLhs);
     hlir_kind_t rhsKind = get_hlir_kind(actualRhs);
     if (lhsKind != rhsKind)

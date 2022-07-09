@@ -7,7 +7,7 @@ typedef struct reports_t reports_t;
 
 /**
  * @brief get a user readable string representation of a type
- * 
+ *
  * @param type the type to format
  * @param detail do we want a detailed name or a simple name
  * @return const char* the formatted name

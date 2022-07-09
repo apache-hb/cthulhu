@@ -89,9 +89,9 @@ void hlir_set_parent(hlir_t *self, const hlir_t *parent);
 
 /**
  * @brief set the type of a declaration or expression
- * 
+ *
  * @note use this with great care.
- * 
+ *
  * @param self the node to change the type of
  * @param type the type to update to
  */

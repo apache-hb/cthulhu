@@ -1,15 +1,15 @@
 #include "attribs.h"
 #include "sema.h"
 
+#include "base/macros.h"
+#include "base/util.h"
 #include "std/map.h"
 #include "std/str.h"
-#include "base/util.h"
-#include "base/macros.h"
 
 #include "cthulhu/hlir/sema.h"
 
-#include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/decl.h"
+#include "cthulhu/hlir/query.h"
 
 static attrib_t *new_attrib(const char *name, hlir_kind_t expected, apply_attribs_t apply)
 {
@@ -66,7 +66,7 @@ static hlir_attributes_t *apply_entry(sema_t *sema, hlir_t *hlir, ast_t *ast)
         report(sema->reports, eFatal, get_hlir_node(hlir), "entry point cannot be imported");
         return NULL;
     }
-    
+
     hlir_attributes_t *newAttributes = ctu_memdup(attribs, sizeof(hlir_attributes_t));
 
     newAttributes->linkage = linkage;
@@ -103,13 +103,8 @@ void add_builtin_attribs(sema_t *sema)
 }
 
 static const char *kDeclNames[eHlirTotal] = {
-    [eHlirStruct] = "struct",
-    [eHlirUnion] = "union",
-    [eHlirAlias] = "type aliase",
-    [eHlirFunction] = "function",
-    [eHlirGlobal] = "global value",
-    [eHlirField] = "field"
-};
+    [eHlirStruct] = "struct",     [eHlirUnion] = "union",         [eHlirAlias] = "type aliase",
+    [eHlirFunction] = "function", [eHlirGlobal] = "global value", [eHlirField] = "field"};
 
 void apply_attributes(sema_t *sema, hlir_t *hlir, ast_t *ast)
 {
@@ -132,7 +127,8 @@ void apply_attributes(sema_t *sema, hlir_t *hlir, ast_t *ast)
     hlir_kind_t kind = get_hlir_kind(hlir);
     if (kind != attrib->expectedKind)
     {
-        report(sema->reports, eFatal, attr->node, "attribute '%s' is for %ss, was provided with a %s instead", attrib->name, kDeclNames[attrib->expectedKind], kDeclNames[kind]);
+        report(sema->reports, eFatal, attr->node, "attribute '%s' is for %ss, was provided with a %s instead",
+               attrib->name, kDeclNames[attrib->expectedKind], kDeclNames[kind]);
         return;
     }
 

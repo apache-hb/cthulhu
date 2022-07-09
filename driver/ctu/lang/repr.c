@@ -30,7 +30,7 @@ static const char *repr_array(reports_t *reports, const hlir_t *type, bool detai
         return format("[]%s (aka '%s')", inner, name);
     }
 
-    return format ("[]%s", inner);
+    return format("[]%s", inner);
 }
 
 static const char *repr_alias(reports_t *reports, const hlir_t *type, bool detail)

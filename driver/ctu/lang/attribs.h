@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cthulhu/hlir/hlir.h"
 #include "ast.h"
+#include "cthulhu/hlir/hlir.h"
 
 typedef struct map_t map_t;
 typedef struct sema_t sema_t;
