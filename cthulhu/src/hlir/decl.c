@@ -199,3 +199,8 @@ hlir_t *hlir_module(node_t node, const char *name, vector_t *types, vector_t *gl
     hlir_build_module(self, types, globals, functions);
     return self;
 }
+
+void hlir_set_type(hlir_t *self, const hlir_t *type)
+{
+    self->of = type;
+}

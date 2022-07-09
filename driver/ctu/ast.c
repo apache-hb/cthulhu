@@ -2,6 +2,8 @@
 
 #include "base/util.h"
 
+#include "report/report.h"
+
 static ast_t *ast_new(astof_t of, scan_t scan, where_t where)
 {
     ast_t *ast = ctu_malloc(sizeof(ast_t));
@@ -56,11 +58,18 @@ ast_t *ast_function(scan_t scan, where_t where, char *name, ast_t *signature, as
     return ast;
 }
 
-ast_t *ast_variable(scan_t scan, where_t where, char *name, bool mut, ast_t *init)
+ast_t *ast_variable(scan_t scan, where_t where, char *name, bool mut, ast_t *expected, ast_t *init)
 {
     ast_t *ast = ast_decl(eAstVariable, name, scan, where);
     ast->mut = mut;
+    ast->expected = expected;
     ast->init = init;
+
+    if (expected == NULL && init == NULL)
+    {
+        report(scan_reports(scan), eFatal, ast->node, "uninitialized variable requires an explicit type annotation");
+    }
+
     return ast;
 }
 
@@ -198,9 +207,10 @@ ast_t *ast_uniondecl(scan_t scan, where_t where, char *name, vector_t *fields)
     return ast;
 }
 
-ast_t *ast_typealias(scan_t scan, where_t where, char *name, ast_t *type)
+ast_t *ast_typealias(scan_t scan, where_t where, char *name, bool newtype, ast_t *type)
 {
     ast_t *ast = ast_decl(eAstDeclAlias, name, scan, where);
+    ast->newtype = newtype;
     ast->alias = type;
     return ast;
 }

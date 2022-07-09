@@ -104,7 +104,26 @@ tests = {
             'invalid-attribute',
             'multiple-entry'
         ]
+    },
+    'variables': {
+        'fail': [
+            'bad-type',
+            'invalid',
+            'newtype-init',
+            'noinit-local',
+            'noinit-notype',
+            'recursive'
+        ],
+        'pass': [
+            'alias-init',
+            'local-noinit',
+            'uninit'
+        ]
     }
+}
+
+crashes = {
+    '0': false
 }
 
 cases = {
@@ -178,4 +197,14 @@ foreach name, data : cases
             suite : 'ctu'
         )
     endforeach
+endforeach
+
+
+foreach case, success : crashes
+    path = dir/'crashes'/case + '.pl0'
+    test('crash-' + case, ctc,
+        args : [ path ],
+        suite : 'ctu',
+        should_fail : not success
+    )
 endforeach

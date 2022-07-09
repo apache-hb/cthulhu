@@ -1,0 +1,3 @@
+def local: int {
+    const i: int = __noinit;
+}

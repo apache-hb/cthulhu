@@ -114,6 +114,7 @@ WS [ \t\r\v\n\f]
 "as" { return AS; }
 
 "__null" { return NIL; }
+"__noinit" { return NOINIT; }
 
 "__match" { return MATCH; }
 "__default" { return DEFAULT; }
@@ -125,6 +126,7 @@ WS [ \t\r\v\n\f]
 "__where" { return WHERE; }
 "__when" { return WHEN; }
 "__then" { return THEN; }
+"__with" { return WITH; }
 
 "__in" { return IN; }
 "__out" { return OUT; }
@@ -138,8 +140,16 @@ WS [ \t\r\v\n\f]
 "__await" { return AWAIT; }
 "__yield" { return YIELD; }
 
+"__unique" { return UNIQUE; }
+"__shared" { return SHARED; }
+"__strong" { return STRONG; }
+"__weak" { return WEAK; }
+"__move" { return MOVE; }
+
 "__compile" { return COMPILED; }
 "__static" { return COMPILED; }
+"__explicit" { return EXPLICIT; }
+"__inline" { return INLINE; }
 
 "__try" { return TRY; }
 "__catch" { return CATCH; }

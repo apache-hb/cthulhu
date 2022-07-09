@@ -236,7 +236,7 @@ static LONG WINAPI exception_filter(LPEXCEPTION_POINTERS info)
 
 void native_install_segfault(void)
 {
-    AddVectoredExceptionHandler(1, exception_filter);
+    AddVectoredExceptionHandler(0, exception_filter);
 }
 
 USE_DECL

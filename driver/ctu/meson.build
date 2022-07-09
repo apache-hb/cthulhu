@@ -4,6 +4,7 @@ src = [
     'ast.c', 
     'lang/sema.c', 
     'lang/attribs.c',
+    'lang/repr.c',
     lex.process('ctu.l'), 
     parse.process('ctu.y') 
 ]

@@ -226,10 +226,33 @@ const char *hlir_digit_to_string(digit_t digit)
     return kDigitNames[digit];
 }
 
+const hlir_t *hlir_follow_type(const hlir_t *hlir)
+{
+    if (hlir_is(hlir, eHlirAlias) && !hlir->newtype)
+    {
+        return hlir_follow_type(hlir->alias);
+    }
+
+    if (hlir_is(hlir, eHlirParam))
+    {
+        return hlir_follow_type(get_hlir_type(hlir));
+    }
+
+    return hlir;
+}
+
 bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
 {
-    hlir_kind_t lhsKind = get_hlir_kind(lhs);
-    hlir_kind_t rhsKind = get_hlir_kind(rhs);
+    const hlir_t *actualLhs = hlir_follow_type(lhs);
+    const hlir_t *actualRhs = hlir_follow_type(rhs);
+
+    if ((lhs == rhs) || (actualLhs == actualRhs))
+    {
+        return true;
+    }
+    
+    hlir_kind_t lhsKind = get_hlir_kind(actualLhs);
+    hlir_kind_t rhsKind = get_hlir_kind(actualRhs);
     if (lhsKind != rhsKind)
     {
         return false;
@@ -238,10 +261,15 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
     switch (lhsKind)
     {
     case eHlirDigit:
-        return lhs->digit == rhs->digit && lhs->sign == rhs->sign;
+        return actualLhs->digit == actualRhs->digit && actualLhs->sign == actualRhs->sign;
     case eHlirString: // TODO: update this when we have multiple string encodings
     case eHlirBool:
+    case eHlirVoid:
         return true;
+
+    case eHlirAlias:
+    case eHlirError: // TODO: are errors always equal, or never equal?
+        return false;
 
     default:
         CTASSERT(false, "unknown type");

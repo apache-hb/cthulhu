@@ -1,0 +1,3 @@
+variant x = int;
+
+const i: x = 25;

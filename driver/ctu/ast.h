@@ -154,7 +154,10 @@ typedef struct ast_t
                 vector_t *fields;
 
                 /* eAstDeclAlias */
-                struct ast_t *alias;
+                struct {
+                    bool newtype;
+                    struct ast_t *alias;
+                };
 
                 /* eAstParam */
                 struct ast_t *param;
@@ -166,6 +169,7 @@ typedef struct ast_t
                 struct
                 {
                     bool mut;
+                    struct ast_t *expected;
                     struct ast_t *init;
                 };
 
@@ -191,7 +195,7 @@ ast_t *ast_attribute(scan_t scan, where_t where, char *name, vector_t *args);
 /// declarations
 
 ast_t *ast_function(scan_t scan, where_t where, char *name, ast_t *signature, ast_t *body);
-ast_t *ast_variable(scan_t scan, where_t where, char *name, bool mut, ast_t *init);
+ast_t *ast_variable(scan_t scan, where_t where, char *name, bool mut, ast_t *expected, ast_t *init);
 
 /// expressions
 
@@ -226,7 +230,7 @@ ast_t *ast_closure(scan_t scan, where_t where, vector_t *params, bool variadic, 
 
 ast_t *ast_structdecl(scan_t scan, where_t where, char *name, vector_t *fields);
 ast_t *ast_uniondecl(scan_t scan, where_t where, char *name, vector_t *fields);
-ast_t *ast_typealias(scan_t scan, where_t where, char *name, ast_t *type);
+ast_t *ast_typealias(scan_t scan, where_t where, char *name, bool newtype, ast_t *type);
 ast_t *ast_variantdecl(scan_t scan, where_t where, char *name, vector_t *fields);
 
 /// extra type data

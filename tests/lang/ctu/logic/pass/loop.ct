@@ -1,0 +1,9 @@
+@extern
+def puts(s: str): int;
+
+@entry
+def main {
+    while true {
+        puts("hello world");
+    }
+}

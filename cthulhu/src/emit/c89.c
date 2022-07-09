@@ -963,10 +963,17 @@ static void c89_emit_global(c89_emit_t *emit, const hlir_t *hlir)
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
     const char *name = c89_mangle_name(emit, hlir);
     const char *type = c89_emit_type(emit, get_hlir_type(hlir), name);
-    const char *expr = c89_emit_rvalue(emit, hlir->value);
     const char *linkage = c89_get_linkage(attribs->linkage);
 
-    WRITE_STRINGF(emit, "%s%s[1] = { %s };\n", linkage, type, expr);
+    if (hlir->value != NULL)
+    {
+        const char *expr = c89_emit_rvalue(emit, hlir->value);
+        WRITE_STRINGF(emit, "%s%s[1] = { %s };\n", linkage, type, expr);
+    }
+    else
+    {
+        WRITE_STRINGF(emit, "%s%s[1];\n", linkage, type);
+    }
 }
 
 static void c89_emit_globals(c89_emit_t *emit, size_t totalDecls, vector_t *modules)

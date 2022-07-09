@@ -122,6 +122,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     AS "`as`"
 
     NIL "`null`"
+    NOINIT "`noinit`"
 
     MATCH "`match`"
     DEFAULT "`default`"
@@ -133,6 +134,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     WHERE "`where`"
     WHEN "`when`"
     THEN "`then`"
+    WITH "`with`"
 
     IN "`in`"
     OUT "`out`"
@@ -145,6 +147,12 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     ASYNC "`async`"
     AWAIT "`await`"
     YIELD "`yield`"
+
+    UNIQUE "`unique`"
+    SHARED "`shared`"
+    STRONG "`strong`"
+    WEAK "`weak`"
+    MOVE "`move`"
 
     CONTRACT "`contract`"
     REQUIRES "`requires`"
@@ -165,6 +173,8 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
 
     COMPILED "`compile`"
     STATIC "`static`"
+    EXPLICIT "`explicit`"
+    INLINE "`inline`"
 
 %type<ast>
     modspec decl innerdecl
@@ -179,6 +189,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     expr postfix unary multiply add 
     compare equality shift bits xor and or
     primary else
+    varinit vartype
 
 %type<vector>
     path decls decllist
@@ -242,7 +253,15 @@ innerdecl: structdecl { $$ = $1; }
 funcdecl: DEF IDENT funcsig funcbody { $$ = ast_function(x, @$, $2, $3, $4); }
     ;
 
-vardecl: mut IDENT EQUALS expr SEMICOLON { $$ = ast_variable(x, @$, $2, $1, $4); }
+vardecl: mut IDENT vartype EQUALS varinit SEMICOLON { $$ = ast_variable(x, @$, $2, $1, $3, $5); }
+    ;
+
+vartype: %empty { $$ = NULL; }
+    | COLON type { $$ = $2; }
+    ;
+
+varinit: expr { $$ = $1; }
+    | NOINIT { $$ = NULL; }
     ;
 
 mut: VAR { $$ = true; }
@@ -273,7 +292,7 @@ funcbody: SEMICOLON { $$ = NULL; }
     | stmts { $$ = $1; }
     ;
 
-aliasdecl: TYPE IDENT EQUALS type SEMICOLON { $$ = ast_typealias(x, @$, $2, $4); }
+aliasdecl: TYPE IDENT EQUALS type SEMICOLON { $$ = ast_typealias(x, @$, $2, false, $4); }
     ;
 
 structdecl: STRUCT IDENT aggregates { $$ = ast_structdecl(x, @$, $2, $3); }
@@ -283,6 +302,7 @@ uniondecl: UNION IDENT aggregates { $$ = ast_uniondecl(x, @$, $2, $3); }
     ;
 
 variantdecl: VARIANT IDENT LBRACE variants RBRACE { $$ = ast_variantdecl(x, @$, $2, $4); }
+    | VARIANT IDENT EQUALS type SEMICOLON { $$ = ast_typealias(x, @$, $2, true, $4); }
     ;
 
 variants: %empty { $$ = vector_new(0); }
