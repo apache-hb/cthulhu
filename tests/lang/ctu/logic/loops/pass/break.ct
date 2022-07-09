@@ -1,0 +1,6 @@
+@entry
+def main {
+    while true {
+        break;
+    }
+}

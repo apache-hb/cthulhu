@@ -1,0 +1,8 @@
+@entry
+def main {
+    outer: while true {
+        while true {
+            break outer;
+        }
+    }
+}

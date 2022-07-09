@@ -32,11 +32,13 @@ typedef enum
     eHlirCompare, ///< a comparison operation
     eHlirCall,    ///< a function call
 
-    eHlirStmts,  ///< a list of statements
-    eHlirBranch, ///< a conditional branch
-    eHlirLoop,   ///< a loop on a condition
-    eHlirAssign, ///< an assignment
-    eHlirReturn, ///< a return statement
+    eHlirStmts,    ///< a list of statements
+    eHlirBranch,   ///< a conditional branch
+    eHlirLoop,     ///< a loop on a condition
+    eHlirBreak,    ///< break out of a loop
+    eHlirContinue, ///< continue to next iteration
+    eHlirAssign,   ///< an assignment
+    eHlirReturn,   ///< a return statement
 
     eHlirStruct,  ///< a record type
     eHlirUnion,   ///< an untagged union type
@@ -135,6 +137,9 @@ typedef struct hlir_t
             struct hlir_t *then;
             struct hlir_t *other;
         };
+
+        /* eHlirBreak | eHlirContinue */
+        struct hlir_t *target;
 
         struct
         {
@@ -306,7 +311,11 @@ hlir_t *hlir_call(node_t node, hlir_t *call, vector_t *args);
 
 hlir_t *hlir_stmts(node_t node, vector_t *stmts);
 hlir_t *hlir_branch(node_t node, hlir_t *cond, hlir_t *then, hlir_t *other);
+
 hlir_t *hlir_loop(node_t node, hlir_t *cond, hlir_t *body, hlir_t *other);
+hlir_t *hlir_break(node_t node, hlir_t *target);
+hlir_t *hlir_continue(node_t node, hlir_t *target);
+
 hlir_t *hlir_assign(node_t node, hlir_t *dst, hlir_t *src);
 hlir_t *hlir_return(node_t node, hlir_t *result);
 

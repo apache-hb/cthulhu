@@ -119,6 +119,19 @@ tests = {
             'local-noinit',
             'uninit'
         ]
+    },
+    'logic.loops': {
+        'fail': [
+            'loop-nonbool-expr',
+            #'invalid-break-label',
+            #'incorrect-break-label'
+        ],
+        'pass': [
+            'loop',
+            #'break',
+            #'break-label',
+            #'nested-break'
+        ]
     }
 }
 

@@ -142,23 +142,37 @@ ast_t *ast_return(scan_t scan, where_t where, ast_t *expr)
     return ast;
 }
 
-ast_t *ast_while(scan_t scan, where_t where, ast_t *cond, ast_t *body, ast_t *other)
+ast_t *ast_while(scan_t scan, where_t where, char *label, ast_t *cond, ast_t *body, ast_t *other)
 {
     ast_t *ast = ast_new(eAstWhile, scan, where);
+    ast->label = label;
     ast->cond = cond;
     ast->then = body;
     ast->other = other;
     return ast;
 }
 
-ast_t *ast_break(scan_t scan, where_t where)
+ast_t *ast_branch(scan_t scan, where_t where, ast_t *cond, ast_t *body, ast_t *other)
 {
-    return ast_new(eAstBreak, scan, where);
+    ast_t *ast = ast_new(eAstBranch, scan, where);
+    ast->cond = cond;
+    ast->body = body;
+    ast->other = other;
+    return ast;
 }
 
-ast_t *ast_continue(scan_t scan, where_t where)
+ast_t *ast_break(scan_t scan, where_t where, char *label)
 {
-    return ast_new(eAstContinue, scan, where);
+    ast_t *ast = ast_new(eAstBreak, scan, where);
+    ast->label = label;
+    return ast;
+}
+
+ast_t *ast_continue(scan_t scan, where_t where, char *label)
+{
+    ast_t *ast = ast_new(eAstContinue, scan, where);
+    ast->label = label;
+    return ast;
 }
 
 ast_t *ast_typename(scan_t scan, where_t where, vector_t *path)

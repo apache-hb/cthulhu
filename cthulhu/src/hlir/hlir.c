@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 
 hlir_t *hlir_error(node_t node, const char *error)
@@ -102,6 +103,20 @@ hlir_t *hlir_loop(node_t node, hlir_t *cond, hlir_t *body, hlir_t *other)
     self->cond = cond;
     self->then = body;
     self->other = other;
+    return self;
+}
+
+hlir_t *hlir_break(node_t node, hlir_t *target)
+{
+    hlir_t *self = hlir_new(node, kInvalidNode, eHlirBreak);
+    self->target = target;
+    return self;
+}
+
+hlir_t *hlir_continue(node_t node, hlir_t *target)
+{
+    hlir_t *self = hlir_new(node, kInvalidNode, eHlirContinue);
+    self->target = target;
     return self;
 }
 

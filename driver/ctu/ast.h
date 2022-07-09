@@ -31,6 +31,7 @@ typedef enum
     eAstStmts,
     eAstReturn,
     eAstWhile,
+    eAstBranch,
     eAstBreak,
     eAstContinue,
 
@@ -116,9 +117,10 @@ typedef struct ast_t
             bool variadic;
         };
 
-        /* eAstWhile */
+        /* eAstWhile | eAstBranch */
         struct
         {
+            char *label;
             struct ast_t *cond;
             struct ast_t *then;
             struct ast_t *other;
@@ -215,10 +217,12 @@ ast_t *ast_call(scan_t scan, where_t where, ast_t *call, vector_t *args);
 
 ast_t *ast_stmts(scan_t scan, where_t where, vector_t *stmts);
 ast_t *ast_return(scan_t scan, where_t where, ast_t *expr);
-ast_t *ast_while(scan_t scan, where_t where, ast_t *cond, ast_t *body, ast_t *other);
+ast_t *ast_while(scan_t scan, where_t where, char *label, ast_t *cond, ast_t *body, ast_t *other);
 
-ast_t *ast_break(scan_t scan, where_t where);
-ast_t *ast_continue(scan_t scan, where_t where);
+ast_t *ast_branch(scan_t scan, where_t where, ast_t *cond, ast_t *body, ast_t *other);
+
+ast_t *ast_break(scan_t scan, where_t where, char *label);
+ast_t *ast_continue(scan_t scan, where_t where, char *label);
 
 /// types
 

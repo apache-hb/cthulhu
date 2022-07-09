@@ -20,20 +20,33 @@ typedef struct
 {
     size_t totalDecls;
     hlir_t *parentModule;
-    hlir_t *currentFunction;
+
+    hlir_t *currentFunction; // current function we are adding locals to
 } sema_data_t;
 
 static void set_current_function(sema_t *sema, hlir_t *function)
 {
-    sema_data_t *data = ctu_malloc(sizeof(sema_data_t));
+    sema_data_t *data = sema_get_data(sema);
     data->currentFunction = function;
-    sema_set_data(sema, data);
 }
 
 static hlir_t *get_current_function(sema_t *sema)
 {
     sema_data_t *data = sema_get_data(sema);
     return data->currentFunction;
+}
+
+static sema_t *begin_sema(sema_t *parent, reports_t *reports, size_t *sizes)
+{
+    sema_data_t *data = parent != NULL ? sema_get_data(parent) : ctu_malloc(sizeof(sema_data_t));
+    if (parent == NULL)
+    {
+        data->currentFunction = NULL;
+    }
+
+    sema_t *sema = sema_new(parent, (reports != NULL ? reports : parent->reports), eTagTotal, sizes);
+    sema_set_data(sema, data);
+    return sema;
 }
 
 static const char *kDigitNames[eSignTotal][eDigitTotal] = {
@@ -157,7 +170,7 @@ void ctu_init_compiler(runtime_t *runtime)
     size_t sizes[eTagTotal] = {
         [eTagValues] = 1, [eTagProcs] = 1, [eTagTypes] = 32, [eTagModules] = 1, [eTagAttribs] = 1};
 
-    kRootSema = sema_new(NULL, runtime->reports, eTagTotal, sizes);
+    kRootSema = begin_sema(NULL, runtime->reports, sizes);
 
     node_t node = node_builtin();
 
@@ -448,14 +461,14 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     size_t sizes[eTagTotal] = {
         [eTagValues] = 32, [eTagProcs] = 32, [eTagTypes] = 32, [eTagModules] = 1, [eTagAttribs] = 1};
 
-    sema_t *nestThen = sema_new(sema, sema->reports, eTagTotal, sizes);
+    sema_t *nestThen = begin_sema(sema, sema->reports, sizes);
 
     hlir_t *then = sema_stmt(nestThen, ast->then);
     hlir_t *other = NULL;
 
     if (ast->other != NULL)
     {
-        sema_t *nextOther = sema_new(sema, sema->reports, eTagTotal, sizes);
+        sema_t *nextOther = begin_sema(sema, sema->reports, sizes);
         other = sema_stmt(nextOther, ast->other);
     }
 
@@ -496,6 +509,12 @@ static hlir_t *sema_local(sema_t *sema, ast_t *stmt)
     }
 }
 
+static hlir_t *sema_break(sema_t *sema, ast_t *stmt)
+{
+    UNUSED(sema);
+    return hlir_break(stmt->node, NULL);
+}
+
 static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
 {
     switch (stmt->of)
@@ -509,11 +528,21 @@ static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
     case eAstWhile:
         return sema_while(sema, stmt);
 
+    case eAstDigit:
+    case eAstBool:
+    case eAstName:
+    case eAstString:
+    case eAstUnary:
+    case eAstBinary:
+    case eAstCompare:
     case eAstCall:
         return sema_expr(sema, stmt);
 
     case eAstVariable:
         return sema_local(sema, stmt);
+
+    case eAstBreak:
+        return sema_break(sema, stmt);
 
     default:
         report(sema->reports, eInternal, stmt->node, "unknown sema-stmt: %d", stmt->of);
@@ -644,7 +673,7 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     size_t tags[eTagTotal] = {
         [eTagValues] = 32, [eTagProcs] = 32, [eTagTypes] = 32, [eTagModules] = 32, [eTagAttribs] = 32};
 
-    sema_t *nest = sema_new(sema, sema->reports, eTagTotal, tags);
+    sema_t *nest = begin_sema(sema, sema->reports, tags);
     set_current_function(nest, decl);
     sema_params(nest, decl->params);
 
@@ -832,7 +861,7 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
                                [eTagModules] = vector_len(root->imports),
                                [eTagAttribs] = totalDecls};
 
-    sema_t *sema = sema_new(kRootSema, runtime->reports, eTagTotal, sizes);
+    sema_t *sema = begin_sema(kRootSema, runtime->reports, sizes);
     add_builtin_attribs(sema);
 
     char *name = NULL;

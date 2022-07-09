@@ -190,6 +190,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     compare equality shift bits xor and or
     primary else
     varinit vartype
+    branch elif
 
 %type<vector>
     path decls decllist
@@ -201,6 +202,9 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
 
 %type<funcparams>
     funcparams opttypes types
+
+%type<ident>
+    label block
 
 %type<boolean>
     mut
@@ -341,11 +345,28 @@ stmts: LBRACE RBRACE { $$ = ast_stmts(x, @$, vector_of(0)); }
 
 stmt: stmts { $$ = $1; }
     | RETURN expr SEMICOLON { $$ = ast_return(x, @$, $2); }
-    | WHILE expr stmts else { $$ = ast_while(x, @$, $2, $3, $4); }
-    | BREAK SEMICOLON { $$ = ast_break(x, @$); }
-    | CONTINUE SEMICOLON { $$ = ast_continue(x, @$); }
+    | block WHILE expr stmts else { $$ = ast_while(x, @$, $1, $3, $4, $5); }
+    | BREAK label SEMICOLON { $$ = ast_break(x, @$, $2); }
+    | CONTINUE label SEMICOLON { $$ = ast_continue(x, @$, $2); }
     | vardecl { $$ = $1; }
     | expr SEMICOLON { $$ = $1; }
+    | branch { $$ = $1; }
+    ;
+
+label: %empty { $$ = NULL; }
+    | IDENT { $$ = $1; }
+    ;
+
+block: %empty { $$ = NULL; }
+    | IDENT COLON { $$ = $1; }
+    ;
+
+branch: IF expr stmts elif { $$ = ast_branch(x, @$, $2, $3, $4); }
+    ;
+
+elif: %empty { $$ = NULL; }
+    | ELSE branch { $$ = $2;}
+    | ELSE stmts { $$ = $2; }
     ;
 
 else: %empty { $$ = NULL; }
