@@ -3,15 +3,15 @@ on:
   push:
     branches: [master]
     paths:
-      - 'src/**'
-      - 'include/**'
+      - 'common/**'
+      - 'cthulhu/**'
       - 'driver/**'
       - 'interface/**'
   pull_request:
     branches: [master]
     paths:
-      - 'src/**'
-      - 'include/**'
+      - 'common/**'
+      - 'cthulhu/**'
       - 'driver/**'
       - 'interface/**'
 
@@ -22,8 +22,8 @@ jobs:
     strategy:
       matrix:
         path:
-          - 'src'
-          - 'include'
+          - 'common'
+          - 'cthulhu'
           - 'driver'
           - 'interface'
     steps:
