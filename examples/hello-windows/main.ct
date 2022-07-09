@@ -1,0 +1,11 @@
+type HINSTANCE = *void;
+type HWND = *void;
+const NULL = 0 as *void;
+
+@extern
+def MessageBox(hwnd: HWND, lpText: str, lpCaption: str, uType: uint): int;
+
+@entry(gui)
+def main(hInstance: HINSTANCE, hPrevInstances: HINSTANCE, pCmdLine: str, nCmdShow: int): int {
+    return MessageBox(null, "hello windows", "title", 0);
+}
