@@ -15,12 +15,23 @@
 * integer literal suffixes
 * return type checking
 * entire expression list
-* syntax for newtypes rather than aliases
+* syntax for newtypes
 * unary ooperations
 * all comparisons
 * variants
+* C interop
+* COM interop
 
 ## not yet started
 * branches
-* for loop
+* for loops
+* with blocks
 * state mutation
+* casts
+
+## bikeshedding
+* contracts
+* generics
+* interfaces
+* inheritance
+* objects
