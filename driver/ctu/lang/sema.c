@@ -340,7 +340,7 @@ static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
     case eUnaryNeg:
     case eUnaryBitflip:
         return sema_unary_digit(sema, ast, operand);
-        
+
     case eUnaryNot:
         return sema_unary_bool(sema, ast, operand);
 
@@ -535,27 +535,48 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     return hlir_loop(ast->node, cond, then, other);
 }
 
-// TODO: merge this logic with global init
-static hlir_t *sema_local(sema_t *sema, ast_t *stmt)
+typedef struct
+{
+    const hlir_t *type;
+    hlir_t *init;
+} sema_value_t;
+
+static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
 {
     hlir_t *init = stmt->init != NULL ? sema_expr(sema, stmt->init) : NULL;
     const hlir_t *type = stmt->expected != NULL ? sema_type(sema, stmt->expected) : get_hlir_type(init);
+
+    sema_value_t result = { type, init };
 
     if ((stmt->init != NULL && stmt->expected != NULL) && !hlir_types_equal(type, get_hlir_type(init)))
     {
         message_t *id = report(sema->reports, eFatal, stmt->node, "incompatible initializer and explicit type");
         report_underline(id, "found '%s', expected '%s'", ctu_repr(sema->reports, type, true),
                          ctu_repr(sema->reports, get_hlir_type(init), true));
-        return hlir_error(stmt->node, "invalid local declaration");
+        result.init = hlir_error(stmt->node, "invalid value declaration");
+        return result;
     }
 
-    hlir_t *local = hlir_local(stmt->node, stmt->name, type);
+    return result;
+}
+
+// TODO: merge this logic with global init
+static hlir_t *sema_local(sema_t *sema, ast_t *stmt)
+{
+    sema_value_t value = sema_value(sema, stmt);
+    
+    if (value.init != NULL && hlir_is(value.init, eHlirError))
+    {
+        return value.init;
+    }
+
+    hlir_t *local = hlir_local(stmt->node, stmt->name, value.type);
     add_decl(sema, eTagValues, stmt->name, local);
     hlir_add_local(get_current_function(sema), local);
 
-    if (init != NULL)
+    if (value.init != NULL)
     {
-        return hlir_assign(get_hlir_node(init), local, init);
+        return hlir_assign(get_hlir_node(value.init), local, value.init);
     }
     else
     {
@@ -748,21 +769,17 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_set_attributes(decl, attribs);
 }
 
-static void sema_value(sema_t *sema, hlir_t *decl, ast_t *ast)
+static void sema_global(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
-    hlir_t *init = ast->init != NULL ? sema_expr(sema, ast->init) : NULL;
-    const hlir_t *type = ast->expected != NULL ? sema_type(sema, ast->expected) : get_hlir_type(init);
+    sema_value_t result = sema_value(sema, ast);
 
-    if ((ast->expected && ast->init) && !hlir_types_equal(type, get_hlir_type(init)))
+    if (result.init != NULL && hlir_is(result.init, eHlirError))
     {
-        message_t *id = report(sema->reports, eFatal, ast->node, "invalid initializer type");
-        report_underline(id, "found '%s', expected '%s'", ctu_repr(sema->reports, get_hlir_type(init), true),
-                         ctu_repr(sema->reports, type, true));
         return;
     }
 
-    hlir_set_type(decl, type);
-    hlir_build_global(decl, init);
+    hlir_set_type(decl, result.type);
+    hlir_build_global(decl, result.init);
 }
 
 static void sema_decl(sema_t *sema, ast_t *ast)
@@ -798,7 +815,7 @@ static void sema_decl(sema_t *sema, ast_t *ast)
 
     case eAstVariable:
         decl = sema_get(sema, eTagValues, ast->name);
-        sema_value(sema, decl, ast);
+        sema_global(sema, decl, ast);
         break;
 
     default:

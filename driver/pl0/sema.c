@@ -276,7 +276,7 @@ static hlir_t *sema_stmt(sema_t *sema, pl0_t *node)
     }
 }
 
-static hlir_t *sema_value(sema_t *sema, pl0_t *node)
+static hlir_t *sema_global(sema_t *sema, pl0_t *node)
 {
     pl0_t *val = node->value;
     if (val == NULL)
@@ -500,14 +500,14 @@ void pl0_compile_module(runtime_t *runtime, compile_t *compile)
     {
         pl0_t *it = vector_get(root->consts, i);
         hlir_t *hlir = vector_get(semaData->consts, i);
-        hlir_build_global(hlir, sema_value(sema, it));
+        hlir_build_global(hlir, sema_global(sema, it));
     }
 
     for (size_t i = 0; i < semaData->totalGlobals; i++)
     {
         pl0_t *it = vector_get(root->globals, i);
         hlir_t *hlir = vector_get(semaData->globals, i);
-        hlir_build_global(hlir, sema_value(sema, it));
+        hlir_build_global(hlir, sema_global(sema, it));
     }
 
     for (size_t i = 0; i < semaData->totalProcs; i++)
