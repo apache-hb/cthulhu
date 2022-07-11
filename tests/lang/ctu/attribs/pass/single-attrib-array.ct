@@ -1,0 +1,2 @@
+@[entry(cli)]
+def hello: int = 5;

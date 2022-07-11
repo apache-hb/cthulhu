@@ -241,6 +241,22 @@ const hlir_t *hlir_follow_type(const hlir_t *hlir)
     return hlir;
 }
 
+const hlir_t *hlir_real_type(const hlir_t *hlir)
+{
+    if (hlir_is(hlir, eHlirAlias))
+    {
+        return hlir_follow_type(hlir->alias);
+    }
+
+    if (hlir_is(hlir, eHlirParam))
+    {
+        return hlir_follow_type(get_hlir_type(hlir));
+    }
+
+    return hlir;
+}
+
+
 bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
 {
     const hlir_t *actualLhs = hlir_follow_type(lhs);

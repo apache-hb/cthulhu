@@ -304,6 +304,52 @@ static hlir_t *sema_string(ast_t *ast)
     return hlir_string_literal(ast->node, kStringType, ast->string, ast->length);
 }
 
+static hlir_t *sema_unary_digit(sema_t *sema, ast_t *ast, hlir_t *operand)
+{
+    const hlir_t *type = get_hlir_type(operand);
+    const hlir_t *realType = hlir_real_type(type);
+
+    if (!hlir_is(realType, eHlirDigit))
+    {
+        report(sema->reports, eFatal, ast->node, "cannot perform integer unary operation on '%s'", ctu_repr(sema->reports, type, true));
+    }
+
+    return hlir_unary(ast->node, type, operand, ast->unary);
+}
+
+static hlir_t *sema_unary_bool(sema_t *sema, ast_t *ast, hlir_t *operand)
+{
+    const hlir_t *type = get_hlir_type(operand);
+    const hlir_t *realType = hlir_real_type(type);
+
+    if (!hlir_is(realType, eHlirDigit))
+    {
+        report(sema->reports, eFatal, ast->node, "cannot perform boolean unary operation on '%s'", ctu_repr(sema->reports, type, true));
+    }
+
+    return hlir_unary(ast->node, type, operand, ast->unary);
+}
+
+static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
+{
+    hlir_t *operand = sema_expr(sema, ast->operand);
+
+    switch (ast->unary)
+    {
+    case eUnaryAbs:
+    case eUnaryNeg:
+    case eUnaryBitflip:
+        return sema_unary_digit(sema, ast, operand);
+        
+    case eUnaryNot:
+        return sema_unary_bool(sema, ast, operand);
+
+    default:
+        report(sema->reports, eInternal, ast->node, "unexpected unary operand %s", unary_name(ast->unary));
+        return hlir_error(ast->node, "unsupported unary operand");
+    }
+}
+
 static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
 {
     hlir_t *lhs = sema_expr(sema, ast->lhs);
@@ -414,6 +460,8 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_bool(ast);
     case eAstString:
         return sema_string(ast);
+    case eAstUnary:
+        return sema_unary(sema, ast);
     case eAstBinary:
         return sema_binary(sema, ast);
     case eAstCompare:
@@ -456,6 +504,11 @@ static hlir_t *sema_return(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_while(sema_t *sema, ast_t *ast)
 {
+    if (ast->label != NULL)
+    {
+        report(sema->reports, eInternal, ast->node, "loop labels not yet supported");
+    }
+    
     hlir_t *cond = sema_expr(sema, ast->cond);
 
     size_t sizes[eTagTotal] = {
@@ -482,6 +535,7 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     return hlir_loop(ast->node, cond, then, other);
 }
 
+// TODO: merge this logic with global init
 static hlir_t *sema_local(sema_t *sema, ast_t *stmt)
 {
     hlir_t *init = stmt->init != NULL ? sema_expr(sema, stmt->init) : NULL;
@@ -511,7 +565,11 @@ static hlir_t *sema_local(sema_t *sema, ast_t *stmt)
 
 static hlir_t *sema_break(sema_t *sema, ast_t *stmt)
 {
-    UNUSED(sema);
+    if (stmt->label != NULL)
+    {
+        report(sema->reports, eInternal, stmt->node, "loop labels not yet supported"); // TODO: support labels
+    }
+
     return hlir_break(stmt->node, NULL);
 }
 

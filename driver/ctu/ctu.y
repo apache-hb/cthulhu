@@ -50,6 +50,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     BOOLEAN "boolean literal"
 
 %token
+    BITNOT "`~`"
     AT "`@`"
     COLON "`:`"
     COLON2 "`::`"
@@ -177,8 +178,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     INLINE "`inline`"
 
 %type<ast>
-    modspec decl innerdecl
-    attrib
+    modspec decl innerDecl
     structdecl uniondecl variantdecl aliasdecl
     field variant 
     funcdecl funcresult funcbody funcsig
@@ -235,18 +235,32 @@ decllist: decl { $$ = vector_init($1); }
     | decllist decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: innerdecl { $$ = $1; }
-    | attrib innerdecl { $2->attrib = $1; $$ = $2; }
+decl: optAttribs innerDecl { set_attribs($2, collect_attributes(x)); $$ = $2; }
     ;
 
-attrib: AT IDENT attrargs { $$ = ast_attribute(x, @$, $2, $3); } 
+optAttribs: %empty | attribs ;
+
+attribs: attrib | attribs attrib ;
+
+attrib: AT attribBody
+    | AT attribList
+    ;
+    
+attribList: LSQUARE attribBodyList RSQUARE
+    ;
+
+attribBodyList: attribBody
+    | attribBodyList COMMA attribBody
+    ;
+
+attribBody: IDENT attrargs { add_attribute(x, ast_attribute(x, @$, $1, $2)); } 
     ;
 
 attrargs: %empty { $$ = vector_new(0); }
     | LPAREN args RPAREN { $$ = $2; }
     ;
 
-innerdecl: structdecl { $$ = $1; }
+innerDecl: structdecl { $$ = $1; }
     | uniondecl { $$ = $1; }
     | aliasdecl { $$ = $1; }
     | variantdecl { $$ = $1; }
@@ -306,7 +320,6 @@ uniondecl: UNION IDENT aggregates { $$ = ast_uniondecl(x, @$, $2, $3); }
     ;
 
 variantdecl: VARIANT IDENT LBRACE variants RBRACE { $$ = ast_variantdecl(x, @$, $2, $4); }
-    | VARIANT IDENT EQUALS type SEMICOLON { $$ = ast_typealias(x, @$, $2, true, $4); }
     ;
 
 variants: %empty { $$ = vector_new(0); }
@@ -405,6 +418,10 @@ postfix: primary { $$ = $1; }
     ;
 
 unary: postfix { $$ = $1; }
+    | SUB unary { $$ = ast_unary(x, @$, eUnaryNeg, $2); }
+    | ADD unary { $$ = ast_unary(x, @$, eUnaryAbs, $2); }
+    | BITNOT unary { $$ = ast_unary(x, @$, eUnaryBitflip, $2); }
+    | NOT unary { $$ = ast_unary(x, @$, eUnaryNot, $2); }
     ;
 
 multiply: unary { $$ = $1; }
@@ -426,21 +443,30 @@ compare: add { $$ = $1; }
     ;
 
 equality: compare { $$ = $1; }
+    | equality EQ compare { $$ = ast_compare(x, @$, eCompareEq, $1, $3); }
+    | equality NEQ compare { $$ = ast_compare(x, @$, eCompareNeq, $1, $3); }
     ;
 
 shift: equality { $$ = $1; }
+    | shift RSHIFT equality
+    | shift LSHIFT equality
     ;
 
 bits: shift { $$ = $1; }
+    | bits BITAND shift
+    | bits BITOR shift
     ;
 
 xor: bits { $$ = $1; }
+    | xor BITXOR bits
     ;
 
 and: xor { $$ = $1; }
+    | and AND xor
     ;
 
 or: and { $$ = $1; }
+    | or OR xor
     ;
 
 expr: or { $$ = $1; }

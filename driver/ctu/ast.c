@@ -16,7 +16,7 @@ static ast_t *ast_decl(astof_t of, char *name, scan_t scan, where_t where)
 {
     ast_t *ast = ast_new(of, scan, where);
     ast->name = name;
-    ast->attrib = NULL;
+    ast->attribs = NULL;
     return ast;
 }
 
@@ -99,6 +99,14 @@ ast_t *ast_name(scan_t scan, where_t where, vector_t *path)
 {
     ast_t *ast = ast_new(eAstName, scan, where);
     ast->path = path;
+    return ast;
+}
+
+ast_t *ast_unary(scan_t scan, where_t where, unary_t op, ast_t *operand)
+{
+    ast_t *ast = ast_new(eAstUnary, scan, where);
+    ast->unary = op;
+    ast->operand = operand;
     return ast;
 }
 
@@ -255,4 +263,9 @@ funcparams_t funcparams_new(vector_t *params, bool variadic)
     funcparams_t result = {.params = params, .variadic = variadic};
 
     return result;
+}
+
+void set_attribs(ast_t *decl, vector_t *attribs)
+{
+    decl->attribs = attribs;
 }

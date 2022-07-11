@@ -97,8 +97,14 @@ tests = {
         ]
     },
     'attribs': {
-        'pass': [],
+        'pass': [
+            'entry-point',
+            'multi-attrib-array',
+            'multi-attrib',
+            'single-attrib-array'
+        ],
         'fail': [
+            'duplicate-attribs',
             'entry-var',
             'imported-entry',
             'invalid-attribute',
@@ -117,7 +123,8 @@ tests = {
         'pass': [
             'alias-init',
             'local-noinit',
-            'uninit'
+            'uninit',
+            'globals'
         ]
     },
     'logic.loops': {

@@ -1,1 +1,1 @@
-var x: int = __noinit;
+var x: int = noinit;

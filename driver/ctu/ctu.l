@@ -26,6 +26,8 @@ WS [ \t\r\v\n\f]
 <COMMENT>\n ;
 <COMMENT>. ;
 
+"~" { return BITNOT; }
+
 "->" { return ARROW; }
 
 "!<" { 
@@ -114,7 +116,7 @@ WS [ \t\r\v\n\f]
 "as" { return AS; }
 
 "__null" { return NIL; }
-"__noinit" { return NOINIT; }
+"noinit" { return NOINIT; }
 
 "__match" { return MATCH; }
 "__default" { return DEFAULT; }

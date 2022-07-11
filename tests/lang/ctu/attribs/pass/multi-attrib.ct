@@ -1,0 +1,3 @@
+@entry(cli)
+@section(".name")
+def entry: int = 5;

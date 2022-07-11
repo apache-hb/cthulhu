@@ -1,4 +1,5 @@
 #include "attribs.h"
+#include "cthulhu/hlir/attribs.h"
 #include "sema.h"
 
 #include "base/macros.h"
@@ -67,6 +68,12 @@ static hlir_attributes_t *apply_entry(sema_t *sema, hlir_t *hlir, ast_t *ast)
         return NULL;
     }
 
+    if (is_entry_point(attribs->linkage))
+    {
+        report(sema->reports, eFatal, ast->node, "overriding entry point attribute");
+        return NULL;
+    }
+
     hlir_attributes_t *newAttributes = ctu_memdup(attribs, sizeof(hlir_attributes_t));
 
     newAttributes->linkage = linkage;
@@ -106,21 +113,12 @@ static const char *kDeclNames[eHlirTotal] = {
     [eHlirStruct] = "struct",     [eHlirUnion] = "union",         [eHlirAlias] = "type aliase",
     [eHlirFunction] = "function", [eHlirGlobal] = "global value", [eHlirField] = "field"};
 
-void apply_attributes(sema_t *sema, hlir_t *hlir, ast_t *ast)
+static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *ast, ast_t *attr)
 {
-    CTASSERT(hlir != NULL, "hlir was NULL");
-
-    ast_t *attr = ast->attrib;
-
-    if (attr == NULL)
-    {
-        return;
-    }
-
     attrib_t *attrib = sema_get(sema, eTagAttribs, attr->name);
     if (attrib == NULL)
     {
-        report(sema->reports, eFatal, attr->node, "unknown attribute '%s'", attr->name);
+        report(sema->reports, eWarn, attr->node, "unknown attribute '%s'", attr->name);
         return;
     }
 
@@ -139,4 +137,16 @@ void apply_attributes(sema_t *sema, hlir_t *hlir, ast_t *ast)
     }
 
     hlir_set_attributes(hlir, newAttribs);
+}
+
+void apply_attributes(sema_t *sema, hlir_t *hlir, ast_t *ast)
+{
+    CTASSERT(hlir != NULL, "hlir was NULL");
+
+    size_t totalAttribs = vector_len(ast->attribs);
+    for (size_t i = 0; i < totalAttribs; i++)
+    {
+        ast_t *attrib = vector_get(ast->attribs, i);
+        apply_single_attrib(sema, hlir, ast, attrib);
+    }
 }
