@@ -147,6 +147,7 @@ typedef struct ast_t
         {
             char *name;
             vector_t *attribs;
+            bool exported;
 
             union {
                 /* eAstField */
@@ -243,7 +244,7 @@ ast_t *ast_variantdecl(scan_t scan, where_t where, char *name, vector_t *fields)
 ast_t *ast_field(scan_t scan, where_t where, char *name, ast_t *type);
 ast_t *ast_param(scan_t scan, where_t where, char *name, ast_t *type);
 
-void set_attribs(ast_t *decl, vector_t *attribs);
+void set_attribs(ast_t *decl, bool exported, vector_t *attribs);
 
 /// inner ast types
 

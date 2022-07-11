@@ -1,6 +1,7 @@
 #include "sema.h"
 #include "ast.h"
 #include "attribs.h"
+#include "cthulhu/hlir/attribs.h"
 #include "repr.h"
 
 #include "cthulhu/hlir/decl.h"
@@ -96,7 +97,7 @@ static const char *get_digit_name(sign_t sign, digit_t digit)
 
 static sema_t *kRootSema = NULL;
 
-static hlir_t *get_common_type(node_t node, const hlir_t *lhs, const hlir_t *rhs)
+static const hlir_t *get_common_type(node_t node, const hlir_t *lhs, const hlir_t *rhs)
 {
     if (hlir_is(lhs, eHlirDigit) && hlir_is(rhs, eHlirDigit))
     {
@@ -311,7 +312,9 @@ static hlir_t *sema_unary_digit(sema_t *sema, ast_t *ast, hlir_t *operand)
 
     if (!hlir_is(realType, eHlirDigit))
     {
-        report(sema->reports, eFatal, ast->node, "cannot perform integer unary operation on '%s'", ctu_repr(sema->reports, type, true));
+        report(sema->reports, eFatal, ast->node, "cannot perform integer unary operation on '%s'",
+               ctu_repr(sema->reports, operand, true));
+        return hlir_error(ast->node, "invalid unary digit type");
     }
 
     return hlir_unary(ast->node, type, operand, ast->unary);
@@ -322,9 +325,11 @@ static hlir_t *sema_unary_bool(sema_t *sema, ast_t *ast, hlir_t *operand)
     const hlir_t *type = get_hlir_type(operand);
     const hlir_t *realType = hlir_real_type(type);
 
-    if (!hlir_is(realType, eHlirDigit))
+    if (!hlir_is(realType, eHlirBool))
     {
-        report(sema->reports, eFatal, ast->node, "cannot perform boolean unary operation on '%s'", ctu_repr(sema->reports, type, true));
+        report(sema->reports, eFatal, ast->node, "cannot perform boolean unary operation on '%s'",
+               ctu_repr(sema->reports, operand, true));
+        return hlir_error(ast->node, "invalid unary bool type");
     }
 
     return hlir_unary(ast->node, type, operand, ast->unary);
@@ -355,12 +360,15 @@ static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
     hlir_t *lhs = sema_expr(sema, ast->lhs);
     hlir_t *rhs = sema_expr(sema, ast->rhs);
 
-    hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
+    const hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
 
     if (!hlir_is(type, eHlirDigit))
     {
-        report(sema->reports, eFatal, ast->node, "cannot perform binary operations on %s",
-               ctu_repr(sema->reports, type, true));
+        message_t *id = report(sema->reports, eFatal, ast->node, "cannot perform binary operations on %s",
+                               ctu_type_repr(sema->reports, type, true));
+        report_append(id, get_hlir_node(lhs), ctu_repr(sema->reports, lhs, false));
+        report_append(id, get_hlir_node(rhs), ctu_repr(sema->reports, rhs, false));
+        return hlir_error(ast->node, "invalid common type");
     }
 
     return hlir_binary(ast->node, type, ast->binary, lhs, rhs);
@@ -371,15 +379,29 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
     hlir_t *lhs = sema_expr(sema, ast->lhs);
     hlir_t *rhs = sema_expr(sema, ast->rhs);
 
-    hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
+    const hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
 
     if (!hlir_is(type, eHlirDigit))
     {
-        report(sema->reports, eFatal, ast->node, "cannot perform comparison operations on %s",
-               ctu_repr(sema->reports, type, true));
+        message_t *id = report(sema->reports, eFatal, ast->node, "cannot perform comparison operations on %s",
+                               ctu_type_repr(sema->reports, type, true));
+        report_append(id, get_hlir_node(lhs), ctu_repr(sema->reports, lhs, false));
+        report_append(id, get_hlir_node(rhs), ctu_repr(sema->reports, rhs, false));
+        return hlir_error(ast->node, "invalid common type");
     }
 
     return hlir_compare(ast->node, kBoolType, ast->compare, lhs, rhs);
+}
+
+void check_valid_import(sema_t *sema, sema_t *cur, ast_t *ast, hlir_t *hlir)
+{
+    const char *name = vector_tail(ast->path);
+    if (sema != cur && !hlir_is_exported(hlir))
+    {
+        message_t *id =
+            report(sema->reports, eFatal, ast->node, "symbol '%s' is not visible inside this context", name);
+        report_append(id, get_hlir_node(hlir), "originally declared here");
+    }
 }
 
 static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
@@ -388,6 +410,12 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
     for (size_t i = 0; i < vector_len(ast->path) - 1; i++)
     {
         const char *name = vector_get(ast->path, i);
+        if (name == NULL)
+        {
+            report(sema->reports, eFatal, ast->node, "discarded path segment");
+            return hlir_error(ast->node, "discarded path segment");
+        }
+
         sema_t *next = sema_get(current, eTagModules, name);
 
         if (next == NULL)
@@ -401,15 +429,23 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 
     const char *name = vector_tail(ast->path);
 
+    if (name == NULL)
+    {
+        report(sema->reports, eFatal, ast->node, "cannot resolve discarded identifier");
+        return hlir_error(ast->node, "discarded indentifier");
+    }
+
     hlir_t *var = sema_get(current, eTagValues, name);
     if (var != NULL)
     {
-        return var;
+        check_valid_import(sema, current, ast, var);
+        return hlir_name(ast->node, var);
     }
 
     hlir_t *func = sema_get(sema, eTagProcs, name);
     if (func != NULL)
     {
+        check_valid_import(sema, current, ast, func);
         return func;
     }
 
@@ -420,16 +456,24 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 static hlir_t *sema_call(sema_t *sema, ast_t *ast)
 {
     hlir_t *call = sema_expr(sema, ast->call);
-    if (!hlir_is(call, eHlirFunction))
+    if (!hlis_is_or_will_be(call, eHlirFunction))
     {
         message_t *id = report(sema->reports, eFatal, ast->node, "can only call function types");
-        report_underline(id, "%s", ctu_repr(sema->reports, get_hlir_type(call), true));
+        report_underline(id, "%s", ctu_repr(sema->reports, call, true));
         return hlir_error(ast->node, "invalid callable");
     }
 
     size_t len = vector_len(ast->args);
-    vector_t *args = vector_of(len);
     vector_t *params = closure_params(call);
+    size_t totalParams = vector_len(params);
+    if (len != totalParams)
+    {
+        message_t *id = report(sema->reports, eFatal, ast->node, "incorrect number of parameters specified");
+        report_note(id, "expected `%zu` got `%zu` instead", totalParams, len);
+        return hlir_error(ast->node, "incorrect argument count");
+    }
+
+    vector_t *args = vector_of(len);
     for (size_t i = 0; i < len; i++)
     {
         ast_t *arg = vector_get(ast->args, i);
@@ -440,8 +484,8 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
         if (!hlir_types_equal(argType, expectedType))
         {
             message_t *id = report(sema->reports, eFatal, arg->node, "incorrect argument type `%s`",
-                                   ctu_repr(sema->reports, argType, true));
-            report_note(id, "expecting '%s' instead", ctu_repr(sema->reports, expectedType, true));
+                                   ctu_repr(sema->reports, hlir, true));
+            report_note(id, "expecting '%s' instead", ctu_type_repr(sema->reports, expectedType, true));
         }
 
         vector_set(args, i, hlir);
@@ -508,7 +552,7 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     {
         report(sema->reports, eInternal, ast->node, "loop labels not yet supported");
     }
-    
+
     hlir_t *cond = sema_expr(sema, ast->cond);
 
     size_t sizes[eTagTotal] = {
@@ -529,7 +573,7 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     if (!hlir_types_equal(condType, kBoolType))
     {
         message_t *id = report(sema->reports, eFatal, get_hlir_node(cond), "loop condition must be boolean");
-        report_note(id, "type '%s' found", ctu_repr(sema->reports, condType, true));
+        report_note(id, "type '%s' found", ctu_repr(sema->reports, cond, true));
     }
 
     return hlir_loop(ast->node, cond, then, other);
@@ -546,15 +590,22 @@ static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
     hlir_t *init = stmt->init != NULL ? sema_expr(sema, stmt->init) : NULL;
     const hlir_t *type = stmt->expected != NULL ? sema_type(sema, stmt->expected) : get_hlir_type(init);
 
-    sema_value_t result = { type, init };
+    sema_value_t result = {type, init};
 
     if ((stmt->init != NULL && stmt->expected != NULL) && !hlir_types_equal(type, get_hlir_type(init)))
     {
         message_t *id = report(sema->reports, eFatal, stmt->node, "incompatible initializer and explicit type");
-        report_underline(id, "found '%s', expected '%s'", ctu_repr(sema->reports, type, true),
-                         ctu_repr(sema->reports, get_hlir_type(init), true));
+        report_underline(id, "found '%s', expected '%s'", ctu_type_repr(sema->reports, type, true),
+                         ctu_repr(sema->reports, init, true));
         result.init = hlir_error(stmt->node, "invalid value declaration");
         return result;
+    }
+
+    if (!stmt->mut)
+    {
+        hlir_t *constant = ctu_memdup(type, sizeof(hlir_t));
+        hlir_set_attributes(constant, hlir_tags(eTagConst));
+        result.type = constant;
     }
 
     return result;
@@ -564,7 +615,7 @@ static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
 static hlir_t *sema_local(sema_t *sema, ast_t *stmt)
 {
     sema_value_t value = sema_value(sema, stmt);
-    
+
     if (value.init != NULL && hlir_is(value.init, eHlirError))
     {
         return value.init;
@@ -747,7 +798,6 @@ static void sema_params(sema_t *sema, vector_t *params)
 static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
     hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? eLinkImported : eLinkExported, 0, NULL);
-    hlir_t *body = NULL;
 
     size_t tags[eTagTotal] = {
         [eTagValues] = 32, [eTagProcs] = 32, [eTagTypes] = 32, [eTagModules] = 32, [eTagAttribs] = 32};
@@ -756,14 +806,7 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     set_current_function(nest, decl);
     sema_params(nest, decl->params);
 
-    if (ast->body == NULL)
-    {
-        body = hlir_stmts(ast->node, vector_new(0));
-    }
-    else
-    {
-        body = sema_stmts(nest, ast->body);
-    }
+    hlir_t *body = (ast->body != NULL) ? sema_stmts(nest, ast->body) : NULL;
 
     hlir_build_function(decl, body);
     hlir_set_attributes(decl, attribs);
@@ -821,6 +864,11 @@ static void sema_decl(sema_t *sema, ast_t *ast)
     default:
         ctu_assert(sema->reports, "unexpected ast of type %d", ast->of);
         return;
+    }
+
+    if (ast->exported)
+    {
+        hlir_set_attributes(decl, hlir_linkage(eLinkExported));
     }
 
     apply_attributes(sema, decl, ast);

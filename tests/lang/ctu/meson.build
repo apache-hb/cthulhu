@@ -114,6 +114,7 @@ tests = {
     'variables': {
         'fail': [
             'bad-type',
+            'invalid-init',
             'invalid',
             'newtype-init',
             'noinit-local',
@@ -143,7 +144,15 @@ tests = {
 }
 
 crashes = {
-    '0': false
+    '0': false,
+    '1': false,
+    '2': false,
+    '3': true,
+    '5': false,
+    '6': false,
+    '7': true,
+    '8': false,
+    '9': true
 }
 
 cases = {
@@ -151,7 +160,8 @@ cases = {
         'fails': {
             'missing-import': [ 'main' ],
             'duplicate-name': [ 'main', 'lib', 'subdir/lib' ],
-            'duplicate-import': [ 'main', 'lib' ]
+            'duplicate-import': [ 'main', 'lib' ],
+            'private-symbol': [ 'main', 'lib' ]
         },
         'passes': { 
             'no-imports': [ 'main' ],
@@ -221,7 +231,7 @@ endforeach
 
 
 foreach case, success : crashes
-    path = dir/'crashes'/case + '.pl0'
+    path = dir/'crashes'/case + '.ct'
     test('crash-' + case, ctc,
         args : [ path ],
         suite : 'ctu',

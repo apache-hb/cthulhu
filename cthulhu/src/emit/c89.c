@@ -566,6 +566,11 @@ static void c89_emit_return(c89_emit_t *emit, const hlir_t *hlir)
     }
 }
 
+static const char *c89_emit_local_rvalue(const hlir_t *hlir)
+{
+    return format("%s[0]", hlir->name);
+}
+
 static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -593,6 +598,10 @@ static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
 
     case eHlirReturn:
         c89_emit_return(emit, hlir);
+        break;
+
+    case eHlirLocal:
+        WRITE_STRINGF(emit, "%s;\n", c89_emit_local_rvalue(hlir));
         break;
 
     default:
@@ -674,11 +683,6 @@ static const char *c89_emit_name(c89_emit_t *emit, const hlir_t *hlir)
 {
     const char *name = c89_emit_rvalue(emit, hlir->read);
     return format("%s[0]", name);
-}
-
-static const char *c89_emit_local_rvalue(const hlir_t *hlir)
-{
-    return format("%s[0]", hlir->name);
 }
 
 static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)

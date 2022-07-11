@@ -8,7 +8,7 @@
 
 typedef struct
 {
-    size_t depth; // template depth
+    size_t depth;      // template depth
     vector_t *attribs; // attribute collector
 } lex_extra_t;
 

@@ -53,6 +53,11 @@ bool hlir_is_imported(const hlir_t *self)
     return get_hlir_attributes(self)->linkage == eLinkImported;
 }
 
+bool hlir_is_exported(const hlir_t *self)
+{
+    return get_hlir_attributes(self)->linkage == eLinkExported;
+}
+
 static bool is_signature(const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);

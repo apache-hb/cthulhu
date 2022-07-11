@@ -256,7 +256,6 @@ const hlir_t *hlir_real_type(const hlir_t *hlir)
     return hlir;
 }
 
-
 bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
 {
     const hlir_t *actualLhs = hlir_follow_type(lhs);
@@ -277,7 +276,7 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
     switch (lhsKind)
     {
     case eHlirDigit:
-        return actualLhs->digit == actualRhs->digit && actualLhs->sign == actualRhs->sign;
+        return actualLhs->width == actualRhs->width && actualLhs->sign == actualRhs->sign;
     case eHlirString: // TODO: update this when we have multiple string encodings
     case eHlirBool:
     case eHlirVoid:

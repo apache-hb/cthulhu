@@ -28,7 +28,7 @@ NODISCARD PUREFN bool hlis_is_or_will_be(const hlir_t *hlir, hlir_kind_t kind);
 
 /**
  * @brief follow a type until either a newtype or a real type is reached
- * 
+ *
  * @param hlir the type to follow
  * @return const hlir_t* the base type
  */
@@ -36,7 +36,7 @@ const hlir_t *hlir_follow_type(const hlir_t *hlir);
 
 /**
  * @brief follow a type until a real type is reached, ignoring newtypes
- * 
+ *
  * @param hlir the type to follow
  * @return const hlir_t* the base type
  */

@@ -245,6 +245,8 @@ typedef struct hlir_t
  */
 bool hlir_is_imported(const hlir_t *self);
 
+bool hlir_is_exported(const hlir_t *self);
+
 /**
  * @brief get the params of a function. only valid to call on eHlirFunction and
  * eHlirClosure

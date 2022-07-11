@@ -1,0 +1,11 @@
+@extern
+def puts(s: str): int;
+
+@extern
+def exit(code: int): void;
+
+@entry(cli)
+def Fstart {
+ uts("hello world");
+    exit(result);
+}

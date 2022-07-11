@@ -1,0 +1,20 @@
+@extern def puts;
+
+@extern
+def exit(code: int): void {
+    const result = puts("hello world");
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+}

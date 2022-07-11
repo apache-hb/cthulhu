@@ -152,6 +152,10 @@ static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *
         check_recursion(reports, stack, hlir->rhs);
         break;
 
+    case eHlirUnary:
+        check_recursion(reports, stack, hlir->operand);
+        break;
+
     case eHlirLiteralDigit:
     case eHlirLiteralBool:
     case eHlirLiteralString:
@@ -376,6 +380,11 @@ static void check_attribute(check_t *ctx, hlir_t *hlir)
         hlir_attributes_t *newAttribs = ctu_memdup(attribs, sizeof(hlir_attributes_t));
         newAttribs->mangle = NULL;
         hlir_set_attributes(hlir, newAttribs);
+    }
+
+    if (attribs->linkage == eLinkImported && hlir_is(hlir, eHlirFunction) && hlir->body != NULL)
+    {
+        report(ctx->reports, eWarn, get_hlir_node(hlir), "imported function with a body, body will be discarded");
     }
 
     bool isEntry = false;

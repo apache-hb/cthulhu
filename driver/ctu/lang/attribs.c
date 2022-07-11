@@ -113,7 +113,7 @@ static const char *kDeclNames[eHlirTotal] = {
     [eHlirStruct] = "struct",     [eHlirUnion] = "union",         [eHlirAlias] = "type aliase",
     [eHlirFunction] = "function", [eHlirGlobal] = "global value", [eHlirField] = "field"};
 
-static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *ast, ast_t *attr)
+static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *attr)
 {
     attrib_t *attrib = sema_get(sema, eTagAttribs, attr->name);
     if (attrib == NULL)
@@ -147,6 +147,6 @@ void apply_attributes(sema_t *sema, hlir_t *hlir, ast_t *ast)
     for (size_t i = 0; i < totalAttribs; i++)
     {
         ast_t *attrib = vector_get(ast->attribs, i);
-        apply_single_attrib(sema, hlir, ast, attrib);
+        apply_single_attrib(sema, hlir, attrib);
     }
 }

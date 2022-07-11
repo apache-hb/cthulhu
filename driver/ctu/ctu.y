@@ -207,7 +207,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
     label block
 
 %type<boolean>
-    mut
+    mut optExport
 
 %start program
 
@@ -235,7 +235,11 @@ decllist: decl { $$ = vector_init($1); }
     | decllist decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: optAttribs innerDecl { set_attribs($2, collect_attributes(x)); $$ = $2; }
+decl: optExport optAttribs innerDecl { set_attribs($3, $1, collect_attributes(x)); $$ = $3; }
+    ;
+
+optExport: %empty { $$ = false; }
+    | EXPORT { $$ = true; }
     ;
 
 optAttribs: %empty | attribs ;
@@ -448,25 +452,25 @@ equality: compare { $$ = $1; }
     ;
 
 shift: equality { $$ = $1; }
-    | shift RSHIFT equality
-    | shift LSHIFT equality
+    | shift RSHIFT equality { $$ = ast_binary(x, @$, eBinaryShl, $1, $3); }
+    | shift LSHIFT equality { $$ = ast_binary(x, @$, eBinaryShr, $1, $3); }
     ;
 
 bits: shift { $$ = $1; }
-    | bits BITAND shift
-    | bits BITOR shift
+    | bits BITAND shift { $$ = ast_binary(x, @$, eBinaryBitAnd, $1, $3); }
+    | bits BITOR shift { $$ = ast_binary(x, @$, eBinaryBitOr, $1, $3); }
     ;
 
 xor: bits { $$ = $1; }
-    | xor BITXOR bits
+    | xor BITXOR bits { $$ = ast_binary(x, @$, eBinaryXor, $1, $3); }
     ;
 
 and: xor { $$ = $1; }
-    | and AND xor
+    | and AND xor { $$ = ast_binary(x, @$, eBinaryAnd, $1, $3); }
     ;
 
 or: and { $$ = $1; }
-    | or OR xor
+    | or OR xor { $$ = ast_binary(x, @$, eBinaryOr, $1, $3); }
     ;
 
 expr: or { $$ = $1; }

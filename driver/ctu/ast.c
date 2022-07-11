@@ -265,7 +265,8 @@ funcparams_t funcparams_new(vector_t *params, bool variadic)
     return result;
 }
 
-void set_attribs(ast_t *decl, vector_t *attribs)
+void set_attribs(ast_t *decl, bool exported, vector_t *attribs)
 {
+    decl->exported = exported;
     decl->attribs = attribs;
 }
