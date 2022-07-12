@@ -157,6 +157,11 @@ void hlir_build_function(hlir_t *self, hlir_t *body)
 {
     hlir_finish(self, eHlirFunction);
     self->body = body;
+
+    if (self->variadic)
+    {
+        CTASSERT(vector_len(self->params) > 0, "variadic functions must have at least one parameter");
+    }
 }
 
 hlir_t *hlir_function(node_t node, const char *name, signature_t signature, vector_t *locals, hlir_t *body)

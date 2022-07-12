@@ -434,6 +434,8 @@ static const char *c89_emit_inner_type(c89_emit_t *emit, const hlir_t *hlir, con
         return c89_emit_pointer_type(emit, hlir, name);
     case eHlirArray:
         return c89_emit_array_type(emit, hlir, name);
+    
+    case eHlirFunction:
     case eHlirClosure:
         return c89_emit_closure_type(emit, hlir, name);
 

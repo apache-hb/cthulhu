@@ -1,4 +1,5 @@
-#include "imgui-wrapper.h"
+#include "glad/glad.h"
+#include <GLFW/glfw3.h>
 
 #include <stdio.h>
 
@@ -46,23 +47,39 @@ int main()
         return EXIT_INTERNAL;
     }
 
-    void *ctx = imgui_init(window);
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
 
-    while (!glfwWindowShouldClose(window) && !imgui_should_quit(ctx))
+    ImGuiIO &io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 130");
+
+
+    while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
 
-        imgui_new_frame(ctx);
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::ShowDemoWindow(nullptr);
 
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         glClear(GL_COLOUR_BUFFER_BIT);
 
-        imgui_render(ctx);
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
     }
 
-    imgui_cleanup(ctx);
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwTerminate();
 

@@ -17,6 +17,8 @@
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 WS [ \t\r\v\n\f]
 
+SUFFIX [uUiI][cCsSlL]
+
 %%
 
 {WS} ;

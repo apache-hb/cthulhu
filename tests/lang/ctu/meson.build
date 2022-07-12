@@ -152,7 +152,10 @@ crashes = {
     '6': false,
     '7': true,
     '8': false,
-    '9': true
+    '9': true,
+    '10': false,
+    '11': false,
+    '12': true
 }
 
 cases = {

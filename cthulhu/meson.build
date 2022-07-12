@@ -10,6 +10,9 @@ src = [
     'src/hlir/common.c',
     'src/hlir/validate.c',
 
+    # ssa intermediate
+    'src/ssa/ssa.c',
+
     # common frontend components
     'src/interface/runtime.c',
     'src/interface/cthulhu.c',

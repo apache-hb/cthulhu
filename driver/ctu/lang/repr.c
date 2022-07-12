@@ -101,10 +101,42 @@ static const char *repr_integral(const hlir_t *type, bool detail)
     return get_hlir_name(type);
 }
 
+static const char *repr_closure(reports_t *reports, const hlir_t *type, bool detail)
+{
+    vector_t *params = closure_params(type);
+    const char *result = ctu_type_repr(reports, closure_result(type), false);
+    const char *name = get_hlir_name(type);
+
+    if (detail)
+    {
+        size_t totalParams = vector_len(params);
+        vector_t *paramNames = vector_of(totalParams);
+        for (size_t i = 0; i < totalParams; i++)
+        {
+            const char *paramName = ctu_type_repr(reports, vector_get(params, i), false);
+            vector_set(paramNames, i, (char*)paramName);
+        }
+
+        if (closure_variadic(type))
+        {
+            vector_push(&paramNames, (char*)"...");
+        }
+
+        return format("%s { (%s, ...) -> %s }", name, str_join(", ", paramNames), result);
+    }
+
+    return name;
+}
+
 const char *ctu_type_repr(reports_t *reports, const hlir_t *type, bool detail)
 {
     const hlir_t *inner = hlir_follow_type(type);
     hlir_kind_t kind = get_hlir_kind(inner);
+    if (kind == eHlirForward)
+    {
+        kind = inner->expected;
+    }
+    
     switch (kind)
     {
     case eHlirDigit:
@@ -124,6 +156,10 @@ const char *ctu_type_repr(reports_t *reports, const hlir_t *type, bool detail)
 
     case eHlirError:
         return repr_error(type, detail);
+
+    case eHlirFunction:
+    case eHlirClosure:
+        return repr_closure(reports, inner, detail);
 
     default:
         ctu_assert(reports, "ctu-repr unexpected %s", hlir_kind_to_string(kind));

@@ -5,6 +5,7 @@
 * ssa backend
     * wasm
     * x64
+* deprecate C backend, move to something else
 * rewrite reporting
     * more detailed location tracking
     * fix current reports

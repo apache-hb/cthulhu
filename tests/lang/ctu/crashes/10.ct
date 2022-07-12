@@ -1,0 +1,8 @@
+@extern
+def pu: int;
+
+@extern
+def exit(code: int): void;
+
+@entry(cli)
+def _star= pu^s("hello world"); 

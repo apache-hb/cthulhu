@@ -1,0 +1,8 @@
+@e@tern
+def puts(s: str): int;
+
+@extern
+def exit(code: int): void;
+
+@mntry(cli)	def _start { const result = puts;
+}
