@@ -7,7 +7,6 @@ glad = subproject('glad').get_variable('glad')
 
 foreach name, lib : langs
     executable(name, 'interface/main.cpp',
-        link_with : wrapper,
         dependencies : [ generic, lib, core, impl, glfw, glad ]
     )
 endforeach

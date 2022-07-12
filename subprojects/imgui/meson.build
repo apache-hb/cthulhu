@@ -22,7 +22,7 @@ backend = [
     'imgui/backends/imgui_impl_glfw.cpp'
 ]
 
-glfw = dependency('glfw', fallback : [ 'glfw', 'glfw3' ])
+glfw = dependency('glfw3', fallback : [ 'glfw', 'glfw3' ])
 
 libbackend = library('imgui_backend', backend,
     include_directories : 'imgui/backends',

@@ -1,4 +1,9 @@
-project('glfw', 'c')
+project('glfw', 'c',
+    default_options : [
+        'werror=false',
+        'warning_level=0'
+    ]
+)
 
 host = host_machine.system()
 cc = meson.get_compiler('c')
