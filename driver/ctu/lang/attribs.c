@@ -1,9 +1,13 @@
 #include "attribs.h"
 #include "cthulhu/hlir/attribs.h"
+#include "cthulhu/hlir/hlir.h"
 #include "sema.h"
 
 #include "base/macros.h"
+#include "base/memory.h"
 #include "base/util.h"
+#include "base/panic.h"
+
 #include "std/map.h"
 #include "std/str.h"
 
@@ -98,6 +102,13 @@ static hlir_attributes_t *apply_extern(sema_t *sema, hlir_t *hlir, ast_t *ast)
     return newAttributes;
 }
 
+static hlir_attributes_t *apply_layout(sema_t *sema, hlir_t *hlir, ast_t *ast)
+{
+    UNUSED(ast);
+    report(sema->reports, eInternal, get_hlir_node(hlir), "layout not implemented");
+    return NULL;
+}
+
 static void add_attrib(sema_t *sema, const char *name, hlir_kind_t kind, apply_attribs_t apply)
 {
     sema_set(sema, eTagAttribs, name, new_attrib(name, kind, apply));
@@ -107,10 +118,11 @@ void add_builtin_attribs(sema_t *sema)
 {
     add_attrib(sema, "entry", eHlirFunction, apply_entry);
     add_attrib(sema, "extern", eHlirFunction, apply_extern);
+    add_attrib(sema, "layout", eHlirStruct, apply_layout);
 }
 
 static const char *kDeclNames[eHlirTotal] = {
-    [eHlirStruct] = "struct",     [eHlirUnion] = "union",         [eHlirAlias] = "type aliase",
+    [eHlirStruct] = "struct",     [eHlirUnion] = "union",         [eHlirAlias] = "type alias",
     [eHlirFunction] = "function", [eHlirGlobal] = "global value", [eHlirField] = "field"};
 
 static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *attr)
@@ -141,7 +153,7 @@ static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *attr)
 
 void apply_attributes(sema_t *sema, hlir_t *hlir, ast_t *ast)
 {
-    CTASSERT(hlir != NULL, "hlir was NULL");
+    CTASSERT(hlir != NULL);
 
     size_t totalAttribs = vector_len(ast->attribs);
     for (size_t i = 0; i < totalAttribs; i++)

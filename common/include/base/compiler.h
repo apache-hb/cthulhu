@@ -100,3 +100,11 @@
 #    define END_API
 #endif
 // clang-format on
+
+#if CC_GNU
+#    define FUNCNAME __PRETTY_FUNCTION__
+#endif
+
+#ifndef FUNCNAME
+#    define FUNCNAME __func__
+#endif

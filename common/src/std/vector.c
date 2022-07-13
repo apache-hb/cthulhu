@@ -1,6 +1,7 @@
 #include "std/vector.h"
 #include "base/macros.h"
-#include "base/util.h"
+#include "base/memory.h"
+#include "base/panic.h"
 
 #include <stdint.h>
 
@@ -78,7 +79,7 @@ void vector_push(vector_t **vector, void *value)
 
 void vector_drop(vector_t *vector)
 {
-    CTASSERT(vector_len(vector) > 0, "vector-drop: vector is empty");
+    CTASSERT(vector_len(vector) > 0);
     vector->used -= 1;
 }
 

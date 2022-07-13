@@ -1,6 +1,9 @@
 #include "std/set.h"
-#include "base/util.h"
 #include "std/str.h"
+
+#include "base/util.h"
+#include "base/memory.h"
+#include "base/panic.h"
 
 /**
  * @brief a node in a chain of set entries
@@ -48,6 +51,8 @@ static item_t *get_bucket_ptr(set_t *set, const void *key)
 USE_DECL
 set_t *set_new(size_t size)
 {
+    CTASSERT(size > 0);
+
     set_t *set = ctu_malloc(set_size(size));
     set->size = size;
 
@@ -62,6 +67,9 @@ set_t *set_new(size_t size)
 
 const char *set_add(set_t *set, const char *key)
 {
+    CTASSERT(set != NULL);
+    CTASSERT(key != NULL);
+
     item_t *item = get_bucket(set, key);
 
     while (true)
@@ -92,6 +100,9 @@ const char *set_add(set_t *set, const char *key)
 USE_DECL
 bool set_contains(set_t *set, const char *key)
 {
+    CTASSERT(set != NULL);
+    CTASSERT(key != NULL);
+    
     item_t *item = get_bucket(set, key);
 
     while (true)
@@ -119,6 +130,8 @@ bool set_contains(set_t *set, const char *key)
 
 const void *set_add_ptr(set_t *set, const void *key)
 {
+    CTASSERT(set != NULL);
+    
     item_t *item = get_bucket_ptr(set, key);
 
     while (true)
@@ -149,6 +162,8 @@ const void *set_add_ptr(set_t *set, const void *key)
 USE_DECL
 bool set_contains_ptr(set_t *set, const void *key)
 {
+    CTASSERT(set != NULL);
+    
     item_t *item = get_bucket_ptr(set, key);
 
     while (true)
@@ -176,6 +191,8 @@ bool set_contains_ptr(set_t *set, const void *key)
 
 void set_reset(set_t *set)
 {
+    CTASSERT(set != NULL);
+
     for (size_t i = 0; i < set->size; i++)
     {
         item_t *item = &set->items[i];

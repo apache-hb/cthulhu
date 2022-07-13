@@ -1,5 +1,6 @@
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/query.h"
+#include "base/panic.h"
 
 #include "common.h"
 
@@ -23,9 +24,9 @@ static hlir_t *hlir_begin_aggregate(node_t node, const char *name, hlir_kind_t t
 
 static void hlir_finish(hlir_t *self, hlir_kind_t type)
 {
-    CHECK_NULL(self);
-    CTASSERT(hlir_is(self, eHlirForward), "hlir-finish called on non-forward hlir");
-    CTASSERT(self->expected == type, "hlir-finish called with wrong type");
+    CTASSERT(self != NULL);
+    CTASSERTM(hlir_is(self, eHlirForward), "hlir-finish called on non-forward hlir");
+    CTASSERTM(self->expected == type, "hlir-finish called with wrong type");
 
     self->type = type;
 }
@@ -78,9 +79,9 @@ hlir_t *hlir_union(node_t node, const char *name, vector_t *fields)
 
 void hlir_add_field(hlir_t *self, hlir_t *field)
 {
-    CHECK_NULL(self);
-    CTASSERT(IS_AGGREGATE(self), "hlir-add-field called on non-aggregate hlir");
-    CTASSERT(hlir_is(field, eHlirField), "hlir-add-field called with non-field hlir");
+    CTASSERT(self != NULL);
+    CTASSERTM(IS_AGGREGATE(self), "hlir-add-field called on non-aggregate hlir");
+    CTASSERTM(hlir_is(field, eHlirField), "hlir-add-field called with non-field hlir");
 
     hlir_set_parent(field, self);
     vector_push(&self->fields, field);
@@ -160,7 +161,7 @@ void hlir_build_function(hlir_t *self, hlir_t *body)
 
     if (self->variadic)
     {
-        CTASSERT(vector_len(self->params) > 0, "variadic functions must have at least one parameter");
+        CTASSERTM(vector_len(self->params) > 0, "variadic functions must have at least one parameter");
     }
 }
 
@@ -173,7 +174,7 @@ hlir_t *hlir_function(node_t node, const char *name, signature_t signature, vect
 
 void hlir_add_local(hlir_t *self, hlir_t *local)
 {
-    CTASSERT(hlir_will_be(self, eHlirFunction), "hlir-add-local called on non-function hlir");
+    CTASSERTM(hlir_will_be(self, eHlirFunction), "hlir-add-local called on non-function hlir");
     vector_push(&self->locals, local);
 }
 

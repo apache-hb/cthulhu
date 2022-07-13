@@ -4,6 +4,7 @@
 #include "report/report.h"
 
 #include "base/macros.h"
+#include "base/panic.h"
 
 #include <limits.h>
 #include <string.h>

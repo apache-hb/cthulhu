@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cthulhu/hlir/ops.h"
 #include "cthulhu/hlir/digit.h"
+#include "cthulhu/hlir/ops.h"
 
 #include <stdbool.h>
 
@@ -44,10 +44,10 @@ typedef struct
     };
 } type_t;
 
-typedef struct 
+typedef struct
 {
     type_t type;
-    
+
     union {
         mpz_t digit;
         bool boolean;
@@ -127,8 +127,8 @@ typedef struct flow_t
 
 typedef struct module_t
 {
-    vector_t *imports; ///< imported symbols
-    vector_t *exports; ///< exported symbols
+    vector_t *imports;   ///< imported symbols
+    vector_t *exports;   ///< exported symbols
     vector_t *internals; ///< internal functions
 
     flow_t *cliEntry;

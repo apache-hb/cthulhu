@@ -3,6 +3,8 @@
 #include "platform/file.h"
 // clang-format on
 
+#include "base/panic.h"
+
 USE_DECL
 cerror_t make_directory(const char *path)
 {
@@ -12,8 +14,8 @@ cerror_t make_directory(const char *path)
 static file_format_t get_format(file_flags_t flags)
 {
     file_flags_t fmt = flags & (eFileText | eFileBinary);
-    CTASSERT(fmt, "no file format specified");
-    CTASSERT(fmt == eFileText || fmt == eFileBinary, "invalid file format flags");
+    CTASSERTM(fmt, "no file format specified");
+    CTASSERTM(fmt == eFileText || fmt == eFileBinary, "invalid file format flags");
 
     return (fmt == eFileText) ? eFormatText : eFormatBinary;
 }
@@ -21,8 +23,8 @@ static file_format_t get_format(file_flags_t flags)
 static file_mode_t get_mode(file_flags_t flags)
 {
     file_flags_t fmt = flags & (eFileRead | eFileWrite);
-    CTASSERT(fmt, "no open mode specified");
-    CTASSERT(fmt == eFileRead || fmt == eFileWrite, "invalid open mode flags");
+    CTASSERTM(fmt, "no open mode specified");
+    CTASSERTM(fmt == eFileRead || fmt == eFileWrite, "invalid open mode flags");
 
     return (fmt == eFileRead) ? eModeRead : eModeWrite;
 }

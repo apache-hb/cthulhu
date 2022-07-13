@@ -114,12 +114,12 @@ static const char *repr_closure(reports_t *reports, const hlir_t *type, bool det
         for (size_t i = 0; i < totalParams; i++)
         {
             const char *paramName = ctu_type_repr(reports, vector_get(params, i), false);
-            vector_set(paramNames, i, (char*)paramName);
+            vector_set(paramNames, i, (char *)paramName);
         }
 
         if (closure_variadic(type))
         {
-            vector_push(&paramNames, (char*)"...");
+            vector_push(&paramNames, (char *)"...");
         }
 
         return format("%s { (%s, ...) -> %s }", name, str_join(", ", paramNames), result);
@@ -136,7 +136,7 @@ const char *ctu_type_repr(reports_t *reports, const hlir_t *type, bool detail)
     {
         kind = inner->expected;
     }
-    
+
     switch (kind)
     {
     case eHlirDigit:

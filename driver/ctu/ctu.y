@@ -25,12 +25,16 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
 %union {
     bool boolean;
     char *ident;
+    
     struct {
         char *data;
         size_t length;
     } string;
 
-    mpz_t mpz;
+    struct {
+        mpz_t mpz;
+        suffix_t suffix;
+    } digit;
 
     ast_t *ast;
     vector_t *vector;
@@ -43,7 +47,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
 %token<string>
     STRING "string literal"
 
-%token<mpz>
+%token<digit>
     INTEGER "integer literal"
 
 %token<boolean>
@@ -411,7 +415,7 @@ typelist: type { $$ = vector_init($1); }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }
-    | INTEGER { $$ = ast_digit(x, @$, $1); }
+    | INTEGER { $$ = ast_digit(x, @$, $1.mpz, $1.suffix); }
     | path { $$ = ast_name(x, @$, $1); }
     | BOOLEAN { $$ = ast_bool(x, @$, $1); }
     | STRING { $$ = ast_string(x, @$, $1.data, $1.length); }

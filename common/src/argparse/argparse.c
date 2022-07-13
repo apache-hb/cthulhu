@@ -2,7 +2,8 @@
 #include "argparse/common.h"
 
 #include "base/macros.h"
-#include "base/util.h"
+#include "base/memory.h"
+#include "base/panic.h"
 
 #include "std/map.h"
 #include "std/str.h"
@@ -177,8 +178,8 @@ USE_DECL
 long get_digit_arg(const argparse_t *argparse, const param_t *arg, long other)
 {
     arg_t *associated = map_get_ptr(argparse->lookup, arg);
-    CTASSERT(associated != NULL, "parameter not found");
-    CTASSERT(associated->kind == eParamInt, "parameter is not an integer");
+    CTASSERT(associated != NULL);
+    CTASSERT(associated->kind == eParamInt);
 
     if (!associated->setByUser)
     {
@@ -192,8 +193,8 @@ USE_DECL
 const char *get_string_arg(const argparse_t *argparse, const param_t *arg, const char *other)
 {
     arg_t *associated = map_get_ptr(argparse->lookup, arg);
-    CTASSERT(associated != NULL, "parameter not found");
-    CTASSERT(associated->kind == eParamString, "parameter is not a string");
+    CTASSERT(associated != NULL);
+    CTASSERT(associated->kind == eParamString);
 
     if (!associated->setByUser)
     {
@@ -207,8 +208,8 @@ USE_DECL
 bool get_bool_arg(const argparse_t *argparse, const param_t *arg, bool other)
 {
     arg_t *associated = map_get_ptr(argparse->lookup, arg);
-    CTASSERT(associated != NULL, "parameter not found");
-    CTASSERT(associated->kind == eParamBool, "parameter is not a boolean");
+    CTASSERT(associated != NULL);
+    CTASSERT(associated->kind == eParamBool);
 
     if (!associated->setByUser)
     {

@@ -1,6 +1,9 @@
 #include "cthulhu/hlir/sema.h"
 #include "base/macros.h"
+#include "base/memory.h"
 #include "base/util.h"
+#include "base/panic.h"
+
 #include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/hlir.h"

@@ -1,6 +1,6 @@
 #include "cthulhu/interface/runtime.h"
 
-#include "base/util.h"
+#include "base/memory.h"
 #include "cthulhu/hlir/init.h"
 
 #include "argparse/argparse.h"
@@ -12,7 +12,7 @@
 void common_init(void)
 {
     install_segfault();
-    init_gmp();
+    init_gmp(NULL);
     argparse_init();
     init_hlir();
 }

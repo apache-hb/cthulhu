@@ -5,7 +5,8 @@
 #include "scan/node.h"
 
 #include "base/macros.h"
-#include "base/util.h"
+#include "base/memory.h"
+#include "base/panic.h"
 
 static const hlir_attributes_t kDefaultAttributes = {.linkage = eLinkInternal, .tags = DEFAULT_TAGS};
 

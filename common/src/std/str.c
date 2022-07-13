@@ -4,6 +4,8 @@
 
 #include "base/macros.h"
 #include "base/util.h"
+#include "base/memory.h"
+#include "base/panic.h"
 
 #include <ctype.h>
 #include <stddef.h>
@@ -426,7 +428,7 @@ USE_DECL
 const char *common_prefix(vector_t *args)
 {
     size_t len = vector_len(args);
-    CTASSERT(len > 0, "must have at least one argument");
+    CTASSERT(len > 0);
 
     if (len == 1)
     {
@@ -467,8 +469,8 @@ const char *common_prefix(vector_t *args)
 
 static size_t str_rfind_inner(const char *str, size_t len, const char *sub, size_t sublen)
 {
-    CTASSERT(len > 0, "str must be non-empty");
-    CTASSERT(sublen > 0, "sub must be non-empty");
+    CTASSERTM(len > 0, "str must be non-empty");
+    CTASSERTM(sublen > 0, "sub must be non-empty");
 
     while (len--)
     {

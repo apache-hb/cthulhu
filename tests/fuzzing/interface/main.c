@@ -1,4 +1,6 @@
 #include "base/macros.h"
+#include "base/panic.h"
+
 #include "cthulhu/interface/interface.h"
 
 #include "cthulhu/emit/c89.h"
@@ -19,7 +21,7 @@ int main(int argc, const char **argv)
 
     verbose = true;
 
-    CTASSERT(argc == 2, "must provide one argument");
+    CTASSERTM(argc == 2, "must provide one argument");
 
     source_t *src = source_file(argv[1]);
     vector_t *sources = vector_init(src);

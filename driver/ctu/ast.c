@@ -1,6 +1,6 @@
 #include "ast.h"
 
-#include "base/util.h"
+#include "base/memory.h"
 
 #include "report/report.h"
 
@@ -73,10 +73,11 @@ ast_t *ast_variable(scan_t scan, where_t where, char *name, bool mut, ast_t *exp
     return ast;
 }
 
-ast_t *ast_digit(scan_t scan, where_t where, mpz_t value)
+ast_t *ast_digit(scan_t scan, where_t where, mpz_t value, suffix_t suffix)
 {
     ast_t *ast = ast_new(eAstDigit, scan, where);
     mpz_init_set(ast->digit, value);
+    ast->suffix = suffix;
     return ast;
 }
 

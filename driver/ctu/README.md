@@ -20,7 +20,6 @@
 * all comparisons
 * variants
 * C interop
-* COM interop
 
 ## not yet started
 * branches
@@ -28,6 +27,7 @@
 * with blocks
 * state mutation
 * casts
+* COM interop
 
 ## bikeshedding
 * contracts

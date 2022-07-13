@@ -64,28 +64,3 @@
 #endif
 
 #define ADDRSAN_ENABLED ((__SANITIZE_ADDRESS__ != 0) || __has_feature(address_sanitizer))
-
-NORETURN ctpanic(FORMAT_STRING const char *msg, ...) FORMAT_ATTRIBUTE(1, 2);
-
-#if ENABLE_DEBUG
-#    define CTASSERT(expr, msg)                                                                                        \
-        do                                                                                                             \
-        {                                                                                                              \
-            if (!(expr))                                                                                               \
-            {                                                                                                          \
-                ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" __FILE__ ":" STR(__LINE__) "]: " msg "\n");             \
-            }                                                                                                          \
-        } while (0)
-#    define CTASSERTF(expr, msg, ...)                                                                                  \
-        do                                                                                                             \
-        {                                                                                                              \
-            if (!(expr))                                                                                               \
-            {                                                                                                          \
-                ctpanic(COLOUR_CYAN "assert" COLOUR_RESET " [" __FILE__ ":" STR(__LINE__) "]: " msg "\n",              \
-                        __VA_ARGS__);                                                                                  \
-            }                                                                                                          \
-        } while (0)
-#else
-#    define CTASSERT(expr, msg) ASSUME(expr)
-#    define CTASSERTF(expr, msg, ...) ASSUME(expr)
-#endif

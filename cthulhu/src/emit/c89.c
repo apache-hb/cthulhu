@@ -6,6 +6,8 @@
 
 #include "base/macros.h"
 #include "base/util.h"
+#include "base/panic.h"
+
 #include "cthulhu/hlir/query.h"
 #include "std/set.h"
 #include "std/str.h"
@@ -434,7 +436,7 @@ static const char *c89_emit_inner_type(c89_emit_t *emit, const hlir_t *hlir, con
         return c89_emit_pointer_type(emit, hlir, name);
     case eHlirArray:
         return c89_emit_array_type(emit, hlir, name);
-    
+
     case eHlirFunction:
     case eHlirClosure:
         return c89_emit_closure_type(emit, hlir, name);
@@ -944,7 +946,7 @@ static const char *c89_get_linkage(hlir_linkage_t linkage)
     case eLinkExported:
         return "";
     default:
-        CTASSERT(false, "unknown linkage");
+        CTASSERTM(false, "unknown linkage");
         return "";
     }
 }

@@ -1,6 +1,8 @@
 #include "scan/node.h"
 
 #include "base/macros.h"
+#include "base/panic.h"
+
 #include <limits.h>
 
 typedef struct

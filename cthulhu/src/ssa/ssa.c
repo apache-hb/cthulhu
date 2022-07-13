@@ -4,7 +4,7 @@
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 
-#include "base/util.h"
+#include "base/memory.h"
 
 #include "report/report.h"
 #include "std/map.h"
@@ -55,52 +55,32 @@ static vreg_t add_step(ssa_t *ssa, step_t step)
 
 static step_t new_step(opcode_t op, type_t type)
 {
-    step_t step = { 
-        .op = op,
-        .type = type
-    };
+    step_t step = {.op = op, .type = type};
 
     return step;
 }
 
 static operand_t operand_empty(void)
 {
-    operand_t operand = {
-        .kind = eOperandEmpty
-    };
+    operand_t operand = {.kind = eOperandEmpty};
     return operand;
 }
 
 static operand_t operand_vreg(vreg_t reg)
 {
-    operand_t operand = {
-        .kind = eOperandReg,
-        .reg = reg
-    };
+    operand_t operand = {.kind = eOperandReg, .reg = reg};
     return operand;
 }
 
 static operand_t operand_digit(const mpz_t digit, digit_t width, sign_t sign)
 {
-    value_t value = {
-        .type = {
-            .kind = eLiteralInt,
-            .digitKind = {
-                .width = width,
-                .sign = sign
-            }
-        }
-    };
+    value_t value = {.type = {.kind = eLiteralInt, .digitKind = {.width = width, .sign = sign}}};
 
     mpz_init_set(value.digit, digit);
 
-    operand_t operand = {
-        .kind = eOperandImm,
-        .value = value
-    };
+    operand_t operand = {.kind = eOperandImm, .value = value};
 
     return operand;
-
 }
 
 static operand_t emit_hlir(ssa_t *ssa, const hlir_t *hlir);
@@ -116,13 +96,7 @@ static operand_t emit_binary(ssa_t *ssa, const hlir_t *hlir)
     operand_t rhs = emit_hlir(ssa, hlir->rhs);
 
     // TODO: convert hlir type to type_t
-    type_t type = { 
-        .kind = eLiteralInt,
-        .digitKind = {
-            .width = eInt,
-            .sign = eSigned
-        }
-    };
+    type_t type = {.kind = eLiteralInt, .digitKind = {.width = eInt, .sign = eSigned}};
 
     step_t step = new_step(eOpBinary, type);
     step.binary = hlir->binary;
@@ -137,9 +111,7 @@ static operand_t emit_compare(ssa_t *ssa, const hlir_t *hlir)
     operand_t lhs = emit_hlir(ssa, hlir->lhs);
     operand_t rhs = emit_hlir(ssa, hlir->rhs);
 
-    type_t type = {
-        .kind = eLiteralBool
-    };
+    type_t type = {.kind = eLiteralBool};
     step_t step = new_step(eOpCompare, type);
     step.compare = hlir->compare;
     step.lhs = lhs;
@@ -152,7 +124,7 @@ static operand_t emit_return(ssa_t *ssa, const hlir_t *hlir)
 {
     operand_t result = emit_hlir(ssa, hlir->result);
 
-    type_t type = { .kind = eLiteralEmpty };
+    type_t type = {.kind = eLiteralEmpty};
     step_t step = new_step(eOpReturn, type);
     step.result = result;
 
@@ -220,7 +192,7 @@ static void compile_flow(ssa_t *ssa, flow_t *flow, const hlir_t *hlir)
     case eLinkInternal:
         vector_push(&mod->internals, flow);
         break;
-    
+
     default:
         break;
     }
@@ -228,11 +200,7 @@ static void compile_flow(ssa_t *ssa, flow_t *flow, const hlir_t *hlir)
 
 static void compile_flows(reports_t *reports, module_t *mod, map_t *flows)
 {
-    ssa_t ssa = { 
-        .reports = reports,
-        .mod = mod,
-        .flows = flows
-    };
+    ssa_t ssa = {.reports = reports, .mod = mod, .flows = flows};
 
     map_iter_t iter = map_iter(flows);
     while (map_has_next(&iter))

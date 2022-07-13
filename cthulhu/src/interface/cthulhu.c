@@ -6,7 +6,9 @@
 #include "scan/compile.h"
 
 #include "base/macros.h"
-#include "base/util.h"
+#include "base/memory.h"
+#include "base/panic.h"
+
 #include "std/str.h"
 
 static int report_errors(cthulhu_t *cthulhu, const char *name)
@@ -63,11 +65,11 @@ source_t *source_string(const char *path, const char *string)
 
 cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
 {
-    CTASSERT(driver.fnInitCompiler != NULL, "driver must implement fnInitCompiler");
-    CTASSERT(driver.fnParseFile != NULL, "driver must implement fnParseFile");
-    CTASSERT(driver.fnForwardDecls != NULL, "driver must implement fnForwardDecls");
-    CTASSERT(driver.fnResolveImports != NULL, "driver must implement fnResolveImports");
-    CTASSERT(driver.fnCompileModule != NULL, "driver must implement fnCompileModule");
+    CTASSERT(driver.fnInitCompiler != NULL);
+    CTASSERT(driver.fnParseFile != NULL);
+    CTASSERT(driver.fnForwardDecls != NULL);
+    CTASSERT(driver.fnResolveImports != NULL);
+    CTASSERT(driver.fnCompileModule != NULL);
 
     cthulhu_t *cthulhu = ctu_malloc(sizeof(cthulhu_t));
 

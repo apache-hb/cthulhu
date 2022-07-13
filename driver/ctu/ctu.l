@@ -14,10 +14,10 @@
 
 %x COMMENT
 
+SUFFIX [uU]?[cCsSlLzZpPmM]?
+
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 WS [ \t\r\v\n\f]
-
-SUFFIX [uUiI][cCsSlL]
 
 %%
 
@@ -194,18 +194,18 @@ SUFFIX [uUiI][cCsSlL]
     return IDENT; 
 }
 
-"0b"[01]+ {
-    mpz_init_set_str(yylval->mpz, yytext+2, 2);
+"0b"[01]+{SUFFIX} {
+    init_string_with_suffix(&yylval->digit.suffix, yylval->digit.mpz, yytext + 2, 2);
     return INTEGER;
 }
 
-"0x"[0-9a-fA-F]+ {
-    mpz_init_set_str(yylval->mpz, yytext+2, 16);
+"0x"[0-9a-fA-F]+{SUFFIX} {
+    init_string_with_suffix(&yylval->digit.suffix, yylval->digit.mpz, yytext + 2, 16);
     return INTEGER;
 }
 
-[0-9]+ {
-    mpz_init_set_str(yylval->mpz, yytext, 10);
+[0-9]+{SUFFIX} {
+    init_string_with_suffix(&yylval->digit.suffix, yylval->digit.mpz, yytext, 10);
     return INTEGER;
 }
 

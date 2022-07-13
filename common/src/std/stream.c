@@ -1,5 +1,5 @@
 #include "std/stream.h"
-#include "base/util.h"
+#include "base/memory.h"
 
 #include <string.h>
 

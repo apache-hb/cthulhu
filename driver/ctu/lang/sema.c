@@ -12,6 +12,7 @@
 
 #include "base/macros.h"
 #include "base/util.h"
+#include "base/memory.h"
 
 #include "report/report-ext.h"
 #include "std/set.h"

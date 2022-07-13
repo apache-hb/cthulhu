@@ -12,42 +12,6 @@ BEGIN_API
  */
 
 /**
- * @brief free a pointer
- *
- * @param ptr a pointer to valid memory allocated from @ref ctu_malloc
- */
-void ctu_free(void *ptr);
-
-/**
- * @brief allocate memory
- *
- * all memory allocated must be freed with @ref ctu_free.
- * will abort if memory cannot be allocated.
- *
- * @param size the size of the memory to allocate
- *
- * @return the allocated memory
- */
-NODISCARD
-void *ctu_malloc(size_t size);
-
-/**
- * @brief reallocate memory
- *
- * memory must be originally allocated with @ref ctu_malloc, @ref ctu_realloc,
- * @ref ctu_strdup, @ref ctu_strndup, or @ref ctu_memdup.
- * all memory allocated must be freed with @ref ctu_free.
- * will abort if memory cannot be allocated.
- *
- * @param ptr the pointer to reallocate
- * @param size the new size the pointers memory should be
- *
- * @return the reallocated pointer
- */
-NODISCARD
-void *ctu_realloc(void *ptr, size_t size);
-
-/**
  * @brief allocate a copy of a string
  *
  * all memory allocated must be freed with @ref ctu_free.
@@ -93,11 +57,6 @@ void *ctu_memdup(IN_READS(size) const void *ptr, size_t size);
 
 NODISCARD
 size_t ptrhash(const void *ptr);
-
-/**
- * @brief init gmp with our own allocation functions
- */
-void init_gmp(void);
 
 #define BOX(name) ctu_memdup(&(name), sizeof(name)) ///< box a value onto the heap from the stack
 

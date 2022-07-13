@@ -1,5 +1,8 @@
 #include "std/map.h"
 #include "base/util.h"
+#include "base/memory.h"
+#include "base/panic.h"
+
 #include "std/str.h"
 #include "std/vector.h"
 
@@ -60,6 +63,8 @@ static void clear_keys(bucket_t *buckets, size_t size)
 USE_DECL
 map_t *map_new(size_t size)
 {
+    CTASSERT(size > 0);
+
     map_t *map = ctu_malloc(sizeof_map(size));
 
     map->size = size;
@@ -86,6 +91,8 @@ map_t *map_new(size_t size)
 USE_DECL
 vector_t *map_values(map_t *map)
 {
+    CTASSERT(map != NULL);
+
     vector_t *result = vector_new(map->size);
 
     MAP_FOREACH_APPLY(map, entry, { vector_push(&result, entry->value); });
@@ -104,6 +111,8 @@ static map_entry_t *new_entry(const char *key, void *value)
 USE_DECL
 vector_t *map_entries(map_t *map)
 {
+    CTASSERT(map != NULL);
+
     vector_t *result = vector_new(map->size);
 
     MAP_FOREACH_APPLY(map, entry, { vector_push(&result, new_entry(entry->key, entry->value)); });
@@ -137,6 +146,9 @@ static void *entry_get(const bucket_t *entry, const char *key, void *other)
 USE_DECL
 void *map_get_default(map_t *map, const char *key, void *other)
 {
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
     bucket_t *bucket = map_bucket_str(map, key);
     return entry_get(bucket, key, other);
 }
@@ -144,11 +156,17 @@ void *map_get_default(map_t *map, const char *key, void *other)
 USE_DECL
 void *map_get(map_t *map, const char *key)
 {
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
     return map_get_default(map, key, NULL);
 }
 
 void map_set(map_t *map, const char *key, void *value)
 {
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
     bucket_t *entry = map_bucket_str(map, key);
 
     while (true)
@@ -201,6 +219,9 @@ static void *entry_get_ptr(const bucket_t *entry, const void *key, void *other)
 
 void map_set_ptr(map_t *map, const void *key, void *value)
 {
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
     bucket_t *entry = map_bucket_ptr(map, key);
 
     while (true)
@@ -231,12 +252,18 @@ void map_set_ptr(map_t *map, const void *key, void *value)
 USE_DECL
 void *map_get_ptr(map_t *map, const void *key)
 {
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
     return map_get_default_ptr(map, key, NULL);
 }
 
 USE_DECL
 void *map_get_default_ptr(map_t *map, const void *key, void *other)
 {
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
     bucket_t *bucket = map_bucket_ptr(map, key);
     return entry_get_ptr(bucket, key, other);
 }
@@ -302,6 +329,8 @@ static bucket_t *find_next_bucket(map_t *map, size_t *index, bucket_t *previous)
 USE_DECL
 map_iter_t map_iter(map_t *map)
 {
+    CTASSERT(map != NULL);
+    
     size_t index = 0;
 
     bucket_t *bucket = find_next_bucket(map, &index, NULL);
@@ -320,6 +349,8 @@ map_iter_t map_iter(map_t *map)
 USE_DECL
 map_entry_t map_next(map_iter_t *iter)
 {
+    CTASSERT(iter != NULL);
+
     map_entry_t entry = {
         iter->bucket->key,
         iter->bucket->value,
@@ -334,10 +365,14 @@ map_entry_t map_next(map_iter_t *iter)
 USE_DECL
 bool map_has_next(map_iter_t *iter)
 {
+    CTASSERT(iter != NULL);
+    
     return iter->bucket != NULL;
 }
 
 void map_reset(map_t *map)
 {
+    CTASSERT(map != NULL);
+
     clear_keys(map->data, map->size);
 }

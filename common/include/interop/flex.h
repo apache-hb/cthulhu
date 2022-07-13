@@ -5,7 +5,9 @@
 DISABLE_SAL
 #endif
 
+#include "base/memory.h"
 #include "base/util.h"
+
 #include "scan/node.h"
 
 /**

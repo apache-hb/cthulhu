@@ -1,10 +1,12 @@
 #include "report/report.h"
+
 #include "base/util.h"
-#include "scan/node.h"
+#include "base/macros.h"
+#include "base/memory.h"
+
 #include "std/str.h"
 #include "std/vector.h"
 
-#include "base/macros.h"
 #include "scan/node.h"
 
 #include <math.h>

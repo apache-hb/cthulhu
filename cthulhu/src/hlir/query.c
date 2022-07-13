@@ -2,6 +2,7 @@
 
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
+#include "base/panic.h"
 
 static bool has_name(hlir_kind_t kind)
 {
@@ -68,19 +69,19 @@ static bool has_attribs(hlir_kind_t kind)
 
 hlir_kind_t get_hlir_kind(const hlir_t *hlir)
 {
-    CHECK_NULL(hlir);
+    CTASSERT(hlir != NULL);
     return hlir->type;
 }
 
 const hlir_t *get_hlir_type(const hlir_t *hlir)
 {
-    CHECK_NULL(hlir);
+    CTASSERT(hlir != NULL);
     return hlir->of;
 }
 
 const char *get_hlir_name(const hlir_t *hlir)
 {
-    CHECK_NULL(hlir);
+    CTASSERT(hlir != NULL);
     hlir_kind_t kind = get_hlir_kind(hlir);
     CTASSERTF(has_name(kind), "hlir_t %s has no name", hlir_kind_to_string(kind));
 
@@ -89,7 +90,7 @@ const char *get_hlir_name(const hlir_t *hlir)
 
 const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir)
 {
-    CHECK_NULL(hlir);
+    CTASSERT(hlir != NULL);
     hlir_kind_t kind = get_hlir_kind(hlir);
     CTASSERTF(has_attribs(kind), "hlir %s has no attributes", hlir_kind_to_string(kind));
 
@@ -98,13 +99,13 @@ const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir)
 
 node_t get_hlir_node(const hlir_t *hlir)
 {
-    CHECK_NULL(hlir);
+    CTASSERT(hlir != NULL);
     return hlir->location;
 }
 
 const hlir_t *get_hlir_parent(const hlir_t *hlir)
 {
-    CHECK_NULL(hlir);
+    CTASSERT(hlir != NULL);
     return hlir->parentDecl;
 }
 
@@ -287,7 +288,7 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
         return false;
 
     default:
-        CTASSERT(false, "unknown type");
+        CTASSERTF(false, "unknown type %s", hlir_kind_to_string(lhsKind));
         return false;
     }
 }

@@ -1,4 +1,10 @@
-libbase = library('base', [ 'src/base/base.c' ], 
+src = [
+    'src/base/base.c',
+    'src/base/panic.c',
+    'src/base/memory.c'
+]
+
+libbase = library('base', src, 
     c_args : args,
     dependencies : deps,
     include_directories : 'include'
