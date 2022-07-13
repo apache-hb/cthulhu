@@ -109,7 +109,7 @@ static argparse_t new_argparse(const argparse_config_t *config)
 
                          .reports = config->reports,
                          .currentName = NULL,
-                         .currentArg = NULL};
+                         .currentArg = NULL,};
 
     return result;
 }

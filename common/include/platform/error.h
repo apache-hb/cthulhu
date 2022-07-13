@@ -2,6 +2,8 @@
 
 #include "base/analyze.h"
 
+#include <stddef.h>
+
 typedef size_t cerror_t;
 
 NODISCARD

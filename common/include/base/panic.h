@@ -3,8 +3,8 @@
 #include "base/analyze.h"
 #include "base/macros.h"
 
-#include <stddef.h>
 #include <stdarg.h>
+#include <stddef.h>
 
 typedef struct
 {
@@ -15,7 +15,7 @@ typedef struct
 
 /**
  * @brief a panic handler callback
- * 
+ *
  * @note this function is not allowed to allocate using any allocator the compiler
  *       has used.
  */

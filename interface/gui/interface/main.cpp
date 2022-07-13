@@ -204,48 +204,51 @@ int main()
         constexpr auto *helloId = "Hello World!";
 
         ImGui::Begin(helloId);
-            ImGui::Button("Compile");
-            ImGui::InputTextMultiline("##", textInput, kEditorSize); // TODO: make this scale properly
+        ImGui::Button("Compile");
+        ImGui::InputTextMultiline("##", textInput, kEditorSize); // TODO: make this scale properly
         ImGui::End();
 
         ImGui::End();
 
-
-        if (openMemoryView) {
-            if (ImGui::Begin("Memory Stats", &openMemoryView)) {
-            
+        if (openMemoryView)
+        {
+            if (ImGui::Begin("Memory Stats", &openMemoryView))
+            {
             }
             ImGui::End();
         }
 
-        if (openPerfView) {
-            if (ImGui::Begin("Performance Stats", &openPerfView)) {
-            
+        if (openPerfView)
+        {
+            if (ImGui::Begin("Performance Stats", &openPerfView))
+            {
             }
             ImGui::End();
         }
 
-        if (openHlirView) {
-            if (ImGui::Begin("HLIR Debug View", &openHlirView)) {
-                
+        if (openHlirView)
+        {
+            if (ImGui::Begin("HLIR Debug View", &openHlirView))
+            {
             }
             ImGui::End();
         }
 
-        if (openSsaView) {
-            if (ImGui::Begin("SSA Debug View", &openSsaView)) {
-                
+        if (openSsaView)
+        {
+            if (ImGui::Begin("SSA Debug View", &openSsaView))
+            {
             }
             ImGui::End();
         }
 
-        if (openLogView) {
-            if (ImGui::Begin("Compiler Log View", &openLogView)) {
-                
+        if (openLogView)
+        {
+            if (ImGui::Begin("Compiler Log View", &openLogView))
+            {
             }
             ImGui::End();
         }
-
 
         ImGui::ShowDemoWindow();
 

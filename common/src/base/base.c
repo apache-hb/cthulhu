@@ -1,8 +1,8 @@
 #include "base/util.h"
 
+#include "base/macros.h"
 #include "base/memory.h"
 #include "base/panic.h"
-#include "base/macros.h"
 
 #include <gmp.h>
 #include <stdarg.h>

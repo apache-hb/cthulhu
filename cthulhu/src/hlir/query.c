@@ -1,8 +1,8 @@
 #include "common.h"
 
+#include "base/panic.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
-#include "base/panic.h"
 
 static bool has_name(hlir_kind_t kind)
 {

@@ -61,6 +61,8 @@ typedef struct
     const char *name;
     version_t version;
 
+    vector_t *commandGroups;
+
     init_compiler_t fnInitCompiler;
     parse_file_t fnParseFile;
     forward_decls_t fnForwardDecls;

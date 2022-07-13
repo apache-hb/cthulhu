@@ -11,8 +11,8 @@
 #include "cthulhu/interface/runtime.h"
 
 #include "base/macros.h"
-#include "base/util.h"
 #include "base/memory.h"
+#include "base/util.h"
 
 #include "report/report-ext.h"
 #include "std/set.h"

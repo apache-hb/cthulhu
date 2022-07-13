@@ -1,16 +1,19 @@
 #include "cthulhu/emit/c89.h"
+
 #include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/ops.h"
+#include "cthulhu/hlir/query.h"
+
 #include "report/report.h"
-#include "std/map.h"
 
 #include "base/macros.h"
 #include "base/util.h"
 #include "base/panic.h"
+#include "base/memory.h"
 
-#include "cthulhu/hlir/query.h"
 #include "std/set.h"
 #include "std/str.h"
+#include "std/map.h"
 #include "std/stream.h"
 
 #include <string.h>
@@ -905,7 +908,7 @@ static vector_t *sort_types(c89_emit_t *emit, vector_t *modules)
 
     vector_t *result = vector_new(totalTypes);
 
-    set_t *uniqueTypes = set_new(totalTypes);
+    set_t *uniqueTypes = set_new(totalTypes, &globalAlloc, "unique-types");
 
     for (size_t i = 0; i < totalTypes; i++)
     {
@@ -987,7 +990,7 @@ static void c89_emit_global(c89_emit_t *emit, const hlir_t *hlir)
 static void c89_emit_globals(c89_emit_t *emit, size_t totalDecls, vector_t *modules)
 {
     size_t totalModules = vector_len(modules);
-    set_t *uniqueGlobals = set_new(totalDecls);
+    set_t *uniqueGlobals = set_new(totalDecls, &globalAlloc, "unique-globals");
 
     for (size_t i = 0; i < totalModules; i++)
     {
@@ -1113,7 +1116,7 @@ static void c89_emit_function(c89_emit_t *emit, const hlir_t *function)
 static void c89_emit_functions(c89_emit_t *emit, size_t totalDecls, vector_t *modules)
 {
     size_t totalModules = vector_len(modules);
-    set_t *uniqueFunctions = set_new(totalDecls);
+    set_t *uniqueFunctions = set_new(totalDecls, &globalAlloc, "unique-functions");
 
     for (size_t i = 0; i < totalModules; i++)
     {

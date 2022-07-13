@@ -2,8 +2,8 @@
 #include "base/macros.h"
 #include "base/panic.h"
 
-#include <stdlib.h>
 #include <gmp.h>
+#include <stdlib.h>
 
 /// default global allocator
 
@@ -31,13 +31,11 @@ static void default_global_free(alloc_t *alloc, void *ptr, size_t size)
     free(ptr);
 }
 
-alloc_t globalAlloc = {
-    .name = "default global allocator",
-    .arenaMalloc = default_global_malloc,
-    .arenaRealloc = default_global_realloc,
-    .arenaFree = default_global_free,
-    .data = NULL
-};
+alloc_t globalAlloc = {.name = "default global allocator",
+                       .arenaMalloc = default_global_malloc,
+                       .arenaRealloc = default_global_realloc,
+                       .arenaFree = default_global_free,
+                       .data = NULL};
 
 /// global allocator
 
@@ -52,7 +50,7 @@ void *ctu_realloc(void *ptr, size_t newSize)
 {
     CTASSERT(ptr != NULL);
     CTASSERT(newSize > 0);
-    
+
     return arena_realloc(&globalAlloc, ptr, newSize, ALLOC_SIZE_UNKNOWN);
 }
 
@@ -64,7 +62,7 @@ void ctu_free(void *ptr)
 /// arena allocator
 
 void *arena_malloc(alloc_t *alloc, size_t size, const char *name)
-{   
+{
     CTASSERT(alloc != NULL);
 
     return alloc->arenaMalloc(alloc, size, name);
@@ -104,7 +102,7 @@ static void ctu_gmp_free(void *ptr, size_t size)
 }
 
 void init_gmp(alloc_t *alloc)
-{    
+{
     gmpAlloc = alloc != NULL ? alloc : &globalAlloc;
     mp_set_memory_functions(ctu_gmp_malloc, ctu_gmp_realloc, ctu_gmp_free);
 }

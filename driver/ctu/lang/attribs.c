@@ -5,8 +5,8 @@
 
 #include "base/macros.h"
 #include "base/memory.h"
-#include "base/util.h"
 #include "base/panic.h"
+#include "base/util.h"
 
 #include "std/map.h"
 #include "std/str.h"

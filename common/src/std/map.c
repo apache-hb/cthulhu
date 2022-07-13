@@ -1,7 +1,7 @@
 #include "std/map.h"
-#include "base/util.h"
 #include "base/memory.h"
 #include "base/panic.h"
+#include "base/util.h"
 
 #include "std/str.h"
 #include "std/vector.h"
@@ -330,7 +330,7 @@ USE_DECL
 map_iter_t map_iter(map_t *map)
 {
     CTASSERT(map != NULL);
-    
+
     size_t index = 0;
 
     bucket_t *bucket = find_next_bucket(map, &index, NULL);
@@ -366,7 +366,7 @@ USE_DECL
 bool map_has_next(map_iter_t *iter)
 {
     CTASSERT(iter != NULL);
-    
+
     return iter->bucket != NULL;
 }
 

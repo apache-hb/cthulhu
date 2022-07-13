@@ -3,9 +3,9 @@
 #include "std/vector.h"
 
 #include "base/macros.h"
-#include "base/util.h"
 #include "base/memory.h"
 #include "base/panic.h"
+#include "base/util.h"
 
 #include <ctype.h>
 #include <stddef.h>

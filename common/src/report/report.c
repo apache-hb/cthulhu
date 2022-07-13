@@ -1,8 +1,8 @@
 #include "report/report.h"
 
-#include "base/util.h"
 #include "base/macros.h"
 #include "base/memory.h"
+#include "base/util.h"
 
 #include "std/str.h"
 #include "std/vector.h"

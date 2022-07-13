@@ -1,5 +1,6 @@
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/query.h"
+
 #include "base/panic.h"
 
 #include "common.h"
