@@ -25,6 +25,7 @@ typedef enum
 {
     eLiteralInt,
     eLiteralBool,
+    eLiteralVoid,
     eLiteralString,
     eLiteralEmpty
 } literal_t;
@@ -74,7 +75,9 @@ typedef enum
     eOpBinary,
     eOpCompare,
     eOpJmp,
-    eOpCond
+    eOpCond,
+    eOpLoad,
+    eOpStore
 } opcode_t;
 
 typedef struct
@@ -114,6 +117,12 @@ typedef struct
 
             size_t count;
             operand_t *args;
+        };
+
+        struct 
+        {
+            operand_t src;
+            operand_t dst;
         };
     };
 } step_t;

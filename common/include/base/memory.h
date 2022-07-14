@@ -20,16 +20,20 @@ typedef struct alloc_t
     malloc_t arenaMalloc;
     realloc_t arenaRealloc;
     free_t arenaFree;
-    void *data;
+    void *data; // this allocators private data
 } alloc_t;
 
 extern alloc_t globalAlloc;
 
 #define ALLOC_SIZE_UNKNOWN SIZE_MAX
 
-NODISCARD void *ctu_malloc(size_t size);
-NODISCARD void *ctu_realloc(void *ptr, size_t newSize);
 void ctu_free(void *ptr);
+
+ALLOC(ctu_free)
+NODISCARD void *ctu_malloc(size_t size);
+
+ALLOC(ctu_free)
+NODISCARD void *ctu_realloc(void *ptr, size_t newSize);
 
 void init_gmp(alloc_t *alloc);
 

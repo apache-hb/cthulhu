@@ -53,8 +53,12 @@ static item_t *get_bucket_ptr(set_t *set, const void *key)
 USE_DECL
 set_t *set_new(size_t size, alloc_t *alloc, const char *name)
 {
-    CTASSERT(size > 0);
     CTASSERT(alloc != NULL);
+
+    if (size == 0)
+    {
+        return NULL;
+    }
 
     set_t *set = arena_malloc(alloc, set_size(size), name);
     set->alloc = alloc;

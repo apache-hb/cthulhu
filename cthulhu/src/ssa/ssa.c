@@ -5,6 +5,7 @@
 #include "cthulhu/hlir/query.h"
 
 #include "base/memory.h"
+#include "base/panic.h"
 
 #include "report/report.h"
 #include "std/map.h"
@@ -53,6 +54,30 @@ static vreg_t add_step(ssa_t *ssa, step_t step)
     return flow->len++;
 }
 
+static type_t new_type(literal_t kind)
+{
+    type_t type = {
+        .kind = kind
+    };
+
+    return type;
+}
+
+static type_t invalid_type(void)
+{
+    return new_type(eLiteralEmpty);
+}
+
+static type_t digit_type(const hlir_t *hlir)
+{
+    CTASSERT(hlir_is(hlir, eHlirDigit));
+
+    type_t type = new_type(eLiteralInt);
+    type.digitKind.sign = hlir->sign;
+    type.digitKind.width = hlir->width;
+    return type;
+}
+
 static step_t new_step(opcode_t op, type_t type)
 {
     step_t step = {.op = op, .type = type};
@@ -72,22 +97,52 @@ static operand_t operand_vreg(vreg_t reg)
     return operand;
 }
 
-static operand_t operand_digit(const mpz_t digit, digit_t width, sign_t sign)
+static operand_t operand_ref(flow_t *flow)
 {
-    value_t value = {.type = {.kind = eLiteralInt, .digitKind = {.width = width, .sign = sign}}};
+    operand_t operand = {.kind = eOperandRef, .ref = flow};
+    return operand;
+}
 
-    mpz_init_set(value.digit, digit);
+static operand_t operand_digit(const hlir_t *hlir)
+{
+    CTASSERT(hlir_is(hlir, eHlirLiteralDigit));
+
+    value_t value = {
+        .type = digit_type(get_hlir_type(hlir))
+    };
+
+    mpz_init_set(value.digit, hlir->digit);
 
     operand_t operand = {.kind = eOperandImm, .value = value};
 
     return operand;
 }
 
+static type_t emit_type(ssa_t *ssa, const hlir_t *hlir)
+{
+    hlir_kind_t kind = get_hlir_kind(hlir);
+    switch (kind)
+    {
+    case eHlirDigit:
+        return digit_type(hlir);
+    case eHlirBool:
+        return new_type(eLiteralBool);
+    case eHlirVoid:
+        return new_type(eLiteralVoid);
+    case eHlirString:
+        return new_type(eLiteralString);
+
+    default:
+        report(ssa->reports, eInternal, get_hlir_node(hlir), "unsupported type %s", hlir_kind_to_string(kind));
+        return invalid_type();
+    }
+}
+
 static operand_t emit_hlir(ssa_t *ssa, const hlir_t *hlir);
 
 static operand_t emit_digit(const hlir_t *hlir)
 {
-    return operand_digit(hlir->digit, hlir->width, hlir->sign);
+    return operand_digit(hlir);
 }
 
 static operand_t emit_binary(ssa_t *ssa, const hlir_t *hlir)
@@ -95,9 +150,7 @@ static operand_t emit_binary(ssa_t *ssa, const hlir_t *hlir)
     operand_t lhs = emit_hlir(ssa, hlir->lhs);
     operand_t rhs = emit_hlir(ssa, hlir->rhs);
 
-    // TODO: convert hlir type to type_t
-    type_t type = {.kind = eLiteralInt, .digitKind = {.width = eInt, .sign = eSigned}};
-
+    type_t type = emit_type(ssa, get_hlir_type(hlir));
     step_t step = new_step(eOpBinary, type);
     step.binary = hlir->binary;
     step.lhs = lhs;
@@ -111,7 +164,7 @@ static operand_t emit_compare(ssa_t *ssa, const hlir_t *hlir)
     operand_t lhs = emit_hlir(ssa, hlir->lhs);
     operand_t rhs = emit_hlir(ssa, hlir->rhs);
 
-    type_t type = {.kind = eLiteralBool};
+    type_t type = new_type(eLiteralBool);
     step_t step = new_step(eOpCompare, type);
     step.compare = hlir->compare;
     step.lhs = lhs;
@@ -124,10 +177,68 @@ static operand_t emit_return(ssa_t *ssa, const hlir_t *hlir)
 {
     operand_t result = emit_hlir(ssa, hlir->result);
 
-    type_t type = {.kind = eLiteralEmpty};
+    type_t type = invalid_type();
     step_t step = new_step(eOpReturn, type);
     step.result = result;
 
+    return operand_vreg(add_step(ssa, step));
+}
+
+static operand_t emit_call(ssa_t *ssa, const hlir_t *hlir)
+{
+    operand_t *args = NULL;
+
+    size_t len = vector_len(hlir->args);
+    if (len > 0) 
+    {
+        args = ctu_malloc(sizeof(operand_t) * len);
+
+        for (size_t i = 0; i < len; i++)
+        {
+            const hlir_t *arg = vector_get(hlir->args, i);
+            args[i] = emit_hlir(ssa, arg);
+        }
+    }
+
+    operand_t func = emit_hlir(ssa, hlir->call);
+
+    type_t type = emit_type(ssa, closure_result(hlir->call));
+    step_t step = new_step(eOpCall, type);
+    step.call = func;
+    step.count = len;
+    step.args = args;
+
+    return operand_vreg(add_step(ssa, step));
+}
+
+static operand_t emit_ref(ssa_t *ssa, const hlir_t *hlir)
+{
+    flow_t *flow = map_get_ptr(ssa->flows, hlir);
+    CTASSERT(flow != NULL);
+
+    return operand_ref(flow);
+}
+
+static operand_t emit_stmts(ssa_t *ssa, const hlir_t *hlir)
+{
+    for (size_t i = 0; i < vector_len(hlir->stmts); i++)
+    {
+        const hlir_t *stmt = vector_get(hlir->stmts, i);
+        emit_hlir(ssa, stmt);
+    }
+
+    return operand_empty();
+}
+
+static operand_t emit_assign(ssa_t *ssa, const hlir_t *hlir)
+{
+    operand_t src = emit_hlir(ssa, hlir->src);
+    operand_t dst = emit_hlir(ssa, hlir->dst);
+
+    step_t step = new_step(eOpStore, new_type(eLiteralEmpty));
+    step.dst = dst;
+    step.src = src;
+    
     return operand_vreg(add_step(ssa, step));
 }
 
@@ -147,6 +258,18 @@ static operand_t emit_hlir(ssa_t *ssa, const hlir_t *hlir)
 
     case eHlirReturn:
         return emit_return(ssa, hlir);
+
+    case eHlirCall:
+        return emit_call(ssa, hlir);
+
+    case eHlirFunction:
+        return emit_ref(ssa, hlir);
+
+    case eHlirStmts:
+        return emit_stmts(ssa, hlir);
+
+    case eHlirAssign:
+        return emit_assign(ssa, hlir);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "unexpected hlir %s", hlir_kind_to_string(kind));

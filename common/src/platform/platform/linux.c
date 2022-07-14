@@ -160,19 +160,6 @@ char *native_cerror_to_string(native_cerror_t error)
     return format("%s (errno %d)", buffer, error);
 }
 
-static void signal_handler(int sig)
-{
-    UNUSED(sig);
-
-    fprintf(stderr, COLOUR_CYAN "[signal:%d]" COLOUR_RESET ": unhandled signal\n", sig);
-    exit(EXIT_INTERNAL);
-}
-
-void native_install_segfault(void)
-{
-    signal(SIGSEGV, signal_handler);
-}
-
 USE_DECL
 native_cerror_t native_get_last_error(void)
 {

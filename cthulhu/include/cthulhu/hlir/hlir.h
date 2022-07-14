@@ -306,7 +306,7 @@ hlir_t *hlir_string_literal(node_t node, const hlir_t *type, const char *value, 
 
 hlir_t *hlir_name(node_t node, hlir_t *read);
 
-hlir_t *hlir_unary(node_t node, const hlir_t *type, hlir_t *operand, unary_t unary);
+hlir_t *hlir_unary(node_t node, hlir_t *operand, unary_t unary);
 hlir_t *hlir_binary(node_t node, const hlir_t *type, binary_t binary, hlir_t *lhs, hlir_t *rhs);
 hlir_t *hlir_compare(node_t node, const hlir_t *type, compare_t compare, hlir_t *lhs, hlir_t *rhs);
 hlir_t *hlir_call(node_t node, hlir_t *call, vector_t *args);

@@ -318,7 +318,7 @@ static hlir_t *sema_unary_digit(sema_t *sema, ast_t *ast, hlir_t *operand)
         return hlir_error(ast->node, "invalid unary digit type");
     }
 
-    return hlir_unary(ast->node, type, operand, ast->unary);
+    return hlir_unary(ast->node, operand, ast->unary);
 }
 
 static hlir_t *sema_unary_bool(sema_t *sema, ast_t *ast, hlir_t *operand)
@@ -333,7 +333,7 @@ static hlir_t *sema_unary_bool(sema_t *sema, ast_t *ast, hlir_t *operand)
         return hlir_error(ast->node, "invalid unary bool type");
     }
 
-    return hlir_unary(ast->node, type, operand, ast->unary);
+    return hlir_unary(ast->node, operand, ast->unary);
 }
 
 static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
@@ -575,6 +575,7 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     {
         message_t *id = report(sema->reports, eFatal, get_hlir_node(cond), "loop condition must be boolean");
         report_note(id, "type '%s' found", ctu_repr(sema->reports, cond, true));
+        return hlir_error(ast->node, "invalid loop condition");
     }
 
     return hlir_loop(ast->node, cond, then, other);

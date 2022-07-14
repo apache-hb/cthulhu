@@ -5,14 +5,11 @@
 
 #include "argparse/argparse.h"
 
-#include "platform/segfault.h"
-
 #include <stdio.h>
 
 void common_init(void)
 {
-    install_segfault();
-    init_gmp(NULL);
+    init_gmp(&globalAlloc);
     argparse_init();
     init_hlir();
 }

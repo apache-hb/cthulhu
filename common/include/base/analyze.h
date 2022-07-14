@@ -25,12 +25,14 @@
 #    define PUREFN __attribute__((pure))
 #    define HOTFN __attribute__((hot))
 #    define COLDFN __attribute__((cold))
+#    define ALLOC(fn) __attribute__((malloc, malloc(fn)))
 #else
 #    define FORMAT_ATTRIBUTE(a, b)
 #    define CONSTFN
 #    define PUREFN
 #    define HOTFN
 #    define COLDFN
+#    define ALLOC(fn)
 #endif
 
 #ifndef NODISCARD

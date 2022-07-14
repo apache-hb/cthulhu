@@ -1,6 +1,10 @@
-module l;procedure add;
+module l;
+
+procedure add;
 var tmp;
-begin tmp := + rhs; result := tmp
+begin
+    tmp := + rhs;
+    result := tmp
 end;
 
 .

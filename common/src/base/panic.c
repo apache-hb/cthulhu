@@ -3,9 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#if ADDRSAN_ENABLED
+#   include <signal.h>
+#endif
+
 static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
-    fprintf(stderr, COLOUR_CYAN "panic" COLOUR_RESET "[%s:%zu]@" COLOUR_RED "%s" COLOUR_RESET ": ", panic.file,
+    fprintf(stderr,  COLOUR_CYAN "[panic]" COLOUR_RESET "[%s:%zu] => " COLOUR_RED "%s" COLOUR_RESET ": ", panic.file,
             panic.line, panic.function);
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
@@ -23,8 +27,7 @@ void ctpanic(panic_t panic, const char *msg, ...)
 
 #if ADDRSAN_ENABLED
     raise(SIGSEGV);
-    exit(EXIT_INTERNAL);
-#else
-    abort();
 #endif
+
+    abort();
 }

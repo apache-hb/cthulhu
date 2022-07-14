@@ -7,13 +7,13 @@
 #include "report/report.h"
 
 #include "base/macros.h"
-#include "base/util.h"
-#include "base/panic.h"
 #include "base/memory.h"
+#include "base/panic.h"
+#include "base/util.h"
 
+#include "std/map.h"
 #include "std/set.h"
 #include "std/str.h"
-#include "std/map.h"
 #include "std/stream.h"
 
 #include <string.h>

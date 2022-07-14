@@ -40,4 +40,4 @@ extern panic_handler_t globalPanicHandler;
 #endif
 
 #define CTASSERTM(expr, msg) CTASSERTF(expr, msg)
-#define CTASSERT(expr) CTASSERTM(expr, STR(FUNCNAME) "@" #expr)
+#define CTASSERT(expr) CTASSERTM(expr, #expr)

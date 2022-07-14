@@ -124,10 +124,6 @@ const void *native_file_map(file_handle_t handle, native_cerror_t *error);
 NODISCARD
 char *native_cerror_to_string(native_cerror_t error);
 
-// segfault api
-
-void native_install_segfault(void);
-
 /// error api
 
 NODISCARD

@@ -283,6 +283,32 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
     case eHlirVoid:
         return true;
 
+    case eHlirFunction: {
+        vector_t *lhsParams = closure_params(actualLhs);
+        vector_t *rhsParams = closure_params(actualRhs);
+        if (vector_len(lhsParams) != vector_len(rhsParams))
+        {
+            return false;
+        }
+
+        if (closure_variadic(actualLhs) != closure_variadic(actualRhs))
+        {
+            return false;
+        }
+
+        for (size_t i = 0; i < vector_len(lhsParams); i++)
+        {
+            const hlir_t *lhsParam = vector_get(lhsParams, i);
+            const hlir_t *rhsParam = vector_get(rhsParams, i);
+            if (!hlir_types_equal(lhsParam, rhsParam))
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
     case eHlirAlias:
     case eHlirError: // TODO: are errors always equal, or never equal?
         return false;

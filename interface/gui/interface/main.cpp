@@ -148,9 +148,6 @@ int main()
     bool openSsaView = false;
     bool openLogView = false;
 
-    constexpr auto kEditorSize = 0x4000;
-    char *textInput = new char[kEditorSize]();
-
     while (!glfwWindowShouldClose(window) && !shouldExit)
     {
         glfwPollEvents();
@@ -200,13 +197,6 @@ int main()
 
             ImGui::EndMenuBar();
         }
-
-        constexpr auto *helloId = "Hello World!";
-
-        ImGui::Begin(helloId);
-        ImGui::Button("Compile");
-        ImGui::InputTextMultiline("##", textInput, kEditorSize); // TODO: make this scale properly
-        ImGui::End();
 
         ImGui::End();
 

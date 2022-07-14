@@ -27,6 +27,7 @@
 * add binary module support back in
 * support [ifc](https://github.com/microsoft/ifc-spec) modules
 * custom allocators
+    * make everything allocator aware
 * build time option for internal compiler timing
 * better code coverage with tests
 * perhaps custom lexer + parser generator

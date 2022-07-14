@@ -7,9 +7,13 @@
 #include "cthulhu/interface/interface.h"
 
 #include "cthulhu/emit/c89.h"
+#include "cthulhu/ssa/ssa.h"
 
 static const char *kOutputFileNames[] = {"-o", "--output"};
 #define TOTAL_OUTPUT_FILE_NAMES (sizeof(kOutputFileNames) / sizeof(const char *))
+
+static const char *kSSANames[] = { "--enable-ssa", "-ssa" };
+#define TOTAL_SSA_NAMES (sizeof(kSSANames) / sizeof(const char *))
 
 int main(int argc, const char **argv)
 {
@@ -22,7 +26,13 @@ int main(int argc, const char **argv)
     driver_t driver = get_driver();
 
     param_t *outputFileNameParam = string_param("output file name", kOutputFileNames, TOTAL_OUTPUT_FILE_NAMES);
-    group_t *codegenGroup = new_group("codegen", "code generation options", vector_init(outputFileNameParam));
+    param_t *enableSSAParam = bool_param("enable ssa codegen (experimental)", kSSANames, TOTAL_SSA_NAMES);
+
+    vector_t *codegenParams = vector_new(2);
+    vector_push(&codegenParams, outputFileNameParam);
+    vector_push(&codegenParams, enableSSAParam);
+
+    group_t *codegenGroup = new_group("codegen", "code generation options", codegenParams);
 
     reports_t *reports = begin_reports();
 
@@ -48,6 +58,7 @@ int main(int argc, const char **argv)
     }
 
     const char *outFile = get_string_arg(&result, outputFileNameParam, "out.c");
+    bool enableSsa = get_bool_arg(&result, enableSSAParam, false);
 
     size_t totalFiles = vector_len(result.files);
     vector_t *sources = vector_of(totalFiles);
@@ -91,6 +102,18 @@ int main(int argc, const char **argv)
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
 
+    if (enableSsa)
+    {
+        module_t *mod = ssa_compile(reports, allModules);
+        UNUSED(mod);
+
+        status = end_reports(reports, "ssa codegen", reportConfig);
+        if (status != EXIT_OK)
+        {
+            return status;
+        }
+    }
+
     cerror_t error = 0;
     file_t out = file_open(outFile, eFileWrite | eFileBinary, &error);
 
@@ -98,7 +121,7 @@ int main(int argc, const char **argv)
     {
         message_t *id = report(reports, eFatal, node_invalid(), "failed to open file `%s`", outFile);
         report_note(id, "%s", error_string(error));
-        return EXIT_ERROR;
+        return end_reports(reports, "opening file", reportConfig);
     }
 
     stream_t *stream = c89_emit_modules(reports, allModules);

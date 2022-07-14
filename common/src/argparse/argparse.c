@@ -96,20 +96,22 @@ static size_t total_arg_names(vector_t *groups)
 static argparse_t new_argparse(const argparse_config_t *config)
 {
     size_t totalNames = total_arg_names(config->groups);
-    argparse_t result = {.exitCode = INT_MAX,
+    argparse_t result = {
+        .exitCode = INT_MAX,
 
-                         .verboseEnabled = false,
-                         .reportLimit = 20,
-                         .warningsAsErrors = false,
+        .verboseEnabled = false,
+        .reportLimit = 20,
+        .warningsAsErrors = false,
 
-                         .params = map_optimal(totalNames),
-                         .lookup = map_optimal(totalNames),
+        .params = map_optimal(totalNames),
+        .lookup = map_optimal(totalNames),
 
-                         .files = vector_new(config->argc - 1),
+        .files = vector_new(config->argc - 1),
 
-                         .reports = config->reports,
-                         .currentName = NULL,
-                         .currentArg = NULL,};
+        .reports = config->reports,
+        .currentName = NULL,
+        .currentArg = NULL,
+    };
 
     return result;
 }

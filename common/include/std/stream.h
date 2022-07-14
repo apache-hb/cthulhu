@@ -5,7 +5,7 @@
 
 BEGIN_API
 
-typedef struct
+typedef struct stream_t
 {
     size_t len;
     size_t size;

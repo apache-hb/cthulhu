@@ -31,11 +31,13 @@ static void default_global_free(alloc_t *alloc, void *ptr, size_t size)
     free(ptr);
 }
 
-alloc_t globalAlloc = {.name = "default global allocator",
-                       .arenaMalloc = default_global_malloc,
-                       .arenaRealloc = default_global_realloc,
-                       .arenaFree = default_global_free,
-                       .data = NULL};
+alloc_t globalAlloc = {
+    .name = "default global allocator",
+    .arenaMalloc = default_global_malloc,
+    .arenaRealloc = default_global_realloc,
+    .arenaFree = default_global_free,
+    .data = NULL,
+};
 
 /// global allocator
 
@@ -103,6 +105,8 @@ static void ctu_gmp_free(void *ptr, size_t size)
 
 void init_gmp(alloc_t *alloc)
 {
-    gmpAlloc = alloc != NULL ? alloc : &globalAlloc;
+    CTASSERT(alloc != NULL);
+
+    gmpAlloc = alloc;
     mp_set_memory_functions(ctu_gmp_malloc, ctu_gmp_realloc, ctu_gmp_free);
 }

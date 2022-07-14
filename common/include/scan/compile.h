@@ -52,6 +52,7 @@ typedef struct
  * @param text the source text inside the file
  * @return the populated scanner
  */
+NODISCARD
 scan_t scan_string(reports_t *reports, const char *language, const char *path, const char *text);
 
 /**
@@ -62,8 +63,10 @@ scan_t scan_string(reports_t *reports, const char *language, const char *path, c
  * @param file a file object
  * @return the populated scanner
  */
+NODISCARD
 scan_t scan_file(reports_t *reports, const char *language, file_t file);
 
+NODISCARD
 scan_t scan_without_source(reports_t *reports, const char *language, const char *path);
 
 /**
