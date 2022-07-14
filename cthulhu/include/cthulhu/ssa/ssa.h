@@ -18,7 +18,8 @@ typedef enum
     eOperandEmpty, // an empty operand
     eOperandImm,   // an immediate value
     eOperandReg,   // a register index
-    eOperandRef    // a symbol reference
+    eOperandRef,    // a symbol reference
+    eOperandLocal // a local variable
 } opkind_t;
 
 typedef enum
@@ -64,6 +65,7 @@ typedef struct
         value_t value;
         vreg_t reg;
         flow_t *ref;
+        size_t local;
     };
 } operand_t;
 
@@ -129,9 +131,11 @@ typedef struct
 
 typedef struct flow_t
 {
+    size_t stepsSize;
+    size_t stepsLen;
     step_t *steps;
-    size_t len;
-    size_t total;
+
+    vector_t *locals;
 } flow_t;
 
 typedef struct module_t

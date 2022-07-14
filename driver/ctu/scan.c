@@ -81,10 +81,10 @@ char *init_string_with_suffix(mpz_t mpz, const char *text, size_t base)
 {
     size_t len = strlen(text);
     CTASSERT(len > 0);
+    
+    size_t i = 0;
 
-    // trim off the suffix and get the last index
-    size_t i = len;
-    for (; i > 0; i--)
+    for (; i < len; i++)
     {
         if (!is_digit_in_base(text[i], base))
         {
@@ -93,8 +93,9 @@ char *init_string_with_suffix(mpz_t mpz, const char *text, size_t base)
     }
 
     // get the suffix and init mpz with the actual digit
-    char *suffix = str_upper(text + i);
-    mpz_init_set_str(mpz, ctu_strndup(text, i), base);
+    char *suffix = str_lower(text + i);
+    char *digit = ctu_strndup(text, i);
+    mpz_init_set_str(mpz, digit, base);
 
     return suffix;
 }

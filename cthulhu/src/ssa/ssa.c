@@ -15,6 +15,7 @@ typedef struct
     reports_t *reports;
     module_t *mod;
     map_t *flows;
+
     flow_t *current;
 } ssa_t;
 
@@ -44,14 +45,14 @@ static void forward_flows(map_t *cache, const hlir_t *hlir)
 static vreg_t add_step(ssa_t *ssa, step_t step)
 {
     flow_t *flow = ssa->current;
-    if (flow->total >= flow->len)
+    if (flow->stepsSize >= flow->stepsLen)
     {
-        flow->total += 16;
-        flow->steps = ctu_realloc(flow->steps, sizeof(step_t) * flow->total);
+        flow->stepsSize += 16;
+        flow->steps = ctu_realloc(flow->steps, sizeof(step_t) * flow->stepsSize);
     }
 
-    flow->steps[flow->len] = step;
-    return flow->len++;
+    flow->steps[flow->stepsLen] = step;
+    return flow->stepsLen++;
 }
 
 static type_t new_type(literal_t kind)
@@ -238,6 +239,15 @@ static operand_t emit_assign(ssa_t *ssa, const hlir_t *hlir)
     return operand_vreg(add_step(ssa, step));
 }
 
+static operand_t emit_name(ssa_t *ssa, const hlir_t *hlir)
+{
+    operand_t src = emit_hlir(ssa, hlir->read);
+    step_t step = new_step(eOpLoad, emit_type(ssa, get_hlir_type(hlir)));
+    step.src = src;
+
+    return operand_vreg(add_step(ssa, step));
+}
+
 static operand_t emit_hlir(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -267,6 +277,9 @@ static operand_t emit_hlir(ssa_t *ssa, const hlir_t *hlir)
     case eHlirAssign:
         return emit_assign(ssa, hlir);
 
+    case eHlirName:
+        return emit_name(ssa, hlir);
+
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "unexpected hlir %s", hlir_kind_to_string(kind));
         return operand_empty();
@@ -277,18 +290,24 @@ static void compile_flow(ssa_t *ssa, flow_t *flow, const hlir_t *hlir)
 {
     ssa->current = flow;
 
+    flow->stepsLen = 0;
+
     if (hlir->body != NULL)
     {
-        flow->len = 0;
-        flow->total = 16;
+        flow->stepsSize = 16;
+
         flow->steps = ctu_malloc(sizeof(step_t) * 16);
+        flow->locals = ctu_malloc(sizeof(type_t) * 4);
         emit_hlir(ssa, hlir->body);
+
+        flow->locals = vector_new(16);
     }
     else
     {
-        flow->len = 0;
-        flow->total = 0;
+        flow->stepsSize = 0;
+
         flow->steps = NULL;
+        flow->locals = NULL;
     }
 
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
@@ -297,9 +316,11 @@ static void compile_flow(ssa_t *ssa, flow_t *flow, const hlir_t *hlir)
     switch (attribs->linkage)
     {
     case eLinkEntryCli:
+        CTASSERT(mod->cliEntry == NULL);
         mod->cliEntry = flow;
         break;
     case eLinkEntryGui:
+        CTASSERT(mod->guiEntry == NULL);
         mod->guiEntry = flow;
         break;
     case eLinkExported:
@@ -319,7 +340,7 @@ static void compile_flow(ssa_t *ssa, flow_t *flow, const hlir_t *hlir)
 
 static void compile_flows(reports_t *reports, module_t *mod, map_t *flows)
 {
-    ssa_t ssa = {.reports = reports, .mod = mod, .flows = flows};
+    ssa_t ssa = {.reports = reports, .mod = mod, .flows = flows,};
 
     map_iter_t iter = map_iter(flows);
     while (map_has_next(&iter))

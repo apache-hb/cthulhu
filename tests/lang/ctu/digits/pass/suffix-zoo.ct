@@ -1,8 +1,6 @@
 const a = 0; // default 
 const b = 0u; // unsigned 
 const e = 0l; // long
-const f = 0z; // size
-const g = 0p; // pointer
+
 const j = 0ul; // unsigned long
 const k = 0uz; // unsigned size 
-const l = 0up; // unsigned pointer 

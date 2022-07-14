@@ -293,6 +293,12 @@ static hlir_t *sema_digit(sema_t *sema, ast_t *ast)
 {
     // TODO: maybe we want untyped integer literals
     suffix_t *suffix = sema_get(sema, eTagSuffix, ast->suffix);
+    if (suffix == NULL)
+    {
+        report(sema->reports, eFatal, ast->node, "invalid suffix '%s'", ast->suffix);
+        return hlir_error(ast->node, "invalid suffix");
+    }
+
     return apply_suffix(sema, ast, suffix);
 }
 

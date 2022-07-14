@@ -140,6 +140,15 @@ tests = {
             #'break-label',
             #'nested-break'
         ]
+    },
+    'digits': {
+        'pass': [
+            'no-suffix',
+            'suffix-zoo'
+        ],
+        'fail': [
+            'invalid-suffix'
+        ]
     }
 }
 
