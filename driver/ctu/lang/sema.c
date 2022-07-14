@@ -1,14 +1,14 @@
 #include "sema.h"
 #include "ast.h"
 #include "attribs.h"
-#include "suffix.h"
 #include "repr.h"
+#include "suffix.h"
 
+#include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/type.h"
-#include "cthulhu/hlir/attribs.h"
 #include "cthulhu/interface/runtime.h"
 
 #include "base/macros.h"
@@ -171,7 +171,8 @@ static void add_basic_types(sema_t *sema)
 void ctu_init_compiler(runtime_t *runtime)
 {
     size_t sizes[eTagTotal] = {
-        [eTagValues] = 1, [eTagProcs] = 1, [eTagTypes] = 32, [eTagModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 32,};
+        [eTagValues] = 1, [eTagProcs] = 1, [eTagTypes] = 32, [eTagModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 32,
+    };
 
     kRootSema = begin_sema(NULL, runtime->reports, sizes);
 
@@ -552,13 +553,7 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     hlir_t *cond = sema_expr(sema, ast->cond);
 
     size_t sizes[eTagTotal] = {
-        [eTagValues] = 32, 
-        [eTagProcs] = 4, 
-        [eTagTypes] = 4, 
-        [eTagModules] = 1, 
-        [eTagAttribs] = 1,
-        [eTagSuffix] = 1
-    };
+        [eTagValues] = 32, [eTagProcs] = 4, [eTagTypes] = 4, [eTagModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 1};
 
     sema_t *nestThen = begin_sema(sema, sema->reports, sizes);
 
@@ -980,12 +975,11 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
     ast_t *root = compile->ast;
 
     size_t totalDecls = vector_len(root->decls);
-    size_t sizes[eTagTotal] = {[eTagValues] = totalDecls,
-                               [eTagProcs] = totalDecls,
-                               [eTagTypes] = totalDecls,
-                               [eTagModules] = vector_len(root->imports),
-                               [eTagAttribs] = totalDecls,
-                               [eTagSuffix] = 32,};
+    size_t sizes[eTagTotal] = {
+        [eTagValues] = totalDecls,  [eTagProcs] = totalDecls,
+        [eTagTypes] = totalDecls,   [eTagModules] = vector_len(root->imports),
+        [eTagAttribs] = totalDecls, [eTagSuffix] = 32,
+    };
 
     sema_t *sema = begin_sema(kRootSema, runtime->reports, sizes);
     add_builtin_attribs(sema);

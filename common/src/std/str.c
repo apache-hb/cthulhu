@@ -8,11 +8,11 @@
 #include "base/util.h"
 
 #include <ctype.h>
+#include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <limits.h>
 
 USE_DECL
 char *format(const char *fmt, ...)
@@ -556,7 +556,6 @@ char *str_upper(const char *str)
 
     return result;
 }
-
 
 USE_DECL
 char *str_lower(const char *str)

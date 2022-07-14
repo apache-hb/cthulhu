@@ -56,9 +56,7 @@ static vreg_t add_step(ssa_t *ssa, step_t step)
 
 static type_t new_type(literal_t kind)
 {
-    type_t type = {
-        .kind = kind
-    };
+    type_t type = {.kind = kind};
 
     return type;
 }
@@ -107,9 +105,7 @@ static operand_t operand_digit(const hlir_t *hlir)
 {
     CTASSERT(hlir_is(hlir, eHlirLiteralDigit));
 
-    value_t value = {
-        .type = digit_type(get_hlir_type(hlir))
-    };
+    value_t value = {.type = digit_type(get_hlir_type(hlir))};
 
     mpz_init_set(value.digit, hlir->digit);
 
@@ -189,7 +185,7 @@ static operand_t emit_call(ssa_t *ssa, const hlir_t *hlir)
     operand_t *args = NULL;
 
     size_t len = vector_len(hlir->args);
-    if (len > 0) 
+    if (len > 0)
     {
         args = ctu_malloc(sizeof(operand_t) * len);
 
@@ -238,7 +234,7 @@ static operand_t emit_assign(ssa_t *ssa, const hlir_t *hlir)
     step_t step = new_step(eOpStore, new_type(eLiteralEmpty));
     step.dst = dst;
     step.src = src;
-    
+
     return operand_vreg(add_step(ssa, step));
 }
 

@@ -575,7 +575,7 @@ static void c89_emit_return(c89_emit_t *emit, const hlir_t *hlir)
 
 static const char *c89_emit_local_rvalue(const hlir_t *hlir)
 {
-    return format("%s[0]", hlir->name);
+    return format("%s", hlir->name);
 }
 
 static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
@@ -762,13 +762,13 @@ static const char *c89_emit_lvalue(c89_emit_t *emit, const hlir_t *hlir)
     }
 }
 
-static const char *c89_emit_type(c89_emit_t *emit, const hlir_t *hlir, const char *name)
+static const char *c89_emit_outer_type(c89_emit_t *emit, const hlir_t *hlir, const char *name, bool local)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
     const char *inner = c89_emit_inner_type(emit, hlir, name);
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
 
-    if (attribs->tags & eTagConst && kind != eHlirString)
+    if (attribs->tags & eTagConst && kind != eHlirString && !local)
     {
         inner = format("const %s", inner);
     }
@@ -785,6 +785,16 @@ static const char *c89_emit_type(c89_emit_t *emit, const hlir_t *hlir, const cha
     }
 
     return inner;
+}
+
+static const char *c89_emit_type(c89_emit_t *emit, const hlir_t *hlir, const char *name)
+{
+    return c89_emit_outer_type(emit, hlir, name, false);
+}
+
+static const char *c89_emit_local_type(c89_emit_t *emit, const hlir_t *hlir, const char *name)
+{
+    return c89_emit_outer_type(emit, hlir, name, true);
 }
 
 static void c89_emit_aggregate_decl(c89_emit_t *emit, const hlir_t *hlir, const char *aggregate)
@@ -1102,7 +1112,7 @@ static void c89_emit_function(c89_emit_t *emit, const hlir_t *function)
     {
         hlir_t *local = vector_get(locals, i);
         const char *name = get_hlir_name(local);
-        const char *type = c89_emit_type(emit, get_hlir_type(local), name);
+        const char *type = c89_emit_local_type(emit, get_hlir_type(local), name);
         WRITE_STRINGF(emit, "%s[1];\n", type);
     }
 

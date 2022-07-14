@@ -305,7 +305,7 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
                 return false;
             }
         }
-        
+
         return true;
     }
 

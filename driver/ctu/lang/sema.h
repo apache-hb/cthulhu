@@ -9,7 +9,7 @@ typedef enum
     eTagTypes,   // hlir_t*
     eTagModules, // sema_t*
     eTagAttribs, // hlir_t*
-    eTagSuffix, // suffix_t*
+    eTagSuffix,  // suffix_t*
 
     eTagTotal
 } tag_t;

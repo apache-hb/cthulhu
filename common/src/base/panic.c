@@ -4,12 +4,12 @@
 #include <stdlib.h>
 
 #if ADDRSAN_ENABLED
-#   include <signal.h>
+#    include <signal.h>
 #endif
 
 static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
-    fprintf(stderr,  COLOUR_CYAN "[panic]" COLOUR_RESET "[%s:%zu] => " COLOUR_RED "%s" COLOUR_RESET ": ", panic.file,
+    fprintf(stderr, COLOUR_CYAN "[panic]" COLOUR_RESET "[%s:%zu] => " COLOUR_RED "%s" COLOUR_RESET ": ", panic.file,
             panic.line, panic.function);
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");

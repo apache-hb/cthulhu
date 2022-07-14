@@ -12,7 +12,7 @@
 static const char *kOutputFileNames[] = {"-o", "--output"};
 #define TOTAL_OUTPUT_FILE_NAMES (sizeof(kOutputFileNames) / sizeof(const char *))
 
-static const char *kSSANames[] = { "--enable-ssa", "-ssa" };
+static const char *kSSANames[] = {"--enable-ssa", "-ssa"};
 #define TOTAL_SSA_NAMES (sizeof(kSSANames) / sizeof(const char *))
 
 int main(int argc, const char **argv)

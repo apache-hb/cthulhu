@@ -119,7 +119,7 @@ typedef struct
             operand_t *args;
         };
 
-        struct 
+        struct
         {
             operand_t src;
             operand_t dst;

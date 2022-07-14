@@ -7,8 +7,8 @@
 
 #include "report/report.h"
 
-#include "std/vector.h"
 #include "std/str.h"
+#include "std/vector.h"
 
 #include <string.h>
 
