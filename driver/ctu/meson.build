@@ -5,6 +5,7 @@ src = [
     'lang/sema.c', 
     'lang/attribs.c',
     'lang/repr.c',
+    'lang/suffix.c',
     lex.process('ctu.l'), 
     parse.process('ctu.y') 
 ]

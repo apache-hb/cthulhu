@@ -258,6 +258,11 @@ char *str_noext(const char *path);
 NODISCARD
 char *str_upper(const char *str);
 
+NODISCARD
+char *str_lower(const char *str);
+
+NODISCARD CONSTFN char str_tolower(int c);
+
 #define STR_WHITESPACE " \t\r\v\n\f" //< all whitespace charaters
 
 /** @} */

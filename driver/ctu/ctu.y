@@ -33,7 +33,7 @@ void ctuerror(where_t *where, void *state, scan_t scan, const char *msg);
 
     struct {
         mpz_t mpz;
-        suffix_t suffix;
+        char *suffix;
     } digit;
 
     ast_t *ast;

@@ -1,13 +1,14 @@
 #include "sema.h"
 #include "ast.h"
 #include "attribs.h"
-#include "cthulhu/hlir/attribs.h"
+#include "suffix.h"
 #include "repr.h"
 
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/type.h"
+#include "cthulhu/hlir/attribs.h"
 #include "cthulhu/interface/runtime.h"
 
 #include "base/macros.h"
@@ -86,7 +87,7 @@ static hlir_t *kUninitalized = NULL;
 
 #define DIGIT_INDEX(sign, digit) ((sign)*eDigitTotal + (digit))
 
-static hlir_t *get_digit_type(sign_t sign, digit_t digit)
+hlir_t *get_digit_type(sign_t sign, digit_t digit)
 {
     return kDigitTypes[DIGIT_INDEX(sign, digit)];
 }
@@ -170,7 +171,7 @@ static void add_basic_types(sema_t *sema)
 void ctu_init_compiler(runtime_t *runtime)
 {
     size_t sizes[eTagTotal] = {
-        [eTagValues] = 1, [eTagProcs] = 1, [eTagTypes] = 32, [eTagModules] = 1, [eTagAttribs] = 1};
+        [eTagValues] = 1, [eTagProcs] = 1, [eTagTypes] = 32, [eTagModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 32,};
 
     kRootSema = begin_sema(NULL, runtime->reports, sizes);
 
@@ -190,6 +191,7 @@ void ctu_init_compiler(runtime_t *runtime)
     }
 
     add_basic_types(kRootSema);
+    add_builtin_suffixes(kRootSema);
 
     kUnresolvedType = hlir_error(node, "unresolved");
     kUninitalized = hlir_error(node, "uninitialized");
@@ -286,14 +288,11 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast)
     }
 }
 
-static hlir_t *sema_digit(ast_t *ast)
+static hlir_t *sema_digit(sema_t *sema, ast_t *ast)
 {
-    // TODO: check if the digit is in range
-    // TODO: digit suffixes should be added later
-    // TODO: or maybe we want untyped literals?
-
-    const hlir_t *type = get_digit_type(eSigned, eInt);
-    return hlir_digit_literal(ast->node, type, ast->digit);
+    // TODO: maybe we want untyped integer literals
+    suffix_t *suffix = sema_get(sema, eTagSuffix, ast->suffix);
+    return apply_suffix(sema, ast, suffix);
 }
 
 static hlir_t *sema_bool(ast_t *ast)
@@ -315,7 +314,6 @@ static hlir_t *sema_unary_digit(sema_t *sema, ast_t *ast, hlir_t *operand)
     {
         report(sema->reports, eFatal, ast->node, "cannot perform integer unary operation on '%s'",
                ctu_repr(sema->reports, operand, true));
-        return hlir_error(ast->node, "invalid unary digit type");
     }
 
     return hlir_unary(ast->node, operand, ast->unary);
@@ -330,7 +328,6 @@ static hlir_t *sema_unary_bool(sema_t *sema, ast_t *ast, hlir_t *operand)
     {
         report(sema->reports, eFatal, ast->node, "cannot perform boolean unary operation on '%s'",
                ctu_repr(sema->reports, operand, true));
-        return hlir_error(ast->node, "invalid unary bool type");
     }
 
     return hlir_unary(ast->node, operand, ast->unary);
@@ -369,7 +366,6 @@ static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
                                ctu_type_repr(sema->reports, type, true));
         report_append(id, get_hlir_node(lhs), ctu_repr(sema->reports, lhs, false));
         report_append(id, get_hlir_node(rhs), ctu_repr(sema->reports, rhs, false));
-        return hlir_error(ast->node, "invalid common type");
     }
 
     return hlir_binary(ast->node, type, ast->binary, lhs, rhs);
@@ -388,7 +384,6 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
                                ctu_type_repr(sema->reports, type, true));
         report_append(id, get_hlir_node(lhs), ctu_repr(sema->reports, lhs, false));
         report_append(id, get_hlir_node(rhs), ctu_repr(sema->reports, rhs, false));
-        return hlir_error(ast->node, "invalid common type");
     }
 
     return hlir_compare(ast->node, kBoolType, ast->compare, lhs, rhs);
@@ -500,7 +495,7 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
     switch (ast->of)
     {
     case eAstDigit:
-        return sema_digit(ast);
+        return sema_digit(sema, ast);
     case eAstBool:
         return sema_bool(ast);
     case eAstString:
@@ -557,7 +552,13 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     hlir_t *cond = sema_expr(sema, ast->cond);
 
     size_t sizes[eTagTotal] = {
-        [eTagValues] = 32, [eTagProcs] = 32, [eTagTypes] = 32, [eTagModules] = 1, [eTagAttribs] = 1};
+        [eTagValues] = 32, 
+        [eTagProcs] = 4, 
+        [eTagTypes] = 4, 
+        [eTagModules] = 1, 
+        [eTagAttribs] = 1,
+        [eTagSuffix] = 1
+    };
 
     sema_t *nestThen = begin_sema(sema, sema->reports, sizes);
 
@@ -613,7 +614,6 @@ static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
     return result;
 }
 
-// TODO: merge this logic with global init
 static hlir_t *sema_local(sema_t *sema, ast_t *stmt)
 {
     sema_value_t value = sema_value(sema, stmt);
@@ -984,7 +984,8 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
                                [eTagProcs] = totalDecls,
                                [eTagTypes] = totalDecls,
                                [eTagModules] = vector_len(root->imports),
-                               [eTagAttribs] = totalDecls};
+                               [eTagAttribs] = totalDecls,
+                               [eTagSuffix] = 32,};
 
     sema_t *sema = begin_sema(kRootSema, runtime->reports, sizes);
     add_builtin_attribs(sema);

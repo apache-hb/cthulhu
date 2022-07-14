@@ -3,10 +3,12 @@
 #include "base/macros.h"
 #include "base/memory.h"
 #include "base/panic.h"
+#include "base/util.h"
 
 #include "report/report.h"
 
 #include "std/vector.h"
+#include "std/str.h"
 
 #include <string.h>
 
@@ -57,83 +59,42 @@ vector_t *collect_attributes(scan_t scan)
     return vec;
 }
 
-static digit_t trim_width(char *text)
+static const char *kDigits = "0123456789abcdef";
+
+static bool is_digit_in_base(char c, size_t base)
 {
-    size_t len = strlen(text);
-    CTASSERTM(len > 0, "trim-width got empty string");
+    CTASSERT(base <= 16);
 
-    digit_t result = eInt;
-    switch (text[len - 1])
+    char lower = str_tolower(c);
+    for (size_t i = 0; i < base; i++)
     {
-    case 'c':
-    case 'C':
-        result = eChar;
-        break;
-
-    case 's':
-    case 'S':
-        result = eShort;
-        break;
-
-    case 'l':
-    case 'L':
-        result = eLong;
-        break;
-
-    case 'z':
-    case 'Z':
-        result = eIntSize;
-        break;
-
-    case 'p':
-    case 'P':
-        result = eIntPtr;
-        break;
-
-    case 'm':
-    case 'M':
-        result = eIntMax;
-        break;
-
-    default:
-        return eInt;
+        if (kDigits[i] == lower)
+        {
+            return true;
+        }
     }
 
-    text[len - 1] = '\0';
-    return result;
+    return false;
 }
 
-static sign_t trim_sign(char *text)
+char *init_string_with_suffix(mpz_t mpz, const char *text, size_t base)
 {
     size_t len = strlen(text);
-    CTASSERTM(len > 0, "trim-sign passed empty string");
+    CTASSERT(len > 0);
 
-    switch (text[len - 1])
+    // trim off the suffix and get the last index
+    size_t i = len;
+    for (; i > 0; i--)
     {
-    case 'u':
-    case 'U':
-        text[len - 1] = '\0';
-        return eUnsigned;
-    default:
-        return eSigned;
-    }
-}
-
-void init_string_with_suffix(suffix_t *suffix, mpz_t mpz, char *text, size_t base)
-{
-    suffix_t out = {eInt, eSigned};
-    size_t len = strlen(text);
-    if (len == 0)
-    {
-        mpz_init_set_d(mpz, 0);
-        *suffix = out;
-        return;
+        if (!is_digit_in_base(text[i], base))
+        {
+            break;
+        }
     }
 
-    out.digit = trim_width(text);
-    out.sign = trim_sign(text);
+    // get the suffix and init mpz with the actual digit
+    char *suffix = str_upper(text + i);
+    mpz_init_set_str(mpz, ctu_strndup(text, i), base);
 
-    mpz_init_set_str(mpz, text, base);
-
-    *suffix = out;
+    return suffix;
 }

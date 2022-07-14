@@ -14,7 +14,7 @@
 
 %x COMMENT
 
-SUFFIX [uU]?[cCsSlLzZpPmM]?
+SUFFIX [a-zA-Z_]*
 
 ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
 WS [ \t\r\v\n\f]
@@ -195,17 +195,17 @@ WS [ \t\r\v\n\f]
 }
 
 "0b"[01]+{SUFFIX} {
-    init_string_with_suffix(&yylval->digit.suffix, yylval->digit.mpz, yytext + 2, 2);
+    yylval->digit.suffix = init_string_with_suffix(yylval->digit.mpz, yytext + 2, 2);
     return INTEGER;
 }
 
 "0x"[0-9a-fA-F]+{SUFFIX} {
-    init_string_with_suffix(&yylval->digit.suffix, yylval->digit.mpz, yytext + 2, 16);
+    yylval->digit.suffix = init_string_with_suffix(yylval->digit.mpz, yytext + 2, 16);
     return INTEGER;
 }
 
 [0-9]+{SUFFIX} {
-    init_string_with_suffix(&yylval->digit.suffix, yylval->digit.mpz, yytext, 10);
+    yylval->digit.suffix = init_string_with_suffix(yylval->digit.mpz, yytext, 10);
     return INTEGER;
 }
 

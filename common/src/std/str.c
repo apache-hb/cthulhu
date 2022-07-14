@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 USE_DECL
 char *format(const char *fmt, ...)
@@ -554,4 +555,36 @@ char *str_upper(const char *str)
     }
 
     return result;
+}
+
+
+USE_DECL
+char *str_lower(const char *str)
+{
+    char *result = ctu_strdup(str);
+    char *temp = result;
+
+    while (*temp)
+    {
+        *temp = str_tolower(*temp);
+        temp += 1;
+    }
+
+    return result;
+}
+
+USE_DECL
+char str_tolower(int c)
+{
+    if (c >= 'A' && c <= 'Z')
+    {
+        return (c + 'a' - 'A') & CHAR_MAX;
+    }
+
+    if (CHAR_MIN <= c && c <= CHAR_MAX)
+    {
+        return c;
+    }
+
+    return '\0';
 }

@@ -73,7 +73,7 @@ ast_t *ast_variable(scan_t scan, where_t where, char *name, bool mut, ast_t *exp
     return ast;
 }
 
-ast_t *ast_digit(scan_t scan, where_t where, mpz_t value, suffix_t suffix)
+ast_t *ast_digit(scan_t scan, where_t where, mpz_t value, char *suffix)
 {
     ast_t *ast = ast_new(eAstDigit, scan, where);
     mpz_init_set(ast->digit, value);

@@ -72,7 +72,7 @@ typedef struct ast_t
         struct
         {
             mpz_t digit;
-            suffix_t suffix;
+            char *suffix;
         };
 
         /* eAstBool */
@@ -209,7 +209,7 @@ ast_t *ast_variable(scan_t scan, where_t where, char *name, bool mut, ast_t *exp
 
 /// expressions
 
-ast_t *ast_digit(scan_t scan, where_t where, mpz_t value, suffix_t suffix);
+ast_t *ast_digit(scan_t scan, where_t where, mpz_t value, char *suffix);
 ast_t *ast_bool(scan_t scan, where_t where, bool value);
 ast_t *ast_name(scan_t scan, where_t where, vector_t *path);
 ast_t *ast_string(scan_t scan, where_t where, char *str, size_t len);

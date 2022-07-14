@@ -16,7 +16,7 @@
 * return type checking
 * entire expression list
 * syntax for newtypes
-* unary ooperations
+* unary operations
 * all comparisons
 * variants
 * C interop
