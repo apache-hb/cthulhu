@@ -3,6 +3,7 @@
 #include "base/macros.h"
 #include "std/str.h"
 #include "base/util.h"
+#include "base/memory.h"
 #include <stdio.h>
 #include <excpt.h>
 #include <processthreadsapi.h>

@@ -58,7 +58,7 @@ void *ctu_realloc(void *ptr, size_t newSize)
 
 void ctu_free(void *ptr)
 {
-    return arena_free(&globalAlloc, ptr, ALLOC_SIZE_UNKNOWN);
+    arena_free(&globalAlloc, ptr, ALLOC_SIZE_UNKNOWN);
 }
 
 /// arena allocator
@@ -81,7 +81,7 @@ void arena_free(alloc_t *alloc, void *ptr, size_t size)
 {
     CTASSERT(alloc != NULL);
 
-    return alloc->arenaFree(alloc, ptr, size);
+    alloc->arenaFree(alloc, ptr, size);
 }
 
 /// gmp arena managment

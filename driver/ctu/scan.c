@@ -77,7 +77,7 @@ static bool is_digit_in_base(char c, size_t base)
     return false;
 }
 
-char *init_string_with_suffix(mpz_t mpz, const char *text, size_t base)
+char *init_string_with_suffix(mpz_t mpz, const char *text, int base)
 {
     size_t len = strlen(text);
     CTASSERT(len > 0);

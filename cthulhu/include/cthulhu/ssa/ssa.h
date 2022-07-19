@@ -140,6 +140,8 @@ typedef struct flow_t
 
 typedef struct module_t
 {
+    set_t *strings;
+    
     vector_t *imports;   ///< imported symbols
     vector_t *exports;   ///< exported symbols
     vector_t *internals; ///< internal functions

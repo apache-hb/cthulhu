@@ -15,6 +15,6 @@ size_t exit_template(scan_t scan);
 void add_attribute(scan_t scan, ast_t *ast);
 vector_t *collect_attributes(scan_t scan);
 
-char *init_string_with_suffix(mpz_t mpz, const char *text, size_t base);
+char *init_string_with_suffix(mpz_t mpz, const char *text, int base);
 
 #define CTULTYPE where_t

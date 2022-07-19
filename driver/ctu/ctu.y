@@ -239,7 +239,7 @@ decllist: decl { $$ = vector_init($1); }
     | decllist decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: optExport optAttribs innerDecl { set_attribs($3, $1, collect_attributes(x)); $$ = $3; }
+decl: optAttribs optExport innerDecl { set_attribs($3, $2, collect_attributes(x)); $$ = $3; }
     ;
 
 optExport: %empty { $$ = false; }
