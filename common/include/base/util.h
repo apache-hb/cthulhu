@@ -36,7 +36,7 @@ char *ctu_strdup(const char *str);
  * @return the allocated copy of the string
  */
 NODISCARD
-char *ctu_strndup(const char *str, size_t len);
+char *ctu_strndup(IN_READS(len) const char *str, size_t len);
 
 /**
  * @brief duplicate a memory region

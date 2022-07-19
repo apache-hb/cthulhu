@@ -67,6 +67,12 @@ else
     deps += [ cc.find_library('m'), cc.find_library('dl') ]
 endif
 
+foreach arg : [ '-fno-strict-aliasing', '-fno-threadsafe-statics', '-fno-keep-static-consts', '-fmerge-all-constants' ]
+    if cc.has_argument(arg)
+        args += [ arg ]
+    endif
+endforeach
+
 if cc.get_id() == 'msvc'
     args += [ '/Wv:18' ]
 

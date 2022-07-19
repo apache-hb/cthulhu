@@ -9,6 +9,7 @@
 
 typedef struct reports_t reports_t;
 typedef struct vector_t vector_t;
+typedef struct set_t set_t;
 typedef struct flow_t flow_t;
 
 typedef size_t vreg_t;

@@ -371,8 +371,8 @@ static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
     {
         message_t *id = report(sema->reports, eFatal, ast->node, "cannot perform binary operations on %s",
                                ctu_type_repr(sema->reports, type, true));
-        report_append(id, get_hlir_node(lhs), ctu_repr(sema->reports, lhs, false));
-        report_append(id, get_hlir_node(rhs), ctu_repr(sema->reports, rhs, false));
+        report_append(id, get_hlir_node(lhs), "%s", ctu_repr(sema->reports, lhs, false));
+        report_append(id, get_hlir_node(rhs), "%s", ctu_repr(sema->reports, rhs, false));
     }
 
     return hlir_binary(ast->node, type, ast->binary, lhs, rhs);
@@ -389,8 +389,8 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
     {
         message_t *id = report(sema->reports, eFatal, ast->node, "cannot perform comparison operations on %s",
                                ctu_type_repr(sema->reports, type, true));
-        report_append(id, get_hlir_node(lhs), ctu_repr(sema->reports, lhs, false));
-        report_append(id, get_hlir_node(rhs), ctu_repr(sema->reports, rhs, false));
+        report_append(id, get_hlir_node(lhs), "%s", ctu_repr(sema->reports, lhs, false));
+        report_append(id, get_hlir_node(rhs), "%s", ctu_repr(sema->reports, rhs, false));
     }
 
     return hlir_compare(ast->node, kBoolType, ast->compare, lhs, rhs);
