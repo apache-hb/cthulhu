@@ -9,7 +9,7 @@
 
 typedef struct reports_t reports_t;
 typedef struct vector_t vector_t;
-typedef struct set_t set_t;
+typedef struct stream_t stream_t;
 typedef struct flow_t flow_t;
 
 typedef size_t vreg_t;
@@ -20,7 +20,8 @@ typedef enum
     eOperandImm,   // an immediate value
     eOperandReg,   // a register index
     eOperandRef,    // a symbol reference
-    eOperandLocal // a local variable
+    eOperandLocal, // a local variable
+    eOperandArg    // a function argument
 } opkind_t;
 
 typedef enum
@@ -132,17 +133,18 @@ typedef struct
 
 typedef struct flow_t
 {
+    const char *name;
+
     size_t stepsSize;
     size_t stepsLen;
     step_t *steps;
 
-    vector_t *locals;
+    vector_t *params; // all function parameters
+    vector_t *locals; // all local variables
 } flow_t;
 
 typedef struct module_t
 {
-    set_t *strings;
-    
     vector_t *imports;   ///< imported symbols
     vector_t *exports;   ///< exported symbols
     vector_t *internals; ///< internal functions
@@ -152,3 +154,5 @@ typedef struct module_t
 } module_t;
 
 module_t *ssa_compile(reports_t *reports, vector_t *modules);
+
+stream_t *ssa_debug(reports_t *reports, module_t *mod);

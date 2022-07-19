@@ -12,6 +12,7 @@ src = [
 
     # ssa intermediate
     'src/ssa/ssa.c',
+    'src/ssa/debug.c',
 
     # common frontend components
     'src/interface/runtime.c',

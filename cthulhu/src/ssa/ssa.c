@@ -290,6 +290,14 @@ static void compile_flow(ssa_t *ssa, flow_t *flow, const hlir_t *hlir)
 {
     ssa->current = flow;
 
+    // TODO: init function params
+
+    flow->name = get_hlir_name(hlir);
+    if (flow->name == NULL)
+    {
+        flow->name = "<unnamed>";
+    }
+    
     flow->stepsLen = 0;
 
     if (hlir->body != NULL)

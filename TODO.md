@@ -35,3 +35,5 @@
     * will need further thought
 * VM execution
     * debugging, interactive shell
+* find a better abstraction than `stream_t`
+    * probably extend the `file_t` interface outside of platform to support in-memory buffers

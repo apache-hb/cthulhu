@@ -105,13 +105,16 @@ int main(int argc, const char **argv)
     if (enableSsa)
     {
         module_t *mod = ssa_compile(reports, allModules);
-        UNUSED(mod);
 
         status = end_reports(reports, "ssa codegen", reportConfig);
         if (status != EXIT_OK)
         {
             return status;
         }
+
+        stream_t *dbg = ssa_debug(reports, mod);
+
+        printf("%s\n", stream_data(dbg));
     }
 
     cerror_t error = 0;
