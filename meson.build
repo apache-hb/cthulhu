@@ -67,6 +67,7 @@ else
     deps += [ cc.find_library('m'), cc.find_library('dl') ]
 endif
 
+# we dont use these features so might as well
 foreach arg : [ '-fno-strict-aliasing', '-fno-threadsafe-statics', '-fno-keep-static-consts', '-fmerge-all-constants' ]
     if cc.has_argument(arg)
         args += [ arg ]

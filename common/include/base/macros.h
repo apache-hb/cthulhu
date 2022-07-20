@@ -4,8 +4,6 @@
 
 #define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
 
-#define UNREACHABLE() ASSUME(false)
-
 /// macros with functionality
 #define MAX(L, R) ((L) > (R) ? (L) : (R))
 #define MIN(L, R) ((L) < (R) ? (L) : (R))

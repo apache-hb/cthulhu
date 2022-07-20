@@ -55,7 +55,11 @@ typedef struct
     union {
         mpz_t digit;
         bool boolean;
-        const char *string;
+
+        struct {
+            const char *string;
+            size_t length;
+        };
     };
 } value_t;
 
@@ -64,10 +68,11 @@ typedef struct
     opkind_t kind;
 
     union {
-        value_t value;
-        vreg_t reg;
-        flow_t *ref;
-        size_t local;
+        value_t value; // eOperandImm
+        vreg_t reg; // eOperandReg
+        flow_t *ref; // eOperandRef
+        size_t local; // eOperandLocal
+        size_t param; // eOperandParam
     };
 } operand_t;
 
@@ -76,6 +81,7 @@ typedef enum
     eOpReturn,
     eOpValue,
     eOpCall,
+    eOpUnary,
     eOpBinary,
     eOpCompare,
     eOpJmp,
@@ -141,6 +147,8 @@ typedef struct flow_t
 
     vector_t *params; // all function parameters
     vector_t *locals; // all local variables
+
+    type_t result;
 } flow_t;
 
 typedef struct module_t

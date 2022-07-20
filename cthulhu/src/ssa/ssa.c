@@ -6,6 +6,7 @@
 
 #include "base/memory.h"
 #include "base/panic.h"
+#include "base/util.h"
 
 #include "report/report.h"
 #include "std/map.h"
@@ -17,6 +18,7 @@ typedef struct
     map_t *flows;
 
     flow_t *current;
+    const hlir_t *currentDecl;
 } ssa_t;
 
 static size_t total_flows(vector_t *modules)
@@ -115,6 +117,41 @@ static operand_t operand_digit(const hlir_t *hlir)
     return operand;
 }
 
+static operand_t operand_string(const char *string, size_t length)
+{
+    value_t value = {
+        .type = {.kind = eLiteralBool}, 
+        .string = string,
+        .length = length
+    };
+    
+    operand_t operand = {.kind = eOperandImm, .value = value};
+
+    return operand;
+}
+
+static operand_t operand_bool(bool boolean)
+{
+    value_t value = {.type = {.kind = eLiteralBool}, .boolean = boolean};
+    operand_t operand = {.kind = eOperandImm, .value = value};
+
+    return operand;
+}
+
+static operand_t operand_param(size_t idx)
+{
+    operand_t operand = {.kind = eOperandArg, .param = idx};
+
+    return operand;
+}
+
+static operand_t operand_local(size_t idx)
+{
+    operand_t operand = {.kind = eOperandLocal, .local = idx};
+
+    return operand;
+}
+
 static type_t emit_type(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -129,6 +166,9 @@ static type_t emit_type(ssa_t *ssa, const hlir_t *hlir)
     case eHlirString:
         return new_type(eLiteralString);
 
+    case eHlirParam:
+        return emit_type(ssa, get_hlir_type(hlir));
+
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "unsupported type %s", hlir_kind_to_string(kind));
         return invalid_type();
@@ -140,6 +180,28 @@ static operand_t emit_hlir(ssa_t *ssa, const hlir_t *hlir);
 static operand_t emit_digit(const hlir_t *hlir)
 {
     return operand_digit(hlir);
+}
+
+static operand_t emit_string(const hlir_t *hlir)
+{
+    return operand_string(hlir->string, hlir->stringLength);
+}
+
+static operand_t emit_bool(const hlir_t *hlir)
+{
+    return operand_bool(hlir->boolean);
+}
+
+static operand_t emit_unary(ssa_t *ssa, const hlir_t *hlir)
+{
+    operand_t op = emit_hlir(ssa, hlir->operand);
+
+    type_t type = emit_type(ssa, get_hlir_type(hlir));
+    step_t step = new_step(eOpUnary, type);
+    step.unary = hlir->unary;
+    step.operand = op;
+
+    return operand_vreg(add_step(ssa, step));
 }
 
 static operand_t emit_binary(ssa_t *ssa, const hlir_t *hlir)
@@ -248,6 +310,20 @@ static operand_t emit_name(ssa_t *ssa, const hlir_t *hlir)
     return operand_vreg(add_step(ssa, step));
 }
 
+static operand_t emit_param(ssa_t *ssa, const hlir_t *hlir)
+{
+    size_t idx = vector_find(closure_params(ssa->currentDecl), hlir);
+    
+    return operand_param(idx);
+}
+
+static operand_t emit_local(ssa_t *ssa, const hlir_t *hlir)
+{
+    size_t idx = vector_find(ssa->currentDecl->locals, hlir);
+
+    return operand_local(idx);
+}
+
 static operand_t emit_hlir(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -255,6 +331,15 @@ static operand_t emit_hlir(ssa_t *ssa, const hlir_t *hlir)
     {
     case eHlirLiteralDigit:
         return emit_digit(hlir);
+
+    case eHlirLiteralString:
+        return emit_string(hlir);
+
+    case eHlirLiteralBool:
+        return emit_bool(hlir);
+
+    case eHlirUnary:
+        return emit_unary(ssa, hlir);
 
     case eHlirBinary:
         return emit_binary(ssa, hlir);
@@ -280,6 +365,12 @@ static operand_t emit_hlir(ssa_t *ssa, const hlir_t *hlir)
     case eHlirName:
         return emit_name(ssa, hlir);
 
+    case eHlirParam:
+        return emit_param(ssa, hlir);
+
+    case eHlirLocal:
+        return emit_local(ssa, hlir);
+
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "unexpected hlir %s", hlir_kind_to_string(kind));
         return operand_empty();
@@ -289,8 +380,19 @@ static operand_t emit_hlir(ssa_t *ssa, const hlir_t *hlir)
 static void compile_flow(ssa_t *ssa, flow_t *flow, const hlir_t *hlir)
 {
     ssa->current = flow;
+    ssa->currentDecl = hlir;
 
-    // TODO: init function params
+    flow->result = emit_type(ssa, closure_result(hlir));
+
+    vector_t *params = closure_params(hlir);
+    size_t totalParams = vector_len(params);
+
+    flow->params = vector_of(totalParams);
+    for (size_t i = 0; i < totalParams; i++)
+    {
+        type_t param = emit_type(ssa, vector_get(params, i));
+        vector_set(flow->params, i, BOX(param));
+    }
 
     flow->name = get_hlir_name(hlir);
     if (flow->name == NULL)
@@ -363,10 +465,13 @@ module_t *ssa_compile(reports_t *reports, vector_t *modules)
     size_t totalFlows = total_flows(modules);
     size_t len = vector_len(modules);
 
-    module_t *mod = ctu_malloc(sizeof(module_t));
-    mod->imports = vector_new(totalFlows);
-    mod->exports = vector_new(totalFlows);
-    mod->internals = vector_new(totalFlows);
+    module_t *mod = ctu_malloc(sizeof(module_t));    
+    mod->imports = vector_new2(totalFlows, &globalAlloc, "ssa-module-imports");
+    mod->exports = vector_new2(totalFlows, &globalAlloc, "ssa-module-exports");
+    mod->internals = vector_new2(totalFlows, &globalAlloc, "ssa-module-internals");
+
+    mod->cliEntry = NULL;
+    mod->guiEntry = NULL;
 
     map_t *flows = map_optimal(totalFlows);
 
