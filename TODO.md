@@ -26,8 +26,6 @@
 * complete api docs
 * add binary module support back in
 * support [ifc](https://github.com/microsoft/ifc-spec) modules
-* custom allocators
-    * make everything allocator aware
 * build time option for internal compiler timing
 * better code coverage with tests
 * perhaps custom lexer + parser generator
@@ -37,3 +35,5 @@
     * debugging, interactive shell
 * find a better abstraction than `stream_t`
     * probably extend the `file_t` interface outside of platform to support in-memory buffers
+* replace AST definitions with protobuf for better fuzzing
+* support llvm libfuzzer

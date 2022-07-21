@@ -1,5 +1,6 @@
 #include "report/report.h"
 
+#include "base/panic.h"
 #include "base/macros.h"
 #include "base/memory.h"
 #include "base/util.h"
@@ -503,6 +504,9 @@ static const char *paths_base(vector_t *messages)
 USE_DECL
 int end_reports(reports_t *reports, const char *name, report_config_t settings)
 {
+    CTASSERT(reports != NULL);
+    CTASSERT(name != NULL);
+    
     size_t total = settings.limit - 1;
 
     size_t internal = 0;
@@ -580,6 +584,8 @@ int end_reports(reports_t *reports, const char *name, report_config_t settings)
 
 static message_t *report_push(reports_t *reports, level_t level, node_t node, const char *fmt, va_list args)
 {
+    CTASSERT(reports != NULL);
+
     char *str = formatv(fmt, args);
     message_t *message = ctu_malloc(sizeof(message_t));
 
@@ -623,6 +629,8 @@ message_t *report(reports_t *reports, level_t level, node_t node, const char *fm
 USE_DECL
 void report_append(message_t *message, node_t node, const char *fmt, ...)
 {
+    CTASSERT(message != NULL);
+
     va_list args;
     va_start(args, fmt);
     char *str = formatv(fmt, args);
@@ -634,6 +642,8 @@ void report_append(message_t *message, node_t node, const char *fmt, ...)
 USE_DECL
 void report_underline(message_t *message, const char *fmt, ...)
 {
+    CTASSERT(message != NULL);
+
     va_list args;
     va_start(args, fmt);
     char *msg = formatv(fmt, args);
@@ -645,6 +655,8 @@ void report_underline(message_t *message, const char *fmt, ...)
 USE_DECL
 void report_note(message_t *message, const char *fmt, ...)
 {
+    CTASSERT(message != NULL);
+
     va_list args;
     va_start(args, fmt);
     char *msg = formatv(fmt, args);
