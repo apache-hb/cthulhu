@@ -462,8 +462,14 @@ static bool report_send(const char *base, message_t *message)
 USE_DECL
 reports_t *begin_reports(void)
 {
-    reports_t *reports = ctu_malloc(sizeof(reports_t));
-    reports->messages = vector_new(32);
+    return begin_reports2(&globalAlloc);
+}
+
+USE_DECL
+reports_t *begin_reports2(alloc_t *alloc)
+{
+    reports_t *reports = arena_malloc(alloc, sizeof(reports_t), "report-context");
+    reports->messages = vector_new2(32, alloc, "report-messages");
     return reports;
 }
 
