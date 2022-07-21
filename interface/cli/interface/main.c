@@ -3,11 +3,14 @@
 #include "std/str.h"
 
 #include "base/macros.h"
+#include "base/memory.h"
 
 #include "cthulhu/interface/interface.h"
 
 #include "cthulhu/emit/c89.h"
 #include "cthulhu/ssa/ssa.h"
+
+#include <stdio.h>
 
 static const char *kOutputFileNames[] = {"-o", "--output"};
 #define TOTAL_OUTPUT_FILE_NAMES (sizeof(kOutputFileNames) / sizeof(const char *))
@@ -34,7 +37,7 @@ int main(int argc, const char **argv)
 
     group_t *codegenGroup = new_group("codegen", "code generation options", codegenParams);
 
-    reports_t *reports = begin_reports();
+    reports_t *reports = begin_reports(&globalAlloc);
 
     report_config_t reportConfig = DEFAULT_REPORT_CONFIG;
 
@@ -65,17 +68,18 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < totalFiles; i++)
     {
         const char *file = vector_get(result.files, i);
-        source_t *source = source_file(file);
+        source_t *source = source_file(&globalAlloc, file);
         vector_set(sources, i, source);
     }
 
-    int status = end_reports(reports, "command line parsing", reportConfig);
+    status_t status = end_reports(reports, "command line parsing", reportConfig);
     if (status != 0)
     {
         return status;
     }
 
     config_t config = {
+        .alloc = &globalAlloc,
         .reportConfig = reportConfig,
     };
 

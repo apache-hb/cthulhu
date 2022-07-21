@@ -272,11 +272,11 @@ static void print_version(const argparse_config_t *config)
            VERSION_MINOR(config->version), VERSION_PATCH(config->version));
 }
 
-static int process_general_args(const argparse_config_t *config, argparse_t *argparse)
+static status_t process_general_args(const argparse_config_t *config, argparse_t *argparse)
 {
     report_config_t reportConfig = {.limit = argparse->reportLimit, .warningsAreErrors = argparse->warningsAsErrors};
 
-    int result = end_reports(argparse->reports, "command line parsing", reportConfig);
+    status_t result = end_reports(argparse->reports, "command line parsing", reportConfig);
     if (result != EXIT_OK)
     {
         return result;
@@ -333,7 +333,7 @@ argparse_t parse_args(const argparse_config_t *config)
         .warningsAreErrors = false,
     };
 
-    int status = end_reports(config->reports, "command line parsing", reportConfig);
+    status_t status = end_reports(config->reports, "command line parsing", reportConfig);
     if (status != 0)
     {
         argparse.exitCode = status;

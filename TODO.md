@@ -37,3 +37,4 @@
     * probably extend the `file_t` interface outside of platform to support in-memory buffers
 * replace AST definitions with protobuf for better fuzzing
 * support llvm libfuzzer
+* async file reading

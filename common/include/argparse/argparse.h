@@ -6,8 +6,8 @@
 #include "base/analyze.h"
 #include "base/version-def.h"
 
-typedef struct reports_t reports_t;
-typedef struct vector_t vector_t;
+#include "report/report.h"
+
 typedef struct map_t map_t;
 
 typedef enum
@@ -67,7 +67,7 @@ typedef struct
 
 typedef struct argparse_t
 {
-    int exitCode;
+    status_t exitCode;
 
     bool verboseEnabled;
     size_t reportLimit;

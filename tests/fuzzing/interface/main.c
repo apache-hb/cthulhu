@@ -1,5 +1,6 @@
 #include "base/macros.h"
 #include "base/panic.h"
+#include "base/memory.h"
 
 #include "cthulhu/interface/interface.h"
 
@@ -23,10 +24,11 @@ int main(int argc, const char **argv)
 
     CTASSERTM(argc == 2, "must provide one argument");
 
-    source_t *src = source_file(argv[1]);
+    source_t *src = source_file(&globalAlloc, argv[1]);
     vector_t *sources = vector_init(src);
 
     config_t config = {
+        .alloc = &globalAlloc,
         .reportConfig = reportConfig,
     };
 

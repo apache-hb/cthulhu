@@ -5,6 +5,9 @@
 #include "std/stream.h"
 
 #include "base/macros.h"
+#include "base/memory.h"
+
+#include <stdio.h>
 
 int main(int argc, const char **argv)
 {
@@ -21,11 +24,12 @@ int main(int argc, const char **argv)
     for (int i = 1; i < argc; i++)
     {
         const char *file = argv[i];
-        source_t *source = source_file(file);
+        source_t *source = source_file(&globalAlloc, file);
         vector_set(sources, i - 1, source);
     }
 
     config_t config = {
+        .alloc = &globalAlloc,
         .reportConfig = reportConfig,
     };
 
@@ -48,7 +52,7 @@ int main(int argc, const char **argv)
 
     module_t *mod = ssa_compile(cthulhu->reports, cthulhu_get_modules(cthulhu));
 
-    int status = end_reports(cthulhu->reports, "ssa codegen", reportConfig);
+    status_t status = end_reports(cthulhu->reports, "ssa codegen", reportConfig);
     if (status != EXIT_OK) { return status; }
 
     stream_t *out = ssa_debug(cthulhu->reports, mod);

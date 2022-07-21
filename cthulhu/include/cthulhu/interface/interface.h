@@ -72,6 +72,7 @@ typedef struct
 
 typedef struct
 {
+    alloc_t *alloc;
     report_config_t reportConfig;
 } config_t;
 
@@ -80,30 +81,31 @@ typedef struct
     driver_t driver;
     config_t config;
 
-    int status;
+    status_t status;
 
     reports_t *reports;
 
     runtime_t runtime;
-    vector_t *compiles;
+
+    compile_t *compiles;
 
     vector_t *sources;
 } cthulhu_t;
 
 cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config);
 
-typedef int (*cthulhu_step_t)(cthulhu_t *);
+typedef status_t (*cthulhu_step_t)(cthulhu_t *);
 
-int cthulhu_init(cthulhu_t *cthulhu);
-int cthulhu_parse(cthulhu_t *cthulhu);
-int cthulhu_forward(cthulhu_t *cthulhu);
-int cthulhu_resolve(cthulhu_t *cthulhu);
-int cthulhu_compile(cthulhu_t *cthulhu);
+status_t cthulhu_init(cthulhu_t *cthulhu);
+status_t cthulhu_parse(cthulhu_t *cthulhu);
+status_t cthulhu_forward(cthulhu_t *cthulhu);
+status_t cthulhu_resolve(cthulhu_t *cthulhu);
+status_t cthulhu_compile(cthulhu_t *cthulhu);
 
 vector_t *cthulhu_get_modules(cthulhu_t *cthulhu);
 
-source_t *source_file(const char *path);
-source_t *source_string(const char *path, const char *string);
+source_t *source_file(alloc_t *alloc, const char *path);
+source_t *source_string(alloc_t *alloc, const char *path, const char *string);
 
 /**
  * @brief initialize the common runtime, always the first function an interface

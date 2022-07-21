@@ -11,9 +11,9 @@
 
 #include "std/str.h"
 
-static int report_errors(cthulhu_t *cthulhu, const char *name)
+static status_t report_errors(cthulhu_t *cthulhu, const char *name)
 {
-    int status = end_reports(cthulhu->reports, name, cthulhu->config.reportConfig);
+    status_t status = end_reports(cthulhu->reports, name, cthulhu->config.reportConfig);
     cthulhu->status = status;
     return status;
 }
@@ -43,37 +43,60 @@ static runtime_t runtime_new(reports_t *reports, size_t size)
     return runtime;
 }
 
-static source_t *source_of_kind(source_kind_t kind, const char *path)
+static size_t total_sources(const cthulhu_t *cthulhu)
 {
-    source_t *source = ctu_malloc(sizeof(source_t));
+    CTASSERT(cthulhu != NULL);
+
+    return vector_len(cthulhu->sources);
+}
+
+static alloc_t *get_alloc(const cthulhu_t *cthulhu)
+{
+    CTASSERT(cthulhu != NULL);
+
+    return cthulhu->config.alloc;
+}
+
+static compile_t *get_compile(const cthulhu_t *cthulhu, size_t idx)
+{
+    CTASSERT(idx <= total_sources(cthulhu));
+
+    return cthulhu->compiles + idx;
+}
+
+static source_t *source_of_kind(alloc_t *alloc, source_kind_t kind, const char *path)
+{
+    source_t *source = arena_malloc(alloc, sizeof(source_t), "source-code-bundle");
     source->kind = kind;
     source->path = path;
     return source;
 }
 
-source_t *source_file(const char *path)
+source_t *source_file(alloc_t *alloc, const char *path)
 {
-    return source_of_kind(eSourceFile, path);
+    return source_of_kind(alloc, eSourceFile, path);
 }
 
-source_t *source_string(const char *path, const char *string)
+source_t *source_string(alloc_t *alloc, const char *path, const char *string)
 {
-    source_t *source = source_of_kind(eSourceString, path);
+    source_t *source = source_of_kind(alloc, eSourceString, path);
     source->string = string;
     return source;
 }
 
 cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
 {
+    CTASSERT(config.alloc != NULL);
+
     CTASSERT(driver.fnInitCompiler != NULL);
     CTASSERT(driver.fnParseFile != NULL);
     CTASSERT(driver.fnForwardDecls != NULL);
     CTASSERT(driver.fnResolveImports != NULL);
     CTASSERT(driver.fnCompileModule != NULL);
 
-    cthulhu_t *cthulhu = ctu_malloc(sizeof(cthulhu_t));
+    cthulhu_t *cthulhu = arena_malloc(config.alloc, sizeof(cthulhu_t), "cthulhu-context");
 
-    reports_t *reports = begin_reports();
+    reports_t *reports = begin_reports(config.alloc);
 
     size_t totalSources = vector_len(sources);
     runtime_t runtime = runtime_new(reports, totalSources);
@@ -82,11 +105,8 @@ cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
     cthulhu->config = config;
     cthulhu->status = EXIT_INTERNAL;
     cthulhu->reports = reports;
-
-    cthulhu->runtime = runtime;
-    cthulhu->compiles = vector_new(totalSources);
-
     cthulhu->sources = sources;
+    cthulhu->runtime = runtime;
 
     return cthulhu;
 }
@@ -121,50 +141,48 @@ static scan_t make_scanner_from_source(cthulhu_t *cthulhu, source_t *source)
     return make[source->kind](cthulhu, source);
 }
 
-int cthulhu_init(cthulhu_t *cthulhu)
+status_t cthulhu_init(cthulhu_t *cthulhu)
 {
     cthulhu->driver.fnInitCompiler(&cthulhu->runtime);
 
-    size_t totalSources = vector_len(cthulhu->sources);
+    size_t totalSources = total_sources(cthulhu);
 
-    cthulhu->compiles = vector_of(totalSources);
+    cthulhu->compiles = arena_malloc(get_alloc(cthulhu), totalSources * sizeof(compile_t), "compile-pipelines");
 
     for (size_t i = 0; i < totalSources; i++)
     {
         source_t *source = vector_get(cthulhu->sources, i);
 
-        compile_t *ctx = ctu_malloc(sizeof(compile_t));
+        compile_t *ctx = get_compile(cthulhu, i);
         ctx->ast = NULL;
         ctx->hlir = NULL;
         ctx->source = source;
         ctx->scanner = make_scanner_from_source(cthulhu, source);
-
-        vector_set(cthulhu->compiles, i, ctx);
     }
 
     return report_errors(cthulhu, "scanning sources");
 }
 
-int cthulhu_parse(cthulhu_t *cthulhu)
+status_t cthulhu_parse(cthulhu_t *cthulhu)
 {
-    size_t totalSources = vector_len(cthulhu->sources);
+    size_t totalSources = total_sources(cthulhu);
 
     for (size_t i = 0; i < totalSources; i++)
     {
-        compile_t *ctx = vector_get(cthulhu->compiles, i);
+        compile_t *ctx = get_compile(cthulhu, i);
         ctx->ast = cthulhu->driver.fnParseFile(&cthulhu->runtime, ctx);
     }
 
     return report_errors(cthulhu, "parsing sources");
 }
 
-int cthulhu_forward(cthulhu_t *cthulhu)
+status_t cthulhu_forward(cthulhu_t *cthulhu)
 {
-    size_t totalSources = vector_len(cthulhu->sources);
+    size_t totalSources = total_sources(cthulhu);
 
     for (size_t i = 0; i < totalSources; i++)
     {
-        compile_t *ctx = vector_get(cthulhu->compiles, i);
+        compile_t *ctx = get_compile(cthulhu, i);
         cthulhu->driver.fnForwardDecls(&cthulhu->runtime, ctx);
     }
 
@@ -176,7 +194,7 @@ int cthulhu_forward(cthulhu_t *cthulhu)
     for (size_t i = 0; i < totalSources; i++)
     {
         source_t *source = vector_get(cthulhu->sources, i);
-        compile_t *ctx = vector_get(cthulhu->compiles, i);
+        compile_t *ctx = get_compile(cthulhu, i);
         hlir_t *hlir = ctx->hlir;
 
         rename_module(hlir, source->path);
@@ -186,26 +204,26 @@ int cthulhu_forward(cthulhu_t *cthulhu)
     return report_errors(cthulhu, "forwarding declarations");
 }
 
-int cthulhu_resolve(cthulhu_t *cthulhu)
+status_t cthulhu_resolve(cthulhu_t *cthulhu)
 {
-    size_t totalSources = vector_len(cthulhu->sources);
+    size_t totalSources = total_sources(cthulhu);
 
     for (size_t i = 0; i < totalSources; i++)
     {
-        compile_t *ctx = vector_get(cthulhu->compiles, i);
+        compile_t *ctx = get_compile(cthulhu, i);
         cthulhu->driver.fnResolveImports(&cthulhu->runtime, ctx);
     }
 
     return report_errors(cthulhu, "import resolution");
 }
 
-int cthulhu_compile(cthulhu_t *cthulhu)
+status_t cthulhu_compile(cthulhu_t *cthulhu)
 {
-    size_t totalSources = vector_len(cthulhu->sources);
+    size_t totalSources = total_sources(cthulhu);
 
     for (size_t i = 0; i < totalSources; i++)
     {
-        compile_t *ctx = vector_get(cthulhu->compiles, i);
+        compile_t *ctx = get_compile(cthulhu, i);
         cthulhu->driver.fnCompileModule(&cthulhu->runtime, ctx);
     }
 
@@ -220,7 +238,7 @@ int cthulhu_compile(cthulhu_t *cthulhu)
 
     for (size_t i = 0; i < totalSources; i++)
     {
-        compile_t *ctx = vector_get(cthulhu->compiles, i);
+        compile_t *ctx = get_compile(cthulhu, i);
         check_module(&check, ctx->hlir);
     }
 
@@ -229,13 +247,13 @@ int cthulhu_compile(cthulhu_t *cthulhu)
 
 vector_t *cthulhu_get_modules(cthulhu_t *cthulhu)
 {
-    size_t totalSources = vector_len(cthulhu->sources);
+    size_t totalSources = total_sources(cthulhu);
 
     vector_t *result = vector_of(totalSources);
 
     for (size_t i = 0; i < totalSources; i++)
     {
-        compile_t *ctx = vector_get(cthulhu->compiles, i);
+        compile_t *ctx = get_compile(cthulhu, i);
         vector_set(result, i, ctx->hlir);
     }
 

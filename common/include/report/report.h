@@ -2,6 +2,7 @@
 
 #include "scan/node.h"
 
+typedef struct sink_t sink_t;
 typedef struct vector_t vector_t;
 typedef struct alloc_t alloc_t;
 
@@ -53,6 +54,8 @@ typedef enum
     eLevelTotal
 } level_t;
 
+typedef int status_t;
+
 /**
  * @brief part of an error message
  */
@@ -87,6 +90,7 @@ typedef struct
 {
     size_t limit;
     bool warningsAreErrors;
+    sink_t *sink;
 } report_config_t;
 
 #define DEFAULT_REPORT_CONFIG                                                                                          \
@@ -108,10 +112,7 @@ typedef struct reports_t
  * @return the new context
  */
 NODISCARD
-reports_t *begin_reports(void);
-
-NODISCARD
-reports_t *begin_reports2(alloc_t *alloc);
+reports_t *begin_reports(alloc_t *alloc);
 
 /**
  * flush a reporting context and return an exit code
@@ -126,7 +127,7 @@ reports_t *begin_reports2(alloc_t *alloc);
  *         EXIT_INTERAL if the sink contained an internal error.
  */
 NODISCARD
-int end_reports(reports_t *reports, const char *name, report_config_t settings);
+status_t end_reports(reports_t *reports, const char *name, report_config_t settings);
 
 /**
  * @brief push an internal compiler error into a reporting context

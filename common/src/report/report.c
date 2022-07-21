@@ -460,13 +460,7 @@ static bool report_send(const char *base, message_t *message)
 }
 
 USE_DECL
-reports_t *begin_reports(void)
-{
-    return begin_reports2(&globalAlloc);
-}
-
-USE_DECL
-reports_t *begin_reports2(alloc_t *alloc)
+reports_t *begin_reports(alloc_t *alloc)
 {
     reports_t *reports = arena_malloc(alloc, sizeof(reports_t), "report-context");
     reports->messages = vector_new2(32, alloc, "report-messages");
@@ -508,7 +502,7 @@ static const char *paths_base(vector_t *messages)
 }
 
 USE_DECL
-int end_reports(reports_t *reports, const char *name, report_config_t settings)
+status_t end_reports(reports_t *reports, const char *name, report_config_t settings)
 {
     CTASSERT(reports != NULL);
     CTASSERT(name != NULL);
@@ -521,7 +515,7 @@ int end_reports(reports_t *reports, const char *name, report_config_t settings)
     size_t fatalMessagesSuppressed = 0;
     size_t warningsSuppressed = 0;
 
-    int result = EXIT_OK;
+    status_t result = EXIT_OK;
 
     size_t errors = vector_len(reports->messages);
     const char *common = paths_base(reports->messages);
