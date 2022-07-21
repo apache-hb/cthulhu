@@ -56,6 +56,20 @@ platform = declare_dependency(
     include_directories : 'include'
 )
 
+src = [ 'src/io/io.c' ]
+
+libio = library('io', src,
+    c_args : args,
+    dependencies : [ platform, std ],
+    include_directories : 'include'
+)
+
+io = declare_dependency(
+    link_with : libio,
+    dependencies : [ platform, std ],
+    include_directories : 'include'
+)
+
 src = [
     'src/report/report.c',
     'src/report/report-ext.c',
@@ -108,4 +122,4 @@ argparse = declare_dependency(
     include_directories : 'include'
 )
 
-deps += [ base, std, platform, location, interop, argparse ]
+deps += [ base, std, platform, io, location, interop, argparse ]
