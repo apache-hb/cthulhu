@@ -9,6 +9,8 @@
 
 #include "cthulhu/emit/c89.h"
 
+#include "io/io.h"
+
 #include <stdio.h>
 
 static const char *kOutputFileNames[] = {"-o", "--output"};
@@ -60,7 +62,7 @@ int main(int argc, const char **argv)
     }
 
     const char *outFile = get_string_arg(&result, outputFileNameParam, "out.c");
-    bool enableSsa = get_bool_arg(&result, enableSSAParam, false);
+    // bool enableSsa = get_bool_arg(&result, enableSSAParam, false);
 
     size_t totalFiles = vector_len(result.files);
     vector_t *sources = vector_of(totalFiles);
@@ -105,21 +107,16 @@ int main(int argc, const char **argv)
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
 
-    cerror_t error = 0;
-    file_t out = file_open(outFile, eFileWrite | eFileBinary, &error);
+    io_t *out = io_file(&globalAlloc, outFile, eFileWrite | eFileBinary);
 
-    if (error != 0)
+    if (io_error(out) != 0)
     {
         message_t *id = report(reports, eFatal, node_invalid(), "failed to open file `%s`", outFile);
-        report_note(id, "%s", error_string(error));
+        report_note(id, "%s", error_string(io_error(out)));
         return end_reports(reports, "opening file", reportConfig);
     }
 
-    stream_t *stream = c89_emit_modules(reports, allModules);
-
-    file_write(out, stream_data(stream), stream_len(stream), &error);
-
-    file_close(out);
+    c89_emit_modules(reports, allModules, out);
 
     return end_reports(reports, "emitting code", reportConfig);
 }

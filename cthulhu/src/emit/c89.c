@@ -14,14 +14,15 @@
 #include "std/map.h"
 #include "std/set.h"
 #include "std/str.h"
-#include "std/stream.h"
+
+#include "io/io.h"
 
 #include <string.h>
 
 typedef struct
 {
     reports_t *reports;
-    stream_t *output;
+    io_t *output;
 
     size_t depth;
 
@@ -29,14 +30,17 @@ typedef struct
     map_t *mangledNames;
 } c89_emit_t;
 
+static const char *kIndent = "  ";
+
 static void write_string(c89_emit_t *emit, const char *str)
 {
+    size_t indentLen = strlen(kIndent);
     for (size_t i = 0; i < emit->depth; i++)
     {
-        stream_write(emit->output, "  ");
+        io_write(emit->output, kIndent, indentLen);
     }
 
-    stream_write(emit->output, str);
+    io_write(emit->output, str, strlen(str));
 }
 
 static void begin_indent(c89_emit_t *emit)
@@ -1162,9 +1166,9 @@ static void c89_emit_functions(c89_emit_t *emit, size_t totalDecls, vector_t *mo
     }
 }
 
-stream_t *c89_emit_modules(reports_t *reports, vector_t *modules)
+void c89_emit_modules(reports_t *reports, vector_t *modules, io_t *io)
 {
-    c89_emit_t emit = {.reports = reports, .output = stream_new(0x1000)};
+    c89_emit_t emit = {.reports = reports, .output = io};
 
     size_t totalDecls = 0;
     size_t totalModules = vector_len(modules);
@@ -1187,6 +1191,4 @@ stream_t *c89_emit_modules(reports_t *reports, vector_t *modules)
     c89_emit_globals(&emit, totalDecls, modules);
 
     c89_emit_functions(&emit, totalDecls, modules);
-
-    return emit.output;
 }

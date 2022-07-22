@@ -1,6 +1,7 @@
 #pragma once
 
-#include "report/report.h"
-#include "std/stream.h"
+typedef struct reports_t reports_t;
+typedef struct vector_t vector_t;
+typedef struct io_t io_t;
 
-stream_t *c89_emit_modules(reports_t *reports, vector_t *modules);
+void c89_emit_modules(reports_t *reports, vector_t *modules, io_t *dst);

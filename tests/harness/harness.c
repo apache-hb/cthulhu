@@ -1,7 +1,5 @@
 #include "cthulhu/interface/interface.h"
 
-#include "std/stream.h"
-
 #include "base/macros.h"
 #include "base/memory.h"
 

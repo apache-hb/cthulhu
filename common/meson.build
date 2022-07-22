@@ -21,8 +21,7 @@ src = [
     'src/std/optimal.c', 
     'src/std/set.c', 
     'src/std/str.c', 
-    'src/std/vector.c',
-    'src/std/stream.c'
+    'src/std/vector.c'
 ]
 
 libstd = library('std', src, 

@@ -33,8 +33,7 @@
     * will need further thought
 * VM execution
     * debugging, interactive shell
-* find a better abstraction than `stream_t`
-    * probably extend the `file_t` interface outside of platform to support in-memory buffers
+* replace all uses of `file_t` with the wrapped `io_t`
 * replace AST definitions with protobuf for better fuzzing
 * support llvm libfuzzer
 * async file reading
