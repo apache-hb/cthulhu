@@ -28,7 +28,8 @@ NODISCARD CONSTFN size_t scan_size(const scan_t *scan);
 
 NODISCARD CONSTFN text_t scan_source(const scan_t *scan);
 
-NODISCARD size_t scan_read(scan_t *scan, void *dst, size_t size);
+NODISCARD RET_RANGE(0, size)
+size_t scan_read(scan_t *scan, void *dst, size_t size);
 
 NODISCARD CONSTFN reports_t *scan_reports(scan_t *scan);
 

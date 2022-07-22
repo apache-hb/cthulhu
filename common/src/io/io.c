@@ -40,7 +40,7 @@ typedef struct io_t {
 } io_t;
 
 typedef struct buffer_t {
-    void *data; ///< stored data
+    char *data; ///< stored data
     size_t used; ///< used data
     size_t total; ///< total size of data
 
@@ -48,7 +48,7 @@ typedef struct buffer_t {
 } buffer_t;
 
 typedef struct view_t {
-    const void *data;
+    const char *data;
     size_t size;
     size_t offset;
 } view_t;
@@ -138,7 +138,6 @@ static void mem_close(io_t *self)
     buffer_t *mem = io_data(self);
     arena_free(self->alloc, mem->data, mem->total);
 }
-
 
 static size_t view_read(io_t *self, void *dst, size_t size)
 {

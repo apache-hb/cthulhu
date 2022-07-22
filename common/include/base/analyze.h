@@ -9,12 +9,14 @@
 #    define USE_DECL _Use_decl_annotations_
 #    define NODISCARD _Check_return_
 #    define IN_READS(expr) _In_reads_(expr)
+#    define RET_RANGE(lo, hi) _Ret_range_(lo, hi)
 #    define FIELD_SIZE(of) _Field_size_(of)
 #else
 #    define DISABLE_SAL
 #    define FORMAT_STRING
 #    define USE_DECL
 #    define IN_READS(expr)
+#    define RET_RANGE(lo, hi)
 #    define FIELD_SIZE(of)
 #endif
 

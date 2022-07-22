@@ -30,7 +30,7 @@ void flex_action(where_t *where, const char *text)
 int flex_input(scan_t *scan, char *out, int size)
 {
     CTASSERT(size <= INT_MAX);
-    return scan_read(scan, out, size);
+    return (int)scan_read(scan, out, size);
 }
 
 void flex_init(where_t *where)
