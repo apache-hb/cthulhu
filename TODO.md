@@ -1,11 +1,18 @@
 # TODO
 
-* remove hlir parent data
-    * nodes should not care about the context they're used in
+## important
+
 * ssa backend
     * wasm
     * x64
+    
 * deprecate C backend, move to something else
+    * blocked by ssa backend
+
+* remove hlir parent data
+    * nodes should not care about the context they're used in
+    * blocked by C backend
+
 * rewrite reporting
     * more detailed location tracking
     * fix current reports
@@ -15,15 +22,18 @@
     * proper unit testing
 * C frontend
     * perhaps support a small subset of C++ so we can use it internally
+* unit tests for everything in `/common/`
+* complete api docs
+
+## bikeshedding
+
 * rewrite gui frontend
 * add language server support
 * move to incremental compilation
 * error registry like msvc
-* unit tests for everything in `/common/`
 * more frontend tests
 * continued code cleanup
 * add plugin support back in
-* complete api docs
 * add binary module support back in
 * support [ifc](https://github.com/microsoft/ifc-spec) modules
 * build time option for internal compiler timing
@@ -36,4 +46,4 @@
 * replace AST definitions with protobuf for better fuzzing
 * support llvm libfuzzer
 * async file reading
-* simplify `scan_t` and `node_t`
+* simplify `node_t`
