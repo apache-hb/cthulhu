@@ -42,6 +42,7 @@ ninja -C build test # build and run tests
   * `base` - memory allocation library
   * `interop` - flex & bison helper functions
   * `platform` - platform detail wrappers
+  * `io` - file io abstraction
   * `report` - error reporting tools
   * `scan` - flex & bison scanning tools
   * `std` - collections and data structures
