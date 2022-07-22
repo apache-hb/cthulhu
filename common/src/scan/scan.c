@@ -5,136 +5,88 @@
 
 #include "base/macros.h"
 #include "base/panic.h"
+#include "base/memory.h"
+
+#include "io/io.h"
 
 #include <limits.h>
 #include <string.h>
 
-typedef struct
+typedef struct scan_t
 {
+    alloc_t *alloc;
+    reports_t *reports; ///< the reporting sink for this file
+    io_t *io; ///< file itself
+
     const char *language;      ///< the language this file contains
-    const char *path;          ///< the path to this file
     void *data;                ///< user data pointer
-    text_t source;             ///< the source text in this file
-    size_t offset;             ///< how much of this file has been parsed
-    struct reports_t *reports; ///< the reporting sink for this file
-} scan_data_t;
 
-#define TOTAL_SCANNERS (0x1000) // TODO: make this configurable
+    const char *mapped;
+    size_t size;
+} scan_t;
 
-static scan_data_t kScanData[TOTAL_SCANNERS];
-static scan_t kScanOffset = 0;
-
-static scan_data_t *get_scanner(scan_t scan)
+const char *scan_language(const scan_t *scan)
 {
-    CTASSERTF(scan < TOTAL_SCANNERS, "[get-scanner] scan %u out of range", scan);
-    return kScanData + scan;
+    return scan->language;
 }
 
-const char *scan_language(scan_t scan)
+const char *scan_path(const scan_t *scan)
 {
-    const scan_data_t *self = get_scanner(scan);
-    return self->language;
+    return io_name(scan->io);
 }
 
-const char *scan_path(scan_t scan)
+void *scan_get(scan_t *scan)
 {
-    const scan_data_t *self = get_scanner(scan);
-    return self->path;
+    return scan->data;
 }
 
-void *scan_get(scan_t scan)
+void scan_set(scan_t *scan, void *value)
 {
-    const scan_data_t *self = get_scanner(scan);
-    return self->data;
+    scan->data = value;
 }
 
-void scan_set(scan_t scan, void *value)
+const char *scan_text(const scan_t *scan)
 {
-    scan_data_t *self = get_scanner(scan);
-    self->data = value;
+    return scan->mapped;
 }
 
-const char *scan_text(scan_t scan)
+text_t scan_source(const scan_t *scan)
 {
-    const scan_data_t *self = get_scanner(scan);
-    return self->source.text;
+    text_t text = { scan->size, scan->mapped };
+    return text;
 }
 
-text_t scan_source(scan_t scan)
+size_t scan_size(const scan_t *scan)
 {
-    scan_data_t *self = get_scanner(scan);
-    return self->source;
+    return scan->size;
 }
 
-size_t scan_size(scan_t scan)
+size_t scan_read(scan_t *scan, void *dst, size_t size)
 {
-    const scan_data_t *self = get_scanner(scan);
-    return self->source.size;
+    return io_read(scan->io, dst, size);
 }
 
-size_t scan_offset(scan_t scan)
+reports_t *scan_reports(scan_t *scan)
 {
-    const scan_data_t *self = get_scanner(scan);
-    return self->offset;
+    return scan->reports;
 }
 
-void scan_advance(scan_t scan, size_t offset)
+scan_t *scan_invalid(void)
 {
-    scan_data_t *self = get_scanner(scan);
-    self->offset += offset;
+    return NULL;
 }
 
-reports_t *scan_reports(scan_t scan)
+scan_t *scan_io(alloc_t *alloc, reports_t *reports, const char *language, io_t *io)
 {
-    const scan_data_t *self = get_scanner(scan);
-    return self->reports;
-}
+    scan_t *self = arena_malloc(alloc, sizeof(scan_t), "scan-io");
 
-scan_t scan_invalid(void)
-{
-    return UINT_MAX;
-}
-
-static scan_t scan_new(reports_t *reports, const char *language, const char *path, text_t source)
-{
-    scan_t index = kScanOffset++;
-
-    scan_data_t *self = get_scanner(index);
+    self->alloc = alloc;
     self->language = language;
-    self->path = path;
     self->reports = reports;
-    self->offset = 0;
-    self->source = source;
+    self->io = io;
 
-    return index;
-}
+    self->mapped = io_map(io);
+    self->size = io_size(io);
 
-scan_t scan_string(reports_t *reports, const char *language, const char *path, const char *text)
-{
-    text_t source = {
-        .size = strlen(text),
-        .text = text,
-    };
-    return scan_new(reports, language, path, source);
-}
-
-scan_t scan_file(reports_t *reports, const char *language, file_t file)
-{
-    cerror_t error = 0;
-    size_t size = file_size(file, &error);
-    const char *text = file_map(file, &error);
-    text_t source = {.size = size, .text = text};
-
-    if (text == NULL || error != 0)
-    {
-        report(reports, eFatal, node_invalid(), "failed to map file: %s", error_string(error));
-    }
-
-    return scan_new(reports, language, file.path, source);
-}
-
-scan_t scan_without_source(reports_t *reports, const char *language, const char *path)
-{
-    text_t source = {.size = 0, .text = ""};
-    return scan_new(reports, language, path, source);
+    return self;
 }

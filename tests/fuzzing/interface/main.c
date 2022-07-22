@@ -6,6 +6,8 @@
 
 #include "cthulhu/emit/c89.h"
 
+#include "io/io.h"
+
 int main(int argc, const char **argv)
 {
     UNUSED(argc);
@@ -24,8 +26,8 @@ int main(int argc, const char **argv)
 
     CTASSERTM(argc == 2, "must provide one argument");
 
-    source_t *src = source_file(&globalAlloc, argv[1]);
-    vector_t *sources = vector_init(src);
+    io_t *io = io_file(&globalAlloc, argv[1], eFileRead | eFileText);
+    vector_t *sources = vector_init(io);
 
     config_t config = {
         .alloc = &globalAlloc,
@@ -51,7 +53,9 @@ int main(int argc, const char **argv)
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
 
-    c89_emit_modules(cthulhu->reports, allModules);
+    io_t *dst = io_memory(&globalAlloc, "c89-output", NULL, 0x1000);
+
+    c89_emit_modules(cthulhu->reports, allModules, dst);
 
     return end_reports(cthulhu->reports, "codegen", reportConfig);
 }

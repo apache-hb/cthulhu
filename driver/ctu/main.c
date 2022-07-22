@@ -15,8 +15,8 @@ static void *ctu_parse_file(runtime_t *runtime, compile_t *compile)
 {
     UNUSED(runtime);
 
-    init_scan(compile->scanner);
-    return compile_scanner(compile->scanner, &kCallbacks);
+    init_scan(compile->scan);
+    return compile_scanner(compile->scan, &kCallbacks);
 }
 
 const driver_t kDriver = {

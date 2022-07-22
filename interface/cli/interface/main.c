@@ -69,7 +69,7 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < totalFiles; i++)
     {
         const char *file = vector_get(result.files, i);
-        source_t *source = source_file(&globalAlloc, file);
+        io_t *source = io_file(&globalAlloc, file, eFileRead | eFileText);
         vector_set(sources, i, source);
     }
 

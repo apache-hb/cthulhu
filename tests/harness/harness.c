@@ -3,6 +3,8 @@
 #include "base/macros.h"
 #include "base/memory.h"
 
+#include "io/io.h"
+
 #include <stdio.h>
 
 int main(int argc, const char **argv)
@@ -20,7 +22,7 @@ int main(int argc, const char **argv)
     for (int i = 1; i < argc; i++)
     {
         const char *file = argv[i];
-        source_t *source = source_file(&globalAlloc, file);
+        io_t *source = io_file(&globalAlloc, file, eFileRead | eFileText);
         vector_set(sources, i - 1, source);
     }
 

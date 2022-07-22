@@ -9,6 +9,8 @@
 #include "base/memory.h"
 #include "base/panic.h"
 
+#include "io/io.h"
+
 #include "std/str.h"
 
 static status_t report_errors(cthulhu_t *cthulhu, const char *name)
@@ -64,26 +66,6 @@ static compile_t *get_compile(const cthulhu_t *cthulhu, size_t idx)
     return cthulhu->compiles + idx;
 }
 
-static source_t *source_of_kind(alloc_t *alloc, source_kind_t kind, const char *path)
-{
-    source_t *source = arena_malloc(alloc, sizeof(source_t), "source-code-bundle");
-    source->kind = kind;
-    source->path = path;
-    return source;
-}
-
-source_t *source_file(alloc_t *alloc, const char *path)
-{
-    return source_of_kind(alloc, eSourceFile, path);
-}
-
-source_t *source_string(alloc_t *alloc, const char *path, const char *string)
-{
-    source_t *source = source_of_kind(alloc, eSourceString, path);
-    source->string = string;
-    return source;
-}
-
 cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
 {
     CTASSERT(config.alloc != NULL);
@@ -111,36 +93,6 @@ cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
     return cthulhu;
 }
 
-static scan_t make_scanner_from_file(cthulhu_t *cthulhu, source_t *source)
-{
-    cerror_t error = 0;
-    file_t handle = file_open(source->path, eFileRead | eFileText, &error);
-
-    if (error != 0)
-    {
-        message_t *id = report(cthulhu->reports, eFatal, node_invalid(), "failed to open file `%s`", source->path);
-        report_note(id, "%s", error_string(error));
-        return scan_invalid();
-    }
-
-    return scan_file(cthulhu->reports, cthulhu->driver.name, handle);
-}
-
-static scan_t make_scanner_from_string(cthulhu_t *cthulhu, source_t *source)
-{
-    return scan_string(cthulhu->reports, cthulhu->driver.name, source->path, source->string);
-}
-
-static scan_t make_scanner_from_source(cthulhu_t *cthulhu, source_t *source)
-{
-    scan_t (*make[])(cthulhu_t *, source_t *) = {
-        [eSourceFile] = make_scanner_from_file,
-        [eSourceString] = make_scanner_from_string,
-    };
-
-    return make[source->kind](cthulhu, source);
-}
-
 status_t cthulhu_init(cthulhu_t *cthulhu)
 {
     cthulhu->driver.fnInitCompiler(&cthulhu->runtime);
@@ -151,13 +103,19 @@ status_t cthulhu_init(cthulhu_t *cthulhu)
 
     for (size_t i = 0; i < totalSources; i++)
     {
-        source_t *source = vector_get(cthulhu->sources, i);
+        io_t *source = vector_get(cthulhu->sources, i);
+
+        if (io_error(source) != 0)
+        {
+            message_t *id = report(cthulhu->reports, eFatal, node_invalid(), "failed to open file `%s`", io_name(source));
+            report_note(id, "%s", error_string(io_error(source)));
+            continue;
+        }
 
         compile_t *ctx = get_compile(cthulhu, i);
         ctx->ast = NULL;
         ctx->hlir = NULL;
-        ctx->source = source;
-        ctx->scanner = make_scanner_from_source(cthulhu, source);
+        ctx->scan = scan_io(cthulhu->config.alloc, cthulhu->reports, cthulhu->driver.name, source);
     }
 
     return report_errors(cthulhu, "scanning sources");
@@ -193,11 +151,11 @@ status_t cthulhu_forward(cthulhu_t *cthulhu)
 
     for (size_t i = 0; i < totalSources; i++)
     {
-        source_t *source = vector_get(cthulhu->sources, i);
+        io_t *source = vector_get(cthulhu->sources, i);
         compile_t *ctx = get_compile(cthulhu, i);
         hlir_t *hlir = ctx->hlir;
 
-        rename_module(hlir, source->path);
+        rename_module(hlir, io_name(source));
         add_module(&cthulhu->runtime, get_hlir_name(hlir), ctx->sema);
     }
 

@@ -18,14 +18,14 @@ typedef struct
     vector_t *attribs; // attribute collector
 } lex_extra_t;
 
-void ctuerror(where_t *where, void *state, scan_t scan, const char *msg)
+void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
     UNUSED(state);
 
     report(scan_reports(scan), eFatal, node_new(scan, *where), "%s", msg);
 }
 
-void init_scan(scan_t scan)
+void init_scan(scan_t *scan)
 {
     lex_extra_t *extra = ctu_malloc(sizeof(lex_extra_t));
     extra->depth = 0;
@@ -33,25 +33,25 @@ void init_scan(scan_t scan)
     scan_set(scan, extra);
 }
 
-void enter_template(scan_t scan)
+void enter_template(scan_t *scan)
 {
     lex_extra_t *extra = scan_get(scan);
     extra->depth++;
 }
 
-size_t exit_template(scan_t scan)
+size_t exit_template(scan_t *scan)
 {
     lex_extra_t *extra = scan_get(scan);
     return extra->depth--;
 }
 
-void add_attribute(scan_t scan, ast_t *ast)
+void add_attribute(scan_t *scan, ast_t *ast)
 {
     lex_extra_t *extra = scan_get(scan);
     vector_push(&extra->attribs, ast);
 }
 
-vector_t *collect_attributes(scan_t scan)
+vector_t *collect_attributes(scan_t *scan)
 {
     lex_extra_t *extra = scan_get(scan);
     vector_t *vec = extra->attribs;

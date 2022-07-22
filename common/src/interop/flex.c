@@ -1,6 +1,8 @@
 #include "base/macros.h"
+#include "base/panic.h"
 
 #include <string.h>
+#include <limits.h>
 
 #define COMPILER_SOURCE 1
 
@@ -25,16 +27,10 @@ void flex_action(where_t *where, const char *text)
     }
 }
 
-int flex_input(scan_t scan, char *out, int size)
+int flex_input(scan_t *scan, char *out, int size)
 {
-    size_t remainingSize = scan_size(scan) - scan_offset(scan);
-    int total = MIN((int)remainingSize, size);
-
-    memcpy(out, scan_text(scan) + scan_offset(scan), total);
-
-    scan_advance(scan, total);
-
-    return total;
+    CTASSERT(size <= INT_MAX);
+    return scan_read(scan, out, size);
 }
 
 void flex_init(where_t *where)

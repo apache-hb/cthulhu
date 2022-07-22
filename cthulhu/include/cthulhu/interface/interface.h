@@ -18,23 +18,9 @@ typedef struct
     map_t *modules;
 } runtime_t;
 
-typedef enum
-{
-    eSourceString,
-    eSourceFile
-} source_kind_t;
-
 typedef struct
 {
-    source_kind_t kind;
-    const char *path;
-    const char *string;
-} source_t;
-
-typedef struct
-{
-    source_t *source;
-    scan_t scanner;
+    scan_t *scan;
 
     void *ast;
     const char *moduleName;
@@ -103,9 +89,6 @@ status_t cthulhu_resolve(cthulhu_t *cthulhu);
 status_t cthulhu_compile(cthulhu_t *cthulhu);
 
 vector_t *cthulhu_get_modules(cthulhu_t *cthulhu);
-
-source_t *source_file(alloc_t *alloc, const char *path);
-source_t *source_string(alloc_t *alloc, const char *path, const char *string);
 
 /**
  * @brief initialize the common runtime, always the first function an interface

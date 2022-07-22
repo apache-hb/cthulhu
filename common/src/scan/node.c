@@ -7,7 +7,7 @@
 
 typedef struct
 {
-    scan_t scan;   ///< the source file
+    scan_t *scan;   ///< the source file
     where_t where; ///< the location of this node in the source file
 } node_data_t;
 
@@ -31,7 +31,7 @@ bool node_is_valid(node_t node)
     return node != node_invalid();
 }
 
-node_t node_new(scan_t scan, where_t where)
+node_t node_new(scan_t *scan, where_t where)
 {
     node_t offset = kNodeOffset++;
 
@@ -42,7 +42,7 @@ node_t node_new(scan_t scan, where_t where)
     return offset;
 }
 
-scan_t get_node_scanner(node_t node)
+scan_t *get_node_scanner(node_t node)
 {
     CTASSERTF(node < TOTAL_NODES, "[get-node-scanner] node %u out of range", node);
     const node_data_t *self = kNodeData + node;

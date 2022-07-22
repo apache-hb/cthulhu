@@ -13,6 +13,8 @@
 
 #include "report/report.h"
 
+#include "io/io.h"
+
 #include "cmd-bison.h"
 #include "cmd-flex.h"
 
@@ -20,7 +22,7 @@
 
 CT_CALLBACKS(kCallbacks, cmd);
 
-void cmderror(where_t *where, void *state, scan_t scan, const char *msg)
+void cmderror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
     UNUSED(state);
 
@@ -326,7 +328,9 @@ argparse_t parse_args(const argparse_config_t *config)
 
     char *args = join_args(config->argc, config->argv);
 
-    scan_t scan = scan_string(config->reports, "command-parser", "<command-line>", args);
+    io_t *io = io_string(&globalAlloc, "<command-line>", args);
+
+    scan_t *scan = scan_io(&globalAlloc, config->reports, "command-parser", io);
 
     report_config_t reportConfig = {
         .limit = 20,

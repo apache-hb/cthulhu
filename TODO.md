@@ -33,7 +33,7 @@
     * will need further thought
 * VM execution
     * debugging, interactive shell
-* replace all uses of `file_t` with the wrapped `io_t`
 * replace AST definitions with protobuf for better fuzzing
 * support llvm libfuzzer
 * async file reading
+* simplify `scan_t` and `node_t`

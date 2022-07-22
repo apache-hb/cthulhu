@@ -1,4 +1,4 @@
-%option extra-type="scan_t"
+%option extra-type="scan_t*"
 %option 8bit nodefault
 %option noyywrap noinput nounput
 %option noyyalloc noyyrealloc noyyfree

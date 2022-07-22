@@ -213,7 +213,9 @@ io_t *io_file(alloc_t *alloc, const char *path, file_flags_t mode)
 {
     cerror_t err = 0;
     file_t file = file_open(path, mode, &err);
-    return io_new(alloc, &kFileCallbacks, mode, path, &file, sizeof(file_t));
+    io_t *io = io_new(alloc, &kFileCallbacks, mode, path, &file, sizeof(file_t));
+    io->error = err;
+    return io;
 }
 
 io_t *io_memory(alloc_t *alloc, const char *name, const void *data, size_t size)
@@ -227,7 +229,10 @@ io_t *io_memory(alloc_t *alloc, const char *name, const void *data, size_t size)
         .offset = 0
     };
 
-    memcpy(buffer.data, data, size);
+    if (data != NULL)
+    {
+        memcpy(buffer.data, data, size);
+    }
 
     return io_new(alloc, &kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
 }

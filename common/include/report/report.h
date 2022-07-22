@@ -2,7 +2,6 @@
 
 #include "scan/node.h"
 
-typedef struct sink_t sink_t;
 typedef struct vector_t vector_t;
 typedef struct alloc_t alloc_t;
 
@@ -90,7 +89,6 @@ typedef struct
 {
     size_t limit;
     bool warningsAreErrors;
-    sink_t *sink;
 } report_config_t;
 
 #define DEFAULT_REPORT_CONFIG                                                                                          \
