@@ -8,7 +8,6 @@
 #include "cthulhu/interface/interface.h"
 
 #include "cthulhu/emit/c89.h"
-#include "cthulhu/ssa/ssa.h"
 
 #include <stdio.h>
 
@@ -105,21 +104,6 @@ int main(int argc, const char **argv)
     }
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
-
-    if (enableSsa)
-    {
-        module_t *mod = ssa_compile(reports, allModules);
-
-        status = end_reports(reports, "ssa codegen", reportConfig);
-        if (status != EXIT_OK)
-        {
-            return status;
-        }
-
-        stream_t *dbg = ssa_debug(reports, mod);
-
-        printf("%s\n", stream_data(dbg));
-    }
 
     cerror_t error = 0;
     file_t out = file_open(outFile, eFileWrite | eFileBinary, &error);

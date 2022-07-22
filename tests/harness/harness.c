@@ -1,7 +1,5 @@
 #include "cthulhu/interface/interface.h"
 
-#include "cthulhu/ssa/ssa.h"
-
 #include "std/stream.h"
 
 #include "base/macros.h"
@@ -50,14 +48,5 @@ int main(int argc, const char **argv)
         }
     }
 
-    module_t *mod = ssa_compile(cthulhu->reports, cthulhu_get_modules(cthulhu));
-
-    status_t status = end_reports(cthulhu->reports, "ssa codegen", reportConfig);
-    if (status != EXIT_OK) { return status; }
-
-    stream_t *out = ssa_debug(cthulhu->reports, mod);
-
-    printf("%s\n", stream_data(out));
-
-    return end_reports(cthulhu->reports, "ssa debug output", reportConfig);
+    return 0;
 }
