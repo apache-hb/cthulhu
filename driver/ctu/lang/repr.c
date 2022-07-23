@@ -161,6 +161,9 @@ const char *ctu_type_repr(reports_t *reports, const hlir_t *type, bool detail)
     case eHlirClosure:
         return repr_closure(reports, inner, detail);
 
+    case eHlirStruct:
+        return format("struct %s", get_hlir_name(inner));
+
     default:
         ctu_assert(reports, "ctu-repr unexpected %s", hlir_kind_to_string(kind));
         return "unexpected";

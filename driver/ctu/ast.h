@@ -27,6 +27,7 @@ typedef enum
     eAstBinary,
     eAstCompare,
 
+    eAstAccess,
     eAstCall,
 
     /* statements */
@@ -34,6 +35,7 @@ typedef enum
     eAstReturn,
     eAstWhile,
     eAstBranch,
+    eAstAssign,
     eAstBreak,
     eAstContinue,
 
@@ -146,6 +148,20 @@ typedef struct ast_t
             vector_t *args;
         };
 
+        /* eAstAccess */
+        struct
+        {
+            struct ast_t *record;
+            const char *access;
+            bool indirect;
+        };
+
+        struct
+        {
+            struct ast_t *dst;
+            struct ast_t *src;
+        };
+
         /* eAstStmts */
         vector_t *stmts;
 
@@ -218,6 +234,8 @@ ast_t *ast_unary(scan_t *scan, where_t where, unary_t op, ast_t *operand);
 ast_t *ast_binary(scan_t *scan, where_t where, binary_t binary, ast_t *lhs, ast_t *rhs);
 ast_t *ast_compare(scan_t *scan, where_t where, compare_t compare, ast_t *lhs, ast_t *rhs);
 
+ast_t *ast_access(scan_t *scan, where_t where, ast_t *data, const char *field, bool indirect);
+
 ast_t *ast_call(scan_t *scan, where_t where, ast_t *call, vector_t *args);
 
 /// statements
@@ -225,6 +243,8 @@ ast_t *ast_call(scan_t *scan, where_t where, ast_t *call, vector_t *args);
 ast_t *ast_stmts(scan_t *scan, where_t where, vector_t *stmts);
 ast_t *ast_return(scan_t *scan, where_t where, ast_t *expr);
 ast_t *ast_while(scan_t *scan, where_t where, char *label, ast_t *cond, ast_t *body, ast_t *other);
+
+ast_t *ast_assign(scan_t *scan, where_t where, ast_t *dst, ast_t *src);
 
 ast_t *ast_branch(scan_t *scan, where_t where, ast_t *cond, ast_t *body, ast_t *other);
 

@@ -129,6 +129,17 @@ ast_t *ast_compare(scan_t *scan, where_t where, compare_t compare, ast_t *lhs, a
     return ast;
 }
 
+ast_t *ast_access(scan_t *scan, where_t where, ast_t *data, const char *field, bool indirect)
+{
+    ast_t *ast = ast_new(eAstAccess, scan, where);
+
+    ast->record = data;
+    ast->access = field;
+    ast->indirect = indirect;
+
+    return ast;
+}
+
 ast_t *ast_call(scan_t *scan, where_t where, ast_t *call, vector_t *args)
 {
     ast_t *ast = ast_new(eAstCall, scan, where);
@@ -167,6 +178,14 @@ ast_t *ast_branch(scan_t *scan, where_t where, ast_t *cond, ast_t *body, ast_t *
     ast->cond = cond;
     ast->body = body;
     ast->other = other;
+    return ast;
+}
+
+ast_t *ast_assign(scan_t *scan, where_t where, ast_t *dst, ast_t *src)
+{
+    ast_t *ast = ast_new(eAstAssign, scan, where);
+    ast->dst = dst;
+    ast->src = src;
     return ast;
 }
 

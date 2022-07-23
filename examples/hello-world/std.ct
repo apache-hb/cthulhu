@@ -1,0 +1,8 @@
+@extern
+export def malloc(size: usize): *void;
+
+@extern 
+export def realloc(ptr: *void, size: usize): *void;
+
+@extern
+export def free(ptr: *void): void;

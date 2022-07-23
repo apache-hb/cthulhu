@@ -1,0 +1,17 @@
+import std;
+
+export struct Vec {
+    used: usize;
+    total: usize;
+    data: **void;
+}
+
+export def vecNew(initial: usize): *Vec {
+    var vec: *Vec = std::malloc(12uz);
+
+    vec->used = 0uz;
+    vec->total = initial;
+    vec->data = std::malloc(8uz * initial);
+
+    return vec;
+}

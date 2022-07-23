@@ -27,7 +27,6 @@ void *sema_get_data(sema_t *sema);
 
 void sema_set(sema_t *sema, size_t tag, const char *name, void *data);
 void *sema_get(sema_t *sema, size_t tag, const char *name);
-void *sema_get_with_depth(sema_t *sema, size_t tag, const char *name, size_t *depth);
 map_t *sema_tag(sema_t *sema, size_t tag);
 
 typedef struct

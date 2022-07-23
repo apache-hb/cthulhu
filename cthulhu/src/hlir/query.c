@@ -283,6 +283,9 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
     case eHlirVoid:
         return true;
 
+    case eHlirPointer:
+        return actualLhs->indexable == actualRhs->indexable && hlir_types_equal(actualLhs->ptr, actualRhs->ptr);
+
     case eHlirFunction: {
         vector_t *lhsParams = closure_params(actualLhs);
         vector_t *rhsParams = closure_params(actualRhs);

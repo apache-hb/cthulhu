@@ -50,44 +50,22 @@ void sema_set(sema_t *sema, size_t tag, const char *name, void *data)
     map_set(map, name, data);
 }
 
-typedef struct
-{
-    hlir_t *result;
-    size_t depth;
-} sema_query_t;
-
-static sema_query_t sema_inner_get(sema_t *sema, size_t tag, const char *name)
+void *sema_get(sema_t *sema, size_t tag, const char *name)
 {
     map_t *map = sema_tag(sema, tag);
 
     hlir_t *hlir = map_get(map, name);
     if (hlir != NULL)
     {
-        sema_query_t result = {hlir, 0};
-        return result;
+        return hlir;
     }
 
     if (sema->parent != NULL)
     {
-        sema_query_t result = sema_inner_get(sema->parent, tag, name);
-        result.depth += 1;
-        return result;
+        return sema_get(sema->parent, tag, name);
     }
 
-    sema_query_t result = {NULL, 0};
-    return result;
-}
-
-void *sema_get(sema_t *sema, size_t tag, const char *name)
-{
-    return sema_inner_get(sema, tag, name).result;
-}
-
-void *sema_get_with_depth(sema_t *sema, size_t tag, const char *name, size_t *depth)
-{
-    sema_query_t result = sema_inner_get(sema, tag, name);
-    *depth = result.depth;
-    return result.result;
+    return NULL;
 }
 
 map_t *sema_tag(sema_t *sema, size_t tag)

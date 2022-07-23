@@ -372,6 +372,7 @@ stmt: stmts { $$ = $1; }
     | vardecl { $$ = $1; }
     | expr SEMICOLON { $$ = $1; }
     | branch { $$ = $1; }
+    | expr EQUALS expr SEMICOLON { $$ = ast_assign(x, @$, $1, $3); }
     ;
 
 label: %empty { $$ = NULL; }
@@ -423,6 +424,8 @@ primary: LPAREN expr RPAREN { $$ = $2; }
 
 postfix: primary { $$ = $1; }
     | postfix LPAREN args RPAREN { $$ = ast_call(x, @$, $1, $3); }
+    | postfix DOT IDENT { $$ = ast_access(x, @$, $1, $3, false); }
+    | postfix ARROW IDENT { $$ = ast_access(x, @$, $1, $3, true); }
     ;
 
 unary: postfix { $$ = $1; }
