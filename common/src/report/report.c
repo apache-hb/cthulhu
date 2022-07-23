@@ -1,8 +1,8 @@
 #include "report/report.h"
 
-#include "base/panic.h"
 #include "base/macros.h"
 #include "base/memory.h"
+#include "base/panic.h"
 #include "base/util.h"
 
 #include "std/str.h"
@@ -506,7 +506,7 @@ status_t end_reports(reports_t *reports, const char *name, report_config_t setti
 {
     CTASSERT(reports != NULL);
     CTASSERT(name != NULL);
-    
+
     size_t total = settings.limit - 1;
 
     size_t internal = 0;

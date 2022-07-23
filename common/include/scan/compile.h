@@ -8,19 +8,19 @@ typedef struct scan_t scan_t;
  */
 typedef struct
 {
-    int (*init)(scan_t *extra, void *scanner);                    ///< yylex_init_extra
-    int (*parse)(void *scanner, scan_t *extra);                   ///< yyparse
+    int (*init)(scan_t *extra, void *scanner);                   ///< yylex_init_extra
+    int (*parse)(void *scanner, scan_t *extra);                  ///< yyparse
     void *(*scan)(const char *text, size_t size, void *scanner); ///< yy_scan_string
     void (*destroyBuffer)(void *buffer, void *scanner);          ///< yy_delete_buffer
     void (*destroy)(void *scanner);                              ///< yylex_destroy
 } callbacks_t;
 
 #define CT_CALLBACKS(id, prefix)                                                                                       \
-    static int prefix##_##id##_##init(scan_t *extra, void *scanner)                                                     \
+    static int prefix##_##id##_##init(scan_t *extra, void *scanner)                                                    \
     {                                                                                                                  \
         return prefix##lex_init_extra(extra, scanner);                                                                 \
     }                                                                                                                  \
-    static int prefix##_##id##_parse(void *scanner, scan_t *extra)                                                      \
+    static int prefix##_##id##_parse(void *scanner, scan_t *extra)                                                     \
     {                                                                                                                  \
         return prefix##parse(scanner, extra);                                                                          \
     }                                                                                                                  \

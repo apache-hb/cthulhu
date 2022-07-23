@@ -7,7 +7,7 @@
 
 typedef struct
 {
-    scan_t *scan;   ///< the source file
+    scan_t *scan;  ///< the source file
     where_t where; ///< the location of this node in the source file
 } node_data_t;
 

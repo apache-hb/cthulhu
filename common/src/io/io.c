@@ -1,22 +1,23 @@
 #include "io/io.h"
 
-#include "base/panic.h"
 #include "base/memory.h"
+#include "base/panic.h"
 
 #include <string.h>
 
 STATIC_ASSERT(sizeof(io_error_t) == sizeof(cerror_t), "io error and cerror must be the same size");
 
-typedef size_t(*io_read_t)(io_t *self, void *dst, size_t size);
-typedef size_t(*io_write_t)(io_t *self, const void *src, size_t size);
+typedef size_t (*io_read_t)(io_t *self, void *dst, size_t size);
+typedef size_t (*io_write_t)(io_t *self, const void *src, size_t size);
 
-typedef size_t(*io_size_t)(io_t *self);
+typedef size_t (*io_size_t)(io_t *self);
 
-typedef const void*(*io_map_t)(io_t *self);
+typedef const void *(*io_map_t)(io_t *self);
 
-typedef void(*io_close_t)(io_t *self);
+typedef void (*io_close_t)(io_t *self);
 
-typedef struct io_callbacks_t {
+typedef struct io_callbacks_t
+{
     io_read_t read;
     io_write_t write;
 
@@ -27,7 +28,8 @@ typedef struct io_callbacks_t {
     io_close_t close;
 } io_callbacks_t;
 
-typedef struct io_t {
+typedef struct io_t
+{
     alloc_t *alloc;
     const io_callbacks_t *cb;
 
@@ -39,15 +41,17 @@ typedef struct io_t {
     char data[];
 } io_t;
 
-typedef struct buffer_t {
-    char *data; ///< stored data
-    size_t used; ///< used data
+typedef struct buffer_t
+{
+    char *data;   ///< stored data
+    size_t used;  ///< used data
     size_t total; ///< total size of data
 
     size_t offset; ///< current offset in data
 } buffer_t;
 
-typedef struct view_t {
+typedef struct view_t
+{
     const char *data;
     size_t size;
     size_t offset;
@@ -161,39 +165,33 @@ static const void *view_map(io_t *self)
     return mem->data;
 }
 
-
 /// view callbacks
 
-static const io_callbacks_t kFileCallbacks = {
-    .read = fd_read,
-    .write = fd_write,
+static const io_callbacks_t kFileCallbacks = {.read = fd_read,
+                                              .write = fd_write,
 
-    .size = fd_size,
+                                              .size = fd_size,
 
-    .map = fd_map,
-    .close = fd_close
-};
+                                              .map = fd_map,
+                                              .close = fd_close};
 
-static const io_callbacks_t kBufferCallbacks = {
-    .read = mem_read,
-    .write = mem_write,
+static const io_callbacks_t kBufferCallbacks = {.read = mem_read,
+                                                .write = mem_write,
 
-    .size = mem_size,
+                                                .size = mem_size,
 
-    .map = mem_map,
-    .close = mem_close
-};
+                                                .map = mem_map,
+                                                .close = mem_close};
 
-static const io_callbacks_t kViewCallbacks = {
-    .read = view_read,
-    .write = NULL,
+static const io_callbacks_t kViewCallbacks = {.read = view_read,
+                                              .write = NULL,
 
-    .size = view_size,
+                                              .size = view_size,
 
-    .map = view_map
-};
+                                              .map = view_map};
 
-static io_t *io_new(alloc_t *alloc, const io_callbacks_t *cb, file_flags_t flags, const char *name, void *data, size_t size)
+static io_t *io_new(alloc_t *alloc, const io_callbacks_t *cb, file_flags_t flags, const char *name, void *data,
+                    size_t size)
 {
     io_t *io = arena_malloc(alloc, sizeof(io_t) + size, name);
 
@@ -221,12 +219,7 @@ io_t *io_memory(alloc_t *alloc, const char *name, const void *data, size_t size)
 {
     file_flags_t flags = eFileRead | eFileWrite;
 
-    buffer_t buffer = {
-        .data = arena_malloc(alloc, size, "io-memory"),
-        .total = size,
-        .used = size,
-        .offset = 0
-    };
+    buffer_t buffer = {.data = arena_malloc(alloc, size, "io-memory"), .total = size, .used = size, .offset = 0};
 
     if (data != NULL)
     {
@@ -240,11 +233,7 @@ io_t *io_view(alloc_t *alloc, const char *name, const void *data, size_t size)
 {
     file_flags_t flags = eFileRead;
 
-    view_t view = {
-        .data = data,
-        .size = size,
-        .offset = 0
-    };
+    view_t view = {.data = data, .size = size, .offset = 0};
 
     return io_new(alloc, &kViewCallbacks, flags, name, &view, sizeof(view_t));
 }

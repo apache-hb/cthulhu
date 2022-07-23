@@ -107,7 +107,8 @@ status_t cthulhu_init(cthulhu_t *cthulhu)
 
         if (io_error(source) != 0)
         {
-            message_t *id = report(cthulhu->reports, eFatal, node_invalid(), "failed to open file `%s`", io_name(source));
+            message_t *id =
+                report(cthulhu->reports, eFatal, node_invalid(), "failed to open file `%s`", io_name(source));
             report_note(id, "%s", error_string(io_error(source)));
             continue;
         }

@@ -81,7 +81,7 @@ char *init_string_with_suffix(mpz_t mpz, const char *text, int base)
 {
     size_t len = strlen(text);
     CTASSERT(len > 0);
-    
+
     size_t i = 0;
 
     for (; i < len; i++)

@@ -4,8 +4,8 @@
 #include "report/report.h"
 
 #include "base/macros.h"
-#include "base/panic.h"
 #include "base/memory.h"
+#include "base/panic.h"
 
 #include "io/io.h"
 
@@ -16,10 +16,10 @@ typedef struct scan_t
 {
     alloc_t *alloc;
     reports_t *reports; ///< the reporting sink for this file
-    io_t *io; ///< file itself
+    io_t *io;           ///< file itself
 
-    const char *language;      ///< the language this file contains
-    void *data;                ///< user data pointer
+    const char *language; ///< the language this file contains
+    void *data;           ///< user data pointer
 
     const char *mapped;
     size_t size;
@@ -52,7 +52,7 @@ const char *scan_text(const scan_t *scan)
 
 text_t scan_source(const scan_t *scan)
 {
-    text_t text = { scan->size, scan->mapped };
+    text_t text = {scan->size, scan->mapped};
     return text;
 }
 

@@ -1,8 +1,8 @@
 #include "base/macros.h"
 #include "base/panic.h"
 
-#include <string.h>
 #include <limits.h>
+#include <string.h>
 
 #define COMPILER_SOURCE 1
 
