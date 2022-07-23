@@ -122,9 +122,10 @@ parse = generator(bison,
 # common helper libraries used by compiler, tools, interfaces, and drivers
 subdir('common')
 
-foreach tool : [ 'protobuf-rt', 'gentool', 'protobuf-gen' ]
-    subdir('tools'/tool)
-endforeach
+# TODO: these would be nice to have in the future
+#foreach tool : [ 'protobuf-rt', 'gentool', 'protobuf-gen' ]
+#    subdir('tools'/tool)
+#endforeach
 
 # common compiler libraries used by interfaces and drivers
 subdir('cthulhu')
