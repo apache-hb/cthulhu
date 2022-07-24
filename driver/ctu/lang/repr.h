@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 
-typedef struct hlir_t hlir_t;
+typedef struct Hlir hlir_t;
 typedef struct reports_t reports_t;
 
 /**

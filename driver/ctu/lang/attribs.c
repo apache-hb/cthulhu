@@ -123,7 +123,7 @@ void add_builtin_attribs(sema_t *sema)
 
 static const char *kDeclNames[eHlirTotal] = {
     [eHlirStruct] = "struct",     [eHlirUnion] = "union",         [eHlirAlias] = "type alias",
-    [eHlirFunction] = "function", [eHlirGlobal] = "global value", [eHlirField] = "field"};
+    [eHlirFunction] = "function", [eHlirGlobal] = "global value", [eHlirRecordField] = "field"};
 
 static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *attr)
 {

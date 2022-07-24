@@ -120,7 +120,7 @@ static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *
 
     switch (hlir->type)
     {
-    case eHlirName:
+    case eHlirLoad:
         check_recursion(reports, stack, hlir->read);
         break;
     case eHlirGlobal:
@@ -137,9 +137,9 @@ static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *
         check_recursion(reports, stack, hlir->operand);
         break;
 
-    case eHlirLiteralDigit:
-    case eHlirLiteralBool:
-    case eHlirLiteralString:
+    case eHlirDigitLiteral:
+    case eHlirBoolLiteral:
+    case eHlirStringLiteral:
         break;
 
     default:
@@ -231,7 +231,7 @@ static const hlir_t *chase(reports_t *reports, const hlir_t *hlir)
         case eHlirAlias:
             hlir = hlir->alias;
             break;
-        case eHlirField:
+        case eHlirRecordField:
             hlir = get_hlir_type(hlir);
             break;
         default:
@@ -299,7 +299,7 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
         }
         break;
 
-    case eHlirField:
+    case eHlirRecordField:
         check_type_recursion(reports, stack, get_hlir_type(hlir));
         return;
 

@@ -59,24 +59,24 @@ static char *c89_mangle_section(const char *section)
 }
 
 static const char *kDigitMangles[eSignTotal][eDigitTotal] = {
-    [eSigned] = {[eChar] = "a",
-                 [eShort] = "s",
-                 [eInt] = "i",
-                 [eLong] = "x",
+    [eSigned] = {[eDigitChar] = "a",
+                 [eDigitShort] = "s",
+                 [eDigitInt] = "i",
+                 [eDigitLong] = "x",
 
-                 [eIntPtr] = "x", // TODO: only right for 64-bit
-                 [eIntMax] = "n",
-                 [eIntSize] = "x"},
+                 [eDigitPtr] = "x", // TODO: only right for 64-bit
+                 [eDigitMax] = "n",
+                 [eDigitSize] = "x"},
     [eUnsigned] =
         {
-            [eChar] = "h",
-            [eShort] = "t",
-            [eInt] = "j",
-            [eLong] = "y",
+            [eDigitChar] = "h",
+            [eDigitShort] = "t",
+            [eDigitInt] = "j",
+            [eDigitLong] = "y",
 
-            [eIntPtr] = "y",
-            [eIntMax] = "o",
-            [eIntSize] = "y",
+            [eDigitPtr] = "y",
+            [eDigitMax] = "o",
+            [eDigitSize] = "y",
         },
 };
 
@@ -296,10 +296,10 @@ static const char *kC89SignNames[eSignTotal] = {
 };
 
 static const char *kC89DigitNames[eDigitTotal] = {
-    [eChar] = "char",
-    [eShort] = "short",
-    [eInt] = "int",
-    [eLong] = "long",
+    [eDigitChar] = "char",
+    [eDigitShort] = "short",
+    [eDigitInt] = "int",
+    [eDigitLong] = "long",
 };
 
 static const char *c89_get_digit_symbol(const hlir_t *digit)
@@ -309,11 +309,11 @@ static const char *c89_get_digit_symbol(const hlir_t *digit)
 
     switch (width)
     {
-    case eIntSize:
+    case eDigitSize:
         return sign == eUnsigned ? "size_t" : "ssize_t";
-    case eIntPtr:
+    case eDigitPtr:
         return sign == eUnsigned ? "uintptr_t" : "intptr_t";
-    case eIntMax:
+    case eDigitMax:
         return sign == eUnsigned ? "uintmax_t" : "intmax_t";
 
     default:
@@ -629,15 +629,15 @@ static const char *c89_emit_digit_literal(c89_emit_t *emit, const hlir_t *hlir)
 
     switch (width)
     {
-    case eChar:
-    case eShort:
-    case eInt:
+    case eDigitChar:
+    case eDigitShort:
+    case eDigitInt:
         return format("%s%s", mpz_get_str(NULL, 10, hlir->digit), sign == eUnsigned ? "u" : "");
 
-    case eLong:
+    case eDigitLong:
         return format("%s%s", mpz_get_str(NULL, 10, hlir->digit), sign == eUnsigned ? "ull" : "ll");
 
-    case eIntMax:
+    case eDigitMax:
         return format("%s(%s)", sign == eUnsigned ? "UINTMAX_C" : "INTMAX_C", mpz_get_str(NULL, 10, hlir->digit));
 
     default:
@@ -701,14 +701,14 @@ static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
     {
-    case eHlirLiteralDigit:
+    case eHlirDigitLiteral:
         return c89_emit_digit_literal(emit, hlir);
-    case eHlirLiteralBool:
+    case eHlirBoolLiteral:
         return c89_emit_bool_literal(hlir);
-    case eHlirLiteralString:
+    case eHlirStringLiteral:
         return c89_emit_string_literal(hlir);
 
-    case eHlirName:
+    case eHlirLoad:
         return c89_emit_name(emit, hlir);
 
     case eHlirUnary:
@@ -749,7 +749,7 @@ static const char *c89_emit_lvalue(c89_emit_t *emit, const hlir_t *hlir)
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
     {
-    case eHlirName:
+    case eHlirLoad:
     case eHlirLocal:
         return c89_emit_name_lvalue(hlir);
 
@@ -864,7 +864,7 @@ static void visit_type(c89_emit_t *emit, vector_t **result, const hlir_t *hlir)
         visit_type(emit, result, hlir->alias);
         break;
 
-    case eHlirField:
+    case eHlirRecordField:
         visit_type(emit, result, get_hlir_type(hlir));
         break;
 

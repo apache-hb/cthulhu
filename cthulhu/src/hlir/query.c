@@ -22,7 +22,7 @@ static bool has_name(hlir_kind_t kind)
     case eHlirAlias:
 
     case eHlirForward:
-    case eHlirField:
+    case eHlirRecordField:
     case eHlirFunction:
 
     case eHlirGlobal:
@@ -53,7 +53,7 @@ static bool has_attribs(hlir_kind_t kind)
     case eHlirVoid:
     case eHlirClosure:
 
-    case eHlirField:
+    case eHlirRecordField:
     case eHlirForward:
     case eHlirFunction:
 
@@ -165,52 +165,19 @@ bool hlir_is_decl(const hlir_t *hlir)
 ///
 
 static const char *kKindNames[eHlirTotal] = {
-    [eHlirLiteralDigit] = "digit-literal",
-    [eHlirLiteralBool] = "bool-literal",
-    [eHlirLiteralString] = "string-literal",
-
-    [eHlirName] = "name",
-    [eHlirUnary] = "unary",
-    [eHlirBinary] = "binary",
-    [eHlirCompare] = "compare",
-    [eHlirCall] = "call",
-
-    [eHlirStmts] = "stmt-list",
-    [eHlirBranch] = "branch",
-    [eHlirLoop] = "loop",
-    [eHlirAssign] = "assign",
-    [eHlirReturn] = "return",
-
-    [eHlirStruct] = "struct-type",
-    [eHlirUnion] = "union-type",
-    [eHlirDigit] = "digit-type",
-    [eHlirBool] = "bool-type",
-    [eHlirString] = "string-type",
-    [eHlirVoid] = "void-type",
-    [eHlirClosure] = "closure-type",
-    [eHlirPointer] = "pointer-type",
-    [eHlirArray] = "array-type",
-    [eHlirType] = "metatype",
-    [eHlirAlias] = "alias-type",
-
-    [eHlirLocal] = "local",
-    [eHlirParam] = "param",
-    [eHlirGlobal] = "global",
-
-    [eHlirForward] = "forward",
-    [eHlirFunction] = "function",
-    [eHlirModule] = "module",
-
-    [eHlirField] = "field",
-
-    [eHlirError] = "internal-error",
+#define HLIR_KIND(ID, STR) [ID] = (STR),
+#include "cthulhu/hlir/hlir-def.inc"
 };
 
 static const char *kDigitNames[eDigitTotal] = {
-    [eChar] = "char", [eShort] = "short", [eInt] = "int", [eLong] = "long", [eIntSize] = "size", [eIntPtr] = "intptr",
+#define DIGIT_KIND(ID, STR) [ID] = (STR),
+#include "cthulhu/hlir/hlir-def.inc"
 };
 
-static const char *kSignNames[eSignTotal] = {[eSigned] = "signed", [eUnsigned] = "unsigned"};
+static const char *kSignNames[eSignTotal] = {
+#define SIGN_KIND(ID, STR) [ID] = (STR),
+#include "cthulhu/hlir/hlir-def.inc"
+};
 
 const char *hlir_kind_to_string(hlir_kind_t kind)
 {

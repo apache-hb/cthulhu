@@ -7,9 +7,9 @@ node_t check_const_expr(reports_t *reports, const hlir_t *expr)
     hlir_kind_t kind = get_hlir_kind(expr);
     switch (kind)
     {
-    case eHlirLiteralBool:
-    case eHlirLiteralDigit:
-    case eHlirLiteralString:
+    case eHlirBoolLiteral:
+    case eHlirDigitLiteral:
+    case eHlirStringLiteral:
         return node_invalid();
 
     case eHlirUnary:

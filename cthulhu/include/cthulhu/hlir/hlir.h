@@ -22,48 +22,8 @@
  */
 typedef enum
 {
-    eHlirLiteralDigit,  ///< an integer literal
-    eHlirLiteralBool,   ///< a boolean literal
-    eHlirLiteralString, ///< a string literal
-
-    eHlirName,    ///< a load operation
-    eHlirUnary,   ///< a unary operation
-    eHlirBinary,  ///< a binary operation
-    eHlirCompare, ///< a comparison operation
-    eHlirCall,    ///< a function call
-
-    eHlirStmts,    ///< a list of statements
-    eHlirBranch,   ///< a conditional branch
-    eHlirLoop,     ///< a loop on a condition
-    eHlirBreak,    ///< break out of a loop
-    eHlirContinue, ///< continue to next iteration
-    eHlirAssign,   ///< an assignment
-    eHlirReturn,   ///< a return statement
-
-    eHlirStruct,  ///< a record type
-    eHlirUnion,   ///< an untagged union type
-    eHlirDigit,   ///< any integer type
-    eHlirBool,    ///< the boolean type
-    eHlirString,  ///< any string type
-    eHlirVoid,    ///< the void type
-    eHlirClosure, ///< the type of a function signature
-    eHlirPointer, ///< a pointer to another type
-    eHlirArray,   ///< an array of another type
-    eHlirType,    ///< the type of all types
-    eHlirAlias,   ///< an alias for another type
-
-    eHlirLocal,  ///< a local variable
-    eHlirParam,  ///< a function parameter
-    eHlirGlobal, ///< a global variable
-
-    eHlirForward,  ///< a forward declaration, should never appear in the final
-                   ///< module
-    eHlirFunction, ///< a function definition
-    eHlirModule,   ///< the toplevel module definition
-
-    eHlirField, ///< a field in a record
-
-    eHlirError, ///< a compilation error
+#define HLIR_KIND(ID, _) ID,
+#include "hlir-def.inc"
 
     eHlirTotal
 } hlir_kind_t;
@@ -71,11 +31,11 @@ typedef enum
 /**
  * @brief an hlir node
  */
-typedef struct hlir_t
+typedef struct Hlir
 {
     hlir_kind_t type;        ///< the type of this node
     node_t location;         ///< the source location that generated this node
-    const struct hlir_t *of; ///< the type this hlir evaluates to
+    const struct Hlir *of; ///< the type this hlir evaluates to
 
     union {
         mpz_t digit;  ///< the value of this integer literal. active if type ==
@@ -89,21 +49,21 @@ typedef struct hlir_t
             size_t stringLength; ///< the length of the string
         };
 
-        struct hlir_t *read; ///< the name of this load operation. active if
+        struct Hlir *read; ///< the name of this load operation. active if
                              ///< type == eHlirName
 
         struct
         {
-            struct hlir_t *operand; ///< the operand of this unary operation.
+            struct Hlir *operand; ///< the operand of this unary operation.
                                     ///< active if type == eHlirUnary
             unary_t unary;          ///< the unary operation to perform
         };
 
         struct
         {
-            struct hlir_t *lhs; ///< the left operand of this operation. active if type ==
+            struct Hlir *lhs; ///< the left operand of this operation. active if type ==
                                 ///< eHlirBinary || type == eHlirCompare
-            struct hlir_t *rhs; ///< the right operand of this operation. active if type
+            struct Hlir *rhs; ///< the right operand of this operation. active if type
                                 ///< == eHlirBinary || type == eHlirCompare
 
             union {
@@ -116,7 +76,7 @@ typedef struct hlir_t
 
         struct
         {
-            struct hlir_t *call; ///< the function to call. active if type == eHlirCall
+            struct Hlir *call; ///< the function to call. active if type == eHlirCall
             vector_t *args;      ///< the arguments to pass to the function.
         };
 
@@ -125,21 +85,21 @@ typedef struct hlir_t
 
         struct
         {
-            struct hlir_t *dst; ///< the destination of this assignment. active
+            struct Hlir *dst; ///< the destination of this assignment. active
                                 ///< if type == eHlirAssign
-            struct hlir_t *src; ///< the source of this assignment.
+            struct Hlir *src; ///< the source of this assignment.
         };
 
         /* eHlirBranch|eHlirLoop */
         struct
         {
-            struct hlir_t *cond;
-            struct hlir_t *then;
-            struct hlir_t *other;
+            struct Hlir *cond;
+            struct Hlir *then;
+            struct Hlir *other;
         };
 
         /* eHlirBreak | eHlirContinue */
-        struct hlir_t *target;
+        struct Hlir *target;
 
         struct
         {
@@ -149,7 +109,7 @@ typedef struct hlir_t
             /* any attributes this declaration has */
             const hlir_attributes_t *attributes;
 
-            const struct hlir_t *parentDecl; ///< the module that contains this
+            const struct Hlir *parentDecl; ///< the module that contains this
                                              ///< declaration
 
             union {
@@ -159,7 +119,7 @@ typedef struct hlir_t
 
                 struct
                 {
-                    const struct hlir_t *alias;
+                    const struct Hlir *alias;
                     bool newtype;
                 };
 
@@ -177,7 +137,7 @@ typedef struct hlir_t
                 struct
                 {
                     vector_t *params;
-                    const struct hlir_t *result;
+                    const struct Hlir *result;
                     bool variadic;
 
                     /* the local variables */
@@ -185,7 +145,7 @@ typedef struct hlir_t
 
                     union {
                         /* the body of this function */
-                        struct hlir_t *body;
+                        struct Hlir *body;
 
                         /* the type this is expected to be */
                         hlir_kind_t expected;
@@ -195,15 +155,15 @@ typedef struct hlir_t
                 /* pointer type */
                 struct
                 {
-                    struct hlir_t *ptr;
+                    struct Hlir *ptr;
                     bool indexable;
                 };
 
                 /* array type */
                 struct
                 {
-                    struct hlir_t *element;
-                    struct hlir_t *length;
+                    struct Hlir *element;
+                    struct Hlir *length;
                 };
 
                 ///
@@ -211,7 +171,7 @@ typedef struct hlir_t
                 ///
 
                 /* the initial value */
-                const struct hlir_t *value;
+                const struct Hlir *value;
 
                 struct
                 {

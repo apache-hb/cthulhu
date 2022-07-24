@@ -15,28 +15,28 @@ hlir_t *hlir_error(node_t node, const char *error)
 
 hlir_t *hlir_digit_literal(node_t node, const hlir_t *type, mpz_t value)
 {
-    hlir_t *self = hlir_new(node, type, eHlirLiteralDigit);
+    hlir_t *self = hlir_new(node, type, eHlirDigitLiteral);
     mpz_init_set(self->digit, value);
     return self;
 }
 
 hlir_t *hlir_int_literal(node_t node, const hlir_t *type, int value)
 {
-    hlir_t *self = hlir_new(node, type, eHlirLiteralDigit);
+    hlir_t *self = hlir_new(node, type, eHlirDigitLiteral);
     mpz_init_set_si(self->digit, value);
     return self;
 }
 
 hlir_t *hlir_bool_literal(node_t node, const hlir_t *type, bool value)
 {
-    hlir_t *self = hlir_new(node, type, eHlirLiteralBool);
+    hlir_t *self = hlir_new(node, type, eHlirBoolLiteral);
     self->boolean = value;
     return self;
 }
 
 hlir_t *hlir_string_literal(node_t node, const hlir_t *type, const char *value, size_t length)
 {
-    hlir_t *self = hlir_new(node, type, eHlirLiteralString);
+    hlir_t *self = hlir_new(node, type, eHlirStringLiteral);
     self->string = value;
     self->stringLength = length;
     return self;
@@ -44,7 +44,7 @@ hlir_t *hlir_string_literal(node_t node, const hlir_t *type, const char *value, 
 
 hlir_t *hlir_name(node_t node, hlir_t *read)
 {
-    hlir_t *self = hlir_new(node, get_hlir_type(read), eHlirName);
+    hlir_t *self = hlir_new(node, get_hlir_type(read), eHlirLoad);
     self->read = read;
     return self;
 }
@@ -146,7 +146,7 @@ hlir_t *hlir_return(node_t node, hlir_t *result)
 
 hlir_t *hlir_field(node_t node, const hlir_t *type, const char *name)
 {
-    return hlir_new_decl(node, name, type, eHlirField);
+    return hlir_new_decl(node, name, type, eHlirRecordField);
 }
 
 // building modules

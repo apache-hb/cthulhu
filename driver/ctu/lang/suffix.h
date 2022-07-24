@@ -2,7 +2,7 @@
 
 #include "ast.h"
 
-typedef struct hlir_t hlir_t;
+typedef struct Hlir hlir_t;
 typedef struct suffix_t suffix_t;
 typedef struct ast_t ast_t;
 typedef struct sema_t sema_t;

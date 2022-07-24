@@ -53,12 +53,12 @@ static void add_int_suffix(sema_t *sema, const char *suffix, digit_t digit, sign
 
 void add_builtin_suffixes(sema_t *sema)
 {
-    add_int_suffix(sema, "", eInt, eSigned);
-    add_int_suffix(sema, "l", eLong, eSigned);
+    add_int_suffix(sema, "", eDigitInt, eSigned);
+    add_int_suffix(sema, "l", eDigitLong, eSigned);
 
-    add_int_suffix(sema, "u", eInt, eUnsigned);
-    add_int_suffix(sema, "ul", eLong, eUnsigned);
-    add_int_suffix(sema, "uz", eIntSize, eUnsigned);
+    add_int_suffix(sema, "u", eDigitInt, eUnsigned);
+    add_int_suffix(sema, "ul", eDigitLong, eUnsigned);
+    add_int_suffix(sema, "uz", eDigitSize, eUnsigned);
 }
 
 hlir_t *apply_suffix(sema_t *sema, ast_t *ast, suffix_t *suffix)

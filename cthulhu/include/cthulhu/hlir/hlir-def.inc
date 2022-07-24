@@ -31,7 +31,7 @@ HLIR_KIND(eHlirBoolLiteral,   "bool-literal")
 HLIR_KIND(eHlirStringLiteral, "string-literal")
 
 // expressions
-HLIR_KIND(eHlirName,    "name") // a load from an address, equivilent to a C rvalue
+HLIR_KIND(eHlirLoad,    "load") // a load from an address, equivilent to a C rvalue
 HLIR_KIND(eHlirUnary,   "unary")
 HLIR_KIND(eHlirBinary,  "binary") // integer aritmatic
 HLIR_KIND(eHlirCompare, "compare") // all boolean logic
@@ -93,8 +93,8 @@ SIGN_KIND(eSigned,   "signed")
 #   define HLIR_BUILTIN(ID, STR)
 #endif
 
-HLIR_BUILTIN(eHlirBuiltinSizeOf, "sizeof")
-HLIR_BUILTIN(eHlirBuiltinAlignOf, "alignof")
+HLIR_BUILTIN(eBuiltinSizeOf, "sizeof")
+HLIR_BUILTIN(eBuiltinAlignOf, "alignof")
 
 #undef HLIR_BUILTIN
 

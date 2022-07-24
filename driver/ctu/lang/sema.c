@@ -55,25 +55,25 @@ static sema_t *begin_sema(sema_t *parent, reports_t *reports, size_t *sizes)
 static const char *kDigitNames[eSignTotal][eDigitTotal] = {
     [eSigned] =
         {
-            [eChar] = "char",
-            [eShort] = "short",
-            [eInt] = "int",
-            [eLong] = "long",
+            [eDigitChar] = "char",
+            [eDigitShort] = "short",
+            [eDigitInt] = "int",
+            [eDigitLong] = "long",
 
-            [eIntPtr] = "intptr",
-            [eIntSize] = "size",
-            [eIntMax] = "intmax",
+            [eDigitPtr] = "intptr",
+            [eDigitSize] = "size",
+            [eDigitMax] = "intmax",
         },
     [eUnsigned] =
         {
-            [eChar] = "uchar",
-            [eShort] = "ushort",
-            [eInt] = "uint",
-            [eLong] = "ulong",
+            [eDigitChar] = "uchar",
+            [eDigitShort] = "ushort",
+            [eDigitInt] = "uint",
+            [eDigitLong] = "ulong",
 
-            [eIntPtr] = "uintptr",
-            [eIntSize] = "usize",
-            [eIntMax] = "uintmax",
+            [eDigitPtr] = "uintptr",
+            [eDigitSize] = "usize",
+            [eDigitMax] = "uintmax",
         },
 };
 
@@ -755,7 +755,7 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
     {
         // create the variant tag
         char *tagName = format("%s_tag", ast->name);
-        hlir_t *tag = hlir_digit(ast->node, tagName, eInt, eUnsigned);
+        hlir_t *tag = hlir_digit(ast->node, tagName, eDigitInt, eUnsigned);
 
         // create the field container for the tag
         hlir_t *field = hlir_field(ast->node, tag, "tag");
