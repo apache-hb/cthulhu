@@ -12,7 +12,7 @@
 #include <gmp.h>
 
 /**
- * @defgroup Hlir HLIR (High Level Intermediate Representation)
+ * @defgroup hlir_t HLIR (High Level Intermediate Representation)
  * @brief a high level typed ast format
  * @{
  */
@@ -31,11 +31,11 @@ typedef enum
 /**
  * @brief an hlir node
  */
-typedef struct Hlir
+typedef struct hlir_t
 {
     hlir_kind_t type;        ///< the type of this node
     node_t location;         ///< the source location that generated this node
-    const struct Hlir *of; ///< the type this hlir evaluates to
+    const struct hlir_t *of; ///< the type this hlir evaluates to
 
     union {
         mpz_t digit;  ///< the value of this integer literal. active if type ==
@@ -49,21 +49,21 @@ typedef struct Hlir
             size_t stringLength; ///< the length of the string
         };
 
-        struct Hlir *read; ///< the name of this load operation. active if
+        struct hlir_t *read; ///< the name of this load operation. active if
                              ///< type == eHlirName
 
         struct
         {
-            struct Hlir *operand; ///< the operand of this unary operation.
+            struct hlir_t *operand; ///< the operand of this unary operation.
                                     ///< active if type == eHlirUnary
             unary_t unary;          ///< the unary operation to perform
         };
 
         struct
         {
-            struct Hlir *lhs; ///< the left operand of this operation. active if type ==
+            struct hlir_t *lhs; ///< the left operand of this operation. active if type ==
                                 ///< eHlirBinary || type == eHlirCompare
-            struct Hlir *rhs; ///< the right operand of this operation. active if type
+            struct hlir_t *rhs; ///< the right operand of this operation. active if type
                                 ///< == eHlirBinary || type == eHlirCompare
 
             union {
@@ -76,7 +76,7 @@ typedef struct Hlir
 
         struct
         {
-            struct Hlir *call; ///< the function to call. active if type == eHlirCall
+            struct hlir_t *call; ///< the function to call. active if type == eHlirCall
             vector_t *args;      ///< the arguments to pass to the function.
         };
 
@@ -85,21 +85,21 @@ typedef struct Hlir
 
         struct
         {
-            struct Hlir *dst; ///< the destination of this assignment. active
+            struct hlir_t *dst; ///< the destination of this assignment. active
                                 ///< if type == eHlirAssign
-            struct Hlir *src; ///< the source of this assignment.
+            struct hlir_t *src; ///< the source of this assignment.
         };
 
         /* eHlirBranch|eHlirLoop */
         struct
         {
-            struct Hlir *cond;
-            struct Hlir *then;
-            struct Hlir *other;
+            struct hlir_t *cond;
+            struct hlir_t *then;
+            struct hlir_t *other;
         };
 
         /* eHlirBreak | eHlirContinue */
-        struct Hlir *target;
+        struct hlir_t *target;
 
         struct
         {
@@ -109,7 +109,7 @@ typedef struct Hlir
             /* any attributes this declaration has */
             const hlir_attributes_t *attributes;
 
-            const struct Hlir *parentDecl; ///< the module that contains this
+            const struct hlir_t *parentDecl; ///< the module that contains this
                                              ///< declaration
 
             union {
@@ -119,7 +119,7 @@ typedef struct Hlir
 
                 struct
                 {
-                    const struct Hlir *alias;
+                    const struct hlir_t *alias;
                     bool newtype;
                 };
 
@@ -137,7 +137,7 @@ typedef struct Hlir
                 struct
                 {
                     vector_t *params;
-                    const struct Hlir *result;
+                    const struct hlir_t *result;
                     bool variadic;
 
                     /* the local variables */
@@ -145,7 +145,7 @@ typedef struct Hlir
 
                     union {
                         /* the body of this function */
-                        struct Hlir *body;
+                        struct hlir_t *body;
 
                         /* the type this is expected to be */
                         hlir_kind_t expected;
@@ -155,15 +155,15 @@ typedef struct Hlir
                 /* pointer type */
                 struct
                 {
-                    struct Hlir *ptr;
+                    struct hlir_t *ptr;
                     bool indexable;
                 };
 
                 /* array type */
                 struct
                 {
-                    struct Hlir *element;
-                    struct Hlir *length;
+                    struct hlir_t *element;
+                    struct hlir_t *length;
                 };
 
                 ///
@@ -171,7 +171,7 @@ typedef struct Hlir
                 ///
 
                 /* the initial value */
-                const struct Hlir *value;
+                const struct hlir_t *value;
 
                 struct
                 {
@@ -192,7 +192,7 @@ typedef struct Hlir
 
 /**
  * @defgroup HlirQuerys HLIR querys
- * @ingroup Hlir
+ * @ingroup hlir_t
  * @brief information queries for HLIR nodes
  * @{
  */
@@ -238,7 +238,7 @@ const hlir_t *closure_result(const hlir_t *self);
 
 /**
  * @defgroup HlirConstructors HLIR constructors
- * @ingroup Hlir
+ * @ingroup hlir_t
  * @brief constructors for HLIR nodes
  * @{
  */

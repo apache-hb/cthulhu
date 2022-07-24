@@ -32,8 +32,68 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     } string;
 }
 
-%start program
+%token<ident>
+    IDENT "identifier"
+
+%token
+    TYPEDEF "typedef"
+
+    VOID "void"
+    BOOL "_Bool"
+    
+    CHAR "char"
+    SHORT "short"
+    INT "int"
+    LONG "long"
+
+    FLOAT "float"
+    DOUBLE "double"
+
+    SIGNED "signed"
+    UNSIGNED "unsigned"
+
+    ATOMIC "_Atomic"
+    CONST "const"
+    VOLATILE "volatile"
+
+    STRUCT "struct"
+    UNION "union"
+
+    SEMICOLON ";"
+
+%start unit
 
 %%
+
+unit: decls
+    ;
+
+decls: decl
+    | decls decl
+    ;
+
+decl: typedefDecl
+    ;
+
+typedefDecl: TYPEDEF type IDENT SEMICOLON
+    ;
+
+type: sign integral
+    ;
+
+sign: %empty 
+    | SIGNED
+    | UNSIGNED
+    ;
+
+integral: BOOL
+    | CHAR
+    | SHORT
+    | INT
+    | LONG
+    | LONG LONG
+    | FLOAT
+    | DOUBLE
+    ;
 
 %%

@@ -5,21 +5,8 @@
  */
 typedef enum
 {
-    eBinaryAdd, ///< lhs + rhs
-    eBinarySub, ///< lhs - rhs
-    eBinaryMul, ///< lhs * rhs
-    eBinaryDiv, ///< lhs / rhs
-    eBinaryRem, ///< lhs % rhs
-
-    eBinaryAnd, ///< lhs && rhs
-    eBinaryOr,  ///< lhs || rhs
-
-    eBinaryBitAnd, ///< lhs & rhs
-    eBinaryBitOr,  ///< lhs | rhs
-    eBinaryXor,    ///< lhs ^ rhs
-    eBinaryShl,    ///< lhs << rhs
-    eBinaryShr,    ///< lhs >> rhs
-
+#define BINARY_OP(ID, NAME, SYMBOL) ID,
+#include "hlir-def.inc"
     eBinaryTotal
 } binary_t;
 
@@ -28,14 +15,8 @@ typedef enum
  */
 typedef enum
 {
-    eCompareEq,  ///< lhs == rhs
-    eCompareNeq, ///< lhs != rhs
-
-    eCompareLt,  ///< lhs < rhs
-    eCompareLte, ///< lhs <= rhs
-    eCompareGt,  ///< lhs > rhs
-    eCompareGte, ///< lhs >= rhs
-
+#define COMPARE_OP(ID, NAME, SYMBOL) ID,
+#include "hlir-def.inc"
     eCompareTotal
 } compare_t;
 
@@ -44,12 +25,8 @@ typedef enum
  */
 typedef enum
 {
-    eUnaryNeg, ///< -operand
-    eUnaryAbs, ///< abs(operand)
-
-    eUnaryBitflip, ///< ~operand
-    eUnaryNot,     ///< !operand
-
+#define UNARY_OP(ID, NAME, SYMBOL) ID,
+#include "hlir-def.inc"
     eUnaryTotal
 } unary_t;
 

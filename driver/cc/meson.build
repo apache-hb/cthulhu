@@ -1,0 +1,13 @@
+src = [ 
+    'main.c', 
+    'scan.c',
+    lex.process('cc.l'), 
+    parse.process('cc.y') 
+]
+
+cc = library('cc', src,
+    dependencies : [ generic, interop ],
+    install : true
+)
+
+langs += { 'cc': declare_dependency(link_with : cc) }

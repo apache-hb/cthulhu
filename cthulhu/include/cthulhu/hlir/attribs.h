@@ -13,29 +13,25 @@
  */
 typedef enum
 {
-    eLinkImported, ///< this declaration is external, and is not part of this
-                   ///< compilation unit
-    eLinkExported, ///< this declaration is internal, and is visibile outside of
-                   ///< this compilation unit
-    eLinkInternal, ///< this declaration is internal, and is not visible outside
-                   ///< of this compilation unit
-
-    eLinkEntryCli, ///< standard cli entry point
-    eLinkEntryGui, ///< windows gui entry point
-
+#define HLIR_LINKAGE(ID, STR) ID,
+#include "hlir-def.inc"
     eLinkTotal
 } hlir_linkage_t;
+
+typedef enum 
+{
+#define HLIR_VISIBILITY(ID, STR) ID,
+#include "hlir-def.inc"
+    eHlirVisibilityTotal
+} hlir_visibility_t;
 
 /**
  * @brief any modifiers for a type
  */
 typedef enum
 {
-    eTagConst = (1 << 0),    ///< this type is const, and cannot be modified or assigned
-    eTagVolatile = (1 << 1), ///< this type is volatile, all modifications, assigns,
-                             ///  and accesses are treated as side effects
-    eTagAtomic = (1 << 2),   ///< this type is atomic, treated the same as
-                             ///< volatile but also synchronizes
+#define TYPE_QUALIFIER(ID, NAME, BIT) ID = (BIT),
+#include "hlir-def.inc"
 } hlir_tags_t;
 
 /**
@@ -43,7 +39,8 @@ typedef enum
  */
 typedef struct
 {
-    hlir_linkage_t linkage; ///< the visibility of the current declaration
+    hlir_linkage_t linkage; ///< the linkage of the current declaration
+    hlir_visibility_t visibility; ///< the visibility of the current declaration
     hlir_tags_t tags;       ///< any modifiers for the current declaration
     const char *mangle;     ///< the name to use for the current declaration
 } hlir_attributes_t;

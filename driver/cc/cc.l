@@ -21,53 +21,61 @@ WS [ \t\r\v\n\f]
 {WS} ;
 "//".* ;
 
+"void" { return VOID; }
+"_Bool" { return BOOL; }
+
+"char" { return CHAR; }
+"short" { return SHORT; }
+"int" { return INT; }
+"long" { return LONG; }
+
+"float" { return FLOAT; }
+"double" { return DOUBLE; }
+
+"signed" { return SIGNED; }
+"unsigned" { return UNSIGNED; }
+
+"_Atomic" { return ATOMIC; }
+"const" { return CONST; }
+"volatile" { return VOLATILE; }
+
+"struct" { return STRUCT; }
+"union" { return UNION; }
+
 "auto" { return AUTO; }
 "break" { return BREAK; }
 "case" { return CASE; }
-"char" { return CHAR; }
-"const" { return CONST; }
 "continue" { return CONTINUE; }
 "default" { return DEFAULT; }
 "do" { return DO; }
-"double" { return DOUBLE; }
 "else" { return ELSE; }
 "enum" { return ENUM; }
 
 "extern" { return EXTERN; }
-"float" { return FLOAT; }
 "for" { return FOR; }
 "goto" { return GOTO; }
 "if" { return IF; }
 "inline" { return INLINE; }
-"int" { return INT; }
-"long" { return LONG; }
 "register" { return REGISTER; }
 "restrict" { return RESTRICT; }
 "return" { return RETURN; }
 
-"short" { return SHORT; }
-"signed" { return SIGNED; }
 "sizeof" { return SIZEOF; }
 "static" { return STATIC; }
-"struct" { return STRUCT; }
 "switch" { return SWITCH; }
 "typedef" { return TYPEDEF; }
-"union" { return UNION; }
-"unsigned" { return UNSIGNED; }
-"void" { return VOID; }
-"volatile" { return VOLATILE; }
 
 "while" { return WHILE; }
 "_Alignas" { return ALIGNAS; }
 "_Alignof" { return ALIGNOF; }
-"_Atomic" { return ATOMIC; }
-"_Bool" { return BOOL; }
 "_Complex" { return COMPLEX; }
 "_Generic" { return GENERIC; }
 "_Imaginary" { return IMAGINARY; }
 "_Noreturn" { return NORETURN; }
 "_Static_assert" { return STATIC_ASSERT; }
 "_Thread_local" { return THREAD_LOCAL; }
+
+"virtual" { return VIRTUAL; }
 
 "0"[0-7]+ {
     mpz_init_set_str(yylval->digit, yytext + 1, 8);
@@ -79,12 +87,12 @@ WS [ \t\r\v\n\f]
     return DIGIT;
 }
 
-"0x"[0-9a-fA-F]+ {
+"0"[xX][0-9a-fA-F]+ {
     mpz_init_set_str(yylval->digit, yytext + 2, 16);
     return DIGIT;
 }
 
-"0b"[01]+ {
+"0"[bB][01]+ {
     mpz_init_set_str(yylval->digit, yytext + 2, 2);
     return DIGIT;
 }

@@ -7,27 +7,18 @@ typedef struct
 } operand_name_t;
 
 static const operand_name_t kBinaryOperands[eBinaryTotal] = {
-    [eBinaryAdd] = {"add", "+"},     [eBinarySub] = {"sub", "-"},  [eBinaryMul] = {"mul", "*"},
-    [eBinaryDiv] = {"div", "/"},     [eBinaryRem] = {"rem", "%"},
-
-    [eBinaryAnd] = {"and", "&&"},    [eBinaryOr] = {"or", "||"},
-
-    [eBinaryShl] = {"shl", "<<"},    [eBinaryShr] = {"shr", ">>"}, [eBinaryBitAnd] = {"bitand", "&"},
-    [eBinaryBitOr] = {"bitor", "|"}, [eBinaryXor] = {"xor", "^"},
+#define BINARY_OP(ID, NAME, SYMBOL) [ID] = {(NAME), (SYMBOL)},
+#include "cthulhu/hlir/hlir-def.inc"
 };
 
 static const operand_name_t kCompareOperands[eCompareTotal] = {
-    [eCompareEq] = {"eq", "=="}, [eCompareNeq] = {"ne", "!="},
-
-    [eCompareLt] = {"lt", "<"},  [eCompareLte] = {"le", "<="}, [eCompareGt] = {"gt", ">"}, [eCompareGte] = {"ge", ">="},
+#define COMPARE_OP(ID, NAME, SYMBOL) [ID] = {(NAME), (SYMBOL)},
+#include "cthulhu/hlir/hlir-def.inc"
 };
 
 static const operand_name_t kUnaryOperands[eUnaryTotal] = {
-    [eUnaryNeg] = {"neg", "-"},
-    [eUnaryAbs] = {"abs", "abs"},
-
-    [eUnaryBitflip] = {"bitflip", "~"},
-    [eUnaryNot] = {"not", "!"},
+#define UNARY_OP(ID, NAME, SYMBOL) [ID] = {(NAME), (SYMBOL)},
+#include "cthulhu/hlir/hlir-def.inc"
 };
 
 // operand accessors

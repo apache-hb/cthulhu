@@ -13,17 +13,17 @@ static char *repr_tags(const hlir_t *hlir)
     hlir_tags_t tags = attribs->tags;
     vector_t *result = vector_new(4);
 
-    if (tags & eTagConst)
+    if (tags & eQualConst)
     {
         vector_push(&result, (char *)"const");
     }
 
-    if (tags & eTagAtomic)
+    if (tags & eQualAtomic)
     {
         vector_push(&result, (char *)"atomic");
     }
 
-    if (tags & eTagVolatile)
+    if (tags & eQualVolatile)
     {
         vector_push(&result, (char *)"volatile");
     }

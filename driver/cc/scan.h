@@ -1,0 +1,7 @@
+#pragma once
+
+#include "scan/node.h"
+
+#define CCLTYPE where_t
+
+void init_scan(scan_t *scan);

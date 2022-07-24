@@ -431,7 +431,7 @@ postfix: primary { $$ = $1; }
 unary: postfix { $$ = $1; }
     | SUB unary { $$ = ast_unary(x, @$, eUnaryNeg, $2); }
     | ADD unary { $$ = ast_unary(x, @$, eUnaryAbs, $2); }
-    | BITNOT unary { $$ = ast_unary(x, @$, eUnaryBitflip, $2); }
+    | BITNOT unary { $$ = ast_unary(x, @$, eUnaryFlip, $2); }
     | NOT unary { $$ = ast_unary(x, @$, eUnaryNot, $2); }
     ;
 
@@ -473,11 +473,11 @@ xor: bits { $$ = $1; }
     ;
 
 and: xor { $$ = $1; }
-    | and AND xor { $$ = ast_binary(x, @$, eBinaryAnd, $1, $3); }
+    | and AND xor { $$ = ast_compare(x, @$, eCompareAnd, $1, $3); }
     ;
 
 or: and { $$ = $1; }
-    | or OR xor { $$ = ast_binary(x, @$, eBinaryOr, $1, $3); }
+    | or OR and { $$ = ast_compare(x, @$, eCompareOr, $1, $3); }
     ;
 
 expr: or { $$ = $1; }

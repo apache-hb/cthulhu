@@ -348,7 +348,7 @@ static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
     {
     case eUnaryAbs:
     case eUnaryNeg:
-    case eUnaryBitflip:
+    case eUnaryFlip:
         return sema_unary_digit(sema, ast, operand);
 
     case eUnaryNot:
@@ -608,7 +608,7 @@ static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
     if (!stmt->mut)
     {
         hlir_t *constant = ctu_memdup(type, sizeof(hlir_t));
-        hlir_set_attributes(constant, hlir_tags(eTagConst));
+        hlir_set_attributes(constant, hlir_tags(eQualConst));
         result.type = constant;
     }
 
