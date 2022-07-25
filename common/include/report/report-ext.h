@@ -16,7 +16,7 @@ typedef struct message_t message_t;
  *
  * @return the message
  */
-message_t *report_shadow(reports_t *reports, const char *name, node_t prevDefinition, node_t newDefinition);
+message_t *report_shadow(reports_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition);
 
 /**
  * @brief report one or more unknown characters in a file
@@ -27,6 +27,6 @@ message_t *report_shadow(reports_t *reports, const char *name, node_t prevDefini
  *
  * @return the message
  */
-message_t *report_unknown_character(reports_t *reports, node_t node, const char *str);
+message_t *report_unknown_character(reports_t *reports, const node_t *node, const char *str);
 
 message_t *report_errno(reports_t *reports, const char *msg, cerror_t err);

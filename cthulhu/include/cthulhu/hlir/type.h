@@ -18,7 +18,7 @@
  * @param sign the sign of this integer type
  * @return hlir_t* the constructed integer type
  */
-hlir_t *hlir_digit(node_t node, const char *name, digit_t width, sign_t sign);
+hlir_t *hlir_digit(node_t *node, const char *name, digit_t width, sign_t sign);
 
 /**
  * @brief construct a new bool type
@@ -27,7 +27,7 @@ hlir_t *hlir_digit(node_t node, const char *name, digit_t width, sign_t sign);
  * @param name the name of this bool type
  * @return hlir_t* the constructed bool type
  */
-hlir_t *hlir_bool(node_t node, const char *name);
+hlir_t *hlir_bool(node_t *node, const char *name);
 
 /**
  * @brief construct a new string type
@@ -36,7 +36,7 @@ hlir_t *hlir_bool(node_t node, const char *name);
  * @param name the name of this string type
  * @return hlir_t* the constructed string type
  */
-hlir_t *hlir_string(node_t node, const char *name);
+hlir_t *hlir_string(node_t *node, const char *name);
 
 /**
  * @brief construct a new void type
@@ -45,7 +45,7 @@ hlir_t *hlir_string(node_t node, const char *name);
  * @param name the name of this void type
  * @return hlir_t*
  */
-hlir_t *hlir_void(node_t node, const char *name);
+hlir_t *hlir_void(node_t *node, const char *name);
 
 /**
  * @brief construct a new closure type
@@ -57,7 +57,7 @@ hlir_t *hlir_void(node_t node, const char *name);
  * @param variadic is this a variadic function?
  * @return hlir_t* the constructed closure type
  */
-hlir_t *hlir_closure(node_t node, const char *name, vector_t *params, const hlir_t *result, bool variadic);
+hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hlir_t *result, bool variadic);
 
 /**
  * @brief construct a new pointer type
@@ -68,7 +68,7 @@ hlir_t *hlir_closure(node_t node, const char *name, vector_t *params, const hlir
  * @param indexable can this pointer be indexed?
  * @return hlir_t* the constructed pointer type
  */
-hlir_t *hlir_pointer(node_t node, const char *name, hlir_t *type, bool indexable);
+hlir_t *hlir_pointer(node_t *node, const char *name, hlir_t *type, bool indexable);
 
 /**
  * @brief construct a new array type
@@ -79,6 +79,6 @@ hlir_t *hlir_pointer(node_t node, const char *name, hlir_t *type, bool indexable
  * @param length the length of this array
  * @return hlir_t* the constructed array type
  */
-hlir_t *hlir_array(reports_t *reports, node_t node, const char *name, hlir_t *element, hlir_t *length);
+hlir_t *hlir_array(reports_t *reports, node_t *node, const char *name, hlir_t *element, hlir_t *length);
 
 /** @} */

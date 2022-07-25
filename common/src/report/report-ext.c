@@ -5,14 +5,14 @@
 #include "base/macros.h"
 #include "std/str.h"
 
-message_t *report_shadow(reports_t *reports, const char *name, node_t prevDefinition, node_t newDefinition)
+message_t *report_shadow(reports_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)
 {
     message_t *id = report(reports, eFatal, newDefinition, "redefinition of `%s`", name);
     report_append(id, prevDefinition, "previous definition");
     return id;
 }
 
-message_t *report_unknown_character(reports_t *reports, node_t node, const char *str)
+message_t *report_unknown_character(reports_t *reports, const node_t *node, const char *str)
 {
     where_t where = get_node_location(node);
 

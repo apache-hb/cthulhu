@@ -12,7 +12,7 @@ NODISCARD PUREFN const char *get_hlir_name(const hlir_t *hlir);
 
 NODISCARD PUREFN const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir);
 
-NODISCARD PUREFN node_t get_hlir_node(const hlir_t *hlir);
+NODISCARD PUREFN node_t *get_hlir_node(const hlir_t *hlir);
 
 NODISCARD PUREFN const hlir_t *get_hlir_parent(const hlir_t *hlir);
 

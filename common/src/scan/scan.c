@@ -1,4 +1,4 @@
-#include "scan/scan.h"
+#include "common.h"
 
 #include "platform/file.h"
 #include "report/report.h"
@@ -11,19 +11,6 @@
 
 #include <limits.h>
 #include <string.h>
-
-typedef struct scan_t
-{
-    alloc_t *alloc;
-    reports_t *reports; ///< the reporting sink for this file
-    io_t *io;           ///< file itself
-
-    const char *language; ///< the language this file contains
-    void *data;           ///< user data pointer
-
-    const char *mapped;
-    size_t size;
-} scan_t;
 
 const char *scan_language(const scan_t *scan)
 {
@@ -76,11 +63,16 @@ scan_t *scan_invalid(void)
     return NULL;
 }
 
-scan_t *scan_io(alloc_t *alloc, reports_t *reports, const char *language, io_t *io)
+scan_t *scan_io(reports_t *reports, const char *language, io_t *io, scan_config_t config)
 {
-    scan_t *self = arena_malloc(alloc, sizeof(scan_t), "scan-io");
+    CTASSERT(config.alloc != NULL);
+    CTASSERT(config.astAlloc != NULL);
+    CTASSERT(config.nodeAlloc != NULL);
+    CTASSERT(config.yyAlloc != NULL);
 
-    self->alloc = alloc;
+    scan_t *self = arena_malloc(config.alloc, sizeof(scan_t), "scan-io");
+
+    self->config = config;
     self->language = language;
     self->reports = reports;
     self->io = io;
@@ -89,4 +81,14 @@ scan_t *scan_io(alloc_t *alloc, reports_t *reports, const char *language, io_t *
     self->size = io_size(io);
 
     return self;
+}
+
+void *ast_alloc(scan_t *scan, size_t size, const char *name)
+{
+    return arena_malloc(scan->config.astAlloc, size, name);
+}
+
+alloc_t *scan_yyalloc(scan_t *scan)
+{
+    return scan->config.yyAlloc;
 }

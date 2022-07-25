@@ -2,7 +2,7 @@
 
 #include "cthulhu/hlir/query.h"
 
-node_t check_const_expr(reports_t *reports, const hlir_t *expr)
+node_t *check_const_expr(reports_t *reports, const hlir_t *expr)
 {
     hlir_kind_t kind = get_hlir_kind(expr);
     switch (kind)
@@ -17,8 +17,8 @@ node_t check_const_expr(reports_t *reports, const hlir_t *expr)
 
     case eHlirCompare:
     case eHlirBinary: {
-        node_t lhs = check_const_expr(reports, expr->lhs);
-        node_t rhs = check_const_expr(reports, expr->rhs);
+        node_t *lhs = check_const_expr(reports, expr->lhs);
+        node_t *rhs = check_const_expr(reports, expr->rhs);
 
         if (node_is_valid(lhs))
         {

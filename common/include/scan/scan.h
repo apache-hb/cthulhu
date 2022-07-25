@@ -14,6 +14,14 @@ typedef struct
     const char *text; ///< the text itself
 } text_t;
 
+typedef struct 
+{
+    alloc_t *alloc;
+    alloc_t *nodeAlloc; ///< allocator for internal nodes
+    alloc_t *astAlloc; ///< allocator for driver ast nodes
+    alloc_t *yyAlloc; ///< allocator for flex + bison buffers
+} scan_config_t;
+
 NODISCARD CONSTFN const char *scan_language(const scan_t *scan);
 
 NODISCARD CONSTFN const char *scan_path(const scan_t *scan);
@@ -36,4 +44,9 @@ NODISCARD RET_RANGE(0, size)
 size_t scan_read(scan_t *scan, void *dst, size_t size);
 
 NODISCARD
-scan_t *scan_io(alloc_t *alloc, reports_t *reports, const char *language, io_t *io);
+scan_t *scan_io(reports_t *reports, const char *language, io_t *io, scan_config_t config);
+
+NODISCARD
+void *ast_alloc(scan_t *scan, size_t size, const char *name);
+
+alloc_t *scan_yyalloc(scan_t *scan);

@@ -32,7 +32,7 @@ typedef enum
 typedef struct pl0_t
 {
     pl0_type_t type;
-    node_t node;
+    node_t *node;
 
     union {
         /* integer literal */

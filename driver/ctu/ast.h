@@ -64,7 +64,7 @@ typedef enum
 typedef struct ast_t
 {
     astof_t of;
-    node_t node;
+    node_t *node;
 
     union {
         /* eAstTypename|eAstModule */

@@ -531,7 +531,7 @@ static void c89_emit_loop(c89_emit_t *emit, const hlir_t *hlir)
 {
     const char *cond = c89_emit_rvalue(emit, hlir->cond);
 
-    const node_t node = get_hlir_node(hlir);
+    const node_t *node = get_hlir_node(hlir);
     where_t where = get_node_location(node);
 
     if (hlir->other != NULL)
@@ -779,7 +779,7 @@ static const char *c89_emit_outer_type(c89_emit_t *emit, const hlir_t *hlir, con
 
     if (attribs->tags & eQualAtomic)
     {
-        node_t node = get_hlir_node(hlir);
+        node_t *node = get_hlir_node(hlir);
         report(emit->reports, eWarn, node, "atomic types are not supported yet");
     }
 

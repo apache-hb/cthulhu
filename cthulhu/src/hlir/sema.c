@@ -65,7 +65,7 @@ sema_t *sema_parent(sema_t *sema)
 
 void sema_delete(sema_t *sema)
 {
-    ctu_free(sema);
+    arena_free(sema->alloc, sema, sizeof(sema_t));
 }
 
 void sema_set_data(sema_t *sema, void *data)
@@ -110,13 +110,13 @@ map_t *sema_tag(sema_t *sema, size_t tag)
 static void report_recursion(reports_t *reports, vector_t *stack, const char *msg)
 {
     hlir_t *top = vector_tail(stack);
-    node_t topNode = get_hlir_node(top);
+    node_t *topNode = get_hlir_node(top);
     message_t *id = report(reports, eFatal, topNode, "%s", msg);
 
     for (size_t i = 0; i < vector_len(stack); i++)
     {
         hlir_t *hlir = vector_get(stack, i);
-        node_t node = get_hlir_node(hlir);
+        node_t *node = get_hlir_node(hlir);
         report_append(id, node, "trace `%zu`", i);
     }
 }
@@ -201,7 +201,7 @@ static entry_t *new_entry(const hlir_t *hlir, bool nesting)
 static void report_type_recursion(reports_t *reports, vector_t *stack)
 {
     entry_t *top = vector_tail(stack);
-    node_t topNode = get_hlir_node(top->hlir);
+    node_t *topNode = get_hlir_node(top->hlir);
     message_t *id = report(reports, eFatal, topNode, "%s", "recursive type definition");
 
     size_t trace = 0;
@@ -214,7 +214,7 @@ static void report_type_recursion(reports_t *reports, vector_t *stack)
             continue;
         }
 
-        node_t node = get_hlir_node(entry->hlir);
+        node_t *node = get_hlir_node(entry->hlir);
         report_append(id, node, "trace `%zu`", trace++);
     }
 }
@@ -274,7 +274,7 @@ static const hlir_t *chase(reports_t *reports, const hlir_t *hlir)
 
         if (depth++ > DEPTH_LIMIT)
         {
-            node_t node = get_hlir_node(hlir);
+            node_t *node = get_hlir_node(hlir);
             message_t *id = report(reports, eFatal, node, "type definition recurses too deep");
             report_note(id, "type definition recurses beyond %d levels", DEPTH_LIMIT);
             return NULL;
@@ -374,8 +374,8 @@ static const char *kLinkageNames[eLinkTotal] = {
 
 static void report_multiple_entry(check_t *ctx, const hlir_t *hlir, const hlir_t *prev, const char *name)
 {
-    node_t newNode = get_hlir_node(hlir);
-    node_t prevNode = get_hlir_node(prev);
+    node_t *newNode = get_hlir_node(hlir);
+    node_t *prevNode = get_hlir_node(prev);
 
     message_t *id = report(ctx->reports, eFatal, newNode, "multiple %s entry points defined", name);
     report_append(id, prevNode, "previously defined here");
@@ -387,7 +387,7 @@ static void check_attribute(check_t *ctx, hlir_t *hlir)
 
     if (attribs->mangle != NULL && !can_mangle_name(attribs->linkage))
     {
-        node_t node = get_hlir_node(hlir);
+        node_t *node = get_hlir_node(hlir);
         message_t *id =
             report(ctx->reports, eWarn, node, "cannot change name mangling of %s", kLinkageNames[attribs->linkage]);
         report_note(id, "attribute will not be mangled");
@@ -437,7 +437,7 @@ static void check_identifier_isnt_empty(reports_t *reports, const hlir_t *ident)
     const char *name = get_hlir_name(ident);
     if (name == NULL || strlen(name) == 0)
     {
-        node_t node = get_hlir_node(ident);
+        node_t *node = get_hlir_node(ident);
         report(reports, eFatal, node, "empty identifier");
     }
 }

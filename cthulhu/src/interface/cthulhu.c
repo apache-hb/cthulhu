@@ -113,10 +113,17 @@ status_t cthulhu_init(cthulhu_t *cthulhu)
             continue;
         }
 
+        scan_config_t config = {
+            .alloc = &globalAlloc,
+            .nodeAlloc = &globalAlloc,
+            .astAlloc = &globalAlloc,
+            .yyAlloc = &globalAlloc
+        };
+
         compile_t *ctx = get_compile(cthulhu, i);
         ctx->ast = NULL;
         ctx->hlir = NULL;
-        ctx->scan = scan_io(cthulhu->config.alloc, cthulhu->reports, cthulhu->driver.name, source);
+        ctx->scan = scan_io(cthulhu->reports, cthulhu->driver.name, source, config);
     }
 
     return report_errors(cthulhu, "scanning sources");

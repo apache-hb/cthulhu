@@ -16,12 +16,12 @@
 
 bool verbose = false;
 
-static bool is_valid_node(node_t node)
+static bool is_valid_node(const node_t *node)
 {
     return node_is_valid(node) && node != node_builtin();
 }
 
-static part_t *part_new(char *message, node_t node)
+static part_t *part_new(char *message, const node_t *node)
 {
     part_t *part = ctu_malloc(sizeof(part_t));
     part->message = message;
@@ -75,7 +75,7 @@ static char *format_location(const char *base, const scan_t *scan, where_t where
     return format("%s source [%s:%ld:%ld]", language, path + strlen(base), where.firstLine + 1, where.firstColumn);
 }
 
-static void report_scanner(const char *base, node_t node)
+static void report_scanner(const char *base, const node_t *node)
 {
     scan_t *scan = get_node_scanner(node);
     where_t where = get_node_location(node);
@@ -262,7 +262,7 @@ static char *right_align(line_t line, int width)
  *  line| source text
  *      | ^~~~~~ underline message
  */
-static char *format_single(node_t node, const char *underline)
+static char *format_single(const node_t *node, const char *underline)
 {
     where_t where = get_node_location(node);
     const scan_t *scan = get_node_scanner(node);
@@ -290,7 +290,7 @@ static char *format_single(node_t node, const char *underline)
  *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
  *       |
  */
-static char *format_medium2(node_t node, const char *underline)
+static char *format_medium2(const node_t *node, const char *underline)
 {
     where_t where = get_node_location(node);
     const scan_t *scan = get_node_scanner(node);
@@ -321,7 +321,7 @@ static char *format_medium2(node_t node, const char *underline)
  *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
  *       |
  */
-static char *format_medium3(node_t node, const char *underline)
+static char *format_medium3(const node_t *node, const char *underline)
 {
     where_t where = get_node_location(node);
     const scan_t *scan = get_node_scanner(node);
@@ -353,7 +353,7 @@ static char *format_medium3(node_t node, const char *underline)
  *       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ underline message
  *       |
  */
-static char *format_large(node_t node, const char *underline)
+static char *format_large(const node_t *node, const char *underline)
 {
     where_t where = get_node_location(node);
     const scan_t *scan = get_node_scanner(node);
@@ -376,7 +376,7 @@ static char *format_large(node_t node, const char *underline)
                   build_underline(lastSourceLine, where, underline));
 }
 
-static char *format_source(node_t node, const char *underline)
+static char *format_source(const node_t *node, const char *underline)
 {
     switch (total_lines(get_node_location(node)))
     {
@@ -393,7 +393,7 @@ static char *format_source(node_t node, const char *underline)
 
 static void report_source(message_t *message)
 {
-    node_t node = message->node;
+    const node_t *node = message->node;
     if (!is_valid_node(node))
     {
         return;
@@ -406,7 +406,7 @@ static void report_part(const char *base, message_t *message, part_t *part)
 {
     char *msg = part->message;
 
-    node_t node = part->node;
+    const node_t *node = part->node;
     const scan_t *scan = get_node_scanner(node);
     where_t where = get_node_location(node);
 
@@ -582,7 +582,7 @@ status_t end_reports(reports_t *reports, const char *name, report_config_t setti
     return result;
 }
 
-static message_t *report_push(reports_t *reports, level_t level, node_t node, const char *fmt, va_list args)
+static message_t *report_push(reports_t *reports, level_t level, const node_t *node, const char *fmt, va_list args)
 {
     CTASSERT(reports != NULL);
 
@@ -614,7 +614,7 @@ message_t *ctu_assert(reports_t *reports, const char *fmt, ...)
 }
 
 USE_DECL
-message_t *report(reports_t *reports, level_t level, node_t node, const char *fmt, ...)
+message_t *report(reports_t *reports, level_t level, const node_t *node, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -627,7 +627,7 @@ message_t *report(reports_t *reports, level_t level, node_t node, const char *fm
 }
 
 USE_DECL
-void report_append(message_t *message, node_t node, const char *fmt, ...)
+void report_append(message_t *message, const node_t *node, const char *fmt, ...)
 {
     CTASSERT(message != NULL);
 

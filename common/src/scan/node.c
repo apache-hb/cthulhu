@@ -1,59 +1,55 @@
 #include "scan/node.h"
 
+#include "common.h"
+
 #include "base/macros.h"
 #include "base/panic.h"
+#include "base/memory.h"
 
 #include <limits.h>
 
-typedef struct
+typedef struct node_t
 {
     scan_t *scan;  ///< the source file
     where_t where; ///< the location of this node in the source file
-} node_data_t;
+} node_t;
 
-#define TOTAL_NODES (0x1000 * 64) // TODO: make this configurable
-
-static node_data_t kNodeData[TOTAL_NODES] = {0};
-static node_t kNodeOffset = 0;
-
-node_t node_builtin(void)
+node_t *node_builtin(void)
 {
-    return UINT_MAX - 1;
+    return (void*)UINTPTR_MAX;
 }
 
-node_t node_invalid(void)
+node_t *node_invalid(void)
 {
-    return UINT_MAX;
+    return NULL;
 }
 
-bool node_is_valid(node_t node)
+bool node_is_valid(const node_t *node)
 {
     return node != node_invalid();
 }
 
-node_t node_new(scan_t *scan, where_t where)
+node_t *node_new(scan_t *scan, where_t where)
 {
-    node_t offset = kNodeOffset++;
+    if (scan == NULL)
+    {
+        return NULL;
+    }
 
-    node_data_t *node = kNodeData + offset;
+    node_t *node = arena_malloc(scan->config.nodeAlloc, sizeof(node_t), "node-new");
     node->scan = scan;
     node->where = where;
 
-    return offset;
+    return node;
 }
 
-scan_t *get_node_scanner(node_t node)
+scan_t *get_node_scanner(const node_t *node)
 {
-    CTASSERTF(node < TOTAL_NODES, "[get-node-scanner] node %u out of range", node);
-    const node_data_t *self = kNodeData + node;
-
-    return self->scan;
+    return node != NULL ? node->scan : NULL;
 }
 
-where_t get_node_location(node_t node)
+where_t get_node_location(const node_t *node)
 {
-    CTASSERTF(node < TOTAL_NODES, "[get-node-location] node %u out of range", node);
-    const node_data_t *self = kNodeData + node;
-
-    return self->where;
+    CTASSERT(node != NULL);
+    return node->where;
 }

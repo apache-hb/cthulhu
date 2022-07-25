@@ -99,7 +99,7 @@ static const char *get_digit_name(sign_t sign, digit_t digit)
 
 static sema_t *kRootSema = NULL;
 
-static const hlir_t *get_common_type(node_t node, const hlir_t *lhs, const hlir_t *rhs)
+static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs)
 {
     if (hlir_is(lhs, eHlirDigit) && hlir_is(rhs, eHlirDigit))
     {
@@ -121,7 +121,7 @@ static bool is_discard_ident(const char *id)
 
 static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
 {
-    node_t node = get_hlir_node(decl);
+    node_t *node = get_hlir_node(decl);
 
     if (is_discard_ident(name))
     {
@@ -134,7 +134,7 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
     if (other != NULL)
     {
         // if it was report it and dont add this new one
-        node_t otherNode = get_hlir_node(other);
+        node_t *otherNode = get_hlir_node(other);
         report_shadow(sema_reports(sema), name, otherNode, node);
         return;
     }
@@ -176,7 +176,7 @@ void ctu_init_compiler(runtime_t *runtime)
 
     kRootSema = begin_sema(NULL, runtime->reports, sizes);
 
-    node_t node = node_builtin();
+    node_t *node = node_builtin();
 
     kVoidType = hlir_void(node, "void");
     kBoolType = hlir_bool(node, "bool");
