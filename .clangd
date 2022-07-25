@@ -7,7 +7,7 @@ Hover:
 
 Diagnostics:
   ClangTidy:
-    Add: [performance*, portability*, bugprone*,readability-identifier-naming]
+    Add: [performance*, portability*, bugprone*, clang-analyzer*, cert*, concurrency*, readability-identifier-naming]
     Remove: [bugprone-easily-swappable-parameters, bugprone-narrowing-conversions]
     CheckOptions:
       readability-identifier-naming.VariableCase: camelBack

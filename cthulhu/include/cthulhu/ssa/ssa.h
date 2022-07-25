@@ -32,7 +32,7 @@ typedef struct operand_t
     };
 } operand_t;
 
-typedef enum opcode_t 
+typedef enum opcode_t
 {
     eOpReturn,
     eOpValue,
@@ -50,7 +50,8 @@ typedef struct step_t
     opcode_t opcode;
 
     union {
-        struct {
+        struct
+        {
             union {
                 binary_t binary;
                 compare_t compare;
@@ -60,7 +61,8 @@ typedef struct step_t
             operand_t rhs;
         };
 
-        struct {
+        struct
+        {
             unary_t unary;
             operand_t operand;
         };

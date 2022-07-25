@@ -105,7 +105,7 @@ typedef struct map_iter_t
 
 NODISCARD CONSTFN map_iter_t map_iter(map_t *map);
 
-NODISCARD CONSTFN map_entry_t map_next(map_iter_t *iter);
+NODISCARD map_entry_t map_next(map_iter_t *iter);
 
 NODISCARD CONSTFN bool map_has_next(map_iter_t *iter);
 

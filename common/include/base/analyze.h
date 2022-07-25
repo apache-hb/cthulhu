@@ -9,15 +9,19 @@
 #    define USE_DECL _Use_decl_annotations_
 #    define NODISCARD _Check_return_
 #    define IN_READS(expr) _In_reads_(expr)
+#    define OUT_WRITES(expr) _Out_writes_(expr)
 #    define RET_RANGE(lo, hi) _Ret_range_(lo, hi)
 #    define FIELD_SIZE(of) _Field_size_(of)
+#    define MUST_INSPECT _Must_inspect_result_
 #else
 #    define DISABLE_SAL
 #    define FORMAT_STRING
 #    define USE_DECL
 #    define IN_READS(expr)
+#    define OUT_WRITES(expr)
 #    define RET_RANGE(lo, hi)
 #    define FIELD_SIZE(of)
+#    define MUST_INSPECT
 #endif
 
 #if __GNUC__ >= 11
@@ -27,14 +31,14 @@
 #    define PUREFN __attribute__((pure))
 #    define HOTFN __attribute__((hot))
 #    define COLDFN __attribute__((cold))
-#    define ALLOC(fn) __attribute__((malloc, malloc(fn)))
+#    define ALLOC(...) __attribute__((malloc, malloc(__VA_ARGS__)))
 #else
 #    define FORMAT_ATTRIBUTE(a, b)
 #    define CONSTFN
 #    define PUREFN
 #    define HOTFN
 #    define COLDFN
-#    define ALLOC(fn)
+#    define ALLOC(...)
 #endif
 
 #ifndef NODISCARD

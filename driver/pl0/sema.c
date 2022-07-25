@@ -11,6 +11,7 @@
 
 #include "base/macros.h"
 #include "base/util.h"
+#include "base/memory.h"
 #include "std/str.h"
 
 static hlir_t *kIntegerType;
@@ -94,7 +95,7 @@ static void set_proc(sema_t *sema, const char *name, hlir_t *proc)
     {
         const node_t node = get_hlir_node(proc);
         const node_t otherNode = get_hlir_node(other);
-        report_pl0_shadowing(sema->reports, name, otherNode, node);
+        report_pl0_shadowing(sema_reports(sema), name, otherNode, node);
         return;
     }
 
@@ -114,7 +115,7 @@ static void set_var(sema_t *sema, size_t tag, const char *name, hlir_t *hlir)
         const node_t node = get_hlir_node(hlir);
         const node_t otherNode = get_hlir_node(other);
 
-        report_pl0_shadowing(sema->reports, name, otherNode, node);
+        report_pl0_shadowing(sema_reports(sema), name, otherNode, node);
         return;
     }
 
@@ -135,7 +136,7 @@ static hlir_t *sema_ident(sema_t *sema, pl0_t *node)
     hlir_t *var = get_var(sema, node->ident);
     if (var == NULL)
     {
-        report_pl0_unresolved(sema->reports, node->node, node->ident);
+        report_pl0_unresolved(sema_reports(sema), node->node, node->ident);
         return hlir_error(node->node, "unresolved identifier");
     }
     return hlir_name(node->node, var);
@@ -167,7 +168,7 @@ static hlir_t *sema_expr(sema_t *sema, pl0_t *node)
     case ePl0Unary:
         return sema_unary(sema, node);
     default:
-        report(sema->reports, eInternal, node->node, "sema-expr: %d", node->type);
+        report(sema_reports(sema), eInternal, node->node, "sema-expr: %d", node->type);
         return hlir_error(node->node, "sema-expr");
     }
 }
@@ -197,7 +198,7 @@ static hlir_t *sema_call(sema_t *sema, pl0_t *node)
     hlir_t *proc = get_proc(sema, node->procedure);
     if (proc == NULL)
     {
-        report_pl0_unresolved(sema->reports, node->node, node->procedure);
+        report_pl0_unresolved(sema_reports(sema), node->node, node->procedure);
         return hlir_error(node->node, "unresolved procedure");
     }
 
@@ -221,7 +222,7 @@ static hlir_t *sema_assign(sema_t *sema, pl0_t *node)
 
     if (dst == NULL)
     {
-        report_pl0_unresolved(sema->reports, node->node, node->dst);
+        report_pl0_unresolved(sema_reports(sema), node->node, node->dst);
         return hlir_error(node->node, "unresolved variable");
     }
 
@@ -229,7 +230,7 @@ static hlir_t *sema_assign(sema_t *sema, pl0_t *node)
 
     if (attrs->tags & eQualConst)
     {
-        report(sema->reports, eFatal, node->node, "cannot assign to constant value");
+        report(sema_reports(sema), eFatal, node->node, "cannot assign to constant value");
     }
 
     return hlir_assign(node->node, dst, src);
@@ -271,7 +272,7 @@ static hlir_t *sema_stmt(sema_t *sema, pl0_t *node)
     case ePl0Print:
         return sema_print(sema, node);
     default:
-        report(sema->reports, eInternal, node->node, "sema-stmt: %d", node->type);
+        report(sema_reports(sema), eInternal, node->node, "sema-stmt: %d", node->type);
         return hlir_error(node->node, "sema-stmt");
     }
 }
@@ -317,7 +318,7 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node)
     case ePl0Compare:
         return sema_comp(sema, node);
     default:
-        report(sema->reports, eInternal, node->node, "sema-compare: %d", node->type);
+        report(sema_reports(sema), eInternal, node->node, "sema-compare: %d", node->type);
         return hlir_error(node->node, "sema-compare");
     }
 }
@@ -327,7 +328,7 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
     size_t nlocals = vector_len(node->locals);
     size_t sizes[eTagMax] = {[eTagValues] = nlocals};
 
-    sema_t *nest = sema_new(sema, sema->reports, eTagMax, sizes);
+    sema_t *nest = sema_new(NULL, sema, NULL, eTagMax, sizes);
 
     for (size_t i = 0; i < nlocals; i++)
     {
@@ -402,7 +403,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
         [eTagProcs] = totalFunctions,
     };
 
-    sema_t *sema = sema_new(NULL, runtime->reports, eTagMax, sizes);
+    sema_t *sema = sema_new(&globalAlloc, NULL, runtime->reports, eTagMax, sizes);
 
     // forward declare everything
     for (size_t i = 0; i < totalConsts; i++)
@@ -473,13 +474,13 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
 
         if (lib == NULL)
         {
-            report(sema->reports, eFatal, importDecl->node, "cannot import `%s`, failed to find module", pathToImport);
+            report(sema_reports(sema), eFatal, importDecl->node, "cannot import `%s`, failed to find module", pathToImport);
             continue;
         }
 
         if (lib == sema)
         {
-            report(sema->reports, eFatal, importDecl->node, "module cannot import itself");
+            report(sema_reports(sema), eFatal, importDecl->node, "module cannot import itself");
             continue;
         }
 

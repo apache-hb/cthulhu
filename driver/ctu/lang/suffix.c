@@ -65,7 +65,7 @@ hlir_t *apply_suffix(sema_t *sema, ast_t *ast, suffix_t *suffix)
 {
     if (ast->of != suffix->expected)
     {
-        report(sema->reports, eFatal, ast->node, "incorrect literal for suffix");
+        report(sema_reports(sema), eFatal, ast->node, "incorrect literal for suffix");
         return hlir_error(ast->node, "invalid suffix application");
     }
 

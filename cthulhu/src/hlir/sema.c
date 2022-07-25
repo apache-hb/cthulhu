@@ -12,12 +12,34 @@
 
 #include <string.h>
 
-sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes)
+typedef struct sema_t
 {
-    sema_t *sema = ctu_malloc(sizeof(sema_t));
+    struct sema_t *parent;
+    reports_t *reports;
+    alloc_t *alloc;
+
+    /**
+     * an array of maps
+     * each map is its own namespace which maps from symbol name to hlir node
+     */
+    vector_t *decls;
+
+    void *data;
+} sema_t;
+
+sema_t *sema_new(alloc_t *alloc, sema_t *parent, reports_t *reports, size_t decls, size_t *sizes)
+{
+    alloc_t *innerAlloc = parent != NULL ? parent->alloc : alloc;
+    reports_t *innerReports = parent != NULL ? parent->reports : reports;
+
+    CTASSERT(innerAlloc != NULL);
+    CTASSERT(innerReports != NULL);
+
+    sema_t *sema = arena_malloc(innerAlloc, sizeof(sema_t), "sema-new");
 
     sema->parent = parent;
-    sema->reports = reports;
+    sema->reports = innerReports;
+    sema->alloc = innerAlloc;
 
     sema->decls = vector_of(decls);
     for (size_t i = 0; i < decls; i++)
@@ -27,6 +49,18 @@ sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes
     }
 
     return sema;
+}
+
+reports_t *sema_reports(sema_t *sema)
+{
+    CTASSERT(sema != NULL);
+    return sema->reports;
+}
+
+sema_t *sema_parent(sema_t *sema)
+{
+    CTASSERT(sema != NULL);
+    return sema->parent;
 }
 
 void sema_delete(sema_t *sema)

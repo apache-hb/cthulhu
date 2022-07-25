@@ -131,7 +131,7 @@ static const void *mem_map(io_t *self)
 {
     buffer_t *mem = io_data(self);
 
-    void *it = ctu_malloc(mem->used);
+    void *it = arena_malloc(self->alloc, mem->used, "mem-map");
     memcpy(it, mem->data, mem->used);
 
     return it;

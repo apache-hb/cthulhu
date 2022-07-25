@@ -6,8 +6,7 @@ typedef void *library_t;
 
 void library_close(library_t library);
 
-ALLOC(library_close)
-NODISCARD
+NODISCARD ALLOC(library_close)
 library_t library_open(const char *path, cerror_t *error);
 
 NODISCARD

@@ -47,7 +47,7 @@ static sema_t *begin_sema(sema_t *parent, reports_t *reports, size_t *sizes)
         data->currentFunction = NULL;
     }
 
-    sema_t *sema = sema_new(parent, (reports != NULL ? reports : parent->reports), eTagTotal, sizes);
+    sema_t *sema = sema_new(&globalAlloc, parent, reports, eTagTotal, sizes);
     sema_set_data(sema, data);
     return sema;
 }
@@ -125,7 +125,7 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
 
     if (is_discard_ident(name))
     {
-        report(sema->reports, eFatal, node, "discarding declaration");
+        report(sema_reports(sema), eFatal, node, "discarding declaration");
         return;
     }
 
@@ -135,7 +135,7 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
     {
         // if it was report it and dont add this new one
         node_t otherNode = get_hlir_node(other);
-        report_shadow(sema->reports, name, otherNode, node);
+        report_shadow(sema_reports(sema), name, otherNode, node);
         return;
     }
 
@@ -213,7 +213,7 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
 
         if (next == NULL)
         {
-            report(sema->reports, eFatal, ast->node, "unknown namespace `%s`", name);
+            report(sema_reports(sema), eFatal, ast->node, "unknown namespace `%s`", name);
             return hlir_error(ast->node, "unknown namespace");
         }
 
@@ -229,10 +229,10 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
             return decl;
         }
 
-        current = current->parent;
+        current = sema_parent(current);
     }
 
-    report(sema->reports, eFatal, ast->node, "type '%s' not found", name);
+    report(sema_reports(sema), eFatal, ast->node, "type '%s' not found", name);
     return hlir_error(ast->node, "type not found");
 }
 
@@ -247,7 +247,7 @@ static hlir_t *sema_array(sema_t *sema, ast_t *ast)
     hlir_t *size = sema_expr(sema, ast->size);
     hlir_t *type = sema_type(sema, ast->type);
 
-    return hlir_array(sema->reports, ast->node, NULL, type, size);
+    return hlir_array(sema_reports(sema), ast->node, NULL, type, size);
 }
 
 static hlir_t *sema_closure(sema_t *sema, ast_t *ast)
@@ -264,7 +264,7 @@ static hlir_t *sema_closure(sema_t *sema, ast_t *ast)
 
         if (hlir_is(type, eHlirVoid))
         {
-            report(sema->reports, eFatal, param->node, "void parameter");
+            report(sema_reports(sema), eFatal, param->node, "void parameter");
         }
     }
 
@@ -284,7 +284,7 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast)
     case eAstClosure:
         return sema_closure(sema, ast);
     default:
-        report(sema->reports, eInternal, ast->node, "unknown sema-type: %d", ast->of);
+        report(sema_reports(sema), eInternal, ast->node, "unknown sema-type: %d", ast->of);
         return hlir_error(ast->node, "unknown sema-type");
     }
 }
@@ -295,7 +295,7 @@ static hlir_t *sema_digit(sema_t *sema, ast_t *ast)
     suffix_t *suffix = sema_get(sema, eTagSuffix, ast->suffix);
     if (suffix == NULL)
     {
-        report(sema->reports, eFatal, ast->node, "invalid suffix '%s'", ast->suffix);
+        report(sema_reports(sema), eFatal, ast->node, "invalid suffix '%s'", ast->suffix);
         return hlir_error(ast->node, "invalid suffix");
     }
 
@@ -319,8 +319,8 @@ static hlir_t *sema_unary_digit(sema_t *sema, ast_t *ast, hlir_t *operand)
 
     if (!hlir_is(realType, eHlirDigit))
     {
-        report(sema->reports, eFatal, ast->node, "cannot perform integer unary operation on '%s'",
-               ctu_repr(sema->reports, operand, true));
+        report(sema_reports(sema), eFatal, ast->node, "cannot perform integer unary operation on '%s'",
+               ctu_repr(sema_reports(sema), operand, true));
     }
 
     return hlir_unary(ast->node, operand, ast->unary);
@@ -333,8 +333,8 @@ static hlir_t *sema_unary_bool(sema_t *sema, ast_t *ast, hlir_t *operand)
 
     if (!hlir_is(realType, eHlirBool))
     {
-        report(sema->reports, eFatal, ast->node, "cannot perform boolean unary operation on '%s'",
-               ctu_repr(sema->reports, operand, true));
+        report(sema_reports(sema), eFatal, ast->node, "cannot perform boolean unary operation on '%s'",
+               ctu_repr(sema_reports(sema), operand, true));
     }
 
     return hlir_unary(ast->node, operand, ast->unary);
@@ -355,7 +355,7 @@ static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
         return sema_unary_bool(sema, ast, operand);
 
     default:
-        report(sema->reports, eInternal, ast->node, "unexpected unary operand %s", unary_name(ast->unary));
+        report(sema_reports(sema), eInternal, ast->node, "unexpected unary operand %s", unary_name(ast->unary));
         return hlir_error(ast->node, "unsupported unary operand");
     }
 }
@@ -369,10 +369,10 @@ static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
 
     if (!hlir_is(type, eHlirDigit))
     {
-        message_t *id = report(sema->reports, eFatal, ast->node, "cannot perform binary operations on %s",
-                               ctu_type_repr(sema->reports, type, true));
-        report_append(id, get_hlir_node(lhs), "%s", ctu_repr(sema->reports, lhs, false));
-        report_append(id, get_hlir_node(rhs), "%s", ctu_repr(sema->reports, rhs, false));
+        message_t *id = report(sema_reports(sema), eFatal, ast->node, "cannot perform binary operations on %s",
+                               ctu_type_repr(sema_reports(sema), type, true));
+        report_append(id, get_hlir_node(lhs), "%s", ctu_repr(sema_reports(sema), lhs, false));
+        report_append(id, get_hlir_node(rhs), "%s", ctu_repr(sema_reports(sema), rhs, false));
     }
 
     return hlir_binary(ast->node, type, ast->binary, lhs, rhs);
@@ -387,10 +387,10 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
 
     if (!hlir_is(type, eHlirDigit))
     {
-        message_t *id = report(sema->reports, eFatal, ast->node, "cannot perform comparison operations on %s",
-                               ctu_type_repr(sema->reports, type, true));
-        report_append(id, get_hlir_node(lhs), "%s", ctu_repr(sema->reports, lhs, false));
-        report_append(id, get_hlir_node(rhs), "%s", ctu_repr(sema->reports, rhs, false));
+        message_t *id = report(sema_reports(sema), eFatal, ast->node, "cannot perform comparison operations on %s",
+                               ctu_type_repr(sema_reports(sema), type, true));
+        report_append(id, get_hlir_node(lhs), "%s", ctu_repr(sema_reports(sema), lhs, false));
+        report_append(id, get_hlir_node(rhs), "%s", ctu_repr(sema_reports(sema), rhs, false));
     }
 
     return hlir_compare(ast->node, kBoolType, ast->compare, lhs, rhs);
@@ -402,7 +402,7 @@ void check_valid_import(sema_t *sema, sema_t *cur, ast_t *ast, hlir_t *hlir)
     if (sema != cur && !hlir_is_exported(hlir))
     {
         message_t *id =
-            report(sema->reports, eFatal, ast->node, "symbol '%s' is not visible inside this context", name);
+            report(sema_reports(sema), eFatal, ast->node, "symbol '%s' is not visible inside this context", name);
         report_append(id, get_hlir_node(hlir), "originally declared here");
     }
 }
@@ -415,7 +415,7 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
         const char *name = vector_get(ast->path, i);
         if (name == NULL)
         {
-            report(sema->reports, eFatal, ast->node, "discarded path segment");
+            report(sema_reports(sema), eFatal, ast->node, "discarded path segment");
             return hlir_error(ast->node, "discarded path segment");
         }
 
@@ -423,7 +423,7 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 
         if (next == NULL)
         {
-            report(sema->reports, eFatal, ast->node, "unknown namespace `%s`", name);
+            report(sema_reports(sema), eFatal, ast->node, "unknown namespace `%s`", name);
             return hlir_error(ast->node, "unknown namespace");
         }
 
@@ -434,7 +434,7 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 
     if (name == NULL)
     {
-        report(sema->reports, eFatal, ast->node, "cannot resolve discarded identifier");
+        report(sema_reports(sema), eFatal, ast->node, "cannot resolve discarded identifier");
         return hlir_error(ast->node, "discarded indentifier");
     }
 
@@ -452,7 +452,7 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
         return func;
     }
 
-    report(sema->reports, eFatal, ast->node, "unknown identifier '%s'", name);
+    report(sema_reports(sema), eFatal, ast->node, "unknown identifier '%s'", name);
     return hlir_error(ast->node, "unknown identifier");
 }
 
@@ -461,8 +461,8 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
     hlir_t *call = sema_expr(sema, ast->call);
     if (!hlis_is_or_will_be(call, eHlirFunction))
     {
-        message_t *id = report(sema->reports, eFatal, ast->node, "can only call function types");
-        report_underline(id, "%s", ctu_repr(sema->reports, call, true));
+        message_t *id = report(sema_reports(sema), eFatal, ast->node, "can only call function types");
+        report_underline(id, "%s", ctu_repr(sema_reports(sema), call, true));
         return hlir_error(ast->node, "invalid callable");
     }
 
@@ -471,7 +471,7 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
     size_t totalParams = vector_len(params);
     if (len != totalParams)
     {
-        message_t *id = report(sema->reports, eFatal, ast->node, "incorrect number of parameters specified");
+        message_t *id = report(sema_reports(sema), eFatal, ast->node, "incorrect number of parameters specified");
         report_note(id, "expected `%zu` got `%zu` instead", totalParams, len);
         return hlir_error(ast->node, "incorrect argument count");
     }
@@ -486,9 +486,9 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
 
         if (!hlir_types_equal(argType, expectedType))
         {
-            message_t *id = report(sema->reports, eFatal, arg->node, "incorrect argument type `%s`",
-                                   ctu_repr(sema->reports, hlir, true));
-            report_note(id, "expecting '%s' instead", ctu_type_repr(sema->reports, expectedType, true));
+            message_t *id = report(sema_reports(sema), eFatal, arg->node, "incorrect argument type `%s`",
+                                   ctu_repr(sema_reports(sema), hlir, true));
+            report_note(id, "expecting '%s' instead", ctu_type_repr(sema_reports(sema), expectedType, true));
         }
 
         vector_set(args, i, hlir);
@@ -519,7 +519,7 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_call(sema, ast);
 
     default:
-        report(sema->reports, eInternal, ast->node, "unknown sema-expr: %d", ast->of);
+        report(sema_reports(sema), eInternal, ast->node, "unknown sema-expr: %d", ast->of);
         return hlir_error(ast->node, "unknown sema-expr");
     }
 }
@@ -553,7 +553,7 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
 {
     if (ast->label != NULL)
     {
-        report(sema->reports, eInternal, ast->node, "loop labels not yet supported");
+        report(sema_reports(sema), eInternal, ast->node, "loop labels not yet supported");
     }
 
     hlir_t *cond = sema_expr(sema, ast->cond);
@@ -561,22 +561,22 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     size_t sizes[eTagTotal] = {
         [eTagValues] = 32, [eTagProcs] = 4, [eTagTypes] = 4, [eTagModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 1};
 
-    sema_t *nestThen = begin_sema(sema, sema->reports, sizes);
+    sema_t *nestThen = begin_sema(sema, sema_reports(sema), sizes);
 
     hlir_t *then = sema_stmt(nestThen, ast->then);
     hlir_t *other = NULL;
 
     if (ast->other != NULL)
     {
-        sema_t *nextOther = begin_sema(sema, sema->reports, sizes);
+        sema_t *nextOther = begin_sema(sema, sema_reports(sema), sizes);
         other = sema_stmt(nextOther, ast->other);
     }
 
     const hlir_t *condType = get_hlir_type(cond);
     if (!hlir_types_equal(condType, kBoolType))
     {
-        message_t *id = report(sema->reports, eFatal, get_hlir_node(cond), "loop condition must be boolean");
-        report_note(id, "type '%s' found", ctu_repr(sema->reports, cond, true));
+        message_t *id = report(sema_reports(sema), eFatal, get_hlir_node(cond), "loop condition must be boolean");
+        report_note(id, "type '%s' found", ctu_repr(sema_reports(sema), cond, true));
         return hlir_error(ast->node, "invalid loop condition");
     }
 
@@ -598,9 +598,9 @@ static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
 
     if ((stmt->init != NULL && stmt->expected != NULL) && !hlir_types_equal(type, get_hlir_type(init)))
     {
-        message_t *id = report(sema->reports, eFatal, stmt->node, "incompatible initializer and explicit type");
-        report_underline(id, "found '%s', expected '%s'", ctu_type_repr(sema->reports, type, true),
-                         ctu_repr(sema->reports, init, true));
+        message_t *id = report(sema_reports(sema), eFatal, stmt->node, "incompatible initializer and explicit type");
+        report_underline(id, "found '%s', expected '%s'", ctu_type_repr(sema_reports(sema), type, true),
+                         ctu_repr(sema_reports(sema), init, true));
         result.init = hlir_error(stmt->node, "invalid value declaration");
         return result;
     }
@@ -642,7 +642,7 @@ static hlir_t *sema_break(sema_t *sema, ast_t *stmt)
 {
     if (stmt->label != NULL)
     {
-        report(sema->reports, eInternal, stmt->node, "loop labels not yet supported"); // TODO: support labels
+        report(sema_reports(sema), eInternal, stmt->node, "loop labels not yet supported"); // TODO: support labels
     }
 
     return hlir_break(stmt->node, NULL);
@@ -678,7 +678,7 @@ static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
         return sema_break(sema, stmt);
 
     default:
-        report(sema->reports, eInternal, stmt->node, "unknown sema-stmt: %d", stmt->of);
+        report(sema_reports(sema), eInternal, stmt->node, "unknown sema-stmt: %d", stmt->of);
         return hlir_error(stmt->node, "unknown sema-stmt");
     }
 }
@@ -698,7 +698,7 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
             const ast_t *previous = map_get(names, name);
             if (previous != NULL)
             {
-                report_shadow(sema->reports, name, previous->node, field->node);
+                report_shadow(sema_reports(sema), name, previous->node, field->node);
                 continue;
             }
 
@@ -805,7 +805,7 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     size_t tags[eTagTotal] = {
         [eTagValues] = 32, [eTagProcs] = 32, [eTagTypes] = 32, [eTagModules] = 32, [eTagAttribs] = 32};
 
-    sema_t *nest = begin_sema(sema, sema->reports, tags);
+    sema_t *nest = begin_sema(sema, sema_reports(sema), tags);
     set_current_function(nest, decl);
     sema_params(nest, decl->params);
 
@@ -865,7 +865,7 @@ static void sema_decl(sema_t *sema, ast_t *ast)
         break;
 
     default:
-        ctu_assert(sema->reports, "unexpected ast of type %d", ast->of);
+        ctu_assert(sema_reports(sema), "unexpected ast of type %d", ast->of);
         return;
     }
 
@@ -945,7 +945,7 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
         break;
 
     default:
-        ctu_assert(sema->reports, "unexpected ast of type %d", ast->of);
+        ctu_assert(sema_reports(sema), "unexpected ast of type %d", ast->of);
         return;
     }
 
@@ -968,7 +968,7 @@ static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
     if (previous != NULL)
     {
         message_t *id =
-            report(sema->reports, eFatal, import->node, "a module was already imported under the name `%s`", name);
+            report(sema_reports(sema), eFatal, import->node, "a module was already imported under the name `%s`", name);
         report_note(id, "use module aliases to avoid name collisions");
         return;
     }

@@ -28,7 +28,7 @@ NODISCARD
 file_t file_open(const char *path, file_flags_t flags, cerror_t *error);
 
 size_t file_read(file_t file, void *buffer, size_t size, cerror_t *error);
-size_t file_write(file_t file, const void *buffer, size_t size, cerror_t *error);
+size_t file_write(file_t file, IN_READS(size) const void *buffer, size_t size, cerror_t *error);
 
 NODISCARD
 bool file_valid(file_t file);

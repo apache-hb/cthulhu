@@ -4,21 +4,13 @@
 #include "report/report.h"
 #include "std/map.h"
 
-typedef struct sema_t
-{
-    struct sema_t *parent;
-    reports_t *reports;
+typedef struct sema_t sema_t;
+typedef struct alloc_t alloc_t;
 
-    /**
-     * an array of maps
-     * each map is its own namespace which maps from symbol name to hlir node
-     */
-    vector_t *decls;
+sema_t *sema_new(alloc_t *alloc, sema_t *parent, reports_t *reports, size_t decls, size_t *sizes);
 
-    void *data;
-} sema_t;
-
-sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes);
+reports_t *sema_reports(sema_t *sema);
+sema_t *sema_parent(sema_t *sema);
 
 void sema_delete(sema_t *sema);
 

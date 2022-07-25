@@ -37,6 +37,10 @@ NODISCARD void *ctu_realloc(void *ptr, size_t newSize);
 
 void init_gmp(alloc_t *alloc);
 
-NODISCARD void *arena_malloc(alloc_t *alloc, size_t size, const char *name);
-NODISCARD void *arena_realloc(alloc_t *alloc, void *ptr, size_t newSize, size_t oldSize);
 void arena_free(alloc_t *alloc, void *ptr, size_t size);
+
+NODISCARD ALLOC(arena_free, 2) 
+void *arena_malloc(alloc_t *alloc, size_t size, const char *name);
+
+NODISCARD ALLOC(arena_free, 2) 
+void *arena_realloc(alloc_t *alloc, void *ptr, size_t newSize, size_t oldSize);

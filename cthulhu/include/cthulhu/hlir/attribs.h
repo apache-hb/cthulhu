@@ -18,7 +18,7 @@ typedef enum
     eLinkTotal
 } hlir_linkage_t;
 
-typedef enum 
+typedef enum
 {
 #define HLIR_VISIBILITY(ID, STR) ID,
 #include "hlir-def.inc"
@@ -39,10 +39,10 @@ typedef enum
  */
 typedef struct
 {
-    hlir_linkage_t linkage; ///< the linkage of the current declaration
+    hlir_linkage_t linkage;       ///< the linkage of the current declaration
     hlir_visibility_t visibility; ///< the visibility of the current declaration
-    hlir_tags_t tags;       ///< any modifiers for the current declaration
-    const char *mangle;     ///< the name to use for the current declaration
+    hlir_tags_t tags;             ///< any modifiers for the current declaration
+    const char *mangle;           ///< the name to use for the current declaration
 } hlir_attributes_t;
 
 #define DEFAULT_LINKAGE (eLinkInternal) ///< the default linkage for a declaration

@@ -30,7 +30,7 @@ static hlir_attributes_t *apply_entry(sema_t *sema, hlir_t *hlir, ast_t *ast)
     hlir_linkage_t linkage = eLinkEntryCli;
     if (vector_len(ast->config) > 1)
     {
-        report(sema->reports, eFatal, ast->node, "entry only takes 0 or 1 parameters");
+        report(sema_reports(sema), eFatal, ast->node, "entry only takes 0 or 1 parameters");
         return NULL;
     }
 
@@ -39,13 +39,13 @@ static hlir_attributes_t *apply_entry(sema_t *sema, hlir_t *hlir, ast_t *ast)
         ast_t *entry = vector_get(ast->config, 0);
         if (entry->of != eAstName)
         {
-            report(sema->reports, eFatal, entry->node, "entry param must be either 'cli' or 'gui'");
+            report(sema_reports(sema), eFatal, entry->node, "entry param must be either 'cli' or 'gui'");
             return NULL;
         }
 
         if (vector_len(entry->path) != 1)
         {
-            report(sema->reports, eFatal, entry->node, "entry param must be either 'cli' or 'gui'");
+            report(sema_reports(sema), eFatal, entry->node, "entry param must be either 'cli' or 'gui'");
             return NULL;
         }
 
@@ -60,7 +60,7 @@ static hlir_attributes_t *apply_entry(sema_t *sema, hlir_t *hlir, ast_t *ast)
         }
         else
         {
-            report(sema->reports, eFatal, entry->node, "entry param must be either 'cli' or 'gui'");
+            report(sema_reports(sema), eFatal, entry->node, "entry param must be either 'cli' or 'gui'");
             return NULL;
         }
     }
@@ -68,13 +68,13 @@ static hlir_attributes_t *apply_entry(sema_t *sema, hlir_t *hlir, ast_t *ast)
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
     if (attribs->linkage == eLinkImported)
     {
-        report(sema->reports, eFatal, get_hlir_node(hlir), "entry point cannot be imported");
+        report(sema_reports(sema), eFatal, get_hlir_node(hlir), "entry point cannot be imported");
         return NULL;
     }
 
     if (is_entry_point(attribs->linkage))
     {
-        report(sema->reports, eFatal, ast->node, "overriding entry point attribute");
+        report(sema_reports(sema), eFatal, ast->node, "overriding entry point attribute");
         return NULL;
     }
 
@@ -89,7 +89,7 @@ static hlir_attributes_t *apply_extern(sema_t *sema, hlir_t *hlir, ast_t *ast)
 {
     if (vector_len(ast->config))
     {
-        report(sema->reports, eFatal, ast->node, "attribute does not take any parameters");
+        report(sema_reports(sema), eFatal, ast->node, "attribute does not take any parameters");
         return NULL;
     }
 
@@ -105,7 +105,7 @@ static hlir_attributes_t *apply_extern(sema_t *sema, hlir_t *hlir, ast_t *ast)
 static hlir_attributes_t *apply_layout(sema_t *sema, hlir_t *hlir, ast_t *ast)
 {
     UNUSED(ast);
-    report(sema->reports, eInternal, get_hlir_node(hlir), "layout not implemented");
+    report(sema_reports(sema), eInternal, get_hlir_node(hlir), "layout not implemented");
     return NULL;
 }
 
@@ -130,14 +130,14 @@ static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *attr)
     attrib_t *attrib = sema_get(sema, eTagAttribs, attr->name);
     if (attrib == NULL)
     {
-        report(sema->reports, eWarn, attr->node, "unknown attribute '%s'", attr->name);
+        report(sema_reports(sema), eWarn, attr->node, "unknown attribute '%s'", attr->name);
         return;
     }
 
     hlir_kind_t kind = get_hlir_kind(hlir);
     if (kind != attrib->expectedKind)
     {
-        report(sema->reports, eFatal, attr->node, "attribute '%s' is for %ss, was provided with a %s instead",
+        report(sema_reports(sema), eFatal, attr->node, "attribute '%s' is for %ss, was provided with a %s instead",
                attrib->name, kDeclNames[attrib->expectedKind], kDeclNames[kind]);
         return;
     }
