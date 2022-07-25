@@ -46,4 +46,3 @@
 * replace AST definitions with protobuf for better fuzzing
 * support llvm libfuzzer
 * async file reading
-* simplify `node_t`
