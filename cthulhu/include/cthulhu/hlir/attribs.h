@@ -46,6 +46,7 @@ typedef struct
 } hlir_attributes_t;
 
 #define DEFAULT_LINKAGE (eLinkInternal) ///< the default linkage for a declaration
+#define DEFAULT_VISIBILITY (eVisiblePrivate)
 #define DEFAULT_TAGS (0)                ///< the default tags for a declaration
 
 /**
@@ -55,7 +56,7 @@ typedef struct
  * @param tags the tags of the declaration
  * @return a new attributes object
  */
-hlir_attributes_t *hlir_attributes(hlir_linkage_t linkage, hlir_tags_t tags, const char *name);
+hlir_attributes_t *hlir_attributes(hlir_linkage_t linkage, hlir_visibility_t visibility, hlir_tags_t tags, const char *name);
 
 /**
  * @brief create a new attributes object with the default tags

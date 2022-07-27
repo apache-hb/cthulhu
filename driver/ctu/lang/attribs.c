@@ -87,16 +87,28 @@ static hlir_attributes_t *apply_entry(sema_t *sema, hlir_t *hlir, ast_t *ast)
 
 static hlir_attributes_t *apply_extern(sema_t *sema, hlir_t *hlir, ast_t *ast)
 {
-    if (vector_len(ast->config))
+    if (vector_len(ast->config) > 1)
     {
-        report(sema_reports(sema), eFatal, ast->node, "attribute does not take any parameters");
+        report(sema_reports(sema), eFatal, ast->node, "attribute takes up to 1 parameter");
         return NULL;
+    }
+
+    const char *mangle = get_hlir_name(hlir);
+    if (vector_len(ast->config) == 1)
+    {
+        ast_t *entry = vector_get(ast->config, 0);
+        if (entry->of != eAstString)
+        {
+            report(sema_reports(sema), eFatal, entry->node, "extern argument must be a string");
+            return NULL;
+        }
+        mangle = entry->string;
     }
 
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
     hlir_attributes_t *newAttributes = ctu_memdup(attribs, sizeof(hlir_attributes_t));
 
-    newAttributes->mangle = hlir->name;
+    newAttributes->mangle = mangle;
     newAttributes->linkage = eLinkImported;
 
     return newAttributes;

@@ -38,7 +38,7 @@ int main(int argc, const char **argv)
 
     group_t *codegenGroup = new_group("codegen", "code generation options", codegenParams);
 
-    reports_t *reports = begin_reports(&globalAlloc);
+    reports_t *reports = begin_reports();
 
     report_config_t reportConfig = DEFAULT_REPORT_CONFIG;
 
@@ -80,7 +80,6 @@ int main(int argc, const char **argv)
     }
 
     config_t config = {
-        .alloc = &globalAlloc,
         .reportConfig = reportConfig,
     };
 

@@ -30,7 +30,6 @@ int main(int argc, const char **argv)
     vector_t *sources = vector_init(io);
 
     config_t config = {
-        .alloc = &globalAlloc,
         .reportConfig = reportConfig,
     };
 

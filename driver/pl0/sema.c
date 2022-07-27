@@ -33,32 +33,25 @@ void pl0_init(runtime_t *runtime)
 
     node_t *node = node_builtin();
 
-    kExported = hlir_linkage(eLinkExported);
+    kExported = hlir_attributes(eLinkExported, eVisiblePublic, DEFAULT_TAGS, NULL);
 
-    kConst = hlir_attributes(eLinkExported, eQualConst, NULL);
-    kMutable = hlir_attributes(eLinkExported, DEFAULT_TAGS, NULL);
+    kConst = hlir_attributes(eLinkExported, eVisiblePublic, eQualConst, NULL);
+    kMutable = hlir_attributes(eLinkExported, eVisiblePublic, DEFAULT_TAGS, NULL);
 
     kIntegerType = hlir_digit(node, "integer", eDigitInt, eSigned);
     kBoolType = hlir_bool(node, "boolean");
     kStringType = hlir_string(node, "string");
     kVoidType = hlir_void(node, "void");
 
-    kFmtString = hlir_string_literal(node, kStringType, "%d\n", 3);
+    struct string_view_t fmtLiteral = { .data = "%d\n", .size = 3 };
 
-    const hlir_attributes_t *printAttributes = hlir_attributes(eLinkImported, DEFAULT_TAGS, "printf");
+    kFmtString = hlir_string_literal(node, kStringType, fmtLiteral);
+
+    const hlir_attributes_t *printAttributes = hlir_attributes(eLinkImported, eVisiblePrivate, DEFAULT_TAGS, "printf");
     signature_t signature = {.params = vector_init(kStringType), .result = kIntegerType, .variadic = true};
     kPrint = hlir_function(node, "printf", signature, vector_of(0), NULL);
     hlir_set_attributes(kPrint, printAttributes);
 }
-
-typedef enum
-{
-    eTagValues, // hlir_t*
-    eTagConsts, // hlir_t*
-    eTagProcs,  // hlir_t*
-
-    eTagMax
-} tag_t;
 
 static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)
 {
@@ -79,7 +72,7 @@ static hlir_t *get_var(sema_t *sema, const char *name)
         return constHlir;
     }
 
-    hlir_t *varHlir = sema_get(sema, eTagValues, name);
+    hlir_t *varHlir = sema_get(sema, eSemaValues, name);
     if (varHlir != NULL)
     {
         return varHlir;
@@ -90,7 +83,7 @@ static hlir_t *get_var(sema_t *sema, const char *name)
 
 static void set_proc(sema_t *sema, const char *name, hlir_t *proc)
 {
-    hlir_t *other = sema_get(sema, eTagProcs, name);
+    hlir_t *other = sema_get(sema, eSemaProcs, name);
     if (other != NULL && other != proc)
     {
         const node_t *node = get_hlir_node(proc);
@@ -99,12 +92,12 @@ static void set_proc(sema_t *sema, const char *name, hlir_t *proc)
         return;
     }
 
-    sema_set(sema, eTagProcs, name, proc);
+    sema_set(sema, eSemaProcs, name, proc);
 }
 
 static hlir_t *get_proc(sema_t *sema, const char *name)
 {
-    return sema_get(sema, eTagProcs, name);
+    return sema_get(sema, eSemaProcs, name);
 }
 
 static void set_var(sema_t *sema, size_t tag, const char *name, hlir_t *hlir)
@@ -152,7 +145,8 @@ static hlir_t *sema_binary(sema_t *sema, pl0_t *node)
 static hlir_t *sema_unary(sema_t *sema, pl0_t *node)
 {
     hlir_t *operand = sema_expr(sema, node->operand);
-    return hlir_unary(node->node, operand, node->unary);
+    struct hlir_unary_t unaryExpr = { .operand = operand, .op = node->unary};
+    return hlir_unary(node->node, unaryExpr);
 }
 
 static hlir_t *sema_expr(sema_t *sema, pl0_t *node)
@@ -326,15 +320,15 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node)
 static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
 {
     size_t nlocals = vector_len(node->locals);
-    size_t sizes[eTagMax] = {[eTagValues] = nlocals};
+    size_t sizes[eSemaMax] = {[eSemaValues] = nlocals};
 
-    sema_t *nest = sema_new(NULL, sema, NULL, eTagMax, sizes);
+    sema_t *nest = sema_new(sema, NULL, eSemaMax, sizes);
 
     for (size_t i = 0; i < nlocals; i++)
     {
         pl0_t *local = vector_get(node->locals, i);
         hlir_t *it = hlir_local(local->node, local->name, kIntegerType);
-        set_var(nest, eTagValues, local->name, it);
+        set_var(nest, eSemaValues, local->name, it);
         hlir_add_local(hlir, it);
     }
 
@@ -347,26 +341,32 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
 
 static void insert_module(sema_t *sema, sema_t *other)
 {
-    map_iter_t otherValues = map_iter(sema_tag(other, eTagValues));
+    map_iter_t otherValues = map_iter(sema_tag(other, eSemaValues));
     map_iter_t otherConsts = map_iter(sema_tag(other, eTagConsts));
-    map_iter_t otherProcs = map_iter(sema_tag(other, eTagProcs));
+    map_iter_t otherProcs = map_iter(sema_tag(other, eSemaProcs));
 
     while (map_has_next(&otherValues))
     {
         hlir_t *decl = map_next(&otherValues).value;
-        set_var(sema, eTagValues, get_hlir_name(decl), decl);
+        if (get_hlir_attributes(decl)->visibility != eVisiblePublic) continue; // filter out private symbols
+
+        set_var(sema, eSemaValues, get_hlir_name(decl), decl);
     }
 
     while (map_has_next(&otherConsts))
     {
         hlir_t *decl = map_next(&otherConsts).value;
+        if (get_hlir_attributes(decl)->visibility != eVisiblePublic) continue;
+
         set_var(sema, eTagConsts, get_hlir_name(decl), decl);
     }
 
     while (map_has_next(&otherProcs))
     {
         hlir_t *decl = map_next(&otherProcs).value;
-        set_var(sema, eTagProcs, get_hlir_name(decl), decl);
+        if (get_hlir_attributes(decl)->visibility != eVisiblePublic) continue;
+
+        set_var(sema, eSemaProcs, get_hlir_name(decl), decl);
     }
 }
 
@@ -397,13 +397,13 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     const char *moduleName = root->mod == NULL ? str_filename(scan_path(thisScanner)) : root->mod;
     hlir_t *mod = hlir_module(root->node, moduleName, vector_of(0), vector_of(0), vector_of(0));
 
-    size_t sizes[eTagMax] = {
+    size_t sizes[eSemaMax] = {
         [eTagConsts] = totalConsts,
-        [eTagValues] = totalGlobals,
-        [eTagProcs] = totalFunctions,
+        [eSemaValues] = totalGlobals,
+        [eSemaProcs] = totalFunctions,
     };
 
-    sema_t *sema = sema_new(&globalAlloc, NULL, runtime->reports, eTagMax, sizes);
+    sema_t *sema = sema_new(NULL, runtime->reports, eSemaMax, sizes);
 
     // forward declare everything
     for (size_t i = 0; i < totalConsts; i++)
@@ -426,7 +426,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
         hlir_set_attributes(hlir, kMutable);
         hlir_set_parent(hlir, mod);
 
-        set_var(sema, eTagValues, it->name, hlir);
+        set_var(sema, eSemaValues, it->name, hlir);
         vector_push(&globals, hlir);
     }
 
@@ -528,7 +528,7 @@ void pl0_compile_module(runtime_t *runtime, compile_t *compile)
         };
 
         // this is the entry point, we only support cli entry points in pl/0 for now
-        const hlir_attributes_t *attribs = hlir_attributes(eLinkEntryCli, DEFAULT_TAGS, NULL);
+        const hlir_attributes_t *attribs = hlir_attributes(eLinkEntryCli, eVisiblePrivate, DEFAULT_TAGS, NULL);
         const char *modName = get_hlir_name(compile->hlir);
 
         hlir_t *hlir = hlir_function(root->node, modName, signature, vector_of(0), body);

@@ -34,11 +34,10 @@ hlir_t *hlir_bool_literal(node_t *node, const hlir_t *type, bool value)
     return self;
 }
 
-hlir_t *hlir_string_literal(node_t *node, const hlir_t *type, const char *value, size_t length)
+hlir_t *hlir_string_literal(node_t *node, const hlir_t *type, struct string_view_t literal)
 {
     hlir_t *self = hlir_new(node, type, eHlirStringLiteral);
-    self->string = value;
-    self->stringLength = length;
+    self->stringLiteral = literal;
     return self;
 }
 
@@ -49,11 +48,10 @@ hlir_t *hlir_name(node_t *node, hlir_t *read)
     return self;
 }
 
-hlir_t *hlir_unary(node_t *node, hlir_t *operand, unary_t unary)
+hlir_t *hlir_unary(node_t *node, struct hlir_unary_t expr)
 {
-    hlir_t *self = hlir_new(node, get_hlir_type(operand), eHlirUnary);
-    self->unary = unary;
-    self->operand = operand;
+    hlir_t *self = hlir_new(node, get_hlir_type(expr.operand), eHlirUnary);
+    self->unaryExpr = expr;
     return self;
 }
 

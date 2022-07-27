@@ -3,7 +3,6 @@
 #include "scan/node.h"
 
 typedef struct vector_t vector_t;
-typedef struct alloc_t alloc_t;
 
 /**
  * @defgroup ErrorApi Error reporting sink
@@ -110,7 +109,7 @@ typedef struct reports_t
  * @return the new context
  */
 NODISCARD
-reports_t *begin_reports(alloc_t *alloc);
+reports_t *begin_reports(void);
 
 /**
  * flush a reporting context and return an exit code

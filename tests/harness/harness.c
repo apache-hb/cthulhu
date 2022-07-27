@@ -27,7 +27,6 @@ int main(int argc, const char **argv)
     }
 
     config_t config = {
-        .alloc = &globalAlloc,
         .reportConfig = reportConfig,
     };
 

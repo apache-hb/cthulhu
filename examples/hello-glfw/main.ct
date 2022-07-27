@@ -1,0 +1,28 @@
+import glfw;
+import gl;
+
+@entry(cli)
+def cliEntry {
+    if glfw::init() != 0 {
+        exit(-1);
+    }
+
+    const window = glfw::createWindow(640, 480, "Hello World", null, null);
+
+    if window == null {
+        glfw::terminate();
+        exit(-1);
+    }
+
+    glfw::makeContextCurrent(window);
+
+    while glfw::windowShouldClose(window) == 0 {
+        gl::clear(gl::ColourBufferBit);
+        
+        glfw::swapBuffers(window);
+        glfw::pollEvents();
+    }
+
+    glfw::terminate();
+    exit(0);
+}

@@ -47,7 +47,7 @@ static sema_t *begin_sema(sema_t *parent, reports_t *reports, size_t *sizes)
         data->currentFunction = NULL;
     }
 
-    sema_t *sema = sema_new(&globalAlloc, parent, reports, eTagTotal, sizes);
+    sema_t *sema = sema_new(parent, reports, eTagTotal, sizes);
     sema_set_data(sema, data);
     return sema;
 }
@@ -309,7 +309,8 @@ static hlir_t *sema_bool(ast_t *ast)
 
 static hlir_t *sema_string(ast_t *ast)
 {
-    return hlir_string_literal(ast->node, kStringType, ast->string, ast->length);
+    struct string_view_t literal = { .data = ast->string, .size = ast->length };
+    return hlir_string_literal(ast->node, kStringType, literal);
 }
 
 static hlir_t *sema_unary_digit(sema_t *sema, ast_t *ast, hlir_t *operand)
@@ -323,7 +324,9 @@ static hlir_t *sema_unary_digit(sema_t *sema, ast_t *ast, hlir_t *operand)
                ctu_repr(sema_reports(sema), operand, true));
     }
 
-    return hlir_unary(ast->node, operand, ast->unary);
+    struct hlir_unary_t unaryExpr = { .operand = operand, .op = ast->unary };
+
+    return hlir_unary(ast->node, unaryExpr);
 }
 
 static hlir_t *sema_unary_bool(sema_t *sema, ast_t *ast, hlir_t *operand)
@@ -337,7 +340,9 @@ static hlir_t *sema_unary_bool(sema_t *sema, ast_t *ast, hlir_t *operand)
                ctu_repr(sema_reports(sema), operand, true));
     }
 
-    return hlir_unary(ast->node, operand, ast->unary);
+    struct hlir_unary_t unaryExpr = { .operand = operand, .op = ast->unary };
+
+    return hlir_unary(ast->node, unaryExpr);
 }
 
 static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
@@ -399,7 +404,8 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
 void check_valid_import(sema_t *sema, sema_t *cur, ast_t *ast, hlir_t *hlir)
 {
     const char *name = vector_tail(ast->path);
-    if (sema != cur && !hlir_is_exported(hlir))
+    const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
+    if (sema != cur && attribs->visibility != eVisiblePublic)
     {
         message_t *id =
             report(sema_reports(sema), eFatal, ast->node, "symbol '%s' is not visible inside this context", name);
@@ -459,7 +465,7 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 static hlir_t *sema_call(sema_t *sema, ast_t *ast)
 {
     hlir_t *call = sema_expr(sema, ast->call);
-    if (!hlis_is_or_will_be(call, eHlirFunction))
+    if (!hlis_is_or_will_be(get_hlir_type(call), eHlirFunction))
     {
         message_t *id = report(sema_reports(sema), eFatal, ast->node, "can only call function types");
         report_underline(id, "%s", ctu_repr(sema_reports(sema), call, true));
@@ -800,7 +806,7 @@ static void sema_params(sema_t *sema, vector_t *params)
 
 static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
-    hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? eLinkImported : eLinkExported, 0, NULL);
+    hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? eLinkImported : eLinkExported, (ast->exported ? eVisiblePublic : eVisiblePrivate), 0, NULL);
 
     size_t tags[eTagTotal] = {
         [eTagValues] = 32, [eTagProcs] = 32, [eTagTypes] = 32, [eTagModules] = 32, [eTagAttribs] = 32};
@@ -953,6 +959,8 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
 
     hlir_set_parent(decl, semaData->parentModule);
     add_decl(sema, tag, ast->name, decl);
+
+    hlir_set_attributes(decl, hlir_attributes(eLinkExported, ast->exported ? eVisiblePublic : eVisiblePrivate, DEFAULT_TAGS, NULL));
 }
 
 static char *make_import_name(vector_t *vec)

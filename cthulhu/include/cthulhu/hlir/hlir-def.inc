@@ -127,7 +127,7 @@ HLIR_LINKAGE(eLinkEntryGui, "entry-gui")
 #endif
 
 HLIR_VISIBILITY(eVisiblePublic, "public")
-HLIR_VISIBILITY(eVisibleModule, "module")
+HLIR_VISIBILITY(eVisiblePrivate, "private")
 
 #undef HLIR_VISIBILITY
 

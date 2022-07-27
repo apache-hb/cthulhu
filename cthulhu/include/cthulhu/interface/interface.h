@@ -58,7 +58,6 @@ typedef struct
 
 typedef struct
 {
-    alloc_t *alloc;
     report_config_t reportConfig;
 } config_t;
 

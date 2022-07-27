@@ -12,7 +12,7 @@ static const report_config_t kReportConfig = {
 };
 
 TEST(test_argparse_defaults, {
-    reports_t *reports = begin_reports(&globalAlloc);
+    reports_t *reports = begin_reports();
     
     const char *argv[] = { "argparse-test", "--help" };
     const int argc = 2;
@@ -37,7 +37,7 @@ TEST(test_argparse_defaults, {
 })
 
 TEST(test_unknown_arg, {
-    reports_t *reports = begin_reports(&globalAlloc);
+    reports_t *reports = begin_reports();
     
     const char *argv[] = { "argparse-test", "--helpaaaaa" };
     const int argc = 2;
@@ -60,7 +60,7 @@ TEST(test_unknown_arg, {
 })
 
 TEST(test_extra_args, {
-    reports_t *reports = begin_reports(&globalAlloc);
+    reports_t *reports = begin_reports();
 
     const char *kParamNames[] = { "--param" };
     param_t *param = bool_param("test param", kParamNames, 1);

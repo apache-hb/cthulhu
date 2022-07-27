@@ -1,6 +1,7 @@
 #include "cthulhu/emit/c89.h"
 
 #include "cthulhu/hlir/attribs.h"
+#include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/ops.h"
 #include "cthulhu/hlir/query.h"
 
@@ -654,7 +655,8 @@ static const char *c89_emit_bool_literal(const hlir_t *hlir)
 
 static const char *c89_emit_string_literal(const hlir_t *hlir)
 {
-    char *str = str_normalizen(hlir->string, hlir->stringLength);
+    struct string_view_t literal = hlir->stringLiteral;
+    char *str = str_normalizen(literal.data, literal.size);
     return format("\"%s\"", str);
 }
 
@@ -670,14 +672,14 @@ static const char *c89_emit_binary(c89_emit_t *emit, const hlir_t *hlir)
 
 static const char *c89_emit_unary(c89_emit_t *emit, const hlir_t *hlir)
 {
-    const char *operand = c89_emit_rvalue(emit, hlir->operand);
+    const char *operand = c89_emit_rvalue(emit, hlir->unaryExpr.operand);
 
-    if (hlir->unary == eUnaryAbs)
+    if (hlir->unaryExpr.op == eUnaryAbs)
     {
         return format("llabs(%s)", operand);
     }
 
-    const char *op = unary_symbol(hlir->unary);
+    const char *op = unary_symbol(hlir->unaryExpr.op);
     return format("(%s %s)", op, operand);
 }
 

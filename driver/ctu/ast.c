@@ -6,7 +6,7 @@
 
 static ast_t *ast_new(astof_t of, scan_t *scan, where_t where)
 {
-    ast_t *ast = ctu_malloc(sizeof(ast_t));
+    ast_t *ast = ast_alloc(scan, sizeof(ast_t), "ast-new");
     ast->of = of;
     ast->node = node_new(scan, where);
     return ast;

@@ -45,11 +45,11 @@ node_t *node_new(scan_t *scan, where_t where)
 
 scan_t *get_node_scanner(const node_t *node)
 {
-    return node != NULL ? node->scan : NULL;
+    return node_is_valid(node) ? node->scan : NULL;
 }
 
 where_t get_node_location(const node_t *node)
 {
-    CTASSERT(node != NULL);
+    CTASSERT(node_is_valid(node));
     return node->where;
 }

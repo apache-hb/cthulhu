@@ -52,13 +52,6 @@ static size_t total_sources(const cthulhu_t *cthulhu)
     return vector_len(cthulhu->sources);
 }
 
-static alloc_t *get_alloc(const cthulhu_t *cthulhu)
-{
-    CTASSERT(cthulhu != NULL);
-
-    return cthulhu->config.alloc;
-}
-
 static compile_t *get_compile(const cthulhu_t *cthulhu, size_t idx)
 {
     CTASSERT(idx <= total_sources(cthulhu));
@@ -68,7 +61,6 @@ static compile_t *get_compile(const cthulhu_t *cthulhu, size_t idx)
 
 cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
 {
-    CTASSERT(config.alloc != NULL);
 
     CTASSERT(driver.fnInitCompiler != NULL);
     CTASSERT(driver.fnParseFile != NULL);
@@ -76,9 +68,9 @@ cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
     CTASSERT(driver.fnResolveImports != NULL);
     CTASSERT(driver.fnCompileModule != NULL);
 
-    cthulhu_t *cthulhu = arena_malloc(config.alloc, sizeof(cthulhu_t), "cthulhu-context");
+    cthulhu_t *cthulhu = ctu_malloc(sizeof(cthulhu_t));
 
-    reports_t *reports = begin_reports(config.alloc);
+    reports_t *reports = begin_reports();
 
     size_t totalSources = vector_len(sources);
     runtime_t runtime = runtime_new(reports, totalSources);
@@ -99,7 +91,7 @@ status_t cthulhu_init(cthulhu_t *cthulhu)
 
     size_t totalSources = total_sources(cthulhu);
 
-    cthulhu->compiles = arena_malloc(get_alloc(cthulhu), totalSources * sizeof(compile_t), "compile-pipelines");
+    cthulhu->compiles = ctu_malloc(totalSources * sizeof(compile_t));
 
     for (size_t i = 0; i < totalSources; i++)
     {

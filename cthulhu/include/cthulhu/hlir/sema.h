@@ -5,9 +5,17 @@
 #include "std/map.h"
 
 typedef struct sema_t sema_t;
-typedef struct alloc_t alloc_t;
 
-sema_t *sema_new(alloc_t *alloc, sema_t *parent, reports_t *reports, size_t decls, size_t *sizes);
+typedef enum sema_tags_t {
+    eSemaValues,
+    eSemaProcs,
+    eSemaTypes,
+    eSemaModules,
+
+    eSemaMax
+} sema_tags_t;
+
+sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes);
 
 reports_t *sema_reports(sema_t *sema);
 sema_t *sema_parent(sema_t *sema);
@@ -20,6 +28,10 @@ void *sema_get_data(sema_t *sema);
 void sema_set(sema_t *sema, size_t tag, const char *name, void *data);
 void *sema_get(sema_t *sema, size_t tag, const char *name);
 map_t *sema_tag(sema_t *sema, size_t tag);
+
+#define SEMA_CUSTOM_SET(sema, tag, name, data) sema_set(sema, (tag) + eSemaMax, name, data)
+#define SEMA_CUSTOM_GET(sema, tag, name) sema_get(sema, (tag) + eSemaMax, name)
+#define SEMA_CUSTOM_TAG(sema, tag) sema_tag(sema, (tag) + eSemaMax)
 
 typedef struct
 {

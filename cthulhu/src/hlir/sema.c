@@ -16,7 +16,6 @@ typedef struct sema_t
 {
     struct sema_t *parent;
     reports_t *reports;
-    alloc_t *alloc;
 
     /**
      * an array of maps
@@ -27,19 +26,16 @@ typedef struct sema_t
     void *data;
 } sema_t;
 
-sema_t *sema_new(alloc_t *alloc, sema_t *parent, reports_t *reports, size_t decls, size_t *sizes)
+sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes)
 {
-    alloc_t *innerAlloc = parent != NULL ? parent->alloc : alloc;
     reports_t *innerReports = parent != NULL ? parent->reports : reports;
 
-    CTASSERT(innerAlloc != NULL);
     CTASSERT(innerReports != NULL);
 
-    sema_t *sema = arena_malloc(innerAlloc, sizeof(sema_t), "sema-new");
+    sema_t *sema = ctu_malloc(sizeof(sema_t));
 
     sema->parent = parent;
     sema->reports = innerReports;
-    sema->alloc = innerAlloc;
 
     sema->decls = vector_of(decls);
     for (size_t i = 0; i < decls; i++)
@@ -65,7 +61,7 @@ sema_t *sema_parent(sema_t *sema)
 
 void sema_delete(sema_t *sema)
 {
-    arena_free(sema->alloc, sema, sizeof(sema_t));
+    ctu_free(sema);
 }
 
 void sema_set_data(sema_t *sema, void *data)
@@ -168,7 +164,7 @@ static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *
         break;
 
     case eHlirUnary:
-        check_recursion(reports, stack, hlir->operand);
+        check_recursion(reports, stack, hlir->unaryExpr.operand);
         break;
 
     case eHlirDigitLiteral:

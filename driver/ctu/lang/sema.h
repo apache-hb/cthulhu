@@ -4,11 +4,7 @@
 
 typedef enum
 {
-    eTagValues,  // hlir_t*
-    eTagProcs,   // hlir_t*
-    eTagTypes,   // hlir_t*
-    eTagModules, // sema_t*
-    eTagAttribs, // hlir_t*
+    eTagAttribs = eSemaMax, // hlir_t*
     eTagSuffix,  // suffix_t*
 
     eTagTotal

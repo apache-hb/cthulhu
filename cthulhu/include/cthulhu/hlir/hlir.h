@@ -28,6 +28,11 @@ typedef enum
     eHlirTotal
 } hlir_kind_t;
 
+typedef struct string_view_t {
+    const char *data;
+    size_t size;
+} string_view_t;
+
 /**
  * @brief an hlir node
  */
@@ -42,22 +47,16 @@ typedef struct hlir_t
                       ///< eHlirLiteralDigit
         bool boolean; ///< the value of this boolean literal. active if type ==
                       ///< eHlirLiteralBool
-        struct
-        {
-            const char *string;  ///< the value of this string literal. active if
-                                 ///< type == eHlirLiteralString
-            size_t stringLength; ///< the length of the string
-        };
+
+        string_view_t stringLiteral;
 
         struct hlir_t *read; ///< the name of this load operation. active if
                              ///< type == eHlirName
 
-        struct
-        {
-            struct hlir_t *operand; ///< the operand of this unary operation.
-                                    ///< active if type == eHlirUnary
-            unary_t unary;          ///< the unary operation to perform
-        };
+        struct hlir_unary_t {
+            struct hlir_t *operand;
+            unary_t op;
+        } unaryExpr;
 
         struct
         {
@@ -262,11 +261,11 @@ hlir_t *hlir_int_literal(node_t *node, const hlir_t *type, int value);
 
 hlir_t *hlir_bool_literal(node_t *node, const hlir_t *type, bool value);
 
-hlir_t *hlir_string_literal(node_t *node, const hlir_t *type, const char *value, size_t length);
+hlir_t *hlir_string_literal(node_t *node, const hlir_t *type, struct string_view_t literal);
 
 hlir_t *hlir_name(node_t *node, hlir_t *read);
 
-hlir_t *hlir_unary(node_t *node, hlir_t *operand, unary_t unary);
+hlir_t *hlir_unary(node_t *node, struct hlir_unary_t expr);
 hlir_t *hlir_binary(node_t *node, const hlir_t *type, binary_t binary, hlir_t *lhs, hlir_t *rhs);
 hlir_t *hlir_compare(node_t *node, const hlir_t *type, compare_t compare, hlir_t *lhs, hlir_t *rhs);
 hlir_t *hlir_call(node_t *node, hlir_t *call, vector_t *args);
@@ -284,3 +283,49 @@ hlir_t *hlir_return(node_t *node, hlir_t *result);
 hlir_t *hlir_field(node_t *node, const hlir_t *type, const char *name);
 
 /** @} */
+
+// TODO: we will rewrite hlir once we can self host
+#if 0
+/**
+ * @defgroup hlir_t HLIR2 (High Level Intermediate Representation v2)
+ * @brief a high level typed ast format to replace HLIR, loosley based on gccjit
+ * @{
+ */
+
+typedef struct hlir_context_t hlir_context_t;
+
+typedef struct hlir2_type_t hlir2_type_t;
+typedef struct hlir2_lvalue_t hlir2_lvalue_t;
+typedef struct hlir2_rvalue_t hlir2_rvalue_t;
+
+typedef struct hlir2_record_field_t hlir2_record_field_t;
+typedef struct hlir2_enum_field_t hlir2_enum_field_t;
+
+hlir_context_t *hl2_context_new(alloc_t *alloc);
+
+/// integral types
+
+hlir2_type_t *hl2_digit_type(hlir_context_t *ctx, node_t *node, const char *name, sign_t sign, digit_t width);
+
+hlir2_type_t *hl2_string_type(hlir_context_t *ctx, node_t *node, const char *name);
+
+hlir2_type_t *hl2_bool_type(hlir_context_t *ctx, node_t *node, const char *name);
+
+hlir2_type_t *hl2_void_type(hlir_context_t *ctx, node_t *node, const char *name);
+
+hlir2_type_t *hl2_array_type(hlir_context_t *ctx, node_t *node, const char *name, hlir2_type_t *element, hlir2_type_t *length);
+
+hlir2_type_t *hl2_pointer_type(node_t *node, const char *name, hlir2_type_t *pointer);
+
+hlir2_type_t *hl2_closure_type(hlir_context_t *ctx, node_t *node, const char *name, vector_t *params, hlir2_type_t *result, bool variadic);
+
+/// literals
+
+hlir2_rvalue_t *hl2_digit_literal(hlir_context_t *ctx, node_t *node, hlir2_type_t *type, mpz_t value);
+
+hlir2_rvalue_t *hl2_bool_literal(hlir_context_t *ctx, node_t *node, hlir2_type_t *type, bool value);
+
+hlir2_rvalue_t *hl2_string_literal(hlir_context_t *ctx, node_t *node, hlir2_type_t *type, string_view_t string);
+
+/** @} */
+#endif
