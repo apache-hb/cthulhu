@@ -40,7 +40,7 @@ typedef void (*forward_decls_t)(runtime_t *, compile_t *);
 typedef void (*import_modules_t)(runtime_t *, compile_t *);
 
 // compile the file
-typedef void (*compile_module_t)(runtime_t *, compile_t *);
+typedef hlir_t *(*compile_module_t)(runtime_t *, compile_t *);
 
 typedef struct
 {

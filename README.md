@@ -18,6 +18,8 @@ wow this project got out of hand.
 
 ## Building
 
+Requires a C11 compliant compiler targetting a platform with `uintptr_t`
+
 ```sh
 meson build # configure build directory
 ninja -C build # build compiler and drivers

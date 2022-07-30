@@ -1,6 +1,7 @@
 #include "sema.h"
 #include "ast.h"
 #include "attribs.h"
+#include "cthulhu/hlir/sema.h"
 #include "repr.h"
 #include "suffix.h"
 
@@ -119,7 +120,7 @@ static bool is_discard_ident(const char *id)
     return id == NULL || str_equal(id, "$");
 }
 
-static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
+static void add_decl(sema_t *sema, int tag, const char *name, hlir_t *decl)
 {
     node_t *node = get_hlir_node(decl);
 
@@ -144,9 +145,9 @@ static void add_decl(sema_t *sema, tag_t tag, const char *name, hlir_t *decl)
 
 static void add_basic_types(sema_t *sema)
 {
-    add_decl(sema, eTagTypes, "void", kVoidType);
-    add_decl(sema, eTagTypes, "bool", kBoolType);
-    add_decl(sema, eTagTypes, "str", kStringType);
+    add_decl(sema, eSemaTypes, "void", kVoidType);
+    add_decl(sema, eSemaTypes, "bool", kBoolType);
+    add_decl(sema, eSemaTypes, "str", kStringType);
 
     for (int sign = 0; sign < eSignTotal; sign++)
     {
@@ -155,7 +156,7 @@ static void add_basic_types(sema_t *sema)
             const char *name = get_digit_name(sign, digit);
             hlir_t *type = get_digit_type(sign, digit);
 
-            add_decl(sema, eTagTypes, name, type);
+            add_decl(sema, eSemaTypes, name, type);
         }
     }
 
@@ -171,7 +172,7 @@ static void add_basic_types(sema_t *sema)
 void ctu_init_compiler(runtime_t *runtime)
 {
     size_t sizes[eTagTotal] = {
-        [eTagValues] = 1, [eTagProcs] = 1, [eTagTypes] = 32, [eTagModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 32,
+        [eSemaValues] = 1, [eSemaProcs] = 1, [eSemaTypes] = 32, [eSemaModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 32,
     };
 
     kRootSema = begin_sema(NULL, runtime->reports, sizes);
@@ -209,7 +210,7 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *name = vector_get(ast->path, i);
-        sema_t *next = sema_get(current, eTagModules, name);
+        sema_t *next = sema_get(current, eSemaModules, name);
 
         if (next == NULL)
         {
@@ -223,7 +224,7 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
     const char *name = vector_tail(ast->path);
     while (current != NULL)
     {
-        hlir_t *decl = sema_get(current, eTagTypes, name);
+        hlir_t *decl = sema_get(current, eSemaTypes, name);
         if (decl != NULL)
         {
             return decl;
@@ -425,7 +426,7 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
             return hlir_error(ast->node, "discarded path segment");
         }
 
-        sema_t *next = sema_get(current, eTagModules, name);
+        sema_t *next = sema_get(current, eSemaModules, name);
 
         if (next == NULL)
         {
@@ -444,14 +445,14 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
         return hlir_error(ast->node, "discarded indentifier");
     }
 
-    hlir_t *var = sema_get(current, eTagValues, name);
+    hlir_t *var = sema_get(current, eSemaValues, name);
     if (var != NULL)
     {
         check_valid_import(sema, current, ast, var);
         return hlir_name(ast->node, var);
     }
 
-    hlir_t *func = sema_get(sema, eTagProcs, name);
+    hlir_t *func = sema_get(sema, eSemaProcs, name);
     if (func != NULL)
     {
         check_valid_import(sema, current, ast, func);
@@ -565,7 +566,7 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     hlir_t *cond = sema_expr(sema, ast->cond);
 
     size_t sizes[eTagTotal] = {
-        [eTagValues] = 32, [eTagProcs] = 4, [eTagTypes] = 4, [eTagModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 1};
+        [eSemaValues] = 32, [eSemaProcs] = 4, [eSemaTypes] = 4, [eSemaModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 1,};
 
     sema_t *nestThen = begin_sema(sema, sema_reports(sema), sizes);
 
@@ -631,7 +632,7 @@ static hlir_t *sema_local(sema_t *sema, ast_t *stmt)
     }
 
     hlir_t *local = hlir_local(stmt->node, stmt->name, value.type);
-    add_decl(sema, eTagValues, stmt->name, local);
+    add_decl(sema, eSemaValues, stmt->name, local);
     hlir_add_local(get_current_function(sema), local);
 
     if (value.init != NULL)
@@ -800,7 +801,7 @@ static void sema_params(sema_t *sema, vector_t *params)
     for (size_t i = 0; i < len; i++)
     {
         hlir_t *param = vector_get(params, i);
-        add_decl(sema, eTagValues, get_hlir_name(param), param);
+        add_decl(sema, eSemaValues, get_hlir_name(param), param);
     }
 }
 
@@ -809,7 +810,7 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? eLinkImported : eLinkExported, (ast->exported ? eVisiblePublic : eVisiblePrivate), 0, NULL);
 
     size_t tags[eTagTotal] = {
-        [eTagValues] = 32, [eTagProcs] = 32, [eTagTypes] = 32, [eTagModules] = 32, [eTagAttribs] = 32};
+        [eSemaValues] = 32, [eSemaProcs] = 32, [eSemaTypes] = 32, [eSemaModules] = 32, [eTagAttribs] = 32,};
 
     sema_t *nest = begin_sema(sema, sema_reports(sema), tags);
     set_current_function(nest, decl);
@@ -841,32 +842,32 @@ static void sema_decl(sema_t *sema, ast_t *ast)
     switch (ast->of)
     {
     case eAstDeclStruct:
-        decl = sema_get(sema, eTagTypes, ast->name);
+        decl = sema_get(sema, eSemaTypes, ast->name);
         sema_struct(sema, decl, ast);
         break;
 
     case eAstDeclUnion:
-        decl = sema_get(sema, eTagTypes, ast->name);
+        decl = sema_get(sema, eSemaTypes, ast->name);
         sema_union(sema, decl, ast);
         break;
 
     case eAstDeclAlias:
-        decl = sema_get(sema, eTagTypes, ast->name);
+        decl = sema_get(sema, eSemaTypes, ast->name);
         sema_alias(sema, decl, ast);
         break;
 
     case eAstDeclVariant:
-        decl = sema_get(sema, eTagTypes, ast->name);
+        decl = sema_get(sema, eSemaTypes, ast->name);
         sema_variant(sema, decl, ast);
         break;
 
     case eAstFunction:
-        decl = sema_get(sema, eTagProcs, ast->name);
+        decl = sema_get(sema, eSemaProcs, ast->name);
         sema_func(sema, decl, ast);
         break;
 
     case eAstVariable:
-        decl = sema_get(sema, eTagValues, ast->name);
+        decl = sema_get(sema, eSemaValues, ast->name);
         sema_global(sema, decl, ast);
         break;
 
@@ -920,7 +921,7 @@ static hlir_t *begin_global(ast_t *ast)
 static void fwd_decl(sema_t *sema, ast_t *ast)
 {
     hlir_t *decl;
-    tag_t tag = eTagTypes;
+    int tag = eSemaTypes;
 
     switch (ast->of)
     {
@@ -942,12 +943,12 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
 
     case eAstFunction:
         decl = begin_function(sema, ast);
-        tag = eTagProcs;
+        tag = eSemaProcs;
         break;
 
     case eAstVariable:
         decl = begin_global(ast);
-        tag = eTagValues;
+        tag = eSemaValues;
         break;
 
     default:
@@ -971,7 +972,7 @@ static char *make_import_name(vector_t *vec)
 static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
 {
     const char *name = vector_tail(import->path);
-    sema_t *previous = sema_get(sema, eTagModules, name);
+    sema_t *previous = sema_get(sema, eSemaModules, name);
 
     if (previous != NULL)
     {
@@ -981,7 +982,7 @@ static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
         return;
     }
 
-    sema_set(sema, eTagModules, name, mod);
+    sema_set(sema, eSemaModules, name, mod);
 }
 
 void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
@@ -990,21 +991,20 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
 
     size_t totalDecls = vector_len(root->decls);
     size_t sizes[eTagTotal] = {
-        [eTagValues] = totalDecls,  [eTagProcs] = totalDecls,
-        [eTagTypes] = totalDecls,   [eTagModules] = vector_len(root->imports),
+        [eSemaValues] = totalDecls,  [eSemaProcs] = totalDecls,
+        [eSemaTypes] = totalDecls,   [eSemaModules] = vector_len(root->imports),
         [eTagAttribs] = totalDecls, [eTagSuffix] = 32,
     };
 
     sema_t *sema = begin_sema(kRootSema, runtime->reports, sizes);
     add_builtin_attribs(sema);
 
-    char *name = NULL;
     if (root->modspec != NULL)
     {
-        name = make_import_name(root->modspec->path);
+        compile->moduleName = make_import_name(root->modspec->path);
     }
 
-    hlir_t *mod = hlir_module(root->node, name, vector_of(0), vector_of(0), vector_of(0));
+    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0));
 
     sema_data_t semaData = {.totalDecls = totalDecls, .parentModule = mod};
 
@@ -1015,12 +1015,6 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
         ast_t *decl = vector_get(root->decls, i);
         fwd_decl(sema, decl);
     }
-
-    vector_t *types = map_values(sema_tag(sema, eTagTypes));
-    vector_t *globals = map_values(sema_tag(sema, eTagValues));
-    vector_t *procs = map_values(sema_tag(sema, eTagProcs));
-
-    hlir_update_module(mod, types, globals, procs);
 
     compile->sema = sema;
     compile->hlir = mod;
@@ -1056,7 +1050,7 @@ void ctu_process_imports(runtime_t *runtime, compile_t *compile)
     }
 }
 
-void ctu_compile_module(runtime_t *runtime, compile_t *compile)
+hlir_t *ctu_compile_module(runtime_t *runtime, compile_t *compile)
 {
     UNUSED(runtime);
 
@@ -1070,9 +1064,11 @@ void ctu_compile_module(runtime_t *runtime, compile_t *compile)
         sema_decl(sema, decl);
     }
 
-    vector_t *types = map_values(sema_tag(sema, eTagTypes));
-    vector_t *globals = map_values(sema_tag(sema, eTagValues));
-    vector_t *procs = map_values(sema_tag(sema, eTagProcs));
+    vector_t *types = map_values(sema_tag(sema, eSemaTypes));
+    vector_t *globals = map_values(sema_tag(sema, eSemaValues));
+    vector_t *procs = map_values(sema_tag(sema, eSemaProcs));
 
     hlir_update_module(compile->hlir, types, globals, procs);
+
+    return compile->hlir;
 }

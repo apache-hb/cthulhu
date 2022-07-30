@@ -66,19 +66,7 @@ static void report_pl0_unresolved(reports_t *reports, const node_t *node, const 
 
 static hlir_t *get_var(sema_t *sema, const char *name)
 {
-    hlir_t *constHlir = sema_get(sema, eTagConsts, name);
-    if (constHlir != NULL)
-    {
-        return constHlir;
-    }
-
-    hlir_t *varHlir = sema_get(sema, eSemaValues, name);
-    if (varHlir != NULL)
-    {
-        return varHlir;
-    }
-
-    return NULL;
+    return sema_get(sema, eSemaValues, name);
 }
 
 static void set_proc(sema_t *sema, const char *name, hlir_t *proc)
@@ -342,7 +330,6 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
 static void insert_module(sema_t *sema, sema_t *other)
 {
     map_iter_t otherValues = map_iter(sema_tag(other, eSemaValues));
-    map_iter_t otherConsts = map_iter(sema_tag(other, eTagConsts));
     map_iter_t otherProcs = map_iter(sema_tag(other, eSemaProcs));
 
     while (map_has_next(&otherValues))
@@ -351,14 +338,6 @@ static void insert_module(sema_t *sema, sema_t *other)
         if (get_hlir_attributes(decl)->visibility != eVisiblePublic) continue; // filter out private symbols
 
         set_var(sema, eSemaValues, get_hlir_name(decl), decl);
-    }
-
-    while (map_has_next(&otherConsts))
-    {
-        hlir_t *decl = map_next(&otherConsts).value;
-        if (get_hlir_attributes(decl)->visibility != eVisiblePublic) continue;
-
-        set_var(sema, eTagConsts, get_hlir_name(decl), decl);
     }
 
     while (map_has_next(&otherProcs))
@@ -393,13 +372,14 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     vector_t *globals = vector_new(totalGlobals);
     vector_t *procs = vector_new(totalFunctions);
 
-    scan_t *thisScanner = get_node_scanner(root->node);
-    const char *moduleName = root->mod == NULL ? str_filename(scan_path(thisScanner)) : root->mod;
-    hlir_t *mod = hlir_module(root->node, moduleName, vector_of(0), vector_of(0), vector_of(0));
+    if (root->mod != NULL)
+    {
+        compile->moduleName = root->mod;
+    }
+    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0));
 
     size_t sizes[eSemaMax] = {
-        [eTagConsts] = totalConsts,
-        [eSemaValues] = totalGlobals,
+        [eSemaValues] = totalConsts + totalGlobals,
         [eSemaProcs] = totalFunctions,
     };
 
@@ -414,7 +394,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
         hlir_set_attributes(hlir, kConst);
         hlir_set_parent(hlir, mod);
 
-        set_var(sema, eTagConsts, it->name, hlir);
+        set_var(sema, eSemaValues, it->name, hlir);
         vector_push(&consts, hlir);
     }
 
@@ -454,8 +434,6 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
 
     sema_set_data(sema, BOX(semaData));
 
-    hlir_update_module(mod, vector_of(0), vector_merge(globals, consts), procs);
-
     compile->hlir = mod;
     compile->sema = sema;
 }
@@ -488,7 +466,7 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
     }
 }
 
-void pl0_compile_module(runtime_t *runtime, compile_t *compile)
+hlir_t *pl0_compile_module(runtime_t *runtime, compile_t *compile)
 {
     UNUSED(runtime);
 
@@ -541,4 +519,6 @@ void pl0_compile_module(runtime_t *runtime, compile_t *compile)
     vector_push(&semaData->procs, kPrint);
 
     hlir_update_module(self, self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
+
+    return self;
 }

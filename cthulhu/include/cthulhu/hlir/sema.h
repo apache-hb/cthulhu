@@ -29,10 +29,6 @@ void sema_set(sema_t *sema, size_t tag, const char *name, void *data);
 void *sema_get(sema_t *sema, size_t tag, const char *name);
 map_t *sema_tag(sema_t *sema, size_t tag);
 
-#define SEMA_CUSTOM_SET(sema, tag, name, data) sema_set(sema, (tag) + eSemaMax, name, data)
-#define SEMA_CUSTOM_GET(sema, tag, name) sema_get(sema, (tag) + eSemaMax, name)
-#define SEMA_CUSTOM_TAG(sema, tag) sema_tag(sema, (tag) + eSemaMax)
-
 typedef struct
 {
     reports_t *reports;

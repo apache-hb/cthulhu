@@ -25,16 +25,6 @@ static bool end_stage(cthulhu_t *cthulhu, const char *name)
     return report_errors(cthulhu, name) != EXIT_OK;
 }
 
-static void rename_module(hlir_t *hlir, const char *path)
-{
-    if (hlir->name != NULL)
-    {
-        return;
-    }
-
-    hlir->name = str_filename(path);
-}
-
 static runtime_t runtime_new(reports_t *reports, size_t size)
 {
     runtime_t runtime = {
@@ -116,6 +106,7 @@ status_t cthulhu_init(cthulhu_t *cthulhu)
         ctx->ast = NULL;
         ctx->hlir = NULL;
         ctx->scan = scan_io(cthulhu->reports, cthulhu->driver.name, source, config);
+        ctx->moduleName = str_filename(io_name(source));
     }
 
     return report_errors(cthulhu, "scanning sources");
@@ -151,12 +142,9 @@ status_t cthulhu_forward(cthulhu_t *cthulhu)
 
     for (size_t i = 0; i < totalSources; i++)
     {
-        io_t *source = vector_get(cthulhu->sources, i);
         compile_t *ctx = get_compile(cthulhu, i);
-        hlir_t *hlir = ctx->hlir;
 
-        rename_module(hlir, io_name(source));
-        add_module(&cthulhu->runtime, get_hlir_name(hlir), ctx->sema);
+        add_module(&cthulhu->runtime, ctx->moduleName, ctx->sema);
     }
 
     return report_errors(cthulhu, "forwarding declarations");
@@ -182,7 +170,7 @@ status_t cthulhu_compile(cthulhu_t *cthulhu)
     for (size_t i = 0; i < totalSources; i++)
     {
         compile_t *ctx = get_compile(cthulhu, i);
-        cthulhu->driver.fnCompileModule(&cthulhu->runtime, ctx);
+        ctx->hlir = cthulhu->driver.fnCompileModule(&cthulhu->runtime, ctx);
     }
 
     if (end_stage(cthulhu, "compiling modules"))
