@@ -22,7 +22,7 @@ int main(int argc, const char **argv)
     for (int i = 1; i < argc; i++)
     {
         const char *file = argv[i];
-        io_t *source = io_file(&globalAlloc, file, eFileRead | eFileText);
+        io_t *source = io_file(file, eFileRead | eFileText);
         vector_set(sources, i - 1, source);
     }
 

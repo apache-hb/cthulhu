@@ -63,16 +63,10 @@ scan_t *scan_invalid(void)
     return NULL;
 }
 
-scan_t *scan_io(reports_t *reports, const char *language, io_t *io, scan_config_t config)
+scan_t *scan_io(reports_t *reports, const char *language, io_t *io)
 {
-    CTASSERT(config.alloc != NULL);
-    CTASSERT(config.astAlloc != NULL);
-    CTASSERT(config.nodeAlloc != NULL);
-    CTASSERT(config.yyAlloc != NULL);
+    scan_t *self = ctu_malloc(sizeof(scan_t));
 
-    scan_t *self = arena_malloc(config.alloc, sizeof(scan_t), "scan-io");
-
-    self->config = config;
     self->language = language;
     self->reports = reports;
     self->io = io;
@@ -81,14 +75,4 @@ scan_t *scan_io(reports_t *reports, const char *language, io_t *io, scan_config_
     self->size = io_size(io);
 
     return self;
-}
-
-void *ast_alloc(scan_t *scan, size_t size, const char *name)
-{
-    return arena_malloc(scan->config.astAlloc, size, name);
-}
-
-alloc_t *scan_yyalloc(scan_t *scan)
-{
-    return scan->config.yyAlloc;
 }

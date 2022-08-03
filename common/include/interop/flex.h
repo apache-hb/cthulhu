@@ -85,20 +85,18 @@ void flex_init(where_t *where);
 #define FLEX_MEMORY(alloc, resize, release)                                                                            \
     inline void *alloc(size_t size, yyscan_t scanner)                                                                  \
     {                                                                                                                  \
-        scan_t *extra = yyget_extra(scanner);                                                                                               \
-        return arena_malloc(scan_yyalloc(extra), size, "yy-alloc");                                                                                       \
+        UNUSED(scanner); return ctu_malloc(size);                                                                                       \
     }                                                                                                                  \
     inline void *resize(void *ptr, size_t bytes, yyscan_t scanner)                                                     \
     {                                                                                                                  \
-        scan_t *extra = yyget_extra(scanner);                                                                                               \
-        return arena_realloc(scan_yyalloc(extra), ptr, bytes, ALLOC_SIZE_UNKNOWN);                                                                                \
+        UNUSED(scanner); return ctu_realloc(ptr, bytes);                                                                                \
     }                                                                                                                  \
     inline void release(void *ptr, yyscan_t scanner)                                                                   \
     {                                                                                                                  \
-        scan_t *extra = yyget_extra(scanner);                                                                                               \
+        UNUSED(scanner);                                                                                              \
         if (ptr == NULL)                                                                                               \
             return;                                                                                                    \
-        arena_free(scan_yyalloc(extra), ptr, ALLOC_SIZE_UNKNOWN);                                                                                                 \
+        ctu_free(ptr);                                                                                                 \
     }
 
 /** @} */

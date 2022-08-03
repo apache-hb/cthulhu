@@ -31,12 +31,7 @@ bool node_is_valid(const node_t *node)
 
 node_t *node_new(scan_t *scan, where_t where)
 {
-    if (scan == NULL)
-    {
-        return NULL;
-    }
-
-    node_t *node = arena_malloc(scan->config.nodeAlloc, sizeof(node_t), "node-new");
+    node_t *node = ctu_malloc(sizeof(node_t));
     node->scan = scan;
     node->where = where;
 
@@ -45,7 +40,8 @@ node_t *node_new(scan_t *scan, where_t where)
 
 scan_t *get_node_scanner(const node_t *node)
 {
-    return node_is_valid(node) ? node->scan : NULL;
+    CTASSERT(node_is_valid(node));
+    return node->scan;
 }
 
 where_t get_node_location(const node_t *node)

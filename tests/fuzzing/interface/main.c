@@ -26,7 +26,7 @@ int main(int argc, const char **argv)
 
     CTASSERTM(argc == 2, "must provide one argument");
 
-    io_t *io = io_file(&globalAlloc, argv[1], eFileRead | eFileText);
+    io_t *io = io_file(argv[1], eFileRead | eFileText);
     vector_t *sources = vector_init(io);
 
     config_t config = {
@@ -52,7 +52,7 @@ int main(int argc, const char **argv)
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
 
-    io_t *dst = io_memory(&globalAlloc, "c89-output", NULL, 0x1000);
+    io_t *dst = io_memory("c89-output", NULL, 0x1000);
 
     c89_emit_modules(cthulhu->reports, allModules, dst);
 

@@ -4,7 +4,6 @@
 
 typedef struct scan_t
 {
-    scan_config_t config;
     reports_t *reports; ///< the reporting sink for this file
     io_t *io;           ///< file itself
 

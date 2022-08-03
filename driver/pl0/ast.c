@@ -4,7 +4,7 @@
 
 pl0_t *pl0_new(scan_t *scan, where_t where, pl0_type_t type)
 {
-    pl0_t *node = ast_alloc(scan, sizeof(pl0_t), "pl0-new");
+    pl0_t *node = ctu_malloc(sizeof(pl0_t));
     node->node = node_new(scan, where);
     node->type = type;
     return node;

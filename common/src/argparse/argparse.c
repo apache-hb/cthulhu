@@ -328,16 +328,9 @@ argparse_t parse_args(const argparse_config_t *config)
 
     char *args = join_args(config->argc, config->argv);
 
-    io_t *io = io_string(&globalAlloc, "<command-line>", args);
+    io_t *io = io_string("<command-line>", args);
 
-    scan_config_t scanConfig = {
-        .alloc = &globalAlloc,
-        .astAlloc = &globalAlloc,
-        .yyAlloc = &globalAlloc,
-        .nodeAlloc = &globalAlloc,
-    };
-
-    scan_t *scan = scan_io(config->reports, "command-parser", io, scanConfig);
+    scan_t *scan = scan_io(config->reports, "command-parser", io);
 
     report_config_t reportConfig = {
         .limit = 20,

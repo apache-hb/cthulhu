@@ -30,14 +30,11 @@ typedef struct io_callbacks_t
 
 typedef struct io_t
 {
-    alloc_t *alloc;
     const io_callbacks_t *cb;
 
     io_error_t error;
     file_flags_t flags;
     const char *name;
-
-    size_t dataSize;
     char data[];
 } io_t;
 
@@ -110,7 +107,7 @@ static size_t mem_write(io_t *self, const void *src, size_t size)
     buffer_t *mem = io_data(self);
     if (mem->offset + size > mem->total)
     {
-        mem->data = arena_realloc(self->alloc, mem->data, mem->offset + size, mem->total);
+        mem->data = ctu_realloc(mem->data, mem->offset + size);
         mem->total = mem->offset + size;
         mem->used = mem->offset + size;
     }
@@ -131,7 +128,7 @@ static const void *mem_map(io_t *self)
 {
     buffer_t *mem = io_data(self);
 
-    void *it = arena_malloc(self->alloc, mem->used, "mem-map");
+    void *it = ctu_malloc(mem->used);
     memcpy(it, mem->data, mem->used);
 
     return it;
@@ -140,7 +137,7 @@ static const void *mem_map(io_t *self)
 static void mem_close(io_t *self)
 {
     buffer_t *mem = io_data(self);
-    arena_free(self->alloc, mem->data, mem->total);
+    ctu_free(mem->data);
 }
 
 static size_t view_read(io_t *self, void *dst, size_t size)
@@ -173,7 +170,7 @@ static const io_callbacks_t kFileCallbacks = {.read = fd_read,
                                               .size = fd_size,
 
                                               .map = fd_map,
-                                              .close = fd_close};
+                                              .close = fd_close,};
 
 static const io_callbacks_t kBufferCallbacks = {.read = mem_read,
                                                 .write = mem_write,
@@ -181,24 +178,22 @@ static const io_callbacks_t kBufferCallbacks = {.read = mem_read,
                                                 .size = mem_size,
 
                                                 .map = mem_map,
-                                                .close = mem_close};
+                                                .close = mem_close,};
 
 static const io_callbacks_t kViewCallbacks = {.read = view_read,
                                               .write = NULL,
 
                                               .size = view_size,
 
-                                              .map = view_map};
+                                              .map = view_map,};
 
-static io_t *io_new(alloc_t *alloc, const io_callbacks_t *cb, file_flags_t flags, const char *name, void *data,
+static io_t *io_new(const io_callbacks_t *cb, file_flags_t flags, const char *name, void *data,
                     size_t size)
 {
-    io_t *io = arena_malloc(alloc, sizeof(io_t) + size, name);
+    io_t *io = ctu_malloc(sizeof(io_t) + size);
 
     memcpy(io->data, data, size);
-    io->alloc = alloc;
     io->cb = cb;
-    io->dataSize = size;
     io->name = name;
     io->flags = flags;
     io->error = 0;
@@ -206,41 +201,41 @@ static io_t *io_new(alloc_t *alloc, const io_callbacks_t *cb, file_flags_t flags
     return io;
 }
 
-io_t *io_file(alloc_t *alloc, const char *path, file_flags_t mode)
+io_t *io_file(const char *path, file_flags_t mode)
 {
     cerror_t err = 0;
     file_t file = file_open(path, mode, &err);
-    io_t *io = io_new(alloc, &kFileCallbacks, mode, path, &file, sizeof(file_t));
+    io_t *io = io_new(&kFileCallbacks, mode, path, &file, sizeof(file_t));
     io->error = err;
     return io;
 }
 
-io_t *io_memory(alloc_t *alloc, const char *name, const void *data, size_t size)
+io_t *io_memory(const char *name, const void *data, size_t size)
 {
     file_flags_t flags = eFileRead | eFileWrite;
 
-    buffer_t buffer = {.data = arena_malloc(alloc, size, "io-memory"), .total = size, .used = size, .offset = 0};
+    buffer_t buffer = {.data = ctu_malloc(size), .total = size, .used = size, .offset = 0};
 
     if (data != NULL)
     {
         memcpy(buffer.data, data, size);
     }
 
-    return io_new(alloc, &kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
+    return io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
 }
 
-io_t *io_view(alloc_t *alloc, const char *name, const void *data, size_t size)
+io_t *io_view(const char *name, const void *data, size_t size)
 {
     file_flags_t flags = eFileRead;
 
     view_t view = {.data = data, .size = size, .offset = 0};
 
-    return io_new(alloc, &kViewCallbacks, flags, name, &view, sizeof(view_t));
+    return io_new(&kViewCallbacks, flags, name, &view, sizeof(view_t));
 }
 
-io_t *io_string(alloc_t *alloc, const char *name, const char *string)
+io_t *io_string(const char *name, const char *string)
 {
-    return io_view(alloc, name, string, strlen(string));
+    return io_view(name, string, strlen(string));
 }
 
 void io_close(io_t *io)
@@ -252,7 +247,7 @@ void io_close(io_t *io)
         io->cb->close(io);
     }
 
-    arena_free(io->alloc, io, sizeof(io_t) + io->dataSize);
+    ctu_free(io);
 }
 
 size_t io_read(io_t *io, void *dst, size_t size)

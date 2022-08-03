@@ -18,7 +18,7 @@ static const char *kSetItems[] = {
 #define TOTAL_ITEMS (sizeof(kSetItems) / sizeof(const char *))
 
 TEST(test_set_clashes, {
-    set_t *set = set_new(3, &globalAlloc, "test-set-clashes");
+    set_t *set = set_new(3);
     for (size_t i = 0; i < TOTAL_ITEMS; i++) {
         set_add(set, kSetItems[i]);
     }
@@ -30,7 +30,7 @@ TEST(test_set_clashes, {
 })
 
 TEST(test_set_deduplicates, {
-    set_t *set = set_new(3, &globalAlloc, "test-set-deduplicates");
+    set_t *set = set_new(3);
     const char *item = set_add(set, "duplicate");
     for (size_t i = 0; i < 64; i++) {
         char *element = ctu_strdup("duplicate");

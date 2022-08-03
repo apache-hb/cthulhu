@@ -8,13 +8,9 @@
 BEGIN_API
 
 typedef struct vector_t vector_t;
-typedef struct alloc_t alloc_t;
 
 typedef struct bucket_t bucket_t;
 typedef struct map_t map_t;
-
-NODISCARD
-map_t *map_new2(size_t size, alloc_t *alloc, const char *name);
 
 /**
  * create a new map

@@ -24,8 +24,6 @@ typedef struct bucket_t
  */
 typedef struct map_t
 {
-    alloc_t *alloc;
-
     size_t size;                      ///< the number of buckets in the toplevel
     FIELD_SIZE(size) bucket_t data[]; ///< the buckets
 } map_t;
@@ -37,9 +35,9 @@ static size_t sizeof_map(size_t size)
     return sizeof(map_t) + (size * sizeof(bucket_t));
 }
 
-static bucket_t *new_bucket(map_t *parent, const void *key, void *value)
+static bucket_t *new_bucket(const void *key, void *value)
 {
-    bucket_t *entry = arena_malloc(parent->alloc, sizeof(bucket_t), "bucket-new");
+    bucket_t *entry = ctu_malloc(sizeof(bucket_t));
     entry->key = key;
     entry->value = value;
     entry->next = NULL;
@@ -63,22 +61,15 @@ static void clear_keys(bucket_t *buckets, size_t size)
 }
 
 USE_DECL
-map_t *map_new2(size_t size, alloc_t *alloc, const char *name)
+map_t *map_new(size_t size)
 {
-    map_t *map = arena_malloc(alloc, sizeof_map(size), name);
+    map_t *map = ctu_malloc(sizeof_map(size));
 
-    map->alloc = alloc;
     map->size = size;
 
     clear_keys(map->data, size);
 
     return map;
-}
-
-USE_DECL
-map_t *map_new(size_t size)
-{
-    return map_new2(size, &globalAlloc, "map-new");
 }
 
 #define MAP_FOREACH_APPLY(self, item, ...)                                                                             \
@@ -107,9 +98,9 @@ vector_t *map_values(map_t *map)
     return result;
 }
 
-static map_entry_t *new_entry(map_t *parent, const char *key, void *value)
+static map_entry_t *new_entry(const char *key, void *value)
 {
-    map_entry_t *entry = arena_malloc(parent->alloc, sizeof(map_entry_t), "new-entry");
+    map_entry_t *entry = ctu_malloc(sizeof(map_entry_t));
     entry->key = key;
     entry->value = value;
     return entry;
@@ -122,7 +113,7 @@ vector_t *map_entries(map_t *map)
 
     vector_t *result = vector_new(map->size);
 
-    MAP_FOREACH_APPLY(map, entry, { vector_push(&result, new_entry(map, entry->key, entry->value)); });
+    MAP_FOREACH_APPLY(map, entry, { vector_push(&result, new_entry(entry->key, entry->value)); });
 
     return result;
 }
@@ -193,7 +184,7 @@ void map_set(map_t *map, const char *key, void *value)
 
         if (entry->next == NULL)
         {
-            entry->next = new_bucket(map, key, value);
+            entry->next = new_bucket(key, value);
             break;
         }
 
@@ -248,7 +239,7 @@ void map_set_ptr(map_t *map, const void *key, void *value)
 
         if (entry->next == NULL)
         {
-            entry->next = new_bucket(map, key, value);
+            entry->next = new_bucket(key, value);
             break;
         }
 

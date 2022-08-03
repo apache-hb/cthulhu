@@ -14,8 +14,6 @@
  */
 typedef struct vector_t
 {
-    alloc_t *alloc;
-
     size_t size;                   ///< the total number of allocated elements
     size_t used;                   ///< the number of elements in use
     FIELD_SIZE(size) void *data[]; ///< the data
@@ -34,7 +32,7 @@ static void vector_ensure(vector_t **vector, size_t size)
     if (size >= VEC->size)
     {
         size_t resize = (size + 1) * 2;
-        VEC = arena_realloc(VEC->alloc, VEC, vector_size(resize), vector_size(VEC->size));
+        VEC = ctu_realloc(VEC, vector_size(resize));
         VEC->size = resize;
     }
 }
@@ -42,21 +40,14 @@ static void vector_ensure(vector_t **vector, size_t size)
 // vector public api
 
 USE_DECL
-vector_t *vector_new2(size_t size, alloc_t *alloc, const char *name)
+vector_t *vector_new(size_t size)
 {
-    vector_t *vector = arena_malloc(alloc, vector_size(size), name);
+    vector_t *vector = ctu_malloc(vector_size(size));
 
-    vector->alloc = alloc;
     vector->size = size;
     vector->used = 0;
 
     return vector;
-}
-
-USE_DECL
-vector_t *vector_new(size_t size)
-{
-    return vector_new2(size, &globalAlloc, "vector-new");
 }
 
 USE_DECL
@@ -77,7 +68,7 @@ vector_t *vector_init(void *value)
 
 void vector_delete(vector_t *vector)
 {
-    arena_free(vector->alloc, vector, vector_size(vector->size));
+    ctu_free(vector);
 }
 
 void vector_push(vector_t **vector, void *value)

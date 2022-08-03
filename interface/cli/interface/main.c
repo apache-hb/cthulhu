@@ -69,7 +69,7 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < totalFiles; i++)
     {
         const char *file = vector_get(result.files, i);
-        io_t *source = io_file(&globalAlloc, file, eFileRead | eFileText);
+        io_t *source = io_file(file, eFileRead | eFileText);
         vector_set(sources, i, source);
     }
 
@@ -106,7 +106,7 @@ int main(int argc, const char **argv)
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
 
-    io_t *out = io_file(&globalAlloc, outFile, eFileWrite | eFileBinary);
+    io_t *out = io_file(outFile, eFileWrite | eFileBinary);
 
     if (io_error(out) != 0)
     {

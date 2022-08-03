@@ -5,8 +5,6 @@
 
 BEGIN_API
 
-typedef struct alloc_t alloc_t;
-
 /**
  * a vector of non-owning pointers
  *
@@ -24,9 +22,6 @@ typedef struct vector_t vector_t;
  * @param vector the vector to release
  */
 void vector_delete(vector_t *vector);
-
-NODISCARD
-vector_t *vector_new2(size_t size, alloc_t *alloc, const char *name);
 
 /**
  * @brief create a new vector.

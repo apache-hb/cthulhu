@@ -7,8 +7,6 @@
 
 BEGIN_API
 
-typedef struct alloc_t alloc_t;
-
 /**
  * @brief a hashset of strings
  */
@@ -21,7 +19,7 @@ typedef struct set_t set_t;
  * @return the created set
  */
 NODISCARD
-set_t *set_new(size_t size, alloc_t *alloc, const char *name);
+set_t *set_new(size_t size);
 
 /**
  * @brief add a string to a set

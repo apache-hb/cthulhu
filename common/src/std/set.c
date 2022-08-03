@@ -16,8 +16,6 @@ typedef struct item_t
 
 typedef struct set_t
 {
-    alloc_t *alloc;
-
     size_t size;                     ///< the number of buckets
     FIELD_SIZE(size) item_t items[]; ///< the buckets
 } set_t;
@@ -28,9 +26,9 @@ static size_t set_size(size_t size)
     return sizeof(set_t) + (sizeof(item_t) * size);
 }
 
-static item_t *item_new(alloc_t *alloc, const char *key)
+static item_t *item_new(const char *key)
 {
-    item_t *item = arena_malloc(alloc, sizeof(item_t), "set-item");
+    item_t *item = ctu_malloc(sizeof(item_t));
     item->key = key;
     item->next = NULL;
     return item;
@@ -51,17 +49,9 @@ static item_t *get_bucket_ptr(set_t *set, const void *key)
 }
 
 USE_DECL
-set_t *set_new(size_t size, alloc_t *alloc, const char *name)
+set_t *set_new(size_t size)
 {
-    CTASSERT(alloc != NULL);
-
-    if (size == 0)
-    {
-        return NULL;
-    }
-
-    set_t *set = arena_malloc(alloc, set_size(size), name);
-    set->alloc = alloc;
+    set_t *set = ctu_malloc(set_size(size));
     set->size = size;
 
     for (size_t i = 0; i < size; i++)
@@ -99,7 +89,7 @@ const char *set_add(set_t *set, const char *key)
         }
         else
         {
-            item->next = item_new(set->alloc, key);
+            item->next = item_new(key);
             return key;
         }
     }
@@ -161,7 +151,7 @@ const void *set_add_ptr(set_t *set, const void *key)
         }
         else
         {
-            item->next = item_new(set->alloc, key);
+            item->next = item_new(key);
             return key;
         }
     }
@@ -208,7 +198,7 @@ void set_reset(set_t *set)
         {
             item_t *next = item->next;
             item->next = next->next;
-            arena_free(set->alloc, next, sizeof(item_t));
+            ctu_free(next);
         }
         item->next = NULL;
         item->key = NULL;
