@@ -1,14 +1,7 @@
 #include "base/util.h"
 
-#include "base/macros.h"
 #include "base/memory.h"
-#include "base/panic.h"
 
-#include <gmp.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 USE_DECL

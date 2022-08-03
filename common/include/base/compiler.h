@@ -19,6 +19,8 @@
 #    define OS_LINUX 1
 #elif defined(_WIN32)
 #    define OS_WINDOWS 1
+#else
+#    error "unknown platform"
 #endif
 
 /**

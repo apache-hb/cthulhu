@@ -23,7 +23,8 @@ typedef void (*panic_handler_t)(panic_t panic, const char *fmt, va_list args);
 
 extern panic_handler_t globalPanicHandler;
 
-NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...) FORMAT_ATTRIBUTE(2, 3);
+FORMAT_ATTRIB(2, 3)
+NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
 
 #if ENABLE_DEBUG
 #    define CTASSERTF(expr, ...)                                                                                       \

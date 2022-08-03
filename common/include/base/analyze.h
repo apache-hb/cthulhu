@@ -25,21 +25,18 @@
 #endif
 
 #if __GNUC__ >= 11
-#    define FORMAT_ATTRIBUTE(a, b) __attribute__((format(printf, a, b)))
-#    define NODISCARD __attribute__((warn_unused_result))
-#    define CONSTFN __attribute__((const))
-#    define PUREFN __attribute__((pure))
-#    define HOTFN __attribute__((hot))
-#    define COLDFN __attribute__((cold))
-#    define ALLOC(...) __attribute__((malloc, malloc(__VA_ARGS__)))
+#    define GNU_ATTRIB(...) __attribute__(( __VA_ARGS__ ))
 #else
-#    define FORMAT_ATTRIBUTE(a, b)
-#    define CONSTFN
-#    define PUREFN
-#    define HOTFN
-#    define COLDFN
-#    define ALLOC(...)
+#    define GNU_ATTRIB(...)
 #endif
+
+#define FORMAT_ATTRIB(a, b) GNU_ATTRIB(format(printf, a, b))
+#define NODISCARD GNU_ATTRIB(warn_unused_result)
+#define CONSTFN GNU_ATTRIB(const)
+#define PUREFN GNU_ATTRIB(pure)
+#define HOTFN GNU_ATTRIB(hot)
+#define COLDFN GNU_ATTRIB(cold)
+#define ALLOC(...) GNU_ATTRIB(malloc, malloc(__VA_ARGS__))
 
 #ifndef NODISCARD
 #    define NODISCARD
