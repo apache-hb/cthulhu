@@ -13,10 +13,7 @@ int main(int argc, const char **argv)
     driver_t driver = get_driver();
     verbose = true;
     
-    report_config_t reportConfig = {
-        .limit = 20, 
-        .warningsAreErrors = false,
-    };
+    report_config_t reportConfig = DEFAULT_REPORT_CONFIG;
 
     vector_t *sources = vector_of(argc - 1);
     for (int i = 1; i < argc; i++)

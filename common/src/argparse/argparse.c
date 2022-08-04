@@ -44,11 +44,16 @@ static const char *kFatalWarningsArgs[] = {"-Werror"};
 static const char *kReportLimitArgs[] = {"-Wlimit"};
 #define TOTAL_REPORT_LIMIT_ARGS (sizeof(kReportLimitArgs) / sizeof(const char *))
 
+static const char *kDisableColourArgs[] = { "-Wno-colour" };
+#define TOTAL_DISABLE_COLOUR_ARGS (sizeof(kDisableColourArgs) / sizeof(const char *))
+
 static param_t *kHelpParam = NULL;
 static param_t *kVersionParam = NULL;
+
 static param_t *kVerboseLoggingParam = NULL;
 static param_t *kFatalWarningsParam = NULL;
 static param_t *kReportLimitParam = NULL;
+static param_t *kDisableColourParam = NULL;
 
 static group_t *kGeneralGroup = NULL;
 static group_t *kReportingGroup = NULL;
@@ -71,6 +76,7 @@ void argparse_init(void)
     kVerboseLoggingParam = bool_param("enable verbose logging", kVerboseLoggingArgs, TOTAL_VERBOSE_LOGGING_ARGS);
     kFatalWarningsParam = bool_param("enable fatal warnings", kFatalWarningsArgs, TOTAL_FATAL_WARNINGS_ARGS);
     kReportLimitParam = int_param("set the report limit", kReportLimitArgs, TOTAL_REPORT_LIMIT_ARGS);
+    kDisableColourParam = bool_param("disable ansi colour reporting", kDisableColourArgs, TOTAL_DISABLE_COLOUR_ARGS);
 
     vector_t *generalParams = vector_new(4);
     vector_push(&generalParams, kHelpParam);
@@ -81,6 +87,7 @@ void argparse_init(void)
     vector_push(&reportingParams, kVerboseLoggingParam);
     vector_push(&reportingParams, kFatalWarningsParam);
     vector_push(&reportingParams, kReportLimitParam);
+    vector_push(&reportingParams, kDisableColourParam);
     kReportingGroup = new_group("reporting", "reporting options", reportingParams);
 }
 
@@ -102,8 +109,10 @@ static argparse_t new_argparse(const argparse_config_t *config)
         .exitCode = INT_MAX,
 
         .verboseEnabled = false,
-        .reportLimit = 20,
-        .warningsAsErrors = false,
+        .reportConfig = {
+            .limit = 20,
+            .warningsAreErrors = false,
+        },
 
         .params = map_optimal(totalNames),
         .lookup = map_optimal(totalNames),
@@ -276,7 +285,7 @@ static void print_version(const argparse_config_t *config)
 
 static status_t process_general_args(const argparse_config_t *config, argparse_t *argparse)
 {
-    report_config_t reportConfig = {.limit = argparse->reportLimit, .warningsAreErrors = argparse->warningsAsErrors};
+    report_config_t reportConfig = argparse->reportConfig;
 
     status_t result = end_reports(argparse->reports, "command line parsing", reportConfig);
     if (result != EXIT_OK)
@@ -290,9 +299,14 @@ static status_t process_general_args(const argparse_config_t *config, argparse_t
 
     long reportLimit = get_digit_arg(argparse, kReportLimitParam, 20);
     bool warningsAsErrors = get_bool_arg(argparse, kFatalWarningsParam, false);
+    // bool disableColour = get_bool_arg(argparse, kDisableColourParam, false);
 
-    argparse->reportLimit = reportLimit;
-    argparse->warningsAsErrors = warningsAsErrors;
+    report_config_t newConfig = {
+        .limit = reportLimit,
+        .warningsAreErrors = warningsAsErrors,
+    };
+
+    argparse->reportConfig = newConfig;
 
     if (logVerbose)
     {

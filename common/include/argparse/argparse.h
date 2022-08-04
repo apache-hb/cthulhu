@@ -70,9 +70,8 @@ typedef struct argparse_t
     status_t exitCode;
 
     bool verboseEnabled;
-    size_t reportLimit;
-    bool warningsAsErrors;
-
+    report_config_t reportConfig;
+    
     vector_t *files;
 
     map_t *params;

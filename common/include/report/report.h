@@ -92,7 +92,8 @@ typedef struct
 
 #define DEFAULT_REPORT_CONFIG                                                                                          \
     {                                                                                                                  \
-        .limit = SIZE_MAX, .warningsAreErrors = false                                                                  \
+        .limit = SIZE_MAX, \
+        .warningsAreErrors = false, \
     }
 
 /**

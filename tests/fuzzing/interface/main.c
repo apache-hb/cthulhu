@@ -17,10 +17,7 @@ int main(int argc, const char **argv)
 
     driver_t driver = get_driver();
 
-    report_config_t reportConfig = {
-        .limit = 100,
-        .warningsAreErrors = false,
-    };
+    report_config_t reportConfig = DEFAULT_REPORT_CONFIG;
 
     verbose = true;
 
