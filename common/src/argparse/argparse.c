@@ -362,6 +362,13 @@ argparse_t parse_args(const argparse_config_t *config)
     add_group(&argparse, kReportingGroup);
     add_groups(&argparse, config->groups);
 
+    if (config->argc <= 1)
+    {
+        print_help(config);
+        argparse.exitCode = EXIT_ERROR;
+        return argparse;
+    }
+
     scan_set(scan, &argparse);
     compile_scanner(scan, &kCallbacks);
 
