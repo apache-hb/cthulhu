@@ -3,7 +3,7 @@ project('cthulhu', [ 'c' ],
     version : '0.2.2',
     meson_version : '>=0.59',
     default_options : [
-        'c_std=gnu11',
+        'c_std=gnu11', # gcc is picky about POSIX stdlib extensions
         'warning_level=2', # we use unnamed structs
         'default_library=static',
         'werror=true'
