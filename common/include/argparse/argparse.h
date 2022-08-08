@@ -95,14 +95,19 @@ param_t *bool_param(const char *desc, const char **names, size_t total);
 NODISCARD
 group_t *new_group(const char *name, const char *desc, vector_t *params);
 
-NODISCARD CONSTFN long get_digit_arg(const argparse_t *argparse, const param_t *arg, long other);
+NODISCARD CONSTFN 
+long get_digit_arg(const argparse_t *argparse, const param_t *arg, long other);
 
-NODISCARD CONSTFN const char *get_string_arg(const argparse_t *argparse, const param_t *arg, const char *other);
+NODISCARD CONSTFN 
+const char *get_string_arg(const argparse_t *argparse, const param_t *arg, const char *other);
 
-NODISCARD CONSTFN bool get_bool_arg(const argparse_t *argparse, const param_t *arg, bool other);
+NODISCARD CONSTFN 
+bool get_bool_arg(const argparse_t *argparse, const param_t *arg, bool other);
 
 void argparse_init(void);
 
-NODISCARD CONSTFN argparse_t parse_args(const argparse_config_t *config);
+NODISCARD 
+argparse_t parse_args(const argparse_config_t *config);
 
-NODISCARD CONSTFN bool should_exit(const argparse_t *argparse);
+NODISCARD CONSTFN 
+bool should_exit(const argparse_t *argparse);

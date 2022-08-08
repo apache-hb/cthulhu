@@ -40,6 +40,8 @@ hlir_t *hlir_new_forward(node_t *node, const char *name, const hlir_t *of, hlir_
 
 void init_hlir(void)
 {
+    GLOBAL_INIT();
+    
     kMetaType = hlir_new(node_builtin(), NULL, eHlirType);
     kMetaType->of = kMetaType;
     kMetaType->name = "type";

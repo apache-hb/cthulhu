@@ -70,6 +70,8 @@ static param_t *new_param(param_kind_t kind, const char *desc, const char **name
 
 void argparse_init(void)
 {
+    GLOBAL_INIT();
+    
     kHelpParam = bool_param("print this help message", kHelpArgs, TOTAL_HELP_ARGS);
     kVersionParam = bool_param("print the version number", kVersionArgs, TOTAL_VERSION_ARGS);
 
@@ -375,7 +377,13 @@ argparse_t parse_args(const argparse_config_t *config)
     argparse_end_flag(&argparse);
 
     int exitCode = process_general_args(config, &argparse);
-
     argparse.exitCode = exitCode;
+
+    if (vector_len(argparse.files) && !should_exit(&argparse))
+    {
+        report(argparse.reports, eFatal, node_invalid(), "no input files provided");
+        exitCode = EXIT_OK;
+    }
+
     return argparse;
 }

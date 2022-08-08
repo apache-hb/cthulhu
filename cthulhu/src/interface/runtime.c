@@ -1,6 +1,7 @@
 #include "cthulhu/interface/runtime.h"
 
 #include "base/memory.h"
+#include "base/panic.h"
 #include "cthulhu/hlir/init.h"
 
 #include "argparse/argparse.h"
@@ -9,6 +10,8 @@
 
 void common_init(void)
 {
+    GLOBAL_INIT();
+
     init_gmp(&globalAlloc);
     argparse_init();
     init_hlir();
