@@ -1188,6 +1188,8 @@ void c89_emit_modules(reports_t *reports, vector_t *modules, io_t *io)
     emit.mangledNames = map_optimal(totalDecls);
     emit.depth = 0;
 
+    WRITE_STRING(&emit, "#include <stddef.h>\n");
+
     c89_emit_types(&emit, modules);
 
     c89_emit_globals(&emit, totalDecls, modules);

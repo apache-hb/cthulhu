@@ -379,7 +379,7 @@ argparse_t parse_args(const argparse_config_t *config)
     int exitCode = process_general_args(config, &argparse);
     argparse.exitCode = exitCode;
 
-    if (vector_len(argparse.files) && !should_exit(&argparse))
+    if (vector_len(argparse.files) == 0 && !should_exit(&argparse))
     {
         report(argparse.reports, eFatal, node_invalid(), "no input files provided");
         exitCode = EXIT_OK;

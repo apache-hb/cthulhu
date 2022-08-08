@@ -1,11 +1,7 @@
-@extern
-def puts(s: str): int;
-
-@extern
-def exit(code: int): void;
+import std;
 
 @entry(cli)
 def _start {
-    const result = puts("hello world");
-    exit(result);
+    const result = std::puts("hello world");
+    std::exit(result);
 }

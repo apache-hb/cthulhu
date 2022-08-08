@@ -1,17 +1,18 @@
 src = [ 
-    'main.c', 
-    'scan.c', 
-    'ast.c', 
-    'lang/sema.c', 
-    'lang/attribs.c',
-    'lang/repr.c',
-    'lang/suffix.c',
-    lex.process('ctu.l'), 
-    parse.process('ctu.y') 
+    'src/main.c', 
+    'src/scan.c', 
+    'src/ast.c', 
+    'src/lang/sema.c', 
+    'src/lang/attribs.c',
+    'src/lang/repr.c',
+    'src/lang/suffix.c',
+    lex.process('src/ctu.l'), 
+    parse.process('src/ctu.y') 
 ]
 
 ctc = library('ctc', src,
     dependencies : [ generic, interop ],
+    include_directories : 'src',
     install : true
 )
 

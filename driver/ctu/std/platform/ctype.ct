@@ -1,0 +1,18 @@
+module platform::ctype;
+
+// TODO: __builtin module is required for this stuff to work
+
+export type char = __builtin::ctype::char;
+export type uchar = __builtin::ctype::uchar;
+
+export type short = __builtin::ctype::short;
+export type ushort = __builtin::ctype::ushort;
+
+export type int = __builtin::ctype::int;
+export type uint = __builtin::ctype::uint;
+
+export type long = __builtin::ctype::long;
+export type ulong = __builtin::ctype::ulong;
+
+export type llong = __builtin::ctype::llong;
+export type ullong = __builtin::ctype::ullong;

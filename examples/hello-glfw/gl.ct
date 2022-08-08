@@ -1,6 +1,6 @@
 module gl;
 
-export const ColourBufferBit = 0x00004000;
+export const ColourBufferBit = 0x00004000u;
 
 @extern("glClear")
 export def clear(bit: uint);

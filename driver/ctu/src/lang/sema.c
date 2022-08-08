@@ -452,7 +452,7 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
         return hlir_name(ast->node, var);
     }
 
-    hlir_t *func = sema_get(sema, eSemaProcs, name);
+    hlir_t *func = sema_get(current, eSemaProcs, name);
     if (func != NULL)
     {
         check_valid_import(sema, current, ast, func);
