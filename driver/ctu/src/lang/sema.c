@@ -655,6 +655,22 @@ static hlir_t *sema_break(sema_t *sema, ast_t *stmt)
     return hlir_break(stmt->node, NULL);
 }
 
+static hlir_t *sema_branch(sema_t *sema, ast_t *stmt)
+{
+    hlir_t *cond = sema_expr(sema, stmt->cond);
+    
+    size_t tags[eTagTotal] = {
+        [eSemaValues] = 32, [eSemaProcs] = 32, [eSemaTypes] = 32, [eSemaModules] = 32, [eTagAttribs] = 32,};
+
+    sema_t *bodyInner = begin_sema(sema, sema_reports(sema), tags);
+    sema_t *otherInner = begin_sema(sema, sema_reports(sema), tags);
+
+    hlir_t *body = sema_stmt(bodyInner, stmt->body);
+    hlir_t *other = stmt->other == NULL ? NULL : sema_stmt(otherInner, stmt->other);
+
+    return hlir_branch(stmt->node, cond, body, other);
+}
+
 static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
 {
     switch (stmt->of)
@@ -683,6 +699,9 @@ static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
 
     case eAstBreak:
         return sema_break(sema, stmt);
+
+    case eAstBranch:
+        return sema_branch(sema, stmt);
 
     default:
         report(sema_reports(sema), eInternal, stmt->node, "unknown sema-stmt: %d", stmt->of);

@@ -1,17 +1,18 @@
 import glfw;
 import gl;
+import std;
 
 @entry(cli)
 def cliEntry {
     if glfw::init() != 0 {
-        exit(-1);
+        std::exit(-1);
     }
 
     const window = glfw::createWindow(640, 480, "Hello World", null, null);
 
     if window == null {
         glfw::terminate();
-        exit(-1);
+        std::exit(-1);
     }
 
     glfw::makeContextCurrent(window);
@@ -24,5 +25,5 @@ def cliEntry {
     }
 
     glfw::terminate();
-    exit(0);
+    std::exit(0);
 }

@@ -1,0 +1,3 @@
+module ffi::consts;
+
+export const nullptr = __builtin::interop::nullptr;
