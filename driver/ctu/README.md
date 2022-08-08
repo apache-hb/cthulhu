@@ -9,10 +9,10 @@
 * closure types
 * array types
 * integral types
+* integer literal suffixes
 
 ## half finished
 * break/continue labels
-* integer literal suffixes
 * return type checking
 * entire expression list
 * syntax for newtypes

@@ -30,8 +30,11 @@
 #    define GNU_ATTRIB(...)
 #endif
 
+#ifndef NODISCARD
+#   define NODISCARD GNU_ATTRIB(warn_unused_result)
+#endif
+
 #define FORMAT_ATTRIB(a, b) GNU_ATTRIB(format(printf, a, b))
-#define NODISCARD GNU_ATTRIB(warn_unused_result)
 #define CONSTFN GNU_ATTRIB(const)
 #define PUREFN GNU_ATTRIB(pure)
 #define HOTFN GNU_ATTRIB(hot)
