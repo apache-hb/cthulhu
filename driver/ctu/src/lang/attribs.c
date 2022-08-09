@@ -72,12 +72,6 @@ static hlir_attributes_t *apply_entry(sema_t *sema, hlir_t *hlir, ast_t *ast)
         return NULL;
     }
 
-    if (ast->body == NULL)
-    {
-        report(sema_reports(sema), eFatal, ast->node, "entry points must have a body");
-        return NULL;
-    }
-
     if (is_entry_point(attribs->linkage))
     {
         report(sema_reports(sema), eFatal, ast->node, "overriding entry point attribute");

@@ -59,6 +59,8 @@ void add_builtin_suffixes(sema_t *sema)
     add_int_suffix(sema, "u", eDigitInt, eUnsigned);
     add_int_suffix(sema, "ul", eDigitLong, eUnsigned);
     add_int_suffix(sema, "uz", eDigitSize, eUnsigned);
+
+    add_int_suffix(sema, "p", eDigitPtr, eUnsigned);
 }
 
 hlir_t *apply_suffix(sema_t *sema, ast_t *ast, suffix_t *suffix)

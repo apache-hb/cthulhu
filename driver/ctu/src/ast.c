@@ -176,7 +176,7 @@ ast_t *ast_branch(scan_t *scan, where_t where, ast_t *cond, ast_t *body, ast_t *
 {
     ast_t *ast = ast_new(eAstBranch, scan, where);
     ast->cond = cond;
-    ast->body = body;
+    ast->then = body;
     ast->other = other;
     return ast;
 }

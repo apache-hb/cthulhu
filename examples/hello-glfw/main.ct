@@ -8,9 +8,9 @@ def cliEntry {
         std::exit(-1);
     }
 
-    const window = glfw::createWindow(640, 480, "Hello World", null, null);
+    const window = glfw::createWindow(640, 480, "Hello World", std::null, std::null);
 
-    if window == null {
+    if window == std::null {
         glfw::terminate();
         std::exit(-1);
     }
