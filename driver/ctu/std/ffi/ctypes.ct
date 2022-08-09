@@ -1,0 +1,18 @@
+module std::ffi::ctypes;
+
+// TODO: __builtin module is required for this stuff to work
+
+export type char = __builtin::char;
+export type uchar = __builtin::uchar;
+
+export type short = __builtin::short;
+export type ushort = __builtin::ushort;
+
+export type int = __builtin::int;
+export type uint = __builtin::uint;
+
+export type long = __builtin::long;
+export type ulong = __builtin::ulong;
+
+export type llong = __builtin::llong;
+export type ullong = __builtin::ullong;

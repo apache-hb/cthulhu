@@ -1,3 +1,3 @@
-module ffi::consts;
+module std::ffi::consts;
 
-export const nullptr = __builtin::interop::nullptr;
+export const nullptr: *void = __builtin::nullptr;

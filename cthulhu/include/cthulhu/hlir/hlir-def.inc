@@ -10,6 +10,7 @@ HLIR_KIND(eHlirDigit,  "digit-type")
 HLIR_KIND(eHlirString, "string-type")
 HLIR_KIND(eHlirBool,   "bool-type")
 HLIR_KIND(eHlirVoid,   "void-type")
+HLIR_KIND(eHlirNull,   "null-type")
 
 // user defined scalar types
 HLIR_KIND(eHlirArray,   "array-type")

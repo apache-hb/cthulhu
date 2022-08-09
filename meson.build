@@ -68,7 +68,7 @@ else
 endif
 
 # we dont use these features so might as well
-foreach arg : [ '-fno-strict-aliasing', '-fno-threadsafe-statics', '-fno-keep-static-consts', '-fmerge-all-constants' ]
+foreach arg : [ '-fstrict-aliasing', '-fno-threadsafe-statics', '-fno-keep-static-consts', '-fmerge-all-constants' ]
     if cc.has_argument(arg)
         args += [ arg ]
     endif
