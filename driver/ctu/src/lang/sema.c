@@ -665,10 +665,10 @@ static hlir_t *sema_branch(sema_t *sema, ast_t *stmt)
     sema_t *bodyInner = begin_sema(sema, sema_reports(sema), tags);
     sema_t *otherInner = begin_sema(sema, sema_reports(sema), tags);
 
-    hlir_t *body = sema_stmt(bodyInner, stmt->body);
+    hlir_t *then = sema_stmt(bodyInner, stmt->then);
     hlir_t *other = stmt->other == NULL ? NULL : sema_stmt(otherInner, stmt->other);
 
-    return hlir_branch(stmt->node, cond, body, other);
+    return hlir_branch(stmt->node, cond, then, other);
 }
 
 static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
@@ -893,11 +893,6 @@ static void sema_decl(sema_t *sema, ast_t *ast)
     default:
         ctu_assert(sema_reports(sema), "unexpected ast of type %d", ast->of);
         return;
-    }
-
-    if (ast->exported)
-    {
-        hlir_set_attributes(decl, hlir_linkage(eLinkExported));
     }
 
     apply_attributes(sema, decl, ast);

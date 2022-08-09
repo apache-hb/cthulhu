@@ -72,6 +72,12 @@ static hlir_attributes_t *apply_entry(sema_t *sema, hlir_t *hlir, ast_t *ast)
         return NULL;
     }
 
+    if (ast->body == NULL)
+    {
+        report(sema_reports(sema), eFatal, ast->node, "entry points must have a body");
+        return NULL;
+    }
+
     if (is_entry_point(attribs->linkage))
     {
         report(sema_reports(sema), eFatal, ast->node, "overriding entry point attribute");
@@ -134,8 +140,24 @@ void add_builtin_attribs(sema_t *sema)
 }
 
 static const char *kDeclNames[eHlirTotal] = {
-    [eHlirStruct] = "struct",     [eHlirUnion] = "union",         [eHlirAlias] = "type alias",
-    [eHlirFunction] = "function", [eHlirGlobal] = "global value", [eHlirRecordField] = "field"};
+    [eHlirStruct] = "struct",     
+    [eHlirUnion] = "union",         
+    [eHlirAlias] = "type alias",
+    [eHlirFunction] = "function", 
+    [eHlirGlobal] = "global value", 
+    [eHlirRecordField] = "field",
+    [eHlirError] = "error"
+};
+
+static const char *get_pretty_decl_name(hlir_t *hlir)
+{
+    if (hlir_is(hlir, eHlirForward))
+    {
+        return kDeclNames[hlir->expected];
+    }
+
+    return kDeclNames[get_hlir_kind(hlir)];
+}
 
 static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *attr)
 {
@@ -146,11 +168,12 @@ static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *attr)
         return;
     }
 
-    hlir_kind_t kind = get_hlir_kind(hlir);
-    if (kind != attrib->expectedKind)
+    if (!hlis_is_or_will_be(hlir, attrib->expectedKind))
     {
         report(sema_reports(sema), eFatal, attr->node, "attribute '%s' is for %ss, was provided with a %s instead",
-               attrib->name, kDeclNames[attrib->expectedKind], kDeclNames[kind]);
+               attrib->name, 
+               kDeclNames[attrib->expectedKind], 
+               get_pretty_decl_name(hlir));
         return;
     }
 
