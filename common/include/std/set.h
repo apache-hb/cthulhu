@@ -19,7 +19,7 @@ typedef struct set_t set_t;
  * @return the created set
  */
 NODISCARD
-set_t *set_new(size_t size);
+set_t *set_new(IN_RANGE(>, 0) size_t size);
 
 /**
  * @brief add a string to a set
@@ -28,7 +28,7 @@ set_t *set_new(size_t size);
  * @param key the key to add
  * @return a pointer to the deduplicated key
  */
-const char *set_add(set_t *set, const char *key);
+const char *set_add(IN_NOTNULL set_t *set, IN_NOTNULL const char *key);
 
 /**
  * @brief check if a set contains a key
@@ -37,12 +37,14 @@ const char *set_add(set_t *set, const char *key);
  * @param key the key to check
  * @return true if the set contains the key
  */
-NODISCARD CONSTFN bool set_contains(set_t *set, const char *key);
+NODISCARD CONSTFN 
+bool set_contains(IN_NOTNULL set_t *set, IN_STRING const char *key);
 
-const void *set_add_ptr(set_t *set, const void *key);
+const void *set_add_ptr(IN_NOTNULL set_t *set, const void *key);
 
-NODISCARD CONSTFN bool set_contains_ptr(set_t *set, const void *key);
+NODISCARD CONSTFN 
+bool set_contains_ptr(IN_NOTNULL set_t *set, const void *key);
 
-void set_reset(set_t *set);
+void set_reset(IN_NOTNULL set_t *set);
 
 END_API

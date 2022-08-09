@@ -41,7 +41,7 @@ char *format(FORMAT_STRING const char *fmt, ...);
  * @return the formatted string
  */
 NODISCARD
-char *formatv(const char *fmt, va_list args);
+char *formatv(IN_STRING const char *fmt, va_list args);
 
 /**
  * @brief see if a string starts with a prefix
@@ -53,7 +53,8 @@ char *formatv(const char *fmt, va_list args);
  *
  * @return if str starts with prefix
  */
-NODISCARD CONSTFN bool str_startswith(const char *str, const char *prefix);
+NODISCARD CONSTFN 
+bool str_startswith(IN_STRING const char *str, IN_STRING const char *prefix);
 
 /**
  * check if a string ends with a substring
@@ -63,7 +64,8 @@ NODISCARD CONSTFN bool str_startswith(const char *str, const char *prefix);
  *
  * @return if str ends with suffix
  */
-NODISCARD CONSTFN bool str_endswith(const char *str, const char *suffix);
+NODISCARD CONSTFN 
+bool str_endswith(IN_STRING const char *str, IN_STRING const char *suffix);
 
 /**
  * @brief join strings
@@ -76,7 +78,7 @@ NODISCARD CONSTFN bool str_endswith(const char *str, const char *suffix);
  * @return the joined string
  */
 NODISCARD
-char *str_join(const char *sep, vector_t *parts);
+char *str_join(IN_STRING const char *sep, IN_NOTNULL vector_t *parts);
 
 /**
  * @brief repeat a string
@@ -89,7 +91,7 @@ char *str_join(const char *sep, vector_t *parts);
  * @return the repeated string
  */
 NODISCARD
-char *str_repeat(const char *str, size_t times);
+char *str_repeat(IN_STRING const char *str, size_t times);
 
 /**
  * @brief turn a string into a C string literal
@@ -101,7 +103,7 @@ char *str_repeat(const char *str, size_t times);
  * @return the normalized string
  */
 NODISCARD
-char *str_normalize(const char *str);
+char *str_normalize(IN_STRING const char *str);
 
 /**
  * @brief turn a string with length into a C string literal
@@ -129,7 +131,7 @@ char *str_normalizen(IN_READS(len) const char *str, size_t len);
  * @return the substrings
  */
 NODISCARD
-vector_t *str_split(const char *str, const char *sep);
+vector_t *str_split(IN_STRING const char *str, IN_STRING const char *sep);
 
 /**
  * @brief find the longest common prefix of a vector of paths
@@ -141,7 +143,7 @@ vector_t *str_split(const char *str, const char *sep);
  * @return the common prefix
  */
 NODISCARD
-const char *common_prefix(vector_t *args);
+const char *common_prefix(IN_NOTNULL vector_t *args);
 
 /**
  * @brief find the last instance of a substring in a string
@@ -152,7 +154,8 @@ const char *common_prefix(vector_t *args);
  * @return the index of the last instance of @a sub in @a str, or SIZE_MAX if
  * sub is not found
  */
-NODISCARD CONSTFN size_t str_rfind(const char *str, const char *sub);
+MUST_INSPECT CONSTFN 
+size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub);
 
 /**
  * @brief find the last instance of a substring in a string with provided length
@@ -162,7 +165,8 @@ NODISCARD CONSTFN size_t str_rfind(const char *str, const char *sub);
  * @param sub the substring to search for
  * @return the index of the last instance of @a sub in @a str, or SIZE_MAX
  */
-NODISCARD CONSTFN size_t str_rfindn(IN_READS(len) const char *str, size_t len, const char *sub);
+MUST_INSPECT CONSTFN 
+size_t str_rfindn(IN_READS(len) const char *str, size_t len, IN_STRING const char *sub);
 
 /**
  * @brief check if a string contains a substring
@@ -172,7 +176,8 @@ NODISCARD CONSTFN size_t str_rfindn(IN_READS(len) const char *str, size_t len, c
  *
  * @return if @a sub is found in @a str
  */
-NODISCARD CONSTFN bool str_contains(const char *str, const char *sub);
+NODISCARD CONSTFN 
+bool str_contains(IN_STRING const char *str, IN_STRING const char *sub);
 
 /**
  * @brief replace all instances of a substring in a string
@@ -184,10 +189,10 @@ NODISCARD CONSTFN bool str_contains(const char *str, const char *sub);
  * @return a copy of @a str with all instances of @a sub replaced with @a repl
  */
 NODISCARD
-char *str_replace(const char *str, const char *sub, const char *repl);
+char *str_replace(IN_STRING const char *str, IN_STRING const char *sub, IN_STRING const char *repl);
 
 NODISCARD
-char *str_replace_many(const char *str, map_t *repl);
+char *str_replace_many(IN_STRING const char *str, IN_NOTNULL map_t *repl);
 
 /**
  * @brief trim leading and trailing characters from a string
@@ -197,7 +202,7 @@ char *str_replace_many(const char *str, map_t *repl);
  * @return the trimmed string
  */
 NODISCARD
-char *str_trim(const char *str, const char *letters);
+char *str_trim(IN_STRING const char *str, IN_STRING const char *letters);
 
 /**
  * @brief remove all instances of @a letters from @a str
@@ -208,7 +213,7 @@ char *str_trim(const char *str, const char *letters);
  * @return the string with letters removed
  */
 NODISCARD
-char *str_erase(IN_READS(len) const char *str, size_t len, const char *letters);
+char *str_erase(IN_READS(len) const char *str, size_t len, IN_STRING const char *letters);
 
 /**
  * @brief hash a string
@@ -217,7 +222,8 @@ char *str_erase(IN_READS(len) const char *str, size_t len, const char *letters);
  *
  * @return the hash
  */
-NODISCARD CONSTFN size_t strhash(const char *str);
+NODISCARD CONSTFN 
+size_t strhash(IN_STRING const char *str);
 
 /**
  * @brief compare strings equality
@@ -229,7 +235,8 @@ NODISCARD CONSTFN size_t strhash(const char *str);
  *
  * @return if the strings are equal
  */
-NODISCARD CONSTFN bool str_equal(const char *lhs, const char *rhs);
+NODISCARD CONSTFN 
+bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
 
 /**
  * @brief get the filename from @a path
@@ -238,7 +245,7 @@ NODISCARD CONSTFN bool str_equal(const char *lhs, const char *rhs);
  * @return the filename extracted from @a path
  */
 NODISCARD
-char *str_filename(const char *path);
+char *str_filename(IN_STRING const char *path);
 
 /**
  * @brief remove the last file extension from a path
@@ -247,7 +254,7 @@ char *str_filename(const char *path);
  * @return the @a path with the last extension removed
  */
 NODISCARD
-char *str_noext(const char *path);
+char *str_noext(IN_STRING const char *path);
 
 /**
  * @brief uppercase an ascii string
@@ -256,12 +263,13 @@ char *str_noext(const char *path);
  * @return @a str with all lowercase charaters replaced with uppercase
  */
 NODISCARD
-char *str_upper(const char *str);
+char *str_upper(IN_STRING const char *str);
 
 NODISCARD
-char *str_lower(const char *str);
+char *str_lower(IN_STRING const char *str);
 
-NODISCARD CONSTFN char str_tolower(int c);
+NODISCARD CONSTFN 
+char str_tolower(int c);
 
 #define STR_WHITESPACE " \t\r\v\n\f" //< all whitespace charaters
 

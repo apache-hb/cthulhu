@@ -1,10 +1,6 @@
 #pragma once
 
-#if !COMPILER_SOURCE
-#    include "base/macros.h"
-DISABLE_SAL
-#endif
-
+#include "base/macros.h"
 #include "base/memory.h"
 #include "base/util.h"
 

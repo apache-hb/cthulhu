@@ -74,17 +74,17 @@ foreach arg : [ '-fstrict-aliasing', '-fno-threadsafe-statics', '-fno-keep-stati
     endif
 endforeach
 
+analyze_args = []
+
 if cc.get_id() == 'msvc'
     args += [ '/Wv:18' ]
 
-    if analyze.enabled()
-        args += [
-            '/external:W0', '/external:I' + bld, 
-            '/analyze', '/analyze:external-'
-        ]
-    endif
+    analyze_args += [
+        '/analyze',
+        '/analyze:max_paths', '4096'
+    ]
 else
-    analyze_args = [ 
+    analyze_args += [ 
         '-Wanalyzer-double-fclose',
         '-Wanalyzer-double-free',
         '-Wanalyzer-free-of-non-heap',
@@ -92,10 +92,10 @@ else
         '-Wanalyzer-null-dereference',
         '-Wanalyzer-use-after-free'
     ]
+endif
 
-    if analyze.require(cc.has_multi_arguments(analyze_args), error_message : 'analyze requires a gcc version that supports analyzer').enabled()
-        args += analyze_args
-    endif
+if analyze.require(cc.has_multi_arguments(analyze_args), error_message : 'analyze requires a compiler that supports specified arguments').enabled()
+    args += analyze_args
 endif
 
 flex = find_program('flex', 'win_flex', version : '>=2.6')

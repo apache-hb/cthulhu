@@ -21,7 +21,7 @@ typedef struct vector_t vector_t;
  *
  * @param vector the vector to release
  */
-void vector_delete(vector_t *vector);
+void vector_delete(IN_NOTNULL vector_t *vector);
 
 /**
  * @brief create a new vector.
@@ -65,14 +65,14 @@ vector_t *vector_init(void *value);
  *
  * @param value the value to push onto the vector
  */
-void vector_push(vector_t **vector, void *value);
+void vector_push(IN_NOTNULL vector_t **vector, void *value);
 
 /**
  * @brief remove the last element from a vector. invalid on empty vectors
  *
  * @param vector the vector to drop an item from
  */
-void vector_drop(vector_t *vector);
+void vector_drop(IN_NOTNULL vector_t *vector);
 
 /**
  * @brief set an element in a vector
@@ -84,7 +84,11 @@ void vector_drop(vector_t *vector);
  * @param index the index to place the value
  * @param value the value to place
  */
-void vector_set(vector_t *vector, size_t index, void *value);
+void vector_set(
+    IN_NOTNULL vector_t *vector, 
+    IN_RANGE(<, vector_len(vector)) size_t index, 
+    void *value
+);
 
 /**
  * @brief read from a vector by index.
@@ -96,7 +100,11 @@ void vector_set(vector_t *vector, size_t index, void *value);
  * @param index the index to query
  * @return the value at index
  */
-NODISCARD CONSTFN void *vector_get(const vector_t *vector, size_t index);
+NODISCARD CONSTFN 
+void *vector_get(
+    IN_NOTNULL const vector_t *vector, 
+    IN_RANGE(<, vector_len(vector)) size_t index
+);
 
 /**
  * @brief get a vectors last element
@@ -107,7 +115,8 @@ NODISCARD CONSTFN void *vector_get(const vector_t *vector, size_t index);
  * @param vector the vector to get from
  * @return the value of the last element
  */
-NODISCARD CONSTFN void *vector_tail(const vector_t *vector);
+NODISCARD CONSTFN 
+void *vector_tail(IN_NOTNULL const vector_t *vector);
 
 /**
  * @brief get vector length
@@ -117,7 +126,8 @@ NODISCARD CONSTFN void *vector_tail(const vector_t *vector);
  * @param vector the vector to get the length of
  * @return the active size of the vector
  */
-NODISCARD CONSTFN size_t vector_len(const vector_t *vector);
+NODISCARD CONSTFN 
+size_t vector_len(IN_NOTNULL const vector_t *vector);
 
 /**
  * @brief join two vectors
@@ -129,10 +139,10 @@ NODISCARD CONSTFN size_t vector_len(const vector_t *vector);
  * @return the new vector
  */
 NODISCARD
-vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs);
+vector_t *vector_merge(IN_NOTNULL const vector_t *lhs, IN_NOTNULL const vector_t *rhs);
 
 NODISCARD
-vector_t *vector_join(vector_t *vectors);
+vector_t *vector_join(IN_NOTNULL vector_t *vectors);
 
 /**
  * @brief find an element in a vector
@@ -143,13 +153,14 @@ vector_t *vector_join(vector_t *vectors);
  * @param element the element to search for
  * @return the index of the element of @a SIZE_MAX if not found
  */
-NODISCARD CONSTFN size_t vector_find(vector_t *vector, const void *element);
+MUST_INSPECT CONSTFN 
+size_t vector_find(IN_NOTNULL vector_t *vector, const void *element);
 
 /**
  * @brief reset the length of a vector
  *
  * @param vec the vector to clear
  */
-void vector_reset(vector_t *vec);
+void vector_reset(IN_NOTNULL vector_t *vec);
 
 END_API
