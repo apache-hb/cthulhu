@@ -263,7 +263,7 @@ static hlir_t *sema_closure(sema_t *sema, ast_t *ast)
         hlir_t *type = sema_type(sema, param);
         vector_set(params, i, type);
 
-        if (hlir_is(type, eHlirVoid))
+        if (hlir_is(type, eHlirEmpty))
         {
             report(sema_reports(sema), eFatal, param->node, "void parameter");
         }
@@ -466,7 +466,7 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 static hlir_t *sema_call(sema_t *sema, ast_t *ast)
 {
     hlir_t *call = sema_expr(sema, ast->call);
-    if (!hlis_is_or_will_be(get_hlir_type(call), eHlirFunction))
+    if (!hlir_is(get_hlir_type(call), eHlirFunction))
     {
         message_t *id = report(sema_reports(sema), eFatal, ast->node, "can only call function types");
         report_underline(id, "%s", ctu_repr(sema_reports(sema), call, true));
@@ -747,8 +747,6 @@ static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast)
     vector_t *fields = ast->fields;
 
     check_duplicates_and_add_fields(sema, fields, decl);
-
-    hlir_build_struct(decl);
 }
 
 static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast)
@@ -756,8 +754,6 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast)
     vector_t *fields = ast->fields;
 
     check_duplicates_and_add_fields(sema, fields, decl);
-
-    hlir_build_union(decl);
 }
 
 static void sema_alias(sema_t *sema, hlir_t *decl, ast_t *ast)
@@ -799,7 +795,6 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
         check_duplicates_and_add_fields(sema, ast->fields, innerUnion);
 
         // then build the union and set its parent
-        hlir_build_union(innerUnion);
         hlir_set_parent(innerUnion, decl);
 
         // create the field container for the union
@@ -808,9 +803,6 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
         // add the field to the struct
         hlir_add_field(decl, dataField);
     }
-
-    // add the variant to the struct
-    hlir_build_struct(decl);
 }
 
 static void sema_params(sema_t *sema, vector_t *params)

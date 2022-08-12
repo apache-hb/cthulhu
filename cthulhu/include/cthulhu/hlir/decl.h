@@ -5,7 +5,6 @@
 ///
 
 hlir_t *hlir_begin_struct(node_t *node, const char *name);
-void hlir_build_struct(hlir_t *self);
 hlir_t *hlir_struct(node_t *node, const char *name, vector_t *fields);
 
 ///
@@ -13,7 +12,6 @@ hlir_t *hlir_struct(node_t *node, const char *name, vector_t *fields);
 ///
 
 hlir_t *hlir_begin_union(node_t *node, const char *name);
-void hlir_build_union(hlir_t *self);
 hlir_t *hlir_union(node_t *node, const char *name, vector_t *fields);
 
 ///

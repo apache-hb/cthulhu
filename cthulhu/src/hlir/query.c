@@ -13,7 +13,7 @@ static bool has_name(hlir_kind_t kind)
     case eHlirDigit:
     case eHlirBool:
     case eHlirString:
-    case eHlirVoid:
+    case eHlirEmpty:
     case eHlirClosure:
     case eHlirPointer:
     case eHlirArray:
@@ -21,7 +21,6 @@ static bool has_name(hlir_kind_t kind)
     case eHlirType:
     case eHlirAlias:
 
-    case eHlirForward:
     case eHlirRecordField:
     case eHlirFunction:
 
@@ -50,11 +49,10 @@ static bool has_attribs(hlir_kind_t kind)
     case eHlirBool:
     case eHlirString:
     case eHlirPointer:
-    case eHlirVoid:
+    case eHlirEmpty:
     case eHlirClosure:
 
     case eHlirRecordField:
-    case eHlirForward:
     case eHlirFunction:
 
     case eHlirGlobal:
@@ -114,16 +112,6 @@ bool hlir_is(const hlir_t *hlir, hlir_kind_t kind)
     return get_hlir_kind(hlir) == kind;
 }
 
-bool hlir_will_be(const hlir_t *hlir, hlir_kind_t kind)
-{
-    return hlir_is(hlir, eHlirForward) && hlir->expected == kind;
-}
-
-bool hlis_is_or_will_be(const hlir_t *hlir, hlir_kind_t kind)
-{
-    return hlir_is(hlir, kind) || hlir_will_be(hlir, kind);
-}
-
 ///
 /// specific
 ///
@@ -137,7 +125,7 @@ bool hlir_is_type(const hlir_t *hlir)
     case eHlirDigit:
     case eHlirBool:
     case eHlirString:
-    case eHlirVoid:
+    case eHlirEmpty:
     case eHlirType:
     case eHlirAlias:
         return true;
@@ -247,7 +235,7 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
         return actualLhs->width == actualRhs->width && actualLhs->sign == actualRhs->sign;
     case eHlirString: // TODO: update this when we have multiple string encodings
     case eHlirBool:
-    case eHlirVoid:
+    case eHlirEmpty:
         return true;
 
     case eHlirPointer:

@@ -18,10 +18,6 @@ NODISCARD PUREFN const hlir_t *get_hlir_parent(const hlir_t *hlir);
 
 NODISCARD PUREFN bool hlir_is(const hlir_t *hlir, hlir_kind_t kind);
 
-NODISCARD PUREFN bool hlir_will_be(const hlir_t *hlir, hlir_kind_t kind);
-
-NODISCARD PUREFN bool hlis_is_or_will_be(const hlir_t *hlir, hlir_kind_t kind);
-
 ///
 /// detail queries
 ///

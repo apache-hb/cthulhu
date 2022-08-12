@@ -5,7 +5,7 @@
 
 #include "common.h"
 
-#define IS_AGGREGATE(hlir) (hlis_is_or_will_be(hlir, eHlirStruct) || hlis_is_or_will_be(hlir, eHlirUnion))
+#define IS_AGGREGATE(hlir) (hlir_is(hlir, eHlirStruct) || hlir_is(hlir, eHlirUnion))
 
 ///
 /// builder functions
@@ -13,7 +13,7 @@
 
 static hlir_t *hlir_begin_aggregate_with_fields(node_t *node, const char *name, vector_t *fields, hlir_kind_t type)
 {
-    hlir_t *self = hlir_new_forward(node, name, kMetaType, type);
+    hlir_t *self = hlir_new_decl(node, name, kMetaType, type);
     self->fields = fields;
     return self;
 }
@@ -21,15 +21,6 @@ static hlir_t *hlir_begin_aggregate_with_fields(node_t *node, const char *name, 
 static hlir_t *hlir_begin_aggregate(node_t *node, const char *name, hlir_kind_t type)
 {
     return hlir_begin_aggregate_with_fields(node, name, vector_new(4), type);
-}
-
-static void hlir_finish(hlir_t *self, hlir_kind_t type)
-{
-    CTASSERT(self != NULL);
-    CTASSERTM(hlir_is(self, eHlirForward), "hlir-finish called on non-forward hlir");
-    CTASSERTM(self->expected == type, "hlir-finish called with wrong type");
-
-    self->type = type;
 }
 
 ///
@@ -41,15 +32,9 @@ hlir_t *hlir_begin_struct(node_t *node, const char *name)
     return hlir_begin_aggregate(node, name, eHlirStruct);
 }
 
-void hlir_build_struct(hlir_t *self)
-{
-    hlir_finish(self, eHlirStruct);
-}
-
 hlir_t *hlir_struct(node_t *node, const char *name, vector_t *fields)
 {
     hlir_t *self = hlir_begin_aggregate_with_fields(node, name, fields, eHlirStruct);
-    hlir_build_struct(self);
     return self;
 }
 
@@ -62,15 +47,9 @@ hlir_t *hlir_begin_union(node_t *node, const char *name)
     return hlir_begin_aggregate(node, name, eHlirUnion);
 }
 
-void hlir_build_union(hlir_t *self)
-{
-    hlir_finish(self, eHlirUnion);
-}
-
 hlir_t *hlir_union(node_t *node, const char *name, vector_t *fields)
 {
     hlir_t *self = hlir_begin_aggregate_with_fields(node, name, fields, eHlirUnion);
-    hlir_build_union(self);
     return self;
 }
 
@@ -94,12 +73,12 @@ void hlir_add_field(hlir_t *self, hlir_t *field)
 
 hlir_t *hlir_begin_alias(node_t *node, const char *name)
 {
-    return hlir_new_forward(node, name, kMetaType, eHlirAlias);
+    return hlir_new_decl(node, name, kMetaType, eHlirAlias);
 }
 
 void hlir_build_alias(hlir_t *self, const hlir_t *alias, bool newtype)
 {
-    hlir_finish(self, eHlirAlias);
+    CTASSERT(hlir_is(self, eHlirAlias));
     self->alias = alias;
     self->newtype = newtype;
 }
@@ -113,12 +92,12 @@ hlir_t *hlir_alias(node_t *node, const char *name, const hlir_t *type, bool newt
 
 hlir_t *hlir_begin_global(node_t *node, const char *name, const hlir_t *type)
 {
-    return hlir_new_forward(node, name, type, eHlirGlobal);
+    return hlir_new_decl(node, name, type, eHlirGlobal);
 }
 
 void hlir_build_global(hlir_t *self, const hlir_t *init)
 {
-    hlir_finish(self, eHlirGlobal);
+    CTASSERT(hlir_is(self, eHlirGlobal));
     self->value = init;
 }
 
@@ -139,9 +118,15 @@ hlir_t *hlir_param(node_t *node, const char *name, const hlir_t *type)
     return hlir_new_decl(node, name, type, eHlirParam);
 }
 
+void hlir_build_function(hlir_t *self, hlir_t *body)
+{
+    CTASSERT(hlir_is(self, eHlirFunction));
+    self->body = body;
+}
+
 static hlir_t *hlir_begin_function_with_locals(node_t *node, const char *name, vector_t *locals, signature_t signature)
 {
-    hlir_t *self = hlir_new_forward(node, name, kMetaType, eHlirFunction);
+    hlir_t *self = hlir_new_decl(node, name, kMetaType, eHlirFunction);
     self->params = signature.params;
     self->result = signature.result;
     self->variadic = signature.variadic;
@@ -155,17 +140,6 @@ hlir_t *hlir_begin_function(node_t *node, const char *name, signature_t signatur
     return hlir_begin_function_with_locals(node, name, vector_new(4), signature);
 }
 
-void hlir_build_function(hlir_t *self, hlir_t *body)
-{
-    hlir_finish(self, eHlirFunction);
-    self->body = body;
-
-    if (self->variadic)
-    {
-        CTASSERTM(vector_len(self->params) > 0, "variadic functions must have at least one parameter");
-    }
-}
-
 hlir_t *hlir_function(node_t *node, const char *name, signature_t signature, vector_t *locals, hlir_t *body)
 {
     hlir_t *self = hlir_begin_function_with_locals(node, name, locals, signature);
@@ -175,26 +149,26 @@ hlir_t *hlir_function(node_t *node, const char *name, signature_t signature, vec
 
 void hlir_add_local(hlir_t *self, hlir_t *local)
 {
-    CTASSERTM(hlir_will_be(self, eHlirFunction), "hlir-add-local called on non-function hlir");
+    CTASSERTM(hlir_is(self, eHlirFunction), "hlir-add-local called on non-function hlir");
     vector_push(&self->locals, local);
 }
 
 hlir_t *hlir_begin_module(node_t *node, const char *name)
 {
-    return hlir_new_forward(node, name, NULL, eHlirModule);
+    return hlir_new_decl(node, name, NULL, eHlirModule);
 }
 
-void hlir_build_module(hlir_t *self, vector_t *types, vector_t *globals, vector_t *functions)
+void hlir_update_module(hlir_t *self, vector_t *types, vector_t *globals, vector_t *functions)
 {
-    hlir_finish(self, eHlirModule);
-
     self->types = types;
     self->globals = globals;
     self->functions = functions;
 }
 
-void hlir_update_module(hlir_t *self, vector_t *types, vector_t *globals, vector_t *functions)
+void hlir_build_module(hlir_t *self, vector_t *types, vector_t *globals, vector_t *functions)
 {
+    CTASSERT(hlir_is(self, eHlirModule));
+
     self->types = types;
     self->globals = globals;
     self->functions = functions;

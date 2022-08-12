@@ -132,17 +132,12 @@ const char *ctu_type_repr(reports_t *reports, const hlir_t *type, bool detail)
 {
     const hlir_t *inner = hlir_follow_type(type);
     hlir_kind_t kind = get_hlir_kind(inner);
-    if (kind == eHlirForward)
-    {
-        kind = inner->expected;
-    }
-
     switch (kind)
     {
     case eHlirDigit:
     case eHlirBool:
     case eHlirString:
-    case eHlirVoid:
+    case eHlirEmpty:
         return repr_integral(inner, detail);
 
     case eHlirPointer:

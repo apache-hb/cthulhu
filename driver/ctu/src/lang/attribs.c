@@ -145,11 +145,6 @@ static const char *kDeclNames[eHlirTotal] = {
 
 static const char *get_pretty_decl_name(hlir_t *hlir)
 {
-    if (hlir_is(hlir, eHlirForward))
-    {
-        return kDeclNames[hlir->expected];
-    }
-
     return kDeclNames[get_hlir_kind(hlir)];
 }
 
@@ -162,7 +157,7 @@ static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *attr)
         return;
     }
 
-    if (!hlis_is_or_will_be(hlir, attrib->expectedKind))
+    if (!hlir_is(hlir, attrib->expectedKind))
     {
         report(sema_reports(sema), eFatal, attr->node, "attribute '%s' is for %ss, was provided with a %s instead",
                attrib->name, 

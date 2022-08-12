@@ -31,13 +31,6 @@ hlir_t *hlir_new_decl(node_t *node, const char *name, const hlir_t *of, hlir_kin
     return hlir;
 }
 
-hlir_t *hlir_new_forward(node_t *node, const char *name, const hlir_t *of, hlir_kind_t expect)
-{
-    hlir_t *hlir = hlir_new_decl(node, name, of, eHlirForward);
-    hlir->expected = expect;
-    return hlir;
-}
-
 void init_hlir(void)
 {
     GLOBAL_INIT();
@@ -64,7 +57,7 @@ bool hlir_is_exported(const hlir_t *self)
 static bool is_signature(const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
-    return kind == eHlirClosure || kind == eHlirFunction || hlir_will_be(hlir, eHlirFunction);
+    return kind == eHlirClosure || kind == eHlirFunction;
 }
 
 #define ENSURE_VALID_CLOSURE(hlir, str)                                                                                \

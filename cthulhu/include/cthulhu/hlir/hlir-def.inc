@@ -9,8 +9,8 @@ HLIR_KIND(eHlirType,   "meta-type")
 HLIR_KIND(eHlirDigit,  "digit-type")
 HLIR_KIND(eHlirString, "string-type")
 HLIR_KIND(eHlirBool,   "bool-type")
-HLIR_KIND(eHlirVoid,   "void-type")
-HLIR_KIND(eHlirNull,   "null-type")
+HLIR_KIND(eHlirUnit, "unit-type")
+HLIR_KIND(eHlirEmpty, "empty-type")
 
 // user defined scalar types
 HLIR_KIND(eHlirArray,   "array-type")
@@ -56,7 +56,6 @@ HLIR_KIND(eHlirReturn, "return")
 // declarations
 HLIR_KIND(eHlirGlobal,   "global")
 HLIR_KIND(eHlirFunction, "function")
-HLIR_KIND(eHlirForward,  "forward")
 HLIR_KIND(eHlirModule,   "module")
 
 HLIR_KIND(eHlirParam, "param")
@@ -103,6 +102,7 @@ HLIR_BUILTIN(eBuiltinAlignOf, "alignof")
 #   define TYPE_QUALIFIER(ID, STR, BIT)
 #endif
 
+TYPE_QUALIFIER(eQualDefault, "default", (0 << 0))
 TYPE_QUALIFIER(eQualConst, "const", (1 << 0))
 TYPE_QUALIFIER(eQualVolatile, "volatile", (1 << 1))
 TYPE_QUALIFIER(eQualAtomic, "atomic", (1 << 2))

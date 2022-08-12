@@ -145,9 +145,6 @@ typedef struct hlir_t
                     union {
                         /* the body of this function */
                         struct hlir_t *body;
-
-                        /* the type this is expected to be */
-                        hlir_kind_t expected;
                     };
                 };
 
