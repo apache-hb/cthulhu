@@ -263,7 +263,7 @@ static hlir_t *sema_closure(sema_t *sema, ast_t *ast)
         hlir_t *type = sema_type(sema, param);
         vector_set(params, i, type);
 
-        if (hlir_is(type, eHlirEmpty))
+        if (hlir_is(type, eHlirUnit) || hlir_is(type, eHlirEmpty))
         {
             report(sema_reports(sema), eFatal, param->node, "void parameter");
         }

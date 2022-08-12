@@ -138,6 +138,7 @@ const char *ctu_type_repr(reports_t *reports, const hlir_t *type, bool detail)
     case eHlirBool:
     case eHlirString:
     case eHlirEmpty:
+    case eHlirUnit:
         return repr_integral(inner, detail);
 
     case eHlirPointer:

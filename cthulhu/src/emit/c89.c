@@ -153,7 +153,7 @@ static const char *c89_mangle_type_inner(c89_emit_t *emit, const hlir_t *type)
     case eHlirDigit:
         return c89_mangle_digit(type);
 
-    case eHlirEmpty:
+    case eHlirUnit:
         return "v";
     case eHlirBool:
         return "b";
@@ -434,7 +434,7 @@ static const char *c89_emit_inner_type(c89_emit_t *emit, const hlir_t *hlir, con
     {
     case eHlirBool:
         return c89_emit_bool_type(name);
-    case eHlirEmpty:
+    case eHlirUnit:
         return c89_emit_void_type(name);
     case eHlirDigit:
         return c89_emit_digit_type(hlir, name);
@@ -855,6 +855,7 @@ static void visit_type(c89_emit_t *emit, vector_t **result, const hlir_t *hlir)
     switch (kind)
     {
     case eHlirEmpty:
+    case eHlirUnit:
     case eHlirDigit:
     case eHlirBool:
     case eHlirString:

@@ -23,7 +23,7 @@ hlir_t *hlir_string(node_t *node, const char *name)
 
 hlir_t *hlir_void(node_t *node, const char *name)
 {
-    return hlir_new_decl(node, name, kMetaType, eHlirEmpty);
+    return hlir_new_decl(node, name, kMetaType, eHlirUnit);
 }
 
 hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hlir_t *result, bool variadic)
