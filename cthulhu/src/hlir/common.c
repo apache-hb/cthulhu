@@ -27,7 +27,6 @@ hlir_t *hlir_new_decl(node_t *node, const char *name, const hlir_t *of, hlir_kin
     hlir_t *hlir = hlir_new(node, of, kind);
     hlir->name = name;
     hlir->attributes = &kDefaultAttributes;
-    hlir->parentDecl = NULL;
     return hlir;
 }
 

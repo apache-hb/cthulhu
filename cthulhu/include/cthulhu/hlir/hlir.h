@@ -108,9 +108,6 @@ typedef struct hlir_t
             /* any attributes this declaration has */
             const hlir_attributes_t *attributes;
 
-            const struct hlir_t *parentDecl; ///< the module that contains this
-                                             ///< declaration
-
             union {
                 ///
                 /// all types

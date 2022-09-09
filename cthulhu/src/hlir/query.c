@@ -103,12 +103,6 @@ node_t *get_hlir_node(const hlir_t *hlir)
     return hlir->location;
 }
 
-const hlir_t *get_hlir_parent(const hlir_t *hlir)
-{
-    CTASSERT(hlir != NULL);
-    return hlir->parentDecl;
-}
-
 bool hlir_is(const hlir_t *hlir, hlir_kind_t kind)
 {
     return get_hlir_kind(hlir) == kind;

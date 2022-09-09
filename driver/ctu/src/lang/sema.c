@@ -794,9 +794,6 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
         // add all fields with data to the union
         check_duplicates_and_add_fields(sema, ast->fields, innerUnion);
 
-        // then build the union and set its parent
-        hlir_set_parent(innerUnion, decl);
-
         // create the field container for the union
         hlir_t *dataField = hlir_field(ast->node, innerUnion, "data");
 
@@ -964,7 +961,6 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
 
     sema_data_t *semaData = sema_get_data(sema);
 
-    hlir_set_parent(decl, semaData->parentModule);
     add_decl(sema, tag, ast->name, decl);
 
     hlir_set_attributes(decl, hlir_attributes(eLinkExported, ast->exported ? eVisiblePublic : eVisiblePrivate, DEFAULT_TAGS, NULL));

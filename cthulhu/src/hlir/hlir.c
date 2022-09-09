@@ -153,8 +153,3 @@ void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes)
 {
     self->attributes = attributes;
 }
-
-void hlir_set_parent(hlir_t *self, const hlir_t *parent)
-{
-    self->parentDecl = parent;
-}

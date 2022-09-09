@@ -29,6 +29,8 @@ typedef struct
 
     // map of hlir -> string
     map_t *mangledNames;
+
+    vector_t *path; // current path of decls
 } c89_emit_t;
 
 static const char *kIndent = "  ";
@@ -56,7 +58,10 @@ static void end_indent(c89_emit_t *emit)
 
 static char *c89_mangle_section(const char *section)
 {
-    return format("%zu%s", strlen(section), section);
+    map_t *repl = map_new(4);
+    map_set(repl, "-", "_");
+    map_set(repl, ".", "_");
+    return format("%zu%s", strlen(section), str_replace_many(section, repl));
 }
 
 static const char *kDigitMangles[eSignTotal][eDigitTotal] = {
@@ -117,32 +122,21 @@ static const char *c89_mangle_digit(const hlir_t *type)
     return kDigitMangles[sign][width];
 }
 
-static const char *c89_mangle_qualified(const hlir_t *type)
+static const char *c89_mangle_qualified(c89_emit_t *emit, const hlir_t *type)
 {
-    vector_t *parts = vector_new(4);
-    const hlir_t *parent = get_hlir_parent(type);
+    const char *result = "";
+    size_t len = vector_len(emit->path);
 
-    while (parent != NULL)
+    for (size_t i = 0; i < len; i++)
     {
-        const char *name = get_hlir_name(parent);
-        vector_t *split = str_split(name, ".");
-        size_t totalParts = vector_len(parts);
+        const hlir_t *part = vector_get(emit->path, i);
+        const char *name = get_hlir_name(part);
 
-        for (size_t i = 0; i < totalParts; i++)
-        {
-            char *part = vector_get(split, i);
-            char *mangled = c89_mangle_section(part);
-            vector_push(&parts, mangled);
-        }
-
-        parent = get_hlir_parent(parent);
+        result = format("%s%s", result, c89_mangle_section(name));
     }
-
-    char *joinedParts = str_join("", parts);
-
     const char *name = get_hlir_name(type);
 
-    return format("%s%zu%s", joinedParts, strlen(name), name);
+    return format("%s%zu%s", result, strlen(name), name);
 }
 
 static const char *c89_mangle_type_inner(c89_emit_t *emit, const hlir_t *type)
@@ -164,7 +158,7 @@ static const char *c89_mangle_type_inner(c89_emit_t *emit, const hlir_t *type)
     case eHlirAlias:
     case eHlirStruct:
     case eHlirUnion:
-        return c89_mangle_qualified(type);
+        return c89_mangle_qualified(emit, type);
 
     case eHlirParam:
         return c89_mangle_type(emit, get_hlir_type(type));
@@ -201,32 +195,30 @@ static char *c89_mangle_params(c89_emit_t *emit, vector_t *params)
 
 static char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
 {
-    vector_t *parts = vector_new(4);
-    const hlir_t *parent = get_hlir_parent(hlir);
+    const char *prefix = "";
+    const char *result = "";
+    size_t len = vector_len(emit->path);
 
-    while (parent != NULL)
+    for (size_t i = 0; i < len; i++)
     {
-        const char *name = get_hlir_name(parent);
-        vector_t *split = str_split(name, ".");
-        size_t totalParts = vector_len(parts);
+        const hlir_t *part = vector_get(emit->path, i);
+        const char *name = get_hlir_name(part);
 
-        for (size_t i = 0; i < totalParts; i++)
-        {
-            char *part = vector_get(split, i);
-            char *mangled = c89_mangle_section(part);
-            vector_push(&parts, mangled);
-        }
-
-        parent = get_hlir_parent(parent);
+        result = format("%s%s", result, c89_mangle_section(name));
     }
 
-    char *joinedParts = str_join("", parts);
     const char *name = get_hlir_name(hlir);
     const char *typesig = "";
+
+    if (len > 0)
+    {
+        prefix = "_Z";
+    }
 
     if (hlir_is(hlir, eHlirFunction))
     {
         typesig = c89_mangle_params(emit, closure_params(hlir));
+        prefix = "_Z";
     }
 
     if (name == NULL)
@@ -234,14 +226,11 @@ static char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
         name = ""; // TODO: generate a unique id per anonymous field
     }
 
-    return format("_Z%s%zu%s%s", joinedParts, strlen(name), name, typesig);
+    return format("%s%s%zu%s%s", prefix, result, strlen(name), name, typesig);
 }
 
 static const char *c89_mangle_name(c89_emit_t *emit, const hlir_t *hlir)
 {
-    CTASSERTF((hlir->parentDecl == NULL ? hlir_is_imported(hlir) : true), "decl '%s' must have a parent decl",
-              get_hlir_name(hlir));
-
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
     if (attribs->mangle != NULL)
     {
@@ -1006,12 +995,15 @@ static void c89_emit_global(c89_emit_t *emit, const hlir_t *hlir)
 
 static void c89_emit_globals(c89_emit_t *emit, size_t totalDecls, vector_t *modules)
 {
+    vector_reset(emit->path);
+
     size_t totalModules = vector_len(modules);
     set_t *uniqueGlobals = set_new(totalDecls);
 
     for (size_t i = 0; i < totalModules; i++)
     {
         hlir_t *mod = vector_get(modules, i);
+        vector_push(&emit->path, mod);
 
         for (size_t j = 0; j < vector_len(mod->globals); j++)
         {
@@ -1023,6 +1015,8 @@ static void c89_emit_globals(c89_emit_t *emit, size_t totalDecls, vector_t *modu
 
             c89_forward_global(emit, global);
         }
+
+        vector_reset(emit->path);
     }
 
     set_reset(uniqueGlobals);
@@ -1132,12 +1126,15 @@ static void c89_emit_function(c89_emit_t *emit, const hlir_t *function)
 
 static void c89_emit_functions(c89_emit_t *emit, size_t totalDecls, vector_t *modules)
 {
+    vector_reset(emit->path);
+
     size_t totalModules = vector_len(modules);
     set_t *uniqueFunctions = set_new(totalDecls);
 
     for (size_t i = 0; i < totalModules; i++)
     {
         hlir_t *mod = vector_get(modules, i);
+        vector_push(&emit->path, mod);
 
         for (size_t j = 0; j < vector_len(mod->functions); j++)
         {
@@ -1149,6 +1146,8 @@ static void c89_emit_functions(c89_emit_t *emit, size_t totalDecls, vector_t *mo
 
             c89_forward_function(emit, function);
         }
+
+        vector_reset(emit->path);
     }
 
     set_reset(uniqueFunctions);
@@ -1188,12 +1187,11 @@ void c89_emit_modules(reports_t *reports, vector_t *modules, io_t *io)
     // then use the total number of types to create a fast map
     emit.mangledNames = map_optimal(totalDecls);
     emit.depth = 0;
+    emit.path = vector_new(4);
 
     WRITE_STRING(&emit, "#include <stddef.h>\n");
 
     c89_emit_types(&emit, modules);
-
     c89_emit_globals(&emit, totalDecls, modules);
-
     c89_emit_functions(&emit, totalDecls, modules);
 }

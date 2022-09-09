@@ -392,7 +392,6 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
 
         hlir_t *hlir = hlir_begin_global(it->node, it->name, kIntegerType);
         hlir_set_attributes(hlir, kConst);
-        hlir_set_parent(hlir, mod);
 
         set_var(sema, eSemaValues, it->name, hlir);
         vector_push(&consts, hlir);
@@ -404,7 +403,6 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
 
         hlir_t *hlir = hlir_begin_global(it->node, it->name, kIntegerType);
         hlir_set_attributes(hlir, kMutable);
-        hlir_set_parent(hlir, mod);
 
         set_var(sema, eSemaValues, it->name, hlir);
         vector_push(&globals, hlir);
@@ -417,7 +415,6 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
 
         hlir_t *hlir = hlir_begin_function(it->node, it->name, signature);
         hlir_set_attributes(hlir, kExported);
-        hlir_set_parent(hlir, mod);
 
         set_proc(sema, it->name, hlir);
         vector_push(&procs, hlir);
@@ -511,7 +508,6 @@ hlir_t *pl0_compile_module(runtime_t *runtime, compile_t *compile)
 
         hlir_t *hlir = hlir_function(root->node, modName, signature, vector_of(0), body);
         hlir_set_attributes(hlir, attribs);
-        hlir_set_parent(hlir, self);
 
         vector_push(&semaData->procs, hlir);
     }

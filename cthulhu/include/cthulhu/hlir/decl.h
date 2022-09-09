@@ -83,7 +83,6 @@ hlir_t *hlir_module(node_t *node, const char *name, vector_t *types, vector_t *g
 ///
 
 void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes);
-void hlir_set_parent(hlir_t *self, const hlir_t *parent);
 
 /**
  * @brief set the type of a declaration or expression

@@ -63,7 +63,6 @@ void hlir_add_field(hlir_t *self, hlir_t *field)
     CTASSERTM(IS_AGGREGATE(self), "hlir-add-field called on non-aggregate hlir");
     CTASSERTM(hlir_is(field, eHlirRecordField), "hlir-add-field called with non-field hlir");
 
-    hlir_set_parent(field, self);
     vector_push(&self->fields, field);
 }
 
