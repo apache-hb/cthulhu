@@ -16,6 +16,8 @@ typedef struct {
 
 static const char *emit_operand(emit_t *emit, set_t *edges, operand_t op)
 {
+    UNUSED(emit);
+
     switch (op.kind)
     {
     case eOperandEmpty: return "";
@@ -24,21 +26,25 @@ static const char *emit_operand(emit_t *emit, set_t *edges, operand_t op)
         set_add_ptr(edges, op.bb);
         return format(".%s", op.bb->id);
     case eOperandImm: return format("$%s", mpz_get_str(NULL, 10, op.imm.digit));
+    case eOperandGlobal: return format("&%s", op.flow->name);
     default: return "unknown";
     }
 }
 
-static void emit_step(emit_t *emit, size_t i, set_t *edges, step_t *step)
+static void emit_step(emit_t *emit, set_t *edges, step_t *step)
 {
-    const char *id = step->id == NULL ? "" : step->id;
     switch (step->opcode)
     {
     case eOpValue:
-        printf("  %%%s = %s\n", id, emit_operand(emit, edges, step->value));
+        printf("  %%%s = %s\n", step->id, emit_operand(emit, edges, step->value));
         break;
 
     case eOpBinary:
-        printf("  %%%s = binary %s %s %s\n", id, binary_name(step->binary), emit_operand(emit, edges, step->lhs), emit_operand(emit, edges, step->rhs));
+        printf("  %%%s = binary %s %s %s\n", step->id, binary_name(step->binary), emit_operand(emit, edges, step->lhs), emit_operand(emit, edges, step->rhs));
+        break;
+
+    case eOpLoad:
+        printf("  %%%s = load %s\n", step->id, emit_operand(emit, edges, step->value));
         break;
 
     case eOpReturn:
@@ -66,7 +72,7 @@ static void emit_block(emit_t *emit, const block_t *block)
     for (size_t i = 0; i < len; i++) 
     {
         step_t *step = vector_get(block->steps, i);
-        emit_step(emit, i, edges, step);
+        emit_step(emit, edges, step);
     }
 
     set_iter_t iter = set_iter(edges);

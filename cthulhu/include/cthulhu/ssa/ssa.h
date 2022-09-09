@@ -33,9 +33,9 @@ typedef struct operand_t
     opkind_t kind;
 
     union {
-        block_t *bb;
+        const block_t *bb;
         step_t *reg;
-        flow_t *function;
+        const flow_t *flow;
         imm_t imm;
     };
 } operand_t;

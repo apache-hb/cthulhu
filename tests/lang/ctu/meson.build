@@ -144,7 +144,8 @@ tests = {
     'digits': {
         'pass': [
             'no-suffix',
-            'suffix-zoo'
+            'suffix-zoo',
+            'complex-init'
         ],
         'fail': [
             'invalid-suffix'

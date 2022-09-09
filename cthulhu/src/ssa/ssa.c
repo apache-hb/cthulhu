@@ -9,6 +9,7 @@
 
 #include "std/map.h"
 #include "std/vector.h"
+#include "std/str.h"
 
 #include "report/report.h"
 
@@ -16,18 +17,25 @@ typedef struct {
     reports_t *reports;
     map_t *globals;
     block_t *currentBlock;
+    size_t stepIdx;
+    size_t blockIdx;
 } ssa_t;
 
-static block_t *new_block(void) 
+static block_t *new_block(const char *id) 
 {
     block_t *block = ctu_malloc(sizeof(block_t));
     block->steps = vector_new(16);
+    block->id = id;
     return block;
 }
 
 static operand_t add_step(ssa_t *ssa, step_t step)
 {
     step_t *ptr = BOX(step);
+    if (ptr->id == NULL)
+    {
+        ptr->id = format("%zu", ssa->stepIdx++);
+    }
     vector_push(&ssa->currentBlock->steps, ptr);
     operand_t op = {
         .kind = eOperandReg,
@@ -46,7 +54,7 @@ static void fwd_global(ssa_t *ssa, const hlir_t *global)
 
 static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir);
 
-static operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
+static operand_t compile_digit(const hlir_t *hlir)
 {
     imm_t imm;
     mpz_init_set(imm.digit, hlir->digit);
@@ -74,16 +82,45 @@ static operand_t compile_binary(ssa_t *ssa, const hlir_t *hlir)
     return add_step(ssa, step);
 }
 
+static operand_t compile_load(ssa_t *ssa, const hlir_t *hlir)
+{
+    operand_t name = compile_rvalue(ssa, hlir->read);
+    step_t step = {
+        .opcode = eOpLoad,
+        .value = name
+    };
+
+    return add_step(ssa, step);
+}
+
+static operand_t compile_global_ref(ssa_t *ssa, const hlir_t *hlir)
+{
+    const flow_t *ref = map_get_ptr(ssa->globals, hlir);
+
+    operand_t op = {
+        .kind = eOperandGlobal,
+        .flow = ref
+    };
+
+    return op;
+}
+
 static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
     {
     case eHlirDigitLiteral:
-        return compile_digit(ssa, hlir);
+        return compile_digit(hlir);
 
     case eHlirBinary:
         return compile_binary(ssa, hlir);
+
+    case eHlirLoad:
+        return compile_load(ssa, hlir);
+
+    case eHlirGlobal:
+        return compile_global_ref(ssa, hlir);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-rvalue %s", hlir_kind_to_string(kind));
@@ -94,9 +131,11 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 static void compile_global(ssa_t *ssa, const hlir_t *global)
 {
     flow_t *flow = map_get_ptr(ssa->globals, global);
-    block_t *block = new_block();
+    block_t *block = new_block("entry");
     flow->entry = block;
     ssa->currentBlock = block;
+    ssa->stepIdx = 0;
+    ssa->blockIdx = 0;
 
     operand_t result = compile_rvalue(ssa, global->value);
     step_t step = {
