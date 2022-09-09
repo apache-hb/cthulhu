@@ -48,10 +48,11 @@ hlir_t *hlir_name(node_t *node, hlir_t *read)
     return self;
 }
 
-hlir_t *hlir_unary(node_t *node, struct hlir_unary_t expr)
+hlir_t *hlir_unary(node_t *node, unary_t unary, hlir_t *operand)
 {
-    hlir_t *self = hlir_new(node, get_hlir_type(expr.operand), eHlirUnary);
-    self->unaryExpr = expr;
+    hlir_t *self = hlir_new(node, get_hlir_type(operand), eHlirUnary);
+    self->unary = unary;
+    self->operand = operand;
     return self;
 }
 

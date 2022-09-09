@@ -164,7 +164,7 @@ static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *
         break;
 
     case eHlirUnary:
-        check_recursion(reports, stack, hlir->unaryExpr.operand);
+        check_recursion(reports, stack, hlir->operand);
         break;
 
     case eHlirDigitLiteral:

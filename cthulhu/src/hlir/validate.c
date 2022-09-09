@@ -13,7 +13,7 @@ node_t *check_const_expr(reports_t *reports, const hlir_t *expr)
         return node_invalid();
 
     case eHlirUnary:
-        return check_const_expr(reports, expr->unaryExpr.operand);
+        return check_const_expr(reports, expr->operand);
 
     case eHlirCompare:
     case eHlirBinary: {

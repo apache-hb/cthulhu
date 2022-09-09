@@ -133,8 +133,7 @@ static hlir_t *sema_binary(sema_t *sema, pl0_t *node)
 static hlir_t *sema_unary(sema_t *sema, pl0_t *node)
 {
     hlir_t *operand = sema_expr(sema, node->operand);
-    struct hlir_unary_t unaryExpr = { .operand = operand, .op = node->unary};
-    return hlir_unary(node->node, unaryExpr);
+    return hlir_unary(node->node, node->unary, operand);
 }
 
 static hlir_t *sema_expr(sema_t *sema, pl0_t *node)

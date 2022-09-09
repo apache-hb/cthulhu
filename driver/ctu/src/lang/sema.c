@@ -325,9 +325,7 @@ static hlir_t *sema_unary_digit(sema_t *sema, ast_t *ast, hlir_t *operand)
                ctu_repr(sema_reports(sema), operand, true));
     }
 
-    struct hlir_unary_t unaryExpr = { .operand = operand, .op = ast->unary };
-
-    return hlir_unary(ast->node, unaryExpr);
+    return hlir_unary(ast->node, ast->unary, operand);
 }
 
 static hlir_t *sema_unary_bool(sema_t *sema, ast_t *ast, hlir_t *operand)
@@ -341,9 +339,7 @@ static hlir_t *sema_unary_bool(sema_t *sema, ast_t *ast, hlir_t *operand)
                ctu_repr(sema_reports(sema), operand, true));
     }
 
-    struct hlir_unary_t unaryExpr = { .operand = operand, .op = ast->unary };
-
-    return hlir_unary(ast->node, unaryExpr);
+    return hlir_unary(ast->node, ast->unary, operand);
 }
 
 static hlir_t *sema_unary(sema_t *sema, ast_t *ast)

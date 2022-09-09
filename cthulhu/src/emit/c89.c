@@ -661,14 +661,14 @@ static const char *c89_emit_binary(c89_emit_t *emit, const hlir_t *hlir)
 
 static const char *c89_emit_unary(c89_emit_t *emit, const hlir_t *hlir)
 {
-    const char *operand = c89_emit_rvalue(emit, hlir->unaryExpr.operand);
+    const char *operand = c89_emit_rvalue(emit, hlir->operand);
 
-    if (hlir->unaryExpr.op == eUnaryAbs)
+    if (hlir->unary == eUnaryAbs)
     {
         return format("llabs(%s)", operand);
     }
 
-    const char *op = unary_symbol(hlir->unaryExpr.op);
+    const char *op = unary_symbol(hlir->unary);
     return format("(%s %s)", op, operand);
 }
 

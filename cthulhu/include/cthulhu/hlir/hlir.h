@@ -53,10 +53,10 @@ typedef struct hlir_t
         struct hlir_t *read; ///< the name of this load operation. active if
                              ///< type == eHlirName
 
-        struct hlir_unary_t {
+        struct {
             struct hlir_t *operand;
-            unary_t op;
-        } unaryExpr;
+            unary_t unary;
+        };
 
         struct
         {
@@ -259,7 +259,7 @@ hlir_t *hlir_string_literal(node_t *node, const hlir_t *type, struct string_view
 
 hlir_t *hlir_name(node_t *node, hlir_t *read);
 
-hlir_t *hlir_unary(node_t *node, struct hlir_unary_t expr);
+hlir_t *hlir_unary(node_t *node, unary_t op, hlir_t *operand);
 hlir_t *hlir_binary(node_t *node, const hlir_t *type, binary_t binary, hlir_t *lhs, hlir_t *rhs);
 hlir_t *hlir_compare(node_t *node, const hlir_t *type, compare_t compare, hlir_t *lhs, hlir_t *rhs);
 hlir_t *hlir_call(node_t *node, hlir_t *call, vector_t *args);
