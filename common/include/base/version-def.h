@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <inttypes.h>
 
 #define NEW_VERSION(major, minor, patch) (((major) << 24) | ((minor) << 16) | (patch))
 

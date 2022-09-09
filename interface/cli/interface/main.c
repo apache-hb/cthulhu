@@ -7,6 +7,8 @@
 
 #include "cthulhu/interface/interface.h"
 
+#include "cthulhu/ssa/ssa.h"
+
 #include "cthulhu/emit/c89.h"
 
 #include "io/io.h"
@@ -62,7 +64,7 @@ int main(int argc, const char **argv)
     }
 
     const char *outFile = get_string_arg(&result, outputFileNameParam, "out.c");
-    // bool enableSsa = get_bool_arg(&result, enableSSAParam, false);
+    bool enableSsa = get_bool_arg(&result, enableSSAParam, false);
 
     size_t totalFiles = vector_len(result.files);
     vector_t *sources = vector_of(totalFiles);
@@ -105,6 +107,20 @@ int main(int argc, const char **argv)
     }
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
+
+    if (enableSsa)
+    {
+        module_t *mod = emit_module(reports, allModules);
+        status = end_reports(reports, "emitting ssa", reportConfig);
+        if (status != 0)
+        {
+            return status;
+        }
+
+        eval_module(reports, mod);
+
+        return end_reports(reports, "evaluating ssa", reportConfig);
+    }
 
     io_t *out = io_file(outFile, eFileWrite | eFileBinary);
 

@@ -27,6 +27,22 @@ libgeneric = library('generic', src,
 generic = declare_dependency(
     link_with : libgeneric,
     include_directories : 'include',
+    dependencies : deps
+)
+
+src = [
+    'src/ssa/ssa.c',
+    'src/ssa/eval.c'
+]
+
+libssa = library('ssa', src,
     dependencies : deps,
-    compile_args : args
+    c_args : args,
+    include_directories : 'include'
+)
+
+ssa = declare_dependency(
+    link_with : libssa,
+    include_directories : 'include',
+    dependencies : deps,
 )

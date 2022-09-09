@@ -1,6 +1,6 @@
 foreach name, lib : langs
     executable(name, 'interface/main.c',
         link_args : host != 'windows' ? [] : [ 'setargv.obj' ],
-        dependencies : [ lib, generic, argparse ]
+        dependencies : [ lib, generic, argparse, ssa ]
     )
 endforeach

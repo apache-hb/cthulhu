@@ -2,16 +2,24 @@
 
 #include "cthulhu/hlir/ops.h"
 
-typedef struct vector_t vector_t;
+#include <gmp.h>
 
-typedef struct bb_t bb_t;
-typedef struct global_t global_t;
+typedef struct vector_t vector_t;
+typedef struct reports_t reports_t;
+
+typedef struct block_t block_t;
 typedef struct flow_t flow_t;
 typedef struct step_t step_t;
 
+typedef struct imm_t
+{
+    mpz_t digit;
+} imm_t;
+
 typedef enum opkind_t
 {
-    eOperandBB,
+    eOperandEmpty,
+    eOperandBlock,
     eOperandReg,
     eOperandGlobal,
     eOperandFunction,
@@ -25,10 +33,10 @@ typedef struct operand_t
     opkind_t kind;
 
     union {
-        bb_t *bb;
+        block_t *bb;
         step_t *reg;
-        global_t *global;
         flow_t *function;
+        imm_t imm;
     };
 } operand_t;
 
@@ -48,6 +56,7 @@ typedef enum opcode_t
 typedef struct step_t
 {
     opcode_t opcode;
+    const char *id;
 
     union {
         struct
@@ -71,23 +80,23 @@ typedef struct step_t
     };
 } step_t;
 
-typedef struct bb_t
+typedef struct block_t
 {
+    const char *id;
     vector_t *steps;
-} bb_t;
-
-typedef struct global_t
-{
-    const char *name;
-
-    vector_t *blocks;
-
-    operand_t value;
-} global_t;
+} block_t;
 
 typedef struct flow_t
 {
     const char *name;
 
-    vector_t *blocks;
+    block_t *entry;
 } flow_t;
+
+typedef struct module_t 
+{
+    vector_t *flows;
+} module_t;
+
+module_t *emit_module(reports_t *reports, vector_t *mods);
+void eval_module(reports_t *reports, module_t *mod);

@@ -204,3 +204,102 @@ void set_reset(set_t *set)
         item->key = NULL;
     }
 }
+
+static item_t *next_in_chain(item_t *entry)
+{
+    if (entry == NULL || entry->key == NULL)
+    {
+        return NULL;
+    }
+
+    while (entry->next != NULL)
+    {
+        entry = entry->next;
+
+        if (entry->key != NULL)
+        {
+            return entry;
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @brief get the next bucket for an iterator
+ *
+ * @param map the map being iterated
+ * @param index the current toplevel bucket index
+ * @param previous the previous bucket that was returned
+ * @return bucket_t* the next bucket or NULL if there are no more buckets
+ */
+static item_t *find_next_item(set_t *set, size_t *index, item_t *previous)
+{
+    item_t *entry = next_in_chain(previous);
+    if (entry != NULL)
+    {
+        return entry;
+    }
+
+    size_t i = *index;
+
+    while (i < set->size)
+    {
+        entry = &set->items[i++];
+        if (entry->key != NULL)
+        {
+            *index = i;
+            return entry;
+        }
+
+        entry = next_in_chain(entry);
+        if (entry != NULL)
+        {
+            *index = i;
+            return entry;
+        }
+    }
+
+    return NULL;
+}
+
+USE_DECL
+set_iter_t set_iter(set_t *set)
+{
+    CTASSERT(set != NULL);
+
+    size_t index = 0;
+
+    item_t *current = find_next_item(set, &index, NULL);
+    item_t *next = find_next_item(set, &index, current);
+
+    set_iter_t iter = {
+        .set = set,
+        .index = index,
+        .current = current,
+        .next = next,
+    };
+
+    return iter;
+}
+
+USE_DECL 
+const void *set_next(set_iter_t *iter)
+{
+    CTASSERT(iter != NULL);
+
+    const void *entry = iter->current->key;
+
+    iter->current = iter->next;
+    iter->next = find_next_item(iter->set, &iter->index, iter->current);
+
+    return entry;
+}
+
+USE_DECL
+bool set_has_next(set_iter_t *iter)
+{
+    CTASSERT(iter != NULL);
+
+    return iter->current != NULL;
+}
