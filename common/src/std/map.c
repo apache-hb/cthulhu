@@ -63,6 +63,8 @@ static void clear_keys(bucket_t *buckets, size_t size)
 USE_DECL
 map_t *map_new(size_t size)
 {
+    CTASSERT(size > 0);
+    
     map_t *map = ctu_malloc(sizeof_map(size));
 
     map->size = size;
