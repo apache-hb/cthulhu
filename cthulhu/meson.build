@@ -1,6 +1,7 @@
 src = [
     'src/hlir/sema.c',
     'src/hlir/attribs.c',
+    'src/hlir/check.c',
     
     'src/hlir/type.c',
     'src/hlir/hlir.c',

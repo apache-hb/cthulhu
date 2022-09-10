@@ -12,7 +12,9 @@
 #include "base/macros.h"
 #include "base/util.h"
 #include "base/memory.h"
+
 #include "std/str.h"
+#include "std/map.h"
 
 static hlir_t *kIntegerType;
 static hlir_t *kBoolType;

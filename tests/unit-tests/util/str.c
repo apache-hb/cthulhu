@@ -1,5 +1,6 @@
 #include "std/str.h"
 #include "std/vector.h"
+#include "std/map.h"
 #include "platform/error.h"
 #include "ct-test.h"
 

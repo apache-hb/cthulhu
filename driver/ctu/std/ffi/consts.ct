@@ -1,3 +1,0 @@
-module std::ffi::consts;
-
-export const nullptr: *void = __builtin::nullptr;

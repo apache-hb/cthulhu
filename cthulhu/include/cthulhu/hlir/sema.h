@@ -1,16 +1,18 @@
 #pragma once
 
-#include "hlir.h"
-#include "report/report.h"
-#include "std/map.h"
+#include <stddef.h>
+
+typedef struct hlir_t hlir_t;
+typedef struct reports_t reports_t;
+typedef struct map_t map_t;
 
 typedef struct sema_t sema_t;
 
 typedef enum sema_tags_t {
-    eSemaValues,
-    eSemaProcs,
-    eSemaTypes,
-    eSemaModules,
+    eSemaValues, // hlir_t *
+    eSemaProcs, // hlir_t *
+    eSemaTypes, // hlir_t *
+    eSemaModules, // sema_t *
 
     eSemaMax
 } sema_tags_t;
@@ -28,15 +30,3 @@ void *sema_get_data(sema_t *sema);
 void sema_set(sema_t *sema, size_t tag, const char *name, void *data);
 void *sema_get(sema_t *sema, size_t tag, const char *name);
 map_t *sema_tag(sema_t *sema, size_t tag);
-
-typedef struct
-{
-    reports_t *reports;
-
-    // keep pointers to the entry points for error reporting
-    // we can only have one of each
-    const hlir_t *cliEntryPoint;
-    const hlir_t *guiEntryPoint;
-} check_t;
-
-void check_module(check_t *check, hlir_t *mod);

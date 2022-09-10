@@ -2,6 +2,9 @@
 
 #include "base/memory.h"
 #include "base/panic.h"
+
+#include "std/map.h"
+
 #include "cthulhu/hlir/init.h"
 
 #include "argparse/argparse.h"

@@ -20,6 +20,7 @@
 * all comparisons
 * variants
 * C interop
+* order independant resolution
 
 ## not yet started
 * branches

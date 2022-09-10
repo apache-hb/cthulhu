@@ -1,7 +1,10 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/sema.h"
+#include "cthulhu/hlir/check.h"
+
 #include "cthulhu/interface/interface.h"
 #include "cthulhu/interface/runtime.h"
+
 #include "report/report.h"
 #include "scan/compile.h"
 
@@ -12,6 +15,7 @@
 #include "io/io.h"
 
 #include "std/str.h"
+#include "std/map.h"
 
 static status_t report_errors(cthulhu_t *cthulhu, const char *name)
 {

@@ -19,6 +19,7 @@
 #include "report/report-ext.h"
 #include "std/set.h"
 #include "std/str.h"
+#include "std/map.h"
 
 typedef struct
 {
