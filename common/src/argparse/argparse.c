@@ -58,7 +58,7 @@ static param_t *kDisableColourParam = NULL;
 static group_t *kGeneralGroup = NULL;
 static group_t *kReportingGroup = NULL;
 
-static param_t *new_param(param_kind_t kind, const char *desc, const char **names, size_t total)
+static param_t *param_new(param_kind_t kind, const char *desc, const char **names, size_t total)
 {
     param_t *result = ctu_malloc(sizeof(param_t));
     result->kind = kind;
@@ -83,14 +83,14 @@ void argparse_init(void)
     vector_t *generalParams = vector_new(4);
     vector_push(&generalParams, kHelpParam);
     vector_push(&generalParams, kVersionParam);
-    kGeneralGroup = new_group("general", "general options", generalParams);
+    kGeneralGroup = group_new("general", "general options", generalParams);
 
     vector_t *reportingParams = vector_new(4);
     vector_push(&reportingParams, kVerboseLoggingParam);
     vector_push(&reportingParams, kFatalWarningsParam);
     vector_push(&reportingParams, kReportLimitParam);
     vector_push(&reportingParams, kDisableColourParam);
-    kReportingGroup = new_group("reporting", "reporting options", reportingParams);
+    kReportingGroup = group_new("reporting", "reporting options", reportingParams);
 }
 
 static size_t total_arg_names(vector_t *groups)
@@ -104,7 +104,7 @@ static size_t total_arg_names(vector_t *groups)
     return count;
 }
 
-static argparse_t new_argparse(const argparse_config_t *config)
+static argparse_t argparse_new(const argparse_config_t *config)
 {
     size_t totalNames = total_arg_names(config->groups);
     argparse_t result = {
@@ -164,23 +164,23 @@ static void add_groups(argparse_t *argparse, vector_t *groups)
 USE_DECL
 param_t *int_param(const char *desc, const char **names, size_t total)
 {
-    return new_param(eParamInt, desc, names, total);
+    return param_new(eParamInt, desc, names, total);
 }
 
 USE_DECL
 param_t *string_param(const char *desc, const char **names, size_t total)
 {
-    return new_param(eParamString, desc, names, total);
+    return param_new(eParamString, desc, names, total);
 }
 
 USE_DECL
 param_t *bool_param(const char *desc, const char **names, size_t total)
 {
-    return new_param(eParamBool, desc, names, total);
+    return param_new(eParamBool, desc, names, total);
 }
 
 USE_DECL
-group_t *new_group(const char *name, const char *desc, vector_t *params)
+group_t *group_new(const char *name, const char *desc, vector_t *params)
 {
     group_t *result = ctu_malloc(sizeof(group_t));
     result->name = name;
@@ -340,7 +340,7 @@ bool should_exit(const argparse_t *argparse)
 USE_DECL
 argparse_t parse_args(const argparse_config_t *config)
 {
-    argparse_t argparse = new_argparse(config);
+    argparse_t argparse = argparse_new(config);
 
     char *args = join_args(config->argc, config->argv);
 

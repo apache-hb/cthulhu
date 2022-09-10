@@ -38,7 +38,7 @@ int main(int argc, const char **argv)
     vector_push(&codegenParams, outputFileNameParam);
     vector_push(&codegenParams, enableSSAParam);
 
-    group_t *codegenGroup = new_group("codegen", "code generation options", codegenParams);
+    group_t *codegenGroup = group_new("codegen", "code generation options", codegenParams);
 
     reports_t *reports = begin_reports();
 

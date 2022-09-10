@@ -64,7 +64,7 @@ TEST(test_extra_args, {
 
     const char *kParamNames[] = { "--param" };
     param_t *param = bool_param("test param", kParamNames, 1);
-    group_t *group = new_group("test group", "test group desc", vector_init(param));
+    group_t *group = group_new("test group", "test group desc", vector_init(param));
     
     const char *argv[] = { "argparse-test", "--help", "hello.txt", "--param" };
     const int argc = 4;

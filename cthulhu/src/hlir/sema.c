@@ -186,7 +186,7 @@ typedef struct
     bool nesting;
 } entry_t;
 
-static entry_t *new_entry(const hlir_t *hlir, bool nesting)
+static entry_t *entry_new(const hlir_t *hlir, bool nesting)
 {
     entry_t *entry = ctu_malloc(sizeof(entry_t));
     entry->hlir = hlir;
@@ -240,7 +240,7 @@ static bool find_type_recursion(reports_t *reports, vector_t **vec, const hlir_t
         }
     }
 
-    vector_push(vec, new_entry(hlir, nesting));
+    vector_push(vec, entry_new(hlir, nesting));
 
     return true;
 }

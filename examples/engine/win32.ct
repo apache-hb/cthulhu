@@ -1,0 +1,3 @@
+module win32;
+
+export type HINSTANCE = *void;

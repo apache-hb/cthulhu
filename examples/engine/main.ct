@@ -1,0 +1,7 @@
+import platform;
+import win32;
+
+@entry(gui)
+def guiMain(instance: win32::HINSTANCE, previous: win32::HINSTANCE, cmd: str, show: int): int {
+    return 0;
+}

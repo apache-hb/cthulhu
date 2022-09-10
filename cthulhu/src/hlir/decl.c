@@ -13,7 +13,7 @@
 
 static hlir_t *hlir_begin_aggregate_with_fields(node_t *node, const char *name, vector_t *fields, hlir_kind_t type)
 {
-    hlir_t *self = hlir_new_decl(node, name, kMetaType, type);
+    hlir_t *self = hlir_decl_new(node, name, kMetaType, type);
     self->fields = fields;
     return self;
 }
@@ -72,7 +72,7 @@ void hlir_add_field(hlir_t *self, hlir_t *field)
 
 hlir_t *hlir_begin_alias(node_t *node, const char *name)
 {
-    return hlir_new_decl(node, name, kMetaType, eHlirAlias);
+    return hlir_decl_new(node, name, kMetaType, eHlirAlias);
 }
 
 void hlir_build_alias(hlir_t *self, const hlir_t *alias, bool newtype)
@@ -91,7 +91,7 @@ hlir_t *hlir_alias(node_t *node, const char *name, const hlir_t *type, bool newt
 
 hlir_t *hlir_begin_global(node_t *node, const char *name, const hlir_t *type)
 {
-    return hlir_new_decl(node, name, type, eHlirGlobal);
+    return hlir_decl_new(node, name, type, eHlirGlobal);
 }
 
 void hlir_build_global(hlir_t *self, const hlir_t *init)
@@ -109,12 +109,12 @@ hlir_t *hlir_global(node_t *node, const char *name, const hlir_t *type, const hl
 
 hlir_t *hlir_local(node_t *node, const char *name, const hlir_t *type)
 {
-    return hlir_new_decl(node, name, type, eHlirLocal);
+    return hlir_decl_new(node, name, type, eHlirLocal);
 }
 
 hlir_t *hlir_param(node_t *node, const char *name, const hlir_t *type)
 {
-    return hlir_new_decl(node, name, type, eHlirParam);
+    return hlir_decl_new(node, name, type, eHlirParam);
 }
 
 void hlir_build_function(hlir_t *self, hlir_t *body)
@@ -125,7 +125,7 @@ void hlir_build_function(hlir_t *self, hlir_t *body)
 
 static hlir_t *hlir_begin_function_with_locals(node_t *node, const char *name, vector_t *locals, signature_t signature)
 {
-    hlir_t *self = hlir_new_decl(node, name, kMetaType, eHlirFunction);
+    hlir_t *self = hlir_decl_new(node, name, kMetaType, eHlirFunction);
     self->params = signature.params;
     self->result = signature.result;
     self->variadic = signature.variadic;
@@ -154,7 +154,7 @@ void hlir_add_local(hlir_t *self, hlir_t *local)
 
 hlir_t *hlir_begin_module(node_t *node, const char *name)
 {
-    return hlir_new_decl(node, name, NULL, eHlirModule);
+    return hlir_decl_new(node, name, NULL, eHlirModule);
 }
 
 void hlir_update_module(hlir_t *self, vector_t *types, vector_t *globals, vector_t *functions)

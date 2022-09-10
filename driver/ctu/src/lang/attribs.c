@@ -16,7 +16,7 @@
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/query.h"
 
-static attrib_t *new_attrib(const char *name, hlir_kind_t expected, apply_attribs_t apply)
+static attrib_t *attrib_new(const char *name, hlir_kind_t expected, apply_attribs_t apply)
 {
     attrib_t *attrib = ctu_malloc(sizeof(attrib_t));
     attrib->name = name;
@@ -123,7 +123,7 @@ static hlir_attributes_t *apply_layout(sema_t *sema, hlir_t *hlir, ast_t *ast)
 
 static void add_attrib(sema_t *sema, const char *name, hlir_kind_t kind, apply_attribs_t apply)
 {
-    sema_set(sema, eTagAttribs, name, new_attrib(name, kind, apply));
+    sema_set(sema, eTagAttribs, name, attrib_new(name, kind, apply));
 }
 
 void add_builtin_attribs(sema_t *sema)

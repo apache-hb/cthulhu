@@ -21,7 +21,7 @@ typedef struct {
     size_t blockIdx;
 } ssa_t;
 
-static block_t *new_block(const char *id) 
+static block_t *block_new(const char *id) 
 {
     block_t *block = ctu_malloc(sizeof(block_t));
     block->steps = vector_new(16);
@@ -131,7 +131,7 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 static void compile_global(ssa_t *ssa, const hlir_t *global)
 {
     flow_t *flow = map_get_ptr(ssa->globals, global);
-    block_t *block = new_block("entry");
+    block_t *block = block_new("entry");
     flow->entry = block;
     ssa->currentBlock = block;
     ssa->stepIdx = 0;

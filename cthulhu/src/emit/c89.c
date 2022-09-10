@@ -124,8 +124,15 @@ static const char *c89_mangle_digit(const hlir_t *type)
 
 static const char *c89_mangle_qualified(c89_emit_t *emit, const hlir_t *type)
 {
-    const char *result = "";
+    const char *declName = get_hlir_name(type);
     size_t len = vector_len(emit->path);
+
+    if (len == 0)
+    {
+        return declName;
+    }
+
+    const char *result = "";
 
     for (size_t i = 0; i < len; i++)
     {
@@ -134,9 +141,10 @@ static const char *c89_mangle_qualified(c89_emit_t *emit, const hlir_t *type)
 
         result = format("%s%s", result, c89_mangle_section(name));
     }
-    const char *name = get_hlir_name(type);
 
-    return format("%s%zu%s", result, strlen(name), name);
+    
+
+    return format("%s%zu%s", result, strlen(declName), declName);
 }
 
 static const char *c89_mangle_type_inner(c89_emit_t *emit, const hlir_t *type)
@@ -193,11 +201,18 @@ static char *c89_mangle_params(c89_emit_t *emit, vector_t *params)
     return str_join("", parts);
 }
 
-static char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
+static const char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
 {
+    const char *name = get_hlir_name(hlir);
+    size_t len = vector_len(emit->path);
+
+    if (len == 0)
+    {
+        return name;
+    }
+
     const char *prefix = "";
     const char *result = "";
-    size_t len = vector_len(emit->path);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -207,10 +222,9 @@ static char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
         result = format("%s%s", result, c89_mangle_section(name));
     }
 
-    const char *name = get_hlir_name(hlir);
     const char *typesig = "";
 
-    if (len > 0)
+    if (len == 0)
     {
         prefix = "_Z";
     }
@@ -243,8 +257,8 @@ static const char *c89_mangle_name(c89_emit_t *emit, const hlir_t *hlir)
         return result;
     }
 
-    char *mangledName = c89_mangle_decl_name(emit, hlir);
-    map_set_ptr(emit->mangledNames, hlir, mangledName);
+    const char *mangledName = c89_mangle_decl_name(emit, hlir);
+    map_set_ptr(emit->mangledNames, hlir, (char*)mangledName);
     return mangledName;
 }
 

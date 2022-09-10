@@ -5,7 +5,7 @@
 
 hlir_t *hlir_digit(node_t *node, const char *name, digit_t width, sign_t sign)
 {
-    hlir_t *hlir = hlir_new_decl(node, name, kMetaType, eHlirDigit);
+    hlir_t *hlir = hlir_decl_new(node, name, kMetaType, eHlirDigit);
     hlir->width = width;
     hlir->sign = sign;
     return hlir;
@@ -13,22 +13,22 @@ hlir_t *hlir_digit(node_t *node, const char *name, digit_t width, sign_t sign)
 
 hlir_t *hlir_bool(node_t *node, const char *name)
 {
-    return hlir_new_decl(node, name, kMetaType, eHlirBool);
+    return hlir_decl_new(node, name, kMetaType, eHlirBool);
 }
 
 hlir_t *hlir_string(node_t *node, const char *name)
 {
-    return hlir_new_decl(node, name, kMetaType, eHlirString);
+    return hlir_decl_new(node, name, kMetaType, eHlirString);
 }
 
 hlir_t *hlir_void(node_t *node, const char *name)
 {
-    return hlir_new_decl(node, name, kMetaType, eHlirUnit);
+    return hlir_decl_new(node, name, kMetaType, eHlirUnit);
 }
 
 hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hlir_t *result, bool variadic)
 {
-    hlir_t *hlir = hlir_new_decl(node, name, kMetaType, eHlirClosure);
+    hlir_t *hlir = hlir_decl_new(node, name, kMetaType, eHlirClosure);
     hlir->params = params;
     hlir->result = result;
     hlir->variadic = variadic;
@@ -37,7 +37,7 @@ hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hli
 
 hlir_t *hlir_pointer(node_t *node, const char *name, hlir_t *ptr, bool indexable)
 {
-    hlir_t *hlir = hlir_new_decl(node, name, kMetaType, eHlirPointer);
+    hlir_t *hlir = hlir_decl_new(node, name, kMetaType, eHlirPointer);
     hlir->ptr = ptr;
     hlir->indexable = indexable;
     return hlir;
@@ -60,7 +60,7 @@ hlir_t *hlir_array(reports_t *reports, node_t *node, const char *name, hlir_t *e
         return hlir_error(node, "array length must be a digit");
     }
 
-    hlir_t *hlir = hlir_new_decl(node, name, kMetaType, eHlirArray);
+    hlir_t *hlir = hlir_decl_new(node, name, kMetaType, eHlirArray);
     hlir->element = element;
     hlir->length = length;
     return hlir;

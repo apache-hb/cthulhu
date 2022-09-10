@@ -1,7 +1,7 @@
 struct Left {
-    right: *Right;
+    rhs: *Right;
 }
 
 struct Right {
-    left: *Left;
+    lhs: *Left;
 }

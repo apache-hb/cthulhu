@@ -13,7 +13,7 @@ typedef struct
     sign_t sign;
 } int_type_t;
 
-static int_type_t *new_int_type(digit_t digit, sign_t sign)
+static int_type_t *int_type_new(digit_t digit, sign_t sign)
 {
     int_type_t *it = ctu_malloc(sizeof(int_type_t));
     it->width = digit;
@@ -21,7 +21,7 @@ static int_type_t *new_int_type(digit_t digit, sign_t sign)
     return it;
 }
 
-static suffix_t *new_suffix(astof_t expected, apply_suffix_t apply, void *data)
+static suffix_t *suffix_new(astof_t expected, apply_suffix_t apply, void *data)
 {
     CTASSERT(apply != NULL);
 
@@ -48,7 +48,7 @@ static void add_suffix(sema_t *sema, const char *name, suffix_t *suffix)
 
 static void add_int_suffix(sema_t *sema, const char *suffix, digit_t digit, sign_t sign)
 {
-    add_suffix(sema, suffix, new_suffix(eAstDigit, apply_int_suffix, new_int_type(digit, sign)));
+    add_suffix(sema, suffix, suffix_new(eAstDigit, apply_int_suffix, int_type_new(digit, sign)));
 }
 
 void add_builtin_suffixes(sema_t *sema)

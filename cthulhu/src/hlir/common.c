@@ -22,7 +22,7 @@ hlir_t *hlir_new(node_t *node, const hlir_t *of, hlir_kind_t kind)
     return self;
 }
 
-hlir_t *hlir_new_decl(node_t *node, const char *name, const hlir_t *of, hlir_kind_t kind)
+hlir_t *hlir_decl_new(node_t *node, const char *name, const hlir_t *of, hlir_kind_t kind)
 {
     hlir_t *hlir = hlir_new(node, of, kind);
     hlir->name = name;

@@ -145,7 +145,7 @@ hlir_t *hlir_return(node_t *node, hlir_t *result)
 
 hlir_t *hlir_field(node_t *node, const hlir_t *type, const char *name)
 {
-    return hlir_new_decl(node, name, type, eHlirRecordField);
+    return hlir_decl_new(node, name, type, eHlirRecordField);
 }
 
 // building modules

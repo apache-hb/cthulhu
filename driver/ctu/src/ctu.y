@@ -433,6 +433,8 @@ unary: postfix { $$ = $1; }
     | ADD unary { $$ = ast_unary(x, @$, eUnaryAbs, $2); }
     | BITNOT unary { $$ = ast_unary(x, @$, eUnaryFlip, $2); }
     | NOT unary { $$ = ast_unary(x, @$, eUnaryNot, $2); }
+    | BITAND unary { $$ = ast_ref(x, @$, $2); }
+    | MUL unary { $$ = ast_deref(x, @$, $2); }
     ;
 
 multiply: unary { $$ = $1; }

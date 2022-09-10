@@ -955,8 +955,6 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
         return;
     }
 
-    sema_data_t *semaData = sema_get_data(sema);
-
     add_decl(sema, tag, ast->name, decl);
 
     hlir_set_attributes(decl, hlir_attributes(eLinkExported, ast->exported ? eVisiblePublic : eVisiblePrivate, DEFAULT_TAGS, NULL));

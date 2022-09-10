@@ -93,7 +93,7 @@ NODISCARD
 param_t *bool_param(const char *desc, const char **names, size_t total);
 
 NODISCARD
-group_t *new_group(const char *name, const char *desc, vector_t *params);
+group_t *group_new(const char *name, const char *desc, vector_t *params);
 
 NODISCARD CONSTFN 
 long get_digit_arg(const argparse_t *argparse, const param_t *arg, long other);

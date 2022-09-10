@@ -30,6 +30,9 @@ typedef enum
     eAstAccess,
     eAstCall,
 
+    eAstRef,
+    eAstDeref,
+
     /* statements */
     eAstStmts,
     eAstReturn,
@@ -237,6 +240,9 @@ ast_t *ast_compare(scan_t *scan, where_t where, compare_t compare, ast_t *lhs, a
 ast_t *ast_access(scan_t *scan, where_t where, ast_t *data, const char *field, bool indirect);
 
 ast_t *ast_call(scan_t *scan, where_t where, ast_t *call, vector_t *args);
+
+ast_t *ast_ref(scan_t *scan, where_t where, ast_t *value);
+ast_t *ast_deref(scan_t *scan, where_t where, ast_t *value);
 
 /// statements
 

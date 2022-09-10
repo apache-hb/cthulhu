@@ -148,6 +148,20 @@ ast_t *ast_call(scan_t *scan, where_t where, ast_t *call, vector_t *args)
     return ast;
 }
 
+ast_t *ast_ref(scan_t *scan, where_t where, ast_t *value)
+{
+    ast_t *ast = ast_new(eAstRef, scan, where);
+    ast->operand = value;
+    return ast;
+}
+
+ast_t *ast_deref(scan_t *scan, where_t where, ast_t *value)
+{
+    ast_t *ast = ast_new(eAstDeref, scan, where);
+    ast->operand = value;
+    return ast;
+}
+
 ast_t *ast_stmts(scan_t *scan, where_t where, vector_t *stmts)
 {
     ast_t *ast = ast_new(eAstStmts, scan, where);
