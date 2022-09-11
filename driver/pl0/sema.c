@@ -369,12 +369,7 @@ static void insert_module(sema_t *sema, sema_t *other)
 
 typedef struct
 {
-    size_t totalConsts;
-    size_t totalGlobals;
-    size_t totalProcs;
-
-    vector_t *consts;
-    vector_t *globals;
+    vector_t *values;
     vector_t *procs;
 } sema_data_t;
 
@@ -386,8 +381,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     size_t totalGlobals = vector_len(root->globals);
     size_t totalFunctions = vector_len(root->procs);
 
-    vector_t *consts = vector_new(totalConsts);
-    vector_t *globals = vector_new(totalGlobals);
+    vector_t *values = vector_new(totalConsts + totalGlobals);
     vector_t *procs = vector_new(totalFunctions);
 
     if (root->mod != NULL)
@@ -410,7 +404,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
 
         hlir_t *decl = hlir_unresolved(it->node, it->name, kConst, sema, it);
         set_var(sema, eSemaValues, it->name, decl);
-        vector_push(&consts, decl);
+        vector_push(&values, decl);
     }
 
     for (size_t i = 0; i < totalGlobals; i++)
@@ -419,7 +413,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
 
         hlir_t *decl = hlir_unresolved(it->node, it->name, kMutable, sema, it); // TODO
         set_var(sema, eSemaValues, it->name, decl);
-        vector_push(&globals, decl);
+        vector_push(&values, decl);
     }
 
     for (size_t i = 0; i < totalFunctions; i++)
@@ -436,11 +430,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     }
 
     sema_data_t semaData = {
-        .totalConsts = totalConsts,
-        .totalGlobals = totalGlobals,
-        .totalProcs = totalFunctions,
-        .consts = consts,
-        .globals = globals,
+        .values = values,
         .procs = procs,
     };
 
@@ -487,20 +477,13 @@ hlir_t *pl0_compile_module(runtime_t *runtime, compile_t *compile)
     hlir_t *self = compile->hlir;
     sema_data_t *semaData = sema_get_data(sema);
 
-    
-    for (size_t i = 0; i < semaData->totalConsts; i++)
+    for (size_t i = 0; i < vector_len(semaData->values); i++)
     {
-        hlir_t *hlir = vector_get(semaData->consts, i);
+        hlir_t *hlir = vector_get(semaData->values, i);
         resolve_value(hlir);
     }
 
-    for (size_t i = 0; i < semaData->totalGlobals; i++)
-    {
-        hlir_t *hlir = vector_get(semaData->globals, i);
-        resolve_value(hlir);
-    }
-
-    for (size_t i = 0; i < semaData->totalProcs; i++)
+    for (size_t i = 0; i < vector_len(semaData->procs); i++)
     {
         pl0_t *it = vector_get(root->procs, i);
         hlir_t *hlir = vector_get(semaData->procs, i);
@@ -528,7 +511,7 @@ hlir_t *pl0_compile_module(runtime_t *runtime, compile_t *compile)
 
     vector_push(&semaData->procs, kPrint);
 
-    hlir_update_module(self, self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
+    hlir_update_module(self, self->types, semaData->values, semaData->procs);
 
     return self;
 }

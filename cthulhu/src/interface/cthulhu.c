@@ -55,7 +55,6 @@ static compile_t *get_compile(const cthulhu_t *cthulhu, size_t idx)
 
 cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
 {
-
     CTASSERT(driver.fnInitCompiler != NULL);
     CTASSERT(driver.fnParseFile != NULL);
     CTASSERT(driver.fnForwardDecls != NULL);
