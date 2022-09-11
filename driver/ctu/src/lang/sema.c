@@ -204,23 +204,36 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast);
 
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast);
 
-static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
+static sema_t *sema_path(sema_t *sema, vector_t *path, node_t *node)
 {
-    size_t len = vector_len(ast->path);
+    size_t len = vector_len(path);
     sema_t *current = sema;
     for (size_t i = 0; i < len - 1; i++)
     {
-        const char *name = vector_get(ast->path, i);
+        const char *name = vector_get(path, i);
+        if (name == NULL)
+        {
+            report(sema_reports(sema), eFatal, node, "discarded path segment");
+            return NULL;
+        }
+
         sema_t *next = sema_get(current, eSemaModules, name);
 
         if (next == NULL)
         {
-            report(sema_reports(sema), eFatal, ast->node, "unknown namespace `%s`", name);
-            return hlir_error(ast->node, "unknown namespace");
+            report(sema_reports(sema), eFatal, node, "unknown namespace `%s`", name);
+            return NULL;
         }
 
         current = next;
     }
+
+    return current;
+}
+
+static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
+{
+    sema_t *current = sema_path(sema, ast->path, ast->node);
 
     const char *name = vector_tail(ast->path);
     while (current != NULL)
@@ -413,25 +426,10 @@ void check_valid_import(sema_t *sema, sema_t *cur, ast_t *ast, hlir_t *hlir)
 
 static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 {
-    sema_t *current = sema;
-    for (size_t i = 0; i < vector_len(ast->path) - 1; i++)
+    sema_t *current = sema_path(sema, ast->path, ast->node);
+    if (current == NULL)
     {
-        const char *name = vector_get(ast->path, i);
-        if (name == NULL)
-        {
-            report(sema_reports(sema), eFatal, ast->node, "discarded path segment");
-            return hlir_error(ast->node, "discarded path segment");
-        }
-
-        sema_t *next = sema_get(current, eSemaModules, name);
-
-        if (next == NULL)
-        {
-            report(sema_reports(sema), eFatal, ast->node, "unknown namespace `%s`", name);
-            return hlir_error(ast->node, "unknown namespace");
-        }
-
-        current = next;
+        return hlir_error(ast->node, "failed to resolve namespace");
     }
 
     const char *name = vector_tail(ast->path);
