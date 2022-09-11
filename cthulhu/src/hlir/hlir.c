@@ -3,7 +3,6 @@
 #include "base/panic.h"
 
 #include "cthulhu/hlir/hlir.h"
-#include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/query.h"
 
 hlir_t *hlir_error(node_t *node, const char *error)
@@ -12,20 +11,6 @@ hlir_t *hlir_error(node_t *node, const char *error)
     self->name = error;
     self->of = self;
     return self;
-}
-
-hlir_t *hlir_unresolved(node_t *node, const char *name,  const hlir_attributes_t *attribs, sema_t *sema, void *ptr)
-{
-    hlir_t *self = hlir_decl_new(node, name, kMetaType, eHlirUnresolved);
-    self->user = ptr;
-    self->sema = sema;
-    hlir_set_attributes(self, attribs);
-    return self;
-}
-
-bool hlir_is_unresolved(const hlir_t *hlir)
-{
-    return hlir_is(hlir, eHlirUnresolved);
 }
 
 hlir_t *hlir_digit_literal(node_t *node, const hlir_t *type, mpz_t value)

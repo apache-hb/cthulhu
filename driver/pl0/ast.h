@@ -23,7 +23,6 @@ typedef enum
     ePl0Print,
     ePl0Stmts,
 
-    ePl0Const,
     ePl0Value,
     ePl0Procedure,
 
@@ -147,8 +146,7 @@ pl0_t *pl0_loop(scan_t *scan, where_t where, pl0_t *cond, pl0_t *body);
 pl0_t *pl0_stmts(scan_t *scan, where_t where, vector_t *stmts);
 
 pl0_t *pl0_procedure(scan_t *scan, where_t where, const char *name, vector_t *locals, vector_t *body);
-pl0_t *pl0_value(scan_t *scan, where_t where, const char *name);
-pl0_t *pl0_const(scan_t *scan, where_t where, const char *name, pl0_t *value);
+pl0_t *pl0_value(scan_t *scan, where_t where, const char *name, pl0_t *value);
 
 pl0_t *pl0_module(scan_t *scan, where_t where, const char *mod, vector_t *imports, vector_t *consts, vector_t *globals,
                   vector_t *procs, pl0_t *entry);

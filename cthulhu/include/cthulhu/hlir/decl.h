@@ -34,7 +34,7 @@ hlir_t *hlir_alias(node_t *node, const char *name, const hlir_t *type, bool newt
 
 hlir_t *hlir_begin_global(node_t *node, const char *name, const hlir_t *type);
 void hlir_build_global(hlir_t *self, const hlir_t *init);
-hlir_t *hlir_global(node_t *node, const hlir_attributes_t *attribs, const char *name, const hlir_t *type, const hlir_t *init);
+hlir_t *hlir_global(node_t *node, const char *name, const hlir_t *type, const hlir_t *init);
 
 ///
 /// local builders

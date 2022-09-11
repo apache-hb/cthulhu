@@ -130,7 +130,7 @@ inits: init { $$ = vector_init($1); }
     | inits COMMA init { vector_push(&$1, $3); $$ = $1; }
     ;
 
-init: IDENT EQUALS expr { $$ = pl0_const(x, @$, $1, $3); }
+init: IDENT EQUALS expr { $$ = pl0_value(x, @$, $1, $3); }
     ;
 
 vars: %empty { $$ = vector_new(0); }
@@ -141,7 +141,7 @@ names: name { $$ = vector_init($1); }
     | names COMMA name { vector_push(&$1, $3); $$ = $1; }
     ;
 
-name: IDENT { $$ = pl0_value(x, @$, $1); }
+name: IDENT { $$ = pl0_value(x, @$, $1, NULL); }
     ;
 
 procedures: %empty { $$ = vector_new(0); }

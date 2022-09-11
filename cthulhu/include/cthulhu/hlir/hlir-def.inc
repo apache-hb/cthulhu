@@ -4,8 +4,6 @@
 #   define HLIR_KIND(ID, NAME)
 #endif
 
-HLIR_KIND(eHlirUnresolved, "unresolved")
-
 // scalar types
 HLIR_KIND(eHlirType,   "meta-type")
 HLIR_KIND(eHlirDigit,  "digit-type")
