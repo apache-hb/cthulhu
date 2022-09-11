@@ -146,6 +146,11 @@ const void *native_file_map(file_handle_t handle, native_cerror_t *error)
     return ptr;
 }
 
+void native_platform_init(void)
+{
+    // empty for now
+}
+
 USE_DECL
 char *native_cerror_to_string(native_cerror_t error)
 {

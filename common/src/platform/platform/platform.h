@@ -126,5 +126,7 @@ char *native_cerror_to_string(native_cerror_t error);
 
 /// error api
 
+void native_platform_init(void);
+
 NODISCARD
 native_cerror_t native_get_last_error(void);

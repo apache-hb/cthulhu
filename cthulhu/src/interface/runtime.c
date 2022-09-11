@@ -15,6 +15,7 @@ void common_init(void)
 {
     GLOBAL_INIT();
 
+    platform_init();
     init_gmp(&globalAlloc);
     argparse_init();
     init_hlir();
