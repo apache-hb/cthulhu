@@ -198,6 +198,11 @@ const void *native_file_map(file_handle_t handle, native_cerror_t *error)
     return file;
 }
 
+void native_platform_init(void)
+{
+    _set_abort_behavior(0, _WRITE_ABORT_MSG);
+}
+
 USE_DECL
 char *native_cerror_to_string(native_cerror_t error)
 {
