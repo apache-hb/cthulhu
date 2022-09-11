@@ -11,6 +11,8 @@
 
 #include <gmp.h>
 
+typedef struct sema_t sema_t;
+
 /**
  * @defgroup hlir_t HLIR (High Level Intermediate Representation)
  * @brief a high level typed ast format
@@ -109,6 +111,11 @@ typedef struct hlir_t
             const hlir_attributes_t *attributes;
 
             union {
+                struct { // unresolved decl
+                    sema_t *sema;
+                    void *user;
+                };
+
                 ///
                 /// all types
                 ///
@@ -244,6 +251,10 @@ const hlir_t *closure_result(const hlir_t *self);
  * @return hlir_t* the error node
  */
 hlir_t *hlir_error(node_t *node, const char *error);
+
+hlir_t *hlir_unresolved(node_t *node, const char *name, const hlir_attributes_t *attribs, sema_t *sema, void *ptr);
+
+bool hlir_is_unresolved(const hlir_t *hlir);
 
 ///
 /// expression constructors

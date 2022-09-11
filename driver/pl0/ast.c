@@ -111,9 +111,17 @@ pl0_t *pl0_procedure(scan_t *scan, where_t where, const char *name, vector_t *lo
     return node;
 }
 
-pl0_t *pl0_value(scan_t *scan, where_t where, const char *name, pl0_t *value)
+pl0_t *pl0_value(scan_t *scan, where_t where, const char *name)
 {
     pl0_t *node = pl0_new(scan, where, ePl0Value);
+    node->name = name;
+    node->value = NULL;
+    return node;
+}
+
+pl0_t *pl0_const(scan_t *scan, where_t where, const char *name, pl0_t *value)
+{
+    pl0_t *node = pl0_new(scan, where, ePl0Const);
     node->name = name;
     node->value = value;
     return node;

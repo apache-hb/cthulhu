@@ -106,3 +106,19 @@ map_t *sema_tag(sema_t *sema, size_t tag)
 {
     return vector_get(sema->decls, tag);
 }
+
+hlir_t *sema_resolve(hlir_t *decl, resolve_t resolve)
+{
+    if (decl == NULL)
+    {
+        return NULL;
+    }
+    
+    if (!hlir_is_unresolved(decl))
+    {
+        return decl;
+    }
+
+    *decl = *resolve(decl->sema, decl->user);
+    return decl;
+}

@@ -100,10 +100,11 @@ void hlir_build_global(hlir_t *self, const hlir_t *init)
     self->value = init;
 }
 
-hlir_t *hlir_global(node_t *node, const char *name, const hlir_t *type, const hlir_t *init)
+hlir_t *hlir_global(node_t *node, const hlir_attributes_t *attribs, const char *name, const hlir_t *type, const hlir_t *init)
 {
     hlir_t *self = hlir_begin_global(node, name, type);
     hlir_build_global(self, init);
+    hlir_set_attributes(self, attribs);
     return self;
 }
 
