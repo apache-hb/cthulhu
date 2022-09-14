@@ -10,7 +10,7 @@ void init_scan(scan_t *scan)
         [eSemaModules] = 32
     };
 
-    sema_t *sema = sema_new(NULL, scan_reports(scan), eTagTotal, sizes);
+    sema_t *sema = sema_root_new(scan_reports(scan), eTagTotal, sizes);
     scan_set(scan, sema);
 }
 

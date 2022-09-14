@@ -45,7 +45,9 @@ hlir_t *hlir_string(node_t *node, const char *name);
  * @param name the name of this void type
  * @return hlir_t*
  */
-hlir_t *hlir_void(node_t *node, const char *name);
+hlir_t *hlir_unit(node_t *node, const char *name);
+
+hlir_t *hlir_empty(node_t *node, const char *name);
 
 /**
  * @brief construct a new closure type

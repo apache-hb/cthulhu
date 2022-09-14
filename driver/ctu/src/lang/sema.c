@@ -24,7 +24,6 @@
 typedef struct
 {
     size_t totalDecls;
-    hlir_t *parentModule;
 
     hlir_t *currentFunction; // current function we are adding locals to
 } sema_data_t;
@@ -41,15 +40,18 @@ static hlir_t *get_current_function(sema_t *sema)
     return data->currentFunction;
 }
 
-static sema_t *begin_sema(sema_t *parent, reports_t *reports, size_t *sizes)
+static sema_data_t *sema_data_new(void)
 {
-    sema_data_t *data = parent != NULL ? sema_get_data(parent) : ctu_malloc(sizeof(sema_data_t));
-    if (parent == NULL)
-    {
-        data->currentFunction = NULL;
-    }
+    sema_data_t *data = ctu_malloc(sizeof(sema_data_t));
+    data->totalDecls = SIZE_MAX; 
+    data->currentFunction = NULL;
+    return data;
+}
 
-    sema_t *sema = sema_new(parent, reports, eTagTotal, sizes);
+static sema_t *begin_sema(sema_t *parent, size_t *sizes)
+{
+    sema_data_t *data = parent != NULL ? sema_get_data(parent) : sema_data_new();
+    sema_t *sema = sema_new(parent, eTagTotal, sizes);
     sema_set_data(sema, data);
     return sema;
 }
@@ -63,7 +65,7 @@ static const char *kDigitNames[eSignTotal][eDigitTotal] = {
             [eDigitLong] = "long",
 
             [eDigitPtr] = "intptr",
-            [eDigitSize] = "size",
+            [eDigitSize] = "isize",
             [eDigitMax] = "intmax",
         },
     [eUnsigned] =
@@ -80,6 +82,7 @@ static const char *kDigitNames[eSignTotal][eDigitTotal] = {
 };
 
 static hlir_t *kVoidType = NULL;
+static hlir_t *kEmptyType = NULL;
 static hlir_t *kBoolType = NULL;
 static hlir_t *kStringType = NULL;
 static hlir_t *kDigitTypes[eSignTotal * eDigitTotal];
@@ -150,6 +153,9 @@ static void add_basic_types(sema_t *sema)
     add_decl(sema, eSemaTypes, "bool", kBoolType);
     add_decl(sema, eSemaTypes, "str", kStringType);
 
+    // noreturn type for exit/abort/terminate etc
+    add_decl(sema, eSemaTypes, "noreturn", kEmptyType);
+
     for (int sign = 0; sign < eSignTotal; sign++)
     {
         for (int digit = 0; digit < eDigitTotal; digit++)
@@ -163,9 +169,6 @@ static void add_basic_types(sema_t *sema)
 
     // enable the below later
 
-    // noreturn type for exit/abort/terminate etc
-    // add_decl(sema, eTagTypes, "noreturn", hlir_noreturn(node, "noreturn"));
-
     // special types for interfacing with C
     // add_decl(sema, eTagTypes, "enum", hlir_digit(node, "enum", eInt, eSigned));
 }
@@ -176,11 +179,12 @@ void ctu_init_compiler(runtime_t *runtime)
         [eSemaValues] = 1, [eSemaProcs] = 1, [eSemaTypes] = 32, [eSemaModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 32,
     };
 
-    kRootSema = begin_sema(NULL, runtime->reports, sizes);
+    kRootSema = sema_root_new(runtime->reports, eTagTotal, sizes);
 
     node_t *node = node_builtin();
 
-    kVoidType = hlir_void(node, "void");
+    kVoidType = hlir_unit(node, "void");
+    kEmptyType = hlir_empty(node, "noreturn");
     kBoolType = hlir_bool(node, "bool");
     kStringType = hlir_string(node, "str");
 
@@ -563,14 +567,14 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     size_t sizes[eTagTotal] = {
         [eSemaValues] = 32, [eSemaProcs] = 4, [eSemaTypes] = 4, [eSemaModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 1,};
 
-    sema_t *nestThen = begin_sema(sema, sema_reports(sema), sizes);
+    sema_t *nestThen = begin_sema(sema, sizes);
 
     hlir_t *then = sema_stmt(nestThen, ast->then);
     hlir_t *other = NULL;
 
     if (ast->other != NULL)
     {
-        sema_t *nextOther = begin_sema(sema, sema_reports(sema), sizes);
+        sema_t *nextOther = begin_sema(sema, sizes);
         other = sema_stmt(nextOther, ast->other);
     }
 
@@ -657,8 +661,8 @@ static hlir_t *sema_branch(sema_t *sema, ast_t *stmt)
     size_t tags[eTagTotal] = {
         [eSemaValues] = 32, [eSemaProcs] = 32, [eSemaTypes] = 32, [eSemaModules] = 32, [eTagAttribs] = 32,};
 
-    sema_t *bodyInner = begin_sema(sema, sema_reports(sema), tags);
-    sema_t *otherInner = begin_sema(sema, sema_reports(sema), tags);
+    sema_t *bodyInner = begin_sema(sema, tags);
+    sema_t *otherInner = begin_sema(sema, tags);
 
     hlir_t *then = sema_stmt(bodyInner, stmt->then);
     hlir_t *other = stmt->other == NULL ? NULL : sema_stmt(otherInner, stmt->other);
@@ -815,7 +819,7 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     size_t tags[eTagTotal] = {
         [eSemaValues] = 32, [eSemaProcs] = 32, [eSemaTypes] = 32, [eSemaModules] = 32, [eTagAttribs] = 32,};
 
-    sema_t *nest = begin_sema(sema, sema_reports(sema), tags);
+    sema_t *nest = begin_sema(sema, tags);
     set_current_function(nest, decl);
     sema_params(nest, decl->params);
 
@@ -991,7 +995,7 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
         [eTagAttribs] = totalDecls, [eTagSuffix] = 32,
     };
 
-    sema_t *sema = begin_sema(kRootSema, runtime->reports, sizes);
+    sema_t *sema = begin_sema(kRootSema, sizes);
     add_builtin_attribs(sema);
 
     if (root->modspec != NULL)
@@ -1001,7 +1005,7 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
 
     hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0));
 
-    sema_data_t semaData = {.totalDecls = totalDecls, .parentModule = mod};
+    sema_data_t semaData = {.totalDecls = totalDecls};
 
     sema_set_data(sema, BOX(semaData));
 

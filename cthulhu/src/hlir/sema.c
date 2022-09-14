@@ -27,19 +27,20 @@ typedef struct sema_t
      */
     vector_t *decls;
 
+    vector_t **stack; // recursion stack
+
     void *data;
 } sema_t;
 
-sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes)
+static sema_t *sema_inner_new(sema_t *parent, reports_t *reports, vector_t **stack, size_t decls, size_t *sizes)
 {
-    reports_t *innerReports = parent != NULL ? parent->reports : reports;
-
-    CTASSERT(innerReports != NULL);
-
     sema_t *sema = ctu_malloc(sizeof(sema_t));
 
     sema->parent = parent;
-    sema->reports = innerReports;
+    sema->reports = reports;
+
+    sema->stack = stack;
+    sema->data = NULL;
 
     sema->decls = vector_of(decls);
     for (size_t i = 0; i < decls; i++)
@@ -49,6 +50,19 @@ sema_t *sema_new(sema_t *parent, reports_t *reports, size_t decls, size_t *sizes
     }
 
     return sema;
+}
+
+sema_t *sema_root_new(reports_t *reports, size_t decls, size_t *sizes)
+{
+    CTASSERT(reports != NULL);
+    vector_t *stack = vector_new(16);
+    return sema_inner_new(NULL, reports, BOX(stack), decls, sizes);
+}
+
+sema_t *sema_new(sema_t *parent, size_t decls, size_t *sizes)
+{
+    CTASSERT(parent != NULL);
+    return sema_inner_new(parent, parent->reports, parent->stack, decls, sizes);
 }
 
 reports_t *sema_reports(sema_t *sema)
@@ -105,4 +119,23 @@ void *sema_get(sema_t *sema, size_t tag, const char *name)
 map_t *sema_tag(sema_t *sema, size_t tag)
 {
     return vector_get(sema->decls, tag);
+}
+
+hlir_t *sema_resolve(sema_t *root, hlir_t *unresolved, sema_resolve_t resolve)
+{
+    CTASSERT(root->parent != NULL);
+    if (!hlir_is(unresolved, eHlirUnresolved))
+    {
+        return unresolved;
+    }
+
+    if (vector_find(*root->stack, unresolved) != SIZE_MAX)
+    {
+        // declaration requires recursive resolution, error out
+        report(root->reports, eFatal, get_hlir_node(unresolved), "recursive resolution for %s", get_hlir_name(unresolved));
+        return unresolved;
+    }
+
+    *unresolved = *resolve(unresolved->sema, unresolved->user);
+    return unresolved;
 }

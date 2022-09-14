@@ -17,6 +17,8 @@
  * @{
  */
 
+typedef struct sema_t sema_t;
+
 /**
  * the tag for a hlir node
  */
@@ -109,6 +111,12 @@ typedef struct hlir_t
             const hlir_attributes_t *attributes;
 
             union {
+                struct {
+                    // unresolved decl
+                    sema_t *sema;
+                    void *user;
+                };
+
                 ///
                 /// all types
                 ///
@@ -277,49 +285,3 @@ hlir_t *hlir_return(node_t *node, hlir_t *result);
 hlir_t *hlir_field(node_t *node, const hlir_t *type, const char *name);
 
 /** @} */
-
-// TODO: we will rewrite hlir once we can self host
-#if 0
-/**
- * @defgroup hlir_t HLIR2 (High Level Intermediate Representation v2)
- * @brief a high level typed ast format to replace HLIR, loosley based on gccjit
- * @{
- */
-
-typedef struct hlir_context_t hlir_context_t;
-
-typedef struct hlir2_type_t hlir2_type_t;
-typedef struct hlir2_lvalue_t hlir2_lvalue_t;
-typedef struct hlir2_rvalue_t hlir2_rvalue_t;
-
-typedef struct hlir2_record_field_t hlir2_record_field_t;
-typedef struct hlir2_enum_field_t hlir2_enum_field_t;
-
-hlir_context_t *hl2_context_new(alloc_t *alloc);
-
-/// integral types
-
-hlir2_type_t *hl2_digit_type(hlir_context_t *ctx, node_t *node, const char *name, sign_t sign, digit_t width);
-
-hlir2_type_t *hl2_string_type(hlir_context_t *ctx, node_t *node, const char *name);
-
-hlir2_type_t *hl2_bool_type(hlir_context_t *ctx, node_t *node, const char *name);
-
-hlir2_type_t *hl2_void_type(hlir_context_t *ctx, node_t *node, const char *name);
-
-hlir2_type_t *hl2_array_type(hlir_context_t *ctx, node_t *node, const char *name, hlir2_type_t *element, hlir2_type_t *length);
-
-hlir2_type_t *hl2_pointer_type(node_t *node, const char *name, hlir2_type_t *pointer);
-
-hlir2_type_t *hl2_closure_type(hlir_context_t *ctx, node_t *node, const char *name, vector_t *params, hlir2_type_t *result, bool variadic);
-
-/// literals
-
-hlir2_rvalue_t *hl2_digit_literal(hlir_context_t *ctx, node_t *node, hlir2_type_t *type, mpz_t value);
-
-hlir2_rvalue_t *hl2_bool_literal(hlir_context_t *ctx, node_t *node, hlir2_type_t *type, bool value);
-
-hlir2_rvalue_t *hl2_string_literal(hlir_context_t *ctx, node_t *node, hlir2_type_t *type, string_view_t string);
-
-/** @} */
-#endif

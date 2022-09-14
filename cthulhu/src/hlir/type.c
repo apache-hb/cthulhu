@@ -21,9 +21,14 @@ hlir_t *hlir_string(node_t *node, const char *name)
     return hlir_decl_new(node, name, kMetaType, eHlirString);
 }
 
-hlir_t *hlir_void(node_t *node, const char *name)
+hlir_t *hlir_unit(node_t *node, const char *name)
 {
     return hlir_decl_new(node, name, kMetaType, eHlirUnit);
+}
+
+hlir_t *hlir_empty(node_t *node, const char *name)
+{
+    return hlir_decl_new(node, name, kMetaType, eHlirEmpty);
 }
 
 hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hlir_t *result, bool variadic)

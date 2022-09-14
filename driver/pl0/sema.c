@@ -43,7 +43,7 @@ void pl0_init(runtime_t *runtime)
     kIntegerType = hlir_digit(node, "integer", eDigitInt, eSigned);
     kBoolType = hlir_bool(node, "boolean");
     kStringType = hlir_string(node, "string");
-    kVoidType = hlir_void(node, "void");
+    kVoidType = hlir_unit(node, "void");
 
     struct string_view_t fmtLiteral = { .data = "%d\n", .size = 3 };
 
@@ -311,7 +311,7 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
     size_t nlocals = vector_len(node->locals);
     size_t sizes[eSemaMax] = {[eSemaValues] = nlocals};
 
-    sema_t *nest = sema_new(sema, NULL, eSemaMax, sizes);
+    sema_t *nest = sema_new(sema, eSemaMax, sizes);
 
     for (size_t i = 0; i < nlocals; i++)
     {
@@ -380,7 +380,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
         [eSemaProcs] = totalFunctions,
     };
 
-    sema_t *sema = sema_new(NULL, runtime->reports, eSemaMax, sizes);
+    sema_t *sema = sema_root_new(runtime->reports, eSemaMax, sizes);
 
     // forward declare everything
     for (size_t i = 0; i < totalConsts; i++)
