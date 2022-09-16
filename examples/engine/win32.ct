@@ -1,3 +1,7 @@
 module win32;
 
+export type DWORD = uint;
+
 export type HINSTANCE = *void;
+
+export const MAX_COMPUTERNAME_LENGTH: DWORD = 15u;

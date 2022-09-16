@@ -164,6 +164,7 @@ static const char *c89_mangle_type_inner(c89_emit_t *emit, const hlir_t *type)
         return c89_mangle_pointer(emit, type);
 
     case eHlirAlias:
+        return c89_mangle_type_inner(emit, type->alias);
     case eHlirStruct:
     case eHlirUnion:
         return c89_mangle_qualified(emit, type);
@@ -189,16 +190,21 @@ static const char *c89_mangle_type(c89_emit_t *emit, const hlir_t *type)
 static char *c89_mangle_params(c89_emit_t *emit, vector_t *params)
 {
     size_t len = vector_len(params);
-    vector_t *parts = vector_of(len);
+    if (len == 0)
+    {
+        return "v";
+    }
+    
+    char *result = "";
 
     for (size_t i = 0; i < len; i++)
     {
         hlir_t *param = vector_get(params, i);
         const char *mangled = c89_mangle_type(emit, param);
-        vector_set(parts, i, (char *)mangled);
+        result = format("%s%s", result, mangled);
     }
 
-    return str_join("", parts);
+    return result;
 }
 
 static const char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
@@ -211,7 +217,6 @@ static const char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
         return name;
     }
 
-    const char *prefix = "";
     const char *result = "";
 
     for (size_t i = 0; i < len; i++)
@@ -224,15 +229,9 @@ static const char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
 
     const char *typesig = "";
 
-    if (len == 0)
-    {
-        prefix = "_Z";
-    }
-
     if (hlir_is(hlir, eHlirFunction))
     {
         typesig = c89_mangle_params(emit, closure_params(hlir));
-        prefix = "_Z";
     }
 
     if (name == NULL)
@@ -240,7 +239,7 @@ static const char *c89_mangle_decl_name(c89_emit_t *emit, const hlir_t *hlir)
         name = ""; // TODO: generate a unique id per anonymous field
     }
 
-    return format("%s%s%zu%s%s", prefix, result, strlen(name), name, typesig);
+    return format("_ZN%s%zu%sE%s", result, strlen(name), name, typesig);
 }
 
 static const char *c89_mangle_name(c89_emit_t *emit, const hlir_t *hlir)
@@ -969,7 +968,7 @@ static const char *c89_get_linkage(hlir_linkage_t linkage)
     case eLinkExported:
         return "";
     default:
-        CTASSERTM(false, "unknown linkage");
+        CTASSERTF(false, "unknown linkage %d", linkage);
         return "";
     }
 }
@@ -1081,7 +1080,7 @@ static void c89_function_header(c89_emit_t *emit, const hlir_t *function)
     const char *linkage = "";
 
     const char *result = "int main";
-    if (attribs->linkage != eLinkEntryCli)
+    if (!is_entry_point(attribs->linkage))
     {
         name = c89_mangle_name(emit, function);
         params = c89_fmt_params(emit, closureParams);

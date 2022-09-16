@@ -27,12 +27,12 @@ typedef struct sema_t
      */
     vector_t *decls;
 
-    vector_t **stack; // recursion stack
+    vector_t *stack; // recursion stack
 
     void *data;
 } sema_t;
 
-static sema_t *sema_inner_new(sema_t *parent, reports_t *reports, vector_t **stack, size_t decls, size_t *sizes)
+static sema_t *sema_inner_new(sema_t *parent, reports_t *reports, vector_t *stack, size_t decls, size_t *sizes)
 {
     sema_t *sema = ctu_malloc(sizeof(sema_t));
 
@@ -55,8 +55,7 @@ static sema_t *sema_inner_new(sema_t *parent, reports_t *reports, vector_t **sta
 sema_t *sema_root_new(reports_t *reports, size_t decls, size_t *sizes)
 {
     CTASSERT(reports != NULL);
-    vector_t *stack = vector_new(16);
-    return sema_inner_new(NULL, reports, BOX(stack), decls, sizes);
+    return sema_inner_new(NULL, reports, vector_new(16), decls, sizes);
 }
 
 sema_t *sema_new(sema_t *parent, size_t decls, size_t *sizes)
@@ -123,19 +122,31 @@ map_t *sema_tag(sema_t *sema, size_t tag)
 
 hlir_t *sema_resolve(sema_t *root, hlir_t *unresolved, sema_resolve_t resolve)
 {
-    CTASSERT(root->parent != NULL);
+    CTASSERT(root->parent == NULL); // we want the root node
+
+    // bail early if its already resolved
     if (!hlir_is(unresolved, eHlirUnresolved))
     {
         return unresolved;
     }
 
-    if (vector_find(*root->stack, unresolved) != SIZE_MAX)
+    if (vector_find(root->stack, unresolved) != SIZE_MAX)
     {
         // declaration requires recursive resolution, error out
         report(root->reports, eFatal, get_hlir_node(unresolved), "recursive resolution for %s", get_hlir_name(unresolved));
         return unresolved;
     }
 
+    // save attributes
+    const hlir_attributes_t *attribs = get_hlir_attributes(unresolved);
+
+    vector_push(&root->stack, unresolved);
+
     *unresolved = *resolve(unresolved->sema, unresolved->user);
+
+    vector_drop(root->stack);
+
+    hlir_set_attributes(unresolved, attribs);
+
     return unresolved;
 }

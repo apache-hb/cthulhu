@@ -20,6 +20,7 @@
 #include "std/set.h"
 #include "std/str.h"
 #include "std/map.h"
+#include <stdio.h>
 
 typedef struct
 {
@@ -235,6 +236,61 @@ static sema_t *sema_path(sema_t *sema, vector_t *path, node_t *node)
     return current;
 }
 
+static hlir_t *begin_function(sema_t *sema, ast_t *ast);
+
+static hlir_t *begin_global(ast_t *ast)
+{
+    return hlir_begin_global(ast->node, ast->name, kUnresolvedType);
+}
+
+static hlir_t *begin_type_resolve(sema_t *sema, void *user)
+{
+    ast_t *ast = user;
+    switch (ast->of) {
+    case eAstDeclUnion:
+        return hlir_begin_union(ast->node, ast->name);
+
+    case eAstDeclAlias:
+        return hlir_begin_alias(ast->node, ast->name);
+
+    case eAstDeclVariant:
+    case eAstDeclStruct:
+        return hlir_begin_struct(ast->node, ast->name);
+
+    case eAstFunction:
+        return begin_function(sema, ast);
+
+    case eAstVariable:
+        return begin_global(ast);
+
+    default:
+        report(sema_reports(sema), eInternal, ast->node, "unknown ast type in resolution");
+        return hlir_error(ast->node, "unknown type resolution");
+    }
+}
+
+void check_valid_import(sema_t *sema, sema_t *cur, ast_t *ast, hlir_t *hlir)
+{
+    const char *name = vector_tail(ast->path);
+    const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
+    if (sema != cur && attribs->visibility != eVisiblePublic)
+    {
+        message_t *id =
+            report(sema_reports(sema), eFatal, ast->node, "symbol '%s' is not visible inside this context", name);
+        report_append(id, get_hlir_node(hlir), "originally declared here");
+    }
+}
+
+static hlir_t *sema_get_resolved(sema_t *sema, size_t tag, const char *name)
+{
+    hlir_t *it = sema_get(sema, tag, name);
+    if (it != NULL)
+    {
+        return sema_resolve(kRootSema, it, begin_type_resolve);
+    }
+    return NULL;
+}
+
 static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
 {
     sema_t *current = sema_path(sema, ast->path, ast->node);
@@ -242,9 +298,10 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
     const char *name = vector_tail(ast->path);
     while (current != NULL)
     {
-        hlir_t *decl = sema_get(current, eSemaTypes, name);
+        hlir_t *decl = sema_get_resolved(current, eSemaTypes, name);
         if (decl != NULL)
         {
+            check_valid_import(sema, current, ast, decl);
             return decl;
         }
 
@@ -416,18 +473,6 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
     return hlir_compare(ast->node, kBoolType, ast->compare, lhs, rhs);
 }
 
-void check_valid_import(sema_t *sema, sema_t *cur, ast_t *ast, hlir_t *hlir)
-{
-    const char *name = vector_tail(ast->path);
-    const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
-    if (sema != cur && attribs->visibility != eVisiblePublic)
-    {
-        message_t *id =
-            report(sema_reports(sema), eFatal, ast->node, "symbol '%s' is not visible inside this context", name);
-        report_append(id, get_hlir_node(hlir), "originally declared here");
-    }
-}
-
 static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 {
     sema_t *current = sema_path(sema, ast->path, ast->node);
@@ -444,14 +489,14 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
         return hlir_error(ast->node, "discarded indentifier");
     }
 
-    hlir_t *var = sema_get(current, eSemaValues, name);
+    hlir_t *var = sema_get_resolved(current, eSemaValues, name);
     if (var != NULL)
     {
         check_valid_import(sema, current, ast, var);
         return hlir_name(ast->node, var);
     }
 
-    hlir_t *func = sema_get(current, eSemaProcs, name);
+    hlir_t *func = sema_get_resolved(current, eSemaProcs, name);
     if (func != NULL)
     {
         check_valid_import(sema, current, ast, func);
@@ -743,6 +788,7 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
 
 static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
+    sema_resolve(kRootSema, decl, begin_type_resolve);
     vector_t *fields = ast->fields;
 
     check_duplicates_and_add_fields(sema, fields, decl);
@@ -849,32 +895,32 @@ static void sema_decl(sema_t *sema, ast_t *ast)
     switch (ast->of)
     {
     case eAstDeclStruct:
-        decl = sema_get(sema, eSemaTypes, ast->name);
+        decl = sema_get_resolved(sema, eSemaTypes, ast->name);
         sema_struct(sema, decl, ast);
         break;
 
     case eAstDeclUnion:
-        decl = sema_get(sema, eSemaTypes, ast->name);
+        decl = sema_get_resolved(sema, eSemaTypes, ast->name);
         sema_union(sema, decl, ast);
         break;
 
     case eAstDeclAlias:
-        decl = sema_get(sema, eSemaTypes, ast->name);
+        decl = sema_get_resolved(sema, eSemaTypes, ast->name);
         sema_alias(sema, decl, ast);
         break;
 
     case eAstDeclVariant:
-        decl = sema_get(sema, eSemaTypes, ast->name);
+        decl = sema_get_resolved(sema, eSemaTypes, ast->name);
         sema_variant(sema, decl, ast);
         break;
 
     case eAstFunction:
-        decl = sema_get(sema, eSemaProcs, ast->name);
+        decl = sema_get_resolved(sema, eSemaProcs, ast->name);
         sema_func(sema, decl, ast);
         break;
 
     case eAstVariable:
-        decl = sema_get(sema, eSemaValues, ast->name);
+        decl = sema_get_resolved(sema, eSemaValues, ast->name);
         sema_global(sema, decl, ast);
         break;
 
@@ -915,41 +961,23 @@ static hlir_t *begin_function(sema_t *sema, ast_t *ast)
     return hlir_begin_function(ast->node, ast->name, sig);
 }
 
-static hlir_t *begin_global(ast_t *ast)
-{
-    return hlir_begin_global(ast->node, ast->name, kUnresolvedType);
-}
-
 static void fwd_decl(sema_t *sema, ast_t *ast)
 {
-    hlir_t *decl;
     int tag = eSemaTypes;
 
     switch (ast->of)
     {
     case eAstDeclStruct:
-        decl = hlir_begin_struct(ast->node, ast->name);
-        break;
-
     case eAstDeclUnion:
-        decl = hlir_begin_union(ast->node, ast->name);
-        break;
-
     case eAstDeclAlias:
-        decl = hlir_begin_alias(ast->node, ast->name);
-        break;
-
     case eAstDeclVariant:
-        decl = hlir_begin_struct(ast->node, ast->name);
         break;
 
     case eAstFunction:
-        decl = begin_function(sema, ast);
         tag = eSemaProcs;
         break;
 
     case eAstVariable:
-        decl = begin_global(ast);
         tag = eSemaValues;
         break;
 
@@ -958,9 +986,10 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
         return;
     }
 
-    add_decl(sema, tag, ast->name, decl);
-
+    hlir_t *decl = hlir_unresolved(ast->node, sema, ast);
     hlir_set_attributes(decl, hlir_attributes(eLinkExported, ast->exported ? eVisiblePublic : eVisiblePrivate, DEFAULT_TAGS, NULL));
+
+    add_decl(sema, tag, ast->name, decl);
 }
 
 static char *make_import_name(vector_t *vec)
@@ -986,6 +1015,7 @@ static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
 
 void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
 {
+    UNUSED(runtime);
     ast_t *root = compile->ast;
 
     size_t totalDecls = vector_len(root->decls);

@@ -13,6 +13,14 @@ hlir_t *hlir_error(node_t *node, const char *error)
     return self;
 }
 
+hlir_t *hlir_unresolved(node_t *node, sema_t *sema, void *user)
+{
+    hlir_t *self = hlir_decl_new(node, "unresolved", kMetaType, eHlirUnresolved);
+    self->sema = sema;
+    self->user = user;
+    return self;
+}
+
 hlir_t *hlir_digit_literal(node_t *node, const hlir_t *type, mpz_t value)
 {
     hlir_t *self = hlir_new(node, type, eHlirDigitLiteral);

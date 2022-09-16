@@ -17,6 +17,8 @@
 #include "std/str.h"
 #include "std/map.h"
 
+#include <stdio.h>
+
 static status_t report_errors(cthulhu_t *cthulhu, const char *name)
 {
     status_t status = end_reports(cthulhu->reports, name, cthulhu->config.reportConfig);

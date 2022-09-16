@@ -7,7 +7,9 @@ struct System {
 }
 
 def getComputerName: str {
-    const kNameLength = win32::MAX_COMPUTERNAME_LENGTH + 1;
+    return "";
+    
+    /*const kNameLength = win32::MAX_COMPUTERNAME_LENGTH + 1;
 
     var result: [kNameLength]char = noinit;
     var size: win32::DWORD = kNameLength;
@@ -16,11 +18,11 @@ def getComputerName: str {
         return "";
     }
 
-    return String::new(result, size);
+    return String::new(result, size);*/
 }
 
 export def newSystem(instance: win32::HINSTANCE): System {
-    var result: System = noinit;
+    /*var result: System = noinit;
     result.name = getComputerName();
-    return result;
+    return result;*/
 }

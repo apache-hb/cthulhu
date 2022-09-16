@@ -43,6 +43,7 @@ static bool has_attribs(hlir_kind_t kind)
 {
     switch (kind)
     {
+    case eHlirUnresolved:
     case eHlirStruct:
     case eHlirUnion:
     case eHlirAlias:
