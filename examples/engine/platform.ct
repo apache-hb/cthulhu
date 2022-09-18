@@ -9,8 +9,8 @@ struct System {
 def getComputerName: str {
     return "";
     
-    /*const kNameLength = win32::MAX_COMPUTERNAME_LENGTH + 1;
-
+    const kNameLength = win32::MAX_COMPUTERNAME_LENGTH + 1u;
+    /*
     var result: [kNameLength]char = noinit;
     var size: win32::DWORD = kNameLength;
 

@@ -150,6 +150,12 @@ tests = {
         'fail': [
             'invalid-suffix'
         ]
+    },
+    'programs': {
+        'pass': [
+            'alias-var'
+        ],
+        'fail': []
     }
 }
 
