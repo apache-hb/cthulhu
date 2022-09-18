@@ -2,27 +2,25 @@ module platform;
 
 import win32;
 
-struct System {
+export struct System {
     name: str;
 }
 
-def getComputerName: str {
-    return "";
-    
-    const kNameLength = win32::MAX_COMPUTERNAME_LENGTH + 1u;
-    /*
-    var result: [kNameLength]char = noinit;
+def getComputerName: String {
+    // compile denotes a compile time fixed value
+    compile const kNameLength = win32::MAX_COMPUTERNAME_LENGTH + 1u;
+    var result: [16]char = noinit; // must explicitly leave values unitinalized
     var size: win32::DWORD = kNameLength;
 
+    // ask the system for our current NetBIOS name
     if (win32::GetComputerNameA(result, &size) == 0) {
-        return "";
+        return String::empty(); // if it failed return the empty string
     }
 
-    return String::new(result, size);*/
+    // return the name
+    return String::new(result, size);
 }
 
-export def newSystem(instance: win32::HINSTANCE): System {
-    /*var result: System = noinit;
-    result.name = getComputerName();
-    return result;*/
-}
+// create a new system using aggregate initialization
+export def System::new(instance: win32::HINSTANCE): System 
+    = System { .name = getComputerName() };

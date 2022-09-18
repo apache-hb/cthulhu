@@ -107,12 +107,14 @@ static sema_t *kRootSema = NULL;
 
 static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs)
 {
-    if (hlir_is(lhs, eHlirDigit) && hlir_is(rhs, eHlirDigit))
+    const hlir_t *lhsType = hlir_follow_type(lhs);
+    const hlir_t *rhsType = hlir_follow_type(rhs);
+    if (hlir_is(lhsType, eHlirDigit) && hlir_is(rhsType, eHlirDigit))
     {
         // get the largest size
-        digit_t width = MAX(lhs->width, rhs->width);
+        digit_t width = MAX(lhsType->width, rhsType->width);
         // if either is signed the result is signed
-        sign_t sign = (lhs->sign == eSigned || rhs->sign == eSigned) ? eSigned : eUnsigned;
+        sign_t sign = (lhsType->sign == eSigned || rhsType->sign == eSigned) ? eSigned : eUnsigned;
 
         return get_digit_type(sign, width);
     }
@@ -238,9 +240,30 @@ static sema_t *sema_path(sema_t *sema, vector_t *path, node_t *node)
 
 static hlir_t *begin_function(sema_t *sema, ast_t *ast);
 
-static hlir_t *begin_global(ast_t *ast)
+typedef struct
 {
-    return hlir_begin_global(ast->node, ast->name, kUnresolvedType);
+    const hlir_t *type;
+    hlir_t *init;
+} sema_value_t;
+
+static sema_value_t sema_value(sema_t *sema, ast_t *stmt);
+
+static hlir_t *sema_global(sema_t *sema, ast_t *ast)
+{
+    sema_value_t result = sema_value(sema, ast);
+
+    if (result.init != NULL && hlir_is(result.init, eHlirError))
+    {
+        return result.init;
+    }
+
+    return hlir_global(ast->node, ast->name, result.type, result.init);
+}
+
+static hlir_t *sema_alias(sema_t *sema, ast_t *ast)
+{
+    hlir_t *type = sema_type(sema, ast->alias);
+    return hlir_alias(ast->node, ast->name, type, false);
 }
 
 static hlir_t *begin_type_resolve(sema_t *sema, void *user)
@@ -251,7 +274,7 @@ static hlir_t *begin_type_resolve(sema_t *sema, void *user)
         return hlir_begin_union(ast->node, ast->name);
 
     case eAstDeclAlias:
-        return hlir_begin_alias(ast->node, ast->name);
+        return sema_alias(sema, ast);
 
     case eAstDeclVariant:
     case eAstDeclStruct:
@@ -261,7 +284,7 @@ static hlir_t *begin_type_resolve(sema_t *sema, void *user)
         return begin_function(sema, ast);
 
     case eAstVariable:
-        return begin_global(ast);
+        return sema_global(sema, ast);
 
     default:
         report(sema_reports(sema), eInternal, ast->node, "unknown ast type in resolution");
@@ -634,12 +657,6 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     return hlir_loop(ast->node, cond, then, other);
 }
 
-typedef struct
-{
-    const hlir_t *type;
-    hlir_t *init;
-} sema_value_t;
-
 static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
 {
     hlir_t *init = stmt->init != NULL ? sema_expr(sema, stmt->init) : NULL;
@@ -801,12 +818,6 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast)
     check_duplicates_and_add_fields(sema, fields, decl);
 }
 
-static void sema_alias(sema_t *sema, hlir_t *decl, ast_t *ast)
-{
-    hlir_t *type = sema_type(sema, ast->alias);
-    hlir_build_alias(decl, type, ast->newtype);
-}
-
 /**
  * variants are internally represented as
  * struct {
@@ -875,19 +886,6 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_set_attributes(decl, attribs);
 }
 
-static void sema_global(sema_t *sema, hlir_t *decl, ast_t *ast)
-{
-    sema_value_t result = sema_value(sema, ast);
-
-    if (result.init != NULL && hlir_is(result.init, eHlirError))
-    {
-        return;
-    }
-
-    hlir_set_type(decl, result.type);
-    hlir_build_global(decl, result.init);
-}
-
 static void sema_decl(sema_t *sema, ast_t *ast)
 {
     hlir_t *decl;
@@ -906,7 +904,7 @@ static void sema_decl(sema_t *sema, ast_t *ast)
 
     case eAstDeclAlias:
         decl = sema_get_resolved(sema, eSemaTypes, ast->name);
-        sema_alias(sema, decl, ast);
+        // sema_alias(sema, decl, ast); TODO: uhhhhh
         break;
 
     case eAstDeclVariant:
@@ -921,7 +919,8 @@ static void sema_decl(sema_t *sema, ast_t *ast)
 
     case eAstVariable:
         decl = sema_get_resolved(sema, eSemaValues, ast->name);
-        sema_global(sema, decl, ast);
+        // TODO: idk
+        // sema_global(sema, decl, ast);
         break;
 
     default:

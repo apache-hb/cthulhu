@@ -54,6 +54,7 @@ static bool has_attribs(hlir_kind_t kind)
     case eHlirEmpty:
     case eHlirUnit:
     case eHlirClosure:
+    case eHlirArray:
 
     case eHlirRecordField:
     case eHlirFunction:
