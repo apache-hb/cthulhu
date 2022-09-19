@@ -60,7 +60,14 @@ static const char *repr_array(reports_t *reports, const hlir_t *type, bool detai
 
     if (detail)
     {
-        return format("%s[]%s (aka '%s')", repr_tags(type), inner, name);
+        if (name != NULL)
+        {
+            return format("%s[]%s (aka '%s')", repr_tags(type), inner, name);
+        }
+        else
+        {
+            return format("%s[]%s", repr_tags(type), inner);
+        }
     }
 
     return format("[]%s", inner);

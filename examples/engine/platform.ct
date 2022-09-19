@@ -8,7 +8,7 @@ export struct System {
 
 def getComputerName: String {
     // compile denotes a compile time fixed value
-    compile const kNameLength = win32::MAX_COMPUTERNAME_LENGTH + 1u;
+    const kNameLength = win32::MAX_COMPUTERNAME_LENGTH + 1u;
     var result: [16]char = noinit; // must explicitly leave values unitinalized
     var size: win32::DWORD = kNameLength;
 
