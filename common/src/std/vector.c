@@ -68,47 +68,64 @@ vector_t *vector_init(void *value)
 
 void vector_delete(vector_t *vector)
 {
+    CTASSERT(vector != NULL);
     ctu_free(vector);
 }
 
 void vector_push(vector_t **vector, void *value)
 {
+    CTASSERT(vector != NULL && *vector != NULL);
+
     vector_ensure(vector, VEC->used + 1);
     VEC->data[VEC->used++] = value;
 }
 
 void vector_drop(vector_t *vector)
 {
+    CTASSERT(vector != NULL);
     CTASSERT(vector_len(vector) > 0);
     vector->used -= 1;
 }
 
 void vector_set(vector_t *vector, size_t index, void *value)
 {
+    CTASSERT(vector != NULL);
+    CTASSERT(vector_len(vector) > index);
+
     vector->data[index] = value;
 }
 
 USE_DECL
 void *vector_get(const vector_t *vector, size_t index)
 {
+    CTASSERT(vector != NULL);
+    CTASSERT(vector_len(vector) > index);
+
     return vector->data[index];
 }
 
 USE_DECL
 void *vector_tail(const vector_t *vector)
 {
+    CTASSERT(vector != NULL);
+    CTASSERT(vector_len(vector) > 0);
+
     return vector->data[vector->used - 1];
 }
 
 USE_DECL
 size_t vector_len(const vector_t *vector)
 {
+    CTASSERT(vector != NULL);
+
     return vector->used;
 }
 
 USE_DECL
 size_t vector_find(vector_t *vector, const void *element)
 {
+    CTASSERT(vector != NULL);
+
     for (size_t i = 0; i < vector_len(vector); i++)
     {
         if (vector_get(vector, i) == element)
@@ -174,5 +191,7 @@ vector_t *vector_join(vector_t *vectors)
 
 void vector_reset(vector_t *vec)
 {
+    CTASSERT(vec != NULL);
+
     vec->used = 0;
 }

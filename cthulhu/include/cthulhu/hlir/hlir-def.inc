@@ -39,6 +39,7 @@ HLIR_KIND(eHlirUnary,   "unary")
 HLIR_KIND(eHlirBinary,  "binary") // integer aritmatic
 HLIR_KIND(eHlirCompare, "compare") // all boolean logic
 HLIR_KIND(eHlirCall,    "call")
+HLIR_KIND(eHlirCast, "cast")
 
 HLIR_KIND(eHlirAccess, "access") // aggregate member access
 HLIR_KIND(eHlirIndex,  "index") // array access
@@ -178,3 +179,13 @@ COMPARE_OP(eCompareGt,  "gt",  ">")
 COMPARE_OP(eCompareGte, "gte", ">=")
 
 #undef COMPARE_OP
+
+#ifndef CAST_OP
+#   define CAST_OP(ID, NAME)
+#endif
+
+CAST_OP(eCastZeroExtend, "zero-extend")
+CAST_OP(eCastSignExtend, "sign-extend")
+CAST_OP(eCastBit, "bit-cast")
+
+#undef CAST_OP

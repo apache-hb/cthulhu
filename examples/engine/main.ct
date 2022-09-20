@@ -1,11 +1,11 @@
-import platform;
+// import platform;
 import win32;
 
 @entry(gui)
 def guiMain(instance: win32::HINSTANCE, previous: win32::HINSTANCE, cmd: str, show: int): int {
-    const system = platform::System::new(instance);
+    // const system = platform::System::new(instance);
     
-    win32::MessageBoxA(null, system.name, "Computer name", 0);
+    win32::MessageBoxA(null, "hello world", "more text", 0u);
 
     return 0;
 }

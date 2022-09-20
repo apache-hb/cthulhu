@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 
+#include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/ops.h"
 #include "scan/node.h"
 #include "std/vector.h"
@@ -34,6 +35,12 @@ typedef struct string_view_t {
     const char *data;
     size_t size;
 } string_view_t;
+
+typedef enum {
+#define CAST_OP(ID, NAME) ID,
+#include "hlir-def.inc" 
+    eCastTotal
+} hlir_cast_t;
 
 /**
  * @brief an hlir node
@@ -97,6 +104,13 @@ typedef struct hlir_t
             struct hlir_t *cond;
             struct hlir_t *then;
             struct hlir_t *other;
+        };
+
+        /* eHlirCast */
+        struct 
+        {
+            struct hlir_t *expr;
+            hlir_cast_t cast;
         };
 
         /* eHlirBreak | eHlirContinue */
@@ -273,6 +287,8 @@ hlir_t *hlir_unary(node_t *node, unary_t op, hlir_t *operand);
 hlir_t *hlir_binary(node_t *node, const hlir_t *type, binary_t binary, hlir_t *lhs, hlir_t *rhs);
 hlir_t *hlir_compare(node_t *node, const hlir_t *type, compare_t compare, hlir_t *lhs, hlir_t *rhs);
 hlir_t *hlir_call(node_t *node, hlir_t *call, vector_t *args);
+
+hlir_t *hlir_cast(const hlir_t *type, hlir_t *expr, hlir_cast_t cast);
 
 hlir_t *hlir_stmts(node_t *node, vector_t *stmts);
 hlir_t *hlir_branch(node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other);

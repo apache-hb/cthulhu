@@ -122,6 +122,39 @@ static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir
     return hlir_error(node, "unknown common type");
 }
 
+static bool is_voidptr(const hlir_t *type)
+{
+    return hlir_is(type, eHlirPointer) && hlir_is(hlir_follow_type(type->ptr), eHlirUnit);
+}
+
+static const hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *expr)
+{
+    const hlir_t *dstType = hlir_follow_type(to);
+    const hlir_t *srcType = hlir_follow_type(get_hlir_type(expr));
+
+    // if both types are equal no conversion is needed
+    if (hlir_types_equal(dstType, srcType))
+    {
+        return expr;
+    }
+
+    // TODO: this doesnt handle warning on narrowing and other cases
+    // dont use get_common_type here
+    const hlir_t *common = get_common_type(get_hlir_node(expr), dstType, srcType);
+    if (!hlir_is(common, eHlirError))
+    {
+        return common;
+    }
+
+    if (is_voidptr(dstType) && hlir_is(srcType, eHlirPointer))
+    {
+        return hlir_cast(dstType, expr, eCastBit); // bitcast the pointer
+    }
+
+    report(reports, eFatal, get_hlir_node(expr), "cannot convert from %s to %s", ctu_repr(reports, expr, true), ctu_type_repr(reports, to, true));
+    return NULL;
+}
+
 static bool is_discard_ident(const char *id)
 {
     return id == NULL || str_equal(id, "$");
@@ -556,16 +589,8 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
         ast_t *arg = vector_get(ast->args, i);
         hlir_t *hlir = sema_expr(sema, arg);
         hlir_t *expectedType = vector_get(params, i);
-        const hlir_t *argType = get_hlir_type(hlir);
-
-        if (!hlir_types_equal(argType, expectedType))
-        {
-            message_t *id = report(sema_reports(sema), eFatal, arg->node, "incorrect argument type `%s`",
-                                   ctu_repr(sema_reports(sema), hlir, true));
-            report_note(id, "expecting '%s' instead", ctu_type_repr(sema_reports(sema), expectedType, true));
-        }
-
-        vector_set(args, i, hlir);
+        const hlir_t *cast = convert_to(sema_reports(sema), expectedType, hlir);
+        vector_set(args, i, (hlir_t*)cast);
     }
 
     return hlir_call(ast->node, call, args);

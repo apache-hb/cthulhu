@@ -1,6 +1,7 @@
 module win32;
 
 export type DWORD = uint;
+export type UINT = uint;
 export type BOOL = uint;
 
 export type HINSTANCE = *void;

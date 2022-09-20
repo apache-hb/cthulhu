@@ -93,6 +93,14 @@ hlir_t *hlir_call(node_t *node, hlir_t *call, vector_t *args)
     return self;
 }
 
+hlir_t *hlir_cast(const hlir_t *type, hlir_t *expr, hlir_cast_t cast)
+{
+    hlir_t *self = hlir_new(get_hlir_node(expr), type, eHlirCast);
+    self->expr = expr;
+    self->cast = cast;
+    return self;
+}
+
 hlir_t *hlir_stmts(node_t *node, vector_t *stmts)
 {
     CTASSERT(stmts != NULL);
