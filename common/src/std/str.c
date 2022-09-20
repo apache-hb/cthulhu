@@ -126,8 +126,7 @@ char *str_join(const char *sep, vector_t *parts)
     {
         return ctu_strdup("");
     }
-
-    if (all == 1)
+    else if (all == 1)
     {
         return vector_get(parts, 0);
     }
@@ -222,29 +221,25 @@ static size_t normstr(char *out, char c)
         out[1] = '\\';
         return 2;
     }
-
-    if (c == '\'')
+    else if (c == '\'')
     {
         out[0] = '\\';
         out[1] = '\'';
         return 2;
     }
-
-    if (c == '\"')
+    else if (c == '\"')
     {
         out[0] = '\\';
         out[1] = '\"';
         return 2;
     }
-
-    if (c == '\0')
+    else if (c == '\0')
     {
         out[0] = '\\';
         out[1] = '0';
         return 2;
     }
-
-    if (safe_isprint(c))
+    else if (safe_isprint(c))
     {
         out[0] = c;
         return 1;
