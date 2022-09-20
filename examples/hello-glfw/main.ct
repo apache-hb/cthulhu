@@ -3,16 +3,18 @@ import gl;
 import std;
 
 @entry(cli)
-def cliEntry {
-    if glfw::init() != 0 {
-        std::exit(-1);
+def cliEntry: int {
+    if glfw::init() == 0 {
+        std::puts("failed to init glfw");
+        return 99;
     }
 
     const window = glfw::createWindow(640, 480, "Hello World", std::null, std::null);
 
     if window == std::null {
+        std::puts("failed to create window");
         glfw::terminate();
-        std::exit(-1);
+        return 99;
     }
 
     glfw::makeContextCurrent(window);
