@@ -164,23 +164,24 @@ vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs)
 USE_DECL
 vector_t *vector_join(vector_t *vectors)
 {
-    size_t totalLength = 0;
+    // find the total length for less memory allocations
+    size_t totalLen = 0;
     size_t vecLength = vector_len(vectors);
 
     for (size_t i = 0; i < vecLength; i++)
     {
-        totalLength += vector_len(vector_get(vectors, i));
+        totalLen += vector_len(vector_get(vectors, i));
     }
 
-    vector_t *result = vector_of(totalLength);
+    vector_t *result = vector_of(totalLen);
     size_t offset = 0;
 
     for (size_t i = 0; i < vecLength; i++)
     {
         vector_t *vector = vector_get(vectors, i);
-        size_t length = vector_len(vector);
+        size_t innerLen = vector_len(vector);
 
-        for (size_t j = 0; j < length; j++)
+        for (size_t j = 0; j < innerLen; j++)
         {
             vector_set(result, offset++, vector_get(vector, j));
         }
