@@ -267,7 +267,7 @@ const hlir_t *closure_result(const hlir_t *self);
  */
 hlir_t *hlir_error(node_t *node, const char *error);
 
-hlir_t *hlir_unresolved(node_t *node, sema_t *sema, void *user);
+hlir_t *hlir_unresolved(node_t *node, const char *name, sema_t *sema, void *user);
 
 ///
 /// expression constructors

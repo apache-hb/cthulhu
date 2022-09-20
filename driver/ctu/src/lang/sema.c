@@ -110,6 +110,11 @@ static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir
 
 static const hlir_t *common_pointer_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs)
 {
+    if (!hlir_is(lhs, eHlirPointer) || !hlir_is(rhs, eHlirPointer))
+    {
+        return hlir_error(node, "no common pointer type");
+    }
+
     if (lhs == kNullType && hlir_is(rhs, eHlirPointer))
     {
         return kNullType;
@@ -1045,7 +1050,7 @@ static void fwd_decl(sema_t *sema, ast_t *ast)
         return;
     }
 
-    hlir_t *decl = hlir_unresolved(ast->node, sema, ast);
+    hlir_t *decl = hlir_unresolved(ast->node, ast->name, sema, ast);
     hlir_set_attributes(decl, hlir_attributes(eLinkExported, ast->exported ? eVisiblePublic : eVisiblePrivate, DEFAULT_TAGS, NULL));
 
     add_decl(sema, tag, ast->name, decl);
