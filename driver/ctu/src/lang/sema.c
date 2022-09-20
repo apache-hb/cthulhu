@@ -108,6 +108,11 @@ static sema_t *kRootSema = NULL;
 
 static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs);
 
+static bool is_voidptr(const hlir_t *type)
+{
+    return hlir_is(type, eHlirPointer) && type->ptr == kVoidType;
+}
+
 static const hlir_t *common_pointer_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs)
 {
     if (!hlir_is(lhs, eHlirPointer) || !hlir_is(rhs, eHlirPointer))
@@ -115,17 +120,17 @@ static const hlir_t *common_pointer_type(node_t *node, const hlir_t *lhs, const 
         return hlir_error(node, "no common pointer type");
     }
 
-    if (lhs == kNullType && hlir_is(rhs, eHlirPointer))
+    if (is_voidptr(lhs) || is_voidptr(rhs))
     {
         return kNullType;
     }
 
-    if (rhs == kNullType && hlir_is(lhs, eHlirPointer))
+    if (lhs == rhs)
     {
-        return kNullType;
+        return lhs;
     }
 
-    return get_common_type(node, lhs->ptr, rhs->ptr);
+    return hlir_error(node, "no common type between unrelated pointers");
 }
 
 static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs)
@@ -152,11 +157,6 @@ static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir
     return hlir_error(node, "unknown common type");
 }
 
-static bool is_voidptr(const hlir_t *type)
-{
-    return hlir_is(type, eHlirPointer) && type->ptr == kVoidType;
-}
-
 static const hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *expr)
 {
     const hlir_t *dstType = hlir_follow_type(to);
@@ -174,11 +174,6 @@ static const hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *ex
     if (!hlir_is(common, eHlirError))
     {
         return common;
-    }
-
-    if (is_voidptr(dstType) && hlir_is(srcType, eHlirPointer))
-    {
-        return hlir_cast(dstType, expr, eCastBit); // bitcast the pointer
     }
 
     report(reports, eFatal, get_hlir_node(expr), "cannot convert from %s to %s", ctu_repr(reports, expr, true), ctu_type_repr(reports, to, true));

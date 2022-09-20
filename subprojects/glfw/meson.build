@@ -29,7 +29,7 @@ libs = []
 args = []
 
 if host == 'windows'
-    links += [ 'gdi32' ]
+    links += [ 'gdi32.lib' ]
     args += [ '-D_CRT_SECURE_NO_WARNINGS=1', '-D_GLFW_WIN32=1' ]
     src += [
         'glfw/src/win32_module.c',

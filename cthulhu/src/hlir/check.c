@@ -77,6 +77,10 @@ static void check_recursion(reports_t *reports, vector_t **stack, const hlir_t *
         check_recursion(reports, stack, hlir->operand);
         break;
 
+    case eHlirCast:
+        check_recursion(reports, stack, hlir->expr);
+        break;
+
     case eHlirDigitLiteral:
     case eHlirBoolLiteral:
     case eHlirStringLiteral:
