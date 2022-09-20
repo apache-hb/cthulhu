@@ -643,6 +643,10 @@ static const char *c89_emit_digit_literal(c89_emit_t *emit, const hlir_t *hlir)
     case eDigitMax:
         return format("%s(%s)", sign == eUnsigned ? "UINTMAX_C" : "INTMAX_C", mpz_get_str(NULL, 10, hlir->digit));
 
+    // TODO: horrible awful wrong hack
+    case eDigitPtr:
+        return format("%s(%s)", sign == eUnsigned ? "UINT64_C" : "INT64_C", mpz_get_str(NULL, 10, hlir->digit));
+
     default:
         ctu_assert(emit->reports, "digit literal with (%s, %s) not supported", hlir_sign_to_string(sign),
                    hlir_digit_to_string(width));
@@ -700,6 +704,21 @@ static const char *c89_emit_name(c89_emit_t *emit, const hlir_t *hlir)
     return format("%s[0]", name);
 }
 
+static const char *c89_emit_cast(c89_emit_t *emit, const hlir_t *hlir)
+{
+    const char *expr = c89_emit_rvalue(emit, hlir->expr);
+    const char *type = c89_emit_type(emit, get_hlir_type(hlir), NULL);
+    switch (hlir->cast)
+    {
+    case eCastBit:
+        return format("((%s)(%s))", type, expr);
+
+    default:
+        report(emit->reports, eInternal, get_hlir_node(hlir), "cannot emit %d cast", hlir->cast);
+        return "";
+    }
+}
+
 static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -736,6 +755,9 @@ static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
 
     case eHlirCall:
         return c89_emit_call(emit, hlir);
+
+    case eHlirCast:
+        return c89_emit_cast(emit, hlir);
 
     default:
         ctu_assert(emit->reports, "cannot emit rvalue for %s", hlir_kind_to_string(kind));
@@ -1203,6 +1225,7 @@ void c89_emit_modules(reports_t *reports, vector_t *modules, io_t *io)
     emit.path = vector_new(4);
 
     WRITE_STRING(&emit, "#include <stddef.h>\n");
+    WRITE_STRING(&emit, "#include <stdint.h>\n");
 
     c89_emit_types(&emit, modules);
     c89_emit_globals(&emit, totalDecls, modules);

@@ -1,11 +1,25 @@
-// import platform;
 import win32;
+import glfw;
 
 @entry(gui)
 def guiMain(instance: win32::HINSTANCE, previous: win32::HINSTANCE, cmd: str, show: int): int {
-    // const system = platform::System::new(instance);
-    
-    win32::MessageBoxA(null, "hello world", "more text", 0u);
+    win32::MessageBoxA(__null, "hello world", "more text", 0u);
+
+    if glfw::init() != 0 {
+        return 99;
+    }
+
+    var window = glfw::createWindow(640, 480, "hello world", __null, __null);
+    if window == __null {
+        glfw::terminate();
+        return 99;
+    }
+
+    while glfw::windowShouldClose(window) != 0 {
+        glfw::pollEvents();
+    }
+
+    glfw::terminate();
 
     return 0;
 }

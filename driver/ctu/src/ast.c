@@ -96,6 +96,11 @@ ast_t *ast_string(scan_t *scan, where_t where, char *str, size_t length)
     return ast;
 }
 
+ast_t *ast_null(scan_t *scan, where_t where)
+{
+    return ast_new(eAstNull, scan, where);
+}
+
 ast_t *ast_name(scan_t *scan, where_t where, vector_t *path)
 {
     ast_t *ast = ast_new(eAstName, scan, where);

@@ -22,6 +22,7 @@ typedef enum
     eAstBool,
     eAstName,
     eAstString,
+    eAstNull,
 
     eAstUnary,
     eAstBinary,
@@ -232,6 +233,7 @@ ast_t *ast_digit(scan_t *scan, where_t where, mpz_t value, char *suffix);
 ast_t *ast_bool(scan_t *scan, where_t where, bool value);
 ast_t *ast_name(scan_t *scan, where_t where, vector_t *path);
 ast_t *ast_string(scan_t *scan, where_t where, char *str, size_t len);
+ast_t *ast_null(scan_t *scan, where_t where);
 
 ast_t *ast_unary(scan_t *scan, where_t where, unary_t op, ast_t *operand);
 ast_t *ast_binary(scan_t *scan, where_t where, binary_t binary, ast_t *lhs, ast_t *rhs);

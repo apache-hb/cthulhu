@@ -83,6 +83,7 @@ static const char *kDigitNames[eSignTotal][eDigitTotal] = {
 };
 
 static hlir_t *kVoidType = NULL;
+static hlir_t *kNullType = NULL;
 static hlir_t *kEmptyType = NULL;
 static hlir_t *kBoolType = NULL;
 static hlir_t *kStringType = NULL;
@@ -105,6 +106,23 @@ static const char *get_digit_name(sign_t sign, digit_t digit)
 
 static sema_t *kRootSema = NULL;
 
+static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs);
+
+static const hlir_t *common_pointer_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs)
+{
+    if (lhs == kNullType && hlir_is(rhs, eHlirPointer))
+    {
+        return kNullType;
+    }
+
+    if (rhs == kNullType && hlir_is(lhs, eHlirPointer))
+    {
+        return kNullType;
+    }
+
+    return get_common_type(node, lhs->ptr, rhs->ptr);
+}
+
 static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs)
 {
     const hlir_t *lhsType = hlir_follow_type(lhs);
@@ -119,12 +137,19 @@ static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir
         return get_digit_type(sign, width);
     }
 
+    // doesnt account for const, probably wrong
+    const hlir_t *commonPtr = common_pointer_type(node, lhsType, rhsType);
+    if (!hlir_is(commonPtr, eHlirError))
+    {
+        return commonPtr;
+    }
+
     return hlir_error(node, "unknown common type");
 }
 
 static bool is_voidptr(const hlir_t *type)
 {
-    return hlir_is(type, eHlirPointer) && hlir_is(hlir_follow_type(type->ptr), eHlirUnit);
+    return hlir_is(type, eHlirPointer) && type->ptr == kVoidType;
 }
 
 static const hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *expr)
@@ -223,6 +248,8 @@ void ctu_init_compiler(runtime_t *runtime)
     kEmptyType = hlir_empty(node, "noreturn");
     kBoolType = hlir_bool(node, "bool");
     kStringType = hlir_string(node, "str");
+
+    kNullType = hlir_pointer(node, "nullptr", kVoidType, false);
 
     for (int sign = 0; sign < eSignTotal; sign++)
     {
@@ -518,7 +545,7 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
 
     const hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
 
-    if (!hlir_is(type, eHlirDigit))
+    if (!hlir_is(type, eHlirDigit) && !hlir_is(type, eHlirPointer))
     {
         message_t *id = report(sema_reports(sema), eFatal, ast->node, "cannot perform comparison operations on %s",
                                ctu_type_repr(sema_reports(sema), type, true));
@@ -596,6 +623,12 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
     return hlir_call(ast->node, call, args);
 }
 
+static hlir_t *sema_null(ast_t *ast)
+{
+    hlir_t *zero = hlir_int_literal(ast->node, get_digit_type(eUnsigned, eDigitPtr), 0);
+    return hlir_cast(kNullType, zero, eCastBit);
+}
+
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
 {
     switch (ast->of)
@@ -606,6 +639,8 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_bool(ast);
     case eAstString:
         return sema_string(ast);
+    case eAstNull:
+        return sema_null(ast);
     case eAstUnary:
         return sema_unary(sema, ast);
     case eAstBinary:

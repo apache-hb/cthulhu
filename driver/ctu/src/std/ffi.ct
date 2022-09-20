@@ -1,0 +1,3 @@
+module std::ffi;
+
+export const null: *void = __null;

@@ -420,6 +420,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | path { $$ = ast_name(x, @$, $1); }
     | BOOLEAN { $$ = ast_bool(x, @$, $1); }
     | STRING { $$ = ast_string(x, @$, $1.data, $1.length); }
+    | NIL { $$ = ast_null(x, @$); }
     ;
 
 postfix: primary { $$ = $1; }
