@@ -21,7 +21,7 @@ NODISCARD PUREFN bool hlir_is(const hlir_t *hlir, hlir_kind_t kind);
 ///
 
 /**
- * @brief follow a type until either a newtype or a real type is reached
+ * @brief follow a type until either a real type is reached
  *
  * @param hlir the type to follow
  * @return const hlir_t* the base type

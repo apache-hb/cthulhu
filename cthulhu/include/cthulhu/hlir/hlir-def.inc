@@ -186,6 +186,6 @@ COMPARE_OP(eCompareGte, "gte", ">=")
 
 CAST_OP(eCastZeroExtend, "zero-extend")
 CAST_OP(eCastSignExtend, "sign-extend")
-CAST_OP(eCastBit, "bit-cast")
+CAST_OP(eCastBit, "bitcast")
 
 #undef CAST_OP

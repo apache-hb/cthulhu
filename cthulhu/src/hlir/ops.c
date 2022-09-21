@@ -55,6 +55,16 @@ const char *unary_name(unary_t op)
     return unary_operand_name(op).name;
 }
 
+const char *cast_name(cast_t op)
+{
+#define CAST_OP(ID, NAME) case ID: return NAME;
+    switch (op)
+    {
+#include "cthulhu/hlir/hlir-def.inc"
+    default: return "unknown";
+    }
+}
+
 // symbol accessors
 
 const char *binary_symbol(binary_t op)

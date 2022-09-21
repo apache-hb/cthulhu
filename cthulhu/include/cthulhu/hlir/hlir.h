@@ -36,12 +36,6 @@ typedef struct string_view_t {
     size_t size;
 } string_view_t;
 
-typedef enum {
-#define CAST_OP(ID, NAME) ID,
-#include "hlir-def.inc" 
-    eCastTotal
-} hlir_cast_t;
-
 /**
  * @brief an hlir node
  */
@@ -110,7 +104,7 @@ typedef struct hlir_t
         struct 
         {
             struct hlir_t *expr;
-            hlir_cast_t cast;
+            cast_t cast;
         };
 
         /* eHlirBreak | eHlirContinue */
@@ -135,11 +129,7 @@ typedef struct hlir_t
                 /// all types
                 ///
 
-                struct
-                {
-                    const struct hlir_t *alias;
-                    bool newtype;
-                };
+                const struct hlir_t *alias;
 
                 /* the aggregate members */
                 vector_t *fields;
@@ -288,7 +278,7 @@ hlir_t *hlir_binary(node_t *node, const hlir_t *type, binary_t binary, hlir_t *l
 hlir_t *hlir_compare(node_t *node, const hlir_t *type, compare_t compare, hlir_t *lhs, hlir_t *rhs);
 hlir_t *hlir_call(node_t *node, hlir_t *call, vector_t *args);
 
-hlir_t *hlir_cast(const hlir_t *type, hlir_t *expr, hlir_cast_t cast);
+hlir_t *hlir_cast(const hlir_t *type, hlir_t *expr, cast_t cast);
 
 hlir_t *hlir_stmts(node_t *node, vector_t *stmts);
 hlir_t *hlir_branch(node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other);

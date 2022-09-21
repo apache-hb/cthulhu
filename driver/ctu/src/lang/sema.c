@@ -323,7 +323,7 @@ static hlir_t *sema_global(sema_t *sema, ast_t *ast)
 static hlir_t *sema_alias(sema_t *sema, ast_t *ast)
 {
     hlir_t *type = sema_type(sema, ast->alias);
-    return hlir_alias(ast->node, ast->name, type, false);
+    return hlir_alias(ast->node, ast->name, type);
 }
 
 static hlir_t *begin_type_resolve(sema_t *sema, void *user)

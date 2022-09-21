@@ -75,17 +75,16 @@ hlir_t *hlir_begin_alias(node_t *node, const char *name)
     return hlir_decl_new(node, name, kMetaType, eHlirAlias);
 }
 
-void hlir_build_alias(hlir_t *self, const hlir_t *alias, bool newtype)
+void hlir_build_alias(hlir_t *self, const hlir_t *alias)
 {
     CTASSERT(hlir_is(self, eHlirAlias));
     self->alias = alias;
-    self->newtype = newtype;
 }
 
-hlir_t *hlir_alias(node_t *node, const char *name, const hlir_t *type, bool newtype)
+hlir_t *hlir_alias(node_t *node, const char *name, const hlir_t *type)
 {
     hlir_t *self = hlir_begin_alias(node, name);
-    hlir_build_alias(self, type, newtype);
+    hlir_build_alias(self, type);
     return self;
 }
 

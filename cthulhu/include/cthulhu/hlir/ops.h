@@ -30,6 +30,13 @@ typedef enum
     eUnaryTotal
 } unary_t;
 
+typedef enum 
+{
+#define CAST_OP(ID, NAME) ID,
+#include "hlir-def.inc" 
+    eCastTotal
+} cast_t;
+
 /**
  * @brief get the name of a binary operator
  *
@@ -53,6 +60,8 @@ const char *compare_name(compare_t op);
  * @return the name
  */
 const char *unary_name(unary_t op);
+
+const char *cast_name(cast_t op);
 
 /**
  * @brief get the C symbol for a binary operator

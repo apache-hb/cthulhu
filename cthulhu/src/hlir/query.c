@@ -184,7 +184,7 @@ const char *hlir_digit_to_string(digit_t digit)
 
 const hlir_t *hlir_follow_type(const hlir_t *hlir)
 {
-    if (hlir_is(hlir, eHlirAlias) && !hlir->newtype)
+    if (hlir_is(hlir, eHlirAlias))
     {
         return hlir_follow_type(hlir->alias);
     }

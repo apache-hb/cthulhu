@@ -11,6 +11,33 @@ typedef struct block_t block_t;
 typedef struct flow_t flow_t;
 typedef struct step_t step_t;
 
+typedef struct type_t type_t;
+
+typedef enum typekind_t 
+{
+    eTypeDigit,
+    eTypeBool, // either true or false
+    eTypeUnit, // only a single value, like void
+    eTypeEmpty, // impossible to calculate value, like noreturn
+
+    eTypePointer, // a pointer to another type
+    eTypeOpaque, // an opaque pointer to any type
+
+    eTypeStruct, // a possibly unordered list of types in memory
+
+    eTypeTotal
+} typekind_t;
+
+typedef struct type_t 
+{
+    typekind_t kind;
+    const char *name;
+
+    union {
+        const type_t *ptr;
+    };
+} type_t;
+
 typedef struct imm_t
 {
     mpz_t digit;
@@ -31,6 +58,7 @@ typedef enum opkind_t
 typedef struct operand_t
 {
     opkind_t kind;
+    const type_t *type;
 
     union {
         const block_t *bb;
@@ -49,6 +77,7 @@ typedef enum opcode_t
     eOpUnary,
     eOpBinary,
     eOpCompare,
+    eOpCast,
 
     eOpTotal
 } opcode_t;
@@ -57,6 +86,7 @@ typedef struct step_t
 {
     opcode_t opcode;
     const char *id;
+    const type_t *type;
 
     union {
         struct
@@ -72,7 +102,11 @@ typedef struct step_t
 
         struct
         {
-            unary_t unary;
+            union {
+                unary_t unary;
+                cast_t cast;
+            };
+
             operand_t operand;
         };
 

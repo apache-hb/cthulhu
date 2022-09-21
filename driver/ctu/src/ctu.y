@@ -318,7 +318,7 @@ funcbody: SEMICOLON { $$ = NULL; }
     | stmts { $$ = $1; }
     ;
 
-aliasdecl: TYPE IDENT EQUALS type SEMICOLON { $$ = ast_typealias(x, @$, $2, false, $4); }
+aliasdecl: TYPE IDENT EQUALS type SEMICOLON { $$ = ast_typealias(x, @$, $2, $4); }
     ;
 
 structdecl: STRUCT IDENT aggregates { $$ = ast_structdecl(x, @$, $2, $3); }

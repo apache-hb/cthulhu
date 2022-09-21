@@ -268,10 +268,9 @@ ast_t *ast_uniondecl(scan_t *scan, where_t where, char *name, vector_t *fields)
     return ast;
 }
 
-ast_t *ast_typealias(scan_t *scan, where_t where, char *name, bool newtype, ast_t *type)
+ast_t *ast_typealias(scan_t *scan, where_t where, char *name,ast_t *type)
 {
     ast_t *ast = ast_decl(eAstDeclAlias, name, scan, where);
-    ast->newtype = newtype;
     ast->alias = type;
     return ast;
 }

@@ -29,6 +29,39 @@ static block_t *block_new(const char *id)
     return block;
 }
 
+static typekind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
+{
+    hlir_kind_t kind = get_hlir_kind(hlir);
+    switch (kind)
+    {
+    case eHlirDigit: return eTypeDigit;
+    case eHlirBool: return eTypeBool;
+    case eHlirPointer: // TODO: frontend should also have opaque pointer type, this is a hack
+        return hlir_is(hlir->ptr, eHlirUnit) ? eTypeOpaque : eTypePointer;
+    case eHlirUnit: return eTypeUnit;
+    case eHlirEmpty: return eTypeEmpty;
+
+    default:
+        report(ssa->reports, eInternal, get_hlir_node(hlir), "no respective ssa type for %s", hlir_kind_to_string(kind));
+        return eTypeEmpty;
+    }
+}
+
+static type_t *type_new(ssa_t *ssa, const hlir_t *type)
+{
+    const hlir_t *real = hlir_follow_type(type);
+    type_t *it = ctu_malloc(sizeof(type_t));
+    it->name = get_hlir_name(real);
+    it->kind = get_type_kind(ssa, real);
+
+    if (hlir_is(real, eHlirPointer))
+    {
+        it->ptr = type_new(ssa, real->ptr);
+    }
+    
+    return it;
+}
+
 static operand_t add_step(ssa_t *ssa, step_t step)
 {
     step_t *ptr = BOX(step);
@@ -39,6 +72,7 @@ static operand_t add_step(ssa_t *ssa, step_t step)
     vector_push(&ssa->currentBlock->steps, ptr);
     operand_t op = {
         .kind = eOperandReg,
+        .type = step.type,
         .reg = ptr
     };
     return op;
@@ -54,13 +88,14 @@ static void fwd_global(ssa_t *ssa, const hlir_t *global)
 
 static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir);
 
-static operand_t compile_digit(const hlir_t *hlir)
+static operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
 {
     imm_t imm;
     mpz_init_set(imm.digit, hlir->digit);
 
     operand_t op = {
         .kind = eOperandImm,
+        .type = type_new(ssa, get_hlir_type(hlir)),
         .imm = imm
     };
 
@@ -74,6 +109,7 @@ static operand_t compile_binary(ssa_t *ssa, const hlir_t *hlir)
     
     step_t step = {
         .opcode = eOpBinary,
+        .type = type_new(ssa, get_hlir_type(hlir)),
         .binary = hlir->binary,
         .lhs = lhs,
         .rhs = rhs
@@ -87,6 +123,7 @@ static operand_t compile_load(ssa_t *ssa, const hlir_t *hlir)
     operand_t name = compile_rvalue(ssa, hlir->read);
     step_t step = {
         .opcode = eOpLoad,
+        .type = type_new(ssa, get_hlir_type(hlir)),
         .value = name
     };
 
@@ -99,10 +136,25 @@ static operand_t compile_global_ref(ssa_t *ssa, const hlir_t *hlir)
 
     operand_t op = {
         .kind = eOperandGlobal,
+        .type = type_new(ssa, get_hlir_type(hlir)),
         .flow = ref
     };
 
     return op;
+}
+
+static operand_t compile_cast(ssa_t *ssa, const hlir_t* hlir)
+{
+    operand_t op = compile_rvalue(ssa, hlir->expr);
+
+    step_t step = {
+        .opcode = eOpCast,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .cast = hlir->cast,
+        .operand = op
+    };
+
+    return add_step(ssa, step);
 }
 
 static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
@@ -111,7 +163,7 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
     switch (kind)
     {
     case eHlirDigitLiteral:
-        return compile_digit(hlir);
+        return compile_digit(ssa, hlir);
 
     case eHlirBinary:
         return compile_binary(ssa, hlir);
@@ -121,6 +173,9 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 
     case eHlirGlobal:
         return compile_global_ref(ssa, hlir);
+
+    case eHlirCast:
+        return compile_cast(ssa, hlir);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-rvalue %s", hlir_kind_to_string(kind));
@@ -140,6 +195,7 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
     operand_t result = compile_rvalue(ssa, global->value);
     step_t step = {
         .opcode = eOpReturn,
+        .type = type_new(ssa, get_hlir_type(global)),
         .value = result
     };
     add_step(ssa, step);

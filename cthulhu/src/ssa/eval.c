@@ -14,6 +14,26 @@ typedef struct {
     set_t *blocks;
 } emit_t;
 
+static const char *emit_type(emit_t *emit, const type_t *type)
+{
+    if (type == NULL)
+    {
+        return "nil";
+    }
+
+    switch (type->kind)
+    {
+    case eTypeBool: return "bool";
+    case eTypeDigit: return "digit";
+    case eTypeEmpty: return "empty";
+    case eTypeOpaque: return "ptr";
+    case eTypePointer: return format("%s*", type->ptr);
+    case eTypeStruct: return format(":%s", type->name);
+    case eTypeUnit: return "unit";
+    default: return format("err(%s)", type->name);
+    }
+}
+
 static const char *emit_operand(emit_t *emit, set_t *edges, operand_t op)
 {
     UNUSED(emit);
@@ -48,11 +68,15 @@ static void emit_step(emit_t *emit, set_t *edges, step_t *step)
         break;
 
     case eOpReturn:
-        printf("  ret %s\n", emit_operand(emit, edges, step->value));
+        printf("  ret %s %s\n", emit_type(emit, step->type), emit_operand(emit, edges, step->value));
+        break;
+
+    case eOpCast:
+        printf("  %%%s = %s<%s> %s\n", step->id, cast_name(step->cast), emit_type(emit, step->type), emit_operand(emit, edges, step->operand));
         break;
 
     default:
-        printf("  <error>\n");
+        printf("  <error> %d\n", (int)step->opcode);
         break;
     }
 }
