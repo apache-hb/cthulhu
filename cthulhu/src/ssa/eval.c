@@ -115,7 +115,8 @@ static void emit_flow(emit_t *emit, const flow_t *flow)
 
 void eval_module(reports_t *reports, module_t *mod)
 {
-    size_t len = vector_len(mod->flows);
+    section_t *symbols = &mod->symbols;
+    size_t len = vector_len(symbols->globals);
     emit_t emit = {
         .reports = reports,
         .blocks = set_new(0x100)
@@ -123,6 +124,6 @@ void eval_module(reports_t *reports, module_t *mod)
 
     for (size_t i = 0; i < len; i++)
     {
-        emit_flow(&emit, vector_get(mod->flows, i));
+        emit_flow(&emit, vector_get(symbols->globals, i));
     }
 }

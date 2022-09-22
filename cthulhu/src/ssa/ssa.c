@@ -15,7 +15,12 @@
 
 typedef struct {
     reports_t *reports;
+    
     map_t *globals;
+    map_t *functions;
+
+    map_t *importedSymbols;
+
     block_t *currentBlock;
     size_t stepIdx;
     size_t blockIdx;
@@ -78,15 +83,28 @@ static operand_t add_step(ssa_t *ssa, step_t step)
     return op;
 }
 
-static void fwd_global(ssa_t *ssa, const hlir_t *global)
+static flow_t *flow_new(const hlir_t *symbol)
 {
     flow_t *flow = ctu_malloc(sizeof(flow_t));
-    flow->name = get_hlir_name(global);
+    flow->name = get_hlir_name(symbol);
     flow->entry = NULL;
+    return flow;
+}
+
+static void fwd_global(ssa_t *ssa, const hlir_t *global)
+{
+    flow_t *flow = flow_new(global);
     map_set_ptr(ssa->globals, global, flow);
 }
 
+static void fwd_function(ssa_t *ssa, const hlir_t *function)
+{
+    flow_t *flow = flow_new(function);
+    map_set_ptr(ssa->functions, function, flow);
+}
+
 static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir);
+static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
 
 static operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
 {
@@ -183,14 +201,56 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
     }
 }
 
-static void compile_global(ssa_t *ssa, const hlir_t *global)
+static operand_t operand_bb(const block_t *dst)
 {
-    flow_t *flow = map_get_ptr(ssa->globals, global);
+    operand_t op = {
+        .kind = eOperandBlock,
+        .bb = dst
+    };
+
+    return op;
+}
+
+static operand_t compile_stmts(ssa_t *ssa, const hlir_t *stmt)
+{
+    block_t *oldBlock = ssa->currentBlock;
+    ssa->currentBlock = block_new(format("%zu", ssa->blockIdx++));
+    
+    for (size_t i = 0; i < vector_len(stmt->stmts); i++)
+    {
+        compile_stmt(ssa, vector_get(stmt->stmts, i));
+    }
+
+    ssa->currentBlock = oldBlock;
+    return operand_bb(ssa->currentBlock);
+}
+
+static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
+{
+    hlir_kind_t kind = get_hlir_kind(stmt);
+    switch (kind)
+    {
+    case eHlirStmts:
+        return compile_stmts(ssa, stmt);
+    default:
+        report(ssa->reports, eInternal, get_hlir_node(stmt), "compile-stmt %s", hlir_kind_to_string(kind));
+        return (operand_t){.kind = eOperandEmpty};
+    }
+}
+
+static void compile_flow(ssa_t *ssa, flow_t *flow)
+{
     block_t *block = block_new("entry");
     flow->entry = block;
     ssa->currentBlock = block;
     ssa->stepIdx = 0;
     ssa->blockIdx = 0;
+}
+
+static void compile_global(ssa_t *ssa, const hlir_t *global)
+{
+    flow_t *flow = map_get_ptr(ssa->globals, global);
+    compile_flow(ssa, flow);
 
     operand_t result = compile_rvalue(ssa, global->value);
     step_t step = {
@@ -201,11 +261,21 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
     add_step(ssa, step);
 }
 
+static void compile_function(ssa_t *ssa, const hlir_t *function)
+{
+    flow_t *flow = map_get_ptr(ssa->functions, function);
+    compile_flow(ssa, flow);
+
+    compile_stmt(ssa, function->body);
+}
+
 module_t *emit_module(reports_t *reports, vector_t *mods)
 {
     ssa_t ssa = { 
         .reports = reports,
-        .globals = map_optimal(0x1000)
+        .globals = map_optimal(0x1000),
+        .functions = map_optimal(0x1000),
+        .importedSymbols = map_optimal(0x1000)
     };
 
     size_t len = vector_len(mods);
@@ -216,6 +286,11 @@ module_t *emit_module(reports_t *reports, vector_t *mods)
         {
             fwd_global(&ssa, vector_get(mod->globals, j));
         }
+
+        for (size_t j = 0; j < vector_len(mod->functions); j++)
+        {
+            fwd_function(&ssa, vector_get(mod->functions, j));
+        }
     }
 
     for (size_t i = 0; i < len; i++)
@@ -225,10 +300,20 @@ module_t *emit_module(reports_t *reports, vector_t *mods)
         {
             compile_global(&ssa, vector_get(mod->globals, j));
         }
+
+        for (size_t j = 0; j < vector_len(mod->functions); j++)
+        {
+            compile_function(&ssa, vector_get(mod->functions, j));
+        }
     }
 
+    section_t symbols = {
+        .globals = map_values(ssa.globals),
+        .functions = map_values(ssa.functions)
+    };
+
     module_t *mod = ctu_malloc(sizeof(module_t));
-    mod->flows = map_values(ssa.globals);
+    mod->symbols = symbols;
 
     return mod;
 }

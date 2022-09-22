@@ -70,14 +70,22 @@ typedef struct operand_t
 
 typedef enum opcode_t
 {
+    // control flow
     eOpReturn,
-    eOpValue,
-    eOpLoad,
+    eOpJmp, ///< unconditional jump
+    eOpBranch, ///< conditional jump
+
+    // effects
     eOpStore,
+    eOpLoad,
+
+    // expressions
+    eOpValue,
     eOpUnary,
     eOpBinary,
     eOpCompare,
     eOpCast,
+    eOpCall,
 
     eOpTotal
 } opcode_t;
@@ -110,6 +118,19 @@ typedef struct step_t
             operand_t operand;
         };
 
+        struct
+        {
+            operand_t *args;
+            size_t len;
+
+            operand_t symbol;
+        };
+
+        struct
+        {
+            operand_t label;
+        };
+
         operand_t value;
     };
 } step_t;
@@ -123,13 +144,22 @@ typedef struct block_t
 typedef struct flow_t
 {
     const char *name;
-
     block_t *entry;
+    const type_t *type;
 } flow_t;
+
+typedef struct section_t 
+{
+    vector_t *globals;
+    vector_t *functions;
+} section_t;
 
 typedef struct module_t 
 {
-    vector_t *flows;
+    section_t symbols;
+
+    section_t imports;
+    section_t exports;
 } module_t;
 
 module_t *emit_module(reports_t *reports, vector_t *mods);
