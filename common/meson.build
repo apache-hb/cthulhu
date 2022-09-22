@@ -77,6 +77,10 @@ src = [
     'src/scan/compile.c'
 ]
 
+if minimal.enabled()
+    subdir_done()
+endif
+
 # this is both libreport and libscan as they depend on each other
 liblocation = library('location', src, 
     c_args : args, 

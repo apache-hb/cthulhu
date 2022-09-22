@@ -29,3 +29,8 @@ option('interfaces', type : 'array',
     choices : [ 'cli', 'gui' ],
     value : [ 'cli' ]
 )
+
+option('minimal', type : 'feature',
+    description : 'only build common libraries',
+    value : 'auto'
+)

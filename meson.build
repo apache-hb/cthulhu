@@ -12,6 +12,7 @@ project('cthulhu', [ 'c' ],
 
 analyze = get_option('analyze')
 tuning = get_option('tuning')
+minimal = get_option('minimal').disable_auto_if(not meson.is_subproject())
 
 version = meson.project_version()
 target = target_machine.system()
@@ -122,10 +123,9 @@ parse = generator(bison,
 # common helper libraries used by compiler, tools, interfaces, and drivers
 subdir('common')
 
-# TODO: these would be nice to have in the future
-#foreach tool : [ 'protobuf-rt', 'gentool', 'protobuf-gen' ]
-#    subdir('tools'/tool)
-#endforeach
+if minimal.enabled()
+    subdir_done()
+endif
 
 # common compiler libraries used by interfaces and drivers
 subdir('cthulhu')
