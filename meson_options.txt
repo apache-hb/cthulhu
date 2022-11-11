@@ -30,7 +30,7 @@ option('interfaces', type : 'array',
     value : [ 'cli' ]
 )
 
-option('minimal', type : 'feature',
-    description : 'only build common libraries',
+option('stacktrace', type : 'feature',
+    description : 'enable stacktrace support',
     value : 'auto'
 )

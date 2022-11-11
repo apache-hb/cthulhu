@@ -13,23 +13,31 @@ typedef struct
     const char *text; ///< the text itself
 } text_t;
 
-NODISCARD CONSTFN const char *scan_language(const scan_t *scan);
+NODISCARD CONSTFN 
+const char *scan_language(IN_NOTNULL const scan_t *scan);
 
-NODISCARD CONSTFN const char *scan_path(const scan_t *scan);
+NODISCARD CONSTFN 
+const char *scan_path(IN_NOTNULL const scan_t *scan);
 
-NODISCARD CONSTFN void *scan_get(scan_t *scan);
+NODISCARD CONSTFN 
+void *scan_get(IN_NOTNULL scan_t *scan);
 
-void scan_set(scan_t *scan, void *value);
+void scan_set(IN_NOTNULL scan_t *scan, void *value);
 
-NODISCARD CONSTFN const char *scan_text(const scan_t *scan);
+NODISCARD CONSTFN 
+const char *scan_text(IN_NOTNULL const scan_t *scan);
 
-NODISCARD CONSTFN size_t scan_size(const scan_t *scan);
+NODISCARD CONSTFN 
+size_t scan_size(IN_NOTNULL const scan_t *scan);
 
-NODISCARD CONSTFN text_t scan_source(const scan_t *scan);
+NODISCARD CONSTFN 
+text_t scan_source(IN_NOTNULL const scan_t *scan);
 
-NODISCARD CONSTFN reports_t *scan_reports(scan_t *scan);
+NODISCARD CONSTFN 
+reports_t *scan_reports(IN_NOTNULL scan_t *scan);
 
-NODISCARD CONSTFN scan_t *scan_invalid(void);
+NODISCARD CONSTFN 
+scan_t *scan_invalid(void);
 
 NODISCARD RET_RANGE(0, size)
 size_t scan_read(scan_t *scan, void *dst, size_t size);

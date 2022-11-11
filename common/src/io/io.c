@@ -201,6 +201,7 @@ static io_t *io_new(const io_callbacks_t *cb, file_flags_t flags, const char *na
     return io;
 }
 
+USE_DECL
 io_t *io_file(const char *path, file_flags_t mode)
 {
     cerror_t err = 0;
@@ -210,6 +211,7 @@ io_t *io_file(const char *path, file_flags_t mode)
     return io;
 }
 
+USE_DECL
 io_t *io_memory(const char *name, const void *data, size_t size)
 {
     file_flags_t flags = eFileRead | eFileWrite;
@@ -224,6 +226,20 @@ io_t *io_memory(const char *name, const void *data, size_t size)
     return io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
 }
 
+USE_DECL
+io_t *io_blob(const char *name, size_t size)
+{
+    buffer_t buffer = {
+        .data = ctu_malloc(size),
+        .total = size,
+        .used = size,
+        .offset = 0
+    };
+
+    return io_new(&kBufferCallbacks, eFileWrite, name, &buffer, sizeof(buffer_t));
+}
+
+USE_DECL
 io_t *io_view(const char *name, const void *data, size_t size)
 {
     file_flags_t flags = eFileRead;
@@ -233,6 +249,7 @@ io_t *io_view(const char *name, const void *data, size_t size)
     return io_new(&kViewCallbacks, flags, name, &view, sizeof(view_t));
 }
 
+USE_DECL
 io_t *io_string(const char *name, const char *string)
 {
     return io_view(name, string, strlen(string));
@@ -250,6 +267,7 @@ void io_close(io_t *io)
     ctu_free(io);
 }
 
+USE_DECL
 size_t io_read(io_t *io, void *dst, size_t size)
 {
     CTASSERT(io != NULL);
@@ -258,6 +276,7 @@ size_t io_read(io_t *io, void *dst, size_t size)
     return io->cb->read(io, dst, size);
 }
 
+USE_DECL
 size_t io_write(io_t *io, const void *src, size_t size)
 {
     CTASSERT(io != NULL);
@@ -266,6 +285,7 @@ size_t io_write(io_t *io, const void *src, size_t size)
     return io->cb->write(io, src, size);
 }
 
+USE_DECL
 size_t io_size(io_t *io)
 {
     CTASSERT(io != NULL);
@@ -273,6 +293,7 @@ size_t io_size(io_t *io)
     return io->cb->size(io);
 }
 
+USE_DECL
 const char *io_name(io_t *io)
 {
     CTASSERT(io != NULL);
@@ -280,6 +301,7 @@ const char *io_name(io_t *io)
     return io->name;
 }
 
+USE_DECL
 const void *io_map(io_t *io)
 {
     CTASSERT(io != NULL);
@@ -287,6 +309,7 @@ const void *io_map(io_t *io)
     return io->cb->map(io);
 }
 
+USE_DECL
 io_error_t io_error(const io_t *io)
 {
     CTASSERT(io != NULL);

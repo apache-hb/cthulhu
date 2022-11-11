@@ -3,6 +3,7 @@
 #include "base/memory.h"
 #include "base/panic.h"
 
+#include "stacktrace/stacktrace.h"
 #include "std/map.h"
 
 #include "cthulhu/hlir/init.h"
@@ -15,6 +16,7 @@ void common_init(void)
 {
     GLOBAL_INIT();
 
+    stacktrace_init();
     platform_init();
     init_gmp(&globalAlloc);
     argparse_init();

@@ -21,7 +21,7 @@
 #    define IN_NOTNULL _In_
 #    define IN_NULLABLE _In_opt_
 #    define IN_STRING _In_z_
-#    define IN_RANGE(lo, hi) _In_range_(lo, hi)
+#    define IN_RANGE(...) _In_range_(__VA_ARGS__)
 #else
 #    define FORMAT_STRING
 #    define USE_DECL
@@ -33,7 +33,7 @@
 #    define IN_NOTNULL
 #    define IN_NULLABLE
 #    define IN_STRING
-#    define IN_RANGE(lo, hi)
+#    define IN_RANGE(...)
 #endif
 
 #if __GNUC__ >= 11

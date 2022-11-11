@@ -27,6 +27,8 @@
 
 ## bikeshedding
 
+* fix tuning 
+* fix sal support
 * rewrite gui frontend
 * add language server support
 * move to incremental compilation

@@ -55,6 +55,7 @@ bool file_valid(file_t file)
     return file.handle != INVALID_FILE_HANDLE;
 }
 
+USE_DECL
 size_t file_read(file_t file, void *buffer, size_t size, cerror_t *error)
 {
     native_cerror_t nativeError = 0;
@@ -63,6 +64,7 @@ size_t file_read(file_t file, void *buffer, size_t size, cerror_t *error)
     return result;
 }
 
+USE_DECL
 size_t file_write(file_t file, const void *buffer, size_t size, cerror_t *error)
 {
     native_cerror_t nativeError = 0;

@@ -70,18 +70,21 @@ static bool has_attribs(hlir_kind_t kind)
     }
 }
 
+USE_DECL
 hlir_kind_t get_hlir_kind(const hlir_t *hlir)
 {
     CTASSERT(hlir != NULL);
     return hlir->type;
 }
 
+USE_DECL
 const hlir_t *get_hlir_type(const hlir_t *hlir)
 {
     CTASSERT(hlir != NULL);
     return hlir->of;
 }
 
+USE_DECL
 const char *get_hlir_name(const hlir_t *hlir)
 {
     CTASSERT(hlir != NULL);

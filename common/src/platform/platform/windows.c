@@ -1,9 +1,12 @@
 // clang-format off
 #include "platform.h"
 #include "base/macros.h"
+
 #include "std/str.h"
+
 #include "base/util.h"
 #include "base/memory.h"
+
 #include <stdio.h>
 #include <excpt.h>
 #include <processthreadsapi.h>
@@ -83,7 +86,7 @@ native_cerror_t native_make_directory(const char *path)
     {
         native_cerror_t err = native_get_last_error();
 
-        if (err != HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS))
+        if ((HRESULT)err != HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS))
         {
             return err;
         }

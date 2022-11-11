@@ -14,21 +14,25 @@ typedef struct node_t
     where_t where; ///< the location of this node in the source file
 } node_t;
 
+USE_DECL
 node_t *node_builtin(void)
 {
     return (void*)UINTPTR_MAX;
 }
 
+USE_DECL
 node_t *node_invalid(void)
 {
     return NULL;
 }
 
+USE_DECL
 bool node_is_valid(const node_t *node)
 {
     return node != node_invalid();
 }
 
+USE_DECL
 node_t *node_new(scan_t *scan, where_t where)
 {
     node_t *node = ctu_malloc(sizeof(node_t));
@@ -38,12 +42,14 @@ node_t *node_new(scan_t *scan, where_t where)
     return node;
 }
 
+USE_DECL
 scan_t *get_node_scanner(const node_t *node)
 {
     CTASSERT(node_is_valid(node));
     return node->scan;
 }
 
+USE_DECL
 where_t get_node_location(const node_t *node)
 {
     CTASSERT(node_is_valid(node));

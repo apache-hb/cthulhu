@@ -63,6 +63,7 @@ set_t *set_new(size_t size)
     return set;
 }
 
+USE_DECL
 const char *set_add(set_t *set, const char *key)
 {
     CTASSERT(set != NULL);
@@ -126,6 +127,7 @@ bool set_contains(set_t *set, const char *key)
     }
 }
 
+USE_DECL
 const void *set_add_ptr(set_t *set, const void *key)
 {
     CTASSERT(set != NULL);
@@ -187,6 +189,7 @@ bool set_contains_ptr(set_t *set, const void *key)
     }
 }
 
+USE_DECL
 void set_reset(set_t *set)
 {
     CTASSERT(set != NULL);

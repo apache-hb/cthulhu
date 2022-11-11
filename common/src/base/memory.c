@@ -41,6 +41,7 @@ alloc_t globalAlloc = {
 
 /// global allocator
 
+USE_DECL
 void *ctu_malloc(size_t size)
 {
     CTASSERT(size > 0);
@@ -48,6 +49,7 @@ void *ctu_malloc(size_t size)
     return arena_malloc(&globalAlloc, size, NULL);
 }
 
+USE_DECL
 void *ctu_realloc(void *ptr, size_t newSize)
 {
     CTASSERT(ptr != NULL);
@@ -56,6 +58,7 @@ void *ctu_realloc(void *ptr, size_t newSize)
     return arena_realloc(&globalAlloc, ptr, newSize, ALLOC_SIZE_UNKNOWN);
 }
 
+USE_DECL
 void ctu_free(void *ptr)
 {
     arena_free(&globalAlloc, ptr, ALLOC_SIZE_UNKNOWN);
@@ -63,6 +66,7 @@ void ctu_free(void *ptr)
 
 /// arena allocator
 
+USE_DECL
 void *arena_malloc(alloc_t *alloc, size_t size, const char *name)
 {
     CTASSERT(alloc != NULL);
@@ -70,6 +74,7 @@ void *arena_malloc(alloc_t *alloc, size_t size, const char *name)
     return alloc->arenaMalloc(alloc, size, name);
 }
 
+USE_DECL
 void *arena_realloc(alloc_t *alloc, void *ptr, size_t newSize, size_t oldSize)
 {
     CTASSERT(alloc != NULL);
@@ -77,6 +82,7 @@ void *arena_realloc(alloc_t *alloc, void *ptr, size_t newSize, size_t oldSize)
     return alloc->arenaRealloc(alloc, ptr, newSize, oldSize);
 }
 
+USE_DECL
 void arena_free(alloc_t *alloc, void *ptr, size_t size)
 {
     CTASSERT(alloc != NULL);

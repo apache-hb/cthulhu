@@ -12,7 +12,6 @@ project('cthulhu', [ 'c' ],
 
 analyze = get_option('analyze')
 tuning = get_option('tuning')
-minimal = get_option('minimal').disable_auto_if(not meson.is_subproject())
 
 version = meson.project_version()
 target = target_machine.system()
@@ -23,6 +22,14 @@ buildtype = get_option('buildtype')
 parts = version.split('.')
 cwd = meson.current_source_dir()
 bld = meson.current_build_dir()
+
+has_glib_backtrace = cc.has_header('<execinfo.h>') and cc.has_function('backtrace', include_directories : include_directories('<execinfo.h>'))
+
+stacktrace = get_option('stacktrace').disable_auto_if(target != 'windows' and not has_glib_backtrace)
+
+message('target:', target)
+message('glib backtrace:', has_glib_backtrace)
+message('stacktrace:', stacktrace.allowed())
 
 config = {
     'major': parts[0].to_int(),
@@ -49,7 +56,7 @@ parseargs = []
 
 fs = import('fs')
 
-if tuning.enabled()
+if tuning.allowed()
     args += [ '-DENABLE_TUNING=1' ]
 endif
 
@@ -122,10 +129,6 @@ parse = generator(bison,
 
 # common helper libraries used by compiler, tools, interfaces, and drivers
 subdir('common')
-
-if minimal.enabled()
-    subdir_done()
-endif
 
 # common compiler libraries used by interfaces and drivers
 subdir('cthulhu')

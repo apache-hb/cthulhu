@@ -45,11 +45,12 @@
 
 #    define INVALID_LIBRARY_HANDLE NULL
 #    define INVALID_FILE_HANDLE INVALID_HANDLE_VALUE
+#    define PROCESS_HANDLE_TYPE HANDLE
 #    define LIBRARY_HANDLE_TYPE HMODULE
 #    define FILE_HANDLE_TYPE HANDLE
 #    define FILE_SIZE_TYPE LONGLONG
 #    define FILE_POS_TYPE DWORD
-#    define eFileRead_TYPE DWORD
+#    define FILE_READ_TYPE DWORD
 #    define FILE_WRITE_TYPE DWORD
 #    define CERROR_TYPE HRESULT
 #else
@@ -57,11 +58,12 @@
 #    include <stdio.h>
 #    define INVALID_LIBRARY_HANDLE NULL
 #    define INVALID_FILE_HANDLE NULL
+#    define PROCESS_HANDLE_TYPE void *
 #    define LIBRARY_HANDLE_TYPE void *
 #    define FILE_HANDLE_TYPE FILE *
 #    define FILE_SIZE_TYPE size_t
 #    define FILE_POS_TYPE size_t
-#    define eFileRead_TYPE size_t
+#    define FILE_READ_TYPE size_t
 #    define FILE_WRITE_TYPE size_t
 #    define CERROR_TYPE int
 #endif
@@ -70,12 +72,17 @@
 
 #include <stdbool.h>
 
+typedef struct vector_t vector_t;
+
 typedef LIBRARY_HANDLE_TYPE library_handle_t;
 typedef FILE_HANDLE_TYPE file_handle_t;
+typedef PROCESS_HANDLE_TYPE process_handle_t;
+
 typedef CERROR_TYPE native_cerror_t;
+
 typedef FILE_SIZE_TYPE file_size_t;
 typedef FILE_POS_TYPE file_pos_t;
-typedef eFileRead_TYPE file_read_t;
+typedef FILE_READ_TYPE file_read_t;
 typedef FILE_WRITE_TYPE file_write_t;
 
 typedef enum
@@ -130,3 +137,6 @@ void native_platform_init(void);
 
 NODISCARD
 native_cerror_t native_get_last_error(void);
+
+NODISCARD
+vector_t *native_error_stacktrace(void);

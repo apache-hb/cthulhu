@@ -86,7 +86,7 @@ void vector_drop(IN_NOTNULL vector_t *vector);
  */
 void vector_set(
     IN_NOTNULL vector_t *vector, 
-    IN_RANGE(<, vector_len(vector)) size_t index, 
+    IN_RANGE(0, _Inexpressible_(vector_len(vector))) size_t index, 
     void *value
 );
 
@@ -103,7 +103,7 @@ void vector_set(
 NODISCARD CONSTFN 
 void *vector_get(
     IN_NOTNULL const vector_t *vector, 
-    IN_RANGE(<, vector_len(vector)) size_t index
+    IN_RANGE(0, _Inexpressible_(vector_len(vector))) size_t index
 );
 
 /**

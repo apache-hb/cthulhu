@@ -1,3 +1,28 @@
+if stacktrace.allowed()
+    src = [ 'src/stacktrace/stacktrace-target.c'.replace('target', target) ]
+    if target == 'windows'
+        stacktrace_links = [ 'dbghelp.lib' ]
+    else
+        stacktrace_links = []
+    endif
+else
+    src = [ 'src/stacktrace/stacktrace-null.c' ]
+    stacktrace_links = []
+endif   
+
+libstacktrace = library('stacktrace', src,
+    c_args : args,
+    dependencies : deps,
+    include_directories : 'include',
+    link_args : stacktrace_links
+)
+
+stacktrace = declare_dependency(
+    link_with : libstacktrace,
+    include_directories : 'include',
+    link_args : stacktrace_links
+)
+
 src = [
     'src/base/base.c',
     'src/base/panic.c',
@@ -6,7 +31,7 @@ src = [
 
 libbase = library('base', src, 
     c_args : args,
-    dependencies : deps,
+    dependencies : deps + [ stacktrace ],
     include_directories : 'include'
 )
 
@@ -76,10 +101,6 @@ src = [
     'src/scan/scan.c',
     'src/scan/compile.c'
 ]
-
-if minimal.enabled()
-    subdir_done()
-endif
 
 # this is both libreport and libscan as they depend on each other
 liblocation = library('location', src, 

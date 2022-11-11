@@ -4,6 +4,8 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <limits.h>
+
 
 BEGIN_API
 
@@ -22,7 +24,7 @@ typedef struct map_t map_t;
  * @return a new map
  */
 NODISCARD
-map_t *map_new(IN_RANGE(>, 0) size_t size);
+map_t *map_new(IN_RANGE(0, SIZE_MAX) size_t size);
 
 /**
  * create a map with an optimal number of buckets

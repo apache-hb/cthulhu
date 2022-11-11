@@ -162,6 +162,7 @@ void *map_get(map_t *map, const char *key)
     return map_get_default(map, key, NULL);
 }
 
+USE_DECL
 void map_set(map_t *map, const char *key, void *value)
 {
     CTASSERT(map != NULL);
@@ -217,6 +218,7 @@ static void *entry_get_ptr(const bucket_t *entry, const void *key, void *other)
     return other;
 }
 
+USE_DECL
 void map_set_ptr(map_t *map, const void *key, void *value)
 {
     CTASSERT(map != NULL);
@@ -370,6 +372,7 @@ bool map_has_next(map_iter_t *iter)
     return iter->bucket != NULL;
 }
 
+USE_DECL
 void map_reset(map_t *map)
 {
     CTASSERT(map != NULL);
