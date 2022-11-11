@@ -1,3 +1,4 @@
+#include "base/util.h"
 #include "cthulhu/emit/c89.h"
 #include "cthulhu/interface/interface.h"
 #include "argparse/argparse.h"
@@ -13,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <windows.h>
 
 static const char *kPostRunNames[] = {"-T", "--then"};
 #define TOTAL_POST_RUN_NAMES (sizeof(kPostRunNames) / sizeof(const char *))
@@ -93,21 +95,44 @@ int main(int argc, const char **argv)
     // test ssa output
 
     vector_t *modules = cthulhu_get_modules(cthulhu);
+    status_t err = EXIT_OK;
+
+#if 0
     module_t *mod = emit_module(result.reports, modules);
-    int err = end_reports(result.reports, "emitting ssa", result.reportConfig);
+    err = end_reports(result.reports, "emitting ssa", result.reportConfig);
     if (err != EXIT_OK) { return err; }
 
     eval_module(result.reports, mod);
     err = end_reports(result.reports, "evaluating ssa", result.reportConfig);
     if (err != EXIT_OK) { return err; }
+#endif
 
     // test c89 output
 
-    io_t *c89Out = io_blob("c89-output.c", 0x1000);
+    make_directory("test-c89");
+
+    const char *path = vector_get(result.files, 0);
+    size_t len = strlen(path);
+    size_t needed = MIN(strlen(path), 8);
+    char *id = ctu_strdup(path + len - needed);
+    char *name = format("test-c89/%s.c", str_replace(id, "/", "."));
+    io_t *c89Out = io_file(name, eFileText | eFileWrite);
     c89_emit_modules(result.reports, modules, c89Out);
 
     err = end_reports(result.reports, "emitting c89", result.reportConfig);
     if (err != EXIT_OK) { return err; }
+
+    io_close(c89Out);
+
+    int status = system(format("cl /nologo /c %s /Fo%s.obj", name, name));
+    if (status != EXIT_OK)
+    {
+        report(result.reports, eFatal, NULL, "compilation failed");
+        return status;
+    }
+
+    DeleteFileA(name);
+    DeleteFileA(format("%s.obj", name));
 
     return 0;
 }

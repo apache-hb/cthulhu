@@ -366,17 +366,10 @@ static const char *c89_emit_pointer_type(c89_emit_t *emit, const hlir_t *hlir, c
 
 static const char *c89_emit_array_type(c89_emit_t *emit, const hlir_t *hlir, const char *name)
 {
-    const char *inner = c89_emit_type(emit, hlir->element, NULL);
     const char *length = c89_emit_rvalue(emit, hlir->length);
 
-    if (name == NULL)
-    {
-        return format("%s[%s]", inner, length);
-    }
-    else
-    {
-        return format("%s %s[%s]", inner, name, length);
-    }
+    const char *innerName = name != NULL ? format("%s[%s]", name, length) : NULL;
+    return c89_emit_type(emit, hlir->element, innerName);
 }
 
 static const char *c89_emit_aggregate_type(c89_emit_t *emit, const hlir_t *hlir, const char *name,
@@ -585,6 +578,18 @@ static const char *c89_emit_local_rvalue(const hlir_t *hlir)
     return format("%s", hlir->name);
 }
 
+static const char *c89_emit_name_lvalue(const hlir_t *hlir)
+{
+    if (hlir_is(hlir, eHlirLoad))
+    {
+        if (hlir_is(hlir->read, eHlirLocal) || hlir_is(hlir->read, eHlirParam))
+        {
+            return c89_emit_local_rvalue(hlir->read);
+        }
+    }
+    return format("%s[0]", get_hlir_name(hlir));
+}
+
 static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -615,7 +620,12 @@ static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
         break;
 
     case eHlirLocal:
+    case eHlirParam:
         WRITE_STRINGF(emit, "%s;\n", c89_emit_local_rvalue(hlir));
+        break;
+
+    case eHlirLoad:
+        WRITE_STRINGF(emit, "%s;\n", c89_emit_name_lvalue(hlir->read));
         break;
 
     default:
@@ -646,6 +656,9 @@ static const char *c89_emit_digit_literal(c89_emit_t *emit, const hlir_t *hlir)
     // TODO: horrible awful wrong hack
     case eDigitPtr:
         return format("%s(%s)", sign == eUnsigned ? "UINT64_C" : "INT64_C", mpz_get_str(NULL, 10, hlir->digit));
+
+    case eDigitSize:
+        return format("((%s)%s)", sign == eUnsigned ? "size_t" : "ssize_t", mpz_get_str(NULL, 10, hlir->digit));
 
     default:
         ctu_assert(emit->reports, "digit literal with (%s, %s) not supported", hlir_sign_to_string(sign),
@@ -701,6 +714,10 @@ static const char *c89_emit_compare(c89_emit_t *emit, const hlir_t *hlir)
 static const char *c89_emit_name(c89_emit_t *emit, const hlir_t *hlir)
 {
     const char *name = c89_emit_rvalue(emit, hlir->read);
+    if (hlir_is(hlir->read, eHlirParam)) 
+    {
+        return name;
+    }
     return format("%s[0]", name);
 }
 
@@ -765,11 +782,6 @@ static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
     }
 }
 
-static const char *c89_emit_name_lvalue(const hlir_t *hlir)
-{
-    return format("%s[0]", get_hlir_name(hlir));
-}
-
 static const char *c89_emit_lvalue(c89_emit_t *emit, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -780,11 +792,11 @@ static const char *c89_emit_lvalue(c89_emit_t *emit, const hlir_t *hlir)
         return c89_emit_name_lvalue(hlir);
 
     case eHlirGlobal:
-        return c89_mangle_name(emit, hlir);
+        return format("%s[0]", c89_mangle_name(emit, hlir));
 
         // TODO: these should be managled to not clash with globals
     case eHlirParam:
-        return get_hlir_name(hlir);
+        return c89_emit_local_rvalue(hlir);
 
     default:
         ctu_assert(emit->reports, "cannot emit lvalue for %s", hlir_kind_to_string(kind));
@@ -1148,8 +1160,8 @@ static void c89_emit_function(c89_emit_t *emit, const hlir_t *function)
     {
         hlir_t *local = vector_get(locals, i);
         const char *name = get_hlir_name(local);
-        const char *type = c89_emit_local_type(emit, get_hlir_type(local), name);
-        WRITE_STRINGF(emit, "%s[1];\n", type);
+        const char *type = c89_emit_local_type(emit, get_hlir_type(local), format("%s[1]", name));
+        WRITE_STRINGF(emit, "%s;\n", type);
     }
 
     c89_emit_stmt(emit, function->body);

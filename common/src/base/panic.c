@@ -18,8 +18,7 @@ static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
 
-    const char *backend = stacktrace_backend();
-    fprintf(stderr, COLOUR_CYAN "stacktrace backend:" COLOUR_RESET " %s\n", backend);
+    fprintf(stderr, COLOUR_CYAN "stacktrace backend:" COLOUR_RESET " %s\n", stacktrace_backend());
 
     frame_t frames[STACK_FRAMES] = { 0 };
     size_t count = stacktrace_get(frames, STACK_FRAMES);

@@ -35,7 +35,7 @@ NODISCARD void *ctu_malloc(size_t size);
 ALLOC(ctu_free)
 NODISCARD void *ctu_realloc(IN_NOTNULL void *ptr, size_t newSize);
 
-void init_gmp(alloc_t *alloc);
+void init_gmp(IN_NOTNULL alloc_t *alloc);
 
 void arena_free(IN_NOTNULL alloc_t *alloc, IN_NOTNULL void *ptr, size_t size);
 

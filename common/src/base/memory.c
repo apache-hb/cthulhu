@@ -109,6 +109,7 @@ static void ctu_gmp_free(void *ptr, size_t size)
     arena_free(gmpAlloc, ptr, size);
 }
 
+USE_DECL
 void init_gmp(alloc_t *alloc)
 {
     CTASSERT(alloc != NULL);
