@@ -41,10 +41,12 @@ static typekind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     {
     case eHlirDigit: return eTypeDigit;
     case eHlirBool: return eTypeBool;
+    case eHlirString: return eTypeString;
     case eHlirPointer: // TODO: frontend should also have opaque pointer type, this is a hack
         return hlir_is(hlir->ptr, eHlirUnit) ? eTypeOpaque : eTypePointer;
     case eHlirUnit: return eTypeUnit;
     case eHlirEmpty: return eTypeEmpty;
+    case eHlirFunction: return eTypeClosure;
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "no respective ssa type for %s", hlir_kind_to_string(kind));
@@ -62,6 +64,17 @@ static type_t *type_new(ssa_t *ssa, const hlir_t *type)
     if (hlir_is(real, eHlirPointer))
     {
         it->ptr = type_new(ssa, real->ptr);
+    }
+    else if (hlir_is(real, eHlirFunction))
+    {
+        it->result = type_new(ssa, closure_result(real));
+
+        vector_t *params = closure_params(real);
+        vector_t *args = vector_of(vector_len(params));
+        for (size_t i = 0; i < vector_len(params); i++)
+        {
+            vector_set(args, i, type_new(ssa, vector_get(params, i)));
+        }
     }
     
     return it;
@@ -161,7 +174,7 @@ static operand_t compile_global_ref(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
-static operand_t compile_cast(ssa_t *ssa, const hlir_t* hlir)
+static operand_t compile_cast(ssa_t *ssa, const hlir_t *hlir)
 {
     operand_t op = compile_rvalue(ssa, hlir->expr);
 
@@ -173,6 +186,40 @@ static operand_t compile_cast(ssa_t *ssa, const hlir_t* hlir)
     };
 
     return add_step(ssa, step);
+}
+
+static operand_t compile_call(ssa_t *ssa, const hlir_t *hlir)
+{
+    operand_t *args = ctu_malloc(sizeof(operand_t) * MAX(vector_len(hlir->args), 1));
+    for (size_t i = 0; i < vector_len(hlir->args); i++)
+    {
+        args[i] = compile_rvalue(ssa, vector_get(hlir->args, i));
+    }
+
+    operand_t func = compile_rvalue(ssa, hlir->call);
+
+    step_t step = {
+        .opcode = eOpCall,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .args = args,
+        .len = vector_len(hlir->args),
+        .symbol = func,
+    };
+
+    return add_step(ssa, step);
+}
+
+static operand_t compile_name(ssa_t *ssa, const hlir_t *hlir)
+{
+    const flow_t *ref = map_get_ptr(ssa->functions, hlir);
+
+    operand_t op = {
+        .kind = eOperandFunction,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .flow = ref
+    };
+
+    return op;
 }
 
 static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
@@ -194,6 +241,12 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 
     case eHlirCast:
         return compile_cast(ssa, hlir);
+
+    case eHlirCall:
+        return compile_call(ssa, hlir);
+
+    case eHlirFunction:
+        return compile_name(ssa, hlir);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-rvalue %s", hlir_kind_to_string(kind));
@@ -232,6 +285,10 @@ static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
     {
     case eHlirStmts:
         return compile_stmts(ssa, stmt);
+
+    case eHlirCall:
+        return compile_call(ssa, stmt);
+
     default:
         report(ssa->reports, eInternal, get_hlir_node(stmt), "compile-stmt %s", hlir_kind_to_string(kind));
         return (operand_t){.kind = eOperandEmpty};
@@ -265,6 +322,9 @@ static void compile_function(ssa_t *ssa, const hlir_t *function)
 {
     flow_t *flow = map_get_ptr(ssa->functions, function);
     compile_flow(ssa, flow);
+
+    // TODO: put function into import table
+    if (function->body == NULL) { return; }
 
     compile_stmt(ssa, function->body);
 }

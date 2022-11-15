@@ -22,6 +22,9 @@ typedef enum typekind_t
 
     eTypePointer, // a pointer to another type
     eTypeOpaque, // an opaque pointer to any type
+    eTypeString, // a string of characters
+
+    eTypeClosure, // a function pointer
 
     eTypeStruct, // a possibly unordered list of types in memory
 
@@ -35,6 +38,10 @@ typedef struct type_t
 
     union {
         const type_t *ptr;
+        struct {
+            const type_t *result;
+            vector_t *args;
+        };
     };
 } type_t;
 

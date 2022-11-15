@@ -51,6 +51,22 @@ static const char *emit_operand(emit_t *emit, set_t *edges, operand_t op)
     }
 }
 
+static const char *emit_operand_list(emit_t *emit, set_t *edges, operand_t *ops, size_t count)
+{
+    if (count == 0)
+    {
+        return "";
+    }
+
+    vector_t *result = vector_of(count);
+    for (size_t i = 0; i < count; ++i)
+    {
+        vector_set(result, i, (void*)emit_operand(emit, edges, ops[i]));
+    }
+
+    return str_join(", ", result);
+}
+
 static void emit_step(emit_t *emit, set_t *edges, step_t *step)
 {
     switch (step->opcode)
@@ -73,6 +89,10 @@ static void emit_step(emit_t *emit, set_t *edges, step_t *step)
 
     case eOpCast:
         printf("  %%%s = %s<%s> %s\n", step->id, cast_name(step->cast), emit_type(emit, step->type), emit_operand(emit, edges, step->operand));
+        break;
+
+    case eOpCall: 
+        printf("  %%%s = call %s(%s)\n", step->id, emit_operand(emit, edges, step->symbol), emit_operand_list(emit, edges, step->args, step->len));
         break;
 
     default:
