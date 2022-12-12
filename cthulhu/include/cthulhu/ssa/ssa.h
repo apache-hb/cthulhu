@@ -55,6 +55,7 @@ typedef enum opkind_t
     eOperandEmpty,
     eOperandBlock,
     eOperandReg,
+    eOperandLocal,
     eOperandGlobal,
     eOperandFunction,
     eOperandImm,
@@ -72,6 +73,7 @@ typedef struct operand_t
         step_t *reg;
         const flow_t *flow;
         imm_t imm;
+        size_t local;
     };
 } operand_t;
 
@@ -117,6 +119,12 @@ typedef struct step_t
 
         struct
         {
+            operand_t dst;
+            operand_t src;
+        };
+
+        struct
+        {
             union {
                 unary_t unary;
                 cast_t cast;
@@ -153,6 +161,7 @@ typedef struct flow_t
     const char *name;
     block_t *entry;
     const type_t *type;
+    vector_t *locals; // vector_t<type_t*> 
 } flow_t;
 
 typedef struct section_t 

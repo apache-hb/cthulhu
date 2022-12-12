@@ -6,10 +6,12 @@
 #include "base/macros.h"
 #include "base/memory.h"
 #include "base/util.h"
+#include "base/panic.h"
 
 #include "std/map.h"
 #include "std/vector.h"
 #include "std/str.h"
+#include "std/set.h"
 
 #include "report/report.h"
 
@@ -19,7 +21,11 @@ typedef struct {
     map_t *globals;
     map_t *functions;
 
+    set_t *strings;
+
     map_t *importedSymbols;
+
+    map_t *currentLocals; // map_t<const hlir_t *, size_t> // map of local variables to their index in the locals vector
 
     block_t *currentBlock;
     size_t stepIdx;
@@ -96,23 +102,25 @@ static operand_t add_step(ssa_t *ssa, step_t step)
     return op;
 }
 
-static flow_t *flow_new(const hlir_t *symbol)
+static flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol)
 {
     flow_t *flow = ctu_malloc(sizeof(flow_t));
     flow->name = get_hlir_name(symbol);
     flow->entry = NULL;
+    flow->locals = NULL;
+
     return flow;
 }
 
 static void fwd_global(ssa_t *ssa, const hlir_t *global)
 {
-    flow_t *flow = flow_new(global);
+    flow_t *flow = flow_new(ssa, global);
     map_set_ptr(ssa->globals, global, flow);
 }
 
 static void fwd_function(ssa_t *ssa, const hlir_t *function)
 {
-    flow_t *flow = flow_new(function);
+    flow_t *flow = flow_new(ssa, function);
     map_set_ptr(ssa->functions, function, flow);
 }
 
@@ -222,6 +230,50 @@ static operand_t compile_name(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
+static operand_t compile_global_lvalue(ssa_t *ssa, const hlir_t *hlir)
+{
+    const flow_t *ref = map_get_ptr(ssa->globals, hlir);
+    CTASSERT(ref != NULL);
+
+    operand_t op = {
+        .kind = eOperandGlobal,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .flow = ref
+    };
+
+    return op;
+}
+
+static operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
+{
+    const size_t idx = (size_t)(uintptr_t)map_get_ptr(ssa->currentLocals, hlir);
+
+    operand_t op = {
+        .kind = eOperandLocal,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .local = idx
+    };
+
+    return op;
+}
+
+static operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
+{
+    hlir_kind_t kind = get_hlir_kind(hlir);
+    switch (kind)
+    {
+    case eHlirGlobal:
+        return compile_global_lvalue(ssa, hlir);
+
+    case eHlirLocal:
+        return compile_local_lvalue(ssa, hlir);
+
+    default:
+        report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-lvalue %s", hlir_kind_to_string(kind));
+        return (operand_t){.kind = eOperandEmpty};
+    }
+}
+
 static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -278,6 +330,21 @@ static operand_t compile_stmts(ssa_t *ssa, const hlir_t *stmt)
     return operand_bb(ssa->currentBlock);
 }
 
+static operand_t compile_assign(ssa_t *ssa, const hlir_t *stmt)
+{
+    operand_t dst = compile_lvalue(ssa, stmt->dst);
+    operand_t src = compile_rvalue(ssa, stmt->src);
+
+    step_t step = {
+        .opcode = eOpStore,
+        .type = type_new(ssa, get_hlir_type(stmt->dst)),
+        .dst = dst,
+        .src = src   
+    };
+
+    return add_step(ssa, step);
+}
+
 static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
 {
     hlir_kind_t kind = get_hlir_kind(stmt);
@@ -288,6 +355,9 @@ static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
 
     case eHlirCall:
         return compile_call(ssa, stmt);
+
+    case eHlirAssign:
+        return compile_assign(ssa, stmt);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(stmt), "compile-stmt %s", hlir_kind_to_string(kind));
@@ -321,6 +391,18 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
 static void compile_function(ssa_t *ssa, const hlir_t *function)
 {
     flow_t *flow = map_get_ptr(ssa->functions, function);
+
+    size_t len = vector_len(function->locals);
+    ssa->currentLocals = map_optimal(len);
+    flow->locals = vector_of(len);
+    
+    for (size_t i = 0; i < len; i++) 
+    {
+        const hlir_t *local = vector_get(function->locals, i);
+        map_set_ptr(ssa->currentLocals, local, (void*)(uintptr_t)i);
+        vector_set(flow->locals, i, type_new(ssa, get_hlir_type(local)));
+    }
+
     compile_flow(ssa, flow);
 
     // TODO: put function into import table
@@ -335,6 +417,7 @@ module_t *emit_module(reports_t *reports, vector_t *mods)
         .reports = reports,
         .globals = map_optimal(0x1000),
         .functions = map_optimal(0x1000),
+        .strings = set_new(0x1000),
         .importedSymbols = map_optimal(0x1000)
     };
 
