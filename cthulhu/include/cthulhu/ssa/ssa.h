@@ -143,7 +143,9 @@ typedef struct step_t
 
         struct
         {
+            operand_t cond;
             operand_t label;
+            operand_t other;
         };
 
         operand_t value;

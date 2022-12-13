@@ -17,6 +17,8 @@
 
 typedef struct {
     reports_t *reports;
+
+    type_t *emptyType;
     
     map_t *globals;
     map_t *functions;
@@ -58,6 +60,13 @@ static typekind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
         report(ssa->reports, eInternal, get_hlir_node(hlir), "no respective ssa type for %s", hlir_kind_to_string(kind));
         return eTypeEmpty;
     }
+}
+
+static type_t *type_empty(void)
+{
+    type_t *it = ctu_malloc(sizeof(type_t));
+    it->kind = eTypeEmpty;
+    return it;
 }
 
 static type_t *type_new(ssa_t *ssa, const hlir_t *type)
@@ -257,6 +266,25 @@ static operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
+static operand_t operand_bb(const block_t *dst)
+{
+    operand_t op = {
+        .kind = eOperandBlock,
+        .bb = dst
+    };
+
+    return op;
+}
+
+static operand_t operand_empty(void)
+{
+    operand_t op = {
+        .kind = eOperandEmpty
+    };
+
+    return op;
+}
+
 static operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -270,7 +298,7 @@ static operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-lvalue %s", hlir_kind_to_string(kind));
-        return (operand_t){.kind = eOperandEmpty};
+        return operand_empty();
     }
 }
 
@@ -302,18 +330,8 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-rvalue %s", hlir_kind_to_string(kind));
-        return (operand_t){.kind = eOperandEmpty};
+        return operand_empty();
     }
-}
-
-static operand_t operand_bb(const block_t *dst)
-{
-    operand_t op = {
-        .kind = eOperandBlock,
-        .bb = dst
-    };
-
-    return op;
 }
 
 static operand_t compile_stmts(ssa_t *ssa, const hlir_t *stmt)
@@ -345,6 +363,107 @@ static operand_t compile_assign(ssa_t *ssa, const hlir_t *stmt)
     return add_step(ssa, step);
 }
 
+static operand_t compile_compare_compare(ssa_t *ssa, const hlir_t *cond)
+{
+    operand_t lhs = compile_rvalue(ssa, cond->lhs);
+    operand_t rhs = compile_rvalue(ssa, cond->rhs);
+
+    step_t step = {
+        .opcode = eOpCompare,
+        .type = type_new(ssa, get_hlir_type(cond->lhs)),
+        .compare = cond->compare,
+        .lhs = lhs,
+        .rhs = rhs
+    };
+
+    return add_step(ssa, step);
+}
+
+static operand_t compile_compare(ssa_t *ssa, const hlir_t *cond)
+{
+    hlir_kind_t kind = get_hlir_kind(cond);
+    switch (kind)
+    {
+    case eHlirCompare:
+        return compile_compare_compare(ssa, cond);
+
+    default:
+        report(ssa->reports, eInternal, get_hlir_node(cond), "compile-compare %s", hlir_kind_to_string(kind));
+        return operand_empty();
+    }
+}
+
+static operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
+{
+    block_t *loop = block_new("loop");
+    block_t *tail = block_new("tail");
+
+    step_t step = {
+        .opcode = eOpJmp,
+        .type = ssa->emptyType,
+        .label = operand_bb(loop)
+    };
+
+    add_step(ssa, step);
+
+    ssa->currentBlock = loop;
+    compile_stmt(ssa, stmt->then);
+
+    step_t ret = {
+        .opcode = eOpBranch,
+        .type = ssa->emptyType,
+        .cond = compile_compare(ssa, stmt->cond),
+        .label = operand_bb(loop),
+        .other = operand_bb(tail)
+    };
+
+    add_step(ssa, ret);
+
+    ssa->currentBlock = tail;
+
+    return operand_bb(tail);
+}
+
+static operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
+{
+    block_t *then = block_new("then");
+    block_t *other = stmt->other ? block_new("other") : NULL;
+    block_t *tail = block_new("tail");
+
+    step_t ret = {
+        .opcode = eOpJmp,
+        .type = ssa->emptyType,
+        .label = operand_bb(tail)
+    };
+
+    step_t step = {
+        .opcode = eOpBranch,
+        .type = ssa->emptyType,
+        .cond = compile_compare(ssa, stmt->cond),
+        .label = operand_bb(then),
+        .other = other ? operand_bb(other) : operand_bb(tail)
+    };
+
+    add_step(ssa, step);
+
+    // if true
+    ssa->currentBlock = then;
+    compile_stmt(ssa, stmt->then);
+    add_step(ssa, ret);
+
+    // if false
+    if (other) 
+    {
+        ssa->currentBlock = other;
+        compile_stmt(ssa, stmt->other);
+        add_step(ssa, ret);
+    }
+
+    ssa->currentBlock = tail;
+
+    return operand_bb(tail);
+}
+
 static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
 {
     hlir_kind_t kind = get_hlir_kind(stmt);
@@ -359,9 +478,15 @@ static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
     case eHlirAssign:
         return compile_assign(ssa, stmt);
 
+    case eHlirLoop:
+        return compile_loop(ssa, stmt);
+
+    case eHlirBranch:
+        return compile_branch(ssa, stmt);
+
     default:
         report(ssa->reports, eInternal, get_hlir_node(stmt), "compile-stmt %s", hlir_kind_to_string(kind));
-        return (operand_t){.kind = eOperandEmpty};
+        return operand_empty();
     }
 }
 
@@ -415,6 +540,7 @@ module_t *emit_module(reports_t *reports, vector_t *mods)
 {
     ssa_t ssa = { 
         .reports = reports,
+        .emptyType = type_empty(),
         .globals = map_optimal(0x1000),
         .functions = map_optimal(0x1000),
         .strings = set_new(0x1000),
