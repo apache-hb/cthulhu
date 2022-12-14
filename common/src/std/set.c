@@ -34,18 +34,22 @@ static item_t *item_new(const char *key)
     return item;
 }
 
-static item_t *get_bucket(set_t *set, const char *key)
+static item_t *get_bucket_from_hash(set_t *set, size_t hash)
 {
-    size_t hash = strhash(key);
     size_t index = hash % set->size;
     return &set->items[index];
+}
+
+static item_t *get_bucket_str(set_t *set, const char *key)
+{
+    size_t hash = strhash(key);
+    return get_bucket_from_hash(set, hash);
 }
 
 static item_t *get_bucket_ptr(set_t *set, const void *key)
 {
     size_t hash = ptrhash(key);
-    size_t index = hash % set->size;
-    return &set->items[index];
+    return get_bucket_from_hash(set, hash);
 }
 
 USE_DECL
@@ -69,7 +73,7 @@ const char *set_add(set_t *set, const char *key)
     CTASSERT(set != NULL);
     CTASSERT(key != NULL);
 
-    item_t *item = get_bucket(set, key);
+    item_t *item = get_bucket_str(set, key);
 
     while (true)
     {
@@ -102,7 +106,7 @@ bool set_contains(set_t *set, const char *key)
     CTASSERT(set != NULL);
     CTASSERT(key != NULL);
 
-    item_t *item = get_bucket(set, key);
+    item_t *item = get_bucket_str(set, key);
 
     while (true)
     {

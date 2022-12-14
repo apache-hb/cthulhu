@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/ops.h"
 
 #include <gmp.h>
@@ -70,6 +71,7 @@ typedef struct operand_t
 
     union {
         const block_t *bb;
+        string_view_t string;
         step_t *reg;
         const flow_t *flow;
         imm_t imm;

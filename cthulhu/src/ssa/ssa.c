@@ -42,6 +42,11 @@ static block_t *block_new(const char *id)
     return block;
 }
 
+static block_t *block_gen(ssa_t *ssa, const char *id)
+{
+    return block_new(format("%s%zu", id, ssa->blockIdx++));
+}
+
 static typekind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -150,6 +155,17 @@ static operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
+static operand_t compile_string(ssa_t *ssa, const hlir_t *hlir)
+{
+    operand_t op = {
+        .kind = eOperandImm,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .string = hlir->stringLiteral
+    };
+
+    return op;
+}
+
 static operand_t compile_binary(ssa_t *ssa, const hlir_t *hlir)
 {
     operand_t lhs = compile_rvalue(ssa, hlir->lhs);
@@ -186,6 +202,19 @@ static operand_t compile_global_ref(ssa_t *ssa, const hlir_t *hlir)
         .kind = eOperandGlobal,
         .type = type_new(ssa, get_hlir_type(hlir)),
         .flow = ref
+    };
+
+    return op;
+}
+
+static operand_t compile_local_ref(ssa_t *ssa, const hlir_t *hlir)
+{
+    size_t index = (uintptr_t)map_get_ptr(ssa->currentLocals, hlir);
+
+    operand_t op = {
+        .kind = eOperandLocal,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .local = index
     };
 
     return op;
@@ -310,6 +339,9 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
     case eHlirDigitLiteral:
         return compile_digit(ssa, hlir);
 
+    case eHlirStringLiteral:
+        return compile_string(ssa, hlir);
+
     case eHlirBinary:
         return compile_binary(ssa, hlir);
 
@@ -318,6 +350,9 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 
     case eHlirGlobal:
         return compile_global_ref(ssa, hlir);
+
+    case eHlirLocal:
+        return compile_local_ref(ssa, hlir);
 
     case eHlirCast:
         return compile_cast(ssa, hlir);
@@ -336,15 +371,11 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 
 static operand_t compile_stmts(ssa_t *ssa, const hlir_t *stmt)
 {
-    block_t *oldBlock = ssa->currentBlock;
-    ssa->currentBlock = block_new(format("%zu", ssa->blockIdx++));
-    
     for (size_t i = 0; i < vector_len(stmt->stmts); i++)
     {
         compile_stmt(ssa, vector_get(stmt->stmts, i));
     }
 
-    ssa->currentBlock = oldBlock;
     return operand_bb(ssa->currentBlock);
 }
 
@@ -395,8 +426,8 @@ static operand_t compile_compare(ssa_t *ssa, const hlir_t *cond)
 
 static operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 {
-    block_t *loop = block_new("loop");
-    block_t *tail = block_new("tail");
+    block_t *loop = block_gen(ssa, "loop");
+    block_t *tail = block_gen(ssa, "tail");
 
     step_t step = {
         .opcode = eOpJmp,
@@ -426,9 +457,9 @@ static operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 
 static operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
 {
-    block_t *then = block_new("then");
-    block_t *other = stmt->other ? block_new("other") : NULL;
-    block_t *tail = block_new("tail");
+    block_t *then = block_gen(ssa, "then");
+    block_t *other = stmt->other != NULL ? block_gen(ssa, "other") : NULL;
+    block_t *tail = block_gen(ssa, "tail");
 
     step_t ret = {
         .opcode = eOpJmp,
@@ -441,7 +472,7 @@ static operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
         .type = ssa->emptyType,
         .cond = compile_compare(ssa, stmt->cond),
         .label = operand_bb(then),
-        .other = other ? operand_bb(other) : operand_bb(tail)
+        .other = other != NULL ? operand_bb(other) : operand_bb(tail)
     };
 
     add_step(ssa, step);
@@ -452,7 +483,7 @@ static operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
     add_step(ssa, ret);
 
     // if false
-    if (other) 
+    if (other != NULL) 
     {
         ssa->currentBlock = other;
         compile_stmt(ssa, stmt->other);

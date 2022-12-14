@@ -47,6 +47,8 @@ static const char *emit_operand(emit_t *emit, set_t *edges, operand_t op)
         return format(".%s", op.bb->id);
     case eOperandImm: return format("$%s", mpz_get_str(NULL, 10, op.imm.digit));
     case eOperandGlobal: return format("&%s", op.flow->name);
+    case eOperandLocal: return format("local[%zu]", op.local);
+    case eOperandFunction: return format("%s", op.flow->name);
     default: return "unknown";
     }
 }
@@ -65,6 +67,14 @@ static const char *emit_operand_list(emit_t *emit, set_t *edges, operand_t *ops,
     }
 
     return str_join(", ", result);
+}
+
+static void add_edge(set_t *edges, operand_t op)
+{
+    if (op.kind == eOperandBlock) 
+    {
+        set_add_ptr(edges, op.bb);
+    }
 }
 
 static void emit_step(emit_t *emit, set_t *edges, step_t *step)
@@ -93,6 +103,25 @@ static void emit_step(emit_t *emit, set_t *edges, step_t *step)
 
     case eOpCall: 
         printf("  %%%s = call %s(%s)\n", step->id, emit_operand(emit, edges, step->symbol), emit_operand_list(emit, edges, step->args, step->len));
+        break;
+
+    case eOpJmp:
+        printf("  jmp %s\n", emit_operand(emit, edges, step->label));
+        add_edge(edges, step->label);
+        break;
+
+    case eOpBranch:
+        printf("  br %s %s %s\n", emit_operand(emit, edges, step->cond), emit_operand(emit, edges, step->label), emit_operand(emit, edges, step->other));
+        add_edge(edges, step->label);
+        add_edge(edges, step->other);
+        break;
+
+    case eOpStore:
+        printf("  store %s %s\n", emit_operand(emit, edges, step->dst), emit_operand(emit, edges, step->src));
+        break;
+
+    case eOpCompare:
+        printf("  %%%s = cmp %s %s %s\n", step->id, compare_name(step->compare), emit_operand(emit, edges, step->lhs), emit_operand(emit, edges, step->rhs));
         break;
 
     default:
@@ -133,17 +162,23 @@ static void emit_flow(emit_t *emit, const flow_t *flow)
     emit_block(emit, flow->entry);
 }
 
+void emit_flows(emit_t *emit, vector_t *vec)
+{
+    for (size_t i = 0; i < vector_len(vec); i++)
+    {
+        emit_flow(emit, vector_get(vec, i));
+    }
+}
+
 void eval_module(reports_t *reports, module_t *mod)
 {
-    section_t *symbols = &mod->symbols;
-    size_t len = vector_len(symbols->globals);
     emit_t emit = {
         .reports = reports,
         .blocks = set_new(0x100)
     };
 
-    for (size_t i = 0; i < len; i++)
-    {
-        emit_flow(&emit, vector_get(symbols->globals, i));
-    }
+    section_t symbols = mod->symbols;
+
+    emit_flows(&emit, symbols.globals);
+    emit_flows(&emit, symbols.functions);
 }
