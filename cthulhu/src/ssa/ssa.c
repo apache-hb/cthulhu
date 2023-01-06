@@ -143,14 +143,12 @@ static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
 
 static operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
 {
-    imm_t imm;
-    mpz_init_set(imm.digit, hlir->digit);
-
     operand_t op = {
-        .kind = eOperandImm,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .imm = imm
+        .kind = eOperandDigitImm,
+        .type = type_new(ssa, get_hlir_type(hlir))
     };
+
+    mpz_init_set(op.mpz, hlir->digit);
 
     return op;
 }
@@ -158,7 +156,7 @@ static operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
 static operand_t compile_string(ssa_t *ssa, const hlir_t *hlir)
 {
     operand_t op = {
-        .kind = eOperandImm,
+        .kind = eOperandStringImm,
         .type = type_new(ssa, get_hlir_type(hlir)),
         .string = hlir->stringLiteral
     };
@@ -282,6 +280,20 @@ static operand_t compile_global_lvalue(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
+static operand_t compile_unary(ssa_t *ssa, const hlir_t *hlir)
+{
+    operand_t op = compile_rvalue(ssa, hlir->expr);
+
+    step_t step = {
+        .opcode = eOpUnary,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .unary = hlir->unary,
+        .operand = op
+    };
+
+    return add_step(ssa, step);
+}
+
 static operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     const size_t idx = (size_t)(uintptr_t)map_get_ptr(ssa->currentLocals, hlir);
@@ -341,6 +353,9 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 
     case eHlirStringLiteral:
         return compile_string(ssa, hlir);
+
+    case eHlirUnary:
+        return compile_unary(ssa, hlir);
 
     case eHlirBinary:
         return compile_binary(ssa, hlir);
@@ -410,6 +425,17 @@ static operand_t compile_compare_compare(ssa_t *ssa, const hlir_t *cond)
     return add_step(ssa, step);
 }
 
+static operand_t compile_compare_bool(ssa_t *ssa, const hlir_t *cond)
+{
+    operand_t op = {
+        .kind = eOperandBoolImm,
+        .type = type_new(ssa, get_hlir_type(cond)),
+        .boolean = cond->boolean
+    };
+
+    return op;
+}
+
 static operand_t compile_compare(ssa_t *ssa, const hlir_t *cond)
 {
     hlir_kind_t kind = get_hlir_kind(cond);
@@ -417,6 +443,9 @@ static operand_t compile_compare(ssa_t *ssa, const hlir_t *cond)
     {
     case eHlirCompare:
         return compile_compare_compare(ssa, cond);
+
+    case eHlirBoolLiteral:
+        return compile_compare_bool(ssa, cond);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(cond), "compile-compare %s", hlir_kind_to_string(kind));
@@ -515,6 +544,9 @@ static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
     case eHlirBranch:
         return compile_branch(ssa, stmt);
 
+    case eHlirLoad:
+        return compile_rvalue(ssa, stmt);
+
     default:
         report(ssa->reports, eInternal, get_hlir_node(stmt), "compile-stmt %s", hlir_kind_to_string(kind));
         return operand_empty();
@@ -534,6 +566,8 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
 {
     flow_t *flow = map_get_ptr(ssa->globals, global);
     compile_flow(ssa, flow);
+
+    // TODO: noinit globals dont work
 
     operand_t result = compile_rvalue(ssa, global->value);
     step_t step = {
