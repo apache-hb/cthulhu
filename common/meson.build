@@ -1,12 +1,14 @@
+src = [ 'src/stacktrace/common.c' ]
+
 if stacktrace.allowed()
-    src = [ 'src/stacktrace/stacktrace-target.c'.replace('target', target) ]
+    src += [ 'src/stacktrace/stacktrace-target.c'.replace('target', target) ]
     if target == 'windows'
         stacktrace_links = [ 'dbghelp.lib' ]
     else
         stacktrace_links = []
     endif
 else
-    src = [ 'src/stacktrace/stacktrace-null.c' ]
+    src += [ 'src/stacktrace/stacktrace-null.c' ]
     stacktrace_links = []
 endif   
 

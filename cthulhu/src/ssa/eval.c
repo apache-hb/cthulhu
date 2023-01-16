@@ -45,7 +45,8 @@ static const char *emit_operand(emit_t *emit, set_t *edges, operand_t op)
     case eOperandBlock: 
         set_add_ptr(edges, op.bb);
         return format(".%s", op.bb->id);
-    case eOperandImm: return format("$%s", mpz_get_str(NULL, 10, op.imm.digit));
+    case eOperandDigitImm: return format("$%s", mpz_get_str(NULL, 10, op.mpz));
+    case eOperandBoolImm: return format("%s", op.boolean ? "true" : "false");
     case eOperandGlobal: return format("&%s", op.flow->name);
     case eOperandLocal: return format("local[%zu]", op.local);
     case eOperandFunction: return format("%s", op.flow->name);

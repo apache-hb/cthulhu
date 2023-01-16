@@ -310,7 +310,7 @@ static void check_attribute(check_t *ctx, hlir_t *hlir)
 
     if (attribs->linkage == eLinkImported && hlir_is(hlir, eHlirFunction) && hlir->body != NULL)
     {
-        report(ctx->reports, eWarn, get_hlir_node(hlir), "imported function with a body, body will be discarded");
+        report(ctx->reports, eWarn, get_hlir_node(hlir), "imported symbol has an implementation, it will be discarded");
     }
 
     bool isEntry = false;

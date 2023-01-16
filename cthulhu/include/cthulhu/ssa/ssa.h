@@ -46,11 +46,6 @@ typedef struct type_t
     };
 } type_t;
 
-typedef struct imm_t
-{
-    mpz_t digit;
-} imm_t;
-
 typedef enum opkind_t
 {
     eOperandEmpty,
@@ -59,7 +54,9 @@ typedef enum opkind_t
     eOperandLocal,
     eOperandGlobal,
     eOperandFunction,
-    eOperandImm,
+    eOperandDigitImm,
+    eOperandStringImm,
+    eOperandBoolImm,
 
     eOperandTotal
 } opkind_t;
@@ -74,7 +71,8 @@ typedef struct operand_t
         string_view_t string;
         step_t *reg;
         const flow_t *flow;
-        imm_t imm;
+        mpz_t mpz;
+        bool boolean;
         size_t local;
     };
 } operand_t;

@@ -10,6 +10,8 @@
 
 #include "scan/node.h"
 
+#include "stacktrace/stacktrace.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -598,7 +600,15 @@ static message_t *report_push(reports_t *reports, level_t level, const node_t *n
 
     message->note = NULL;
 
-    vector_push(&reports->messages, message);
+    if (level == eInternal)
+    {
+        report_send("internal error", message);
+        stacktrace_print(stderr);
+    }
+    else
+    {
+        vector_push(&reports->messages, message);
+    }
     return message;
 }
 
