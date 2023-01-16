@@ -111,7 +111,7 @@ static void emit_step(emit_t *emit, set_t *edges, step_t *step)
         break;
 
     case eOpBranch:
-        printf("  br %s %s %s\n", emit_operand(emit, edges, step->cond), emit_operand(emit, edges, step->label), emit_operand(emit, edges, step->other));
+        printf("  br %s %s else %s\n", emit_operand(emit, edges, step->cond), emit_operand(emit, edges, step->label), emit_operand(emit, edges, step->other));
         add_edge(edges, step->label);
         add_edge(edges, step->other);
         break;
