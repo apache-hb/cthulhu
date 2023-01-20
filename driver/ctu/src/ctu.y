@@ -421,6 +421,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | BOOLEAN { $$ = ast_bool(x, @$, $1); }
     | STRING { $$ = ast_string(x, @$, $1.data, $1.length); }
     | NIL { $$ = ast_null(x, @$); }
+    | SIZEOF LPAREN type RPAREN { $$ = ast_sizeof(x, @$, $3); }
     ;
 
 postfix: primary { $$ = $1; }

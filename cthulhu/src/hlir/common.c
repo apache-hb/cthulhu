@@ -53,14 +53,13 @@ bool hlir_is_exported(const hlir_t *self)
     return get_hlir_attributes(self)->linkage == eLinkExported;
 }
 
-static bool is_signature(const hlir_t *hlir)
+bool hlir_is_callable(const hlir_t *hlir)
 {
-    hlir_kind_t kind = get_hlir_kind(hlir);
-    return kind == eHlirClosure || kind == eHlirFunction;
+    return hlir_is(hlir, eHlirClosure) || hlir_is(hlir, eHlirFunction);
 }
 
 #define ENSURE_VALID_CLOSURE(hlir, str)                                                                                \
-    CTASSERTF(is_signature(hlir), str "(%s)", hlir_kind_to_string(get_hlir_kind(hlir)))
+    CTASSERTF(hlir_is_callable(hlir), str "(%s)", hlir_kind_to_string(get_hlir_kind(hlir)))
 
 vector_t *closure_params(const hlir_t *self)
 {

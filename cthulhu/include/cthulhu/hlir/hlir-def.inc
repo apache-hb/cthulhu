@@ -11,8 +11,8 @@ HLIR_KIND(eHlirType,   "meta-type")
 HLIR_KIND(eHlirDigit,  "digit-type")
 HLIR_KIND(eHlirString, "string-type")
 HLIR_KIND(eHlirBool,   "bool-type")
-HLIR_KIND(eHlirUnit, "unit-type")
-HLIR_KIND(eHlirEmpty, "empty-type")
+HLIR_KIND(eHlirUnit,   "unit-type")
+HLIR_KIND(eHlirEmpty,  "empty-type")
 
 // user defined scalar types
 HLIR_KIND(eHlirArray,   "array-type")
@@ -39,7 +39,7 @@ HLIR_KIND(eHlirUnary,   "unary")
 HLIR_KIND(eHlirBinary,  "binary") // integer aritmatic
 HLIR_KIND(eHlirCompare, "compare") // all boolean logic
 HLIR_KIND(eHlirCall,    "call")
-HLIR_KIND(eHlirCast, "cast")
+HLIR_KIND(eHlirCast,    "cast")
 
 HLIR_KIND(eHlirAccess, "access") // aggregate member access
 HLIR_KIND(eHlirIndex,  "index") // array access

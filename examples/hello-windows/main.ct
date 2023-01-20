@@ -7,6 +7,7 @@ type HWND = *void;
 
 type WNDPROC = def(HWND, uint, uint, uint) -> uint;
 
+@layout(platform)
 struct WNDCLASSEXA {
     cbSize: uint;
 
@@ -34,13 +35,13 @@ def UnregisterClassA(lpClassName: str, hInstance: HINSTANCE): HANDLE;
 def DefWindowProcA(hWnd: HWND, uMsg: uint, wParam: uint, lParam: uint): uint;
 
 @entry(gui)
-def main(hInstance: HINSTANCE, hPrevInstances: HINSTANCE, pCmdLine: str, nCmdShow: int): int {
+def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: str, nCmdShow: int): int {
     const clsName = "test";
 
     var cls: WNDCLASSEXA = noinit;
-    //cls.cbSize = sizeof(WNDCLASSEXA);
+    cls.cbSize = __sizeof(WNDCLASSEXA);
     cls.style = 0x0002 | 0x0001;
-    //cls.lpfnWndProc = DefWindowProcA;
+    cls.lpfnWndProc = DefWindowProcA;
     cls.hInstance = hInstance;
     cls.lpszClassName = clsName;
 

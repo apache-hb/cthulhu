@@ -167,6 +167,13 @@ ast_t *ast_deref(scan_t *scan, where_t where, ast_t *value)
     return ast;
 }
 
+ast_t *ast_sizeof(scan_t *scan, where_t where, ast_t *type)
+{
+    ast_t *ast = ast_new(eAstSizeOf, scan, where);
+    ast->type = type;
+    return ast;
+}
+
 ast_t *ast_stmts(scan_t *scan, where_t where, vector_t *stmts)
 {
     ast_t *ast = ast_new(eAstStmts, scan, where);

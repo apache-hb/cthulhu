@@ -33,6 +33,7 @@ typedef enum
 
     eAstRef,
     eAstDeref,
+    eAstSizeOf,
 
     /* statements */
     eAstStmts,
@@ -241,6 +242,7 @@ ast_t *ast_call(scan_t *scan, where_t where, ast_t *call, vector_t *args);
 
 ast_t *ast_ref(scan_t *scan, where_t where, ast_t *value);
 ast_t *ast_deref(scan_t *scan, where_t where, ast_t *value);
+ast_t *ast_sizeof(scan_t *scan, where_t where, ast_t *type);
 
 /// statements
 

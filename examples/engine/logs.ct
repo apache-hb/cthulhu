@@ -1,0 +1,16 @@
+module simcoe::logs;
+
+variant Level {
+    INFO,
+    WARN,
+    ERROR
+}
+
+struct Sink {
+    name: str;
+}
+
+struct Channel {
+    name: str;
+    level: Level;
+}

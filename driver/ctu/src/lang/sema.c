@@ -1,6 +1,7 @@
 #include "sema.h"
 #include "ast.h"
 #include "attribs.h"
+#include "cthulhu/hlir/digit.h"
 #include "cthulhu/hlir/ops.h"
 #include "cthulhu/hlir/sema.h"
 #include "repr.h"
@@ -187,8 +188,11 @@ static hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *expr)
         return hlir_cast(common, expr, eCastSignExtend);
     }
 
-    report(reports, eFatal, get_hlir_node(expr), "cannot convert from %s to %s", ctu_repr(reports, expr, true), ctu_type_repr(reports, to, true));
-    return NULL;
+    report(reports, eFatal, get_hlir_node(expr), "cannot convert from %s to %s", 
+        ctu_repr(reports, expr, true), 
+        ctu_type_repr(reports, to, true)
+    );
+    return hlir_error(get_hlir_node(expr), "failed to convert type");
 }
 
 static bool is_discard_ident(const char *id)
@@ -676,11 +680,18 @@ static hlir_t *sema_access(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_ref(sema_t *sema, ast_t *ast)
 {
-    hlir_t *expr = sema_expr(sema, ast);
+    hlir_t *expr = sema_expr(sema, ast->operand);
     // TODO: check if expr is an lvalue
     (void)expr;
 
-    return hlir_error(ast->node, "cannot take reference of non-pointer");
+    report(sema_reports(sema), eFatal, ast->node, "ref not implemented");
+    return hlir_error(ast->node, "ref not implemented");
+}
+
+static hlir_t *sema_sizeof(sema_t *sema, ast_t *ast)
+{
+    hlir_t *type = sema_type(sema, ast->type);
+    return hlir_builtin(ast->node, get_digit_type(eUnsigned, eDigitSize), type, eBuiltinSizeOf);
 }
 
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
@@ -709,6 +720,8 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_access(sema, ast);
     case eAstRef:
         return sema_ref(sema, ast);
+    case eAstSizeOf:
+        return sema_sizeof(sema, ast);
 
     default:
         report(sema_reports(sema), eInternal, ast->node, "unknown sema-expr: %d", ast->of);

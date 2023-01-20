@@ -37,6 +37,13 @@ typedef enum
     eCastTotal
 } cast_t;
 
+typedef enum
+{
+#define HLIR_BUILTIN(ID, NAME) ID,
+#include "hlir-def.inc"
+    eBuiltinTotal
+} builtin_t;
+
 /**
  * @brief get the name of a binary operator
  *

@@ -64,6 +64,14 @@ hlir_t *hlir_unary(node_t *node, unary_t unary, hlir_t *operand)
     return self;
 }
 
+hlir_t *hlir_builtin(node_t *node, const hlir_t *type, hlir_t *operand, builtin_t builtin)
+{
+    hlir_t *self = hlir_new(node, type, eHlirBuiltin);
+    self->operand = operand;
+    self->builtin = builtin;
+    return self;
+}
+
 hlir_t *hlir_binary(node_t *node, const hlir_t *type, binary_t binary, hlir_t *lhs, hlir_t *rhs)
 {
     hlir_t *self = hlir_new(node, type, eHlirBinary);

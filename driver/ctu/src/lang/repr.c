@@ -113,7 +113,11 @@ static const char *repr_closure(reports_t *reports, const hlir_t *type, bool det
     vector_t *params = closure_params(type);
     const char *result = ctu_type_repr(reports, closure_result(type), false);
     const char *name = get_hlir_name(type);
-
+    if (name == NULL)
+    {
+        name = "def";
+    }
+    
     if (detail)
     {
         size_t totalParams = vector_len(params);
@@ -124,6 +128,7 @@ static const char *repr_closure(reports_t *reports, const hlir_t *type, bool det
             vector_set(paramNames, i, (char *)paramName);
         }
 
+        // TODO: why is this always true?
         if (closure_variadic(type))
         {
             vector_push(&paramNames, (char *)"...");

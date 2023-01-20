@@ -3,6 +3,7 @@
 #include "base/panic.h"
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
+#include <stdio.h>
 
 static bool has_name(hlir_kind_t kind)
 {
@@ -227,7 +228,11 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
 
     hlir_kind_t lhsKind = get_hlir_kind(actualLhs);
     hlir_kind_t rhsKind = get_hlir_kind(actualRhs);
-    if (lhsKind != rhsKind)
+    if (hlir_is_callable(actualLhs) && hlir_is_callable(actualRhs))
+    {
+        // TODO: this is kinda ugly   
+    }
+    else if (lhsKind != rhsKind)
     {
         return false;
     }
@@ -245,16 +250,19 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
     case eHlirPointer:
         return actualLhs->indexable == actualRhs->indexable && hlir_types_equal(actualLhs->ptr, actualRhs->ptr);
 
+    case eHlirClosure:
     case eHlirFunction: {
         vector_t *lhsParams = closure_params(actualLhs);
         vector_t *rhsParams = closure_params(actualRhs);
         if (vector_len(lhsParams) != vector_len(rhsParams))
         {
+            puts("different number of params\n");
             return false;
         }
 
         if (closure_variadic(actualLhs) != closure_variadic(actualRhs))
         {
+            puts("different variadic\n");
             return false;
         }
 
@@ -264,6 +272,7 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
             const hlir_t *rhsParam = vector_get(rhsParams, i);
             if (!hlir_types_equal(lhsParam, rhsParam))
             {
+                printf("different param %zu\n", i);
                 return false;
             }
         }

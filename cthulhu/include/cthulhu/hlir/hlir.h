@@ -58,7 +58,11 @@ typedef struct hlir_t
 
         struct {
             struct hlir_t *operand;
-            unary_t unary;
+
+            union {
+                unary_t unary;
+                builtin_t builtin;
+            };
         };
 
         struct
@@ -158,10 +162,8 @@ typedef struct hlir_t
                     /* the local variables */
                     vector_t *locals;
 
-                    union {
-                        /* the body of this function */
-                        struct hlir_t *body;
-                    };
+                    /* the body of this function */
+                    struct hlir_t *body;
                 };
 
                 /* pointer type */
@@ -218,6 +220,8 @@ typedef struct hlir_t
 bool hlir_is_imported(const hlir_t *self);
 
 bool hlir_is_exported(const hlir_t *self);
+
+bool hlir_is_callable(const hlir_t *self);
 
 /**
  * @brief get the params of a function. only valid to call on eHlirFunction and
@@ -286,6 +290,8 @@ hlir_t *hlir_compare(node_t *node, const hlir_t *type, compare_t compare, hlir_t
 hlir_t *hlir_call(node_t *node, hlir_t *call, vector_t *args);
 
 hlir_t *hlir_cast(const hlir_t *type, hlir_t *expr, cast_t cast);
+
+hlir_t *hlir_builtin(node_t *node, const hlir_t *type, hlir_t *operand, builtin_t builtin);
 
 hlir_t *hlir_stmts(node_t *node, vector_t *stmts);
 hlir_t *hlir_branch(node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other);
