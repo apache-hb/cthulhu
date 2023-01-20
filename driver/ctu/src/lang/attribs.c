@@ -117,7 +117,7 @@ static hlir_attributes_t *apply_extern(sema_t *sema, hlir_t *hlir, ast_t *ast)
 static hlir_attributes_t *apply_layout(sema_t *sema, hlir_t *hlir, ast_t *ast)
 {
     UNUSED(ast);
-    report(sema_reports(sema), eInternal, get_hlir_node(hlir), "layout not implemented");
+    report(sema_reports(sema), eWarn, get_hlir_node(hlir), "layout not implemented");
     return NULL;
 }
 

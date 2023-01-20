@@ -4,6 +4,7 @@
 
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
+#include "cthulhu/hlir/type.h"
 
 hlir_t *hlir_error(node_t *node, const char *error)
 {
@@ -69,6 +70,13 @@ hlir_t *hlir_builtin(node_t *node, const hlir_t *type, hlir_t *operand, builtin_
     hlir_t *self = hlir_new(node, type, eHlirBuiltin);
     self->operand = operand;
     self->builtin = builtin;
+    return self;
+}
+
+hlir_t *hlir_addr(node_t *node, hlir_t *operand)
+{
+    hlir_t *self = hlir_new(node, hlir_pointer(node, NULL, get_hlir_type(operand), false), eHlirAddr);
+    self->expr = operand;
     return self;
 }
 

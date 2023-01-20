@@ -303,7 +303,7 @@ static const char *kC89DigitNames[eDigitTotal] = {
     [eDigitChar] = "char",
     [eDigitShort] = "short",
     [eDigitInt] = "int",
-    [eDigitLong] = "long",
+    [eDigitLong] = "long long",
 };
 
 static const char *c89_get_digit_symbol(const hlir_t *digit)
@@ -583,9 +583,13 @@ static const char *c89_emit_name_lvalue(const hlir_t *hlir)
 {
     if (hlir_is(hlir, eHlirLoad))
     {
-        if (hlir_is(hlir->read, eHlirLocal) || hlir_is(hlir->read, eHlirParam))
+        if (hlir_is(hlir->read, eHlirParam))
         {
             return c89_emit_local_rvalue(hlir->read);
+        }
+        else if (hlir_is(hlir->read, eHlirLocal))
+        {
+            return format("%s[0]", c89_emit_local_rvalue(hlir->read));
         }
     }
     return format("%s[0]", get_hlir_name(hlir));
@@ -627,6 +631,22 @@ static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
 
     case eHlirLoad:
         WRITE_STRINGF(emit, "%s;\n", c89_emit_name_lvalue(hlir->read));
+        break;
+
+    case eHlirBreak:
+        if (hlir->target != NULL)
+        {
+            report(emit->reports, eInternal, get_hlir_node(hlir), "break with target not implemented");
+        }
+        WRITE_STRING(emit, "break;\n");
+        break;
+
+    case eHlirContinue:
+        if (hlir->target != NULL)
+        {
+            report(emit->reports, eInternal, get_hlir_node(hlir), "continue with target not implemented");
+        }
+        WRITE_STRING(emit, "continue;\n");
         break;
 
     default:
@@ -748,6 +768,25 @@ static const char *c89_emit_access(c89_emit_t *emit, const hlir_t *hlir)
     return format("%s%s%s", expr, dot, field);
 }
 
+static const char *c89_emit_addr(c89_emit_t *emit, const hlir_t *hlir)
+{
+    const char *expr = c89_emit_rvalue(emit, hlir->expr);
+    return format("&%s", expr);
+}
+
+static const char *c89_emit_builtin(c89_emit_t *emit, const hlir_t *hlir)
+{
+    switch (hlir->builtin)
+    {
+    case eBuiltinSizeOf:
+        return format("sizeof(%s)", c89_emit_type(emit, hlir->operand, NULL));
+
+    default:
+        report(emit->reports, eInternal, get_hlir_node(hlir), "cannot emit %d builtin", hlir->builtin);
+        return "";
+    }
+}
+
 static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -790,6 +829,12 @@ static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
 
     case eHlirAccess:
         return c89_emit_access(emit, hlir);
+
+    case eHlirAddr:
+        return c89_emit_addr(emit, hlir);
+
+    case eHlirBuiltin:
+        return c89_emit_builtin(emit, hlir);
 
     default:
         report(emit->reports, eInternal, get_hlir_node(hlir), "cannot emit rvalue for %s", hlir_kind_to_string(kind));
@@ -1017,8 +1062,12 @@ static const char *c89_get_linkage(hlir_linkage_t linkage)
         return "extern ";
     case eLinkInternal:
         return "static ";
+
+    case eLinkEntryCli:
+    case eLinkEntryGui:
     case eLinkExported:
         return "";
+
     default:
         CTASSERTF(false, "unknown linkage %d", linkage);
         return "";
@@ -1132,12 +1181,34 @@ static void c89_function_header(c89_emit_t *emit, const hlir_t *function)
     const char *linkage = "";
 
     const char *result = "int main";
-    if (!is_entry_point(attribs->linkage))
+    switch (attribs->linkage)
     {
+    case eLinkEntryGui:
+        name = "WinMain";
+        // fallthrough
+    case eLinkEntryCli:
+        params = c89_fmt_params(emit, closureParams);
+        linkage = c89_get_linkage(attribs->linkage);
+        result = c89_emit_type(emit, closure_result(function), name);
+        break;
+
+    case eLinkExported:
+    case eLinkImported:
         name = c89_mangle_name(emit, function);
         params = c89_fmt_params(emit, closureParams);
         linkage = c89_get_linkage(attribs->linkage);
         result = c89_emit_type(emit, closure_result(function), name);
+        break;
+    case eLinkInternal:
+        // TODO: internal stuff should be static
+        name = c89_mangle_name(emit, function);
+        params = c89_fmt_params(emit, closureParams);
+        result = c89_emit_type(emit, closure_result(function), name);
+        break;
+
+    default:
+        report(emit->reports, eInternal, get_hlir_node(function), "unknown linkage type");
+        break;
     }
 
     if (vector_len(closureParams) == 0)

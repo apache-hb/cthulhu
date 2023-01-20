@@ -70,7 +70,7 @@ hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hli
  * @param indexable can this pointer be indexed?
  * @return hlir_t* the constructed pointer type
  */
-hlir_t *hlir_pointer(node_t *node, const char *name, hlir_t *type, bool indexable);
+hlir_t *hlir_pointer(node_t *node, const char *name, const hlir_t *type, bool indexable);
 
 /**
  * @brief construct a new array type

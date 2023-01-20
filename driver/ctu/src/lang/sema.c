@@ -125,6 +125,23 @@ static bool is_voidptr(const hlir_t *type)
     return is_ptr(type) && type->ptr == kVoidType;
 }
 
+static bool is_lvalue(const hlir_t *expr)
+{
+    hlir_kind_t kind = get_hlir_kind(expr);
+    switch (kind)
+    {
+    case eHlirLoad:
+    case eHlirAccess:
+    case eHlirIndex:
+    case eHlirLocal:
+    case eHlirGlobal:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 static const hlir_t *common_pointer_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs)
 {
     if (!hlir_is(lhs, eHlirPointer) || !hlir_is(rhs, eHlirPointer))
@@ -157,6 +174,11 @@ static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir
         sign_t sign = (lhsType->sign == eSigned || rhsType->sign == eSigned) ? eSigned : eUnsigned;
 
         return get_digit_type(sign, width);
+    }
+
+    if (hlir_is(lhsType, eHlirBool) && hlir_is(rhsType, eHlirBool))
+    {
+        return kBoolType;
     }
 
     // doesnt account for const, probably wrong
@@ -560,7 +582,7 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
 
     const hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
 
-    if (!hlir_is(type, eHlirDigit) && !hlir_is(type, eHlirPointer))
+    if (!hlir_is(type, eHlirDigit) && !hlir_is(type, eHlirBool) && !hlir_is(type, eHlirPointer))
     {
         message_t *id = report(sema_reports(sema), eFatal, ast->node, "cannot perform comparison operations on %s",
                                ctu_type_repr(sema_reports(sema), type, true));
@@ -681,11 +703,13 @@ static hlir_t *sema_access(sema_t *sema, ast_t *ast)
 static hlir_t *sema_ref(sema_t *sema, ast_t *ast)
 {
     hlir_t *expr = sema_expr(sema, ast->operand);
-    // TODO: check if expr is an lvalue
-    (void)expr;
+    if (!is_lvalue(expr))
+    {
+        report(sema_reports(sema), eFatal, ast->node, "cannot take reference of non-lvalue");
+        return hlir_error(ast->node, "invalid ref");
+    }
 
-    report(sema_reports(sema), eFatal, ast->node, "ref not implemented");
-    return hlir_error(ast->node, "ref not implemented");
+    return hlir_addr(ast->node, expr);
 }
 
 static hlir_t *sema_sizeof(sema_t *sema, ast_t *ast)
@@ -847,6 +871,16 @@ static hlir_t *sema_break(sema_t *sema, ast_t *stmt)
     return hlir_break(stmt->node, NULL);
 }
 
+static hlir_t *sema_continue(sema_t *sema, ast_t *stmt)
+{
+    if (stmt->label != NULL)
+    {
+        report(sema_reports(sema), eInternal, stmt->node, "loop labels not yet supported"); // TODO: support labels
+    }
+
+    return hlir_continue(stmt->node, NULL);
+}
+
 static hlir_t *sema_branch(sema_t *sema, ast_t *stmt)
 {
     hlir_t *cond = sema_expr(sema, stmt->cond);
@@ -910,6 +944,9 @@ static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
 
     case eAstBreak:
         return sema_break(sema, stmt);
+
+    case eAstContinue:
+        return sema_continue(sema, stmt);
 
     case eAstBranch:
         return sema_branch(sema, stmt);

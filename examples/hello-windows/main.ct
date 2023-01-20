@@ -3,9 +3,10 @@ type HANDLE = *void;
 type HICON = *void;
 type HCURSOR = *void;
 type HBRUSH = *void;
+type HMENU = *void;
 type HWND = *void;
 
-type WNDPROC = def(HWND, uint, uint, uint) -> uint;
+type WNDPROC = def(HWND, uint, ulong, ulong) -> uint;
 
 @layout(platform)
 struct WNDCLASSEXA {
@@ -25,6 +26,24 @@ struct WNDCLASSEXA {
     hIconSm: HICON;
 }
 
+@layout(platform)
+struct POINT {
+    x: int;
+    y: int;
+}
+
+@layout(platform)
+struct MSG {
+    hwnd: HWND;
+    message: uint;
+    wParam: uint;
+    lParam: uint;
+    time: uint;
+    pt: POINT;
+
+    lPrivate: uint;
+}
+
 @extern("RegisterClassExA")
 def RegisterClassExA(cls: *WNDCLASSEXA): HANDLE;
 
@@ -34,18 +53,106 @@ def UnregisterClassA(lpClassName: str, hInstance: HINSTANCE): HANDLE;
 @extern("DefWindowProcA")
 def DefWindowProcA(hWnd: HWND, uMsg: uint, wParam: uint, lParam: uint): uint;
 
+@extern("CreateWindowExA")
+def CreateWindowExA(
+    dwExStyle: uint, 
+    lpClassName: str, 
+    lpWindowName: str, 
+    dwStyle: uint, 
+    x: int, y: int, 
+    nWidth: int, nHeight: int, 
+    hWndParent: HWND, 
+    hMenu: HMENU, 
+    hInstance: HINSTANCE, 
+    lpParam: *void
+): HWND;
+
+@extern("ShowWindow")
+def ShowWindow(hWnd: HWND, nCmdShow: int): int;
+
+@extern("UpdateWindow")
+def UpdateWindow(hWnd: HWND): int;
+
+@extern("DestroyWindow")
+def DestroyWindow(hWnd: HWND): int;
+
+@extern("PeekMessageA")
+def PeekMessageA(
+    lpMsg: *MSG, 
+    hWnd: HWND, 
+    wMsgFilterMin: uint, 
+    wMsgFilterMax: uint, 
+    wRemoveMsg: uint
+): int;
+
+@extern("GetMessageA")
+def GetMessageA(
+    lpMsg: *MSG, 
+    hWnd: HWND, 
+    wMsgFilterMin: uint, 
+    wMsgFilterMax: uint
+): int;
+
+@extern("TranslateMessage")
+def TranslateMessage(lpMsg: *MSG): int;
+
+@extern("DispatchMessageA")
+def DispatchMessageA(lpMsg: *MSG): uint;
+
+@extern("PostQuitMessage")
+def PostQuitMessage(nExitCode: int): void;
+
 @entry(gui)
-def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: str, nCmdShow: int): int {
-    const clsName = "test";
+def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdShow: int): int {
+    const szAppName = "hello";
+    const szTitle = "Hello, World!";
 
-    var cls: WNDCLASSEXA = noinit;
-    cls.cbSize = __sizeof(WNDCLASSEXA);
-    cls.style = 0x0002 | 0x0001;
-    cls.lpfnWndProc = DefWindowProcA;
-    cls.hInstance = hInstance;
-    cls.lpszClassName = clsName;
+    var wndclass: WNDCLASSEXA = noinit;
+    wndclass.cbSize = __sizeof(WNDCLASSEXA);
+    wndclass.style = (1 | 2);
+    wndclass.lpfnWndProc = windowCallback;
+    wndclass.cbClsExtra = 0;
+    wndclass.cbWndExtra = 0;
+    wndclass.hInstance = hInstance;
+    wndclass.hIcon = __null;
+    wndclass.hIconSm = __null;
+    wndclass.hCursor = __null;
+    wndclass.hbrBackground = __null;
+    wndclass.lpszClassName = szAppName;
+    wndclass.lpszMenuName = "";
 
-    RegisterClassExA(&cls);
+    RegisterClassExA(&wndclass);
 
-    UnregisterClassA(clsName, hInstance);
+    var hWnd = CreateWindowExA(
+        0, 
+        szAppName, 
+        szTitle, 
+        (1 | 2 | 0x10000000), 
+        0, 0, 
+        640, 480, 
+        __null, 
+        __null, 
+        hInstance, 
+        __null
+    );
+
+    ShowWindow(hWnd, nCmdShow);
+    UpdateWindow(hWnd);
+
+    var msg: MSG = noinit;
+    while GetMessageA(&msg, __null, 0, 0) != 0 {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+
+    return msg.wParam;
+}
+
+def windowCallback(hWnd: HWND, uMsg: uint, wParam: ulong, lParam: ulong): uint {
+    if uMsg == 0x0002 { // WM_DESTROY
+        PostQuitMessage(0);
+        return 0;
+    }
+    
+    return DefWindowProcA(hWnd, uMsg, wParam, lParam);
 }

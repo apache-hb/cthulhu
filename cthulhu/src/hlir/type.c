@@ -40,7 +40,7 @@ hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hli
     return hlir;
 }
 
-hlir_t *hlir_pointer(node_t *node, const char *name, hlir_t *ptr, bool indexable)
+hlir_t *hlir_pointer(node_t *node, const char *name, const hlir_t *ptr, bool indexable)
 {
     hlir_t *hlir = hlir_decl_new(node, name, kMetaType, eHlirPointer);
     hlir->ptr = ptr;

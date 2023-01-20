@@ -169,7 +169,7 @@ typedef struct hlir_t
                 /* pointer type */
                 struct
                 {
-                    struct hlir_t *ptr;
+                    const struct hlir_t *ptr;
                     bool indexable;
                 };
 
@@ -292,6 +292,8 @@ hlir_t *hlir_call(node_t *node, hlir_t *call, vector_t *args);
 hlir_t *hlir_cast(const hlir_t *type, hlir_t *expr, cast_t cast);
 
 hlir_t *hlir_builtin(node_t *node, const hlir_t *type, hlir_t *operand, builtin_t builtin);
+
+hlir_t *hlir_addr(node_t *node, hlir_t *operand);
 
 hlir_t *hlir_stmts(node_t *node, vector_t *stmts);
 hlir_t *hlir_branch(node_t *node, hlir_t *cond, hlir_t *then, hlir_t *other);

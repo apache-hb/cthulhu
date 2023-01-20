@@ -43,6 +43,7 @@ HLIR_KIND(eHlirCast,    "cast")
 
 HLIR_KIND(eHlirAccess, "access") // aggregate member access
 HLIR_KIND(eHlirIndex,  "index") // array access
+HLIR_KIND(eHlirAddr,   "addr") // address of an expression
 
 HLIR_KIND(eHlirBuiltin, "builtin")
 
