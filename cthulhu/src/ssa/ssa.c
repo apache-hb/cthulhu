@@ -25,7 +25,7 @@ typedef struct {
 
     set_t *strings;
 
-    map_t *importedSymbols;
+    map_t *importedSymbols; // map_t<const char *, const hlir_t *>
 
     map_t *currentLocals; // map_t<const hlir_t *, size_t> // map of local variables to their index in the locals vector
 
@@ -567,7 +567,10 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
     flow_t *flow = map_get_ptr(ssa->globals, global);
     compile_flow(ssa, flow);
 
-    // TODO: noinit globals dont work
+    // TODO: might be wrong
+    if (global->value == NULL) {
+        return;
+    }
 
     operand_t result = compile_rvalue(ssa, global->value);
     step_t step = {
@@ -595,8 +598,11 @@ static void compile_function(ssa_t *ssa, const hlir_t *function)
 
     compile_flow(ssa, flow);
 
-    // TODO: put function into import table
-    if (function->body == NULL) { return; }
+    // TODO: idk if this is right
+    if (function->body == NULL) { 
+        map_set(ssa->importedSymbols, function->name, flow);
+        return;
+    }
 
     compile_stmt(ssa, function->body);
 }

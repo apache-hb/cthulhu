@@ -18,6 +18,7 @@
 
 #include "io/io.h"
 
+#include <stdio.h>
 #include <string.h>
 
 typedef struct
@@ -513,8 +514,8 @@ static const char *c89_emit_call(c89_emit_t *emit, const hlir_t *hlir)
 
     for (size_t i = 0; i < totalParams; i++)
     {
-        const hlir_t *param = vector_get(hlir->args, i);
-        const char *expr = c89_emit_rvalue(emit, param);
+        const hlir_t *arg = vector_get(hlir->args, i);
+        const char *expr = c89_emit_rvalue(emit, arg);
         vector_set(params, i, (void *)expr);
     }
 
@@ -695,6 +696,7 @@ static const char *c89_emit_unary(c89_emit_t *emit, const hlir_t *hlir)
 
     if (hlir->unary == eUnaryAbs)
     {
+        // TODO: doesnt handle types other than long long
         return format("llabs(%s)", operand);
     }
 
@@ -727,13 +729,23 @@ static const char *c89_emit_cast(c89_emit_t *emit, const hlir_t *hlir)
     const char *type = c89_emit_type(emit, get_hlir_type(hlir), NULL);
     switch (hlir->cast)
     {
+    case eCastSignExtend:
     case eCastBit:
+        // TODO: this is wrong
         return format("((%s)(%s))", type, expr);
 
     default:
         report(emit->reports, eInternal, get_hlir_node(hlir), "cannot emit %d cast", hlir->cast);
         return "";
     }
+}
+
+static const char *c89_emit_access(c89_emit_t *emit, const hlir_t *hlir)
+{
+    const char *expr = c89_emit_rvalue(emit, hlir->object);
+    const char *field = get_hlir_name(hlir->member); // TODO: eh?
+    const char *dot = hlir_is(get_hlir_type(hlir->object), eHlirPointer) ? "->" : ".";
+    return format("%s%s%s", expr, dot, field);
 }
 
 static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
@@ -776,8 +788,11 @@ static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
     case eHlirCast:
         return c89_emit_cast(emit, hlir);
 
+    case eHlirAccess:
+        return c89_emit_access(emit, hlir);
+
     default:
-        ctu_assert(emit->reports, "cannot emit rvalue for %s", hlir_kind_to_string(kind));
+        report(emit->reports, eInternal, get_hlir_node(hlir), "cannot emit rvalue for %s", hlir_kind_to_string(kind));
         return "error";
     }
 }
@@ -790,6 +805,9 @@ static const char *c89_emit_lvalue(c89_emit_t *emit, const hlir_t *hlir)
     case eHlirLoad:
     case eHlirLocal:
         return c89_emit_name_lvalue(hlir);
+
+    case eHlirAccess:
+        return c89_emit_access(emit, hlir);
 
     case eHlirGlobal:
         return format("%s[0]", c89_mangle_name(emit, hlir));

@@ -19,6 +19,7 @@ static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
     fprintf(stderr, "\n");
 
     stacktrace_print(stderr);
+    __debugbreak();
 }
 
 panic_handler_t globalPanicHandler = default_panic_handler;

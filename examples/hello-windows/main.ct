@@ -1,10 +1,50 @@
 type HINSTANCE = *void;
+type HANDLE = *void;
+type HICON = *void;
+type HCURSOR = *void;
+type HBRUSH = *void;
 type HWND = *void;
 
-@extern("MessageBoxA")
-def messageBox(hwnd: HWND, lpText: str, lpCaption: str, uType: uint): int;
+type WNDPROC = def(HWND, uint, uint, uint) -> uint;
+
+struct WNDCLASSEXA {
+    cbSize: uint;
+
+    style: uint;
+    lpfnWndProc: WNDPROC;
+    cbClsExtra: int;
+    cbWndExtra: int;
+    hInstance: HINSTANCE;
+    hIcon: HICON;
+    hCursor: HCURSOR;
+    hbrBackground: HBRUSH;
+    lpszMenuName: str;
+    lpszClassName: str;
+
+    hIconSm: HICON;
+}
+
+@extern("RegisterClassExA")
+def RegisterClassExA(cls: *WNDCLASSEXA): HANDLE;
+
+@extern("UnregisterClassA")
+def UnregisterClassA(lpClassName: str, hInstance: HINSTANCE): HANDLE;
+
+@extern("DefWindowProcA")
+def DefWindowProcA(hWnd: HWND, uMsg: uint, wParam: uint, lParam: uint): uint;
 
 @entry(gui)
 def main(hInstance: HINSTANCE, hPrevInstances: HINSTANCE, pCmdLine: str, nCmdShow: int): int {
-    return messageBox(null, "hello windows", "title", 0);
+    const clsName = "test";
+
+    var cls: WNDCLASSEXA = noinit;
+    //cls.cbSize = sizeof(WNDCLASSEXA);
+    cls.style = 0x0002 | 0x0001;
+    //cls.lpfnWndProc = DefWindowProcA;
+    cls.hInstance = hInstance;
+    cls.lpszClassName = clsName;
+
+    RegisterClassExA(&cls);
+
+    UnregisterClassA(clsName, hInstance);
 }

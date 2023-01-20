@@ -157,6 +157,14 @@ hlir_t *hlir_return(node_t *node, hlir_t *result)
     return self;
 }
 
+hlir_t *hlir_access(node_t *node, hlir_t *record, hlir_t *member)
+{
+    hlir_t *self = hlir_new(node, get_hlir_type(member), eHlirAccess);
+    self->object = record;
+    self->member = member;
+    return self;
+}
+
 // building values
 
 hlir_t *hlir_field(node_t *node, const hlir_t *type, const char *name)

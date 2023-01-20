@@ -161,9 +161,21 @@ typedef struct block_t
 typedef struct flow_t
 {
     const char *name;
-    block_t *entry;
     const type_t *type;
-    vector_t *locals; // vector_t<type_t*> 
+
+    union {
+        // function
+        struct {
+            block_t *entry;
+            vector_t *locals; // vector_t<type_t*> 
+        };
+
+        // imported symbol
+        struct {
+            const char *library;
+            const char *symbol;
+        };
+    };
 } flow_t;
 
 typedef struct section_t 

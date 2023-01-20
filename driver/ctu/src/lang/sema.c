@@ -1,6 +1,7 @@
 #include "sema.h"
 #include "ast.h"
 #include "attribs.h"
+#include "cthulhu/hlir/ops.h"
 #include "cthulhu/hlir/sema.h"
 #include "repr.h"
 #include "suffix.h"
@@ -108,9 +109,19 @@ static sema_t *kRootSema = NULL;
 
 static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs);
 
+static bool is_aggregate(const hlir_t *type)
+{
+    return hlir_is(type, eHlirStruct) || hlir_is(type, eHlirUnion);
+}
+
+static bool is_ptr(const hlir_t *type)
+{
+    return hlir_is(type, eHlirPointer);
+}
+
 static bool is_voidptr(const hlir_t *type)
 {
-    return hlir_is(type, eHlirPointer) && type->ptr == kVoidType;
+    return is_ptr(type) && type->ptr == kVoidType;
 }
 
 static const hlir_t *common_pointer_type(node_t *node, const hlir_t *lhs, const hlir_t *rhs)
@@ -157,7 +168,7 @@ static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir
     return hlir_error(node, "unknown common type");
 }
 
-static const hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *expr)
+static hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *expr)
 {
     const hlir_t *dstType = hlir_follow_type(to);
     const hlir_t *srcType = hlir_follow_type(get_hlir_type(expr));
@@ -173,7 +184,7 @@ static const hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *ex
     const hlir_t *common = get_common_type(get_hlir_node(expr), dstType, srcType);
     if (!hlir_is(common, eHlirError))
     {
-        return common;
+        return hlir_cast(common, expr, eCastSignExtend);
     }
 
     report(reports, eFatal, get_hlir_node(expr), "cannot convert from %s to %s", ctu_repr(reports, expr, true), ctu_type_repr(reports, to, true));
@@ -629,6 +640,49 @@ static hlir_t *sema_null(ast_t *ast)
     return hlir_cast(kNullType, zero, eCastBit);
 }
 
+static hlir_t *sema_access(sema_t *sema, ast_t *ast)
+{
+    hlir_t *object = sema_expr(sema, ast->record);
+    const hlir_t *objectType = get_hlir_type(object);
+    if (is_ptr(objectType))
+    {
+        if (!ast->indirect) 
+        {
+            report(sema_reports(sema), eWarn, ast->node, "accessing pointer without dereferencing");
+        }
+
+        objectType = objectType->ptr;
+    }
+
+    if (!is_aggregate(objectType)) 
+    {
+        report(sema_reports(sema), eFatal, ast->node, "cannot access non-aggregate type");
+        return hlir_error(ast->node, "invalid access");
+    }
+
+    vector_t *fields = objectType->fields;
+    for (size_t i = 0; i < vector_len(fields); i++)
+    {
+        hlir_t *field = vector_get(fields, i);
+        if (str_equal(field->name, ast->access))
+        {
+            return hlir_access(ast->node, object, field);
+        }
+    }
+
+    report(sema_reports(sema), eFatal, ast->node, "unknown field '%s'", ast->access);
+    return hlir_error(ast->node, "unknown field");
+}
+
+static hlir_t *sema_ref(sema_t *sema, ast_t *ast)
+{
+    hlir_t *expr = sema_expr(sema, ast);
+    // TODO: check if expr is an lvalue
+    (void)expr;
+
+    return hlir_error(ast->node, "cannot take reference of non-pointer");
+}
+
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
 {
     switch (ast->of)
@@ -651,6 +705,10 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_ident(sema, ast);
     case eAstCall:
         return sema_call(sema, ast);
+    case eAstAccess:
+        return sema_access(sema, ast);
+    case eAstRef:
+        return sema_ref(sema, ast);
 
     default:
         report(sema_reports(sema), eInternal, ast->node, "unknown sema-expr: %d", ast->of);
@@ -792,6 +850,25 @@ static hlir_t *sema_branch(sema_t *sema, ast_t *stmt)
     return hlir_branch(stmt->node, cond, then, other);
 }
 
+static hlir_t *sema_assign(sema_t *sema, ast_t *stmt)
+{
+    hlir_t *dst = sema_expr(sema, stmt->dst);
+    hlir_t *src = sema_expr(sema, stmt->src);
+
+    hlir_t *convert = convert_to(sema_reports(sema), get_hlir_type(dst), src);
+
+    if (hlir_is(convert, eHlirError))
+    {
+        report(sema_reports(sema), eFatal, stmt->node, "cannot assign value of type %s to %s",
+            ctu_type_repr(sema_reports(sema), get_hlir_type(src), true),
+            ctu_repr(sema_reports(sema), dst, true));
+
+        return hlir_error(stmt->node, "invalid assignment");
+    }
+
+    return hlir_assign(stmt->node, dst, convert);
+}
+
 static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
 {
     switch (stmt->of)
@@ -823,6 +900,9 @@ static hlir_t *sema_stmt(sema_t *sema, ast_t *stmt)
 
     case eAstBranch:
         return sema_branch(sema, stmt);
+
+    case eAstAssign:
+        return sema_assign(sema, stmt);
 
     default:
         report(sema_reports(sema), eInternal, stmt->node, "unknown sema-stmt: %d", stmt->of);

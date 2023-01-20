@@ -110,6 +110,13 @@ typedef struct hlir_t
         /* eHlirBreak | eHlirContinue */
         struct hlir_t *target;
 
+        /* eHlirAccess */
+        struct
+        {
+            struct hlir_t *object;
+            struct hlir_t *member;
+        };
+
         struct
         {
             /* the name of this declaration */
@@ -291,5 +298,7 @@ hlir_t *hlir_assign(node_t *node, hlir_t *dst, hlir_t *src);
 hlir_t *hlir_return(node_t *node, hlir_t *result);
 
 hlir_t *hlir_field(node_t *node, const hlir_t *type, const char *name);
+
+hlir_t *hlir_access(node_t *node, hlir_t *expr, hlir_t *field);
 
 /** @} */
