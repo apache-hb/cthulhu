@@ -9,10 +9,6 @@
 * deprecate C backend, move to something else
     * blocked by ssa backend
 
-* remove hlir parent data
-    * nodes should not care about the context they're used in
-    * blocked by C backend
-
 * rewrite reporting
     * more detailed location tracking
     * fix current reports

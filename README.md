@@ -34,6 +34,7 @@ ninja -C build test # build and run tests
 * `driver` - language frontends
   * `pl0` - example pl0 frontend, good for referencing how to use the common framework
   * `ctu` - cthulhu language frontend (TODO)
+  * `cc` - C11 frontend (TODO)
 
 * `interface`
   * `cmd` - command line user interface
@@ -54,6 +55,7 @@ ninja -C build test # build and run tests
     * `emit` - tree writing
     * `hlir` - common typed ast
     * `util` - common utilities
+    * `ssa` - ssa emitter (TODO)
 
 * `subprojects` - 3rd & 1st party dependencies
   * `cjson` - json serialization + deserialization library
