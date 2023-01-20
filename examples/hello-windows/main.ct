@@ -6,6 +6,12 @@ type HBRUSH = *void;
 type HMENU = *void;
 type HWND = *void;
 
+type LPCSTR = str;
+type UINT = uint;
+
+type WPARAM = ulong;
+type LPARAM = ulong;
+
 type WNDPROC = def(HWND, uint, ulong, ulong) -> uint;
 
 @layout(platform)
@@ -20,8 +26,8 @@ struct WNDCLASSEXA {
     hIcon: HICON;
     hCursor: HCURSOR;
     hbrBackground: HBRUSH;
-    lpszMenuName: str;
-    lpszClassName: str;
+    lpszMenuName: LPCSTR;
+    lpszClassName: LPCSTR;
 
     hIconSm: HICON;
 }
@@ -36,8 +42,8 @@ struct POINT {
 struct MSG {
     hwnd: HWND;
     message: uint;
-    wParam: uint;
-    lParam: uint;
+    wParam: WPARAM;
+    lParam: LPARAM;
     time: uint;
     pt: POINT;
 
@@ -51,7 +57,7 @@ def RegisterClassExA(cls: *WNDCLASSEXA): HANDLE;
 def UnregisterClassA(lpClassName: str, hInstance: HINSTANCE): HANDLE;
 
 @extern("DefWindowProcA")
-def DefWindowProcA(hWnd: HWND, uMsg: uint, wParam: uint, lParam: uint): uint;
+def DefWindowProcA(hWnd: HWND, uMsg: uint, wParam: WPARAM, lParam: LPARAM): uint;
 
 @extern("CreateWindowExA")
 def CreateWindowExA(
@@ -127,7 +133,7 @@ def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdSh
         0, 
         szAppName, 
         szTitle, 
-        (1 | 2 | 0x10000000), 
+        0xcf0000, 
         0, 0, 
         640, 480, 
         __null, 
@@ -144,6 +150,9 @@ def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdSh
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
+
+    DestroyWindow(hWnd);
+    UnregisterClassA(szAppName, hInstance);
 
     return msg.wParam;
 }
