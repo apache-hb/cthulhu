@@ -908,7 +908,8 @@ static hlir_t *sema_assign(sema_t *sema, ast_t *stmt)
     {
         report(sema_reports(sema), eFatal, stmt->node, "cannot assign value of type %s to %s",
             ctu_type_repr(sema_reports(sema), get_hlir_type(src), true),
-            ctu_repr(sema_reports(sema), dst, true));
+            ctu_repr(sema_reports(sema), dst, true)
+        );
 
         return hlir_error(stmt->node, "invalid assignment");
     }
