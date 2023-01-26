@@ -215,37 +215,46 @@ static size_t normlen(char c)
 
 static size_t normstr(char *out, char c)
 {
-    if (c == '\\')
-    {
-        out[0] = '\\';
-        out[1] = '\\';
-        return 2;
-    }
-    else if (c == '\'')
-    {
-        out[0] = '\\';
-        out[1] = '\'';
-        return 2;
-    }
-    else if (c == '\"')
-    {
-        out[0] = '\\';
-        out[1] = '\"';
-        return 2;
-    }
-    else if (c == '\0')
-    {
-        out[0] = '\\';
-        out[1] = '0';
-        return 2;
-    }
-    else if (safe_isprint(c))
+    if (safe_isprint(c))
     {
         out[0] = c;
         return 1;
     }
 
-    return snprintf(out, 5, "\\x%02x", c & 0xFF);
+    /* handle C shortcuts */
+    switch (c) 
+    {
+    case '\\':
+        out[0] = '\\';
+        out[1] = '\\';
+        return 2;
+    case '\'':
+        out[0] = '\\';
+        out[1] = '\'';
+        return 2;
+    case '\"':
+        out[0] = '\\';
+        out[1] = '\"';
+        return 2;
+    case '\0':
+        out[0] = '\\';
+        out[1] = '0';
+        return 2;
+    case '\n':
+        out[0] = '\\';
+        out[1] = 'n';
+        return 2;
+    case '\t':
+        out[0] = '\\';
+        out[1] = 't';
+        return 2;
+    case '\r':
+        out[0] = '\\';
+        out[1] = 'r';
+        return 2;
+    default:
+        return snprintf(out, 5, "\\x%02x", c & 0xFF);
+    }
 }
 
 USE_DECL

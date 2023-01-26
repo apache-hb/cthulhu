@@ -1,6 +1,7 @@
 #include "cthulhu/hlir/ops.h"
 #include "cthulhu/ssa/ssa.h"
 
+#include "report/report.h"
 #include "std/vector.h"
 #include "std/str.h"
 #include "std/set.h"
@@ -45,12 +46,16 @@ static const char *emit_operand(emit_t *emit, set_t *edges, operand_t op)
     case eOperandBlock: 
         set_add_ptr(edges, op.bb);
         return format(".%s", op.bb->id);
+    case eOperandStringImm: return format("\"%s\"", str_normalizen(op.string.data, op.string.size));
     case eOperandDigitImm: return format("$%s", mpz_get_str(NULL, 10, op.mpz));
     case eOperandBoolImm: return format("%s", op.boolean ? "true" : "false");
     case eOperandGlobal: return format("&%s", op.flow->name);
     case eOperandLocal: return format("local[%zu]", op.local);
     case eOperandFunction: return format("%s", op.flow->name);
-    default: return "unknown";
+
+    default: 
+        report(emit->reports, eInternal, NULL, "unhandled operand kind %d", (int)op.kind);
+        return format("err(%d)", (int)op.kind);
     }
 }
 
@@ -88,6 +93,10 @@ static void emit_step(emit_t *emit, set_t *edges, step_t *step)
 
     case eOpBinary:
         printf("  %%%s = binary %s %s %s\n", step->id, binary_name(step->binary), emit_operand(emit, edges, step->lhs), emit_operand(emit, edges, step->rhs));
+        break;
+
+    case eOpUnary:
+        printf("  %%%s = unary %s %s\n", step->id, unary_name(step->unary), emit_operand(emit, edges, step->operand));
         break;
 
     case eOpLoad:

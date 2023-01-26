@@ -160,7 +160,7 @@ WS [ \t\r\v\n\f]
 "__finally" { return FINALLY; }
 "__throw" { return THROW; }
 "__raise" { return THROW; }
-"__except" { return THROW; }
+"__except" { return CATCH; }
 
 "__contract" { return CONTRACT; }
 "__requires" { return REQUIRES; }

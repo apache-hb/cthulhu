@@ -20,6 +20,7 @@
     * perhaps support a small subset of C++ so we can use it internally
 * unit tests for everything in `/common/`
 * complete api docs
+* add opaque pointer type to replace eHlirPointer(eHlirUnit)
 
 ## bikeshedding
 

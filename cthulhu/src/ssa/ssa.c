@@ -568,7 +568,8 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
     compile_flow(ssa, flow);
 
     // TODO: might be wrong
-    if (global->value == NULL) {
+    if (global->value == NULL) 
+    {
         return;
     }
 
