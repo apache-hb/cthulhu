@@ -30,6 +30,7 @@ typedef enum
 
     eAstAccess,
     eAstCall,
+    eAstIndex,
 
     eAstRef,
     eAstDeref,
@@ -161,6 +162,13 @@ typedef struct ast_t
             bool indirect;
         };
 
+        /* eAstIndex */
+        struct
+        {
+            struct ast_t *array;
+            struct ast_t *index;
+        };
+
         struct
         {
             struct ast_t *dst;
@@ -237,6 +245,7 @@ ast_t *ast_binary(scan_t *scan, where_t where, binary_t binary, ast_t *lhs, ast_
 ast_t *ast_compare(scan_t *scan, where_t where, compare_t compare, ast_t *lhs, ast_t *rhs);
 
 ast_t *ast_access(scan_t *scan, where_t where, ast_t *data, const char *field, bool indirect);
+ast_t *ast_index(scan_t *scan, where_t where, ast_t *array, ast_t *index);
 
 ast_t *ast_call(scan_t *scan, where_t where, ast_t *call, vector_t *args);
 

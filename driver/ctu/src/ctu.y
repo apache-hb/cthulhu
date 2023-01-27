@@ -428,6 +428,7 @@ postfix: primary { $$ = $1; }
     | postfix LPAREN args RPAREN { $$ = ast_call(x, @$, $1, $3); }
     | postfix DOT IDENT { $$ = ast_access(x, @$, $1, $3, false); }
     | postfix ARROW IDENT { $$ = ast_access(x, @$, $1, $3, true); }
+    | postfix LSQUARE expr RSQUARE { $$ = ast_index(x, @$, $1, $3); }
     ;
 
 unary: postfix { $$ = $1; }

@@ -181,6 +181,29 @@ hlir_t *hlir_access(node_t *node, hlir_t *record, hlir_t *member)
     return self;
 }
 
+static const hlir_t *get_index_type(const hlir_t *type)
+{
+    if (hlir_is(type, eHlirPointer))
+    {
+        return type->ptr;
+    }
+    else if (hlir_is(type, eHlirArray))
+    {
+        return type->element;
+    }
+
+    CTASSERT(false);
+}
+
+hlir_t *hlir_index(node_t *node, hlir_t *array, hlir_t *index)
+{
+    const hlir_t *type = get_index_type(get_hlir_type(array));
+    hlir_t *self = hlir_new(node, type, eHlirIndex);
+    self->array = array;
+    self->index = index;
+    return self;
+}
+
 // building values
 
 hlir_t *hlir_field(node_t *node, const hlir_t *type, const char *name)

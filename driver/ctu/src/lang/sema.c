@@ -120,6 +120,17 @@ static bool is_ptr(const hlir_t *type)
     return hlir_is(type, eHlirPointer);
 }
 
+static bool is_indexable(const hlir_t *type)
+{
+    const hlir_t *real = hlir_follow_type(type);
+    if (is_ptr(real))
+    {
+        return real->indexable;
+    }
+
+    return hlir_is(real, eHlirArray);
+}
+
 static bool is_voidptr(const hlir_t *type)
 {
     return is_ptr(type) && type->ptr == kVoidType;
@@ -718,6 +729,32 @@ static hlir_t *sema_sizeof(sema_t *sema, ast_t *ast)
     return hlir_builtin(ast->node, get_digit_type(eUnsigned, eDigitSize), type, eBuiltinSizeOf);
 }
 
+static hlir_t *sema_index(sema_t *sema, ast_t *ast)
+{
+    hlir_t *array = sema_expr(sema, ast->array);
+    hlir_t *index = sema_expr(sema, ast->index);
+
+    const hlir_t *arrayType = get_hlir_type(array);
+    const hlir_t *indexType = get_hlir_type(index);
+
+    if (!is_indexable(arrayType))
+    {
+        report(sema_reports(sema), eFatal, ast->node, "cannot index non-indexable type");
+        return hlir_error(ast->node, "invalid index");
+    }
+
+    const hlir_t *sizeType = get_digit_type(eUnsigned, eDigitSize);
+    const hlir_t *common = get_common_type(get_hlir_node(index), indexType, sizeType);
+    if (hlir_is(common, eHlirError))
+    {
+        report(sema_reports(sema), eFatal, ast->node, "index must be convertable to size type");
+        return hlir_error(ast->node, "invalid index type");
+    }
+
+    hlir_t *cast = hlir_cast(sizeType, index, eCastSignExtend);
+    return hlir_index(ast->node, array, cast);
+}
+
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
 {
     switch (ast->of)
@@ -746,6 +783,8 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_ref(sema, ast);
     case eAstSizeOf:
         return sema_sizeof(sema, ast);
+    case eAstIndex:
+        return sema_index(sema, ast);
 
     default:
         report(sema_reports(sema), eInternal, ast->node, "unknown sema-expr: %d", ast->of);

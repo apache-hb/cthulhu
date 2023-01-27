@@ -55,7 +55,8 @@ void *ctu_memdup(IN_READS(size) const void *ptr, size_t size);
 
 /** @} */
 
-NODISCARD CONSTFN size_t ptrhash(const void *ptr);
+NODISCARD CONSTFN 
+size_t ptrhash(const void *ptr);
 
 #define BOX(name) ctu_memdup(&(name), sizeof(name)) ///< box a value onto the heap from the stack
 

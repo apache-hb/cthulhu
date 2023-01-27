@@ -145,6 +145,14 @@ ast_t *ast_access(scan_t *scan, where_t where, ast_t *data, const char *field, b
     return ast;
 }
 
+ast_t *ast_index(scan_t *scan, where_t where, ast_t *array, ast_t *index)
+{
+    ast_t *ast = ast_new(eAstIndex, scan, where);
+    ast->array = array;
+    ast->index = index;
+    return ast;
+}
+
 ast_t *ast_call(scan_t *scan, where_t where, ast_t *call, vector_t *args)
 {
     ast_t *ast = ast_new(eAstCall, scan, where);

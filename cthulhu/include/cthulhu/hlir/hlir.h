@@ -121,6 +121,13 @@ typedef struct hlir_t
             struct hlir_t *member;
         };
 
+        /* eHlirIndex */
+        struct
+        {
+            struct hlir_t *array;
+            struct hlir_t *index;
+        };
+
         struct
         {
             /* the name of this declaration */
@@ -166,14 +173,14 @@ typedef struct hlir_t
                     struct hlir_t *body;
                 };
 
-                /* pointer type */
+                /* eHlirPointer */
                 struct
                 {
                     const struct hlir_t *ptr;
                     bool indexable;
                 };
 
-                /* array type */
+                /* eHlirArray */
                 struct
                 {
                     struct hlir_t *element;
@@ -308,5 +315,6 @@ hlir_t *hlir_return(node_t *node, hlir_t *result);
 hlir_t *hlir_field(node_t *node, const hlir_t *type, const char *name);
 
 hlir_t *hlir_access(node_t *node, hlir_t *expr, hlir_t *field);
+hlir_t *hlir_index(node_t *node, hlir_t *array, hlir_t *index);
 
 /** @} */

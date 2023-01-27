@@ -787,6 +787,13 @@ static const char *c89_emit_builtin(c89_emit_t *emit, const hlir_t *hlir)
     }
 }
 
+static const char *c89_emit_index(c89_emit_t *emit, const hlir_t *hlir)
+{
+    const char *expr = c89_emit_rvalue(emit, hlir->expr);
+    const char *index = c89_emit_rvalue(emit, hlir->index);
+    return format("%s[%s]", expr, index);
+}
+
 static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -836,6 +843,9 @@ static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
     case eHlirBuiltin:
         return c89_emit_builtin(emit, hlir);
 
+    case eHlirIndex:
+        return c89_emit_index(emit, hlir);
+
     default:
         report(emit->reports, eInternal, get_hlir_node(hlir), "cannot emit rvalue for %s", hlir_kind_to_string(kind));
         return "error";
@@ -856,6 +866,9 @@ static const char *c89_emit_lvalue(c89_emit_t *emit, const hlir_t *hlir)
 
     case eHlirGlobal:
         return format("%s[0]", c89_mangle_name(emit, hlir));
+
+    case eHlirIndex:
+        return c89_emit_index(emit, hlir);
 
         // TODO: these should be managled to not clash with globals
     case eHlirParam:
