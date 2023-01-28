@@ -136,7 +136,8 @@ tests = {
         ],
         'pass': [
             'loop',
-            #'break',
+            'for',
+            'break'
             #'break-label',
             #'nested-break'
         ]

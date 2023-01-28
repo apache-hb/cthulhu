@@ -524,6 +524,21 @@ static operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
     return operand_bb(tail);
 }
 
+static operand_t compile_return(ssa_t *ssa, const hlir_t *stmt)
+{
+    const hlir_t *result = stmt->result;
+    operand_t op = result != NULL ? compile_rvalue(ssa, result) : operand_empty();
+    type_t *type = result != NULL ? type_new(ssa, get_hlir_type(result)) : ssa->emptyType;
+
+    step_t step = {
+        .opcode = eOpReturn,
+        .type = type,
+        .src = op
+    };
+
+    return add_step(ssa, step);
+}
+
 static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
 {
     hlir_kind_t kind = get_hlir_kind(stmt);
@@ -546,6 +561,9 @@ static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
 
     case eHlirLoad:
         return compile_rvalue(ssa, stmt);
+
+    case eHlirReturn:
+        return compile_return(ssa, stmt);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(stmt), "compile-stmt %s", hlir_kind_to_string(kind));
