@@ -18,7 +18,7 @@
 typedef struct {
     reports_t *reports;
 
-    type_t *emptyType;
+    ssa_type_t *emptyType;
     
     map_t *globals;
     map_t *functions;
@@ -29,25 +29,25 @@ typedef struct {
 
     map_t *currentLocals; // map_t<const hlir_t *, size_t> // map of local variables to their index in the locals vector
 
-    block_t *currentBlock;
+    ssa_block_t *currentBlock;
     size_t stepIdx;
     size_t blockIdx;
 } ssa_t;
 
-static block_t *block_new(const char *id) 
+static ssa_block_t *block_new(const char *id) 
 {
-    block_t *block = ctu_malloc(sizeof(block_t));
+    ssa_block_t *block = ctu_malloc(sizeof(ssa_block_t));
     block->steps = vector_new(16);
     block->id = id;
     return block;
 }
 
-static block_t *block_gen(ssa_t *ssa, const char *id)
+static ssa_block_t *block_gen(ssa_t *ssa, const char *id)
 {
     return block_new(format("%s%zu", id, ssa->blockIdx++));
 }
 
-static typekind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
+static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
@@ -56,10 +56,10 @@ static typekind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     case eHlirBool: return eTypeBool;
     case eHlirString: return eTypeString;
     case eHlirPointer: // TODO: frontend should also have opaque pointer type, this is a hack
-        return hlir_is(hlir->ptr, eHlirUnit) ? eTypeOpaque : eTypePointer;
+        return eTypePointer; // hlir_is(hlir->ptr, eHlirUnit) ? eTypeOpaque : eTypePointer;
     case eHlirUnit: return eTypeUnit;
     case eHlirEmpty: return eTypeEmpty;
-    case eHlirFunction: return eTypeClosure;
+    case eHlirFunction: return eTypeSignature;
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "no respective ssa type for %s", hlir_kind_to_string(kind));
@@ -67,58 +67,60 @@ static typekind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     }
 }
 
-static type_t *type_empty(void)
+static ssa_type_t *type_empty(void)
 {
-    type_t *it = ctu_malloc(sizeof(type_t));
+    ssa_type_t *it = ctu_malloc(sizeof(ssa_type_t));
     it->kind = eTypeEmpty;
     return it;
 }
 
-static type_t *type_new(ssa_t *ssa, const hlir_t *type)
+static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
 {
     const hlir_t *real = hlir_follow_type(type);
-    type_t *it = ctu_malloc(sizeof(type_t));
+    ssa_type_t *it = ctu_malloc(sizeof(ssa_type_t));
     it->name = get_hlir_name(real);
     it->kind = get_type_kind(ssa, real);
 
     if (hlir_is(real, eHlirPointer))
     {
-        it->ptr = type_new(ssa, real->ptr);
+        //it->ptr = type_new(ssa, real->ptr);
     }
     else if (hlir_is(real, eHlirFunction))
     {
-        it->result = type_new(ssa, closure_result(real));
+        /*it->result = type_new(ssa, closure_result(real));
 
         vector_t *params = closure_params(real);
         vector_t *args = vector_of(vector_len(params));
         for (size_t i = 0; i < vector_len(params); i++)
         {
             vector_set(args, i, type_new(ssa, vector_get(params, i)));
-        }
+        }*/
     }
     
     return it;
 }
 
-static operand_t add_step(ssa_t *ssa, step_t step)
+/**
+ * @brief add a step to the current block and return the register it was assigned to
+ */
+static ssa_operand_t add_step(ssa_t *ssa, ssa_step_t step)
 {
-    step_t *ptr = BOX(step);
+    ssa_step_t *ptr = BOX(step);
     if (ptr->id == NULL)
     {
         ptr->id = format("%zu", ssa->stepIdx++);
     }
     vector_push(&ssa->currentBlock->steps, ptr);
-    operand_t op = {
+    ssa_operand_t op = {
         .kind = eOperandReg,
-        .type = step.type,
-        .reg = ptr
+        .vreg = ptr
     };
     return op;
 }
 
-static flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol)
+static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol)
 {
-    flow_t *flow = ctu_malloc(sizeof(flow_t));
+    ssa_flow_t *flow = ctu_malloc(sizeof(ssa_flow_t));
     flow->name = get_hlir_name(symbol);
     flow->entry = NULL;
     flow->locals = NULL;
@@ -128,121 +130,147 @@ static flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol)
 
 static void fwd_global(ssa_t *ssa, const hlir_t *global)
 {
-    flow_t *flow = flow_new(ssa, global);
+    ssa_flow_t *flow = flow_new(ssa, global);
     map_set_ptr(ssa->globals, global, flow);
 }
 
 static void fwd_function(ssa_t *ssa, const hlir_t *function)
 {
-    flow_t *flow = flow_new(ssa, function);
+    ssa_flow_t *flow = flow_new(ssa, function);
     map_set_ptr(ssa->functions, function, flow);
 }
 
-static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir);
-static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
+static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir);
+static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
 
-static operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
+static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
 {
-    operand_t op = {
-        .kind = eOperandDigitImm,
-        .type = type_new(ssa, get_hlir_type(hlir))
-    };
+    CTASSERT(hlir_is(digit, eHlirDigit));
 
-    mpz_init_set(op.mpz, hlir->digit);
+    const hlir_t *type = hlir_follow_type(get_hlir_type(digit));
 
-    return op;
+    ssa_type_t *it = ctu_malloc(sizeof(ssa_type_t));
+    it->kind = eTypeDigit;
+    it->name = get_hlir_name(type);
+    it->digit = type->width;
+    it->sign = type->sign;
+
+    return it;
 }
 
-static operand_t compile_string(ssa_t *ssa, const hlir_t *hlir)
+static ssa_value_t *value_digit_new(ssa_t *ssa, const hlir_t *hlir)
 {
-    operand_t op = {
-        .kind = eOperandStringImm,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .string = hlir->stringLiteral
-    };
-
-    return op;
-}
-
-static operand_t compile_binary(ssa_t *ssa, const hlir_t *hlir)
-{
-    operand_t lhs = compile_rvalue(ssa, hlir->lhs);
-    operand_t rhs = compile_rvalue(ssa, hlir->rhs);
+    ssa_value_t *it = ctu_malloc(sizeof(ssa_value_t));
+    it->type = ssa_get_digit_type(ssa, hlir);
     
-    step_t step = {
-        .opcode = eOpBinary,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .binary = hlir->binary,
-        .lhs = lhs,
-        .rhs = rhs
-    };
+    mpz_init_set(it->digit, hlir->digit);
 
-    return add_step(ssa, step);
+    return it;
 }
 
-static operand_t compile_load(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
 {
-    operand_t name = compile_rvalue(ssa, hlir->read);
-    step_t step = {
-        .opcode = eOpLoad,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .value = name
-    };
-
-    return add_step(ssa, step);
-}
-
-static operand_t compile_global_ref(ssa_t *ssa, const hlir_t *hlir)
-{
-    const flow_t *ref = map_get_ptr(ssa->globals, hlir);
-
-    operand_t op = {
-        .kind = eOperandGlobal,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .flow = ref
+    ssa_operand_t op = {
+        .kind = eOperandImm,
+        .value = value_digit_new(ssa, hlir)
     };
 
     return op;
 }
 
-static operand_t compile_local_ref(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_string(ssa_t *ssa, const hlir_t *hlir)
+{
+    // TODO: string
+    ssa_operand_t op = {
+        .kind = eOperandImm
+    };
+
+    return op;
+}
+
+static ssa_operand_t compile_binary(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_operand_t lhs = compile_rvalue(ssa, hlir->lhs);
+    ssa_operand_t rhs = compile_rvalue(ssa, hlir->rhs);
+
+    ssa_step_t step = {
+        .opcode = eOpBinary,
+        .binary = {
+            .op = hlir->binary,
+            .lhs = lhs,
+            .rhs = rhs
+        }
+    };
+
+    return add_step(ssa, step);
+}
+
+static ssa_operand_t compile_load(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_operand_t name = compile_rvalue(ssa, hlir->read);
+
+    ssa_step_t step = {
+        .opcode = eOpLoad,
+        .load = {
+            .src = name
+        }
+    };
+
+    return add_step(ssa, step);
+}
+
+static ssa_operand_t compile_global_ref(ssa_t *ssa, const hlir_t *hlir)
+{
+    const ssa_flow_t *ref = map_get_ptr(ssa->globals, hlir);
+
+    ssa_operand_t op = {
+        .kind = eOperandGlobal,
+        .global = ref
+    };
+
+    return op;
+}
+
+static ssa_operand_t compile_local_ref(ssa_t *ssa, const hlir_t *hlir)
 {
     size_t index = (uintptr_t)map_get_ptr(ssa->currentLocals, hlir);
 
-    operand_t op = {
+    ssa_operand_t op = {
         .kind = eOperandLocal,
-        .type = type_new(ssa, get_hlir_type(hlir)),
         .local = index
     };
 
     return op;
 }
 
-static operand_t compile_cast(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_cast(ssa_t *ssa, const hlir_t *hlir)
 {
-    operand_t op = compile_rvalue(ssa, hlir->expr);
+    ssa_operand_t op = compile_rvalue(ssa, hlir->expr);
 
-    step_t step = {
+    ssa_step_t step = {
         .opcode = eOpCast,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .cast = hlir->cast,
-        .operand = op
+        .cast = {
+            .op = hlir->cast,
+            .operand = op,
+
+            .type = type_new(ssa, get_hlir_type(hlir))
+        }
     };
 
     return add_step(ssa, step);
 }
 
-static operand_t compile_call(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_call(ssa_t *ssa, const hlir_t *hlir)
 {
-    operand_t *args = ctu_malloc(sizeof(operand_t) * MAX(vector_len(hlir->args), 1));
+    ssa_operand_t *args = ctu_malloc(sizeof(ssa_operand_t) * MAX(vector_len(hlir->args), 1));
     for (size_t i = 0; i < vector_len(hlir->args); i++)
     {
         args[i] = compile_rvalue(ssa, vector_get(hlir->args, i));
     }
 
-    operand_t func = compile_rvalue(ssa, hlir->call);
+    ssa_operand_t func = compile_rvalue(ssa, hlir->call);
 
-    step_t step = {
+    ssa_step_t step = {
         .opcode = eOpCall,
         .type = type_new(ssa, get_hlir_type(hlir)),
         .args = args,
@@ -253,11 +281,11 @@ static operand_t compile_call(ssa_t *ssa, const hlir_t *hlir)
     return add_step(ssa, step);
 }
 
-static operand_t compile_name(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_name(ssa_t *ssa, const hlir_t *hlir)
 {
-    const flow_t *ref = map_get_ptr(ssa->functions, hlir);
+    const ssa_flow_t *ref = map_get_ptr(ssa->functions, hlir);
 
-    operand_t op = {
+    ssa_operand_t op = {
         .kind = eOperandFunction,
         .type = type_new(ssa, get_hlir_type(hlir)),
         .flow = ref
@@ -266,12 +294,12 @@ static operand_t compile_name(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
-static operand_t compile_global_lvalue(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_global_lvalue(ssa_t *ssa, const hlir_t *hlir)
 {
-    const flow_t *ref = map_get_ptr(ssa->globals, hlir);
+    const ssa_flow_t *ref = map_get_ptr(ssa->globals, hlir);
     CTASSERT(ref != NULL);
 
-    operand_t op = {
+    ssa_operand_t op = {
         .kind = eOperandGlobal,
         .type = type_new(ssa, get_hlir_type(hlir)),
         .flow = ref
@@ -280,11 +308,11 @@ static operand_t compile_global_lvalue(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
-static operand_t compile_unary(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_unary(ssa_t *ssa, const hlir_t *hlir)
 {
-    operand_t op = compile_rvalue(ssa, hlir->expr);
+    ssa_operand_t op = compile_rvalue(ssa, hlir->expr);
 
-    step_t step = {
+    ssa_step_t step = {
         .opcode = eOpUnary,
         .type = type_new(ssa, get_hlir_type(hlir)),
         .unary = hlir->unary,
@@ -294,11 +322,11 @@ static operand_t compile_unary(ssa_t *ssa, const hlir_t *hlir)
     return add_step(ssa, step);
 }
 
-static operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     const size_t idx = (size_t)(uintptr_t)map_get_ptr(ssa->currentLocals, hlir);
 
-    operand_t op = {
+    ssa_operand_t op = {
         .kind = eOperandLocal,
         .type = type_new(ssa, get_hlir_type(hlir)),
         .local = idx
@@ -307,9 +335,9 @@ static operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
-static operand_t operand_bb(const block_t *dst)
+static ssa_operand_t operand_bb(const block_t *dst)
 {
-    operand_t op = {
+    ssa_operand_t op = {
         .kind = eOperandBlock,
         .bb = dst
     };
@@ -317,16 +345,16 @@ static operand_t operand_bb(const block_t *dst)
     return op;
 }
 
-static operand_t operand_empty(void)
+static ssa_operand_t operand_empty(void)
 {
-    operand_t op = {
+    ssa_operand_t op = {
         .kind = eOperandEmpty
     };
 
     return op;
 }
 
-static operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
@@ -343,7 +371,7 @@ static operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
     }
 }
 
-static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
@@ -384,7 +412,7 @@ static operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
     }
 }
 
-static operand_t compile_stmts(ssa_t *ssa, const hlir_t *stmt)
+static ssa_operand_t compile_stmts(ssa_t *ssa, const hlir_t *stmt)
 {
     for (size_t i = 0; i < vector_len(stmt->stmts); i++)
     {
@@ -394,12 +422,12 @@ static operand_t compile_stmts(ssa_t *ssa, const hlir_t *stmt)
     return operand_bb(ssa->currentBlock);
 }
 
-static operand_t compile_assign(ssa_t *ssa, const hlir_t *stmt)
+static ssa_operand_t compile_assign(ssa_t *ssa, const hlir_t *stmt)
 {
-    operand_t dst = compile_lvalue(ssa, stmt->dst);
-    operand_t src = compile_rvalue(ssa, stmt->src);
+    ssa_operand_t dst = compile_lvalue(ssa, stmt->dst);
+    ssa_operand_t src = compile_rvalue(ssa, stmt->src);
 
-    step_t step = {
+    ssa_step_t step = {
         .opcode = eOpStore,
         .type = type_new(ssa, get_hlir_type(stmt->dst)),
         .dst = dst,
@@ -409,12 +437,12 @@ static operand_t compile_assign(ssa_t *ssa, const hlir_t *stmt)
     return add_step(ssa, step);
 }
 
-static operand_t compile_compare_compare(ssa_t *ssa, const hlir_t *cond)
+static ssa_operand_t compile_compare_compare(ssa_t *ssa, const hlir_t *cond)
 {
-    operand_t lhs = compile_rvalue(ssa, cond->lhs);
-    operand_t rhs = compile_rvalue(ssa, cond->rhs);
+    ssa_operand_t lhs = compile_rvalue(ssa, cond->lhs);
+    ssa_operand_t rhs = compile_rvalue(ssa, cond->rhs);
 
-    step_t step = {
+    ssa_step_t step = {
         .opcode = eOpCompare,
         .type = type_new(ssa, get_hlir_type(cond->lhs)),
         .compare = cond->compare,
@@ -425,9 +453,9 @@ static operand_t compile_compare_compare(ssa_t *ssa, const hlir_t *cond)
     return add_step(ssa, step);
 }
 
-static operand_t compile_compare_bool(ssa_t *ssa, const hlir_t *cond)
+static ssa_operand_t compile_compare_bool(ssa_t *ssa, const hlir_t *cond)
 {
-    operand_t op = {
+    ssa_operand_t op = {
         .kind = eOperandBoolImm,
         .type = type_new(ssa, get_hlir_type(cond)),
         .boolean = cond->boolean
@@ -436,7 +464,7 @@ static operand_t compile_compare_bool(ssa_t *ssa, const hlir_t *cond)
     return op;
 }
 
-static operand_t compile_compare(ssa_t *ssa, const hlir_t *cond)
+static ssa_operand_t compile_compare(ssa_t *ssa, const hlir_t *cond)
 {
     hlir_kind_t kind = get_hlir_kind(cond);
     switch (kind)
@@ -453,12 +481,12 @@ static operand_t compile_compare(ssa_t *ssa, const hlir_t *cond)
     }
 }
 
-static operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
+static ssa_operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 {
     block_t *loop = block_gen(ssa, "loop");
     block_t *tail = block_gen(ssa, "tail");
 
-    step_t step = {
+    ssa_step_t step = {
         .opcode = eOpJmp,
         .type = ssa->emptyType,
         .label = operand_bb(loop)
@@ -469,7 +497,7 @@ static operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
     ssa->currentBlock = loop;
     compile_stmt(ssa, stmt->then);
 
-    step_t ret = {
+    ssa_step_t ret = {
         .opcode = eOpBranch,
         .type = ssa->emptyType,
         .cond = compile_compare(ssa, stmt->cond),
@@ -484,19 +512,19 @@ static operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
     return operand_bb(tail);
 }
 
-static operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
+static ssa_operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
 {
     block_t *then = block_gen(ssa, "then");
     block_t *other = stmt->other != NULL ? block_gen(ssa, "other") : NULL;
     block_t *tail = block_gen(ssa, "tail");
 
-    step_t ret = {
+    ssa_step_t ret = {
         .opcode = eOpJmp,
         .type = ssa->emptyType,
         .label = operand_bb(tail)
     };
 
-    step_t step = {
+    ssa_step_t step = {
         .opcode = eOpBranch,
         .type = ssa->emptyType,
         .cond = compile_compare(ssa, stmt->cond),
@@ -524,13 +552,13 @@ static operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
     return operand_bb(tail);
 }
 
-static operand_t compile_return(ssa_t *ssa, const hlir_t *stmt)
+static ssa_operand_t compile_return(ssa_t *ssa, const hlir_t *stmt)
 {
     const hlir_t *result = stmt->result;
-    operand_t op = result != NULL ? compile_rvalue(ssa, result) : operand_empty();
-    type_t *type = result != NULL ? type_new(ssa, get_hlir_type(result)) : ssa->emptyType;
+    ssa_operand_t op = result != NULL ? compile_rvalue(ssa, result) : operand_empty();
+    ssa_type_t *type = result != NULL ? type_new(ssa, get_hlir_type(result)) : ssa->emptyType;
 
-    step_t step = {
+    ssa_step_t step = {
         .opcode = eOpReturn,
         .type = type,
         .src = op
@@ -539,7 +567,7 @@ static operand_t compile_return(ssa_t *ssa, const hlir_t *stmt)
     return add_step(ssa, step);
 }
 
-static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
+static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
 {
     hlir_kind_t kind = get_hlir_kind(stmt);
     switch (kind)
@@ -571,7 +599,7 @@ static operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
     }
 }
 
-static void compile_flow(ssa_t *ssa, flow_t *flow)
+static void compile_flow(ssa_t *ssa, ssa_flow_t *flow)
 {
     block_t *block = block_new("entry");
     flow->entry = block;
@@ -582,7 +610,7 @@ static void compile_flow(ssa_t *ssa, flow_t *flow)
 
 static void compile_global(ssa_t *ssa, const hlir_t *global)
 {
-    flow_t *flow = map_get_ptr(ssa->globals, global);
+    ssa_flow_t *flow = map_get_ptr(ssa->globals, global);
     compile_flow(ssa, flow);
 
     // TODO: might be wrong
@@ -591,8 +619,8 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
         return;
     }
 
-    operand_t result = compile_rvalue(ssa, global->value);
-    step_t step = {
+    ssa_operand_t result = compile_rvalue(ssa, global->value);
+    ssa_step_t step = {
         .opcode = eOpReturn,
         .type = type_new(ssa, get_hlir_type(global)),
         .value = result
@@ -602,7 +630,7 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
 
 static void compile_function(ssa_t *ssa, const hlir_t *function)
 {
-    flow_t *flow = map_get_ptr(ssa->functions, function);
+    ssa_flow_t *flow = map_get_ptr(ssa->functions, function);
 
     size_t len = vector_len(function->locals);
     ssa->currentLocals = map_optimal(len);
@@ -626,7 +654,7 @@ static void compile_function(ssa_t *ssa, const hlir_t *function)
     compile_stmt(ssa, function->body);
 }
 
-module_t *gen_module(reports_t *reports, vector_t *mods)
+ssa_module_t *gen_module(reports_t *reports, vector_t *mods)
 {
     ssa_t ssa = { 
         .reports = reports,
@@ -636,6 +664,15 @@ module_t *gen_module(reports_t *reports, vector_t *mods)
         .strings = set_new(0x1000),
         .importedSymbols = map_optimal(0x1000)
     };
+
+    for (digit_t digit = 0; digit < eDigitTotal; digit++)
+    {
+        for (sign_t sign = 0; sign < eSignTotal; sign++)
+        {
+            ssa_type_t *type = type_new(&ssa, type_int(digit, sign));
+            map_set_ptr(ssa.types, type->type, type);
+        }
+    }
 
     size_t len = vector_len(mods);
     for (size_t i = 0; i < len; i++)
@@ -671,7 +708,7 @@ module_t *gen_module(reports_t *reports, vector_t *mods)
         .functions = map_values(ssa.functions)
     };
 
-    module_t *mod = ctu_malloc(sizeof(module_t));
+    ssa_module_t *mod = ctu_malloc(sizeof(ssa_module_t));
     mod->symbols = symbols;
 
     return mod;

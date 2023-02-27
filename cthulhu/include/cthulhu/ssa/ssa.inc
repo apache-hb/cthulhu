@@ -4,12 +4,12 @@
 
 SSA_OPCODE(eOpReturn, "ret")
 SSA_OPCODE(eOpJmp, "jmp")
-
 SSA_OPCODE(eOpBranch, "branch")
+
 SSA_OPCODE(eOpStore, "store")
 SSA_OPCODE(eOpLoad, "load")
 
-SSA_OPCODE(eOpValue, "value")
+SSA_OPCODE(eOpImm, "imm")
 SSA_OPCODE(eOpUnary, "unary")
 SSA_OPCODE(eOpBinary, "binary")
 SSA_OPCODE(eOpCompare, "compare")
@@ -28,9 +28,7 @@ SSA_OPERAND(eOperandReg, "reg")
 SSA_OPERAND(eOperandLocal, "local")
 SSA_OPERAND(eOperandGlobal, "global")
 SSA_OPERAND(eOperandFunction, "function")
-SSA_OPERAND(eOperandDigitImm, "digit")
-SSA_OPERAND(eOperandStringImm, "string")
-SSA_OPERAND(eOperandBoolImm, "bool")
+SSA_OPERAND(eOperandImm, "imm")
 
 #undef SSA_OPERAND
 
@@ -40,14 +38,14 @@ SSA_OPERAND(eOperandBoolImm, "bool")
 
 SSA_TYPE(eTypeDigit, "digit")
 SSA_TYPE(eTypeBool, "bool")
+SSA_TYPE(eTypeString, "string")
+
 SSA_TYPE(eTypeUnit, "unit")
 SSA_TYPE(eTypeEmpty, "empty")
 
 SSA_TYPE(eTypePointer, "pointer")
-SSA_TYPE(eTypeOpaque, "opaque")
-SSA_TYPE(eTypeString, "string")
 
-SSA_TYPE(eTypeClosure, "closure")
+SSA_TYPE(eTypeSignature, "signature")
 
 SSA_TYPE(eTypeStruct, "struct")
 

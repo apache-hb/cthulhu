@@ -115,13 +115,13 @@ int main(int argc, const char **argv)
 
     if (enableSsa)
     {
-        module_t *mod = gen_module(reports, allModules);
+        ssa_module_t *mod = ssa_gen_module(reports, allModules);
         CHECK_REPORTS("generating ssa");
 
-        opt_module(reports, mod);
+        ssa_opt_module(reports, mod);
         CHECK_REPORTS("optimizing ssa");
 
-        emit_module(reports, mod);
+        ssa_emit_module(reports, mod);
 
         return end_reports(reports, "emitting ssa", reportConfig);
     }

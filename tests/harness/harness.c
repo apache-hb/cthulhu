@@ -109,13 +109,13 @@ int main(int argc, const char **argv)
     vector_t *modules = cthulhu_get_modules(cthulhu);
     status_t err = EXIT_OK;
 
-    module_t *mod = gen_module(result.reports, modules);
+    ssa_module_t *mod = ssa_gen_module(result.reports, modules);
     CHECK_REPORTS("emitting ssa");
 
-    opt_module(result.reports, mod);
+    ssa_opt_module(result.reports, mod);
     CHECK_REPORTS("optimizing ssa");
 
-    emit_module(result.reports, mod);
+    ssa_emit_module(result.reports, mod);
     CHECK_REPORTS("emitting ssa");
 
     // test c89 output
