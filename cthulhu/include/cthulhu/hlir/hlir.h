@@ -4,11 +4,12 @@
 
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/ops.h"
+#include "cthulhu/hlir/string-view.h"
+#include "cthulhu/hlir/attribs.h"
+#include "cthulhu/hlir/digit.h"
+
 #include "scan/node.h"
 #include "std/vector.h"
-
-#include "attribs.h"
-#include "digit.h"
 
 #include <gmp.h>
 
@@ -30,11 +31,6 @@ typedef enum
 
     eHlirTotal
 } hlir_kind_t;
-
-typedef struct string_view_t {
-    const char *data;
-    size_t size;
-} string_view_t;
 
 /**
  * @brief an hlir node

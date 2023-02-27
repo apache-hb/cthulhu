@@ -21,6 +21,14 @@ static const char *kOutputFileNames[] = {"-o", "--output"};
 static const char *kSSANames[] = {"--enable-ssa", "-ssa"};
 #define TOTAL_SSA_NAMES (sizeof(kSSANames) / sizeof(const char *))
 
+#define CHECK_REPORTS(msg) \
+    do { \
+        status_t err = end_reports(reports, msg, reportConfig); \
+        if (err != 0) { \
+            return err; \
+        } \
+    } while (0)
+
 int main(int argc, const char **argv)
 {
     common_init();
@@ -75,11 +83,7 @@ int main(int argc, const char **argv)
         vector_set(sources, i, source);
     }
 
-    status_t status = end_reports(reports, "command line parsing", reportConfig);
-    if (status != 0)
-    {
-        return status;
-    }
+    CHECK_REPORTS("command line parsing");
 
     config_t config = {
         .reportConfig = reportConfig,
@@ -97,10 +101,11 @@ int main(int argc, const char **argv)
 
     size_t totalSteps = sizeof(steps) / sizeof(cthulhu_step_t);
 
+    status_t status = EXIT_OK;
     for (size_t i = 0; i < totalSteps; i++)
     {
         status = steps[i](cthulhu);
-        if (status != 0)
+        if (status != EXIT_OK)
         {
             return status;
         }
@@ -110,16 +115,15 @@ int main(int argc, const char **argv)
 
     if (enableSsa)
     {
-        module_t *mod = emit_module(reports, allModules);
-        status = end_reports(reports, "emitting ssa", reportConfig);
-        if (status != 0)
-        {
-            return status;
-        }
+        module_t *mod = gen_module(reports, allModules);
+        CHECK_REPORTS("generating ssa");
 
-        eval_module(reports, mod);
+        opt_module(reports, mod);
+        CHECK_REPORTS("optimizing ssa");
 
-        return end_reports(reports, "evaluating ssa", reportConfig);
+        emit_module(reports, mod);
+
+        return end_reports(reports, "emitting ssa", reportConfig);
     }
 
     io_t *out = io_file(outFile, eFileWrite | eFileBinary);

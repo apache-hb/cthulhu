@@ -1,9 +1,14 @@
 #pragma once
 
-#include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/ops.h"
+#include "cthulhu/hlir/string-view.h"
+
+#include <stdbool.h>
 
 #include <gmp.h>
+
+// TODO: this is all bunk
+// rewrite it all
 
 typedef struct vector_t vector_t;
 typedef struct reports_t reports_t;
@@ -16,19 +21,8 @@ typedef struct type_t type_t;
 
 typedef enum typekind_t 
 {
-    eTypeDigit,
-    eTypeBool, // either true or false
-    eTypeUnit, // only a single value, like void
-    eTypeEmpty, // impossible to calculate value, like noreturn
-
-    eTypePointer, // a pointer to another type
-    eTypeOpaque, // an opaque pointer to any type
-    eTypeString, // a string of characters
-
-    eTypeClosure, // a function pointer
-
-    eTypeStruct, // a possibly unordered list of types in memory
-
+#define SSA_TYPE(id, name) id,
+#include "cthulhu/ssa/ssa.inc"
     eTypeTotal
 } typekind_t;
 
@@ -48,16 +42,8 @@ typedef struct type_t
 
 typedef enum opkind_t
 {
-    eOperandEmpty,
-    eOperandBlock,
-    eOperandReg,
-    eOperandLocal,
-    eOperandGlobal,
-    eOperandFunction,
-    eOperandDigitImm,
-    eOperandStringImm,
-    eOperandBoolImm,
-
+#define SSA_OPERAND(id, name) id,
+#include "cthulhu/ssa/ssa.inc"
     eOperandTotal
 } opkind_t;
 
@@ -79,23 +65,8 @@ typedef struct operand_t
 
 typedef enum opcode_t
 {
-    // control flow
-    eOpReturn,
-    eOpJmp, ///< unconditional jump
-    eOpBranch, ///< conditional jump
-
-    // effects
-    eOpStore,
-    eOpLoad,
-
-    // expressions
-    eOpValue,
-    eOpUnary,
-    eOpBinary,
-    eOpCompare,
-    eOpCast,
-    eOpCall,
-
+#define SSA_OPCODE(id, name) id,
+#include "cthulhu/ssa/ssa.inc"
     eOpTotal
 } opcode_t;
 
@@ -188,9 +159,11 @@ typedef struct module_t
 {
     section_t symbols;
 
-    section_t imports;
-    section_t exports;
+    //section_t imports;
+    //section_t exports;
 } module_t;
 
-module_t *emit_module(reports_t *reports, vector_t *mods);
-void eval_module(reports_t *reports, module_t *mod);
+module_t *gen_module(reports_t *reports, vector_t *mods);
+void emit_module(reports_t *reports, module_t *mod);
+
+void opt_module(reports_t *reports, module_t *mod);

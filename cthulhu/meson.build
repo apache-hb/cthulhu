@@ -33,7 +33,9 @@ generic = declare_dependency(
 
 src = [
     'src/ssa/ssa.c',
-    'src/ssa/eval.c'
+    'src/ssa/emit.c',
+    'src/ssa/eval.c',
+    'src/ssa/common.c'
 ]
 
 libssa = library('ssa', src,

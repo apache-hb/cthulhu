@@ -22,6 +22,14 @@
 static const char *kPostRunNames[] = {"-T", "--then"};
 #define TOTAL_POST_RUN_NAMES (sizeof(kPostRunNames) / sizeof(const char *))
 
+#define CHECK_REPORTS(msg) \
+    do { \
+        status_t err = end_reports(result.reports, msg, result.reportConfig); \
+        if (err != 0) { \
+            return err; \
+        } \
+    } while (0)
+
 int main(int argc, const char **argv)
 {
     common_init();
@@ -67,6 +75,7 @@ int main(int argc, const char **argv)
     if (totalFiles == 0)
     {
         report(result.reports, eFatal, NULL, "no input files");
+        end_reports(result.reports, "parsing arguments", reportConfig);
         return EXIT_ERROR;
     }
 
@@ -100,13 +109,14 @@ int main(int argc, const char **argv)
     vector_t *modules = cthulhu_get_modules(cthulhu);
     status_t err = EXIT_OK;
 
-    module_t *mod = emit_module(result.reports, modules);
-    err = end_reports(result.reports, "emitting ssa", result.reportConfig);
-    if (err != EXIT_OK) { return err; }
+    module_t *mod = gen_module(result.reports, modules);
+    CHECK_REPORTS("emitting ssa");
 
-    eval_module(result.reports, mod);
-    err = end_reports(result.reports, "evaluating ssa", result.reportConfig);
-    if (err != EXIT_OK) { return err; }
+    opt_module(result.reports, mod);
+    CHECK_REPORTS("optimizing ssa");
+
+    emit_module(result.reports, mod);
+    CHECK_REPORTS("emitting ssa");
 
     // test c89 output
 

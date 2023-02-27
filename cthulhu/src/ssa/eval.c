@@ -3,192 +3,155 @@
 
 #include "report/report.h"
 #include "std/vector.h"
+
 #include "std/str.h"
 #include "std/set.h"
+#include "std/map.h"
 
 #include "base/macros.h"
+#include "base/util.h"
 
-#include <stdio.h>
+#include "common.h"
 
 typedef struct {
     reports_t *reports;
-    set_t *blocks;
-} emit_t;
+    map_t *globalCache;
 
-static const char *emit_type(emit_t *emit, const type_t *type)
+    map_t *stepCache;
+    operand_t result;
+} opt_t;
+
+static operand_t *opt_global(opt_t *opt, const flow_t *flow);
+static bool eval_block(opt_t *opt, const flow_t *flow, const block_t *block);
+
+static void set_result(opt_t *opt, const flow_t *flow, operand_t result) 
 {
-    if (type == NULL)
-    {
-        return "nil";
-    }
-
-    switch (type->kind)
-    {
-    case eTypeBool: return "bool";
-    case eTypeDigit: return "digit";
-    case eTypeEmpty: return "empty";
-    case eTypeOpaque: return "ptr";
-    case eTypePointer: return format("%s*", type->ptr);
-    case eTypeStruct: return format(":%s", type->name);
-    case eTypeUnit: return "unit";
-    default: return format("err(%s)", type->name);
-    }
+    map_set_ptr(opt->globalCache, flow, BOX(result));
+    opt->result = result;
 }
 
-static const char *emit_operand(emit_t *emit, set_t *edges, operand_t op)
+static bool get_operand_digit(opt_t *opt, operand_t operand, mpz_t mpz)
 {
-    UNUSED(emit);
-
-    switch (op.kind)
+    if (operand.kind != eOperandDigitImm) 
     {
-    case eOperandEmpty: return "";
-    case eOperandReg: return format("%%%s", op.reg->id);
-    case eOperandBlock: 
-        set_add_ptr(edges, op.bb);
-        return format(".%s", op.bb->id);
-    case eOperandStringImm: return format("\"%s\"", str_normalizen(op.string.data, op.string.size));
-    case eOperandDigitImm: return format("$%s", mpz_get_str(NULL, 10, op.mpz));
-    case eOperandBoolImm: return format("%s", op.boolean ? "true" : "false");
-    case eOperandGlobal: return format("&%s", op.flow->name);
-    case eOperandLocal: return format("local[%zu]", op.local);
-    case eOperandFunction: return format("%s", op.flow->name);
-
-    default: 
-        report(emit->reports, eInternal, NULL, "unhandled operand kind %d", (int)op.kind);
-        return format("err(%d)", (int)op.kind);
+        return false;
     }
+
+    mpz_set(mpz, operand.mpz);
+    return true;
 }
 
-static const char *emit_operand_list(emit_t *emit, set_t *edges, operand_t *ops, size_t count)
+static bool eval_binary(opt_t *opt, step_t step, mpz_t result) 
 {
-    if (count == 0)
+    mpz_t lhs;
+    mpz_t rhs;
+
+    if (!get_operand_digit(opt, step.lhs, lhs))
     {
-        return "";
+        return false;
     }
 
-    vector_t *result = vector_of(count);
-    for (size_t i = 0; i < count; ++i)
+    if (!get_operand_digit(opt, step.rhs, rhs))
     {
-        vector_set(result, i, (void*)emit_operand(emit, edges, ops[i]));
+        return false;
     }
 
-    return str_join(", ", result);
-}
+    mpz_init_set_ui(result, 0);
 
-static void add_edge(set_t *edges, operand_t op)
-{
-    if (op.kind == eOperandBlock) 
+    switch (step.binary)
     {
-        set_add_ptr(edges, op.bb);
-    }
-}
-
-static void emit_step(emit_t *emit, set_t *edges, step_t *step)
-{
-    switch (step->opcode)
-    {
-    case eOpValue:
-        printf("  %%%s = %s\n", step->id, emit_operand(emit, edges, step->value));
+    case eBinaryAdd:
+        mpz_add(result, lhs, rhs);
         break;
-
-    case eOpBinary:
-        printf("  %%%s = binary %s %s %s\n", step->id, binary_name(step->binary), emit_operand(emit, edges, step->lhs), emit_operand(emit, edges, step->rhs));
+    case eBinarySub:
+        mpz_sub(result, lhs, rhs);
         break;
-
-    case eOpUnary:
-        printf("  %%%s = unary %s %s\n", step->id, unary_name(step->unary), emit_operand(emit, edges, step->operand));
+    case eBinaryMul:
+        mpz_mul(result, lhs, rhs);
         break;
-
-    case eOpLoad:
-        printf("  %%%s = load %s\n", step->id, emit_operand(emit, edges, step->value));
+    case eBinaryDiv:
+        mpz_divexact(result, lhs, rhs);
         break;
-
-    case eOpReturn:
-        printf("  ret %s %s\n", emit_type(emit, step->type), emit_operand(emit, edges, step->value));
-        break;
-
-    case eOpCast:
-        printf("  %%%s = %s<%s> %s\n", step->id, cast_name(step->cast), emit_type(emit, step->type), emit_operand(emit, edges, step->operand));
-        break;
-
-    case eOpCall: 
-        printf("  %%%s = call %s(%s)\n", step->id, emit_operand(emit, edges, step->symbol), emit_operand_list(emit, edges, step->args, step->len));
-        break;
-
-    case eOpJmp:
-        printf("  jmp %s\n", emit_operand(emit, edges, step->label));
-        add_edge(edges, step->label);
-        break;
-
-    case eOpBranch:
-        printf("  br %s %s else %s\n", emit_operand(emit, edges, step->cond), emit_operand(emit, edges, step->label), emit_operand(emit, edges, step->other));
-        add_edge(edges, step->label);
-        add_edge(edges, step->other);
-        break;
-
-    case eOpStore:
-        printf("  store %s %s\n", emit_operand(emit, edges, step->dst), emit_operand(emit, edges, step->src));
-        break;
-
-    case eOpCompare:
-        printf("  %%%s = cmp %s %s %s\n", step->id, compare_name(step->compare), emit_operand(emit, edges, step->lhs), emit_operand(emit, edges, step->rhs));
-        break;
-
     default:
-        printf("  <error> %d\n", (int)step->opcode);
+        ctu_assert(opt->reports, "unhandled binary %s", binary_name(step.binary));
         break;
     }
+
+    return true;
 }
 
-static void emit_block(emit_t *emit, const block_t *block)
+static bool eval_block(opt_t *opt, const flow_t *flow, const block_t *block)
 {
-    if (set_contains_ptr(emit->blocks, block)) 
-    {
-        return;
-    }
-    set_add_ptr(emit->blocks, block);
-
     size_t len = vector_len(block->steps);
-    set_t *edges = set_new(len);
 
-    printf(".%s:\n", block->id);
-    for (size_t i = 0; i < len; i++) 
+    for (size_t i = 0; i < len; i++)
     {
         step_t *step = vector_get(block->steps, i);
-        emit_step(emit, edges, step);
+        switch (step->opcode)
+        {
+        case eOpValue:
+            map_set_ptr(opt->stepCache, step, &step->value);
+            break;
+
+        case eOpReturn:
+            set_result(opt, flow, step->value);
+            return true;
+
+        case eOpJmp:
+            // TODO: unsafe
+            if (eval_block(opt, flow, step->label.bb)) {
+                return true;
+            }
+            break;
+
+        case eOpLoad: {
+            // TODO: also unsafe
+            operand_t *op = opt_global(opt, step->value.flow);
+            map_set_ptr(opt->stepCache, step, op);
+            break;
+        }
+
+        case eOpBinary: {
+            
+        }
+
+        default:
+            ctu_assert(opt->reports, "unhandled opcode %s", ssa_opcode_name(step->opcode));
+            break;
+        }
     }
 
-    set_iter_t iter = set_iter(edges);
-    while (set_has_next(&iter))
-    {
-        const block_t *edge = set_next(&iter);
-        emit_block(emit, edge);
+    return false;
+}
+
+static operand_t *opt_global(opt_t *opt, const flow_t *flow)
+{
+    operand_t *cached = map_get_ptr(opt->globalCache, flow);
+    if (cached != NULL) {
+        return cached;
     }
+
+    eval_block(opt, flow, flow->entry);
+
+    operand_t *result = BOX(opt->result);
+    map_set_ptr(opt->globalCache, flow, result);
+
+    return result;
 }
 
-static void emit_flow(emit_t *emit, const flow_t *flow)
+void opt_module(reports_t *reports, module_t *mod)
 {
-    printf("%s:\n", flow->name);
-    emit_block(emit, flow->entry);
-}
-
-void emit_flows(emit_t *emit, vector_t *vec)
-{
-    for (size_t i = 0; i < vector_len(vec); i++)
-    {
-        emit_flow(emit, vector_get(vec, i));
-    }
-}
-
-void eval_module(reports_t *reports, module_t *mod)
-{
-    emit_t emit = {
+    section_t symbols = mod->symbols;
+    size_t totalGlobals = vector_len(symbols.globals);
+    opt_t opt = {
         .reports = reports,
-        .blocks = set_new(0x100)
+        .globalCache = map_optimal(totalGlobals),
+        .stepCache = map_optimal(totalGlobals * 4), // TODO: better estimate
     };
 
-    section_t symbols = mod->symbols;
-
-    emit_flows(&emit, symbols.globals);
-    emit_flows(&emit, symbols.functions);
+    for (size_t i = 0; i < totalGlobals; i++) 
+    {
+        flow_t *flow = vector_get(symbols.globals, i);
+        opt_global(&opt, flow);
+    }
 }

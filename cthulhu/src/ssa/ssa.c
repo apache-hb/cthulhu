@@ -626,7 +626,7 @@ static void compile_function(ssa_t *ssa, const hlir_t *function)
     compile_stmt(ssa, function->body);
 }
 
-module_t *emit_module(reports_t *reports, vector_t *mods)
+module_t *gen_module(reports_t *reports, vector_t *mods)
 {
     ssa_t ssa = { 
         .reports = reports,
