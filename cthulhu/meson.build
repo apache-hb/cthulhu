@@ -13,10 +13,7 @@ src = [
 
     # common frontend components
     'src/interface/runtime.c',
-    'src/interface/cthulhu.c',
-
-    # tree output
-    'src/emit/c89.c'
+    'src/interface/cthulhu.c'
 ]
 
 libgeneric = library('generic', src,
@@ -46,6 +43,23 @@ libssa = library('ssa', src,
 
 ssa = declare_dependency(
     link_with : libssa,
+    include_directories : 'include',
+    dependencies : deps,
+)
+
+src = [
+    'src/emit/c89-hlir.c',
+    'src/emit/c89-ssa.c'
+]
+
+libemit = library('emit', src,
+    dependencies : deps,
+    c_args : args,
+    include_directories : 'include'
+)
+
+emit = declare_dependency(
+    link_with : libemit,
     include_directories : 'include',
     dependencies : deps,
 )

@@ -1315,7 +1315,7 @@ static void c89_emit_functions(c89_emit_t *emit, size_t totalDecls, vector_t *mo
     }
 }
 
-void c89_emit_modules(reports_t *reports, vector_t *modules, io_t *io)
+void c89_emit_hlir_modules(reports_t *reports, vector_t *modules, io_t *io)
 {
     c89_emit_t emit = {.reports = reports, .output = io};
 

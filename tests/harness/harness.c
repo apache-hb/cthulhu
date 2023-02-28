@@ -134,7 +134,7 @@ int main(int argc, const char **argv)
     char *id = ctu_strdup(path + len - needed);
     char *name = format("test-c89/%s.c", str_replace(id, "/", "."));
     io_t *c89Out = io_file(name, eFileText | eFileWrite);
-    c89_emit_modules(result.reports, modules, c89Out);
+    c89_emit_hlir_modules(result.reports, modules, c89Out);
 
     err = end_reports(result.reports, "emitting c89", result.reportConfig);
     if (err != EXIT_OK) { return err; }

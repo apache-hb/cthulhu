@@ -135,7 +135,7 @@ int main(int argc, const char **argv)
         return end_reports(reports, "opening file", reportConfig);
     }
 
-    c89_emit_modules(reports, allModules, out);
+    c89_emit_hlir_modules(reports, allModules, out);
 
     return end_reports(reports, "emitting code", reportConfig);
 }

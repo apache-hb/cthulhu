@@ -51,7 +51,7 @@ int main(int argc, const char **argv)
 
     io_t *dst = io_memory("c89-output", NULL, 0x1000);
 
-    c89_emit_modules(cthulhu->reports, allModules, dst);
+    c89_emit_hlir_modules(cthulhu->reports, allModules, dst);
 
     return end_reports(cthulhu->reports, "codegen", reportConfig);
 }
