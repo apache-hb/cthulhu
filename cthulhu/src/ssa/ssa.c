@@ -185,7 +185,7 @@ static ssa_value_t *value_new(const ssa_type_t *type)
     return it;
 }
 
-static ssa_value_t *value_digit_new(ssa_t *ssa, const hlir_t *hlir)
+static ssa_value_t *ssa_value_digit_new(ssa_t *ssa, const hlir_t *hlir)
 {
     ssa_value_t *it = value_new(ssa_get_digit_type(ssa, hlir));
 
@@ -214,7 +214,7 @@ static ssa_operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
 {
     ssa_operand_t op = {
         .kind = eOperandImm,
-        .value = value_digit_new(ssa, hlir)
+        .value = ssa_value_digit_new(ssa, hlir)
     };
 
     return op;

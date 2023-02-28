@@ -9,3 +9,5 @@ const char *ssa_kind_name(ssa_kind_t kind);
 const ssa_type_t *ssa_get_step_type(ssa_step_t step);
 
 ssa_kind_t ssa_get_value_kind(const ssa_value_t *value);
+
+ssa_value_t *value_digit_new(mpz_t digit, const ssa_type_t *type);

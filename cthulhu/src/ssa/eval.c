@@ -15,6 +15,8 @@
 
 #include "common.h"
 
+#include <stdio.h>
+
 typedef struct 
 {
     reports_t *reports;
@@ -43,7 +45,7 @@ static const ssa_value_t *get_operand_value(opt_t *opt, ssa_operand_t operand)
     case eOperandReg: return map_get_ptr(opt->stepCache, operand.vreg);
 
     default:
-        report(opt->reports, eWarn, NULL, "unhandled operand %s", ssa_operand_name(operand.kind));
+        report(opt->reports, eInternal, NULL, "unhandled operand %s", ssa_operand_name(operand.kind));
         return NULL;
     }
 }
@@ -62,7 +64,7 @@ static void opt_load(opt_t *opt, const ssa_step_t *step, ssa_operand_t src)
         break;
     }
     default:
-        report(opt->reports, eWarn, NULL, "unhandled operand %s", ssa_operand_name(src.kind));
+        report(opt->reports, eInternal, NULL, "unhandled operand %s", ssa_operand_name(src.kind));
         break;
     }
 }
@@ -79,13 +81,13 @@ static void opt_binary(opt_t *opt, const ssa_step_t *step, ssa_binary_t binary)
 
     if (lhs == NULL || rhs == NULL)
     {
-        report(opt->reports, eWarn, NULL, "unhandled binary operands");
+        report(opt->reports, eInternal, NULL, "unhandled binary operands");
         return;
     }
 
     if (!value_is(lhs, eTypeDigit) || !value_is(rhs, eTypeDigit))
     {
-        report(opt->reports, eWarn, NULL, "both operands must be ints");
+        report(opt->reports, eInternal, NULL, "both operands must be ints");
         return;
     }
 
@@ -108,9 +110,12 @@ static void opt_binary(opt_t *opt, const ssa_step_t *step, ssa_binary_t binary)
         break;
 
     default:
-        report(opt->reports, eWarn, NULL, "unhandled binary op %s", binary_name(binary.op));
+        report(opt->reports, eInternal, NULL, "unhandled binary op %s", binary_name(binary.op));
         return;
     }
+
+    // TODO: type is a hack here
+    map_set_ptr(opt->stepCache, step, value_digit_new(result, lhs->type));
 }
 
 static bool opt_block(opt_t *opt, const ssa_block_t *block)
@@ -143,7 +148,7 @@ static bool opt_block(opt_t *opt, const ssa_block_t *block)
         }
 
         default:
-            report(opt->reports, eWarn, NULL, "unhandled opcode %s", ssa_opcode_name(kind));
+            report(opt->reports, eInternal, NULL, "unhandled opcode %s", ssa_opcode_name(kind));
             return false;
         }
     }
@@ -161,7 +166,7 @@ static const ssa_value_t *opt_global(opt_t *opt, const ssa_flow_t *flow)
     
     if (!opt_block(opt, flow->entry))
     {
-        // TODO: error here
+        report(opt->reports, eInternal, NULL, "failed to optimize block");
         return NULL;
     }
 
@@ -191,6 +196,7 @@ void ssa_opt_module(reports_t *reports, ssa_module_t *mod)
     for (size_t i = 0; i < totalGlobals; i++)
     {
         ssa_flow_t *flow = vector_get(symbols.globals, i);
+        printf("build: %s\n", flow->name);
         build_global(&opt, flow);
     }
 }

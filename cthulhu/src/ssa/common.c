@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "base/memory.h"
+#include "cthulhu/ssa/ssa.h"
 #include "std/str.h"
 #include "base/panic.h"
 
@@ -38,4 +40,12 @@ ssa_kind_t ssa_get_value_kind(const ssa_value_t *value)
     CTASSERT(value != NULL);
     CTASSERT(value->type != NULL);
     return value->type->kind;
+}
+
+ssa_value_t *value_digit_new(mpz_t digit, const ssa_type_t *type)
+{
+    ssa_value_t *value = ctu_malloc(sizeof(ssa_value_t));
+    value->type = type;
+    mpz_init_set(value->digit, digit);
+    return value;
 }
