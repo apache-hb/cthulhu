@@ -3,9 +3,12 @@
 #include "base/util.h"
 #include "platform.h"
 #include "std/str.h"
+
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
+#include <unistd.h>
+
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -52,6 +55,19 @@ native_cerror_t native_make_directory(const char *path)
         {
             return err;
         }
+    }
+
+    return 0;
+}
+
+USE_DECL
+native_cerror_t native_delete_file(const char *path)
+{
+    int res = unlink(path);
+
+    if (res == -1)
+    {
+        return native_get_last_error();
     }
 
     return 0;

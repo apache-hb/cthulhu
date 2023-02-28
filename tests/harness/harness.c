@@ -17,7 +17,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h>
+#include <string.h>
+
+#ifdef _WIN32
+#   include <windows.h>
+#else
+#   include <unistd.h>
+#endif
 
 static const char *kPostRunNames[] = {"-T", "--then"};
 #define TOTAL_POST_RUN_NAMES (sizeof(kPostRunNames) / sizeof(const char *))
@@ -142,8 +148,8 @@ int main(int argc, const char **argv)
         return status;
     }
 
-    DeleteFileA(name);
-    DeleteFileA(format("%s.obj", name));
+    delete_file(name);
+    delete_file(format("%s.obj", name));
 
     return 0;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cthulhu/hlir/string-view.h"
 #include "cthulhu/hlir/digit.h"
 #include "cthulhu/hlir/ops.h"
 
@@ -43,7 +44,7 @@ typedef struct ssa_type_t
         /* empty */
 
         // eTypeString
-        /* TODO: implement */
+        /* empty */
 
         // eTypeUnit
         /* empty */
@@ -74,7 +75,7 @@ typedef struct ssa_value_t
         bool boolean;
 
         // eTypeString
-        /* TODO: implement */
+        string_view_t string; // TODO: wrong
 
         // eTypeUnit
         /* empty */
@@ -233,7 +234,7 @@ typedef struct ssa_block_t
 typedef struct ssa_flow_t
 {
     const char *name;
-    const ssa_type_t *type;
+    const ssa_value_t *value;
 
     union {
         // function

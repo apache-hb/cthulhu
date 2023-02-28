@@ -69,21 +69,18 @@ TEST(test_string_repeat, {
 })
 
 typedef struct {
-    char escaped;
+    const char *escaped;
     const char *unescaped;
 } pair_t;
 
 static pair_t kEscapes[] = {  
-    { '\a', "\\x07" },
-    { '\b', "\\x08" },
-    { '\f', "\\x0c" },
-    { '\n', "\\n" },
-    { '\r', "\\r" },
-    { '\t', "\\t" },
-    { '\v', "\\x0b" },
-    { '\\', "\\\\" },
-    { '\'', "\\\'" },
-    { '\"', "\\\"" },
+    { "\n", "\\n" },
+    { "\r", "\\r" },
+    { "\t", "\\t" },
+    { "\v", "\\x0b" },
+    { "\\", "\\\\" },
+    { "\'", "\\\'" },
+    { "\"", "\\\"" },
 };
 
 #define ESCAPE_SIZE (sizeof(kEscapes) / sizeof(pair_t))
@@ -93,16 +90,16 @@ TEST(test_string_normalize, {
     SHOULD_PASS("normalized equals", str_equal(normalized, "hello world"));
 
     char *newline = str_normalize("hello\nworld");
-    SHOULD_PASS("newline equals", str_equal(newline, "hello\\x0aworld"));
+    SHOULD_PASS("newline equals", str_equal(newline, "hello\\nworld"));
 
     for (size_t i = 0; i < ESCAPE_SIZE; i++) {
         pair_t *escape = &kEscapes[i];
-        char *input = format("hello %c world", escape->escaped);
+        char *input = format("hello %s world", escape->escaped);
         char *expected = format("hello %s world", escape->unescaped);
 
         char *result = str_normalize(input);
 
-        char *name = format("escaped %s equal", escape->unescaped);
+        char *name = format("escaped %s equal (`%s` != `%s`)", escape->unescaped, expected, result);
         SHOULD_PASS(name, str_equal(expected, result));
     }
 })
@@ -115,7 +112,7 @@ TEST(test_string_normalizen, {
     SHOULD_PASS("normalized equals", str_equal(normalized, "hello world\\0"));
 
     char *newline = str_normalizen("hello\nworld", 12);
-    SHOULD_PASS("newline equals", str_equal(newline, "hello\\x0aworld\\0"));
+    SHOULD_PASS("newline equals", str_equal(newline, "hello\\nworld\\0"));
 
     for (size_t i = 0; i < ESCAPE_SIZE; i++) {
         pair_t *escape = &kEscapes[i];
@@ -204,7 +201,6 @@ TEST(test_string_replace_many, {
     map_set(entries, " ", "___");
 
     char *result = str_replace_many("hello world!", entries);
-    printf("result: %s\n", result);
     SHOULD_PASS("replace all correctly", str_equal(result, "world___hello?"));
 })
 

@@ -20,6 +20,8 @@ typedef struct {
 
 static const char *emit_type(emit_t *emit, const ssa_type_t *type)
 {
+    UNUSED(emit);
+
     if (type == NULL)
     {
         return "nil";
@@ -40,6 +42,7 @@ static const char *emit_type(emit_t *emit, const ssa_type_t *type)
 
 static const char *emit_value(emit_t *emit, const ssa_value_t *value)
 {
+    UNUSED(emit);
     CTASSERT(value != NULL);
 
     ssa_kind_t kind = ssa_get_value_kind(value);
@@ -50,6 +53,10 @@ static const char *emit_value(emit_t *emit, const ssa_value_t *value)
         return format("%s", mpz_get_str(NULL, 10, value->digit));
     case eTypeBool:
         return format("%s", value->boolean ? "true" : "false");
+    case eTypeString: {
+        string_view_t string = value->string;
+        return format("\"%s\"", str_normalizen(string.data, string.size));
+    }
 
     default: return format("error(%s)", ssa_kind_name(kind));
     }
@@ -225,16 +232,33 @@ static void emit_block(emit_t *emit, const ssa_block_t *block)
 
 static void emit_flow(emit_t *emit, const ssa_flow_t *flow)
 {
-    printf("%s:\n", flow->name);
-    emit_block(emit, flow->entry);
+    if (flow->value != NULL) 
+    {
+        printf("%s = %s\n", flow->name, emit_value(emit, flow->value));
+    }
+    else
+    {
+        printf("%s:\n", flow->name);
+        emit_block(emit, flow->entry);
+    }
 }
 
-void emit_flows(emit_t *emit, vector_t *vec)
+static void emit_flows(emit_t *emit, vector_t *vec)
 {
     for (size_t i = 0; i < vector_len(vec); i++)
     {
         emit_flow(emit, vector_get(vec, i));
     }
+}
+
+static void emit_globals(emit_t *emit, vector_t *globals)
+{
+    emit_flows(emit, globals);
+}
+
+static void emit_functions(emit_t *emit, vector_t *functions)
+{
+    emit_flows(emit, functions);
 }
 
 void ssa_emit_module(reports_t *reports, ssa_module_t *mod)
@@ -246,6 +270,6 @@ void ssa_emit_module(reports_t *reports, ssa_module_t *mod)
 
     section_t symbols = mod->symbols;
 
-    emit_flows(&emit, symbols.globals);
-    emit_flows(&emit, symbols.functions);
+    emit_globals(&emit, symbols.globals);
+    emit_functions(&emit, symbols.functions);
 }

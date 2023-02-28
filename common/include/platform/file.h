@@ -22,6 +22,9 @@ typedef enum
 NODISCARD
 cerror_t make_directory(const char *path);
 
+NODISCARD
+cerror_t delete_file(const char *path);
+
 void file_close(file_t file);
 
 NODISCARD

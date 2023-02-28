@@ -11,6 +11,12 @@ cerror_t make_directory(const char *path)
     return native_make_directory(path);
 }
 
+USE_DECL
+cerror_t delete_file(const char *path)
+{
+    return native_delete_file(path);
+}
+
 static file_format_t get_format(file_flags_t flags)
 {
     file_flags_t fmt = flags & (eFileText | eFileBinary);

@@ -15,10 +15,10 @@
 
 #include "report/report.h"
 
+#include <stdio.h>
+
 typedef struct {
     reports_t *reports;
-
-    ssa_type_t *emptyType;
     
     map_t *globals;
     map_t *functions;
@@ -67,19 +67,20 @@ static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     }
 }
 
-static ssa_type_t *type_empty(void)
+static ssa_type_t *ssa_type_new(ssa_t *ssa, ssa_kind_t kind)
 {
+    UNUSED(ssa);
     ssa_type_t *it = ctu_malloc(sizeof(ssa_type_t));
-    it->kind = eTypeEmpty;
+    it->kind = kind;
+    it->name = NULL;
     return it;
 }
 
 static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
 {
     const hlir_t *real = hlir_follow_type(type);
-    ssa_type_t *it = ctu_malloc(sizeof(ssa_type_t));
+    ssa_type_t *it = ssa_type_new(ssa, get_type_kind(ssa, real));
     it->name = get_hlir_name(real);
-    it->kind = get_type_kind(ssa, real);
 
     if (hlir_is(real, eHlirPointer))
     {
@@ -120,10 +121,12 @@ static ssa_operand_t add_step(ssa_t *ssa, ssa_step_t step)
 
 static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol)
 {
+    UNUSED(ssa);
     ssa_flow_t *flow = ctu_malloc(sizeof(ssa_flow_t));
     flow->name = get_hlir_name(symbol);
     flow->entry = NULL;
     flow->locals = NULL;
+    flow->value = NULL;
 
     return flow;
 }
@@ -145,12 +148,11 @@ static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
 
 static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
 {
-    CTASSERT(hlir_is(digit, eHlirDigit));
+    CTASSERTF(hlir_is(digit, eHlirDigitLiteral), "expected digit, got %s", hlir_kind_to_string(get_hlir_kind(digit)));
 
     const hlir_t *type = hlir_follow_type(get_hlir_type(digit));
 
-    ssa_type_t *it = ctu_malloc(sizeof(ssa_type_t));
-    it->kind = eTypeDigit;
+    ssa_type_t *it = ssa_type_new(ssa, eTypeDigit);
     it->name = get_hlir_name(type);
     it->digit = type->width;
     it->sign = type->sign;
@@ -158,12 +160,52 @@ static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
     return it;
 }
 
+static ssa_type_t *ssa_get_bool_type(ssa_t *ssa)
+{
+    ssa_type_t *it = ssa_type_new(ssa, eTypeBool);
+    it->name = "bool"; // TODO: match frontend name
+
+    return it;
+}
+
+static ssa_type_t *ssa_get_string_type(ssa_t *ssa)
+{
+    ssa_type_t *it = ssa_type_new(ssa, eTypeString);
+    it->name = "string"; // TODO: match frontend name
+
+    return it;
+}
+
+static ssa_value_t *value_new(const ssa_type_t *type)
+{
+    CTASSERT(type != NULL);
+    ssa_value_t *it = ctu_malloc(sizeof(ssa_value_t));
+    it->type = type;
+
+    return it;
+}
+
 static ssa_value_t *value_digit_new(ssa_t *ssa, const hlir_t *hlir)
 {
-    ssa_value_t *it = ctu_malloc(sizeof(ssa_value_t));
-    it->type = ssa_get_digit_type(ssa, hlir);
-    
+    ssa_value_t *it = value_new(ssa_get_digit_type(ssa, hlir));
+
     mpz_init_set(it->digit, hlir->digit);
+
+    return it;
+}
+
+static ssa_value_t *value_bool_new(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_value_t *it = value_new(ssa_get_bool_type(ssa));
+    it->boolean = hlir->boolean;
+
+    return it;
+}
+
+static ssa_value_t *value_string_new(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_value_t *it = value_new(ssa_get_string_type(ssa));
+    it->string = hlir->stringLiteral;
 
     return it;
 }
@@ -182,7 +224,8 @@ static ssa_operand_t compile_string(ssa_t *ssa, const hlir_t *hlir)
 {
     // TODO: string
     ssa_operand_t op = {
-        .kind = eOperandImm
+        .kind = eOperandImm,
+        .value = value_string_new(ssa, hlir)
     };
 
     return op;
@@ -262,8 +305,9 @@ static ssa_operand_t compile_cast(ssa_t *ssa, const hlir_t *hlir)
 
 static ssa_operand_t compile_call(ssa_t *ssa, const hlir_t *hlir)
 {
-    ssa_operand_t *args = ctu_malloc(sizeof(ssa_operand_t) * MAX(vector_len(hlir->args), 1));
-    for (size_t i = 0; i < vector_len(hlir->args); i++)
+    size_t len = vector_len(hlir->args);
+    ssa_operand_t *args = ctu_malloc(sizeof(ssa_operand_t) * MAX(len, 1));
+    for (size_t i = 0; i < len; i++)
     {
         args[i] = compile_rvalue(ssa, vector_get(hlir->args, i));
     }
@@ -272,10 +316,11 @@ static ssa_operand_t compile_call(ssa_t *ssa, const hlir_t *hlir)
 
     ssa_step_t step = {
         .opcode = eOpCall,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .args = args,
-        .len = vector_len(hlir->args),
-        .symbol = func,
+        .call = {
+            .args = args,
+            .len = len,
+            .symbol = func
+        }
     };
 
     return add_step(ssa, step);
@@ -284,11 +329,11 @@ static ssa_operand_t compile_call(ssa_t *ssa, const hlir_t *hlir)
 static ssa_operand_t compile_name(ssa_t *ssa, const hlir_t *hlir)
 {
     const ssa_flow_t *ref = map_get_ptr(ssa->functions, hlir);
+    CTASSERT(ref != NULL);
 
     ssa_operand_t op = {
         .kind = eOperandFunction,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .flow = ref
+        .function = ref
     };
 
     return op;
@@ -301,8 +346,7 @@ static ssa_operand_t compile_global_lvalue(ssa_t *ssa, const hlir_t *hlir)
 
     ssa_operand_t op = {
         .kind = eOperandGlobal,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .flow = ref
+        .global = ref
     };
 
     return op;
@@ -314,9 +358,10 @@ static ssa_operand_t compile_unary(ssa_t *ssa, const hlir_t *hlir)
 
     ssa_step_t step = {
         .opcode = eOpUnary,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .unary = hlir->unary,
-        .operand = op
+        .unary = {
+            .op = hlir->unary,
+            .operand = op
+        }
     };
 
     return add_step(ssa, step);
@@ -328,14 +373,13 @@ static ssa_operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
 
     ssa_operand_t op = {
         .kind = eOperandLocal,
-        .type = type_new(ssa, get_hlir_type(hlir)),
         .local = idx
     };
 
     return op;
 }
 
-static ssa_operand_t operand_bb(const block_t *dst)
+static ssa_operand_t operand_bb(const ssa_block_t *dst)
 {
     ssa_operand_t op = {
         .kind = eOperandBlock,
@@ -429,9 +473,10 @@ static ssa_operand_t compile_assign(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpStore,
-        .type = type_new(ssa, get_hlir_type(stmt->dst)),
-        .dst = dst,
-        .src = src   
+        .store = {
+            .dst = dst,
+            .src = src
+        }
     };
 
     return add_step(ssa, step);
@@ -444,10 +489,11 @@ static ssa_operand_t compile_compare_compare(ssa_t *ssa, const hlir_t *cond)
 
     ssa_step_t step = {
         .opcode = eOpCompare,
-        .type = type_new(ssa, get_hlir_type(cond->lhs)),
-        .compare = cond->compare,
-        .lhs = lhs,
-        .rhs = rhs
+        .compare = {
+            .op = cond->compare,
+            .lhs = lhs,
+            .rhs = rhs
+        }
     };
 
     return add_step(ssa, step);
@@ -456,9 +502,8 @@ static ssa_operand_t compile_compare_compare(ssa_t *ssa, const hlir_t *cond)
 static ssa_operand_t compile_compare_bool(ssa_t *ssa, const hlir_t *cond)
 {
     ssa_operand_t op = {
-        .kind = eOperandBoolImm,
-        .type = type_new(ssa, get_hlir_type(cond)),
-        .boolean = cond->boolean
+        .kind = eOperandImm,
+        .value = value_bool_new(ssa, cond)
     };
 
     return op;
@@ -483,13 +528,14 @@ static ssa_operand_t compile_compare(ssa_t *ssa, const hlir_t *cond)
 
 static ssa_operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 {
-    block_t *loop = block_gen(ssa, "loop");
-    block_t *tail = block_gen(ssa, "tail");
+    ssa_block_t *loop = block_gen(ssa, "loop");
+    ssa_block_t *tail = block_gen(ssa, "tail");
 
     ssa_step_t step = {
         .opcode = eOpJmp,
-        .type = ssa->emptyType,
-        .label = operand_bb(loop)
+        .jmp = {
+            .label = operand_bb(loop)
+        }
     };
 
     add_step(ssa, step);
@@ -499,10 +545,11 @@ static ssa_operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t ret = {
         .opcode = eOpBranch,
-        .type = ssa->emptyType,
-        .cond = compile_compare(ssa, stmt->cond),
-        .label = operand_bb(loop),
-        .other = operand_bb(tail)
+        .branch = {
+            .cond = compile_compare(ssa, stmt->cond),
+            .truthy = operand_bb(loop),
+            .falsey = operand_bb(tail)
+        }
     };
 
     add_step(ssa, ret);
@@ -514,22 +561,24 @@ static ssa_operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 
 static ssa_operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
 {
-    block_t *then = block_gen(ssa, "then");
-    block_t *other = stmt->other != NULL ? block_gen(ssa, "other") : NULL;
-    block_t *tail = block_gen(ssa, "tail");
+    ssa_block_t *then = block_gen(ssa, "then");
+    ssa_block_t *other = stmt->other != NULL ? block_gen(ssa, "other") : NULL;
+    ssa_block_t *tail = block_gen(ssa, "tail");
 
     ssa_step_t ret = {
         .opcode = eOpJmp,
-        .type = ssa->emptyType,
-        .label = operand_bb(tail)
+        .jmp = {
+            .label = operand_bb(tail)
+        }
     };
 
     ssa_step_t step = {
         .opcode = eOpBranch,
-        .type = ssa->emptyType,
-        .cond = compile_compare(ssa, stmt->cond),
-        .label = operand_bb(then),
-        .other = other != NULL ? operand_bb(other) : operand_bb(tail)
+        .branch = {
+            .cond = compile_compare(ssa, stmt->cond),
+            .truthy = operand_bb(then),
+            .falsey = other != NULL ? operand_bb(other) : operand_bb(tail)
+        }
     };
 
     add_step(ssa, step);
@@ -556,12 +605,12 @@ static ssa_operand_t compile_return(ssa_t *ssa, const hlir_t *stmt)
 {
     const hlir_t *result = stmt->result;
     ssa_operand_t op = result != NULL ? compile_rvalue(ssa, result) : operand_empty();
-    ssa_type_t *type = result != NULL ? type_new(ssa, get_hlir_type(result)) : ssa->emptyType;
 
     ssa_step_t step = {
         .opcode = eOpReturn,
-        .type = type,
-        .src = op
+        .ret = {
+            .value = op,
+        }
     };
 
     return add_step(ssa, step);
@@ -601,7 +650,7 @@ static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
 
 static void compile_flow(ssa_t *ssa, ssa_flow_t *flow)
 {
-    block_t *block = block_new("entry");
+    ssa_block_t *block = block_new("entry");
     flow->entry = block;
     ssa->currentBlock = block;
     ssa->stepIdx = 0;
@@ -613,17 +662,12 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
     ssa_flow_t *flow = map_get_ptr(ssa->globals, global);
     compile_flow(ssa, flow);
 
-    // TODO: might be wrong
-    if (global->value == NULL) 
-    {
-        return;
-    }
-
-    ssa_operand_t result = compile_rvalue(ssa, global->value);
+    ssa_operand_t result = global->value == NULL ? operand_empty() : compile_rvalue(ssa, global->value);
     ssa_step_t step = {
         .opcode = eOpReturn,
-        .type = type_new(ssa, get_hlir_type(global)),
-        .value = result
+        .ret = {
+            .value = result
+        }
     };
     add_step(ssa, step);
 }
@@ -631,6 +675,7 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
 static void compile_function(ssa_t *ssa, const hlir_t *function)
 {
     ssa_flow_t *flow = map_get_ptr(ssa->functions, function);
+    CTASSERT(flow != NULL);
 
     size_t len = vector_len(function->locals);
     ssa->currentLocals = map_optimal(len);
@@ -654,25 +699,15 @@ static void compile_function(ssa_t *ssa, const hlir_t *function)
     compile_stmt(ssa, function->body);
 }
 
-ssa_module_t *gen_module(reports_t *reports, vector_t *mods)
+ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods)
 {
     ssa_t ssa = { 
         .reports = reports,
-        .emptyType = type_empty(),
         .globals = map_optimal(0x1000),
         .functions = map_optimal(0x1000),
         .strings = set_new(0x1000),
         .importedSymbols = map_optimal(0x1000)
     };
-
-    for (digit_t digit = 0; digit < eDigitTotal; digit++)
-    {
-        for (sign_t sign = 0; sign < eSignTotal; sign++)
-        {
-            ssa_type_t *type = type_new(&ssa, type_int(digit, sign));
-            map_set_ptr(ssa.types, type->type, type);
-        }
-    }
 
     size_t len = vector_len(mods);
     for (size_t i = 0; i < len; i++)

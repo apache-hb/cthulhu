@@ -221,7 +221,7 @@ static size_t normstr(char *out, char c)
         return 1;
     }
 
-    /* handle C shortcuts */
+    /* handle C shorthand */
     switch (c) 
     {
     case '\\':

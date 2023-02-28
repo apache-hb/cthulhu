@@ -143,8 +143,6 @@ static const char *c89_mangle_qualified(c89_emit_t *emit, const hlir_t *type)
         result = format("%s%s", result, c89_mangle_section(name));
     }
 
-    
-
     return format("%s%zu%s", result, strlen(declName), declName);
 }
 
