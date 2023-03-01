@@ -21,12 +21,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "common.h"
+
 typedef struct
 {
-    reports_t *reports;
-    io_t *output;
-
-    size_t depth;
+    emit_t emit;
 
     // map of hlir -> string
     map_t *mangledNames;
@@ -34,28 +33,10 @@ typedef struct
     vector_t *path; // current path of decls
 } c89_emit_t;
 
-static const char *kIndent = "  ";
+#define REPORTS(it) ((it)->emit.reports)
 
-static void write_string(c89_emit_t *emit, const char *str)
-{
-    size_t indentLen = strlen(kIndent);
-    for (size_t i = 0; i < emit->depth; i++)
-    {
-        io_write(emit->output, kIndent, indentLen);
-    }
-
-    io_write(emit->output, str, strlen(str));
-}
-
-static void begin_indent(c89_emit_t *emit)
-{
-    emit->depth++;
-}
-
-static void end_indent(c89_emit_t *emit)
-{
-    emit->depth--;
-}
+#define EMIT_STRING(it, str) WRITE_STRING(&it->emit, str)
+#define EMIT_STRINGF(it, fmt, ...) WRITE_STRINGF(&it->emit, fmt, __VA_ARGS__)
 
 static char *c89_mangle_section(const char *section)
 {
@@ -175,7 +156,7 @@ static const char *c89_mangle_type_inner(c89_emit_t *emit, const hlir_t *type)
         return "KPc"; // const char *
 
     default:
-        report(emit->reports, eFatal, get_hlir_node(type), "cannot mangle %s", hlir_kind_to_string(kind));
+        report(REPORTS(emit), eFatal, get_hlir_node(type), "cannot mangle %s", hlir_kind_to_string(kind));
         return "";
     }
 }
@@ -259,9 +240,6 @@ static const char *c89_mangle_name(c89_emit_t *emit, const hlir_t *hlir)
     map_set_ptr(emit->mangledNames, hlir, (char*)mangledName);
     return mangledName;
 }
-
-#define WRITE_STRINGF(emit, str, ...) write_string(emit, format(str, __VA_ARGS__))
-#define WRITE_STRING(emit, str) write_string(emit, str)
 
 static const char *c89_emit_type(c89_emit_t *emit, const hlir_t *hlir, const char *name);
 static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir);
@@ -455,7 +433,7 @@ static const char *c89_emit_inner_type(c89_emit_t *emit, const hlir_t *hlir, con
         return c89_emit_type(emit, get_hlir_type(hlir), name);
 
     default:
-        ctu_assert(emit->reports, "cannot emit %s as a type", hlir_kind_to_string(kind));
+        ctu_assert(emit->emit.reports, "cannot emit %s as a type", hlir_kind_to_string(kind));
         return "error";
     }
 }
@@ -474,32 +452,32 @@ static void c89_emit_assign(c89_emit_t *emit, const hlir_t *hlir)
     const char *dst = c89_emit_lvalue(emit, hlir->dst);
     const char *src = c89_emit_rvalue(emit, hlir->src);
 
-    WRITE_STRINGF(emit, "%s = %s;\n", dst, src);
+    EMIT_STRINGF(emit, "%s = %s;\n", dst, src);
 }
 
 static void c89_emit_branch(c89_emit_t *emit, const hlir_t *hlir)
 {
     const char *cond = c89_emit_rvalue(emit, hlir->cond);
 
-    WRITE_STRINGF(emit, "if (%s)\n", cond);
-    WRITE_STRING(emit, "{\n");
+    EMIT_STRINGF(emit, "if (%s)\n", cond);
+    EMIT_STRING(emit, "{\n");
 
-    begin_indent(emit);
+    emit_indent(&emit->emit);
     c89_emit_stmt(emit, hlir->then);
-    end_indent(emit);
+    emit_dedent(&emit->emit);
 
-    WRITE_STRING(emit, "}\n");
+    EMIT_STRING(emit, "}\n");
 
     if (hlir->other != NULL)
     {
-        WRITE_STRING(emit, "else\n");
-        WRITE_STRING(emit, "{\n");
+        EMIT_STRING(emit, "else\n");
+        EMIT_STRING(emit, "{\n");
 
-        begin_indent(emit);
+        emit_indent(&emit->emit);
         c89_emit_stmt(emit, hlir->other);
-        end_indent(emit);
+        emit_dedent(&emit->emit);
 
-        WRITE_STRING(emit, "}\n");
+        EMIT_STRING(emit, "}\n");
     }
 }
 
@@ -531,32 +509,32 @@ static void c89_emit_loop(c89_emit_t *emit, const hlir_t *hlir)
 
     if (hlir->other != NULL)
     {
-        WRITE_STRINGF(emit, "int __used_loop%ld_%ld = 0;\n", where.firstLine, where.firstColumn);
+        EMIT_STRINGF(emit, "int __used_loop%ld_%ld = 0;\n", where.firstLine, where.firstColumn);
     }
 
-    WRITE_STRINGF(emit, "while (%s)\n", cond);
-    WRITE_STRING(emit, "{\n");
+    EMIT_STRINGF(emit, "while (%s)\n", cond);
+    EMIT_STRING(emit, "{\n");
 
-    begin_indent(emit);
+    emit_indent(&emit->emit);
 
     if (hlir->other != NULL)
     {
-        WRITE_STRINGF(emit, "__used_loop%ld_%ld = 1;\n", where.firstLine, where.firstColumn);
+        EMIT_STRINGF(emit, "__used_loop%ld_%ld = 1;\n", where.firstLine, where.firstColumn);
     }
 
     c89_emit_stmt(emit, hlir->then);
-    end_indent(emit);
+    emit_dedent(&emit->emit);
 
-    WRITE_STRING(emit, "}\n");
+    EMIT_STRING(emit, "}\n");
 
     if (hlir->other != NULL)
     {
-        WRITE_STRINGF(emit, "if (!__used_loop%ld_%ld)\n", where.firstLine, where.firstColumn);
-        WRITE_STRING(emit, "{\n");
-        begin_indent(emit);
+        EMIT_STRINGF(emit, "if (!__used_loop%ld_%ld)\n", where.firstLine, where.firstColumn);
+        EMIT_STRING(emit, "{\n");
+        emit_indent(&emit->emit);
         c89_emit_stmt(emit, hlir->other);
-        end_indent(emit);
-        WRITE_STRING(emit, "}\n");
+        emit_dedent(&emit->emit);
+        EMIT_STRING(emit, "}\n");
     }
 }
 
@@ -564,11 +542,11 @@ static void c89_emit_return(c89_emit_t *emit, const hlir_t *hlir)
 {
     if (hlir->result != NULL)
     {
-        WRITE_STRINGF(emit, "return %s;\n", c89_emit_rvalue(emit, hlir->result));
+        EMIT_STRINGF(emit, "return %s;\n", c89_emit_rvalue(emit, hlir->result));
     }
     else
     {
-        WRITE_STRING(emit, "return;\n");
+        EMIT_STRING(emit, "return;\n");
     }
 }
 
@@ -615,7 +593,7 @@ static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
         break;
 
     case eHlirCall:
-        WRITE_STRINGF(emit, "%s;\n", c89_emit_call(emit, hlir));
+        EMIT_STRINGF(emit, "%s;\n", c89_emit_call(emit, hlir));
         break;
 
     case eHlirReturn:
@@ -624,31 +602,31 @@ static void c89_emit_stmt(c89_emit_t *emit, const hlir_t *hlir)
 
     case eHlirLocal:
     case eHlirParam:
-        WRITE_STRINGF(emit, "%s;\n", c89_emit_local_rvalue(hlir));
+        EMIT_STRINGF(emit, "%s;\n", c89_emit_local_rvalue(hlir));
         break;
 
     case eHlirLoad:
-        WRITE_STRINGF(emit, "%s;\n", c89_emit_name_lvalue(hlir->read));
+        EMIT_STRINGF(emit, "%s;\n", c89_emit_name_lvalue(hlir->read));
         break;
 
     case eHlirBreak:
         if (hlir->target != NULL)
         {
-            report(emit->reports, eInternal, get_hlir_node(hlir), "break with target not implemented");
+            report(REPORTS(emit), eInternal, get_hlir_node(hlir), "break with target not implemented");
         }
-        WRITE_STRING(emit, "break;\n");
+        EMIT_STRING(emit, "break;\n");
         break;
 
     case eHlirContinue:
         if (hlir->target != NULL)
         {
-            report(emit->reports, eInternal, get_hlir_node(hlir), "continue with target not implemented");
+            report(REPORTS(emit), eInternal, get_hlir_node(hlir), "continue with target not implemented");
         }
-        WRITE_STRING(emit, "continue;\n");
+        EMIT_STRING(emit, "continue;\n");
         break;
 
     default:
-        ctu_assert(emit->reports, "cannot emit %s as a statement", hlir_kind_to_string(kind));
+        ctu_assert(REPORTS(emit), "cannot emit %s as a statement", hlir_kind_to_string(kind));
         return;
     }
 }
@@ -680,7 +658,7 @@ static const char *c89_emit_digit_literal(c89_emit_t *emit, const hlir_t *hlir)
         return format("((%s)%s)", sign == eUnsigned ? "size_t" : "ssize_t", mpz_get_str(NULL, 10, hlir->digit));
 
     default:
-        ctu_assert(emit->reports, "digit literal with (%s, %s) not supported", hlir_sign_to_string(sign),
+        ctu_assert(REPORTS(emit), "digit literal with (%s, %s) not supported", hlir_sign_to_string(sign),
                    hlir_digit_to_string(width));
         return mpz_get_str(NULL, 10, hlir->digit);
     }
@@ -753,7 +731,7 @@ static const char *c89_emit_cast(c89_emit_t *emit, const hlir_t *hlir)
         return format("((%s)(%s))", type, expr);
 
     default:
-        report(emit->reports, eInternal, get_hlir_node(hlir), "cannot emit %d cast", hlir->cast);
+        report(REPORTS(emit), eInternal, get_hlir_node(hlir), "cannot emit %d cast", hlir->cast);
         return "";
     }
 }
@@ -780,7 +758,7 @@ static const char *c89_emit_builtin(c89_emit_t *emit, const hlir_t *hlir)
         return format("sizeof(%s)", c89_emit_type(emit, hlir->operand, NULL));
 
     default:
-        report(emit->reports, eInternal, get_hlir_node(hlir), "cannot emit %d builtin", hlir->builtin);
+        report(REPORTS(emit), eInternal, get_hlir_node(hlir), "cannot emit %d builtin", hlir->builtin);
         return "";
     }
 }
@@ -845,7 +823,7 @@ static const char *c89_emit_rvalue(c89_emit_t *emit, const hlir_t *hlir)
         return c89_emit_index(emit, hlir);
 
     default:
-        report(emit->reports, eInternal, get_hlir_node(hlir), "cannot emit rvalue for %s", hlir_kind_to_string(kind));
+        report(REPORTS(emit), eInternal, get_hlir_node(hlir), "cannot emit rvalue for %s", hlir_kind_to_string(kind));
         return "error";
     }
 }
@@ -873,7 +851,7 @@ static const char *c89_emit_lvalue(c89_emit_t *emit, const hlir_t *hlir)
         return c89_emit_local_rvalue(hlir);
 
     default:
-        ctu_assert(emit->reports, "cannot emit lvalue for %s", hlir_kind_to_string(kind));
+        ctu_assert(REPORTS(emit), "cannot emit lvalue for %s", hlir_kind_to_string(kind));
         return "error";
     }
 }
@@ -892,7 +870,7 @@ static const char *c89_emit_outer_type(c89_emit_t *emit, const hlir_t *hlir, con
     if (attribs->tags & eQualAtomic)
     {
         node_t *node = get_hlir_node(hlir);
-        report(emit->reports, eWarn, node, "atomic types are not supported yet");
+        report(REPORTS(emit), eWarn, node, "atomic types are not supported yet");
     }
 
     if (attribs->tags & eQualVolatile)
@@ -917,7 +895,7 @@ static void c89_emit_aggregate_decl(c89_emit_t *emit, const hlir_t *hlir, const 
 {
     size_t totalFields = vector_len(hlir->fields);
 
-    WRITE_STRINGF(emit, "%s %s\n{\n", aggregate, c89_mangle_name(emit, hlir));
+    EMIT_STRINGF(emit, "%s %s\n{\n", aggregate, c89_mangle_name(emit, hlir));
 
     for (size_t i = 0; i < totalFields; i++)
     {
@@ -925,10 +903,10 @@ static void c89_emit_aggregate_decl(c89_emit_t *emit, const hlir_t *hlir, const 
         const char *name = c89_mangle_name(emit, field);
         const char *entry = c89_emit_type(emit, get_hlir_type(field), name);
 
-        WRITE_STRINGF(emit, "  %s;\n", entry);
+        EMIT_STRINGF(emit, "  %s;\n", entry);
     }
 
-    WRITE_STRING(emit, "};\n");
+    EMIT_STRING(emit, "};\n");
 }
 
 static void c89_emit_typedef(c89_emit_t *emit, const hlir_t *hlir)
@@ -945,7 +923,7 @@ static void c89_emit_typedef(c89_emit_t *emit, const hlir_t *hlir)
         break;
 
     default:
-        ctu_assert(emit->reports, "cannot emit typedef for %s", hlir_kind_to_string(kind));
+        ctu_assert(REPORTS(emit), "cannot emit typedef for %s", hlir_kind_to_string(kind));
         break;
     }
 }
@@ -1004,7 +982,7 @@ static void visit_type(c89_emit_t *emit, vector_t **result, const hlir_t *hlir)
         break;
 
     default:
-        ctu_assert(emit->reports, "invalid type kind %s", hlir_kind_to_string(kind));
+        ctu_assert(REPORTS(emit), "invalid type kind %s", hlir_kind_to_string(kind));
         break;
     }
 }
@@ -1092,7 +1070,7 @@ static void c89_forward_global(c89_emit_t *emit, const hlir_t *hlir)
     const char *linkage = c89_get_linkage(attribs->linkage);
     const char *type = c89_emit_type(emit, get_hlir_type(hlir), name);
 
-    WRITE_STRINGF(emit, "%s%s[1];\n", linkage, type);
+    EMIT_STRINGF(emit, "%s%s[1];\n", linkage, type);
 }
 
 static void c89_emit_global(c89_emit_t *emit, const hlir_t *hlir)
@@ -1110,11 +1088,11 @@ static void c89_emit_global(c89_emit_t *emit, const hlir_t *hlir)
     if (hlir->value != NULL)
     {
         const char *expr = c89_emit_rvalue(emit, hlir->value);
-        WRITE_STRINGF(emit, "%s%s[1] = { %s };\n", linkage, type, expr);
+        EMIT_STRINGF(emit, "%s%s[1] = { %s };\n", linkage, type, expr);
     }
     else
     {
-        WRITE_STRINGF(emit, "%s%s[1];\n", linkage, type);
+        EMIT_STRINGF(emit, "%s%s[1];\n", linkage, type);
     }
 }
 
@@ -1218,26 +1196,26 @@ static void c89_function_header(c89_emit_t *emit, const hlir_t *function)
         break;
 
     default:
-        report(emit->reports, eInternal, get_hlir_node(function), "unknown linkage type");
+        report(REPORTS(emit), eInternal, get_hlir_node(function), "unknown linkage type");
         break;
     }
 
     if (vector_len(closureParams) == 0)
     {
         const char *variaidc = closure_variadic(function) ? "" : "void";
-        WRITE_STRINGF(emit, "%s%s(%s)", linkage, result, variaidc);
+        EMIT_STRINGF(emit, "%s%s(%s)", linkage, result, variaidc);
     }
     else
     {
         const char *variadic = closure_variadic(function) ? ", ..." : "";
-        WRITE_STRINGF(emit, "%s%s(%s%s)", linkage, result, params, variadic);
+        EMIT_STRINGF(emit, "%s%s(%s%s)", linkage, result, params, variadic);
     }
 }
 
 static void c89_forward_function(c89_emit_t *emit, const hlir_t *function)
 {
     c89_function_header(emit, function);
-    WRITE_STRING(emit, ";\n");
+    EMIT_STRING(emit, ";\n");
 }
 
 static void c89_emit_function(c89_emit_t *emit, const hlir_t *function)
@@ -1249,9 +1227,9 @@ static void c89_emit_function(c89_emit_t *emit, const hlir_t *function)
 
     c89_function_header(emit, function);
 
-    WRITE_STRING(emit, "\n{\n");
+    EMIT_STRING(emit, "\n{\n");
 
-    begin_indent(emit);
+    emit_indent(&emit->emit);
 
     vector_t *locals = function->locals;
     size_t numLocals = vector_len(locals);
@@ -1261,14 +1239,14 @@ static void c89_emit_function(c89_emit_t *emit, const hlir_t *function)
         hlir_t *local = vector_get(locals, i);
         const char *name = get_hlir_name(local);
         const char *type = c89_emit_local_type(emit, get_hlir_type(local), format("%s[1]", name));
-        WRITE_STRINGF(emit, "%s;\n", type);
+        EMIT_STRINGF(emit, "%s;\n", type);
     }
 
     c89_emit_stmt(emit, function->body);
 
-    end_indent(emit);
+    emit_dedent(&emit->emit);
 
-    WRITE_STRING(emit, "}\n");
+    EMIT_STRING(emit, "}\n");
 }
 
 static void c89_emit_functions(c89_emit_t *emit, size_t totalDecls, vector_t *modules)
@@ -1317,7 +1295,13 @@ static void c89_emit_functions(c89_emit_t *emit, size_t totalDecls, vector_t *mo
 
 void c89_emit_hlir_modules(reports_t *reports, vector_t *modules, io_t *io)
 {
-    c89_emit_t emit = {.reports = reports, .output = io};
+    c89_emit_t emit = {
+        .emit = {
+            .reports = reports,
+            .io = io,
+            .indent = 0
+        }
+    };
 
     size_t totalDecls = 0;
     size_t totalModules = vector_len(modules);
@@ -1333,11 +1317,10 @@ void c89_emit_hlir_modules(reports_t *reports, vector_t *modules, io_t *io)
 
     // then use the total number of types to create a fast map
     emit.mangledNames = map_optimal(totalDecls);
-    emit.depth = 0;
     emit.path = vector_new(4);
 
-    WRITE_STRING(&emit, "#include <stddef.h>\n");
-    WRITE_STRING(&emit, "#include <stdint.h>\n");
+    WRITE_STRING(&emit.emit, "#include <stddef.h>\n");
+    WRITE_STRING(&emit.emit, "#include <stdint.h>\n");
 
     c89_emit_types(&emit, modules);
     c89_emit_globals(&emit, totalDecls, modules);

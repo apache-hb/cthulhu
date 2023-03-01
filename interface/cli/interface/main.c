@@ -112,6 +112,7 @@ int main(int argc, const char **argv)
     }
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
+    io_t *out = io_file(outFile, eFileWrite | eFileBinary);
 
     if (enableSsa)
     {
@@ -122,11 +123,12 @@ int main(int argc, const char **argv)
         CHECK_REPORTS("optimizing ssa");
 
         ssa_emit_module(reports, mod);
+        CHECK_REPORTS("emitting ssa");
 
-        return end_reports(reports, "emitting ssa", reportConfig);
+        c89_emit_ssa_modules(reports, mod, out);
+
+        return end_reports(reports, "generating c89 from ssa", reportConfig);
     }
-
-    io_t *out = io_file(outFile, eFileWrite | eFileBinary);
 
     if (io_error(out) != 0)
     {
