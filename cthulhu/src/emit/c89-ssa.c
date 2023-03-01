@@ -80,16 +80,28 @@ static const char *emit_value(c89_ssa_emit_t *emit, const ssa_value_t *value)
     }
 }
 
-static void c89_emit_ssa_global(c89_ssa_emit_t *emit, const ssa_flow_t *flow)
+static void c89_emit_ssa_global(c89_ssa_emit_t *emit, const ssa_flow_t *global)
 {
-    CTASSERT(flow->value != NULL);
+    CTASSERT(global->value != NULL);
 
-    const char *name = flow->name;
+    const char *name = global->name;
 
-    const char *type = get_type_name(emit, flow->value->type);
-    const char *value = emit_value(emit, flow->value);
+    const char *type = get_type_name(emit, global->value->type);
+    const char *value = emit_value(emit, global->value);
 
     WRITE_STRINGF(&emit->emit, "%s %s = %s;\n", type, name, value);
+}
+
+static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
+{
+    UNUSED(emit);
+    UNUSED(function);
+}
+
+static void c89_fwd_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
+{
+    UNUSED(emit);
+    UNUSED(function);
 }
 
 void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)
@@ -105,9 +117,20 @@ void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)
     section_t symbols = module->symbols;
 
     size_t totalGlobals = vector_len(symbols.globals);
+    size_t totalFunctions = vector_len(symbols.functions);
 
     for (size_t i = 0; i < totalGlobals; i++)
     {
         c89_emit_ssa_global(&emit, vector_get(symbols.globals, i));
+    }
+
+    for (size_t i = 0; i < totalFunctions; i++)
+    {
+        c89_fwd_function(&emit, vector_get(symbols.functions, i));
+    }
+
+    for (size_t i = 0; i < totalFunctions; i++)
+    {
+        c89_emit_function(&emit, vector_get(symbols.functions, i));
     }
 }

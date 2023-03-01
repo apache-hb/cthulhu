@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 typedef struct reports_t reports_t;
 typedef struct io_t io_t;
 

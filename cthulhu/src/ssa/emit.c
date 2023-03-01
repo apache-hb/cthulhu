@@ -230,7 +230,13 @@ static void emit_block(emit_t *emit, const ssa_block_t *block)
     }
 }
 
-static void emit_flow(emit_t *emit, const ssa_flow_t *flow)
+static void emit_function(emit_t *emit, const ssa_flow_t *flow)
+{
+    printf("%s:\n", flow->name);
+    emit_block(emit, flow->entry);
+}
+
+static void emit_global(emit_t *emit, const ssa_flow_t *flow)
 {
     if (flow->value != NULL) 
     {
@@ -243,22 +249,20 @@ static void emit_flow(emit_t *emit, const ssa_flow_t *flow)
     }
 }
 
-static void emit_flows(emit_t *emit, vector_t *vec)
-{
-    for (size_t i = 0; i < vector_len(vec); i++)
-    {
-        emit_flow(emit, vector_get(vec, i));
-    }
-}
-
 static void emit_globals(emit_t *emit, vector_t *globals)
 {
-    emit_flows(emit, globals);
+    for (size_t i = 0; i < vector_len(globals); i++)
+    {
+        emit_global(emit, vector_get(globals, i));
+    }
 }
 
 static void emit_functions(emit_t *emit, vector_t *functions)
 {
-    emit_flows(emit, functions);
+    for (size_t i = 0; i < vector_len(functions); i++)
+    {
+        emit_function(emit, vector_get(functions, i));
+    }
 }
 
 void ssa_emit_module(reports_t *reports, ssa_module_t *mod)

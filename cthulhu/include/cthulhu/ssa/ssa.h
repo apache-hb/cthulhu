@@ -8,9 +8,6 @@
 
 #include <gmp.h>
 
-// TODO: this is all bunk
-// rewrite it all
-
 typedef struct vector_t vector_t;
 typedef struct reports_t reports_t;
 
@@ -56,6 +53,11 @@ typedef struct ssa_type_t
         /* TODO: implement */
 
         // eTypeSignature
+        struct {
+            const ssa_type_t *result;
+            vector_t *args;
+        };
+
         /* TODO: implement */
 
         // eTypeStruct
@@ -234,14 +236,21 @@ typedef struct ssa_block_t
 typedef struct ssa_flow_t
 {
     const char *name;
-    const ssa_value_t *value;
+    const ssa_type_t *type;
 
     union {
-        // function
+        // local or exported symbol
         struct
         {
             ssa_block_t *entry;
-            vector_t *locals; // vector_t<ssa_type_t*>
+
+            union {
+                // function
+                vector_t *locals;
+                
+                // global
+                const ssa_value_t *value; 
+            };
         };
 
         // imported symbol

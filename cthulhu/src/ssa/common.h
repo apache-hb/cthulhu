@@ -11,3 +11,4 @@ const ssa_type_t *ssa_get_step_type(ssa_step_t step);
 ssa_kind_t ssa_get_value_kind(const ssa_value_t *value);
 
 ssa_value_t *value_digit_new(mpz_t digit, const ssa_type_t *type);
+ssa_value_t *value_empty_new(const ssa_type_t *type);

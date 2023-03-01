@@ -5,6 +5,13 @@
 #include "std/str.h"
 #include "base/panic.h"
 
+static ssa_value_t *ssa_value_new(const ssa_type_t *type) 
+{
+    ssa_value_t *value = ctu_malloc(sizeof(ssa_value_t));
+    value->type = type;
+    return value;
+}
+
 const char *ssa_opcode_name(ssa_opcode_t op) 
 {
 #define SSA_OPCODE(id, name) case id: return name;
@@ -44,8 +51,13 @@ ssa_kind_t ssa_get_value_kind(const ssa_value_t *value)
 
 ssa_value_t *value_digit_new(mpz_t digit, const ssa_type_t *type)
 {
-    ssa_value_t *value = ctu_malloc(sizeof(ssa_value_t));
-    value->type = type;
+    ssa_value_t *value = ssa_value_new(type);
     mpz_init_set(value->digit, digit);
+    return value;
+}
+
+ssa_value_t *value_empty_new(const ssa_type_t *type)
+{
+    ssa_value_t *value = ssa_value_new(type);
     return value;
 }

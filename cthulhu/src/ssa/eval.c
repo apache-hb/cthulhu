@@ -1,7 +1,6 @@
 #include "cthulhu/hlir/ops.h"
 #include "cthulhu/ssa/ssa.h"
 
-#include "mini-gmp.h"
 #include "report/report.h"
 #include "src/ssa/common.h"
 #include "std/vector.h"
@@ -178,7 +177,8 @@ static const ssa_value_t *opt_global(opt_t *opt, const ssa_flow_t *flow)
 
 static void build_global(opt_t *opt, ssa_flow_t *flow)
 {
-    flow->value = opt_global(opt, flow);
+    // TODO: where do we get a type from?
+    flow->value = flow->entry == NULL ? value_empty_new(NULL) : opt_global(opt, flow);
 }
 
 void ssa_opt_module(reports_t *reports, ssa_module_t *mod)
@@ -196,7 +196,6 @@ void ssa_opt_module(reports_t *reports, ssa_module_t *mod)
     for (size_t i = 0; i < totalGlobals; i++)
     {
         ssa_flow_t *flow = vector_get(symbols.globals, i);
-        printf("build: %s\n", flow->name);
         build_global(&opt, flow);
     }
 }

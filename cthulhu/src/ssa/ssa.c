@@ -122,24 +122,38 @@ static ssa_operand_t add_step(ssa_t *ssa, ssa_step_t step)
 static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol)
 {
     UNUSED(ssa);
+
     ssa_flow_t *flow = ctu_malloc(sizeof(ssa_flow_t));
     flow->name = get_hlir_name(symbol);
+    flow->type = NULL;
     flow->entry = NULL;
-    flow->locals = NULL;
-    flow->value = NULL;
 
+    return flow;
+}
+
+static ssa_flow_t *global_new(ssa_t *ssa, const hlir_t *global)
+{
+    ssa_flow_t *flow = flow_new(ssa, global);
+    flow->value = NULL;
+    return flow;
+}
+
+static ssa_flow_t *function_new(ssa_t *ssa, const hlir_t *function)
+{
+    ssa_flow_t *flow = flow_new(ssa, function);
+    flow->locals = vector_new(0);
     return flow;
 }
 
 static void fwd_global(ssa_t *ssa, const hlir_t *global)
 {
-    ssa_flow_t *flow = flow_new(ssa, global);
+    ssa_flow_t *flow = global_new(ssa, global);
     map_set_ptr(ssa->globals, global, flow);
 }
 
 static void fwd_function(ssa_t *ssa, const hlir_t *function)
 {
-    ssa_flow_t *flow = flow_new(ssa, function);
+    ssa_flow_t *flow = function_new(ssa, function);
     map_set_ptr(ssa->functions, function, flow);
 }
 
