@@ -49,22 +49,21 @@ static const ssa_value_t *get_operand_value(opt_t *opt, ssa_operand_t operand)
     }
 }
 
-static void set_result(opt_t *opt, ssa_operand_t operand) 
+static void set_result(opt_t *opt, const ssa_value_t *value) 
 {
-    opt->result = get_operand_value(opt, operand);
+    opt->result = value;
 }
 
-static void opt_load(opt_t *opt, const ssa_step_t *step, ssa_operand_t src) 
+static const ssa_value_t *opt_load(opt_t *opt, const ssa_step_t *step, ssa_operand_t src) 
 {
     switch (src.kind) 
     {
     case eOperandGlobal: {
-        map_set_ptr(opt->stepCache, step, (void*)opt_global(opt, src.global));
-        break;
+        return opt_global(opt, src.global);
     }
     default:
         report(opt->reports, eInternal, NULL, "unhandled operand %s", ssa_operand_name(src.kind));
-        break;
+        return NULL;
     }
 }
 
@@ -73,21 +72,20 @@ static bool value_is(const ssa_value_t *value, ssa_kind_t kind)
     return ssa_get_value_kind(value) == kind;
 }
 
-static void opt_binary(opt_t *opt, const ssa_step_t *step, ssa_binary_t binary)
+static ssa_value_t *opt_binary(opt_t *opt, ssa_binary_t binary)
 {
     const ssa_value_t *lhs = get_operand_value(opt, binary.lhs);
     const ssa_value_t *rhs = get_operand_value(opt, binary.rhs);
 
     if (lhs == NULL || rhs == NULL)
     {
-        report(opt->reports, eInternal, NULL, "unhandled binary operands");
-        return;
+        return NULL;
     }
 
     if (!value_is(lhs, eTypeDigit) || !value_is(rhs, eTypeDigit))
     {
         report(opt->reports, eInternal, NULL, "both operands must be ints");
-        return;
+        return NULL;
     }
 
     mpz_t result;
@@ -110,45 +108,94 @@ static void opt_binary(opt_t *opt, const ssa_step_t *step, ssa_binary_t binary)
 
     default:
         report(opt->reports, eInternal, NULL, "unhandled binary op %s", binary_name(binary.op));
-        return;
+        return NULL;
     }
 
     // TODO: type is a hack here
-    map_set_ptr(opt->stepCache, step, value_digit_new(result, lhs->type));
+    return value_digit_new(result, lhs->type);
+}
+
+static ssa_value_t *opt_unary(opt_t *opt, ssa_unary_t unary)
+{
+    const ssa_value_t *operand = get_operand_value(opt, unary.operand);
+
+    if (operand == NULL)
+    {
+        return NULL;
+    }
+
+    if (!value_is(operand, eTypeDigit))
+    {
+        report(opt->reports, eInternal, NULL, "operand must be ints");
+        return NULL;
+    }
+
+    mpz_t result;
+    mpz_init(result);
+
+    switch (unary.op)
+    {
+    case eUnaryAbs:
+        mpz_abs(result, operand->digit);
+        break;
+    case eUnaryNeg:
+        mpz_neg(result, operand->digit);
+        break;
+    
+    default:
+        report(opt->reports, eInternal, NULL, "unhandled unary op %s", unary_name(unary.op));
+        return NULL;
+    }
+
+    return value_digit_new(result, operand->type);
+}
+
+static const ssa_value_t *opt_step(opt_t *opt, const ssa_step_t *step, bool *result)
+{
+    ssa_opcode_t kind = step->opcode;
+    switch (kind)
+    {
+    case eOpReturn: {
+        ssa_return_t ret = step->ret;
+        *result = true;
+        return get_operand_value(opt, ret.value);
+    }
+
+    case eOpLoad: {
+        ssa_load_t load = step->load;
+        return opt_load(opt, step, load.src);
+    }
+
+    case eOpBinary: {
+        ssa_binary_t binary = step->binary;
+        return opt_binary(opt, binary);
+    }
+
+    case eOpUnary: {
+        ssa_unary_t unary = step->unary;
+        return opt_unary(opt, unary);
+    }
+
+    default:
+        report(opt->reports, eInternal, NULL, "unhandled opcode %s", ssa_opcode_name(kind));
+        return NULL;
+    }
 }
 
 static bool opt_block(opt_t *opt, const ssa_block_t *block)
 {
     size_t steps = vector_len(block->steps);
 
+    bool result = false;
     for (size_t i = 0; i < steps; i++)
     {
         ssa_step_t *step = vector_get(block->steps, i);
-        ssa_opcode_t kind = step->opcode;
+        const ssa_value_t *value = opt_step(opt, step, &result);
 
-        switch (kind)
+        if (result) 
         {
-        case eOpReturn: {
-            ssa_return_t ret = step->ret;
-            set_result(opt, ret.value);
+            set_result(opt, value);
             return true;
-        }
-
-        case eOpLoad: {
-            ssa_load_t load = step->load;
-            opt_load(opt, step, load.src);
-            break;
-        }
-
-        case eOpBinary: {
-            ssa_binary_t binary = step->binary;
-            opt_binary(opt, step, binary);
-            break;
-        }
-
-        default:
-            report(opt->reports, eInternal, NULL, "unhandled opcode %s", ssa_opcode_name(kind));
-            return false;
         }
     }
 
@@ -181,10 +228,16 @@ static void build_global(opt_t *opt, ssa_flow_t *flow)
     flow->value = flow->entry == NULL ? value_empty_new(NULL) : opt_global(opt, flow);
 }
 
+static void build_function(opt_t *opt, ssa_flow_t *flow)
+{
+    
+}
+
 void ssa_opt_module(reports_t *reports, ssa_module_t *mod)
 {
     section_t symbols = mod->symbols;
     size_t totalGlobals = vector_len(symbols.globals);
+    size_t totalFunctions = vector_len(symbols.functions);
 
     opt_t opt = {
         .reports = reports,
@@ -197,5 +250,11 @@ void ssa_opt_module(reports_t *reports, ssa_module_t *mod)
     {
         ssa_flow_t *flow = vector_get(symbols.globals, i);
         build_global(&opt, flow);
+    }
+
+    for (size_t i = 0; i < totalFunctions; i++)
+    {
+        ssa_flow_t *flow = vector_get(symbols.functions, i);
+        build_function(&opt, flow);
     }
 }
