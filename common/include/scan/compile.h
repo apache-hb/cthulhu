@@ -5,6 +5,8 @@
 #include "base/analyze.h"
 #include "base/panic.h"
 
+#include <limits.h>
+
 typedef struct io_t io_t;
 typedef struct scan_t scan_t;
 

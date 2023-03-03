@@ -119,13 +119,13 @@ static ssa_operand_t add_step(ssa_t *ssa, ssa_step_t step)
     return op;
 }
 
-static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol)
+static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol, ssa_type_t *type)
 {
     UNUSED(ssa);
 
     ssa_flow_t *flow = ctu_malloc(sizeof(ssa_flow_t));
     flow->name = get_hlir_name(symbol);
-    flow->type = NULL;
+    flow->type = type;
     flow->entry = NULL;
 
     return flow;
@@ -133,14 +133,16 @@ static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol)
 
 static ssa_flow_t *global_new(ssa_t *ssa, const hlir_t *global)
 {
-    ssa_flow_t *flow = flow_new(ssa, global);
+    ssa_type_t *type = type_new(ssa, get_hlir_type(global));
+    ssa_flow_t *flow = flow_new(ssa, global, type);
     flow->value = NULL;
     return flow;
 }
 
 static ssa_flow_t *function_new(ssa_t *ssa, const hlir_t *function)
 {
-    ssa_flow_t *flow = flow_new(ssa, function);
+    ssa_type_t *type = type_new(ssa, get_hlir_type(function));
+    ssa_flow_t *flow = flow_new(ssa, function, type);
     flow->locals = vector_new(0);
     return flow;
 }
@@ -705,7 +707,8 @@ static void compile_function(ssa_t *ssa, const hlir_t *function)
     compile_flow(ssa, flow);
 
     // TODO: idk if this is right
-    if (function->body == NULL) { 
+    if (function->body == NULL) 
+    { 
         map_set(ssa->importedSymbols, function->name, flow);
         return;
     }
