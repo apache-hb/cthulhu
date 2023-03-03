@@ -236,9 +236,18 @@ static void emit_function(emit_t *emit, const ssa_flow_t *flow)
     emit_block(emit, flow->entry);
 }
 
+static bool value_exists(const ssa_value_t *value)
+{
+    if (value == NULL) { return false; }
+    if (!value->initialized) { return false; }
+    if (value->type->kind == eTypeEmpty) { return false; }
+
+    return true;
+}
+
 static void emit_global(emit_t *emit, const ssa_flow_t *flow)
 {
-    if (flow->value != NULL) 
+    if (value_exists(flow->value)) 
     {
         printf("%s = %s\n", flow->name, emit_value(emit, flow->value));
     }

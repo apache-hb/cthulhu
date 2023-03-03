@@ -15,6 +15,8 @@
 
 #include "report/report.h"
 
+#include "common.h"
+
 #include <stdio.h>
 
 typedef struct {
@@ -192,18 +194,9 @@ static ssa_type_t *ssa_get_string_type(ssa_t *ssa)
     return it;
 }
 
-static ssa_value_t *value_new(const ssa_type_t *type)
-{
-    CTASSERT(type != NULL);
-    ssa_value_t *it = ctu_malloc(sizeof(ssa_value_t));
-    it->type = type;
-
-    return it;
-}
-
 static ssa_value_t *ssa_value_digit_new(ssa_t *ssa, const hlir_t *hlir)
 {
-    ssa_value_t *it = value_new(ssa_get_digit_type(ssa, hlir));
+    ssa_value_t *it = ssa_value_new(ssa_get_digit_type(ssa, hlir), true);
 
     mpz_init_set(it->digit, hlir->digit);
 
@@ -212,7 +205,7 @@ static ssa_value_t *ssa_value_digit_new(ssa_t *ssa, const hlir_t *hlir)
 
 static ssa_value_t *value_bool_new(ssa_t *ssa, const hlir_t *hlir)
 {
-    ssa_value_t *it = value_new(ssa_get_bool_type(ssa));
+    ssa_value_t *it = ssa_value_new(ssa_get_bool_type(ssa), true);
     it->boolean = hlir->boolean;
 
     return it;
@@ -220,7 +213,7 @@ static ssa_value_t *value_bool_new(ssa_t *ssa, const hlir_t *hlir)
 
 static ssa_value_t *value_string_new(ssa_t *ssa, const hlir_t *hlir)
 {
-    ssa_value_t *it = value_new(ssa_get_string_type(ssa));
+    ssa_value_t *it = ssa_value_new(ssa_get_string_type(ssa), true);
     it->string = hlir->stringLiteral;
 
     return it;

@@ -68,6 +68,7 @@ typedef struct ssa_type_t
 typedef struct ssa_value_t
 {
     const ssa_type_t *type;
+    bool initialized;
 
     union {
         // eTypeDigit
