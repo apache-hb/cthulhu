@@ -81,25 +81,36 @@ static ssa_type_t *ssa_type_new(ssa_t *ssa, ssa_kind_t kind)
 static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
 {
     const hlir_t *real = hlir_follow_type(type);
+    hlir_kind_t kind = get_hlir_kind(real);
     ssa_type_t *it = ssa_type_new(ssa, get_type_kind(ssa, real));
     it->name = get_hlir_name(real);
 
-    if (hlir_is(real, eHlirPointer))
+    switch (kind) 
     {
-        //it->ptr = type_new(ssa, real->ptr);
-    }
-    else if (hlir_is(real, eHlirFunction))
-    {
-        /*it->result = type_new(ssa, closure_result(real));
+    case eHlirDigit:
+        it->digit = real->width;
+        it->sign = real->sign;
+        break;
 
-        vector_t *params = closure_params(real);
-        vector_t *args = vector_of(vector_len(params));
-        for (size_t i = 0; i < vector_len(params); i++)
-        {
-            vector_set(args, i, type_new(ssa, vector_get(params, i)));
-        }*/
+    case eHlirFunction:
+    case eHlirClosure: {
+        it->result = type_new(ssa, real->result);
+        it->args = vector_of(vector_len(real->params));
+        for (size_t i = 0; i < vector_len(real->params); i++) {
+            ssa_type_t *arg = type_new(ssa, vector_get(real->params, i));
+            vector_set(it->args, i, arg);
+        }
+        break;
     }
-    
+
+    case eHlirString: 
+        break;
+
+    default:
+        report(ssa->reports, eInternal, get_hlir_node(real), "no respective ssa type for %s", hlir_kind_to_string(kind));
+        break;
+    }
+
     return it;
 }
 
@@ -169,6 +180,8 @@ static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
     CTASSERTF(hlir_is(digit, eHlirDigitLiteral), "expected digit, got %s", hlir_kind_to_string(get_hlir_kind(digit)));
 
     const hlir_t *type = hlir_follow_type(get_hlir_type(digit));
+
+    CTASSERT(hlir_is(type, eHlirDigit));
 
     ssa_type_t *it = ssa_type_new(ssa, eTypeDigit);
     it->name = get_hlir_name(type);

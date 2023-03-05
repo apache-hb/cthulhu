@@ -12,6 +12,8 @@
 
 #include "common.h"
 
+#include <stdio.h>
+
 typedef struct c89_ssa_emit_t
 {
     emit_t emit;
@@ -69,6 +71,12 @@ static const char *emit_value(c89_ssa_emit_t *emit, const ssa_value_t *value)
 {
     ssa_kind_t kind = value->type->kind;
 
+    if (!value->initialized)
+    {
+        report(REPORTS(emit), eInternal, NULL, "attempting to emit empty value");
+        return "";
+    }
+
     switch (kind)
     {
     case eTypeDigit:
@@ -80,16 +88,31 @@ static const char *emit_value(c89_ssa_emit_t *emit, const ssa_value_t *value)
     }
 }
 
+static bool value_exists(const ssa_value_t *value)
+{
+    if (value == NULL) { return false; }
+    if (!value->initialized) { return false; }
+    if (value->type->kind == eTypeEmpty) { return false; }
+
+    return true;
+}
+
 static void c89_emit_ssa_global(c89_ssa_emit_t *emit, const ssa_flow_t *global)
 {
     CTASSERT(global->value != NULL);
 
     const char *name = global->name;
+    const char *type = get_type_name(emit, global->type);
 
-    const char *type = get_type_name(emit, global->value->type);
-    const char *value = emit_value(emit, global->value);
-
-    WRITE_STRINGF(&emit->emit, "%s %s = %s;\n", type, name, value);
+    if (value_exists(global->value))
+    {
+        const char *value = emit_value(emit, global->value);
+        WRITE_STRINGF(&emit->emit, "%s %s = %s;\n", type, name, value);
+    }
+    else
+    {
+        WRITE_STRINGF(&emit->emit, "%s %s;\n", type, name);
+    }
 }
 
 static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)

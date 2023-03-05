@@ -211,8 +211,7 @@ static opt_result_t opt_step(opt_t *opt, const ssa_step_t *step, bool *result)
     case eOpReturn: {
         ssa_return_t ret = step->ret;
         *result = true;
-        const ssa_value_t *value = get_operand_value(opt, ret.value);
-        return opt_ok(value);
+        return opt_ok(get_operand_value(opt, ret.value));
     }
 
     case eOpLoad: {
@@ -240,19 +239,20 @@ static bool opt_block(opt_t *opt, const ssa_block_t *block)
 {
     size_t steps = vector_len(block->steps);
 
-    bool hasValue = false;
+    bool shouldReturn = false;
     for (size_t i = 0; i < steps; i++)
     {
         ssa_step_t *step = vector_get(block->steps, i);
-        opt_result_t result = opt_step(opt, step, &hasValue);
+        opt_result_t result = opt_step(opt, step, &shouldReturn);
 
         if (result.reason != eOptSuccess)
         {
             // failed to optimize
+            report(opt->reports, eInternal, NULL, "failed to optimize step");
             break;
         }
 
-        if (hasValue) 
+        if (shouldReturn) 
         {
             CTASSERT(result.value != NULL);
             set_result(opt, result.value);
@@ -288,19 +288,23 @@ static opt_result_t opt_global(opt_t *opt, const ssa_flow_t *flow)
 
 static void build_global(opt_t *opt, ssa_flow_t *flow)
 {
-    if (flow->value == NULL)
+    // if there is no entry then the global is uninitialized
+    if (flow->entry == NULL)
     {
+        flow->value = value_empty_new(flow->type);
+        return;
+    }
+
+    opt_result_t result = opt_global(opt, flow);
+    
+    if (result.reason != eOptSuccess)
+    {
+        report(opt->reports, eInternal, NULL, "failed to optimize global");
         flow->value = value_empty_new(flow->type);
     }
     else
     {
-        opt_result_t result = opt_global(opt, flow);
         flow->value = result.value;
-        
-        if (result.reason != eOptSuccess)
-        {
-            report(opt->reports, eInternal, NULL, "failed to optimize global");
-        }
     }
 }
 
