@@ -47,7 +47,9 @@
 * async file reading
 
 * custom lex + parser file format
-    * can autogenerate flex and bison
-    * can autogenerate vscode grammars
-    * can autogenerate protobuf defs 
+    * autogenerate flex and bison
+    * autogenerate vscode grammars
+    * autogenerate protobuf defs 
     * reduces alot of boilerplate
+
+* fuzz protobuf rather than direct source code

@@ -95,6 +95,7 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
     case eHlirFunction:
     case eHlirClosure: {
         it->result = type_new(ssa, real->result);
+        it->variadic = real->variadic;
         it->args = vector_of(vector_len(real->params));
         for (size_t i = 0; i < vector_len(real->params); i++) {
             ssa_type_t *arg = type_new(ssa, vector_get(real->params, i));
@@ -103,6 +104,8 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
         break;
     }
 
+    case eHlirUnit:
+    case eHlirEmpty:
     case eHlirString: 
         break;
 
@@ -140,6 +143,10 @@ static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol, ssa_type_t *type)
     flow->name = get_hlir_name(symbol);
     flow->type = type;
     flow->entry = NULL;
+
+    // TODO: a little iffy
+    flow->linkage = symbol->attributes->linkage;
+    flow->visibility = symbol->attributes->visibility;
 
     return flow;
 }

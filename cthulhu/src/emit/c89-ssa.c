@@ -1,5 +1,6 @@
 #include "cthulhu/emit/c89.h"
 
+#include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/digit.h"
 #include "cthulhu/ssa/ssa.h"
 
@@ -52,9 +53,27 @@ static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type)
     case eTypeDigit:
         return get_digit_name(emit, type->digit, type->sign);
 
+    case eTypeUnit:
+    case eTypeEmpty:
+        return "void";
+    case eTypeString:
+        return "const char *";
+
     default:
         report(REPORTS(emit), eInternal, NULL, "unhandled type kind: %d", kind);
         return "";
+    }
+}
+
+static const char *get_function_name(c89_ssa_emit_t *emit, const ssa_flow_t *function)
+{
+    switch (function->linkage)
+    {
+    case eLinkEntryCli:
+        return "main";
+
+    default:
+        return function->name;
     }
 }
 
@@ -123,8 +142,41 @@ static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 
 static void c89_fwd_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 {
-    UNUSED(emit);
-    UNUSED(function);
+    CTASSERT(function->type->kind == eTypeSignature);
+    const ssa_type_t *type = function->type;
+
+    const char *name = get_function_name(emit, function);
+    const char *result = get_type_name(emit, type->result);
+
+    WRITE_STRINGF(&emit->emit, "%s %s(", result, name);
+    
+    size_t totalParams = vector_len(type->args);
+    if (totalParams == 0) 
+    {
+        WRITE_STRING(&emit->emit, "void");
+    }
+    else
+    {
+        for (size_t i = 0; i < totalParams; i++)
+        {
+            const ssa_type_t *param = vector_get(type->args, i);
+            const char *paramType = get_type_name(emit, param);
+
+            WRITE_STRINGF(&emit->emit, "%s", paramType);
+
+            if (i < totalParams - 1)
+            {
+                WRITE_STRING(&emit->emit, ", ");
+            }
+        }
+    }
+
+    if (type->variadic)
+    {
+        WRITE_STRING(&emit->emit, ", ...");
+    }
+
+    WRITE_STRING(&emit->emit, ");\n");
 }
 
 void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)

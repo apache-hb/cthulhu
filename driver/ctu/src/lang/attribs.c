@@ -27,7 +27,7 @@ static attrib_t *attrib_new(const char *name, hlir_kind_t expected, apply_attrib
 
 static hlir_attributes_t *apply_entry(sema_t *sema, hlir_t *hlir, ast_t *ast)
 {
-    hlir_linkage_t linkage = eLinkEntryCli;
+    linkage_t linkage = eLinkEntryCli;
     if (vector_len(ast->config) > 1)
     {
         report(sema_reports(sema), eFatal, ast->node, "entry only takes 0 or 1 parameters");

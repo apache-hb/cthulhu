@@ -1043,7 +1043,7 @@ static void c89_emit_types(c89_emit_t *emit, vector_t *modules)
     }
 }
 
-static const char *c89_get_linkage(hlir_linkage_t linkage)
+static const char *c89_get_linkage(linkage_t linkage)
 {
     switch (linkage)
     {
