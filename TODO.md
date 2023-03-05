@@ -5,8 +5,9 @@
 * ssa backend
     * wasm
     * x64
+    * c89
     
-* deprecate C backend, move to something else
+* deprecate C hlir backend
     * blocked by ssa backend
 
 * rewrite reporting
