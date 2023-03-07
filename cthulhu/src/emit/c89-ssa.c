@@ -53,6 +53,9 @@ static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type)
     case eTypeDigit:
         return get_digit_name(emit, type->digit, type->sign);
 
+    case eTypeBool:
+        return "bool";
+
     case eTypeUnit:
     case eTypeEmpty:
         return "void";
@@ -100,6 +103,9 @@ static const char *emit_value(c89_ssa_emit_t *emit, const ssa_value_t *value)
     {
     case eTypeDigit:
         return emit_digit(emit, value->type, value->digit);
+
+    case eTypeBool:
+        return value->boolean ? "true" : "false";
 
     default:
         report(REPORTS(emit), eInternal, NULL, "unhandled value kind: %d", kind);
@@ -193,6 +199,8 @@ void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)
 
     size_t totalGlobals = vector_len(symbols.globals);
     size_t totalFunctions = vector_len(symbols.functions);
+
+    WRITE_STRING(&emit.emit, "#include <stdbool.h>\n");
 
     for (size_t i = 0; i < totalGlobals; i++)
     {

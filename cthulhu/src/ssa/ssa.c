@@ -104,6 +104,7 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
         break;
     }
 
+    case eHlirBool:
     case eHlirUnit:
     case eHlirEmpty:
     case eHlirString: 
@@ -255,6 +256,16 @@ static ssa_operand_t compile_string(ssa_t *ssa, const hlir_t *hlir)
     ssa_operand_t op = {
         .kind = eOperandImm,
         .value = value_string_new(ssa, hlir)
+    };
+
+    return op;
+}
+
+static ssa_operand_t compile_bool(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_operand_t op = {
+        .kind = eOperandImm,
+        .value = value_bool_new(ssa, hlir)
     };
 
     return op;
@@ -454,6 +465,9 @@ static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 
     case eHlirStringLiteral:
         return compile_string(ssa, hlir);
+
+    case eHlirBoolLiteral:
+        return compile_bool(ssa, hlir);
 
     case eHlirUnary:
         return compile_unary(ssa, hlir);

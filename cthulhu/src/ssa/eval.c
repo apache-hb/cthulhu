@@ -25,6 +25,7 @@ typedef struct
 
     ssa_step_t *nopStep;
 
+    const ssa_type_t *expectedReturnType;
     const ssa_value_t *result;
 } opt_t;
 
@@ -93,6 +94,7 @@ static ssa_value_t *get_operand_value(opt_t *opt, ssa_operand_t operand)
     {
     case eOperandImm: return operand.value;
     case eOperandReg: return map_get_ptr(opt->stepCache, operand.vreg);
+    case eOperandEmpty: return NULL;
 
     default:
         report(opt->reports, eInternal, NULL, "unhandled operand %s", ssa_operand_name(operand.kind));
@@ -239,9 +241,9 @@ static bool opt_block(opt_t *opt, const ssa_block_t *block)
 {
     size_t steps = vector_len(block->steps);
 
-    bool shouldReturn = false;
     for (size_t i = 0; i < steps; i++)
     {
+        bool shouldReturn = false;
         ssa_step_t *step = vector_get(block->steps, i);
         opt_result_t result = opt_step(opt, step, &shouldReturn);
 
@@ -254,7 +256,6 @@ static bool opt_block(opt_t *opt, const ssa_block_t *block)
 
         if (shouldReturn) 
         {
-            CTASSERT(result.value != NULL);
             set_result(opt, result.value);
             return true;
         }
@@ -288,6 +289,7 @@ static opt_result_t opt_global(opt_t *opt, const ssa_flow_t *flow)
 
 static void build_global(opt_t *opt, ssa_flow_t *flow)
 {
+    printf("building global %s\n", flow->name);
     // if there is no entry then the global is uninitialized
     if (flow->entry == NULL)
     {
@@ -295,8 +297,12 @@ static void build_global(opt_t *opt, ssa_flow_t *flow)
         return;
     }
 
+    printf("opt global %s\n", flow->name);
+    opt->expectedReturnType = flow->type;
     opt_result_t result = opt_global(opt, flow);
     
+    printf("opt %d\n", (int)result.reason);
+
     if (result.reason != eOptSuccess)
     {
         report(opt->reports, eInternal, NULL, "failed to optimize global");
@@ -331,6 +337,8 @@ void ssa_opt_module(reports_t *reports, ssa_module_t *mod)
         .globalCache = map_new(0x1000), // TODO: better size
 
         .nopStep = BOX(nopStep),
+
+        .expectedReturnType = NULL,
         .result = NULL
     };
 
