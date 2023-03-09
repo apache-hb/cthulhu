@@ -289,7 +289,7 @@ char *str_normalize(const char *input)
     // if the string is already normalized, just return a copy
     if (isNormalized)
     {
-        return ctu_strdup(input);
+        return ctu_strndup(input, len);
     }
 
     const char *replCount = input;
