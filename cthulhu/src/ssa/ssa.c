@@ -162,7 +162,7 @@ static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
 
 static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
 {
-    CTASSERTF(hlir_is(digit, eHlirDigitLiteral), "expected digit, got %s", hlir_kind_to_string(get_hlir_kind(digit)));
+    CTASSERTF(hlir_is(digit, eHlirDigitLiteral), "expected digit literal, got %s", hlir_kind_to_string(get_hlir_kind(digit)));
 
     const hlir_t *type = hlir_follow_type(get_hlir_type(digit));
 
