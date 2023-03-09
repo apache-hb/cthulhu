@@ -124,8 +124,8 @@ static bool value_exists(const ssa_value_t *value)
 
 static void c89_emit_ssa_global(c89_ssa_emit_t *emit, const ssa_flow_t *global)
 {
-    CTASSERT(global->value != NULL);
-
+    CTASSERT(global != NULL);
+    
     const char *name = global->name;
     const char *type = get_type_name(emit, global->type);
 

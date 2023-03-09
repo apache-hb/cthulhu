@@ -184,9 +184,26 @@ char *str_repeat(const char *str, size_t times)
     return out;
 }
 
+static const char kEscapeChars[] = {
+    '\n', '\t', '\f', '\r', '\v', '\\', '\0', '\'', '\"',
+};
+
+static bool is_escape_char(char c) 
+{
+    for (size_t i = 0; i < sizeof(kEscapeChars); i++)
+    {
+        if (kEscapeChars[i] == c)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static bool safe_isprint(char c)
 {
-    if (c == '\n' || c == '\t' || c == '\f' || c == '\r' || c == '\v')
+    if (is_escape_char(c))
     {
         return false;
     }
@@ -201,16 +218,12 @@ static bool safe_isprint(char c)
 
 static size_t normlen(char c)
 {
-    switch (c)
+    if (is_escape_char(c))
     {
-    case '\0':
-    case '\\':
-    case '\'':
-    case '\"':
         return 2;
-    default:
-        return safe_isprint(c) ? 1 : 4;
     }
+
+    return safe_isprint(c) ? 1 : 4;
 }
 
 static size_t normstr(char *out, char c)
@@ -221,7 +234,6 @@ static size_t normstr(char *out, char c)
         return 1;
     }
 
-    /* handle C shorthand */
     switch (c) 
     {
     case '\\':
@@ -258,22 +270,36 @@ static size_t normstr(char *out, char c)
 }
 
 USE_DECL
-char *str_normalize(const char *str)
+char *str_normalize(const char *input)
 {
     size_t len = 0;
-    const char *temp = str;
-    while (*temp != '\0')
+    const char *lenCount = input;
+    bool isNormalized = true;
+    while (*lenCount != '\0')
     {
-        len += normlen(*temp++);
+        size_t inc = normlen(*lenCount++);
+        len += inc;
+
+        if (inc != 1)
+        {
+            isNormalized = false;
+        }
     }
 
-    char *buf = ctu_malloc(len + 1);
-    char *out = buf;
-    while (*str != '\0')
+    // if the string is already normalized, just return a copy
+    if (isNormalized)
     {
-        out += normstr(out, *str++);
+        return ctu_strdup(input);
     }
-    *out = '\0';
+
+    const char *replCount = input;
+    char *buf = ctu_malloc(len + 1);
+    char *result = buf;
+    while (*replCount != '\0')
+    {
+        result += normstr(result, *replCount++);
+    }
+    *result = '\0';
 
     return buf;
 }
@@ -282,15 +308,20 @@ USE_DECL
 char *str_normalizen(const char *str, size_t len)
 {
     size_t outlen = 1;
-    size_t actual = 0;
-    for (; actual < len; actual++)
+    for (size_t i = 0; i < len; i++)
     {
-        outlen += normlen(str[actual]);
+        outlen += normlen(str[i]);
+    }
+
+    // if the string is already normalized, just return a copy
+    if (outlen == len)
+    {
+        return ctu_strndup(str, len);
     }
 
     char *buf = ctu_malloc(outlen + 1);
     char *out = buf;
-    for (size_t i = 0; i < actual; i++)
+    for (size_t i = 0; i < len; i++)
     {
         out += normstr(out, str[i]);
     }

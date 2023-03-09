@@ -116,12 +116,12 @@ TEST(test_string_normalizen, {
 
     for (size_t i = 0; i < ESCAPE_SIZE; i++) {
         pair_t *escape = &kEscapes[i];
-        char *input = format("hello %c world", escape->escaped);
+        char *input = format("hello %s world", escape->escaped);
         char *expected = format("hello %s world", escape->unescaped);
 
         char *result = str_normalizen(input, strlen(input));
 
-        char *name = format("escaped %s equal", escape->unescaped);
+        char *name = format("escaped %s equal (`%s` != `%s`)", escape->unescaped, expected, result);
         SHOULD_PASS(name, str_equal(expected, result));
     }
 })
