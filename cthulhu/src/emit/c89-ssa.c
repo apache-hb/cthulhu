@@ -1,5 +1,6 @@
 #include "cthulhu/emit/c89.h"
 
+#include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/digit.h"
 #include "cthulhu/ssa/ssa.h"
 
@@ -11,6 +12,8 @@
 #include "base/panic.h"
 
 #include "common.h"
+
+#include <stdio.h>
 
 typedef struct c89_ssa_emit_t
 {
@@ -50,9 +53,30 @@ static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type)
     case eTypeDigit:
         return get_digit_name(emit, type->digit, type->sign);
 
+    case eTypeBool:
+        return "bool";
+
+    case eTypeUnit:
+    case eTypeEmpty:
+        return "void";
+    case eTypeString:
+        return "const char *";
+
     default:
         report(REPORTS(emit), eInternal, NULL, "unhandled type kind: %d", kind);
         return "";
+    }
+}
+
+static const char *get_function_name(c89_ssa_emit_t *emit, const ssa_flow_t *function)
+{
+    switch (function->linkage)
+    {
+    case eLinkEntryCli:
+        return "main";
+
+    default:
+        return function->name;
     }
 }
 
@@ -69,10 +93,19 @@ static const char *emit_value(c89_ssa_emit_t *emit, const ssa_value_t *value)
 {
     ssa_kind_t kind = value->type->kind;
 
+    if (!value->initialized)
+    {
+        report(REPORTS(emit), eInternal, NULL, "attempting to emit empty value");
+        return "";
+    }
+
     switch (kind)
     {
     case eTypeDigit:
         return emit_digit(emit, value->type, value->digit);
+
+    case eTypeBool:
+        return value->boolean ? "true" : "false";
 
     default:
         report(REPORTS(emit), eInternal, NULL, "unhandled value kind: %d", kind);
@@ -80,16 +113,31 @@ static const char *emit_value(c89_ssa_emit_t *emit, const ssa_value_t *value)
     }
 }
 
+static bool value_exists(const ssa_value_t *value)
+{
+    if (value == NULL) { return false; }
+    if (!value->initialized) { return false; }
+    if (value->type->kind == eTypeEmpty) { return false; }
+
+    return true;
+}
+
 static void c89_emit_ssa_global(c89_ssa_emit_t *emit, const ssa_flow_t *global)
 {
     CTASSERT(global->value != NULL);
 
     const char *name = global->name;
+    const char *type = get_type_name(emit, global->type);
 
-    const char *type = get_type_name(emit, global->value->type);
-    const char *value = emit_value(emit, global->value);
-
-    WRITE_STRINGF(&emit->emit, "%s %s = %s;\n", type, name, value);
+    if (value_exists(global->value))
+    {
+        const char *value = emit_value(emit, global->value);
+        WRITE_STRINGF(&emit->emit, "%s %s = %s;\n", type, name, value);
+    }
+    else
+    {
+        WRITE_STRINGF(&emit->emit, "%s %s;\n", type, name);
+    }
 }
 
 static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
@@ -100,8 +148,41 @@ static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 
 static void c89_fwd_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 {
-    UNUSED(emit);
-    UNUSED(function);
+    CTASSERT(function->type->kind == eTypeSignature);
+    const ssa_type_t *type = function->type;
+
+    const char *name = get_function_name(emit, function);
+    const char *result = get_type_name(emit, type->result);
+
+    WRITE_STRINGF(&emit->emit, "%s %s(", result, name);
+    
+    size_t totalParams = vector_len(type->args);
+    if (totalParams == 0) 
+    {
+        WRITE_STRING(&emit->emit, "void");
+    }
+    else
+    {
+        for (size_t i = 0; i < totalParams; i++)
+        {
+            const ssa_type_t *param = vector_get(type->args, i);
+            const char *paramType = get_type_name(emit, param);
+
+            WRITE_STRINGF(&emit->emit, "%s", paramType);
+
+            if (i < totalParams - 1)
+            {
+                WRITE_STRING(&emit->emit, ", ");
+            }
+        }
+    }
+
+    if (type->variadic)
+    {
+        WRITE_STRING(&emit->emit, ", ...");
+    }
+
+    WRITE_STRING(&emit->emit, ");\n");
 }
 
 void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)
@@ -118,6 +199,8 @@ void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)
 
     size_t totalGlobals = vector_len(symbols.globals);
     size_t totalFunctions = vector_len(symbols.functions);
+
+    WRITE_STRING(&emit.emit, "#include <stdbool.h>\n");
 
     for (size_t i = 0; i < totalGlobals; i++)
     {

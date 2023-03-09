@@ -263,7 +263,7 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
     vector_drop(*stack);
 }
 
-static bool can_mangle_name(hlir_linkage_t linkage)
+static bool can_mangle_name(linkage_t linkage)
 {
     switch (linkage)
     {

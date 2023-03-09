@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/string-view.h"
 #include "cthulhu/hlir/digit.h"
 #include "cthulhu/hlir/ops.h"
@@ -56,6 +57,7 @@ typedef struct ssa_type_t
         struct {
             const ssa_type_t *result;
             vector_t *args;
+            bool variadic;
         };
 
         /* TODO: implement */
@@ -68,6 +70,7 @@ typedef struct ssa_type_t
 typedef struct ssa_value_t
 {
     const ssa_type_t *type;
+    bool initialized;
 
     union {
         // eTypeDigit
@@ -236,6 +239,10 @@ typedef struct ssa_block_t
 typedef struct ssa_flow_t
 {
     const char *name;
+    
+    linkage_t linkage;
+    visibility_t visibility;
+
     const ssa_type_t *type;
 
     union {

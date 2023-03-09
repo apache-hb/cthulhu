@@ -5,8 +5,9 @@
 * ssa backend
     * wasm
     * x64
+    * c89
     
-* deprecate C backend, move to something else
+* deprecate C hlir backend
     * blocked by ssa backend
 
 * rewrite reporting
@@ -40,11 +41,15 @@
 * support [ifc](https://github.com/microsoft/ifc-spec) modules
 * build time option for internal compiler timing
 * better code coverage with tests
-* perhaps custom lexer + parser generator
-    * this is alot of effort
-    * will need further thought
 * VM execution
     * debugging, interactive shell
-* replace AST definitions with protobuf for better fuzzing
 * support llvm libfuzzer
 * async file reading
+
+* custom lex + parser file format
+    * autogenerate flex and bison
+    * autogenerate vscode grammars
+    * autogenerate protobuf defs 
+    * reduces alot of boilerplate
+
+* fuzz protobuf rather than direct source code

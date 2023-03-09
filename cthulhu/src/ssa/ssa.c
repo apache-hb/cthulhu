@@ -15,6 +15,8 @@
 
 #include "report/report.h"
 
+#include "common.h"
+
 #include <stdio.h>
 
 typedef struct {
@@ -79,25 +81,40 @@ static ssa_type_t *ssa_type_new(ssa_t *ssa, ssa_kind_t kind)
 static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
 {
     const hlir_t *real = hlir_follow_type(type);
+    hlir_kind_t kind = get_hlir_kind(real);
     ssa_type_t *it = ssa_type_new(ssa, get_type_kind(ssa, real));
     it->name = get_hlir_name(real);
 
-    if (hlir_is(real, eHlirPointer))
+    switch (kind) 
     {
-        //it->ptr = type_new(ssa, real->ptr);
-    }
-    else if (hlir_is(real, eHlirFunction))
-    {
-        /*it->result = type_new(ssa, closure_result(real));
+    case eHlirDigit:
+        it->digit = real->width;
+        it->sign = real->sign;
+        break;
 
-        vector_t *params = closure_params(real);
-        vector_t *args = vector_of(vector_len(params));
-        for (size_t i = 0; i < vector_len(params); i++)
-        {
-            vector_set(args, i, type_new(ssa, vector_get(params, i)));
-        }*/
+    case eHlirFunction:
+    case eHlirClosure: {
+        it->result = type_new(ssa, real->result);
+        it->variadic = real->variadic;
+        it->args = vector_of(vector_len(real->params));
+        for (size_t i = 0; i < vector_len(real->params); i++) {
+            ssa_type_t *arg = type_new(ssa, vector_get(real->params, i));
+            vector_set(it->args, i, arg);
+        }
+        break;
     }
-    
+
+    case eHlirBool:
+    case eHlirUnit:
+    case eHlirEmpty:
+    case eHlirString: 
+        break;
+
+    default:
+        report(ssa->reports, eInternal, get_hlir_node(real), "no respective ssa type for %s", hlir_kind_to_string(kind));
+        break;
+    }
+
     return it;
 }
 
@@ -119,28 +136,34 @@ static ssa_operand_t add_step(ssa_t *ssa, ssa_step_t step)
     return op;
 }
 
-static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol)
+static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol, ssa_type_t *type)
 {
     UNUSED(ssa);
 
     ssa_flow_t *flow = ctu_malloc(sizeof(ssa_flow_t));
     flow->name = get_hlir_name(symbol);
-    flow->type = NULL;
+    flow->type = type;
     flow->entry = NULL;
+
+    // TODO: a little iffy
+    flow->linkage = symbol->attributes->linkage;
+    flow->visibility = symbol->attributes->visibility;
 
     return flow;
 }
 
 static ssa_flow_t *global_new(ssa_t *ssa, const hlir_t *global)
 {
-    ssa_flow_t *flow = flow_new(ssa, global);
+    ssa_type_t *type = type_new(ssa, get_hlir_type(global));
+    ssa_flow_t *flow = flow_new(ssa, global, type);
     flow->value = NULL;
     return flow;
 }
 
 static ssa_flow_t *function_new(ssa_t *ssa, const hlir_t *function)
 {
-    ssa_flow_t *flow = flow_new(ssa, function);
+    ssa_type_t *type = type_new(ssa, get_hlir_type(function));
+    ssa_flow_t *flow = flow_new(ssa, function, type);
     flow->locals = vector_new(0);
     return flow;
 }
@@ -166,6 +189,8 @@ static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
 
     const hlir_t *type = hlir_follow_type(get_hlir_type(digit));
 
+    CTASSERT(hlir_is(type, eHlirDigit));
+
     ssa_type_t *it = ssa_type_new(ssa, eTypeDigit);
     it->name = get_hlir_name(type);
     it->digit = type->width;
@@ -190,18 +215,9 @@ static ssa_type_t *ssa_get_string_type(ssa_t *ssa)
     return it;
 }
 
-static ssa_value_t *value_new(const ssa_type_t *type)
-{
-    CTASSERT(type != NULL);
-    ssa_value_t *it = ctu_malloc(sizeof(ssa_value_t));
-    it->type = type;
-
-    return it;
-}
-
 static ssa_value_t *ssa_value_digit_new(ssa_t *ssa, const hlir_t *hlir)
 {
-    ssa_value_t *it = value_new(ssa_get_digit_type(ssa, hlir));
+    ssa_value_t *it = ssa_value_new(ssa_get_digit_type(ssa, hlir), true);
 
     mpz_init_set(it->digit, hlir->digit);
 
@@ -210,7 +226,7 @@ static ssa_value_t *ssa_value_digit_new(ssa_t *ssa, const hlir_t *hlir)
 
 static ssa_value_t *value_bool_new(ssa_t *ssa, const hlir_t *hlir)
 {
-    ssa_value_t *it = value_new(ssa_get_bool_type(ssa));
+    ssa_value_t *it = ssa_value_new(ssa_get_bool_type(ssa), true);
     it->boolean = hlir->boolean;
 
     return it;
@@ -218,7 +234,7 @@ static ssa_value_t *value_bool_new(ssa_t *ssa, const hlir_t *hlir)
 
 static ssa_value_t *value_string_new(ssa_t *ssa, const hlir_t *hlir)
 {
-    ssa_value_t *it = value_new(ssa_get_string_type(ssa));
+    ssa_value_t *it = ssa_value_new(ssa_get_string_type(ssa), true);
     it->string = hlir->stringLiteral;
 
     return it;
@@ -240,6 +256,16 @@ static ssa_operand_t compile_string(ssa_t *ssa, const hlir_t *hlir)
     ssa_operand_t op = {
         .kind = eOperandImm,
         .value = value_string_new(ssa, hlir)
+    };
+
+    return op;
+}
+
+static ssa_operand_t compile_bool(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_operand_t op = {
+        .kind = eOperandImm,
+        .value = value_bool_new(ssa, hlir)
     };
 
     return op;
@@ -439,6 +465,9 @@ static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 
     case eHlirStringLiteral:
         return compile_string(ssa, hlir);
+
+    case eHlirBoolLiteral:
+        return compile_bool(ssa, hlir);
 
     case eHlirUnary:
         return compile_unary(ssa, hlir);
@@ -705,7 +734,8 @@ static void compile_function(ssa_t *ssa, const hlir_t *function)
     compile_flow(ssa, flow);
 
     // TODO: idk if this is right
-    if (function->body == NULL) { 
+    if (function->body == NULL) 
+    { 
         map_set(ssa->importedSymbols, function->name, flow);
         return;
     }

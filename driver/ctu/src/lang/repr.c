@@ -10,7 +10,7 @@
 static char *repr_tags(const hlir_t *hlir)
 {
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
-    hlir_tags_t tags = attribs->tags;
+    tags_t tags = attribs->tags;
     vector_t *result = vector_new(4);
 
     if (tags & eQualConst)

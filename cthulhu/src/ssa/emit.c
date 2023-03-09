@@ -230,15 +230,31 @@ static void emit_block(emit_t *emit, const ssa_block_t *block)
     }
 }
 
+static void emit_imported_function(emit_t *emit, const ssa_flow_t *flow)
+{
+    CTASSERT(flow->linkage == eLinkImported);
+    printf("extern %s\n", flow->name);
+}
+
 static void emit_function(emit_t *emit, const ssa_flow_t *flow)
 {
+    CTASSERT(flow->linkage != eLinkImported);
     printf("%s:\n", flow->name);
     emit_block(emit, flow->entry);
 }
 
+static bool value_exists(const ssa_value_t *value)
+{
+    if (value == NULL) { return false; }
+    if (!value->initialized) { return false; }
+    if (value->type->kind == eTypeEmpty) { return false; }
+
+    return true;
+}
+
 static void emit_global(emit_t *emit, const ssa_flow_t *flow)
 {
-    if (flow->value != NULL) 
+    if (value_exists(flow->value)) 
     {
         printf("%s = %s\n", flow->name, emit_value(emit, flow->value));
     }
@@ -261,7 +277,24 @@ static void emit_functions(emit_t *emit, vector_t *functions)
 {
     for (size_t i = 0; i < vector_len(functions); i++)
     {
-        emit_function(emit, vector_get(functions, i));
+        const ssa_flow_t *flow = vector_get(functions, i);
+        if (flow->linkage != eLinkImported)
+        {
+            continue;
+        }
+
+        emit_imported_function(emit, flow);
+    }
+
+    for (size_t i = 0; i < vector_len(functions); i++)
+    {
+        const ssa_flow_t *flow = vector_get(functions, i);
+        if (flow->linkage == eLinkImported)
+        {
+            continue;
+        }
+        
+        emit_function(emit, flow);
     }
 }
 

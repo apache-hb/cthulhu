@@ -2,15 +2,15 @@
 #include "cthulhu/ssa/ssa.h"
 
 #include "report/report.h"
-#include "src/ssa/common.h"
-#include "std/vector.h"
 
+#include "std/vector.h"
 #include "std/str.h"
 #include "std/set.h"
 #include "std/map.h"
 
 #include "base/macros.h"
 #include "base/util.h"
+#include "base/panic.h"
 
 #include "common.h"
 
@@ -23,8 +23,60 @@ typedef struct
     map_t *stepCache;
     map_t *globalCache;
 
+    ssa_step_t *nopStep;
+
+    const ssa_type_t *expectedReturnType;
     const ssa_value_t *result;
 } opt_t;
+
+typedef enum {
+    eOptSuccess,
+    eOptUnsupported,
+
+    eOptTotal
+} opt_failure_reason_t;
+
+typedef struct {
+    opt_failure_reason_t reason;
+
+    union {
+        const ssa_value_t *value;
+        const char *detail;
+    };
+} opt_result_t;
+
+static opt_result_t opt_result_new(opt_failure_reason_t reason)
+{
+    opt_result_t result = {
+        .reason = reason
+    };
+
+    return result;
+}
+
+static opt_result_t opt_result_value(opt_failure_reason_t reason, const ssa_value_t *value)
+{
+    opt_result_t result = opt_result_new(reason);
+    result.value = value;
+    return result;
+}
+
+static opt_result_t opt_result_error(opt_failure_reason_t reason, const char *detail)
+{
+    opt_result_t result = opt_result_new(reason);
+    result.detail = detail;
+    return result;
+}
+
+static opt_result_t opt_ok(const ssa_value_t *value)
+{
+    return opt_result_value(eOptSuccess, value);
+}
+
+static opt_result_t opt_unsupported(const char *reason)
+{
+    return opt_result_error(eOptUnsupported, reason);
+}
 
 static const ssa_value_t *reset_value(opt_t *opt) 
 {
@@ -33,15 +85,16 @@ static const ssa_value_t *reset_value(opt_t *opt)
     return result;
 }
 
-static const ssa_value_t *opt_global(opt_t *opt, const ssa_flow_t *flow);
+static opt_result_t opt_global(opt_t *opt, const ssa_flow_t *flow);
 static void build_global(opt_t *opt, ssa_flow_t *flow);
 
-static const ssa_value_t *get_operand_value(opt_t *opt, ssa_operand_t operand)
+static ssa_value_t *get_operand_value(opt_t *opt, ssa_operand_t operand)
 {
     switch (operand.kind)
     {
     case eOperandImm: return operand.value;
     case eOperandReg: return map_get_ptr(opt->stepCache, operand.vreg);
+    case eOperandEmpty: return NULL;
 
     default:
         report(opt->reports, eInternal, NULL, "unhandled operand %s", ssa_operand_name(operand.kind));
@@ -49,22 +102,21 @@ static const ssa_value_t *get_operand_value(opt_t *opt, ssa_operand_t operand)
     }
 }
 
-static void set_result(opt_t *opt, ssa_operand_t operand) 
+static void set_result(opt_t *opt, const ssa_value_t *value) 
 {
-    opt->result = get_operand_value(opt, operand);
+    opt->result = value;
 }
 
-static void opt_load(opt_t *opt, const ssa_step_t *step, ssa_operand_t src) 
+static opt_result_t opt_load(opt_t *opt, ssa_operand_t src) 
 {
     switch (src.kind) 
     {
     case eOperandGlobal: {
-        map_set_ptr(opt->stepCache, step, (void*)opt_global(opt, src.global));
-        break;
+        return opt_global(opt, src.global);
     }
     default:
         report(opt->reports, eInternal, NULL, "unhandled operand %s", ssa_operand_name(src.kind));
-        break;
+        return opt_unsupported("unhandled operand");
     }
 }
 
@@ -73,21 +125,20 @@ static bool value_is(const ssa_value_t *value, ssa_kind_t kind)
     return ssa_get_value_kind(value) == kind;
 }
 
-static void opt_binary(opt_t *opt, const ssa_step_t *step, ssa_binary_t binary)
+static opt_result_t opt_binary(opt_t *opt, ssa_binary_t binary)
 {
     const ssa_value_t *lhs = get_operand_value(opt, binary.lhs);
     const ssa_value_t *rhs = get_operand_value(opt, binary.rhs);
 
     if (lhs == NULL || rhs == NULL)
     {
-        report(opt->reports, eInternal, NULL, "unhandled binary operands");
-        return;
+        return opt_unsupported("unhandled operand");
     }
 
     if (!value_is(lhs, eTypeDigit) || !value_is(rhs, eTypeDigit))
     {
         report(opt->reports, eInternal, NULL, "both operands must be ints");
-        return;
+        return opt_unsupported("unsupported operand types");
     }
 
     mpz_t result;
@@ -110,11 +161,80 @@ static void opt_binary(opt_t *opt, const ssa_step_t *step, ssa_binary_t binary)
 
     default:
         report(opt->reports, eInternal, NULL, "unhandled binary op %s", binary_name(binary.op));
-        return;
+        return opt_unsupported("unhandled binary op");
     }
 
     // TODO: type is a hack here
-    map_set_ptr(opt->stepCache, step, value_digit_new(result, lhs->type));
+    ssa_value_t *value = value_digit_new(result, lhs->type);
+    return opt_ok(value);
+}
+
+static opt_result_t opt_unary(opt_t *opt, ssa_unary_t unary)
+{
+    const ssa_value_t *operand = get_operand_value(opt, unary.operand);
+
+    if (operand == NULL)
+    {
+        return opt_unsupported("unhandled operand");
+    }
+
+    if (!value_is(operand, eTypeDigit))
+    {
+        report(opt->reports, eInternal, NULL, "operand must be ints");
+        return opt_unsupported("unsupported operand types");
+    }
+
+    mpz_t result;
+    mpz_init(result);
+
+    switch (unary.op)
+    {
+    case eUnaryAbs:
+        mpz_abs(result, operand->digit);
+        break;
+    case eUnaryNeg:
+        mpz_neg(result, operand->digit);
+        break;
+    
+    default:
+        report(opt->reports, eInternal, NULL, "unhandled unary op %s", unary_name(unary.op));
+        return opt_unsupported("unhandled unary op");
+    }
+
+    ssa_value_t *value = value_digit_new(result, operand->type);
+    return opt_ok(value);
+}
+
+static opt_result_t opt_step(opt_t *opt, const ssa_step_t *step, bool *result)
+{
+    ssa_opcode_t kind = step->opcode;
+    switch (kind)
+    {
+    case eOpReturn: {
+        ssa_return_t ret = step->ret;
+        *result = true;
+        return opt_ok(get_operand_value(opt, ret.value));
+    }
+
+    case eOpLoad: {
+        ssa_load_t load = step->load;
+        return opt_load(opt, load.src);
+    }
+
+    case eOpBinary: {
+        ssa_binary_t binary = step->binary;
+        return opt_binary(opt, binary);
+    }
+
+    case eOpUnary: {
+        ssa_unary_t unary = step->unary;
+        return opt_unary(opt, unary);
+    }
+
+    default:
+        report(opt->reports, eInternal, NULL, "unhandled opcode %s", ssa_opcode_name(kind));
+        return opt_unsupported("unhandled opcode");
+    }
 }
 
 static bool opt_block(opt_t *opt, const ssa_block_t *block)
@@ -123,73 +243,102 @@ static bool opt_block(opt_t *opt, const ssa_block_t *block)
 
     for (size_t i = 0; i < steps; i++)
     {
+        bool shouldReturn = false;
         ssa_step_t *step = vector_get(block->steps, i);
-        ssa_opcode_t kind = step->opcode;
+        opt_result_t result = opt_step(opt, step, &shouldReturn);
 
-        switch (kind)
+        if (result.reason != eOptSuccess)
         {
-        case eOpReturn: {
-            ssa_return_t ret = step->ret;
-            set_result(opt, ret.value);
+            // failed to optimize
+            report(opt->reports, eInternal, NULL, "failed to optimize step");
+            break;
+        }
+
+        if (shouldReturn) 
+        {
+            set_result(opt, result.value);
             return true;
         }
 
-        case eOpLoad: {
-            ssa_load_t load = step->load;
-            opt_load(opt, step, load.src);
-            break;
-        }
-
-        case eOpBinary: {
-            ssa_binary_t binary = step->binary;
-            opt_binary(opt, step, binary);
-            break;
-        }
-
-        default:
-            report(opt->reports, eInternal, NULL, "unhandled opcode %s", ssa_opcode_name(kind));
-            return false;
-        }
+        map_set_ptr(opt->stepCache, step, (void*)result.value);
     }
 
+    set_result(opt, NULL);
     return false;
 }
 
-static const ssa_value_t *opt_global(opt_t *opt, const ssa_flow_t *flow)
+static opt_result_t opt_global(opt_t *opt, const ssa_flow_t *flow)
 {
     const ssa_value_t *value = map_get_ptr(opt->globalCache, flow);
     if (value != NULL)
     {
-        return value;
+        return opt_ok(value);
     }
     
     if (!opt_block(opt, flow->entry))
     {
         report(opt->reports, eInternal, NULL, "failed to optimize block");
-        return NULL;
+        return opt_unsupported("failed to optimize block");
     }
 
     const ssa_value_t *result = reset_value(opt);
 
     map_set_ptr(opt->globalCache, flow, (void*)result);
-    return result;
+    return opt_ok(result);
 }
 
 static void build_global(opt_t *opt, ssa_flow_t *flow)
 {
-    // TODO: where do we get a type from?
-    flow->value = flow->entry == NULL ? value_empty_new(NULL) : opt_global(opt, flow);
+    printf("building global %s\n", flow->name);
+    // if there is no entry then the global is uninitialized
+    if (flow->entry == NULL)
+    {
+        flow->value = value_empty_new(flow->type);
+        return;
+    }
+
+    printf("opt global %s\n", flow->name);
+    opt->expectedReturnType = flow->type;
+    opt_result_t result = opt_global(opt, flow);
+    
+    printf("opt %d\n", (int)result.reason);
+
+    if (result.reason != eOptSuccess)
+    {
+        report(opt->reports, eInternal, NULL, "failed to optimize global");
+        flow->value = value_empty_new(flow->type);
+    }
+    else
+    {
+        flow->value = result.value;
+    }
+}
+
+static void build_function(opt_t *opt, ssa_flow_t *flow)
+{
+    UNUSED(opt);
+    UNUSED(flow);
 }
 
 void ssa_opt_module(reports_t *reports, ssa_module_t *mod)
 {
     section_t symbols = mod->symbols;
     size_t totalGlobals = vector_len(symbols.globals);
+    size_t totalFunctions = vector_len(symbols.functions);
+
+    ssa_step_t nopStep = {
+        .opcode = eOpNop,
+        .id = "nop"
+    };
 
     opt_t opt = {
         .reports = reports,
         .stepCache = map_new(0x1000), // TODO: better size
         .globalCache = map_new(0x1000), // TODO: better size
+
+        .nopStep = BOX(nopStep),
+
+        .expectedReturnType = NULL,
         .result = NULL
     };
 
@@ -197,5 +346,11 @@ void ssa_opt_module(reports_t *reports, ssa_module_t *mod)
     {
         ssa_flow_t *flow = vector_get(symbols.globals, i);
         build_global(&opt, flow);
+    }
+
+    for (size_t i = 0; i < totalFunctions; i++)
+    {
+        ssa_flow_t *flow = vector_get(symbols.functions, i);
+        build_function(&opt, flow);
     }
 }

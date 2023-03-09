@@ -33,6 +33,8 @@ set_t *set_new(IN_RANGE(0, SIZE_MAX) size_t size);
  */
 const char *set_add(IN_NOTNULL set_t *set, IN_NOTNULL const char *key);
 
+const void *set_add_ptr(IN_NOTNULL set_t *set, const void *key);
+
 /**
  * @brief check if a set contains a key
  *
@@ -42,8 +44,6 @@ const char *set_add(IN_NOTNULL set_t *set, IN_NOTNULL const char *key);
  */
 NODISCARD CONSTFN 
 bool set_contains(IN_NOTNULL set_t *set, IN_STRING const char *key);
-
-const void *set_add_ptr(IN_NOTNULL set_t *set, const void *key);
 
 NODISCARD CONSTFN 
 bool set_contains_ptr(IN_NOTNULL set_t *set, const void *key);
