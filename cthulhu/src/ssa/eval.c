@@ -289,7 +289,6 @@ static opt_result_t opt_global(opt_t *opt, const ssa_flow_t *flow)
 
 static void build_global(opt_t *opt, ssa_flow_t *flow)
 {
-    printf("building global %s\n", flow->name);
     // if there is no entry then the global is uninitialized
     if (flow->entry == NULL)
     {
@@ -297,12 +296,9 @@ static void build_global(opt_t *opt, ssa_flow_t *flow)
         return;
     }
 
-    printf("opt global %s\n", flow->name);
     opt->expectedReturnType = flow->type;
     opt_result_t result = opt_global(opt, flow);
     
-    printf("opt %d\n", (int)result.reason);
-
     if (result.reason != eOptSuccess)
     {
         report(opt->reports, eInternal, NULL, "failed to optimize global");

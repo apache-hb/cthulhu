@@ -1,10 +1,11 @@
-#include "base/util.h"
 #include "cthulhu/emit/c89.h"
 #include "cthulhu/interface/interface.h"
 #include "argparse/argparse.h"
 
 #include "base/macros.h"
 #include "base/memory.h"
+#include "base/panic.h"
+#include "base/util.h"
 
 #include "cthulhu/ssa/ssa.h"
 #include "report/report.h"
@@ -126,14 +127,21 @@ int main(int argc, const char **argv)
 
     // test c89 output
 
-    make_directory("test-c89");
-
     const char *path = vector_get(result.files, 0);
-    size_t len = strlen(path);
-    size_t needed = MIN(strlen(path), 8);
-    char *id = ctu_strdup(path + len - needed);
-    char *name = format("test-c89/%s.c", str_replace(id, "/", "."));
-    io_t *c89Out = io_file(name, eFileText | eFileWrite);
+    vector_t *parts = str_split(path, ":");
+    CTASSERT(vector_len(parts) == 2);
+
+    const char *name = str_replace(vector_get(parts, 1), "/", ".");
+    const char *dir = format("test-out\\%s", name + 1);
+    const char *src = format("%s\\main.c", dir);
+
+    system(format("md %s", dir));
+
+    io_t *c89Out = io_file(src, eFileText | eFileWrite);
+
+    CTASSERTF(io_error(c89Out) == 0, "failed to open file: %s", error_string(io_error(c89Out)));
+    printf("here\n");
+
     c89_emit_ssa_modules(result.reports, mod, c89Out);
 
     err = end_reports(result.reports, "emitting c89", result.reportConfig);
@@ -141,15 +149,12 @@ int main(int argc, const char **argv)
 
     io_close(c89Out);
 
-    int status = system(format("cl /nologo /c %s /Fo%s.obj", name, name));
+    int status = system(format("cl /nologo /c %s /Fo%s.obj", src, name + 1));
     if (status != EXIT_OK)
     {
         report(result.reports, eFatal, NULL, "compilation failed");
         return status;
     }
-
-    delete_file(name);
-    delete_file(format("%s.obj", name));
-
+    
     return 0;
 }
