@@ -943,6 +943,12 @@ static hlir_t *sema_assign(sema_t *sema, ast_t *stmt)
     hlir_t *dst = sema_expr(sema, stmt->dst);
     hlir_t *src = sema_expr(sema, stmt->src);
 
+    // TODO: distinguish between lvalue and rvalue
+    if (hlir_is(dst, eHlirLoad))
+    {
+        dst = dst->read;
+    }
+
     hlir_t *convert = convert_to(sema_reports(sema), get_hlir_type(dst), src);
 
     if (hlir_is(convert, eHlirError))

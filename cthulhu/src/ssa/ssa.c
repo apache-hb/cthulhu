@@ -107,6 +107,10 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
         break;
     }
 
+    case eHlirPointer:
+        it->ptr = type_new(ssa, real->ptr);
+        break;
+
     case eHlirBool:
     case eHlirUnit:
     case eHlirEmpty:

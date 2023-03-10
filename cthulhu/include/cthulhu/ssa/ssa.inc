@@ -47,6 +47,7 @@ SSA_TYPE(eTypeUnit, "unit")
 SSA_TYPE(eTypeEmpty, "empty")
 
 SSA_TYPE(eTypePointer, "pointer")
+SSA_TYPE(eTypeArray, "array")
 
 SSA_TYPE(eTypeSignature, "signature")
 

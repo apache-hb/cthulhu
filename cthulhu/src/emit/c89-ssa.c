@@ -95,6 +95,11 @@ static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, c
     case eTypeString:
         return name == NULL ? "const char *" : format("const char *%s", name);
 
+    case eTypePointer:
+        return name == NULL 
+            ? format("%s *", get_type_name(emit, type->ptr, NULL)) 
+            : format("%s *%s", get_type_name(emit, type->ptr, NULL), name);
+
     case eTypeSignature:
         return get_signature_type(emit, type, name);
 

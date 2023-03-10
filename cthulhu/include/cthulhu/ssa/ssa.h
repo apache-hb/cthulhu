@@ -57,6 +57,7 @@ typedef struct ssa_type_t
         /* empty */
 
         // eTypePointer
+        const ssa_type_t *ptr;
         /* TODO: implement */
 
         // eTypeSignature
