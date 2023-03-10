@@ -19,12 +19,6 @@ static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
     fprintf(stderr, "\n");
 
     stacktrace_print(stderr);
-
-#ifdef _WIN32
-    __debugbreak();
-#else
-    __builtin_trap();
-#endif
 }
 
 panic_handler_t globalPanicHandler = default_panic_handler;
@@ -41,5 +35,5 @@ void ctpanic(panic_t panic, const char *msg, ...)
     raise(SIGSEGV);
 #endif
 
-    abort();
+    exit(99);
 }

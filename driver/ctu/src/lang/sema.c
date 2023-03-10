@@ -87,6 +87,7 @@ static const char *kDigitNames[eSignTotal][eDigitTotal] = {
 static hlir_t *kVoidType = NULL;
 static hlir_t *kNullType = NULL;
 static hlir_t *kEmptyType = NULL;
+static hlir_t *kOpaqueType = NULL;
 static hlir_t *kBoolType = NULL;
 static hlir_t *kStringType = NULL;
 static hlir_t *kDigitTypes[eSignTotal * eDigitTotal];
@@ -294,10 +295,11 @@ void ctu_init_compiler(runtime_t *runtime)
 
     kVoidType = hlir_unit(node, "void");
     kEmptyType = hlir_empty(node, "noreturn");
+    kOpaqueType = hlir_opaque(node, "opaque");
     kBoolType = hlir_bool(node, "bool");
     kStringType = hlir_string(node, "str");
 
-    kNullType = hlir_pointer(node, "nullptr", kVoidType, false);
+    kNullType = hlir_pointer(node, "nullptr", kOpaqueType, false);
 
     for (int sign = 0; sign < eSignTotal; sign++)
     {

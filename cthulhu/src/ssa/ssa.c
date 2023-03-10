@@ -30,6 +30,7 @@ typedef struct {
     map_t *importedSymbols; // map_t<const char *, const hlir_t *>
 
     map_t *currentLocals; // map_t<const hlir_t *, size_t> // map of local variables to their index in the locals vector
+    map_t *currentParams; // map_t<const hlir_t *, size_t> // map of parameters to their index in the params vector
 
     ssa_block_t *currentBlock;
     size_t stepIdx;
@@ -217,6 +218,14 @@ static ssa_type_t *ssa_get_string_type(ssa_t *ssa)
     return it;
 }
 
+static ssa_type_t *ssa_get_empty_type(ssa_t *ssa)
+{
+    ssa_type_t *it = ssa_type_new(ssa, eTypeEmpty);
+    it->name = "empty"; // TODO: match frontend name
+
+    return it;
+}
+
 static ssa_value_t *ssa_value_digit_new(ssa_t *ssa, const hlir_t *hlir)
 {
     ssa_value_t *it = ssa_value_new(ssa_get_digit_type(ssa, hlir), true);
@@ -280,6 +289,7 @@ static ssa_operand_t compile_binary(ssa_t *ssa, const hlir_t *hlir)
 
     ssa_step_t step = {
         .opcode = eOpBinary,
+        .type = type_new(ssa, get_hlir_type(hlir)),
         .binary = {
             .op = hlir->binary,
             .lhs = lhs,
@@ -296,6 +306,7 @@ static ssa_operand_t compile_load(ssa_t *ssa, const hlir_t *hlir)
 
     ssa_step_t step = {
         .opcode = eOpLoad,
+        .type = type_new(ssa, get_hlir_type(hlir->read)),
         .load = {
             .src = name
         }
@@ -331,14 +342,16 @@ static ssa_operand_t compile_local_ref(ssa_t *ssa, const hlir_t *hlir)
 static ssa_operand_t compile_cast(ssa_t *ssa, const hlir_t *hlir)
 {
     ssa_operand_t op = compile_rvalue(ssa, hlir->expr);
+    const ssa_type_t *type = type_new(ssa, get_hlir_type(hlir));
 
     ssa_step_t step = {
         .opcode = eOpCast,
+        .type = type,
         .cast = {
             .op = hlir->cast,
             .operand = op,
 
-            .type = type_new(ssa, get_hlir_type(hlir))
+            .type = type
         }
     };
 
@@ -358,6 +371,7 @@ static ssa_operand_t compile_call(ssa_t *ssa, const hlir_t *hlir)
 
     ssa_step_t step = {
         .opcode = eOpCall,
+        .type = type_new(ssa, get_hlir_type(hlir)),
         .call = {
             .args = args,
             .len = len,
@@ -400,6 +414,7 @@ static ssa_operand_t compile_unary(ssa_t *ssa, const hlir_t *hlir)
 
     ssa_step_t step = {
         .opcode = eOpUnary,
+        .type = type_new(ssa, get_hlir_type(hlir)),
         .unary = {
             .op = hlir->unary,
             .operand = op
@@ -457,6 +472,18 @@ static ssa_operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
     }
 }
 
+static ssa_operand_t compile_param(ssa_t *ssa, const hlir_t *hlir)
+{
+    const void *ref = map_get_ptr(ssa->currentParams, hlir);
+
+    ssa_operand_t op = {
+        .kind = eOperandParam,
+        .param = (uintptr_t)ref
+    };
+
+    return op;
+}
+
 static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -495,6 +522,9 @@ static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
     case eHlirFunction:
         return compile_name(ssa, hlir);
 
+    case eHlirParam:
+        return compile_param(ssa, hlir);
+
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-rvalue %s", hlir_kind_to_string(kind));
         return operand_empty();
@@ -518,6 +548,7 @@ static ssa_operand_t compile_assign(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpStore,
+        .type = ssa_get_empty_type(ssa),
         .store = {
             .dst = dst,
             .src = src
@@ -534,6 +565,7 @@ static ssa_operand_t compile_compare_compare(ssa_t *ssa, const hlir_t *cond)
 
     ssa_step_t step = {
         .opcode = eOpCompare,
+        .type = ssa_get_bool_type(ssa),
         .compare = {
             .op = cond->compare,
             .lhs = lhs,
@@ -578,6 +610,7 @@ static ssa_operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpJmp,
+        .type = ssa_get_empty_type(ssa),
         .jmp = {
             .label = operand_bb(loop)
         }
@@ -590,6 +623,7 @@ static ssa_operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t ret = {
         .opcode = eOpBranch,
+        .type = ssa_get_empty_type(ssa),
         .branch = {
             .cond = compile_compare(ssa, stmt->cond),
             .truthy = operand_bb(loop),
@@ -612,6 +646,7 @@ static ssa_operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t ret = {
         .opcode = eOpJmp,
+        .type = ssa_get_empty_type(ssa),
         .jmp = {
             .label = operand_bb(tail)
         }
@@ -619,6 +654,7 @@ static ssa_operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpBranch,
+        .type = ssa_get_empty_type(ssa),
         .branch = {
             .cond = compile_compare(ssa, stmt->cond),
             .truthy = operand_bb(then),
@@ -653,6 +689,7 @@ static ssa_operand_t compile_return(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpReturn,
+        .type = ssa_get_empty_type(ssa),
         .ret = {
             .value = op,
         }
@@ -710,6 +747,7 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
     ssa_operand_t result = global->value == NULL ? operand_empty() : compile_rvalue(ssa, global->value);
     ssa_step_t step = {
         .opcode = eOpReturn,
+        .type = ssa_get_empty_type(ssa),
         .ret = {
             .value = result
         }
@@ -722,15 +760,25 @@ static void compile_function(ssa_t *ssa, const hlir_t *function)
     ssa_flow_t *flow = map_get_ptr(ssa->functions, function);
     CTASSERT(flow != NULL);
 
-    size_t len = vector_len(function->locals);
-    ssa->currentLocals = map_optimal(len);
-    flow->locals = vector_of(len);
+    size_t totalLocals = vector_len(function->locals);
+    size_t totalParams = vector_len(function->params);
+
+    ssa->currentLocals = map_optimal(totalLocals);
+    ssa->currentParams = map_optimal(totalParams);
+
+    flow->locals = vector_of(totalLocals);
     
-    for (size_t i = 0; i < len; i++) 
+    for (size_t i = 0; i < totalLocals; i++) 
     {
         const hlir_t *local = vector_get(function->locals, i);
         map_set_ptr(ssa->currentLocals, local, (void*)(uintptr_t)i);
         vector_set(flow->locals, i, type_new(ssa, get_hlir_type(local)));
+    }
+
+    for (size_t i = 0; i < totalParams; i++)
+    {
+        const hlir_t *param = vector_get(function->params, i);
+        map_set_ptr(ssa->currentParams, param, (void*)(uintptr_t)i);
     }
 
     compile_flow(ssa, flow);

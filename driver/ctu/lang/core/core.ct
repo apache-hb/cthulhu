@@ -1,0 +1,11 @@
+module core;
+
+variant Result<T: type, E: type> {
+    Value(value: T),
+    Error(error: E)
+}
+
+variant Option<T: type> {
+    Value(value: T),
+    Empty
+}

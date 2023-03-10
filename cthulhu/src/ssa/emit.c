@@ -92,6 +92,9 @@ static const char *emit_operand(emit_t *emit, set_t *edges, ssa_operand_t op)
     case eOperandLocal: 
         return format("local[%zu]", op.local);
 
+    case eOperandParam:
+        return format("param[%zu]", op.param);
+
     case eOperandFunction: 
         return format("%s", get_flow_name(op.function));
 

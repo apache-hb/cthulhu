@@ -129,6 +129,9 @@ typedef struct ssa_operand_t
         // eOperandLocal
         size_t local;
 
+        // eOperandParam
+        size_t param;
+
         // eOperandGlobal
         const ssa_flow_t *global;
 
@@ -220,6 +223,7 @@ typedef struct ssa_step_t
 {
     ssa_opcode_t opcode;
     const char *id;
+    const ssa_type_t *type;
 
     union {
         ssa_return_t ret;

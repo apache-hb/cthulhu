@@ -1,0 +1,25 @@
+import sm6(Register, ComputeThreads, CsMain, DispatchThreadID);
+
+struct ConstBuffer {
+    texelSize: float2;
+}
+
+@Register(t0)
+const src: Texture2D<float4>;
+
+@Register(u0)
+var dst: RWTexture2D<float4>;
+
+@Register(s0)
+const sampler: SamplerState;
+
+@Register(b0)
+const cb: ConstantBuffer!<ConstBuffer>;
+
+@[ComputeThreads(32, 32, 1), CsMain]
+def genMipMap(@DispatchThreadID id : uint3) {
+    const texcoords = cb.texelSize * float2(id.xy) + 0.5;
+    const colour = src.sample(sampler, texcoords, 0);
+
+    dst[id.xy] = colour;
+}

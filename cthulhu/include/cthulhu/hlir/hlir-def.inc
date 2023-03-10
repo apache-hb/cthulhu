@@ -13,6 +13,7 @@ HLIR_KIND(eHlirString, "string-type")
 HLIR_KIND(eHlirBool,   "bool-type")
 HLIR_KIND(eHlirUnit,   "unit-type")
 HLIR_KIND(eHlirEmpty,  "empty-type")
+HLIR_KIND(eHlirOpaque, "opaque-type") // opaque pointer type, akin to void*
 
 // user defined scalar types
 HLIR_KIND(eHlirArray,   "array-type")

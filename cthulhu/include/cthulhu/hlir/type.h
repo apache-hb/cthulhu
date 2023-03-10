@@ -49,6 +49,8 @@ hlir_t *hlir_unit(node_t *node, const char *name);
 
 hlir_t *hlir_empty(node_t *node, const char *name);
 
+hlir_t *hlir_opaque(node_t *node, const char *name);
+
 /**
  * @brief construct a new closure type
  *
