@@ -140,18 +140,29 @@ static void c89_emit_ssa_global(c89_ssa_emit_t *emit, const ssa_flow_t *global)
     }
 }
 
-static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
+static bool is_extern(const ssa_flow_t *flow)
 {
-    UNUSED(emit);
-    UNUSED(function);
+    return flow->linkage == eLinkImported;
 }
 
-static void c89_fwd_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
+static void c89_emit_function_decl(c89_ssa_emit_t *emit, const ssa_flow_t *flow)
 {
-    CTASSERT(function->type->kind == eTypeSignature);
-    const ssa_type_t *type = function->type;
+    CTASSERT(flow->type->kind == eTypeSignature);
+    const ssa_type_t *type = flow->type;
 
-    const char *name = get_function_name(emit, function);
+    switch (flow->linkage)
+    {
+    case eLinkImported:
+        WRITE_STRING(&emit->emit, "extern ");
+        break;
+    case eLinkInternal:
+        WRITE_STRING(&emit->emit, "static ");
+        break;
+    default:
+        break;
+    }
+
+    const char *name = get_function_name(emit, flow);
     const char *result = get_type_name(emit, type->result);
 
     WRITE_STRINGF(&emit->emit, "%s %s(", result, name);
@@ -165,10 +176,10 @@ static void c89_fwd_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
     {
         for (size_t i = 0; i < totalParams; i++)
         {
-            const ssa_type_t *param = vector_get(type->args, i);
-            const char *paramType = get_type_name(emit, param);
+            const ssa_param_t *param = vector_get(type->args, i);
+            const char *paramType = get_type_name(emit, param->type);
 
-            WRITE_STRINGF(&emit->emit, "%s", paramType);
+            WRITE_STRINGF(&emit->emit, "%s %s", paramType, param->name);
 
             if (i < totalParams - 1)
             {
@@ -182,7 +193,21 @@ static void c89_fwd_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
         WRITE_STRING(&emit->emit, ", ...");
     }
 
-    WRITE_STRING(&emit->emit, ");\n");
+    WRITE_STRING(&emit->emit, ")");
+}
+
+static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
+{
+    if (is_extern(function)) { return; }
+
+    c89_emit_function_decl(emit, function);
+    WRITE_STRING(&emit->emit, " {}\n");
+}
+
+static void c89_fwd_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
+{
+    c89_emit_function_decl(emit, function);
+    WRITE_STRING(&emit->emit, ";\n");
 }
 
 void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)

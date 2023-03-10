@@ -42,6 +42,14 @@ ssa_kind_t ssa_get_value_kind(const ssa_value_t *value)
     return value->type->kind;
 }
 
+ssa_param_t *ssa_param_new(const char *name, const ssa_type_t *type)
+{
+    ssa_param_t *param = ctu_malloc(sizeof(ssa_param_t));
+    param->name = name;
+    param->type = type;
+    return param;
+}
+
 ssa_value_t *ssa_value_new(const ssa_type_t *type, bool init) 
 {
     ssa_value_t *value = ctu_malloc(sizeof(ssa_value_t));

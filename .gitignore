@@ -43,3 +43,7 @@ fuzz-*/
 afl*/
 genout*/
 out.c
+
+# grammar files
+!driver/**/*
+node_modules/

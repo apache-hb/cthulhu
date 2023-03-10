@@ -1,0 +1,25 @@
+{
+  "name": "ctu",
+  "displayName": "cthulhu",
+  "description": "Cthulhu language support",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.76.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "ctu",
+      "aliases": ["Cthulhu", "ctu"],
+      "extensions": [".ct"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "ctu",
+      "scopeName": "source.cthulhu",
+      "path": "./syntaxes/ctu.tmLanguage.json"
+    }]
+  }
+}

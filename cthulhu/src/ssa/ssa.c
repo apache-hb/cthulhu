@@ -97,9 +97,11 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
         it->result = type_new(ssa, real->result);
         it->variadic = real->variadic;
         it->args = vector_of(vector_len(real->params));
-        for (size_t i = 0; i < vector_len(real->params); i++) {
+        for (size_t i = 0; i < vector_len(real->params); i++) 
+        {
+            const char *name = get_hlir_name(vector_get(real->params, i));
             ssa_type_t *arg = type_new(ssa, vector_get(real->params, i));
-            vector_set(it->args, i, arg);
+            vector_set(it->args, i, ssa_param_new(name, arg));
         }
         break;
     }

@@ -26,6 +26,12 @@ typedef enum ssa_kind_t
     eTypeTotal
 } ssa_kind_t;
 
+typedef struct ssa_param_t
+{
+    const ssa_type_t *type;
+    const char *name;
+} ssa_param_t;
+
 typedef struct ssa_type_t
 {
     ssa_kind_t kind;
@@ -56,7 +62,7 @@ typedef struct ssa_type_t
         // eTypeSignature
         struct {
             const ssa_type_t *result;
-            vector_t *args;
+            vector_t *args; // vector_t<ssa_param_t*>
             bool variadic;
         };
 

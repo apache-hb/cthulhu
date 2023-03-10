@@ -135,7 +135,7 @@ int main(int argc, const char **argv)
     const char *dir = format("test-out\\%s", name + 1);
     const char *src = format("%s\\main.c", dir);
 
-    system(format("md %s", dir));
+    system(format("if not exist \"%s\" md %s", dir, dir));
 
     io_t *c89Out = io_file(src, eFileText | eFileWrite);
 
@@ -155,6 +155,6 @@ int main(int argc, const char **argv)
         report(result.reports, eFatal, NULL, "compilation failed");
         return status;
     }
-    
+
     return 0;
 }
