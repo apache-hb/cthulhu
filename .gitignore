@@ -29,6 +29,7 @@
 !.clangd
 !.clang-format
 !.github/workflows/*.yml
+!*.xml
 
 # dont ignore scripts
 !*.py
@@ -47,3 +48,4 @@ out.c
 # grammar files
 !driver/**/*
 node_modules/
+interface/gui/interface/imgui/examples/example_android_opengl3/android/app/src/main/AndroidManifest.xml

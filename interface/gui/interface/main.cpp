@@ -151,7 +151,7 @@ struct HlirNode
 
     const char *title = nullptr;
 
-    ImVec2 position = ImVec2(0, 0);
+    ImVec2 position = ImVec2(100, 100);
     bool selected = false;
 
     std::vector<HlirConnection> connections;

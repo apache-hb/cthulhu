@@ -1,0 +1,109 @@
+<root>
+    <includes>
+        <system>gmp.h</system>
+        <system>stddef.h</system>
+        <system>stdbool.h</system>
+    </includes>
+
+    <enums>
+        <enum prefix="eSign" desc="Digit sign" name="sign_t">
+            <value desc="Signed">signed</value>
+            <value desc="Unsigned">unsigned</value>
+        </enum>
+
+        <enum prefix="eDigit" desc="Digit width" name="digit_t">
+            <value desc="Char">char</value>
+            <value desc="Short">short</value>
+            <value desc="Int">int</value>
+            <value desc="Long">long</value>
+            <value desc="Ptr">intptr</value>
+            <value desc="Size">intsize</value>
+            <value desc="Max">intmax</value>
+        </enum>
+
+        <enum prefix="eBuiltin" desc="Builtin expression" name="builtin_t">
+            <value desc="SizeOf">sizeof</value>
+            <value desc="AlignOf">alignof</value>
+        </enum>
+
+        <enum prefix="eLink" desc="Symbol linkage" name="link_t">
+            <value desc="Exported">exported</value>
+            <value desc="Imported">imported</value>
+            <value desc="Internal">internal</value>
+            <value desc="CliEntry">cli-entry</value>
+            <value desc="GuiEntry">gui-entry</value>
+            <value desc="LibEntry">lib-entry</value>
+        </enum>
+
+        <enum prefix="eVisible" desc="Symbol visibility" name="visible_t">
+            <value desc="Public">public</value>
+            <value desc="Private">private</value>
+        </enum>
+
+        <enum prefix="eUnary" desc="Unary expression" name="unary_t">
+            <value desc="Abs" symbol="+">abs</value>
+            <value desc="Neg" symbol="-">neg</value>
+            <value desc="Not" symbol="!">not</value>
+            <value desc="BitNot" symbol="~">bitnot</value>
+        </enum>
+
+        <enum prefix="eBinary" desc="Binary expression" name="binary_t">
+            <value desc="Add" symbol="+">add</value>
+            <value desc="Sub" symbol="-">sub</value>
+            <value desc="Mul" symbol="*">mul</value>
+            <value desc="Div" symbol="/">div</value>
+            <value desc="Mod" symbol="%">mod</value>
+            <value desc="BitAnd" symbol="&amp;">bitand</value>
+            <value desc="BitOr" symbol="|">bitor</value>
+            <value desc="BitXor" symbol="^">bitxor</value>
+            <value desc="BitShl" symbol="&lt;&lt;">bitshl</value>
+            <value desc="BitShr" symbol="&gt;&gt;">bitshr</value>
+        </enum>
+
+        <enum prefix="eCompare" desc="Comparison expression" name="compare_t">
+            <value desc="And" symbol="&amp;&amp;">and</value>
+            <value desc="Or" symbol="||">or</value>
+            <value desc="Equal" symbol="==">equal</value>
+            <value desc="NotEqual" symbol="!=">not-equal</value>
+            <value desc="Less" symbol="&lt;">less</value>
+            <value desc="LessEqual" symbol="&lt;=">less-equal</value>
+            <value desc="Greater" symbol="&gt;">greater</value>
+            <value desc="GreaterEqual" symbol="&gt;=">greater-equal</value>
+        </enum>
+
+        <enum prefix="eCast" desc="Cast" name="cast_t">
+            <value desc="ZeroExtend">zero-extend</value>
+            <value desc="SignExtend">sign-extend</value>
+            <value desc="BitCast">bitcast</value>
+        </enum>
+    </enums>
+
+    <bitflags>
+        <flags prefix="eQual" desc="Type Qualifiers" name="qual_t">
+            <bitflag desc="Default" bit="0">default</bitflag>
+            <bitflag desc="Const" bit="1">const</bitflag>
+            <bitflag desc="Volatile" bit="2">volatile</bitflag>
+            <bitflag desc="Atomic" bit="3">atomic</bitflag>
+        </flags>
+    </bitflags>
+
+    <nodes prefix="hlir_">
+        <node desc="DigitType" name="digit_type_t">
+            <field desc="Sign" type="sign_t">sign</field>
+            <field desc="Digit" type="digit_t">digit</field>
+        </node>
+
+        <node desc="DigitLiteral" name="digit_literal_t">
+            <field desc="Value" type="mpz_t">value</field>
+        </node>
+        
+        <node desc="StringLiteral" name="string_literal_t">
+            <field desc="Length" type="size_t">size</field>
+            <field desc="Data" type="char*">text</field>
+        </node>
+
+        <node desc="BooleanLiteral" name="bool_literal_t">
+            <field desc="Value" type="bool">value</field>
+        </node>
+    </nodes>
+</root>
