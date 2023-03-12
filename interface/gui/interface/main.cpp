@@ -1,42 +1,52 @@
 #include "base/version-def.h"
-#include "cthulhu/interface/interface.h"
-#include "glad/glad.h"
-#include <GLFW/glfw3.h>
-
 #include "base/macros.h"
 #include "base/memory.h"
 #include "base/panic.h"
 
+#include "std/str.h"
+
+#include "report/report.h"
+
+#include "cthulhu/hlir/query.h"
+#include "cthulhu/interface/interface.h"
+
+#include "glad/glad.h"
+#include <GLFW/glfw3.h>
+
 #include "imgui.h"
+#include "imgui/misc/cpp/imgui_stdlib.h"
+#include "imgui_internal.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+
+#include "imnodes/ImNodesEz.h"
 
 #include <stdio.h>
 #include <unordered_map>
 #include <unordered_set>
+#include <atomic>
 
-#include "imgui_internal.h"
-#include "report/report.h"
-#include "std/str.h"
+using ssize_t = std::make_signed_t<size_t>;
 
-// TODO: use this once the compiler is allocator aware
-#if 0
-struct Alloc {
+extern "C" struct Alloc {
     Alloc(const char *name) {
         alloc.name = name;
         alloc.data = this;
-        alloc.arenaMalloc = [](auto *self, auto size, auto name) {
-            return reinterpret_cast<Alloc*>(self)->doMalloc(size, name);
+        alloc.arenaMalloc = [](alloc_t *self, size_t size, const char *name) {
+            CTASSERT(self != nullptr);
+            return reinterpret_cast<Alloc*>(self->data)->doMalloc(size, name);
         };
-        alloc.arenaRealloc = [](auto *self, auto ptr, auto newSize, auto oldSize) {
-            return reinterpret_cast<Alloc*>(self)->doRealloc(ptr, newSize, oldSize);
+        alloc.arenaRealloc = [](alloc_t *self, void *ptr, size_t newSize, size_t oldSize) {
+            CTASSERT(self != nullptr);
+            return reinterpret_cast<Alloc*>(self->data)->doRealloc(ptr, newSize, oldSize);
         };
-        alloc.arenaFree = [](auto *self, auto ptr, auto size) {
-            reinterpret_cast<Alloc*>(self)->doFree(ptr, size);
+        alloc.arenaFree = [](alloc_t *self, void *ptr, size_t size) {
+            CTASSERT(self != nullptr);
+            reinterpret_cast<Alloc*>(self->data)->doFree(ptr, size);
         };
     }
 
-    operator alloc_t() { return alloc; }
+    alloc_t get() const { return alloc; }
 
     virtual ~Alloc() = default;
 
@@ -50,11 +60,14 @@ private:
 };
 
 struct StatsAlloc : Alloc {
+    using Alloc::Alloc;
+
     virtual void *doMalloc(size_t size, const char *name) override {
         UNUSED(name);
 
         adjustMemoryUsage(size);
         totalAllocs += 1;
+        currentAllocations += 1;
 
         return malloc(size);
     }
@@ -67,29 +80,197 @@ struct StatsAlloc : Alloc {
     }
 
     virtual void doFree(void *ptr, size_t size) override {
-        adjustMemoryUsage(-size);
+        adjustMemoryUsage(-ssize_t(size));
         totalFrees += 1;
+        currentAllocations -= 1;
 
         free(ptr);
     }
 
 private:
-    void adjustMemoryUsage(ssize_t size) {
+    void adjustMemoryUsage(size_t size) {
         currentUsedMemory += size;
-        peakUsedMemory = MAX(peakUsedMemory, currentUsedMemory);
+        peakUsedMemory.store(MAX(peakUsedMemory, currentUsedMemory));
     }
 
-    size_t currentUsedMemory;
-    size_t peakUsedMemory;
+public:
+    std::atomic_size_t currentUsedMemory{0};
+    std::atomic_size_t peakUsedMemory{0};
 
-    size_t totalAllocs;
-    size_t totalReallocs;
-    size_t totalFrees;
+    std::atomic_size_t totalAllocs{0};
+    std::atomic_size_t totalReallocs{0};
+    std::atomic_size_t totalFrees{0};
+
+    std::atomic_size_t currentAllocations{0};
 };
-#endif
+
+void checkNewConnection();
+
+using SlotInfo = ImNodes::Ez::SlotInfo;
+using SlotInfoVec = std::vector<SlotInfo>;
+
+enum SlotType : int {
+    eSlotInvalid,
+    eSlotDigit,
+    eSlotTotal
+};
+
+struct HlirConnection
+{
+    void *inputNode = nullptr;
+    void *outputNode = nullptr;
+
+    const char *inputSlot = nullptr;
+    const char *outputSlot = nullptr;
+
+    bool operator==(const HlirConnection& other) const 
+    {
+        return inputNode == other.inputNode 
+            && outputNode == other.outputNode 
+            && inputSlot == other.inputSlot 
+            && outputSlot == other.outputSlot;
+    }
+
+    bool operator!=(const HlirConnection& other) const 
+    {
+        return !(*this == other);
+    }
+};
+
+struct HlirNode
+{
+    HlirNode(const char *title, const SlotInfoVec& inputs, const SlotInfoVec& outputs)
+        : title(title)
+        , inputs(inputs)
+        , outputs(outputs)
+    { }
+
+    virtual ~HlirNode() = default;
+
+    virtual void drawContent() { }
+
+    const char *title = nullptr;
+
+    ImVec2 position = ImVec2(0, 0);
+    bool selected = false;
+
+    std::vector<HlirConnection> connections;
+
+    SlotInfoVec inputs;
+    SlotInfoVec outputs;
+
+    void addConnection(HlirConnection conn)
+    {
+        connections.push_back(conn);
+    }
+
+    void removeConnection(HlirConnection conn)
+    {
+        auto it = std::find(connections.begin(), connections.end(), conn);
+        if (it != connections.end())
+        {
+            connections.erase(it);
+        }
+    }
+
+    void drawConnections() 
+    {
+        for (const auto& conn : connections)
+        {
+            if (conn.outputNode != this)
+                continue;
+
+            if (!ImNodes::Connection(conn.inputNode, conn.inputSlot, conn.outputNode, conn.outputSlot))
+            {
+                auto *inputNode = reinterpret_cast<HlirNode*>(conn.inputNode);
+                auto *outputNode = reinterpret_cast<HlirNode*>(conn.outputNode);
+
+                inputNode->removeConnection(conn);
+                outputNode->removeConnection(conn);
+            }
+        }
+    }
+
+    void draw()
+    {
+        if (ImNodes::Ez::BeginNode(this, title, &position, &selected))
+        {
+            ImNodes::Ez::InputSlots(inputs.data(), int(inputs.size()));
+
+            drawContent();
+
+            ImNodes::Ez::OutputSlots(outputs.data(), int(outputs.size()));
+
+            checkNewConnection();
+            drawConnections();
+
+            ImNodes::Ez::EndNode();
+        }
+    }
+};
+
+void checkNewConnection()
+{
+    HlirConnection conn;
+    if (ImNodes::GetNewConnection(&conn.inputNode, &conn.inputSlot, &conn.outputNode, &conn.outputSlot))
+    {
+        auto *inputNode = reinterpret_cast<HlirNode*>(conn.inputNode);
+        auto *outputNode = reinterpret_cast<HlirNode*>(conn.outputNode);
+
+        inputNode->addConnection(conn);
+        outputNode->addConnection(conn);
+    }
+}
+
+struct HlirDigitLiteralNode : HlirNode 
+{
+    HlirDigitLiteralNode(const char *text)
+        : HlirNode("Digit Literal", {}, { SlotInfo{"Value", eSlotDigit} })
+        , str(text)
+    { 
+        mpz_init_set_str(value, str.c_str(), 10);
+    }
+
+    void drawContent() override
+    {
+        ImGui::SetNextItemWidth(64.f);
+        ImGui::InputText("Value", &str, ImGuiInputTextFlags_CharsDecimal);
+        mpz_set_str(value, str.c_str(), 10);
+    }
+
+private:
+    std::string str;
+    mpz_t value;
+};
+
+#define BINARY_OP(op, name, symbol) name "\0"
+const char *kBinaryNames = 
+#include "cthulhu/hlir/hlir-def.inc"
+    "\0\0"
+    ;
+
+struct HlirBinaryNode : HlirNode
+{
+    HlirBinaryNode(binary_t op)
+        : HlirNode("Binary", { SlotInfo{"Left", eSlotDigit}, SlotInfo{"Right", eSlotDigit} }, { SlotInfo{"Value", eSlotDigit} })
+        , binary(op)
+    { }
+
+    void drawContent() override
+    {
+        ImGui::SetNextItemWidth(64.f);
+        ImGui::Combo("Op", &binary, kBinaryNames);
+    }
+
+private:
+    int binary;
+};
 
 int main()
 {
+    StatsAlloc statsAlloc("stats");
+    globalAlloc = statsAlloc.get();
+
     common_init();
     driver_t driver = get_driver();
     char *title = format("GUI Editor (%s | %lu.%lu.%lu)", driver.name, VERSION_MAJOR(driver.version),
@@ -104,7 +285,9 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-    glfwSetErrorCallback([](auto error, auto desc) { fprintf(stderr, "GLFW error(%d): %s", error, desc); });
+    glfwSetErrorCallback([](int error, const char* desc) { 
+        (void)fprintf(stderr, "GLFW error(%d): %s", error, desc); 
+    });
 
     auto *primary = glfwGetPrimaryMonitor();
     const GLFWvidmode *mode = glfwGetVideoMode(primary);
@@ -119,7 +302,9 @@ int main()
 
     glfwMakeContextCurrent(window);
 
-    glfwSetFramebufferSizeCallback(window, [](auto, auto width, auto height) { glViewport(0, 0, width, height); });
+    glfwSetFramebufferSizeCallback(window, [](auto, auto width, auto height) { 
+        glViewport(0, 0, width, height); 
+    });
 
     glfwSwapInterval(0);
 
@@ -147,6 +332,13 @@ int main()
     bool openHlirView = false;
     bool openSsaView = false;
     bool openLogView = false;
+
+    std::vector<HlirNode*> hlirNodes = {
+        new HlirDigitLiteralNode("0"),
+        new HlirBinaryNode(eBinaryAdd)
+    };
+
+    ImNodes::Ez::Context *ctx = ImNodes::Ez::CreateContext();
 
     while (!glfwWindowShouldClose(window) && !shouldExit)
     {
@@ -195,6 +387,13 @@ int main()
                 ImGui::EndMenu();
             }
 
+            ImGuiStyle& style = ImGui::GetStyle();
+            ImVec2 closeButtonPos(ImGui::GetWindowWidth() - (style.FramePadding.x * 2) - ImGui::GetFontSize(), 0.f);
+
+            if (ImGui::CloseButton(ImGui::GetID("CloseEditor"), closeButtonPos)) {
+                shouldExit = true;
+            }
+
             ImGui::EndMenuBar();
         }
 
@@ -204,6 +403,14 @@ int main()
         {
             if (ImGui::Begin("Memory Stats", &openMemoryView))
             {
+                ImGui::Text("Current Used Memory: %zu", statsAlloc.currentUsedMemory.load());
+                ImGui::Text("Current Allocations: %zu", statsAlloc.currentAllocations.load());
+
+                ImGui::Text("Peak Used Memory: %zu", statsAlloc.peakUsedMemory.load());
+
+                ImGui::Text("Total Allocs: %zu", statsAlloc.totalAllocs.load());
+                ImGui::Text("Total Reallocs: %zu", statsAlloc.totalReallocs.load());
+                ImGui::Text("Total Frees: %zu", statsAlloc.totalFrees.load());
             }
             ImGui::End();
         }
@@ -218,8 +425,33 @@ int main()
 
         if (openHlirView)
         {
-            if (ImGui::Begin("HLIR Debug View", &openHlirView))
+            if (ImGui::Begin("HLIR Debug View", &openHlirView, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
             {
+                ImNodes::Ez::BeginCanvas();
+
+                for (auto* node : hlirNodes) {
+                    node->draw();
+                }
+
+                if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered() && !ImGui::IsMouseDragging(ImGuiMouseButton_Right))
+                {
+                    ImGui::FocusWindow(ImGui::GetCurrentWindow());
+                    ImGui::OpenPopup("NodeContextMenu");
+                }
+
+                if (ImGui::BeginPopup("NodeContextMenu"))
+                {
+                    if (ImGui::MenuItem("Digit Literal"))
+                    {
+                        auto *node = new HlirDigitLiteralNode("0");
+                        hlirNodes.push_back(node);
+                        ImNodes::AutoPositionNode(node);
+                    }
+
+                    ImGui::EndPopup();
+                }
+
+                ImNodes::Ez::EndCanvas();
             }
             ImGui::End();
         }
@@ -250,6 +482,8 @@ int main()
 
         glfwSwapBuffers(window);
     }
+
+    ImNodes::Ez::FreeContext(ctx);
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

@@ -4,11 +4,16 @@ project('cthulhu', [ 'c' ],
     meson_version : '>=0.59',
     default_options : [
         'c_std=gnu11', # gcc is picky about POSIX stdlib extensions
+        'cpp_std=c++11',
         'warning_level=2', # we use unnamed structs
         'default_library=static',
         'werror=true'
     ]
 )
+
+if get_option('interfaces').contains('gui')
+    add_languages('cpp', native : false)
+endif
 
 analyze = get_option('analyze')
 tuning = get_option('tuning')

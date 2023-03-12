@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+BEGIN_API
+
 typedef struct alloc_t alloc_t;
 
 typedef void *(*malloc_t)(alloc_t *self, size_t size, const char *name);
@@ -44,3 +46,5 @@ void *arena_malloc(IN_NOTNULL alloc_t *alloc, size_t size, const char *name);
 
 NODISCARD ALLOC(arena_free, 2) 
 void *arena_realloc(IN_NOTNULL alloc_t *alloc, IN_NOTNULL void *ptr, size_t newSize, size_t oldSize);
+
+END_API
