@@ -125,10 +125,10 @@ struct HlirConnection
 
     bool operator==(const HlirConnection& other) const 
     {
-        return inputNode == other.inputNode 
-            && outputNode == other.outputNode 
-            && inputSlot == other.inputSlot 
-            && outputSlot == other.outputSlot;
+        return strcmp(inputSlot, other.inputSlot) == 0
+            && strcmp(outputSlot, other.outputSlot) == 0
+            && inputNode == other.inputNode
+            && outputNode == other.outputNode;
     }
 
     bool operator!=(const HlirConnection& other) const 
@@ -222,49 +222,108 @@ void checkNewConnection()
     }
 }
 
-struct HlirDigitLiteralNode : HlirNode 
+namespace hlir
 {
-    HlirDigitLiteralNode(const char *text)
-        : HlirNode("Digit Literal", {}, { SlotInfo{"Value", eSlotDigit} })
-        , str(text)
-    { 
-        mpz_init_set_str(value, str.c_str(), 10);
-    }
-
-    void drawContent() override
+    struct DigitLiteral : HlirNode 
     {
-        ImGui::SetNextItemWidth(64.f);
-        ImGui::InputText("Value", &str, ImGuiInputTextFlags_CharsDecimal);
-        mpz_set_str(value, str.c_str(), 10);
-    }
+        DigitLiteral(const char *text)
+            : HlirNode("Digit Literal", {}, { SlotInfo{"Value", eSlotDigit} })
+            , str(text)
+        { 
+            mpz_init_set_str(value, str.c_str(), 10);
+        }
 
-private:
-    std::string str;
-    mpz_t value;
-};
+        void drawContent() override
+        {
+            ImGui::SetNextItemWidth(64.f);
+            ImGui::InputText("Value", &str, ImGuiInputTextFlags_CharsDecimal);
+            mpz_set_str(value, str.c_str(), 10);
+        }
 
-#define BINARY_OP(op, name, symbol) name "\0"
-const char *kBinaryNames = 
-#include "cthulhu/hlir/hlir-def.inc"
-    "\0\0"
-    ;
+    private:
+        std::string str;
+        mpz_t value;
+    };
 
-struct HlirBinaryNode : HlirNode
-{
-    HlirBinaryNode(binary_t op)
-        : HlirNode("Binary", { SlotInfo{"Left", eSlotDigit}, SlotInfo{"Right", eSlotDigit} }, { SlotInfo{"Value", eSlotDigit} })
-        , binary(op)
-    { }
-
-    void drawContent() override
+    struct BoolLiteral : HlirNode 
     {
-        ImGui::SetNextItemWidth(64.f);
-        ImGui::Combo("Op", &binary, kBinaryNames);
-    }
+        BoolLiteral(bool value)
+            : HlirNode("Bool Literal", {}, { SlotInfo{"Value", eSlotDigit} })
+            , value(value)
+        { }
 
-private:
-    int binary;
-};
+        void drawContent() override
+        {
+            ImGui::SetNextItemWidth(64.f);
+            ImGui::Checkbox("Value", &value);
+        }
+
+    private:
+        bool value;
+    };
+
+    struct StringLiteral : HlirNode 
+    {
+        StringLiteral(const char *text)
+            : HlirNode("String Literal", {}, { SlotInfo{"Value", eSlotDigit} })
+            , str(text)
+        { }
+
+        void drawContent() override
+        {
+            ImGui::SetNextItemWidth(64.f);
+            ImGui::InputText("Value", &str, ImGuiInputTextFlags_CharsDecimal);
+        }
+    private:
+        std::string str;
+    };  
+
+    #define BINARY_OP(op, name, symbol) name "\0"
+    const char *kBinaryNames = 
+    #include "cthulhu/hlir/hlir-def.inc"
+        "\0\0"
+        ;
+
+    #define UNARY_OP(op, name, symbol) name "\0"
+    const char *kUnaryNames =
+    #include "cthulhu/hlir/hlir-def.inc"
+        "\0\0"
+        ;
+
+    struct Binary : HlirNode
+    {
+        Binary(binary_t op)
+            : HlirNode("Binary", { SlotInfo{"Left", eSlotDigit}, SlotInfo{"Right", eSlotDigit} }, { SlotInfo{"Value", eSlotDigit} })
+            , binary(op)
+        { }
+
+        void drawContent() override
+        {
+            ImGui::SetNextItemWidth(64.f);
+            ImGui::Combo("Op", &binary, kBinaryNames);
+        }
+
+    private:
+        int binary;
+    };
+
+    struct Unary : HlirNode
+    {
+        Unary(unary_t op)
+            : HlirNode("Unary", { SlotInfo{"Value", eSlotDigit} }, { SlotInfo{"Value", eSlotDigit} })
+            , unary(op)
+        { }
+
+        void drawContent() override
+        {
+            ImGui::SetNextItemWidth(64.f);
+            ImGui::Combo("Op", &unary, kUnaryNames);
+        }
+
+    private:
+        int unary;
+    };
+}
 
 int main()
 {
@@ -334,8 +393,8 @@ int main()
     bool openLogView = false;
 
     std::vector<HlirNode*> hlirNodes = {
-        new HlirDigitLiteralNode("0"),
-        new HlirBinaryNode(eBinaryAdd)
+        new hlir::DigitLiteral("0"),
+        new hlir::Binary(eBinaryAdd)
     };
 
     ImNodes::Ez::Context *ctx = ImNodes::Ez::CreateContext();
@@ -443,7 +502,35 @@ int main()
                 {
                     if (ImGui::MenuItem("Digit Literal"))
                     {
-                        auto *node = new HlirDigitLiteralNode("0");
+                        auto *node = new hlir::DigitLiteral("0");
+                        hlirNodes.push_back(node);
+                        ImNodes::AutoPositionNode(node);
+                    }
+
+                    if (ImGui::MenuItem("Bool Literal"))
+                    {
+                        auto *node = new hlir::BoolLiteral(false);
+                        hlirNodes.push_back(node);
+                        ImNodes::AutoPositionNode(node);
+                    }
+
+                    if (ImGui::MenuItem("String Literal"))
+                    {
+                        auto *node = new hlir::StringLiteral("Hello World");
+                        hlirNodes.push_back(node);
+                        ImNodes::AutoPositionNode(node);
+                    }
+
+                    if (ImGui::MenuItem("Binary"))
+                    {
+                        auto *node = new hlir::Binary(eBinaryAdd);
+                        hlirNodes.push_back(node);
+                        ImNodes::AutoPositionNode(node);
+                    }
+
+                    if (ImGui::MenuItem("Unary"))
+                    {
+                        auto *node = new hlir::Unary(eUnaryAbs);
                         hlirNodes.push_back(node);
                         ImNodes::AutoPositionNode(node);
                     }
