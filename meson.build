@@ -15,6 +15,14 @@ if get_option('interfaces').contains('gui')
     add_languages('cpp', native : false)
 endif
 
+py3 = find_program('python3')
+
+astgen = generator(
+    py3,
+    output : [ '@BASENAME@-ast.h', '@BASENAME@-ast.c' ],
+    arguments : [ meson.source_root() / 'data/gen-ast.py', '@INPUT@', '@BUILD_DIR@', '@BUILD_DIR@', '@EXTRA_ARGS@' ]
+)
+
 analyze = get_option('analyze')
 tuning = get_option('tuning')
 

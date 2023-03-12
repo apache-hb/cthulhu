@@ -1,0 +1,212 @@
+<root prefix="h2">
+    <includes>
+        <system>gmp.h</system>
+        <system>stddef.h</system>
+        <system>stdbool.h</system>
+        <local>scan/node.h</local>
+        <local>cthulhu/hlir2/gmp-ext.h</local>
+        <local>std/vector.h</local>
+    </includes>
+
+    <enums>
+        <enum prefix="eSign" desc="Digit sign" name="sign">
+            <value desc="Signed">signed</value>
+            <value desc="Unsigned">unsigned</value>
+        </enum>
+
+        <enum prefix="eDigit" desc="Digit width" name="digit">
+            <value desc="Char">char</value>
+            <value desc="Short">short</value>
+            <value desc="Int">int</value>
+            <value desc="Long">long</value>
+            <value desc="Ptr">intptr</value>
+            <value desc="Size">intsize</value>
+            <value desc="Max">intmax</value>
+        </enum>
+
+        <enum prefix="eBuiltin" desc="Builtin expression" name="builtin">
+            <value desc="SizeOf">sizeof</value>
+            <value desc="AlignOf">alignof</value>
+        </enum>
+
+        <enum prefix="eLink" desc="Symbol linkage" name="link">
+            <value desc="Exported">exported</value>
+            <value desc="Imported">imported</value>
+            <value desc="Internal">internal</value>
+            <value desc="CliEntry">cli-entry</value>
+            <value desc="GuiEntry">gui-entry</value>
+            <value desc="LibEntry">lib-entry</value>
+        </enum>
+
+        <enum prefix="eVisible" desc="Symbol visibility" name="visiblity">
+            <value desc="Public">public</value>
+            <value desc="Private">private</value>
+        </enum>
+
+        <enum prefix="eUnary" desc="Unary expression" name="unary">
+            <value desc="Abs" symbol="+">abs</value>
+            <value desc="Neg" symbol="-">neg</value>
+            <value desc="Not" symbol="!">not</value>
+            <value desc="BitNot" symbol="~">bitnot</value>
+        </enum>
+
+        <enum prefix="eBinary" desc="Binary expression" name="binary">
+            <value desc="Add" symbol="+">add</value>
+            <value desc="Sub" symbol="-">sub</value>
+            <value desc="Mul" symbol="*">mul</value>
+            <value desc="Div" symbol="/">div</value>
+            <value desc="Mod" symbol="%">mod</value>
+            <value desc="BitAnd" symbol="&amp;">bitand</value>
+            <value desc="BitOr" symbol="|">bitor</value>
+            <value desc="BitXor" symbol="^">bitxor</value>
+            <value desc="BitShl" symbol="&lt;&lt;">bitshl</value>
+            <value desc="BitShr" symbol="&gt;&gt;">bitshr</value>
+        </enum>
+
+        <enum prefix="eCompare" desc="Comparison expression" name="compare">
+            <value desc="And" symbol="&amp;&amp;">and</value>
+            <value desc="Or" symbol="||">or</value>
+            <value desc="Equal" symbol="==">equal</value>
+            <value desc="NotEqual" symbol="!=">not-equal</value>
+            <value desc="Less" symbol="&lt;">less</value>
+            <value desc="LessEqual" symbol="&lt;=">less-equal</value>
+            <value desc="Greater" symbol="&gt;">greater</value>
+            <value desc="GreaterEqual" symbol="&gt;=">greater-equal</value>
+        </enum>
+
+        <enum prefix="eCast" desc="Cast" name="cast">
+            <value desc="ZeroExtend">zero-extend</value>
+            <value desc="SignExtend">sign-extend</value>
+            <value desc="BitCast">bitcast</value>
+        </enum>
+    </enums>
+
+    <bitflags>
+        <flags prefix="eQual" desc="Type Qualifiers" name="qual">
+            <bitflag desc="Default" bit="0">default</bitflag>
+            <bitflag desc="Const" bit="1">const</bitflag>
+            <bitflag desc="Volatile" bit="2">volatile</bitflag>
+            <bitflag desc="Atomic" bit="3">atomic</bitflag>
+        </flags>
+    </bitflags>
+
+    <structs>
+        <struct desc="Field" name="field">
+            <field desc="Name" type="$string">name</field>
+            <field desc="Type" type="$$_type_t*">type</field>
+        </struct>
+
+        <struct desc="Enum field" name="enum field">
+            <field desc="Name" type="$string">name</field>
+            <field desc="Value" type="$$_rvalue_t*">value</field>
+        </struct>
+    </structs>
+
+    <nodes root="node">
+        <node desc="Node" name="node" abstract="true">
+            <field desc="Source location" type="node_t*">pos</field>
+        </node>
+
+        <node desc="Decl" name="decl" extends="node" abstract="true">
+            <field desc="Name" type="$string">name</field>
+        </node>
+
+        <node desc="Type" name="type" extends="decl" abstract="true">
+            <field desc="Qualifiers" type="qual_t">qual</field>
+        </node>
+        
+        <node desc="Digit" name="digit" extends="type">
+            <field desc="Sign" type="sign_t">sign</field>
+            <field desc="Width" type="digit_t">width</field>
+        </node>
+
+        <node desc="String" name="string" extends="type"/>
+        <node desc="Bool" name="boolean" extends="type"/>
+        <node desc="Empty" name="empty" extends="type"/>
+        <node desc="Unit" name="unit" extends="type"/>
+        <node desc="Opaque" name="opaque" extends="type"/>
+
+        <node desc="Pointer" name="pointer" extends="type">
+            <field desc="The pointer type" type="$$_type_t*">target</field>
+            <field desc="Can this pointer be indexed into" type="bool">index</field>
+        </node>
+
+        <node desc="Array" name="array" extends="type">
+            <field desc="Target" type="$$_type_t*">target</field>
+            <field desc="Size" type="$$_rvalue_t*">size</field>
+        </node>
+
+        <node desc="Closure" name="closure" extends="type">
+            <field desc="Return type" type="$$_type_t*">result</field>
+            <field desc="Parameters" type="vector_t*" of="$$_field_t*">params</field>
+        </node>
+
+        <node desc="Alias" name="alias" extends="type">
+            <field desc="Target" type="$$_type_t*">target</field>
+        </node>
+
+        <node desc="Aggregate" name="aggregate" extends="type" abstract="true">
+            <field desc="Fields" type="vector_t*" of="$$_field_t*">fields</field>
+        </node>
+
+        <node desc="Union" name="hunion" extends="aggregate"/>
+        <node desc="Struct" name="hstruct" extends="aggregate"/>
+
+        <node desc="Enum" name="henum" extends="type">
+            <field desc="Underlying type" type="$$_type_t*">underlying</field>
+            <field desc="Fields" type="vector_t*" of="$$_enum_field_t*">fields</field>
+        </node>
+
+        <node desc="Stmt" name="stmt" extends="node" abstract="true"/>
+
+        <node desc="LValue" name="lvalue" extends="stmt" abstract="true">
+            <field desc="Type" type="$$_type_t*">type</field>
+        </node>
+
+        <node desc="Name" name="name" extends="lvalue">
+            <field desc="Name" type="$$_node_t*">symbol</field>
+        </node>
+
+        <node desc="RValue" name="rvalue" extends="lvalue" abstract="true"/>
+
+        <node desc="DigitLiteral" name="digit literal" extends="rvalue">
+            <field desc="Value" type="gmp_t">value</field>
+        </node>
+        
+        <node desc="StringLiteral" name="string literal" extends="rvalue">
+            <field desc="Length" type="size_t">size</field>
+            <field desc="Data" type="char*">text</field>
+        </node>
+
+        <node desc="BooleanLiteral" name="bool literal" extends="rvalue">
+            <field desc="Value" type="bool">value</field>
+        </node>
+
+        <node desc="Binary" name="binary" extends="rvalue">
+            <field desc="Operator" type="binary_t">op</field>
+            <field desc="Left" type="$$_rvalue_t*">lhs</field>
+            <field desc="Right" type="$$_rvalue_t*">rhs</field>
+        </node>
+
+        <node desc="Unary" name="unary" extends="rvalue">
+            <field desc="Operator" type="unary_t">op</field>
+            <field desc="Operand" type="$$_rvalue_t*">expr</field>
+        </node>
+
+        <node desc="Compare" name="compare" extends="rvalue">
+            <field desc="Operator" type="compare_t">op</field>
+            <field desc="Left" type="$$_rvalue_t*">lhs</field>
+            <field desc="Right" type="$$_rvalue_t*">rhs</field>
+        </node>
+
+        <node desc="Call" name="call" extends="rvalue">
+            <field desc="Symbol" type="$$_rvalue_t*">symbol</field>
+            <field desc="Arguments" type="vector_t*" of="$$_rvalue_t*">args</field>
+        </node>
+
+        <node desc="Cast" name="cast" extends="rvalue">
+            <field desc="Operator" type="cast_t">op</field>
+            <field desc="Operand" type="$$_rvalue_t*">expr</field>
+        </node>
+    </nodes>
+</root>

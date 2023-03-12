@@ -28,6 +28,22 @@ generic = declare_dependency(
     dependencies : deps
 )
 
+src = astgen.process('data/hlir.xml',
+    extra_args : [ '--name=hlir', '--include=cthulhu/hlir2' ]
+)
+
+libhlir2 = library('hlir2', src,
+    dependencies : deps,
+    c_args : args,
+    include_directories : 'include'
+)
+
+hlir2 = declare_dependency(
+    link_with : libhlir2,
+    include_directories : 'include',
+    dependencies : deps,
+)
+
 src = [
     'src/ssa/ssa.c',
     'src/ssa/emit.c',
