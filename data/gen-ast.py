@@ -238,7 +238,7 @@ class NodeGen:
         for name, node in self.nodes.items():
             src = Source(name)
 
-            args = [field for field in self.collect_fields(node) if field.name != 'tag']
+            args = [field for field in reversed(self.collect_fields(node)) if field.name != 'tag']
             argstr = ', '.join([field.make_arg() for field in args]) if args else 'void'
 
             id = snake_case(name)
