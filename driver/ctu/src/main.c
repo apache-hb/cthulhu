@@ -23,6 +23,8 @@ const driver_t kDriver = {
     .name = "Cthulhu",
     .version = NEW_VERSION(1, 0, 0),
 
+    .exts = ".ct,.ctu",
+
     .fnInitCompiler = ctu_init_compiler,
     .fnParseFile = ctu_parse_file,
     .fnForwardDecls = ctu_forward_decls,

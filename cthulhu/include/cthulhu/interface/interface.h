@@ -47,6 +47,8 @@ typedef struct
     const char *name;
     version_t version;
 
+    const char *exts;
+
     vector_t *commandGroups;
 
     init_compiler_t fnInitCompiler;

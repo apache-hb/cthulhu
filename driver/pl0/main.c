@@ -22,6 +22,8 @@ const driver_t kDriver = {
     .name = "PL/0",
     .version = NEW_VERSION(2, 2, 0),
 
+    .exts = ".pl0",
+
     .fnInitCompiler = pl0_init,
     .fnParseFile = pl0_parse_file,
     .fnForwardDecls = pl0_forward_decls,

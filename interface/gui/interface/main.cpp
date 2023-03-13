@@ -1,3 +1,5 @@
+#include "editor/editor.h"
+
 #include "base/version-def.h"
 #include "base/macros.h"
 #include "base/memory.h"
@@ -10,99 +12,12 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/interface/interface.h"
 
-#include "glad/glad.h"
-#include <GLFW/glfw3.h>
-
-#include "imgui.h"
+#include "imgui/imgui_internal.h"
 #include "imgui/misc/cpp/imgui_stdlib.h"
-#include "imgui_internal.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-
-#include "imnodes/ImNodesEz.h"
 
 #include <stdio.h>
 #include <unordered_map>
 #include <unordered_set>
-#include <atomic>
-
-using ssize_t = std::make_signed_t<size_t>;
-
-extern "C" struct Alloc {
-    Alloc(const char *name) {
-        alloc.name = name;
-        alloc.data = this;
-        alloc.arenaMalloc = [](alloc_t *self, size_t size, const char *name) {
-            CTASSERT(self != nullptr);
-            return reinterpret_cast<Alloc*>(self->data)->doMalloc(size, name);
-        };
-        alloc.arenaRealloc = [](alloc_t *self, void *ptr, size_t newSize, size_t oldSize) {
-            CTASSERT(self != nullptr);
-            return reinterpret_cast<Alloc*>(self->data)->doRealloc(ptr, newSize, oldSize);
-        };
-        alloc.arenaFree = [](alloc_t *self, void *ptr, size_t size) {
-            CTASSERT(self != nullptr);
-            reinterpret_cast<Alloc*>(self->data)->doFree(ptr, size);
-        };
-    }
-
-    alloc_t get() const { return alloc; }
-
-    virtual ~Alloc() = default;
-
-protected:
-    virtual void *doMalloc(size_t size, const char *name) = 0;
-    virtual void *doRealloc(void *ptr, size_t newSize, size_t oldSize) = 0;
-    virtual void doFree(void *ptr, size_t size) = 0;
-
-private:
-    alloc_t alloc;
-};
-
-struct StatsAlloc : Alloc {
-    using Alloc::Alloc;
-
-    virtual void *doMalloc(size_t size, const char *name) override {
-        UNUSED(name);
-
-        adjustMemoryUsage(size);
-        totalAllocs += 1;
-        currentAllocations += 1;
-
-        return malloc(size);
-    }
-
-    virtual void *doRealloc(void *ptr, size_t newSize, size_t oldSize) override {
-        adjustMemoryUsage(newSize - oldSize);
-        totalReallocs += 1;
-
-        return realloc(ptr, newSize);
-    }
-
-    virtual void doFree(void *ptr, size_t size) override {
-        adjustMemoryUsage(-ssize_t(size));
-        totalFrees += 1;
-        currentAllocations -= 1;
-
-        free(ptr);
-    }
-
-private:
-    void adjustMemoryUsage(size_t size) {
-        currentUsedMemory += size;
-        peakUsedMemory.store(MAX(peakUsedMemory, currentUsedMemory));
-    }
-
-public:
-    std::atomic_size_t currentUsedMemory{0};
-    std::atomic_size_t peakUsedMemory{0};
-
-    std::atomic_size_t totalAllocs{0};
-    std::atomic_size_t totalReallocs{0};
-    std::atomic_size_t totalFrees{0};
-
-    std::atomic_size_t currentAllocations{0};
-};
 
 void checkNewConnection();
 
@@ -327,64 +242,7 @@ namespace hlir
 
 int main()
 {
-    StatsAlloc statsAlloc("stats");
-    globalAlloc = statsAlloc.get();
-
-    common_init();
-    driver_t driver = get_driver();
-    char *title = format("GUI Editor (%s | %lu.%lu.%lu)", driver.name, VERSION_MAJOR(driver.version),
-                         VERSION_MINOR(driver.version), VERSION_PATCH(driver.version));
-
-    if (!glfwInit())
-    {
-        return EXIT_INTERNAL;
-    }
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-    glfwSetErrorCallback([](int error, const char* desc) { 
-        (void)fprintf(stderr, "GLFW error(%d): %s", error, desc); 
-    });
-
-    auto *primary = glfwGetPrimaryMonitor();
-    const GLFWvidmode *mode = glfwGetVideoMode(primary);
-
-    GLFWwindow *window = glfwCreateWindow(mode->width, mode->height, title, primary, NULL);
-
-    if (!window)
-    {
-        glfwTerminate();
-        return EXIT_INTERNAL;
-    }
-
-    glfwMakeContextCurrent(window);
-
-    glfwSetFramebufferSizeCallback(window, [](auto, auto width, auto height) { 
-        glViewport(0, 0, width, height); 
-    });
-
-    glfwSwapInterval(0);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        glfwTerminate();
-        return EXIT_INTERNAL;
-    }
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-
-    ImGuiIO &io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 130");
-
-    bool shouldExit = false;
+    Editor editor(get_driver());
 
     bool openMemoryView = false;
     bool openPerfView = false;
@@ -397,42 +255,18 @@ int main()
         new hlir::Binary(eBinaryAdd)
     };
 
-    ImNodes::Ez::Context *ctx = ImNodes::Ez::CreateContext();
-
-    while (!glfwWindowShouldClose(window) && !shouldExit)
+    while (editor.begin())
     {
-        glfwPollEvents();
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        constexpr auto windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
-                                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
-                                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                     ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-        constexpr auto dockFlags = ImGuiDockNodeFlags_None;
-
-        const ImGuiViewport *viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->WorkPos);
-        ImGui::SetNextWindowSize(viewport->WorkSize);
-        ImGui::SetNextWindowViewport(viewport->ID);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-
-        ImGui::Begin("DockSpace", nullptr, windowFlags);
-
-        ImGui::PopStyleVar(3);
-
-        auto id = ImGui::GetID("Dock");
-        ImGui::DockSpace(id, ImVec2(0.f, 0.f), dockFlags);
+        editor.beginDock();
 
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu("File"))
             {
-                ImGui::MenuItem("Open");
+                if (ImGui::MenuItem("Open"))
+                {
+                    editor.openDialog();
+                }
                 ImGui::EndMenu();
             }
 
@@ -450,28 +284,17 @@ int main()
             ImVec2 closeButtonPos(ImGui::GetWindowWidth() - (style.FramePadding.x * 2) - ImGui::GetFontSize(), 0.f);
 
             if (ImGui::CloseButton(ImGui::GetID("CloseEditor"), closeButtonPos)) {
-                shouldExit = true;
+                editor.quit();
             }
 
             ImGui::EndMenuBar();
         }
 
-        ImGui::End();
+        editor.endDock();
 
-        if (openMemoryView)
-        {
-            if (ImGui::Begin("Memory Stats", &openMemoryView))
-            {
-                ImGui::Text("Current Used Memory: %zu", statsAlloc.currentUsedMemory.load());
-                ImGui::Text("Current Allocations: %zu", statsAlloc.currentAllocations.load());
+        std::string name, path;
+        if (editor.showDialog(name, path)) {
 
-                ImGui::Text("Peak Used Memory: %zu", statsAlloc.peakUsedMemory.load());
-
-                ImGui::Text("Total Allocs: %zu", statsAlloc.totalAllocs.load());
-                ImGui::Text("Total Reallocs: %zu", statsAlloc.totalReallocs.load());
-                ImGui::Text("Total Frees: %zu", statsAlloc.totalFrees.load());
-            }
-            ImGui::End();
         }
 
         if (openPerfView)
@@ -482,66 +305,8 @@ int main()
             ImGui::End();
         }
 
-        if (openHlirView)
-        {
-            if (ImGui::Begin("HLIR Debug View", &openHlirView, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
-            {
-                ImNodes::Ez::BeginCanvas();
-
-                for (auto* node : hlirNodes) {
-                    node->draw();
-                }
-
-                if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered() && !ImGui::IsMouseDragging(ImGuiMouseButton_Right))
-                {
-                    ImGui::FocusWindow(ImGui::GetCurrentWindow());
-                    ImGui::OpenPopup("NodeContextMenu");
-                }
-
-                if (ImGui::BeginPopup("NodeContextMenu"))
-                {
-                    if (ImGui::MenuItem("Digit Literal"))
-                    {
-                        auto *node = new hlir::DigitLiteral("0");
-                        hlirNodes.push_back(node);
-                        ImNodes::AutoPositionNode(node);
-                    }
-
-                    if (ImGui::MenuItem("Bool Literal"))
-                    {
-                        auto *node = new hlir::BoolLiteral(false);
-                        hlirNodes.push_back(node);
-                        ImNodes::AutoPositionNode(node);
-                    }
-
-                    if (ImGui::MenuItem("String Literal"))
-                    {
-                        auto *node = new hlir::StringLiteral("Hello World");
-                        hlirNodes.push_back(node);
-                        ImNodes::AutoPositionNode(node);
-                    }
-
-                    if (ImGui::MenuItem("Binary"))
-                    {
-                        auto *node = new hlir::Binary(eBinaryAdd);
-                        hlirNodes.push_back(node);
-                        ImNodes::AutoPositionNode(node);
-                    }
-
-                    if (ImGui::MenuItem("Unary"))
-                    {
-                        auto *node = new hlir::Unary(eUnaryAbs);
-                        hlirNodes.push_back(node);
-                        ImNodes::AutoPositionNode(node);
-                    }
-
-                    ImGui::EndPopup();
-                }
-
-                ImNodes::Ez::EndCanvas();
-            }
-            ImGui::End();
-        }
+        editor.memoryStats(&openMemoryView);
+        editor.nodeEditor(&openHlirView);
 
         if (openSsaView)
         {
@@ -561,22 +326,8 @@ int main()
 
         ImGui::ShowDemoWindow();
 
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        glfwSwapBuffers(window);
+        editor.end();
     }
-
-    ImNodes::Ez::FreeContext(ctx);
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    glfwTerminate();
 
     return EXIT_OK;
 }

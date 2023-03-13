@@ -12,6 +12,8 @@ CT_CALLBACKS(kCallbacks, cc);
 const driver_t kDriver = {
     .name = "C",
     .version = NEW_VERSION(0, 0, 1),
+
+    .exts = ".c,.h"
 };
 
 driver_t get_driver(void)
