@@ -1,12 +1,12 @@
 #include "sema.h"
 #include "ast.h"
 #include "attribs.h"
-#include "cthulhu/hlir/digit.h"
-#include "cthulhu/hlir/ops.h"
-#include "cthulhu/hlir/sema.h"
 #include "repr.h"
 #include "suffix.h"
 
+#include "cthulhu/hlir/digit.h"
+#include "cthulhu/hlir/ops.h"
+#include "cthulhu/hlir/sema.h"
 #include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/hlir.h"
@@ -15,13 +15,16 @@
 #include "cthulhu/interface/runtime.h"
 
 #include "base/macros.h"
+#include "base/panic.h"
 #include "base/memory.h"
 #include "base/util.h"
 
 #include "report/report-ext.h"
+
 #include "std/set.h"
 #include "std/str.h"
 #include "std/map.h"
+
 #include <stdio.h>
 
 typedef struct
@@ -320,6 +323,28 @@ void ctu_init_compiler(runtime_t *runtime)
 static hlir_t *sema_type(sema_t *sema, ast_t *ast);
 
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast);
+
+// hacky as hell but seems to work fine
+static hlir_t *sema_lvalue(sema_t *sema, ast_t *ast)
+{
+    hlir_t *result = sema_expr(sema, ast);
+    if (hlir_is(result, eHlirLoad))
+    {
+        result = result->read;
+    }
+    return result;
+}
+
+// also hacky and weird, whatever
+static hlir_t *sema_rvalue(sema_t *sema, ast_t *ast)
+{
+    hlir_t *result = sema_expr(sema, ast);
+    if (hlir_is(result, eHlirAccess))
+    {
+        result = hlir_name(get_hlir_node(result), result);
+    }
+    return result;
+}
 
 static sema_t *sema_path(sema_t *sema, vector_t *path, node_t *node)
 {
@@ -652,12 +677,25 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
 
     size_t len = vector_len(ast->args);
     vector_t *params = closure_params(call);
+    bool variadic = closure_variadic(call);
+
     size_t totalParams = vector_len(params);
+    
     if (len != totalParams)
     {
-        message_t *id = report(sema_reports(sema), eFatal, ast->node, "incorrect number of parameters specified");
-        report_note(id, "expected `%zu` got `%zu` instead", totalParams, len);
-        return hlir_error(ast->node, "incorrect argument count");
+        if (len < totalParams)
+        {
+            message_t *id = report(sema_reports(sema), eFatal, ast->node, "not enough parameters specified");
+            report_note(id, "expected `%zu` got `%zu` instead", totalParams, len);
+            return hlir_error(ast->node, "incorrect argument count");
+        }
+
+        if (!variadic)
+        {
+            message_t *id = report(sema_reports(sema), eFatal, ast->node, "too many parameters specified");
+            report_note(id, "expected `%zu` got `%zu` instead", totalParams, len);
+            return hlir_error(ast->node, "incorrect argument count");
+        }
     }
 
     vector_t *args = vector_of(len);
@@ -665,9 +703,18 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
     {
         ast_t *arg = vector_get(ast->args, i);
         hlir_t *hlir = sema_expr(sema, arg);
-        hlir_t *expectedType = vector_get(params, i);
-        const hlir_t *cast = convert_to(sema_reports(sema), expectedType, hlir);
-        vector_set(args, i, (hlir_t*)cast);
+
+        if (i >= totalParams)
+        {
+            CTASSERT(variadic);
+            vector_set(args, i, hlir);
+        }
+        else
+        {
+            hlir_t *expectedType = vector_get(params, i);
+            const hlir_t *cast = convert_to(sema_reports(sema), expectedType, hlir);
+            vector_set(args, i, (hlir_t*)cast);
+        }
     }
 
     return hlir_call(ast->node, call, args);
@@ -681,7 +728,7 @@ static hlir_t *sema_null(ast_t *ast)
 
 static hlir_t *sema_access(sema_t *sema, ast_t *ast)
 {
-    hlir_t *object = sema_expr(sema, ast->record);
+    hlir_t *object = sema_lvalue(sema, ast->record);
     const hlir_t *objectType = get_hlir_type(object);
     if (is_ptr(objectType))
     {
@@ -814,7 +861,7 @@ static hlir_t *sema_stmts(sema_t *sema, ast_t *stmts)
 
 static hlir_t *sema_return(sema_t *sema, ast_t *ast)
 {
-    hlir_t *result = sema_expr(sema, ast->operand);
+    hlir_t *result = sema_rvalue(sema, ast->operand);
 
     return hlir_return(ast->node, result);
 }
@@ -940,14 +987,8 @@ static hlir_t *sema_branch(sema_t *sema, ast_t *stmt)
 
 static hlir_t *sema_assign(sema_t *sema, ast_t *stmt)
 {
-    hlir_t *dst = sema_expr(sema, stmt->dst);
-    hlir_t *src = sema_expr(sema, stmt->src);
-
-    // TODO: distinguish between lvalue and rvalue
-    if (hlir_is(dst, eHlirLoad))
-    {
-        dst = dst->read;
-    }
+    hlir_t *dst = sema_lvalue(sema, stmt->dst);
+    hlir_t *src = sema_rvalue(sema, stmt->src);
 
     hlir_t *convert = convert_to(sema_reports(sema), get_hlir_type(dst), src);
 
@@ -1193,7 +1234,11 @@ static hlir_t *begin_function(sema_t *sema, ast_t *ast)
         vector_set(params, i, entry);
     }
 
-    signature_t sig = {.params = params, .result = result, .variadic = false};
+    signature_t sig = {
+        .params = params, 
+        .result = result, 
+        .variadic = signature->variadic
+    };
 
     return hlir_begin_function(ast->node, ast->name, sig);
 }

@@ -99,3 +99,61 @@ char *init_string_with_suffix(mpz_t mpz, const char *text, int base)
 
     return suffix;
 }
+
+static char parse_escape(const char *text)
+{
+    char c = text[0];
+    switch (c) {
+    case 'a': return '\a';
+    case 'b': return '\b';
+    case 'f': return '\f';
+    case 'n': return '\n';
+    case 'r': return '\r';
+    case 't': return '\t';
+    case 'v': return '\v';
+    case '\\': return '\\';
+    case '\'': return '\'';
+    case '"': return '"';
+    case '?': return '\?';
+    default: return c;
+    }
+}
+
+string_t parse_string_escapes(reports_t *reports, const char *text, size_t len)
+{
+    char *str = ctu_malloc(len + 1);
+    size_t size = 0;
+    bool escaped = false;
+
+    for (; size < len; size++)
+    {
+        char c = text[size];
+        if (c == '\\')
+        {
+            escaped = true;
+            size_t required = size + 1;
+            if (required >= len)
+            {
+                report(reports, eWarn, NULL, "string literal has trailing backslash");
+                break;
+            }
+
+            str[size] = parse_escape(text + size + 1);
+            size = required;
+        }
+        else
+        {
+            escaped = false;
+            str[size] = c;
+        }
+    }
+
+    size_t offset = escaped ? 1 : 0;
+
+    string_t result = {
+        .text = str,
+        .size = size - offset // TODO: this seems wrong
+    };
+
+    return result;
+}

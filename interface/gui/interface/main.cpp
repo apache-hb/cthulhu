@@ -137,8 +137,7 @@ void checkNewConnection()
     }
 }
 
-namespace hlir
-{
+namespace hlir {
     struct DigitLiteral : HlirNode 
     {
         DigitLiteral(const char *text)
@@ -244,19 +243,18 @@ int main()
 {
     Editor editor(get_driver());
 
-    bool openMemoryView = false;
-    bool openPerfView = false;
-    bool openHlirView = false;
-    bool openSsaView = false;
-    bool openLogView = false;
+    bool memoryView = false;
+    bool perfView = false;
+    bool hlirView = false;
+    bool ssaView = false;
+    bool logView = false;
 
     std::vector<HlirNode*> hlirNodes = {
         new hlir::DigitLiteral("0"),
         new hlir::Binary(eBinaryAdd)
     };
 
-    while (editor.begin())
-    {
+    while (editor.begin()) {
         editor.beginDock();
 
         if (ImGui::BeginMenuBar())
@@ -272,11 +270,11 @@ int main()
 
             if (ImGui::BeginMenu("Metrics"))
             {
-                ImGui::MenuItem("Memory Stats", nullptr, &openMemoryView);
-                ImGui::MenuItem("Performance Stats", nullptr, &openPerfView);
-                ImGui::MenuItem("HLIR Debug View", nullptr, &openHlirView);
-                ImGui::MenuItem("SSA Debug View", nullptr, &openSsaView);
-                ImGui::MenuItem("Logs", nullptr, &openLogView);
+                ImGui::MenuItem("Memory Stats", nullptr, &memoryView);
+                ImGui::MenuItem("Performance Stats", nullptr, &perfView);
+                ImGui::MenuItem("HLIR Debug View", nullptr, &hlirView);
+                ImGui::MenuItem("SSA Debug View", nullptr, &ssaView);
+                ImGui::MenuItem("Logs", nullptr, &logView);
                 ImGui::EndMenu();
             }
 
@@ -297,32 +295,23 @@ int main()
 
         }
 
-        if (openPerfView)
+        if (ImGui::Begin("Performance Stats", &perfView))
         {
-            if (ImGui::Begin("Performance Stats", &openPerfView))
-            {
-            }
-            ImGui::End();
         }
+        ImGui::End();
 
-        editor.memoryStats(&openMemoryView);
-        editor.nodeEditor(&openHlirView);
+        editor.memoryStats(&memoryView);
+        editor.nodeEditor(&hlirView);
 
-        if (openSsaView)
+        if (ImGui::Begin("SSA Debug View", &ssaView))
         {
-            if (ImGui::Begin("SSA Debug View", &openSsaView))
-            {
-            }
-            ImGui::End();
         }
+        ImGui::End();
 
-        if (openLogView)
+        if (ImGui::Begin("Compiler Log View", &logView))
         {
-            if (ImGui::Begin("Compiler Log View", &openLogView))
-            {
-            }
-            ImGui::End();
         }
+        ImGui::End();
 
         ImGui::ShowDemoWindow();
 

@@ -26,10 +26,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     bool boolean;
     char *ident;
     
-    struct {
-        char *data;
-        size_t length;
-    } string;
+    string_t string;
 
     struct {
         mpz_t mpz;
@@ -419,7 +416,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | INTEGER { $$ = ast_digit(x, @$, $1.mpz, $1.suffix); }
     | path { $$ = ast_name(x, @$, $1); }
     | BOOLEAN { $$ = ast_bool(x, @$, $1); }
-    | STRING { $$ = ast_string(x, @$, $1.data, $1.length); }
+    | STRING { $$ = ast_string(x, @$, $1.text, $1.size); }
     | NIL { $$ = ast_null(x, @$); }
     | SIZEOF LPAREN type RPAREN { $$ = ast_sizeof(x, @$, $3); }
     ;

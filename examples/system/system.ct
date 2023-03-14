@@ -1,0 +1,13 @@
+struct System {
+    name: str;
+}
+
+export def newSystem: System {
+    var result: System = noinit;
+    result.name = "System";
+    return result;
+}
+
+export def getSystemName(system: System): str {
+    return system.name;
+}

@@ -103,6 +103,11 @@ static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, c
     case eTypeSignature:
         return get_signature_type(emit, type, name);
 
+    case eTypeStruct:
+        return name == NULL 
+            ? format("struct %s", type->name) 
+            : format("struct %s %s", type->name, name);
+
     default:
         report(REPORTS(emit), eInternal, NULL, "unhandled type kind: %d", kind);
         return "";
@@ -533,7 +538,7 @@ static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
     set_reset(emit->pendingEdges);
 
     c89_emit_function_decl(emit, function, false);
-    WRITE_STRING(&emit->emit, "\n{\n");
+    WRITE_STRING(&emit->emit, " {\n");
     emit_indent(&emit->emit);
 
     size_t locals = vector_len(function->locals);

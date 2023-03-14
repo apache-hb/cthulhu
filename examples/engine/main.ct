@@ -1,0 +1,7 @@
+@extern
+def printf(fmt: str, ...): int;
+
+@entry(cli)
+def entry {
+    printf("hello %s\n", "world!");
+}

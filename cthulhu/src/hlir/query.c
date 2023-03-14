@@ -256,13 +256,11 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
         vector_t *rhsParams = closure_params(actualRhs);
         if (vector_len(lhsParams) != vector_len(rhsParams))
         {
-            puts("different number of params\n");
             return false;
         }
 
         if (closure_variadic(actualLhs) != closure_variadic(actualRhs))
         {
-            puts("different variadic\n");
             return false;
         }
 
@@ -272,7 +270,6 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
             const hlir_t *rhsParam = vector_get(rhsParams, i);
             if (!hlir_types_equal(lhsParam, rhsParam))
             {
-                printf("different param %zu\n", i);
                 return false;
             }
         }

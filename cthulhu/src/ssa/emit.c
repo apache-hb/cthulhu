@@ -69,7 +69,7 @@ static const char *get_flow_name(const ssa_flow_t *flow)
     return flow->name ? flow->name : "unknown";
 }
 
-static const char *emit_operand(emit_t *emit, set_t *edges, ssa_operand_t op)
+static const char *emit_operand_inner(emit_t *emit, set_t *edges, ssa_operand_t op)
 {
     switch (op.kind)
     {
@@ -102,6 +102,20 @@ static const char *emit_operand(emit_t *emit, set_t *edges, ssa_operand_t op)
         report(emit->reports, eInternal, NULL, "unhandled operand kind %d", (int)op.kind);
         return format("err(%d)", ssa_operand_name(op.kind));
     }
+}
+
+static const char *emit_operand(emit_t *emit, set_t *edges, ssa_operand_t op)
+{
+    const char *result = emit_operand_inner(emit, edges, op);
+
+    if (op.offset == NULL)
+    {
+        return result;
+    }
+
+    const char *offset = format(" + %s", emit_operand_inner(emit, edges, *op.offset));
+
+    return format("(%s%s)", result, offset);
 }
 
 static const char *emit_operand_list(emit_t *emit, set_t *edges, ssa_operand_t *ops, size_t count)
@@ -242,7 +256,16 @@ static void emit_imported_function(emit_t *emit, const ssa_flow_t *flow)
 static void emit_function(emit_t *emit, const ssa_flow_t *flow)
 {
     CTASSERT(flow->linkage != eLinkImported);
+    vector_t *locals = flow->locals;
+    size_t len = vector_len(locals);
     printf("%s:\n", flow->name);
+    
+    for (size_t i = 0; i < len; i++)
+    {
+        ssa_type_t *type = vector_get(locals, i);
+        printf("  local[%zu] = %s\n", i, emit_type(emit, type));
+    }
+
     emit_block(emit, flow->entry);
 }
 

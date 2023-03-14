@@ -210,8 +210,7 @@ WS [ \t\r\v\n\f]
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-	yylval->string.data = ctu_strndup(yytext + 1, yyleng - 2);
-    yylval->string.length = yyleng - 2;
+	yylval->string = parse_string_escapes(scan_reports(yyextra), yytext + 1, yyleng - 2);
     return STRING;
 }
 

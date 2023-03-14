@@ -64,6 +64,10 @@ static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     case eHlirEmpty: return eTypeEmpty;
     case eHlirFunction: return eTypeSignature;
 
+    case eHlirStruct: return eTypeStruct;
+
+    case eHlirArray: return eTypeArray;
+
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "no respective ssa type for %s", hlir_kind_to_string(kind));
         return eTypeEmpty;
@@ -103,6 +107,19 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
             const char *name = get_hlir_name(vector_get(real->params, i));
             ssa_type_t *arg = type_new(ssa, vector_get(real->params, i));
             vector_set(it->args, i, ssa_param_new(name, arg));
+        }
+        break;
+    }
+
+    case eHlirStruct: {
+        size_t len = vector_len(real->fields);
+        it->fields = vector_of(len);
+        for (size_t i = 0; i < len; i++) 
+        {
+            const hlir_t *field = vector_get(real->fields, i);
+            const char *name = get_hlir_name(field);
+            ssa_type_t *type = type_new(ssa, get_hlir_type(field));
+            vector_set(it->fields, i, ssa_param_new(name, type));
         }
         break;
     }
@@ -190,6 +207,15 @@ static void fwd_function(ssa_t *ssa, const hlir_t *function)
 static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir);
 static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
 
+static ssa_type_t *new_digit_type(ssa_t *ssa, digit_t width, sign_t sign, const char *name)
+{
+    ssa_type_t *it = ssa_type_new(ssa, eTypeDigit);
+    it->name = name;
+    it->digit = width;
+    it->sign = sign;
+    return it;
+}
+
 static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
 {
     CTASSERTF(hlir_is(digit, eHlirDigitLiteral), "expected digit literal, got %s", hlir_kind_to_string(get_hlir_kind(digit)));
@@ -198,12 +224,7 @@ static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
 
     CTASSERT(hlir_is(type, eHlirDigit));
 
-    ssa_type_t *it = ssa_type_new(ssa, eTypeDigit);
-    it->name = get_hlir_name(type);
-    it->digit = type->width;
-    it->sign = type->sign;
-
-    return it;
+    return new_digit_type(ssa, type->width, type->sign, get_hlir_name(type));
 }
 
 static ssa_type_t *ssa_get_bool_type(ssa_t *ssa)
@@ -368,7 +389,8 @@ static ssa_operand_t compile_call(ssa_t *ssa, const hlir_t *hlir)
     ssa_operand_t *args = ctu_malloc(sizeof(ssa_operand_t) * MAX(len, 1));
     for (size_t i = 0; i < len; i++)
     {
-        args[i] = compile_rvalue(ssa, vector_get(hlir->args, i));
+        const hlir_t *arg = vector_get(hlir->args, i);
+        args[i] = compile_rvalue(ssa, arg);
     }
 
     ssa_operand_t func = compile_rvalue(ssa, hlir->call);
@@ -398,6 +420,8 @@ static ssa_operand_t compile_name(ssa_t *ssa, const hlir_t *hlir)
 
     return op;
 }
+
+static ssa_operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir);
 
 static ssa_operand_t compile_global_lvalue(ssa_t *ssa, const hlir_t *hlir)
 {
@@ -440,6 +464,34 @@ static ssa_operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
+static ssa_operand_t *make_offset(ssa_t *ssa, const hlir_t *object, const hlir_t *member)
+{
+    const hlir_t *type = get_hlir_type(object);
+
+    size_t field = vector_find(type->fields, member);
+
+    CTASSERT(field != SIZE_MAX);
+
+    mpz_t index;
+    mpz_init_set_ui(index, (unsigned long int)(field));
+
+    ssa_operand_t offset = {
+        .kind = eOperandImm,
+        .value = value_digit_new(index, new_digit_type(ssa, eDigitSize, eUnsigned, "size"))
+    };
+
+    return BOX(offset);
+}
+
+static ssa_operand_t compile_access_lvalue(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_operand_t read = compile_lvalue(ssa, hlir->object);
+
+    read.offset = make_offset(ssa, hlir->object, hlir->member);
+
+    return read;
+}
+
 static ssa_operand_t operand_bb(const ssa_block_t *dst)
 {
     ssa_operand_t op = {
@@ -459,6 +511,18 @@ static ssa_operand_t operand_empty(void)
     return op;
 }
 
+static ssa_operand_t compile_param(ssa_t *ssa, const hlir_t *hlir)
+{
+    const void *ref = map_get_ptr(ssa->currentParams, hlir);
+
+    ssa_operand_t op = {
+        .kind = eOperandParam,
+        .param = (uintptr_t)ref
+    };
+
+    return op;
+}
+
 static ssa_operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -470,22 +534,25 @@ static ssa_operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
     case eHlirLocal:
         return compile_local_lvalue(ssa, hlir);
 
+    case eHlirParam:
+        return compile_param(ssa, hlir);
+
+    case eHlirAccess:
+        return compile_access_lvalue(ssa, hlir);
+
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-lvalue %s", hlir_kind_to_string(kind));
         return operand_empty();
     }
 }
 
-static ssa_operand_t compile_param(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_rvalue_access(ssa_t *ssa, const hlir_t *hlir)
 {
-    const void *ref = map_get_ptr(ssa->currentParams, hlir);
+    ssa_operand_t read = compile_lvalue(ssa, hlir->object);
 
-    ssa_operand_t op = {
-        .kind = eOperandParam,
-        .param = (uintptr_t)ref
-    };
+    read.offset = make_offset(ssa, hlir->object, hlir->member);
 
-    return op;
+    return read;
 }
 
 static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
@@ -528,6 +595,9 @@ static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 
     case eHlirParam:
         return compile_param(ssa, hlir);
+
+    case eHlirAccess:
+        return compile_rvalue_access(ssa, hlir);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-rvalue %s", hlir_kind_to_string(kind));

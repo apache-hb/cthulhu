@@ -37,25 +37,28 @@ static void vector_ensure(vector_t **vector, size_t size)
     }
 }
 
+static vector_t *vector_init_inner(size_t size, size_t used)
+{
+    vector_t *vector = ctu_malloc(vector_size(size));
+
+    vector->size = size;
+    vector->used = used;
+
+    return vector;
+}
+
 // vector public api
 
 USE_DECL
 vector_t *vector_new(size_t size)
 {
-    vector_t *vector = ctu_malloc(vector_size(size));
-
-    vector->size = size;
-    vector->used = 0;
-
-    return vector;
+    return vector_init_inner(size, 0);
 }
 
 USE_DECL
 vector_t *vector_of(size_t len)
 {
-    vector_t *vector = vector_new(len);
-    vector->used = len;
-    return vector;
+    return vector_init_inner(len, len);
 }
 
 USE_DECL

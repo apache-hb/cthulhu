@@ -15,6 +15,7 @@ typedef struct reports_t reports_t;
 typedef struct ssa_block_t ssa_block_t;
 typedef struct ssa_flow_t ssa_flow_t;
 typedef struct ssa_step_t ssa_step_t;
+typedef struct ssa_operand_t ssa_operand_t;
 
 typedef struct ssa_type_t ssa_type_t;
 typedef struct ssa_value_t ssa_value_t;
@@ -58,7 +59,6 @@ typedef struct ssa_type_t
 
         // eTypePointer
         const ssa_type_t *ptr;
-        /* TODO: implement */
 
         // eTypeSignature
         struct {
@@ -67,10 +67,8 @@ typedef struct ssa_type_t
             bool variadic;
         };
 
-        /* TODO: implement */
-
         // eTypeStruct
-        /* TODO: implement */
+        vector_t *fields;
     };
 } ssa_type_t;
 
@@ -142,6 +140,8 @@ typedef struct ssa_operand_t
         // eOperandImm
         ssa_value_t *value;
     };
+
+    ssa_operand_t *offset;
 } ssa_operand_t;
 
 typedef enum ssa_opcode_t
@@ -230,8 +230,10 @@ typedef struct ssa_step_t
         ssa_return_t ret;
         ssa_jmp_t jmp;
         ssa_branch_t branch;
+
         ssa_store_t store;
         ssa_load_t load;
+
         ssa_imm_t imm;
         ssa_unary_t unary;
         ssa_binary_t binary;
