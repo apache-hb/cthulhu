@@ -32,7 +32,10 @@ static const char *emit_type(emit_t *emit, const ssa_type_t *type)
     case eTypeBool: return "bool";
     case eTypeDigit: return "digit";
     case eTypeEmpty: return "empty";
-    // case eTypeOpaque: return "ptr";
+    case eTypePointer: return "ptr";
+    case eTypeOpaque: return "opaque";
+    case eTypeString: return "str";
+
     // case eTypePointer: return format("%s*", type->ptr);
     case eTypeStruct: return format("struct(%s)", type->name);
     case eTypeUnit: return "unit";
@@ -90,10 +93,10 @@ static const char *emit_operand_inner(emit_t *emit, set_t *edges, ssa_operand_t 
         return format("&%s", get_flow_name(op.global));
         
     case eOperandLocal: 
-        return format("local[%zu]", op.local);
+        return format("local.%zu", op.local);
 
     case eOperandParam:
-        return format("param[%zu]", op.param);
+        return format("param.%zu", op.param);
 
     case eOperandFunction: 
         return format("%s", get_flow_name(op.function));
@@ -107,15 +110,14 @@ static const char *emit_operand_inner(emit_t *emit, set_t *edges, ssa_operand_t 
 static const char *emit_operand(emit_t *emit, set_t *edges, ssa_operand_t op)
 {
     const char *result = emit_operand_inner(emit, edges, op);
+    const ssa_operand_t *offset = op.offset;
 
-    if (op.offset == NULL)
+    if (offset == NULL)
     {
         return result;
     }
 
-    const char *offset = format(" + %s", emit_operand_inner(emit, edges, *op.offset));
-
-    return format("(%s%s)", result, offset);
+    return format("(%s + %zu)", result, offset->index);
 }
 
 static const char *emit_operand_list(emit_t *emit, set_t *edges, ssa_operand_t *ops, size_t count)
@@ -215,6 +217,12 @@ static void emit_step(emit_t *emit, set_t *edges, ssa_step_t *step)
         break;
     }
 
+    case eOpAddr: {
+        ssa_addr_t addr = step->addr;
+        printf("  %%%s = ref %s\n", step->id, emit_operand(emit, edges, addr.expr));
+        break;
+    }
+
     default:
         printf("  <error> %s\n", ssa_opcode_name(step->opcode));
         break;
@@ -256,6 +264,7 @@ static void emit_imported_function(emit_t *emit, const ssa_flow_t *flow)
 static void emit_function(emit_t *emit, const ssa_flow_t *flow)
 {
     CTASSERT(flow->linkage != eLinkImported);
+
     vector_t *locals = flow->locals;
     size_t len = vector_len(locals);
     printf("%s:\n", flow->name);

@@ -8,6 +8,7 @@ SSA_OPCODE(eOpBranch, "branch")
 
 SSA_OPCODE(eOpStore, "store")
 SSA_OPCODE(eOpLoad, "load")
+SSA_OPCODE(eOpAddr, "addr")
 
 SSA_OPCODE(eOpImm, "imm")
 SSA_OPCODE(eOpUnary, "unary")
@@ -33,6 +34,9 @@ SSA_OPERAND(eOperandGlobal, "global")
 SSA_OPERAND(eOperandFunction, "function")
 SSA_OPERAND(eOperandImm, "imm")
 
+// this is a little wonky, should probably replace
+SSA_OPERAND(eOperandOffset, "offset")
+
 #undef SSA_OPERAND
 
 #ifndef SSA_TYPE
@@ -48,6 +52,7 @@ SSA_TYPE(eTypeEmpty, "empty")
 
 SSA_TYPE(eTypePointer, "pointer")
 SSA_TYPE(eTypeArray, "array")
+SSA_TYPE(eTypeOpaque, "opaque")
 
 SSA_TYPE(eTypeSignature, "signature")
 

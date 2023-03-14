@@ -125,7 +125,7 @@ string_t parse_string_escapes(reports_t *reports, const char *text, size_t len)
     size_t size = 0;
     bool escaped = false;
 
-    for (; size < len; size++)
+    for (; size < len;)
     {
         char c = text[size];
         if (c == '\\')
@@ -146,6 +146,8 @@ string_t parse_string_escapes(reports_t *reports, const char *text, size_t len)
             escaped = false;
             str[size] = c;
         }
+
+        size += 1;
     }
 
     size_t offset = escaped ? 1 : 0;

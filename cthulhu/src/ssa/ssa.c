@@ -21,7 +21,9 @@
 
 typedef struct {
     reports_t *reports;
-    
+
+    map_t *aggregates;
+
     map_t *globals;
     map_t *functions;
 
@@ -63,6 +65,7 @@ static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     case eHlirUnit: return eTypeUnit;
     case eHlirEmpty: return eTypeEmpty;
     case eHlirFunction: return eTypeSignature;
+    case eHlirOpaque: return eTypeOpaque;
 
     case eHlirStruct: return eTypeStruct;
 
@@ -74,12 +77,24 @@ static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     }
 }
 
-static ssa_type_t *ssa_type_new(ssa_t *ssa, ssa_kind_t kind)
+static ssa_type_t *ssa_type_new(ssa_t *ssa, const void *key, ssa_kind_t kind)
 {
-    UNUSED(ssa);
     ssa_type_t *it = ctu_malloc(sizeof(ssa_type_t));
     it->kind = kind;
     it->name = NULL;
+
+    if (kind == eTypeStruct)
+    {
+        CTASSERT(key != NULL);
+        map_set_ptr(ssa->aggregates, key, it);
+    }
+    return it;
+}
+
+static ssa_type_t *type_pointer_new(ssa_t *ssa, ssa_type_t *type)
+{
+    ssa_type_t *it = ssa_type_new(ssa, NULL, eTypePointer);
+    it->ptr = type;
     return it;
 }
 
@@ -87,7 +102,7 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
 {
     const hlir_t *real = hlir_follow_type(type);
     hlir_kind_t kind = get_hlir_kind(real);
-    ssa_type_t *it = ssa_type_new(ssa, get_type_kind(ssa, real));
+    ssa_type_t *it = ssa_type_new(ssa, real, get_type_kind(ssa, real));
     it->name = get_hlir_name(real);
 
     switch (kind) 
@@ -128,6 +143,7 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
         it->ptr = type_new(ssa, real->ptr);
         break;
 
+    case eHlirOpaque:
     case eHlirBool:
     case eHlirUnit:
     case eHlirEmpty:
@@ -160,6 +176,11 @@ static ssa_operand_t add_step(ssa_t *ssa, ssa_step_t step)
     return op;
 }
 
+static bool is_imported(linkage_t link)
+{
+    return link == eLinkImported;
+}
+
 static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol, ssa_type_t *type)
 {
     UNUSED(ssa);
@@ -167,11 +188,21 @@ static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol, ssa_type_t *type)
     ssa_flow_t *flow = ctu_malloc(sizeof(ssa_flow_t));
     flow->name = get_hlir_name(symbol);
     flow->type = type;
-    flow->entry = NULL;
+
+    const hlir_attributes_t *attribs = get_hlir_attributes(symbol);
+
+    if (is_imported(attribs->linkage))
+    {
+        flow->symbol = attribs->mangle;
+    }
+    else
+    {
+        flow->entry = NULL;
+    }
 
     // TODO: a little iffy
-    flow->linkage = symbol->attributes->linkage;
-    flow->visibility = symbol->attributes->visibility;
+    flow->linkage = attribs->linkage;
+    flow->visibility = attribs->visibility;
 
     return flow;
 }
@@ -180,7 +211,12 @@ static ssa_flow_t *global_new(ssa_t *ssa, const hlir_t *global)
 {
     ssa_type_t *type = type_new(ssa, get_hlir_type(global));
     ssa_flow_t *flow = flow_new(ssa, global, type);
-    flow->value = NULL;
+    
+    if (!is_imported(flow->linkage))
+    {
+        flow->value = NULL;
+    }
+
     return flow;
 }
 
@@ -188,7 +224,12 @@ static ssa_flow_t *function_new(ssa_t *ssa, const hlir_t *function)
 {
     ssa_type_t *type = type_new(ssa, get_hlir_type(function));
     ssa_flow_t *flow = flow_new(ssa, function, type);
-    flow->locals = vector_new(0);
+
+    if (!is_imported(flow->linkage))
+    {
+        flow->locals = vector_new(0);
+    }
+
     return flow;
 }
 
@@ -209,7 +250,7 @@ static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
 
 static ssa_type_t *new_digit_type(ssa_t *ssa, digit_t width, sign_t sign, const char *name)
 {
-    ssa_type_t *it = ssa_type_new(ssa, eTypeDigit);
+    ssa_type_t *it = ssa_type_new(ssa, NULL, eTypeDigit);
     it->name = name;
     it->digit = width;
     it->sign = sign;
@@ -229,7 +270,7 @@ static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
 
 static ssa_type_t *ssa_get_bool_type(ssa_t *ssa)
 {
-    ssa_type_t *it = ssa_type_new(ssa, eTypeBool);
+    ssa_type_t *it = ssa_type_new(ssa, NULL, eTypeBool);
     it->name = "bool"; // TODO: match frontend name
 
     return it;
@@ -237,7 +278,7 @@ static ssa_type_t *ssa_get_bool_type(ssa_t *ssa)
 
 static ssa_type_t *ssa_get_string_type(ssa_t *ssa)
 {
-    ssa_type_t *it = ssa_type_new(ssa, eTypeString);
+    ssa_type_t *it = ssa_type_new(ssa, NULL, eTypeString);
     it->name = "string"; // TODO: match frontend name
 
     return it;
@@ -245,7 +286,7 @@ static ssa_type_t *ssa_get_string_type(ssa_t *ssa)
 
 static ssa_type_t *ssa_get_empty_type(ssa_t *ssa)
 {
-    ssa_type_t *it = ssa_type_new(ssa, eTypeEmpty);
+    ssa_type_t *it = ssa_type_new(ssa, NULL, eTypeEmpty);
     it->name = "empty"; // TODO: match frontend name
 
     return it;
@@ -472,12 +513,9 @@ static ssa_operand_t *make_offset(ssa_t *ssa, const hlir_t *object, const hlir_t
 
     CTASSERT(field != SIZE_MAX);
 
-    mpz_t index;
-    mpz_init_set_ui(index, (unsigned long int)(field));
-
     ssa_operand_t offset = {
-        .kind = eOperandImm,
-        .value = value_digit_new(index, new_digit_type(ssa, eDigitSize, eUnsigned, "size"))
+        .kind = eOperandOffset,
+        .index = field
     };
 
     return BOX(offset);
@@ -555,6 +593,21 @@ static ssa_operand_t compile_rvalue_access(ssa_t *ssa, const hlir_t *hlir)
     return read;
 }
 
+static ssa_operand_t compile_addr(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_operand_t op = compile_lvalue(ssa, hlir->expr);
+
+    ssa_step_t step = {
+        .opcode = eOpAddr,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .addr = {
+            .expr = op
+        }
+    };
+
+    return add_step(ssa, step);
+}
+
 static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -598,6 +651,9 @@ static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 
     case eHlirAccess:
         return compile_rvalue_access(ssa, hlir);
+
+    case eHlirAddr:
+        return compile_addr(ssa, hlir);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-rvalue %s", hlir_kind_to_string(kind));
@@ -816,6 +872,12 @@ static void compile_flow(ssa_t *ssa, ssa_flow_t *flow)
 static void compile_global(ssa_t *ssa, const hlir_t *global)
 {
     ssa_flow_t *flow = map_get_ptr(ssa->globals, global);
+
+    if (is_imported(flow->linkage))
+    {
+        return;
+    }
+
     compile_flow(ssa, flow);
 
     ssa_operand_t result = global->value == NULL ? operand_empty() : compile_rvalue(ssa, global->value);
@@ -833,6 +895,11 @@ static void compile_function(ssa_t *ssa, const hlir_t *function)
 {
     ssa_flow_t *flow = map_get_ptr(ssa->functions, function);
     CTASSERT(flow != NULL);
+
+    if (is_imported(flow->linkage))
+    {
+        return;
+    }
 
     size_t totalLocals = vector_len(function->locals);
     size_t totalParams = vector_len(function->params);
@@ -871,6 +938,7 @@ ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods)
 {
     ssa_t ssa = { 
         .reports = reports,
+        .aggregates = map_optimal(0x1000),
         .globals = map_optimal(0x1000),
         .functions = map_optimal(0x1000),
         .strings = set_new(0x1000),
@@ -907,6 +975,7 @@ ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods)
     }
 
     section_t symbols = {
+        .types = map_values(ssa.aggregates),
         .globals = map_values(ssa.globals),
         .functions = map_values(ssa.functions)
     };

@@ -139,6 +139,9 @@ typedef struct ssa_operand_t
 
         // eOperandImm
         ssa_value_t *value;
+
+        // eOperandOffset
+        size_t index;
     };
 
     ssa_operand_t *offset;
@@ -178,6 +181,11 @@ typedef struct ssa_load_t
 {
     ssa_operand_t src;
 } ssa_load_t;
+
+typedef struct ssa_addr_t
+{
+    ssa_operand_t expr;
+} ssa_addr_t;
 
 typedef struct ssa_imm_t
 {
@@ -233,6 +241,7 @@ typedef struct ssa_step_t
 
         ssa_store_t store;
         ssa_load_t load;
+        ssa_addr_t addr;
 
         ssa_imm_t imm;
         ssa_unary_t unary;
@@ -284,6 +293,7 @@ typedef struct ssa_flow_t
 
 typedef struct section_t
 {
+    vector_t *types;
     vector_t *globals;
     vector_t *functions;
 } section_t;
@@ -291,9 +301,6 @@ typedef struct section_t
 typedef struct ssa_module_t
 {
     section_t symbols;
-
-    // section_t imports;
-    // section_t exports;
 } ssa_module_t;
 
 ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods);

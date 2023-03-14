@@ -102,7 +102,7 @@ static hlir_attributes_t *apply_extern(sema_t *sema, hlir_t *hlir, ast_t *ast)
             report(sema_reports(sema), eFatal, entry->node, "extern argument must be a string");
             return NULL;
         }
-        mangle = entry->string;
+        mangle = ctu_strndup(entry->string, entry->length);
     }
 
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);

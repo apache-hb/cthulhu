@@ -1,3 +1,26 @@
+type LPSTR = str;
+type DWORD = uint;
+type BOOL = int;
+
+@extern("printf")
+def printf(fmt: str, ...): int;
+
+@extern("malloc")
+def alloc(size: usize): opaque;
+
+@extern("GetComputerNameA")
+def win32GetComputerNameA(name: str, size: *DWORD): BOOL;
+
+def getComputerName: str {
+    var size: DWORD = 256u;
+    var name: str = alloc(size);
+    if win32GetComputerNameA(name, &size) == 0 {
+        return "Unknown";
+    }
+
+    return name;
+}
+
 struct System {
     name: str;
 }
@@ -10,4 +33,10 @@ export def newSystem: System {
 
 export def getSystemName(system: System): str {
     return system.name;
+}
+
+@entry(cli)
+def main {
+    const system = newSystem();
+    printf("System name: %s\n", getSystemName(system));
 }

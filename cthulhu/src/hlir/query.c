@@ -23,6 +23,7 @@ static bool has_name(hlir_kind_t kind)
 
     case eHlirType:
     case eHlirAlias:
+    case eHlirOpaque:
 
     case eHlirRecordField:
     case eHlirFunction:
@@ -57,6 +58,7 @@ static bool has_attribs(hlir_kind_t kind)
     case eHlirUnit:
     case eHlirClosure:
     case eHlirArray:
+    case eHlirOpaque:
 
     case eHlirRecordField:
     case eHlirFunction:
@@ -269,6 +271,28 @@ bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
             const hlir_t *lhsParam = vector_get(lhsParams, i);
             const hlir_t *rhsParam = vector_get(rhsParams, i);
             if (!hlir_types_equal(lhsParam, rhsParam))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    case eHlirStruct:
+    case eHlirUnion: {
+        vector_t *lhsFields = actualLhs->fields;
+        vector_t *rhsFields = actualLhs->fields;
+        if (vector_len(lhsFields) != vector_len(rhsFields))
+        {
+            return false;
+        }
+
+        for (size_t i = 0; i < vector_len(lhsFields); i++)
+        {
+            const hlir_t *lhsField = vector_get(lhsFields, i);
+            const hlir_t *rhsField = vector_get(rhsFields, i);
+            if (!hlir_types_equal(lhsField, rhsField))
             {
                 return false;
             }

@@ -217,6 +217,14 @@ static hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *expr)
         return expr;
     }
 
+    if (hlir_is(srcType, eHlirOpaque))
+    {
+        if (hlir_is(dstType, eHlirPointer) || hlir_is(dstType, eHlirString))
+        {
+            return hlir_cast(dstType, expr, eCastBit);
+        }
+    }
+
     // TODO: this doesnt handle warning on narrowing and other cases
     // dont use get_common_type here
     const hlir_t *common = get_common_type(get_hlir_node(expr), dstType, srcType);
@@ -268,6 +276,7 @@ static void add_basic_types(sema_t *sema)
 
     // noreturn type for exit/abort/terminate etc
     add_decl(sema, eSemaTypes, "noreturn", kEmptyType);
+    add_decl(sema, eSemaTypes, "opaque", kOpaqueType);
 
     for (int sign = 0; sign < eSignTotal; sign++)
     {
@@ -762,7 +771,7 @@ static hlir_t *sema_access(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_ref(sema_t *sema, ast_t *ast)
 {
-    hlir_t *expr = sema_expr(sema, ast->operand);
+    hlir_t *expr = sema_lvalue(sema, ast->operand);
     if (!is_lvalue(expr))
     {
         report(sema_reports(sema), eFatal, ast->node, "cannot take reference of non-lvalue");
@@ -907,8 +916,14 @@ static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
 
     sema_value_t result = {type, init};
 
-    if ((stmt->init != NULL && stmt->expected != NULL) && !hlir_types_equal(type, get_hlir_type(init)))
+    if ((stmt->init != NULL && stmt->expected != NULL) )
     {
+        const hlir_t *convert = convert_to(sema_reports(sema), type, init);
+        if (!hlir_is(convert, eHlirError))
+        {
+            result.init = (hlir_t*)convert; // TODO: evil
+            return result;
+        }
         message_t *id = report(sema_reports(sema), eFatal, stmt->node, "incompatible initializer and explicit type");
         report_underline(id, "found '%s', expected '%s'", ctu_type_repr(sema_reports(sema), type, true),
                          ctu_repr(sema_reports(sema), init, true));
