@@ -77,24 +77,19 @@ static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     }
 }
 
-static ssa_type_t *ssa_type_new(ssa_t *ssa, const void *key, ssa_kind_t kind)
+static ssa_type_t *ssa_type_new(ssa_t *ssa, const void *key, const char *name, ssa_kind_t kind)
 {
     ssa_type_t *it = ctu_malloc(sizeof(ssa_type_t));
     it->kind = kind;
-    it->name = NULL;
+    it->name = name;
 
     if (kind == eTypeStruct)
     {
+        printf("struct %p = %s\n", key, name);
         CTASSERT(key != NULL);
         map_set_ptr(ssa->aggregates, key, it);
     }
-    return it;
-}
-
-static ssa_type_t *type_pointer_new(ssa_t *ssa, ssa_type_t *type)
-{
-    ssa_type_t *it = ssa_type_new(ssa, NULL, eTypePointer);
-    it->ptr = type;
+    
     return it;
 }
 
@@ -102,8 +97,7 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
 {
     const hlir_t *real = hlir_follow_type(type);
     hlir_kind_t kind = get_hlir_kind(real);
-    ssa_type_t *it = ssa_type_new(ssa, real, get_type_kind(ssa, real));
-    it->name = get_hlir_name(real);
+    ssa_type_t *it = ssa_type_new(ssa, real, get_hlir_name(real), get_type_kind(ssa, real));
 
     switch (kind) 
     {
@@ -127,6 +121,9 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
     }
 
     case eHlirStruct: {
+        printf("  - real: %p = %s\n", real, hlir_kind_to_string(get_hlir_kind(real)));
+        printf("  - type: %p = %s\n", type, hlir_kind_to_string(get_hlir_kind(type)));
+
         size_t len = vector_len(real->fields);
         it->fields = vector_of(len);
         for (size_t i = 0; i < len; i++) 
@@ -250,8 +247,7 @@ static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
 
 static ssa_type_t *new_digit_type(ssa_t *ssa, digit_t width, sign_t sign, const char *name)
 {
-    ssa_type_t *it = ssa_type_new(ssa, NULL, eTypeDigit);
-    it->name = name;
+    ssa_type_t *it = ssa_type_new(ssa, NULL, name, eTypeDigit);
     it->digit = width;
     it->sign = sign;
     return it;
@@ -270,24 +266,21 @@ static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
 
 static ssa_type_t *ssa_get_bool_type(ssa_t *ssa)
 {
-    ssa_type_t *it = ssa_type_new(ssa, NULL, eTypeBool);
-    it->name = "bool"; // TODO: match frontend name
+    ssa_type_t *it = ssa_type_new(ssa, NULL, "bool", eTypeBool);
 
     return it;
 }
 
 static ssa_type_t *ssa_get_string_type(ssa_t *ssa)
 {
-    ssa_type_t *it = ssa_type_new(ssa, NULL, eTypeString);
-    it->name = "string"; // TODO: match frontend name
+    ssa_type_t *it = ssa_type_new(ssa, NULL, "string", eTypeString);
 
     return it;
 }
 
 static ssa_type_t *ssa_get_empty_type(ssa_t *ssa)
 {
-    ssa_type_t *it = ssa_type_new(ssa, NULL, eTypeEmpty);
-    it->name = "empty"; // TODO: match frontend name
+    ssa_type_t *it = ssa_type_new(ssa, NULL, "empty", eTypeEmpty);
 
     return it;
 }
