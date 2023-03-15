@@ -5,6 +5,7 @@
 #endif
 
 HLIR_KIND(eHlirUnresolved, "unresolved")
+HLIR_KIND(eHlirQualified, "qualified")
 
 // scalar types
 HLIR_KIND(eHlirType,   "meta-type")

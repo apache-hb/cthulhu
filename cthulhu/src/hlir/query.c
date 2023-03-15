@@ -195,7 +195,7 @@ const hlir_t *hlir_follow_type(const hlir_t *hlir)
         return hlir_follow_type(hlir->alias);
     }
 
-    if (hlir_is(hlir, eHlirParam))
+    if (hlir_is(hlir, eHlirParam) || hlir_is(hlir, eHlirQualified))
     {
         return hlir_follow_type(get_hlir_type(hlir));
     }

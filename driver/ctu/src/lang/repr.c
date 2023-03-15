@@ -175,6 +175,9 @@ const char *ctu_type_repr(reports_t *reports, const hlir_t *type, bool detail)
     case eHlirOpaque:
         return format("opaque");
 
+    case eHlirQualified:
+        return ctu_type_repr(reports, get_hlir_type(inner), detail);
+
     default:
         ctu_assert(reports, "ctu-repr unexpected %s", hlir_kind_to_string(kind));
         return "unexpected";

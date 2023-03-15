@@ -60,15 +60,16 @@ static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     case eHlirDigit: return eTypeDigit;
     case eHlirBool: return eTypeBool;
     case eHlirString: return eTypeString;
-    case eHlirPointer: // TODO: frontend should also have opaque pointer type, this is a hack
-        return eTypePointer; // hlir_is(hlir->ptr, eHlirUnit) ? eTypeOpaque : eTypePointer;
+    case eHlirPointer: return eTypePointer;
     case eHlirUnit: return eTypeUnit;
     case eHlirEmpty: return eTypeEmpty;
-    case eHlirFunction: return eTypeSignature;
+
+    case eHlirClosure:
+    case eHlirFunction: 
+        return eTypeSignature;
+
     case eHlirOpaque: return eTypeOpaque;
-
     case eHlirStruct: return eTypeStruct;
-
     case eHlirArray: return eTypeArray;
 
     default:
@@ -85,7 +86,6 @@ static ssa_type_t *ssa_type_new(ssa_t *ssa, const void *key, const char *name, s
 
     if (kind == eTypeStruct)
     {
-        printf("struct %p = %s\n", key, name);
         CTASSERT(key != NULL);
         map_set_ptr(ssa->aggregates, key, it);
     }
@@ -121,9 +121,6 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
     }
 
     case eHlirStruct: {
-        printf("  - real: %p = %s\n", real, hlir_kind_to_string(get_hlir_kind(real)));
-        printf("  - type: %p = %s\n", type, hlir_kind_to_string(get_hlir_kind(type)));
-
         size_t len = vector_len(real->fields);
         it->fields = vector_of(len);
         for (size_t i = 0; i < len; i++) 

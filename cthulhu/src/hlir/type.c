@@ -2,6 +2,7 @@
 
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/type.h"
+#include "cthulhu/hlir/decl.h"
 
 hlir_t *hlir_digit(node_t *node, const char *name, digit_t width, sign_t sign)
 {
@@ -73,5 +74,12 @@ hlir_t *hlir_array(reports_t *reports, node_t *node, const char *name, hlir_t *e
     hlir_t *hlir = hlir_decl_new(node, name, kMetaType, eHlirArray);
     hlir->element = element;
     hlir->length = length;
+    return hlir;
+}
+
+hlir_t *hlir_qualified(const hlir_t *type, hlir_attributes_t *attribs)
+{
+    hlir_t *hlir = hlir_decl_new(get_hlir_node(type), get_hlir_name(type), type, eHlirQualified);
+    hlir_set_attributes(hlir, attribs);
     return hlir;
 }

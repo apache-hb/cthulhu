@@ -252,6 +252,7 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
     case eHlirString:
     case eHlirEmpty:
     case eHlirUnit:
+    case eHlirOpaque:
         return; // it is important to return rather than break
                 // in cases where find_type_recursion isnt called
 

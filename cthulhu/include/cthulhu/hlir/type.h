@@ -85,4 +85,6 @@ hlir_t *hlir_pointer(node_t *node, const char *name, const hlir_t *type, bool in
  */
 hlir_t *hlir_array(reports_t *reports, node_t *node, const char *name, hlir_t *element, hlir_t *length);
 
+hlir_t *hlir_qualified(const hlir_t *type, hlir_attributes_t *attribs);
+
 /** @} */

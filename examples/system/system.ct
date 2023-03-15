@@ -2,6 +2,12 @@ type LPSTR = str;
 type DWORD = uint;
 type BOOL = int;
 
+struct Arena {
+    name: str;
+    alloc: def(*Arena, usize) -> opaque;
+    release: def(*Arena, opaque) -> void;
+}
+
 struct System {
     name: str;
 }
@@ -10,14 +16,43 @@ struct System {
 def printf(fmt: str, ...): int;
 
 @extern("malloc")
-def alloc(size: usize): opaque;
+def libcAlloc(size: usize): opaque;
+
+@extern("free")
+def libcRelease(ptr: opaque);
 
 @extern("GetComputerNameA")
 def win32GetComputerNameA(name: str, size: *DWORD): BOOL;
 
-def getComputerName: str {
+def defaultAlloc(mem: *Arena, size: usize): opaque {
+    printf("[%s] alloc %zu\n", mem->name, size);
+    return libcAlloc(size);
+}
+
+def defaultRelease(mem: *Arena, ptr: opaque) {
+    printf("[%s] release %p\n", mem->name, ptr);
+    libcRelease(ptr);
+}
+
+def defaultArena(name: str): Arena {
+    var mem: Arena = noinit;
+    mem.name = name;
+    mem.alloc = defaultAlloc;
+    mem.release = defaultRelease;
+    return mem;
+}
+
+def arenaAlloc(mem: *Arena, size: usize): opaque {
+    return mem->alloc(mem, size);
+}
+
+def arenaRelease(mem: *Arena, ptr: opaque) {
+    mem->release(mem, ptr);
+}
+
+def getComputerName(mem: *Arena): str {
     var size: DWORD = 256u;
-    var name: str = alloc(size);
+    var name: str = arenaAlloc(mem, size);
     if win32GetComputerNameA(name, &size) == 0 {
         return "Unknown";
     }
@@ -25,9 +60,9 @@ def getComputerName: str {
     return name;
 }
 
-export def newSystem: System {
+export def newSystem(mem: *Arena): System {
     var result: System = noinit;
-    result.name = "System";
+    result.name = getComputerName(mem);
     return result;
 }
 
@@ -37,6 +72,8 @@ export def getSystemName(system: System): str {
 
 @entry(cli)
 def main {
-    const system = newSystem();
+    var mem = defaultArena("libc");
+
+    const system = newSystem(&mem);
     printf("System name: %s\n", getSystemName(system));
 }

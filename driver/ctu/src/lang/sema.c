@@ -413,7 +413,9 @@ static hlir_t *sema_alias(sema_t *sema, ast_t *ast)
 static hlir_t *begin_type_resolve(sema_t *sema, void *user)
 {
     ast_t *ast = user;
-    switch (ast->of) {
+
+    switch (ast->of) 
+    {
     case eAstDeclUnion:
         return hlir_begin_union(ast->node, ast->name);
 
@@ -676,8 +678,9 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_call(sema_t *sema, ast_t *ast)
 {
-    hlir_t *call = sema_expr(sema, ast->call);
-    if (!hlir_is(get_hlir_type(call), eHlirFunction))
+    hlir_t *call = sema_rvalue(sema, ast->call);
+    const hlir_t *fnType = get_hlir_type(call);
+    if (!hlir_is(fnType, eHlirFunction) && !hlir_is(fnType, eHlirClosure))
     {
         message_t *id = report(sema_reports(sema), eFatal, ast->node, "can only call function types");
         report_underline(id, "%s", ctu_repr(sema_reports(sema), call, true));
@@ -685,8 +688,8 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
     }
 
     size_t len = vector_len(ast->args);
-    vector_t *params = closure_params(call);
-    bool variadic = closure_variadic(call);
+    vector_t *params = closure_params(fnType);
+    bool variadic = closure_variadic(fnType);
 
     size_t totalParams = vector_len(params);
     
@@ -933,9 +936,7 @@ static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
 
     if (!stmt->mut)
     {
-        hlir_t *constant = ctu_memdup(type, sizeof(hlir_t));
-        hlir_set_attributes(constant, hlir_tags(eQualConst));
-        result.type = constant;
+        result.type = hlir_qualified(type, hlir_tags(eQualConst));
     }
 
     return result;
@@ -1097,7 +1098,6 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
     }
 }
 
-// TODO: somehow more than one struct type can be created for the same struct
 static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
     vector_t *fields = ast->fields;
@@ -1168,7 +1168,12 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? eLinkImported : eLinkExported, (ast->exported ? eVisiblePublic : eVisiblePrivate), 0, NULL);
 
     size_t tags[eTagTotal] = {
-        [eSemaValues] = 32, [eSemaProcs] = 32, [eSemaTypes] = 32, [eSemaModules] = 32, [eTagAttribs] = 32,};
+        [eSemaValues] = 32, 
+        [eSemaProcs] = 32, 
+        [eSemaTypes] = 32, 
+        [eSemaModules] = 32, 
+        [eTagAttribs] = 32,
+    };
 
     sema_t *nest = begin_sema(sema, tags);
     set_current_function(nest, decl);

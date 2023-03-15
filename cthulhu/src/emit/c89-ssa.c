@@ -619,12 +619,15 @@ static void c89_fwd_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 
 static void c89_fwd_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
 {
-    CTASSERT(type->kind == eTypeStruct);
+    if (type->kind != eTypeStruct) { return; }
+
     WRITE_STRINGF(&emit->emit, "struct %s;\n", type->name);
 }
 
 static void c89_emit_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
 {
+    if (type->kind != eTypeStruct) { return; }
+
     WRITE_STRINGF(&emit->emit, "struct %s {\n", type->name);
     emit_indent(&emit->emit);
 
