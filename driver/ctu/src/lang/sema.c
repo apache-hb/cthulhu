@@ -1097,9 +1097,9 @@ static void check_duplicates_and_add_fields(sema_t *sema, vector_t *fields, hlir
     }
 }
 
+// TODO: somehow more than one struct type can be created for the same struct
 static void sema_struct(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
-    sema_resolve(kRootSema, decl, begin_type_resolve);
     vector_t *fields = ast->fields;
 
     check_duplicates_and_add_fields(sema, fields, decl);
