@@ -127,7 +127,7 @@ static const char *get_flow_name(c89_ssa_emit_t *emit, const ssa_flow_t *functio
     case eLinkEntryCli:
         return "main";
     case eLinkImported:
-        return function->symbol;
+        return function->symbol == NULL ? function->name : function->symbol;
 
     default:
         return function->name;

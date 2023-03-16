@@ -28,6 +28,7 @@ static bool has_name(hlir_kind_t kind)
 
     case eHlirRecordField:
     case eHlirFunction:
+    case eHlirQualified:
 
     case eHlirGlobal:
     case eHlirLocal:
