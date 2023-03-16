@@ -141,7 +141,10 @@ typedef struct ssa_operand_t
         ssa_value_t *value;
 
         // eOperandOffset
-        size_t index;
+        struct {
+            bool indirect;
+            size_t index;
+        };
     };
 
     ssa_operand_t *offset;

@@ -78,26 +78,49 @@ static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     }
 }
 
-static ssa_type_t *ssa_type_new(ssa_t *ssa, const void *key, const char *name, ssa_kind_t kind)
+typedef struct ssa_type_result_t {
+    ssa_type_t *type;
+    bool complete;
+} ssa_type_result_t;
+
+static ssa_type_result_t ssa_type_new(ssa_t *ssa, const void *key, const char *name, ssa_kind_t kind)
 {
+    if (key != NULL)
+    {
+        ssa_type_t *existing = map_get_ptr(ssa->aggregates, key);
+        if (existing != NULL)
+        {
+            ssa_type_result_t result = { existing, true };
+            return result;
+        }
+    }
+
     ssa_type_t *it = ctu_malloc(sizeof(ssa_type_t));
     it->kind = kind;
     it->name = name;
 
-    if (kind == eTypeStruct)
+    if (kind == eTypeStruct || kind == eTypePointer || kind == eTypeSignature)
     {
         CTASSERT(key != NULL);
         map_set_ptr(ssa->aggregates, key, it);
     }
     
-    return it;
+    ssa_type_result_t result = { it, false };
+
+    return result;
 }
 
 static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
 {
     const hlir_t *real = hlir_follow_type(type);
     hlir_kind_t kind = get_hlir_kind(real);
-    ssa_type_t *it = ssa_type_new(ssa, real, get_hlir_name(real), get_type_kind(ssa, real));
+    ssa_type_result_t result = ssa_type_new(ssa, real, get_hlir_name(real), get_type_kind(ssa, real));
+    if (result.complete)
+    {
+        return result.type;
+    }
+
+    ssa_type_t *it = result.type;
 
     switch (kind) 
     {
@@ -244,7 +267,8 @@ static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
 
 static ssa_type_t *new_digit_type(ssa_t *ssa, digit_t width, sign_t sign, const char *name)
 {
-    ssa_type_t *it = ssa_type_new(ssa, NULL, name, eTypeDigit);
+    ssa_type_result_t result = ssa_type_new(ssa, NULL, name, eTypeDigit);
+    ssa_type_t *it = result.type;
     it->digit = width;
     it->sign = sign;
     return it;
@@ -263,23 +287,17 @@ static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
 
 static ssa_type_t *ssa_get_bool_type(ssa_t *ssa)
 {
-    ssa_type_t *it = ssa_type_new(ssa, NULL, "bool", eTypeBool);
-
-    return it;
+    return ssa_type_new(ssa, NULL, "bool", eTypeBool).type;
 }
 
 static ssa_type_t *ssa_get_string_type(ssa_t *ssa)
 {
-    ssa_type_t *it = ssa_type_new(ssa, NULL, "string", eTypeString);
-
-    return it;
+    return ssa_type_new(ssa, NULL, "string", eTypeString).type;
 }
 
 static ssa_type_t *ssa_get_empty_type(ssa_t *ssa)
 {
-    ssa_type_t *it = ssa_type_new(ssa, NULL, "empty", eTypeEmpty);
-
-    return it;
+    return ssa_type_new(ssa, NULL, "empty", eTypeEmpty).type;
 }
 
 static ssa_value_t *ssa_value_digit_new(ssa_t *ssa, const hlir_t *hlir)
@@ -498,6 +516,14 @@ static ssa_operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
 static ssa_operand_t *make_offset(ssa_t *ssa, const hlir_t *object, const hlir_t *member)
 {
     const hlir_t *type = get_hlir_type(object);
+    bool indirect = false;
+    if (hlir_is(type, eHlirPointer))
+    {
+        indirect = true;
+        type = type->ptr;
+    }
+
+    CTASSERT(hlir_is(type, eHlirStruct));
 
     size_t field = vector_find(type->fields, member);
 
@@ -505,6 +531,7 @@ static ssa_operand_t *make_offset(ssa_t *ssa, const hlir_t *object, const hlir_t
 
     ssa_operand_t offset = {
         .kind = eOperandOffset,
+        .indirect = indirect,
         .index = field
     };
 

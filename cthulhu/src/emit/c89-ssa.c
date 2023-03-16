@@ -222,6 +222,8 @@ static void c89_emit_function_decl(c89_ssa_emit_t *emit, const ssa_flow_t *flow,
     CTASSERT(flow->type->kind == eTypeSignature);
     const ssa_type_t *type = flow->type;
 
+    printf("emit %s %d\n", flow->name, flow->linkage);
+
     switch (flow->linkage)
     {
     case eLinkImported:
@@ -334,7 +336,9 @@ static const char *emit_operand(c89_ssa_emit_t *emit, ssa_operand_t operand)
 
     CTASSERT(off->kind == eOperandOffset);
 
-    return format("%s.field%zu", result, off->index);
+    const char *sep = off->indirect ? "->" : ".";
+
+    return format("%s%sfield%zu", result, sep, off->index);
 }
 
 static const char *c89_emit_return(c89_ssa_emit_t *emit, ssa_return_t ret)
@@ -640,7 +644,7 @@ static void c89_emit_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
     }
 
     emit_dedent(&emit->emit);
-    WRITE_STRINGF(&emit->emit, "} %s;\n", type->name);
+    WRITE_STRING(&emit->emit, "};\n");
 }
 
 void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)

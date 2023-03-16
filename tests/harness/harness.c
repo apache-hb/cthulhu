@@ -140,7 +140,6 @@ int main(int argc, const char **argv)
     io_t *c89Out = io_file(src, eFileText | eFileWrite);
 
     CTASSERTF(io_error(c89Out) == 0, "failed to open file: %s", error_string(io_error(c89Out)));
-    printf("here\n");
 
     c89_emit_ssa_modules(result.reports, mod, c89Out);
 

@@ -1163,10 +1163,25 @@ static void sema_params(sema_t *sema, vector_t *params)
     }
 }
 
+static void update_func_attribs(ast_t *ast, hlir_t *hlir)
+{
+    linkage_t link = eLinkInternal;
+    visibility_t visibility = eVisiblePrivate;
+    if (ast->exported) 
+    {
+        link = eLinkExported;
+        visibility = eVisiblePublic;
+    }
+    else if (ast->body == NULL)
+    {
+        link = eLinkImported;
+    }
+
+    hlir_set_attributes(hlir, hlir_attributes(link, visibility, DEFAULT_TAGS, NULL));
+}
+
 static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
-    hlir_attributes_t *attribs = hlir_attributes(ast->body == NULL ? eLinkImported : eLinkExported, (ast->exported ? eVisiblePublic : eVisiblePrivate), 0, NULL);
-
     size_t tags[eTagTotal] = {
         [eSemaValues] = 32, 
         [eSemaProcs] = 32, 
@@ -1182,7 +1197,7 @@ static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
     hlir_t *body = (ast->body != NULL) ? sema_stmts(nest, ast->body) : NULL;
 
     hlir_build_function(decl, body);
-    hlir_set_attributes(decl, attribs);
+    update_func_attribs(ast, decl);
 }
 
 static void sema_decl(sema_t *sema, ast_t *ast)
@@ -1260,7 +1275,9 @@ static hlir_t *begin_function(sema_t *sema, ast_t *ast)
         .variadic = signature->variadic
     };
 
-    return hlir_begin_function(ast->node, ast->name, sig);
+    hlir_t *func = hlir_begin_function(ast->node, ast->name, sig);
+    update_func_attribs(ast, func);
+    return func;
 }
 
 static void fwd_decl(sema_t *sema, ast_t *ast)
