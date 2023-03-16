@@ -17,6 +17,7 @@ SSA_OPCODE(eOpCompare, "compare")
 SSA_OPCODE(eOpCast, "cast")
 SSA_OPCODE(eOpCall, "call")
 
+SSA_OPCODE(eOpSizeOf, "sizeof")
 SSA_OPCODE(eOpNop, "nop")
 
 #undef SSA_OPCODE

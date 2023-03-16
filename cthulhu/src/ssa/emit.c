@@ -223,6 +223,12 @@ static void emit_step(emit_t *emit, set_t *edges, ssa_step_t *step)
         break;
     }
 
+    case eOpSizeOf: {
+        ssa_sizeof_t size = step->size;
+        printf("  %%%s = sizeof %s\n", step->id, emit_type(emit, size.type));
+        break;
+    }
+
     default:
         printf("  <error> %s\n", ssa_opcode_name(step->opcode));
         break;

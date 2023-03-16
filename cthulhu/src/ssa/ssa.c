@@ -625,6 +625,34 @@ static ssa_operand_t compile_addr(ssa_t *ssa, const hlir_t *hlir)
     return add_step(ssa, step);
 }
 
+static ssa_operand_t compile_sizeof(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_type_t *type = type_new(ssa, hlir->operand);
+
+    ssa_step_t step = {
+        .opcode = eOpSizeOf,
+        .type = new_digit_type(ssa, eDigitSize, eUnsigned, "size"),
+        .size = {
+            .type = type
+        }
+    };
+
+    return add_step(ssa, step);
+}
+
+static ssa_operand_t compile_builtin(ssa_t *ssa, const hlir_t *hlir)
+{
+    switch (hlir->builtin)
+    {
+    case eBuiltinSizeOf:
+        return compile_sizeof(ssa, hlir);
+    
+    default:
+        report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-builtin %d", hlir->builtin);
+        return operand_empty();
+    }
+}
+
 static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -671,6 +699,9 @@ static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 
     case eHlirAddr:
         return compile_addr(ssa, hlir);
+
+    case eHlirBuiltin:
+        return compile_builtin(ssa, hlir);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-rvalue %s", hlir_kind_to_string(kind));

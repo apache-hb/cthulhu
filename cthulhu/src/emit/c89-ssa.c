@@ -222,8 +222,6 @@ static void c89_emit_function_decl(c89_ssa_emit_t *emit, const ssa_flow_t *flow,
     CTASSERT(flow->type->kind == eTypeSignature);
     const ssa_type_t *type = flow->type;
 
-    printf("emit %s %d\n", flow->name, flow->linkage);
-
     switch (flow->linkage)
     {
     case eLinkImported:
@@ -509,6 +507,19 @@ static const char *c89_emit_addr(c89_ssa_emit_t *emit, const ssa_step_t *step)
     return format("%s = &%s;", result, operand);
 }
 
+static const char *c89_emit_sizeof(c89_ssa_emit_t *emit, const ssa_step_t *step)
+{
+    const ssa_sizeof_t size = step->size;
+
+    const char *type = get_type_name(emit, size.type, NULL);
+
+    char *name = c89_gen_reg(emit, step);
+    const char *result = get_type_name(emit, step->type, name);
+    map_set_ptr(emit->stepCache, step, name);
+
+    return format("%s = sizeof(%s);", result, type);
+}
+
 static const char *c89_emit_step(c89_ssa_emit_t *emit, const ssa_step_t *step)
 {
     switch (step->opcode)
@@ -551,6 +562,9 @@ static const char *c89_emit_step(c89_ssa_emit_t *emit, const ssa_step_t *step)
 
     case eOpAddr:
         return c89_emit_addr(emit, step);
+
+    case eOpSizeOf:
+        return c89_emit_sizeof(emit, step);
 
     default:
         ctu_assert(emit->emit.reports, "unhandled opcode: %d", step->opcode);
@@ -647,6 +661,52 @@ static void c89_emit_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
     WRITE_STRING(&emit->emit, "};\n");
 }
 
+static void add_type_deps(vector_t **deps, set_t *fwd, const ssa_type_t *type)
+{
+    if (set_contains_ptr(fwd, type)) { return; }
+
+    switch (type->kind)
+    {
+    case eTypeSignature: {
+        for (size_t i = 0; i < vector_len(type->args); i++)
+        {
+            ssa_param_t *param = vector_get(type->args, i);
+            add_type_deps(deps, fwd, param->type);
+        }
+        add_type_deps(deps, fwd, type->result);
+        break;
+    }
+    case eTypeStruct: {
+        for (size_t i = 0; i < vector_len(type->fields); i++)
+        {
+            ssa_param_t *field = vector_get(type->fields, i);
+            add_type_deps(deps, fwd, field->type);
+        }
+        break;
+    }
+    default: return;
+    }
+
+    set_add_ptr(fwd, type);
+    vector_push(deps, (void*)type);
+}
+
+static vector_t *c89_sort_types(c89_ssa_emit_t *emit, vector_t *types)
+{
+    size_t inLen = vector_len(types);
+    set_t *fwd = set_new(inLen);
+
+    vector_t *result = vector_new(inLen);
+
+    for (size_t i = 0; i < inLen; i++)
+    {
+        ssa_type_t *type = vector_get(types, i);
+        add_type_deps(&result, fwd, type);
+    }
+
+    return result;
+}
+
 void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)
 {
     c89_ssa_emit_t emit = {
@@ -662,20 +722,23 @@ void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)
 
     section_t symbols = module->symbols;
 
-    size_t totalTypes = vector_len(symbols.types);
     size_t totalGlobals = vector_len(symbols.globals);
     size_t totalFunctions = vector_len(symbols.functions);
 
+    vector_t *sortedTypes = c89_sort_types(&emit, symbols.types);
+    size_t totalTypes = vector_len(sortedTypes);
+
     WRITE_STRING(&emit.emit, "#include <stdbool.h>\n");
+    WRITE_STRING(&emit.emit, "#include <stddef.h>\n");
 
     for (size_t i = 0; i < totalTypes; i++)
     {
-        c89_fwd_type(&emit, vector_get(symbols.types, i));
+        c89_fwd_type(&emit, vector_get(sortedTypes, i));
     }
 
     for (size_t i = 0; i < totalTypes; i++)
     {
-        c89_emit_type(&emit, vector_get(symbols.types, i));
+        c89_emit_type(&emit, vector_get(sortedTypes, i));
     }
 
     for (size_t i = 0; i < totalGlobals; i++)

@@ -231,6 +231,11 @@ typedef struct ssa_call_t
     ssa_operand_t symbol;
 } ssa_call_t;
 
+typedef struct ssa_sizeof_t
+{
+    const ssa_type_t *type;
+} ssa_sizeof_t;
+
 typedef struct ssa_step_t
 {
     ssa_opcode_t opcode;
@@ -252,6 +257,8 @@ typedef struct ssa_step_t
         ssa_compare_t compare;
         ssa_cast_t cast;
         ssa_call_t call;
+
+        ssa_sizeof_t size;
     };
 } ssa_step_t;
 
