@@ -20,6 +20,8 @@
  */
 hlir_t *hlir_digit(node_t *node, const char *name, digit_t width, sign_t sign);
 
+hlir_t *hlir_decimal(node_t *node, const char *name);
+
 /**
  * @brief construct a new bool type
  *

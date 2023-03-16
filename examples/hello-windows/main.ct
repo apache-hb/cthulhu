@@ -8,11 +8,17 @@ type HWND = *void;
 
 type LPCSTR = str;
 type UINT = uint;
+type WORD = ushort;
+type ATOM = WORD;
+type BOOL = int;
 
-type WPARAM = ulong;
-type LPARAM = ulong;
+type LONG_PTR = long;
 
-type WNDPROC = def(HWND, uint, ulong, ulong) -> uint;
+type WPARAM = LONG_PTR;
+type LPARAM = LONG_PTR;
+type LRESULT = LONG_PTR;
+
+type WNDPROC = def(HWND, uint, WPARAM, LPARAM) -> LRESULT;
 
 @layout(platform)
 struct WNDCLASSEXA {
@@ -51,13 +57,13 @@ struct MSG {
 }
 
 @extern("RegisterClassExA")
-def RegisterClassExA(cls: *WNDCLASSEXA): HANDLE;
+def RegisterClassExA(cls: *WNDCLASSEXA): ATOM;
 
 @extern("UnregisterClassA")
-def UnregisterClassA(lpClassName: str, hInstance: HINSTANCE): HANDLE;
+def UnregisterClassA(lpClassName: str, hInstance: HINSTANCE): BOOL;
 
 @extern("DefWindowProcA")
-def DefWindowProcA(hWnd: HWND, uMsg: uint, wParam: WPARAM, lParam: LPARAM): uint;
+def DefWindowProcA(hWnd: HWND, uMsg: uint, wParam: WPARAM, lParam: LPARAM): LRESULT;
 
 @extern("CreateWindowExA")
 def CreateWindowExA(
@@ -157,7 +163,7 @@ def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdSh
     return msg.wParam;
 }
 
-def windowCallback(hWnd: HWND, uMsg: uint, wParam: ulong, lParam: ulong): uint {
+def windowCallback(hWnd: HWND, uMsg: uint, wParam: WPARAM, lParam: LPARAM): LRESULT {
     if uMsg == 0x0002 { // WM_DESTROY
         PostQuitMessage(0);
         return 0;

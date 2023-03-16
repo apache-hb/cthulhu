@@ -88,11 +88,11 @@ static const char *kDigitNames[eSignTotal][eDigitTotal] = {
 };
 
 static hlir_t *kVoidType = NULL;
-static hlir_t *kNullType = NULL;
 static hlir_t *kEmptyType = NULL;
 static hlir_t *kOpaqueType = NULL;
 static hlir_t *kBoolType = NULL;
 static hlir_t *kStringType = NULL;
+static hlir_t *kFloatType = NULL;
 static hlir_t *kDigitTypes[eSignTotal * eDigitTotal];
 
 static hlir_t *kUnresolvedType = NULL;
@@ -135,11 +135,6 @@ static bool is_indexable(const hlir_t *type)
     return hlir_is(real, eHlirArray);
 }
 
-static bool is_voidptr(const hlir_t *type)
-{
-    return is_ptr(type) && type->ptr == kVoidType;
-}
-
 static bool is_lvalue(const hlir_t *expr)
 {
     hlir_kind_t kind = get_hlir_kind(expr);
@@ -164,11 +159,6 @@ static const hlir_t *common_pointer_type(node_t *node, const hlir_t *lhs, const 
         return hlir_error(node, "no common pointer type");
     }
 
-    if (is_voidptr(lhs) || is_voidptr(rhs))
-    {
-        return kNullType;
-    }
-
     if (lhs == rhs)
     {
         return lhs;
@@ -181,6 +171,7 @@ static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir
 {
     const hlir_t *lhsType = hlir_follow_type(lhs);
     const hlir_t *rhsType = hlir_follow_type(rhs);
+
     if (hlir_is(lhsType, eHlirDigit) && hlir_is(rhsType, eHlirDigit))
     {
         // get the largest size
@@ -194,6 +185,21 @@ static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir
     if (hlir_is(lhsType, eHlirBool) && hlir_is(rhsType, eHlirBool))
     {
         return kBoolType;
+    }
+
+    if (hlir_is(lhsType, eHlirOpaque) && hlir_is(rhsType, eHlirOpaque))
+    {
+        return kOpaqueType;
+    }
+
+    if (hlir_is(lhsType, eHlirOpaque) && hlir_is(rhsType, eHlirPointer))
+    {
+        return kOpaqueType;
+    }
+
+    if (hlir_is(lhsType, eHlirPointer) && hlir_is(rhsType, eHlirOpaque))
+    {
+        return kOpaqueType;
     }
 
     // doesnt account for const, probably wrong
@@ -273,6 +279,7 @@ static void add_basic_types(sema_t *sema)
     add_decl(sema, eSemaTypes, "void", kVoidType);
     add_decl(sema, eSemaTypes, "bool", kBoolType);
     add_decl(sema, eSemaTypes, "str", kStringType);
+    add_decl(sema, eSemaTypes, "float", kFloatType);
 
     // noreturn type for exit/abort/terminate etc
     add_decl(sema, eSemaTypes, "noreturn", kEmptyType);
@@ -310,8 +317,7 @@ void ctu_init_compiler(runtime_t *runtime)
     kOpaqueType = hlir_opaque(node, "opaque");
     kBoolType = hlir_bool(node, "bool");
     kStringType = hlir_string(node, "str");
-
-    kNullType = hlir_pointer(node, "nullptr", kOpaqueType, false);
+    kFloatType = hlir_decimal(node, "float");
 
     for (int sign = 0; sign < eSignTotal; sign++)
     {
@@ -547,6 +553,11 @@ static hlir_t *sema_digit(sema_t *sema, ast_t *ast)
     return apply_suffix(sema, ast, suffix);
 }
 
+static hlir_t *sema_decimal(sema_t *sema, ast_t *ast)
+{
+    return hlir_decimal_literal(ast->node, kFloatType, ast->decimal);
+}
+
 static hlir_t *sema_bool(ast_t *ast)
 {
     return hlir_bool_literal(ast->node, kBoolType, ast->boolean);
@@ -563,9 +574,9 @@ static hlir_t *sema_unary_digit(sema_t *sema, ast_t *ast, hlir_t *operand)
     const hlir_t *type = get_hlir_type(operand);
     const hlir_t *realType = hlir_real_type(type);
 
-    if (!hlir_is(realType, eHlirDigit))
+    if (!hlir_is(realType, eHlirDigit) && !hlir_is(realType, eHlirDecimal))
     {
-        report(sema_reports(sema), eFatal, ast->node, "cannot perform integer unary operation on '%s'",
+        report(sema_reports(sema), eFatal, ast->node, "cannot perform unary operation on '%s'",
                ctu_repr(sema_reports(sema), operand, true));
     }
 
@@ -626,12 +637,12 @@ static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
 {
-    hlir_t *lhs = sema_expr(sema, ast->lhs);
-    hlir_t *rhs = sema_expr(sema, ast->rhs);
+    hlir_t *lhs = sema_rvalue(sema, ast->lhs);
+    hlir_t *rhs = sema_rvalue(sema, ast->rhs);
 
     const hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
 
-    if (!hlir_is(type, eHlirDigit) && !hlir_is(type, eHlirBool) && !hlir_is(type, eHlirPointer))
+    if (hlir_is(type, eHlirError))
     {
         message_t *id = report(sema_reports(sema), eFatal, ast->node, "cannot perform comparison operations on %s",
                                ctu_type_repr(sema_reports(sema), type, true));
@@ -735,7 +746,7 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
 static hlir_t *sema_null(ast_t *ast)
 {
     hlir_t *zero = hlir_int_literal(ast->node, get_digit_type(eUnsigned, eDigitPtr), 0);
-    return hlir_cast(kNullType, zero, eCastBit);
+    return hlir_cast(kOpaqueType, zero, eCastBit);
 }
 
 static hlir_t *sema_access(sema_t *sema, ast_t *ast)
@@ -822,6 +833,8 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
     {
     case eAstDigit:
         return sema_digit(sema, ast);
+    case eAstDecimal:
+        return sema_decimal(sema, ast);
     case eAstBool:
         return sema_bool(ast);
     case eAstString:

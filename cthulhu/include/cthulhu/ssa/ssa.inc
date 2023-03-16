@@ -45,6 +45,7 @@ SSA_OPERAND(eOperandOffset, "offset")
 #endif
 
 SSA_TYPE(eTypeDigit, "digit")
+SSA_TYPE(eTypeDecimal, "decimal")
 SSA_TYPE(eTypeBool, "bool")
 SSA_TYPE(eTypeString, "string")
 

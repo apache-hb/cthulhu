@@ -25,6 +25,7 @@
 * complete api docs
 * add opaque pointer type to replace eHlirPointer(eHlirUnit)
 * driver specific config support
+* replace mpq with mpfr (rounding is important)
 
 ## bikeshedding
 

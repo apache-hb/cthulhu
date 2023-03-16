@@ -13,6 +13,7 @@ static bool has_name(hlir_kind_t kind)
     case eHlirStruct:
     case eHlirUnion:
     case eHlirDigit:
+    case eHlirDecimal:
     case eHlirBool:
     case eHlirString:
     case eHlirEmpty:
@@ -51,6 +52,7 @@ static bool has_attribs(hlir_kind_t kind)
     case eHlirUnion:
     case eHlirAlias:
     case eHlirDigit:
+    case eHlirDecimal:
     case eHlirBool:
     case eHlirString:
     case eHlirPointer:

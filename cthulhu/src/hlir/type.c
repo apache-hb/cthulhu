@@ -12,6 +12,11 @@ hlir_t *hlir_digit(node_t *node, const char *name, digit_t width, sign_t sign)
     return hlir;
 }
 
+hlir_t *hlir_decimal(node_t *node, const char *name)
+{
+    return hlir_decl_new(node, name, kMetaType, eHlirDecimal);
+}
+
 hlir_t *hlir_bool(node_t *node, const char *name)
 {
     return hlir_decl_new(node, name, kMetaType, eHlirBool);

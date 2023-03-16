@@ -12,6 +12,7 @@
 #include "std/vector.h"
 
 #include <gmp.h>
+#include <mpq.h>
 
 /**
  * @defgroup hlir_t HLIR (High Level Intermediate Representation)
@@ -44,6 +45,9 @@ typedef struct hlir_t
     union {
         mpz_t digit;  ///< the value of this integer literal. active if type ==
                       ///< eHlirLiteralDigit
+
+        mpq_t decimal;
+        
         bool boolean; ///< the value of this boolean literal. active if type ==
                       ///< eHlirLiteralBool
 
@@ -278,6 +282,8 @@ hlir_t *hlir_unresolved(node_t *node, const char *name, sema_t *sema, void *user
 ///
 
 hlir_t *hlir_digit_literal(node_t *node, const hlir_t *type, mpz_t value);
+
+hlir_t *hlir_decimal_literal(node_t *node, const hlir_t *type, mpq_t value);
 
 hlir_t *hlir_int_literal(node_t *node, const hlir_t *type, int value);
 

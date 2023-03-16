@@ -20,8 +20,15 @@ def cliEntry: int {
     glfw::makeContextCurrent(window);
 
     while glfw::windowShouldClose(window) == 0 {
+        gl::clearColour(0.2, 0.3, 0.3, 1.0);
         gl::clear(gl::ColourBufferBit);
         
+        gl::begin(gl::Triangles);
+            gl::vertex2f(-0.5, -0.5);
+            gl::vertex2f(0.0, 0.5);
+            gl::vertex2f(0.5, -0.5);
+        gl::end();
+
         glfw::swapBuffers(window);
         glfw::pollEvents();
     }

@@ -4,6 +4,8 @@
 
 #include "report/report.h"
 
+#include <string.h>
+
 static ast_t *ast_new(astof_t of, scan_t *scan, where_t where)
 {
     ast_t *ast = ctu_malloc(sizeof(ast_t));
@@ -76,8 +78,15 @@ ast_t *ast_variable(scan_t *scan, where_t where, char *name, bool mut, ast_t *ex
 ast_t *ast_digit(scan_t *scan, where_t where, mpz_t value, char *suffix)
 {
     ast_t *ast = ast_new(eAstDigit, scan, where);
-    mpz_init_set(ast->digit, value);
+    memcpy(ast->digit, value, sizeof(mpz_t));
     ast->suffix = suffix;
+    return ast;
+}
+
+ast_t *ast_decimal(scan_t *scan, where_t where, mpq_t value)
+{
+    ast_t *ast = ast_new(eAstDecimal, scan, where);
+    memcpy(ast->decimal, value, sizeof(mpq_t));
     return ast;
 }
 

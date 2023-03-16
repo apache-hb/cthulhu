@@ -147,10 +147,12 @@ const char *ctu_type_repr(reports_t *reports, const hlir_t *type, bool detail)
     switch (kind)
     {
     case eHlirDigit:
+    case eHlirDecimal:
     case eHlirBool:
     case eHlirString:
     case eHlirEmpty:
     case eHlirUnit:
+    case eHlirOpaque:
         return repr_integral(inner, detail);
 
     case eHlirPointer:
@@ -171,9 +173,6 @@ const char *ctu_type_repr(reports_t *reports, const hlir_t *type, bool detail)
 
     case eHlirStruct:
         return format("struct %s", get_hlir_name(inner));
-
-    case eHlirOpaque:
-        return format("opaque");
 
     case eHlirQualified:
         return ctu_type_repr(reports, get_hlir_type(inner), detail);

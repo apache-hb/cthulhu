@@ -47,6 +47,7 @@ see https://www.gnu.org/licenses/.  */
 #define GMP_LIMB_HIGHBIT ((mp_limb_t) 1 << (GMP_LIMB_BITS - 1))
 #define GMP_NEG_CAST(T,x) (-((T)((x) + 1) - 1))
 #define GMP_MIN(a, b) ((a) < (b) ? (a) : (b))
+#define GMP_LIMB_MAX ((mp_limb_t) ~ (mp_limb_t) 0)
 
 static mpz_srcptr
 mpz_roinit_normal_n (mpz_t x, mp_srcptr xp, mp_size_t xs)

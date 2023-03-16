@@ -1,8 +1,8 @@
 module glfw;
 
-export type Window = *void;
+export type Window = opaque;
 
-export type Monitor = *void;
+export type Monitor = opaque;
 
 @extern("glfwInit")
 export def init: int;

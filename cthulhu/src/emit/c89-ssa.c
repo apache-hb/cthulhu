@@ -85,6 +85,9 @@ static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, c
         return name == NULL ? digit : format("%s %s", digit, name);
     }
 
+    case eTypeDecimal:
+        return name == NULL ? "float" : format("float %s", name);
+
     case eTypeBool:
         return name == NULL ? "bool" : format("bool %s", name);
 
@@ -140,6 +143,19 @@ static const char *emit_digit(c89_ssa_emit_t *emit, const ssa_type_t *type, cons
     return format("((%s)(%s))", prefix, str);
 }
 
+static char *emit_decimal(const mpq_t decimal)
+{
+    mpz_t num;
+    mpz_t den;
+    mpz_init(num);
+    mpz_init(den);
+
+    mpq_get_num(num, decimal);
+    mpq_get_den(den, decimal);
+
+    return format("(%s.%sf)", mpz_get_str(NULL, 10, num), mpz_get_str(NULL, 10, den));
+}
+
 static const char *emit_value(c89_ssa_emit_t *emit, const ssa_value_t *value)
 {
     ssa_kind_t kind = value->type->kind;
@@ -154,6 +170,12 @@ static const char *emit_value(c89_ssa_emit_t *emit, const ssa_value_t *value)
     {
     case eTypeDigit:
         return emit_digit(emit, value->type, value->digit);
+
+    case eTypeDecimal:
+        return emit_decimal(value->decimal);
+
+    case eTypeOpaque:
+        return format("(void*)(0x%s)", mpz_get_str(NULL, 16, value->digit));
 
     case eTypeBool:
         return value->boolean ? "true" : "false";
@@ -201,15 +223,18 @@ static bool is_extern(const ssa_flow_t *flow)
 
 static const char *get_function_return_type(c89_ssa_emit_t *emit, const ssa_flow_t *flow)
 {
-    if (is_entry_point(flow->linkage))
+    switch (flow->linkage)
     {
+    case eLinkEntryCli:
         return "int main";
+    case eLinkEntryGui:
+        return "int wWinMain";
+    default:
+        break;
     }
-    else
-    {
-        const char *name = get_flow_name(emit, flow);
-        return get_type_name(emit, flow->type->result, name);
-    }
+
+    const char *name = get_flow_name(emit, flow);
+    return get_type_name(emit, flow->type->result, name);
 }
 
 static const char *get_param_name(const ssa_param_t *param, size_t idx, bool fwd)

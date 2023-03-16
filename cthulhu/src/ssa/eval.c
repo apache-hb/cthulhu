@@ -102,6 +102,28 @@ static ssa_value_t *get_operand_value(opt_t *opt, ssa_operand_t operand)
     }
 }
 
+static const ssa_type_t *get_operand_type(opt_t *opt, ssa_operand_t operand)
+{
+    switch (operand.kind)
+    {
+    case eOperandImm: {
+        ssa_value_t *value = operand.value;
+        return value->type;
+    }
+    case eOperandReg: {
+        const ssa_step_t *step = operand.vreg;
+        return step->type;
+    }
+    case eOperandEmpty: {
+        return type_empty_new("empty");
+    }
+
+    default:
+        report(opt->reports, eInternal, NULL, "unhandled operand %s", ssa_operand_name(operand.kind));
+        return NULL;
+    }
+}
+
 static void set_result(opt_t *opt, const ssa_value_t *value) 
 {
     opt->result = value;
@@ -164,9 +186,8 @@ static opt_result_t opt_binary(opt_t *opt, ssa_binary_t binary)
         return opt_unsupported("unhandled binary op");
     }
 
-    // TODO: type is a hack here
-    ssa_value_t *value = value_digit_new(result, lhs->type);
-    return opt_ok(value);
+    // TODO: lhs->type is a hack here
+    return opt_ok(value_digit_new(result, lhs->type));
 }
 
 static opt_result_t opt_unary(opt_t *opt, ssa_unary_t unary)
@@ -205,6 +226,23 @@ static opt_result_t opt_unary(opt_t *opt, ssa_unary_t unary)
     return opt_ok(value);
 }
 
+static opt_result_t opt_cast(opt_t *opt, ssa_cast_t cast)
+{
+    const ssa_value_t *operand = get_operand_value(opt, cast.operand);
+    const ssa_type_t *srcType = get_operand_type(opt, cast.operand);
+    const ssa_type_t *dstType = cast.type;
+
+    if (srcType->kind == eTypeDigit && dstType->kind == eTypeOpaque)
+    {
+        if (srcType->digit == eDigitPtr)
+        {
+            return opt_ok(value_ptr_new(dstType, operand->digit));
+        }
+    }
+
+    return opt_result_error(eOptUnsupported, "invalid cast");
+}
+
 static opt_result_t opt_step(opt_t *opt, const ssa_step_t *step, bool *result)
 {
     ssa_opcode_t kind = step->opcode;
@@ -229,6 +267,11 @@ static opt_result_t opt_step(opt_t *opt, const ssa_step_t *step, bool *result)
     case eOpUnary: {
         ssa_unary_t unary = step->unary;
         return opt_unary(opt, unary);
+    }
+
+    case eOpCast: {
+        ssa_cast_t cast = step->cast;
+        return opt_cast(opt, cast);
     }
 
     default:

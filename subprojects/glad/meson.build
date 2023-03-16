@@ -2,7 +2,7 @@ project('glad', 'c')
 
 src = [ 'glad/glad.c' ]
 
-libglad = library('libglad', src,
+libglad = library('glad', src,
     include_directories : [ 'glad' ]
 )
 

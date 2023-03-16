@@ -1173,7 +1173,7 @@ static void c89_function_header(c89_emit_t *emit, const hlir_t *function)
     switch (attribs->linkage)
     {
     case eLinkEntryGui:
-        name = "WinMain";
+        name = "wWinMain";
         // fallthrough
     case eLinkEntryCli:
         params = c89_fmt_params(emit, closureParams);

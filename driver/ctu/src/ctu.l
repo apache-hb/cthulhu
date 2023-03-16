@@ -209,6 +209,11 @@ WS [ \t\r\v\n\f]
     return INTEGER;
 }
 
+[0-9]+.[0-9]+ {
+    init_decimal(yylval->decimal, yytext);
+    return DECIMAL;
+}
+
 \"([^"\\\n]|{ESCAPES})*\" {
 	yylval->string = parse_string_escapes(scan_reports(yyextra), yytext + 1, yyleng - 2);
     return STRING;

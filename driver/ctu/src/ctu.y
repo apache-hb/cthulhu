@@ -33,6 +33,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
         char *suffix;
     } digit;
 
+    mpq_t decimal;
+
     ast_t *ast;
     vector_t *vector;
     funcparams_t funcparams;
@@ -49,6 +51,9 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %token<boolean>
     BOOLEAN "boolean literal"
+
+%token<decimal>
+    DECIMAL "decimal literal"
 
 %token
     BITNOT "`~`"
@@ -414,6 +419,7 @@ typelist: type { $$ = vector_init($1); }
 
 primary: LPAREN expr RPAREN { $$ = $2; }
     | INTEGER { $$ = ast_digit(x, @$, $1.mpz, $1.suffix); }
+    | DECIMAL { $$ = ast_decimal(x, @$, $1); }
     | path { $$ = ast_name(x, @$, $1); }
     | BOOLEAN { $$ = ast_bool(x, @$, $1); }
     | STRING { $$ = ast_string(x, @$, $1.text, $1.size); }

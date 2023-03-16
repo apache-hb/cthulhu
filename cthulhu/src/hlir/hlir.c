@@ -6,6 +6,8 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/type.h"
 
+#include <string.h>
+
 hlir_t *hlir_error(node_t *node, const char *error)
 {
     hlir_t *self = hlir_new(node, kMetaType, eHlirError);
@@ -25,7 +27,14 @@ hlir_t *hlir_unresolved(node_t *node, const char *name, sema_t *sema, void *user
 hlir_t *hlir_digit_literal(node_t *node, const hlir_t *type, mpz_t value)
 {
     hlir_t *self = hlir_new(node, type, eHlirDigitLiteral);
-    mpz_init_set(self->digit, value);
+    memcpy(self->digit, value, sizeof(mpz_t));
+    return self;
+}
+
+hlir_t *hlir_decimal_literal(node_t *node, const hlir_t *type, mpq_t value)
+{
+    hlir_t *self = hlir_new(node, type, eHlirDecimalLiteral);
+    memcpy(self->decimal, value, sizeof(mpq_t));
     return self;
 }
 

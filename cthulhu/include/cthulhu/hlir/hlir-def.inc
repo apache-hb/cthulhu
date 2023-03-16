@@ -8,13 +8,14 @@ HLIR_KIND(eHlirUnresolved, "unresolved")
 HLIR_KIND(eHlirQualified, "qualified")
 
 // scalar types
-HLIR_KIND(eHlirType,   "meta-type")
-HLIR_KIND(eHlirDigit,  "digit-type")
-HLIR_KIND(eHlirString, "string-type")
-HLIR_KIND(eHlirBool,   "bool-type")
-HLIR_KIND(eHlirUnit,   "unit-type")
-HLIR_KIND(eHlirEmpty,  "empty-type")
-HLIR_KIND(eHlirOpaque, "opaque-type") // opaque pointer type, akin to void*
+HLIR_KIND(eHlirType,    "meta-type")
+HLIR_KIND(eHlirDigit,   "digit-type")
+HLIR_KIND(eHlirDecimal, "decimal-type")
+HLIR_KIND(eHlirString,  "string-type")
+HLIR_KIND(eHlirBool,    "bool-type")
+HLIR_KIND(eHlirUnit,    "unit-type")
+HLIR_KIND(eHlirEmpty,   "empty-type")
+HLIR_KIND(eHlirOpaque,  "opaque-type") // opaque pointer type, akin to void*
 
 // user defined scalar types
 HLIR_KIND(eHlirArray,   "array-type")
@@ -31,9 +32,10 @@ HLIR_KIND(eHlirRecordField, "record-field")
 HLIR_KIND(eHlirEnumField,   "enum-field")
 
 // literal values
-HLIR_KIND(eHlirDigitLiteral,  "digit-literal")
-HLIR_KIND(eHlirBoolLiteral,   "bool-literal")
-HLIR_KIND(eHlirStringLiteral, "string-literal")
+HLIR_KIND(eHlirDigitLiteral,   "digit-literal")
+HLIR_KIND(eHlirDecimalLiteral, "decimal-literal")
+HLIR_KIND(eHlirBoolLiteral,    "bool-literal")
+HLIR_KIND(eHlirStringLiteral,  "string-literal")
 
 // expressions
 HLIR_KIND(eHlirLoad,    "load") // a load from an address, equivilent to a C rvalue

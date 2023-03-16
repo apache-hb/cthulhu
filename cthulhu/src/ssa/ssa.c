@@ -18,6 +18,7 @@
 #include "common.h"
 
 #include <stdio.h>
+#include <string.h>
 
 typedef struct {
     reports_t *reports;
@@ -58,6 +59,7 @@ static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     switch (kind)
     {
     case eHlirDigit: return eTypeDigit;
+    case eHlirDecimal: return eTypeDecimal;
     case eHlirBool: return eTypeBool;
     case eHlirString: return eTypeString;
     case eHlirPointer: return eTypePointer;
@@ -83,7 +85,7 @@ typedef struct ssa_type_result_t {
     bool complete;
 } ssa_type_result_t;
 
-static ssa_type_result_t ssa_type_new(ssa_t *ssa, const void *key, const char *name, ssa_kind_t kind)
+static ssa_type_result_t ssa_anytype_new(ssa_t *ssa, const void *key, const char *name, ssa_kind_t kind)
 {
     if (key != NULL)
     {
@@ -114,7 +116,7 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
 {
     const hlir_t *real = hlir_follow_type(type);
     hlir_kind_t kind = get_hlir_kind(real);
-    ssa_type_result_t result = ssa_type_new(ssa, real, get_hlir_name(real), get_type_kind(ssa, real));
+    ssa_type_result_t result = ssa_anytype_new(ssa, real, get_hlir_name(real), get_type_kind(ssa, real));
     if (result.complete)
     {
         return result.type;
@@ -160,6 +162,7 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
         it->ptr = type_new(ssa, real->ptr);
         break;
 
+    case eHlirDecimal:
     case eHlirOpaque:
     case eHlirBool:
     case eHlirUnit:
@@ -267,7 +270,7 @@ static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
 
 static ssa_type_t *new_digit_type(ssa_t *ssa, digit_t width, sign_t sign, const char *name)
 {
-    ssa_type_result_t result = ssa_type_new(ssa, NULL, name, eTypeDigit);
+    ssa_type_result_t result = ssa_anytype_new(ssa, NULL, name, eTypeDigit);
     ssa_type_t *it = result.type;
     it->digit = width;
     it->sign = sign;
@@ -285,26 +288,41 @@ static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
     return new_digit_type(ssa, type->width, type->sign, get_hlir_name(type));
 }
 
+static ssa_type_t *ssa_get_decimal_type(ssa_t *ssa, const hlir_t *decimal)
+{
+    CTASSERTF(hlir_is(decimal, eHlirDecimalLiteral), "expected decimal literal, got %s", hlir_kind_to_string(get_hlir_kind(decimal)));
+
+    const hlir_t *type = hlir_follow_type(get_hlir_type(decimal));
+
+    CTASSERT(hlir_is(type, eHlirDecimal));
+
+    return ssa_anytype_new(ssa, NULL, "float", eTypeDecimal).type;
+}
+
 static ssa_type_t *ssa_get_bool_type(ssa_t *ssa)
 {
-    return ssa_type_new(ssa, NULL, "bool", eTypeBool).type;
+    return ssa_anytype_new(ssa, NULL, "bool", eTypeBool).type;
 }
 
 static ssa_type_t *ssa_get_string_type(ssa_t *ssa)
 {
-    return ssa_type_new(ssa, NULL, "string", eTypeString).type;
-}
-
-static ssa_type_t *ssa_get_empty_type(ssa_t *ssa)
-{
-    return ssa_type_new(ssa, NULL, "empty", eTypeEmpty).type;
+    return ssa_anytype_new(ssa, NULL, "string", eTypeString).type;
 }
 
 static ssa_value_t *ssa_value_digit_new(ssa_t *ssa, const hlir_t *hlir)
 {
     ssa_value_t *it = ssa_value_new(ssa_get_digit_type(ssa, hlir), true);
 
-    mpz_init_set(it->digit, hlir->digit);
+    memcpy(it->digit, hlir->digit, sizeof(mpz_t));
+
+    return it;
+}
+
+static ssa_value_t *ssa_value_decimal_new(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_value_t *it = ssa_value_new(ssa_get_decimal_type(ssa, hlir), true);
+
+    memcpy(it->decimal, hlir->decimal, sizeof(mpq_t));
 
     return it;
 }
@@ -330,6 +348,16 @@ static ssa_operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
     ssa_operand_t op = {
         .kind = eOperandImm,
         .value = ssa_value_digit_new(ssa, hlir)
+    };
+
+    return op;
+}
+
+static ssa_operand_t compile_decimal(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_operand_t op = {
+        .kind = eOperandImm,
+        .value = ssa_value_decimal_new(ssa, hlir)
     };
 
     return op;
@@ -661,6 +689,9 @@ static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
     case eHlirDigitLiteral:
         return compile_digit(ssa, hlir);
 
+    case eHlirDecimalLiteral:
+        return compile_decimal(ssa, hlir);
+
     case eHlirStringLiteral:
         return compile_string(ssa, hlir);
 
@@ -726,7 +757,7 @@ static ssa_operand_t compile_assign(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpStore,
-        .type = ssa_get_empty_type(ssa),
+        .type = type_empty_new("empty"),
         .store = {
             .dst = dst,
             .src = src
@@ -788,7 +819,7 @@ static ssa_operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpJmp,
-        .type = ssa_get_empty_type(ssa),
+        .type = type_empty_new("empty"),
         .jmp = {
             .label = operand_bb(loop)
         }
@@ -801,7 +832,7 @@ static ssa_operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t ret = {
         .opcode = eOpBranch,
-        .type = ssa_get_empty_type(ssa),
+        .type = type_empty_new("empty"),
         .branch = {
             .cond = compile_compare(ssa, stmt->cond),
             .truthy = operand_bb(loop),
@@ -824,7 +855,7 @@ static ssa_operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t ret = {
         .opcode = eOpJmp,
-        .type = ssa_get_empty_type(ssa),
+        .type = type_empty_new("empty"),
         .jmp = {
             .label = operand_bb(tail)
         }
@@ -832,7 +863,7 @@ static ssa_operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpBranch,
-        .type = ssa_get_empty_type(ssa),
+        .type = type_empty_new("empty"),
         .branch = {
             .cond = compile_compare(ssa, stmt->cond),
             .truthy = operand_bb(then),
@@ -867,7 +898,7 @@ static ssa_operand_t compile_return(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpReturn,
-        .type = ssa_get_empty_type(ssa),
+        .type = type_empty_new("empty"),
         .ret = {
             .value = op,
         }
@@ -931,7 +962,7 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
     ssa_operand_t result = global->value == NULL ? operand_empty() : compile_rvalue(ssa, global->value);
     ssa_step_t step = {
         .opcode = eOpReturn,
-        .type = ssa_get_empty_type(ssa),
+        .type = type_empty_new("empty"),
         .ret = {
             .value = result
         }
