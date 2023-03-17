@@ -7,7 +7,7 @@ src = [
 
 cc = library('cc', src,
     dependencies : [ generic, interop ],
-    install : true
+    name_suffix: lib_suffix
 )
 
 langs += { 'cc': declare_dependency(link_with : cc) }

@@ -261,7 +261,7 @@ static void emit_block(emit_t *emit, const ssa_block_t *block)
     }
 }
 
-static void emit_imported_function(emit_t *emit, const ssa_flow_t *flow)
+static void emit_imported_function(const ssa_flow_t *flow)
 {
     CTASSERT(flow->linkage == eLinkImported);
     printf("extern %s\n", flow->name);
@@ -324,7 +324,7 @@ static void emit_functions(emit_t *emit, vector_t *functions)
             continue;
         }
 
-        emit_imported_function(emit, flow);
+        emit_imported_function(flow);
     }
 
     for (size_t i = 0; i < vector_len(functions); i++)

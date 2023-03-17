@@ -16,7 +16,8 @@ libstacktrace = library('stacktrace', src,
     c_args : args,
     dependencies : deps,
     include_directories : 'include',
-    link_args : stacktrace_links
+    link_args : stacktrace_links,
+    name_suffix: lib_suffix
 )
 
 stacktrace = declare_dependency(
@@ -34,7 +35,8 @@ src = [
 libbase = library('base', src, 
     c_args : args,
     dependencies : deps + [ stacktrace ],
-    include_directories : 'include'
+    include_directories : 'include',
+    name_suffix: lib_suffix
 )
 
 base = declare_dependency(
@@ -54,7 +56,8 @@ src = [
 libstd = library('std', src, 
     c_args : args, 
     dependencies : base,
-    include_directories : 'include'
+    include_directories : 'include',
+    name_suffix: lib_suffix
 )
 
 std = declare_dependency(
@@ -73,7 +76,8 @@ src = [
 libplatform = library('platform', src, 
     c_args : args, 
     dependencies : std,
-    include_directories : 'include'
+    include_directories : 'include',
+    name_suffix: lib_suffix
 )
 
 platform = declare_dependency(
@@ -87,7 +91,8 @@ src = [ 'src/io/io.c' ]
 libio = library('io', src,
     c_args : args,
     dependencies : [ platform, std ],
-    include_directories : 'include'
+    include_directories : 'include',
+    name_suffix: lib_suffix
 )
 
 io = declare_dependency(
@@ -108,7 +113,8 @@ src = [
 liblocation = library('location', src, 
     c_args : args, 
     dependencies : std,
-    include_directories : 'include'
+    include_directories : 'include',
+    name_suffix: lib_suffix
 )
 
 location = declare_dependency(
@@ -120,7 +126,8 @@ location = declare_dependency(
 libinterop = library('interop', [ 'src/interop/flex.c' ],
     c_args : args,
     dependencies : std,
-    include_directories : 'include'
+    include_directories : 'include',
+    name_suffix: lib_suffix
 )
 
 interop = declare_dependency(
@@ -139,7 +146,8 @@ src = [
 libargparse = library('argparse', src, 
     c_args : args, 
     dependencies : deps,
-    include_directories : [ 'include', 'src' ]
+    include_directories : [ 'include', 'src' ],
+    name_suffix: lib_suffix
 )
 
 argparse = declare_dependency(

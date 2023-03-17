@@ -13,7 +13,7 @@ src = [
 ctc = library('ctc', src,
     dependencies : [ generic, interop ],
     include_directories : 'src',
-    install : true
+    name_suffix: lib_suffix
 )
 
 langs += { 'ctu': declare_dependency(link_with : ctc) }

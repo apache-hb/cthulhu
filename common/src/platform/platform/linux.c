@@ -1,7 +1,6 @@
 #include "platform.h"
 
 #include "base/util.h"
-#include "platform.h"
 #include "std/str.h"
 
 #include <errno.h>

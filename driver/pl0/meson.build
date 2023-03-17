@@ -9,7 +9,7 @@ src = [
 
 pl0c = library('pl0c', src,
     dependencies : [ generic, interop ],
-    install : true
+    name_suffix: lib_suffix
 )
 
 langs += { 'pl0': declare_dependency(link_with : pl0c) }

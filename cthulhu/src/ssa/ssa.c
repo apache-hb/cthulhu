@@ -541,7 +541,7 @@ static ssa_operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
-static ssa_operand_t *make_offset(ssa_t *ssa, const hlir_t *object, const hlir_t *member)
+static ssa_operand_t *make_offset(const hlir_t *object, const hlir_t *member)
 {
     const hlir_t *type = get_hlir_type(object);
     bool indirect = false;
@@ -570,7 +570,7 @@ static ssa_operand_t compile_access_lvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     ssa_operand_t read = compile_lvalue(ssa, hlir->object);
 
-    read.offset = make_offset(ssa, hlir->object, hlir->member);
+    read.offset = make_offset(hlir->object, hlir->member);
 
     return read;
 }
@@ -633,7 +633,7 @@ static ssa_operand_t compile_rvalue_access(ssa_t *ssa, const hlir_t *hlir)
 {
     ssa_operand_t read = compile_lvalue(ssa, hlir->object);
 
-    read.offset = make_offset(ssa, hlir->object, hlir->member);
+    read.offset = make_offset(hlir->object, hlir->member);
 
     return read;
 }

@@ -553,7 +553,7 @@ static hlir_t *sema_digit(sema_t *sema, ast_t *ast)
     return apply_suffix(sema, ast, suffix);
 }
 
-static hlir_t *sema_decimal(sema_t *sema, ast_t *ast)
+static hlir_t *sema_decimal(ast_t *ast)
 {
     return hlir_decimal_literal(ast->node, kFloatType, ast->decimal);
 }
@@ -834,7 +834,7 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
     case eAstDigit:
         return sema_digit(sema, ast);
     case eAstDecimal:
-        return sema_decimal(sema, ast);
+        return sema_decimal(ast);
     case eAstBool:
         return sema_bool(ast);
     case eAstString:

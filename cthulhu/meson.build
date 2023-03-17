@@ -19,7 +19,8 @@ src = [
 libgeneric = library('generic', src,
     include_directories : 'include',
     c_args : args,
-    dependencies : deps
+    dependencies : deps,
+    name_suffix: lib_suffix
 )
 
 generic = declare_dependency(
@@ -38,7 +39,8 @@ src = [
 libssa = library('ssa', src,
     dependencies : deps,
     c_args : args,
-    include_directories : 'include'
+    include_directories : 'include',
+    name_suffix: lib_suffix
 )
 
 ssa = declare_dependency(
@@ -57,7 +59,8 @@ src = [
 libemit = library('emit', src,
     dependencies : deps,
     c_args : args,
-    include_directories : 'include'
+    include_directories : 'include',
+    name_suffix: lib_suffix
 )
 
 emit = declare_dependency(

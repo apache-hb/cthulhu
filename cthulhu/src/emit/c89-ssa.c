@@ -120,7 +120,7 @@ static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, c
     }
 }
 
-static const char *get_flow_name(c89_ssa_emit_t *emit, const ssa_flow_t *function)
+static const char *get_flow_name(const ssa_flow_t *function)
 {
     switch (function->linkage)
     {
@@ -233,7 +233,7 @@ static const char *get_function_return_type(c89_ssa_emit_t *emit, const ssa_flow
         break;
     }
 
-    const char *name = get_flow_name(emit, flow);
+    const char *name = get_flow_name(flow);
     return get_type_name(emit, flow->type->result, name);
 }
 
@@ -327,10 +327,10 @@ static const char *emit_operand_inner(c89_ssa_emit_t *emit, ssa_operand_t operan
         return operand.bb->id;
 
     case eOperandGlobal:
-        return get_flow_name(emit, operand.global);
+        return get_flow_name(operand.global);
 
     case eOperandFunction:
-        return get_flow_name(emit, operand.function);
+        return get_flow_name(operand.function);
 
     case eOperandLocal:
         return format("local%zu", operand.local);
@@ -388,7 +388,7 @@ static const char *c89_emit_branch(c89_ssa_emit_t *emit, ssa_branch_t branch)
     return format("if (%s) { goto %s; } else { goto %s; }", cond, trueLabel, falseLabel);
 }
 
-static char *c89_gen_reg(c89_ssa_emit_t *emit, const ssa_step_t *step)
+static char *c89_gen_reg(const ssa_step_t *step)
 {
     return format("reg%s", step->id);
 }
@@ -401,7 +401,7 @@ static const char *c89_emit_compare(c89_ssa_emit_t *emit, const ssa_step_t *step
 
     const char *op = compare_symbol(compare.op);
 
-    char *name = c89_gen_reg(emit, step);
+    char *name = c89_gen_reg(step);
     const char *type = get_type_name(emit, step->type, name);
     map_set_ptr(emit->stepCache, step, name);
     
@@ -413,7 +413,7 @@ static const char *c89_emit_load(c89_ssa_emit_t *emit, const ssa_step_t *step)
     const ssa_load_t load = step->load;
     const char *src = emit_operand(emit, load.src);
 
-    char *name = c89_gen_reg(emit, step);
+    char *name = c89_gen_reg(step);
     const char *type = get_type_name(emit, step->type, name);
     map_set_ptr(emit->stepCache, step, name);
 
@@ -436,7 +436,7 @@ static const char *c89_emit_unary(c89_ssa_emit_t *emit, const ssa_step_t *step)
     const char *operand = emit_operand(emit, unary.operand);
     const char *op = unary_symbol(unary.op);
 
-    char *name = c89_gen_reg(emit, step);
+    char *name = c89_gen_reg(step);
     const char *type = get_type_name(emit, step->type, name);
     map_set_ptr(emit->stepCache, step, name);
 
@@ -451,7 +451,7 @@ static const char *c89_emit_binary(c89_ssa_emit_t *emit, const ssa_step_t *step)
     const char *rhs = emit_operand(emit, binary.rhs);
     const char *op = binary_symbol(binary.op);
 
-    char *name = c89_gen_reg(emit, step);
+    char *name = c89_gen_reg(step);
     const char *type = get_type_name(emit, step->type, name);
     map_set_ptr(emit->stepCache, step, name);
 
@@ -464,7 +464,7 @@ static const char *c89_emit_imm(c89_ssa_emit_t *emit, const ssa_step_t *step)
 
     const char *value = emit_operand(emit, imm.value);
 
-    char *name = c89_gen_reg(emit, step);
+    char *name = c89_gen_reg(step);
     const char *type = get_type_name(emit, step->type, name);
     map_set_ptr(emit->stepCache, step, name);
 
@@ -493,7 +493,7 @@ static const char *c89_emit_call(c89_ssa_emit_t *emit, const ssa_step_t *step)
 
     if (should_store_result(step->type))
     {
-        char *name = c89_gen_reg(emit, step);
+        char *name = c89_gen_reg(step);
         const char *type = get_type_name(emit, step->type, name);
         map_set_ptr(emit->stepCache, step, name);
 
@@ -512,7 +512,7 @@ static const char *c89_emit_cast(c89_ssa_emit_t *emit, const ssa_step_t *step)
     const char *operand = emit_operand(emit, cast.operand);
     const char *type = get_type_name(emit, cast.type, NULL);
 
-    char *name = c89_gen_reg(emit, step);
+    char *name = c89_gen_reg(step);
     const char *result = get_type_name(emit, step->type, name);
     map_set_ptr(emit->stepCache, step, name);
 
@@ -525,7 +525,7 @@ static const char *c89_emit_addr(c89_ssa_emit_t *emit, const ssa_step_t *step)
 
     const char *operand = emit_operand(emit, addr.expr);
 
-    char *name = c89_gen_reg(emit, step);
+    char *name = c89_gen_reg(step);
     const char *result = get_type_name(emit, step->type, name);
     map_set_ptr(emit->stepCache, step, name);
 
@@ -538,7 +538,7 @@ static const char *c89_emit_sizeof(c89_ssa_emit_t *emit, const ssa_step_t *step)
 
     const char *type = get_type_name(emit, size.type, NULL);
 
-    char *name = c89_gen_reg(emit, step);
+    char *name = c89_gen_reg(step);
     const char *result = get_type_name(emit, step->type, name);
     map_set_ptr(emit->stepCache, step, name);
 
@@ -716,7 +716,7 @@ static void add_type_deps(vector_t **deps, set_t *fwd, const ssa_type_t *type)
     vector_push(deps, (void*)type);
 }
 
-static vector_t *c89_sort_types(c89_ssa_emit_t *emit, vector_t *types)
+static vector_t *c89_sort_types(vector_t *types)
 {
     size_t inLen = vector_len(types);
     set_t *fwd = set_new(inLen);
@@ -750,7 +750,7 @@ void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)
     size_t totalGlobals = vector_len(symbols.globals);
     size_t totalFunctions = vector_len(symbols.functions);
 
-    vector_t *sortedTypes = c89_sort_types(&emit, symbols.types);
+    vector_t *sortedTypes = c89_sort_types(symbols.types);
     size_t totalTypes = vector_len(sortedTypes);
 
     WRITE_STRING(&emit.emit, "#include <stdbool.h>\n");

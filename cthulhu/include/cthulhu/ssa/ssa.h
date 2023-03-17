@@ -61,6 +61,12 @@ typedef struct ssa_type_t
         // eTypePointer
         const ssa_type_t *ptr;
 
+        // eTypeArray
+        struct {
+            const ssa_type_t *arr;
+            size_t size;
+        };
+
         // eTypeSignature
         struct {
             const ssa_type_t *result;
