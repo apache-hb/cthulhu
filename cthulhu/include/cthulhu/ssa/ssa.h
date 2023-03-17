@@ -149,15 +149,7 @@ typedef struct ssa_operand_t
 
         // eOperandImm
         ssa_value_t *value;
-
-        // eOperandOffset
-        struct {
-            bool indirect;
-            size_t index;
-        };
     };
-
-    ssa_operand_t *offset;
 } ssa_operand_t;
 
 typedef enum ssa_opcode_t
@@ -241,6 +233,18 @@ typedef struct ssa_call_t
     ssa_operand_t symbol;
 } ssa_call_t;
 
+typedef struct ssa_index_t
+{
+    ssa_operand_t array;
+    ssa_operand_t index;
+} ssa_index_t;
+
+typedef struct ssa_offset_t
+{
+    ssa_operand_t object;
+    size_t field;
+} ssa_offset_t;
+
 typedef struct ssa_sizeof_t
 {
     const ssa_type_t *type;
@@ -260,6 +264,8 @@ typedef struct ssa_step_t
         ssa_store_t store;
         ssa_load_t load;
         ssa_addr_t addr;
+        ssa_offset_t offset;
+        ssa_index_t index;
 
         ssa_imm_t imm;
         ssa_unary_t unary;
@@ -323,8 +329,19 @@ typedef struct ssa_module_t
     section_t symbols;
 } ssa_module_t;
 
+// interface
 ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods);
-
 void ssa_emit_module(reports_t *reports, ssa_module_t *mod);
-
 void ssa_opt_module(reports_t *reports, ssa_module_t *mod);
+
+// create ssa objects
+
+ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name);
+ssa_type_t *ssa_type_empty_new(const char *name);
+ssa_type_t *ssa_type_ptr_new(const char *name, const ssa_type_t *type);
+ssa_type_t *ssa_type_array_new(const char *name, const ssa_type_t *type, size_t len);
+
+ssa_value_t *ssa_value_new(const ssa_type_t *type, bool init);
+ssa_value_t *ssa_value_digit_new(const mpz_t digit, const ssa_type_t *type);
+ssa_value_t *ssa_value_empty_new(const ssa_type_t *type);
+ssa_value_t *ssa_value_ptr_new(const ssa_type_t *type, const mpz_t value);

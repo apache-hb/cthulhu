@@ -72,7 +72,7 @@ file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t siz
     CTASSERTF(false, "not implemented");
 }
 
-file_write_t native_file_write(file_handle_t handle, const void *buffer, file_size_t size, native_cerror_t *error)
+file_write_t native_file_write(file_handle_t handle, const void *buffer, file_write_t size, native_cerror_t *error)
 {
     UNUSED(handle);
     UNUSED(buffer);

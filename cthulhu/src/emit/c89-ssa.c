@@ -114,10 +114,25 @@ static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, c
     case eTypeOpaque:
         return name == NULL ? "void *" : format("void *%s", name);
 
+    case eTypeArray:
+        return name == NULL 
+            ? format("%s[%zu]", get_type_name(emit, type->ptr, NULL), type->size) 
+            : get_type_name(emit, type->ptr, format("%s[%zu]", name, type->size));
+
     default:
         report(REPORTS(emit), eInternal, NULL, "unhandled type kind: %d", kind);
         return "";
     }
+}
+
+static const char *get_memory_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, const char *name)
+{
+    if (type->kind != eTypeArray)
+    {
+        type = ssa_type_array_new("", type, 1);
+    }
+
+    return get_type_name(emit, type, name);
 }
 
 static const char *get_flow_name(const ssa_flow_t *function)
@@ -203,12 +218,12 @@ static void c89_emit_ssa_global(c89_ssa_emit_t *emit, const ssa_flow_t *global)
     CTASSERT(global != NULL);
     
     const char *name = global->name;
-    const char *type = get_type_name(emit, global->type, name);
+    const char *type = get_memory_type_name(emit, global->type, name);
 
     if (value_exists(global->value))
     {
         const char *value = emit_value(emit, global->value);
-        WRITE_STRINGF(&emit->emit, "%s = %s;\n", type, value);
+        WRITE_STRINGF(&emit->emit, "%s = { %s };\n", type, value);
     }
     else
     {
@@ -314,7 +329,7 @@ static bool mark_edge_complete(c89_ssa_emit_t *emit, const ssa_block_t *block)
     return true;
 }
 
-static const char *emit_operand_inner(c89_ssa_emit_t *emit, ssa_operand_t operand)
+static const char *emit_operand(c89_ssa_emit_t *emit, ssa_operand_t operand)
 {
     switch (operand.kind)
     {
@@ -345,23 +360,6 @@ static const char *emit_operand_inner(c89_ssa_emit_t *emit, ssa_operand_t operan
         ctu_assert(emit->emit.reports, "unhandled operand kind: %d", operand.kind);
         return "";
     }
-}
-
-static const char *emit_operand(c89_ssa_emit_t *emit, ssa_operand_t operand)
-{
-    const char *result = emit_operand_inner(emit, operand);
-    const ssa_operand_t *off = operand.offset;
-
-    if (off == NULL)
-    {
-        return result;
-    }
-
-    CTASSERT(off->kind == eOperandOffset);
-
-    const char *sep = off->indirect ? "->" : ".";
-
-    return format("%s%sfield%zu", result, sep, off->index);
 }
 
 static const char *c89_emit_return(c89_ssa_emit_t *emit, ssa_return_t ret)
@@ -413,11 +411,17 @@ static const char *c89_emit_load(c89_ssa_emit_t *emit, const ssa_step_t *step)
     const ssa_load_t load = step->load;
     const char *src = emit_operand(emit, load.src);
 
+    const char *deref = "*";
+    if (load.src.kind == eOperandParam)
+    {
+        deref = "";
+    }
+
     char *name = c89_gen_reg(step);
     const char *type = get_type_name(emit, step->type, name);
     map_set_ptr(emit->stepCache, step, name);
 
-    return format("%s = %s;", type, src);
+    return format("%s = %s%s;", type, deref, src);
 }
 
 static const char *c89_emit_store(c89_ssa_emit_t *emit, const ssa_step_t *step)
@@ -426,7 +430,7 @@ static const char *c89_emit_store(c89_ssa_emit_t *emit, const ssa_step_t *step)
     const char *src = emit_operand(emit, store.src);
     const char *dst = emit_operand(emit, store.dst);
 
-    return format("%s = %s;", dst, src);
+    return format("*%s = %s;", dst, src);
 }
 
 static const char *c89_emit_unary(c89_ssa_emit_t *emit, const ssa_step_t *step)
@@ -545,6 +549,20 @@ static const char *c89_emit_sizeof(c89_ssa_emit_t *emit, const ssa_step_t *step)
     return format("%s = sizeof(%s);", result, type);
 }
 
+static const char *c89_emit_index(c89_ssa_emit_t *emit, const ssa_step_t *step)
+{
+    const ssa_index_t index = step->index;
+
+    const char *array = emit_operand(emit, index.array);
+    const char *idx = emit_operand(emit, index.index);
+
+    char *name = c89_gen_reg(step);
+    const char *result = get_type_name(emit, ssa_type_ptr_new("", step->type), name);
+    map_set_ptr(emit->stepCache, step, name);
+
+    return format("%s = %s + %s;", result, array, idx);
+}
+
 static const char *c89_emit_step(c89_ssa_emit_t *emit, const ssa_step_t *step)
 {
     switch (step->opcode)
@@ -591,6 +609,9 @@ static const char *c89_emit_step(c89_ssa_emit_t *emit, const ssa_step_t *step)
     case eOpSizeOf:
         return c89_emit_sizeof(emit, step);
 
+    case eOpIndex:
+        return c89_emit_index(emit, step);
+
     default:
         ctu_assert(emit->emit.reports, "unhandled opcode: %d", step->opcode);
         return "";
@@ -626,6 +647,12 @@ static void c89_emit_block(c89_ssa_emit_t *emit, const ssa_block_t *block)
     }
 }
 
+static void c89_emit_local(c89_ssa_emit_t *emit, size_t idx, const ssa_type_t *local)
+{
+    const char *type = get_memory_type_name(emit, local, format("local%zu", idx));
+    WRITE_STRINGF(&emit->emit, "%s;\n", type);
+}
+
 static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 {
     if (is_extern(function)) { return; }
@@ -642,8 +669,7 @@ static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
     for (size_t i = 0; i < locals; i++)
     {
         const ssa_type_t *local = vector_get(function->locals, i);
-        const char *type = get_type_name(emit, local, format("local%zu", i));
-        WRITE_STRINGF(&emit->emit, "%s;\n", type);
+        c89_emit_local(emit, i, local);
     }
 
     c89_emit_block(emit, function->entry);

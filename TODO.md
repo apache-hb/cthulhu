@@ -5,8 +5,12 @@
 * ssa backend
     * wasm
     * x64
-    * c89
-    
+
+* ssa arrays
+* ctu designated init
+* generic interface compilation option
+    * use dynamic libraries rather than static linking
+
 * deprecate C hlir backend
     * blocked by ssa backend
 
@@ -23,7 +27,6 @@
 
 * unit tests for everything in `/common/`
 * complete api docs
-* add opaque pointer type to replace eHlirPointer(eHlirUnit)
 * driver specific config support
 * replace mpq with mpfr (rounding is important)
 
@@ -54,3 +57,8 @@
     * reduces alot of boilerplate
 
 * fuzz protobuf rather than direct source code
+* windows COM support
+* generate code for other runtimes?
+    * JVM
+    * CLR
+    * python

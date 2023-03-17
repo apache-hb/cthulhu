@@ -32,11 +32,11 @@ static const char *emit_type(emit_t *emit, const ssa_type_t *type)
     case eTypeBool: return "bool";
     case eTypeDigit: return "digit";
     case eTypeEmpty: return "empty";
-    case eTypePointer: return "ptr";
+    case eTypePointer: return format("ptr:%s", emit_type(emit, type->ptr));
+    case eTypeArray: return format("%s[%zu]", emit_type(emit, type->arr), type->size);
     case eTypeOpaque: return "opaque";
     case eTypeString: return "str";
 
-    // case eTypePointer: return format("%s*", type->ptr);
     case eTypeStruct: return format("struct(%s)", type->name);
     case eTypeUnit: return "unit";
     default: return format("error(%s)", type->name);
@@ -72,7 +72,7 @@ static const char *get_flow_name(const ssa_flow_t *flow)
     return flow->name ? flow->name : "unknown";
 }
 
-static const char *emit_operand_inner(emit_t *emit, set_t *edges, ssa_operand_t op)
+static const char *emit_operand(emit_t *emit, set_t *edges, ssa_operand_t op)
 {
     switch (op.kind)
     {
@@ -105,19 +105,6 @@ static const char *emit_operand_inner(emit_t *emit, set_t *edges, ssa_operand_t 
         report(emit->reports, eInternal, NULL, "unhandled operand kind %d", (int)op.kind);
         return format("err(%d)", ssa_operand_name(op.kind));
     }
-}
-
-static const char *emit_operand(emit_t *emit, set_t *edges, ssa_operand_t op)
-{
-    const char *result = emit_operand_inner(emit, edges, op);
-    const ssa_operand_t *offset = op.offset;
-
-    if (offset == NULL)
-    {
-        return result;
-    }
-
-    return format("(%s + %zu)", result, offset->index);
 }
 
 static const char *emit_operand_list(emit_t *emit, set_t *edges, ssa_operand_t *ops, size_t count)
@@ -226,6 +213,18 @@ static void emit_step(emit_t *emit, set_t *edges, ssa_step_t *step)
     case eOpSizeOf: {
         ssa_sizeof_t size = step->size;
         printf("  %%%s = sizeof %s\n", step->id, emit_type(emit, size.type));
+        break;
+    }
+
+    case eOpIndex: {
+        ssa_index_t index = step->index;
+        printf("  %%%s = index %s %s\n", step->id, emit_operand(emit, edges, index.array), emit_operand(emit, edges, index.index));
+        break;
+    }
+
+    case eOpOffset: {
+        ssa_offset_t offset = step->offset;
+        printf("  %%%s = %s.%zu\n", step->id, emit_operand(emit, edges, offset.object), offset.field);
         break;
     }
 

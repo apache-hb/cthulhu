@@ -354,7 +354,7 @@ static hlir_t *sema_lvalue(sema_t *sema, ast_t *ast)
 static hlir_t *sema_rvalue(sema_t *sema, ast_t *ast)
 {
     hlir_t *result = sema_expr(sema, ast);
-    if (hlir_is(result, eHlirAccess))
+    if (hlir_is(result, eHlirAccess) || hlir_is(result, eHlirIndex))
     {
         result = hlir_name(get_hlir_node(result), result);
     }
@@ -619,8 +619,8 @@ static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
 {
-    hlir_t *lhs = sema_expr(sema, ast->lhs);
-    hlir_t *rhs = sema_expr(sema, ast->rhs);
+    hlir_t *lhs = sema_rvalue(sema, ast->lhs);
+    hlir_t *rhs = sema_rvalue(sema, ast->rhs);
 
     const hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
 
@@ -803,8 +803,8 @@ static hlir_t *sema_sizeof(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_index(sema_t *sema, ast_t *ast)
 {
-    hlir_t *array = sema_expr(sema, ast->array);
-    hlir_t *index = sema_expr(sema, ast->index);
+    hlir_t *array = sema_lvalue(sema, ast->array);
+    hlir_t *index = sema_rvalue(sema, ast->index);
 
     const hlir_t *arrayType = get_hlir_type(array);
     const hlir_t *indexType = get_hlir_type(index);

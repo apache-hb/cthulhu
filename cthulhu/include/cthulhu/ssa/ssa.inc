@@ -17,6 +17,9 @@ SSA_OPCODE(eOpCompare, "compare")
 SSA_OPCODE(eOpCast, "cast")
 SSA_OPCODE(eOpCall, "call")
 
+SSA_OPCODE(eOpIndex, "index") // index into an array
+SSA_OPCODE(eOpOffset, "offset") // offset into a struct
+
 SSA_OPCODE(eOpSizeOf, "sizeof")
 SSA_OPCODE(eOpNop, "nop")
 
@@ -34,9 +37,6 @@ SSA_OPERAND(eOperandParam, "param")
 SSA_OPERAND(eOperandGlobal, "global")
 SSA_OPERAND(eOperandFunction, "function")
 SSA_OPERAND(eOperandImm, "imm")
-
-// this is a little wonky, should probably replace
-SSA_OPERAND(eOperandOffset, "offset")
 
 #undef SSA_OPERAND
 

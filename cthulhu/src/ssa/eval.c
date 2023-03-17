@@ -102,28 +102,6 @@ static ssa_value_t *get_operand_value(opt_t *opt, ssa_operand_t operand)
     }
 }
 
-static const ssa_type_t *get_operand_type(opt_t *opt, ssa_operand_t operand)
-{
-    switch (operand.kind)
-    {
-    case eOperandImm: {
-        ssa_value_t *value = operand.value;
-        return value->type;
-    }
-    case eOperandReg: {
-        const ssa_step_t *step = operand.vreg;
-        return step->type;
-    }
-    case eOperandEmpty: {
-        return type_empty_new("empty");
-    }
-
-    default:
-        report(opt->reports, eInternal, NULL, "unhandled operand %s", ssa_operand_name(operand.kind));
-        return NULL;
-    }
-}
-
 static void set_result(opt_t *opt, const ssa_value_t *value) 
 {
     opt->result = value;
@@ -187,7 +165,7 @@ static opt_result_t opt_binary(opt_t *opt, ssa_binary_t binary)
     }
 
     // TODO: lhs->type is a hack here
-    return opt_ok(value_digit_new(result, lhs->type));
+    return opt_ok(ssa_value_digit_new(result, lhs->type));
 }
 
 static opt_result_t opt_unary(opt_t *opt, ssa_unary_t unary)
@@ -222,21 +200,20 @@ static opt_result_t opt_unary(opt_t *opt, ssa_unary_t unary)
         return opt_unsupported("unhandled unary op");
     }
 
-    ssa_value_t *value = value_digit_new(result, operand->type);
-    return opt_ok(value);
+    return opt_ok(ssa_value_digit_new(result, operand->type));
 }
 
 static opt_result_t opt_cast(opt_t *opt, ssa_cast_t cast)
 {
     const ssa_value_t *operand = get_operand_value(opt, cast.operand);
-    const ssa_type_t *srcType = get_operand_type(opt, cast.operand);
+    const ssa_type_t *srcType = ssa_get_operand_type(opt->reports, cast.operand);
     const ssa_type_t *dstType = cast.type;
 
     if (srcType->kind == eTypeDigit && dstType->kind == eTypeOpaque)
     {
         if (srcType->digit == eDigitPtr)
         {
-            return opt_ok(value_ptr_new(dstType, operand->digit));
+            return opt_ok(ssa_value_ptr_new(dstType, operand->digit));
         }
     }
 
@@ -335,7 +312,7 @@ static void build_global(opt_t *opt, ssa_flow_t *flow)
     // if there is no entry then the global is uninitialized
     if (flow->entry == NULL)
     {
-        flow->value = value_empty_new(flow->type);
+        flow->value = ssa_value_empty_new(flow->type);
         return;
     }
 
@@ -345,7 +322,7 @@ static void build_global(opt_t *opt, ssa_flow_t *flow)
     if (result.reason != eOptSuccess)
     {
         report(opt->reports, eInternal, NULL, "failed to optimize global");
-        flow->value = value_empty_new(flow->type);
+        flow->value = ssa_value_empty_new(flow->type);
     }
     else
     {

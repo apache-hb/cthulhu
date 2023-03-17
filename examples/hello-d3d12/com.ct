@@ -16,7 +16,7 @@ export type HRESULT = LONG;
 
 @midl("00000000-0000-0000-C000-000000000046")
 export interface IUnknown {
-    def queryInterface(riid: REFIID, object: **void): HRESULT;
+    def queryInterface(riid: REFIID, object: *opaque): HRESULT;
     def addRef(): ulong;
     def release(): ulong;
 }

@@ -38,6 +38,8 @@ typedef struct {
     ssa_block_t *currentBlock;
     size_t stepIdx;
     size_t blockIdx;
+
+    const ssa_type_t *emptyType;
 } ssa_t;
 
 static ssa_block_t *block_new(const char *id) 
@@ -162,6 +164,12 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
         it->ptr = type_new(ssa, real->ptr);
         break;
 
+    case eHlirArray:
+        CTASSERT(hlir_is(real->length, eHlirDigitLiteral));
+        it->arr = type_new(ssa, real->element);
+        it->size = mpz_get_ui(real->length->digit);
+        break;
+
     case eHlirDecimal:
     case eHlirOpaque:
     case eHlirBool:
@@ -188,6 +196,12 @@ static ssa_operand_t add_step(ssa_t *ssa, ssa_step_t step)
     {
         ptr->id = format("%zu", ssa->stepIdx++);
     }
+
+    if (ptr->type == NULL)
+    {
+        ptr->type = ssa->emptyType;
+    }
+
     vector_push(&ssa->currentBlock->steps, ptr);
     ssa_operand_t op = {
         .kind = eOperandReg,
@@ -309,12 +323,10 @@ static ssa_type_t *ssa_get_string_type(ssa_t *ssa)
     return ssa_anytype_new(ssa, NULL, "string", eTypeString).type;
 }
 
-static ssa_value_t *ssa_value_digit_new(ssa_t *ssa, const hlir_t *hlir)
+static ssa_value_t *value_digit_new(ssa_t *ssa, const hlir_t *hlir)
 {
-    ssa_value_t *it = ssa_value_new(ssa_get_digit_type(ssa, hlir), true);
-
-    memcpy(it->digit, hlir->digit, sizeof(mpz_t));
-
+    ssa_type_t *type = ssa_get_digit_type(ssa, hlir);
+    ssa_value_t *it = ssa_value_digit_new(hlir->digit, type);
     return it;
 }
 
@@ -347,7 +359,7 @@ static ssa_operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
 {
     ssa_operand_t op = {
         .kind = eOperandImm,
-        .value = ssa_value_digit_new(ssa, hlir)
+        .value = value_digit_new(ssa, hlir)
     };
 
     return op;
@@ -541,38 +553,33 @@ static ssa_operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
-static ssa_operand_t *make_offset(const hlir_t *object, const hlir_t *member)
+static size_t get_offset(const hlir_t *object, const hlir_t *member)
 {
     const hlir_t *type = get_hlir_type(object);
-    bool indirect = false;
-    if (hlir_is(type, eHlirPointer))
-    {
-        indirect = true;
-        type = type->ptr;
-    }
-
     CTASSERT(hlir_is(type, eHlirStruct));
 
     size_t field = vector_find(type->fields, member);
 
     CTASSERT(field != SIZE_MAX);
 
-    ssa_operand_t offset = {
-        .kind = eOperandOffset,
-        .indirect = indirect,
-        .index = field
-    };
-
-    return BOX(offset);
+    return field;
 }
 
-static ssa_operand_t compile_access_lvalue(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_access(ssa_t *ssa, const hlir_t *hlir)
 {
     ssa_operand_t read = compile_lvalue(ssa, hlir->object);
+    size_t offset = get_offset(hlir->object, hlir->member);
 
-    read.offset = make_offset(hlir->object, hlir->member);
+    ssa_step_t step = {
+        .opcode = eOpOffset,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .offset = {
+            .object = read,
+            .field = offset
+        }
+    };
 
-    return read;
+    return add_step(ssa, step);
 }
 
 static ssa_operand_t operand_bb(const ssa_block_t *dst)
@@ -606,6 +613,23 @@ static ssa_operand_t compile_param(ssa_t *ssa, const hlir_t *hlir)
     return op;
 }
 
+static ssa_operand_t compile_index_lvalue(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_operand_t read = compile_lvalue(ssa, hlir->array);
+    ssa_operand_t index = compile_rvalue(ssa, hlir->index);
+
+    ssa_step_t step = {
+        .opcode = eOpIndex,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .index = {
+            .array = read,
+            .index = index
+        }
+    };
+
+    return add_step(ssa, step);
+}
+
 static ssa_operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
 {
     hlir_kind_t kind = get_hlir_kind(hlir);
@@ -621,21 +645,15 @@ static ssa_operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
         return compile_param(ssa, hlir);
 
     case eHlirAccess:
-        return compile_access_lvalue(ssa, hlir);
+        return compile_access(ssa, hlir);
+
+    case eHlirIndex:
+        return compile_index_lvalue(ssa, hlir);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-lvalue %s", hlir_kind_to_string(kind));
         return operand_empty();
     }
-}
-
-static ssa_operand_t compile_rvalue_access(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_operand_t read = compile_lvalue(ssa, hlir->object);
-
-    read.offset = make_offset(hlir->object, hlir->member);
-
-    return read;
 }
 
 static ssa_operand_t compile_addr(ssa_t *ssa, const hlir_t *hlir)
@@ -679,6 +697,23 @@ static ssa_operand_t compile_builtin(ssa_t *ssa, const hlir_t *hlir)
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-builtin %d", hlir->builtin);
         return operand_empty();
     }
+}
+
+static ssa_operand_t compile_index(ssa_t *ssa, const hlir_t *hlir)
+{
+    ssa_operand_t op = compile_rvalue(ssa, hlir->array);
+    ssa_operand_t index = compile_rvalue(ssa, hlir->index);
+
+    ssa_step_t step = {
+        .opcode = eOpIndex,
+        .type = type_new(ssa, get_hlir_type(hlir)),
+        .index = {
+            .array = op,
+            .index = index
+        }
+    };
+
+    return add_step(ssa, step);
 }
 
 static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
@@ -726,13 +761,16 @@ static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
         return compile_param(ssa, hlir);
 
     case eHlirAccess:
-        return compile_rvalue_access(ssa, hlir);
+        return compile_access(ssa, hlir);
 
     case eHlirAddr:
         return compile_addr(ssa, hlir);
 
     case eHlirBuiltin:
         return compile_builtin(ssa, hlir);
+
+    case eHlirIndex:
+        return compile_index(ssa, hlir);
 
     default:
         report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-rvalue %s", hlir_kind_to_string(kind));
@@ -757,7 +795,6 @@ static ssa_operand_t compile_assign(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpStore,
-        .type = type_empty_new("empty"),
         .store = {
             .dst = dst,
             .src = src
@@ -819,7 +856,6 @@ static ssa_operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpJmp,
-        .type = type_empty_new("empty"),
         .jmp = {
             .label = operand_bb(loop)
         }
@@ -832,7 +868,6 @@ static ssa_operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t ret = {
         .opcode = eOpBranch,
-        .type = type_empty_new("empty"),
         .branch = {
             .cond = compile_compare(ssa, stmt->cond),
             .truthy = operand_bb(loop),
@@ -855,7 +890,6 @@ static ssa_operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t ret = {
         .opcode = eOpJmp,
-        .type = type_empty_new("empty"),
         .jmp = {
             .label = operand_bb(tail)
         }
@@ -863,7 +897,6 @@ static ssa_operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpBranch,
-        .type = type_empty_new("empty"),
         .branch = {
             .cond = compile_compare(ssa, stmt->cond),
             .truthy = operand_bb(then),
@@ -898,7 +931,6 @@ static ssa_operand_t compile_return(ssa_t *ssa, const hlir_t *stmt)
 
     ssa_step_t step = {
         .opcode = eOpReturn,
-        .type = type_empty_new("empty"),
         .ret = {
             .value = op,
         }
@@ -962,7 +994,6 @@ static void compile_global(ssa_t *ssa, const hlir_t *global)
     ssa_operand_t result = global->value == NULL ? operand_empty() : compile_rvalue(ssa, global->value);
     ssa_step_t step = {
         .opcode = eOpReturn,
-        .type = type_empty_new("empty"),
         .ret = {
             .value = result
         }
@@ -1021,7 +1052,8 @@ ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods)
         .globals = map_optimal(0x1000),
         .functions = map_optimal(0x1000),
         .strings = set_new(0x1000),
-        .importedSymbols = map_optimal(0x1000)
+        .importedSymbols = map_optimal(0x1000),
+        .emptyType = ssa_type_empty_new("empty")
     };
 
     size_t len = vector_len(mods);

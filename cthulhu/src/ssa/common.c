@@ -1,9 +1,13 @@
 #include "common.h"
 
 #include "base/memory.h"
-#include "cthulhu/ssa/ssa.h"
-#include "std/str.h"
 #include "base/panic.h"
+
+#include "std/str.h"
+
+#include "report/report.h"
+
+#include "cthulhu/ssa/ssa.h"
 
 #include <string.h>
 
@@ -37,6 +41,28 @@ const char *ssa_kind_name(ssa_kind_t kind)
     }
 }
 
+const ssa_type_t *ssa_get_operand_type(reports_t *reports, ssa_operand_t operand)
+{
+    switch (operand.kind)
+    {
+    case eOperandImm: {
+        ssa_value_t *value = operand.value;
+        return value->type;
+    }
+    case eOperandReg: {
+        const ssa_step_t *step = operand.vreg;
+        return step->type;
+    }
+    case eOperandEmpty: {
+        return ssa_type_empty_new("empty");
+    }
+
+    default:
+        report(reports, eInternal, NULL, "unhandled operand %s", ssa_operand_name(operand.kind));
+        return NULL;
+    }
+}
+
 ssa_kind_t ssa_get_value_kind(const ssa_value_t *value)
 {
     CTASSERT(value != NULL);
@@ -60,9 +86,24 @@ ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name)
     return type;
 }
 
-ssa_type_t *type_empty_new(const char *name)
+ssa_type_t *ssa_type_empty_new(const char *name)
 {
     return ssa_type_new(eTypeEmpty, name);
+}
+
+ssa_type_t *ssa_type_ptr_new(const char *name, const ssa_type_t *type)
+{
+    ssa_type_t *ptr = ssa_type_new(eTypePointer, name);
+    ptr->ptr = type;
+    return ptr;
+}
+
+ssa_type_t *ssa_type_array_new(const char *name, const ssa_type_t *type, size_t len)
+{
+    ssa_type_t *array = ssa_type_new(eTypeArray, name);
+    array->arr = type;
+    array->size = len;
+    return array;
 }
 
 ssa_value_t *ssa_value_new(const ssa_type_t *type, bool init) 
@@ -73,20 +114,20 @@ ssa_value_t *ssa_value_new(const ssa_type_t *type, bool init)
     return value;
 }
 
-ssa_value_t *value_digit_new(mpz_t digit, const ssa_type_t *type)
+ssa_value_t *ssa_value_digit_new(const mpz_t digit, const ssa_type_t *type)
 {
     ssa_value_t *value = ssa_value_new(type, true);
-    mpz_init_set(value->digit, digit);
+    memcpy(value->digit, digit, sizeof(mpz_t));
     return value;
 }
 
-ssa_value_t *value_empty_new(const ssa_type_t *type)
+ssa_value_t *ssa_value_empty_new(const ssa_type_t *type)
 {
     ssa_value_t *value = ssa_value_new(type, false);
     return value;
 }
 
-ssa_value_t *value_ptr_new(const ssa_type_t *type, const mpz_t digit)
+ssa_value_t *ssa_value_ptr_new(const ssa_type_t *type, const mpz_t digit)
 {
     ssa_value_t *value = ssa_value_new(type, true);
     memcpy(value->digit, digit, sizeof(mpz_t));
