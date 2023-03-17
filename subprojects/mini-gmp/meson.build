@@ -12,12 +12,12 @@ if target_machine.system() == 'emscripten'
     lib_suffix = 'bc'
 endif
 
-libgmp = library('gmp', [ 'mini-gmp.c' ],
+libgmp = library('gmp', 'mini-gmp.c',
     include_directories : '.',
     name_suffix : lib_suffix
 )
 
-libmpq = library('mpq', [ 'mini-mpq.c' ],
+libmpq = library('mpq', 'mini-mpq.c',
     include_directories : '.',
     name_suffix : lib_suffix
 )
