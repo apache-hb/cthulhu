@@ -127,16 +127,6 @@ static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, c
     }
 }
 
-static const char *get_memory_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, const char *name)
-{
-    if (type->kind != eTypeArray)
-    {
-        type = ssa_type_array_new("", type, 1);
-    }
-
-    return get_type_name(emit, type, name);
-}
-
 static const char *get_flow_name(const ssa_flow_t *function)
 {
     switch (function->linkage)
