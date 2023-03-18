@@ -3,15 +3,15 @@ import std;
 export struct Vec {
     used: usize;
     total: usize;
-    data: **void;
+    data: [*]opaque;
 }
 
 export def vecNew(initial: usize): *Vec {
-    var vec: *Vec = std::malloc(12uz);
+    var vec: *Vec = std::malloc(__sizeof(Vec));
 
     vec->used = 0uz;
     vec->total = initial;
-    vec->data = std::malloc(8uz * initial);
+    vec->data = std::malloc(__sizeof(opaque) * initial);
 
     return vec;
 }

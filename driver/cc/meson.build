@@ -1,8 +1,8 @@
 src = [ 
-    'main.c', 
-    'scan.c',
-    lex.process('cc.l'), 
-    parse.process('cc.y') 
+    'cc/main.c', 
+    'cc/scan.c',
+    lex.process('cc/cc.l'), 
+    parse.process('cc/cc.y') 
 ]
 
 cc = library('cc', src,

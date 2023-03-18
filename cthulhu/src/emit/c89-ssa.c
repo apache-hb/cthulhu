@@ -102,8 +102,8 @@ static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, c
 
     case eTypePointer:
         return name == NULL 
-            ? format("%s*", get_type_name(emit, type->ptr, NULL)) 
-            : format("%s* %s", get_type_name(emit, type->ptr, NULL), name);
+            ? format("%s*", get_type_name(emit, type->ptr, NULL))
+            : get_type_name(emit, type->ptr, format("*%s", name));
 
     case eTypeSignature:
         return get_signature_type(emit, type, name);
@@ -597,10 +597,10 @@ static const char *c89_emit_offset(c89_ssa_emit_t *emit, const ssa_step_t *step)
     const char *indirect = type->kind == eTypePointer ? "->" : ".";
 
     char *name = c89_gen_reg(step);
-    const char *result = get_type_name(emit, step->type, name);
+    const char *result = get_type_name(emit, ssa_type_ptr_new(name, step->type), name);
     map_set_ptr(emit->stepCache, step, name);
 
-    return format("%s = %s%s%s;", result, operand, indirect, field);
+    return format("%s = &%s%s%s;", result, operand, indirect, field);
 }
 
 static const char *c89_emit_step(c89_ssa_emit_t *emit, const ssa_step_t *step)
