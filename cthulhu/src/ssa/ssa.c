@@ -556,7 +556,12 @@ static ssa_operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
 static size_t get_offset(const hlir_t *object, const hlir_t *member)
 {
     const hlir_t *type = get_hlir_type(object);
-    CTASSERT(hlir_is(type, eHlirStruct));
+    if (hlir_is(type, eHlirPointer))
+    {
+        type = type->ptr;
+    }
+
+    CTASSERTF(hlir_is(type, eHlirStruct), "%s", hlir_kind_to_string(get_hlir_kind(type)));
 
     size_t field = vector_find(type->fields, member);
 

@@ -1,0 +1,16 @@
+import dxgi;
+
+@extern("printf")
+def printf(format: str, ...): int;
+
+@entry(gui)
+def main {
+    var pFactory: *dxgi::Factory = noinit;
+    const hrError = dxgi::newFactory(&dxgi::kFactoryId, &pFactory);
+    if hrError != 0 {
+        printf("Failed to create DXGI factory: %d", hrError);
+    } else {
+        const uRefs = pFactory->vtable->Release(pFactory);
+        printf("Factory refs: %d", uRefs);
+    }
+}

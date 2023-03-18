@@ -25,6 +25,8 @@ typedef struct c89_ssa_emit_t
 
     set_t *completeEdges; // set_t<ssa_block_t*>
     set_t *pendingEdges; // set_t<ssa_block_t*>
+
+    const ssa_flow_t *currentFlow;
 } c89_ssa_emit_t;
 
 #define REPORTS(emit) ((emit)->emit.reports)
@@ -217,17 +219,18 @@ static void c89_emit_ssa_global(c89_ssa_emit_t *emit, const ssa_flow_t *global)
 {
     CTASSERT(global != NULL);
     
-    const char *name = global->name;
-    const char *type = get_memory_type_name(emit, global->type, name);
+    const char *name = get_flow_name(global);
+    const char *type = get_type_name(emit, global->type, name);
 
-    if (value_exists(global->value))
+    if (global->linkage == eLinkImported || !value_exists(global->value))
     {
-        const char *value = emit_value(emit, global->value);
-        WRITE_STRINGF(&emit->emit, "%s = { %s };\n", type, value);
+        WRITE_STRINGF(&emit->emit, "extern %s;\n", type);
+        return;
     }
     else
     {
-        WRITE_STRINGF(&emit->emit, "%s;\n", type);
+        const char *value = emit_value(emit, global->value);
+        WRITE_STRINGF(&emit->emit, "%s = %s;\n", type, value);
     }
 }
 
@@ -335,8 +338,10 @@ static const char *emit_operand(c89_ssa_emit_t *emit, ssa_operand_t operand)
     {
     case eOperandImm:
         return emit_value(emit, operand.value);
+
     case eOperandReg:
         return map_get_ptr(emit->stepCache, operand.vreg);
+
     case eOperandBlock:
         add_edge(emit, operand.bb);
         return operand.bb->id;
@@ -412,7 +417,9 @@ static const char *c89_emit_load(c89_ssa_emit_t *emit, const ssa_step_t *step)
     const char *src = emit_operand(emit, load.src);
 
     const char *deref = "*";
-    if (load.src.kind == eOperandParam)
+    if (load.src.kind == eOperandParam 
+        || load.src.kind == eOperandGlobal
+        || load.src.kind == eOperandLocal)
     {
         deref = "";
     }
@@ -430,7 +437,15 @@ static const char *c89_emit_store(c89_ssa_emit_t *emit, const ssa_step_t *step)
     const char *src = emit_operand(emit, store.src);
     const char *dst = emit_operand(emit, store.dst);
 
-    return format("*%s = %s;", dst, src);
+    const char *deref = "*";
+    if (store.dst.kind == eOperandParam 
+        || store.dst.kind == eOperandGlobal
+        || store.dst.kind == eOperandLocal)
+    {
+        deref = "";
+    }
+
+    return format("%s%s = %s;", deref, dst, src);
 }
 
 static const char *c89_emit_unary(c89_ssa_emit_t *emit, const ssa_step_t *step)
@@ -529,11 +544,19 @@ static const char *c89_emit_addr(c89_ssa_emit_t *emit, const ssa_step_t *step)
 
     const char *operand = emit_operand(emit, addr.expr);
 
+    const char *ref = "";
+    if (addr.expr.kind == eOperandParam 
+        || addr.expr.kind == eOperandGlobal
+        || addr.expr.kind == eOperandLocal)
+    {
+        ref = "&";
+    }
+
     char *name = c89_gen_reg(step);
     const char *result = get_type_name(emit, step->type, name);
     map_set_ptr(emit->stepCache, step, name);
 
-    return format("%s = &%s;", result, operand);
+    return format("%s = %s%s;", result, ref, operand);
 }
 
 static const char *c89_emit_sizeof(c89_ssa_emit_t *emit, const ssa_step_t *step)
@@ -561,6 +584,23 @@ static const char *c89_emit_index(c89_ssa_emit_t *emit, const ssa_step_t *step)
     map_set_ptr(emit->stepCache, step, name);
 
     return format("%s = %s + %s;", result, array, idx);
+}
+
+static const char *c89_emit_offset(c89_ssa_emit_t *emit, const ssa_step_t *step)
+{
+    const ssa_offset_t offset = step->offset;
+
+    const char *operand = emit_operand(emit, offset.object);
+    const char *field = format("field%zu", offset.field);
+
+    const ssa_type_t *type = ssa_get_operand_type(emit->emit.reports, emit->currentFlow, offset.object);
+    const char *indirect = type->kind == eTypePointer ? "->" : ".";
+
+    char *name = c89_gen_reg(step);
+    const char *result = get_type_name(emit, step->type, name);
+    map_set_ptr(emit->stepCache, step, name);
+
+    return format("%s = %s%s%s;", result, operand, indirect, field);
 }
 
 static const char *c89_emit_step(c89_ssa_emit_t *emit, const ssa_step_t *step)
@@ -612,6 +652,9 @@ static const char *c89_emit_step(c89_ssa_emit_t *emit, const ssa_step_t *step)
     case eOpIndex:
         return c89_emit_index(emit, step);
 
+    case eOpOffset:
+        return c89_emit_offset(emit, step);
+
     default:
         ctu_assert(emit->emit.reports, "unhandled opcode: %d", step->opcode);
         return "";
@@ -649,7 +692,7 @@ static void c89_emit_block(c89_ssa_emit_t *emit, const ssa_block_t *block)
 
 static void c89_emit_local(c89_ssa_emit_t *emit, size_t idx, const ssa_type_t *local)
 {
-    const char *type = get_memory_type_name(emit, local, format("local%zu", idx));
+    const char *type = get_type_name(emit, local, format("local%zu", idx));
     WRITE_STRINGF(&emit->emit, "%s;\n", type);
 }
 
@@ -660,6 +703,8 @@ static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
     map_reset(emit->stepCache);
     set_reset(emit->completeEdges);
     set_reset(emit->pendingEdges);
+
+    emit->currentFlow = function;
 
     c89_emit_function_decl(emit, function, false);
     WRITE_STRING(&emit->emit, " {\n");

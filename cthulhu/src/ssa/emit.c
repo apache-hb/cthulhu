@@ -224,7 +224,7 @@ static void emit_step(emit_t *emit, set_t *edges, ssa_step_t *step)
 
     case eOpOffset: {
         ssa_offset_t offset = step->offset;
-        printf("  %%%s = %s.%zu\n", step->id, emit_operand(emit, edges, offset.object), offset.field);
+        printf("  %%%s = offset %s:%zu\n", step->id, emit_operand(emit, edges, offset.object), offset.field);
         break;
     }
 
@@ -294,7 +294,11 @@ static bool value_exists(const ssa_value_t *value)
 
 static void emit_global(emit_t *emit, const ssa_flow_t *flow)
 {
-    if (value_exists(flow->value)) 
+    if (flow->linkage == eLinkImported)
+    {
+        printf("extern %s\n", flow->name);
+    }
+    else if (value_exists(flow->value)) 
     {
         printf("%s = %s\n", flow->name, emit_value(emit, flow->value));
     }

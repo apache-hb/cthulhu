@@ -330,6 +330,7 @@ typedef struct ssa_module_t
 } ssa_module_t;
 
 // interface
+
 ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods);
 void ssa_emit_module(reports_t *reports, ssa_module_t *mod);
 void ssa_opt_module(reports_t *reports, ssa_module_t *mod);
@@ -345,3 +346,7 @@ ssa_value_t *ssa_value_new(const ssa_type_t *type, bool init);
 ssa_value_t *ssa_value_digit_new(const mpz_t digit, const ssa_type_t *type);
 ssa_value_t *ssa_value_empty_new(const ssa_type_t *type);
 ssa_value_t *ssa_value_ptr_new(const ssa_type_t *type, const mpz_t value);
+
+// query ssa objects
+
+const ssa_type_t *ssa_get_operand_type(reports_t *reports, const ssa_flow_t *flow, ssa_operand_t operand);

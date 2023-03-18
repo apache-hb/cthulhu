@@ -16,12 +16,13 @@
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/query.h"
 
-static attrib_t *attrib_new(const char *name, hlir_kind_t expected, apply_attribs_t apply)
+static attrib_t *attrib_new(const char *name, hlir_kind_t expected, apply_attribs_t apply, apply_accepts_t accepts)
 {
     attrib_t *attrib = ctu_malloc(sizeof(attrib_t));
     attrib->name = name;
     attrib->expectedKind = expected;
     attrib->apply = apply;
+    attrib->accepts = accepts;
     return attrib;
 }
 
@@ -85,6 +86,11 @@ static hlir_attributes_t *apply_entry(sema_t *sema, hlir_t *hlir, ast_t *ast)
     return newAttributes;
 }
 
+static bool accept_entry(hlir_t *hlir)
+{
+    return hlir_is(hlir, eHlirFunction);
+}
+
 static hlir_attributes_t *apply_extern(sema_t *sema, hlir_t *hlir, ast_t *ast)
 {
     if (vector_len(ast->config) > 1)
@@ -114,6 +120,11 @@ static hlir_attributes_t *apply_extern(sema_t *sema, hlir_t *hlir, ast_t *ast)
     return newAttributes;
 }
 
+static bool accept_extern(hlir_t *hlir)
+{
+    return hlir_is(hlir, eHlirFunction) || hlir_is(hlir, eHlirGlobal);
+}
+
 static hlir_attributes_t *apply_layout(sema_t *sema, hlir_t *hlir, ast_t *ast)
 {
     UNUSED(ast);
@@ -121,16 +132,21 @@ static hlir_attributes_t *apply_layout(sema_t *sema, hlir_t *hlir, ast_t *ast)
     return NULL;
 }
 
-static void add_attrib(sema_t *sema, const char *name, hlir_kind_t kind, apply_attribs_t apply)
+static bool accept_layout(hlir_t *hlir)
 {
-    sema_set(sema, eTagAttribs, name, attrib_new(name, kind, apply));
+    return hlir_is(hlir, eHlirStruct);
+}
+
+static void add_attrib(sema_t *sema, const char *name, hlir_kind_t kind, apply_attribs_t apply, apply_accepts_t accepts)
+{
+    sema_set(sema, eTagAttribs, name, attrib_new(name, kind, apply, accepts));
 }
 
 void add_builtin_attribs(sema_t *sema)
 {
-    add_attrib(sema, "entry", eHlirFunction, apply_entry);
-    add_attrib(sema, "extern", eHlirFunction, apply_extern);
-    add_attrib(sema, "layout", eHlirStruct, apply_layout);
+    add_attrib(sema, "entry", eHlirFunction, apply_entry, accept_entry);
+    add_attrib(sema, "extern", eHlirFunction, apply_extern, accept_extern);
+    add_attrib(sema, "layout", eHlirStruct, apply_layout, accept_layout);
 }
 
 static const char *kDeclNames[eHlirTotal] = {
@@ -157,7 +173,7 @@ static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *attr)
         return;
     }
 
-    if (!hlir_is(hlir, attrib->expectedKind))
+    if (!attrib->accepts(hlir))
     {
         report(sema_reports(sema), eFatal, attr->node, "attribute '%s' is for %ss, was provided with a %s instead",
                attrib->name, 

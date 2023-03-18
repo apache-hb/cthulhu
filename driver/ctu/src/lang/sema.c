@@ -212,6 +212,40 @@ static const hlir_t *get_common_type(node_t *node, const hlir_t *lhs, const hlir
     return hlir_error(node, "unknown common type");
 }
 
+#define IS_OPAQUE(it) (hlir_is(it, eHlirOpaque))
+#define IS_PTR(it) (hlir_is(it, eHlirPointer))
+#define IS_STR(it) (hlir_is(it, eHlirString))
+
+static bool is_pointer_type(const hlir_t *hlir)
+{
+    return IS_OPAQUE(hlir) || IS_PTR(hlir) || IS_STR(hlir);
+}
+
+static hlir_t *ptr_convert_to(hlir_t *expr, const hlir_t *type, const hlir_t *ptrDst, const hlir_t *ptrSrc)
+{
+    if (!is_pointer_type(ptrDst) || !is_pointer_type(ptrSrc))
+    {
+        return NULL;
+    }
+    
+    if (hlir_types_equal(ptrDst, ptrSrc))
+    {
+        return expr;
+    }
+    
+    if (!IS_OPAQUE(ptrDst) && !IS_OPAQUE(ptrSrc))
+    {
+        return ptr_convert_to(expr, type, ptrDst->ptr, ptrSrc->ptr);
+    }
+
+    if (IS_OPAQUE(ptrDst) || IS_OPAQUE(ptrSrc))
+    {
+        return hlir_cast(type, expr, eCastBit);
+    }
+
+    return NULL;
+}
+
 static hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *expr)
 {
     const hlir_t *dstType = hlir_follow_type(to);
@@ -223,12 +257,10 @@ static hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *expr)
         return expr;
     }
 
-    if (hlir_is(srcType, eHlirOpaque))
+    hlir_t *ptrType = ptr_convert_to(expr, dstType, dstType, srcType);
+    if (ptrType != NULL)
     {
-        if (hlir_is(dstType, eHlirPointer) || hlir_is(dstType, eHlirString))
-        {
-            return hlir_cast(dstType, expr, eCastBit);
-        }
+        return ptrType;
     }
 
     // TODO: this doesnt handle warning on narrowing and other cases

@@ -4,6 +4,7 @@
 #include "base/panic.h"
 
 #include "std/str.h"
+#include "std/vector.h"
 
 #include "report/report.h"
 
@@ -41,7 +42,7 @@ const char *ssa_kind_name(ssa_kind_t kind)
     }
 }
 
-const ssa_type_t *ssa_get_operand_type(reports_t *reports, ssa_operand_t operand)
+const ssa_type_t *ssa_get_operand_type(reports_t *reports, const ssa_flow_t *flow, ssa_operand_t operand)
 {
     switch (operand.kind)
     {
@@ -55,6 +56,10 @@ const ssa_type_t *ssa_get_operand_type(reports_t *reports, ssa_operand_t operand
     }
     case eOperandEmpty: {
         return ssa_type_empty_new("empty");
+    }
+    case eOperandLocal: {
+        CTASSERT(flow != NULL);
+        return vector_get(flow->locals, operand.local);
     }
 
     default:

@@ -1,0 +1,74 @@
+module dxgi;
+
+type HWND = opaque;
+type HMODULE = opaque;
+
+@layout(platform)
+struct GUID {
+    Data1: uint;
+    Data2: ushort;
+    Data3: ushort;
+    Data4: [8]uchar;
+}
+
+type REFIID = *GUID;
+
+type HRESULT = int;
+
+struct SampleDesc {
+    Count: uint;
+    Quality: uint;
+}
+
+struct Rational {
+    Numerator: uint;
+    Denominator: uint;
+}
+
+struct ModeDesc {
+    Width: uint;
+    Height: uint;
+    RefreshRate: Rational;
+    Format: uint;
+    ScanlineOrdering: uint;
+    Scaling: uint;
+}
+
+@layout(platform)
+struct SwapChainDesc {
+    BufferDesc: ModeDesc;
+    SampleDesc: SampleDesc;
+    BufferUsage: uint;
+    BufferCount: uint;
+    OutputWindow: HWND;
+    Windowed: bool;
+    SwapEffect: uint;
+    Flags: uint;
+}
+
+@layout(platform)
+export struct Factory {
+    vtable: *FactoryImpl;
+}
+
+@layout(platform)
+struct FactoryImpl {
+    QueryInterface: def(*Factory, REFIID, *opaque) -> HRESULT;
+    AddRef: def(*Factory) -> uint;
+    Release: def(*Factory) -> uint;
+    SetPrivateData: def(*Factory, REFIID, uint, *opaque) -> HRESULT;
+    SetPrivateDataInterface: def(*Factory, REFIID, *opaque) -> HRESULT;
+    GetPrivateData: def(*Factory, REFIID, *uint, *opaque) -> HRESULT;
+    GetParent: def(*Factory, REFIID, *opaque) -> HRESULT;
+    EnumAdapters: def(*Factory, uint, *opaque) -> HRESULT;
+    MakeWindowAssociation: def(*Factory, HWND, uint) -> HRESULT;
+    GetWindowAssociation: def(*Factory, *HWND) -> HRESULT;
+    CreateSwapChain: def(*Factory, *opaque, *SwapChainDesc, *opaque) -> HRESULT;
+    CreateSoftwareAdapter: def(*Factory, HMODULE, *opaque) -> HRESULT;
+}
+
+@extern("CreateDXGIFactory")
+export def newFactory(id: REFIID, obj: *opaque): HRESULT;
+
+@extern("IID_IDXGIFactory")
+export const kFactoryId: GUID = noinit;

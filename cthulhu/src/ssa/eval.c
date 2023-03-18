@@ -27,6 +27,7 @@ typedef struct
 
     const ssa_type_t *expectedReturnType;
     const ssa_value_t *result;
+    const ssa_flow_t *currentFlow;
 } opt_t;
 
 typedef enum {
@@ -206,7 +207,7 @@ static opt_result_t opt_unary(opt_t *opt, ssa_unary_t unary)
 static opt_result_t opt_cast(opt_t *opt, ssa_cast_t cast)
 {
     const ssa_value_t *operand = get_operand_value(opt, cast.operand);
-    const ssa_type_t *srcType = ssa_get_operand_type(opt->reports, cast.operand);
+    const ssa_type_t *srcType = ssa_get_operand_type(opt->reports, opt->currentFlow, cast.operand);
     const ssa_type_t *dstType = cast.type;
 
     if (srcType->kind == eTypeDigit && dstType->kind == eTypeOpaque)
@@ -310,13 +311,13 @@ static opt_result_t opt_global(opt_t *opt, const ssa_flow_t *flow)
 static void build_global(opt_t *opt, ssa_flow_t *flow)
 {
     // if there is no entry then the global is uninitialized
-    if (flow->entry == NULL)
+    if (flow->linkage == eLinkImported)
     {
-        flow->value = ssa_value_empty_new(flow->type);
         return;
     }
 
     opt->expectedReturnType = flow->type;
+    opt->currentFlow = flow;
     opt_result_t result = opt_global(opt, flow);
     
     if (result.reason != eOptSuccess)
