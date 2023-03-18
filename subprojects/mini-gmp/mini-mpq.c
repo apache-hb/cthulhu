@@ -66,7 +66,6 @@ gmp_die (const char *msg)
 }
 #endif
 
-
 /* MPQ helper functions */
 static mpq_srcptr
 mpq_roinit_normal_nn (mpq_t x, mp_srcptr np, mp_size_t ns,
@@ -149,7 +148,6 @@ mpq_swap (mpq_t a, mpq_t b)
   mpz_swap (mpq_denref (a), mpq_denref (b));
 }
 
-
 /* MPQ assignment and conversions. */
 void
 mpz_set_q (mpz_t r, const mpq_t q)
@@ -209,7 +207,6 @@ mpq_get_den (mpz_t r, const mpq_t q)
   mpz_set (r, mpq_denref (q));
 }
 
-
 /* MPQ comparisons and the like. */
 int
 mpq_cmp (const mpq_t a, const mpq_t b)
@@ -302,7 +299,6 @@ mpq_sgn (const mpq_t a)
   return mpz_sgn (mpq_numref (a));
 }
 
-
 /* MPQ arithmetic. */
 void
 mpq_abs (mpq_t r, const mpq_t q)

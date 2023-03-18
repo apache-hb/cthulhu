@@ -63,13 +63,8 @@ gmp = dependency('gmp',
     fallback : [ 'mini-gmp', 'gmp' ]
 )
 
-mpq = dependency('mpq', 
-    not_found_message : 'no system mpq found, falling back to mini-mpq',
-    fallback : [ 'mini-gmp', 'mpq' ]
-)
-
 args = []
-deps = [ gmp, mpq ]
+deps = [ gmp ]
 lexargs = []
 parseargs = []
 
