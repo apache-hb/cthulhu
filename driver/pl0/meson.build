@@ -1,14 +1,15 @@
 src = [ 
-    'main.c', 
-    'scan.c', 
-    'ast.c', 
-    'sema.c',
-    lex.process('pl0.l'), 
-    parse.process('pl0.y')
+    'src/main.c', 
+    'src/scan.c', 
+    'src/ast.c', 
+    'src/sema.c',
+    lex.process('src/pl0.l'), 
+    parse.process('src/pl0.y')
 ]
 
 pl0c = library('pl0c', src,
     dependencies : [ generic, interop ],
+    include_directories : [ 'src' ],
     name_suffix: lib_suffix
 )
 

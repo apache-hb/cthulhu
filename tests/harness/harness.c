@@ -151,15 +151,17 @@ int main(int argc, const char **argv)
 
 #if OS_WINDOWS
     int status = system(format("cl /nologo /c %s /Fo%s.obj", src, name + 1));
+    if (status == -1)
+    {
+        report(result.reports, eFatal, NULL, "compilation failed %d", errno);
+    }
 #else
     int status = system(format("cc %s -o %s", src, lib));
-#endif
-
     if (WEXITSTATUS(status) != EXIT_OK)
     {
-        report(result.reports, eFatal, NULL, "compilation failed");
-        return WEXITSTATUS(status);
+        report(result.reports, eFatal, NULL, "compilation failed %d", WEXITSTATUS(status));
     }
+#endif
 
-    return 0;
+    return end_reports(result.reports, "compiling c89", result.reportConfig);
 }

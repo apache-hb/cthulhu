@@ -1,5 +1,6 @@
 from typing import Mapping, List, TextIO
 from dataclasses import dataclass
+import json
 
 @dataclass
 class LexPattern:
@@ -180,7 +181,17 @@ class Frontend:
     grammar: Grammar
 
     def write_tmlang(self, fd: TextIO):
-        pass
+        result = {
+	        "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+            "name": self.name,
+            "patterns": [],
+            "repository": {},
+            "scopeName": f"source.{self.name}"
+        }
+
+        # TODO: emit tmlang properly
+
+        fd.write(json.dumps(result, indent = 4))
 
     def write_flex(self, fd: TextIO):
         fd.write(flex_preamble(self.name))
@@ -225,6 +236,3 @@ class Frontend:
             rule.write_rule(fd)
 
         fd.write('\n%%\n')
-
-    def write_ast(self, fd: TextIO):
-        pass
