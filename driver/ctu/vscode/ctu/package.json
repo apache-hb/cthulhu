@@ -10,16 +10,25 @@
     "Programming Languages"
   ],
   "contributes": {
-    "languages": [{
-      "id": "ctu",
-      "aliases": ["Cthulhu", "ctu"],
-      "extensions": [".ct"],
-      "configuration": "./language-configuration.json"
-    }],
-    "grammars": [{
-      "language": "ctu",
-      "scopeName": "source.cthulhu",
-      "path": "./syntaxes/ctu.tmLanguage.json"
-    }]
+    "languages": [
+      {
+        "id": "ctu",
+        "aliases": [
+          "Cthulhu",
+          "ctu"
+        ],
+        "extensions": [
+          ".ct"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "ctu",
+        "scopeName": "source.cthulhu",
+        "path": "./syntaxes/ctu.tmLanguage.json"
+      }
+    ]
   }
 }
