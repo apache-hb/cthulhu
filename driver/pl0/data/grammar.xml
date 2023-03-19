@@ -19,7 +19,7 @@
 
     <rule name="imports" type="vec">
         <match action="$$ = vector_new(0);">
-            <empty />
+            <empty/>
         </match>
         <match action="$$ = $2;">
             <token>IMPORT</token>
