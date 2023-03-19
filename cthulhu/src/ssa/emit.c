@@ -103,7 +103,7 @@ static const char *emit_operand(emit_t *emit, set_t *edges, ssa_operand_t op)
 
     default: 
         report(emit->reports, eInternal, NULL, "unhandled operand kind %d", (int)op.kind);
-        return format("err(%d)", ssa_operand_name(op.kind));
+        return format("err(%s)", ssa_operand_name(op.kind));
     }
 }
 

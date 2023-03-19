@@ -2,6 +2,7 @@
 
 #include <execinfo.h>
 #include <stdlib.h>
+#include <string.h>
 
 void stacktrace_init(void) { }
 
@@ -14,7 +15,7 @@ const char *stacktrace_backend(void)
 size_t stacktrace_get(frame_t *frames, size_t size)
 {
     void **buffers = malloc(size * sizeof(void*));
-    int count = backtrace(buffers, size);
+    size_t count = (size_t)backtrace(buffers, size);
     char **strings = backtrace_symbols(buffers, size);
 
     size_t used = count < size ? count : size;

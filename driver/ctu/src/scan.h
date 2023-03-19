@@ -4,7 +4,6 @@
 #include "scan/scan.h"
 
 #include <gmp.h>
-#include <mpq.h>
 
 typedef struct ast_t ast_t;
 typedef struct vector_t vector_t;

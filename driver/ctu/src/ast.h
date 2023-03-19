@@ -7,7 +7,6 @@
 #include "scan.h"
 
 #include <gmp.h>
-#include <mpq.h>
 
 #include <stdbool.h>
 

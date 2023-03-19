@@ -8,7 +8,6 @@
 #include <stdbool.h>
 
 #include <gmp.h>
-#include <mpq.h>
 
 typedef struct vector_t vector_t;
 typedef struct reports_t reports_t;

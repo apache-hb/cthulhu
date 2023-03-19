@@ -12,7 +12,6 @@
 #include "std/vector.h"
 
 #include <gmp.h>
-#include <mpq.h>
 
 /**
  * @defgroup hlir_t HLIR (High Level Intermediate Representation)

@@ -74,7 +74,7 @@ native_cerror_t native_delete_file(const char *path)
 
 static const char *kOpenModes[eModeTotal][eFormatTotal] = {
     [eModeRead] = {[eFormatText] = "r", [eFormatBinary] = "rb"},
-    [eModeWrite] = {[eFormatText] = "w", [eFormatBinary] = "wb"},
+    [eModeWrite] = {[eFormatText] = "w+", [eFormatBinary] = "wb+"},
 };
 
 USE_DECL

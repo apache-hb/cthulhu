@@ -37,7 +37,7 @@ parts = version.split('.')
 cwd = meson.current_source_dir()
 bld = meson.current_build_dir()
 
-has_glib_backtrace = cc.has_header('<execinfo.h>') and cc.has_function('backtrace', include_directories : include_directories('<execinfo.h>'))
+has_glib_backtrace = true # cc.has_header('<execinfo.h>')
 
 stacktrace = get_option('stacktrace').disable_auto_if(target != 'windows' and not has_glib_backtrace)
 

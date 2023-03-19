@@ -26,9 +26,6 @@
 #   include <unistd.h>
 #endif
 
-static const char *kPostRunNames[] = {"-T", "--then"};
-#define TOTAL_POST_RUN_NAMES (sizeof(kPostRunNames) / sizeof(const char *))
-
 #define CHECK_REPORTS(msg) \
     do { \
         status_t err = end_reports(result.reports, msg, result.reportConfig); \
@@ -43,10 +40,6 @@ int main(int argc, const char **argv)
 
     driver_t driver = get_driver();
     verbose = true;
-    
-    param_t *postRunParam = string_param("post run command", kPostRunNames, TOTAL_POST_RUN_NAMES);
-
-    group_t *testGroup = group_new("test", "test options", vector_init(postRunParam));
 
     argparse_config_t argparseConfig = {
         .argv = argv,
@@ -57,7 +50,7 @@ int main(int argc, const char **argv)
 
         .reports = begin_reports(),
 
-        .groups = vector_init(testGroup),
+        .groups = vector_new(0)
     };
 
     argparse_t result = parse_args(&argparseConfig);
@@ -67,8 +60,6 @@ int main(int argc, const char **argv)
     }
 
     report_config_t reportConfig = DEFAULT_REPORT_CONFIG;
-
-    // const char *postRun = get_string_arg(&result, postRunParam, NULL);
 
     size_t totalFiles = vector_len(result.files);
     vector_t *sources = vector_of(totalFiles);
@@ -82,8 +73,7 @@ int main(int argc, const char **argv)
     if (totalFiles == 0)
     {
         report(result.reports, eFatal, NULL, "no input files");
-        end_reports(result.reports, "parsing arguments", reportConfig);
-        return EXIT_ERROR;
+        return end_reports(result.reports, "parsing arguments", reportConfig);
     }
 
     config_t config = {
@@ -128,14 +118,25 @@ int main(int argc, const char **argv)
     // test c89 output
 
     const char *path = vector_get(result.files, 0);
+#if OS_WINDOWS
+#   define CWD ".\\"
     vector_t *parts = str_split(path, ":");
     CTASSERT(vector_len(parts) == 2);
-
     const char *name = str_replace(vector_get(parts, 1), "/", ".");
-    const char *dir = format("test-out\\%s", name + 1);
-    const char *src = format("%s\\main.c", dir);
+#else
+#   define CWD "./"
+    const char *name = str_replace(str_lower(path), "/", ".");
+#endif
 
+    const char *dir = format(CWD "test-out" NATIVE_PATH_SEPARATOR "%s", name + 1);
+    const char *lib = format("%s" NATIVE_PATH_SEPARATOR "it.o", dir);
+    const char *src = format("%s" NATIVE_PATH_SEPARATOR "main.c", dir);
+
+#if OS_WINDOWS
     system(format("if not exist \"%s\" md %s", dir, dir));
+#else
+    system(format("mkdir -p %s", dir));
+#endif
 
     io_t *c89Out = io_file(src, eFileText | eFileWrite);
 
@@ -148,11 +149,16 @@ int main(int argc, const char **argv)
 
     io_close(c89Out);
 
+#if OS_WINDOWS
     int status = system(format("cl /nologo /c %s /Fo%s.obj", src, name + 1));
-    if (status != EXIT_OK)
+#else
+    int status = system(format("cc %s -o %s", src, lib));
+#endif
+
+    if (WEXITSTATUS(status) != EXIT_OK)
     {
         report(result.reports, eFatal, NULL, "compilation failed");
-        return status;
+        return WEXITSTATUS(status);
     }
 
     return 0;
