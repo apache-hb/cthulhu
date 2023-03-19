@@ -1,0 +1,321 @@
+<grammar entry="program">
+    <rule name="program">
+        <match action="scan_set(x, $1);">
+            <rule>block</rule>
+            <token>DOT</token>
+        </match>
+    </rule>
+
+    <rule name="block" type="ast">
+        <match action="$$ = pl0_module(x, @$, $1, $2, $3, $4, $5, $6);">
+            <rule>module</rule>
+            <rule>imports</rule>
+            <rule>consts</rule>
+            <rule>vars</rule>
+            <rule>procedures</rule>
+            <rule>toplevel</rule>
+        </match>
+    </rule>
+
+    <rule name="imports" type="vec">
+        <match action="$$ = vector_new(0);">
+            <empty />
+        </match>
+        <match action="$$ = $2;">
+            <token>IMPORT</token>
+            <rule>idents</rule>
+            <token>SEMICOLON</token>
+        </match>
+    </rule>
+
+    <rule name="idents" type="vec">
+        <match action="$$ = vector_init($1);">
+            <rule>ident</rule>
+        </match>
+        <match action="vector_push(&amp;$1, $3); $$ = $1;">
+            <rule>idents</rule>
+            <token>COMMA</token>
+            <rule>ident</rule>
+        </match>
+    </rule>
+
+    <rule name="module" type="ident">
+        <match action="$$ = NULL;">
+            <empty />
+        </match>
+        <match action="$$ = $2;">
+            <token>MODULE</token>
+            <token>IDENT</token>
+            <token>SEMICOLON</token>
+        </match>
+    </rule>
+
+    <rule name="toplevel" type="ast">
+        <match action="$$ = NULL;">
+            <empty />
+        </match>
+        <match action="$$ = $1;">
+            <rule>statement</rule>
+        </match>
+    </rule>
+
+    <rule name="consts" type="vec">
+        <match action="$$ = vector_new(0);">
+            <empty />
+        </match>
+        <match action="$$ = $2;">
+            <token>CONST</token>
+            <rule>inits</rule>
+            <token>SEMICOLON</token>
+        </match>
+    </rule>
+
+    <rule name="inits" type="vec">
+        <match action="$$ = vector_init($1);">init</match>
+        <match action="vector_push(&amp;$1, $3); $$ = $1;">
+            <rule>inits</rule>
+            <token>COMMA</token>
+            <rule>init</rule>
+        </match>
+    </rule>
+
+    <rule name="init" type="ast">
+        <match action="$$ = pl0_value(x, @$, $1, $3);">
+            <token>IDENT</token>
+            <token>EQUALS</token>
+            <rule>expr</rule>
+        </match>
+    </rule>
+
+    <rule name="vars" type="vec">
+        <match action="$$ = vector_new(0);">
+            <empty />
+        </match>
+        <match action="$$ = $2;">
+            <token>VAR</token>
+            <rule>names</rule>
+            <token>SEMICOLON</token>
+        </match>
+    </rule>
+
+    <rule name="names" type="vec">
+        <match action="$$ = vector_init($1);">
+            <rule>name</rule>
+        </match>
+        <match action="vector_push(&amp;$1, $3); $$ = $1;">
+            <rule>names</rule>
+            <token>COMMA</token>
+            <rule>name</rule>
+        </match>
+    </rule>
+
+    <rule name="name" type="ast">
+        <match action="$$ = pl0_value(x, @$, $1, NULL);">
+            <token>IDENT</token>
+        </match>
+    </rule>
+
+    <rule name="procedures" type="vec">
+        <match action="$$ = vector_new(0);">
+            <empty />
+        </match>
+        <match action="$$ = $1;">
+            <rule>proclist</rule>
+        </match>
+    </rule>
+
+    <rule name="proclist" type="vec">
+        <match action="$$ = vector_init($1);">
+            <rule>procedure</rule>
+        </match>
+        <match action="vector_push(&amp;$1, $2); $$ = $1;">
+            <rule>proclist</rule>
+            <rule>procedure</rule>
+        </match>
+    </rule>
+
+    <rule name="procedure" type="ast">
+        <match action="$$ = pl0_procedure(x, @$, $2, $4, $6);">
+            <token>PROCEDURE</token>
+            <token>IDENT</token>
+            <token>SEMICOLON</token>
+            <rule>vars</rule>
+            <token>BEGIN</token>
+            <rule>stmtlist</rule>
+            <token>END</token>
+            <token>SEMICOLON</token>
+        </match>
+    </rule>
+
+    <rule name="statement" type="ast">
+        <match action="$$ = $1;">
+            <rule>statements</rule>
+        </match>
+        <match action="$$ = pl0_call(x, @$, $2);">
+            <token>CALL</token>
+            <token>IDENT</token>
+        </match>
+        <match action="$$ = pl0_assign(x, @$, $1, $3);">
+            <token>IDENT</token>
+            <token>ASSIGN</token>
+            <rule>expr</rule>
+        </match>
+        <match action="$$ = pl0_branch(x, @$, $2, $4);">
+            <token>IF</token>
+            <rule>condition</rule>
+            <token>THEN</token>
+            <rule>statement</rule>
+        </match>
+        <match action="$$ = pl0_loop(x, @$, $2, $4);">
+            <token>WHILE</token>
+            <rule>condition</rule>
+            <token>DO</token>
+            <rule>statement</rule>
+        </match>
+        <match action="$$ = pl0_print(x, @$, $2);">
+            <token>PRINT</token>
+            <rule>expr</rule>
+        </match>
+    </rule>
+
+    <rule name="statements" type="ast">
+        <match action="$$ = $1;">
+            <rule>stmtlist</rule>
+        </match>
+        <match action="$$ = pl0_block(x, @$, $2);">
+            <token>BEGIN</token>
+            <rule>stmtlist</rule>
+            <token>END</token>
+        </match>
+    </rule>
+
+    <rule name="stmtlist" type="vec">
+        <match action="$$ = vector_init($1);">
+            <rule>statement</rule>
+        </match>
+        <match action="vector_push(&amp;$1, $2); $$ = $1;">
+            <rule>stmtlist</rule>
+            <token>SEMICOLON</token>
+            <rule>statement</rule>
+        </match>
+    </rule>
+
+    <rule name="ident" type="ast">
+        <match action="$$ = pl0_ident(x, @$, $1);">
+            <token>IDENT</token>
+        </match>
+    </rule>
+
+    <rule name="factor" type="ast">
+        <match action="$$ = $1;">
+            <rule>ident</rule>
+        </match>
+        <match action="$$ = $1;">
+            <rule>number</rule>
+        </match>
+        <match action="$$ = $2;">
+            <token>LPAREN</token>
+            <rule>expr</rule>
+            <token>RPAREN</token>
+        </match>
+    </rule>
+
+    <rule name="term" type="ast">
+        <match action="$$ = $1;">
+            <rule>factor</rule>
+        </match>
+        <match action="$$ = pl0_binary(x, @$, eBinaryDiv, $1, $3);">
+            <rule>factor</rule>
+            <token>DIV</token>
+            <rule>term</rule>
+        </match>
+    </rule>
+
+    <rule name="mul" type="ast">
+        <match action="$$ = $1;">
+            <rule>term</rule>
+        </match>
+        <match action="$$ = pl0_binary(x, @$, eBinaryMul, $1, $3);">
+            <rule>term</rule>
+            <token>MUL</token>
+            <rule>mul</rule>
+        </match>
+    </rule>
+
+    <rule name="math" type="ast">
+        <match action="$$ = $1;">mul</match>
+        <match action="$$ = pl0_binary(x, @$, eBinaryAdd, $1, $3);">
+            <rule>mul</rule>
+            <token>ADD</token>
+            <rule>math</rule>
+        </match>
+        <match action="$$ = pl0_binary(x, @$, eBinarySub, $1, $3);">
+            <rule>mul</rule>
+            <token>SUB</token>
+            <rule>math</rule>
+        </match>
+    </rule>
+
+    <rule name="unary" type="ast">
+        <match action="$$ = $1;">
+            <rule>math</rule>
+        </match>
+        <match action="$$ = pl0_unary(x, @$, eUnaryNeg, $2);">
+            <token>SUB</token>
+            <rule>math</rule>
+        </match>
+        <match action="$$ = pl0_unary(x, @$, eUnaryAbs, $2);">
+            <token>ADD</token>
+            <rule>math</rule>
+        </match>
+    </rule>
+
+    <rule name="expr" type="ast">
+        <match action="$$ = $1;">
+            <rule>unary</rule>
+        </match>
+    </rule>
+
+    <rule name="condition" type="ast">
+        <match action="$$ = pl0_odd(x, @$, $2);">
+            <token>ODD</token>
+            <rule>expr</rule>
+        </match>
+        <match action="$$ = pl0_compare(x, @$, eCompareEq, $1, $3);"> 
+            <rule>expr</rule>
+            <token>EQUALS</token>
+            <rule>expr</rule>
+        </match>
+        <match action="$$ = pl0_compare(x, @$, eCompareNeq, $1, $3);">
+            <rule>expr</rule>
+            <token>NOTEQUAL</token>
+            <rule>expr</rule>
+        </match>
+        <match action="$$ = pl0_compare(x, @$, eCompareLt, $1, $3);"> 
+            <rule>expr</rule>
+            <token>LESS</token>
+            <rule>expr</rule>
+        </match>
+        <match action="$$ = pl0_compare(x, @$, eCompareLte, $1, $3);">
+            <rule>expr</rule>
+            <token>LESSEQ</token>
+            <rule>expr</rule>
+        </match>
+        <match action="$$ = pl0_compare(x, @$, eCompareGt, $1, $3);"> 
+            <rule>expr</rule>
+            <token>GREATER</token>
+            <rule>expr</rule>
+        </match>
+        <match action="$$ = pl0_compare(x, @$, eCompareGte, $1, $3);">
+            <rule>expr</rule>
+            <token>GREATEQ</token>
+            <rule>expr</rule>
+        </match>
+    </rule>
+
+    <rule name="number" type="ast">
+        <match action="$$ = pl0_digit(x, @$, $1);">
+            <token>NUMBER</token>
+        </match>
+    </rule>
+</grammar>

@@ -1,0 +1,67 @@
+<tokens initial="INITIAL">
+    <field type="pl0_t*">ast</field>
+    <field type="vector_t*">vec</field>
+    <field type="char*">ident</field>
+    <field type="mpz_t">number</field>
+
+    <state name="INITIAL">
+        <ignore pattern="[ \r\n\t]">whitespace</ignore>
+        <ignore pattern="//.*">comment</ignore>
+        <transition state="COMMENT" pattern="/*">begin-comment</transition>
+
+        <token pattern="(?i:module)" tag="MODULE">module</token>
+        <token pattern="(?i:import)" tag="IMPORT">import</token>
+        <token pattern="(?i:const)" tag="CONST">const</token>
+        <token pattern="(?i:var)" tag="VAR">var</token>
+        <token pattern="(?i:procedure)" tag="PROCEDURE">procedure</token>
+
+        <token pattern="(?i:begin)" tag="BEGIN">begin</token>
+        <token pattern="(?i:end)" tag="END">end</token>
+        <token pattern="(?i:if)" tag="IF">if</token>
+        <token pattern="(?i:then)" tag="THEN">then</token>
+        <token pattern="(?i:while)" tag="WHILE">while</token>
+        <token pattern="(?i:do)" tag="DO">do</token>
+        <token pattern="(?i:call)" tag="CALL">call</token>
+
+        <token pattern="(?i:odd)" tag="ODD">odd</token>
+
+        <token pattern="[a-zA-Z_][a-zA-Z0-9_]*" 
+               tag="IDENT" 
+               type="ident" 
+               action="$type = pl0_normalize(yytext)">identifier</token>
+
+        <token pattern="[0-9]+" 
+               tag="NUMBER" 
+               type="number" 
+               action="mpz_init_set_str($type, yytext, 10)">number</token>
+
+        <symbol pattern=";" tag="SEMICOLON">semicolon</symbol>
+        <symbol pattern="." tag="DOT">dot</symbol>
+        <symbol pattern="," tag="COMMA">comma</symbol>
+        <symbol pattern=":=" tag="ASSIGN"></symbol>
+
+        <symbol pattern="=" tag="EQUALS">equals</symbol>
+        <symbol pattern="!=" tag="NOTEQUAL">notequal</symbol>
+        <symbol pattern="&lt;" tag="LESS">less</symbol>
+        <symbol pattern="&gt;" tag="GREATER">greater</symbol>
+        <symbol pattern="&lt;=" tag="LESSEQ">lesseq</symbol>
+        <symbol pattern="&gt;=" tag="GREATEQ">greateq</symbol>
+
+        <symbol pattern="(" tag="LPAREN">lparen</symbol>
+        <symbol pattern=")" tag="RPAREN">rparen</symbol>
+
+        <symbol pattern="+" tag="ADD">add</symbol>
+        <symbol pattern="-" tag="SUB">sub</symbol>
+        <symbol pattern="*" tag="MUL">mul</symbol>
+        <symbol pattern="/" tag="DIV">div</symbol>
+
+        <symbol pattern="!" tag="PRINT">print</symbol>
+    </state>
+
+    <state name="COMMENT">
+        <transition state="INITIAL" pattern="*/">end-comment</transition>
+
+        <ignore pattern="\n">newline</ignore>
+        <ignore pattern=".">comment-body</ignore>
+    </state>
+</tokens>

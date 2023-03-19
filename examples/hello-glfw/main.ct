@@ -34,5 +34,5 @@ def cliEntry: int {
     }
 
     glfw::terminate();
-    std::exit(0);
+    return 0;
 }
