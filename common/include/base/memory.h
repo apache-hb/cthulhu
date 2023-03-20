@@ -44,7 +44,7 @@ void arena_free(IN_NOTNULL alloc_t *alloc, IN_NOTNULL void *ptr, size_t size);
 NODISCARD ALLOC(arena_free, 2) 
 void *arena_malloc(IN_NOTNULL alloc_t *alloc, size_t size, const char *name);
 
-NODISCARD ALLOC(arena_free, 2) 
+NODISCARD
 void *arena_realloc(IN_NOTNULL alloc_t *alloc, IN_NOTNULL void *ptr, size_t newSize, size_t oldSize);
 
 END_API
