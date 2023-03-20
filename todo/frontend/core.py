@@ -180,19 +180,6 @@ class Frontend:
     lexer: Lexer
     grammar: Grammar
 
-    def write_tmlang(self, fd: TextIO):
-        result = {
-	        "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-            "name": self.name,
-            "patterns": [],
-            "repository": {},
-            "scopeName": f"source.{self.name}"
-        }
-
-        # TODO: emit tmlang properly
-
-        fd.write(json.dumps(result, indent = 4))
-
     def write_flex(self, fd: TextIO):
         fd.write(flex_preamble(self.name))
         fd.write('\n')

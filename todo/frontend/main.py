@@ -118,9 +118,6 @@ def main():
     except:
         pass
 
-    with open(f'{name}-out/{name}.tmlang.json', 'w') as fd:
-        it.write_tmlang(fd)
-
     with open(f'{name}-out/{name}.l', 'w') as fd:
         it.write_flex(fd)
 
