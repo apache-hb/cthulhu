@@ -156,7 +156,7 @@ int main(int argc, const char **argv)
         report(result.reports, eFatal, NULL, "compilation failed %d", errno);
     }
 #else
-    int status = system(format("cc %s -o %s", src, lib));
+    int status = system(format("cc %s -c -o%s", src, lib));
     if (WEXITSTATUS(status) != EXIT_OK)
     {
         report(result.reports, eFatal, NULL, "compilation failed %d", WEXITSTATUS(status));

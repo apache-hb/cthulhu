@@ -18,7 +18,7 @@
 }
 
 %{
-int ctulex();
+int ctulex(void *lval, void *loc, scan_t *scan);
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 

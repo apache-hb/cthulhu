@@ -12,6 +12,7 @@ src = [
 
 ctc = library('ctc', src,
     dependencies : [ generic, interop ],
+    c_args : args,
     include_directories : 'src',
     name_suffix: lib_suffix
 )

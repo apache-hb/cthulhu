@@ -19,7 +19,7 @@
 }
 
 %{
-int pl0lex();
+int pl0lex(void *lval, void *loc, scan_t *scan);
 void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 

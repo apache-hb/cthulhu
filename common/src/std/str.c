@@ -230,7 +230,7 @@ static size_t normstr(char *out, char c)
 {
     if (safe_isprint(c))
     {
-        out[0] = c;
+        *out = c;
         return 1;
     }
 
@@ -264,36 +264,35 @@ static size_t normstr(char *out, char c)
         out[0] = '\\';
         out[1] = 'r';
         return 2;
-    default:
-        return snprintf(out, 5, "\\x%02x", c & 0xFF);
+    default: {
+        int result = snprintf(out, 5, "\\x%02x", (c & 0xFF));
+        CTASSERT(result > 0);
+        return result;
+    }
     }
 }
 
 USE_DECL
 char *str_normalize(const char *input)
 {
-    size_t len = 0;
+    size_t inputLen = 0;
+    size_t resultLen = 0;
     const char *lenCount = input;
-    bool isNormalized = true;
     while (*lenCount != '\0')
     {
         size_t inc = normlen(*lenCount++);
-        len += inc;
-
-        if (inc != 1)
-        {
-            isNormalized = false;
-        }
+        resultLen += inc;
+        inputLen += 1;
     }
 
     // if the string is already normalized, just return a copy
-    if (isNormalized)
+    if (inputLen == resultLen)
     {
-        return ctu_strndup(input, len);
+        return ctu_strndup(input, inputLen);
     }
 
     const char *replCount = input;
-    char *buf = ctu_malloc(len + 1);
+    char *buf = ctu_malloc(resultLen + 1);
     char *result = buf;
     while (*replCount != '\0')
     {
@@ -307,26 +306,30 @@ char *str_normalize(const char *input)
 USE_DECL
 char *str_normalizen(const char *str, size_t len)
 {
-    size_t outlen = 1;
+    size_t resultLen = 1;
     for (size_t i = 0; i < len; i++)
     {
-        outlen += normlen(str[i]);
+        resultLen += normlen(str[i]);
     }
 
+    printf("lens: %zu %zu\n", len, resultLen);
+
     // if the string is already normalized, just return a copy
-    if (outlen == len)
+    if (resultLen == len)
     {
         return ctu_strndup(str, len);
     }
 
-    char *buf = ctu_malloc(outlen + 1);
-    char *out = buf;
+    char *buf = ctu_malloc(resultLen + 1);
+    size_t offset = 0;
     for (size_t i = 0; i < len; i++)
     {
-        out += normstr(out, str[i]);
+        size_t inc = normstr(buf + offset, str[i]);
+        offset += inc;
+        printf("inc: %zu %zu\n", offset, inc);
     }
 
-    *out = '\0';
+    buf[offset] = '\0';
     return buf;
 }
 

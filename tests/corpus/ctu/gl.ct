@@ -1,0 +1,23 @@
+module gl;
+
+export const ColourBufferBit = 0x00004000u;
+
+export const Triangles = 0x0004u;
+
+@extern("glClear")
+export def clear(bit: uint);
+
+@extern("glClearColor")
+export def clearColour(red: float, green: float, blue: float, alpha: float);
+
+@extern("glBegin")
+export def begin(mode: uint);
+
+@extern("glEnd")
+export def end;
+
+@extern("glColor3f")
+export def colour3f(red: float, green: float, blue: float);
+
+@extern("glVertex2f")
+export def vertex2f(x: float, y: float);

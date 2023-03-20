@@ -1,0 +1,38 @@
+import glfw;
+import gl;
+import std;
+
+@entry(cli)
+def cliEntry: int {
+    if glfw::init() == 0 {
+        std::puts("failed to init glfw");
+        return 99;
+    }
+
+    const window = glfw::createWindow(640, 480, "Hello World", std::null, std::null);
+
+    if window == std::null {
+        std::puts("failed to create window");
+        glfw::terminate();
+        return 99;
+    }
+
+    glfw::makeContextCurrent(window);
+
+    while glfw::windowShouldClose(window) == 0 {
+        gl::clearColour(0.2, 0.3, 0.3, 1.0);
+        gl::clear(gl::ColourBufferBit);
+        
+        gl::begin(gl::Triangles);
+            gl::vertex2f(-0.5, -0.5);
+            gl::vertex2f(0.0, 0.5);
+            gl::vertex2f(0.5, -0.5);
+        gl::end();
+
+        glfw::swapBuffers(window);
+        glfw::pollEvents();
+    }
+
+    glfw::terminate();
+    return 0;
+}

@@ -1,0 +1,26 @@
+module glfw;
+
+export type Window = opaque;
+
+export type Monitor = opaque;
+
+@extern("glfwInit")
+export def init: int;
+
+@extern("glfwCreateWindow")
+export def createWindow(width: int, height: int, title: str, monitor: Monitor, share: Window): Window;
+
+@extern("glfwTerminate")
+export def terminate;
+
+@extern("glfwMakeContextCurrent")
+export def makeContextCurrent(window: Window);
+
+@extern("glfwWindowShouldClose")
+export def windowShouldClose(window: Window): int;
+
+@extern("glfwSwapBuffers")
+export def swapBuffers(window: Window);
+
+@extern("glfwPollEvents")
+export def pollEvents;

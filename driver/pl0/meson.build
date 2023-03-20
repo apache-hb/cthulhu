@@ -9,6 +9,7 @@ src = [
 
 pl0c = library('pl0c', src,
     dependencies : [ generic, interop ],
+    c_args : args,
     include_directories : [ 'src' ],
     name_suffix: lib_suffix
 )

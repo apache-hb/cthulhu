@@ -78,6 +78,11 @@ if buildtype.startswith('debug')
     args += [ '-DENABLE_DEBUG=1' ]
 endif
 
+# bison generates a few unused variables
+if cc.has_argument('-Wno-unused-but-set-variable')
+    args += [ '-Wno-unused-but-set-variable' ]
+endif
+
 if host == 'windows'
     lexargs += [ '--wincompat' ]
 

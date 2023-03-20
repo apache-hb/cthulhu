@@ -1,0 +1,18 @@
+module std;
+
+@extern
+export def malloc(size: usize): opaque;
+
+@extern 
+export def realloc(ptr: opaque, size: usize): opaque;
+
+@extern
+export def free(ptr: opaque);
+
+@extern
+export def puts(s: str): int;
+
+@extern
+export def exit(code: int);
+
+export const null = __null;

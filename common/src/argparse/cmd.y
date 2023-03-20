@@ -17,7 +17,7 @@
 }
 
 %{
-int cmdlex();
+int cmdlex(void *lval, void *loc, scan_t *scan);
 void cmderror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 

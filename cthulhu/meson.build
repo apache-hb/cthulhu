@@ -57,7 +57,7 @@ src = [
 ]
 
 libemit = library('emit', src,
-    dependencies : deps,
+    dependencies : deps + [ ssa ],
     c_args : args,
     include_directories : 'include',
     name_suffix: lib_suffix
@@ -66,5 +66,5 @@ libemit = library('emit', src,
 emit = declare_dependency(
     link_with : libemit,
     include_directories : 'include',
-    dependencies : deps,
+    dependencies : deps + [ ssa ]
 )
