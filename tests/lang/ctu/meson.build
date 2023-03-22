@@ -172,7 +172,12 @@ crashes = {
     '9': true,
     '10': false,
     '11': false,
-    '12': true
+    '12': true,
+    '13': false,
+    '14': false,
+    '15': false,
+    '16': false,
+    'discard-mod': false
 }
 
 cases = {

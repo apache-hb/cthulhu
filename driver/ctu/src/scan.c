@@ -165,7 +165,7 @@ string_t parse_string_escapes(reports_t *reports, const char *text, size_t len)
 void init_decimal(mpq_t result, const char *text)
 {
     vector_t *parts = str_split(text, ".");
-    CTASSERT(vector_len(parts) >= 2);
+    CTASSERT(vector_len(parts) == 2);
     const char *num = vector_get(parts, 0);
     const char *den = vector_get(parts, 1);
     

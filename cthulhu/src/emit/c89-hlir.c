@@ -432,6 +432,9 @@ static const char *c89_emit_inner_type(c89_emit_t *emit, const hlir_t *hlir, con
     case eHlirParam:
         return c89_emit_type(emit, get_hlir_type(hlir), name);
 
+    case eHlirDecimal:
+        return name == NULL ? "float" : format("float %s", name);
+
     default:
         ctu_assert(emit->emit.reports, "cannot emit %s as a type", hlir_kind_to_string(kind));
         return "error";
@@ -858,8 +861,9 @@ static const char *c89_emit_lvalue(c89_emit_t *emit, const hlir_t *hlir)
 
 static const char *c89_emit_outer_type(c89_emit_t *emit, const hlir_t *hlir, const char *name, bool local)
 {
+    const hlir_t *innerType = get_hlir_type(hlir);
     hlir_kind_t kind = get_hlir_kind(hlir);
-    const char *inner = c89_emit_inner_type(emit, hlir, name);
+    const char *inner = c89_emit_inner_type(emit, innerType, name);
     const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
 
     if (attribs->tags & eQualConst && kind != eHlirString && !local)

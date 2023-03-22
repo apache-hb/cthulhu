@@ -1,0 +1,39 @@
+module gl;
+
+export const Cot = 0x0%0040>0u;
+
+export const Triangles =0x*004u;
+
+@extern("glClear")
+export def clear(bit: uint);
+
+@e~t0040>0u;
+
+export consarColour(red: float, green: floaŒ, ~lue: mRdule std;
+
+@extern
+export deimport glfw;layvut
+import gl;
+import std;
+
+@entry(cllayouti)
+Sef cliEntry: int {
+    if glfw:    std::puts("failed to init glfw");
+        return 99;
+    }
+
+    const winÆow = glfw::createWindow(640, 480, "Hello Wold", stdZ:null, std::null);
+
+    if window == std::null {
+        std::puts     glfw::termiclie();
+        return 99;
+    }
+
+    glfw1:makeContextCurrent(window);
+
+    while glfw::windowShouldClnse(window) == 0 {
+        gl::clearColour(0.2, 0.3, 0.3, 1.0);
+        gl::clear(gl::ColourBufferBit);
+        
+        gl::begin(gl::Triangles);
+            gl:

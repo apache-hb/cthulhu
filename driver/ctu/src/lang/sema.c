@@ -933,7 +933,13 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     hlir_t *cond = sema_expr(sema, ast->cond);
 
     size_t sizes[eTagTotal] = {
-        [eSemaValues] = 32, [eSemaProcs] = 4, [eSemaTypes] = 4, [eSemaModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 1,};
+        [eSemaValues] = 32, 
+        [eSemaProcs] = 4, 
+        [eSemaTypes] = 4, 
+        [eSemaModules] = 1, 
+        [eTagAttribs] = 1, 
+        [eTagSuffix] = 1,
+    };
 
     sema_t *nestThen = begin_sema(sema, sizes);
 
@@ -1035,7 +1041,12 @@ static hlir_t *sema_branch(sema_t *sema, ast_t *stmt)
     hlir_t *cond = sema_expr(sema, stmt->cond);
     
     size_t tags[eTagTotal] = {
-        [eSemaValues] = 32, [eSemaProcs] = 32, [eSemaTypes] = 32, [eSemaModules] = 32, [eTagAttribs] = 32,};
+        [eSemaValues] = 32, 
+        [eSemaProcs] = 32, 
+        [eSemaTypes] = 32, 
+        [eSemaModules] = 32, 
+        [eTagAttribs] = 32,
+    };
 
     sema_t *bodyInner = begin_sema(sema, tags);
     sema_t *otherInner = begin_sema(sema, tags);

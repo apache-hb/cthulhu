@@ -218,11 +218,7 @@ static bool safe_isprint(char c)
 
 static size_t normlen(char c)
 {
-    if (is_escape_char(c))
-    {
-        return 2;
-    }
-
+    // TODO: this might overallocate size
     return safe_isprint(c) ? 1 : 4;
 }
 
@@ -312,8 +308,6 @@ char *str_normalizen(const char *str, size_t len)
         resultLen += normlen(str[i]);
     }
 
-    printf("lens: %zu %zu\n", len, resultLen);
-
     // if the string is already normalized, just return a copy
     if (resultLen == len)
     {
@@ -326,7 +320,6 @@ char *str_normalizen(const char *str, size_t len)
     {
         size_t inc = normstr(buf + offset, str[i]);
         offset += inc;
-        printf("inc: %zu %zu\n", offset, inc);
     }
 
     buf[offset] = '\0';

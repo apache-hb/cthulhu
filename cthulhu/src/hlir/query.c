@@ -62,6 +62,7 @@ static bool has_attribs(hlir_kind_t kind)
     case eHlirClosure:
     case eHlirArray:
     case eHlirOpaque:
+    case eHlirQualified:
 
     case eHlirRecordField:
     case eHlirFunction:

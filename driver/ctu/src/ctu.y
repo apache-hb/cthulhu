@@ -56,6 +56,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     DECIMAL "decimal literal"
 
 %token
+    DISCARD "`$`"
     BITNOT "`~`"
     AT "`@`"
     COLON "`:`"
@@ -210,7 +211,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     funcparams opttypes types
 
 %type<ident>
-    label block
+    label block ident
 
 %type<boolean>
     mut optExport
@@ -312,7 +313,7 @@ paramlist: param { $$ = vector_init($1); }
     | paramlist COMMA param { vector_push(&$1, $3); $$ = $1; }
     ;
 
-param: IDENT COLON type { $$ = ast_param(x, @$, $1, $3); }
+param: ident COLON type { $$ = ast_param(x, @$, $1, $3); }
     ;
 
 funcbody: SEMICOLON { $$ = NULL; }
@@ -351,7 +352,7 @@ fieldlist: field { $$ = vector_init($1); }
     | fieldlist field { vector_push(&$1, $2); $$ = $1; }
     ;
 
-field: IDENT COLON type SEMICOLON { $$ = ast_field(x, @$, $1, $3); }
+field: ident COLON type SEMICOLON { $$ = ast_field(x, @$, $1, $3); }
     ;
 
 modspec: %empty { $$ = NULL; }
@@ -501,6 +502,10 @@ args: %empty { $$ = vector_new(0); }
 
 path: IDENT { $$ = vector_init($1); }
     | path COLON2 IDENT { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+ident: IDENT { $$ = $1; } 
+    | DISCARD { $$ = NULL; }
     ;
 
 %%

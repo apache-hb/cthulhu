@@ -185,8 +185,7 @@ WS [ \t\r\v\n\f]
 }
 
 "$" { 
-    yylval->ident = NULL;
-    return IDENT; 
+    return DISCARD; 
 }
 
 [a-zA-Z_][a-zA-Z0-9_]* { 
@@ -209,7 +208,7 @@ WS [ \t\r\v\n\f]
     return INTEGER;
 }
 
-[0-9]+.[0-9]+ {
+[0-9]+\.[0-9]+ {
     init_decimal(yylval->decimal, yytext);
     return DECIMAL;
 }

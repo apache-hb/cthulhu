@@ -73,3 +73,11 @@ ninja -C build test # build and run tests
 
 * `tools` - tools
   * `tune-map` - map runtime perf tuning
+
+## Fuzzing
+Right now only fuzzing with afl++ is supported
+
+```sh
+./scripts/build-for-fuzzing.sh
+./scripts/run-fuzzer.sh build-fuzz # requires tmux
+```
