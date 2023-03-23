@@ -116,14 +116,12 @@ static argparse_t argparse_new(const argparse_config_t *config)
             .warningsAreErrors = false,
         },
 
-        .params = map_optimal(totalNames),
         .lookup = map_optimal(totalNames),
+        .params = map_optimal(totalNames),
 
         .files = vector_new(config->argc - 1),
 
-        .reports = config->reports,
-        .currentName = NULL,
-        .currentArg = NULL,
+        .reports = config->reports
     };
 
     return result;
@@ -139,7 +137,7 @@ static void add_arg(argparse_t *ctx, param_t *param)
 
     for (size_t i = 0; i < param->totalNames; i++)
     {
-        map_set(ctx->params, param->names[i], result);
+        map_set(ctx->params, param->names[i], param);
     }
 }
 
@@ -346,7 +344,7 @@ argparse_t parse_args(const argparse_config_t *config)
 
     io_t *io = io_string("<command-line>", args);
 
-    scan_t *scan = scan_io(config->reports, "command-parser", io);
+    scan_t *scan = scan_io(config->reports, "command-parser", io, &argparse);
 
     report_config_t reportConfig = {
         .limit = 20,
@@ -373,8 +371,6 @@ argparse_t parse_args(const argparse_config_t *config)
 
     scan_set(scan, &argparse);
     compile_scanner(scan, &kCallbacks);
-
-    argparse_end_flag(&argparse);
 
     int exitCode = process_general_args(config, &argparse);
     argparse.exitCode = exitCode;

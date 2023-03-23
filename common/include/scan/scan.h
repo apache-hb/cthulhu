@@ -24,6 +24,9 @@ void *scan_get(IN_NOTNULL scan_t *scan);
 
 void scan_set(IN_NOTNULL scan_t *scan, void *value);
 
+NODISCARD CONSTFN
+void *scan_extra(IN_NOTNULL scan_t *scan);
+
 NODISCARD CONSTFN 
 const char *scan_text(IN_NOTNULL const scan_t *scan);
 
@@ -43,4 +46,4 @@ NODISCARD RET_RANGE(0, size)
 size_t scan_read(scan_t *scan, void *dst, size_t size);
 
 NODISCARD
-scan_t *scan_io(reports_t *reports, const char *language, io_t *io);
+scan_t *scan_io(reports_t *reports, const char *language, io_t *io, void *extra);

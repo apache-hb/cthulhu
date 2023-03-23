@@ -22,7 +22,7 @@ typedef enum
 /**
  * a user provided argument from the command line
  */
-typedef struct
+typedef struct arg_t
 {
     param_kind_t kind;
     bool setByUser;
@@ -36,7 +36,7 @@ typedef struct
 /**
  * an option that can be specified on the command line
  */
-typedef struct
+typedef struct param_t
 {
     const char **names;
     size_t totalNames;
@@ -44,7 +44,7 @@ typedef struct
     param_kind_t kind;
 } param_t;
 
-typedef struct
+typedef struct group_t
 {
     const char *name;
     const char *description;
@@ -74,13 +74,10 @@ typedef struct argparse_t
     
     vector_t *files;
 
-    map_t *params;
-
     /// private data
     reports_t *reports;
-    const char *currentName;
-    arg_t *currentArg;
-    map_t *lookup;
+    map_t *lookup; // param_t -> arg_t
+    map_t *params; // name -> param_t
 } argparse_t;
 
 NODISCARD

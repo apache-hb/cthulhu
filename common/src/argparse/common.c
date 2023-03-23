@@ -1,113 +1,93 @@
 #include "common.h"
 
+#include "cmd-bison.h"
+
 #include "argparse/argparse.h"
 #include "report/report.h"
+
+#include "base/util.h"
+#include "base/panic.h"
 
 #include "std/map.h"
 #include "std/vector.h"
 
 #include <limits.h>
+#include <stdio.h>
 
-static const char *kFlagTypes[eParamTotal] = {
-    [eParamBool] = "boolean",
-    [eParamString] = "string",
-    [eParamInt] = "integer",
-};
-
-static bool argparse_check(argparse_t *argparse, param_kind_t kind)
+int arg_parse_opt(argparse_t *argparse, const char *text, param_t **param)
 {
-    arg_t *currentArg = argparse->currentArg;
-    if (currentArg == NULL)
+    param_t *result = map_get(argparse->params, text);
+    if (result == NULL)
     {
-        return false;
+        return ERROR;
     }
 
-    param_kind_t flagKind = currentArg->kind;
-    if (flagKind != kind)
+    *param = result;
+
+    switch (result->kind)
     {
-        report(argparse->reports, eWarn, node_invalid(), "flag %s expected a %s, got %s", argparse->currentName,
-               kFlagTypes[kind], kFlagTypes[flagKind]);
-
-        argparse->currentArg = NULL;
-        argparse->currentName = NULL;
-
-        return false;
-    }
-
-    if (currentArg->setByUser)
-    {
-        report(argparse->reports, eWarn, node_invalid(), "flag `%s` already set", argparse->currentName);
-        argparse->currentArg = NULL;
-        argparse->currentName = NULL;
-        return false;
-    }
-
-    return true;
-}
-
-static void argparse_flush(argparse_t *argparse)
-{
-    if (argparse->currentArg != NULL)
-    {
-        argparse->currentArg->setByUser = true;
-    }
-
-    argparse->currentArg = NULL;
-    argparse->currentName = NULL;
-}
-
-void argparse_end_flag(argparse_t *argparse)
-{
-    if (argparse_check(argparse, eParamBool))
-    {
-        argparse->currentArg->boolean = true;
-        argparse_flush(argparse);
+    case eParamBool: return FLAG_OPT;
+    case eParamInt: return INT_OPT;
+    case eParamString: return STRING_OPT;
+    default: return ERROR;
     }
 }
 
-void argparse_begin_flag(argparse_t *argparse, const char *name)
+void argparse_string_opt(argparse_t *argparse, param_t *param, const char *value)
 {
-    argparse_end_flag(argparse);
+    CTASSERT(argparse != NULL);
+    CTASSERT(param != NULL);
+    CTASSERT(param->kind == eParamString);
 
-    arg_t *arg = map_get(argparse->params, name);
-    if (arg == NULL)
+    arg_t *arg = map_get_ptr(argparse->lookup, param);
+
+    if (arg->setByUser)
     {
-        report(argparse->reports, eWarn, node_invalid(), "unknown flag '%s'", name);
-        return;
+        report(argparse->reports, eWarn, node_invalid(), "flag `` already set");
     }
 
-    argparse->currentName = name;
-    argparse->currentArg = arg;
+    arg->setByUser = true;
+    arg->string = value;
 }
 
-void argparse_push_string(argparse_t *argparse, const char *value)
+void argparse_int_opt(argparse_t *argparse, param_t *param, mpz_t value)
 {
-    if (argparse_check(argparse, eParamString))
+    CTASSERT(argparse != NULL);
+    CTASSERT(param != NULL);
+    CTASSERT(param->kind == eParamInt);
+
+    arg_t *arg = map_get_ptr(argparse->lookup, param);
+
+    if (arg->setByUser)
     {
-        argparse->currentArg->string = value;
-        argparse_flush(argparse);
+        report(argparse->reports, eWarn, node_invalid(), "flag `` already set");
     }
-    else
-    {
-        argparse_end_flag(argparse);
-        vector_push(&argparse->files, (char *)value);
-    }
+
+    arg->setByUser = true;
+    arg->digit = mpz_get_si(value);
 }
 
-void argparse_push_digit(argparse_t *argparse, mpz_t value)
+void argparse_flag_opt(argparse_t *argparse, param_t *param)
 {
-    if (argparse_check(argparse, eParamInt))
-    {
-        long digit = mpz_get_si(value);
-        if (!mpz_fits_slong_p(value))
-        {
-            message_t *id = report(argparse->reports, eWarn, node_invalid(),
-                                   "flag `%s` passed digit %s, which is out of range [%ld, %ld]", argparse->currentName,
-                                   mpz_get_str(NULL, 10, value), LONG_MIN, LONG_MAX);
-            report_note(id, "value truncated to %ld", digit);
-        }
+    CTASSERT(argparse != NULL);
+    CTASSERT(param != NULL);
+    CTASSERT(param->kind == eParamBool);
 
-        argparse->currentArg->digit = digit;
-        argparse_flush(argparse);
+    arg_t *arg = map_get_ptr(argparse->lookup, param);
+
+    if (arg->setByUser)
+    {
+        report(argparse->reports, eWarn, node_invalid(), "flag `` already set");
     }
+
+    arg->setByUser = true;
+    arg->boolean = true;
+}
+
+void argparse_add_file(argparse_t *argparse, char *name)
+{
+    CTASSERT(argparse != NULL);
+    CTASSERT(name != NULL);
+
+    vector_push(&argparse->files, name);
 }

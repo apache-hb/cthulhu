@@ -103,7 +103,7 @@ status_t cthulhu_init(cthulhu_t *cthulhu)
         compile_t *ctx = get_compile(cthulhu, i);
         ctx->ast = NULL;
         ctx->hlir = NULL;
-        ctx->scan = scan_io(cthulhu->reports, cthulhu->driver.name, source);
+        ctx->scan = scan_io(cthulhu->reports, cthulhu->driver.name, source, NULL);
         ctx->moduleName = str_filename(io_name(source));
     }
 

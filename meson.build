@@ -1,6 +1,6 @@
 project('cthulhu', [ 'c' ],
     license : 'LGPLv3',
-    version : '0.2.2',
+    version : '0.2.3',
     meson_version : '>=0.59',
     default_options : [
         'c_std=gnu11', # gcc is picky about POSIX stdlib extensions
@@ -37,12 +37,10 @@ parts = version.split('.')
 cwd = meson.current_source_dir()
 bld = meson.current_build_dir()
 
-has_glib_backtrace = true # cc.has_header('<execinfo.h>')
-
-stacktrace = get_option('stacktrace').disable_auto_if(target != 'windows' and not has_glib_backtrace)
+# TODO: not quite accurate for some reason
+stacktrace = get_option('stacktrace').disable_auto_if(target != 'windows' and not cc.has_header('<execinfo.h>'))
 
 message('target:', target)
-message('glib backtrace:', has_glib_backtrace)
 message('stacktrace:', stacktrace.allowed())
 
 config = {

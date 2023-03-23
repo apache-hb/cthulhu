@@ -37,6 +37,12 @@ void scan_set(scan_t *scan, void *value)
 }
 
 USE_DECL
+void *scan_extra(scan_t *scan)
+{
+    return scan->extra;
+}
+
+USE_DECL
 const char *scan_text(const scan_t *scan)
 {
     return scan->mapped;
@@ -74,13 +80,14 @@ scan_t *scan_invalid(void)
 }
 
 USE_DECL
-scan_t *scan_io(reports_t *reports, const char *language, io_t *io)
+scan_t *scan_io(reports_t *reports, const char *language, io_t *io, void *extra)
 {
     scan_t *self = ctu_malloc(sizeof(scan_t));
 
     self->language = language;
     self->reports = reports;
     self->io = io;
+    self->extra = extra;
 
     self->mapped = io_map(io);
     self->size = io_size(io);

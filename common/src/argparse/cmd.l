@@ -22,8 +22,7 @@ ALNUMDASH [a-zA-Z0-9-]
 "=" { return ASSIGN; }
 
 [-]+{LETTER}{ALNUMDASH}* {
-    yylval->ident = ctu_strdup(yytext); 
-    return OPT; 
+    return arg_parse_opt(scan_extra(yyextra), yytext, &yylval->option); 
 }
 
 [0-9]+ {
