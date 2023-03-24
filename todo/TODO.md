@@ -6,8 +6,11 @@
     * wasm
     * x64
 
-* ssa arrays
-* ctu designated init
+* valist forwarding
+* enum consts
+* full C and fixed width types
+* designated init
+
 * generic interface compilation option
     * use dynamic libraries rather than static linking
 

@@ -1,0 +1,11 @@
+export object Unique(T: type) {
+    new default(value: *T) {
+        self.value = value;
+    }
+
+    delete default() {
+        delete self.value;
+    }
+
+    private var value: *T;
+}

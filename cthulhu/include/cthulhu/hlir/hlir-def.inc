@@ -17,6 +17,9 @@ HLIR_KIND(eHlirUnit,    "unit-type")
 HLIR_KIND(eHlirEmpty,   "empty-type")
 HLIR_KIND(eHlirOpaque,  "opaque-type") // opaque pointer type, akin to void*
 
+HLIR_KIND(eHlirVaArgs, "va-args-type")
+HLIR_KIND(eHlirVaList, "va-list-type")
+
 // user defined scalar types
 HLIR_KIND(eHlirArray,   "array-type")
 HLIR_KIND(eHlirPointer, "pointer-type")

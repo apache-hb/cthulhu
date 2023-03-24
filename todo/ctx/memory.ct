@@ -31,17 +31,17 @@ export object Memory {
         self.bytes = bytes * kSizes[unit];
     }
 
-    new fromBytes(bytes: usize): default(bytes, MemoryUnit::bytes) { }
-    new fromKilobytes(kilobytes: usize): default(kilobytes, MemoryUnit::kilobytes) { }
-    new fromMegabytes(megabytes: usize): default(megabytes, MemoryUnit::megabytes) { }
-    new fromGigabytes(gigabytes: usize): default(gigabytes, MemoryUnit::gigabytes) { }
-    new fromTerabytes(terabytes: usize): default(terabytes, MemoryUnit::terabytes) { }
+    new b(bytes: usize): default(bytes, MemoryUnit::bytes) { }
+    new kb(kilobytes: usize): default(kilobytes, MemoryUnit::kilobytes) { }
+    new mb(megabytes: usize): default(megabytes, MemoryUnit::megabytes) { }
+    new gb(gigabytes: usize): default(gigabytes, MemoryUnit::gigabytes) { }
+    new tb(terabytes: usize): default(terabytes, MemoryUnit::terabytes) { }
     
-    def asBytes: usize = self.bytes;
-    def asKilobytes: usize = self.bytes / kSizes[MemoryUnit::kilobytes];
-    def asMegabytes: usize = self.bytes / kSizes[MemoryUnit::megabytes];
-    def asGigabytes: usize = self.bytes / kSizes[MemoryUnit::gigabytes];
-    def asTerabytes: usize = self.bytes / kSizes[MemoryUnit::terabytes];
+    def b: usize = self.bytes;
+    def kb: usize = self.bytes / kSizes[MemoryUnit::kilobytes];
+    def mb: usize = self.bytes / kSizes[MemoryUnit::megabytes];
+    def gb: usize = self.bytes / kSizes[MemoryUnit::gigabytes];
+    def tb: usize = self.bytes / kSizes[MemoryUnit::terabytes];
 
     def toString: String {
         if bytes == 0 {
@@ -63,4 +63,14 @@ export object Memory {
     }
 
     private var bytes: usize;
+}
+
+def test {
+    const mem1: Memory = default(MemoryUnit::megabytes, 1);
+    const mem2 = Memory::mb(1);
+    const mem3 = Memory::tb(64);
+
+    assert mem1.mb() == 1 : "Memory::mb(1) failed";
+    assert mem2.mb() == 1 : "Memory::mb(1) failed";
+    assert mem3.tb() == 64 : "Memory::tb(64) failed";
 }

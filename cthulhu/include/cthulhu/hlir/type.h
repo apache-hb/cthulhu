@@ -89,4 +89,10 @@ hlir_t *hlir_array(reports_t *reports, node_t *node, const char *name, hlir_t *e
 
 hlir_t *hlir_qualified(const hlir_t *type, hlir_attributes_t *attribs);
 
+// same as ...
+hlir_t *hlir_va_args(node_t *node, const char *name);
+
+// same as va_list
+hlir_t *hlir_va_list(node_t *node, const char *name);
+
 /** @} */
