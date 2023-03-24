@@ -757,7 +757,7 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
     for (size_t i = 0; i < len; i++)
     {
         ast_t *arg = vector_get(ast->args, i);
-        hlir_t *hlir = sema_expr(sema, arg);
+        hlir_t *hlir = sema_rvalue(sema, arg);
 
         if (i >= totalParams)
         {

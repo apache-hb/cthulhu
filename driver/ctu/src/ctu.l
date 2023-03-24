@@ -93,14 +93,14 @@ WS [ \t\r\v\n\f]
 "module" { return MODULE; }
 "import" { return IMPORT; }
 "export" { return EXPORT; }
-"using" { return USING; }
+"__using" { return USING; }
 
 "def" { return DEF; }
 "var" { return VAR; }
-"final" { return FINAL; }
+"__final" { return FINAL; }
 "const" { return CONST; }
 
-"object" { return OBJECT; }
+"__object" { return OBJECT; }
 "struct" { return STRUCT; }
 "union" { return UNION; }
 "variant" { return VARIANT; }
@@ -115,10 +115,13 @@ WS [ \t\r\v\n\f]
 "return" { return RETURN; }
 
 "lambda" { return LAMBDA; }
-"as" { return AS; }
+"__as" { return AS; }
 
 "__null" { return NIL; }
 "noinit" { return NOINIT; }
+
+"__new" { return NEW; }
+"__delete" { return DELETE; }
 
 "__match" { return MATCH; }
 "__default" { return DEFAULT; }

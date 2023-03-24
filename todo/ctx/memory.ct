@@ -1,0 +1,66 @@
+module simcoe::core;
+
+import std(String, Vec);
+
+export variant MemoryUnit : uint {
+    bytes,
+    kilobytes,
+    megabytes,
+    gigabytes,
+    terabytes
+}
+
+const kSizes: []usize = [
+    [MemoryUnit::bytes] = 1,
+    [MemoryUnit::kilobytes] = 1024,
+    [MemoryUnit::megabytes] = 1024 * 1024,
+    [MemoryUnit::gigabytes] = 1024 * 1024 * 1024,
+    [MemoryUnit::terabytes] = 1024 * 1024 * 1024 * 1024
+];
+
+const kNames: []str = [
+    [MemoryUnit::bytes] = "b",
+    [MemoryUnit::kilobytes] = "kb",
+    [MemoryUnit::megabytes] = "mb",
+    [MemoryUnit::gigabytes] = "gb",
+    [MemoryUnit::terabytes] = "tb"
+];
+
+export object Memory {
+    new default(bytes: usize, unit: MemoryUnit) {
+        self.bytes = bytes * kSizes[unit];
+    }
+
+    new fromBytes(bytes: usize): default(bytes, MemoryUnit::bytes) { }
+    new fromKilobytes(kilobytes: usize): default(kilobytes, MemoryUnit::kilobytes) { }
+    new fromMegabytes(megabytes: usize): default(megabytes, MemoryUnit::megabytes) { }
+    new fromGigabytes(gigabytes: usize): default(gigabytes, MemoryUnit::gigabytes) { }
+    new fromTerabytes(terabytes: usize): default(terabytes, MemoryUnit::terabytes) { }
+    
+    def asBytes: usize = self.bytes;
+    def asKilobytes: usize = self.bytes / kSizes[MemoryUnit::kilobytes];
+    def asMegabytes: usize = self.bytes / kSizes[MemoryUnit::megabytes];
+    def asGigabytes: usize = self.bytes / kSizes[MemoryUnit::gigabytes];
+    def asTerabytes: usize = self.bytes / kSizes[MemoryUnit::terabytes];
+
+    def toString: String {
+        if bytes == 0 {
+            return "0b";
+        }
+
+        var parts: Vec!<String> = default;
+        var total = self.bytes;
+
+        for fmt : MemoryUnit {
+            const size = total / kSizes[fmt];
+            if size <= 0 { continue; }
+
+            parts.append(f"{size}{kNames[fmt]}");
+            total %= kSizes[fmt];
+        }
+
+        return join("+", parts);
+    }
+
+    private var bytes: usize;
+}

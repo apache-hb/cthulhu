@@ -83,12 +83,41 @@ TEST(test_extra_args, {
 
     argparse_t result = parse_args(&config);
 
-    SHOULD_PASS("no extra files", vector_len(result.files) == 1);
+    SHOULD_PASS("one extra file", vector_len(result.files) == 1);
+    SHOULD_PASS("has param", get_bool_arg(&result, param, false));
+})
+
+TEST(test_flag_string, {
+    reports_t *reports = begin_reports();
+
+    const char *kParamNames[] = { "--param" };
+    param_t *param = bool_param("test param", kParamNames, 1);
+    group_t *group = group_new("test group", "test group desc", vector_init(param));
+    
+    const char *argv[] = { "argparse-test", "--help", "hello.txt", "--param", "bazinga.txt" };
+    const int argc = 5;
+
+    argparse_config_t config = {
+        .argv = argv,
+        .argc = argc,
+
+        .description = "argparse-test",
+        .version = NEW_VERSION(1, 0, 0),
+
+        .reports = reports,
+    
+        .groups = vector_init(group)
+    };
+
+    argparse_t result = parse_args(&config);
+
+    SHOULD_PASS("2 extra files", vector_len(result.files) == 2);
     SHOULD_PASS("has param", get_bool_arg(&result, param, false));
 })
 
 HARNESS("argparse", {
     ENTRY("default-args", test_argparse_defaults),
     ENTRY("unknown-arg", test_unknown_arg),
-    ENTRY("extra-args", test_extra_args)
+    ENTRY("extra-args", test_extra_args),
+    ENTRY("flag-string", test_flag_string)
 })

@@ -1,10 +1,10 @@
-type HINSTANCE = *void;
-type HANDLE = *void;
-type HICON = *void;
-type HCURSOR = *void;
-type HBRUSH = *void;
-type HMENU = *void;
-type HWND = *void;
+type HINSTANCE = opaque;
+type HANDLE = opaque;
+type HICON = opaque;
+type HCURSOR = opaque;
+type HBRUSH = opaque;
+type HMENU = opaque;
+type HWND = opaque;
 
 type LPCSTR = str;
 type UINT = uint;
@@ -76,7 +76,7 @@ def CreateWindowExA(
     hWndParent: HWND, 
     hMenu: HMENU, 
     hInstance: HINSTANCE, 
-    lpParam: *void
+    lpParam: opaque
 ): HWND;
 
 @extern("ShowWindow")

@@ -126,6 +126,9 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     CONTINUE "`continue`"
     RETURN "`return`"
 
+    NEW "`new`"
+    DELETE "`delete`"
+
     LAMBDA "`lambda`"
     AS "`as`"
 

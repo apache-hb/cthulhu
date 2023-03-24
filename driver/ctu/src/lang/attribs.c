@@ -169,14 +169,11 @@ static const char *get_pretty_decl_name(hlir_t *hlir)
 static void apply_single_attrib(sema_t *sema, hlir_t *hlir, ast_t *attr)
 {
     attrib_t *attrib = sema_get(sema, eTagAttribs, attr->name);
-    printf("attr: %s %p\n", attr->name, (void*)attrib);
     if (attrib == NULL)
     {
         report(sema_reports(sema), eWarn, attr->node, "unknown attribute '%s'", attr->name);
         return;
     }
-
-    printf("accept: %p\n", attrib->accepts);
 
     if (!attrib->accepts(hlir))
     {

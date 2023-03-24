@@ -299,9 +299,13 @@ typedef struct ssa_flow_t
             ssa_block_t *entry;
 
             union {
-                // function
-                vector_t *locals;
+                struct {
+                    // function
+                    vector_t *locals;
                 
+                    vector_t *params;
+                };
+
                 // global
                 const ssa_value_t *value; 
             };

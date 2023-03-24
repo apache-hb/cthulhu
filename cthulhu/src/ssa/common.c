@@ -61,6 +61,12 @@ const ssa_type_t *ssa_get_operand_type(reports_t *reports, const ssa_flow_t *flo
         CTASSERT(flow != NULL);
         return vector_get(flow->locals, operand.local);
     }
+    case eOperandParam: {
+        CTASSERT(flow != NULL);
+        const ssa_type_t *type = flow->type;
+        const ssa_param_t *param = vector_get(type->args, operand.param);
+        return param->type;
+    }
 
     default:
         report(reports, eInternal, NULL, "unhandled operand %s", ssa_operand_name(operand.kind));
