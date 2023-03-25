@@ -19,6 +19,7 @@
 static hlir_t *kIntegerType;
 static hlir_t *kBoolType;
 static hlir_t *kStringType;
+static hlir_t *kVarArgs;
 static hlir_t *kVoidType;
 
 static hlir_t *kPrint;
@@ -44,14 +45,18 @@ void pl0_init(runtime_t *runtime)
     kBoolType = hlir_bool(node, "boolean");
     kStringType = hlir_string(node, "string");
     kVoidType = hlir_unit(node, "void");
+    kVarArgs = hlir_va_args(node, "varargs");
 
     struct string_view_t fmtLiteral = { .data = "%d\n", .size = 3 };
 
     kFmtString = hlir_string_literal(node, kStringType, fmtLiteral);
 
     const hlir_attributes_t *printAttributes = hlir_attributes(eLinkImported, eVisiblePrivate, DEFAULT_TAGS, "printf");
-    signature_t signature = {.params = vector_init(kStringType), .result = kIntegerType, .variadic = true};
-    kPrint = hlir_function(node, "printf", signature, vector_of(0), NULL);
+    vector_t *args = vector_of(2);
+    vector_set(args, 0, kStringType);
+    vector_set(args, 1, kVarArgs);
+
+    kPrint = hlir_function(node, "printf", args, kIntegerType, vector_of(0), NULL);
     hlir_set_attributes(kPrint, printAttributes);
 }
 
@@ -408,9 +413,8 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     for (size_t i = 0; i < totalFunctions; i++)
     {
         pl0_t *it = vector_get(root->procs, i);
-        signature_t signature = {.params = vector_of(0), .result = kVoidType, .variadic = false};
 
-        hlir_t *hlir = hlir_begin_function(it->node, it->name, signature);
+        hlir_t *hlir = hlir_begin_function(it->node, it->name, vector_of(0), kVoidType);
         hlir_set_attributes(hlir, kExported);
 
         set_proc(sema, it->name, hlir);
@@ -490,17 +494,12 @@ hlir_t *pl0_compile_module(runtime_t *runtime, compile_t *compile)
     if (root->entry != NULL)
     {
         hlir_t *body = sema_stmt(sema, root->entry);
-        signature_t signature = {
-            .params = vector_of(0),
-            .result = kVoidType,
-            .variadic = false,
-        };
 
         // this is the entry point, we only support cli entry points in pl/0 for now
         const hlir_attributes_t *attribs = hlir_attributes(eLinkEntryCli, eVisiblePrivate, DEFAULT_TAGS, NULL);
         const char *modName = get_hlir_name(compile->hlir);
 
-        hlir_t *hlir = hlir_function(root->node, modName, signature, vector_of(0), body);
+        hlir_t *hlir = hlir_function(root->node, modName, vector_of(0), kVoidType, vector_of(0), body);
         hlir_set_attributes(hlir, attribs);
 
         vector_push(&semaData->procs, hlir);

@@ -93,6 +93,7 @@ static hlir_t *kOpaqueType = NULL;
 static hlir_t *kBoolType = NULL;
 static hlir_t *kStringType = NULL;
 static hlir_t *kFloatType = NULL;
+static hlir_t *kVarArgs = NULL;
 static hlir_t *kDigitTypes[eSignTotal * eDigitTotal];
 
 static hlir_t *kUnresolvedType = NULL;
@@ -551,7 +552,7 @@ static hlir_t *sema_closure(sema_t *sema, ast_t *ast)
         }
     }
 
-    return hlir_closure(ast->node, NULL, params, result, ast->variadic);
+    return hlir_closure(ast->node, NULL, params, result);
 }
 
 static hlir_t *sema_type(sema_t *sema, ast_t *ast)
@@ -1325,13 +1326,7 @@ static hlir_t *begin_function(sema_t *sema, ast_t *ast)
         vector_set(params, i, entry);
     }
 
-    signature_t sig = {
-        .params = params, 
-        .result = result, 
-        .variadic = signature->variadic
-    };
-
-    hlir_t *func = hlir_begin_function(ast->node, ast->name, sig);
+    hlir_t *func = hlir_begin_function(ast->node, ast->name, params, result);
     update_func_attribs(ast, func);
     return func;
 }

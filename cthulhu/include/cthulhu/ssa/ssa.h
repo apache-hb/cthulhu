@@ -70,7 +70,6 @@ typedef struct ssa_type_t
         struct {
             const ssa_type_t *result;
             vector_t *args; // vector_t<ssa_param_t*>
-            bool variadic;
         };
 
         // eTypeStruct

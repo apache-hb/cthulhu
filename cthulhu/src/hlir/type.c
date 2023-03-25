@@ -42,12 +42,11 @@ hlir_t *hlir_opaque(node_t *node, const char *name)
     return hlir_decl_new(node, name, kMetaType, eHlirOpaque);
 }
 
-hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hlir_t *result, bool variadic)
+hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hlir_t *result)
 {
     hlir_t *hlir = hlir_decl_new(node, name, kMetaType, eHlirClosure);
     hlir->params = params;
     hlir->result = result;
-    hlir->variadic = variadic;
     return hlir;
 }
 

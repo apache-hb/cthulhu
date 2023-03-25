@@ -56,6 +56,7 @@ typedef enum
     eAstPointer,
     eAstClosure,
     eAstArray,
+    eAstVarArgs,
 
     /* type declarations */
     eAstDeclUnion,
@@ -132,7 +133,6 @@ typedef struct ast_t
         {
             vector_t *params;
             struct ast_t *result;
-            bool variadic;
         };
 
         /* eAstWhile | eAstBranch */
@@ -276,7 +276,8 @@ ast_t *ast_continue(scan_t *scan, where_t where, char *label);
 ast_t *ast_typename(scan_t *scan, where_t where, vector_t *path);
 ast_t *ast_pointer(scan_t *scan, where_t where, ast_t *type, bool indexable);
 ast_t *ast_array(scan_t *scan, where_t where, ast_t *size, ast_t *type);
-ast_t *ast_closure(scan_t *scan, where_t where, vector_t *params, bool variadic, ast_t *type);
+ast_t *ast_closure(scan_t *scan, where_t where, vector_t *params, ast_t *type);
+ast_t *ast_varargs(scan_t *scan, where_t where);
 
 /// type declarations
 
@@ -291,13 +292,3 @@ ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type);
 ast_t *ast_param(scan_t *scan, where_t where, char *name, ast_t *type);
 
 void set_attribs(ast_t *decl, bool exported, vector_t *attribs);
-
-/// inner ast types
-
-typedef struct
-{
-    vector_t *params;
-    bool variadic;
-} funcparams_t;
-
-funcparams_t funcparams_new(vector_t *params, bool variadic);

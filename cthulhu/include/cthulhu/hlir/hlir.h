@@ -163,7 +163,6 @@ typedef struct hlir_t
                 {
                     vector_t *params;
                     const struct hlir_t *result;
-                    bool variadic;
 
                     /* the local variables */
                     vector_t *locals;

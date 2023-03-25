@@ -37,7 +37,6 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     ast_t *ast;
     vector_t *vector;
-    funcparams_t funcparams;
 }
 
 %token<ident>
@@ -205,12 +204,10 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<vector>
     path decls decllist
     fieldlist aggregates
-    typelist imports importlist
+    imports importlist
     variants variantlist
     stmtlist paramlist
     args attrargs argbody
-
-%type<funcparams>
     funcparams opttypes types
 
 %type<ident>
@@ -300,16 +297,15 @@ mut: VAR { $$ = true; }
     | CONST { $$ = false; }
     ;
 
-funcsig: funcparams funcresult { $$ = ast_closure(x, @$, $1.params, $1.variadic, $2); }
+funcsig: funcparams funcresult { $$ = ast_closure(x, @$, $1, $2); }
     ;
 
 funcresult: %empty { $$ = NULL; }
     | COLON type { $$ = $2; }
     ;
 
-funcparams: %empty { $$ = funcparams_new(vector_of(0), false); }
-    | LPAREN paramlist RPAREN { $$ = funcparams_new($2, false); }
-    | LPAREN paramlist COMMA DOT3 RPAREN { $$ = funcparams_new($2, true); }
+funcparams: %empty { $$ = vector_of(0); }
+    | LPAREN paramlist RPAREN { $$ = $2; }
     ;
 
 paramlist: param { $$ = vector_init($1); }
@@ -405,20 +401,17 @@ type: path { $$ = ast_typename(x, @$, $1); }
     | MUL type { $$ = ast_pointer(x, @$, $2, false); }
     | LSQUARE MUL RSQUARE type { $$ = ast_pointer(x, @$, $4, true); }
     | LSQUARE expr RSQUARE type { $$ = ast_array(x, @$, $2, $4); }
-    | DEF LPAREN opttypes RPAREN ARROW type { $$ = ast_closure(x, @$, $3.params, $3.variadic, $6); } 
+    | DEF LPAREN opttypes RPAREN ARROW type { $$ = ast_closure(x, @$, $3, $6); } 
     | LPAREN type RPAREN { $$ = $2; }
+    | DOT3 { $$ = ast_varargs(x, @$); }
     ;
 
-opttypes: %empty { $$ = funcparams_new(vector_of(0), false); }
+opttypes: %empty { $$ = vector_of(0); }
     | types { $$ = $1; }
     ;
 
-types: typelist { $$ = funcparams_new($1, false); }
-    | typelist COMMA DOT3 { $$ = funcparams_new($1, true); }
-    ;
-
-typelist: type { $$ = vector_init($1); }
-    | typelist COMMA type { vector_push(&$1, $3); $$ = $1; }
+types: type { $$ = vector_init($1); }
+    | types COMMA type { vector_push(&$1, $3); $$ = $1; }
     ;
 
 primary: LPAREN expr RPAREN { $$ = $2; }

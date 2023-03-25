@@ -52,16 +52,9 @@ hlir_t *hlir_param(node_t *node, const char *name, const hlir_t *type);
 /// function builders
 ///
 
-typedef struct
-{
-    vector_t *params;
-    const hlir_t *result;
-    bool variadic;
-} signature_t;
-
-hlir_t *hlir_begin_function(node_t *node, const char *name, signature_t signature);
+hlir_t *hlir_begin_function(node_t *node, const char *name, vector_t *params, const hlir_t *result);
 void hlir_build_function(hlir_t *self, hlir_t *body);
-hlir_t *hlir_function(node_t *node, const char *name, signature_t signature, vector_t *locals, hlir_t *body);
+hlir_t *hlir_function(node_t *node, const char *name, vector_t *params, const hlir_t *result, vector_t *locals, hlir_t *body);
 
 ///
 /// extra function details

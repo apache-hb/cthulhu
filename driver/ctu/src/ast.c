@@ -269,13 +269,17 @@ ast_t *ast_array(scan_t *scan, where_t where, ast_t *size, ast_t *type)
     return ast;
 }
 
-ast_t *ast_closure(scan_t *scan, where_t where, vector_t *params, bool variadic, ast_t *type)
+ast_t *ast_closure(scan_t *scan, where_t where, vector_t *params, ast_t *type)
 {
     ast_t *ast = ast_new(eAstClosure, scan, where);
     ast->params = params;
-    ast->variadic = variadic;
     ast->result = type;
     return ast;
+}
+
+ast_t *ast_varargs(scan_t *scan, where_t where)
+{
+    return ast_new(eAstVarArgs, scan, where);
 }
 
 ast_t *ast_structdecl(scan_t *scan, where_t where, char *name, vector_t *fields)
@@ -318,13 +322,6 @@ ast_t *ast_param(scan_t *scan, where_t where, char *name, ast_t *type)
     ast_t *ast = ast_decl(eAstParam, name, scan, where);
     ast->param = type;
     return ast;
-}
-
-funcparams_t funcparams_new(vector_t *params, bool variadic)
-{
-    funcparams_t result = {.params = params, .variadic = variadic};
-
-    return result;
 }
 
 void set_attribs(ast_t *decl, bool exported, vector_t *attribs)

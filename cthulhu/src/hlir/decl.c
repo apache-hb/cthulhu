@@ -122,25 +122,24 @@ void hlir_build_function(hlir_t *self, hlir_t *body)
     self->body = body;
 }
 
-static hlir_t *hlir_begin_function_with_locals(node_t *node, const char *name, vector_t *locals, signature_t signature)
+static hlir_t *hlir_begin_function_with_locals(node_t *node, const char *name, vector_t *locals, vector_t *params, const hlir_t *result)
 {
     hlir_t *self = hlir_decl_new(node, name, kMetaType, eHlirFunction);
-    self->params = signature.params;
-    self->result = signature.result;
-    self->variadic = signature.variadic;
+    self->params = params;
+    self->result = result;
     self->locals = locals;
     self->of = self; // TODO: this should be a closure
     return self;
 }
 
-hlir_t *hlir_begin_function(node_t *node, const char *name, signature_t signature)
+hlir_t *hlir_begin_function(node_t *node, const char *name, vector_t *params, const hlir_t *result)
 {
-    return hlir_begin_function_with_locals(node, name, vector_new(4), signature);
+    return hlir_begin_function_with_locals(node, name, vector_new(4), params, result);
 }
 
-hlir_t *hlir_function(node_t *node, const char *name, signature_t signature, vector_t *locals, hlir_t *body)
+hlir_t *hlir_function(node_t *node, const char *name, vector_t *params, const hlir_t *result, vector_t *locals, hlir_t *body)
 {
-    hlir_t *self = hlir_begin_function_with_locals(node, name, locals, signature);
+    hlir_t *self = hlir_begin_function_with_locals(node, name, locals, params, result);
     hlir_build_function(self, body);
     return self;
 }

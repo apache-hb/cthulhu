@@ -21,6 +21,8 @@ static bool has_name(hlir_kind_t kind)
     case eHlirClosure:
     case eHlirPointer:
     case eHlirArray:
+    case eHlirVaArgs:
+    case eHlirVaList:
 
     case eHlirType:
     case eHlirAlias:

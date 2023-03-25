@@ -63,7 +63,7 @@ hlir_t *hlir_opaque(node_t *node, const char *name);
  * @param variadic is this a variadic function?
  * @return hlir_t* the constructed closure type
  */
-hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hlir_t *result, bool variadic);
+hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hlir_t *result);
 
 /**
  * @brief construct a new pointer type

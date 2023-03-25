@@ -72,7 +72,15 @@ bool closure_variadic(const hlir_t *self)
 {
     ENSURE_VALID_CLOSURE(self, "closure-variadic");
 
-    return self->variadic;
+    if (vector_len(self->params) == 0)
+    {
+        return false;
+    }
+
+    const hlir_t *last = vector_tail(self->params);
+    const hlir_t *ty = hlir_follow_type(last);
+
+    return hlir_is(ty, eHlirVaArgs);
 }
 
 const hlir_t *closure_result(const hlir_t *self)
