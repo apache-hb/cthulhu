@@ -200,6 +200,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     primary else
     varinit vartype
     branch elif
+    init
 
 %type<vector>
     path decls decllist
@@ -340,8 +341,12 @@ variantlist: variant { $$ = vector_init($1); }
     | variantlist COMMA variant { vector_push(&$1, $3); $$ = $1; }
     ;
 
-variant: IDENT { $$ = ast_field(x, @$, $1, NULL); }
-    | IDENT LPAREN type RPAREN { $$ = ast_field(x, @$, $1, $3); }
+variant: IDENT init { $$ = ast_field(x, @$, $1, NULL, $2); }
+    | IDENT LPAREN type RPAREN init { $$ = ast_field(x, @$, $1, $3, $5); }
+    ;
+
+init: %empty { $$ = NULL; }
+    | EQUALS expr { $$ = $2; }
     ;
 
 aggregates: LBRACE fieldlist RBRACE { $$ = $2; }
@@ -351,7 +356,7 @@ fieldlist: field { $$ = vector_init($1); }
     | fieldlist field { vector_push(&$1, $2); $$ = $1; }
     ;
 
-field: ident COLON type SEMICOLON { $$ = ast_field(x, @$, $1, $3); }
+field: ident COLON type SEMICOLON { $$ = ast_field(x, @$, $1, $3, NULL); }
     ;
 
 modspec: %empty { $$ = NULL; }

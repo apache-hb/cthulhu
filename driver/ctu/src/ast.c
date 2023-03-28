@@ -303,17 +303,19 @@ ast_t *ast_typealias(scan_t *scan, where_t where, char *name,ast_t *type)
     return ast;
 }
 
-ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, vector_t *fields)
+ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, ast_t *type, vector_t *fields)
 {
     ast_t *ast = ast_decl(eAstDeclVariant, name, scan, where);
+    ast->underlying = type;
     ast->fields = fields;
     return ast;
 }
 
-ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type)
+ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type, ast_t *value)
 {
     ast_t *ast = ast_decl(eAstField, name, scan, where);
     ast->field = type;
+    ast->value = value;
     return ast;
 }
 

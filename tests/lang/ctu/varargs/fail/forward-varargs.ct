@@ -1,0 +1,5 @@
+def thing1(i: int, args: ...);
+
+def thing2(i: int, args: ...) {
+    thing1(i, args);
+}

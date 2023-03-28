@@ -60,7 +60,6 @@ hlir_t *hlir_opaque(node_t *node, const char *name);
  * @param name the name of this closure type
  * @param params the parameters of this closure type
  * @param result the result of this closure type
- * @param variadic is this a variadic function?
  * @return hlir_t* the constructed closure type
  */
 hlir_t *hlir_closure(node_t *node, const char *name, vector_t *params, const hlir_t *result);

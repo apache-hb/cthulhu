@@ -190,10 +190,16 @@ typedef struct ast_t
 
             union {
                 /* eAstField */
-                struct ast_t *field;
+                struct {
+                    struct ast_t *field;
+                    struct ast_t *value;
+                };
 
                 /* eAstDeclUnion|eAstDeclStruct|eAstDeclVariant */
-                vector_t *fields;
+                struct {
+                    struct ast_t *underlying;
+                    vector_t *fields;
+                };
 
                 /* eAstDeclAlias */
                 struct ast_t *alias;
@@ -284,11 +290,11 @@ ast_t *ast_varargs(scan_t *scan, where_t where);
 ast_t *ast_structdecl(scan_t *scan, where_t where, char *name, vector_t *fields);
 ast_t *ast_uniondecl(scan_t *scan, where_t where, char *name, vector_t *fields);
 ast_t *ast_typealias(scan_t *scan, where_t where, char *name, ast_t *type);
-ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, vector_t *fields);
+ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, ast_t *type, vector_t *fields);
 
 /// extra type data
 
-ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type);
+ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type, ast_t *value);
 ast_t *ast_param(scan_t *scan, where_t where, char *name, ast_t *type);
 
 void set_attribs(ast_t *decl, bool exported, vector_t *attribs);

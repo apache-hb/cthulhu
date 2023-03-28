@@ -15,6 +15,13 @@ hlir_t *hlir_begin_union(node_t *node, const char *name);
 hlir_t *hlir_union(node_t *node, const char *name, vector_t *fields);
 
 ///
+/// enum builders
+///
+
+hlir_t *hlir_begin_enum(node_t *node, const char *name, const hlir_t *type);
+hlir_t *hlir_enum(node_t *node, const char *name, const hlir_t *type, vector_t *values);
+
+///
 /// aggregate builders
 ///
 

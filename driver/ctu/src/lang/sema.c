@@ -93,8 +93,10 @@ static hlir_t *kOpaqueType = NULL;
 static hlir_t *kBoolType = NULL;
 static hlir_t *kStringType = NULL;
 static hlir_t *kFloatType = NULL;
-static hlir_t *kVarArgs = NULL;
 static hlir_t *kDigitTypes[eSignTotal * eDigitTotal];
+
+static hlir_t *kVarArgsType = NULL;
+static hlir_t *kVaListType = NULL;
 
 static hlir_t *kUnresolvedType = NULL;
 static hlir_t *kUninitalized = NULL;
@@ -316,7 +318,9 @@ static void add_basic_types(sema_t *sema)
 
     // noreturn type for exit/abort/terminate etc
     add_decl(sema, eSemaTypes, "noreturn", kEmptyType);
-    add_decl(sema, eSemaTypes, "opaque", kOpaqueType);
+    add_decl(sema, eSemaTypes, "opaque", kOpaqueType); // equivalent to void*
+
+    add_decl(sema, eSemaTypes, "valist", kVaListType);
 
     for (int sign = 0; sign < eSignTotal; sign++)
     {
@@ -351,6 +355,9 @@ void ctu_init_compiler(runtime_t *runtime)
     kBoolType = hlir_bool(node, "bool");
     kStringType = hlir_string(node, "str");
     kFloatType = hlir_decimal(node, "float");
+
+    kVarArgsType = hlir_va_args(node, "...");
+    kVaListType = hlir_va_list(node, "valist");
 
     for (int sign = 0; sign < eSignTotal; sign++)
     {
@@ -523,12 +530,25 @@ static hlir_t *sema_typename(sema_t *sema, ast_t *ast)
 static hlir_t *sema_pointer(sema_t *sema, ast_t *ast)
 {
     hlir_t *type = sema_type(sema, ast->type);
+    const hlir_t *real = hlir_follow_type(type);
+
+    if (real == kVoidType)
+    {
+        report(sema_reports(sema), eWarn, ast->node, "pointers to `%s` are deprecated, please use `%s` instead", get_hlir_name(real), get_hlir_name(kOpaqueType));
+        return kOpaqueType;
+    }
+
+    if (real == kEmptyType || real == kVarArgsType || real == kVaListType)
+    {
+        report(sema_reports(sema), eFatal, ast->node, "pointers to `%s` are not allowed", get_hlir_name(real));
+    }
+
     return hlir_pointer(ast->node, NULL, type, ast->indexable);
 }
 
 static hlir_t *sema_array(sema_t *sema, ast_t *ast)
 {
-    hlir_t *size = sema_expr(sema, ast->size);
+    hlir_t *size = sema_rvalue(sema, ast->size);
     hlir_t *type = sema_type(sema, ast->type);
 
     return hlir_array(sema_reports(sema), ast->node, NULL, type, size);
@@ -567,6 +587,8 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast)
         return sema_array(sema, ast);
     case eAstClosure:
         return sema_closure(sema, ast);
+    case eAstVarArgs:
+        return kVarArgsType;
     default:
         report(sema_reports(sema), eInternal, ast->node, "unknown sema-type: %d", ast->of);
         return hlir_error(ast->node, "unknown sema-type");
@@ -632,7 +654,7 @@ static hlir_t *sema_unary_bool(sema_t *sema, ast_t *ast, hlir_t *operand)
 
 static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
 {
-    hlir_t *operand = sema_expr(sema, ast->operand);
+    hlir_t *operand = sema_rvalue(sema, ast->operand);
 
     switch (ast->unary)
     {
@@ -931,7 +953,7 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
         report(sema_reports(sema), eInternal, ast->node, "loop labels not yet supported");
     }
 
-    hlir_t *cond = sema_expr(sema, ast->cond);
+    hlir_t *cond = sema_rvalue(sema, ast->cond);
 
     size_t sizes[eTagTotal] = {
         [eSemaValues] = 32, 
@@ -966,7 +988,7 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
 
 static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
 {
-    hlir_t *init = stmt->init != NULL ? sema_expr(sema, stmt->init) : NULL;
+    hlir_t *init = stmt->init != NULL ? sema_rvalue(sema, stmt->init) : NULL;
     const hlir_t *type = stmt->expected != NULL ? sema_type(sema, stmt->expected) : get_hlir_type(init);
 
     sema_value_t result = {type, init};
@@ -1039,7 +1061,7 @@ static hlir_t *sema_continue(sema_t *sema, ast_t *stmt)
 
 static hlir_t *sema_branch(sema_t *sema, ast_t *stmt)
 {
-    hlir_t *cond = sema_expr(sema, stmt->cond);
+    hlir_t *cond = sema_rvalue(sema, stmt->cond);
     
     size_t tags[eTagTotal] = {
         [eSemaValues] = 32, 
@@ -1169,10 +1191,66 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast)
     check_duplicates_and_add_fields(sema, fields, decl);
 }
 
+static void check_explicit_tag(sema_t *sema, const hlir_t *base, vector_t *fields)
+{
+    if (!hlir_is(base, eHlirDigit))
+    {
+        report(sema_reports(sema), eFatal, get_hlir_node(base), "tag type must be an integer");
+        return;
+    }
+
+    size_t len = vector_len(fields);
+    for (size_t i = 0; i < len; i++)
+    {
+        ast_t *field = vector_get(fields, i);
+        if (field->value == NULL)
+        {
+            continue;
+        }
+
+        hlir_t *value = sema_rvalue(sema, field->value);
+        const hlir_t *ty = hlir_follow_type(get_hlir_type(value));
+        if (!hlir_is(ty, eHlirDigit))
+        {
+            report(sema_reports(sema), eFatal, get_hlir_node(value), "tag value must be an integer");
+            return;
+        }
+
+        const hlir_t *common = get_common_type(get_hlir_node(value), base, ty);
+        if (common != base)
+        {
+            report(sema_reports(sema), eFatal, get_hlir_node(value), "tag value must be of type %s", ctu_type_repr(sema_reports(sema), base, true));
+            return;
+        }
+    }
+}
+
+static const hlir_t *get_implicit_tag(sema_t *sema, vector_t *fields)
+{
+    const hlir_t *base = get_digit_type(eSigned, eDigitChar);
+
+    return hlir_error(get_hlir_node(base), "TODO: implicit tag");
+}
+
+static const hlir_t *get_tag_type(sema_t *sema, ast_t *base, vector_t *fields)
+{
+    if (base != NULL)
+    {
+        const hlir_t *underlying = sema_type(sema, base);
+        check_explicit_tag(sema, hlir_follow_type(underlying), fields);
+        return underlying;
+    }
+    else
+    {
+        return get_implicit_tag(sema, fields);
+    }
+}
+
 /**
  * variants are internally represented as
+ * enum tag_type : underlying { ... }
  * struct {
- *   tag_type tag;
+ *   tag_type tag
  *   union {
  *      fields...
  *   }
@@ -1180,6 +1258,7 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast)
  */
 static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
+    const hlir_t *tag = get_tag_type(sema, ast->underlying, ast->fields);
     // build the tag
     {
         // create the variant tag

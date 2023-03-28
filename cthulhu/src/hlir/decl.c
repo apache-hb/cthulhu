@@ -6,21 +6,22 @@
 #include "common.h"
 
 #define IS_AGGREGATE(hlir) (hlir_is(hlir, eHlirStruct) || hlir_is(hlir, eHlirUnion))
+#define IS_ENUM(hlir) (hlir_is(hlir, eHlirEnum))
 
 ///
 /// builder functions
 ///
 
-static hlir_t *hlir_begin_aggregate_with_fields(node_t *node, const char *name, vector_t *fields, hlir_kind_t type)
+static hlir_t *hlir_begin_aggregate_with_fields(node_t *node, const char *name, vector_t *fields, hlir_kind_t kind, const hlir_t *type)
 {
-    hlir_t *self = hlir_decl_new(node, name, kMetaType, type);
+    hlir_t *self = hlir_decl_new(node, name, type, kind);
     self->fields = fields;
     return self;
 }
 
-static hlir_t *hlir_begin_aggregate(node_t *node, const char *name, hlir_kind_t type)
+static hlir_t *hlir_begin_aggregate(node_t *node, const char *name, hlir_kind_t kind, const hlir_t *type)
 {
-    return hlir_begin_aggregate_with_fields(node, name, vector_new(4), type);
+    return hlir_begin_aggregate_with_fields(node, name, vector_new(4), kind, type);
 }
 
 ///
@@ -29,13 +30,12 @@ static hlir_t *hlir_begin_aggregate(node_t *node, const char *name, hlir_kind_t 
 
 hlir_t *hlir_begin_struct(node_t *node, const char *name)
 {
-    return hlir_begin_aggregate(node, name, eHlirStruct);
+    return hlir_begin_aggregate(node, name, eHlirStruct, kMetaType);
 }
 
 hlir_t *hlir_struct(node_t *node, const char *name, vector_t *fields)
 {
-    hlir_t *self = hlir_begin_aggregate_with_fields(node, name, fields, eHlirStruct);
-    return self;
+    return hlir_begin_aggregate_with_fields(node, name, fields, eHlirStruct, kMetaType);
 }
 
 ///
@@ -44,13 +44,28 @@ hlir_t *hlir_struct(node_t *node, const char *name, vector_t *fields)
 
 hlir_t *hlir_begin_union(node_t *node, const char *name)
 {
-    return hlir_begin_aggregate(node, name, eHlirUnion);
+    return hlir_begin_aggregate(node, name, eHlirUnion, kMetaType);
 }
 
 hlir_t *hlir_union(node_t *node, const char *name, vector_t *fields)
 {
-    hlir_t *self = hlir_begin_aggregate_with_fields(node, name, fields, eHlirUnion);
-    return self;
+    return hlir_begin_aggregate_with_fields(node, name, fields, eHlirUnion, kMetaType);
+}
+
+///
+/// enum interface
+///
+
+hlir_t *hlir_begin_enum(node_t *node, const char *name, const hlir_t *type)
+{
+    CTASSERT(hlir_is(type, eHlirDigit));
+    return hlir_begin_aggregate(node, name, eHlirEnum, type);
+}
+
+hlir_t *hlir_enum(node_t *node, const char *name, const hlir_t *type, vector_t *values)
+{
+    CTASSERT(hlir_is(type, eHlirDigit));
+    return hlir_begin_aggregate_with_fields(node, name, values, eHlirEnum, type);
 }
 
 ///
@@ -62,6 +77,15 @@ void hlir_add_field(hlir_t *self, hlir_t *field)
     CTASSERT(self != NULL);
     CTASSERTM(IS_AGGREGATE(self), "hlir-add-field called on non-aggregate hlir");
     CTASSERTM(hlir_is(field, eHlirRecordField), "hlir-add-field called with non-field hlir");
+
+    vector_push(&self->fields, field);
+}
+
+void hlir_add_case(hlir_t *self, hlir_t *field)
+{
+    CTASSERT(self != NULL);
+    CTASSERTM(IS_ENUM(self), "hlir-add-case called on non-union hlir");
+    CTASSERTM(hlir_is(field, eHlirEnumField), "hlir-add-case called with non-field hlir");
 
     vector_push(&self->fields, field);
 }
