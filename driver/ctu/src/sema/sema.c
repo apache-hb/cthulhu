@@ -1231,7 +1231,27 @@ static const hlir_t *get_implicit_tag(sema_t *sema, vector_t *fields)
 {
     const hlir_t *base = get_digit_type(eSigned, eDigitChar);
 
-    return hlir_error(get_hlir_node(base), "TODO: implicit tag");
+    size_t len = vector_len(fields);
+    for (size_t i = 0; i < len; i++)
+    {
+        ast_t *field = vector_get(fields, i);
+        if (field->value == NULL)
+        {
+            continue;
+        }
+
+        hlir_t *value = sema_rvalue(sema, field->value);
+        const hlir_t *ty = hlir_follow_type(get_hlir_type(value));
+        if (!hlir_is(ty, eHlirDigit))
+        {
+            report(sema_reports(sema), eFatal, get_hlir_node(value), "tag value must be an integer");
+            return NULL;
+        }
+
+        base = get_common_type(get_hlir_node(value), base, ty);
+    }
+
+    return base;
 }
 
 static const hlir_t *get_tag_type(sema_t *sema, ast_t *ast)
