@@ -1191,11 +1191,12 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast)
     check_duplicates_and_add_fields(sema, fields, decl);
 }
 
-static void check_explicit_tag(sema_t *sema, const hlir_t *base, vector_t *fields)
+static void check_explicit_tag(sema_t *sema, node_t *node, const hlir_t *base, vector_t *fields)
 {
     if (!hlir_is(base, eHlirDigit))
     {
-        report(sema_reports(sema), eFatal, get_hlir_node(base), "tag type must be an integer");
+        message_t *id = report(sema_reports(sema), eFatal, node, "tag type must be an integral type");
+        report_note(id, "tag type is %s", ctu_type_repr(sema_reports(sema), base, true));
         return;
     }
 
@@ -1212,7 +1213,8 @@ static void check_explicit_tag(sema_t *sema, const hlir_t *base, vector_t *field
         const hlir_t *ty = hlir_follow_type(get_hlir_type(value));
         if (!hlir_is(ty, eHlirDigit))
         {
-            report(sema_reports(sema), eFatal, get_hlir_node(value), "tag value must be an integer");
+            // TODO: also needs to fit in the tag type
+            report(sema_reports(sema), eFatal, get_hlir_node(value), "tag value must be an integral type");
             return;
         }
 
@@ -1232,17 +1234,17 @@ static const hlir_t *get_implicit_tag(sema_t *sema, vector_t *fields)
     return hlir_error(get_hlir_node(base), "TODO: implicit tag");
 }
 
-static const hlir_t *get_tag_type(sema_t *sema, ast_t *base, vector_t *fields)
+static const hlir_t *get_tag_type(sema_t *sema, ast_t *ast)
 {
-    if (base != NULL)
+    if (ast->underlying != NULL)
     {
-        const hlir_t *underlying = sema_type(sema, base);
-        check_explicit_tag(sema, hlir_follow_type(underlying), fields);
+        const hlir_t *underlying = sema_type(sema, ast->underlying);
+        check_explicit_tag(sema, ast->underlying->node, hlir_follow_type(underlying), ast->fields);
         return underlying;
     }
     else
     {
-        return get_implicit_tag(sema, fields);
+        return get_implicit_tag(sema, ast->fields);
     }
 }
 
@@ -1258,7 +1260,7 @@ static const hlir_t *get_tag_type(sema_t *sema, ast_t *base, vector_t *fields)
  */
 static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
-    const hlir_t *tag = get_tag_type(sema, ast->underlying, ast->fields);
+    const hlir_t *tag = get_tag_type(sema, ast);
     // build the tag
     {
         // create the variant tag

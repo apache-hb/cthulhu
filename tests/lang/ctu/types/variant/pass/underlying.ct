@@ -1,0 +1,8 @@
+variant C : char {}
+variant UC : uchar {}
+variant S : short {}
+variant US : ushort {}
+variant I : int {}
+variant UI : uint {}
+variant L : long {}
+variant UL : ulong {}

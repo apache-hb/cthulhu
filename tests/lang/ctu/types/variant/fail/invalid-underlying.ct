@@ -1,0 +1,3 @@
+variant A : str {
+    a = "a"
+}

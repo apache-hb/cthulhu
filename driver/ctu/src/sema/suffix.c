@@ -5,7 +5,7 @@
 
 #include "cthulhu/hlir/hlir.h"
 
-#include "lang/sema.h"
+#include "sema/sema.h"
 
 typedef struct
 {

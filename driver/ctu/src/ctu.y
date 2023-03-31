@@ -200,7 +200,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     primary else
     varinit vartype
     branch elif
-    init
+    init underlying
 
 %type<vector>
     path decls decllist
@@ -330,7 +330,11 @@ structdecl: STRUCT IDENT aggregates { $$ = ast_structdecl(x, @$, $2, $3); }
 uniondecl: UNION IDENT aggregates { $$ = ast_uniondecl(x, @$, $2, $3); }
     ;
 
-variantdecl: VARIANT IDENT LBRACE variants RBRACE { $$ = ast_variantdecl(x, @$, $2, $4); }
+variantdecl: VARIANT IDENT underlying LBRACE variants RBRACE { $$ = ast_variantdecl(x, @$, $2, $3, $5); }
+    ;
+
+underlying: %empty { $$ = NULL; }
+    | COLON type { $$ = $2; }
     ;
 
 variants: %empty { $$ = vector_new(0); }

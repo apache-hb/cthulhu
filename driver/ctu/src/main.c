@@ -2,7 +2,7 @@
 #include "cthulhu/interface/runtime.h"
 #include "scan/compile.h"
 
-#include "lang/sema.h"
+#include "sema/sema.h"
 
 #include "base/macros.h"
 
