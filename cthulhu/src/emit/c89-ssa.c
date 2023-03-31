@@ -113,6 +113,11 @@ static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, c
             ? format("struct %s", type->name) 
             : format("struct %s %s", type->name, name);
 
+    case eTypeUnion:
+        return name == NULL 
+            ? format("union %s", type->name) 
+            : format("union %s %s", type->name, name);
+
     case eTypeOpaque:
         return name == NULL ? "void *" : format("void *%s", name);
 
@@ -724,18 +729,33 @@ static void c89_fwd_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
     WRITE_STRING(&emit->emit, ";\n");
 }
 
+static bool should_fwd_type(ssa_kind_t kind)
+{
+    return kind == eTypeStruct || kind == eTypeUnion;
+}
+
+static const char *get_aggregate_name(ssa_kind_t kind)
+{
+    switch (kind)
+    {
+    case eTypeStruct: return "struct";
+    case eTypeUnion: return "union";
+    default: return "";
+    }
+}
+
 static void c89_fwd_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
 {
-    if (type->kind != eTypeStruct) { return; }
+    if (!should_fwd_type(type->kind)) { return; }
 
     WRITE_STRINGF(&emit->emit, "struct %s;\n", type->name);
 }
 
 static void c89_emit_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
 {
-    if (type->kind != eTypeStruct) { return; }
+    if (!should_fwd_type(type->kind)) { return; }
 
-    WRITE_STRINGF(&emit->emit, "struct %s {\n", type->name);
+    WRITE_STRINGF(&emit->emit, "%s %s {\n", get_aggregate_name(type->kind), type->name);
     emit_indent(&emit->emit);
 
     size_t len = vector_len(type->fields);
@@ -765,7 +785,8 @@ static void add_type_deps(vector_t **deps, set_t *fwd, const ssa_type_t *type)
         add_type_deps(deps, fwd, type->result);
         break;
     }
-    case eTypeStruct: {
+    case eTypeStruct: 
+    case eTypeUnion: {
         for (size_t i = 0; i < vector_len(type->fields); i++)
         {
             ssa_param_t *field = vector_get(type->fields, i);

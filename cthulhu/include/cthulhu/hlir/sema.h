@@ -20,6 +20,17 @@ typedef enum sema_tags_t {
 sema_t *sema_root_new(reports_t *reports, size_t decls, size_t *sizes);
 sema_t *sema_new(sema_t *parent, size_t decls, size_t *sizes);
 
+/**
+ * @brief badly named, this is a version of sema_new that checks the sizes of the
+ *        decls to make sure no maps are created with 0 buckets
+ * 
+ * @param parent 
+ * @param decls 
+ * @param sizes 
+ * @return sema_t* 
+ */
+sema_t *sema_new_checked(sema_t *parent, size_t decls, size_t *sizes);
+
 reports_t *sema_reports(sema_t *sema);
 sema_t *sema_parent(sema_t *sema);
 

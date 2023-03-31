@@ -72,7 +72,7 @@ typedef struct ssa_type_t
             vector_t *args; // vector_t<ssa_param_t*>
         };
 
-        // eTypeStruct
+        // eTypeStruct or eTypeUnion
         vector_t *fields;
     };
 } ssa_type_t;

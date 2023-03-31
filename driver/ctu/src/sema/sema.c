@@ -1219,7 +1219,7 @@ static void check_explicit_tag(sema_t *sema, node_t *node, const hlir_t *base, v
         }
 
         const hlir_t *common = get_common_type(get_hlir_node(value), base, ty);
-        if (common != base)
+        if (hlir_is(common, eHlirError))
         {
             report(sema_reports(sema), eFatal, get_hlir_node(value), "tag value must be of type %s", ctu_type_repr(sema_reports(sema), base, true));
             return;
@@ -1268,6 +1268,27 @@ static const hlir_t *get_tag_type(sema_t *sema, ast_t *ast)
     }
 }
 
+static void create_variant_sema(sema_t *parent, const hlir_t *type, ast_t *ast)
+{
+    size_t len = vector_len(ast->fields);
+    size_t decls[eTagTotal] = {
+        [eSemaValues] = len
+    };
+
+    sema_t *sema = sema_new_checked(parent, eTagTotal, decls);
+    for (size_t i = 0; i < len; i++)
+    {
+        ast_t *field = vector_get(ast->fields, i);
+        if (field->value == NULL) { continue; } // TODO: handle generating the value
+        hlir_t *value = sema_rvalue(sema, field->value);
+        hlir_t *global = hlir_global(field->node, field->name, type, value);
+        hlir_set_attributes(global, hlir_attributes(eLinkInternal, eVisiblePublic, eQualConst, NULL));
+        sema_set(sema, eSemaValues, field->name, global);
+    }
+
+    sema_set(parent, eSemaModules, ast->name, sema);
+}
+
 /**
  * variants are internally represented as
  * enum tag_type : underlying { ... }
@@ -1283,10 +1304,6 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
     const hlir_t *tag = get_tag_type(sema, ast);
     // build the tag
     {
-        // create the variant tag
-        char *tagName = format("%s_tag", ast->name);
-        hlir_t *tag = hlir_digit(ast->node, tagName, eDigitInt, eUnsigned);
-
         // create the field container for the tag
         hlir_t *field = hlir_field(ast->node, tag, "tag");
         // add the field to the struct
@@ -1308,6 +1325,8 @@ static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
         // add the field to the struct
         hlir_add_field(decl, dataField);
     }
+
+    create_variant_sema(sema, tag, ast);
 }
 
 static void sema_params(sema_t *sema, vector_t *params)
@@ -1391,8 +1410,6 @@ static void sema_decl(sema_t *sema, ast_t *ast)
 
     case eAstVariable:
         decl = sema_get_resolved(sema, eSemaValues, ast->name);
-        // TODO: idk
-        // sema_global(sema, decl, ast);
         break;
 
     default:

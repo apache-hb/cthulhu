@@ -61,5 +61,6 @@ SSA_TYPE(eTypeVarArgs, "varargs")
 SSA_TYPE(eTypeVaList, "valist")
 
 SSA_TYPE(eTypeStruct, "struct")
+SSA_TYPE(eTypeUnion, "union")
 
 #undef SSA_TYPE

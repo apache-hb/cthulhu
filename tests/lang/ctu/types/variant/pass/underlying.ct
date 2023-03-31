@@ -1,8 +1,19 @@
-variant C : char {}
-variant UC : uchar {}
-variant S : short {}
-variant US : ushort {}
-variant I : int {}
-variant UI : uint {}
-variant L : long {}
-variant UL : ulong {}
+variant C : char { invalid = 0 }
+variant UC : uchar { invalid = 0 }
+variant S : short { invalid = 0 }
+variant US : ushort { invalid = 0 }
+variant I : int { invalid = 0 }
+variant UI : uint { invalid = 0 }
+variant L : long { invalid = 0 }
+variant UL : ulong { invalid = 0 }
+
+def main {
+    const c: C = C::invalid;
+    const uc: UC = UC::invalid;
+    const s: S = S::invalid;
+    const us: US = US::invalid;
+    const i: I = I::invalid;
+    const ui: UI = UI::invalid;
+    const l: L = L::invalid;
+    const ul: UL = UL::invalid;
+}

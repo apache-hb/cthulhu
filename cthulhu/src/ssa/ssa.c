@@ -74,6 +74,7 @@ static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
 
     case eHlirOpaque: return eTypeOpaque;
     case eHlirStruct: return eTypeStruct;
+    case eHlirUnion: return eTypeUnion;
     case eHlirArray: return eTypeArray;
 
     default:
@@ -86,6 +87,14 @@ typedef struct ssa_type_result_t {
     ssa_type_t *type;
     bool complete;
 } ssa_type_result_t;
+
+static bool should_add_aggregate(ssa_kind_t kind)
+{
+    return kind == eTypeStruct 
+        || kind == eTypeUnion
+        || kind == eTypePointer 
+        || kind == eTypeSignature;
+}
 
 static ssa_type_result_t ssa_anytype_new(ssa_t *ssa, const void *key, const char *name, ssa_kind_t kind)
 {
@@ -103,7 +112,7 @@ static ssa_type_result_t ssa_anytype_new(ssa_t *ssa, const void *key, const char
     it->kind = kind;
     it->name = name;
 
-    if (kind == eTypeStruct || kind == eTypePointer || kind == eTypeSignature)
+    if (should_add_aggregate(kind))
     {
         CTASSERT(key != NULL);
         map_set_ptr(ssa->aggregates, key, it);
@@ -146,7 +155,8 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
         break;
     }
 
-    case eHlirStruct: {
+    case eHlirStruct: 
+    case eHlirUnion: {
         size_t len = vector_len(real->fields);
         it->fields = vector_of(len);
         for (size_t i = 0; i < len; i++) 

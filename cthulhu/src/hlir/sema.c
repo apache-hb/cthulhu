@@ -64,6 +64,15 @@ sema_t *sema_new(sema_t *parent, size_t decls, size_t *sizes)
     return sema_inner_new(parent, parent->reports, parent->stack, decls, sizes);
 }
 
+sema_t *sema_new_checked(sema_t *parent, size_t decls, size_t *sizes)
+{
+    for (size_t i = 0; i < decls; i++)
+    {
+        sizes[i] = MIN(sizes[i], 1);
+    }
+    return sema_new(parent, decls, sizes);
+}
+
 reports_t *sema_reports(sema_t *sema)
 {
     CTASSERT(sema != NULL);

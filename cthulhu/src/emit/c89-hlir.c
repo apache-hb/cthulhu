@@ -436,7 +436,7 @@ static const char *c89_emit_inner_type(c89_emit_t *emit, const hlir_t *hlir, con
         return name == NULL ? "float" : format("float %s", name);
 
     default:
-        ctu_assert(emit->emit.reports, "cannot emit %s as a type", hlir_kind_to_string(kind));
+        ctu_assert(emit->emit.reports, "cannot emit %s (%s) as a type", get_hlir_name(hlir), hlir_kind_to_string(kind));
         return "error";
     }
 }
