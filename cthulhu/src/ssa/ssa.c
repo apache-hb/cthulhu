@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <string.h>
 
+// TODO: track name mangling
+
 typedef struct {
     reports_t *reports;
 
@@ -38,6 +40,8 @@ typedef struct {
     ssa_block_t *currentBlock;
     size_t stepIdx;
     size_t blockIdx;
+
+    vector_t *namePath; // vector_t<const char *>
 
     const ssa_type_t *emptyType;
 } ssa_t;
@@ -224,12 +228,47 @@ static bool is_imported(linkage_t link)
     return link == eLinkImported;
 }
 
+static const char *flow_make_name(ssa_t *ssa, const hlir_t *symbol)
+{
+    const hlir_attributes_t *attribs = get_hlir_attributes(symbol);
+    if (attribs->mangle != NULL)
+    {
+        return attribs->mangle;
+    }
+
+    const char *part = get_hlir_name(symbol);
+
+    size_t parts = vector_len(ssa->namePath);
+    if (parts == 0)
+    {
+        return format("_Z%zu%s", strlen(part), part);
+    }
+
+    char *result = ctu_strdup("_Z");
+    for (size_t i = 0; i < parts; i++)
+    {
+        const char *ns = vector_get(ssa->namePath, i);
+        result = format("%sN%zu%s", result, strlen(ns), ns);
+    }
+
+    result = format("%s%zu%sE", result, strlen(part), part);
+
+    if (!hlir_is(symbol, eHlirFunction))
+    { 
+        return result;
+    }
+
+    // TODO: mangle args
+
+    return result;
+}
+
 static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol, ssa_type_t *type)
 {
     UNUSED(ssa);
 
     ssa_flow_t *flow = ctu_malloc(sizeof(ssa_flow_t));
-    flow->name = get_hlir_name(symbol);
+    flow->name = flow_make_name(ssa, symbol);
     flow->type = type;
 
     const hlir_attributes_t *attribs = get_hlir_attributes(symbol);
@@ -1058,6 +1097,38 @@ static void compile_function(ssa_t *ssa, const hlir_t *function)
     compile_stmt(ssa, function->body);
 }
 
+static void fwd_module(ssa_t *ssa, hlir_t *mod)
+{
+    CTASSERT(hlir_is(mod, eHlirModule));
+
+    const char *name = mod->name;
+
+    if (name != NULL)
+    {
+        vector_push(&ssa->namePath, (void*)mod->name);
+    }
+
+    for (size_t j = 0; j < vector_len(mod->globals); j++)
+    {
+        fwd_global(ssa, vector_get(mod->globals, j));
+    }
+
+    for (size_t j = 0; j < vector_len(mod->functions); j++)
+    {
+        fwd_function(ssa, vector_get(mod->functions, j));
+    }
+
+    for (size_t j = 0; j < vector_len(mod->modules); j++)
+    {
+        fwd_module(ssa, vector_get(mod->modules, j));
+    }
+
+    if (name != NULL)
+    {
+        vector_drop(ssa->namePath);
+    }
+}
+
 ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods)
 {
     ssa_t ssa = { 
@@ -1067,23 +1138,15 @@ ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods)
         .functions = map_optimal(0x1000),
         .strings = set_new(0x1000),
         .importedSymbols = map_optimal(0x1000),
+        .namePath = vector_new(16),
         .emptyType = ssa_type_empty_new("empty")
     };
 
     size_t len = vector_len(mods);
     for (size_t i = 0; i < len; i++)
     {
-        hlir_t *mod = vector_get(mods, i);
-        for (size_t j = 0; j < vector_len(mod->globals); j++)
-        {
-            fwd_global(&ssa, vector_get(mod->globals, j));
-        }
-
-        for (size_t j = 0; j < vector_len(mod->functions); j++)
-        {
-            fwd_function(&ssa, vector_get(mod->functions, j));
-        }
-    }
+        fwd_module(&ssa, vector_get(mods, i));
+    }    
 
     for (size_t i = 0; i < len; i++)
     {
