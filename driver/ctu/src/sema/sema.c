@@ -1521,7 +1521,7 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
         compile->moduleName = make_import_name(root->modspec->path);
     }
 
-    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0));
+    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0), vector_of(0));
 
     sema_data_t semaData = {.totalDecls = totalDecls};
 
@@ -1585,7 +1585,7 @@ hlir_t *ctu_compile_module(runtime_t *runtime, compile_t *compile)
     vector_t *globals = map_values(sema_tag(sema, eSemaValues));
     vector_t *procs = map_values(sema_tag(sema, eSemaProcs));
 
-    hlir_update_module(compile->hlir, types, globals, procs);
+    hlir_build_module(compile->hlir, vector_of(0), types, globals, procs);
 
     return compile->hlir;
 }

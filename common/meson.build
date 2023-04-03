@@ -10,7 +10,7 @@ if stacktrace.allowed()
 else
     src += [ 'src/stacktrace/stacktrace-null.c' ]
     stacktrace_links = []
-endif   
+endif
 
 libstacktrace = library('stacktrace', src,
     c_args : args,
@@ -32,7 +32,7 @@ src = [
     'src/base/memory.c'
 ]
 
-libbase = library('base', src, 
+libbase = library('base', src,
     c_args : args,
     dependencies : deps + [ stacktrace ],
     include_directories : 'include',
@@ -40,49 +40,49 @@ libbase = library('base', src,
 )
 
 base = declare_dependency(
-    link_with : libbase, 
+    link_with : libbase,
     dependencies : deps,
     include_directories : 'include'
 )
 
-src = [ 
-    'src/std/map.c', 
-    'src/std/optimal.c', 
-    'src/std/set.c', 
-    'src/std/str.c', 
+src = [
+    'src/std/map.c',
+    'src/std/optimal.c',
+    'src/std/set.c',
+    'src/std/str.c',
     'src/std/vector.c'
 ]
 
-libstd = library('std', src, 
-    c_args : args, 
+libstd = library('std', src,
+    c_args : args,
     dependencies : base,
     include_directories : 'include',
     name_suffix: lib_suffix
 )
 
 std = declare_dependency(
-    link_with : libstd, 
-    dependencies : base, 
+    link_with : libstd,
+    dependencies : base,
     include_directories : 'include'
 )
 
-src = [ 
+src = [
     'src/platform/error.c',
     'src/platform/file.c',
     'src/platform/library.c',
     'src/platform/platform/target.c'.replace('target', target)
 ]
 
-libplatform = library('platform', src, 
-    c_args : args, 
+libplatform = library('platform', src,
+    c_args : args,
     dependencies : std,
     include_directories : 'include',
     name_suffix: lib_suffix
 )
 
 platform = declare_dependency(
-    link_with : libplatform, 
-    dependencies : std, 
+    link_with : libplatform,
+    dependencies : std,
     include_directories : 'include'
 )
 
@@ -110,16 +110,16 @@ src = [
 ]
 
 # this is both libreport and libscan as they depend on each other
-liblocation = library('location', src, 
-    c_args : args, 
+liblocation = library('location', src,
+    c_args : args,
     dependencies : std,
     include_directories : 'include',
     name_suffix: lib_suffix
 )
 
 location = declare_dependency(
-    link_with : liblocation, 
-    dependencies : std, 
+    link_with : liblocation,
+    dependencies : std,
     include_directories : 'include'
 )
 
@@ -131,28 +131,28 @@ libinterop = library('interop', [ 'src/interop/flex.c' ],
 )
 
 interop = declare_dependency(
-    link_with : libinterop, 
-    dependencies : std, 
+    link_with : libinterop,
+    dependencies : std,
     include_directories : 'include'
 )
 
-src = [ 
+src = [
     'src/argparse/argparse.c',
     'src/argparse/common.c',
     lex.process('src/argparse/cmd.l'),
     parse.process('src/argparse/cmd.y')
 ]
 
-libargparse = library('argparse', src, 
-    c_args : args, 
+libargparse = library('argparse', src,
+    c_args : args,
     dependencies : deps,
     include_directories : [ 'include', 'src' ],
     name_suffix: lib_suffix
 )
 
 argparse = declare_dependency(
-    link_with : libargparse, 
-    dependencies : deps, 
+    link_with : libargparse,
+    dependencies : deps,
     include_directories : 'include'
 )
 

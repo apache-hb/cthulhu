@@ -194,6 +194,7 @@ typedef struct hlir_t
 
                 struct
                 {
+                    vector_t *modules;
                     vector_t *functions;
                     vector_t *globals;
                     vector_t *types;

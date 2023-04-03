@@ -11,6 +11,10 @@
 * full C and fixed width types
 * designated init
 
+* name mangling in the ssa backend
+    * nested modules support
+    * requires name mangling
+
 * generic interface compilation option
     * use dynamic libraries rather than static linking
 

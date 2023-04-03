@@ -378,7 +378,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     {
         compile->moduleName = root->mod;
     }
-    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0));
+    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0), vector_of(0));
 
     size_t sizes[eSemaMax] = {
         [eSemaValues] = totalConsts + totalGlobals,
@@ -507,7 +507,7 @@ hlir_t *pl0_compile_module(runtime_t *runtime, compile_t *compile)
 
     vector_push(&semaData->procs, kPrint);
 
-    hlir_update_module(self, self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
+    hlir_build_module(self, vector_of(0), self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
 
     return self;
 }

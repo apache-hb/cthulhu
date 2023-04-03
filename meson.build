@@ -25,6 +25,7 @@ cc = meson.get_compiler('c')
 buildtype = get_option('buildtype')
 
 wasm = target == 'emscripten'
+mingw = target == 'windows' and cc.get_id() == 'gcc'
 
 # emscripten and meson dont play nice together, though emscripten doesnt play nice with anything
 # so no big suprise there
