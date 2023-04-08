@@ -17,7 +17,6 @@ HLIR_KIND(eHlirUnit,    "unit-type")
 HLIR_KIND(eHlirEmpty,   "empty-type")
 HLIR_KIND(eHlirOpaque,  "opaque-type") // opaque pointer type, akin to void*
 
-HLIR_KIND(eHlirVaArgs, "va-args-type")
 HLIR_KIND(eHlirVaList, "va-list-type")
 
 // user defined scalar types
@@ -197,3 +196,12 @@ CAST_OP(eCastSignExtend, "sign-extend")
 CAST_OP(eCastBit, "bitcast")
 
 #undef CAST_OP
+
+#ifndef HLIR_ARITY
+#   define HLIR_ARITY(ID, NAME)
+#endif
+
+HLIR_ARITY(eArityFixed, "fixed") // fixed number of arguments
+HLIR_ARITY(eArityVariable, "variable") // variable number of arguments, same as C varargs
+
+#undef HLIR_ARITY

@@ -146,24 +146,27 @@ void hlir_build_function(hlir_t *self, hlir_t *body)
     self->body = body;
 }
 
-static hlir_t *hlir_begin_function_with_locals(node_t *node, const char *name, vector_t *locals, vector_t *params, const hlir_t *result)
+static hlir_t *hlir_begin_function_with_locals(node_t *node, const char *name, vector_t *locals, vector_t *params, const hlir_t *result, arity_t arity)
 {
     hlir_t *self = hlir_decl_new(node, name, kMetaType, eHlirFunction);
+
+    self->arity = arity;
     self->params = params;
     self->result = result;
     self->locals = locals;
     self->of = self; // TODO: this should be a closure
+
     return self;
 }
 
-hlir_t *hlir_begin_function(node_t *node, const char *name, vector_t *params, const hlir_t *result)
+hlir_t *hlir_begin_function(node_t *node, const char *name, vector_t *params, const hlir_t *result, arity_t arity)
 {
-    return hlir_begin_function_with_locals(node, name, vector_new(4), params, result);
+    return hlir_begin_function_with_locals(node, name, vector_new(4), params, result, arity);
 }
 
-hlir_t *hlir_function(node_t *node, const char *name, vector_t *params, const hlir_t *result, vector_t *locals, hlir_t *body)
+hlir_t *hlir_function(node_t *node, const char *name, vector_t *params, const hlir_t *result, vector_t *locals, arity_t arity, hlir_t *body)
 {
-    hlir_t *self = hlir_begin_function_with_locals(node, name, locals, params, result);
+    hlir_t *self = hlir_begin_function_with_locals(node, name, locals, params, result, arity);
     hlir_build_function(self, body);
     return self;
 }
@@ -179,20 +182,19 @@ hlir_t *hlir_begin_module(node_t *node, const char *name)
     return hlir_decl_new(node, name, NULL, eHlirModule);
 }
 
-void hlir_build_module(hlir_t *self, vector_t *modules, vector_t *types, vector_t *globals, vector_t *functions)
+void hlir_build_module(hlir_t *self, vector_t *types, vector_t *globals, vector_t *functions)
 {
     CTASSERT(hlir_is(self, eHlirModule));
 
-    self->modules = modules;
     self->types = types;
     self->globals = globals;
     self->functions = functions;
 }
 
-hlir_t *hlir_module(node_t *node, const char *name, vector_t *modules, vector_t *types, vector_t *globals, vector_t *functions)
+hlir_t *hlir_module(node_t *node, const char *name, vector_t *types, vector_t *globals, vector_t *functions)
 {
     hlir_t *self = hlir_begin_module(node, name);
-    hlir_build_module(self, modules, types, globals, functions);
+    hlir_build_module(self, types, globals, functions);
     return self;
 }
 

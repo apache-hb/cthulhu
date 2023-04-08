@@ -4,6 +4,7 @@
 
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/ops.h"
+#include "cthulhu/hlir/arity.h"
 #include "cthulhu/hlir/string-view.h"
 #include "cthulhu/hlir/attribs.h"
 #include "cthulhu/hlir/digit.h"
@@ -161,6 +162,7 @@ typedef struct hlir_t
                 /* either a closure type or a function */
                 struct
                 {
+                    arity_t arity;
                     vector_t *params;
                     const struct hlir_t *result;
 
@@ -194,7 +196,6 @@ typedef struct hlir_t
 
                 struct
                 {
-                    vector_t *modules;
                     vector_t *functions;
                     vector_t *globals;
                     vector_t *types;

@@ -59,9 +59,9 @@ hlir_t *hlir_param(node_t *node, const char *name, const hlir_t *type);
 /// function builders
 ///
 
-hlir_t *hlir_begin_function(node_t *node, const char *name, vector_t *params, const hlir_t *result);
+hlir_t *hlir_begin_function(node_t *node, const char *name, vector_t *params, const hlir_t *result, arity_t arity);
 void hlir_build_function(hlir_t *self, hlir_t *body);
-hlir_t *hlir_function(node_t *node, const char *name, vector_t *params, const hlir_t *result, vector_t *locals, hlir_t *body);
+hlir_t *hlir_function(node_t *node, const char *name, vector_t *params, const hlir_t *result, vector_t *locals, arity_t arity, hlir_t *body);
 
 ///
 /// extra function details
@@ -74,8 +74,8 @@ void hlir_add_local(hlir_t *self, hlir_t *local);
 ///
 
 hlir_t *hlir_begin_module(node_t *node, const char *name);
-void hlir_build_module(hlir_t *self, vector_t *modules, vector_t *types, vector_t *globals, vector_t *functions);
-hlir_t *hlir_module(node_t *node, const char *name, vector_t *modules, vector_t *types, vector_t *globals, vector_t *functions);
+void hlir_build_module(hlir_t *self, vector_t *types, vector_t *globals, vector_t *functions);
+hlir_t *hlir_module(node_t *node, const char *name, vector_t *types, vector_t *globals, vector_t *functions);
 
 ///
 /// decl modification

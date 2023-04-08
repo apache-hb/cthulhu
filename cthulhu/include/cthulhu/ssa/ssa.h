@@ -4,6 +4,7 @@
 #include "cthulhu/hlir/string-view.h"
 #include "cthulhu/hlir/digit.h"
 #include "cthulhu/hlir/ops.h"
+#include "cthulhu/hlir/arity.h"
 
 #include <stdbool.h>
 
@@ -70,6 +71,7 @@ typedef struct ssa_type_t
         struct {
             const ssa_type_t *result;
             vector_t *args; // vector_t<ssa_param_t*>
+            arity_t arity;
         };
 
         // eTypeStruct or eTypeUnion

@@ -88,11 +88,6 @@ hlir_t *hlir_qualified(const hlir_t *type, hlir_attributes_t *attribs)
     return hlir;
 }
 
-hlir_t *hlir_va_args(node_t *node, const char *name)
-{
-    return hlir_decl_new(node, name, kMetaType, eHlirVaArgs);
-}
-
 hlir_t *hlir_va_list(node_t *node, const char *name)
 {
     return hlir_decl_new(node, name, kMetaType, eHlirVaList);

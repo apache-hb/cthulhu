@@ -19,7 +19,6 @@
 static hlir_t *kIntegerType;
 static hlir_t *kBoolType;
 static hlir_t *kStringType;
-static hlir_t *kVarArgs;
 static hlir_t *kVoidType;
 
 static hlir_t *kPrint;
@@ -45,18 +44,16 @@ void pl0_init(runtime_t *runtime)
     kBoolType = hlir_bool(node, "boolean");
     kStringType = hlir_string(node, "string");
     kVoidType = hlir_unit(node, "void");
-    kVarArgs = hlir_va_args(node, "varargs");
 
     struct string_view_t fmtLiteral = { .data = "%d\n", .size = 3 };
 
     kFmtString = hlir_string_literal(node, kStringType, fmtLiteral);
 
     const hlir_attributes_t *printAttributes = hlir_attributes(eLinkImported, eVisiblePrivate, DEFAULT_TAGS, "printf");
-    vector_t *args = vector_of(2);
+    vector_t *args = vector_of(1);
     vector_set(args, 0, kStringType);
-    vector_set(args, 1, kVarArgs);
 
-    kPrint = hlir_function(node, "printf", args, kIntegerType, vector_of(0), NULL);
+    kPrint = hlir_function(node, "printf", args, kIntegerType, vector_of(0), eArityVariable, NULL);
     hlir_set_attributes(kPrint, printAttributes);
 }
 
@@ -378,7 +375,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     {
         compile->moduleName = root->mod;
     }
-    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0), vector_of(0));
+    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0));
 
     size_t sizes[eSemaMax] = {
         [eSemaValues] = totalConsts + totalGlobals,
@@ -414,7 +411,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     {
         pl0_t *it = vector_get(root->procs, i);
 
-        hlir_t *hlir = hlir_begin_function(it->node, it->name, vector_of(0), kVoidType);
+        hlir_t *hlir = hlir_begin_function(it->node, it->name, vector_of(0), kVoidType, eArityFixed);
         hlir_set_attributes(hlir, kExported);
 
         set_proc(sema, it->name, hlir);
@@ -499,7 +496,7 @@ hlir_t *pl0_compile_module(runtime_t *runtime, compile_t *compile)
         const hlir_attributes_t *attribs = hlir_attributes(eLinkEntryCli, eVisiblePrivate, DEFAULT_TAGS, NULL);
         const char *modName = get_hlir_name(compile->hlir);
 
-        hlir_t *hlir = hlir_function(root->node, modName, vector_of(0), kVoidType, vector_of(0), body);
+        hlir_t *hlir = hlir_function(root->node, modName, vector_of(0), kVoidType, vector_of(0), eArityFixed, body);
         hlir_set_attributes(hlir, attribs);
 
         vector_push(&semaData->procs, hlir);
@@ -507,7 +504,7 @@ hlir_t *pl0_compile_module(runtime_t *runtime, compile_t *compile)
 
     vector_push(&semaData->procs, kPrint);
 
-    hlir_build_module(self, vector_of(0), self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
+    hlir_build_module(self, self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
 
     return self;
 }

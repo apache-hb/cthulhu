@@ -149,6 +149,7 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
     case eHlirFunction:
     case eHlirClosure: {
         it->result = type_new(ssa, real->result);
+        it->arity = real->arity;
         it->args = vector_of(vector_len(real->params));
         for (size_t i = 0; i < vector_len(real->params); i++) 
         {
@@ -248,7 +249,8 @@ static const char *flow_make_name(ssa_t *ssa, const hlir_t *symbol)
     for (size_t i = 0; i < parts; i++)
     {
         const char *ns = vector_get(ssa->namePath, i);
-        result = format("%sN%zu%s", result, strlen(ns), ns);
+        char *part = str_replace(ns, "-", "_"); // todo: replace all non alphanum with _
+        result = format("%sN%zu%s", result, strlen(part), part);
     }
 
     result = format("%s%zu%sE", result, strlen(part), part);
@@ -1116,11 +1118,6 @@ static void fwd_module(ssa_t *ssa, hlir_t *mod)
     for (size_t j = 0; j < vector_len(mod->functions); j++)
     {
         fwd_function(ssa, vector_get(mod->functions, j));
-    }
-
-    for (size_t j = 0; j < vector_len(mod->modules); j++)
-    {
-        fwd_module(ssa, vector_get(mod->modules, j));
     }
 
     if (name != NULL)

@@ -95,7 +95,6 @@ static hlir_t *kStringType = NULL;
 static hlir_t *kFloatType = NULL;
 static hlir_t *kDigitTypes[eSignTotal * eDigitTotal];
 
-static hlir_t *kVarArgsType = NULL;
 static hlir_t *kVaListType = NULL;
 
 static hlir_t *kUnresolvedType = NULL;
@@ -356,7 +355,6 @@ void ctu_init_compiler(runtime_t *runtime)
     kStringType = hlir_string(node, "str");
     kFloatType = hlir_decimal(node, "float");
 
-    kVarArgsType = hlir_va_args(node, "...");
     kVaListType = hlir_va_list(node, "valist");
 
     for (int sign = 0; sign < eSignTotal; sign++)
@@ -538,7 +536,7 @@ static hlir_t *sema_pointer(sema_t *sema, ast_t *ast)
         return kOpaqueType;
     }
 
-    if (real == kEmptyType || real == kVarArgsType || real == kVaListType)
+    if (real == kEmptyType || real == kVaListType)
     {
         report(sema_reports(sema), eFatal, ast->node, "pointers to `%s` are not allowed", get_hlir_name(real));
     }
@@ -587,8 +585,6 @@ static hlir_t *sema_type(sema_t *sema, ast_t *ast)
         return sema_array(sema, ast);
     case eAstClosure:
         return sema_closure(sema, ast);
-    case eAstVarArgs:
-        return kVarArgsType;
     default:
         report(sema_reports(sema), eInternal, ast->node, "unknown sema-type: %d", ast->of);
         return hlir_error(ast->node, "unknown sema-type");
@@ -1444,7 +1440,8 @@ static hlir_t *begin_function(sema_t *sema, ast_t *ast)
         vector_set(params, i, entry);
     }
 
-    hlir_t *func = hlir_begin_function(ast->node, ast->name, params, result);
+    // todo: check arity
+    hlir_t *func = hlir_begin_function(ast->node, ast->name, params, result, eArityFixed);
     update_func_attribs(ast, func);
     return func;
 }
@@ -1521,7 +1518,7 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
         compile->moduleName = make_import_name(root->modspec->path);
     }
 
-    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0), vector_of(0));
+    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0));
 
     sema_data_t semaData = {.totalDecls = totalDecls};
 
@@ -1585,7 +1582,7 @@ hlir_t *ctu_compile_module(runtime_t *runtime, compile_t *compile)
     vector_t *globals = map_values(sema_tag(sema, eSemaValues));
     vector_t *procs = map_values(sema_tag(sema, eSemaProcs));
 
-    hlir_build_module(compile->hlir, vector_of(0), types, globals, procs);
+    hlir_build_module(compile->hlir, types, globals, procs);
 
     return compile->hlir;
 }

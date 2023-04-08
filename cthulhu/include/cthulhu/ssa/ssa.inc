@@ -57,7 +57,6 @@ SSA_TYPE(eTypeArray, "array")
 SSA_TYPE(eTypeOpaque, "opaque")
 
 SSA_TYPE(eTypeSignature, "signature")
-SSA_TYPE(eTypeVarArgs, "varargs")
 SSA_TYPE(eTypeVaList, "valist")
 
 SSA_TYPE(eTypeStruct, "struct")

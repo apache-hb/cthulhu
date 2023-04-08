@@ -297,10 +297,7 @@ static void c89_emit_function_decl(c89_ssa_emit_t *emit, const ssa_flow_t *flow,
             }
         }
 
-        const ssa_param_t *last = vector_tail(type->args);
-        const ssa_type_t *ty = last->type;
-
-        if (ty->kind == eTypeVarArgs)
+        if (type->arity == eArityVariable)
         {
             WRITE_STRING(&emit->emit, ", ...");
         }
