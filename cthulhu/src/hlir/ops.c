@@ -1,5 +1,7 @@
 #include "cthulhu/hlir/ops.h"
 
+#include "base/panic.h"
+
 typedef struct
 {
     const char *name;
@@ -25,16 +27,19 @@ static const operand_name_t kUnaryOperands[eUnaryTotal] = {
 
 static operand_name_t binary_operand_name(binary_t op)
 {
+    CTASSERT(op < eBinaryTotal);
     return kBinaryOperands[op];
 }
 
 static operand_name_t compare_operand_name(compare_t op)
 {
+    CTASSERT(op < eCompareTotal);
     return kCompareOperands[op];
 }
 
 static operand_name_t unary_operand_name(unary_t op)
 {
+    CTASSERT(op < eUnaryTotal);
     return kUnaryOperands[op];
 }
 

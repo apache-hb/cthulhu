@@ -13,7 +13,7 @@ struct System {
 }
 
 @extern("printf")
-def printf(fmt: str, ...): int;
+def printf(fmt: str, args: ...): int;
 
 @extern("malloc")
 def libcAlloc(size: usize): opaque;
@@ -66,9 +66,7 @@ export def newSystem(mem: *Arena): System {
     return result;
 }
 
-export def getSystemName(system: System): str {
-    return system.name;
-}
+export def getSystemName(system: System): str = system.name;
 
 @entry(cli)
 def main {

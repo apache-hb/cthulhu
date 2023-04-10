@@ -1,6 +1,7 @@
 #include "sema.h"
 #include "ast.h"
 #include "attribs.h"
+#include "cthulhu/hlir/arity.h"
 #include "repr.h"
 #include "suffix.h"
 
@@ -738,6 +739,18 @@ static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
     return hlir_error(ast->node, "unknown identifier");
 }
 
+static char *min_param_msg(const hlir_t *fn)
+{
+    size_t len = vector_len(closure_params(fn));
+    bool variadic = closure_variadic(fn);
+    if (variadic)
+    {
+        return format("at least %zu parameter%s", len - 1, len == 2 ? "" : "s");
+    }
+
+    return format("%zu parameter%s", len, len == 1 ? "" : "s");
+}
+
 static hlir_t *sema_call(sema_t *sema, ast_t *ast)
 {
     hlir_t *call = sema_rvalue(sema, ast->call);
@@ -760,14 +773,14 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
         if (len < totalParams)
         {
             message_t *id = report(sema_reports(sema), eFatal, ast->node, "not enough parameters specified");
-            report_note(id, "expected `%zu` got `%zu` instead", totalParams, len);
+            report_note(id, "expected %s got `%zu` instead", min_param_msg(fnType), len);
             return hlir_error(ast->node, "incorrect argument count");
         }
 
         if (!variadic)
         {
             message_t *id = report(sema_reports(sema), eFatal, ast->node, "too many parameters specified");
-            report_note(id, "expected `%zu` got `%zu` instead", totalParams, len);
+            report_note(id, "expected %s got `%zu` instead", min_param_msg(fnType), len);
             return hlir_error(ast->node, "incorrect argument count");
         }
     }
@@ -1416,6 +1429,23 @@ static void sema_decl(sema_t *sema, ast_t *ast)
     apply_attributes(sema, decl, ast);
 }
 
+static arity_t get_arity(ast_t *ast)
+{
+    CTASSERT(ast->of == eAstFunction);
+    ast_t *sig = ast->signature;
+
+    if (vector_len(sig->params) == 0)
+    {
+        return eArityFixed;
+    }
+
+    ast_t *tail = vector_tail(sig->params);
+    CTASSERT(tail->of == eAstParam);
+
+    ast_t *type = tail->param;
+    return (type->of == eAstVarArgs) ? eArityVariable : eArityFixed;
+}
+
 static hlir_t *begin_function(sema_t *sema, ast_t *ast)
 {
     hlir_t *result = kVoidType;
@@ -1426,6 +1456,14 @@ static hlir_t *begin_function(sema_t *sema, ast_t *ast)
     }
 
     size_t len = vector_len(signature->params);
+
+    arity_t arity = get_arity(ast);
+
+    if (arity == eArityVariable)
+    {
+        len -= 1;
+    }
+
     vector_t *params = vector_of(len);
     for (size_t i = 0; i < len; i++)
     {
@@ -1440,8 +1478,7 @@ static hlir_t *begin_function(sema_t *sema, ast_t *ast)
         vector_set(params, i, entry);
     }
 
-    // todo: check arity
-    hlir_t *func = hlir_begin_function(ast->node, ast->name, params, result, eArityFixed);
+    hlir_t *func = hlir_begin_function(ast->node, ast->name, params, result, arity);
     update_func_attribs(ast, func);
     return func;
 }

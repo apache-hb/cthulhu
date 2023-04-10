@@ -229,6 +229,55 @@ static bool is_imported(linkage_t link)
     return link == eLinkImported;
 }
 
+static const char *mangle_digit(digit_t width, sign_t sign)
+{
+    switch (width)
+    {
+    case eDigitChar:
+        return sign == eSigned ? "c" : "h";
+    case eDigitShort:
+        return sign == eSigned ? "s" : "t";
+    case eDigitInt:
+        return sign == eSigned ? "i" : "j";
+    case eDigitLong:
+    case eDigitPtr:
+        return sign == eSigned ? "x" : "y";
+    case eDigitSize:
+        return "m";
+    default:
+        return "";
+    }
+}
+
+static const char *mangle_named_type(const hlir_t *type)
+{
+    const char *name = get_hlir_name(type);
+    return format("%zu%s", strlen(name), name);
+}
+
+static const char *mangle_arg(ssa_t *ssa, const hlir_t *param)
+{
+    const hlir_t *type = hlir_follow_type(param);
+    hlir_kind_t kind = get_hlir_kind(type);
+    switch (kind) 
+    {
+    case eHlirPointer:
+        return format("P%s", mangle_arg(ssa, type->ptr));
+    case eHlirString:
+        return "PKc";
+    case eHlirBool:
+        return "b";
+    case eHlirDigit:
+        return mangle_digit(type->width, type->sign);
+    case eHlirStruct:
+    case eHlirUnion:
+        return mangle_named_type(type);
+
+    default:
+        return "";
+    }
+}
+
 static const char *flow_make_name(ssa_t *ssa, const hlir_t *symbol)
 {
     const hlir_attributes_t *attribs = get_hlir_attributes(symbol);
@@ -260,7 +309,12 @@ static const char *flow_make_name(ssa_t *ssa, const hlir_t *symbol)
         return result;
     }
 
-    // TODO: mangle args
+    size_t len = vector_len(symbol->params);
+    for (size_t i = 0; i < len; i++)
+    {
+        const hlir_t *param = vector_get(symbol->params, i);
+        result = format("%s%s", result, mangle_arg(ssa, param));
+    }
 
     return result;
 }
