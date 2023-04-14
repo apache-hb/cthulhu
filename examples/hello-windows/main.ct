@@ -119,19 +119,20 @@ def main(hInstance: HINSTANCE, hPrevInstance: HINSTANCE, pCmdLine: *char, nCmdSh
     const szAppName = "hello";
     const szTitle = "Hello, World!";
 
-    var wndclass: WNDCLASSEXA = noinit;
-    wndclass.cbSize = __sizeof(WNDCLASSEXA);
-    wndclass.style = (1 | 2);
-    wndclass.lpfnWndProc = windowCallback;
-    wndclass.cbClsExtra = 0;
-    wndclass.cbWndExtra = 0;
-    wndclass.hInstance = hInstance;
-    wndclass.hIcon = __null;
-    wndclass.hIconSm = __null;
-    wndclass.hCursor = __null;
-    wndclass.hbrBackground = __null;
-    wndclass.lpszClassName = szAppName;
-    wndclass.lpszMenuName = "";
+    var wndclass = .WNDCLASSEXA {
+        cbSize = __sizeof(WNDCLASSEXA),
+        style = (1 | 2),
+        lpfnWndProc = windowCallback,
+        cbClsExtra = 0,
+        cbWndExtra = 0,
+        hInstance = hInstance,
+        hIcon = __null,
+        hIconSm = __null,
+        hCursor = __null,
+        hbrBackground = __null,
+        lpszClassName = szAppName,
+        lpszMenuName = ""
+    };
 
     RegisterClassExA(&wndclass);
 
