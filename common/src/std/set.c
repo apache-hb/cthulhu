@@ -194,6 +194,22 @@ bool set_contains_ptr(set_t *set, const void *key)
 }
 
 USE_DECL
+bool set_empty(set_t *set)
+{
+    set_iter_t iter = set_iter(set);
+    while (set_has_next(&iter))
+    {
+        const char *key = set_next(&iter);
+        if (key != NULL)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+USE_DECL
 void set_reset(set_t *set)
 {
     CTASSERT(set != NULL);

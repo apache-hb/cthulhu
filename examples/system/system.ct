@@ -12,6 +12,11 @@ struct System {
     name: str;
 }
 
+struct Memory {
+    name: str;
+    bytes: usize;
+}
+
 @extern("printf")
 def printf(fmt: str, args: ...): int;
 
@@ -24,6 +29,10 @@ def libcRelease(ptr: opaque);
 @extern("GetComputerNameA")
 def win32GetComputerNameA(name: str, size: *DWORD): BOOL;
 
+def printMemory(mem: Memory) {
+    printf("[%s] %zu bytes\n", mem.name, mem.bytes);
+}
+
 def defaultAlloc(mem: *Arena, size: usize): opaque {
     printf("[%s] alloc %zu\n", mem->name, size);
     return libcAlloc(size);
@@ -34,14 +43,11 @@ def defaultRelease(mem: *Arena, ptr: opaque) {
     libcRelease(ptr);
 }
 
-def defaultArena(name: str): Arena {
-    var mem = .Arena {
-        name = name,
-        alloc = defaultAlloc,
-        release = defaultRelease
-    };
-    return mem;
-}
+def defaultArena(name: str): Arena = .{
+    name = name,
+    alloc = defaultAlloc,
+    release = defaultRelease
+};
 
 def arenaAlloc(mem: *Arena, size: usize): opaque {
     return mem->alloc(mem, size);
@@ -73,4 +79,6 @@ def main {
 
     const system = newSystem(&mem);
     printf("System name: %s\n", getSystemName(system));
+
+    printMemory(.{ name = "example", bytes = 0x1000 });
 }

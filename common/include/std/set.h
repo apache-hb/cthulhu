@@ -48,6 +48,9 @@ bool set_contains(IN_NOTNULL set_t *set, IN_STRING const char *key);
 NODISCARD CONSTFN 
 bool set_contains_ptr(IN_NOTNULL set_t *set, const void *key);
 
+NODISCARD CONSTFN
+bool set_empty(IN_NOTNULL set_t *set);
+
 void set_reset(IN_NOTNULL set_t *set);
 
 typedef struct set_iter_t

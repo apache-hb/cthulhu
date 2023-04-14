@@ -33,6 +33,8 @@ typedef struct
 {
     size_t totalDecls;
 
+    const hlir_t *currentImplicitType;
+
     vector_t *currentScope;
 
     hlir_t *currentFunction; // current function we are adding locals to
@@ -64,6 +66,26 @@ static void add_scope_step(sema_t *sema, hlir_t *hlir)
     vector_push(&data->currentScope, hlir);
 }
 
+static const hlir_t *push_implicit_type(sema_t *sema, const hlir_t *type)
+{
+    sema_data_t *data = sema_get_data(sema);
+    const hlir_t *current = data->currentImplicitType;
+    data->currentImplicitType = type;
+    return current;
+}
+
+static void pop_implicit_type(sema_t *sema, const hlir_t *type)
+{
+    sema_data_t *data = sema_get_data(sema);
+    data->currentImplicitType = type;
+}
+
+static const hlir_t *get_implicit_type(sema_t *sema)
+{
+    sema_data_t *data = sema_get_data(sema);
+    return data->currentImplicitType;
+}
+
 static void set_current_function(sema_t *sema, hlir_t *function)
 {
     sema_data_t *data = sema_get_data(sema);
@@ -76,10 +98,19 @@ static hlir_t *get_current_function(sema_t *sema)
     return data->currentFunction;
 }
 
+static const hlir_t *get_current_return_type(sema_t *sema)
+{
+    hlir_t *function = get_current_function(sema);
+    CTASSERT(function != NULL);
+
+    return function->result;
+}
+
 static sema_data_t *sema_data_new(void)
 {
     sema_data_t *data = ctu_malloc(sizeof(sema_data_t));
     data->totalDecls = SIZE_MAX; 
+    data->currentImplicitType = NULL;
     data->currentScope = NULL;
     data->currentFunction = NULL;
     return data;
@@ -429,6 +460,19 @@ static hlir_t *sema_rvalue(sema_t *sema, ast_t *ast)
     }
     return result;
 }
+
+#define IMPLICIT_SEMA_EXPR(name, fn) \
+    static hlir_t *name(sema_t *sema, ast_t *ast, const hlir_t *type) \
+    { \
+        const hlir_t *save = push_implicit_type(sema, type); \
+        hlir_t *result = fn(sema, ast); \
+        pop_implicit_type(sema, save); \
+        return result; \
+    }
+
+IMPLICIT_SEMA_EXPR(sema_expr_with_implicit, sema_expr);
+IMPLICIT_SEMA_EXPR(sema_rvalue_with_implicit, sema_rvalue);
+IMPLICIT_SEMA_EXPR(sema_lvalue_with_implicit, sema_lvalue);
 
 static sema_t *sema_path(sema_t *sema, vector_t *path, node_t *node)
 {
@@ -819,7 +863,9 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
     for (size_t i = 0; i < len; i++)
     {
         ast_t *arg = vector_get(ast->args, i);
-        hlir_t *hlir = sema_rvalue(sema, arg);
+        hlir_t *expectedType = (i >= totalParams) ? NULL : vector_get(params, i);
+
+        hlir_t *hlir = sema_rvalue_with_implicit(sema, arg, expectedType);
 
         if (i >= totalParams)
         {
@@ -828,7 +874,6 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
         }
         else
         {
-            hlir_t *expectedType = vector_get(params, i);
             const hlir_t *cast = convert_to(sema_reports(sema), expectedType, hlir);
             vector_set(args, i, (hlir_t*)cast);
         }
@@ -938,15 +983,64 @@ static hlir_t *struct_get_field(const hlir_t *aggregate, const char *name)
     return NULL;
 }
 
+/**
+ * @brief Selects the implicit type for an initializer.
+ * @param sema The semantic analyzer.
+ * @param context The implicit expected type.
+ * @param user The user-provided initializer type.
+ */
+static const hlir_t *select_implicit_init_type(sema_t *sema, const hlir_t *context, ast_t *user)
+{
+    if (user == NULL)
+    {
+        return context;
+    }
+
+    return sema_type(sema, user);
+}
+
+static void add_default_inits(sema_t *sema, node_t *node, hlir_t *local, const hlir_t *type, set_t *fields)
+{
+    size_t len = vector_len(type->fields);
+    set_t *missing = set_new(len);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        hlir_t *field = vector_get(type->fields, i);
+        if (set_contains(fields, field->name))
+        {
+            continue;
+        }
+
+        set_add(missing, field->name);
+
+        hlir_t *access = hlir_access(node, local, field);
+        hlir_t *assign = hlir_assign(node, access, NULL); // TODO: default value
+        add_scope_step(sema, assign);
+    }
+
+    if (!set_empty(missing))
+    {
+        message_t *id = report(sema_reports(sema), eWarn, node, "missing initializers for fields");
+        set_iter_t iter = set_iter(missing);
+        while (set_has_next(&iter))
+        {
+            const char *name = set_next(&iter);
+            report_append(id, node, "field: %s", name);
+        }
+    }
+}
+
 static hlir_t *sema_init(sema_t *sema, ast_t *ast)
 {
-    if (ast->type == NULL)
+    const hlir_t *expected = get_implicit_type(sema);
+    if (expected == NULL && ast->type == NULL)
     {
-        report(sema_reports(sema), eInternal, ast->node, "cannot infer type of initializer (yet)");
+        report(sema_reports(sema), eInternal, ast->node, "cannot infer type of initializer in current context");
         return hlir_error(ast->node, "invalid initializer");
     }
 
-    hlir_t *type = sema_type(sema, ast->type);
+    const hlir_t *type = select_implicit_init_type(sema, expected, ast->type);
 
     if (hlir_is(type, eHlirError))
     {
@@ -965,6 +1059,8 @@ static hlir_t *sema_init(sema_t *sema, ast_t *ast)
 
     hlir_add_local(get_current_function(sema), local);
 
+    set_t *setFields = set_new(vector_len(real->fields));
+
     size_t len = vector_len(ast->inits);
     for (size_t i = 0; i < len; i++)
     {
@@ -979,14 +1075,23 @@ static hlir_t *sema_init(sema_t *sema, ast_t *ast)
             return hlir_error(ast->node, "invalid initializer");
         }
 
+        if (set_contains(setFields, field->name))
+        {
+            report(sema_reports(sema), eFatal, ast->node, "duplicate field '%s'", field->name);
+            return hlir_error(ast->node, "invalid initializer");
+        }
+
+        set_add(setFields, field->name);
+
         hlir_t *value = sema_rvalue(sema, field->value);
         
         hlir_t *access = hlir_access(field->node, local, it);
         hlir_t *assign = hlir_assign(field->node, access, value);
     
         add_scope_step(sema, assign);
-        // TODO: push to current scope
     }
+
+    add_default_inits(sema, ast->node, local, real, setFields);
 
     return hlir_name(ast->node, local);
 }
@@ -1053,7 +1158,7 @@ static hlir_t *sema_stmts(sema_t *sema, ast_t *stmts)
 
 static hlir_t *sema_return(sema_t *sema, ast_t *ast)
 {
-    hlir_t *result = sema_rvalue(sema, ast->operand);
+    hlir_t *result = sema_rvalue_with_implicit(sema, ast->operand, get_current_return_type(sema));
 
     return hlir_return(ast->node, result);
 }
