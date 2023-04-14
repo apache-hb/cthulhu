@@ -32,6 +32,7 @@ typedef enum
     eAstAccess,
     eAstCall,
     eAstIndex,
+    eAstInit,
 
     eAstRef,
     eAstDeref,
@@ -50,6 +51,7 @@ typedef enum
     eAstField,
     eAstCase,
     eAstParam,
+    eAstFieldInit,
 
     /* types */
     eAstTypename,
@@ -125,6 +127,9 @@ typedef struct ast_t
             union {
                 bool indexable;
                 struct ast_t *size;
+
+                /* eAstInit */
+                vector_t *inits;
             };
         };
 
@@ -192,6 +197,8 @@ typedef struct ast_t
                 /* eAstField */
                 struct {
                     struct ast_t *field;
+
+                    /* eAstFieldInit */
                     struct ast_t *value;
                 };
 
@@ -264,6 +271,8 @@ ast_t *ast_ref(scan_t *scan, where_t where, ast_t *value);
 ast_t *ast_deref(scan_t *scan, where_t where, ast_t *value);
 ast_t *ast_sizeof(scan_t *scan, where_t where, ast_t *type);
 
+ast_t *ast_init(scan_t *scan, where_t where, ast_t *type, vector_t *fields);
+
 /// statements
 
 ast_t *ast_stmts(scan_t *scan, where_t where, vector_t *stmts);
@@ -296,5 +305,6 @@ ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, ast_t *type, vec
 
 ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type, ast_t *value);
 ast_t *ast_param(scan_t *scan, where_t where, char *name, ast_t *type);
+ast_t *ast_fieldinit(scan_t *scan, where_t where, char *name, ast_t *value);
 
 void set_attribs(ast_t *decl, bool exported, vector_t *attribs);

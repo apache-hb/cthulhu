@@ -2,6 +2,7 @@
 #include "ast.h"
 #include "attribs.h"
 #include "cthulhu/hlir/arity.h"
+#include "report/report.h"
 #include "repr.h"
 #include "suffix.h"
 
@@ -891,6 +892,75 @@ static hlir_t *sema_index(sema_t *sema, ast_t *ast)
     return hlir_index(ast->node, array, cast);
 }
 
+static hlir_t *struct_get_field(const hlir_t *aggregate, const char *name)
+{
+    CTASSERT(hlir_is(aggregate, eHlirStruct));
+
+    vector_t *fields = aggregate->fields;
+    for (size_t i = 0; i < vector_len(fields); i++)
+    {
+        hlir_t *field = vector_get(fields, i);
+        if (str_equal(field->name, name))
+        {
+            return field;
+        }
+    }
+
+    return NULL;
+}
+
+static hlir_t *sema_init(sema_t *sema, ast_t *ast)
+{
+    if (ast->type == NULL)
+    {
+        report(sema_reports(sema), eInternal, ast->node, "cannot infer type of initializer (yet)");
+        return hlir_error(ast->node, "invalid initializer");
+    }
+
+    hlir_t *type = sema_type(sema, ast->type);
+
+    if (hlir_is(type, eHlirError))
+    {
+        return hlir_error(ast->node, "invalid initializer type");
+    }
+
+    const hlir_t *real = hlir_follow_type(type);
+
+    if (!hlir_is(real, eHlirStruct))
+    {
+        report(sema_reports(sema), eFatal, ast->node, "cannot initialize non-struct type (yet)");
+        return hlir_error(ast->node, "invalid initializer type");
+    }
+
+    hlir_t *local = hlir_local(ast->node, NULL, real);
+
+    hlir_add_local(get_current_function(sema), local);
+
+    size_t len = vector_len(ast->inits);
+    for (size_t i = 0; i < len; i++)
+    {
+        ast_t *field = vector_get(ast->inits, i);
+        CTASSERT(field->of == eAstFieldInit);
+
+        hlir_t *it = struct_get_field(real, field->name);
+
+        if (it == NULL)
+        {
+            report(sema_reports(sema), eFatal, ast->node, "unknown field '%s'", field->name);
+            return hlir_error(ast->node, "invalid initializer");
+        }
+
+        hlir_t *value = sema_rvalue(sema, field->value);
+        
+        hlir_t *access = hlir_access(field->node, local, it);
+        hlir_t *assign = hlir_assign(field->node, access, value);
+    
+        // TODO: push to current scope
+    }
+
+    return hlir_name(ast->node, local);
+}
+
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
 {
     switch (ast->of)
@@ -923,6 +993,9 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_sizeof(sema, ast);
     case eAstIndex:
         return sema_index(sema, ast);
+
+    case eAstInit:
+        return sema_init(sema, ast);
 
     default:
         report(sema_reports(sema), eInternal, ast->node, "unknown sema-expr: %d", ast->of);
@@ -997,8 +1070,13 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
 
 static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
 {
-    hlir_t *init = stmt->init != NULL ? sema_rvalue(sema, stmt->init) : NULL;
-    const hlir_t *type = stmt->expected != NULL ? sema_type(sema, stmt->expected) : get_hlir_type(init);
+    hlir_t *init = stmt->init != NULL 
+        ? sema_rvalue(sema, stmt->init) 
+        : NULL;
+    
+    const hlir_t *type = stmt->expected != NULL 
+        ? sema_type(sema, stmt->expected) 
+        : get_hlir_type(init);
 
     sema_value_t result = {type, init};
 
@@ -1404,7 +1482,6 @@ static void sema_decl(sema_t *sema, ast_t *ast)
 
     case eAstDeclAlias:
         decl = sema_get_resolved(sema, eSemaTypes, ast->name);
-        // sema_alias(sema, decl, ast); TODO: uhhhhh
         break;
 
     case eAstDeclVariant:

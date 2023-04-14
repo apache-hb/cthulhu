@@ -133,6 +133,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     NIL "`null`"
     NOINIT "`noinit`"
+    INIT "`init`"
 
     MATCH "`match`"
     DEFAULT "`default`"
@@ -169,6 +170,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     ASSERT "`assert`"
     ENSURES "`ensures`"
     INVARIANT "`invariant`"
+    ALWAYS "`always`"
 
     SIZEOF "`sizeof`"
     ALIGNOF "`alignof`"
@@ -201,6 +203,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     varinit vartype
     branch elif
     init underlying
+    opttype
+    fieldinit
 
 %type<vector>
     path decls decllist
@@ -210,6 +214,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     stmtlist paramlist
     args attrargs argbody
     funcparams opttypes types
+    optinits inits
 
 %type<ident>
     label block ident
@@ -431,6 +436,22 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | STRING { $$ = ast_string(x, @$, $1.text, $1.size); }
     | NIL { $$ = ast_null(x, @$); }
     | SIZEOF LPAREN type RPAREN { $$ = ast_sizeof(x, @$, $3); }
+    | DOT opttype LBRACE optinits RBRACE { $$ = ast_init(x, @$, $2, $4); }
+    ;
+
+opttype: %empty { $$ = NULL; }
+    | type { $$ = $1; }
+    ;
+
+optinits: %empty { $$ = vector_of(0); }
+    | inits { $$ = $1; }
+    ;
+
+inits: fieldinit { $$ = vector_init($1); }
+    | inits COMMA fieldinit { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+fieldinit: IDENT EQUALS expr { $$ = ast_fieldinit(x, @$, $1, $3); }
     ;
 
 postfix: primary { $$ = $1; }

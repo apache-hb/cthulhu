@@ -331,3 +331,19 @@ void set_attribs(ast_t *decl, bool exported, vector_t *attribs)
     decl->exported = exported;
     decl->attribs = attribs;
 }
+
+ast_t *ast_init(scan_t *scan, where_t where, ast_t *type, vector_t *fields)
+{
+    ast_t *ast = ast_new(eAstInit, scan, where);
+    ast->type = type;
+    ast->inits = fields;
+    return ast;
+}
+
+ast_t *ast_fieldinit(scan_t *scan, where_t where, char *name, ast_t *value)
+{
+    ast_t *ast = ast_new(eAstFieldInit, scan, where);
+    ast->name = name;
+    ast->value = value;
+    return ast;
+}

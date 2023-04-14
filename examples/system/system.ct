@@ -35,10 +35,11 @@ def defaultRelease(mem: *Arena, ptr: opaque) {
 }
 
 def defaultArena(name: str): Arena {
-    var mem: Arena = noinit;
-    mem.name = name;
-    mem.alloc = defaultAlloc;
-    mem.release = defaultRelease;
+    var mem = .Arena {
+        name = name,
+        alloc = defaultAlloc,
+        release = defaultRelease
+    };
     return mem;
 }
 
@@ -61,8 +62,9 @@ def getComputerName(mem: *Arena): str {
 }
 
 export def newSystem(mem: *Arena): System {
-    var result: System = noinit;
-    result.name = getComputerName(mem);
+    var result = .System {
+        name = getComputerName(mem)
+    };
     return result;
 }
 

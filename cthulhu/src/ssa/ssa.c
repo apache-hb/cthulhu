@@ -272,8 +272,12 @@ static const char *mangle_arg(ssa_t *ssa, const hlir_t *param)
     case eHlirStruct:
     case eHlirUnion:
         return mangle_named_type(type);
-
+    case eHlirOpaque:
+        return "Pv";
+    case eHlirUnit:
+        return "v";
     default:
+        report(ssa->reports, eWarn, get_hlir_node(param), "no mangle for %s", hlir_kind_to_string(kind));
         return "";
     }
 }

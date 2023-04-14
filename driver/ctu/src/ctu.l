@@ -93,11 +93,9 @@ WS [ \t\r\v\n\f]
 "module" { return MODULE; }
 "import" { return IMPORT; }
 "export" { return EXPORT; }
-"__using" { return USING; }
 
 "def" { return DEF; }
 "var" { return VAR; }
-"__final" { return FINAL; }
 "const" { return CONST; }
 
 "__object" { return OBJECT; }
@@ -115,10 +113,15 @@ WS [ \t\r\v\n\f]
 "return" { return RETURN; }
 
 "lambda" { return LAMBDA; }
-"__as" { return AS; }
 
 "__null" { return NIL; }
+
 "noinit" { return NOINIT; }
+"__init" { return INIT; }
+
+"__final" { return FINAL; }
+"__using" { return USING; }
+"__as" { return AS; }
 
 "__new" { return NEW; }
 "__delete" { return DELETE; }
@@ -170,6 +173,7 @@ WS [ \t\r\v\n\f]
 "__assert" { return ASSERT; }
 "__ensures" { return ENSURES; }
 "__invariant" { return INVARIANT; }
+"__always" { return ALWAYS; }
 
 "__sizeof" { return SIZEOF; }
 "__alignof" { return ALIGNOF; }

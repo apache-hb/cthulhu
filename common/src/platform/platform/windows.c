@@ -236,11 +236,11 @@ char *native_cerror_to_string(native_cerror_t error)
 
     if (written == 0)
     {
-        return format("unknown error (0x%08X)", error);
+        return format("unknown error (0x%08lX)", error);
     }
 
     char *cleaned = str_erase(buffer, written, "\n\r");
-    return format("%s (0x%08X)", cleaned, error);
+    return format("%s (0x%08lX)", cleaned, error);
 }
 
 USE_DECL
