@@ -61,12 +61,9 @@ def getComputerName(mem: *Arena): str {
     return name;
 }
 
-export def newSystem(mem: *Arena): System {
-    var result = .System {
-        name = getComputerName(mem)
-    };
-    return result;
-}
+export def newSystem(mem: *Arena): System = .System {
+    name = getComputerName(mem)
+};
 
 export def getSystemName(system: System): str = system.name;
 

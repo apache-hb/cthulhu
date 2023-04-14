@@ -33,8 +33,36 @@ typedef struct
 {
     size_t totalDecls;
 
+    vector_t *currentScope;
+
     hlir_t *currentFunction; // current function we are adding locals to
 } sema_data_t;
+
+static vector_t *enter_scope(sema_t *sema, size_t len)
+{
+    sema_data_t *data = sema_get_data(sema);
+    
+    vector_t *current = data->currentScope;
+    data->currentScope = vector_new(len);
+
+    return current;
+}
+
+static vector_t *leave_scope(sema_t *sema, vector_t *next)
+{
+    sema_data_t *data = sema_get_data(sema);
+    
+    vector_t *current = data->currentScope;
+    data->currentScope = next;
+
+    return current;
+}
+
+static void add_scope_step(sema_t *sema, hlir_t *hlir)
+{
+    sema_data_t *data = sema_get_data(sema);
+    vector_push(&data->currentScope, hlir);
+}
 
 static void set_current_function(sema_t *sema, hlir_t *function)
 {
@@ -52,6 +80,7 @@ static sema_data_t *sema_data_new(void)
 {
     sema_data_t *data = ctu_malloc(sizeof(sema_data_t));
     data->totalDecls = SIZE_MAX; 
+    data->currentScope = NULL;
     data->currentFunction = NULL;
     return data;
 }
@@ -955,6 +984,7 @@ static hlir_t *sema_init(sema_t *sema, ast_t *ast)
         hlir_t *access = hlir_access(field->node, local, it);
         hlir_t *assign = hlir_assign(field->node, access, value);
     
+        add_scope_step(sema, assign);
         // TODO: push to current scope
     }
 
@@ -1009,16 +1039,16 @@ static hlir_t *sema_stmts(sema_t *sema, ast_t *stmts)
 {
     size_t len = vector_len(stmts->stmts);
 
-    vector_t *result = vector_of(len);
+    vector_t *upper = enter_scope(sema, len);
 
     for (size_t i = 0; i < len; i++)
     {
         ast_t *stmt = vector_get(stmts->stmts, i);
         hlir_t *hlir = sema_stmt(sema, stmt);
-        vector_set(result, i, hlir);
+        add_scope_step(sema, hlir);
     }
 
-    return hlir_stmts(stmts->node, result);
+    return hlir_stmts(stmts->node, leave_scope(sema, upper));
 }
 
 static hlir_t *sema_return(sema_t *sema, ast_t *ast)
