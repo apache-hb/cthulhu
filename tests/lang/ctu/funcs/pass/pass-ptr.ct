@@ -1,0 +1,9 @@
+def setPtr(ptr: *int) {
+    *ptr = 25;
+}
+
+@entry(cli)
+def main {
+    var i = 999;
+    setPtr(&i);
+}

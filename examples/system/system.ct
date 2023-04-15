@@ -67,7 +67,7 @@ def getComputerName(mem: *Arena): str {
     return name;
 }
 
-export def newSystem(mem: *Arena): System = .System {
+export def newSystem(mem: *Arena): System = .{
     name = getComputerName(mem)
 };
 

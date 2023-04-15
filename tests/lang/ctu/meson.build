@@ -2,6 +2,70 @@ dir = meson.current_source_dir()
 ctc = harness['ctu']
 
 tests = {
+    'attribs': {
+        'pass': [
+            'entry-point',
+            'multi-attrib-array',
+            'multi-attrib',
+            'single-attrib-array'
+        ],
+        'fail': [
+            'duplicate-attribs',
+            'entry-var',
+            'imported-entry',
+            'invalid-attribute',
+            'multiple-entry'
+        ]
+    },
+    'digits': {
+        'pass': [
+            'no-suffix',
+            'suffix-zoo',
+            'complex-init'
+        ],
+        'fail': [
+            'invalid-suffix'
+        ]
+    },
+    'funcs': {
+        'fail': [
+            'ret-invalid',
+            'dup-arg'
+        ],
+        'pass': [
+            'decl-arg',
+            'empty-body',
+            'empty',
+            'int-return',
+            'many-args',
+            'return-int',
+            'type-return',
+            'use-arg',
+            'infinite-loop',
+            'loop-else',
+            'pass-ptr'
+        ]
+    },
+    'logic.loops': {
+        'fail': [
+            'loop-nonbool-expr',
+            #'invalid-break-label',
+            #'incorrect-break-label'
+        ],
+        'pass': [
+            'loop',
+            'for',
+            'break'
+            #'break-label',
+            #'nested-break'
+        ]
+    },
+    'programs': {
+        'pass': [
+            'alias-var'
+        ],
+        'fail': []
+    },
     'types.alias': {
         'fail': [ 
             'discard-alias-name', 
@@ -78,38 +142,14 @@ tests = {
             'expr-size'
         ]
     },
-    'funcs': {
+    'varargs': {
         'fail': [
-            'ret-invalid',
-            'dup-arg'
+            'forward-varargs',
+            'only-varargs',
+            'return-varargs',
+            'vararg-global'
         ],
-        'pass': [
-            'decl-arg',
-            'empty-body',
-            'empty',
-            'int-return',
-            'many-args',
-            'return-int',
-            'type-return',
-            'use-arg',
-            'infinite-loop',
-            'loop-else'
-        ]
-    },
-    'attribs': {
-        'pass': [
-            'entry-point',
-            'multi-attrib-array',
-            'multi-attrib',
-            'single-attrib-array'
-        ],
-        'fail': [
-            'duplicate-attribs',
-            'entry-var',
-            'imported-entry',
-            'invalid-attribute',
-            'multiple-entry'
-        ]
+        'pass': []
     },
     'variables': {
         'fail': [
@@ -127,36 +167,6 @@ tests = {
             'uninit',
             'globals'
         ]
-    },
-    'logic.loops': {
-        'fail': [
-            'loop-nonbool-expr',
-            #'invalid-break-label',
-            #'incorrect-break-label'
-        ],
-        'pass': [
-            'loop',
-            'for',
-            'break'
-            #'break-label',
-            #'nested-break'
-        ]
-    },
-    'digits': {
-        'pass': [
-            'no-suffix',
-            'suffix-zoo',
-            'complex-init'
-        ],
-        'fail': [
-            'invalid-suffix'
-        ]
-    },
-    'programs': {
-        'pass': [
-            'alias-var'
-        ],
-        'fail': []
     }
 }
 

@@ -43,7 +43,7 @@ typedef struct
 static vector_t *enter_scope(sema_t *sema, size_t len)
 {
     sema_data_t *data = sema_get_data(sema);
-    
+
     vector_t *current = data->currentScope;
     data->currentScope = vector_new(len);
 
@@ -53,7 +53,7 @@ static vector_t *enter_scope(sema_t *sema, size_t len)
 static vector_t *leave_scope(sema_t *sema, vector_t *next)
 {
     sema_data_t *data = sema_get_data(sema);
-    
+
     vector_t *current = data->currentScope;
     data->currentScope = next;
 
@@ -109,7 +109,7 @@ static const hlir_t *get_current_return_type(sema_t *sema)
 static sema_data_t *sema_data_new(void)
 {
     sema_data_t *data = ctu_malloc(sizeof(sema_data_t));
-    data->totalDecls = SIZE_MAX; 
+    data->totalDecls = SIZE_MAX;
     data->currentImplicitType = NULL;
     data->currentScope = NULL;
     data->currentFunction = NULL;
@@ -161,6 +161,8 @@ static hlir_t *kVaListType = NULL;
 
 static hlir_t *kUnresolvedType = NULL;
 static hlir_t *kUninitalized = NULL;
+
+static hlir_t *kZeroIndex = NULL;
 
 #define DIGIT_INDEX(sign, digit) ((sign)*eDigitTotal + (digit))
 
@@ -291,12 +293,12 @@ static hlir_t *ptr_convert_to(hlir_t *expr, const hlir_t *type, const hlir_t *pt
     {
         return NULL;
     }
-    
+
     if (hlir_types_equal(ptrDst, ptrSrc))
     {
         return expr;
     }
-    
+
     if (!IS_OPAQUE(ptrDst) && !IS_OPAQUE(ptrSrc))
     {
         return ptr_convert_to(expr, type, ptrDst->ptr, ptrSrc->ptr);
@@ -335,8 +337,8 @@ static hlir_t *convert_to(reports_t *reports, const hlir_t *to, hlir_t *expr)
         return hlir_cast(common, expr, eCastSignExtend);
     }
 
-    report(reports, eFatal, get_hlir_node(expr), "cannot convert from %s to %s", 
-        ctu_repr(reports, expr, true), 
+    report(reports, eFatal, get_hlir_node(expr), "cannot convert from %s to %s",
+        ctu_repr(reports, expr, true),
         ctu_type_repr(reports, to, true)
     );
     return hlir_error(get_hlir_node(expr), "failed to convert type");
@@ -433,6 +435,11 @@ void ctu_init_compiler(runtime_t *runtime)
 
     kUnresolvedType = hlir_error(node, "unresolved");
     kUninitalized = hlir_error(node, "uninitialized");
+
+    mpz_t zero;
+    mpz_init_set_ui(zero, 0);
+
+    kZeroIndex = hlir_digit_literal(node, get_digit_type(eUnsigned, eDigitSize), zero);
 }
 
 static hlir_t *sema_type(sema_t *sema, ast_t *ast);
@@ -461,18 +468,13 @@ static hlir_t *sema_rvalue(sema_t *sema, ast_t *ast)
     return result;
 }
 
-#define IMPLICIT_SEMA_EXPR(name, fn) \
-    static hlir_t *name(sema_t *sema, ast_t *ast, const hlir_t *type) \
-    { \
-        const hlir_t *save = push_implicit_type(sema, type); \
-        hlir_t *result = fn(sema, ast); \
-        pop_implicit_type(sema, save); \
-        return result; \
-    }
-
-IMPLICIT_SEMA_EXPR(sema_expr_with_implicit, sema_expr);
-IMPLICIT_SEMA_EXPR(sema_rvalue_with_implicit, sema_rvalue);
-IMPLICIT_SEMA_EXPR(sema_lvalue_with_implicit, sema_lvalue);
+static hlir_t *sema_rvalue_with_implicit(sema_t *sema, ast_t *ast, const hlir_t *type)
+{
+    const hlir_t *save = push_implicit_type(sema, type);
+    hlir_t *result = sema_rvalue(sema, ast);
+    pop_implicit_type(sema, save);
+    return result;
+}
 
 static sema_t *sema_path(sema_t *sema, vector_t *path, node_t *node)
 {
@@ -533,7 +535,7 @@ static hlir_t *begin_type_resolve(sema_t *sema, void *user)
 {
     ast_t *ast = user;
 
-    switch (ast->of) 
+    switch (ast->of)
     {
     case eAstDeclUnion:
         return hlir_begin_union(ast->node, ast->name);
@@ -841,7 +843,7 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
     bool variadic = closure_variadic(fnType);
 
     size_t totalParams = vector_len(params);
-    
+
     if (len != totalParams)
     {
         if (len < totalParams)
@@ -894,7 +896,7 @@ static hlir_t *sema_access(sema_t *sema, ast_t *ast)
     const hlir_t *objectType = get_hlir_type(object);
     if (is_ptr(objectType))
     {
-        if (!ast->indirect) 
+        if (!ast->indirect)
         {
             report(sema_reports(sema), eWarn, ast->node, "accessing pointer without dereferencing");
         }
@@ -902,7 +904,7 @@ static hlir_t *sema_access(sema_t *sema, ast_t *ast)
         objectType = objectType->ptr;
     }
 
-    if (!is_aggregate(objectType)) 
+    if (!is_aggregate(objectType))
     {
         report(sema_reports(sema), eFatal, ast->node, "cannot access non-aggregate type");
         return hlir_error(ast->node, "invalid access");
@@ -1084,16 +1086,30 @@ static hlir_t *sema_init(sema_t *sema, ast_t *ast)
         set_add(setFields, field->name);
 
         hlir_t *value = sema_rvalue(sema, field->value);
-        
+
         hlir_t *access = hlir_access(field->node, local, it);
         hlir_t *assign = hlir_assign(field->node, access, value);
-    
+
         add_scope_step(sema, assign);
     }
 
     add_default_inits(sema, ast->node, local, real, setFields);
 
     return hlir_name(ast->node, local);
+}
+
+static hlir_t *sema_deref(sema_t *sema, ast_t *ast)
+{
+    hlir_t *expr = sema_rvalue(sema, ast->operand);
+
+    const hlir_t *ty = get_hlir_type(expr);
+    if (!hlir_is(ty, eHlirPointer))
+    {
+        report(sema_reports(sema), eFatal, ast->node, "cannot dereference non-pointer type");
+        return hlir_error(ast->node, "invalid dereference");
+    }
+
+    return hlir_index(ast->node, expr, kZeroIndex);
 }
 
 static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
@@ -1128,6 +1144,8 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
         return sema_sizeof(sema, ast);
     case eAstIndex:
         return sema_index(sema, ast);
+    case eAstDeref:
+        return sema_deref(sema, ast);
 
     case eAstInit:
         return sema_init(sema, ast);
@@ -1173,11 +1191,11 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     hlir_t *cond = sema_rvalue(sema, ast->cond);
 
     size_t sizes[eTagTotal] = {
-        [eSemaValues] = 32, 
-        [eSemaProcs] = 4, 
-        [eSemaTypes] = 4, 
-        [eSemaModules] = 1, 
-        [eTagAttribs] = 1, 
+        [eSemaValues] = 32,
+        [eSemaProcs] = 4,
+        [eSemaTypes] = 4,
+        [eSemaModules] = 1,
+        [eTagAttribs] = 1,
         [eTagSuffix] = 1,
     };
 
@@ -1203,15 +1221,30 @@ static hlir_t *sema_while(sema_t *sema, ast_t *ast)
     return hlir_loop(ast->node, cond, then, other);
 }
 
+static const hlir_t *sema_global_type(sema_t *sema, ast_t *expected, const hlir_t *expr)
+{
+    if (expected == NULL)
+    {
+        return get_hlir_type(expr);
+    }
+    else if (expected->of == eAstVarArgs)
+    {
+        report(sema_reports(sema), eFatal, expected->node, "cannot use varargs as a global type");
+        return hlir_error(expected->node, "invalid global type");
+    }
+    else
+    {
+        return sema_type(sema, expected);
+    }
+}
+
 static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
 {
-    hlir_t *init = stmt->init != NULL 
-        ? sema_rvalue(sema, stmt->init) 
+    hlir_t *init = stmt->init != NULL
+        ? sema_rvalue(sema, stmt->init)
         : NULL;
-    
-    const hlir_t *type = stmt->expected != NULL 
-        ? sema_type(sema, stmt->expected) 
-        : get_hlir_type(init);
+
+    const hlir_t *type = sema_global_type(sema, stmt->expected, init);
 
     sema_value_t result = {type, init};
 
@@ -1284,12 +1317,12 @@ static hlir_t *sema_continue(sema_t *sema, ast_t *stmt)
 static hlir_t *sema_branch(sema_t *sema, ast_t *stmt)
 {
     hlir_t *cond = sema_rvalue(sema, stmt->cond);
-    
+
     size_t tags[eTagTotal] = {
-        [eSemaValues] = 32, 
-        [eSemaProcs] = 32, 
-        [eSemaTypes] = 32, 
-        [eSemaModules] = 32, 
+        [eSemaValues] = 32,
+        [eSemaProcs] = 32,
+        [eSemaTypes] = 32,
+        [eSemaModules] = 32,
         [eTagAttribs] = 32,
     };
 
@@ -1566,7 +1599,7 @@ static void update_func_attribs(ast_t *ast, hlir_t *hlir)
 {
     linkage_t link = eLinkInternal;
     visibility_t visibility = eVisiblePrivate;
-    if (ast->exported) 
+    if (ast->exported)
     {
         link = eLinkExported;
         visibility = eVisiblePublic;
@@ -1582,10 +1615,10 @@ static void update_func_attribs(ast_t *ast, hlir_t *hlir)
 static void sema_func(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
     size_t tags[eTagTotal] = {
-        [eSemaValues] = 32, 
-        [eSemaProcs] = 32, 
-        [eSemaTypes] = 32, 
-        [eSemaModules] = 32, 
+        [eSemaValues] = 32,
+        [eSemaProcs] = 32,
+        [eSemaTypes] = 32,
+        [eSemaModules] = 32,
         [eTagAttribs] = 32,
     };
 
@@ -1658,18 +1691,34 @@ static arity_t get_arity(ast_t *ast)
     return (type->of == eAstVarArgs) ? eArityVariable : eArityFixed;
 }
 
+static hlir_t *get_func_result(sema_t *sema, ast_t *result)
+{
+    if (result == NULL)
+    {
+        return kVoidType;
+    }
+    else if (result->of == eAstVarArgs)
+    {
+        report(sema_reports(sema), eFatal, result->node, "function cannot have a single varargs parameter");
+        return kVoidType;
+    }
+
+    return sema_type(sema, result);
+}
+
 static hlir_t *begin_function(sema_t *sema, ast_t *ast)
 {
-    hlir_t *result = kVoidType;
     ast_t *signature = ast->signature;
-    if (signature->result != NULL)
-    {
-        result = sema_type(sema, signature->result);
-    }
+    hlir_t *result = get_func_result(sema, signature->result);
 
     size_t len = vector_len(signature->params);
 
     arity_t arity = get_arity(ast);
+
+    if (len == 1 && arity == eArityVariable)
+    {
+        report(sema_reports(sema), eFatal, ast->node, "function cannot have a single varargs parameter");
+    }
 
     if (arity == eArityVariable)
     {

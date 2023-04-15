@@ -54,7 +54,7 @@ typedef struct hlir_t
         string_view_t stringLiteral;
 
         struct hlir_t *read; ///< the name of this load operation. active if
-                             ///< type == eHlirName
+                             ///< type == eHlirLoad
 
         struct {
             struct hlir_t *operand;
