@@ -865,7 +865,9 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
     for (size_t i = 0; i < len; i++)
     {
         ast_t *arg = vector_get(ast->args, i);
-        hlir_t *expectedType = (i >= totalParams) ? NULL : vector_get(params, i);
+        hlir_t *expectedType = (i >= totalParams) 
+            ? NULL 
+            : vector_get(params, i);
 
         hlir_t *hlir = sema_rvalue_with_implicit(sema, arg, expectedType);
 
@@ -976,7 +978,8 @@ static hlir_t *struct_get_field(const hlir_t *aggregate, const char *name)
     for (size_t i = 0; i < vector_len(fields); i++)
     {
         hlir_t *field = vector_get(fields, i);
-        if (str_equal(field->name, name))
+        printf("names: %s = %s\n", field->name, name);
+        if (str_equal(get_hlir_name(field), name))
         {
             return field;
         }
@@ -1073,7 +1076,7 @@ static hlir_t *sema_init(sema_t *sema, ast_t *ast)
 
         if (it == NULL)
         {
-            report(sema_reports(sema), eFatal, ast->node, "unknown field '%s'", field->name);
+            report(sema_reports(sema), eFatal, ast->node, "unknown init field '%s'", field->name);
             return hlir_error(ast->node, "invalid initializer");
         }
 
@@ -1240,6 +1243,17 @@ static const hlir_t *sema_global_type(sema_t *sema, ast_t *expected, const hlir_
 
 static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
 {
+    if (stmt->expected != NULL && stmt->init != NULL)
+    {
+        const hlir_t *type = sema_global_type(sema, stmt->expected, NULL);
+        hlir_t *init = sema_rvalue_with_implicit(sema, stmt->init, type);
+
+        sema_value_t result = {type, init};
+        return result;
+    }
+
+
+    // TODO: this is getting ugly
     hlir_t *init = stmt->init != NULL
         ? sema_rvalue(sema, stmt->init)
         : NULL;

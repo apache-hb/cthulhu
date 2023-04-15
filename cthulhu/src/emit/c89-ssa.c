@@ -44,7 +44,6 @@ static bool should_emit_to_header(c89_ssa_emit_t *emit, const void *symbol)
 
 static void add_public_symbol(c89_ssa_emit_t *emit, const void *symbol)
 {
-    printf("add public symbol: %p\n", symbol);
     set_add_ptr(emit->publicSymbols, symbol);
 }
 
@@ -58,11 +57,8 @@ static void pick_dst(c89_ssa_emit_t *emit, const void *symbol)
     if (!has_header(emit))
     {
         emit->dst = &emit->emit;
-        printf("no header\n");
         return;
     }
-
-    printf("should: %d\n", should_emit_to_header(emit, symbol));
 
     emit->dst = should_emit_to_header(emit, symbol) 
         ? &emit->header 
@@ -751,6 +747,8 @@ static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 
     emit->currentFlow = function;
 
+    pick_dst(emit, function);
+
     c89_emit_function_decl(emit, function, false);
     WRITE_SOURCE(emit, " {\n");
     emit_indent(&emit->emit);
@@ -872,6 +870,7 @@ static vector_t *c89_sort_types(vector_t *types)
 
 static bool is_public(const ssa_flow_t *flow)
 {
+    if (is_entry_point(flow->linkage)) { return false; }
     return flow->visibility == eVisiblePublic || flow->linkage == eLinkExported;
 }
 

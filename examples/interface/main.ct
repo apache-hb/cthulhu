@@ -1,0 +1,16 @@
+module main;
+
+import cthulhu;
+
+@entry(cli)
+def main(argc: int, argv: [*]str): int {
+    var reports = cthulhu::beginReports();
+
+    cthulhu::report(reports, 0, cthulhu::builtinNode(), "Test %s", "message");
+
+    cthulhu::endReports(reports, .{
+        limit = 100uz
+    });
+
+    return 0;
+}

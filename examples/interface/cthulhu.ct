@@ -1,0 +1,50 @@
+module cthulhu;
+
+// nodes
+
+// TODO: variant id = ty; should be added again
+
+export type Node = opaque;
+
+@extern("node_builtin")
+export def builtinNode: Node;
+
+@extern("node_invalid")
+export def invalidNode: Node;
+
+
+
+// reporting
+
+export type Reports = opaque;
+
+export type Message = opaque;
+
+// TODO: this should be a variant, but interop with those doesnt work properly
+export type Level = int;
+
+// @layout(platform)
+export struct ReportConfig {
+    limit: usize;
+    werror: bool;
+}
+
+@extern("begin_reports")
+export def beginReports: Reports;
+
+@extern("end_reports")
+export def endReports(reports: Reports, config: ReportConfig);
+
+@extern("report")
+export def report(reports: Reports, level: Level, node: Node, fmt: str, args: ...): Message;
+
+
+
+// debugging
+
+// TODO: this feels a little ugly
+@extern("verbose")
+export var verbose: bool = noinit;
+
+@extern("logverbose")
+export def logverbose(fmt: str, args: ...);
