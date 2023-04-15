@@ -25,6 +25,7 @@
 
 typedef struct
 {
+    reports_t *reports;
     emit_t emit;
 
     // map of hlir -> string
@@ -33,7 +34,7 @@ typedef struct
     vector_t *path; // current path of decls
 } c89_emit_t;
 
-#define REPORTS(it) ((it)->emit.reports)
+#define REPORTS(it) ((it)->reports)
 
 #define EMIT_STRING(it, str) WRITE_STRING(&it->emit, str)
 #define EMIT_STRINGF(it, fmt, ...) WRITE_STRINGF(&it->emit, fmt, __VA_ARGS__)
@@ -436,7 +437,7 @@ static const char *c89_emit_inner_type(c89_emit_t *emit, const hlir_t *hlir, con
         return name == NULL ? "float" : format("float %s", name);
 
     default:
-        ctu_assert(emit->emit.reports, "cannot emit %s (%s) as a type", get_hlir_name(hlir), hlir_kind_to_string(kind));
+        ctu_assert(REPORTS(emit), "cannot emit %s (%s) as a type", get_hlir_name(hlir), hlir_kind_to_string(kind));
         return "error";
     }
 }
@@ -1297,12 +1298,15 @@ static void c89_emit_functions(c89_emit_t *emit, size_t totalDecls, vector_t *mo
     }
 }
 
-void c89_emit_hlir_modules(reports_t *reports, vector_t *modules, io_t *io)
+void c89_emit_hlir_modules(emit_config_t config, vector_t *modules)
 {
+    CTASSERT(config.reports != NULL);
+    CTASSERT(config.source != NULL);
+
     c89_emit_t emit = {
+        .reports = config.reports,
         .emit = {
-            .reports = reports,
-            .io = io,
+            .io = config.source,
             .indent = 0
         }
     };

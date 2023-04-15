@@ -9,6 +9,11 @@ static const char *kIndent = "  ";
 
 void write_string(emit_t *emit, const char *str)
 {
+    if (emit->io == NULL)
+    {
+        return;
+    }
+    
     size_t indentLen = strlen(kIndent);
     for (size_t i = 0; i < emit->indent; i++)
     {

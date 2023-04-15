@@ -71,7 +71,7 @@ int main(int argc, const char **argv)
         return result.exitCode;
     }
 
-    const char *outFile = get_string_arg(&result, outputFileNameParam, "out.c");
+    const char *outFile = get_string_arg(&result, outputFileNameParam, "out");
     bool enableSsa = get_bool_arg(&result, enableSSAParam, false);
 
     size_t totalFiles = vector_len(result.files);
@@ -112,7 +112,14 @@ int main(int argc, const char **argv)
     }
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
-    io_t *out = io_file(outFile, eFileWrite | eFileBinary);
+    io_t *outSource = io_file(format("%s.c", outFile), eFileWrite | eFileBinary);
+    io_t *outHeader = io_file(format("%s.h", outFile), eFileWrite | eFileBinary);
+
+    emit_config_t emitConfig = {
+        .reports = reports,
+        .source = outSource,
+        .header = outHeader
+    };
 
     if (enableSsa)
     {
@@ -125,19 +132,27 @@ int main(int argc, const char **argv)
         ssa_emit_module(reports, mod);
         CHECK_REPORTS("emitting ssa");
 
-        c89_emit_ssa_modules(reports, mod, out);
+        c89_emit_ssa_modules(emitConfig, mod);
 
         return end_reports(reports, "generating c89 from ssa", reportConfig);
     }
 
-    if (io_error(out) != 0)
+    // TODO: dedup
+    if (io_error(outSource) != 0)
     {
         message_t *id = report(reports, eFatal, node_invalid(), "failed to open file `%s`", outFile);
-        report_note(id, "%s", error_string(io_error(out)));
+        report_note(id, "%s", error_string(io_error(outSource)));
         return end_reports(reports, "opening file", reportConfig);
     }
 
-    c89_emit_hlir_modules(reports, allModules, out);
+    if (io_error(outHeader) != 0)
+    {
+        message_t *id = report(reports, eFatal, node_invalid(), "failed to open file `%s`", outFile);
+        report_note(id, "%s", error_string(io_error(outHeader)));
+        return end_reports(reports, "opening file", reportConfig);
+    }
+
+    c89_emit_hlir_modules(emitConfig, allModules);
 
     return end_reports(reports, "emitting code", reportConfig);
 }

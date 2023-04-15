@@ -8,6 +8,7 @@
 #include "std/str.h"
 #include "std/map.h"
 #include "std/set.h"
+#include "io/io.h"
 
 #include "report/report.h"
 
@@ -19,17 +20,65 @@
 
 typedef struct c89_ssa_emit_t
 {
+    reports_t *reports;
+    
     emit_t emit;
+    emit_t header;
+
+    emit_t *dst;
 
     map_t *stepCache; // map_t<ssa_step_t*, const char*>
 
     set_t *completeEdges; // set_t<ssa_block_t*>
     set_t *pendingEdges; // set_t<ssa_block_t*>
 
+    set_t *publicSymbols; // set_t<void*>
+
     const ssa_flow_t *currentFlow;
 } c89_ssa_emit_t;
 
-#define REPORTS(emit) ((emit)->emit.reports)
+static bool should_emit_to_header(c89_ssa_emit_t *emit, const void *symbol)
+{
+    return set_contains_ptr(emit->publicSymbols, symbol);
+}
+
+static void add_public_symbol(c89_ssa_emit_t *emit, const void *symbol)
+{
+    printf("add public symbol: %p\n", symbol);
+    set_add_ptr(emit->publicSymbols, symbol);
+}
+
+static bool has_header(c89_ssa_emit_t *emit)
+{
+    return emit->header.io != NULL;
+}
+
+static void pick_dst(c89_ssa_emit_t *emit, const void *symbol)
+{
+    if (!has_header(emit))
+    {
+        emit->dst = &emit->emit;
+        printf("no header\n");
+        return;
+    }
+
+    printf("should: %d\n", should_emit_to_header(emit, symbol));
+
+    emit->dst = should_emit_to_header(emit, symbol) 
+        ? &emit->header 
+        : &emit->emit;
+}
+
+#define REPORTS(emit) ((emit)->reports)
+
+#define WRITE_TEXT(it, str) WRITE_STRING((it)->dst, str)
+#define WRITE_TEXTF(it, fmt, ...) WRITE_STRINGF((it)->dst, fmt, __VA_ARGS__)
+
+#define WRITE_SOURCE(it, str) WRITE_STRING(&(it)->emit, str)
+#define WRITE_SOURCEF(it, fmt, ...) WRITE_STRINGF(&(it)->emit, fmt, __VA_ARGS__)
+
+#define WRITE_HEADER(it, str) WRITE_STRING(&(it)->header, str)
+#define WRITE_HEADERF(it, fmt, ...) WRITE_STRINGF(&(it)->header, fmt, __VA_ARGS__)
 
 static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, const char *name);
 
@@ -214,18 +263,19 @@ static void c89_emit_ssa_global(c89_ssa_emit_t *emit, const ssa_flow_t *global)
 {
     CTASSERT(global != NULL);
     
+    pick_dst(emit, global);
+
     const char *name = get_flow_name(global);
     const char *type = get_type_name(emit, global->type, name);
 
     if (global->linkage == eLinkImported || !value_exists(global->value))
     {
-        WRITE_STRINGF(&emit->emit, "extern %s;\n", type);
-        return;
+        WRITE_TEXTF(emit, "extern %s;\n", type);
     }
     else
     {
         const char *value = emit_value(emit, global->value);
-        WRITE_STRINGF(&emit->emit, "%s = %s;\n", type, value);
+        WRITE_SOURCEF(emit, "%s = %s;\n", type, value);
     }
 }
 
@@ -263,10 +313,10 @@ static void c89_emit_function_decl(c89_ssa_emit_t *emit, const ssa_flow_t *flow,
     switch (flow->linkage)
     {
     case eLinkImported:
-        WRITE_STRING(&emit->emit, "extern ");
+        WRITE_TEXT(emit, "extern ");
         break;
     case eLinkInternal:
-        WRITE_STRING(&emit->emit, "static ");
+        WRITE_TEXT(emit, "static ");
         break;
     
     default:
@@ -275,12 +325,12 @@ static void c89_emit_function_decl(c89_ssa_emit_t *emit, const ssa_flow_t *flow,
 
     const char *result = get_function_return_type(emit, flow);
 
-    WRITE_STRINGF(&emit->emit, "%s(", result);
+    WRITE_TEXTF(emit, "%s(", result);
     
     size_t totalParams = vector_len(type->args);
     if (totalParams == 0) 
     {
-        WRITE_STRING(&emit->emit, "void");
+        WRITE_TEXT(emit, "void");
     }
     else
     {
@@ -289,21 +339,21 @@ static void c89_emit_function_decl(c89_ssa_emit_t *emit, const ssa_flow_t *flow,
             const ssa_param_t *param = vector_get(type->args, i);
             const char *paramType = get_type_name(emit, param->type, get_param_name(param, i, fwd));
 
-            WRITE_STRINGF(&emit->emit, "%s", paramType);
+            WRITE_TEXTF(emit, "%s", paramType);
 
             if (i < totalParams - 1)
             {
-                WRITE_STRING(&emit->emit, ", ");
+                WRITE_TEXT(emit, ", ");
             }
         }
 
         if (type->arity == eArityVariable)
         {
-            WRITE_STRING(&emit->emit, ", ...");
+            WRITE_TEXT(emit, ", ...");
         }
     }
 
-    WRITE_STRING(&emit->emit, ")");
+    WRITE_TEXT(emit, ")");
 }
 
 static bool operand_is_empty(ssa_operand_t op)
@@ -357,7 +407,7 @@ static const char *emit_operand(c89_ssa_emit_t *emit, ssa_operand_t operand)
         return "";
 
     default:
-        ctu_assert(emit->emit.reports, "unhandled operand kind: %d", operand.kind);
+        ctu_assert(REPORTS(emit), "unhandled operand kind: %d", operand.kind);
         return "";
     }
 }
@@ -588,7 +638,7 @@ static const char *c89_emit_offset(c89_ssa_emit_t *emit, const ssa_step_t *step)
     const char *operand = emit_operand(emit, offset.object);
     const char *field = format("field%zu", offset.field);
 
-    const ssa_type_t *type = ssa_get_operand_type(emit->emit.reports, emit->currentFlow, offset.object);
+    const ssa_type_t *type = ssa_get_operand_type(REPORTS(emit), emit->currentFlow, offset.object);
     const char *indirect = type->kind == eTypePointer ? "->" : ".";
 
     char *name = c89_gen_reg(step);
@@ -651,7 +701,7 @@ static const char *c89_emit_step(c89_ssa_emit_t *emit, const ssa_step_t *step)
         return c89_emit_offset(emit, step);
 
     default:
-        ctu_assert(emit->emit.reports, "unhandled opcode: %d", step->opcode);
+        ctu_assert(REPORTS(emit), "unhandled opcode: %d", step->opcode);
         return "";
     }
 }
@@ -663,7 +713,7 @@ static void c89_emit_block(c89_ssa_emit_t *emit, const ssa_block_t *block)
         return;
     }
 
-    WRITE_STRINGF(&emit->emit, "%s: {\n", block->id);
+    WRITE_SOURCEF(emit, "%s: {\n", block->id);
     emit_indent(&emit->emit);
 
     size_t len = vector_len(block->steps);
@@ -671,11 +721,11 @@ static void c89_emit_block(c89_ssa_emit_t *emit, const ssa_block_t *block)
     {
         const ssa_step_t *step = vector_get(block->steps, i);
         const char *it = c89_emit_step(emit, step);
-        WRITE_STRINGF(&emit->emit, "%s\n", it);
+        WRITE_SOURCEF(emit, "%s\n", it);
     }
 
     emit_dedent(&emit->emit);
-    WRITE_STRING(&emit->emit, "}\n");
+    WRITE_SOURCE(emit, "}\n");
 
     set_iter_t iter = set_iter(emit->pendingEdges);
     while (set_has_next(&iter))
@@ -688,7 +738,7 @@ static void c89_emit_block(c89_ssa_emit_t *emit, const ssa_block_t *block)
 static void c89_emit_local(c89_ssa_emit_t *emit, size_t idx, const ssa_type_t *local)
 {
     const char *type = get_type_name(emit, local, format("local%zu", idx));
-    WRITE_STRINGF(&emit->emit, "%s;\n", type);
+    WRITE_SOURCEF(emit, "%s;\n", type);
 }
 
 static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
@@ -702,7 +752,7 @@ static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
     emit->currentFlow = function;
 
     c89_emit_function_decl(emit, function, false);
-    WRITE_STRING(&emit->emit, " {\n");
+    WRITE_SOURCE(emit, " {\n");
     emit_indent(&emit->emit);
 
     size_t locals = vector_len(function->locals);
@@ -715,15 +765,17 @@ static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
     c89_emit_block(emit, function->entry);
 
     emit_dedent(&emit->emit);
-    WRITE_STRING(&emit->emit, "}\n");
+    WRITE_SOURCE(emit, "}\n");
 }
 
 static void c89_fwd_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 {
     if (is_entry_point(function->linkage)) { return; }
 
+    pick_dst(emit, function);
+
     c89_emit_function_decl(emit, function, true);
-    WRITE_STRING(&emit->emit, ";\n");
+    WRITE_TEXT(emit, ";\n");
 }
 
 static bool should_fwd_type(ssa_kind_t kind)
@@ -745,14 +797,18 @@ static void c89_fwd_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
 {
     if (!should_fwd_type(type->kind)) { return; }
 
-    WRITE_STRINGF(&emit->emit, "struct %s;\n", type->name);
+    pick_dst(emit, type);
+
+    WRITE_TEXTF(emit, "%s %s;\n", get_aggregate_name(type->kind), type->name);
 }
 
 static void c89_emit_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
 {
     if (!should_fwd_type(type->kind)) { return; }
 
-    WRITE_STRINGF(&emit->emit, "%s %s {\n", get_aggregate_name(type->kind), type->name);
+    pick_dst(emit, type);
+
+    WRITE_TEXTF(emit, "%s %s {\n", get_aggregate_name(type->kind), type->name);
     emit_indent(&emit->emit);
 
     size_t len = vector_len(type->fields);
@@ -760,11 +816,11 @@ static void c89_emit_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
     {
         const ssa_param_t *field = vector_get(type->fields, i);
         const char *type = get_type_name(emit, field->type, format("field%zu", i));
-        WRITE_STRINGF(&emit->emit, "%s;\n", type);
+        WRITE_TEXTF(emit, "%s;\n", type);
     }
 
     emit_dedent(&emit->emit);
-    WRITE_STRING(&emit->emit, "};\n");
+    WRITE_TEXT(emit, "};\n");
 }
 
 static void add_type_deps(vector_t **deps, set_t *fwd, const ssa_type_t *type)
@@ -814,18 +870,83 @@ static vector_t *c89_sort_types(vector_t *types)
     return result;
 }
 
-void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)
+static bool is_public(const ssa_flow_t *flow)
 {
+    return flow->visibility == eVisiblePublic || flow->linkage == eLinkExported;
+}
+
+static void mark_type_public(c89_ssa_emit_t *emit, const ssa_type_t *type)
+{
+    add_public_symbol(emit, type);
+    switch (type->kind)
+    {
+    case eTypeStruct:
+    case eTypeUnion:
+        for (size_t i = 0; i < vector_len(type->fields); i++)
+        {
+            ssa_param_t *field = vector_get(type->fields, i);
+            mark_type_public(emit, field->type);
+        }
+        break;
+    case eTypeSignature:
+        mark_type_public(emit, type->result);
+        for (size_t i = 0; i < vector_len(type->args); i++)
+        {
+            ssa_param_t *param = vector_get(type->args, i);
+            mark_type_public(emit, param->type);
+        }
+        break;
+    default: break;
+    }
+}
+
+static void mark_public_symbols(c89_ssa_emit_t *emit, section_t symbols)
+{
+    size_t totalGlobals = vector_len(symbols.globals);
+    size_t totalFunctions = vector_len(symbols.functions);
+
+    for (size_t i = 0; i < totalGlobals; i++)
+    {
+        const ssa_flow_t *global = vector_get(symbols.globals, i);
+        if (is_public(global))
+        {
+            add_public_symbol(emit, global);
+            mark_type_public(emit, global->type);
+        }
+    }
+
+    for (size_t i = 0; i < totalFunctions; i++)
+    {
+        const ssa_flow_t *function = vector_get(symbols.functions, i);
+        if (is_public(function))
+        {
+            add_public_symbol(emit, function);
+            mark_type_public(emit, function->type);
+        }
+    }
+}
+
+void c89_emit_ssa_modules(emit_config_t config, ssa_module_t *module)
+{
+    CTASSERT(config.reports != NULL);
+    CTASSERT(config.source != NULL);
+    
     c89_ssa_emit_t emit = {
+        .reports = config.reports,
         .emit = {
-            .reports = reports,
-            .io = dst,
-            .indent = 0,
+            .io = config.source,
+        },
+        .header = {
+            .io = config.header,
         },
         .stepCache = map_new(0x1000),
         .completeEdges = set_new(64),
         .pendingEdges = set_new(64),
+        .publicSymbols = set_new(0x1000)
     };
+
+    printf("src: %s\nhdr: %s\n", io_name(config.source), io_name(config.header));
+    printf("has: %d\n", has_header(&emit));
 
     section_t symbols = module->symbols;
 
@@ -835,8 +956,21 @@ void c89_emit_ssa_modules(reports_t *reports, ssa_module_t *module, io_t *dst)
     vector_t *sortedTypes = c89_sort_types(symbols.types);
     size_t totalTypes = vector_len(sortedTypes);
 
-    WRITE_STRING(&emit.emit, "#include <stdbool.h>\n");
-    WRITE_STRING(&emit.emit, "#include <stddef.h>\n");
+    mark_public_symbols(&emit, symbols);
+
+    if (has_header(&emit))
+    {
+        WRITE_SOURCEF(&emit, "#include \"%s\"\n", io_name(config.header));
+    }
+    else
+    {
+        WRITE_SOURCE(&emit, "#include <stdbool.h>\n");
+        WRITE_SOURCE(&emit, "#include <stddef.h>\n");
+    }
+
+    WRITE_HEADER(&emit, "#pragma once\n");
+    WRITE_HEADER(&emit, "#include <stdbool.h>\n");
+    WRITE_HEADER(&emit, "#include <stddef.h>\n");
 
     for (size_t i = 0; i < totalTypes; i++)
     {

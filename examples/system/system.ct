@@ -8,7 +8,7 @@ struct Arena {
     release: def(*Arena, opaque) -> void;
 }
 
-struct System {
+export struct System {
     name: str;
 }
 
@@ -43,7 +43,7 @@ def defaultRelease(mem: *Arena, ptr: opaque) {
     libcRelease(ptr);
 }
 
-def defaultArena(name: str): Arena = .{
+export def defaultArena(name: str): Arena = .{
     name = name,
     alloc = defaultAlloc,
     release = defaultRelease

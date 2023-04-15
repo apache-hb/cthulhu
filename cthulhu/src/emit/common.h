@@ -7,7 +7,6 @@ typedef struct io_t io_t;
 
 typedef struct emit_t 
 {
-    reports_t *reports;
     io_t *io;
 
     size_t indent;

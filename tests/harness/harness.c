@@ -142,7 +142,12 @@ int main(int argc, const char **argv)
 
     CTASSERTF(io_error(c89Out) == 0, "failed to open file: %s", error_string(io_error(c89Out)));
 
-    c89_emit_ssa_modules(result.reports, mod, c89Out);
+    emit_config_t emitConfig = {
+        .reports = result.reports,
+        .source = c89Out
+    };
+
+    c89_emit_ssa_modules(emitConfig, mod);
 
     err = end_reports(result.reports, "emitting c89", result.reportConfig);
     if (err != EXIT_OK) { return err; }
