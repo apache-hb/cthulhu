@@ -943,10 +943,7 @@ void c89_emit_ssa_modules(emit_config_t config, ssa_module_t *module)
         .pendingEdges = set_new(64),
         .publicSymbols = set_new(0x1000)
     };
-
-    printf("src: %s\nhdr: %s\n", io_name(config.source), io_name(config.header));
-    printf("has: %d\n", has_header(&emit));
-
+    
     section_t symbols = module->symbols;
 
     size_t totalGlobals = vector_len(symbols.globals);

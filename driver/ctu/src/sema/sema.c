@@ -1241,45 +1241,48 @@ static const hlir_t *sema_global_type(sema_t *sema, ast_t *expected, const hlir_
     }
 }
 
-static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
+static sema_value_t sema_value_inner(sema_t *sema, ast_t *stmt)
 {
     if (stmt->expected != NULL && stmt->init != NULL)
     {
+        // init global with type
         const hlir_t *type = sema_global_type(sema, stmt->expected, NULL);
         hlir_t *init = sema_rvalue_with_implicit(sema, stmt->init, type);
+        hlir_t *cvt = convert_to(sema_reports(sema), type, init);
+
+        sema_value_t result = {type, cvt};
+        return result;
+    }
+    else if (stmt->expected != NULL && stmt->init == NULL)
+    {
+        // noinit global
+        const hlir_t *type = sema_global_type(sema, stmt->expected, NULL);
+
+        sema_value_t result = {type, NULL};
+        return result;
+    }
+    else if (stmt->expected == NULL && stmt->init != NULL)
+    {
+        // init global with implicit type
+        hlir_t *init = sema_rvalue(sema, stmt->init);
+        const hlir_t *type = get_hlir_type(init);
 
         sema_value_t result = {type, init};
         return result;
     }
-
-
-    // TODO: this is getting ugly
-    hlir_t *init = stmt->init != NULL
-        ? sema_rvalue(sema, stmt->init)
-        : NULL;
-
-    const hlir_t *type = sema_global_type(sema, stmt->expected, init);
-
-    sema_value_t result = {type, init};
-
-    if ((stmt->init != NULL && stmt->expected != NULL) )
+    else
     {
-        const hlir_t *convert = convert_to(sema_reports(sema), type, init);
-        if (!hlir_is(convert, eHlirError))
-        {
-            result.init = (hlir_t*)convert; // TODO: evil
-            return result;
-        }
-        message_t *id = report(sema_reports(sema), eFatal, stmt->node, "incompatible initializer and explicit type");
-        report_underline(id, "found '%s', expected '%s'", ctu_type_repr(sema_reports(sema), type, true),
-                         ctu_repr(sema_reports(sema), init, true));
-        result.init = hlir_error(stmt->node, "invalid value declaration");
-        return result;
+        CTASSERT(false);
     }
+}
+
+static sema_value_t sema_value(sema_t *sema, ast_t *stmt)
+{
+    sema_value_t result = sema_value_inner(sema, stmt);
 
     if (!stmt->mut)
     {
-        result.type = hlir_qualified(type, hlir_tags(eQualConst));
+        result.type = hlir_qualified(result.type, hlir_tags(eQualConst));
     }
 
     return result;
