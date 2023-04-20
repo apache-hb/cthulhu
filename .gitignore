@@ -50,3 +50,4 @@ out.c
 !driver/**/*
 node_modules/
 interface/gui/interface/imgui/examples/example_android_opengl3/android/app/src/main/AndroidManifest.xml
+out.h

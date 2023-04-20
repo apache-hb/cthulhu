@@ -978,7 +978,6 @@ static hlir_t *struct_get_field(const hlir_t *aggregate, const char *name)
     for (size_t i = 0; i < vector_len(fields); i++)
     {
         hlir_t *field = vector_get(fields, i);
-        printf("names: %s = %s\n", field->name, name);
         if (str_equal(get_hlir_name(field), name))
         {
             return field;
