@@ -296,10 +296,11 @@ ast_t *ast_uniondecl(scan_t *scan, where_t where, char *name, vector_t *fields)
     return ast;
 }
 
-ast_t *ast_typealias(scan_t *scan, where_t where, char *name,ast_t *type)
+ast_t *ast_typealias(scan_t *scan, where_t where, char *name, ast_t *type)
 {
     ast_t *ast = ast_decl(eAstDeclAlias, name, scan, where);
     ast->alias = type;
+    ast->newtype = false;
     return ast;
 }
 
@@ -308,6 +309,14 @@ ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, ast_t *type, vec
     ast_t *ast = ast_decl(eAstDeclVariant, name, scan, where);
     ast->underlying = type;
     ast->fields = fields;
+    return ast;
+}
+
+ast_t *ast_newtype(scan_t *scan, where_t where, char *name, ast_t *type)
+{
+    ast_t *ast = ast_decl(eAstDeclAlias, name, scan, where);
+    ast->alias = type;
+    ast->newtype = true;
     return ast;
 }
 

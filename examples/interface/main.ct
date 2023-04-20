@@ -4,12 +4,15 @@ import cthulhu;
 
 @entry(cli)
 def main(argc: int, argv: [*]str): int {
+    cthulhu::commonInit();
+
     var reports = cthulhu::beginReports();
 
     cthulhu::report(reports, 0, cthulhu::builtinNode(), "Test %s", "message");
 
     cthulhu::endReports(reports, .{
-        limit = 100uz
+        limit = 100uz,
+        werror = false
     });
 
     return 0;

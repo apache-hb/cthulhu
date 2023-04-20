@@ -209,7 +209,11 @@ typedef struct ast_t
                 };
 
                 /* eAstDeclAlias */
-                struct ast_t *alias;
+                struct 
+                {
+                    struct ast_t *alias;
+                    bool newtype;
+                };
 
                 /* eAstParam */
                 struct ast_t *param;
@@ -300,6 +304,7 @@ ast_t *ast_structdecl(scan_t *scan, where_t where, char *name, vector_t *fields)
 ast_t *ast_uniondecl(scan_t *scan, where_t where, char *name, vector_t *fields);
 ast_t *ast_typealias(scan_t *scan, where_t where, char *name, ast_t *type);
 ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, ast_t *type, vector_t *fields);
+ast_t *ast_newtype(scan_t *scan, where_t where, char *name, ast_t *type);
 
 /// extra type data
 

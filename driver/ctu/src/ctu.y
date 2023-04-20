@@ -191,7 +191,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<ast>
     modspec decl innerDecl
     structdecl uniondecl variantdecl aliasdecl
-    field variant 
+    field variant newtype
     funcdecl funcresult funcbody funcsig
     vardecl
     param
@@ -283,6 +283,7 @@ innerDecl: structdecl { $$ = $1; }
     | variantdecl { $$ = $1; }
     | funcdecl { $$ = $1; }
     | vardecl { $$ = $1; }
+    | newtype SEMICOLON { $$ = $1; }
     ;
 
 funcdecl: DEF IDENT funcsig funcbody { $$ = ast_function(x, @$, $2, $3, $4); }
@@ -336,6 +337,9 @@ uniondecl: UNION IDENT aggregates { $$ = ast_uniondecl(x, @$, $2, $3); }
     ;
 
 variantdecl: VARIANT IDENT underlying LBRACE variants RBRACE { $$ = ast_variantdecl(x, @$, $2, $3, $5); }
+    ;
+
+newtype: VARIANT IDENT EQUALS type { $$ = ast_newtype(x, @$, $2, $4); }
     ;
 
 underlying: %empty { $$ = NULL; }

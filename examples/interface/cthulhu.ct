@@ -1,10 +1,11 @@
 module cthulhu;
 
+@extern("common_init")
+export def commonInit;
+
 // nodes
 
-// TODO: variant id = ty; should be added again
-
-export type Node = opaque;
+export variant Node = opaque;
 
 @extern("node_builtin")
 export def builtinNode: Node;
@@ -16,9 +17,9 @@ export def invalidNode: Node;
 
 // reporting
 
-export type Reports = opaque;
+export variant Reports = opaque;
 
-export type Message = opaque;
+export variant Message = opaque;
 
 // TODO: this should be a variant, but interop with those doesnt work properly
 export type Level = int;
