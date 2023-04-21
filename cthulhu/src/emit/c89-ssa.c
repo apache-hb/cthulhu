@@ -76,6 +76,9 @@ static void pick_dst(c89_ssa_emit_t *emit, const void *symbol)
 #define WRITE_HEADER(it, str) WRITE_STRING(&(it)->header, str)
 #define WRITE_HEADERF(it, fmt, ...) WRITE_STRINGF(&(it)->header, fmt, __VA_ARGS__)
 
+#define WRITE_BOTH(it, str) do { WRITE_SOURCE(it, str); WRITE_HEADER(it, str); } while (0)
+#define WRITE_BOTHF(it, fmt, ...) do { char *text = format(fmt, __VA_ARGS__); WRITE_BOTH(it, text); free(text); } while (0)
+
 static const char *get_type_name(c89_ssa_emit_t *emit, const ssa_type_t *type, const char *name);
 
 static const char *get_digit_name(c89_ssa_emit_t *emit, digit_t digit, sign_t sign)
@@ -627,15 +630,23 @@ static const char *c89_emit_index(c89_ssa_emit_t *emit, const ssa_step_t *step)
     return format("%s = %s + %s;", result, array, idx);
 }
 
+static const char *get_field_name(const ssa_type_t *type, size_t idx)
+{
+    CTASSERT(type->kind == eTypeStruct || type->kind == eTypeUnion);
+
+    const ssa_param_t *field = vector_get(type->fields, idx);
+    return field->name;
+}
+
 static const char *c89_emit_offset(c89_ssa_emit_t *emit, const ssa_step_t *step)
 {
     const ssa_offset_t offset = step->offset;
 
-    const char *operand = emit_operand(emit, offset.object);
-    const char *field = format("field%zu", offset.field);
-
-    const ssa_type_t *type = ssa_get_operand_type(REPORTS(emit), emit->currentFlow, offset.object);
+    const ssa_type_t *type = ssa_get_operand_type(emit->reports, emit->currentFlow, offset.object);
     const char *indirect = type->kind == eTypePointer ? "->" : ".";
+
+    const char *operand = emit_operand(emit, offset.object);
+    const char *field = get_field_name(type, offset.field);
 
     char *name = c89_gen_reg(step);
     const char *result = get_type_name(emit, ssa_type_ptr_new(name, step->type), name);
@@ -813,7 +824,7 @@ static void c89_emit_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_param_t *field = vector_get(type->fields, i);
-        const char *type = get_type_name(emit, field->type, format("field%zu", i));
+        const char *type = get_type_name(emit, field->type, field->name);
         WRITE_TEXTF(emit, "%s;\n", type);
     }
 
@@ -954,6 +965,8 @@ void c89_emit_ssa_modules(emit_config_t config, ssa_module_t *module)
 
     mark_public_symbols(&emit, symbols);
 
+    WRITE_BOTH(&emit, "// auto-generated code, do not edit\n");
+
     if (has_header(&emit))
     {
         WRITE_SOURCEF(&emit, "#include \"%s\"\n", io_name(config.header));
@@ -968,25 +981,35 @@ void c89_emit_ssa_modules(emit_config_t config, ssa_module_t *module)
     WRITE_HEADER(&emit, "#include <stdbool.h>\n");
     WRITE_HEADER(&emit, "#include <stddef.h>\n");
 
+    WRITE_BOTH(&emit, "\n// forward declarations\n\n");
+
     for (size_t i = 0; i < totalTypes; i++)
     {
         c89_fwd_type(&emit, vector_get(sortedTypes, i));
     }
+
+    WRITE_BOTH(&emit, "\n// type definitions\n\n");
 
     for (size_t i = 0; i < totalTypes; i++)
     {
         c89_emit_type(&emit, vector_get(sortedTypes, i));
     }
 
+    WRITE_BOTH(&emit, "\n// global variables\n\n");
+
     for (size_t i = 0; i < totalGlobals; i++)
     {
         c89_emit_ssa_global(&emit, vector_get(symbols.globals, i));
     }
 
+    WRITE_BOTH(&emit, "\n// function declarations\n\n");
+
     for (size_t i = 0; i < totalFunctions; i++)
     {
         c89_fwd_function(&emit, vector_get(symbols.functions, i));
     }
+
+    WRITE_BOTH(&emit, "\n// function definitions\n\n");
 
     for (size_t i = 0; i < totalFunctions; i++)
     {

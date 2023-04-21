@@ -18,8 +18,11 @@
 static const char *kOutputFileNames[] = {"-o", "--output"};
 #define TOTAL_OUTPUT_FILE_NAMES (sizeof(kOutputFileNames) / sizeof(const char *))
 
-static const char *kSSANames[] = {"--enable-ssa", "-ssa"};
-#define TOTAL_SSA_NAMES (sizeof(kSSANames) / sizeof(const char *))
+static const char *kHlirNames[] = {"--enable-hlir", "-hlir"};
+#define TOTAL_HLIR_NAMES (sizeof(kHlirNames) / sizeof(const char *))
+
+static const char *kHeaderNames[] = {"--enable-header", "-header"};
+#define TOTAL_HEADER_NAMES (sizeof(kHeaderNames) / sizeof(const char *))
 
 #define CHECK_REPORTS(msg) \
     do { \
@@ -28,6 +31,23 @@ static const char *kSSANames[] = {"--enable-ssa", "-ssa"};
             return err; \
         } \
     } while (0)
+
+static bool check_io(reports_t *reports, io_t *io)
+{
+    if (io == NULL) 
+    {
+        return true;
+    }
+
+    if (io_error(io) != 0)
+    {
+        message_t *id = report(reports, eFatal, node_invalid(), "failed to open file `%s`", io_name(io));
+        report_note(id, "%s", error_string(io_error(io)));
+        return false;
+    }
+
+    return true;
+}
 
 int main(int argc, const char **argv)
 {
@@ -40,11 +60,13 @@ int main(int argc, const char **argv)
     driver_t driver = get_driver();
 
     param_t *outputFileNameParam = string_param("output file name", kOutputFileNames, TOTAL_OUTPUT_FILE_NAMES);
-    param_t *enableSSAParam = bool_param("enable ssa codegen (experimental)", kSSANames, TOTAL_SSA_NAMES);
+    param_t *enableHlirParam = bool_param("use hlir codegen instead of ssa (deprecated)", kHlirNames, TOTAL_HLIR_NAMES);
+    param_t *headerNameParam = string_param("c89 header file name (default does not generate a header)", kHeaderNames, TOTAL_HEADER_NAMES);
 
-    vector_t *codegenParams = vector_new(2);
+    vector_t *codegenParams = vector_new(3);
     vector_push(&codegenParams, outputFileNameParam);
-    vector_push(&codegenParams, enableSSAParam);
+    vector_push(&codegenParams, enableHlirParam);
+    vector_push(&codegenParams, headerNameParam);
 
     group_t *codegenGroup = group_new("codegen", "code generation options", codegenParams);
 
@@ -72,7 +94,8 @@ int main(int argc, const char **argv)
     }
 
     const char *outFile = get_string_arg(&result, outputFileNameParam, "out");
-    bool enableSsa = get_bool_arg(&result, enableSSAParam, false);
+    const char *headerFile = get_string_arg(&result, headerNameParam, NULL);
+    bool enableHlir = get_bool_arg(&result, enableHlirParam, false);
 
     size_t totalFiles = vector_len(result.files);
     vector_t *sources = vector_of(totalFiles);
@@ -113,7 +136,20 @@ int main(int argc, const char **argv)
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
     io_t *outSource = io_file(format("%s.c", outFile), eFileWrite | eFileBinary);
-    io_t *outHeader = io_file(format("%s.h", outFile), eFileWrite | eFileBinary);
+    
+    io_t *outHeader = headerFile != NULL 
+        ? io_file(format("%s.h", headerFile), eFileWrite | eFileBinary)
+        : NULL;
+
+    if (!check_io(reports, outSource)) 
+    {
+        return end_reports(reports, "opening file", reportConfig);
+    }
+
+    if (!check_io(reports, outHeader)) 
+    {
+        return end_reports(reports, "opening file", reportConfig);
+    }
 
     emit_config_t emitConfig = {
         .reports = reports,
@@ -121,7 +157,7 @@ int main(int argc, const char **argv)
         .header = outHeader
     };
 
-    if (enableSsa)
+    if (!enableHlir)
     {
         ssa_module_t *mod = ssa_gen_module(reports, allModules);
         CHECK_REPORTS("generating ssa");
@@ -135,21 +171,6 @@ int main(int argc, const char **argv)
         c89_emit_ssa_modules(emitConfig, mod);
 
         return end_reports(reports, "generating c89 from ssa", reportConfig);
-    }
-
-    // TODO: dedup
-    if (io_error(outSource) != 0)
-    {
-        message_t *id = report(reports, eFatal, node_invalid(), "failed to open file `%s`", outFile);
-        report_note(id, "%s", error_string(io_error(outSource)));
-        return end_reports(reports, "opening file", reportConfig);
-    }
-
-    if (io_error(outHeader) != 0)
-    {
-        message_t *id = report(reports, eFatal, node_invalid(), "failed to open file `%s`", outFile);
-        report_note(id, "%s", error_string(io_error(outHeader)));
-        return end_reports(reports, "opening file", reportConfig);
     }
 
     c89_emit_hlir_modules(emitConfig, allModules);
