@@ -990,9 +990,11 @@ void c89_emit_ssa_modules(emit_config_t config, ssa_module_t *module)
         WRITE_SOURCE(&emit, "#include <stddef.h>\n");
     }
 
-    WRITE_HEADER(&emit, "#pragma once\n");
+    WRITE_HEADER(&emit, "#pragma once\n\n");
     WRITE_HEADER(&emit, "#include <stdbool.h>\n");
     WRITE_HEADER(&emit, "#include <stddef.h>\n");
+
+    WRITE_HEADER(&emit, "\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n");
 
     WRITE_BOTH(&emit, "\n// forward declarations\n\n");
 
@@ -1024,8 +1026,12 @@ void c89_emit_ssa_modules(emit_config_t config, ssa_module_t *module)
 
     WRITE_BOTH(&emit, "\n// function definitions\n\n");
 
+    emit.dst = &emit.emit;
+
     for (size_t i = 0; i < totalFunctions; i++)
     {
         c89_emit_function(&emit, vector_get(symbols.functions, i));
     }
+
+    WRITE_HEADER(&emit, "\n#ifdef __cplusplus\n}\n#endif\n");
 }
