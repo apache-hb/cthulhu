@@ -277,7 +277,7 @@ static void emit_function(emit_t *emit, const ssa_flow_t *flow)
     for (size_t i = 0; i < len; i++)
     {
         ssa_type_t *type = vector_get(locals, i);
-        printf("  local[%zu] = %s\n", i, emit_type(emit, type));
+        printf("  local.%zu = %s\n", i, emit_type(emit, type));
     }
 
     emit_block(emit, flow->entry);

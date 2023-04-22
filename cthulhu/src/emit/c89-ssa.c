@@ -632,7 +632,7 @@ static const char *c89_emit_index(c89_ssa_emit_t *emit, const ssa_step_t *step)
 
 static const char *get_field_name(const ssa_type_t *type, size_t idx)
 {
-    CTASSERT(type->kind == eTypeStruct || type->kind == eTypeUnion);
+    CTASSERTF(type->kind == eTypeStruct || type->kind == eTypeUnion, "unexpected %d", type->kind);
 
     const ssa_param_t *field = vector_get(type->fields, idx);
     return field->name;
@@ -644,6 +644,9 @@ static const char *c89_emit_offset(c89_ssa_emit_t *emit, const ssa_step_t *step)
 
     const ssa_type_t *type = ssa_get_operand_type(emit->reports, emit->currentFlow, offset.object);
     const char *indirect = type->kind == eTypePointer ? "->" : ".";
+    
+    if (type->kind == eTypePointer)
+        type = type->ptr;
 
     const char *operand = emit_operand(emit, offset.object);
     const char *field = get_field_name(type, offset.field);

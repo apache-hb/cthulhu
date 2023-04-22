@@ -19,6 +19,7 @@ hlir_t *hlir_new(node_t *node, const hlir_t *of, hlir_kind_t kind)
     self->type = kind;
     self->location = node;
     self->of = of;
+    self->user = NULL;
     return self;
 }
 

@@ -1,1 +1,4 @@
-variant Var { first, second }
+variant Var { 
+    __case first = 1
+    __case second = 2
+}

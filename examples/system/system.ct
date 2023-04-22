@@ -12,9 +12,19 @@ export struct System {
     name: str;
 }
 
+variant MemoryType {
+    __default Invalid = 99
+    __case Heap = 1
+    __case Stack = 2
+    __case Data = 3
+    __case Code = 4
+    __case Other = 5
+}
+
 struct Memory {
     name: str;
     bytes: usize;
+    kind: MemoryType;
 }
 
 @extern("printf")
@@ -80,5 +90,8 @@ def main {
     const system = newSystem(&mem);
     printf("System name: %s\n", getSystemName(system));
 
-    printMemory(.{ name = "example", bytes = 0x1000 });
+    printMemory(.{ 
+        name = "example", 
+        bytes = 0x1000
+    });
 }

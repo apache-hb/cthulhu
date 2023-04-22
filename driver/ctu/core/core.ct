@@ -1,0 +1,33 @@
+def externName(fn: symbol, name: str): str {
+    if name == null {
+        return fn.name;
+    }
+
+    return name;
+}
+
+export compile def extern(fn: symbol, name: str = null): symbol {
+    if fn.kind != __builtin::function {
+        return __builtin::error("extern can only be applied to functions");
+    }
+
+    const id = externName(fn, name);
+
+    return __builtin::extern(fn, id);
+}
+
+export variant EntryType { cli, gui }
+
+export compile def entry(fn: symbol, kind: EntryType): symbol {
+    if fn.kind != __builtin::function {
+        return __builtin::error("only functions can be entry points");
+    }
+
+    if kind == EntryType::cli {
+        return __builtin::entry(fn, "cli");
+    } else if kind == EntryType::gui {
+        return __builtin::entry(fn, "gui");
+    } else {
+        return __builtin::error("invalid entry point kind");
+    }
+}

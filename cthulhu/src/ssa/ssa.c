@@ -38,12 +38,14 @@ typedef struct {
     map_t *currentParams; // map_t<const hlir_t *, size_t> // map of parameters to their index in the params vector
 
     ssa_block_t *currentBlock;
+    ssa_flow_t *currentFlow;
     size_t stepIdx;
     size_t blockIdx;
 
     vector_t *namePath; // vector_t<const char *>
 
     const ssa_type_t *emptyType;
+    const ssa_type_t *stubType;
 } ssa_t;
 
 static ssa_block_t *block_new(const char *id) 
@@ -164,6 +166,11 @@ static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
     case eHlirUnion: {
         size_t len = vector_len(real->fields);
         it->fields = vector_of(len);
+        if (len == 0)
+        {
+            vector_push(&it->fields, ssa_param_new("stub", ssa->stubType));
+        }
+
         for (size_t i = 0; i < len; i++) 
         {
             const hlir_t *field = vector_get(real->fields, i);
@@ -831,6 +838,7 @@ static ssa_operand_t compile_index(ssa_t *ssa, const hlir_t *hlir)
 
 static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
 {
+    CTASSERTF(hlir != NULL, "compile-rvalue(hlir = NULL) { flow = %s, block = %s }", ssa->currentFlow->name, ssa->currentBlock->id);
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
     {
@@ -1088,7 +1096,9 @@ static void compile_flow(ssa_t *ssa, ssa_flow_t *flow)
 {
     ssa_block_t *block = block_new("entry");
     flow->entry = block;
+
     ssa->currentBlock = block;
+    ssa->currentFlow = flow;
     ssa->stepIdx = 0;
     ssa->blockIdx = 0;
 }
@@ -1194,7 +1204,8 @@ ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods)
         .strings = set_new(0x1000),
         .importedSymbols = map_optimal(0x1000),
         .namePath = vector_new(16),
-        .emptyType = ssa_type_empty_new("empty")
+        .emptyType = ssa_type_empty_new("empty"),
+        .stubType = ssa_get_bool_type(&ssa)
     };
 
     size_t len = vector_len(mods);

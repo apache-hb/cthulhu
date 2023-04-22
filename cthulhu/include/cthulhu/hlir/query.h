@@ -36,6 +36,9 @@ bool hlir_is(const hlir_t *hlir, hlir_kind_t kind);
 NODISCARD PUREFN
 const hlir_t *hlir_follow_type(const hlir_t *hlir);
 
+NODISCARD PUREFN
+const hlir_t *hlir_base_decl_type(const hlir_t *hlir);
+
 /**
  * @brief follow a type until a real type is reached, ignoring newtypes
  *

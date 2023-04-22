@@ -356,3 +356,15 @@ ast_t *ast_fieldinit(scan_t *scan, where_t where, char *name, ast_t *value)
     ast->value = value;
     return ast;
 }
+
+ast_t *ast_case(scan_t *scan, where_t where, char *name, vector_t *fields, ast_t *value, bool isDefault)
+{
+    ast_t *ast = ast_new(eAstCase, scan, where);
+
+    ast->name = name;
+    ast->caseFields = fields;
+    ast->caseValue = value;
+    ast->isCaseDefault = isDefault;
+
+    return ast;
+}

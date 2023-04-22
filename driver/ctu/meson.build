@@ -2,10 +2,13 @@ src = [
     'src/main.c', 
     'src/scan.c', 
     'src/ast.c', 
+
     'src/sema/sema.c', 
     'src/sema/attribs.c',
     'src/sema/repr.c',
     'src/sema/suffix.c',
+    'src/sema/mark.c',
+
     lex.process('src/ctu.l'), 
     parse.process('src/ctu.y') 
 ]

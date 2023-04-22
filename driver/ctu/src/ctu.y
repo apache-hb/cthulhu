@@ -205,6 +205,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     init underlying
     opttype
     fieldinit
+    caseField
 
 %type<vector>
     path decls decllist
@@ -215,12 +216,13 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     args attrargs argbody
     funcparams opttypes types
     optinits inits
+    caseFields caseData
 
 %type<ident>
     label block ident
 
 %type<boolean>
-    mut optExport
+    mut optExport defaultCase
 
 %start program
 
@@ -351,11 +353,25 @@ variants: %empty { $$ = vector_new(0); }
     ;
 
 variantlist: variant { $$ = vector_init($1); }
-    | variantlist COMMA variant { vector_push(&$1, $3); $$ = $1; }
+    | variantlist variant { vector_push(&$1, $2); $$ = $1; }
     ;
 
-variant: IDENT init { $$ = ast_field(x, @$, $1, NULL, $2); }
-    | IDENT LPAREN type RPAREN init { $$ = ast_field(x, @$, $1, $3, $5); }
+variant: defaultCase[isDefault] IDENT[name] caseData[fields] init[value] { $$ = ast_case(x, @$, $name, $fields, $value, $isDefault); }
+    ;
+
+defaultCase: DEFAULT { $$ = true; }
+    | CASE { $$ = false; }
+    ;
+
+caseData: %empty { $$ = vector_of(0); }
+    | LPAREN caseFields RPAREN { $$ = $2; }
+    ;
+
+caseFields: caseField { $$ = vector_init($1); }
+    | caseFields COMMA caseField { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+caseField: ident COLON type { $$ = ast_param(x, @$, $1, $3); }
     ;
 
 init: %empty { $$ = NULL; }

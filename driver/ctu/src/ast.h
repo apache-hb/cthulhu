@@ -235,6 +235,13 @@ typedef struct ast_t
                     struct ast_t *signature;
                     struct ast_t *body;
                 };
+
+                struct
+                {
+                    vector_t *caseFields;
+                    struct ast_t *caseValue;
+                    bool isCaseDefault;
+                };
             };
         };
     };
@@ -311,5 +318,7 @@ ast_t *ast_newtype(scan_t *scan, where_t where, char *name, ast_t *type);
 ast_t *ast_field(scan_t *scan, where_t where, char *name, ast_t *type, ast_t *value);
 ast_t *ast_param(scan_t *scan, where_t where, char *name, ast_t *type);
 ast_t *ast_fieldinit(scan_t *scan, where_t where, char *name, ast_t *value);
+
+ast_t *ast_case(scan_t *scan, where_t where, char *name, vector_t *fields, ast_t *value, bool isDefault);
 
 void set_attribs(ast_t *decl, bool exported, vector_t *attribs);
