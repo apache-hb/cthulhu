@@ -8,8 +8,6 @@
 
 #include "std/map.h"
 
-#include <stdio.h>
-
 typedef enum
 {
     eMarkVariant,
@@ -63,8 +61,6 @@ const hlir_t *user_set_variant_default(hlir_t *self, const hlir_t *it)
     mark_data_t *data = self->user;
     CTASSERT(data != NULL && data->tag == eMarkVariant);
 
-    printf("set-default: %p %s\n", self, hlir_kind_to_string(get_hlir_kind(self)));
-
     const hlir_t *old = data->defaultCase;
     data->defaultCase = it;
     return old;
@@ -83,7 +79,6 @@ map_t *user_variant_cases(const hlir_t *self)
 
 const hlir_t *user_variant_default_case(const hlir_t *self)
 {
-    printf("get-default: %p %s\n", self, hlir_kind_to_string(get_hlir_kind(self)));
     if (self == NULL) { return NULL; }
     if (self->user == NULL) { return NULL; }
 

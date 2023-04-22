@@ -1057,7 +1057,6 @@ static hlir_t *sema_default_value(sema_t *sema, const node_t *node, const hlir_t
     const hlir_t *defaultCase = user_variant_default_case(real);
     if (defaultCase != NULL)
     {
-        printf("found default case: %p %s\n", defaultCase, hlir_kind_to_string(get_hlir_kind(defaultCase)));
         return (hlir_t*)defaultCase; // TODO: pinky promise this wont be modified
     }
 

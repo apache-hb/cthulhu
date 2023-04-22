@@ -9,7 +9,6 @@
 * valist forwarding
 * enum consts
 * full C and fixed width types
-* designated init
 
 * name mangling in the ssa backend
     * nested modules support
@@ -36,6 +35,8 @@
 * complete api docs
 * driver specific config support
 * replace mpq with mpfr (rounding is important)
+* profile startup time
+    * something is afoot since commit c64ef228a2a4edd01bd7eb1544e1a2cc05274e1b
 
 ## bikeshedding
 
