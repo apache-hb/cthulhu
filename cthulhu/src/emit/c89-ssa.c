@@ -37,6 +37,18 @@ typedef struct c89_ssa_emit_t
     const ssa_flow_t *currentFlow;
 } c89_ssa_emit_t;
 
+static void indent(c89_ssa_emit_t *c89)
+{
+    emit_indent(&c89->emit);
+    emit_indent(&c89->header);
+}
+
+static void dedent(c89_ssa_emit_t *c89)
+{
+    emit_dedent(&c89->emit);
+    emit_dedent(&c89->header);
+}
+
 static bool should_emit_to_header(c89_ssa_emit_t *emit, const void *symbol)
 {
     return set_contains_ptr(emit->publicSymbols, symbol);
@@ -644,7 +656,7 @@ static const char *c89_emit_offset(c89_ssa_emit_t *emit, const ssa_step_t *step)
 
     const ssa_type_t *type = ssa_get_operand_type(emit->reports, emit->currentFlow, offset.object);
     const char *indirect = type->kind == eTypePointer ? "->" : ".";
-    
+
     if (type->kind == eTypePointer)
         type = type->ptr;
 
@@ -724,7 +736,7 @@ static void c89_emit_block(c89_ssa_emit_t *emit, const ssa_block_t *block)
     }
 
     WRITE_SOURCEF(emit, "%s: {\n", block->id);
-    emit_indent(&emit->emit);
+    indent(emit);
 
     size_t len = vector_len(block->steps);
     for (size_t i = 0; i < len; i++)
@@ -734,7 +746,7 @@ static void c89_emit_block(c89_ssa_emit_t *emit, const ssa_block_t *block)
         WRITE_SOURCEF(emit, "%s\n", it);
     }
 
-    emit_dedent(&emit->emit);
+    dedent(emit);
     WRITE_SOURCE(emit, "}\n");
 
     set_iter_t iter = set_iter(emit->pendingEdges);
@@ -761,11 +773,9 @@ static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 
     emit->currentFlow = function;
 
-    pick_dst(emit, function);
-
     c89_emit_function_decl(emit, function, false);
     WRITE_SOURCE(emit, " {\n");
-    emit_indent(&emit->emit);
+    indent(emit);
 
     size_t locals = vector_len(function->locals);
     for (size_t i = 0; i < locals; i++)
@@ -776,7 +786,7 @@ static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 
     c89_emit_block(emit, function->entry);
 
-    emit_dedent(&emit->emit);
+    dedent(emit);
     WRITE_SOURCE(emit, "}\n");
 }
 
@@ -821,7 +831,7 @@ static void c89_emit_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
     pick_dst(emit, type);
 
     WRITE_TEXTF(emit, "%s %s {\n", get_aggregate_name(type->kind), type->name);
-    emit_indent(&emit->emit);
+    indent(emit);
 
     size_t len = vector_len(type->fields);
     for (size_t i = 0; i < len; i++)
@@ -831,7 +841,7 @@ static void c89_emit_type(c89_ssa_emit_t *emit, const ssa_type_t *type)
         WRITE_TEXTF(emit, "%s;\n", type);
     }
 
-    emit_dedent(&emit->emit);
+    dedent(emit);
     WRITE_TEXT(emit, "};\n");
 }
 

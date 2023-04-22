@@ -127,8 +127,8 @@ WS [ \t\r\v\n\f]
 "__delete" { return DELETE; }
 
 "__match" { return MATCH; }
-"__default" { return DEFAULT; }
-"__case" { return CASE; }
+"default" { return DEFAULT; }
+"case" { return CASE; }
 "__select" { return SELECT; }
 "__order" { return ORDER; }
 "__on" { return ON; }

@@ -13,12 +13,12 @@ export struct System {
 }
 
 variant MemoryType {
-    __default Invalid = 99
-    __case Heap = 1
-    __case Stack = 2
-    __case Data = 3
-    __case Code = 4
-    __case Other = 5
+    default Invalid = 99
+    case Heap = 1
+    case Stack = 2
+    case Data = 3
+    case Code = 4
+    case Other = 5
 }
 
 struct Memory {
