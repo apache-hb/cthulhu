@@ -763,9 +763,9 @@ static void c89_emit_local(c89_ssa_emit_t *emit, size_t idx, const ssa_type_t *l
     WRITE_SOURCEF(emit, "%s;\n", type);
 }
 
-static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
+static bool c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 {
-    if (is_extern(function)) { return; }
+    if (is_extern(function)) { return false; }
 
     map_reset(emit->stepCache);
     set_reset(emit->completeEdges);
@@ -788,6 +788,7 @@ static void c89_emit_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
 
     dedent(emit);
     WRITE_SOURCE(emit, "}\n");
+    return true;
 }
 
 static void c89_fwd_function(c89_ssa_emit_t *emit, const ssa_flow_t *function)
@@ -1030,7 +1031,15 @@ void c89_emit_ssa_modules(emit_config_t config, ssa_module_t *module)
 
     for (size_t i = 0; i < totalFunctions; i++)
     {
-        c89_emit_function(&emit, vector_get(symbols.functions, i));
+        if (!c89_emit_function(&emit, vector_get(symbols.functions, i)))
+        {
+            continue;
+        }
+        
+        if (i != totalFunctions - 1)
+        {
+            WRITE_SOURCE(&emit, "\n");
+        }
     }
 
     WRITE_HEADER(&emit, "\n#ifdef __cplusplus\n}\n#endif\n");
