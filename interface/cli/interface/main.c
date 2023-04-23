@@ -21,6 +21,9 @@ static const char *kOutputFileNames[] = {"-o", "--output"};
 static const char *kHlirNames[] = {"--enable-hlir", "-hlir"};
 #define TOTAL_HLIR_NAMES (sizeof(kHlirNames) / sizeof(const char *))
 
+static const char *kDebugSsaNames[] = {"--debug-ssa", "-dbgssa"};
+#define TOTAL_DEBUG_SSA_NAMES (sizeof(kDebugSsaNames) / sizeof(const char *))
+
 static const char *kHeaderNames[] = {"--enable-header", "-header"};
 #define TOTAL_HEADER_NAMES (sizeof(kHeaderNames) / sizeof(const char *))
 
@@ -59,6 +62,8 @@ int main(int argc, const char **argv)
     // rather than one of each interface for each driver
     driver_t driver = get_driver();
 
+    // codegen group
+
     param_t *outputFileNameParam = string_param("output file name", kOutputFileNames, TOTAL_OUTPUT_FILE_NAMES);
     param_t *enableHlirParam = bool_param("use hlir codegen instead of ssa (deprecated)", kHlirNames, TOTAL_HLIR_NAMES);
     param_t *headerNameParam = string_param("c89 header file name (default does not generate a header)", kHeaderNames, TOTAL_HEADER_NAMES);
@@ -68,7 +73,21 @@ int main(int argc, const char **argv)
     vector_push(&codegenParams, enableHlirParam);
     vector_push(&codegenParams, headerNameParam);
 
+    // debug group
+
+    param_t *debugSsaParam = bool_param("debug ssa", kDebugSsaNames, TOTAL_DEBUG_SSA_NAMES);
+
+    vector_t *debugParams = vector_new(1);
+    vector_push(&debugParams, debugSsaParam);
+
+    // groups
+
     group_t *codegenGroup = group_new("codegen", "code generation options", codegenParams);
+    group_t *debugGroup = group_new("debug", "debug options", debugParams);
+
+    vector_t *groups = vector_new(2);
+    vector_push(&groups, codegenGroup);
+    vector_push(&groups, debugGroup);
 
     reports_t *reports = begin_reports();
 
@@ -83,7 +102,7 @@ int main(int argc, const char **argv)
 
         .reports = reports,
 
-        .groups = vector_init(codegenGroup),
+        .groups = groups
     };
 
     argparse_t result = parse_args(&argparseConfig);
@@ -96,6 +115,8 @@ int main(int argc, const char **argv)
     const char *outFile = get_string_arg(&result, outputFileNameParam, "out");
     const char *headerFile = get_string_arg(&result, headerNameParam, NULL);
     bool enableHlir = get_bool_arg(&result, enableHlirParam, false);
+    bool debugSsa = get_bool_arg(&result, debugSsaParam, false);
+
 
     size_t totalFiles = vector_len(result.files);
     vector_t *sources = vector_of(totalFiles);
@@ -165,8 +186,11 @@ int main(int argc, const char **argv)
         ssa_opt_module(reports, mod);
         CHECK_REPORTS("optimizing ssa");
 
-        ssa_emit_module(reports, mod);
-        CHECK_REPORTS("emitting ssa");
+        if (debugSsa)
+        {
+            ssa_emit_module(reports, mod);
+            CHECK_REPORTS("emitting ssa");
+        }
 
         c89_emit_ssa_modules(emitConfig, mod);
 

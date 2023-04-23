@@ -24,6 +24,7 @@ typedef enum
     eAstName,
     eAstString,
     eAstNull,
+    eAstDefault, // default value
 
     eAstUnary,
     eAstBinary,
@@ -283,6 +284,7 @@ ast_t *ast_deref(scan_t *scan, where_t where, ast_t *value);
 ast_t *ast_sizeof(scan_t *scan, where_t where, ast_t *type);
 
 ast_t *ast_init(scan_t *scan, where_t where, ast_t *type, vector_t *fields);
+ast_t *ast_default(scan_t *scan, where_t where);
 
 /// statements
 

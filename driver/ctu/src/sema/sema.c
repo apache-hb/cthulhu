@@ -1050,9 +1050,9 @@ static const hlir_t *select_implicit_init_type(sema_t *sema, const hlir_t *conte
     return sema_type(sema, user);
 }
 
-static hlir_t *sema_default_value(sema_t *sema, const node_t *node, const hlir_t *field)
+static hlir_t *sema_default_value(sema_t *sema, const node_t *node, const hlir_t *type)
 {
-    const hlir_t *real = hlir_base_decl_type(field);
+    const hlir_t *real = hlir_base_decl_type(type);
     
     const hlir_t *defaultCase = user_variant_default_case(real);
     if (defaultCase != NULL)
@@ -1064,17 +1064,18 @@ static hlir_t *sema_default_value(sema_t *sema, const node_t *node, const hlir_t
     {
         mpz_t zero;
         mpz_init(zero);
-        return hlir_digit_literal(get_hlir_node(field), real, zero);
+        return hlir_digit_literal(get_hlir_node(type), real, zero);
     }
     else if (hlir_is(real, eHlirBool))
     {
-        return hlir_bool_literal(get_hlir_node(field), real, false);
+        return hlir_bool_literal(get_hlir_node(type), real, false);
     }
     else if (hlir_is(real, eHlirPointer))
     {
         return hlir_cast(real, kZeroIndex, eCastSignExtend);
     }
     
+    report(sema_reports(sema), eInternal, node, "no default value for type '%s'", get_hlir_name(real));
     return NULL;
 }
 
@@ -1112,7 +1113,7 @@ static void add_default_inits(sema_t *sema, node_t *node, hlir_t *local, const h
         while (set_has_next(&iter))
         {
             const char *name = set_next(&iter);
-            report_append(id, node, "field: %s", name);
+            report_append(id, node, "field `%s` is missing", name);
         }
     }
 }
@@ -1183,6 +1184,19 @@ static hlir_t *sema_init(sema_t *sema, ast_t *ast)
     return hlir_name(ast->node, local);
 }
 
+// TODO: stabilize maybe?
+static hlir_t *sema_default(sema_t *sema, ast_t *ast)
+{
+    const hlir_t *type = get_implicit_type(sema);
+    if (type == NULL)
+    {
+        report(sema_reports(sema), eFatal, ast->node, "cannot infer type of default value in current context");
+        return hlir_error(ast->node, "invalid default value");
+    }
+
+    return sema_default_value(sema, ast->node, type);
+}
+
 static hlir_t *sema_deref(sema_t *sema, ast_t *ast)
 {
     hlir_t *expr = sema_rvalue(sema, ast->operand);
@@ -1234,6 +1248,9 @@ static hlir_t *sema_expr(sema_t *sema, ast_t *ast)
 
     case eAstInit:
         return sema_init(sema, ast);
+
+    case eAstDefault:
+        return sema_default(sema, ast);
 
     default:
         report(sema_reports(sema), eInternal, ast->node, "unknown sema-expr: %d", ast->of);

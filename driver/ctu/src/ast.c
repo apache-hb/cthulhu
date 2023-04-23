@@ -368,3 +368,8 @@ ast_t *ast_case(scan_t *scan, where_t where, char *name, vector_t *fields, ast_t
 
     return ast;
 }
+
+ast_t *ast_default(scan_t *scan, where_t where)
+{
+    return ast_new(eAstDefault, scan, where);
+}

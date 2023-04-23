@@ -457,6 +457,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     | NIL { $$ = ast_null(x, @$); }
     | SIZEOF LPAREN type RPAREN { $$ = ast_sizeof(x, @$, $3); }
     | DOT opttype LBRACE optinits RBRACE { $$ = ast_init(x, @$, $2, $4); }
+    | DEFAULT { $$ = ast_default(x, @$); }
     ;
 
 opttype: %empty { $$ = NULL; }
