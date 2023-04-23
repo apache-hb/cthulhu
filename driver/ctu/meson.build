@@ -8,6 +8,7 @@ src = [
     'src/sema/repr.c',
     'src/sema/suffix.c',
     'src/sema/mark.c',
+    'src/sema/config.c',
 
     lex.process('src/ctu.l'), 
     parse.process('src/ctu.y') 

@@ -8,6 +8,8 @@
 
 BEGIN_API
 
+typedef struct argparse_t argparse_t;
+
 ///
 /// code required by interfaces
 ///
@@ -16,6 +18,7 @@ typedef struct
 {
     reports_t *reports;
     map_t *modules;
+    argparse_t *args;
 } runtime_t;
 
 typedef struct
@@ -28,6 +31,7 @@ typedef struct
     sema_t *sema;
 } compile_t;
 
+// setup the compiler
 typedef void (*init_compiler_t)(runtime_t *);
 
 // parse and register a module
@@ -60,13 +64,8 @@ typedef struct
 
 typedef struct
 {
-    report_config_t reportConfig;
-} config_t;
-
-typedef struct
-{
     driver_t driver;
-    config_t config;
+    report_config_t reportConfig;
 
     status_t status;
 
@@ -79,7 +78,7 @@ typedef struct
     vector_t *sources;
 } cthulhu_t;
 
-cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config);
+cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, argparse_t *args, reports_t *reports, report_config_t config);
 
 typedef status_t (*cthulhu_step_t)(cthulhu_t *);
 

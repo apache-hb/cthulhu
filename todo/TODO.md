@@ -6,6 +6,9 @@
     * wasm
     * x64
 
+* rewrite `interface`
+    * right now it does too much, and doest cover features we actually need
+
 * valist forwarding
 * enum consts
 * full C and fixed width types

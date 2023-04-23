@@ -3,6 +3,7 @@
 #include "scan/compile.h"
 
 #include "sema/sema.h"
+#include "sema/config.h"
 
 #include "base/macros.h"
 
@@ -19,7 +20,7 @@ static void *ctu_parse_file(runtime_t *runtime, compile_t *compile)
     return compile_scanner(compile->scan, &kCallbacks);
 }
 
-const driver_t kDriver = {
+static const driver_t kBaseDriver = {
     .name = "Cthulhu",
     .version = NEW_VERSION(1, 0, 0),
 
@@ -34,5 +35,9 @@ const driver_t kDriver = {
 
 driver_t get_driver()
 {
-    return kDriver;
+    driver_t result = kBaseDriver;
+
+    result.commandGroups = config_get_groups();
+
+    return result;
 }

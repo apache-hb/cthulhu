@@ -89,6 +89,14 @@ int main(int argc, const char **argv)
     vector_push(&groups, codegenGroup);
     vector_push(&groups, debugGroup);
 
+    if (driver.commandGroups != NULL)
+    {
+        for (size_t i = 0; i < vector_len(driver.commandGroups); i++)
+        {
+            vector_push(&groups, vector_get(driver.commandGroups, i));
+        }
+    }
+
     reports_t *reports = begin_reports();
 
     report_config_t reportConfig = DEFAULT_REPORT_CONFIG;
@@ -117,7 +125,6 @@ int main(int argc, const char **argv)
     bool enableHlir = get_bool_arg(&result, enableHlirParam, false);
     bool debugSsa = get_bool_arg(&result, debugSsaParam, false);
 
-
     size_t totalFiles = vector_len(result.files);
     vector_t *sources = vector_of(totalFiles);
     for (size_t i = 0; i < totalFiles; i++)
@@ -129,11 +136,7 @@ int main(int argc, const char **argv)
 
     CHECK_REPORTS("command line parsing");
 
-    config_t config = {
-        .reportConfig = reportConfig,
-    };
-
-    cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
+    cthulhu_t *cthulhu = cthulhu_new(driver, sources, &result, reports, reportConfig);
 
     cthulhu_step_t steps[] = {
         cthulhu_init,    // init cthulhu instance

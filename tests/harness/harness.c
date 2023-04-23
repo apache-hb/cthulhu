@@ -39,6 +39,7 @@ int main(int argc, const char **argv)
     common_init();
 
     driver_t driver = get_driver();
+    reports_t *reports = begin_reports();
     verbose = true;
 
     argparse_config_t argparseConfig = {
@@ -48,7 +49,7 @@ int main(int argc, const char **argv)
         .description = format("%s command line interface", driver.name),
         .version = driver.version,
 
-        .reports = begin_reports(),
+        .reports = reports,
 
         .groups = vector_new(0)
     };
@@ -76,11 +77,7 @@ int main(int argc, const char **argv)
         return end_reports(result.reports, "parsing arguments", reportConfig);
     }
 
-    config_t config = {
-        .reportConfig = reportConfig,
-    };
-
-    cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
+    cthulhu_t *cthulhu = cthulhu_new(driver, sources, &result, reports, reportConfig);
 
     cthulhu_step_t steps[] = {
         cthulhu_init, 

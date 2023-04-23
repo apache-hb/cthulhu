@@ -21,7 +21,7 @@
 
 static status_t report_errors(cthulhu_t *cthulhu, const char *name)
 {
-    status_t status = end_reports(cthulhu->reports, name, cthulhu->config.reportConfig);
+    status_t status = end_reports(cthulhu->reports, name, cthulhu->reportConfig);
     cthulhu->status = status;
     return status;
 }
@@ -31,11 +31,12 @@ static bool end_stage(cthulhu_t *cthulhu, const char *name)
     return report_errors(cthulhu, name) != EXIT_OK;
 }
 
-static runtime_t runtime_new(reports_t *reports, size_t size)
+static runtime_t runtime_new(reports_t *reports, size_t size, argparse_t *args)
 {
     runtime_t runtime = {
         .reports = reports,
         .modules = map_optimal(size),
+        .args = args
     };
 
     return runtime;
@@ -55,7 +56,7 @@ static compile_t *get_compile(const cthulhu_t *cthulhu, size_t idx)
     return cthulhu->compiles + idx;
 }
 
-cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
+cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, argparse_t *args, reports_t *reports, report_config_t config)
 {
     CTASSERT(driver.fnInitCompiler != NULL);
     CTASSERT(driver.fnParseFile != NULL);
@@ -65,13 +66,11 @@ cthulhu_t *cthulhu_new(driver_t driver, vector_t *sources, config_t config)
 
     cthulhu_t *cthulhu = ctu_malloc(sizeof(cthulhu_t));
 
-    reports_t *reports = begin_reports();
-
     size_t totalSources = vector_len(sources);
-    runtime_t runtime = runtime_new(reports, totalSources);
+    runtime_t runtime = runtime_new(reports, totalSources, args);
 
     cthulhu->driver = driver;
-    cthulhu->config = config;
+    cthulhu->reportConfig = config;
     cthulhu->status = EXIT_INTERNAL;
     cthulhu->reports = reports;
     cthulhu->sources = sources;
