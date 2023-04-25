@@ -13,7 +13,7 @@ typedef struct feature_data_t {
 static bool gFeaturesInit = false;
 static feature_data_t gFeatures[eFeatureTotal];
 
-static const char *kDefaultInitNames[] = { "--enable-default-init", "-default-init" };
+static const char *kDefaultInitNames[] = { "--ctu-enable-default-expr", "-Fctu-default-expr" };
 #define DEFAULT_INIT_NAMES (sizeof(kDefaultInitNames) / sizeof(const char *))
 
 static void init_features(void)
@@ -29,7 +29,7 @@ static void init_features(void)
     gFeatures[eFeatureDefaultInit] = defaultInitFeature;
 }
 
-vector_t *config_get_groups(void)
+void ctu_add_commands(vector_t **groups)
 {
     init_features();
 
@@ -42,7 +42,7 @@ vector_t *config_get_groups(void)
 
     group_t *group = group_new("cthulhu features", "unstable cthulhu features and extensions", params);
 
-    return vector_init(group);
+    vector_push(groups, group);
 }
 
 static argparse_t *gArgParse = NULL;

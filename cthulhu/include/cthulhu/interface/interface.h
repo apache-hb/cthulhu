@@ -31,6 +31,9 @@ typedef struct
     sema_t *sema;
 } compile_t;
 
+// add commands to the command line parser
+typedef void (*add_commands_t)(vector_t **);
+
 // setup the compiler
 typedef void (*init_compiler_t)(runtime_t *);
 
@@ -51,10 +54,10 @@ typedef struct
     const char *name;
     version_t version;
 
-    const char *exts;
+    // null terminated list of file extensions
+    const char **exts;
 
-    vector_t *commandGroups;
-
+    add_commands_t fnAddCommands;
     init_compiler_t fnInitCompiler;
     parse_file_t fnParseFile;
     forward_decls_t fnForwardDecls;

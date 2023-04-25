@@ -11,7 +11,7 @@ typedef enum feature_t {
     eFeatureTotal
 } feature_t;
 
-vector_t *config_get_groups(void);
+void ctu_add_commands(vector_t **groups);
 void config_init(argparse_t *args);
 
 bool config_get_feature(feature_t feature);

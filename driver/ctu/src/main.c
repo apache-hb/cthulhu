@@ -20,12 +20,15 @@ static void *ctu_parse_file(runtime_t *runtime, compile_t *compile)
     return compile_scanner(compile->scan, &kCallbacks);
 }
 
-static const driver_t kBaseDriver = {
+static const char *kExts[] = { ".ct", ".ctu", NULL };
+
+static const driver_t kDriver = {
     .name = "Cthulhu",
     .version = NEW_VERSION(1, 0, 0),
 
-    .exts = ".ct,.ctu",
+    .exts = kExts,
 
+    .fnAddCommands = ctu_add_commands,
     .fnInitCompiler = ctu_init_compiler,
     .fnParseFile = ctu_parse_file,
     .fnForwardDecls = ctu_forward_decls,
@@ -35,9 +38,5 @@ static const driver_t kBaseDriver = {
 
 driver_t get_driver()
 {
-    driver_t result = kBaseDriver;
-
-    result.commandGroups = config_get_groups();
-
-    return result;
+    return kDriver;
 }
