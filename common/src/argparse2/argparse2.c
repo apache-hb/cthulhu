@@ -1,4 +1,4 @@
-#include "argparse/argparse2.h"
+#include "argparse2/argparse2.h"
 
 #include "base/memory.h"
 #include "base/panic.h"
@@ -103,8 +103,12 @@ ap2_param_t *ap2_param_string(
 
 void ap2_add(ap2_group_t *self, ap2_param_t *param)
 {
+    CTASSERT(self != NULL);
+    CTASSERT(param != NULL);
+    CTASSERT(*param->names != NULL);
+    
     ap2_t *parent = self->parent;
-    const char *name = param->names[0];
+    const char *name = *param->names;
 
     while (name != NULL)
     {
