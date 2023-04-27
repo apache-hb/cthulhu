@@ -89,14 +89,6 @@ int main(int argc, const char **argv)
     vector_push(&groups, codegenGroup);
     vector_push(&groups, debugGroup);
 
-    if (driver.commandGroups != NULL)
-    {
-        for (size_t i = 0; i < vector_len(driver.commandGroups); i++)
-        {
-            vector_push(&groups, vector_get(driver.commandGroups, i));
-        }
-    }
-
     reports_t *reports = begin_reports();
 
     report_config_t reportConfig = DEFAULT_REPORT_CONFIG;

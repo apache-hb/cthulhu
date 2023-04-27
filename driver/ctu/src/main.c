@@ -20,13 +20,13 @@ static void *ctu_parse_file(runtime_t *runtime, compile_t *compile)
     return compile_scanner(compile->scan, &kCallbacks);
 }
 
-static const char *kExts[] = { ".ct", ".ctu", NULL };
+static const char *kLangNames[] = { ".ct", ".ctu", NULL };
 
 static const driver_t kDriver = {
     .name = "Cthulhu",
     .version = NEW_VERSION(1, 0, 0),
 
-    .exts = kExts,
+    .exts = kLangNames,
 
     .fnAddCommands = ctu_add_commands,
     .fnInitCompiler = ctu_init_compiler,

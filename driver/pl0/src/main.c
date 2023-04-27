@@ -18,11 +18,13 @@ static void *pl0_parse_file(runtime_t *runtime, compile_t *compile)
     return compile_scanner(compile->scan, &kCallbacks);
 }
 
-const driver_t kDriver = {
+static const char *kLangNames[] = { ".pl0", NULL };
+
+static const driver_t kDriver = {
     .name = "PL/0",
     .version = NEW_VERSION(2, 2, 0),
 
-    .exts = ".pl0",
+    .exts = kLangNames,
 
     .fnInitCompiler = pl0_init,
     .fnParseFile = pl0_parse_file,

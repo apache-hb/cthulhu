@@ -156,4 +156,24 @@ argparse = declare_dependency(
     include_directories : 'include'
 )
 
+src = [
+    'src/argparse2/argparse2.c',
+    'src/argparse2/common.c',
+    lex.process('src/argparse2/ap.l'),
+    parse.process('src/argparse2/ap.y')
+]
+
+libargparse2 = library('argparse2', src,
+    c_args : args,
+    dependencies : deps,
+    include_directories : [ 'include', 'src' ],
+    name_suffix: lib_suffix
+)
+
+argparse2 = declare_dependency(
+    link_with : libargparse2,
+    dependencies : deps,
+    include_directories : 'include'
+)
+
 deps += [ base, std, platform, io, location, interop, argparse ]
