@@ -8,6 +8,8 @@
 
 #include "ct-test.h"
 
+#include <stdlib.h>
+
 static const report_config_t kReportConfig = {
     .limit = SIZE_MAX,
     .warningsAreErrors = true
@@ -62,6 +64,57 @@ TEST(test_argparse_posargs, {
     SHOULD_PASS("file is file.txt", str_equal(vector_get(sources.files, 0), "file.txt"));
 })
 
+typedef struct error_stack_t
+{
+    int levels[5];
+} error_stack_t;
+
+typedef struct error_filter_t
+{
+    int level;
+    error_stack_t *stack;
+} error_filter_t;
+
+static ap_event_result_t count_error(ap_t *ap, const node_t *node, const char *message, void *data)
+{
+    int i = strtol(message, NULL, 10);
+    error_filter_t *filter = data;
+    printf("error: i=%d l=%d\n", i, filter->level);
+    if (filter->level != i)
+        return eEventContinue;
+    
+    error_stack_t *stack = filter->stack;
+    stack->levels[i] += 1;
+    return eEventHandled;
+}
+
+TEST(test_error_stack, {
+    reports_t *reports = begin_reports();
+    error_stack_t errors = { 0 };
+
+    ap_t *ap = ap_new("test-argparse-error-stack", NEW_VERSION(1, 0, 0));
+
+    error_filter_t f1 = { 1, &errors };
+    error_filter_t f2 = { 2, &errors };
+    error_filter_t f3 = { 3, &errors };
+    error_filter_t f4 = { 4, &errors };
+
+    ap_error(ap, count_error, &f1);
+    ap_error(ap, count_error, &f2);
+    ap_error(ap, count_error, &f3);
+    ap_error(ap, count_error, &f4);
+
+    const char *argv[] = { "argparse-test", "1", "2", "3", "4" };
+
+    ap_parse(ap, reports, argv, 5);
+
+    SHOULD_PASS("has 1 error", errors.levels[1] == 1);
+    SHOULD_PASS("has 1 error", errors.levels[2] == 1);
+    SHOULD_PASS("has 1 error", errors.levels[3] == 1);
+    SHOULD_PASS("has 0 error", errors.levels[4] == 1);
+})
+
 HARNESS("argparse", {
-    ENTRY("posargs", test_argparse_posargs)
+    ENTRY("posargs", test_argparse_posargs),
+    ENTRY("error-stack", test_error_stack),
 })

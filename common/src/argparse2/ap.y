@@ -61,6 +61,7 @@ argument: AP_STRING ident { ap_on_string(x, @$, $1, $2); }
     | AP_BOOL { ap_on_bool(x, @$, $1, true); }
     | ident { ap_on_posarg(x, @$, $1); }
     | AP_ERROR { ap_on_error(x, @$, $1); }
+    | number { ap_on_error(x, @$, mpz_get_str(NULL, 10, $1)); }
     ;
 
 ident: IDENT { $$ = $1; }
