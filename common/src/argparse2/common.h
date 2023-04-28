@@ -60,6 +60,7 @@ typedef struct ap_t
     // vector<ap_callback_t> for positional arguments
     vector_t *posArgCallbacks;
 
+    // vector<ap_err_callback_t> for error callbacks
     vector_t *errorCallbacks;
 } ap_t;
 
