@@ -157,7 +157,7 @@ argparse = declare_dependency(
 )
 
 src = [
-    'src/argparse2/argparse2.c',
+    'src/argparse2/argparse.c',
     'src/argparse2/common.c',
     lex.process('src/argparse2/ap.l'),
     parse.process('src/argparse2/ap.y')

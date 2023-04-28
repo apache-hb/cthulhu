@@ -46,7 +46,7 @@ void *ctu_malloc(size_t size)
 {
     CTASSERT(size > 0);
 
-    return arena_malloc(&globalAlloc, size, NULL);
+    return arena_malloc(&globalAlloc, size, "");
 }
 
 USE_DECL

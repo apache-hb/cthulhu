@@ -21,8 +21,8 @@ ALNUMDASH [a-zA-Z0-9-]
 
 "=" { return ASSIGN; }
 
-[-]+{LETTER}{ALNUMDASH}* {
-    return ap2_get_opt(scan_extra(yyextra), yytext, &yylval->option); 
+[-]+{LETTER}{ALNUMDASH}* { 
+    return ap_get_opt(scan_extra(yyextra), yytext, &yylval->option, &yylval->error); 
 }
 
 [0-9]+ {
@@ -50,7 +50,7 @@ ALNUMDASH [a-zA-Z0-9-]
     return IDENT;
 }
 
-. { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }
+. { ap_on_error(yyextra, *yylloc, yytext); }
 
 %%
 

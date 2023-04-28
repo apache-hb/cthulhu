@@ -59,16 +59,10 @@
 #endif
 
 #if CC_CLANG || CC_GNU
-#    define BEGIN_PACKED(align)
-#    define END_PACKED()
-#    define PACKED(align) __attribute__((aligned(align), packed))
 #    ifndef NORETURN
 #        define NORETURN _Noreturn void
 #    endif
 #elif CC_MSVC
-#    define BEGIN_PACKED(align) __pragma(pack(push, align))
-#    define END_PACKED() __pragma(pack(pop))
-#    define PACKED(align)
 #    ifndef NORETURN
 #        define NORETURN __declspec(noreturn) void
 #    endif

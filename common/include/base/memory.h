@@ -29,6 +29,8 @@ extern alloc_t globalAlloc;
 
 #define ALLOC_SIZE_UNKNOWN SIZE_MAX
 
+// C allocators
+
 void ctu_free(IN_NOTNULL void *ptr);
 
 ALLOC(ctu_free)
@@ -37,7 +39,11 @@ NODISCARD void *ctu_malloc(size_t size);
 ALLOC(ctu_free)
 NODISCARD void *ctu_realloc(IN_NOTNULL void *ptr, size_t newSize);
 
+// gmp
+
 void init_gmp(IN_NOTNULL alloc_t *alloc);
+
+// arena allocators
 
 void arena_free(IN_NOTNULL alloc_t *alloc, IN_NOTNULL void *ptr, size_t size);
 

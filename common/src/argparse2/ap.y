@@ -23,18 +23,19 @@ void aperror(where_t *where, void *state, scan_t *scan, const char *msg);
 %}
 
 %union {
-    ap2_param_t *option;
+    ap_param_t *option;
     char *ident;
+    char *error;
     mpz_t number;
 }
 
 %token<option>
-    STRING_OPT "string option"
-    INT_OPT "integer option"
-    FLAG_OPT "flag option"
+    AP_STRING "string option"
+    AP_INT "integer option"
+    AP_BOOL "flag option"
 
-%token
-    ERROR "unknown flag"
+%token<error>
+    AP_ERROR "unknown flag"
 
 %token<ident>
     IDENT "identifier"
@@ -55,11 +56,11 @@ void aperror(where_t *where, void *state, scan_t *scan, const char *msg);
 entry: %empty | arguments ;
 arguments: argument | arguments argument ;
 
-argument: STRING_OPT ident { ap2_on_string(scan_get(x), $1, $2); }
-    | INT_OPT number { ap2_on_int(scan_get(x), $1, $2); }
-    | FLAG_OPT { ap2_on_bool(scan_get(x), $1, true); }
-    | ident { ap2_on_posarg(scan_get(x), $1); }
-    | ERROR
+argument: AP_STRING ident { ap_on_string(x, @$, $1, $2); }
+    | AP_INT number { ap_on_int(x, @$, $1, $2); }
+    | AP_BOOL { ap_on_bool(x, @$, $1, true); }
+    | ident { ap_on_posarg(x, @$, $1); }
+    | AP_ERROR { ap_on_error(x, @$, $1); }
     ;
 
 ident: IDENT { $$ = $1; }

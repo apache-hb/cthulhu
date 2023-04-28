@@ -4,14 +4,70 @@
 
 #include <gmp.h>
 
+#include "argparse2/argparse.h"
+
 #define APLTYPE where_t
 
-typedef struct ap2_t ap2_t;
-typedef struct ap2_param_t ap2_param_t;
+typedef struct vector_t vector_t;
+typedef struct map_t map_t;
 
-void ap2_on_string(ap2_t *self, const ap2_param_t *param, const char *value);
-void ap2_on_bool(ap2_t *self, const ap2_param_t *param, bool value);
-void ap2_on_int(ap2_t *self, const ap2_param_t *param, mpz_t value);
-void ap2_on_posarg(ap2_t *self, const char *value);
+typedef enum ap_param_type_t
+{
+    eParamBool,
+    eParamString,
+    eParamInt,
 
-int ap2_get_opt(ap2_t *self, const char *name, ap2_param_t **param);
+    eParamTotal
+} ap_param_type_t;
+
+typedef struct ap_group_t
+{
+    ap_t *parent;
+    const char *name;
+    const char *desc;
+} ap_group_t;
+
+typedef struct ap_param_t
+{
+    ap_param_type_t type;
+    const char *desc;
+    const char **names;
+} ap_param_t;
+
+#define CALLBACK_TYPE(name, type) \
+    typedef struct name { \
+        type callback; \
+        void *data; \
+    } name;
+
+CALLBACK_TYPE(ap_callback_t, ap_event_t)
+CALLBACK_TYPE(ap_err_callback_t, ap_error_t)
+
+typedef struct ap_t
+{
+    const char *desc;
+    version_t version;
+
+    // name -> ap_param_t lookup
+    map_t *nameLookup;
+
+    // param -> vector<ap_event_t> lookup
+    map_t *eventLookup;
+
+    // all groups
+    vector_t *groups;
+
+    // vector<ap_callback_t> for positional arguments
+    vector_t *posArgCallbacks;
+
+    vector_t *errorCallbacks;
+} ap_t;
+
+void ap_on_string(scan_t *scan, where_t where, const ap_param_t *param, const char *value);
+void ap_on_bool(scan_t *scan, where_t where, const ap_param_t *param, bool value);
+void ap_on_int(scan_t *scan, where_t where, const ap_param_t *param, mpz_t value);
+void ap_on_posarg(scan_t *scan, where_t where, const char *value);
+
+void ap_on_error(scan_t *scan, where_t where, const char *message);
+
+int ap_get_opt(ap_t *self, const char *name, ap_param_t **param, char **error);
