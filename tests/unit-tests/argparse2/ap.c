@@ -57,7 +57,7 @@ TEST(test_argparse_posargs, {
 
     const char *argv[] = { "argparse-test", "file.txt", "lettuce.wad" };
 
-    ap_parse(ap, reports, argv, 3);
+    ap_parse(ap, reports, 3, argv);
 
     SHOULD_PASS("has 1 error", vector_len(errors.errors) == 1);
     SHOULD_PASS("has 1 file", vector_len(sources.files) == 1);
@@ -106,7 +106,7 @@ TEST(test_error_stack, {
 
     const char *argv[] = { "argparse-test", "1", "2", "3", "4" };
 
-    ap_parse(ap, reports, argv, 5);
+    ap_parse(ap, reports, 5, argv);
 
     SHOULD_PASS("has 1 error", errors.levels[1] == 1);
     SHOULD_PASS("has 1 error", errors.levels[2] == 1);

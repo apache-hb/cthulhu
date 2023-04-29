@@ -5,6 +5,11 @@
 
 #include "std/map.h"
 
+#include "platform/file.h"
+#include "stacktrace/stacktrace.h"
+
+#include "cthulhu/hlir/init.h"
+
 typedef struct mediator_t
 {
     const char *name; ///< mediator name
@@ -37,6 +42,16 @@ static void add_lang_ext(mediator_t *self, const char *ext, const language_t *la
 
 // public api
 
+void runtime_init()
+{
+    GLOBAL_INIT();
+
+    stacktrace_init();
+    platform_init();
+    init_gmp(&globalAlloc);
+    init_hlir();
+}
+
 mediator_t *mediator_new(const char *name, version_t version)
 {
     mediator_t *mediator = ctu_malloc(sizeof(mediator_t));
@@ -67,5 +82,8 @@ void mediator_add_language(mediator_t *self, const language_t *language)
 
 void mediator_add_plugin(mediator_t *self, const plugin_t *plugin)
 {
+    CTASSERT(self != NULL);
+    CTASSERT(plugin != NULL);
 
+    plugin->fnConfigure(self);
 }

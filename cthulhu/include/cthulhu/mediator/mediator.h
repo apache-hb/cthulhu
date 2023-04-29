@@ -87,6 +87,19 @@ typedef struct language_t
     language_compile_t fnCompile; ///< compile the ast to hlir
 } language_t;
 
+typedef void (*plugin_config_t)(mediator_t *);
+
+typedef void (*plugin_init_t)(mediator_t *);
+
+typedef struct plugin_t
+{
+    const char *name; ///< plugin name
+    version_t version; ///< plugin version
+
+    plugin_config_t fnConfigure; ///< configure the mediator to work with this plugin
+    plugin_init_t fnInit; ///< initialize the plugin
+} plugin_t;
+
 void runtime_init(void);
 
 // language api

@@ -40,7 +40,7 @@ ALNUMDASH [a-zA-Z0-9-]
     return NUMBER;
 }
 
-[a-zA-Z0-9_./;:\\\-]+ { 
+[a-zA-Z0-9_.,/;:\\\-]+ { 
     yylval->ident = ctu_strdup(yytext);
     return IDENT; 
 }

@@ -68,22 +68,9 @@ ap_group_t *ap_group_new(
     const char *desc
 );
 
-ap_param_t *ap_param_bool(
-    const char *desc, 
-    const char **names
-);
-
-ap_param_t *ap_param_int(
-    const char *desc, 
-    const char **names
-);
-
-ap_param_t *ap_param_string(
-    const char *desc, 
-    const char **names
-);
-
-void ap_add(ap_group_t *self, ap_param_t *param);
+ap_param_t *ap_add_bool(ap_group_t *self, const char *desc, const char **names);
+ap_param_t *ap_add_int(ap_group_t *self, const char *desc, const char **names);
+ap_param_t *ap_add_string(ap_group_t *self, const char *desc, const char **names);
 
 /**
  * @brief add a callback event to a parameter
@@ -98,4 +85,14 @@ void ap_event(ap_t *self, ap_param_t *param, ap_event_t callback, void *data);
 void ap_error(ap_t *self, ap_error_t callback, void *data);
 
 // TODO: remove reports here, requires a refactor of the reports module
-int ap_parse(ap_t *self, reports_t *reports, const char **argv, int argc);
+
+/**
+ * @brief parse the command line
+ * 
+ * @param self the parser instance
+ * @param reports reporting channel
+ * @param argc from main
+ * @param argv from main
+ * @return int exit code
+ */
+int ap_parse(ap_t *self, reports_t *reports, int argc, const char **argv);

@@ -8,6 +8,8 @@
 #include "std/vector.h"
 #include "std/str.h"
 
+#include <stdio.h>
+
 // internals
 
 static void apply_callbacks(scan_t *scan, where_t where, const ap_param_t *param, const void *value, vector_t *all)
@@ -77,12 +79,15 @@ int ap_get_opt(ap_t *self, const char *name, ap_param_t **param, char **error)
     CTASSERT(name != NULL);
     CTASSERT(param != NULL);
 
-    ap_param_t *result = map_get_ptr(self->nameLookup, name);
+
+    ap_param_t *result = map_get(self->nameLookup, name);
     if (result == NULL)
     {
         *error = format("unknown option '%s'", name);
         return AP_ERROR;
     }
+
+    *param = result;
 
     switch (result->type)
     {

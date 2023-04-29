@@ -70,6 +70,32 @@ static char *join_args(int argc, const char **argv)
     return str_join(" ", vec);
 }
 
+static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char *desc, const char **names)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(desc != NULL);
+    CTASSERT(*names != NULL);
+    
+    ap_param_t *param = ap_param_new(type, desc, names);
+
+    ap_t *parent = self->parent;
+    size_t idx = 0;
+
+    while (names[idx] != NULL)
+    {
+        CTASSERT(map_get(self->parent->nameLookup, names[idx]) == NULL);
+
+        map_set(parent->nameLookup, names[idx], param);
+
+        idx += 1;
+    }
+
+    map_set_ptr(parent->eventLookup, param, vector_new(4));
+
+    return param;
+}
+
+
 /// public api
 
 ap_t *ap_new(const char *desc, version_t version)
@@ -102,50 +128,19 @@ ap_group_t *ap_group_new(
     return self;
 }
 
-ap_param_t *ap_param_bool(
-    const char *description, 
-    const char **names
-)
+ap_param_t *ap_add_bool(ap_group_t *self, const char *desc, const char **names)
 {
-    ap_param_t *self = ap_param_new(eParamBool, description, names);
-    return self;
+    return add_param(self, eParamBool, desc, names);
 }
 
-ap_param_t *ap_param_int(
-    const char *description, 
-    const char **names
-)
+ap_param_t *ap_add_int(ap_group_t *self, const char *desc, const char **names)
 {
-    ap_param_t *self = ap_param_new(eParamInt, description, names);
-    return self;
+    return add_param(self, eParamInt, desc, names);
 }
 
-ap_param_t *ap_param_string(
-    const char *description, 
-    const char **names
-)
+ap_param_t *ap_add_string(ap_group_t *self, const char *desc, const char **names)
 {
-    ap_param_t *self = ap_param_new(eParamString, description, names);
-    return self;
-}
-
-void ap_add(ap_group_t *self, ap_param_t *param)
-{
-    CTASSERT(self != NULL);
-    CTASSERT(param != NULL);
-    CTASSERT(*param->names != NULL);
-    
-    ap_t *parent = self->parent;
-    const char *name = *param->names;
-
-    while (name != NULL)
-    {
-        CTASSERT(map_get_ptr(self->parent->nameLookup, name) == NULL);
-
-        map_set_ptr(parent->nameLookup, name, param);
-    }
-
-    map_set_ptr(parent->eventLookup, param, vector_new(4));
+    return add_param(self, eParamString, desc, names);
 }
 
 void ap_event(ap_t *self, ap_param_t *param, ap_event_t callback, void *data)
@@ -173,7 +168,7 @@ void ap_error(ap_t *self, ap_error_t callback, void *data)
     vector_push(&self->errorCallbacks, ap_error_new(callback, data));
 }
 
-int ap_parse(ap_t *self, reports_t *reports, const char **argv, int argc)
+int ap_parse(ap_t *self, reports_t *reports, int argc, const char **argv)
 {
     char *args = join_args(argc, argv);
     io_t *io = io_string("<command-line>", args);
