@@ -178,7 +178,11 @@ void Editor::endDock() {
 }
 
 void Editor::openDialog() {
-    dialog.OpenDialog("ChooseFile", "Open File", driver.exts, ".");
+    // TODO: Implement
+    ImGui::Begin("TODO");
+    ImGui::Text("Editor::openDialog() not implemented");
+    ImGui::End();
+    //dialog.OpenDialog("ChooseFile", "Open File", exts, ".");
 }
 
 bool Editor::showDialog(std::string& name, std::string& path) {

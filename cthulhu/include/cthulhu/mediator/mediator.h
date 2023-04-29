@@ -44,6 +44,8 @@
 
 BEGIN_API
 
+typedef struct language_t language_t;
+typedef struct plugin_t plugin_t;
 typedef struct instance_t instance_t;
 typedef struct mediator_t mediator_t;
 typedef struct ap_t ap_t;
@@ -54,7 +56,7 @@ typedef struct ap_t ap_t;
 // TODO: should probably abstract argparse out
 //       an intermediate config format that maps to toml/cmd/imgui would be nice
 
-typedef void (*language_config_t)(instance_t *, ap_t *);
+typedef void (*language_config_t)(instance_t *);
 
 typedef void (*language_init_t)(instance_t *);
 
@@ -76,7 +78,7 @@ typedef struct language_t
 
     const char **exts; ///< null terminated list of default file extensions for this driver
 
-    language_config_t fnConfigure; ///< configure the language driver
+    language_config_t fnConfigure; ///< configure the mediator to work with this driver
     language_init_t fnInit; ///< initialize the language driver
 
     language_parse_t fnParse; ///< parse a source file
@@ -85,26 +87,25 @@ typedef struct language_t
     language_compile_t fnCompile; ///< compile the ast to hlir
 } language_t;
 
-typedef struct instance_t
-{
-    mediator_t *mediator;
-} instance_t;
-
-// load a language driver
-typedef void (*mediator_language_t)(mediator_t *, const char *);
-
-// load a plugin
-typedef void (*mediator_plugin_t)(mediator_t *, const char *);
-
-typedef struct mediator_t
-{
-    const char *name; ///< mediator name
-    version_t version; ///< mediator version
-
-    mediator_language_t fnLoadLanguage;
-    mediator_plugin_t fnLoadPlugin;
-} mediator_t;
-
 void runtime_init(void);
+
+// language api
+
+typedef const language_t *(*language_load_t)(mediator_t *);
+
+#define LANGUAGE_ENTRY_POINT language_load
+
+// plugin api
+
+typedef const plugin_t *(*plugin_load_t)(mediator_t *);
+
+#define PLUGIN_ENTRY_POINT plugin_load
+
+// mediator api
+
+mediator_t *mediator_new(const char *name, version_t version);
+
+void mediator_add_language(mediator_t *self, const language_t *language);
+void mediator_add_plugin(mediator_t *self, const plugin_t *plugin);
 
 END_API

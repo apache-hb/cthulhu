@@ -68,3 +68,20 @@ emit = declare_dependency(
     include_directories : 'include',
     dependencies : deps + [ ssa ]
 )
+
+src = [
+    'src/mediator/mediator.c'
+]
+
+libmediate = library('mediate', src,
+    dependencies : deps,
+    c_args : args,
+    include_directories : 'include',
+    name_suffix: lib_suffix
+)
+
+mediate = declare_dependency(
+    link_with : libmediate,
+    include_directories : 'include',
+    dependencies : deps
+)
