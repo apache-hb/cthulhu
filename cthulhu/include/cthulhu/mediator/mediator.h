@@ -85,6 +85,26 @@ typedef struct language_t
     language_compile_t fnCompile; ///< compile the ast to hlir
 } language_t;
 
+typedef struct instance_t
+{
+    mediator_t *mediator;
+} instance_t;
+
+// load a language driver
+typedef void (*mediator_language_t)(mediator_t *, const char *);
+
+// load a plugin
+typedef void (*mediator_plugin_t)(mediator_t *, const char *);
+
+typedef struct mediator_t
+{
+    const char *name; ///< mediator name
+    version_t version; ///< mediator version
+
+    mediator_language_t fnLoadLanguage;
+    mediator_plugin_t fnLoadPlugin;
+} mediator_t;
+
 void runtime_init(void);
 
 END_API
