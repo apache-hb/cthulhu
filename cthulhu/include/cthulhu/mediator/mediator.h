@@ -48,6 +48,9 @@ typedef struct instance_t instance_t;
 typedef struct mediator_t mediator_t;
 typedef struct ap_t ap_t;
 
+// TODO: how should threading work? one thread per file or one thread per language?
+// TODO: maybe it should be configurable, but then conflicts might happen
+
 // TODO: should probably abstract argparse out
 //       an intermediate config format that maps to toml/cmd/imgui would be nice
 
