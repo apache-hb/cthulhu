@@ -127,6 +127,12 @@ typedef const language_t *(*language_load_t)(mediator_t *);
 
 #define LANGUAGE_ENTRY_POINT language_load
 
+#ifdef CC_MSVC
+#   define LANGUAGE_EXPORT __declspec(dllexport)
+#else
+#   define LANGUAGE_EXPORT __attribute__((visibility("default")))
+#endif
+
 // plugin api
 
 typedef const plugin_t *(*plugin_load_t)(mediator_t *);

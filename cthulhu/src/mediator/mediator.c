@@ -82,7 +82,8 @@ void mediator_add_language(mediator_t *self, const language_t *language)
 
     instance_t *handle = add_new_instance(self, language);
 
-    language->fnConfigure(handle);
+    if (language->fnConfigure != NULL)
+        language->fnConfigure(handle);
 }
 
 void mediator_add_plugin(mediator_t *self, const plugin_t *plugin)
@@ -91,9 +92,7 @@ void mediator_add_plugin(mediator_t *self, const plugin_t *plugin)
     CTASSERT(plugin != NULL);
 
     if (plugin->fnInit != NULL)
-    {
         plugin->fnInit(self);
-    }
 
     vector_push(&self->plugins, (plugin_t*)plugin);
 }
