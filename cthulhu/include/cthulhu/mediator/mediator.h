@@ -50,6 +50,21 @@ typedef struct instance_t instance_t;
 typedef struct mediator_t mediator_t;
 typedef struct ap_t ap_t;
 
+typedef enum region_t
+{
+    eRegionLoad, // load plugins and languages
+    eRegionInit, // initialize everything
+    eRegionLoadSource, // load source files
+    eRegionParse, // parse source files
+    eRegionCompile, // compile ast to hlir
+    eRegionOptimize, // optimize hlir
+    eRegionCodegen, // codegen hlir to ir
+    eRegionCleanup, // cleanup everything
+    eRegionEnd, // end of compilation
+
+    eRegionTotal
+} region_t;
+
 // TODO: how should threading work? one thread per file or one thread per language?
 // TODO: maybe it should be configurable, but then conflicts might happen
 
@@ -87,17 +102,21 @@ typedef struct language_t
     language_compile_t fnCompile; ///< compile the ast to hlir
 } language_t;
 
-typedef void (*plugin_config_t)(mediator_t *);
-
 typedef void (*plugin_init_t)(mediator_t *);
+
+typedef void (*plugin_shutdown_t)(mediator_t *);
+
+typedef void (*plugin_region_t)(mediator_t *, region_t);
 
 typedef struct plugin_t
 {
     const char *name; ///< plugin name
     version_t version; ///< plugin version
 
-    plugin_config_t fnConfigure; ///< configure the mediator to work with this plugin
     plugin_init_t fnInit; ///< initialize the plugin
+    plugin_shutdown_t fnShutdown; ///< shutdown the plugin
+
+    plugin_region_t fnRegion; ///< called when a region begins
 } plugin_t;
 
 void runtime_init(void);
@@ -114,11 +133,20 @@ typedef const plugin_t *(*plugin_load_t)(mediator_t *);
 
 #define PLUGIN_ENTRY_POINT plugin_load
 
+#ifdef CC_MSVC
+#   define PLUGIN_EXPORT __declspec(dllexport)
+#else
+#   define PLUGIN_EXPORT __attribute__((visibility("default")))
+#endif
+
 // mediator api
 
 mediator_t *mediator_new(const char *name, version_t version);
 
 void mediator_add_language(mediator_t *self, const language_t *language);
 void mediator_add_plugin(mediator_t *self, const plugin_t *plugin);
+
+void mediator_region(mediator_t *self, region_t region);
+void mediator_shutdown(mediator_t *self);
 
 END_API

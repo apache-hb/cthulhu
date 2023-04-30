@@ -24,16 +24,6 @@ host = host_machine.system()
 cc = meson.get_compiler('c')
 buildtype = get_option('buildtype')
 
-wasm = target == 'emscripten'
-mingw = target == 'windows' and cc.get_id() == 'gcc'
-
-# emscripten and meson dont play nice together, though emscripten doesnt play nice with anything
-# so no big suprise there
-lib_suffix = []
-if wasm
-    lib_suffix = 'bc'
-endif
-
 parts = version.split('.')
 cwd = meson.current_source_dir()
 bld = meson.current_build_dir()
@@ -151,30 +141,24 @@ subdir('common')
 # common compiler libraries used by interfaces and drivers
 subdir('cthulhu')
 
-enabled_interfaces = get_option('interfaces')
-
-message('enabled interfaces:', enabled_interfaces)
+message('enabled interfaces:', get_option('interfaces'))
 message('enabled languages:', get_option('languages'))
-
-if wasm
-    message('emscripten detected, overriding interfaces to `browser`')
-    enabled_interfaces = [ 'browser' ]
-endif
 
 langs = {}
 interfaces = {}
+plugins = {}
 
 foreach lang : get_option('languages')
-    subdir('driver'/lang)
+    subdir('components/driver'/lang)
 endforeach
 
-foreach interface : enabled_interfaces
-    subdir('interface'/interface)
+foreach interface : get_option('interfaces')
+    subdir('components/interface'/interface)
 endforeach
 
-if wasm
-    subdir_done()
-endif
+foreach plugin : get_option('plugins')
+    subdir('components/plugin'/plugin)
+endforeach
 
 subdir('tests/harness')
 subdir('tests/unit-tests')

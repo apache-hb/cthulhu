@@ -54,6 +54,9 @@ typedef struct ap_t
     // param -> vector<ap_event_t> lookup
     map_t *eventLookup;
 
+    // param -> void* lookup
+    map_t *paramValues;
+
     // all groups
     vector_t *groups;
 

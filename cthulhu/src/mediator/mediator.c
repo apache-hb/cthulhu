@@ -4,6 +4,7 @@
 #include "base/panic.h"
 
 #include "std/map.h"
+#include "std/vector.h"
 
 #include "platform/file.h"
 #include "stacktrace/stacktrace.h"
@@ -18,6 +19,8 @@ typedef struct mediator_t
     map_t *extMap; ///< map of extensions to their language
 
     map_t *instances; ///< map of languages to their instance
+
+    vector_t *plugins; ///< list of plugins
 } mediator_t;
 
 typedef struct instance_t
@@ -59,6 +62,8 @@ mediator_t *mediator_new(const char *name, version_t version)
     mediator->version = version;
     
     mediator->extMap = map_new(64);
+    mediator->instances = map_new(64);
+    mediator->plugins = vector_new(64);
 
     return mediator;
 }
@@ -85,5 +90,36 @@ void mediator_add_plugin(mediator_t *self, const plugin_t *plugin)
     CTASSERT(self != NULL);
     CTASSERT(plugin != NULL);
 
-    plugin->fnConfigure(self);
+    if (plugin->fnInit != NULL)
+    {
+        plugin->fnInit(self);
+    }
+
+    vector_push(&self->plugins, (plugin_t*)plugin);
+}
+
+void mediator_region(mediator_t *self, region_t region)
+{
+    size_t len = vector_len(self->plugins);
+    for (size_t i = 0; i < len; i++)
+    {
+        const plugin_t *plugin = vector_get(self->plugins, i);
+        if (plugin->fnRegion == NULL)
+            continue;
+            
+        plugin->fnRegion(self, region);
+    }
+}
+
+void mediator_shutdown(mediator_t *self)
+{
+    size_t len = vector_len(self->plugins);
+    for (size_t i = 0; i < len; i++)
+    {
+        const plugin_t *plugin = vector_get(self->plugins, i);
+        if (plugin->fnShutdown == NULL)
+            continue;
+            
+        plugin->fnShutdown(self);
+    }
 }

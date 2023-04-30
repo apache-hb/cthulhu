@@ -16,8 +16,7 @@ libstacktrace = library('stacktrace', src,
     c_args : args,
     dependencies : deps,
     include_directories : 'include',
-    link_args : stacktrace_links,
-    name_suffix: lib_suffix
+    link_args : stacktrace_links
 )
 
 stacktrace = declare_dependency(
@@ -35,8 +34,7 @@ src = [
 libbase = library('base', src,
     c_args : args,
     dependencies : deps + [ stacktrace ],
-    include_directories : 'include',
-    name_suffix: lib_suffix
+    include_directories : 'include'
 )
 
 base = declare_dependency(
@@ -56,8 +54,7 @@ src = [
 libstd = library('std', src,
     c_args : args,
     dependencies : base,
-    include_directories : 'include',
-    name_suffix: lib_suffix
+    include_directories : 'include'
 )
 
 std = declare_dependency(
@@ -76,8 +73,7 @@ src = [
 libplatform = library('platform', src,
     c_args : args,
     dependencies : std,
-    include_directories : 'include',
-    name_suffix: lib_suffix
+    include_directories : 'include'
 )
 
 platform = declare_dependency(
@@ -91,8 +87,7 @@ src = [ 'src/io/io.c' ]
 libio = library('io', src,
     c_args : args,
     dependencies : [ platform, std ],
-    include_directories : 'include',
-    name_suffix: lib_suffix
+    include_directories : 'include'
 )
 
 io = declare_dependency(
@@ -113,8 +108,7 @@ src = [
 liblocation = library('location', src,
     c_args : args,
     dependencies : std,
-    include_directories : 'include',
-    name_suffix: lib_suffix
+    include_directories : 'include'
 )
 
 location = declare_dependency(
@@ -126,8 +120,7 @@ location = declare_dependency(
 libinterop = library('interop', [ 'src/interop/flex.c' ],
     c_args : args,
     dependencies : std,
-    include_directories : 'include',
-    name_suffix: lib_suffix
+    include_directories : 'include'
 )
 
 interop = declare_dependency(
@@ -146,8 +139,7 @@ src = [
 libargparse = library('argparse', src,
     c_args : args,
     dependencies : deps,
-    include_directories : [ 'include', 'src' ],
-    name_suffix: lib_suffix
+    include_directories : [ 'include', 'src' ]
 )
 
 argparse = declare_dependency(
@@ -166,8 +158,7 @@ src = [
 libargparse2 = library('argparse2', src,
     c_args : args,
     dependencies : deps,
-    include_directories : [ 'include', 'src' ],
-    name_suffix: lib_suffix
+    include_directories : [ 'include', 'src' ]
 )
 
 argparse2 = declare_dependency(

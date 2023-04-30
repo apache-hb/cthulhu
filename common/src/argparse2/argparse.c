@@ -107,6 +107,7 @@ ap_t *ap_new(const char *desc, version_t version)
 
     self->nameLookup = map_optimal(256);
     self->eventLookup = map_optimal(256);
+    self->paramValues = map_optimal(256);
     self->groups = vector_new(16);
 
     self->posArgCallbacks = vector_new(16);
@@ -141,6 +142,60 @@ ap_param_t *ap_add_int(ap_group_t *self, const char *desc, const char **names)
 ap_param_t *ap_add_string(ap_group_t *self, const char *desc, const char **names)
 {
     return add_param(self, eParamString, desc, names);
+}
+
+bool ap_get_bool(ap_t *self, const ap_param_t *param, bool *value)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(param != NULL);
+    CTASSERT(value != NULL);
+
+    CTASSERT(param->type == eParamBool);
+
+    bool *val = map_get_ptr(self->paramValues, param);
+    if (val != NULL)
+    {
+        *value = *val;
+        return true;
+    }
+
+    return false;
+}
+
+bool ap_get_int(ap_t *self, const ap_param_t *param, mpz_t value)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(param != NULL);
+    CTASSERT(value != NULL);
+
+    CTASSERT(param->type == eParamInt);
+
+    void *val = map_get_ptr(self->paramValues, param);
+    if (val != NULL)
+    {
+        memcpy(value, val, sizeof(mpz_t));
+        return true;
+    }
+
+    return false;
+}
+
+bool ap_get_string(ap_t *self, const ap_param_t *param, const char **value)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(param != NULL);
+    CTASSERT(value != NULL);
+
+    CTASSERT(param->type == eParamString);
+
+    const char *val = map_get_ptr(self->paramValues, param);
+    if (val != NULL)
+    {
+        *value = val;
+        return true;
+    }
+
+    return false;
 }
 
 void ap_event(ap_t *self, ap_param_t *param, ap_event_t callback, void *data)

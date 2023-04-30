@@ -7,11 +7,7 @@ project('mini-gmp', 'c',
     ]
 )
 
-lib_suffix = []
 c_args = []
-if target_machine.system() == 'emscripten'
-    lib_suffix = 'bc'
-endif
 
 if meson.get_compiler('c').get_id() == 'msvc'
     c_args = [ '/wd4146' ]
@@ -19,14 +15,12 @@ endif
 
 libgmp = library('gmp', 'mini-gmp.c',
     include_directories : '.',
-    c_args : c_args,
-    name_suffix : lib_suffix
+    c_args : c_args
 )
 
 libmpq = library('mpq', 'mini-mpq.c',
     include_directories : '.',
-    c_args : c_args,
-    name_suffix : lib_suffix
+    c_args : c_args
 )
 
 gmp = declare_dependency(
