@@ -32,7 +32,6 @@ static const char *kDebugSsaNames[] = { "-dbgssa", "--debug-ssa", NULL };
 
 static ap_event_result_t on_load_language(ap_t *ap, const ap_param_t *param, const void *value, void *data)
 {
-    UNUSED(ap);
     UNUSED(param);
     UNUSED(data);
 
@@ -61,14 +60,13 @@ static ap_event_result_t on_load_language(ap_t *ap, const ap_param_t *param, con
         return eEventHandled;
     }
 
-    mediator_add_language(rt->mediator, lang);
+    mediator_add_language(rt->mediator, lang, ap);
 
     return eEventHandled;
 }
 
 static ap_event_result_t on_load_plugin(ap_t *ap, const ap_param_t *param, const void *value, void *data)
 {
-    UNUSED(ap);
     UNUSED(param);
     UNUSED(data);
 
@@ -97,7 +95,7 @@ static ap_event_result_t on_load_plugin(ap_t *ap, const ap_param_t *param, const
         return eEventHandled;
     }
 
-    mediator_add_plugin(rt->mediator, plugin);
+    mediator_add_plugin(rt->mediator, plugin, ap);
 
     return eEventHandled;
 }
@@ -150,6 +148,8 @@ int main(int argc, const char **argv)
         const char *err = vector_get(rt.unknownArgs, i);
         printf("error: %s\n", err);
     }
+
+    mediator_startup(mediator);
 
     for (size_t i = 0; i < eRegionTotal; i++)
     {

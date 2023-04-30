@@ -3,11 +3,7 @@
 #include <windows.h>
 
 #include <stdio.h>
-
-static LARGE_INTEGER gFrequency;
-static LARGE_INTEGER gCounter;
-
-static LONGLONG gTicks[eRegionTotal] = { 0 };
+#include <winnt.h>
 
 static const char *kRegionNames[] = {
     [eRegionLoad] = "Load",
@@ -21,30 +17,43 @@ static const char *kRegionNames[] = {
     [eRegionEnd] = "End"
 };
 
-static void plugin_init(mediator_t *mediator)
+typedef struct timing_t
 {
-    QueryPerformanceFrequency(&gFrequency);
-    QueryPerformanceCounter(&gCounter);
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER counter;
+
+    LONGLONG ticks[eRegionTotal];
+} timing_t;
+
+static void plugin_init(plugin_handle_t *handle)
+{
+    timing_t timing = { 0 };
+    QueryPerformanceFrequency(&timing.frequency);
+    QueryPerformanceCounter(&timing.counter);
 }
 
-static void plugin_region(mediator_t *mediator, region_t region)
+static void plugin_region(plugin_handle_t *handle, region_t region)
 {
+    timing_t *timing = handle->user;
     LARGE_INTEGER counter;
     QueryPerformanceCounter(&counter);
 
-    LONGLONG ticks = counter.QuadPart - gCounter.QuadPart;
-    gTicks[region] += ticks;
+    LONGLONG ticks = counter.QuadPart - timing->counter.QuadPart;
+    timing->ticks[region] += ticks;
 
-    gCounter = counter;
+    timing->counter = counter;
 }
 
-static void plugin_shutdown(mediator_t *mediator)
+static void plugin_shutdown(plugin_handle_t *handle)
 {
+    timing_t *timing = handle->user;
+
+    double freq = (double)timing->frequency.QuadPart;
     printf("Timing:\n");
 
     for (size_t i = 0; i < eRegionTotal; i++)
     {
-        printf("- %s: %fms\n", kRegionNames[i], (double)gTicks[i] / (double)gFrequency.QuadPart * 1000.0);
+        printf("- %s: %fms\n", kRegionNames[i], (double)timing->ticks[i] / freq * 1000.0);
     }
 }
 

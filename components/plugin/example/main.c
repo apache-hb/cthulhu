@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-static void plugin_init(mediator_t *mediator)
+static void plugin_init(plugin_handle_t *handle)
 {
     printf("plugin_init\n");
 }

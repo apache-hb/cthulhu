@@ -157,7 +157,7 @@ foreach plugin : get_option('plugins')
     subdir('components/plugin'/plugin)
 endforeach
 
-#subdir('tests/harness')
+subdir('tests/harness')
 #subdir('tests/unit-tests')
 
 #foreach lang : get_option('languages')

@@ -23,17 +23,24 @@ typedef struct mediator_t
     vector_t *plugins; ///< list of plugins
 } mediator_t;
 
-typedef struct instance_t
+static lang_handle_t *add_new_lang_instance(mediator_t *self, const language_t *lang)
 {
-    mediator_t *mediator;
-} instance_t;
-
-static instance_t *add_new_instance(mediator_t *self, const language_t *lang)
-{
-    instance_t *instance = ctu_malloc(sizeof(instance_t));
+    lang_handle_t *instance = ctu_malloc(sizeof(lang_handle_t));
+    instance->handle = lang;
+    instance->user = NULL;
     instance->mediator = self;
 
     map_set_ptr(self->instances, lang, instance);
+
+    return instance;
+}
+
+static plugin_handle_t *add_new_plugin_instance(mediator_t *self, const plugin_t *plugin)
+{
+    plugin_handle_t *instance = ctu_malloc(sizeof(plugin_handle_t));
+    instance->handle = plugin;
+    instance->user = NULL;
+    instance->mediator = self;
 
     return instance;
 }
@@ -68,7 +75,7 @@ mediator_t *mediator_new(const char *name, version_t version)
     return mediator;
 }
 
-void mediator_add_language(mediator_t *self, const language_t *language)
+void mediator_add_language(mediator_t *self, const language_t *language, ap_t *ap)
 {
     CTASSERT(self != NULL);
     CTASSERT(language != NULL);
@@ -80,21 +87,23 @@ void mediator_add_language(mediator_t *self, const language_t *language)
         idx += 1;
     }
 
-    instance_t *handle = add_new_instance(self, language);
+    lang_handle_t *handle = add_new_lang_instance(self, language);
 
     if (language->fnConfigure != NULL)
-        language->fnConfigure(handle);
+        language->fnConfigure(handle, ap);
 }
 
-void mediator_add_plugin(mediator_t *self, const plugin_t *plugin)
+void mediator_add_plugin(mediator_t *self, const plugin_t *plugin, ap_t *ap)
 {
     CTASSERT(self != NULL);
     CTASSERT(plugin != NULL);
 
-    if (plugin->fnInit != NULL)
-        plugin->fnInit(self);
+    plugin_handle_t *handle = add_new_plugin_instance(self, plugin);
 
-    vector_push(&self->plugins, (plugin_t*)plugin);
+    if (plugin->fnConfigure != NULL)
+        plugin->fnConfigure(handle, ap);
+
+    vector_push(&self->plugins, handle);
 }
 
 void mediator_region(mediator_t *self, region_t region)
@@ -102,11 +111,40 @@ void mediator_region(mediator_t *self, region_t region)
     size_t len = vector_len(self->plugins);
     for (size_t i = 0; i < len; i++)
     {
-        const plugin_t *plugin = vector_get(self->plugins, i);
+        plugin_handle_t *handle = vector_get(self->plugins, i);
+        const plugin_t *plugin = handle->handle;
         if (plugin->fnRegion == NULL)
             continue;
             
-        plugin->fnRegion(self, region);
+        plugin->fnRegion(handle, region);
+    }
+}
+
+void mediator_startup(mediator_t *self)
+{
+    // init all plugins
+    size_t len = vector_len(self->plugins);
+    for (size_t i = 0; i < len; i++)
+    {
+        plugin_handle_t *handle = vector_get(self->plugins, i);
+        const plugin_t *plugin = handle->handle;
+        if (plugin->fnInit == NULL)
+            continue;
+            
+        plugin->fnInit(handle);
+    }
+
+    // init all languages
+    map_iter_t iter = map_iter(self->instances);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        lang_handle_t *handle = entry.value;
+        const language_t *lang = handle->handle;
+        if (lang->fnInit == NULL)
+            continue;
+
+        lang->fnInit(handle);
     }
 }
 
@@ -115,10 +153,11 @@ void mediator_shutdown(mediator_t *self)
     size_t len = vector_len(self->plugins);
     for (size_t i = 0; i < len; i++)
     {
-        const plugin_t *plugin = vector_get(self->plugins, i);
+        plugin_handle_t *handle = vector_get(self->plugins, i);
+        const plugin_t *plugin = handle->handle;
         if (plugin->fnShutdown == NULL)
             continue;
             
-        plugin->fnShutdown(self);
+        plugin->fnShutdown(handle);
     }
 }

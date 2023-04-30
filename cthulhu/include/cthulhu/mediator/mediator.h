@@ -42,6 +42,9 @@
 /// - initializing all plugins
 ///
 
+// fnConfigure is run as soon as the handle is loaded
+// fnInit is called once all handles have been loaded
+
 BEGIN_API
 
 typedef struct language_t language_t;
@@ -65,26 +68,44 @@ typedef enum region_t
     eRegionTotal
 } region_t;
 
+
+typedef struct lang_handle_t
+{
+    mediator_t *mediator;
+    const language_t *handle;
+
+    void *user;
+} lang_handle_t;
+
+typedef struct plugin_handle_t
+{
+    mediator_t *mediator;
+    const plugin_t *handle;
+
+    void *user;
+} plugin_handle_t;
+
 // TODO: how should threading work? one thread per file or one thread per language?
 // TODO: maybe it should be configurable, but then conflicts might happen
 
 // TODO: should probably abstract argparse out
 //       an intermediate config format that maps to toml/cmd/imgui would be nice
 
-typedef void (*language_config_t)(instance_t *);
+typedef void (*language_config_t)(lang_handle_t *, ap_t *);
 
-typedef void (*language_init_t)(instance_t *);
+typedef void (*language_init_t)(lang_handle_t *);
 
+typedef void (*language_shutdown_t)(lang_handle_t *);
 
 // TODO: these should be structured differently, not quite sure how though
 
-typedef void (*language_parse_t)(instance_t *);
+typedef void (*language_parse_t)(lang_handle_t *);
 
-typedef void (*language_forward_t)(instance_t *);
+typedef void (*language_forward_t)(lang_handle_t *);
 
-typedef void (*language_import_t)(instance_t *);
+typedef void (*language_import_t)(lang_handle_t *);
 
-typedef void (*language_compile_t)(instance_t *);
+typedef void (*language_compile_t)(lang_handle_t *);
 
 typedef struct language_t
 {
@@ -94,7 +115,9 @@ typedef struct language_t
     const char **exts; ///< null terminated list of default file extensions for this driver
 
     language_config_t fnConfigure; ///< configure the mediator to work with this driver
+    
     language_init_t fnInit; ///< initialize the language driver
+    language_shutdown_t fnShutdown; ///< shutdown the language driver
 
     language_parse_t fnParse; ///< parse a source file
     language_forward_t fnForward; ///< forward declare all decls in a module
@@ -102,17 +125,21 @@ typedef struct language_t
     language_compile_t fnCompile; ///< compile the ast to hlir
 } language_t;
 
-typedef void (*plugin_init_t)(mediator_t *);
+typedef void (*plugin_config_t)(plugin_handle_t *, ap_t *);
 
-typedef void (*plugin_shutdown_t)(mediator_t *);
+typedef void (*plugin_init_t)(plugin_handle_t *);
 
-typedef void (*plugin_region_t)(mediator_t *, region_t);
+typedef void (*plugin_shutdown_t)(plugin_handle_t *);
+
+typedef void (*plugin_region_t)(plugin_handle_t *, region_t);
 
 typedef struct plugin_t
 {
     const char *name; ///< plugin name
     version_t version; ///< plugin version
 
+    plugin_config_t fnConfigure; ///< configure the mediator to work with this plugin
+    
     plugin_init_t fnInit; ///< initialize the plugin
     plugin_shutdown_t fnShutdown; ///< shutdown the plugin
 
@@ -149,10 +176,11 @@ typedef const plugin_t *(*plugin_load_t)(mediator_t *);
 
 mediator_t *mediator_new(const char *name, version_t version);
 
-void mediator_add_language(mediator_t *self, const language_t *language);
-void mediator_add_plugin(mediator_t *self, const plugin_t *plugin);
+void mediator_add_language(mediator_t *self, const language_t *language, ap_t *ap);
+void mediator_add_plugin(mediator_t *self, const plugin_t *plugin, ap_t *ap);
 
 void mediator_region(mediator_t *self, region_t region);
+void mediator_startup(mediator_t *self);
 void mediator_shutdown(mediator_t *self);
 
 END_API

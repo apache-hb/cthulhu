@@ -1,169 +1,69 @@
-#include "cthulhu/emit/c89.h"
-#include "cthulhu/interface/interface.h"
-#include "argparse/argparse.h"
-
-#include "base/macros.h"
 #include "base/memory.h"
-#include "base/panic.h"
-#include "base/util.h"
 
-#include "cthulhu/ssa/ssa.h"
-#include "report/report.h"
-#include "std/str.h"
+#include "argparse2/argparse.h"
 
-#include "io/io.h"
-
-// just kill me already
-#define MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS 0
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "cthulhu/mediator/mediator.h"
 
 #ifdef _WIN32
-#   include <windows.h>
+#   define DEFAULT_CC "cl.exe"
+#   define DEFAULT_ARGS "/nologo"
 #else
-#   include <unistd.h>
+#   define DEFAULT_CC "gcc"
+#   define DEFAULT_ARGS ""
 #endif
 
-#define CHECK_REPORTS(msg) \
-    do { \
-        status_t err = end_reports(result.reports, msg, result.reportConfig); \
-        if (err != 0) { \
-            return err; \
-        } \
-    } while (0)
-
-int main(int argc, const char **argv)
+typedef struct harness_t
 {
-    common_init();
+    const char *compiler;
+    const char *args;
+} harness_t;
 
-    driver_t driver = get_driver();
-    reports_t *reports = begin_reports();
-    verbose = true;
+static const char *kCompilerNames[] = { "-cc", "--compiler", NULL };
+static const char *kCompilerArgNames[] = { "-ca", "--compiler-args", NULL };
 
-    argparse_config_t argparseConfig = {
-        .argv = argv,
-        .argc = argc,
+static ap_event_result_t on_compiler_name(ap_t *ap, const ap_param_t *param, const void *value, void *data)
+{
+    harness_t *harness = data;
 
-        .description = format("%s command line interface", driver.name),
-        .version = driver.version,
+    harness->compiler = value;
 
-        .reports = reports,
+    return eEventHandled;
+}
 
-        .groups = vector_new(0)
-    };
+static ap_event_result_t on_compiler_args(ap_t *ap, const ap_param_t *param, const void *value, void *data)
+{
+    harness_t *harness = data;
 
-    argparse_t result = parse_args(&argparseConfig);
-    if (should_exit(&result)) 
-    {
-        return result.exitCode;
-    }
+    harness->args = value;
 
-    report_config_t reportConfig = DEFAULT_REPORT_CONFIG;
+    return eEventHandled;
+}
 
-    size_t totalFiles = vector_len(result.files);
-    vector_t *sources = vector_of(totalFiles);
-    for (size_t i = 0; i < totalFiles; i++)
-    {
-        const char *file = vector_get(result.files, i);
-        io_t *source = io_file(file, eFileRead | eFileText);
-        vector_set(sources, i, source);
-    }
+static void harness_configure(plugin_handle_t *handle, ap_t *ap)
+{
+    ap_group_t *group = ap_group_new(ap, "harness", "Test harness config options");
+    ap_param_t *compiler = ap_add_string(group, "compiler (default: " DEFAULT_CC ")", kCompilerNames);
+    ap_param_t *args = ap_add_string(group, "compiler args (default: " DEFAULT_ARGS ")", kCompilerArgNames);
 
-    if (totalFiles == 0)
-    {
-        report(result.reports, eFatal, NULL, "no input files");
-        return end_reports(result.reports, "parsing arguments", reportConfig);
-    }
+    harness_t *harness = ctu_malloc(sizeof(harness_t));
+    harness->compiler = DEFAULT_CC;
+    harness->args = DEFAULT_ARGS;
 
-    cthulhu_t *cthulhu = cthulhu_new(driver, sources, &result, reports, reportConfig);
+    ap_event(ap, compiler, on_compiler_name, &rt);
+    ap_event(ap, args, on_compiler_args, &rt);
 
-    cthulhu_step_t steps[] = {
-        cthulhu_init, 
-        cthulhu_parse, 
-        cthulhu_forward, 
-        cthulhu_resolve, 
-        cthulhu_compile,
-    };
+    handle->user = harness;
+}
 
-    size_t totalSteps = sizeof(steps) / sizeof(cthulhu_step_t);
+static const plugin_t kPluginInfo = {
+    .name = "Test Harness",
+    .version = NEW_VERSION(1, 0, 0),
 
-    for (size_t i = 0; i < totalSteps; i++)
-    {
-        int status = steps[i](cthulhu);
-        if (status != EXIT_OK)
-        {
-            return status;
-        }
-    }
+    .fnConfigure = harness_configure,
+};
 
-    // test ssa output
-
-    vector_t *modules = cthulhu_get_modules(cthulhu);
-    status_t err = EXIT_OK;
-
-    ssa_module_t *mod = ssa_gen_module(result.reports, modules);
-    CHECK_REPORTS("emitting ssa");
-
-    ssa_opt_module(result.reports, mod);
-    CHECK_REPORTS("optimizing ssa");
-
-    ssa_emit_module(result.reports, mod);
-    CHECK_REPORTS("emitting ssa");
-
-    // test c89 output
-
-    const char *path = vector_get(result.files, 0);
-#if OS_WINDOWS
-#   define CWD ".\\"
-    vector_t *parts = str_split(path, ":");
-    CTASSERT(vector_len(parts) == 2);
-    const char *name = str_replace(vector_get(parts, 1), "/", ".");
-#else
-#   define CWD "./"
-    const char *name = str_replace(str_lower(path), "/", ".");
-#endif
-
-    const char *dir = format(CWD "test-out" NATIVE_PATH_SEPARATOR "%s", name + 1);
-    const char *lib = format("%s" NATIVE_PATH_SEPARATOR "it.o", dir);
-    const char *src = format("%s" NATIVE_PATH_SEPARATOR "main.c", dir);
-
-#if OS_WINDOWS
-    system(format("if not exist \"%s\" md %s", dir, dir));
-#else
-    system(format("mkdir -p %s", dir));
-#endif
-
-    io_t *c89Out = io_file(src, eFileText | eFileWrite);
-
-    CTASSERTF(io_error(c89Out) == 0, "failed to open file: %s", error_string(io_error(c89Out)));
-
-    emit_config_t emitConfig = {
-        .reports = result.reports,
-        .source = c89Out
-    };
-
-    c89_emit_ssa_modules(emitConfig, mod);
-
-    err = end_reports(result.reports, "emitting c89", result.reportConfig);
-    if (err != EXIT_OK) { return err; }
-
-    io_close(c89Out);
-
-#if OS_WINDOWS
-    int status = system(format("cl /nologo /c %s /Fo%s.obj", src, name + 1));
-    if (status == -1)
-    {
-        report(result.reports, eFatal, NULL, "compilation failed %d", errno);
-    }
-#else
-    int status = system(format("cc %s -c -o%s", src, lib));
-    if (WEXITSTATUS(status) != EXIT_OK)
-    {
-        report(result.reports, eFatal, NULL, "compilation failed %d", WEXITSTATUS(status));
-    }
-#endif
-
-    return end_reports(result.reports, "compiling c89", result.reportConfig);
+PLUGIN_EXPORT
+extern const plugin_t *PLUGIN_ENTRY_POINT(mediator_t *mediator)
+{
+    return &kPluginInfo;
 }
