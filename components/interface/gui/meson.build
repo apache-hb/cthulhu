@@ -80,8 +80,10 @@ editor = declare_dependency(
     dependencies : [ generic, imgui, imnodes, dialog, backend, glfw, glad ]
 )
 
-foreach name, lib : langs
-    executable(name, 'interface/main.cpp',
-        dependencies : [ editor, generic, lib ]
-    )
-endforeach
+error('gui not implemented')
+
+# foreach name, lib : langs
+#     executable(name, 'interface/main.cpp',
+#         dependencies : [ editor, generic, lib ]
+#     )
+# endforeach

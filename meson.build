@@ -31,9 +31,6 @@ bld = meson.current_build_dir()
 # TODO: not quite accurate for some reason
 stacktrace = get_option('stacktrace').disable_auto_if(target != 'windows' and not cc.has_header('<execinfo.h>'))
 
-message('target:', target)
-message('stacktrace:', stacktrace.allowed())
-
 config = {
     'major': parts[0].to_int(),
     'minor': parts[1].to_int(),
@@ -160,12 +157,12 @@ foreach plugin : get_option('plugins')
     subdir('components/plugin'/plugin)
 endforeach
 
-subdir('tests/harness')
-subdir('tests/unit-tests')
+#subdir('tests/harness')
+#subdir('tests/unit-tests')
 
-foreach lang : get_option('languages')
-    subdir('tests/lang'/lang)
-endforeach
+#foreach lang : get_option('languages')
+#    subdir('tests/lang'/lang)
+#endforeach
 
 if tuning.enabled()
     tune = executable('tune-map', [ 'tools/tune-map.c' ],

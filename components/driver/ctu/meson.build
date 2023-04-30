@@ -14,10 +14,10 @@ src = [
     parse.process('src/ctu.y') 
 ]
 
-ctc = library('ctc', src,
+ctu = shared_library('ctu', src,
     dependencies : [ generic, interop ],
     c_args : args,
     include_directories : 'src'
 )
 
-langs += { 'ctu': declare_dependency(link_with : ctc) }
+langs += { 'ctu': ctu }

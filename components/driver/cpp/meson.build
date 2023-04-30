@@ -2,7 +2,7 @@ src = [
     'cpp/main.c'
 ]
 
-cpp = library('cpp', src,
+cpp = shared_library('cpp', src,
     dependencies : [ generic, interop ]
 )
 
