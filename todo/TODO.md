@@ -41,6 +41,8 @@
 * profile startup time
     * something is afoot since commit c64ef228a2a4edd01bd7eb1544e1a2cc05274e1b
 
+* add argument namespacing to ap
+
 ## bikeshedding
 
 * fix tuning 

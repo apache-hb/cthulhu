@@ -1,4 +1,5 @@
 #include "cthulhu/interface/interface.h"
+#include "cthulhu/mediator/mediator.h"
 #include "cthulhu/interface/runtime.h"
 #include "scan/compile.h"
 
@@ -39,4 +40,20 @@ static const driver_t kDriver = {
 driver_t get_driver()
 {
     return kDriver;
+}
+
+static const language_t kLanguageInfo = {
+    .id = "ctu",
+    .name = "Cthulhu",
+    .version = NEW_VERSION(1, 1, 0),
+
+    .exts = kLangNames,
+};
+
+LANGUAGE_EXPORT
+extern const language_t *LANGUAGE_ENTRY_POINT(mediator_t *lang)
+{
+    UNUSED(lang);
+
+    return &kLanguageInfo;
 }

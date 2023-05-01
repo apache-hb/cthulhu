@@ -20,6 +20,8 @@ typedef struct mediator_t
 
     map_t *instances; ///< map of languages to their instance
 
+    map_t *languages; ///< map of ids to languages
+
     vector_t *plugins; ///< list of plugins
 } mediator_t;
 
@@ -45,11 +47,6 @@ static plugin_handle_t *add_new_plugin_instance(mediator_t *self, const plugin_t
     return instance;
 }
 
-static void add_lang_ext(mediator_t *self, const char *ext, const language_t *lang)
-{
-    map_set(self->extMap, ext, (language_t*)lang);
-}
-
 // public api
 
 void runtime_init()
@@ -70,9 +67,27 @@ mediator_t *mediator_new(const char *name, version_t version)
     
     mediator->extMap = map_new(64);
     mediator->instances = map_new(64);
+    mediator->languages = map_new(64);
+
     mediator->plugins = vector_new(64);
 
     return mediator;
+}
+
+const language_t *mediator_register_extension(mediator_t *self, const char *ext, const language_t *lang)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(ext != NULL);
+    CTASSERT(lang != NULL);
+
+    const language_t *old = map_get(self->extMap, ext);
+    if (old != NULL)
+    {
+        return old;
+    }
+
+    map_set(self->extMap, ext, (language_t*)lang);
+    return NULL;
 }
 
 void mediator_add_language(mediator_t *self, const language_t *language, ap_t *ap)
@@ -83,7 +98,8 @@ void mediator_add_language(mediator_t *self, const language_t *language, ap_t *a
     size_t idx = 0;
     while (language->exts[idx] != NULL)
     {
-        add_lang_ext(self, language->exts[idx], language);
+        // TODO: handle conflicts
+        mediator_register_extension(self, language->exts[idx], language);
         idx += 1;
     }
 
@@ -91,6 +107,8 @@ void mediator_add_language(mediator_t *self, const language_t *language, ap_t *a
 
     if (language->fnConfigure != NULL)
         language->fnConfigure(handle, ap);
+
+    map_set(self->languages, language->id, (language_t*)language);
 }
 
 void mediator_add_plugin(mediator_t *self, const plugin_t *plugin, ap_t *ap)
@@ -104,6 +122,22 @@ void mediator_add_plugin(mediator_t *self, const plugin_t *plugin, ap_t *ap)
         plugin->fnConfigure(handle, ap);
 
     vector_push(&self->plugins, handle);
+}
+
+const language_t *mediator_get_language(mediator_t *self, const char *id)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(id != NULL);
+
+    return map_get(self->languages, id);
+}
+
+const language_t *mediator_get_language_for_ext(mediator_t *self, const char *ext)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(ext != NULL);
+
+    return map_get(self->extMap, ext);
 }
 
 void mediator_region(mediator_t *self, region_t region)

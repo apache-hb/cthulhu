@@ -55,7 +55,7 @@ typedef struct ap_t ap_t;
 
 typedef enum region_t
 {
-    eRegionLoad, // load plugins and languages
+    eRegionLoadCompiler, // load plugins and languages
     eRegionInit, // initialize everything
     eRegionLoadSource, // load source files
     eRegionParse, // parse source files
@@ -63,7 +63,7 @@ typedef enum region_t
     eRegionOptimize, // optimize hlir
     eRegionCodegen, // codegen hlir to ir
     eRegionCleanup, // cleanup everything
-    eRegionEnd, // end of compilation
+    eRegionEnd, // end of compilers lifetime
 
     eRegionTotal
 } region_t;
@@ -109,6 +109,7 @@ typedef void (*language_compile_t)(lang_handle_t *);
 
 typedef struct language_t
 {
+    const char *id; ///< language driver id
     const char *name; ///< language driver name
     version_t version; ///< driver version
 
@@ -135,6 +136,7 @@ typedef void (*plugin_region_t)(plugin_handle_t *, region_t);
 
 typedef struct plugin_t
 {
+    const char *id; ///< plugin id
     const char *name; ///< plugin name
     version_t version; ///< plugin version
 
@@ -178,6 +180,11 @@ mediator_t *mediator_new(const char *name, version_t version);
 
 void mediator_add_language(mediator_t *self, const language_t *language, ap_t *ap);
 void mediator_add_plugin(mediator_t *self, const plugin_t *plugin, ap_t *ap);
+
+const language_t *mediator_register_extension(mediator_t *self, const char *ext, const language_t *lang);
+
+const language_t *mediator_get_language(mediator_t *self, const char *id);
+const language_t *mediator_get_language_for_ext(mediator_t *self, const char *ext);
 
 void mediator_region(mediator_t *self, region_t region);
 void mediator_startup(mediator_t *self);

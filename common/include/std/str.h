@@ -168,6 +168,9 @@ size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub);
 MUST_INSPECT CONSTFN 
 size_t str_rfindn(IN_READS(len) const char *str, size_t len, IN_STRING const char *sub);
 
+MUST_INSPECT CONSTFN
+size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
+
 /**
  * @brief check if a string contains a substring
  *
@@ -255,6 +258,9 @@ char *str_filename(IN_STRING const char *path);
  */
 NODISCARD
 char *str_noext(IN_STRING const char *path);
+
+NODISCARD
+char *str_ext(IN_STRING const char *path);
 
 /**
  * @brief uppercase an ascii string

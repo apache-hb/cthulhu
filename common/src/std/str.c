@@ -87,6 +87,18 @@ char *str_noext(const char *path)
 }
 
 USE_DECL
+char *str_ext(const char *path)
+{
+    size_t idx = str_rfind(path, ".");
+    if (idx == SIZE_MAX)
+    {
+        return NULL;
+    }
+
+    return ctu_strdup(path + idx + 1);
+}
+
+USE_DECL
 char *str_filename(const char *path)
 {
     size_t idx = str_rfind_any(path, PATH_SEPERATORS);
@@ -530,6 +542,16 @@ size_t str_rfindn(const char *str, size_t len, const char *sub)
     size_t sublen = strlen(sub);
 
     return str_rfind_inner(str, len, sub, sublen);
+}
+
+USE_DECL
+size_t str_find(const char *str, const char *sub)
+{
+    CTASSERT(str != NULL);
+    CTASSERT(sub != NULL);
+
+    char *ptr = strstr(str, sub);
+    return ptr == NULL ? SIZE_MAX : ptr - str;
 }
 
 USE_DECL

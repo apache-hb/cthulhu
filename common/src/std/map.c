@@ -6,6 +6,8 @@
 #include "std/str.h"
 #include "std/vector.h"
 
+#include <stdio.h>
+
 /**
  * a bucket in a hashmap
  */

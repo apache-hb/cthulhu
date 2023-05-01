@@ -49,13 +49,14 @@ static void harness_configure(plugin_handle_t *handle, ap_t *ap)
     harness->compiler = DEFAULT_CC;
     harness->args = DEFAULT_ARGS;
 
-    ap_event(ap, compiler, on_compiler_name, &rt);
-    ap_event(ap, args, on_compiler_args, &rt);
+    ap_event(ap, compiler, on_compiler_name, harness);
+    ap_event(ap, args, on_compiler_args, harness);
 
     handle->user = harness;
 }
 
 static const plugin_t kPluginInfo = {
+    .id = "harness",
     .name = "Test Harness",
     .version = NEW_VERSION(1, 0, 0),
 

@@ -21,7 +21,7 @@ static void *pl0_parse_file(runtime_t *runtime, compile_t *compile)
     return compile_scanner(compile->scan, &kCallbacks);
 }
 
-static const char *kLangNames[] = { ".pl0", NULL };
+static const char *kLangNames[] = { ".pl0", ".pl", NULL };
 
 static const driver_t kDriver = {
     .name = "PL/0",
@@ -42,6 +42,7 @@ driver_t get_driver(void)
 }
 
 static const language_t kLanguageInfo = {
+    .id = "pl0",
     .name = "PL/0",
     .version = NEW_VERSION(2, 3, 0),
 

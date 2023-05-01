@@ -3,10 +3,9 @@
 #include <windows.h>
 
 #include <stdio.h>
-#include <winnt.h>
 
 static const char *kRegionNames[] = {
-    [eRegionLoad] = "Load",
+    [eRegionLoadCompiler] = "Load compiler",
     [eRegionInit] = "Init",
     [eRegionLoadSource] = "Load source",
     [eRegionParse] = "Parse",
@@ -58,6 +57,7 @@ static void plugin_shutdown(plugin_handle_t *handle)
 }
 
 static const plugin_t kPluginInfo = {
+    .id = "timing",
     .name = "Compiler execution timing",
     .version = NEW_VERSION(1, 0, 0),
     .fnInit = plugin_init,
