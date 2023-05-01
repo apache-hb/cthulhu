@@ -273,7 +273,6 @@ int main(int argc, const char **argv)
         vector_set(sources, i, io);
     }
 
-
     mediator_region(mediator, eRegionEnd);
     mediator_shutdown(mediator);
 }
