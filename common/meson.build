@@ -151,6 +151,7 @@ argparse = declare_dependency(
 src = [
     'src/argparse2/argparse.c',
     'src/argparse2/common.c',
+    'src/argparse2/commands.c',
     lex.process('src/argparse2/ap.l'),
     parse.process('src/argparse2/ap.y')
 ]
@@ -158,7 +159,7 @@ src = [
 libargparse2 = library('argparse2', src,
     c_args : args,
     dependencies : deps,
-    include_directories : [ 'include', 'src' ]
+    include_directories : [ 'src', 'include', versiondir ]
 )
 
 argparse2 = declare_dependency(

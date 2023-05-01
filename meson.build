@@ -44,6 +44,8 @@ configure_file(
     configuration : config
 )
 
+versiondir = include_directories('.')
+
 gmp = dependency('gmp', 
     not_found_message : 'no system gmp found, falling back to mini-gmp',
     fallback : [ 'mini-gmp', 'gmp' ]

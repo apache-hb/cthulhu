@@ -83,7 +83,13 @@ static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char 
 
     while (names[idx] != NULL)
     {
-        CTASSERT(map_get(self->parent->nameLookup, names[idx]) == NULL);
+        const ap_param_t *old = map_get(self->parent->nameLookup, names[idx]);
+        if (old != NULL)
+        {
+            printf("failed to add name (name=%s,param=%s)\n", desc, names[idx]);
+            printf("name already exists (param=%s)\n", old->desc);
+            continue;
+        }
 
         map_set(parent->nameLookup, names[idx], param);
 
@@ -91,6 +97,7 @@ static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char 
     }
 
     map_set_ptr(parent->eventLookup, param, vector_new(4));
+    vector_push(&self->params, param);
 
     return param;
 }
@@ -126,6 +133,7 @@ ap_group_t *ap_group_new(
     self->parent = parent;
     self->name = name;
     self->desc = desc;
+    self->params = vector_new(16);
     return self;
 }
 
@@ -233,4 +241,20 @@ int ap_parse(ap_t *self, reports_t *reports, int argc, const char **argv)
     compile_scanner(scan, &kCallbacks);
 
     return 0;
+}
+
+USE_DECL
+const vector_t *ap_get_groups(const ap_t *self)
+{
+    CTASSERT(self != NULL);
+
+    return self->groups;
+}
+
+USE_DECL
+const vector_t *ap_get_params(const ap_group_t *self)
+{
+    CTASSERT(self != NULL);
+
+    return self->params;
 }

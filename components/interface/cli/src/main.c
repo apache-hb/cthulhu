@@ -7,7 +7,10 @@
 #include "platform/error.h"
 
 #include "report/report.h"
+
 #include "argparse2/argparse.h"
+#include "argparse2/commands.h"
+
 #include "cthulhu/mediator/mediator.h"
 
 #include "io/io.h"
@@ -16,6 +19,9 @@
 
 typedef struct runtime_t 
 {
+    int argc;
+    const char **argv;
+
     reports_t *reports;
     ap_t *ap;
     mediator_t *mediator;
@@ -32,6 +38,8 @@ typedef struct compile_t
 } compile_t;
 
 // general
+static const char *kHelpNames[] = { "-h", "--help", NULL };
+static const char *kVersionNames[] = { "-v", "--version", NULL };
 static const char *kLoadLangNames[] = { "-lang", "--load-lang", NULL };
 static const char *kLoadPluginNames[] = { "-plugin", "--load-plugin", NULL };
 static const char *kAddExtensionMapNames[] = { "-ext", "--add-ext", NULL };
@@ -39,13 +47,28 @@ static const char *kAddExtensionMapNames[] = { "-ext", "--add-ext", NULL };
 // codegen
 static const char *kOutputFileNames[] = { "-o", "--output", NULL };
 static const char *kOutputGenNames[] = { "-cg", "--codegen", NULL };
-static const char *kOutputHeaderNames[] = { "-h", "--header", NULL };
+static const char *kOutputHeaderNames[] = { "-header", "--output-header", NULL };
 
 // debug
 static const char *kDebugSsaNames[] = { "-dbgssa", "--debug-ssa", NULL };
 static const char *kDebugVerboseNames[] = { "-V", "--verbose", NULL };
 
-static ap_event_result_t on_load_language(ap_t *ap, const ap_param_t *param, const void *value, void *data)
+static AP_EVENT(on_help, ap, param, value, data)
+{
+    runtime_t *rt = data;
+    ap_help(ap, rt->argv[0]);
+
+    return eEventHandled;
+}
+
+static AP_EVENT(on_version, ap, param, value, data)
+{
+    ap_version(ap);
+
+    return eEventHandled;
+}
+
+static AP_EVENT(on_load_language, ap, param, value, data)
 {
     UNUSED(param);
     UNUSED(data);
@@ -80,7 +103,7 @@ static ap_event_result_t on_load_language(ap_t *ap, const ap_param_t *param, con
     return eEventHandled;
 }
 
-static ap_event_result_t on_load_plugin(ap_t *ap, const ap_param_t *param, const void *value, void *data)
+static AP_EVENT(on_load_plugin, ap, param, value, data)
 {
     UNUSED(param);
     UNUSED(data);
@@ -115,7 +138,7 @@ static ap_event_result_t on_load_plugin(ap_t *ap, const ap_param_t *param, const
     return eEventHandled;
 }
 
-static ap_event_result_t on_register_ext(ap_t *ap, const ap_param_t *param, const void *value, void *data)
+static AP_EVENT(on_register_ext, ap, param, value, data)
 {
     UNUSED(ap);
     UNUSED(param);
@@ -153,7 +176,7 @@ static ap_event_result_t on_register_ext(ap_t *ap, const ap_param_t *param, cons
     return eEventHandled;
 }
 
-static ap_event_result_t on_add_source(ap_t *ap, const ap_param_t *param, const void *value, void *data)
+static AP_EVENT(on_add_source, ap, param, value, data)
 {
     UNUSED(ap);
     UNUSED(param);
@@ -167,7 +190,7 @@ static ap_event_result_t on_add_source(ap_t *ap, const ap_param_t *param, const 
     return eEventHandled;
 }
 
-static ap_event_result_t on_set_verbose(ap_t *ap, const ap_param_t *param, const void *value, void *data)
+static AP_EVENT(on_set_verbose, ap, param, value, data)
 {
     UNUSED(ap);
     UNUSED(param);
@@ -182,7 +205,7 @@ static ap_event_result_t on_set_verbose(ap_t *ap, const ap_param_t *param, const
     return eEventHandled;
 }
 
-static ap_event_result_t on_arg_error(ap_t *ap, const node_t *node, const char *message, void *data)
+static AP_ERROR(on_arg_error, ap, node, message, data)
 {
     runtime_t *rt = data;
 
@@ -201,6 +224,9 @@ int main(int argc, const char **argv)
     mediator_region(mediator, eRegionLoadCompiler);
 
     runtime_t rt = {
+        .argc = argc,
+        .argv = argv,
+
         .reports = reports,
         .ap = ap,
         .mediator = mediator,
@@ -210,6 +236,8 @@ int main(int argc, const char **argv)
     };
 
     ap_group_t *general = ap_group_new(ap, "general", "general options");
+    ap_param_t *helpParam = ap_add_bool(general, "help", kHelpNames);
+    ap_param_t *versionParam = ap_add_bool(general, "version", kVersionNames);
     ap_param_t *loadLanguageParam = ap_add_string(general, "load language", kLoadLangNames);
     ap_param_t *loadPluginParam = ap_add_string(general, "load plugin", kLoadPluginNames);
     ap_param_t *addExtensionMapParam = ap_add_string(general, "add extension map", kAddExtensionMapNames);
@@ -222,6 +250,9 @@ int main(int argc, const char **argv)
     ap_group_t *debug = ap_group_new(ap, "debug", "debug options");
     ap_param_t *debugSsaParam = ap_add_bool(debug, "debug ssa", kDebugSsaNames);
     ap_param_t *debugVerboseParam = ap_add_bool(debug, "enable verbose logging", kDebugVerboseNames);
+
+    ap_event(ap, helpParam, on_help, &rt);
+    ap_event(ap, versionParam, on_version, &rt);
 
     ap_event(ap, loadLanguageParam, on_load_language, &rt);
     ap_event(ap, loadPluginParam, on_load_plugin, &rt);

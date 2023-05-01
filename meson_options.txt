@@ -12,8 +12,8 @@ option('plugins', type : 'array',
 
 option('interfaces', type : 'array',
     description : 'select which frontend interfaces to enable',
-    choices : [ 'cli', 'gui' ],
-    value : [ 'cli' ]
+    choices : [ 'cli', 'gui', 'query' ],
+    value : [ 'cli', 'query' ]
 )
 
 option('tuning', type : 'feature',

@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <gmp.h>
 
+#include "argparse2/argparse.h"
+#include "base/analyze.h"
 #include "base/version-def.h"
 
 /**
@@ -25,6 +27,7 @@
 
 typedef struct reports_t reports_t;
 typedef struct node_t node_t;
+typedef struct vector_t vector_t;
 
 typedef struct ap_t ap_t;
 typedef struct ap_param_t ap_param_t;
@@ -61,6 +64,8 @@ typedef ap_event_result_t (*ap_error_t)(
     void *data
 );
 
+// initialization + config api
+
 ap_t *ap_new(const char *desc, version_t version);
 
 ap_group_t *ap_group_new(
@@ -91,6 +96,8 @@ void ap_error(ap_t *self, ap_error_t callback, void *data);
 
 // TODO: remove reports here, requires a refactor of the reports module
 
+// parsing api
+
 /**
  * @brief parse the command line
  * 
@@ -101,3 +108,23 @@ void ap_error(ap_t *self, ap_error_t callback, void *data);
  * @return int exit code
  */
 int ap_parse(ap_t *self, reports_t *reports, int argc, const char **argv);
+
+// reflection api
+
+/**
+ * @brief get all currently registered groups in the parser
+ * 
+ * @param self 
+ * @return vector_t* vector<ap_group_t*>
+ */
+NODISCARD CONSTFN
+const vector_t *ap_get_groups(const ap_t *self);
+
+/**
+ * @brief get all currently registered params in the group
+ * 
+ * @param self 
+ * @return vector_t* vector<ap_param_t*>
+ */
+NODISCARD CONSTFN
+const vector_t *ap_get_params(const ap_group_t *self);

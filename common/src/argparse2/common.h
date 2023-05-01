@@ -25,6 +25,8 @@ typedef struct ap_group_t
     ap_t *parent;
     const char *name;
     const char *desc;
+
+    vector_t *params;
 } ap_group_t;
 
 typedef struct ap_param_t
