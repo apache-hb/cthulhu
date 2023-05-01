@@ -10,6 +10,8 @@
 
 #include "cthulhu/mediator/mediator.h"
 
+#include "version.h"
+
 #include <stdio.h>
 
 typedef enum out_format_t
@@ -100,19 +102,19 @@ static AP_EVENT(on_set_format, ap, param, value, data)
     const char *fmt = value;
 
     // TODO: string lookup tables would be nice
-    if (str_equal(fmt, "text") == 0)
+    if (str_equal(fmt, "text"))
     {
         info->fmt = eFormatText;
     }
-    else if (str_equal(fmt, "json") == 0)
+    else if (str_equal(fmt, "json"))
     {
         info->fmt = eFormatJson;
     }
-    else if (str_equal(fmt, "xml") == 0)
+    else if (str_equal(fmt, "xml"))
     {
         info->fmt = eFormatXml;
     }
-    else if (str_equal(fmt, "toml") == 0)
+    else if (str_equal(fmt, "toml"))
     {
         info->fmt = eFormatToml;
     }
@@ -121,6 +123,8 @@ static AP_EVENT(on_set_format, ap, param, value, data)
         fprintf(stderr, "Unknown format '%s'\n", fmt);
     }
 
+    printf("format: `%s`\n", fmt);
+
     return eEventHandled;
 }
 
@@ -128,6 +132,107 @@ static AP_ERROR(on_error, ap, node, message, data)
 {
     fprintf(stderr, "Error: %s\n", message);
     return eEventHandled;
+}
+
+static void write_query_text(vector_t *langs, vector_t *plugins)
+{
+
+    size_t numPlugins = vector_len(plugins);
+    size_t numLanguages = vector_len(langs);
+
+    printf("query(plugins=%zu, languages=%zu)\n", numPlugins, numLanguages);
+
+    for (size_t i = 0; i < numPlugins; i++)
+    {
+        if (i != 0)
+        {
+            printf("\n");
+        }
+        const plugin_t *plugin = vector_get(plugins, i);
+
+        printf("plugin(id=%s,name=%s,version=%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", plugin->id, plugin->name, VERSION_MAJOR(plugin->version), VERSION_MINOR(plugin->version), VERSION_PATCH(plugin->version));
+        
+        printf(" - configure: %s\n", plugin->fnConfigure ? "provided" : "default");
+        printf(" - init: %s\n", plugin->fnInit ? "provided" : "default");
+        printf(" - shutdown: %s\n", plugin->fnShutdown ? "provided" : "default");
+        printf(" - region: %s\n", plugin->fnRegion ? "provided" : "default");
+    }
+
+    for (size_t i = 0; i < numLanguages; i++)
+    {
+        if (i != 0)
+        {
+            printf("\n");
+        }
+        const language_t *lang = vector_get(langs, i);
+
+        printf("language(id=%s,name=%s,version=%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", lang->id, lang->name, VERSION_MAJOR(lang->version), VERSION_MINOR(lang->version), VERSION_PATCH(lang->version));
+
+        printf(" - configure: %s\n", lang->fnConfigure ? "provided" : "default");
+        printf(" - init: %s\n", lang->fnInit ? "provided" : "default");
+        printf(" - shutdown: %s\n", lang->fnShutdown ? "provided" : "default");
+
+        printf(" - parse: %s\n", lang->fnParse ? "provided" : "default");
+        printf(" - forward: %s\n", lang->fnForward ? "provided" : "default");
+        printf(" - import: %s\n", lang->fnImport ? "provided" : "default");
+        printf(" - compile: %s\n", lang->fnCompile ? "provided" : "default");
+    }
+}
+
+static void write_query_toml(version_t version, vector_t *langs, vector_t *plugins)
+{
+    size_t numLangs = vector_len(langs);
+    size_t numPlugins = vector_len(plugins);
+
+    printf("[info]\n");
+    printf("interface-version = { major = %" PRI_VERSION ", minor = %" PRI_VERSION ", patch = %" PRI_VERSION " }\n", VERSION_MAJOR(version), VERSION_MINOR(version), VERSION_PATCH(version));
+    printf("framework-version = { major = %" PRI_VERSION ", minor = %" PRI_VERSION ", patch = %" PRI_VERSION " }\n", CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH);
+
+    if (numLangs > 0)
+    {
+        printf("\n[languages]\n");
+    }
+
+    for (size_t i = 0; i < numLangs; ++i)
+    {    
+        printf("\n");   
+
+        const language_t *lang = vector_get(langs, i);
+        printf("[languages.%s]\n", lang->id);
+        printf("name = \"%s\"\n", lang->name);
+        printf("version = { major = %" PRI_VERSION ", minor = %" PRI_VERSION ", patch = %" PRI_VERSION " }\n", VERSION_MAJOR(lang->version), VERSION_MINOR(lang->version), VERSION_PATCH(lang->version));
+        printf("configure = \"%s\"\n", lang->fnConfigure ? "true" : "false");
+        printf("init = %s\n", lang->fnInit ? "true" : "false");
+        printf("shutdown = %s\n", lang->fnShutdown ? "true" : "false");
+        printf("parse = %s\n", lang->fnParse ? "true" : "false");
+        printf("forward = %s\n", lang->fnForward ? "true" : "false");
+        printf("import = %s\n", lang->fnImport ? "true" : "false");
+        printf("compile = %s\n", lang->fnCompile ? "true" : "false");
+    }
+
+    if (numLangs > 0 && numPlugins > 0)
+    {
+        printf("\n");
+    }
+
+    if (numPlugins > 0)
+    {
+        printf("[plugins]\n");
+    }
+
+    for (size_t i = 0; i < numPlugins; ++i)
+    {
+        printf("\n");   
+
+        const plugin_t *plugin = vector_get(plugins, i);
+        printf("[plugins.%s]\n", plugin->id);
+        printf("name = \"%s\"\n", plugin->name);
+        printf("version = { major = %" PRI_VERSION ", minor = %" PRI_VERSION ", patch = %" PRI_VERSION " }\n", VERSION_MAJOR(plugin->version), VERSION_MINOR(plugin->version), VERSION_PATCH(plugin->version));
+        printf("configure = \"%s\"\n", plugin->fnConfigure ? "true" : "false");
+        printf("init = %s\n", plugin->fnInit ? "true" : "false");
+        printf("shutdown = %s\n", plugin->fnShutdown ? "true" : "false");
+        printf("region = %s\n", plugin->fnRegion ? "true" : "false");
+    }
 }
 
 int main(int argc, const char **argv)
@@ -143,7 +248,8 @@ int main(int argc, const char **argv)
     };
 
     reports_t *reports = begin_reports();
-    ap_t *ap = ap_new("Cthulhu query interface", NEW_VERSION(1, 0, 0));
+    version_t version = NEW_VERSION(1, 0, 0);
+    ap_t *ap = ap_new("Cthulhu query interface", version);
 
     ap_group_t *general = ap_group_new(ap, "General", "General options");
     ap_param_t *loadPluginParam = ap_add_string(general, "load a plugin", kLoadPluginNames);
@@ -160,36 +266,10 @@ int main(int argc, const char **argv)
 
     ap_parse(ap, reports, argc, argv);
 
-    size_t numPlugins = vector_len(info.plugins);
-    size_t numLanguages = vector_len(info.languages);
-
-    printf("query(plugins=%zu, languages=%zu)\n", numPlugins, numLanguages);
-
-    for (size_t i = 0; i < numPlugins; i++)
+    switch (info.fmt)
     {
-        const plugin_t *plugin = vector_get(info.plugins, i);
-        
-        printf("plugin(id=%s,name=%s,version=%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", plugin->id, plugin->name, VERSION_MAJOR(plugin->version), VERSION_MINOR(plugin->version), VERSION_PATCH(plugin->version));
-        
-        printf(" - configure: %s\n", plugin->fnConfigure ? "provided" : "default");
-        printf(" - init: %s\n", plugin->fnInit ? "provided" : "default");
-        printf(" - shutdown: %s\n", plugin->fnShutdown ? "provided" : "default");
-        printf(" - region: %s\n", plugin->fnRegion ? "provided" : "default");
-    }
-
-    for (size_t i = 0; i < numLanguages; i++)
-    {
-        const language_t *lang = vector_get(info.languages, i);
-
-        printf("language(id=%s,name=%s,version=%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", lang->id, lang->name, VERSION_MAJOR(lang->version), VERSION_MINOR(lang->version), VERSION_PATCH(lang->version));
-
-        printf(" - configure: %s\n", lang->fnConfigure ? "provided" : "default");
-        printf(" - init: %s\n", lang->fnInit ? "provided" : "default");
-        printf(" - shutdown: %s\n", lang->fnShutdown ? "provided" : "default");
-
-        printf(" - parse: %s\n", lang->fnParse ? "provided" : "default");
-        printf(" - forward: %s\n", lang->fnForward ? "provided" : "default");
-        printf(" - import: %s\n", lang->fnImport ? "provided" : "default");
-        printf(" - compile: %s\n", lang->fnCompile ? "provided" : "default");
+    case eFormatToml: write_query_toml(version, info.languages, info.plugins); break;
+    case eFormatText: 
+    default: write_query_text(info.languages, info.plugins); break;
     }
 }
