@@ -16,6 +16,7 @@ typedef enum ap_param_type_t
     eParamBool,
     eParamString,
     eParamInt,
+    eParamGroup,
 
     eParamTotal
 } ap_param_type_t;
