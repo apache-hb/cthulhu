@@ -8,8 +8,6 @@
 
 #include "cthulhu/hlir/init.h"
 
-#include "argparse/argparse.h"
-
 #include <stdio.h>
 
 void common_init(void)
@@ -19,7 +17,6 @@ void common_init(void)
     stacktrace_init();
     platform_init();
     init_gmp(&globalAlloc);
-    argparse_init();
     init_hlir();
 }
 

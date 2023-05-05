@@ -15,7 +15,7 @@ src = [
 ]
 
 ctu = shared_library('ctu', src,
-    dependencies : [ generic, interop ],
+    dependencies : [ generic, mediate, argparse, interop ],
     c_args : args,
     include_directories : 'src'
 )

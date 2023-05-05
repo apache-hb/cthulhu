@@ -32,7 +32,10 @@ typedef struct ap_group_t
 typedef struct ap_param_t
 {
     ap_param_type_t type;
+
+    const char *name;
     const char *desc;
+    
     const char **names;
 } ap_param_t;
 

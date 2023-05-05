@@ -42,8 +42,8 @@ static ap_event_result_t on_compiler_args(ap_t *ap, const ap_param_t *param, con
 static void harness_configure(plugin_handle_t *handle, ap_t *ap)
 {
     ap_group_t *group = ap_group_new(ap, "harness", "Test harness config options");
-    ap_param_t *compiler = ap_add_string(group, "compiler (default: " DEFAULT_CC ")", kCompilerNames);
-    ap_param_t *args = ap_add_string(group, "compiler args (default: " DEFAULT_ARGS ")", kCompilerArgNames);
+    ap_param_t *compiler = ap_add_string(group, "compiler", "compiler to use for ensuring resulting C89 is valid (default: " DEFAULT_CC ")", kCompilerNames);
+    ap_param_t *args = ap_add_string(group, "compiler args", "extra compiler args for the compiler (default: " DEFAULT_ARGS ")", kCompilerArgNames);
 
     harness_t *harness = ctu_malloc(sizeof(harness_t));
     harness->compiler = DEFAULT_CC;

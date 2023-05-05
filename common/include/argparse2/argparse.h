@@ -74,9 +74,9 @@ ap_group_t *ap_group_new(
     const char *desc
 );
 
-ap_param_t *ap_add_bool(ap_group_t *self, const char *desc, const char **names);
-ap_param_t *ap_add_int(ap_group_t *self, const char *desc, const char **names);
-ap_param_t *ap_add_string(ap_group_t *self, const char *desc, const char **names);
+ap_param_t *ap_add_bool(ap_group_t *self, const char *name, const char *desc, const char **names);
+ap_param_t *ap_add_int(ap_group_t *self, const char *name, const char *desc, const char **names);
+ap_param_t *ap_add_string(ap_group_t *self, const char *name, const char *desc, const char **names);
 
 bool ap_get_bool(ap_t *self, const ap_param_t *param, bool *value);
 bool ap_get_int(ap_t *self, const ap_param_t *param, mpz_t value);

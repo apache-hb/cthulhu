@@ -1,62 +1,61 @@
 #include "config.h"
 
-#include "argparse/argparse.h"
-#include "std/vector.h"
+#include "cthulhu/mediator/mediator.h"
+#include "argparse2/commands.h"
+
 #include "base/panic.h"
+#include "base/memory.h"
+
+#include <string.h>
 
 typedef struct feature_data_t {
     bool defaultValue;
 
-    param_t *param;
+    ap_param_t *param;
 } feature_data_t;
 
-static bool gFeaturesInit = false;
-static feature_data_t gFeatures[eFeatureTotal];
+typedef struct config_t {
+    bool features[eFeatureTotal];
+} config_t;
 
-static const char *kDefaultInitNames[] = { "--ctu-enable-default-expr", "-Fctu-default-expr" };
-#define DEFAULT_INIT_NAMES (sizeof(kDefaultInitNames) / sizeof(const char *))
+static const char *kDefaultInitNames[] = { "--ctu-enable-default-expr", "-Fctu-default-expr", NULL };
 
-static void init_features(void)
+static AP_EVENT(on_feature, ap, param, value, data)
 {
-    if (gFeaturesInit) { return; }
-    gFeaturesInit = true;
+    bool *feature = data;
+    const bool *update = value;
 
-    feature_data_t defaultInitFeature = {
-        .defaultValue = false,
-        .param = bool_param("enables `default` in expressions to refer to an implicit types default value", kDefaultInitNames, DEFAULT_INIT_NAMES)
-    };
+    *feature = *update;
 
-    gFeatures[eFeatureDefaultInit] = defaultInitFeature;
+    return eEventHandled;
 }
 
-void ctu_add_commands(vector_t **groups)
+static config_t *new_config(void)
 {
-    init_features();
+    config_t *config = ctu_malloc(sizeof(config_t));
+    memset(config->features, 0, sizeof(config->features));
 
-    vector_t *params = vector_of(eFeatureTotal);
-    for (size_t i = 0; i < eFeatureTotal; i++) 
-    {
-        feature_data_t data = gFeatures[i];
-        vector_set(params, i, data.param);
-    }
-
-    group_t *group = group_new("cthulhu features", "unstable cthulhu features and extensions", params);
-
-    vector_push(groups, group);
+    return config;
 }
 
-static argparse_t *gArgParse = NULL;
-
-void config_init(argparse_t *args)
+void ctu_config_init(lang_handle_t *handle, ap_t *args) 
 {
-    gArgParse = args;
+    config_t *config = new_config();
+    
+    ap_group_t *group = ap_group_new(args, "cthulhu features", "unstable cthulhu features and extensions");
+    ap_param_t *defaultInit = ap_add_bool(group, "default expressions", "enables `default` in expressions to refer to an implicit types default value", kDefaultInitNames);
+
+    ap_event(args, defaultInit, on_feature, &config->features[eFeatureDefaultExpr]);
+
+    handle->user = config;
 }
 
-bool config_get_feature(feature_t feature)
+bool ctu_has_feature(lang_handle_t *handle, feature_t feature)
 {
-    CTASSERTM(gFeaturesInit, "config_get_groups must be called before config_get_feature");
-    CTASSERTM(gArgParse != NULL, "config_init must be called before config_get_feature");
+    CTASSERT(handle != NULL);
+    CTASSERT(feature < eFeatureTotal);
 
-    feature_data_t data = gFeatures[feature];
-    return get_bool_arg(gArgParse, data.param, data.defaultValue);
+    config_t *config = handle->user;
+
+    return config->features[feature];
 }

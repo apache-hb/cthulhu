@@ -8,7 +8,7 @@ foreach case : all
 
     it = executable(case, path,
         include_directories : '.',
-        dependencies : [ generic, argparse, argparse2 ]
+        dependencies : [ generic, argparse ]
     )
 
     test('test-' + case, it, suite : 'unit-tests')

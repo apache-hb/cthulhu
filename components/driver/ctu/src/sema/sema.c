@@ -407,8 +407,6 @@ static void add_basic_types(sema_t *sema)
 
 void ctu_init_compiler(runtime_t *runtime)
 {
-    config_init(runtime->args);
-
     size_t sizes[eTagTotal] = {
         [eSemaValues] = 1, [eSemaProcs] = 1, [eSemaTypes] = 32, [eSemaModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 32,
     };

@@ -36,10 +36,11 @@ static ap_err_callback_t *ap_error_new(ap_error_t event, void *data)
     return self;
 }
 
-static ap_param_t *ap_param_new(ap_param_type_t type, const char *desc, const char **names)
+static ap_param_t *ap_param_new(ap_param_type_t type, const char *name, const char *desc, const char **names)
 {
     ap_param_t *self = ctu_malloc(sizeof(ap_param_t));
     self->type = type;
+    self->name = name;
     self->desc = desc;
     self->names = names;
     return self;
@@ -70,13 +71,13 @@ static char *join_args(int argc, const char **argv)
     return str_join(" ", vec);
 }
 
-static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char *desc, const char **names)
+static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char *name, const char *desc, const char **names)
 {
     CTASSERT(self != NULL);
     CTASSERT(desc != NULL);
     CTASSERT(*names != NULL);
     
-    ap_param_t *param = ap_param_new(type, desc, names);
+    ap_param_t *param = ap_param_new(type, name, desc, names);
 
     ap_t *parent = self->parent;
     size_t idx = 0;
@@ -134,22 +135,24 @@ ap_group_t *ap_group_new(
     self->name = name;
     self->desc = desc;
     self->params = vector_new(16);
+
+    vector_push(&parent->groups, self);
     return self;
 }
 
-ap_param_t *ap_add_bool(ap_group_t *self, const char *desc, const char **names)
+ap_param_t *ap_add_bool(ap_group_t *self, const char *name, const char *desc, const char **names)
 {
-    return add_param(self, eParamBool, desc, names);
+    return add_param(self, eParamBool, name, desc, names);
 }
 
-ap_param_t *ap_add_int(ap_group_t *self, const char *desc, const char **names)
+ap_param_t *ap_add_int(ap_group_t *self, const char *name, const char *desc, const char **names)
 {
-    return add_param(self, eParamInt, desc, names);
+    return add_param(self, eParamInt, name, desc, names);
 }
 
-ap_param_t *ap_add_string(ap_group_t *self, const char *desc, const char **names)
+ap_param_t *ap_add_string(ap_group_t *self, const char *name, const char *desc, const char **names)
 {
-    return add_param(self, eParamString, desc, names);
+    return add_param(self, eParamString, name, desc, names);
 }
 
 bool ap_get_bool(ap_t *self, const ap_param_t *param, bool *value)

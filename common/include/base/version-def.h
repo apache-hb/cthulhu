@@ -12,3 +12,12 @@
 typedef uint_fast32_t version_t;
 
 #define PRI_VERSION PRIuFAST32
+
+typedef struct version_info_t {
+    const char *name;
+    const char *license;
+    const char *desc;
+    const char *author;
+
+    version_t version;
+} version_info_t;

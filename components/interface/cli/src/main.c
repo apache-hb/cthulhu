@@ -236,20 +236,20 @@ int main(int argc, const char **argv)
     };
 
     ap_group_t *general = ap_group_new(ap, "general", "general options");
-    ap_param_t *helpParam = ap_add_bool(general, "help", kHelpNames);
-    ap_param_t *versionParam = ap_add_bool(general, "version", kVersionNames);
-    ap_param_t *loadLanguageParam = ap_add_string(general, "load language", kLoadLangNames);
-    ap_param_t *loadPluginParam = ap_add_string(general, "load plugin", kLoadPluginNames);
-    ap_param_t *addExtensionMapParam = ap_add_string(general, "add extension map", kAddExtensionMapNames);
+    ap_param_t *helpParam = ap_add_bool(general, "help", "display this message", kHelpNames);
+    ap_param_t *versionParam = ap_add_bool(general, "version", "print version information", kVersionNames);
+    ap_param_t *loadLanguageParam = ap_add_string(general, "load language", "load a new language driver", kLoadLangNames);
+    ap_param_t *loadPluginParam = ap_add_string(general, "load plugin", "load a new shared library plugin", kLoadPluginNames);
+    ap_param_t *addExtensionMapParam = ap_add_string(general, "add extension map", "register a new extension for a compiler", kAddExtensionMapNames);
 
     ap_group_t *codegen = ap_group_new(ap, "codegen", "code generation options");
-    ap_param_t *outputFileParam = ap_add_string(codegen, "output file name (default: out)", kOutputFileNames);
-    ap_param_t *outputGenParam = ap_add_string(codegen, "output generator [ssa-c89, hlir-c89] (default: ssa-c89)", kOutputGenNames);
-    ap_param_t *outputHeaderParam = ap_add_string(codegen, "output header (default: none)", kOutputHeaderNames);
+    ap_param_t *outputFileParam = ap_add_string(codegen, "output file name", "output file name, will have .c appened to it (default: out)", kOutputFileNames);
+    ap_param_t *outputGenParam = ap_add_string(codegen, "output generator", "code generator output to use [ssa-c89, hlir-c89] (default: ssa-c89)", kOutputGenNames);
+    ap_param_t *outputHeaderParam = ap_add_string(codegen, "output header", "output header name, provide none to skip header generation. will have .c appeneded to it (default: none)", kOutputHeaderNames);
 
     ap_group_t *debug = ap_group_new(ap, "debug", "debug options");
-    ap_param_t *debugSsaParam = ap_add_bool(debug, "debug ssa", kDebugSsaNames);
-    ap_param_t *debugVerboseParam = ap_add_bool(debug, "enable verbose logging", kDebugVerboseNames);
+    ap_param_t *debugSsaParam = ap_add_bool(debug, "debug ssa", "print debug ssa output", kDebugSsaNames);
+    ap_param_t *debugVerboseParam = ap_add_bool(debug, "verbose", "enable verbose logging", kDebugVerboseNames);
 
     ap_event(ap, helpParam, on_help, &rt);
     ap_event(ap, versionParam, on_version, &rt);
