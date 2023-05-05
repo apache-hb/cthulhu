@@ -1,44 +1,21 @@
+#include "cmd.h"
+
 #include "base/util.h"
 
-#include "std/vector.h"
-#include "std/str.h"
+#include "io/io.h"
 
 #include "platform/library.h"
 #include "platform/error.h"
+
+#include "std/vector.h"
+#include "std/str.h"
 
 #include "report/report.h"
 
 #include "argparse/argparse.h"
 #include "argparse/commands.h"
 
-#include "cthulhu/mediator/mediator.h"
-
-#include "io/io.h"
-
 #include <stdio.h>
-
-typedef struct runtime_t 
-{
-    int argc;
-    const char **argv;
-
-    reports_t *reports;
-    ap_t *ap;
-    mediator_t *mediator;
-
-    vector_t *languages;
-    vector_t *plugins;
-
-    vector_t *sourcePaths;
-
-    vector_t *unknownArgs;
-} runtime_t;
-
-typedef struct compile_t
-{
-    io_t *io;
-    const language_t *lang;
-} compile_t;
 
 // general
 static const char *kHelpNames[] = { "-h", "--help", NULL };
@@ -254,14 +231,10 @@ static AP_ERROR(on_arg_error, ap, node, message, data)
     return eEventHandled;
 }
 
-int main(int argc, const char **argv)
+runtime_t cmd_parse(mediator_t *mediator, int argc, const char **argv)
 {
-    runtime_init();
     reports_t *reports = begin_reports();
-    mediator_t *mediator = mediator_new("cli", NEW_VERSION(0, 0, 1));
-    ap_t *ap = ap_new("cli compiler", NEW_VERSION(0, 0, 1));
-
-    mediator_region(mediator, eRegionLoadCompiler);
+    ap_t *ap = ap_new("cli", NEW_VERSION(0, 0, 1));
 
     runtime_t rt = {
         .argc = argc,
@@ -306,47 +279,5 @@ int main(int argc, const char **argv)
 
     ap_parse(ap, reports, argc, argv);
 
-    size_t errs = vector_len(rt.unknownArgs);
-    for (size_t i = 0; i < errs; i++)
-    {
-        const char *err = vector_get(rt.unknownArgs, i);
-        printf("error: %s\n", err);
-    }
-
-    mediator_region(mediator, eRegionInit);
-    mediator_startup(mediator);
-
-    mediator_region(mediator, eRegionLoadSource);
-
-    size_t len = vector_len(rt.sourcePaths);
-    vector_t *sources = vector_of(len);
-    for (size_t i = 0; i < len; i++)
-    {
-        const char *path = vector_get(rt.sourcePaths, i);
-        const char *ext = str_ext(path);
-        if (ext == NULL)
-        {
-            printf("could not identify compiler for `%s` (no extension)\n", path);
-            return 1;
-        }
-
-        const language_t *lang = mediator_get_language_for_ext(mediator, ext);
-        if (lang == NULL)
-        {
-            printf("could not identify compiler for `%s` (no language registered for extension `%s`)\n", path, ext);
-            return 1;
-        }
-
-        io_t *io = io_file(path, eFileRead | eFileText);
-        if (io_error(io) != 0)
-        {
-            printf("failed to load source `%s`\n%s\n", path, error_string(io_error(io)));
-            return 1;
-        }
-        
-        vector_set(sources, i, io);
-    }
-
-    mediator_region(mediator, eRegionEnd);
-    mediator_shutdown(mediator);
+    return rt;
 }
