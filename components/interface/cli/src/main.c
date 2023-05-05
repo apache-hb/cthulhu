@@ -26,6 +26,9 @@ typedef struct runtime_t
     ap_t *ap;
     mediator_t *mediator;
 
+    vector_t *languages;
+    vector_t *plugins;
+
     vector_t *sourcePaths;
 
     vector_t *unknownArgs;
@@ -58,9 +61,38 @@ static AP_EVENT(on_help, ap, param, value, data)
     runtime_t *rt = data;
     ap_print_help_header(ap, rt->argv[0]);
 
-    
+    size_t langCount = vector_len(rt->languages);
+    if (langCount != 0)
+    {
+        printf("\n%zu languages loaded:\n", langCount);
+        printf("========================================\n");
+    }
+    for (size_t i = 0; i < langCount; i++)
+    {
+        const language_t *lang = vector_get(rt->languages, i);
+        ap_print_version_info(lang->version, lang->name);
+        printf("========================================\n");
+    }
 
-    ap_print_help_body(ap);
+    size_t pluginCount = vector_len(rt->plugins);
+    if (pluginCount != 0)
+    {
+        printf("\n%zu plugins:\n", pluginCount);
+        printf("========================================\n");
+    }
+    for (size_t i = 0; i < pluginCount; i++)
+    {
+        const plugin_t *plugin = vector_get(rt->plugins, i);
+        ap_print_version_info(plugin->version, plugin->name);
+        printf("========================================\n");
+    }
+
+    if (langCount != 0 || pluginCount != 0)
+    {
+        printf("\n");
+    }
+
+    ap_print_help_body(ap, rt->argv[0]);
 
     return eEventHandled;
 }
@@ -102,6 +134,8 @@ static AP_EVENT(on_load_language, ap, param, value, data)
         return eEventHandled;
     }
 
+    vector_push(&rt->languages, (language_t*)lang);
+
     mediator_add_language(rt->mediator, lang, ap);
 
     return eEventHandled;
@@ -136,6 +170,8 @@ static AP_EVENT(on_load_plugin, ap, param, value, data)
         printf("failed to load plugin `%s` (plugin failed to load)\n", path);
         return eEventHandled;
     }
+
+    vector_push(&rt->plugins, (plugin_t*)plugin);
 
     mediator_add_plugin(rt->mediator, plugin, ap);
 
@@ -235,6 +271,9 @@ int main(int argc, const char **argv)
         .ap = ap,
         .mediator = mediator,
         
+        .languages = vector_new(16),
+        .plugins = vector_new(16),
+
         .sourcePaths = vector_new(16),
         .unknownArgs = vector_new(16),
     };

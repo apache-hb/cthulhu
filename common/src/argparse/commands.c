@@ -20,17 +20,30 @@ void ap_print_help_header(const ap_t *ap, const char *name)
     CTASSERT(ap != NULL);
 
     printf("usage: %s [options] [arguments] [sources...]\n", name);
-    printf("common: %s (%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", ap->desc, VERSION_MAJOR(ap->version), VERSION_MINOR(ap->version), VERSION_PATCH(ap->version));
-    printf("license: LGPLv3\n");
+    version_info_t info = {
+        .license = "LGPLv3",
+        .desc = "common compiler mediator",
+        .author = "Elliot Haisley",
+        .version = NEW_VERSION(CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH)
+    };
+    ap_print_version_info(info, "cthulhu");
+}
+
+void ap_print_version_info(version_info_t info, const char *name)
+{
+    printf(" | %s: %s (%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", name, info.desc, VERSION_MAJOR(info.version), VERSION_MINOR(info.version), VERSION_PATCH(info.version));
+    printf(" | license: %s\n", info.license);
+    printf(" | author: %s\n", info.author);
+}
+
+void ap_print_help_body(const ap_t *ap, const char *name)
+{
     printf("========================================\n");
     printf("parser commands are executed in the order they are parsed unless specified otherwise.\n");
     printf("this means %s -a -b may not behave the same as %s -b -a\n", name, name);
     printf("keep this in mind when writing commands.\n");
     printf("========================================\n");
-}
 
-void ap_print_help_body(const ap_t *ap)
-{
     const vector_t *groups = ap_get_groups(ap);
 
     size_t groupCount = vector_len(groups);
