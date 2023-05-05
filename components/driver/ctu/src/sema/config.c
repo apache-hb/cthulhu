@@ -1,7 +1,7 @@
 #include "config.h"
 
 #include "cthulhu/mediator/mediator.h"
-#include "argparse2/commands.h"
+#include "argparse/commands.h"
 
 #include "base/panic.h"
 #include "base/memory.h"

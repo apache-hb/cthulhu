@@ -12,7 +12,7 @@
 }
 
 %code requires {
-    #include "argparse2/common.h"
+    #include "argparse/common.h"
     #define YYSTYPE APSTYPE
     #define YYLTYPE APLTYPE
 }

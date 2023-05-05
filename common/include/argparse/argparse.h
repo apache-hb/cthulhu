@@ -3,12 +3,12 @@
 #include <stdbool.h>
 #include <gmp.h>
 
-#include "argparse2/argparse.h"
+#include "argparse/argparse.h"
 #include "base/analyze.h"
 #include "base/version-def.h"
 
 /**
- * argparse2 control flow
+ * argparse control flow
  * 
  * parser instance
  *   - contains a list of groups

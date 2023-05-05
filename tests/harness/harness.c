@@ -1,6 +1,6 @@
 #include "base/memory.h"
 
-#include "argparse2/argparse.h"
+#include "argparse/argparse.h"
 
 #include "cthulhu/mediator/mediator.h"
 

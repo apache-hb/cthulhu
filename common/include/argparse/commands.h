@@ -1,6 +1,6 @@
 #pragma once
 
-#include "argparse2/argparse.h"
+#include "argparse/argparse.h"
 
 #define AP_EVENT(name, ap, param, value, data) \
     ap_event_result_t name(ap_t *ap, const ap_param_t *param, const void *value, void *data)

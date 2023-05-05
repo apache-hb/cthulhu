@@ -5,8 +5,8 @@
 #include "std/vector.h"
 #include "std/str.h"
 
-#include "argparse2/argparse.h"
-#include "argparse2/commands.h"
+#include "argparse/argparse.h"
+#include "argparse/commands.h"
 
 #include "cthulhu/mediator/mediator.h"
 

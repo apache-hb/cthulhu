@@ -130,14 +130,14 @@ interop = declare_dependency(
 )
 
 src = [
-    'src/argparse2/argparse.c',
-    'src/argparse2/common.c',
-    'src/argparse2/commands.c',
-    lex.process('src/argparse2/ap.l'),
-    parse.process('src/argparse2/ap.y')
+    'src/argparse/argparse.c',
+    'src/argparse/common.c',
+    'src/argparse/commands.c',
+    lex.process('src/argparse/ap.l'),
+    parse.process('src/argparse/ap.y')
 ]
 
-libargparse = library('argparse2', src,
+libargparse = library('argparse', src,
     c_args : args,
     dependencies : deps,
     include_directories : [ 'src', 'include', versiondir ]

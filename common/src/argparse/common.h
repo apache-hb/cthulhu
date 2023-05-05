@@ -4,7 +4,7 @@
 
 #include <gmp.h>
 
-#include "argparse2/argparse.h"
+#include "argparse/argparse.h"
 
 #define APLTYPE where_t
 
