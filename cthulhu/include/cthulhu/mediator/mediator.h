@@ -111,7 +111,8 @@ typedef struct language_t
 {
     const char *id; ///< language driver id
     const char *name; ///< language driver name
-    version_t version; ///< driver version
+
+    version_info_t version; ///< language driver version
 
     const char **exts; ///< null terminated list of default file extensions for this driver
 
@@ -138,7 +139,8 @@ typedef struct plugin_t
 {
     const char *id; ///< plugin id
     const char *name; ///< plugin name
-    version_t version; ///< plugin version
+
+    version_info_t version; ///< language driver version
 
     plugin_config_t fnConfigure; ///< configure the mediator to work with this plugin
     

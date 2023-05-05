@@ -58,7 +58,12 @@ static void harness_configure(plugin_handle_t *handle, ap_t *ap)
 static const plugin_t kPluginInfo = {
     .id = "harness",
     .name = "Test Harness",
-    .version = NEW_VERSION(1, 0, 0),
+    .version = {
+        .license = "LGPLv3",
+        .desc = "Provides a harness for testing language drivers and plugins effectively.",
+        .author = "Elliot Haisley",
+        .version = NEW_VERSION(1, 1, 0)
+    },
 
     .fnConfigure = harness_configure,
 };

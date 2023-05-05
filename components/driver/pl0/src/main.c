@@ -44,7 +44,12 @@ driver_t get_driver(void)
 static const language_t kLanguageInfo = {
     .id = "pl0",
     .name = "PL/0",
-    .version = NEW_VERSION(2, 3, 0),
+    .version = {
+        .license = "LGPLv3",
+        .desc = "PL/0 language driver",
+        .author = "Elliot Haisley",
+        .version = NEW_VERSION(2, 3, 1)
+    },
 
     .exts = kLangNames,
 };

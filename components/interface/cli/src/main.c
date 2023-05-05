@@ -56,7 +56,11 @@ static const char *kDebugVerboseNames[] = { "-V", "--verbose", NULL };
 static AP_EVENT(on_help, ap, param, value, data)
 {
     runtime_t *rt = data;
-    ap_help(ap, rt->argv[0]);
+    ap_print_help_header(ap, rt->argv[0]);
+
+    
+
+    ap_print_help_body(ap);
 
     return eEventHandled;
 }

@@ -8,13 +8,15 @@
 
 #include <string.h>
 
-typedef struct feature_data_t {
+typedef struct feature_data_t 
+{
     bool defaultValue;
 
     ap_param_t *param;
 } feature_data_t;
 
-typedef struct config_t {
+typedef struct config_t 
+{
     bool features[eFeatureTotal];
 } config_t;
 

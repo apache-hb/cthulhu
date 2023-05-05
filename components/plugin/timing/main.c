@@ -59,7 +59,12 @@ static void plugin_shutdown(plugin_handle_t *handle)
 static const plugin_t kPluginInfo = {
     .id = "timing",
     .name = "Compiler execution timing",
-    .version = NEW_VERSION(1, 0, 0),
+    .version = {
+        .license = "LGPLv3",
+        .desc = "Times the execution of the compiler and its various stages",
+        .author = "Elliot Haisley",
+        .version = NEW_VERSION(1, 1, 0)
+    },
     .fnInit = plugin_init,
     .fnShutdown = plugin_shutdown,
     .fnRegion = plugin_region,

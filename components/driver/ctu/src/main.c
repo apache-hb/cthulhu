@@ -49,7 +49,12 @@ static void ctu_configure(lang_handle_t *handle, ap_t *ap)
 static const language_t kLanguageInfo = {
     .id = "ctu",
     .name = "Cthulhu",
-    .version = NEW_VERSION(1, 1, 0),
+    .version = {
+        .license = "LGPLv3",
+        .desc = "Cthulhu language driver",
+        .author = "Elliot Haisley",
+        .version = NEW_VERSION(1, 1, 0)
+    },
 
     .exts = kLangNames,
 

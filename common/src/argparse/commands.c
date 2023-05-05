@@ -15,7 +15,7 @@ static const char *kParamTypeNames[] = {
     [eParamInt] = "integer",
 };
 
-void ap_help(const ap_t *ap, const char *name)
+void ap_print_help_header(const ap_t *ap, const char *name)
 {
     CTASSERT(ap != NULL);
 
@@ -27,7 +27,10 @@ void ap_help(const ap_t *ap, const char *name)
     printf("this means %s -a -b may not behave the same as %s -b -a\n", name, name);
     printf("keep this in mind when writing commands.\n");
     printf("========================================\n");
+}
 
+void ap_print_help_body(const ap_t *ap)
+{
     const vector_t *groups = ap_get_groups(ap);
 
     size_t groupCount = vector_len(groups);
