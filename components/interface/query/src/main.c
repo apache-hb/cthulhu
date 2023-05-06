@@ -1,3 +1,4 @@
+#include "base/version-def.h"
 #include "platform/library.h"
 #include "platform/error.h"
 
@@ -134,9 +135,13 @@ static AP_ERROR(on_error, ap, node, message, data)
     return eEventHandled;
 }
 
+static version_t get_version(version_info_t info)
+{
+    return info.version;
+}
+
 static void write_query_text(vector_t *langs, vector_t *plugins)
 {
-
     size_t numPlugins = vector_len(plugins);
     size_t numLanguages = vector_len(langs);
 
@@ -149,9 +154,10 @@ static void write_query_text(vector_t *langs, vector_t *plugins)
             printf("\n");
         }
         const plugin_t *plugin = vector_get(plugins, i);
+        version_t version = get_version(plugin->version);
 
-        printf("plugin(id=%s,name=%s,version=%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", plugin->id, plugin->name, VERSION_MAJOR(plugin->version), VERSION_MINOR(plugin->version), VERSION_PATCH(plugin->version));
-        
+        printf("plugin(id=%s,name=%s,version=%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", plugin->id, plugin->name, VERSION_MAJOR(version), VERSION_MINOR(version), VERSION_PATCH(version));
+
         printf(" - configure: %s\n", plugin->fnConfigure ? "provided" : "default");
         printf(" - init: %s\n", plugin->fnInit ? "provided" : "default");
         printf(" - shutdown: %s\n", plugin->fnShutdown ? "provided" : "default");
@@ -165,8 +171,9 @@ static void write_query_text(vector_t *langs, vector_t *plugins)
             printf("\n");
         }
         const language_t *lang = vector_get(langs, i);
+        version_t version = get_version(lang->version);
 
-        printf("language(id=%s,name=%s,version=%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", lang->id, lang->name, VERSION_MAJOR(lang->version), VERSION_MINOR(lang->version), VERSION_PATCH(lang->version));
+        printf("language(id=%s,name=%s,version=%" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION ")\n", lang->id, lang->name, VERSION_MAJOR(version), VERSION_MINOR(version), VERSION_PATCH(version));
 
         printf(" - configure: %s\n", lang->fnConfigure ? "provided" : "default");
         printf(" - init: %s\n", lang->fnInit ? "provided" : "default");
@@ -194,13 +201,15 @@ static void write_query_toml(version_t version, vector_t *langs, vector_t *plugi
     }
 
     for (size_t i = 0; i < numLangs; ++i)
-    {    
-        printf("\n");   
+    {
+        printf("\n");
 
         const language_t *lang = vector_get(langs, i);
+        version_t version = get_version(lang->version);
+
         printf("[languages.%s]\n", lang->id);
         printf("name = \"%s\"\n", lang->name);
-        printf("version = { major = %" PRI_VERSION ", minor = %" PRI_VERSION ", patch = %" PRI_VERSION " }\n", VERSION_MAJOR(lang->version), VERSION_MINOR(lang->version), VERSION_PATCH(lang->version));
+        printf("version = { major = %" PRI_VERSION ", minor = %" PRI_VERSION ", patch = %" PRI_VERSION " }\n", VERSION_MAJOR(version), VERSION_MINOR(version), VERSION_PATCH(version));
         printf("configure = \"%s\"\n", lang->fnConfigure ? "true" : "false");
         printf("init = %s\n", lang->fnInit ? "true" : "false");
         printf("shutdown = %s\n", lang->fnShutdown ? "true" : "false");
@@ -222,12 +231,14 @@ static void write_query_toml(version_t version, vector_t *langs, vector_t *plugi
 
     for (size_t i = 0; i < numPlugins; ++i)
     {
-        printf("\n");   
+        printf("\n");
 
         const plugin_t *plugin = vector_get(plugins, i);
+        version_t version = get_version(plugin->version);
+
         printf("[plugins.%s]\n", plugin->id);
         printf("name = \"%s\"\n", plugin->name);
-        printf("version = { major = %" PRI_VERSION ", minor = %" PRI_VERSION ", patch = %" PRI_VERSION " }\n", VERSION_MAJOR(plugin->version), VERSION_MINOR(plugin->version), VERSION_PATCH(plugin->version));
+        printf("version = { major = %" PRI_VERSION ", minor = %" PRI_VERSION ", patch = %" PRI_VERSION " }\n", VERSION_MAJOR(version), VERSION_MINOR(version), VERSION_PATCH(version));
         printf("configure = \"%s\"\n", plugin->fnConfigure ? "true" : "false");
         printf("init = %s\n", plugin->fnInit ? "true" : "false");
         printf("shutdown = %s\n", plugin->fnShutdown ? "true" : "false");
@@ -252,11 +263,11 @@ int main(int argc, const char **argv)
     ap_t *ap = ap_new("Cthulhu query interface", version);
 
     ap_group_t *general = ap_group_new(ap, "General", "General options");
-    ap_param_t *loadPluginParam = ap_add_string(general, "load a plugin", kLoadPluginNames);
-    ap_param_t *loadLanguageParam = ap_add_string(general, "load a language", kLoadLangNames);
+    ap_param_t *loadPluginParam = ap_add_string(general, "add plugin", "load a plugin from a shared library to query its info", kLoadPluginNames);
+    ap_param_t *loadLanguageParam = ap_add_string(general, "add language", "load a language from a shared library to query its info", kLoadLangNames);
 
     ap_group_t *query = ap_group_new(ap, "Query", "Query options");
-    ap_param_t *formatParam = ap_add_string(query, "output format of the query [text|json|xml|toml] (default: text)", kFormatNames);
+    ap_param_t *formatParam = ap_add_string(query, "output format", "output format of the query [text|json|xml|toml] (default: text)", kFormatNames);
 
     ap_event(ap, loadPluginParam, on_load_plugin, &info);
     ap_event(ap, loadLanguageParam, on_lang_plugin, &info);
@@ -268,8 +279,13 @@ int main(int argc, const char **argv)
 
     switch (info.fmt)
     {
-    case eFormatToml: write_query_toml(version, info.languages, info.plugins); break;
-    case eFormatText: 
-    default: write_query_text(info.languages, info.plugins); break;
+    case eFormatToml: 
+        write_query_toml(version, info.languages, info.plugins); 
+        break;
+        
+    case eFormatText:
+    default: 
+        write_query_text(info.languages, info.plugins); 
+        break;
     }
 }
