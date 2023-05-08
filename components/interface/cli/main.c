@@ -1,5 +1,6 @@
 #include "cmd.h"
 
+#include "cthulhu/mediator/mediator.h"
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -9,12 +10,6 @@
 #include "io/io.h"
 
 #include <stdio.h>
-
-typedef struct compile_t
-{
-    io_t *io;
-    const language_t *lang;
-} compile_t;
 
 int main(int argc, const char **argv)
 {
@@ -49,8 +44,8 @@ int main(int argc, const char **argv)
             return 1;
         }
 
-        const language_t *lang = mediator_get_language_for_ext(mediator, ext);
-        if (lang == NULL)
+        lang_handle_t *handle = mediator_get_language_for_ext(mediator, ext);
+        if (handle == NULL)
         {
             printf("could not identify compiler for `%s` (no language registered for extension `%s`)\n", path, ext);
             return 1;
@@ -62,8 +57,35 @@ int main(int argc, const char **argv)
             printf("failed to load source `%s`\n%s\n", path, error_string(io_error(io)));
             return 1;
         }
+
+        context_t *ctx = context_new(handle, io);
         
-        vector_set(sources, i, io);
+        vector_set(sources, i, ctx);
+    }
+
+    mediator_region(mediator, eRegionParse);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        context_t *ctx = vector_get(sources, i);
+        mediator_parse(mediator, ctx);
+    }
+
+    mediator_region(mediator, eRegionCompile);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        context_t *ctx = vector_get(sources, i);
+        mediator_compile(mediator, ctx);
+    }
+
+    vector_t *modules = vector_new(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        context_t *ctx = vector_get(sources, i);
+        hlir_t *mod = get_context_module(ctx);
+
+        vector_push(&modules, mod);
     }
 
     mediator_region(mediator, eRegionEnd);

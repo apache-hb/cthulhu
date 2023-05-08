@@ -37,10 +37,22 @@ typedef struct query_t
     vector_t *languages;
 } query_t;
 
+typedef struct format_entry_t {
+    const char *name;
+    out_format_t fmt;
+} format_entry_t;
+
 static const char *kLoadPluginNames[] = { "-plugin", "--load-plugin", NULL };
 static const char *kLoadLangNames[] = { "-lang", "--load-lang", NULL };
 
 static const char *kFormatNames[] = { "-f", "--format", NULL };
+
+static const format_entry_t kFormatEntries[] = {
+    { "text", eFormatText },
+    { "json", eFormatJson },
+    { "xml", eFormatXml },
+    { "toml", eFormatToml },
+};
 
 static AP_EVENT(on_load_plugin, ap, param, value, data)
 {
@@ -102,29 +114,18 @@ static AP_EVENT(on_set_format, ap, param, value, data)
     query_t *info = data;
     const char *fmt = value;
 
-    // TODO: string lookup tables would be nice
-    if (str_equal(fmt, "text"))
+    for (size_t i = 0; i < eFormatTotal; i++)
     {
-        info->fmt = eFormatText;
+        format_entry_t entry = kFormatEntries[i];
+        if (str_equal(entry.name, fmt))
+        {
+            logverbose("setting output format to `%s`", fmt);
+            info->fmt = entry.fmt;
+            return eEventHandled;
+        }
     }
-    else if (str_equal(fmt, "json"))
-    {
-        info->fmt = eFormatJson;
-    }
-    else if (str_equal(fmt, "xml"))
-    {
-        info->fmt = eFormatXml;
-    }
-    else if (str_equal(fmt, "toml"))
-    {
-        info->fmt = eFormatToml;
-    }
-    else
-    {
-        fprintf(stderr, "Unknown format '%s'\n", fmt);
-    }
-
-    printf("format: `%s`\n", fmt);
+    
+    fprintf(stderr, "Unknown format '%s'\n", fmt);
 
     return eEventHandled;
 }

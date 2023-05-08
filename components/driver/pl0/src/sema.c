@@ -29,7 +29,7 @@ static const hlir_attributes_t *kExported;
 static const hlir_attributes_t *kConst;
 static const hlir_attributes_t *kMutable;
 
-void pl0_init(runtime_t *runtime)
+void pl0_init(lang_handle_t *runtime)
 {
     UNUSED(runtime);
 
@@ -359,7 +359,7 @@ typedef struct
     vector_t *procs;
 } sema_data_t;
 
-void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
+void pl0_forward_decls(lang_handle_t *handle, context_t *ctx)
 {
     pl0_t *root = compile->ast;
 
@@ -430,7 +430,7 @@ void pl0_forward_decls(runtime_t *runtime, compile_t *compile)
     compile->sema = sema;
 }
 
-void pl0_process_imports(runtime_t *runtime, compile_t *compile)
+void pl0_process_imports(lang_handle_t *handle, context_t *compile)
 {
     pl0_t *root = compile->ast;
     sema_t *sema = compile->sema;
@@ -458,13 +458,12 @@ void pl0_process_imports(runtime_t *runtime, compile_t *compile)
     }
 }
 
-hlir_t *pl0_compile_module(runtime_t *runtime, compile_t *compile)
+hlir_t *pl0_compile_module(lang_handle_t *handle, context_t *ctx)
 {
-    UNUSED(runtime);
+    UNUSED(handle);
 
-    pl0_t *root = compile->ast;
-    sema_t *sema = compile->sema;
-    hlir_t *self = compile->hlir;
+    pl0_t *root = context_get_ast(ctx);
+    sema_t *sema = context_get_sema(ctx);
     sema_data_t *semaData = sema_get_data(sema);
 
     for (size_t i = 0; i < vector_len(semaData->consts); i++)
@@ -504,7 +503,7 @@ hlir_t *pl0_compile_module(runtime_t *runtime, compile_t *compile)
 
     vector_push(&semaData->procs, kPrint);
 
-    hlir_build_module(self, self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
+    hlir_t *self = hlir_module(self, self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
 
     return self;
 }

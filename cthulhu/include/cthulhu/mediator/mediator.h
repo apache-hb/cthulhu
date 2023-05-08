@@ -51,7 +51,11 @@ typedef struct language_t language_t;
 typedef struct plugin_t plugin_t;
 typedef struct instance_t instance_t;
 typedef struct mediator_t mediator_t;
+typedef struct context_t context_t;
+typedef struct hlir_t hlir_t;
+typedef struct sema_t sema_t;
 typedef struct ap_t ap_t;
+typedef struct io_t io_t;
 
 typedef enum region_t
 {
@@ -67,7 +71,6 @@ typedef enum region_t
 
     eRegionTotal
 } region_t;
-
 
 typedef struct lang_handle_t
 {
@@ -99,13 +102,13 @@ typedef void (*language_shutdown_t)(lang_handle_t *);
 
 // TODO: these should be structured differently, not quite sure how though
 
-typedef void (*language_parse_t)(lang_handle_t *);
+typedef void *(*language_parse_t)(lang_handle_t *, io_t *);
 
-typedef void (*language_forward_t)(lang_handle_t *);
+typedef void (*language_forward_t)(lang_handle_t *, context_t *);
 
 typedef void (*language_import_t)(lang_handle_t *);
 
-typedef void (*language_compile_t)(lang_handle_t *);
+typedef hlir_t *(*language_compile_t)(lang_handle_t *, context_t *);
 
 typedef struct language_t
 {
@@ -176,6 +179,17 @@ typedef const plugin_t *(*plugin_load_t)(mediator_t *);
 #   define PLUGIN_EXPORT __attribute__((visibility("default")))
 #endif
 
+// context api
+
+context_t *context_new(lang_handle_t *handle, io_t *io);
+
+hlir_t *get_context_module(context_t *ctx);
+
+void *context_get_ast(context_t *ctx);
+
+void context_set_sema(context_t *ctx, sema_t *sema);
+sema_t *context_get_sema(context_t *ctx);
+
 // mediator api
 
 mediator_t *mediator_new(const char *name, version_t version);
@@ -185,8 +199,12 @@ void mediator_add_plugin(mediator_t *self, const plugin_t *plugin, ap_t *ap);
 
 const language_t *mediator_register_extension(mediator_t *self, const char *ext, const language_t *lang);
 
-const language_t *mediator_get_language(mediator_t *self, const char *id);
-const language_t *mediator_get_language_for_ext(mediator_t *self, const char *ext);
+lang_handle_t *mediator_get_language(mediator_t *self, const char *id);
+lang_handle_t *mediator_get_language_for_ext(mediator_t *self, const char *ext);
+
+void mediator_parse(mediator_t *self, context_t *ctx);
+
+void mediator_compile(mediator_t *self, context_t *ctx);
 
 void mediator_region(mediator_t *self, region_t region);
 void mediator_startup(mediator_t *self);

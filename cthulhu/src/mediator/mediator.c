@@ -25,6 +25,16 @@ typedef struct mediator_t
     vector_t *plugins; ///< list of plugins
 } mediator_t;
 
+typedef struct context_t
+{
+    lang_handle_t *handle;
+    io_t *io;
+
+    void *ast;
+    hlir_t *hlir;
+    sema_t *sema;
+} context_t;
+
 static lang_handle_t *add_new_lang_instance(mediator_t *self, const language_t *lang)
 {
     lang_handle_t *instance = ctu_malloc(sizeof(lang_handle_t));
@@ -57,6 +67,38 @@ void runtime_init()
     platform_init();
     init_gmp(&globalAlloc);
     init_hlir();
+}
+
+context_t *context_new(lang_handle_t *handle, io_t *io)
+{
+    context_t *ctx = ctu_malloc(sizeof(context_t));
+    ctx->handle = handle;
+    ctx->io = io;
+    ctx->ast = NULL;
+    ctx->hlir = NULL;
+
+    return ctx;
+}
+
+hlir_t *get_context_module(context_t *ctx)
+{
+    CTASSERT(ctx != NULL);
+
+    return ctx->hlir;
+}
+
+void context_set_sema(context_t *ctx, sema_t *sema)
+{
+    CTASSERT(ctx != NULL);
+
+    ctx->sema = sema;
+}
+
+sema_t *context_get_sema(context_t *ctx)
+{
+    CTASSERT(ctx != NULL);
+
+    return ctx->sema;
 }
 
 mediator_t *mediator_new(const char *name, version_t version)
@@ -108,7 +150,7 @@ void mediator_add_language(mediator_t *self, const language_t *language, ap_t *a
     if (language->fnConfigure != NULL)
         language->fnConfigure(handle, ap);
 
-    map_set(self->languages, language->id, (language_t*)language);
+    map_set(self->languages, language->id, handle);
 }
 
 void mediator_add_plugin(mediator_t *self, const plugin_t *plugin, ap_t *ap)
@@ -124,7 +166,7 @@ void mediator_add_plugin(mediator_t *self, const plugin_t *plugin, ap_t *ap)
     vector_push(&self->plugins, handle);
 }
 
-const language_t *mediator_get_language(mediator_t *self, const char *id)
+lang_handle_t *mediator_get_language(mediator_t *self, const char *id)
 {
     CTASSERT(self != NULL);
     CTASSERT(id != NULL);
@@ -132,7 +174,7 @@ const language_t *mediator_get_language(mediator_t *self, const char *id)
     return map_get(self->languages, id);
 }
 
-const language_t *mediator_get_language_for_ext(mediator_t *self, const char *ext)
+lang_handle_t *mediator_get_language_for_ext(mediator_t *self, const char *ext)
 {
     CTASSERT(self != NULL);
     CTASSERT(ext != NULL);
@@ -194,4 +236,32 @@ void mediator_shutdown(mediator_t *self)
             
         plugin->fnShutdown(handle);
     }
+}
+
+void mediator_parse(mediator_t *self, context_t *ctx)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(ctx != NULL);
+
+    lang_handle_t *handle = ctx->handle;
+    const language_t *lang = handle->handle;
+
+    CTASSERT(lang != NULL);
+    CTASSERT(lang->fnParse != NULL);
+
+    ctx->ast = lang->fnParse(handle, ctx->io);
+}
+
+void mediator_compile(mediator_t *self, context_t *ctx)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(ctx != NULL);
+
+    lang_handle_t *handle = ctx->handle;
+    const language_t *lang = handle->handle;
+
+    CTASSERT(lang != NULL);
+    CTASSERT(lang->fnCompile != NULL);
+
+    ctx->hlir = lang->fnCompile(handle, ctx->ast);
 }

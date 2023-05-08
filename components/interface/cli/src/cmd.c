@@ -174,13 +174,14 @@ static AP_EVENT(on_register_ext, ap, param, value, data)
     const char *id = ctu_strndup(mapping, split);
     const char *ext = ctu_strdup(mapping + split + 1);
 
-    const language_t *lang = mediator_get_language(rt->mediator, id);
-    if (lang == NULL)
+    const lang_handle_t *handle = mediator_get_language(rt->mediator, id);
+    if (handle == NULL)
     {
         printf("failed to register extension `%s` (no language identified by id=%s found)\n", mapping, id);
         return eEventHandled;
     }
 
+    const language_t *lang = handle->handle;
     const language_t *old = mediator_register_extension(rt->mediator, ext, lang);
     if (old != NULL)
     {
@@ -188,7 +189,7 @@ static AP_EVENT(on_register_ext, ap, param, value, data)
         return eEventHandled;
     }
 
-    logverbose("registered extension `%s` to language `%s`", ext, lang->name);
+    logverbose("registered extension `%s` to language `%s`", ext, lang->id);
 
     return eEventHandled;
 }

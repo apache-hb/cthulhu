@@ -52,6 +52,8 @@ static const language_t kLanguageInfo = {
     },
 
     .exts = kLangNames,
+
+    .fnInit = pl0_init,
 };
 
 LANGUAGE_EXPORT
