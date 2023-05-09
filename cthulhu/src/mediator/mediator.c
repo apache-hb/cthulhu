@@ -9,6 +9,10 @@
 #include "platform/file.h"
 #include "stacktrace/stacktrace.h"
 
+#include "scan/scan.h"
+
+#include "report/report.h"
+
 #include "cthulhu/hlir/init.h"
 
 typedef struct mediator_t
@@ -28,7 +32,10 @@ typedef struct mediator_t
 typedef struct context_t
 {
     lang_handle_t *handle;
+
+    reports_t *reports;
     io_t *io;
+    scan_t *scan;
 
     void *ast;
     hlir_t *hlir;
@@ -73,25 +80,43 @@ context_t *context_new(lang_handle_t *handle, io_t *io)
 {
     context_t *ctx = ctu_malloc(sizeof(context_t));
     ctx->handle = handle;
+
+    ctx->reports = begin_reports();
     ctx->io = io;
+    ctx->scan = scan_io(ctx->reports, handle->handle->name, io, ctx);
+
     ctx->ast = NULL;
     ctx->hlir = NULL;
 
     return ctx;
 }
 
-hlir_t *get_context_module(context_t *ctx)
+hlir_t *context_get_module(context_t *ctx)
 {
     CTASSERT(ctx != NULL);
 
     return ctx->hlir;
 }
 
-void context_set_sema(context_t *ctx, sema_t *sema)
+reports_t *context_get_reports(context_t *ctx)
 {
     CTASSERT(ctx != NULL);
 
-    ctx->sema = sema;
+    return ctx->reports;
+}
+
+scan_t *context_get_scanner(context_t *ctx)
+{
+    CTASSERT(ctx != NULL);
+
+    return ctx->scan;
+}
+
+void *context_get_ast(context_t *ctx)
+{
+    CTASSERT(ctx != NULL);
+
+    return ctx->ast;
 }
 
 sema_t *context_get_sema(context_t *ctx)
@@ -140,8 +165,10 @@ void mediator_add_language(mediator_t *self, const language_t *language, ap_t *a
     size_t idx = 0;
     while (language->exts[idx] != NULL)
     {
-        // TODO: handle conflicts
-        mediator_register_extension(self, language->exts[idx], language);
+        // TODO: gracefully handle conflicts
+        const language_t *old = mediator_register_extension(self, language->exts[idx], language);
+        CTASSERT(old == NULL);
+
         idx += 1;
     }
 

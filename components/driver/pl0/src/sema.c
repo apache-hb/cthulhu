@@ -461,7 +461,7 @@ hlir_t *pl0_compile_module(lang_handle_t *handle, context_t *ctx)
     UNUSED(handle);
 
     pl0_t *root = context_get_ast(ctx);
-    hlir_t *mod = get_context_module(ctx);
+    hlir_t *mod = context_get_module(ctx);
     sema_t *sema = context_get_sema(ctx);
     sema_data_t *semaData = sema_get_data(sema);
 

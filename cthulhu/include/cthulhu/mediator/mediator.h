@@ -42,13 +42,6 @@
 /// - initializing all plugins
 ///
 
-// fnConfigure is run as soon as the handle is loaded
-// fnInit is called once all handles have been loaded
-
-// language_t is shared across all instances of a language compiler
-//   - lang_handle_t is shared across a single configuration of the language compiler
-//      - context_t is shared across a single compilation of a language handle
-
 BEGIN_API
 
 typedef struct language_t language_t;
@@ -189,7 +182,7 @@ typedef const plugin_t *(*plugin_load_t)(mediator_t *);
 
 context_t *context_new(lang_handle_t *handle, io_t *io);
 
-hlir_t *get_context_module(context_t *ctx);
+hlir_t *context_get_module(context_t *ctx);
 scan_t *context_get_scanner(context_t *ctx);
 reports_t *context_get_reports(context_t *ctx);
 void *context_get_ast(context_t *ctx);

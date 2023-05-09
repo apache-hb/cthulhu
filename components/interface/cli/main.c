@@ -83,7 +83,7 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < len; i++)
     {
         context_t *ctx = vector_get(sources, i);
-        hlir_t *mod = get_context_module(ctx);
+        hlir_t *mod = context_get_module(ctx);
 
         vector_push(&modules, mod);
     }
