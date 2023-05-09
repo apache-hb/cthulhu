@@ -361,7 +361,8 @@ typedef struct
 
 void pl0_forward_decls(lang_handle_t *handle, context_t *ctx)
 {
-    pl0_t *root = compile->ast;
+    pl0_t *root = context_get_ast(ctx);
+    reports_t *reports = context_get_reports(ctx);
 
     size_t totalConsts = vector_len(root->consts);
     size_t totalGlobals = vector_len(root->globals);
@@ -371,18 +372,16 @@ void pl0_forward_decls(lang_handle_t *handle, context_t *ctx)
     vector_t *globals = vector_new(totalGlobals);
     vector_t *procs = vector_new(totalFunctions);
 
-    if (root->mod != NULL)
-    {
-        compile->moduleName = root->mod;
-    }
-    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0));
+    const char *id = root->mod != NULL ? root->mod : context_get_name(ctx);
+
+    hlir_t *mod = hlir_module(root->node, id, vector_of(0), vector_of(0), vector_of(0));
 
     size_t sizes[eSemaMax] = {
         [eSemaValues] = totalConsts + totalGlobals,
         [eSemaProcs] = totalFunctions,
     };
 
-    sema_t *sema = sema_root_new(runtime->reports, eSemaMax, sizes);
+    sema_t *sema = sema_root_new(reports, eSemaMax, sizes);
 
     // forward declare everything
     for (size_t i = 0; i < totalConsts; i++)
@@ -426,21 +425,20 @@ void pl0_forward_decls(lang_handle_t *handle, context_t *ctx)
 
     sema_set_data(sema, BOX(semaData));
 
-    compile->hlir = mod;
-    compile->sema = sema;
+    context_begin(ctx, sema, mod);
 }
 
 void pl0_process_imports(lang_handle_t *handle, context_t *compile)
 {
-    pl0_t *root = compile->ast;
-    sema_t *sema = compile->sema;
+    pl0_t *root = context_get_ast(compile);
+    sema_t *sema = context_get_sema(compile);
 
     size_t totalImports = vector_len(root->imports);
     for (size_t i = 0; i < totalImports; i++)
     {
         pl0_t *importDecl = vector_get(root->imports, i);
         const char *pathToImport = importDecl->ident;
-        sema_t *lib = find_module(runtime, pathToImport);
+        sema_t *lib = handle_get_sema(handle, pathToImport);
 
         if (lib == NULL)
         {
@@ -463,6 +461,7 @@ hlir_t *pl0_compile_module(lang_handle_t *handle, context_t *ctx)
     UNUSED(handle);
 
     pl0_t *root = context_get_ast(ctx);
+    hlir_t *mod = get_context_module(ctx);
     sema_t *sema = context_get_sema(ctx);
     sema_data_t *semaData = sema_get_data(sema);
 
@@ -493,7 +492,7 @@ hlir_t *pl0_compile_module(lang_handle_t *handle, context_t *ctx)
 
         // this is the entry point, we only support cli entry points in pl/0 for now
         const hlir_attributes_t *attribs = hlir_attributes(eLinkEntryCli, eVisiblePrivate, DEFAULT_TAGS, NULL);
-        const char *modName = get_hlir_name(compile->hlir);
+        const char *modName = get_hlir_name(mod);
 
         hlir_t *hlir = hlir_function(root->node, modName, vector_of(0), kVoidType, vector_of(0), eArityFixed, body);
         hlir_set_attributes(hlir, attribs);
@@ -503,7 +502,9 @@ hlir_t *pl0_compile_module(lang_handle_t *handle, context_t *ctx)
 
     vector_push(&semaData->procs, kPrint);
 
-    hlir_t *self = hlir_module(self, self->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
+    hlir_build_module(mod, mod->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
 
-    return self;
+    context_end(ctx, mod);
+
+    return mod;
 }

@@ -249,7 +249,7 @@ void mediator_parse(mediator_t *self, context_t *ctx)
     CTASSERT(lang != NULL);
     CTASSERT(lang->fnParse != NULL);
 
-    ctx->ast = lang->fnParse(handle, ctx->io);
+    ctx->ast = lang->fnParse(handle, ctx);
 }
 
 void mediator_compile(mediator_t *self, context_t *ctx)

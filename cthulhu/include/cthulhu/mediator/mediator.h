@@ -45,6 +45,10 @@
 // fnConfigure is run as soon as the handle is loaded
 // fnInit is called once all handles have been loaded
 
+// language_t is shared across all instances of a language compiler
+//   - lang_handle_t is shared across a single configuration of the language compiler
+//      - context_t is shared across a single compilation of a language handle
+
 BEGIN_API
 
 typedef struct language_t language_t;
@@ -52,8 +56,10 @@ typedef struct plugin_t plugin_t;
 typedef struct instance_t instance_t;
 typedef struct mediator_t mediator_t;
 typedef struct context_t context_t;
+typedef struct reports_t reports_t;
 typedef struct hlir_t hlir_t;
 typedef struct sema_t sema_t;
+typedef struct scan_t scan_t;
 typedef struct ap_t ap_t;
 typedef struct io_t io_t;
 
@@ -102,11 +108,11 @@ typedef void (*language_shutdown_t)(lang_handle_t *);
 
 // TODO: these should be structured differently, not quite sure how though
 
-typedef void *(*language_parse_t)(lang_handle_t *, io_t *);
+typedef void *(*language_parse_t)(lang_handle_t *, context_t *);
 
 typedef void (*language_forward_t)(lang_handle_t *, context_t *);
 
-typedef void (*language_import_t)(lang_handle_t *);
+typedef void (*language_import_t)(lang_handle_t *, context_t *);
 
 typedef hlir_t *(*language_compile_t)(lang_handle_t *, context_t *);
 
@@ -184,11 +190,18 @@ typedef const plugin_t *(*plugin_load_t)(mediator_t *);
 context_t *context_new(lang_handle_t *handle, io_t *io);
 
 hlir_t *get_context_module(context_t *ctx);
-
+scan_t *context_get_scanner(context_t *ctx);
+reports_t *context_get_reports(context_t *ctx);
 void *context_get_ast(context_t *ctx);
-
-void context_set_sema(context_t *ctx, sema_t *sema);
 sema_t *context_get_sema(context_t *ctx);
+const char *context_get_name(context_t *ctx);
+
+void context_begin(context_t *ctx, sema_t *sema, hlir_t *mod);
+void context_end(context_t *ctx, hlir_t *mod);
+
+// handle api
+
+sema_t *handle_get_sema(lang_handle_t *handle, const char *path);
 
 // mediator api
 
