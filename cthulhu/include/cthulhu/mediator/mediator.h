@@ -46,7 +46,7 @@ BEGIN_API
 
 typedef struct language_t language_t;
 typedef struct plugin_t plugin_t;
-typedef struct instance_t instance_t;
+typedef struct lifetime_t lifetime_t;
 typedef struct mediator_t mediator_t;
 typedef struct context_t context_t;
 typedef struct reports_t reports_t;
@@ -195,6 +195,12 @@ void context_end(context_t *ctx, hlir_t *mod);
 // handle api
 
 sema_t *handle_get_sema(lang_handle_t *handle, const char *path);
+
+lang_handle_t *lifetime_get_handle(lifetime_t *self, const language_t *it);
+
+// lifetime api
+
+lifetime_t *mediator_get_lifetime(mediator_t *self);
 
 // mediator api
 
