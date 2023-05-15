@@ -15,8 +15,7 @@ int main(int argc, const char **argv)
 {
     runtime_init();
     mediator_t *mediator = mediator_new("cli", NEW_VERSION(0, 0, 1));
-
-    mediator_region(mediator, eRegionLoadCompiler);
+    lifetime_t *lifetime = mediator_get_lifetime(mediator);
 
     runtime_t rt = cmd_parse(mediator, argc, argv);
 
@@ -26,11 +25,6 @@ int main(int argc, const char **argv)
         const char *err = vector_get(rt.unknownArgs, i);
         printf("error: %s\n", err);
     }
-
-    mediator_region(mediator, eRegionInit);
-    mediator_startup(mediator);
-
-    mediator_region(mediator, eRegionLoadSource);
 
     size_t len = vector_len(rt.sourcePaths);
     vector_t *sources = vector_of(len);
@@ -44,8 +38,8 @@ int main(int argc, const char **argv)
             return 1;
         }
 
-        lang_handle_t *handle = mediator_get_language_for_ext(mediator, ext);
-        if (handle == NULL)
+        const language_t *lang = mediator_get_language_by_ext(mediator, ext);
+        if (lang == NULL)
         {
             printf("could not identify compiler for `%s` (no language registered for extension `%s`)\n", path, ext);
             return 1;
@@ -58,36 +52,11 @@ int main(int argc, const char **argv)
             return 1;
         }
 
-        context_t *ctx = context_new(handle, io);
-        
-        vector_set(sources, i, ctx);
+        source_t src = {
+            .io = io,
+            .lang = lang
+        };
+
+        lifetime_add_source(lifetime, src);
     }
-
-    mediator_region(mediator, eRegionParse);
-
-    for (size_t i = 0; i < len; i++)
-    {
-        context_t *ctx = vector_get(sources, i);
-        mediator_parse(mediator, ctx);
-    }
-
-    mediator_region(mediator, eRegionCompile);
-
-    for (size_t i = 0; i < len; i++)
-    {
-        context_t *ctx = vector_get(sources, i);
-        mediator_compile(mediator, ctx);
-    }
-
-    vector_t *modules = vector_new(len);
-    for (size_t i = 0; i < len; i++)
-    {
-        context_t *ctx = vector_get(sources, i);
-        hlir_t *mod = context_get_module(ctx);
-
-        vector_push(&modules, mod);
-    }
-
-    mediator_region(mediator, eRegionEnd);
-    mediator_shutdown(mediator);
 }

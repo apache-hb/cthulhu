@@ -1,19 +1,19 @@
 option('languages', type : 'array',
     description : 'select which languages to compile',
-    choices : [ 'ctu', 'pl0' ],
+    choices : [ 'ctu', 'pl0', 'lox', 'example' ],
     value : [ 'ctu', 'pl0' ]
 )
 
 option('plugins', type : 'array',
     description : 'select which plugins to compile',
     choices : [ 'timing', 'example' ],
-    value : [ 'timing', 'example' ]
+    value : [ 'timing' ]
 )
 
 option('interfaces', type : 'array',
     description : 'select which frontend interfaces to enable',
-    choices : [ 'cli', 'gui', 'query' ],
-    value : [ 'cli', 'query' ]
+    choices : [ 'cli', 'gui', 'query', 'browser' ],
+    value : [ 'cli' ]
 )
 
 option('tuning', type : 'feature',

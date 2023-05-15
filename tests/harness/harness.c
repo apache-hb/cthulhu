@@ -2,7 +2,7 @@
 
 #include "argparse/argparse.h"
 
-#include "cthulhu/mediator/mediator.h"
+#include "cthulhu/mediator/plugin.h"
 
 #ifdef _WIN32
 #   define DEFAULT_CC "cl.exe"
@@ -52,7 +52,7 @@ static void harness_configure(plugin_handle_t *handle, ap_t *ap)
     ap_event(ap, compiler, on_compiler_name, harness);
     ap_event(ap, args, on_compiler_args, harness);
 
-    handle->user = harness;
+    plugin_set_user(handle, harness);
 }
 
 static const plugin_t kPluginInfo = {

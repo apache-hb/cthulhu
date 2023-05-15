@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/mediator/mediator.h"
+#include "cthulhu/mediator/mediator2.h"
 
 void pl0_init(lang_handle_t *runtime);
 

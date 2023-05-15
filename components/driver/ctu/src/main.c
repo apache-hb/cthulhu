@@ -1,5 +1,5 @@
 #include "cthulhu/interface/interface.h"
-#include "cthulhu/mediator/mediator.h"
+#include "cthulhu/mediator/language.h"
 #include "cthulhu/interface/runtime.h"
 #include "scan/compile.h"
 

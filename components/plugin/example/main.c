@@ -1,4 +1,4 @@
-#include "cthulhu/mediator/mediator.h"
+#include "cthulhu/mediator/plugin.h"
 
 #include <stdio.h>
 

@@ -1,5 +1,9 @@
 #include "cmd.h"
 
+#include "cthulhu/mediator/mediator.h"
+#include "cthulhu/mediator/language.h"
+#include "cthulhu/mediator/plugin.h"
+
 #include "base/util.h"
 
 #include "io/io.h"
@@ -97,7 +101,7 @@ static AP_EVENT(on_load_language, ap, param, value, data)
         return eEventHandled;
     }
 
-    language_load_t load = library_get(handle, STR(LANGUAGE_ENTRY_POINT), &err);
+    language_acquire_t load = library_get(handle, STR(LANGUAGE_ENTRY_POINT), &err);
     if (err != 0)
     {
         printf("failed to load language entrypoint `%s`\n%s\n", path, error_string(err));
@@ -113,7 +117,7 @@ static AP_EVENT(on_load_language, ap, param, value, data)
 
     vector_push(&rt->languages, (language_t*)lang);
 
-    mediator_add_language(rt->mediator, lang, ap);
+    mediator_add_language(rt->mediator, lang);
 
     return eEventHandled;
 }
@@ -134,7 +138,7 @@ static AP_EVENT(on_load_plugin, ap, param, value, data)
         return eEventHandled;
     }
 
-    plugin_load_t load = library_get(handle, STR(PLUGIN_ENTRY_POINT), &err);
+    plugin_acquire_t load = library_get(handle, STR(PLUGIN_ENTRY_POINT), &err);
     if (err != 0)
     {
         printf("failed to load plugin entrypoint `%s`\n%s\n", path, error_string(err));
@@ -150,7 +154,7 @@ static AP_EVENT(on_load_plugin, ap, param, value, data)
 
     vector_push(&rt->plugins, (plugin_t*)plugin);
 
-    mediator_add_plugin(rt->mediator, plugin, ap);
+    mediator_add_plugin(rt->mediator, plugin);
 
     return eEventHandled;
 }
@@ -174,14 +178,13 @@ static AP_EVENT(on_register_ext, ap, param, value, data)
     const char *id = ctu_strndup(mapping, split);
     const char *ext = ctu_strdup(mapping + split + 1);
 
-    const lang_handle_t *handle = mediator_get_language(rt->mediator, id);
-    if (handle == NULL)
+    const language_t *lang = mediator_get_language(rt->mediator, id);
+    if (lang == NULL)
     {
         printf("failed to register extension `%s` (no language identified by id=%s found)\n", mapping, id);
         return eEventHandled;
     }
 
-    const language_t *lang = handle->handle;
     const language_t *old = mediator_register_extension(rt->mediator, ext, lang);
     if (old != NULL)
     {

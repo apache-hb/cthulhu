@@ -44,11 +44,15 @@
 
 BEGIN_API
 
+typedef struct mediator_t mediator_t;
+typedef struct lifetime_t lifetime_t;
+
+typedef struct lang_handle_t lang_handle_t;
+typedef struct plugin_handle_t plugin_handle_t;
+
 typedef struct language_t language_t;
 typedef struct plugin_t plugin_t;
-typedef struct lifetime_t lifetime_t;
-typedef struct mediator_t mediator_t;
-typedef struct context_t context_t;
+
 typedef struct reports_t reports_t;
 typedef struct hlir_t hlir_t;
 typedef struct sema_t sema_t;
@@ -56,170 +60,74 @@ typedef struct scan_t scan_t;
 typedef struct ap_t ap_t;
 typedef struct io_t io_t;
 
-typedef enum region_t
-{
-    eRegionLoadCompiler, // load plugins and languages
-    eRegionInit, // initialize everything
-    eRegionLoadSource, // load source files
-    eRegionParse, // parse source files
-    eRegionCompile, // compile ast to hlir
-    eRegionOptimize, // optimize hlir
-    eRegionCodegen, // codegen hlir to ir
-    eRegionCleanup, // cleanup everything
-    eRegionEnd, // end of compilers lifetime
-
-    eRegionTotal
-} region_t;
-
-typedef struct lang_handle_t
-{
-    mediator_t *mediator;
-    const language_t *handle;
-
-    void *user;
-} lang_handle_t;
-
-typedef struct plugin_handle_t
-{
-    mediator_t *mediator;
-    const plugin_t *handle;
-
-    void *user;
-} plugin_handle_t;
-
 // TODO: how should threading work? one thread per file or one thread per language?
 // TODO: maybe it should be configurable, but then conflicts might happen
 
+// TODO: replace xxx_config_t with xxx_load_t and xxx_unload_t
 // TODO: should probably abstract argparse out
 //       an intermediate config format that maps to toml/cmd/imgui would be nice
 
-typedef void (*language_config_t)(lang_handle_t *, ap_t *);
+/// language lifetime flow
 
-typedef void (*language_init_t)(lang_handle_t *);
+/// - load: called once at first load, setup globals
 
-typedef void (*language_shutdown_t)(lang_handle_t *);
+///   - configure: called once per lifetime, provide configuration info
+///   - init: called once all languages have been configured. setup globals that depend on configuration
 
-// TODO: these should be structured differently, not quite sure how though
+///     - parse: called once per file, parse a source file into an ast
+///     - forward: called once per ast, forward declare all decls in a module
+///     - import: called once per ast, import all required modules
+///     - compile: called once per set of asts, compile the ast to hlir
 
-typedef void *(*language_parse_t)(lang_handle_t *, context_t *);
+///   - deinit: called once all languages have been deinitialized. cleanup globals that depend on configuration
 
-typedef void (*language_forward_t)(lang_handle_t *, context_t *);
-
-typedef void (*language_import_t)(lang_handle_t *, context_t *);
-
-typedef hlir_t *(*language_compile_t)(lang_handle_t *, context_t *);
-
-typedef struct language_t
-{
-    const char *id; ///< language driver id
-    const char *name; ///< language driver name
-
-    version_info_t version; ///< language driver version
-
-    const char **exts; ///< null terminated list of default file extensions for this driver
-
-    language_config_t fnConfigure; ///< configure the mediator to work with this driver
-    
-    language_init_t fnInit; ///< initialize the language driver
-    language_shutdown_t fnShutdown; ///< shutdown the language driver
-
-    language_parse_t fnParse; ///< parse a source file
-    language_forward_t fnForward; ///< forward declare all decls in a module
-    language_import_t fnImport; ///< import all required modules
-    language_compile_t fnCompile; ///< compile the ast to hlir
-} language_t;
-
-typedef void (*plugin_config_t)(plugin_handle_t *, ap_t *);
-
-typedef void (*plugin_init_t)(plugin_handle_t *);
-
-typedef void (*plugin_shutdown_t)(plugin_handle_t *);
-
-typedef void (*plugin_region_t)(plugin_handle_t *, region_t);
-
-typedef struct plugin_t
-{
-    const char *id; ///< plugin id
-    const char *name; ///< plugin name
-
-    version_info_t version; ///< language driver version
-
-    plugin_config_t fnConfigure; ///< configure the mediator to work with this plugin
-    
-    plugin_init_t fnInit; ///< initialize the plugin
-    plugin_shutdown_t fnShutdown; ///< shutdown the plugin
-
-    plugin_region_t fnRegion; ///< called when a region begins
-} plugin_t;
+/// - unload: called once at the end of the program, cleanup globals
+///           will only be called if load was called
 
 void runtime_init(void);
 
-// language api
-
-typedef const language_t *(*language_load_t)(mediator_t *);
-
-#define LANGUAGE_ENTRY_POINT language_load
-
-#ifdef CC_MSVC
-#   define LANGUAGE_EXPORT __declspec(dllexport)
-#else
-#   define LANGUAGE_EXPORT __attribute__((visibility("default")))
-#endif
-
-// plugin api
-
-typedef const plugin_t *(*plugin_load_t)(mediator_t *);
-
-#define PLUGIN_ENTRY_POINT plugin_load
-
-#ifdef CC_MSVC
-#   define PLUGIN_EXPORT __declspec(dllexport)
-#else
-#   define PLUGIN_EXPORT __attribute__((visibility("default")))
-#endif
-
-// context api
-
-context_t *context_new(lang_handle_t *handle, io_t *io);
-
-hlir_t *context_get_module(context_t *ctx);
-scan_t *context_get_scanner(context_t *ctx);
-reports_t *context_get_reports(context_t *ctx);
-void *context_get_ast(context_t *ctx);
-sema_t *context_get_sema(context_t *ctx);
-const char *context_get_name(context_t *ctx);
-
-void context_begin(context_t *ctx, sema_t *sema, hlir_t *mod);
-void context_end(context_t *ctx, hlir_t *mod);
-
-// handle api
-
-sema_t *handle_get_sema(lang_handle_t *handle, const char *path);
-
-lang_handle_t *lifetime_get_handle(lifetime_t *self, const language_t *it);
+typedef struct source_t
+{
+    io_t *io;
+    const language_t *lang;
+} source_t;
 
 // lifetime api
 
 lifetime_t *mediator_get_lifetime(mediator_t *self);
 
+/**
+ * @brief add a module to the handle
+ * 
+ * @param handle 
+ * @param name 
+ * @param data 
+ * @return void* NULL if the module was added, otherwise the module that already exists wih that name
+ */
+void *lifetime_add_module(lifetime_t *self, const char *name, void *data);
+
+void *lifetime_get_module(const lifetime_t *self, const char *name);
+
+void lifetime_add_source(lifetime_t *self, source_t source);
+
 // mediator api
 
 mediator_t *mediator_new(const char *name, version_t version);
 
-void mediator_add_language(mediator_t *self, const language_t *language, ap_t *ap);
-void mediator_add_plugin(mediator_t *self, const plugin_t *plugin, ap_t *ap);
+void mediator_add_language(mediator_t *self, const language_t *language);
+void mediator_add_plugin(mediator_t *self, const plugin_t *plugin);
 
+/**
+ * @brief map an extension to a language
+ * 
+ * @param self the mediator
+ * @param ext the extension
+ * @param lang the language
+ * @return const language_t* NULL if the extension is correctly registered, otherwise the language that already has the extension
+ */
 const language_t *mediator_register_extension(mediator_t *self, const char *ext, const language_t *lang);
 
-lang_handle_t *mediator_get_language(mediator_t *self, const char *id);
-lang_handle_t *mediator_get_language_for_ext(mediator_t *self, const char *ext);
-
-void mediator_parse(mediator_t *self, context_t *ctx);
-
-void mediator_compile(mediator_t *self, context_t *ctx);
-
-void mediator_region(mediator_t *self, region_t region);
-void mediator_startup(mediator_t *self);
-void mediator_shutdown(mediator_t *self);
+const language_t *mediator_get_language(mediator_t *self, const char *id);
+const language_t *mediator_get_language_by_ext(mediator_t *self, const char *ext);
 
 END_API
