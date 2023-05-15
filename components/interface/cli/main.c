@@ -27,7 +27,6 @@ int main(int argc, const char **argv)
     }
 
     size_t len = vector_len(rt.sourcePaths);
-    vector_t *sources = vector_of(len);
     for (size_t i = 0; i < len; i++)
     {
         const char *path = vector_get(rt.sourcePaths, i);
@@ -35,21 +34,21 @@ int main(int argc, const char **argv)
         if (ext == NULL)
         {
             printf("could not identify compiler for `%s` (no extension)\n", path);
-            return 1;
+            continue;
         }
 
         const language_t *lang = mediator_get_language_by_ext(mediator, ext);
         if (lang == NULL)
         {
-            printf("could not identify compiler for `%s` (no language registered for extension `%s`)\n", path, ext);
-            return 1;
+            printf("could not identify compiler for `%s` by extension `%s`.\nnote: extra extensions can be provided with -ext=id:ext", path, ext);
+            continue;
         }
 
         io_t *io = io_file(path, eFileRead | eFileText);
         if (io_error(io) != 0)
         {
             printf("failed to load source `%s`\n%s\n", path, error_string(io_error(io)));
-            return 1;
+            continue;
         }
 
         source_t src = {
@@ -58,5 +57,24 @@ int main(int argc, const char **argv)
         };
 
         lifetime_add_source(lifetime, src);
+    }
+
+    lifetime_init(lifetime);
+
+    lifetime_deinit(lifetime);
+
+    size_t langs = vector_len(rt.languages);
+    size_t plugins = vector_len(rt.plugins);
+
+    for (size_t i = 0; i < langs; i++)
+    {
+        const language_t *lang = vector_get(rt.languages, i);
+        mediator_unload_language(rt.mediator, lang);
+    }
+
+    for (size_t i = 0; i < plugins; i++)
+    {
+        const plugin_t *plugin = vector_get(rt.plugins, i);
+        mediator_unload_plugin(rt.mediator, plugin);
     }
 }

@@ -17,6 +17,8 @@
 
 #include "cthulhu/hlir/init.h"
 
+#include "common.h"
+
 typedef struct mediator_t
 {
     const char *name; ///< mediator name
@@ -65,7 +67,7 @@ mediator_t *mediator_new(const char *name, version_t version)
     return self;
 }
 
-void mediator_add_language(mediator_t *self, const language_t *language)
+void mediator_load_language(mediator_t *self, const language_t *language)
 {
     CTASSERT(self != NULL);
     CTASSERT(language != NULL);
@@ -77,17 +79,20 @@ void mediator_add_language(mediator_t *self, const language_t *language)
     size_t idx = 0;
     while (language->exts[idx] != NULL)
     {
-        const char *ext = language->exts[idx];
-        const language_t *old = mediator_register_extension(self, ext, language);
+        const language_t *old = mediator_register_extension(self, language->exts[idx++], language);
 
         // TODO: gracefully handle this
-        CTASSERT(old == NULL);
+        CTASSERTF(old == NULL, "%p", old);
     }
 
+    map_set(self->langById, language->id, (void*)language);
+
     vector_push(&self->languages, (void*)language);
+
+    EXEC(language, fnLoad, self);
 }
 
-void mediator_add_plugin(mediator_t *self, const plugin_t *plugin)
+void mediator_load_plugin(mediator_t *self, const plugin_t *plugin)
 {
     CTASSERT(self != NULL);
     CTASSERT(plugin != NULL);
@@ -99,6 +104,20 @@ void mediator_add_plugin(mediator_t *self, const plugin_t *plugin)
     CTASSERT(old == NULL); // TODO: gracefully handle this
 
     map_set(self->pluginById, plugin->id, (void*)plugin);
+
+    vector_push(&self->plugins, (void*)plugin);
+
+    EXEC(plugin, fnLoad, self);
+}
+
+void mediator_unload_language(mediator_t *self, const language_t *language)
+{
+    EXEC(language, fnUnload, self);
+}
+
+void mediator_unload_plugin(mediator_t *self, const plugin_t *plugin)
+{
+    EXEC(plugin, fnUnload, self);
 }
 
 const language_t *mediator_register_extension(mediator_t *self, const char *ext, const language_t *lang)

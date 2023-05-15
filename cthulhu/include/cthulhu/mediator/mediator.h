@@ -110,12 +110,20 @@ void *lifetime_get_module(const lifetime_t *self, const char *name);
 
 void lifetime_add_source(lifetime_t *self, source_t source);
 
+void lifetime_init(lifetime_t *self);
+void lifetime_deinit(lifetime_t *self);
+
+void lifetime_parse(lifetime_t *self);
+
 // mediator api
 
 mediator_t *mediator_new(const char *name, version_t version);
 
-void mediator_add_language(mediator_t *self, const language_t *language);
-void mediator_add_plugin(mediator_t *self, const plugin_t *plugin);
+void mediator_load_language(mediator_t *self, const language_t *language);
+void mediator_load_plugin(mediator_t *self, const plugin_t *plugin);
+
+void mediator_unload_language(mediator_t *self, const language_t *language);
+void mediator_unload_plugin(mediator_t *self, const plugin_t *plugin);
 
 /**
  * @brief map an extension to a language

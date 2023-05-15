@@ -117,7 +117,7 @@ static AP_EVENT(on_load_language, ap, param, value, data)
 
     vector_push(&rt->languages, (language_t*)lang);
 
-    mediator_add_language(rt->mediator, lang);
+    mediator_load_language(rt->mediator, lang);
 
     return eEventHandled;
 }
@@ -154,7 +154,7 @@ static AP_EVENT(on_load_plugin, ap, param, value, data)
 
     vector_push(&rt->plugins, (plugin_t*)plugin);
 
-    mediator_add_plugin(rt->mediator, plugin);
+    mediator_load_plugin(rt->mediator, plugin);
 
     return eEventHandled;
 }
@@ -255,29 +255,33 @@ runtime_t cmd_parse(mediator_t *mediator, int argc, const char **argv)
         .unknownArgs = vector_new(16),
     };
 
-    ap_group_t *general = ap_group_new(ap, "general", "general options");
-    ap_param_t *helpParam = ap_add_bool(general, "help", "display this message", kHelpNames);
-    ap_param_t *versionParam = ap_add_bool(general, "version", "print version information", kVersionNames);
-    ap_param_t *loadLanguageParam = ap_add_string(general, "load language", "load a new language driver", kLoadLangNames);
-    ap_param_t *loadPluginParam = ap_add_string(general, "load plugin", "load a new shared library plugin", kLoadPluginNames);
-    ap_param_t *addExtensionMapParam = ap_add_string(general, "add extension map", "register a new extension for a compiler", kAddExtensionMapNames);
+    ap_group_t *generalGroup = ap_group_new(ap, "general", "general options");
+    ap_param_t *helpParam = ap_add_bool(generalGroup, "help", "display this message", kHelpNames);
+    ap_param_t *versionParam = ap_add_bool(generalGroup, "version", "print version information", kVersionNames);
+    ap_param_t *loadLanguageParam = ap_add_string(generalGroup, "load language", "load a new language driver", kLoadLangNames);
+    ap_param_t *loadPluginParam = ap_add_string(generalGroup, "load plugin", "load a new shared library plugin", kLoadPluginNames);
+    ap_param_t *addExtensionMapParam = ap_add_string(generalGroup, "add extension map", "register a new extension for a compiler", kAddExtensionMapNames);
 
-    ap_group_t *codegen = ap_group_new(ap, "codegen", "code generation options");
-    ap_param_t *outputFileParam = ap_add_string(codegen, "output file name", "output file name, will have .c appened to it (default: out)", kOutputFileNames);
-    ap_param_t *outputGenParam = ap_add_string(codegen, "output generator", "code generator output to use [ssa-c89, hlir-c89] (default: ssa-c89)", kOutputGenNames);
-    ap_param_t *outputHeaderParam = ap_add_string(codegen, "output header", "output header name, provide none to skip header generation. will have .c appeneded to it (default: none)", kOutputHeaderNames);
+    ap_group_t *codegenGroup = ap_group_new(ap, "codegen", "code generation options");
+    ap_param_t *outputFileParam = ap_add_string(codegenGroup, "output file name", "output file name, will have .c appened to it (default: out)", kOutputFileNames);
+    ap_param_t *outputGenParam = ap_add_string(codegenGroup, "output generator", "code generator output to use [ssa-c89, hlir-c89] (default: ssa-c89)", kOutputGenNames);
+    ap_param_t *outputHeaderParam = ap_add_string(codegenGroup, "output header", "output header name, provide none to skip header generation. will have .c appeneded to it (default: none)", kOutputHeaderNames);
 
-    ap_group_t *debug = ap_group_new(ap, "debug", "debug options");
-    ap_param_t *debugSsaParam = ap_add_bool(debug, "debug ssa", "print debug ssa output", kDebugSsaNames);
-    ap_param_t *debugVerboseParam = ap_add_bool(debug, "verbose", "enable verbose logging", kDebugVerboseNames);
+    ap_group_t *debugGroup = ap_group_new(ap, "debug", "debug options");
+    ap_param_t *debugSsaParam = ap_add_bool(debugGroup, "debug ssa", "print debug ssa output", kDebugSsaNames);
+    ap_param_t *debugVerboseParam = ap_add_bool(debugGroup, "verbose", "enable verbose logging", kDebugVerboseNames);
 
+
+    // general
     ap_event(ap, helpParam, on_help, &rt);
     ap_event(ap, versionParam, on_version, &rt);
-
     ap_event(ap, loadLanguageParam, on_load_language, &rt);
     ap_event(ap, loadPluginParam, on_load_plugin, &rt);
     ap_event(ap, addExtensionMapParam, on_register_ext, &rt);
+    
+    // debug
     ap_event(ap, debugVerboseParam, on_set_verbose, &rt);
+
     ap_event(ap, NULL, on_add_source, &rt);
     ap_error(ap, on_arg_error, &rt);
 
