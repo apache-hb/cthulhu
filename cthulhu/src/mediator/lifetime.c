@@ -24,6 +24,8 @@ typedef struct lifetime_t
     map_t *handles; // map_t<const language_t *, lang_handle_t *>
 
     vector_t *files; /// vector_t<source_t>
+
+    map_t *modules; // map_t<const char *, hlir_t *>
 } lifetime_t;
 
 typedef struct context_t
@@ -53,6 +55,7 @@ lifetime_t *mediator_get_lifetime(mediator_t *self)
     lifetime->languages = set_new(4);
     lifetime->handles = map_new(4);
     lifetime->files = vector_new(4);
+    lifetime->modules = map_new(8);
     return lifetime;
 }
 
