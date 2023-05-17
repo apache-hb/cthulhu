@@ -16,7 +16,7 @@ static void *pl0_parse(lang_handle_t *handle, context_t *ctx)
     return compile_scanner(context_get_scanner(ctx), &kCallbacks);
 }
 
-static const char *kLangNames[] = { ".pl0", ".pl", NULL };
+static const char *kLangNames[] = { "pl", "pl0", NULL };
 
 static const language_t kLanguageInfo = {
     .id = "pl0",

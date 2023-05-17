@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-static const char *kLangNames[] = { ".e", ".example", NULL };
+static const char *kLangNames[] = { "e", "example", NULL };
 
 static void ex_load(mediator_t *mediator)
 {
@@ -25,6 +25,13 @@ static void ex_deinit(lang_handle_t *handle)
     printf("ex-deinit(%p)\n", handle);
 }
 
+static void *ex_parse(lang_handle_t *handle, scan_t *scan)
+{
+    printf("ex-parse(%p, %p)\n", handle, scan);
+
+    return NULL;
+}
+
 static const language_t kLanguageInfo = {
     .id = "example",
     .name = "Example",
@@ -42,6 +49,8 @@ static const language_t kLanguageInfo = {
 
     .fnInit = ex_init,
     .fnDeinit = ex_deinit,
+
+    .fnParse = ex_parse
 };
 
 LANGUAGE_EXPORT

@@ -11,25 +11,12 @@
 
 #include <stdio.h>
 
-int main(int argc, const char **argv)
+static void add_sources(mediator_t *mediator, lifetime_t *lifetime, vector_t *sources)
 {
-    runtime_init();
-    mediator_t *mediator = mediator_new("cli", NEW_VERSION(0, 0, 1));
-    lifetime_t *lifetime = mediator_get_lifetime(mediator);
-
-    runtime_t rt = cmd_parse(mediator, argc, argv);
-
-    size_t errs = vector_len(rt.unknownArgs);
-    for (size_t i = 0; i < errs; i++)
-    {
-        const char *err = vector_get(rt.unknownArgs, i);
-        printf("error: %s\n", err);
-    }
-
-    size_t len = vector_len(rt.sourcePaths);
+    size_t len = vector_len(sources);
     for (size_t i = 0; i < len; i++)
     {
-        const char *path = vector_get(rt.sourcePaths, i);
+        const char *path = vector_get(sources, i);
         const char *ext = str_ext(path);
         if (ext == NULL)
         {
@@ -58,8 +45,37 @@ int main(int argc, const char **argv)
 
         lifetime_add_source(lifetime, src);
     }
+}
+
+int main(int argc, const char **argv)
+{
+    runtime_init();
+    
+    mediator_t *mediator = mediator_new("cli", NEW_VERSION(0, 0, 1));
+    lifetime_t *lifetime = mediator_get_lifetime(mediator);
+
+    runtime_t rt = cmd_parse(mediator, argc, argv);
+
+    size_t errs = vector_len(rt.unknownArgs);
+    for (size_t i = 0; i < errs; i++)
+    {
+        const char *err = vector_get(rt.unknownArgs, i);
+        printf("error: %s\n", err);
+    }
+
+    size_t len = vector_len(rt.sourcePaths);
+    if (len == 0)
+    {
+        printf("no source files provided\n");
+    }
+    else
+    {
+        add_sources(mediator, lifetime, rt.sourcePaths);
+    }
 
     lifetime_init(lifetime);
+
+    lifetime_parse(rt.reports, lifetime);
 
     lifetime_deinit(lifetime);
 

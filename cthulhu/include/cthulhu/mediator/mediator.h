@@ -113,7 +113,7 @@ void lifetime_add_source(lifetime_t *self, source_t source);
 void lifetime_init(lifetime_t *self);
 void lifetime_deinit(lifetime_t *self);
 
-void lifetime_parse(lifetime_t *self);
+void lifetime_parse(reports_t *reports, lifetime_t *self);
 
 // mediator api
 

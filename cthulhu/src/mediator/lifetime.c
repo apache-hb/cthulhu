@@ -2,6 +2,8 @@
 
 #include "cthulhu/mediator/language.h"
 
+#include "scan/compile.h"
+
 #include "std/vector.h"
 #include "std/set.h"
 #include "std/map.h"
@@ -23,6 +25,22 @@ typedef struct lifetime_t
 
     vector_t *files; /// vector_t<source_t>
 } lifetime_t;
+
+typedef struct context_t
+{
+    const language_t *lang;
+    io_t *io;
+
+    void *ast;
+} context_t;
+
+static context_t *context_new(source_t src)
+{
+    context_t *ctx = ctu_malloc(sizeof(context_t));
+    ctx->lang = src.lang;
+    ctx->io = src.io;
+    return ctx;
+}
 
 // public api
 
@@ -46,7 +64,7 @@ void lifetime_add_source(lifetime_t *self, source_t source)
 
     set_add_ptr(self->languages, source.lang);
 
-    vector_push(&self->files, BOX(source));
+    vector_push(&self->files, context_new(source));
 }
 
 void lifetime_init(lifetime_t *self)
@@ -68,5 +86,19 @@ void lifetime_deinit(lifetime_t *self)
         const language_t *lang = set_next(&iter);
         lang_handle_t *handle = map_get_ptr(self->handles, lang);
         EXEC(lang, fnDeinit, handle);
+    }
+}
+
+void lifetime_parse(reports_t *reports, lifetime_t *self)
+{
+    size_t len = vector_len(self->files);
+    for (size_t i = 0; i < len; i++)
+    {
+        context_t *src = vector_get(self->files, i);
+        const language_t *lang = src->lang;
+        lang_handle_t *handle = map_get_ptr(self->handles, lang);
+        scan_t *scan = scan_io(reports, lang->name, src->io, handle);
+        
+        src->ast = lang->fnParse(handle, scan);
     }
 }
