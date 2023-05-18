@@ -211,6 +211,21 @@ static AP_EVENT(on_add_source, ap, param, value, data)
     return eEventHandled;
 }
 
+static AP_EVENT(on_set_debug_ssa, ap, param, value, data)
+{
+    UNUSED(ap);
+    UNUSED(param);
+
+    const bool *val = value;
+    runtime_t *rt = data;
+
+    rt->emitSSA = *val;
+
+    logverbose("%sd debug ssa", *val ? "enable" : "disable");
+
+    return eEventHandled;
+}
+
 static AP_EVENT(on_set_verbose, ap, param, value, data)
 {
     UNUSED(ap);
@@ -280,6 +295,7 @@ runtime_t cmd_parse(mediator_t *mediator, int argc, const char **argv)
     ap_event(ap, addExtensionMapParam, on_register_ext, &rt);
     
     // debug
+    ap_event(ap, debugSsaParam, on_set_debug_ssa, &rt);
     ap_event(ap, debugVerboseParam, on_set_verbose, &rt);
 
     ap_event(ap, NULL, on_add_source, &rt);

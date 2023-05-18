@@ -359,9 +359,9 @@ typedef struct
     vector_t *procs;
 } sema_data_t;
 
-void pl0_forward_decls(lang_handle_t *handle, context_t *ctx)
+void pl0_forward_decls(lang_handle_t *handle, void *ast)
 {
-    pl0_t *root = context_get_ast(ctx);
+    pl0_t *root = ast;
     reports_t *reports = context_get_reports(ctx);
 
     size_t totalConsts = vector_len(root->consts);
@@ -428,7 +428,7 @@ void pl0_forward_decls(lang_handle_t *handle, context_t *ctx)
     context_begin(ctx, sema, mod);
 }
 
-void pl0_process_imports(lang_handle_t *handle, context_t *compile)
+void pl0_process_imports(lang_handle_t *handle)
 {
     pl0_t *root = context_get_ast(compile);
     sema_t *sema = context_get_sema(compile);
@@ -456,7 +456,7 @@ void pl0_process_imports(lang_handle_t *handle, context_t *compile)
     }
 }
 
-hlir_t *pl0_compile_module(lang_handle_t *handle, context_t *ctx)
+hlir_t *pl0_compile_module(lang_handle_t *handle)
 {
     UNUSED(handle);
 

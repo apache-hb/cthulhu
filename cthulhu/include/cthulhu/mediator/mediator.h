@@ -55,6 +55,7 @@ typedef struct plugin_t plugin_t;
 
 typedef struct reports_t reports_t;
 typedef struct hlir_t hlir_t;
+typedef struct vector_t vector_t;
 typedef struct sema_t sema_t;
 typedef struct scan_t scan_t;
 typedef struct ap_t ap_t;
@@ -118,6 +119,10 @@ void lifetime_parse(reports_t *reports, lifetime_t *self);
 void lifetime_forward(reports_t *reports, lifetime_t *self);
 
 void lifetime_compile(reports_t *reports, lifetime_t *self);
+
+vector_t *lifetime_modules(lifetime_t *self);
+
+
 
 // mediator api
 

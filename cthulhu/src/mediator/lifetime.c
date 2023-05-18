@@ -144,3 +144,17 @@ void lifetime_compile(reports_t *reports, lifetime_t *self)
         lang_compile(mod->handle, mod->hlir);
     }
 }
+
+vector_t *lifetime_modules(lifetime_t *self)
+{
+    vector_t *result = vector_new(32);
+    map_iter_t iter = map_iter(self->modules);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        module_entry_t *mod = entry.value;
+        vector_push(&result, mod->hlir);
+    }
+
+    return result;
+}

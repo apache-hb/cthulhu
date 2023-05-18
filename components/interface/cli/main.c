@@ -9,6 +9,8 @@
 
 #include "io/io.h"
 
+#include "cthulhu/ssa/ssa.h"
+
 #include <stdio.h>
 
 static void add_sources(mediator_t *mediator, lifetime_t *lifetime, vector_t *sources)
@@ -78,6 +80,16 @@ int main(int argc, const char **argv)
     lifetime_parse(rt.reports, lifetime);
 
     lifetime_forward(rt.reports, lifetime);
+
+    vector_t *mods = lifetime_modules(lifetime);
+    ssa_module_t *ssa = ssa_gen_module(rt.reports, mods);
+
+    ssa_opt_module(rt.reports, ssa);
+
+    if (rt.emitSSA) 
+    {
+        ssa_emit_module(rt.reports, ssa);
+    }
 
     lifetime_deinit(lifetime);
 

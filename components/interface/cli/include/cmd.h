@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "cthulhu/mediator/mediator.h"
 
 typedef struct reports_t reports_t;
@@ -17,6 +19,8 @@ typedef struct runtime_t
 
     vector_t *languages;
     vector_t *plugins;
+
+    bool emitSSA;
 
     vector_t *sourcePaths;
 
