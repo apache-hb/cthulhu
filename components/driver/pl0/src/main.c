@@ -11,9 +11,9 @@
 
 CT_CALLBACKS(kCallbacks, pl0);
 
-static void *pl0_parse(lang_handle_t *handle, context_t *ctx)
+static void *pl0_parse(lang_handle_t *handle, scan_t *scan)
 {
-    return compile_scanner(context_get_scanner(ctx), &kCallbacks);
+    return compile_scanner(scan, &kCallbacks);
 }
 
 static const char *kLangNames[] = { "pl", "pl0", NULL };

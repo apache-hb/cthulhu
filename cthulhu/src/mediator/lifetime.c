@@ -36,12 +36,27 @@ typedef struct context_t
     void *ast;
 } context_t;
 
+typedef struct module_entry_t
+{
+    lang_handle_t *handle;
+
+    hlir_t *hlir;
+} module_entry_t;
+
 static context_t *context_new(source_t src)
 {
     context_t *ctx = ctu_malloc(sizeof(context_t));
     ctx->lang = src.lang;
     ctx->io = src.io;
     return ctx;
+}
+
+static module_entry_t *module_new(lang_handle_t *handle, hlir_t *hlir)
+{
+    module_entry_t *entry = ctu_malloc(sizeof(module_entry_t));
+    entry->handle = handle;
+    entry->hlir = hlir;
+    return entry;
 }
 
 // public api
@@ -76,7 +91,7 @@ void lifetime_init(lifetime_t *self)
     while (set_has_next(&iter))
     {
         const language_t *lang = set_next(&iter);
-        lang_handle_t *handle = init_language(self, lang);
+        lang_handle_t *handle = lang_init(self, lang);
         map_set_ptr(self->handles, lang, handle);
     }
 }
@@ -103,5 +118,29 @@ void lifetime_parse(reports_t *reports, lifetime_t *self)
         scan_t *scan = scan_io(reports, lang->name, src->io, handle);
         
         src->ast = lang->fnParse(handle, scan);
+    }
+}
+
+void lifetime_forward(reports_t *reports, lifetime_t *self)
+{
+    size_t len = vector_len(self->files);
+    for (size_t i = 0; i < len; i++)
+    {
+        context_t *src = vector_get(self->files, i);
+        const language_t *lang = src->lang;
+        lang_handle_t *handle = map_get_ptr(self->handles, lang);
+
+        lang->fnForward(handle, src->ast);
+    }
+}
+
+void lifetime_compile(reports_t *reports, lifetime_t *self)
+{
+    map_iter_t iter = map_iter(self->modules);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        module_entry_t *mod = entry.value;
+        lang_compile(mod->handle, mod->hlir);
     }
 }

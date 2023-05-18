@@ -77,6 +77,8 @@ int main(int argc, const char **argv)
 
     lifetime_parse(rt.reports, lifetime);
 
+    lifetime_forward(rt.reports, lifetime);
+
     lifetime_deinit(lifetime);
 
     size_t langs = vector_len(rt.languages);

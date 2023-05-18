@@ -13,7 +13,7 @@ typedef struct lang_handle_t
     void *user;
 } lang_handle_t;
 
-lang_handle_t *init_language(lifetime_t *lifetime, const language_t *lang)
+lang_handle_t *lang_init(lifetime_t *lifetime, const language_t *lang)
 {
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
@@ -26,4 +26,12 @@ lang_handle_t *init_language(lifetime_t *lifetime, const language_t *lang)
     EXEC(lang, fnInit, handle);
 
     return handle;
+}
+
+void lang_compile(lang_handle_t *handle, hlir_t *mod)
+{
+    CTASSERT(handle != NULL);
+    CTASSERT(mod != NULL);
+
+    EXEC(handle->language, fnCompile, handle);
 }

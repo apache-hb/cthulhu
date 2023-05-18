@@ -77,6 +77,8 @@ void mediator_load_language(mediator_t *self, const language_t *language)
     CTASSERTF(*language->exts != NULL, "language '%s' has no extensions", language->id);
 
     CTASSERTF(language->fnParse != NULL, "language '%s' has no parse function", language->id);
+    CTASSERTF(language->fnForward != NULL, "language '%s' has no forward function", language->id);
+    CTASSERTF(language->fnCompile != NULL, "language '%s' has no compile function", language->id);
 
     size_t idx = 0;
     while (language->exts[idx] != NULL)

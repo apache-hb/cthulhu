@@ -32,6 +32,18 @@ static void *ex_parse(lang_handle_t *handle, scan_t *scan)
     return NULL;
 }
 
+static void ex_forward(lang_handle_t *handle, void *ast)
+{
+    printf("ex-forward(%p, %p)\n", handle, ast);
+}
+
+static hlir_t *ex_compile(lang_handle_t *handle)
+{
+    printf("ex-compile(%p)\n", handle);
+
+    return NULL;
+}
+
 static const language_t kLanguageInfo = {
     .id = "example",
     .name = "Example",
@@ -50,7 +62,9 @@ static const language_t kLanguageInfo = {
     .fnInit = ex_init,
     .fnDeinit = ex_deinit,
 
-    .fnParse = ex_parse
+    .fnParse = ex_parse,
+    .fnForward = ex_forward,
+    .fnCompile = ex_compile
 };
 
 LANGUAGE_EXPORT
