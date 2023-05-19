@@ -33,9 +33,7 @@ typedef struct mediator_t
     vector_t *plugins;
 } mediator_t;
 
-// public mediator api
-
-void runtime_init(void)
+static void runtime_init(void)
 {
     GLOBAL_INIT();
 
@@ -49,6 +47,8 @@ void runtime_init(void)
 
 mediator_t *mediator_new(const char *name, version_t version)
 {
+    runtime_init();
+
     CTASSERT(name != NULL);
 
     mediator_t *self = ctu_malloc(sizeof(mediator_t));

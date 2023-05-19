@@ -18,9 +18,9 @@ typedef void *(*language_parse_t)(lang_handle_t *, scan_t *);
 
 typedef void (*language_forward_t)(lang_handle_t *, void *);
 
-typedef void (*language_import_t)(lang_handle_t *);
+typedef void (*language_import_t)(lang_handle_t *, compile_t *);
 
-typedef hlir_t *(*language_compile_t)(lang_handle_t *);
+typedef hlir_t *(*language_compile_t)(lang_handle_t *, compile_t *);
 
 typedef struct language_t
 {
@@ -58,3 +58,20 @@ typedef const language_t *(*language_acquire_t)(mediator_t *);
 // handle api
 
 lang_handle_t *lifetime_get_lang_handle(lifetime_t *self, const language_t *it);
+
+// driver api
+
+reports_t *lang_get_reports(lang_handle_t *self);
+
+const char *handle_get_name(lang_handle_t *self, void *ast);
+sema_t *handle_get_sema(lang_handle_t *self, const char *mod);
+
+// compile api
+
+void compile_begin(lang_handle_t *self, void *ast, const char *name, sema_t *sema, hlir_t *mod);
+
+void compile_finish(compile_t *self);
+
+void *compile_get_ast(compile_t *self);
+sema_t *compile_get_sema(compile_t *self);
+hlir_t *compile_get_module(compile_t *self);

@@ -51,8 +51,6 @@ static void add_sources(mediator_t *mediator, lifetime_t *lifetime, vector_t *so
 
 int main(int argc, const char **argv)
 {
-    runtime_init();
-    
     mediator_t *mediator = mediator_new("cli", NEW_VERSION(0, 0, 1));
     lifetime_t *lifetime = mediator_get_lifetime(mediator);
 
@@ -86,7 +84,7 @@ int main(int argc, const char **argv)
 
     ssa_opt_module(rt.reports, ssa);
 
-    if (rt.emitSSA) 
+    if (rt.emitSSA)
     {
         ssa_emit_module(rt.reports, ssa);
     }

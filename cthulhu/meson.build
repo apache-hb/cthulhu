@@ -10,10 +10,6 @@ src = [
     'src/hlir/query.c',
     'src/hlir/common.c',
     'src/hlir/validate.c',
-
-    # common frontend components
-    'src/interface/runtime.c',
-    'src/interface/cthulhu.c'
 ]
 
 libgeneric = library('generic', src,

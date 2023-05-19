@@ -37,9 +37,9 @@ static void ex_forward(lang_handle_t *handle, void *ast)
     printf("ex-forward(%p, %p)\n", handle, ast);
 }
 
-static hlir_t *ex_compile(lang_handle_t *handle)
+static hlir_t *ex_compile(lang_handle_t *handle, compile_t *compile)
 {
-    printf("ex-compile(%p)\n", handle);
+    printf("ex-compile(%p, %p)\n", handle, compile);
 
     return NULL;
 }

@@ -50,6 +50,8 @@ typedef struct lifetime_t lifetime_t;
 typedef struct lang_handle_t lang_handle_t;
 typedef struct plugin_handle_t plugin_handle_t;
 
+typedef struct compile_t compile_t;
+
 typedef struct language_t language_t;
 typedef struct plugin_t plugin_t;
 
@@ -85,8 +87,6 @@ typedef struct io_t io_t;
 /// - unload: called once at the end of the program, cleanup globals
 ///           will only be called if load was called
 
-void runtime_init(void);
-
 typedef struct source_t
 {
     io_t *io;
@@ -97,17 +97,7 @@ typedef struct source_t
 
 lifetime_t *mediator_get_lifetime(mediator_t *self);
 
-/**
- * @brief add a module to the handle
- * 
- * @param handle 
- * @param name 
- * @param data 
- * @return void* NULL if the module was added, otherwise the module that already exists wih that name
- */
-void *lifetime_add_module(lifetime_t *self, const char *name, void *data);
-
-void *lifetime_get_module(const lifetime_t *self, const char *name);
+compile_t *lifetime_get_module(const lifetime_t *self, const char *name);
 
 void lifetime_add_source(lifetime_t *self, source_t source);
 

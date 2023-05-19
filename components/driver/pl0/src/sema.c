@@ -6,7 +6,7 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/hlir/type.h"
-#include "cthulhu/interface/runtime.h"
+#include "cthulhu/mediator/language.h"
 #include "report/report-ext.h"
 
 #include "base/macros.h"
@@ -362,7 +362,7 @@ typedef struct
 void pl0_forward_decls(lang_handle_t *handle, void *ast)
 {
     pl0_t *root = ast;
-    reports_t *reports = context_get_reports(ctx);
+    reports_t *reports = lang_get_reports(handle);
 
     size_t totalConsts = vector_len(root->consts);
     size_t totalGlobals = vector_len(root->globals);
@@ -372,7 +372,7 @@ void pl0_forward_decls(lang_handle_t *handle, void *ast)
     vector_t *globals = vector_new(totalGlobals);
     vector_t *procs = vector_new(totalFunctions);
 
-    const char *id = root->mod != NULL ? root->mod : context_get_name(ctx);
+    const char *id = root->mod != NULL ? root->mod : handle_get_name(handle, ast);
 
     hlir_t *mod = hlir_module(root->node, id, vector_of(0), vector_of(0), vector_of(0));
 
@@ -425,13 +425,13 @@ void pl0_forward_decls(lang_handle_t *handle, void *ast)
 
     sema_set_data(sema, BOX(semaData));
 
-    context_begin(ctx, sema, mod);
+    compile_begin(handle, ast, id, sema, mod);
 }
 
-void pl0_process_imports(lang_handle_t *handle)
+void pl0_process_imports(lang_handle_t *handle, compile_t *compile)
 {
-    pl0_t *root = context_get_ast(compile);
-    sema_t *sema = context_get_sema(compile);
+    pl0_t *root = compile_get_ast(compile);
+    sema_t *sema = compile_get_sema(compile);
 
     size_t totalImports = vector_len(root->imports);
     for (size_t i = 0; i < totalImports; i++)
@@ -456,13 +456,13 @@ void pl0_process_imports(lang_handle_t *handle)
     }
 }
 
-hlir_t *pl0_compile_module(lang_handle_t *handle)
+hlir_t *pl0_compile_module(lang_handle_t *handle, compile_t *compile)
 {
     UNUSED(handle);
 
-    pl0_t *root = context_get_ast(ctx);
-    hlir_t *mod = context_get_module(ctx);
-    sema_t *sema = context_get_sema(ctx);
+    pl0_t *root = compile_get_ast(compile);
+    hlir_t *mod = compile_get_module(compile);
+    sema_t *sema = compile_get_sema(compile);
     sema_data_t *semaData = sema_get_data(sema);
 
     for (size_t i = 0; i < vector_len(semaData->consts); i++)
@@ -504,7 +504,7 @@ hlir_t *pl0_compile_module(lang_handle_t *handle)
 
     hlir_build_module(mod, mod->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
 
-    context_end(ctx, mod);
+    compile_finish(compile);
 
     return mod;
 }

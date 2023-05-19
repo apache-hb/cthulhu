@@ -40,7 +40,7 @@ typedef struct module_entry_t
 {
     lang_handle_t *handle;
 
-    hlir_t *hlir;
+    compile_t *compile;
 } module_entry_t;
 
 static context_t *context_new(source_t src)
@@ -51,11 +51,11 @@ static context_t *context_new(source_t src)
     return ctx;
 }
 
-static module_entry_t *module_new(lang_handle_t *handle, hlir_t *hlir)
+static module_entry_t *module_new(lang_handle_t *handle, compile_t *compile)
 {
     module_entry_t *entry = ctu_malloc(sizeof(module_entry_t));
     entry->handle = handle;
-    entry->hlir = hlir;
+    entry->compile = compile;
     return entry;
 }
 
@@ -72,6 +72,18 @@ lifetime_t *mediator_get_lifetime(mediator_t *self)
     lifetime->files = vector_new(4);
     lifetime->modules = map_new(8);
     return lifetime;
+}
+
+compile_t *lifetime_add_module(lifetime_t *self, lang_handle_t *handle, const char *name, compile_t *data)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(name != NULL);
+    CTASSERT(data != NULL);
+
+    module_entry_t *mod = module_new(handle, data);
+
+    map_set_ptr(self->modules, name, mod);
+    return data;
 }
 
 void lifetime_add_source(lifetime_t *self, source_t source)
@@ -141,7 +153,7 @@ void lifetime_compile(reports_t *reports, lifetime_t *self)
     {
         map_entry_t entry = map_next(&iter);
         module_entry_t *mod = entry.value;
-        lang_compile(mod->handle, mod->hlir);
+        lang_compile(mod->handle, mod->compile);
     }
 }
 
@@ -153,7 +165,7 @@ vector_t *lifetime_modules(lifetime_t *self)
     {
         map_entry_t entry = map_next(&iter);
         module_entry_t *mod = entry.value;
-        vector_push(&result, mod->hlir);
+        vector_push(&result, compile_get_module(mod->compile));
     }
 
     return result;
