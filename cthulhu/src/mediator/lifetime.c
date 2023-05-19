@@ -86,6 +86,17 @@ compile_t *lifetime_add_module(lifetime_t *self, lang_handle_t *handle, const ch
     return data;
 }
 
+compile_t *lifetime_get_module(const lifetime_t *self, const char *name)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(name != NULL);
+
+    module_entry_t *mod = map_get_ptr(self->modules, name);
+    if (mod == NULL) { return NULL; }
+    
+    return mod->compile;
+}
+
 void lifetime_add_source(lifetime_t *self, source_t source)
 {
     CTASSERT(self != NULL);

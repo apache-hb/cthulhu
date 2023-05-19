@@ -63,7 +63,6 @@ lang_handle_t *lifetime_get_lang_handle(lifetime_t *self, const language_t *it);
 
 reports_t *lang_get_reports(lang_handle_t *self);
 
-const char *handle_get_name(lang_handle_t *self, void *ast);
 sema_t *handle_get_sema(lang_handle_t *self, const char *mod);
 
 // compile api

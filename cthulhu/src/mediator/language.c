@@ -60,6 +60,14 @@ void lang_compile(lang_handle_t *handle, compile_t *compile)
 
 // driver api
 
+sema_t *handle_get_sema(lang_handle_t *self, const char *mod)
+{
+    compile_t *compile = lifetime_get_module(self->parent, mod);
+    if (compile == NULL) { return NULL; }
+
+    return compile->sema;
+}
+
 reports_t *lang_get_reports(lang_handle_t *self)
 {
     CTASSERT(self != NULL);
@@ -97,5 +105,5 @@ void compile_begin(lang_handle_t *self, void *ast, const char *name, sema_t *sem
 
 void compile_finish(compile_t *self)
 {
-
+    // TODO: what goes here?
 }

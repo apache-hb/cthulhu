@@ -112,8 +112,6 @@ void lifetime_compile(reports_t *reports, lifetime_t *self);
 
 vector_t *lifetime_modules(lifetime_t *self);
 
-
-
 // mediator api
 
 mediator_t *mediator_new(const char *name, version_t version);
