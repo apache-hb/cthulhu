@@ -16,7 +16,7 @@ typedef void (*language_deinit_t)(lang_handle_t *);
 
 typedef void *(*language_parse_t)(lang_handle_t *, scan_t *);
 
-typedef void (*language_forward_t)(lang_handle_t *, void *);
+typedef void (*language_forward_t)(lang_handle_t *, const char *, void *);
 
 typedef void (*language_import_t)(lang_handle_t *, compile_t *);
 

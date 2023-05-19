@@ -32,9 +32,9 @@ static void *ex_parse(lang_handle_t *handle, scan_t *scan)
     return NULL;
 }
 
-static void ex_forward(lang_handle_t *handle, void *ast)
+static void ex_forward(lang_handle_t *handle, const char *name, void *ast)
 {
-    printf("ex-forward(%p, %p)\n", handle, ast);
+    printf("ex-forward(%p, %s, %p)\n", handle, name, ast);
 }
 
 static hlir_t *ex_compile(lang_handle_t *handle, compile_t *compile)

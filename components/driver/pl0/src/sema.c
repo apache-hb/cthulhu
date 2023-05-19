@@ -359,7 +359,7 @@ typedef struct
     vector_t *procs;
 } sema_data_t;
 
-void pl0_forward_decls(lang_handle_t *handle, void *ast)
+void pl0_forward_decls(lang_handle_t *handle, const char *name, void *ast)
 {
     pl0_t *root = ast;
     reports_t *reports = lang_get_reports(handle);
@@ -372,7 +372,7 @@ void pl0_forward_decls(lang_handle_t *handle, void *ast)
     vector_t *globals = vector_new(totalGlobals);
     vector_t *procs = vector_new(totalFunctions);
 
-    const char *id = root->mod != NULL ? root->mod : handle_get_name(handle, ast);
+    const char *id = root->mod != NULL ? root->mod : name;
 
     hlir_t *mod = hlir_module(root->node, id, vector_of(0), vector_of(0), vector_of(0));
 

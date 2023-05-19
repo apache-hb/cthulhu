@@ -7,6 +7,7 @@
 #include "std/vector.h"
 #include "std/set.h"
 #include "std/map.h"
+#include "std/str.h"
 
 #include "io/io.h"
 
@@ -153,7 +154,9 @@ void lifetime_forward(reports_t *reports, lifetime_t *self)
         const language_t *lang = src->lang;
         lang_handle_t *handle = map_get_ptr(self->handles, lang);
 
-        lang->fnForward(handle, src->ast);
+        char *name = str_filename(io_name(src->io));
+
+        lang->fnForward(handle, name, src->ast);
     }
 }
 
