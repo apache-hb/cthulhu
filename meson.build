@@ -52,7 +52,6 @@ gmp = dependency('gmp',
 )
 
 args = []
-deps = [ gmp ]
 lexargs = []
 parseargs = []
 

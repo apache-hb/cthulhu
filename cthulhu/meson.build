@@ -15,13 +15,13 @@ src = [
 libgeneric = library('generic', src,
     include_directories : 'include',
     c_args : args,
-    dependencies : deps
+    dependencies : [ std, gmp ]
 )
 
 generic = declare_dependency(
     link_with : libgeneric,
     include_directories : 'include',
-    dependencies : deps
+    dependencies : [ gmp ]
 )
 
 src = [
@@ -32,7 +32,7 @@ src = [
 ]
 
 libssa = library('ssa', src,
-    dependencies : deps,
+    dependencies : [ std, gmp ],
     c_args : args,
     include_directories : 'include'
 )
@@ -40,7 +40,7 @@ libssa = library('ssa', src,
 ssa = declare_dependency(
     link_with : libssa,
     include_directories : 'include',
-    dependencies : deps,
+    dependencies : [ gmp ]
 )
 
 src = [
@@ -51,7 +51,7 @@ src = [
 ]
 
 libemit = library('emit', src,
-    dependencies : deps + [ ssa ],
+    dependencies : [ ssa, std, io, interop ],
     c_args : args,
     include_directories : 'include'
 )
@@ -59,7 +59,7 @@ libemit = library('emit', src,
 emit = declare_dependency(
     link_with : libemit,
     include_directories : 'include',
-    dependencies : deps + [ ssa ]
+    dependencies : [ ssa ]
 )
 
 src = [
@@ -70,13 +70,13 @@ src = [
 ]
 
 libmediate = library('mediate', src,
-    dependencies : deps,
+    dependencies : [ std, emit ],
     c_args : args,
     include_directories : 'include'
 )
 
 mediate = declare_dependency(
     link_with : libmediate,
-    include_directories : 'include',
-    dependencies : deps
+    include_directories : [ 'include', versiondir ],
+    dependencies : [ base ]
 )

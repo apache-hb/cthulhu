@@ -14,7 +14,6 @@ endif
 
 libstacktrace = library('stacktrace', src,
     c_args : args,
-    dependencies : deps,
     include_directories : 'include',
     link_args : stacktrace_links
 )
@@ -33,14 +32,13 @@ src = [
 
 libbase = library('base', src,
     c_args : args,
-    dependencies : deps + [ stacktrace ],
+    dependencies : [ gmp, stacktrace ],
     include_directories : 'include'
 )
 
 base = declare_dependency(
     link_with : libbase,
-    dependencies : deps,
-    include_directories : 'include'
+    include_directories : [ 'include', versiondir ]
 )
 
 src = [
@@ -139,14 +137,12 @@ src = [
 
 libargparse = library('argparse', src,
     c_args : args,
-    dependencies : deps,
+    dependencies : [ gmp, std, location, interop ],
     include_directories : [ 'src', 'include', versiondir ]
 )
 
 argparse = declare_dependency(
     link_with : libargparse,
-    dependencies : deps,
-    include_directories : 'include'
+    include_directories : 'include',
+    dependencies : [ gmp ]
 )
-
-deps += [ base, std, platform, io, location, interop ]

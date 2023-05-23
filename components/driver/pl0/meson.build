@@ -8,7 +8,7 @@ src = [
 ]
 
 pl0 = shared_library('pl0', src,
-    dependencies : [ generic, mediate, interop ],
+    dependencies : [ gmp, generic, mediate, interop, location ],
     c_args : args,
     include_directories : [ 'src' ]
 )
