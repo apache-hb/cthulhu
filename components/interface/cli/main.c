@@ -79,6 +79,8 @@ int main(int argc, const char **argv)
 
     lifetime_forward(rt.reports, lifetime);
 
+    lifetime_compile(rt.reports, lifetime);
+
     vector_t *mods = lifetime_modules(lifetime);
     ssa_module_t *ssa = ssa_gen_module(rt.reports, mods);
 

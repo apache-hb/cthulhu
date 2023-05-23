@@ -1,8 +1,10 @@
 #pragma once
 
+#include "report/report.h"
+
 #include "cthulhu/mediator/mediator.h"
 
-#define EXEC(mod, fn, ...) do { if (mod->fn != NULL) { mod->fn(__VA_ARGS__); } } while (0)
+#define EXEC(mod, fn, ...) do { if (mod->fn != NULL) { logverbose("%s:" #fn "()", mod->id); mod->fn(__VA_ARGS__); } } while (0)
 
 lang_handle_t *lang_init(lifetime_t *lifetime, const language_t *lang);
 compile_t *lifetime_add_module(lifetime_t *self, lang_handle_t *handle, const char *name, compile_t *data);

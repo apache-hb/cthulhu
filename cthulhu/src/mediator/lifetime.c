@@ -140,8 +140,10 @@ void lifetime_parse(reports_t *reports, lifetime_t *self)
         const language_t *lang = src->lang;
         lang_handle_t *handle = map_get_ptr(self->handles, lang);
         scan_t *scan = scan_io(reports, lang->name, src->io, handle);
-        
+
         src->ast = lang->fnParse(handle, scan);
+
+        logverbose("%s:fnParse(%s) = 0x%p", lang->id, io_name(src->io), src->ast);
     }
 }
 
@@ -157,6 +159,8 @@ void lifetime_forward(reports_t *reports, lifetime_t *self)
         char *name = str_filename(io_name(src->io));
 
         lang->fnForward(handle, name, src->ast);
+
+        logverbose("%s:fnForward(%s)", lang->id, name);
     }
 }
 

@@ -7,6 +7,8 @@
 
 #include "report/report.h"
 
+#include <stdio.h>
+
 typedef struct lang_handle_t
 {
     lifetime_t *parent;
@@ -55,7 +57,11 @@ void lang_compile(lang_handle_t *handle, compile_t *compile)
     CTASSERT(handle != NULL);
     CTASSERT(compile != NULL);
 
-    EXEC(handle->language, fnCompile, handle, compile);
+    const language_t *lang = handle->language;
+
+    logverbose("%s:fnCompile()", lang->id);
+
+    compile->mod = lang->fnCompile(handle, compile);
 }
 
 // driver api
