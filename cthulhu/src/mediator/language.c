@@ -91,6 +91,7 @@ void *compile_get_ast(compile_t *self)
 sema_t *compile_get_sema(compile_t *self)
 {
     CTASSERT(self != NULL);
+    CTASSERT(self->sema != NULL);
 
     return self->sema;
 }

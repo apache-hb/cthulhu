@@ -12,8 +12,6 @@
 
 #include <string.h>
 
-#include <stdio.h>
-
 // internals
 
 static void apply_callbacks(scan_t *scan, where_t where, const ap_param_t *param, const void *value, vector_t *all)

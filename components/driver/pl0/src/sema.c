@@ -458,35 +458,21 @@ void pl0_process_imports(lang_handle_t *handle, compile_t *compile)
     }
 }
 
-#include <stdio.h>
-
 hlir_t *pl0_compile_module(lang_handle_t *handle, compile_t *compile)
 {
     UNUSED(handle);
 
-    printf("here 1\n");
-
     pl0_t *root = compile_get_ast(compile);
-    printf("here 2\n");
     hlir_t *mod = compile_get_module(compile);
-    printf("here 3\n");
     sema_t *sema = compile_get_sema(compile);
-    printf("here 4\n");
     sema_data_t *semaData = sema_get_data(sema);
-
-    printf("here 5 %zu\n", vector_len(semaData->consts));
 
     for (size_t i = 0; i < vector_len(semaData->consts); i++)
     {
-        printf("a\n");
         pl0_t *it = vector_get(root->consts, i);
-        printf("get\n");
         hlir_t *hlir = vector_get(semaData->consts, i);
-        printf("step\n");
         hlir_build_global(hlir, sema_global(sema, it));
     }
-
-    printf("here 6\n");
 
     for (size_t i = 0; i < vector_len(semaData->globals); i++)
     {
@@ -501,8 +487,6 @@ hlir_t *pl0_compile_module(lang_handle_t *handle, compile_t *compile)
         hlir_t *hlir = vector_get(semaData->procs, i);
         sema_proc(sema, hlir, it);
     }
-
-    printf("here\n");
 
     if (root->entry != NULL)
     {

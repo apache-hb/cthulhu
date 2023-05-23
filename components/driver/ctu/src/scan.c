@@ -160,8 +160,6 @@ string_t parse_string_escapes(reports_t *reports, const char *text, size_t len)
     return result;
 }
 
-#include <stdio.h>
-
 void init_decimal(mpq_t result, const char *text)
 {
     vector_t *parts = str_split(text, ".");

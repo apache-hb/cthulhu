@@ -16,8 +16,6 @@
 #include "cthulhu/hlir/decl.h"
 #include "cthulhu/hlir/query.h"
 
-#include <stdio.h>
-
 static attrib_t *attrib_new(const char *name, hlir_kind_t expected, apply_attribs_t apply, apply_accepts_t accepts)
 {
     attrib_t *attrib = ctu_malloc(sizeof(attrib_t));
