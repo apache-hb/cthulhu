@@ -1,5 +1,7 @@
 #include "std/map.h"
 #include "std/str.h"
+#include "std/vector.h"
+
 #include "ct-test.h"
 
 static const char *kSetItems[] = {

@@ -10,11 +10,21 @@
 
 #include "io/io.h"
 
+#include "report/report.h"
+
 #include "cthulhu/ssa/ssa.h"
 
 #include "cthulhu/emit/c89.h"
 
 #include <stdio.h>
+
+#define CHECK_REPORTS(reports, msg) \
+    do { \
+        int err = end_reports(reports, msg, reportConfig); \
+        if (err != 0) { \
+            return err; \
+        } \
+    } while (0)
 
 static void add_sources(mediator_t *mediator, lifetime_t *lifetime, vector_t *sources)
 {
@@ -76,18 +86,28 @@ int main(int argc, const char **argv)
         add_sources(mediator, lifetime, rt.sourcePaths);
     }
 
+    report_config_t reportConfig = {
+        .limit = rt.reportLimit,
+        .warningsAreErrors = rt.warnAsError
+    };
+
     lifetime_init(lifetime);
 
     lifetime_parse(rt.reports, lifetime);
+    CHECK_REPORTS(rt.reports, "failed to parse sources");
 
     lifetime_forward(rt.reports, lifetime);
+    CHECK_REPORTS(rt.reports, "failed to forward declarations");
 
     lifetime_compile(rt.reports, lifetime);
+    CHECK_REPORTS(rt.reports, "failed to compile sources");
 
     vector_t *mods = lifetime_modules(lifetime);
     ssa_module_t *ssa = ssa_gen_module(rt.reports, mods);
+    CHECK_REPORTS(rt.reports, "failed to generate SSA");
 
     ssa_opt_module(rt.reports, ssa);
+    CHECK_REPORTS(rt.reports, "failed to optimize SSA");
 
     if (rt.emitSSA)
     {
@@ -100,6 +120,7 @@ int main(int argc, const char **argv)
     };
 
     c89_emit_ssa_modules(config, ssa);
+    CHECK_REPORTS(rt.reports, "failed to emit C89");
 
     lifetime_deinit(lifetime);
 

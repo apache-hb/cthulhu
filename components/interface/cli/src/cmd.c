@@ -38,6 +38,8 @@ static const char *kOutputHeaderNames[] = { "-header", "--output-header", NULL }
 // debug
 static const char *kDebugSsaNames[] = { "-dbgssa", "--debug-ssa", NULL };
 static const char *kDebugVerboseNames[] = { "-V", "--verbose", NULL };
+static const char *kWarnAsErrorNames[] = { "-Werror", NULL };
+static const char *kReportLimitNames[] = { "-fmax-errors", NULL };
 
 static AP_EVENT(on_help, ap, param, value, data)
 {
@@ -45,6 +47,7 @@ static AP_EVENT(on_help, ap, param, value, data)
     ap_print_help_header(ap, rt->argv[0]);
 
     size_t langCount = vector_len(rt->languages);
+    
     if (langCount != 0)
     {
         printf("\n%zu languages loaded:\n", langCount);
@@ -275,6 +278,9 @@ runtime_t cmd_parse(mediator_t *mediator, int argc, const char **argv)
         .ap = ap,
         .mediator = mediator,
         
+        .warnAsError = false,
+        .reportLimit = 20,
+
         .languages = vector_new(16),
         .plugins = vector_new(16),
 
@@ -294,9 +300,11 @@ runtime_t cmd_parse(mediator_t *mediator, int argc, const char **argv)
     ap_param_t *outputGenParam = ap_add_string(codegenGroup, "output generator", "code generator output to use [ssa-c89, hlir-c89] (default: ssa-c89)", kOutputGenNames);
     ap_param_t *outputHeaderParam = ap_add_string(codegenGroup, "output header", "output header name, provide none to skip header generation. will have .c appeneded to it (default: none)", kOutputHeaderNames);
 
-    ap_group_t *debugGroup = ap_group_new(ap, "debug", "debug options");
+    ap_group_t *debugGroup = ap_group_new(ap, "reports", "reporting options");
     ap_param_t *debugSsaParam = ap_add_bool(debugGroup, "debug ssa", "print debug ssa output", kDebugSsaNames);
     ap_param_t *debugVerboseParam = ap_add_bool(debugGroup, "verbose", "enable verbose logging", kDebugVerboseNames);
+    ap_param_t *warnAsErrorParam = ap_add_bool(debugGroup, "warn as error", "treat warnings as errors", kWarnAsErrorNames);
+    ap_param_t *reportLimitParam = ap_add_int(debugGroup, "report limit", "limit the number of reports to display (default: 20)", kReportLimitNames);
 
     // general
     ap_event(ap, helpParam, on_help, &rt);

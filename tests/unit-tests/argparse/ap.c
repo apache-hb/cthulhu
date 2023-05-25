@@ -2,6 +2,9 @@
 #include "base/memory.h"
 
 #include "argparse/argparse.h" 
+#include "argparse/commands.h"
+
+#include "report/report.h"
 
 #include "std/vector.h"
 #include "std/str.h"
@@ -75,11 +78,11 @@ typedef struct error_filter_t
     error_stack_t *stack;
 } error_filter_t;
 
-static ap_event_result_t count_error(ap_t *ap, const node_t *node, const char *message, void *data)
+static AP_EVENT(count_error, ap, node, message, data)
 {
     int i = strtol(message, NULL, 10);
     error_filter_t *filter = data;
-    printf("error: i=%d l=%d\n", i, filter->level);
+    printf("error: i=%d l=%d (%s)\n", i, filter->level, (char*)message);
     if (filter->level != i)
         return eEventContinue;
     
@@ -99,19 +102,19 @@ TEST(test_error_stack, {
     error_filter_t f3 = { 3, &errors };
     error_filter_t f4 = { 4, &errors };
 
-    ap_error(ap, count_error, &f1);
-    ap_error(ap, count_error, &f2);
-    ap_error(ap, count_error, &f3);
-    ap_error(ap, count_error, &f4);
+    ap_event(ap, NULL, count_error, &f1);
+    ap_event(ap, NULL, count_error, &f2);
+    ap_event(ap, NULL, count_error, &f3);
+    ap_event(ap, NULL, count_error, &f4);
 
     const char *argv[] = { "argparse-test", "1", "2", "3", "4" };
 
     ap_parse(ap, reports, 5, argv);
 
-    SHOULD_PASS("has 1 error", errors.levels[1] == 1);
-    SHOULD_PASS("has 1 error", errors.levels[2] == 1);
-    SHOULD_PASS("has 1 error", errors.levels[3] == 1);
-    SHOULD_PASS("has 0 error", errors.levels[4] == 1);
+    SHOULD_PASS("level 1 has 1 error", errors.levels[1] == 1);
+    SHOULD_PASS("level 2 has 1 error", errors.levels[2] == 1);
+    SHOULD_PASS("level 3 has 1 error", errors.levels[3] == 1);
+    SHOULD_PASS("level 4 has 1 error", errors.levels[4] == 1);
 })
 
 HARNESS("argparse", {

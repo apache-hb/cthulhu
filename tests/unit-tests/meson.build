@@ -1,6 +1,6 @@
 dir = meson.current_source_dir()
 
-all = [ 'util.str', 'util.set', 'util.map', 'argparse.argparse', 'argparse2.ap' ]
+all = [ 'util.str', 'util.set', 'util.map', 'argparse.ap' ]
 
 foreach case : all
     where = case.replace('.', '/')
@@ -8,7 +8,7 @@ foreach case : all
 
     it = executable(case, path,
         include_directories : '.',
-        dependencies : [ generic, argparse ]
+        dependencies : [ generic, mediate, argparse ]
     )
 
     test('test-' + case, it, suite : 'unit-tests')

@@ -23,6 +23,9 @@ typedef struct runtime_t
 
     bool emitSSA;
 
+    bool warnAsError;
+    size_t reportLimit;
+
     vector_t *sourcePaths;
 
     vector_t *unknownArgs;

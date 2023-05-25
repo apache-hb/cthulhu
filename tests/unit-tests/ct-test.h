@@ -5,7 +5,7 @@
 
 // TODO: find a better way to init stuff, this currently means we depend on cthulhu
 //       when the tests only need common
-#include "cthulhu/interface/runtime.h"
+#include "cthulhu/mediator/mediator.h"
 
 typedef enum {
     eTestPassed,
@@ -44,7 +44,7 @@ typedef struct {
 #define ENTRY(name, func) (test_t){name, func}
 
 static int run_tests(const char *suite, const test_t *tests, size_t total) {
-    common_init();
+    mediator_new("test", NEW_VERSION(2, 0, 0));
 
     test_result_t result = eTestPassed;
     
