@@ -1,3 +1,5 @@
+subdir_done()
+
 dir = meson.current_source_dir()
 pl0c = harness['pl0']
 

@@ -159,9 +159,9 @@ endforeach
 subdir('tests/harness')
 subdir('tests/unit-tests')
 
-#foreach lang : get_option('languages')
-#    subdir('tests/lang'/lang)
-#endforeach
+foreach lang : get_option('languages')
+    subdir('tests/lang'/lang)
+endforeach
 
 if tuning.enabled()
     tune = executable('tune-map', [ 'tools/tune-map.c' ],
