@@ -150,9 +150,7 @@ foreach lang : get_option('languages')
     subdir('components/driver'/lang)
 endforeach
 
-foreach interface : get_option('interfaces')
-    subdir('components/interface'/interface)
-endforeach
+subdir('components/interface')
 
 foreach plugin : get_option('plugins')
     subdir('components/plugin'/plugin)

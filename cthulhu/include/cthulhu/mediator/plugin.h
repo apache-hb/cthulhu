@@ -30,14 +30,6 @@ typedef struct plugin_t
 
 typedef const plugin_t *(*plugin_acquire_t)(mediator_t *);
 
-#define PLUGIN_ENTRY_POINT plugin_acquire
-
-#ifdef CC_MSVC
-#   define PLUGIN_EXPORT __declspec(dllexport)
-#else
-#   define PLUGIN_EXPORT __attribute__((visibility("default")))
-#endif
-
 // handle api
 
 void plugin_set_user(plugin_handle_t *self, void *user);

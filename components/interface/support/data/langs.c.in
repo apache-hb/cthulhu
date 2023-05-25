@@ -1,0 +1,16 @@
+#include "support/langs.h"
+
+#include "base/util.h"
+
+@EXTERNS@
+
+langs_t get_langs(void)
+{
+    const language_t langs[] = { @MODS@ };
+    size_t len = sizeof(langs) / sizeof(const language_t);
+
+    const language_t *data = ctu_memdup(langs, sizeof(langs));
+
+    langs_t ret = { data, len };
+    return ret;
+}

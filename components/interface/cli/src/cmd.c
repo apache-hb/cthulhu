@@ -1,5 +1,7 @@
 #include "cmd.h"
 
+#include "support/langs.h"
+
 #include "cthulhu/mediator/mediator.h"
 #include "cthulhu/mediator/language.h"
 #include "cthulhu/mediator/plugin.h"
@@ -85,6 +87,22 @@ static AP_EVENT(on_version, ap, param, value, data)
     return eEventHandled;
 }
 
+static const language_t *get_lang_by_id(const char *id)
+{
+    langs_t langs = get_langs();
+
+    for (size_t i = 0; i < langs.size; i++)
+    {
+        const language_t lang = langs.langs[i];
+        if (str_equal(lang.id, id))
+        {
+            return langs.langs + i;
+        }
+    }
+
+    return NULL;
+}
+
 static AP_EVENT(on_load_language, ap, param, value, data)
 {
     UNUSED(param);
@@ -93,25 +111,19 @@ static AP_EVENT(on_load_language, ap, param, value, data)
     const char *path = value;
     runtime_t *rt = data;
 
-    cerror_t err = 0;
-    library_t *handle = library_open(path, &err);
-    if (err != 0)
-    {
-        printf("failed to load language `%s`\n%s\n", path, error_string(err));
-        return eEventHandled;
-    }
-
-    language_acquire_t load = library_get(handle, STR(LANGUAGE_ENTRY_POINT), &err);
-    if (err != 0)
-    {
-        printf("failed to load language entrypoint `%s`\n%s\n", path, error_string(err));
-        return eEventHandled;
-    }
-
-    const language_t *lang = load(rt->mediator);
+    const language_t *lang = get_lang_by_id(path);
     if (lang == NULL)
     {
-        printf("failed to load language `%s` (language failed to load)\n", path);
+        printf("failed to find language `%s`\n", path);
+        printf("available languages:\n");
+
+        langs_t langs = get_langs();
+        for (size_t i = 0; i < langs.size; i++)
+        {
+            const language_t lang = langs.langs[i];
+            printf("  - %s\n", lang.id);
+        }
+        
         return eEventHandled;
     }
 
@@ -285,7 +297,6 @@ runtime_t cmd_parse(mediator_t *mediator, int argc, const char **argv)
     ap_group_t *debugGroup = ap_group_new(ap, "debug", "debug options");
     ap_param_t *debugSsaParam = ap_add_bool(debugGroup, "debug ssa", "print debug ssa output", kDebugSsaNames);
     ap_param_t *debugVerboseParam = ap_add_bool(debugGroup, "verbose", "enable verbose logging", kDebugVerboseNames);
-
 
     // general
     ap_event(ap, helpParam, on_help, &rt);

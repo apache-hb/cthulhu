@@ -7,10 +7,15 @@ src = [
     parse.process('src/pl0.y')
 ]
 
-pl0 = shared_library('pl0', src,
+pl0 = library('pl0', src,
     dependencies : [ gmp, generic, mediate, interop, location ],
     c_args : args,
     include_directories : [ 'src' ]
 )
 
-langs += { 'pl0': pl0 }
+langs += { 
+    'pl0': {
+        'dep': declare_dependency(link_with : pl0),
+        'mod': 'kPl0Module'
+    }
+}

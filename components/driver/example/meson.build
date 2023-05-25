@@ -1,11 +1,14 @@
-src = [ 
-    'src/main.c'
-]
+src = [ 'src/main.c' ]
 
-ex = shared_library('example', src,
+ex = library('example', src,
     dependencies : [ generic, mediate, interop ],
     c_args : args,
     include_directories : [ 'src', versiondir ]
 )
 
-langs += { 'example': ex }
+langs += { 
+    'example': {
+        'dep': declare_dependency(link_with : ex),
+        'mod': 'kExampleModule'
+    }
+}

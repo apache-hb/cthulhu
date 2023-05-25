@@ -47,14 +47,6 @@ typedef struct language_t
 
 typedef const language_t *(*language_acquire_t)(mediator_t *);
 
-#define LANGUAGE_ENTRY_POINT language_acquire
-
-#ifdef CC_MSVC
-#   define LANGUAGE_EXPORT __declspec(dllexport)
-#else
-#   define LANGUAGE_EXPORT __attribute__((visibility("default")))
-#endif
-
 // handle api
 
 lang_handle_t *lifetime_get_lang_handle(lifetime_t *self, const language_t *it);

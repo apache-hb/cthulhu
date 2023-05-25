@@ -44,7 +44,7 @@ static hlir_t *ex_compile(lang_handle_t *handle, compile_t *compile)
     return NULL;
 }
 
-static const language_t kLanguageInfo = {
+const language_t kExampleModule = {
     .id = "example",
     .name = "Example",
     .version = {
@@ -66,9 +66,3 @@ static const language_t kLanguageInfo = {
     .fnForward = ex_forward,
     .fnCompile = ex_compile
 };
-
-LANGUAGE_EXPORT
-extern const language_t *LANGUAGE_ENTRY_POINT(mediator_t *mediator)
-{
-    return &kLanguageInfo;
-}

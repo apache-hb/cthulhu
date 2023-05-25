@@ -18,7 +18,7 @@ static void *pl0_parse(lang_handle_t *handle, scan_t *scan)
 
 static const char *kLangNames[] = { "pl", "pl0", NULL };
 
-static const language_t kLanguageInfo = {
+const language_t kPl0Module = {
     .id = "pl0",
     .name = "PL/0",
     .version = {
@@ -37,11 +37,3 @@ static const language_t kLanguageInfo = {
     .fnImport = pl0_process_imports,
     .fnCompile = pl0_compile_module
 };
-
-LANGUAGE_EXPORT
-extern const language_t *LANGUAGE_ENTRY_POINT(mediator_t *lang)
-{
-    UNUSED(lang);
-
-    return &kLanguageInfo;
-}

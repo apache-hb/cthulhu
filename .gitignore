@@ -9,6 +9,7 @@
 !*.h
 !*.inc
 !data/version.h.in
+!langs.c.in
 
 # dont ignore flex and bison files
 !*.y

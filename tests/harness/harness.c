@@ -68,8 +68,7 @@ static const plugin_t kPluginInfo = {
     .fnConfigure = harness_configure,
 };
 
-PLUGIN_EXPORT
-extern const plugin_t *PLUGIN_ENTRY_POINT(mediator_t *mediator)
+extern const plugin_t *harness_acquire(mediator_t *mediator)
 {
     return &kPluginInfo;
 }

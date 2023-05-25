@@ -3,6 +3,7 @@
 #include "cthulhu/mediator/mediator.h"
 #include "std/vector.h"
 #include "std/str.h"
+#include "std/map.h"
 
 #include "argparse/argparse.h"
 #include "argparse/commands.h"
@@ -10,6 +11,8 @@
 #include "io/io.h"
 
 #include "cthulhu/ssa/ssa.h"
+
+#include "cthulhu/emit/c89.h"
 
 #include <stdio.h>
 
@@ -90,6 +93,13 @@ int main(int argc, const char **argv)
     {
         ssa_emit_module(rt.reports, ssa);
     }
+
+    emit_config_t config = {
+        .reports = rt.reports,
+        .source = io_file("out.c", eFileWrite | eFileText)
+    };
+
+    c89_emit_ssa_modules(config, ssa);
 
     lifetime_deinit(lifetime);
 

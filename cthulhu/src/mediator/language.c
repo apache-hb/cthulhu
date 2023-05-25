@@ -46,6 +46,8 @@ compile_t *compile_init(lang_handle_t *handle, void *ast, sema_t *sema, hlir_t *
     CTASSERT(mod != NULL);
 
     compile_t *compile = ctu_malloc(sizeof(compile_t));
+
+    compile->ast = ast;
     compile->sema = sema;
     compile->mod = mod;
 

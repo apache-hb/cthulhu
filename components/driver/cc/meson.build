@@ -5,7 +5,7 @@ src = [
     parse.process('cc/cc.y') 
 ]
 
-cc = shared_library('cc', src,
+cc = library('cc', src,
     dependencies : [ generic, interop ]
 )
 

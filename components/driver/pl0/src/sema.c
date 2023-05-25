@@ -427,7 +427,7 @@ void pl0_forward_decls(lang_handle_t *handle, const char *name, void *ast)
 
     sema_set_data(sema, BOX(semaData));
 
-    compile_begin(handle, ast, id, sema, mod);
+    compile_begin(handle, root, id, sema, mod);
 }
 
 void pl0_process_imports(lang_handle_t *handle, compile_t *compile)
@@ -465,6 +465,8 @@ hlir_t *pl0_compile_module(lang_handle_t *handle, compile_t *compile)
     pl0_t *root = compile_get_ast(compile);
     hlir_t *mod = compile_get_module(compile);
     sema_t *sema = compile_get_sema(compile);
+
+    // TODO: this returns garbage data
     sema_data_t *semaData = sema_get_data(sema);
 
     for (size_t i = 0; i < vector_len(semaData->consts); i++)

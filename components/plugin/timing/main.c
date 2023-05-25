@@ -70,7 +70,6 @@ static const plugin_t kPluginInfo = {
     .fnRegion = plugin_region,
 };
 
-PLUGIN_EXPORT
 extern const plugin_t *PLUGIN_ENTRY_POINT(mediator_t *mediator)
 {
     return &kPluginInfo;

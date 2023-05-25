@@ -20,8 +20,7 @@ static const plugin_t kPluginInfo = {
     .fnInit = plugin_init,
 };
 
-PLUGIN_EXPORT
-extern const plugin_t *PLUGIN_ENTRY_POINT(mediator_t *mediator)
+extern const plugin_t *example_acquire(mediator_t *mediator)
 {
     return &kPluginInfo;
 }

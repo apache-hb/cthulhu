@@ -1,7 +1,7 @@
 option('languages', type : 'array',
     description : 'select which languages to compile',
     choices : [ 'ctu', 'pl0', 'lox', 'example' ],
-    value : [ 'ctu', 'pl0' ]
+    value : [ 'pl0' ]
 )
 
 option('plugins', type : 'array',
