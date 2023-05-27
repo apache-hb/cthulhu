@@ -16,3 +16,6 @@ export def puts(s: str): int;
 export def exit(code: int);
 
 export const null = __null;
+
+@extern
+export def puts(s: str): int;

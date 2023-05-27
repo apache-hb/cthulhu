@@ -26,6 +26,9 @@ typedef struct runtime_t
     bool warnAsError;
     size_t reportLimit;
 
+    const char *sourceOut;
+    const char *headerOut;
+
     vector_t *sourcePaths;
 
     vector_t *unknownArgs;

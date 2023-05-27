@@ -256,6 +256,32 @@ static AP_EVENT(on_set_verbose, ap, param, value, data)
     return eEventHandled;
 }
 
+static AP_EVENT(on_set_source, ap, param, value, data)
+{
+    UNUSED(ap);
+    UNUSED(param);
+
+    const char *path = value;
+    runtime_t *rt = data;
+
+    rt->sourceOut = path;
+
+    return eEventHandled;
+}
+
+static AP_EVENT(on_set_header, ap, param, value, data)
+{
+    UNUSED(ap);
+    UNUSED(param);
+
+    const char *path = value;
+    runtime_t *rt = data;
+
+    rt->headerOut = path;
+
+    return eEventHandled;
+}
+
 static AP_ERROR(on_arg_error, ap, node, message, data)
 {
     runtime_t *rt = data;
@@ -316,6 +342,9 @@ runtime_t cmd_parse(mediator_t *mediator, int argc, const char **argv)
     // debug
     ap_event(ap, debugSsaParam, on_set_debug_ssa, &rt);
     ap_event(ap, debugVerboseParam, on_set_verbose, &rt);
+
+    ap_event(ap, outputFileParam, on_set_source, &rt);
+    ap_event(ap, outputHeaderParam, on_set_header, &rt);
 
     ap_event(ap, NULL, on_add_source, &rt);
     ap_error(ap, on_arg_error, &rt);

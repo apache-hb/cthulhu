@@ -62,6 +62,18 @@ static void add_sources(mediator_t *mediator, lifetime_t *lifetime, vector_t *so
     }
 }
 
+static io_t *make_file(const char *path)
+{
+    io_t *io = io_file(path, eFileWrite | eFileText);
+    if (io_error(io) != 0)
+    {
+        printf("failed to open `%s` for writing\n%s\n", path, error_string(io_error(io)));
+        return NULL;
+    }
+
+    return io;
+}
+
 int main(int argc, const char **argv)
 {
     mediator_t *mediator = mediator_new("cli", NEW_VERSION(0, 0, 1));
@@ -114,9 +126,16 @@ int main(int argc, const char **argv)
         ssa_emit_module(rt.reports, ssa);
     }
 
+    const char *sourcePath = rt.sourceOut == NULL ? "out.c" : format("%s.c", rt.sourceOut);
+    const char *headerPath = rt.headerOut == NULL ? "out.h" : format("%s.h", rt.headerOut);
+
+    io_t *src = make_file(sourcePath);
+    io_t *header = rt.headerOut == NULL ? NULL : make_file(headerPath);
+
     emit_config_t config = {
         .reports = rt.reports,
-        .source = io_file("out.c", eFileWrite | eFileText)
+        .source = src,
+        .header = header
     };
 
     c89_emit_ssa_modules(config, ssa);
