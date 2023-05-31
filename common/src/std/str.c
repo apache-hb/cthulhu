@@ -99,7 +99,7 @@ char *str_ext(const char *path)
 }
 
 USE_DECL
-char *str_filename(const char *path)
+char *str_filename_noext(const char *path)
 {
     size_t idx = str_rfind_any(path, PATH_SEPERATORS);
     if (idx == SIZE_MAX)
@@ -108,6 +108,18 @@ char *str_filename(const char *path)
     }
 
     return str_noext(path + idx + 1);
+}
+
+USE_DECL
+char *str_filename(const char *path)
+{
+    size_t idx = str_rfind_any(path, PATH_SEPERATORS);
+    if (idx == SIZE_MAX)
+    {
+        return ctu_strdup(path);
+    }
+
+    return ctu_strdup(path + idx + 1);
 }
 
 USE_DECL

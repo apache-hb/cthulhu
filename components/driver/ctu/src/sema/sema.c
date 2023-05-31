@@ -16,7 +16,6 @@
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/type.h"
-#include "cthulhu/interface/runtime.h"
 
 #include "base/macros.h"
 #include "base/panic.h"
@@ -403,13 +402,13 @@ static void add_basic_types(sema_t *sema)
     // add_decl(sema, eTagTypes, "enum", hlir_digit(node, "enum", eInt, eSigned));
 }
 
-void ctu_init_compiler(runtime_t *runtime)
+void ctu_init_compiler(lang_handle_t *runtime)
 {
     size_t sizes[eTagTotal] = {
         [eSemaValues] = 1, [eSemaProcs] = 1, [eSemaTypes] = 32, [eSemaModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 32,
     };
 
-    kRootSema = sema_root_new(runtime->reports, eTagTotal, sizes);
+    kRootSema = sema_root_new(lang_get_reports(runtime), eTagTotal, sizes);
 
     node_t *node = node_builtin();
 
@@ -1904,27 +1903,29 @@ static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
     sema_set(sema, eSemaModules, name, mod);
 }
 
-void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
+void ctu_forward_decls(lang_handle_t *runtime, const char *name, void *ast)
 {
     UNUSED(runtime);
-    ast_t *root = compile->ast;
+    ast_t *root = ast;
 
     size_t totalDecls = vector_len(root->decls);
     size_t sizes[eTagTotal] = {
-        [eSemaValues] = totalDecls,  [eSemaProcs] = totalDecls,
-        [eSemaTypes] = totalDecls,   [eSemaModules] = vector_len(root->imports),
-        [eTagAttribs] = totalDecls, [eTagSuffix] = 32,
+        [eSemaValues] = totalDecls,  
+        [eSemaProcs] = totalDecls,
+        [eSemaTypes] = totalDecls,   
+        [eSemaModules] = vector_len(root->imports),
+        [eTagAttribs] = totalDecls, 
+        [eTagSuffix] = 32,
     };
 
     sema_t *sema = begin_sema(kRootSema, sizes);
     add_builtin_attribs(sema);
 
-    if (root->modspec != NULL)
-    {
-        compile->moduleName = make_import_name(root->modspec->path);
-    }
+    const char *modName = root->modspec == NULL
+        ? name
+        : make_import_name(root->modspec->path);
 
-    hlir_t *mod = hlir_module(root->node, compile->moduleName, vector_of(0), vector_of(0), vector_of(0));
+    hlir_t *mod = hlir_module(root->node, modName, vector_of(0), vector_of(0), vector_of(0));
 
     sema_data_t semaData = {.totalDecls = totalDecls};
 
@@ -1936,14 +1937,14 @@ void ctu_forward_decls(runtime_t *runtime, compile_t *compile)
         fwd_decl(sema, decl);
     }
 
-    compile->sema = sema;
-    compile->hlir = mod;
+    compile_begin(runtime, ast, modName, sema, mod);
 }
 
-void ctu_process_imports(runtime_t *runtime, compile_t *compile)
+void ctu_process_imports(lang_handle_t *runtime, compile_t *compile)
 {
-    ast_t *root = compile->ast;
-    sema_t *sema = compile->sema;
+    reports_t *reports = lang_get_reports(runtime);
+    ast_t *root = compile_get_ast(compile);
+    sema_t *sema = compile_get_sema(compile);
 
     vector_t *imports = root->imports;
     size_t totalImports = vector_len(imports);
@@ -1953,16 +1954,16 @@ void ctu_process_imports(runtime_t *runtime, compile_t *compile)
         ast_t *import = vector_get(imports, i);
         char *name = make_import_name(import->path);
 
-        sema_t *mod = find_module(runtime, name);
+        sema_t *mod = lang_find_module(runtime, name);
         if (mod == NULL)
         {
-            report(runtime->reports, eFatal, import->node, "module '%s' not found", name);
+            report(reports, eFatal, import->node, "module '%s' not found", name);
             continue;
         }
 
         if (mod == sema)
         {
-            report(runtime->reports, eWarn, import->node, "module cannot import itself");
+            report(reports, eWarn, import->node, "module cannot import itself");
             continue;
         }
 
@@ -1970,12 +1971,12 @@ void ctu_process_imports(runtime_t *runtime, compile_t *compile)
     }
 }
 
-hlir_t *ctu_compile_module(runtime_t *runtime, compile_t *compile)
+hlir_t *ctu_compile_module(lang_handle_t *runtime, compile_t *compile)
 {
     UNUSED(runtime);
 
-    ast_t *root = compile->ast;
-    sema_t *sema = compile->sema;
+    ast_t *root = compile_get_ast(compile);
+    sema_t *sema = compile_get_sema(compile);
     sema_data_t *data = sema_get_data(sema);
 
     for (size_t i = 0; i < data->totalDecls; i++)
@@ -1988,7 +1989,10 @@ hlir_t *ctu_compile_module(runtime_t *runtime, compile_t *compile)
     vector_t *globals = map_values(sema_tag(sema, eSemaValues));
     vector_t *procs = map_values(sema_tag(sema, eSemaProcs));
 
-    hlir_build_module(compile->hlir, types, globals, procs);
+    hlir_t *mod = compile_get_module(compile);
 
-    return compile->hlir;
+    hlir_build_module(mod, types, globals, procs);
+    compile_finish(compile);
+
+    return mod;
 }

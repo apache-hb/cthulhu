@@ -3,6 +3,8 @@
 #include "cthulhu/hlir/hlir.h"
 #include "sema.h"
 
+#include "report/report.h"
+
 #include "base/macros.h"
 #include "base/memory.h"
 #include "base/panic.h"

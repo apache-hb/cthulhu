@@ -1,6 +1,4 @@
-#include "cthulhu/interface/interface.h"
 #include "cthulhu/mediator/language.h"
-#include "cthulhu/interface/runtime.h"
 #include "scan/compile.h"
 
 #include "sema/sema.h"
@@ -13,58 +11,39 @@
 
 CT_CALLBACKS(kCallbacks, ctu);
 
-static void *ctu_parse_file(runtime_t *runtime, compile_t *compile)
+static void *ctu_parse_file(lang_handle_t *runtime, scan_t *scan)
 {
     UNUSED(runtime);
 
-    init_scan(compile->scan);
-    return compile_scanner(compile->scan, &kCallbacks);
+    init_scan(scan);
+    return compile_scanner(scan, &kCallbacks);
 }
 
-static const char *kLangNames[] = { ".ct", ".ctu", NULL };
-
-static const driver_t kDriver = {
-    .name = "Cthulhu",
-    .version = NEW_VERSION(1, 0, 0),
-
-    .exts = kLangNames,
-
-    .fnInitCompiler = ctu_init_compiler,
-    .fnParseFile = ctu_parse_file,
-    .fnForwardDecls = ctu_forward_decls,
-    .fnResolveImports = ctu_process_imports,
-    .fnCompileModule = ctu_compile_module,
-};
-
-driver_t get_driver()
-{
-    return kDriver;
-}
+static const char *kLangNames[] = { "ct", "ctu", NULL };
 
 static void ctu_configure(lang_handle_t *handle, ap_t *ap)
 {
     ctu_config_init(handle, ap);
 }
 
-static const language_t kLanguageInfo = {
+const language_t kCtuModule = {
     .id = "ctu",
     .name = "Cthulhu",
     .version = {
         .license = "LGPLv3",
         .desc = "Cthulhu language driver",
         .author = "Elliot Haisley",
-        .version = NEW_VERSION(1, 1, 0)
+        .version = NEW_VERSION(0, 4, 0)
     },
 
     .exts = kLangNames,
 
     .fnConfigure = ctu_configure,
+
+    .fnInit = ctu_init_compiler,
+
+    .fnParse = ctu_parse_file,
+    .fnForward = ctu_forward_decls,
+    .fnImport = ctu_process_imports,
+    .fnCompile = ctu_compile_module,
 };
-
-LANGUAGE_EXPORT
-extern const language_t *LANGUAGE_ENTRY_POINT(mediator_t *mediator)
-{
-    UNUSED(mediator);
-
-    return &kLanguageInfo;
-}

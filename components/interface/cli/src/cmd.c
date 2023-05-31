@@ -46,37 +46,21 @@ static AP_EVENT(on_help, ap, param, value, data)
     runtime_t *rt = data;
     ap_print_help_header(ap, rt->argv[0]);
 
-    size_t langCount = vector_len(rt->languages);
+    langs_t langs = get_langs();
     
-    if (langCount != 0)
+
+    printf("\n%zu languages loaded:\n", langs.size);
+    printf("========================================\n");
+
+    for (size_t i = 0; i < langs.size; i++)
     {
-        printf("\n%zu languages loaded:\n", langCount);
-        printf("========================================\n");
-    }
-    for (size_t i = 0; i < langCount; i++)
-    {
-        const language_t *lang = vector_get(rt->languages, i);
+        const language_t *lang = langs.langs + i;
         ap_print_version_info(lang->version, lang->name);
         printf("========================================\n");
     }
 
-    size_t pluginCount = vector_len(rt->plugins);
-    if (pluginCount != 0)
-    {
-        printf("\n%zu plugins:\n", pluginCount);
-        printf("========================================\n");
-    }
-    for (size_t i = 0; i < pluginCount; i++)
-    {
-        const plugin_t *plugin = vector_get(rt->plugins, i);
-        ap_print_version_info(plugin->version, plugin->name);
-        printf("========================================\n");
-    }
+    printf("\n");
 
-    if (langCount != 0 || pluginCount != 0)
-    {
-        printf("\n");
-    }
 
     ap_print_help_body(ap, rt->argv[0]);
 
@@ -104,74 +88,6 @@ static const language_t *get_lang_by_id(const char *id)
     }
 
     return NULL;
-}
-
-static AP_EVENT(on_load_language, ap, param, value, data)
-{
-    UNUSED(param);
-    UNUSED(data);
-
-    const char *path = value;
-    runtime_t *rt = data;
-
-    const language_t *lang = get_lang_by_id(path);
-    if (lang == NULL)
-    {
-        printf("failed to find language `%s`\n", path);
-        printf("available languages:\n");
-
-        langs_t langs = get_langs();
-        for (size_t i = 0; i < langs.size; i++)
-        {
-            const language_t lang = langs.langs[i];
-            printf("  - %s\n", lang.id);
-        }
-        
-        return eEventHandled;
-    }
-
-    vector_push(&rt->languages, (language_t*)lang);
-
-    mediator_load_language(rt->mediator, lang);
-
-    return eEventHandled;
-}
-
-static AP_EVENT(on_load_plugin, ap, param, value, data)
-{
-    UNUSED(param);
-    UNUSED(data);
-
-    const char *path = value;
-    runtime_t *rt = data;
-
-    cerror_t err = 0;
-    library_t *handle = library_open(path, &err);
-    if (err != 0)
-    {
-        printf("failed to load plugin `%s`\n%s\n", path, error_string(err));
-        return eEventHandled;
-    }
-
-    plugin_acquire_t load = library_get(handle, STR(PLUGIN_ENTRY_POINT), &err);
-    if (err != 0)
-    {
-        printf("failed to load plugin entrypoint `%s`\n%s\n", path, error_string(err));
-        return eEventHandled;
-    }
-
-    const plugin_t *plugin = load(rt->mediator);
-    if (plugin == NULL)
-    {
-        printf("failed to load plugin `%s` (plugin failed to load)\n", path);
-        return eEventHandled;
-    }
-
-    vector_push(&rt->plugins, (plugin_t*)plugin);
-
-    mediator_load_plugin(rt->mediator, plugin);
-
-    return eEventHandled;
 }
 
 static AP_EVENT(on_register_ext, ap, param, value, data)
@@ -286,7 +202,7 @@ static AP_ERROR(on_arg_error, ap, node, message, data)
 {
     runtime_t *rt = data;
 
-    vector_push(&rt->unknownArgs, (char*)message);
+    report(rt->reports, eFatal, node, "%s", message);
 
     return eEventHandled;
 }
@@ -307,18 +223,12 @@ runtime_t cmd_parse(mediator_t *mediator, int argc, const char **argv)
         .warnAsError = false,
         .reportLimit = 20,
 
-        .languages = vector_new(16),
-        .plugins = vector_new(16),
-
         .sourcePaths = vector_new(16),
-        .unknownArgs = vector_new(16),
     };
 
     ap_group_t *generalGroup = ap_group_new(ap, "general", "general options");
     ap_param_t *helpParam = ap_add_bool(generalGroup, "help", "display this message", kHelpNames);
     ap_param_t *versionParam = ap_add_bool(generalGroup, "version", "print version information", kVersionNames);
-    ap_param_t *loadLanguageParam = ap_add_string(generalGroup, "load language", "load a new language driver", kLoadLangNames);
-    ap_param_t *loadPluginParam = ap_add_string(generalGroup, "load plugin", "load a new shared library plugin", kLoadPluginNames);
     ap_param_t *addExtensionMapParam = ap_add_string(generalGroup, "add extension map", "register a new extension for a compiler", kAddExtensionMapNames);
 
     ap_group_t *codegenGroup = ap_group_new(ap, "codegen", "code generation options");
@@ -335,8 +245,6 @@ runtime_t cmd_parse(mediator_t *mediator, int argc, const char **argv)
     // general
     ap_event(ap, helpParam, on_help, &rt);
     ap_event(ap, versionParam, on_version, &rt);
-    ap_event(ap, loadLanguageParam, on_load_language, &rt);
-    ap_event(ap, loadPluginParam, on_load_plugin, &rt);
     ap_event(ap, addExtensionMapParam, on_register_ext, &rt);
     
     // debug

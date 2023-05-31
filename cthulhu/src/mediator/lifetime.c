@@ -156,7 +156,7 @@ void lifetime_forward(reports_t *reports, lifetime_t *self)
         const language_t *lang = src->lang;
         lang_handle_t *handle = map_get_ptr(self->handles, lang);
 
-        char *name = str_filename(io_name(src->io));
+        char *name = str_filename_noext(io_name(src->io));
 
         lang->fnForward(handle, name, src->ast);
 

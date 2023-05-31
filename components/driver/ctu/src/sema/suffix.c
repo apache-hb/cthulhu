@@ -7,6 +7,8 @@
 
 #include "sema/sema.h"
 
+#include "report/report.h"
+
 typedef struct
 {
     digit_t width;

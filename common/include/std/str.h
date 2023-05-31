@@ -248,6 +248,9 @@ bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
  * @return the filename extracted from @a path
  */
 NODISCARD
+char *str_filename_noext(IN_STRING const char *path);
+
+NODISCARD
 char *str_filename(IN_STRING const char *path);
 
 /**

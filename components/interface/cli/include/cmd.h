@@ -18,9 +18,6 @@ typedef struct runtime_t
     ap_t *ap;
     mediator_t *mediator;
 
-    vector_t *languages;
-    vector_t *plugins;
-
     bool emitSSA;
 
     bool warnAsError;
@@ -30,8 +27,6 @@ typedef struct runtime_t
     const char *headerOut;
 
     vector_t *sourcePaths;
-
-    vector_t *unknownArgs;
 } runtime_t;
 
 runtime_t cmd_parse(mediator_t *mediator, int argc, const char **argv);

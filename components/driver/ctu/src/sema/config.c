@@ -1,6 +1,6 @@
 #include "config.h"
 
-#include "cthulhu/mediator/mediator.h"
+#include "cthulhu/mediator/language.h"
 #include "argparse/commands.h"
 
 #include "base/panic.h"
@@ -49,7 +49,7 @@ void ctu_config_init(lang_handle_t *handle, ap_t *args)
 
     ap_event(args, defaultInit, on_feature, &config->features[eFeatureDefaultExpr]);
 
-    handle->user = config;
+    lang_set_user(handle, config);
 }
 
 bool ctu_has_feature(lang_handle_t *handle, feature_t feature)
@@ -57,7 +57,7 @@ bool ctu_has_feature(lang_handle_t *handle, feature_t feature)
     CTASSERT(handle != NULL);
     CTASSERT(feature < eFeatureTotal);
 
-    config_t *config = handle->user;
+    config_t *config = lang_get_user(handle);
 
     return config->features[feature];
 }

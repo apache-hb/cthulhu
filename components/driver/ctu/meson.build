@@ -21,5 +21,8 @@ ctu = library('ctu', src,
 )
 
 langs += { 
-    'ctu': declare_dependency(link_with : ctu) 
+    'ctu': {
+        'dep': declare_dependency(link_with : ctu),
+        'mod': 'kCtuModule'
+    }
 }

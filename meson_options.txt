@@ -1,13 +1,13 @@
 option('languages', type : 'array',
     description : 'select which languages to compile',
     choices : [ 'ctu', 'pl0', 'lox', 'example' ],
-    value : [ 'pl0' ]
+    value : [ 'ctu', 'pl0' ]
 )
 
 option('plugins', type : 'array',
     description : 'select which plugins to compile',
     choices : [ 'timing', 'example' ],
-    value : [ 'timing' ]
+    value : [ ]
 )
 
 option('interfaces', type : 'array',

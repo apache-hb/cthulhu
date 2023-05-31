@@ -68,6 +68,31 @@ void lang_compile(lang_handle_t *handle, compile_t *compile)
 
 // driver api
 
+sema_t *lang_find_module(lang_handle_t *self, const char *name)
+{
+    CTASSERT(self != NULL);
+    CTASSERT(name != NULL);
+
+    compile_t *cc = lifetime_get_module(self->parent, name);
+    if (cc == NULL) { return NULL; }
+
+    return cc->sema;
+}
+
+void lang_set_user(lang_handle_t *self, void *user)
+{
+    CTASSERT(self != NULL);
+
+    self->user = user;
+}
+
+void *lang_get_user(lang_handle_t *self)
+{
+    CTASSERT(self != NULL);
+
+    return self->user;
+}
+
 sema_t *handle_get_sema(lang_handle_t *self, const char *mod)
 {
     compile_t *compile = lifetime_get_module(self->parent, mod);

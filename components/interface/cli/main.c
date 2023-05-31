@@ -16,7 +16,7 @@
 
 #include "cthulhu/emit/c89.h"
 
-#include <stdio.h>
+#include "support/langs.h"
 
 #define CHECK_REPORTS(reports, msg) \
     do { \
@@ -26,7 +26,7 @@
         } \
     } while (0)
 
-static void add_sources(mediator_t *mediator, lifetime_t *lifetime, vector_t *sources)
+static void add_sources(mediator_t *mediator, lifetime_t *lifetime, vector_t *sources, reports_t *reports)
 {
     size_t len = vector_len(sources);
     for (size_t i = 0; i < len; i++)
@@ -35,21 +35,23 @@ static void add_sources(mediator_t *mediator, lifetime_t *lifetime, vector_t *so
         const char *ext = str_ext(path);
         if (ext == NULL)
         {
-            printf("could not identify compiler for `%s` (no extension)\n", path);
+            report(reports, eFatal, NULL, "could not identify compiler for `%s` (no extension)", path);
             continue;
         }
 
         const language_t *lang = mediator_get_language_by_ext(mediator, ext);
         if (lang == NULL)
         {
-            printf("could not identify compiler for `%s` by extension `%s`.\nnote: extra extensions can be provided with -ext=id:ext", path, ext);
+            const char *basepath = str_filename(path);
+            message_t *id = report(reports, eFatal, NULL, "could not identify compiler for `%s` by extension `%s`", basepath, ext);
+            report_note(id, "extra extensions can be provided with -ext=id:ext");
             continue;
         }
 
         io_t *io = io_file(path, eFileRead | eFileText);
         if (io_error(io) != 0)
         {
-            printf("failed to load source `%s`\n%s\n", path, error_string(io_error(io)));
+            report(reports, eFatal, NULL, "failed to load source `%s`\n%s", path, error_string(io_error(io)));
             continue;
         }
 
@@ -62,12 +64,12 @@ static void add_sources(mediator_t *mediator, lifetime_t *lifetime, vector_t *so
     }
 }
 
-static io_t *make_file(const char *path)
+static io_t *make_file(reports_t *reports, const char *path)
 {
     io_t *io = io_file(path, eFileWrite | eFileText);
     if (io_error(io) != 0)
     {
-        printf("failed to open `%s` for writing\n%s\n", path, error_string(io_error(io)));
+        report(reports, eFatal, NULL, "failed to open `%s` for writing\n%s", path, error_string(io_error(io)));
         return NULL;
     }
 
@@ -79,29 +81,32 @@ int main(int argc, const char **argv)
     mediator_t *mediator = mediator_new("cli", NEW_VERSION(0, 0, 1));
     lifetime_t *lifetime = mediator_get_lifetime(mediator);
 
+    langs_t langs = get_langs();
+    for (size_t i = 0; i < langs.size; i++)
+    {
+        const language_t *lang = langs.langs + i;
+        mediator_load_language(mediator, lang);
+    }
+
     runtime_t rt = cmd_parse(mediator, argc, argv);
-
-    size_t errs = vector_len(rt.unknownArgs);
-    for (size_t i = 0; i < errs; i++)
-    {
-        const char *err = vector_get(rt.unknownArgs, i);
-        printf("error: %s\n", err);
-    }
-
-    size_t len = vector_len(rt.sourcePaths);
-    if (len == 0)
-    {
-        printf("no source files provided\n");
-    }
-    else
-    {
-        add_sources(mediator, lifetime, rt.sourcePaths);
-    }
-
     report_config_t reportConfig = {
         .limit = rt.reportLimit,
         .warningsAreErrors = rt.warnAsError
     };
+
+    CHECK_REPORTS(rt.reports, "failed to parse command line arguments");
+
+    size_t len = vector_len(rt.sourcePaths);
+    if (len == 0)
+    {
+        report(rt.reports, eFatal, NULL, "no source files provided");
+    }
+    else
+    {
+        add_sources(mediator, lifetime, rt.sourcePaths, rt.reports);
+    }
+
+    CHECK_REPORTS(rt.reports, "failed to load sources");
 
     lifetime_init(lifetime);
 
@@ -127,10 +132,11 @@ int main(int argc, const char **argv)
     }
 
     const char *sourcePath = rt.sourceOut == NULL ? "out.c" : format("%s.c", rt.sourceOut);
-    const char *headerPath = rt.headerOut == NULL ? "out.h" : format("%s.h", rt.headerOut);
 
-    io_t *src = make_file(sourcePath);
-    io_t *header = rt.headerOut == NULL ? NULL : make_file(headerPath);
+    io_t *src = make_file(rt.reports, sourcePath);
+    io_t *header = rt.headerOut == NULL ? NULL : make_file(rt.reports, format("%s.h", rt.headerOut));
+
+    CHECK_REPORTS(rt.reports, "failed to open output files");
 
     emit_config_t config = {
         .reports = rt.reports,
@@ -143,18 +149,9 @@ int main(int argc, const char **argv)
 
     lifetime_deinit(lifetime);
 
-    size_t langs = vector_len(rt.languages);
-    size_t plugins = vector_len(rt.plugins);
-
-    for (size_t i = 0; i < langs; i++)
+    for (size_t i = 0; i < langs.size; i++)
     {
-        const language_t *lang = vector_get(rt.languages, i);
+        const language_t *lang = langs.langs + i;
         mediator_unload_language(rt.mediator, lang);
-    }
-
-    for (size_t i = 0; i < plugins; i++)
-    {
-        const plugin_t *plugin = vector_get(rt.plugins, i);
-        mediator_unload_plugin(rt.mediator, plugin);
     }
 }
