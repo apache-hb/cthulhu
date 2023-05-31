@@ -21,6 +21,8 @@ typedef struct lifetime_t
 {
     mediator_t *parent;
 
+    reports_t *reports;
+
     set_t *languages;
     map_t *handles; // map_t<const language_t *, lang_handle_t *>
 
@@ -62,7 +64,7 @@ static module_entry_t *module_new(lang_handle_t *handle, compile_t *compile)
 
 // public api
 
-lifetime_t *mediator_get_lifetime(mediator_t *self)
+lifetime_t *mediator_get_lifetime(mediator_t *self, reports_t *reports)
 {
     CTASSERT(self != NULL);
 
@@ -72,6 +74,7 @@ lifetime_t *mediator_get_lifetime(mediator_t *self)
     lifetime->handles = map_new(4);
     lifetime->files = vector_new(4);
     lifetime->modules = map_new(8);
+    lifetime->reports = reports;
     return lifetime;
 }
 
@@ -83,7 +86,8 @@ compile_t *lifetime_add_module(lifetime_t *self, lang_handle_t *handle, const ch
 
     module_entry_t *mod = module_new(handle, data);
 
-    map_set_ptr(self->modules, name, mod);
+    map_set(self->modules, name, mod);
+    logverbose("adding module `%s` (0x%p)", name, data);
     return data;
 }
 
@@ -92,10 +96,18 @@ compile_t *lifetime_get_module(const lifetime_t *self, const char *name)
     CTASSERT(self != NULL);
     CTASSERT(name != NULL);
 
-    module_entry_t *mod = map_get_ptr(self->modules, name);
+    logverbose("getting module `%s`", name);
+
+    module_entry_t *mod = map_get(self->modules, name);
     if (mod == NULL) { return NULL; }
     
     return mod->compile;
+}
+
+reports_t *lifetime_get_reports(const lifetime_t *self)
+{
+    CTASSERT(self != NULL);
+    return self->reports;
 }
 
 void lifetime_add_source(lifetime_t *self, source_t source)
@@ -161,6 +173,18 @@ void lifetime_forward(reports_t *reports, lifetime_t *self)
         lang->fnForward(handle, name, src->ast);
 
         logverbose("%s:fnForward(%s)", lang->id, name);
+    }
+}
+
+void lifetime_import(reports_t *reports, lifetime_t *self)
+{
+    map_iter_t iter = map_iter(self->modules);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        module_entry_t *mod = entry.value;
+        lang_handle_t *handle = mod->handle;
+        lang_import(handle, mod->compile);
     }
 }
 

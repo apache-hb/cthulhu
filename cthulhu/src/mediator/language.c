@@ -66,18 +66,19 @@ void lang_compile(lang_handle_t *handle, compile_t *compile)
     compile->mod = lang->fnCompile(handle, compile);
 }
 
-// driver api
-
-sema_t *lang_find_module(lang_handle_t *self, const char *name)
+void lang_import(lang_handle_t *handle, compile_t *compile)
 {
-    CTASSERT(self != NULL);
-    CTASSERT(name != NULL);
+    CTASSERT(handle != NULL);
+    CTASSERT(compile != NULL);
 
-    compile_t *cc = lifetime_get_module(self->parent, name);
-    if (cc == NULL) { return NULL; }
+    const language_t *lang = handle->language;
 
-    return cc->sema;
+    logverbose("%s:fnImport()", lang->id);
+
+    lang->fnImport(handle, compile);
 }
+
+// driver api
 
 void lang_set_user(lang_handle_t *self, void *user)
 {
@@ -105,7 +106,7 @@ reports_t *lang_get_reports(lang_handle_t *self)
 {
     CTASSERT(self != NULL);
 
-    return begin_reports(); // TODO
+    return lifetime_get_reports(self->parent);
 }
 
 void *compile_get_ast(compile_t *self)

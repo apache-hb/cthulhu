@@ -95,9 +95,10 @@ typedef struct source_t
 
 // lifetime api
 
-lifetime_t *mediator_get_lifetime(mediator_t *self);
+lifetime_t *mediator_get_lifetime(mediator_t *self, reports_t *reports);
 
 compile_t *lifetime_get_module(const lifetime_t *self, const char *name);
+reports_t *lifetime_get_reports(const lifetime_t *self);
 
 void lifetime_add_source(lifetime_t *self, source_t source);
 
@@ -107,6 +108,8 @@ void lifetime_deinit(lifetime_t *self);
 void lifetime_parse(reports_t *reports, lifetime_t *self);
 
 void lifetime_forward(reports_t *reports, lifetime_t *self);
+
+void lifetime_import(reports_t *reports, lifetime_t *self);
 
 void lifetime_compile(reports_t *reports, lifetime_t *self);
 

@@ -78,8 +78,9 @@ static io_t *make_file(reports_t *reports, const char *path)
 
 int main(int argc, const char **argv)
 {
+    reports_t *reports = begin_reports();
     mediator_t *mediator = mediator_new("cli", NEW_VERSION(0, 0, 1));
-    lifetime_t *lifetime = mediator_get_lifetime(mediator);
+    lifetime_t *lifetime = mediator_get_lifetime(mediator, reports);
 
     langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
@@ -88,64 +89,67 @@ int main(int argc, const char **argv)
         mediator_load_language(mediator, lang);
     }
 
-    runtime_t rt = cmd_parse(mediator, argc, argv);
+    runtime_t rt = cmd_parse(reports, mediator, argc, argv);
     report_config_t reportConfig = {
         .limit = rt.reportLimit,
         .warningsAreErrors = rt.warnAsError
     };
 
-    CHECK_REPORTS(rt.reports, "failed to parse command line arguments");
+    CHECK_REPORTS(reports, "failed to parse command line arguments");
 
     size_t len = vector_len(rt.sourcePaths);
     if (len == 0)
     {
-        report(rt.reports, eFatal, NULL, "no source files provided");
+        report(reports, eFatal, NULL, "no source files provided");
     }
     else
     {
-        add_sources(mediator, lifetime, rt.sourcePaths, rt.reports);
+        add_sources(mediator, lifetime, rt.sourcePaths, reports);
     }
 
-    CHECK_REPORTS(rt.reports, "failed to load sources");
+    CHECK_REPORTS(reports, "failed to load sources");
 
     lifetime_init(lifetime);
 
-    lifetime_parse(rt.reports, lifetime);
-    CHECK_REPORTS(rt.reports, "failed to parse sources");
+    lifetime_parse(reports, lifetime);
+    CHECK_REPORTS(reports, "failed to parse sources");
 
-    lifetime_forward(rt.reports, lifetime);
-    CHECK_REPORTS(rt.reports, "failed to forward declarations");
+    lifetime_forward(reports, lifetime);
+    CHECK_REPORTS(reports, "failed to forward declarations");
 
-    lifetime_compile(rt.reports, lifetime);
-    CHECK_REPORTS(rt.reports, "failed to compile sources");
+    lifetime_import(reports, lifetime);
+    CHECK_REPORTS(reports, "failed to import modules");
+
+    lifetime_compile(reports, lifetime);
+    CHECK_REPORTS(reports, "failed to compile sources");
 
     vector_t *mods = lifetime_modules(lifetime);
-    ssa_module_t *ssa = ssa_gen_module(rt.reports, mods);
-    CHECK_REPORTS(rt.reports, "failed to generate SSA");
+    ssa_module_t *ssa = ssa_gen_module(reports, mods);
+    CHECK_REPORTS(reports, "failed to generate SSA");
 
-    ssa_opt_module(rt.reports, ssa);
-    CHECK_REPORTS(rt.reports, "failed to optimize SSA");
+    ssa_opt_module(reports, ssa);
+    CHECK_REPORTS(reports, "failed to optimize SSA");
 
     if (rt.emitSSA)
     {
-        ssa_emit_module(rt.reports, ssa);
+        ssa_emit_module(reports, ssa);
     }
 
     const char *sourcePath = rt.sourceOut == NULL ? "out.c" : format("%s.c", rt.sourceOut);
 
-    io_t *src = make_file(rt.reports, sourcePath);
-    io_t *header = rt.headerOut == NULL ? NULL : make_file(rt.reports, format("%s.h", rt.headerOut));
+    io_t *src = make_file(reports, sourcePath);
+    io_t *header = rt.headerOut == NULL ? NULL : make_file(reports, format("%s.h", rt.headerOut));
 
-    CHECK_REPORTS(rt.reports, "failed to open output files");
+    CHECK_REPORTS(reports, "failed to open output files");
 
     emit_config_t config = {
-        .reports = rt.reports,
+        .reports = reports,
         .source = src,
         .header = header
     };
 
     c89_emit_ssa_modules(config, ssa);
-    CHECK_REPORTS(rt.reports, "failed to emit C89");
+    CHECK_REPORTS(reports, "failed to emit C89");
 
     lifetime_deinit(lifetime);
 

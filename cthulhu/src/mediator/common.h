@@ -12,3 +12,4 @@ compile_t *lifetime_add_module(lifetime_t *self, lang_handle_t *handle, const ch
 compile_t *compile_init(lang_handle_t *handle, void *ast, sema_t *sema, hlir_t *mod);
 
 void lang_compile(lang_handle_t *handle, compile_t *compile);
+void lang_import(lang_handle_t *handle, compile_t *compile);

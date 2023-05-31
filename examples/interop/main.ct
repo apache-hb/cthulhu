@@ -1,0 +1,11 @@
+import lib;
+
+@entry(cli)
+def main: int {
+    lib::lhs = 25;
+    lib::rhs = 42;
+    
+    lib::add();
+
+    return lib::result;
+}

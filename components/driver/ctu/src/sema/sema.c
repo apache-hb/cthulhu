@@ -524,6 +524,7 @@ static sema_t *sema_path(sema_t *sema, vector_t *path, node_t *node)
         }
 
         sema_t *next = sema_get(current, eSemaModules, name);
+        logverbose("next: %p for %s", next, name);
 
         if (next == NULL)
         {
@@ -1954,7 +1955,7 @@ void ctu_process_imports(lang_handle_t *runtime, compile_t *compile)
         ast_t *import = vector_get(imports, i);
         char *name = make_import_name(import->path);
 
-        sema_t *mod = lang_find_module(runtime, name);
+        sema_t *mod = handle_get_sema(runtime, name);
         if (mod == NULL)
         {
             report(reports, eFatal, import->node, "module '%s' not found", name);

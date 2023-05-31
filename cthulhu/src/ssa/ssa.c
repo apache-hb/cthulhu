@@ -1087,7 +1087,7 @@ static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
         return compile_return(ssa, stmt);
 
     default:
-        report(ssa->reports, eInternal, get_hlir_node(stmt), "compile-stmt %s", hlir_kind_to_string(kind));
+        report(ssa->reports, eInternal, get_hlir_node(stmt), "compile-stmt %s", hlir_to_string(stmt));
         return operand_empty();
     }
 }

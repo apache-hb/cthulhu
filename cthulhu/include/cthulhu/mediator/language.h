@@ -53,8 +53,6 @@ lang_handle_t *lifetime_get_lang_handle(lifetime_t *self, const language_t *it);
 
 // driver api
 
-sema_t *lang_find_module(lang_handle_t *self, const char *name);
-
 void lang_set_user(lang_handle_t *self, void *user);
 
 void *lang_get_user(lang_handle_t *self);

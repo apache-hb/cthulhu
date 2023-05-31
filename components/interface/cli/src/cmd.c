@@ -207,9 +207,8 @@ static AP_ERROR(on_arg_error, ap, node, message, data)
     return eEventHandled;
 }
 
-runtime_t cmd_parse(mediator_t *mediator, int argc, const char **argv)
+runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, int argc, const char **argv)
 {
-    reports_t *reports = begin_reports();
     ap_t *ap = ap_new("cli", NEW_VERSION(0, 0, 1));
 
     runtime_t rt = {

@@ -1,0 +1,9 @@
+module lib;
+
+var lhs, rhs, result;
+
+procedure add;
+begin
+    result := lhs + rhs
+end;
+.
