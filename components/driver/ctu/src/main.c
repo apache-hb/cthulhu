@@ -15,16 +15,16 @@ static void *ctu_parse_file(lang_handle_t *runtime, scan_t *scan)
 {
     UNUSED(runtime);
 
-    init_scan(scan);
+    ctu_init_scan(scan);
     return compile_scanner(scan, &kCallbacks);
 }
-
-static const char *kLangNames[] = { "ct", "ctu", NULL };
 
 static void ctu_configure(lang_handle_t *handle, ap_t *ap)
 {
     ctu_config_init(handle, ap);
 }
+
+static const char *kLangNames[] = { "ct", "ctu", NULL };
 
 const language_t kCtuModule = {
     .id = "ctu",

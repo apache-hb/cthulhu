@@ -13,7 +13,7 @@ typedef struct string_t {
     size_t size;
 } string_t;
 
-void init_scan(scan_t *scan);
+void ctu_init_scan(scan_t *scan);
 void enter_template(scan_t *scan);
 size_t exit_template(scan_t *scan);
 

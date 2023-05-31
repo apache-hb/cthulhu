@@ -1,12 +1,19 @@
 src = [ 
-    'cc/main.c', 
-    'cc/scan.c',
-    lex.process('cc/cc.l'), 
-    parse.process('cc/cc.y') 
+    'src/main.c', 
+    'src/scan.c',
+    lex.process('src/cc.l'), 
+    parse.process('src/cc.y') 
 ]
 
 cc = library('cc', src,
-    dependencies : [ generic, interop ]
+    dependencies : [ generic, mediate, argparse, interop ],
+    c_args : args,
+    include_directories : 'src'
 )
 
-langs += { 'cc': declare_dependency(link_with : cc) }
+langs += { 
+    'cc': {
+        'dep': declare_dependency(link_with : cc),
+        'mod': 'kCModule'
+    }
+}

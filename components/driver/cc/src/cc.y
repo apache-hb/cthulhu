@@ -11,9 +11,8 @@
 }
 
 %code requires {
-    #include "scan.h"
     #include "ast.h"
-    
+    #include "scan.h"
     #define YYSTYPE CCSTYPE
     #define YYLTYPE CCLTYPE
 }
@@ -30,10 +29,18 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
         char *text;
         size_t length;
     } string;
+
+    mpz_t digit;
 }
 
 %token<ident>
     IDENT "identifier"
+
+%token<digit>
+    DIGIT "digit"
+
+%token<string>
+    STRING "string"
 
 %token
     TYPEDEF "typedef"
@@ -55,9 +62,43 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     ATOMIC "_Atomic"
     CONST "const"
     VOLATILE "volatile"
+    RESTRICT "restrict"
+    AUTO "auto"
+    EXTERN "extern"
+    INLINE "inline"
+    STATIC "static"
+    REGISTER "register"
+
+    BREAK "break"
+    CASE "case"
+    CONTINUE "continue"
+    DEFAULT "default"
+
+    DO "do"
+    ELSE "else"
+    WHILE "while"
+    FOR "for"
+    GOTO "goto"
+    IF "if"
+    RETURN "return"
+    SWITCH "switch"
+
+    SIZEOF "sizeof"
+    ALIGNAS "_Alignas"
+    ALIGNOF "_Alignof"
+
+    COMPLEX "_Complex"
+    GENERIC "_Generic"
+    IMAGINARY "_Imaginary"
+
+    TOK_NORETURN "_Noreturn"
+
+    STATIC_ASSERT "_Static_assert"
+    THREAD_LOCAL "_Thread_local"
 
     STRUCT "struct"
     UNION "union"
+    ENUM "enum"
 
     SEMICOLON ";"
 

@@ -25,7 +25,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
     report(scan_reports(scan), eFatal, node_new(scan, *where), "%s", msg);
 }
 
-void init_scan(scan_t *scan)
+void ctu_init_scan(scan_t *scan)
 {
     lex_extra_t *extra = ctu_malloc(sizeof(lex_extra_t));
     extra->depth = 0;

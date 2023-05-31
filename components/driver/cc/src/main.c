@@ -1,5 +1,4 @@
-#include "cthulhu/interface/interface.h"
-#include "cthulhu/interface/runtime.h"
+#include "cthulhu/mediator/language.h"
 #include "scan/compile.h"
 
 #include "base/macros.h"
@@ -9,14 +8,27 @@
 
 CT_CALLBACKS(kCallbacks, cc);
 
-const driver_t kDriver = {
-    .name = "C",
-    .version = NEW_VERSION(0, 0, 1),
-
-    .exts = ".c,.h"
-};
-
-driver_t get_driver(void)
+static void *cc_parse(lang_handle_t *lang, scan_t *scan)
 {
-    return kDriver;
+    UNUSED(lang);
+
+    cc_init_scan(scan);
+    return compile_scanner(scan, &kCallbacks);
 }
+
+static const char *kLangNames[] = { "c", "h", NULL };
+
+const language_t kCModule = {
+    .id = "c",
+    .name = "C",
+    .version = {
+        .license = "LGPLv3",
+        .desc = "C11 language driver",
+        .author = "Elliot Haisley",
+        .version = NEW_VERSION(0, 0, 1),
+    },
+
+    .exts = kLangNames,
+
+    .fnParse = cc_parse
+};

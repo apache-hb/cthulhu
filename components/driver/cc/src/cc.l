@@ -71,11 +71,9 @@ WS [ \t\r\v\n\f]
 "_Complex" { return COMPLEX; }
 "_Generic" { return GENERIC; }
 "_Imaginary" { return IMAGINARY; }
-"_Noreturn" { return NORETURN; }
+"_Noreturn" { return TOK_NORETURN; }
 "_Static_assert" { return STATIC_ASSERT; }
 "_Thread_local" { return THREAD_LOCAL; }
-
-"virtual" { return VIRTUAL; }
 
 "0"[0-7]+ {
     mpz_init_set_str(yylval->digit, yytext + 1, 8);
@@ -103,7 +101,7 @@ WS [ \t\r\v\n\f]
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-	yylval->string.data = ctu_strndup(yytext + 1, yyleng - 2);
+	yylval->string.text = ctu_strndup(yytext + 1, yyleng - 2);
     yylval->string.length = yyleng - 2;
     return STRING;
 }
