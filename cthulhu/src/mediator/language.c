@@ -24,7 +24,7 @@ typedef struct compile_t
     hlir_t *mod;
 } compile_t;
 
-lang_handle_t *lang_init(lifetime_t *lifetime, const language_t *lang)
+lang_handle_t *lang_new(lifetime_t *lifetime, const language_t *lang)
 {
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
@@ -33,8 +33,6 @@ lang_handle_t *lang_init(lifetime_t *lifetime, const language_t *lang)
     handle->parent = lifetime;
     handle->language = lang;
     handle->user = NULL;
-
-    EXEC(lang, fnInit, handle);
 
     return handle;
 }

@@ -29,4 +29,4 @@ typedef struct runtime_t
     vector_t *sourcePaths;
 } runtime_t;
 
-runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, int argc, const char **argv);
+runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv);

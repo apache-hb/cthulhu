@@ -102,6 +102,8 @@ reports_t *lifetime_get_reports(const lifetime_t *self);
 
 void lifetime_add_source(lifetime_t *self, source_t source);
 
+void lifetime_configure(lifetime_t *self, const language_t *lang, ap_t *ap);
+
 void lifetime_init(lifetime_t *self);
 void lifetime_deinit(lifetime_t *self);
 

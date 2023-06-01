@@ -15,7 +15,7 @@ typedef enum
 
 hlir_t *get_digit_type(sign_t sign, digit_t digit);
 
-void ctu_init_compiler(lang_handle_t *runtime);
+void ctu_init(lang_handle_t *runtime);
 void ctu_forward_decls(lang_handle_t *runtime, const char *name, void *ast);
 void ctu_process_imports(lang_handle_t *runtime, compile_t *compile);
 hlir_t *ctu_compile_module(lang_handle_t *runtime, compile_t *compile);

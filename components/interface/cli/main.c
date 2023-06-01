@@ -82,14 +82,7 @@ int main(int argc, const char **argv)
     mediator_t *mediator = mediator_new("cli", NEW_VERSION(0, 0, 1));
     lifetime_t *lifetime = mediator_get_lifetime(mediator, reports);
 
-    langs_t langs = get_langs();
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        const language_t *lang = langs.langs + i;
-        mediator_load_language(mediator, lang);
-    }
-
-    runtime_t rt = cmd_parse(reports, mediator, argc, argv);
+    runtime_t rt = cmd_parse(reports, mediator, lifetime, argc, argv);
     report_config_t reportConfig = {
         .limit = rt.reportLimit,
         .warningsAreErrors = rt.warnAsError
@@ -153,6 +146,7 @@ int main(int argc, const char **argv)
 
     lifetime_deinit(lifetime);
 
+    langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
     {
         const language_t *lang = langs.langs + i;

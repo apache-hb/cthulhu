@@ -402,7 +402,7 @@ static void add_basic_types(sema_t *sema)
     // add_decl(sema, eTagTypes, "enum", hlir_digit(node, "enum", eInt, eSigned));
 }
 
-void ctu_init_compiler(lang_handle_t *runtime)
+void ctu_init(lang_handle_t *runtime)
 {
     size_t sizes[eTagTotal] = {
         [eSemaValues] = 1, [eSemaProcs] = 1, [eSemaTypes] = 32, [eSemaModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 32,

@@ -20,7 +20,9 @@ typedef struct config_t
     bool features[eFeatureTotal];
 } config_t;
 
-static const char *kDefaultInitNames[] = { "--ctu-enable-default-expr", "-Fctu-default-expr", NULL };
+static const char *kDefaultInitNames[] = { "--ctu:enable-default-expr", "-ctu:default", NULL };
+static const char *kTemplateNames[] = { "--ctu:enable-templates", "-ctu:templates", NULL };
+static const char *kInterfaceNames[] = { "--ctu:enable-interfaces", "-ctu:interfaces", NULL };
 
 static AP_EVENT(on_feature, ap, param, value, data)
 {
@@ -40,14 +42,18 @@ static config_t *new_config(void)
     return config;
 }
 
-void ctu_config_init(lang_handle_t *handle, ap_t *args) 
+void ctu_config(lang_handle_t *handle, ap_t *args) 
 {
     config_t *config = new_config();
     
     ap_group_t *group = ap_group_new(args, "cthulhu features", "unstable cthulhu features and extensions");
-    ap_param_t *defaultInit = ap_add_bool(group, "default expressions", "enables `default` in expressions to refer to an implicit types default value", kDefaultInitNames);
+    ap_param_t *defaultEnable = ap_add_bool(group, "default expressions", "enables `default` in expressions to explicitly refer to a types default value (experimental)", kDefaultInitNames);
+    ap_param_t *templateEnable = ap_add_bool(group, "templates", "enables templated types and functions (unimplemented)", kTemplateNames);
+    ap_param_t *interfaceEnable = ap_add_bool(group, "interfaces", "enables interface declarations (unimplemented)", kInterfaceNames);
 
-    ap_event(args, defaultInit, on_feature, &config->features[eFeatureDefaultExpr]);
+    ap_event(args, defaultEnable, on_feature, &config->features[eFeatureDefaultExpr]);
+    ap_event(args, templateEnable, on_feature, &config->features[eFeatureTemplateDecls]);
+    ap_event(args, interfaceEnable, on_feature, &config->features[eFeatureInterfaceDecls]);
 
     lang_set_user(handle, config);
 }

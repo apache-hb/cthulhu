@@ -207,7 +207,7 @@ static AP_ERROR(on_arg_error, ap, node, message, data)
     return eEventHandled;
 }
 
-runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, int argc, const char **argv)
+runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifetime, int argc, const char **argv)
 {
     ap_t *ap = ap_new("cli", NEW_VERSION(0, 0, 1));
 
@@ -224,6 +224,14 @@ runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, int argc, const ch
 
         .sourcePaths = vector_new(16),
     };
+
+    langs_t langs = get_langs();
+    for (size_t i = 0; i < langs.size; i++)
+    {
+        const language_t *lang = langs.langs + i;
+        mediator_load_language(mediator, lang);
+        lifetime_configure(lifetime, lang, ap);
+    }
 
     ap_group_t *generalGroup = ap_group_new(ap, "general", "general options");
     ap_param_t *helpParam = ap_add_bool(generalGroup, "help", "display this message", kHelpNames);

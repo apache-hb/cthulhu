@@ -121,14 +121,22 @@ void lifetime_add_source(lifetime_t *self, source_t source)
     vector_push(&self->files, context_new(source));
 }
 
+void lifetime_configure(lifetime_t *self, const language_t *lang, ap_t *ap)
+{
+    lang_handle_t *handle = lang_new(self, lang);
+    EXEC(lang, fnConfigure, handle, ap);
+
+    map_set_ptr(self->handles, lang, handle);
+}
+
 void lifetime_init(lifetime_t *self)
 {
     set_iter_t iter = set_iter(self->languages);
     while (set_has_next(&iter))
     {
         const language_t *lang = set_next(&iter);
-        lang_handle_t *handle = lang_init(self, lang);
-        map_set_ptr(self->handles, lang, handle);
+        lang_handle_t *handle = map_get_ptr(self->handles, lang);
+        EXEC(lang, fnInit, handle);
     }
 }
 

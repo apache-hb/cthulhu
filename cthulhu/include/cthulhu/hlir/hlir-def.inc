@@ -9,13 +9,17 @@ HLIR_KIND(eHlirQualified, "qualified")
 
 // scalar types
 HLIR_KIND(eHlirType,    "meta-type")
-HLIR_KIND(eHlirDigit,   "digit-type")
 HLIR_KIND(eHlirDecimal, "decimal-type")
 HLIR_KIND(eHlirString,  "string-type")
 HLIR_KIND(eHlirBool,    "bool-type")
 HLIR_KIND(eHlirUnit,    "unit-type")
 HLIR_KIND(eHlirEmpty,   "empty-type")
 HLIR_KIND(eHlirOpaque,  "opaque-type") // opaque pointer type, akin to void*
+
+// different digit types (only eHlirDigit is used for now)
+HLIR_KIND(eHlirDigit,   "digit-type")
+// HLIR_KIND(eHlirDigitFixed, "fixed-digit-type") // fixed bit-width digit type uint8, uint64, etc
+// HLIR_KIND(eHlirDigitRange, "range-digit-type") // range digit type, 0..255, -50..999, etc
 
 HLIR_KIND(eHlirVaList, "va-list-type")
 
@@ -29,9 +33,11 @@ HLIR_KIND(eHlirStruct, "struct-type")
 HLIR_KIND(eHlirUnion,  "union-type")
 HLIR_KIND(eHlirEnum,   "enum-type")
 HLIR_KIND(eHlirAlias,  "alias-type")
+// HLIR_KIND(eHlirVariant, "variant-type")
 
 HLIR_KIND(eHlirRecordField, "record-field")
 HLIR_KIND(eHlirEnumField,   "enum-field")
+// HLIR_KIND(eHlirVariantField, "variant-field")
 
 // literal values
 HLIR_KIND(eHlirDigitLiteral,   "digit-literal")
