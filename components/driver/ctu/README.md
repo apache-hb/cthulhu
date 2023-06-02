@@ -29,6 +29,7 @@
 * state mutation
 * casts
 * COM interop
+* standard library
 
 ## bikeshedding
 * contracts

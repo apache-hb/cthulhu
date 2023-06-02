@@ -1,9 +1,12 @@
 #include "common.h"
 
 #include "base/panic.h"
+
+#include "std/str.h"
+
 #include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
-#include <stdio.h>
+
 
 static bool has_name(hlir_kind_t kind)
 {
@@ -202,6 +205,17 @@ const char *hlir_sign_to_string(sign_t sign)
 const char *hlir_digit_to_string(digit_t digit)
 {
     return kDigitNames[digit];
+}
+
+const char *hlir_to_string(const hlir_t *hlir)
+{
+    const char *kind = hlir_kind_to_string(get_hlir_kind(hlir));
+    if (hlir_is_decl(hlir) || hlir_is(hlir, eHlirError))
+    {
+        return format("%s (%s)", kind, get_hlir_name(hlir));
+    }
+
+    return hlir_kind_to_string(get_hlir_kind(hlir));
 }
 
 const hlir_t *hlir_follow_type(const hlir_t *hlir)

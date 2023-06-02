@@ -69,3 +69,6 @@ const char *hlir_sign_to_string(sign_t sign);
 
 NODISCARD PUREFN 
 const char *hlir_digit_to_string(digit_t digit);
+
+NODISCARD PUREFN
+const char *hlir_to_string(const hlir_t *hlir);

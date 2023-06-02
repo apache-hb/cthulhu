@@ -1,0 +1,4 @@
+module cthulhu::stdlib;
+
+@extern("memcpy")
+export def memcpy(dst: opaque, src: opaque, n: usize): opaque;

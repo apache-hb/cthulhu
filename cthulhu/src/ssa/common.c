@@ -146,14 +146,3 @@ ssa_value_t *ssa_value_ptr_new(const ssa_type_t *type, const mpz_t digit)
     memcpy(value->digit, digit, sizeof(mpz_t));
     return value;
 }
-
-const char *hlir_to_string(const hlir_t *hlir)
-{
-    const char *kind = hlir_kind_to_string(get_hlir_kind(hlir));
-    if (hlir_is_decl(hlir) || hlir_is(hlir, eHlirError))
-    {
-        return format("%s (%s)", kind, get_hlir_name(hlir));
-    }
-
-    return hlir_kind_to_string(get_hlir_kind(hlir));
-}

@@ -602,7 +602,10 @@ static hlir_t *get_underlying_type(sema_t *sema, ast_t *underlying)
     // TODO: hlir needs an actual enum underlying type
     if (underlying == NULL) { return get_digit_type(eUnsigned, eDigitInt); }
 
-    return sema_type(sema, underlying);
+    hlir_t *hlir = sema_type(sema, underlying);
+    if (hlir_is(hlir, eHlirError)) { return get_digit_type(eUnsigned, eDigitInt); }
+
+    return hlir;
 }
 
 static hlir_t *begin_type_resolve(sema_t *sema, void *user)
@@ -829,10 +832,51 @@ static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
     }
 }
 
+static hlir_t *sema_math(sema_t *sema, ast_t *ast, hlir_t *lhs, hlir_t *rhs)
+{
+    const hlir_t *lhsType = get_hlir_type(lhs);
+    const hlir_t *rhsType = get_hlir_type(rhs);
+
+    if (!hlir_is(lhsType, eHlirOpaque) || !hlir_is(rhsType, eHlirDigit))
+    {
+        return NULL;
+    }
+
+    return hlir_binary(ast->node, lhsType, ast->binary, lhs, rhs);
+}
+
+static hlir_t *sema_ptr_math(sema_t *sema, ast_t *ast, hlir_t *lhs, hlir_t *rhs)
+{
+    if (ast->binary != eBinaryAdd && ast->binary != eBinarySub)
+    {
+        return NULL;
+    }
+
+    hlir_t *lhsFirst = sema_math(sema, ast, lhs, rhs);
+    if (lhsFirst != NULL)
+    {
+        return lhsFirst;
+    }
+
+    hlir_t *rhsFirst = sema_math(sema, ast, rhs, lhs);
+    if (rhsFirst != NULL)
+    {
+        return rhsFirst;
+    }
+
+    return NULL;
+}
+
 static hlir_t *sema_binary(sema_t *sema, ast_t *ast)
 {
     hlir_t *lhs = sema_rvalue(sema, ast->lhs);
     hlir_t *rhs = sema_rvalue(sema, ast->rhs);
+
+    hlir_t *ptrMath = sema_ptr_math(sema, ast, lhs, rhs);
+    if (ptrMath != NULL)
+    {
+        return ptrMath;
+    }
 
     const hlir_t *type = get_common_type(ast->node, get_hlir_type(lhs), get_hlir_type(rhs));
 
@@ -1987,7 +2031,7 @@ static char *make_import_name(vector_t *vec)
 
 static const char *get_import_name(ast_t *import)
 {
-    return import->id == NULL ? make_import_name(import->path) : import->id;
+    return import->id == NULL ? vector_tail(import->path) : import->id;
 }
 
 static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
@@ -2002,6 +2046,8 @@ static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
         report_note(id, "use module aliases to avoid name collisions");
         return;
     }
+
+    logverbose("importing module `%s`", name);
 
     sema_set(sema, eSemaModules, name, mod);
 }

@@ -292,6 +292,11 @@ static const char *mangle_arg(ssa_t *ssa, const hlir_t *param)
 
 static const char *flow_make_name(ssa_t *ssa, const hlir_t *symbol)
 {
+    map_t *repl = map_new(4);
+    map_set(repl, "-", "_");
+    map_set(repl, ".", "_");
+    map_set(repl, "/", "_");
+
     const hlir_attributes_t *attribs = get_hlir_attributes(symbol);
     if (attribs->mangle != NULL)
     {
@@ -310,7 +315,7 @@ static const char *flow_make_name(ssa_t *ssa, const hlir_t *symbol)
     for (size_t i = 0; i < parts; i++)
     {
         const char *ns = vector_get(ssa->namePath, i);
-        char *part = str_replace(ns, "-", "_"); // todo: replace all non alphanum with _
+        char *part = str_replace_many(ns, repl); // todo: replace all non alphanum with _
         result = format("%sN%zu%s", result, strlen(part), part);
     }
 

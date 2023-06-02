@@ -66,7 +66,7 @@ static hlir_t *begin_enum_type(node_t *node, const char *name, const hlir_t *und
 
 hlir_t *hlir_begin_enum(node_t *node, const char *name, const hlir_t *type)
 {
-    CTASSERT(hlir_is(type, eHlirDigit));
+    CTASSERTF(hlir_is(type, eHlirDigit), "hlir-begin-enum called with non-digit type: %s", hlir_to_string(type));
     return begin_enum_type(node, name, type, eHlirEnum);
 }
 
