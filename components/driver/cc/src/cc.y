@@ -91,7 +91,7 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     GENERIC "_Generic"
     IMAGINARY "_Imaginary"
 
-    TOK_NORETURN "_Noreturn"
+    NRETURN "_Noreturn"
 
     STATIC_ASSERT "_Static_assert"
     THREAD_LOCAL "_Thread_local"
@@ -101,6 +101,9 @@ void ccerror(where_t *where, void *state, scan_t *scan, const char *msg);
     ENUM "enum"
 
     SEMICOLON ";"
+
+    MODULE "_Module"
+    IMPORT "_Import"
 
 %start unit
 

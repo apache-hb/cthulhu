@@ -4,7 +4,6 @@
 #include "attribs.h"
 #include "repr.h"
 #include "suffix.h"
-#include "mark.h"
 #include "config.h"
 
 #include "cthulhu/hlir/arity.h"
@@ -349,6 +348,33 @@ static bool is_discard_ident(const char *id)
     return id == NULL || str_equal(id, "$");
 }
 
+typedef enum variant_kind_t {
+    eVariantSum,
+    eVariantEnum,
+
+    eVariantTotal
+} variant_kind_t;
+
+static variant_kind_t get_variant_kind(sema_t *sema, ast_t *ast)
+{
+    if (ast->of != eAstDeclVariant) 
+    { 
+        report(sema_reports(sema), eInternal, ast->node, "expected variant declaration");
+        return eVariantTotal; 
+    }
+
+    size_t len = vector_len(ast->fields);
+    for (size_t i = 0; i < len; i++)
+    {
+        ast_t *field = vector_get(ast->fields, i);
+        CTASSERT(field->of == eAstCase);
+
+        if (vector_len(field->caseFields) > 0) { return eVariantSum; }
+    }
+
+    return eVariantEnum;
+}
+
 static void add_decl(sema_t *sema, int tag, const char *name, hlir_t *decl)
 {
     node_t *node = get_hlir_node(decl);
@@ -399,7 +425,7 @@ static void add_basic_types(sema_t *sema)
     // enable the below later
 
     // special types for interfacing with C
-    // add_decl(sema, eTagTypes, "enum", hlir_digit(node, "enum", eInt, eSigned));
+    // add_decl(sema, eTagTypes, "enum", hlir_enum(node, "enum", eInt, eSigned));
 }
 
 void ctu_init(lang_handle_t *runtime)
@@ -483,31 +509,38 @@ static hlir_t *sema_rvalue_with_implicit(sema_t *sema, ast_t *ast, const hlir_t 
  * @param path 
  * @return hlir_t* 
  */
-static hlir_t *sema_try_get_enum_case(sema_t *sema, vector_t *path)
+static const hlir_t *sema_try_get_enum_case(sema_t *sema, node_t *node, vector_t *path)
 {
     // if theres more than one path segment, we can't be an enum case
+    
+    // TODO: we should also support qualified enum cases
+    //       e.g. Foo::eCase instead of just eCase and relying on implicit type
     if (vector_len(path) != 1)
     {
         return NULL;
     }
     
-    // if theres no implicit type, we can't be an enum case
-    const hlir_t *current = get_implicit_type(sema);
-    map_t *cases = user_variant_cases(current);
-    if (cases == NULL)
-    {
-        return NULL;
-    }
-
-    // try and get the case
     const char *name = vector_tail(path);
-    hlir_t *result = map_get(cases, name);
-    if (result == NULL)
+
+    const hlir_t *current = get_implicit_type(sema);
+    if (current == NULL) { return NULL; }
+
+    if (!hlir_is(current, eHlirEnum)) { return NULL; }
+
+    size_t len = vector_len(current->fields);
+    for (size_t i = 0; i < len; i++)
     {
-        return NULL;
+        hlir_t *field = vector_get(current->fields, i);
+        CTASSERT(hlir_is(field, eHlirEnumCase));
+
+        if (str_equal(get_hlir_name(field), name))
+        {
+            return field->value;
+        }
     }
 
-    return result;
+    report(sema_reports(sema), eSorry, node, "enum cases not implemented yet");
+    return NULL;
 }
 
 static sema_t *sema_path(sema_t *sema, vector_t *path, node_t *node)
@@ -521,11 +554,9 @@ static sema_t *sema_path(sema_t *sema, vector_t *path, node_t *node)
         {
             report(sema_reports(sema), eFatal, node, "discarded path segment");
             return NULL;
-        }
+        }        
 
         sema_t *next = sema_get(current, eSemaModules, name);
-        logverbose("next: %p for %s", next, name);
-
         if (next == NULL)
         {
             report(sema_reports(sema), eFatal, node, "unknown namespace `%s`", name);
@@ -566,6 +597,14 @@ static hlir_t *sema_alias(sema_t *sema, ast_t *ast)
     return hlir_alias(ast->node, ast->name, type);
 }
 
+static hlir_t *get_underlying_type(sema_t *sema, ast_t *underlying)
+{
+    // TODO: hlir needs an actual enum underlying type
+    if (underlying == NULL) { return get_digit_type(eUnsigned, eDigitInt); }
+
+    return sema_type(sema, underlying);
+}
+
 static hlir_t *begin_type_resolve(sema_t *sema, void *user)
 {
     ast_t *ast = user;
@@ -578,11 +617,16 @@ static hlir_t *begin_type_resolve(sema_t *sema, void *user)
     case eAstDeclAlias:
         return sema_alias(sema, ast);
 
-    case eAstDeclVariant: {
-        hlir_t *type = hlir_begin_alias(ast->node, ast->name);
-        user_mark_variant(type);
-        return type;
-    }
+    case eAstDeclVariant:
+        switch (get_variant_kind(sema, user)) 
+        {
+        case eVariantEnum:
+            return hlir_begin_enum(ast->node, ast->name, get_underlying_type(sema, ast->underlying));
+        case eVariantSum:
+            return hlir_begin_variant(ast->node, ast->name, get_underlying_type(sema, ast->underlying));
+        default:
+            report(sema_reports(sema), eInternal, ast->node, "unknown variant kind in resolution");
+        }
 
     case eAstDeclStruct:
         return hlir_begin_struct(ast->node, ast->name);
@@ -823,10 +867,11 @@ static hlir_t *sema_compare(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_ident(sema_t *sema, ast_t *ast)
 {
-    hlir_t *variantCase = sema_try_get_enum_case(sema, ast->path);
+    const hlir_t *variantCase = sema_try_get_enum_case(sema, ast->node, ast->path);
     if (variantCase != NULL)
     {
-        return variantCase;
+        // TODO: evil
+        return (hlir_t*)variantCase;
     }
 
     sema_t *current = sema_path(sema, ast->path, ast->node);
@@ -1049,15 +1094,9 @@ static const hlir_t *select_implicit_init_type(sema_t *sema, const hlir_t *conte
     return sema_type(sema, user);
 }
 
-static hlir_t *sema_default_value(sema_t *sema, const node_t *node, const hlir_t *type)
+static hlir_t *sema_default_value(sema_t *sema, node_t *node, const hlir_t *type)
 {
     const hlir_t *real = hlir_base_decl_type(type);
-    
-    const hlir_t *defaultCase = user_variant_default_case(real);
-    if (defaultCase != NULL)
-    {
-        return (hlir_t*)defaultCase; // TODO: pinky promise this wont be modified
-    }
 
     if (hlir_is(real, eHlirDigit))
     {
@@ -1072,6 +1111,16 @@ static hlir_t *sema_default_value(sema_t *sema, const node_t *node, const hlir_t
     else if (hlir_is(real, eHlirPointer))
     {
         return hlir_cast(real, kZeroIndex, eCastSignExtend);
+    }
+    else if (hlir_is(real, eHlirEnum))
+    {
+        if (real->defaultCase != NULL)
+        {
+            return (hlir_t*)real->defaultCase;
+        }
+
+        report(sema_reports(sema), eFatal, node, "`%s` has no default value set", get_hlir_name(real));
+        return hlir_error(node, "no default value");
     }
     
     report(sema_reports(sema), eInternal, node, "no default value for type '%s'", get_hlir_name(real));
@@ -1638,58 +1687,106 @@ static const hlir_t *get_tag_type(sema_t *sema, ast_t *ast)
     }
 }
 
-static void sema_variant_cases(sema_t *sema, const hlir_t *tag, hlir_t *decl, vector_t *fields)
+static void add_case(sema_t *sema, hlir_t *decl, hlir_t *field, ast_t *ast)
 {
-    size_t len = vector_len(fields);
+    hlir_add_case(decl, field);
+
+    if (!ast->isCaseDefault) { return; }
+
+    if (decl->defaultCase != NULL)
+    {
+        const hlir_t *prev = decl->defaultCase;
+        message_t *id = report(sema_reports(sema), eFatal, ast->node, "duplicate default case");
+        report_append(id, get_hlir_node(prev), "previous default case is `%s`", get_hlir_name(prev));
+        return;
+    }
+
+    decl->defaultCase = field;
+}
+
+static void sema_enum_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
+{
+    size_t len = vector_len(ast->fields);
     for (size_t i = 0; i < len; i++)
     {
-        ast_t *field = vector_get(fields, i);
-        if (vector_len(field->caseFields) > 0)
-        {
-            report(sema_reports(sema), eFatal, field->node, "case fields are not supported yet");
-            continue;
-        }
-
+        ast_t *field = vector_get(ast->fields, i);
+        CTASSERT(field->of == eAstCase);
+        
         if (field->caseValue == NULL)
         {
-            report(sema_reports(sema), eFatal, field->node, "autogenerated values are not implemented");
+            report(sema_reports(sema), eSorry, field->node, "cannot generate enum values yet");
             continue;
         }
 
-        const hlir_t *value = sema_rvalue_with_implicit(sema, field->caseValue, tag);
+        hlir_t *expr = sema_rvalue(sema, field->caseValue);
 
-        if (field->isCaseDefault)
+        hlir_t *cvt = convert_to(sema_reports(sema), get_hlir_type(decl), expr);
+
+        if (hlir_is(cvt, eHlirError))
         {
-            const hlir_t *old = user_set_variant_default(decl, value);
-            if (old != NULL)
-            {
-                message_t *id = report(sema_reports(sema), eFatal, field->node, "multiple default cases");
-                report_append(id, get_hlir_node(old), "previous default case here");
-            }
+            continue;
         }
 
-        user_add_variant_case(decl, field->name, value);
+        hlir_t *entry = hlir_case(field->node, field->name, cvt);
+
+        add_case(sema, decl, entry, field);
     }
 }
 
-/**
- * variants are internally represented as
- * enum tag_type : underlying { ... }
- * struct {
- *   tag_type tag
- *   union {
- *      fields...
- *   }
- * }
- */
+static hlir_t *sema_variant_case(sema_t *sema, ast_t *ast)
+{
+    CTASSERT(ast->of == eAstCase);
+
+    if (ast->caseValue == NULL)
+    {
+        report(sema_reports(sema), eSorry, ast->node, "cannot generate enum values yet");
+        return NULL;
+    }
+
+    hlir_t *expr = sema_rvalue(sema, ast->caseValue);
+
+    size_t len = vector_len(ast->caseFields);
+    vector_t *fields = vector_of(len);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        ast_t *param = vector_get(ast->caseFields, i);
+        hlir_t *type = sema_type(sema, param->param);
+        hlir_t *field = hlir_field(param->node, type, param->name);
+
+        vector_set(fields, i, field);
+    }
+
+    return hlir_variant_case(ast->node, ast->name, expr, fields);
+}
+
+static void sema_sum_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
+{
+    size_t len = vector_len(ast->fields);
+    for (size_t i = 0; i < len; i++)
+    {
+        ast_t *field = vector_get(ast->fields, i);
+        hlir_t *entry = sema_variant_case(sema, field);
+
+        if (entry == NULL) { continue; }
+
+        add_case(sema, decl, entry, field);
+    }
+}
+
 static void sema_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
 {
-    // TODO: this eventually needs to be a struct rather than an alias
-    const hlir_t *tag = get_tag_type(sema, ast);
-
-    hlir_build_alias(decl, tag);
-
-    sema_variant_cases(sema, tag, decl, ast->fields);
+    switch (get_variant_kind(sema, ast))
+    {
+    case eVariantEnum:
+        sema_enum_variant(sema, decl, ast);
+        break;
+    case eVariantSum:
+        sema_sum_variant(sema, decl, ast);
+        break;
+    default:
+        CTASSERT(false);
+    }
 }
 
 static void sema_params(sema_t *sema, vector_t *params)
@@ -1888,9 +1985,14 @@ static char *make_import_name(vector_t *vec)
     return str_join(".", vec);
 }
 
+static const char *get_import_name(ast_t *import)
+{
+    return import->id == NULL ? make_import_name(import->path) : import->id;
+}
+
 static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
 {
-    const char *name = vector_tail(import->path);
+    const char *name = get_import_name(import);
     sema_t *previous = sema_get(sema, eSemaModules, name);
 
     if (previous != NULL)

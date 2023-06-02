@@ -148,7 +148,19 @@ typedef struct hlir_t
                 const struct hlir_t *alias;
 
                 /* the aggregate members */
-                vector_t *fields;
+                /* eHlirEnum|eHlirVariant|eHlirStruct|eHlirUnion */
+                /* eHlirVariantCase|eHlirCase */
+                struct 
+                {
+                    /* eHlirVariantCase|eHlirEnum|eHlirStruct|eHlirUnion */
+                    vector_t *fields;
+
+                    /* eHlirVariantCase|eHlirCase */
+                    const struct hlir_t *value;
+
+                    /* eHlirEnum|eHlirVariant */
+                    const struct hlir_t *defaultCase;
+                };
 
                 /* integer type */
                 struct
@@ -188,9 +200,6 @@ typedef struct hlir_t
                 ///
                 /// all declarations
                 ///
-
-                /* the initial value */
-                const struct hlir_t *value;
 
                 struct
                 {
@@ -313,6 +322,8 @@ hlir_t *hlir_assign(node_t *node, hlir_t *dst, hlir_t *src);
 hlir_t *hlir_return(node_t *node, hlir_t *result);
 
 hlir_t *hlir_field(node_t *node, const hlir_t *type, const char *name);
+hlir_t *hlir_case(node_t *node, const char *name, hlir_t *value);
+hlir_t *hlir_variant_case(node_t *node, const char *name, hlir_t *value, vector_t *fields);
 
 hlir_t *hlir_access(node_t *node, hlir_t *expr, hlir_t *field);
 hlir_t *hlir_index(node_t *node, hlir_t *array, hlir_t *index);

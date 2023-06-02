@@ -220,6 +220,21 @@ hlir_t *hlir_field(node_t *node, const hlir_t *type, const char *name)
     return hlir_decl_new(node, name, type, eHlirRecordField);
 }
 
+hlir_t *hlir_case(node_t *node, const char *name, hlir_t *value)
+{
+    hlir_t *self = hlir_decl_new(node, name, get_hlir_type(value), eHlirEnumCase);
+    self->value = value;
+    return self;
+}
+
+hlir_t *hlir_variant_case(node_t *node, const char *name, hlir_t *value, vector_t *fields)
+{
+    hlir_t *self = hlir_decl_new(node, name, get_hlir_type(value), eHlirVariantCase);
+    self->value = value;
+    self->fields = fields;
+    return self;
+}
+
 // building modules
 
 void hlir_set_attributes(hlir_t *self, const hlir_attributes_t *attributes)

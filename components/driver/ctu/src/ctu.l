@@ -31,6 +31,7 @@ WS [ \t\r\v\n\f]
 "~" { return BITNOT; }
 
 "->" { return ARROW; }
+"=>" { return IMPLIES; }
 
 "!<" { 
     enter_template(yyextra);

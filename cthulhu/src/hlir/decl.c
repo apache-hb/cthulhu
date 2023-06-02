@@ -56,16 +56,28 @@ hlir_t *hlir_union(node_t *node, const char *name, vector_t *fields)
 /// enum interface
 ///
 
+static hlir_t *begin_enum_type(node_t *node, const char *name, const hlir_t *underlying, hlir_kind_t kind)
+{
+    hlir_t *hlir = hlir_decl_new(node, name, underlying, kind);
+    hlir->fields = vector_new(4);
+    hlir->defaultCase = NULL;
+    return hlir;
+}
+
 hlir_t *hlir_begin_enum(node_t *node, const char *name, const hlir_t *type)
 {
     CTASSERT(hlir_is(type, eHlirDigit));
-    return hlir_begin_aggregate(node, name, eHlirEnum, type);
+    return begin_enum_type(node, name, type, eHlirEnum);
 }
 
-hlir_t *hlir_enum(node_t *node, const char *name, const hlir_t *type, vector_t *values)
+///
+/// variant interface
+///
+
+hlir_t *hlir_begin_variant(node_t *node, const char *name, const hlir_t *type)
 {
     CTASSERT(hlir_is(type, eHlirDigit));
-    return hlir_begin_aggregate_with_fields(node, name, values, eHlirEnum, type);
+    return begin_enum_type(node, name, type, eHlirVariant);
 }
 
 ///
@@ -85,7 +97,7 @@ void hlir_add_case(hlir_t *self, hlir_t *field)
 {
     CTASSERT(self != NULL);
     CTASSERTM(IS_ENUM(self), "hlir-add-case called on non-union hlir");
-    CTASSERTM(hlir_is(field, eHlirEnumField), "hlir-add-case called with non-field hlir");
+    CTASSERTM(hlir_is(field, eHlirEnumCase), "hlir-add-case called with non-field hlir");
 
     vector_push(&self->fields, field);
 }

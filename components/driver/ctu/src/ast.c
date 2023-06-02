@@ -33,10 +33,11 @@ ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *import
     return ast;
 }
 
-ast_t *ast_import(scan_t *scan, where_t where, vector_t *path)
+ast_t *ast_import(scan_t *scan, where_t where, vector_t *path, char *alias)
 {
     ast_t *ast = ast_new(eAstImport, scan, where);
     ast->path = path;
+    ast->id = alias;
     return ast;
 }
 
@@ -373,9 +374,9 @@ ast_t *ast_case(scan_t *scan, where_t where, char *name, vector_t *fields, ast_t
 
 ast_t *ast_default(scan_t *scan, where_t where)
 {
-    if (!ctu_has_feature(NULL, eFeatureDefaultExpr))
+    if (!ctu_has_feature(get_lang_handle(scan), eFeatureDefaultExpr))
     {
-        report(scan_reports(scan), eFatal, node_new(scan, where), "`default` expressions are unstable and therefore disabled by default. enable them with `--ctu-enable-default-expr`");
+        report(scan_reports(scan), eFatal, node_new(scan, where), "`default` expressions are unstable and therefore disabled by default");
     }
 
     return ast_new(eAstDefault, scan, where);

@@ -66,7 +66,8 @@ static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
     {
-    case eHlirDigit: return eTypeDigit;
+    case eHlirDigit:
+    case eHlirEnum: return eTypeDigit;
     case eHlirDecimal: return eTypeDecimal;
     case eHlirBool: return eTypeBool;
     case eHlirString: return eTypeString;
@@ -842,6 +843,9 @@ static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
     hlir_kind_t kind = get_hlir_kind(hlir);
     switch (kind)
     {
+    case eHlirEnumCase:
+        return compile_rvalue(ssa, hlir->value);
+
     case eHlirDigitLiteral:
         return compile_digit(ssa, hlir);
 

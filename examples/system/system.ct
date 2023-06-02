@@ -90,9 +90,9 @@ def main {
     const system = newSystem(&mem);
     printf("System name: %s\n", getSystemName(system));
 
-    printMemory(.{ 
+    printMemory(.{
         name = "example", 
         bytes = 0x1000,
-        kind = default
+        kind = Heap
     });
 }

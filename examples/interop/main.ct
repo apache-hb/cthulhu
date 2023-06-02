@@ -1,11 +1,11 @@
-import lib;
+import lib => other; // module alias
 
 @entry(cli)
 def main: int {
-    lib::lhs = 25;
-    lib::rhs = 42;
+    other::lhs = 25;
+    other::rhs = 42;
     
-    lib::add();
+    other::add();
 
-    return lib::result;
+    return other::result;
 }

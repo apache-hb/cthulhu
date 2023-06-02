@@ -22,10 +22,18 @@ hlir_t *hlir_begin_enum(node_t *node, const char *name, const hlir_t *type);
 hlir_t *hlir_enum(node_t *node, const char *name, const hlir_t *type, vector_t *values);
 
 ///
+/// sum type builders
+///
+
+hlir_t *hlir_begin_variant(node_t *node, const char *name, const hlir_t *type);
+void hlir_variant(node_t *node, const char *name, const hlir_t *type, vector_t *cases);
+
+///
 /// aggregate builders
 ///
 
 void hlir_add_field(hlir_t *self, hlir_t *field);
+void hlir_add_case(hlir_t *self, hlir_t *field);
 
 ///
 /// alias builders

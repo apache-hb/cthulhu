@@ -38,6 +38,7 @@ typedef struct
 } level_format_t;
 
 static level_format_t kFormats[eLevelTotal] = {
+    [eSorry] = { "sorry", COLOUR_PURPLE "sorry" COLOUR_RESET },
     [eInternal] = {"internal", COLOUR_CYAN "ice" COLOUR_RESET},
     [eFatal] = {"error", COLOUR_RED "error" COLOUR_RESET},
     [eWarn] = {"warning", COLOUR_YELLOW "warning" COLOUR_RESET},

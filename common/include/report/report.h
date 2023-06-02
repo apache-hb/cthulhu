@@ -44,6 +44,7 @@ typedef struct vector_t vector_t;
  */
 typedef enum
 {
+    eSorry,    ///< unimplemented feature has been hit
     eInternal, ///< an invalid state has been reached internally
     eFatal,    ///< a user issue that prevents the program from continuing
     eWarn,     ///< a user issue that may be resolved

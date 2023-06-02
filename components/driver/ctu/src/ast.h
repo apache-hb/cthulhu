@@ -78,8 +78,12 @@ typedef struct ast_t
     node_t *node;
 
     union {
-        /* eAstTypename|eAstModule */
-        vector_t *path;
+        /* eAstTypename|eAstModule|eAstImport */
+        struct 
+        {
+            vector_t *path;
+            char *id; // import name
+        };
 
         /* eAstDigit */
         struct
@@ -251,7 +255,7 @@ typedef struct ast_t
 /// module declarations
 
 ast_t *ast_module(scan_t *scan, where_t where, vector_t *path);
-ast_t *ast_import(scan_t *scan, where_t where, vector_t *path);
+ast_t *ast_import(scan_t *scan, where_t where, vector_t *path, char *alias);
 ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *imports, vector_t *decls);
 
 ast_t *ast_attribute(scan_t *scan, where_t where, char *name, vector_t *args);

@@ -10,6 +10,8 @@
 #include "std/vector.h"
 #include "std/str.h"
 
+#include "report/report.h"
+
 #include <string.h>
 
 // internals
@@ -92,7 +94,6 @@ int ap_get_opt(ap_t *self, const char *name, ap_param_t **param, char **error)
     CTASSERT(self != NULL);
     CTASSERT(name != NULL);
     CTASSERT(param != NULL);
-
 
     ap_param_t *result = map_get(self->nameLookup, name);
     if (result == NULL)

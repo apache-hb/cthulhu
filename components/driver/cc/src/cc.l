@@ -38,31 +38,30 @@ WS [ \t\r\v\n\f]
 "_Atomic" { return ATOMIC; }
 "const" { return CONST; }
 "volatile" { return VOLATILE; }
+"restrict" { return RESTRICT; }
+"auto" { return AUTO; }
+"extern" { return EXTERN; }
+"inline" { return INLINE; }
+"static" { return STATIC; }
+"register" { return REGISTER; }
 
 "struct" { return STRUCT; }
 "union" { return UNION; }
+"enum" { return ENUM; }
 
-"auto" { return AUTO; }
 "break" { return BREAK; }
 "case" { return CASE; }
 "continue" { return CONTINUE; }
 "default" { return DEFAULT; }
 "do" { return DO; }
 "else" { return ELSE; }
-"enum" { return ENUM; }
-
-"extern" { return EXTERN; }
 "for" { return FOR; }
 "goto" { return GOTO; }
 "if" { return IF; }
-"inline" { return INLINE; }
-"register" { return REGISTER; }
-"restrict" { return RESTRICT; }
+"switch" { return SWITCH; }
 "return" { return RETURN; }
 
 "sizeof" { return SIZEOF; }
-"static" { return STATIC; }
-"switch" { return SWITCH; }
 "typedef" { return TYPEDEF; }
 
 "while" { return WHILE; }
@@ -71,9 +70,12 @@ WS [ \t\r\v\n\f]
 "_Complex" { return COMPLEX; }
 "_Generic" { return GENERIC; }
 "_Imaginary" { return IMAGINARY; }
-"_Noreturn" { return TOK_NORETURN; }
+"_Noreturn" { return NRETURN; }
 "_Static_assert" { return STATIC_ASSERT; }
 "_Thread_local" { return THREAD_LOCAL; }
+
+"_Module" { return MODULE; }
+"_Import" { return IMPORT; }
 
 "0"[0-7]+ {
     mpz_init_set_str(yylval->digit, yytext + 1, 8);

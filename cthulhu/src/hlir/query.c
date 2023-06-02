@@ -31,6 +31,12 @@ static bool has_name(hlir_kind_t kind)
     case eHlirFunction:
     case eHlirQualified:
 
+    case eHlirEnum:
+    case eHlirVariant:
+
+    case eHlirEnumCase:
+    case eHlirVariantCase:
+
     case eHlirGlobal:
     case eHlirLocal:
     case eHlirParam:
@@ -64,6 +70,11 @@ static bool has_attribs(hlir_kind_t kind)
     case eHlirArray:
     case eHlirOpaque:
     case eHlirQualified:
+
+    case eHlirEnum:
+    case eHlirVariant:
+    case eHlirEnumCase:
+    case eHlirVariantCase:
 
     case eHlirRecordField:
     case eHlirFunction:
@@ -200,7 +211,7 @@ const hlir_t *hlir_follow_type(const hlir_t *hlir)
         return hlir_follow_type(hlir->alias);
     }
 
-    if (hlir_is(hlir, eHlirParam) || hlir_is(hlir, eHlirRecordField) || hlir_is(hlir, eHlirQualified))
+    if (hlir_is(hlir, eHlirEnum) || hlir_is(hlir, eHlirParam) || hlir_is(hlir, eHlirRecordField) || hlir_is(hlir, eHlirQualified))
     {
         return hlir_follow_type(get_hlir_type(hlir));
     }

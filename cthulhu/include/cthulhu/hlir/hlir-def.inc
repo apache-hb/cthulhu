@@ -33,11 +33,11 @@ HLIR_KIND(eHlirStruct, "struct-type")
 HLIR_KIND(eHlirUnion,  "union-type")
 HLIR_KIND(eHlirEnum,   "enum-type")
 HLIR_KIND(eHlirAlias,  "alias-type")
-// HLIR_KIND(eHlirVariant, "variant-type")
+HLIR_KIND(eHlirVariant, "variant-type")
 
 HLIR_KIND(eHlirRecordField, "record-field")
-HLIR_KIND(eHlirEnumField,   "enum-field")
-// HLIR_KIND(eHlirVariantField, "variant-field")
+HLIR_KIND(eHlirEnumCase,   "enum-case")
+HLIR_KIND(eHlirVariantCase, "variant-case")
 
 // literal values
 HLIR_KIND(eHlirDigitLiteral,   "digit-literal")

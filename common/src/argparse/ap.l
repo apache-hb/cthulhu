@@ -13,7 +13,7 @@
 %}
 
 LETTER [a-zA-Z]
-ALNUMDASH [a-zA-Z0-9-]
+OPT [a-zA-Z0-9\-\:]
 
 %%
 
@@ -21,7 +21,7 @@ ALNUMDASH [a-zA-Z0-9-]
 
 "=" { return ASSIGN; }
 
-[-]+{LETTER}{ALNUMDASH}* { 
+[-]+{LETTER}{OPT}* { 
     return ap_get_opt(scan_extra(yyextra), yytext, &yylval->option, &yylval->error); 
 }
 

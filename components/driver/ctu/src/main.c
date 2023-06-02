@@ -15,7 +15,7 @@ static void *ctu_parse_file(lang_handle_t *runtime, scan_t *scan)
 {
     UNUSED(runtime);
 
-    ctu_init_scan(scan);
+    ctu_init_scan(scan, runtime);
     return compile_scanner(scan, &kCallbacks);
 }
 
