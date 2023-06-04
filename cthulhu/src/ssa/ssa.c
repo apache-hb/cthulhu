@@ -322,6 +322,35 @@ static vector_t *split_section(const char *section)
     return result;
 }
 
+// only the first segment of a namespace starts with `N`
+static const char *get_mangle_prefix(size_t i)
+{
+    if (i == 0) { return "N"; }
+    return "";
+}
+
+static char *mangle_section(size_t index, char *src, const char *part)
+{
+    char *dst = src;
+
+    vector_t *sections = split_section(part);
+    if (sections == NULL)
+    {
+        return format("%s%s%zu%s", dst, get_mangle_prefix(index), strlen(part), part);
+    }
+    
+    char *head = vector_get(sections, 0);
+    dst = format("%s%s%zu%s", dst, get_mangle_prefix(index), strlen(head), head);
+
+    for (size_t j = 1; j < vector_len(sections); j++)
+    {
+        const char *section = vector_get(sections, j);
+        dst = format("%s%zu%s", dst, strlen(section), section);
+    }
+
+    return dst;
+}
+
 static const char *flow_make_name(ssa_t *ssa, const hlir_t *symbol)
 {
     const hlir_attributes_t *attribs = get_hlir_attributes(symbol);
@@ -342,22 +371,7 @@ static const char *flow_make_name(ssa_t *ssa, const hlir_t *symbol)
     for (size_t i = 0; i < parts; i++)
     {
         const char *ns = vector_get(ssa->namePath, i);
-        vector_t *sections = split_section(ns);
-        // TODO: clean this up
-        if (sections == NULL)
-        {
-            result = format("%sN%zu%s", result, strlen(ns), ns);
-            continue;
-        }
-        
-        char *head = vector_get(sections, 0);
-        result = format("%sN%zu%s", result, strlen(head), head);
-
-        for (size_t j = 1; j < vector_len(sections); j++)
-        {
-            const char *section = vector_get(sections, j);
-            result = format("%s%zu%s", result, strlen(section), section);
-        }
+        result = mangle_section(i, result, ns);
     }
 
     result = format("%s%zu%sE", result, strlen(part), part);
