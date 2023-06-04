@@ -1,4 +1,5 @@
 src = [ 
+    'src/ast.c',
     'src/main.c', 
     'src/scan.c',
     lex.process('src/cc.l'), 

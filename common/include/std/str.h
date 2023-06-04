@@ -171,6 +171,12 @@ size_t str_rfindn(IN_READS(len) const char *str, size_t len, IN_STRING const cha
 MUST_INSPECT CONSTFN
 size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
 
+MUST_INSPECT CONSTFN
+size_t str_count_any(IN_STRING const char *str, IN_STRING const char *chars);
+
+// TODO: docs
+bool char_is_any_of(char c, const char *chars);
+
 /**
  * @brief check if a string contains a substring
  *

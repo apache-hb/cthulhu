@@ -44,7 +44,7 @@ char *formatv(const char *fmt, va_list args)
     return out;
 }
 
-static bool char_is_any_of(char c, const char *chars)
+bool char_is_any_of(char c, const char *chars)
 {
     for (; *chars; chars++)
     {
@@ -564,6 +564,26 @@ size_t str_find(const char *str, const char *sub)
 
     char *ptr = strstr(str, sub);
     return ptr == NULL ? SIZE_MAX : ptr - str;
+}
+
+USE_DECL
+size_t str_count_any(const char *str, const char *chars)
+{
+    CTASSERT(str != NULL);
+    CTASSERT(chars != NULL);
+    CTASSERT(*chars != '\0');
+
+    size_t count = 0;
+
+    for (size_t i = 0; str[i] != '\0'; i++)
+    {
+        if (char_is_any_of(str[i], chars))
+        {
+            count++;
+        }
+    }
+
+    return count;
 }
 
 USE_DECL

@@ -290,13 +290,40 @@ static const char *mangle_arg(ssa_t *ssa, const hlir_t *param)
     }
 }
 
+static vector_t *split_section(const char *section)
+{
+    size_t parts = str_count_any(section, "-./");
+    if (parts == 0)
+    {
+        return NULL;
+    }
+
+    vector_t *result = vector_new(parts);
+
+    const char *start = section;
+
+    for (size_t i = 0; i < parts; i++)
+    {
+        const char *end = strpbrk(start, "-./");
+        if (end == NULL)
+        {
+            end = start + strlen(start);
+        }
+
+        size_t len = end - start;
+
+        vector_push(&result, ctu_strndup(start, len));
+        start = end + 1;
+    }
+
+    char *tail = ctu_strdup(start);
+    vector_push(&result, tail);
+
+    return result;
+}
+
 static const char *flow_make_name(ssa_t *ssa, const hlir_t *symbol)
 {
-    map_t *repl = map_new(4);
-    map_set(repl, "-", "_");
-    map_set(repl, ".", "_");
-    map_set(repl, "/", "_");
-
     const hlir_attributes_t *attribs = get_hlir_attributes(symbol);
     if (attribs->mangle != NULL)
     {
@@ -315,8 +342,22 @@ static const char *flow_make_name(ssa_t *ssa, const hlir_t *symbol)
     for (size_t i = 0; i < parts; i++)
     {
         const char *ns = vector_get(ssa->namePath, i);
-        char *part = str_replace_many(ns, repl); // todo: replace all non alphanum with _
-        result = format("%sN%zu%s", result, strlen(part), part);
+        vector_t *sections = split_section(ns);
+        // TODO: clean this up
+        if (sections == NULL)
+        {
+            result = format("%sN%zu%s", result, strlen(ns), ns);
+            continue;
+        }
+        
+        char *head = vector_get(sections, 0);
+        result = format("%sN%zu%s", result, strlen(head), head);
+
+        for (size_t j = 1; j < vector_len(sections); j++)
+        {
+            const char *section = vector_get(sections, j);
+            result = format("%s%zu%s", result, strlen(section), section);
+        }
     }
 
     result = format("%s%zu%sE", result, strlen(part), part);

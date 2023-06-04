@@ -21,6 +21,16 @@ WS [ \t\r\v\n\f]
 {WS} ;
 "//".* ;
 
+"*=" { return MULEQ; }
+"*" { return MUL; }
+
+"." { return DOT; }
+
+"::" { return COLON2; }
+":" { return COLON; }
+
+";" { return SEMICOLON; }
+
 "void" { return VOID; }
 "_Bool" { return BOOL; }
 
@@ -78,22 +88,22 @@ WS [ \t\r\v\n\f]
 "_Import" { return IMPORT; }
 
 "0"[0-7]+ {
-    mpz_init_set_str(yylval->digit, yytext + 1, 8);
+    mpz_init_set_str(yylval->mpz, yytext + 1, 8);
     return DIGIT;
 }
 
 [0-9]+ {
-    mpz_init_set_str(yylval->digit, yytext, 10);
+    mpz_init_set_str(yylval->mpz, yytext, 10);
     return DIGIT;
 }
 
 "0"[xX][0-9a-fA-F]+ {
-    mpz_init_set_str(yylval->digit, yytext + 2, 16);
+    mpz_init_set_str(yylval->mpz, yytext + 2, 16);
     return DIGIT;
 }
 
 "0"[bB][01]+ {
-    mpz_init_set_str(yylval->digit, yytext + 2, 2);
+    mpz_init_set_str(yylval->mpz, yytext + 2, 2);
     return DIGIT;
 }
 

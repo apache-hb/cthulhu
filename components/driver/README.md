@@ -23,8 +23,8 @@ ex = library('example', src,
 
 langs += { 
     'example': {
-        'dep': declare_dependency(link_with : ex),
-        'mod': 'kExampleLang'
+        'dep': declare_dependency(link_with : ex), # dependency object
+        'mod': 'kExampleModule' # module definition exported from the object
     }
 }
 ```
