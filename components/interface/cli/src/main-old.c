@@ -187,7 +187,7 @@ int main(int argc, const char **argv)
             CHECK_REPORTS("emitting ssa");
         }
 
-        c89_emit_ssa_modules(emitConfig, mod);
+        emit_ssa_modules(emitConfig, mod);
 
         return end_reports(reports, "generating c89 from ssa", reportConfig);
     }

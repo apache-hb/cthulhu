@@ -141,7 +141,7 @@ int main(int argc, const char **argv)
         .header = header
     };
 
-    c89_emit_ssa_modules(config, ssa);
+    emit_ssa_modules(config, ssa);
     CHECK_REPORTS(reports, "failed to emit C89");
 
     lifetime_deinit(lifetime);

@@ -134,6 +134,11 @@ static const char *kDigitNames[eSignTotal][eDigitTotal] = {
             [eDigitPtr] = "intptr",
             [eDigitSize] = "isize",
             [eDigitMax] = "intmax",
+
+            [eDigit8] = "int8",
+            [eDigit16] = "int16",
+            [eDigit32] = "int32",
+            [eDigit64] = "int64",
         },
     [eUnsigned] =
         {
@@ -145,6 +150,11 @@ static const char *kDigitNames[eSignTotal][eDigitTotal] = {
             [eDigitPtr] = "uintptr",
             [eDigitSize] = "usize",
             [eDigitMax] = "uintmax",
+
+            [eDigit8] = "uint8",
+            [eDigit16] = "uint16",
+            [eDigit32] = "uint32",
+            [eDigit64] = "uint64",
         },
 };
 
@@ -369,9 +379,14 @@ static variant_kind_t get_variant_kind(sema_t *sema, ast_t *ast)
         ast_t *field = vector_get(ast->fields, i);
         CTASSERT(field->of == eAstCase);
 
-        if (vector_len(field->caseFields) > 0) { return eVariantSum; }
+        if (vector_len(field->caseFields) > 0) 
+        { 
+            logverbose("variant `%s` is sum", ast->name);
+            return eVariantSum; 
+        }
     }
 
+    logverbose("variant `%s` is enum", ast->name);
     return eVariantEnum;
 }
 
@@ -630,6 +645,7 @@ static hlir_t *begin_type_resolve(sema_t *sema, void *user)
         default:
             report(sema_reports(sema), eInternal, ast->node, "unknown variant kind in resolution");
         }
+        break;
 
     case eAstDeclStruct:
         return hlir_begin_struct(ast->node, ast->name);
@@ -641,9 +657,11 @@ static hlir_t *begin_type_resolve(sema_t *sema, void *user)
         return sema_global(sema, ast);
 
     default:
-        report(sema_reports(sema), eInternal, ast->node, "unknown ast type in resolution");
-        return hlir_error(ast->node, "unknown type resolution");
+        break;
     }
+    
+    report(sema_reports(sema), eInternal, ast->node, "unknown ast type in resolution");
+    return hlir_error(ast->node, "unknown type resolution");
 }
 
 void check_valid_import(sema_t *sema, sema_t *cur, ast_t *ast, hlir_t *hlir)

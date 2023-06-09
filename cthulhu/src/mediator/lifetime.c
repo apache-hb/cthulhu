@@ -198,12 +198,13 @@ void lifetime_import(reports_t *reports, lifetime_t *self)
 
 void lifetime_compile(reports_t *reports, lifetime_t *self)
 {
+    check_t check = { .reports = reports };
     map_iter_t iter = map_iter(self->modules);
     while (map_has_next(&iter))
     {
         map_entry_t entry = map_next(&iter);
         module_entry_t *mod = entry.value;
-        lang_compile(mod->handle, mod->compile);
+        lang_compile(mod->handle, mod->compile, &check);
     }
 }
 

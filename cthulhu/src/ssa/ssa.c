@@ -20,8 +20,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// TODO: track name mangling
-
 typedef struct {
     reports_t *reports;
 
@@ -329,6 +327,7 @@ static const char *get_mangle_prefix(size_t i)
     return "";
 }
 
+// TODO: we should just require frontends to pass us namespace segments properly
 static char *mangle_section(size_t index, char *src, const char *part)
 {
     char *dst = src;

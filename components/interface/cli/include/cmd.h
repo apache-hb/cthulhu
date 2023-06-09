@@ -14,9 +14,11 @@ typedef struct runtime_t
     int argc;
     const char **argv;
 
+    mediator_t *mediator;
+    lifetime_t *lifetime;
+
     reports_t *reports;
     ap_t *ap;
-    mediator_t *mediator;
 
     bool emitSSA;
 

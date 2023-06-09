@@ -94,6 +94,11 @@ DIGIT_KIND(eDigitPtr,  "intptr")
 DIGIT_KIND(eDigitSize, "intsize")
 DIGIT_KIND(eDigitMax,  "intmax")
 
+DIGIT_KIND(eDigit8,  "int8")
+DIGIT_KIND(eDigit16, "int16")
+DIGIT_KIND(eDigit32, "int32")
+DIGIT_KIND(eDigit64, "int64")
+
 #undef DIGIT_KIND
 
 #ifndef SIGN_KIND

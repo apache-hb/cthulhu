@@ -247,6 +247,8 @@ static void check_type_recursion(reports_t *reports, vector_t **stack, const hli
         check_type_recursion(reports, stack, get_hlir_type(hlir));
         return;
 
+    // enums cant be recursive
+    case eHlirEnum:
     case eHlirDigit:
     case eHlirBool:
     case eHlirString:

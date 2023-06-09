@@ -138,7 +138,7 @@ void native_file_close(file_handle_t handle)
 
 file_read_t native_file_read(file_handle_t handle, void *buffer, file_read_t size, native_cerror_t *error)
 {
-    DWORD readSize;
+    DWORD readSize = 0;
     BOOL result = ReadFile(handle, buffer, size, &readSize, NULL);
 
     if (!result)

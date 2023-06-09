@@ -6,6 +6,7 @@ typedef struct io_t io_t;
 
 typedef struct ssa_module_t ssa_module_t;
 
+/* TODO: add cxx headers and wrappers */
 typedef struct {
     reports_t *reports;
 
@@ -14,4 +15,4 @@ typedef struct {
 } emit_config_t;
 
 void c89_emit_hlir_modules(emit_config_t config, vector_t *modules);
-void c89_emit_ssa_modules(emit_config_t config, ssa_module_t *module);
+void emit_ssa_modules(emit_config_t config, ssa_module_t *module);

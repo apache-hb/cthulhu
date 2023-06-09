@@ -26,12 +26,10 @@
 // general
 static const char *kHelpNames[] = { "-h", "--help", NULL };
 static const char *kVersionNames[] = { "-v", "--version", NULL };
-static const char *kLoadLangNames[] = { "-lang", "--load-lang", NULL };
-static const char *kLoadPluginNames[] = { "-plugin", "--load-plugin", NULL };
 static const char *kAddExtensionMapNames[] = { "-ext", "--add-ext", NULL };
 
 // codegen
-static const char *kOutputFileNames[] = { "-o", "--output", NULL };
+static const char *kOutputSourceNames[] = { "-o", "--output", NULL };
 static const char *kOutputGenNames[] = { "-cg", "--codegen", NULL };
 static const char *kOutputHeaderNames[] = { "-header", "--output-header", NULL };
 
@@ -40,6 +38,8 @@ static const char *kDebugSsaNames[] = { "-dbgssa", "--debug-ssa", NULL };
 static const char *kDebugVerboseNames[] = { "-V", "--verbose", NULL };
 static const char *kWarnAsErrorNames[] = { "-Werror", NULL };
 static const char *kReportLimitNames[] = { "-fmax-errors", NULL };
+
+// general events
 
 static AP_EVENT(on_help, ap, param, value, data)
 {
@@ -128,19 +128,36 @@ static AP_EVENT(on_register_ext, ap, param, value, data)
     return eEventHandled;
 }
 
-static AP_EVENT(on_add_source, ap, param, value, data)
+// codegen events
+
+static AP_EVENT(on_set_source, ap, param, value, data)
 {
     UNUSED(ap);
     UNUSED(param);
-    UNUSED(data);
 
     const char *path = value;
     runtime_t *rt = data;
 
-    vector_push(&rt->sourcePaths, (char*)path);
+    rt->sourceOut = path;
 
     return eEventHandled;
 }
+
+static AP_EVENT(on_set_header, ap, param, value, data)
+{
+    UNUSED(ap);
+    UNUSED(param);
+
+    const char *path = value;
+    runtime_t *rt = data;
+
+    rt->headerOut = path;
+
+    return eEventHandled;
+}
+
+
+// debug events
 
 static AP_EVENT(on_set_debug_ssa, ap, param, value, data)
 {
@@ -172,31 +189,23 @@ static AP_EVENT(on_set_verbose, ap, param, value, data)
     return eEventHandled;
 }
 
-static AP_EVENT(on_set_source, ap, param, value, data)
+// posargs
+
+static AP_EVENT(on_add_source, ap, param, value, data)
 {
     UNUSED(ap);
     UNUSED(param);
+    UNUSED(data);
 
     const char *path = value;
     runtime_t *rt = data;
 
-    rt->sourceOut = path;
+    vector_push(&rt->sourcePaths, (char*)path);
 
     return eEventHandled;
 }
 
-static AP_EVENT(on_set_header, ap, param, value, data)
-{
-    UNUSED(ap);
-    UNUSED(param);
-
-    const char *path = value;
-    runtime_t *rt = data;
-
-    rt->headerOut = path;
-
-    return eEventHandled;
-}
+// errors
 
 static AP_ERROR(on_arg_error, ap, node, message, data)
 {
@@ -215,9 +224,11 @@ runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifeti
         .argc = argc,
         .argv = argv,
 
+        .mediator = mediator,
+        .lifetime = lifetime,
+
         .reports = reports,
         .ap = ap,
-        .mediator = mediator,
         
         .warnAsError = false,
         .reportLimit = 20,
@@ -239,7 +250,7 @@ runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifeti
     ap_param_t *addExtensionMapParam = ap_add_string(generalGroup, "add extension map", "register a new extension for a compiler", kAddExtensionMapNames);
 
     ap_group_t *codegenGroup = ap_group_new(ap, "codegen", "code generation options");
-    ap_param_t *outputFileParam = ap_add_string(codegenGroup, "output file name", "output file name, will have .c appened to it (default: out)", kOutputFileNames);
+    ap_param_t *outputFileParam = ap_add_string(codegenGroup, "output file name", "output file name, will have .c appened to it (default: out)", kOutputSourceNames);
     ap_param_t *outputGenParam = ap_add_string(codegenGroup, "output generator", "code generator output to use [ssa-c89, hlir-c89] (default: ssa-c89)", kOutputGenNames);
     ap_param_t *outputHeaderParam = ap_add_string(codegenGroup, "output header", "output header name, provide none to skip header generation. will have .c appeneded to it (default: none)", kOutputHeaderNames);
 

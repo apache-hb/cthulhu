@@ -52,7 +52,7 @@ compile_t *compile_init(lang_handle_t *handle, void *ast, sema_t *sema, hlir_t *
     return compile;
 }
 
-void lang_compile(lang_handle_t *handle, compile_t *compile)
+void lang_compile(lang_handle_t *handle, compile_t *compile, check_t *check)
 {
     CTASSERT(handle != NULL);
     CTASSERT(compile != NULL);
@@ -62,6 +62,8 @@ void lang_compile(lang_handle_t *handle, compile_t *compile)
     logverbose("%s:fnCompile()", lang->id);
 
     compile->mod = lang->fnCompile(handle, compile);
+
+    check_module(check, compile->mod);
 }
 
 void lang_import(lang_handle_t *handle, compile_t *compile)
