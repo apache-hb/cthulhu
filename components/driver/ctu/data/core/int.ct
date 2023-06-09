@@ -1,0 +1,37 @@
+module core;
+
+// fixed size types
+
+export type int8 = __builtin::int8;
+export type int16 = __builtin::int16;
+export type int32 = __builtin::int32;
+export type int64 = __builtin::int64;
+
+export type uint8 = __builtin::uint8;
+export type uint16 = __builtin::uint16;
+export type uint32 = __builtin::uint32;
+export type uint64 = __builtin::uint64;
+
+// fastest type with at least N bits
+
+export type fast8 = __builtin::int_fast8;
+export type fast16 = __builtin::int_fast16;
+export type fast32 = __builtin::int_fast32;
+export type fast64 = __builtin::int_fast64;
+
+export type ufast8 = __builtin::uint_fast8;
+export type ufast16 = __builtin::uint_fast16;
+export type ufast32 = __builtin::uint_fast32;
+export type ufast64 = __builtin::uint_fast64;
+
+// smallest type with at least N bits
+
+export type least8 = __builtin::int_least8;
+export type least16 = __builtin::int_least16;
+export type least32 = __builtin::int_least32;
+export type least64 = __builtin::int_least64;
+
+export type uleast8 = __builtin::uint_least8;
+export type uleast16 = __builtin::uint_least16;
+export type uleast32 = __builtin::uint_least32;
+export type uleast64 = __builtin::uint_least64;

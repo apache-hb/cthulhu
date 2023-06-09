@@ -6,6 +6,8 @@
 #include "suffix.h"
 #include "config.h"
 
+#include "builtin/builtin.h"
+
 #include "cthulhu/hlir/arity.h"
 #include "cthulhu/hlir/digit.h"
 #include "cthulhu/hlir/ops.h"
@@ -115,7 +117,7 @@ static sema_data_t *sema_data_new(void)
     return data;
 }
 
-static sema_t *begin_sema(sema_t *parent, size_t *sizes)
+sema_t *begin_sema(sema_t *parent, size_t *sizes)
 {
     sema_data_t *data = parent != NULL ? sema_get_data(parent) : sema_data_new();
     sema_t *sema = sema_new(parent, eTagTotal, sizes);
@@ -124,54 +126,29 @@ static sema_t *begin_sema(sema_t *parent, size_t *sizes)
 }
 
 static const char *kDigitNames[eSignTotal][eDigitTotal] = {
-    [eSigned] =
-        {
-            [eDigitChar] = "char",
-            [eDigitShort] = "short",
-            [eDigitInt] = "int",
-            [eDigitLong] = "long",
+    [eSigned] = {
+        [eDigitChar] = "char",
+        [eDigitShort] = "short",
+        [eDigitInt] = "int",
+        [eDigitLong] = "long",
 
-            [eDigitPtr] = "intptr",
-            [eDigitSize] = "isize",
-            [eDigitMax] = "intmax",
+        [eDigitPtr] = "intptr",
+        [eDigitSize] = "isize",
+        [eDigitMax] = "intmax",
+    },
+    [eUnsigned] = {
+        [eDigitChar] = "uchar",
+        [eDigitShort] = "ushort",
+        [eDigitInt] = "uint",
+        [eDigitLong] = "ulong",
 
-            [eDigit8] = "int8",
-            [eDigit16] = "int16",
-            [eDigit32] = "int32",
-            [eDigit64] = "int64",
-        },
-    [eUnsigned] =
-        {
-            [eDigitChar] = "uchar",
-            [eDigitShort] = "ushort",
-            [eDigitInt] = "uint",
-            [eDigitLong] = "ulong",
-
-            [eDigitPtr] = "uintptr",
-            [eDigitSize] = "usize",
-            [eDigitMax] = "uintmax",
-
-            [eDigit8] = "uint8",
-            [eDigit16] = "uint16",
-            [eDigit32] = "uint32",
-            [eDigit64] = "uint64",
-        },
+        [eDigitPtr] = "uintptr",
+        [eDigitSize] = "usize",
+        [eDigitMax] = "uintmax",
+    },
 };
 
-static hlir_t *kVoidType = NULL;
-static hlir_t *kEmptyType = NULL;
-static hlir_t *kOpaqueType = NULL;
-static hlir_t *kBoolType = NULL;
-static hlir_t *kStringType = NULL;
-static hlir_t *kFloatType = NULL;
 static hlir_t *kDigitTypes[eSignTotal * eDigitTotal];
-
-static hlir_t *kVaListType = NULL;
-
-static hlir_t *kUnresolvedType = NULL;
-static hlir_t *kUninitalized = NULL;
-
-static hlir_t *kZeroIndex = NULL;
 
 #define DIGIT_INDEX(sign, digit) ((sign)*eDigitTotal + (digit))
 
@@ -184,6 +161,20 @@ static const char *get_digit_name(sign_t sign, digit_t digit)
 {
     return kDigitNames[sign][digit];
 }
+
+static hlir_t *kVoidType = NULL;
+static hlir_t *kEmptyType = NULL;
+static hlir_t *kOpaqueType = NULL;
+static hlir_t *kBoolType = NULL;
+static hlir_t *kStringType = NULL;
+static hlir_t *kFloatType = NULL;
+
+static hlir_t *kVaListType = NULL;
+
+static hlir_t *kUnresolvedType = NULL;
+static hlir_t *kUninitalized = NULL;
+
+static hlir_t *kZeroIndex = NULL;
 
 static sema_t *kRootSema = NULL;
 
@@ -390,7 +381,7 @@ static variant_kind_t get_variant_kind(sema_t *sema, ast_t *ast)
     return eVariantEnum;
 }
 
-static void add_decl(sema_t *sema, int tag, const char *name, hlir_t *decl)
+void add_decl(sema_t *sema, int tag, const char *name, hlir_t *decl)
 {
     node_t *node = get_hlir_node(decl);
 
@@ -446,10 +437,18 @@ static void add_basic_types(sema_t *sema)
 void ctu_init(lang_handle_t *runtime)
 {
     size_t sizes[eTagTotal] = {
-        [eSemaValues] = 1, [eSemaProcs] = 1, [eSemaTypes] = 32, [eSemaModules] = 1, [eTagAttribs] = 1, [eTagSuffix] = 32,
+        [eSemaValues] = 1, 
+        [eSemaProcs] = 1, 
+        [eSemaTypes] = 32, 
+        [eSemaModules] = 1, 
+        [eTagAttribs] = 1, 
+        [eTagSuffix] = 32,
     };
 
     kRootSema = sema_root_new(lang_get_reports(runtime), eTagTotal, sizes);
+
+    //sema_t *builtin = get_builtin_sema(kRootSema);
+    //sema_set(kRootSema, eSemaModules, "__builtin", builtin);
 
     node_t *node = node_builtin();
 
@@ -659,7 +658,7 @@ static hlir_t *begin_type_resolve(sema_t *sema, void *user)
     default:
         break;
     }
-    
+
     report(sema_reports(sema), eInternal, ast->node, "unknown ast type in resolution");
     return hlir_error(ast->node, "unknown type resolution");
 }

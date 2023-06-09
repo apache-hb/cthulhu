@@ -1,3 +1,5 @@
+module core;
+
 def externName(fn: symbol, name: str): str {
     if name == null {
         return fn.name;
@@ -23,11 +25,9 @@ export compile def entry(fn: symbol, kind: EntryType): symbol {
         return __builtin::error("only functions can be entry points");
     }
 
-    if kind == EntryType::cli {
-        return __builtin::entry(fn, "cli");
-    } else if kind == EntryType::gui {
-        return __builtin::entry(fn, "gui");
-    } else {
-        return __builtin::error("invalid entry point kind");
-    }
+    return switch kind {
+        case EntryType::cli => __builtin::entry(fn, "cli");
+        case EntryType::gui => __builtin::entry(fn, "gui");
+        default => __builtin::error("invalid entry point kind");
+    };
 }

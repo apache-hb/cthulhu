@@ -19,3 +19,6 @@ void ctu_init(lang_handle_t *runtime);
 void ctu_forward_decls(lang_handle_t *runtime, const char *name, void *ast);
 void ctu_process_imports(lang_handle_t *runtime, compile_t *compile);
 hlir_t *ctu_compile_module(lang_handle_t *runtime, compile_t *compile);
+
+sema_t *begin_sema(sema_t *parent, size_t *sizes);
+void add_decl(sema_t *sema, int tag, const char *name, hlir_t *decl);

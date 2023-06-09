@@ -99,6 +99,16 @@ DIGIT_KIND(eDigit16, "int16")
 DIGIT_KIND(eDigit32, "int32")
 DIGIT_KIND(eDigit64, "int64")
 
+DIGIT_KIND(eDigitFast8, "fast8")
+DIGIT_KIND(eDigitFast16, "fast16")
+DIGIT_KIND(eDigitFast32, "fast32")
+DIGIT_KIND(eDigitFast64, "fast64")
+
+DIGIT_KIND(eDigitLeast8, "least8")
+DIGIT_KIND(eDigitLeast16, "least16")
+DIGIT_KIND(eDigitLeast32, "least32")
+DIGIT_KIND(eDigitLeast64, "least64")
+
 #undef DIGIT_KIND
 
 #ifndef SIGN_KIND
