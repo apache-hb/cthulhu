@@ -125,41 +125,34 @@ sema_t *begin_sema(sema_t *parent, size_t *sizes)
     return sema;
 }
 
-static const char *kDigitNames[eSignTotal][eDigitTotal] = {
-    [eSigned] = {
-        [eDigitChar] = "char",
-        [eDigitShort] = "short",
-        [eDigitInt] = "int",
-        [eDigitLong] = "long",
+static const builtin_digit_t kDigits[] = {
+    { "char", eDigitChar, eSigned },
+    { "short", eDigitShort, eSigned },
+    { "int", eDigitInt, eSigned },
+    { "long", eDigitLong, eSigned },
 
-        [eDigitPtr] = "intptr",
-        [eDigitSize] = "isize",
-        [eDigitMax] = "intmax",
-    },
-    [eUnsigned] = {
-        [eDigitChar] = "uchar",
-        [eDigitShort] = "ushort",
-        [eDigitInt] = "uint",
-        [eDigitLong] = "ulong",
+    { "intptr", eDigitPtr, eSigned },
+    { "isize", eDigitSize, eSigned },
+    { "intmax", eDigitMax, eSigned },
 
-        [eDigitPtr] = "uintptr",
-        [eDigitSize] = "usize",
-        [eDigitMax] = "uintmax",
-    },
+    { "uchar", eDigitChar, eUnsigned },
+    { "ushort", eDigitShort, eUnsigned },
+    { "uint", eDigitInt, eUnsigned },
+    { "ulong", eDigitLong, eUnsigned },
+
+    { "uintptr", eDigitPtr, eUnsigned },
+    { "usize", eDigitSize, eUnsigned },
+    { "uintmax", eDigitMax, eUnsigned }
 };
 
-static hlir_t *kDigitTypes[eSignTotal * eDigitTotal];
+#define TOTAL_DIGITS (sizeof(kDigits) / sizeof(builtin_digit_t))
 
-#define DIGIT_INDEX(sign, digit) ((sign)*eDigitTotal + (digit))
+static hlir_t *kDigitTypes[TOTAL_DIGITS] = { NULL };
 
 hlir_t *get_digit_type(sign_t sign, digit_t digit)
 {
-    return kDigitTypes[DIGIT_INDEX(sign, digit)];
-}
-
-static const char *get_digit_name(sign_t sign, digit_t digit)
-{
-    return kDigitNames[sign][digit];
+    // some pretty ugly math
+    return kDigitTypes[sign * ((TOTAL_DIGITS / 2) + 1) + digit];
 }
 
 static hlir_t *kVoidType = NULL;
@@ -417,15 +410,10 @@ static void add_basic_types(sema_t *sema)
 
     add_decl(sema, eSemaTypes, "valist", kVaListType);
 
-    for (int sign = 0; sign < eSignTotal; sign++)
+    for (size_t i = 0; i < TOTAL_DIGITS; i++)
     {
-        for (int digit = 0; digit < eDigitTotal; digit++)
-        {
-            const char *name = get_digit_name(sign, digit);
-            hlir_t *type = get_digit_type(sign, digit);
-
-            add_decl(sema, eSemaTypes, name, type);
-        }
+        hlir_t *digit = kDigitTypes[i];
+        add_decl(sema, eSemaTypes, get_hlir_name(digit), digit);
     }
 
     // enable the below later
@@ -461,13 +449,11 @@ void ctu_init(lang_handle_t *runtime)
 
     kVaListType = hlir_va_list(node, "valist");
 
-    for (int sign = 0; sign < eSignTotal; sign++)
+
+    for (size_t i = 0; i < TOTAL_DIGITS; i++)
     {
-        for (int digit = 0; digit < eDigitTotal; digit++)
-        {
-            const char *name = get_digit_name(sign, digit);
-            kDigitTypes[DIGIT_INDEX(sign, digit)] = hlir_digit(node, name, digit, sign);
-        }
+        const builtin_digit_t *digit = kDigits + i;
+        kDigitTypes[i] = hlir_digit(node, digit->name, digit->digit, digit->sign);
     }
 
     add_basic_types(kRootSema);
