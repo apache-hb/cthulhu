@@ -29,18 +29,37 @@ static const hlir_attributes_t *kExported;
 static const hlir_attributes_t *kConst;
 static const hlir_attributes_t *kMutable;
 
-void pl0_init(lang_handle_t *runtime)
+static hlir_t *make_runtime_mod(void)
 {
-    UNUSED(runtime);
+    node_t *node = node_builtin();
+    const hlir_attributes_t *printAttributes = hlir_attributes(eLinkImported, eVisiblePrivate, DEFAULT_TAGS, "printf");
 
+    vector_t *args = vector_of(1);
+    vector_set(args, 0, kStringType);
+
+    kPrint = hlir_function(node, "print", args, kIntegerType, vector_of(0), eArityVariable, NULL);
+    hlir_set_attributes(kPrint, printAttributes);
+
+    return hlir_module(node, "pl0", vector_of(0), vector_of(0), vector_init(kPrint));
+}
+
+static vector_t *make_runtime_path(void)
+{
+    vector_t *path = vector_new(2);
+    vector_push(&path, "pl0");
+    vector_push(&path, "lang");
+    return path;
+}
+
+void pl0_init(lifetime_t *lifetime)
+{
     node_t *node = node_builtin();
 
     logverbose("initializing PL/0 runtime");
 
     kExported = hlir_attributes(eLinkExported, eVisiblePublic, DEFAULT_TAGS, NULL);
-
     kConst = hlir_attributes(eLinkExported, eVisiblePublic, eQualConst, NULL);
-    kMutable = hlir_attributes(eLinkExported, eVisiblePublic, DEFAULT_TAGS, NULL);
+    kMutable = hlir_attributes(eLinkExported, eVisiblePublic, eQualDefault, NULL);
 
     kIntegerType = hlir_digit(node, "integer", eDigitInt, eSigned);
     kBoolType = hlir_bool(node, "boolean");
@@ -51,12 +70,11 @@ void pl0_init(lang_handle_t *runtime)
 
     kFmtString = hlir_string_literal(node, kStringType, fmtLiteral);
 
-    const hlir_attributes_t *printAttributes = hlir_attributes(eLinkImported, eVisiblePrivate, DEFAULT_TAGS, "printf");
-    vector_t *args = vector_of(1);
-    vector_set(args, 0, kStringType);
+    hlir_t *runtime = make_runtime_mod();
+    vector_t *path = make_runtime_path();
 
-    kPrint = hlir_function(node, "printf", args, kIntegerType, vector_of(0), eArityVariable, NULL);
-    hlir_set_attributes(kPrint, printAttributes);
+    context_t *ctx = context_new(lifetime, NULL, runtime);
+    add_context(lifetime, path, ctx);
 }
 
 static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)

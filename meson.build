@@ -147,10 +147,10 @@ interfaces = {}
 plugins = {}
 
 foreach lang : get_option('languages')
-    subdir('components/driver'/lang)
+    subdir('driver'/lang)
 endforeach
 
-subdir('components/interface')
+subdir('interface')
 
 #subdir('tests/harness')
 #subdir('tests/unit-tests')

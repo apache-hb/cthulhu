@@ -87,6 +87,7 @@ static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char 
         const ap_param_t *old = map_get(self->parent->nameLookup, names[idx]);
         if (old != NULL)
         {
+            // TODO: better logging
             printf("failed to add name (name=%s,param=%s)\n", desc, names[idx]);
             printf("name already exists (param=%s)\n", old->desc);
             continue;

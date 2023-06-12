@@ -9,8 +9,8 @@ typedef struct context_t context_t;
 typedef struct hlir_t hlir_t;
 typedef struct scan_t scan_t;
 
-typedef void (*create_t)(mediator_t *);
-typedef void (*destroy_t)(mediator_t *);
+typedef void (*create_t)(lifetime_t *);
+typedef void (*destroy_t)(lifetime_t *);
 
 typedef void (*parse_t)(lifetime_t *, scan_t *);
 

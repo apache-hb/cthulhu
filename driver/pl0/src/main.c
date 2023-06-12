@@ -1,8 +1,9 @@
-#include "cthulhu/mediator/language.h"
+#include "cthulhu/mediator/driver.h"
 
 #include "scan/compile.h"
 
 #include "sema.h"
+#include "ast.h"
 
 #include "base/macros.h"
 
@@ -11,9 +12,16 @@
 
 CT_CALLBACKS(kCallbacks, pl0);
 
-static void *pl0_parse(lang_handle_t *handle, scan_t *scan)
+static void *pl0_parse(lifetime_t *lifetime, scan_t *scan)
 {
-    return compile_scanner(scan, &kCallbacks);
+    pl0_t *ast = compile_scanner(scan, &kCallbacks);
+    CTASSERT(ast->type == ePl0Module);
+
+    vector_t *path = vector_init((char*)ast->mod);
+
+    context_t *ctx = context_new(lifetime, ast, NULL);
+
+    add_context(lifetime, path, ctx);
 }
 
 static const char *kLangNames[] = { "pl", "pl0", NULL };
@@ -25,12 +33,12 @@ const language_t kPl0Module = {
         .license = "LGPLv3",
         .desc = "PL/0 language driver",
         .author = "Elliot Haisley",
-        .version = NEW_VERSION(2, 3, 1)
+        .version = NEW_VERSION(2, 3, 2)
     },
 
     .exts = kLangNames,
 
-    .fnInit = pl0_init,
+    .fnCreate = pl0_init,
 
     .fnParse = pl0_parse,
     .fnForward = pl0_forward_decls,
