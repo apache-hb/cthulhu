@@ -23,7 +23,7 @@ impl = configure_file(
 
 libsupport = library('support', impl, 
     include_directories : 'support/include',
-    dependencies : deps + [ mediate ]
+    dependencies : deps + [ mediator ]
 )
 
 support = declare_dependency(

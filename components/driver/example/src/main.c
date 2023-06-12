@@ -1,48 +1,38 @@
-#include "cthulhu/mediator/language.h"
-#include "cthulhu/mediator/mediator.h"
+#include "cthulhu/mediator/driver.h"
 
 #include <stdio.h>
 
-static const char *kLangNames[] = { "e", "example", NULL };
-
-static void ex_load(mediator_t *mediator)
+static void ex_create(mediator_t *mediator)
 {
     printf("ex-load(%p)\n", mediator);
 }
 
-static void ex_unload(mediator_t *mediator)
+static void ex_destroy(mediator_t *mediator)
 {
     printf("ex-unload(%p)\n", mediator);
 }
 
-static void ex_init(lang_handle_t *handle)
+static void ex_parse(lifetime_t *lifetime, scan_t *scan)
 {
-    printf("ex-init(%p)\n", handle);
+    printf("ex-parse(%p, %p)\n", lifetime, scan);
 }
 
-static void ex_deinit(lang_handle_t *handle)
+static void ex_forward(context_t *context)
 {
-    printf("ex-deinit(%p)\n", handle);
+    printf("ex-forward(%p)\n", context);
 }
 
-static void *ex_parse(lang_handle_t *handle, scan_t *scan)
+static void ex_import(context_t *context)
 {
-    printf("ex-parse(%p, %p)\n", handle, scan);
-
-    return NULL;
+    printf("ex-import(%p)\n", context);
 }
 
-static void ex_forward(lang_handle_t *handle, const char *name, void *ast)
+static void ex_compile(context_t *context, hlir_t *hlir)
 {
-    printf("ex-forward(%p, %s, %p)\n", handle, name, ast);
+    printf("ex-compile(%p, %p)\n", context, hlir);
 }
 
-static hlir_t *ex_compile(lang_handle_t *handle, compile_t *compile)
-{
-    printf("ex-compile(%p, %p)\n", handle, compile);
-
-    return NULL;
-}
+static const char *kLangNames[] = { "e", "example", NULL };
 
 const language_t kExampleModule = {
     .id = "example",
@@ -56,13 +46,11 @@ const language_t kExampleModule = {
 
     .exts = kLangNames,
     
-    .fnLoad = ex_load,
-    .fnUnload = ex_unload,
-
-    .fnInit = ex_init,
-    .fnDeinit = ex_deinit,
+    .fnCreate = ex_create,
+    .fnDestroy = ex_destroy,
 
     .fnParse = ex_parse,
-    .fnForward = ex_forward,
-    .fnCompile = ex_compile
+    .fnForwardSymbols = ex_forward,
+    .fnCompileImports = ex_import,
+    .fnCompileSymbol = ex_compile
 };

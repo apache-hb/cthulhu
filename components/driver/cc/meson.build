@@ -7,7 +7,7 @@ src = [
 ]
 
 cc = library('cc', src,
-    dependencies : [ generic, mediate, argparse, interop ],
+    dependencies : [ generic, mediator, argparse, interop ],
     c_args : args,
     include_directories : 'src'
 )

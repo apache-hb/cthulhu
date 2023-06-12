@@ -1,19 +1,23 @@
 #pragma once
 
-#include "report/report.h"
+#include "cthulhu/mediator/common.h"
 
-#include "cthulhu/mediator/mediator.h"
+#include "std/map.h"
 
-#include "cthulhu/hlir/check.h"
+typedef struct mediator_t
+{
+    const char *id;
+    version_info_t version;
+} mediator_t;
 
-#define EXEC(mod, fn, ...) do { if (mod->fn != NULL) { logverbose("%s:" #fn "()", mod->id); mod->fn(__VA_ARGS__); } } while (0)
+typedef struct lifetime_t 
+{
+    mediator_t *parent;
 
-lang_handle_t *lang_new(lifetime_t *lifetime, const language_t *lang);
-compile_t *lifetime_add_module(lifetime_t *self, lang_handle_t *handle, const char *name, compile_t *data);
+    map_t *modules;
+} lifetime_t;
 
-compile_t *compile_init(lang_handle_t *handle, void *ast, sema_t *sema, hlir_t *mod);
-
-void lang_compile(lang_handle_t *handle, compile_t *compile, check_t *check);
-void lang_import(lang_handle_t *handle, compile_t *compile);
-
-void mediator_configure(mediator_t *self, ap_t *ap);
+typedef struct context_t 
+{
+    lifetime_t *parent;
+} context_t;

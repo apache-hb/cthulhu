@@ -216,7 +216,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     args attrargs argbody
     funcparams opttypes types
     optinits inits
-    caseFields caseData
+    caseFields caseData items
 
 %type<ident>
     label block ident
@@ -239,8 +239,14 @@ importlist: import { $$ = vector_init($1); }
     | importlist import { vector_push(&$1, $2); $$ = $1; }
     ;
 
-import: IMPORT path SEMICOLON { $$ = ast_import(x, @$, $2, NULL); }
-    | IMPORT path AS IDENT SEMICOLON { $$ = ast_import(x, @$, $2, $4); }
+import: IMPORT path SEMICOLON { $$ = ast_import(x, @$, $2, NULL, NULL); }
+    | IMPORT path AS IDENT SEMICOLON { $$ = ast_import(x, @$, $2, $4, NULL); }
+    | IMPORT path LPAREN items RPAREN SEMICOLON { $$ = ast_import(x, @$, $2, NULL, $4); }
+    | IMPORT path LPAREN DOT3 RPAREN SEMICOLON { $$ = ast_import(x, @$, $2, NULL, vector_of(0)); }
+    ;
+
+items: IDENT { $$ = vector_init($1); }
+    | items COMMA IDENT { vector_push(&$1, $3); $$ = $1; }
     ;
 
 decls: %empty { $$ = vector_new(0); }

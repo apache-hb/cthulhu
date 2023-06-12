@@ -33,10 +33,11 @@ ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *import
     return ast;
 }
 
-ast_t *ast_import(scan_t *scan, where_t where, vector_t *path, char *alias)
+ast_t *ast_import(scan_t *scan, where_t where, vector_t *path, char *alias, vector_t *items)
 {
     ast_t *ast = ast_new(eAstImport, scan, where);
     ast->path = path;
+    ast->items = items;
     ast->id = alias;
     return ast;
 }

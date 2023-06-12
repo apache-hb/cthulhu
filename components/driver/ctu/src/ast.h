@@ -81,7 +81,8 @@ typedef struct ast_t
         /* eAstTypename|eAstModule|eAstImport */
         struct 
         {
-            vector_t *path;
+            vector_t *path; // import path
+            vector_t *items; // import items
             char *id; // import name
         };
 
@@ -255,7 +256,7 @@ typedef struct ast_t
 /// module declarations
 
 ast_t *ast_module(scan_t *scan, where_t where, vector_t *path);
-ast_t *ast_import(scan_t *scan, where_t where, vector_t *path, char *alias);
+ast_t *ast_import(scan_t *scan, where_t where, vector_t *path, char *alias, vector_t *items);
 ast_t *ast_program(scan_t *scan, where_t where, ast_t *modspec, vector_t *imports, vector_t *decls);
 
 ast_t *ast_attribute(scan_t *scan, where_t where, char *name, vector_t *args);

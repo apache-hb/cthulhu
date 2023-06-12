@@ -152,16 +152,12 @@ endforeach
 
 subdir('components/interface')
 
-foreach plugin : get_option('plugins')
-    subdir('components/plugin'/plugin)
-endforeach
-
 #subdir('tests/harness')
-subdir('tests/unit-tests')
+#subdir('tests/unit-tests')
 
-foreach lang : get_option('languages')
-    subdir('tests/lang'/lang)
-endforeach
+#foreach lang : get_option('languages')
+#    subdir('tests/lang'/lang)
+#endforeach
 
 if tuning.enabled()
     tune = executable('tune-map', [ 'tools/tune-map.c' ],

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/mediator/language.h"
+#include "cthulhu/mediator/driver.h"
 
 typedef struct langs_t {
     const language_t *langs;
