@@ -435,8 +435,8 @@ void ctu_init(lang_handle_t *runtime)
 
     kRootSema = sema_root_new(lang_get_reports(runtime), eTagTotal, sizes);
 
-    //sema_t *builtin = get_builtin_sema(kRootSema);
-    //sema_set(kRootSema, eSemaModules, "__builtin", builtin);
+    sema_t *builtin = get_builtin_sema(kRootSema);
+    sema_set(kRootSema, eSemaModules, "__builtin", builtin);
 
     node_t *node = node_builtin();
 
@@ -448,7 +448,6 @@ void ctu_init(lang_handle_t *runtime)
     kFloatType = hlir_decimal(node, "float");
 
     kVaListType = hlir_va_list(node, "valist");
-
 
     for (size_t i = 0; i < TOTAL_DIGITS; i++)
     {

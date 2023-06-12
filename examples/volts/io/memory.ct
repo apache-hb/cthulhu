@@ -1,7 +1,7 @@
 module volts::io::memory;
 
 import volts::io;
-import cthulhu::stdlib => cstd;
+import cthulhu::stdlib as cstd;
 
 struct View {
     data: opaque;

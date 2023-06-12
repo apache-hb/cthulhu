@@ -1,4 +1,4 @@
-module main;
+module vulkan;
 
 import core;
 
@@ -85,34 +85,3 @@ export def createInstance(createInfo: *InstanceCreateInfo, allocator: *Allocatio
 
 @extern("vkDestroyInstance")
 export def destroyInstance(instance: Instance, allocator: *AllocationCallbacks): void;
-
-@extern("printf")
-def printf(fmt: str, args: ...): int;
-
-@entry(cli)
-def entry {
-    const appInfo: ApplicationInfo = .{
-        kind = ApplicationInfo,
-        applicationName = "Cthulhu",
-        applicationVersion = createVersion(1, 0, 0),
-        engineName = "Cthulhu",
-        engineVersion = createVersion(1, 0, 0),
-        apiVersion = createVersion(1, 0, 0)
-    };
-
-    const instanceInfo: InstanceCreateInfo = .{
-        kind = InstanceCreateInfo,
-        applicationInfo = &appInfo
-    };
-
-    var instance: Instance = noinit;
-    const result = createInstance(&instanceInfo, __null, instance);
-
-    if result != Result::Success {
-        printf("Failed to create instance\n");
-    } else {
-        printf("Created instance\n");
-
-        destroyInstance(instance, __null);
-    }
-}

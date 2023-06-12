@@ -4,7 +4,6 @@
 
 #include "cthulhu/mediator/mediator.h"
 #include "cthulhu/mediator/language.h"
-#include "cthulhu/mediator/plugin.h"
 
 #include "base/util.h"
 

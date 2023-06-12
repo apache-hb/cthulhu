@@ -41,7 +41,6 @@ typedef struct hlir_t
     hlir_kind_t type;        ///< the type of this node
     node_t *location;         ///< the source location that generated this node
     const struct hlir_t *of; ///< the type this hlir evaluates to
-    void *user;              ///< user data
 
     union {
         mpz_t digit;  ///< the value of this integer literal. active if type ==
@@ -138,8 +137,12 @@ typedef struct hlir_t
             const hlir_attributes_t *attributes;
 
             union {
-                // unresolved decl
-                sema_t *sema;
+                /* eHlirUnresolved */
+                struct
+                {
+                    void *userData; ///< user data
+                    sema_t *sema; ///< unresolved decl
+                };
 
                 ///
                 /// all types

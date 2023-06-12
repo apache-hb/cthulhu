@@ -53,7 +53,6 @@ typedef struct plugin_handle_t plugin_handle_t;
 typedef struct compile_t compile_t;
 
 typedef struct language_t language_t;
-typedef struct plugin_t plugin_t;
 
 typedef struct reports_t reports_t;
 typedef struct hlir_t hlir_t;
@@ -119,10 +118,8 @@ vector_t *lifetime_modules(lifetime_t *self);
 mediator_t *mediator_new(const char *name, version_t version);
 
 void mediator_load_language(mediator_t *self, const language_t *language);
-void mediator_load_plugin(mediator_t *self, const plugin_t *plugin);
 
 void mediator_unload_language(mediator_t *self, const language_t *language);
-void mediator_unload_plugin(mediator_t *self, const plugin_t *plugin);
 
 /**
  * @brief map an extension to a language

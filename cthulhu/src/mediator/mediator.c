@@ -1,6 +1,5 @@
 #include "cthulhu/mediator/mediator.h"
 #include "cthulhu/mediator/language.h"
-#include "cthulhu/mediator/plugin.h"
 
 #include "base/memory.h"
 #include "base/panic.h"
@@ -27,10 +26,7 @@ typedef struct mediator_t
     map_t *langById; /// map_t<const char *, const language_t *>
     map_t *langByExt; /// map_t<const char *, const language_t *>
 
-    map_t *pluginById; /// map_t<const char *, const plugin_t *>
-
     vector_t *languages;
-    vector_t *plugins;
 } mediator_t;
 
 static void runtime_init(void)
@@ -59,10 +55,7 @@ mediator_t *mediator_new(const char *name, version_t version)
     self->langById = map_optimal(64);
     self->langByExt = map_optimal(64);
 
-    self->pluginById = map_optimal(64);
-
     self->languages = vector_new(4);
-    self->plugins = vector_new(4);
 
     return self;
 }
@@ -96,32 +89,9 @@ void mediator_load_language(mediator_t *self, const language_t *language)
     EXEC(language, fnLoad, self);
 }
 
-void mediator_load_plugin(mediator_t *self, const plugin_t *plugin)
-{
-    CTASSERT(self != NULL);
-    CTASSERT(plugin != NULL);
-
-    CTASSERTF(plugin->id != NULL, "plugin has no id");
-    CTASSERTF(plugin->name != NULL, "plugin '%s' has no name", plugin->id);
-
-    const plugin_t *old = map_get(self->pluginById, plugin->id);
-    CTASSERT(old == NULL); // TODO: gracefully handle this
-
-    map_set(self->pluginById, plugin->id, (void*)plugin);
-
-    vector_push(&self->plugins, (void*)plugin);
-
-    EXEC(plugin, fnLoad, self);
-}
-
 void mediator_unload_language(mediator_t *self, const language_t *language)
 {
     EXEC(language, fnUnload, self);
-}
-
-void mediator_unload_plugin(mediator_t *self, const plugin_t *plugin)
-{
-    EXEC(plugin, fnUnload, self);
 }
 
 const language_t *mediator_register_extension(mediator_t *self, const char *ext, const language_t *lang)

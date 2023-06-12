@@ -65,7 +65,6 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     DOT "`.`"
     DOT3 "`...`"
     ARROW "`->`"
-    IMPLIES "`=>`"
     LSHIFT "`<<`"
     RSHIFT "`>>`"
 
@@ -241,7 +240,7 @@ importlist: import { $$ = vector_init($1); }
     ;
 
 import: IMPORT path SEMICOLON { $$ = ast_import(x, @$, $2, NULL); }
-    | IMPORT path IMPLIES IDENT SEMICOLON { $$ = ast_import(x, @$, $2, $4); }
+    | IMPORT path AS IDENT SEMICOLON { $$ = ast_import(x, @$, $2, $4); }
     ;
 
 decls: %empty { $$ = vector_new(0); }

@@ -45,8 +45,6 @@ typedef struct language_t
     language_compile_t fnCompile; ///< compile the ast to hlir
 } language_t;
 
-typedef const language_t *(*language_acquire_t)(mediator_t *);
-
 // handle api
 
 lang_handle_t *lifetime_get_lang_handle(lifetime_t *self, const language_t *it);

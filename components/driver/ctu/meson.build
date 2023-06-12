@@ -24,6 +24,7 @@ ctu = library('ctu', src,
 langs += { 
     'ctu': {
         'dep': declare_dependency(link_with : ctu),
-        'mod': 'kCtuModule'
+        'mod': 'kCtuModule',
+        'data': files('data/core/int.ct')
     }
 }

@@ -151,7 +151,7 @@ hlir_t *sema_resolve(sema_t *root, hlir_t *unresolved, sema_resolve_t resolve)
 
     vector_push(&root->stack, unresolved);
 
-    hlir_t *result = resolve(unresolved->sema, unresolved->user);
+    hlir_t *result = resolve(unresolved->sema, unresolved->userData);
     memcpy(unresolved, result, sizeof(hlir_t));
     
     vector_drop(root->stack);

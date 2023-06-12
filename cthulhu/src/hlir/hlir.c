@@ -20,7 +20,7 @@ hlir_t *hlir_unresolved(node_t *node, const char *name, sema_t *sema, void *user
 {
     hlir_t *self = hlir_decl_new(node, name, kMetaType, eHlirUnresolved);
     self->sema = sema;
-    self->user = user;
+    self->userData = user;
     return self;
 }
 

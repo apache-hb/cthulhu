@@ -31,7 +31,6 @@ WS [ \t\r\v\n\f]
 "~" { return BITNOT; }
 
 "->" { return ARROW; }
-"=>" { return IMPLIES; }
 
 "!<" { 
     enter_template(yyextra);
@@ -122,7 +121,7 @@ WS [ \t\r\v\n\f]
 
 "__final" { return FINAL; }
 "__using" { return USING; }
-"__as" { return AS; }
+"as" { return AS; }
 
 "__new" { return NEW; }
 "__delete" { return DELETE; }

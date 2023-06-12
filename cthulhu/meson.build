@@ -65,7 +65,6 @@ emit = declare_dependency(
 src = [
     'src/mediator/mediator.c',
     'src/mediator/language.c',
-    'src/mediator/plugin.c',
     'src/mediator/lifetime.c'
 ]
 
