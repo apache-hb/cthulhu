@@ -6,7 +6,6 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/sema.h"
 #include "cthulhu/hlir/type.h"
-#include "cthulhu/mediator/language.h"
 #include "report/report-ext.h"
 
 #include "base/macros.h"
@@ -379,10 +378,10 @@ typedef struct
     vector_t *procs;
 } sema_data_t;
 
-void pl0_forward_decls(lang_handle_t *handle, const char *name, void *ast)
+void pl0_forward_decls(context_t *context)
 {
-    pl0_t *root = ast;
-    reports_t *reports = lang_get_reports(handle);
+    pl0_t *root = context_get_ast(context);
+    reports_t *reports = context_get_reports(context);
 
     size_t totalConsts = vector_len(root->consts);
     size_t totalGlobals = vector_len(root->globals);
@@ -392,7 +391,7 @@ void pl0_forward_decls(lang_handle_t *handle, const char *name, void *ast)
     vector_t *globals = vector_new(totalGlobals);
     vector_t *procs = vector_new(totalFunctions);
 
-    const char *id = root->mod != NULL ? root->mod : name;
+    const char *id = root->mod != NULL ? root->mod : context_get_name(context);
 
     hlir_t *mod = hlir_module(root->node, id, vector_of(0), vector_of(0), vector_of(0));
 
@@ -445,26 +444,29 @@ void pl0_forward_decls(lang_handle_t *handle, const char *name, void *ast)
 
     sema_set_data(sema, BOX(semaData));
 
-    compile_begin(handle, root, id, sema, mod);
+    context_update(context, sema, mod);
 }
 
-void pl0_process_imports(lang_handle_t *handle, compile_t *compile)
+void pl0_process_imports(context_t *context)
 {
-    pl0_t *root = compile_get_ast(compile);
-    sema_t *sema = compile_get_sema(compile);
+    lifetime_t *lifetime = context_get_lifetime(context);
+    pl0_t *root = context_get_ast(context);
+    sema_t *sema = context_get_sema(context);
 
     size_t totalImports = vector_len(root->imports);
     for (size_t i = 0; i < totalImports; i++)
     {
         pl0_t *importDecl = vector_get(root->imports, i);
-        const char *pathToImport = importDecl->ident;
-        sema_t *lib = handle_get_sema(handle, pathToImport);
+        char *pathToImport = (char*)importDecl->ident;
+        context_t *ctx = get_context(lifetime, vector_init(pathToImport));
 
-        if (lib == NULL)
+        if (ctx == NULL)
         {
             report(sema_reports(sema), eFatal, importDecl->node, "cannot import `%s`, failed to find module", pathToImport);
             continue;
         }
+
+        sema_t *lib = context_get_sema(ctx);
 
         if (lib == sema)
         {
@@ -476,15 +478,12 @@ void pl0_process_imports(lang_handle_t *handle, compile_t *compile)
     }
 }
 
-hlir_t *pl0_compile_module(lang_handle_t *handle, compile_t *compile)
+void pl0_compile_module(context_t *context)
 {
-    UNUSED(handle);
+    pl0_t *root = context_get_ast(context);
+    hlir_t *mod = context_get_hlir(context);
+    sema_t *sema = context_get_sema(context);
 
-    pl0_t *root = compile_get_ast(compile);
-    hlir_t *mod = compile_get_module(compile);
-    sema_t *sema = compile_get_sema(compile);
-
-    // TODO: this returns garbage data
     sema_data_t *semaData = sema_get_data(sema);
 
     for (size_t i = 0; i < vector_len(semaData->consts); i++)
@@ -522,11 +521,5 @@ hlir_t *pl0_compile_module(lang_handle_t *handle, compile_t *compile)
         vector_push(&semaData->procs, hlir);
     }
 
-    vector_push(&semaData->procs, kPrint);
-
     hlir_build_module(mod, mod->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
-
-    compile_finish(compile);
-
-    return mod;
 }

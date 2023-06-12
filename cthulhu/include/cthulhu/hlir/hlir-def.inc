@@ -7,6 +7,9 @@
 HLIR_KIND(eHlirUnresolved, "unresolved")
 HLIR_KIND(eHlirQualified, "qualified")
 
+// updated module, remove eHlirModule
+HLIR_KIND(eHlirModuleEx, "module-ex")
+
 // scalar types
 HLIR_KIND(eHlirType,    "meta-type")
 HLIR_KIND(eHlirDecimal, "decimal-type")

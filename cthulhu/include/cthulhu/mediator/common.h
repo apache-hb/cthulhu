@@ -14,14 +14,17 @@ typedef void (*destroy_t)(lifetime_t *);
 
 typedef void (*parse_t)(lifetime_t *, scan_t *);
 
-// forward all symbols from the current context
-typedef void (*forward_symbols_t)(context_t *);
+typedef enum compile_stage_t
+{
+    eStageForwardSymbols,
+    eStageCompileImports,
+    eStageCompileTypes,
+    eStageCompileSymbols,
 
-// add symbols from imports to the current context
-typedef void (*compile_imports_t)(context_t *);
+    eStageTotal
+} compile_stage_t;
 
-// fully compile a symbol and all its dependencies
-typedef void (*compile_symbol_t)(context_t *, hlir_t *);
+typedef void (*compile_pass_t)(context_t *);
 
 typedef struct language_t 
 {
@@ -36,7 +39,6 @@ typedef struct language_t
     destroy_t fnDestroy; ///< called at shutdown
 
     parse_t fnParse; ///< parse a file into an ast
-    forward_symbols_t fnForwardSymbols; ///< forward all symbols from the current context
-    compile_imports_t fnCompileImports; ///< add symbols from imports to the current context
-    compile_symbol_t fnCompileSymbol; ///< fully compile a symbol and all its dependencies
+
+    compile_pass_t fnCompilePass[eStageTotal]; ///< compile a single pass
 } language_t;

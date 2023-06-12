@@ -12,7 +12,7 @@
 
 CT_CALLBACKS(kCallbacks, pl0);
 
-static void *pl0_parse(lifetime_t *lifetime, scan_t *scan)
+static void pl0_parse(lifetime_t *lifetime, scan_t *scan)
 {
     pl0_t *ast = compile_scanner(scan, &kCallbacks);
     CTASSERT(ast->type == ePl0Module);
@@ -41,7 +41,9 @@ const language_t kPl0Module = {
     .fnCreate = pl0_init,
 
     .fnParse = pl0_parse,
-    .fnForward = pl0_forward_decls,
-    .fnImport = pl0_process_imports,
-    .fnCompile = pl0_compile_module
+    .fnCompilePass = {
+        [eStageForwardSymbols] = pl0_forward_decls,
+        [eStageCompileImports] = pl0_process_imports,
+        [eStageCompileSymbols] = pl0_compile_module
+    }
 };

@@ -29,7 +29,7 @@ static const language_t *add_language_extension(map_t *map, const char *ext, con
     CTASSERT(ext != NULL);
     CTASSERT(lang != NULL);
 
-    logverbose("mapping language `%s` to `%s`", lang->id, ext);
+    logverbose("mapping language `%s` to extension `.%s`", lang->id, ext);
 
     const language_t *old = map_get(map, ext);
     if (old != NULL)
