@@ -119,7 +119,7 @@ typedef struct pl0_t
             struct pl0_t *entry;
 
             /* the public name of this module, defaults to the file name */
-            const char *mod;
+            char *mod;
 
             /* all modules imported by this module */
             vector_t *imports;
@@ -148,5 +148,5 @@ pl0_t *pl0_stmts(scan_t *scan, where_t where, vector_t *stmts);
 pl0_t *pl0_procedure(scan_t *scan, where_t where, const char *name, vector_t *locals, vector_t *body);
 pl0_t *pl0_value(scan_t *scan, where_t where, const char *name, pl0_t *value);
 
-pl0_t *pl0_module(scan_t *scan, where_t where, const char *mod, vector_t *imports, vector_t *consts, vector_t *globals,
+pl0_t *pl0_module(scan_t *scan, where_t where, char *mod, vector_t *imports, vector_t *consts, vector_t *globals,
                   vector_t *procs, pl0_t *entry);

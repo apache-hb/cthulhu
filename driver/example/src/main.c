@@ -13,24 +13,24 @@ static vector_t *example_lang_path(void)
     return path;
 }
 
-static void ex_create(lifetime_t *lifetime)
+static void ex_create(handle_t *handle)
 {
     vector_t *path = example_lang_path();
-    context_t *ctx = context_new(lifetime, NULL, NULL);
+    context_t *ctx = context_new(handle, "example", NULL, NULL, NULL);
 
-    add_context(lifetime, path, ctx);
+    add_context(handle_get_lifetime(handle), path, ctx);
 
-    logverbose("ex-create(0x%p)", lifetime);
+    logverbose("ex-create(0x%p)", handle);
 }
 
-static void ex_destroy(lifetime_t *lifetime)
+static void ex_destroy(handle_t *handle)
 {
-    logverbose("ex-destroy(0x%p)", lifetime);
+    logverbose("ex-destroy(0x%p)", handle);
 }
 
-static void ex_parse(lifetime_t *lifetime, scan_t *scan)
+static void ex_parse(handle_t *handle, scan_t *scan)
 {
-    logverbose("ex-parse(0x%p, %s)", lifetime, scan_path(scan));
+    logverbose("ex-parse(0x%p, %s)", handle, scan_path(scan));
 }
 
 static void ex_forward_symbols(context_t *context)

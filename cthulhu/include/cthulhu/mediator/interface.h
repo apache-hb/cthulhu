@@ -25,4 +25,6 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang);
 
 const language_t *lifetime_get_language(lifetime_t *lifetime, const char *ext);
 
-void lifetime_parse(lifetime_t *lifetime, reports_t *reports, const language_t *lang, io_t *io);
+void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io);
+
+void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage);

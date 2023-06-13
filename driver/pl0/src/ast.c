@@ -119,7 +119,7 @@ pl0_t *pl0_value(scan_t *scan, where_t where, const char *name, pl0_t *value)
     return node;
 }
 
-pl0_t *pl0_module(scan_t *scan, where_t where, const char *mod, vector_t *imports, vector_t *consts, vector_t *globals,
+pl0_t *pl0_module(scan_t *scan, where_t where, char *mod, vector_t *imports, vector_t *consts, vector_t *globals,
                   vector_t *procs, pl0_t *entry)
 {
     pl0_t *node = pl0_new(scan, where, ePl0Module);

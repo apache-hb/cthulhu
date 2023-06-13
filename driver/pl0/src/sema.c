@@ -50,7 +50,7 @@ static vector_t *make_runtime_path(void)
     return path;
 }
 
-void pl0_init(lifetime_t *lifetime)
+void pl0_init(handle_t *handle)
 {
     node_t *node = node_builtin();
 
@@ -72,8 +72,8 @@ void pl0_init(lifetime_t *lifetime)
     hlir_t *runtime = make_runtime_mod();
     vector_t *path = make_runtime_path();
 
-    context_t *ctx = context_new(lifetime, NULL, runtime);
-    add_context(lifetime, path, ctx);
+    context_t *ctx = context_new(handle, "pl0", NULL, runtime, NULL);
+    add_context(handle_get_lifetime(handle), path, ctx);
 }
 
 static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)
@@ -380,8 +380,10 @@ typedef struct
 
 void pl0_forward_decls(context_t *context)
 {
+    lifetime_t *lifetime = context_get_lifetime(context);
+
     pl0_t *root = context_get_ast(context);
-    reports_t *reports = context_get_reports(context);
+    reports_t *reports = lifetime_get_reports(lifetime);
 
     size_t totalConsts = vector_len(root->consts);
     size_t totalGlobals = vector_len(root->globals);
@@ -444,7 +446,7 @@ void pl0_forward_decls(context_t *context)
 
     sema_set_data(sema, BOX(semaData));
 
-    context_update(context, sema, mod);
+    context_update(context, root, sema, mod);
 }
 
 void pl0_process_imports(context_t *context)

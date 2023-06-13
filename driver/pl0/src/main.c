@@ -1,9 +1,9 @@
-#include "cthulhu/mediator/driver.h"
+#include "sema.h"
+#include "ast.h"
 
 #include "scan/compile.h"
 
-#include "sema.h"
-#include "ast.h"
+#include "std/str.h"
 
 #include "base/macros.h"
 
@@ -12,16 +12,18 @@
 
 CT_CALLBACKS(kCallbacks, pl0);
 
-static void pl0_parse(lifetime_t *lifetime, scan_t *scan)
+static void pl0_parse(handle_t *handle, scan_t *scan)
 {
     pl0_t *ast = compile_scanner(scan, &kCallbacks);
     CTASSERT(ast->type == ePl0Module);
 
-    vector_t *path = vector_init((char*)ast->mod);
+    char *fp = (char*)scan_path(scan);
+    char *name = ast->mod != NULL ? ast->mod : str_filename_noext(fp);
 
-    context_t *ctx = context_new(lifetime, ast, NULL);
+    vector_t *path = vector_init(name);
+    context_t *ctx = context_new(handle, name, ast, NULL, NULL);
 
-    add_context(lifetime, path, ctx);
+    add_context(handle_get_lifetime(handle), path, ctx);
 }
 
 static const char *kLangNames[] = { "pl", "pl0", NULL };
