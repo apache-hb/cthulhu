@@ -7,6 +7,9 @@
 
 #include "io/io.h"
 
+#include "cthulhu/ssa/ssa.h"
+#include "cthulhu/emit/c89.h"
+
 #include <stdio.h>
 
 #define CHECK_REPORTS(reports, msg) \
@@ -28,6 +31,19 @@ static const version_info_t kVersion = {
     .author = "Elliot Haisley",
     .version = NEW_VERSION(0, 0, 1)
 };
+
+static io_t *make_file(reports_t *reports, const char *path, file_flags_t flags)
+{
+    io_t *io = io_file(path, flags);
+    if (io_error(io) != 0)
+    {
+        message_t *id = report(reports, eFatal, NULL, "failed to open `%s`", path);
+        report_note(id, "%s", error_string(io_error(io)));
+        return NULL;
+    }
+
+    return io;
+}
 
 int main(int argc, const char **argv)
 {
@@ -58,15 +74,11 @@ int main(int argc, const char **argv)
             printf("no language found for file: %s\n", path);
         }
 
-        io_t *io = io_file(path, eFileRead | eFileText);
-        io_error_t err = io_error(io);
-        if (err != 0)
+        io_t *io = make_file(reports, path, eFileText | eFileRead);
+        if (io != NULL)
         {
-            printf("failed to load source `%s`%s", path, error_string(err));
-            continue;
+            lifetime_parse(lifetime, lang, io);
         }
-
-        lifetime_parse(lifetime, lang, io);
 
         CHECK_REPORTS(reports, "parsing source");
     }
@@ -78,4 +90,27 @@ int main(int argc, const char **argv)
         char *msg = format("running stage %s", stage_to_string(stage));
         CHECK_REPORTS(reports, msg);
     }
+
+    vector_t *mods = lifetime_get_modules(lifetime);
+    ssa_module_t *ssa = ssa_gen_module(reports, mods);
+    CHECK_REPORTS(reports, "generating ssa");
+
+    ssa_opt_module(reports, ssa);
+    CHECK_REPORTS(reports, "optimizing ssa");
+
+    ssa_emit_module(reports, ssa);
+
+    io_t *src = make_file(reports, "out.c", eFileText | eFileWrite);
+    io_t *hdr = make_file(reports, "out.h", eFileText | eFileWrite);
+
+    CHECK_REPORTS(reports, "failed to open output files");
+
+    emit_config_t emit = {
+        .reports = reports,
+        .source = src,
+        .header = hdr
+    };
+
+    emit_ssa_modules(emit, ssa);
+    CHECK_REPORTS(reports, "emitting ssa");
 }

@@ -1,5 +1,7 @@
 #include "cthulhu/mediator/driver.h"
 
+#include "cthulhu/hlir/decl.h"
+
 #include "std/vector.h"
 
 #include "report/report.h"
@@ -13,10 +15,18 @@ static vector_t *example_lang_path(void)
     return path;
 }
 
+static hlir_t *example_lang_module(void)
+{
+    node_t *node = node_builtin();
+    hlir_t *mod = hlir_module(node, "example", vector_of(0), vector_of(0), vector_of(0));
+    return mod;
+}
+
 static void ex_create(handle_t *handle)
 {
     vector_t *path = example_lang_path();
-    context_t *ctx = context_new(handle, "example", NULL, NULL, NULL);
+    hlir_t *mod = example_lang_module();
+    context_t *ctx = compiled_new(handle, "example", mod, NULL);
 
     add_context(handle_get_lifetime(handle), path, ctx);
 

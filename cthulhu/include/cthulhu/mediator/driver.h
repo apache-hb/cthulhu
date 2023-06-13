@@ -7,6 +7,10 @@ typedef struct vector_t vector_t;
 typedef struct sema_t sema_t;
 typedef struct reports_t reports_t;
 
+// make a precompiled context
+context_t *compiled_new(handle_t *handle, const char *name, hlir_t *root, sema_t *sema);
+
+// make a context from an ast
 context_t *context_new(handle_t *handle, const char *name, void *ast, hlir_t *root, sema_t *sema);
 
 context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod);

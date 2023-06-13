@@ -3,6 +3,7 @@
 #include "cthulhu/mediator/common.h"
 
 typedef struct io_t io_t;
+typedef struct vector_t vector_t;
 typedef struct reports_t reports_t;
 
 // mediator api
@@ -28,3 +29,5 @@ const language_t *lifetime_get_language(lifetime_t *lifetime, const char *ext);
 void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io);
 
 void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage);
+
+vector_t *lifetime_get_modules(lifetime_t *lifetime);

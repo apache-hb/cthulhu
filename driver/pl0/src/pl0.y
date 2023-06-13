@@ -42,6 +42,7 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
     unary condition
     block init procedure name
     statement statements toplevel
+    import
 
 %type<vector>
     consts inits
@@ -50,9 +51,8 @@ void pl0error(where_t *where, void *state, scan_t *scan, const char *msg);
     stmtlist
     proclist
     imports
-    idents
-
-%type<ident>
+    paths
+    path
     module
 
 %token
@@ -107,15 +107,22 @@ block: module imports consts vars procedures toplevel { $$ = pl0_module(x, @$, $
     ;
 
 imports: %empty { $$ = vector_new(0); }
-    |  IMPORT idents SEMICOLON { $$ = $2; }
+    |  IMPORT paths SEMICOLON { $$ = $2; }
     ;
 
-idents: ident { $$ = vector_init($1); }
-    | idents COMMA ident { vector_push(&$1, $3); $$ = $1; }
+paths: import { $$ = vector_init($1); }
+    | paths COMMA import { vector_push(&$1, $3); $$ = $1; }
     ;
 
-module: %empty { $$ = NULL; }
-    | MODULE IDENT SEMICOLON { $$ = $2; }
+import: path { $$ = pl0_import(x, @$, $1); }
+    ;
+
+path: IDENT { $$ = vector_init($1); }
+    | path DOT IDENT { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+module: %empty { $$ = vector_of(0); }
+    | MODULE path SEMICOLON { $$ = $2; }
     ;
 
 toplevel: %empty { $$ = NULL; }

@@ -7,6 +7,8 @@
 
 #include "scan/scan.h"
 
+#include "std/vector.h"
+
 #include "report/report.h"
 
 #include "platform/error.h"
@@ -52,6 +54,11 @@ static handle_t *handle_new(lifetime_t *lifetime, const language_t *lang)
     self->lang = lang;
 
     return self;
+}
+
+bool context_requires_compiling(const context_t *ctx)
+{
+    return ctx->ast != NULL;
 }
 
 lifetime_t *handle_get_lifetime(handle_t *handle)
@@ -149,34 +156,52 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
 {
     CTASSERT(lifetime != NULL);
 
-    logverbose("running stage %d", stage);
+    const char *name = stage_to_string(stage);    
+    logverbose("=== %s ===", name);
 
     map_iter_t iter = map_iter(lifetime->modules);
     while (map_has_next(&iter))
     {
         map_entry_t entry = map_next(&iter);
         context_t *ctx = entry.value;
+        const char *id = entry.key;
 
         CTASSERT(ctx != NULL);
 
         const language_t *lang = ctx->lang;
         compile_pass_t fnPass = lang->fnCompilePass[stage];
 
-        const char *name = stage_to_string(stage);
-
-        if (ctx->sema == NULL)
+        if (!context_requires_compiling(ctx) || fnPass == NULL)
         {
-            logverbose("%s:fnCompilePass[%s](%s) skipped, sema was NULL", ctx->lang->id, name, ctx->name);
+            logverbose("skipped %s:fnCompilePass(%s)", lang->id, id);
             continue;
         }
 
-        if (fnPass == NULL)
-        {
-            logverbose("%s:fnCompilePass[%s](%s) skipped, no provided pass", ctx->lang->id, name, ctx->name);
-            continue;
-        }
-
-        logverbose("%s:fnCompilePass[%s](%s)", lang->id, name, ctx->name);
+        logverbose("execute %s:fnCompilePass(%s)", lang->id, id);
         fnPass(ctx);
     }
+}
+
+vector_t *lifetime_get_modules(lifetime_t *lifetime)
+{
+    CTASSERT(lifetime != NULL);
+
+    vector_t *mods = vector_new(64);
+
+    map_iter_t iter = map_iter(lifetime->modules);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        context_t *ctx = entry.value;
+        const char *name = entry.key;
+
+        CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
+        CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
+
+        vector_push(&mods, ctx->root);
+    }
+
+    logverbose("acquired modules %zu", vector_len(mods));
+
+    return mods;
 }

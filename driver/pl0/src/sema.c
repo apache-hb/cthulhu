@@ -11,6 +11,7 @@
 #include "base/macros.h"
 #include "base/util.h"
 #include "base/memory.h"
+#include "base/panic.h"
 
 #include "std/str.h"
 #include "std/map.h"
@@ -72,7 +73,7 @@ void pl0_init(handle_t *handle)
     hlir_t *runtime = make_runtime_mod();
     vector_t *path = make_runtime_path();
 
-    context_t *ctx = context_new(handle, "pl0", NULL, runtime, NULL);
+    context_t *ctx = compiled_new(handle, "pl0", runtime, NULL);
     add_context(handle_get_lifetime(handle), path, ctx);
 }
 
@@ -393,7 +394,9 @@ void pl0_forward_decls(context_t *context)
     vector_t *globals = vector_new(totalGlobals);
     vector_t *procs = vector_new(totalFunctions);
 
-    const char *id = root->mod != NULL ? root->mod : context_get_name(context);
+    const char *id = vector_len(root->mod) > 0 
+        ? vector_tail(root->mod) 
+        : context_get_name(context);
 
     hlir_t *mod = hlir_module(root->node, id, vector_of(0), vector_of(0), vector_of(0));
 
@@ -459,12 +462,13 @@ void pl0_process_imports(context_t *context)
     for (size_t i = 0; i < totalImports; i++)
     {
         pl0_t *importDecl = vector_get(root->imports, i);
-        char *pathToImport = (char*)importDecl->ident;
-        context_t *ctx = get_context(lifetime, vector_init(pathToImport));
+        CTASSERT(importDecl->type == ePl0Import);
+
+        context_t *ctx = get_context(lifetime, importDecl->path);
 
         if (ctx == NULL)
         {
-            report(sema_reports(sema), eFatal, importDecl->node, "cannot import `%s`, failed to find module", pathToImport);
+            report(sema_reports(sema), eFatal, importDecl->node, "cannot import `%s`, failed to find module", str_join(".", importDecl->path));
             continue;
         }
 
