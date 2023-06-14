@@ -31,6 +31,7 @@
 * deprecate C hlir backend
     * blocked by ssa backend
 
+* add newtypes to hlir
 
 * C frontend
     * perhaps support a small subset of C++ so we can use it internally

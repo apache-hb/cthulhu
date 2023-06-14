@@ -23,6 +23,7 @@ typedef struct ctu_config_t
 static const char *kDefaultInitNames[] = { "--ctu:enable-default-expr", "-ctu:default", NULL };
 static const char *kTemplateNames[] = { "--ctu:enable-templates", "-ctu:templates", NULL };
 static const char *kInterfaceNames[] = { "--ctu:enable-interfaces", "-ctu:interfaces", NULL };
+static const char *kNewTypeNames[] = { "--ctu:enable-newtypes", "-ctu:newtypes", NULL };
 
 static ctu_config_t *gConfig = NULL;
 
@@ -53,10 +54,12 @@ void ctu_config(lifetime_t *lifetime, ap_t *args)
     ap_param_t *defaultEnable = ap_add_bool(group, "default expressions", "enables `default` in expressions to explicitly refer to a types default value (experimental)", kDefaultInitNames);
     ap_param_t *templateEnable = ap_add_bool(group, "templates", "enables templated types and functions (unimplemented)", kTemplateNames);
     ap_param_t *interfaceEnable = ap_add_bool(group, "interfaces", "enables interface declarations (unimplemented)", kInterfaceNames);
+    ap_param_t *newTypeEnable = ap_add_bool(group, "newtypes", "enables newtype declarations (unimplemented)", kNewTypeNames);
 
     ap_event(args, defaultEnable, on_feature, &gConfig->features[eFeatureDefaultExpr]);
     ap_event(args, templateEnable, on_feature, &gConfig->features[eFeatureTemplateDecls]);
     ap_event(args, interfaceEnable, on_feature, &gConfig->features[eFeatureInterfaceDecls]);
+    ap_event(args, newTypeEnable, on_feature, &gConfig->features[eFeatureNewTypes]);
 }
 
 bool ctu_has_feature(feature_t feature)

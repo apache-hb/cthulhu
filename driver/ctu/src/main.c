@@ -55,6 +55,8 @@ const language_t kCtuModule = {
 
     .exts = kLangNames,
 
+    .fnConfig = ctu_config,
+
     .fnCreate = ctu_init,
 
     .fnParse = ctu_parse_file,

@@ -9,6 +9,7 @@ typedef enum feature_t {
     eFeatureDefaultExpr,
     eFeatureTemplateDecls,
     eFeatureInterfaceDecls,
+    eFeatureNewTypes,
 
     eFeatureTotal
 } feature_t;

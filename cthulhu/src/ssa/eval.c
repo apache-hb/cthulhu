@@ -210,15 +210,17 @@ static opt_result_t opt_cast(opt_t *opt, ssa_cast_t cast)
     const ssa_type_t *srcType = ssa_get_operand_type(opt->reports, opt->currentFlow, cast.operand);
     const ssa_type_t *dstType = cast.type;
 
-    if (srcType->kind == eTypeDigit && dstType->kind == eTypeOpaque)
+    if (srcType->kind == eTypeDigit)
     {
-        if (srcType->digit == eDigitPtr)
+        if (srcType->digit == eDigitPtr && dstType->kind == eTypeOpaque)
         {
             return opt_ok(ssa_value_ptr_new(dstType, operand->digit));
         }
     }
 
-    return opt_result_error(eOptUnsupported, "invalid cast");
+    char *msg = format("invalid cast from %s to %s", ssa_type_to_string(srcType), ssa_type_to_string(dstType));
+
+    return opt_result_error(eOptUnsupported, msg);
 }
 
 static opt_result_t opt_step(opt_t *opt, const ssa_step_t *step, bool *result)
@@ -270,8 +272,7 @@ static bool opt_block(opt_t *opt, const ssa_block_t *block)
 
         if (result.reason != eOptSuccess)
         {
-            // failed to optimize
-            report(opt->reports, eInternal, NULL, "failed to optimize step");
+            report(opt->reports, eInternal, NULL, "failed to optimize step %s, %s", ssa_opcode_name(step->opcode), result.detail);
             break;
         }
 
@@ -298,7 +299,7 @@ static opt_result_t opt_global(opt_t *opt, const ssa_flow_t *flow)
     
     if (!opt_block(opt, flow->entry))
     {
-        report(opt->reports, eInternal, NULL, "failed to optimize block");
+        report(opt->reports, eInternal, NULL, "failed to optimize block %s:%s", flow->name, flow->entry->id);
         return opt_unsupported("failed to optimize block");
     }
 

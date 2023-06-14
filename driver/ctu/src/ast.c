@@ -318,6 +318,11 @@ ast_t *ast_variantdecl(scan_t *scan, where_t where, char *name, ast_t *type, vec
 
 ast_t *ast_newtype(scan_t *scan, where_t where, char *name, ast_t *type)
 {
+    if (!ctu_has_feature(eFeatureNewTypes))
+    {
+        report(scan_reports(scan), eFatal, node_new(scan, where), "newtypes are unimplemented");
+    }
+
     ast_t *ast = ast_decl(eAstDeclAlias, name, scan, where);
     ast->alias = type;
     ast->newtype = true;

@@ -227,6 +227,7 @@ static ssa_operand_t add_step(ssa_t *ssa, ssa_step_t step)
         .kind = eOperandReg,
         .vreg = ptr
     };
+
     return op;
 }
 
