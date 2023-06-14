@@ -1,5 +1,19 @@
 # TODO
 
+## next up
+
+* rewrite reporting
+    * more detailed location tracking
+    * fix current reports
+    * support for multiple formats
+    * option to disable colouring
+    * complete cthulhu frontend
+    * proper unit testing
+
+* error registry like msvc
+
+* rewrite location tracking
+
 ## important
 
 * ssa backend
@@ -17,13 +31,6 @@
 * deprecate C hlir backend
     * blocked by ssa backend
 
-* rewrite reporting
-    * more detailed location tracking
-    * fix current reports
-    * support for multiple formats
-    * option to disable colouring
-    * complete cthulhu frontend
-    * proper unit testing
 
 * C frontend
     * perhaps support a small subset of C++ so we can use it internally
@@ -45,7 +52,6 @@
 * rewrite gui frontend
 * add language server support
 * move to incremental compilation
-* error registry like msvc
 * more frontend tests
 * continued code cleanup
 * add plugin support back in
