@@ -15,16 +15,16 @@ typedef struct feature_data_t
     ap_param_t *param;
 } feature_data_t;
 
-typedef struct config_t 
+typedef struct ctu_config_t 
 {
     bool features[eFeatureTotal];
-} config_t;
+} ctu_config_t;
 
 static const char *kDefaultInitNames[] = { "--ctu:enable-default-expr", "-ctu:default", NULL };
 static const char *kTemplateNames[] = { "--ctu:enable-templates", "-ctu:templates", NULL };
 static const char *kInterfaceNames[] = { "--ctu:enable-interfaces", "-ctu:interfaces", NULL };
 
-static config_t *gConfig = NULL;
+static ctu_config_t *gConfig = NULL;
 
 static AP_EVENT(on_feature, ap, param, value, data)
 {
@@ -36,15 +36,15 @@ static AP_EVENT(on_feature, ap, param, value, data)
     return eEventHandled;
 }
 
-static config_t *new_config(void)
+static ctu_config_t *new_config(void)
 {
-    config_t *config = ctu_malloc(sizeof(config_t));
+    ctu_config_t *config = ctu_malloc(sizeof(ctu_config_t));
     memset(config->features, 0, sizeof(config->features));
 
     return config;
 }
 
-void ctu_config(driver_t *handle, ap_t *args) 
+void ctu_config(lifetime_t *lifetime, ap_t *args) 
 {
     GLOBAL_INIT();
 

@@ -36,6 +36,11 @@ static void ctu_parse_file(driver_t *runtime, scan_t *scan)
     add_context(lifetime, path, ctx);
 }
 
+static void pl0_config(lifetime_t *lifetime, ap_t *ap)
+{
+    ctu_config(lifetime, ap);
+}
+
 static const char *kLangNames[] = { "ct", "ctu", NULL };
 
 const language_t kCtuModule = {

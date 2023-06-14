@@ -422,11 +422,8 @@ static void add_basic_types(sema_t *sema)
     // add_decl(sema, eTagTypes, "enum", hlir_enum(node, "enum", eInt, eSigned));
 }
 
-void ctu_init(driver_t *runtime, ap_t *ap)
+void ctu_init(driver_t *runtime)
 {
-    // TODO: seperate config and init functions
-    ctu_config(runtime, ap);
-
     lifetime_t *lifetime = handle_get_lifetime(runtime);
     reports_t *reports = lifetime_get_reports(lifetime);
 

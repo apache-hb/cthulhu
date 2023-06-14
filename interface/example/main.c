@@ -61,7 +61,13 @@ int main(int argc, const char **argv)
     for (size_t i = 0; i < langs.size; i++)
     {
         const language_t *lang = langs.langs + i;
-        lifetime_add_language(lifetime, ap, lang);
+        lifetime_config_language(lifetime, ap, lang);
+    }
+
+    for (size_t i = 0; i < langs.size; i++)
+    {
+        const language_t *lang = langs.langs + i;
+        lifetime_add_language(lifetime, lang);
     }
 
     CHECK_REPORTS(reports, "adding languages");

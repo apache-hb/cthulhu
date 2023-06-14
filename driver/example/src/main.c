@@ -22,7 +22,12 @@ static hlir_t *example_lang_module(void)
     return mod;
 }
 
-static void ex_create(driver_t *handle, ap_t *ap)
+static void ex_config(lifetime_t *lifetime, ap_t *ap)
+{
+    logverbose("ex-config(0x%p, 0x%p)", lifetime, ap);
+}
+
+static void ex_create(driver_t *handle)
 {
     vector_t *path = example_lang_path();
     hlir_t *mod = example_lang_module();
@@ -30,7 +35,7 @@ static void ex_create(driver_t *handle, ap_t *ap)
 
     add_context(handle_get_lifetime(handle), path, ctx);
 
-    logverbose("ex-create(0x%p, 0x%p)", handle, ap);
+    logverbose("ex-create(0x%p)", handle);
 }
 
 static void ex_destroy(driver_t *handle)
@@ -77,6 +82,8 @@ const language_t kExampleModule = {
 
     .exts = kLangNames,
     
+    .fnConfig = ex_config,
+
     .fnCreate = ex_create,
     .fnDestroy = ex_destroy,
 

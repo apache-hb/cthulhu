@@ -15,7 +15,7 @@ typedef enum
 
 hlir_t *get_digit_type(sign_t sign, digit_t digit);
 
-void ctu_init(driver_t *runtime, ap_t *ap);
+void ctu_init(driver_t *runtime);
 void ctu_forward_decls(context_t *context);
 void ctu_process_imports(context_t *context);
 void ctu_compile_module(context_t *context);

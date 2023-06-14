@@ -22,7 +22,9 @@ mediator_t *mediator_new(const char *id, version_info_t version);
 
 lifetime_t *lifetime_new(mediator_t *mediator);
 
-void lifetime_add_language(lifetime_t *lifetime, ap_t *ap, const language_t *lang);
+void lifetime_config_language(lifetime_t *lifetime, ap_t *ap, const language_t *lang);
+
+void lifetime_add_language(lifetime_t *lifetime, const language_t *lang);
 
 const language_t *lifetime_get_language(lifetime_t *lifetime, const char *ext);
 

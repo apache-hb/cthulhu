@@ -12,7 +12,9 @@ typedef struct hlir_t hlir_t;
 typedef struct scan_t scan_t;
 typedef struct reports_t reports_t;
 
-typedef void (*create_t)(driver_t *, ap_t *);
+typedef void (*config_t)(lifetime_t *, ap_t *);
+
+typedef void (*create_t)(driver_t *);
 typedef void (*destroy_t)(driver_t *);
 
 typedef void (*parse_t)(driver_t *, scan_t *);
@@ -35,6 +37,8 @@ typedef struct language_t
     version_info_t version; ///< version info for the frontend
 
     const char **exts; ///< null terminated list of file extensions
+
+    config_t fnConfig;
 
     create_t fnCreate; ///< called at startup
     destroy_t fnDestroy; ///< called at shutdown
