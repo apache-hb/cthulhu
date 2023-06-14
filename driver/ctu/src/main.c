@@ -1,22 +1,39 @@
-#include "cthulhu/mediator/language.h"
-#include "scan/compile.h"
-
 #include "sema/sema.h"
 #include "sema/config.h"
 
+#include "scan/compile.h"
+
 #include "base/macros.h"
+
+#include "std/str.h"
 
 #include "ctu-bison.h"
 #include "ctu-flex.h"
 
 CT_CALLBACKS(kCallbacks, ctu);
 
-static void *ctu_parse_file(lang_handle_t *runtime, scan_t *scan)
+static vector_t *find_mod_path(ast_t *mod, char *fp)
 {
-    UNUSED(runtime);
+    if (mod == NULL) { return vector_init(str_filename_noext(fp)); }
+
+    return vector_len(mod->path) > 0 
+        ? mod->path
+        : vector_init(str_filename_noext(fp));
+}
+
+static void ctu_parse_file(driver_t *runtime, scan_t *scan)
+{
+    lifetime_t *lifetime = handle_get_lifetime(runtime);
 
     ctu_init_scan(scan, runtime);
-    return compile_scanner(scan, &kCallbacks);
+    ast_t *ast = compile_scanner(scan, &kCallbacks);
+
+    char *fp = (char*)scan_path(scan);
+    vector_t *path = find_mod_path(ast->modspec, fp);
+
+    context_t *ctx = context_new(runtime, vector_tail(path), ast, NULL, NULL);
+
+    add_context(lifetime, path, ctx);
 }
 
 static const char *kLangNames[] = { "ct", "ctu", NULL };
@@ -33,12 +50,13 @@ const language_t kCtuModule = {
 
     .exts = kLangNames,
 
-    .fnConfigure = ctu_config,
-
-    .fnInit = ctu_init,
+    .fnCreate = ctu_init,
 
     .fnParse = ctu_parse_file,
-    .fnForward = ctu_forward_decls,
-    .fnImport = ctu_process_imports,
-    .fnCompile = ctu_compile_module,
+
+    .fnCompilePass = {
+        [eStageForwardSymbols] = ctu_forward_decls,
+        [eStageCompileImports] = ctu_process_imports,
+        [eStageCompileSymbols] = ctu_compile_module
+    }
 };

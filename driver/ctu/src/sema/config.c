@@ -1,6 +1,6 @@
 #include "config.h"
 
-#include "cthulhu/mediator/language.h"
+#include "cthulhu/mediator/driver.h"
 #include "argparse/commands.h"
 
 #include "base/panic.h"
@@ -24,6 +24,8 @@ static const char *kDefaultInitNames[] = { "--ctu:enable-default-expr", "-ctu:de
 static const char *kTemplateNames[] = { "--ctu:enable-templates", "-ctu:templates", NULL };
 static const char *kInterfaceNames[] = { "--ctu:enable-interfaces", "-ctu:interfaces", NULL };
 
+static config_t *gConfig = NULL;
+
 static AP_EVENT(on_feature, ap, param, value, data)
 {
     bool *feature = data;
@@ -42,28 +44,25 @@ static config_t *new_config(void)
     return config;
 }
 
-void ctu_config(lang_handle_t *handle, ap_t *args) 
+void ctu_config(driver_t *handle, ap_t *args) 
 {
-    config_t *config = new_config();
-    
+    GLOBAL_INIT();
+
+    gConfig = new_config();
     ap_group_t *group = ap_group_new(args, "cthulhu features", "unstable cthulhu features and extensions");
     ap_param_t *defaultEnable = ap_add_bool(group, "default expressions", "enables `default` in expressions to explicitly refer to a types default value (experimental)", kDefaultInitNames);
     ap_param_t *templateEnable = ap_add_bool(group, "templates", "enables templated types and functions (unimplemented)", kTemplateNames);
     ap_param_t *interfaceEnable = ap_add_bool(group, "interfaces", "enables interface declarations (unimplemented)", kInterfaceNames);
 
-    ap_event(args, defaultEnable, on_feature, &config->features[eFeatureDefaultExpr]);
-    ap_event(args, templateEnable, on_feature, &config->features[eFeatureTemplateDecls]);
-    ap_event(args, interfaceEnable, on_feature, &config->features[eFeatureInterfaceDecls]);
-
-    lang_set_user(handle, config);
+    ap_event(args, defaultEnable, on_feature, &gConfig->features[eFeatureDefaultExpr]);
+    ap_event(args, templateEnable, on_feature, &gConfig->features[eFeatureTemplateDecls]);
+    ap_event(args, interfaceEnable, on_feature, &gConfig->features[eFeatureInterfaceDecls]);
 }
 
-bool ctu_has_feature(lang_handle_t *handle, feature_t feature)
+bool ctu_has_feature(feature_t feature)
 {
-    CTASSERT(handle != NULL);
+    CTASSERT(gConfig != NULL);
     CTASSERT(feature < eFeatureTotal);
 
-    config_t *config = lang_get_user(handle);
-
-    return config->features[feature];
+    return gConfig->features[feature];
 }

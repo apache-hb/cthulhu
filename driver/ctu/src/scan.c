@@ -16,7 +16,7 @@ typedef struct
 {
     size_t depth;      // template depth
     vector_t *attribs; // attribute collector
-    lang_handle_t *handle;
+    driver_t *handle;
 } lex_extra_t;
 
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
@@ -26,7 +26,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
     report(scan_reports(scan), eFatal, node_new(scan, *where), "%s", msg);
 }
 
-void ctu_init_scan(scan_t *scan, lang_handle_t *handle)
+void ctu_init_scan(scan_t *scan, driver_t *handle)
 {
     lex_extra_t *extra = ctu_malloc(sizeof(lex_extra_t));
     extra->depth = 0;
@@ -47,7 +47,7 @@ size_t exit_template(scan_t *scan)
     return extra->depth--;
 }
 
-lang_handle_t *get_lang_handle(scan_t *scan)
+driver_t *get_lang_handle(scan_t *scan)
 {
     lex_extra_t *extra = scan_get(scan);
     return extra->handle;

@@ -4,6 +4,6 @@ def setPtr(ptr: *int) {
 
 @entry(cli)
 def main {
-    var i = 999;
+    var i: int = 999;
     setPtr(&i);
 }

@@ -7,18 +7,18 @@
 
 typedef struct ast_t ast_t;
 typedef struct vector_t vector_t;
-typedef struct lang_handle_t lang_handle_t;
+typedef struct driver_t driver_t;
 
 typedef struct string_t {
     char *text;
     size_t size;
 } string_t;
 
-void ctu_init_scan(scan_t *scan, lang_handle_t *handle);
+void ctu_init_scan(scan_t *scan, driver_t *handle);
 void enter_template(scan_t *scan);
 size_t exit_template(scan_t *scan);
 
-lang_handle_t *get_lang_handle(scan_t *scan);
+driver_t *get_lang_handle(scan_t *scan);
 
 void add_attribute(scan_t *scan, ast_t *ast);
 vector_t *collect_attributes(scan_t *scan);

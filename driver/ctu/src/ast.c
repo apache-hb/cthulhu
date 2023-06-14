@@ -375,7 +375,7 @@ ast_t *ast_case(scan_t *scan, where_t where, char *name, vector_t *fields, ast_t
 
 ast_t *ast_default(scan_t *scan, where_t where)
 {
-    if (!ctu_has_feature(get_lang_handle(scan), eFeatureDefaultExpr))
+    if (!ctu_has_feature(eFeatureDefaultExpr))
     {
         report(scan_reports(scan), eFatal, node_new(scan, where), "`default` expressions are unstable and therefore disabled by default");
     }

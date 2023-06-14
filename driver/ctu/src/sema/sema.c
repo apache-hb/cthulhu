@@ -422,8 +422,14 @@ static void add_basic_types(sema_t *sema)
     // add_decl(sema, eTagTypes, "enum", hlir_enum(node, "enum", eInt, eSigned));
 }
 
-void ctu_init(lang_handle_t *runtime)
+void ctu_init(driver_t *runtime, ap_t *ap)
 {
+    // TODO: seperate config and init functions
+    ctu_config(runtime, ap);
+
+    lifetime_t *lifetime = handle_get_lifetime(runtime);
+    reports_t *reports = lifetime_get_reports(lifetime);
+
     size_t sizes[eTagTotal] = {
         [eSemaValues] = 1, 
         [eSemaProcs] = 1, 
@@ -433,7 +439,7 @@ void ctu_init(lang_handle_t *runtime)
         [eTagSuffix] = 32,
     };
 
-    kRootSema = sema_root_new(lang_get_reports(runtime), eTagTotal, sizes);
+    kRootSema = sema_root_new(reports, eTagTotal, sizes);
 
     sema_t *builtin = get_builtin_sema(kRootSema);
     sema_set(kRootSema, eSemaModules, "__builtin", builtin);
@@ -1293,7 +1299,7 @@ static hlir_t *sema_default(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_deref(sema_t *sema, ast_t *ast)
 {
-    hlir_t *expr = sema_rvalue(sema, ast->operand);
+    hlir_t *expr = sema_lvalue(sema, ast->operand);
 
     const hlir_t *ty = get_hlir_type(expr);
     if (!hlir_is(ty, eHlirPointer))
@@ -2054,10 +2060,9 @@ static void import_namespaced_decls(sema_t *sema, ast_t *import, sema_t *mod)
     sema_set(sema, eSemaModules, name, mod);
 }
 
-void ctu_forward_decls(lang_handle_t *runtime, const char *name, void *ast)
+void ctu_forward_decls(context_t *context)
 {
-    UNUSED(runtime);
-    ast_t *root = ast;
+    ast_t *root = context_get_ast(context);
 
     size_t totalDecls = vector_len(root->decls);
     size_t sizes[eTagTotal] = {
@@ -2072,8 +2077,9 @@ void ctu_forward_decls(lang_handle_t *runtime, const char *name, void *ast)
     sema_t *sema = begin_sema(kRootSema, sizes);
     add_builtin_attribs(sema);
 
+    // TODO: context names seem wrong
     const char *modName = root->modspec == NULL
-        ? name
+        ? context_get_name(context)
         : make_import_name(root->modspec->path);
 
     hlir_t *mod = hlir_module(root->node, modName, vector_of(0), vector_of(0), vector_of(0));
@@ -2088,14 +2094,15 @@ void ctu_forward_decls(lang_handle_t *runtime, const char *name, void *ast)
         fwd_decl(sema, decl);
     }
 
-    compile_begin(runtime, ast, modName, sema, mod);
+    context_update(context, root, sema, mod);
 }
 
-void ctu_process_imports(lang_handle_t *runtime, compile_t *compile)
+void ctu_process_imports(context_t *context)
 {
-    reports_t *reports = lang_get_reports(runtime);
-    ast_t *root = compile_get_ast(compile);
-    sema_t *sema = compile_get_sema(compile);
+    lifetime_t *lifetime = context_get_lifetime(context);
+    reports_t *reports = lifetime_get_reports(lifetime);
+    ast_t *root = context_get_ast(context);
+    sema_t *sema = context_get_sema(context);
 
     vector_t *imports = root->imports;
     size_t totalImports = vector_len(imports);
@@ -2103,31 +2110,32 @@ void ctu_process_imports(lang_handle_t *runtime, compile_t *compile)
     for (size_t i = 0; i < totalImports; i++)
     {
         ast_t *import = vector_get(imports, i);
-        char *name = make_import_name(import->path);
 
-        sema_t *mod = handle_get_sema(runtime, name);
-        if (mod == NULL)
+        context_t *other = get_context(lifetime, import->path);
+        if (other == NULL)
         {
-            report(reports, eFatal, import->node, "module '%s' not found", name);
+            report(reports, eFatal, import->node, "module '%s' not found", str_join("::", import->path));
             continue;
         }
 
-        if (mod == sema)
+        sema_t *otherSema = context_get_sema(other);
+        CTASSERTF(otherSema != NULL, "internal corruption %s", str_join("::", import->path));
+
+        // TODO: more robust way of checking for self imports
+        if (otherSema == sema)
         {
             report(reports, eWarn, import->node, "module cannot import itself");
             continue;
         }
 
-        import_namespaced_decls(sema, import, mod);
+        import_namespaced_decls(sema, import, otherSema);
     }
 }
 
-hlir_t *ctu_compile_module(lang_handle_t *runtime, compile_t *compile)
+void ctu_compile_module(context_t *context)
 {
-    UNUSED(runtime);
-
-    ast_t *root = compile_get_ast(compile);
-    sema_t *sema = compile_get_sema(compile);
+    ast_t *root = context_get_ast(context);
+    sema_t *sema = context_get_sema(context);
     sema_data_t *data = sema_get_data(sema);
 
     for (size_t i = 0; i < data->totalDecls; i++)
@@ -2140,10 +2148,7 @@ hlir_t *ctu_compile_module(lang_handle_t *runtime, compile_t *compile)
     vector_t *globals = map_values(sema_tag(sema, eSemaValues));
     vector_t *procs = map_values(sema_tag(sema, eSemaProcs));
 
-    hlir_t *mod = compile_get_module(compile);
+    hlir_t *mod = context_get_hlir(context);
 
     hlir_build_module(mod, types, globals, procs);
-    compile_finish(compile);
-
-    return mod;
 }

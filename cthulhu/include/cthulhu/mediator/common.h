@@ -7,11 +7,12 @@ typedef struct lifetime_t lifetime_t;
 typedef struct driver_t driver_t;
 typedef struct context_t context_t;
 
+typedef struct ap_t ap_t;
 typedef struct hlir_t hlir_t;
 typedef struct scan_t scan_t;
 typedef struct reports_t reports_t;
 
-typedef void (*create_t)(driver_t *);
+typedef void (*create_t)(driver_t *, ap_t *);
 typedef void (*destroy_t)(driver_t *);
 
 typedef void (*parse_t)(driver_t *, scan_t *);

@@ -831,7 +831,7 @@ static ssa_operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
         return compile_index_lvalue(ssa, hlir);
 
     default:
-        report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-lvalue %s", hlir_kind_to_string(kind));
+        report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-lvalue %s", hlir_to_string(hlir));
         return operand_empty();
     }
 }

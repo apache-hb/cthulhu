@@ -22,7 +22,7 @@ static hlir_t *example_lang_module(void)
     return mod;
 }
 
-static void ex_create(driver_t *handle)
+static void ex_create(driver_t *handle, ap_t *ap)
 {
     vector_t *path = example_lang_path();
     hlir_t *mod = example_lang_module();
@@ -30,7 +30,7 @@ static void ex_create(driver_t *handle)
 
     add_context(handle_get_lifetime(handle), path, ctx);
 
-    logverbose("ex-create(0x%p)", handle);
+    logverbose("ex-create(0x%p, 0x%p)", handle, ap);
 }
 
 static void ex_destroy(driver_t *handle)

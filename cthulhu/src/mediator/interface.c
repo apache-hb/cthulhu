@@ -108,7 +108,7 @@ const char *stage_to_string(compile_stage_t stage)
     }
 }
 
-void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
+void lifetime_add_language(lifetime_t *lifetime, ap_t *ap, const language_t *lang)
 {
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
@@ -127,7 +127,7 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
     }
     
     driver_t *handle = handle_new(lifetime, lang);
-    EXEC(lang, fnCreate, handle);
+    EXEC(lang, fnCreate, handle, ap);
 }
 
 const language_t *lifetime_get_language(lifetime_t *lifetime, const char *ext)

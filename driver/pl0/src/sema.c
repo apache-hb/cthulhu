@@ -51,8 +51,10 @@ static vector_t *make_runtime_path(void)
     return path;
 }
 
-void pl0_init(driver_t *handle)
+void pl0_init(driver_t *handle, ap_t *ap)
 {
+    // TODO: put module and import behind feature in ap
+    
     node_t *node = node_builtin();
 
     logverbose("initializing PL/0 runtime");
