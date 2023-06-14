@@ -14,6 +14,7 @@
 #include "platform/error.h"
 #include "stacktrace/stacktrace.h"
 #include "cthulhu/hlir/init.h"
+#include "cthulhu/hlir/check.h"
 
 static void runtime_init(void)
 {
@@ -43,12 +44,12 @@ static const language_t *add_language_extension(lifetime_t *lifetime, const char
     return NULL;
 }
 
-static handle_t *handle_new(lifetime_t *lifetime, const language_t *lang)
+static driver_t *handle_new(lifetime_t *lifetime, const language_t *lang)
 {
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
 
-    handle_t *self = ctu_malloc(sizeof(handle_t));
+    driver_t *self = ctu_malloc(sizeof(driver_t));
 
     self->parent = lifetime;
     self->lang = lang;
@@ -61,7 +62,7 @@ bool context_requires_compiling(const context_t *ctx)
     return ctx->ast != NULL;
 }
 
-lifetime_t *handle_get_lifetime(handle_t *handle)
+lifetime_t *handle_get_lifetime(driver_t *handle)
 {
     CTASSERT(handle != NULL);
 
@@ -125,7 +126,7 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
         report(lifetime->reports, eInternal, node_invalid(), "language `%s` registered under extension `%s` clashes with previously registered language `%s`", lang->id, lang->exts[i], old->id); // TODO: handle this
     }
     
-    handle_t *handle = handle_new(lifetime, lang);
+    driver_t *handle = handle_new(lifetime, lang);
     EXEC(lang, fnCreate, handle);
 }
 
@@ -145,8 +146,8 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
 
     CTASSERT(lang->fnParse != NULL);
 
-    scan_t *scan = scan_io(lifetime->reports, lang->id, io, lifetime);
-    handle_t *handle = handle_new(lifetime, lang);
+    scan_t *scan = scan_io(lifetime->reports, lang->id, io);
+    driver_t *handle = handle_new(lifetime, lang);
 
     logverbose("%s:fnParse(%s)", lang->id, scan_path(scan));
     lang->fnParse(handle, scan);
@@ -204,4 +205,24 @@ vector_t *lifetime_get_modules(lifetime_t *lifetime)
     logverbose("acquired modules %zu", vector_len(mods));
 
     return mods;
+}
+
+void lifetime_check(lifetime_t *lifetime)
+{
+    check_t check = {
+        .reports = lifetime_get_reports(lifetime)
+    };
+
+    map_iter_t iter = map_iter(lifetime->modules);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        context_t *ctx = entry.value;
+        const char *name = entry.key;
+
+        CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
+        CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
+
+        check_module(&check, ctx->root);
+    }
 }

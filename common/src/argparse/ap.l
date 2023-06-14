@@ -22,7 +22,7 @@ OPT [a-zA-Z0-9\-\:]
 "=" { return ASSIGN; }
 
 [-]+{LETTER}{OPT}* { 
-    return ap_get_opt(scan_extra(yyextra), yytext, &yylval->option, &yylval->error); 
+    return ap_get_opt(scan_get(yyextra), yytext, &yylval->option, &yylval->error); 
 }
 
 [0-9]+ {

@@ -24,11 +24,11 @@ typedef struct lifetime_t
     map_t *modules;
 } lifetime_t;
 
-typedef struct handle_t 
+typedef struct driver_t 
 {
     lifetime_t *parent;
     const language_t *lang;
-} handle_t;
+} driver_t;
 
 typedef struct context_t 
 {

@@ -4,17 +4,17 @@
 
 typedef struct mediator_t mediator_t;
 typedef struct lifetime_t lifetime_t;
-typedef struct handle_t handle_t;
+typedef struct driver_t driver_t;
 typedef struct context_t context_t;
 
 typedef struct hlir_t hlir_t;
 typedef struct scan_t scan_t;
 typedef struct reports_t reports_t;
 
-typedef void (*create_t)(handle_t *);
-typedef void (*destroy_t)(handle_t *);
+typedef void (*create_t)(driver_t *);
+typedef void (*destroy_t)(driver_t *);
 
-typedef void (*parse_t)(handle_t *, scan_t *);
+typedef void (*parse_t)(driver_t *, scan_t *);
 
 typedef enum compile_stage_t
 {

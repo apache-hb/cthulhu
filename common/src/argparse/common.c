@@ -18,7 +18,7 @@
 
 static void apply_callbacks(scan_t *scan, where_t where, const ap_param_t *param, const void *value, vector_t *all)
 {
-    ap_t *self = scan_extra(scan);
+    ap_t *self = scan_get(scan);
     size_t len = vector_len(all);
 
     for (size_t i = 0; i < len; i++)
@@ -47,21 +47,21 @@ static void add_value(ap_t *self, const ap_param_t *param, void *value)
 
 void ap_on_string(scan_t *scan, where_t where, const ap_param_t *param, const char *value)
 {
-    ap_t *self = scan_extra(scan);
+    ap_t *self = scan_get(scan);
     add_value(self, param, ctu_strdup(value));
     apply_callbacks(scan, where, param, value, map_get_ptr(self->eventLookup, param));
 }
 
 void ap_on_bool(scan_t *scan, where_t where, const ap_param_t *param, bool value)
 {
-    ap_t *self = scan_extra(scan);
+    ap_t *self = scan_get(scan);
     add_value(self, param, BOX(value));
     apply_callbacks(scan, where, param, &value, map_get_ptr(self->eventLookup, param));
 }
 
 void ap_on_int(scan_t *scan, where_t where, const ap_param_t *param, mpz_t value)
 {
-    ap_t *self = scan_extra(scan);
+    ap_t *self = scan_get(scan);
     
     void *it = ctu_malloc(sizeof(mpz_t));
     memcpy(it, value, sizeof(mpz_t));
@@ -72,13 +72,13 @@ void ap_on_int(scan_t *scan, where_t where, const ap_param_t *param, mpz_t value
 
 void ap_on_posarg(scan_t *scan, where_t where, const char *value)
 {
-    ap_t *self = scan_extra(scan);
+    ap_t *self = scan_get(scan);
     apply_callbacks(scan, where, NULL, value, self->posArgCallbacks);
 }
 
 void ap_on_error(scan_t *scan, where_t where, const char *message)
 {
-    ap_t *self = scan_extra(scan);
+    ap_t *self = scan_get(scan);
     node_t *node = node_new(scan, where);
     size_t len = vector_len(self->errorCallbacks);
 

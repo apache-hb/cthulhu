@@ -12,7 +12,7 @@
 
 CT_CALLBACKS(kCallbacks, pl0);
 
-static void pl0_parse(handle_t *handle, scan_t *scan)
+static void pl0_parse(driver_t *handle, scan_t *scan)
 {
     pl0_t *ast = compile_scanner(scan, &kCallbacks);
     if (ast == NULL)

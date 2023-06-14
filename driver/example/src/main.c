@@ -22,7 +22,7 @@ static hlir_t *example_lang_module(void)
     return mod;
 }
 
-static void ex_create(handle_t *handle)
+static void ex_create(driver_t *handle)
 {
     vector_t *path = example_lang_path();
     hlir_t *mod = example_lang_module();
@@ -33,12 +33,12 @@ static void ex_create(handle_t *handle)
     logverbose("ex-create(0x%p)", handle);
 }
 
-static void ex_destroy(handle_t *handle)
+static void ex_destroy(driver_t *handle)
 {
     logverbose("ex-destroy(0x%p)", handle);
 }
 
-static void ex_parse(handle_t *handle, scan_t *scan)
+static void ex_parse(driver_t *handle, scan_t *scan)
 {
     logverbose("ex-parse(0x%p, %s)", handle, scan_path(scan));
 }

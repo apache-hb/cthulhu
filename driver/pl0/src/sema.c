@@ -51,7 +51,7 @@ static vector_t *make_runtime_path(void)
     return path;
 }
 
-void pl0_init(handle_t *handle)
+void pl0_init(driver_t *handle)
 {
     node_t *node = node_builtin();
 
@@ -343,11 +343,20 @@ static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
         hlir_add_local(hlir, it);
     }
 
-    hlir_t *body = sema_vector(nest, node->node, node->body);
+    hlir_t *ret = hlir_return(node->node, NULL);
+
+    hlir_t *inner = sema_vector(nest, node->node, node->body);
+
+    vector_t *body = vector_new(2);
+    vector_push(&body, inner);
+    vector_push(&body, ret);
+
+    // make sure we have a return statement
+    hlir_t *stmts = hlir_stmts(node->node, body);
 
     sema_delete(nest);
 
-    hlir_build_function(hlir, body);
+    hlir_build_function(hlir, stmts);
 }
 
 static void insert_module(sema_t *sema, sema_t *other)

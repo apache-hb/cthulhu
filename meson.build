@@ -150,14 +150,20 @@ foreach lang : get_option('languages')
     subdir('driver'/lang)
 endforeach
 
-subdir('interface')
+subdir('interface/support')
 
-#subdir('tests/harness')
-#subdir('tests/unit-tests')
+foreach interface : get_option('interfaces')
+    subdir('interface'/interface)
+endforeach
 
-#foreach lang : get_option('languages')
-#    subdir('tests/lang'/lang)
-#endforeach
+if not meson.is_subproject()
+    subdir('tests/unit-tests')
+    subdir('interface/harness')
+endif
+
+foreach lang : get_option('languages')
+    subdir('tests/lang'/lang)
+endforeach
 
 if tuning.enabled()
     tune = executable('tune-map', [ 'tools/tune-map.c' ],

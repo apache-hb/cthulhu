@@ -18,7 +18,7 @@ static char *path_to_string(vector_t *path)
     return str_join(".", path);
 }
 
-static context_t *context_inner_new(handle_t *handle, const char *name, void *ast, hlir_t *root, sema_t *sema)
+static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, hlir_t *root, sema_t *sema)
 {
     context_t *self = ctu_malloc(sizeof(context_t));
 
@@ -32,14 +32,14 @@ static context_t *context_inner_new(handle_t *handle, const char *name, void *as
     return self;
 }
 
-context_t *compiled_new(handle_t *handle, const char *name, hlir_t *root, sema_t *sema)
+context_t *compiled_new(driver_t *handle, const char *name, hlir_t *root, sema_t *sema)
 {
     CTASSERT(handle != NULL);
 
     return context_inner_new(handle, name, NULL, root, sema);
 }
 
-context_t *context_new(handle_t *handle, const char *name, void *ast, hlir_t *root, sema_t *sema)
+context_t *context_new(driver_t *handle, const char *name, void *ast, hlir_t *root, sema_t *sema)
 {
     CTASSERT(handle != NULL);
     CTASSERT(ast != NULL);
