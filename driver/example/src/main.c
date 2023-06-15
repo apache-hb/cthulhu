@@ -11,7 +11,6 @@ static vector_t *example_lang_path(void)
     vector_t *path = vector_new(2);
     vector_push(&path, "example");
     vector_push(&path, "lang");
-
     return path;
 }
 

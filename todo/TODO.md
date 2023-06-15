@@ -16,6 +16,8 @@
 
 ## important
 
+* memory arenas
+
 * ssa backend
     * wasm
     * x64

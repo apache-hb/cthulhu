@@ -22,7 +22,7 @@ typedef void (*parse_t)(driver_t *, scan_t *);
 typedef enum compile_stage_t
 {
 #define STAGE(ID, STR) ID,
-#include "cthulhu/mediator/mediator-def.inc"
+#include "cthulhu/mediator/mediator.inc"
 
     eStageTotal
 } compile_stage_t;

@@ -146,3 +146,19 @@ argparse = declare_dependency(
     include_directories : 'include',
     dependencies : [ gmp ]
 )
+
+src = [
+    'src/report2/report.c'
+]
+
+libreport2 = library('report2', src,
+    c_args : args,
+    dependencies : [ std, location, interop ],
+    include_directories : 'include'
+)
+
+report = declare_dependency(
+    link_with : libreport2,
+    dependencies : std,
+    include_directories : 'include'
+)

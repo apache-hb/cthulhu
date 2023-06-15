@@ -21,14 +21,14 @@ static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
     stacktrace_print(stderr);
 }
 
-panic_handler_t globalPanicHandler = default_panic_handler;
+panic_handler_t gPanicHandler = default_panic_handler;
 
 USE_DECL
 void ctpanic(panic_t panic, const char *msg, ...)
 {
     va_list args;
     va_start(args, msg);
-    globalPanicHandler(panic, msg, args);
+    gPanicHandler(panic, msg, args);
     va_end(args);
 
 #if ADDRSAN_ENABLED

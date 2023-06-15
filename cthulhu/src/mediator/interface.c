@@ -103,7 +103,7 @@ const char *stage_to_string(compile_stage_t stage)
 #define STAGE(ID, STR) case ID: return STR;
     switch (stage)
     {
-#include "cthulhu/mediator/mediator-def.inc"
+#include "cthulhu/mediator/mediator.inc"
     default: return "unknown";
     }
 }

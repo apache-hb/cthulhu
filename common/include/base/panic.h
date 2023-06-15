@@ -21,7 +21,7 @@ typedef struct
  */
 typedef void (*panic_handler_t)(panic_t panic, const char *fmt, va_list args);
 
-extern panic_handler_t globalPanicHandler;
+extern panic_handler_t gPanicHandler;
 
 FORMAT_ATTRIB(2, 3)
 NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
