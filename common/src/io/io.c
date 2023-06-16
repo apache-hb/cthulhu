@@ -18,14 +18,14 @@ typedef void (*io_close_t)(io_t *self);
 
 typedef struct io_callbacks_t
 {
-    io_read_t read;
-    io_write_t write;
+    io_read_t fnRead;
+    io_write_t fnWrite;
 
-    io_size_t size;
+    io_size_t fnGetSize;
 
-    io_map_t map;
+    io_map_t fnMap;
 
-    io_close_t close;
+    io_close_t fnClose;
 } io_callbacks_t;
 
 typedef struct io_t
@@ -164,28 +164,34 @@ static const void *view_map(io_t *self)
 
 /// view callbacks
 
-static const io_callbacks_t kFileCallbacks = {.read = fd_read,
-                                              .write = fd_write,
+static const io_callbacks_t kFileCallbacks = {
+    .fnRead = fd_read,
+    .fnWrite = fd_write,
 
-                                              .size = fd_size,
+    .fnGetSize = fd_size,
 
-                                              .map = fd_map,
-                                              .close = fd_close,};
+    .fnMap = fd_map,
+    .fnClose = fd_close
+};
 
-static const io_callbacks_t kBufferCallbacks = {.read = mem_read,
-                                                .write = mem_write,
+static const io_callbacks_t kBufferCallbacks = {
+    .fnRead = mem_read,
+    .fnWrite = mem_write,
 
-                                                .size = mem_size,
+    .fnGetSize = mem_size,
 
-                                                .map = mem_map,
-                                                .close = mem_close,};
+    .fnMap = mem_map,
+    .fnClose = mem_close
+};
 
-static const io_callbacks_t kViewCallbacks = {.read = view_read,
-                                              .write = NULL,
+static const io_callbacks_t kViewCallbacks = {
+    .fnRead = view_read,
+    .fnWrite = NULL,
 
-                                              .size = view_size,
+    .fnGetSize = view_size,
 
-                                              .map = view_map,};
+    .fnMap = view_map
+};
 
 static io_t *io_new(const io_callbacks_t *cb, file_flags_t flags, const char *name, void *data,
                     size_t size)
@@ -259,9 +265,9 @@ void io_close(io_t *io)
 {
     CTASSERT(io != NULL);
 
-    if (io->cb->close != NULL)
+    if (io->cb->fnClose != NULL)
     {
-        io->cb->close(io);
+        io->cb->fnClose(io);
     }
 
     ctu_free(io);
@@ -273,7 +279,7 @@ size_t io_read(io_t *io, void *dst, size_t size)
     CTASSERT(io != NULL);
     CTASSERT(io->flags & eFileRead);
 
-    return io->cb->read(io, dst, size);
+    return io->cb->fnRead(io, dst, size);
 }
 
 USE_DECL
@@ -282,7 +288,7 @@ size_t io_write(io_t *io, const void *src, size_t size)
     CTASSERT(io != NULL);
     CTASSERT(io->flags & eFileWrite);
 
-    return io->cb->write(io, src, size);
+    return io->cb->fnWrite(io, src, size);
 }
 
 USE_DECL
@@ -290,7 +296,7 @@ size_t io_size(io_t *io)
 {
     CTASSERT(io != NULL);
 
-    return io->cb->size(io);
+    return io->cb->fnGetSize(io);
 }
 
 USE_DECL
@@ -306,7 +312,7 @@ const void *io_map(io_t *io)
 {
     CTASSERT(io != NULL);
 
-    return io->cb->map(io);
+    return io->cb->fnMap(io);
 }
 
 USE_DECL

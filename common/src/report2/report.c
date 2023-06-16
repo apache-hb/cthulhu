@@ -9,6 +9,7 @@
 typedef struct rep_root_t
 {
     vector_t *entries;
+    vector_t *messages;
 } rep_root_t;
 
 typedef struct rep_group_t
@@ -42,11 +43,27 @@ static void push_entry(rep_root_t *reports, rep_entry_t *entry)
     vector_push(&reports->entries, entry);
 }
 
+static rep_message_t *push_message(const rep_entry_t *entry, const node_t *node, const char *fmt, va_list args)
+{
+    CTASSERT(entry != NULL);
+    CTASSERT(fmt != NULL);
+
+    rep_message_t *message = ctu_malloc(sizeof(rep_message_t));
+    message->entry = entry;
+    message->node = node;
+    message->message = formatv(fmt, args);
+
+    vector_push(&entry->parent->reports->messages, message);
+
+    return message;
+}
+
 rep_root_t *reports_new(void)
 {
     rep_root_t *reports = ctu_malloc(sizeof(rep_root_t));
 
     reports->entries = vector_new(128);
+    reports->messages = vector_new(128);
 
     return reports;
 }
@@ -71,22 +88,14 @@ rep_entry_t *add_entry(rep_group_t *group, rep_level_t level, const char *name, 
 
 rep_message_t *reportv(const rep_entry_t *entry, const node_t *node, const char *fmt, va_list args)
 {
-    CTASSERT(entry != NULL);
-    CTASSERT(fmt != NULL);
-
-    rep_message_t *message = ctu_malloc(sizeof(rep_message_t));
-    message->entry = entry;
-    message->node = node;
-    message->message = formatv(fmt, args);
-
-    return message;
+    return push_message(entry, node, fmt, args);
 }
 
 rep_message_t *report(const rep_entry_t *entry, const node_t *node, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    rep_message_t *message = reportv(entry, node, fmt, args);
+    rep_message_t *message = push_message(entry, node, fmt, args);
     va_end(args);
 
     return message;

@@ -141,6 +141,11 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
     EXEC(lang, fnCreate, handle);
 }
 
+const language_t *lifetime_add_extension(lifetime_t *lifetime, const char *ext, const language_t *lang)
+{
+    return add_language_extension(lifetime, ext, lang);
+}
+
 const language_t *lifetime_get_language(lifetime_t *lifetime, const char *ext)
 {
     CTASSERT(lifetime != NULL);

@@ -1,6 +1,5 @@
 #include "cmd.h"
 
-#include "cthulhu/mediator/mediator.h"
 #include "std/vector.h"
 #include "std/str.h"
 #include "std/map.h"
@@ -18,6 +17,13 @@
 
 #include "support/langs.h"
 
+static const version_info_t kVersionInfo = {
+    .license = "GPLv3",
+    .desc = "Cthulhu Compiler Collection CLI",
+    .author = "Elliot Haisley",
+    .version = NEW_VERSION(0, 0, 2)
+};
+
 #define CHECK_REPORTS(reports, msg) \
     do { \
         int err = end_reports(reports, msg, reportConfig); \
@@ -26,42 +32,33 @@
         } \
     } while (0)
 
-static void add_sources(mediator_t *mediator, lifetime_t *lifetime, vector_t *sources, reports_t *reports)
+static void parse_source(lifetime_t *lifetime, const char *path)
 {
-    size_t len = vector_len(sources);
-    for (size_t i = 0; i < len; i++)
+    reports_t *reports = lifetime_get_reports(lifetime);
+    const char *ext = str_ext(path);
+    if (ext == NULL)
     {
-        const char *path = vector_get(sources, i);
-        const char *ext = str_ext(path);
-        if (ext == NULL)
-        {
-            report(reports, eFatal, NULL, "could not identify compiler for `%s` (no extension)", path);
-            continue;
-        }
-
-        const language_t *lang = mediator_get_language_by_ext(mediator, ext);
-        if (lang == NULL)
-        {
-            const char *basepath = str_filename(path);
-            message_t *id = report(reports, eFatal, NULL, "could not identify compiler for `%s` by extension `%s`", basepath, ext);
-            report_note(id, "extra extensions can be provided with -ext=id:ext");
-            continue;
-        }
-
-        io_t *io = io_file(path, eFileRead | eFileText);
-        if (io_error(io) != 0)
-        {
-            report(reports, eFatal, NULL, "failed to load source `%s`\n%s", path, error_string(io_error(io)));
-            continue;
-        }
-
-        source_t src = {
-            .io = io,
-            .lang = lang
-        };
-
-        lifetime_add_source(lifetime, src);
+        report(reports, eFatal, NULL, "could not identify compiler for `%s` (no extension)", path);
+        return;
     }
+
+    const language_t *lang = lifetime_get_language(lifetime, ext);
+    if (lang == NULL)
+    {
+        const char *basepath = str_filename(path);
+        message_t *id = report(reports, eFatal, NULL, "could not identify compiler for `%s` by extension `%s`", basepath, ext);
+        report_note(id, "extra extensions can be provided with -ext=id:ext");
+        return;
+    }
+
+    io_t *io = io_file(path, eFileRead | eFileText);
+    if (io_error(io) != 0)
+    {
+        report(reports, eFatal, NULL, "failed to load source `%s`\n%s", path, error_string(io_error(io)));
+        return;
+    }
+
+    lifetime_parse(lifetime, lang, io);
 }
 
 static io_t *make_file(reports_t *reports, const char *path)
@@ -78,9 +75,9 @@ static io_t *make_file(reports_t *reports, const char *path)
 
 int main(int argc, const char **argv)
 {
-    reports_t *reports = begin_reports();
-    mediator_t *mediator = mediator_new("cli", NEW_VERSION(0, 0, 1));
-    lifetime_t *lifetime = mediator_get_lifetime(mediator, reports);
+    mediator_t *mediator = mediator_new("cli", kVersionInfo);
+    lifetime_t *lifetime = lifetime_new(mediator);
+    reports_t *reports = lifetime_get_reports(lifetime);
 
     runtime_t rt = cmd_parse(reports, mediator, lifetime, argc, argv);
     report_config_t reportConfig = {
@@ -95,30 +92,28 @@ int main(int argc, const char **argv)
     {
         report(reports, eFatal, NULL, "no source files provided");
     }
-    else
-    {
-        add_sources(mediator, lifetime, rt.sourcePaths, reports);
-    }
 
     CHECK_REPORTS(reports, "failed to load sources");
 
-    lifetime_init(lifetime);
+    for (size_t i = 0; i < len; i++)
+    {
+        const char *path = vector_get(rt.sourcePaths, i);
+        parse_source(lifetime, path);
+    }
 
-    lifetime_parse(reports, lifetime);
     CHECK_REPORTS(reports, "failed to parse sources");
 
-    lifetime_forward(reports, lifetime);
-    CHECK_REPORTS(reports, "failed to forward declarations");
+    for (size_t stage = 0; stage < eStageTotal; stage++)
+    {
+        lifetime_run_stage(lifetime, stage);
 
-    lifetime_import(reports, lifetime);
-    CHECK_REPORTS(reports, "failed to import modules");
+        char *msg = format("running stage %s", stage_to_string(stage));
+        CHECK_REPORTS(reports, msg);
+    }
 
-    lifetime_compile(reports, lifetime);
-    CHECK_REPORTS(reports, "failed to compile sources");
-
-    vector_t *mods = lifetime_modules(lifetime);
+    vector_t *mods = lifetime_get_modules(lifetime);
     ssa_module_t *ssa = ssa_gen_module(reports, mods);
-    CHECK_REPORTS(reports, "failed to generate SSA");
+    CHECK_REPORTS(reports, "generating ssa");
 
     ssa_opt_module(reports, ssa);
     CHECK_REPORTS(reports, "failed to optimize SSA");
@@ -142,14 +137,5 @@ int main(int argc, const char **argv)
     };
 
     emit_ssa_modules(config, ssa);
-    CHECK_REPORTS(reports, "failed to emit C89");
-
-    lifetime_deinit(lifetime);
-
-    langs_t langs = get_langs();
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        const language_t *lang = langs.langs + i;
-        mediator_unload_language(rt.mediator, lang);
-    }
+    CHECK_REPORTS(reports, "failed to emit ssa");
 }

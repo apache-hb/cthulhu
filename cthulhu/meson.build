@@ -44,9 +44,8 @@ ssa = declare_dependency(
 )
 
 src = [
-    'src/emit/c89-hlir.c',
-    'src/emit/c89-ssa.c',
-
+    'src/emit/c89.c',
+    'src/emit/jvm.c',
     'src/emit/common.c'
 ]
 

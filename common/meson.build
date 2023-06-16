@@ -80,7 +80,10 @@ platform = declare_dependency(
     include_directories : 'include'
 )
 
-src = [ 'src/io/io.c' ]
+src = [ 
+    'src/io/io.c',
+    'src/io/fs.c'
+]
 
 libio = library('io', src,
     c_args : args,

@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 
-#include "cthulhu/mediator/mediator.h"
+#include "cthulhu/mediator/interface.h"
 
 typedef struct reports_t reports_t;
 typedef struct map_t map_t;

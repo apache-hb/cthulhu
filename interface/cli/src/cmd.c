@@ -2,10 +2,10 @@
 
 #include "support/langs.h"
 
-#include "cthulhu/mediator/mediator.h"
-#include "cthulhu/mediator/language.h"
+#include "cthulhu/mediator/interface.h"
 
 #include "base/util.h"
+#include "base/macros.h"
 
 #include "io/io.h"
 
@@ -108,14 +108,14 @@ static AP_EVENT(on_register_ext, ap, param, value, data)
     const char *id = ctu_strndup(mapping, split);
     const char *ext = ctu_strdup(mapping + split + 1);
 
-    const language_t *lang = mediator_get_language(rt->mediator, id);
+    const language_t *lang = lifetime_get_language(rt->lifetime, id);
     if (lang == NULL)
     {
         printf("failed to register extension `%s` (no language identified by id=%s found)\n", mapping, id);
         return eEventHandled;
     }
 
-    const language_t *old = mediator_register_extension(rt->mediator, ext, lang);
+    const language_t *old = lifetime_add_extension(rt->lifetime, ext, lang);
     if (old != NULL)
     {
         printf("failed to register extension `%s` (extension already registered by %s)\n", mapping, old->name);
@@ -238,9 +238,12 @@ runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifeti
     langs_t langs = get_langs();
     for (size_t i = 0; i < langs.size; i++)
     {
-        const language_t *lang = langs.langs + i;
-        mediator_load_language(mediator, lang);
-        lifetime_configure(lifetime, lang, ap);
+        lifetime_config_language(lifetime, ap, langs.langs + i);
+    }
+
+    for (size_t i = 0; i < langs.size; i++)
+    {
+        lifetime_add_language(lifetime, langs.langs + i);
     }
 
     ap_group_t *generalGroup = ap_group_new(ap, "general", "general options");
