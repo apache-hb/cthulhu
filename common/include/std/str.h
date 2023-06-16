@@ -259,6 +259,9 @@ char *str_filename_noext(IN_STRING const char *path);
 NODISCARD
 char *str_filename(IN_STRING const char *path);
 
+NODISCARD
+char *str_path(IN_STRING const char *path);
+
 /**
  * @brief remove the last file extension from a path
  *

@@ -123,6 +123,18 @@ char *str_filename(const char *path)
 }
 
 USE_DECL
+char *str_path(const char *path)
+{
+    size_t idx = str_rfind_any(path, PATH_SEPERATORS);
+    if (idx == SIZE_MAX)
+    {
+        return ctu_strdup("");
+    }
+
+    return ctu_strndup(path, idx);
+}
+
+USE_DECL
 bool str_startswith(const char *str, const char *prefix)
 {
     return strncmp(str, prefix, strlen(prefix)) == 0;

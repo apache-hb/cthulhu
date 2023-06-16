@@ -19,12 +19,19 @@ typedef inode_t *(*inode_mkdir_t)(inode_t *parent, const char *name);
  */
 typedef inode_t *(*inode_open_t)(inode_t *parent, const char *name, file_flags_t flags);
 
+/**
+ * get the io_t for a file inode
+ */
+typedef io_t *(*inode_file_t)(inode_t *inode);
+
 typedef struct fs_callbacks_t
 {
     inode_query_t inodeQuery;
     
     inode_mkdir_t inodeDir;
-    inode_open_t inodeFile;
+    inode_open_t inodeOpen;
+
+    inode_file_t inodeFile;
 } fs_callbacks_t;
 
 typedef enum inode_type_t

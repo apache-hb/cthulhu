@@ -59,10 +59,33 @@ static inode_t *vfs_mkdir(inode_t *parent, const char *name)
     return inode;
 }
 
+static inode_t *vfs_open(inode_t *parent, const char *name, file_flags_t flags)
+{
+    CTASSERT(inode_is(parent, eNodeDir));
+
+    vfs_dir_t *dir = inode_data(parent);
+    inode_t *inode = vfs_new_file(parent, name);
+
+    map_set(dir->children, name, inode);
+
+    return inode;
+}
+
+static io_t *vfs_file(inode_t *inode)
+{
+    CTASSERT(inode_is(inode, eNodeFile));
+
+    vfs_file_t *file = inode_data(inode);
+    return file->io;
+}
+
 static const fs_callbacks_t kVirtual = {
     .inodeQuery = vfs_query,
 
     .inodeDir = vfs_mkdir,
+    .inodeOpen = vfs_open,
+
+    .inodeFile = vfs_file
 };
 
 fs_t *fs_virtual(const char *name)
