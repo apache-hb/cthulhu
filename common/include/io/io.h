@@ -3,9 +3,12 @@
 #include "platform/file.h"
 
 #include "base/analyze.h"
+#include "base/macros.h"
 
 typedef struct io_t io_t;
 typedef size_t io_error_t;
+
+STATIC_ASSERT(sizeof(io_error_t) == sizeof(cerror_t), "io error and cerror must be the same size");
 
 void io_close(io_t *io);
 

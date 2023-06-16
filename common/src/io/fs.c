@@ -1,174 +1,57 @@
-#include "io/fs.h"
+#include "fs/common.h"
 
 #include "base/memory.h"
 #include "base/panic.h"
 
 #include "std/map.h"
 #include "std/str.h"
+#include "std/vector.h"
 
 #include <string.h>
 
-typedef io_t *(*fs_open_t)(fs_t *self, const char *name, file_flags_t flags);
-typedef void (*fs_mkdir_t)(fs_t *self, const char *path);
-
-typedef void (*fs_close_t)(fs_t *self);
-
-typedef struct fs_callbacks_t
+static inode_t *query_inode(fs_t *fs, inode_t *node, const char *name)
 {
-    fs_open_t fnOpenFile;
-    fs_mkdir_t fnNewDir;
+    return fs->cb->inodeQuery(node, name);
+}
 
-    fs_close_t fnClose;
-} fs_callbacks_t;
-
-typedef enum vfs_file_type_t
+static inode_t *mkdir_inode(fs_t *fs, inode_t *parent, const char *name)
 {
-    eNodeFile,
-    eNodeDir,
+    return fs->cb->inodeDir(parent, name);
+}
 
-    eNodeTotal
-} vfs_file_type_t;
-
-typedef struct vfs_inode_t
+static inode_t *checked_mkdir(fs_t *fs, inode_t *parent, const char *name)
 {
-    vfs_file_type_t type;
-    struct vfs_inode_t *parent;
-
-    union
+    inode_t *node = query_inode(fs, parent, name);
+    if (inode_is(node, eNodeDir))
     {
-        io_t *file;
-        map_t *dir;
-    };
-} vfs_inode_t;
-
-typedef struct fs_virtual_t
-{
-    const char *name;
-    map_t *files;
-} fs_virtual_t;
-
-typedef struct fs_physical_t
-{
-    const char *root;
-} fs_physical_t;
-
-typedef struct fs_t 
-{
-    const fs_callbacks_t *cb;
-    char data[];
-} fs_t;
-
-// internal helpers
-
-static void *fs_data(fs_t *fs)
-{
-    return fs->data;
-}
-
-// virtual file system
-
-static vfs_inode_t *inode_new(vfs_file_type_t type, vfs_inode_t *parent)
-{
-    vfs_inode_t *inode = ctu_malloc(sizeof(vfs_inode_t));
-    inode->type = type;
-    inode->parent = parent;
-
-    return inode;
-}
-
-static vfs_inode_t *inode_file(vfs_inode_t *parent, io_t *file)
-{
-    vfs_inode_t *inode = inode_new(eNodeFile, parent);
-    inode->file = file;
-
-    return inode;
-}
-
-static vfs_inode_t *inode_dir(vfs_inode_t *parent)
-{
-    vfs_inode_t *inode = inode_new(eNodeDir, parent);
-    inode->dir = map_optimal(32);
-
-    return inode;
-}
-
-static bool inode_is(vfs_inode_t *inode, vfs_file_type_t type)
-{
-    return inode != NULL && inode->type == type;
-}
-
-static io_t *vfs_open_file(fs_t *fs, const char *name, file_flags_t flags)
-{
-    fs_virtual_t *vfs = fs_data(fs);
-
-    vfs_inode_t *existing = map_get(vfs->files, name);
-
-    if (inode_is(existing, eNodeFile)) 
-    { 
-        return existing->file; 
+        return node;
     }
 
-    io_t *io = io_blob(format("vfs(%s) - %s", vfs->name, name), 0x1000);
-    vfs_inode_t *inode = inode_file(existing, io);
+    if (node != NULL)
+    {
+        return NULL;
+    }
 
-    map_set(vfs->files, name, inode);
-
-    return io;
+    return mkdir_inode(fs, parent, name);
 }
 
-// physical file system
-
-static io_t *pfs_open_file(fs_t *fs, const char *name, file_flags_t flags)
+void fs_mkdir(fs_t *fs, const char *path)
 {
-    fs_physical_t *pfs = fs_data(fs);
+    vector_t *parts = str_split(path, "/");
+    size_t len = vector_len(parts);
+    inode_t *node = fs->root;
 
-    char *path = format("%s" NATIVE_PATH_SEPARATOR "%s", pfs->root, name);
-    return io_file(path, flags);
-}
+    for (size_t i = 0; i < len; i++)
+    {
+        const char *part = vector_get(parts, i);
+        inode_t *next = checked_mkdir(fs, node, part);
+        
+        if (next == NULL)
+        {
+            // TODO: error
+            return;
+        }
 
-// callbacks
-
-static const fs_callbacks_t kVirtual = {
-    .fnOpenFile = vfs_open_file
-};
-
-static const fs_callbacks_t kPhysical = {
-    .fnOpenFile = pfs_open_file
-};
-
-static fs_t *fs_new(const fs_callbacks_t *cb, void *data, size_t size)
-{
-    fs_t *fs = ctu_malloc(sizeof(fs_t) + size);
-    fs->cb = cb;
-    memcpy(fs->data, data, size);
-
-    return fs;
-}
-
-fs_t *fs_virtual(const char *name)
-{
-    fs_virtual_t fs = {
-        .name = name,
-        .files = map_optimal(32)
-    };
-
-    return fs_new(&kVirtual, &fs, sizeof(fs_virtual_t));
-}
-
-fs_t *fs_physical(const char *root)
-{
-    fs_physical_t fs = {
-        .root = root
-    };
-
-    return fs_new(&kPhysical, &fs, sizeof(fs_physical_t));
-}
-
-io_t *fs_open(fs_t *fs, const char *path, file_flags_t mode)
-{
-    CTASSERT(fs != NULL);
-    CTASSERT(fs->cb != NULL && fs->cb->fnOpenFile != NULL);
-    CTASSERT(path != NULL);
-
-    return fs->cb->fnOpenFile(fs, path, mode);
+        node = next;
+    }
 }

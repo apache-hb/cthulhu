@@ -82,7 +82,15 @@ platform = declare_dependency(
 
 src = [ 
     'src/io/io.c',
-    'src/io/fs.c'
+    'src/io/io/common.c',
+    'src/io/io/view.c',
+    'src/io/io/buffer.c',
+    'src/io/io/file.c',
+
+    'src/io/fs.c',
+    'src/io/fs/common.c',
+    'src/io/fs/physical.c',
+    'src/io/fs/virtual.c'
 ]
 
 libio = library('io', src,
