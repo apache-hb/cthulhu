@@ -26,6 +26,12 @@ static inode2_t *virtual_dir(void)
     return inode2_dir(&dir, sizeof(virtual_dir_t));
 }
 
+static inode2_t *vfs_query_node(inode2_t *self, const char *name)
+{
+    virtual_dir_t *dir = inode2_data(self);
+    return map_get(dir->dirents, name);
+}
+
 static const fs2_interface_t kVirtualInterface = {
     .name = "Virtual File System"
 };
