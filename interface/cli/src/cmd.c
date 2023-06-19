@@ -42,6 +42,9 @@ static const char *kReportLimitNames[] = { "-fmax-errors", NULL };
 
 static AP_EVENT(on_help, ap, param, value, data)
 {
+    UNUSED(param);
+    UNUSED(value);
+    
     runtime_t *rt = data;
     ap_print_help_header(ap, rt->argv[0]);
 
@@ -68,25 +71,13 @@ static AP_EVENT(on_help, ap, param, value, data)
 
 static AP_EVENT(on_version, ap, param, value, data)
 {
+    UNUSED(param);
+    UNUSED(value);
+    UNUSED(data);
+
     ap_version(ap);
 
     return eEventHandled;
-}
-
-static const language_t *get_lang_by_id(const char *id)
-{
-    langs_t langs = get_langs();
-
-    for (size_t i = 0; i < langs.size; i++)
-    {
-        const language_t lang = langs.langs[i];
-        if (str_equal(lang.id, id))
-        {
-            return langs.langs + i;
-        }
-    }
-
-    return NULL;
 }
 
 static AP_EVENT(on_register_ext, ap, param, value, data)
@@ -208,6 +199,8 @@ static AP_EVENT(on_add_source, ap, param, value, data)
 
 static AP_ERROR(on_arg_error, ap, node, message, data)
 {
+    UNUSED(ap);
+
     runtime_t *rt = data;
 
     report(rt->reports, eFatal, node, "%s", message);
@@ -261,6 +254,10 @@ runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifeti
     ap_param_t *debugVerboseParam = ap_add_bool(debugGroup, "verbose", "enable verbose logging", kDebugVerboseNames);
     ap_param_t *warnAsErrorParam = ap_add_bool(debugGroup, "warn as error", "treat warnings as errors", kWarnAsErrorNames);
     ap_param_t *reportLimitParam = ap_add_int(debugGroup, "report limit", "limit the number of reports to display (default: 20)", kReportLimitNames);
+
+    UNUSED(outputGenParam);
+    UNUSED(warnAsErrorParam);
+    UNUSED(reportLimitParam);
 
     // general
     ap_event(ap, helpParam, on_help, &rt);

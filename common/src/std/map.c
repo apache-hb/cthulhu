@@ -218,6 +218,21 @@ static void *entry_get_ptr(const bucket_t *entry, const void *key, void *other)
     return other;
 }
 
+static void delete_bucket(bucket_t *previous, bucket_t *entry)
+{
+    CTASSERT(entry != NULL);
+    
+    if (previous == NULL)
+    {
+        entry->key = NULL;
+        entry->value = NULL;
+    }
+    else
+    {
+        previous->next = entry->next;
+    }
+}
+
 USE_DECL
 void map_set_ptr(map_t *map, const void *key, void *value)
 {
@@ -268,6 +283,52 @@ void *map_get_default_ptr(map_t *map, const void *key, void *other)
 
     bucket_t *bucket = map_bucket_ptr(map, key);
     return entry_get_ptr(bucket, key, other);
+}
+
+USE_DECL
+void map_delete(map_t *map, const char *key)
+{
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
+    size_t hash = strhash(key);
+    bucket_t *entry = get_bucket(map, hash);
+    bucket_t *previous = entry;
+
+    while (entry != NULL)
+    {
+        if (str_equal(entry->key, key))
+        {
+            delete_bucket(previous, entry);
+            break;
+        }
+
+        previous = entry;
+        entry = entry->next;
+    }
+}
+
+USE_DECL
+void map_delete_ptr(map_t *map, const void *key)
+{
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
+    size_t hash = ptrhash(key);
+    bucket_t *entry = get_bucket(map, hash);
+    bucket_t *previous = entry;
+
+    while (entry != NULL)
+    {
+        if (entry->key == key)
+        {
+            delete_bucket(previous, entry);
+            break;
+        }
+
+        previous = entry;
+        entry = entry->next;
+    }
 }
 
 static bucket_t *next_in_chain(bucket_t *entry)

@@ -23,7 +23,16 @@ NODISCARD
 cerror_t make_directory(const char *path);
 
 NODISCARD
+void delete_directory(const char *path);
+
+NODISCARD
 cerror_t delete_file(const char *path);
+
+NODISCARD
+bool is_directory(const char *path);
+
+NODISCARD
+bool is_file(const char *path);
 
 void file_close(file_t file);
 

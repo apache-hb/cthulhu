@@ -9,6 +9,7 @@
 #include "std/vector.h"
 
 #include "io/io.h"
+#include "io/fs.h"
 
 #include "argparse/argparse.h"
 
@@ -54,7 +55,7 @@ static const version_info_t kVersion = {
     .version = NEW_VERSION(0, 0, 1)
 };
 
-static io_t *make_file(reports_t *reports, const char *path, file_flags_t flags)
+static io_t *make_file(const char *path, file_flags_t flags)
 {
     io_t *io = io_file(path, flags);
     CTASSERTF(io_error(io) == 0, "failed to open `%s`: %s", path, error_string(io_error(io)));
@@ -96,7 +97,7 @@ int main(int argc, const char **argv)
         const char *ext = str_ext(path);
         const language_t *lang = lifetime_get_language(lifetime, ext);
 
-        io_t *io = make_file(reports, path, eFileText | eFileRead);
+        io_t *io = make_file(path, eFileText | eFileRead);
 
         lifetime_parse(lifetime, lang, io);
 
@@ -136,22 +137,15 @@ int main(int argc, const char **argv)
     system(format("mkdir -p %s", dir));
 #endif
 
-    io_t *src = make_file(reports, srcPath, eFileText | eFileWrite);
-    io_t *hdr = make_file(reports, hdrPath, eFileText | eFileWrite);
-
     CHECK_REPORTS(reports, "failed to open output files");
 
-    emit_config_t emit = {
+    c89_emit_t emit = {
         .reports = reports,
-        .source = src,
-        .header = hdr
+        .fs = fs_virtual("c89")
     };
 
-    emit_ssa_modules(emit, ssa);
+    c89_emit(emit, ssa);
     CHECK_REPORTS(reports, "emitting ssa");
-
-    io_close(src);
-    io_close(hdr);
 
 #if OS_WINDOWS
     int status = system(format("cl /nologo /c %s /Fo%s", srcPath, libPath));

@@ -8,7 +8,9 @@
 #include "std/str.h"
 #include "std/map.h"
 #include "std/set.h"
+
 #include "io/io.h"
+#include "io/fs.h"
 
 #include "report/report.h"
 
@@ -950,18 +952,19 @@ static void mark_public_symbols(c89_ssa_emit_t *emit, section_t symbols)
     }
 }
 
-void emit_ssa_modules(emit_config_t config, ssa_module_t *module)
+void c89_emit(c89_emit_t config, ssa_module_t *module)
 {
     CTASSERT(config.reports != NULL);
-    CTASSERT(config.source != NULL);
     
+    fs_mkdir(config.fs, "c89");
+
     c89_ssa_emit_t emit = {
         .reports = config.reports,
         .emit = {
-            .io = config.source,
+            .io = fs_open(config.fs, "c89/out.c", eFileWrite | eFileText),
         },
         .header = {
-            .io = config.header,
+            .io = fs_open(config.fs, "c89/out.h", eFileWrite | eFileText),
         },
         .stepCache = map_new(0x1000),
         .completeEdges = set_new(64),
@@ -983,7 +986,7 @@ void emit_ssa_modules(emit_config_t config, ssa_module_t *module)
 
     if (has_header(&emit))
     {
-        WRITE_SOURCEF(&emit, "#include \"%s\"\n", io_name(config.header));
+        WRITE_SOURCEF(&emit, "#include \"%s\"\n", io_name(emit.header.io));
     }
     else
     {

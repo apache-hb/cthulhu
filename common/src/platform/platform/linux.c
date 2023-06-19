@@ -60,6 +60,12 @@ native_cerror_t native_make_directory(const char *path)
 }
 
 USE_DECL
+void native_delete_directory(const char *path)
+{
+    rmdir(path);
+}
+
+USE_DECL
 native_cerror_t native_delete_file(const char *path)
 {
     int res = unlink(path);
@@ -70,6 +76,21 @@ native_cerror_t native_delete_file(const char *path)
     }
 
     return 0;
+}
+
+USE_DECL
+bool native_is_directory(const char *path)
+{
+    struct stat st;
+    int res = stat(path, &st);
+    
+    return (res != -1) && S_ISDIR(st.st_mode);
+}
+
+USE_DECL
+bool native_is_file(const char *path)
+{
+    return access(path, F_OK) == 0;
 }
 
 static const char *kOpenModes[eModeTotal][eFormatTotal] = {

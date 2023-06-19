@@ -8,6 +8,7 @@
 #include "argparse/commands.h"
 
 #include "io/io.h"
+#include "io/fs.h"
 
 #include "report/report.h"
 
@@ -123,19 +124,13 @@ int main(int argc, const char **argv)
         ssa_emit_module(reports, ssa);
     }
 
-    const char *sourcePath = rt.sourceOut == NULL ? "out.c" : format("%s.c", rt.sourceOut);
-
-    io_t *src = make_file(reports, sourcePath);
-    io_t *header = rt.headerOut == NULL ? NULL : make_file(reports, format("%s.h", rt.headerOut));
-
-    CHECK_REPORTS(reports, "failed to open output files");
-
-    emit_config_t config = {
+    c89_emit_t config = {
         .reports = reports,
-        .source = src,
-        .header = header
+        .fs = fs_virtual("c89-out")
     };
 
-    emit_ssa_modules(config, ssa);
+    c89_emit(config, ssa);
     CHECK_REPORTS(reports, "failed to emit ssa");
+
+    fs_copy(config.fs, fs_physical("c89-out"));
 }

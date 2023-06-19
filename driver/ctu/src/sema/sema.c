@@ -839,6 +839,8 @@ static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_math(sema_t *sema, ast_t *ast, hlir_t *lhs, hlir_t *rhs)
 {
+    UNUSED(sema);
+    
     const hlir_t *lhsType = get_hlir_type(lhs);
     const hlir_t *rhsType = get_hlir_type(rhs);
 
@@ -1658,7 +1660,7 @@ static void sema_union(sema_t *sema, hlir_t *decl, ast_t *ast)
 
     check_duplicates_and_add_fields(sema, fields, decl);
 }
-
+#if 0
 static void check_explicit_tag(sema_t *sema, node_t *node, const hlir_t *base, vector_t *fields)
 {
     if (!hlir_is(base, eHlirDigit))
@@ -1735,6 +1737,7 @@ static const hlir_t *get_tag_type(sema_t *sema, ast_t *ast)
         return get_implicit_tag(sema, ast->fields);
     }
 }
+#endif
 
 static void add_case(sema_t *sema, hlir_t *decl, hlir_t *field, ast_t *ast)
 {

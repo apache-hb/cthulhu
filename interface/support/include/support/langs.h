@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 #include "cthulhu/mediator/driver.h"
 
 typedef struct langs_t {

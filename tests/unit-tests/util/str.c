@@ -148,6 +148,10 @@ TEST(test_string_split, {
     SHOULD_PASS("first is some text", str_equal(vector_get(end, 0), "some text"));
     SHOULD_PASS("second is empty", str_equal(vector_get(end, 1), ""));
     SHOULD_PASS("third is empty", str_equal(vector_get(end, 2), ""));
+
+    vector_t *parts = str_split("a-path", "/");
+    SHOULD_PASS("length is 1", vector_len(parts) == 1);
+    SHOULD_PASS("first is a-path", str_equal(vector_get(parts, 0), "a-path"));
 })
 
 TEST(test_string_common_prefix, {

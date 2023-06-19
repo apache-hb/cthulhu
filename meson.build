@@ -78,7 +78,6 @@ if host == 'windows'
     endif
 else
     parseargs += [ '-Wdeprecated' ]
-    deps += [ cc.find_library('m'), cc.find_library('dl') ]
 endif
 
 # we dont use these features so might as well

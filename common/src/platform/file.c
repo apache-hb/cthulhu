@@ -12,9 +12,27 @@ cerror_t make_directory(const char *path)
 }
 
 USE_DECL
+void delete_directory(const char *path)
+{
+    native_delete_directory(path);
+}
+
+USE_DECL
 cerror_t delete_file(const char *path)
 {
     return native_delete_file(path);
+}
+
+USE_DECL
+bool is_directory(const char *path)
+{
+    return native_is_directory(path);
+}
+
+USE_DECL
+bool is_file(const char *path)
+{
+    return native_is_file(path);
 }
 
 static file_format_t get_format(file_flags_t flags)

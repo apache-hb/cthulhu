@@ -6,6 +6,7 @@
 #include "std/str.h"
 
 #include "io/io.h"
+#include "io/fs.h"
 
 #include "argparse/argparse.h"
 
@@ -109,17 +110,13 @@ int main(int argc, const char **argv)
 
     ssa_emit_module(reports, ssa);
 
-    io_t *src = make_file(reports, "out.c", eFileText | eFileWrite);
-    io_t *hdr = make_file(reports, "out.h", eFileText | eFileWrite);
-
     CHECK_REPORTS(reports, "failed to open output files");
 
-    emit_config_t emit = {
+    c89_emit_t emit = {
         .reports = reports,
-        .source = src,
-        .header = hdr
+        .fs = fs_virtual("out")
     };
 
-    emit_ssa_modules(emit, ssa);
+    c89_emit(emit, ssa);
     CHECK_REPORTS(reports, "emitting ssa");
 }

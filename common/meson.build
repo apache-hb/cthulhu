@@ -61,6 +61,12 @@ std = declare_dependency(
     include_directories : 'include'
 )
 
+platform_deps = []
+
+if host == 'linux'
+    platform_deps += [ cc.find_library('m'), cc.find_library('dl') ]
+endif
+
 src = [
     'src/platform/error.c',
     'src/platform/file.c',
@@ -70,13 +76,13 @@ src = [
 
 libplatform = library('platform', src,
     c_args : args,
-    dependencies : std,
+    dependencies : [ std, platform_deps ],
     include_directories : 'include'
 )
 
 platform = declare_dependency(
     link_with : libplatform,
-    dependencies : std,
+    dependencies : [ std, platform_deps ],
     include_directories : 'include'
 )
 
@@ -90,13 +96,14 @@ src = [
     'src/io/fs.c',
     'src/io/fs/common.c',
     'src/io/fs/physical.c',
-    'src/io/fs/virtual.c'
+    'src/io/fs/virtual.c',
+    'src/io/fs/io.c',
 ]
 
 libio = library('io', src,
     c_args : args,
     dependencies : [ platform, std ],
-    include_directories : 'include'
+    include_directories : [ 'include', 'src/io' ]
 )
 
 io = declare_dependency(

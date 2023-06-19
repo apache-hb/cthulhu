@@ -115,5 +115,7 @@ int ap_get_opt(ap_t *self, const char *name, ap_param_t **param, char **error)
 
 void aperror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
+    UNUSED(state);
+    
     ap_on_error(scan, *where, ctu_strdup(msg));
 }

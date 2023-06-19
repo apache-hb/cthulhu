@@ -575,7 +575,7 @@ size_t str_find(const char *str, const char *sub)
     CTASSERT(sub != NULL);
 
     char *ptr = strstr(str, sub);
-    return ptr == NULL ? SIZE_MAX : ptr - str;
+    return ptr == NULL ? SIZE_MAX : (size_t)(ptr - str);
 }
 
 USE_DECL

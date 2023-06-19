@@ -96,6 +96,13 @@ native_cerror_t native_make_directory(const char *path)
 }
 
 USE_DECL
+void native_delete_directory(const char *path)
+{
+    wchar_t *dir = widen_string(path);
+    RemoveDirectoryW(dir);
+}
+
+USE_DECL
 native_cerror_t native_delete_file(const char *path)
 {
     wchar_t *file = widen_string(path);
@@ -107,6 +114,26 @@ native_cerror_t native_delete_file(const char *path)
     }
 
     return 0;
+}
+
+USE_DECL
+bool native_is_directory(const char *path)
+{
+    wchar_t *dir = widen_string(path);
+    DWORD attr = GetFileAttributesW(dir);
+
+    return (attr != INVALID_FILE_ATTRIBUTES) && 
+           ((attr & FILE_ATTRIBUTE_DIRECTORY) != 0);
+}
+
+USE_DECL
+bool native_is_file(const char *path)
+{
+    wchar_t *file = widen_string(path);
+    DWORD attr = GetFileAttributesW(file);
+
+    return (attr != INVALID_FILE_ATTRIBUTES) && 
+           ((attr & FILE_ATTRIBUTE_DIRECTORY) == 0);
 }
 
 USE_DECL

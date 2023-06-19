@@ -11,7 +11,6 @@ typedef struct view_t
     size_t offset;
 } view_t;
 
-
 static size_t view_read(io_t *self, void *dst, size_t size)
 {
     view_t *mem = io_data(self);

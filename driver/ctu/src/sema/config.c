@@ -29,6 +29,9 @@ static ctu_config_t *gConfig = NULL;
 
 static AP_EVENT(on_feature, ap, param, value, data)
 {
+    UNUSED(ap);
+    UNUSED(param);
+    
     bool *feature = data;
     const bool *update = value;
 
@@ -47,6 +50,8 @@ static ctu_config_t *new_config(void)
 
 void ctu_config(lifetime_t *lifetime, ap_t *args) 
 {
+    UNUSED(lifetime);
+
     GLOBAL_INIT();
 
     gConfig = new_config();

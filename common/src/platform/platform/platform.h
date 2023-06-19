@@ -116,7 +116,16 @@ NODISCARD
 native_cerror_t native_make_directory(const char *path);
 
 NODISCARD
+void native_delete_directory(const char *path);
+
+NODISCARD
 native_cerror_t native_delete_file(const char *path);
+
+NODISCARD
+bool native_is_directory(const char *path);
+
+NODISCARD
+bool native_is_file(const char *path);
 
 NODISCARD
 file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error);
