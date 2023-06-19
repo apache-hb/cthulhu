@@ -2,6 +2,7 @@
 
 #include "base/macros.h"
 #include "base/memory.h"
+#include "base/panic.h"
 
 #include <string.h>
 
@@ -82,16 +83,13 @@ static const io_callbacks_t kBufferCallbacks = {
 USE_DECL
 io_t *io_memory(const char *name, const void *data, size_t size)
 {
-    file_flags_t flags = eFileRead | eFileWrite;
+    CTASSERT(data != NULL);
 
     buffer_t buffer = {.data = ctu_malloc(size), .total = size, .used = size, .offset = 0};
 
-    if (data != NULL)
-    {
-        memcpy(buffer.data, data, size);
-    }
+    memcpy(buffer.data, data, size);
 
-    return io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
+    return io_new(&kBufferCallbacks, eFileRead | eFileWrite, name, &buffer, sizeof(buffer_t));
 }
 
 USE_DECL

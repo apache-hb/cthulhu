@@ -63,7 +63,7 @@ int main(int argc, const char **argv)
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
 
-    io_t *dst = io_memory("ssa-output", NULL, 0x1000);
+    io_t *dst = io_blob("ssa-output", 0x1000);
 
     ssa_module_t *mod = ssa_gen_module(cthulhu->reports, allModules);
     CHECK_REPORTS("emitting ssa");
