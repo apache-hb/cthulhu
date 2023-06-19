@@ -98,6 +98,11 @@ src = [
     'src/io/fs/physical.c',
     'src/io/fs/virtual.c',
     'src/io/fs/io.c',
+
+    'src/io/fs2.c',
+    'src/io/fs2/common.c',
+    'src/io/fs2/physical.c',
+    'src/io/fs2/virtual.c',
 ]
 
 libio = library('io', src,
@@ -163,20 +168,4 @@ argparse = declare_dependency(
     link_with : libargparse,
     include_directories : 'include',
     dependencies : [ gmp ]
-)
-
-src = [
-    'src/report2/report.c'
-]
-
-libreport2 = library('report2', src,
-    c_args : args,
-    dependencies : [ std, location, interop ],
-    include_directories : 'include'
-)
-
-report = declare_dependency(
-    link_with : libreport2,
-    dependencies : std,
-    include_directories : 'include'
 )

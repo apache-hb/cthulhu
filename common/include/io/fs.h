@@ -19,18 +19,18 @@ void fs_copy(fs_t *fs, fs_t *dst);
 
 // v2
 
+typedef struct reports_t reports_t;
+
 typedef struct fs2_t fs2_t;
-typedef struct fs2_dir_t fs2_dir_t;
-typedef struct fs2_file_t fs2_file_t;
 
-fs2_t *fs2_physical(const char *root);
-fs2_t *fs2_virtual(const char *name);
+fs2_t *fs2_physical(reports_t *reports, const char *root);
+fs2_t *fs2_virtual(reports_t *reports, const char *name);
 
-fs2_dir_t *fs2_dir_create(fs2_t *fs, const char *path);
-fs2_file_t *fs2_file_create(fs2_t *fs, const char *path, file_flags_t flags);
+void fs2_dir_create(fs2_t *fs, const char *path);
+void fs2_file_create(fs2_t *fs, const char *path, file_flags_t flags);
 
-void fs2_dir_delete(fs2_dir_t *dir);
-void fs2_file_delete(fs2_file_t *file);
+void fs2_dir_delete(const char *path);
+void fs2_file_delete(const char *path);
 
 void fs2_sync(fs2_t *dst, fs2_t *src);
 
