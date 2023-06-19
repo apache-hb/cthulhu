@@ -6,6 +6,7 @@ typedef size_t (*io_read_t)(io_t *self, void *dst, size_t size);
 typedef size_t (*io_write_t)(io_t *self, const void *src, size_t size);
 
 typedef size_t (*io_size_t)(io_t *self);
+typedef size_t (*io_seek_t)(io_t *self, size_t offset);
 
 typedef const void *(*io_map_t)(io_t *self);
 
@@ -17,6 +18,7 @@ typedef struct io_callbacks_t
     io_write_t fnWrite;
 
     io_size_t fnGetSize;
+    io_seek_t fnSeek;
 
     io_map_t fnMap;
 

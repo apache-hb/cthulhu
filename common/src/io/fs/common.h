@@ -33,7 +33,7 @@ typedef void (*fs_delete_file_t)(fs_t *fs, inode_t *parent, const char *name);
 /**
  * get the io_t for a file inode
  */
-typedef io_t *(*fs_get_file_t)(fs_t *fs, inode_t *inode, file_flags_t flags);
+typedef io_t *(*fs_get_file_t)(fs_t *fs, inode_t *inode, const char *name, file_flags_t flags);
 
 /**
  * get all the children of a directory inode
@@ -75,7 +75,6 @@ typedef struct fs_t
 {
     const fs_callbacks_t *cb;
     inode_t *root;
-    const char *path;
 
     char data[];
 } fs_t;
@@ -90,6 +89,6 @@ bool inode_is(inode_t *inode, inode_type_t type);
 
 // fs api
 
-fs_t *fs_new(const fs_callbacks_t *cb, const char *path, inode_t *root, void *data, size_t size);
+fs_t *fs_new(const fs_callbacks_t *cb, inode_t *root, void *data, size_t size);
 
 void *fs_data(fs_t *fs);

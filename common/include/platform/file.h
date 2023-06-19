@@ -20,19 +20,22 @@ typedef enum
 } file_flags_t;
 
 NODISCARD
-cerror_t make_directory(const char *path);
+cerror_t dir_create(const char *path);
 
 NODISCARD
-void delete_directory(const char *path);
+void dir_delete(const char *path);
 
 NODISCARD
-cerror_t delete_file(const char *path);
+const char *get_cwd(void);
 
 NODISCARD
-bool is_directory(const char *path);
+cerror_t file_delete(const char *path);
 
 NODISCARD
-bool is_file(const char *path);
+bool dir_exists(const char *path);
+
+NODISCARD
+bool file_exists(const char *path);
 
 void file_close(file_t file);
 
@@ -47,6 +50,9 @@ bool file_valid(file_t file);
 
 NODISCARD
 size_t file_size(file_t file, cerror_t *error);
+
+NODISCARD
+size_t file_seek(file_t file, size_t offset, cerror_t *error);
 
 NODISCARD
 const void *file_map(file_t file, cerror_t *error);

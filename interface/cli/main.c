@@ -52,7 +52,9 @@ static void parse_source(lifetime_t *lifetime, const char *path)
         return;
     }
 
-    io_t *io = io_file(path, eFileRead | eFileText);
+    const char *cwd = get_cwd();
+
+    io_t *io = io_file(format("%s" NATIVE_PATH_SEPARATOR "%s", cwd, path), eFileRead | eFileText);
     if (io_error(io) != 0)
     {
         report(reports, eFatal, NULL, "failed to load source `%s`\n%s", path, error_string(io_error(io)));
@@ -60,18 +62,6 @@ static void parse_source(lifetime_t *lifetime, const char *path)
     }
 
     lifetime_parse(lifetime, lang, io);
-}
-
-static io_t *make_file(reports_t *reports, const char *path)
-{
-    io_t *io = io_file(path, eFileWrite | eFileText);
-    if (io_error(io) != 0)
-    {
-        report(reports, eFatal, NULL, "failed to open `%s` for writing\n%s", path, error_string(io_error(io)));
-        return NULL;
-    }
-
-    return io;
 }
 
 int main(int argc, const char **argv)

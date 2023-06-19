@@ -41,13 +41,12 @@ bool inode_is(inode_t *inode, inode_type_t type)
 
 // fs internals
 
-fs_t *fs_new(const fs_callbacks_t *cb, const char *path, inode_t *root, void *data, size_t size)
+fs_t *fs_new(const fs_callbacks_t *cb, inode_t *root, void *data, size_t size)
 {
     fs_t *fs = ctu_malloc(sizeof(fs_t) + size);
     
     fs->cb = cb;
     fs->root = root;
-    fs->path = path;
 
     memcpy(fs->data, data, size);
 

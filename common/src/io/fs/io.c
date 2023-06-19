@@ -4,9 +4,10 @@
 
 #include "base/panic.h"
 
+#include "std/str.h"
+
 typedef struct vfs_io_t
 {
-    int refs;
     io_t *underlying;
 } vfs_io_t;
 
@@ -36,9 +37,7 @@ static const void *vfs_map(io_t *self)
 
 static void vfs_close(io_t *self) 
 { 
-    vfs_io_t *vfs = io_data(self);
-    vfs->refs -= 1;
-    CTASSERTF(vfs->refs > 0, "vfs_io_t refcount is 0 (%s)", self->name);
+
 }
 
 static const io_callbacks_t kVirtualFileCallbacks = {
@@ -55,9 +54,8 @@ io_t *io_virtual(vfs_file_t *file, const char *name, file_flags_t flags)
 {
     io_t *data = io_blob(name, 0x1000);
     vfs_io_t virtualFile = {
-        .refs = 1,
         .underlying = data
     };
 
-    return io_new(&kVirtualFileCallbacks, flags, name, &virtualFile, sizeof(vfs_io_t));
+    return io_new(&kVirtualFileCallbacks, flags, format("%s - underlying", name), &virtualFile, sizeof(vfs_io_t));
 }

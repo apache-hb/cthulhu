@@ -7,6 +7,8 @@
 #include "base/util.h"
 #include "base/memory.h"
 
+#include "report/report.h"
+
 #include <stdio.h>
 #include <excpt.h>
 #include <processthreadsapi.h>
@@ -78,13 +80,14 @@ static char *get_current_directory(void)
 USE_DECL
 native_cerror_t native_make_directory(const char *path)
 {
-    char *cwd = get_current_directory();
-    wchar_t *dir = widen_string(format("\\\\?\\%s" NATIVE_PATH_SEPARATOR "%s", cwd, path));
+    wchar_t *dir = widen_string(format("\\\\?\\%s", path));
     BOOL ok = CreateDirectoryW(dir, NULL);
 
     if (!ok)
     {
         native_cerror_t err = native_get_last_error();
+
+        logverbose("failed to create directory: %s", path);
 
         if ((HRESULT)err != HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS))
         {
@@ -93,6 +96,13 @@ native_cerror_t native_make_directory(const char *path)
     }
 
     return 0;
+}
+
+USE_DECL
+const char *native_get_cwd(void)
+{
+    char *cwd = get_current_directory();
+    return cwd;
 }
 
 USE_DECL
@@ -137,12 +147,12 @@ bool native_is_file(const char *path)
 }
 
 USE_DECL
-file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t format, native_cerror_t *error)
+file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t type, native_cerror_t *error)
 {
     DWORD access = (mode == eModeRead) ? GENERIC_READ : GENERIC_WRITE;
     DWORD disposition = (mode == eModeRead) ? OPEN_EXISTING : CREATE_ALWAYS;
-    file_handle_t handle = CreateFile(
-        /* lpFileName = */ path,
+    file_handle_t handle = CreateFileW(
+        /* lpFileName = */ widen_string(format("\\\\?\\%s", path)),
         /* dwDesiredAccess = */ access,
         /* dwShareMode = */ FILE_SHARE_READ,
         /* lpSecurityAttributes = */ NULL,
@@ -201,6 +211,23 @@ file_size_t native_file_size(file_handle_t handle, native_cerror_t *error)
     }
 
     return size.QuadPart;
+}
+
+USE_DECL
+file_pos_t native_file_seek(file_handle_t handle, file_pos_t offset, native_cerror_t *error)
+{
+    LARGE_INTEGER pos;
+    pos.QuadPart = offset;
+
+    LARGE_INTEGER newPos;
+    BOOL result = SetFilePointerEx(handle, pos, &newPos, FILE_BEGIN);
+
+    if (!result)
+    {
+        *error = native_get_last_error();
+    }
+
+    return (file_pos_t)newPos.QuadPart;
 }
 
 USE_DECL

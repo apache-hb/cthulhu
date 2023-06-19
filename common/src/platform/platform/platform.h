@@ -119,6 +119,9 @@ NODISCARD
 void native_delete_directory(const char *path);
 
 NODISCARD
+const char *native_get_cwd(void);
+
+NODISCARD
 native_cerror_t native_delete_file(const char *path);
 
 NODISCARD
@@ -136,6 +139,9 @@ file_write_t native_file_write(file_handle_t handle, const void *buffer, file_wr
 
 NODISCARD
 file_size_t native_file_size(file_handle_t handle, native_cerror_t *error);
+
+NODISCARD
+file_pos_t native_file_seek(file_handle_t handle, file_pos_t offset, native_cerror_t *error);
 
 NODISCARD
 const void *native_file_map(file_handle_t handle, native_cerror_t *error);

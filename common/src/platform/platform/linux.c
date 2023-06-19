@@ -66,6 +66,19 @@ void native_delete_directory(const char *path)
 }
 
 USE_DECL
+const char *native_get_cwd(void)
+{
+    static char cwd[PATH_MAX];
+
+    if (getcwd(cwd, sizeof(cwd)) == NULL)
+    {
+        return NULL;
+    }
+
+    return ctu_strdup(cwd);
+}
+
+USE_DECL
 native_cerror_t native_delete_file(const char *path)
 {
     int res = unlink(path);

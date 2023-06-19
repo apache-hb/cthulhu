@@ -26,11 +26,11 @@ static size_t mem_read(io_t *self, void *dst, size_t size)
 static size_t mem_write(io_t *self, const void *src, size_t size)
 {
     buffer_t *mem = io_data(self);
+    mem->used = MAX(mem->used, mem->offset + size);
     if (mem->offset + size > mem->total)
     {
         mem->data = ctu_realloc(mem->data, mem->offset + size);
         mem->total = mem->offset + size;
-        mem->used = mem->offset + size;
     }
 
     memcpy(mem->data + mem->offset, src, size);
@@ -43,6 +43,13 @@ static size_t mem_size(io_t *self)
 {
     buffer_t *mem = io_data(self);
     return mem->used;
+}
+
+static size_t mem_seek(io_t *self, size_t offset)
+{
+    buffer_t *mem = io_data(self);
+    mem->offset = MIN(offset, mem->used);
+    return mem->offset;
 }
 
 static const void *mem_map(io_t *self)
@@ -66,6 +73,7 @@ static const io_callbacks_t kBufferCallbacks = {
     .fnWrite = mem_write,
 
     .fnGetSize = mem_size,
+    .fnSeek = mem_seek,
 
     .fnMap = mem_map,
     .fnClose = mem_close
@@ -92,9 +100,9 @@ io_t *io_blob(const char *name, size_t size)
     buffer_t buffer = {
         .data = ctu_malloc(size),
         .total = size,
-        .used = size,
+        .used = 0,
         .offset = 0
     };
 
-    return io_new(&kBufferCallbacks, eFileWrite, name, &buffer, sizeof(buffer_t));
+    return io_new(&kBufferCallbacks, eFileRead | eFileWrite, name, &buffer, sizeof(buffer_t));
 }

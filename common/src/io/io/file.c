@@ -18,6 +18,12 @@ static size_t fd_size(io_t *self)
     return file_size(*file, &self->error);
 }
 
+static size_t fd_seek(io_t *self, size_t offset)
+{
+    file_t *file = io_data(self);
+    return file_seek(*file, offset, &self->error);
+}
+
 static const void *fd_map(io_t *self)
 {
     file_t *file = io_data(self);
@@ -35,6 +41,7 @@ static const io_callbacks_t kFileCallbacks = {
     .fnWrite = fd_write,
 
     .fnGetSize = fd_size,
+    .fnSeek = fd_seek,
 
     .fnMap = fd_map,
     .fnClose = fd_close

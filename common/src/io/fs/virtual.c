@@ -83,7 +83,7 @@ static void vfs_delete_file(fs_t *fs, inode_t *parent, const char *name)
     map_delete(dir->children, name);
 }
 
-static io_t *vfs_file(fs_t *fs, inode_t *inode, file_flags_t flags)
+static io_t *vfs_file(fs_t *fs, inode_t *inode, const char *name, file_flags_t flags)
 {
     UNUSED(fs);
     UNUSED(flags);
@@ -91,7 +91,7 @@ static io_t *vfs_file(fs_t *fs, inode_t *inode, file_flags_t flags)
     CTASSERT(inode_is(inode, eNodeFile));
 
     vfs_file_t *file = inode_data(inode);
-    return io_virtual(file, "TODO", flags);
+    return io_virtual(file, name, flags);
 }
 
 static map_t *vfs_dir(fs_t *fs, inode_t *inode)
@@ -124,5 +124,5 @@ fs_t *fs_virtual(const char *name)
 
     inode_t *root = vfs_new_dir(NULL);
 
-    return fs_new(&kVirtual, ".", root, &fs, sizeof(fs_virtual_t));
+    return fs_new(&kVirtual, root, &fs, sizeof(fs_virtual_t));
 }

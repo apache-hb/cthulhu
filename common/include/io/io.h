@@ -37,6 +37,9 @@ NODISCARD
 size_t io_size(IN_NOTNULL io_t *io);
 
 NODISCARD
+size_t io_seek(IN_NOTNULL io_t *io, size_t offset);
+
+NODISCARD
 const void *io_map(IN_NOTNULL io_t *io);
 
 NODISCARD MUST_INSPECT 

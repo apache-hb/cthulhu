@@ -34,10 +34,10 @@ static inode_t *create_file_inode(fs_t *fs, inode_t *parent, const char *name)
     return fs->cb->fnCreateFile(fs, parent, name);
 }
 
-static io_t *get_file_handle(fs_t *fs, inode_t *parent, file_flags_t flags)
+static io_t *get_file_handle(fs_t *fs, inode_t *parent, const char *name, file_flags_t flags)
 {
     CTASSERT(fs->cb->fnGetHandle != NULL);
-    return fs->cb->fnGetHandle(fs, parent, flags);
+    return fs->cb->fnGetHandle(fs, parent, name, flags);
 }
 
 static map_t *get_dir_listing(fs_t *fs, inode_t *parent)
@@ -56,6 +56,11 @@ static void delete_dir_inode(fs_t *fs, inode_t *parent, const char *name)
 {
     CTASSERT(fs->cb->fnDeleteDir != NULL);
     fs->cb->fnDeleteDir(fs, parent, name);
+}
+
+static vector_t *split_path(const char *path)
+{
+    return str_split(path, NATIVE_PATH_SEPARATOR);
 }
 
 static inode_t *checked_mkdir(fs_t *fs, inode_t *parent, const char *name)
@@ -100,10 +105,10 @@ static inode_t *recursive_mkdir(fs_t *fs, vector_t *parts)
     {
         const char *part = vector_get(parts, i);
         inode_t *next = checked_mkdir(fs, node, part);
-        
+
         if (next == NULL)
         {
-            CTASSERTF(next != NULL, "failed to create dir `%s`", part);
+            CTASSERTF(next != NULL, "failed to create dir %zu `%s`", i, part);
             return NULL; // TODO: error
         }
 
@@ -136,13 +141,7 @@ static inode_t *find_inode(fs_t *fs, inode_t *root, vector_t *parts)
 
 void fs_mkdir(fs_t *fs, const char *path)
 {
-    logverbose("mkdir: %s", path);
-    vector_t *parts = str_split(path, "/");
-    logverbose("parts: %zu", vector_len(parts));
-    for (size_t i = 0; i < vector_len(parts); i++)
-    {
-        logverbose("  %s", vector_get(parts, i));
-    }
+    vector_t *parts = split_path(path);
     recursive_mkdir(fs, parts);
 }
 
@@ -150,14 +149,14 @@ io_t *fs_open(fs_t *fs, const char *path, file_flags_t flags)
 {
     char *dir = str_path(path);
 
-    inode_t *inode = recursive_mkdir(fs, str_split(dir, "/"));
+    inode_t *inode = recursive_mkdir(fs, split_path(dir));
     CTASSERT(inode != NULL);
 
     char *name = str_filename(path);
 
     inode_t *file = checked_open(fs, inode, name);
 
-    return get_file_handle(fs, file, flags);
+    return get_file_handle(fs, file, name, flags);
 }
 
 static inode_t *get_inode_for_delete(fs_t *fs, vector_t *parts)
@@ -171,7 +170,7 @@ static inode_t *get_inode_for_delete(fs_t *fs, vector_t *parts)
 
 void fs_rmdir(fs_t *fs, const char *path)
 {
-    vector_t *parts = str_split(path, "/");
+    vector_t *parts = split_path(path);
     inode_t *node = get_inode_for_delete(fs, parts);
     if (node == NULL) { return; }
 
@@ -185,7 +184,7 @@ void fs_rmdir(fs_t *fs, const char *path)
 
 void fs_delete(fs_t *fs, const char *path)
 {
-    vector_t *parts = str_split(path, "/");
+    vector_t *parts = split_path(path);
     inode_t *node = get_inode_for_delete(fs, parts);
     if (node == NULL) { return; }
 
@@ -199,11 +198,15 @@ void fs_delete(fs_t *fs, const char *path)
 
 static void copy_file(io_t *from, io_t *to)
 {
+    io_seek(from, 0);
+    io_seek(to, 0);
+    
     uint8_t buffer[0x1000];
     size_t len = 0;
 
     while ((len = io_read(from, buffer, sizeof(buffer))) > 0)
     {
+        logverbose("copy (len = %zu)", len);
         io_write(to, buffer, len);
     }
 
@@ -213,6 +216,7 @@ static void copy_file(io_t *from, io_t *to)
 
 static void copy_recursive(fs_t *fs, inode_t *node, const char *path, fs_t *dst)
 {
+    logverbose("copy (%s)", path);
     map_t *dir = get_dir_listing(fs, node);
     map_iter_t iter = map_iter(dir);
     while (map_has_next(&iter))
@@ -221,18 +225,19 @@ static void copy_recursive(fs_t *fs, inode_t *node, const char *path, fs_t *dst)
         const char *name = entry.key;
         inode_t *child = entry.value;
 
-        char *current = format("%s/%s", path, name);
-
-        fs_mkdir(dst, current);
+        char *current = format("%s" NATIVE_PATH_SEPARATOR "%s", path, name);
+        logverbose("current = %s", current);
 
         if (inode_is(child, eNodeFile))
         {
+            logverbose("copy (from = %s)", current);
             io_t *to = fs_open(dst, current, eFileWrite | eFileBinary);
-            io_t *from = get_file_handle(fs, child, eFileRead | eFileBinary);
+            io_t *from = get_file_handle(fs, child, current, eFileRead | eFileBinary);
             copy_file(from, to);
         }
         else if (inode_is(child, eNodeDir))
         {
+            fs_mkdir(dst, current);
             copy_recursive(fs, child, current, dst);
         }
     }
@@ -240,5 +245,5 @@ static void copy_recursive(fs_t *fs, inode_t *node, const char *path, fs_t *dst)
 
 void fs_copy(fs_t *fs, fs_t *dst)
 {
-    copy_recursive(fs, fs->root, fs->path, dst);
+    copy_recursive(fs, fs->root, ".", dst);
 }

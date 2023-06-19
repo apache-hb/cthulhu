@@ -6,31 +6,37 @@
 #include "base/panic.h"
 
 USE_DECL
-cerror_t make_directory(const char *path)
+cerror_t dir_create(const char *path)
 {
     return native_make_directory(path);
 }
 
 USE_DECL
-void delete_directory(const char *path)
+void dir_delete(const char *path)
 {
     native_delete_directory(path);
 }
 
 USE_DECL
-cerror_t delete_file(const char *path)
+const char *get_cwd(void)
+{
+    return native_get_cwd();
+}
+
+USE_DECL
+cerror_t file_delete(const char *path)
 {
     return native_delete_file(path);
 }
 
 USE_DECL
-bool is_directory(const char *path)
+bool dir_exists(const char *path)
 {
     return native_is_directory(path);
 }
 
 USE_DECL
-bool is_file(const char *path)
+bool file_exists(const char *path)
 {
     return native_is_file(path);
 }
@@ -102,6 +108,15 @@ size_t file_size(file_t file, cerror_t *error)
 {
     native_cerror_t nativeError = 0;
     size_t result = native_file_size(file.handle, &nativeError);
+    *error = (cerror_t)nativeError;
+    return result;
+}
+
+USE_DECL
+size_t file_seek(file_t file, size_t offset, cerror_t *error)
+{
+    native_cerror_t nativeError = 0;
+    size_t result = native_file_seek(file.handle, (file_pos_t)offset, &nativeError);
     *error = (cerror_t)nativeError;
     return result;
 }

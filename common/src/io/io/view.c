@@ -26,6 +26,13 @@ static size_t view_size(io_t *self)
     return mem->size;
 }
 
+static size_t view_seek(io_t *self, size_t offset)
+{
+    view_t *mem = io_data(self);
+    mem->offset = MIN(offset, mem->size);
+    return mem->offset;
+}
+
 static const void *view_map(io_t *self)
 {
     view_t *mem = io_data(self);
@@ -38,6 +45,7 @@ static const io_callbacks_t kViewCallbacks = {
     .fnWrite = NULL,
 
     .fnGetSize = view_size,
+    .fnSeek = view_seek,
 
     .fnMap = view_map
 };
