@@ -2,7 +2,11 @@
 
 #include "base/analyze.h"
 
-#define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
+#ifdef __cplusplus
+#    define STATIC_ASSERT(expr, msg) static_assert(expr, msg)
+#else
+#   define STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
+#endif
 
 /// macros with functionality
 #define MAX(L, R) ((L) > (R) ? (L) : (R))

@@ -116,11 +116,9 @@ int main(int argc, const char **argv)
 
     c89_emit_t config = {
         .reports = reports,
-        .fs = fs_virtual("c89-out")
+        .fs = fs_physical("out")
     };
 
     c89_emit(config, ssa);
     CHECK_REPORTS(reports, "failed to emit ssa");
-
-    fs_copy(config.fs, fs_physical("c89-out"));
 }

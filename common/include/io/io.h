@@ -5,6 +5,8 @@
 #include "base/analyze.h"
 #include "base/macros.h"
 
+BEGIN_API
+
 typedef struct io_t io_t;
 typedef size_t io_error_t;
 
@@ -44,3 +46,5 @@ const void *io_map(IN_NOTNULL io_t *io);
 
 NODISCARD MUST_INSPECT 
 io_error_t io_error(IN_NOTNULL const io_t *io);
+
+END_API
