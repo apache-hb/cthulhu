@@ -151,8 +151,9 @@ file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t
 {
     DWORD access = (mode == eModeRead) ? GENERIC_READ : GENERIC_WRITE;
     DWORD disposition = (mode == eModeRead) ? OPEN_EXISTING : CREATE_ALWAYS;
+    wchar_t *wpath = widen_string(path);
     file_handle_t handle = CreateFileW(
-        /* lpFileName = */ widen_string(format("\\\\?\\%s", path)),
+        /* lpFileName = */ wpath,
         /* dwDesiredAccess = */ access,
         /* dwShareMode = */ FILE_SHARE_READ,
         /* lpSecurityAttributes = */ NULL,
@@ -163,6 +164,7 @@ file_handle_t native_file_open(const char *path, file_mode_t mode, file_format_t
     if (handle == INVALID_FILE_HANDLE)
     {
         *error = native_get_last_error();
+        return NULL;
     }
 
     return handle;

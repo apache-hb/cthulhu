@@ -61,8 +61,11 @@ if tuning.allowed()
     args += [ '-DENABLE_TUNING=1' ]
 endif
 
-if buildtype.startswith('debug')
+if buildtype.contains('debug')
+    message('enabling `ENABLE_DEBUG` for debug build')
     args += [ '-DENABLE_DEBUG=1' ]
+else
+    message('disabling `ENABLE_DEBUG` for release build')
 endif
 
 # bison generates a few unused variables

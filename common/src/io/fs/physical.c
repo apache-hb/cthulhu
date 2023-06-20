@@ -76,13 +76,14 @@ static inode_t *phys_create_dir(fs_t *fs, inode_t *parent, const char *name)
 {
     const char *absolute = get_absolute_path(fs, parent, name);
 
-    dir_create(absolute);
+    CTASSERT(dir_create(absolute) == 0);
 
     return phys_dir_new(parent, name);
 }
 
 static inode_t *phys_create_file(fs_t *fs, inode_t *parent, const char *name)
 {
+    UNUSED(fs);
     // TODO: thonk
     return phys_file_new(parent, name);
 }
@@ -98,7 +99,7 @@ static void phys_delete_file(fs_t *fs, inode_t *inode, const char *path)
 {
     const char *absolute = get_absolute_path(fs, inode, path);
 
-    file_delete(absolute);
+    CTASSERT(file_delete(absolute) == 0);
 }
 
 static io_t *phys_get_handle(fs_t *fs, inode_t *inode, const char *name, file_flags_t flags)
@@ -129,7 +130,7 @@ fs_t *fs_physical(const char *root)
     const char *cwd = get_cwd();
 
     const char *absolute = format("%s" NATIVE_PATH_SEPARATOR "%s", cwd, root);
-    dir_create(absolute);
+    CTASSERT(dir_create(absolute) == 0);
 
     logverbose("dir-create (cwd = %s, abs = %s)", cwd, absolute);
 

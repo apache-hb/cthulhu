@@ -42,5 +42,6 @@ NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
 
 #define CTASSERTM(expr, msg) CTASSERTF(expr, msg)
 #define CTASSERT(expr) CTASSERTM(expr, #expr)
+#define NEVER(...) CTASSERTF(false, __VA_ARGS__)
 
 #define GLOBAL_INIT() do { static bool init = false; CTASSERTM(!init, "already initialized"); init = true; } while (0)

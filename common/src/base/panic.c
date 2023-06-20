@@ -9,8 +9,6 @@
 #    include <signal.h>
 #endif
 
-#define STACK_FRAMES 128
-
 static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
 {
     fprintf(stderr, COLOUR_CYAN "[panic]" COLOUR_RESET "[%s:%zu] => " COLOUR_RED "%s" COLOUR_RESET ": ", panic.file,
@@ -18,7 +16,9 @@ static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
 
+#if !ADDRSAN_ENABLED
     stacktrace_print(stderr);
+#endif
 }
 
 panic_handler_t gPanicHandler = default_panic_handler;
@@ -30,10 +30,6 @@ void ctpanic(panic_t panic, const char *msg, ...)
     va_start(args, msg);
     gPanicHandler(panic, msg, args);
     va_end(args);
-
-#if ADDRSAN_ENABLED
-    raise(SIGSEGV);
-#endif
 
     exit(99);
 }

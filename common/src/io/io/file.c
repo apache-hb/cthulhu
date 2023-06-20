@@ -54,6 +54,7 @@ io_t *io_file(const char *path, file_flags_t mode)
 {
     cerror_t err = 0;
     file_t file = file_open(path, mode, &err);
+    logverbose("file: %p, err: %zu, path: %s", file.handle, err, file.path);
     io_t *io = io_new(&kFileCallbacks, mode, path, &file, sizeof(file_t));
     io->error = err;
     return io;

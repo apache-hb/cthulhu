@@ -66,7 +66,7 @@ size_t scan_size(const scan_t *scan)
 {
     CTASSERT(scan != NULL);
 
-    return scan->size;
+    return io_size(scan->io);
 }
 
 USE_DECL
@@ -94,6 +94,11 @@ scan_t *scan_invalid(void)
 USE_DECL
 scan_t *scan_io(reports_t *reports, const char *language, io_t *io)
 {
+    CTASSERT(reports != NULL);
+    CTASSERT(language != NULL);
+    CTASSERT(io != NULL);
+    CTASSERTF(io_error(io) == 0, "io-error(%s) = %zu", io_name(io), io_error(io));
+
     scan_t *self = ctu_malloc(sizeof(scan_t));
 
     self->language = language;

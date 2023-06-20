@@ -198,8 +198,8 @@ void fs_delete(fs_t *fs, const char *path)
 
 static void copy_file(io_t *from, io_t *to)
 {
-    io_seek(from, 0);
-    io_seek(to, 0);
+    CTASSERT(io_seek(from, 0) == 0);
+    CTASSERT(io_seek(to, 0) == 0);
     
     uint8_t buffer[0x1000];
     size_t len = 0;

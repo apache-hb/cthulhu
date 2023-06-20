@@ -77,10 +77,8 @@ void *map_get_ptr(IN_NOTNULL map_t *map, const void *key);
 NODISCARD CONSTFN
 void *map_get_default_ptr(IN_NOTNULL map_t *map, const void *key, void *other);
 
-CONSTFN
 void map_delete(IN_NOTNULL map_t *map, IN_STRING const char *key);
 
-CONSTFN
 void map_delete_ptr(IN_NOTNULL map_t *map, const void *key);
 
 /**

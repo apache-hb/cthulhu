@@ -115,7 +115,6 @@ void *native_library_get_symbol(library_handle_t handle, const char *symbol, nat
 NODISCARD
 native_cerror_t native_make_directory(const char *path);
 
-NODISCARD
 void native_delete_directory(const char *path);
 
 NODISCARD

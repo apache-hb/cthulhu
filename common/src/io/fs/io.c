@@ -37,7 +37,7 @@ static const void *vfs_map(io_t *self)
 
 static void vfs_close(io_t *self) 
 { 
-
+    UNUSED(self);
 }
 
 static const io_callbacks_t kVirtualFileCallbacks = {
@@ -52,6 +52,8 @@ static const io_callbacks_t kVirtualFileCallbacks = {
 
 io_t *io_virtual(vfs_file_t *file, const char *name, file_flags_t flags)
 {
+    UNUSED(file);
+    
     io_t *data = io_blob(name, 0x1000, flags);
     vfs_io_t virtualFile = {
         .underlying = data

@@ -58,11 +58,7 @@ static const version_info_t kVersion = {
 static io_t *make_file(const char *path, file_flags_t flags)
 {
     io_t *io = io_file(path, flags);
-    size_t err = io_error(io);
-    if (err != 0)
-    {
-        CTASSERTF(false, "failed to open `%s`: %s", path, error_string(err));
-    }
+    NEVER("aaaa, %zu", io_error(io));
     return io;
 }
 
@@ -133,7 +129,6 @@ int main(int argc, const char **argv)
     const char *dir = format(CWD "test-out" NATIVE_PATH_SEPARATOR "%s", path);
     const char *libPath = format("%s" NATIVE_PATH_SEPARATOR "it" OBJ, dir);
     const char *srcPath = format("%s" NATIVE_PATH_SEPARATOR "out.c", dir);
-    const char *hdrPath = format("%s" NATIVE_PATH_SEPARATOR "out.h", dir);
 
 #if OS_WINDOWS
     system(format("if not exist \"%s\" md %s", dir, dir));

@@ -33,7 +33,7 @@ typedef struct
     }                                                                                                                  \
     static void *prefix##_##id##_scan(const char *text, size_t size, void *scanner)                                    \
     {                                                                                                                  \
-        CTASSERTF(size <= INT_MAX, #prefix "-scan (%zu > %d)", size, INT_MAX);                                                                                     \
+        CTASSERTF(size <= INT_MAX, #prefix "-scan (size = %zu > %d, name = %s)", size, INT_MAX, scan_path(scanner));                                                                                     \
         return prefix##_scan_bytes(text, (int)size, scanner);                                                          \
     }                                                                                                                  \
     static void prefix##_##id##_delete(void *buffer, void *scanner)                                                    \

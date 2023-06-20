@@ -68,7 +68,7 @@ void native_delete_directory(const char *path)
 USE_DECL
 const char *native_get_cwd(void)
 {
-    static char cwd[PATH_MAX];
+    char cwd[1024];
 
     if (getcwd(cwd, sizeof(cwd)) == NULL)
     {
@@ -151,6 +151,20 @@ file_write_t native_file_write(file_handle_t handle, const void *buffer, file_si
     }
 
     return written;
+}
+
+USE_DECL
+file_pos_t native_file_seek(file_handle_t handle, file_pos_t offset, native_cerror_t *error)
+{
+    int res = fseek(handle, offset, SEEK_SET);
+
+    if (res != 0)
+    {
+        *error = native_get_last_error();
+        return 0;
+    }
+
+    return ftell(handle);
 }
 
 USE_DECL

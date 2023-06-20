@@ -42,7 +42,6 @@ context_t *compiled_new(driver_t *handle, const char *name, hlir_t *root, sema_t
 context_t *context_new(driver_t *handle, const char *name, void *ast, hlir_t *root, sema_t *sema)
 {
     CTASSERT(handle != NULL);
-    CTASSERT(ast != NULL);
 
     return context_inner_new(handle, name, ast, root, sema);
 }

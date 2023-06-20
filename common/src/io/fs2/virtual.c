@@ -87,6 +87,7 @@ static const void *vfs_map(io_t *self)
 
 static void vfs_close(io_t *self) 
 { 
+    UNUSED(self);
     /* empty */
 }
 

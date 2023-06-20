@@ -12,8 +12,11 @@
 
 CT_CALLBACKS(kCallbacks, ctu);
 
-static vector_t *find_mod_path(ast_t *mod, char *fp)
+static vector_t *find_mod_path(ast_t *ast, char *fp)
 {
+    if (ast == NULL) { return vector_init(str_filename_noext(fp)); }
+    ast_t *mod = ast->modspec;
+
     if (mod == NULL) { return vector_init(str_filename_noext(fp)); }
 
     return vector_len(mod->path) > 0 
@@ -29,7 +32,7 @@ static void ctu_parse_file(driver_t *runtime, scan_t *scan)
     ast_t *ast = compile_scanner(scan, &kCallbacks);
 
     char *fp = (char*)scan_path(scan);
-    vector_t *path = find_mod_path(ast->modspec, fp);
+    vector_t *path = find_mod_path(ast, fp);
 
     context_t *ctx = context_new(runtime, vector_tail(path), ast, NULL, NULL);
 

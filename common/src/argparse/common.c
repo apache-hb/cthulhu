@@ -33,7 +33,7 @@ static void apply_callbacks(scan_t *scan, where_t where, const ap_param_t *param
     }
 
     const char *msg = param == NULL 
-        ? format("unhandled positional argument '%s'", value)
+        ? format("unhandled positional argument '%s'", (char*)value)
         : format("unhandled event '%s'", param->names[0]);
     ap_on_error(scan, where, msg);
 }
