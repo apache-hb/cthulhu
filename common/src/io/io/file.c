@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "report/report.h"
+
 static size_t fd_read(io_t *self, void *dst, size_t size)
 {
     file_t *file = io_data(self);

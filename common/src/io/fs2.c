@@ -5,6 +5,7 @@
 #include "std/map.h"
 
 #include "base/panic.h"
+#include "base/memory.h"
 
 #include "report/report.h"
 
@@ -23,6 +24,28 @@ static inode2_t *query_inode(fs2_t *fs, inode2_t *node, const char *name)
     CTASSERT(fs->cb->fnQueryNode != NULL);
 
     return fs->cb->fnQueryNode(fs, node, name);
+}
+
+static map_t *query_dirents(fs2_t *fs, inode2_t *node)
+{
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
+
+    CTASSERT(inode2_is(node, eNodeDir));
+    CTASSERT(fs->cb->fnQueryDirents != NULL);
+
+    return fs->cb->fnQueryDirents(fs, node);
+}
+
+static io_t *query_file(fs2_t *fs, inode2_t *node, file_flags_t flags)
+{   
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
+
+    CTASSERT(inode2_is(node, eNodeFile));
+    CTASSERT(fs->cb->fnQueryFile != NULL);
+
+    return fs->cb->fnQueryFile(fs, node, flags);
 }
 
 static inode2_t *create_dir(fs2_t *fs, inode2_t *node, const char *name)
@@ -47,17 +70,6 @@ static void delete_dir(fs2_t *fs, inode2_t *node, const char *name)
     CTASSERT(fs->cb->fnDeleteDir != NULL);
 
     fs->cb->fnDeleteDir(fs, node, name);
-}
-
-static map_t *query_dirents(fs2_t *fs, inode2_t *node)
-{
-    CTASSERT(fs != NULL);
-    CTASSERT(node != NULL);
-
-    CTASSERT(inode2_is(node, eNodeDir));
-    CTASSERT(fs->cb->fnQueryDirents != NULL);
-
-    return fs->cb->fnQueryDirents(fs, node);
 }
 
 static inode2_t *get_dir_or_create(fs2_t *fs, inode2_t *node, const char *name)
@@ -168,7 +180,17 @@ static void sync_file(fs2_t *dst, fs2_t *src, inode2_t *dstNode, inode2_t *srcNo
     CTASSERT(inode2_is(dstNode, eNodeFile));
     CTASSERT(inode2_is(srcNode, eNodeFile));
 
-    // TODO: sync file
+    io_t *srcIo = query_file(src, srcNode, eFileRead | eFileBinary);
+    io_t *dstIo = query_file(dst, dstNode, eFileWrite | eFileBinary);
+
+    size_t size = io_size(srcIo);
+    void *data = ctu_malloc(size);
+
+    size_t read = io_read(srcIo, data, size);
+    io_write(dstIo, data, read);
+
+    io_close(srcIo);
+    io_close(dstIo);
 }
 
 static void sync_dir(fs2_t *dst, fs2_t *src, inode2_t *dstNode, inode2_t *srcNode)

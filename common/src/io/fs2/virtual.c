@@ -6,6 +6,10 @@
 #include "report/report.h"
 
 #include "base/panic.h"
+#include "base/memory.h"
+#include "base/macros.h"
+
+#include <string.h>
 
 typedef struct virtual_t
 {
@@ -14,7 +18,13 @@ typedef struct virtual_t
 
 typedef struct virtual_file_t
 {
-    io_t *io;
+    const char *name;
+
+    // TODO: mutex
+
+    char *data;
+    size_t used;
+    size_t size;
 } virtual_file_t;
 
 typedef struct virtual_dir_t
@@ -24,34 +34,55 @@ typedef struct virtual_dir_t
 
 // io impl
 
+typedef struct virtual_io_t
+{
+    virtual_file_t *data;
+    size_t offset;
+} virtual_io_t;
+
 static size_t vfs_read(io_t *self, void *dst, size_t size)
 {
-    virtual_file_t *file = io_data(self);
-    return io_read(file->io, dst, size);
+    virtual_io_t *io = io_data(self);
+    size_t len = MIN(size, io->data->used - io->offset);
+    memcpy(dst, io->data->data + io->offset, len);
+    io->offset += len;
+    return len;
 }
 
 static size_t vfs_write(io_t *self, const void *src, size_t size)
 {
-    virtual_file_t *file = io_data(self);
-    return io_write(file->io, src, size);
+    virtual_io_t *io = io_data(self);
+    virtual_file_t *data = io->data;
+    data->used = MAX(data->used, io->offset + size);
+    if (io->offset + size > data->size)
+    {
+        data->data = ctu_realloc(data->data, io->offset + size);
+        data->size = io->offset + size;
+    }
+
+    memcpy(data->data + io->offset, src, size);
+    io->offset += size;
+
+    return size;
 }
 
 static size_t vfs_size(io_t *self)
 {
-    virtual_file_t *file = io_data(self);
-    return io_size(file->io);
+    virtual_io_t *io = io_data(self);
+    return io->data->used;
 }
 
 static size_t vfs_seek(io_t *self, size_t offset)
 {
-    virtual_file_t *file = io_data(self);
-    return io_seek(file->io, offset);
+    virtual_io_t *io = io_data(self);
+    io->offset = MIN(offset, io->data->used);
+    return io->offset;
 }
 
 static const void *vfs_map(io_t *self)
 {
-    virtual_file_t *file = io_data(self);
-    return io_map(file->io);
+    virtual_io_t *io = io_data(self);
+    return io->data->data;
 }
 
 static void vfs_close(io_t *self) 
@@ -72,7 +103,11 @@ static const io_callbacks_t kVirtualCallbacks = {
 
 static io_t *vfs_io(virtual_file_t *file, file_flags_t flags)
 {
-    return io_new(&kVirtualCallbacks, flags, io_name(file->io), file, sizeof(virtual_file_t));
+    virtual_io_t *io = ctu_malloc(sizeof(virtual_io_t));
+    io->data = file;
+    io->offset = 0;
+
+    return io_new(&kVirtualCallbacks, flags, file->name, io, sizeof(virtual_io_t));
 }
 
 // fs impl
@@ -135,7 +170,11 @@ static inode2_t *vfs_create_file(fs2_t *fs, inode2_t *self, const char *name)
     virtual_dir_t *dir = inode2_data(self);
 
     virtual_file_t file = {
-        .io = io_blob(name, 0x1000, eFileRead | eFileWrite | eFileBinary)
+        .name = name,
+
+        .data = ctu_malloc(0x1000),
+        .used = 0,
+        .size = 0x1000
     };
 
     inode2_t *node = inode2_file(&file, sizeof(virtual_file_t));

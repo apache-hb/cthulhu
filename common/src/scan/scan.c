@@ -15,36 +15,48 @@
 USE_DECL
 const char *scan_language(const scan_t *scan)
 {
+    CTASSERT(scan != NULL);
+    
     return scan->language;
 }
 
 USE_DECL
 const char *scan_path(const scan_t *scan)
 {
+    CTASSERT(scan != NULL);
+    
     return io_name(scan->io);
 }
 
 USE_DECL
 void *scan_get(scan_t *scan)
 {
+    CTASSERT(scan != NULL);
+    
     return scan->data;
 }
 
 USE_DECL
 void scan_set(scan_t *scan, void *value)
 {
+    CTASSERT(scan != NULL);
+    
     scan->data = value;
 }
 
 USE_DECL
 const char *scan_text(const scan_t *scan)
 {
+    CTASSERT(scan != NULL);
+    
     return scan->mapped;
 }
 
 USE_DECL
 text_t scan_source(const scan_t *scan)
 {
+    CTASSERT(scan != NULL);
+    
     text_t text = {scan->size, scan->mapped};
     return text;
 }
@@ -52,18 +64,24 @@ text_t scan_source(const scan_t *scan)
 USE_DECL
 size_t scan_size(const scan_t *scan)
 {
+    CTASSERT(scan != NULL);
+
     return scan->size;
 }
 
 USE_DECL
 size_t scan_read(scan_t *scan, void *dst, size_t size)
 {
+    CTASSERT(scan != NULL);
+    
     return io_read(scan->io, dst, size);
 }
 
 USE_DECL
 reports_t *scan_reports(scan_t *scan)
 {
+    CTASSERT(scan != NULL);
+    
     return scan->reports;
 }
 

@@ -58,7 +58,11 @@ static const version_info_t kVersion = {
 static io_t *make_file(const char *path, file_flags_t flags)
 {
     io_t *io = io_file(path, flags);
-    CTASSERTF(io_error(io) == 0, "failed to open `%s`: %s", path, error_string(io_error(io)));
+    size_t err = io_error(io);
+    if (err != 0)
+    {
+        CTASSERTF(false, "failed to open `%s`: %s", path, error_string(err));
+    }
     return io;
 }
 
