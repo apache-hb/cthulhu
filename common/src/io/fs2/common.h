@@ -23,9 +23,10 @@ typedef struct inode2_t
 
 typedef inode2_t *(*fs2_query_node_t)(fs2_t *fs, inode2_t *node, const char *name);
 typedef map_t *(*fs2_query_dirents_t)(fs2_t *fs, inode2_t *node);
+typedef io_t *(*fs2_query_file_t)(fs2_t *fs, inode2_t *node, file_flags_t flags);
 
 typedef inode2_t *(*fs2_dir_create_t)(fs2_t *fs, inode2_t *node, const char *name);
-typedef inode2_t *(*fs2_file_create_t)(fs2_t *fs, inode2_t *node, const char *name, file_flags_t flags);
+typedef inode2_t *(*fs2_file_create_t)(fs2_t *fs, inode2_t *node, const char *name);
 
 typedef void (*fs2_dir_delete_t)(fs2_t *fs, inode2_t *node, const char *name);
 typedef void (*fs2_file_delete_t)(fs2_t *fs, inode2_t *node, const char *name);
@@ -36,9 +37,13 @@ typedef struct fs2_interface_t
 
     fs2_query_node_t fnQueryNode;
     fs2_query_dirents_t fnQueryDirents;
+    fs2_query_file_t fnQueryFile;
 
     fs2_dir_create_t fnCreateDir;
     fs2_dir_delete_t fnDeleteDir;
+
+    fs2_file_create_t fnCreateFile;
+    fs2_file_delete_t fnDeleteFile;
 } fs2_interface_t;
 
 typedef struct fs2_t 

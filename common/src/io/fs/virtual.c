@@ -24,7 +24,7 @@ static inode_t *vfs_new_dir(inode_t *parent)
 static inode_t *vfs_new_file(inode_t *parent, const char *name)
 {
     vfs_file_t file = {
-        .io = io_blob(name, 0x1000)
+        .io = io_blob(name, 0x1000, eFileRead | eFileWrite)
     };
 
     return inode_file(parent, &file, sizeof(vfs_file_t));

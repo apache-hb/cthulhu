@@ -81,7 +81,7 @@ static const io_callbacks_t kBufferCallbacks = {
 };
 
 USE_DECL
-io_t *io_memory(const char *name, const void *data, size_t size)
+io_t *io_memory(const char *name, const void *data, size_t size, file_flags_t flags)
 {
     CTASSERT(data != NULL);
 
@@ -89,11 +89,11 @@ io_t *io_memory(const char *name, const void *data, size_t size)
 
     memcpy(buffer.data, data, size);
 
-    return io_new(&kBufferCallbacks, eFileRead | eFileWrite, name, &buffer, sizeof(buffer_t));
+    return io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
 }
 
 USE_DECL
-io_t *io_blob(const char *name, size_t size)
+io_t *io_blob(const char *name, size_t size, file_flags_t flags)
 {
     buffer_t buffer = {
         .data = ctu_malloc(size),
@@ -102,5 +102,5 @@ io_t *io_blob(const char *name, size_t size)
         .offset = 0
     };
 
-    return io_new(&kBufferCallbacks, eFileRead | eFileWrite, name, &buffer, sizeof(buffer_t));
+    return io_new(&kBufferCallbacks, flags, name, &buffer, sizeof(buffer_t));
 }

@@ -18,10 +18,10 @@ NODISCARD ALLOC(io_close)
 io_t *io_file(const char *path, file_flags_t mode);
 
 NODISCARD ALLOC(io_close)
-io_t *io_memory(const char *name, const void *data, size_t size);
+io_t *io_memory(const char *name, const void *data, size_t size, file_flags_t flags);
 
 NODISCARD ALLOC(io_close)
-io_t *io_blob(const char *name, size_t size);
+io_t *io_blob(const char *name, size_t size, file_flags_t flags);
 
 NODISCARD ALLOC(io_close)
 io_t *io_view(const char *name, const void *data, size_t size);

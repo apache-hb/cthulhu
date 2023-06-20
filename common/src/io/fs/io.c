@@ -52,7 +52,7 @@ static const io_callbacks_t kVirtualFileCallbacks = {
 
 io_t *io_virtual(vfs_file_t *file, const char *name, file_flags_t flags)
 {
-    io_t *data = io_blob(name, 0x1000);
+    io_t *data = io_blob(name, 0x1000, flags);
     vfs_io_t virtualFile = {
         .underlying = data
     };

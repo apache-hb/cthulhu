@@ -27,7 +27,7 @@ fs2_t *fs2_physical(reports_t *reports, const char *root);
 fs2_t *fs2_virtual(reports_t *reports, const char *name);
 
 void fs2_dir_create(fs2_t *fs, const char *path);
-void fs2_file_create(fs2_t *fs, const char *path, file_flags_t flags);
+void fs2_file_create(fs2_t *fs, const char *path);
 
 io_t *fs2_open(fs2_t *fs, const char *path, file_flags_t flags);
 
