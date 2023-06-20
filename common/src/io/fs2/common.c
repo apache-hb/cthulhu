@@ -7,6 +7,10 @@
 
 // inode api
 
+inode2_t kInvalidINode = {
+    .type = eNodeInvalid
+};
+
 static inode2_t *inode_new(inode2_type_t type, const void *data, size_t size)
 {
     CTASSERT(type < eNodeTotal);
@@ -32,6 +36,14 @@ void *inode2_data(inode2_t *inode)
     CTASSERT(inode != NULL);
     
     return inode->data;
+}
+
+bool inode2_is(inode2_t *inode, inode2_type_t type)
+{
+    CTASSERT(inode != NULL);
+    CTASSERT(type < eNodeTotal);
+
+    return inode->type == type;
 }
 
 // fs api

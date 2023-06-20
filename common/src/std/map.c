@@ -115,7 +115,9 @@ vector_t *map_entries(map_t *map)
 
     vector_t *result = vector_new(map->size);
 
-    MAP_FOREACH_APPLY(map, entry, { vector_push(&result, map_entry_new(entry->key, entry->value)); });
+    MAP_FOREACH_APPLY(map, entry, { 
+        vector_push(&result, map_entry_new(entry->key, entry->value)); 
+    });
 
     return result;
 }
@@ -221,13 +223,11 @@ static void *entry_get_ptr(const bucket_t *entry, const void *key, void *other)
 static void delete_bucket(bucket_t *previous, bucket_t *entry)
 {
     CTASSERT(entry != NULL);
-    
-    if (previous == NULL)
-    {
-        entry->key = NULL;
-        entry->value = NULL;
-    }
-    else
+
+    entry->key = NULL;
+    entry->value = NULL;
+
+    if (previous != NULL)
     {
         previous->next = entry->next;
     }
@@ -297,7 +297,7 @@ void map_delete(map_t *map, const char *key)
 
     while (entry != NULL)
     {
-        if (str_equal(entry->key, key))
+        if (entry->key && str_equal(entry->key, key))
         {
             delete_bucket(previous, entry);
             break;

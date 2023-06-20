@@ -7,6 +7,8 @@
 //       when the tests only need common
 #include "cthulhu/mediator/interface.h"
 
+#include "report/report.h"
+
 typedef enum {
     eTestPassed,
     eTestFailed,
@@ -50,6 +52,8 @@ static int run_tests(const char *suite, const test_t *tests, size_t total) {
         .author = "Elliot",
         .version = NEW_VERSION(3, 0, 0)
     };
+
+    verbose = true;
 
     mediator_new("test", version);
 
