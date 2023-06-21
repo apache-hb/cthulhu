@@ -199,12 +199,13 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
     }
 }
 
-vector_t *lifetime_get_modules(lifetime_t *lifetime)
+map_t *lifetime_get_modules(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);
 
-    vector_t *mods = vector_new(64);
+    map_t *mods = map_optimal(64);
 
+    size_t items = 0;
     map_iter_t iter = map_iter(lifetime->modules);
     while (map_has_next(&iter))
     {
@@ -215,10 +216,11 @@ vector_t *lifetime_get_modules(lifetime_t *lifetime)
         CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
         CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
 
-        vector_push(&mods, ctx->root);
+        map_set(mods, name, ctx->root);
+        items += 1;
     }
 
-    logverbose("acquired modules %zu", vector_len(mods));
+    logverbose("acquired %zu modules", items);
 
     return mods;
 }

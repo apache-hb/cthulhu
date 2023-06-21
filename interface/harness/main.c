@@ -7,6 +7,7 @@
 
 #include "std/str.h"
 #include "std/vector.h"
+#include "std/map.h"
 
 #include "io/io.h"
 #include "io/fs.h"
@@ -115,7 +116,8 @@ int main(int argc, const char **argv)
     lifetime_check(lifetime);
     CHECK_REPORTS(reports, "validations failed");
 
-    vector_t *mods = lifetime_get_modules(lifetime);
+    map_t *modmap = lifetime_get_modules(lifetime);
+    vector_t *mods = map_values(modmap);
     ssa_module_t *ssa = ssa_gen_module(reports, mods);
     CHECK_REPORTS(reports, "generating ssa");
 

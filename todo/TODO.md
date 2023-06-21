@@ -14,6 +14,8 @@
 
 * rewrite location tracking
 
+* platform is becoming a pain point, perhaps rewrite
+
 ## important
 
 * memory arenas

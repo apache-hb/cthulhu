@@ -102,7 +102,8 @@ int main(int argc, const char **argv)
         CHECK_REPORTS(reports, msg);
     }
 
-    vector_t *mods = lifetime_get_modules(lifetime);
+    map_t *modmap = lifetime_get_modules(lifetime);
+    vector_t *mods = map_values(modmap); // TODO: rewrite ssa to accept map
     ssa_module_t *ssa = ssa_gen_module(reports, mods);
     CHECK_REPORTS(reports, "generating ssa");
 

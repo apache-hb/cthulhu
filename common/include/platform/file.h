@@ -11,6 +11,17 @@ typedef struct
     const char *path;
 } file_t;
 
+typedef struct dir_iter_t
+{
+    void *handle;
+    cerror_t error;
+} dir_iter_t;
+
+typedef struct
+{
+    const char *name;
+} dir_t;
+
 typedef enum
 {
     eFileRead = (1 << 0),
@@ -36,6 +47,15 @@ bool dir_exists(const char *path);
 
 NODISCARD
 bool file_exists(const char *path);
+
+// dir api
+
+void dir_close(dir_iter_t *iter);
+
+dir_iter_t dir_open(const char *path);
+bool dir_next(dir_iter_t *iter, dir_t *dir);
+
+// file api
 
 void file_close(file_t file);
 
