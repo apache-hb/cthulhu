@@ -4,10 +4,9 @@
 
 typedef struct os_result_t 
 {
-    bool valid;
-
+    os_error_t error;
+    
     char data[];
 } os_result_t;
 
-os_result_t *os_error(void *data, size_t size);
-os_result_t *os_value(void *data, size_t size);
+os_result_t *os_result_new(os_error_t error, const void *data, size_t size);

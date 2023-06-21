@@ -9,9 +9,6 @@
 
 #include "io/io.h"
 
-#include "platform/library.h"
-#include "platform/error.h"
-
 #include "std/vector.h"
 #include "std/str.h"
 

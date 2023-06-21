@@ -5,32 +5,29 @@
 
 #include <string.h>
 
-static os_result_t *os_result_new(bool valid, void *data, size_t size)
+os_result_t *os_result_new(os_error_t error, const void *data, size_t size)
 {
     CTASSERT(data != NULL);
     CTASSERT(size > 0);
 
     os_result_t *result = ctu_malloc(sizeof(os_result_t));
-    result->valid = valid;
+    result->error = error;
 
     memcpy(result->data, data, size);
 
     return result;
 }
 
-os_result_t *os_error(void *data, size_t size)
-{
-    return os_result_new(false, data, size);
-}
-
-os_result_t *os_value(void *data, size_t size)
-{
-    return os_result_new(true, data, size);
-}
-
-bool os_result_valid(const os_result_t *result)
+os_error_t os_result_error(os_result_t *result)
 {
     CTASSERT(result != NULL);
 
-    return result->valid;
+    return result->error;
+}
+
+void *os_result_value(os_result_t *result)
+{
+    CTASSERT(result != NULL);
+
+    return result->data;
 }

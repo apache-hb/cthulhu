@@ -1,249 +1,234 @@
 #include "fs/common.h"
 
-#include "base/memory.h"
-#include "base/panic.h"
-
-#include "std/map.h"
-#include "std/str.h"
 #include "std/vector.h"
+#include "std/str.h"
+#include "std/map.h"
+
+#include "base/panic.h"
+#include "base/memory.h"
 
 #include "report/report.h"
 
-#include <string.h>
+static vector_t *path_split(const char *path)
+{
+    return str_split(path, "/");
+}
 
 static inode_t *query_inode(fs_t *fs, inode_t *node, const char *name)
 {
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
+    CTASSERT(name != NULL);
+
+    CTASSERT(inode_is(node, eNodeDir));
     CTASSERT(fs->cb->fnQueryNode != NULL);
-    if (str_equal(name, "."))
-    {
-        return node;
-    }
 
     return fs->cb->fnQueryNode(fs, node, name);
 }
 
-static inode_t *create_dir_inode(fs_t *fs, inode_t *parent, const char *name)
+static map_t *query_dirents(fs_t *fs, inode_t *node)
 {
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
+
+    CTASSERT(inode_is(node, eNodeDir));
+    CTASSERT(fs->cb->fnQueryDirents != NULL);
+
+    return fs->cb->fnQueryDirents(fs, node);
+}
+
+static io_t *query_file(fs_t *fs, inode_t *node, os_access_t flags)
+{   
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
+
+    CTASSERT(inode_is(node, eNodeFile));
+    CTASSERT(fs->cb->fnQueryFile != NULL);
+
+    return fs->cb->fnQueryFile(fs, node, flags);
+}
+
+static inode_t *create_dir(fs_t *fs, inode_t *node, const char *name)
+{
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
+    CTASSERT(name != NULL);
+
+    CTASSERT(inode_is(node, eNodeDir));
     CTASSERT(fs->cb->fnCreateDir != NULL);
-    return fs->cb->fnCreateDir(fs, parent, name);
+
+    return fs->cb->fnCreateDir(fs, node, name);
 }
 
-static inode_t *create_file_inode(fs_t *fs, inode_t *parent, const char *name)
+static void delete_dir(fs_t *fs, inode_t *node, const char *name)
 {
-    CTASSERT(fs->cb->fnCreateFile != NULL);
-    return fs->cb->fnCreateFile(fs, parent, name);
-}
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
+    CTASSERT(name != NULL);
 
-static io_t *get_file_handle(fs_t *fs, inode_t *parent, const char *name, file_flags_t flags)
-{
-    CTASSERT(fs->cb->fnGetHandle != NULL);
-    return fs->cb->fnGetHandle(fs, parent, name, flags);
-}
-
-static map_t *get_dir_listing(fs_t *fs, inode_t *parent)
-{
-    CTASSERT(fs->cb->fnGetDir != NULL);
-    return fs->cb->fnGetDir(fs, parent);
-}
-
-static void delete_file_inode(fs_t *fs, inode_t *parent, const char *name)
-{
-    CTASSERT(fs->cb->fnDeleteFile != NULL);
-    fs->cb->fnDeleteFile(fs, parent, name);
-}
-
-static void delete_dir_inode(fs_t *fs, inode_t *parent, const char *name)
-{
+    CTASSERT(inode_is(node, eNodeDir));
     CTASSERT(fs->cb->fnDeleteDir != NULL);
-    fs->cb->fnDeleteDir(fs, parent, name);
+
+    fs->cb->fnDeleteDir(fs, node, name);
 }
 
-static vector_t *split_path(const char *path)
+static inode_t *get_dir_or_create(fs_t *fs, inode_t *node, const char *name)
 {
-    return str_split(path, NATIVE_PATH_SEPARATOR);
+    inode_t *dir = query_inode(fs, node, name);
+    switch (dir->type)
+    {
+    case eNodeDir: return dir;
+    case eNodeInvalid: return create_dir(fs, node, name);
+
+    default: return NULL;
+    }
 }
 
-static inode_t *checked_mkdir(fs_t *fs, inode_t *parent, const char *name)
+void fs_dir_create(fs_t *fs, const char *path)
 {
-    inode_t *node = query_inode(fs, parent, name);
-    if (inode_is(node, eNodeDir))
-    {
-        return node;
-    }
-
-    if (node != NULL)
-    {
-        logverbose("node `%s` is not a directory", name);
-        return NULL;
-    }
-
-    return create_dir_inode(fs, parent, name);
-}
-
-static inode_t *checked_open(fs_t *fs, inode_t *parent, const char *name)
-{
-    inode_t *node = query_inode(fs, parent, name);
-    if (inode_is(node, eNodeFile))
-    {
-        return node;
-    }
-
-    if (node != NULL)
-    {
-        return NULL;
-    }
-
-    return create_file_inode(fs, parent, name);
-}
-
-static inode_t *recursive_mkdir(fs_t *fs, vector_t *parts)
-{
+    vector_t *parts = path_split(path);
     size_t len = vector_len(parts);
-    inode_t *node = fs->root;
+    inode_t *current = fs->root;
 
     for (size_t i = 0; i < len; i++)
     {
         const char *part = vector_get(parts, i);
-        inode_t *next = checked_mkdir(fs, node, part);
-
-        if (next == NULL)
+        inode_t *node = query_inode(fs, current, part);
+        switch (node->type)
         {
-            CTASSERTF(next != NULL, "failed to create dir %zu `%s`", i, part);
-            return NULL; // TODO: error
+        case eNodeDir:
+            current = node;
+            break;
+        case eNodeInvalid:
+            current = create_dir(fs, current, part);
+            break;
+
+        case eNodeFile:
+            CTASSERTF(false, "cannot create directory with file in path (dir = %s, file = %s)", part, path);
+            return;
+
+        default:
+            CTASSERTF(false, "invalid inode type (type = %d)", node->type);
+            return;
         }
-
-        node = next;
     }
-
-    return node;
 }
 
-static inode_t *find_inode(fs_t *fs, inode_t *root, vector_t *parts)
+bool fs_dir_exists(fs_t *fs, const char *path)
 {
+    vector_t *parts = path_split(path);
     size_t len = vector_len(parts);
-    inode_t *node = root;
+    inode_t *current = fs->root;
 
     for (size_t i = 0; i < len; i++)
     {
         const char *part = vector_get(parts, i);
-        inode_t *next = query_inode(fs, node, part);
-
-        if (next == NULL)
+        inode_t *node = query_inode(fs, current, part);
+        switch (node->type)
         {
-            return NULL;
+        case eNodeDir:
+            current = node;
+            break;
+
+        case eNodeInvalid:
+        case eNodeFile:
+            return false;
+
+        default:
+            CTASSERTF(false, "invalid inode type (type = %d)", node->type);
+            return false;
         }
-
-        node = next;
     }
 
-    return node;
+    return inode_is(current, eNodeDir);
 }
 
-void fs_mkdir(fs_t *fs, const char *path)
+void fs_dir_delete(fs_t *fs, const char *path)
 {
-    vector_t *parts = split_path(path);
-    recursive_mkdir(fs, parts);
-}
+    vector_t *parts = path_split(path);
+    size_t len = vector_len(parts);
+    inode_t *current = fs->root;
 
-io_t *fs_open(fs_t *fs, const char *path, file_flags_t flags)
-{
-    char *dir = str_path(path);
+    CTASSERT(len > 0);
 
-    inode_t *inode = recursive_mkdir(fs, split_path(dir));
-    CTASSERT(inode != NULL);
-
-    char *name = str_filename(path);
-
-    inode_t *file = checked_open(fs, inode, name);
-
-    return get_file_handle(fs, file, name, flags);
-}
-
-static inode_t *get_inode_for_delete(fs_t *fs, vector_t *parts)
-{
-    inode_t *node = find_inode(fs, fs->root, parts);
-    if (node == NULL) { return NULL; }
-    if (node == fs->root) { return NULL; } // cant delete root dir, TODO: error
-
-    return node;
-}
-
-void fs_rmdir(fs_t *fs, const char *path)
-{
-    vector_t *parts = split_path(path);
-    inode_t *node = get_inode_for_delete(fs, parts);
-    if (node == NULL) { return; }
-
-    inode_t *parent = node->parent;
-    const char *name = vector_tail(parts);
-
-    if (node->type != eNodeDir) { return; } // TODO: error
-
-    delete_dir_inode(fs, parent, name);
-}
-
-void fs_delete(fs_t *fs, const char *path)
-{
-    vector_t *parts = split_path(path);
-    inode_t *node = get_inode_for_delete(fs, parts);
-    if (node == NULL) { return; }
-
-    inode_t *parent = node->parent;
-    const char *name = vector_tail(parts);
-
-    if (node->type != eNodeFile) { return; } // TODO: error
-
-    delete_file_inode(fs, parent, name);
-}
-
-static void copy_file(io_t *from, io_t *to)
-{
-    CTASSERT(io_seek(from, 0) == 0);
-    CTASSERT(io_seek(to, 0) == 0);
-    
-    uint8_t buffer[0x1000];
-    size_t len = 0;
-
-    while ((len = io_read(from, buffer, sizeof(buffer))) > 0)
+    for (size_t i = 0; i < len - 1; i++)
     {
-        logverbose("copy (len = %zu)", len);
-        io_write(to, buffer, len);
+        const char *part = vector_get(parts, i);
+        inode_t *node = query_inode(fs, current, part);
+        switch (node->type)
+        {
+        case eNodeDir:
+            current = node;
+            break;
+
+        case eNodeInvalid:
+        case eNodeFile:
+            return;
+
+        default:
+            CTASSERTF(false, "invalid inode type (type = %d)", node->type);
+            return;
+        }
     }
 
-    io_close(from);
-    io_close(to);
+    // TODO: recursively delete all files and directories inside the directory
+    delete_dir(fs, current, vector_tail(parts));
 }
 
-static void copy_recursive(fs_t *fs, inode_t *node, const char *path, fs_t *dst)
+static void sync_file(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
 {
-    logverbose("copy (%s)", path);
-    map_t *dir = get_dir_listing(fs, node);
-    map_iter_t iter = map_iter(dir);
+    CTASSERT(inode_is(dstNode, eNodeFile));
+    CTASSERT(inode_is(srcNode, eNodeFile));
+
+    io_t *srcIo = query_file(src, srcNode, eAccessRead);
+    io_t *dstIo = query_file(dst, dstNode, eAccessWrite);
+
+    size_t size = io_size(srcIo);
+    void *data = ctu_malloc(size);
+
+    size_t read = io_read(srcIo, data, size);
+    io_write(dstIo, data, read);
+
+    io_close(srcIo);
+    io_close(dstIo);
+}
+
+static void sync_dir(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
+{
+    map_t *dirents = query_dirents(src, srcNode);
+    map_iter_t iter = map_iter(dirents);
     while (map_has_next(&iter))
     {
         map_entry_t entry = map_next(&iter);
         const char *name = entry.key;
         inode_t *child = entry.value;
 
-        char *current = format("%s" NATIVE_PATH_SEPARATOR "%s", path, name);
-        logverbose("current = %s", current);
-
-        if (inode_is(child, eNodeFile))
+        inode_t *other = get_dir_or_create(dst, dstNode, name);
+        if (other == NULL)
         {
-            logverbose("copy (from = %s)", current);
-            io_t *to = fs_open(dst, current, eFileWrite | eFileBinary);
-            io_t *from = get_file_handle(fs, child, current, eFileRead | eFileBinary);
-            copy_file(from, to);
+            report(src->reports, eWarn, NULL, "cannot create directory (path = %s)", name);
+            return;
         }
-        else if (inode_is(child, eNodeDir))
+
+        switch (child->type)
         {
-            fs_mkdir(dst, current);
-            copy_recursive(fs, child, current, dst);
+        case eNodeDir: 
+            sync_dir(dst, src, other, child); 
+            break;
+        case eNodeFile:
+            sync_file(dst, src, other, child);
+            break;
+
+        default:
+            break;
         }
     }
 }
 
-void fs_copy(fs_t *fs, fs_t *dst)
+void fs_sync(fs_t *dst, fs_t *src)
 {
-    copy_recursive(fs, fs->root, ".", dst);
+    CTASSERT(dst != NULL);
+    CTASSERT(src != NULL);
+
+    sync_dir(dst, src, dst->root, src->root);
 }

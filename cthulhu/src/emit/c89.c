@@ -956,15 +956,15 @@ void c89_emit(c89_emit_t config, ssa_module_t *module)
 {
     CTASSERT(config.reports != NULL);
     
-    fs_mkdir(config.fs, "c89");
+    fs_dir_create(config.fs, "c89");
 
     c89_ssa_emit_t emit = {
         .reports = config.reports,
         .emit = {
-            .io = fs_open(config.fs, "c89/out.c", eFileWrite | eFileText),
+            .io = fs_open(config.fs, "c89/out.c", eAccessRead | eAccessText),
         },
         .header = {
-            .io = fs_open(config.fs, "c89/out.h", eFileWrite | eFileText),
+            .io = fs_open(config.fs, "c89/out.h", eAccessRead | eAccessText),
         },
         .stepCache = map_new(0x1000),
         .completeEdges = set_new(64),

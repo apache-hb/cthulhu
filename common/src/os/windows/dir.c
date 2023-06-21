@@ -30,7 +30,7 @@ OS_RESULT(os_iter_t *) os_dir_iter(const char *path)
         case ERROR_PATH_NOT_FOUND:
             return NULL;
         default:
-            return win_error(error);
+            return win_result(error, NULL, 0);
         }
     }
 
@@ -40,14 +40,14 @@ OS_RESULT(os_iter_t *) os_dir_iter(const char *path)
         .error = ERROR_SUCCESS
     };
 
-    return win_value(&iter);
+    return win_result(ERROR_SUCCESS, &iter, sizeof(iter));
 }
 
 void os_iter_close(os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
 
-    FindClose(iter->find);
+    FindClose(iter->find); // TODO: check result
 }
 
 OS_RESULT(os_dir_t *) os_iter_next(os_iter_t *iter)
@@ -59,7 +59,7 @@ OS_RESULT(os_dir_t *) os_iter_next(os_iter_t *iter)
     {
     case ERROR_SUCCESS: break;
     case ERROR_NO_MORE_FILES: return NULL;
-    default: return win_error(iter->error);
+    default: return win_result(iter->error, NULL, 0);
     }
 
     PWIN32_FIND_DATA data = &iter->data;
@@ -77,7 +77,7 @@ OS_RESULT(os_dir_t *) os_iter_next(os_iter_t *iter)
     // store error to check on next iteration
     iter->error = GetLastError();
 
-    return win_value(&dir);
+    return win_result(ERROR_SUCCESS, &dir, sizeof(dir));
 }
 
 const char *os_dir_name(os_dir_t *dir)

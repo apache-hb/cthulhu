@@ -1,128 +1,215 @@
 #include "common.h"
-#include "virtual.h"
+#include "io/common.h"
 
 #include "std/map.h"
-#include "std/str.h"
 
-#include "base/memory.h"
+#include "report/report.h"
+
 #include "base/panic.h"
+#include "base/memory.h"
+#include "base/macros.h"
 
-typedef struct fs_virtual_t
+#include <string.h>
+
+typedef struct virtual_t
 {
-    const char *name; ///< name of the virtual filesystem
-} fs_virtual_t;
+    const char *name;
+} virtual_t;
 
-static inode_t *vfs_new_dir(inode_t *parent)
+typedef struct virtual_file_t
 {
-    vfs_dir_t dir = {
-        .children = map_new(32)
-    };
+    const char *name;
 
-    return inode_dir(parent, &dir, sizeof(vfs_dir_t));
+    // TODO: mutex
+
+    char *data;
+    size_t used;
+    size_t size;
+} virtual_file_t;
+
+typedef struct virtual_dir_t
+{
+    map_t *dirents; ///< map<const char *, inode_t *>
+} virtual_dir_t;
+
+// io impl
+
+typedef struct virtual_io_t
+{
+    virtual_file_t *data;
+    size_t offset;
+} virtual_io_t;
+
+static size_t vfs_read(io_t *self, void *dst, size_t size)
+{
+    virtual_io_t *io = io_data(self);
+    size_t len = MIN(size, io->data->used - io->offset);
+    memcpy(dst, io->data->data + io->offset, len);
+    io->offset += len;
+    return len;
 }
 
-static inode_t *vfs_new_file(inode_t *parent, const char *name)
+static size_t vfs_write(io_t *self, const void *src, size_t size)
 {
-    vfs_file_t file = {
-        .io = io_blob(name, 0x1000, eFileRead | eFileWrite)
-    };
+    virtual_io_t *io = io_data(self);
+    virtual_file_t *data = io->data;
+    data->used = MAX(data->used, io->offset + size);
+    if (io->offset + size > data->size)
+    {
+        data->data = ctu_realloc(data->data, io->offset + size);
+        data->size = io->offset + size;
+    }
 
-    return inode_file(parent, &file, sizeof(vfs_file_t));
+    memcpy(data->data + io->offset, src, size);
+    io->offset += size;
+
+    return size;
 }
 
-static inode_t *vfs_query(fs_t *fs, inode_t *inode, const char *name)
+static size_t vfs_size(io_t *self)
 {
-    UNUSED(fs);
-    CTASSERT(inode_is(inode, eNodeDir));
-
-    vfs_dir_t *dir = inode_data(inode);
-    return map_get(dir->children, name);
+    virtual_io_t *io = io_data(self);
+    return io->data->used;
 }
 
-static inode_t *vfs_create_dir(fs_t *fs, inode_t *parent, const char *name)
+static size_t vfs_seek(io_t *self, size_t offset)
 {
-    UNUSED(fs);
-    CTASSERT(inode_is(parent, eNodeDir));
-
-    vfs_dir_t *dir = inode_data(parent);
-    inode_t *inode = vfs_new_dir(parent);
-
-    map_set(dir->children, name, inode);
-
-    return inode;
+    virtual_io_t *io = io_data(self);
+    io->offset = MIN(offset, io->data->used);
+    return io->offset;
 }
 
-static inode_t *vfs_create_file(fs_t *fs, inode_t *parent, const char *name)
+static const void *vfs_map(io_t *self)
 {
-    UNUSED(fs);
-    CTASSERT(inode_is(parent, eNodeDir));
-
-    vfs_dir_t *dir = inode_data(parent);
-    inode_t *inode = vfs_new_file(parent, name);
-
-    map_set(dir->children, name, inode);
-
-    return inode;
+    virtual_io_t *io = io_data(self);
+    return io->data->data;
 }
 
-static void vfs_delete_dir(fs_t *fs, inode_t *parent, const char *name)
-{
-    UNUSED(fs);
-    CTASSERT(inode_is(parent, eNodeDir));
-
-    vfs_dir_t *dir = inode_data(parent);
-    map_delete(dir->children, name);
+static void vfs_close(io_t *self) 
+{ 
+    UNUSED(self);
+    /* empty */
 }
 
-static void vfs_delete_file(fs_t *fs, inode_t *parent, const char *name)
-{
-    UNUSED(fs);
-    CTASSERT(inode_is(parent, eNodeDir));
+static const io_callbacks_t kVirtualCallbacks = {
+    .fnRead = vfs_read,
+    .fnWrite = vfs_write,
 
-    vfs_dir_t *dir = inode_data(parent);
-    map_delete(dir->children, name);
-}
+    .fnGetSize = vfs_size,
+    .fnSeek = vfs_seek,
 
-static io_t *vfs_file(fs_t *fs, inode_t *inode, const char *name, file_flags_t flags)
-{
-    UNUSED(fs);
-    UNUSED(flags);
-
-    CTASSERT(inode_is(inode, eNodeFile));
-
-    vfs_file_t *file = inode_data(inode);
-    return io_virtual(file, name, flags);
-}
-
-static map_t *vfs_dir(fs_t *fs, inode_t *inode)
-{
-    UNUSED(fs);
-    CTASSERT(inode_is(inode, eNodeDir));
-
-    vfs_dir_t *dir = inode_data(inode);
-    return dir->children;
-}
-
-static const fs_callbacks_t kVirtual = {
-    .fnQueryNode = vfs_query,
-
-    .fnCreateDir = vfs_create_dir,
-    .fnCreateFile = vfs_create_file,
-
-    .fnDeleteDir = vfs_delete_dir,
-    .fnDeleteFile = vfs_delete_file,
-
-    .fnGetHandle = vfs_file,
-    .fnGetDir = vfs_dir
+    .fnMap = vfs_map,
+    .fnClose = vfs_close
 };
 
-fs_t *fs_virtual(const char *name)
+static io_t *vfs_io(virtual_file_t *file, os_access_t flags)
 {
-    fs_virtual_t fs = {
+    virtual_io_t *io = ctu_malloc(sizeof(virtual_io_t));
+    io->data = file;
+    io->offset = 0;
+
+    return io_new(&kVirtualCallbacks, flags, file->name, io, sizeof(virtual_io_t));
+}
+
+// fs impl
+
+static inode_t *virtual_dir(void)
+{
+    virtual_dir_t dir = {
+        .dirents = map_new(64)
+    };
+    
+    return inode_dir(&dir, sizeof(virtual_dir_t));
+}
+
+static inode_t *vfs_query_node(fs_t *fs, inode_t *self, const char *name)
+{
+    UNUSED(fs);
+
+    virtual_dir_t *dir = inode_data(self);
+    return map_get_default(dir->dirents, name, &kInvalidINode);
+}
+
+static map_t *vfs_query_dirents(fs_t *fs, inode_t *self)
+{
+    UNUSED(fs);
+
+    virtual_dir_t *dir = inode_data(self);
+    return dir->dirents;
+}
+
+static io_t *vfs_query_file(fs_t *fs, inode_t *self, os_access_t flags)
+{
+    UNUSED(fs);
+
+    virtual_file_t *file = inode_data(self);
+    return vfs_io(file, flags);
+}
+
+static inode_t *vfs_create_dir(fs_t *fs, inode_t *self, const char *name)
+{
+    UNUSED(fs);
+
+    virtual_dir_t *dir = inode_data(self);
+    inode_t *node = virtual_dir();
+    map_set(dir->dirents, name, node);
+    return node;
+}
+
+static void vfs_delete_dir(fs_t *fs, inode_t *self, const char *name)
+{
+    UNUSED(fs);
+
+    virtual_dir_t *dir = inode_data(self);
+    map_delete(dir->dirents, name);
+}
+
+static inode_t *vfs_create_file(fs_t *fs, inode_t *self, const char *name)
+{
+    UNUSED(fs);
+
+    virtual_dir_t *dir = inode_data(self);
+
+    virtual_file_t file = {
+        .name = name,
+
+        .data = ctu_malloc(0x1000),
+        .used = 0,
+        .size = 0x1000
+    };
+
+    inode_t *node = inode_file(&file, sizeof(virtual_file_t));
+    map_set(dir->dirents, name, node);
+    return node;
+}
+
+static void vfs_delete_file(fs_t *fs, inode_t *self, const char *name)
+{
+    UNUSED(fs);
+
+    virtual_dir_t *dir = inode_data(self);
+    map_delete(dir->dirents, name);
+}
+
+static const fs_interface_t kVirtualInterface = {
+    .fnQueryNode = vfs_query_node,
+    .fnQueryDirents = vfs_query_dirents,
+    .fnQueryFile = vfs_query_file,
+
+    .fnCreateDir = vfs_create_dir,
+    .fnDeleteDir = vfs_delete_dir,
+
+    .fnCreateFile = vfs_create_file,
+    .fnDeleteFile = vfs_delete_file
+};
+
+fs_t *fs_virtual(reports_t *reports, const char *name)
+{
+    virtual_t self = {
         .name = name
     };
 
-    inode_t *root = vfs_new_dir(NULL);
+    inode_t *root = virtual_dir();
 
-    return fs_new(&kVirtual, root, &fs, sizeof(fs_virtual_t));
+    return fs_new(reports, root, &kVirtualInterface, &self, sizeof(virtual_t));
 }

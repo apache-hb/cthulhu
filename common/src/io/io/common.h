@@ -30,7 +30,7 @@ typedef struct io_t
     const io_callbacks_t *cb;
 
     io_error_t error;
-    file_flags_t flags;
+    os_access_t flags;
     const char *name;
     char data[];
 } io_t;
@@ -38,7 +38,7 @@ typedef struct io_t
 void *io_data(io_t *io);
 
 io_t *io_new(const io_callbacks_t *cb, 
-             file_flags_t flags, 
+             os_access_t flags, 
              const char *name, 
              void *data,
              size_t size);

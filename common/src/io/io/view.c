@@ -53,7 +53,7 @@ static const io_callbacks_t kViewCallbacks = {
 USE_DECL
 io_t *io_view(const char *name, const void *data, size_t size)
 {
-    file_flags_t flags = eFileRead;
+    os_access_t flags = eAccessRead;
 
     view_t view = {.data = data, .size = size, .offset = 0};
 

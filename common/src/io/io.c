@@ -21,7 +21,7 @@ USE_DECL
 size_t io_read(io_t *io, void *dst, size_t size)
 {
     CTASSERT(io != NULL);
-    CTASSERTF(io->flags & eFileRead, "io.read(%s) flags not readable", io_name(io));
+    CTASSERTF(io->flags & eAccessRead, "io.read(%s) flags not readable", io_name(io));
 
     size_t bytes = io->cb->fnRead(io, dst, size);
     logverbose("io.read(%s) %zu bytes", io_name(io), bytes);
@@ -32,7 +32,7 @@ USE_DECL
 size_t io_write(io_t *io, const void *src, size_t size)
 {
     CTASSERT(io != NULL);
-    CTASSERT(io->flags & eFileWrite);
+    CTASSERT(io->flags & eAccessWrite);
 
     size_t bytes = io->cb->fnWrite(io, src, size);
     logverbose("io.write(id = %s, size = %zu, write = %zu)", io_name(io), io_size(io), bytes);
@@ -66,8 +66,8 @@ const char *io_name(io_t *io)
 USE_DECL
 const void *io_map(io_t *io)
 {
-    CTASSERT(io != NULL);
-
+    CTASSERT(io_size(io) != 0);
+    
     return io->cb->fnMap(io);
 }
 

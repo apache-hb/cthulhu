@@ -6,11 +6,5 @@
 
 #include "os/common.h"
 
-typedef union win_result_t
-{
-    DWORD error;
-    void *value;
-} win_result_t;
-
+os_result_t *win_result(DWORD error, const void *value, size_t size);
 os_result_t *win_error(DWORD error);
-os_result_t *win_value(void *value);

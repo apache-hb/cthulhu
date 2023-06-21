@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform/file.h"
+#include "os/os.h"
 
 #include "base/analyze.h"
 #include "base/macros.h"
@@ -8,20 +8,18 @@
 BEGIN_API
 
 typedef struct io_t io_t;
-typedef size_t io_error_t;
-
-STATIC_ASSERT(sizeof(io_error_t) == sizeof(cerror_t), "io error and cerror must be the same size");
+typedef os_error_t io_error_t;
 
 void io_close(io_t *io);
 
 NODISCARD ALLOC(io_close)
-io_t *io_file(const char *path, file_flags_t mode);
+io_t *io_file(const char *path, os_access_t mode);
 
 NODISCARD ALLOC(io_close)
-io_t *io_memory(const char *name, const void *data, size_t size, file_flags_t flags);
+io_t *io_memory(const char *name, const void *data, size_t size, os_access_t flags);
 
 NODISCARD ALLOC(io_close)
-io_t *io_blob(const char *name, size_t size, file_flags_t flags);
+io_t *io_blob(const char *name, size_t size, os_access_t flags);
 
 NODISCARD ALLOC(io_close)
 io_t *io_view(const char *name, const void *data, size_t size);

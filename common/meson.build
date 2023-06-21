@@ -61,29 +61,31 @@ std = declare_dependency(
     include_directories : 'include'
 )
 
-platform_deps = []
+# platform glue code
 
-if host == 'linux'
-    platform_deps += [ cc.find_library('m'), cc.find_library('dl') ]
-endif
+src = [ 'src/os/common.c' ]
 
-src = [
-    'src/platform/error.c',
-    'src/platform/file.c',
-    'src/platform/library.c',
-    'src/platform/platform/target.c'.replace('target', target)
-]
-
-libplatform = library('platform', src,
+libcommon = static_library('common', src,
     c_args : args,
-    dependencies : [ std, platform_deps ],
+    dependencies : [ std ],
     include_directories : 'include'
 )
 
-platform = declare_dependency(
-    link_with : libplatform,
-    dependencies : [ std, platform_deps ],
-    include_directories : 'include'
+common = declare_dependency(
+    link_with : libcommon,
+    dependencies : [ std ],
+    include_directories : [ 'include', 'src' ]
+)
+
+# get the backend
+
+subdir('src/os/target'.replace('target', target))
+
+# create the native library
+
+os = declare_dependency(
+    include_directories : 'include',
+    dependencies : [ std, native ]
 )
 
 src = [ 
@@ -97,23 +99,17 @@ src = [
     'src/io/fs/common.c',
     'src/io/fs/physical.c',
     'src/io/fs/virtual.c',
-    'src/io/fs/io.c',
-
-    'src/io/fs2.c',
-    'src/io/fs2/common.c',
-    'src/io/fs2/physical.c',
-    'src/io/fs2/virtual.c',
 ]
 
 libio = library('io', src,
     c_args : args,
-    dependencies : [ platform, std ],
+    dependencies : [ std, os ],
     include_directories : [ 'include', 'src/io' ]
 )
 
 io = declare_dependency(
     link_with : libio,
-    dependencies : [ platform, std ],
+    dependencies : [ std, os ],
     include_directories : 'include'
 )
 

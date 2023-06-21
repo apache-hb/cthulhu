@@ -2,12 +2,13 @@
 
 #include <stdbool.h>
 
+#include "os/error.h"
+
 // opaque types
 
 typedef struct os_file_t os_file_t;
 typedef struct os_dir_t os_dir_t;
 typedef struct os_iter_t os_iter_t;
-typedef struct os_result_t os_result_t;
 
 typedef enum os_mode_t
 {
@@ -17,23 +18,14 @@ typedef enum os_mode_t
     eAccessText = (1 << 2), ///< enable eof translation
 } os_access_t;
 
-typedef enum os_dirent_type_t
+typedef enum os_dirent_t
 {
+    eOsNodeNone,
     eOsNodeFile,
     eOsNodeDir,
 
     eOsNodeTotal
-} os_dirent_type_t;
-
-// documentation macros
-
-#define OS_RESULT(TYPE) os_result_t *
-
-// result & error api
-
-bool os_result_valid(const os_result_t *result);
-void *os_result_value(os_result_t *result);
-const char *os_result_error(os_result_t *result);
+} os_dirent_t;
 
 // filesystem api
 
@@ -76,7 +68,7 @@ const char *os_dir_name(os_dir_t *dir);
 
 OS_RESULT(os_file_t *) os_file_open(const char *path, os_access_t access);
 
-OS_RESULT(void) os_file_close(os_file_t *file);
+void os_file_close(os_file_t *file);
 
 OS_RESULT(size_t) os_file_read(os_file_t *file, void *buffer, size_t size);
 OS_RESULT(size_t) os_file_write(os_file_t *file, const void *buffer, size_t size);
@@ -86,4 +78,4 @@ OS_RESULT(size_t) os_file_seek(os_file_t *file, size_t offset);
 OS_RESULT(size_t) os_file_tell(os_file_t *file);
 
 OS_RESULT(const void *) os_file_map(os_file_t *file);
-OS_RESULT(const char *) os_file_name(os_file_t *file);
+const char *os_file_name(os_file_t *file);

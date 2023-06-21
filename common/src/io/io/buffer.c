@@ -81,7 +81,7 @@ static const io_callbacks_t kBufferCallbacks = {
 };
 
 USE_DECL
-io_t *io_memory(const char *name, const void *data, size_t size, file_flags_t flags)
+io_t *io_memory(const char *name, const void *data, size_t size, os_access_t flags)
 {
     CTASSERT(data != NULL);
 
@@ -93,7 +93,7 @@ io_t *io_memory(const char *name, const void *data, size_t size, file_flags_t fl
 }
 
 USE_DECL
-io_t *io_blob(const char *name, size_t size, file_flags_t flags)
+io_t *io_blob(const char *name, size_t size, os_access_t flags)
 {
     buffer_t buffer = {
         .data = ctu_malloc(size),

@@ -36,13 +36,13 @@ static const version_info_t kVersion = {
     .version = NEW_VERSION(0, 0, 1)
 };
 
-static io_t *make_file(reports_t *reports, const char *path, file_flags_t flags)
+static io_t *make_file(reports_t *reports, const char *path, os_access_t flags)
 {
     io_t *io = io_file(path, flags);
     if (io_error(io) != 0)
     {
         message_t *id = report(reports, eFatal, NULL, "failed to open `%s`", path);
-        report_note(id, "%s", error_string(io_error(io)));
+        report_note(id, "%s", os_decode(io_error(io)));
         return NULL;
     }
 
@@ -85,7 +85,7 @@ int main(int argc, const char **argv)
             printf("no language found for file: %s\n", path);
         }
 
-        io_t *io = make_file(reports, path, eFileText | eFileRead);
+        io_t *io = make_file(reports, path, eAccessRead | eAccessText);
         if (io != NULL)
         {
             lifetime_parse(lifetime, lang, io);
@@ -116,7 +116,7 @@ int main(int argc, const char **argv)
 
     c89_emit_t emit = {
         .reports = reports,
-        .fs = fs_virtual("out")
+        .fs = fs_virtual(reports, "out")
     };
 
     c89_emit(emit, ssa);

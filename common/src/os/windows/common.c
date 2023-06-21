@@ -1,13 +1,13 @@
 #include "common.h"
 
-os_result_t *win_error(DWORD error)
+#include "base/panic.h"
+
+os_result_t *win_result(DWORD error, const void *value, size_t size)
 {
-    win_result_t result = { .error = error };
-    return os_error(&result, sizeof(win_result_t));
+    return os_result_new(error, value, size);
 }
 
-os_result_t *win_value(void *value)
+os_result_t *win_error(DWORD error)
 {
-    win_result_t result = { .value = value };
-    return os_value(&result, sizeof(win_result_t));
+    return win_result(error, NULL, 0);
 }

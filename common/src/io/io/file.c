@@ -2,40 +2,58 @@
 
 #include "report/report.h"
 
+typedef os_file_t *fd_t;
+
+static os_file_t *fd_data(io_t *self)
+{
+    fd_t *fd = io_data(self);
+    return *fd;
+}
+
 static size_t fd_read(io_t *self, void *dst, size_t size)
 {
-    file_t *file = io_data(self);
-    return file_read(*file, dst, size, &self->error);
+    os_file_t *file = fd_data(self);
+    OS_RESULT(size_t) read = os_file_read(file, dst, size);
+    self->error = os_error(read);
+    return OS_VALUE_OR(size_t, read, SIZE_MAX);
 }
 
 static size_t fd_write(io_t *self, const void *src, size_t size)
 {
-    file_t *file = io_data(self);
-    return file_write(*file, src, size, &self->error);
+    os_file_t *file = fd_data(self);
+    OS_RESULT(size_t) written = os_file_write(file, src, size);
+    self->error = os_error(written);
+    return OS_VALUE_OR(size_t, written, SIZE_MAX);
 }
 
 static size_t fd_size(io_t *self)
 {
-    file_t *file = io_data(self);
-    return file_size(*file, &self->error);
+    os_file_t *file = fd_data(self);
+    OS_RESULT(size_t) size = os_file_size(file);
+    self->error = os_error(size);
+    return OS_VALUE_OR(size_t, size, SIZE_MAX);
 }
 
 static size_t fd_seek(io_t *self, size_t offset)
 {
-    file_t *file = io_data(self);
-    return file_seek(*file, offset, &self->error);
+    os_file_t *file = fd_data(self);
+    OS_RESULT(size_t) seek = os_file_seek(file, offset);
+    self->error = os_error(seek);
+    return OS_VALUE_OR(size_t, seek, SIZE_MAX);
 }
 
 static const void *fd_map(io_t *self)
 {
-    file_t *file = io_data(self);
-    return file_map(*file, &self->error);
+    os_file_t *file = fd_data(self);
+    OS_RESULT(const void *) data = os_file_map(file);
+    self->error = os_error(data);
+    return OS_VALUE_OR(const void *, data, NULL);
 }
 
 static void fd_close(io_t *self)
 {
-    file_t *file = io_data(self);
-    file_close(*file);
+    os_file_t *file = fd_data(self);
+    os_file_close(file);
 }
 
 static const io_callbacks_t kFileCallbacks = {
@@ -50,12 +68,10 @@ static const io_callbacks_t kFileCallbacks = {
 };
 
 USE_DECL
-io_t *io_file(const char *path, file_flags_t mode)
+io_t *io_file(const char *path, os_access_t mode)
 {
-    cerror_t err = 0;
-    file_t file = file_open(path, mode, &err);
-    logverbose("file: %p, err: %zu, path: %s", file.handle, err, file.path);
-    io_t *io = io_new(&kFileCallbacks, mode, path, &file, sizeof(file_t));
-    io->error = err;
+    OS_RESULT(fd_t) file = os_file_open(path, mode);
+    io_t *io = io_new(&kFileCallbacks, mode, path, &file, sizeof(fd_t));
+    io->error = os_error(file);
     return io;
 }

@@ -11,7 +11,6 @@
 
 #include "report/report.h"
 
-#include "platform/error.h"
 #include "stacktrace/stacktrace.h"
 #include "cthulhu/hlir/init.h"
 #include "cthulhu/hlir/check.h"
@@ -21,7 +20,6 @@ static void runtime_init(void)
     GLOBAL_INIT();
 
     stacktrace_init();
-    platform_init();
     init_gmp(&globalAlloc);
     init_hlir();
 }

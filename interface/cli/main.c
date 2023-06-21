@@ -52,12 +52,18 @@ static void parse_source(lifetime_t *lifetime, const char *path)
         return;
     }
 
-    const char *cwd = get_cwd();
+    OS_RESULT(const char*) cwd = os_dir_current();
+    if (os_error(cwd)) 
+    {  
+        message_t *id = report(reports, eFatal, NULL, "failed to get current working directory");
+        report_note(id, "%s", os_decode(os_error(cwd)));
+        return;
+    }
 
-    io_t *io = io_file(format("%s" NATIVE_PATH_SEPARATOR "%s", cwd, path), eFileRead | eFileText);
+    io_t *io = io_file(format("%s" NATIVE_PATH_SEPARATOR "%s", OS_VALUE(const char *, cwd), path), eAccessRead | eAccessText);
     if (io_error(io) != 0)
     {
-        report(reports, eFatal, NULL, "failed to load source `%s`\n%s", path, error_string(io_error(io)));
+        report(reports, eFatal, NULL, "failed to load source `%s`\n%s", path, os_decode(io_error(io)));
         return;
     }
 
@@ -117,7 +123,7 @@ int main(int argc, const char **argv)
 
     c89_emit_t config = {
         .reports = reports,
-        .fs = fs_physical("out")
+        .fs = fs_physical(reports, "out")
     };
 
     c89_emit(config, ssa);

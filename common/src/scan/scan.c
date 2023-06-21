@@ -1,6 +1,5 @@
 #include "common.h"
 
-#include "platform/file.h"
 #include "report/report.h"
 
 #include "base/macros.h"

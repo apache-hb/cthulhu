@@ -56,7 +56,7 @@ static const version_info_t kVersion = {
     .version = NEW_VERSION(0, 0, 1)
 };
 
-static io_t *make_file(const char *path, file_flags_t flags)
+static io_t *make_file(const char *path, os_access_t flags)
 {
     io_t *io = io_file(path, flags);
     NEVER("aaaa, %zu", io_error(io));
@@ -98,7 +98,7 @@ int main(int argc, const char **argv)
         const char *ext = str_ext(path);
         const language_t *lang = lifetime_get_language(lifetime, ext);
 
-        io_t *io = make_file(path, eFileText | eFileRead);
+        io_t *io = make_file(path, eAccessRead | eAccessText);
 
         lifetime_parse(lifetime, lang, io);
 
@@ -142,7 +142,7 @@ int main(int argc, const char **argv)
 
     c89_emit_t emit = {
         .reports = reports,
-        .fs = fs_virtual("c89")
+        .fs = fs_virtual(reports, "c89")
     };
 
     c89_emit(emit, ssa);
