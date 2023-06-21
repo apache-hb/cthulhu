@@ -33,8 +33,6 @@ typedef void (*fs2_file_delete_t)(fs2_t *fs, inode2_t *node, const char *name);
 
 typedef struct fs2_interface_t
 {
-    const char *name;
-
     fs2_query_node_t fnQueryNode;
     fs2_query_dirents_t fnQueryDirents;
     fs2_query_file_t fnQueryFile;

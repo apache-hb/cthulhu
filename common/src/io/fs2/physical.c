@@ -110,8 +110,6 @@ static void pfs_file_delete(fs2_t *fs, inode2_t *self, const char *name)
 }
 
 static const fs2_interface_t kPhysicalInterface = {
-    .name = "Disk File System",
-
     .fnQueryNode = pfs_query_node,
     .fnQueryDirents = NULL, // TODO: query dirents
     .fnQueryFile = pfs_query_file,

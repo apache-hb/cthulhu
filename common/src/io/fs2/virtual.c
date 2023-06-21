@@ -192,8 +192,6 @@ static void vfs_delete_file(fs2_t *fs, inode2_t *self, const char *name)
 }
 
 static const fs2_interface_t kVirtualInterface = {
-    .name = "Virtual File System",
-
     .fnQueryNode = vfs_query_node,
     .fnQueryDirents = vfs_query_dirents,
     .fnQueryFile = vfs_query_file,
