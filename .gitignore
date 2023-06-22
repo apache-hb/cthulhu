@@ -8,8 +8,8 @@
 !*.c
 !*.h
 !*.inc
-!data/version.h.in
 !langs.c.in
+!data/**/*
 
 # dont ignore flex and bison files
 !*.y
