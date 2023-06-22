@@ -5,12 +5,20 @@
 
 #include "ct-test.h"
 
+static const report_config_t kConfig = {
+    .limit = SIZE_MAX,
+    .warningsAreErrors = true
+};
+
 TEST(test_fs_physical_creation, {
     reports_t *reports = begin_reports();
     OS_RESULT(const char *) cwd = os_dir_current();
     SHOULD_PASS("os_dir_current() should return a valid path", os_error(cwd) == 0);
 
     fs_t *fs = fs_physical(reports, format("%s" NATIVE_PATH_SEPARATOR "data" NATIVE_PATH_SEPARATOR "unit-test-data", OS_VALUE(const char *, cwd)));
+
+    int err = end_reports(reports, "", kConfig);
+    SHOULD_PASS("end_reports() should return 0", err == 0);
 
     SHOULD_PASS("fs_physical() should return a valid fs_t pointer", fs != NULL);
 })
@@ -22,6 +30,9 @@ TEST(test_fs_physical_sync, {
     SHOULD_PASS("os_dir_current() should return a valid path", os_error(cwd) == 0);
 
     fs_t *fs = fs_physical(reports, format("%s" NATIVE_PATH_SEPARATOR "data" NATIVE_PATH_SEPARATOR "unit-test-data", OS_VALUE(const char *, cwd)));
+
+    int err = end_reports(reports, "", kConfig);
+    SHOULD_PASS("end_reports() should return 0", err == 0);
 
     SHOULD_PASS("fs_physical() should return a valid fs_t pointer", fs != NULL);
 
@@ -37,6 +48,9 @@ TEST(test_fs_physical_sync, {
     SHOULD_PASS("fs_sync() should sync directories", fs_dir_exists(vfs, "vfs/subdir"));
     SHOULD_PASS("fs_sync() should sync files", fs_file_exists(vfs, "vfs/input1.txt"));
     SHOULD_PASS("fs_sync() should sync files", fs_file_exists(vfs, "vfs/next/nested/temp.txt"));
+
+    err = end_reports(reports, "", kConfig);
+    SHOULD_PASS("end_reports() should return 0", err == 0);
 })
 
 HARNESS("pfs", {

@@ -10,6 +10,8 @@
 #include "io/io.h"
 #include "io/fs.h"
 
+#include "base/panic.h"
+
 #include "report/report.h"
 
 #include "cthulhu/ssa/ssa.h"
@@ -121,9 +123,16 @@ int main(int argc, const char **argv)
         ssa_emit_module(reports, ssa);
     }
 
+    OS_RESULT(const char *) cwd = os_dir_current();
+    CTASSERTF(os_error(cwd) == 0, "failed to get current working directory: %s", os_decode(os_error(cwd)));
+    char *path = format("%s" NATIVE_PATH_SEPARATOR "out", OS_VALUE(const char *, cwd));
+
+    fs_t *fs = fs_physical(reports, path);
+    CHECK_REPORTS(reports, "filesystem creation");
+
     c89_emit_t config = {
         .reports = reports,
-        .fs = fs_physical(reports, "out")
+        .fs = fs
     };
 
     c89_emit(config, ssa);

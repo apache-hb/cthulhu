@@ -50,9 +50,9 @@
  * @{
  */
 
-#define EXIT_OK 0        ///< no compiler errors or internal errors
-#define EXIT_ERROR 1     ///< only compiler errors occurred
-#define EXIT_INTERNAL 99 ///< at least one internal error occured
+#define EXIT_OK 0        ///< no user errors or internal errors
+#define EXIT_ERROR 1     ///< the user has made an error
+#define EXIT_INTERNAL 99 ///< internal compiler errors have occurred
 
 /** @} */
 

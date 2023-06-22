@@ -36,6 +36,8 @@ static const char *get_absolute(fs_t *fs, inode_t *node, const char *path)
     const physical_t *self = fs_data(fs);
     const physical_dir_t *dir = inode_data(node);
 
+    CTASSERT(!is_special(self->root));
+
     if (is_special(dir->path) && is_special(path))
     {
         return self->root;
@@ -78,7 +80,7 @@ static inode_t *physical_dir(const char *path)
     physical_dir_t dir = {
         .path = path
     };
-    
+
     return inode_dir(&dir, sizeof(physical_dir_t));
 }
 
@@ -96,16 +98,16 @@ static inode_t *pfs_query_node(fs_t *fs, inode_t *self, const char *name)
     const char *absolute = get_absolute(fs, self, name);
     OS_RESULT(os_dirent_t) dirent = os_dirent_type(absolute);
     CTASSERTF(os_error(dirent) == 0, "failed to query dirent `%s`", os_decode(os_error(dirent)));
-    
+
     const char *relative = get_relative(self, name);
 
     switch (OS_VALUE_OR(os_dirent_t, dirent, eOsNodeNone))
     {
-    case eOsNodeFile: 
+    case eOsNodeFile:
         return physical_file(relative);
-    case eOsNodeDir: 
+    case eOsNodeDir:
         return physical_dir(relative);
-    default: 
+    default:
         return &kInvalidINode;
     }
 }
@@ -159,8 +161,8 @@ static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
 {
     const char *absolute = get_absolute(fs, self, name);
     OS_RESULT(bool) check = os_dir_create(absolute);
-    CTASSERT(os_error(check) == 0);
-    
+    CTASSERTF(os_error(check) == 0, "failed to create dir `%s` %s", absolute, os_decode(os_error(check)));
+
     return physical_dir(get_relative(self, name));
 }
 
@@ -192,11 +194,13 @@ static const fs_interface_t kPhysicalInterface = {
 
 fs_t *fs_physical(reports_t *reports, const char *root)
 {
-    OS_RESULT(bool) exists = os_dir_exists(root);
-    if (os_error(exists)) 
-    { 
-        report(reports, eFatal, NULL, "root directory does not exist: %s", root);
-        return NULL; 
+    OS_RESULT(bool) create = os_dir_create(root);
+    CTASSERTF(os_error(create) == 0, "error creating root directory: %s", os_decode(os_error(create)));
+
+    if (!OS_VALUE(bool, create))
+    {
+        report(reports, eFatal, NULL, "root directory could not be created: %s", root);
+        return NULL;
     }
 
     physical_t self = {

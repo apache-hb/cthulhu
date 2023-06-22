@@ -35,7 +35,7 @@ config = {
     'major': parts[0].to_int(),
     'minor': parts[1].to_int(),
     'patch': parts[2].to_int(),
-    'source': cwd/'src' + ' ' + cwd/'include' + ' ' + cwd/'driver'
+    'source': cwd/'interface' + ' ' + cwd/'common' + ' ' + cwd/'cthulhu' + ' ' + cwd/'driver'
 }
 
 configure_file(
@@ -199,7 +199,7 @@ if doxygen.found()
         configuration : config
     )
 
-    run_target('docs', command : [doxygen, meson.current_build_dir() / 'Doxyfile'])
+    run_target('docs', command : [ doxygen, meson.current_build_dir() / 'Doxyfile' ])
 endif
 
 # TODO: order of files should not matter

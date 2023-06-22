@@ -101,6 +101,7 @@ OS_RESULT(bool) os_dir_exists(const char *path)
 OS_RESULT(os_dirent_t) os_dirent_type(const char *path)
 {
     DWORD attributes = GetFileAttributesA(path);
+
     if (attributes != INVALID_FILE_ATTRIBUTES)
     {
         if (attributes & FILE_ATTRIBUTE_DIRECTORY)

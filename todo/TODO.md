@@ -14,7 +14,8 @@
 
 * rewrite location tracking
 
-* platform is becoming a pain point, perhaps rewrite
+* more docs
+* fix doxygen
 
 ## important
 
@@ -41,7 +42,6 @@
     * perhaps support a small subset of C++ so we can use it internally
 
 * unit tests for everything in `/common/`
-* complete api docs
 * driver specific config support
 * replace mpq with mpfr (rounding is important)
 * profile startup time
