@@ -69,6 +69,8 @@ OS_RESULT(bool) os_dir_create(const char *path)
         {
             return win_error(error);
         }
+        
+        result = true;
     }
 
     return win_result(ERROR_SUCCESS, &result, sizeof(bool));

@@ -13,13 +13,6 @@
 
 #include <stdlib.h>
 
-#if 0
-static const report_config_t kReportConfig = {
-    .limit = SIZE_MAX,
-    .warningsAreErrors = true
-};
-#endif
-
 typedef struct sources_t
 {
     vector_t *files;
