@@ -1,132 +1,89 @@
 #include "common.h"
 
 #include "base/panic.h"
+#include "base/util.h"
 
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdio.h>
+#include "report/report.h"
+
+#include <dirent.h>
 #include <errno.h>
 
+typedef struct os_iter_t
+{
+    DIR *dir;
+} os_iter_t;
+
+typedef struct os_dir_t
+{
+    struct dirent *ent;
+} os_dir_t;
+
 USE_DECL
-OS_RESULT(bool) os_file_create(const char *path)
+OS_RESULT(os_iter_t *) os_iter_begin(const char *path)
 {
     CTASSERT(path != NULL);
 
-    FILE *fd = fopen(path, "w");
-    if (fd == NULL)
+    DIR *dir = opendir(path);
+    if (dir == NULL)
     {
+        if (errno == ENOENT)
+        {
+            return NULL;
+        }
+        
         return linux_error(errno);
     }
 
-    fclose(fd);
+    os_iter_t iter = {
+        .dir = dir
+    };
 
-    bool created = (errno == 0);
-    return linux_result(errno, &created, sizeof(bool));
+    return os_result_new(0, &iter, sizeof(os_iter_t));
+}
+
+void os_iter_end(os_iter_t *iter)
+{
+    CTASSERT(iter != NULL);
+
+    closedir(iter->dir);
 }
 
 USE_DECL
-OS_RESULT(bool) os_file_delete(const char *path)
+OS_RESULT(os_dir_t) os_iter_next(os_iter_t *iter)
 {
-    CTASSERT(path != NULL);
+    CTASSERT(iter != NULL);
 
-    if (remove(path) != 0)
+    struct dirent *ent = NULL;
+    while ((ent = readdir(iter->dir)) != NULL)
     {
-        return linux_error(errno);
+        if (!is_special(ent->d_name))
+        {
+            break;
+        }
     }
 
-    bool removed = (errno == 0);
-    return linux_result(errno, &removed, sizeof(bool));
-}
-
-USE_DECL
-OS_RESULT(bool) os_file_exists(const char *path)
-{
-    CTASSERT(path != NULL);
-
-    bool exists = access(path, F_OK) == 0;
-    return linux_result(errno, &exists, sizeof(bool));
-}
-
-USE_DECL
-OS_RESULT(bool) os_dir_create(const char *path)
-{
-    CTASSERT(path != NULL);
-
-    if (mkdir(path, 0777) != 0)
+    if (ent == NULL)
     {
-        return linux_error(errno);
+        if (errno != 0)
+        {
+            return linux_error(errno);
+        }
+
+        return NULL;
     }
 
-    bool created = (errno == 0);
-    return linux_result(errno, &created, sizeof(bool));
+    os_dir_t dir = {
+        .ent = ent
+    };
+
+    return os_result_new(0, &dir, sizeof(os_dir_t));
 }
 
 USE_DECL
-OS_RESULT(bool) os_dir_delete(const char *path)
+const char *os_dir_name(os_dir_t *dir)
 {
-    CTASSERT(path != NULL);
+    CTASSERT(dir != NULL);
 
-    if (rmdir(path) != 0)
-    {
-        return linux_error(errno);
-    }
-
-    bool removed = (errno == 0);
-    return linux_result(errno, &removed, sizeof(bool));
-}
-
-USE_DECL
-OS_RESULT(bool) os_dir_exists(const char *path)
-{
-    CTASSERT(path != NULL);
-
-    struct stat sb;
-    bool exists = stat(path, &sb) == 0 && S_ISDIR(sb.st_mode);
-    return linux_result(errno, &exists, sizeof(bool));
-}
-
-USE_DECL
-OS_RESULT(bool) os_dirent_exists(const char *path)
-{
-    CTASSERT(path != NULL);
-
-    struct stat sb;
-    bool exists = stat(path, &sb) == 0;
-    return linux_result(errno, &exists, sizeof(bool));
-}
-
-USE_DECL
-OS_RESULT(os_dirent_t) os_dirent_type(const char *path)
-{
-    CTASSERT(path != NULL);
-
-    struct stat sb;
-    if (stat(path, &sb) != 0)
-    {
-        return linux_error(errno);
-    }
-
-    os_dirent_t type = eOsNodeNone;
-    if (S_ISDIR(sb.st_mode))
-    {
-        type = eOsNodeDir;
-    }
-    else if (S_ISREG(sb.st_mode))
-    {
-        type = eOsNodeFile;
-    }
-
-    return os_result_new(0, &type, sizeof(os_dirent_t));
-}
-
-USE_DECL
-OS_RESULT(const char *) os_dir_current(void)
-{
-    char *path = getcwd(NULL, 0);
-    if (path == NULL)
-    {
-        return linux_error(errno);
-    }
-
-    return os_result_new(0, &path, sizeof(char *));
+    // have to copy the string because it's owned by the dirent
+    return ctu_strdup(dir->ent->d_name);
 }

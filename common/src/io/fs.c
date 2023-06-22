@@ -207,6 +207,28 @@ static inode_t *get_dir_or_create(fs_t *fs, inode_t *node, const char *name)
     }
 }
 
+static inode_t *get_file_or_create(fs_t *fs, inode_t *node, const char *name)
+{
+    inode_t *file = query_inode(fs, node, name);
+    switch (file->type)
+    {
+    case eNodeFile: return file;
+    case eNodeInvalid: return create_file(fs, node, name);
+
+    default: return NULL;
+    }
+}
+
+static inode_t *get_inode_for(fs_t *fs, inode_t *node, const char *name, inode_type_t type)
+{
+    switch (type)
+    {
+    case eNodeDir: return get_dir_or_create(fs, node, name);
+    case eNodeFile: return get_file_or_create(fs, node, name);
+    default: NEVER("invalid inode type for %s", name);
+    }
+}
+
 void fs_dir_create(fs_t *fs, const char *path)
 {
     vector_t *parts = path_split(path);
@@ -258,8 +280,7 @@ bool fs_dir_exists(fs_t *fs, const char *path)
             return false;
 
         default:
-            CTASSERTF(false, "invalid inode type (type = %d)", node->type);
-            return false;
+            NEVER("invalid inode type (type = %d)", node->type);
         }
     }
 
@@ -328,7 +349,7 @@ static void sync_dir(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
         const char *name = entry.key;
         inode_t *child = entry.value;
 
-        inode_t *other = get_dir_or_create(dst, dstNode, name);
+        inode_t *other = get_inode_for(dst, dstNode, name, child->type);
         if (other == NULL)
         {
             report(src->reports, eWarn, NULL, "cannot create directory (path = %s)", name);
@@ -337,15 +358,15 @@ static void sync_dir(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
 
         switch (child->type)
         {
-        case eNodeDir: 
-            sync_dir(dst, src, other, child); 
+        case eNodeDir:
+            sync_dir(dst, src, other, child);
             break;
         case eNodeFile:
             sync_file(dst, src, other, child);
             break;
 
         default:
-            break;
+            NEVER("invalid inode type (type = %d)", child->type);
         }
     }
 }

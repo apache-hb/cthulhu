@@ -2,6 +2,10 @@
 
 #include "base/panic.h"
 
+#include "std/str.h"
+
+#include "report/report.h"
+
 typedef struct os_iter_t
 {
     HANDLE find;
@@ -14,16 +18,29 @@ typedef struct os_dir_t
     WIN32_FIND_DATA data;
 } os_dir_t;
 
-OS_RESULT(os_iter_t *) os_iter_begin(const char *path)
+static BOOL find_next(HANDLE handle, WIN32_FIND_DATA *data, DWORD *error)
+{
+    BOOL result = FindNextFile(handle, data);
+    if (result == 0)
+    {
+        *error = GetLastError();
+    }
+    return result;
+}
+
+OS_RESULT(os_iter_t) os_iter_begin(const char *path)
 {
     CTASSERT(path != NULL);
 
-    WIN32_FIND_DATA data = { 0 };
-    HANDLE find = FindFirstFile(path, &data);
+    char *wild = format("%s" NATIVE_PATH_SEPARATOR "*", path);
+
+    WIN32_FIND_DATA data;
+    DWORD error = ERROR_SUCCESS;
+    HANDLE find = FindFirstFile(wild, &data);
 
     if (find == INVALID_HANDLE_VALUE) 
     { 
-        DWORD error = GetLastError();
+        error = GetLastError();
         switch (error)
         {
         case ERROR_FILE_NOT_FOUND:
@@ -34,13 +51,21 @@ OS_RESULT(os_iter_t *) os_iter_begin(const char *path)
         }
     }
 
+    do 
+    {
+        if (!is_special(data.cFileName))
+        {
+            break;
+        }
+    } while (find_next(find, &data, &error) != 0);
+
     os_iter_t iter = {
         .find = find,
         .data = data,
-        .error = ERROR_SUCCESS
+        .error = error
     };
-
-    return win_result(ERROR_SUCCESS, &iter, sizeof(iter));
+    
+    return win_result(ERROR_SUCCESS, &iter, sizeof(os_iter_t));
 }
 
 void os_iter_end(os_iter_t *iter)
@@ -50,7 +75,7 @@ void os_iter_end(os_iter_t *iter)
     FindClose(iter->find); // TODO: check result
 }
 
-OS_RESULT(os_dir_t *) os_iter_next(os_iter_t *iter)
+OS_RESULT(os_dir_t) os_iter_next(os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
     
@@ -66,18 +91,15 @@ OS_RESULT(os_dir_t *) os_iter_next(os_iter_t *iter)
     os_dir_t dir = { .data = iter->data };
 
     // get the next directory
-    while (FindNextFile(iter->find, data) != 0)
+    while (find_next(iter->find, data, &iter->error) != 0)
     {
-        if (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        if (!is_special(data->cFileName))
         {
             break;
         }
     }
 
-    // store error to check on next iteration
-    iter->error = GetLastError();
-
-    return win_result(ERROR_SUCCESS, &dir, sizeof(dir));
+    return win_result(ERROR_SUCCESS, &dir, sizeof(os_dir_t));
 }
 
 const char *os_dir_name(os_dir_t *dir)

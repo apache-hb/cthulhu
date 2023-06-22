@@ -1,6 +1,6 @@
 dir = meson.current_source_dir()
 
-all = [ 'util.str', 'util.set', 'util.map', 'argparse.ap', 'io.vfs' ]
+all = [ 'util.str', 'util.set', 'util.map', 'argparse.ap', 'io.vfs', 'io.fs' ]
 
 foreach case : all
     where = case.replace('.', '/')
@@ -11,7 +11,10 @@ foreach case : all
         dependencies : [ generic, mediator, argparse ]
     )
 
-    test('test-' + case, it, suite : 'unit-tests')
+    test('test-' + case, it,
+        workdir : meson.project_source_root(), 
+        suite : 'unit-tests'
+    )
 endforeach
 
 # currently disabled, meson has no way of detecting that a test

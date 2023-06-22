@@ -18,6 +18,9 @@ static void default_panic_handler(panic_t panic, const char *fmt, va_list args)
 
 #if !ADDRSAN_ENABLED
     stacktrace_print(stderr);
+#else
+    volatile char *ptr = NULL;
+    *ptr = 0;
 #endif
 }
 

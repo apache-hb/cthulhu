@@ -2,6 +2,8 @@
 
 #include "base/panic.h"
 
+#include "report/report.h"
+
 #include <stdio.h>
 #include <errno.h>
 
@@ -59,7 +61,7 @@ OS_RESULT(os_file_t *) os_file_open(const char *path, os_access_t access)
         .file = fd
     };
 
-    return os_result_new(0, &file, sizeof(os_file_t));
+    return linux_result(0, &file, sizeof(os_file_t));
 }
 
 void os_file_close(os_file_t *file)

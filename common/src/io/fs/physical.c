@@ -5,6 +5,8 @@
 
 #include "base/panic.h"
 
+#include "report/report.h"
+
 typedef struct physical_t
 {
     const char *root; ///< absolute path to root directory
@@ -20,18 +22,55 @@ typedef struct physical_dir_t
     const char *path; ///< path to directory relative to root
 } physical_dir_t;
 
-static char *get_absolute(fs_t *fs, inode_t *node, const char *path)
+static bool is_special(const char *path)
 {
+    return path == NULL
+        || str_equal(path, ".")
+        || str_equal(path, "..");
+}
+
+static const char *get_absolute(fs_t *fs, inode_t *node, const char *path)
+{
+    CTASSERT(fs != NULL);
+
     const physical_t *self = fs_data(fs);
     const physical_dir_t *dir = inode_data(node);
 
-    char *it = format("%s" NATIVE_PATH_SEPARATOR "%s", self->root, dir->path);
-    if (path != NULL)
+    if (is_special(dir->path) && is_special(path))
     {
-        it = format("%s" NATIVE_PATH_SEPARATOR "%s", it, path);
+        return self->root;
     }
 
-    return it;
+    if (is_special(dir->path) && !is_special(path))
+    {
+        return format("%s" NATIVE_PATH_SEPARATOR "%s", self->root, path);
+    }
+
+    if (!is_special(dir->path) && is_special(path))
+    {
+        return format("%s" NATIVE_PATH_SEPARATOR "%s", self->root, dir->path);
+    }
+
+    return format("%s" NATIVE_PATH_SEPARATOR "%s" NATIVE_PATH_SEPARATOR "%s", self->root, dir->path, path);
+}
+
+static const char *get_relative(inode_t *node, const char *path)
+{
+    const physical_dir_t *dir = inode_data(node);
+
+    if (is_special(dir->path) && !is_special(path))
+    {
+        return path;
+    }
+
+    if (!is_special(dir->path) && is_special(path))
+    {
+        return dir->path;
+    }
+
+    CTASSERT(!is_special(dir->path) && !is_special(path));
+
+    return format("%s" NATIVE_PATH_SEPARATOR "%s", dir->path, path);
 }
 
 static inode_t *physical_dir(const char *path)
@@ -54,36 +93,45 @@ static inode_t *physical_file(const char *path)
 
 static inode_t *pfs_query_node(fs_t *fs, inode_t *self, const char *name)
 {
-    char *absolute = get_absolute(fs, self, name);
+    const char *absolute = get_absolute(fs, self, name);
     OS_RESULT(os_dirent_t) dirent = os_dirent_type(absolute);
+    CTASSERTF(os_error(dirent) == 0, "failed to query dirent `%s`", os_decode(os_error(dirent)));
+    
+    const char *relative = get_relative(self, name);
+
     switch (OS_VALUE_OR(os_dirent_t, dirent, eOsNodeNone))
     {
-    case eOsNodeFile: return physical_file(absolute);
-    case eOsNodeDir: return physical_dir(absolute);
-    default: return NULL;
+    case eOsNodeFile: 
+        return physical_file(relative);
+    case eOsNodeDir: 
+        return physical_dir(relative);
+    default: 
+        return &kInvalidINode;
     }
 }
 
 static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
 {
-    char *absolute = get_absolute(fs, self, NULL);
+    const char *absolute = get_absolute(fs, self, NULL);
 
-    OS_RESULT(os_iter_t*) iter = os_iter_begin(absolute);
-    OS_RESULT(os_dir_t*) node = NULL;
+    OS_RESULT(os_iter_t) iter = os_iter_begin(absolute);
+    OS_RESULT(os_dir_t) node = NULL;
 
+    CTASSERTF(iter != NULL, "fs backing corrupted, expected dir `%s` to exist, but it doesn't", absolute);
     if (os_error(iter)) { return map_new(1); }
 
-    os_iter_t *it = OS_VALUE(os_iter_t*, iter);
+    os_iter_t *it = os_value(iter);
 
     map_t *dirents = map_new(64);
 
     while ((node = os_iter_next(it)) != NULL)
     {
         if (os_error(node)) { break; }
-        os_dir_t *dir = OS_VALUE(os_dir_t*, node);
+        os_dir_t *dir = os_value(node);
         const char *path = os_dir_name(dir);
 
         inode_t *inode = pfs_query_node(fs, self, path);
+        CTASSERTF(inode != NULL, "failed to query node %s '%s'", absolute, path);
         map_set(dirents, path, inode);
     }
 
@@ -94,38 +142,38 @@ static map_t *pfs_query_dirents(fs_t *fs, inode_t *self)
 
 static io_t *pfs_query_file(fs_t *fs, inode_t *self, os_access_t flags)
 {
-    char *absolute = get_absolute(fs, self, NULL);
+    const char *absolute = get_absolute(fs, self, NULL);
     return io_file(absolute, flags);
 }
 
 static inode_t *pfs_file_create(fs_t *fs, inode_t *self, const char *name)
 {
-    char *absolute = get_absolute(fs, self, name);
+    const char *absolute = get_absolute(fs, self, name);
     OS_RESULT(bool) check = os_file_create(absolute);
     CTASSERT(os_error(check) == 0);
 
-    return physical_file(absolute);
+    return physical_file(get_relative(self, name));
 }
 
 static inode_t *pfs_dir_create(fs_t *fs, inode_t *self, const char *name)
 {
-    char *absolute = get_absolute(fs, self, name);
+    const char *absolute = get_absolute(fs, self, name);
     OS_RESULT(bool) check = os_dir_create(absolute);
     CTASSERT(os_error(check) == 0);
-
-    return physical_dir(absolute);
+    
+    return physical_dir(get_relative(self, name));
 }
 
 static void pfs_dir_delete(fs_t *fs, inode_t *self, const char *name)
 {
-    char *absolute = get_absolute(fs, self, name);
+    const char *absolute = get_absolute(fs, self, name);
     OS_RESULT(bool) check = os_dir_delete(absolute);
     CTASSERT(os_error(check) == 0);
 }
 
 static void pfs_file_delete(fs_t *fs, inode_t *self, const char *name)
 {
-    char *absolute = get_absolute(fs, self, name);
+    const char *absolute = get_absolute(fs, self, name);
     OS_RESULT(bool) check = os_file_delete(absolute);
     CTASSERT(os_error(check) == 0);
 }
@@ -144,6 +192,13 @@ static const fs_interface_t kPhysicalInterface = {
 
 fs_t *fs_physical(reports_t *reports, const char *root)
 {
+    OS_RESULT(bool) exists = os_dir_exists(root);
+    if (os_error(exists)) 
+    { 
+        report(reports, eFatal, NULL, "root directory does not exist: %s", root);
+        return NULL; 
+    }
+
     physical_t self = {
         .root = root
     };

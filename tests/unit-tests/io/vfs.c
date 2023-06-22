@@ -44,7 +44,7 @@ TEST(test_fs_virtual_sync, {
     SHOULD_PASS("fs_sync() should sync directories", fs_dir_exists(dst, "testdir/foo/bar"));
 })
 
-HARNESS("fs", {
+HARNESS("vfs", {
     ENTRY("virtual_new", test_fs_virtual_creation),
     ENTRY("virtual_mkdir", test_fs_virtual_mkdir),
     ENTRY("virtual_rmdir", test_fs_virtual_rmdir),

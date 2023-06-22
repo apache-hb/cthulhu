@@ -65,7 +65,7 @@ OS_RESULT(const char *) os_dir_current(void);
  * @return result containing either a valid iterator or an error, NULL if dir does not exist
  */
 NODISCARD
-OS_RESULT(os_iter_t *) os_iter_begin(const char *path);
+OS_RESULT(os_iter_t) os_iter_begin(const char *path);
 
 void os_iter_end(os_iter_t *iter);
 
@@ -76,7 +76,7 @@ void os_iter_end(os_iter_t *iter);
  * @return result containing either a valid directory entry or an error, NULL if no more entries
  */
 NODISCARD
-OS_RESULT(os_dir_t *) os_iter_next(os_iter_t *iter);
+OS_RESULT(os_dir_t) os_iter_next(os_iter_t *iter);
 
 NODISCARD
 const char *os_dir_name(os_dir_t *dir);

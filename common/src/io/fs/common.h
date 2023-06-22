@@ -2,6 +2,7 @@
 
 #include "io/fs.h"
 #include <stddef.h>
+#include <stdint.h>
 
 typedef struct map_t map_t;
 
@@ -17,6 +18,7 @@ typedef enum inode_type_t
 typedef struct inode_t
 {
     inode_type_t type;
+    uint32_t shutup; // ubsan moment
 
     char data[];
 } inode_t;

@@ -2,6 +2,8 @@
 
 #include "base/memory.h"
 
+#include "report/report.h"
+
 // TODO: this feels janky
 OS_RESULT(bool) os_file_create(const char *path)
 {
