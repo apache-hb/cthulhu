@@ -1,4 +1,4 @@
-src = [ 'common.c', 'dir.c', 'fs.c' ]
+src = [ 'common.c', 'file.c', 'dir.c', 'fs.c', 'error.c' ]
 
 libnative = library('native', src,
     c_args : args,

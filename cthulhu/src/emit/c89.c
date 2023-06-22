@@ -961,10 +961,10 @@ void c89_emit(c89_emit_t config, ssa_module_t *module)
     c89_ssa_emit_t emit = {
         .reports = config.reports,
         .emit = {
-            .io = fs_open(config.fs, "c89/out.c", eAccessRead | eAccessText),
+            .io = fs_open(config.fs, "c89/out.c", eAccessWrite | eAccessText),
         },
         .header = {
-            .io = fs_open(config.fs, "c89/out.h", eAccessRead | eAccessText),
+            .io = fs_open(config.fs, "c89/out.h", eAccessWrite | eAccessText),
         },
         .stepCache = map_new(0x1000),
         .completeEdges = set_new(64),

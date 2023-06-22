@@ -59,7 +59,7 @@ static const version_info_t kVersion = {
 static io_t *make_file(const char *path, os_access_t flags)
 {
     io_t *io = io_file(path, flags);
-    NEVER("aaaa, %zu", io_error(io));
+    CTASSERT(io_error(io) == 0);
     return io;
 }
 

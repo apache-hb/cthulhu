@@ -2,12 +2,17 @@
 
 #include "report/report.h"
 
-typedef os_file_t *fd_t;
+#include "base/panic.h"
+
+typedef struct io_file_t
+{
+    os_file_t *file;
+} io_file_t;
 
 static os_file_t *fd_data(io_t *self)
 {
-    fd_t *fd = io_data(self);
-    return *fd;
+    io_file_t *file = io_data(self);
+    return file->file;
 }
 
 static size_t fd_read(io_t *self, void *dst, size_t size)
@@ -70,8 +75,13 @@ static const io_callbacks_t kFileCallbacks = {
 USE_DECL
 io_t *io_file(const char *path, os_access_t mode)
 {
-    OS_RESULT(fd_t) file = os_file_open(path, mode);
-    io_t *io = io_new(&kFileCallbacks, mode, path, &file, sizeof(fd_t));
+    OS_RESULT(os_file_t *) file = os_file_open(path, mode);
+    os_file_t *fd = os_value(file);
+    CTASSERT(fd != NULL);
+    logverbose("file = %p, fd = %p, diff = %zu", file, fd, (uintptr_t)fd - (uintptr_t)file);
+    io_file_t it = { .file = fd };
+    
+    io_t *io = io_new(&kFileCallbacks, mode, path, &it, sizeof(io_file_t));
     io->error = os_error(file);
     return io;
 }

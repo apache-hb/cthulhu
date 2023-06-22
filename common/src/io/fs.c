@@ -14,6 +14,8 @@ static vector_t *path_split(const char *path)
     return str_split(path, "/");
 }
 
+// fs interface api
+
 static inode_t *query_inode(fs_t *fs, inode_t *node, const char *name)
 {
     CTASSERT(fs != NULL);
@@ -71,6 +73,127 @@ static void delete_dir(fs_t *fs, inode_t *node, const char *name)
 
     fs->cb->fnDeleteDir(fs, node, name);
 }
+
+static inode_t *create_file(fs_t *fs, inode_t *node, const char *name)
+{
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
+    CTASSERT(name != NULL);
+
+    CTASSERT(inode_is(node, eNodeDir));
+    CTASSERT(fs->cb->fnCreateFile != NULL);
+
+    return fs->cb->fnCreateFile(fs, node, name);
+}
+
+static void delete_file(fs_t *fs, inode_t *node, const char *name)
+{
+    CTASSERT(fs != NULL);
+    CTASSERT(node != NULL);
+    CTASSERT(name != NULL);
+
+    CTASSERT(inode_is(node, eNodeDir));
+    CTASSERT(fs->cb->fnDeleteFile != NULL);
+
+    fs->cb->fnDeleteFile(fs, node, name);
+}
+
+// fs file api
+
+void fs_file_create(fs_t *fs, const char *path)
+{
+    vector_t *parts = path_split(path);
+    size_t len = vector_len(parts);
+    inode_t *current = fs->root;
+
+    for (size_t i = 0; i < len - 1; i++)
+    {
+        const char *part = vector_get(parts, i);
+        inode_t *node = query_inode(fs, current, part);
+        switch (node->type)
+        {
+        case eNodeDir: current = node; break;
+        default: return;
+        }
+    }
+
+    create_file(fs, current, vector_tail(parts));
+}
+
+bool fs_file_exists(fs_t *fs, const char *path)
+{
+    vector_t *parts = path_split(path);
+    size_t len = vector_len(parts);
+    inode_t *current = fs->root;
+
+    for (size_t i = 0; i < len - 1; i++)
+    {
+        const char *part = vector_get(parts, i);
+        inode_t *node = query_inode(fs, current, part);
+        switch (node->type)
+        {
+        case eNodeDir: current = node; break;
+        default: return false;
+        }
+    }
+
+    inode_t *file = query_inode(fs, current, vector_tail(parts));
+    return inode_is(file, eNodeFile);
+}
+
+void fs_file_delete(fs_t *fs, const char *path)
+{
+    vector_t *parts = path_split(path);
+    size_t len = vector_len(parts);
+    inode_t *current = fs->root;
+
+    for (size_t i = 0; i < len - 1; i++)
+    {
+        const char *part = vector_get(parts, i);
+        inode_t *node = query_inode(fs, current, part);
+        switch (node->type)
+        {
+        case eNodeDir: current = node; break;
+        default: return;
+        }
+    }
+
+    delete_file(fs, current, vector_tail(parts));
+}
+
+io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
+{
+    // create a file if it doesn't exist then open it
+
+    vector_t *parts = path_split(path);
+    size_t len = vector_len(parts);
+    inode_t *current = fs->root;
+
+    for (size_t i = 0; i < len - 1; i++)
+    {
+        const char *part = vector_get(parts, i);
+        inode_t *node = query_inode(fs, current, part);
+        switch (node->type)
+        {
+        case eNodeDir: current = node; break;
+        case eNodeInvalid: current = create_dir(fs, current, part); break;
+        default: return NULL;
+        }
+    }
+
+    inode_t *file = query_inode(fs, current, vector_tail(parts));
+    switch (file->type)
+    {
+    case eNodeFile:
+        return query_file(fs, file, flags);
+    case eNodeInvalid: 
+        file = create_file(fs, current, vector_tail(parts)); 
+        return query_file(fs, file, flags);
+    default: return NULL;
+    }
+}
+
+// fs dir api
 
 static inode_t *get_dir_or_create(fs_t *fs, inode_t *node, const char *name)
 {
@@ -174,6 +297,8 @@ void fs_dir_delete(fs_t *fs, const char *path)
     // TODO: recursively delete all files and directories inside the directory
     delete_dir(fs, current, vector_tail(parts));
 }
+
+// fs sync
 
 static void sync_file(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
 {

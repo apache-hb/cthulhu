@@ -5,6 +5,8 @@
 #include "base/analyze.h"
 #include "base/macros.h"
 
+#include <stddef.h>
+
 BEGIN_API
 
 typedef struct io_t io_t;

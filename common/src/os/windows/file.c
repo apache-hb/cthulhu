@@ -3,6 +3,7 @@
 #include "base/panic.h"
 #include "base/util.h"
 
+#include <limits.h>
 
 typedef struct os_file_t
 {
@@ -56,10 +57,10 @@ OS_RESULT(size_t) os_file_read(os_file_t *file, void *buffer, size_t size)
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
-    CTASSERT(size > 0);
+    CTASSERT(size > 0 && size <= DWORD_MAX);
 
     DWORD readSize = 0;
-    BOOL result = ReadFile(file->handle, buffer, size, &readSize, NULL);
+    BOOL result = ReadFile(file->handle, buffer, (DWORD)size, &readSize, NULL);
 
     size_t read = readSize;
 
@@ -75,10 +76,10 @@ OS_RESULT(size_t) os_file_write(os_file_t *file, const void *buffer, size_t size
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
-    CTASSERT(size > 0);
+    CTASSERT(size > 0 && size <= DWORD_MAX);
 
     DWORD writtenSize = 0;
-    BOOL result = WriteFile(file->handle, buffer, size, &writtenSize, NULL);
+    BOOL result = WriteFile(file->handle, buffer, (DWORD)size, &writtenSize, NULL);
 
     size_t written = writtenSize;
 

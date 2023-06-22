@@ -14,7 +14,7 @@ typedef struct os_dir_t
     WIN32_FIND_DATA data;
 } os_dir_t;
 
-OS_RESULT(os_iter_t *) os_dir_iter(const char *path)
+OS_RESULT(os_iter_t *) os_iter_begin(const char *path)
 {
     CTASSERT(path != NULL);
 
@@ -43,7 +43,7 @@ OS_RESULT(os_iter_t *) os_dir_iter(const char *path)
     return win_result(ERROR_SUCCESS, &iter, sizeof(iter));
 }
 
-void os_iter_close(os_iter_t *iter)
+void os_iter_end(os_iter_t *iter)
 {
     CTASSERT(iter != NULL);
 
