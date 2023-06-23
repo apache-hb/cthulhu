@@ -128,25 +128,30 @@ int main(int argc, const char **argv)
 
     const char *path = argv[1];
 
-    const char *dir = format(CWD "test-out" NATIVE_PATH_SEPARATOR "%s", path);
-    const char *libPath = format("%s" NATIVE_PATH_SEPARATOR "it" OBJ, dir);
-    const char *srcPath = format("%s" NATIVE_PATH_SEPARATOR "out.c", dir);
+    OS_RESULT(const char *) cwd = os_dir_current();
+    CTASSERT(os_error(cwd) == 0);
 
-#if OS_WINDOWS
-    system(format("if not exist \"%s\" md %s", dir, dir));
-#else
-    system(format("mkdir -p %s", dir));
-#endif
+    const char *testDir = format("%s" NATIVE_PATH_SEPARATOR "test-out", OS_VALUE(const char*, cwd));
+    const char *runDir = format("%s" NATIVE_PATH_SEPARATOR "%s", testDir, path);
+    const char *libPath = format("%s" NATIVE_PATH_SEPARATOR "it" OBJ, runDir);
+    const char *srcPath = format("%s" NATIVE_PATH_SEPARATOR "c89/out.c", runDir);
+
+    OS_RESULT(bool) create = os_dir_create(testDir);
+    CTASSERT(os_error(create) == 0);
+
+    fs_t *dst = fs_physical(reports, runDir);
 
     CHECK_REPORTS(reports, "failed to open output files");
 
     c89_emit_t emit = {
         .reports = reports,
-        .fs = fs_virtual(reports, "c89")
+        .fs = fs_virtual(reports, "out")
     };
 
     c89_emit(emit, ssa);
     CHECK_REPORTS(reports, "emitting ssa");
+
+    fs_sync(dst, emit.fs);
 
 #if OS_WINDOWS
     int status = system(format("cl /nologo /c %s /Fo%s", srcPath, libPath));

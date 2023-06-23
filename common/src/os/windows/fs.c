@@ -89,14 +89,14 @@ OS_RESULT(bool) os_dir_delete(const char *path)
 
 OS_RESULT(bool) os_dir_exists(const char *path)
 {
+    logverbose("os_dir_exists: %s", path);
     OS_RESULT(os_dirent_t) type = os_dirent_type(path);
-    if (os_error(type))
-    {
-        return type;
-    }
+    if (os_error(type)) { return type; }
+
+    logverbose("no error");
 
     os_dirent_t ent = OS_VALUE(os_dirent_t, type);
-    bool result = ent != eOsNodeNone;
+    bool result = ent == eOsNodeDir;
     return win_result(ERROR_SUCCESS, &result, sizeof(bool));
 }
 

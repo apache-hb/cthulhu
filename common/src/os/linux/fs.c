@@ -2,6 +2,8 @@
 
 #include "base/panic.h"
 
+#include "report/report.h"
+
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -12,7 +14,7 @@ OS_RESULT(bool) os_file_create(const char *path)
 {
     CTASSERT(path != NULL);
 
-    FILE *fd = fopen(path, "w");
+    FILE *fd = fopen(path, "wb+");
     if (fd == NULL)
     {
         return linux_error(errno);
@@ -21,7 +23,7 @@ OS_RESULT(bool) os_file_create(const char *path)
     fclose(fd);
 
     bool created = (errno == 0);
-    return linux_result(errno, &created, sizeof(bool));
+    return linux_result(0, &created, sizeof(bool));
 }
 
 USE_DECL
@@ -52,13 +54,20 @@ OS_RESULT(bool) os_dir_create(const char *path)
 {
     CTASSERT(path != NULL);
 
+    logverbose("os_dir_create: %s", path);
+
     if (mkdir(path, 0777) != 0)
     {
-        return linux_error(errno);
+        if (errno != EEXIST)
+        {
+            return linux_error(errno);
+        }
+
+        errno = 0;
     }
 
     bool created = (errno == 0);
-    return linux_result(errno, &created, sizeof(bool));
+    return linux_result(0, &created, sizeof(bool));
 }
 
 USE_DECL
@@ -103,6 +112,12 @@ OS_RESULT(os_dirent_t) os_dirent_type(const char *path)
     struct stat sb;
     if (stat(path, &sb) != 0)
     {
+        if (errno == ENOENT)
+        {
+            os_dirent_t ent = eOsNodeNone;
+            return os_result_new(0, &ent, sizeof(os_dirent_t));
+        }
+
         return linux_error(errno);
     }
 

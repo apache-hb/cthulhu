@@ -108,7 +108,7 @@ static const char *get_digit_name(c89_ssa_emit_t *emit, digit_t digit, sign_t si
     case eDigitLong:
         return sign == eSigned ? "signed long long" : "unsigned long long";
     case eDigitSize:
-        return sign == eSigned ? "ssize_t" : "size_t";
+        return sign == eSigned ? "ptrdiff_t" : "size_t"; /* TODO: is ptrdiff the same as signed size_t */
     case eDigitPtr:
         return sign == eSigned ? "intptr_t" : "uintptr_t";
     default:
@@ -992,11 +992,13 @@ void c89_emit(c89_emit_t config, ssa_module_t *module)
     {
         WRITE_SOURCE(&emit, "#include <stdbool.h>\n");
         WRITE_SOURCE(&emit, "#include <stddef.h>\n");
+        WRITE_SOURCE(&emit, "#include <stdint.h>\n");
     }
 
     WRITE_HEADER(&emit, "#pragma once\n\n");
     WRITE_HEADER(&emit, "#include <stdbool.h>\n");
     WRITE_HEADER(&emit, "#include <stddef.h>\n");
+    WRITE_HEADER(&emit, "#include <stdint.h>\n");
 
     WRITE_HEADER(&emit, "\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n\n");
 
