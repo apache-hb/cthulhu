@@ -1,7 +1,7 @@
 option('languages', type : 'array',
     description : 'select which languages to compile',
     choices : [ 'ctu', 'pl0', 'jvm', 'cc', 'lox', 'example' ],
-    value : [ 'ctu', 'pl0', 'example' ]
+    value : [ 'ctu', 'pl0', 'jvm', 'example' ]
 )
 
 option('interfaces', type : 'array',

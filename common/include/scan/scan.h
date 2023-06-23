@@ -40,7 +40,7 @@ NODISCARD CONSTFN
 scan_t *scan_invalid(void);
 
 NODISCARD RET_RANGE(0, size)
-size_t scan_read(scan_t *scan, void *dst, size_t size);
+size_t scan_read(scan_t *scan, OUT_WRITES(size) void *dst, size_t size);
 
 NODISCARD
 scan_t *scan_io(reports_t *reports, const char *language, io_t *io);

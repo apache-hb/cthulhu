@@ -122,7 +122,7 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
     CTASSERT(lifetime != NULL);
     CTASSERT(lang != NULL);
 
-    CTASSERT(lang->fnCreate != NULL);
+    CTASSERTF(lang->fnCreate != NULL, "language `%s` has no create function", lang->id);
 
     for (size_t i = 0; lang->exts[i] != NULL; i++)
     {
@@ -171,9 +171,6 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
 {
     CTASSERT(lifetime != NULL);
 
-    const char *name = stage_to_string(stage);    
-    logverbose("=== %s ===", name);
-
     map_iter_t iter = map_iter(lifetime->modules);
     while (map_has_next(&iter))
     {
@@ -188,7 +185,6 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
 
         if (!context_requires_compiling(ctx) || fnPass == NULL)
         {
-            logverbose("skipped %s:fnCompilePass(%s)", lang->id, id);
             continue;
         }
 

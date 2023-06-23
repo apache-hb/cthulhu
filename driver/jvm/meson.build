@@ -1,5 +1,7 @@
 src = [ 
-    'src/main.c'
+    'src/main.c',
+    'src/jvm.c',
+    'src/bytecode.c'
 ]
 
 jvm = library('jvm', src,

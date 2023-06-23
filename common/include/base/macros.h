@@ -30,7 +30,7 @@
  * @defgroup ColourMacros ANSI escape string colour macros
  * @brief ANSI escape string colour macros
  *
- * These are useful for formatting messages to the console.
+ * Useful for formatting messages to the console.
  * @{
  */
 

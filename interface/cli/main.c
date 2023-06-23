@@ -54,15 +54,7 @@ static void parse_source(lifetime_t *lifetime, const char *path)
         return;
     }
 
-    OS_RESULT(const char*) cwd = os_dir_current();
-    if (os_error(cwd)) 
-    {  
-        message_t *id = report(reports, eFatal, NULL, "failed to get current working directory");
-        report_note(id, "%s", os_decode(os_error(cwd)));
-        return;
-    }
-
-    io_t *io = io_file(format("%s" NATIVE_PATH_SEPARATOR "%s", OS_VALUE(const char *, cwd), path), eAccessRead | eAccessText);
+    io_t *io = io_file(path, eAccessRead);
     if (io_error(io) != 0)
     {
         report(reports, eFatal, NULL, "failed to load source `%s`\n%s", path, os_decode(io_error(io)));

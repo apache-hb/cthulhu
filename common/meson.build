@@ -27,7 +27,8 @@ stacktrace = declare_dependency(
 src = [
     'src/base/base.c',
     'src/base/panic.c',
-    'src/base/memory.c'
+    'src/base/memory.c',
+    'src/base/endian.c'
 ]
 
 libbase = library('base', src,
