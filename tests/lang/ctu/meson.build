@@ -1,7 +1,4 @@
-subdir_done()
-
 dir = meson.current_source_dir()
-ctc = harness['ctu']
 
 tests = {
     'attribs': {
@@ -216,16 +213,18 @@ foreach case, tests : tests
 
     foreach name : passes
         path = dir/where/'pass'/name + '.ct'
-        test('pass-' + case + '-' + name, ctc,
-            args : [ path ],
+        id = 'pass-' + case + '-' + name
+        test(id, harness,
+            args : [ id, path ],
             suite : 'ctu'
         )
     endforeach
 
     foreach name : fails
         path = dir/where/'fail'/name + '.ct'
-        test('fail-' + case + '-' + name, ctc,
-            args : [ path ],
+        id = 'fail-' + case + '-' + name
+        test(id, harness,
+            args : [ id, path ],
             suite : 'ctu',
             should_fail : true
         )
@@ -244,8 +243,9 @@ foreach name, data : cases
             sources += [ root/file + '.ct' ]
         endforeach
 
-        test('fail-' + name + '-' + id, ctc,
-            args : sources,
+        id = 'fail-' + name + '-' + id
+        test(id, harness,
+            args : [ id ] + sources,
             suite : 'ctu',
             should_fail : true
         )
@@ -259,18 +259,19 @@ foreach name, data : cases
             sources += [ root/file + '.ct' ]
         endforeach
 
-        test('pass-' + name + '-' + id, ctc,
-            args : sources,
+        id = 'pass-' + name + '-' + id
+        test(id, harness,
+            args : [ id ] + sources,
             suite : 'ctu'
         )
     endforeach
 endforeach
 
-
 foreach case, success : crashes
     path = dir/'crashes'/case + '.ct'
-    test('crash-' + case, ctc,
-        args : [ path ],
+    id = 'crash-' + case
+    test(id, harness,
+        args : [ id, path ],
         suite : 'ctu',
         should_fail : not success
     )

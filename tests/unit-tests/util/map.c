@@ -93,11 +93,36 @@ TEST(test_map_entries, {
     }
 })
 
+TEST(test_map_delete, {
+    map_t *map = map_new(64);
+    for (size_t i = 0; i < TOTAL_ITEMS; i++) 
+    {
+        map_set(map, kSetItems[i], (char*)kSetItems[i]);
+    }
+
+    for (size_t i = 0; i < TOTAL_ITEMS; i++) 
+    {
+        map_delete(map, kSetItems[i]);
+    }
+
+    vector_t *entries = map_entries(map);
+
+    printf("%zu\n", vector_len(entries));
+
+    SHOULD_PASS("correct entry count", vector_len(entries) == 0);
+
+    for (size_t i = 0; i < TOTAL_ITEMS; i++)
+    {
+        SHOULD_PASS("map entry correct", map_get(map, kSetItems[i]) == NULL);
+    }
+})
+
 HARNESS("maps", {
     ENTRY("construction", test_map_construction),
     ENTRY("insertion", test_map_insertion),
     ENTRY("defaults", test_map_default),
     ENTRY("insertion-ptr", test_map_insertion_ptr),
     ENTRY("iter", test_map_iter),
-    ENTRY("entries", test_map_entries)
+    ENTRY("entries", test_map_entries),
+    ENTRY("delete", test_map_delete)
 })

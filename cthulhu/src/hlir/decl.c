@@ -6,7 +6,7 @@
 #include "common.h"
 
 #define IS_AGGREGATE(hlir) (hlir_is(hlir, eHlirStruct) || hlir_is(hlir, eHlirUnion))
-#define IS_ENUM(hlir) (hlir_is(hlir, eHlirEnum))
+#define IS_ENUM(hlir) (hlir_is(hlir, eHlirEnum) || hlir_is(hlir, eHlirVariant))
 
 ///
 /// builder functions
@@ -96,8 +96,17 @@ void hlir_add_field(hlir_t *self, hlir_t *field)
 void hlir_add_case(hlir_t *self, hlir_t *field)
 {
     CTASSERT(self != NULL);
-    CTASSERTM(IS_ENUM(self), "hlir-add-case called on non-union hlir");
-    CTASSERTM(hlir_is(field, eHlirEnumCase), "hlir-add-case called with non-field hlir");
+    CTASSERTM(IS_ENUM(self), "hlir-add-case called on non-enum hlir");
+
+    if (hlir_is(self, eHlirEnum))
+    {
+        CTASSERTM(hlir_is(field, eHlirEnumCase), "hlir-add-case called with non-field hlir");
+    }
+
+    if (hlir_is(self, eHlirVariant))
+    {
+        CTASSERTM(hlir_is(field, eHlirVariantCase), "hlir-add-case called with non-field hlir");
+    }
 
     vector_push(&self->fields, field);
 }

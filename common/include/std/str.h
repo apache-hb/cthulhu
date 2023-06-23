@@ -168,13 +168,34 @@ size_t str_rfind(IN_STRING const char *str, IN_STRING const char *sub);
 MUST_INSPECT CONSTFN 
 size_t str_rfindn(IN_READS(len) const char *str, size_t len, IN_STRING const char *sub);
 
+/**
+ * @brief find the first instance of a substring in a string
+ * 
+ * @param str the string to search
+ * @param sub the substring to search for
+ * @return the index of the first instance of @a sub in @a str, or SIZE_MAX if @a sub is not found
+ */
 MUST_INSPECT CONSTFN
 size_t str_find(IN_STRING const char *str, IN_STRING const char *sub);
 
+/**
+ * @brief count the number of times any of a set of characters in @a chars appears in @a str
+ * 
+ * @param str the string to search
+ * @param chars the characters to search for
+ * @return the number of times any of @a chars appears in @a str
+ */
 MUST_INSPECT CONSTFN
 size_t str_count_any(IN_STRING const char *str, IN_STRING const char *chars);
 
-// TODO: docs
+/**
+ * @brief check if a character is any of a set of characters
+ * 
+ * @param c the character to check
+ * @param chars the characters to check against
+ * @return true @a c is any of @a chars
+ * @return false @a c is not any of @a chars
+ */
 bool char_is_any_of(char c, const char *chars);
 
 /**
@@ -200,6 +221,13 @@ bool str_contains(IN_STRING const char *str, IN_STRING const char *sub);
 NODISCARD
 char *str_replace(IN_STRING const char *str, IN_STRING const char *sub, IN_STRING const char *repl);
 
+/**
+ * @brief replace all instances of a each substring in a string with provided replacement
+ * 
+ * @param str the string to replace elements in
+ * @param repl a map of substrings to replace and their replacements
+ * @return a copy of @a str with all instances of substrings in @a repl replaced
+ */
 NODISCARD
 char *str_replace_many(IN_STRING const char *str, IN_NOTNULL map_t *repl);
 
@@ -256,6 +284,12 @@ bool str_equal(IN_STRING const char *lhs, IN_STRING const char *rhs);
 NODISCARD
 char *str_filename_noext(IN_STRING const char *path);
 
+/**
+ * @brief get the filename from @a path
+ * 
+ * @param path the path to get the filename from
+ * @return the filename extracted from @a path
+ */
 NODISCARD
 char *str_filename(IN_STRING const char *path);
 
@@ -268,6 +302,12 @@ char *str_filename(IN_STRING const char *path);
 NODISCARD
 char *str_noext(IN_STRING const char *path);
 
+/**
+ * @brief get the last file extension from a path
+ * 
+ * @param path the path to get the extension from
+ * @return the last extension in @a path
+ */
 NODISCARD
 char *str_ext(IN_STRING const char *path);
 
@@ -280,13 +320,25 @@ char *str_ext(IN_STRING const char *path);
 NODISCARD
 char *str_upper(IN_STRING const char *str);
 
+/**
+ * @brief lowercase an ascii string
+ * 
+ * @param str the string
+ * @return @a str with all uppercase charaters replaced with lowercase
+ */
 NODISCARD
 char *str_lower(IN_STRING const char *str);
 
+/**
+ * @brief get the lowercase version of a character
+ * 
+ * @param c the character
+ * @return the lowercase version of @a c, or NUL if @a c is not an ascii
+ */
 NODISCARD CONSTFN 
 char str_tolower(int c);
 
-#define STR_WHITESPACE " \t\r\v\n\f" //< all whitespace charaters
+#define STR_WHITESPACE " \t\r\v\n\f" ///< all whitespace charaters
 
 /** @} */
 

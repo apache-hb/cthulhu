@@ -1,12 +1,12 @@
 #include "base/macros.h"
 #include "base/panic.h"
 
-#include <limits.h>
-#include <string.h>
-
-#define COMPILER_SOURCE 1
+#include "report/report.h"
 
 #include "interop/flex.h"
+
+#include <limits.h>
+#include <string.h>
 
 void flex_action(where_t *where, const char *text)
 {
@@ -29,7 +29,7 @@ void flex_action(where_t *where, const char *text)
 
 int flex_input(scan_t *scan, char *out, int size)
 {
-    CTASSERT(size <= INT_MAX);
+    CTASSERTF(size <= INT_MAX, "flex-input(scan=%s, size=%d > INT_MAX)", scan_path(scan), size);
     return (int)scan_read(scan, out, size);
 }
 
@@ -39,4 +39,23 @@ void flex_init(where_t *where)
     where->firstColumn = 0;
     where->lastLine = 0;
     where->lastColumn = 0;
+}
+
+void flex_update(where_t *where, where_t *offsets, int steps)
+{    
+    if (steps)
+    {
+        where_t rhs1 = offsets[1];
+        where_t rhsn = offsets[steps];
+
+        where->firstLine = rhs1.firstLine;
+        where->firstColumn = rhs1.firstColumn;
+        where->lastLine = rhsn.lastLine;
+        where->lastColumn = rhsn.lastColumn;
+    }
+    else
+    {
+        where->lastLine = offsets[0].lastLine;
+        where->lastColumn = offsets[0].lastColumn;
+    }
 }

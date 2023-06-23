@@ -331,4 +331,9 @@ hlir_t *hlir_variant_case(node_t *node, const char *name, hlir_t *value, vector_
 hlir_t *hlir_access(node_t *node, hlir_t *expr, hlir_t *field);
 hlir_t *hlir_index(node_t *node, hlir_t *array, hlir_t *index);
 
+/**
+ * underlying is for things like enums where their cases are namespaces by the enum type
+ */
+hlir_t *hlir_module_ex(node_t *node, const char *name, hlir_t *underlying, vector_t *decls);
+
 /** @} */

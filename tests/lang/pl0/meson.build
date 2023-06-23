@@ -1,7 +1,4 @@
-subdir_done()
-
 dir = meson.current_source_dir()
-pl0c = harness['pl0']
 
 tests = {
     'consts': {
@@ -61,7 +58,8 @@ crashes = {
     '3': false, '4': false, '5': false, '6': false,
     '7': false, '8': false, '9': false, '10': false,
     '11': false, '12': false, '13': false, '14': false,
-    '15': false, '16': false, '17': false, '18': false,
+    '15': false, # 16 omitted
+    '17': false, '18': false,
     '19': false, '20': true, '21': false, '22': false, 
     '23': false, '24': false, '25': false, '26': false,
     '27': true, '28': true, '29': true, '30': false,
@@ -91,16 +89,18 @@ foreach case, tests : tests
 
     foreach name : passes
         path = dir/where/'pass'/name + '.pl0'
-        test('pass-' + case + '-' + name, pl0c,
-            args : [ path ],
+        id = 'pass-' + case + '-' + name
+        test(id, harness,
+            args : [ id, path ],
             suite : 'pl0'
         )
     endforeach
 
     foreach name : fails
         path = dir/where/'fail'/name + '.pl0'
-        test('fail-' + case + '-' + name, pl0c,
-            args : [ path ],
+        id = 'fail-' + case + '-' + name
+        test(id, harness,
+            args : [ id, path ],
             suite : 'pl0',
             should_fail : true
         )
@@ -113,8 +113,9 @@ foreach case, cfg : multi
         paths += [ dir/case.replace('.', '/')/file + '.pl0' ]
     endforeach
 
-    test('pass-multi-' + case, pl0c,
-        args : paths,
+    id = 'pass-multi-' + case
+    test(id, harness,
+        args : [ id ] + paths,
         suite : 'pl0',
         should_fail : not cfg['pass']
     )
@@ -122,8 +123,9 @@ endforeach
 
 foreach case, success : crashes
     path = dir/'crashes'/case + '.pl0'
-    test('crash-' + case, pl0c,
-        args : [ path ],
+    id = 'crash-' + case
+    test(id, harness,
+        args : [ id, path ],
         suite : 'pl0',
         should_fail : not success
     )

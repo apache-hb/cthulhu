@@ -77,5 +77,5 @@ void ap_version(const ap_t *ap)
 {
     printf("%s\n", ap->desc);
     printf("interface version: %" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION "\n", VERSION_MAJOR(ap->version), VERSION_MINOR(ap->version), VERSION_PATCH(ap->version));
-    printf("cthulhu version: %" PRI_VERSION ".%" PRI_VERSION ".%" PRI_VERSION "\n", CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH);
+    printf("cthulhu version: %d.%d.%d\n", CTHULHU_MAJOR, CTHULHU_MINOR, CTHULHU_PATCH);
 }

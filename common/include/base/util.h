@@ -55,6 +55,12 @@ void *ctu_memdup(IN_READS(size) const void *ptr, size_t size);
 
 /** @} */
 
+/**
+ * @brief hash a pointer value
+ * 
+ * @param ptr the pointer to hash
+ * @return the hash of the pointer
+ */
 NODISCARD CONSTFN 
 size_t ptrhash(const void *ptr);
 

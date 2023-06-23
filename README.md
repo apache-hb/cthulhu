@@ -32,12 +32,16 @@ ninja -C build test # build and run tests
 * `data` - various data files
 
 * `driver` - language frontends
-  * `pl0` - example pl0 frontend, good for referencing how to use the common framework
+  * `pl0` - pl0 frontend, good for referencing how to use the common framework
   * `ctu` - cthulhu language frontend (TODO)
+  * `lox` - lox language frontend (TODO)
+  * `jvm` - jvm classfile consumer (TODO)
   * `cc` - C11 frontend (TODO)
+  * `cpp` - C preprocessor (TODO)
+  * `example` - example frontend 
 
 * `interface`
-  * `cmd` - command line user interface
+  * `cli` - command line user interface
   * `gui` - graphical user interface (TODO)
 
 * `common/include` - common code
@@ -55,21 +59,20 @@ ninja -C build test # build and run tests
     * `emit` - tree writing
     * `hlir` - common typed ast
     * `util` - common utilities
-    * `ssa` - ssa emitter (TODO)
+    * `ssa` - ssa emitter
 
 * `subprojects` - 3rd & 1st party dependencies
   * `cjson` - json serialization + deserialization library
   * `mini-gmp` - fallback gmp library if system gmp isnt installed
-  * `ct-test` - testing framework
   * `glad` - gl loader for gui interface
   * `glfw` - windowing library for gui interface
   * `imgui` - ui library for gui interface
 
 * `tests` - tests
   * `lang` - language specific tests
-  * `interface` - interface specific tests
   * `unit-tests` - compiler code unit tests
-  * `harness` - language test harness interface
+  * `corpus` - afl fuzzing corpus
+  * `fuzzing` - fuzzing interface
 
 * `tools` - tools
   * `tune-map` - map runtime perf tuning

@@ -44,9 +44,8 @@ ssa = declare_dependency(
 )
 
 src = [
-    'src/emit/c89-hlir.c',
-    'src/emit/c89-ssa.c',
-
+    'src/emit/c89.c',
+    'src/emit/jvm.c',
     'src/emit/common.c'
 ]
 
@@ -63,19 +62,18 @@ emit = declare_dependency(
 )
 
 src = [
-    'src/mediator/mediator.c',
-    'src/mediator/language.c',
-    'src/mediator/lifetime.c'
+    'src/mediator/interface.c',
+    'src/mediator/driver.c'
 ]
 
-libmediate = library('mediate', src,
-    dependencies : [ std, emit ],
+libmediator = library('mediator', src,
+    dependencies : [ std ],
     c_args : args,
     include_directories : 'include'
 )
 
-mediate = declare_dependency(
-    link_with : libmediate,
+mediator = declare_dependency(
+    link_with : libmediator,
     include_directories : [ 'include', versiondir ],
     dependencies : [ base ]
 )

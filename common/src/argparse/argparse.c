@@ -87,6 +87,7 @@ static ap_param_t *add_param(ap_group_t *self, ap_param_type_t type, const char 
         const ap_param_t *old = map_get(self->parent->nameLookup, names[idx]);
         if (old != NULL)
         {
+            // TODO: better logging
             printf("failed to add name (name=%s,param=%s)\n", desc, names[idx]);
             printf("name already exists (param=%s)\n", old->desc);
             continue;
@@ -238,7 +239,7 @@ int ap_parse(ap_t *self, reports_t *reports, int argc, const char **argv)
 {
     char *args = join_args(argc, argv);
     io_t *io = io_string("<command-line>", args);
-    scan_t *scan = scan_io(reports, "ap2", io, self);
+    scan_t *scan = scan_io(reports, "ap2", io);
 
     scan_set(scan, self);
     compile_scanner(scan, &kCallbacks);

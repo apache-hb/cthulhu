@@ -1,4 +1,4 @@
-project('cthulhu', [ 'c' ],
+project('cthulhu', [ 'c', 'cpp' ],
     license : 'LGPLv3',
     version : '0.2.4',
     meson_version : '>=0.59',
@@ -35,7 +35,7 @@ config = {
     'major': parts[0].to_int(),
     'minor': parts[1].to_int(),
     'patch': parts[2].to_int(),
-    'source': cwd/'src' + ' ' + cwd/'include' + ' ' + cwd/'driver'
+    'source': cwd/'interface' + ' ' + cwd/'common' + ' ' + cwd/'cthulhu' + ' ' + cwd/'driver'
 }
 
 configure_file(
@@ -61,8 +61,11 @@ if tuning.allowed()
     args += [ '-DENABLE_TUNING=1' ]
 endif
 
-if buildtype.startswith('debug')
+if buildtype.contains('debug')
+    message('enabling `ENABLE_DEBUG` for debug build')
     args += [ '-DENABLE_DEBUG=1' ]
+else
+    message('disabling `ENABLE_DEBUG` for release build')
 endif
 
 # bison generates a few unused variables
@@ -78,7 +81,6 @@ if host == 'windows'
     endif
 else
     parseargs += [ '-Wdeprecated' ]
-    deps += [ cc.find_library('m'), cc.find_library('dl') ]
 endif
 
 # we dont use these features so might as well
@@ -147,17 +149,19 @@ interfaces = {}
 plugins = {}
 
 foreach lang : get_option('languages')
-    subdir('components/driver'/lang)
+    subdir('driver'/lang)
 endforeach
 
-subdir('components/interface')
+subdir('interface/support')
 
-foreach plugin : get_option('plugins')
-    subdir('components/plugin'/plugin)
+foreach interface : get_option('interfaces')
+    subdir('interface'/interface)
 endforeach
 
-#subdir('tests/harness')
-subdir('tests/unit-tests')
+if not meson.is_subproject()
+    subdir('tests/unit-tests')
+    subdir('interface/harness')
+endif
 
 foreach lang : get_option('languages')
     subdir('tests/lang'/lang)
@@ -195,7 +199,7 @@ if doxygen.found()
         configuration : config
     )
 
-    run_target('docs', command : [doxygen, meson.current_build_dir() / 'Doxyfile'])
+    run_target('docs', command : [ doxygen, meson.current_build_dir() / 'Doxyfile' ])
 endif
 
 # TODO: order of files should not matter

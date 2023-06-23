@@ -71,11 +71,11 @@ static char *format_location(const char *base, const scan_t *scan, where_t where
     const char *path = scan_path(scan);
     if (is_multiline_report(where))
     {
-        return format("%s source [%s:%ld:%ld-%ld:%ld]", language, path + strlen(base), where.firstLine + 1,
+        return format("%s source [%s:%lu:%lu-%lu:%lu]", language, path + strlen(base), where.firstLine + 1,
                       where.firstColumn, where.lastLine + 1, where.lastColumn);
     }
 
-    return format("%s source [%s:%ld:%ld]", language, path + strlen(base), where.firstLine + 1, where.firstColumn);
+    return format("%s source [%s:%lu:%lu]", language, path + strlen(base), where.firstLine + 1, where.firstColumn);
 }
 
 static void report_scanner(const char *base, const node_t *node)

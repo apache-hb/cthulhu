@@ -348,11 +348,14 @@ static void check_attribute(check_t *ctx, hlir_t *hlir)
 
 static void check_identifier_isnt_empty(reports_t *reports, const hlir_t *ident)
 {
+    // TODO: bad taste
+    if (is_entry_point(get_hlir_attributes(ident)->linkage)) { return; }
+
     const char *name = get_hlir_name(ident);
     if (name == NULL || strlen(name) == 0)
     {
         node_t *node = get_hlir_node(ident);
-        report(reports, eFatal, node, "empty identifier");
+        report(reports, eFatal, node, "empty identifier on %s", hlir_to_string(ident));
     }
 }
 

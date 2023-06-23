@@ -1,19 +1,46 @@
 #pragma once
 
-#include "report/report.h"
+#include "cthulhu/mediator/common.h"
 
-#include "cthulhu/mediator/mediator.h"
+#include "std/map.h"
 
-#include "cthulhu/hlir/check.h"
+typedef struct sema_t sema_t;
+typedef struct reports_t reports_t;
+
+typedef struct mediator_t
+{
+    const char *id;
+    version_info_t version;
+} mediator_t;
+
+typedef struct lifetime_t 
+{
+    mediator_t *parent;
+
+    reports_t *reports;
+
+    map_t *extensions;
+
+    map_t *modules;
+} lifetime_t;
+
+typedef struct driver_t 
+{
+    lifetime_t *parent;
+    const language_t *lang;
+} driver_t;
+
+typedef struct context_t 
+{
+    lifetime_t *parent;
+    const language_t *lang;
+
+    const char *name;
+    void *ast;
+    hlir_t *root;
+    sema_t *sema;
+} context_t;
+
+bool context_requires_compiling(const context_t *ctx);
 
 #define EXEC(mod, fn, ...) do { if (mod->fn != NULL) { logverbose("%s:" #fn "()", mod->id); mod->fn(__VA_ARGS__); } } while (0)
-
-lang_handle_t *lang_new(lifetime_t *lifetime, const language_t *lang);
-compile_t *lifetime_add_module(lifetime_t *self, lang_handle_t *handle, const char *name, compile_t *data);
-
-compile_t *compile_init(lang_handle_t *handle, void *ast, sema_t *sema, hlir_t *mod);
-
-void lang_compile(lang_handle_t *handle, compile_t *compile, check_t *check);
-void lang_import(lang_handle_t *handle, compile_t *compile);
-
-void mediator_configure(mediator_t *self, ap_t *ap);

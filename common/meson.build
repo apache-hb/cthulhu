@@ -61,36 +61,55 @@ std = declare_dependency(
     include_directories : 'include'
 )
 
-src = [
-    'src/platform/error.c',
-    'src/platform/file.c',
-    'src/platform/library.c',
-    'src/platform/platform/target.c'.replace('target', target)
-]
+# platform glue code
 
-libplatform = library('platform', src,
+src = [ 'src/os/common.c' ]
+
+libcommon = static_library('common', src,
     c_args : args,
-    dependencies : std,
+    dependencies : [ std ],
     include_directories : 'include'
 )
 
-platform = declare_dependency(
-    link_with : libplatform,
-    dependencies : std,
-    include_directories : 'include'
+common = declare_dependency(
+    link_with : libcommon,
+    dependencies : [ std ],
+    include_directories : [ 'include', 'src' ]
 )
 
-src = [ 'src/io/io.c' ]
+# get the backend
+
+subdir('src/os/target'.replace('target', target))
+
+# create the native library
+
+os = declare_dependency(
+    include_directories : 'include',
+    dependencies : [ std, native ]
+)
+
+src = [ 
+    'src/io/io.c',
+    'src/io/io/common.c',
+    'src/io/io/view.c',
+    'src/io/io/buffer.c',
+    'src/io/io/file.c',
+
+    'src/io/fs.c',
+    'src/io/fs/common.c',
+    'src/io/fs/physical.c',
+    'src/io/fs/virtual.c',
+]
 
 libio = library('io', src,
     c_args : args,
-    dependencies : [ platform, std ],
-    include_directories : 'include'
+    dependencies : [ std, os ],
+    include_directories : [ 'include', 'src/io' ]
 )
 
 io = declare_dependency(
     link_with : libio,
-    dependencies : [ platform, std ],
+    dependencies : [ std, os ],
     include_directories : 'include'
 )
 

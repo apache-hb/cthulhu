@@ -21,8 +21,18 @@ typedef struct
  */
 typedef void (*panic_handler_t)(panic_t panic, const char *fmt, va_list args);
 
-extern panic_handler_t globalPanicHandler;
+/**
+ * @brief global panic handler
+ */
+extern panic_handler_t gPanicHandler;
 
+/**
+ * @brief panic with a message, file, and line
+ * 
+ * @param panic the panic information
+ * @param msg the message to panic with
+ * @param ... the arguments to format
+ */
 FORMAT_ATTRIB(2, 3)
 NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
 
@@ -42,5 +52,6 @@ NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
 
 #define CTASSERTM(expr, msg) CTASSERTF(expr, msg)
 #define CTASSERT(expr) CTASSERTM(expr, #expr)
+#define NEVER(...) CTASSERTF(false, __VA_ARGS__)
 
 #define GLOBAL_INIT() do { static bool init = false; CTASSERTM(!init, "already initialized"); init = true; } while (0)

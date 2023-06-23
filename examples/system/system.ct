@@ -27,6 +27,12 @@ struct Memory {
     kind: MemoryType;
 }
 
+export variant Weapon {
+    default Invalid(msg: str) = 0
+    case Melee(name: str) = 1
+    case Ranged(name: str, ammo: uint) = 2
+}
+
 @extern("printf")
 def printf(fmt: str, args: ...): int;
 

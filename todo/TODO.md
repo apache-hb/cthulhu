@@ -1,6 +1,25 @@
 # TODO
 
+## next up
+
+* rewrite reporting
+    * more detailed location tracking
+    * fix current reports
+    * support for multiple formats
+    * option to disable colouring
+    * complete cthulhu frontend
+    * proper unit testing
+
+* error registry like msvc
+
+* rewrite location tracking
+
+* more docs
+* fix doxygen
+
 ## important
+
+* memory arenas
 
 * ssa backend
     * wasm
@@ -17,19 +36,12 @@
 * deprecate C hlir backend
     * blocked by ssa backend
 
-* rewrite reporting
-    * more detailed location tracking
-    * fix current reports
-    * support for multiple formats
-    * option to disable colouring
-    * complete cthulhu frontend
-    * proper unit testing
+* add newtypes to hlir
 
 * C frontend
     * perhaps support a small subset of C++ so we can use it internally
 
 * unit tests for everything in `/common/`
-* complete api docs
 * driver specific config support
 * replace mpq with mpfr (rounding is important)
 * profile startup time
@@ -45,7 +57,6 @@
 * rewrite gui frontend
 * add language server support
 * move to incremental compilation
-* error registry like msvc
 * more frontend tests
 * continued code cleanup
 * add plugin support back in

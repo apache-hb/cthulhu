@@ -146,3 +146,21 @@ ssa_value_t *ssa_value_ptr_new(const ssa_type_t *type, const mpz_t digit)
     memcpy(value->digit, digit, sizeof(mpz_t));
     return value;
 }
+
+const char *ssa_type_to_string(const ssa_type_t *type)
+{
+    switch (type->kind)
+    {
+    case eTypeDigit: return format("digit(%s, %s)", hlir_digit_to_string(type->digit), hlir_sign_to_string(type->sign));
+    case eTypeBool: return "bool";
+    case eTypePointer: return format("ptr(%s)", ssa_type_to_string(type->ptr));
+    case eTypeString: return "string";
+    case eTypeArray: return format("array(%s, %zu)", ssa_type_to_string(type->arr), type->size);
+    case eTypeStruct: return format("struct(%s)", type->name);
+    case eTypeUnion: return format("union(%s)", type->name);
+    case eTypeEmpty: return "empty";
+    case eTypeUnit: return "unit";
+
+    default: return format("unknown(%s)", ssa_kind_name(type->kind));
+    }
+}

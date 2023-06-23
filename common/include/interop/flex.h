@@ -38,6 +38,8 @@ int flex_input(scan_t *scan, char *out, int size);
  */
 void flex_init(where_t *where);
 
+void flex_update(where_t *where, where_t *offsets, int steps);
+
 /**
  * used to track source locations inside flex and bison
  */
@@ -53,22 +55,7 @@ void flex_init(where_t *where);
         (result) = YY_NULL;                                                                                            \
     }
 
-#define YYLLOC_DEFAULT(current, rhs, offset)                                                                           \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        if (offset)                                                                                                    \
-        {                                                                                                              \
-            (current).firstLine = YYRHSLOC(rhs, 1).firstLine;                                                          \
-            (current).firstColumn = YYRHSLOC(rhs, 1).firstColumn;                                                      \
-            (current).lastLine = YYRHSLOC(rhs, 1).lastLine;                                                            \
-            (current).lastColumn = YYRHSLOC(rhs, 1).lastColumn;                                                        \
-        }                                                                                                              \
-        else                                                                                                           \
-        {                                                                                                              \
-            (current).firstLine = YYRHSLOC(rhs, 0).firstLine;                                                          \
-            (current).firstColumn = YYRHSLOC(rhs, 0).firstColumn;                                                      \
-        }                                                                                                              \
-    } while (0)
+#define YYLLOC_DEFAULT(current, rhs, offset) flex_update(&current, rhs, offset)                                                                           \
 
 /**
  * used to initialize flex and bison
