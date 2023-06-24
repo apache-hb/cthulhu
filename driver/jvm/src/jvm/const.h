@@ -2,18 +2,7 @@
 
 #include <stdint.h>
 
-typedef enum jvm_access_t {
-    eAccessPublic = 0x0001,
-    eAccessFinal = 0x0010,
-    eAccessSuper = 0x0020,
-    eAccessInterface = 0x0200,
-    eAccessAbstract = 0x0400
-} jvm_access_t;
-
-typedef enum jvm_version_t {
-#define JVM_VERSION(id, name, v) id = (v),
-#include "jvm.inc"
-} jvm_version_t;
+typedef struct io_t io_t;
 
 typedef enum jvm_const_tag_t {
 #define JVM_CONST(id, name, v) id = (v),
@@ -93,29 +82,5 @@ typedef struct jvm_const_t {
     };
 } jvm_const_t;
 
-typedef struct jvm_header_t {
-    uint16_t minorVersion;
-    uint16_t majorVersion;
-
-    uint16_t constPoolCount;
-    // TODO: pool data
-
-    uint16_t accessFlags;
-    uint16_t thisClass;
-    uint16_t superClass;
-
-    uint16_t interfacesCount;
-    // TODO: interfaces
-
-    uint16_t fieldsCount;
-    // TODO: fields
-
-    uint16_t methodsCount;
-    // TODO: methods
-
-    uint16_t attributesCount;
-    // TODO: attributes
-} jvm_header_t;
-
-const char *jvm_version_string(jvm_version_t version);
+jvm_const_t jvm_parse_const(io_t *io);
 const char *jvm_const_tag_string(jvm_const_tag_t tag);

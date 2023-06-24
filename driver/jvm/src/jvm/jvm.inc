@@ -49,3 +49,19 @@ JVM_CONST(eConstModule, "Module", 19)
 JVM_CONST(eConstPackage, "Package", 20)
 
 #undef JVM_CONST
+
+#ifndef JVM_ACCESS
+#   define JVM_ACCESS(id, str, bits)
+#endif
+
+JVM_ACCESS(eAccessPublic, "public", 0x0001)
+JVM_ACCESS(eAccessFinal, "final", 0x0010)
+JVM_ACCESS(eAccessSuper, "super", 0x0020)
+JVM_ACCESS(eAccessInterface, "interface", 0x0200)
+JVM_ACCESS(eAccessAbstract, "abstract", 0x0400)
+JVM_ACCESS(eAccessSynthetic, "synthetic", 0x1000)
+JVM_ACCESS(eAccessAnnotation, "annotation", 0x2000)
+JVM_ACCESS(eAccessEnum, "enum", 0x4000)
+JVM_ACCESS(eAccessModule, "module", 0x8000)
+
+#undef JVM_ACCESS

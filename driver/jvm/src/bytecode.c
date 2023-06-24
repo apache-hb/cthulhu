@@ -1,5 +1,10 @@
 #include "bytecode.h"
-#include "jvm.h"
+
+#include "jvm/common.h"
+#include "jvm/const.h"
+#include "jvm/field.h"
+#include "jvm/attrib.h"
+#include "jvm/jvm.h"
 
 #include "cthulhu/mediator/driver.h"
 
@@ -187,6 +192,46 @@ static jvm_const_t const_read(scan_t *scan)
     return value;
 }
 
+static jvm_attrib_t attrib_read(scan_t *scan)
+{
+    uint16_t nameIndex = read_be16(scan);
+    uint32_t length = read_be32(scan);
+    uint8_t *bytes = ctu_malloc(length);
+    CTASSERT(scan_read(scan, bytes, length) == length);
+
+    jvm_attrib_t value = {
+        .nameIndex = nameIndex,
+        .length = length,
+        .info = bytes
+    };
+
+    return value;
+}
+
+static jvm_field_t field_read(scan_t *scan)
+{
+    jvm_access_t access = read_be16(scan);
+    uint16_t nameIndex = read_be16(scan);
+    uint16_t descriptorIndex = read_be16(scan);
+    uint16_t attributesCount = read_be16(scan);
+
+    logverbose("field(access=%s, nameIndex=%u, descriptorIndex=%u, attributesCount=%u)", jvm_access_string(access), nameIndex, descriptorIndex, attributesCount);
+
+    jvm_field_t value = {
+        .accessFlags = access,
+        .nameIndex = nameIndex,
+        .descriptorIndex = descriptorIndex,
+        .attributesCount = attributesCount
+    };
+
+    for (size_t i = 0; i < attributesCount; i++)
+    {
+        attrib_read(scan);
+    }
+
+    return value;
+}
+
 static void class_read(scan_t *scan)
 {
     uint16_t minor = read_be16(scan);
@@ -194,12 +239,41 @@ static void class_read(scan_t *scan)
 
     logverbose("classfile(path=`%s`, major=`%s`, minor=%u)", scan_path(scan), jvm_version_string(major), minor);
 
-    uint16_t constPool = read_be16(scan);
-    logverbose("constPool=%u", constPool);
+    uint16_t constPoolCount = read_be16(scan);
+    logverbose("constPool=%u", constPoolCount);
 
-    for (size_t i = 0; i < constPool - 1; i++)
+    jvm_const_t *constPool = ctu_malloc(sizeof(jvm_const_t) * constPoolCount);
+
+    for (size_t i = 0; i < constPoolCount - 1; i++)
     {
-        const_read(scan);
+        constPool[i] = const_read(scan);
+    }
+
+    jvm_access_t access = read_be16(scan);
+    uint16_t thisClass = read_be16(scan);
+    uint16_t superClass = read_be16(scan);
+
+    logverbose("class(access=%s, thisClass=%u, superClass=%u)", jvm_access_string(access), thisClass, superClass);
+
+    uint16_t interfaces = read_be16(scan);
+    logverbose("interfaces=%u", interfaces);
+
+    for (size_t i = 0; i < interfaces; i++)
+    {
+        uint16_t idx = read_be16(scan);
+        logverbose("interface=%u", idx);
+    }
+
+    uint16_t fields = read_be16(scan);
+    logverbose("fields=%u", fields);
+
+    for (size_t i = 0; i < fields; i++)
+    {
+        jvm_field_t field = field_read(scan);
+        jvm_const_t name = constPool[field.nameIndex - 1];
+        CTASSERT(name.tag == eConstUtf8);
+        
+        logverbose("attrib(nameIndex=%u, name=%s, length=%u, bytes=%p)", field.nameIndex, name.utf8Info.bytes, field.attributesCount, field.attributes);
     }
 }
 

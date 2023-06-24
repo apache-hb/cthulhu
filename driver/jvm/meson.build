@@ -1,6 +1,6 @@
 src = [ 
     'src/main.c',
-    'src/jvm.c',
+    'src/jvm/jvm.c',
     'src/bytecode.c'
 ]
 
