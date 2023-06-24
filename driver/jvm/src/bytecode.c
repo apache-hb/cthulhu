@@ -5,6 +5,7 @@
 #include "jvm/field.h"
 #include "jvm/attrib.h"
 #include "jvm/jvm.h"
+#include "jvm/method.h"
 
 #include "cthulhu/mediator/driver.h"
 
@@ -33,6 +34,8 @@ FN_READ(read8, uint8_t, UINT8_MAX)
 FN_READ(read16, uint16_t, UINT16_MAX)
 FN_READ(read32, uint32_t, UINT32_MAX)
 
+static uint8_t kNul = '\0';
+
 static uint16_t read_be16(scan_t *scan)
 {
     return native_order16(read16(scan), eEndianBig);
@@ -46,6 +49,16 @@ static uint32_t read_be32(scan_t *scan)
 static jvm_utf8_info_t utf8_info_read(scan_t *scan)
 {
     uint16_t length = read_be16(scan);
+    if (length == 0)
+    {
+        jvm_utf8_info_t value = {
+            .length = 0,
+            .bytes = &kNul
+        };
+
+        return value;
+    }
+
     uint8_t *bytes = ctu_malloc(length + 1);
     CTASSERT(scan_read(scan, bytes, length) == length);
     
@@ -162,11 +175,22 @@ static jvm_float_info_t float_info_read(scan_t *scan)
     return it;
 }
 
+static jvm_string_info_t string_info_read(scan_t *scan)
+{
+    uint16_t stringIndex = read_be16(scan);
+
+    logverbose("string(stringIndex=%u)", stringIndex);
+
+    jvm_string_info_t value = {
+        .stringIndex = stringIndex
+    };
+
+    return value;
+}
+
 static jvm_const_t const_read(scan_t *scan)
 {
     uint8_t tag = read8(scan);
-
-    logverbose("const(tag=%s)", jvm_const_tag_string(tag));
 
     jvm_const_t value = {
         .tag = tag
@@ -184,6 +208,7 @@ static jvm_const_t const_read(scan_t *scan)
     case eConstInvokeDynamic: value.invokeDynamicInfo = invoke_dynamic_info_read(scan); break;
     case eConstFloat: value.floatInfo = float_info_read(scan); break;
     case eConstFieldRef: value.fieldInfo = field_info_read(scan); break;
+    case eConstString: value.stringInfo = string_info_read(scan); break;
 
     default: 
         NEVER("unknown tag: %s", jvm_const_tag_string(tag));
@@ -215,18 +240,40 @@ static jvm_field_t field_read(scan_t *scan)
     uint16_t descriptorIndex = read_be16(scan);
     uint16_t attributesCount = read_be16(scan);
 
-    logverbose("field(access=%s, nameIndex=%u, descriptorIndex=%u, attributesCount=%u)", jvm_access_string(access), nameIndex, descriptorIndex, attributesCount);
-
     jvm_field_t value = {
         .accessFlags = access,
         .nameIndex = nameIndex,
         .descriptorIndex = descriptorIndex,
-        .attributesCount = attributesCount
+        .attributesCount = attributesCount,
+        .attributes = ctu_malloc(sizeof(jvm_attrib_t) * MAX(attributesCount, 1))
     };
 
     for (size_t i = 0; i < attributesCount; i++)
     {
-        attrib_read(scan);
+        value.attributes[i] = attrib_read(scan);
+    }
+
+    return value;
+}
+
+static jvm_method_info_t method_read(scan_t *scan)
+{
+    jvm_access_t access = read_be16(scan);
+    uint16_t nameIndex = read_be16(scan);
+    uint16_t descriptorIndex = read_be16(scan);
+    uint16_t attributesCount = read_be16(scan);
+
+    jvm_method_info_t value = {
+        .accessFlags = access,
+        .nameIndex = nameIndex,
+        .descriptorIndex = descriptorIndex,
+        .attributesCount = attributesCount,
+        .attributes = ctu_malloc(sizeof(jvm_attrib_t) * MAX(attributesCount, 1))
+    };
+
+    for (size_t i = 0; i < attributesCount; i++)
+    {
+        value.attributes[i] = attrib_read(scan);
     }
 
     return value;
@@ -272,8 +319,28 @@ static void class_read(scan_t *scan)
         jvm_field_t field = field_read(scan);
         jvm_const_t name = constPool[field.nameIndex - 1];
         CTASSERT(name.tag == eConstUtf8);
-        
-        logverbose("attrib(nameIndex=%u, name=%s, length=%u, bytes=%p)", field.nameIndex, name.utf8Info.bytes, field.attributesCount, field.attributes);
+
+        logverbose("field(nameIndex=%u, name=%s, length=%u, bytes=%p)", field.nameIndex, name.utf8Info.bytes, field.attributesCount, field.attributes);
+        for (size_t i = 0; i < field.attributesCount; i++)
+        {
+            jvm_attrib_t attrib = field.attributes[i];
+            jvm_const_t name = constPool[attrib.nameIndex - 1];
+            CTASSERT(name.tag == eConstUtf8);
+
+            logverbose("attrib(nameIndex=%u, name=%s, length=%u, bytes=%p)", attrib.nameIndex, name.utf8Info.bytes, attrib.length, attrib.info);
+        }
+    }
+
+    uint16_t methods = read_be16(scan);
+    logverbose("methods=%u", methods);
+
+    for (size_t i = 0; i < methods; i++)
+    {
+        jvm_method_info_t method = method_read(scan);
+        jvm_const_t name = constPool[method.nameIndex - 1];
+        CTASSERT(name.tag == eConstUtf8);
+
+        logverbose("method(nameIndex=%u, name=%s, length=%u, bytes=%p)", method.nameIndex, name.utf8Info.bytes, method.attributesCount, method.attributes);
     }
 }
 

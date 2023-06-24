@@ -57,7 +57,7 @@ OS_RESULT(size_t) os_file_read(os_file_t *file, void *buffer, size_t size)
 {
     CTASSERT(file != NULL);
     CTASSERT(buffer != NULL);
-    CTASSERT(size > 0 && size <= DWORD_MAX);
+    CTASSERTF(size > 0 && size <= DWORD_MAX, "size=%zu", size);
 
     DWORD readSize = 0;
     BOOL result = ReadFile(file->handle, buffer, (DWORD)size, &readSize, NULL);
