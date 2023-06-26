@@ -24,7 +24,9 @@ OS_RESULT(os_file_t *) os_file_open(const char *path, os_access_t access)
     CTASSERT(path != NULL);
     CTASSERT(access & (eAccessRead | eAccessWrite));
     DWORD dwAccess = get_access(access);
-    DWORD dwDisposition = (access & eAccessWrite) ? OPEN_ALWAYS : OPEN_EXISTING;
+    DWORD dwDisposition = (access & eAccessWrite) 
+        ? (OPEN_ALWAYS | TRUNCATE_EXISTING) 
+        : OPEN_EXISTING;
     HANDLE handle = CreateFile(        
         /* lpFileName = */ path,
         /* dwDesiredAccess = */ dwAccess,

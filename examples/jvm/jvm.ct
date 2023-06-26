@@ -1,0 +1,21 @@
+module jvm;
+
+export variant Const : uint8 {
+    default Unknown = 0
+    case Utf8(length: uint16, bytes: [*]uint8) = 1
+    case Integer(value: int32) = 3
+    case Float(value: float32) = 4
+    case Long(value: int64) = 5
+    case Double(value: float64) = 6
+    case Class(nameIndex: uint16) = 7
+    case String(stringIndex: uint16) = 8
+    case Fieldref(classIndex: uint16, nameAndTypeIndex: uint16) = 9
+    case Methodref(classIndex: uint16, nameAndTypeIndex: uint16) = 10
+    case InterfaceMethodref(classIndex: uint16, nameAndTypeIndex: uint16) = 11
+    case NameAndType(nameIndex: uint16, descriptorIndex: uint16) = 12
+    case MethodHandle(referenceKind: uint8, referenceIndex: uint16) = 15
+    case MethodType(descriptorIndex: uint16) = 16
+    case InvokeDynamic(bootstrapMethodAttrIndex: uint16, nameAndTypeIndex: uint16) = 18
+    case Module(nameIndex: uint16) = 19
+    case Package(nameIndex: uint16) = 20
+}

@@ -1231,13 +1231,18 @@ static void compile_function(ssa_t *ssa, const hlir_t *function)
     compile_stmt(ssa, function->body);
 }
 
+static bool has_name(const char *id)
+{
+    return id == NULL || str_equal(id, "");
+}
+
 static void fwd_module(ssa_t *ssa, hlir_t *mod)
 {
     CTASSERT(hlir_is(mod, eHlirModule));
 
     const char *name = mod->name;
 
-    if (name != NULL)
+    if (has_name(name))
     {
         vector_push(&ssa->namePath, (void*)mod->name);
     }
@@ -1252,7 +1257,7 @@ static void fwd_module(ssa_t *ssa, hlir_t *mod)
         fwd_function(ssa, vector_get(mod->functions, j));
     }
 
-    if (name != NULL)
+    if (has_name(name))
     {
         vector_drop(ssa->namePath);
     }

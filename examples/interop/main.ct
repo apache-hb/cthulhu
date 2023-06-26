@@ -1,4 +1,4 @@
-import lib => other; // module alias
+import lib as other; // module alias
 
 @entry(cli)
 def main: int {

@@ -60,21 +60,10 @@ const char *jvm_access_string(jvm_access_t access)
         return value; \
     }
 
-#define FN_READ_PTR(name, type, err) \
-    type name(uint8_t *ptr) \
-    { \
-        type value = (err); \
-        memcpy(&value, ptr, sizeof(type)); \
-        return value; \
-    }
 
 FN_READ_IO(read_io8, uint8_t, UINT8_MAX)
 FN_READ_IO(read_io16, uint16_t, UINT16_MAX)
 FN_READ_IO(read_io32, uint32_t, UINT32_MAX)
-
-FN_READ_PTR(read_ptr8, uint8_t, UINT8_MAX)
-FN_READ_PTR(read_ptr16, uint16_t, UINT16_MAX)
-FN_READ_PTR(read_ptr32, uint32_t, UINT32_MAX)
 
 uint8_t read_iobe8(io_t *io)
 {
@@ -89,19 +78,4 @@ uint16_t read_iobe16(io_t *io)
 uint32_t read_iobe32(io_t *io)
 {
     return native_order32(read_io32(io), eEndianBig);
-}
-
-uint8_t read_ptrbe8(uint8_t *ptr)
-{
-    return read_ptr8(ptr);
-}
-
-uint16_t read_ptrbe16(uint8_t *ptr)
-{
-    return native_order16(read_ptr16(ptr), eEndianBig);
-}
-
-uint32_t read_ptrbe32(uint8_t *ptr)
-{
-    return native_order32(read_ptr32(ptr), eEndianBig);
 }

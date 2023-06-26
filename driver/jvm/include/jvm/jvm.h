@@ -36,14 +36,6 @@ uint8_t read_io8(io_t *io);
 uint16_t read_io16(io_t *io);
 uint32_t read_io32(io_t *io);
 
-uint8_t read_ptr8(uint8_t *ptr);
-uint16_t read_ptr16(uint8_t *ptr);
-uint32_t read_ptr32(uint8_t *ptr);
-
 uint8_t read_iobe8(io_t *io);
 uint16_t read_iobe16(io_t *io);
 uint32_t read_iobe32(io_t *io);
-
-uint8_t read_ptrbe8(uint8_t *ptr);
-uint16_t read_ptrbe16(uint8_t *ptr);
-uint32_t read_ptrbe32(uint8_t *ptr);
