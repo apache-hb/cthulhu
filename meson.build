@@ -11,8 +11,14 @@ project('cthulhu', [ 'c', 'cpp' ],
     ]
 )
 
+# we use dearimgui for the gui interface (TODO: maybe qt in the future?)
 if get_option('interfaces').contains('gui')
     add_languages('cpp', native : false)
+endif
+
+# we use java to generate test cases for the jvm interface
+if get_option('languages').contains('jvm')
+    add_languages('java', native : false)
 endif
 
 analyze = get_option('analyze')

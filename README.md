@@ -13,6 +13,9 @@ wow this project got out of hand.
   * `libgmp-dev` (optional)
   * `doxygen` (optional)
 
+  * a `cxx` compiler (gui interface only)
+  * `javac` (jvm driver tests only)
+
 * runtime dependencies
   * `libgmp` (optional)
 

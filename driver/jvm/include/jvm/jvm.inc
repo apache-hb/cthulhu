@@ -65,3 +65,48 @@ JVM_ACCESS(eAccessEnum, "enum", 0x4000)
 JVM_ACCESS(eAccessModule, "module", 0x8000)
 
 #undef JVM_ACCESS
+
+#ifndef JVM_ATTRIB
+#   define JVM_ATTRIB(id, str)
+#endif
+
+// critical to interpretation of class file
+
+JVM_ATTRIB(eAttribConstantValue, "ConstantValue")
+JVM_ATTRIB(eAttribCode, "Code")
+JVM_ATTRIB(eAttribStackMapTable, "StackMapTable")
+JVM_ATTRIB(eAttribBootstrapMethods, "BootstrapMethods")
+JVM_ATTRIB(eAttribNestHost, "NestHost")
+JVM_ATTRIB(eAttribNestMembers, "NestMembers")
+JVM_ATTRIB(eAttribPermittedSubclasses, "PermittedSubclasses")
+
+// critical to interpretation of class file by class libraries
+
+JVM_ATTRIB(eAttribExceptions, "Exceptions")
+JVM_ATTRIB(eAttribInnerClasses, "InnerClasses")
+JVM_ATTRIB(eAttribEnclosingMethod, "EnclosingMethod")
+JVM_ATTRIB(eAttribSynthetic, "Synthetic")
+JVM_ATTRIB(eAttribSignature, "Signature")
+JVM_ATTRIB(eAttribRecord, "Record")
+JVM_ATTRIB(eAttribSourceFile, "SourceFile")
+JVM_ATTRIB(eAttribLineNumberTable, "LineNumberTable")
+JVM_ATTRIB(eAttribLocalVariableTable, "LocalVariableTable")
+JVM_ATTRIB(eAttribLocalVariableTypeTable, "LocalVariableTypeTable")
+
+// metadata about class file
+
+JVM_ATTRIB(eAttribSourceDebugExtension, "SourceDebugExtension")
+JVM_ATTRIB(eAttribDeprecated, "Deprecated")
+JVM_ATTRIB(eAttribRuntimeVisibleAnnotations, "RuntimeVisibleAnnotations")
+JVM_ATTRIB(eAttribRuntimeInvisibleAnnotations, "RuntimeInvisibleAnnotations")
+JVM_ATTRIB(eAttribRuntimeVisibleParameterAnnotations, "RuntimeVisibleParameterAnnotations")
+JVM_ATTRIB(eAttribRuntimeInvisibleParameterAnnotations, "RuntimeInvisibleParameterAnnotations")
+JVM_ATTRIB(eAttribRuntimeVisibleTypeAnnotations, "RuntimeVisibleTypeAnnotations")
+JVM_ATTRIB(eAttribRuntimeInvisibleTypeAnnotations, "RuntimeInvisibleTypeAnnotations")
+JVM_ATTRIB(eAttribAnnotationDefault, "AnnotationDefault")
+JVM_ATTRIB(eAttribMethodParameters, "MethodParameters")
+JVM_ATTRIB(eAttribModule, "Module")
+JVM_ATTRIB(eAttribModulePackages, "ModulePackages")
+JVM_ATTRIB(eAttribModuleMainClass, "ModuleMainClass")
+
+#undef JVM_ATTRIB

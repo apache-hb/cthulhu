@@ -36,6 +36,9 @@ text_t scan_source(IN_NOTNULL const scan_t *scan);
 NODISCARD CONSTFN 
 reports_t *scan_reports(IN_NOTNULL scan_t *scan);
 
+NODISCARD CONSTFN
+io_t *scan_src(IN_NOTNULL scan_t *scan);
+
 NODISCARD CONSTFN 
 scan_t *scan_invalid(void);
 

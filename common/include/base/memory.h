@@ -32,11 +32,11 @@ extern alloc_t globalAlloc;
 
 void ctu_free(IN_NOTNULL void *ptr);
 
-ALLOC(ctu_free)
-NODISCARD void *ctu_malloc(size_t size);
+NODISCARD ALLOC(ctu_free)
+void *ctu_malloc(size_t size);
 
-ALLOC(ctu_free)
-NODISCARD void *ctu_realloc(IN_NOTNULL void *ptr, size_t newSize);
+NODISCARD ALLOC(ctu_free)
+void *ctu_realloc(IN_NOTNULL void *ptr, size_t newSize);
 
 // gmp
 

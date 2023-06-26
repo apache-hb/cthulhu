@@ -1,7 +1,5 @@
 #include "cthulhu/mediator/driver.h"
 
-#include "bytecode.h"
-
 #include "base/macros.h"
 
 static void jvm_config(lifetime_t *lifetime, ap_t *ap)
@@ -37,7 +35,5 @@ const language_t kJvmModule = {
     .fnConfig = jvm_config,
 
     .fnCreate = jvm_create,
-    .fnDestroy = jvm_destroy,
-
-    .fnParse = jvm_parse,
+    .fnDestroy = jvm_destroy
 };

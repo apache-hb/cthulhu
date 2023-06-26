@@ -85,6 +85,14 @@ reports_t *scan_reports(scan_t *scan)
 }
 
 USE_DECL
+io_t *scan_src(scan_t *scan)
+{
+    CTASSERT(scan != NULL);
+    
+    return scan->io;
+}
+
+USE_DECL
 scan_t *scan_invalid(void)
 {
     return NULL;
