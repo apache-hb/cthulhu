@@ -1262,11 +1262,11 @@ ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods)
 {
     ssa_t ssa = { 
         .reports = reports,
-        .aggregates = map_optimal(0x1000),
-        .globals = map_optimal(0x1000),
-        .functions = map_optimal(0x1000),
-        .strings = set_new(0x1000),
-        .importedSymbols = map_optimal(0x1000),
+        .aggregates = map_optimal(128),
+        .globals = map_optimal(128),
+        .functions = map_optimal(128),
+        .strings = set_new(128),
+        .importedSymbols = map_optimal(128),
         .namePath = vector_new(16),
         .emptyType = ssa_type_empty_new("empty"),
         .stubType = ssa_get_bool_type(&ssa)

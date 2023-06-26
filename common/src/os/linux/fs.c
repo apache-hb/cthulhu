@@ -53,9 +53,7 @@ USE_DECL
 OS_RESULT(bool) os_dir_create(const char *path)
 {
     CTASSERT(path != NULL);
-
-    logverbose("os_dir_create: %s", path);
-
+    
     if (mkdir(path, 0777) != 0)
     {
         if (errno != EEXIST)

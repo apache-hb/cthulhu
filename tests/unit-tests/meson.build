@@ -1,6 +1,10 @@
 dir = meson.current_source_dir()
 
-all = [ 'util.str', 'util.set', 'util.map', 'argparse.ap', 'io.vfs', 'io.fs' ]
+all = [ 
+    'util.str', 'util.set', 'util.map', 
+    'argparse.ap', 
+    'io.vfs', 'io.fs' 
+]
 
 foreach case : all
     where = case.replace('.', '/')
