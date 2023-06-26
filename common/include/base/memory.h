@@ -7,6 +7,8 @@
 
 BEGIN_API
 
+#define ALLOC_SIZE_UNKNOWN SIZE_MAX
+
 typedef struct alloc_t alloc_t;
 
 typedef void *(*malloc_t)(alloc_t *self, size_t size, const char *name);
@@ -22,12 +24,9 @@ typedef struct alloc_t
     malloc_t arenaMalloc;
     realloc_t arenaRealloc;
     free_t arenaFree;
-    void *data; // this allocators private data
 } alloc_t;
 
 extern alloc_t globalAlloc;
-
-#define ALLOC_SIZE_UNKNOWN SIZE_MAX
 
 // C allocators
 

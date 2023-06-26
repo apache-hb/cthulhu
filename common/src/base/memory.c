@@ -35,8 +35,7 @@ alloc_t globalAlloc = {
     .name = "default global allocator",
     .arenaMalloc = default_global_malloc,
     .arenaRealloc = default_global_realloc,
-    .arenaFree = default_global_free,
-    .data = NULL,
+    .arenaFree = default_global_free
 };
 
 /// global allocator
