@@ -4,7 +4,6 @@
 
 #include "std/map.h"
 
-typedef struct sema_t sema_t;
 typedef struct reports_t reports_t;
 
 typedef struct mediator_t
@@ -37,8 +36,7 @@ typedef struct context_t
 
     const char *name;
     void *ast;
-    hlir_t *root;
-    sema_t *sema;
+    h2_t *root;
 } context_t;
 
 bool context_requires_compiling(const context_t *ctx);

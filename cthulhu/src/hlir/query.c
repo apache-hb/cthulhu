@@ -209,13 +209,20 @@ const char *hlir_digit_to_string(digit_t digit)
 
 const char *hlir_to_string(const hlir_t *hlir)
 {
-    const char *kind = hlir_kind_to_string(get_hlir_kind(hlir));
+    hlir_kind_t kind = get_hlir_kind(hlir);
+    const char *str = hlir_kind_to_string(kind);
+
+    if (kind == eHlirDigit) 
+    {
+        return format("digit %s (%s %s)", str, hlir_digit_to_string(hlir->width), hlir_sign_to_string(hlir->sign));
+    }
+    
     if (hlir_is_decl(hlir) || hlir_is(hlir, eHlirError))
     {
-        return format("%s (%s)", kind, get_hlir_name(hlir));
+        return format("%s (%s)", str, get_hlir_name(hlir));
     }
 
-    return hlir_kind_to_string(get_hlir_kind(hlir));
+    return hlir_kind_to_string(kind);
 }
 
 const hlir_t *hlir_follow_type(const hlir_t *hlir)

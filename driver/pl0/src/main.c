@@ -28,7 +28,7 @@ static void pl0_parse(driver_t *handle, scan_t *scan)
         ? ast->mod
         : vector_init(str_filename_noext(fp));
 
-    context_t *ctx = context_new(handle, vector_tail(path), ast, NULL, NULL);
+    context_t *ctx = context_new(handle, vector_tail(path), ast, NULL);
 
     add_context(handle_get_lifetime(handle), path, ctx);
 }

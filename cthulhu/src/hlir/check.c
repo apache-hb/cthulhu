@@ -10,6 +10,7 @@
 
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/decl.h"
+#include "cthulhu/hlir/type.h"
 
 #include <string.h>
 
@@ -359,6 +360,52 @@ static void check_identifier_isnt_empty(reports_t *reports, const hlir_t *ident)
     }
 }
 
+#if 0
+static const hlir_t *get_return_type(const hlir_t *stmt)
+{
+    CTASSERT(hlir_is(stmt, eHlirReturn));
+
+    return stmt->result == NULL 
+        ? hlir_unit(node_builtin(), "void") 
+        : get_hlir_type(stmt->result);
+}
+
+static void check_stmt_returns(reports_t *reports, const hlir_t *body, const hlir_t *result)
+{
+    hlir_kind_t kind = get_hlir_kind(body);
+    switch (kind)
+    {
+    case eHlirReturn:
+        if (!hlir_types_equal(get_return_type(body), result))
+        {
+            report(reports, eFatal, get_hlir_node(body), "return type mismatch, expected `%s` but `%s` was returned", hlir_to_string(result), hlir_to_string(get_return_type(body)));
+        }
+        return;
+
+    case eHlirStmts:
+        for (size_t i = 0; i < vector_len(body->stmts); i++)
+        {
+            const hlir_t *stmt = vector_get(body->stmts, i);
+            check_stmt_returns(reports, stmt, result);
+        }
+        return;
+
+    default: break; // should be fine
+    }
+}
+
+static void check_function_return(reports_t *reports, const hlir_t *fn)
+{
+    const hlir_t *result = closure_result(fn);
+    if (fn->body == NULL)
+    {
+        return;
+    }
+
+    check_stmt_returns(reports, fn->body, result);
+}
+#endif
+
 void check_module(check_t *check, hlir_t *mod)
 {
     reports_t *reports = check->reports;
@@ -403,4 +450,11 @@ void check_module(check_t *check, hlir_t *mod)
     CHECK_ATTRIBUTES_FOR_ARRAY(totalGlobals, mod->globals);
     CHECK_ATTRIBUTES_FOR_ARRAY(totalTypes, mod->types);
     CHECK_ATTRIBUTES_FOR_ARRAY(totalFunctions, mod->functions);
+
+    // TODO: check that return types are correct
+    // for (size_t i = 0; i < totalFunctions; i++)
+    // {
+    //     hlir_t *func = vector_get(mod->functions, i);
+    //     check_function_return(reports, func);
+    // }
 }

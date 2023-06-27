@@ -25,6 +25,23 @@ generic = declare_dependency(
 )
 
 src = [
+    'src/hlir2/h2.c',
+    'src/hlir2/check.c'
+]
+
+libh2 = library('hlir2', src,
+    include_directories : 'include',
+    c_args : args,
+    dependencies : [ std, gmp ]
+)
+
+h2 = declare_dependency(
+    link_with : libh2,
+    include_directories : 'include',
+    dependencies : [ gmp ]
+)
+
+src = [
     'src/ssa/ssa.c',
     'src/ssa/emit.c',
     'src/ssa/eval.c',
@@ -32,9 +49,9 @@ src = [
 ]
 
 libssa = library('ssa', src,
-    dependencies : [ std, gmp ],
+    include_directories : 'include',
     c_args : args,
-    include_directories : 'include'
+    dependencies : [ std, gmp ]
 )
 
 ssa = declare_dependency(
@@ -50,9 +67,9 @@ src = [
 ]
 
 libemit = library('emit', src,
-    dependencies : [ ssa, std, io, interop ],
+    include_directories : 'include',
     c_args : args,
-    include_directories : 'include'
+    dependencies : [ ssa, std, io, interop ]
 )
 
 emit = declare_dependency(
@@ -67,13 +84,13 @@ src = [
 ]
 
 libmediator = library('mediator', src,
-    dependencies : [ std ],
+    include_directories : 'include',
     c_args : args,
-    include_directories : 'include'
+    dependencies : [ std, h2 ]
 )
 
 mediator = declare_dependency(
     link_with : libmediator,
     include_directories : [ 'include', versiondir ],
-    dependencies : [ base ]
+    dependencies : [ base, h2 ]
 )

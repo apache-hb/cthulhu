@@ -1377,9 +1377,12 @@ static hlir_t *sema_stmts(sema_t *sema, ast_t *stmts)
 
 static hlir_t *sema_return(sema_t *sema, ast_t *ast)
 {
-    hlir_t *result = sema_rvalue_with_implicit(sema, ast->operand, get_current_return_type(sema));
+    const hlir_t *current = get_current_return_type(sema);
+    hlir_t *result = sema_rvalue_with_implicit(sema, ast->operand, current);
 
-    return hlir_return(ast->node, result);
+    hlir_t *cvt = convert_to(sema_reports(sema), current, result);
+
+    return hlir_return(ast->node, cvt);
 }
 
 static hlir_t *sema_while(sema_t *sema, ast_t *ast)

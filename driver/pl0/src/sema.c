@@ -1,11 +1,7 @@
 #include "sema.h"
-
 #include "ast.h"
-#include "cthulhu/hlir/attribs.h"
-#include "cthulhu/hlir/decl.h"
-#include "cthulhu/hlir/query.h"
-#include "cthulhu/hlir/sema.h"
-#include "cthulhu/hlir/type.h"
+
+#include "report/report.h"
 #include "report/report-ext.h"
 
 #include "base/macros.h"
@@ -16,31 +12,38 @@
 #include "std/str.h"
 #include "std/map.h"
 
-static hlir_t *kIntegerType;
-static hlir_t *kBoolType;
-static hlir_t *kStringType;
-static hlir_t *kVoidType;
+#include "cthulhu/hlir2/h2.h"
+#include "cthulhu/hlir2/query.h"
 
-static hlir_t *kPrint;
-static hlir_t *kFmtString;
+static const h2_t *kStringType = NULL;
+static const h2_t *kIntegerType = NULL;
+static const h2_t *kBoolType = NULL;
+static const h2_t *kVoidType = NULL;
 
-static const hlir_attributes_t *kExported;
+static const h2_t *kPrint = NULL;
 
-static const hlir_attributes_t *kConst;
-static const hlir_attributes_t *kMutable;
+static const h2_attrib_t kPrintAttrib = {
+    .link = eLinkImport,
+    .visible = eVisiblePublic,
+    .mangle = "printf"
+};
 
-static hlir_t *make_runtime_mod(void)
+static const h2_attrib_t kExportAttrib = {
+    .link = eLinkExport,
+    .visible = eVisiblePublic
+};
+
+static h2_t *make_runtime_mod(void)
 {
     node_t *node = node_builtin();
-    const hlir_attributes_t *printAttributes = hlir_attributes(eLinkImported, eVisiblePrivate, DEFAULT_TAGS, "printf");
+    size_t decls[eSema2Total] = {
+        [eSema2Values] = 1,
+        [eSema2Types] = 1,
+        [eSema2Procs] = 1,
+        [eSema2Modules] = 1
+    };
 
-    vector_t *args = vector_of(1);
-    vector_set(args, 0, kStringType);
-
-    kPrint = hlir_function(node, "print", args, kIntegerType, vector_of(0), eArityVariable, NULL);
-    hlir_set_attributes(kPrint, printAttributes);
-
-    return hlir_module(node, "pl0", vector_of(0), vector_of(0), vector_init(kPrint));
+    return h2_module(NULL, node, "pl0", eSema2Total, decls);
 }
 
 static vector_t *make_runtime_path(void)
@@ -57,23 +60,20 @@ void pl0_init(driver_t *handle)
 
     logverbose("initializing PL/0 runtime");
 
-    kExported = hlir_attributes(eLinkExported, eVisiblePublic, DEFAULT_TAGS, NULL);
-    kConst = hlir_attributes(eLinkExported, eVisiblePublic, eQualConst, NULL);
-    kMutable = hlir_attributes(eLinkExported, eVisiblePublic, eQualDefault, NULL);
+    kIntegerType = h2_type_digit(node, "integer", eDigitInt, eSignSigned);
+    kBoolType = h2_type_bool(node, "boolean");
+    kStringType = h2_type_string(node, "string");
+    kVoidType = h2_type_unit(node, "void");
 
-    kIntegerType = hlir_digit(node, "integer", eDigitInt, eSigned);
-    kBoolType = hlir_bool(node, "boolean");
-    kStringType = hlir_string(node, "string");
-    kVoidType = hlir_unit(node, "void");
+    vector_t *params = vector_of(1);
+    vector_set(params, 0, h2_decl_param(node, "fmt", kStringType));
 
-    struct string_view_t fmtLiteral = { .data = "%d\n", .size = 3 };
+    kPrint = h2_decl_function(node, "print", kVoidType, params, NULL);
 
-    kFmtString = hlir_string_literal(node, kStringType, fmtLiteral);
-
-    hlir_t *runtime = make_runtime_mod();
+    h2_t *runtime = make_runtime_mod();
     vector_t *path = make_runtime_path();
 
-    context_t *ctx = compiled_new(handle, "pl0", runtime, NULL);
+    context_t *ctx = compiled_new(handle, "pl0", runtime);
     add_context(handle_get_lifetime(handle), path, ctx);
 }
 
@@ -88,79 +88,79 @@ static void report_pl0_unresolved(reports_t *reports, const node_t *node, const 
     report(reports, eFatal, node, "unresolved reference to `%s`", name);
 }
 
-static hlir_t *get_var(sema_t *sema, const char *name)
+static h2_t *get_var(h2_t *sema, const char *name)
 {
-    return sema_get(sema, eSemaValues, name);
+    return h2_module_get(sema, eSema2Values, name);
 }
 
-static void set_proc(sema_t *sema, const char *name, hlir_t *proc)
+static void set_proc(h2_t *sema, const char *name, h2_t *proc)
 {
-    hlir_t *other = sema_get(sema, eSemaProcs, name);
+    h2_t *other = h2_module_get(sema, eSema2Procs, name);
     if (other != NULL && other != proc)
     {
-        const node_t *node = get_hlir_node(proc);
-        const node_t *otherNode = get_hlir_node(other);
-        report_pl0_shadowing(sema_reports(sema), name, otherNode, node);
+        const node_t *node = h2_get_node(proc);
+        const node_t *otherNode = h2_get_node(other);
+        report_pl0_shadowing(sema->reports, name, otherNode, node);
         return;
     }
 
-    sema_set(sema, eSemaProcs, name, proc);
+    h2_module_set(sema, eSema2Procs, name, proc);
 }
 
-static hlir_t *get_proc(sema_t *sema, const char *name)
+static h2_t *get_proc(h2_t *sema, const char *name)
 {
-    return sema_get(sema, eSemaProcs, name);
+    return h2_module_get(sema, eSema2Procs, name);
 }
 
-static void set_var(sema_t *sema, size_t tag, const char *name, hlir_t *hlir)
+static void set_var(h2_t *sema, size_t tag, const char *name, h2_t *hlir)
 {
-    hlir_t *other = get_var(sema, name);
+    h2_t *other = get_var(sema, name);
     if (other != NULL && other != hlir)
     {
-        node_t *node = get_hlir_node(hlir);
-        node_t *otherNode = get_hlir_node(other);
+        const node_t *node = h2_get_node(hlir);
+        const node_t *otherNode = h2_get_node(other);
 
-        report_pl0_shadowing(sema_reports(sema), name, otherNode, node);
+        report_pl0_shadowing(sema->reports, name, otherNode, node);
         return;
     }
 
-    sema_set(sema, tag, name, hlir);
+    h2_module_set(sema, tag, name, hlir);
 }
 
-static hlir_t *sema_expr(sema_t *sema, pl0_t *node);
-static hlir_t *sema_compare(sema_t *sema, pl0_t *node);
-static hlir_t *sema_stmt(sema_t *sema, pl0_t *node);
+static h2_t *sema_expr(h2_t *sema, pl0_t *node);
+static h2_t *sema_compare(h2_t *sema, pl0_t *node);
+static h2_t *sema_stmt(h2_t *sema, pl0_t *node);
 
-static hlir_t *sema_digit(pl0_t *node)
+static h2_t *sema_digit(pl0_t *node)
 {
-    return hlir_digit_literal(node->node, kIntegerType, node->digit);
+    return h2_expr_digit(node->node, kIntegerType, node->digit);
 }
 
-static hlir_t *sema_ident(sema_t *sema, pl0_t *node)
+static h2_t *sema_ident(h2_t *sema, pl0_t *node)
 {
-    hlir_t *var = get_var(sema, node->ident);
+    h2_t *var = get_var(sema, node->ident);
     if (var == NULL)
     {
-        report_pl0_unresolved(sema_reports(sema), node->node, node->ident);
-        return hlir_error(node->node, "unresolved identifier");
+        report_pl0_unresolved(sema->reports, node->node, node->ident);
+        return h2_error(node->node, "unresolved identifier");
     }
-    return hlir_name(node->node, var);
+    return h2_expr_load(node->node, var);
 }
 
-static hlir_t *sema_binary(sema_t *sema, pl0_t *node)
+static h2_t *sema_binary(h2_t *sema, pl0_t *node)
 {
-    hlir_t *lhs = sema_expr(sema, node->lhs);
-    hlir_t *rhs = sema_expr(sema, node->rhs);
-    return hlir_binary(node->node, kIntegerType, node->binary, lhs, rhs);
+    h2_t *lhs = sema_expr(sema, node->lhs);
+    h2_t *rhs = sema_expr(sema, node->rhs);
+    return h2_expr_binary(node->node, kIntegerType, node->binary, lhs, rhs);
 }
 
-static hlir_t *sema_unary(sema_t *sema, pl0_t *node)
+static h2_t *sema_unary(h2_t *sema, pl0_t *node)
 {
-    hlir_t *operand = sema_expr(sema, node->operand);
-    return hlir_unary(node->node, node->unary, operand);
+    h2_t *operand = sema_expr(sema, node->operand);
+    return h2_expr_unary(node->node, node->unary, operand);
 }
 
-static hlir_t *sema_expr(sema_t *sema, pl0_t *node)
+static h2_t *sema_expr(h2_t *sema, pl0_t *node)
 {
     switch (node->type)
     {
@@ -173,12 +173,12 @@ static hlir_t *sema_expr(sema_t *sema, pl0_t *node)
     case ePl0Unary:
         return sema_unary(sema, node);
     default:
-        report(sema_reports(sema), eInternal, node->node, "sema-expr: %d", node->type);
-        return hlir_error(node->node, "sema-expr");
+        report(sema->reports, eInternal, node->node, "sema-expr: %d", node->type);
+        return h2_error(node->node, "sema-expr");
     }
 }
 
-static hlir_t *sema_vector(sema_t *sema, node_t *node, vector_t *body)
+static h2_t *sema_vector(h2_t *sema, node_t *node, vector_t *body)
 {
     size_t len = vector_len(body);
     vector_t *result = vector_of(len);
@@ -186,81 +186,81 @@ static hlir_t *sema_vector(sema_t *sema, node_t *node, vector_t *body)
     for (size_t i = 0; i < len; i++)
     {
         pl0_t *it = vector_get(body, i);
-        hlir_t *temp = sema_stmt(sema, it);
+        h2_t *temp = sema_stmt(sema, it);
         vector_set(result, i, temp);
     }
 
-    return hlir_stmts(node, result);
+    return h2_stmt_block(node, result);
 }
 
-static hlir_t *sema_stmts(sema_t *sema, pl0_t *node)
+static h2_t *sema_stmts(h2_t *sema, pl0_t *node)
 {
     return sema_vector(sema, node->node, node->stmts);
 }
 
-static hlir_t *sema_call(sema_t *sema, pl0_t *node)
+static h2_t *sema_call(h2_t *sema, pl0_t *node)
 {
-    hlir_t *proc = get_proc(sema, node->procedure);
+    h2_t *proc = get_proc(sema, node->procedure);
     if (proc == NULL)
     {
-        report_pl0_unresolved(sema_reports(sema), node->node, node->procedure);
-        return hlir_error(node->node, "unresolved procedure");
+        report_pl0_unresolved(sema->reports, node->node, node->procedure);
+        return h2_error(node->node, "unresolved procedure");
     }
 
     vector_t *args = vector_new(0);
 
-    return hlir_call(node->node, proc, args);
+    return h2_expr_call(node->node, proc, args);
 }
 
-static hlir_t *sema_branch(sema_t *sema, pl0_t *node)
+static h2_t *sema_branch(h2_t *sema, pl0_t *node)
 {
-    hlir_t *cond = sema_compare(sema, node->cond);
-    hlir_t *then = sema_stmt(sema, node->then);
+    h2_t *cond = sema_compare(sema, node->cond);
+    h2_t *then = sema_stmt(sema, node->then);
 
-    return hlir_branch(node->node, cond, then, NULL);
+    return h2_stmt_branch(node->node, cond, then, NULL);
 }
 
-static hlir_t *sema_assign(sema_t *sema, pl0_t *node)
+static h2_t *sema_assign(h2_t *sema, pl0_t *node)
 {
-    hlir_t *dst = get_var(sema, node->dst);
-    hlir_t *src = sema_expr(sema, node->src);
+    h2_t *dst = get_var(sema, node->dst);
+    h2_t *src = sema_expr(sema, node->src);
 
     if (dst == NULL)
     {
-        report_pl0_unresolved(sema_reports(sema), node->node, node->dst);
-        return hlir_error(node->node, "unresolved variable");
+        report_pl0_unresolved(sema->reports, node->node, node->dst);
+        return h2_error(node->node, "unresolved variable");
     }
 
-    const hlir_attributes_t *attrs = get_hlir_attributes(dst);
-
-    if (attrs->tags & eQualConst)
+    if (h2_is_const(dst))
     {
-        report(sema_reports(sema), eFatal, node->node, "cannot assign to constant value");
+        report(sema->reports, eFatal, node->node, "cannot assign to constant value");
     }
 
-    return hlir_assign(node->node, dst, src);
+    return h2_stmt_assign(node->node, dst, src);
 }
 
-static hlir_t *sema_loop(sema_t *sema, pl0_t *node)
+static h2_t *sema_loop(h2_t *sema, pl0_t *node)
 {
-    hlir_t *cond = sema_compare(sema, node->cond);
-    hlir_t *body = sema_stmt(sema, node->then);
+    h2_t *cond = sema_compare(sema, node->cond);
+    h2_t *body = sema_stmt(sema, node->then);
 
-    return hlir_loop(node->node, cond, body, NULL);
+    return h2_stmt_loop(node->node, cond, body, NULL);
 }
 
-static hlir_t *sema_print(sema_t *sema, pl0_t *node)
+static h2_t *sema_print(h2_t *sema, pl0_t *node)
 {
-    hlir_t *expr = sema_expr(sema, node->print);
+    h2_t *expr = sema_expr(sema, node->print);
+
+    h2_t *fmt = h2_expr_string(node->node, kStringType, "%d\n", 2);
 
     vector_t *args = vector_of(2);
-    vector_set(args, 0, kFmtString);
+    vector_set(args, 0, fmt);
     vector_set(args, 1, expr);
 
-    return hlir_call(node->node, kPrint, args);
+    return h2_expr_call(node->node, kPrint, args);
 }
 
-static hlir_t *sema_stmt(sema_t *sema, pl0_t *node)
+static h2_t *sema_stmt(h2_t *sema, pl0_t *node)
 {
     switch (node->type)
     {
@@ -277,17 +277,19 @@ static hlir_t *sema_stmt(sema_t *sema, pl0_t *node)
     case ePl0Print:
         return sema_print(sema, node);
     default:
-        report(sema_reports(sema), eInternal, node->node, "sema-stmt: %d", node->type);
-        return hlir_error(node->node, "sema-stmt");
+        report(sema->reports, eInternal, node->node, "sema-stmt: %d", node->type);
+        return h2_error(node->node, "sema-stmt");
     }
 }
 
-static hlir_t *sema_global(sema_t *sema, pl0_t *node)
+static h2_t *sema_global(h2_t *sema, pl0_t *node)
 {
     pl0_t *val = node->value;
     if (val == NULL)
     {
-        return hlir_int_literal(node->node, kIntegerType, 0);
+        mpz_t zero;
+        mpz_init_set_ui(zero, 0);
+        return h2_expr_digit(node->node, kIntegerType, zero);
     }
     else
     {
@@ -295,26 +297,32 @@ static hlir_t *sema_global(sema_t *sema, pl0_t *node)
     }
 }
 
-static hlir_t *sema_odd(sema_t *sema, pl0_t *node)
+static h2_t *sema_odd(h2_t *sema, pl0_t *node)
 {
-    hlir_t *val = sema_expr(sema, node->operand);
-    hlir_t *two = hlir_int_literal(node->node, kIntegerType, 2);
-    hlir_t *one = hlir_int_literal(node->node, kIntegerType, 1);
-    hlir_t *rem = hlir_binary(node->node, kIntegerType, eBinaryRem, val, two);
-    hlir_t *eq = hlir_compare(node->node, kBoolType, eCompareEq, rem, one);
+    mpz_t two;
+    mpz_init_set_ui(two, 2);
+
+    mpz_t one;
+    mpz_init_set_ui(one, 1);
+
+    h2_t *val = sema_expr(sema, node->operand);
+    h2_t *twoValue = h2_expr_digit(node->node, kIntegerType, two);
+    h2_t *oneValue = h2_expr_digit(node->node, kIntegerType, one);
+    h2_t *rem = h2_expr_binary(node->node, kIntegerType, eBinaryRem, val, twoValue);
+    h2_t *eq = h2_expr_compare(node->node, kBoolType, eCompareEq, rem, oneValue);
 
     return eq;
 }
 
-static hlir_t *sema_comp(sema_t *sema, pl0_t *node)
+static h2_t *sema_comp(h2_t *sema, pl0_t *node)
 {
-    hlir_t *lhs = sema_expr(sema, node->lhs);
-    hlir_t *rhs = sema_expr(sema, node->rhs);
+    h2_t *lhs = sema_expr(sema, node->lhs);
+    h2_t *rhs = sema_expr(sema, node->rhs);
 
-    return hlir_compare(node->node, kBoolType, node->compare, lhs, rhs);
+    return h2_expr_compare(node->node, kBoolType, node->compare, lhs, rhs);
 }
 
-static hlir_t *sema_compare(sema_t *sema, pl0_t *node)
+static h2_t *sema_compare(h2_t *sema, pl0_t *node)
 {
     switch (node->type)
     {
@@ -323,61 +331,59 @@ static hlir_t *sema_compare(sema_t *sema, pl0_t *node)
     case ePl0Compare:
         return sema_comp(sema, node);
     default:
-        report(sema_reports(sema), eInternal, node->node, "sema-compare: %d", node->type);
-        return hlir_error(node->node, "sema-compare");
+        report(sema->reports, eInternal, node->node, "sema-compare: %d", node->type);
+        return h2_error(node->node, "sema-compare");
     }
 }
 
-static void sema_proc(sema_t *sema, hlir_t *hlir, pl0_t *node)
+static void sema_proc(h2_t *sema, h2_t *hlir, pl0_t *node)
 {
     size_t nlocals = vector_len(node->locals);
-    size_t sizes[eSemaMax] = {[eSemaValues] = nlocals};
+    size_t sizes[eSema2Total] = {[eSema2Values] = nlocals};
 
-    sema_t *nest = sema_new(sema, eSemaMax, sizes);
+    h2_t *nest = h2_module(sema, node->node, node->name, eSema2Total, sizes);
 
     for (size_t i = 0; i < nlocals; i++)
     {
         pl0_t *local = vector_get(node->locals, i);
-        hlir_t *it = hlir_local(local->node, local->name, kIntegerType);
-        set_var(nest, eSemaValues, local->name, it);
+        h2_t *it = h2_decl_local(local->node, local->name, kIntegerType);
+        set_var(nest, eSema2Values, local->name, it);
         hlir_add_local(hlir, it);
     }
 
-    hlir_t *ret = hlir_return(node->node, NULL);
+    h2_t *ret = h2_stmt_return(node->node, kVoidType, NULL);
 
-    hlir_t *inner = sema_vector(nest, node->node, node->body);
+    h2_t *inner = sema_vector(nest, node->node, node->body);
 
     vector_t *body = vector_new(2);
     vector_push(&body, inner);
     vector_push(&body, ret);
 
     // make sure we have a return statement
-    hlir_t *stmts = hlir_stmts(node->node, body);
-
-    sema_delete(nest);
+    h2_t *stmts = h2_stmt_block(node->node, body);
 
     hlir_build_function(hlir, stmts);
 }
 
-static void insert_module(sema_t *sema, sema_t *other)
+static void insert_module(h2_t *sema, h2_t *other)
 {
-    map_iter_t otherValues = map_iter(sema_tag(other, eSemaValues));
-    map_iter_t otherProcs = map_iter(sema_tag(other, eSemaProcs));
+    map_iter_t otherValues = map_iter(h2_module_tag(other, eSema2Values));
+    map_iter_t otherProcs = map_iter(h2_module_tag(other, eSema2Procs));
 
     while (map_has_next(&otherValues))
     {
-        hlir_t *decl = map_next(&otherValues).value;
-        if (get_hlir_attributes(decl)->visibility != eVisiblePublic) continue; // filter out private symbols
+        h2_t *decl = map_next(&otherValues).value;
+        if (!h2_is_visible(decl, eVisiblePublic)) continue;
 
-        set_var(sema, eSemaValues, get_hlir_name(decl), decl);
+        set_var(sema, eSema2Values, h2_get_name(decl), decl);
     }
 
     while (map_has_next(&otherProcs))
     {
-        hlir_t *decl = map_next(&otherProcs).value;
-        if (get_hlir_attributes(decl)->visibility != eVisiblePublic) continue;
+        h2_t *decl = map_next(&otherProcs).value;
+        if (!h2_is_visible(decl, eVisiblePublic)) continue;
 
-        set_var(sema, eSemaProcs, get_hlir_name(decl), decl);
+        set_var(sema, eSema2Procs, h2_get_name(decl), decl);
     }
 }
 
@@ -407,24 +413,22 @@ void pl0_forward_decls(context_t *context)
         ? vector_tail(root->mod) 
         : context_get_name(context);
 
-    hlir_t *mod = hlir_module(root->node, id, vector_of(0), vector_of(0), vector_of(0));
-
-    size_t sizes[eSemaMax] = {
-        [eSemaValues] = totalConsts + totalGlobals,
-        [eSemaProcs] = totalFunctions,
+    size_t sizes[eSema2Total] = {
+        [eSema2Values] = totalConsts + totalGlobals,
+        [eSema2Procs] = totalFunctions,
     };
-
-    sema_t *sema = sema_root_new(reports, eSemaMax, sizes);
+    
+    h2_t *sema = h2_module_root(reports, root->node, id, eSema2Total, sizes);
 
     // forward declare everything
     for (size_t i = 0; i < totalConsts; i++)
     {
         pl0_t *it = vector_get(root->consts, i);
 
-        hlir_t *hlir = hlir_begin_global(it->node, it->name, kIntegerType);
+        h2_t *hlir = h2_open_global(it->node, it->name, kIntegerType);
         hlir_set_attributes(hlir, kConst);
 
-        set_var(sema, eSemaValues, it->name, hlir);
+        set_var(sema, eSema2Values, it->name, hlir);
         vector_push(&consts, hlir);
     }
 
@@ -432,10 +436,10 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->globals, i);
 
-        hlir_t *hlir = hlir_begin_global(it->node, it->name, kIntegerType);
+        h2_t *hlir = h2_open_global(it->node, it->name, kIntegerType);
         hlir_set_attributes(hlir, kMutable);
 
-        set_var(sema, eSemaValues, it->name, hlir);
+        set_var(sema, eSema2Values, it->name, hlir);
         vector_push(&globals, hlir);
     }
 
@@ -443,7 +447,7 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->procs, i);
 
-        hlir_t *hlir = hlir_begin_function(it->node, it->name, vector_of(0), kVoidType, eArityFixed);
+        h2_t *hlir = h2_open_function(it->node, it->name, vector_of(0), kVoidType, eArityFixed);
         hlir_set_attributes(hlir, kExported);
 
         set_proc(sema, it->name, hlir);
@@ -458,14 +462,14 @@ void pl0_forward_decls(context_t *context)
 
     sema_set_data(sema, BOX(semaData));
 
-    context_update(context, root, sema, mod);
+    context_update(context, root, sema, sema);
 }
 
 void pl0_process_imports(context_t *context)
 {
     lifetime_t *lifetime = context_get_lifetime(context);
     pl0_t *root = context_get_ast(context);
-    sema_t *sema = context_get_sema(context);
+    h2_t *sema = context_get_module(context);
 
     size_t totalImports = vector_len(root->imports);
     for (size_t i = 0; i < totalImports; i++)
@@ -477,15 +481,15 @@ void pl0_process_imports(context_t *context)
 
         if (ctx == NULL)
         {
-            report(sema_reports(sema), eFatal, importDecl->node, "cannot import `%s`, failed to find module", str_join(".", importDecl->path));
+            report(sema->reports, eFatal, importDecl->node, "cannot import `%s`, failed to find module", str_join(".", importDecl->path));
             continue;
         }
 
-        sema_t *lib = context_get_sema(ctx);
+        h2_t *lib = context_get_module(ctx);
 
         if (lib == sema)
         {
-            report(sema_reports(sema), eFatal, importDecl->node, "module cannot import itself");
+            report(sema->reports, eFatal, importDecl->node, "module cannot import itself");
             continue;
         }
 
@@ -496,41 +500,40 @@ void pl0_process_imports(context_t *context)
 void pl0_compile_module(context_t *context)
 {
     pl0_t *root = context_get_ast(context);
-    hlir_t *mod = context_get_hlir(context);
-    sema_t *sema = context_get_sema(context);
+    h2_t *mod = context_get_module(context);
 
-    sema_data_t *semaData = sema_get_data(sema);
+    sema_data_t *semaData = sema_get_data(mod);
 
     for (size_t i = 0; i < vector_len(semaData->consts); i++)
     {
         pl0_t *it = vector_get(root->consts, i);
-        hlir_t *hlir = vector_get(semaData->consts, i);
-        hlir_build_global(hlir, sema_global(sema, it));
+        h2_t *hlir = vector_get(semaData->consts, i);
+        hlir_build_global(hlir, sema_global(mod, it));
     }
 
     for (size_t i = 0; i < vector_len(semaData->globals); i++)
     {
         pl0_t *it = vector_get(root->globals, i);
-        hlir_t *hlir = vector_get(semaData->globals, i);
-        hlir_build_global(hlir, sema_global(sema, it));
+        h2_t *hlir = vector_get(semaData->globals, i);
+        hlir_build_global(hlir, sema_global(mod, it));
     }
 
     for (size_t i = 0; i < vector_len(semaData->procs); i++)
     {
         pl0_t *it = vector_get(root->procs, i);
-        hlir_t *hlir = vector_get(semaData->procs, i);
-        sema_proc(sema, hlir, it);
+        h2_t *hlir = vector_get(semaData->procs, i);
+        sema_proc(mod, hlir, it);
     }
 
     if (root->entry != NULL)
     {
-        hlir_t *body = sema_stmt(sema, root->entry);
+        h2_t *body = sema_stmt(mod, root->entry);
 
         // this is the entry point, we only support cli entry points in pl/0 for now
         const hlir_attributes_t *attribs = hlir_attributes(eLinkEntryCli, eVisiblePrivate, DEFAULT_TAGS, NULL);
         const char *modName = get_hlir_name(mod);
 
-        hlir_t *hlir = hlir_function(root->node, modName, vector_of(0), kVoidType, vector_of(0), eArityFixed, body);
+        h2_t *hlir = h2_decl_function(root->node, modName, vector_of(0), kVoidType, vector_of(0), eArityFixed, body);
         hlir_set_attributes(hlir, attribs);
 
         vector_push(&semaData->procs, hlir);

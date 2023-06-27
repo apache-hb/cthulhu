@@ -1,13 +1,13 @@
 option('languages', type : 'array',
     description : 'select which languages to compile',
     choices : [ 'ctu', 'pl0', 'jvm', 'cc', 'lox', 'example' ],
-    value : [ 'ctu', 'pl0', 'jvm', 'example' ]
+    value : [ 'pl0', 'example' ]
 )
 
 option('interfaces', type : 'array',
     description : 'select which frontend interfaces to enable',
     choices : [ 'cli', 'gui', 'browser', 'example' ],
-    value : [ 'cli', 'example' ]
+    value : [ 'example' ]
 )
 
 option('tuning', type : 'feature',

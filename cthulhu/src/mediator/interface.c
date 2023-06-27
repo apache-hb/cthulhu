@@ -12,8 +12,8 @@
 #include "report/report.h"
 
 #include "stacktrace/stacktrace.h"
-#include "cthulhu/hlir/init.h"
-#include "cthulhu/hlir/check.h"
+#include "cthulhu/hlir2/h2.h"
+#include "cthulhu/hlir2/check.h"
 
 static void runtime_init(void)
 {
@@ -21,7 +21,6 @@ static void runtime_init(void)
 
     stacktrace_init();
     init_gmp(&globalAlloc);
-    init_hlir();
 }
 
 static const language_t *add_language_extension(lifetime_t *lifetime, const char *ext, const language_t *lang)
@@ -221,10 +220,6 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
 
 void lifetime_check(lifetime_t *lifetime)
 {
-    check_t check = {
-        .reports = lifetime_get_reports(lifetime)
-    };
-
     map_iter_t iter = map_iter(lifetime->modules);
     while (map_has_next(&iter))
     {
@@ -235,6 +230,6 @@ void lifetime_check(lifetime_t *lifetime)
         CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
         CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
 
-        check_module(&check, ctx->root);
+        h2_check(lifetime_get_reports(lifetime), ctx->root);
     }
 }

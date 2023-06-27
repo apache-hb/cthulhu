@@ -176,6 +176,7 @@ static hlir_t *hlir_begin_function_with_locals(node_t *node, const char *name, v
     self->result = result;
     self->locals = locals;
     self->of = self; // TODO: this should be a closure
+    self->body = NULL;
 
     return self;
 }

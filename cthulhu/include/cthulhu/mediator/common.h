@@ -8,7 +8,7 @@ typedef struct driver_t driver_t;
 typedef struct context_t context_t;
 
 typedef struct ap_t ap_t;
-typedef struct hlir_t hlir_t;
+typedef struct h2_t h2_t;
 typedef struct scan_t scan_t;
 typedef struct reports_t reports_t;
 

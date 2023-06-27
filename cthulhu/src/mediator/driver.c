@@ -18,7 +18,7 @@ static char *path_to_string(vector_t *path)
     return str_join(".", path);
 }
 
-static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, hlir_t *root, sema_t *sema)
+static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, h2_t *root)
 {
     context_t *self = ctu_malloc(sizeof(context_t));
 
@@ -27,23 +27,22 @@ static context_t *context_inner_new(driver_t *handle, const char *name, void *as
     self->name = name;
     self->ast = ast;
     self->root = root;
-    self->sema = sema;
 
     return self;
 }
 
-context_t *compiled_new(driver_t *handle, const char *name, hlir_t *root, sema_t *sema)
+context_t *compiled_new(driver_t *handle, const char *name, h2_t *root)
 {
     CTASSERT(handle != NULL);
 
-    return context_inner_new(handle, name, NULL, root, sema);
+    return context_inner_new(handle, name, NULL, root);
 }
 
-context_t *context_new(driver_t *handle, const char *name, void *ast, hlir_t *root, sema_t *sema)
+context_t *context_new(driver_t *handle, const char *name, void *ast, h2_t *root)
 {
     CTASSERT(handle != NULL);
 
-    return context_inner_new(handle, name, ast, root, sema);
+    return context_inner_new(handle, name, ast, root);
 }
 
 context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod)
@@ -88,18 +87,11 @@ void *context_get_ast(context_t *context)
     return context->ast;
 }
 
-hlir_t *context_get_hlir(context_t *context)
+h2_t *context_get_module(context_t *context)
 {
     CTASSERT(context != NULL);
 
     return context->root;
-}
-
-sema_t *context_get_sema(context_t *context)
-{
-    CTASSERT(context != NULL);
-
-    return context->sema;
 }
 
 lifetime_t *context_get_lifetime(context_t *context)
@@ -116,11 +108,10 @@ const char *context_get_name(context_t *context)
     return "";
 }
 
-void context_update(context_t *ctx, void *ast, sema_t *sema, hlir_t *root)
+void context_update(context_t *ctx, void *ast, h2_t *root)
 {
     CTASSERT(ctx != NULL);
 
     ctx->ast = ast;
     ctx->root = root;
-    ctx->sema = sema;
 }
