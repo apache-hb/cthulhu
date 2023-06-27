@@ -73,7 +73,7 @@ void pl0_init(driver_t *handle)
     vector_t *params = vector_of(1);
     vector_set(params, 0, h2_decl_param(node, "fmt", kStringType));
 
-    kPrint = h2_decl_function(node, "print", kVoidType, params, NULL);
+    kPrint = h2_decl_function(node, "print", kVoidType, params, eArityVariable, NULL);
 
     h2_t *runtime = make_runtime_mod();
     vector_t *path = make_runtime_path();
@@ -454,7 +454,7 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->procs, i);
 
-        h2_t *hlir = h2_open_function(it->node, it->name, vector_of(0), kVoidType, eArityFixed);
+        h2_t *hlir = h2_open_function(it->node, it->name, kVoidType, vector_of(0), eArityFixed);
         h2_set_attrib(hlir, &kExportAttrib);
 
         set_proc(sema, it->name, hlir);
@@ -467,7 +467,7 @@ void pl0_forward_decls(context_t *context)
         .procs = procs,
     };
 
-    sema_set_data(sema, BOX(semaData));
+    h2_module_update(sema, BOX(semaData));
 
     context_update(context, root, sema);
 }
@@ -509,7 +509,7 @@ void pl0_compile_module(context_t *context)
     pl0_t *root = context_get_ast(context);
     h2_t *mod = context_get_module(context);
 
-    sema_data_t *semaData = sema_get_data(mod);
+    sema_data_t *semaData = h2_module_data(mod);
 
     for (size_t i = 0; i < vector_len(semaData->consts); i++)
     {
@@ -537,7 +537,7 @@ void pl0_compile_module(context_t *context)
         h2_t *body = sema_stmt(mod, root->entry);
 
         // this is the entry point, we only support cli entry points in pl/0 for now
-        h2_t *hlir = h2_decl_function(root->node, h2_get_name(mod), vector_of(0), kVoidType, vector_of(0), eArityFixed, body);
+        h2_t *hlir = h2_decl_function(root->node, h2_get_name(mod), kVoidType, vector_of(0), eArityFixed, body);
         h2_set_attrib(hlir, &kEntryAttrib);
 
         vector_push(&semaData->procs, hlir);

@@ -38,3 +38,35 @@ typedef enum builtin_t {
 #include "hlir.inc"
     eBuiltinTotal
 } builtin_t;
+
+typedef enum arity_t {
+#define HLIR_ARITY(ID, STR) ID,
+#include "hlir.inc"
+    eArityTotal
+} arity_t;
+/**
+ * @brief the visibility of a declaration
+ */
+typedef enum h2_link_t {
+#define HLIR_LINKAGE(ID, STR) ID,
+#include "hlir.inc"
+    eLinkTotal
+} h2_link_t;
+
+typedef enum h2_visible_t {
+#define HLIR_VISIBILITY(ID, STR) ID,
+#include "hlir.inc"
+    eHlirVisibilityTotal
+} h2_visible_t;
+
+typedef enum h2_digit_t {
+#define DIGIT_KIND(ID, STR) ID,
+#include "hlir.inc"
+    eDigitTotal
+} h2_digit_t;
+
+typedef enum h2_sign_t {
+#define SIGN_KIND(ID, STR) ID,
+#include "hlir.inc"
+    eSignTotal
+} h2_sign_t;

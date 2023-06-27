@@ -118,8 +118,9 @@ DIGIT_KIND(eDigitLeast64, "least64")
 #   define SIGN_KIND(ID, STR)
 #endif
 
-SIGN_KIND(eUnsigned, "unsigned")
-SIGN_KIND(eSigned,   "signed")
+SIGN_KIND(eSignDefault,  "default")
+SIGN_KIND(eSignUnsigned, "unsigned")
+SIGN_KIND(eSignSigned,   "signed")
 
 #undef SIGN_KIND
 
@@ -148,9 +149,9 @@ TYPE_QUALIFIER(eQualAtomic, "atomic", (1 << 2))
 #   define HLIR_LINKAGE(ID, STR)
 #endif
 
-HLIR_LINKAGE(eLinkExported, "exported")
-HLIR_LINKAGE(eLinkImported, "imported")
-HLIR_LINKAGE(eLinkInternal, "internal")
+HLIR_LINKAGE(eLinkExport, "exported")
+HLIR_LINKAGE(eLinkImport, "imported")
+HLIR_LINKAGE(eLinkModule, "internal")
 HLIR_LINKAGE(eLinkEntryCli, "entry-cli")
 HLIR_LINKAGE(eLinkEntryGui, "entry-gui")
 

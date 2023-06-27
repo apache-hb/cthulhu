@@ -16,40 +16,6 @@ typedef struct h2_cookie_t h2_cookie_t;
 
 typedef void (*h2_resolve_t)(h2_cookie_t *cookie, h2_t *self, void *user);
 
-typedef enum h2_digit_t {
-    eDigitChar,
-    eDigitShort,
-    eDigitInt,
-    eDigitLong,
-
-    eDigitTotal
-} h2_digit_t;
-
-typedef enum h2_sign_t {
-    eSignDefault,
-    eSignUnsigned,
-    eSignSigned,
-
-    eSignTotal
-} h2_sign_t;
-
-typedef enum h2_link_t {
-    eLinkExport,
-    eLinkImport,
-    eLinkModule,
-
-    eLinkEntryCli,
-
-    eLinkTotal
-} h2_link_t;
-
-typedef enum h2_visible_t {
-    eVisiblePublic,
-    eVisiblePrivate,
-
-    eVisibleTotal
-} h2_visible_t;
-
 typedef enum h2_quals_t {
     eQualDefault = (0 << 0),
     eQualMutable = (1 << 0),
@@ -109,10 +75,7 @@ typedef struct h2_t {
         };
 
         /* eHlir2Error */
-        struct {
-            const char *message;
-            vector_t *trace;
-        };
+        const char *message;
         
         /* any declaration */
         struct {
@@ -280,7 +243,7 @@ void h2_resolve(h2_cookie_t *cookie, h2_t *decl);
 h2_t *h2_decl_open(const node_t *node, const char *name, void *user, h2_kind_t expected, h2_resolve_t fnResolve);
 
 h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type);
-h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *result, vector_t *params);
+h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *result, vector_t *params, arity_t arity);
 
 void h2_close_global(h2_t *self, h2_t *value);
 void h2_close_function(h2_t *self, h2_t *body);
@@ -288,7 +251,7 @@ void h2_close_function(h2_t *self, h2_t *body);
 h2_t *h2_decl_param(const node_t *node, const char *name, const h2_t *type);
 h2_t *h2_decl_local(const node_t *node, const char *name, const h2_t *type);
 h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value);
-h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *result, vector_t *params, h2_t *body);
+h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *result, vector_t *params, arity_t arity, h2_t *body);
 
 ///
 /// various helpers
@@ -339,6 +302,9 @@ h2_t *h2_module_get(h2_t *self, size_t tag, const char *name);
 h2_t *h2_module_set(h2_t *self, size_t tag, const char *name, h2_t *value);
 
 map_t *h2_module_tag(h2_t *self, size_t tag);
+
+void h2_module_update(h2_t *self, void *data);
+void *h2_module_data(h2_t *self);
 
 /**
  * @brief return a resolution cookie
