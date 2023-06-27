@@ -117,6 +117,7 @@ typedef struct h2_t {
         /* any declaration */
         struct {
             const char *name; ///< the name of the declaration
+            const h2_attrib_t *attrib; ///< the attributes of the declaration
 
             union {
                 /* eHlir2TypeDigit */
@@ -274,16 +275,27 @@ h2_t *h2_stmt_branch(const node_t *node, h2_t *cond, h2_t *then, h2_t *other);
 /// h2 decl interface
 ///
 
-h2_t *h2_decl_param(const node_t *node, const char *name, const h2_t *type);
-
 // delay the resolve of a declaration
 void h2_resolve(h2_cookie_t *cookie, h2_t *decl);
 h2_t *h2_decl_open(const node_t *node, const char *name, void *user, h2_kind_t expected, h2_resolve_t fnResolve);
-void h2_close_global(h2_t *self, const h2_t *type, h2_t *value);
 
+h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type);
+h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *result, vector_t *params);
+
+void h2_close_global(h2_t *self, h2_t *value);
+void h2_close_function(h2_t *self, h2_t *body);
+
+h2_t *h2_decl_param(const node_t *node, const char *name, const h2_t *type);
 h2_t *h2_decl_local(const node_t *node, const char *name, const h2_t *type);
 h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value);
 h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *result, vector_t *params, h2_t *body);
+
+///
+/// various helpers
+///
+
+void h2_add_local(h2_t *self, h2_t *decl);
+void h2_set_attrib(h2_t *self, const h2_attrib_t *attrib);
 
 ///
 /// h2 sema interface

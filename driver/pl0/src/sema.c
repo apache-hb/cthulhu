@@ -33,6 +33,11 @@ static const h2_attrib_t kExportAttrib = {
     .visible = eVisiblePublic
 };
 
+static const h2_attrib_t kEntryAttrib = {
+    .link = eLinkEntryCli,
+    .visible = eVisiblePublic
+};
+
 static h2_t *make_runtime_mod(void)
 {
     node_t *node = node_builtin();
@@ -348,7 +353,7 @@ static void sema_proc(h2_t *sema, h2_t *hlir, pl0_t *node)
         pl0_t *local = vector_get(node->locals, i);
         h2_t *it = h2_decl_local(local->node, local->name, kIntegerType);
         set_var(nest, eSema2Values, local->name, it);
-        hlir_add_local(hlir, it);
+        h2_add_local(hlir, it);
     }
 
     h2_t *ret = h2_stmt_return(node->node, kVoidType, NULL);
@@ -362,7 +367,7 @@ static void sema_proc(h2_t *sema, h2_t *hlir, pl0_t *node)
     // make sure we have a return statement
     h2_t *stmts = h2_stmt_block(node->node, body);
 
-    hlir_build_function(hlir, stmts);
+    h2_close_function(hlir, stmts);
 }
 
 static void insert_module(h2_t *sema, h2_t *other)
@@ -425,8 +430,9 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->consts, i);
 
+        // TODO: mark const
         h2_t *hlir = h2_open_global(it->node, it->name, kIntegerType);
-        hlir_set_attributes(hlir, kConst);
+        h2_set_attrib(hlir, &kExportAttrib);
 
         set_var(sema, eSema2Values, it->name, hlir);
         vector_push(&consts, hlir);
@@ -436,8 +442,9 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->globals, i);
 
+        // TODO: mark mutable
         h2_t *hlir = h2_open_global(it->node, it->name, kIntegerType);
-        hlir_set_attributes(hlir, kMutable);
+        h2_set_attrib(hlir, &kExportAttrib);
 
         set_var(sema, eSema2Values, it->name, hlir);
         vector_push(&globals, hlir);
@@ -448,7 +455,7 @@ void pl0_forward_decls(context_t *context)
         pl0_t *it = vector_get(root->procs, i);
 
         h2_t *hlir = h2_open_function(it->node, it->name, vector_of(0), kVoidType, eArityFixed);
-        hlir_set_attributes(hlir, kExported);
+        h2_set_attrib(hlir, &kExportAttrib);
 
         set_proc(sema, it->name, hlir);
         vector_push(&procs, hlir);
@@ -462,7 +469,7 @@ void pl0_forward_decls(context_t *context)
 
     sema_set_data(sema, BOX(semaData));
 
-    context_update(context, root, sema, sema);
+    context_update(context, root, sema);
 }
 
 void pl0_process_imports(context_t *context)
@@ -508,14 +515,14 @@ void pl0_compile_module(context_t *context)
     {
         pl0_t *it = vector_get(root->consts, i);
         h2_t *hlir = vector_get(semaData->consts, i);
-        hlir_build_global(hlir, sema_global(mod, it));
+        h2_close_global(hlir, sema_global(mod, it));
     }
 
     for (size_t i = 0; i < vector_len(semaData->globals); i++)
     {
         pl0_t *it = vector_get(root->globals, i);
         h2_t *hlir = vector_get(semaData->globals, i);
-        hlir_build_global(hlir, sema_global(mod, it));
+        h2_close_global(hlir, sema_global(mod, it));
     }
 
     for (size_t i = 0; i < vector_len(semaData->procs); i++)
@@ -530,14 +537,9 @@ void pl0_compile_module(context_t *context)
         h2_t *body = sema_stmt(mod, root->entry);
 
         // this is the entry point, we only support cli entry points in pl/0 for now
-        const hlir_attributes_t *attribs = hlir_attributes(eLinkEntryCli, eVisiblePrivate, DEFAULT_TAGS, NULL);
-        const char *modName = get_hlir_name(mod);
-
-        h2_t *hlir = h2_decl_function(root->node, modName, vector_of(0), kVoidType, vector_of(0), eArityFixed, body);
-        hlir_set_attributes(hlir, attribs);
+        h2_t *hlir = h2_decl_function(root->node, h2_get_name(mod), vector_of(0), kVoidType, vector_of(0), eArityFixed, body);
+        h2_set_attrib(hlir, &kEntryAttrib);
 
         vector_push(&semaData->procs, hlir);
     }
-
-    hlir_build_module(mod, mod->types, vector_merge(semaData->consts, semaData->globals), semaData->procs);
 }
