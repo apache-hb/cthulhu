@@ -1,6 +1,6 @@
 #include "cthulhu/mediator/driver.h"
 
-#include "cthulhu/hlir2/h2.h"
+#include "cthulhu/hlir/h2.h"
 
 #include "std/vector.h"
 

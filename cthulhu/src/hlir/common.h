@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/hlir2/h2.h"
+#include "cthulhu/hlir/h2.h"
 
 typedef struct h2_cookie_t {
     h2_t *parent;

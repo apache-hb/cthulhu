@@ -25,21 +25,21 @@
 # )
 
 src = [
-    'src/hlir2/h2.c',
-    'src/hlir2/check.c',
-    'src/hlir2/sema.c',
-    'src/hlir2/decl.c',
-    'src/hlir2/query.c'
+    'src/hlir/h2.c',
+    'src/hlir/check.c',
+    'src/hlir/sema.c',
+    'src/hlir/decl.c',
+    'src/hlir/query.c'
 ]
 
-libh2 = library('hlir2', src,
+libhlir = library('hlir', src,
     include_directories : 'include',
     c_args : args,
     dependencies : [ std, gmp ]
 )
 
-h2 = declare_dependency(
-    link_with : libh2,
+hlir = declare_dependency(
+    link_with : libhlir,
     include_directories : 'include',
     dependencies : [ gmp ]
 )
@@ -89,11 +89,11 @@ src = [
 libmediator = library('mediator', src,
     include_directories : 'include',
     c_args : args,
-    dependencies : [ std, h2 ]
+    dependencies : [ std, hlir ]
 )
 
 mediator = declare_dependency(
     link_with : libmediator,
     include_directories : [ 'include', versiondir ],
-    dependencies : [ base, h2 ]
+    dependencies : [ base ]
 )

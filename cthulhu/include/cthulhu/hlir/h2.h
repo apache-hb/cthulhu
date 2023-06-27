@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/hlir2/ops.h"
+#include "cthulhu/hlir/ops.h"
 
 #include <stdbool.h>
 #include <gmp.h>

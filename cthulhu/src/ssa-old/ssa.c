@@ -1,7 +1,7 @@
 #include "cthulhu/ssa/ssa.h"
 
-#include "cthulhu/hlir2/h2.h"
-#include "cthulhu/hlir2/query.h"
+#include "cthulhu/hlir/h2.h"
+#include "cthulhu/hlir/query.h"
 
 #include "base/macros.h"
 #include "base/memory.h"

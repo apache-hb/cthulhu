@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/hlir2/h2.h"
+#include "cthulhu/hlir/h2.h"
 
 typedef struct reports_t reports_t;
 typedef struct node_t node_t;

@@ -1,4 +1,4 @@
-#include "cthulhu/hlir2/check.h"
+#include "cthulhu/hlir/check.h"
 
 #include "base/macros.h"
 

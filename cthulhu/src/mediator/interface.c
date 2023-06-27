@@ -12,8 +12,8 @@
 #include "report/report.h"
 
 #include "stacktrace/stacktrace.h"
-#include "cthulhu/hlir2/h2.h"
-#include "cthulhu/hlir2/check.h"
+#include "cthulhu/hlir/h2.h"
+#include "cthulhu/hlir/check.h"
 
 static void runtime_init(void)
 {

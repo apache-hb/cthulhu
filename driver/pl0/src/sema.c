@@ -12,8 +12,8 @@
 #include "std/str.h"
 #include "std/map.h"
 
-#include "cthulhu/hlir2/h2.h"
-#include "cthulhu/hlir2/query.h"
+#include "cthulhu/hlir/h2.h"
+#include "cthulhu/hlir/query.h"
 
 static const h2_t *kStringType = NULL;
 static const h2_t *kIntegerType = NULL;
