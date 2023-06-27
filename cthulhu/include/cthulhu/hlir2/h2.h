@@ -41,17 +41,41 @@ typedef struct h2_attrib_t {
 } h2_attrib_t;
 
 typedef enum h2_kind_t {
-    eHlir2Module,
-
-    eHlir2TypeMeta,
     eHlir2TypeEmpty,
     eHlir2TypeUnit,
     eHlir2TypeBool,
     eHlir2TypeDigit,
     eHlir2TypeString,
+    eHlir2TypeClosure,
 
-    eHlir2Begin,
+    eHlir2ExprEmpty,
+    eHlir2ExprUnit,
+    eHlir2ExprBool,
+    eHlir2ExprDigit,
+    eHlir2ExprString,
+
+    eHlir2ExprLoad,
+    eHlir2ExprUnary,
+    eHlir2ExprBinary,
+    eHlir2ExprCompare,
+
+    eHlir2ExprCall,
+
+    eHlir2StmtBlock,
+    eHlir2StmtReturn,
+    eHlir2StmtAssign,
+    eHlir2StmtLoop,
+    eHlir2StmtBranch,
+
+    eHlir2DeclGlobal,
+    eHlir2DeclLocal,
+    eHlir2DeclParam,
+    eHlir2DeclFunction,
+    eHlir2DeclModule,
+
+    eHlir2Resolve,
     eHlir2Error,
+    eHlir2Qualify,
 
     eHlir2Total
 } h2_kind_t;
@@ -74,9 +98,60 @@ typedef struct h2_t {
             size_t stringLength;
         };
 
+        /* eHlir2Qualify */
+        struct {
+            h2_quals_t quals;
+            const h2_t *qualify;
+        };
+
+        /* eHlir2ExprLoad */
+        h2_t *load;
+
+        /* eHlir2ExprUnary */
+        struct {
+            unary_t unary;
+            h2_t *operand;
+        };
+
+        /* eHlir2ExprBinary|eHlir2ExprCompare */
+        struct {
+            union {
+                binary_t binary;
+                compare_t compare;
+            };
+
+            h2_t *lhs;
+            h2_t *rhs;
+        };
+
+        /* eHlir2ExprCall */
+        struct {
+            const h2_t *callee;
+            vector_t *args;
+        };
+
         /* eHlir2Error */
         const char *message;
         
+        /* eHlir2StmtBlock */
+        vector_t *stmts;
+
+        /* eHlir2StmtReturn */
+        const h2_t *value;
+
+        /* eHlir2StmtAssign */
+        struct {
+            h2_t *dst;
+            h2_t *src;
+        };
+
+        /* eHlir2StmtLoop|eHlir2StmtBranch */
+        struct {
+            h2_t *cond;
+            h2_t *then;
+            h2_t *other;
+        };
+
         /* any declaration */
         struct {
             const char *name; ///< the name of the declaration
@@ -89,17 +164,36 @@ typedef struct h2_t {
                     h2_sign_t sign;
                 };
 
+                /* eHlir2TypeClosure */
+                struct {
+                    const h2_t *result;
+                    vector_t *params;
+                    arity_t arity;
+                };
+
+                /* eHlir2DeclFunction */
+                struct {
+                    vector_t *locals;
+                    h2_t *body;
+                };
+
+                /* eHlir2DeclGlobal */
+                struct {
+                    h2_t *global;
+                };
+
                 /* eHlir2Begin */
                 struct {
                     void *user;
                     h2_resolve_t fnResolve;
                 };
 
-                /* eHlir2Module */
+                /* eHlir2DeclModule */
                 struct {
+                    void *data;
                     h2_t *parent;
                     reports_t *reports;
-                    map_t *tags;
+                    vector_t *tags;
                 };
             };
         };
@@ -115,15 +209,6 @@ h2_t *h2_error(const node_t *node, const char *message);
 ///
 /// h2 type interface
 ///
-
-/**
- * @brief the type of all types
- * 
- * @param node where this type was defined
- * @param name the name of the type
- * @return the type
- */
-h2_t *h2_type_meta(const node_t *node, const char *name);
 
 /**
  * @brief create an empty type, this is a type that has no values and can never be created in a well defined program
@@ -172,7 +257,13 @@ h2_t *h2_type_digit(const node_t *node, const char *name, h2_digit_t digit, h2_s
  */
 h2_t *h2_type_string(const node_t *node, const char *name);
 
-h2_t *h2_type_qualify(const node_t *node, const h2_t *type, h2_quals_t quals);
+h2_t *h2_type_closure(const node_t *node, const char *name, const h2_t *result, vector_t *params, arity_t arity);
+
+///
+/// qualify
+///
+
+h2_t *h2_qualify(const node_t *node, const h2_t *type, h2_quals_t quals);
 
 
 ///
@@ -180,7 +271,7 @@ h2_t *h2_type_qualify(const node_t *node, const h2_t *type, h2_quals_t quals);
 ///
 
 h2_t *h2_expr_empty(const node_t *node, const h2_t *type);
-h2_t *h2_expr_void(const node_t *node, const h2_t *type);
+h2_t *h2_expr_unit(const node_t *node, const h2_t *type);
 h2_t *h2_expr_bool(const node_t *node, const h2_t *type, bool value);
 h2_t *h2_expr_digit(const node_t *node, const h2_t *type, mpz_t value);
 
@@ -200,7 +291,7 @@ h2_t *h2_expr_unary(const node_t *node, unary_t unary, h2_t *expr);
 h2_t *h2_expr_binary(const node_t *node, const h2_t *type, binary_t binary, h2_t *lhs, h2_t *rhs);
 h2_t *h2_expr_compare(const node_t *node, const h2_t *type, compare_t compare, h2_t *lhs, h2_t *rhs);
 
-h2_t *h2_expr_call(const node_t *node, const h2_t *expr, vector_t *args);
+h2_t *h2_expr_call(const node_t *node, const h2_t *callee, vector_t *args);
 
 ///
 /// h2 statement interface
@@ -219,15 +310,12 @@ h2_t *h2_stmt_block(const node_t *node, vector_t *stmts);
  * @brief create a return statement
  * 
  * @note this is only valid in a function
- * @note either @a value or @a type must not be NULL
- * @note if neither are null then the type of @a value must be the same as @a type
- * 
+ *
  * @param node the location of the return statement
- * @param type the type of the return statement, this must be the same as the return type of the function
  * @param value the value to return
  * @return the return statement
  */
-h2_t *h2_stmt_return(const node_t *node, const h2_t *type, h2_t *value);
+h2_t *h2_stmt_return(const node_t *node, const h2_t *value);
 
 
 h2_t *h2_stmt_assign(const node_t *node, h2_t *dst, h2_t *src);
@@ -239,11 +327,11 @@ h2_t *h2_stmt_branch(const node_t *node, h2_t *cond, h2_t *then, h2_t *other);
 ///
 
 // delay the resolve of a declaration
-void h2_resolve(h2_cookie_t *cookie, h2_t *decl);
-h2_t *h2_decl_open(const node_t *node, const char *name, void *user, h2_kind_t expected, h2_resolve_t fnResolve);
+h2_t *h2_resolve(h2_cookie_t *cookie, h2_t *decl);
+h2_t *h2_decl_open(const node_t *node, const char *name, const h2_t *type, void *user, h2_resolve_t fnResolve);
 
 h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type);
-h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *result, vector_t *params, arity_t arity);
+h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature);
 
 void h2_close_global(h2_t *self, h2_t *value);
 void h2_close_function(h2_t *self, h2_t *body);
@@ -251,7 +339,7 @@ void h2_close_function(h2_t *self, h2_t *body);
 h2_t *h2_decl_param(const node_t *node, const char *name, const h2_t *type);
 h2_t *h2_decl_local(const node_t *node, const char *name, const h2_t *type);
 h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value);
-h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *result, vector_t *params, arity_t arity, h2_t *body);
+h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *signature, h2_t *body);
 
 ///
 /// various helpers

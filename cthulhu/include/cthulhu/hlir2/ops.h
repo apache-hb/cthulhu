@@ -70,3 +70,10 @@ typedef enum h2_sign_t {
 #include "hlir.inc"
     eSignTotal
 } h2_sign_t;
+
+const char *unary_name(unary_t op);
+const char *binary_name(binary_t op);
+const char *compare_name(compare_t op);
+
+const char *sign_name(h2_sign_t sign);
+const char *digit_name(h2_digit_t digit);

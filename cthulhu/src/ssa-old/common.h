@@ -2,7 +2,7 @@
 
 #include "cthulhu/ssa/ssa.h"
 
-typedef struct hlir_t hlir_t;
+typedef struct h2_t h2_t;
 
 const char *ssa_opcode_name(ssa_opcode_t op);
 const char *ssa_operand_name(ssa_operand_kind_t op);

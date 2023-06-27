@@ -2,5 +2,5 @@ src = [ 'main.c' ]
 
 example = executable('example', src,
     link_args : host != 'windows' ? [] : [ 'setargv.obj' ],
-    dependencies : [ generic, mediator, argparse, ssa, emit, support ]
+    dependencies : [ mediator, argparse, support, h2 ]
 )

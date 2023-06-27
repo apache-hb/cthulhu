@@ -11,9 +11,6 @@
 
 #include "argparse/argparse.h"
 
-#include "cthulhu/ssa/ssa.h"
-#include "cthulhu/emit/c89.h"
-
 #include <stdio.h>
 
 #define CHECK_REPORTS(reports, msg) \
@@ -103,6 +100,7 @@ int main(int argc, const char **argv)
     }
 
     map_t *modmap = lifetime_get_modules(lifetime);
+#if 0
     vector_t *mods = map_values(modmap);
     ssa_module_t *ssa = ssa_gen_module(reports, mods);
     CHECK_REPORTS(reports, "generating ssa");
@@ -121,4 +119,5 @@ int main(int argc, const char **argv)
 
     c89_emit(emit, ssa);
     CHECK_REPORTS(reports, "emitting ssa");
+#endif
 }

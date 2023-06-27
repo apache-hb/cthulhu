@@ -1,10 +1,6 @@
 #pragma once
 
-#include "cthulhu/hlir/attribs.h"
-#include "cthulhu/hlir/string-view.h"
-#include "cthulhu/hlir/digit.h"
-#include "cthulhu/hlir/ops.h"
-#include "cthulhu/hlir/arity.h"
+#include "cthulhu/hlir2/ops.h"
 
 #include <stdbool.h>
 
@@ -42,8 +38,8 @@ typedef struct ssa_type_t
     union {
         // eTypeDigit
         struct {
-            digit_t digit;
-            sign_t sign;
+            h2_digit_t digit;
+            h2_sign_t sign;
         };
 
         // eTypeBool
@@ -95,7 +91,10 @@ typedef struct ssa_value_t
         bool boolean;
 
         // eTypeString
-        string_view_t string; // TODO: wrong
+        struct {
+            const char *stringValue;
+            size_t stringLength;
+        };
 
         // eTypeUnit
         /* empty */
@@ -288,8 +287,8 @@ typedef struct ssa_flow_t
 {
     const char *name;
     
-    linkage_t linkage;
-    visibility_t visibility;
+    h2_link_t link;
+    h2_visible_t visible;
 
     const ssa_type_t *type;
 

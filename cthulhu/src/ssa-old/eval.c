@@ -1,4 +1,3 @@
-#include "cthulhu/hlir/ops.h"
 #include "cthulhu/ssa/ssa.h"
 
 #include "report/report.h"
@@ -312,7 +311,7 @@ static opt_result_t opt_global(opt_t *opt, const ssa_flow_t *flow)
 static void build_global(opt_t *opt, ssa_flow_t *flow)
 {
     // if there is no entry then the global is uninitialized
-    if (flow->linkage == eLinkImported)
+    if (flow->link == eLinkImport)
     {
         return;
     }

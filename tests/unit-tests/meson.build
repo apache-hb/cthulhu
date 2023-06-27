@@ -12,7 +12,7 @@ foreach case : all
 
     it = executable(case, path,
         include_directories : '.',
-        dependencies : [ generic, mediator, argparse ]
+        dependencies : [ mediator, argparse ]
     )
 
     test('test-' + case, it,

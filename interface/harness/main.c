@@ -14,7 +14,6 @@
 
 #include "argparse/argparse.h"
 
-#include "cthulhu/ssa/ssa.h"
 #include "cthulhu/emit/c89.h"
 
 #include <stdio.h>
@@ -117,6 +116,8 @@ int main(int argc, const char **argv)
     CHECK_REPORTS(reports, "validations failed");
 
     map_t *modmap = lifetime_get_modules(lifetime);
+
+#if 0
     vector_t *mods = map_values(modmap);
     ssa_module_t *ssa = ssa_gen_module(reports, mods);
     CHECK_REPORTS(reports, "generating ssa");
@@ -125,6 +126,7 @@ int main(int argc, const char **argv)
     CHECK_REPORTS(reports, "optimizing ssa");
 
     ssa_emit_module(reports, ssa);
+#endif
 
     const char *path = argv[1];
 
@@ -143,6 +145,7 @@ int main(int argc, const char **argv)
 
     CHECK_REPORTS(reports, "failed to open output files");
 
+#if 0
     c89_emit_t emit = {
         .reports = reports,
         .fs = fs_virtual(reports, "out")
@@ -152,7 +155,7 @@ int main(int argc, const char **argv)
     CHECK_REPORTS(reports, "emitting ssa");
 
     fs_sync(dst, emit.fs);
-
+#endif
 #if OS_WINDOWS
     int status = system(format("cl /nologo /c %s /Fo%s", srcPath, libPath));
     if (status == -1)

@@ -1,7 +1,5 @@
 #include "cthulhu/emit/c89.h"
 
-#include "cthulhu/hlir/attribs.h"
-#include "cthulhu/hlir/digit.h"
 #include "cthulhu/ssa/ssa.h"
 
 #include "std/vector.h"

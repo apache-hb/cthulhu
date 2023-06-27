@@ -8,7 +8,7 @@ src = [
 ]
 
 pl0 = library('pl0', src,
-    dependencies : [ gmp, generic, mediator, interop, location ],
+    dependencies : [ gmp, mediator, interop, location, h2 ],
     c_args : args,
     include_directories : [ 'src' ]
 )

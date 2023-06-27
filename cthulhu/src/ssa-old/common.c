@@ -10,8 +10,6 @@
 
 #include "cthulhu/ssa/ssa.h"
 
-#include "cthulhu/hlir/query.h"
-
 #include <string.h>
 
 const char *ssa_opcode_name(ssa_opcode_t op) 
@@ -151,7 +149,7 @@ const char *ssa_type_to_string(const ssa_type_t *type)
 {
     switch (type->kind)
     {
-    case eTypeDigit: return format("digit(%s, %s)", hlir_digit_to_string(type->digit), hlir_sign_to_string(type->sign));
+    case eTypeDigit: return format("digit(%s, %s)", digit_name(type->digit), sign_name(type->sign));
     case eTypeBool: return "bool";
     case eTypePointer: return format("ptr(%s)", ssa_type_to_string(type->ptr));
     case eTypeString: return "string";

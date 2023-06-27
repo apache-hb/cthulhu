@@ -20,7 +20,7 @@ static const h2_t *kIntegerType = NULL;
 static const h2_t *kBoolType = NULL;
 static const h2_t *kVoidType = NULL;
 
-static const h2_t *kPrint = NULL;
+static h2_t *kPrint = NULL;
 
 static const h2_attrib_t kPrintAttrib = {
     .link = eLinkImport,
@@ -38,7 +38,7 @@ static const h2_attrib_t kEntryAttrib = {
     .visible = eVisiblePublic
 };
 
-static h2_t *make_runtime_mod(void)
+static h2_t *make_runtime_mod(reports_t *reports)
 {
     node_t *node = node_builtin();
     size_t decls[eSema2Total] = {
@@ -48,7 +48,7 @@ static h2_t *make_runtime_mod(void)
         [eSema2Modules] = 1
     };
 
-    return h2_module(NULL, node, "pl0", eSema2Total, decls);
+    return h2_module_root(reports, node, "pl0", eSema2Total, decls);
 }
 
 static vector_t *make_runtime_path(void)
@@ -62,6 +62,8 @@ static vector_t *make_runtime_path(void)
 void pl0_init(driver_t *handle)
 {
     node_t *node = node_builtin();
+    lifetime_t *lifetime = handle_get_lifetime(handle);
+    reports_t *reports = lifetime_get_reports(lifetime);
 
     logverbose("initializing PL/0 runtime");
 
@@ -73,9 +75,11 @@ void pl0_init(driver_t *handle)
     vector_t *params = vector_of(1);
     vector_set(params, 0, h2_decl_param(node, "fmt", kStringType));
 
-    kPrint = h2_decl_function(node, "print", kVoidType, params, eArityVariable, NULL);
+    h2_t *signature = h2_type_closure(node, "print", kVoidType, params, eArityVariable);
+    kPrint = h2_decl_function(node, "print", signature, NULL);
+    h2_set_attrib(kPrint, &kPrintAttrib);
 
-    h2_t *runtime = make_runtime_mod();
+    h2_t *runtime = make_runtime_mod(reports);
     vector_t *path = make_runtime_path();
 
     context_t *ctx = compiled_new(handle, "pl0", runtime);
@@ -236,7 +240,7 @@ static h2_t *sema_assign(h2_t *sema, pl0_t *node)
         return h2_error(node->node, "unresolved variable");
     }
 
-    if (h2_is_const(dst))
+    if (!h2_has_quals(dst, eQualMutable))
     {
         report(sema->reports, eFatal, node->node, "cannot assign to constant value");
     }
@@ -356,7 +360,7 @@ static void sema_proc(h2_t *sema, h2_t *hlir, pl0_t *node)
         h2_add_local(hlir, it);
     }
 
-    h2_t *ret = h2_stmt_return(node->node, kVoidType, NULL);
+    h2_t *ret = h2_stmt_return(node->node, h2_expr_unit(node->node, kVoidType));
 
     h2_t *inner = sema_vector(nest, node->node, node->body);
 
@@ -378,7 +382,7 @@ static void insert_module(h2_t *sema, h2_t *other)
     while (map_has_next(&otherValues))
     {
         h2_t *decl = map_next(&otherValues).value;
-        if (!h2_is_visible(decl, eVisiblePublic)) continue;
+        if (!h2_has_vis(decl, eVisiblePublic)) continue;
 
         set_var(sema, eSema2Values, h2_get_name(decl), decl);
     }
@@ -386,7 +390,7 @@ static void insert_module(h2_t *sema, h2_t *other)
     while (map_has_next(&otherProcs))
     {
         h2_t *decl = map_next(&otherProcs).value;
-        if (!h2_is_visible(decl, eVisiblePublic)) continue;
+        if (!h2_has_vis(decl, eVisiblePublic)) continue;
 
         set_var(sema, eSema2Procs, h2_get_name(decl), decl);
     }
@@ -454,7 +458,8 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->procs, i);
 
-        h2_t *hlir = h2_open_function(it->node, it->name, kVoidType, vector_of(0), eArityFixed);
+        h2_t *signature = h2_type_closure(it->node, it->name, kVoidType, vector_of(0), eArityFixed);
+        h2_t *hlir = h2_open_function(it->node, it->name, signature);
         h2_set_attrib(hlir, &kExportAttrib);
 
         set_proc(sema, it->name, hlir);
@@ -537,7 +542,8 @@ void pl0_compile_module(context_t *context)
         h2_t *body = sema_stmt(mod, root->entry);
 
         // this is the entry point, we only support cli entry points in pl/0 for now
-        h2_t *hlir = h2_decl_function(root->node, h2_get_name(mod), kVoidType, vector_of(0), eArityFixed, body);
+        h2_t *signature = h2_type_closure(root->node, h2_get_name(mod), kVoidType, vector_of(0), eArityFixed);
+        h2_t *hlir = h2_decl_function(root->node, h2_get_name(mod), signature, body);
         h2_set_attrib(hlir, &kEntryAttrib);
 
         vector_push(&semaData->procs, hlir);

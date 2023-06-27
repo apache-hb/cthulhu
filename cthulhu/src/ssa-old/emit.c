@@ -1,4 +1,3 @@
-#include "cthulhu/hlir/ops.h"
 #include "cthulhu/ssa/ssa.h"
 
 #include "report/report.h"
@@ -57,8 +56,7 @@ static const char *emit_value(emit_t *emit, const ssa_value_t *value)
     case eTypeBool:
         return format("%s", value->boolean ? "true" : "false");
     case eTypeString: {
-        string_view_t string = value->string;
-        return format("\"%s\"", str_normalizen(string.data, string.size));
+        return format("\"%s\"", str_normalizen(value->stringValue, value->stringLength));
     }
 
     default: return format("error(%s)", ssa_kind_name(kind));
