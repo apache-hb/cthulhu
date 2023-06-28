@@ -229,6 +229,7 @@ typedef struct ssa_symbol_t {
 typedef struct ssa_module_t {
     const char *name;
     vector_t *globals;
+    vector_t *functions;
 } ssa_module_t;
 
-map_t *ssa_compile(const h2_t *root);
+map_t *ssa_compile(map_t *mods);

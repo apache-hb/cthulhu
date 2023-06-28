@@ -44,24 +44,21 @@ hlir = declare_dependency(
     dependencies : [ gmp ]
 )
 
-# src = [
-#     'src/ssa/ssa.c',
-#     'src/ssa/emit.c',
-#     'src/ssa/eval.c',
-#     'src/ssa/common.c'
-# ]
+src = [
+    'src/ssa/ssa.c'
+]
 
-# libssa = library('ssa', src,
-#     include_directories : 'include',
-#     c_args : args,
-#     dependencies : [ std, gmp, h2 ]
-# )
+libssa = library('ssa', src,
+    include_directories : 'include',
+    c_args : args,
+    dependencies : [ std, gmp, hlir ]
+)
 
-# ssa = declare_dependency(
-#     link_with : libssa,
-#     include_directories : 'include',
-#     dependencies : [ gmp, h2 ]
-# )
+ssa = declare_dependency(
+    link_with : libssa,
+    include_directories : 'include',
+    dependencies : [ gmp, hlir ]
+)
 
 # src = [
 #     'src/emit/c89.c',
