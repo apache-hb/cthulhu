@@ -19,7 +19,6 @@ typedef struct lifetime_t
     reports_t *reports;
 
     map_t *extensions;
-
     map_t *modules;
 } lifetime_t;
 

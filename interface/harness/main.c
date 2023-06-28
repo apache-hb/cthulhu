@@ -14,8 +14,6 @@
 
 #include "argparse/argparse.h"
 
-#include "cthulhu/emit/c89.h"
-
 #include <stdio.h>
 
 // just kill me already
