@@ -1,4 +1,8 @@
 #include "cthulhu/mediator/interface.h"
+
+#include "cthulhu/ssa/ssa.h"
+#include "cthulhu/emit/emit.h"
+
 #include "support/langs.h"
 
 #include "report/report.h"
@@ -100,24 +104,18 @@ int main(int argc, const char **argv)
     }
 
     map_t *modmap = lifetime_get_modules(lifetime);
-#if 0
-    vector_t *mods = map_values(modmap);
-    ssa_module_t *ssa = ssa_gen_module(reports, mods);
+
+    ssa_module_t *ssa = ssa_compile(modmap);
     CHECK_REPORTS(reports, "generating ssa");
 
-    ssa_opt_module(reports, ssa);
-    CHECK_REPORTS(reports, "optimizing ssa");
+    fs_t *fs = fs_virtual(reports, "out");
 
-    ssa_emit_module(reports, ssa);
-
-    CHECK_REPORTS(reports, "failed to open output files");
-
-    c89_emit_t emit = {
-        .reports = reports,
-        .fs = fs_virtual(reports, "out")
-    };
-
-    c89_emit(emit, ssa);
+    emit_c89(reports, fs, ssa);
     CHECK_REPORTS(reports, "emitting ssa");
-#endif
+
+    fs_t *out = fs_physical(reports, "out");
+    CHECK_REPORTS(reports, "creating output directory");
+
+    fs_sync(out, fs);
+    CHECK_REPORTS(reports, "syncing output directory");
 }

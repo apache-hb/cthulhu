@@ -236,7 +236,7 @@ static bool is_imported(h2_link_t link)
     return link == eLinkImport;
 }
 
-static const char *mangle_digit(h2_digit_t width, h2_sign_t sign)
+static const char *mangle_digit(digit_t width, sign_t sign)
 {
     switch (width)
     {
@@ -458,7 +458,7 @@ static void fwd_function(ssa_t *ssa, const h2_t *function)
 static ssa_operand_t compile_rvalue(ssa_t *ssa, const h2_t *hlir);
 static ssa_operand_t compile_stmt(ssa_t *ssa, const h2_t *stmt);
 
-static ssa_type_t *new_digit_type(ssa_t *ssa, h2_digit_t width, h2_sign_t sign, const char *name)
+static ssa_type_t *new_digit_type(ssa_t *ssa, digit_t width, sign_t sign, const char *name)
 {
     ssa_type_result_t result = ssa_anytype_new(ssa, NULL, name, eTypeDigit);
     ssa_type_t *it = result.type;

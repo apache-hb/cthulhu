@@ -46,7 +46,7 @@ h2_t *h2_type_bool(const node_t *node, const char *name)
     return h2_decl(eHlir2TypeBool, node, NULL, name);
 }
 
-h2_t *h2_type_digit(const node_t *node, const char *name, h2_digit_t digit, h2_sign_t sign)
+h2_t *h2_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign)
 {
     h2_t *self = h2_decl(eHlir2TypeDigit, node, NULL, name);
     self->digit = digit;
@@ -68,7 +68,7 @@ h2_t *h2_type_closure(const node_t *node, const char *name, const h2_t *result, 
     return self;
 }
 
-h2_t *h2_qualify(const node_t *node, const h2_t *type, h2_quals_t quals)
+h2_t *h2_qualify(const node_t *node, const h2_t *type, quals_t quals)
 {
     h2_t *self = h2_new(eHlir2Qualify, node, type);
     self->quals = quals;

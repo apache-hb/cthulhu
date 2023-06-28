@@ -16,21 +16,14 @@ typedef struct h2_cookie_t h2_cookie_t;
 
 typedef void (*h2_resolve_t)(h2_cookie_t *cookie, h2_t *self, void *user);
 
-typedef enum h2_quals_t {
-    eQualDefault = (0 << 0),
-    eQualMutable = (1 << 0),
-    eQualVolatile = (1 << 1),
-    eQualAtomic = (1 << 2),
-} h2_quals_t;
-
-typedef enum sema2_tags_t {
+typedef enum sema_tags_t {
     eSema2Values,
     eSema2Types,
     eSema2Procs,
     eSema2Modules,
 
     eSema2Total
-} sema2_tags_t;
+} sema_tags_t;
 
 typedef struct h2_attrib_t {
     h2_link_t link; ///< the link type of the declaration
@@ -100,7 +93,7 @@ typedef struct h2_t {
 
         /* eHlir2Qualify */
         struct {
-            h2_quals_t quals;
+            quals_t quals;
             const h2_t *qualify;
         };
 
@@ -160,8 +153,8 @@ typedef struct h2_t {
             union {
                 /* eHlir2TypeDigit */
                 struct {
-                    h2_digit_t digit;
-                    h2_sign_t sign;
+                    digit_t digit;
+                    sign_t sign;
                 };
 
                 /* eHlir2TypeClosure */
@@ -246,7 +239,7 @@ h2_t *h2_type_bool(const node_t *node, const char *name);
  * @param sign the sign of the digit
  * @return a digit type
  */
-h2_t *h2_type_digit(const node_t *node, const char *name, h2_digit_t digit, h2_sign_t sign);
+h2_t *h2_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign);
 
 /**
  * @brief create a string type
@@ -260,11 +253,10 @@ h2_t *h2_type_string(const node_t *node, const char *name);
 h2_t *h2_type_closure(const node_t *node, const char *name, const h2_t *result, vector_t *params, arity_t arity);
 
 ///
-/// qualify
+/// generic nodes
 ///
 
-h2_t *h2_qualify(const node_t *node, const h2_t *type, h2_quals_t quals);
-
+h2_t *h2_qualify(const node_t *node, const h2_t *type, quals_t quals);
 
 ///
 /// h2 expr interface
@@ -352,6 +344,10 @@ void h2_set_attrib(h2_t *self, const h2_attrib_t *attrib);
 /// h2 sema interface
 ///
 
+// only declarations placed in the tags eSema2Values, eSema2Types, eSema2Procs, and eSema2Modules
+// will be emitted, they are also required to be valid h2_t objects
+// any custom slots can contain any data, but they will not be emitted
+
 h2_t *h2_module_root(reports_t *reports, const node_t *node, const char *name, size_t decls, size_t *sizes);
 
 /**
@@ -387,7 +383,7 @@ h2_t *h2_module_get(h2_t *self, size_t tag, const char *name);
  * @param value the value of the declaration
  * @return a previous declaration or NULL if it did not exist
  */
-h2_t *h2_module_set(h2_t *self, size_t tag, const char *name, h2_t *value);
+void *h2_module_set(h2_t *self, size_t tag, const char *name, void *value);
 
 map_t *h2_module_tag(h2_t *self, size_t tag);
 

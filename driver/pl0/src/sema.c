@@ -16,7 +16,8 @@
 #include "cthulhu/hlir/query.h"
 
 static const h2_t *kStringType = NULL;
-static const h2_t *kIntegerType = NULL;
+static const h2_t *kConstType = NULL;
+static const h2_t *kIntType = NULL;
 static const h2_t *kBoolType = NULL;
 static const h2_t *kVoidType = NULL;
 
@@ -67,7 +68,8 @@ void pl0_init(driver_t *handle)
 
     logverbose("initializing PL/0 runtime");
 
-    kIntegerType = h2_type_digit(node, "integer", eDigitInt, eSignSigned);
+    kConstType = h2_type_digit(node, "integer", eDigitInt, eSignSigned);
+    kIntType = h2_qualify(node, kConstType, eQualMutable);
     kBoolType = h2_type_bool(node, "boolean");
     kStringType = h2_type_string(node, "string");
     kVoidType = h2_type_unit(node, "void");
@@ -121,7 +123,7 @@ static h2_t *get_proc(h2_t *sema, const char *name)
     return h2_module_get(sema, eSema2Procs, name);
 }
 
-static void set_var(h2_t *sema, size_t tag, const char *name, h2_t *hlir)
+static void set_var(h2_t *sema, const char *name, h2_t *hlir)
 {
     h2_t *other = get_var(sema, name);
     if (other != NULL && other != hlir)
@@ -133,7 +135,8 @@ static void set_var(h2_t *sema, size_t tag, const char *name, h2_t *hlir)
         return;
     }
 
-    h2_module_set(sema, tag, name, hlir);
+    logverbose("set-var %s", name);
+    h2_module_set(sema, eSema2Values, name, hlir);
 }
 
 static h2_t *sema_expr(h2_t *sema, pl0_t *node);
@@ -142,7 +145,7 @@ static h2_t *sema_stmt(h2_t *sema, pl0_t *node);
 
 static h2_t *sema_digit(pl0_t *node)
 {
-    return h2_expr_digit(node->node, kIntegerType, node->digit);
+    return h2_expr_digit(node->node, kConstType, node->digit);
 }
 
 static h2_t *sema_ident(h2_t *sema, pl0_t *node)
@@ -160,7 +163,7 @@ static h2_t *sema_binary(h2_t *sema, pl0_t *node)
 {
     h2_t *lhs = sema_expr(sema, node->lhs);
     h2_t *rhs = sema_expr(sema, node->rhs);
-    return h2_expr_binary(node->node, kIntegerType, node->binary, lhs, rhs);
+    return h2_expr_binary(node->node, kConstType, node->binary, lhs, rhs);
 }
 
 static h2_t *sema_unary(h2_t *sema, pl0_t *node)
@@ -240,7 +243,9 @@ static h2_t *sema_assign(h2_t *sema, pl0_t *node)
         return h2_error(node->node, "unresolved variable");
     }
 
-    if (!h2_has_quals(dst, eQualMutable))
+    const h2_t *dstType = h2_get_type(dst);
+
+    if (!h2_has_quals(dstType, eQualMutable))
     {
         report(sema->reports, eFatal, node->node, "cannot assign to constant value");
     }
@@ -298,7 +303,7 @@ static h2_t *sema_global(h2_t *sema, pl0_t *node)
     {
         mpz_t zero;
         mpz_init_set_ui(zero, 0);
-        return h2_expr_digit(node->node, kIntegerType, zero);
+        return h2_expr_digit(node->node, kConstType, zero);
     }
     else
     {
@@ -315,9 +320,9 @@ static h2_t *sema_odd(h2_t *sema, pl0_t *node)
     mpz_init_set_ui(one, 1);
 
     h2_t *val = sema_expr(sema, node->operand);
-    h2_t *twoValue = h2_expr_digit(node->node, kIntegerType, two);
-    h2_t *oneValue = h2_expr_digit(node->node, kIntegerType, one);
-    h2_t *rem = h2_expr_binary(node->node, kIntegerType, eBinaryRem, val, twoValue);
+    h2_t *twoValue = h2_expr_digit(node->node, kConstType, two);
+    h2_t *oneValue = h2_expr_digit(node->node, kConstType, one);
+    h2_t *rem = h2_expr_binary(node->node, kConstType, eBinaryRem, val, twoValue);
     h2_t *eq = h2_expr_compare(node->node, kBoolType, eCompareEq, rem, oneValue);
 
     return eq;
@@ -355,8 +360,8 @@ static void sema_proc(h2_t *sema, h2_t *hlir, pl0_t *node)
     for (size_t i = 0; i < nlocals; i++)
     {
         pl0_t *local = vector_get(node->locals, i);
-        h2_t *it = h2_decl_local(local->node, local->name, kIntegerType);
-        set_var(nest, eSema2Values, local->name, it);
+        h2_t *it = h2_decl_local(local->node, local->name, kIntType);
+        set_var(nest, local->name, it);
         h2_add_local(hlir, it);
     }
 
@@ -384,7 +389,7 @@ static void insert_module(h2_t *sema, h2_t *other)
         h2_t *decl = map_next(&otherValues).value;
         if (!h2_has_vis(decl, eVisiblePublic)) continue;
 
-        set_var(sema, eSema2Values, h2_get_name(decl), decl);
+        set_var(sema, h2_get_name(decl), decl);
     }
 
     while (map_has_next(&otherProcs))
@@ -392,7 +397,7 @@ static void insert_module(h2_t *sema, h2_t *other)
         h2_t *decl = map_next(&otherProcs).value;
         if (!h2_has_vis(decl, eVisiblePublic)) continue;
 
-        set_var(sema, eSema2Procs, h2_get_name(decl), decl);
+        set_proc(sema, h2_get_name(decl), decl);
     }
 }
 
@@ -434,11 +439,10 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->consts, i);
 
-        // TODO: mark const
-        h2_t *hlir = h2_open_global(it->node, it->name, kIntegerType);
+        h2_t *hlir = h2_open_global(it->node, it->name, kConstType);
         h2_set_attrib(hlir, &kExportAttrib);
 
-        set_var(sema, eSema2Values, it->name, hlir);
+        set_var(sema, it->name, hlir);
         vector_push(&consts, hlir);
     }
 
@@ -446,11 +450,10 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->globals, i);
 
-        // TODO: mark mutable
-        h2_t *hlir = h2_open_global(it->node, it->name, kIntegerType);
+        h2_t *hlir = h2_open_global(it->node, it->name, kIntType);
         h2_set_attrib(hlir, &kExportAttrib);
 
-        set_var(sema, eSema2Values, it->name, hlir);
+        set_var(sema, it->name, hlir);
         vector_push(&globals, hlir);
     }
 

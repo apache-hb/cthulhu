@@ -29,8 +29,6 @@ static const language_t *add_language_extension(lifetime_t *lifetime, const char
     CTASSERT(ext != NULL);
     CTASSERT(lang != NULL);
 
-    logverbose("mapping language `%s` to extension `.%s`", lang->id, ext);
-
     const language_t *old = map_get(lifetime->extensions, ext);
     if (old != NULL)
     {
@@ -162,7 +160,6 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
     scan_t *scan = scan_io(lifetime->reports, lang->id, io);
     driver_t *handle = handle_new(lifetime, lang);
 
-    logverbose("%s:fnParse(%s)", lang->id, scan_path(scan));
     lang->fnParse(handle, scan);
 }
 
@@ -175,7 +172,6 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
     {
         map_entry_t entry = map_next(&iter);
         context_t *ctx = entry.value;
-        const char *id = entry.key;
 
         CTASSERT(ctx != NULL);
 
@@ -187,7 +183,6 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
             continue;
         }
 
-        logverbose("execute %s:fnCompilePass(%s)", lang->id, id);
         fnPass(ctx);
     }
 }

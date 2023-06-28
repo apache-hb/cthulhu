@@ -45,7 +45,8 @@ hlir = declare_dependency(
 )
 
 src = [
-    'src/ssa/ssa.c'
+    'src/ssa/ssa.c',
+    'src/ssa/type.c'
 ]
 
 libssa = library('ssa', src,
@@ -60,23 +61,21 @@ ssa = declare_dependency(
     dependencies : [ gmp, hlir ]
 )
 
-# src = [
-#     'src/emit/c89.c',
-#     'src/emit/jvm.c',
-#     'src/emit/common.c'
-# ]
+src = [
+    'src/emit/c89.c'
+]
 
-# libemit = library('emit', src,
-#     include_directories : 'include',
-#     c_args : args,
-#     dependencies : [ ssa, std, io, interop ]
-# )
+libemit = library('emit', src,
+    include_directories : 'include',
+    c_args : args,
+    dependencies : [ ssa, std, io, interop ]
+)
 
-# emit = declare_dependency(
-#     link_with : libemit,
-#     include_directories : 'include',
-#     dependencies : [ ssa ]
-# )
+emit = declare_dependency(
+    link_with : libemit,
+    include_directories : 'include',
+    dependencies : [ ssa ]
+)
 
 src = [
     'src/mediator/interface.c',

@@ -1,5 +1,13 @@
 #pragma once
 
+
+typedef enum quals_t {
+    eQualDefault = (0 << 0),
+    eQualMutable = (1 << 0),
+    eQualVolatile = (1 << 1),
+    eQualAtomic = (1 << 2),
+} quals_t;
+
 /**
  * @brief all binary operators
  */
@@ -59,21 +67,21 @@ typedef enum h2_visible_t {
     eHlirVisibilityTotal
 } h2_visible_t;
 
-typedef enum h2_digit_t {
+typedef enum digit_t {
 #define DIGIT_KIND(ID, STR) ID,
 #include "hlir.inc"
     eDigitTotal
-} h2_digit_t;
+} digit_t;
 
-typedef enum h2_sign_t {
+typedef enum sign_t {
 #define SIGN_KIND(ID, STR) ID,
 #include "hlir.inc"
     eSignTotal
-} h2_sign_t;
+} sign_t;
 
 const char *unary_name(unary_t op);
 const char *binary_name(binary_t op);
 const char *compare_name(compare_t op);
 
-const char *sign_name(h2_sign_t sign);
-const char *digit_name(h2_digit_t digit);
+const char *sign_name(sign_t sign);
+const char *digit_name(digit_t digit);

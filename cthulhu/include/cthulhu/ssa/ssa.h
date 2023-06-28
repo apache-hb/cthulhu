@@ -69,10 +69,9 @@ typedef enum ssa_opcode_t {
     eOpTotal
 } ssa_opcode_t;
 
-typedef struct ssa_type_t {
-    ssa_kind_t kind;
-    const char *name;
-} ssa_type_t;
+///
+/// intermediate types
+///
 
 typedef struct ssa_param_t {
     const char *name;
@@ -88,6 +87,36 @@ typedef struct ssa_field_t {
     const char *name;
     const ssa_type_t *type;
 } ssa_field_t;
+
+///
+/// types
+///
+
+typedef struct ssa_type_qualify_t {
+    quals_t quals;
+    const ssa_type_t *type;
+} ssa_type_qualify_t;
+
+typedef struct ssa_type_digit_t {
+    sign_t sign;
+    digit_t digit;
+} ssa_type_digit_t;
+
+typedef struct ssa_type_closure_t {
+    const ssa_type_t *result;
+    typevec_t *params; // typevec_t<ssa_param_t *>
+} ssa_type_closure_t;
+
+typedef struct ssa_type_t {
+    ssa_kind_t kind;
+    const char *name;
+
+    union {
+        ssa_type_qualify_t qualify;
+        ssa_type_digit_t digit;
+        ssa_type_closure_t closure;
+    };
+} ssa_type_t;
 
 typedef struct ssa_value_t {
     ssa_kind_t kind;
@@ -228,8 +257,10 @@ typedef struct ssa_symbol_t {
 
 typedef struct ssa_module_t {
     const char *name;
-    vector_t *globals;
-    vector_t *functions;
+
+    map_t *globals;
+
+    map_t *modules;
 } ssa_module_t;
 
-map_t *ssa_compile(map_t *mods);
+ssa_module_t *ssa_compile(map_t *mods);

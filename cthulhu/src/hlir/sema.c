@@ -30,7 +30,6 @@ h2_t *h2_module_root(reports_t *reports, const node_t *node, const char *name, s
 
 h2_t *h2_module(h2_t *parent, const node_t *node, const char *name, size_t decls, size_t *sizes)
 {
-    logverbose("h2_module: %p %s %p %p[%zu]", parent, name, node, sizes, decls);
     return h2_module_new(node, name, parent, parent->reports, decls, sizes);
 }
 
@@ -51,9 +50,9 @@ h2_t *h2_module_get(h2_t *self, size_t tag, const char *name)
     return NULL;
 }
 
-h2_t *h2_module_set(h2_t *self, size_t tag, const char *name, h2_t *value)
+void *h2_module_set(h2_t *self, size_t tag, const char *name, void *value)
 {
-    h2_t *old = h2_module_get(self, tag, name);
+    void *old = h2_module_get(self, tag, name);
     if (old != NULL)
     {
         return old;

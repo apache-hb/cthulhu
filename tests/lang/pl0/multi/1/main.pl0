@@ -1,6 +1,7 @@
 module main;
 
-import lhs, rhs;
+import multi.lhs, 
+       multi.rhs;
 
 const LIMIT = 25;
 var x;

@@ -17,5 +17,5 @@ const h2_t *h2_follow_type(const h2_t *self);
 
 bool h2_is(const h2_t *self, h2_kind_t kind);
 
-bool h2_has_quals(const h2_t *self, h2_quals_t quals);
+bool h2_has_quals(const h2_t *self, quals_t quals);
 bool h2_has_vis(const h2_t *self, h2_visible_t visible);

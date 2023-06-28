@@ -38,8 +38,8 @@ typedef struct ssa_type_t
     union {
         // eTypeDigit
         struct {
-            h2_digit_t digit;
-            h2_sign_t sign;
+            digit_t digit;
+            sign_t sign;
         };
 
         // eTypeBool
