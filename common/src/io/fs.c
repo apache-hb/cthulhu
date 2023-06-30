@@ -330,10 +330,13 @@ static void sync_file(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
     io_t *dstIo = query_file(dst, dstNode, eAccessWrite);
 
     size_t size = io_size(srcIo);
-    void *data = ctu_malloc(size);
+    if (size > 0)
+    {
+        void *data = ctu_malloc(size);
 
-    size_t read = io_read(srcIo, data, size);
-    io_write(dstIo, data, read);
+        size_t read = io_read(srcIo, data, size);
+        io_write(dstIo, data, read);
+    }
 
     io_close(srcIo);
     io_close(dstIo);

@@ -204,6 +204,8 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
         CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
         CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
 
+        logverbose("acquiring module `%s`", name);
+
         map_set(mods, name, ctx->root);
         items += 1;
     }

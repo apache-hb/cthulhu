@@ -110,7 +110,14 @@ int main(int argc, const char **argv)
 
     fs_t *fs = fs_virtual(reports, "out");
 
-    emit_c89(reports, fs, ssa);
+    emit_options_t opts = {
+        .reports = reports,
+        .fs = fs,
+        .mod = ssa,
+        .flags = eEmitHeaders
+    };
+
+    emit_c89(&opts);
     CHECK_REPORTS(reports, "emitting ssa");
 
     fs_t *out = fs_physical(reports, "out");

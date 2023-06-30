@@ -122,6 +122,20 @@ vector_t *map_entries(map_t *map)
     return result;
 }
 
+USE_DECL
+bool map_empty(map_t *map)
+{
+    CTASSERT(map != NULL);
+
+    MAP_FOREACH_APPLY(map, entry, {
+        if (entry->key != NULL) { 
+            return false; 
+        }
+    });
+
+    return true;
+}
+
 // string key map functions
 
 static bucket_t *map_bucket_str(map_t *map, const char *key)

@@ -24,7 +24,7 @@ static h2_t *example_lang_module(reports_t *reports)
         [eSema2Modules] = 1
     };
     
-    return h2_module_root(reports, node, "example", eSema2Total, sizes);
+    return h2_module_root(reports, node, "lang", eSema2Total, sizes);
 }
 
 static void ex_config(lifetime_t *lifetime, ap_t *ap)
@@ -39,7 +39,7 @@ static void ex_create(driver_t *handle)
 
     vector_t *path = example_lang_path();
     h2_t *mod = example_lang_module(reports);
-    context_t *ctx = compiled_new(handle, "example", mod);
+    context_t *ctx = compiled_new(handle, "lang", mod);
 
     add_context(lifetime, path, ctx);
 

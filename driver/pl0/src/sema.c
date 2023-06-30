@@ -39,17 +39,80 @@ static const h2_attrib_t kEntryAttrib = {
     .visible = eVisiblePublic
 };
 
+static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)
+{
+    message_t *id = report_shadow(reports, name, prevDefinition, newDefinition);
+    report_note(id, "PL/0 is case insensitive");
+}
+
+static h2_t *get_decl(h2_t *sema, const char *name, const pl0_tag_t *tags, size_t len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        pl0_tag_t tag = tags[i];
+        h2_t *decl = h2_module_get(sema, tag, name);
+        if (decl != NULL) { return decl; }
+    }
+
+    return NULL;
+}
+
+static h2_t *get_var(h2_t *sema, const char *name)
+{
+    const pl0_tag_t kTags[] = { eTagValues, eTagImportedValues };
+
+    return get_decl(sema, name, kTags, sizeof(kTags) / sizeof(pl0_tag_t));
+}
+
+static h2_t *get_proc(h2_t *sema, const char *name)
+{
+    const pl0_tag_t kTags[] = { eTagProcs, eTagImportedProcs };
+
+    return get_decl(sema, name, kTags, sizeof(kTags) / sizeof(pl0_tag_t));
+}
+
+static void set_proc(h2_t *sema, pl0_tag_t tag, const char *name, h2_t *proc)
+{
+    h2_t *other = get_proc(sema, name);
+    if (other != NULL && other != proc)
+    {
+        const node_t *node = h2_get_node(proc);
+        const node_t *otherNode = h2_get_node(other);
+        report_pl0_shadowing(sema->reports, name, otherNode, node);
+        return;
+    }
+
+    h2_module_set(sema, tag, name, proc);
+}
+
+static void set_var(h2_t *sema, pl0_tag_t tag, const char *name, h2_t *hlir)
+{
+    h2_t *other = get_var(sema, name);
+    if (other != NULL && other != hlir)
+    {
+        const node_t *node = h2_get_node(hlir);
+        const node_t *otherNode = h2_get_node(other);
+
+        report_pl0_shadowing(sema->reports, name, otherNode, node);
+        return;
+    }
+
+    h2_module_set(sema, tag, name, hlir);
+}
+
 static h2_t *make_runtime_mod(reports_t *reports)
 {
     node_t *node = node_builtin();
-    size_t decls[eSema2Total] = {
-        [eSema2Values] = 1,
-        [eSema2Types] = 1,
-        [eSema2Procs] = 1,
-        [eSema2Modules] = 1
+    size_t decls[eTagTotal] = {
+        [eTagValues] = 1,
+        [eTagTypes] = 1,
+        [eTagProcs] = 1,
+        [eTagModules] = 1
     };
 
-    return h2_module_root(reports, node, "pl0", eSema2Total, decls);
+    h2_t *mod = h2_module_root(reports, node, "pl0", eTagTotal, decls);
+    set_proc(mod, eTagProcs, "print", kPrint);
+    return mod;
 }
 
 static vector_t *make_runtime_path(void)
@@ -84,59 +147,13 @@ void pl0_init(driver_t *handle)
     h2_t *runtime = make_runtime_mod(reports);
     vector_t *path = make_runtime_path();
 
-    context_t *ctx = compiled_new(handle, "pl0", runtime);
+    context_t *ctx = compiled_new(handle, "lang", runtime);
     add_context(handle_get_lifetime(handle), path, ctx);
-}
-
-static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)
-{
-    message_t *id = report_shadow(reports, name, prevDefinition, newDefinition);
-    report_note(id, "PL/0 is case insensitive");
 }
 
 static void report_pl0_unresolved(reports_t *reports, const node_t *node, const char *name)
 {
     report(reports, eFatal, node, "unresolved reference to `%s`", name);
-}
-
-static h2_t *get_var(h2_t *sema, const char *name)
-{
-    return h2_module_get(sema, eSema2Values, name);
-}
-
-static void set_proc(h2_t *sema, const char *name, h2_t *proc)
-{
-    h2_t *other = h2_module_get(sema, eSema2Procs, name);
-    if (other != NULL && other != proc)
-    {
-        const node_t *node = h2_get_node(proc);
-        const node_t *otherNode = h2_get_node(other);
-        report_pl0_shadowing(sema->reports, name, otherNode, node);
-        return;
-    }
-
-    h2_module_set(sema, eSema2Procs, name, proc);
-}
-
-static h2_t *get_proc(h2_t *sema, const char *name)
-{
-    return h2_module_get(sema, eSema2Procs, name);
-}
-
-static void set_var(h2_t *sema, const char *name, h2_t *hlir)
-{
-    h2_t *other = get_var(sema, name);
-    if (other != NULL && other != hlir)
-    {
-        const node_t *node = h2_get_node(hlir);
-        const node_t *otherNode = h2_get_node(other);
-
-        report_pl0_shadowing(sema->reports, name, otherNode, node);
-        return;
-    }
-
-    logverbose("set-var %s", name);
-    h2_module_set(sema, eSema2Values, name, hlir);
 }
 
 static h2_t *sema_expr(h2_t *sema, pl0_t *node);
@@ -353,15 +370,15 @@ static h2_t *sema_compare(h2_t *sema, pl0_t *node)
 static void sema_proc(h2_t *sema, h2_t *hlir, pl0_t *node)
 {
     size_t nlocals = vector_len(node->locals);
-    size_t sizes[eSema2Total] = {[eSema2Values] = nlocals};
+    size_t sizes[eTagTotal] = {[eTagValues] = nlocals};
 
-    h2_t *nest = h2_module(sema, node->node, node->name, eSema2Total, sizes);
+    h2_t *nest = h2_module(sema, node->node, node->name, eTagTotal, sizes);
 
     for (size_t i = 0; i < nlocals; i++)
     {
         pl0_t *local = vector_get(node->locals, i);
         h2_t *it = h2_decl_local(local->node, local->name, kIntType);
-        set_var(nest, local->name, it);
+        set_var(nest, eTagValues, local->name, it);
         h2_add_local(hlir, it);
     }
 
@@ -381,15 +398,15 @@ static void sema_proc(h2_t *sema, h2_t *hlir, pl0_t *node)
 
 static void insert_module(h2_t *sema, h2_t *other)
 {
-    map_iter_t otherValues = map_iter(h2_module_tag(other, eSema2Values));
-    map_iter_t otherProcs = map_iter(h2_module_tag(other, eSema2Procs));
+    map_iter_t otherValues = map_iter(h2_module_tag(other, eTagValues));
+    map_iter_t otherProcs = map_iter(h2_module_tag(other, eTagProcs));
 
     while (map_has_next(&otherValues))
     {
         h2_t *decl = map_next(&otherValues).value;
         if (!h2_has_vis(decl, eVisiblePublic)) continue;
 
-        set_var(sema, h2_get_name(decl), decl);
+        set_var(sema, eTagImportedValues, h2_get_name(decl), decl);
     }
 
     while (map_has_next(&otherProcs))
@@ -397,7 +414,7 @@ static void insert_module(h2_t *sema, h2_t *other)
         h2_t *decl = map_next(&otherProcs).value;
         if (!h2_has_vis(decl, eVisiblePublic)) continue;
 
-        set_proc(sema, h2_get_name(decl), decl);
+        set_proc(sema, eTagImportedProcs, h2_get_name(decl), decl);
     }
 }
 
@@ -427,12 +444,14 @@ void pl0_forward_decls(context_t *context)
         ? vector_tail(root->mod) 
         : context_get_name(context);
 
-    size_t sizes[eSema2Total] = {
-        [eSema2Values] = totalConsts + totalGlobals,
-        [eSema2Procs] = totalFunctions,
+    size_t sizes[eTagTotal] = {
+        [eTagValues] = totalConsts + totalGlobals,
+        [eTagProcs] = totalFunctions,
+        [eTagImportedValues] = 64,
+        [eTagImportedProcs] = 64
     };
     
-    h2_t *sema = h2_module_root(reports, root->node, id, eSema2Total, sizes);
+    h2_t *sema = h2_module_root(reports, root->node, id, eTagTotal, sizes);
 
     // forward declare everything
     for (size_t i = 0; i < totalConsts; i++)
@@ -442,7 +461,7 @@ void pl0_forward_decls(context_t *context)
         h2_t *hlir = h2_open_global(it->node, it->name, kConstType);
         h2_set_attrib(hlir, &kExportAttrib);
 
-        set_var(sema, it->name, hlir);
+        set_var(sema, eTagValues, it->name, hlir);
         vector_push(&consts, hlir);
     }
 
@@ -453,7 +472,7 @@ void pl0_forward_decls(context_t *context)
         h2_t *hlir = h2_open_global(it->node, it->name, kIntType);
         h2_set_attrib(hlir, &kExportAttrib);
 
-        set_var(sema, it->name, hlir);
+        set_var(sema, eTagValues, it->name, hlir);
         vector_push(&globals, hlir);
     }
 
@@ -465,7 +484,7 @@ void pl0_forward_decls(context_t *context)
         h2_t *hlir = h2_open_function(it->node, it->name, signature);
         h2_set_attrib(hlir, &kExportAttrib);
 
-        set_proc(sema, it->name, hlir);
+        set_proc(sema, eTagProcs, it->name, hlir);
         vector_push(&procs, hlir);
     }
 

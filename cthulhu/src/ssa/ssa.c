@@ -21,9 +21,12 @@ static ssa_module_t *ssa_compile_module(ssa_t *ssa, const char *path, h2_t *tree
 
 static ssa_module_t *ssa_module_new(const char *name)
 {
+    logverbose("creating module: %s", name);
+
     ssa_module_t *mod = ctu_malloc(sizeof(ssa_module_t));
     mod->name = name;
     mod->globals = map_optimal(32);
+    mod->functions = map_optimal(32);
     mod->modules = map_optimal(4);
     return mod;
 }
@@ -33,13 +36,19 @@ static void add_module(ssa_module_t *root, ssa_module_t *other)
     CTASSERT(other->name != NULL);
     CTASSERTF(!str_contains(other->name, "."), "invalid module name: %s", other->name);
 
+    logverbose("adding module: %s to %s", other->name, root->name);
+
     map_set(root->modules, other->name, other);
 }
 
 static void add_global(ssa_module_t *mod, ssa_symbol_t *sym)
 {
-    logverbose("adding global: %s to %s", sym->name, mod->name);
     map_set(mod->globals, sym->name, sym);
+}
+
+static void add_function(ssa_module_t *mod, ssa_symbol_t *func)
+{
+    map_set(mod->functions, func->name, func);
 }
 
 static ssa_symbol_t *ssa_symbol_new(const char *name, ssa_type_t *type)
@@ -63,6 +72,14 @@ static ssa_symbol_t *ssa_global_new(const h2_t *global)
     return ssa_symbol_new(name, type);
 }
 
+static ssa_symbol_t *ssa_function_new(const h2_t *function)
+{
+    const char *name = h2_get_name(function);
+    ssa_type_t *type = ssa_type_from(h2_get_type(function));
+
+    return ssa_symbol_new(name, type);
+}
+
 static void ssa_add_globals(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
 {
     map_t *globals = h2_module_tag(tree, eSema2Values);
@@ -76,6 +93,21 @@ static void ssa_add_globals(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
         add_global(mod, symbol);
     }
 }
+
+static void ssa_add_functions(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
+{
+    map_t *functions = h2_module_tag(tree, eSema2Procs);
+    map_iter_t iter = map_iter(functions);
+
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        ssa_symbol_t *fn = ssa_function_new(entry.value);
+        
+        add_function(mod, fn);
+    }
+}
+
 
 static void ssa_add_modules(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
 {
@@ -94,6 +126,7 @@ static ssa_module_t *ssa_compile_module(ssa_t *ssa, const char *path, h2_t *tree
 {
     ssa_module_t *mod = ssa_module_new(path);
     ssa_add_globals(ssa, mod, tree);
+    ssa_add_functions(ssa, mod, tree);
     ssa_add_modules(ssa, mod, tree);
     return mod;
 }

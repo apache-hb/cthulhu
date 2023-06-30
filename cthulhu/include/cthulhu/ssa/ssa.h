@@ -259,6 +259,7 @@ typedef struct ssa_module_t {
     const char *name;
 
     map_t *globals;
+    map_t *functions;
 
     map_t *modules;
 } ssa_module_t;

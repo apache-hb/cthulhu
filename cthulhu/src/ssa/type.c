@@ -39,6 +39,11 @@ ssa_type_t *ssa_type_digit(const char *name, sign_t sign, digit_t digit)
     return type;
 }
 
+ssa_type_t *ssa_type_string(const char *name)
+{
+    return ssa_type_new(eTypeString, name);
+}
+
 ssa_type_t *ssa_type_qualify(const char *name, quals_t quals, ssa_type_t *type)
 {
     ssa_type_qualify_t it = { .quals = quals, .type = type };
@@ -89,6 +94,7 @@ ssa_type_t *ssa_type_from(const h2_t *type)
     case eHlir2TypeUnit: return ssa_type_unit(name);
     case eHlir2TypeBool: return ssa_type_bool(name);
     case eHlir2TypeDigit: return ssa_type_digit(name, type->sign, type->digit);
+    case eHlir2TypeString: return ssa_type_string(name);
     case eHlir2TypeClosure: 
         return ssa_type_closure(
             /* name = */ name, 

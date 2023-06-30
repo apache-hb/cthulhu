@@ -94,6 +94,9 @@ vector_t *map_values(IN_NOTNULL map_t *map);
 NODISCARD
 vector_t *map_entries(IN_NOTNULL map_t *map);
 
+NODISCARD CONSTFN
+bool map_empty(IN_NOTNULL map_t *map);
+
 typedef struct map_entry_t
 {
     const void *key; ///< the key of this entry

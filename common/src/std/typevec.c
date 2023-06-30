@@ -1,6 +1,7 @@
 #include "std/typevec.h"
 
 #include "base/memory.h"
+#include "base/panic.h"
 
 #include <string.h>
 
@@ -15,11 +16,13 @@ typedef struct typevec_t {
 
 static typevec_t *typevec_create(size_t typeSize, size_t len)
 {
+    CTASSERT(typeSize > 0);
+
     typevec_t *vec = ctu_malloc(sizeof(typevec_t));
     vec->size = len;
     vec->used = 0;
     vec->typeSize = typeSize;
-    vec->data = ctu_malloc(typeSize * len);
+    vec->data = ctu_malloc(typeSize * (len + 1));
     return vec;
 }
 
