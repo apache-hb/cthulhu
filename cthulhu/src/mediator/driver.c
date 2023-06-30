@@ -2,6 +2,8 @@
 
 #include "cthulhu/mediator/driver.h"
 
+#include "cthulhu/hlir/query.h"
+
 #include "base/panic.h"
 #include "base/memory.h"
 
@@ -31,11 +33,11 @@ static context_t *context_inner_new(driver_t *handle, const char *name, void *as
     return self;
 }
 
-context_t *compiled_new(driver_t *handle, const char *name, h2_t *root)
+context_t *compiled_new(driver_t *handle, h2_t *root)
 {
     CTASSERT(handle != NULL);
 
-    return context_inner_new(handle, name, NULL, root);
+    return context_inner_new(handle, h2_get_name(root), NULL, root);
 }
 
 context_t *context_new(driver_t *handle, const char *name, void *ast, h2_t *root)

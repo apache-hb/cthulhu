@@ -110,7 +110,7 @@ static h2_t *make_runtime_mod(reports_t *reports)
         [eTagModules] = 1
     };
 
-    h2_t *mod = h2_module_root(reports, node, "pl0", eTagTotal, decls);
+    h2_t *mod = h2_module_root(reports, node, "runtime", eTagTotal, decls);
     set_proc(mod, eTagProcs, "print", kPrint);
     return mod;
 }
@@ -120,6 +120,7 @@ static vector_t *make_runtime_path(void)
     vector_t *path = vector_new(2);
     vector_push(&path, "pl0");
     vector_push(&path, "lang");
+    vector_push(&path, "runtime");
     return path;
 }
 
@@ -147,7 +148,7 @@ void pl0_init(driver_t *handle)
     h2_t *runtime = make_runtime_mod(reports);
     vector_t *path = make_runtime_path();
 
-    context_t *ctx = compiled_new(handle, "lang", runtime);
+    context_t *ctx = compiled_new(handle, runtime);
     add_context(handle_get_lifetime(handle), path, ctx);
 }
 

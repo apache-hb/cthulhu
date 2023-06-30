@@ -7,7 +7,7 @@ typedef struct vector_t vector_t;
 typedef struct reports_t reports_t;
 
 // make a precompiled context
-context_t *compiled_new(driver_t *handle, const char *name, h2_t *root);
+context_t *compiled_new(driver_t *handle, h2_t *root);
 
 // make a context from an ast
 context_t *context_new(driver_t *handle, const char *name, void *ast, h2_t *root);

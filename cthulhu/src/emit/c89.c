@@ -49,9 +49,11 @@ static void create_module_dir(c89_t *emit, const char *root, ssa_module_t *mod)
     const char *name = mod->name;
     CTASSERT(name != NULL);
 
+    const char *path = (root == NULL) ? name : format("%s/%s", root, name);
+
     if (!map_empty(mod->globals) || !map_empty(mod->functions))
     {
-        create_module_file(emit, root, mod);
+        create_module_file(emit, path, mod);
     }
 
     if (map_empty(mod->modules))
@@ -59,11 +61,10 @@ static void create_module_dir(c89_t *emit, const char *root, ssa_module_t *mod)
         return;
     }
     
-    char *path = format("%s/%s", root, name);
     logverbose("mod: (root=%s, path=%s, name=%s)", root, path, name);
     
-    char *includeDir = format("include/%s", root);
-    char *sourceDir = format("src/%s", root);
+    char *includeDir = format("include/%s", path);
+    char *sourceDir = format("src/%s", path);
 
     fs_dir_create(emit->fs, includeDir);
     fs_dir_create(emit->fs, sourceDir);
@@ -84,8 +85,7 @@ static void create_root_dir(c89_t *emit, ssa_module_t *mod)
     {
         map_entry_t entry = map_next(&iter);
         ssa_module_t *child = entry.value;
-        const char *path = entry.key;
-        create_module_dir(emit, path, child);
+        create_module_dir(emit, NULL, child);
     }
 }
 
