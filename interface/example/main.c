@@ -80,7 +80,7 @@ int main(int argc, const char **argv)
         const char *path = argv[i];
         const char *ext = str_ext(path);
         const language_t *lang = lifetime_get_language(lifetime, ext);
-        
+
         if (lang == NULL)
         {
             printf("no language found for file: %s\n", path);
@@ -117,7 +117,7 @@ int main(int argc, const char **argv)
         .flags = eEmitHeaders
     };
 
-    emit_c89(&opts);
+    emit_ssa(&opts);
     CHECK_REPORTS(reports, "emitting ssa");
 
     fs_t *out = fs_physical(reports, "out");

@@ -120,7 +120,6 @@ static vector_t *make_runtime_path(void)
     vector_t *path = vector_new(2);
     vector_push(&path, "pl0");
     vector_push(&path, "lang");
-    vector_push(&path, "runtime");
     return path;
 }
 
@@ -441,8 +440,8 @@ void pl0_forward_decls(context_t *context)
     vector_t *globals = vector_new(totalGlobals);
     vector_t *procs = vector_new(totalFunctions);
 
-    const char *id = vector_len(root->mod) > 0 
-        ? vector_tail(root->mod) 
+    const char *id = vector_len(root->mod) > 0
+        ? vector_tail(root->mod)
         : context_get_name(context);
 
     size_t sizes[eTagTotal] = {
@@ -451,7 +450,7 @@ void pl0_forward_decls(context_t *context)
         [eTagImportedValues] = 64,
         [eTagImportedProcs] = 64
     };
-    
+
     h2_t *sema = h2_module_root(reports, root->node, id, eTagTotal, sizes);
 
     // forward declare everything

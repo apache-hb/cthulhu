@@ -12,7 +12,7 @@ typedef struct mediator_t
     version_info_t version;
 } mediator_t;
 
-typedef struct lifetime_t 
+typedef struct lifetime_t
 {
     mediator_t *parent;
 
@@ -22,13 +22,13 @@ typedef struct lifetime_t
     map_t *modules;
 } lifetime_t;
 
-typedef struct driver_t 
+typedef struct driver_t
 {
     lifetime_t *parent;
     const language_t *lang;
 } driver_t;
 
-typedef struct context_t 
+typedef struct context_t
 {
     lifetime_t *parent;
     const language_t *lang;

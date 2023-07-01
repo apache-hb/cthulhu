@@ -1,5 +1,4 @@
-#include "cthulhu/emit/emit.h"
-#include "cthulhu/ssa/ssa.h"
+#include "common.h"
 
 #include "report/report.h"
 
@@ -31,11 +30,8 @@ static void create_module_file(c89_t *emit, const char *root, ssa_module_t *mod)
     io_t *src = fs_open(emit->fs, sourceFile, eAccessWrite | eAccessText);
     io_t *inc = fs_open(emit->fs, includeFile, eAccessWrite | eAccessText);
 
-    const char pragma[] = "#pragma once\n";
-    io_write(inc, pragma, sizeof(pragma) - 1);
-
-    char *include = format("#include \"%s.h\"\n", root);
-    io_write(src, include, strlen(include));
+    write_string(inc, "#pragma once\n");
+    write_string(src, "#include \"%s.h\"\n", root);
 
     map_set_ptr(emit->includes, mod, includeFile);
     map_set_ptr(emit->sources, mod, sourceFile);
@@ -60,9 +56,7 @@ static void create_module_dir(c89_t *emit, const char *root, ssa_module_t *mod)
     {
         return;
     }
-    
-    logverbose("mod: (root=%s, path=%s, name=%s)", root, path, name);
-    
+
     char *includeDir = format("include/%s", path);
     char *sourceDir = format("src/%s", path);
 
@@ -79,7 +73,6 @@ static void create_module_dir(c89_t *emit, const char *root, ssa_module_t *mod)
 
 static void create_root_dir(c89_t *emit, ssa_module_t *mod)
 {
-    logverbose("mod: root");
     map_iter_t iter = map_iter(mod->modules);
     while (map_has_next(&iter))
     {
@@ -91,8 +84,8 @@ static void create_root_dir(c89_t *emit, ssa_module_t *mod)
 
 void emit_c89(const emit_options_t *options)
 {
-    c89_t c89 = { 
-        .reports = options->reports, 
+    c89_t c89 = {
+        .reports = options->reports,
         .fs = options->fs,
         .includes = map_optimal(64),
         .sources = map_optimal(64)

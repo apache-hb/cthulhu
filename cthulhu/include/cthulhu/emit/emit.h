@@ -14,7 +14,7 @@ typedef enum emit_flags_t {
 
     /**
      * emit all headers in a single folder rather than in subdirs.
-     * 
+     *
      * modules will be renamed to their namespace name seperated with `.`
      * e.g. `java/lang/Object.h` would be emitted as `java.lang.Object.h`
      */
@@ -28,4 +28,16 @@ typedef struct emit_options_t {
     emit_flags_t flags;
 } emit_options_t;
 
+/**
+ * @brief emit c89 for final compilation by a c compiler
+ *
+ * @param options
+ */
 void emit_c89(const emit_options_t *options);
+
+/**
+ * @brief emit ssa form for debugging
+ *
+ * @param options the options to use
+ */
+void emit_ssa(const emit_options_t *options);

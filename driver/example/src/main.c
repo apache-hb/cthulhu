@@ -11,7 +11,6 @@ static vector_t *example_lang_path(void)
     vector_t *path = vector_new(2);
     vector_push(&path, "example");
     vector_push(&path, "lang");
-    vector_push(&path, "runtime");
     return path;
 }
 
@@ -24,7 +23,7 @@ static h2_t *example_lang_module(reports_t *reports)
         [eSema2Procs] = 1,
         [eSema2Modules] = 1
     };
-    
+
     return h2_module_root(reports, node, "runtime", eSema2Total, sizes);
 }
 
@@ -90,7 +89,7 @@ const language_t kExampleModule = {
     },
 
     .exts = kLangNames,
-    
+
     .fnConfig = ex_config,
 
     .fnCreate = ex_create,

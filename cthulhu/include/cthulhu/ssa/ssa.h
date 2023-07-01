@@ -54,7 +54,7 @@ typedef enum ssa_opcode_t {
     eOpUnary,
     eOpBinary,
     eOpCompare,
-    
+
     eOpCast,
     eOpCall,
 
@@ -139,7 +139,7 @@ typedef struct ssa_operand_t {
     union {
         const ssa_block_t *bb;
         const ssa_step_t *vreg;
-        
+
         size_t local;
         size_t param;
 

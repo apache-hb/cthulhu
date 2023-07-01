@@ -131,7 +131,7 @@ void lifetime_add_language(lifetime_t *lifetime, const language_t *lang)
 
         report(lifetime->reports, eInternal, node_invalid(), "language `%s` registered under extension `%s` clashes with previously registered language `%s`", lang->id, lang->exts[i], old->id); // TODO: handle this
     }
-    
+
     driver_t *handle = handle_new(lifetime, lang);
     EXEC(lang, fnCreate, handle);
 }
@@ -227,6 +227,6 @@ void lifetime_check(lifetime_t *lifetime)
         CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
         CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
 
-        h2_check(lifetime_get_reports(lifetime), ctx->root);
+        //h2_check(lifetime_get_reports(lifetime), ctx->root);
     }
 }

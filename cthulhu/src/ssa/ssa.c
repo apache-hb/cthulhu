@@ -21,8 +21,6 @@ static ssa_module_t *ssa_compile_module(ssa_t *ssa, const char *path, h2_t *tree
 
 static ssa_module_t *ssa_module_new(const char *name)
 {
-    logverbose("creating module: %s", name);
-
     ssa_module_t *mod = ctu_malloc(sizeof(ssa_module_t));
     mod->name = name;
     mod->globals = map_optimal(32);
@@ -35,8 +33,6 @@ static void add_module(ssa_module_t *root, ssa_module_t *other)
 {
     CTASSERT(other->name != NULL);
     CTASSERTF(!str_contains(other->name, "."), "invalid module name: %s", other->name);
-
-    logverbose("adding module: %s to %s", other->name, root->name);
 
     map_set(root->modules, other->name, other);
 }
@@ -89,7 +85,7 @@ static void ssa_add_globals(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
     {
         map_entry_t entry = map_next(&iter);
         ssa_symbol_t *symbol = ssa_global_new(entry.value);
-        
+
         add_global(mod, symbol);
     }
 }
@@ -103,7 +99,7 @@ static void ssa_add_functions(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
     {
         map_entry_t entry = map_next(&iter);
         ssa_symbol_t *fn = ssa_function_new(entry.value);
-        
+
         add_function(mod, fn);
     }
 }

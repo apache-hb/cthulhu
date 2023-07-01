@@ -2,7 +2,7 @@
 #     'src/hlir/sema.c',
 #     'src/hlir/attribs.c',
 #     'src/hlir/check.c',
-    
+
 #     'src/hlir/type.c',
 #     'src/hlir/hlir.c',
 #     'src/hlir/decl.c',
@@ -26,7 +26,7 @@
 
 src = [
     'src/hlir/h2.c',
-    'src/hlir/check.c',
+    'src/hlir/ops.c',
     'src/hlir/sema.c',
     'src/hlir/decl.c',
     'src/hlir/query.c'
@@ -62,7 +62,9 @@ ssa = declare_dependency(
 )
 
 src = [
-    'src/emit/c89.c'
+    'src/emit/common.c',
+    'src/emit/c89.c',
+    'src/emit/ssa.c'
 ]
 
 libemit = library('emit', src,

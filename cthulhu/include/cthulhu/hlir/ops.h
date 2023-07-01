@@ -37,7 +37,7 @@ typedef enum unary_t {
 
 typedef enum cast_t {
 #define CAST_OP(ID, NAME) ID,
-#include "hlir.inc" 
+#include "hlir.inc"
     eCastTotal
 } cast_t;
 
@@ -85,3 +85,5 @@ const char *compare_name(compare_t op);
 
 const char *sign_name(sign_t sign);
 const char *digit_name(digit_t digit);
+
+const char *quals_name(quals_t quals);
