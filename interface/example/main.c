@@ -110,15 +110,24 @@ int main(int argc, const char **argv)
 
     fs_t *fs = fs_virtual(reports, "out");
 
-    emit_options_t opts = {
+    emit_options_t baseOpts = {
         .reports = reports,
         .fs = fs,
         .mod = ssa,
+    };
+
+    emit_ssa(&baseOpts);
+    CHECK_REPORTS(reports, "emitting ssa");
+
+    c89_emit_options_t c89Opts = {
+        .opts = baseOpts,
         .flags = eEmitHeaders
     };
 
-    emit_ssa(&opts);
-    CHECK_REPORTS(reports, "emitting ssa");
+    c89_emit_result_t c89Result = emit_c89(&c89Opts);
+    CHECK_REPORTS(reports, "emitting c89");
+
+    UNUSED(c89Result); // TODO: check for errors
 
     fs_t *out = fs_physical(reports, "out");
     CHECK_REPORTS(reports, "creating output directory");

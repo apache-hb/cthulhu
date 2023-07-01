@@ -30,3 +30,23 @@ const char *quals_name(quals_t quals)
 #include "cthulhu/hlir/hlir.inc"
     return str_join(" | ", names);
 }
+
+const char *link_name(h2_link_t link)
+{
+#define HLIR_LINKAGE(ID, STR) case ID: return STR;
+    switch (link)
+    {
+#include "cthulhu/hlir/hlir.inc"
+    default: return "unknown";
+    }
+}
+
+const char *vis_name(h2_visible_t vis)
+{
+#define HLIR_VISIBILITY(ID, STR) case ID: return STR;
+    switch (vis)
+    {
+#include "cthulhu/hlir/hlir.inc"
+    default: return "unknown";
+    }
+}

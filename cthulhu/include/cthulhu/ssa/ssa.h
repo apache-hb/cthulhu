@@ -36,11 +36,14 @@ typedef enum ssa_kind_t {
 typedef enum ssa_opkind_t {
     eOperandEmpty,
     eOperandImm,
+
     eOperandBlock,
     eOperandGlobal,
-    eOperandLocal,
-    eOperandReg,
+
     eOperandFunction,
+    eOperandLocal,
+    eOperandParam,
+    eOperandReg,
 
     eOperandTotal
 } ssa_opkind_t;
@@ -138,7 +141,10 @@ typedef struct ssa_operand_t {
 
     union {
         const ssa_block_t *bb;
-        const ssa_step_t *vreg;
+        struct {
+            const ssa_block_t *vregContext;
+            size_t vregIndex;
+        };
 
         size_t local;
         size_t param;
@@ -245,14 +251,18 @@ typedef struct ssa_step_t {
 
 typedef struct ssa_block_t {
     const char *name;
-    vector_t *steps;
+    typevec_t *steps;
 } ssa_block_t;
 
 typedef struct ssa_symbol_t {
+    h2_link_t linkage;
+    h2_visible_t visible;
+    const char *mangle;
+
     const char *name;
     const ssa_type_t *type;
     const ssa_value_t *value;
-    const ssa_block_t *entry;
+    ssa_block_t *entry;
 } ssa_symbol_t;
 
 typedef struct ssa_module_t {

@@ -193,7 +193,6 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
 
     map_t *mods = map_optimal(64);
 
-    size_t items = 0;
     map_iter_t iter = map_iter(lifetime->modules);
     while (map_has_next(&iter))
     {
@@ -204,13 +203,8 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
         CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
         CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
 
-        logverbose("acquiring module `%s`", name);
-
         map_set(mods, name, ctx->root);
-        items += 1;
     }
-
-    logverbose("acquired %zu modules", items);
 
     return mods;
 }

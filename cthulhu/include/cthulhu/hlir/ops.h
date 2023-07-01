@@ -52,6 +52,7 @@ typedef enum arity_t {
 #include "hlir.inc"
     eArityTotal
 } arity_t;
+
 /**
  * @brief the visibility of a declaration
  */
@@ -87,3 +88,5 @@ const char *sign_name(sign_t sign);
 const char *digit_name(digit_t digit);
 
 const char *quals_name(quals_t quals);
+const char *link_name(h2_link_t link);
+const char *vis_name(h2_visible_t vis);

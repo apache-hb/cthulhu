@@ -29,6 +29,11 @@ const h2_t *h2_get_type(const h2_t *self)
     return self->type;
 }
 
+const h2_attrib_t *h2_get_attrib(const h2_t *self)
+{
+    return self->attrib;
+}
+
 bool h2_is(const h2_t *self, h2_kind_t kind)
 {
     return self->kind == kind;

@@ -16,7 +16,27 @@ typedef struct ssa_t {
     fs_t *fs;
 
     map_t *modules;
+
+    size_t index;
+    map_t *regs;
 } ssa_t;
+
+static void add_step(ssa_t *ssa, const ssa_step_t *step)
+{
+    char *name = format("%zu", ssa->index++);
+    map_set_ptr(ssa->regs, step, name);
+}
+
+static const char *step_name(ssa_t *ssa, const ssa_step_t *step)
+{
+    return map_get_ptr(ssa->regs, step);
+}
+
+static const char *get_step(ssa_t *ssa, const ssa_block_t *block, size_t index)
+{
+    ssa_step_t *step = typevec_offset(block->steps, index);
+    return step_name(ssa, step);
+}
 
 static const char *ssa_type_to_string(const ssa_type_t *type);
 
@@ -65,6 +85,90 @@ static const char *ssa_type_to_string(const ssa_type_t *type)
     }
 }
 
+static const char *ssa_imm_string(const ssa_value_t *value)
+{
+    const ssa_type_t *type = value->type;
+    switch (value->kind)
+    {
+    case eTypeEmpty: return format("empty(type: %s)", ssa_type_to_string(type));
+    case eTypeUnit: return format("unit(type: %s)", ssa_type_to_string(type));
+    case eTypeString: {
+        const char *str = str_normalizen(value->stringValue, value->stringLength);
+        return format("string(value: \"%s\", type: %s)", str, ssa_type_to_string(type));
+    }
+    case eTypeBool: return value->boolValue ? "true" : "false";
+    case eTypeDigit: return mpz_get_str(NULL, 10, value->digitValue);
+
+    default: NEVER("Invalid imm kind: %d", value->kind);
+    }
+}
+
+static const char *ssa_operand_string(ssa_t *ssa, ssa_operand_t operand)
+{
+    switch (operand.kind)
+    {
+    case eOperandEmpty: return "";
+    case eOperandLocal: return format("local.%zu", operand.local);
+    case eOperandParam: return format("param.%zu", operand.param);
+    case eOperandGlobal: {
+        const ssa_symbol_t *sym = operand.global;
+        return format("&%s", sym->name);
+    }
+    case eOperandFunction: {
+        const ssa_symbol_t *sym = operand.function;
+        return format("&fn(%s)", sym->name);
+    }
+    case eOperandReg: {
+        const char *reg = get_step(ssa, operand.vregContext, operand.vregIndex);
+        return format("%%%s", reg);
+    }
+    case eOperandImm: {
+        const char *imm = ssa_imm_string(operand.value);
+        return format("$%s", imm);
+    }
+
+    default: NEVER("Invalid operand kind: %d", operand.kind);
+    }
+}
+
+static void write_step(io_t *io, ssa_t *ssa, const ssa_step_t *step)
+{
+    add_step(ssa, step);
+
+    switch (step->opcode)
+    {
+    case eOpReturn: {
+        ssa_return_t ret = step->ret;
+        const char *value = ssa_operand_string(ssa, ret.value);
+        write_string(io, "\tret %s\n", value);
+        break;
+    }
+    case eOpImm: {
+        ssa_imm_t imm = step->imm;
+        const char *value = ssa_imm_string(imm.value);
+        write_string(io, "\t%%%s = imm %s\n", step_name(ssa, step), value);
+        break;
+    }
+
+    default: NEVER("Invalid opcode: %d", step->opcode);
+    }
+}
+
+static void write_block(io_t *io, ssa_t *ssa, const ssa_block_t *block)
+{
+    CTASSERT(block != NULL);
+
+    write_string(io, "%s: [len=%zu]\n", (block->name == NULL) ? "null" : block->name, typevec_len(block->steps));
+
+    size_t len = typevec_len(block->steps);
+    for (size_t i = 0; i < len; i++)
+    {
+        ssa_step_t step = { eOpTotal };
+        typevec_get(block->steps, i, &step);
+        write_step(io, ssa, &step);
+    }
+}
+
 static void create_module_file(ssa_t *emit, const char *root, ssa_module_t *mod)
 {
     char *sourceFile = format("ssa/%s.ssa", root);
@@ -76,12 +180,32 @@ static void create_module_file(ssa_t *emit, const char *root, ssa_module_t *mod)
     char *name = str_replace(root, "/", ".");
     write_string(src, "module = %s\n", name);
 
+    if (!map_empty(mod->globals))
+    {
+        write_string(src, "\n");
+    }
+
     map_iter_t globals = map_iter(mod->globals);
     while (map_has_next(&globals))
     {
         map_entry_t entry = map_next(&globals);
         ssa_symbol_t *global = entry.value;
         write_string(src, "global %s: %s = noinit\n", global->name, ssa_type_to_string(global->type));
+        write_string(src, "\t[mangled = %s, visible = %s, linkage = %s]\n",
+            (global->mangle == NULL) ? "null" : format("\"%s\"", global->mangle),
+            vis_name(global->visible),
+            link_name(global->linkage)
+        );
+        write_block(src, emit, global->entry);
+        write_string(src, "\n");
+    }
+
+    map_iter_t functions = map_iter(mod->functions);
+    while (map_has_next(&functions))
+    {
+        map_entry_t entry = map_next(&functions);
+        ssa_symbol_t *function = entry.value;
+        write_string(src, "function %s: %s\n", function->name, ssa_type_to_string(function->type));
     }
 
     map_set_ptr(emit->modules, mod, sourceFile);
@@ -126,7 +250,7 @@ static void create_root_dir(ssa_t *emit, ssa_module_t *mod)
     }
 }
 
-void emit_ssa(const emit_options_t *options)
+ssa_emit_result_t emit_ssa(const emit_options_t *options)
 {
     ssa_t ssa = {
         .reports = options->reports,
@@ -137,4 +261,10 @@ void emit_ssa(const emit_options_t *options)
     fs_dir_create(ssa.fs, "ssa");
 
     create_root_dir(&ssa, options->mod);
+
+    ssa_emit_result_t result = {
+        .stub = NULL
+    };
+
+    return result;
 }

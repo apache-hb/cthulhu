@@ -82,17 +82,25 @@ static void create_root_dir(c89_t *emit, ssa_module_t *mod)
     }
 }
 
-void emit_c89(const emit_options_t *options)
+c89_emit_result_t emit_c89(const c89_emit_options_t *options)
 {
+    emit_options_t opts = options->opts;
+    map_t *sourceMap = map_optimal(64);
     c89_t c89 = {
-        .reports = options->reports,
-        .fs = options->fs,
+        .reports = opts.reports,
+        .fs = opts.fs,
         .includes = map_optimal(64),
-        .sources = map_optimal(64)
+        .sources = sourceMap
     };
 
     fs_dir_create(c89.fs, "include");
     fs_dir_create(c89.fs, "src");
 
-    create_root_dir(&c89, options->mod);
+    create_root_dir(&c89, opts.mod);
+
+    c89_emit_result_t result = {
+        .sources = map_values(sourceMap)
+    };
+
+    return result;
 }

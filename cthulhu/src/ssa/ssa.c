@@ -7,6 +7,7 @@
 #include "std/str.h"
 #include "std/map.h"
 #include "std/vector.h"
+#include "std/typevec.h"
 
 #include "base/memory.h"
 #include "base/panic.h"
@@ -15,6 +16,8 @@ typedef struct ssa_t {
     map_t *globals;
 
     map_t *modules;
+
+    ssa_block_t *current;
 } ssa_t;
 
 static ssa_module_t *ssa_compile_module(ssa_t *ssa, const char *path, h2_t *tree);
@@ -37,9 +40,9 @@ static void add_module(ssa_module_t *root, ssa_module_t *other)
     map_set(root->modules, other->name, other);
 }
 
-static void add_global(ssa_module_t *mod, ssa_symbol_t *sym)
+static void add_global(ssa_module_t *mod, h2_t *h2, ssa_symbol_t *sym)
 {
-    map_set(mod->globals, sym->name, sym);
+    map_set_ptr(mod->globals, h2, sym);
 }
 
 static void add_function(ssa_module_t *mod, ssa_symbol_t *func)
@@ -47,16 +50,28 @@ static void add_function(ssa_module_t *mod, ssa_symbol_t *func)
     map_set(mod->functions, func->name, func);
 }
 
-static ssa_symbol_t *ssa_symbol_new(const char *name, ssa_type_t *type)
+static ssa_block_t *ssa_block_new(const char *name, size_t len)
+{
+    ssa_block_t *self = ctu_malloc(sizeof(ssa_block_t));
+    self->name = name;
+    self->steps = typevec_new(sizeof(ssa_step_t), len);
+    return self;
+}
+
+static ssa_symbol_t *ssa_symbol_new(const char *name, ssa_type_t *type, const h2_attrib_t *attribs)
 {
     CTASSERT(name != NULL);
     CTASSERTF(!str_contains(name, "."), "invalid symbol name: %s", name);
 
     ssa_symbol_t *sym = ctu_malloc(sizeof(ssa_symbol_t));
+    sym->linkage = attribs->link;
+    sym->visible = attribs->visible;
+    sym->mangle = attribs->mangle;
+
     sym->name = name;
     sym->type = type;
     sym->value = NULL;
-    sym->entry = NULL;
+    sym->entry = ssa_block_new("entry", 32);
     return sym;
 }
 
@@ -65,7 +80,7 @@ static ssa_symbol_t *ssa_global_new(const h2_t *global)
     const char *name = h2_get_name(global);
     ssa_type_t *type = ssa_type_from(h2_get_type(global));
 
-    return ssa_symbol_new(name, type);
+    return ssa_symbol_new(name, type, h2_get_attrib(global));
 }
 
 static ssa_symbol_t *ssa_function_new(const h2_t *function)
@@ -73,7 +88,45 @@ static ssa_symbol_t *ssa_function_new(const h2_t *function)
     const char *name = h2_get_name(function);
     ssa_type_t *type = ssa_type_from(h2_get_type(function));
 
-    return ssa_symbol_new(name, type);
+    return ssa_symbol_new(name, type, h2_get_attrib(function));
+}
+
+static ssa_operand_t ssa_add_step(ssa_t *ssa, ssa_step_t step)
+{
+    ssa_block_t *block = ssa->current;
+    size_t index = typevec_len(block->steps);
+
+    typevec_push(block->steps, &step);
+
+    ssa_operand_t operand = {
+        .kind = eOperandReg,
+        .vregContext = block,
+        .vregIndex = index,
+    };
+
+    return operand;
+}
+
+static ssa_operand_t ssa_compile_step(ssa_t *ssa, const h2_t *tree)
+{
+    switch (tree->kind)
+    {
+    case eHlir2ExprEmpty: {
+        ssa_operand_t operand = {
+            .kind = eOperandEmpty
+        };
+        return operand;
+    }
+    case eHlir2ExprDigit: {
+        ssa_operand_t operand = {
+            .kind = eOperandImm,
+            .value = ssa_value_from(tree),
+        };
+
+        return operand;
+    }
+    default: NEVER("invalid expression %d", tree->kind);
+    }
 }
 
 static void ssa_add_globals(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
@@ -86,7 +139,7 @@ static void ssa_add_globals(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
         map_entry_t entry = map_next(&iter);
         ssa_symbol_t *symbol = ssa_global_new(entry.value);
 
-        add_global(mod, symbol);
+        add_global(mod, entry.value, symbol);
     }
 }
 
@@ -103,7 +156,6 @@ static void ssa_add_functions(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
         add_function(mod, fn);
     }
 }
-
 
 static void ssa_add_modules(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
 {
@@ -130,8 +182,9 @@ static ssa_module_t *ssa_compile_module(ssa_t *ssa, const char *path, h2_t *tree
 static void ssa_compile_path(ssa_t *ssa, ssa_module_t *root, const char *path, h2_t *tree)
 {
     vector_t *parts = str_split(path, ".");
-    size_t len = vector_len(parts);
     ssa_module_t *mod = root;
+
+    size_t len = vector_len(parts);
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *part = vector_get(parts, i);
@@ -160,6 +213,17 @@ ssa_module_t *ssa_compile(map_t *mods)
         h2_t *mod = entry.value;
 
         ssa_compile_path(&ssa, root, path, mod);
+    }
+
+    map_iter_t globals = map_iter(ssa.globals);
+    while (map_has_next(&globals))
+    {
+        map_entry_t entry = map_next(&globals);
+        const h2_t *tree = entry.key;
+        ssa_symbol_t *symbol = entry.value;
+
+        ssa.current = symbol->entry;
+        ssa_compile_step(&ssa, tree);
     }
 
     return root;
