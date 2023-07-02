@@ -22,6 +22,8 @@ ssa_type_t *ssa_type_from(const h2_t *type);
 /// value api
 ///
 
+ssa_value_t *ssa_value_new(const ssa_type_t *type);
+
 ssa_value_t *ssa_value_empty(const ssa_type_t *type);
 ssa_value_t *ssa_value_unit(const ssa_type_t *type);
 ssa_value_t *ssa_value_bool(const ssa_type_t *type, bool value);

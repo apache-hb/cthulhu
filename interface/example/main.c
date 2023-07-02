@@ -134,4 +134,6 @@ int main(int argc, const char **argv)
 
     fs_sync(out, fs);
     CHECK_REPORTS(reports, "syncing output directory");
+
+    logverbose("done");
 }

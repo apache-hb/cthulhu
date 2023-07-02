@@ -223,7 +223,15 @@ ssa_module_t *ssa_compile(map_t *mods)
         ssa_symbol_t *symbol = entry.value;
 
         ssa.current = symbol->entry;
-        ssa_compile_step(&ssa, tree);
+        ssa_operand_t op = ssa_compile_step(&ssa, tree);
+        ssa_step_t step = {
+            .opcode = eOpReturn,
+            .ret = {
+                .value = op
+            }
+        };
+
+        ssa_add_step(&ssa, step);
     }
 
     return root;

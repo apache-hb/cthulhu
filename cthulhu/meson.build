@@ -46,7 +46,8 @@ hlir = declare_dependency(
 
 src = [
     'src/ssa/ssa.c',
-    'src/ssa/type.c'
+    'src/ssa/type.c',
+    'src/ssa/value.c'
 ]
 
 libssa = library('ssa', src,

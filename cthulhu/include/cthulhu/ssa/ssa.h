@@ -122,7 +122,6 @@ typedef struct ssa_type_t {
 } ssa_type_t;
 
 typedef struct ssa_value_t {
-    ssa_kind_t kind;
     const ssa_type_t *type;
 
     union {

@@ -88,7 +88,7 @@ static const char *ssa_type_to_string(const ssa_type_t *type)
 static const char *ssa_imm_string(const ssa_value_t *value)
 {
     const ssa_type_t *type = value->type;
-    switch (value->kind)
+    switch (type->kind)
     {
     case eTypeEmpty: return format("empty(type: %s)", ssa_type_to_string(type));
     case eTypeUnit: return format("unit(type: %s)", ssa_type_to_string(type));
@@ -99,7 +99,7 @@ static const char *ssa_imm_string(const ssa_value_t *value)
     case eTypeBool: return value->boolValue ? "true" : "false";
     case eTypeDigit: return mpz_get_str(NULL, 10, value->digitValue);
 
-    default: NEVER("Invalid imm kind: %d", value->kind);
+    default: NEVER("Invalid imm kind: %d", type->kind);
     }
 }
 
