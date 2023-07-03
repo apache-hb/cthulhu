@@ -109,6 +109,8 @@ static ssa_operand_t ssa_add_step(ssa_t *ssa, ssa_step_t step)
 
 static ssa_operand_t ssa_compile_step(ssa_t *ssa, const h2_t *tree)
 {
+    UNUSED(ssa);
+    UNUSED(tree);
     switch (tree->kind)
     {
     case eHlir2ExprEmpty: {
@@ -131,6 +133,8 @@ static ssa_operand_t ssa_compile_step(ssa_t *ssa, const h2_t *tree)
 
 static void ssa_add_globals(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
 {
+    UNUSED(ssa);
+
     map_t *globals = h2_module_tag(tree, eSema2Values);
     map_iter_t iter = map_iter(globals);
 
@@ -145,6 +149,8 @@ static void ssa_add_globals(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
 
 static void ssa_add_functions(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
 {
+    UNUSED(ssa);
+    
     map_t *functions = h2_module_tag(tree, eSema2Procs);
     map_iter_t iter = map_iter(functions);
 

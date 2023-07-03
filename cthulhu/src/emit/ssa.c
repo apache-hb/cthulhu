@@ -163,7 +163,7 @@ static void write_block(io_t *io, ssa_t *ssa, const ssa_block_t *block)
     size_t len = typevec_len(block->steps);
     for (size_t i = 0; i < len; i++)
     {
-        ssa_step_t step = { eOpTotal };
+        ssa_step_t step;
         typevec_get(block->steps, i, &step);
         write_step(io, ssa, &step);
     }

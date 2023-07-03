@@ -89,6 +89,11 @@ else
     parseargs += [ '-Wdeprecated' ]
 endif
 
+if host == 'darwin'
+    # flex generates iffy code
+    args += [ '-Wno-sign-compare' ]
+endif
+
 # we dont use these features so might as well
 foreach arg : [ '-fstrict-aliasing', '-fno-threadsafe-statics', '-fno-keep-static-consts', '-fmerge-all-constants' ]
     if cc.has_argument(arg)

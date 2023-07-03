@@ -1,10 +1,5 @@
 #pragma once
 
-// not worth the hassle
-#ifdef __APPLE__
-#    error __APPLE__
-#endif
-
 #if defined(__clang__)
 #    define CC_CLANG 1
 #elif defined(__GNUC__)
@@ -19,6 +14,8 @@
 #    define OS_LINUX 1
 #elif defined(_WIN32)
 #    define OS_WINDOWS 1
+#elif defined(__APPLE__)
+#    define OS_APPLE 1
 #elif defined(__EMSCRIPTEN__)
 #    define OS_WASM 1
 #else
