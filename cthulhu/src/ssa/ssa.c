@@ -16,7 +16,10 @@ typedef struct ssa_t {
     map_t *globals;
     map_t *functions;
 
-    ssa_block_t *current;
+    map_t *locals;
+
+    ssa_block_t *currentBlock;
+    ssa_symbol_t *currentSymbol;
 } ssa_t;
 
 static ssa_module_t *ssa_compile_module(ssa_t *ssa, const char *path, h2_t *tree);
@@ -51,6 +54,18 @@ static void add_function(ssa_t *ssa, ssa_module_t *mod, const h2_t *h2, ssa_symb
     map_set_ptr(mod->functions, h2, func);
 }
 
+static void add_local(ssa_t *ssa, const h2_t *h2, size_t local)
+{
+    map_set_ptr(ssa->locals, h2, (void*)local);
+}
+
+static size_t get_local(ssa_t *ssa, const h2_t *h2)
+{
+    size_t value = (size_t)map_get_default_ptr(ssa->locals, h2, (void*)SIZE_MAX);
+    CTASSERTF(value != SIZE_MAX, "local not found: %s", h2->name);
+    return value;
+}
+
 static ssa_symbol_t *get_global(ssa_t *ssa, const h2_t *h2)
 {
     ssa_symbol_t *sym = map_get_ptr(ssa->globals, h2);
@@ -58,11 +73,20 @@ static ssa_symbol_t *get_global(ssa_t *ssa, const h2_t *h2)
     return sym;
 }
 
-static ssa_block_t *ssa_block_new(const char *name, size_t len)
+static ssa_symbol_t *get_function(ssa_t *ssa, const h2_t *h2)
+{
+    ssa_symbol_t *sym = map_get_ptr(ssa->functions, h2);
+    CTASSERTF(sym != NULL, "function not found: %s", h2->name);
+    return sym;
+}
+
+static ssa_block_t *ssa_block_new(ssa_symbol_t *symbol, const char *name, size_t len)
 {
     ssa_block_t *self = ctu_malloc(sizeof(ssa_block_t));
     self->name = name;
     self->steps = typevec_new(sizeof(ssa_step_t), len);
+
+    vector_push(&symbol->blocks, self);
     return self;
 }
 
@@ -76,10 +100,14 @@ static ssa_symbol_t *ssa_symbol_new(const char *name, ssa_type_t *type, const h2
     sym->visible = attribs->visible;
     sym->mangle = attribs->mangle;
 
+    sym->locals = NULL;
+
     sym->name = name;
     sym->type = type;
     sym->value = NULL;
     sym->entry = NULL;
+
+    sym->blocks = vector_new(4);
     return sym;
 }
 
@@ -89,7 +117,7 @@ static ssa_symbol_t *ssa_global_new(const h2_t *global)
     ssa_type_t *type = ssa_type_from(h2_get_type(global));
 
     ssa_symbol_t *sym = ssa_symbol_new(name, type, h2_get_attrib(global));
-    sym->entry = ssa_block_new("entry", 32);
+    sym->entry = ssa_block_new(sym, "entry", 32);
     return sym;
 }
 
@@ -103,7 +131,7 @@ static ssa_symbol_t *ssa_function_new(const h2_t *function)
 
 static ssa_operand_t ssa_add_step(ssa_t *ssa, ssa_step_t step)
 {
-    ssa_block_t *block = ssa->current;
+    ssa_block_t *block = ssa->currentBlock;
     size_t index = typevec_len(block->steps);
 
     typevec_push(block->steps, &step);
@@ -115,6 +143,18 @@ static ssa_operand_t ssa_add_step(ssa_t *ssa, ssa_step_t step)
     };
 
     return operand;
+}
+
+static ssa_operand_t ssa_compile_step(ssa_t *ssa, const h2_t *tree);
+
+static void add_stmt_block(ssa_t *ssa, vector_t *stmts)
+{
+    size_t len = vector_len(stmts);
+    for (size_t i = 0; i < len; i++)
+    {
+        const h2_t *stmt = vector_get(stmts, i);
+        ssa_compile_step(ssa, stmt);
+    }
 }
 
 static ssa_operand_t ssa_compile_step(ssa_t *ssa, const h2_t *tree)
@@ -130,23 +170,154 @@ static ssa_operand_t ssa_compile_step(ssa_t *ssa, const h2_t *tree)
         };
         return operand;
     }
-    case eHlir2ExprDigit: {
+    case eHlir2ExprDigit:
+    case eHlir2ExprBool:
+    case eHlir2ExprString:
+    case eHlir2ExprUnit: {
         ssa_operand_t operand = {
             .kind = eOperandImm,
             .value = ssa_value_from(tree),
         };
-
         return operand;
     }
+    case eHlir2ExprBinary: {
+        ssa_operand_t lhs = ssa_compile_step(ssa, tree->lhs);
+        ssa_operand_t rhs = ssa_compile_step(ssa, tree->rhs);
 
+        ssa_step_t step = {
+            .opcode = eOpBinary,
+            .binary = {
+                .lhs = lhs,
+                .rhs = rhs,
+                .binary = tree->binary,
+            }
+        };
+        return ssa_add_step(ssa, step);
+    }
+    case eHlir2ExprLoad: {
+        ssa_operand_t operand = ssa_compile_step(ssa, tree->load);
+        ssa_step_t step = {
+            .opcode = eOpLoad,
+            .load = {
+                .src = operand,
+            }
+        };
+        return ssa_add_step(ssa, step);
+    }
+    case eHlir2ExprCall: {
+        size_t len = vector_len(tree->args);
+        typevec_t *args = typevec_of(sizeof(ssa_operand_t), len);
+        for (size_t i = 0; i < len; i++)
+        {
+            const h2_t *arg = vector_get(tree->args, i);
+            ssa_operand_t operand = ssa_compile_step(ssa, arg);
+            typevec_set(args, i, &operand);
+        }
+
+        ssa_operand_t callee = ssa_compile_step(ssa, tree->callee);
+
+        ssa_step_t step = {
+            .opcode = eOpCall,
+            .call = {
+                .function = callee,
+                .args = args,
+            }
+        };
+        return ssa_add_step(ssa, step);
+    }
     case eHlir2DeclGlobal: {
         ssa_operand_t operand = {
             .kind = eOperandGlobal,
             .global = get_global(ssa, tree),
         };
+        return operand;
+    }
+    case eHlir2DeclFunction: {
+        ssa_operand_t operand = {
+            .kind = eOperandFunction,
+            .function = get_function(ssa, tree),
+        };
+        return operand;
+    }
+
+    case eHlir2DeclLocal: {
+        size_t idx = get_local(ssa, tree);
+
+        ssa_operand_t operand = {
+            .kind = eOperandLocal,
+            .local = idx,
+        };
+        return operand;
+    }
+
+    case eHlir2StmtBlock: {
+        ssa_block_t *block = ssa_block_new(ssa->currentSymbol, NULL, 32);
+        ssa_block_t *next = ssa_block_new(ssa->currentSymbol, NULL, 32);
+
+        ssa_operand_t operand = {
+            .kind = eOperandBlock,
+            .bb = block,
+        };
+
+        ssa_step_t into = {
+            .opcode = eOpJump,
+            .jump = {
+                .target = operand
+            }
+        };
+
+        ssa_step_t step = {
+            .opcode = eOpJump,
+            .jump = {
+                .target = {
+                    .kind = eOperandBlock,
+                    .bb = next,
+                },
+            }
+        };
+
+        ssa_add_step(ssa, into);
+
+        ssa->currentBlock = block;
+
+        add_stmt_block(ssa, tree->stmts);
+
+        ssa_add_step(ssa, step);
+
+        ssa->currentBlock = next;
 
         return operand;
     }
+
+    case eHlir2StmtAssign: {
+        ssa_operand_t dst = ssa_compile_step(ssa, tree->dst);
+        ssa_operand_t src = ssa_compile_step(ssa, tree->src);
+
+        ssa_step_t step = {
+            .opcode = eOpStore,
+            .store = {
+                .dst = dst,
+                .src = src,
+            }
+        };
+        return ssa_add_step(ssa, step);
+    }
+
+    case eHlir2StmtReturn: {
+        ssa_operand_t operand = ssa_compile_step(ssa, tree->value);
+
+        ssa_step_t step = {
+            .opcode = eOpReturn,
+            .ret = {
+                .value = operand,
+            }
+        };
+        return ssa_add_step(ssa, step);
+    }
+
+    case eHlir2Resolve:
+        NEVER("resolve %s should be resolved by now", tree->name);
+
     default: NEVER("invalid expression %d", tree->kind);
     }
 }
@@ -219,11 +390,43 @@ static void ssa_compile_path(ssa_t *ssa, ssa_module_t *root, const char *path, h
     add_module(mod, ssa_compile_module(ssa, name, tree));
 }
 
+static typevec_t *ssa_gen_locals(ssa_t *ssa, const h2_t *tree)
+{
+    CTASSERT(h2_is(tree, eHlir2DeclFunction));
+
+    map_reset(ssa->locals);
+
+    size_t len = vector_len(tree->locals);
+    typevec_t *dst = typevec_of(sizeof(ssa_local_t), len);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        const h2_t *local = vector_get(tree->locals, i);
+        ssa_local_t sym = {
+            .name = h2_get_name(local),
+            .type = ssa_type_from(h2_get_type(local))
+        };
+
+        typevec_set(dst, i, &sym);
+        add_local(ssa, local, i);
+    }
+
+    return dst;
+}
+
+static void begin_pass(ssa_t *ssa, ssa_symbol_t *sym, ssa_block_t *block)
+{
+    ssa->currentSymbol = sym;
+    ssa->currentBlock = block;
+}
+
 ssa_module_t *ssa_compile(map_t *mods)
 {
     ssa_t ssa = {
         .globals = map_new(64),
         .functions = map_new(64),
+
+        .locals = map_new(64),
     };
 
     ssa_module_t *root = ssa_module_new(NULL);
@@ -245,7 +448,8 @@ ssa_module_t *ssa_compile(map_t *mods)
         const h2_t *tree = entry.key;
         ssa_symbol_t *symbol = entry.value;
 
-        ssa.current = symbol->entry;
+        begin_pass(&ssa, symbol, symbol->entry);
+
         ssa_operand_t op = ssa_compile_step(&ssa, tree->global);
         ssa_step_t step = {
             .opcode = eOpReturn,
@@ -264,13 +468,14 @@ ssa_module_t *ssa_compile(map_t *mods)
         const h2_t *tree = entry.key;
         ssa_symbol_t *symbol = entry.value;
 
-        logverbose("compiling function %s", symbol->name);
-
         if (tree->body == NULL) { continue; }
 
-        logverbose("has body %s", symbol->name);
+        symbol->locals = ssa_gen_locals(&ssa, tree);
+        symbol->entry = ssa_block_new(symbol, "entry", 32);
+        begin_pass(&ssa, symbol, symbol->entry);
 
-        symbol->entry = ssa_block_new(symbol->name, 32);
+        CTASSERT(h2_is(tree->body, eHlir2StmtBlock));
+        add_stmt_block(&ssa, tree->body->stmts);
     }
 
     return root;

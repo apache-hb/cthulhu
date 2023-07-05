@@ -3,6 +3,36 @@
 #include "std/vector.h"
 #include "std/str.h"
 
+const char *unary_name(unary_t op)
+{
+#define UNARY_OP(ID, STR, SYM) case ID: return STR;
+    switch (op)
+    {
+#include "cthulhu/hlir/hlir.inc"
+    default: return "unknown";
+    }
+}
+
+const char *binary_name(binary_t op)
+{
+#define BINARY_OP(ID, STR, SYM) case ID: return STR;
+    switch (op)
+    {
+#include "cthulhu/hlir/hlir.inc"
+    default: return "unknown";
+    }
+}
+
+const char *compare_name(compare_t op)
+{
+#define COMPARE_OP(ID, STR, SYM) case ID: return STR;
+    switch (op)
+    {
+#include "cthulhu/hlir/hlir.inc"
+    default: return "unknown";
+    }
+}
+
 const char *sign_name(sign_t sign)
 {
 #define SIGN_KIND(ID, STR) case ID: return STR;

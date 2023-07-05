@@ -67,14 +67,14 @@ h2_t *h2_decl_local(const node_t *node, const char *name, const h2_t *type)
 h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value)
 {
     h2_t *self = h2_decl(eHlir2DeclGlobal, node, type, name);
-    self->global = value;
+    h2_close_global(self, value);
     return self;
 }
 
 h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *signature, h2_t *body)
 {
     h2_t *self = h2_open_function(node, name, signature);
-    self->body = body;
+    h2_close_function(self, body);
     return self;
 }
 

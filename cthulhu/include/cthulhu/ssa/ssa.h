@@ -261,7 +261,13 @@ typedef struct ssa_symbol_t {
     const char *name;
     const ssa_type_t *type;
     const ssa_value_t *value;
+
+    typevec_t *locals;
+    typevec_t *params;
+
     ssa_block_t *entry;
+
+    vector_t *blocks;
 } ssa_symbol_t;
 
 typedef struct ssa_module_t {
