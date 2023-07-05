@@ -173,6 +173,7 @@ static h2_t *sema_ident(h2_t *sema, pl0_t *node)
         report_pl0_unresolved(sema->reports, node->node, node->ident);
         return h2_error(node->node, "unresolved identifier");
     }
+
     return h2_expr_load(node->node, var);
 }
 

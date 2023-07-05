@@ -14,8 +14,7 @@
 
 typedef struct ssa_t {
     map_t *globals;
-
-    map_t *modules;
+    map_t *functions;
 
     ssa_block_t *current;
 } ssa_t;
@@ -40,14 +39,23 @@ static void add_module(ssa_module_t *root, ssa_module_t *other)
     map_set(root->modules, other->name, other);
 }
 
-static void add_global(ssa_module_t *mod, h2_t *h2, ssa_symbol_t *sym)
+static void add_global(ssa_t *ssa, ssa_module_t *mod, const h2_t *h2, ssa_symbol_t *sym)
 {
+    map_set_ptr(ssa->globals, h2, sym);
     map_set_ptr(mod->globals, h2, sym);
 }
 
-static void add_function(ssa_module_t *mod, ssa_symbol_t *func)
+static void add_function(ssa_t *ssa, ssa_module_t *mod, const h2_t *h2, ssa_symbol_t *func)
 {
-    map_set(mod->functions, func->name, func);
+    map_set_ptr(ssa->functions, h2, func);
+    map_set_ptr(mod->functions, h2, func);
+}
+
+static ssa_symbol_t *get_global(ssa_t *ssa, const h2_t *h2)
+{
+    ssa_symbol_t *sym = map_get_ptr(ssa->globals, h2);
+    CTASSERTF(sym != NULL, "global not found: %s", h2->name);
+    return sym;
 }
 
 static ssa_block_t *ssa_block_new(const char *name, size_t len)
@@ -71,7 +79,7 @@ static ssa_symbol_t *ssa_symbol_new(const char *name, ssa_type_t *type, const h2
     sym->name = name;
     sym->type = type;
     sym->value = NULL;
-    sym->entry = ssa_block_new("entry", 32);
+    sym->entry = NULL;
     return sym;
 }
 
@@ -80,7 +88,9 @@ static ssa_symbol_t *ssa_global_new(const h2_t *global)
     const char *name = h2_get_name(global);
     ssa_type_t *type = ssa_type_from(h2_get_type(global));
 
-    return ssa_symbol_new(name, type, h2_get_attrib(global));
+    ssa_symbol_t *sym = ssa_symbol_new(name, type, h2_get_attrib(global));
+    sym->entry = ssa_block_new("entry", 32);
+    return sym;
 }
 
 static ssa_symbol_t *ssa_function_new(const h2_t *function)
@@ -111,6 +121,7 @@ static ssa_operand_t ssa_compile_step(ssa_t *ssa, const h2_t *tree)
 {
     UNUSED(ssa);
     UNUSED(tree);
+
     switch (tree->kind)
     {
     case eHlir2ExprEmpty: {
@@ -127,14 +138,21 @@ static ssa_operand_t ssa_compile_step(ssa_t *ssa, const h2_t *tree)
 
         return operand;
     }
+
+    case eHlir2DeclGlobal: {
+        ssa_operand_t operand = {
+            .kind = eOperandGlobal,
+            .global = get_global(ssa, tree),
+        };
+
+        return operand;
+    }
     default: NEVER("invalid expression %d", tree->kind);
     }
 }
 
 static void ssa_add_globals(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
 {
-    UNUSED(ssa);
-
     map_t *globals = h2_module_tag(tree, eSema2Values);
     map_iter_t iter = map_iter(globals);
 
@@ -143,14 +161,12 @@ static void ssa_add_globals(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
         map_entry_t entry = map_next(&iter);
         ssa_symbol_t *symbol = ssa_global_new(entry.value);
 
-        add_global(mod, entry.value, symbol);
+        add_global(ssa, mod, entry.value, symbol);
     }
 }
 
 static void ssa_add_functions(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
 {
-    UNUSED(ssa);
-    
     map_t *functions = h2_module_tag(tree, eSema2Procs);
     map_iter_t iter = map_iter(functions);
 
@@ -159,7 +175,7 @@ static void ssa_add_functions(ssa_t *ssa, ssa_module_t *mod, h2_t *tree)
         map_entry_t entry = map_next(&iter);
         ssa_symbol_t *fn = ssa_function_new(entry.value);
 
-        add_function(mod, fn);
+        add_function(ssa, mod, entry.value, fn);
     }
 }
 
@@ -206,7 +222,8 @@ static void ssa_compile_path(ssa_t *ssa, ssa_module_t *root, const char *path, h
 ssa_module_t *ssa_compile(map_t *mods)
 {
     ssa_t ssa = {
-        .globals = map_new(64)
+        .globals = map_new(64),
+        .functions = map_new(64),
     };
 
     ssa_module_t *root = ssa_module_new(NULL);
@@ -229,7 +246,7 @@ ssa_module_t *ssa_compile(map_t *mods)
         ssa_symbol_t *symbol = entry.value;
 
         ssa.current = symbol->entry;
-        ssa_operand_t op = ssa_compile_step(&ssa, tree);
+        ssa_operand_t op = ssa_compile_step(&ssa, tree->global);
         ssa_step_t step = {
             .opcode = eOpReturn,
             .ret = {
@@ -238,6 +255,22 @@ ssa_module_t *ssa_compile(map_t *mods)
         };
 
         ssa_add_step(&ssa, step);
+    }
+
+    map_iter_t functions = map_iter(ssa.functions);
+    while (map_has_next(&functions))
+    {
+        map_entry_t entry = map_next(&functions);
+        const h2_t *tree = entry.key;
+        ssa_symbol_t *symbol = entry.value;
+
+        logverbose("compiling function %s", symbol->name);
+
+        if (tree->body == NULL) { continue; }
+
+        logverbose("has body %s", symbol->name);
+
+        symbol->entry = ssa_block_new(symbol->name, 32);
     }
 
     return root;

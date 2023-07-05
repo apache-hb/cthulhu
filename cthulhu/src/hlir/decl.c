@@ -44,11 +44,13 @@ h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signatu
 
 void h2_close_global(h2_t *self, h2_t *value)
 {
+    self->kind = eHlir2DeclGlobal;
     self->global = value;
 }
 
 void h2_close_function(h2_t *self, h2_t *body)
 {
+    self->kind = eHlir2DeclFunction;
     self->body = body;
 }
 

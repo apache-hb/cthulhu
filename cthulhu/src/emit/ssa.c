@@ -205,7 +205,8 @@ static void create_module_file(ssa_t *emit, const char *root, ssa_module_t *mod)
     {
         map_entry_t entry = map_next(&functions);
         ssa_symbol_t *function = entry.value;
-        write_string(src, "function %s: %s\n", function->name, ssa_type_to_string(function->type));
+        const char *where = (function->entry == NULL) ? "extern" : "function";
+        write_string(src, "%s %s: %s\n", where, function->name, ssa_type_to_string(function->type));
     }
 
     map_set_ptr(emit->modules, mod, sourceFile);
@@ -256,6 +257,9 @@ ssa_emit_result_t emit_ssa(const emit_options_t *options)
         .reports = options->reports,
         .fs = options->fs,
         .modules = map_optimal(4),
+
+        .index = 0,
+        .regs = map_optimal(64),
     };
 
     fs_dir_create(ssa.fs, "ssa");
