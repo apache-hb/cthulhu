@@ -39,7 +39,6 @@ static void add_block(ssa_t *ssa, const ssa_block_t *block)
 
     const char *id = block->name != NULL ? block->name : format("%zu", ssa->blockCounter++);
     map_set_ptr(ssa->blocks, block, (char*)id);
-    logverbose("Added block %s", id);
 }
 
 static const char *step_name(ssa_t *ssa, const ssa_step_t *step)
@@ -62,7 +61,6 @@ static const char *get_step(ssa_t *ssa, const ssa_block_t *block, size_t index)
 
 static void reset_counters(ssa_t *ssa)
 {
-    logverbose("reset_counters()");
     ssa->blockCounter = 0;
     ssa->vregCounter = 0;
 
