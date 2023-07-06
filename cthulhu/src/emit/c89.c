@@ -7,6 +7,7 @@
 #include "std/str.h"
 #include "std/map.h"
 #include "std/vector.h"
+#include "std/typevec.h"
 
 #include "base/panic.h"
 #include "base/memory.h"
@@ -18,7 +19,7 @@ typedef struct c89_t {
     fs_t *fs;
     c89_flags_t flags;
 
-    map_t *modules; // map<ssa_module_t*, c89_file_t*>
+    map_t *modules; // map<ssa_module_t*, c89_module_t*>
 
     vector_t *path;
 } c89_t;
@@ -32,6 +33,16 @@ typedef struct c89_module_t {
     c89_file_t source;
     c89_file_t include;
 } c89_module_t;
+
+static io_t *get_source(c89_module_t *mod)
+{
+    return mod->source.io;
+}
+
+static io_t *get_include(c89_module_t *mod)
+{
+    return mod->include.io;
+}
 
 static c89_file_t create_new_file(const char *path, io_t *io)
 {
@@ -72,6 +83,9 @@ static c89_module_t *create_module_file(c89_t *emit, const char *root, vector_t 
     io_t *inc = fs_open(emit->fs, includeFile, eAccessWrite | eAccessText);
 
     write_string(inc, "#pragma once\n");
+    write_string(inc, "#include <stdbool.h>\n");
+    write_string(inc, "#include <stdint.h>\n");
+
     write_string(src, "#include \"%s.h\"\n", root);
 
     const char *id = (vector_len(path) > 0)
@@ -90,6 +104,89 @@ static c89_module_t *create_module_file(c89_t *emit, const char *root, vector_t 
     return self;
 }
 
+static const char *type_to_string(c89_t *emit, const ssa_type_t *type, const char *name);
+
+static const char *get_digit_name(ssa_type_digit_t info)
+{
+    switch (info.digit)
+    {
+    case eDigitChar: return (info.sign == eSignUnsigned) ? "unsigned char" : "signed char";
+    case eDigitShort: return (info.sign == eSignUnsigned) ? "unsigned short" : "signed short";
+    case eDigitInt: return (info.sign == eSignUnsigned) ? "unsigned int" : "signed int";
+    case eDigitLong: return (info.sign == eSignUnsigned) ? "unsigned long long" : "signed long long";
+    case eDigitPtr: return (info.sign == eSignUnsigned) ? "uintptr_t" : "intptr_t";
+    case eDigitSize: return (info.sign == eSignUnsigned) ? "size_t" : "ptrdiff_t";
+    case eDigitMax: return (info.sign == eSignUnsigned) ? "uintmax_t" : "intmax_t";
+    default: NEVER("invalid digit");
+    }
+}
+
+static const char *qual_to_string(c89_t *emit, ssa_type_qualify_t qual, const char *name)
+{
+    quals_t quals = qual.quals;
+    vector_t *parts = vector_new(3);
+
+    if (!(quals & eQualMutable))
+    {
+        vector_push(&parts, (char*)"const");
+    }
+
+    if (quals & eQualVolatile)
+    {
+        vector_push(&parts, (char*)"volatile");
+    }
+
+    if (quals & eQualAtomic)
+    {
+        vector_push(&parts, (char*)"_Atomic");
+    }
+
+    const char *inner = type_to_string(emit, qual.type, name);
+    if (vector_len(parts) == 0)
+    {
+        return inner;
+    }
+
+    const char *decorate = str_join(" ", parts);
+    return format("%s %s", decorate, inner);
+}
+
+static const char *closure_to_string(c89_t *emit, ssa_type_closure_t closure, const char *name)
+{
+    size_t len = typevec_len(closure.params);
+    vector_t *args = vector_of(len);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        ssa_param_t *param = typevec_offset(closure.params, i);
+        const char *type = type_to_string(emit, param->type, param->name);
+
+        vector_push(&args, (char*)type);
+    }
+
+    const char *params = str_join(", ", args);
+    const char *ret = type_to_string(emit, closure.result, NULL);
+
+    return format("%s (*%s)(%s)", ret, (name == NULL) ? "" : name, params);
+}
+
+static const char *type_to_string(c89_t *emit, const ssa_type_t *type, const char *name)
+{
+    CTASSERT(type != NULL);
+
+    switch (type->kind)
+    {
+    case eTypeEmpty: NEVER("empty type indicates unreachable");
+    case eTypeUnit: return (name == NULL) ? "void" : format("void %s", name);
+    case eTypeBool: return (name == NULL) ? "bool" : format("bool %s", name);
+    case eTypeDigit: return (name == NULL) ? get_digit_name(type->digit) : format("%s %s", get_digit_name(type->digit), name);
+    case eTypeString: return (name == NULL) ? "const char*" : format("const char *%s", name);
+    case eTypeQualify: return qual_to_string(emit, type->qualify, name);
+    case eTypeClosure: return closure_to_string(emit, type->closure, name);
+    default: NEVER("invalid type kind");
+    }
+}
+
 static void create_module_dir(c89_t *emit, ssa_module_t *mod)
 {
     const char *name = mod->name;
@@ -97,7 +194,34 @@ static void create_module_dir(c89_t *emit, ssa_module_t *mod)
 
     const char *path = join_path(emit, emit->path, name);
 
-    create_module_file(emit, path, emit->path, mod);
+    c89_module_t *it = create_module_file(emit, path, emit->path, mod);
+
+    io_t *inc = get_include(it);
+    io_t *src = get_source(it);
+
+    map_iter_t globals = map_iter(mod->globals);
+    while (map_has_next(&globals))
+    {
+        map_entry_t entry = map_next(&globals);
+        ssa_symbol_t *global = entry.value;
+
+        const char *type = type_to_string(emit, global->type, global->name);
+
+        // TODO: calc value
+
+        switch (global->visible)
+        {
+        case eVisiblePublic:
+            write_string(inc, "extern %s;\n", type);
+            write_string(src, "%s;\n", type);
+            break;
+        case eVisiblePrivate:
+            write_string(src, "static %s;\n", type);
+            break;
+
+        default: NEVER("invalid visibility");
+        }
+    }
 
     if (map_empty(mod->modules))
     {
