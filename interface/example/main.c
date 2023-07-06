@@ -9,6 +9,7 @@
 
 #include "std/str.h"
 #include "std/map.h"
+#include "std/vector.h"
 
 #include "io/io.h"
 #include "io/fs.h"
@@ -116,8 +117,9 @@ int main(int argc, const char **argv)
         .mod = ssa,
     };
 
-    emit_ssa(&baseOpts);
+    ssa_emit_result_t ssaResult = emit_ssa(&baseOpts);
     CHECK_REPORTS(reports, "emitting ssa");
+    UNUSED(ssaResult); // TODO: check for errors
 
     c89_emit_options_t c89Opts = {
         .opts = baseOpts,
@@ -127,7 +129,12 @@ int main(int argc, const char **argv)
     c89_emit_result_t c89Result = emit_c89(&c89Opts);
     CHECK_REPORTS(reports, "emitting c89");
 
-    UNUSED(c89Result); // TODO: check for errors
+    size_t len = vector_len(c89Result.sources);
+    for (size_t i = 0; i < len; i++)
+    {
+        const char *path = vector_get(c89Result.sources, i);
+        printf("%s\n", path);
+    }
 
     fs_t *out = fs_physical(reports, "out");
     CHECK_REPORTS(reports, "creating output directory");

@@ -1,5 +1,5 @@
 #pragma once
 
 /**
- * module pl0.lang
+ * module pl0
  */
