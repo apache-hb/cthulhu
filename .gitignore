@@ -45,7 +45,7 @@ fuzz-*/
 afl*/
 genout*/
 out.c
-*-out/
+*out/
 
 # grammar files
 !driver/**/*
