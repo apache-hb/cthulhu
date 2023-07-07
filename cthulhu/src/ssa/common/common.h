@@ -18,6 +18,8 @@ ssa_type_t *ssa_type_closure(const char *name, ssa_type_t *result, typevec_t *pa
 
 ssa_type_t *ssa_type_from(const h2_t *type);
 
+ssa_type_t *ssa_type_common(const ssa_type_t *lhs, const ssa_type_t *rhs);
+
 ///
 /// value api
 ///

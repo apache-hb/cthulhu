@@ -69,7 +69,7 @@ static typevec_t *collect_params(vector_t *vector)
     {
         const h2_t *param = vector_get(vector, i);
         CTASSERTF(h2_is(param, eHlir2DeclParam), "expected param, got %s", h2_to_string(param));
-    
+
         const char *name = h2_get_name(param);
         const h2_t *type = h2_get_type(param);
 
@@ -95,15 +95,15 @@ ssa_type_t *ssa_type_from(const h2_t *type)
     case eHlir2TypeBool: return ssa_type_bool(name);
     case eHlir2TypeDigit: return ssa_type_digit(name, type->sign, type->digit);
     case eHlir2TypeString: return ssa_type_string(name);
-    case eHlir2TypeClosure: 
+    case eHlir2TypeClosure:
         return ssa_type_closure(
-            /* name = */ name, 
-            /* result = */ ssa_type_from(type->result), 
+            /* name = */ name,
+            /* result = */ ssa_type_from(type->result),
             /* params = */ collect_params(type->params)
         );
     case eHlir2Qualify: return ssa_type_qualify(name, type->quals, ssa_type_from(type->qualify));
 
-    default: 
+    default:
         NEVER("unexpected type kind: %s", h2_to_string(type));
     }
 }

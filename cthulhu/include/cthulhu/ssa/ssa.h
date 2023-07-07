@@ -287,18 +287,10 @@ ssa_module_t *ssa_compile(map_t *mods);
 /// optimization api
 ///
 
-typedef bool (*ssa_pass_run_t)(reports_t *reports, ssa_module_t *mod);
-
-typedef struct ssa_pass_t {
-    const char *name;
-    ssa_pass_run_t run;
-} ssa_pass_t;
-
 /**
  * @brief Optimize a given module.
  *
  * @param reports report sink
  * @param mod module to optimize
- * @param passes typevec_t<ssa_pass_t> passes to run
  */
-void ssa_opt(reports_t *reports, ssa_module_t *mod, typevec_t *passes);
+void ssa_opt(reports_t *reports, ssa_module_t *mod);

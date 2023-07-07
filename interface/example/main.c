@@ -109,6 +109,9 @@ int main(int argc, const char **argv)
     ssa_module_t *ssa = ssa_compile(modmap);
     CHECK_REPORTS(reports, "generating ssa");
 
+    ssa_opt(reports, ssa);
+    CHECK_REPORTS(reports, "optimizing ssa");
+
     fs_t *fs = fs_virtual(reports, "out");
 
     emit_options_t baseOpts = {

@@ -115,6 +115,28 @@ static const char *ssa_type_to_string(const ssa_type_t *type)
     }
 }
 
+static const char *ssa_value_to_string(const ssa_value_t *value)
+{
+    const ssa_type_t *type = value->type;
+
+    switch (type->kind)
+    {
+    case eTypeEmpty:
+    case eTypeUnit:
+        return ssa_type_to_string(type);
+
+    case eTypeBool:
+        return format("bool(value: %s)", value->boolValue ? "true" : "false");
+    case eTypeDigit:
+        return format("digit(value: %s, type: %s)", mpz_get_str(NULL, 10, value->digitValue), ssa_type_to_string(type));
+
+    case eTypeString:
+        return format("string(value: \"%s\")", str_normalizen(value->stringValue, value->stringLength));
+
+    default: NEVER("Invalid value kind: %d", type->kind);
+    }
+}
+
 static const char *ssa_imm_string(const ssa_value_t *value)
 {
     const ssa_type_t *type = value->type;
@@ -290,6 +312,16 @@ static void create_module_file(ssa_t *emit, const char *root, ssa_module_t *mod)
             vis_name(global->visible),
             link_name(global->linkage)
         );
+
+        if (global->value != NULL)
+        {
+            write_string(src, "\t[value = %s]\n", ssa_value_to_string(global->value));
+        }
+        else
+        {
+            write_string(src, "\t[value = error]\n");
+        }
+
         write_symbol_blocks(src, emit, global);
         write_string(src, "\n");
 
