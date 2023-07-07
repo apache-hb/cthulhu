@@ -256,18 +256,20 @@ typedef struct ssa_block_t {
 typedef struct ssa_symbol_t {
     h2_link_t linkage;
     h2_visible_t visible;
-    const char *mangle;
 
-    const char *name;
-    const ssa_type_t *type;
-    const ssa_value_t *value;
+    const char *mangle; ///< external name
+//    const char *library; ///< external library to link against
 
-    typevec_t *locals;
-    typevec_t *params;
+    const char *name; ///< internal name
+    const ssa_type_t *type; ///< the type of this symbol, must be a closure for functions
+    const ssa_value_t *value; ///< the value of this symbol, must always be set for globals
 
-    ssa_block_t *entry;
+    typevec_t *locals; ///< typevec_t<ssa_type_t>
+    typevec_t *params; ///< typevec_t<ssa_type_t>
 
-    vector_t *blocks;
+    ssa_block_t *entry; ///< entry block
+
+    vector_t *blocks; ///< vector_t<ssa_block_t *>
 } ssa_symbol_t;
 
 typedef struct ssa_module_t {
@@ -280,3 +282,23 @@ typedef struct ssa_module_t {
 } ssa_module_t;
 
 ssa_module_t *ssa_compile(map_t *mods);
+
+///
+/// optimization api
+///
+
+typedef bool (*ssa_pass_run_t)(reports_t *reports, ssa_module_t *mod);
+
+typedef struct ssa_pass_t {
+    const char *name;
+    ssa_pass_run_t run;
+} ssa_pass_t;
+
+/**
+ * @brief Optimize a given module.
+ *
+ * @param reports report sink
+ * @param mod module to optimize
+ * @param passes typevec_t<ssa_pass_t> passes to run
+ */
+void ssa_opt(reports_t *reports, ssa_module_t *mod, typevec_t *passes);
