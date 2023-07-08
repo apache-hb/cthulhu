@@ -15,58 +15,11 @@
 #include <string.h>
 
 typedef struct ssa_t {
-    reports_t *reports;
+    emit_t emit;
     fs_t *fs;
 
     map_t *modules;
-
-    size_t blockCounter;
-    map_t *blocks;
-
-    size_t vregCounter;
-    map_t *regs;
 } ssa_t;
-
-static void add_step(ssa_t *ssa, const ssa_step_t *step)
-{
-    char *name = format("%zu", ssa->vregCounter++);
-    map_set_ptr(ssa->regs, step, name);
-}
-
-static void add_block(ssa_t *ssa, const ssa_block_t *block)
-{
-    if (map_get_ptr(ssa->blocks, block) != NULL) { return; }
-
-    const char *id = block->name != NULL ? block->name : format("%zu", ssa->blockCounter++);
-    map_set_ptr(ssa->blocks, block, (char*)id);
-}
-
-static const char *step_name(ssa_t *ssa, const ssa_step_t *step)
-{
-    return map_get_ptr(ssa->regs, step);
-}
-
-static const char *get_block(ssa_t *ssa, const ssa_block_t *block)
-{
-    const char *id = map_get_ptr(ssa->blocks, block);
-    return id;
-}
-
-static const char *get_step(ssa_t *ssa, const ssa_block_t *block, size_t index)
-{
-    ssa_step_t *step = typevec_offset(block->steps, index);
-    const char *result = step_name(ssa, step);
-    return result;
-}
-
-static void reset_counters(ssa_t *ssa)
-{
-    ssa->blockCounter = 0;
-    ssa->vregCounter = 0;
-
-    map_reset(ssa->blocks);
-    map_reset(ssa->regs);
-}
 
 static const char *ssa_type_to_string(const ssa_type_t *type);
 
@@ -171,7 +124,7 @@ static const char *ssa_operand_string(ssa_t *ssa, ssa_operand_t operand)
         return format("&fn(%s)", sym->name);
     }
     case eOperandReg: {
-        const char *reg = get_step(ssa, operand.vregContext, operand.vregIndex);
+        const char *reg = get_step_from_block(&ssa->emit, operand.vregContext, operand.vregIndex);
         return format("%%%s", reg);
     }
     case eOperandImm: {
@@ -179,8 +132,7 @@ static const char *ssa_operand_string(ssa_t *ssa, ssa_operand_t operand)
         return format("$%s", imm);
     }
     case eOperandBlock: {
-        add_block(ssa, operand.bb);
-        return format(".%s", get_block(ssa, operand.bb));
+        return format(".%s", get_block_name(&ssa->emit, operand.bb));
     }
 
     default: NEVER("Invalid operand kind: %d", operand.kind);
@@ -189,8 +141,6 @@ static const char *ssa_operand_string(ssa_t *ssa, ssa_operand_t operand)
 
 static void write_step(io_t *io, ssa_t *ssa, const ssa_step_t *step)
 {
-    add_step(ssa, step);
-
     switch (step->opcode)
     {
     case eOpReturn: {
@@ -202,7 +152,7 @@ static void write_step(io_t *io, ssa_t *ssa, const ssa_step_t *step)
     case eOpImm: {
         ssa_imm_t imm = step->imm;
         const char *value = ssa_imm_string(imm.value);
-        write_string(io, "\t%%%s = imm %s\n", step_name(ssa, step), value);
+        write_string(io, "\t%%%s = imm %s\n", get_step_name(&ssa->emit, step), value);
         break;
     }
     case eOpJump: {
@@ -214,13 +164,13 @@ static void write_step(io_t *io, ssa_t *ssa, const ssa_step_t *step)
     case eOpAddress: {
         ssa_addr_t addr = step->addr;
         const char *target = ssa_operand_string(ssa, addr.symbol);
-        write_string(io, "\t%%%s = addr %s\n", step_name(ssa, step), target);
+        write_string(io, "\t%%%s = addr %s\n", get_step_name(&ssa->emit, step), target);
         break;
     }
     case eOpLoad: {
         ssa_load_t load = step->load;
         const char *target = ssa_operand_string(ssa, load.src);
-        write_string(io, "\t%%%s = load %s\n", step_name(ssa, step), target);
+        write_string(io, "\t%%%s = load %s\n", get_step_name(&ssa->emit, step), target);
         break;
     }
     case eOpStore: {
@@ -234,14 +184,14 @@ static void write_step(io_t *io, ssa_t *ssa, const ssa_step_t *step)
         ssa_binary_t binary = step->binary;
         const char *lhs = ssa_operand_string(ssa, binary.lhs);
         const char *rhs = ssa_operand_string(ssa, binary.rhs);
-        write_string(io, "\t%%%s = %s %s, %s\n", step_name(ssa, step), binary_name(binary.binary), lhs, rhs);
+        write_string(io, "\t%%%s = %s %s, %s\n", get_step_name(&ssa->emit, step), binary_name(binary.binary), lhs, rhs);
         break;
     }
     case eOpCall: {
         ssa_call_t call = step->call;
         const char *target = ssa_operand_string(ssa, call.function);
         size_t len = typevec_len(call.args);
-        write_string(io, "\t%%%s = call %s [", step_name(ssa, step), target);
+        write_string(io, "\t%%%s = call %s [", get_step_name(&ssa->emit, step), target);
         for (size_t i = 0; i < len; i++)
         {
             ssa_operand_t arg;
@@ -263,9 +213,7 @@ static void write_block(io_t *io, ssa_t *ssa, const ssa_block_t *block)
 {
     CTASSERT(block != NULL);
 
-    add_block(ssa, block);
-
-    write_string(io, ".%s: [len=%zu]\n", get_block(ssa, block), typevec_len(block->steps));
+    write_string(io, ".%s: [len=%zu]\n", get_block_name(&ssa->emit, block), typevec_len(block->steps));
 
     size_t len = typevec_len(block->steps);
     for (size_t i = 0; i < len; i++)
@@ -285,13 +233,13 @@ static void write_symbol_blocks(io_t *io, ssa_t *emit, const ssa_symbol_t *symbo
     }
 }
 
-static void create_module_file(ssa_t *emit, const char *root, ssa_module_t *mod)
+static void create_module_file(ssa_t *ssa, const char *root, ssa_module_t *mod)
 {
     char *sourceFile = format("ssa/%s.ssa", root);
 
-    fs_file_create(emit->fs, sourceFile);
+    fs_file_create(ssa->fs, sourceFile);
 
-    io_t *src = fs_open(emit->fs, sourceFile, eAccessWrite | eAccessText);
+    io_t *src = fs_open(ssa->fs, sourceFile, eAccessWrite | eAccessText);
 
     char *name = str_replace(root, "/", ".");
     write_string(src, "module = %s\n", name);
@@ -306,26 +254,21 @@ static void create_module_file(ssa_t *emit, const char *root, ssa_module_t *mod)
     {
         map_entry_t entry = map_next(&globals);
         ssa_symbol_t *global = entry.value;
-        write_string(src, "global %s: %s = noinit\n", global->name, ssa_type_to_string(global->type));
+        write_string(src, "global %s: %s = %s\n",
+            global->name,
+            ssa_type_to_string(global->type),
+            global->value == NULL ? "noinit" : ssa_value_to_string(global->value)
+        );
         write_string(src, "\t[mangled = %s, visible = %s, linkage = %s]\n",
             (global->mangle == NULL) ? "null" : format("\"%s\"", global->mangle),
             vis_name(global->visible),
             link_name(global->linkage)
         );
 
-        if (global->value != NULL)
-        {
-            write_string(src, "\t[value = %s]\n", ssa_value_to_string(global->value));
-        }
-        else
-        {
-            write_string(src, "\t[value = error]\n");
-        }
-
-        write_symbol_blocks(src, emit, global);
+        write_symbol_blocks(src, ssa, global);
         write_string(src, "\n");
 
-        reset_counters(emit);
+        counter_reset(&ssa->emit);
     }
 
     map_iter_t functions = map_iter(mod->functions);
@@ -354,13 +297,13 @@ static void create_module_file(ssa_t *emit, const char *root, ssa_module_t *mod)
 
         if (function->entry != NULL)
         {
-            write_symbol_blocks(src, emit, function);
+            write_symbol_blocks(src, ssa, function);
         }
 
-        reset_counters(emit);
+        counter_reset(&ssa->emit);
     }
 
-    map_set_ptr(emit->modules, mod, sourceFile);
+    map_set_ptr(ssa->modules, mod, sourceFile);
 
     io_close(src);
 }
@@ -405,12 +348,13 @@ static void create_root_dir(ssa_t *emit, ssa_module_t *mod)
 ssa_emit_result_t emit_ssa(const emit_options_t *options)
 {
     ssa_t ssa = {
-        .reports = options->reports,
+        .emit = {
+            .reports = options->reports,
+            .blockNames = names_new(64),
+            .vregNames = names_new(64),
+        },
         .fs = options->fs,
         .modules = map_optimal(4),
-        .blocks = map_optimal(64),
-
-        .regs = map_optimal(64),
     };
 
     fs_dir_create(ssa.fs, "ssa");

@@ -52,9 +52,14 @@ ssa_type_t *ssa_type_qualify(const char *name, quals_t quals, ssa_type_t *type)
     return qual;
 }
 
-ssa_type_t *ssa_type_closure(const char *name, ssa_type_t *result, typevec_t *params)
+ssa_type_t *ssa_type_closure(const char *name, ssa_type_t *result, typevec_t *params, bool variadic)
 {
-    ssa_type_closure_t it = { .result = result, .params = params };
+    ssa_type_closure_t it = {
+        .result = result,
+        .params = params,
+        .variadic = variadic
+    };
+
     ssa_type_t *closure = ssa_type_new(eTypeClosure, name);
     closure->closure = it;
     return closure;
@@ -99,7 +104,8 @@ ssa_type_t *ssa_type_from(const h2_t *type)
         return ssa_type_closure(
             /* name = */ name,
             /* result = */ ssa_type_from(type->result),
-            /* params = */ collect_params(type->params)
+            /* params = */ collect_params(type->params),
+            /* variadic = */ type->arity == eArityVariable
         );
     case eHlir2Qualify: return ssa_type_qualify(name, type->quals, ssa_type_from(type->qualify));
 

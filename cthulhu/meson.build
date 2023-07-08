@@ -65,12 +65,12 @@ ssa = declare_dependency(
 
 src = [
     'src/emit/common.c',
-    'src/emit/c89.c',
+    'src/emit/c89/c89.c',
     'src/emit/ssa.c'
 ]
 
 libemit = library('emit', src,
-    include_directories : 'include',
+    include_directories : [ 'include', 'src' ],
     c_args : args,
     dependencies : [ ssa, std, io, interop ]
 )

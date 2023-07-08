@@ -84,6 +84,10 @@ const char *unary_name(unary_t op);
 const char *binary_name(binary_t op);
 const char *compare_name(compare_t op);
 
+const char *unary_symbol(unary_t op);
+const char *binary_symbol(binary_t op);
+const char *compare_symbol(compare_t op);
+
 const char *sign_name(sign_t sign);
 const char *digit_name(digit_t digit);
 

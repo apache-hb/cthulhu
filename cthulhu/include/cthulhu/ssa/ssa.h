@@ -30,6 +30,8 @@ typedef enum ssa_kind_t {
     eTypeClosure,
     eTypeQualify,
 
+    eTypeUndecidable, ///< this is used to indicate that an ssa_value_t cannot be calculated at compile time
+
     eTypeTotal
 } ssa_kind_t;
 
@@ -108,6 +110,7 @@ typedef struct ssa_type_digit_t {
 typedef struct ssa_type_closure_t {
     const ssa_type_t *result;
     typevec_t *params; // typevec_t<ssa_param_t *>
+    bool variadic;
 } ssa_type_closure_t;
 
 typedef struct ssa_type_t {
@@ -225,6 +228,7 @@ typedef struct ssa_jump_t {
 
 typedef struct ssa_step_t {
     ssa_opcode_t opcode;
+    const ssa_type_t *type;
 
     union {
         ssa_store_t store;
