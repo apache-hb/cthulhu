@@ -131,6 +131,19 @@ static ssa_symbol_t *ssa_function_new(const h2_t *function)
 
 static ssa_operand_t ssa_add_step(ssa_t *ssa, ssa_step_t step)
 {
+    switch (step.opcode)
+    {
+    case eOpReturn:
+    case eOpBranch:
+    case eOpJump:
+    case eOpStore:
+        break;
+    default:
+        CTASSERT(step.type != NULL);
+    }
+
+    CTASSERT(ssa->currentBlock != NULL);
+
     ssa_block_t *block = ssa->currentBlock;
     size_t index = typevec_len(block->steps);
 
@@ -186,6 +199,7 @@ static ssa_operand_t ssa_compile_step(ssa_t *ssa, const h2_t *tree)
 
         ssa_step_t step = {
             .opcode = eOpBinary,
+            .type = ssa_type_from(tree->type),
             .binary = {
                 .lhs = lhs,
                 .rhs = rhs,
@@ -198,6 +212,7 @@ static ssa_operand_t ssa_compile_step(ssa_t *ssa, const h2_t *tree)
         ssa_operand_t operand = ssa_compile_step(ssa, tree->load);
         ssa_step_t step = {
             .opcode = eOpLoad,
+            .type = ssa_type_from(tree->type),
             .load = {
                 .src = operand,
             }
@@ -218,6 +233,7 @@ static ssa_operand_t ssa_compile_step(ssa_t *ssa, const h2_t *tree)
 
         ssa_step_t step = {
             .opcode = eOpCall,
+            .type = ssa_type_from(tree->type),
             .call = {
                 .function = callee,
                 .args = args,
@@ -453,6 +469,7 @@ ssa_module_t *ssa_compile(map_t *mods)
         ssa_operand_t op = ssa_compile_step(&ssa, tree->global);
         ssa_step_t step = {
             .opcode = eOpReturn,
+            .type = symbol->type,
             .ret = {
                 .value = op
             }

@@ -210,7 +210,9 @@ static const char *value_to_string(c89_t *emit, const ssa_value_t *value)
 
 static const char *format_step_name(c89_t *emit, const ssa_step_t *step)
 {
-    return format("reg%s", get_step_name(&emit->emit, step));
+    const ssa_type_t *type = step->type;
+    char *name = format("reg%s", get_step_name(&emit->emit, step));
+    return type_to_string(emit, type, name);
 }
 
 static const char *operand_to_string(c89_t *emit, ssa_operand_t operand)
@@ -234,13 +236,18 @@ static const char *operand_to_string(c89_t *emit, ssa_operand_t operand)
     }
 }
 
+// can this type be materialized in a register?
+static bool material_type(const ssa_type_t *type)
+{
+    return (type->kind == eTypeEmpty) || (type->kind == eTypeUnit);
+}
+
 static bool operand_is_return(ssa_operand_t operand)
 {
     if (operand.kind != eOperandImm) { return false; }
 
     const ssa_value_t *value = operand.value;
-    const ssa_type_t *type = value->type;
-    return (type->kind == eTypeEmpty) || (type->kind == eTypeUnit);
+    return material_type(value->type);
 }
 
 static void write_step(c89_t *emit, io_t *io, const ssa_step_t *step)
@@ -296,7 +303,14 @@ static void write_step(c89_t *emit, io_t *io, const ssa_step_t *step)
             vector_set(args, i, (char*)operand_to_string(emit, operand));
         }
         char *str = str_join(", ", args);
-        write_string(io, "\t%s = %s(%s);\n", format_step_name(emit, step), fn, str);
+        if (material_type(step->type))
+        {
+            write_string(io, "\t%s = %s(%s);\n", format_step_name(emit, step), fn, str);
+        }
+        else
+        {
+            write_string(io, "\t%s(%s);\n", fn, str);
+        }
         break;
     }
     default: NEVER("invalid opcode %d", step->opcode);
