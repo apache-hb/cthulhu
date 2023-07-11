@@ -40,7 +40,7 @@ static map_t *query_dirents(fs_t *fs, inode_t *node)
 }
 
 static io_t *query_file(fs_t *fs, inode_t *node, os_access_t flags)
-{   
+{
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
 
@@ -186,8 +186,8 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
     {
     case eNodeFile:
         return query_file(fs, file, flags);
-    case eNodeInvalid: 
-        file = create_file(fs, current, vector_tail(parts)); 
+    case eNodeInvalid:
+        file = create_file(fs, current, vector_tail(parts));
         return query_file(fs, file, flags);
     default: return NULL;
     }

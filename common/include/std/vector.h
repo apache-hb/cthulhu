@@ -55,6 +55,9 @@ vector_t *vector_of(size_t len);
 NODISCARD
 vector_t *vector_init(void *value);
 
+NODISCARD
+vector_t *vector_clone(IN_NOTNULL vector_t *vector);
+
 /**
  * @brief add an element to the end of the vector
  *
@@ -85,8 +88,8 @@ void vector_drop(IN_NOTNULL vector_t *vector);
  * @param value the value to place
  */
 void vector_set(
-    IN_NOTNULL vector_t *vector, 
-    size_t index, 
+    IN_NOTNULL vector_t *vector,
+    size_t index,
     void *value
 );
 
@@ -100,7 +103,7 @@ void vector_set(
  * @param index the index to query
  * @return the value at index
  */
-NODISCARD CONSTFN 
+NODISCARD CONSTFN
 void *vector_get(
     IN_NOTNULL const vector_t *vector,
     size_t index
@@ -115,7 +118,7 @@ void *vector_get(
  * @param vector the vector to get from
  * @return the value of the last element
  */
-NODISCARD CONSTFN 
+NODISCARD CONSTFN
 void *vector_tail(IN_NOTNULL const vector_t *vector);
 
 /**
@@ -126,7 +129,7 @@ void *vector_tail(IN_NOTNULL const vector_t *vector);
  * @param vector the vector to get the length of
  * @return the active size of the vector
  */
-NODISCARD CONSTFN 
+NODISCARD CONSTFN
 size_t vector_len(IN_NOTNULL const vector_t *vector);
 
 /**
@@ -153,7 +156,7 @@ vector_t *vector_join(IN_NOTNULL vector_t *vectors);
  * @param element the element to search for
  * @return the index of the element of @a SIZE_MAX if not found
  */
-MUST_INSPECT CONSTFN 
+MUST_INSPECT CONSTFN
 size_t vector_find(IN_NOTNULL vector_t *vector, const void *element);
 
 /**

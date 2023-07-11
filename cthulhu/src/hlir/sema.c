@@ -14,7 +14,7 @@ static h2_t *h2_module_new(const node_t *node, const char *name, h2_t *parent, r
     self->reports = reports;
     self->tags = vector_of(decls);
 
-    for (size_t i = 0; i < decls; i++) 
+    for (size_t i = 0; i < decls; i++)
     {
         map_t *map = map_optimal(sizes[i]);
         vector_set(self->tags, i, map);
@@ -64,7 +64,7 @@ void *h2_module_set(h2_t *self, size_t tag, const char *name, void *value)
     return NULL;
 }
 
-map_t *h2_module_tag(h2_t *self, size_t tag)
+map_t *h2_module_tag(const h2_t *self, size_t tag)
 {
     return vector_get(self->tags, tag);
 }

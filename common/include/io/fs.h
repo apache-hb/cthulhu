@@ -22,6 +22,8 @@ bool fs_file_exists(fs_t *fs, const char *path);
 void fs_dir_delete(fs_t *fs, const char *path);
 void fs_file_delete(fs_t *fs, const char *path);
 
+void fs_dir_create_recursive(fs_t *fs, const char *path);
+
 void fs_sync(fs_t *dst, fs_t *src);
 
 END_API

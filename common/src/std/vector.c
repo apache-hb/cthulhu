@@ -4,6 +4,7 @@
 #include "base/panic.h"
 
 #include <stdint.h>
+#include <string.h>
 
 /**
  * a vector of non-owning pointers
@@ -67,6 +68,17 @@ vector_t *vector_init(void *value)
     vector_t *vector = vector_of(1);
     vector_set(vector, 0, value);
     return vector;
+}
+
+USE_DECL
+vector_t *vector_clone(vector_t *vector)
+{
+    CTASSERT(vector != NULL);
+
+    size_t len = vector_len(vector);
+    vector_t *clone = vector_of(len);
+    memcpy(clone->data, vector->data, len * sizeof(void *));
+    return clone;
 }
 
 void vector_delete(vector_t *vector)
@@ -151,15 +163,8 @@ vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs)
     vector_t *out = vector_new(len);
     out->used = len;
 
-    for (size_t i = 0; i < lhsLength; i++)
-    {
-        vector_set(out, i, vector_get(lhs, i));
-    }
-
-    for (size_t i = 0; i < rhsLength; i++)
-    {
-        vector_set(out, lhsLength + i, vector_get(rhs, i));
-    }
+    memcpy(out->data, lhs->data, lhsLength * sizeof(void *));
+    memcpy(out->data + lhsLength, rhs->data, rhsLength * sizeof(void *));
 
     return out;
 }
@@ -184,10 +189,8 @@ vector_t *vector_join(vector_t *vectors)
         vector_t *vector = vector_get(vectors, i);
         size_t innerLen = vector_len(vector);
 
-        for (size_t j = 0; j < innerLen; j++)
-        {
-            vector_set(result, offset++, vector_get(vector, j));
-        }
+        memcpy(result->data + offset, vector->data, innerLen * sizeof(void *));
+        offset += innerLen;
     }
 
     return result;

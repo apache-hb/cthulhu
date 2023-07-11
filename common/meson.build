@@ -49,8 +49,7 @@ src = [
     'src/std/str.c',
     'src/std/vector.c',
 
-    'src/std/typed/vector.c',
-    'src/std/typed/set.c'
+    'src/std/typed/vector.c'
 ]
 
 libstd = library('std', src,

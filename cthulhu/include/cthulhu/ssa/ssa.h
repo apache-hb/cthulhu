@@ -12,6 +12,7 @@ typedef struct map_t map_t;
 
 typedef struct h2_t h2_t;
 
+typedef struct ssa_module_t ssa_module_t;
 typedef struct ssa_symbol_t ssa_symbol_t;
 
 typedef struct ssa_block_t ssa_block_t;
@@ -229,9 +230,6 @@ typedef struct ssa_jump_t {
 typedef struct ssa_step_t {
     ssa_opcode_t opcode;
 
-    // TODO: maybe remove this
-    const ssa_type_t *type;
-
     union {
         ssa_store_t store;
         ssa_load_t load;
@@ -279,13 +277,14 @@ typedef struct ssa_symbol_t {
 
 typedef struct ssa_module_t {
     const char *name;
+    vector_t *path; // vector<string>
 
-    map_t *globals;
-    map_t *functions;
+    map_t *globals; // map<string, ssa_symbol>
+    map_t *functions; // map<string, ssa_symbol>
 } ssa_module_t;
 
 typedef struct ssa_result_t {
-    map_t *modules; // map<string, ssa_module>
+    vector_t *modules; // vector<ssa_module>
     map_t *deps; // map<ssa_symbol, set<ssa_symbol>>
 } ssa_result_t;
 

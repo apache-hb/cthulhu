@@ -385,7 +385,7 @@ h2_t *h2_module_get(h2_t *self, size_t tag, const char *name);
  */
 void *h2_module_set(h2_t *self, size_t tag, const char *name, void *value);
 
-map_t *h2_module_tag(h2_t *self, size_t tag);
+map_t *h2_module_tag(const h2_t *self, size_t tag);
 
 void h2_module_update(h2_t *self, void *data);
 void *h2_module_data(h2_t *self);

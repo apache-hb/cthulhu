@@ -63,23 +63,22 @@ ssa = declare_dependency(
     dependencies : [ gmp, hlir ]
 )
 
-# src = [
-#     'src/emit/common.c',
-#     'src/emit/c89/c89.c',
-#     'src/emit/ssa.c'
-# ]
+src = [
+    'src/emit/common.c',
+    'src/emit/ssa.c'
+]
 
-# libemit = library('emit', src,
-#     include_directories : [ 'include', 'src' ],
-#     c_args : args,
-#     dependencies : [ ssa, std, io, interop ]
-# )
+libemit = library('emit', src,
+    include_directories : [ 'include', 'src' ],
+    c_args : args,
+    dependencies : [ ssa, std, io, interop ]
+)
 
-# emit = declare_dependency(
-#     link_with : libemit,
-#     include_directories : 'include',
-#     dependencies : [ ssa ]
-# )
+emit = declare_dependency(
+    link_with : libemit,
+    include_directories : 'include',
+    dependencies : [ ssa ]
+)
 
 src = [
     'src/mediator/interface.c',
