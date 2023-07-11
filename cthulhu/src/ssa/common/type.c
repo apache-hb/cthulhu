@@ -2,8 +2,9 @@
 
 #include "cthulhu/hlir/query.h"
 
-#include "std/typevec.h"
 #include "std/vector.h"
+
+#include "std/typed/vector.h"
 
 #include "base/memory.h"
 #include "base/panic.h"

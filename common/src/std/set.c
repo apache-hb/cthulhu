@@ -199,7 +199,7 @@ bool set_empty(set_t *set)
     set_iter_t iter = set_iter(set);
     while (set_has_next(&iter))
     {
-        const char *key = set_next(&iter);
+        const void *key = set_next(&iter);
         if (key != NULL)
         {
             return false;
@@ -234,6 +234,8 @@ static item_t *next_in_chain(item_t *entry)
     {
         return NULL;
     }
+
+    // TODO: something better than this
 
     while (entry->next != NULL)
     {
@@ -306,7 +308,7 @@ set_iter_t set_iter(set_t *set)
     return iter;
 }
 
-USE_DECL 
+USE_DECL
 const void *set_next(set_iter_t *iter)
 {
     CTASSERT(iter != NULL);

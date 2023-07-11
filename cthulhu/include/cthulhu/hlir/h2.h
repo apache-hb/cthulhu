@@ -27,7 +27,7 @@ typedef enum sema_tags_t {
 
 typedef struct h2_attrib_t {
     h2_link_t link; ///< the link type of the declaration
-    h2_visible_t visible; ///< the visibility of the declaration
+    h2_visible_t visibility; ///< the visibility of the declaration
 
     const char *mangle; ///< override the mangle of the declaration
     const char *deprecated; ///< the reason for deprecation, or NULL if not deprecated
@@ -125,7 +125,7 @@ typedef struct h2_t {
 
         /* eHlir2Error */
         const char *message;
-        
+
         /* eHlir2StmtBlock */
         vector_t *stmts;
 
@@ -205,7 +205,7 @@ h2_t *h2_error(const node_t *node, const char *message);
 
 /**
  * @brief create an empty type, this is a type that has no values and can never be created in a well defined program
- * 
+ *
  * @param node where this type was defined
  * @param name the name of the type
  * @return an empty type
@@ -214,7 +214,7 @@ h2_t *h2_type_empty(const node_t *node, const char *name);
 
 /**
  * @brief create a unit type, this is a type that has only one value. equivilent to void
- * 
+ *
  * @param node where this type was defined
  * @param name the name of the type
  * @return a unit type
@@ -223,7 +223,7 @@ h2_t *h2_type_unit(const node_t *node, const char *name);
 
 /**
  * @brief create a bool type, this is a type that has only two values, true and false
- * 
+ *
  * @param node where this type was defined
  * @param name the name of the type
  * @return a bool type
@@ -232,7 +232,7 @@ h2_t *h2_type_bool(const node_t *node, const char *name);
 
 /**
  * @brief create a digit type
- * 
+ *
  * @param node where this type was defined
  * @param name the name of the type
  * @param digit the width of the digit
@@ -243,7 +243,7 @@ h2_t *h2_type_digit(const node_t *node, const char *name, digit_t digit, sign_t 
 
 /**
  * @brief create a string type
- * 
+ *
  * @param node where this type was defined
  * @param name the name of the type
  * @return a string type
@@ -269,12 +269,12 @@ h2_t *h2_expr_digit(const node_t *node, const h2_t *type, mpz_t value);
 
 /**
  * @brief create a string expression
- * 
+ *
  * @param node a node to attach the expression to
  * @param type the type of the expression
  * @param value a null terminated string
  * @param length the length of the string not including the null terminator
- * @return h2_t* 
+ * @return h2_t*
  */
 h2_t *h2_expr_string(const node_t *node, const h2_t *type, const char *value, size_t length);
 
@@ -291,7 +291,7 @@ h2_t *h2_expr_call(const node_t *node, const h2_t *callee, vector_t *args);
 
 /**
  * @brief create a block statement
- * 
+ *
  * @param node the location of the block statement
  * @param stmts the statements in the block
  * @return the block statement
@@ -300,7 +300,7 @@ h2_t *h2_stmt_block(const node_t *node, vector_t *stmts);
 
 /**
  * @brief create a return statement
- * 
+ *
  * @note this is only valid in a function
  *
  * @param node the location of the return statement
@@ -352,7 +352,7 @@ h2_t *h2_module_root(reports_t *reports, const node_t *node, const char *name, s
 
 /**
  * @brief create a new module
- * 
+ *
  * @param parent the parent module
  * @param node location of the module
  * @param name the name of the module
@@ -364,7 +364,7 @@ h2_t *h2_module(h2_t *parent, const node_t *node, const char *name, size_t decls
 
 /**
  * @brief recursively search for a declaration in a module
- * 
+ *
  * @param self the module
  * @param tag the declaration category
  * @param name the name of the declaration
@@ -374,9 +374,9 @@ h2_t *h2_module_get(h2_t *self, size_t tag, const char *name);
 
 /**
  * @brief set a declaration in the current module
- * 
+ *
  * @note if the declaration already exists it will not be replaced
- * 
+ *
  * @param self the module
  * @param tag the declaration category
  * @param name the name of the declaration
@@ -392,7 +392,7 @@ void *h2_module_data(h2_t *self);
 
 /**
  * @brief return a resolution cookie
- * 
+ *
  * @param self the module
  * @return the cookie
  */

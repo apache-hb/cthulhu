@@ -6,11 +6,41 @@
 
 #include "std/str.h"
 #include "std/map.h"
+#include "std/set.h"
 #include "std/vector.h"
-#include "std/typevec.h"
+
+#include "std/typed/vector.h"
+#include "std/typed/set.h"
 
 #include "base/memory.h"
 #include "base/panic.h"
+
+#if 0
+static size_t ssa_type_hash(const void *ptr)
+{
+    const ssa_type_t *type = ptr;
+    return type->kind;
+}
+
+static bool ssa_type_equal(const void *lhs, const void *rhs)
+{
+    const ssa_type_t *lhsType = lhs;
+    const ssa_type_t *rhsType = rhs;
+
+    if (lhsType->kind != rhsType->kind)
+    {
+        return false;
+    }
+
+    return false;
+}
+
+static const typeset_info_t kTypeSetSSAInfo = {
+    .typeSize = sizeof(ssa_type_t),
+    .fnHash = ssa_type_hash,
+    .fnEqual = ssa_type_equal
+};
+#endif
 
 typedef struct ssa_t {
     map_t *globals;
@@ -20,7 +50,27 @@ typedef struct ssa_t {
 
     ssa_block_t *currentBlock;
     ssa_symbol_t *currentSymbol;
+
+    typeset_t *types;
+
+    // dependency graph
+    map_t *deps; // map<ssa_symbol_t*, typeset<ssa_symbol_t*>>
 } ssa_t;
+
+#if 0
+static void add_graph_dep(ssa_t *ssa, const ssa_symbol_t *symbol, const ssa_symbol_t *dep)
+{
+    set_t *set = map_get_ptr(ssa->deps, symbol);
+
+    if (set == NULL)
+    {
+        set = set_new(4);
+        map_set_ptr(ssa->deps, symbol, set);
+    }
+
+    set_add_ptr(set, dep);
+}
+#endif
 
 static ssa_module_t *ssa_compile_module(ssa_t *ssa, const char *path, h2_t *tree);
 
@@ -97,8 +147,8 @@ static ssa_symbol_t *ssa_symbol_new(const char *name, ssa_type_t *type, const h2
 
     ssa_symbol_t *sym = ctu_malloc(sizeof(ssa_symbol_t));
     sym->linkage = attribs->link;
-    sym->visible = attribs->visible;
-    sym->mangle = attribs->mangle;
+    sym->visibility = attribs->visibility;
+    sym->linkName = attribs->mangle;
 
     sym->locals = NULL;
 
@@ -443,6 +493,8 @@ ssa_module_t *ssa_compile(map_t *mods)
         .functions = map_new(64),
 
         .locals = map_new(64),
+
+        .deps = map_new(128)
     };
 
     ssa_module_t *root = ssa_module_new(NULL);

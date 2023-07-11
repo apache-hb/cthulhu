@@ -3,8 +3,9 @@
 #include "std/map.h"
 #include "std/str.h"
 #include "std/vector.h"
-#include "std/typevec.h"
 #include "std/set.h"
+
+#include "std/typed/vector.h"
 
 #include "base/panic.h"
 
@@ -20,7 +21,7 @@ typedef struct ssa_t {
 
     map_t *modules;
 } ssa_t;
-
+#if 0
 static const char *ssa_type_to_string(const ssa_type_t *type);
 
 static const char *ssa_digit_to_string(ssa_type_digit_t digit)
@@ -259,9 +260,9 @@ static void create_module_file(ssa_t *ssa, const char *root, ssa_module_t *mod)
             ssa_type_to_string(global->type),
             global->value == NULL ? "noinit" : ssa_value_to_string(global->value)
         );
-        write_string(src, "\t[mangled = %s, visible = %s, linkage = %s]\n",
-            (global->mangle == NULL) ? "null" : format("\"%s\"", global->mangle),
-            vis_name(global->visible),
+        write_string(src, "\t[mangled = %s, visibility = %s, linkage = %s]\n",
+            (global->linkName == NULL) ? "null" : format("\"%s\"", global->linkName),
+            vis_name(global->visibility),
             link_name(global->linkage)
         );
 
@@ -278,9 +279,9 @@ static void create_module_file(ssa_t *ssa, const char *root, ssa_module_t *mod)
         ssa_symbol_t *function = entry.value;
         const char *where = (function->entry == NULL) ? "extern" : "function";
         write_string(src, "%s %s: %s\n", where, function->name, ssa_type_to_string(function->type));
-        write_string(src, "\t[mangled = %s, visible = %s, linkage = %s]\n",
-            (function->mangle == NULL) ? "null" : format("\"%s\"", function->mangle),
-            vis_name(function->visible),
+        write_string(src, "\t[mangled = %s, visibility = %s, linkage = %s]\n",
+            (function->linkName == NULL) ? "null" : format("\"%s\"", function->linkName),
+            vis_name(function->visibility),
             link_name(function->linkage)
         );
 
@@ -367,3 +368,4 @@ ssa_emit_result_t emit_ssa(const emit_options_t *options)
 
     return result;
 }
+#endif

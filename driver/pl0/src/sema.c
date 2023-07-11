@@ -25,18 +25,18 @@ static h2_t *kPrint = NULL;
 
 static const h2_attrib_t kPrintAttrib = {
     .link = eLinkImport,
-    .visible = eVisiblePublic,
+    .visibility = eVisiblePublic,
     .mangle = "printf"
 };
 
 static const h2_attrib_t kExportAttrib = {
     .link = eLinkExport,
-    .visible = eVisiblePublic
+    .visibility = eVisiblePublic
 };
 
 static const h2_attrib_t kEntryAttrib = {
     .link = eLinkEntryCli,
-    .visible = eVisiblePublic
+    .visibility = eVisiblePublic
 };
 
 static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)

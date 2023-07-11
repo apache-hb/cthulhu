@@ -351,10 +351,10 @@ typedef enum variant_kind_t {
 
 static variant_kind_t get_variant_kind(sema_t *sema, ast_t *ast)
 {
-    if (ast->of != eAstDeclVariant) 
-    { 
+    if (ast->of != eAstDeclVariant)
+    {
         report(sema_reports(sema), eInternal, ast->node, "expected variant declaration");
-        return eVariantTotal; 
+        return eVariantTotal;
     }
 
     size_t len = vector_len(ast->fields);
@@ -363,10 +363,10 @@ static variant_kind_t get_variant_kind(sema_t *sema, ast_t *ast)
         ast_t *field = vector_get(ast->fields, i);
         CTASSERT(field->of == eAstCase);
 
-        if (vector_len(field->caseFields) > 0) 
-        { 
+        if (vector_len(field->caseFields) > 0)
+        {
             logverbose("variant `%s` is sum", ast->name);
-            return eVariantSum; 
+            return eVariantSum;
         }
     }
 
@@ -428,11 +428,11 @@ void ctu_init(driver_t *runtime)
     reports_t *reports = lifetime_get_reports(lifetime);
 
     size_t sizes[eTagTotal] = {
-        [eSemaValues] = 1, 
-        [eSemaProcs] = 1, 
-        [eSemaTypes] = 32, 
-        [eSemaModules] = 1, 
-        [eTagAttribs] = 1, 
+        [eSemaValues] = 1,
+        [eSemaProcs] = 1,
+        [eSemaTypes] = 32,
+        [eSemaModules] = 1,
+        [eTagAttribs] = 1,
         [eTagSuffix] = 32,
     };
 
@@ -506,22 +506,22 @@ static hlir_t *sema_rvalue_with_implicit(sema_t *sema, ast_t *ast, const hlir_t 
 
 /**
  * @brief try and get an enum case from the current implicit type
- * 
- * @param sema 
- * @param path 
- * @return hlir_t* 
+ *
+ * @param sema
+ * @param path
+ * @return hlir_t*
  */
 static const hlir_t *sema_try_get_enum_case(sema_t *sema, node_t *node, vector_t *path)
 {
     // if theres more than one path segment, we can't be an enum case
-    
+
     // TODO: we should also support qualified enum cases
     //       e.g. Foo::eCase instead of just eCase and relying on implicit type
     if (vector_len(path) != 1)
     {
         return NULL;
     }
-    
+
     const char *name = vector_tail(path);
 
     const hlir_t *current = get_implicit_type(sema);
@@ -556,7 +556,7 @@ static sema_t *sema_path(sema_t *sema, vector_t *path, node_t *node)
         {
             report(sema_reports(sema), eFatal, node, "discarded path segment");
             return NULL;
-        }        
+        }
 
         sema_t *next = sema_get(current, eSemaModules, name);
         if (next == NULL)
@@ -623,7 +623,7 @@ static hlir_t *begin_type_resolve(sema_t *sema, void *user)
         return sema_alias(sema, ast);
 
     case eAstDeclVariant:
-        switch (get_variant_kind(sema, user)) 
+        switch (get_variant_kind(sema, user))
         {
         case eVariantEnum:
             return hlir_begin_enum(ast->node, ast->name, get_underlying_type(sema, ast->underlying));
@@ -658,7 +658,7 @@ void check_valid_import(sema_t *sema, sema_t *cur, ast_t *ast, hlir_t *hlir)
     if (sema != cur && attribs->visibility != eVisiblePublic)
     {
         message_t *id =
-            report(sema_reports(sema), eFatal, ast->node, "symbol '%s' is not visible inside this context", name);
+            report(sema_reports(sema), eFatal, ast->node, "symbol '%s' is not visibility inside this context", name);
         report_append(id, get_hlir_node(hlir), "originally declared here");
     }
 }
@@ -840,7 +840,7 @@ static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
 static hlir_t *sema_math(sema_t *sema, ast_t *ast, hlir_t *lhs, hlir_t *rhs)
 {
     UNUSED(sema);
-    
+
     const hlir_t *lhsType = get_hlir_type(lhs);
     const hlir_t *rhsType = get_hlir_type(rhs);
 
@@ -1007,8 +1007,8 @@ static hlir_t *sema_call(sema_t *sema, ast_t *ast)
     for (size_t i = 0; i < len; i++)
     {
         ast_t *arg = vector_get(ast->args, i);
-        hlir_t *expectedType = (i >= totalParams) 
-            ? NULL 
+        hlir_t *expectedType = (i >= totalParams)
+            ? NULL
             : vector_get(params, i);
 
         hlir_t *hlir = sema_rvalue_with_implicit(sema, arg, expectedType);
@@ -1173,7 +1173,7 @@ static hlir_t *sema_default_value(sema_t *sema, node_t *node, const hlir_t *type
         report(sema_reports(sema), eFatal, node, "`%s` has no default value set", get_hlir_name(real));
         return hlir_error(node, "no default value");
     }
-    
+
     report(sema_reports(sema), eInternal, node, "no default value for type '%s'", get_hlir_name(real));
     return NULL;
 }
@@ -1272,7 +1272,7 @@ static hlir_t *sema_init(sema_t *sema, ast_t *ast)
         hlir_t *value = sema_rvalue_with_implicit(sema, field->value, get_hlir_type(it));
 
         hlir_t *access = hlir_access(field->node, local, it);
-        
+
         hlir_t *assign = hlir_assign(field->node, access, value);
 
         add_scope_step(sema, assign);
@@ -1766,7 +1766,7 @@ static void sema_enum_variant(sema_t *sema, hlir_t *decl, ast_t *ast)
     {
         ast_t *field = vector_get(ast->fields, i);
         CTASSERT(field->of == eAstCase);
-        
+
         if (field->caseValue == NULL)
         {
             report(sema_reports(sema), eSorry, field->node, "cannot generate enum values yet");
@@ -2069,11 +2069,11 @@ void ctu_forward_decls(context_t *context)
 
     size_t totalDecls = vector_len(root->decls);
     size_t sizes[eTagTotal] = {
-        [eSemaValues] = totalDecls,  
+        [eSemaValues] = totalDecls,
         [eSemaProcs] = totalDecls,
-        [eSemaTypes] = totalDecls,   
+        [eSemaTypes] = totalDecls,
         [eSemaModules] = vector_len(root->imports),
-        [eTagAttribs] = totalDecls, 
+        [eTagAttribs] = totalDecls,
         [eTagSuffix] = 32,
     };
 

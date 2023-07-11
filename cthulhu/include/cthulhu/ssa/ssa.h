@@ -228,6 +228,8 @@ typedef struct ssa_jump_t {
 
 typedef struct ssa_step_t {
     ssa_opcode_t opcode;
+
+    // TODO: maybe remove this
     const ssa_type_t *type;
 
     union {
@@ -259,10 +261,9 @@ typedef struct ssa_block_t {
 
 typedef struct ssa_symbol_t {
     h2_link_t linkage;
-    h2_visible_t visible;
+    h2_visible_t visibility;
 
-    const char *mangle; ///< external name
-//    const char *library; ///< external library to link against
+    const char *linkName; ///< external name
 
     const char *name; ///< internal name
     const ssa_type_t *type; ///< the type of this symbol, must be a closure for functions
@@ -281,11 +282,14 @@ typedef struct ssa_module_t {
 
     map_t *globals;
     map_t *functions;
-
-    map_t *modules;
 } ssa_module_t;
 
-ssa_module_t *ssa_compile(map_t *mods);
+typedef struct ssa_result_t {
+    map_t *modules; // map<string, ssa_module>
+    map_t *deps; // map<ssa_symbol, set<ssa_symbol>>
+} ssa_result_t;
+
+ssa_result_t ssa_compile(map_t *mods);
 
 ///
 /// optimization api
@@ -297,4 +301,4 @@ ssa_module_t *ssa_compile(map_t *mods);
  * @param reports report sink
  * @param mod module to optimize
  */
-void ssa_opt(reports_t *reports, ssa_module_t *mod);
+void ssa_opt(reports_t *reports, ssa_result_t mod);

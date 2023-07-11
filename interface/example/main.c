@@ -106,12 +106,13 @@ int main(int argc, const char **argv)
 
     map_t *modmap = lifetime_get_modules(lifetime);
 
-    ssa_module_t *ssa = ssa_compile(modmap);
+    ssa_result_t ssa = ssa_compile(modmap);
     CHECK_REPORTS(reports, "generating ssa");
 
     ssa_opt(reports, ssa);
     CHECK_REPORTS(reports, "optimizing ssa");
 
+#if 0
     fs_t *fs = fs_virtual(reports, "out");
 
     emit_options_t baseOpts = {
@@ -144,6 +145,6 @@ int main(int argc, const char **argv)
 
     fs_sync(out, fs);
     CHECK_REPORTS(reports, "syncing output directory");
-
+#endif
     logverbose("done");
 }

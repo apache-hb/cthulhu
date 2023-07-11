@@ -7,7 +7,8 @@
 #include "std/str.h"
 #include "std/map.h"
 #include "std/vector.h"
-#include "std/typevec.h"
+
+#include "std/typed/vector.h"
 
 #include "base/panic.h"
 #include "base/memory.h"
@@ -335,7 +336,7 @@ static void write_function(c89_context_t *ctx, const ssa_symbol_t *fn)
     c89_t *emit = ctx->emit;
     const ssa_type_t *signature = fn->type;
     const ssa_type_closure_t closure = signature->closure;
-    const char *name = fn->mangle != NULL ? fn->mangle : fn->name;
+    const char *name = fn->linkName != NULL ? fn->linkName : fn->name;
 
     const char *result = type_to_string(emit, closure.result, name);
     size_t len = typevec_len(closure.params);
@@ -355,7 +356,7 @@ static void write_function(c89_context_t *ctx, const ssa_symbol_t *fn)
 
     if (isImported)
     {
-        switch (fn->visible)
+        switch (fn->visibility)
         {
         case eVisiblePublic:
             write_string(ctx->inc, "extern %s(%s);\n", result, args);
@@ -369,7 +370,7 @@ static void write_function(c89_context_t *ctx, const ssa_symbol_t *fn)
         return;
     }
 
-    switch (fn->visible)
+    switch (fn->visibility)
     {
     case eVisiblePublic:
         write_string(ctx->inc, "%s(%s);\n", result, args);
@@ -423,7 +424,7 @@ static void create_module_dir(c89_t *emit, ssa_module_t *mod)
         const char *type = type_to_string(emit, global->type, global->name);
         const char *value = value_to_string(emit, global->value);
 
-        switch (global->visible)
+        switch (global->visibility)
         {
         case eVisiblePublic:
             write_string(inc, "extern %s;\n", type);

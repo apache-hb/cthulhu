@@ -2,7 +2,8 @@
 
 #include "std/str.h"
 #include "std/map.h"
-#include "std/typevec.h"
+
+#include "std/typed/vector.h"
 
 #include <stdarg.h>
 #include <string.h>

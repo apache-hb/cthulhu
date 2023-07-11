@@ -1,8 +1,9 @@
 #include "common/common.h"
 
-#include "std/typevec.h"
 #include "std/vector.h"
 #include "std/map.h"
+
+#include "std/typed/vector.h"
 
 #include "report/report.h"
 

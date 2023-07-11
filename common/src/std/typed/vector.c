@@ -1,4 +1,4 @@
-#include "std/typevec.h"
+#include "std/typed/vector.h"
 
 #include "base/memory.h"
 #include "base/panic.h"
@@ -10,7 +10,7 @@ typedef struct typevec_t {
     size_t used;
 
     size_t typeSize;
-    
+
     void *data;
 } typevec_t;
 
@@ -47,28 +47,41 @@ typevec_t *typevec_init(size_t size, const void *value)
 
 size_t typevec_len(typevec_t *vec)
 {
+    CTASSERT(vec != NULL);
+
     return vec->used;
 }
 
 void typevec_set(typevec_t *vec, size_t index, const void *src)
 {
+    CTASSERT(vec != NULL);
+    CTASSERT(src != NULL);
+
     void *dst = typevec_offset(vec, index);
     memcpy(dst, src, vec->typeSize);
 }
 
 void typevec_get(typevec_t *vec, size_t index, void *dst)
 {
+    CTASSERT(vec != NULL);
+    CTASSERT(dst != NULL);
+
     void *src = typevec_offset(vec, index);
     memcpy(dst, src, vec->typeSize);
 }
 
 void typevec_tail(typevec_t *vec, void *dst)
 {
+    CTASSERT(vec != NULL);
+    CTASSERT(vec->used > 0);
+
     typevec_get(vec, vec->used - 1, dst);
 }
 
 void typevec_push(typevec_t *vec, const void *src)
 {
+    CTASSERT(vec != NULL);
+
     if (vec->used == vec->size)
     {
         vec->size *= 2;
@@ -81,11 +94,17 @@ void typevec_push(typevec_t *vec, const void *src)
 
 void typevec_pop(typevec_t *vec, void *dst)
 {
+    CTASSERT(vec != NULL);
+    CTASSERT(vec->used > 0);
+
     void *src = typevec_offset(vec, --vec->used);
     memcpy(dst, src, vec->typeSize);
 }
 
 void *typevec_offset(typevec_t *vec, size_t index)
 {
+    CTASSERT(vec != NULL);
+    CTASSERT(index < vec->used);
+
     return ((char*)vec->data) + (index * vec->typeSize);
 }

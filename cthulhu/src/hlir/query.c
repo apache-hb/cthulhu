@@ -49,7 +49,7 @@ bool h2_has_quals(const h2_t *self, quals_t quals)
     return false;
 }
 
-bool h2_has_vis(const h2_t *self, h2_visible_t visible)
+bool h2_has_vis(const h2_t *self, h2_visible_t visibility)
 {
-    return self->attrib->visible == visible;
+    return self->attrib->visibility == visibility;
 }
