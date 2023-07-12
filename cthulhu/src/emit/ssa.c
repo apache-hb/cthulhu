@@ -18,6 +18,7 @@
 typedef struct ssa_emit_t {
     emit_t emit;
     fs_t *fs;
+    map_t *deps;
 } ssa_emit_t;
 
 static bool check_root_mod(vector_t *path, const char *id)
@@ -106,6 +107,10 @@ static const char *operand_to_string(ssa_emit_t *emit, ssa_operand_t operand)
     case eOperandReg: {
         return format("%%%s", get_step_from_block(&emit->emit, operand.vregContext, operand.vregIndex));
     }
+    case eOperandGlobal: {
+        const ssa_symbol_t *symbol = operand.global;
+        return format("@%s", symbol->name);
+    }
     default: NEVER("unknown operand kind %d", operand.kind);
     }
 }
@@ -119,6 +124,30 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         const ssa_step_t *step = typevec_offset(bb->steps, i);
         switch (step->opcode)
         {
+        case eOpUnary:
+            ssa_unary_t unary = step->unary;
+            write_string(io, "\t%%%s = unary %s %s\n",
+                get_step_name(&emit->emit, step),
+                unary_name(unary.unary),
+                operand_to_string(emit, unary.operand)
+            );
+            break;
+        case eOpBinary:
+            ssa_binary_t binary = step->binary;
+            write_string(io, "\t%%%s = binary %s %s %s\n",
+                get_step_name(&emit->emit, step),
+                binary_name(binary.binary),
+                operand_to_string(emit, binary.lhs),
+                operand_to_string(emit, binary.rhs)
+            );
+            break;
+        case eOpLoad:
+            ssa_load_t load = step->load;
+            write_string(io, "\t%%%s = load %s\n",
+                get_step_name(&emit->emit, step),
+                operand_to_string(emit, load.src)
+            );
+            break;
         case eOpReturn:
             ssa_return_t ret = step->ret;
             write_string(io, "\tret %s\n", operand_to_string(emit, ret.value));
@@ -135,6 +164,24 @@ static void emit_ssa_blocks(ssa_emit_t *emit, io_t *io, vector_t *bbs)
     {
         const ssa_block_t *bb = vector_get(bbs, i);
         emit_ssa_block(emit, io, bb);
+    }
+}
+
+static void emit_symbol_deps(io_t *io, const ssa_symbol_t *symbol, map_t *deps)
+{
+    set_t *all = map_get_ptr(deps, symbol);
+    if (all != NULL)
+    {
+        write_string(io, "deps: (");
+        set_iter_t iter = set_iter(all);
+        while (set_has_next(&iter))
+        {
+            const ssa_symbol_t *dep = set_next(&iter);
+            write_string(io, "%s", dep->name);
+
+            if (set_has_next(&iter)) { write_string(io, ", "); }
+        }
+        write_string(io, ")\n");
     }
 }
 
@@ -167,6 +214,8 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_symbol_t *global = vector_get(mod->globals, i);
+        emit_symbol_deps(io, global, emit->deps);
+
         write_string(io, "%s global %s: %s\n", vis_name(global->visibility), global->name, type_to_string(global->type));
         emit_ssa_attribs(io, global);
 
@@ -186,6 +235,7 @@ ssa_emit_result_t emit_ssa(const ssa_emit_options_t *options)
             .vregNames = names_new(64),
         },
         .fs = opts.fs,
+        .deps = opts.deps
     };
 
     size_t len = vector_len(opts.modules);

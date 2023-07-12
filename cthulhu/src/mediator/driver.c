@@ -107,7 +107,7 @@ const char *context_get_name(context_t *context)
 {
     CTASSERT(context != NULL);
 
-    return "";
+    return context->name;
 }
 
 void context_update(context_t *ctx, void *ast, h2_t *root)

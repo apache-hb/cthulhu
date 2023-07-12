@@ -138,8 +138,31 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         };
         return add_step(ssa, step);
     }
+    case eHlir2DeclGlobal: {
+        ssa_symbol_t *symbol = map_get_ptr(ssa->globals, tree);
+        CTASSERT(symbol != NULL);
 
-    default: NEVER("unhandled tree kind %d", h2_to_string(tree));
+        add_dep(ssa, ssa->currentSymbol, symbol);
+
+        ssa_operand_t operand = {
+            .kind = eOperandGlobal,
+            .global = symbol
+        };
+
+        return operand;
+    }
+    case eHlir2ExprLoad: {
+        ssa_operand_t operand = compile_tree(ssa, tree->load);
+        ssa_step_t step = {
+            .opcode = eOpLoad,
+            .load = {
+                .src = operand
+            }
+        };
+        return add_step(ssa, step);
+    }
+
+    default: NEVER("unhandled tree kind %s", h2_to_string(tree));
     }
 }
 
