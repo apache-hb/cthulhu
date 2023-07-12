@@ -7,7 +7,10 @@
 #include "std/set.h"
 #include "std/vector.h"
 
+#include "std/typed/vector.h"
+
 #include "base/memory.h"
+#include "base/panic.h"
 
 typedef struct ssa_compile_t {
     /// result data
@@ -76,6 +79,70 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
     return mod;
 }
 
+static ssa_operand_t add_step(ssa_compile_t *ssa, ssa_step_t step)
+{
+    const ssa_block_t *bb = ssa->currentBlock;
+    size_t index = typevec_len(bb->steps);
+    typevec_push(bb->steps, &step);
+
+    ssa_operand_t operand = {
+        .kind = eOperandReg,
+        .vregContext = bb,
+        .vregIndex = index
+    };
+
+    return operand;
+}
+
+static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
+{
+    switch (tree->kind)
+    {
+    case eHlir2ExprEmpty: {
+        ssa_operand_t operand = {
+            .kind = eOperandEmpty
+        };
+        return operand;
+    }
+    case eHlir2ExprDigit:
+    case eHlir2ExprBool:
+    case eHlir2ExprUnit:
+    case eHlir2ExprString: {
+        ssa_operand_t operand = {
+            .kind = eOperandImm,
+            .value = ssa_value_from(tree)
+        };
+        return operand;
+    }
+    case eHlir2ExprUnary: {
+        ssa_operand_t expr = compile_tree(ssa, tree->operand);
+        ssa_step_t step = {
+            .opcode = eOpUnary,
+            .unary = {
+                .operand = expr,
+                .unary = tree->unary
+            }
+        };
+        return add_step(ssa, step);
+    }
+    case eHlir2ExprBinary: {
+        ssa_operand_t lhs = compile_tree(ssa, tree->lhs);
+        ssa_operand_t rhs = compile_tree(ssa, tree->rhs);
+        ssa_step_t step = {
+            .opcode = eOpBinary,
+            .binary = {
+                .lhs = lhs,
+                .rhs = rhs,
+                .binary = tree->binary
+            }
+        };
+        return add_step(ssa, step);
+    }
+
+    default: NEVER("unhandled tree kind %d", h2_to_string(tree));
+    }
+}
+
 static void add_module_globals(ssa_compile_t *ssa, ssa_module_t *mod, map_t *globals)
 {
     map_iter_t iter = map_iter(globals);
@@ -113,6 +180,18 @@ static void compile_module(ssa_compile_t *ssa, const h2_t *tree)
     vector_drop(ssa->path);
 }
 
+static void begin_compile(ssa_compile_t *ssa, ssa_symbol_t *symbol)
+{
+    ssa_block_t *bb = ctu_malloc(sizeof(ssa_block_t));
+    bb->name = "entry";
+    bb->steps = typevec_new(sizeof(ssa_step_t), 4);
+
+    vector_push(&symbol->blocks, bb);
+    symbol->entry = bb;
+    ssa->currentBlock = bb;
+    ssa->currentSymbol = symbol;
+}
+
 ssa_result_t ssa_compile(map_t *mods)
 {
     ssa_compile_t ssa = {
@@ -130,6 +209,26 @@ ssa_result_t ssa_compile(map_t *mods)
 
         ssa.path = str_split(entry.key, ".");
         compile_module(&ssa, entry.value);
+    }
+
+    map_iter_t globals = map_iter(ssa.globals);
+    while (map_has_next(&globals))
+    {
+        map_entry_t entry = map_next(&globals);
+
+        const h2_t *tree = entry.key;
+        ssa_symbol_t *global = entry.value;
+
+        begin_compile(&ssa, global);
+
+        ssa_operand_t value = compile_tree(&ssa, tree->global);
+        ssa_step_t ret = {
+            .opcode = eOpReturn,
+            .ret = {
+                .value = value
+            }
+        };
+        add_step(&ssa, ret);
     }
 
     ssa_result_t result = {

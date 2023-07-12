@@ -15,6 +15,11 @@
 
 #include <string.h>
 
+typedef struct ssa_emit_t {
+    emit_t emit;
+    fs_t *fs;
+} ssa_emit_t;
+
 static bool check_root_mod(vector_t *path, const char *id)
 {
     const char *tail = vector_tail(path);
@@ -66,8 +71,76 @@ static const char *type_to_string(const ssa_type_t *type)
     }
 }
 
-static void emit_ssa_module(fs_t *fs, const ssa_module_t *mod)
+static void emit_ssa_attribs(io_t *io, const ssa_symbol_t *symbol)
 {
+    write_string(io, "\t[extern = %s, linkage = %s]\n",
+        symbol->linkName == NULL ? "null" : symbol->linkName,
+        link_name(symbol->linkage)
+    );
+}
+
+static const char *value_to_string(const ssa_value_t *value)
+{
+    const ssa_type_t *type = value->type;
+    switch (type->kind)
+    {
+    case eTypeDigit: return mpz_get_str(NULL, 10, value->digitValue);
+    case eTypeBool: return value->boolValue ? "true" : "false";
+    case eTypeUnit: return "unit";
+    case eTypeEmpty: return "empty";
+
+    default: NEVER("unknown type kind %d", type->kind);
+    }
+}
+
+static const char *operand_to_string(ssa_emit_t *emit, ssa_operand_t operand)
+{
+    switch (operand.kind)
+    {
+    case eOperandBlock: {
+        return format(".%s", get_block_name(&emit->emit, operand.bb));
+    }
+    case eOperandImm: {
+        return format("$%s", value_to_string(operand.value));
+    }
+    case eOperandReg: {
+        return format("%%%s", get_step_from_block(&emit->emit, operand.vregContext, operand.vregIndex));
+    }
+    default: NEVER("unknown operand kind %d", operand.kind);
+    }
+}
+
+static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
+{
+    size_t len = typevec_len(bb->steps);
+    write_string(io, ".%s: [len=%zu]\n", get_block_name(&emit->emit, bb), len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_step_t *step = typevec_offset(bb->steps, i);
+        switch (step->opcode)
+        {
+        case eOpReturn:
+            ssa_return_t ret = step->ret;
+            write_string(io, "\tret %s\n", operand_to_string(emit, ret.value));
+            break;
+        default: NEVER("unknown opcode %d", step->opcode);
+        }
+    }
+}
+
+static void emit_ssa_blocks(ssa_emit_t *emit, io_t *io, vector_t *bbs)
+{
+    size_t len = vector_len(bbs);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_block_t *bb = vector_get(bbs, i);
+        emit_ssa_block(emit, io, bb);
+    }
+}
+
+static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
+{
+    fs_t *fs = emit->fs;
     // this is really badly named :p
     // whats really going on is that we're checking if the module has the same name.
     // as the last element in the path, in these cases we dont want to emit the last element of the path.
@@ -95,9 +168,9 @@ static void emit_ssa_module(fs_t *fs, const ssa_module_t *mod)
     {
         const ssa_symbol_t *global = vector_get(mod->globals, i);
         write_string(io, "%s global %s: %s\n", vis_name(global->visibility), global->name, type_to_string(global->type));
-        write_string(io, "\t[extern = %s, linkage = %s]\n",
-            global->linkName == NULL ? "null" : global->linkName,
-            link_name(global->linkage));
+        emit_ssa_attribs(io, global);
+
+        emit_ssa_blocks(emit, io, global->blocks);
 
         if (i != len - 1) { write_string(io, "\n"); }
     }
@@ -106,11 +179,20 @@ static void emit_ssa_module(fs_t *fs, const ssa_module_t *mod)
 ssa_emit_result_t emit_ssa(const ssa_emit_options_t *options)
 {
     const emit_options_t opts = options->opts;
+    ssa_emit_t emit = {
+        .emit = {
+            .reports = opts.reports,
+            .blockNames = names_new(64),
+            .vregNames = names_new(64),
+        },
+        .fs = opts.fs,
+    };
+
     size_t len = vector_len(opts.modules);
     for (size_t i = 0; i < len; i++)
     {
         const ssa_module_t *mod = vector_get(opts.modules, i);
-        emit_ssa_module(opts.fs, mod);
+        emit_ssa_module(&emit, mod);
     }
 
     ssa_emit_result_t result = { NULL };
