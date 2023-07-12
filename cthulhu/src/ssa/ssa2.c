@@ -70,16 +70,33 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
     mod->name = name;
     mod->path = path;
 
-    mod->globals = map_optimal(32);
-    mod->functions = map_optimal(32);
+    mod->globals = vector_new(32);
+    mod->functions = vector_new(32);
 
     return mod;
+}
+
+static void add_module_globals(ssa_compile_t *ssa, ssa_module_t *mod, map_t *globals)
+{
+    map_iter_t iter = map_iter(globals);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+
+        const h2_t *tree = entry.value;
+        ssa_symbol_t *global = symbol_create(ssa, tree);
+
+        vector_push(&mod->globals, global);
+        map_set_ptr(ssa->globals, tree, global);
+    }
 }
 
 static void compile_module(ssa_compile_t *ssa, const h2_t *tree)
 {
     const char *id = h2_get_name(tree);
     ssa_module_t *mod = module_create(ssa, id);
+
+    add_module_globals(ssa, mod, h2_module_tag(tree, eSema2Values));
 
     vector_push(&ssa->modules, mod);
     vector_push(&ssa->path, (char*)id);

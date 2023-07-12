@@ -279,8 +279,8 @@ typedef struct ssa_module_t {
     const char *name;
     vector_t *path; // vector<string>
 
-    map_t *globals; // map<string, ssa_symbol>
-    map_t *functions; // map<string, ssa_symbol>
+    vector_t *globals; // vector<ssa_symbol>
+    vector_t *functions; // vector<ssa_symbol>
 } ssa_module_t;
 
 typedef struct ssa_result_t {
