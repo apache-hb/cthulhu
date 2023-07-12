@@ -28,17 +28,19 @@ static void emit_ssa_module(fs_t *fs, const ssa_module_t *mod)
     // as the last element in the path, in these cases we dont want to emit the last element of the path.
     // this is not required for correctness but makes the output nicer to grok.
     bool isRootMod = check_root_mod(mod->path, mod->name);
-    if (isRootMod) { vector_drop(mod->path); }
+
+    vector_t *vec = vector_clone(mod->path); // lets not scuff the original path
+    if (isRootMod) { vector_drop(vec); }
 
     // TODO: this may start failing if the api for fs_dir_create changes
-    char *path = str_join("/", mod->path);
+    char *path = str_join("/", vec);
     char *file = format("%s/%s.ssa", path, mod->name);
     fs_dir_create(fs, path);
     fs_file_create(fs, file);
 
     io_t *io = fs_open(fs, file, eAccessWrite | eAccessText);
     write_string(io, "module{name=%s", mod->name);
-    if (vector_len(mod->path) > 0) { write_string(io, ", path=%s", path); }
+    if (vector_len(vec) > 0) { write_string(io, ", path=%s", path); }
     write_string(io, "}\n");
 }
 
