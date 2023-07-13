@@ -140,13 +140,12 @@ static const char *get_c89_quals(quals_t quals)
     // const is the default
     if (quals == eQualDefault) { return "const "; }
 
-    const char *result = "const ";
-    if (quals & eQualMutable) { result = " "; }
+    vector_t *vec = vector_new(3);
+    if (quals & eQualAtomic) { vector_push(&vec, "_Atomic"); }
+    if (quals & eQualVolatile) { vector_push(&vec, "volatile"); }
+    if (quals & ~eQualMutable) { vector_push(&vec, "const"); }
 
-    if (quals & eQualAtomic) { result = format("_Atomic %s", result); }
-    if (quals & eQualVolatile) { result = format("volatile %s", result); }
-
-    return result;
+    return str_join(" ", vec);
 }
 
 static const char *format_c89_type(c89_emit_t *emit, const ssa_type_t *type, const char *name)
