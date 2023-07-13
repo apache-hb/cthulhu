@@ -17,6 +17,7 @@
 
 typedef struct ssa_emit_t {
     emit_t emit;
+
     fs_t *fs;
     map_t *deps;
 } ssa_emit_t;

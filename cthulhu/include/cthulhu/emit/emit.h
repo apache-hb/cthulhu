@@ -37,3 +37,22 @@ typedef struct ssa_emit_result_t {
  * @param options the options to use
  */
 ssa_emit_result_t emit_ssa(const ssa_emit_options_t *options);
+
+///
+/// c89 api
+///
+
+typedef struct c89_emit_options_t {
+    emit_options_t opts;
+} c89_emit_options_t;
+
+typedef struct c89_emit_result_t {
+    vector_t *sources; // vector<string>
+} c89_emit_result_t;
+
+/**
+ * @brief emit c89 form for compilation in another compiler
+ *
+ * @param options the options to use
+ */
+c89_emit_result_t emit_c89(const c89_emit_options_t *options);

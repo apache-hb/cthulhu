@@ -77,7 +77,7 @@ export struct AllocationCallbacks {
 
 export type Instance = opaque;
 
-export def createVersion(major: uint, minor: uint, patch: uint): core::uint32 
+export def createVersion(major: uint, minor: uint, patch: uint): core::uint32
     = (major << 22) | (minor << 12) | patch;
 
 @extern("vkCreateInstance")
