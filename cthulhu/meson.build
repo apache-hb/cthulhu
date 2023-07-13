@@ -65,7 +65,8 @@ ssa = declare_dependency(
 
 src = [
     'src/emit/common.c',
-    'src/emit/ssa.c'
+    'src/emit/ssa.c',
+    'src/emit/c89.c'
 ]
 
 libemit = library('emit', src,

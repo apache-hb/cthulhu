@@ -29,7 +29,6 @@ typedef enum ssa_kind_t {
     eTypeDigit,
     eTypeString,
     eTypeClosure,
-    eTypeQualify,
 
     eTypeUndecidable, ///< this is used to indicate that an ssa_value_t cannot be calculated at compile time
 
@@ -98,11 +97,6 @@ typedef struct ssa_field_t {
 /// types
 ///
 
-typedef struct ssa_type_qualify_t {
-    quals_t quals;
-    const ssa_type_t *type;
-} ssa_type_qualify_t;
-
 typedef struct ssa_type_digit_t {
     sign_t sign;
     digit_t digit;
@@ -116,10 +110,10 @@ typedef struct ssa_type_closure_t {
 
 typedef struct ssa_type_t {
     ssa_kind_t kind;
+    quals_t quals;
     const char *name;
 
     union {
-        ssa_type_qualify_t qualify;
         ssa_type_digit_t digit;
         ssa_type_closure_t closure;
     };

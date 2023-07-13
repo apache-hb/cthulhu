@@ -35,11 +35,6 @@ static char *digit_to_string(ssa_type_digit_t digit)
     return format("digit(%s.%s)", sign_name(digit.sign), digit_name(digit.digit));
 }
 
-static char *qualify_to_string(ssa_type_qualify_t qualify)
-{
-    return format("qualify(quals: %s, type: %s)", quals_name(qualify.quals), type_to_string(qualify.type));
-}
-
 static char *closure_to_string(ssa_type_closure_t closure)
 {
     size_t len = typevec_len(closure.params);
@@ -67,7 +62,6 @@ static const char *type_to_string(const ssa_type_t *type)
     case eTypeBool: return "bool";
     case eTypeString: return "string";
     case eTypeDigit: return digit_to_string(type->digit);
-    case eTypeQualify: return qualify_to_string(type->qualify);
     case eTypeClosure: return closure_to_string(type->closure);
     default: NEVER("unknown type kind %d", type->kind);
     }

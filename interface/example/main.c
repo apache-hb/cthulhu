@@ -114,24 +114,24 @@ int main(int argc, const char **argv)
 
     fs_t *fs = fs_virtual(reports, "out");
 
-    ssa_emit_options_t emitOpts = {
-        .opts = {
-            .reports = reports,
-            .fs = fs,
+    emit_options_t baseOpts = {
+        .reports = reports,
+        .fs = fs,
 
-            .modules = ssa.modules,
-            .deps = ssa.deps,
-        }
+        .modules = ssa.modules,
+        .deps = ssa.deps,
+    };
+
+    ssa_emit_options_t emitOpts = {
+        .opts = baseOpts
     };
 
     ssa_emit_result_t ssaResult = emit_ssa(&emitOpts);
     CHECK_REPORTS(reports, "emitting ssa");
     UNUSED(ssaResult); // TODO: check for errors
 
-#if 0
     c89_emit_options_t c89Opts = {
-        .opts = baseOpts,
-        .flags = eEmitHeaders
+        .opts = baseOpts
     };
 
     c89_emit_result_t c89Result = emit_c89(&c89Opts);
@@ -143,7 +143,6 @@ int main(int argc, const char **argv)
         const char *path = vector_get(c89Result.sources, i);
         printf("%s\n", path);
     }
-#endif
 
     fs_t *out = fs_physical(reports, "out");
     CHECK_REPORTS(reports, "creating output directory");
