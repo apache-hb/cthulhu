@@ -40,16 +40,17 @@ static c89_source_t *source_new(io_t *io, const char *path)
 
 static c89_source_t *header_for(c89_emit_t *emit, const ssa_module_t *mod, const char *path)
 {
-    io_t *io = fs_open(emit->fs, path, eAccessWrite | eAccessText);
-    c89_source_t *source = source_new(io, path);
+    io_t *io = fs_open(emit->fs, format("include/%s.h", path), eAccessWrite | eAccessText);
+    c89_source_t *source = source_new(io, format("%s.h", path));
     map_set_ptr(emit->hdrmap, mod, source);
     return source;
 }
 
 static c89_source_t *source_for(c89_emit_t *emit, const ssa_module_t *mod, const char *path)
 {
-    io_t *io = fs_open(emit->fs, path, eAccessWrite | eAccessText);
-    c89_source_t *source = source_new(io, path);
+    char *it = format("src/%s.c", path);
+    io_t *io = fs_open(emit->fs, it, eAccessWrite | eAccessText);
+    c89_source_t *source = source_new(io, it);
     map_set_ptr(emit->srcmap, mod, source);
     return source;
 }
@@ -62,10 +63,10 @@ static bool check_root_mod(vector_t *path, const char *id)
     return str_equal(tail, id);
 }
 
-static char *format_path(const char *base, const char *name, const char *dir, const char *ext)
+static const char *format_path(const char *base, const char *name)
 {
-    if (strlen(base) == 0) { return format("%s/%s.%s", dir, name, ext); }
-    return format("%s/%s/%s.%s", dir, base, name, ext);
+    if (strlen(base) == 0) { return name; }
+    return format("%s/%s", base, name);
 }
 
 static void begin_c89_module(c89_emit_t *emit, const ssa_module_t *mod)
@@ -82,20 +83,20 @@ static void begin_c89_module(c89_emit_t *emit, const ssa_module_t *mod)
     if (isRootMod) { vector_drop(vec); }
 
     char *path = str_join("/", vec);
-    char *srcFile = format_path(path, mod->name, "src", "c");
-    char *hdrFile = format_path(path, mod->name, "include", "h");
+    const char *srcFile = format_path(path, mod->name);
+    const char *hdrFile = format_path(path, mod->name);
 
     fs_dir_create(fs, path);
     fs_file_create(fs, srcFile);
     fs_file_create(fs, hdrFile);
 
-    vector_push(&emit->sources, srcFile);
+    vector_push(&emit->sources, format("src/%s.c", srcFile));
 
     c89_source_t *src = source_for(emit, mod, srcFile);
     c89_source_t *hdr = header_for(emit, mod, hdrFile);
 
     write_string(hdr->io, "#pragma once\n");
-    write_string(src->io, "#include \"%s\"\n", hdrFile);
+    write_string(src->io, "#include \"%s.h\"\n", hdrFile);
 }
 
 // collect api
@@ -207,7 +208,7 @@ static void emit_required_headers(c89_emit_t *emit, const ssa_module_t *mod)
     // for symbols that are externally visible
 
     size_t len = vector_len(mod->globals);
-    set_t *requires = set_new(len); // set of modules required by this module
+    set_t *requires = set_new(MAX(len, 1)); // set of modules required by this module
 
     get_required_headers(emit, requires, mod, mod->globals);
     get_required_headers(emit, requires, mod, mod->functions);

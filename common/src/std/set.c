@@ -55,6 +55,7 @@ static item_t *get_bucket_ptr(set_t *set, const void *key)
 USE_DECL
 set_t *set_new(size_t size)
 {
+    CTASSERT(size > 0);
     set_t *set = ctu_malloc(set_size(size));
     set->size = size;
 

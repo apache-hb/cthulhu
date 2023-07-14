@@ -50,7 +50,7 @@ static char *closure_to_string(ssa_type_closure_t closure)
 
     char *params = str_join(", ", vec);
 
-    return format("closure(result: %s, params: %s, variadic: %s)", result, params, closure.variadic ? "true" : "false");
+    return format("closure(result: %s, params: [%s], variadic: %s)", result, params, closure.variadic ? "true" : "false");
 }
 
 static const char *type_to_string(const ssa_type_t *type)
@@ -84,6 +84,7 @@ static const char *value_to_string(const ssa_value_t *value)
     case eTypeBool: return value->boolValue ? "true" : "false";
     case eTypeUnit: return "unit";
     case eTypeEmpty: return "empty";
+    case eTypeString: return format("\"%s\"", str_normalizen(value->stringValue, value->stringLength));
 
     default: NEVER("unknown type kind %d", type->kind);
     }
@@ -102,6 +103,14 @@ static const char *operand_to_string(ssa_emit_t *emit, ssa_operand_t operand)
     case eOperandGlobal: {
         const ssa_symbol_t *symbol = operand.global;
         return format("@%s", symbol->name);
+    }
+    case eOperandFunction: {
+        const ssa_symbol_t *symbol = operand.function;
+        return format("::%s", symbol->name);
+    }
+    case eOperandLocal: {
+        size_t index = operand.local;
+        return format("local(%zu)", index);
     }
     default: NEVER("unknown operand kind %d", operand.kind);
     }
@@ -143,6 +152,49 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
         case eOpReturn:
             ssa_return_t ret = step->ret;
             write_string(io, "\tret %s\n", operand_to_string(emit, ret.value));
+            break;
+        case eOpJump:
+            ssa_jump_t jmp = step->jump;
+            write_string(io, "\tjump %s\n", operand_to_string(emit, jmp.target));
+            break;
+        case eOpStore:
+            ssa_store_t store = step->store;
+            write_string(io, "\tstore %s %s\n",
+                operand_to_string(emit, store.dst),
+                operand_to_string(emit, store.src)
+            );
+            break;
+        case eOpCall:
+            ssa_call_t call = step->call;
+            size_t len = typevec_len(call.args);
+            vector_t *args = vector_of(len);
+            for (size_t i = 0; i < len; i++)
+            {
+                const ssa_operand_t *arg = typevec_offset(call.args, i);
+                vector_set(args, i, (char*)operand_to_string(emit, *arg));
+            }
+            write_string(io, "\t%%%s = call %s (%s)\n",
+                get_step_name(&emit->emit, step),
+                operand_to_string(emit, call.function),
+                str_join(", ", args)
+            );
+            break;
+        case eOpBranch:
+            ssa_branch_t branch = step->branch;
+            write_string(io, "\tbranch %s %s %s\n",
+                operand_to_string(emit, branch.cond),
+                operand_to_string(emit, branch.then),
+                operand_to_string(emit, branch.other)
+            );
+            break;
+        case eOpCompare:
+            ssa_compare_t compare = step->compare;
+            write_string(io, "\t%%%s = compare %s %s %s\n",
+                get_step_name(&emit->emit, step),
+                compare_name(compare.compare),
+                operand_to_string(emit, compare.lhs),
+                operand_to_string(emit, compare.rhs)
+            );
             break;
         default: NEVER("unknown opcode %d", step->opcode);
         }
@@ -214,6 +266,20 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
         emit_ssa_blocks(emit, io, global->blocks);
 
         if (i != len - 1) { write_string(io, "\n"); }
+    }
+
+    size_t fns = vector_len(mod->functions);
+    for (size_t i = 0; i < fns; i++)
+    {
+        const ssa_symbol_t *fn = vector_get(mod->functions, i);
+        emit_symbol_deps(io, fn, emit->deps);
+
+        write_string(io, "%s fn %s: %s\n", vis_name(fn->visibility), fn->name, type_to_string(fn->type));
+        emit_ssa_attribs(io, fn);
+
+        emit_ssa_blocks(emit, io, fn->blocks);
+
+        if (i != fns - 1) { write_string(io, "\n"); }
     }
 }
 

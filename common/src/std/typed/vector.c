@@ -18,11 +18,13 @@ static typevec_t *typevec_create(size_t typeSize, size_t len)
 {
     CTASSERT(typeSize > 0);
 
+    size_t size = MAX(len, 1);
+
     typevec_t *vec = ctu_malloc(sizeof(typevec_t));
-    vec->size = len;
+    vec->size = size;
     vec->used = 0;
     vec->typeSize = typeSize;
-    vec->data = ctu_malloc(typeSize * (len + 1));
+    vec->data = ctu_malloc(typeSize * (size + 1));
     return vec;
 }
 

@@ -1,6 +1,9 @@
 #include "cthulhu/mediator/interface.h"
 #include "support/langs.h"
 
+#include "cthulhu/ssa/ssa.h"
+#include "cthulhu/emit/emit.h"
+
 #include "report/report.h"
 
 #include "base/panic.h"
@@ -26,11 +29,9 @@
 #if OS_WINDOWS
 #   include <windows.h>
 #   define CWD ".\\"
-#   define OBJ ".obj"
 #else
 #   include <unistd.h>
 #   define CWD "./"
-#   define OBJ ".o"
 #endif
 
 #define CHECK_REPORTS(reports, msg) \
@@ -115,47 +116,60 @@ int main(int argc, const char **argv)
 
     map_t *modmap = lifetime_get_modules(lifetime);
 
-#if 0
-    vector_t *mods = map_values(modmap);
-    ssa_module_t *ssa = ssa_gen_module(reports, mods);
+    ssa_result_t ssa = ssa_compile(modmap);
     CHECK_REPORTS(reports, "generating ssa");
 
-    ssa_opt_module(reports, ssa);
+    ssa_opt(reports, ssa);
     CHECK_REPORTS(reports, "optimizing ssa");
 
-    ssa_emit_module(reports, ssa);
-#endif
+    fs_t *fs = fs_virtual(reports, "out");
 
-    const char *path = argv[1];
+    emit_options_t baseOpts = {
+        .reports = reports,
+        .fs = fs,
+
+        .modules = ssa.modules,
+        .deps = ssa.deps,
+    };
+
+    ssa_emit_options_t emitOpts = {
+        .opts = baseOpts
+    };
+
+    ssa_emit_result_t ssaResult = emit_ssa(&emitOpts);
+    CHECK_REPORTS(reports, "emitting ssa");
+    UNUSED(ssaResult); // TODO: check for errors
+
+    c89_emit_options_t c89Opts = {
+        .opts = baseOpts
+    };
+
+    c89_emit_result_t c89Result = emit_c89(&c89Opts);
+    CHECK_REPORTS(reports, "emitting c89");
 
     OS_RESULT(const char *) cwd = os_dir_current();
     CTASSERT(os_error(cwd) == 0);
 
     const char *testDir = format("%s" NATIVE_PATH_SEPARATOR "test-out", OS_VALUE(const char*, cwd));
-    const char *runDir = format("%s" NATIVE_PATH_SEPARATOR "%s", testDir, path);
-    const char *libPath = format("%s" NATIVE_PATH_SEPARATOR "it" OBJ, runDir);
-    const char *srcPath = format("%s" NATIVE_PATH_SEPARATOR "c89/out.c", runDir);
+    const char *runDir = format("%s" NATIVE_PATH_SEPARATOR "%s", testDir, argv[1]);
 
-    OS_RESULT(bool) create = os_dir_create(testDir);
-    CTASSERT(os_error(create) == 0);
+    fs_t *out = fs_physical(reports, runDir);
+    CHECK_REPORTS(reports, "creating output directory");
 
-    fs_t *dst = fs_physical(reports, runDir);
+    fs_sync(out, fs);
+    CHECK_REPORTS(reports, "syncing output directory");
 
-    CHECK_REPORTS(reports, "failed to open output files");
+    size_t len = vector_len(c89Result.sources);
+    vector_t *sources = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const char *part = vector_get(c89Result.sources, i);
+        char *path = format("%s" NATIVE_PATH_SEPARATOR "%s", runDir, part);
+        vector_set(sources, i, path);
+    }
 
-#if 0
-    c89_emit_t emit = {
-        .reports = reports,
-        .fs = fs_virtual(reports, "out")
-    };
-
-    c89_emit(emit, ssa);
-    CHECK_REPORTS(reports, "emitting ssa");
-
-    fs_sync(dst, emit.fs);
-#endif
 #if OS_WINDOWS
-    int status = system(format("cl /nologo /c %s /Fo%s", srcPath, libPath));
+    int status = system(format("cl /nologo /c %s /I%s\\include", str_join(" ", sources), runDir));
     if (status == -1)
     {
         report(reports, eFatal, NULL, "compilation failed %d", errno);
@@ -169,4 +183,6 @@ int main(int argc, const char **argv)
 #endif
 
     CHECK_REPORTS(reports, "compiling");
+
+    logverbose("done");
 }

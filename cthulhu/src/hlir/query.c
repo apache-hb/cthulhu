@@ -6,6 +6,7 @@ const char *h2_to_string(const h2_t *self)
 {
     if (self == NULL) { return "nil"; }
 
+    // TODO: not everything has a name
     return h2_get_name(self);
 }
 

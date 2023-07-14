@@ -47,7 +47,7 @@ typedef struct c89_emit_options_t {
 } c89_emit_options_t;
 
 typedef struct c89_emit_result_t {
-    vector_t *sources; // vector<string>
+    vector_t *sources; ///< vector<string> a list of source files to compile
 } c89_emit_result_t;
 
 /**
