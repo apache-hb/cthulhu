@@ -62,10 +62,10 @@ static bool check_root_mod(vector_t *path, const char *id)
     return str_equal(tail, id);
 }
 
-static char *format_path(const char *base, const char *name, const char *ext)
+static char *format_path(const char *base, const char *name, const char *dir, const char *ext)
 {
-    if (strlen(base) == 0) { return format("%s.%s", name, ext); }
-    return format("%s/%s.%s", base, name, ext);
+    if (strlen(base) == 0) { return format("%s/%s.%s", dir, name, ext); }
+    return format("%s/%s/%s.%s", dir, base, name, ext);
 }
 
 static void begin_c89_module(c89_emit_t *emit, const ssa_module_t *mod)
@@ -82,8 +82,8 @@ static void begin_c89_module(c89_emit_t *emit, const ssa_module_t *mod)
     if (isRootMod) { vector_drop(vec); }
 
     char *path = str_join("/", vec);
-    char *srcFile = format_path(path, mod->name, "c");
-    char *hdrFile = format_path(path, mod->name, "h");
+    char *srcFile = format_path(path, mod->name, "src", "c");
+    char *hdrFile = format_path(path, mod->name, "include", "h");
 
     fs_dir_create(fs, path);
     fs_file_create(fs, srcFile);
@@ -117,8 +117,6 @@ static void collect_c89_symbols(c89_emit_t *emit, const ssa_module_t *mod)
 }
 
 // emit api
-
-static const char *format_c89_type(c89_emit_t *emit, const ssa_type_t *type, const char *name);
 
 static const char *get_c89_digit(ssa_type_digit_t ty)
 {

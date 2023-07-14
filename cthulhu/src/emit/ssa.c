@@ -93,15 +93,12 @@ static const char *operand_to_string(ssa_emit_t *emit, ssa_operand_t operand)
 {
     switch (operand.kind)
     {
-    case eOperandBlock: {
+    case eOperandBlock:
         return format(".%s", get_block_name(&emit->emit, operand.bb));
-    }
-    case eOperandImm: {
+    case eOperandImm:
         return format("$%s", value_to_string(operand.value));
-    }
-    case eOperandReg: {
+    case eOperandReg:
         return format("%%%s", get_step_from_block(&emit->emit, operand.vregContext, operand.vregIndex));
-    }
     case eOperandGlobal: {
         const ssa_symbol_t *symbol = operand.global;
         return format("@%s", symbol->name);
