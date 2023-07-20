@@ -148,7 +148,7 @@ int main(int argc, const char **argv)
     CHECK_REPORTS(reports, "emitting c89");
 
     OS_RESULT(const char *) cwd = os_dir_current();
-    CTASSERT(os_error(cwd) == 0);
+    CTASSERTF(os_error(cwd) == 0, "failed to get cwd %s", os_decode(os_error(cwd)));
 
     const char *testDir = format("%s" NATIVE_PATH_SEPARATOR "test-out", OS_VALUE(const char*, cwd));
     const char *runDir = format("%s" NATIVE_PATH_SEPARATOR "%s", testDir, argv[1]);
@@ -170,13 +170,16 @@ int main(int argc, const char **argv)
     }
 
 #if OS_WINDOWS
+    OS_RESULT(bool) create = os_dir_create(libDir);
+    CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", libDir, os_decode(os_error(create)));
+
     int status = system(format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), runDir, libDir));
     if (status == -1)
     {
         report(reports, eFatal, NULL, "compilation failed %d", errno);
     }
 #else
-    int status = system(format("cc %s -c -o%s", srcPath, libPath));
+    int status = system(format("cc %s -c -o%s.o", srcPath, libPath));
     if (WEXITSTATUS(status) != EXIT_OK)
     {
         report(reports, eFatal, NULL, "compilation failed %d", WEXITSTATUS(status));

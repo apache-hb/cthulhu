@@ -9,6 +9,8 @@
 
 #include "report/report.h"
 
+#include <string.h>
+
 static vector_t *path_split(const char *path)
 {
     return str_split(path, "/");
@@ -231,6 +233,10 @@ static inode_t *get_inode_for(fs_t *fs, inode_t *node, const char *name, inode_t
 
 void fs_dir_create(fs_t *fs, const char *path)
 {
+    CTASSERT(fs != NULL);
+    CTASSERT(path != NULL);
+    CTASSERT(strlen(path) > 0);
+
     vector_t *parts = path_split(path);
     size_t len = vector_len(parts);
     inode_t *current = fs->root;

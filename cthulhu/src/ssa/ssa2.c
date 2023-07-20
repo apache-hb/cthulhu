@@ -406,7 +406,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         add_step(ssa, cmp);
 
         ssa->currentBlock = bodyBlock;
-        compile_tree(ssa, tree->body);
+        compile_tree(ssa, tree->then);
 
         ssa_step_t jmp = {
             .opcode = eOpJump,

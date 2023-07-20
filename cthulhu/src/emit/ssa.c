@@ -232,6 +232,8 @@ static void emit_symbol_deps(io_t *io, const ssa_symbol_t *symbol, map_t *deps)
 static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
 {
     fs_t *fs = emit->fs;
+    // TODO: dedup this
+
     // this is really badly named :p
     // whats really going on is that we're checking if the module has the same name.
     // as the last element in the path, in these cases we dont want to emit the last element of the path.
@@ -243,8 +245,12 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
 
     // TODO: this may start failing if the api for fs_dir_create changes
     char *path = str_join("/", vec);
+    if (vector_len(vec) > 0)
+    {
+        fs_dir_create(fs, path);
+    }
+
     char *file = format("%s/%s.ssa", path, mod->name);
-    fs_dir_create(fs, path);
     fs_file_create(fs, file);
 
     io_t *io = fs_open(fs, file, eAccessWrite | eAccessText);
