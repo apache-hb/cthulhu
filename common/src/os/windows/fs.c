@@ -7,7 +7,7 @@
 // TODO: this feels janky
 OS_RESULT(bool) os_file_create(const char *path)
 {
-    HANDLE handle = CreateFile(        
+    HANDLE handle = CreateFile(
         /* lpFileName = */ path,
         /* dwDesiredAccess = */ GENERIC_WRITE,
         /* dwShareMode = */ FILE_SHARE_READ,
@@ -54,8 +54,7 @@ OS_RESULT(bool) os_file_exists(const char *path)
         return type;
     }
 
-    os_dirent_t ent = OS_VALUE(os_dirent_t, type);
-    bool result = ent == eOsNodeFile;
+    bool result = OS_VALUE(os_dirent_t, type) == eOsNodeFile;
     return win_result(ERROR_SUCCESS, &result, sizeof(bool));
 }
 
@@ -69,12 +68,12 @@ OS_RESULT(bool) os_dir_create(const char *path)
         {
             return win_error(error);
         }
-        
+
         result = true;
     }
 
     return win_result(ERROR_SUCCESS, &result, sizeof(bool));
-}   
+}
 
 OS_RESULT(bool) os_dir_delete(const char *path)
 {

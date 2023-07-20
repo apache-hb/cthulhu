@@ -152,6 +152,7 @@ int main(int argc, const char **argv)
 
     const char *testDir = format("%s" NATIVE_PATH_SEPARATOR "test-out", OS_VALUE(const char*, cwd));
     const char *runDir = format("%s" NATIVE_PATH_SEPARATOR "%s", testDir, argv[1]);
+    const char *libDir = format("%s" NATIVE_PATH_SEPARATOR "lib", runDir);
 
     fs_t *out = fs_physical(reports, runDir);
     CHECK_REPORTS(reports, "creating output directory");
@@ -169,7 +170,7 @@ int main(int argc, const char **argv)
     }
 
 #if OS_WINDOWS
-    int status = system(format("cl /nologo /c %s /I%s\\include", str_join(" ", sources), runDir));
+    int status = system(format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), runDir, libDir));
     if (status == -1)
     {
         report(reports, eFatal, NULL, "compilation failed %d", errno);
