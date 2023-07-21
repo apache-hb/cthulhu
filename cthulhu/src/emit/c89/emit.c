@@ -1,4 +1,4 @@
-#include "common.h"
+#include "c89.h"
 
 #include "std/str.h"
 #include "std/map.h"
@@ -17,19 +17,6 @@ typedef struct c89_source_t {
     io_t *io;
     const char *path;
 } c89_source_t;
-
-typedef struct c89_emit_t {
-    emit_t emit;
-
-    map_t *modmap; // map<ssa_symbol, ssa_module>
-
-    map_t *srcmap; // map<ssa_module, c89_source>
-    map_t *hdrmap; // map<ssa_module, c89_source>
-
-    fs_t *fs;
-    map_t *deps;
-    vector_t *sources;
-} c89_emit_t;
 
 static c89_source_t *source_new(io_t *io, const char *path)
 {
@@ -63,12 +50,6 @@ static c89_source_t *source_for(c89_emit_t *emit, const ssa_module_t *mod, const
 
 // begin api
 
-static bool check_root_mod(vector_t *path, const char *id)
-{
-    const char *tail = vector_tail(path);
-    return str_equal(tail, id);
-}
-
 static const char *format_path(const char *base, const char *name)
 {
     if (strlen(base) == 0) { return name; }
@@ -77,22 +58,7 @@ static const char *format_path(const char *base, const char *name)
 
 static void begin_c89_module(c89_emit_t *emit, const ssa_module_t *mod)
 {
-    fs_t *fs = emit->fs;
-
-    // this is really badly named :p
-    // whats really going on is that we're checking if the module has the same name.
-    // as the last element in the path, in these cases we dont want to emit the last element of the path.
-    // this is not required for correctness but makes the output nicer to grok.
-    bool isRootMod = check_root_mod(mod->path, mod->name);
-
-    vector_t *vec = vector_clone(mod->path); // lets not scuff the original path
-    if (isRootMod) { vector_drop(vec); }
-
-    char *path = str_join("/", vec);
-    if (vector_len(vec) > 0)
-    {
-        fs_dir_create(fs, path);
-    }
+    char *path = begin_module(&emit->emit, emit->fs, mod); // lets not scuff the original path
 
     const char *srcFile = format_path(path, mod->name);
     const char *hdrFile = format_path(path, mod->name);
@@ -125,88 +91,6 @@ static void collect_c89_symbols(c89_emit_t *emit, const ssa_module_t *mod)
 }
 
 // emit api
-
-static const char *get_c89_digit(ssa_type_digit_t ty)
-{
-    switch (ty.digit)
-    {
-    case eDigitChar: return (ty.sign == eSignUnsigned) ? "unsigned char" : "char";
-    case eDigitShort: return (ty.sign == eSignUnsigned) ? "unsigned short" : "short";
-    case eDigitInt: return (ty.sign == eSignUnsigned) ? "unsigned int" : "int";
-    case eDigitLong: return (ty.sign == eSignUnsigned) ? "unsigned long" : "long";
-    case eDigitSize: return (ty.sign == eSignUnsigned) ? "size_t" : "ptrdiff_t";
-    case eDigitPtr: return (ty.sign == eSignUnsigned) ? "uintptr_t" : "intptr_t";
-
-    default: NEVER("unknown digit %d", ty.digit);
-    }
-}
-
-static const char *get_c89_quals(quals_t quals)
-{
-    // const is the default
-    if (quals == eQualDefault) { return "const "; }
-
-    vector_t *vec = vector_new(3);
-    if (quals & eQualAtomic) { vector_push(&vec, "_Atomic"); }
-    if (quals & eQualVolatile) { vector_push(&vec, "volatile"); }
-    if (quals & ~eQualMutable) { vector_push(&vec, "const"); }
-
-    return str_join(" ", vec);
-}
-
-static const char *format_c89_type(c89_emit_t *emit, const ssa_type_t *type, const char *name);
-
-static const char *format_c89_params(c89_emit_t *emit, typevec_t *params)
-{
-    size_t len = typevec_len(params);
-    if (len == 0)
-    {
-        return "void";
-    }
-
-    vector_t *args = vector_of(len);
-    for (size_t i = 0; i < len; i++)
-    {
-        const ssa_param_t *param = typevec_offset(params, i);
-        const char *it = format_c89_type(emit, param->type, param->name);
-        vector_set(args, i, (char*)it);
-    }
-
-    return str_join(", ", args);
-}
-
-static const char *format_c89_closure(c89_emit_t *emit, const char *quals, ssa_type_closure_t type, const char *name)
-{
-    const char *result = format_c89_type(emit, type.result, NULL);
-    const char *params = format_c89_params(emit, type.params);
-
-    return (name == NULL)
-        ? format("%s (*%s)(%s)", result, quals, params)
-        : format("%s (*%s%s)(%s)", result, quals, name, params);
-}
-
-static const char *format_c89_type(c89_emit_t *emit, const ssa_type_t *type, const char *name)
-{
-    CTASSERT(type != NULL);
-    const char *quals = get_c89_quals(type->quals);
-
-    switch (type->kind)
-    {
-    case eTypeEmpty: NEVER("cannot emit this type %d", type->kind);
-    case eTypeUnit: return (name != NULL) ? format("void %s", name) : "void";
-    case eTypeString: return (name != NULL) ? format("const char *%s", name) : "const char *";
-
-    case eTypeBool: return (name != NULL) ? format("%sbool %s", quals, name) : format("%sbool", quals);
-    case eTypeDigit: {
-        const char *digitName = get_c89_digit(type->digit);
-        return (name != NULL) ? format("%s%s %s", quals, digitName, name) : format("%s%s", quals, digitName);
-    }
-
-    case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
-
-    default: NEVER("unknown type %d", type->kind);
-    }
-}
 
 static const char *format_c89_link(h2_link_t linkage)
 {
@@ -263,12 +147,18 @@ static void emit_required_headers(c89_emit_t *emit, const ssa_module_t *mod)
     }
 }
 
+static const char *mangle_symbol_name(const ssa_symbol_t *symbol)
+{
+    if (symbol->linkName != NULL) { return symbol->linkName; }
+    return symbol->name;
+}
+
 static void emit_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *global)
 {
     c89_source_t *src = map_get_ptr(emit->srcmap, mod);
     c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
 
-    const char *it = format_c89_type(emit, global->type, global->name);
+    const char *it = c89_format_type(emit, global->type, mangle_symbol_name(global));
 
     const char *link = format_c89_link(global->linkage);
 
@@ -310,10 +200,27 @@ static void emit_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_s
     CTASSERTF(type->kind == eTypeClosure, "expected closure type on %s, got %d", func->name, type->kind);
 
     ssa_type_closure_t closure = type->closure;
-    const char *params = format_c89_params(emit, closure.params);
-    const char *result = format_c89_type(emit, closure.result, func->name);
+    const char *params = c89_format_params(emit, closure.params, closure.variadic);
+    const char *result = c89_format_type(emit, closure.result, mangle_symbol_name(func));
 
     const char *link = format_c89_link(func->linkage);
+
+    if (func->visibility == eVisiblePublic)
+    {
+        CTASSERT(func->linkage != eLinkModule);
+        write_string(hdr->io, "%s%s(%s);\n", link, result, params);
+    }
+    else
+    {
+        write_string(src->io, "%s%s(%s);\n", link, result, params);
+    }
+
+    if (func->entry != NULL)
+    {
+        write_string(src->io, "%s%s(%s) {\n", link, result, params);
+
+        write_string(src->io, "}\n");
+    }
 
     switch (func->visibility)
     {
@@ -348,6 +255,11 @@ static void emit_c89_module(c89_emit_t *emit, const ssa_module_t *mod)
     emit_functions(emit, mod);
 }
 
+static void fwd_c89_module(c89_emit_t *emit, const ssa_module_t *mod)
+{
+
+}
+
 c89_emit_result_t emit_c89(const c89_emit_options_t *options)
 {
     emit_options_t opts = options->opts;
@@ -378,6 +290,12 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
     {
         const ssa_module_t *mod = vector_get(opts.modules, i);
         begin_c89_module(&emit, mod);
+    }
+
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_module_t *mod = vector_get(opts.modules, i);
+        fwd_c89_module(&emit, mod);
     }
 
     for (size_t i = 0; i < len; i++)

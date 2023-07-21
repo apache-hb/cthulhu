@@ -17,6 +17,9 @@ typedef struct emit_t {
     names_t vregNames;
 } emit_t;
 
+char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod);
+void end_module(emit_t *emit);
+
 names_t names_new(size_t size);
 void counter_reset(emit_t *emit);
 

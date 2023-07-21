@@ -2,6 +2,9 @@
 
 #include "std/str.h"
 #include "std/map.h"
+#include "std/vector.h"
+
+#include "io/fs.h"
 
 #include "std/typed/vector.h"
 
@@ -9,6 +12,31 @@
 #include <string.h>
 
 #include "report/report.h"
+
+static bool check_root_mod(vector_t *path, const char *id)
+{
+    const char *tail = vector_tail(path);
+    return str_equal(tail, id);
+}
+
+char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod)
+{
+    // if the last element of the path and the module name are the same then remove the last element
+    // this isnt required to be semanticly correct but it makes the output look nicer
+
+    bool isRoot = check_root_mod(mod->path, mod->name);
+    vector_t *vec = vector_clone(mod->path);
+
+    if (isRoot) { vector_drop(vec); }
+
+    char *path = str_join("/", vec);
+    if (vector_len(vec) > 0)
+    {
+        fs_dir_create(fs, path);
+    }
+
+    return path;
+}
 
 static void names_reset(names_t *names)
 {

@@ -45,7 +45,7 @@ hlir = declare_dependency(
 )
 
 src = [
-    'src/ssa/ssa2.c',
+    'src/ssa/ssa.c',
     'src/ssa/opt2.c',
     'src/ssa/common/type.c',
     'src/ssa/common/value.c'
@@ -66,11 +66,13 @@ ssa = declare_dependency(
 src = [
     'src/emit/common.c',
     'src/emit/ssa.c',
-    'src/emit/c89.c'
+
+    'src/emit/c89/emit.c',
+    'src/emit/c89/type.c'
 ]
 
 libemit = library('emit', src,
-    include_directories : [ 'include', 'src' ],
+    include_directories : [ 'include', 'src/emit' ],
     c_args : args,
     dependencies : [ ssa, std, io, interop ]
 )

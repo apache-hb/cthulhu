@@ -22,12 +22,6 @@ typedef struct ssa_emit_t {
     map_t *deps;
 } ssa_emit_t;
 
-static bool check_root_mod(vector_t *path, const char *id)
-{
-    const char *tail = vector_tail(path);
-    return str_equal(tail, id);
-}
-
 static const char *type_to_string(const ssa_type_t *type);
 
 static char *digit_to_string(ssa_type_digit_t digit)
@@ -232,30 +226,14 @@ static void emit_symbol_deps(io_t *io, const ssa_symbol_t *symbol, map_t *deps)
 static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
 {
     fs_t *fs = emit->fs;
-    // TODO: dedup this
-
-    // this is really badly named :p
-    // whats really going on is that we're checking if the module has the same name.
-    // as the last element in the path, in these cases we dont want to emit the last element of the path.
-    // this is not required for correctness but makes the output nicer to grok.
-    bool isRootMod = check_root_mod(mod->path, mod->name);
-
-    vector_t *vec = vector_clone(mod->path); // lets not scuff the original path
-    if (isRootMod) { vector_drop(vec); }
-
-    // TODO: this may start failing if the api for fs_dir_create changes
-    char *path = str_join("/", vec);
-    if (vector_len(vec) > 0)
-    {
-        fs_dir_create(fs, path);
-    }
+    char *path = begin_module(&emit->emit, fs, mod);
 
     char *file = format("%s/%s.ssa", path, mod->name);
     fs_file_create(fs, file);
 
     io_t *io = fs_open(fs, file, eAccessWrite | eAccessText);
     write_string(io, "module {name=%s", mod->name);
-    if (vector_len(vec) > 0) { write_string(io, ", path=%s", path); }
+    if (strlen(path) > 0) { write_string(io, ", path=%s", path); }
     write_string(io, "}\n");
 
     write_string(io, "\n");
