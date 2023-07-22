@@ -88,6 +88,7 @@ static const char *operand_to_string(ssa_emit_t *emit, ssa_operand_t operand)
 {
     switch (operand.kind)
     {
+    case eOperandEmpty: return "empty";
     case eOperandBlock:
         return format(".%s", get_block_name(&emit->emit, operand.bb));
     case eOperandImm:

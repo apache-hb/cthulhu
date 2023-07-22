@@ -295,3 +295,9 @@ ssa_result_t ssa_compile(map_t *mods);
  * @param mod module to optimize
  */
 void ssa_opt(reports_t *reports, ssa_result_t mod);
+
+///
+/// rewriting
+///
+
+ssa_type_t *ssa_type_bool(const char *name, quals_t quals);

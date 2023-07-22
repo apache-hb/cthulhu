@@ -15,6 +15,10 @@ typedef struct c89_emit_t {
     map_t *srcmap; // map<ssa_module, c89_source>
     map_t *hdrmap; // map<ssa_module, c89_source>
 
+    const ssa_symbol_t *current;
+
+    map_t *stepmap; // map<ssa_step, c89_source>
+
     fs_t *fs;
     map_t *deps;
     vector_t *sources;

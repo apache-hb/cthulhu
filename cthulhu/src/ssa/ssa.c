@@ -119,6 +119,23 @@ static ssa_operand_t bb_add_step(ssa_block_t *bb, ssa_step_t step)
     return operand;
 }
 
+static ssa_operand_t operand_empty(void)
+{
+    ssa_operand_t operand = {
+        .kind = eOperandEmpty
+    };
+    return operand;
+}
+
+static ssa_operand_t operand_bb(ssa_block_t *bb)
+{
+    ssa_operand_t operand = {
+        .kind = eOperandBlock,
+        .bb = bb
+    };
+    return operand;
+}
+
 static ssa_operand_t add_step(ssa_compile_t *ssa, ssa_step_t step)
 {
     return bb_add_step(ssa->currentBlock, step);
@@ -136,19 +153,115 @@ static ssa_block_t *ssa_block_create(ssa_symbol_t *symbol, const char *name, siz
 
 static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree);
 
-static ssa_operand_t compile_else_branch(ssa_compile_t *ssa, const h2_t *other)
+static ssa_operand_t compile_branch(ssa_compile_t *ssa, const h2_t *branch)
 {
-    if (other != NULL)
+    ssa_operand_t cond = compile_tree(ssa, branch->cond);
+    ssa_block_t *current = ssa->currentBlock;
+
+    ssa_block_t *tailBlock = ssa_block_create(ssa->currentSymbol, "tail", 0);
+    ssa_block_t *thenBlock = ssa_block_create(ssa->currentSymbol, "then", 0);
+    ssa_block_t *elseBlock = branch->other ? ssa_block_create(ssa->currentSymbol, "else", 0) : NULL;
+
+    ssa_step_t step = {
+        .opcode = eOpBranch,
+        .branch = {
+            .cond = cond,
+            .then = operand_bb(thenBlock),
+            .other = elseBlock ? operand_bb(elseBlock) : operand_bb(tailBlock)
+        }
+    };
+
+    ssa_operand_t tail = {
+        .kind = eOperandBlock,
+        .bb = tailBlock
+    };
+    ssa_step_t jumpToTail = {
+        .opcode = eOpJump,
+        .jump = {
+            .target = tail
+        }
+    };
+
+    ssa->currentBlock = thenBlock;
+    compile_tree(ssa, branch->then);
+    bb_add_step(thenBlock, jumpToTail);
+
+    if (branch->other != NULL)
     {
-        return compile_tree(ssa, other);
+        ssa->currentBlock = elseBlock;
+        compile_tree(ssa, branch->other);
+        bb_add_step(elseBlock, jumpToTail);
     }
 
-    ssa_block_t *bb = ssa_block_create(ssa->currentSymbol, "else", 0);
-    ssa_operand_t operand = {
+    ssa->currentBlock = current;
+    add_step(ssa, step);
+
+    ssa->currentBlock = tailBlock;
+
+    return tail;
+}
+
+static ssa_operand_t compile_loop(ssa_compile_t *ssa, const h2_t *tree)
+{
+    /**
+    * turns `while (cond) { body }` into:
+    *
+    * .loop:
+    *   %c = cond...
+    *   branch %c .body .tail
+    * .body:
+    *   body...
+    *   jmp .loop
+    * .tail:
+    *
+    */
+    ssa_block_t *loopBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
+    ssa_block_t *bodyBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
+    ssa_block_t *tailBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
+
+    ssa_operand_t loop = {
         .kind = eOperandBlock,
-        .bb = bb
+        .bb = loopBlock
     };
-    return operand;
+
+    ssa_operand_t tail = {
+        .kind = eOperandBlock,
+        .bb = tailBlock
+    };
+
+    ssa_step_t enterLoop = {
+        .opcode = eOpJump,
+        .jump = {
+            .target = loop
+        }
+    };
+    add_step(ssa, enterLoop);
+
+    ssa->currentBlock = loopBlock;
+    ssa_operand_t cond = compile_tree(ssa, tree->cond);
+    ssa_step_t cmp = {
+        .opcode = eOpBranch,
+        .branch = {
+            .cond = cond,
+            .then = operand_bb(bodyBlock),
+            .other = tail
+        }
+    };
+    add_step(ssa, cmp);
+
+    ssa->currentBlock = bodyBlock;
+    compile_tree(ssa, tree->then);
+
+    ssa_step_t repeatLoop = {
+        .opcode = eOpJump,
+        .jump = {
+            .target = loop
+        }
+    };
+    add_step(ssa, repeatLoop);
+
+    ssa->currentBlock = tailBlock;
+    return loop;
 }
 
 static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
@@ -221,39 +334,13 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
 
     case eHlir2StmtBlock: {
         size_t len = vector_len(tree->stmts);
-        ssa_block_t *body = ssa_block_create(ssa->currentSymbol, NULL, len);
-        ssa_block_t *outer = ssa->currentBlock;
-
-        ssa_operand_t bb = {
-            .kind = eOperandBlock,
-            .bb = body
-        };
-
-        ssa_operand_t out = {
-            .kind = eOperandBlock,
-            .bb = outer
-        };
-
-        ssa_step_t into = {
-            .opcode = eOpJump,
-            .jump = { .target = bb }
-        };
-
-        ssa_step_t outof = {
-            .opcode = eOpJump,
-            .jump = { .target = out }
-        };
-
-        add_step(ssa, into);
-        ssa->currentBlock = body;
         for (size_t i = 0; i < len; i++)
         {
             const h2_t *stmt = vector_get(tree->stmts, i);
             compile_tree(ssa, stmt);
         }
-        ssa_operand_t ret = add_step(ssa, outof);
-        ssa->currentBlock = outer;
-        return ret;
+
+        return operand_empty();
     }
 
     case eHlir2StmtAssign: {
@@ -325,31 +412,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         return operand;
     }
 
-    case eHlir2StmtBranch: {
-        ssa_operand_t cond = compile_tree(ssa, tree->cond);
-        ssa_block_t *current = ssa->currentBlock;
-
-        ssa_operand_t then = compile_tree(ssa, tree->then);
-        ssa_operand_t other = compile_else_branch(ssa, tree->other);
-
-        ssa_block_t *save = ssa->currentBlock;
-
-        ssa_step_t step = {
-            .opcode = eOpBranch,
-            .branch = {
-                .cond = cond,
-                .then = then,
-                .other = other
-            }
-        };
-
-        ssa->currentBlock = current;
-        ssa_operand_t ret = add_step(ssa, step);
-        ssa->currentBlock = save;
-
-        return ret;
-    }
-
+    case eHlir2StmtBranch: return compile_branch(ssa, tree);
     case eHlir2ExprCompare: {
         ssa_operand_t lhs = compile_tree(ssa, tree->lhs);
         ssa_operand_t rhs = compile_tree(ssa, tree->rhs);
@@ -366,59 +429,8 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         return add_step(ssa, step);
     }
 
-    case eHlir2StmtLoop: {
-        /**
-         * turns `while (cond) { body }` into:
-         *
-         * .loop:
-         *   %c = cond...
-         *   branch %c .body .tail
-         * .body:
-         *   body...
-         *   jmp .loop
-         * .tail:
-         *
-         */
-        ssa_block_t *loopBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
-        ssa_block_t *bodyBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
-        ssa_block_t *tailBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
-
-        ssa_operand_t loop = {
-            .kind = eOperandBlock,
-            .bb = loopBlock
-        };
-
-        ssa_operand_t tail = {
-            .kind = eOperandBlock,
-            .bb = tailBlock
-        };
-
-        ssa->currentBlock = loopBlock;
-        ssa_operand_t cond = compile_tree(ssa, tree->cond);
-        ssa_step_t cmp = {
-            .opcode = eOpBranch,
-            .branch = {
-                .cond = cond,
-                .then = loop,
-                .other = tail
-            }
-        };
-        add_step(ssa, cmp);
-
-        ssa->currentBlock = bodyBlock;
-        compile_tree(ssa, tree->then);
-
-        ssa_step_t jmp = {
-            .opcode = eOpJump,
-            .jump = {
-                .target = loop
-            }
-        };
-        add_step(ssa, jmp);
-
-        ssa->currentBlock = tailBlock;
-        return loop;
-    }
+    case eHlir2StmtLoop:
+        return compile_loop(ssa, tree);
 
     default: NEVER("unhandled tree kind %d", tree->kind);
     }

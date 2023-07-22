@@ -79,6 +79,9 @@ static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
     c89_source_t *hdr = header_for(emit, mod, hdrFile);
 
     write_string(hdr->io, "#pragma once\n");
+    write_string(hdr->io, "#include <stdbool.h>\n");
+    write_string(hdr->io, "#include <stdint.h>\n");
+
     write_string(src->io, "#include \"%s.h\"\n", hdrFile);
 }
 
@@ -219,9 +222,46 @@ static const ssa_type_t *get_operand_type(c89_emit_t *emit, ssa_operand_t operan
         const ssa_value_t *value = operand.value;
         return value->type;
     }
+    case eOperandLocal: {
+        const ssa_local_t *local = typevec_offset(emit->current->locals, operand.local);
+        return local->type;
+    }
+    case eOperandGlobal: {
+        const ssa_symbol_t *global = operand.global;
+        return global->type;
+    }
+    case eOperandFunction: {
+        const ssa_symbol_t *func = operand.function;
+        return func->type;
+    }
+    case eOperandReg: {
+        const ssa_block_t *bb = operand.vregContext;
+        const ssa_step_t *step = typevec_offset(bb->steps, operand.vregIndex);
+        const ssa_type_t *type = map_get_ptr(emit->stepmap, step);
+        return type;
+    }
 
     default: NEVER("unknown operand kind %d", operand.kind);
     }
+}
+
+static void set_step_type(c89_emit_t *emit, const ssa_step_t *step, const ssa_type_t *type)
+{
+    map_set_ptr(emit->stepmap, step, (ssa_type_t*)type);
+}
+
+static const char *c89_name_vreg(c89_emit_t *emit, const ssa_step_t *step, const ssa_type_t *type)
+{
+    set_step_type(emit, step, (ssa_type_t*)type);
+
+    const char *id = format("vreg%s", get_step_name(&emit->emit, step));
+    return c89_format_type(emit, type, id);
+}
+
+static const char *c89_name_vreg_by_operand(c89_emit_t *emit, const ssa_step_t *step, ssa_operand_t operand)
+{
+    const ssa_type_t *type = get_operand_type(emit, operand);
+    return c89_name_vreg(emit, step, type);
 }
 
 static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
@@ -231,6 +271,7 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
     {
     case eTypeBool: return value->boolValue ? "true" : "false";
     case eTypeDigit: return mpz_get_str(NULL, 10, value->digitValue);
+    case eTypeString: return format("\"%s\"", str_normalizen(value->stringValue, value->stringLength));
     default: NEVER("unknown type kind %d", type->kind);
     }
 }
@@ -239,6 +280,7 @@ static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
 {
     switch (operand.kind)
     {
+    case eOperandEmpty: return "/* empty */";
     case eOperandImm:
         return c89_format_value(emit, operand.value);
 
@@ -249,10 +291,15 @@ static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
         return format("vreg%s", get_step_from_block(&emit->emit, operand.vregContext, operand.vregIndex));
 
     case eOperandGlobal:
-        return format("%s", mangle_symbol_name(operand.global));
+        return mangle_symbol_name(operand.global);
 
-    case eOperandLocal:
-        return format("local%zu", operand.local);
+    case eOperandFunction:
+        return mangle_symbol_name(operand.function);
+
+    case eOperandLocal: {
+        const ssa_local_t *local = typevec_offset(emit->current->locals, operand.local);
+        return local->name;
+    }
 
     default: NEVER("unknown operand kind %d", operand.kind);
     }
@@ -292,18 +339,57 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         case eOpLoad: {
             ssa_load_t load = step->load;
             write_string(io, "\t%s = %s;\n",
-                c89_format_type(emit, get_operand_type(load.src), format("vreg%s", get_step_name(&emit->emit, step))),
+                c89_name_vreg_by_operand(emit, step, load.src),
                 c89_format_operand(emit, load.src)
+            );
+            break;
+        }
+        case eOpBinary: {
+            ssa_binary_t bin = step->binary;
+            write_string(io, "\t%s = (%s %s %s);\n",
+                c89_name_vreg_by_operand(emit, step, bin.lhs),
+                c89_format_operand(emit, bin.lhs),
+                binary_symbol(bin.binary),
+                c89_format_operand(emit, bin.rhs)
             );
             break;
         }
         case eOpCompare: {
             ssa_compare_t cmp = step->compare;
-            write_string(io, "\tbool vreg%s = (%s %s %s);\n",
-                get_step_name(&emit->emit, step),
+            write_string(io, "\t%s = (%s %s %s);\n",
+                c89_name_vreg(emit, step, ssa_type_bool("bool", eQualDefault)),
                 c89_format_operand(emit, cmp.lhs),
                 compare_symbol(cmp.compare),
                 c89_format_operand(emit, cmp.rhs)
+            );
+            break;
+        }
+
+        case eOpCall: {
+            ssa_call_t call = step->call;
+            size_t len = typevec_len(call.args);
+
+            const ssa_type_t *ty = get_operand_type(emit, call.function);
+            ssa_type_closure_t closure = ty->closure;
+            const ssa_type_t *result = closure.result;
+
+            vector_t *args = vector_of(len);
+            for (size_t i = 0; i < len; i++)
+            {
+                const ssa_operand_t *operand = typevec_offset(call.args, i);
+                vector_set(args, i, (char*)c89_format_operand(emit, *operand));
+            }
+
+            write_string(io, "\t");
+
+            if (result->kind != eTypeEmpty && result->kind != eTypeUnit)
+            {
+                write_string(io, "%s = ", c89_name_vreg(emit, step, result));
+            }
+
+            write_string(io, "%s(%s);\n",
+                c89_format_operand(emit, call.function),
+                str_join(", ", args)
             );
             break;
         }
@@ -356,6 +442,18 @@ void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symb
     }
 }
 
+static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
+{
+    size_t len = typevec_len(locals);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_local_t *local = typevec_offset(locals, i);
+        write_string(io, "\t%s;\n",
+            c89_format_type(emit, local->type, local->name)
+        );
+    }
+}
+
 void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *func)
 {
     c89_source_t *src = map_get_ptr(emit->srcmap, mod);
@@ -372,6 +470,7 @@ void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sy
     if (func->linkage != eLinkImport)
     {
         write_string(src->io, "%s%s(%s) {\n", link, result, params);
+        write_locals(emit, src->io, func->locals);
         write_string(src->io, "\tgoto bb%s;\n", get_block_name(&emit->emit, func->entry));
         size_t len = vector_len(func->blocks);
         for (size_t i = 0; i < len; i++)
@@ -389,6 +488,7 @@ static void define_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *
     for (size_t i = 0; i < len; i++)
     {
         const ssa_symbol_t *symbol = vector_get(vec, i);
+        emit->current = symbol;
         fn(emit, mod, symbol);
     }
 }
@@ -413,6 +513,8 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
         .modmap = map_optimal(len),
         .srcmap = map_optimal(len),
         .hdrmap = map_optimal(len),
+
+        .stepmap = map_optimal(64),
 
         .fs = opts.fs,
         .deps = opts.deps,
