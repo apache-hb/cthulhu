@@ -13,11 +13,6 @@
 
 #include <string.h>
 
-typedef struct c89_source_t {
-    io_t *io;
-    const char *path;
-} c89_source_t;
-
 static c89_source_t *source_new(io_t *io, const char *path)
 {
     c89_source_t *source = ctu_malloc(sizeof(c89_source_t));
@@ -56,8 +51,23 @@ static const char *format_path(const char *base, const char *name)
     return format("%s/%s", base, name);
 }
 
-static void begin_c89_module(c89_emit_t *emit, const ssa_module_t *mod)
+static void collect_deps(c89_emit_t *emit, const ssa_module_t *mod, vector_t *symbols)
 {
+    size_t len = vector_len(symbols);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_symbol_t *global = vector_get(symbols, i);
+        map_set_ptr(emit->modmap, global, (ssa_module_t*)mod);
+    }
+}
+
+static void c89_begin_module(c89_emit_t *emit, const ssa_module_t *mod)
+{
+    // collect all symbols defined in this module
+    collect_deps(emit, mod, mod->globals);
+    collect_deps(emit, mod, mod->functions);
+
+    // create source and header files
     char *path = begin_module(&emit->emit, emit->fs, mod); // lets not scuff the original path
 
     const char *srcFile = format_path(path, mod->name);
@@ -70,24 +80,6 @@ static void begin_c89_module(c89_emit_t *emit, const ssa_module_t *mod)
 
     write_string(hdr->io, "#pragma once\n");
     write_string(src->io, "#include \"%s.h\"\n", hdrFile);
-}
-
-// collect api
-
-static void collect_deps(c89_emit_t *emit, const ssa_module_t *mod, vector_t *symbols)
-{
-    size_t len = vector_len(symbols);
-    for (size_t i = 0; i < len; i++)
-    {
-        const ssa_symbol_t *global = vector_get(symbols, i);
-        map_set_ptr(emit->modmap, global, (ssa_module_t*)mod);
-    }
-}
-
-static void collect_c89_symbols(c89_emit_t *emit, const ssa_module_t *mod)
-{
-    collect_deps(emit, mod, mod->globals);
-    collect_deps(emit, mod, mod->functions);
 }
 
 // emit api
@@ -153,7 +145,7 @@ static const char *mangle_symbol_name(const ssa_symbol_t *symbol)
     return symbol->name;
 }
 
-static void emit_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *global)
+static void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *global)
 {
     c89_source_t *src = map_get_ptr(emit->srcmap, mod);
     c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
@@ -162,35 +154,19 @@ static void emit_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sym
 
     const char *link = format_c89_link(global->linkage);
 
-    // TODO: calc value
-
-    switch (global->visibility)
+    if (global->visibility == eVisiblePublic)
     {
-    case eVisiblePublic:
         CTASSERT(global->linkage != eLinkModule); // TODO: move this check into the checker
 
         write_string(hdr->io, "%s%s;\n", link, it);
-        write_string(src->io, "%s%s;\n", link, it);
-        break;
-    case eVisiblePrivate:
-        write_string(src->io, "%s%s;\n", link, it);
-        break;
-
-    default: NEVER("unknown visibility %d", global->visibility);
     }
-}
-
-static void emit_globals(c89_emit_t *emit, const ssa_module_t *mod)
-{
-    size_t len = vector_len(mod->globals);
-    for (size_t i = 0; i < len; i++)
+    else
     {
-        const ssa_symbol_t *global = vector_get(mod->globals, i);
-        emit_global(emit, mod, global);
+        write_string(src->io, "%s%s;\n", link, it);
     }
 }
 
-static void emit_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *func)
+static void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *func)
 {
     c89_source_t *src = map_get_ptr(emit->srcmap, mod);
     c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
@@ -214,50 +190,213 @@ static void emit_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_s
     {
         write_string(src->io, "%s%s(%s);\n", link, result, params);
     }
-
-    if (func->entry != NULL)
-    {
-        write_string(src->io, "%s%s(%s) {\n", link, result, params);
-
-        write_string(src->io, "}\n");
-    }
-
-    switch (func->visibility)
-    {
-    case eVisiblePublic:
-        CTASSERT(func->linkage != eLinkModule); // TODO: move this check into the checker
-
-        write_string(hdr->io, "%s%s(%s);\n", link, result, params);
-        write_string(src->io, "%s%s(%s);\n", link, result, params);
-        break;
-    case eVisiblePrivate:
-        write_string(src->io, "%s%s(%s);\n", link, result, params);
-        break;
-
-    default: NEVER("unknown visibility %d", func->visibility);
-    }
 }
 
-static void emit_functions(c89_emit_t *emit, const ssa_module_t *mod)
+static void proto_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *vec, void (*fn)(c89_emit_t*, const ssa_module_t*, const ssa_symbol_t*))
 {
-    size_t len = vector_len(mod->functions);
+    size_t len = vector_len(vec);
     for (size_t i = 0; i < len; i++)
     {
-        const ssa_symbol_t *func = vector_get(mod->functions, i);
-        emit_function(emit, mod, func);
+        const ssa_symbol_t *symbol = vector_get(vec, i);
+        fn(emit, mod, symbol);
     }
 }
 
-static void emit_c89_module(c89_emit_t *emit, const ssa_module_t *mod)
+static void c89_proto_module(c89_emit_t *emit, const ssa_module_t *mod)
 {
     emit_required_headers(emit, mod);
-    emit_globals(emit, mod);
-    emit_functions(emit, mod);
+    proto_symbols(emit, mod, mod->globals, c89_proto_global);
+    proto_symbols(emit, mod, mod->functions, c89_proto_function);
 }
 
-static void fwd_c89_module(c89_emit_t *emit, const ssa_module_t *mod)
-{
+/// bbs
 
+static const ssa_type_t *get_operand_type(c89_emit_t *emit, ssa_operand_t operand)
+{
+    switch (operand.kind)
+    {
+    case eOperandImm: {
+        const ssa_value_t *value = operand.value;
+        return value->type;
+    }
+
+    default: NEVER("unknown operand kind %d", operand.kind);
+    }
+}
+
+static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
+{
+    const ssa_type_t *type = value->type;
+    switch (type->kind)
+    {
+    case eTypeBool: return value->boolValue ? "true" : "false";
+    case eTypeDigit: return mpz_get_str(NULL, 10, value->digitValue);
+    default: NEVER("unknown type kind %d", type->kind);
+    }
+}
+
+static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
+{
+    switch (operand.kind)
+    {
+    case eOperandImm:
+        return c89_format_value(emit, operand.value);
+
+    case eOperandBlock:
+        return format("bb%s", get_block_name(&emit->emit, operand.bb));
+
+    case eOperandReg:
+        return format("vreg%s", get_step_from_block(&emit->emit, operand.vregContext, operand.vregIndex));
+
+    case eOperandGlobal:
+        return format("%s", mangle_symbol_name(operand.global));
+
+    case eOperandLocal:
+        return format("local%zu", operand.local);
+
+    default: NEVER("unknown operand kind %d", operand.kind);
+    }
+}
+
+static bool operand_is_empty(ssa_operand_t operand)
+{
+    return operand.kind == eOperandEmpty;
+}
+
+static bool operand_cant_return(ssa_operand_t operand)
+{
+    if (operand.kind == eOperandImm)
+    {
+        const ssa_value_t *value = operand.value;
+        const ssa_type_t *type = value->type;
+        return type->kind == eTypeUnit || type->kind == eTypeEmpty;
+    }
+
+    return operand.kind == eOperandEmpty;
+}
+
+static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
+{
+    size_t len = typevec_len(bb->steps);
+    write_string(io, "bb%s: /* len = %zu */\n", get_block_name(&emit->emit, bb), len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_step_t *step = typevec_offset(bb->steps, i);
+        switch (step->opcode)
+        {
+        case eOpStore: {
+            ssa_store_t store = step->store;
+            write_string(io, "\t%s = %s;\n", c89_format_operand(emit, store.dst), c89_format_operand(emit, store.src));
+            break;
+        }
+        case eOpLoad: {
+            ssa_load_t load = step->load;
+            write_string(io, "\t%s = %s;\n",
+                c89_format_type(emit, get_operand_type(load.src), format("vreg%s", get_step_name(&emit->emit, step))),
+                c89_format_operand(emit, load.src)
+            );
+            break;
+        }
+        case eOpCompare: {
+            ssa_compare_t cmp = step->compare;
+            write_string(io, "\tbool vreg%s = (%s %s %s);\n",
+                get_step_name(&emit->emit, step),
+                c89_format_operand(emit, cmp.lhs),
+                compare_symbol(cmp.compare),
+                c89_format_operand(emit, cmp.rhs)
+            );
+            break;
+        }
+
+        case eOpJump: {
+            ssa_jump_t jmp = step->jump;
+            write_string(io, "\tgoto %s;\n", c89_format_operand(emit, jmp.target));
+            break;
+        }
+        case eOpBranch: {
+            ssa_branch_t br = step->branch;
+            write_string(io, "\tif (%s) { goto %s; }", c89_format_operand(emit, br.cond), c89_format_operand(emit, br.then));
+            if (!operand_is_empty(br.other))
+            {
+                write_string(io, " else { goto %s; }", c89_format_operand(emit, br.other));
+            }
+            write_string(io, "\n");
+            break;
+        }
+        case eOpReturn: {
+            ssa_return_t ret = step->ret;
+            if (!operand_cant_return(ret.value))
+            {
+                write_string(io, "\treturn %s;\n", c89_format_operand(emit, ret.value));
+            }
+            else
+            {
+                write_string(io, "\treturn;\n");
+            }
+            break;
+        }
+
+        default: NEVER("unknown opcode %d", step->opcode);
+        }
+    }
+}
+
+/// defines
+
+void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol)
+{
+    c89_source_t *src = map_get_ptr(emit->srcmap, mod);
+
+    const char *it = c89_format_type(emit, symbol->type, mangle_symbol_name(symbol));
+    const char *link = format_c89_link(symbol->linkage);
+
+    if (symbol->linkage != eLinkImport)
+    {
+        write_string(src->io, "%s%s;\n", link, it);
+    }
+}
+
+void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *func)
+{
+    c89_source_t *src = map_get_ptr(emit->srcmap, mod);
+
+    const ssa_type_t *type = func->type;
+    CTASSERTF(type->kind == eTypeClosure, "expected closure type on %s, got %d", func->name, type->kind);
+
+    ssa_type_closure_t closure = type->closure;
+    const char *params = c89_format_params(emit, closure.params, closure.variadic);
+    const char *result = c89_format_type(emit, closure.result, mangle_symbol_name(func));
+
+    const char *link = format_c89_link(func->linkage);
+
+    if (func->linkage != eLinkImport)
+    {
+        write_string(src->io, "%s%s(%s) {\n", link, result, params);
+        write_string(src->io, "\tgoto bb%s;\n", get_block_name(&emit->emit, func->entry));
+        size_t len = vector_len(func->blocks);
+        for (size_t i = 0; i < len; i++)
+        {
+            const ssa_block_t *bb = vector_get(func->blocks, i);
+            c89_write_block(emit, src->io, bb);
+        }
+        write_string(src->io, "}\n");
+    }
+}
+
+static void define_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *vec, void (*fn)(c89_emit_t*, const ssa_module_t*, const ssa_symbol_t*))
+{
+    size_t len = vector_len(vec);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_symbol_t *symbol = vector_get(vec, i);
+        fn(emit, mod, symbol);
+    }
+}
+
+static void c89_define_module(c89_emit_t *emit, const ssa_module_t *mod)
+{
+    define_symbols(emit, mod, mod->globals, c89_define_global);
+    define_symbols(emit, mod, mod->functions, c89_define_function);
 }
 
 c89_emit_result_t emit_c89(const c89_emit_options_t *options)
@@ -283,25 +422,19 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_module_t *mod = vector_get(opts.modules, i);
-        collect_c89_symbols(&emit, mod);
+        c89_begin_module(&emit, mod);
     }
 
     for (size_t i = 0; i < len; i++)
     {
         const ssa_module_t *mod = vector_get(opts.modules, i);
-        begin_c89_module(&emit, mod);
+        c89_proto_module(&emit, mod);
     }
 
     for (size_t i = 0; i < len; i++)
     {
         const ssa_module_t *mod = vector_get(opts.modules, i);
-        fwd_c89_module(&emit, mod);
-    }
-
-    for (size_t i = 0; i < len; i++)
-    {
-        const ssa_module_t *mod = vector_get(opts.modules, i);
-        emit_c89_module(&emit, mod);
+        c89_define_module(&emit, mod);
     }
 
     c89_emit_result_t result = {
