@@ -105,9 +105,33 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
     return mod;
 }
 
+static bool is_control_flow(ssa_step_t step)
+{
+    switch (step.opcode)
+    {
+    case eOpBranch:
+    case eOpJump:
+    case eOpReturn:
+        return true;
+    default:
+        return false;
+    }
+}
+
 static ssa_operand_t bb_add_step(ssa_block_t *bb, ssa_step_t step)
 {
     size_t index = typevec_len(bb->steps);
+
+    // really make sure that control flow is last
+#if ENABLE_DEBUG
+    if (index > 0)
+    {
+        ssa_step_t last;
+        typevec_get(bb->steps, index - 1, &last);
+        CTASSERT(!is_control_flow(last));
+    }
+#endif
+
     typevec_push(bb->steps, &step);
 
     ssa_operand_t operand = {

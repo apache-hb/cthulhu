@@ -46,7 +46,7 @@ hlir = declare_dependency(
 
 src = [
     'src/ssa/ssa.c',
-    'src/ssa/opt2.c',
+    'src/ssa/opt.c',
     'src/ssa/common/type.c',
     'src/ssa/common/value.c'
 ]

@@ -55,7 +55,6 @@ typedef enum ssa_opcode_t {
     eOpLoad,
     eOpAddress,
 
-    eOpImm,
     eOpUnary,
     eOpBinary,
     eOpCompare,
@@ -166,10 +165,6 @@ typedef struct ssa_addr_t {
     ssa_operand_t symbol;
 } ssa_addr_t;
 
-typedef struct ssa_imm_t {
-    const ssa_value_t *value;
-} ssa_imm_t;
-
 typedef struct ssa_unary_t {
     ssa_operand_t operand;
     unary_t unary;
@@ -229,7 +224,6 @@ typedef struct ssa_step_t {
         ssa_load_t load;
         ssa_addr_t addr;
 
-        ssa_imm_t imm;
         ssa_unary_t unary;
         ssa_binary_t binary;
         ssa_compare_t compare;
@@ -301,3 +295,4 @@ void ssa_opt(reports_t *reports, ssa_result_t mod);
 ///
 
 ssa_type_t *ssa_type_bool(const char *name, quals_t quals);
+ssa_type_t *ssa_type_digit(const char *name, quals_t quals, sign_t sign, digit_t digit);

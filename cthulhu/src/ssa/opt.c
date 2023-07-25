@@ -1,250 +1,180 @@
 #include "common/common.h"
 
-#include "std/vector.h"
 #include "std/map.h"
+#include "std/vector.h"
 
 #include "std/typed/vector.h"
 
-#include "report/report.h"
-
+#include "base/macros.h"
 #include "base/panic.h"
-
-static void add_globals(ssa_module_t *mod, vector_t **vec)
-{
-    map_iter_t iter = map_iter(mod->globals);
-    while (map_has_next(&iter))
-    {
-        map_entry_t entry = map_next(&iter);
-        vector_push(vec, entry.value);
-    }
-}
-
-static void flatten_globals_inner(vector_t **vec, ssa_module_t *mod)
-{
-    add_globals(mod, vec);
-
-    map_iter_t modIter = map_iter(mod->modules);
-    while (map_has_next(&modIter))
-    {
-        map_entry_t entry = map_next(&modIter);
-        ssa_module_t *mod = entry.value;
-        flatten_globals_inner(vec, mod);
-    }
-}
-
-static vector_t *flatten_globals(ssa_module_t *mod)
-{
-    vector_t *vec = vector_new(32);
-    flatten_globals_inner(&vec, mod);
-    return vec;
-}
 
 typedef struct opt_t {
     reports_t *reports;
+    map_t *values; ///< map<ssa_step, ssa_value>
+} opt_t;
 
-    bool dirty;
-    map_t *values; ///< map<ssa_step_t, ssa_value_t>
-
-    const ssa_value_t *result; ///< result of the optimization for the current symbol
-} fold_t;
-
-static const ssa_value_t *get_operand_value(fold_t *opt, ssa_operand_t operand)
+static const ssa_value_t *fold_operand(opt_t *opt, ssa_operand_t operand)
 {
     switch (operand.kind)
     {
     case eOperandImm: return operand.value;
     case eOperandReg: {
         const ssa_block_t *ctx = operand.vregContext;
-        ssa_step_t *step = typevec_offset(ctx->steps, operand.vregIndex);
-        return map_get_ptr(opt->values, step);
+        const ssa_step_t *step = typevec_offset(ctx->steps, operand.vregIndex);
+        const ssa_value_t *value = map_get_ptr(opt->values, step);
+        CTASSERTF(value != NULL, "value for step %p is NULL", step);
+        return value;
     }
-
-    default: NEVER("Invalid operand kind: %d", operand.kind);
+    default: NEVER("invalid operand kind");
     }
 }
 
-static const ssa_value_t *fold_unary_digit(fold_t *opt, const ssa_type_t *type, unary_t unary, const mpz_t digit)
+static const ssa_value_t *fold_unary(opt_t *opt, const ssa_step_t *step)
 {
-    mpz_t result;
-
-    switch (unary)
+    ssa_unary_t unary = step->unary;
+    const ssa_value_t *val = fold_operand(opt, unary.operand);
+    switch (unary.unary)
     {
+    case eUnaryNot:
+        CTASSERT(val->type->kind == eTypeBool);
+        return ssa_value_bool(val->type, !val->boolValue);
     case eUnaryAbs:
-        mpz_abs(result, digit);
-        break;
+        CTASSERT(val->type->kind == eTypeDigit);
+        mpz_t result;
+        mpz_init(result);
+        mpz_abs(result, val->digitValue);
+        return ssa_value_digit(val->type, result);
     case eUnaryNeg:
-        mpz_neg(result, digit);
-        break;
+        CTASSERT(val->type->kind == eTypeDigit);
+        mpz_init(result);
+        mpz_neg(result, val->digitValue);
+        return ssa_value_digit(val->type, result);
     case eUnaryFlip:
-        mpz_com(result, digit);
-        break;
+        CTASSERT(val->type->kind == eTypeDigit);
+        mpz_init(result);
+        mpz_com(result, val->digitValue);
+        return ssa_value_digit(val->type, result);
 
-    default: NEVER("Invalid unary: %s", unary_name(unary));
-    }
-
-    return ssa_value_digit(type, result);
-}
-
-static const ssa_value_t *fold_unary(fold_t *opt, ssa_unary_t step)
-{
-    unary_t unary = step.unary;
-    const ssa_value_t *value = get_operand_value(opt, step.operand);
-
-    CTASSERT(value != NULL);
-    const ssa_type_t *type = value->type;
-    switch (type->kind)
-    {
-    case eTypeBool:
-        CTASSERT(unary == eUnaryNot); // nothing else is valid for bool
-        return ssa_value_bool(type, !value->boolValue);
-    case eTypeDigit:
-        return fold_unary_digit(opt, type, unary, value->digitValue);
-
-    default: NEVER("Invalid type: %d", type->kind);
+    default:
+        NEVER("invalid unary");
     }
 }
 
-static const ssa_value_t *fold_binary(fold_t *opt, ssa_binary_t step)
+static const ssa_value_t *fold_binary(opt_t *opt, const ssa_step_t *step)
 {
-    binary_t binary = step.binary;
-    const ssa_value_t *lhs = get_operand_value(opt, step.lhs);
-    const ssa_value_t *rhs = get_operand_value(opt, step.rhs);
+    ssa_binary_t binary = step->binary;
+    const ssa_value_t *lhs = fold_operand(opt, binary.lhs);
+    const ssa_value_t *rhs = fold_operand(opt, binary.rhs);
 
-    // TODO: make sure the types are compatible
-    const ssa_type_t *type = lhs->type;
-    CTASSERT(type->kind == eTypeDigit);
+    CTASSERT(lhs->type->kind == rhs->type->kind);
+    CTASSERT(lhs->type->kind == eTypeDigit);
 
     mpz_t result;
-    switch (binary)
+    mpz_init(result);
+    switch (binary.binary)
     {
     case eBinaryAdd:
         mpz_add(result, lhs->digitValue, rhs->digitValue);
-        break;
+        return ssa_value_digit(lhs->type, result);
     case eBinarySub:
         mpz_sub(result, lhs->digitValue, rhs->digitValue);
-        break;
-    case eBinaryDiv:
-        mpz_tdiv_q(result, lhs->digitValue, rhs->digitValue);
-        break;
+        return ssa_value_digit(lhs->type, result);
     case eBinaryMul:
         mpz_mul(result, lhs->digitValue, rhs->digitValue);
-        break;
+        return ssa_value_digit(lhs->type, result);
+    case eBinaryDiv:
+        mpz_divexact(result, lhs->digitValue, rhs->digitValue);
+        return ssa_value_digit(lhs->type, result);
     case eBinaryRem:
-        mpz_tdiv_r(result, lhs->digitValue, rhs->digitValue);
-        break;
+        mpz_mod(result, lhs->digitValue, rhs->digitValue);
+        return ssa_value_digit(lhs->type, result);
 
-    case eBinaryBitAnd:
-        mpz_and(result, lhs->digitValue, rhs->digitValue);
-        break;
-    case eBinaryBitOr:
-        mpz_ior(result, lhs->digitValue, rhs->digitValue);
-        break;
-    case eBinaryXor:
-        mpz_xor(result, lhs->digitValue, rhs->digitValue);
-        break;
-    case eBinaryShl:
-        mpz_mul_2exp(result, lhs->digitValue, mpz_get_ui(rhs->digitValue));
-        break;
-    case eBinaryShr:
-        mpz_tdiv_q_2exp(result, lhs->digitValue, mpz_get_ui(rhs->digitValue));
-        break;
-
-    default: NEVER("Invalid binary: %s", binary_name(binary));
+    default:
+        NEVER("invalid binary");
     }
-
-    return ssa_value_digit(type, result);
 }
 
-static const ssa_value_t *fold_load(fold_t *opt, ssa_load_t step)
+static const ssa_value_t *fold_load(opt_t *opt, const ssa_step_t *step)
 {
-    ssa_operand_t operand = step.src;
-    CTASSERT(operand.kind == eOperandGlobal);
-
-    const ssa_symbol_t *global = operand.global;
-    return global->value;
+    ssa_load_t load = step->load;
+    return fold_operand(opt, load.src);
 }
 
-static const ssa_value_t *fold_step(fold_t *opt, ssa_step_t *step)
+static const ssa_value_t *fold_step(opt_t *opt, const ssa_step_t *step)
 {
     switch (step->opcode)
     {
-    case eOpImm: {
-        ssa_imm_t imm = step->imm;
-        return imm.value;
-    }
-    case eOpUnary: {
-        ssa_unary_t unary = step->unary;
-        return fold_unary(opt, unary);
-    }
-    case eOpBinary: {
-        ssa_binary_t binary = step->binary;
-        return fold_binary(opt, binary);
-    }
-    case eOpReturn: {
-        ssa_return_t ret = step->ret;
-        opt->result = get_operand_value(opt, ret.value);
-        return opt->result;
-    }
-    case eOpLoad: {
-        ssa_load_t load = step->load;
-        return fold_load(opt, load);
-    }
-
-    default: NEVER("Invalid opcode: %d", step->opcode);
+    case eOpUnary: return fold_unary(opt, step);
+    case eOpBinary: return fold_binary(opt, step);
+    case eOpLoad: return fold_load(opt, step);
+    default: return NULL;
     }
 }
 
-static const ssa_value_t *fold_block(fold_t *opt, const ssa_block_t *block)
+static bool fold_block(opt_t *opt, const ssa_block_t *bb)
 {
-    size_t len = typevec_len(block->steps);
+    bool dirty = false;
+    size_t len = typevec_len(bb->steps);
     for (size_t i = 0; i < len; i++)
     {
-        ssa_step_t *step = typevec_offset(block->steps, i);
+        const ssa_step_t *step = typevec_offset(bb->steps, i);
         const ssa_value_t *value = fold_step(opt, step);
-        if (value == NULL) {
-            return NULL;
+        if (value != NULL)
+        {
+            map_set_ptr(opt->values, step, (ssa_value_t*)value);
         }
-        map_set_ptr(opt->values, step, (ssa_value_t*)value);
     }
 
-    return opt->result;
+    return dirty;
 }
 
-static void fold_global(fold_t *opt, ssa_symbol_t *global)
+static bool run_const_fold(opt_t *opt, ssa_symbol_t *symbol)
 {
-    if (global->value != NULL) { return; }
+    if (symbol->linkage == eLinkImport) { return false; }
 
-    const ssa_value_t *value = fold_block(opt, global->entry);
-    if (value == NULL) { return; }
-
-    logverbose("folded global %s", global->name);
-    global->value = value;
-    opt->dirty = true;
+    const ssa_block_t *entry = symbol->entry;
+    return fold_block(opt, entry);
 }
 
-static bool run_exec(reports_t *reports, ssa_module_t *mod)
+static void flatten_contents(vector_t **symbols, vector_t *inner)
 {
-    fold_t opt = {
+    size_t len = vector_len(inner);
+    for (size_t i = 0; i < len; i++)
+    {
+        ssa_symbol_t *sym = vector_get(inner, i);
+        vector_push(symbols, sym);
+    }
+}
+
+static vector_t *flatten_symbols(vector_t *modules)
+{
+    vector_t *symbols = vector_new(32);
+
+    size_t len = vector_len(modules);
+    for (size_t i = 0; i < len; i++)
+    {
+        ssa_module_t *mod = vector_get(modules, i);
+        flatten_contents(&symbols, mod->globals);
+        flatten_contents(&symbols, mod->functions);
+    }
+
+    return symbols;
+}
+
+void ssa_opt(reports_t *reports, ssa_result_t result)
+{
+    UNUSED(reports);
+
+    opt_t opt = {
         .reports = reports,
-        .values = map_optimal(32)
+        .values = map_new(32)
     };
 
-    vector_t *globals = flatten_globals(mod);
-    size_t len = vector_len(globals);
+    vector_t *symbols = flatten_symbols(result.modules);
+    size_t len = vector_len(symbols);
     for (size_t i = 0; i < len; i++)
     {
-        ssa_symbol_t *global = vector_get(globals, i);
-        fold_global(&opt, global);
-    }
-
-    return opt.dirty;
-}
-
-void ssa_opt(reports_t *reports, ssa_module_t *mod)
-{
-    size_t run = 0;
-    while (run_exec(reports, mod))
-    {
-        logverbose("running full pass %zu", ++run);
+        ssa_symbol_t *sym = vector_get(symbols, i);
+        run_const_fold(&opt, sym);
     }
 }

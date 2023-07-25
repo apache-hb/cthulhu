@@ -63,13 +63,13 @@ size_t stacktrace_get(frame_t *frames, size_t size)
     char name[STACKTRACE_NAME_LENGTH] = { 0 };
 
     size_t used = 0;
-    while (get_frame(&frame, &ctx, process, thread) && used < size) 
+    while (get_frame(&frame, &ctx, process, thread) && used < size)
     {
         memset(name, 0, STACKTRACE_NAME_LENGTH);
 
         SymGetSymFromAddr(process, frame.AddrPC.Offset, &disp, symbol);
         UnDecorateSymbolName(symbol->Name, name, STACKTRACE_NAME_LENGTH, UNDNAME_COMPLETE);
-    
+
         memcpy(frames[used].name, name, STACKTRACE_NAME_LENGTH);
 
         used += 1;
