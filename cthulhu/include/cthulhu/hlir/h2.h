@@ -397,3 +397,12 @@ void *h2_module_data(h2_t *self);
  * @return the cookie
  */
 h2_cookie_t *h2_module_cookie(h2_t *self);
+
+/**
+ * @brief flatten a tag into a vector
+ *
+ * @param self
+ * @param tag
+ * @return vector_t*
+ */
+vector_t *h2_module_flatten(const h2_t *self, size_t tag);

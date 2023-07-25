@@ -12,7 +12,9 @@
 #include "report/report.h"
 
 #include "stacktrace/stacktrace.h"
+
 #include "cthulhu/hlir/h2.h"
+#include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/check.h"
 
 static void runtime_init(void)
@@ -209,6 +211,18 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
     return mods;
 }
 
+typedef struct check_t {
+    reports_t *reports;
+} check_t;
+
+static void check_module_valid(check_t *check, const h2_t *mod)
+{
+    CTASSERT(check != NULL);
+    CTASSERT(h2_is(mod, eHlir2DeclModule));
+
+    size_t totalGlobals = vector_len(mod->globals);
+}
+
 void lifetime_check(lifetime_t *lifetime)
 {
     map_iter_t iter = map_iter(lifetime->modules);
@@ -220,6 +234,15 @@ void lifetime_check(lifetime_t *lifetime)
 
         CTASSERTF(ctx != NULL, "module `%s` is NULL", name);
         CTASSERTF(ctx->root != NULL, "module `%s` has NULL root", name);
+
+        // TODO: required checks
+        // 0. no nodes are of the wrong type
+        // 1. no identifiers are invalid
+        // 1. only one 1 entry point of each type is present
+        // 2. no types can have infinite size
+        // 3. no global types may have circlic dependencies
+        // 4. make sure all return statements match the return type of a global or function
+        // 5. make sure all operands to nodes are the correct type
 
         //h2_check(lifetime_get_reports(lifetime), ctx->root);
     }
