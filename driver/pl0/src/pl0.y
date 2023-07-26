@@ -13,7 +13,7 @@
 %code requires {
     #include "scan.h"
     #include "ast.h"
-    
+
     #define YYSTYPE PL0STYPE
     #define YYLTYPE PL0LTYPE
 }
@@ -126,7 +126,7 @@ module: %empty { $$ = vector_of(0); }
     ;
 
 toplevel: %empty { $$ = NULL; }
-    | statement { $$ = $1; }
+    | stmtlist { $$ = pl0_stmts(x, @$, $1); }
     ;
 
 consts: %empty { $$ = vector_new(0); }

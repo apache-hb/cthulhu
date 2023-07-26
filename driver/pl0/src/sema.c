@@ -570,5 +570,6 @@ void pl0_compile_module(context_t *context)
         h2_set_attrib(hlir, &kEntryAttrib);
 
         vector_push(&semaData->procs, hlir);
+        h2_module_set(mod, eTagProcs, h2_get_name(mod), hlir); // TODO: this is a hack
     }
 }

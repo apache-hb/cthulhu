@@ -344,6 +344,15 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
             );
             break;
         }
+        case eOpUnary: {
+            ssa_unary_t unary = step->unary;
+            write_string(io, "\t%s = (%s %s);\n",
+                c89_name_vreg_by_operand(emit, step, unary.operand),
+                unary_symbol(unary.unary),
+                c89_format_operand(emit, unary.operand)
+            );
+            break;
+        }
         case eOpBinary: {
             ssa_binary_t bin = step->binary;
             write_string(io, "\t%s = (%s %s %s);\n",

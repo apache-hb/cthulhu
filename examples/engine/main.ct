@@ -1,6 +1,6 @@
 module main;
 
-import core;
+import cthulhu::lang(...);
 import vulkan as vk;
 
 @extern("printf")

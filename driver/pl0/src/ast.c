@@ -126,6 +126,8 @@ pl0_t *pl0_import(scan_t *scan, where_t where, vector_t *parts)
     return node;
 }
 
+#include <stdio.h>
+
 pl0_t *pl0_module(scan_t *scan, where_t where, vector_t *mod, vector_t *imports, vector_t *consts, vector_t *globals,
                   vector_t *procs, pl0_t *entry)
 {

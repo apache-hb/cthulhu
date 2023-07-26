@@ -1,8 +1,8 @@
 module vulkan;
 
-import core;
+import cthulhu::lang(...);
 
-export variant Result {
+export variant Result: enum {
     default Success = 0
 
     case NotReady = 1
@@ -17,17 +17,17 @@ export variant Result {
     case ErrorDeviceLost = -4
 }
 
-export variant StructureType {
+export variant StructureType: enum {
     case ApplicationInfo = 0
     case InstanceCreateInfo = 1
 }
 
-export variant InstanceCreateFlags {
+export variant InstanceCreateFlags: enum {
     default None = 0
     case EnumeratePortabilityKHR = 1
 }
 
-export struct ApplicationInfo {
+export struct ApplicationInfo: enum {
     kind: StructureType;
     next: opaque;
     applicationName: str;
@@ -37,7 +37,7 @@ export struct ApplicationInfo {
     apiVersion: core::uint32;
 }
 
-export struct InstanceCreateInfo {
+export struct InstanceCreateInfo: enum {
     kind: StructureType;
     next: opaque;
     flags: InstanceCreateFlags;
@@ -48,7 +48,7 @@ export struct InstanceCreateInfo {
     enabledExtensionNames: *str;
 }
 
-export variant SystemAllocationScope {
+export variant SystemAllocationScope: enum {
     case Command = 0
     case Object = 1
     case Cache = 2
@@ -77,7 +77,7 @@ export struct AllocationCallbacks {
 
 export type Instance = opaque;
 
-export def createVersion(major: uint, minor: uint, patch: uint): core::uint32
+export def createVersion(major: uint, minor: uint, patch: uint): uint32
     = (major << 22) | (minor << 12) | patch;
 
 @extern("vkCreateInstance")
