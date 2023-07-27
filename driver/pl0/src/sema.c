@@ -129,8 +129,6 @@ void pl0_init(driver_t *handle)
     lifetime_t *lifetime = handle_get_lifetime(handle);
     reports_t *reports = lifetime_get_reports(lifetime);
 
-    logverbose("initializing PL/0 runtime");
-
     kConstType = h2_type_digit(node, "integer", eDigitInt, eSignSigned);
     kIntType = h2_qualify(node, kConstType, eQualMutable);
     kBoolType = h2_type_bool(node, "boolean");

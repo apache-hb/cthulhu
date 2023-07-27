@@ -1,8 +1,6 @@
 #pragma once
 
-#include "cthulhu/hlir/digit.h"
-
-typedef struct sema_t sema_t;
+#include "cthulhu/hlir/h2.h"
 
 typedef struct builtin_digit_t {
     const char *name;
@@ -10,4 +8,4 @@ typedef struct builtin_digit_t {
     sign_t sign;
 } builtin_digit_t;
 
-sema_t *get_builtin_sema(sema_t *root);
+h2_t *get_builtin_sema(h2_t *root);

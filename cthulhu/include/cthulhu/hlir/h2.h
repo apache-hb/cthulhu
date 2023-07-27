@@ -370,7 +370,7 @@ h2_t *h2_module(h2_t *parent, const node_t *node, const char *name, size_t decls
  * @param name the name of the declaration
  * @return the declaration or NULL if it does not exist
  */
-h2_t *h2_module_get(h2_t *self, size_t tag, const char *name);
+void *h2_module_get(h2_t *self, size_t tag, const char *name);
 
 /**
  * @brief set a declaration in the current module

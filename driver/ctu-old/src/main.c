@@ -1,10 +1,10 @@
-#include "cthulhu/mediator/driver.h"
+#include "sema/sema.h"
+#include "sema/config.h"
 
 #include "scan/compile.h"
 
 #include "base/macros.h"
 
-#include "std/vector.h"
 #include "std/str.h"
 
 #include "ctu-bison.h"
@@ -12,23 +12,15 @@
 
 CT_CALLBACKS(kCallbacks, ctu);
 
-static void ctu_config(lifetime_t *lifetime, ap_t *args)
-{
-    UNUSED(lifetime);
-    UNUSED(args);
-}
-
-static void ctu_init(driver_t *handle)
-{
-    UNUSED(handle);
-}
-
 static vector_t *find_mod_path(ast_t *ast, char *fp)
 {
     if (ast == NULL) { return vector_init(str_filename_noext(fp)); }
+    ast_t *mod = ast->modspec;
 
-    return vector_len(ast->modspec) > 0
-        ? ast->modspec
+    if (mod == NULL) { return vector_init(str_filename_noext(fp)); }
+
+    return vector_len(mod->path) > 0
+        ? mod->path
         : vector_init(str_filename_noext(fp));
 }
 
@@ -36,10 +28,11 @@ static void ctu_parse_file(driver_t *runtime, scan_t *scan)
 {
     lifetime_t *lifetime = handle_get_lifetime(runtime);
 
+    ctu_init_scan(scan, runtime);
     ast_t *ast = compile_scanner(scan, &kCallbacks);
     if (ast == NULL) { return; }
 
-    CTASSERT(ast->kind == eAstModule);
+    CTASSERT(ast->of == eAstModule);
 
     char *fp = (char*)scan_path(scan);
     vector_t *path = find_mod_path(ast, fp);
@@ -48,10 +41,6 @@ static void ctu_parse_file(driver_t *runtime, scan_t *scan)
 
     add_context(lifetime, path, ctx);
 }
-
-static void ctu_forward_decls(context_t *context) { UNUSED(context); }
-static void ctu_process_imports(context_t *context) { UNUSED(context); }
-static void ctu_compile_module(context_t *context) { UNUSED(context); }
 
 static const char *kLangNames[] = { "ct", "ctu", NULL };
 

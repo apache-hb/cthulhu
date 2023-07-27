@@ -33,7 +33,7 @@ h2_t *h2_module(h2_t *parent, const node_t *node, const char *name, size_t decls
     return h2_module_new(node, name, parent, parent->reports, decls, sizes);
 }
 
-h2_t *h2_module_get(h2_t *self, size_t tag, const char *name)
+void *h2_module_get(h2_t *self, size_t tag, const char *name)
 {
     map_t *map = h2_module_tag(self, tag);
     h2_t *old = map_get(map, name);

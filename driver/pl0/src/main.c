@@ -14,23 +14,21 @@ CT_CALLBACKS(kCallbacks, pl0);
 
 static void pl0_parse(driver_t *handle, scan_t *scan)
 {
+    lifetime_t *lifetime = handle_get_lifetime(handle);
     pl0_t *ast = compile_scanner(scan, &kCallbacks);
-    if (ast == NULL)
-    {
-        return; // if the file is empty we get NULL back
-    }
+    if (ast == NULL) { return; }
 
     CTASSERT(ast->type == ePl0Module);
 
     // TODO: dedup this with pl0_forward_decls
     char *fp = (char*)scan_path(scan);
-    vector_t *path = vector_len(ast->mod) > 0 
+    vector_t *path = vector_len(ast->mod) > 0
         ? ast->mod
         : vector_init(str_filename_noext(fp));
 
     context_t *ctx = context_new(handle, vector_tail(path), ast, NULL);
 
-    add_context(handle_get_lifetime(handle), path, ctx);
+    add_context(lifetime, path, ctx);
 }
 
 static void pl0_config(lifetime_t *lifetime, ap_t *ap)

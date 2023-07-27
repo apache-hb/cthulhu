@@ -1,8 +1,16 @@
 src = [
     'src/main.c',
-
-    'src/ast.c',
     'src/scan.c',
+    'src/ast.c',
+
+    'src/sema/sema.c',
+    'src/sema/attribs.c',
+    'src/sema/repr.c',
+    'src/sema/suffix.c',
+    'src/sema/config.c',
+
+    'src/builtin/builtin.c',
+
     lex.process('src/ctu.l'),
     parse.process('src/ctu.y')
 ]
@@ -16,6 +24,7 @@ ctu = library('ctu', src,
 langs += {
     'ctu': {
         'dep': declare_dependency(link_with : ctu),
-        'mod': 'kCtuModule'
+        'mod': 'kCtuModule',
+        'data': files('data/core/int.ct')
     }
 }

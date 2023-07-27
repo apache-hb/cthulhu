@@ -8,15 +8,9 @@
 
 #include "builtin/builtin.h"
 
-#include "cthulhu/hlir/arity.h"
-#include "cthulhu/hlir/digit.h"
+#include "cthulhu/hlir/h2.h"
 #include "cthulhu/hlir/ops.h"
-#include "cthulhu/hlir/sema.h"
-#include "cthulhu/hlir/attribs.h"
-#include "cthulhu/hlir/decl.h"
-#include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
-#include "cthulhu/hlir/type.h"
 
 #include "base/macros.h"
 #include "base/panic.h"
@@ -34,11 +28,11 @@ typedef struct
 {
     size_t totalDecls;
 
-    const hlir_t *currentImplicitType;
+    const h2_t *currentImplicitType;
 
     vector_t *currentScope;
 
-    hlir_t *currentFunction; // current function we are adding locals to
+    h2_t *currentFunction; // current function we are adding locals to
 } sema_data_t;
 
 static vector_t *enter_scope(sema_t *sema, size_t len)
@@ -196,7 +190,7 @@ static bool is_indexable(const hlir_t *type)
 
 static bool is_lvalue(const hlir_t *expr)
 {
-    hlir_kind_t kind = get_hlir_kind(expr);
+    h2_kind_t kind = get_hlir_kind(expr);
     switch (kind)
     {
     case eHlirLoad:
@@ -654,7 +648,7 @@ static hlir_t *begin_type_resolve(sema_t *sema, void *user)
 void check_valid_import(sema_t *sema, sema_t *cur, ast_t *ast, hlir_t *hlir)
 {
     const char *name = vector_tail(ast->path);
-    const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
+    const h2_attrib_t *attribs = get_hlir_attributes(hlir);
     if (sema != cur && attribs->visibility != eVisiblePublic)
     {
         message_t *id =

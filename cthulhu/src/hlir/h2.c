@@ -31,6 +31,10 @@ h2_t *h2_error(const node_t *node, const char *message)
     return self;
 }
 
+///
+/// types
+///
+
 h2_t *h2_type_empty(const node_t *node, const char *name)
 {
     return h2_decl(eHlir2TypeUnit, node, NULL, name);
@@ -76,7 +80,9 @@ h2_t *h2_qualify(const node_t *node, const h2_t *type, quals_t quals)
     return self;
 }
 
-// literal expressions
+///
+/// literal expressions
+///
 
 h2_t *h2_expr_empty(const node_t *node, const h2_t *type)
 {
@@ -109,6 +115,10 @@ h2_t *h2_expr_string(const node_t *node, const h2_t *type, const char *value, si
     self->stringLength = length;
     return self;
 }
+
+///
+/// expressions
+///
 
 h2_t *h2_expr_load(const node_t *node, h2_t *expr)
 {
@@ -150,6 +160,10 @@ h2_t *h2_expr_call(const node_t *node, const h2_t *callee, vector_t *args)
     self->args = args;
     return self;
 }
+
+///
+/// statements
+///
 
 h2_t *h2_stmt_block(const node_t *node, vector_t *stmts)
 {

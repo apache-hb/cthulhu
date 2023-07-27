@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 
-typedef struct hlir_t hlir_t;
+typedef struct h2_t h2_t;
 typedef struct reports_t reports_t;
 
 /**
@@ -12,7 +12,7 @@ typedef struct reports_t reports_t;
  * @param detail do we want a detailed name or a simple name
  * @return const char* the formatted name
  */
-const char *ctu_repr(reports_t *reports, const hlir_t *type, bool detail);
+const char *ctu_repr(reports_t *reports, const h2_t *type, bool detail);
 
 /**
  * @brief get a user readable string representation of an type
@@ -21,4 +21,4 @@ const char *ctu_repr(reports_t *reports, const hlir_t *type, bool detail);
  * @param detail do we want a detailed name or a simple name
  * @return const char* the formatted name
  */
-const char *ctu_type_repr(reports_t *reports, const hlir_t *type, bool detail);
+const char *ctu_type_repr(reports_t *reports, const h2_t *type, bool detail);

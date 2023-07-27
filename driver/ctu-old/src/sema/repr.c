@@ -1,29 +1,29 @@
 #include "repr.h"
 
-#include "cthulhu/hlir/hlir.h"
+#include "cthulhu/hlir/h2.h"
 #include "cthulhu/hlir/query.h"
+
 #include "report/report.h"
 #include "std/str.h"
+#include "std/vector.h"
 
 #include <string.h>
 
-static char *repr_tags(const hlir_t *hlir)
+static char *repr_tags(quals_t quals)
 {
-    const hlir_attributes_t *attribs = get_hlir_attributes(hlir);
-    tags_t tags = attribs->tags;
     vector_t *result = vector_new(4);
 
-    if (tags & eQualConst)
+    if (!(quals & eQualDefault))
     {
         vector_push(&result, (char *)"const");
     }
 
-    if (tags & eQualAtomic)
+    if (quals & eQualAtomic)
     {
         vector_push(&result, (char *)"atomic");
     }
 
-    if (tags & eQualVolatile)
+    if (quals & eQualVolatile)
     {
         vector_push(&result, (char *)"volatile");
     }
@@ -38,10 +38,10 @@ static char *repr_tags(const hlir_t *hlir)
     return out;
 }
 
-static const char *repr_pointer(reports_t *reports, const hlir_t *type, bool detail)
+static const char *repr_pointer(reports_t *reports, const h2_t *type, bool detail)
 {
     const char *inner = ctu_type_repr(reports, type->ptr, false);
-    const char *name = get_hlir_name(type);
+    const char *name = h2_get_name(type);
 
     const char *ptr = type->indexable ? "[*]" : "*";
 
@@ -53,7 +53,7 @@ static const char *repr_pointer(reports_t *reports, const hlir_t *type, bool det
     return format("%s%s", ptr, inner);
 }
 
-static const char *repr_array(reports_t *reports, const hlir_t *type, bool detail)
+static const char *repr_array(reports_t *reports, const h2_t *type, bool detail)
 {
     const char *inner = ctu_type_repr(reports, type->element, false);
     const char *name = get_hlir_name(type);
@@ -73,7 +73,7 @@ static const char *repr_array(reports_t *reports, const hlir_t *type, bool detai
     return format("[]%s", inner);
 }
 
-static const char *repr_alias(reports_t *reports, const hlir_t *type, bool detail)
+static const char *repr_alias(reports_t *reports, const h2_t *type, bool detail)
 {
     const char *inner = ctu_type_repr(reports, type->alias, false);
     const char *name = get_hlir_name(type);
@@ -86,7 +86,7 @@ static const char *repr_alias(reports_t *reports, const hlir_t *type, bool detai
     return inner;
 }
 
-static const char *repr_error(const hlir_t *type, bool detail)
+static const char *repr_error(const h2_t *type, bool detail)
 {
     if (detail)
     {
@@ -98,52 +98,52 @@ static const char *repr_error(const hlir_t *type, bool detail)
     }
 }
 
-static const char *repr_integral(const hlir_t *type, bool detail)
+static const char *repr_integral(const h2_t *type, bool detail)
 {
+    const char *id = h2_get_name(type);
     if (detail)
     {
-        return format("%s%s", repr_tags(type), get_hlir_name(type));
+        return format("%s%s", repr_tags(type), id);
     }
 
-    return get_hlir_name(type);
+    return id;
 }
 
-static const char *repr_closure(reports_t *reports, const hlir_t *type, bool detail)
+static const char *repr_closure(reports_t *reports, const h2_t *type, bool detail)
 {
-    vector_t *params = closure_params(type);
-    const char *result = ctu_type_repr(reports, closure_result(type), false);
-    const char *name = get_hlir_name(type);
+    const char *result = ctu_type_repr(reports, type->result, false);
+    const char *name = h2_get_name(type);
     if (name == NULL)
     {
         name = "def";
     }
-    
+
     if (detail)
     {
-        size_t totalParams = vector_len(params);
+        size_t totalParams = vector_len(type->params);
         vector_t *paramNames = vector_of(totalParams);
         for (size_t i = 0; i < totalParams; i++)
         {
-            const char *paramName = ctu_type_repr(reports, vector_get(params, i), false);
+            const h2_t *param = vector_get(type->params, i);
+            const char *paramName = ctu_type_repr(reports, param, false);
             vector_set(paramNames, i, (char *)paramName);
         }
 
-        // TODO: why is this always true?
-        if (closure_variadic(type))
+        if (type->arity == eArityVariable)
         {
             vector_push(&paramNames, (char *)"...");
         }
 
-        return format("%s { (%s, ...) -> %s }", name, str_join(", ", paramNames), result);
+        return format("%s { (%s) -> %s }", name, str_join(", ", paramNames), result);
     }
 
     return name;
 }
 
-const char *ctu_type_repr(reports_t *reports, const hlir_t *type, bool detail)
+const char *ctu_type_repr(reports_t *reports, const h2_t *type, bool detail)
 {
-    const hlir_t *inner = hlir_follow_type(type);
-    hlir_kind_t kind = get_hlir_kind(inner);
+    const h2_t *inner = hlir_follow_type(type);
+    h2_kind_t kind = get_hlir_kind(inner);
     switch (kind)
     {
     case eHlirDigit:
