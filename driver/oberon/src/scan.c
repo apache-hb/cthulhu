@@ -1,12 +1,9 @@
-#include "ctu/scan.h"
+#include "scan.h"
 
 #include "base/macros.h"
-
 #include "report/report.h"
 
-#include "scan/node.h"
-
-void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
+void obrerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
     CTU_UNUSED(state);
 

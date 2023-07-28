@@ -8,14 +8,14 @@
 
 #include <string.h>
 
-typedef struct feature_data_t 
+typedef struct feature_data_t
 {
     bool defaultValue;
 
     ap_param_t *param;
 } feature_data_t;
 
-typedef struct ctu_config_t 
+typedef struct ctu_config_t
 {
     bool features[eFeatureTotal];
 } ctu_config_t;
@@ -29,9 +29,9 @@ static ctu_config_t *gConfig = NULL;
 
 static AP_EVENT(on_feature, ap, param, value, data)
 {
-    UNUSED(ap);
-    UNUSED(param);
-    
+    CTU_UNUSED(ap);
+    CTU_UNUSED(param);
+
     bool *feature = data;
     const bool *update = value;
 
@@ -48,9 +48,9 @@ static ctu_config_t *new_config(void)
     return config;
 }
 
-void ctu_config(lifetime_t *lifetime, ap_t *args) 
+void ctu_config(lifetime_t *lifetime, ap_t *args)
 {
-    UNUSED(lifetime);
+    CTU_UNUSED(lifetime);
 
     GLOBAL_INIT();
 

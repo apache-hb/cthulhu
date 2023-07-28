@@ -131,7 +131,7 @@ static bool accept_extern(h2_t *hlir)
 
 static h2_attrib_t *apply_layout(sema_t *sema, h2_t *hlir, ast_t *ast)
 {
-    UNUSED(ast);
+    CTU_UNUSED(ast);
     report(sema->reports, eWarn, h2_get_node(hlir), "layout not implemented");
     return NULL;
 }

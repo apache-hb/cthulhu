@@ -36,7 +36,7 @@ static suffix_t *suffix_new(astof_t expected, apply_suffix_t apply, void *data)
 
 static h2_t *apply_int_suffix(h2_t *sema, ast_t *ast, suffix_t *suffix)
 {
-    UNUSED(sema);
+    CTU_UNUSED(sema);
 
     int_type_t *type = suffix->data;
     h2_t *kind = get_digit_type(type->sign, type->width);

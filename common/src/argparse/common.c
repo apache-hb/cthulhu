@@ -32,7 +32,7 @@ static void apply_callbacks(scan_t *scan, where_t where, const ap_param_t *param
         }
     }
 
-    const char *msg = param == NULL 
+    const char *msg = param == NULL
         ? format("unhandled positional argument '%s'", (char*)value)
         : format("unhandled event '%s'", param->names[0]);
     ap_on_error(scan, where, msg);
@@ -62,7 +62,7 @@ void ap_on_bool(scan_t *scan, where_t where, const ap_param_t *param, bool value
 void ap_on_int(scan_t *scan, where_t where, const ap_param_t *param, mpz_t value)
 {
     ap_t *self = scan_get(scan);
-    
+
     void *it = ctu_malloc(sizeof(mpz_t));
     memcpy(it, value, sizeof(mpz_t));
     add_value(self, param, it);
@@ -115,7 +115,7 @@ int ap_get_opt(ap_t *self, const char *name, ap_param_t **param, char **error)
 
 void aperror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
-    UNUSED(state);
-    
+    CTU_UNUSED(state);
+
     ap_on_error(scan, *where, ctu_strdup(msg));
 }

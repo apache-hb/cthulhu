@@ -33,8 +33,8 @@ static void pl0_parse(driver_t *handle, scan_t *scan)
 
 static void pl0_config(lifetime_t *lifetime, ap_t *ap)
 {
-    UNUSED(lifetime);
-    UNUSED(ap);
+    CTU_UNUSED(lifetime);
+    CTU_UNUSED(ap);
 }
 
 static const char *kLangNames[] = { "pl", "pl0", NULL };

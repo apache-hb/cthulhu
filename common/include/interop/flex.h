@@ -68,15 +68,15 @@ void flex_update(where_t *where, where_t *offsets, int steps);
 #define FLEX_MEMORY(alloc, resize, release)                                                                            \
     inline void *alloc(size_t size, yyscan_t scanner)                                                                  \
     {                                                                                                                  \
-        UNUSED(scanner); return ctu_malloc(size);                                                                                       \
+        CTU_UNUSED(scanner); return ctu_malloc(size);                                                                                       \
     }                                                                                                                  \
     inline void *resize(void *ptr, size_t bytes, yyscan_t scanner)                                                     \
     {                                                                                                                  \
-        UNUSED(scanner); return ctu_realloc(ptr, bytes);                                                                                \
+        CTU_UNUSED(scanner); return ctu_realloc(ptr, bytes);                                                                                \
     }                                                                                                                  \
     inline void release(void *ptr, yyscan_t scanner)                                                                   \
     {                                                                                                                  \
-        UNUSED(scanner);                                                                                              \
+        CTU_UNUSED(scanner);                                                                                              \
         if (ptr == NULL)                                                                                               \
             return;                                                                                                    \
         ctu_free(ptr);                                                                                                 \

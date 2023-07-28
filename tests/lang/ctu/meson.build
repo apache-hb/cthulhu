@@ -1,5 +1,7 @@
 dir = meson.current_source_dir()
 
+subdir_done()
+
 tests = {
     'attribs': {
         'pass': [
@@ -66,8 +68,8 @@ tests = {
         'fail': []
     },
     'types.alias': {
-        'fail': [ 
-            'discard-alias-name', 
+        'fail': [
+            'discard-alias-name',
             'infinite-size-alias',
             'looped-pointer-alias',
             'multiple-pointer-loops',
@@ -197,7 +199,7 @@ cases = {
             'duplicate-import': [ 'main', 'lib' ],
             'private-symbol': [ 'main', 'lib' ]
         },
-        'passes': { 
+        'passes': {
             'no-imports': [ 'main' ],
             'single-import': [ 'main', 'lib' ],
             'circular-import': [ 'main', 'left', 'right' ]

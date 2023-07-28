@@ -833,7 +833,7 @@ static hlir_t *sema_unary(sema_t *sema, ast_t *ast)
 
 static hlir_t *sema_math(sema_t *sema, ast_t *ast, hlir_t *lhs, hlir_t *rhs)
 {
-    UNUSED(sema);
+    CTU_UNUSED(sema);
 
     const hlir_t *lhsType = get_hlir_type(lhs);
     const hlir_t *rhsType = get_hlir_type(rhs);

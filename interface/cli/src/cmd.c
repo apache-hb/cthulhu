@@ -39,14 +39,14 @@ static const char *kReportLimitNames[] = { "-fmax-errors", NULL };
 
 static AP_EVENT(on_help, ap, param, value, data)
 {
-    UNUSED(param);
-    UNUSED(value);
-    
+    CTU_UNUSED(param);
+    CTU_UNUSED(value);
+
     runtime_t *rt = data;
     ap_print_help_header(ap, rt->argv[0]);
 
     langs_t langs = get_langs();
-    
+
 
     printf("\n%zu languages loaded:\n", langs.size);
     printf("========================================\n");
@@ -68,9 +68,9 @@ static AP_EVENT(on_help, ap, param, value, data)
 
 static AP_EVENT(on_version, ap, param, value, data)
 {
-    UNUSED(param);
-    UNUSED(value);
-    UNUSED(data);
+    CTU_UNUSED(param);
+    CTU_UNUSED(value);
+    CTU_UNUSED(data);
 
     ap_version(ap);
 
@@ -79,8 +79,8 @@ static AP_EVENT(on_version, ap, param, value, data)
 
 static AP_EVENT(on_register_ext, ap, param, value, data)
 {
-    UNUSED(ap);
-    UNUSED(param);
+    CTU_UNUSED(ap);
+    CTU_UNUSED(param);
 
     runtime_t *rt = data;
     const char *mapping = value;
@@ -119,8 +119,8 @@ static AP_EVENT(on_register_ext, ap, param, value, data)
 
 static AP_EVENT(on_set_source, ap, param, value, data)
 {
-    UNUSED(ap);
-    UNUSED(param);
+    CTU_UNUSED(ap);
+    CTU_UNUSED(param);
 
     const char *path = value;
     runtime_t *rt = data;
@@ -132,8 +132,8 @@ static AP_EVENT(on_set_source, ap, param, value, data)
 
 static AP_EVENT(on_set_header, ap, param, value, data)
 {
-    UNUSED(ap);
-    UNUSED(param);
+    CTU_UNUSED(ap);
+    CTU_UNUSED(param);
 
     const char *path = value;
     runtime_t *rt = data;
@@ -148,8 +148,8 @@ static AP_EVENT(on_set_header, ap, param, value, data)
 
 static AP_EVENT(on_set_debug_ssa, ap, param, value, data)
 {
-    UNUSED(ap);
-    UNUSED(param);
+    CTU_UNUSED(ap);
+    CTU_UNUSED(param);
 
     const bool *val = value;
     runtime_t *rt = data;
@@ -163,9 +163,9 @@ static AP_EVENT(on_set_debug_ssa, ap, param, value, data)
 
 static AP_EVENT(on_set_verbose, ap, param, value, data)
 {
-    UNUSED(ap);
-    UNUSED(param);
-    UNUSED(data);
+    CTU_UNUSED(ap);
+    CTU_UNUSED(param);
+    CTU_UNUSED(data);
 
     const bool *val = value;
 
@@ -180,9 +180,9 @@ static AP_EVENT(on_set_verbose, ap, param, value, data)
 
 static AP_EVENT(on_add_source, ap, param, value, data)
 {
-    UNUSED(ap);
-    UNUSED(param);
-    UNUSED(data);
+    CTU_UNUSED(ap);
+    CTU_UNUSED(param);
+    CTU_UNUSED(data);
 
     const char *path = value;
     runtime_t *rt = data;
@@ -196,7 +196,7 @@ static AP_EVENT(on_add_source, ap, param, value, data)
 
 static AP_ERROR(on_arg_error, ap, node, message, data)
 {
-    UNUSED(ap);
+    CTU_UNUSED(ap);
 
     runtime_t *rt = data;
 
@@ -218,7 +218,7 @@ runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifeti
 
         .reports = reports,
         .ap = ap,
-        
+
         .warnAsError = false,
         .reportLimit = 20,
 
@@ -252,15 +252,15 @@ runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifeti
     ap_param_t *warnAsErrorParam = ap_add_bool(debugGroup, "warn as error", "treat warnings as errors", kWarnAsErrorNames);
     ap_param_t *reportLimitParam = ap_add_int(debugGroup, "report limit", "limit the number of reports to display (default: 20)", kReportLimitNames);
 
-    UNUSED(outputGenParam);
-    UNUSED(warnAsErrorParam);
-    UNUSED(reportLimitParam);
+    CTU_UNUSED(outputGenParam);
+    CTU_UNUSED(warnAsErrorParam);
+    CTU_UNUSED(reportLimitParam);
 
     // general
     ap_event(ap, helpParam, on_help, &rt);
     ap_event(ap, versionParam, on_version, &rt);
     ap_event(ap, addExtensionMapParam, on_register_ext, &rt);
-    
+
     // debug
     ap_event(ap, debugSsaParam, on_set_debug_ssa, &rt);
     ap_event(ap, debugVerboseParam, on_set_verbose, &rt);

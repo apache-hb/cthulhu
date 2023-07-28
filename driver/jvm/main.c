@@ -4,18 +4,18 @@
 
 static void jvm_config(lifetime_t *lifetime, ap_t *ap)
 {
-    UNUSED(lifetime);
-    UNUSED(ap);
+    CTU_UNUSED(lifetime);
+    CTU_UNUSED(ap);
 }
 
 static void jvm_create(driver_t *handle)
 {
-    UNUSED(handle);
+    CTU_UNUSED(handle);
 }
 
 static void jvm_destroy(driver_t *handle)
 {
-    UNUSED(handle);
+    CTU_UNUSED(handle);
 }
 
 static const char *kLangNames[] = { "class", "jar", NULL };

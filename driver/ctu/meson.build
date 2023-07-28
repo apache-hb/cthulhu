@@ -1,6 +1,8 @@
 src = [
     'src/main.c',
 
+    'src/sema.c',
+
     'src/ast.c',
     'src/scan.c',
     lex.process('src/ctu.l'),
@@ -10,7 +12,7 @@ src = [
 ctu = library('ctu', src,
     dependencies : [ mediator, interop, location, hlir ],
     c_args : args,
-    include_directories : 'src'
+    include_directories : [ 'src', 'include' ]
 )
 
 langs += {

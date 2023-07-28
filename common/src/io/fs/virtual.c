@@ -85,9 +85,9 @@ static const void *vfs_map(io_t *self)
     return io->data->data;
 }
 
-static void vfs_close(io_t *self) 
-{ 
-    UNUSED(self);
+static void vfs_close(io_t *self)
+{
+    CTU_UNUSED(self);
     /* empty */
 }
 
@@ -118,13 +118,13 @@ static inode_t *virtual_dir(void)
     virtual_dir_t dir = {
         .dirents = map_new(64)
     };
-    
+
     return inode_dir(&dir, sizeof(virtual_dir_t));
 }
 
 static inode_t *vfs_query_node(fs_t *fs, inode_t *self, const char *name)
 {
-    UNUSED(fs);
+    CTU_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
     return map_get_default(dir->dirents, name, &kInvalidINode);
@@ -132,7 +132,7 @@ static inode_t *vfs_query_node(fs_t *fs, inode_t *self, const char *name)
 
 static map_t *vfs_query_dirents(fs_t *fs, inode_t *self)
 {
-    UNUSED(fs);
+    CTU_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
     return dir->dirents;
@@ -140,7 +140,7 @@ static map_t *vfs_query_dirents(fs_t *fs, inode_t *self)
 
 static io_t *vfs_query_file(fs_t *fs, inode_t *self, os_access_t flags)
 {
-    UNUSED(fs);
+    CTU_UNUSED(fs);
 
     virtual_file_t *file = inode_data(self);
     return vfs_io(file, flags);
@@ -148,7 +148,7 @@ static io_t *vfs_query_file(fs_t *fs, inode_t *self, os_access_t flags)
 
 static inode_t *vfs_create_dir(fs_t *fs, inode_t *self, const char *name)
 {
-    UNUSED(fs);
+    CTU_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
     inode_t *node = virtual_dir();
@@ -158,7 +158,7 @@ static inode_t *vfs_create_dir(fs_t *fs, inode_t *self, const char *name)
 
 static void vfs_delete_dir(fs_t *fs, inode_t *self, const char *name)
 {
-    UNUSED(fs);
+    CTU_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
     map_delete(dir->dirents, name);
@@ -166,7 +166,7 @@ static void vfs_delete_dir(fs_t *fs, inode_t *self, const char *name)
 
 static inode_t *vfs_create_file(fs_t *fs, inode_t *self, const char *name)
 {
-    UNUSED(fs);
+    CTU_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
 
@@ -185,7 +185,7 @@ static inode_t *vfs_create_file(fs_t *fs, inode_t *self, const char *name)
 
 static void vfs_delete_file(fs_t *fs, inode_t *self, const char *name)
 {
-    UNUSED(fs);
+    CTU_UNUSED(fs);
 
     virtual_dir_t *dir = inode_data(self);
     map_delete(dir->dirents, name);

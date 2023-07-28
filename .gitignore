@@ -19,6 +19,7 @@
 # dont ignore test files
 !*.pl0
 !*.ct
+!*.mod
 
 # dont ignore readme and build files
 !*.md

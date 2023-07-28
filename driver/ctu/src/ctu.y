@@ -11,8 +11,8 @@
 }
 
 %code requires {
-    #include "ast.h"
-    #include "scan.h"
+    #include "ctu/ast.h"
+    #include "ctu/scan.h"
     #define YYSTYPE CTUSTYPE
     #define YYLTYPE CTULTYPE
 }

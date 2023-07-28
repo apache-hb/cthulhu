@@ -1,3 +1,5 @@
+#include "ctu/sema.h"
+
 #include "cthulhu/mediator/driver.h"
 
 #include "scan/compile.h"
@@ -14,13 +16,13 @@ CT_CALLBACKS(kCallbacks, ctu);
 
 static void ctu_config(lifetime_t *lifetime, ap_t *args)
 {
-    UNUSED(lifetime);
-    UNUSED(args);
+    CTU_UNUSED(lifetime);
+    CTU_UNUSED(args);
 }
 
 static void ctu_init(driver_t *handle)
 {
-    UNUSED(handle);
+    CTU_UNUSED(handle);
 }
 
 static vector_t *find_mod_path(ast_t *ast, char *fp)
@@ -48,10 +50,6 @@ static void ctu_parse_file(driver_t *runtime, scan_t *scan)
 
     add_context(lifetime, path, ctx);
 }
-
-static void ctu_forward_decls(context_t *context) { UNUSED(context); }
-static void ctu_process_imports(context_t *context) { UNUSED(context); }
-static void ctu_compile_module(context_t *context) { UNUSED(context); }
 
 static const char *kLangNames[] = { "ct", "ctu", NULL };
 

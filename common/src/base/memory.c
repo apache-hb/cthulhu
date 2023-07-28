@@ -9,24 +9,24 @@
 
 static void *default_global_malloc(alloc_t *alloc, size_t size, const char *name)
 {
-    UNUSED(alloc);
-    UNUSED(name);
+    CTU_UNUSED(alloc);
+    CTU_UNUSED(name);
 
     return malloc(size);
 }
 
 static void *default_global_realloc(alloc_t *alloc, void *ptr, size_t newSize, size_t oldSize)
 {
-    UNUSED(alloc);
-    UNUSED(oldSize);
+    CTU_UNUSED(alloc);
+    CTU_UNUSED(oldSize);
 
     return realloc(ptr, newSize);
 }
 
 static void default_global_free(alloc_t *alloc, void *ptr, size_t size)
 {
-    UNUSED(alloc);
-    UNUSED(size);
+    CTU_UNUSED(alloc);
+    CTU_UNUSED(size);
 
     free(ptr);
 }

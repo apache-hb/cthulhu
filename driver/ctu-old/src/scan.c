@@ -21,7 +21,7 @@ typedef struct
 
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
-    UNUSED(state);
+    CTU_UNUSED(state);
 
     report(scan_reports(scan), eFatal, node_new(scan, *where), "%s", msg);
 }
@@ -174,13 +174,13 @@ void init_decimal(mpq_t result, const char *text)
     CTASSERT(vector_len(parts) == 2);
     const char *num = vector_get(parts, 0);
     const char *den = vector_get(parts, 1);
-    
+
     mpz_t numq;
     mpz_init_set_str(numq, num, 10);
 
     mpz_t denq;
     mpz_init_set_str(denq, den, 10);
-    
+
     mpq_init(result);
     mpq_set_num(result, numq);
     mpq_set_den(result, denq);

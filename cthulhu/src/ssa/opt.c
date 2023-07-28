@@ -10,5 +10,5 @@
 
 void ssa_opt(reports_t *reports, ssa_result_t result)
 {
-    UNUSED(reports);
+    CTU_UNUSED(reports);
 }

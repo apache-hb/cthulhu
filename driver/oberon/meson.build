@@ -1,5 +1,10 @@
 src = [
-    'src/main.c'
+    'src/main.c',
+    'src/ast.c',
+    'src/scan.c',
+
+    lex.process('src/obr.l'),
+    parse.process('src/obr.y')
 ]
 
 obr = library('obr', src,

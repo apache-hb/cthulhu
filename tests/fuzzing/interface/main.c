@@ -20,9 +20,9 @@
 
 int main(int argc, const char **argv)
 {
-    UNUSED(argc);
-    UNUSED(argv);
-    
+    CTU_UNUSED(argc);
+    CTU_UNUSED(argv);
+
     common_init();
 
     driver_t driver = get_driver();
@@ -43,10 +43,10 @@ int main(int argc, const char **argv)
     cthulhu_t *cthulhu = cthulhu_new(driver, sources, config);
 
     cthulhu_step_t steps[] = {
-        cthulhu_init, 
-        cthulhu_parse, 
-        cthulhu_forward, 
-        cthulhu_resolve, 
+        cthulhu_init,
+        cthulhu_parse,
+        cthulhu_forward,
+        cthulhu_resolve,
         cthulhu_compile,
     };
 
