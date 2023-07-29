@@ -1,4 +1,4 @@
-#include "scan.h"
+#include "oberon/scan.h"
 
 #include "base/macros.h"
 #include "report/report.h"

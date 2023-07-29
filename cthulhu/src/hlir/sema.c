@@ -4,6 +4,7 @@
 #include "std/map.h"
 
 #include "base/memory.h"
+#include "base/panic.h"
 
 #include "report/report.h"
 
@@ -30,11 +31,15 @@ h2_t *h2_module_root(reports_t *reports, const node_t *node, const char *name, s
 
 h2_t *h2_module(h2_t *parent, const node_t *node, const char *name, size_t decls, size_t *sizes)
 {
+    CTASSERT(parent != NULL);
+
     return h2_module_new(node, name, parent, parent->reports, decls, sizes);
 }
 
 void *h2_module_get(h2_t *self, size_t tag, const char *name)
 {
+    CTASSERT(name != NULL);
+
     map_t *map = h2_module_tag(self, tag);
     h2_t *old = map_get(map, name);
     if (old != NULL)
@@ -66,21 +71,29 @@ void *h2_module_set(h2_t *self, size_t tag, const char *name, void *value)
 
 map_t *h2_module_tag(const h2_t *self, size_t tag)
 {
+    CTASSERT(self != NULL);
+
     return vector_get(self->tags, tag);
 }
 
 void h2_module_update(h2_t *self, void *data)
 {
+    CTASSERT(self != NULL);
+
     self->data = data;
 }
 
 void *h2_module_data(h2_t *self)
 {
+    CTASSERT(self != NULL);
+
     return self->data;
 }
 
 h2_cookie_t *h2_module_cookie(h2_t *self)
 {
+    CTASSERT(self != NULL);
+
     h2_cookie_t *cookie = ctu_malloc(sizeof(h2_cookie_t));
     cookie->parent = self;
     cookie->stack = vector_new(16);

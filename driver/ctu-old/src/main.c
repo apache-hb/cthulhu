@@ -32,7 +32,7 @@ static void ctu_parse_file(driver_t *runtime, scan_t *scan)
     ast_t *ast = compile_scanner(scan, &kCallbacks);
     if (ast == NULL) { return; }
 
-    CTASSERT(ast->of == eAstModule);
+    CTASSERT(ast->of == eCtuModule);
 
     char *fp = (char*)scan_path(scan);
     vector_t *path = find_mod_path(ast, fp);

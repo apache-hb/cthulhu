@@ -4,83 +4,41 @@
 #   define HLIR_KIND(ID, NAME)
 #endif
 
-HLIR_KIND(eHlirUnresolved, "unresolved")
-HLIR_KIND(eHlirQualified, "qualified")
+HLIR_KIND(eHlir2TypeEmpty, "type-empty")
+HLIR_KIND(eHlir2TypeUnit, "type-unit")
+HLIR_KIND(eHlir2TypeBool, "type-bool")
+HLIR_KIND(eHlir2TypeDigit, "type-digit")
+HLIR_KIND(eHlir2TypeString, "type-string")
+HLIR_KIND(eHlir2TypeClosure, "type-closure")
 
-// updated module, remove eHlirModule
-HLIR_KIND(eHlirModuleEx, "module-ex")
+HLIR_KIND(eHlir2ExprEmpty, "expr-empty")
+HLIR_KIND(eHlir2ExprUnit, "expr-unit")
+HLIR_KIND(eHlir2ExprBool, "expr-bool")
+HLIR_KIND(eHlir2ExprDigit, "expr-digit")
+HLIR_KIND(eHlir2ExprString, "expr-string")
 
-// scalar types
-HLIR_KIND(eHlirType,    "meta-type")
-HLIR_KIND(eHlirDecimal, "decimal-type")
-HLIR_KIND(eHlirString,  "string-type")
-HLIR_KIND(eHlirBool,    "bool-type")
-HLIR_KIND(eHlirUnit,    "unit-type")
-HLIR_KIND(eHlirEmpty,   "empty-type")
-HLIR_KIND(eHlirOpaque,  "opaque-type") // opaque pointer type, akin to void*
+HLIR_KIND(eHlir2ExprLoad, "expr-load")
+HLIR_KIND(eHlir2ExprUnary, "expr-unary")
+HLIR_KIND(eHlir2ExprBinary, "expr-binary")
+HLIR_KIND(eHlir2ExprCompare, "expr-compare")
 
-// different digit types (only eHlirDigit is used for now)
-HLIR_KIND(eHlirDigit,   "digit-type")
-// HLIR_KIND(eHlirDigitFixed, "fixed-digit-type") // fixed bit-width digit type uint8, uint64, etc
-// HLIR_KIND(eHlirDigitRange, "range-digit-type") // range digit type, 0..255, -50..999, etc
+HLIR_KIND(eHlir2ExprCall, "expr-call")
 
-HLIR_KIND(eHlirVaList, "va-list-type")
+HLIR_KIND(eHlir2StmtBlock, "stmt-block")
+HLIR_KIND(eHlir2StmtReturn, "stmt-return")
+HLIR_KIND(eHlir2StmtAssign, "stmt-assign")
+HLIR_KIND(eHlir2StmtLoop, "stmt-loop")
+HLIR_KIND(eHlir2StmtBranch, "stmt-branch")
 
-// user defined scalar types
-HLIR_KIND(eHlirArray,   "array-type")
-HLIR_KIND(eHlirPointer, "pointer-type")
-HLIR_KIND(eHlirClosure, "closure-type")
+HLIR_KIND(eHlir2DeclGlobal, "decl-global")
+HLIR_KIND(eHlir2DeclLocal, "decl-local")
+HLIR_KIND(eHlir2DeclParam, "decl-param")
+HLIR_KIND(eHlir2DeclFunction, "decl-function")
+HLIR_KIND(eHlir2DeclModule, "decl-module")
 
-// user defined record types
-HLIR_KIND(eHlirStruct, "struct-type")
-HLIR_KIND(eHlirUnion,  "union-type")
-HLIR_KIND(eHlirEnum,   "enum-type")
-HLIR_KIND(eHlirAlias,  "alias-type")
-HLIR_KIND(eHlirVariant, "variant-type")
-
-HLIR_KIND(eHlirRecordField, "record-field")
-HLIR_KIND(eHlirEnumCase,   "enum-case")
-HLIR_KIND(eHlirVariantCase, "variant-case")
-
-// literal values
-HLIR_KIND(eHlirDigitLiteral,   "digit-literal")
-HLIR_KIND(eHlirDecimalLiteral, "decimal-literal")
-HLIR_KIND(eHlirBoolLiteral,    "bool-literal")
-HLIR_KIND(eHlirStringLiteral,  "string-literal")
-
-// expressions
-HLIR_KIND(eHlirLoad,    "load") // a load from an address, equivilent to a C rvalue
-HLIR_KIND(eHlirUnary,   "unary")
-HLIR_KIND(eHlirBinary,  "binary") // integer aritmatic
-HLIR_KIND(eHlirCompare, "compare") // all boolean logic
-HLIR_KIND(eHlirCall,    "call")
-HLIR_KIND(eHlirCast,    "cast")
-
-HLIR_KIND(eHlirAccess, "access") // aggregate member access
-HLIR_KIND(eHlirIndex,  "index") // array access
-HLIR_KIND(eHlirAddr,   "addr") // address of an expression
-
-HLIR_KIND(eHlirBuiltin, "builtin")
-
-// statements
-HLIR_KIND(eHlirStmts,    "stmts") // statement list
-HLIR_KIND(eHlirBranch,   "branch")
-HLIR_KIND(eHlirLoop,     "loop")
-HLIR_KIND(eHlirBreak,    "break")
-HLIR_KIND(eHlirContinue, "continue")
-
-HLIR_KIND(eHlirAssign, "assign")
-HLIR_KIND(eHlirReturn, "return")
-
-// declarations
-HLIR_KIND(eHlirGlobal,   "global")
-HLIR_KIND(eHlirFunction, "function")
-HLIR_KIND(eHlirModule,   "module")
-
-HLIR_KIND(eHlirParam, "param")
-HLIR_KIND(eHlirLocal, "local")
-
-HLIR_KIND(eHlirError, "error")
+HLIR_KIND(eHlir2Resolve, "resolve")
+HLIR_KIND(eHlir2Error, "error")
+HLIR_KIND(eHlir2Qualify, "qualify")
 
 #undef HLIR_KIND
 

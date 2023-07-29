@@ -1,4 +1,4 @@
-#include "ast.h"
+#include "oberon/ast.h"
 
 #include "base/memory.h"
 

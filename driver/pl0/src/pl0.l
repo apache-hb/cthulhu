@@ -8,7 +8,7 @@
 
 %{
 #include "pl0-bison.h"
-#include "scan.h"
+#include "pl0/scan.h"
 #include "report/report-ext.h"
 #include "interop/flex.h"
 %}

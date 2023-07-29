@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "base/memory.h"
+#include "base/panic.h"
 
 h2_t *h2_new(h2_kind_t kind, const node_t *node, const h2_t *type)
 {
@@ -15,6 +16,8 @@ h2_t *h2_new(h2_kind_t kind, const node_t *node, const h2_t *type)
 
 h2_t *h2_decl(h2_kind_t kind, const node_t *node, const h2_t *type, const char *name)
 {
+    CTASSERT(name != NULL);
+
     h2_t *self = h2_new(kind, node, type);
 
     self->name = name;
@@ -24,6 +27,8 @@ h2_t *h2_decl(h2_kind_t kind, const node_t *node, const h2_t *type, const char *
 
 h2_t *h2_error(const node_t *node, const char *message)
 {
+    CTASSERT(message != NULL);
+
     h2_t *self = h2_new(eHlir2Error, node, NULL);
 
     self->message = message;
@@ -110,6 +115,8 @@ h2_t *h2_expr_digit(const node_t *node, const h2_t *type, mpz_t value)
 
 h2_t *h2_expr_string(const node_t *node, const h2_t *type, const char *value, size_t length)
 {
+    CTASSERT(value != NULL);
+
     h2_t *self = h2_new(eHlir2ExprString, node, type);
     self->stringValue = value;
     self->stringLength = length;
@@ -122,6 +129,8 @@ h2_t *h2_expr_string(const node_t *node, const h2_t *type, const char *value, si
 
 h2_t *h2_expr_load(const node_t *node, h2_t *expr)
 {
+    CTASSERT(expr != NULL);
+
     h2_t *self = h2_new(eHlir2ExprLoad, node, expr->type);
     self->load = expr;
     return self;
@@ -129,6 +138,8 @@ h2_t *h2_expr_load(const node_t *node, h2_t *expr)
 
 h2_t *h2_expr_unary(const node_t *node, unary_t unary, h2_t *expr)
 {
+    CTASSERT(expr != NULL);
+
     h2_t *self = h2_new(eHlir2ExprUnary, node, expr->type);
     self->unary = unary;
     self->operand = expr;
@@ -137,6 +148,9 @@ h2_t *h2_expr_unary(const node_t *node, unary_t unary, h2_t *expr)
 
 h2_t *h2_expr_binary(const node_t *node, const h2_t *type, binary_t binary, h2_t *lhs, h2_t *rhs)
 {
+    CTASSERT(lhs != NULL);
+    CTASSERT(rhs != NULL);
+
     h2_t *self = h2_new(eHlir2ExprBinary, node, type);
     self->binary = binary;
     self->lhs = lhs;
@@ -146,6 +160,9 @@ h2_t *h2_expr_binary(const node_t *node, const h2_t *type, binary_t binary, h2_t
 
 h2_t *h2_expr_compare(const node_t *node, const h2_t *type, compare_t compare, h2_t *lhs, h2_t *rhs)
 {
+    CTASSERT(lhs != NULL);
+    CTASSERT(rhs != NULL);
+
     h2_t *self = h2_new(eHlir2ExprCompare, node, type);
     self->compare = compare;
     self->lhs = lhs;
@@ -155,6 +172,9 @@ h2_t *h2_expr_compare(const node_t *node, const h2_t *type, compare_t compare, h
 
 h2_t *h2_expr_call(const node_t *node, const h2_t *callee, vector_t *args)
 {
+    CTASSERT(callee != NULL);
+    CTASSERT(args != NULL);
+
     h2_t *self = h2_new(eHlir2ExprCall, node, callee->result);
     self->callee = callee;
     self->args = args;
@@ -167,6 +187,8 @@ h2_t *h2_expr_call(const node_t *node, const h2_t *callee, vector_t *args)
 
 h2_t *h2_stmt_block(const node_t *node, vector_t *stmts)
 {
+    CTASSERT(stmts != NULL);
+
     h2_t *self = h2_new(eHlir2StmtBlock, node, NULL);
     self->stmts = stmts;
     return self;
@@ -181,6 +203,9 @@ h2_t *h2_stmt_return(const node_t *node, const h2_t *value)
 
 h2_t *h2_stmt_assign(const node_t *node, h2_t *dst, h2_t *src)
 {
+    CTASSERT(dst != NULL);
+    CTASSERT(src != NULL);
+
     h2_t *self = h2_new(eHlir2StmtAssign, node, dst->type);
     self->dst = dst;
     self->src = src;
@@ -189,6 +214,9 @@ h2_t *h2_stmt_assign(const node_t *node, h2_t *dst, h2_t *src)
 
 h2_t *h2_stmt_loop(const node_t *node, h2_t *cond, h2_t *body, h2_t *other)
 {
+    CTASSERT(cond != NULL);
+    CTASSERT(body != NULL);
+
     h2_t *self = h2_new(eHlir2StmtLoop, node, NULL);
     self->cond = cond;
     self->then = body;
@@ -198,6 +226,9 @@ h2_t *h2_stmt_loop(const node_t *node, h2_t *cond, h2_t *body, h2_t *other)
 
 h2_t *h2_stmt_branch(const node_t *node, h2_t *cond, h2_t *then, h2_t *other)
 {
+    CTASSERT(cond != NULL);
+    CTASSERT(then != NULL);
+
     h2_t *self = h2_new(eHlir2StmtBranch, node, NULL);
     self->cond = cond;
     self->then = then;

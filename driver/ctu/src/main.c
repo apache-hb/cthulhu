@@ -25,7 +25,7 @@ static void ctu_init(driver_t *handle)
     CTU_UNUSED(handle);
 }
 
-static vector_t *find_mod_path(ast_t *ast, char *fp)
+static vector_t *find_mod_path(ctu_t *ast, char *fp)
 {
     if (ast == NULL) { return vector_init(str_filename_noext(fp)); }
 
@@ -38,10 +38,10 @@ static void ctu_parse_file(driver_t *runtime, scan_t *scan)
 {
     lifetime_t *lifetime = handle_get_lifetime(runtime);
 
-    ast_t *ast = compile_scanner(scan, &kCallbacks);
+    ctu_t *ast = compile_scanner(scan, &kCallbacks);
     if (ast == NULL) { return; }
 
-    CTASSERT(ast->kind == eAstModule);
+    CTASSERT(ast->kind == eCtuModule);
 
     char *fp = (char*)scan_path(scan);
     vector_t *path = find_mod_path(ast, fp);

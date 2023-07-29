@@ -35,6 +35,10 @@ WS [ \t\r\v\n\f]
 "import" { return IMPORT; }
 "export" { return EXPORT; }
 
+"as" { return AS; }
+
+"$" { return DISCARD; }
+
 [a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);
     return IDENT;

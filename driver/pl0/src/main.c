@@ -1,5 +1,5 @@
-#include "sema.h"
-#include "ast.h"
+#include "pl0/sema.h"
+#include "pl0/ast.h"
 
 #include "scan/compile.h"
 

@@ -34,41 +34,8 @@ typedef struct h2_attrib_t {
 } h2_attrib_t;
 
 typedef enum h2_kind_t {
-    eHlir2TypeEmpty,
-    eHlir2TypeUnit,
-    eHlir2TypeBool,
-    eHlir2TypeDigit,
-    eHlir2TypeString,
-    eHlir2TypeClosure,
-
-    eHlir2ExprEmpty,
-    eHlir2ExprUnit,
-    eHlir2ExprBool,
-    eHlir2ExprDigit,
-    eHlir2ExprString,
-
-    eHlir2ExprLoad,
-    eHlir2ExprUnary,
-    eHlir2ExprBinary,
-    eHlir2ExprCompare,
-
-    eHlir2ExprCall,
-
-    eHlir2StmtBlock,
-    eHlir2StmtReturn,
-    eHlir2StmtAssign,
-    eHlir2StmtLoop,
-    eHlir2StmtBranch,
-
-    eHlir2DeclGlobal,
-    eHlir2DeclLocal,
-    eHlir2DeclParam,
-    eHlir2DeclFunction,
-    eHlir2DeclModule,
-
-    eHlir2Resolve,
-    eHlir2Error,
-    eHlir2Qualify,
+#define HLIR_KIND(ID, NAME) ID,
+#include "cthulhu/hlir/hlir.inc"
 
     eHlir2Total
 } h2_kind_t;

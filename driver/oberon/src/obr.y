@@ -11,8 +11,8 @@
 }
 
 %code requires {
-    #include "scan.h"
-    #include "ast.h"
+    #include "oberon/scan.h"
+    #include "oberon/ast.h"
 
     #define YYSTYPE OBRSTYPE
     #define YYLTYPE OBRLTYPE

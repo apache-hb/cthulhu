@@ -1,8 +1,10 @@
 src = [
     'src/main.c',
+
+    'src/sema.c',
+
     'src/ast.c',
     'src/scan.c',
-
     lex.process('src/obr.l'),
     parse.process('src/obr.y')
 ]
@@ -10,7 +12,7 @@ src = [
 obr = library('obr', src,
     dependencies : [ mediator, interop, location, hlir ],
     c_args : args,
-    include_directories : 'src'
+    include_directories : [ 'src', 'include' ]
 )
 
 langs += {

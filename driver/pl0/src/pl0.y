@@ -11,8 +11,8 @@
 }
 
 %code requires {
-    #include "scan.h"
-    #include "ast.h"
+    #include "pl0/scan.h"
+    #include "pl0/ast.h"
 
     #define YYSTYPE PL0STYPE
     #define YYLTYPE PL0LTYPE

@@ -8,7 +8,7 @@
 
 %{
 #include "obr-bison.h"
-#include "scan.h"
+#include "oberon/scan.h"
 #include "report/report-ext.h"
 #include "interop/flex.h"
 %}

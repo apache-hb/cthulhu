@@ -4,10 +4,6 @@
 
 typedef struct context_t context_t;
 
-void ctu_forward_decls(context_t *context);
-void ctu_process_imports(context_t *context);
-void ctu_compile_module(context_t *context);
-
 typedef enum ctu_tag_t {
     eTagValues = eSema2Values,
     eTagTypes = eSema2Types,
@@ -19,3 +15,7 @@ typedef enum ctu_tag_t {
 
     eTagTotal
 } ctu_tag_t;
+
+void ctu_forward_decls(context_t *context);
+void ctu_process_imports(context_t *context);
+void ctu_compile_module(context_t *context);
