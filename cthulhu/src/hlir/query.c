@@ -27,7 +27,7 @@ static bool has_name(h2_kind_t kind)
     }
 }
 
-static const char *hlir_kind_to_string(h2_kind_t kind)
+static const char *h2_kind_to_string(h2_kind_t kind)
 {
     switch (kind)
     {
@@ -49,10 +49,10 @@ const char *h2_to_string(const h2_t *self)
 
     if (has_name(self->kind))
     {
-        return h2_get_name(self);
+        return format("{ %s: %s }", h2_kind_to_string(self->kind), h2_get_name(self));
     }
 
-    return hlir_kind_to_string(self->kind);
+    return h2_kind_to_string(self->kind);
 }
 
 const node_t *h2_get_node(const h2_t *self)

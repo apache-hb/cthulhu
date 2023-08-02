@@ -25,6 +25,8 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %union {
     obr_t *ast;
+    obr_partial_value_t *partialValue;
+
     vector_t *vector;
 
     char *ident;
@@ -33,9 +35,15 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<vector>
     importList importBodyList moduleList
+    declSeq decl
+    nameList valueSeq valueDecl valueDeclSeq
 
 %type<ast>
     importBody module
+    type
+
+%type<partialValue>
+    valueName
 
 %type<ident>
     end
@@ -130,8 +138,10 @@ moduleList: module { $$ = vector_init($1); }
     | moduleList module { vector_push(&$1, $2); $$ = $1; }
     ;
 
-module: MODULE IDENT SEMI importList end DOT { $$ = obr_module(x, @$, $2, $4); }
+module: MODULE IDENT SEMI importList declSeq end DOT { $$ = obr_module(x, @$, $2, $4, $5); }
     ;
+
+/* imports */
 
 importList: %empty { $$ = vector_of(0); }
     | IMPORT importBodyList SEMI { $$ = $2; }
@@ -144,6 +154,42 @@ importBodyList: importBody { $$ = vector_init($1); }
 importBody: IDENT { $$ = obr_import(x, @$, $1, $1); }
     | IDENT ASSIGN IDENT { $$ = obr_import(x, @$, $1, $3); }
     ;
+
+/* values */
+
+declSeq: decl { $$ = $1; }
+    | declSeq decl { vector_append(&$1, $2); $$ = $1; }
+    ;
+
+decl: valueDeclSeq { $$ = $1; }
+    ;
+
+valueDeclSeq: VAR valueSeq { $$ = $2; }
+    ;
+
+valueSeq: valueDecl { $$ = $1; }
+    | valueSeq valueDecl { vector_append(&$1, $2); $$ = $1; }
+    ;
+
+valueDecl: nameList COLON type SEMI { $$ = obr_expand_values(false, $1, $3); }
+    ;
+
+nameList: valueName { $$ = vector_init($1); }
+    | nameList COMMA valueName { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+valueName: IDENT { $$ = obr_partial_value(x, @$, $1); }
+    ;
+
+/* types */
+
+type: IDENT { $$ = obr_type_name(x, @$, $1); }
+    | IDENT DOT IDENT { $$ = obr_type_qual(x, @$, $1, $3); }
+    ;
+
+/* exprs */
+
+/* extra */
 
 end: END { $$ = NULL; }
     | END IDENT { $$ = $2; }

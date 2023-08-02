@@ -170,6 +170,16 @@ vector_t *vector_merge(const vector_t *lhs, const vector_t *rhs)
 }
 
 USE_DECL
+void vector_append(vector_t **vector, const vector_t *other)
+{
+    size_t len = vector_len(other);
+
+    vector_ensure(vector, VEC->used + len);
+    memcpy(VEC->data + VEC->used, other->data, len * sizeof(void *));
+    VEC->used += len;
+}
+
+USE_DECL
 vector_t *vector_join(vector_t *vectors)
 {
     // find the total length for less memory allocations

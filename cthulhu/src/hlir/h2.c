@@ -3,6 +3,11 @@
 #include "base/memory.h"
 #include "base/panic.h"
 
+static const h2_attrib_t kDefaultAttrib = {
+    .link = eLinkModule,
+    .visibility = eVisiblePrivate
+};
+
 h2_t *h2_new(h2_kind_t kind, const node_t *node, const h2_t *type)
 {
     h2_t *self = ctu_malloc(sizeof(h2_t));
@@ -21,6 +26,7 @@ h2_t *h2_decl(h2_kind_t kind, const node_t *node, const h2_t *type, const char *
     h2_t *self = h2_new(kind, node, type);
 
     self->name = name;
+    self->attrib = &kDefaultAttrib;
 
     return self;
 }

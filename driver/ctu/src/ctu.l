@@ -35,6 +35,10 @@ WS [ \t\r\v\n\f]
 "import" { return IMPORT; }
 "export" { return EXPORT; }
 
+"def" { return DEF; }
+"var" { return VAR; }
+"const" { return CONST; }
+
 "as" { return AS; }
 
 "$" { return DISCARD; }

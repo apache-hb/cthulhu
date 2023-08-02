@@ -39,6 +39,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     IMPORT "import"
     EXPORT "export"
 
+    DEF "def"
     VAR "var"
     CONST "const"
 
@@ -47,6 +48,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     DISCARD "$"
 
     SEMI ";"
+    COLON ":"
     COLON2 "::"
 
 %type<vector>
@@ -56,7 +58,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<ast>
     import
-    decl globalDecl
+    decl globalDecl functionDecl
+    type typeName
 
 %type<ident>
     importAlias ident
@@ -85,7 +88,7 @@ importList: import { $$ = vector_init($1); }
     | importList import { vector_push(&$1, $2); $$ = $1; }
     ;
 
-import: IMPORT path importAlias { $$ = ctu_import(x, @$, $2, $3); }
+import: IMPORT path importAlias { $$ = ctu_import(x, @$, $2, ($3 != NULL) ? $3 : vector_tail($2)); }
     ;
 
 importAlias: %empty { $$ = NULL; }
@@ -103,11 +106,18 @@ declList: decl { $$ = vector_init($1); }
     ;
 
 decl: globalDecl { $$ = $1; }
+    | functionDecl { $$ = $1; }
     ;
+
+/* functions */
+
+functionDecl: exported DEF ident COLON type { $$ = ctu_decl_function(x, @$, $1, $3, $5); }
+    ;
+
 
 /* globals */
 
-globalDecl: exported mut ident SEMI { $$ = ctu_global(x, @$, $1, $2, $3); }
+globalDecl: exported mut ident SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3); }
     ;
 
 exported: %empty { $$ = false; }
@@ -117,6 +127,16 @@ exported: %empty { $$ = false; }
 mut: CONST { $$ = false; }
     | VAR { $$ = true; }
     ;
+
+/* types */
+
+type: typeName { $$ = $1; }
+    ;
+
+typeName: path { $$ = ctu_type_name(x, @$, $1); }
+    ;
+
+/* basic */
 
 ident: IDENT { $$ = $1; }
     | DISCARD { $$ = NULL; }

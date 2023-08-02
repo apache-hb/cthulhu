@@ -7,7 +7,10 @@ typedef struct ctu_t ctu_t;
 typedef struct vector_t vector_t;
 
 typedef enum ctu_kind_t {
-    eCtuGlobal,
+    eCtuTypeName,
+
+    eCtuDeclGlobal,
+    eCtuDeclFunction,
 
     eCtuImport,
     eCtuModule
@@ -19,26 +22,37 @@ typedef struct ctu_t {
 
     union {
         struct {
-            vector_t *importPath;
-            char *alias;
+            char *name;
+            bool exported;
+
+            union {
+                /* eCtuImport */
+                vector_t *importPath;
+
+                /* eCtuGlobal */
+                bool mut;
+
+                /* eCtuDeclFunction */
+                ctu_t *returnType;
+            };
         };
 
+        /* eCtuTypeName */
+        vector_t *typeName;
+
+        /* eCtuModule */
         struct {
             vector_t *modspec;
             vector_t *imports;
             vector_t *decls;
         };
-
-        struct {
-            char *name;
-            bool exported;
-
-            bool mut;
-        };
     };
 } ctu_t;
 
 ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *modspec, vector_t *imports, vector_t *decls);
-ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *alias);
+ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name);
 
-ctu_t *ctu_global(scan_t *scan, where_t where, bool exported, bool mutable, char *name);
+ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path);
+
+ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mutable, char *name);
+ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, ctu_t *returnType);

@@ -69,6 +69,7 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const h2_t *tree)
 
 static ssa_symbol_t *function_create(ssa_compile_t *ssa, const h2_t *tree)
 {
+    CTASSERTF(h2_is(tree, eHlir2DeclFunction), "expected function, got %s", h2_to_string(tree));
     ssa_symbol_t *self = symbol_create(ssa, tree);
 
     size_t len = vector_len(tree->locals);
@@ -290,6 +291,9 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const h2_t *tree)
 
 static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
 {
+    CTASSERT(ssa != NULL);
+    CTASSERT(tree != NULL);
+
     switch (tree->kind)
     {
     case eHlir2ExprEmpty: {
@@ -468,6 +472,8 @@ static void add_module_globals(ssa_compile_t *ssa, ssa_module_t *mod, map_t *glo
         map_entry_t entry = map_next(&iter);
 
         const h2_t *tree = entry.value;
+        CTASSERTF(h2_is(tree, eHlir2DeclGlobal), "expected global, got %s", h2_to_string(tree));
+
         ssa_symbol_t *global = symbol_create(ssa, tree);
 
         vector_push(&mod->globals, global);

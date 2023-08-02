@@ -10,6 +10,9 @@
 
 static h2_t *h2_module_new(const node_t *node, const char *name, h2_t *parent, reports_t *reports, size_t decls, size_t *sizes)
 {
+    CTASSERTF(decls >= eSema2Total, "module cannot be constructed with less than %zu tags (%zu given)", eSema2Total, decls);
+    CTASSERT(reports != NULL);
+
     h2_t *self = h2_decl(eHlir2DeclModule, node, NULL, name);
     self->parent = parent;
     self->reports = reports;

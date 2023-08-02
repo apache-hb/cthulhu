@@ -1,5 +1,7 @@
 #include "cthulhu/mediator/driver.h"
 
+#include "oberon/sema.h"
+
 #include "scan/compile.h"
 
 #include "base/macros.h"
@@ -33,7 +35,7 @@ static void obr_config(lifetime_t *lifetime, ap_t *ap)
 static void obr_create(driver_t *handle) { CTU_UNUSED(handle); }
 static void obr_destroy(driver_t *handle) { CTU_UNUSED(handle); }
 
-static const char *kLangNames[] = { "m", "mod", NULL };
+static const char *kLangNames[] = { "m", "mod", "obr", NULL };
 
 const language_t kOberonModule = {
     .id = "obr",
@@ -52,5 +54,10 @@ const language_t kOberonModule = {
     .fnCreate = obr_create,
     .fnDestroy = obr_destroy,
 
-    .fnParse = obr_parse
+    .fnParse = obr_parse,
+    .fnCompilePass = {
+        [eStageForwardSymbols] = obr_forward_decls,
+        [eStageCompileImports] = obr_process_imports,
+        [eStageCompileSymbols] = obr_compile_module
+    }
 };

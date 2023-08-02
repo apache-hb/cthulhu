@@ -10,10 +10,11 @@ static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_kind_t kind)
     return self;
 }
 
-static ctu_t *ctu_decl(scan_t *scan, where_t where, ctu_kind_t kind, char *name)
+static ctu_t *ctu_decl(scan_t *scan, where_t where, ctu_kind_t kind, char *name, bool exported)
 {
     ctu_t *self = ctu_new(scan, where, kind);
     self->name = name;
+    self->exported = exported;
     return self;
 }
 
@@ -26,18 +27,34 @@ ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *modspec, vector_t *impo
     return ast;
 }
 
-ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *alias)
+ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name)
 {
-    ctu_t *ast = ctu_new(scan, where, eCtuImport);
+    ctu_t *ast = ctu_decl(scan, where, eCtuImport, name, false);
     ast->importPath = path;
-    ast->alias = alias;
     return ast;
 }
 
-ctu_t *ctu_global(scan_t *scan, where_t where, bool exported, bool mut, char *name)
+/* types */
+
+ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path)
 {
-    ctu_t *ast = ctu_decl(scan, where, eCtuGlobal, name);
-    ast->exported = exported;
+    ctu_t *ast = ctu_new(scan, where, eCtuTypeName);
+    ast->typeName = path;
+    return ast;
+}
+
+/* decls */
+
+ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mut, char *name)
+{
+    ctu_t *ast = ctu_decl(scan, where, eCtuDeclGlobal, name, exported);
     ast->mut = mut;
+    return ast;
+}
+
+ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, ctu_t *returnType)
+{
+    ctu_t *ast = ctu_decl(scan, where, eCtuDeclFunction, name, exported);
+    ast->returnType = returnType;
     return ast;
 }
