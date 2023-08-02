@@ -36,8 +36,13 @@ static const h2_attrib_t kExportAttrib = {
 
 static const h2_attrib_t kEntryAttrib = {
     .link = eLinkEntryCli,
-    .visibility = eVisiblePublic
+    .visibility = eVisiblePrivate
 };
+
+static char *pl0_normalize(const char *name)
+{
+    return str_lower(name);
+}
 
 static void report_pl0_shadowing(reports_t *reports, const char *name, const node_t *prevDefinition, const node_t *newDefinition)
 {
@@ -47,10 +52,11 @@ static void report_pl0_shadowing(reports_t *reports, const char *name, const nod
 
 static h2_t *get_decl(h2_t *sema, const char *name, const pl0_tag_t *tags, size_t len)
 {
+    char *id = pl0_normalize(name);
     for (size_t i = 0; i < len; i++)
     {
         pl0_tag_t tag = tags[i];
-        h2_t *decl = h2_module_get(sema, tag, name);
+        h2_t *decl = h2_module_get(sema, tag, id);
         if (decl != NULL) { return decl; }
     }
 
@@ -71,6 +77,12 @@ static h2_t *get_proc(h2_t *sema, const char *name)
     return get_decl(sema, name, kTags, sizeof(kTags) / sizeof(pl0_tag_t));
 }
 
+static void set_decl(h2_t *sema, pl0_tag_t tag, const char *name, h2_t *decl)
+{
+    char *id = pl0_normalize(name);
+    h2_module_set(sema, tag, id, decl);
+}
+
 static void set_proc(h2_t *sema, pl0_tag_t tag, const char *name, h2_t *proc)
 {
     h2_t *other = get_proc(sema, name);
@@ -82,7 +94,7 @@ static void set_proc(h2_t *sema, pl0_tag_t tag, const char *name, h2_t *proc)
         return;
     }
 
-    h2_module_set(sema, tag, name, proc);
+    set_decl(sema, tag, name, proc);
 }
 
 static void set_var(h2_t *sema, pl0_tag_t tag, const char *name, h2_t *hlir)
@@ -97,7 +109,7 @@ static void set_var(h2_t *sema, pl0_tag_t tag, const char *name, h2_t *hlir)
         return;
     }
 
-    h2_module_set(sema, tag, name, hlir);
+    set_decl(sema, tag, name, hlir);
 }
 
 static h2_t *make_runtime_mod(reports_t *reports)
@@ -568,6 +580,6 @@ void pl0_compile_module(context_t *context)
         h2_set_attrib(hlir, &kEntryAttrib);
 
         vector_push(&semaData->procs, hlir);
-        h2_module_set(mod, eTagProcs, h2_get_name(mod), hlir); // TODO: this is a hack
+        set_decl(mod, eTagProcs, h2_get_name(mod), hlir); // TODO: this is a hack
     }
 }

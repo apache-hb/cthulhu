@@ -5,9 +5,17 @@
 
 #include "cthulhu/hlir/query.h"
 
+#include "report/report.h"
 #include "report/report-ext.h"
 
+#include "std/str.h"
+
 #include "base/panic.h"
+
+static const h2_attrib_t kDefaultGlobalAttribs = {
+    .link = eLinkExport,
+    .visibility = eVisiblePublic
+};
 
 static h2_t *obr_forward_global(h2_t *sema, obr_t *global)
 {
@@ -16,9 +24,11 @@ static h2_t *obr_forward_global(h2_t *sema, obr_t *global)
     mpz_t zero;
     mpz_init(zero);
 
-    h2_t *type = h2_type_digit(global->node, "INTEGER", eDigitInt, eSignSigned);
-    h2_t *digit = h2_expr_digit(global->node, type, zero);
-    h2_t *decl = h2_decl_global(global->node, global->name, type, digit);
+    h2_t *intType = h2_type_digit(global->node, "INTEGER", eDigitInt, eSignSigned);
+    h2_t *mut = h2_qualify(global->node, intType, eQualMutable);
+    h2_t *zeroLiteral = h2_expr_digit(global->node, intType, zero);
+    h2_t *decl = h2_decl_global(global->node, global->name, mut, zeroLiteral);
+    h2_set_attrib(decl, &kDefaultGlobalAttribs);
 
     return decl;
 }

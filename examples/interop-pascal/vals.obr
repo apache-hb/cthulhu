@@ -1,0 +1,3 @@
+MODULE Values;
+    VAR lhs, rhs, result : INTEGER;
+END Values.

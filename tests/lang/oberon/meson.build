@@ -12,6 +12,14 @@ tests = {
 
         ]
     },
+    'warns': {
+        'pass': [
+            'mod'
+        ],
+        'fail': [
+
+        ]
+    }
 }
 
 foreach case, tests : tests

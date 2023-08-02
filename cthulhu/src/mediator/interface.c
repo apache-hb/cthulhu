@@ -9,6 +9,7 @@
 
 #include "std/vector.h"
 #include "std/str.h"
+#include "std/set.h"
 
 #include "report/report.h"
 
@@ -217,6 +218,10 @@ typedef struct check_t {
 
     const h2_t *cliEntryPoint;
     const h2_t *guiEntryPoint;
+
+    vector_t *stack;
+
+    set_t *checkedForRecursion;
 } check_t;
 
 static void check_ident(check_t *check, const h2_t *decl)
@@ -326,6 +331,86 @@ static void check_func_attribs(check_t *check, const h2_t *fn)
     }
 }
 
+static void check_global_recursion(check_t *check, const h2_t *global);
+
+static void check_expr_recursion(check_t *check, const h2_t *tree)
+{
+    switch (h2_get_kind(tree))
+    {
+    case eHlir2ExprEmpty:
+    case eHlir2ExprUnit:
+    case eHlir2ExprBool:
+    case eHlir2ExprDigit:
+    case eHlir2ExprString:
+        break;
+
+    case eHlir2ExprLoad:
+        check_expr_recursion(check, tree->load);
+        break;
+
+    case eHlir2ExprCall: {
+        check_expr_recursion(check, tree->callee);
+        size_t len = vector_len(tree->args);
+        for (size_t i = 0; i < len; ++i)
+        {
+            const h2_t *arg = vector_get(tree->args, i);
+            check_expr_recursion(check, arg);
+        }
+        break;
+    }
+
+    case eHlir2ExprBinary:
+        check_expr_recursion(check, tree->lhs);
+        check_expr_recursion(check, tree->rhs);
+        break;
+
+    case eHlir2ExprUnary:
+        check_expr_recursion(check, tree->operand);
+        break;
+
+    case eHlir2ExprCompare:
+        check_expr_recursion(check, tree->lhs);
+        check_expr_recursion(check, tree->rhs);
+        break;
+
+    case eHlir2DeclGlobal:
+        check_global_recursion(check, tree);
+        break;
+    default: NEVER("invalid node kind %s (check-tree-recursion)", h2_to_string(tree));
+    }
+}
+
+static void check_global_recursion(check_t *check, const h2_t *global)
+{
+    if (set_contains_ptr(check->checkedForRecursion, global))
+    {
+        return;
+    }
+
+    size_t idx = vector_find(check->stack, global);
+    if (idx == SIZE_MAX)
+    {
+        vector_push(&check->stack, (void*)global);
+        check_expr_recursion(check, global->global);
+        vector_drop(check->stack);
+    }
+    else
+    {
+        message_t *id = report(check->reports, eFatal, h2_get_node(global),
+            "evaluation of `%s` may be infinite",
+            h2_get_name(global)
+        );
+        size_t len = vector_len(check->stack);
+        for (size_t i = 0; i < len; i++)
+        {
+            const h2_t *decl = vector_get(check->stack, i);
+            report_append(id, h2_get_node(decl), "call to `%s`", h2_get_name(decl));
+        }
+    }
+
+    set_add_ptr(check->checkedForRecursion, global);
+}
+
 static void check_module_valid(check_t *check, const h2_t *mod)
 {
     CTASSERT(check != NULL);
@@ -350,6 +435,7 @@ static void check_module_valid(check_t *check, const h2_t *mod)
         check_ident(check, global);
 
         check_global_attribs(check, global);
+        check_global_recursion(check, global);
     }
 
     vector_t *functions = map_values(h2_module_tag(mod, eSema2Procs));
@@ -368,6 +454,9 @@ void lifetime_check(lifetime_t *lifetime)
 {
     check_t check = {
         .reports = lifetime_get_reports(lifetime),
+
+        .stack = vector_new(64),
+        .checkedForRecursion = set_new(64)
     };
 
     map_iter_t iter = map_iter(lifetime->modules);

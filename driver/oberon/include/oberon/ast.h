@@ -13,6 +13,7 @@ typedef enum obr_kind_t {
     eObrTypeQual,
 
     eObrDeclGlobal,
+    eObrDeclProcedure,
 
     eObrModule,
     eObrImport
@@ -47,10 +48,11 @@ typedef struct obr_t {
     };
 } obr_t;
 
-obr_t *obr_module(scan_t *scan, where_t where, char *name, vector_t *imports, vector_t *decls);
+obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *imports, vector_t *decls);
 obr_t *obr_import(scan_t *scan, where_t where, char *name, char *symbol);
 
 obr_t *obr_decl_global(scan_t *scan, where_t where, bool mut, char *name, obr_t *type, obr_t *value);
+obr_t *obr_decl_procedure(scan_t *scan, where_t where, char *name, char *end);
 
 obr_t *obr_type_name(scan_t *scan, where_t where, char *symbol);
 obr_t *obr_type_qual(scan_t *scan, where_t where, char *name, char *symbol);

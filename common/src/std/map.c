@@ -64,7 +64,7 @@ USE_DECL
 map_t *map_new(size_t size)
 {
     CTASSERT(size > 0);
-    
+
     map_t *map = ctu_malloc(sizeof_map(size));
 
     map->size = size;
@@ -115,8 +115,8 @@ vector_t *map_entries(map_t *map)
 
     vector_t *result = vector_new(map->size);
 
-    MAP_FOREACH_APPLY(map, entry, { 
-        vector_push(&result, map_entry_new(entry->key, entry->value)); 
+    MAP_FOREACH_APPLY(map, entry, {
+        vector_push(&result, map_entry_new(entry->key, entry->value));
     });
 
     return result;
@@ -128,8 +128,8 @@ bool map_empty(map_t *map)
     CTASSERT(map != NULL);
 
     MAP_FOREACH_APPLY(map, entry, {
-        if (entry->key != NULL) { 
-            return false; 
+        if (entry->key != NULL) {
+            return false;
         }
     });
 
@@ -297,6 +297,56 @@ void *map_get_default_ptr(map_t *map, const void *key, void *other)
 
     bucket_t *bucket = map_bucket_ptr(map, key);
     return entry_get_ptr(bucket, key, other);
+}
+
+static bool entry_exists(const bucket_t *entry, const char *key)
+{
+    if (str_equal(entry->key, key))
+    {
+        return true;
+    }
+
+    if (entry->next)
+    {
+        return entry_exists(entry->next, key);
+    }
+
+    return false;
+}
+
+static bool entry_exists_ptr(const bucket_t *entry, const void *key)
+{
+    if (entry->key == key)
+    {
+        return true;
+    }
+
+    if (entry->next)
+    {
+        return entry_exists_ptr(entry->next, key);
+    }
+
+    return false;
+}
+
+USE_DECL
+bool map_contains(IN_NOTNULL map_t *map, IN_STRING const char *key)
+{
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
+    const bucket_t *entry = map_bucket_str(map, key);
+    return entry_exists(entry, key);
+}
+
+USE_DECL
+bool map_contains_ptr(IN_NOTNULL map_t *map, const void *key)
+{
+    CTASSERT(map != NULL);
+    CTASSERT(key != NULL);
+
+    const bucket_t *entry = map_bucket_ptr(map, key);
+    return entry_exists_ptr(entry, key);
 }
 
 USE_DECL

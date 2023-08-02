@@ -144,8 +144,20 @@ static void emit_required_headers(c89_emit_t *emit, const ssa_module_t *mod)
 
 static const char *mangle_symbol_name(const ssa_symbol_t *symbol)
 {
+    switch (symbol->linkage)
+    {
+    case eLinkEntryCli: return "main";
+    case eLinkEntryGui: return "WinMain";
+    default: break;
+    }
+
     if (symbol->linkName != NULL) { return symbol->linkName; }
     return symbol->name;
+}
+
+static bool is_entry_point(h2_link_t link)
+{
+    return link == eLinkEntryCli || link == eLinkEntryGui;
 }
 
 static void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *global)
@@ -171,6 +183,9 @@ static void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ss
 
 static void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *func)
 {
+    // dont generate prototypes for entry points
+    if (is_entry_point(func->linkage)) { return; }
+
     c89_source_t *src = map_get_ptr(emit->srcmap, mod);
     c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
 

@@ -138,7 +138,7 @@ moduleList: module { $$ = vector_init($1); }
     | moduleList module { vector_push(&$1, $2); $$ = $1; }
     ;
 
-module: MODULE IDENT SEMI importList declSeq end DOT { $$ = obr_module(x, @$, $2, $4, $5); }
+module: MODULE IDENT SEMI importList declSeq end DOT { $$ = obr_module(x, @$, $2, $6, $4, $5); }
     ;
 
 /* imports */

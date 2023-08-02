@@ -45,6 +45,7 @@ map_t *map_optimal(size_t size);
  * @param value the value to set
  */
 void map_set(IN_NOTNULL map_t *map, IN_STRING const char *key, void *value);
+void map_set_ptr(IN_NOTNULL map_t *map, const void *key, void *value);
 
 /**
  * get a value from a map
@@ -56,6 +57,8 @@ void map_set(IN_NOTNULL map_t *map, IN_STRING const char *key, void *value);
  */
 NODISCARD CONSTFN
 void *map_get(IN_NOTNULL map_t *map, IN_STRING const char *key);
+NODISCARD CONSTFN
+void *map_get_ptr(IN_NOTNULL map_t *map, const void *key);
 
 /**
  * @brief get a value from a map or a default value if the key is not found
@@ -69,13 +72,11 @@ void *map_get(IN_NOTNULL map_t *map, IN_STRING const char *key);
 NODISCARD CONSTFN
 void *map_get_default(IN_NOTNULL map_t *map, IN_STRING const char *key, void *other);
 
-void map_set_ptr(IN_NOTNULL map_t *map, const void *key, void *value);
-
-NODISCARD CONSTFN
-void *map_get_ptr(IN_NOTNULL map_t *map, const void *key);
-
 NODISCARD CONSTFN
 void *map_get_default_ptr(IN_NOTNULL map_t *map, const void *key, void *other);
+
+bool map_contains(IN_NOTNULL map_t *map, IN_STRING const char *key);
+bool map_contains_ptr(IN_NOTNULL map_t *map, const void *key);
 
 void map_delete(IN_NOTNULL map_t *map, IN_STRING const char *key);
 

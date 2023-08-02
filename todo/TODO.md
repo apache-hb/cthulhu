@@ -15,7 +15,6 @@
 * rewrite location tracking
 
 * more docs
-* fix doxygen
 
 ## important
 
@@ -52,7 +51,7 @@
 * generic interface compilation option
     * use dynamic libraries rather than static linking
 
-* fix tuning 
+* fix tuning
 * fix sal support
 * rewrite gui frontend
 * add language server support
@@ -72,7 +71,7 @@
 * custom lex + parser file format
     * autogenerate flex and bison
     * autogenerate vscode grammars
-    * autogenerate protobuf defs 
+    * autogenerate protobuf defs
     * reduces alot of boilerplate
 
 * fuzz protobuf rather than direct source code
