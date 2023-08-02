@@ -584,6 +584,10 @@ ssa_result_t ssa_compile(map_t *mods)
             // TODO: should extern functions be put somewhere else
             compile_tree(&ssa, body);
         }
+        else
+        {
+            CTASSERT(symbol->linkage == eLinkImport);
+        }
     }
 
     ssa_result_t result = {
