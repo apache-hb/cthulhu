@@ -112,18 +112,23 @@ typedef struct h2_t {
             h2_t *other;
         };
 
+        /* eHlir2TypePointer */
+        struct {
+            h2_t *pointer;
+        };
+
+        /* eHlir2TypeDigit */
+        struct {
+            digit_t digit;
+            sign_t sign;
+        };
+
         /* any declaration */
         struct {
             const char *name; ///< the name of the declaration
             const h2_attrib_t *attrib; ///< the attributes of the declaration
 
             union {
-                /* eHlir2TypeDigit */
-                struct {
-                    digit_t digit;
-                    sign_t sign;
-                };
-
                 /* eHlir2TypeClosure */
                 struct {
                     const h2_t *result;
@@ -218,6 +223,8 @@ h2_t *h2_type_digit(const node_t *node, const char *name, digit_t digit, sign_t 
 h2_t *h2_type_string(const node_t *node, const char *name);
 
 h2_t *h2_type_closure(const node_t *node, const char *name, const h2_t *result, vector_t *params, arity_t arity);
+
+h2_t *h2_type_pointer(const node_t *node, h2_t *pointer);
 
 ///
 /// generic nodes

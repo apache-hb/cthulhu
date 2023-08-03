@@ -10,6 +10,7 @@ HLIR_KIND(eHlir2TypeBool, "type-bool")
 HLIR_KIND(eHlir2TypeDigit, "type-digit")
 HLIR_KIND(eHlir2TypeString, "type-string")
 HLIR_KIND(eHlir2TypeClosure, "type-closure")
+HLIR_KIND(eHlir2TypePointer, "type-pointer")
 
 HLIR_KIND(eHlir2ExprEmpty, "expr-empty")
 HLIR_KIND(eHlir2ExprUnit, "expr-unit")

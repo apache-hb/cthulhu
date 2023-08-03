@@ -24,6 +24,10 @@ static bool is_discard(const char *name)
     return name == NULL;
 }
 
+///
+/// get and set decls
+///
+
 static h2_t *get_decl(h2_t *sema, const char *name, const ctu_tag_t *tags, size_t len)
 {
     for (size_t i = 0; i < len; i++)
@@ -38,6 +42,12 @@ static h2_t *get_decl(h2_t *sema, const char *name, const ctu_tag_t *tags, size_
 static h2_t *get_namespace(h2_t *sema, const char *name)
 {
     ctu_tag_t tags[] = { eTagModules, eTagImports };
+    return get_decl(sema, name, tags, sizeof(tags) / sizeof(ctu_tag_t));
+}
+
+static h2_t *get_type(h2_t *sema, const char *name)
+{
+    ctu_tag_t tags[] = { eTagTypes };
     return get_decl(sema, name, tags, sizeof(tags) / sizeof(ctu_tag_t));
 }
 
@@ -57,11 +67,64 @@ static void add_decl(h2_t *sema, ctu_tag_t tag, const char *name, h2_t *decl)
     }
 }
 
+///
+/// getting types
+///
+
+static h2_t *ctu_get_type(h2_t *sema, const ctu_t *type);
+
+static h2_t *ctu_get_type_name(h2_t *sema, const ctu_t *type)
+{
+    size_t len = vector_len(type->typeName);
+    h2_t *ns = sema;
+    for (size_t i = 0; i < len - 1; i++)
+    {
+        const char *segment = vector_get(type->typeName, i);
+        ns = get_namespace(ns, segment);
+        if (ns == NULL)
+        {
+            report(sema->reports, eFatal, type->node, "namespace `%s` not found", segment);
+            return h2_error(type->node, "namespace not found");
+        }
+    }
+
+    const char *name = vector_tail(type->typeName);
+    h2_t *decl = get_type(ns, name);
+    if (decl == NULL)
+    {
+        report(sema->reports, eFatal, type->node, "type `%s` not found", name);
+        return h2_error(type->node, "type not found");
+    }
+
+    return decl;
+}
+
+static h2_t *ctu_get_type_pointer(h2_t *sema, const ctu_t *type)
+{
+    h2_t *pointee = ctu_get_type(sema, type->pointer);
+    return h2_type_pointer(type->node, pointee);
+}
+
+static h2_t *ctu_get_type(h2_t *sema, const ctu_t *type)
+{
+    switch (type->kind)
+    {
+    case eCtuTypeName: return ctu_get_type_name(sema, type);
+    case eCtuTypePointer: return ctu_get_type_pointer(sema, type);
+
+    default: NEVER("invalid type kind %d", type->kind);
+    }
+}
+
+///
+/// forwarding
+///
+
 static h2_t *ctu_forward_global(h2_t *sema, ctu_t *decl)
 {
     CTASSERTF(decl->kind == eCtuDeclGlobal, "decl %s is not a global", decl->name);
 
-    h2_t *type = h2_type_digit(decl->node, "int", eDigitInt, eSignSigned);
+    h2_t *type = ctu_get_type(sema, decl->type);
     h2_t *global = h2_open_global(decl->node, decl->name, type);
 
     return global;

@@ -118,7 +118,7 @@ functionDecl: exported DEF ident COLON type { $$ = ctu_decl_function(x, @$, $1, 
 
 /* globals */
 
-globalDecl: exported mut ident SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3); }
+globalDecl: exported mut ident COLON type SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, $5); }
     ;
 
 exported: %empty { $$ = false; }

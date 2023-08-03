@@ -86,17 +86,16 @@ static typevec_t *collect_params(vector_t *vector)
 static ssa_type_t *ssa_type_inner(const h2_t *type, quals_t quals)
 {
     h2_kind_t kind = h2_get_kind(type);
-    const char *name = h2_get_name(type);
     switch (kind)
     {
-    case eHlir2TypeEmpty: return ssa_type_empty(name, quals);
-    case eHlir2TypeUnit: return ssa_type_unit(name, quals);
-    case eHlir2TypeBool: return ssa_type_bool(name, quals);
-    case eHlir2TypeDigit: return ssa_type_digit(name, quals, type->sign, type->digit);
-    case eHlir2TypeString: return ssa_type_string(name, quals);
+    case eHlir2TypeEmpty: return ssa_type_empty(h2_get_name(type), quals);
+    case eHlir2TypeUnit: return ssa_type_unit(h2_get_name(type), quals);
+    case eHlir2TypeBool: return ssa_type_bool(h2_get_name(type), quals);
+    case eHlir2TypeDigit: return ssa_type_digit(h2_get_name(type), quals, type->sign, type->digit);
+    case eHlir2TypeString: return ssa_type_string(h2_get_name(type), quals);
     case eHlir2TypeClosure:
         return ssa_type_closure(
-            /* name = */ name,
+            /* name = */ h2_get_name(type),
             /* quals = */ quals,
             /* result = */ ssa_type_from(type->result),
             /* params = */ collect_params(type->params),

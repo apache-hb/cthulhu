@@ -31,7 +31,10 @@ typedef struct ctu_t {
                 vector_t *importPath;
 
                 /* eCtuGlobal */
-                bool mut;
+                struct {
+                    ctu_t *type;
+                    bool mut;
+                };
 
                 /* eCtuDeclFunction */
                 ctu_t *returnType;
@@ -42,7 +45,7 @@ typedef struct ctu_t {
         vector_t *typeName;
 
         /* eCtuTypePointer */
-        ctu_t *type;
+        ctu_t *pointer;
 
         /* eCtuModule */
         struct {
@@ -57,7 +60,7 @@ ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *modspec, vector_t *impo
 ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name);
 
 ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path);
-ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *type);
+ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer);
 
-ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mutable, char *name);
+ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mutable, char *name, ctu_t *type);
 ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, ctu_t *returnType);

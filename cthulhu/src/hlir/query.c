@@ -15,6 +15,7 @@ static bool has_name(h2_kind_t kind)
     case eHlir2TypeString:
     case eHlir2TypeClosure:
 
+    case eHlir2Resolve:
     case eHlir2DeclGlobal:
     case eHlir2DeclLocal:
     case eHlir2DeclParam:
@@ -65,6 +66,7 @@ const node_t *h2_get_node(const h2_t *self)
 const char *h2_get_name(const h2_t *self)
 {
     CTASSERT(self != NULL);
+    CTASSERTF(has_name(self->kind), "kind %s has no name", h2_kind_to_string(self->kind));
 
     return self->name;
 }
