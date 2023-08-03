@@ -43,6 +43,13 @@ ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path)
     return ast;
 }
 
+ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *type)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuTypePointer);
+    ast->type = type;
+    return ast;
+}
+
 /* decls */
 
 ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mut, char *name)

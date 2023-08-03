@@ -1,4 +1,5 @@
 #include "ctu/sema.h"
+#include "base/util.h"
 #include "ctu/ast.h"
 
 #include "cthulhu/mediator/driver.h"
@@ -10,12 +11,34 @@
 #include "report/report-ext.h"
 
 #include "std/vector.h"
+#include "std/map.h"
+#include "std/str.h"
 
+#include "base/memory.h"
 #include "base/panic.h"
+#include <ctype.h>
+#include <string.h>
 
 static bool is_discard(const char *name)
 {
     return name == NULL;
+}
+
+static h2_t *get_decl(h2_t *sema, const char *name, const ctu_tag_t *tags, size_t len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        h2_t *decl = h2_module_get(sema, tags[i], name);
+        if (decl != NULL) { return decl; }
+    }
+
+    return NULL;
+}
+
+static h2_t *get_namespace(h2_t *sema, const char *name)
+{
+    ctu_tag_t tags[] = { eTagModules, eTagImports };
+    return get_decl(sema, name, tags, sizeof(tags) / sizeof(ctu_tag_t));
 }
 
 static void add_decl(h2_t *sema, ctu_tag_t tag, const char *name, h2_t *decl)
@@ -39,7 +62,7 @@ static h2_t *ctu_forward_global(h2_t *sema, ctu_t *decl)
     CTASSERTF(decl->kind == eCtuDeclGlobal, "decl %s is not a global", decl->name);
 
     h2_t *type = h2_type_digit(decl->node, "int", eDigitInt, eSignSigned);
-    h2_t *global = h2_decl_global(decl->node, decl->name, type, NULL);
+    h2_t *global = h2_open_global(decl->node, decl->name, type);
 
     return global;
 }
@@ -51,7 +74,7 @@ static h2_t *ctu_forward_function(h2_t *sema, ctu_t *decl)
     h2_t *returnType = h2_type_digit(decl->node, "int", eDigitInt, eSignSigned);
     h2_t *signature = h2_type_closure(decl->node, decl->name, returnType, vector_of(0), eArityFixed);
 
-    h2_t *function = h2_decl_function(decl->node, decl->name, signature, NULL);
+    h2_t *function = h2_open_function(decl->node, decl->name, signature);
 
     return function;
 }
@@ -85,6 +108,47 @@ static ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
     }
 }
 
+static h2_t *make_runtime_mod(reports_t *reports)
+{
+    size_t sizes[eTagTotal] = {
+        [eTagValues] = 1,
+        [eTagTypes] = 1,
+        [eTagFunctions] = 1,
+        [eTagModules] = 1,
+        [eTagImports] = 1,
+        [eTagAttribs] = 1,
+        [eTagSuffix] = 1,
+    };
+
+    node_t *node = node_builtin();
+    h2_t *root = h2_module_root(reports, node, "runtime", eTagTotal, sizes);
+
+    add_decl(root, eTagTypes, "int", h2_type_digit(node, "int", eDigitInt, eSignSigned));
+    add_decl(root, eTagTypes, "uint", h2_type_digit(node, "uint", eDigitInt, eSignUnsigned));
+
+    return root;
+}
+
+static vector_t *make_runtime_path(void)
+{
+    vector_t *path = vector_new(2);
+    vector_push(&path, "ctu");
+    vector_push(&path, "lang");
+    return path;
+}
+
+void ctu_init(driver_t *handle)
+{
+    lifetime_t *lifetime = handle_get_lifetime(handle);
+    reports_t *reports = lifetime_get_reports(lifetime);
+
+    h2_t *root = make_runtime_mod(reports);
+    vector_t *path = make_runtime_path();
+
+    context_t *ctx = compiled_new(handle, root);
+    add_context(lifetime, path, ctx);
+}
+
 void ctu_forward_decls(context_t *context)
 {
     lifetime_t *lifetime = context_get_lifetime(context);
@@ -100,6 +164,7 @@ void ctu_forward_decls(context_t *context)
         [eTagTypes] = len,
         [eTagFunctions] = len,
         [eTagModules] = len,
+        [eTagImports] = vector_len(ast->imports),
         [eTagAttribs] = len,
         [eTagSuffix] = len,
     };
@@ -124,12 +189,87 @@ void ctu_forward_decls(context_t *context)
     context_update(context, ast, mod);
 }
 
+static char *capitalize(const char *name)
+{
+    CTASSERT(strlen(name) > 0);
+
+    char *copy = ctu_strdup(name);
+    copy[0] = toupper(copy[0]);
+    return copy;
+}
+
+static void import_module(lifetime_t *lifetime, h2_t *sema, ctu_t *include)
+{
+    CTASSERT(include->kind == eCtuImport);
+    context_t *ctx = get_context(lifetime, include->importPath);
+
+    if (ctx == NULL)
+    {
+        report(sema->reports, eFatal, include->node, "import %s not found", str_join("::", include->importPath));
+        return;
+    }
+
+    h2_t *lib = context_get_module(ctx);
+    if (lib == sema)
+    {
+        report(sema->reports, eFatal, include->node, "module cannot import itself");
+        return;
+    }
+
+    h2_t *old = get_namespace(sema, include->name);
+    if (old != NULL)
+    {
+        message_t *id = report_shadow(sema->reports, include->name, h2_get_node(old), h2_get_node(lib));
+        report_note(id, "consider using import aliases; eg. `import %s as inc%s`",
+            str_join("::", include->importPath),
+            capitalize(include->name)
+        );
+    }
+    else
+    {
+        add_decl(sema, eTagImports, include->name, lib);
+    }
+}
+
 void ctu_process_imports(context_t *context)
 {
-    CTU_UNUSED(context);
+    lifetime_t *lifetime = context_get_lifetime(context);
+
+    ctu_t *ast = context_get_ast(context);
+    h2_t *sema = context_get_module(context);
+
+    size_t len = vector_len(ast->imports);
+    for (size_t i = 0; i < len; i++)
+    {
+        ctu_t *it = vector_get(ast->imports, i);
+        import_module(lifetime, sema, it);
+    }
 }
 
 void ctu_compile_module(context_t *context)
 {
-    CTU_UNUSED(context);
+    h2_t *sema = context_get_module(context);
+
+    map_iter_t globals = map_iter(h2_module_tag(sema, eTagValues));
+    while (map_has_next(&globals))
+    {
+        map_entry_t entry = map_next(&globals);
+        h2_t *global = entry.value;
+
+        mpz_t zero;
+        mpz_init(zero);
+        h2_t *value = h2_expr_digit(global->node, h2_get_type(global), zero);
+
+        h2_close_global(global, value);
+    }
+
+    map_iter_t functions = map_iter(h2_module_tag(sema, eTagFunctions));
+    while (map_has_next(&functions))
+    {
+        map_entry_t entry = map_next(&functions);
+        h2_t *function = entry.value;
+
+        h2_t *body = h2_stmt_block(function->node, vector_of(0));
+        h2_close_function(function, body);
+    }
 }

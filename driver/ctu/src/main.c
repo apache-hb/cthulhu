@@ -20,11 +20,6 @@ static void ctu_config(lifetime_t *lifetime, ap_t *args)
     CTU_UNUSED(args);
 }
 
-static void ctu_init(driver_t *handle)
-{
-    CTU_UNUSED(handle);
-}
-
 static vector_t *find_mod_path(ctu_t *ast, char *fp)
 {
     if (ast == NULL) { return vector_init(str_filename_noext(fp)); }

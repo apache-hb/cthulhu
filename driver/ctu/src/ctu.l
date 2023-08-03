@@ -28,6 +28,8 @@ WS [ \t\r\v\n\f]
 <COMMENT>\n ;
 <COMMENT>. ;
 
+"*" { return STAR; }
+
 ";" { return SEMI; }
 "::" { return COLON2; }
 

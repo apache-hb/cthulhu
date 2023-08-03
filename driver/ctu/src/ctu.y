@@ -47,6 +47,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     DISCARD "$"
 
+    STAR "*"
     SEMI ";"
     COLON ":"
     COLON2 "::"
@@ -59,7 +60,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<ast>
     import
     decl globalDecl functionDecl
-    type typeName
+    type
 
 %type<ident>
     importAlias ident
@@ -130,10 +131,8 @@ mut: CONST { $$ = false; }
 
 /* types */
 
-type: typeName { $$ = $1; }
-    ;
-
-typeName: path { $$ = ctu_type_name(x, @$, $1); }
+type: path { $$ = ctu_type_name(x, @$, $1); }
+    | STAR type { $$ = ctu_type_pointer(x, @$, $2); }
     ;
 
 /* basic */
