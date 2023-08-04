@@ -34,6 +34,13 @@ ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name)
     return ast;
 }
 
+/* exprs */
+
+ctu_t *ctu_expr_noinit(scan_t *scan, where_t where)
+{
+    return ctu_new(scan, where, eCtuExprNoInit);
+}
+
 /* types */
 
 ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path)
@@ -52,11 +59,12 @@ ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer)
 
 /* decls */
 
-ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mut, char *name, ctu_t *type)
+ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mut, char *name, ctu_t *type, ctu_t *global)
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclGlobal, name, exported);
     ast->mut = mut;
     ast->type = type;
+    ast->global = global;
     return ast;
 }
 

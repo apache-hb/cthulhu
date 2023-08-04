@@ -296,8 +296,8 @@ h2_t *h2_stmt_branch(const node_t *node, h2_t *cond, h2_t *then, h2_t *other);
 h2_t *h2_resolve(h2_cookie_t *cookie, h2_t *decl);
 h2_t *h2_decl_open(const node_t *node, const char *name, const h2_t *type, void *user, h2_resolve_t fnResolve);
 
-h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type);
-h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature);
+h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type, void *user, h2_resolve_t fnResolve);
+h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature, void *user, h2_resolve_t fnResolve);
 
 void h2_close_global(h2_t *self, h2_t *value);
 void h2_close_function(h2_t *self, h2_t *body);

@@ -19,6 +19,10 @@
 #include <ctype.h>
 #include <string.h>
 
+///
+/// helpers
+///
+
 static bool is_discard(const char *name)
 {
     return name == NULL;
@@ -68,108 +72,10 @@ static void add_decl(h2_t *sema, ctu_tag_t tag, const char *name, h2_t *decl)
 }
 
 ///
-/// getting types
+/// init
 ///
 
-static h2_t *ctu_get_type(h2_t *sema, const ctu_t *type);
-
-static h2_t *ctu_get_type_name(h2_t *sema, const ctu_t *type)
-{
-    size_t len = vector_len(type->typeName);
-    h2_t *ns = sema;
-    for (size_t i = 0; i < len - 1; i++)
-    {
-        const char *segment = vector_get(type->typeName, i);
-        ns = get_namespace(ns, segment);
-        if (ns == NULL)
-        {
-            report(sema->reports, eFatal, type->node, "namespace `%s` not found", segment);
-            return h2_error(type->node, "namespace not found");
-        }
-    }
-
-    const char *name = vector_tail(type->typeName);
-    h2_t *decl = get_type(ns, name);
-    if (decl == NULL)
-    {
-        report(sema->reports, eFatal, type->node, "type `%s` not found", name);
-        return h2_error(type->node, "type not found");
-    }
-
-    return decl;
-}
-
-static h2_t *ctu_get_type_pointer(h2_t *sema, const ctu_t *type)
-{
-    h2_t *pointee = ctu_get_type(sema, type->pointer);
-    return h2_type_pointer(type->node, pointee);
-}
-
-static h2_t *ctu_get_type(h2_t *sema, const ctu_t *type)
-{
-    switch (type->kind)
-    {
-    case eCtuTypeName: return ctu_get_type_name(sema, type);
-    case eCtuTypePointer: return ctu_get_type_pointer(sema, type);
-
-    default: NEVER("invalid type kind %d", type->kind);
-    }
-}
-
-///
-/// forwarding
-///
-
-static h2_t *ctu_forward_global(h2_t *sema, ctu_t *decl)
-{
-    CTASSERTF(decl->kind == eCtuDeclGlobal, "decl %s is not a global", decl->name);
-
-    h2_t *type = ctu_get_type(sema, decl->type);
-    h2_t *global = h2_open_global(decl->node, decl->name, type);
-
-    return global;
-}
-
-static h2_t *ctu_forward_function(h2_t *sema, ctu_t *decl)
-{
-    CTASSERTF(decl->kind == eCtuDeclFunction, "decl %s is not a function", decl->name);
-
-    h2_t *returnType = h2_type_digit(decl->node, "int", eDigitInt, eSignSigned);
-    h2_t *signature = h2_type_closure(decl->node, decl->name, returnType, vector_of(0), eArityFixed);
-
-    h2_t *function = h2_open_function(decl->node, decl->name, signature);
-
-    return function;
-}
-
-typedef struct ctu_forward_t {
-    ctu_tag_t tag;
-    h2_t *decl;
-} ctu_forward_t;
-
-static ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
-{
-    switch (decl->kind)
-    {
-    case eCtuDeclGlobal: {
-        ctu_forward_t fwd = {
-            .tag = eTagValues,
-            .decl = ctu_forward_global(sema, decl),
-        };
-        return fwd;
-    }
-    case eCtuDeclFunction: {
-        ctu_forward_t fwd = {
-            .tag = eTagFunctions,
-            .decl = ctu_forward_function(sema, decl),
-        };
-        return fwd;
-    }
-
-    default:
-        NEVER("invalid decl kind %d", decl->kind);
-    }
-}
+static h2_t *kRootModule = NULL;
 
 static h2_t *make_runtime_mod(reports_t *reports)
 {
@@ -205,11 +111,143 @@ void ctu_init(driver_t *handle)
     lifetime_t *lifetime = handle_get_lifetime(handle);
     reports_t *reports = lifetime_get_reports(lifetime);
 
-    h2_t *root = make_runtime_mod(reports);
+    kRootModule = make_runtime_mod(reports);
     vector_t *path = make_runtime_path();
 
-    context_t *ctx = compiled_new(handle, root);
+    context_t *ctx = compiled_new(handle, kRootModule);
     add_context(lifetime, path, ctx);
+}
+
+///
+/// getting types
+///
+
+static h2_t *ctu_sema_type(h2_t *sema, const ctu_t *type);
+
+static h2_t *ctu_sema_type_name(h2_t *sema, const ctu_t *type)
+{
+    size_t len = vector_len(type->typeName);
+    h2_t *ns = sema;
+    for (size_t i = 0; i < len - 1; i++)
+    {
+        const char *segment = vector_get(type->typeName, i);
+        ns = get_namespace(ns, segment);
+        if (ns == NULL)
+        {
+            report(sema->reports, eFatal, type->node, "namespace `%s` not found", segment);
+            return h2_error(type->node, "namespace not found");
+        }
+    }
+
+    const char *name = vector_tail(type->typeName);
+    h2_t *decl = get_type(ns, name);
+    if (decl == NULL)
+    {
+        report(sema->reports, eFatal, type->node, "type `%s` not found", name);
+        return h2_error(type->node, "type not found");
+    }
+
+    return decl;
+}
+
+static h2_t *ctu_sema_type_pointer(h2_t *sema, const ctu_t *type)
+{
+    h2_t *pointee = ctu_sema_type(sema, type->pointer);
+    return h2_type_pointer(type->node, pointee);
+}
+
+static h2_t *ctu_sema_type(h2_t *sema, const ctu_t *type)
+{
+    switch (type->kind)
+    {
+    case eCtuTypeName: return ctu_sema_type_name(sema, type);
+    case eCtuTypePointer: return ctu_sema_type_pointer(sema, type);
+
+    default: NEVER("invalid type kind %d", type->kind);
+    }
+}
+
+///
+/// expressions
+///
+
+static h2_t *ctu_sema_lvalue(h2_t *sema, ctu_t *expr)
+{
+
+}
+
+static h2_t *ctu_sema_rvalue(h2_t *sema, ctu_t *expr)
+{
+
+}
+
+///
+/// resolving
+///
+
+static void ctu_resolve_global(h2_cookie_t *cookie, h2_t *self, void *user)
+{
+
+}
+
+static void ctu_resolve_function(h2_cookie_t *cookie, h2_t *self, void *user)
+{
+
+}
+
+///
+/// forwarding
+///
+
+static h2_t *ctu_forward_global(h2_t *sema, ctu_t *decl)
+{
+    CTASSERTF(decl->kind == eCtuDeclGlobal, "decl %s is not a global", decl->name);
+
+    h2_t *type = ctu_sema_type(sema, decl->type);
+    h2_t *global = h2_open_global(decl->node, decl->name, type, decl, ctu_resolve_global);
+
+    return global;
+}
+
+static h2_t *ctu_forward_function(h2_t *sema, ctu_t *decl)
+{
+    CTASSERTF(decl->kind == eCtuDeclFunction, "decl %s is not a function", decl->name);
+
+    h2_t *returnType = ctu_sema_type(sema, decl->returnType);
+    h2_t *signature = h2_type_closure(decl->node, decl->name, returnType, vector_of(0), eArityFixed);
+
+    h2_t *function = h2_open_function(decl->node, decl->name, signature, decl, ctu_resolve_function);
+
+    return function;
+}
+
+typedef struct ctu_forward_t {
+    ctu_tag_t tag;
+    h2_t *decl;
+} ctu_forward_t;
+
+static ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
+{
+    switch (decl->kind)
+    {
+    case eCtuDeclGlobal: {
+        ctu_forward_t fwd = {
+            .tag = eTagValues,
+            .decl = ctu_forward_global(sema, decl),
+        };
+        return fwd;
+    }
+    case eCtuDeclFunction: {
+        ctu_forward_t fwd = {
+            .tag = eTagFunctions,
+            .decl = ctu_forward_function(sema, decl),
+        };
+        return fwd;
+    }
+
+    default:
+        NEVER("invalid decl kind %d", decl->kind);
+    }
 }
 
 void ctu_forward_decls(context_t *context)
@@ -232,7 +270,7 @@ void ctu_forward_decls(context_t *context)
         [eTagSuffix] = len,
     };
 
-    h2_t *mod = h2_module_root(reports, ast->node, name, eTagTotal, sizes);
+    h2_t *mod = h2_module(kRootModule, ast->node, name, eTagTotal, sizes);
 
     for (size_t i = 0; i < len; i++)
     {

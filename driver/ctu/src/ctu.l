@@ -33,6 +33,8 @@ WS [ \t\r\v\n\f]
 ";" { return SEMI; }
 "::" { return COLON2; }
 
+"=" { return ASSIGN; }
+
 "module" { return MODULE; }
 "import" { return IMPORT; }
 "export" { return EXPORT; }
@@ -40,6 +42,8 @@ WS [ \t\r\v\n\f]
 "def" { return DEF; }
 "var" { return VAR; }
 "const" { return CONST; }
+
+"noinit" { return NOINIT; }
 
 "as" { return AS; }
 

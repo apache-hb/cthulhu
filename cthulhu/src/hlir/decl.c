@@ -30,14 +30,14 @@ h2_t *h2_decl_open(const node_t *node, const char *name, const h2_t *type, void 
     return self;
 }
 
-h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type)
+h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type, void *user, h2_resolve_t fnResolve)
 {
-    return h2_decl_open(node, name, type, NULL, NULL);
+    return h2_decl_open(node, name, type, user, fnResolve);
 }
 
-h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature)
+h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature, void *user, h2_resolve_t fnResolve)
 {
-    h2_t *self = h2_decl_open(node, name, signature, NULL, NULL);
+    h2_t *self = h2_decl_open(node, name, signature, user, fnResolve);
     self->locals = vector_new(4);
     return self;
 }
@@ -73,7 +73,7 @@ h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_
 
 h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *signature, h2_t *body)
 {
-    h2_t *self = h2_open_function(node, name, signature);
+    h2_t *self = h2_open_function(node, name, signature, NULL, NULL);
     h2_close_function(self, body);
     return self;
 }

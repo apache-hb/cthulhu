@@ -43,10 +43,13 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     VAR "var"
     CONST "const"
 
+    NOINIT "noinit"
+
     AS "as"
 
     DISCARD "$"
 
+    ASSIGN "="
     STAR "*"
     SEMI ";"
     COLON ":"
@@ -61,6 +64,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     import
     decl globalDecl functionDecl
     type
+    expr
 
 %type<ident>
     importAlias ident
@@ -118,7 +122,8 @@ functionDecl: exported DEF ident COLON type { $$ = ctu_decl_function(x, @$, $1, 
 
 /* globals */
 
-globalDecl: exported mut ident COLON type SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, $5); }
+globalDecl: exported mut ident COLON type ASSIGN expr SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, $5, $7); }
+    | exported mut ident ASSIGN expr SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, NULL, $5); }
     ;
 
 exported: %empty { $$ = false; }
@@ -133,6 +138,11 @@ mut: CONST { $$ = false; }
 
 type: path { $$ = ctu_type_name(x, @$, $1); }
     | STAR type { $$ = ctu_type_pointer(x, @$, $2); }
+    ;
+
+/* expressions */
+
+expr: NOINIT { $$ = ctu_expr_noinit(x, @$); }
     ;
 
 /* basic */

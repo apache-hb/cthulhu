@@ -469,7 +469,7 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->consts, i);
 
-        h2_t *hlir = h2_open_global(it->node, it->name, kConstType);
+        h2_t *hlir = h2_open_global(it->node, it->name, kConstType, NULL, NULL);
         h2_set_attrib(hlir, &kExportAttrib);
 
         set_var(sema, eTagValues, it->name, hlir);
@@ -480,7 +480,7 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->globals, i);
 
-        h2_t *hlir = h2_open_global(it->node, it->name, kIntType);
+        h2_t *hlir = h2_open_global(it->node, it->name, kIntType, NULL, NULL);
         h2_set_attrib(hlir, &kExportAttrib);
 
         set_var(sema, eTagValues, it->name, hlir);
@@ -492,7 +492,7 @@ void pl0_forward_decls(context_t *context)
         pl0_t *it = vector_get(root->procs, i);
 
         h2_t *signature = h2_type_closure(it->node, it->name, kVoidType, vector_of(0), eArityFixed);
-        h2_t *hlir = h2_open_function(it->node, it->name, signature);
+        h2_t *hlir = h2_open_function(it->node, it->name, signature, NULL, NULL);
         h2_set_attrib(hlir, &kExportAttrib);
 
         set_proc(sema, eTagProcs, it->name, hlir);
