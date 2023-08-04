@@ -1,7 +1,5 @@
 dir = meson.current_source_dir()
 
-subdir_done()
-
 tests = {
     'attribs': {
         'pass': [

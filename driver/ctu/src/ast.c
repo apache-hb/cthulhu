@@ -41,6 +41,20 @@ ctu_t *ctu_expr_noinit(scan_t *scan, where_t where)
     return ctu_new(scan, where, eCtuExprNoInit);
 }
 
+ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprInt);
+    mpz_init_set(ast->intValue, value);
+    return ast;
+}
+
+ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprBool);
+    ast->boolValue = value;
+    return ast;
+}
+
 /* types */
 
 ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path)

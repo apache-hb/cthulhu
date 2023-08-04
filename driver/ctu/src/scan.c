@@ -1,10 +1,22 @@
 #include "ctu/scan.h"
 
 #include "base/macros.h"
+#include "base/util.h"
 
 #include "report/report.h"
 
 #include "scan/node.h"
+
+ctu_digit_t ctu_parse_digit(const char *str, size_t base)
+{
+    ctu_digit_t result = {
+        .suffix = ctu_strdup("")
+    };
+
+    mpz_init_set_str(result.value, str, (int)base);
+
+    return result;
+}
 
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {

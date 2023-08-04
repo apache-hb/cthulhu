@@ -4,15 +4,15 @@
 #   define HLIR_KIND(ID, NAME)
 #endif
 
-HLIR_KIND(eHlir2TypeEmpty, "type-empty")
-HLIR_KIND(eHlir2TypeUnit, "type-unit")
-HLIR_KIND(eHlir2TypeBool, "type-bool")
+HLIR_KIND(eHlir2TypeEmpty, "type-empty") ///< a type that can never be created
+HLIR_KIND(eHlir2TypeUnit, "type-unit") ///< a type with a single value
+HLIR_KIND(eHlir2TypeBool, "type-bool") ///< a type with two values
 HLIR_KIND(eHlir2TypeDigit, "type-digit")
 HLIR_KIND(eHlir2TypeString, "type-string")
-HLIR_KIND(eHlir2TypeClosure, "type-closure")
+HLIR_KIND(eHlir2TypeClosure, "type-closure") ///< a function pointer type (no captures)
 HLIR_KIND(eHlir2TypePointer, "type-pointer")
 
-HLIR_KIND(eHlir2ExprEmpty, "expr-empty")
+HLIR_KIND(eHlir2ExprEmpty, "expr-empty") ///< an uninitialized value of a type
 HLIR_KIND(eHlir2ExprUnit, "expr-unit")
 HLIR_KIND(eHlir2ExprBool, "expr-bool")
 HLIR_KIND(eHlir2ExprDigit, "expr-digit")

@@ -76,6 +76,17 @@ static void add_decl(h2_t *sema, ctu_tag_t tag, const char *name, h2_t *decl)
 ///
 
 static h2_t *kRootModule = NULL;
+static h2_t *kIntTypes[eDigitTotal * eSignTotal] = { NULL };
+
+static h2_t *make_int_type(const char *name, digit_t digit, sign_t sign)
+{
+    return (kIntTypes[digit * eSignTotal + sign] = h2_type_digit(node_builtin(), name, digit, sign));
+}
+
+static h2_t *get_int_type(digit_t digit, sign_t sign)
+{
+    return kIntTypes[digit * eSignTotal + sign];
+}
 
 static h2_t *make_runtime_mod(reports_t *reports)
 {
@@ -92,8 +103,8 @@ static h2_t *make_runtime_mod(reports_t *reports)
     node_t *node = node_builtin();
     h2_t *root = h2_module_root(reports, node, "runtime", eTagTotal, sizes);
 
-    add_decl(root, eTagTypes, "int", h2_type_digit(node, "int", eDigitInt, eSignSigned));
-    add_decl(root, eTagTypes, "uint", h2_type_digit(node, "uint", eDigitInt, eSignUnsigned));
+    add_decl(root, eTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));
+    add_decl(root, eTagTypes, "uint", make_int_type("uint", eDigitInt, eSignUnsigned));
 
     return root;
 }
@@ -171,14 +182,37 @@ static h2_t *ctu_sema_type(h2_t *sema, const ctu_t *type)
 /// expressions
 ///
 
+static h2_t *ctu_sema_int(h2_t *sema, ctu_t *expr, const h2_t *implicitType)
+{
+    const h2_t *type = implicitType ? implicitType : get_int_type(eDigitInt, eSignSigned);
+    return h2_expr_digit(expr->node, type, expr->intValue);
+}
+
+static h2_t *ctu_sema_noinit(h2_t *sema, ctu_t *expr, const h2_t *implicitType)
+{
+    if (implicitType == NULL)
+    {
+        report(sema->reports, eFatal, expr->node, "no implicit type in this context for noinit");
+        return h2_error(expr->node, "no implicit type");
+    }
+
+    return h2_expr_empty(expr->node, implicitType);
+}
+
 static h2_t *ctu_sema_lvalue(h2_t *sema, ctu_t *expr)
 {
 
 }
 
-static h2_t *ctu_sema_rvalue(h2_t *sema, ctu_t *expr)
+static h2_t *ctu_sema_rvalue(h2_t *sema, ctu_t *expr, const h2_t *implicitType)
 {
+    switch (expr->kind)
+    {
+    case eCtuExprInt: return ctu_sema_int(sema, expr, implicitType);
+    case eCtuExprNoInit: return ctu_sema_noinit(sema, expr, implicitType);
 
+    default: NEVER("invalid rvalue-expr kind %d", expr->kind);
+    }
 }
 
 ///
@@ -356,10 +390,11 @@ void ctu_compile_module(context_t *context)
     {
         map_entry_t entry = map_next(&globals);
         h2_t *global = entry.value;
+        CTASSERTF(h2_is(global, eHlir2Resolve), "expected resolve, got %s", h2_to_string(global));
 
-        mpz_t zero;
-        mpz_init(zero);
-        h2_t *value = h2_expr_digit(global->node, h2_get_type(global), zero);
+        ctu_t *decl = global->user;
+        const h2_t *type = h2_get_type(global);
+        h2_t *value = ctu_sema_rvalue(sema, decl->global, type);
 
         h2_close_global(global, value);
     }

@@ -31,6 +31,7 @@ WS [ \t\r\v\n\f]
 "*" { return STAR; }
 
 ";" { return SEMI; }
+":" { return COLON; }
 "::" { return COLON2; }
 
 "=" { return ASSIGN; }
@@ -49,9 +50,34 @@ WS [ \t\r\v\n\f]
 
 "$" { return DISCARD; }
 
+"true" {
+    yylval->boolean = true;
+    return BOOLEAN;
+}
+
+"false" {
+    yylval->boolean = false;
+    return BOOLEAN;
+}
+
 [a-zA-Z_][a-zA-Z0-9_]* {
     yylval->ident = ctu_strdup(yytext);
     return IDENT;
+}
+
+"0b"[01]+{SUFFIX} {
+    yylval->digit = ctu_parse_digit(yytext + 2, 2);
+    return INTEGER;
+}
+
+"0x"[0-9a-fA-F]+{SUFFIX} {
+    yylval->digit = ctu_parse_digit(yytext + 2, 16);
+    return INTEGER;
+}
+
+[0-9]+{SUFFIX} {
+    yylval->digit = ctu_parse_digit(yytext, 10);
+    return INTEGER;
 }
 
 . { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }

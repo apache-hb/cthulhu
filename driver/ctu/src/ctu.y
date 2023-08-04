@@ -24,6 +24,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %union {
     char *ident;
+    ctu_digit_t digit;
+
     bool boolean;
 
     vector_t *vector;
@@ -33,6 +35,12 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %token<ident>
     IDENT "identifier"
+
+%token<digit>
+    INTEGER "integer"
+
+%token<boolean>
+    BOOLEAN "boolean"
 
 %token
     MODULE "module"
@@ -93,7 +101,7 @@ importList: import { $$ = vector_init($1); }
     | importList import { vector_push(&$1, $2); $$ = $1; }
     ;
 
-import: IMPORT path importAlias { $$ = ctu_import(x, @$, $2, ($3 != NULL) ? $3 : vector_tail($2)); }
+import: IMPORT path importAlias SEMI { $$ = ctu_import(x, @$, $2, ($3 != NULL) ? $3 : vector_tail($2)); }
     ;
 
 importAlias: %empty { $$ = NULL; }
@@ -143,6 +151,8 @@ type: path { $$ = ctu_type_name(x, @$, $1); }
 /* expressions */
 
 expr: NOINIT { $$ = ctu_expr_noinit(x, @$); }
+    | INTEGER { $$ = ctu_expr_int(x, @$, $1.value); }
+    | BOOLEAN { $$ = ctu_expr_bool(x, @$, $1); }
     ;
 
 /* basic */
