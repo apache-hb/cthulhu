@@ -22,6 +22,7 @@ static char *path_to_string(vector_t *path)
 
 static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, h2_t *root)
 {
+    CTASSERT(handle != NULL);
     context_t *self = ctu_malloc(sizeof(context_t));
 
     self->parent = handle->parent;
@@ -35,15 +36,11 @@ static context_t *context_inner_new(driver_t *handle, const char *name, void *as
 
 context_t *compiled_new(driver_t *handle, h2_t *root)
 {
-    CTASSERT(handle != NULL);
-
     return context_inner_new(handle, h2_get_name(root), NULL, root);
 }
 
 context_t *context_new(driver_t *handle, const char *name, void *ast, h2_t *root)
 {
-    CTASSERT(handle != NULL);
-
     return context_inner_new(handle, name, ast, root);
 }
 

@@ -91,21 +91,21 @@ void arena_free(alloc_t *alloc, void *ptr, size_t size)
 
 /// gmp arena managment
 
-static alloc_t *gmpAlloc = NULL;
+static alloc_t *gGmpAlloc = NULL;
 
 static void *ctu_gmp_malloc(size_t size)
 {
-    return arena_malloc(gmpAlloc, size, "gmp-alloc");
+    return arena_malloc(gGmpAlloc, size, "gmp-alloc");
 }
 
 static void *ctu_gmp_realloc(void *ptr, size_t oldSize, size_t newSize)
 {
-    return arena_realloc(gmpAlloc, ptr, newSize, oldSize);
+    return arena_realloc(gGmpAlloc, ptr, newSize, oldSize);
 }
 
 static void ctu_gmp_free(void *ptr, size_t size)
 {
-    arena_free(gmpAlloc, ptr, size);
+    arena_free(gGmpAlloc, ptr, size);
 }
 
 USE_DECL
@@ -113,6 +113,6 @@ void init_gmp(alloc_t *alloc)
 {
     CTASSERT(alloc != NULL);
 
-    gmpAlloc = alloc;
+    gGmpAlloc = alloc;
     mp_set_memory_functions(ctu_gmp_malloc, ctu_gmp_realloc, ctu_gmp_free);
 }

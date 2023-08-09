@@ -33,6 +33,7 @@ size_t stacktrace_get(frame_t *frames, size_t size)
     HANDLE thread = GetCurrentThread();
     HANDLE process = GetCurrentProcess();
 
+    // TODO: allocating here is probably not a good idea
     IMAGEHLP_SYMBOL *symbol = malloc(sizeof(IMAGEHLP_SYMBOL) + STACKTRACE_NAME_LENGTH);
     symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
     symbol->Address = 0;
