@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "cthulhu/hlir/query.h"
+
 #include "std/vector.h"
 #include "std/map.h"
 
@@ -95,10 +97,10 @@ void *h2_module_data(h2_t *self)
 
 h2_cookie_t *h2_module_cookie(h2_t *self)
 {
-    CTASSERT(self != NULL);
+    CTASSERT(h2_is(self, eHlir2DeclModule));
 
     h2_cookie_t *cookie = ctu_malloc(sizeof(h2_cookie_t));
-    cookie->parent = self;
+    cookie->reports = self->reports;
     cookie->stack = vector_new(16);
     return cookie;
 }

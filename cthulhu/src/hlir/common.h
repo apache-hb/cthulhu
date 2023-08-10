@@ -3,7 +3,7 @@
 #include "cthulhu/hlir/h2.h"
 
 typedef struct h2_cookie_t {
-    h2_t *parent;
+    reports_t *reports;
     vector_t *stack;
 } h2_cookie_t;
 

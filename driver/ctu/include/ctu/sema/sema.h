@@ -29,5 +29,7 @@ void ctu_add_decl(h2_t *sema, ctu_tag_t tag, const char *name, h2_t *decl);
 // runtime module
 
 h2_t *ctu_get_int_type(digit_t digit, sign_t sign);
+h2_t *ctu_get_bool_type(void);
+
 vector_t *ctu_rt_path(void);
 h2_t *ctu_rt_mod(reports_t *reports);

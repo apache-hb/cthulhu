@@ -28,7 +28,7 @@ static bool has_name(h2_kind_t kind)
     }
 }
 
-static const char *h2_kind_to_string(h2_kind_t kind)
+const char *h2_kind_to_string(h2_kind_t kind)
 {
     switch (kind)
     {

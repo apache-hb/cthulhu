@@ -36,11 +36,6 @@ ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name)
 
 /* exprs */
 
-ctu_t *ctu_expr_noinit(scan_t *scan, where_t where)
-{
-    return ctu_new(scan, where, eCtuExprNoInit);
-}
-
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprInt);

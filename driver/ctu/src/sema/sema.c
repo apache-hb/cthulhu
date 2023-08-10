@@ -56,10 +56,16 @@ void ctu_add_decl(h2_t *sema, ctu_tag_t tag, const char *name, h2_t *decl)
 ///
 
 static h2_t *kIntTypes[eDigitTotal * eSignTotal] = { NULL };
+static h2_t *kBoolType = NULL;
 
 static h2_t *make_int_type(const char *name, digit_t digit, sign_t sign)
 {
     return (kIntTypes[digit * eSignTotal + sign] = h2_type_digit(node_builtin(), name, digit, sign));
+}
+
+static h2_t *make_bool_type(const char *name)
+{
+    return (kBoolType = h2_type_bool(node_builtin(), name));
 }
 
 h2_t *ctu_get_int_type(digit_t digit, sign_t sign)
@@ -67,8 +73,15 @@ h2_t *ctu_get_int_type(digit_t digit, sign_t sign)
     return kIntTypes[digit * eSignTotal + sign];
 }
 
+h2_t *ctu_get_bool_type(void)
+{
+    return kBoolType;
+}
+
 h2_t *ctu_rt_mod(reports_t *reports)
 {
+    GLOBAL_INIT("cthulhu runtime module");
+
     size_t sizes[eTagTotal] = {
         [eTagValues] = 1,
         [eTagTypes] = 1,
@@ -82,6 +95,7 @@ h2_t *ctu_rt_mod(reports_t *reports)
     node_t *node = node_builtin();
     h2_t *root = h2_module_root(reports, node, "runtime", eTagTotal, sizes);
 
+    ctu_add_decl(root, eTagTypes, "bool", make_bool_type("bool"));
     ctu_add_decl(root, eTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));
     ctu_add_decl(root, eTagTypes, "uint", make_int_type("uint", eDigitInt, eSignUnsigned));
 

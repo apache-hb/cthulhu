@@ -28,7 +28,7 @@ extern panic_handler_t gPanicHandler;
 
 /**
  * @brief panic with a message, file, and line
- * 
+ *
  * @param panic the panic information
  * @param msg the message to panic with
  * @param ... the arguments to format
@@ -54,4 +54,4 @@ NORETURN ctpanic(panic_t panic, FORMAT_STRING const char *msg, ...);
 #define CTASSERT(expr) CTASSERTM(expr, #expr)
 #define NEVER(...) CTASSERTF(false, __VA_ARGS__)
 
-#define GLOBAL_INIT() do { static bool init = false; CTASSERTM(!init, "already initialized"); init = true; } while (0)
+#define GLOBAL_INIT(ID) do { static bool init = false; CTASSERTM(!init, ID " already initialized"); init = true; } while (0)

@@ -11,7 +11,6 @@ typedef struct vector_t vector_t;
 typedef enum ctu_kind_t {
     eCtuExprInt,
     eCtuExprBool,
-    eCtuExprNoInit,
 
     eCtuTypeName,
     eCtuTypePointer,
@@ -82,8 +81,6 @@ typedef struct ctu_t {
 
 ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *modspec, vector_t *imports, vector_t *decls);
 ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name);
-
-ctu_t *ctu_expr_noinit(scan_t *scan, where_t where);
 
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value);
 ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value);

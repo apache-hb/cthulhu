@@ -1,27 +1,51 @@
 #include "ctu/sema/decl.h"
 #include "ctu/sema/type.h"
+#include "ctu/sema/expr.h"
 
 #include "std/vector.h"
 
 #include "base/panic.h"
 
-static void ctu_resolve_global(h2_cookie_t *cookie, h2_t *self, void *user)
-{
+///
+/// decl resolution
+///
 
+static void ctu_resolve_global(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
+{
+    ctu_t *decl = user;
+    CTASSERTF(decl->kind == eCtuDeclGlobal, "decl %s is not a global", decl->name);
 }
 
-static void ctu_resolve_function(h2_cookie_t *cookie, h2_t *self, void *user)
+static void ctu_resolve_function(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
 {
-
+    ctu_t *decl = user;
+    CTASSERTF(decl->kind == eCtuDeclFunction, "decl %s is not a function", decl->name);
 }
+
+static void ctu_resolve_struct(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
+{
+    ctu_t *decl = user;
+    CTASSERTF(decl->kind == eCtuDeclStruct, "decl %s is not a struct", decl->name);
+}
+
+///
+/// forward declarations
+///
 
 static h2_t *ctu_forward_global(h2_t *sema, ctu_t *decl)
 {
     CTASSERTF(decl->kind == eCtuDeclGlobal, "decl %s is not a global", decl->name);
-    CTASSERTF(decl->type != NULL || decl->global != NULL, "decl %s has no type and no init", decl->name);
+    CTASSERTF(decl->type != NULL || decl->global != NULL, "decl %s has no type and no init expr", decl->name);
+
+    h2_resolve_config_t resolve = {
+        .sema = sema,
+        .user = decl,
+        .fnResolve = ctu_resolve_global
+    };
 
     h2_t *type = ctu_sema_type(sema, decl->type);
-    h2_t *global = h2_open_global(decl->node, decl->name, type, decl, ctu_resolve_global);
+    h2_t *expr = ctu_sema_rvalue(sema, decl->global, type);
+    h2_t *global = h2_open_global(decl->node, decl->name, type, resolve);
 
     return global;
 }
@@ -30,12 +54,31 @@ static h2_t *ctu_forward_function(h2_t *sema, ctu_t *decl)
 {
     CTASSERTF(decl->kind == eCtuDeclFunction, "decl %s is not a function", decl->name);
 
+    h2_resolve_config_t resolve = {
+        .sema = sema,
+        .user = decl,
+        .fnResolve = ctu_resolve_function
+    };
+
     h2_t *returnType = ctu_sema_type(sema, decl->returnType);
     h2_t *signature = h2_type_closure(decl->node, decl->name, returnType, vector_of(0), eArityFixed);
 
-    h2_t *function = h2_open_function(decl->node, decl->name, signature, decl, ctu_resolve_function);
+    h2_t *function = h2_open_function(decl->node, decl->name, signature, resolve);
 
     return function;
+}
+
+static h2_t *ctu_forward_struct(h2_t *sema, ctu_t *decl)
+{
+    CTASSERTF(decl->kind == eCtuDeclStruct, "decl %s is not a struct", decl->name);
+
+    h2_resolve_config_t resolve = {
+        .sema = sema,
+        .user = decl,
+        .fnResolve = ctu_resolve_struct
+    };
+
+    return h2_error(decl->node, "unimplemented");
 }
 
 ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
@@ -53,6 +96,14 @@ ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
         ctu_forward_t fwd = {
             .tag = eTagFunctions,
             .decl = ctu_forward_function(sema, decl),
+        };
+        return fwd;
+    }
+
+    case eCtuDeclStruct: {
+        ctu_forward_t fwd = {
+            .tag = eTagTypes,
+            .decl = ctu_forward_struct(sema, decl)
         };
         return fwd;
     }

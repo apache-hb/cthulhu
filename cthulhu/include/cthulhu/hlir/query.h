@@ -6,6 +6,7 @@ typedef struct reports_t reports_t;
 typedef struct node_t node_t;
 typedef struct h2_t h2_t;
 
+const char *h2_kind_to_string(h2_kind_t kind);
 const char *h2_to_string(const h2_t *self);
 
 const node_t *h2_get_node(const h2_t *self);

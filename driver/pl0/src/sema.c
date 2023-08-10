@@ -407,6 +407,16 @@ static void sema_proc(h2_t *sema, h2_t *hlir, pl0_t *node)
     h2_close_function(hlir, stmts);
 }
 
+static void resolve_global(h2_cookie_t *cookie, h2_t *sema, h2_t *decl, void *user)
+{
+    h2_close_global(decl, sema_global(sema, user));
+}
+
+static void resolve_proc(h2_cookie_t *cookie, h2_t *sema, h2_t *decl, void *user)
+{
+    sema_proc(sema, decl, user);
+}
+
 static void insert_module(h2_t *sema, h2_t *other)
 {
     map_iter_t otherValues = map_iter(h2_module_tag(other, eTagValues));
@@ -429,8 +439,7 @@ static void insert_module(h2_t *sema, h2_t *other)
     }
 }
 
-typedef struct
-{
+typedef struct {
     vector_t *consts;
     vector_t *globals;
     vector_t *procs;
@@ -446,10 +455,6 @@ void pl0_forward_decls(context_t *context)
     size_t totalConsts = vector_len(root->consts);
     size_t totalGlobals = vector_len(root->globals);
     size_t totalFunctions = vector_len(root->procs);
-
-    vector_t *consts = vector_new(totalConsts);
-    vector_t *globals = vector_new(totalGlobals);
-    vector_t *procs = vector_new(totalFunctions);
 
     const char *id = vector_len(root->mod) > 0
         ? vector_tail(root->mod)
@@ -469,22 +474,32 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->consts, i);
 
-        h2_t *hlir = h2_open_global(it->node, it->name, kConstType, NULL, NULL);
+        h2_resolve_config_t resolve = {
+            .sema = sema,
+            .user = it,
+            .fnResolve = resolve_global
+        };
+
+        h2_t *hlir = h2_open_global(it->node, it->name, kConstType, resolve);
         h2_set_attrib(hlir, &kExportAttrib);
 
         set_var(sema, eTagValues, it->name, hlir);
-        vector_push(&consts, hlir);
     }
 
     for (size_t i = 0; i < totalGlobals; i++)
     {
         pl0_t *it = vector_get(root->globals, i);
 
-        h2_t *hlir = h2_open_global(it->node, it->name, kIntType, NULL, NULL);
+        h2_resolve_config_t resolve = {
+            .sema = sema,
+            .user = it,
+            .fnResolve = resolve_global
+        };
+
+        h2_t *hlir = h2_open_global(it->node, it->name, kIntType, resolve);
         h2_set_attrib(hlir, &kExportAttrib);
 
         set_var(sema, eTagValues, it->name, hlir);
-        vector_push(&globals, hlir);
     }
 
     for (size_t i = 0; i < totalFunctions; i++)
@@ -492,20 +507,18 @@ void pl0_forward_decls(context_t *context)
         pl0_t *it = vector_get(root->procs, i);
 
         h2_t *signature = h2_type_closure(it->node, it->name, kVoidType, vector_of(0), eArityFixed);
-        h2_t *hlir = h2_open_function(it->node, it->name, signature, NULL, NULL);
+        h2_resolve_config_t resolve = {
+            .sema = sema,
+            .user = it,
+            .fnResolve = resolve_proc
+        };
+
+        h2_t *hlir = h2_open_function(it->node, it->name, signature, resolve);
         h2_set_attrib(hlir, &kExportAttrib);
 
         set_proc(sema, eTagProcs, it->name, hlir);
-        vector_push(&procs, hlir);
     }
 
-    sema_data_t semaData = {
-        .consts = consts,
-        .globals = globals,
-        .procs = procs,
-    };
-
-    h2_module_update(sema, BOX(semaData));
 
     context_update(context, root, sema);
 }
@@ -546,28 +559,22 @@ void pl0_compile_module(context_t *context)
 {
     pl0_t *root = context_get_ast(context);
     h2_t *mod = context_get_module(context);
+    h2_cookie_t *cookie = h2_module_cookie(mod);
 
-    sema_data_t *semaData = h2_module_data(mod);
-
-    for (size_t i = 0; i < vector_len(semaData->consts); i++)
+    map_t *values = h2_module_tag(mod, eTagValues);
+    map_iter_t iterGlobals = map_iter(values);
+    while (map_has_next(&iterGlobals))
     {
-        pl0_t *it = vector_get(root->consts, i);
-        h2_t *hlir = vector_get(semaData->consts, i);
-        h2_close_global(hlir, sema_global(mod, it));
+        map_entry_t entry = map_next(&iterGlobals);
+        h2_resolve(cookie, entry.value);
     }
 
-    for (size_t i = 0; i < vector_len(semaData->globals); i++)
+    map_t *procs = h2_module_tag(mod, eTagProcs);
+    map_iter_t iterProcs = map_iter(procs);
+    while (map_has_next(&iterProcs))
     {
-        pl0_t *it = vector_get(root->globals, i);
-        h2_t *hlir = vector_get(semaData->globals, i);
-        h2_close_global(hlir, sema_global(mod, it));
-    }
-
-    for (size_t i = 0; i < vector_len(semaData->procs); i++)
-    {
-        pl0_t *it = vector_get(root->procs, i);
-        h2_t *hlir = vector_get(semaData->procs, i);
-        sema_proc(mod, hlir, it);
+        map_entry_t entry = map_next(&iterProcs);
+        h2_resolve(cookie, entry.value);
     }
 
     if (root->entry != NULL)
@@ -579,7 +586,6 @@ void pl0_compile_module(context_t *context)
         h2_t *hlir = h2_decl_function(root->node, h2_get_name(mod), signature, body);
         h2_set_attrib(hlir, &kEntryAttrib);
 
-        vector_push(&semaData->procs, hlir);
         set_decl(mod, eTagProcs, h2_get_name(mod), hlir); // TODO: this is a hack
     }
 }

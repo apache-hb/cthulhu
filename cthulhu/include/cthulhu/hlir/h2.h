@@ -14,7 +14,7 @@ typedef struct node_t node_t;
 typedef struct h2_t h2_t;
 typedef struct h2_cookie_t h2_cookie_t;
 
-typedef void (*h2_resolve_t)(h2_cookie_t *cookie, h2_t *self, void *user);
+typedef void (*h2_resolve_t)(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user);
 
 typedef enum sema_tags_t {
     eSema2Values,
@@ -128,6 +128,9 @@ typedef struct h2_t {
             const char *name; ///< the name of the declaration
             const h2_attrib_t *attrib; ///< the attributes of the declaration
 
+            /* eHlir2DeclFunction */
+            vector_t *locals;
+
             union {
                 /* eHlir2TypeClosure */
                 struct {
@@ -137,19 +140,18 @@ typedef struct h2_t {
                 };
 
                 /* eHlir2DeclFunction */
-                struct {
-                    vector_t *locals;
-                    h2_t *body;
-                };
+                h2_t *body;
 
                 /* eHlir2DeclGlobal */
-                struct {
-                    h2_t *global;
-                };
+                h2_t *global;
 
-                /* eHlir2Begin */
+                /* eHlir2Resolve */
                 struct {
+                    h2_kind_t expected;
+
                     void *user;
+                    h2_t *sema;
+
                     h2_resolve_t fnResolve;
                 };
 
@@ -164,6 +166,13 @@ typedef struct h2_t {
         };
     };
 } h2_t;
+
+typedef struct h2_resolve_config_t {
+    h2_t *sema;
+    void *user;
+
+    h2_resolve_t fnResolve;
+} h2_resolve_config_t;
 
 ///
 /// h2 error handling
@@ -294,10 +303,9 @@ h2_t *h2_stmt_branch(const node_t *node, h2_t *cond, h2_t *then, h2_t *other);
 
 // delay the resolve of a declaration
 h2_t *h2_resolve(h2_cookie_t *cookie, h2_t *decl);
-h2_t *h2_decl_open(const node_t *node, const char *name, const h2_t *type, void *user, h2_resolve_t fnResolve);
 
-h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type, void *user, h2_resolve_t fnResolve);
-h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature, void *user, h2_resolve_t fnResolve);
+h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type, h2_resolve_config_t resolve);
+h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature, h2_resolve_config_t resolve);
 
 void h2_close_global(h2_t *self, h2_t *value);
 void h2_close_function(h2_t *self, h2_t *body);

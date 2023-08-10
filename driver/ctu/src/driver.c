@@ -27,15 +27,6 @@
 #include <string.h>
 
 ///
-/// helpers
-///
-
-static bool is_discard(const char *name)
-{
-    return name == NULL;
-}
-
-///
 /// init
 ///
 
@@ -91,7 +82,7 @@ static void import_module(lifetime_t *lifetime, h2_t *sema, ctu_t *include)
 
     if (ctx == NULL)
     {
-        report(sema->reports, eFatal, include->node, "import %s not found", str_join("::", include->importPath));
+        report(sema->reports, eFatal, include->node, "import `%s` not found", str_join("::", include->importPath));
         return;
     }
 
