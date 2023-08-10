@@ -1,7 +1,11 @@
 src = [
     'src/main.c',
+    'src/driver.c',
 
-    'src/sema.c',
+    'src/sema/type.c',
+    'src/sema/sema.c',
+    'src/sema/decl.c',
+    'src/sema/expr.c',
 
     'src/ast.c',
     'src/scan.c',

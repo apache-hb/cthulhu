@@ -126,7 +126,7 @@ h2_t *h2_expr_bool(const node_t *node, const h2_t *type, bool value)
     return self;
 }
 
-h2_t *h2_expr_digit(const node_t *node, const h2_t *type, mpz_t value)
+h2_t *h2_expr_digit(const node_t *node, const h2_t *type, const mpz_t value)
 {
     h2_t *self = h2_new(eHlir2ExprDigit, node, type);
     mpz_init_set(self->digitValue, value);

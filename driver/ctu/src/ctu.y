@@ -51,6 +51,9 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     VAR "var"
     CONST "const"
 
+    STRUCT "struct"
+    UNION "union"
+
     NOINIT "noinit"
 
     AS "as"
@@ -63,16 +66,20 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     COLON ":"
     COLON2 "::"
 
+    LBRACE "{"
+    RBRACE "}"
+
 %type<vector>
     path modspec
     imports importList
     decls declList
+    structFields structFieldList
 
 %type<ast>
     import
-    decl globalDecl functionDecl
+    decl globalDecl functionDecl structDecl structField
     type
-    expr
+    expr maybeExpr
 
 %type<ident>
     importAlias ident
@@ -120,18 +127,19 @@ declList: decl { $$ = vector_init($1); }
 
 decl: globalDecl { $$ = $1; }
     | functionDecl { $$ = $1; }
+    | structDecl { $$ = $1; }
     ;
 
 /* functions */
 
-functionDecl: exported DEF ident COLON type { $$ = ctu_decl_function(x, @$, $1, $3, $5); }
+functionDecl: exported DEF IDENT COLON type { $$ = ctu_decl_function(x, @$, $1, $3, $5); }
     ;
-
 
 /* globals */
 
-globalDecl: exported mut ident COLON type ASSIGN expr SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, $5, $7); }
-    | exported mut ident ASSIGN expr SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, NULL, $5); }
+/* TODO: maybe globals should always need a type declared, at least exported ones */
+globalDecl: exported mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, $5, $7); }
+    | exported mut IDENT ASSIGN expr SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, NULL, $5); }
     ;
 
 exported: %empty { $$ = false; }
@@ -142,6 +150,22 @@ mut: CONST { $$ = false; }
     | VAR { $$ = true; }
     ;
 
+/* structs */
+
+structDecl: exported STRUCT IDENT LBRACE structFields RBRACE { $$ = ctu_decl_struct(x, @$, $1, $3, $5); }
+    ;
+
+structFields: %empty { $$ = vector_of(0); }
+    | structFieldList { $$ = $1; }
+    ;
+
+structFieldList: structField { $$ = vector_init($1); }
+    | structFieldList structField { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+structField: ident COLON type SEMI { $$ = ctu_field(x, @$, $1, $3); }
+    ;
+
 /* types */
 
 type: path { $$ = ctu_type_name(x, @$, $1); }
@@ -150,8 +174,11 @@ type: path { $$ = ctu_type_name(x, @$, $1); }
 
 /* expressions */
 
-expr: NOINIT { $$ = ctu_expr_noinit(x, @$); }
-    | INTEGER { $$ = ctu_expr_int(x, @$, $1.value); }
+maybeExpr: NOINIT { $$ = NULL; }
+    | expr { $$ = $1; }
+    ;
+
+expr: INTEGER { $$ = ctu_expr_int(x, @$, $1.value); }
     | BOOLEAN { $$ = ctu_expr_bool(x, @$, $1); }
     ;
 

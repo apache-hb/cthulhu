@@ -19,6 +19,9 @@ typedef enum ctu_kind_t {
     eCtuDeclGlobal,
     eCtuDeclFunction,
 
+    eCtuDeclStruct,
+    eCtuField,
+
     eCtuImport,
     eCtuModule
 } ctu_kind_t;
@@ -47,6 +50,12 @@ typedef struct ctu_t {
                 struct {
                     ctu_t *returnType;
                 };
+
+                /* eCtuDeclStruct */
+                vector_t *fields;
+
+                /* eCtuField */
+                ctu_t *fieldType;
             };
         };
 
@@ -84,3 +93,6 @@ ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer);
 
 ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mutable, char *name, ctu_t *type, ctu_t *global);
 ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, ctu_t *returnType);
+
+ctu_t *ctu_decl_struct(scan_t *scan, where_t where, bool exported, char *name, vector_t *fields);
+ctu_t *ctu_field(scan_t *scan, where_t where, char *name, ctu_t *type);

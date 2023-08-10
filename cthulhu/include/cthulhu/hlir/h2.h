@@ -239,7 +239,7 @@ h2_t *h2_qualify(const node_t *node, const h2_t *type, quals_t quals);
 h2_t *h2_expr_empty(const node_t *node, const h2_t *type);
 h2_t *h2_expr_unit(const node_t *node, const h2_t *type);
 h2_t *h2_expr_bool(const node_t *node, const h2_t *type, bool value);
-h2_t *h2_expr_digit(const node_t *node, const h2_t *type, mpz_t value);
+h2_t *h2_expr_digit(const node_t *node, const h2_t *type, const mpz_t value);
 
 /**
  * @brief create a string expression

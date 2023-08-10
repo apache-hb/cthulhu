@@ -34,6 +34,9 @@ WS [ \t\r\v\n\f]
 ":" { return COLON; }
 "::" { return COLON2; }
 
+"{" { return LBRACE; }
+"}" { return RBRACE; }
+
 "=" { return ASSIGN; }
 
 "module" { return MODULE; }
@@ -43,6 +46,9 @@ WS [ \t\r\v\n\f]
 "def" { return DEF; }
 "var" { return VAR; }
 "const" { return CONST; }
+
+"struct" { return STRUCT; }
+"union" { return UNION; }
 
 "noinit" { return NOINIT; }
 

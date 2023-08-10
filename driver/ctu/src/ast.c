@@ -88,3 +88,18 @@ ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name,
     ast->returnType = returnType;
     return ast;
 }
+
+ctu_t *ctu_decl_struct(scan_t *scan, where_t where, bool exported, char *name, vector_t *fields)
+{
+    ctu_t *ast = ctu_decl(scan, where, eCtuDeclStruct, name, exported);
+    ast->fields = fields;
+    return ast;
+}
+
+ctu_t *ctu_field(scan_t *scan, where_t where, char *name, ctu_t *type)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuField);
+    ast->name = name;
+    ast->fieldType = type;
+    return ast;
+}

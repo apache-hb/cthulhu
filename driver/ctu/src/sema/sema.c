@@ -1,0 +1,97 @@
+#include "ctu/sema/sema.h"
+
+#include "cthulhu/hlir/query.h"
+
+#include "report/report-ext.h"
+
+#include "std/vector.h"
+
+#include "base/panic.h"
+
+///
+/// decls
+///
+
+static h2_t *get_decl(h2_t *sema, const char *name, const ctu_tag_t *tags, size_t len)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        h2_t *decl = h2_module_get(sema, tags[i], name);
+        if (decl != NULL) { return decl; }
+    }
+
+    return NULL;
+}
+
+h2_t *ctu_get_namespace(h2_t *sema, const char *name)
+{
+    ctu_tag_t tags[] = { eTagModules, eTagImports };
+    return get_decl(sema, name, tags, sizeof(tags) / sizeof(ctu_tag_t));
+}
+
+h2_t *ctu_get_type(h2_t *sema, const char *name)
+{
+    ctu_tag_t tags[] = { eTagTypes };
+    return get_decl(sema, name, tags, sizeof(tags) / sizeof(ctu_tag_t));
+}
+
+void ctu_add_decl(h2_t *sema, ctu_tag_t tag, const char *name, h2_t *decl)
+{
+    CTASSERT(name != NULL);
+    CTASSERT(decl != NULL);
+
+    h2_t *old = h2_module_get(sema, tag, name);
+    if (old != NULL)
+    {
+        report_shadow(sema->reports, name, h2_get_node(old), h2_get_node(decl));
+    }
+    else
+    {
+        h2_module_set(sema, tag, name, decl);
+    }
+}
+
+///
+/// runtime
+///
+
+static h2_t *kIntTypes[eDigitTotal * eSignTotal] = { NULL };
+
+static h2_t *make_int_type(const char *name, digit_t digit, sign_t sign)
+{
+    return (kIntTypes[digit * eSignTotal + sign] = h2_type_digit(node_builtin(), name, digit, sign));
+}
+
+h2_t *ctu_get_int_type(digit_t digit, sign_t sign)
+{
+    return kIntTypes[digit * eSignTotal + sign];
+}
+
+h2_t *ctu_rt_mod(reports_t *reports)
+{
+    size_t sizes[eTagTotal] = {
+        [eTagValues] = 1,
+        [eTagTypes] = 1,
+        [eTagFunctions] = 1,
+        [eTagModules] = 1,
+        [eTagImports] = 1,
+        [eTagAttribs] = 1,
+        [eTagSuffix] = 1,
+    };
+
+    node_t *node = node_builtin();
+    h2_t *root = h2_module_root(reports, node, "runtime", eTagTotal, sizes);
+
+    ctu_add_decl(root, eTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));
+    ctu_add_decl(root, eTagTypes, "uint", make_int_type("uint", eDigitInt, eSignUnsigned));
+
+    return root;
+}
+
+vector_t *ctu_rt_path(void)
+{
+    vector_t *path = vector_new(2);
+    vector_push(&path, "ctu");
+    vector_push(&path, "lang");
+    return path;
+}
