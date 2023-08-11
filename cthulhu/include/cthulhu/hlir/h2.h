@@ -128,9 +128,6 @@ typedef struct h2_t {
             const char *name; ///< the name of the declaration
             const h2_attrib_t *attrib; ///< the attributes of the declaration
 
-            /* eHlir2DeclFunction */
-            vector_t *locals;
-
             union {
                 /* eHlir2TypeClosure */
                 struct {
@@ -139,28 +136,36 @@ typedef struct h2_t {
                     arity_t arity;
                 };
 
-                /* eHlir2DeclFunction */
-                h2_t *body;
+                /* Resolve may be a function, in which case locals needs to be initialized */
+                struct {
+                    /* eHlir2DeclFunction */
+                    vector_t *locals;
+
+                    union {
+                        /* eHlir2DeclFunction */
+                        h2_t *body;
+
+                        /* eHlir2Resolve */
+                        struct {
+                            h2_kind_t expected;
+
+                            void *user;
+                            h2_t *sema;
+
+                            h2_resolve_t fnResolve;
+                        };
+                    };
+                };
 
                 /* eHlir2DeclGlobal */
                 h2_t *global;
 
-                /* eHlir2Resolve */
-                struct {
-                    h2_kind_t expected;
-
-                    void *user;
-                    h2_t *sema;
-
-                    h2_resolve_t fnResolve;
-                };
-
                 /* eHlir2DeclModule */
                 struct {
-                    void *data;
                     h2_t *parent;
+
                     reports_t *reports;
-                    vector_t *tags;
+                    vector_t *tags; ///< vector_t<map_t<const char*, void*>*>
                 };
             };
         };
@@ -368,9 +373,6 @@ void *h2_module_get(h2_t *self, size_t tag, const char *name);
 void *h2_module_set(h2_t *self, size_t tag, const char *name, void *value);
 
 map_t *h2_module_tag(const h2_t *self, size_t tag);
-
-void h2_module_update(h2_t *self, void *data);
-void *h2_module_data(h2_t *self);
 
 /**
  * @brief return a resolution cookie

@@ -81,20 +81,6 @@ map_t *h2_module_tag(const h2_t *self, size_t tag)
     return vector_get(self->tags, tag);
 }
 
-void h2_module_update(h2_t *self, void *data)
-{
-    CTASSERT(self != NULL);
-
-    self->data = data;
-}
-
-void *h2_module_data(h2_t *self)
-{
-    CTASSERT(self != NULL);
-
-    return self->data;
-}
-
 h2_cookie_t *h2_module_cookie(h2_t *self)
 {
     CTASSERT(h2_is(self, eHlir2DeclModule));

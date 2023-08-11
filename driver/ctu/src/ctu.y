@@ -139,7 +139,7 @@ functionDecl: exported DEF IDENT COLON type { $$ = ctu_decl_function(x, @$, $1, 
 
 /* TODO: maybe globals should always need a type declared, at least exported ones */
 globalDecl: exported mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, $5, $7); }
-    | exported mut IDENT ASSIGN expr SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, NULL, $5); }
+    //| exported mut IDENT ASSIGN expr SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, NULL, $5); }
     ;
 
 exported: %empty { $$ = false; }
