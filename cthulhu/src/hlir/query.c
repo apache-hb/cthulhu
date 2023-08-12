@@ -80,7 +80,7 @@ h2_kind_t h2_get_kind(const h2_t *self)
 
 const h2_t *h2_get_type(const h2_t *self)
 {
-    CTASSERT(self != NULL);
+    CTASSERT(!h2_is(self, eHlir2Resolve));
 
     return self->type;
 }

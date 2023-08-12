@@ -2,6 +2,8 @@
 
 #include "cthulhu/hlir/query.h"
 
+#include "cthulhu/mediator/driver.h"
+
 #include "report/report-ext.h"
 
 #include "std/vector.h"
@@ -78,7 +80,7 @@ h2_t *ctu_get_bool_type(void)
     return kBoolType;
 }
 
-h2_t *ctu_rt_mod(reports_t *reports)
+h2_t *ctu_rt_mod(lifetime_t *lifetime)
 {
     GLOBAL_INIT("cthulhu runtime module");
 
@@ -92,8 +94,7 @@ h2_t *ctu_rt_mod(reports_t *reports)
         [eTagSuffix] = 1,
     };
 
-    node_t *node = node_builtin();
-    h2_t *root = h2_module_root(reports, node, "runtime", eTagTotal, sizes);
+    h2_t *root = lifetime_sema_new(lifetime, "runtime", eTagTotal, sizes);
 
     ctu_add_decl(root, eTagTypes, "bool", make_bool_type("bool"));
     ctu_add_decl(root, eTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));

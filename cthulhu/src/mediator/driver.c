@@ -79,6 +79,13 @@ reports_t *lifetime_get_reports(lifetime_t *lifetime)
     return lifetime->reports;
 }
 
+h2_cookie_t *lifetime_get_cookie(lifetime_t *lifetime)
+{
+    CTASSERT(lifetime != NULL);
+
+    return lifetime->cookie;
+}
+
 void *context_get_ast(context_t *context)
 {
     CTASSERT(context != NULL);
@@ -113,4 +120,23 @@ void context_update(context_t *ctx, void *ast, h2_t *root)
 
     ctx->ast = ast;
     ctx->root = root;
+}
+
+///
+/// helpers
+///
+
+h2_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, const size_t *sizes)
+{
+    CTASSERT(lifetime != NULL);
+    CTASSERT(name != NULL);
+    CTASSERT(sizes != NULL);
+    CTASSERT(len > 0);
+
+    reports_t *reports = lifetime_get_reports(lifetime);
+    h2_cookie_t *cookie = lifetime_get_cookie(lifetime);
+    node_t *node = node_builtin();
+    h2_t *root = h2_module_root(reports, cookie, node, name, len, sizes);
+
+    return root;
 }

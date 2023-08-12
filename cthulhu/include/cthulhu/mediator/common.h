@@ -9,6 +9,7 @@ typedef struct context_t context_t;
 
 typedef struct ap_t ap_t;
 typedef struct h2_t h2_t;
+typedef struct h2_cookie_t h2_cookie_t;
 typedef struct scan_t scan_t;
 typedef struct reports_t reports_t;
 
@@ -29,7 +30,7 @@ typedef enum compile_stage_t
 
 typedef void (*compile_pass_t)(context_t *);
 
-typedef struct language_t 
+typedef struct language_t
 {
     const char *id; ///< unique identifier for the language
     const char *name; ///< human readable name for the language
@@ -49,5 +50,7 @@ typedef struct language_t
 } language_t;
 
 reports_t *lifetime_get_reports(lifetime_t *lifetime);
+
+h2_cookie_t *lifetime_get_cookie(lifetime_t *lifetime);
 
 const char *stage_to_string(compile_stage_t stage);

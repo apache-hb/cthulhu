@@ -49,7 +49,9 @@ static void add_decl(h2_t *sema, obr_tags_t tag, const char *name, h2_t *decl)
 void obr_forward_decls(context_t *context)
 {
     lifetime_t *lifetime = context_get_lifetime(context);
+
     reports_t *reports = lifetime_get_reports(lifetime);
+    h2_cookie_t *cookie = lifetime_get_cookie(lifetime);
 
     obr_t *root = context_get_ast(context);
     size_t lenDecls = vector_len(root->decls);
@@ -61,7 +63,7 @@ void obr_forward_decls(context_t *context)
         [eTagModules] = 32,
     };
 
-    h2_t *sema = h2_module_root(reports, root->node, root->name, eTagTotal, sizes);
+    h2_t *sema = h2_module_root(reports, cookie, root->node, root->name, eTagTotal, sizes);
 
     for (size_t i = 0; i < lenDecls; i++)
     {

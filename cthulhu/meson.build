@@ -1,29 +1,3 @@
-# src = [
-#     'src/hlir/sema.c',
-#     'src/hlir/attribs.c',
-#     'src/hlir/check.c',
-
-#     'src/hlir/type.c',
-#     'src/hlir/hlir.c',
-#     'src/hlir/decl.c',
-#     'src/hlir/ops.c',
-#     'src/hlir/query.c',
-#     'src/hlir/common.c',
-#     'src/hlir/validate.c',
-# ]
-
-# libgeneric = library('generic', src,
-#     include_directories : 'include',
-#     c_args : args,
-#     dependencies : [ std, gmp ]
-# )
-
-# generic = declare_dependency(
-#     link_with : libgeneric,
-#     include_directories : 'include',
-#     dependencies : [ gmp ]
-# )
-
 src = [
     'src/hlir/h2.c',
     'src/hlir/ops.c',
@@ -47,8 +21,10 @@ hlir = declare_dependency(
 src = [
     'src/ssa/ssa.c',
     'src/ssa/opt.c',
+
     'src/ssa/common/type.c',
-    'src/ssa/common/value.c'
+    'src/ssa/common/value.c',
+    'src/ssa/common/operand.c'
 ]
 
 libssa = library('ssa', src,

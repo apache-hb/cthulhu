@@ -4,6 +4,8 @@
 
 #include "cthulhu/hlir/h2.h"
 
+typedef struct lifetime_t lifetime_t;
+
 typedef enum ctu_tag_t {
     eTagValues = eSema2Values,
     eTagTypes = eSema2Types,
@@ -32,4 +34,4 @@ h2_t *ctu_get_int_type(digit_t digit, sign_t sign);
 h2_t *ctu_get_bool_type(void);
 
 vector_t *ctu_rt_path(void);
-h2_t *ctu_rt_mod(reports_t *reports);
+h2_t *ctu_rt_mod(lifetime_t *lifetime);

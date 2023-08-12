@@ -10,13 +10,14 @@
 
 #include "report/report.h"
 
-static h2_t *h2_module_new(const node_t *node, const char *name, h2_t *parent, reports_t *reports, size_t decls, size_t *sizes)
+static h2_t *h2_module_new(const node_t *node, const char *name, h2_t *parent, h2_cookie_t *cookie, reports_t *reports, size_t decls, const size_t *sizes)
 {
     CTASSERTF(decls >= eSema2Total, "module cannot be constructed with less than %zu tags (%zu given)", eSema2Total, decls);
     CTASSERT(reports != NULL);
 
     h2_t *self = h2_decl(eHlir2DeclModule, node, NULL, name);
     self->parent = parent;
+    self->cookie = cookie;
     self->reports = reports;
     self->tags = vector_of(decls);
 
@@ -29,16 +30,16 @@ static h2_t *h2_module_new(const node_t *node, const char *name, h2_t *parent, r
     return self;
 }
 
-h2_t *h2_module_root(reports_t *reports, const node_t *node, const char *name, size_t decls, size_t *sizes)
+h2_t *h2_module_root(reports_t *reports, h2_cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes)
 {
-    return h2_module_new(node, name, NULL, reports, decls, sizes);
+    return h2_module_new(node, name, NULL, cookie, reports, decls, sizes);
 }
 
-h2_t *h2_module(h2_t *parent, const node_t *node, const char *name, size_t decls, size_t *sizes)
+h2_t *h2_module(h2_t *parent, const node_t *node, const char *name, size_t decls, const size_t *sizes)
 {
     CTASSERT(parent != NULL);
 
-    return h2_module_new(node, name, parent, parent->reports, decls, sizes);
+    return h2_module_new(node, name, parent, parent->cookie, parent->reports, decls, sizes);
 }
 
 void *h2_module_get(h2_t *self, size_t tag, const char *name)
@@ -81,10 +82,9 @@ map_t *h2_module_tag(const h2_t *self, size_t tag)
     return vector_get(self->tags, tag);
 }
 
-h2_cookie_t *h2_cookie_new(reports_t *reports)
+h2_cookie_t *h2_get_cookie(h2_t *sema)
 {
-    h2_cookie_t *cookie = ctu_malloc(sizeof(h2_cookie_t));
-    cookie->reports = reports;
-    cookie->stack = vector_new(16);
-    return cookie;
+    CTASSERT(h2_is(sema, eHlir2DeclModule));
+
+    return sema->cookie;
 }

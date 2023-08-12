@@ -558,14 +558,29 @@ ssa_result_t ssa_compile(map_t *mods)
 
         begin_compile(&ssa, global);
 
-        ssa_operand_t value = compile_tree(&ssa, tree->global);
-        ssa_step_t ret = {
-            .opcode = eOpReturn,
-            .ret = {
-                .value = value
-            }
-        };
-        add_step(&ssa, ret);
+        if (tree->global != NULL)
+        {
+            ssa_operand_t value = compile_tree(&ssa, tree->global);
+            ssa_step_t ret = {
+                .opcode = eOpReturn,
+                .ret = {
+                    .value = value
+                }
+            };
+            add_step(&ssa, ret);
+        }
+        else
+        {
+            ssa_value_t *noinit = ssa_value_noinit(global->type);
+            ssa_operand_t value = operand_value(noinit);
+            ssa_step_t ret = {
+                .opcode = eOpReturn,
+                .ret = {
+                    .value = value
+                }
+            };
+            add_step(&ssa, ret);
+        }
     }
 
     map_iter_t functions = map_iter(ssa.functions);

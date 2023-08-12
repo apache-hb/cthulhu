@@ -112,9 +112,8 @@ static void set_var(h2_t *sema, pl0_tag_t tag, const char *name, h2_t *hlir)
     set_decl(sema, tag, name, hlir);
 }
 
-static h2_t *make_runtime_mod(reports_t *reports)
+static h2_t *make_runtime_mod(lifetime_t *lifetime)
 {
-    node_t *node = node_builtin();
     size_t decls[eTagTotal] = {
         [eTagValues] = 1,
         [eTagTypes] = 1,
@@ -122,7 +121,7 @@ static h2_t *make_runtime_mod(reports_t *reports)
         [eTagModules] = 1
     };
 
-    h2_t *mod = h2_module_root(reports, node, "runtime", eTagTotal, decls);
+    h2_t *mod = lifetime_sema_new(lifetime, "runtime", eTagTotal, decls);
     set_proc(mod, eTagProcs, "print", kPrint);
     return mod;
 }
@@ -139,7 +138,6 @@ void pl0_init(driver_t *handle)
 {
     node_t *node = node_builtin();
     lifetime_t *lifetime = handle_get_lifetime(handle);
-    reports_t *reports = lifetime_get_reports(lifetime);
 
     kConstType = h2_type_digit(node, "integer", eDigitInt, eSignSigned);
     kIntType = h2_qualify(node, kConstType, eQualMutable);
@@ -154,7 +152,7 @@ void pl0_init(driver_t *handle)
     kPrint = h2_decl_function(node, "print", signature, vector_of(0), NULL);
     h2_set_attrib(kPrint, &kPrintAttrib);
 
-    h2_t *runtime = make_runtime_mod(reports);
+    h2_t *runtime = make_runtime_mod(lifetime);
     vector_t *path = make_runtime_path();
 
     context_t *ctx = compiled_new(handle, runtime);
@@ -184,7 +182,8 @@ static h2_t *sema_ident(h2_t *sema, pl0_t *node)
         return h2_error(node->node, "unresolved identifier");
     }
 
-    return h2_expr_load(node->node, var);
+    h2_cookie_t *cookie = h2_get_cookie(sema);
+    return h2_expr_load(node->node, h2_resolve(cookie, var));
 }
 
 static h2_t *sema_binary(h2_t *sema, pl0_t *node)
@@ -451,6 +450,7 @@ void pl0_forward_decls(context_t *context)
 
     pl0_t *root = context_get_ast(context);
     reports_t *reports = lifetime_get_reports(lifetime);
+    h2_cookie_t *cookie = lifetime_get_cookie(lifetime);
 
     size_t totalConsts = vector_len(root->consts);
     size_t totalGlobals = vector_len(root->globals);
@@ -467,7 +467,7 @@ void pl0_forward_decls(context_t *context)
         [eTagImportedProcs] = 64
     };
 
-    h2_t *sema = h2_module_root(reports, root->node, id, eTagTotal, sizes);
+    h2_t *sema = h2_module_root(reports, cookie, root->node, id, eTagTotal, sizes);
 
     // forward declare everything
     for (size_t i = 0; i < totalConsts; i++)
@@ -557,12 +557,9 @@ void pl0_process_imports(context_t *context)
 
 void pl0_compile_module(context_t *context)
 {
-    lifetime_t *lifetime = context_get_lifetime(context);
-    reports_t *reports = lifetime_get_reports(lifetime);
-    h2_cookie_t *cookie = h2_cookie_new(reports);
-
     pl0_t *root = context_get_ast(context);
     h2_t *mod = context_get_module(context);
+    h2_cookie_t *cookie = h2_get_cookie(mod);
 
     map_iter_t iterGlobals = map_iter(h2_module_tag(mod, eTagValues));
     while (map_has_next(&iterGlobals))

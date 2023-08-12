@@ -53,6 +53,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     STRUCT "struct"
     UNION "union"
+    TYPE "type"
 
     NOINIT "noinit"
 
@@ -77,7 +78,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<ast>
     import
-    decl globalDecl functionDecl structDecl structField
+    decl globalDecl functionDecl structDecl structField typeAliasDecl
     type
     expr maybeExpr
 
@@ -128,6 +129,7 @@ declList: decl { $$ = vector_init($1); }
 decl: globalDecl { $$ = $1; }
     | functionDecl { $$ = $1; }
     | structDecl { $$ = $1; }
+    | typeAliasDecl { $$ = $1; }
     ;
 
 /* functions */
@@ -137,9 +139,9 @@ functionDecl: exported DEF IDENT COLON type { $$ = ctu_decl_function(x, @$, $1, 
 
 /* globals */
 
-/* TODO: maybe globals should always need a type declared, at least exported ones */
-globalDecl: exported mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, $5, $7); }
-    //| exported mut IDENT ASSIGN expr SEMI { $$ = ctu_decl_global(x, @$, $1, $2, $3, NULL, $5); }
+globalDecl: EXPORT mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_decl_global(x, @$, true, $2, $3, $5, $7); }
+    | mut IDENT ASSIGN expr SEMI { $$ = ctu_decl_global(x, @$, false, $1, $2, NULL, $4); }
+    | mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_decl_global(x, @$, false, $1, $2, $4, $6); }
     ;
 
 exported: %empty { $$ = false; }
@@ -148,6 +150,11 @@ exported: %empty { $$ = false; }
 
 mut: CONST { $$ = false; }
     | VAR { $$ = true; }
+    ;
+
+/* type aliases */
+
+typeAliasDecl: exported TYPE IDENT ASSIGN type SEMI { $$ = ctu_decl_typealias(x, @$, $1, $3, false, $5); }
     ;
 
 /* structs */

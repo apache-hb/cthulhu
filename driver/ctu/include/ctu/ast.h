@@ -18,7 +18,10 @@ typedef enum ctu_kind_t {
     eCtuDeclGlobal,
     eCtuDeclFunction,
 
+    eCtuDeclTypeAlias,
+    eCtuDeclUnion,
     eCtuDeclStruct,
+
     eCtuField,
 
     eCtuImport,
@@ -50,7 +53,13 @@ typedef struct ctu_t {
                     ctu_t *returnType;
                 };
 
-                /* eCtuDeclStruct */
+                /* eCtuDeclTypeAlias */
+                struct {
+                    bool newtype;
+                    ctu_t *typeAlias;
+                };
+
+                /* eCtuDeclStruct|eCtuDeclUnion */
                 vector_t *fields;
 
                 /* eCtuField */
@@ -79,17 +88,45 @@ typedef struct ctu_t {
     };
 } ctu_t;
 
+///
+/// modules
+///
+
 ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *modspec, vector_t *imports, vector_t *decls);
 ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name);
+
+///
+/// expressions
+///
 
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value);
 ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value);
 
+///
+/// types
+///
+
 ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer);
+
+///
+/// real declarations
+///
 
 ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mutable, char *name, ctu_t *type, ctu_t *global);
 ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, ctu_t *returnType);
 
+///
+/// type declarations
+///
+
+ctu_t *ctu_decl_typealias(scan_t *scan, where_t where, bool exported, char *name, bool newtype, ctu_t *type);
+
+ctu_t *ctu_decl_union(scan_t *scan, where_t where, bool exported, char *name, vector_t *fields);
 ctu_t *ctu_decl_struct(scan_t *scan, where_t where, bool exported, char *name, vector_t *fields);
+
+///
+/// internal components
+///
+
 ctu_t *ctu_field(scan_t *scan, where_t where, char *name, ctu_t *type);

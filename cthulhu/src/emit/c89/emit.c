@@ -462,8 +462,16 @@ void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symb
 
     if (symbol->linkage != eLinkImport)
     {
-        const char *value = c89_format_value(emit, symbol->value);
-        write_string(src->io, "%s%s = %s;\n", link, it, value);
+        const ssa_value_t *value = symbol->value;
+        if (value->init)
+        {
+            const char *valStr = c89_format_value(emit, value);
+            write_string(src->io, "%s%s = %s;\n", link, it, valStr);
+        }
+        else
+        {
+            write_string(src->io, "%s%s;\n", link, it); // TODO: is this needed
+        }
     }
 }
 

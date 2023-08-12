@@ -35,9 +35,8 @@ static h2_t *kRootModule = NULL;
 void ctu_init(driver_t *handle)
 {
     lifetime_t *lifetime = handle_get_lifetime(handle);
-    reports_t *reports = lifetime_get_reports(lifetime);
 
-    kRootModule = ctu_rt_mod(reports);
+    kRootModule = ctu_rt_mod(lifetime);
     vector_t *path = ctu_rt_path();
 
     context_t *ctx = compiled_new(handle, kRootModule);
@@ -125,11 +124,8 @@ void ctu_process_imports(context_t *context)
 
 void ctu_compile_module(context_t *context)
 {
-    lifetime_t *lifetime = context_get_lifetime(context);
-    reports_t *reports = lifetime_get_reports(lifetime);
-    h2_cookie_t *cookie = h2_cookie_new(reports);
-
     h2_t *sema = context_get_module(context);
+    h2_cookie_t *cookie = h2_get_cookie(sema);
 
     map_iter_t globals = map_iter(h2_module_tag(sema, eTagValues));
     while (map_has_next(&globals))

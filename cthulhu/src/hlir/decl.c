@@ -41,6 +41,8 @@ static void close_function(h2_t *decl, vector_t *pendingLocals, h2_t *body)
 
 h2_t *h2_resolve(h2_cookie_t *cookie, h2_t *decl)
 {
+    if (!h2_is(decl, eHlir2Resolve)) { return decl; }
+
     size_t index = vector_find(cookie->stack, decl);
     if (index != SIZE_MAX)
     {
@@ -91,7 +93,11 @@ h2_t *h2_decl_local(const node_t *node, const char *name, const h2_t *type)
     return h2_decl(eHlir2DeclLocal, node, type, name);
 }
 
-static const h2_resolve_config_t kEmptyConfig = { NULL, NULL, NULL };
+static const h2_resolve_config_t kEmptyConfig = {
+    .user = NULL,
+    .sema = NULL,
+    .fnResolve = NULL
+};
 
 h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value)
 {

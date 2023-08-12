@@ -19,6 +19,14 @@
 #include "cthulhu/hlir/query.h"
 #include "cthulhu/hlir/check.h"
 
+static h2_cookie_t *cookie_new(reports_t *reports)
+{
+    h2_cookie_t *self = ctu_malloc(sizeof(h2_cookie_t));
+    self->reports = reports;
+    self->stack = vector_new(16);
+    return self;
+}
+
 static void runtime_init(void)
 {
     GLOBAL_INIT();
@@ -91,8 +99,11 @@ lifetime_t *lifetime_new(mediator_t *mediator)
     self->parent = mediator;
 
     self->reports = begin_reports();
+
     self->extensions = map_new(16);
     self->modules = map_new(64);
+
+    self->cookie = cookie_new(self->reports);
 
     return self;
 }

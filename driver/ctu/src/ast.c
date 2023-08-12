@@ -84,6 +84,16 @@ ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name,
     return ast;
 }
 
+/* type decls */
+
+ctu_t *ctu_decl_typealias(scan_t *scan, where_t where, bool exported, char *name, bool newtype, ctu_t *type)
+{
+    ctu_t *ast = ctu_decl(scan, where, eCtuDeclTypeAlias, name, exported);
+    ast->newtype = newtype;
+    ast->typeAlias = type;
+    return ast;
+}
+
 ctu_t *ctu_decl_struct(scan_t *scan, where_t where, bool exported, char *name, vector_t *fields)
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclStruct, name, exported);

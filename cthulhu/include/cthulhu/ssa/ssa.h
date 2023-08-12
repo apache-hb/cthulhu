@@ -30,8 +30,6 @@ typedef enum ssa_kind_t {
     eTypeString,
     eTypeClosure,
 
-    eTypeUndecidable, ///< this is used to indicate that an ssa_value_t cannot be calculated at compile time
-
     eTypeTotal
 } ssa_kind_t;
 
@@ -120,6 +118,7 @@ typedef struct ssa_type_t {
 
 typedef struct ssa_value_t {
     const ssa_type_t *type;
+    bool init; ///< whether this value has been initialized
 
     union {
         mpz_t digitValue;

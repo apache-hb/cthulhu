@@ -36,19 +36,21 @@ static h2_t *ctu_sema_int(h2_t *sema, const ctu_t *expr, const h2_t *implicitTyp
     return h2_expr_digit(expr->node, type, expr->intValue);
 }
 
-h2_t *ctu_sema_lvalue(h2_t *sema, const ctu_t *expr, const h2_t *implicitType)
+h2_t *ctu_sema_lvalue(h2_t *sema, const ctu_t *expr, h2_t *implicitType)
 {
     NEVER("not implemented");
 }
 
-h2_t *ctu_sema_rvalue(h2_t *sema, const ctu_t *expr, const h2_t *implicitType)
+h2_t *ctu_sema_rvalue(h2_t *sema, const ctu_t *expr, h2_t *implicitType)
 {
     CTASSERT(expr != NULL);
 
+    const h2_t *inner = implicitType == NULL ? NULL : h2_resolve(h2_get_cookie(sema), implicitType);
+
     switch (expr->kind)
     {
-    case eCtuExprBool: return ctu_sema_bool(sema, expr, implicitType);
-    case eCtuExprInt: return ctu_sema_int(sema, expr, implicitType);
+    case eCtuExprBool: return ctu_sema_bool(sema, expr, inner);
+    case eCtuExprInt: return ctu_sema_int(sema, expr, inner);
 
     default: NEVER("invalid rvalue-expr kind %d", expr->kind);
     }

@@ -20,6 +20,8 @@ typedef struct lifetime_t
 
     map_t *extensions;
     map_t *modules;
+
+    h2_cookie_t *cookie;
 } lifetime_t;
 
 typedef struct driver_t

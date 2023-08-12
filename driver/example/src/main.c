@@ -14,8 +14,11 @@ static vector_t *example_lang_path(void)
     return path;
 }
 
-static h2_t *example_lang_module(reports_t *reports)
+static h2_t *example_lang_module(lifetime_t *lifetime)
 {
+    reports_t *reports = lifetime_get_reports(lifetime);
+    h2_cookie_t *cookie = lifetime_get_cookie(lifetime);
+
     node_t *node = node_builtin();
     size_t sizes[eSema2Total] = {
         [eSema2Values] = 1,
@@ -24,7 +27,7 @@ static h2_t *example_lang_module(reports_t *reports)
         [eSema2Modules] = 1
     };
 
-    return h2_module_root(reports, node, "runtime", eSema2Total, sizes);
+    return h2_module_root(reports, cookie, node, "runtime", eSema2Total, sizes);
 }
 
 static void ex_config(lifetime_t *lifetime, ap_t *ap)
@@ -35,10 +38,9 @@ static void ex_config(lifetime_t *lifetime, ap_t *ap)
 static void ex_create(driver_t *handle)
 {
     lifetime_t *lifetime = handle_get_lifetime(handle);
-    reports_t *reports = lifetime_get_reports(lifetime);
 
     vector_t *path = example_lang_path();
-    h2_t *mod = example_lang_module(reports);
+    h2_t *mod = example_lang_module(lifetime);
     context_t *ctx = compiled_new(handle, mod);
 
     add_context(lifetime, path, ctx);

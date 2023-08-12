@@ -25,3 +25,9 @@ lifetime_t *context_get_lifetime(context_t *context);
 const char *context_get_name(context_t *context);
 
 void context_update(context_t *ctx, void *ast, h2_t *root);
+
+///
+/// helper apis
+///
+
+h2_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, const size_t *sizes);

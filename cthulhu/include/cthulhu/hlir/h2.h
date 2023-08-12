@@ -40,6 +40,11 @@ typedef enum h2_kind_t {
     eHlir2Total
 } h2_kind_t;
 
+typedef struct h2_cookie_t {
+    reports_t *reports;
+    vector_t *stack;
+} h2_cookie_t;
+
 typedef struct h2_t {
     h2_kind_t kind;
     const node_t *node;
@@ -161,6 +166,7 @@ typedef struct h2_t {
                 /* eHlir2DeclModule */
                 struct {
                     h2_t *parent;
+                    h2_cookie_t *cookie;
 
                     reports_t *reports;
                     vector_t *tags; ///< vector_t<map_t<const char*, void*>*>
@@ -333,7 +339,7 @@ void h2_set_attrib(h2_t *self, const h2_attrib_t *attrib);
 // will be emitted, they are also required to be valid h2_t objects
 // any custom slots can contain any data, but they will not be emitted
 
-h2_t *h2_module_root(reports_t *reports, const node_t *node, const char *name, size_t decls, size_t *sizes);
+h2_t *h2_module_root(reports_t *reports, h2_cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes);
 
 /**
  * @brief create a new module
@@ -345,7 +351,7 @@ h2_t *h2_module_root(reports_t *reports, const node_t *node, const char *name, s
  * @param sizes the size of each declaration category
  * @return the module
  */
-h2_t *h2_module(h2_t *parent, const node_t *node, const char *name, size_t decls, size_t *sizes);
+h2_t *h2_module(h2_t *parent, const node_t *node, const char *name, size_t decls, const size_t *sizes);
 
 /**
  * @brief recursively search for a declaration in a module
@@ -378,4 +384,4 @@ map_t *h2_module_tag(const h2_t *self, size_t tag);
  * @param self the module
  * @return the cookie
  */
-h2_cookie_t *h2_cookie_new(reports_t *reports);
+h2_cookie_t *h2_get_cookie(h2_t *sema);

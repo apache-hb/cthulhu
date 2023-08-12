@@ -49,6 +49,7 @@ WS [ \t\r\v\n\f]
 
 "struct" { return STRUCT; }
 "union" { return UNION; }
+"type" { return TYPE; }
 
 "noinit" { return NOINIT; }
 

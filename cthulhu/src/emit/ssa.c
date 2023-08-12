@@ -71,6 +71,8 @@ static void emit_ssa_attribs(io_t *io, const ssa_symbol_t *symbol)
 
 static const char *value_to_string(const ssa_value_t *value)
 {
+    if (!value->init) { return "noinit"; }
+
     const ssa_type_t *type = value->type;
     switch (type->kind)
     {

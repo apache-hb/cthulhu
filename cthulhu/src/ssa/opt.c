@@ -95,6 +95,17 @@ static bool value_is(const ssa_value_t *value, ssa_kind_t type)
     return value->type->kind == type;
 }
 
+static bool check_init(ssa_scope_t *vm, const ssa_value_t *value)
+{
+    if (!value->init)
+    {
+        report(vm->vm->reports, eFatal, node_invalid(), "use of uninitialized value inside `%s`", vm->symbol->name);
+        return false;
+    }
+
+    return true;
+}
+
 static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
 {
     binary_t binary = step.binary;
@@ -103,6 +114,9 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
 
     CTASSERTF(value_is(lhs, eTypeDigit), "lhs of binary %s is not a digit (inside %s)", binary_name(binary), vm->symbol->name);
     CTASSERTF(value_is(rhs, eTypeDigit), "rhs of binary %s is not a digit (inside %s)", binary_name(binary), vm->symbol->name);
+
+    if (!check_init(vm, lhs)) { return lhs; }
+    if (!check_init(vm, rhs)) { return rhs; }
 
     mpz_t result;
     mpz_init(result);
