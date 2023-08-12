@@ -1,0 +1,3 @@
+MODULE Obr;
+    VAR x : INTEGER;
+END NotObr.

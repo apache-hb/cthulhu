@@ -1,18 +1,20 @@
 #include "cthulhu/mediator/interface.h"
+
+#include "cthulhu/ssa/ssa.h"
+#include "cthulhu/emit/emit.h"
+
 #include "support/langs.h"
 
 #include "report/report.h"
 
 #include "std/str.h"
 #include "std/map.h"
+#include "std/vector.h"
 
 #include "io/io.h"
 #include "io/fs.h"
 
 #include "argparse/argparse.h"
-
-#include "cthulhu/ssa/ssa.h"
-#include "cthulhu/emit/c89.h"
 
 #include <stdio.h>
 
@@ -79,7 +81,7 @@ int main(int argc, const char **argv)
         const char *path = argv[i];
         const char *ext = str_ext(path);
         const language_t *lang = lifetime_get_language(lifetime, ext);
-        
+
         if (lang == NULL)
         {
             printf("no language found for file: %s\n", path);
@@ -103,22 +105,50 @@ int main(int argc, const char **argv)
     }
 
     map_t *modmap = lifetime_get_modules(lifetime);
-    vector_t *mods = map_values(modmap);
-    ssa_module_t *ssa = ssa_gen_module(reports, mods);
+
+    ssa_result_t ssa = ssa_compile(modmap);
     CHECK_REPORTS(reports, "generating ssa");
 
-    ssa_opt_module(reports, ssa);
+    ssa_opt(reports, ssa);
     CHECK_REPORTS(reports, "optimizing ssa");
 
-    ssa_emit_module(reports, ssa);
+    fs_t *fs = fs_virtual(reports, "out");
 
-    CHECK_REPORTS(reports, "failed to open output files");
-
-    c89_emit_t emit = {
+    emit_options_t baseOpts = {
         .reports = reports,
-        .fs = fs_virtual(reports, "out")
+        .fs = fs,
+
+        .modules = ssa.modules,
+        .deps = ssa.deps,
     };
 
-    c89_emit(emit, ssa);
+    ssa_emit_options_t emitOpts = {
+        .opts = baseOpts
+    };
+
+    ssa_emit_result_t ssaResult = emit_ssa(&emitOpts);
     CHECK_REPORTS(reports, "emitting ssa");
+    CTU_UNUSED(ssaResult); // TODO: check for errors
+
+    c89_emit_options_t c89Opts = {
+        .opts = baseOpts
+    };
+
+    c89_emit_result_t c89Result = emit_c89(&c89Opts);
+    CHECK_REPORTS(reports, "emitting c89");
+
+    size_t len = vector_len(c89Result.sources);
+    for (size_t i = 0; i < len; i++)
+    {
+        const char *path = vector_get(c89Result.sources, i);
+        printf("%s\n", path);
+    }
+
+    fs_t *out = fs_physical(reports, "out");
+    CHECK_REPORTS(reports, "creating output directory");
+
+    fs_sync(out, fs);
+    CHECK_REPORTS(reports, "syncing output directory");
+
+    logverbose("done");
 }

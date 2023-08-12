@@ -1,58 +1,56 @@
 src = [
-    'src/hlir/sema.c',
-    'src/hlir/attribs.c',
-    'src/hlir/check.c',
-    
-    'src/hlir/type.c',
-    'src/hlir/hlir.c',
-    'src/hlir/decl.c',
+    'src/hlir/h2.c',
     'src/hlir/ops.c',
-    'src/hlir/query.c',
-    'src/hlir/common.c',
-    'src/hlir/validate.c',
+    'src/hlir/sema.c',
+    'src/hlir/decl.c',
+    'src/hlir/query.c'
 ]
 
-libgeneric = library('generic', src,
+libhlir = library('hlir', src,
     include_directories : 'include',
     c_args : args,
     dependencies : [ std, gmp ]
 )
 
-generic = declare_dependency(
-    link_with : libgeneric,
+hlir = declare_dependency(
+    link_with : libhlir,
     include_directories : 'include',
     dependencies : [ gmp ]
 )
 
 src = [
     'src/ssa/ssa.c',
-    'src/ssa/emit.c',
-    'src/ssa/eval.c',
-    'src/ssa/common.c'
+    'src/ssa/opt.c',
+
+    'src/ssa/common/type.c',
+    'src/ssa/common/value.c',
+    'src/ssa/common/operand.c'
 ]
 
 libssa = library('ssa', src,
-    dependencies : [ std, gmp ],
+    include_directories : 'include',
     c_args : args,
-    include_directories : 'include'
+    dependencies : [ std, gmp, hlir ]
 )
 
 ssa = declare_dependency(
     link_with : libssa,
     include_directories : 'include',
-    dependencies : [ gmp ]
+    dependencies : [ gmp, hlir ]
 )
 
 src = [
-    'src/emit/c89.c',
-    'src/emit/jvm.c',
-    'src/emit/common.c'
+    'src/emit/common.c',
+    'src/emit/ssa.c',
+
+    'src/emit/c89/emit.c',
+    'src/emit/c89/type.c'
 ]
 
 libemit = library('emit', src,
-    dependencies : [ ssa, std, io, interop ],
+    include_directories : [ 'include', 'src/emit' ],
     c_args : args,
-    include_directories : 'include'
+    dependencies : [ ssa, std, io, interop ]
 )
 
 emit = declare_dependency(
@@ -67,9 +65,9 @@ src = [
 ]
 
 libmediator = library('mediator', src,
-    dependencies : [ std ],
+    include_directories : 'include',
     c_args : args,
-    include_directories : 'include'
+    dependencies : [ std, hlir ]
 )
 
 mediator = declare_dependency(

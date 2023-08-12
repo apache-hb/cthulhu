@@ -1,30 +1,27 @@
-src = [ 
-    'src/main.c', 
-    'src/scan.c', 
-    'src/ast.c', 
+src = [
+    'src/main.c',
+    'src/driver.c',
 
-    'src/sema/sema.c', 
-    'src/sema/attribs.c',
-    'src/sema/repr.c',
-    'src/sema/suffix.c',
-    'src/sema/config.c',
+    'src/sema/type.c',
+    'src/sema/sema.c',
+    'src/sema/decl.c',
+    'src/sema/expr.c',
 
-    'src/builtin/builtin.c',
-
-    lex.process('src/ctu.l'), 
-    parse.process('src/ctu.y') 
+    'src/ast.c',
+    'src/scan.c',
+    lex.process('src/ctu.l'),
+    parse.process('src/ctu.y')
 ]
 
 ctu = library('ctu', src,
-    dependencies : [ generic, mediator, argparse, interop ],
+    dependencies : [ mediator, interop, location, hlir ],
     c_args : args,
-    include_directories : 'src'
+    include_directories : [ 'src', 'include' ]
 )
 
-langs += { 
+langs += {
     'ctu': {
         'dep': declare_dependency(link_with : ctu),
-        'mod': 'kCtuModule',
-        'data': files('data/core/int.ct')
+        'mod': 'kCtuModule'
     }
 }

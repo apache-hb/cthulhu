@@ -47,7 +47,9 @@ src = [
     'src/std/optimal.c',
     'src/std/set.c',
     'src/std/str.c',
-    'src/std/vector.c'
+    'src/std/vector.c',
+
+    'src/std/typed/vector.c'
 ]
 
 libstd = library('std', src,
@@ -89,7 +91,7 @@ os = declare_dependency(
     dependencies : [ std, native ]
 )
 
-src = [ 
+src = [
     'src/io/io.c',
     'src/io/io/common.c',
     'src/io/io/view.c',

@@ -1,162 +1,90 @@
-#include "cthulhu/hlir/sema.h"
+#include "common.h"
 
-#include "base/macros.h"
+#include "cthulhu/hlir/query.h"
+
+#include "std/vector.h"
+#include "std/map.h"
+
 #include "base/memory.h"
 #include "base/panic.h"
-#include "base/util.h"
-
-#include "cthulhu/hlir/attribs.h"
-#include "cthulhu/hlir/decl.h"
-#include "cthulhu/hlir/hlir.h"
-#include "cthulhu/hlir/query.h"
 
 #include "report/report.h"
 
-#include "std/map.h"
-
-#include <string.h>
-
-typedef struct sema_t
+static h2_t *h2_module_new(const node_t *node, const char *name, h2_t *parent, h2_cookie_t *cookie, reports_t *reports, size_t decls, const size_t *sizes)
 {
-    struct sema_t *parent;
-    reports_t *reports;
+    CTASSERTF(decls >= eSema2Total, "module cannot be constructed with less than %zu tags (%zu given)", eSema2Total, decls);
+    CTASSERT(reports != NULL);
 
-    /**
-     * an array of maps
-     * each map is its own namespace which maps from symbol name to hlir node
-     */
-    vector_t *decls;
+    h2_t *self = h2_decl(eHlir2DeclModule, node, NULL, name);
+    self->parent = parent;
+    self->cookie = cookie;
+    self->reports = reports;
+    self->tags = vector_of(decls);
 
-    vector_t *stack; // recursion stack
-
-    void *data;
-} sema_t;
-
-static sema_t *sema_inner_new(sema_t *parent, reports_t *reports, vector_t *stack, size_t decls, size_t *sizes)
-{
-    sema_t *sema = ctu_malloc(sizeof(sema_t));
-
-    sema->parent = parent;
-    sema->reports = reports;
-
-    sema->stack = stack;
-    sema->data = NULL;
-
-    sema->decls = vector_of(decls);
     for (size_t i = 0; i < decls; i++)
     {
         map_t *map = map_optimal(sizes[i]);
-        vector_set(sema->decls, i, map);
+        vector_set(self->tags, i, map);
     }
 
-    return sema;
+    return self;
 }
 
-sema_t *sema_root_new(reports_t *reports, size_t decls, size_t *sizes)
+h2_t *h2_module_root(reports_t *reports, h2_cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes)
 {
-    CTASSERT(reports != NULL);
-    return sema_inner_new(NULL, reports, vector_new(16), decls, sizes);
+    return h2_module_new(node, name, NULL, cookie, reports, decls, sizes);
 }
 
-sema_t *sema_new(sema_t *parent, size_t decls, size_t *sizes)
+h2_t *h2_module(h2_t *parent, const node_t *node, const char *name, size_t decls, const size_t *sizes)
 {
     CTASSERT(parent != NULL);
-    return sema_inner_new(parent, parent->reports, parent->stack, decls, sizes);
+
+    return h2_module_new(node, name, parent, parent->cookie, parent->reports, decls, sizes);
 }
 
-sema_t *sema_new_checked(sema_t *parent, size_t decls, size_t *sizes)
+void *h2_module_get(h2_t *self, size_t tag, const char *name)
 {
-    for (size_t i = 0; i < decls; i++)
+    CTASSERT(name != NULL);
+
+    map_t *map = h2_module_tag(self, tag);
+    h2_t *old = map_get(map, name);
+    if (old != NULL)
     {
-        sizes[i] = MIN(sizes[i], 1);
-    }
-    return sema_new(parent, decls, sizes);
-}
-
-reports_t *sema_reports(sema_t *sema)
-{
-    CTASSERT(sema != NULL);
-    return sema->reports;
-}
-
-sema_t *sema_parent(sema_t *sema)
-{
-    CTASSERT(sema != NULL);
-    return sema->parent;
-}
-
-void sema_delete(sema_t *sema)
-{
-    ctu_free(sema);
-}
-
-void sema_set_data(sema_t *sema, void *data)
-{
-    sema->data = data;
-}
-
-void *sema_get_data(sema_t *sema)
-{
-    return sema->data;
-}
-
-void sema_set(sema_t *sema, size_t tag, const char *name, void *data)
-{
-    map_t *map = sema_tag(sema, tag);
-    map_set(map, name, data);
-}
-
-void *sema_get(sema_t *sema, size_t tag, const char *name)
-{
-    map_t *map = sema_tag(sema, tag);
-
-    hlir_t *hlir = map_get(map, name);
-    if (hlir != NULL)
-    {
-        return hlir;
+        return old;
     }
 
-    if (sema->parent != NULL)
+    if (self->parent != NULL)
     {
-        return sema_get(sema->parent, tag, name);
+        return h2_module_get(self->parent, tag, name);
     }
 
     return NULL;
 }
 
-map_t *sema_tag(sema_t *sema, size_t tag)
+void *h2_module_set(h2_t *self, size_t tag, const char *name, void *value)
 {
-    return vector_get(sema->decls, tag);
+    void *old = h2_module_get(self, tag, name);
+    if (old != NULL)
+    {
+        return old;
+    }
+
+    map_t *map = h2_module_tag(self, tag);
+    map_set(map, name, value);
+
+    return NULL;
 }
 
-hlir_t *sema_resolve(sema_t *root, hlir_t *unresolved, sema_resolve_t resolve)
+map_t *h2_module_tag(const h2_t *self, size_t tag)
 {
-    CTASSERT(root->parent == NULL); // we want the root node
+    CTASSERT(self != NULL);
 
-    // bail early if its already resolved
-    if (!hlir_is(unresolved, eHlirUnresolved))
-    {
-        return unresolved;
-    }
+    return vector_get(self->tags, tag);
+}
 
-    if (vector_find(root->stack, unresolved) != SIZE_MAX)
-    {
-        // declaration requires recursive resolution, error out
-        report(root->reports, eFatal, get_hlir_node(unresolved), "recursive resolution for %s", get_hlir_name(unresolved));
-        return unresolved;
-    }
+h2_cookie_t *h2_get_cookie(h2_t *sema)
+{
+    CTASSERT(h2_is(sema, eHlir2DeclModule));
 
-    // save attributes
-    const hlir_attributes_t *attribs = get_hlir_attributes(unresolved);
-
-    vector_push(&root->stack, unresolved);
-
-    hlir_t *result = resolve(unresolved->sema, unresolved->userData);
-    memcpy(unresolved, result, sizeof(hlir_t));
-    
-    vector_drop(root->stack);
-
-    hlir_set_attributes(unresolved, attribs);
-
-    return unresolved;
+    return sema->cookie;
 }

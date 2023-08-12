@@ -1,10 +1,12 @@
-#include "sema/sema.h"
-#include "sema/config.h"
+#include "ctu/driver.h"
+
+#include "cthulhu/mediator/driver.h"
 
 #include "scan/compile.h"
 
 #include "base/macros.h"
 
+#include "std/vector.h"
 #include "std/str.h"
 
 #include "ctu-bison.h"
@@ -12,15 +14,18 @@
 
 CT_CALLBACKS(kCallbacks, ctu);
 
-static vector_t *find_mod_path(ast_t *ast, char *fp)
+static void ctu_config(lifetime_t *lifetime, ap_t *args)
+{
+    CTU_UNUSED(lifetime);
+    CTU_UNUSED(args);
+}
+
+static vector_t *find_mod_path(ctu_t *ast, char *fp)
 {
     if (ast == NULL) { return vector_init(str_filename_noext(fp)); }
-    ast_t *mod = ast->modspec;
 
-    if (mod == NULL) { return vector_init(str_filename_noext(fp)); }
-
-    return vector_len(mod->path) > 0 
-        ? mod->path
+    return vector_len(ast->modspec) > 0
+        ? ast->modspec
         : vector_init(str_filename_noext(fp));
 }
 
@@ -28,13 +33,15 @@ static void ctu_parse_file(driver_t *runtime, scan_t *scan)
 {
     lifetime_t *lifetime = handle_get_lifetime(runtime);
 
-    ctu_init_scan(scan, runtime);
-    ast_t *ast = compile_scanner(scan, &kCallbacks);
+    ctu_t *ast = compile_scanner(scan, &kCallbacks);
+    if (ast == NULL) { return; }
+
+    CTASSERT(ast->kind == eCtuModule);
 
     char *fp = (char*)scan_path(scan);
     vector_t *path = find_mod_path(ast, fp);
 
-    context_t *ctx = context_new(runtime, vector_tail(path), ast, NULL, NULL);
+    context_t *ctx = context_new(runtime, vector_tail(path), ast, NULL);
 
     add_context(lifetime, path, ctx);
 }
@@ -54,7 +61,6 @@ const language_t kCtuModule = {
     .exts = kLangNames,
 
     .fnConfig = ctu_config,
-
     .fnCreate = ctu_init,
 
     .fnParse = ctu_parse_file,

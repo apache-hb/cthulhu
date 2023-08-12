@@ -1,1310 +1,614 @@
-#include "cthulhu/ssa/ssa.h"
+#include "common/common.h"
 
-#include "cthulhu/hlir/hlir.h"
 #include "cthulhu/hlir/query.h"
 
-#include "base/macros.h"
+#include "std/str.h"
+#include "std/map.h"
+#include "std/set.h"
+#include "std/vector.h"
+
+#include "std/typed/vector.h"
+
 #include "base/memory.h"
-#include "base/util.h"
 #include "base/panic.h"
 
-#include "std/map.h"
-#include "std/vector.h"
-#include "std/str.h"
-#include "std/set.h"
+typedef struct ssa_compile_t {
+    /// result data
 
-#include "report/report.h"
+    vector_t *modules; ///< vector<ssa_module>
 
-#include "common.h"
+    map_t *deps;
 
-#include <stdio.h>
-#include <string.h>
+    /// internal data
 
-typedef struct {
-    reports_t *reports;
+    map_t *globals; ///< map<h2, ssa_symbol>
+    map_t *functions; ///< map<h2, ssa_symbol>
 
-    map_t *aggregates;
-
-    map_t *globals;
-    map_t *functions;
-
-    set_t *strings;
-
-    map_t *importedSymbols; // map_t<const char *, const hlir_t *>
-
-    map_t *currentLocals; // map_t<const hlir_t *, size_t> // map of local variables to their index in the locals vector
-    map_t *currentParams; // map_t<const hlir_t *, size_t> // map of parameters to their index in the params vector
+    map_t *locals; ///< map<h2, ssa_symbol>
 
     ssa_block_t *currentBlock;
-    ssa_flow_t *currentFlow;
-    size_t stepIdx;
-    size_t blockIdx;
+    ssa_symbol_t *currentSymbol;
 
-    vector_t *namePath; // vector_t<const char *>
+    vector_t *path;
+} ssa_compile_t;
 
-    const ssa_type_t *emptyType;
-    const ssa_type_t *stubType;
-} ssa_t;
-
-static ssa_block_t *block_new(const char *id) 
+static void add_dep(ssa_compile_t *ssa, const ssa_symbol_t *symbol, const ssa_symbol_t *dep)
 {
-    ssa_block_t *block = ctu_malloc(sizeof(ssa_block_t));
-    block->steps = vector_new(16);
-    block->id = id;
-    return block;
-}
-
-static ssa_block_t *block_gen(ssa_t *ssa, const char *id)
-{
-    return block_new(format("%s%zu", id, ssa->blockIdx++));
-}
-
-static ssa_kind_t get_type_kind(ssa_t *ssa, const hlir_t *hlir)
-{
-    hlir_kind_t kind = get_hlir_kind(hlir);
-    switch (kind)
+    set_t *set = map_get_ptr(ssa->deps, symbol);
+    if (set == NULL)
     {
-    case eHlirDigit:
-    case eHlirEnum: return eTypeDigit;
-    case eHlirDecimal: return eTypeDecimal;
-    case eHlirBool: return eTypeBool;
-    case eHlirString: return eTypeString;
-    case eHlirPointer: return eTypePointer;
-    case eHlirUnit: return eTypeUnit;
-    case eHlirEmpty: return eTypeEmpty;
+        set = set_new(8);
+        map_set_ptr(ssa->deps, symbol, set);
+    }
 
-    case eHlirClosure:
-    case eHlirFunction: 
-        return eTypeSignature;
+    set_add_ptr(set, dep);
+}
 
-    case eHlirOpaque: return eTypeOpaque;
-    case eHlirStruct: return eTypeStruct;
-    case eHlirUnion: return eTypeUnion;
-    case eHlirArray: return eTypeArray;
+static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const h2_t *tree)
+{
+    const char *name = h2_get_name(tree);
+    ssa_type_t *type = ssa_type_from(h2_get_type(tree));
+    const h2_attrib_t *attrib = h2_get_attrib(tree);
 
+    ssa_symbol_t *symbol = ctu_malloc(sizeof(ssa_symbol_t));
+    symbol->linkage = attrib->link;
+    symbol->visibility = attrib->visibility;
+    symbol->linkName = attrib->mangle;
+
+    symbol->locals = NULL;
+
+    symbol->name = name;
+    symbol->type = type;
+    symbol->value = NULL;
+    symbol->entry = NULL;
+
+    symbol->blocks = vector_new(4);
+
+    return symbol;
+}
+
+static ssa_symbol_t *function_create(ssa_compile_t *ssa, const h2_t *tree)
+{
+    CTASSERTF(h2_is(tree, eHlir2DeclFunction), "expected function, got %s", h2_to_string(tree));
+    ssa_symbol_t *self = symbol_create(ssa, tree);
+
+    size_t len = vector_len(tree->locals);
+    self->locals = typevec_of(sizeof(ssa_local_t), len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const h2_t *local = vector_get(tree->locals, i);
+        ssa_type_t *ty = ssa_type_from(h2_get_type(local));
+        const char *name = h2_get_name(local);
+
+        ssa_local_t it = {
+            .name = name,
+            .type = ty,
+        };
+
+        typevec_set(self->locals, i, &it);
+        map_set_ptr(ssa->locals, local, (void*)(uintptr_t)i);
+    }
+
+    return self;
+}
+
+static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
+{
+    vector_t *path = vector_clone(ssa->path);
+
+    ssa_module_t *mod = ctu_malloc(sizeof(ssa_module_t));
+    mod->name = name;
+    mod->path = path;
+
+    mod->globals = vector_new(32);
+    mod->functions = vector_new(32);
+
+    return mod;
+}
+
+static bool is_control_flow(ssa_step_t step)
+{
+    switch (step.opcode)
+    {
+    case eOpBranch:
+    case eOpJump:
+    case eOpReturn:
+        return true;
     default:
-        report(ssa->reports, eInternal, get_hlir_node(hlir), "no respective ssa type for %s", hlir_kind_to_string(kind));
-        return eTypeEmpty;
+        return false;
     }
 }
 
-typedef struct ssa_type_result_t {
-    ssa_type_t *type;
-    bool complete;
-} ssa_type_result_t;
-
-static bool should_add_aggregate(ssa_kind_t kind)
+static ssa_operand_t bb_add_step(ssa_block_t *bb, ssa_step_t step)
 {
-    return kind == eTypeStruct 
-        || kind == eTypeUnion
-        || kind == eTypePointer 
-        || kind == eTypeSignature;
-}
+    size_t index = typevec_len(bb->steps);
 
-static ssa_type_result_t ssa_anytype_new(ssa_t *ssa, const void *key, const char *name, ssa_kind_t kind)
-{
-    if (key != NULL)
+    // really make sure that control flow is last
+#if ENABLE_DEBUG
+    if (index > 0)
     {
-        ssa_type_t *existing = map_get_ptr(ssa->aggregates, key);
-        if (existing != NULL)
-        {
-            ssa_type_result_t result = { existing, true };
-            return result;
-        }
+        ssa_step_t last;
+        typevec_get(bb->steps, index - 1, &last);
+        CTASSERT(!is_control_flow(last));
     }
+#endif
 
-    ssa_type_t *it = ctu_malloc(sizeof(ssa_type_t));
-    it->kind = kind;
-    it->name = name;
+    typevec_push(bb->steps, &step);
 
-    if (should_add_aggregate(kind))
-    {
-        CTASSERT(key != NULL);
-        map_set_ptr(ssa->aggregates, key, it);
-    }
-    
-    ssa_type_result_t result = { it, false };
-
-    return result;
-}
-
-static ssa_type_t *type_new(ssa_t *ssa, const hlir_t *type)
-{
-    const hlir_t *real = hlir_follow_type(type);
-    hlir_kind_t kind = get_hlir_kind(real);
-    ssa_type_result_t result = ssa_anytype_new(ssa, real, get_hlir_name(real), get_type_kind(ssa, real));
-    if (result.complete)
-    {
-        return result.type;
-    }
-
-    ssa_type_t *it = result.type;
-
-    switch (kind) 
-    {
-    case eHlirDigit:
-        it->digit = real->width;
-        it->sign = real->sign;
-        break;
-
-    case eHlirFunction:
-    case eHlirClosure: {
-        it->result = type_new(ssa, real->result);
-        it->arity = real->arity;
-        it->args = vector_of(vector_len(real->params));
-        for (size_t i = 0; i < vector_len(real->params); i++) 
-        {
-            const char *name = get_hlir_name(vector_get(real->params, i));
-            ssa_type_t *arg = type_new(ssa, vector_get(real->params, i));
-            vector_set(it->args, i, ssa_param_new(name, arg));
-        }
-        break;
-    }
-
-    case eHlirStruct: 
-    case eHlirUnion: {
-        size_t len = vector_len(real->fields);
-        it->fields = vector_of(len);
-        if (len == 0)
-        {
-            vector_push(&it->fields, ssa_param_new("stub", ssa->stubType));
-        }
-
-        for (size_t i = 0; i < len; i++) 
-        {
-            const hlir_t *field = vector_get(real->fields, i);
-            const char *name = get_hlir_name(field);
-            ssa_type_t *type = type_new(ssa, get_hlir_type(field));
-            vector_set(it->fields, i, ssa_param_new(name, type));
-        }
-        break;
-    }
-
-    case eHlirPointer:
-        it->ptr = type_new(ssa, real->ptr);
-        break;
-
-    case eHlirArray:
-        CTASSERT(hlir_is(real->length, eHlirDigitLiteral));
-        it->arr = type_new(ssa, real->element);
-        it->size = mpz_get_ui(real->length->digit);
-        break;
-
-    case eHlirDecimal:
-    case eHlirOpaque:
-    case eHlirBool:
-    case eHlirUnit:
-    case eHlirEmpty:
-    case eHlirString: 
-        break;
-
-    default:
-        report(ssa->reports, eInternal, get_hlir_node(real), "no respective ssa type for %s", hlir_kind_to_string(kind));
-        break;
-    }
-
-    return it;
-}
-
-/**
- * @brief add a step to the current block and return the register it was assigned to
- */
-static ssa_operand_t add_step(ssa_t *ssa, ssa_step_t step)
-{
-    ssa_step_t *ptr = BOX(step);
-    if (ptr->id == NULL)
-    {
-        ptr->id = format("%zu", ssa->stepIdx++);
-    }
-
-    if (ptr->type == NULL)
-    {
-        ptr->type = ssa->emptyType;
-    }
-
-    vector_push(&ssa->currentBlock->steps, ptr);
-    ssa_operand_t op = {
+    ssa_operand_t operand = {
         .kind = eOperandReg,
-        .vreg = ptr
+        .vregContext = bb,
+        .vregIndex = index
     };
 
-    return op;
-}
-
-static bool is_imported(linkage_t link)
-{
-    return link == eLinkImported;
-}
-
-static const char *mangle_digit(digit_t width, sign_t sign)
-{
-    switch (width)
-    {
-    case eDigitChar:
-        return sign == eSigned ? "c" : "h";
-    case eDigitShort:
-        return sign == eSigned ? "s" : "t";
-    case eDigitInt:
-        return sign == eSigned ? "i" : "j";
-    case eDigitLong:
-    case eDigitPtr:
-        return sign == eSigned ? "x" : "y";
-    case eDigitSize:
-        return "m";
-    default:
-        return "";
-    }
-}
-
-static const char *mangle_named_type(const hlir_t *type)
-{
-    const char *name = get_hlir_name(type);
-    return format("%zu%s", strlen(name), name);
-}
-
-static const char *mangle_arg(ssa_t *ssa, const hlir_t *param)
-{
-    const hlir_t *type = hlir_follow_type(param);
-    hlir_kind_t kind = get_hlir_kind(type);
-    switch (kind) 
-    {
-    case eHlirPointer:
-        return format("P%s", mangle_arg(ssa, type->ptr));
-    case eHlirString:
-        return "PKc";
-    case eHlirBool:
-        return "b";
-    case eHlirDigit:
-        return mangle_digit(type->width, type->sign);
-    case eHlirStruct:
-    case eHlirUnion:
-        return mangle_named_type(type);
-    case eHlirOpaque:
-        return "Pv";
-    case eHlirUnit:
-        return "v";
-    default:
-        report(ssa->reports, eWarn, get_hlir_node(param), "no mangle for %s", hlir_kind_to_string(kind));
-        return "";
-    }
-}
-
-static vector_t *split_section(const char *section)
-{
-    size_t parts = str_count_any(section, "-./");
-    if (parts == 0)
-    {
-        return NULL;
-    }
-
-    vector_t *result = vector_new(parts);
-
-    const char *start = section;
-
-    for (size_t i = 0; i < parts; i++)
-    {
-        const char *end = strpbrk(start, "-./");
-        if (end == NULL)
-        {
-            end = start + strlen(start);
-        }
-
-        size_t len = end - start;
-
-        vector_push(&result, ctu_strndup(start, len));
-        start = end + 1;
-    }
-
-    char *tail = ctu_strdup(start);
-    vector_push(&result, tail);
-
-    return result;
-}
-
-// only the first segment of a namespace starts with `N`
-static const char *get_mangle_prefix(size_t i)
-{
-    if (i == 0) { return "N"; }
-    return "";
-}
-
-// TODO: we should just require frontends to pass us namespace segments properly
-static char *mangle_section(size_t index, char *src, const char *part)
-{
-    char *dst = src;
-
-    vector_t *sections = split_section(part);
-    if (sections == NULL)
-    {
-        return format("%s%s%zu%s", dst, get_mangle_prefix(index), strlen(part), part);
-    }
-    
-    char *head = vector_get(sections, 0);
-    dst = format("%s%s%zu%s", dst, get_mangle_prefix(index), strlen(head), head);
-
-    for (size_t j = 1; j < vector_len(sections); j++)
-    {
-        const char *section = vector_get(sections, j);
-        dst = format("%s%zu%s", dst, strlen(section), section);
-    }
-
-    return dst;
-}
-
-static const char *flow_make_name(ssa_t *ssa, const hlir_t *symbol)
-{
-    const hlir_attributes_t *attribs = get_hlir_attributes(symbol);
-    if (attribs->mangle != NULL)
-    {
-        return attribs->mangle;
-    }
-
-    const char *part = get_hlir_name(symbol);
-
-    size_t parts = vector_len(ssa->namePath);
-    if (parts == 0)
-    {
-        return format("_Z%zu%s", strlen(part), part);
-    }
-
-    char *result = ctu_strdup("_Z");
-    for (size_t i = 0; i < parts; i++)
-    {
-        const char *ns = vector_get(ssa->namePath, i);
-        result = mangle_section(i, result, ns);
-    }
-
-    result = format("%s%zu%sE", result, strlen(part), part);
-
-    if (!hlir_is(symbol, eHlirFunction))
-    { 
-        return result;
-    }
-
-    size_t len = vector_len(symbol->params);
-    for (size_t i = 0; i < len; i++)
-    {
-        const hlir_t *param = vector_get(symbol->params, i);
-        result = format("%s%s", result, mangle_arg(ssa, param));
-    }
-
-    return result;
-}
-
-static ssa_flow_t *flow_new(ssa_t *ssa, const hlir_t *symbol, ssa_type_t *type)
-{
-    UNUSED(ssa);
-
-    ssa_flow_t *flow = ctu_malloc(sizeof(ssa_flow_t));
-    flow->name = flow_make_name(ssa, symbol);
-    flow->type = type;
-
-    const hlir_attributes_t *attribs = get_hlir_attributes(symbol);
-
-    if (is_imported(attribs->linkage))
-    {
-        flow->symbol = attribs->mangle;
-    }
-    else
-    {
-        flow->entry = NULL;
-    }
-
-    // TODO: a little iffy
-    flow->linkage = attribs->linkage;
-    flow->visibility = attribs->visibility;
-
-    return flow;
-}
-
-static ssa_flow_t *global_new(ssa_t *ssa, const hlir_t *global)
-{
-    ssa_type_t *type = type_new(ssa, get_hlir_type(global));
-    ssa_flow_t *flow = flow_new(ssa, global, type);
-    
-    if (!is_imported(flow->linkage))
-    {
-        flow->value = NULL;
-    }
-
-    return flow;
-}
-
-static ssa_flow_t *function_new(ssa_t *ssa, const hlir_t *function)
-{
-    ssa_type_t *type = type_new(ssa, get_hlir_type(function));
-    ssa_flow_t *flow = flow_new(ssa, function, type);
-
-    if (!is_imported(flow->linkage))
-    {
-        flow->locals = vector_new(0);
-    }
-
-    return flow;
-}
-
-static void fwd_global(ssa_t *ssa, const hlir_t *global)
-{
-    ssa_flow_t *flow = global_new(ssa, global);
-    map_set_ptr(ssa->globals, global, flow);
-}
-
-static void fwd_function(ssa_t *ssa, const hlir_t *function)
-{
-    ssa_flow_t *flow = function_new(ssa, function);
-    map_set_ptr(ssa->functions, function, flow);
-}
-
-static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir);
-static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt);
-
-static ssa_type_t *new_digit_type(ssa_t *ssa, digit_t width, sign_t sign, const char *name)
-{
-    ssa_type_result_t result = ssa_anytype_new(ssa, NULL, name, eTypeDigit);
-    ssa_type_t *it = result.type;
-    it->digit = width;
-    it->sign = sign;
-    return it;
-}
-
-static ssa_type_t *ssa_get_digit_type(ssa_t *ssa, const hlir_t *digit)
-{
-    CTASSERTF(hlir_is(digit, eHlirDigitLiteral), "expected digit literal, got %s", hlir_kind_to_string(get_hlir_kind(digit)));
-
-    const hlir_t *type = hlir_follow_type(get_hlir_type(digit));
-
-    CTASSERT(hlir_is(type, eHlirDigit));
-
-    return new_digit_type(ssa, type->width, type->sign, get_hlir_name(type));
-}
-
-static ssa_type_t *ssa_get_decimal_type(ssa_t *ssa, const hlir_t *decimal)
-{
-    CTASSERTF(hlir_is(decimal, eHlirDecimalLiteral), "expected decimal literal, got %s", hlir_kind_to_string(get_hlir_kind(decimal)));
-
-    const hlir_t *type = hlir_follow_type(get_hlir_type(decimal));
-
-    CTASSERT(hlir_is(type, eHlirDecimal));
-
-    return ssa_anytype_new(ssa, NULL, "float", eTypeDecimal).type;
-}
-
-static ssa_type_t *ssa_get_bool_type(ssa_t *ssa)
-{
-    return ssa_anytype_new(ssa, NULL, "bool", eTypeBool).type;
-}
-
-static ssa_type_t *ssa_get_string_type(ssa_t *ssa)
-{
-    return ssa_anytype_new(ssa, NULL, "string", eTypeString).type;
-}
-
-static ssa_value_t *value_digit_new(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_type_t *type = ssa_get_digit_type(ssa, hlir);
-    ssa_value_t *it = ssa_value_digit_new(hlir->digit, type);
-    return it;
-}
-
-static ssa_value_t *ssa_value_decimal_new(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_value_t *it = ssa_value_new(ssa_get_decimal_type(ssa, hlir), true);
-
-    memcpy(it->decimal, hlir->decimal, sizeof(mpq_t));
-
-    return it;
-}
-
-static ssa_value_t *value_bool_new(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_value_t *it = ssa_value_new(ssa_get_bool_type(ssa), true);
-    it->boolean = hlir->boolean;
-
-    return it;
-}
-
-static ssa_value_t *value_string_new(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_value_t *it = ssa_value_new(ssa_get_string_type(ssa), true);
-    it->string = hlir->stringLiteral;
-
-    return it;
-}
-
-static ssa_operand_t compile_digit(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_operand_t op = {
-        .kind = eOperandImm,
-        .value = value_digit_new(ssa, hlir)
-    };
-
-    return op;
-}
-
-static ssa_operand_t compile_decimal(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_operand_t op = {
-        .kind = eOperandImm,
-        .value = ssa_value_decimal_new(ssa, hlir)
-    };
-
-    return op;
-}
-
-static ssa_operand_t compile_string(ssa_t *ssa, const hlir_t *hlir)
-{
-    // TODO: string
-    ssa_operand_t op = {
-        .kind = eOperandImm,
-        .value = value_string_new(ssa, hlir)
-    };
-
-    return op;
-}
-
-static ssa_operand_t compile_bool(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_operand_t op = {
-        .kind = eOperandImm,
-        .value = value_bool_new(ssa, hlir)
-    };
-
-    return op;
-}
-
-static ssa_operand_t compile_binary(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_operand_t lhs = compile_rvalue(ssa, hlir->lhs);
-    ssa_operand_t rhs = compile_rvalue(ssa, hlir->rhs);
-
-    ssa_step_t step = {
-        .opcode = eOpBinary,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .binary = {
-            .op = hlir->binary,
-            .lhs = lhs,
-            .rhs = rhs
-        }
-    };
-
-    return add_step(ssa, step);
-}
-
-static ssa_operand_t compile_load(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_operand_t name = compile_rvalue(ssa, hlir->read);
-
-    ssa_step_t step = {
-        .opcode = eOpLoad,
-        .type = type_new(ssa, get_hlir_type(hlir->read)),
-        .load = {
-            .src = name
-        }
-    };
-
-    return add_step(ssa, step);
-}
-
-static ssa_operand_t compile_global_ref(ssa_t *ssa, const hlir_t *hlir)
-{
-    const ssa_flow_t *ref = map_get_ptr(ssa->globals, hlir);
-
-    ssa_operand_t op = {
-        .kind = eOperandGlobal,
-        .global = ref
-    };
-
-    return op;
-}
-
-static ssa_operand_t compile_local_ref(ssa_t *ssa, const hlir_t *hlir)
-{
-    size_t index = (uintptr_t)map_get_ptr(ssa->currentLocals, hlir);
-
-    ssa_operand_t op = {
-        .kind = eOperandLocal,
-        .local = index
-    };
-
-    return op;
-}
-
-static ssa_operand_t compile_cast(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_operand_t op = compile_rvalue(ssa, hlir->expr);
-    const ssa_type_t *type = type_new(ssa, get_hlir_type(hlir));
-
-    ssa_step_t step = {
-        .opcode = eOpCast,
-        .type = type,
-        .cast = {
-            .op = hlir->cast,
-            .operand = op,
-
-            .type = type
-        }
-    };
-
-    return add_step(ssa, step);
-}
-
-static ssa_operand_t compile_call(ssa_t *ssa, const hlir_t *hlir)
-{
-    size_t len = vector_len(hlir->args);
-    ssa_operand_t *args = ctu_malloc(sizeof(ssa_operand_t) * MAX(len, 1));
-    for (size_t i = 0; i < len; i++)
-    {
-        const hlir_t *arg = vector_get(hlir->args, i);
-        args[i] = compile_rvalue(ssa, arg);
-    }
-
-    ssa_operand_t func = compile_rvalue(ssa, hlir->call);
-
-    ssa_step_t step = {
-        .opcode = eOpCall,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .call = {
-            .args = args,
-            .len = len,
-            .symbol = func
-        }
-    };
-
-    return add_step(ssa, step);
-}
-
-static ssa_operand_t compile_name(ssa_t *ssa, const hlir_t *hlir)
-{
-    const ssa_flow_t *ref = map_get_ptr(ssa->functions, hlir);
-    CTASSERT(ref != NULL);
-
-    ssa_operand_t op = {
-        .kind = eOperandFunction,
-        .function = ref
-    };
-
-    return op;
-}
-
-static ssa_operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir);
-
-static ssa_operand_t compile_global_lvalue(ssa_t *ssa, const hlir_t *hlir)
-{
-    const ssa_flow_t *ref = map_get_ptr(ssa->globals, hlir);
-    CTASSERT(ref != NULL);
-
-    ssa_operand_t op = {
-        .kind = eOperandGlobal,
-        .global = ref
-    };
-
-    return op;
-}
-
-static ssa_operand_t compile_unary(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_operand_t op = compile_rvalue(ssa, hlir->expr);
-
-    ssa_step_t step = {
-        .opcode = eOpUnary,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .unary = {
-            .op = hlir->unary,
-            .operand = op
-        }
-    };
-
-    return add_step(ssa, step);
-}
-
-static ssa_operand_t compile_local_lvalue(ssa_t *ssa, const hlir_t *hlir)
-{
-    const size_t idx = (size_t)(uintptr_t)map_get_ptr(ssa->currentLocals, hlir);
-
-    ssa_operand_t op = {
-        .kind = eOperandLocal,
-        .local = idx
-    };
-
-    return op;
-}
-
-static size_t get_offset(const hlir_t *object, const hlir_t *member)
-{
-    const hlir_t *type = get_hlir_type(object);
-    if (hlir_is(type, eHlirPointer))
-    {
-        type = type->ptr;
-    }
-
-    CTASSERTF(hlir_is(type, eHlirStruct), "%s", hlir_kind_to_string(get_hlir_kind(type)));
-
-    size_t field = vector_find(type->fields, member);
-
-    CTASSERT(field != SIZE_MAX);
-
-    return field;
-}
-
-static ssa_operand_t compile_access(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_operand_t read = compile_lvalue(ssa, hlir->object);
-    size_t offset = get_offset(hlir->object, hlir->member);
-
-    ssa_step_t step = {
-        .opcode = eOpOffset,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .offset = {
-            .object = read,
-            .field = offset
-        }
-    };
-
-    return add_step(ssa, step);
-}
-
-static ssa_operand_t operand_bb(const ssa_block_t *dst)
-{
-    ssa_operand_t op = {
-        .kind = eOperandBlock,
-        .bb = dst
-    };
-
-    return op;
+    return operand;
 }
 
 static ssa_operand_t operand_empty(void)
 {
-    ssa_operand_t op = {
+    ssa_operand_t operand = {
         .kind = eOperandEmpty
     };
-
-    return op;
+    return operand;
 }
 
-static ssa_operand_t compile_param(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t operand_bb(ssa_block_t *bb)
 {
-    const void *ref = map_get_ptr(ssa->currentParams, hlir);
-
-    ssa_operand_t op = {
-        .kind = eOperandParam,
-        .param = (uintptr_t)ref
+    ssa_operand_t operand = {
+        .kind = eOperandBlock,
+        .bb = bb
     };
-
-    return op;
+    return operand;
 }
 
-static ssa_operand_t compile_index_lvalue(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t add_step(ssa_compile_t *ssa, ssa_step_t step)
 {
-    ssa_operand_t read = compile_lvalue(ssa, hlir->array);
-    ssa_operand_t index = compile_rvalue(ssa, hlir->index);
-
-    ssa_step_t step = {
-        .opcode = eOpIndex,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .index = {
-            .array = read,
-            .index = index
-        }
-    };
-
-    return add_step(ssa, step);
+    return bb_add_step(ssa->currentBlock, step);
 }
 
-static ssa_operand_t compile_lvalue(ssa_t *ssa, const hlir_t *hlir)
+static ssa_block_t *ssa_block_create(ssa_symbol_t *symbol, const char *name, size_t size)
 {
-    hlir_kind_t kind = get_hlir_kind(hlir);
-    switch (kind)
-    {
-    case eHlirGlobal:
-        return compile_global_lvalue(ssa, hlir);
+    ssa_block_t *bb = ctu_malloc(sizeof(ssa_block_t));
+    bb->name = name;
+    bb->steps = typevec_new(sizeof(ssa_step_t), size);
+    vector_push(&symbol->blocks, bb);
 
-    case eHlirLocal:
-        return compile_local_lvalue(ssa, hlir);
-
-    case eHlirParam:
-        return compile_param(ssa, hlir);
-
-    case eHlirAccess:
-        return compile_access(ssa, hlir);
-
-    case eHlirIndex:
-        return compile_index_lvalue(ssa, hlir);
-
-    default:
-        report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-lvalue %s", hlir_to_string(hlir));
-        return operand_empty();
-    }
+    return bb;
 }
 
-static ssa_operand_t compile_addr(ssa_t *ssa, const hlir_t *hlir)
+static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree);
+
+static ssa_operand_t compile_branch(ssa_compile_t *ssa, const h2_t *branch)
 {
-    ssa_operand_t op = compile_lvalue(ssa, hlir->expr);
+    ssa_operand_t cond = compile_tree(ssa, branch->cond);
+    ssa_block_t *current = ssa->currentBlock;
 
-    ssa_step_t step = {
-        .opcode = eOpAddr,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .addr = {
-            .expr = op
-        }
-    };
-
-    return add_step(ssa, step);
-}
-
-static ssa_operand_t compile_sizeof(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_type_t *type = type_new(ssa, hlir->operand);
-
-    ssa_step_t step = {
-        .opcode = eOpSizeOf,
-        .type = new_digit_type(ssa, eDigitSize, eUnsigned, "size"),
-        .size = {
-            .type = type
-        }
-    };
-
-    return add_step(ssa, step);
-}
-
-static ssa_operand_t compile_builtin(ssa_t *ssa, const hlir_t *hlir)
-{
-    switch (hlir->builtin)
-    {
-    case eBuiltinSizeOf:
-        return compile_sizeof(ssa, hlir);
-    
-    default:
-        report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-builtin %d", hlir->builtin);
-        return operand_empty();
-    }
-}
-
-static ssa_operand_t compile_index(ssa_t *ssa, const hlir_t *hlir)
-{
-    ssa_operand_t op = compile_rvalue(ssa, hlir->array);
-    ssa_operand_t index = compile_rvalue(ssa, hlir->index);
-
-    ssa_step_t step = {
-        .opcode = eOpIndex,
-        .type = type_new(ssa, get_hlir_type(hlir)),
-        .index = {
-            .array = op,
-            .index = index
-        }
-    };
-
-    return add_step(ssa, step);
-}
-
-static ssa_operand_t compile_rvalue(ssa_t *ssa, const hlir_t *hlir)
-{
-    CTASSERTF(hlir != NULL, "compile-rvalue(hlir = NULL) { flow = %s, block = %s }", ssa->currentFlow->name, ssa->currentBlock->id);
-    hlir_kind_t kind = get_hlir_kind(hlir);
-    switch (kind)
-    {
-    case eHlirEnumCase:
-        return compile_rvalue(ssa, hlir->value);
-
-    case eHlirDigitLiteral:
-        return compile_digit(ssa, hlir);
-
-    case eHlirDecimalLiteral:
-        return compile_decimal(ssa, hlir);
-
-    case eHlirStringLiteral:
-        return compile_string(ssa, hlir);
-
-    case eHlirBoolLiteral:
-        return compile_bool(ssa, hlir);
-
-    case eHlirUnary:
-        return compile_unary(ssa, hlir);
-
-    case eHlirBinary:
-        return compile_binary(ssa, hlir);
-
-    case eHlirLoad:
-        return compile_load(ssa, hlir);
-
-    case eHlirGlobal:
-        return compile_global_ref(ssa, hlir);
-
-    case eHlirLocal:
-        return compile_local_ref(ssa, hlir);
-
-    case eHlirCast:
-        return compile_cast(ssa, hlir);
-
-    case eHlirCall:
-        return compile_call(ssa, hlir);
-
-    case eHlirFunction:
-        return compile_name(ssa, hlir);
-
-    case eHlirParam:
-        return compile_param(ssa, hlir);
-
-    case eHlirAccess:
-        return compile_access(ssa, hlir);
-
-    case eHlirAddr:
-        return compile_addr(ssa, hlir);
-
-    case eHlirBuiltin:
-        return compile_builtin(ssa, hlir);
-
-    case eHlirIndex:
-        return compile_index(ssa, hlir);
-
-    default:
-        report(ssa->reports, eInternal, get_hlir_node(hlir), "compile-rvalue %s", hlir_kind_to_string(kind));
-        return operand_empty();
-    }
-}
-
-static ssa_operand_t compile_stmts(ssa_t *ssa, const hlir_t *stmt)
-{
-    for (size_t i = 0; i < vector_len(stmt->stmts); i++)
-    {
-        compile_stmt(ssa, vector_get(stmt->stmts, i));
-    }
-
-    return operand_bb(ssa->currentBlock);
-}
-
-static ssa_operand_t compile_assign(ssa_t *ssa, const hlir_t *stmt)
-{
-    ssa_operand_t dst = compile_lvalue(ssa, stmt->dst);
-    ssa_operand_t src = compile_rvalue(ssa, stmt->src);
-
-    ssa_step_t step = {
-        .opcode = eOpStore,
-        .store = {
-            .dst = dst,
-            .src = src
-        }
-    };
-
-    return add_step(ssa, step);
-}
-
-static ssa_operand_t compile_compare_compare(ssa_t *ssa, const hlir_t *cond)
-{
-    ssa_operand_t lhs = compile_rvalue(ssa, cond->lhs);
-    ssa_operand_t rhs = compile_rvalue(ssa, cond->rhs);
-
-    ssa_step_t step = {
-        .opcode = eOpCompare,
-        .type = ssa_get_bool_type(ssa),
-        .compare = {
-            .op = cond->compare,
-            .lhs = lhs,
-            .rhs = rhs
-        }
-    };
-
-    return add_step(ssa, step);
-}
-
-static ssa_operand_t compile_compare_bool(ssa_t *ssa, const hlir_t *cond)
-{
-    ssa_operand_t op = {
-        .kind = eOperandImm,
-        .value = value_bool_new(ssa, cond)
-    };
-
-    return op;
-}
-
-static ssa_operand_t compile_compare(ssa_t *ssa, const hlir_t *cond)
-{
-    hlir_kind_t kind = get_hlir_kind(cond);
-    switch (kind)
-    {
-    case eHlirCompare:
-        return compile_compare_compare(ssa, cond);
-
-    case eHlirBoolLiteral:
-        return compile_compare_bool(ssa, cond);
-
-    default:
-        report(ssa->reports, eInternal, get_hlir_node(cond), "compile-compare %s", hlir_kind_to_string(kind));
-        return operand_empty();
-    }
-}
-
-static ssa_operand_t compile_loop(ssa_t *ssa, const hlir_t *stmt)
-{
-    ssa_block_t *loop = block_gen(ssa, "loop");
-    ssa_block_t *tail = block_gen(ssa, "tail");
-
-    ssa_step_t step = {
-        .opcode = eOpJmp,
-        .jmp = {
-            .label = operand_bb(loop)
-        }
-    };
-
-    add_step(ssa, step);
-
-    ssa->currentBlock = loop;
-    compile_stmt(ssa, stmt->then);
-
-    ssa_step_t ret = {
-        .opcode = eOpBranch,
-        .branch = {
-            .cond = compile_compare(ssa, stmt->cond),
-            .truthy = operand_bb(loop),
-            .falsey = operand_bb(tail)
-        }
-    };
-
-    add_step(ssa, ret);
-
-    ssa->currentBlock = tail;
-
-    return operand_bb(tail);
-}
-
-static ssa_operand_t compile_branch(ssa_t *ssa, const hlir_t *stmt)
-{
-    ssa_block_t *then = block_gen(ssa, "then");
-    ssa_block_t *other = stmt->other != NULL ? block_gen(ssa, "other") : NULL;
-    ssa_block_t *tail = block_gen(ssa, "tail");
-
-    ssa_step_t ret = {
-        .opcode = eOpJmp,
-        .jmp = {
-            .label = operand_bb(tail)
-        }
-    };
+    ssa_block_t *tailBlock = ssa_block_create(ssa->currentSymbol, "tail", 0);
+    ssa_block_t *thenBlock = ssa_block_create(ssa->currentSymbol, "then", 0);
+    ssa_block_t *elseBlock = branch->other ? ssa_block_create(ssa->currentSymbol, "else", 0) : NULL;
 
     ssa_step_t step = {
         .opcode = eOpBranch,
         .branch = {
-            .cond = compile_compare(ssa, stmt->cond),
-            .truthy = operand_bb(then),
-            .falsey = other != NULL ? operand_bb(other) : operand_bb(tail)
+            .cond = cond,
+            .then = operand_bb(thenBlock),
+            .other = elseBlock ? operand_bb(elseBlock) : operand_bb(tailBlock)
         }
     };
 
-    add_step(ssa, step);
+    ssa_operand_t tail = {
+        .kind = eOperandBlock,
+        .bb = tailBlock
+    };
+    ssa_step_t jumpToTail = {
+        .opcode = eOpJump,
+        .jump = {
+            .target = tail
+        }
+    };
 
-    // if true
-    ssa->currentBlock = then;
-    compile_stmt(ssa, stmt->then);
-    add_step(ssa, ret);
+    ssa->currentBlock = thenBlock;
+    compile_tree(ssa, branch->then);
+    bb_add_step(thenBlock, jumpToTail);
 
-    // if false
-    if (other != NULL) 
+    if (branch->other != NULL)
     {
-        ssa->currentBlock = other;
-        compile_stmt(ssa, stmt->other);
-        add_step(ssa, ret);
+        ssa->currentBlock = elseBlock;
+        compile_tree(ssa, branch->other);
+        bb_add_step(elseBlock, jumpToTail);
     }
 
-    ssa->currentBlock = tail;
+    ssa->currentBlock = current;
+    add_step(ssa, step);
 
-    return operand_bb(tail);
+    ssa->currentBlock = tailBlock;
+
+    return tail;
 }
 
-static ssa_operand_t compile_return(ssa_t *ssa, const hlir_t *stmt)
+static ssa_operand_t compile_loop(ssa_compile_t *ssa, const h2_t *tree)
 {
-    const hlir_t *result = stmt->result;
-    ssa_operand_t op = result != NULL ? compile_rvalue(ssa, result) : operand_empty();
+    /**
+    * turns `while (cond) { body }` into:
+    *
+    * .loop:
+    *   %c = cond...
+    *   branch %c .body .tail
+    * .body:
+    *   body...
+    *   jmp .loop
+    * .tail:
+    *
+    */
+    ssa_block_t *loopBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
+    ssa_block_t *bodyBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
+    ssa_block_t *tailBlock = ssa_block_create(ssa->currentSymbol, NULL, 0);
 
-    ssa_step_t step = {
-        .opcode = eOpReturn,
-        .ret = {
-            .value = op,
-        }
+    ssa_operand_t loop = {
+        .kind = eOperandBlock,
+        .bb = loopBlock
     };
 
-    return add_step(ssa, step);
+    ssa_operand_t tail = {
+        .kind = eOperandBlock,
+        .bb = tailBlock
+    };
+
+    ssa_step_t enterLoop = {
+        .opcode = eOpJump,
+        .jump = {
+            .target = loop
+        }
+    };
+    add_step(ssa, enterLoop);
+
+    ssa->currentBlock = loopBlock;
+    ssa_operand_t cond = compile_tree(ssa, tree->cond);
+    ssa_step_t cmp = {
+        .opcode = eOpBranch,
+        .branch = {
+            .cond = cond,
+            .then = operand_bb(bodyBlock),
+            .other = tail
+        }
+    };
+    add_step(ssa, cmp);
+
+    ssa->currentBlock = bodyBlock;
+    compile_tree(ssa, tree->then);
+
+    ssa_step_t repeatLoop = {
+        .opcode = eOpJump,
+        .jump = {
+            .target = loop
+        }
+    };
+    add_step(ssa, repeatLoop);
+
+    ssa->currentBlock = tailBlock;
+    return loop;
 }
 
-static ssa_operand_t compile_stmt(ssa_t *ssa, const hlir_t *stmt)
+static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
 {
-    hlir_kind_t kind = get_hlir_kind(stmt);
-    switch (kind)
+    CTASSERT(ssa != NULL);
+    CTASSERT(tree != NULL);
+
+    switch (tree->kind)
     {
-    case eHlirStmts:
-        return compile_stmts(ssa, stmt);
+    case eHlir2ExprEmpty: {
+        ssa_operand_t operand = {
+            .kind = eOperandEmpty
+        };
+        return operand;
+    }
+    case eHlir2ExprDigit:
+    case eHlir2ExprBool:
+    case eHlir2ExprUnit:
+    case eHlir2ExprString: {
+        ssa_operand_t operand = {
+            .kind = eOperandImm,
+            .value = ssa_value_from(tree)
+        };
+        return operand;
+    }
+    case eHlir2ExprUnary: {
+        ssa_operand_t expr = compile_tree(ssa, tree->operand);
+        ssa_step_t step = {
+            .opcode = eOpUnary,
+            .unary = {
+                .operand = expr,
+                .unary = tree->unary
+            }
+        };
+        return add_step(ssa, step);
+    }
+    case eHlir2ExprBinary: {
+        ssa_operand_t lhs = compile_tree(ssa, tree->lhs);
+        ssa_operand_t rhs = compile_tree(ssa, tree->rhs);
+        ssa_step_t step = {
+            .opcode = eOpBinary,
+            .binary = {
+                .lhs = lhs,
+                .rhs = rhs,
+                .binary = tree->binary
+            }
+        };
+        return add_step(ssa, step);
+    }
+    case eHlir2DeclGlobal: {
+        ssa_symbol_t *symbol = map_get_ptr(ssa->globals, tree);
+        CTASSERT(symbol != NULL);
 
-    case eHlirCall:
-        return compile_call(ssa, stmt);
+        add_dep(ssa, ssa->currentSymbol, symbol);
 
-    case eHlirAssign:
-        return compile_assign(ssa, stmt);
+        ssa_operand_t operand = {
+            .kind = eOperandGlobal,
+            .global = symbol
+        };
 
-    case eHlirLoop:
-        return compile_loop(ssa, stmt);
+        return operand;
+    }
+    case eHlir2ExprLoad: {
+        ssa_operand_t operand = compile_tree(ssa, tree->load);
+        ssa_step_t step = {
+            .opcode = eOpLoad,
+            .load = {
+                .src = operand
+            }
+        };
+        return add_step(ssa, step);
+    }
 
-    case eHlirBranch:
-        return compile_branch(ssa, stmt);
+    case eHlir2StmtBlock: {
+        size_t len = vector_len(tree->stmts);
+        for (size_t i = 0; i < len; i++)
+        {
+            const h2_t *stmt = vector_get(tree->stmts, i);
+            compile_tree(ssa, stmt);
+        }
 
-    case eHlirLoad:
-        return compile_rvalue(ssa, stmt);
-
-    case eHlirReturn:
-        return compile_return(ssa, stmt);
-
-    default:
-        report(ssa->reports, eInternal, get_hlir_node(stmt), "compile-stmt %s", hlir_to_string(stmt));
         return operand_empty();
     }
-}
 
-static void compile_flow(ssa_t *ssa, ssa_flow_t *flow)
-{
-    ssa_block_t *block = block_new("entry");
-    flow->entry = block;
+    case eHlir2StmtAssign: {
+        ssa_operand_t dst = compile_tree(ssa, tree->dst);
+        ssa_operand_t src = compile_tree(ssa, tree->src);
 
-    ssa->currentBlock = block;
-    ssa->currentFlow = flow;
-    ssa->stepIdx = 0;
-    ssa->blockIdx = 0;
-}
-
-static void compile_global(ssa_t *ssa, const hlir_t *global)
-{
-    ssa_flow_t *flow = map_get_ptr(ssa->globals, global);
-
-    if (is_imported(flow->linkage))
-    {
-        return;
+        ssa_step_t step = {
+            .opcode = eOpStore,
+            .store = {
+                .dst = dst,
+                .src = src
+            }
+        };
+        return add_step(ssa, step);
     }
 
-    compile_flow(ssa, flow);
-
-    ssa_operand_t result = global->value == NULL ? operand_empty() : compile_rvalue(ssa, global->value);
-    ssa_step_t step = {
-        .opcode = eOpReturn,
-        .ret = {
-            .value = result
-        }
-    };
-    add_step(ssa, step);
-}
-
-static void compile_function(ssa_t *ssa, const hlir_t *function)
-{
-    ssa_flow_t *flow = map_get_ptr(ssa->functions, function);
-    CTASSERT(flow != NULL);
-
-    if (is_imported(flow->linkage))
-    {
-        return;
+    case eHlir2DeclLocal: {
+        size_t idx = (uintptr_t)map_get_ptr(ssa->locals, tree);
+        ssa_operand_t local = {
+            .kind = eOperandLocal,
+            .local = idx
+        };
+        return local;
     }
 
-    size_t totalLocals = vector_len(function->locals);
-    size_t totalParams = vector_len(function->params);
-
-    ssa->currentLocals = map_optimal(totalLocals);
-    ssa->currentParams = map_optimal(totalParams);
-
-    flow->locals = vector_of(totalLocals);
-    
-    for (size_t i = 0; i < totalLocals; i++) 
-    {
-        const hlir_t *local = vector_get(function->locals, i);
-        map_set_ptr(ssa->currentLocals, local, (void*)(uintptr_t)i);
-        vector_set(flow->locals, i, type_new(ssa, get_hlir_type(local)));
+    case eHlir2StmtReturn: {
+        ssa_operand_t value = compile_tree(ssa, tree->value);
+        ssa_step_t step = {
+            .opcode = eOpReturn,
+            .ret = {
+                .value = value
+            }
+        };
+        return add_step(ssa, step);
     }
 
-    for (size_t i = 0; i < totalParams; i++)
-    {
-        const hlir_t *param = vector_get(function->params, i);
-        map_set_ptr(ssa->currentParams, param, (void*)(uintptr_t)i);
-    }
-
-    compile_flow(ssa, flow);
-
-    // TODO: idk if this is right
-    if (function->body == NULL) 
-    { 
-        map_set(ssa->importedSymbols, function->name, flow);
-        return;
-    }
-
-    compile_stmt(ssa, function->body);
-}
-
-static bool has_name(const char *id)
-{
-    return id == NULL || str_equal(id, "");
-}
-
-static void fwd_module(ssa_t *ssa, hlir_t *mod)
-{
-    CTASSERT(hlir_is(mod, eHlirModule));
-
-    const char *name = mod->name;
-
-    if (has_name(name))
-    {
-        vector_push(&ssa->namePath, (void*)mod->name);
-    }
-
-    for (size_t j = 0; j < vector_len(mod->globals); j++)
-    {
-        fwd_global(ssa, vector_get(mod->globals, j));
-    }
-
-    for (size_t j = 0; j < vector_len(mod->functions); j++)
-    {
-        fwd_function(ssa, vector_get(mod->functions, j));
-    }
-
-    if (has_name(name))
-    {
-        vector_drop(ssa->namePath);
-    }
-}
-
-ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods)
-{
-    ssa_t ssa = { 
-        .reports = reports,
-        .aggregates = map_optimal(128),
-        .globals = map_optimal(128),
-        .functions = map_optimal(128),
-        .strings = set_new(128),
-        .importedSymbols = map_optimal(128),
-        .namePath = vector_new(16),
-        .emptyType = ssa_type_empty_new("empty"),
-        .stubType = ssa_get_bool_type(&ssa)
-    };
-
-    size_t len = vector_len(mods);
-    for (size_t i = 0; i < len; i++)
-    {
-        fwd_module(&ssa, vector_get(mods, i));
-    }    
-
-    for (size_t i = 0; i < len; i++)
-    {
-        hlir_t *mod = vector_get(mods, i);
-        for (size_t j = 0; j < vector_len(mod->globals); j++)
+    case eHlir2ExprCall: {
+        ssa_operand_t callee = compile_tree(ssa, tree->callee);
+        size_t len = vector_len(tree->args);
+        typevec_t *args = typevec_of(sizeof(ssa_operand_t), len);
+        for (size_t i = 0; i < len; i++)
         {
-            compile_global(&ssa, vector_get(mod->globals, j));
+            const h2_t *arg = vector_get(tree->args, i);
+            ssa_operand_t operand = compile_tree(ssa, arg);
+            typevec_set(args, i, &operand);
         }
 
-        for (size_t j = 0; j < vector_len(mod->functions); j++)
+        ssa_step_t step = {
+            .opcode = eOpCall,
+            .call = {
+                .function = callee,
+                .args = args
+            }
+        };
+
+        return add_step(ssa, step);
+    }
+
+    case eHlir2DeclFunction: {
+        ssa_symbol_t *fn = map_get_ptr(ssa->functions, tree);
+        CTASSERT(fn != NULL);
+
+        add_dep(ssa, ssa->currentSymbol, fn);
+        ssa_operand_t operand = {
+            .kind = eOperandFunction,
+            .function = fn
+        };
+
+        return operand;
+    }
+
+    case eHlir2StmtBranch: return compile_branch(ssa, tree);
+    case eHlir2ExprCompare: {
+        ssa_operand_t lhs = compile_tree(ssa, tree->lhs);
+        ssa_operand_t rhs = compile_tree(ssa, tree->rhs);
+
+        ssa_step_t step = {
+            .opcode = eOpCompare,
+            .compare = {
+                .lhs = lhs,
+                .rhs = rhs,
+                .compare = tree->compare
+            }
+        };
+
+        return add_step(ssa, step);
+    }
+
+    case eHlir2StmtLoop:
+        return compile_loop(ssa, tree);
+
+    default: NEVER("unhandled tree kind %d", tree->kind);
+    }
+}
+
+static void add_module_globals(ssa_compile_t *ssa, ssa_module_t *mod, map_t *globals)
+{
+    map_iter_t iter = map_iter(globals);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+
+        const h2_t *tree = entry.value;
+        CTASSERTF(h2_is(tree, eHlir2DeclGlobal), "expected global, got %s", h2_to_string(tree));
+
+        ssa_symbol_t *global = symbol_create(ssa, tree);
+
+        vector_push(&mod->globals, global);
+        map_set_ptr(ssa->globals, tree, global);
+    }
+}
+
+static void add_module_functions(ssa_compile_t *ssa, ssa_module_t *mod, map_t *functions)
+{
+    map_iter_t iter = map_iter(functions);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+
+        const h2_t *tree = entry.value;
+        ssa_symbol_t *symbol = function_create(ssa, tree);
+
+        vector_push(&mod->functions, symbol);
+        map_set_ptr(ssa->functions, tree, symbol);
+    }
+}
+
+static void compile_module(ssa_compile_t *ssa, const h2_t *tree)
+{
+    const char *id = h2_get_name(tree);
+    ssa_module_t *mod = module_create(ssa, id);
+
+    add_module_globals(ssa, mod, h2_module_tag(tree, eSema2Values));
+    add_module_functions(ssa, mod, h2_module_tag(tree, eSema2Procs));
+
+    vector_push(&ssa->modules, mod);
+    vector_push(&ssa->path, (char*)id);
+
+    map_t *children = h2_module_tag(tree, eSema2Modules);
+    map_iter_t iter = map_iter(children);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+
+        compile_module(ssa, entry.value);
+    }
+
+    vector_drop(ssa->path);
+}
+
+static void begin_compile(ssa_compile_t *ssa, ssa_symbol_t *symbol)
+{
+    ssa_block_t *bb = ssa_block_create(symbol, "entry", 4);
+
+    symbol->entry = bb;
+    ssa->currentBlock = bb;
+    ssa->currentSymbol = symbol;
+}
+
+ssa_result_t ssa_compile(map_t *mods)
+{
+    ssa_compile_t ssa = {
+        .modules = vector_new(4),
+        .deps = map_optimal(64),
+
+        .globals = map_optimal(32),
+        .functions = map_optimal(32),
+        .locals = map_optimal(32)
+    };
+
+    map_iter_t iter = map_iter(mods);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+
+        ssa.path = str_split(entry.key, ".");
+        compile_module(&ssa, entry.value);
+    }
+
+    map_iter_t globals = map_iter(ssa.globals);
+    while (map_has_next(&globals))
+    {
+        map_entry_t entry = map_next(&globals);
+
+        const h2_t *tree = entry.key;
+        ssa_symbol_t *global = entry.value;
+
+        begin_compile(&ssa, global);
+
+        if (tree->global != NULL)
         {
-            compile_function(&ssa, vector_get(mod->functions, j));
+            ssa_operand_t value = compile_tree(&ssa, tree->global);
+            ssa_step_t ret = {
+                .opcode = eOpReturn,
+                .ret = {
+                    .value = value
+                }
+            };
+            add_step(&ssa, ret);
+        }
+        else
+        {
+            ssa_value_t *noinit = ssa_value_noinit(global->type);
+            ssa_operand_t value = operand_value(noinit);
+            ssa_step_t ret = {
+                .opcode = eOpReturn,
+                .ret = {
+                    .value = value
+                }
+            };
+            add_step(&ssa, ret);
         }
     }
 
-    section_t symbols = {
-        .types = map_values(ssa.aggregates),
-        .globals = map_values(ssa.globals),
-        .functions = map_values(ssa.functions)
+    map_iter_t functions = map_iter(ssa.functions);
+    while (map_has_next(&functions))
+    {
+        map_entry_t entry = map_next(&functions);
+
+        const h2_t *tree = entry.key;
+        ssa_symbol_t *symbol = entry.value;
+
+        begin_compile(&ssa, symbol);
+
+        const h2_t *body = tree->body;
+        if (body != NULL)
+        {
+            // TODO: should extern functions be put somewhere else
+            compile_tree(&ssa, body);
+        }
+        else
+        {
+            CTASSERT(symbol->linkage == eLinkImport);
+        }
+    }
+
+    ssa_result_t result = {
+        .modules = ssa.modules,
+        .deps = ssa.deps
     };
 
-    ssa_module_t *mod = ctu_malloc(sizeof(ssa_module_t));
-    mod->symbols = symbols;
-
-    return mod;
+    return result;
 }

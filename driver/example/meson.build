@@ -1,7 +1,7 @@
 src = [ 'src/main.c' ]
 
 ex = library('example', src,
-    dependencies : [ generic, mediator, interop ],
+    dependencies : [ mediator, interop, hlir ],
     c_args : args,
     include_directories : [ 'src', versiondir ]
 )

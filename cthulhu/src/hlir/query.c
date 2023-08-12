@@ -1,52 +1,26 @@
-#include "common.h"
-
-#include "base/panic.h"
+#include "cthulhu/hlir/query.h"
 
 #include "std/str.h"
 
-#include "cthulhu/hlir/hlir.h"
-#include "cthulhu/hlir/query.h"
+#include "base/panic.h"
 
-
-static bool has_name(hlir_kind_t kind)
+static bool has_name(h2_kind_t kind)
 {
     switch (kind)
     {
-    case eHlirUnresolved:
-    case eHlirStruct:
-    case eHlirUnion:
-    case eHlirDigit:
-    case eHlirDecimal:
-    case eHlirBool:
-    case eHlirString:
-    case eHlirEmpty:
-    case eHlirUnit:
-    case eHlirClosure:
-    case eHlirPointer:
-    case eHlirArray:
-    case eHlirVaList:
+    case eHlir2TypeEmpty:
+    case eHlir2TypeUnit:
+    case eHlir2TypeBool:
+    case eHlir2TypeDigit:
+    case eHlir2TypeString:
+    case eHlir2TypeClosure:
 
-    case eHlirType:
-    case eHlirAlias:
-    case eHlirOpaque:
-
-    case eHlirRecordField:
-    case eHlirFunction:
-    case eHlirQualified:
-
-    case eHlirEnum:
-    case eHlirVariant:
-
-    case eHlirEnumCase:
-    case eHlirVariantCase:
-
-    case eHlirGlobal:
-    case eHlirLocal:
-    case eHlirParam:
-
-    case eHlirError:
-
-    case eHlirModule:
+    case eHlir2Resolve:
+    case eHlir2DeclGlobal:
+    case eHlir2DeclLocal:
+    case eHlir2DeclParam:
+    case eHlir2DeclFunction:
+    case eHlir2DeclModule:
         return true;
 
     default:
@@ -54,299 +28,89 @@ static bool has_name(hlir_kind_t kind)
     }
 }
 
-static bool has_attribs(hlir_kind_t kind)
+const char *h2_kind_to_string(h2_kind_t kind)
 {
     switch (kind)
     {
-    case eHlirUnresolved:
-    case eHlirStruct:
-    case eHlirUnion:
-    case eHlirAlias:
-    case eHlirDigit:
-    case eHlirDecimal:
-    case eHlirBool:
-    case eHlirString:
-    case eHlirPointer:
-    case eHlirEmpty:
-    case eHlirUnit:
-    case eHlirClosure:
-    case eHlirArray:
-    case eHlirOpaque:
-    case eHlirQualified:
+#define HLIR_KIND(ID, NAME) case ID: return NAME;
+#include "cthulhu/hlir/hlir.inc"
 
-    case eHlirEnum:
-    case eHlirVariant:
-    case eHlirEnumCase:
-    case eHlirVariantCase:
-
-    case eHlirRecordField:
-    case eHlirFunction:
-
-    case eHlirGlobal:
-    case eHlirLocal:
-    case eHlirParam:
-        return true;
-
-    default:
-        return false;
+    default: NEVER("invalid hlir kind %d", kind);
     }
 }
 
-USE_DECL
-hlir_kind_t get_hlir_kind(const hlir_t *hlir)
+const char *h2_to_string(const h2_t *self)
 {
-    CTASSERT(hlir != NULL);
-    return hlir->type;
-}
+    if (self == NULL) { return "nil"; }
 
-USE_DECL
-const hlir_t *get_hlir_type(const hlir_t *hlir)
-{
-    CTASSERT(hlir != NULL);
-    return hlir->of;
-}
-
-USE_DECL
-const char *get_hlir_name(const hlir_t *hlir)
-{
-    CTASSERT(hlir != NULL);
-    hlir_kind_t kind = get_hlir_kind(hlir);
-    CTASSERTF(has_name(kind), "hlir_t %s has no name", hlir_kind_to_string(kind));
-
-    return hlir->name;
-}
-
-const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir)
-{
-    CTASSERT(hlir != NULL);
-    hlir_kind_t kind = get_hlir_kind(hlir);
-    CTASSERTF(has_attribs(kind), "hlir %s has no attributes", hlir_kind_to_string(kind));
-
-    return hlir->attributes;
-}
-
-node_t *get_hlir_node(const hlir_t *hlir)
-{
-    CTASSERT(hlir != NULL);
-    return hlir->location;
-}
-
-bool hlir_is(const hlir_t *hlir, hlir_kind_t kind)
-{
-    return get_hlir_kind(hlir) == kind;
-}
-
-///
-/// specific
-///
-
-bool hlir_is_type(const hlir_t *hlir)
-{
-    switch (get_hlir_kind(hlir))
+    if (h2_is(self, eHlir2Error))
     {
-    case eHlirStruct:
-    case eHlirUnion:
-    case eHlirDigit:
-    case eHlirBool:
-    case eHlirString:
-    case eHlirEmpty:
-    case eHlirUnit:
-    case eHlirType:
-    case eHlirAlias:
-        return true;
-
-    default:
-        return false;
+        return format("{ error: %s }", self->message);
     }
+
+    if (has_name(self->kind))
+    {
+        return format("{ %s: %s }", h2_kind_to_string(self->kind), h2_get_name(self));
+    }
+
+    return h2_kind_to_string(self->kind);
 }
 
-bool hlir_is_decl(const hlir_t *hlir)
+const node_t *h2_get_node(const h2_t *self)
 {
-    switch (get_hlir_kind(hlir))
-    {
-    case eHlirFunction:
-    case eHlirGlobal:
-        return true;
+    CTASSERT(self != NULL);
 
-    default:
-        return false;
-    }
+    return self->node;
 }
 
-///
-/// debugging
-///
-
-static const char *kKindNames[eHlirTotal] = {
-#define HLIR_KIND(ID, STR) [ID] = (STR),
-#include "cthulhu/hlir/hlir-def.inc"
-};
-
-static const char *kDigitNames[eDigitTotal] = {
-#define DIGIT_KIND(ID, STR) [ID] = (STR),
-#include "cthulhu/hlir/hlir-def.inc"
-};
-
-static const char *kSignNames[eSignTotal] = {
-#define SIGN_KIND(ID, STR) [ID] = (STR),
-#include "cthulhu/hlir/hlir-def.inc"
-};
-
-const char *hlir_kind_to_string(hlir_kind_t kind)
+const char *h2_get_name(const h2_t *self)
 {
-    return kKindNames[kind];
+    CTASSERT(self != NULL);
+    CTASSERTF(has_name(self->kind), "kind %s has no name", h2_kind_to_string(self->kind));
+
+    return self->name;
 }
 
-const char *hlir_sign_to_string(sign_t sign)
+h2_kind_t h2_get_kind(const h2_t *self)
 {
-    return kSignNames[sign];
+    CTASSERT(self != NULL);
+
+    return self->kind;
 }
 
-const char *hlir_digit_to_string(digit_t digit)
+const h2_t *h2_get_type(const h2_t *self)
 {
-    return kDigitNames[digit];
+    CTASSERT(!h2_is(self, eHlir2Resolve));
+
+    return self->type;
 }
 
-const char *hlir_to_string(const hlir_t *hlir)
+const h2_attrib_t *h2_get_attrib(const h2_t *self)
 {
-    const char *kind = hlir_kind_to_string(get_hlir_kind(hlir));
-    if (hlir_is_decl(hlir) || hlir_is(hlir, eHlirError))
-    {
-        return format("%s (%s)", kind, get_hlir_name(hlir));
-    }
+    CTASSERT(self != NULL);
 
-    return hlir_kind_to_string(get_hlir_kind(hlir));
+    return self->attrib;
 }
 
-const hlir_t *hlir_follow_type(const hlir_t *hlir)
+bool h2_is(const h2_t *self, h2_kind_t kind)
 {
-    if (hlir_is(hlir, eHlirAlias))
-    {
-        return hlir_follow_type(hlir->alias);
-    }
+    CTASSERT(self != NULL);
 
-    if (hlir_is(hlir, eHlirEnum) || hlir_is(hlir, eHlirParam) || hlir_is(hlir, eHlirRecordField) || hlir_is(hlir, eHlirQualified))
-    {
-        return hlir_follow_type(get_hlir_type(hlir));
-    }
-
-    return hlir;
+    return self->kind == kind;
 }
 
-const hlir_t *hlir_base_decl_type(const hlir_t *hlir)
+bool h2_has_quals(const h2_t *self, quals_t quals)
 {
-    if (hlir_is(hlir, eHlirParam) || hlir_is(hlir, eHlirRecordField) || hlir_is(hlir, eHlirQualified))
+    if (h2_is(self, eHlir2Qualify))
     {
-        return hlir_follow_type(get_hlir_type(hlir));
+        return self->quals & quals;
     }
 
-    return hlir;
+    return false;
 }
 
-const hlir_t *hlir_real_type(const hlir_t *hlir)
+bool h2_has_vis(const h2_t *self, h2_visible_t visibility)
 {
-    if (hlir_is(hlir, eHlirAlias))
-    {
-        return hlir_follow_type(hlir->alias);
-    }
-
-    if (hlir_is(hlir, eHlirParam) || hlir_is(hlir, eHlirQualified))
-    {
-        return hlir_follow_type(get_hlir_type(hlir));
-    }
-
-    return hlir;
-}
-
-bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs)
-{
-    const hlir_t *actualLhs = hlir_follow_type(lhs);
-    const hlir_t *actualRhs = hlir_follow_type(rhs);
-
-    if ((lhs == rhs) || (actualLhs == actualRhs))
-    {
-        return true;
-    }
-
-    hlir_kind_t lhsKind = get_hlir_kind(actualLhs);
-    hlir_kind_t rhsKind = get_hlir_kind(actualRhs);
-    if (hlir_is_callable(actualLhs) && hlir_is_callable(actualRhs))
-    {
-        // TODO: this is kinda ugly   
-    }
-    else if (lhsKind != rhsKind)
-    {
-        return false;
-    }
-
-    switch (lhsKind)
-    {
-    case eHlirDigit:
-        return actualLhs->width == actualRhs->width && actualLhs->sign == actualRhs->sign;
-    case eHlirString: // TODO: update this when we have multiple string encodings
-    case eHlirBool:
-    case eHlirEmpty:
-    case eHlirUnit:
-        return true;
-
-    case eHlirPointer:
-        return actualLhs->indexable == actualRhs->indexable && hlir_types_equal(actualLhs->ptr, actualRhs->ptr);
-
-    case eHlirClosure:
-    case eHlirFunction: {
-        vector_t *lhsParams = closure_params(actualLhs);
-        vector_t *rhsParams = closure_params(actualRhs);
-        if (vector_len(lhsParams) != vector_len(rhsParams))
-        {
-            return false;
-        }
-
-        if (closure_variadic(actualLhs) != closure_variadic(actualRhs))
-        {
-            return false;
-        }
-
-        for (size_t i = 0; i < vector_len(lhsParams); i++)
-        {
-            const hlir_t *lhsParam = vector_get(lhsParams, i);
-            const hlir_t *rhsParam = vector_get(rhsParams, i);
-            if (!hlir_types_equal(lhsParam, rhsParam))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    case eHlirStruct:
-    case eHlirUnion: {
-        vector_t *lhsFields = actualLhs->fields;
-        vector_t *rhsFields = actualLhs->fields;
-        if (vector_len(lhsFields) != vector_len(rhsFields))
-        {
-            return false;
-        }
-
-        for (size_t i = 0; i < vector_len(lhsFields); i++)
-        {
-            const hlir_t *lhsField = vector_get(lhsFields, i);
-            const hlir_t *rhsField = vector_get(rhsFields, i);
-            if (!hlir_types_equal(lhsField, rhsField))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    case eHlirAlias:
-    case eHlirError: // TODO: are errors always equal, or never equal?
-        return false;
-
-    default:
-        CTASSERTF(false, "unknown type %s", hlir_kind_to_string(lhsKind));
-        return false;
-    }
+    const h2_attrib_t *attrib = h2_get_attrib(self);
+    return attrib->visibility == visibility;
 }

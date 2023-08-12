@@ -1,0 +1,4 @@
+MODULE Test;
+    VAR a : INTEGER;
+    VAR b : INTEGER;
+END Test.

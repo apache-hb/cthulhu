@@ -1,0 +1,16 @@
+module lib;
+
+import Values;
+
+procedure add;
+var tmp;
+begin
+    tmp := lhs + rhs;
+    result := tmp
+end;
+
+lhs := 99;
+rhs := 1;
+call add;
+! result
+.

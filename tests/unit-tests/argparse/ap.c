@@ -1,7 +1,7 @@
 #include "base/macros.h"
 #include "base/memory.h"
 
-#include "argparse/argparse.h" 
+#include "argparse/argparse.h"
 #include "argparse/commands.h"
 
 #include "report/report.h"
@@ -25,9 +25,9 @@ typedef struct errors_t
 
 static ap_event_result_t on_file(ap_t *ap, const ap_param_t *param, const void *value, void *data)
 {
-    UNUSED(ap);
-    UNUSED(param);
-    
+    CTU_UNUSED(ap);
+    CTU_UNUSED(param);
+
     sources_t *sources = data;
     const char *path = value;
 
@@ -42,8 +42,8 @@ static ap_event_result_t on_file(ap_t *ap, const ap_param_t *param, const void *
 
 static ap_event_result_t on_error(ap_t *ap, const node_t *node, const char *message, void *data)
 {
-    UNUSED(ap);
-    UNUSED(node);
+    CTU_UNUSED(ap);
+    CTU_UNUSED(node);
 
     errors_t *errors = data;
     vector_push(&errors->errors, (char*)message);
@@ -81,15 +81,15 @@ typedef struct error_filter_t
 
 static AP_EVENT(count_error, ap, node, message, data)
 {
-    UNUSED(ap);
-    UNUSED(node);
+    CTU_UNUSED(ap);
+    CTU_UNUSED(node);
 
     int i = strtol(message, NULL, 10);
     error_filter_t *filter = data;
     printf("error: i=%d l=%d (%s)\n", i, filter->level, (char*)message);
     if (filter->level != i)
         return eEventContinue;
-    
+
     error_stack_t *stack = filter->stack;
     stack->levels[i] += 1;
     return eEventHandled;

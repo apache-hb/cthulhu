@@ -1,21 +1,30 @@
 #pragma once
 
-#include <stddef.h>
+#include "cthulhu/emit/emit.h"
+#include "cthulhu/ssa/ssa.h"
 
-typedef struct reports_t reports_t;
-typedef struct io_t io_t;
+#include "io/io.h"
 
-typedef struct emit_t 
-{
-    io_t *io;
+typedef struct names_t {
+    size_t counter;
+    map_t *names;
+} names_t;
 
-    size_t indent;
+typedef struct emit_t {
+    reports_t *reports;
+
+    names_t blockNames;
+    names_t vregNames;
 } emit_t;
 
-void write_string(emit_t *emit, const char *str);
+char *begin_module(emit_t *emit, fs_t *fs, const ssa_module_t *mod);
+void end_module(emit_t *emit);
 
-void emit_indent(emit_t *emit);
-void emit_dedent(emit_t *emit);
+names_t names_new(size_t size);
+void counter_reset(emit_t *emit);
 
-#define WRITE_STRINGF(emit, str, ...) write_string(emit, format(str, __VA_ARGS__))
-#define WRITE_STRING(emit, str) write_string(emit, str)
+char *get_step_name(emit_t *emit, const ssa_step_t *step);
+char *get_block_name(emit_t *emit, const ssa_block_t *block);
+char *get_step_from_block(emit_t *emit, const ssa_block_t *block, size_t index);
+
+void write_string(io_t *io, const char *fmt, ...);

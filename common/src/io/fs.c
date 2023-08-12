@@ -9,6 +9,8 @@
 
 #include "report/report.h"
 
+#include <string.h>
+
 static vector_t *path_split(const char *path)
 {
     return str_split(path, "/");
@@ -40,7 +42,7 @@ static map_t *query_dirents(fs_t *fs, inode_t *node)
 }
 
 static io_t *query_file(fs_t *fs, inode_t *node, os_access_t flags)
-{   
+{
     CTASSERT(fs != NULL);
     CTASSERT(node != NULL);
 
@@ -186,8 +188,8 @@ io_t *fs_open(fs_t *fs, const char *path, os_access_t flags)
     {
     case eNodeFile:
         return query_file(fs, file, flags);
-    case eNodeInvalid: 
-        file = create_file(fs, current, vector_tail(parts)); 
+    case eNodeInvalid:
+        file = create_file(fs, current, vector_tail(parts));
         return query_file(fs, file, flags);
     default: return NULL;
     }
@@ -231,6 +233,10 @@ static inode_t *get_inode_for(fs_t *fs, inode_t *node, const char *name, inode_t
 
 void fs_dir_create(fs_t *fs, const char *path)
 {
+    CTASSERT(fs != NULL);
+    CTASSERT(path != NULL);
+    CTASSERT(strlen(path) > 0);
+
     vector_t *parts = path_split(path);
     size_t len = vector_len(parts);
     inode_t *current = fs->root;
@@ -330,10 +336,13 @@ static void sync_file(fs_t *dst, fs_t *src, inode_t *dstNode, inode_t *srcNode)
     io_t *dstIo = query_file(dst, dstNode, eAccessWrite);
 
     size_t size = io_size(srcIo);
-    void *data = ctu_malloc(size);
+    if (size > 0)
+    {
+        void *data = ctu_malloc(size);
 
-    size_t read = io_read(srcIo, data, size);
-    io_write(dstIo, data, read);
+        size_t read = io_read(srcIo, data, size);
+        io_write(dstIo, data, read);
+    }
 
     io_close(srcIo);
     io_close(dstIo);

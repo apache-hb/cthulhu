@@ -46,7 +46,7 @@ typedef struct fs_interface_t
     fs_file_delete_t fnDeleteFile;
 } fs_interface_t;
 
-typedef struct fs_t 
+typedef struct fs_t
 {
     const fs_interface_t *cb; ///< callbacks
     reports_t *reports; ///< reports
@@ -63,6 +63,10 @@ inode_t *inode_file(const void *data, size_t size);
 inode_t *inode_dir(const void *data, size_t size);
 void *inode_data(inode_t *inode);
 bool inode_is(inode_t *inode, inode_type_t type);
+
+// helpers
+
+OS_RESULT(bool) mkdir_recursive(const char *path);
 
 // fs api
 

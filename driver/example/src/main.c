@@ -1,6 +1,6 @@
 #include "cthulhu/mediator/driver.h"
 
-#include "cthulhu/hlir/decl.h"
+#include "cthulhu/hlir/h2.h"
 
 #include "std/vector.h"
 
@@ -14,11 +14,20 @@ static vector_t *example_lang_path(void)
     return path;
 }
 
-static hlir_t *example_lang_module(void)
+static h2_t *example_lang_module(lifetime_t *lifetime)
 {
+    reports_t *reports = lifetime_get_reports(lifetime);
+    h2_cookie_t *cookie = lifetime_get_cookie(lifetime);
+
     node_t *node = node_builtin();
-    hlir_t *mod = hlir_module(node, "example", vector_of(0), vector_of(0), vector_of(0));
-    return mod;
+    size_t sizes[eSema2Total] = {
+        [eSema2Values] = 1,
+        [eSema2Types] = 1,
+        [eSema2Procs] = 1,
+        [eSema2Modules] = 1
+    };
+
+    return h2_module_root(reports, cookie, node, "runtime", eSema2Total, sizes);
 }
 
 static void ex_config(lifetime_t *lifetime, ap_t *ap)
@@ -28,11 +37,13 @@ static void ex_config(lifetime_t *lifetime, ap_t *ap)
 
 static void ex_create(driver_t *handle)
 {
-    vector_t *path = example_lang_path();
-    hlir_t *mod = example_lang_module();
-    context_t *ctx = compiled_new(handle, "example", mod, NULL);
+    lifetime_t *lifetime = handle_get_lifetime(handle);
 
-    add_context(handle_get_lifetime(handle), path, ctx);
+    vector_t *path = example_lang_path();
+    h2_t *mod = example_lang_module(lifetime);
+    context_t *ctx = compiled_new(handle, mod);
+
+    add_context(lifetime, path, ctx);
 
     logverbose("ex-create(0x%p)", handle);
 }
@@ -80,7 +91,7 @@ const language_t kExampleModule = {
     },
 
     .exts = kLangNames,
-    
+
     .fnConfig = ex_config,
 
     .fnCreate = ex_create,

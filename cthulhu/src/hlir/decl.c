@@ -1,225 +1,127 @@
-#include "cthulhu/hlir/decl.h"
+#include "common.h"
+
 #include "cthulhu/hlir/query.h"
+
+#include "report/report.h"
+
+#include "std/vector.h"
 
 #include "base/panic.h"
 
-#include "common.h"
+#include <stdint.h>
 
-#define IS_AGGREGATE(hlir) (hlir_is(hlir, eHlirStruct) || hlir_is(hlir, eHlirUnion))
-#define IS_ENUM(hlir) (hlir_is(hlir, eHlirEnum) || hlir_is(hlir, eHlirVariant))
-
-///
-/// builder functions
-///
-
-static hlir_t *hlir_begin_aggregate_with_fields(node_t *node, const char *name, vector_t *fields, hlir_kind_t kind, const hlir_t *type)
+static h2_t *decl_open(const node_t *node, const char *name, const h2_t *type, h2_kind_t expected, h2_resolve_config_t resolve)
 {
-    hlir_t *self = hlir_decl_new(node, name, type, kind);
-    self->fields = fields;
+    h2_t *self = h2_decl(eHlir2Resolve, node, type, name);
+
+    self->expected = expected;
+    self->sema = resolve.sema;
+    self->user = resolve.user;
+    self->fnResolve = resolve.fnResolve;
+
     return self;
 }
 
-static hlir_t *hlir_begin_aggregate(node_t *node, const char *name, hlir_kind_t kind, const hlir_t *type)
+static void decl_close(h2_t *decl, h2_kind_t kind)
 {
-    return hlir_begin_aggregate_with_fields(node, name, vector_new(4), kind, type);
+    CTASSERTF(h2_is(decl, eHlir2Resolve), "decl `%s` is not a resolve, found %s", h2_get_name(decl), h2_kind_to_string(decl->kind));
+    CTASSERTF(decl->expected == kind, "decl %s is an unresolved %s, expected %s", h2_get_name(decl), h2_kind_to_string(decl->expected), h2_kind_to_string(kind));
+
+    decl->kind = kind;
 }
 
-///
-/// struct interface
-///
-
-hlir_t *hlir_begin_struct(node_t *node, const char *name)
+static void close_function(h2_t *decl, vector_t *pendingLocals, h2_t *body)
 {
-    return hlir_begin_aggregate(node, name, eHlirStruct, kMetaType);
+    CTASSERTF(decl->expected == eHlir2DeclFunction, "decl %s is not a function", h2_get_name(decl));
+
+    decl_close(decl, eHlir2DeclFunction);
+    decl->locals = pendingLocals;
+    decl->body = body;
 }
 
-hlir_t *hlir_struct(node_t *node, const char *name, vector_t *fields)
+h2_t *h2_resolve(h2_cookie_t *cookie, h2_t *decl)
 {
-    return hlir_begin_aggregate_with_fields(node, name, fields, eHlirStruct, kMetaType);
-}
+    if (!h2_is(decl, eHlir2Resolve)) { return decl; }
 
-///
-/// union interface
-///
-
-hlir_t *hlir_begin_union(node_t *node, const char *name)
-{
-    return hlir_begin_aggregate(node, name, eHlirUnion, kMetaType);
-}
-
-hlir_t *hlir_union(node_t *node, const char *name, vector_t *fields)
-{
-    return hlir_begin_aggregate_with_fields(node, name, fields, eHlirUnion, kMetaType);
-}
-
-///
-/// enum interface
-///
-
-static hlir_t *begin_enum_type(node_t *node, const char *name, const hlir_t *underlying, hlir_kind_t kind)
-{
-    hlir_t *hlir = hlir_decl_new(node, name, underlying, kind);
-    hlir->fields = vector_new(4);
-    hlir->defaultCase = NULL;
-    return hlir;
-}
-
-hlir_t *hlir_begin_enum(node_t *node, const char *name, const hlir_t *type)
-{
-    CTASSERTF(hlir_is(type, eHlirDigit), "hlir-begin-enum called with non-digit type: %s", hlir_to_string(type));
-    return begin_enum_type(node, name, type, eHlirEnum);
-}
-
-///
-/// variant interface
-///
-
-hlir_t *hlir_begin_variant(node_t *node, const char *name, const hlir_t *type)
-{
-    CTASSERT(hlir_is(type, eHlirDigit));
-    return begin_enum_type(node, name, type, eHlirVariant);
-}
-
-///
-/// generic aggregate interface
-///
-
-void hlir_add_field(hlir_t *self, hlir_t *field)
-{
-    CTASSERT(self != NULL);
-    CTASSERTM(IS_AGGREGATE(self), "hlir-add-field called on non-aggregate hlir");
-    CTASSERTM(hlir_is(field, eHlirRecordField), "hlir-add-field called with non-field hlir");
-
-    vector_push(&self->fields, field);
-}
-
-void hlir_add_case(hlir_t *self, hlir_t *field)
-{
-    CTASSERT(self != NULL);
-    CTASSERTM(IS_ENUM(self), "hlir-add-case called on non-enum hlir");
-
-    if (hlir_is(self, eHlirEnum))
+    size_t index = vector_find(cookie->stack, decl);
+    if (index != SIZE_MAX)
     {
-        CTASSERTM(hlir_is(field, eHlirEnumCase), "hlir-add-case called with non-field hlir");
+        // TODO: better reporting
+        report(cookie->reports, eFatal, decl->node, "cyclic dependency when resolving %s", h2_get_name(decl));
+        return h2_error(decl->node, "cyclic dependency");
     }
 
-    if (hlir_is(self, eHlirVariant))
-    {
-        CTASSERTM(hlir_is(field, eHlirVariantCase), "hlir-add-case called with non-field hlir");
-    }
+    vector_push(&cookie->stack, decl);
 
-    vector_push(&self->fields, field);
+    decl->fnResolve(cookie, decl->sema, decl, decl->user);
+
+    vector_drop(cookie->stack);
+
+    return decl;
 }
 
-///
-/// alias interface
-///
-
-hlir_t *hlir_begin_alias(node_t *node, const char *name)
+h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type, h2_resolve_config_t resolve)
 {
-    return hlir_decl_new(node, name, kMetaType, eHlirAlias);
+    return decl_open(node, name, type, eHlir2DeclGlobal, resolve);
 }
 
-void hlir_build_alias(hlir_t *self, const hlir_t *alias)
+h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature, h2_resolve_config_t resolve)
 {
-    CTASSERT(hlir_is(self, eHlirAlias));
-    self->alias = alias;
-}
-
-hlir_t *hlir_alias(node_t *node, const char *name, const hlir_t *type)
-{
-    hlir_t *self = hlir_begin_alias(node, name);
-    hlir_build_alias(self, type);
+    h2_t *self = decl_open(node, name, signature, eHlir2DeclFunction, resolve);
+    self->pendingLocals = vector_new(4);
     return self;
 }
 
-hlir_t *hlir_begin_global(node_t *node, const char *name, const hlir_t *type)
+void h2_close_global(h2_t *self, h2_t *value)
 {
-    return hlir_decl_new(node, name, type, eHlirGlobal);
+    decl_close(self, eHlir2DeclGlobal);
+    self->global = value;
 }
 
-void hlir_build_global(hlir_t *self, const hlir_t *init)
+void h2_close_function(h2_t *self, h2_t *body)
 {
-    CTASSERT(hlir_is(self, eHlirGlobal));
-    self->value = init;
+    close_function(self, self->pendingLocals, body);
 }
 
-hlir_t *hlir_global(node_t *node, const char *name, const hlir_t *type, const hlir_t *init)
+h2_t *h2_decl_param(const node_t *node, const char *name, const h2_t *type)
 {
-    hlir_t *self = hlir_begin_global(node, name, type);
-    hlir_build_global(self, init);
+    return h2_decl(eHlir2DeclParam, node, type, name);
+}
+
+h2_t *h2_decl_local(const node_t *node, const char *name, const h2_t *type)
+{
+    return h2_decl(eHlir2DeclLocal, node, type, name);
+}
+
+static const h2_resolve_config_t kEmptyConfig = {
+    .user = NULL,
+    .sema = NULL,
+    .fnResolve = NULL
+};
+
+h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value)
+{
+    h2_t *self = h2_open_global(node, name, type, kEmptyConfig);
+    h2_close_global(self, value);
     return self;
 }
 
-hlir_t *hlir_local(node_t *node, const char *name, const hlir_t *type)
+h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *signature, vector_t *locals, h2_t *body)
 {
-    return hlir_decl_new(node, name, type, eHlirLocal);
-}
-
-hlir_t *hlir_param(node_t *node, const char *name, const hlir_t *type)
-{
-    return hlir_decl_new(node, name, type, eHlirParam);
-}
-
-void hlir_build_function(hlir_t *self, hlir_t *body)
-{
-    CTASSERT(hlir_is(self, eHlirFunction));
-    self->body = body;
-}
-
-static hlir_t *hlir_begin_function_with_locals(node_t *node, const char *name, vector_t *locals, vector_t *params, const hlir_t *result, arity_t arity)
-{
-    hlir_t *self = hlir_decl_new(node, name, kMetaType, eHlirFunction);
-
-    self->arity = arity;
-    self->params = params;
-    self->result = result;
-    self->locals = locals;
-    self->of = self; // TODO: this should be a closure
-
+    h2_t *self = decl_open(node, name, signature, eHlir2DeclFunction, kEmptyConfig);
+    close_function(self, locals, body);
     return self;
 }
 
-hlir_t *hlir_begin_function(node_t *node, const char *name, vector_t *params, const hlir_t *result, arity_t arity)
+void h2_add_local(h2_t *self, h2_t *decl)
 {
-    return hlir_begin_function_with_locals(node, name, vector_new(4), params, result, arity);
+    CTASSERTF(h2_is(self, eHlir2Resolve), "cannot add locals to a completed declaration %s", h2_to_string(self));
+    CTASSERTF(self->expected == eHlir2DeclFunction, "cannot add locals to a non-function declaration %s", h2_to_string(self));
+
+    vector_push(&self->pendingLocals, decl);
 }
 
-hlir_t *hlir_function(node_t *node, const char *name, vector_t *params, const hlir_t *result, vector_t *locals, arity_t arity, hlir_t *body)
+void h2_set_attrib(h2_t *self, const h2_attrib_t *attrib)
 {
-    hlir_t *self = hlir_begin_function_with_locals(node, name, locals, params, result, arity);
-    hlir_build_function(self, body);
-    return self;
-}
-
-void hlir_add_local(hlir_t *self, hlir_t *local)
-{
-    CTASSERTM(hlir_is(self, eHlirFunction), "hlir-add-local called on non-function hlir");
-    vector_push(&self->locals, local);
-}
-
-hlir_t *hlir_begin_module(node_t *node, const char *name)
-{
-    return hlir_decl_new(node, name, NULL, eHlirModule);
-}
-
-void hlir_build_module(hlir_t *self, vector_t *types, vector_t *globals, vector_t *functions)
-{
-    CTASSERT(hlir_is(self, eHlirModule));
-
-    self->types = types;
-    self->globals = globals;
-    self->functions = functions;
-}
-
-hlir_t *hlir_module(node_t *node, const char *name, vector_t *types, vector_t *globals, vector_t *functions)
-{
-    hlir_t *self = hlir_begin_module(node, name);
-    hlir_build_module(self, types, globals, functions);
-    return self;
-}
-
-void hlir_set_type(hlir_t *self, const hlir_t *type)
-{
-    self->of = type;
+    self->attrib = attrib;
 }

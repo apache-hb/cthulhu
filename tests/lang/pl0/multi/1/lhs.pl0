@@ -1,6 +1,7 @@
-module lhs;
+module multi.lhs;
 
-import rhs, main;
+import multi.rhs, 
+       main;
 
 procedure lhs;
 begin

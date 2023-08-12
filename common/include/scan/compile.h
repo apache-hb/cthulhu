@@ -36,7 +36,7 @@ typedef struct
         CTASSERTF(size <= INT_MAX, #prefix "-scan (size = %zu > %d, name = %s)", size, INT_MAX, scan_path(scanner));                                                                                     \
         return prefix##_scan_bytes(text, (int)size, scanner);                                                          \
     }                                                                                                                  \
-    static void prefix##_##id##_delete(void *buffer, void *scanner)                                                    \
+    static void prefix##_##id##_destroyBuffer(void *buffer, void *scanner)                                                    \
     {                                                                                                                  \
         prefix##_delete_buffer(buffer, scanner);                                                                       \
     }                                                                                                                  \
@@ -48,7 +48,7 @@ typedef struct
         .init = prefix##_##id##_##init,                                                                                \
         .parse = prefix##_##id##_parse,                                                                                \
         .scan = prefix##_##id##_scan,                                                                                  \
-        .destroyBuffer = prefix##_##id##_delete,                                                                       \
+        .destroyBuffer = prefix##_##id##_destroyBuffer,                                                                       \
         .destroy = prefix##_##id##_destroy,                                                                            \
     }
 

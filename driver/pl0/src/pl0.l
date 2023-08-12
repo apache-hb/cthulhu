@@ -8,7 +8,7 @@
 
 %{
 #include "pl0-bison.h"
-#include "scan.h"
+#include "pl0/scan.h"
 #include "report/report-ext.h"
 #include "interop/flex.h"
 %}
@@ -41,7 +41,7 @@
 (?i:odd) { return ODD; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    yylval->ident = pl0_normalize(yytext);
+    yylval->ident = ctu_strdup(yytext);
     return IDENT;
 }
 

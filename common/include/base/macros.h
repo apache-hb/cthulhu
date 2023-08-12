@@ -21,7 +21,7 @@
  */
 
 /// macros for readability
-#define UNUSED(x) ((void)(x))
+#define CTU_UNUSED(x) ((void)(x))
 
 #define INNER_STR(x) #x
 #define STR(x) INNER_STR(x)

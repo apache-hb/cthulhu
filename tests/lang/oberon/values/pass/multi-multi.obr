@@ -1,0 +1,4 @@
+MODULE Test;
+    VAR a, b, c : INTEGER;
+    VAR x, y, z : INTEGER;
+END Test.

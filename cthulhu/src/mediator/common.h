@@ -4,7 +4,6 @@
 
 #include "std/map.h"
 
-typedef struct sema_t sema_t;
 typedef struct reports_t reports_t;
 
 typedef struct mediator_t
@@ -13,32 +12,32 @@ typedef struct mediator_t
     version_info_t version;
 } mediator_t;
 
-typedef struct lifetime_t 
+typedef struct lifetime_t
 {
     mediator_t *parent;
 
     reports_t *reports;
 
     map_t *extensions;
-
     map_t *modules;
+
+    h2_cookie_t *cookie;
 } lifetime_t;
 
-typedef struct driver_t 
+typedef struct driver_t
 {
     lifetime_t *parent;
     const language_t *lang;
 } driver_t;
 
-typedef struct context_t 
+typedef struct context_t
 {
     lifetime_t *parent;
     const language_t *lang;
 
     const char *name;
     void *ast;
-    hlir_t *root;
-    sema_t *sema;
+    h2_t *root;
 } context_t;
 
 bool context_requires_compiling(const context_t *ctx);

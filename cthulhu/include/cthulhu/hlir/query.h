@@ -1,74 +1,22 @@
-#include "base/analyze.h"
-#include "hlir.h"
+#pragma once
 
-///
-/// general queries
-///
+#include "cthulhu/hlir/h2.h"
 
-NODISCARD PUREFN 
-hlir_kind_t get_hlir_kind(const hlir_t *hlir);
+typedef struct reports_t reports_t;
+typedef struct node_t node_t;
+typedef struct h2_t h2_t;
 
-NODISCARD PUREFN 
-const hlir_t *get_hlir_type(const hlir_t *hlir);
+const char *h2_kind_to_string(h2_kind_t kind);
+const char *h2_to_string(const h2_t *self);
 
-NODISCARD PUREFN 
-const char *get_hlir_name(const hlir_t *hlir);
+const node_t *h2_get_node(const h2_t *self);
+const char *h2_get_name(const h2_t *self);
+h2_kind_t h2_get_kind(const h2_t *self);
+const h2_t *h2_get_type(const h2_t *self);
+const h2_attrib_t *h2_get_attrib(const h2_t *self);
+const h2_t *h2_follow_type(const h2_t *self);
 
-NODISCARD PUREFN 
-const hlir_attributes_t *get_hlir_attributes(const hlir_t *hlir);
+bool h2_is(const h2_t *self, h2_kind_t kind);
 
-NODISCARD PUREFN 
-node_t *get_hlir_node(const hlir_t *hlir);
-
-NODISCARD PUREFN 
-bool hlir_is(const hlir_t *hlir, hlir_kind_t kind);
-
-///
-/// detail queries
-///
-
-/**
- * @brief follow a type until either a real type is reached
- *
- * @param hlir the type to follow
- * @return const hlir_t* the base type
- */
-NODISCARD PUREFN
-const hlir_t *hlir_follow_type(const hlir_t *hlir);
-
-NODISCARD PUREFN
-const hlir_t *hlir_base_decl_type(const hlir_t *hlir);
-
-/**
- * @brief follow a type until a real type is reached, ignoring newtypes
- *
- * @param hlir the type to follow
- * @return const hlir_t* the base type
- */
-NODISCARD PUREFN
-const hlir_t *hlir_real_type(const hlir_t *hlir);
-
-NODISCARD PUREFN
-bool hlir_is_type(const hlir_t *hlir);
-
-NODISCARD PUREFN
-bool hlir_is_decl(const hlir_t *hlir);
-
-NODISCARD PUREFN
-bool hlir_types_equal(const hlir_t *lhs, const hlir_t *rhs);
-
-///
-/// debugging queries
-///
-
-NODISCARD PUREFN 
-const char *hlir_kind_to_string(hlir_kind_t kind);
-
-NODISCARD PUREFN 
-const char *hlir_sign_to_string(sign_t sign);
-
-NODISCARD PUREFN 
-const char *hlir_digit_to_string(digit_t digit);
-
-NODISCARD PUREFN
-const char *hlir_to_string(const hlir_t *hlir);
+bool h2_has_quals(const h2_t *self, quals_t quals);
+bool h2_has_vis(const h2_t *self, h2_visible_t visibility);

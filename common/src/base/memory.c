@@ -9,24 +9,24 @@
 
 static void *default_global_malloc(alloc_t *alloc, size_t size, const char *name)
 {
-    UNUSED(alloc);
-    UNUSED(name);
+    CTU_UNUSED(alloc);
+    CTU_UNUSED(name);
 
     return malloc(size);
 }
 
 static void *default_global_realloc(alloc_t *alloc, void *ptr, size_t newSize, size_t oldSize)
 {
-    UNUSED(alloc);
-    UNUSED(oldSize);
+    CTU_UNUSED(alloc);
+    CTU_UNUSED(oldSize);
 
     return realloc(ptr, newSize);
 }
 
 static void default_global_free(alloc_t *alloc, void *ptr, size_t size)
 {
-    UNUSED(alloc);
-    UNUSED(size);
+    CTU_UNUSED(alloc);
+    CTU_UNUSED(size);
 
     free(ptr);
 }
@@ -91,21 +91,21 @@ void arena_free(alloc_t *alloc, void *ptr, size_t size)
 
 /// gmp arena managment
 
-static alloc_t *gmpAlloc = NULL;
+static alloc_t *gGmpAlloc = NULL;
 
 static void *ctu_gmp_malloc(size_t size)
 {
-    return arena_malloc(gmpAlloc, size, "gmp-alloc");
+    return arena_malloc(gGmpAlloc, size, "gmp-alloc");
 }
 
 static void *ctu_gmp_realloc(void *ptr, size_t oldSize, size_t newSize)
 {
-    return arena_realloc(gmpAlloc, ptr, newSize, oldSize);
+    return arena_realloc(gGmpAlloc, ptr, newSize, oldSize);
 }
 
 static void ctu_gmp_free(void *ptr, size_t size)
 {
-    arena_free(gmpAlloc, ptr, size);
+    arena_free(gGmpAlloc, ptr, size);
 }
 
 USE_DECL
@@ -113,6 +113,6 @@ void init_gmp(alloc_t *alloc)
 {
     CTASSERT(alloc != NULL);
 
-    gmpAlloc = alloc;
+    gGmpAlloc = alloc;
     mp_set_memory_functions(ctu_gmp_malloc, ctu_gmp_realloc, ctu_gmp_free);
 }

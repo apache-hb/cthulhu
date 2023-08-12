@@ -197,8 +197,10 @@ fs_t *fs_physical(reports_t *reports, const char *root)
     OS_RESULT(bool) exist = os_dir_exists(root);
     if (!OS_VALUE_OR(bool, exist, false))
     {
-        OS_RESULT(bool) create = os_dir_create(root);
-        CTASSERTF(os_error(create) == 0, "error creating root directory: %s", os_decode(os_error(create)));
+        OS_RESULT(bool) create = mkdir_recursive(root);
+
+        // TODO: make this work recursively
+        CTASSERTF(os_error(create) == 0, "error creating root directory: %s. %s", root, os_decode(os_error(create)));
 
         if (!OS_VALUE(bool, create))
         {

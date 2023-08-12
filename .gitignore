@@ -19,6 +19,7 @@
 # dont ignore test files
 !*.pl0
 !*.ct
+!*.obr
 
 # dont ignore readme and build files
 !*.md
@@ -45,7 +46,7 @@ fuzz-*/
 afl*/
 genout*/
 out.c
-*-out/
+*out/
 
 # grammar files
 !driver/**/*

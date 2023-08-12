@@ -2,6 +2,8 @@
 
 #include "cthulhu/mediator/driver.h"
 
+#include "cthulhu/hlir/query.h"
+
 #include "base/panic.h"
 #include "base/memory.h"
 
@@ -18,8 +20,9 @@ static char *path_to_string(vector_t *path)
     return str_join(".", path);
 }
 
-static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, hlir_t *root, sema_t *sema)
+static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, h2_t *root)
 {
+    CTASSERT(handle != NULL);
     context_t *self = ctu_malloc(sizeof(context_t));
 
     self->parent = handle->parent;
@@ -27,23 +30,18 @@ static context_t *context_inner_new(driver_t *handle, const char *name, void *as
     self->name = name;
     self->ast = ast;
     self->root = root;
-    self->sema = sema;
 
     return self;
 }
 
-context_t *compiled_new(driver_t *handle, const char *name, hlir_t *root, sema_t *sema)
+context_t *compiled_new(driver_t *handle, h2_t *root)
 {
-    CTASSERT(handle != NULL);
-
-    return context_inner_new(handle, name, NULL, root, sema);
+    return context_inner_new(handle, h2_get_name(root), NULL, root);
 }
 
-context_t *context_new(driver_t *handle, const char *name, void *ast, hlir_t *root, sema_t *sema)
+context_t *context_new(driver_t *handle, const char *name, void *ast, h2_t *root)
 {
-    CTASSERT(handle != NULL);
-
-    return context_inner_new(handle, name, ast, root, sema);
+    return context_inner_new(handle, name, ast, root);
 }
 
 context_t *add_context(lifetime_t *lifetime, vector_t *path, context_t *mod)
@@ -81,6 +79,13 @@ reports_t *lifetime_get_reports(lifetime_t *lifetime)
     return lifetime->reports;
 }
 
+h2_cookie_t *lifetime_get_cookie(lifetime_t *lifetime)
+{
+    CTASSERT(lifetime != NULL);
+
+    return lifetime->cookie;
+}
+
 void *context_get_ast(context_t *context)
 {
     CTASSERT(context != NULL);
@@ -88,18 +93,11 @@ void *context_get_ast(context_t *context)
     return context->ast;
 }
 
-hlir_t *context_get_hlir(context_t *context)
+h2_t *context_get_module(context_t *context)
 {
     CTASSERT(context != NULL);
 
     return context->root;
-}
-
-sema_t *context_get_sema(context_t *context)
-{
-    CTASSERT(context != NULL);
-
-    return context->sema;
 }
 
 lifetime_t *context_get_lifetime(context_t *context)
@@ -113,14 +111,32 @@ const char *context_get_name(context_t *context)
 {
     CTASSERT(context != NULL);
 
-    return "";
+    return context->name;
 }
 
-void context_update(context_t *ctx, void *ast, sema_t *sema, hlir_t *root)
+void context_update(context_t *ctx, void *ast, h2_t *root)
 {
     CTASSERT(ctx != NULL);
 
     ctx->ast = ast;
     ctx->root = root;
-    ctx->sema = sema;
+}
+
+///
+/// helpers
+///
+
+h2_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, const size_t *sizes)
+{
+    CTASSERT(lifetime != NULL);
+    CTASSERT(name != NULL);
+    CTASSERT(sizes != NULL);
+    CTASSERT(len > 0);
+
+    reports_t *reports = lifetime_get_reports(lifetime);
+    h2_cookie_t *cookie = lifetime_get_cookie(lifetime);
+    node_t *node = node_builtin();
+    h2_t *root = h2_module_root(reports, cookie, node, name, len, sizes);
+
+    return root;
 }

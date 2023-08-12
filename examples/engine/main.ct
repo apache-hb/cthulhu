@@ -1,97 +1,14 @@
 module main;
 
-import core;
-
-export variant Result {
-    default Success = 0
-
-    case NotReady = 1
-    case Timeout = 2
-    case EventSet = 3
-    case EventReset = 4
-    case Incomplete = 5
-
-    case ErrorOutOfHostMemory = -1
-    case ErrorOutOfDeviceMemory = -2
-    case ErrorInitializationFailed = -3
-    case ErrorDeviceLost = -4
-}
-
-export variant StructureType {
-    case ApplicationInfo = 0
-    case InstanceCreateInfo = 1
-}
-
-export variant InstanceCreateFlags {
-    default None = 0
-    case EnumeratePortabilityKHR = 1
-}
-
-export struct ApplicationInfo {
-    kind: StructureType;
-    next: opaque;
-    applicationName: str;
-    applicationVersion: core::uint32;
-    engineName: str;
-    engineVersion: core::uint32;
-    apiVersion: core::uint32;
-}
-
-export struct InstanceCreateInfo {
-    kind: StructureType;
-    next: opaque;
-    flags: InstanceCreateFlags;
-    applicationInfo: *ApplicationInfo;
-    enabledLayerCount: core::uint32;
-    enabledLayerNames: *str;
-    enabledExtensionCount: core::uint32;
-    enabledExtensionNames: *str;
-}
-
-export variant SystemAllocationScope {
-    case Command = 0
-    case Object = 1
-    case Cache = 2
-    case Device = 3
-    case Instance = 4
-}
-
-export type AllocationFunction = def(opaque, usize, usize, SystemAllocationScope) -> opaque;
-
-export type ReallocationFunction = def(opaque, opaque, usize, usize, SystemAllocationScope) -> opaque;
-
-export type FreeFunction = def(opaque, opaque) -> void;
-
-export type InternalAllocationNotification = def(opaque, usize, SystemAllocationScope) -> void;
-
-export type InternalFreeNotification = def(opaque, usize, SystemAllocationScope) -> void;
-
-export struct AllocationCallbacks {
-    user: opaque;
-    allocation: AllocationFunction;
-    reallocation: ReallocationFunction;
-    free: FreeFunction;
-    internalAllocation: InternalAllocationNotification;
-    internalFree: InternalFreeNotification;
-}
-
-export type Instance = opaque;
-
-export def createVersion(major: uint, minor: uint, patch: uint): core::uint32 
-    = (major << 22) | (minor << 12) | patch;
-
-@extern("vkCreateInstance")
-export def createInstance(createInfo: *InstanceCreateInfo, allocator: *AllocationCallbacks, instance: Instance): Result;
-
-@extern("vkDestroyInstance")
-export def destroyInstance(instance: Instance, allocator: *AllocationCallbacks): void;
+import cthulhu::lang(...);
+import vulkan as vk;
 
 @extern("printf")
 def printf(fmt: str, args: ...): int;
 
 @entry(cli)
 def entry {
-    const appInfo: ApplicationInfo = .{
+    const appInfo: vk::ApplicationInfo = .{
         kind = ApplicationInfo,
         applicationName = "Cthulhu",
         applicationVersion = createVersion(1, 0, 0),
@@ -100,19 +17,19 @@ def entry {
         apiVersion = createVersion(1, 0, 0)
     };
 
-    const instanceInfo: InstanceCreateInfo = .{
+    const instanceInfo: vk::InstanceCreateInfo = .{
         kind = InstanceCreateInfo,
         applicationInfo = &appInfo
     };
 
-    var instance: Instance = noinit;
-    const result = createInstance(&instanceInfo, __null, instance);
+    var instance: vk::Instance = noinit;
+    const result = vk::createInstance(&instanceInfo, __null, instance);
 
     if result != Result::Success {
         printf("Failed to create instance\n");
     } else {
         printf("Created instance\n");
 
-        destroyInstance(instance, __null);
+        vk::destroyInstance(instance, __null);
     }
 }

@@ -12,7 +12,7 @@ CT_CALLBACKS(kCallbacks, cc);
 
 static void *cc_parse(lang_handle_t *lang, scan_t *scan)
 {
-    UNUSED(lang);
+    CTU_UNUSED(lang);
 
     cc_init_scan(scan);
     return compile_scanner(scan, &kCallbacks);

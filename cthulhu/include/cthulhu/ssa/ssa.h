@@ -1,356 +1,297 @@
 #pragma once
 
-#include "cthulhu/hlir/attribs.h"
-#include "cthulhu/hlir/string-view.h"
-#include "cthulhu/hlir/digit.h"
 #include "cthulhu/hlir/ops.h"
-#include "cthulhu/hlir/arity.h"
-
-#include <stdbool.h>
 
 #include <gmp.h>
+#include <stdbool.h>
 
-typedef struct vector_t vector_t;
 typedef struct reports_t reports_t;
+typedef struct vector_t vector_t;
+typedef struct typevec_t typevec_t;
+typedef struct map_t map_t;
+
+typedef struct h2_t h2_t;
+
+typedef struct ssa_module_t ssa_module_t;
+typedef struct ssa_symbol_t ssa_symbol_t;
 
 typedef struct ssa_block_t ssa_block_t;
-typedef struct ssa_flow_t ssa_flow_t;
 typedef struct ssa_step_t ssa_step_t;
 typedef struct ssa_operand_t ssa_operand_t;
 
 typedef struct ssa_type_t ssa_type_t;
 typedef struct ssa_value_t ssa_value_t;
 
-typedef enum ssa_kind_t
-{
-#define SSA_TYPE(id, name) id,
-#include "cthulhu/ssa/ssa.inc"
+typedef enum ssa_kind_t {
+    eTypeEmpty,
+    eTypeUnit,
+    eTypeBool,
+    eTypeDigit,
+    eTypeString,
+    eTypeClosure,
+
     eTypeTotal
 } ssa_kind_t;
 
-typedef struct ssa_param_t
-{
-    const ssa_type_t *type;
-    const char *name;
-} ssa_param_t;
+typedef enum ssa_opkind_t {
+    eOperandEmpty,
+    eOperandImm,
 
-typedef struct ssa_type_t
-{
-    ssa_kind_t kind;
-    const char *name;
+    eOperandBlock,
+    eOperandGlobal,
 
-    union {
-        // eTypeDigit
-        struct {
-            digit_t digit;
-            sign_t sign;
-        };
+    eOperandFunction,
+    eOperandLocal,
+    eOperandParam,
+    eOperandReg,
 
-        // eTypeBool
-        /* empty */
-
-        // eTypeString
-        /* empty */
-
-        // eTypeUnit
-        /* empty */
-
-        // eTypeEmpty
-        /* empty */
-
-        // eTypePointer
-        const ssa_type_t *ptr;
-
-        // eTypeArray
-        struct {
-            const ssa_type_t *arr;
-            size_t size;
-        };
-
-        // eTypeSignature
-        struct {
-            const ssa_type_t *result;
-            vector_t *args; // vector_t<ssa_param_t*>
-            arity_t arity;
-        };
-
-        // eTypeStruct or eTypeUnion
-        vector_t *fields; // vector_t<ssa_param_t*>
-    };
-} ssa_type_t;
-
-typedef struct ssa_value_t
-{
-    const ssa_type_t *type;
-    bool initialized;
-
-    union {
-        // eTypeDigit
-        mpz_t digit;
-
-        // eTypeDecimal
-        mpq_t decimal;
-
-        // eTypeBool
-        bool boolean;
-
-        // eTypeString
-        string_view_t string; // TODO: wrong
-
-        // eTypeUnit
-        /* empty */
-
-        // eTypeEmpty
-        /* empty */
-
-        // eTypePointer
-        /* TODO: implement */
-
-        // eTypeSignature
-        /* TODO: implement */
-
-        // eTypeStruct
-        /* TODO: implement */
-    };
-} ssa_value_t;
-
-typedef enum ssa_operand_kind_t
-{
-#define SSA_OPERAND(id, name) id,
-#include "cthulhu/ssa/ssa.inc"
     eOperandTotal
-} ssa_operand_kind_t;
+} ssa_opkind_t;
 
-typedef struct ssa_operand_t
-{
-    ssa_operand_kind_t kind;
+typedef enum ssa_opcode_t {
+    eOpStore,
+    eOpLoad,
+    eOpAddress,
 
-    union {
-        // eOperandEmpty
-        /* empty */
+    eOpUnary,
+    eOpBinary,
+    eOpCompare,
 
-        // eOperandBlock
-        const ssa_block_t *bb;
+    eOpCast,
+    eOpCall,
 
-        // eOperandReg
-        const ssa_step_t *vreg;
+    eOpIndex, // get the address of an element in an array
+    eOpMember, // get the address of a field in a struct
 
-        // eOperandLocal
-        size_t local;
+    /* control flow */
+    eOpReturn,
+    eOpBranch,
+    eOpJump,
 
-        // eOperandParam
-        size_t param;
-
-        // eOperandGlobal
-        const ssa_flow_t *global;
-
-        // eOperandFunction
-        const ssa_flow_t *function;
-
-        // eOperandImm
-        ssa_value_t *value;
-    };
-} ssa_operand_t;
-
-typedef enum ssa_opcode_t
-{
-#define SSA_OPCODE(id, name) id,
-#include "cthulhu/ssa/ssa.inc"
     eOpTotal
 } ssa_opcode_t;
 
-typedef struct ssa_return_t 
-{
-    ssa_operand_t value;
-} ssa_return_t;
+///
+/// intermediate types
+///
 
-typedef struct ssa_jmp_t 
-{
-    ssa_operand_t label;
-} ssa_jmp_t;
+typedef struct ssa_param_t {
+    const char *name;
+    const ssa_type_t *type;
+} ssa_param_t;
 
-typedef struct ssa_branch_t 
-{
-    ssa_operand_t cond;
-    ssa_operand_t truthy;
-    ssa_operand_t falsey;
-} ssa_branch_t;
+typedef struct ssa_local_t {
+    const char *name;
+    const ssa_type_t *type;
+} ssa_local_t;
 
-typedef struct ssa_store_t
-{
+typedef struct ssa_field_t {
+    const char *name;
+    const ssa_type_t *type;
+} ssa_field_t;
+
+///
+/// types
+///
+
+typedef struct ssa_type_digit_t {
+    sign_t sign;
+    digit_t digit;
+} ssa_type_digit_t;
+
+typedef struct ssa_type_closure_t {
+    const ssa_type_t *result;
+    typevec_t *params; // typevec_t<ssa_param_t *>
+    bool variadic;
+} ssa_type_closure_t;
+
+typedef struct ssa_type_t {
+    ssa_kind_t kind;
+    quals_t quals;
+    const char *name;
+
+    union {
+        ssa_type_digit_t digit;
+        ssa_type_closure_t closure;
+    };
+} ssa_type_t;
+
+typedef struct ssa_value_t {
+    const ssa_type_t *type;
+    bool init; ///< whether this value has been initialized
+
+    union {
+        mpz_t digitValue;
+        bool boolValue;
+
+        struct {
+            const char *stringValue;
+            size_t stringLength;
+        };
+    };
+} ssa_value_t;
+
+typedef struct ssa_operand_t {
+    ssa_opkind_t kind;
+
+    union {
+        const ssa_block_t *bb;
+        struct {
+            const ssa_block_t *vregContext;
+            size_t vregIndex;
+        };
+
+        size_t local;
+        size_t param;
+
+        const ssa_symbol_t *global;
+        const ssa_symbol_t *function;
+
+        const ssa_value_t *value;
+    };
+} ssa_operand_t;
+
+typedef struct ssa_store_t {
     ssa_operand_t dst;
     ssa_operand_t src;
 } ssa_store_t;
 
-typedef struct ssa_load_t
-{
+typedef struct ssa_load_t {
     ssa_operand_t src;
 } ssa_load_t;
 
-typedef struct ssa_addr_t
-{
-    ssa_operand_t expr;
+typedef struct ssa_addr_t {
+    ssa_operand_t symbol;
 } ssa_addr_t;
 
-typedef struct ssa_imm_t
-{
-    ssa_operand_t value;
-} ssa_imm_t;
-
-typedef struct ssa_unary_t
-{
-    unary_t op;
+typedef struct ssa_unary_t {
     ssa_operand_t operand;
+    unary_t unary;
 } ssa_unary_t;
 
-typedef struct ssa_binary_t
-{
-    binary_t op;
+typedef struct ssa_binary_t {
     ssa_operand_t lhs;
     ssa_operand_t rhs;
+    binary_t binary;
 } ssa_binary_t;
 
-typedef struct ssa_compare_t
-{
-    compare_t op;
+typedef struct ssa_compare_t {
     ssa_operand_t lhs;
     ssa_operand_t rhs;
+    compare_t compare;
 } ssa_compare_t;
 
-typedef struct ssa_cast_t
-{
-    cast_t op;
+typedef struct ssa_cast_t {
     ssa_operand_t operand;
-
     const ssa_type_t *type;
 } ssa_cast_t;
 
-typedef struct ssa_call_t
-{
-    ssa_operand_t *args;
-    size_t len;
-
-    ssa_operand_t symbol;
+typedef struct ssa_call_t {
+    ssa_operand_t function;
+    typevec_t *args;
 } ssa_call_t;
 
-typedef struct ssa_index_t
-{
+typedef struct ssa_index_t {
     ssa_operand_t array;
     ssa_operand_t index;
 } ssa_index_t;
 
-typedef struct ssa_offset_t
-{
+typedef struct ssa_member_t {
     ssa_operand_t object;
-    size_t field;
-} ssa_offset_t;
+    const ssa_field_t *field;
+} ssa_member_t;
 
-typedef struct ssa_sizeof_t
-{
-    const ssa_type_t *type;
-} ssa_sizeof_t;
+typedef struct ssa_return_t {
+    ssa_operand_t value;
+} ssa_return_t;
 
-typedef struct ssa_step_t
-{
+typedef struct ssa_branch_t {
+    ssa_operand_t cond;
+    ssa_operand_t then;
+    ssa_operand_t other;
+} ssa_branch_t;
+
+typedef struct ssa_jump_t {
+    ssa_operand_t target;
+} ssa_jump_t;
+
+typedef struct ssa_step_t {
     ssa_opcode_t opcode;
-    const char *id;
-    const ssa_type_t *type;
 
     union {
-        ssa_return_t ret;
-        ssa_jmp_t jmp;
-        ssa_branch_t branch;
-
         ssa_store_t store;
         ssa_load_t load;
         ssa_addr_t addr;
-        ssa_offset_t offset;
-        ssa_index_t index;
 
-        ssa_imm_t imm;
         ssa_unary_t unary;
         ssa_binary_t binary;
         ssa_compare_t compare;
+
         ssa_cast_t cast;
         ssa_call_t call;
 
-        ssa_sizeof_t size;
+        ssa_index_t index;
+        ssa_member_t member;
+
+        ssa_return_t ret;
+        ssa_branch_t branch;
+        ssa_jump_t jump;
     };
 } ssa_step_t;
 
-typedef struct ssa_block_t
-{
-    const char *id;
-    vector_t *steps;
+typedef struct ssa_block_t {
+    const char *name;
+    typevec_t *steps;
 } ssa_block_t;
 
-typedef struct ssa_flow_t
-{
+typedef struct ssa_symbol_t {
+    h2_link_t linkage;
+    h2_visible_t visibility;
+
+    const char *linkName; ///< external name
+
+    const char *name; ///< internal name
+    const ssa_type_t *type; ///< the type of this symbol, must be a closure for functions
+    const ssa_value_t *value; ///< the value of this symbol, must always be set for globals
+
+    typevec_t *locals; ///< typevec_t<ssa_type_t>
+    typevec_t *params; ///< typevec_t<ssa_type_t>
+
+    ssa_block_t *entry; ///< entry block
+
+    vector_t *blocks; ///< vector_t<ssa_block_t *>
+} ssa_symbol_t;
+
+typedef struct ssa_module_t {
     const char *name;
-    
-    linkage_t linkage;
-    visibility_t visibility;
+    vector_t *path; // vector<string>
 
-    const ssa_type_t *type;
-
-    union {
-        // local or exported symbol
-        struct
-        {
-            ssa_block_t *entry;
-
-            union {
-                struct {
-                    // function
-                    vector_t *locals;
-                
-                    vector_t *params;
-                };
-
-                // global
-                const ssa_value_t *value; 
-            };
-        };
-
-        // imported symbol
-        struct
-        {
-            const char *library;
-            const char *symbol;
-        };
-    };
-} ssa_flow_t;
-
-typedef struct section_t
-{
-    vector_t *types;
-    vector_t *globals;
-    vector_t *functions;
-} section_t;
-
-typedef struct ssa_module_t
-{
-    section_t symbols;
+    vector_t *globals; // vector<ssa_symbol>
+    vector_t *functions; // vector<ssa_symbol>
 } ssa_module_t;
 
-// interface
+typedef struct ssa_result_t {
+    vector_t *modules; // vector<ssa_module>
+    map_t *deps; // map<ssa_symbol, set<ssa_symbol>>
+} ssa_result_t;
 
-ssa_module_t *ssa_gen_module(reports_t *reports, vector_t *mods);
-void ssa_emit_module(reports_t *reports, ssa_module_t *mod);
-void ssa_opt_module(reports_t *reports, ssa_module_t *mod);
+ssa_result_t ssa_compile(map_t *mods);
 
-// create ssa objects
+///
+/// optimization api
+///
 
-ssa_type_t *ssa_type_new(ssa_kind_t kind, const char *name);
-ssa_type_t *ssa_type_empty_new(const char *name);
-ssa_type_t *ssa_type_ptr_new(const char *name, const ssa_type_t *type);
-ssa_type_t *ssa_type_array_new(const char *name, const ssa_type_t *type, size_t len);
+/**
+ * @brief Optimize a given module.
+ *
+ * @param reports report sink
+ * @param mod module to optimize
+ */
+void ssa_opt(reports_t *reports, ssa_result_t mod);
 
-ssa_value_t *ssa_value_new(const ssa_type_t *type, bool init);
-ssa_value_t *ssa_value_digit_new(const mpz_t digit, const ssa_type_t *type);
-ssa_value_t *ssa_value_empty_new(const ssa_type_t *type);
-ssa_value_t *ssa_value_ptr_new(const ssa_type_t *type, const mpz_t value);
+///
+/// rewriting
+///
 
-// query ssa objects
-
-const ssa_type_t *ssa_get_operand_type(reports_t *reports, const ssa_flow_t *flow, ssa_operand_t operand);
+ssa_type_t *ssa_type_bool(const char *name, quals_t quals);
+ssa_type_t *ssa_type_digit(const char *name, quals_t quals, sign_t sign, digit_t digit);
