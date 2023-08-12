@@ -30,6 +30,15 @@ static void decl_close(h2_t *decl, h2_kind_t kind)
     decl->kind = kind;
 }
 
+static void close_function(h2_t *decl, vector_t *pendingLocals, h2_t *body)
+{
+    CTASSERTF(decl->expected == eHlir2DeclFunction, "decl %s is not a function", h2_get_name(decl));
+
+    decl_close(decl, eHlir2DeclFunction);
+    decl->locals = pendingLocals;
+    decl->body = body;
+}
+
 h2_t *h2_resolve(h2_cookie_t *cookie, h2_t *decl)
 {
     size_t index = vector_find(cookie->stack, decl);
@@ -57,7 +66,7 @@ h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type, h2_
 h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature, h2_resolve_config_t resolve)
 {
     h2_t *self = decl_open(node, name, signature, eHlir2DeclFunction, resolve);
-    self->locals = vector_new(4);
+    self->pendingLocals = vector_new(4);
     return self;
 }
 
@@ -69,8 +78,7 @@ void h2_close_global(h2_t *self, h2_t *value)
 
 void h2_close_function(h2_t *self, h2_t *body)
 {
-    decl_close(self, eHlir2DeclFunction);
-    self->body = body;
+    close_function(self, self->pendingLocals, body);
 }
 
 h2_t *h2_decl_param(const node_t *node, const char *name, const h2_t *type)
@@ -92,16 +100,19 @@ h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_
     return self;
 }
 
-h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *signature, h2_t *body)
+h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *signature, vector_t *locals, h2_t *body)
 {
-    h2_t *self = h2_open_function(node, name, signature, kEmptyConfig);
-    h2_close_function(self, body);
+    h2_t *self = decl_open(node, name, signature, eHlir2DeclFunction, kEmptyConfig);
+    close_function(self, locals, body);
     return self;
 }
 
 void h2_add_local(h2_t *self, h2_t *decl)
 {
-    vector_push(&self->locals, decl);
+    CTASSERTF(h2_is(self, eHlir2Resolve), "cannot add locals to a completed declaration %s", h2_to_string(self));
+    CTASSERTF(self->expected == eHlir2DeclFunction, "cannot add locals to a non-function declaration %s", h2_to_string(self));
+
+    vector_push(&self->pendingLocals, decl);
 }
 
 void h2_set_attrib(h2_t *self, const h2_attrib_t *attrib)

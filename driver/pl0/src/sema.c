@@ -151,7 +151,7 @@ void pl0_init(driver_t *handle)
     vector_set(params, 0, h2_decl_param(node, "fmt", kStringType));
 
     h2_t *signature = h2_type_closure(node, "print", kVoidType, params, eArityVariable);
-    kPrint = h2_decl_function(node, "print", signature, NULL);
+    kPrint = h2_decl_function(node, "print", signature, vector_of(0), NULL);
     h2_set_attrib(kPrint, &kPrintAttrib);
 
     h2_t *runtime = make_runtime_mod(reports);
@@ -557,9 +557,12 @@ void pl0_process_imports(context_t *context)
 
 void pl0_compile_module(context_t *context)
 {
+    lifetime_t *lifetime = context_get_lifetime(context);
+    reports_t *reports = lifetime_get_reports(lifetime);
+    h2_cookie_t *cookie = h2_cookie_new(reports);
+
     pl0_t *root = context_get_ast(context);
     h2_t *mod = context_get_module(context);
-    h2_cookie_t *cookie = h2_module_cookie(mod);
 
     map_iter_t iterGlobals = map_iter(h2_module_tag(mod, eTagValues));
     while (map_has_next(&iterGlobals))
@@ -581,7 +584,7 @@ void pl0_compile_module(context_t *context)
 
         // this is the entry point, we only support cli entry points in pl/0 for now
         h2_t *signature = h2_type_closure(root->node, h2_get_name(mod), kVoidType, vector_of(0), eArityFixed);
-        h2_t *hlir = h2_decl_function(root->node, h2_get_name(mod), signature, body);
+        h2_t *hlir = h2_decl_function(root->node, h2_get_name(mod), signature, vector_of(0), body);
         h2_set_attrib(hlir, &kEntryAttrib);
 
         set_decl(mod, eTagProcs, h2_get_name(mod), hlir); // TODO: this is a hack

@@ -81,12 +81,10 @@ map_t *h2_module_tag(const h2_t *self, size_t tag)
     return vector_get(self->tags, tag);
 }
 
-h2_cookie_t *h2_module_cookie(h2_t *self)
+h2_cookie_t *h2_cookie_new(reports_t *reports)
 {
-    CTASSERT(h2_is(self, eHlir2DeclModule));
-
     h2_cookie_t *cookie = ctu_malloc(sizeof(h2_cookie_t));
-    cookie->reports = self->reports;
+    cookie->reports = reports;
     cookie->stack = vector_new(16);
     return cookie;
 }

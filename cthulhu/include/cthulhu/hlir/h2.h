@@ -137,24 +137,22 @@ typedef struct h2_t {
                 };
 
                 /* Resolve may be a function, in which case locals needs to be initialized */
+
+                /* eHlir2DeclFunction */
                 struct {
-                    /* eHlir2DeclFunction */
                     vector_t *locals;
+                    h2_t *body;
+                };
 
-                    union {
-                        /* eHlir2DeclFunction */
-                        h2_t *body;
+                /* eHlir2Resolve */
+                struct {
+                    h2_kind_t expected;
 
-                        /* eHlir2Resolve */
-                        struct {
-                            h2_kind_t expected;
+                    void *user;
+                    h2_t *sema;
 
-                            void *user;
-                            h2_t *sema;
-
-                            h2_resolve_t fnResolve;
-                        };
-                    };
+                    vector_t *pendingLocals;
+                    h2_resolve_t fnResolve;
                 };
 
                 /* eHlir2DeclGlobal */
@@ -318,7 +316,7 @@ void h2_close_function(h2_t *self, h2_t *body);
 h2_t *h2_decl_param(const node_t *node, const char *name, const h2_t *type);
 h2_t *h2_decl_local(const node_t *node, const char *name, const h2_t *type);
 h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value);
-h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *signature, h2_t *body);
+h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *signature, vector_t *locals, h2_t *body);
 
 ///
 /// various helpers
@@ -380,4 +378,4 @@ map_t *h2_module_tag(const h2_t *self, size_t tag);
  * @param self the module
  * @return the cookie
  */
-h2_cookie_t *h2_module_cookie(h2_t *self);
+h2_cookie_t *h2_cookie_new(reports_t *reports);

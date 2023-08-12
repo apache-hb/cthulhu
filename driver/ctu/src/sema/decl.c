@@ -107,7 +107,6 @@ ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
         };
         return fwd;
     }
-
     case eCtuDeclStruct: {
         ctu_forward_t fwd = {
             .tag = eTagTypes,

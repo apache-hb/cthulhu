@@ -125,8 +125,11 @@ void ctu_process_imports(context_t *context)
 
 void ctu_compile_module(context_t *context)
 {
+    lifetime_t *lifetime = context_get_lifetime(context);
+    reports_t *reports = lifetime_get_reports(lifetime);
+    h2_cookie_t *cookie = h2_cookie_new(reports);
+
     h2_t *sema = context_get_module(context);
-    h2_cookie_t *cookie = h2_module_cookie(sema);
 
     map_iter_t globals = map_iter(h2_module_tag(sema, eTagValues));
     while (map_has_next(&globals))

@@ -390,9 +390,12 @@ static void check_global_recursion(check_t *check, const h2_t *global)
     size_t idx = vector_find(check->stack, global);
     if (idx == SIZE_MAX)
     {
-        vector_push(&check->stack, (void*)global);
-        check_expr_recursion(check, global->global);
-        vector_drop(check->stack);
+        if (global->global != NULL)
+        {
+            vector_push(&check->stack, (void*)global);
+            check_expr_recursion(check, global->global);
+            vector_drop(check->stack);
+        }
     }
     else
     {
