@@ -34,6 +34,24 @@ ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name)
     return ast;
 }
 
+/* stmts */
+
+ctu_t *ctu_stmt_list(scan_t *scan, where_t where, vector_t *stmts)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuStmtList);
+    ast->stmts = stmts;
+    return ast;
+}
+
+ctu_t *ctu_stmt_local(scan_t *scan, where_t where, bool mutable, char *name, ctu_t *type, ctu_t *value)
+{
+    ctu_t *ast = ctu_decl(scan, where, eCtuStmtLocal, name, false);
+    ast->mut = mutable;
+    ast->type = type;
+    ast->value = value;
+    return ast;
+}
+
 /* exprs */
 
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value)
@@ -68,19 +86,20 @@ ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer)
 
 /* decls */
 
-ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mut, char *name, ctu_t *type, ctu_t *global)
+ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mut, char *name, ctu_t *type, ctu_t *value)
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclGlobal, name, exported);
     ast->mut = mut;
     ast->type = type;
-    ast->global = global;
+    ast->value = value;
     return ast;
 }
 
-ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, ctu_t *returnType)
+ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, ctu_t *returnType, ctu_t *body)
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclFunction, name, exported);
     ast->returnType = returnType;
+    ast->body = body;
     return ast;
 }
 

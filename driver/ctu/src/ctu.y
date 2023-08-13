@@ -37,50 +37,53 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     IDENT "identifier"
 
 %token<digit>
-    INTEGER "integer"
+    INTEGER "`integer literal`"
 
 %token<boolean>
-    BOOLEAN "boolean"
+    BOOLEAN "`boolean literal`"
 
 %token
-    MODULE "module"
-    IMPORT "import"
-    EXPORT "export"
+    MODULE "`module`"
+    IMPORT "`import`"
+    EXPORT "`export`"
 
-    DEF "def"
-    VAR "var"
-    CONST "const"
+    DEF "`def`"
+    VAR "`var`"
+    CONST "`const`"
 
-    STRUCT "struct"
-    UNION "union"
-    TYPE "type"
+    STRUCT "`struct`"
+    UNION "`union`"
+    TYPE "`type`"
 
-    NOINIT "noinit"
+    NOINIT "`noinit`"
 
-    AS "as"
+    AS "`as`"
 
-    DISCARD "$"
+    DISCARD "`$`"
 
-    ASSIGN "="
-    STAR "*"
-    SEMI ";"
-    COLON ":"
-    COLON2 "::"
+    ASSIGN "`=`"
+    STAR "`*`"
+    SEMI "`;`"
+    COLON "`:`"
+    COLON2 "`::`"
 
-    LBRACE "{"
-    RBRACE "}"
+    LBRACE "`{`"
+    RBRACE "`}`"
 
 %type<vector>
     path modspec
     imports importList
     decls declList
     structFields structFieldList
+    stmtList
 
 %type<ast>
     import
     decl globalDecl functionDecl structDecl structField typeAliasDecl
+    functionBody
     type
     expr maybeExpr
+    stmt stmts localDecl
 
 %type<ident>
     importAlias ident
@@ -134,7 +137,11 @@ decl: globalDecl { $$ = $1; }
 
 /* functions */
 
-functionDecl: exported DEF IDENT COLON type { $$ = ctu_decl_function(x, @$, $1, $3, $5); }
+functionDecl: exported DEF IDENT COLON type functionBody { $$ = ctu_decl_function(x, @$, $1, $3, $5, $6); }
+    ;
+
+functionBody: ASSIGN expr SEMI { $$ = $2; }
+    | stmts { $$ = $1; }
     ;
 
 /* globals */
@@ -177,6 +184,23 @@ structField: ident COLON type SEMI { $$ = ctu_field(x, @$, $1, $3); }
 
 type: path { $$ = ctu_type_name(x, @$, $1); }
     | STAR type { $$ = ctu_type_pointer(x, @$, $2); }
+    ;
+
+/* statements */
+
+stmtList: %empty { $$ = vector_of(0); }
+    | stmtList stmt { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+stmts: LBRACE stmtList RBRACE { $$ = ctu_stmt_list(x, @$, $2); }
+    ;
+
+localDecl: mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_stmt_local(x, @$, $1, $2, $4, $6); }
+    ;
+
+stmt: expr SEMI { $$ = $1; }
+    | stmts { $$ = $1; }
+    | localDecl { $$ = $1; }
     ;
 
 /* expressions */
