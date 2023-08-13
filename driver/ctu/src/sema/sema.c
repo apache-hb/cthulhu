@@ -97,6 +97,10 @@ h2_t *ctu_rt_mod(lifetime_t *lifetime)
     h2_t *root = lifetime_sema_new(lifetime, "runtime", eTagTotal, sizes);
 
     ctu_add_decl(root, eTagTypes, "bool", make_bool_type("bool"));
+
+    ctu_add_decl(root, eTagTypes, "char", make_int_type("char", eDigitChar, eSignSigned));
+    ctu_add_decl(root, eTagTypes, "uchar", make_int_type("uchar", eDigitChar, eSignUnsigned));
+
     ctu_add_decl(root, eTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));
     ctu_add_decl(root, eTagTypes, "uint", make_int_type("uint", eDigitInt, eSignUnsigned));
 

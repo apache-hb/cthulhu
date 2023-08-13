@@ -27,6 +27,7 @@ h2_t *h2_decl(h2_kind_t kind, const node_t *node, const h2_t *type, const char *
 
     self->name = name;
     self->attrib = &kDefaultAttrib;
+    self->resolve = NULL;
 
     return self;
 }

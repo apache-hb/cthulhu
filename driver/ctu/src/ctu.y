@@ -74,7 +74,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     path modspec
     imports importList
     decls declList
-    structFields structFieldList
+    structFields
     stmtList
 
 %type<ast>
@@ -169,12 +169,8 @@ typeAliasDecl: exported TYPE IDENT ASSIGN type SEMI { $$ = ctu_decl_typealias(x,
 structDecl: exported STRUCT IDENT LBRACE structFields RBRACE { $$ = ctu_decl_struct(x, @$, $1, $3, $5); }
     ;
 
-structFields: %empty { $$ = vector_of(0); }
-    | structFieldList { $$ = $1; }
-    ;
-
-structFieldList: structField { $$ = vector_init($1); }
-    | structFieldList structField { vector_push(&$1, $2); $$ = $1; }
+structFields: structField { $$ = vector_init($1); }
+    | structFields structField { vector_push(&$1, $2); $$ = $1; }
     ;
 
 structField: ident COLON type SEMI { $$ = ctu_field(x, @$, $1, $3); }

@@ -7,41 +7,31 @@
 #include "std/vector.h"
 
 #include "base/panic.h"
+#include "base/util.h"
 
 #include <stdint.h>
 
-static h2_t *decl_open(const node_t *node, const char *name, const h2_t *type, h2_kind_t expected, h2_resolve_config_t resolve)
+static h2_t *decl_open(const node_t *node, const char *name, const h2_t *type, h2_kind_t expected, const h2_resolve_info_t *resolve)
 {
-    h2_t *self = h2_decl(eHlir2Resolve, node, type, name);
+    h2_t *self = h2_decl(expected, node, type, name);
 
-    self->expected = expected;
-    self->sema = resolve.sema;
-    self->user = resolve.user;
-    self->fnResolve = resolve.fnResolve;
+    self->resolve = resolve;
 
     return self;
 }
 
 static void decl_close(h2_t *decl, h2_kind_t kind)
 {
-    CTASSERTF(h2_is(decl, eHlir2Resolve), "decl `%s` is not a resolve, found %s", h2_get_name(decl), h2_kind_to_string(decl->kind));
-    CTASSERTF(decl->expected == kind, "decl %s is an unresolved %s, expected %s", h2_get_name(decl), h2_kind_to_string(decl->expected), h2_kind_to_string(kind));
+    CTASSERTF(h2_is(decl, kind), "decl %s is an unresolved %s, expected %s", h2_get_name(decl), h2_kind_to_string(decl->kind), h2_kind_to_string(kind));
 
     decl->kind = kind;
-}
-
-static void close_function(h2_t *decl, vector_t *pendingLocals, h2_t *body)
-{
-    CTASSERTF(decl->expected == eHlir2DeclFunction, "decl %s is not a function", h2_get_name(decl));
-
-    decl_close(decl, eHlir2DeclFunction);
-    decl->locals = pendingLocals;
-    decl->body = body;
+    decl->resolve = NULL;
 }
 
 h2_t *h2_resolve(h2_cookie_t *cookie, h2_t *decl)
 {
-    if (!h2_is(decl, eHlir2Resolve)) { return decl; }
+    const h2_resolve_info_t *res = decl->resolve;
+    if (res == NULL) { return decl; }
 
     size_t index = vector_find(cookie->stack, decl);
     if (index != SIZE_MAX)
@@ -53,22 +43,22 @@ h2_t *h2_resolve(h2_cookie_t *cookie, h2_t *decl)
 
     vector_push(&cookie->stack, decl);
 
-    decl->fnResolve(cookie, decl->sema, decl, decl->user);
+    res->fnResolve(cookie, res->sema, decl, res->user);
 
     vector_drop(cookie->stack);
 
     return decl;
 }
 
-h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type, h2_resolve_config_t resolve)
+h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type, h2_resolve_info_t resolve)
 {
-    return decl_open(node, name, type, eHlir2DeclGlobal, resolve);
+    return decl_open(node, name, type, eHlir2DeclGlobal, BOX(resolve));
 }
 
-h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature, h2_resolve_config_t resolve)
+h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature, h2_resolve_info_t resolve)
 {
-    h2_t *self = decl_open(node, name, signature, eHlir2DeclFunction, resolve);
-    self->pendingLocals = vector_new(4);
+    h2_t *self = decl_open(node, name, signature, eHlir2DeclFunction, BOX(resolve));
+    self->locals = vector_new(4);
     return self;
 }
 
@@ -80,7 +70,10 @@ void h2_close_global(h2_t *self, h2_t *value)
 
 void h2_close_function(h2_t *self, h2_t *body)
 {
-    close_function(self, self->pendingLocals, body);
+    CTASSERTF(h2_is(self, eHlir2DeclFunction), "decl %s is not a function", h2_get_name(self));
+
+    decl_close(self, eHlir2DeclFunction);
+    self->body = body;
 }
 
 h2_t *h2_decl_param(const node_t *node, const char *name, const h2_t *type)
@@ -88,40 +81,65 @@ h2_t *h2_decl_param(const node_t *node, const char *name, const h2_t *type)
     return h2_decl(eHlir2DeclParam, node, type, name);
 }
 
+h2_t *h2_decl_field(const node_t *node, const char *name, const h2_t *type)
+{
+    return h2_decl(eHlir2DeclField, node, type, name);
+}
+
 h2_t *h2_decl_local(const node_t *node, const char *name, const h2_t *type)
 {
     return h2_decl(eHlir2DeclLocal, node, type, name);
 }
 
-static const h2_resolve_config_t kEmptyConfig = {
-    .user = NULL,
-    .sema = NULL,
-    .fnResolve = NULL
-};
-
 h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value)
 {
-    h2_t *self = h2_open_global(node, name, type, kEmptyConfig);
+    h2_t *self = decl_open(node, name, type, eHlir2DeclGlobal, NULL);
     h2_close_global(self, value);
     return self;
 }
 
 h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *signature, vector_t *locals, h2_t *body)
 {
-    h2_t *self = decl_open(node, name, signature, eHlir2DeclFunction, kEmptyConfig);
-    close_function(self, locals, body);
+    h2_t *self = decl_open(node, name, signature, eHlir2DeclFunction, NULL);
+    self->locals = locals;
+    h2_close_function(self, body);
     return self;
 }
 
 void h2_add_local(h2_t *self, h2_t *decl)
 {
-    CTASSERTF(h2_is(self, eHlir2Resolve), "cannot add locals to a completed declaration %s", h2_to_string(self));
-    CTASSERTF(self->expected == eHlir2DeclFunction, "cannot add locals to a non-function declaration %s", h2_to_string(self));
+    CTASSERTF(h2_is(self, eHlir2DeclFunction), "cannot add locals to a declaration %s", h2_to_string(self));
 
-    vector_push(&self->pendingLocals, decl);
+    vector_push(&self->locals, decl);
 }
 
 void h2_set_attrib(h2_t *self, const h2_attrib_t *attrib)
 {
     self->attrib = attrib;
+}
+
+///
+/// structs
+///
+
+h2_t *h2_decl_struct(const node_t *node, const char *name, vector_t *fields)
+{
+    h2_t *self = decl_open(node, name, NULL, eHlir2TypeStruct, NULL);
+    self->fields = fields;
+    return self;
+}
+
+h2_t *h2_open_struct(const node_t *node, const char *name, h2_resolve_info_t resolve)
+{
+    h2_t *self = decl_open(node, name, NULL, eHlir2TypeStruct, BOX(resolve));
+    self->fields = vector_new(4);
+    return self;
+}
+
+void h2_close_struct(h2_t *self, vector_t *fields)
+{
+    CTASSERTF(h2_is(self, eHlir2TypeStruct), "decl %s is not a struct", h2_get_name(self));
+
+    decl_close(self, eHlir2TypeStruct);
+    self->fields = fields;
 }

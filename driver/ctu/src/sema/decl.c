@@ -5,6 +5,7 @@
 #include "cthulhu/hlir/query.h"
 
 #include "std/vector.h"
+#include "std/str.h"
 
 #include "base/panic.h"
 
@@ -45,7 +46,7 @@ static void ctu_resolve_function(h2_cookie_t *cookie, h2_t *sema, h2_t *self, vo
     ctu_t *decl = user;
     CTASSERTF(decl->kind == eCtuDeclFunction, "decl %s is not a function", decl->name);
 
-    h2_t *body = h2_stmt_block(decl->node, vector_of(0));
+    h2_t *body = ctu_sema_stmt(sema, self, decl->body);
     h2_close_function(self, body);
 }
 
@@ -58,13 +59,25 @@ static void ctu_resolve_function(h2_cookie_t *cookie, h2_t *sema, h2_t *self, vo
 //     NEVER("unimplemented");
 // }
 
-// static void ctu_resolve_struct(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
-// {
-//     ctu_t *decl = user;
-//     CTASSERTF(decl->kind == eCtuDeclStruct, "decl %s is not a struct", decl->name);
+static void ctu_resolve_struct(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
+{
+    ctu_t *decl = user;
+    CTASSERTF(decl->kind == eCtuDeclStruct, "decl %s is not a struct", decl->name);
 
-//     NEVER("unimplemented");
-// }
+    size_t len = vector_len(decl->fields);
+    vector_t *items = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        ctu_t *field = vector_get(decl->fields, i);
+        h2_t *type = ctu_sema_type(sema, field->fieldType);
+        char *name = field->name == NULL ? format("field%zu", i) : field->name;
+        h2_t *item = h2_decl_field(field->node, name, type);
+
+        vector_set(items, i, item);
+    }
+
+    h2_close_struct(self, items);
+}
 
 ///
 /// forward declarations
@@ -77,7 +90,7 @@ static h2_t *ctu_forward_global(h2_t *sema, ctu_t *decl)
 
     const h2_attrib_t *attrib = decl->exported ? &kAttribExport : &kAttribPrivate;
 
-    h2_resolve_config_t resolve = {
+    h2_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
         .fnResolve = ctu_resolve_global
@@ -94,7 +107,7 @@ static h2_t *ctu_forward_function(h2_t *sema, ctu_t *decl)
 {
     CTASSERTF(decl->kind == eCtuDeclFunction, "decl %s is not a function", decl->name);
 
-    h2_resolve_config_t resolve = {
+    h2_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
         .fnResolve = ctu_resolve_function
@@ -121,18 +134,20 @@ static h2_t *ctu_forward_function(h2_t *sema, ctu_t *decl)
 //     return h2_error(decl->node, "unimplemented");
 // }
 
-// static h2_t *ctu_forward_struct(h2_t *sema, ctu_t *decl)
-// {
-//     CTASSERTF(decl->kind == eCtuDeclStruct, "decl %s is not a struct", decl->name);
+static h2_t *ctu_forward_struct(h2_t *sema, ctu_t *decl)
+{
+    CTASSERTF(decl->kind == eCtuDeclStruct, "decl %s is not a struct", decl->name);
 
-//     h2_resolve_config_t resolve = {
-//         .sema = sema,
-//         .user = decl,
-//         .fnResolve = ctu_resolve_struct
-//     };
+    h2_resolve_info_t resolve = {
+        .sema = sema,
+        .user = decl,
+        .fnResolve = ctu_resolve_struct
+    };
 
-//     return h2_error(decl->node, "unimplemented");
-// }
+    h2_t *it = h2_open_struct(decl->node, decl->name, resolve);
+
+    return it;
+}
 
 ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
 {
@@ -159,13 +174,13 @@ ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
     //     };
     //     return fwd;
     // }
-    // case eCtuDeclStruct: {
-    //     ctu_forward_t fwd = {
-    //         .tag = eTagTypes,
-    //         .decl = ctu_forward_struct(sema, decl)
-    //     };
-    //     return fwd;
-    // }
+    case eCtuDeclStruct: {
+        ctu_forward_t fwd = {
+            .tag = eTagTypes,
+            .decl = ctu_forward_struct(sema, decl)
+        };
+        return fwd;
+    }
 
     default:
         NEVER("invalid decl kind %d", decl->kind);

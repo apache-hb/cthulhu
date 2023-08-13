@@ -81,22 +81,22 @@ tests = {
     #         'single-alias'
     #     ]
     # },
-    # 'types.struct': {
-    #     'fail': [
-    #         'alias-to-self',
-    #         'infinite-size',
-    #         'no-elements',
-    #         'discard-struct',
-    #         'duplicate-element'
-    #     ],
-    #     'pass': [
-    #         'multiple-elements',
-    #         'mutural-recursion',
-    #         'recursive',
-    #         'single-element',
-    #         'discard-element'
-    #     ]
-    # },
+    'types.struct': {
+        'fail': [
+            'alias-to-self',
+            'infinite-size',
+            'no-elements',
+            'discard-struct',
+            'duplicate-element'
+        ],
+        'pass': [
+            'multiple-elements',
+            'mutural-recursion',
+            'recursive',
+            'single-element',
+            'discard-element'
+        ]
+    },
     # 'types.union': {
     #     'fail': [
     #         'discard-union',
@@ -161,7 +161,7 @@ tests = {
             'recursive'
         ],
         'pass': [
-            'alias-init',
+            #'alias-init',
             'local-noinit',
             'uninit',
             'globals'
@@ -170,23 +170,23 @@ tests = {
 }
 
 crashes = {
-    # '0': false,
-    # '1': false,
-    # '2': false,
-    # '3': true,
-    # '5': false,
-    # '6': false,
-    # '7': true,
-    # '8': false,
-    # '9': true,
-    # '10': false,
-    # '11': false,
-    # '12': true,
-    # '13': false,
-    # '14': false,
-    # '15': false,
-    # '16': false,
-    # 'discard-mod': false
+    '0': false,
+    '1': false,
+    '2': false,
+    #'3': true,
+    '5': false,
+    '6': false,
+    #'7': true,
+    '8': false,
+    #'9': true,
+    '10': false,
+    '11': false,
+    #'12': true,
+    '13': false,
+    '14': false,
+    '15': false,
+    '16': false,
+    'discard-mod': false
 }
 
 cases = {

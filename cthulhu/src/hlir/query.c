@@ -15,7 +15,8 @@ static bool has_name(h2_kind_t kind)
     case eHlir2TypeString:
     case eHlir2TypeClosure:
 
-    case eHlir2Resolve:
+    case eHlir2TypeStruct:
+
     case eHlir2DeclGlobal:
     case eHlir2DeclLocal:
     case eHlir2DeclParam:
@@ -80,7 +81,8 @@ h2_kind_t h2_get_kind(const h2_t *self)
 
 const h2_t *h2_get_type(const h2_t *self)
 {
-    CTASSERT(!h2_is(self, eHlir2Resolve));
+    CTASSERT(self != NULL); // dont give me null
+    CTASSERT(self->type != NULL); // type hasnt been set yet
 
     return self->type;
 }
@@ -88,6 +90,7 @@ const h2_t *h2_get_type(const h2_t *self)
 const h2_attrib_t *h2_get_attrib(const h2_t *self)
 {
     CTASSERT(self != NULL);
+    CTASSERT(self->attrib != NULL);
 
     return self->attrib;
 }

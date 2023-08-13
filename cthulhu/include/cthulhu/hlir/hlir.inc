@@ -12,6 +12,8 @@ HLIR_KIND(eHlir2TypeString, "type-string")
 HLIR_KIND(eHlir2TypeClosure, "type-closure") ///< a function pointer type (no captures)
 HLIR_KIND(eHlir2TypePointer, "type-pointer")
 
+HLIR_KIND(eHlir2TypeStruct, "type-struct")
+
 HLIR_KIND(eHlir2ExprEmpty, "expr-empty") ///< an uninitialized value of a type
 HLIR_KIND(eHlir2ExprUnit, "expr-unit")
 HLIR_KIND(eHlir2ExprBool, "expr-bool")
@@ -34,10 +36,10 @@ HLIR_KIND(eHlir2StmtBranch, "stmt-branch")
 HLIR_KIND(eHlir2DeclGlobal, "decl-global")
 HLIR_KIND(eHlir2DeclLocal, "decl-local")
 HLIR_KIND(eHlir2DeclParam, "decl-param")
+HLIR_KIND(eHlir2DeclField, "decl-field")
 HLIR_KIND(eHlir2DeclFunction, "decl-function")
 HLIR_KIND(eHlir2DeclModule, "decl-module")
 
-HLIR_KIND(eHlir2Resolve, "resolve")
 HLIR_KIND(eHlir2Error, "error")
 HLIR_KIND(eHlir2Qualify, "qualify")
 

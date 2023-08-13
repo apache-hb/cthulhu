@@ -140,4 +140,11 @@ void ctu_compile_module(context_t *context)
         map_entry_t entry = map_next(&functions);
         h2_resolve(cookie, entry.value);
     }
+
+    map_iter_t types = map_iter(h2_module_tag(sema, eTagTypes));
+    while (map_has_next(&types))
+    {
+        map_entry_t entry = map_next(&types);
+        h2_resolve(cookie, entry.value);
+    }
 }

@@ -474,7 +474,7 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->consts, i);
 
-        h2_resolve_config_t resolve = {
+        h2_resolve_info_t resolve = {
             .sema = sema,
             .user = it,
             .fnResolve = resolve_global
@@ -490,7 +490,7 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->globals, i);
 
-        h2_resolve_config_t resolve = {
+        h2_resolve_info_t resolve = {
             .sema = sema,
             .user = it,
             .fnResolve = resolve_global
@@ -507,7 +507,7 @@ void pl0_forward_decls(context_t *context)
         pl0_t *it = vector_get(root->procs, i);
 
         h2_t *signature = h2_type_closure(it->node, it->name, kVoidType, vector_of(0), eArityFixed);
-        h2_resolve_config_t resolve = {
+        h2_resolve_info_t resolve = {
             .sema = sema,
             .user = it,
             .fnResolve = resolve_proc

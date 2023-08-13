@@ -45,6 +45,13 @@ typedef struct h2_cookie_t {
     vector_t *stack;
 } h2_cookie_t;
 
+typedef struct h2_resolve_info_t {
+    h2_t *sema;
+    void *user;
+
+    h2_resolve_t fnResolve;
+} h2_resolve_info_t;
+
 typedef struct h2_t {
     h2_kind_t kind;
     const node_t *node;
@@ -132,6 +139,7 @@ typedef struct h2_t {
         struct {
             const char *name; ///< the name of the declaration
             const h2_attrib_t *attrib; ///< the attributes of the declaration
+            const h2_resolve_info_t *resolve; ///< the resolve configuration of the declaration, NULL if resolved
 
             union {
                 /* eHlir2TypeClosure */
@@ -141,23 +149,15 @@ typedef struct h2_t {
                     arity_t arity;
                 };
 
-                /* Resolve may be a function, in which case locals needs to be initialized */
+                /* eHlir2TypeStruct */
+                struct {
+                    vector_t *fields;
+                };
 
                 /* eHlir2DeclFunction */
                 struct {
                     vector_t *locals;
                     h2_t *body;
-                };
-
-                /* eHlir2Resolve */
-                struct {
-                    h2_kind_t expected;
-
-                    void *user;
-                    h2_t *sema;
-
-                    vector_t *pendingLocals;
-                    h2_resolve_t fnResolve;
                 };
 
                 /* eHlir2DeclGlobal */
@@ -175,13 +175,6 @@ typedef struct h2_t {
         };
     };
 } h2_t;
-
-typedef struct h2_resolve_config_t {
-    h2_t *sema;
-    void *user;
-
-    h2_resolve_t fnResolve;
-} h2_resolve_config_t;
 
 ///
 /// h2 error handling
@@ -301,7 +294,6 @@ h2_t *h2_stmt_block(const node_t *node, vector_t *stmts);
  */
 h2_t *h2_stmt_return(const node_t *node, const h2_t *value);
 
-
 h2_t *h2_stmt_assign(const node_t *node, h2_t *dst, h2_t *src);
 h2_t *h2_stmt_loop(const node_t *node, h2_t *cond, h2_t *body, h2_t *other);
 h2_t *h2_stmt_branch(const node_t *node, h2_t *cond, h2_t *then, h2_t *other);
@@ -313,16 +305,22 @@ h2_t *h2_stmt_branch(const node_t *node, h2_t *cond, h2_t *then, h2_t *other);
 // delay the resolve of a declaration
 h2_t *h2_resolve(h2_cookie_t *cookie, h2_t *decl);
 
-h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type, h2_resolve_config_t resolve);
-h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature, h2_resolve_config_t resolve);
-
+h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value);
+h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type, h2_resolve_info_t resolve);
 void h2_close_global(h2_t *self, h2_t *value);
+
+h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *signature, vector_t *locals, h2_t *body);
+h2_t *h2_open_function(const node_t *node, const char *name, const h2_t *signature, h2_resolve_info_t resolve);
 void h2_close_function(h2_t *self, h2_t *body);
 
+h2_t *h2_decl_struct(const node_t *node, const char *name, vector_t *fields);
+h2_t *h2_open_struct(const node_t *node, const char *name, h2_resolve_info_t resolve);
+void h2_close_struct(h2_t *self, vector_t *fields);
+
 h2_t *h2_decl_param(const node_t *node, const char *name, const h2_t *type);
+h2_t *h2_decl_field(const node_t *node, const char *name, const h2_t *type);
 h2_t *h2_decl_local(const node_t *node, const char *name, const h2_t *type);
-h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value);
-h2_t *h2_decl_function(const node_t *node, const char *name, const h2_t *signature, vector_t *locals, h2_t *body);
+
 
 ///
 /// various helpers
