@@ -65,22 +65,22 @@ tests = {
     #     ],
     #     'fail': []
     # },
-    # 'types.alias': {
-    #     'fail': [
-    #         'discard-alias-name',
-    #         'infinite-size-alias',
-    #         'looped-pointer-alias',
-    #         'multiple-pointer-loops',
-    #         'duplicate-names',
-    #         'pointer-loop'
-    #     ],
-    #     'pass': [
-    #         'chained-aliases',
-    #         'index-alias',
-    #         'multiple-aliases',
-    #         'single-alias'
-    #     ]
-    # },
+    'types.alias': {
+        'fail': [
+            'discard-alias-name',
+            'infinite-size-alias',
+            'looped-pointer-alias',
+            'multiple-pointer-loops',
+            'duplicate-names',
+            'pointer-loop'
+        ],
+        'pass': [
+            'chained-aliases',
+            'index-alias',
+            'multiple-aliases',
+            'single-alias'
+        ]
+    },
     'types.struct': {
         'fail': [
             'alias-to-self',
@@ -161,7 +161,7 @@ tests = {
             'recursive'
         ],
         'pass': [
-            #'alias-init',
+            'alias-init',
             'local-noinit',
             'uninit',
             'globals'

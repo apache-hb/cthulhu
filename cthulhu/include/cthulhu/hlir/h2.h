@@ -124,17 +124,6 @@ typedef struct h2_t {
             h2_t *other;
         };
 
-        /* eHlir2TypePointer */
-        struct {
-            h2_t *pointer;
-        };
-
-        /* eHlir2TypeDigit */
-        struct {
-            digit_t digit;
-            sign_t sign;
-        };
-
         /* any declaration */
         struct {
             const char *name; ///< the name of the declaration
@@ -142,6 +131,17 @@ typedef struct h2_t {
             const h2_resolve_info_t *resolve; ///< the resolve configuration of the declaration, NULL if resolved
 
             union {
+                /* eHlir2TypePointer */
+                struct {
+                    h2_t *pointer;
+                };
+
+                /* eHlir2TypeDigit */
+                struct {
+                    digit_t digit;
+                    sign_t sign;
+                };
+
                 /* eHlir2TypeClosure */
                 struct {
                     const h2_t *result;
@@ -235,7 +235,7 @@ h2_t *h2_type_string(const node_t *node, const char *name);
 
 h2_t *h2_type_closure(const node_t *node, const char *name, const h2_t *result, vector_t *params, arity_t arity);
 
-h2_t *h2_type_pointer(const node_t *node, h2_t *pointer);
+h2_t *h2_type_pointer(const node_t *node, const char *name, h2_t *pointer);
 
 ///
 /// generic nodes
@@ -304,6 +304,9 @@ h2_t *h2_stmt_branch(const node_t *node, h2_t *cond, h2_t *then, h2_t *other);
 
 // delay the resolve of a declaration
 h2_t *h2_resolve(h2_cookie_t *cookie, h2_t *decl);
+
+h2_t *h2_open_decl(const node_t *node, const char *name, h2_resolve_info_t resolve);
+void h2_close_decl(h2_t *self, const h2_t *kind);
 
 h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value);
 h2_t *h2_open_global(const node_t *node, const char *name, const h2_t *type, h2_resolve_info_t resolve);

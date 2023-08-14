@@ -30,6 +30,8 @@ static void decl_close(h2_t *decl, h2_kind_t kind)
 
 h2_t *h2_resolve(h2_cookie_t *cookie, h2_t *decl)
 {
+    if (h2_is(decl, eHlir2Error)) { return decl; }
+
     const h2_resolve_info_t *res = decl->resolve;
     if (res == NULL) { return decl; }
 
@@ -89,6 +91,18 @@ h2_t *h2_decl_field(const node_t *node, const char *name, const h2_t *type)
 h2_t *h2_decl_local(const node_t *node, const char *name, const h2_t *type)
 {
     return h2_decl(eHlir2DeclLocal, node, type, name);
+}
+
+h2_t *h2_open_decl(const node_t *node, const char *name, h2_resolve_info_t resolve)
+{
+    return decl_open(node, name, NULL, eHlir2Type, BOX(resolve));
+}
+
+void h2_close_decl(h2_t *self, const h2_t *other)
+{
+    CTASSERT(other != NULL);
+
+    *self = *other;
 }
 
 h2_t *h2_decl_global(const node_t *node, const char *name, const h2_t *type, h2_t *value)

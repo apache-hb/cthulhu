@@ -230,9 +230,11 @@ typedef struct check_t {
     const h2_t *cliEntryPoint;
     const h2_t *guiEntryPoint;
 
-    vector_t *stack;
+    vector_t *exprStack;
+    vector_t *typeStack;
 
-    set_t *checkedForRecursion;
+    set_t *checkedExprs;
+    set_t *checkedTypes;
 } check_t;
 
 static void check_ident(check_t *check, const h2_t *decl)
@@ -393,19 +395,19 @@ static void check_expr_recursion(check_t *check, const h2_t *tree)
 
 static void check_global_recursion(check_t *check, const h2_t *global)
 {
-    if (set_contains_ptr(check->checkedForRecursion, global))
+    if (set_contains_ptr(check->checkedExprs, global))
     {
         return;
     }
 
-    size_t idx = vector_find(check->stack, global);
+    size_t idx = vector_find(check->exprStack, global);
     if (idx == SIZE_MAX)
     {
         if (global->global != NULL)
         {
-            vector_push(&check->stack, (void*)global);
+            vector_push(&check->exprStack, (h2_t*)global);
             check_expr_recursion(check, global->global);
-            vector_drop(check->stack);
+            vector_drop(check->exprStack);
         }
     }
     else
@@ -414,15 +416,152 @@ static void check_global_recursion(check_t *check, const h2_t *global)
             "evaluation of `%s` may be infinite",
             h2_get_name(global)
         );
-        size_t len = vector_len(check->stack);
+        size_t len = vector_len(check->exprStack);
         for (size_t i = 0; i < len; i++)
         {
-            const h2_t *decl = vector_get(check->stack, i);
+            const h2_t *decl = vector_get(check->exprStack, i);
             report_append(id, h2_get_node(decl), "call to `%s`", h2_get_name(decl));
         }
     }
 
-    set_add_ptr(check->checkedForRecursion, global);
+    set_add_ptr(check->checkedExprs, global);
+}
+
+///
+/// recursive struct checking
+///
+
+static void check_struct_recursion(check_t *check, const h2_t *type);
+
+static void check_struct_type_recursion(check_t *check, const h2_t *type)
+{
+    CTASSERT(type != NULL);
+
+    switch (type->kind)
+    {
+    case eHlir2TypeBool:
+    case eHlir2TypeDigit:
+    case eHlir2TypeString:
+    case eHlir2TypeUnit:
+    case eHlir2TypeEmpty:
+    case eHlir2TypePointer:
+        break;
+
+    case eHlir2TypeStruct:
+        check_struct_recursion(check, type);
+        break;
+
+    default: NEVER("invalid type kind %s (check-type-size)", h2_to_string(type));
+    }
+}
+
+static void check_struct_recursion(check_t *check, const h2_t *type)
+{
+    if (set_contains_ptr(check->checkedTypes, type))
+    {
+        return;
+    }
+
+    size_t idx = vector_find(check->typeStack, type);
+    if (idx == SIZE_MAX)
+    {
+        vector_push(&check->typeStack, (h2_t*)type);
+        size_t len = vector_len(type->fields);
+        for (size_t i = 0; i < len; i++)
+        {
+            const h2_t *field = vector_get(type->fields, i);
+            check_struct_type_recursion(check, field->type);
+        }
+        vector_drop(check->typeStack);
+    }
+    else
+    {
+        message_t *id = report(check->reports, eFatal, h2_get_node(type),
+            "size of type `%s` may be infinite",
+            h2_get_name(type)
+        );
+        size_t len = vector_len(check->typeStack);
+        for (size_t i = 0; i < len; i++)
+        {
+            const h2_t *decl = vector_get(check->typeStack, i);
+            report_append(id, h2_get_node(decl), "call to `%s`", h2_get_name(decl));
+        }
+    }
+
+    set_add_ptr(check->checkedTypes, type);
+}
+
+///
+/// recursive pointer checking
+///
+
+static void check_type_recursion(check_t *check, const h2_t *type);
+
+static void check_inner_type_recursion(check_t *check, const h2_t *type)
+{
+    CTASSERT(type != NULL);
+
+    switch (type->kind)
+    {
+    case eHlir2TypeBool:
+    case eHlir2TypeDigit:
+    case eHlir2TypeString:
+    case eHlir2TypeUnit:
+    case eHlir2TypeEmpty:
+    case eHlir2TypeStruct:
+        break;
+
+    case eHlir2TypePointer:
+        check_type_recursion(check, type->pointer);
+        break;
+
+    default: NEVER("invalid type kind `%s` (check-type-size)", h2_to_string(type));
+    }
+}
+
+static void check_type_recursion(check_t *check, const h2_t *type)
+{
+    if (set_contains_ptr(check->checkedTypes, type))
+    {
+        return;
+    }
+
+    size_t idx = vector_find(check->typeStack, type);
+    if (idx == SIZE_MAX)
+    {
+        vector_push(&check->typeStack, (h2_t*)type);
+        check_inner_type_recursion(check, type);
+        vector_drop(check->typeStack);
+    }
+    else
+    {
+        message_t *id = report(check->reports, eFatal, h2_get_node(type),
+            "type `%s` contains an impossible type",
+            h2_get_name(type)
+        );
+        size_t len = vector_len(check->typeStack);
+        for (size_t i = 0; i < len; i++)
+        {
+            const h2_t *decl = vector_get(check->typeStack, i);
+            report_append(id, h2_get_node(decl), "call to `%s`", h2_get_name(decl));
+        }
+    }
+
+    set_add_ptr(check->checkedTypes, type);
+}
+
+static void check_any_type_recursion(check_t *check, const h2_t *type)
+{
+    switch (type->kind)
+    {
+    case eHlir2TypeStruct:
+        check_struct_recursion(check, type);
+        break;
+
+    default:
+        check_type_recursion(check, type);
+        break;
+    }
 }
 
 static void check_module_valid(check_t *check, const h2_t *mod)
@@ -462,6 +601,17 @@ static void check_module_valid(check_t *check, const h2_t *mod)
 
         check_func_attribs(check, function);
     }
+
+    vector_t *types = map_values(h2_module_tag(mod, eSema2Types));
+    size_t totalTypes = vector_len(types);
+    for (size_t i = 0; i < totalTypes; i++)
+    {
+        const h2_t *type = vector_get(types, i);
+        // check_ident(check, type); TODO: check these properly
+
+        // nothing else can be recursive (TODO: for now)
+        check_any_type_recursion(check, type);
+    }
 }
 
 void lifetime_check(lifetime_t *lifetime)
@@ -469,8 +619,11 @@ void lifetime_check(lifetime_t *lifetime)
     check_t check = {
         .reports = lifetime_get_reports(lifetime),
 
-        .stack = vector_new(64),
-        .checkedForRecursion = set_new(64)
+        .exprStack = vector_new(64),
+        .typeStack = vector_new(64),
+
+        .checkedExprs = set_new(64),
+        .checkedTypes = set_new(64)
     };
 
     map_iter_t iter = map_iter(lifetime->modules);

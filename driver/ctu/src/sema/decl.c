@@ -9,6 +9,8 @@
 
 #include "base/panic.h"
 
+#include <string.h>
+
 ///
 /// attributes
 ///
@@ -50,14 +52,15 @@ static void ctu_resolve_function(h2_cookie_t *cookie, h2_t *sema, h2_t *self, vo
     h2_close_function(self, body);
 }
 
-// static void ctu_resolve_typealias(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
-// {
-//     ctu_t *decl = user;
-//     CTASSERTF(decl->kind == eCtuDeclTypeAlias, "decl %s is not a type alias", decl->name);
-//     CTASSERTF(decl->type != NULL, "decl %s has no type", decl->name);
+static void ctu_resolve_type(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
+{
+    ctu_t *decl = user;
+    CTASSERTF(decl->kind == eCtuDeclTypeAlias, "decl %s is not a type alias", decl->name);
+    CTASSERTF(decl->type != NULL, "decl %s has no type", decl->name);
 
-//     NEVER("unimplemented");
-// }
+    h2_t *temp = h2_resolve(h2_get_cookie(sema), ctu_sema_type(sema, decl->typeAlias)); // TODO: doesnt support newtypes, also feels icky
+    h2_close_decl(self, temp);
+}
 
 static void ctu_resolve_struct(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
 {
@@ -121,18 +124,18 @@ static h2_t *ctu_forward_function(h2_t *sema, ctu_t *decl)
     return function;
 }
 
-// static h2_t *ctu_forward_typealias(h2_t *sema, ctu_t *decl)
-// {
-//     CTASSERTF(decl->kind == eCtuDeclTypeAlias, "decl %s is not a type alias", decl->name);
+static h2_t *ctu_forward_type(h2_t *sema, ctu_t *decl)
+{
+    CTASSERTF(decl->kind == eCtuDeclTypeAlias, "decl %s is not a type alias", decl->name);
 
-//     h2_resolve_config_t resolve = {
-//         .sema = sema,
-//         .user = decl,
-//         .fnResolve = ctu_resolve_typealias
-//     };
+    h2_resolve_info_t resolve = {
+        .sema = sema,
+        .user = decl,
+        .fnResolve = ctu_resolve_type
+    };
 
-//     return h2_error(decl->node, "unimplemented");
-// }
+    return h2_open_decl(decl->node, decl->name, resolve);
+}
 
 static h2_t *ctu_forward_struct(h2_t *sema, ctu_t *decl)
 {
@@ -167,13 +170,13 @@ ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
         };
         return fwd;
     }
-    // case eCtuDeclTypeAlias: {
-    //     ctu_forward_t fwd = {
-    //         .tag = eTagTypes,
-    //         .decl = ctu_forward_typealias(sema, decl)
-    //     };
-    //     return fwd;
-    // }
+    case eCtuDeclTypeAlias: {
+        ctu_forward_t fwd = {
+            .tag = eTagTypes,
+            .decl = ctu_forward_type(sema, decl)
+        };
+        return fwd;
+    }
     case eCtuDeclStruct: {
         ctu_forward_t fwd = {
             .tag = eTagTypes,

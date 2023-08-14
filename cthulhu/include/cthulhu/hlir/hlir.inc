@@ -4,6 +4,7 @@
 #   define HLIR_KIND(ID, NAME)
 #endif
 
+HLIR_KIND(eHlir2Type, "type") ///< unresolved type
 HLIR_KIND(eHlir2TypeEmpty, "type-empty") ///< a type that can never be created
 HLIR_KIND(eHlir2TypeUnit, "type-unit") ///< a type with a single value
 HLIR_KIND(eHlir2TypeBool, "type-bool") ///< a type with two values

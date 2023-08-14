@@ -87,11 +87,11 @@ h2_t *h2_type_closure(const node_t *node, const char *name, const h2_t *result, 
     return self;
 }
 
-h2_t *h2_type_pointer(const node_t *node, h2_t *pointer)
+h2_t *h2_type_pointer(const node_t *node, const char *name, h2_t *pointer)
 {
     CTASSERT(pointer != NULL);
 
-    h2_t *self = h2_new(eHlir2TypePointer, node, pointer);
+    h2_t *self = h2_decl(eHlir2TypePointer, node, NULL, name);
     self->pointer = pointer;
     return self;
 }

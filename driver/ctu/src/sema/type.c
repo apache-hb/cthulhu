@@ -5,6 +5,7 @@
 #include "cthulhu/hlir/query.h"
 
 #include "std/vector.h"
+#include "std/str.h"
 
 #include "report/report.h"
 
@@ -43,7 +44,7 @@ static h2_t *ctu_sema_type_name(h2_t *sema, const ctu_t *type)
 static h2_t *ctu_sema_type_pointer(h2_t *sema, const ctu_t *type)
 {
     h2_t *pointee = ctu_sema_type(sema, type->pointer);
-    return h2_type_pointer(type->node, pointee);
+    return h2_type_pointer(type->node, format("*%s", h2_get_name(pointee)), pointee);
 }
 
 h2_t *ctu_sema_type(h2_t *sema, const ctu_t *type)

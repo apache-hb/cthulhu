@@ -8,12 +8,15 @@ static bool has_name(h2_kind_t kind)
 {
     switch (kind)
     {
+    case eHlir2Type:
+
     case eHlir2TypeEmpty:
     case eHlir2TypeUnit:
     case eHlir2TypeBool:
     case eHlir2TypeDigit:
     case eHlir2TypeString:
     case eHlir2TypeClosure:
+    case eHlir2TypePointer:
 
     case eHlir2TypeStruct:
 

@@ -104,6 +104,9 @@ h2_t *ctu_rt_mod(lifetime_t *lifetime)
     ctu_add_decl(root, eTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));
     ctu_add_decl(root, eTagTypes, "uint", make_int_type("uint", eDigitInt, eSignUnsigned));
 
+    ctu_add_decl(root, eTagTypes, "long", make_int_type("long", eDigitLong, eSignSigned));
+    ctu_add_decl(root, eTagTypes, "ulong", make_int_type("ulong", eDigitLong, eSignUnsigned));
+
     return root;
 }
 
