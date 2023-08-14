@@ -192,6 +192,7 @@ stmts: LBRACE stmtList RBRACE { $$ = ctu_stmt_list(x, @$, $2); }
     ;
 
 localDecl: mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_stmt_local(x, @$, $1, $2, $4, $6); }
+    | mut IDENT ASSIGN expr SEMI { $$ = ctu_stmt_local(x, @$, $1, $2, NULL, $4); }
     ;
 
 stmt: expr SEMI { $$ = $1; }
@@ -207,6 +208,7 @@ maybeExpr: NOINIT { $$ = NULL; }
 
 expr: INTEGER { $$ = ctu_expr_int(x, @$, $1.value); }
     | BOOLEAN { $$ = ctu_expr_bool(x, @$, $1); }
+    | path { $$ = ctu_expr_name(x, @$, $1); }
     ;
 
 /* basic */

@@ -68,6 +68,13 @@ ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value)
     return ast;
 }
 
+ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprName);
+    ast->path = path;
+    return ast;
+}
+
 /* types */
 
 ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path)

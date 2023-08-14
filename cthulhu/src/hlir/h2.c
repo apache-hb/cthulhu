@@ -38,6 +38,7 @@ h2_t *h2_error(const node_t *node, const char *message)
 
     h2_t *self = h2_new(eHlir2Error, node, NULL);
 
+    self->type = self;
     self->message = message;
 
     return self;

@@ -11,6 +11,7 @@ typedef struct vector_t vector_t;
 typedef enum ctu_kind_t {
     eCtuExprInt,
     eCtuExprBool,
+    eCtuExprName,
 
     eCtuStmtList,
     eCtuStmtLocal,
@@ -80,6 +81,9 @@ typedef struct ctu_t {
         /* eCtuExprBool */
         bool boolValue;
 
+        /* eCtuExprName */
+        vector_t *path;
+
         /* eCtuTypeName */
         vector_t *typeName;
 
@@ -115,6 +119,7 @@ ctu_t *ctu_stmt_local(scan_t *scan, where_t where, bool mutable, char *name, ctu
 
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value);
 ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value);
+ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path);
 
 ///
 /// types

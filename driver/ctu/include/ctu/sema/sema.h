@@ -23,6 +23,7 @@ typedef enum ctu_tag_t {
 
 h2_t *ctu_get_namespace(h2_t *sema, const char *name);
 h2_t *ctu_get_type(h2_t *sema, const char *name);
+h2_t *ctu_get_decl(h2_t *sema, const char *name);
 
 // adding decls
 

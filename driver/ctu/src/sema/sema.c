@@ -37,6 +37,12 @@ h2_t *ctu_get_type(h2_t *sema, const char *name)
     return get_decl(sema, name, tags, sizeof(tags) / sizeof(ctu_tag_t));
 }
 
+h2_t *ctu_get_decl(h2_t *sema, const char *name)
+{
+    ctu_tag_t tags[] = { eTagValues, eTagFunctions };
+    return get_decl(sema, name, tags, sizeof(tags) / sizeof(ctu_tag_t));
+}
+
 void ctu_add_decl(h2_t *sema, ctu_tag_t tag, const char *name, h2_t *decl)
 {
     CTASSERT(name != NULL);
@@ -113,7 +119,7 @@ h2_t *ctu_rt_mod(lifetime_t *lifetime)
 vector_t *ctu_rt_path(void)
 {
     vector_t *path = vector_new(2);
-    vector_push(&path, "ctu");
+    vector_push(&path, "cthulhu");
     vector_push(&path, "lang");
     return path;
 }

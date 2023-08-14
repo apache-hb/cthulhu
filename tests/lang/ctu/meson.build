@@ -59,12 +59,12 @@ tests = {
     #         #'nested-break'
     #     ]
     # },
-    # 'programs': {
-    #     'pass': [
-    #         'alias-var'
-    #     ],
-    #     'fail': []
-    # },
+    'programs': {
+        'pass': [
+            'alias-var'
+        ],
+        'fail': []
+    },
     'types.alias': {
         'fail': [
             'discard-alias-name',

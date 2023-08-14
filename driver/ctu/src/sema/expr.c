@@ -1,6 +1,8 @@
 #include "ctu/sema/expr.h"
 #include "ctu/sema/type.h"
 
+#include "cthulhu/hlir/query.h"
+
 #include "ctu/ast.h"
 
 #include "report/report.h"
@@ -8,6 +10,40 @@
 #include "std/vector.h"
 
 #include "base/panic.h"
+
+///
+/// get decls
+///
+
+static h2_t *sema_decl_name(h2_t *sema, const node_t *node, vector_t *path)
+{
+    size_t len = vector_len(path);
+    h2_t *ns = sema;
+    for (size_t i = 0; i < len - 1; i++)
+    {
+        const char *segment = vector_get(path, i);
+        ns = ctu_get_namespace(ns, segment);
+        if (ns == NULL)
+        {
+            report(sema->reports, eFatal, NULL, "namespace `%s` not found", segment);
+            return h2_error(node, "namespace not found");
+        }
+    }
+
+    const char *name = vector_tail(path);
+    h2_t *decl = ctu_get_decl(ns, name);
+    if (decl == NULL)
+    {
+        report(sema->reports, eFatal, NULL, "decl `%s` not found", name);
+        return h2_error(node, "decl not found");
+    }
+
+    return decl;
+}
+
+///
+/// inner logic
+///
 
 static h2_t *verify_expr_type(h2_t *sema, h2_kind_t kind, const h2_t *type, const char *exprKind, const node_t *node)
 {
@@ -38,21 +74,41 @@ static h2_t *ctu_sema_int(h2_t *sema, const ctu_t *expr, const h2_t *implicitTyp
     return h2_expr_digit(expr->node, type, expr->intValue);
 }
 
+static h2_t *ctu_sema_name(h2_t *sema, const ctu_t *expr, const h2_t *implicitType)
+{
+    h2_t *decl = sema_decl_name(sema, expr->node, expr->path);
+    if (h2_is(decl, eHlir2Error))
+    {
+        report(sema->reports, eFatal, expr->node, "name `%s` not found", expr->name);
+        return h2_error(expr->node, "name not found");
+    }
+
+    return h2_resolve(h2_get_cookie(sema), decl);
+}
+
 h2_t *ctu_sema_lvalue(h2_t *sema, const ctu_t *expr, h2_t *implicitType)
 {
-    NEVER("not implemented");
+    CTASSERT(expr != NULL);
+
+    switch (expr->kind)
+    {
+    case eCtuExprName: return ctu_sema_name(sema, expr, implicitType);
+
+    default: NEVER("invalid lvalue-expr kind %d", expr->kind);
+    }
 }
 
 h2_t *ctu_sema_rvalue(h2_t *sema, const ctu_t *expr, h2_t *implicitType)
 {
     CTASSERT(expr != NULL);
 
-    const h2_t *inner = implicitType == NULL ? NULL : h2_resolve(h2_get_cookie(sema), implicitType);
+    h2_t *inner = implicitType == NULL ? NULL : h2_resolve(h2_get_cookie(sema), implicitType);
 
     switch (expr->kind)
     {
     case eCtuExprBool: return ctu_sema_bool(sema, expr, inner);
     case eCtuExprInt: return ctu_sema_int(sema, expr, inner);
+    case eCtuExprName: return h2_expr_load(expr->node, ctu_sema_name(sema, expr, implicitType));
 
     default: NEVER("invalid rvalue-expr kind %d", expr->kind);
     }
