@@ -11,7 +11,7 @@ typedef struct reports_t reports_t;
 
 /**
  * @brief create the global mediator object, must be the first part of cthulhu called
- * 
+ *
  * @param id the name of the mediator
  * @param version the version of the mediator
  * @return mediator_t* the mediator object
@@ -35,6 +35,8 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io);
 
 void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage);
 
-map_t *lifetime_get_modules(lifetime_t *lifetime);
+void lifetime_resolve(lifetime_t *lifetime);
 
 void lifetime_check(lifetime_t *lifetime);
+
+map_t *lifetime_get_modules(lifetime_t *lifetime);

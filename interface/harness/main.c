@@ -111,6 +111,9 @@ int main(int argc, const char **argv)
         CHECK_REPORTS(reports, msg);
     }
 
+    lifetime_resolve(lifetime);
+    CHECK_REPORTS(reports, "resolving symbols");
+
     lifetime_check(lifetime);
     CHECK_REPORTS(reports, "validations failed");
 

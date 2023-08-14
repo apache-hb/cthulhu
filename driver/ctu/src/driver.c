@@ -124,27 +124,5 @@ void ctu_process_imports(context_t *context)
 
 void ctu_compile_module(context_t *context)
 {
-    h2_t *sema = context_get_module(context);
-    h2_cookie_t *cookie = h2_get_cookie(sema);
 
-    map_iter_t globals = map_iter(h2_module_tag(sema, eTagValues));
-    while (map_has_next(&globals))
-    {
-        map_entry_t entry = map_next(&globals);
-        h2_resolve(cookie, entry.value);
-    }
-
-    map_iter_t functions = map_iter(h2_module_tag(sema, eTagFunctions));
-    while (map_has_next(&functions))
-    {
-        map_entry_t entry = map_next(&functions);
-        h2_resolve(cookie, entry.value);
-    }
-
-    map_iter_t types = map_iter(h2_module_tag(sema, eTagTypes));
-    while (map_has_next(&types))
-    {
-        map_entry_t entry = map_next(&types);
-        h2_resolve(cookie, entry.value);
-    }
 }

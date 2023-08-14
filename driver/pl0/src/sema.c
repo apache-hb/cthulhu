@@ -559,21 +559,6 @@ void pl0_compile_module(context_t *context)
 {
     pl0_t *root = context_get_ast(context);
     h2_t *mod = context_get_module(context);
-    h2_cookie_t *cookie = h2_get_cookie(mod);
-
-    map_iter_t iterGlobals = map_iter(h2_module_tag(mod, eTagValues));
-    while (map_has_next(&iterGlobals))
-    {
-        map_entry_t entry = map_next(&iterGlobals);
-        h2_resolve(cookie, entry.value);
-    }
-
-    map_iter_t iterProcs = map_iter(h2_module_tag(mod, eTagProcs));
-    while (map_has_next(&iterProcs))
-    {
-        map_entry_t entry = map_next(&iterProcs);
-        h2_resolve(cookie, entry.value);
-    }
 
     if (root->entry != NULL)
     {

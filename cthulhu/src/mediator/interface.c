@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "cthulhu/mediator/interface.h"
+#include "cthulhu/mediator/driver.h"
 
 #include "base/memory.h"
 #include "base/panic.h"
@@ -176,6 +177,40 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
     driver_t *handle = handle_new(lifetime, lang);
 
     lang->fnParse(handle, scan);
+}
+
+static void resolve_tag(h2_t *mod, size_t tag)
+{
+    map_iter_t iter = map_iter(h2_module_tag(mod, tag));
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        h2_resolve(h2_get_cookie(mod), entry.value);
+    }
+}
+
+static void resolve_decls(context_t *ctx)
+{
+    h2_t *mod = context_get_module(ctx);
+    resolve_tag(mod, eSema2Values);
+    resolve_tag(mod, eSema2Types);
+    resolve_tag(mod, eSema2Procs);
+}
+
+void lifetime_resolve(lifetime_t *lifetime)
+{
+    CTASSERT(lifetime != NULL);
+
+    map_iter_t iter = map_iter(lifetime->modules);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        context_t *ctx = entry.value;
+
+        CTASSERT(ctx != NULL);
+
+        resolve_decls(ctx);
+    }
 }
 
 void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)

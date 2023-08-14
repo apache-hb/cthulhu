@@ -97,12 +97,5 @@ void obr_process_imports(context_t *context)
 
 void obr_compile_module(context_t *context)
 {
-    h2_t *sema = context_get_module(context);
 
-    map_iter_t globals = map_iter(h2_module_tag(sema, eTagValues));
-    while (map_has_next(&globals))
-    {
-        map_entry_t entry = map_next(&globals);
-        h2_resolve(h2_get_cookie(sema), entry.value);
-    }
 }
