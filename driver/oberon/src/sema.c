@@ -8,6 +8,7 @@
 #include "report/report.h"
 #include "report/report-ext.h"
 
+#include "std/map.h"
 #include "std/str.h"
 
 #include "base/panic.h"
@@ -17,17 +18,31 @@ static const h2_attrib_t kDefaultGlobalAttribs = {
     .visibility = eVisiblePublic
 };
 
+static void obr_resolve_global(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
+{
+    obr_t *decl = user;
+    CTASSERTF(decl->kind == eObrDeclGlobal, "decl %s is not a global", decl->name);
+
+    mpz_t zero;
+    mpz_init(zero);
+    h2_t *zeroLiteral = h2_expr_digit(decl->node, h2_get_type(self), zero);
+
+    h2_close_global(self, zeroLiteral);
+}
+
 static h2_t *obr_forward_global(h2_t *sema, obr_t *global)
 {
     CTASSERTF(global->kind == eObrDeclGlobal, "decl %s is not a global", global->name);
 
-    mpz_t zero;
-    mpz_init(zero);
+    h2_resolve_info_t resolve = {
+        .sema = sema,
+        .user = global,
+        .fnResolve = obr_resolve_global
+    };
 
     h2_t *intType = h2_type_digit(global->node, "INTEGER", eDigitInt, eSignSigned);
     h2_t *mut = h2_qualify(global->node, intType, eQualMutable);
-    h2_t *zeroLiteral = h2_expr_digit(global->node, intType, zero);
-    h2_t *decl = h2_decl_global(global->node, global->name, mut, zeroLiteral);
+    h2_t *decl = h2_open_global(global->node, global->name, mut, resolve);
     h2_set_attrib(decl, &kDefaultGlobalAttribs);
 
     return decl;
@@ -82,5 +97,12 @@ void obr_process_imports(context_t *context)
 
 void obr_compile_module(context_t *context)
 {
+    h2_t *sema = context_get_module(context);
 
+    map_iter_t globals = map_iter(h2_module_tag(sema, eTagValues));
+    while (map_has_next(&globals))
+    {
+        map_entry_t entry = map_next(&globals);
+        h2_resolve(h2_get_cookie(sema), entry.value);
+    }
 }

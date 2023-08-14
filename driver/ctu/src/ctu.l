@@ -28,7 +28,11 @@ WS [ \t\r\v\n\f]
 <COMMENT>\n ;
 <COMMENT>. ;
 
+"+" { return PLUS; }
+"-" { return MINUS; }
 "*" { return STAR; }
+"/" { return DIVIDE; }
+"%" { return MODULO; }
 
 ";" { return SEMI; }
 ":" { return COLON; }

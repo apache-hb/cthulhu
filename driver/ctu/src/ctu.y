@@ -61,8 +61,13 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     DISCARD "`$`"
 
-    ASSIGN "`=`"
+    PLUS "`+`"
+    MINUS "`-`"
     STAR "`*`"
+    DIVIDE "`/`"
+    MODULO "`%`"
+
+    ASSIGN "`=`"
     SEMI "`;`"
     COLON "`:`"
     COLON2 "`::`"
