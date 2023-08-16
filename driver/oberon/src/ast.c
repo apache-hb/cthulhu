@@ -31,16 +31,17 @@ static obr_t *obr_new(scan_t *scan, where_t where, obr_kind_t kind)
     return self;
 }
 
-static obr_t *obr_decl(scan_t *scan, where_t where, obr_kind_t kind, char *name)
+static obr_t *obr_decl(scan_t *scan, where_t where, obr_kind_t kind, char *name, obr_visibility_t vis)
 {
     obr_t *self = obr_new(scan, where, kind);
     self->name = name;
+    self->visibility = vis;
     return self;
 }
 
 obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *imports, vector_t *decls)
 {
-    obr_t *self = obr_decl(scan, where, eObrModule, name);
+    obr_t *self = obr_decl(scan, where, eObrModule, name, eObrVisPublic);
     self->imports = imports;
     self->decls = decls;
 
@@ -51,25 +52,31 @@ obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *
 
 obr_t *obr_import(scan_t *scan, where_t where, char *name, char *symbol)
 {
-    obr_t *self = obr_decl(scan, where, eObrImport, name);
+    obr_t *self = obr_decl(scan, where, eObrImport, name, eObrVisPrivate);
     self->symbol = symbol;
     return self;
 }
 
-obr_t *obr_decl_global(scan_t *scan, where_t where, bool mut, char *name, obr_t *type, obr_t *value)
+obr_t *obr_decl_var(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type)
 {
-    obr_t *self = obr_decl(scan, where, eObrDeclGlobal, name);
-    self->mut = mut;
+    obr_t *self = obr_decl(scan, where, eObrDeclVar, symbol->name, symbol->visibility);
+    self->type = type;
+    return self;
+}
+
+obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type, obr_t *value)
+{
+    obr_t *self = obr_decl(scan, where, eObrDeclConst, symbol->name, symbol->visibility);
     self->type = type;
     self->value = value;
     return self;
 }
 
-obr_t *obr_decl_procedure(scan_t *scan, where_t where, char *name, char *end)
+obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, char *end)
 {
-    obr_t *self = obr_decl(scan, where, eObrDeclProcedure, name);
+    obr_t *self = obr_decl(scan, where, eObrDeclProcedure, symbol->name, symbol->visibility);
 
-    ensure_block_names_match(scan, self->node, "PROCEDURE", name, end);
+    ensure_block_names_match(scan, self->node, "PROCEDURE", symbol->name, end);
 
     return self;
 }
@@ -83,31 +90,32 @@ obr_t *obr_type_name(scan_t *scan, where_t where, char *name)
 
 obr_t *obr_type_qual(scan_t *scan, where_t where, char *name, char *symbol)
 {
-    obr_t *self = obr_decl(scan, where, eObrTypeQual, name);
+    obr_t *self = obr_decl(scan, where, eObrTypeQual, name, eObrVisPrivate); // TODO: should types need this data?
     self->symbol = symbol;
     return self;
 }
 
-/* extras */
+/* symbols */
 
-obr_partial_value_t *obr_partial_value(scan_t *scan, where_t where, char *name)
+obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility_t visibility)
 {
-    obr_partial_value_t *self = ctu_malloc(sizeof(obr_partial_value_t));
+    obr_symbol_t *self = ctu_malloc(sizeof(obr_symbol_t));
     self->scan = scan;
     self->where = where;
     self->name = name;
+    self->visibility = visibility;
     return self;
 }
 
-vector_t *obr_expand_values(bool mut, vector_t *names, obr_t *type)
+vector_t *obr_expand_vars(vector_t *symbols, obr_t *type)
 {
-    size_t len = vector_len(names);
-    vector_t *values = vector_of(len);
+    size_t len = vector_len(symbols);
+    vector_t *result = vector_of(len);
     for (size_t i = 0; i < len; i++)
     {
-        obr_partial_value_t *value = vector_get(names, i);
-        obr_t *decl = obr_decl_global(value->scan, value->where, mut, value->name, type, NULL);
-        vector_set(values, i, decl);
+        obr_symbol_t *symbol = vector_get(symbols, i);
+        obr_t *decl = obr_decl_var(symbol->scan, symbol->where, symbol, type);
+        vector_set(result, i, decl);
     }
-    return values;
+    return result;
 }

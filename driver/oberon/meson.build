@@ -3,6 +3,11 @@ src = [
 
     'src/sema.c',
 
+    'src/sema/sema.c',
+    'src/sema/type.c',
+    'src/sema/decl.c',
+    'src/sema/expr.c',
+
     'src/ast.c',
     'src/scan.c',
     lex.process('src/obr.l'),

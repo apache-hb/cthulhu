@@ -36,7 +36,6 @@ static void obr_config(lifetime_t *lifetime, ap_t *ap)
     CTU_UNUSED(ap);
 }
 
-static void obr_create(driver_t *handle) { CTU_UNUSED(handle); }
 static void obr_destroy(driver_t *handle) { CTU_UNUSED(handle); }
 
 static const char *kLangNames[] = { "m", "mod", "obr", NULL };

@@ -25,7 +25,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %union {
     obr_t *ast;
-    obr_partial_value_t *partialValue;
+    obr_symbol_t *symbol;
 
     vector_t *vector;
 
@@ -36,14 +36,19 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 %type<vector>
     importList importBodyList moduleList
     declSeq decl
-    nameList valueSeq valueDecl valueDeclSeq
+    identList
+    valueSeq valueDecl valueDeclSeq
+    constSeq constDeclSeq
 
 %type<ast>
     importBody module
     type
 
-%type<partialValue>
-    valueName
+    constDecl
+    constExpr expr
+
+%type<symbol>
+    identDef
 
 %type<ident>
     end
@@ -162,7 +167,22 @@ declSeq: decl { $$ = $1; }
     ;
 
 decl: valueDeclSeq { $$ = $1; }
+    | constDeclSeq { $$ = $1; }
     ;
+
+/* consts */
+
+constDeclSeq: CONST constSeq { $$ = $2; }
+    ;
+
+constSeq: constDecl { $$ = vector_init($1); }
+    | constSeq constDecl { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+constDecl: identDef COLON type EQUAL constExpr SEMI { $$ = obr_decl_const(x, @$, $1, $3, $5); }
+    ;
+
+/* values */
 
 valueDeclSeq: VAR valueSeq { $$ = $2; }
     ;
@@ -171,14 +191,7 @@ valueSeq: valueDecl { $$ = $1; }
     | valueSeq valueDecl { vector_append(&$1, $2); $$ = $1; }
     ;
 
-valueDecl: nameList COLON type SEMI { $$ = obr_expand_values(false, $1, $3); }
-    ;
-
-nameList: valueName { $$ = vector_init($1); }
-    | nameList COMMA valueName { vector_push(&$1, $3); $$ = $1; }
-    ;
-
-valueName: IDENT { $$ = obr_partial_value(x, @$, $1); }
+valueDecl: identList COLON type SEMI { $$ = obr_expand_vars($1, $3); }
     ;
 
 /* types */
@@ -189,7 +202,22 @@ type: IDENT { $$ = obr_type_name(x, @$, $1); }
 
 /* exprs */
 
+constExpr: expr { $$ = $1; }
+    ;
+
+expr: IDENT { $$ = NULL; /* dont care yet */ }
+    ;
+
 /* extra */
+
+identList: identDef { $$ = vector_init($1); }
+    | identList COMMA identDef { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+identDef: IDENT { $$ = obr_symbol(x, @$, $1, eObrVisPrivate); }
+    | IDENT STAR { $$ = obr_symbol(x, @$, $1, eObrVisPublic); }
+    | IDENT MINUS { $$ = obr_symbol(x, @$, $1, eObrVisPublicReadOnly); }
+    ;
 
 end: END { $$ = NULL; }
     | END IDENT { $$ = $2; }
