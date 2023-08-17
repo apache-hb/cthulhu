@@ -4,6 +4,8 @@
 
 #include "cthulhu/mediator/driver.h"
 
+#include "cthulhu/util/util.h"
+
 #include "report/report-ext.h"
 
 #include "std/vector.h"
@@ -14,33 +16,22 @@
 /// decls
 ///
 
-static h2_t *get_decl(h2_t *sema, const char *name, const ctu_tag_t *tags, size_t len)
-{
-    for (size_t i = 0; i < len; i++)
-    {
-        h2_t *decl = h2_module_get(sema, tags[i], name);
-        if (decl != NULL) { return decl; }
-    }
-
-    return NULL;
-}
-
 h2_t *ctu_get_namespace(h2_t *sema, const char *name)
 {
-    ctu_tag_t tags[] = { eTagModules, eTagImports };
-    return get_decl(sema, name, tags, sizeof(tags) / sizeof(ctu_tag_t));
+    const size_t tags[] = { eCtuTagModules, eCtuTagImports };
+    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
 h2_t *ctu_get_type(h2_t *sema, const char *name)
 {
-    ctu_tag_t tags[] = { eTagTypes };
-    return get_decl(sema, name, tags, sizeof(tags) / sizeof(ctu_tag_t));
+    const size_t tags[] = { eCtuTagTypes };
+    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
 h2_t *ctu_get_decl(h2_t *sema, const char *name)
 {
-    ctu_tag_t tags[] = { eTagValues, eTagFunctions };
-    return get_decl(sema, name, tags, sizeof(tags) / sizeof(ctu_tag_t));
+    const size_t tags[] = { eCtuTagValues, eCtuTagFunctions };
+    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
 void ctu_add_decl(h2_t *sema, ctu_tag_t tag, const char *name, h2_t *decl)
@@ -90,28 +81,28 @@ h2_t *ctu_rt_mod(lifetime_t *lifetime)
 {
     GLOBAL_INIT("cthulhu runtime module");
 
-    size_t sizes[eTagTotal] = {
-        [eTagValues] = 1,
-        [eTagTypes] = 1,
-        [eTagFunctions] = 1,
-        [eTagModules] = 1,
-        [eTagImports] = 1,
-        [eTagAttribs] = 1,
-        [eTagSuffix] = 1,
+    size_t sizes[eCtuTagTotal] = {
+        [eCtuTagValues] = 1,
+        [eCtuTagTypes] = 1,
+        [eCtuTagFunctions] = 1,
+        [eCtuTagModules] = 1,
+        [eCtuTagImports] = 1,
+        [eCtuTagAttribs] = 1,
+        [eCtuTagSuffixes] = 1,
     };
 
-    h2_t *root = lifetime_sema_new(lifetime, "runtime", eTagTotal, sizes);
+    h2_t *root = lifetime_sema_new(lifetime, "runtime", eCtuTagTotal, sizes);
 
-    ctu_add_decl(root, eTagTypes, "bool", make_bool_type("bool"));
+    ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
 
-    ctu_add_decl(root, eTagTypes, "char", make_int_type("char", eDigitChar, eSignSigned));
-    ctu_add_decl(root, eTagTypes, "uchar", make_int_type("uchar", eDigitChar, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "char", make_int_type("char", eDigitChar, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uchar", make_int_type("uchar", eDigitChar, eSignUnsigned));
 
-    ctu_add_decl(root, eTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));
-    ctu_add_decl(root, eTagTypes, "uint", make_int_type("uint", eDigitInt, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint", make_int_type("uint", eDigitInt, eSignUnsigned));
 
-    ctu_add_decl(root, eTagTypes, "long", make_int_type("long", eDigitLong, eSignSigned));
-    ctu_add_decl(root, eTagTypes, "ulong", make_int_type("ulong", eDigitLong, eSignUnsigned));
+    ctu_add_decl(root, eCtuTagTypes, "long", make_int_type("long", eDigitLong, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "ulong", make_int_type("ulong", eDigitLong, eSignUnsigned));
 
     return root;
 }

@@ -6,13 +6,13 @@
 
 typedef struct lifetime_t lifetime_t;
 
-typedef enum obr_tags_t {
-    eTagValues = eSema2Values,
-    eTagTypes = eSema2Types,
-    eTagProcs = eSema2Procs,
-    eTagModules = eSema2Modules,
+typedef enum obr_tag_t {
+    eObrTagValues = eSema2Values,
+    eObrTagTypes = eSema2Types,
+    eObrTagProcs = eSema2Procs,
+    eObrTagModules = eSema2Modules,
 
-    eTagTotal
+    eObrTagTotal
 } obr_tags_t;
 
 h2_t *obr_get_type(h2_t *sema, const char *name);

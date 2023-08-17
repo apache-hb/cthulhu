@@ -29,14 +29,14 @@ void obr_forward_decls(context_t *context)
     obr_t *root = context_get_ast(context);
     size_t lenDecls = vector_len(root->decls);
 
-    size_t sizes[eTagTotal] = {
-        [eTagValues] = lenDecls,
-        [eTagTypes] = lenDecls,
-        [eTagProcs] = lenDecls,
-        [eTagModules] = 32,
+    size_t sizes[eObrTagTotal] = {
+        [eObrTagValues] = lenDecls,
+        [eObrTagTypes] = lenDecls,
+        [eObrTagProcs] = lenDecls,
+        [eObrTagModules] = 32,
     };
 
-    h2_t *sema = h2_module(gRuntime, root->node, root->name, eTagTotal, sizes);
+    h2_t *sema = h2_module(gRuntime, root->node, root->name, eObrTagTotal, sizes);
 
     for (size_t i = 0; i < lenDecls; i++)
     {

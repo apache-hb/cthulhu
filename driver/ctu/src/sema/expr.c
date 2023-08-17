@@ -136,13 +136,13 @@ static h2_t *ctu_sema_stmts(h2_t *sema, h2_t *decl, const ctu_t *stmt)
     size_t len = vector_len(stmt->stmts);
     vector_t *stmts = vector_of(len);
 
-    size_t sizes[eTagTotal] = {
-        [eTagTypes] = 4,
-        [eTagValues] = 4,
-        [eTagFunctions] = 4
+    size_t sizes[eCtuTagTotal] = {
+        [eCtuTagTypes] = 4,
+        [eCtuTagValues] = 4,
+        [eCtuTagFunctions] = 4
     };
 
-    h2_t *ctx = h2_module(sema, stmt->node, decl->name, eTagTotal, sizes);
+    h2_t *ctx = h2_module(sema, stmt->node, decl->name, eCtuTagTotal, sizes);
     for (size_t i = 0; i < len; i++)
     {
         ctu_t *it = vector_get(stmt->stmts, i);

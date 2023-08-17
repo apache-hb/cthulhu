@@ -38,12 +38,28 @@ static h2_t *sema_type_qual(h2_t *sema, obr_t *type)
     return it;
 }
 
+static h2_t *sema_type_pointer(h2_t *sema, obr_t *type)
+{
+    h2_t *it = obr_sema_type(sema, type->pointer);
+    return h2_type_pointer(type->node, h2_get_name(it), it);
+}
+
+static h2_t *sema_type_array(h2_t *sema, obr_t *type)
+{
+    h2_t *it = obr_sema_type(sema, type->array);
+    return h2_type_pointer(type->node, h2_get_name(it), it); // TODO: maybe arrays are not pointers
+}
+
 h2_t *obr_sema_type(h2_t *sema, obr_t *type)
 {
+    CTASSERT(type != NULL);
+
     switch (type->kind)
     {
     case eObrTypeName: return sema_type_name(sema, type);
     case eObrTypeQual: return sema_type_qual(sema, type);
+    case eObrTypePointer: return sema_type_pointer(sema, type);
+    case eObrTypeArray: return sema_type_array(sema, type);
 
     default: NEVER("unknown type kind %d", type->kind);
     }

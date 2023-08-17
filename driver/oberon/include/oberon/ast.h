@@ -35,6 +35,8 @@ typedef struct obr_symbol_t {
 typedef enum obr_kind_t {
     eObrTypeName,
     eObrTypeQual,
+    eObrTypePointer,
+    eObrTypeArray,
 
     eObrExprDigit,
     eObrExprUnary,
@@ -45,6 +47,7 @@ typedef enum obr_kind_t {
 
     eObrDeclVar,
     eObrDeclConst,
+    eObrDeclType,
     eObrDeclProcedure,
 
     eObrModule,
@@ -73,6 +76,12 @@ typedef struct obr_t {
             obr_t *rhs;
         };
 
+        /* eObrTypePointer */
+        obr_t *pointer;
+
+        /* eObrTypeArray */
+        obr_t *array;
+
         /* eObrExprDigit */
         mpz_t digit;
 
@@ -87,7 +96,7 @@ typedef struct obr_t {
                     vector_t *decls;
                 };
 
-                /* eObrDeclVar */
+                /* eObrDeclVar|eObrDeclType */
                 obr_t *type;
 
                 /* eObrDeclConst */
@@ -100,9 +109,14 @@ typedef struct obr_t {
     };
 } obr_t;
 
+/* modules */
+
 obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *imports, vector_t *decls);
 obr_t *obr_import(scan_t *scan, where_t where, char *name, char *symbol);
 
+/* decls */
+
+obr_t *obr_decl_type(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type);
 obr_t *obr_decl_var(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type);
 obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *value);
 obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, char *end);
@@ -122,6 +136,8 @@ obr_t *obr_expr_digit(scan_t *scan, where_t where, const mpz_t digit);
 
 obr_t *obr_type_name(scan_t *scan, where_t where, char *symbol);
 obr_t *obr_type_qual(scan_t *scan, where_t where, char *name, char *symbol);
+obr_t *obr_type_pointer(scan_t *scan, where_t where, obr_t *type);
+obr_t *obr_type_array(scan_t *scan, where_t where, obr_t *type);
 
 /* partial symbols */
 

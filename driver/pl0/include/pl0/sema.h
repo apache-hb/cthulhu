@@ -5,15 +5,15 @@
 #include "cthulhu/hlir/h2.h"
 
 typedef enum pl0_tag_t {
-    eTagValues = eSema2Values,
-    eTagTypes = eSema2Types,
-    eTagProcs = eSema2Procs,
-    eTagModules = eSema2Modules,
+    ePl0TagValues = eSema2Values,
+    ePl0TagTypes = eSema2Types,
+    ePl0TagProcs = eSema2Procs,
+    ePl0TagModules = eSema2Modules,
 
-    eTagImportedValues,
-    eTagImportedProcs,
+    ePl0TagImportedValues,
+    ePl0TagImportedProcs,
 
-    eTagTotal
+    ePl0TagTotal
 } pl0_tag_t;
 
 void pl0_init(driver_t *handle);

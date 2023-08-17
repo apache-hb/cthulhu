@@ -75,3 +75,19 @@ mediator = declare_dependency(
     include_directories : [ 'include', versiondir ],
     dependencies : [ base ]
 )
+
+src = [
+    'src/util/util.c'
+]
+
+libutil = library('util', src,
+    include_directories : 'include',
+    c_args : args,
+    dependencies : [ std, hlir ]
+)
+
+util = declare_dependency(
+    link_with : libutil,
+    include_directories : 'include',
+    dependencies : [ base ]
+)

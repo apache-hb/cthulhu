@@ -82,6 +82,8 @@ static void ctu_resolve_struct(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void
     h2_close_struct(self, items);
 }
 
+/* TODO: set visibility inside forwarding */
+
 ///
 /// forward declarations
 ///
@@ -91,8 +93,6 @@ static h2_t *ctu_forward_global(h2_t *sema, ctu_t *decl)
     CTASSERTF(decl->kind == eCtuDeclGlobal, "decl %s is not a global", decl->name);
     CTASSERTF(decl->type != NULL || decl->value != NULL, "decl %s has no type and no init expr", decl->name);
 
-    const h2_attrib_t *attrib = decl->exported ? &kAttribExport : &kAttribPrivate;
-
     h2_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
@@ -101,7 +101,6 @@ static h2_t *ctu_forward_global(h2_t *sema, ctu_t *decl)
 
     h2_t *type = decl->type == NULL ? NULL : ctu_sema_type(sema, decl->type);
     h2_t *global = h2_open_global(decl->node, decl->name, type, resolve);
-    h2_set_attrib(global, attrib);
 
     return global;
 }
@@ -119,9 +118,7 @@ static h2_t *ctu_forward_function(h2_t *sema, ctu_t *decl)
     h2_t *returnType = ctu_sema_type(sema, decl->returnType);
     h2_t *signature = h2_type_closure(decl->node, decl->name, returnType, vector_of(0), eArityFixed);
 
-    h2_t *function = h2_open_function(decl->node, decl->name, signature, resolve);
-
-    return function;
+    return h2_open_function(decl->node, decl->name, signature, resolve);
 }
 
 static h2_t *ctu_forward_type(h2_t *sema, ctu_t *decl)
@@ -147,45 +144,52 @@ static h2_t *ctu_forward_struct(h2_t *sema, ctu_t *decl)
         .fnResolve = ctu_resolve_struct
     };
 
-    h2_t *it = h2_open_struct(decl->node, decl->name, resolve);
-
-    return it;
+    return h2_open_struct(decl->node, decl->name, resolve);
 }
 
-ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
+static ctu_forward_t forward_decl_inner(h2_t *sema, ctu_t *decl)
 {
     switch (decl->kind)
     {
     case eCtuDeclGlobal: {
         ctu_forward_t fwd = {
-            .tag = eTagValues,
+            .tag = eCtuTagValues,
             .decl = ctu_forward_global(sema, decl),
         };
         return fwd;
     }
     case eCtuDeclFunction: {
         ctu_forward_t fwd = {
-            .tag = eTagFunctions,
+            .tag = eCtuTagFunctions,
             .decl = ctu_forward_function(sema, decl),
         };
         return fwd;
     }
     case eCtuDeclTypeAlias: {
         ctu_forward_t fwd = {
-            .tag = eTagTypes,
+            .tag = eCtuTagTypes,
             .decl = ctu_forward_type(sema, decl)
         };
         return fwd;
     }
     case eCtuDeclStruct: {
         ctu_forward_t fwd = {
-            .tag = eTagTypes,
+            .tag = eCtuTagTypes,
             .decl = ctu_forward_struct(sema, decl)
         };
         return fwd;
     }
-
     default:
         NEVER("invalid decl kind %d", decl->kind);
     }
+}
+
+ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
+{
+    ctu_forward_t fwd = forward_decl_inner(sema, decl);
+
+    const h2_attrib_t *attrib = decl->exported ? &kAttribExport : &kAttribPrivate;
+    h2_set_attrib(fwd.decl, attrib);
+
+    return fwd;
 }

@@ -39,12 +39,13 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     identList
     valueSeq valueDecl valueDeclSeq
     constSeq constDeclSeq
+    typeSeq typeDeclSeq
 
 %type<ast>
     importBody module
     type
 
-    constDecl
+    constDecl typeDecl
     constExpr expr
     relationExpr addExpr mulExpr unaryExpr simpleExpr
 
@@ -169,6 +170,7 @@ declSeq: decl { $$ = $1; }
 
 decl: valueDeclSeq { $$ = $1; }
     | constDeclSeq { $$ = $1; }
+    | typeDeclSeq { $$ = $1; }
     ;
 
 /* consts */
@@ -197,8 +199,20 @@ valueDecl: identList COLON type SEMI { $$ = obr_expand_vars($1, $3); }
 
 /* types */
 
+typeDeclSeq: TYPE typeSeq { $$ = $2; }
+    ;
+
+typeSeq: typeDecl { $$ = vector_init($1); }
+    | typeSeq typeDecl { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+typeDecl: identDef EQUAL type SEMI { $$ = obr_decl_type(x, @$, $1, $3); }
+    ;
+
 type: IDENT { $$ = obr_type_name(x, @$, $1); }
     | IDENT DOT IDENT { $$ = obr_type_qual(x, @$, $1, $3); }
+    | POINTER TO type { $$ = obr_type_pointer(x, @$, $3); }
+    | ARRAY OF type { $$ = obr_type_array(x, @$, $3); }
     ;
 
 /* exprs */

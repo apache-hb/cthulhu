@@ -66,6 +66,14 @@ static void resolve_var(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
     h2_close_global(self, zeroLiteral);
 }
 
+static void resolve_type(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
+{
+    obr_t *decl = user;
+    CTASSERTF(decl->kind == eObrDeclType, "decl %s is not a type", decl->name);
+
+    h2_close_decl(self, obr_sema_type(sema, decl->type));
+}
+
 static h2_t *forward_const(h2_t *sema, obr_t *decl)
 {
     h2_resolve_info_t resolve = {
@@ -96,13 +104,27 @@ static h2_t *forward_var(h2_t *sema, obr_t *decl)
     return it;
 }
 
+static h2_t *forward_type(h2_t *sema, obr_t *decl)
+{
+    h2_resolve_info_t resolve = {
+        .sema = sema,
+        .user = decl,
+        .fnResolve = resolve_type
+    };
+
+    h2_t *it = h2_open_decl(decl->node, decl->name, resolve);
+    set_attribs(sema, it, decl->visibility);
+
+    return it;
+}
+
 obr_forward_t obr_forward_decl(h2_t *sema, obr_t *decl)
 {
     switch (decl->kind)
     {
     case eObrDeclConst: {
         obr_forward_t fwd = {
-            .tag = eTagValues,
+            .tag = eObrTagValues,
             .decl = forward_const(sema, decl)
         };
         return fwd;
@@ -110,8 +132,16 @@ obr_forward_t obr_forward_decl(h2_t *sema, obr_t *decl)
 
     case eObrDeclVar: {
         obr_forward_t fwd = {
-            .tag = eTagValues,
+            .tag = eObrTagValues,
             .decl = forward_var(sema, decl)
+        };
+        return fwd;
+    }
+
+    case eObrDeclType: {
+        obr_forward_t fwd = {
+            .tag = eObrTagTypes,
+            .decl = forward_type(sema, decl)
         };
         return fwd;
     }

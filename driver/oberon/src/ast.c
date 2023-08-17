@@ -57,6 +57,15 @@ obr_t *obr_import(scan_t *scan, where_t where, char *name, char *symbol)
     return self;
 }
 
+/* decls */
+
+obr_t *obr_decl_type(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type)
+{
+    obr_t *self = obr_decl(scan, where, eObrDeclType, symbol->name, symbol->visibility);
+    self->type = type;
+    return self;
+}
+
 obr_t *obr_decl_var(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type)
 {
     obr_t *self = obr_decl(scan, where, eObrDeclVar, symbol->name, symbol->visibility);
@@ -131,7 +140,6 @@ obr_t *obr_expr_digit(scan_t *scan, where_t where, const mpz_t digit)
     return self;
 }
 
-
 /* types */
 
 obr_t *obr_type_name(scan_t *scan, where_t where, char *name)
@@ -145,6 +153,20 @@ obr_t *obr_type_qual(scan_t *scan, where_t where, char *name, char *symbol)
 {
     obr_t *self = obr_decl(scan, where, eObrTypeQual, name, eObrVisPrivate); // TODO: should types need this data?
     self->symbol = symbol;
+    return self;
+}
+
+obr_t *obr_type_pointer(scan_t *scan, where_t where, obr_t *type)
+{
+    obr_t *self = obr_new(scan, where, eObrTypePointer);
+    self->pointer = type;
+    return self;
+}
+
+obr_t *obr_type_array(scan_t *scan, where_t where, obr_t *type)
+{
+    obr_t *self = obr_new(scan, where, eObrTypeArray);
+    self->array = type;
     return self;
 }
 

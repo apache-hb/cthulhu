@@ -51,17 +51,17 @@ void ctu_forward_decls(context_t *context)
     vector_t *decls = ast->decls;
     size_t len = vector_len(decls);
 
-    size_t sizes[eTagTotal] = {
-        [eTagValues] = len,
-        [eTagTypes] = len,
-        [eTagFunctions] = len,
-        [eTagModules] = len,
-        [eTagImports] = vector_len(ast->imports),
-        [eTagAttribs] = len,
-        [eTagSuffix] = len,
+    size_t sizes[eCtuTagTotal] = {
+        [eCtuTagValues] = len,
+        [eCtuTagTypes] = len,
+        [eCtuTagFunctions] = len,
+        [eCtuTagModules] = len,
+        [eCtuTagImports] = vector_len(ast->imports),
+        [eCtuTagAttribs] = len,
+        [eCtuTagSuffixes] = len,
     };
 
-    h2_t *mod = h2_module(kRootModule, ast->node, name, eTagTotal, sizes);
+    h2_t *mod = h2_module(kRootModule, ast->node, name, eCtuTagTotal, sizes);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -103,7 +103,7 @@ static void import_module(lifetime_t *lifetime, h2_t *sema, ctu_t *include)
     }
     else
     {
-        ctu_add_decl(sema, eTagImports, include->name, lib);
+        ctu_add_decl(sema, eCtuTagImports, include->name, lib);
     }
 }
 

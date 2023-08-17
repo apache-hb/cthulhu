@@ -7,16 +7,16 @@
 typedef struct lifetime_t lifetime_t;
 
 typedef enum ctu_tag_t {
-    eTagValues = eSema2Values,
-    eTagTypes = eSema2Types,
-    eTagFunctions = eSema2Procs,
-    eTagModules = eSema2Modules,
+    eCtuTagValues = eSema2Values,
+    eCtuTagTypes = eSema2Types,
+    eCtuTagFunctions = eSema2Procs,
+    eCtuTagModules = eSema2Modules,
 
-    eTagImports,
-    eTagAttribs,
-    eTagSuffix,
+    eCtuTagImports,
+    eCtuTagAttribs,
+    eCtuTagSuffixes,
 
-    eTagTotal
+    eCtuTagTotal
 } ctu_tag_t;
 
 // getting decls

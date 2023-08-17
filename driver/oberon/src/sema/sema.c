@@ -2,31 +2,22 @@
 
 #include "cthulhu/mediator/driver.h"
 
+#include "cthulhu/util/util.h"
+
 #include "report/report-ext.h"
 
 #include "base/panic.h"
 
-static h2_t *obr_get_decl(h2_t *sema, const size_t *tags, size_t len, const char *name)
-{
-    for (size_t i = 0; i < len; i++)
-    {
-        size_t tag = tags[i];
-        h2_t *decl = h2_module_get(sema, tag, name);
-        if (decl != NULL) { return decl; }
-    }
-    return NULL;
-}
-
 h2_t *obr_get_type(h2_t *sema, const char *name)
 {
-    const size_t tags[] = { eTagTypes };
-    return obr_get_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+    const size_t tags[] = { eObrTagTypes };
+    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
 h2_t *obr_get_module(h2_t *sema, const char *name)
 {
-    const size_t tags[] = { eTagModules };
-    return obr_get_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+    const size_t tags[] = { eObrTagModules };
+    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
 void obr_add_decl(h2_t *sema, obr_tags_t tag, const char *name, h2_t *decl)
@@ -63,19 +54,19 @@ h2_t *obr_get_bool_type(void)
 
 h2_t *obr_rt_mod(lifetime_t *lifetime)
 {
-    size_t tags[eTagTotal] = {
-        [eTagValues] = 32,
-        [eTagTypes] = 32,
-        [eTagProcs] = 32,
-        [eTagModules] = 32,
+    size_t tags[eObrTagTotal] = {
+        [eObrTagValues] = 32,
+        [eObrTagTypes] = 32,
+        [eObrTagProcs] = 32,
+        [eObrTagModules] = 32,
     };
 
     gTypeInteger = h2_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned);
     gTypeBoolean = h2_type_bool(node_builtin(), "BOOLEAN");
 
-    h2_t *rt = lifetime_sema_new(lifetime, "oberon", eTagTotal, tags);
-    obr_add_decl(rt, eTagTypes, "INTEGER", gTypeInteger);
-    obr_add_decl(rt, eTagTypes, "BOOLEAN", gTypeBoolean);
+    h2_t *rt = lifetime_sema_new(lifetime, "oberon", eObrTagTotal, tags);
+    obr_add_decl(rt, eObrTagTypes, "INTEGER", gTypeInteger);
+    obr_add_decl(rt, eObrTagTypes, "BOOLEAN", gTypeBoolean);
 
     return rt;
 }

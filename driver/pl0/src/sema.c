@@ -65,14 +65,14 @@ static h2_t *get_decl(h2_t *sema, const char *name, const pl0_tag_t *tags, size_
 
 static h2_t *get_var(h2_t *sema, const char *name)
 {
-    const pl0_tag_t kTags[] = { eTagValues, eTagImportedValues };
+    const pl0_tag_t kTags[] = { ePl0TagValues, ePl0TagImportedValues };
 
     return get_decl(sema, name, kTags, sizeof(kTags) / sizeof(pl0_tag_t));
 }
 
 static h2_t *get_proc(h2_t *sema, const char *name)
 {
-    const pl0_tag_t kTags[] = { eTagProcs, eTagImportedProcs };
+    const pl0_tag_t kTags[] = { ePl0TagProcs, ePl0TagImportedProcs };
 
     return get_decl(sema, name, kTags, sizeof(kTags) / sizeof(pl0_tag_t));
 }
@@ -114,15 +114,15 @@ static void set_var(h2_t *sema, pl0_tag_t tag, const char *name, h2_t *hlir)
 
 static h2_t *make_runtime_mod(lifetime_t *lifetime)
 {
-    size_t decls[eTagTotal] = {
-        [eTagValues] = 1,
-        [eTagTypes] = 1,
-        [eTagProcs] = 1,
-        [eTagModules] = 1
+    size_t decls[ePl0TagTotal] = {
+        [ePl0TagValues] = 1,
+        [ePl0TagTypes] = 1,
+        [ePl0TagProcs] = 1,
+        [ePl0TagModules] = 1
     };
 
-    h2_t *mod = lifetime_sema_new(lifetime, "runtime", eTagTotal, decls);
-    set_proc(mod, eTagProcs, "print", kPrint);
+    h2_t *mod = lifetime_sema_new(lifetime, "runtime", ePl0TagTotal, decls);
+    set_proc(mod, ePl0TagProcs, "print", kPrint);
     return mod;
 }
 
@@ -380,15 +380,15 @@ static h2_t *sema_compare(h2_t *sema, pl0_t *node)
 static void sema_proc(h2_t *sema, h2_t *hlir, pl0_t *node)
 {
     size_t nlocals = vector_len(node->locals);
-    size_t sizes[eTagTotal] = {[eTagValues] = nlocals};
+    size_t sizes[ePl0TagTotal] = {[ePl0TagValues] = nlocals};
 
-    h2_t *nest = h2_module(sema, node->node, node->name, eTagTotal, sizes);
+    h2_t *nest = h2_module(sema, node->node, node->name, ePl0TagTotal, sizes);
 
     for (size_t i = 0; i < nlocals; i++)
     {
         pl0_t *local = vector_get(node->locals, i);
         h2_t *it = h2_decl_local(local->node, local->name, kIntType);
-        set_var(nest, eTagValues, local->name, it);
+        set_var(nest, ePl0TagValues, local->name, it);
         h2_add_local(hlir, it);
     }
 
@@ -418,15 +418,15 @@ static void resolve_proc(h2_cookie_t *cookie, h2_t *sema, h2_t *decl, void *user
 
 static void insert_module(h2_t *sema, h2_t *other)
 {
-    map_iter_t otherValues = map_iter(h2_module_tag(other, eTagValues));
-    map_iter_t otherProcs = map_iter(h2_module_tag(other, eTagProcs));
+    map_iter_t otherValues = map_iter(h2_module_tag(other, ePl0TagValues));
+    map_iter_t otherProcs = map_iter(h2_module_tag(other, ePl0TagProcs));
 
     while (map_has_next(&otherValues))
     {
         h2_t *decl = map_next(&otherValues).value;
         if (!h2_has_vis(decl, eVisiblePublic)) continue;
 
-        set_var(sema, eTagImportedValues, h2_get_name(decl), decl);
+        set_var(sema, ePl0TagImportedValues, h2_get_name(decl), decl);
     }
 
     while (map_has_next(&otherProcs))
@@ -434,7 +434,7 @@ static void insert_module(h2_t *sema, h2_t *other)
         h2_t *decl = map_next(&otherProcs).value;
         if (!h2_has_vis(decl, eVisiblePublic)) continue;
 
-        set_proc(sema, eTagImportedProcs, h2_get_name(decl), decl);
+        set_proc(sema, ePl0TagImportedProcs, h2_get_name(decl), decl);
     }
 }
 
@@ -460,14 +460,14 @@ void pl0_forward_decls(context_t *context)
         ? vector_tail(root->mod)
         : context_get_name(context);
 
-    size_t sizes[eTagTotal] = {
-        [eTagValues] = totalConsts + totalGlobals,
-        [eTagProcs] = totalFunctions,
-        [eTagImportedValues] = 64,
-        [eTagImportedProcs] = 64
+    size_t sizes[ePl0TagTotal] = {
+        [ePl0TagValues] = totalConsts + totalGlobals,
+        [ePl0TagProcs] = totalFunctions,
+        [ePl0TagImportedValues] = 64,
+        [ePl0TagImportedProcs] = 64
     };
 
-    h2_t *sema = h2_module_root(reports, cookie, root->node, id, eTagTotal, sizes);
+    h2_t *sema = h2_module_root(reports, cookie, root->node, id, ePl0TagTotal, sizes);
 
     // forward declare everything
     for (size_t i = 0; i < totalConsts; i++)
@@ -483,7 +483,7 @@ void pl0_forward_decls(context_t *context)
         h2_t *hlir = h2_open_global(it->node, it->name, kConstType, resolve);
         h2_set_attrib(hlir, &kExportAttrib);
 
-        set_var(sema, eTagValues, it->name, hlir);
+        set_var(sema, ePl0TagValues, it->name, hlir);
     }
 
     for (size_t i = 0; i < totalGlobals; i++)
@@ -499,7 +499,7 @@ void pl0_forward_decls(context_t *context)
         h2_t *hlir = h2_open_global(it->node, it->name, kIntType, resolve);
         h2_set_attrib(hlir, &kExportAttrib);
 
-        set_var(sema, eTagValues, it->name, hlir);
+        set_var(sema, ePl0TagValues, it->name, hlir);
     }
 
     for (size_t i = 0; i < totalFunctions; i++)
@@ -516,7 +516,7 @@ void pl0_forward_decls(context_t *context)
         h2_t *hlir = h2_open_function(it->node, it->name, signature, resolve);
         h2_set_attrib(hlir, &kExportAttrib);
 
-        set_proc(sema, eTagProcs, it->name, hlir);
+        set_proc(sema, ePl0TagProcs, it->name, hlir);
     }
 
 
@@ -569,6 +569,6 @@ void pl0_compile_module(context_t *context)
         h2_t *hlir = h2_decl_function(root->node, h2_get_name(mod), signature, vector_of(0), body);
         h2_set_attrib(hlir, &kEntryAttrib);
 
-        set_decl(mod, eTagProcs, h2_get_name(mod), hlir); // TODO: this is a hack
+        set_decl(mod, ePl0TagProcs, h2_get_name(mod), hlir); // TODO: this is a hack
     }
 }
