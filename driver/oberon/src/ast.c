@@ -64,10 +64,9 @@ obr_t *obr_decl_var(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *ty
     return self;
 }
 
-obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type, obr_t *value)
+obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *value)
 {
     obr_t *self = obr_decl(scan, where, eObrDeclConst, symbol->name, symbol->visibility);
-    self->type = type;
     self->value = value;
     return self;
 }
@@ -80,6 +79,60 @@ obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, cha
 
     return self;
 }
+
+/* exprs */
+
+obr_t *obr_expr_is(scan_t *scan, where_t where, obr_t *lhs, obr_t *rhs)
+{
+    obr_t *self = obr_new(scan, where, eObrExprIs);
+    self->lhs = lhs;
+    self->rhs = rhs;
+    return self;
+}
+
+obr_t *obr_expr_in(scan_t *scan, where_t where, obr_t *lhs, obr_t *rhs)
+{
+    obr_t *self = obr_new(scan, where, eObrExprIn);
+    self->lhs = lhs;
+    self->rhs = rhs;
+    return self;
+}
+
+obr_t *obr_expr_compare(scan_t *scan, where_t where, compare_t op, obr_t *lhs, obr_t *rhs)
+{
+    obr_t *self = obr_new(scan, where, eObrExprCompare);
+    self->compare = op;
+    self->lhs = lhs;
+    self->rhs = rhs;
+    return self;
+}
+
+obr_t *obr_expr_binary(scan_t *scan, where_t where, binary_t op, obr_t *lhs, obr_t *rhs)
+{
+    obr_t *self = obr_new(scan, where, eObrExprBinary);
+    self->binary = op;
+    self->lhs = lhs;
+    self->rhs = rhs;
+    return self;
+}
+
+obr_t *obr_expr_unary(scan_t *scan, where_t where, unary_t op, obr_t *expr)
+{
+    obr_t *self = obr_new(scan, where, eObrExprUnary);
+    self->unary = op;
+    self->expr = expr;
+    return self;
+}
+
+obr_t *obr_expr_digit(scan_t *scan, where_t where, const mpz_t digit)
+{
+    obr_t *self = obr_new(scan, where, eObrExprDigit);
+    mpz_init_set(self->digit, digit);
+    return self;
+}
+
+
+/* types */
 
 obr_t *obr_type_name(scan_t *scan, where_t where, char *name)
 {

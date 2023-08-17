@@ -185,16 +185,26 @@ static void resolve_tag(h2_t *mod, size_t tag)
     while (map_has_next(&iter))
     {
         map_entry_t entry = map_next(&iter);
-        h2_resolve(h2_get_cookie(mod), entry.value);
+        h2_t *decl = entry.value;
+        h2_resolve(h2_get_cookie(mod), decl);
     }
 }
 
-static void resolve_decls(context_t *ctx)
+static void resolve_decls(h2_t *mod)
 {
-    h2_t *mod = context_get_module(ctx);
+    CTASSERT(mod != NULL);
+
     resolve_tag(mod, eSema2Values);
     resolve_tag(mod, eSema2Types);
     resolve_tag(mod, eSema2Procs);
+
+    map_iter_t iter = map_iter(h2_module_tag(mod, eSema2Modules));
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        h2_t *child = entry.value;
+        resolve_decls(child);
+    }
 }
 
 void lifetime_resolve(lifetime_t *lifetime)
@@ -209,7 +219,7 @@ void lifetime_resolve(lifetime_t *lifetime)
 
         CTASSERT(ctx != NULL);
 
-        resolve_decls(ctx);
+        resolve_decls(context_get_module(ctx));
     }
 }
 
@@ -272,13 +282,18 @@ typedef struct check_t {
     set_t *checkedTypes;
 } check_t;
 
-static void check_ident(check_t *check, const h2_t *decl)
+// check for a valid name and a type being set
+static bool check_simple(check_t *check, const h2_t *decl)
 {
+    if (h2_is(decl, eHlir2Error)) { return false; } // TODO: are errors always reported?
+
     const char *id = h2_get_name(decl);
     CTASSERT(id != NULL);
     CTASSERT(!str_equal(id, ""));
 
-    logverbose("check %s", id);
+    CTASSERTF(decl->type != NULL, "decl `%s` has no type", id);
+
+    return true;
 }
 
 static void check_global_attribs(check_t *check, const h2_t *global)
@@ -620,7 +635,7 @@ static void check_module_valid(check_t *check, const h2_t *mod)
     {
         const h2_t *global = vector_get(globals, i);
         CTASSERT(h2_is(global, eHlir2DeclGlobal));
-        check_ident(check, global);
+        check_simple(check, global);
 
         check_global_attribs(check, global);
         check_global_recursion(check, global);
@@ -632,7 +647,7 @@ static void check_module_valid(check_t *check, const h2_t *mod)
     {
         const h2_t *function = vector_get(functions, i);
         CTASSERT(h2_is(function, eHlir2DeclFunction));
-        check_ident(check, function);
+        check_simple(check, function);
 
         check_func_attribs(check, function);
     }

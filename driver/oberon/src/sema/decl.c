@@ -46,7 +46,9 @@ static void resolve_const(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *use
     obr_t *decl = user;
     CTASSERTF(decl->kind == eObrDeclConst, "decl %s is not a const", decl->name);
 
-    h2_t *expr = obr_sema_rvalue(sema, decl->value, h2_get_type(self));
+    h2_t *expr = obr_sema_rvalue(sema, decl->value, NULL);
+    self->type = h2_qualify(self->node, h2_get_type(expr), eQualDefault); ///< TODO: oh no what are you doing?
+
     h2_close_global(self, expr);
 }
 
@@ -72,9 +74,7 @@ static h2_t *forward_const(h2_t *sema, obr_t *decl)
         .fnResolve = resolve_const
     };
 
-    h2_t *type = obr_sema_type(sema, decl->type);
-    h2_t *cnt = h2_qualify(decl->node, type, eQualDefault); // make sure it's not mutable
-    h2_t *it = h2_open_global(decl->node, decl->name, cnt, resolve);
+    h2_t *it = h2_open_global(decl->node, decl->name, NULL, resolve);
     set_attribs(sema, it, decl->visibility);
 
     return it;

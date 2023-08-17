@@ -6,6 +6,7 @@ procedure add;
 var tmp;
 begin
     tmp := lhs + rhs;
+    tmp := tmp + Offset;
     result := tmp
 end;
 

@@ -85,7 +85,7 @@ h2_kind_t h2_get_kind(const h2_t *self)
 const h2_t *h2_get_type(const h2_t *self)
 {
     CTASSERT(self != NULL); // dont give me null
-    CTASSERT(self->type != NULL); // type hasnt been set yet
+    CTASSERTF(self->type != NULL, "missing type on %s", h2_to_string(self)); // type hasnt been set yet
 
     return self->type;
 }

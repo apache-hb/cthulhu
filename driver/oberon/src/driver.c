@@ -1,4 +1,4 @@
-#include "oberon/sema.h"
+#include "oberon/driver.h"
 #include "oberon/ast.h"
 
 #include "oberon/sema/type.h"
@@ -18,23 +18,10 @@
 
 static h2_t *gRuntime = NULL;
 
-static h2_t *gTypeInteger = NULL;
-
 void obr_create(driver_t *handle)
 {
     lifetime_t *lifetime = handle_get_lifetime(handle);
-
-    size_t tags[eTagTotal] = {
-        [eTagValues] = 32,
-        [eTagTypes] = 32,
-        [eTagProcs] = 32,
-        [eTagModules] = 32,
-    };
-
-    gTypeInteger = h2_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned);
-
-    gRuntime = lifetime_sema_new(lifetime, "oberon", eTagTotal, tags);
-    obr_add_decl(gRuntime, eTagTypes, "INTEGER", gTypeInteger);
+    gRuntime = obr_rt_mod(lifetime);
 }
 
 void obr_forward_decls(context_t *context)

@@ -1,6 +1,6 @@
 #include "cthulhu/mediator/driver.h"
 
-#include "oberon/sema.h"
+#include "oberon/driver.h"
 
 #include "scan/compile.h"
 

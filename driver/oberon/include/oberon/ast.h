@@ -4,6 +4,8 @@
 
 #include "std/vector.h"
 
+#include "cthulhu/hlir/ops.h"
+
 #include <gmp.h>
 
 typedef struct obr_t obr_t;
@@ -34,6 +36,13 @@ typedef enum obr_kind_t {
     eObrTypeName,
     eObrTypeQual,
 
+    eObrExprDigit,
+    eObrExprUnary,
+    eObrExprBinary,
+    eObrExprCompare,
+    eObrExprIs,
+    eObrExprIn,
+
     eObrDeclVar,
     eObrDeclConst,
     eObrDeclProcedure,
@@ -47,6 +56,26 @@ typedef struct obr_t {
     node_t *node;
 
     union {
+        /* eObrExprUnary */
+        struct {
+            unary_t unary;
+            obr_t *expr;
+        };
+
+        /* eObrExprBinary|eObrExprCompare|eObrExprIn|eObrExprIs */
+        struct {
+            union {
+                compare_t compare;
+                binary_t binary;
+            };
+
+            obr_t *lhs;
+            obr_t *rhs;
+        };
+
+        /* eObrExprDigit */
+        mpz_t digit;
+
         struct {
             char *name;
             obr_visibility_t visibility;
@@ -59,12 +88,10 @@ typedef struct obr_t {
                 };
 
                 /* eObrDeclVar */
-                struct {
-                    obr_t *type;
+                obr_t *type;
 
-                    /* eObrDeclConst */
-                    obr_t *value;
-                };
+                /* eObrDeclConst */
+                obr_t *value;
 
                 /* eObrImport|eObrTypeQual */
                 char *symbol;
@@ -77,8 +104,21 @@ obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *
 obr_t *obr_import(scan_t *scan, where_t where, char *name, char *symbol);
 
 obr_t *obr_decl_var(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type);
-obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type, obr_t *value);
+obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *value);
 obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, char *end);
+
+/* exprs */
+
+obr_t *obr_expr_is(scan_t *scan, where_t where, obr_t *lhs, obr_t *rhs);
+obr_t *obr_expr_in(scan_t *scan, where_t where, obr_t *lhs, obr_t *rhs);
+
+obr_t *obr_expr_compare(scan_t *scan, where_t where, compare_t op, obr_t *lhs, obr_t *rhs);
+obr_t *obr_expr_binary(scan_t *scan, where_t where, binary_t op, obr_t *lhs, obr_t *rhs);
+obr_t *obr_expr_unary(scan_t *scan, where_t where, unary_t op, obr_t *expr);
+
+obr_t *obr_expr_digit(scan_t *scan, where_t where, const mpz_t digit);
+
+/* types */
 
 obr_t *obr_type_name(scan_t *scan, where_t where, char *symbol);
 obr_t *obr_type_qual(scan_t *scan, where_t where, char *name, char *symbol);

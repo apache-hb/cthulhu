@@ -46,6 +46,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     constDecl
     constExpr expr
+    relationExpr addExpr mulExpr unaryExpr simpleExpr
 
 %type<symbol>
     identDef
@@ -179,7 +180,7 @@ constSeq: constDecl { $$ = vector_init($1); }
     | constSeq constDecl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-constDecl: identDef COLON type EQUAL constExpr SEMI { $$ = obr_decl_const(x, @$, $1, $3, $5); }
+constDecl: identDef EQUAL constExpr SEMI { $$ = obr_decl_const(x, @$, $1, $3); }
     ;
 
 /* values */
@@ -205,7 +206,41 @@ type: IDENT { $$ = obr_type_name(x, @$, $1); }
 constExpr: expr { $$ = $1; }
     ;
 
-expr: IDENT { $$ = NULL; /* dont care yet */ }
+expr: relationExpr { $$ = $1; }
+    ;
+
+relationExpr: addExpr { $$ = $1; }
+    | addExpr LT addExpr { $$ = obr_expr_compare(x, @$, eCompareLt, $1, $3); }
+    | addExpr GT addExpr { $$ = obr_expr_compare(x, @$, eCompareGt, $1, $3); }
+    | addExpr LTE addExpr { $$ = obr_expr_compare(x, @$, eCompareLte, $1, $3); }
+    | addExpr GTE addExpr { $$ = obr_expr_compare(x, @$, eCompareGte, $1, $3); }
+    | addExpr EQUAL addExpr { $$ = obr_expr_compare(x, @$, eCompareEq, $1, $3); }
+    | addExpr NEQUAL addExpr { $$ = obr_expr_compare(x, @$, eCompareNeq, $1, $3); }
+    | addExpr IN addExpr { $$ = obr_expr_in(x, @$, $1, $3); }
+    | addExpr IS addExpr { $$ = obr_expr_is(x, @$, $1, $3); }
+    ;
+
+addExpr: mulExpr { $$ = $1; }
+    | addExpr PLUS mulExpr { $$ = obr_expr_binary(x, @$, eBinaryAdd, $1, $3); }
+    | addExpr MINUS mulExpr { $$ = obr_expr_binary(x, @$, eBinarySub, $1, $3); }
+    | addExpr OR mulExpr { $$ = obr_expr_binary(x, @$, eBinaryBitOr, $1, $3); }
+    ;
+
+mulExpr: unaryExpr { $$ = $1; }
+    | mulExpr STAR unaryExpr { $$ = obr_expr_binary(x, @$, eBinaryMul, $1, $3); }
+    | mulExpr DIVIDE unaryExpr { $$ = obr_expr_binary(x, @$, eBinaryDiv, $1, $3); }
+    | mulExpr MOD unaryExpr { $$ = obr_expr_binary(x, @$, eBinaryRem, $1, $3); }
+    | mulExpr AND unaryExpr { $$ = obr_expr_binary(x, @$, eBinaryBitAnd, $1, $3); }
+    ;
+
+unaryExpr: simpleExpr { $$ = $1; }
+    | PLUS simpleExpr { $$ = obr_expr_unary(x, @$, eUnaryAbs, $2); }
+    | MINUS simpleExpr { $$ = obr_expr_unary(x, @$, eUnaryNeg, $2); }
+    ;
+
+simpleExpr: NUMBER { $$ = obr_expr_digit(x, @$, $1); }
+    | LPAREN expr RPAREN { $$ = $2; }
+    | TILDE simpleExpr { $$ = obr_expr_unary(x, @$, eUnaryFlip, $2); }
     ;
 
 /* extra */

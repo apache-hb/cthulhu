@@ -1,3 +1,5 @@
 MODULE Values;
-    VAR lhs, rhs, result : INTEGER;
+    VAR lhs*, rhs*, result* : INTEGER;
+
+    CONST Offset- = 1000;
 END Values.

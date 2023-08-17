@@ -104,6 +104,9 @@ int main(int argc, const char **argv)
         CHECK_REPORTS(reports, msg);
     }
 
+    lifetime_resolve(lifetime);
+    CHECK_REPORTS(reports, "resolving symbols");
+
     map_t *modmap = lifetime_get_modules(lifetime);
 
     ssa_result_t ssa = ssa_compile(modmap);
