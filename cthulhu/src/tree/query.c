@@ -37,9 +37,9 @@ const char *tree_kind_to_string(tree_kind_t kind)
     switch (kind)
     {
 #define TREE_KIND(ID, NAME) case ID: return NAME;
-#include "cthulhu/tree/hlir.inc"
+#include "cthulhu/tree/tree.inc"
 
-    default: NEVER("invalid hlir kind %d", kind);
+    default: NEVER("invalid tree kind %d", kind);
     }
 }
 
@@ -115,7 +115,7 @@ bool tree_has_quals(const tree_t *self, quals_t quals)
     return false;
 }
 
-bool tree_has_vis(const tree_t *self, tree_visible_t visibility)
+bool tree_has_vis(const tree_t *self, visibility_t visibility)
 {
     const attribs_t *attrib = tree_get_attrib(self);
     return attrib->visibility == visibility;

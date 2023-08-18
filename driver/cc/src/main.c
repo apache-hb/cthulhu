@@ -28,7 +28,7 @@ static void cc_imports(lang_handle_t *handle, compile_t *compile)
     report(lang_get_reports(handle), eSorry, NULL, "C is unimplemented");
 }
 
-static hlir_t *cc_compile(lang_handle_t *handle, compile_t *compile)
+static tree_t *cc_compile(lang_handle_t *handle, compile_t *compile)
 {
     report(lang_get_reports(handle), eSorry, NULL, "C is unimplemented");
     return NULL;

@@ -13,7 +13,7 @@ typedef enum quals_t {
  */
 typedef enum binary_t {
 #define BINARY_OP(ID, NAME, SYMBOL) ID,
-#include "hlir.inc"
+#include "tree.inc"
     eBinaryTotal
 } binary_t;
 
@@ -22,7 +22,7 @@ typedef enum binary_t {
  */
 typedef enum compare_t {
 #define COMPARE_OP(ID, NAME, SYMBOL) ID,
-#include "hlir.inc"
+#include "tree.inc"
     eCompareTotal
 } compare_t;
 
@@ -31,25 +31,25 @@ typedef enum compare_t {
  */
 typedef enum unary_t {
 #define UNARY_OP(ID, NAME, SYMBOL) ID,
-#include "hlir.inc"
+#include "tree.inc"
     eUnaryTotal
 } unary_t;
 
 typedef enum cast_t {
 #define CAST_OP(ID, NAME) ID,
-#include "hlir.inc"
+#include "tree.inc"
     eCastTotal
 } cast_t;
 
 typedef enum builtin_t {
-#define HLIR_BUILTIN(ID, NAME) ID,
-#include "hlir.inc"
+#define TREE_BUILTIN(ID, NAME) ID,
+#include "tree.inc"
     eBuiltinTotal
 } builtin_t;
 
 typedef enum arity_t {
-#define HLIR_ARITY(ID, STR) ID,
-#include "hlir.inc"
+#define TREE_ARITY(ID, STR) ID,
+#include "tree.inc"
     eArityTotal
 } arity_t;
 
@@ -57,26 +57,26 @@ typedef enum arity_t {
  * @brief the visibility of a declaration
  */
 typedef enum tree_link_t {
-#define HLIR_LINKAGE(ID, STR) ID,
-#include "hlir.inc"
+#define TREE_LINKAGE(ID, STR) ID,
+#include "tree.inc"
     eLinkTotal
 } tree_link_t;
 
-typedef enum tree_visible_t {
-#define HLIR_VISIBILITY(ID, STR) ID,
-#include "hlir.inc"
+typedef enum visibility_t {
+#define TREE_VISIBILITY(ID, STR) ID,
+#include "tree.inc"
     eHlirVisibilityTotal
-} tree_visible_t;
+} visibility_t;
 
 typedef enum digit_t {
 #define DIGIT_KIND(ID, STR) ID,
-#include "hlir.inc"
+#include "tree.inc"
     eDigitTotal
 } digit_t;
 
 typedef enum sign_t {
 #define SIGN_KIND(ID, STR) ID,
-#include "hlir.inc"
+#include "tree.inc"
     eSignTotal
 } sign_t;
 
@@ -93,4 +93,4 @@ const char *digit_name(digit_t digit);
 
 const char *quals_name(quals_t quals);
 const char *link_name(tree_link_t link);
-const char *vis_name(tree_visible_t vis);
+const char *vis_name(visibility_t vis);

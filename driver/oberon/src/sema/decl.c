@@ -7,7 +7,7 @@
 #include "base/util.h"
 #include "base/panic.h"
 
-static tree_visible_t remap_visibility(reports_t *reports, const node_t *node, obr_visibility_t vis)
+static visibility_t remap_visibility(reports_t *reports, const node_t *node, obr_visibility_t vis)
 {
     switch (vis)
     {

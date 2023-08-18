@@ -18,7 +18,7 @@
 static const char *kOutputFileNames[] = {"-o", "--output"};
 #define TOTAL_OUTPUT_FILE_NAMES (sizeof(kOutputFileNames) / sizeof(const char *))
 
-static const char *kHlirNames[] = {"--enable-hlir", "-hlir"};
+static const char *kHlirNames[] = {"--enable-tree", "-tree"};
 #define TOTAL_HLIR_NAMES (sizeof(kHlirNames) / sizeof(const char *))
 
 static const char *kDebugSsaNames[] = {"--debug-ssa", "-dbgssa"};
@@ -37,7 +37,7 @@ static const char *kHeaderNames[] = {"--enable-header", "-header"};
 
 static bool check_io(reports_t *reports, io_t *io)
 {
-    if (io == NULL) 
+    if (io == NULL)
     {
         return true;
     }
@@ -65,7 +65,7 @@ int main(int argc, const char **argv)
     // codegen group
 
     param_t *outputFileNameParam = string_param("output file name", kOutputFileNames, TOTAL_OUTPUT_FILE_NAMES);
-    param_t *enableHlirParam = bool_param("use hlir codegen instead of ssa (deprecated)", kHlirNames, TOTAL_HLIR_NAMES);
+    param_t *enableHlirParam = bool_param("use tree codegen instead of ssa (deprecated)", kHlirNames, TOTAL_HLIR_NAMES);
     param_t *headerNameParam = string_param("c89 header file name (default does not generate a header)", kHeaderNames, TOTAL_HEADER_NAMES);
 
     vector_t *codegenParams = vector_new(3);
@@ -135,7 +135,7 @@ int main(int argc, const char **argv)
         cthulhu_parse,   // parse source files
         cthulhu_forward, // forward declarations
         cthulhu_resolve, // resolve declarations
-        cthulhu_compile, // compile to hlir
+        cthulhu_compile, // compile to tree
     };
 
     size_t totalSteps = sizeof(steps) / sizeof(cthulhu_step_t);
@@ -152,17 +152,17 @@ int main(int argc, const char **argv)
 
     vector_t *allModules = cthulhu_get_modules(cthulhu);
     io_t *outSource = io_file(format("%s.c", outFile), eFileWrite | eFileBinary);
-    
-    io_t *outHeader = headerFile != NULL 
+
+    io_t *outHeader = headerFile != NULL
         ? io_file(format("%s.h", headerFile), eFileWrite | eFileBinary)
         : NULL;
 
-    if (!check_io(reports, outSource)) 
+    if (!check_io(reports, outSource))
     {
         return end_reports(reports, "opening file", reportConfig);
     }
 
-    if (!check_io(reports, outHeader)) 
+    if (!check_io(reports, outHeader))
     {
         return end_reports(reports, "opening file", reportConfig);
     }
@@ -192,7 +192,7 @@ int main(int argc, const char **argv)
         return end_reports(reports, "generating c89 from ssa", reportConfig);
     }
 
-    c89_emit_hlir_modules(emitConfig, allModules);
+    c89_emit_tree_modules(emitConfig, allModules);
 
     return end_reports(reports, "emitting code", reportConfig);
 }

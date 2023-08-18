@@ -86,14 +86,14 @@ SIGN_KIND(eSignSigned,   "signed")
 
 #undef SIGN_KIND
 
-#ifndef HLIR_BUILTIN
-#   define HLIR_BUILTIN(ID, STR)
+#ifndef TREE_BUILTIN
+#   define TREE_BUILTIN(ID, STR)
 #endif
 
-HLIR_BUILTIN(eBuiltinSizeOf, "sizeof")
-HLIR_BUILTIN(eBuiltinAlignOf, "alignof")
+TREE_BUILTIN(eBuiltinSizeOf, "sizeof")
+TREE_BUILTIN(eBuiltinAlignOf, "alignof")
 
-#undef HLIR_BUILTIN
+#undef TREE_BUILTIN
 
 #ifndef TYPE_QUALIFIER
 #   define TYPE_QUALIFIER(ID, STR, BIT)
@@ -107,27 +107,27 @@ TYPE_QUALIFIER(eQualAtomic, "atomic", (1 << 2))
 #undef TYPE_QUALIFIER
 
 /// symbol visibility during linking
-#ifndef HLIR_LINKAGE
-#   define HLIR_LINKAGE(ID, STR)
+#ifndef TREE_LINKAGE
+#   define TREE_LINKAGE(ID, STR)
 #endif
 
-HLIR_LINKAGE(eLinkExport, "exported")
-HLIR_LINKAGE(eLinkImport, "imported")
-HLIR_LINKAGE(eLinkModule, "internal")
-HLIR_LINKAGE(eLinkEntryCli, "entry-cli")
-HLIR_LINKAGE(eLinkEntryGui, "entry-gui")
+TREE_LINKAGE(eLinkExport, "exported")
+TREE_LINKAGE(eLinkImport, "imported")
+TREE_LINKAGE(eLinkModule, "internal")
+TREE_LINKAGE(eLinkEntryCli, "entry-cli")
+TREE_LINKAGE(eLinkEntryGui, "entry-gui")
 
-#undef HLIR_LINKAGE
+#undef TREE_LINKAGE
 
 /// symbol visibility during compilation
-#ifndef HLIR_VISIBILITY
-#    define HLIR_VISIBILITY(ID, NAME)
+#ifndef TREE_VISIBILITY
+#    define TREE_VISIBILITY(ID, NAME)
 #endif
 
-HLIR_VISIBILITY(eVisiblePublic, "public")
-HLIR_VISIBILITY(eVisiblePrivate, "private")
+TREE_VISIBILITY(eVisiblePublic, "public")
+TREE_VISIBILITY(eVisiblePrivate, "private")
 
-#undef HLIR_VISIBILITY
+#undef TREE_VISIBILITY
 
 #ifndef UNARY_OP
 #   define UNARY_OP(ID, NAME, SYMBOL)
@@ -184,11 +184,11 @@ CAST_OP(eCastBit, "bitcast")
 
 #undef CAST_OP
 
-#ifndef HLIR_ARITY
-#   define HLIR_ARITY(ID, NAME)
+#ifndef TREE_ARITY
+#   define TREE_ARITY(ID, NAME)
 #endif
 
-HLIR_ARITY(eArityFixed, "fixed") // fixed number of arguments
-HLIR_ARITY(eArityVariable, "variable") // variable number of arguments, same as C varargs
+TREE_ARITY(eArityFixed, "fixed") // fixed number of arguments
+TREE_ARITY(eArityVariable, "variable") // variable number of arguments, same as C varargs
 
-#undef HLIR_ARITY
+#undef TREE_ARITY

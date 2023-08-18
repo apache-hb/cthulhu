@@ -243,7 +243,7 @@ runtime_t cmd_parse(reports_t *reports, mediator_t *mediator, lifetime_t *lifeti
 
     ap_group_t *codegenGroup = ap_group_new(ap, "codegen", "code generation options");
     ap_param_t *outputFileParam = ap_add_string(codegenGroup, "output file name", "output file name, will have .c appened to it (default: out)", kOutputSourceNames);
-    ap_param_t *outputGenParam = ap_add_string(codegenGroup, "output generator", "code generator output to use [ssa-c89, hlir-c89] (default: ssa-c89)", kOutputGenNames);
+    ap_param_t *outputGenParam = ap_add_string(codegenGroup, "output generator", "code generator output to use [ssa-c89, tree-c89] (default: ssa-c89)", kOutputGenNames);
     ap_param_t *outputHeaderParam = ap_add_string(codegenGroup, "output header", "output header name, provide none to skip header generation. will have .c appeneded to it (default: none)", kOutputHeaderNames);
 
     ap_group_t *debugGroup = ap_group_new(ap, "reports", "reporting options");

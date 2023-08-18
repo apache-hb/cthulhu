@@ -97,19 +97,19 @@ static void set_proc(tree_t *sema, pl0_tag_t tag, const char *name, tree_t *proc
     set_decl(sema, tag, name, proc);
 }
 
-static void set_var(tree_t *sema, pl0_tag_t tag, const char *name, tree_t *hlir)
+static void set_var(tree_t *sema, pl0_tag_t tag, const char *name, tree_t *tree)
 {
     tree_t *other = get_var(sema, name);
-    if (other != NULL && other != hlir)
+    if (other != NULL && other != tree)
     {
-        const node_t *node = tree_get_node(hlir);
+        const node_t *node = tree_get_node(tree);
         const node_t *otherNode = tree_get_node(other);
 
         report_pl0_shadowing(sema->reports, name, otherNode, node);
         return;
     }
 
-    set_decl(sema, tag, name, hlir);
+    set_decl(sema, tag, name, tree);
 }
 
 static tree_t *make_runtime_mod(lifetime_t *lifetime)
@@ -377,7 +377,7 @@ static tree_t *sema_compare(tree_t *sema, pl0_t *node)
     }
 }
 
-static void sema_proc(tree_t *sema, tree_t *hlir, pl0_t *node)
+static void sema_proc(tree_t *sema, tree_t *tree, pl0_t *node)
 {
     size_t nlocals = vector_len(node->locals);
     size_t sizes[ePl0TagTotal] = {[ePl0TagValues] = nlocals};
@@ -389,7 +389,7 @@ static void sema_proc(tree_t *sema, tree_t *hlir, pl0_t *node)
         pl0_t *local = vector_get(node->locals, i);
         tree_t *it = tree_decl_local(local->node, local->name, kIntType);
         set_var(nest, ePl0TagValues, local->name, it);
-        tree_add_local(hlir, it);
+        tree_add_local(tree, it);
     }
 
     tree_t *ret = tree_stmt_return(node->node, tree_expr_unit(node->node, kVoidType));
@@ -403,7 +403,7 @@ static void sema_proc(tree_t *sema, tree_t *hlir, pl0_t *node)
     // make sure we have a return statement
     tree_t *stmts = tree_stmt_block(node->node, body);
 
-    tree_close_function(hlir, stmts);
+    tree_close_function(tree, stmts);
 }
 
 static void resolve_global(cookie_t *cookie, tree_t *sema, tree_t *decl, void *user)
@@ -480,10 +480,10 @@ void pl0_forward_decls(context_t *context)
             .fnResolve = resolve_global
         };
 
-        tree_t *hlir = tree_open_global(it->node, it->name, kConstType, resolve);
-        tree_set_attrib(hlir, &kExportAttrib);
+        tree_t *tree = tree_open_global(it->node, it->name, kConstType, resolve);
+        tree_set_attrib(tree, &kExportAttrib);
 
-        set_var(sema, ePl0TagValues, it->name, hlir);
+        set_var(sema, ePl0TagValues, it->name, tree);
     }
 
     for (size_t i = 0; i < totalGlobals; i++)
@@ -496,10 +496,10 @@ void pl0_forward_decls(context_t *context)
             .fnResolve = resolve_global
         };
 
-        tree_t *hlir = tree_open_global(it->node, it->name, kIntType, resolve);
-        tree_set_attrib(hlir, &kExportAttrib);
+        tree_t *tree = tree_open_global(it->node, it->name, kIntType, resolve);
+        tree_set_attrib(tree, &kExportAttrib);
 
-        set_var(sema, ePl0TagValues, it->name, hlir);
+        set_var(sema, ePl0TagValues, it->name, tree);
     }
 
     for (size_t i = 0; i < totalFunctions; i++)
@@ -513,10 +513,10 @@ void pl0_forward_decls(context_t *context)
             .fnResolve = resolve_proc
         };
 
-        tree_t *hlir = tree_open_function(it->node, it->name, signature, resolve);
-        tree_set_attrib(hlir, &kExportAttrib);
+        tree_t *tree = tree_open_function(it->node, it->name, signature, resolve);
+        tree_set_attrib(tree, &kExportAttrib);
 
-        set_proc(sema, ePl0TagProcs, it->name, hlir);
+        set_proc(sema, ePl0TagProcs, it->name, tree);
     }
 
 
@@ -566,9 +566,9 @@ void pl0_compile_module(context_t *context)
 
         // this is the entry point, we only support cli entry points in pl/0 for now
         tree_t *signature = tree_type_closure(root->node, tree_get_name(mod), kVoidType, vector_of(0), eArityFixed);
-        tree_t *hlir = tree_decl_function(root->node, tree_get_name(mod), signature, vector_of(0), body);
-        tree_set_attrib(hlir, &kEntryAttrib);
+        tree_t *tree = tree_decl_function(root->node, tree_get_name(mod), signature, vector_of(0), body);
+        tree_set_attrib(tree, &kEntryAttrib);
 
-        set_decl(mod, ePl0TagProcs, tree_get_name(mod), hlir); // TODO: this is a hack
+        set_decl(mod, ePl0TagProcs, tree_get_name(mod), tree); // TODO: this is a hack
     }
 }

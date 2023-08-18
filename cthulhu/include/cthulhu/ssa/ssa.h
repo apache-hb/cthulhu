@@ -246,7 +246,7 @@ typedef struct ssa_block_t {
 
 typedef struct ssa_symbol_t {
     tree_link_t linkage;
-    tree_visible_t visibility;
+    visibility_t visibility;
 
     const char *linkName; ///< external name
 

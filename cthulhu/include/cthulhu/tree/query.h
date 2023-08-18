@@ -19,4 +19,4 @@ const tree_t *tree_follow_type(const tree_t *self);
 bool tree_is(const tree_t *self, tree_kind_t kind);
 
 bool tree_has_quals(const tree_t *self, quals_t quals);
-bool tree_has_vis(const tree_t *self, tree_visible_t visibility);
+bool tree_has_vis(const tree_t *self, visibility_t visibility);

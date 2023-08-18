@@ -27,7 +27,7 @@ typedef enum sema_tags_t {
 
 typedef struct attribs_t {
     tree_link_t link; ///< the link type of the declaration
-    tree_visible_t visibility; ///< the visibility of the declaration
+    visibility_t visibility; ///< the visibility of the declaration
 
     const char *mangle; ///< override the mangle of the declaration
     const char *deprecated; ///< the reason for deprecation, or NULL if not deprecated
@@ -35,7 +35,7 @@ typedef struct attribs_t {
 
 typedef enum tree_kind_t {
 #define TREE_KIND(ID, NAME) ID,
-#include "cthulhu/tree/hlir.inc"
+#include "cthulhu/tree/tree.inc"
 
     eTreeTotal
 } tree_kind_t;
