@@ -188,8 +188,7 @@ ctu_forward_t ctu_forward_decl(h2_t *sema, ctu_t *decl)
 {
     ctu_forward_t fwd = forward_decl_inner(sema, decl);
 
-    const h2_attrib_t *attrib = decl->exported ? &kAttribExport : &kAttribPrivate;
-    h2_set_attrib(fwd.decl, attrib);
+    h2_set_attrib(fwd.decl, decl->exported ? &kAttribExport : &kAttribPrivate);
 
     return fwd;
 }

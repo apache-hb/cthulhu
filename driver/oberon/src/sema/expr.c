@@ -49,3 +49,27 @@ h2_t *obr_sema_rvalue(h2_t *sema, obr_t *expr, h2_t *implicitType)
     default: NEVER("unknown expr kind %d", expr->kind);
     }
 }
+
+///
+/// default values
+///
+
+h2_t *obr_default_value(const node_t *node, const h2_t *type)
+{
+    while (h2_is(type, eHlir2Qualify)) { type = h2_get_type(type); }
+
+    switch (h2_get_kind(type))
+    {
+    case eHlir2TypeBool: return h2_expr_bool(node, type, false);
+    case eHlir2TypeUnit: return h2_expr_unit(node, type);
+
+    case eHlir2TypeDigit: {
+        mpz_t zero;
+        mpz_init(zero);
+        return h2_expr_digit(node, type, zero);
+    }
+
+    default:
+        NEVER("obr-default-value unknown type kind %d", h2_get_kind(type));
+    }
+}

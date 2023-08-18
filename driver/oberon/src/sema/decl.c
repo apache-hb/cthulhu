@@ -16,7 +16,7 @@ static h2_visible_t remap_visibility(reports_t *reports, const node_t *node, obr
     case eObrVisPublicReadOnly:
         report(reports, eWarn, node, "public read-only is not yet supported");
         return eVisiblePublic;
-    default: NEVER("obr-visibility %d", vis);
+    default: NEVER("remap-visibility %d", vis);
     }
 }
 
@@ -57,13 +57,9 @@ static void resolve_var(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
     obr_t *decl = user;
     CTASSERTF(decl->kind == eObrDeclVar, "decl %s is not a var", decl->name);
 
-    // TODO: get default value from type, or maybe noinit
+    h2_t *value = obr_default_value(self->node, h2_get_type(self));
 
-    mpz_t zero;
-    mpz_init(zero);
-    h2_t *zeroLiteral = h2_expr_digit(decl->node, h2_get_type(self), zero);
-
-    h2_close_global(self, zeroLiteral);
+    h2_close_global(self, value);
 }
 
 static void resolve_type(h2_cookie_t *cookie, h2_t *sema, h2_t *self, void *user)
@@ -118,7 +114,7 @@ static h2_t *forward_type(h2_t *sema, obr_t *decl)
     return it;
 }
 
-obr_forward_t obr_forward_decl(h2_t *sema, obr_t *decl)
+static obr_forward_t forward_inner(h2_t *sema, obr_t *decl)
 {
     switch (decl->kind)
     {
@@ -148,4 +144,11 @@ obr_forward_t obr_forward_decl(h2_t *sema, obr_t *decl)
 
     default: NEVER("obr-forward-decl %d", decl->kind);
     }
+}
+
+obr_forward_t obr_forward_decl(h2_t *sema, obr_t *decl)
+{
+    obr_forward_t fwd = forward_inner(sema, decl);
+    set_attribs(sema, fwd.decl, decl->visibility);
+    return fwd;
 }

@@ -1,0 +1,6 @@
+module lib;
+
+export struct Point {
+    x: int;
+    y: int;
+}
