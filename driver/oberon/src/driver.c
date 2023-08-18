@@ -6,7 +6,7 @@
 
 #include "cthulhu/mediator/driver.h"
 
-#include "cthulhu/hlir/query.h"
+#include "cthulhu/tree/query.h"
 
 #include "report/report.h"
 #include "report/report-ext.h"
@@ -16,7 +16,7 @@
 
 #include "base/panic.h"
 
-static h2_t *gRuntime = NULL;
+static tree_t *gRuntime = NULL;
 
 void obr_create(driver_t *handle)
 {
@@ -36,13 +36,13 @@ void obr_forward_decls(context_t *context)
         [eObrTagModules] = 32,
     };
 
-    h2_t *sema = h2_module(gRuntime, root->node, root->name, eObrTagTotal, sizes);
+    tree_t *sema = tree_module(gRuntime, root->node, root->name, eObrTagTotal, sizes);
 
     for (size_t i = 0; i < lenDecls; i++)
     {
         obr_t *decl = vector_get(root->decls, i);
         obr_forward_t fwd = obr_forward_decl(sema, decl);
-        h2_t *it = fwd.decl;
+        tree_t *it = fwd.decl;
 
         obr_add_decl(sema, fwd.tag, it->name, it);
     }

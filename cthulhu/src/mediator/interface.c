@@ -16,13 +16,13 @@
 
 #include "stacktrace/stacktrace.h"
 
-#include "cthulhu/hlir/h2.h"
-#include "cthulhu/hlir/query.h"
-#include "cthulhu/hlir/check.h"
+#include "cthulhu/tree/tree.h"
+#include "cthulhu/tree/query.h"
+#include "cthulhu/tree/check.h"
 
-static h2_cookie_t *cookie_new(reports_t *reports)
+static cookie_t *cookie_new(reports_t *reports)
 {
-    h2_cookie_t *self = ctu_malloc(sizeof(h2_cookie_t));
+    cookie_t *self = ctu_malloc(sizeof(cookie_t));
     self->reports = reports;
     self->stack = vector_new(16);
     return self;
@@ -179,18 +179,18 @@ void lifetime_parse(lifetime_t *lifetime, const language_t *lang, io_t *io)
     lang->fnParse(handle, scan);
 }
 
-static void resolve_tag(h2_t *mod, size_t tag)
+static void resolve_tag(tree_t *mod, size_t tag)
 {
-    map_iter_t iter = map_iter(h2_module_tag(mod, tag));
+    map_iter_t iter = map_iter(tree_module_tag(mod, tag));
     while (map_has_next(&iter))
     {
         map_entry_t entry = map_next(&iter);
-        h2_t *decl = entry.value;
-        h2_resolve(h2_get_cookie(mod), decl);
+        tree_t *decl = entry.value;
+        tree_resolve(tree_get_cookie(mod), decl);
     }
 }
 
-static void resolve_decls(h2_t *mod)
+static void resolve_decls(tree_t *mod)
 {
     CTASSERT(mod != NULL);
 
@@ -198,11 +198,11 @@ static void resolve_decls(h2_t *mod)
     resolve_tag(mod, eSema2Types);
     resolve_tag(mod, eSema2Procs);
 
-    map_iter_t iter = map_iter(h2_module_tag(mod, eSema2Modules));
+    map_iter_t iter = map_iter(tree_module_tag(mod, eSema2Modules));
     while (map_has_next(&iter))
     {
         map_entry_t entry = map_next(&iter);
-        h2_t *child = entry.value;
+        tree_t *child = entry.value;
         resolve_decls(child);
     }
 }
@@ -272,8 +272,8 @@ map_t *lifetime_get_modules(lifetime_t *lifetime)
 typedef struct check_t {
     reports_t *reports;
 
-    const h2_t *cliEntryPoint;
-    const h2_t *guiEntryPoint;
+    const tree_t *cliEntryPoint;
+    const tree_t *guiEntryPoint;
 
     vector_t *exprStack;
     vector_t *typeStack;
@@ -283,11 +283,11 @@ typedef struct check_t {
 } check_t;
 
 // check for a valid name and a type being set
-static bool check_simple(check_t *check, const h2_t *decl)
+static bool check_simple(check_t *check, const tree_t *decl)
 {
-    if (h2_is(decl, eHlir2Error)) { return false; } // TODO: are errors always reported?
+    if (tree_is(decl, eTreeError)) { return false; } // TODO: are errors always reported?
 
-    const char *id = h2_get_name(decl);
+    const char *id = tree_get_name(decl);
     CTASSERT(id != NULL);
     CTASSERT(!str_equal(id, ""));
 
@@ -296,17 +296,17 @@ static bool check_simple(check_t *check, const h2_t *decl)
     return true;
 }
 
-static void check_global_attribs(check_t *check, const h2_t *global)
+static void check_global_attribs(check_t *check, const tree_t *global)
 {
-    const h2_attrib_t *attribs = h2_get_attrib(global);
+    const attribs_t *attribs = tree_get_attrib(global);
     switch (attribs->link)
     {
     case eLinkImport:
         if (global->global != NULL)
         {
-            message_t *id = report(check->reports, eWarn, h2_get_node(global),
+            message_t *id = report(check->reports, eWarn, tree_get_node(global),
                 "global `%s` is marked as imported but has an implementation",
-                h2_get_name(global)
+                tree_get_name(global)
             );
             report_note(id, "implementation will be ignored");
         }
@@ -315,9 +315,9 @@ static void check_global_attribs(check_t *check, const h2_t *global)
     case eLinkModule:
         if (attribs->mangle != NULL)
         {
-            message_t *id = report(check->reports, eWarn, h2_get_node(global),
+            message_t *id = report(check->reports, eWarn, tree_get_node(global),
                 "global `%s` has internal linkage and user defined mangling",
-                h2_get_name(global)
+                tree_get_name(global)
             );
             report_note(id, "attribute will be ignored");
         }
@@ -325,9 +325,9 @@ static void check_global_attribs(check_t *check, const h2_t *global)
 
     case eLinkEntryGui:
     case eLinkEntryCli:
-        report(check->reports, eFatal, h2_get_node(global),
+        report(check->reports, eFatal, tree_get_node(global),
             "global `%s` is marked as an entry point but is not a function",
-            h2_get_name(global)
+            tree_get_name(global)
         );
         break;
 
@@ -335,18 +335,18 @@ static void check_global_attribs(check_t *check, const h2_t *global)
     }
 }
 
-static void check_func_attribs(check_t *check, const h2_t *fn)
+static void check_func_attribs(check_t *check, const tree_t *fn)
 {
-    const h2_attrib_t *attribs = h2_get_attrib(fn);
+    const attribs_t *attribs = tree_get_attrib(fn);
 
     switch (attribs->link)
     {
     case eLinkImport:
         if (fn->body != NULL)
         {
-            message_t *id = report(check->reports, eWarn, h2_get_node(fn),
+            message_t *id = report(check->reports, eWarn, tree_get_node(fn),
                 "function `%s` is marked as imported but has an implementation",
-                h2_get_name(fn)
+                tree_get_name(fn)
             );
             report_note(id, "implementation will be ignored");
         }
@@ -355,9 +355,9 @@ static void check_func_attribs(check_t *check, const h2_t *fn)
     case eLinkModule:
         if (attribs->mangle != NULL)
         {
-            message_t *id = report(check->reports, eWarn, h2_get_node(fn),
+            message_t *id = report(check->reports, eWarn, tree_get_node(fn),
                 "function `%s` has internal linkage and user defined mangling",
-                h2_get_name(fn)
+                tree_get_name(fn)
             );
             report_note(id, "attribute will be ignored");
         }
@@ -366,10 +366,10 @@ static void check_func_attribs(check_t *check, const h2_t *fn)
     case eLinkEntryCli:
         if (check->cliEntryPoint != NULL)
         {
-            message_t *id = report(check->reports, eFatal, h2_get_node(fn),
+            message_t *id = report(check->reports, eFatal, tree_get_node(fn),
                 "multiple CLI entry points defined"
             );
-            report_append(id, h2_get_node(check->cliEntryPoint), "previous entry point defined here");
+            report_append(id, tree_get_node(check->cliEntryPoint), "previous entry point defined here");
         }
         else
         {
@@ -379,10 +379,10 @@ static void check_func_attribs(check_t *check, const h2_t *fn)
     case eLinkEntryGui:
         if (check->guiEntryPoint != NULL)
         {
-            message_t *id = report(check->reports, eFatal, h2_get_node(fn),
+            message_t *id = report(check->reports, eFatal, tree_get_node(fn),
                 "multiple GUI entry points defined"
             );
-            report_append(id, h2_get_node(check->guiEntryPoint), "previous entry point defined here");
+            report_append(id, tree_get_node(check->guiEntryPoint), "previous entry point defined here");
         }
         else
         {
@@ -394,56 +394,56 @@ static void check_func_attribs(check_t *check, const h2_t *fn)
     }
 }
 
-static void check_global_recursion(check_t *check, const h2_t *global);
+static void check_global_recursion(check_t *check, const tree_t *global);
 
-static void check_expr_recursion(check_t *check, const h2_t *tree)
+static void check_expr_recursion(check_t *check, const tree_t *tree)
 {
-    switch (h2_get_kind(tree))
+    switch (tree_get_kind(tree))
     {
-    case eHlir2ExprEmpty:
-    case eHlir2ExprUnit:
-    case eHlir2ExprBool:
-    case eHlir2ExprDigit:
-    case eHlir2ExprString:
+    case eTreeExprEmpty:
+    case eTreeExprUnit:
+    case eTreeExprBool:
+    case eTreeExprDigit:
+    case eTreeExprString:
         break;
 
-    case eHlir2ExprLoad:
+    case eTreeExprLoad:
         check_expr_recursion(check, tree->load);
         break;
 
-    case eHlir2ExprCall: {
+    case eTreeExprCall: {
         check_expr_recursion(check, tree->callee);
         size_t len = vector_len(tree->args);
         for (size_t i = 0; i < len; ++i)
         {
-            const h2_t *arg = vector_get(tree->args, i);
+            const tree_t *arg = vector_get(tree->args, i);
             check_expr_recursion(check, arg);
         }
         break;
     }
 
-    case eHlir2ExprBinary:
+    case eTreeExprBinary:
         check_expr_recursion(check, tree->lhs);
         check_expr_recursion(check, tree->rhs);
         break;
 
-    case eHlir2ExprUnary:
+    case eTreeExprUnary:
         check_expr_recursion(check, tree->operand);
         break;
 
-    case eHlir2ExprCompare:
+    case eTreeExprCompare:
         check_expr_recursion(check, tree->lhs);
         check_expr_recursion(check, tree->rhs);
         break;
 
-    case eHlir2DeclGlobal:
+    case eTreeDeclGlobal:
         check_global_recursion(check, tree);
         break;
-    default: NEVER("invalid node kind %s (check-tree-recursion)", h2_to_string(tree));
+    default: NEVER("invalid node kind %s (check-tree-recursion)", tree_to_string(tree));
     }
 }
 
-static void check_global_recursion(check_t *check, const h2_t *global)
+static void check_global_recursion(check_t *check, const tree_t *global)
 {
     if (set_contains_ptr(check->checkedExprs, global))
     {
@@ -455,22 +455,22 @@ static void check_global_recursion(check_t *check, const h2_t *global)
     {
         if (global->global != NULL)
         {
-            vector_push(&check->exprStack, (h2_t*)global);
+            vector_push(&check->exprStack, (tree_t*)global);
             check_expr_recursion(check, global->global);
             vector_drop(check->exprStack);
         }
     }
     else
     {
-        message_t *id = report(check->reports, eFatal, h2_get_node(global),
+        message_t *id = report(check->reports, eFatal, tree_get_node(global),
             "evaluation of `%s` may be infinite",
-            h2_get_name(global)
+            tree_get_name(global)
         );
         size_t len = vector_len(check->exprStack);
         for (size_t i = 0; i < len; i++)
         {
-            const h2_t *decl = vector_get(check->exprStack, i);
-            report_append(id, h2_get_node(decl), "call to `%s`", h2_get_name(decl));
+            const tree_t *decl = vector_get(check->exprStack, i);
+            report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
         }
     }
 
@@ -481,31 +481,31 @@ static void check_global_recursion(check_t *check, const h2_t *global)
 /// recursive struct checking
 ///
 
-static void check_struct_recursion(check_t *check, const h2_t *type);
+static void check_struct_recursion(check_t *check, const tree_t *type);
 
-static void check_struct_type_recursion(check_t *check, const h2_t *type)
+static void check_struct_type_recursion(check_t *check, const tree_t *type)
 {
     CTASSERT(type != NULL);
 
     switch (type->kind)
     {
-    case eHlir2TypeBool:
-    case eHlir2TypeDigit:
-    case eHlir2TypeString:
-    case eHlir2TypeUnit:
-    case eHlir2TypeEmpty:
-    case eHlir2TypePointer:
+    case eTreeTypeBool:
+    case eTreeTypeDigit:
+    case eTreeTypeString:
+    case eTreeTypeUnit:
+    case eTreeTypeEmpty:
+    case eTreeTypePointer:
         break;
 
-    case eHlir2TypeStruct:
+    case eTreeTypeStruct:
         check_struct_recursion(check, type);
         break;
 
-    default: NEVER("invalid type kind %s (check-type-size)", h2_to_string(type));
+    default: NEVER("invalid type kind %s (check-type-size)", tree_to_string(type));
     }
 }
 
-static void check_struct_recursion(check_t *check, const h2_t *type)
+static void check_struct_recursion(check_t *check, const tree_t *type)
 {
     if (set_contains_ptr(check->checkedTypes, type))
     {
@@ -515,26 +515,26 @@ static void check_struct_recursion(check_t *check, const h2_t *type)
     size_t idx = vector_find(check->typeStack, type);
     if (idx == SIZE_MAX)
     {
-        vector_push(&check->typeStack, (h2_t*)type);
+        vector_push(&check->typeStack, (tree_t*)type);
         size_t len = vector_len(type->fields);
         for (size_t i = 0; i < len; i++)
         {
-            const h2_t *field = vector_get(type->fields, i);
+            const tree_t *field = vector_get(type->fields, i);
             check_struct_type_recursion(check, field->type);
         }
         vector_drop(check->typeStack);
     }
     else
     {
-        message_t *id = report(check->reports, eFatal, h2_get_node(type),
+        message_t *id = report(check->reports, eFatal, tree_get_node(type),
             "size of type `%s` may be infinite",
-            h2_get_name(type)
+            tree_get_name(type)
         );
         size_t len = vector_len(check->typeStack);
         for (size_t i = 0; i < len; i++)
         {
-            const h2_t *decl = vector_get(check->typeStack, i);
-            report_append(id, h2_get_node(decl), "call to `%s`", h2_get_name(decl));
+            const tree_t *decl = vector_get(check->typeStack, i);
+            report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
         }
     }
 
@@ -545,31 +545,31 @@ static void check_struct_recursion(check_t *check, const h2_t *type)
 /// recursive pointer checking
 ///
 
-static void check_type_recursion(check_t *check, const h2_t *type);
+static void check_type_recursion(check_t *check, const tree_t *type);
 
-static void check_inner_type_recursion(check_t *check, const h2_t *type)
+static void check_inner_type_recursion(check_t *check, const tree_t *type)
 {
     CTASSERT(type != NULL);
 
     switch (type->kind)
     {
-    case eHlir2TypeBool:
-    case eHlir2TypeDigit:
-    case eHlir2TypeString:
-    case eHlir2TypeUnit:
-    case eHlir2TypeEmpty:
-    case eHlir2TypeStruct:
+    case eTreeTypeBool:
+    case eTreeTypeDigit:
+    case eTreeTypeString:
+    case eTreeTypeUnit:
+    case eTreeTypeEmpty:
+    case eTreeTypeStruct:
         break;
 
-    case eHlir2TypePointer:
+    case eTreeTypePointer:
         check_type_recursion(check, type->pointer);
         break;
 
-    default: NEVER("invalid type kind `%s` (check-type-size)", h2_to_string(type));
+    default: NEVER("invalid type kind `%s` (check-type-size)", tree_to_string(type));
     }
 }
 
-static void check_type_recursion(check_t *check, const h2_t *type)
+static void check_type_recursion(check_t *check, const tree_t *type)
 {
     if (set_contains_ptr(check->checkedTypes, type))
     {
@@ -579,32 +579,32 @@ static void check_type_recursion(check_t *check, const h2_t *type)
     size_t idx = vector_find(check->typeStack, type);
     if (idx == SIZE_MAX)
     {
-        vector_push(&check->typeStack, (h2_t*)type);
+        vector_push(&check->typeStack, (tree_t*)type);
         check_inner_type_recursion(check, type);
         vector_drop(check->typeStack);
     }
     else
     {
-        message_t *id = report(check->reports, eFatal, h2_get_node(type),
+        message_t *id = report(check->reports, eFatal, tree_get_node(type),
             "type `%s` contains an impossible type",
-            h2_get_name(type)
+            tree_get_name(type)
         );
         size_t len = vector_len(check->typeStack);
         for (size_t i = 0; i < len; i++)
         {
-            const h2_t *decl = vector_get(check->typeStack, i);
-            report_append(id, h2_get_node(decl), "call to `%s`", h2_get_name(decl));
+            const tree_t *decl = vector_get(check->typeStack, i);
+            report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
         }
     }
 
     set_add_ptr(check->checkedTypes, type);
 }
 
-static void check_any_type_recursion(check_t *check, const h2_t *type)
+static void check_any_type_recursion(check_t *check, const tree_t *type)
 {
     switch (type->kind)
     {
-    case eHlir2TypeStruct:
+    case eTreeTypeStruct:
         check_struct_recursion(check, type);
         break;
 
@@ -614,49 +614,49 @@ static void check_any_type_recursion(check_t *check, const h2_t *type)
     }
 }
 
-static void check_module_valid(check_t *check, const h2_t *mod)
+static void check_module_valid(check_t *check, const tree_t *mod)
 {
     CTASSERT(check != NULL);
-    CTASSERT(h2_is(mod, eHlir2DeclModule));
+    CTASSERT(tree_is(mod, eTreeDeclModule));
 
-    logverbose("check %s", h2_get_name(mod));
+    logverbose("check %s", tree_get_name(mod));
 
-    vector_t *modules = map_values(h2_module_tag(mod, eSema2Modules));
+    vector_t *modules = map_values(tree_module_tag(mod, eSema2Modules));
     size_t totalModules = vector_len(modules);
     for (size_t i = 0; i < totalModules; i++)
     {
-        const h2_t *child = vector_get(modules, i);
+        const tree_t *child = vector_get(modules, i);
         check_module_valid(check, child);
     }
 
-    vector_t *globals = map_values(h2_module_tag(mod, eSema2Values));
+    vector_t *globals = map_values(tree_module_tag(mod, eSema2Values));
     size_t totalGlobals = vector_len(globals);
     for (size_t i = 0; i < totalGlobals; i++)
     {
-        const h2_t *global = vector_get(globals, i);
-        CTASSERT(h2_is(global, eHlir2DeclGlobal));
+        const tree_t *global = vector_get(globals, i);
+        CTASSERT(tree_is(global, eTreeDeclGlobal));
         check_simple(check, global);
 
         check_global_attribs(check, global);
         check_global_recursion(check, global);
     }
 
-    vector_t *functions = map_values(h2_module_tag(mod, eSema2Procs));
+    vector_t *functions = map_values(tree_module_tag(mod, eSema2Procs));
     size_t totalFunctions = vector_len(functions);
     for (size_t i = 0; i < totalFunctions; i++)
     {
-        const h2_t *function = vector_get(functions, i);
-        CTASSERT(h2_is(function, eHlir2DeclFunction));
+        const tree_t *function = vector_get(functions, i);
+        CTASSERT(tree_is(function, eTreeDeclFunction));
         check_simple(check, function);
 
         check_func_attribs(check, function);
     }
 
-    vector_t *types = map_values(h2_module_tag(mod, eSema2Types));
+    vector_t *types = map_values(tree_module_tag(mod, eSema2Types));
     size_t totalTypes = vector_len(types);
     for (size_t i = 0; i < totalTypes; i++)
     {
-        const h2_t *type = vector_get(types, i);
+        const tree_t *type = vector_get(types, i);
         // check_ident(check, type); TODO: check these properly
 
         // nothing else can be recursive (TODO: for now)
@@ -697,6 +697,6 @@ void lifetime_check(lifetime_t *lifetime)
 
         check_module_valid(&check, ctx->root);
 
-        //h2_check(lifetime_get_reports(lifetime), ctx->root);
+        //tree_check(lifetime_get_reports(lifetime), ctx->root);
     }
 }

@@ -41,7 +41,7 @@ ninja -C build test # build and run tests
   * `jvm` - jvm classfile consumer (TODO)
   * `cc` - C11 frontend (TODO)
   * `cpp` - C preprocessor (TODO)
-  * `example` - example frontend 
+  * `example` - example frontend
 
 * `interface`
   * `cli` - command line user interface
@@ -60,7 +60,7 @@ ninja -C build test # build and run tests
 * `cthulhu` - compiler framework library
   * `include/cthulhu` - public interface
     * `emit` - tree writing
-    * `hlir` - common typed ast
+    * `tree` - common typed ast
     * `util` - common utilities
     * `ssa` - ssa emitter
 

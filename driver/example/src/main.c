@@ -1,6 +1,6 @@
 #include "cthulhu/mediator/driver.h"
 
-#include "cthulhu/hlir/h2.h"
+#include "cthulhu/tree/tree.h"
 
 #include "std/vector.h"
 
@@ -14,10 +14,10 @@ static vector_t *example_lang_path(void)
     return path;
 }
 
-static h2_t *example_lang_module(lifetime_t *lifetime)
+static tree_t *example_lang_module(lifetime_t *lifetime)
 {
     reports_t *reports = lifetime_get_reports(lifetime);
-    h2_cookie_t *cookie = lifetime_get_cookie(lifetime);
+    cookie_t *cookie = lifetime_get_cookie(lifetime);
 
     node_t *node = node_builtin();
     size_t sizes[eSema2Total] = {
@@ -27,7 +27,7 @@ static h2_t *example_lang_module(lifetime_t *lifetime)
         [eSema2Modules] = 1
     };
 
-    return h2_module_root(reports, cookie, node, "runtime", eSema2Total, sizes);
+    return tree_module_root(reports, cookie, node, "runtime", eSema2Total, sizes);
 }
 
 static void ex_config(lifetime_t *lifetime, ap_t *ap)
@@ -40,7 +40,7 @@ static void ex_create(driver_t *handle)
     lifetime_t *lifetime = handle_get_lifetime(handle);
 
     vector_t *path = example_lang_path();
-    h2_t *mod = example_lang_module(lifetime);
+    tree_t *mod = example_lang_module(lifetime);
     context_t *ctx = compiled_new(handle, mod);
 
     add_context(lifetime, path, ctx);

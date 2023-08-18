@@ -21,7 +21,7 @@ typedef struct lifetime_t
     map_t *extensions;
     map_t *modules;
 
-    h2_cookie_t *cookie;
+    cookie_t *cookie;
 } lifetime_t;
 
 typedef struct driver_t
@@ -37,7 +37,7 @@ typedef struct context_t
 
     const char *name;
     void *ast;
-    h2_t *root;
+    tree_t *root;
 } context_t;
 
 bool context_requires_compiling(const context_t *ctx);

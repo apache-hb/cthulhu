@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/hlir/ops.h"
+#include "cthulhu/tree/ops.h"
 
 #include <gmp.h>
 #include <stdbool.h>
@@ -10,7 +10,7 @@ typedef struct vector_t vector_t;
 typedef struct typevec_t typevec_t;
 typedef struct map_t map_t;
 
-typedef struct h2_t h2_t;
+typedef struct tree_t tree_t;
 
 typedef struct ssa_module_t ssa_module_t;
 typedef struct ssa_symbol_t ssa_symbol_t;
@@ -245,8 +245,8 @@ typedef struct ssa_block_t {
 } ssa_block_t;
 
 typedef struct ssa_symbol_t {
-    h2_link_t linkage;
-    h2_visible_t visibility;
+    tree_link_t linkage;
+    tree_visible_t visibility;
 
     const char *linkName; ///< external name
 

@@ -4,7 +4,7 @@
 
 #include "std/vector.h"
 
-#include "cthulhu/hlir/ops.h"
+#include "cthulhu/tree/ops.h"
 
 #include <gmp.h>
 

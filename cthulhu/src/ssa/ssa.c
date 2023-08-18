@@ -1,6 +1,6 @@
 #include "common/common.h"
 
-#include "cthulhu/hlir/query.h"
+#include "cthulhu/tree/query.h"
 
 #include "std/str.h"
 #include "std/map.h"
@@ -21,10 +21,10 @@ typedef struct ssa_compile_t {
 
     /// internal data
 
-    map_t *globals; ///< map<h2, ssa_symbol>
-    map_t *functions; ///< map<h2, ssa_symbol>
+    map_t *globals; ///< map<tree, ssa_symbol>
+    map_t *functions; ///< map<tree, ssa_symbol>
 
-    map_t *locals; ///< map<h2, ssa_symbol>
+    map_t *locals; ///< map<tree, ssa_symbol>
 
     ssa_block_t *currentBlock;
     ssa_symbol_t *currentSymbol;
@@ -44,11 +44,11 @@ static void add_dep(ssa_compile_t *ssa, const ssa_symbol_t *symbol, const ssa_sy
     set_add_ptr(set, dep);
 }
 
-static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const h2_t *tree)
+static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree)
 {
-    const char *name = h2_get_name(tree);
-    ssa_type_t *type = ssa_type_from(h2_get_type(tree));
-    const h2_attrib_t *attrib = h2_get_attrib(tree);
+    const char *name = tree_get_name(tree);
+    ssa_type_t *type = ssa_type_from(tree_get_type(tree));
+    const attribs_t *attrib = tree_get_attrib(tree);
 
     ssa_symbol_t *symbol = ctu_malloc(sizeof(ssa_symbol_t));
     symbol->linkage = attrib->link;
@@ -67,18 +67,18 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const h2_t *tree)
     return symbol;
 }
 
-static ssa_symbol_t *function_create(ssa_compile_t *ssa, const h2_t *tree)
+static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
 {
-    CTASSERTF(h2_is(tree, eHlir2DeclFunction), "expected function, got %s", h2_to_string(tree));
+    CTASSERTF(tree_is(tree, eTreeDeclFunction), "expected function, got %s", tree_to_string(tree));
     ssa_symbol_t *self = symbol_create(ssa, tree);
 
     size_t len = vector_len(tree->locals);
     self->locals = typevec_of(sizeof(ssa_local_t), len);
     for (size_t i = 0; i < len; i++)
     {
-        const h2_t *local = vector_get(tree->locals, i);
-        ssa_type_t *ty = ssa_type_from(h2_get_type(local));
-        const char *name = h2_get_name(local);
+        const tree_t *local = vector_get(tree->locals, i);
+        ssa_type_t *ty = ssa_type_from(tree_get_type(local));
+        const char *name = tree_get_name(local);
 
         ssa_local_t it = {
             .name = name,
@@ -176,9 +176,9 @@ static ssa_block_t *ssa_block_create(ssa_symbol_t *symbol, const char *name, siz
     return bb;
 }
 
-static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree);
+static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree);
 
-static ssa_operand_t compile_branch(ssa_compile_t *ssa, const h2_t *branch)
+static ssa_operand_t compile_branch(ssa_compile_t *ssa, const tree_t *branch)
 {
     ssa_operand_t cond = compile_tree(ssa, branch->cond);
     ssa_block_t *current = ssa->currentBlock;
@@ -226,7 +226,7 @@ static ssa_operand_t compile_branch(ssa_compile_t *ssa, const h2_t *branch)
     return tail;
 }
 
-static ssa_operand_t compile_loop(ssa_compile_t *ssa, const h2_t *tree)
+static ssa_operand_t compile_loop(ssa_compile_t *ssa, const tree_t *tree)
 {
     /**
     * turns `while (cond) { body }` into:
@@ -289,30 +289,30 @@ static ssa_operand_t compile_loop(ssa_compile_t *ssa, const h2_t *tree)
     return loop;
 }
 
-static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
+static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
 {
     CTASSERT(ssa != NULL);
     CTASSERT(tree != NULL);
 
     switch (tree->kind)
     {
-    case eHlir2ExprEmpty: {
+    case eTreeExprEmpty: {
         ssa_operand_t operand = {
             .kind = eOperandEmpty
         };
         return operand;
     }
-    case eHlir2ExprDigit:
-    case eHlir2ExprBool:
-    case eHlir2ExprUnit:
-    case eHlir2ExprString: {
+    case eTreeExprDigit:
+    case eTreeExprBool:
+    case eTreeExprUnit:
+    case eTreeExprString: {
         ssa_operand_t operand = {
             .kind = eOperandImm,
             .value = ssa_value_from(tree)
         };
         return operand;
     }
-    case eHlir2ExprUnary: {
+    case eTreeExprUnary: {
         ssa_operand_t expr = compile_tree(ssa, tree->operand);
         ssa_step_t step = {
             .opcode = eOpUnary,
@@ -323,7 +323,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         };
         return add_step(ssa, step);
     }
-    case eHlir2ExprBinary: {
+    case eTreeExprBinary: {
         ssa_operand_t lhs = compile_tree(ssa, tree->lhs);
         ssa_operand_t rhs = compile_tree(ssa, tree->rhs);
         ssa_step_t step = {
@@ -336,7 +336,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         };
         return add_step(ssa, step);
     }
-    case eHlir2DeclGlobal: {
+    case eTreeDeclGlobal: {
         ssa_symbol_t *symbol = map_get_ptr(ssa->globals, tree);
         CTASSERT(symbol != NULL);
 
@@ -349,7 +349,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
 
         return operand;
     }
-    case eHlir2ExprLoad: {
+    case eTreeExprLoad: {
         ssa_operand_t operand = compile_tree(ssa, tree->load);
         ssa_step_t step = {
             .opcode = eOpLoad,
@@ -360,18 +360,18 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         return add_step(ssa, step);
     }
 
-    case eHlir2StmtBlock: {
+    case eTreeStmtBlock: {
         size_t len = vector_len(tree->stmts);
         for (size_t i = 0; i < len; i++)
         {
-            const h2_t *stmt = vector_get(tree->stmts, i);
+            const tree_t *stmt = vector_get(tree->stmts, i);
             compile_tree(ssa, stmt);
         }
 
         return operand_empty();
     }
 
-    case eHlir2StmtAssign: {
+    case eTreeStmtAssign: {
         ssa_operand_t dst = compile_tree(ssa, tree->dst);
         ssa_operand_t src = compile_tree(ssa, tree->src);
 
@@ -385,7 +385,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         return add_step(ssa, step);
     }
 
-    case eHlir2DeclLocal: {
+    case eTreeDeclLocal: {
         size_t idx = (uintptr_t)map_get_ptr(ssa->locals, tree);
         ssa_operand_t local = {
             .kind = eOperandLocal,
@@ -394,7 +394,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         return local;
     }
 
-    case eHlir2StmtReturn: {
+    case eTreeStmtReturn: {
         ssa_operand_t value = compile_tree(ssa, tree->value);
         ssa_step_t step = {
             .opcode = eOpReturn,
@@ -405,13 +405,13 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         return add_step(ssa, step);
     }
 
-    case eHlir2ExprCall: {
+    case eTreeExprCall: {
         ssa_operand_t callee = compile_tree(ssa, tree->callee);
         size_t len = vector_len(tree->args);
         typevec_t *args = typevec_of(sizeof(ssa_operand_t), len);
         for (size_t i = 0; i < len; i++)
         {
-            const h2_t *arg = vector_get(tree->args, i);
+            const tree_t *arg = vector_get(tree->args, i);
             ssa_operand_t operand = compile_tree(ssa, arg);
             typevec_set(args, i, &operand);
         }
@@ -427,7 +427,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         return add_step(ssa, step);
     }
 
-    case eHlir2DeclFunction: {
+    case eTreeDeclFunction: {
         ssa_symbol_t *fn = map_get_ptr(ssa->functions, tree);
         CTASSERT(fn != NULL);
 
@@ -440,8 +440,8 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         return operand;
     }
 
-    case eHlir2StmtBranch: return compile_branch(ssa, tree);
-    case eHlir2ExprCompare: {
+    case eTreeStmtBranch: return compile_branch(ssa, tree);
+    case eTreeExprCompare: {
         ssa_operand_t lhs = compile_tree(ssa, tree->lhs);
         ssa_operand_t rhs = compile_tree(ssa, tree->rhs);
 
@@ -457,7 +457,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const h2_t *tree)
         return add_step(ssa, step);
     }
 
-    case eHlir2StmtLoop:
+    case eTreeStmtLoop:
         return compile_loop(ssa, tree);
 
     default: NEVER("unhandled tree kind %d", tree->kind);
@@ -471,8 +471,8 @@ static void add_module_globals(ssa_compile_t *ssa, ssa_module_t *mod, map_t *glo
     {
         map_entry_t entry = map_next(&iter);
 
-        const h2_t *tree = entry.value;
-        CTASSERTF(h2_is(tree, eHlir2DeclGlobal), "expected global, got %s", h2_to_string(tree));
+        const tree_t *tree = entry.value;
+        CTASSERTF(tree_is(tree, eTreeDeclGlobal), "expected global, got %s", tree_to_string(tree));
 
         ssa_symbol_t *global = symbol_create(ssa, tree);
 
@@ -488,7 +488,7 @@ static void add_module_functions(ssa_compile_t *ssa, ssa_module_t *mod, map_t *f
     {
         map_entry_t entry = map_next(&iter);
 
-        const h2_t *tree = entry.value;
+        const tree_t *tree = entry.value;
         ssa_symbol_t *symbol = function_create(ssa, tree);
 
         vector_push(&mod->functions, symbol);
@@ -496,18 +496,18 @@ static void add_module_functions(ssa_compile_t *ssa, ssa_module_t *mod, map_t *f
     }
 }
 
-static void compile_module(ssa_compile_t *ssa, const h2_t *tree)
+static void compile_module(ssa_compile_t *ssa, const tree_t *tree)
 {
-    const char *id = h2_get_name(tree);
+    const char *id = tree_get_name(tree);
     ssa_module_t *mod = module_create(ssa, id);
 
-    add_module_globals(ssa, mod, h2_module_tag(tree, eSema2Values));
-    add_module_functions(ssa, mod, h2_module_tag(tree, eSema2Procs));
+    add_module_globals(ssa, mod, tree_module_tag(tree, eSema2Values));
+    add_module_functions(ssa, mod, tree_module_tag(tree, eSema2Procs));
 
     vector_push(&ssa->modules, mod);
     vector_push(&ssa->path, (char*)id);
 
-    map_t *children = h2_module_tag(tree, eSema2Modules);
+    map_t *children = tree_module_tag(tree, eSema2Modules);
     map_iter_t iter = map_iter(children);
     while (map_has_next(&iter))
     {
@@ -553,7 +553,7 @@ ssa_result_t ssa_compile(map_t *mods)
     {
         map_entry_t entry = map_next(&globals);
 
-        const h2_t *tree = entry.key;
+        const tree_t *tree = entry.key;
         ssa_symbol_t *global = entry.value;
 
         begin_compile(&ssa, global);
@@ -588,12 +588,12 @@ ssa_result_t ssa_compile(map_t *mods)
     {
         map_entry_t entry = map_next(&functions);
 
-        const h2_t *tree = entry.key;
+        const tree_t *tree = entry.key;
         ssa_symbol_t *symbol = entry.value;
 
         begin_compile(&ssa, symbol);
 
-        const h2_t *body = tree->body;
+        const tree_t *body = tree->body;
         if (body != NULL)
         {
             // TODO: should extern functions be put somewhere else

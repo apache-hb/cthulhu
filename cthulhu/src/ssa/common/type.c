@@ -1,6 +1,6 @@
 #include "common.h"
 
-#include "cthulhu/hlir/query.h"
+#include "cthulhu/tree/query.h"
 
 #include "std/vector.h"
 
@@ -66,11 +66,11 @@ static typevec_t *collect_params(vector_t *vector)
 
     for (size_t i = 0; i < len; i++)
     {
-        const h2_t *param = vector_get(vector, i);
-        CTASSERTF(h2_is(param, eHlir2DeclParam), "expected param, got %s", h2_to_string(param));
+        const tree_t *param = vector_get(vector, i);
+        CTASSERTF(tree_is(param, eTreeDeclParam), "expected param, got %s", tree_to_string(param));
 
-        const char *name = h2_get_name(param);
-        const h2_t *type = h2_get_type(param);
+        const char *name = tree_get_name(param);
+        const tree_t *type = tree_get_type(param);
 
         ssa_param_t entry = {
             .name = name,
@@ -83,32 +83,32 @@ static typevec_t *collect_params(vector_t *vector)
     return result;
 }
 
-static ssa_type_t *ssa_type_inner(const h2_t *type, quals_t quals)
+static ssa_type_t *ssa_type_inner(const tree_t *type, quals_t quals)
 {
-    h2_kind_t kind = h2_get_kind(type);
+    tree_kind_t kind = tree_get_kind(type);
     switch (kind)
     {
-    case eHlir2TypeEmpty: return ssa_type_empty(h2_get_name(type), quals);
-    case eHlir2TypeUnit: return ssa_type_unit(h2_get_name(type), quals);
-    case eHlir2TypeBool: return ssa_type_bool(h2_get_name(type), quals);
-    case eHlir2TypeDigit: return ssa_type_digit(h2_get_name(type), quals, type->sign, type->digit);
-    case eHlir2TypeString: return ssa_type_string(h2_get_name(type), quals);
-    case eHlir2TypeClosure:
+    case eTreeTypeEmpty: return ssa_type_empty(tree_get_name(type), quals);
+    case eTreeTypeUnit: return ssa_type_unit(tree_get_name(type), quals);
+    case eTreeTypeBool: return ssa_type_bool(tree_get_name(type), quals);
+    case eTreeTypeDigit: return ssa_type_digit(tree_get_name(type), quals, type->sign, type->digit);
+    case eTreeTypeString: return ssa_type_string(tree_get_name(type), quals);
+    case eTreeTypeClosure:
         return ssa_type_closure(
-            /* name = */ h2_get_name(type),
+            /* name = */ tree_get_name(type),
             /* quals = */ quals,
             /* result = */ ssa_type_from(type->result),
             /* params = */ collect_params(type->params),
             /* variadic = */ type->arity == eArityVariable
         );
-    case eHlir2Qualify: return ssa_type_inner(type->qualify, type->quals | quals);
+    case eTreeQualify: return ssa_type_inner(type->qualify, type->quals | quals);
 
     default:
-        NEVER("unexpected type kind: %s", h2_to_string(type));
+        NEVER("unexpected type kind: %s", tree_to_string(type));
     }
 }
 
-ssa_type_t *ssa_type_from(const h2_t *type)
+ssa_type_t *ssa_type_from(const tree_t *type)
 {
     return ssa_type_inner(type, eQualDefault);
 }

@@ -2,7 +2,7 @@
 
 #include "cthulhu/mediator/driver.h"
 
-#include "cthulhu/hlir/h2.h"
+#include "cthulhu/tree/tree.h"
 
 typedef enum pl0_tag_t {
     ePl0TagValues = eSema2Values,

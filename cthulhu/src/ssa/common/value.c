@@ -1,6 +1,6 @@
 #include "common.h"
 
-#include "cthulhu/hlir/h2.h"
+#include "cthulhu/tree/tree.h"
 
 #include "base/panic.h"
 #include "base/memory.h"
@@ -45,16 +45,16 @@ ssa_value_t *ssa_value_string(const ssa_type_t *type, const char *value, size_t 
     return self;
 }
 
-ssa_value_t *ssa_value_from(const h2_t *expr)
+ssa_value_t *ssa_value_from(const tree_t *expr)
 {
     const ssa_type_t *type = ssa_type_from(expr->type);
     switch (expr->kind)
     {
-    case eHlir2ExprEmpty: return ssa_value_empty(type);
-    case eHlir2ExprUnit: return ssa_value_unit(type);
-    case eHlir2ExprBool: return ssa_value_bool(type, expr->boolValue);
-    case eHlir2ExprDigit: return ssa_value_digit(type, expr->digitValue);
-    case eHlir2ExprString: return ssa_value_string(type, expr->stringValue, expr->stringLength);
+    case eTreeExprEmpty: return ssa_value_empty(type);
+    case eTreeExprUnit: return ssa_value_unit(type);
+    case eTreeExprBool: return ssa_value_bool(type, expr->boolValue);
+    case eTreeExprDigit: return ssa_value_digit(type, expr->digitValue);
+    case eTreeExprString: return ssa_value_string(type, expr->stringValue, expr->stringLength);
     default: NEVER("Invalid expr kind: %d", expr->kind);
     }
 }

@@ -2,42 +2,42 @@
 
 #include "base/panic.h"
 
-static h2_t *sema_digit(h2_t *sema, obr_t *expr, h2_t *implicitType)
+static tree_t *sema_digit(tree_t *sema, obr_t *expr, tree_t *implicitType)
 {
     // TODO: get correct digit size
-    h2_t *type = implicitType != NULL ? implicitType : obr_get_digit_type(eDigitInt, eSignSigned);
-    return h2_expr_digit(expr->node, type, expr->digit);
+    tree_t *type = implicitType != NULL ? implicitType : obr_get_digit_type(eDigitInt, eSignSigned);
+    return tree_expr_digit(expr->node, type, expr->digit);
 }
 
-static h2_t *sema_unary(h2_t *sema, obr_t *expr, h2_t *implicitType)
+static tree_t *sema_unary(tree_t *sema, obr_t *expr, tree_t *implicitType)
 {
-    h2_t *operand = obr_sema_rvalue(sema, expr->expr, implicitType);
-    return h2_expr_unary(expr->node, expr->unary, operand);
+    tree_t *operand = obr_sema_rvalue(sema, expr->expr, implicitType);
+    return tree_expr_unary(expr->node, expr->unary, operand);
 }
 
-static h2_t *sema_binary(h2_t *sema, obr_t *expr, h2_t *implicitType)
+static tree_t *sema_binary(tree_t *sema, obr_t *expr, tree_t *implicitType)
 {
     // TODO: get common type
-    h2_t *type = implicitType != NULL ? implicitType : obr_get_digit_type(eDigitInt, eSignSigned);
-    h2_t *lhs = obr_sema_rvalue(sema, expr->lhs, implicitType);
-    h2_t *rhs = obr_sema_rvalue(sema, expr->rhs, implicitType);
+    tree_t *type = implicitType != NULL ? implicitType : obr_get_digit_type(eDigitInt, eSignSigned);
+    tree_t *lhs = obr_sema_rvalue(sema, expr->lhs, implicitType);
+    tree_t *rhs = obr_sema_rvalue(sema, expr->rhs, implicitType);
 
-    return h2_expr_binary(expr->node, type, expr->binary, lhs, rhs);
+    return tree_expr_binary(expr->node, type, expr->binary, lhs, rhs);
 }
 
-static h2_t *sema_compare(h2_t *sema, obr_t *expr, h2_t *implicitType)
+static tree_t *sema_compare(tree_t *sema, obr_t *expr, tree_t *implicitType)
 {
     // TODO: check types are comparable
 
-    h2_t *lhs = obr_sema_rvalue(sema, expr->lhs, implicitType);
-    h2_t *rhs = obr_sema_rvalue(sema, expr->rhs, implicitType);
+    tree_t *lhs = obr_sema_rvalue(sema, expr->lhs, implicitType);
+    tree_t *rhs = obr_sema_rvalue(sema, expr->rhs, implicitType);
 
-    return h2_expr_compare(expr->node, obr_get_bool_type(), expr->compare, lhs, rhs);
+    return tree_expr_compare(expr->node, obr_get_bool_type(), expr->compare, lhs, rhs);
 }
 
-h2_t *obr_sema_rvalue(h2_t *sema, obr_t *expr, h2_t *implicitType)
+tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, tree_t *implicitType)
 {
-    h2_t *type = implicitType != NULL ? h2_resolve(h2_get_cookie(sema), implicitType) : NULL;
+    tree_t *type = implicitType != NULL ? tree_resolve(tree_get_cookie(sema), implicitType) : NULL;
 
     switch (expr->kind)
     {
@@ -54,22 +54,22 @@ h2_t *obr_sema_rvalue(h2_t *sema, obr_t *expr, h2_t *implicitType)
 /// default values
 ///
 
-h2_t *obr_default_value(const node_t *node, const h2_t *type)
+tree_t *obr_default_value(const node_t *node, const tree_t *type)
 {
-    while (h2_is(type, eHlir2Qualify)) { type = h2_get_type(type); }
+    while (tree_is(type, eTreeQualify)) { type = tree_get_type(type); }
 
-    switch (h2_get_kind(type))
+    switch (tree_get_kind(type))
     {
-    case eHlir2TypeBool: return h2_expr_bool(node, type, false);
-    case eHlir2TypeUnit: return h2_expr_unit(node, type);
+    case eTreeTypeBool: return tree_expr_bool(node, type, false);
+    case eTreeTypeUnit: return tree_expr_unit(node, type);
 
-    case eHlir2TypeDigit: {
+    case eTreeTypeDigit: {
         mpz_t zero;
         mpz_init(zero);
-        return h2_expr_digit(node, type, zero);
+        return tree_expr_digit(node, type, zero);
     }
 
     default:
-        NEVER("obr-default-value unknown type kind %d", h2_get_kind(type));
+        NEVER("obr-default-value unknown type kind %d", tree_get_kind(type));
     }
 }

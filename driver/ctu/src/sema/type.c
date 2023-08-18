@@ -2,7 +2,7 @@
 #include "ctu/sema/sema.h"
 #include "ctu/ast.h"
 
-#include "cthulhu/hlir/query.h"
+#include "cthulhu/tree/query.h"
 
 #include "std/vector.h"
 #include "std/str.h"
@@ -15,10 +15,10 @@
 /// sema type
 ///
 
-static h2_t *sema_type_name(h2_t *sema, const ctu_t *type)
+static tree_t *sema_type_name(tree_t *sema, const ctu_t *type)
 {
     size_t len = vector_len(type->typeName);
-    h2_t *ns = sema;
+    tree_t *ns = sema;
     for (size_t i = 0; i < len - 1; i++)
     {
         const char *segment = vector_get(type->typeName, i);
@@ -26,28 +26,28 @@ static h2_t *sema_type_name(h2_t *sema, const ctu_t *type)
         if (ns == NULL)
         {
             report(sema->reports, eFatal, type->node, "namespace `%s` not found", segment);
-            return h2_error(type->node, "namespace not found");
+            return tree_error(type->node, "namespace not found");
         }
     }
 
     const char *name = vector_tail(type->typeName);
-    h2_t *decl = ctu_get_type(ns, name);
+    tree_t *decl = ctu_get_type(ns, name);
     if (decl == NULL)
     {
         report(sema->reports, eFatal, type->node, "type `%s` not found", name);
-        return h2_error(type->node, "type not found");
+        return tree_error(type->node, "type not found");
     }
 
     return decl;
 }
 
-static h2_t *ctu_sema_type_pointer(h2_t *sema, const ctu_t *type)
+static tree_t *ctu_sema_type_pointer(tree_t *sema, const ctu_t *type)
 {
-    h2_t *pointee = ctu_sema_type(sema, type->pointer);
-    return h2_type_pointer(type->node, format("*%s", h2_get_name(pointee)), pointee);
+    tree_t *pointee = ctu_sema_type(sema, type->pointer);
+    return tree_type_pointer(type->node, format("*%s", tree_get_name(pointee)), pointee);
 }
 
-h2_t *ctu_sema_type(h2_t *sema, const ctu_t *type)
+tree_t *ctu_sema_type(tree_t *sema, const ctu_t *type)
 {
     CTASSERT(type != NULL);
 
@@ -64,21 +64,21 @@ h2_t *ctu_sema_type(h2_t *sema, const ctu_t *type)
 /// query type
 ///
 
-bool ctu_type_is(const h2_t *type, h2_kind_t kind)
+bool ctu_type_is(const tree_t *type, tree_kind_t kind)
 {
-    while (h2_is(type, eHlir2Qualify))
+    while (tree_is(type, eTreeQualify))
     {
         type = type->qualify;
     }
 
-    return h2_is(type, kind);
+    return tree_is(type, kind);
 }
 
 ///
 /// format type
 ///
 
-const char *ctu_type_string(const h2_t *type)
+const char *ctu_type_string(const tree_t *type)
 {
-    return h2_to_string(type); // TODO: make this match cthulhu type signatures
+    return tree_to_string(type); // TODO: make this match cthulhu type signatures
 }

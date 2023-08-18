@@ -2,7 +2,7 @@
 
 #include "cthulhu/mediator/driver.h"
 
-#include "cthulhu/hlir/query.h"
+#include "cthulhu/tree/query.h"
 
 #include "base/panic.h"
 #include "base/memory.h"
@@ -20,7 +20,7 @@ static char *path_to_string(vector_t *path)
     return str_join(".", path);
 }
 
-static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, h2_t *root)
+static context_t *context_inner_new(driver_t *handle, const char *name, void *ast, tree_t *root)
 {
     CTASSERT(handle != NULL);
     context_t *self = ctu_malloc(sizeof(context_t));
@@ -34,12 +34,12 @@ static context_t *context_inner_new(driver_t *handle, const char *name, void *as
     return self;
 }
 
-context_t *compiled_new(driver_t *handle, h2_t *root)
+context_t *compiled_new(driver_t *handle, tree_t *root)
 {
-    return context_inner_new(handle, h2_get_name(root), NULL, root);
+    return context_inner_new(handle, tree_get_name(root), NULL, root);
 }
 
-context_t *context_new(driver_t *handle, const char *name, void *ast, h2_t *root)
+context_t *context_new(driver_t *handle, const char *name, void *ast, tree_t *root)
 {
     return context_inner_new(handle, name, ast, root);
 }
@@ -79,7 +79,7 @@ reports_t *lifetime_get_reports(lifetime_t *lifetime)
     return lifetime->reports;
 }
 
-h2_cookie_t *lifetime_get_cookie(lifetime_t *lifetime)
+cookie_t *lifetime_get_cookie(lifetime_t *lifetime)
 {
     CTASSERT(lifetime != NULL);
 
@@ -93,7 +93,7 @@ void *context_get_ast(context_t *context)
     return context->ast;
 }
 
-h2_t *context_get_module(context_t *context)
+tree_t *context_get_module(context_t *context)
 {
     CTASSERT(context != NULL);
 
@@ -114,7 +114,7 @@ const char *context_get_name(context_t *context)
     return context->name;
 }
 
-void context_update(context_t *ctx, void *ast, h2_t *root)
+void context_update(context_t *ctx, void *ast, tree_t *root)
 {
     CTASSERT(ctx != NULL);
 
@@ -126,7 +126,7 @@ void context_update(context_t *ctx, void *ast, h2_t *root)
 /// helpers
 ///
 
-h2_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, const size_t *sizes)
+tree_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, const size_t *sizes)
 {
     CTASSERT(lifetime != NULL);
     CTASSERT(name != NULL);
@@ -134,9 +134,9 @@ h2_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, cons
     CTASSERT(len > 0);
 
     reports_t *reports = lifetime_get_reports(lifetime);
-    h2_cookie_t *cookie = lifetime_get_cookie(lifetime);
+    cookie_t *cookie = lifetime_get_cookie(lifetime);
     node_t *node = node_builtin();
-    h2_t *root = h2_module_root(reports, cookie, node, name, len, sizes);
+    tree_t *root = tree_module_root(reports, cookie, node, name, len, sizes);
 
     return root;
 }

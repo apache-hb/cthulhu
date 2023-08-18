@@ -10,8 +10,8 @@
 
 #include "cthulhu/mediator/driver.h"
 
-#include "cthulhu/hlir/h2.h"
-#include "cthulhu/hlir/query.h"
+#include "cthulhu/tree/tree.h"
+#include "cthulhu/tree/query.h"
 
 #include "report/report.h"
 #include "report/report-ext.h"
@@ -30,7 +30,7 @@
 /// init
 ///
 
-static h2_t *kRootModule = NULL;
+static tree_t *kRootModule = NULL;
 
 void ctu_init(driver_t *handle)
 {
@@ -61,7 +61,7 @@ void ctu_forward_decls(context_t *context)
         [eCtuTagSuffixes] = len,
     };
 
-    h2_t *mod = h2_module(kRootModule, ast->node, name, eCtuTagTotal, sizes);
+    tree_t *mod = tree_module(kRootModule, ast->node, name, eCtuTagTotal, sizes);
 
     for (size_t i = 0; i < len; i++)
     {
@@ -74,7 +74,7 @@ void ctu_forward_decls(context_t *context)
     context_update(context, ast, mod);
 }
 
-static void import_module(lifetime_t *lifetime, h2_t *sema, ctu_t *include)
+static void import_module(lifetime_t *lifetime, tree_t *sema, ctu_t *include)
 {
     CTASSERT(include->kind == eCtuImport);
     context_t *ctx = get_context(lifetime, include->importPath);
@@ -85,17 +85,17 @@ static void import_module(lifetime_t *lifetime, h2_t *sema, ctu_t *include)
         return;
     }
 
-    h2_t *lib = context_get_module(ctx);
+    tree_t *lib = context_get_module(ctx);
     if (lib == sema)
     {
         report(sema->reports, eFatal, include->node, "module cannot import itself");
         return;
     }
 
-    h2_t *old = ctu_get_namespace(sema, include->name);
+    tree_t *old = ctu_get_namespace(sema, include->name);
     if (old != NULL)
     {
-        message_t *id = report_shadow(sema->reports, include->name, h2_get_node(old), h2_get_node(lib));
+        message_t *id = report_shadow(sema->reports, include->name, tree_get_node(old), tree_get_node(lib));
         report_note(id, "consider using import aliases; eg. `import %s as my_%s`",
             str_join("::", include->importPath),
             include->name
@@ -112,7 +112,7 @@ void ctu_process_imports(context_t *context)
     lifetime_t *lifetime = context_get_lifetime(context);
 
     ctu_t *ast = context_get_ast(context);
-    h2_t *sema = context_get_module(context);
+    tree_t *sema = context_get_module(context);
 
     size_t len = vector_len(ast->imports);
     for (size_t i = 0; i < len; i++)

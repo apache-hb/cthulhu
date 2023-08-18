@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/hlir/sema.h"
+#include "cthulhu/tree/sema.h"
 
 typedef enum {
     eTagStructs = eSemaMax,

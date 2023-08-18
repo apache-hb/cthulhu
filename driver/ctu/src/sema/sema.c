@@ -1,6 +1,6 @@
 #include "ctu/sema/sema.h"
 
-#include "cthulhu/hlir/query.h"
+#include "cthulhu/tree/query.h"
 
 #include "cthulhu/mediator/driver.h"
 
@@ -16,37 +16,37 @@
 /// decls
 ///
 
-h2_t *ctu_get_namespace(h2_t *sema, const char *name)
+tree_t *ctu_get_namespace(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eCtuTagModules, eCtuTagImports };
     return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
-h2_t *ctu_get_type(h2_t *sema, const char *name)
+tree_t *ctu_get_type(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eCtuTagTypes };
     return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
-h2_t *ctu_get_decl(h2_t *sema, const char *name)
+tree_t *ctu_get_decl(tree_t *sema, const char *name)
 {
     const size_t tags[] = { eCtuTagValues, eCtuTagFunctions };
     return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
-void ctu_add_decl(h2_t *sema, ctu_tag_t tag, const char *name, h2_t *decl)
+void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl)
 {
     CTASSERT(name != NULL);
     CTASSERT(decl != NULL);
 
-    h2_t *old = h2_module_get(sema, tag, name);
+    tree_t *old = tree_module_get(sema, tag, name);
     if (old != NULL)
     {
-        report_shadow(sema->reports, name, h2_get_node(old), h2_get_node(decl));
+        report_shadow(sema->reports, name, tree_get_node(old), tree_get_node(decl));
     }
     else
     {
-        h2_module_set(sema, tag, name, decl);
+        tree_module_set(sema, tag, name, decl);
     }
 }
 
@@ -54,30 +54,30 @@ void ctu_add_decl(h2_t *sema, ctu_tag_t tag, const char *name, h2_t *decl)
 /// runtime
 ///
 
-static h2_t *kIntTypes[eDigitTotal * eSignTotal] = { NULL };
-static h2_t *kBoolType = NULL;
+static tree_t *kIntTypes[eDigitTotal * eSignTotal] = { NULL };
+static tree_t *kBoolType = NULL;
 
-static h2_t *make_int_type(const char *name, digit_t digit, sign_t sign)
+static tree_t *make_int_type(const char *name, digit_t digit, sign_t sign)
 {
-    return (kIntTypes[digit * eSignTotal + sign] = h2_type_digit(node_builtin(), name, digit, sign));
+    return (kIntTypes[digit * eSignTotal + sign] = tree_type_digit(node_builtin(), name, digit, sign));
 }
 
-static h2_t *make_bool_type(const char *name)
+static tree_t *make_bool_type(const char *name)
 {
-    return (kBoolType = h2_type_bool(node_builtin(), name));
+    return (kBoolType = tree_type_bool(node_builtin(), name));
 }
 
-h2_t *ctu_get_int_type(digit_t digit, sign_t sign)
+tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
 {
     return kIntTypes[digit * eSignTotal + sign];
 }
 
-h2_t *ctu_get_bool_type(void)
+tree_t *ctu_get_bool_type(void)
 {
     return kBoolType;
 }
 
-h2_t *ctu_rt_mod(lifetime_t *lifetime)
+tree_t *ctu_rt_mod(lifetime_t *lifetime)
 {
     GLOBAL_INIT("cthulhu runtime module");
 
@@ -91,7 +91,7 @@ h2_t *ctu_rt_mod(lifetime_t *lifetime)
         [eCtuTagSuffixes] = 1,
     };
 
-    h2_t *root = lifetime_sema_new(lifetime, "runtime", eCtuTagTotal, sizes);
+    tree_t *root = lifetime_sema_new(lifetime, "runtime", eCtuTagTotal, sizes);
 
     ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
 

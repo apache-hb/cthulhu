@@ -1,18 +1,18 @@
 src = [
-    'src/hlir/h2.c',
-    'src/hlir/ops.c',
-    'src/hlir/sema.c',
-    'src/hlir/decl.c',
-    'src/hlir/query.c'
+    'src/tree/h2.c',
+    'src/tree/ops.c',
+    'src/tree/sema.c',
+    'src/tree/decl.c',
+    'src/tree/query.c'
 ]
 
-libhlir = library('hlir', src,
+libhlir = library('tree', src,
     include_directories : 'include',
     c_args : args,
     dependencies : [ std, gmp ]
 )
 
-hlir = declare_dependency(
+tree = declare_dependency(
     link_with : libhlir,
     include_directories : 'include',
     dependencies : [ gmp ]
@@ -30,13 +30,13 @@ src = [
 libssa = library('ssa', src,
     include_directories : 'include',
     c_args : args,
-    dependencies : [ std, gmp, hlir ]
+    dependencies : [ std, gmp, tree ]
 )
 
 ssa = declare_dependency(
     link_with : libssa,
     include_directories : 'include',
-    dependencies : [ gmp, hlir ]
+    dependencies : [ gmp, tree ]
 )
 
 src = [
@@ -67,7 +67,7 @@ src = [
 libmediator = library('mediator', src,
     include_directories : 'include',
     c_args : args,
-    dependencies : [ std, hlir ]
+    dependencies : [ std, tree ]
 )
 
 mediator = declare_dependency(
@@ -83,7 +83,7 @@ src = [
 libutil = library('util', src,
     include_directories : 'include',
     c_args : args,
-    dependencies : [ std, hlir ]
+    dependencies : [ std, tree ]
 )
 
 util = declare_dependency(

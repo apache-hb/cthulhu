@@ -1,12 +1,12 @@
 src = [ 'src/main.c' ]
 
 ex = library('example', src,
-    dependencies : [ mediator, interop, hlir ],
+    dependencies : [ mediator, interop, tree ],
     c_args : args,
     include_directories : [ 'src', versiondir ]
 )
 
-langs += { 
+langs += {
     'example': {
         'dep': declare_dependency(link_with : ex),
         'mod': 'kExampleModule'

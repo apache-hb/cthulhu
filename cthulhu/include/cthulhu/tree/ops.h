@@ -56,17 +56,17 @@ typedef enum arity_t {
 /**
  * @brief the visibility of a declaration
  */
-typedef enum h2_link_t {
+typedef enum tree_link_t {
 #define HLIR_LINKAGE(ID, STR) ID,
 #include "hlir.inc"
     eLinkTotal
-} h2_link_t;
+} tree_link_t;
 
-typedef enum h2_visible_t {
+typedef enum tree_visible_t {
 #define HLIR_VISIBILITY(ID, STR) ID,
 #include "hlir.inc"
     eHlirVisibilityTotal
-} h2_visible_t;
+} tree_visible_t;
 
 typedef enum digit_t {
 #define DIGIT_KIND(ID, STR) ID,
@@ -92,5 +92,5 @@ const char *sign_name(sign_t sign);
 const char *digit_name(digit_t digit);
 
 const char *quals_name(quals_t quals);
-const char *link_name(h2_link_t link);
-const char *vis_name(h2_visible_t vis);
+const char *link_name(tree_link_t link);
+const char *vis_name(tree_visible_t vis);

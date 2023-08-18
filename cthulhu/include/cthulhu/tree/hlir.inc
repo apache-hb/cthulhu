@@ -1,50 +1,50 @@
 
-/// hlir tree kind defs
-#ifndef HLIR_KIND
-#   define HLIR_KIND(ID, NAME)
+/// tree kind defs
+#ifndef TREE_KIND
+#   define TREE_KIND(ID, NAME)
 #endif
 
-HLIR_KIND(eHlir2Type, "type") ///< unresolved type
-HLIR_KIND(eHlir2TypeEmpty, "type-empty") ///< a type that can never be created
-HLIR_KIND(eHlir2TypeUnit, "type-unit") ///< a type with a single value
-HLIR_KIND(eHlir2TypeBool, "type-bool") ///< a type with two values
-HLIR_KIND(eHlir2TypeDigit, "type-digit")
-HLIR_KIND(eHlir2TypeString, "type-string")
-HLIR_KIND(eHlir2TypeClosure, "type-closure") ///< a function pointer type (no captures)
-HLIR_KIND(eHlir2TypePointer, "type-pointer")
+TREE_KIND(eTreeType, "type") ///< unresolved type
+TREE_KIND(eTreeTypeEmpty, "type-empty") ///< a type that can never be created
+TREE_KIND(eTreeTypeUnit, "type-unit") ///< a type with a single value
+TREE_KIND(eTreeTypeBool, "type-bool") ///< a type with two values
+TREE_KIND(eTreeTypeDigit, "type-digit")
+TREE_KIND(eTreeTypeString, "type-string")
+TREE_KIND(eTreeTypeClosure, "type-closure") ///< a function pointer type (no captures)
+TREE_KIND(eTreeTypePointer, "type-pointer")
 
-HLIR_KIND(eHlir2TypeStruct, "type-struct")
+TREE_KIND(eTreeTypeStruct, "type-struct")
 
-HLIR_KIND(eHlir2ExprEmpty, "expr-empty") ///< an uninitialized value of a type
-HLIR_KIND(eHlir2ExprUnit, "expr-unit")
-HLIR_KIND(eHlir2ExprBool, "expr-bool")
-HLIR_KIND(eHlir2ExprDigit, "expr-digit")
-HLIR_KIND(eHlir2ExprString, "expr-string")
+TREE_KIND(eTreeExprEmpty, "expr-empty") ///< an uninitialized value of a type
+TREE_KIND(eTreeExprUnit, "expr-unit")
+TREE_KIND(eTreeExprBool, "expr-bool")
+TREE_KIND(eTreeExprDigit, "expr-digit")
+TREE_KIND(eTreeExprString, "expr-string")
 
-HLIR_KIND(eHlir2ExprLoad, "expr-load")
-HLIR_KIND(eHlir2ExprUnary, "expr-unary")
-HLIR_KIND(eHlir2ExprBinary, "expr-binary")
-HLIR_KIND(eHlir2ExprCompare, "expr-compare")
+TREE_KIND(eTreeExprLoad, "expr-load")
+TREE_KIND(eTreeExprUnary, "expr-unary")
+TREE_KIND(eTreeExprBinary, "expr-binary")
+TREE_KIND(eTreeExprCompare, "expr-compare")
 
-HLIR_KIND(eHlir2ExprCall, "expr-call")
+TREE_KIND(eTreeExprCall, "expr-call")
 
-HLIR_KIND(eHlir2StmtBlock, "stmt-block")
-HLIR_KIND(eHlir2StmtReturn, "stmt-return")
-HLIR_KIND(eHlir2StmtAssign, "stmt-assign")
-HLIR_KIND(eHlir2StmtLoop, "stmt-loop")
-HLIR_KIND(eHlir2StmtBranch, "stmt-branch")
+TREE_KIND(eTreeStmtBlock, "stmt-block")
+TREE_KIND(eTreeStmtReturn, "stmt-return")
+TREE_KIND(eTreeStmtAssign, "stmt-assign")
+TREE_KIND(eTreeStmtLoop, "stmt-loop")
+TREE_KIND(eTreeStmtBranch, "stmt-branch")
 
-HLIR_KIND(eHlir2DeclGlobal, "decl-global")
-HLIR_KIND(eHlir2DeclLocal, "decl-local")
-HLIR_KIND(eHlir2DeclParam, "decl-param")
-HLIR_KIND(eHlir2DeclField, "decl-field")
-HLIR_KIND(eHlir2DeclFunction, "decl-function")
-HLIR_KIND(eHlir2DeclModule, "decl-module")
+TREE_KIND(eTreeDeclGlobal, "decl-global")
+TREE_KIND(eTreeDeclLocal, "decl-local")
+TREE_KIND(eTreeDeclParam, "decl-param")
+TREE_KIND(eTreeDeclField, "decl-field")
+TREE_KIND(eTreeDeclFunction, "decl-function")
+TREE_KIND(eTreeDeclModule, "decl-module")
 
-HLIR_KIND(eHlir2Error, "error")
-HLIR_KIND(eHlir2Qualify, "qualify")
+TREE_KIND(eTreeError, "error")
+TREE_KIND(eTreeQualify, "qualify")
 
-#undef HLIR_KIND
+#undef TREE_KIND
 
 #ifndef DIGIT_KIND
 #   define DIGIT_KIND(ID, STR)

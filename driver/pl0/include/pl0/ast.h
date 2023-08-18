@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cthulhu/hlir/ops.h"
+#include "cthulhu/tree/ops.h"
 #include "scan/node.h"
 #include "std/vector.h"
 

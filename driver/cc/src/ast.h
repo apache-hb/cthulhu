@@ -4,7 +4,7 @@
 
 #include "scan/node.h"
 
-#include "cthulhu/hlir/digit.h"
+#include "cthulhu/tree/digit.h"
 
 #include <gmp.h>
 
@@ -56,7 +56,7 @@ typedef struct cc_t {
                 struct cc_t *type;
 
                 /* eAstModule */
-                struct 
+                struct
                 {
                     vector_t *modspec;
                     vector_t *imports;
