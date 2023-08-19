@@ -1,0 +1,4 @@
+MODULE RecursiveType;
+    TYPE FIRST = SECOND;
+        SECOND = FIRST;
+END RecursiveType.

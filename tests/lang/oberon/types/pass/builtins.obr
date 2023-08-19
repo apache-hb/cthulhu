@@ -1,0 +1,4 @@
+MODULE BuiltinTypes;
+    TYPE I = INTEGER;
+         B = BOOLEAN; (* todo: update as needed *)
+END BuiltinTypes.

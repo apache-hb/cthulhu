@@ -19,6 +19,18 @@ tests = {
         'fail': [
 
         ]
+    },
+    'types': {
+        'pass': [
+            'alias',
+            'builtins',
+            'nested'
+        ],
+        'fail': [
+            'invalid-type',
+            'recursive-pointer',
+            'recursive'
+        ]
     }
 }
 

@@ -15,6 +15,12 @@ static tree_t *decl_open(const node_t *node, const char *name, const tree_t *typ
 {
     tree_t *self = tree_decl(expected, node, type, name);
 
+    if (resolve != NULL)
+    {
+        CTASSERT(resolve->fnResolve != NULL);
+        CTASSERT(resolve->sema != NULL);
+    }
+
     self->resolve = resolve;
 
     return self;

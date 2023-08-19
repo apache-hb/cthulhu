@@ -1,0 +1,5 @@
+MODULE NestedType;
+    TYPE FIRST = SECOND;
+         SECOND = THIRD;
+         THIRD = INTEGER;
+END NestedType.

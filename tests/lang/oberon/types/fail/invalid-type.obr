@@ -1,0 +1,3 @@
+MODULE InvalidType;
+    TYPE invalid = NOT_A_TYPE;
+END InvalidType.

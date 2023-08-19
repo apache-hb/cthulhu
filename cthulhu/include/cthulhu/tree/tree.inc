@@ -1,10 +1,9 @@
-
 /// tree kind defs
 #ifndef TREE_KIND
 #   define TREE_KIND(ID, NAME)
 #endif
 
-TREE_KIND(eTreeType, "type") ///< unresolved type
+TREE_KIND(eTreeType, "unresolved-type") ///< unresolved type
 TREE_KIND(eTreeTypeEmpty, "type-empty") ///< a type that can never be created
 TREE_KIND(eTreeTypeUnit, "type-unit") ///< a type with a single value
 TREE_KIND(eTreeTypeBool, "type-bool") ///< a type with two values

@@ -67,7 +67,9 @@ static void resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void *use
     obr_t *decl = user;
     CTASSERTF(decl->kind == eObrDeclType, "decl %s is not a type", decl->name);
 
-    tree_close_decl(self, obr_sema_type(sema, decl->type));
+    tree_t *type = obr_sema_type(sema, decl->type);
+
+    tree_close_decl(self, tree_resolve(cookie, type));
 }
 
 static tree_t *forward_const(tree_t *sema, obr_t *decl)

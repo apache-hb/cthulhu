@@ -1,0 +1,3 @@
+MODULE RecursivePointer;
+    TYPE X = POINTER TO X;
+END RecursivePointer.
