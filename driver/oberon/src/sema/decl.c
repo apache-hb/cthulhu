@@ -80,10 +80,7 @@ static tree_t *forward_const(tree_t *sema, obr_t *decl)
         .fnResolve = resolve_const
     };
 
-    tree_t *it = tree_open_global(decl->node, decl->name, NULL, resolve);
-    set_attribs(sema, it, decl->visibility);
-
-    return it;
+    return tree_open_global(decl->node, decl->name, NULL, resolve);
 }
 
 static tree_t *forward_var(tree_t *sema, obr_t *decl)
@@ -96,10 +93,7 @@ static tree_t *forward_var(tree_t *sema, obr_t *decl)
 
     tree_t *type = obr_sema_type(sema, decl->type);
     tree_t *mut = tree_qualify(decl->node, type, eQualMutable);
-    tree_t *it = tree_open_global(decl->node, decl->name, mut, resolve);
-    set_attribs(sema, it, decl->visibility);
-
-    return it;
+    return tree_open_global(decl->node, decl->name, mut, resolve);
 }
 
 static tree_t *forward_type(tree_t *sema, obr_t *decl)
@@ -110,10 +104,7 @@ static tree_t *forward_type(tree_t *sema, obr_t *decl)
         .fnResolve = resolve_type
     };
 
-    tree_t *it = tree_open_decl(decl->node, decl->name, resolve);
-    set_attribs(sema, it, decl->visibility);
-
-    return it;
+    return tree_open_decl(decl->node, decl->name, resolve);
 }
 
 static obr_forward_t forward_inner(tree_t *sema, obr_t *decl)
