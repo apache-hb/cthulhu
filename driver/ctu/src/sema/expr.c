@@ -54,7 +54,7 @@ static tree_t *verify_expr_type(tree_t *sema, tree_kind_t kind, const tree_t *ty
     return tree_error(node, "invalid implicit type conversion");
 }
 
-static tree_t *ctu_sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
     const tree_t *type = implicitType ? implicitType : ctu_get_bool_type();
 
@@ -64,7 +64,7 @@ static tree_t *ctu_sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *impl
     return tree_expr_bool(expr->node, type, expr->boolValue);
 }
 
-static tree_t *ctu_sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
     const tree_t *type = implicitType ? implicitType : ctu_get_int_type(eDigitInt, eSignSigned); // TODO: calculate proper type to use
 
@@ -74,7 +74,7 @@ static tree_t *ctu_sema_int(tree_t *sema, const ctu_t *expr, const tree_t *impli
     return tree_expr_digit(expr->node, type, expr->intValue);
 }
 
-static tree_t *ctu_sema_name(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_name(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
     tree_t *decl = sema_decl_name(sema, expr->node, expr->path);
     if (tree_is(decl, eTreeError))
@@ -86,13 +86,54 @@ static tree_t *ctu_sema_name(tree_t *sema, const ctu_t *expr, const tree_t *impl
     return tree_resolve(tree_get_cookie(sema), decl);
 }
 
+static tree_t *sema_compare(tree_t *sema, const ctu_t *expr)
+{
+    tree_t *left = ctu_sema_rvalue(sema, expr->lhs, NULL);
+    tree_t *right = ctu_sema_rvalue(sema, expr->rhs, NULL);
+
+    if (tree_is(left, eTreeError) || tree_is(right, eTreeError))
+    {
+        return tree_error(expr->node, "invalid compare");
+    }
+
+    return tree_expr_compare(expr->node, ctu_get_bool_type(), expr->compare, left, right);
+}
+
+static tree_t *sema_binary(tree_t *sema, const ctu_t *expr, tree_t *implicitType)
+{
+    tree_t *left = ctu_sema_rvalue(sema, expr->lhs, implicitType);
+    tree_t *right = ctu_sema_rvalue(sema, expr->rhs, implicitType);
+
+    if (tree_is(left, eTreeError) || tree_is(right, eTreeError))
+    {
+        return tree_error(expr->node, "invalid binary");
+    }
+
+    // TODO: calculate proper type to use
+    const tree_t *commonType = implicitType == NULL ? tree_get_type(left) : implicitType;
+
+    return tree_expr_binary(expr->node, commonType, expr->binary, left, right);
+}
+
+static tree_t *sema_unary(tree_t *sema, const ctu_t *expr, tree_t *implicitType)
+{
+    tree_t *inner = ctu_sema_rvalue(sema, expr->expr, implicitType);
+
+    if (tree_is(inner, eTreeError))
+    {
+        return tree_error(expr->node, "invalid unary");
+    }
+
+    return tree_expr_unary(expr->node, expr->unary, inner);
+}
+
 tree_t *ctu_sema_lvalue(tree_t *sema, const ctu_t *expr, tree_t *implicitType)
 {
     CTASSERT(expr != NULL);
 
     switch (expr->kind)
     {
-    case eCtuExprName: return ctu_sema_name(sema, expr, implicitType);
+    case eCtuExprName: return sema_name(sema, expr, implicitType);
 
     default: NEVER("invalid lvalue-expr kind %d", expr->kind);
     }
@@ -106,22 +147,31 @@ tree_t *ctu_sema_rvalue(tree_t *sema, const ctu_t *expr, tree_t *implicitType)
 
     switch (expr->kind)
     {
-    case eCtuExprBool: return ctu_sema_bool(sema, expr, inner);
-    case eCtuExprInt: return ctu_sema_int(sema, expr, inner);
-    case eCtuExprName: return tree_expr_load(expr->node, ctu_sema_name(sema, expr, implicitType));
+    case eCtuExprBool: return sema_bool(sema, expr, inner);
+    case eCtuExprInt: return sema_int(sema, expr, inner);
+    case eCtuExprName: return tree_expr_load(expr->node, sema_name(sema, expr, implicitType));
+
+    case eCtuExprCompare: return sema_compare(sema, expr);
+    case eCtuExprBinary: return sema_binary(sema, expr, inner);
+    case eCtuExprUnary: return sema_unary(sema, expr, inner);
 
     default: NEVER("invalid rvalue-expr kind %d", expr->kind);
     }
 }
 
-static tree_t *ctu_sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
+static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 {
     tree_t *type = stmt->type == NULL ? NULL : ctu_sema_type(sema, stmt->type);
     tree_t *value = stmt->value == NULL ? NULL : ctu_sema_rvalue(sema, stmt->value, type);
 
     CTASSERT(value != NULL || type != NULL);
 
-    tree_t *self = tree_decl_local(decl->node, stmt->name, type);
+    const tree_t *actualType = type != NULL
+        ? tree_resolve(tree_get_cookie(sema), type)
+        : tree_get_type(value);
+
+    tree_t *self = tree_decl_local(decl->node, stmt->name, actualType);
+    tree_add_local(decl, self);
 
     if (value != NULL)
     {
@@ -161,7 +211,7 @@ tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     switch (stmt->kind)
     {
     case eCtuStmtLocal:
-        return ctu_sema_local(sema, decl, stmt);
+        return sema_local(sema, decl, stmt);
     case eCtuStmtList:
         return ctu_sema_stmts(sema, decl, stmt);
 

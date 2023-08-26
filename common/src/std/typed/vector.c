@@ -74,8 +74,7 @@ void typevec_get(typevec_t *vec, size_t index, void *dst)
 
 void typevec_tail(typevec_t *vec, void *dst)
 {
-    CTASSERT(vec != NULL);
-    CTASSERT(vec->used > 0);
+    CTASSERT(typevec_len(vec) > 0);
 
     typevec_get(vec, vec->used - 1, dst);
 }
@@ -96,8 +95,7 @@ void typevec_push(typevec_t *vec, const void *src)
 
 void typevec_pop(typevec_t *vec, void *dst)
 {
-    CTASSERT(vec != NULL);
-    CTASSERT(vec->used > 0);
+    CTASSERT(typevec_len(vec) > 0);
 
     void *src = typevec_offset(vec, --vec->used);
     memcpy(dst, src, vec->typeSize);
@@ -105,8 +103,7 @@ void typevec_pop(typevec_t *vec, void *dst)
 
 void *typevec_offset(typevec_t *vec, size_t index)
 {
-    CTASSERT(vec != NULL);
-    CTASSERT(index < vec->used);
+    CTASSERT(index < typevec_len(vec));
 
     return ((char*)vec->data) + (index * vec->typeSize);
 }

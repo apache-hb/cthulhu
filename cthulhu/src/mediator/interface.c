@@ -14,6 +14,8 @@
 
 #include "report/report.h"
 
+#include "os/os.h"
+
 #include "stacktrace/stacktrace.h"
 
 #include "cthulhu/tree/tree.h"
@@ -32,6 +34,7 @@ static void runtime_init(void)
 {
     GLOBAL_INIT();
 
+    os_init();
     stacktrace_init();
     init_gmp(&globalAlloc);
 }

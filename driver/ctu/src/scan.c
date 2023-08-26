@@ -18,6 +18,18 @@ ctu_digit_t ctu_parse_digit(const char *str, size_t base)
     return result;
 }
 
+ctu_string_t ctu_parse_string(reports_t *reports, const char *str, size_t length)
+{
+    CTU_UNUSED(reports);
+
+    ctu_string_t result = {
+        .text = ctu_strdup(str),
+        .length = length
+    };
+
+    return result;
+}
+
 void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {
     CTU_UNUSED(state);

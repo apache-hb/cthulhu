@@ -1,5 +1,10 @@
 #include "common.h"
 
+void os_init(void)
+{
+    // empty
+}
+
 os_result_t *linux_result(int error, const void *value, size_t size)
 {
     return os_result_new(error, value, size);

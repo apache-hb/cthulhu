@@ -24,6 +24,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %union {
     char *ident;
+    ctu_string_t string;
     ctu_digit_t digit;
 
     bool boolean;
@@ -41,6 +42,9 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %token<boolean>
     BOOLEAN "`boolean literal`"
+
+%token<string>
+    STRING "`string literal`"
 
 %token
     MODULE "`module`"
@@ -67,10 +71,32 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     DIVIDE "`/`"
     MODULO "`%`"
 
+    NOT "`!`"
+
+    SHL "`<<`"
+    SHR "`>>`"
+    BITAND "`&`"
+    BITOR "`|`"
+    BITXOR "`^`"
+
+    LT "`<`"
+    GT "`>`"
+    LTE "`<=`"
+    GTE "`>=`"
+
+    EQ "`==`"
+    NEQ "`!=`"
+
+    AND "`&&`"
+    OR "`||`"
+
     ASSIGN "`=`"
     SEMI "`;`"
     COLON "`:`"
     COLON2 "`::`"
+
+    LPAREN "`(`"
+    RPAREN "`)`"
 
     LBRACE "`{`"
     RBRACE "`}`"
@@ -82,12 +108,32 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     structFields
     stmtList
 
+/**
+ * order of operations, tightest first
+ * === all mathematical operations come first ===
+ * 1: unary ops `!expr` `-expr` `+expr`
+ * 2: multiplication `lhs * rhs` `lhs / rhs` `lhs % rhs`
+ * 3: addition `lhs + rhs` `lhs - rhs`
+ * === then bitwise operations ===
+ * 4: bitwise shift `lhs << rhs` `lhs >> rhs`
+ * 5: bitwise ops `lhs & rhs` `lhs | rhs`
+ * 6: bitwise xor `lhs ^ rhs`
+ * === then comparisons ===
+ * 7: comparisons `lhs < rhs` `lhs <= rhs` `lhs > rhs` `lhs >= rhs`
+ * 8: equality `lhs == rhs` `lhs != rhs`
+ * === then boolean operations ===
+ * 9: boolean and `lhs && rhs`
+ * 10: boolean or `lhs || rhs`
+ */
+
 %type<ast>
     import
     decl globalDecl functionDecl structDecl structField typeAliasDecl
     functionBody
     type
-    expr maybeExpr
+    primary expr
+    orExpr andExpr eqExpr cmpExpr xorExpr bitExpr shiftExpr addExpr mulExpr unaryExpr postExpr
+    maybeExpr
     stmt stmts localDecl
 
 %type<ident>
@@ -211,9 +257,68 @@ maybeExpr: NOINIT { $$ = NULL; }
     | expr { $$ = $1; }
     ;
 
-expr: INTEGER { $$ = ctu_expr_int(x, @$, $1.value); }
+primary: LPAREN expr RPAREN { $$ = $2; }
+    | INTEGER { $$ = ctu_expr_int(x, @$, $1.value); }
     | BOOLEAN { $$ = ctu_expr_bool(x, @$, $1); }
+    | STRING { $$ = ctu_expr_string(x, @$, $1.text, $1.length); }
     | path { $$ = ctu_expr_name(x, @$, $1); }
+    ;
+
+postExpr: primary { $$ = $1; }
+    ;
+
+unaryExpr: postExpr { $$ = $1; }
+    | MINUS unaryExpr { $$ = ctu_expr_unary(x, @$, eUnaryNeg, $2); }
+    | PLUS unaryExpr { $$ = ctu_expr_unary(x, @$, eUnaryAbs, $2); }
+    | NOT unaryExpr { $$ = ctu_expr_unary(x, @$, eUnaryNot, $2); }
+    ;
+
+mulExpr: unaryExpr { $$ = $1; }
+    | unaryExpr STAR mulExpr { $$ = ctu_expr_binary(x, @$, eBinaryMul, $1, $3); }
+    | unaryExpr DIVIDE mulExpr { $$ = ctu_expr_binary(x, @$, eBinaryDiv, $1, $3); }
+    | unaryExpr MODULO mulExpr { $$ = ctu_expr_binary(x, @$, eBinaryRem, $1, $3); }
+    ;
+
+addExpr: mulExpr { $$ = $1; }
+    | mulExpr PLUS addExpr { $$ = ctu_expr_binary(x, @$, eBinaryAdd, $1, $3); }
+    | mulExpr MINUS addExpr { $$ = ctu_expr_binary(x, @$, eBinarySub, $1, $3); }
+    ;
+
+shiftExpr: addExpr { $$ = $1; }
+    | addExpr SHL shiftExpr { $$ = ctu_expr_binary(x, @$, eBinaryShl, $1, $3); }
+    | addExpr SHR shiftExpr { $$ = ctu_expr_binary(x, @$, eBinaryShr, $1, $3); }
+    ;
+
+bitExpr: shiftExpr { $$ = $1; }
+    | shiftExpr BITAND bitExpr { $$ = ctu_expr_binary(x, @$, eBinaryBitAnd, $1, $3); }
+    | shiftExpr BITOR bitExpr { $$ = ctu_expr_binary(x, @$, eBinaryBitOr, $1, $3); }
+    ;
+
+xorExpr: bitExpr { $$ = $1; }
+    | bitExpr BITXOR xorExpr { $$ = ctu_expr_binary(x, @$, eBinaryXor, $1, $3); }
+    ;
+
+cmpExpr: xorExpr { $$ = $1; }
+    | xorExpr LT cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareLt, $1, $3); }
+    | xorExpr GT cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareGt, $1, $3); }
+    | xorExpr LTE cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareLte, $1, $3); }
+    | xorExpr GTE cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareGte, $1, $3); }
+    ;
+
+eqExpr: cmpExpr { $$ = $1; }
+    | eqExpr EQ cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareEq, $1, $3); }
+    | eqExpr NEQ cmpExpr { $$ = ctu_expr_compare(x, @$, eCompareNeq, $1, $3); }
+    ;
+
+andExpr: eqExpr { $$ = $1; }
+    | eqExpr AND xorExpr { $$ = ctu_expr_compare(x, @$, eCompareAnd, $1, $3); }
+    ;
+
+orExpr: andExpr { $$ = $1; }
+    | orExpr OR andExpr { $$ = ctu_expr_compare(x, @$, eCompareOr, $1, $3); }
+    ;
+
+expr: orExpr { $$ = $1; }
     ;
 
 /* basic */

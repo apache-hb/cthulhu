@@ -3,9 +3,7 @@ type DWORD = uint;
 const MAX_COMPUTERNAME_LENGTH: DWORD = 15u;
 
 export def getComputerName: str {
-    // problem is that DWORD is not resolved fully 
+    // problem is that DWORD is not resolved fully
     // when compiling this expression, this causes the typechecker to flip out
     const kNameLength = MAX_COMPUTERNAME_LENGTH + 1u;
-
-    return "";
 }

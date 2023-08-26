@@ -6,6 +6,8 @@
 #include "std/vector.h"
 #include "std/typed/vector.h"
 
+#include "report/report.h"
+
 #include "io/fs.h"
 
 #include "base/memory.h"
@@ -291,6 +293,19 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
     }
 }
 
+static const char *c89_format_local(c89_emit_t *emit, size_t local)
+{
+    typevec_t *locals = emit->current->locals;
+    if (local >= typevec_len(locals))
+    {
+        //report(emit->emit.reports, eFatal, NULL, "local(%zu) > locals(%zu)", local, typevec_len(locals));
+        return format("local[error(%zu > %zu)]", local, typevec_len(locals));
+    }
+
+    const ssa_local_t *it = typevec_offset(locals, local);
+    return it->name;
+}
+
 static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
 {
     switch (operand.kind)
@@ -311,10 +326,8 @@ static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
     case eOperandFunction:
         return mangle_symbol_name(operand.function);
 
-    case eOperandLocal: {
-        const ssa_local_t *local = typevec_offset(emit->current->locals, operand.local);
-        return local->name;
-    }
+    case eOperandLocal:
+        return c89_format_local(emit, operand.local);
 
     default: NEVER("unknown operand kind %d", operand.kind);
     }

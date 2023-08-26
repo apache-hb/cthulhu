@@ -23,7 +23,7 @@ void typevec_pop(typevec_t *vec, void *dst);
 /**
  * @brief get a pointer to the value at the given index
  *
- * @note the pointer is only valid until the next call to typevec_push or typevec_pop
+ * @note the pointer is only valid until the next call to @a typevec_push or @a typevec_pop
  *
  * @param vec the vector to get the value from
  * @param index the index to get the value from

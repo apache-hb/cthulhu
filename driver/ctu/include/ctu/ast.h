@@ -3,31 +3,45 @@
 #include "scan/scan.h"
 #include "scan/node.h"
 
+#include "cthulhu/tree/ops.h"
+
 #include <gmp.h>
 
 typedef struct ctu_t ctu_t;
 typedef struct vector_t vector_t;
 
 typedef enum ctu_kind_t {
+    /* expressions */
     eCtuExprInt,
     eCtuExprBool,
+    eCtuExprString,
     eCtuExprName,
 
+    eCtuExprCompare,
+    eCtuExprBinary,
+    eCtuExprUnary,
+
+    /* statements */
     eCtuStmtList,
     eCtuStmtLocal,
 
+    /* types */
     eCtuTypeName,
     eCtuTypePointer,
 
+    /* real decls */
     eCtuDeclGlobal,
     eCtuDeclFunction,
 
+    /* type decls */
     eCtuDeclTypeAlias,
     eCtuDeclUnion,
     eCtuDeclStruct,
 
+    /* intermediates */
     eCtuField,
 
+    /* modules */
     eCtuImport,
     eCtuModule
 } ctu_kind_t;
@@ -72,17 +86,42 @@ typedef struct ctu_t {
             };
         };
 
-        /* eCtuStmtList */
-        vector_t *stmts;
-
         /* eCtuExprInt */
         mpz_t intValue;
 
         /* eCtuExprBool */
         bool boolValue;
 
+        /* eCtuExprString */
+        struct {
+            char *text;
+            size_t length;
+        };
+
         /* eCtuExprName */
         vector_t *path;
+
+        struct {
+            union {
+                /* eCtuExprBinary */
+                binary_t binary;
+
+                /* eCtuExprCompare */
+                compare_t compare;
+            };
+
+            ctu_t *lhs;
+            ctu_t *rhs;
+        };
+
+        /* eCtuExprUnary */
+        struct {
+            unary_t unary;
+            ctu_t *expr;
+        };
+
+        /* eCtuStmtList */
+        vector_t *stmts;
 
         /* eCtuTypeName */
         vector_t *typeName;
@@ -119,7 +158,13 @@ ctu_t *ctu_stmt_local(scan_t *scan, where_t where, bool mutable, char *name, ctu
 
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value);
 ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value);
+ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length);
+
 ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path);
+
+ctu_t *ctu_expr_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *expr);
+ctu_t *ctu_expr_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs);
+ctu_t *ctu_expr_compare(scan_t *scan, where_t where, compare_t compare, ctu_t *lhs, ctu_t *rhs);
 
 ///
 /// types

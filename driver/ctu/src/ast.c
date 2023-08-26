@@ -68,12 +68,47 @@ ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value)
     return ast;
 }
 
+ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprString);
+    ast->text = text;
+    ast->length = length;
+    return ast;
+}
+
 ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprName);
     ast->path = path;
     return ast;
 }
+
+ctu_t *ctu_expr_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *expr)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprUnary);
+    ast->unary = unary;
+    ast->expr = expr;
+    return ast;
+}
+
+ctu_t *ctu_expr_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprBinary);
+    ast->binary = binary;
+    ast->lhs = lhs;
+    ast->rhs = rhs;
+    return ast;
+}
+
+ctu_t *ctu_expr_compare(scan_t *scan, where_t where, compare_t compare, ctu_t *lhs, ctu_t *rhs)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprCompare);
+    ast->compare = compare;
+    ast->lhs = lhs;
+    ast->rhs = rhs;
+    return ast;
+}
+
 
 /* types */
 

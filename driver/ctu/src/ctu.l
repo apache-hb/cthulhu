@@ -34,6 +34,27 @@ WS [ \t\r\v\n\f]
 "/" { return DIVIDE; }
 "%" { return MODULO; }
 
+"<<" { return SHL; }
+">>" { return SHR; }
+
+"<=" { return LTE; }
+">=" { return GTE; }
+
+"<" { return LT; }
+">" { return GT; }
+
+"==" { return EQ; }
+"!=" { return NEQ; }
+
+"&&" { return AND; }
+"||" { return OR; }
+
+"&" { return BITAND; }
+"|" { return BITOR; }
+"^" { return BITXOR; }
+
+"!" { return NOT; }
+
 ";" { return SEMI; }
 ":" { return COLON; }
 "::" { return COLON2; }
@@ -89,6 +110,11 @@ WS [ \t\r\v\n\f]
 [0-9]+{SUFFIX} {
     yylval->digit = ctu_parse_digit(yytext, 10);
     return INTEGER;
+}
+
+\"([^"\\\n]|{ESCAPES})*\" {
+	yylval->string = ctu_parse_string(scan_reports(yyextra), yytext + 1, yyleng - 2);
+    return STRING;
 }
 
 . { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }

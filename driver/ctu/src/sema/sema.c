@@ -56,6 +56,7 @@ void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl)
 
 static tree_t *kIntTypes[eDigitTotal * eSignTotal] = { NULL };
 static tree_t *kBoolType = NULL;
+static tree_t *kStrType = NULL;
 
 static tree_t *make_int_type(const char *name, digit_t digit, sign_t sign)
 {
@@ -67,6 +68,11 @@ static tree_t *make_bool_type(const char *name)
     return (kBoolType = tree_type_bool(node_builtin(), name));
 }
 
+static tree_t *make_str_type(const char *name)
+{
+    return (kStrType = tree_type_string(node_builtin(), name));
+}
+
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
 {
     return kIntTypes[digit * eSignTotal + sign];
@@ -75,6 +81,11 @@ tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
 tree_t *ctu_get_bool_type(void)
 {
     return kBoolType;
+}
+
+tree_t *ctu_get_str_type(void)
+{
+    return kStrType;
 }
 
 tree_t *ctu_rt_mod(lifetime_t *lifetime)
@@ -94,6 +105,7 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
     tree_t *root = lifetime_sema_new(lifetime, "runtime", eCtuTagTotal, sizes);
 
     ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
+    ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
 
     ctu_add_decl(root, eCtuTagTypes, "char", make_int_type("char", eDigitChar, eSignSigned));
     ctu_add_decl(root, eCtuTagTypes, "uchar", make_int_type("uchar", eDigitChar, eSignUnsigned));

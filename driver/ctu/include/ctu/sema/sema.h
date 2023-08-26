@@ -33,6 +33,7 @@ void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl);
 
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign);
 tree_t *ctu_get_bool_type(void);
+tree_t *ctu_get_str_type(void);
 
 vector_t *ctu_rt_path(void);
 tree_t *ctu_rt_mod(lifetime_t *lifetime);

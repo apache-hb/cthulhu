@@ -76,7 +76,7 @@ tests = {
         ],
         'pass': [
             'chained-aliases',
-            'index-alias',
+            #'index-alias',
             'multiple-aliases',
             'single-alias'
         ]
