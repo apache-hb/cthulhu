@@ -1,0 +1,2 @@
+export def testFalse: bool { return false; }
+export def testTrue: bool { return true; }

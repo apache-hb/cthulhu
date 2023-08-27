@@ -162,12 +162,22 @@ static bool is_entry_point(tree_link_t link)
     return link == eLinkEntryCli || link == eLinkEntryGui;
 }
 
+static const char *format_symbol(c89_emit_t *emit, const ssa_type_t *type, const char *name)
+{
+    return c89_format_type(emit, type, name, true);
+}
+
+static const char *format_local(c89_emit_t *emit, const ssa_type_t *type, const char *name)
+{
+    return c89_format_type(emit, type, name, false);
+}
+
 static void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *global)
 {
     c89_source_t *src = map_get_ptr(emit->srcmap, mod);
     c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
 
-    const char *it = c89_format_type(emit, global->type, mangle_symbol_name(global));
+    const char *it = format_symbol(emit, global->type, mangle_symbol_name(global));
 
     const char *link = format_c89_link(global->linkage);
 
@@ -175,11 +185,11 @@ static void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ss
     {
         CTASSERT(global->linkage != eLinkModule); // TODO: move this check into the checker
 
-        write_string(hdr->io, "%s%s;\n", link, it);
+        write_string(hdr->io, "%s%s[1];\n", link, it);
     }
     else
     {
-        write_string(src->io, "%s%s;\n", link, it);
+        write_string(src->io, "%s%s[1];\n", link, it);
     }
 }
 
@@ -197,7 +207,7 @@ static void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const 
 
     ssa_type_closure_t closure = type->closure;
     const char *params = c89_format_params(emit, closure.params, closure.variadic);
-    const char *result = c89_format_type(emit, closure.result, mangle_symbol_name(func));
+    const char *result = format_symbol(emit, closure.result, mangle_symbol_name(func));
 
     const char *link = format_c89_link(func->linkage);
 
@@ -272,7 +282,7 @@ static const char *c89_name_vreg(c89_emit_t *emit, const ssa_step_t *step, const
     set_step_type(emit, step, (ssa_type_t*)type);
 
     const char *id = format("vreg%s", get_step_name(&emit->emit, step));
-    return c89_format_type(emit, type, id);
+    return format_symbol(emit, type, id);
 }
 
 static const char *c89_name_vreg_by_operand(c89_emit_t *emit, const ssa_step_t *step, ssa_operand_t operand)
@@ -298,7 +308,7 @@ static const char *c89_format_local(c89_emit_t *emit, size_t local)
     typevec_t *locals = emit->current->locals;
     if (local >= typevec_len(locals))
     {
-        //report(emit->emit.reports, eFatal, NULL, "local(%zu) > locals(%zu)", local, typevec_len(locals));
+        report(emit->emit.reports, eFatal, NULL, "local(%zu) > locals(%zu)", local, typevec_len(locals));
         return format("local[error(%zu > %zu)]", local, typevec_len(locals));
     }
 
@@ -361,12 +371,12 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         {
         case eOpStore: {
             ssa_store_t store = step->store;
-            write_string(io, "\t%s = %s;\n", c89_format_operand(emit, store.dst), c89_format_operand(emit, store.src));
+            write_string(io, "\t%s[0] = %s;\n", c89_format_operand(emit, store.dst), c89_format_operand(emit, store.src));
             break;
         }
         case eOpLoad: {
             ssa_load_t load = step->load;
-            write_string(io, "\t%s = %s;\n",
+            write_string(io, "\t%s = %s[0];\n",
                 c89_name_vreg_by_operand(emit, step, load.src),
                 c89_format_operand(emit, load.src)
             );
@@ -470,7 +480,7 @@ void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symb
 {
     c89_source_t *src = map_get_ptr(emit->srcmap, mod);
 
-    const char *it = c89_format_type(emit, symbol->type, mangle_symbol_name(symbol));
+    const char *it = format_symbol(emit, symbol->type, mangle_symbol_name(symbol));
     const char *link = format_c89_link(symbol->linkage);
 
     if (symbol->linkage != eLinkImport)
@@ -479,11 +489,11 @@ void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symb
         if (value->init)
         {
             const char *valStr = c89_format_value(emit, value);
-            write_string(src->io, "%s%s = %s;\n", link, it, valStr);
+            write_string(src->io, "%s%s[1] = { %s };\n", link, it, valStr);
         }
         else
         {
-            write_string(src->io, "%s%s;\n", link, it); // TODO: is this needed
+            write_string(src->io, "%s%s[1];\n", link, it); // TODO: is this needed
         }
     }
 }
@@ -494,8 +504,8 @@ static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_local_t *local = typevec_offset(locals, i);
-        write_string(io, "\t%s;\n",
-            c89_format_type(emit, local->type, local->name)
+        write_string(io, "\t%s[1];\n",
+            format_local(emit, local->type, local->name)
         );
     }
 }
@@ -509,7 +519,7 @@ void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sy
 
     ssa_type_closure_t closure = type->closure;
     const char *params = c89_format_params(emit, closure.params, closure.variadic);
-    const char *result = c89_format_type(emit, closure.result, mangle_symbol_name(func));
+    const char *result = format_symbol(emit, closure.result, mangle_symbol_name(func));
 
     const char *link = format_c89_link(func->linkage);
 

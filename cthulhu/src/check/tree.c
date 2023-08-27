@@ -1,0 +1,439 @@
+#include "common.h"
+
+#include "cthulhu/mediator/driver.h"
+
+#include "cthulhu/tree/tree.h"
+#include "cthulhu/tree/query.h"
+
+#include "report/report.h"
+
+#include "std/vector.h"
+#include "std/set.h"
+#include "std/map.h"
+#include "std/str.h"
+
+#include "base/panic.h"
+
+typedef struct check_t {
+    reports_t *reports;
+
+    const tree_t *cliEntryPoint;
+    const tree_t *guiEntryPoint;
+
+    vector_t *exprStack;
+    vector_t *typeStack;
+
+    set_t *checkedExprs;
+    set_t *checkedTypes;
+} check_t;
+
+// check for a valid name and a type being set
+static bool check_simple(check_t *check, const tree_t *decl)
+{
+    if (tree_is(decl, eTreeError)) { return false; } // TODO: are errors always reported?
+
+    const char *id = tree_get_name(decl);
+    CTASSERT(id != NULL);
+    CTASSERT(!str_equal(id, ""));
+
+    CTASSERTF(decl->type != NULL, "decl `%s` has no type", id);
+
+    return true;
+}
+
+static void check_global_attribs(check_t *check, const tree_t *global)
+{
+    const attribs_t *attribs = tree_get_attrib(global);
+    switch (attribs->link)
+    {
+    case eLinkImport:
+        if (global->global != NULL)
+        {
+            message_t *id = report(check->reports, eWarn, tree_get_node(global),
+                "global `%s` is marked as imported but has an implementation",
+                tree_get_name(global)
+            );
+            report_note(id, "implementation will be ignored");
+        }
+        break;
+
+    case eLinkModule:
+        if (attribs->mangle != NULL)
+        {
+            message_t *id = report(check->reports, eWarn, tree_get_node(global),
+                "global `%s` has internal linkage and user defined mangling",
+                tree_get_name(global)
+            );
+            report_note(id, "attribute will be ignored");
+        }
+        break;
+
+    case eLinkEntryGui:
+    case eLinkEntryCli:
+        report(check->reports, eFatal, tree_get_node(global),
+            "global `%s` is marked as an entry point but is not a function",
+            tree_get_name(global)
+        );
+        break;
+
+    default: break;
+    }
+}
+
+static void check_func_attribs(check_t *check, const tree_t *fn)
+{
+    const attribs_t *attribs = tree_get_attrib(fn);
+
+    switch (attribs->link)
+    {
+    case eLinkImport:
+        if (fn->body != NULL)
+        {
+            message_t *id = report(check->reports, eWarn, tree_get_node(fn),
+                "function `%s` is marked as imported but has an implementation",
+                tree_get_name(fn)
+            );
+            report_note(id, "implementation will be ignored");
+        }
+        break;
+
+    case eLinkModule:
+        if (attribs->mangle != NULL)
+        {
+            message_t *id = report(check->reports, eWarn, tree_get_node(fn),
+                "function `%s` has internal linkage and user defined mangling",
+                tree_get_name(fn)
+            );
+            report_note(id, "attribute will be ignored");
+        }
+        break;
+
+    case eLinkEntryCli:
+        if (check->cliEntryPoint != NULL)
+        {
+            message_t *id = report(check->reports, eFatal, tree_get_node(fn),
+                "multiple CLI entry points defined"
+            );
+            report_append(id, tree_get_node(check->cliEntryPoint), "previous entry point defined here");
+        }
+        else
+        {
+            check->cliEntryPoint = fn;
+        }
+        break;
+    case eLinkEntryGui:
+        if (check->guiEntryPoint != NULL)
+        {
+            message_t *id = report(check->reports, eFatal, tree_get_node(fn),
+                "multiple GUI entry points defined"
+            );
+            report_append(id, tree_get_node(check->guiEntryPoint), "previous entry point defined here");
+        }
+        else
+        {
+            check->guiEntryPoint = fn;
+        }
+        break;
+
+    default: break;
+    }
+}
+
+static void check_global_recursion(check_t *check, const tree_t *global);
+
+static void check_expr_recursion(check_t *check, const tree_t *tree)
+{
+    switch (tree_get_kind(tree))
+    {
+    case eTreeExprEmpty:
+    case eTreeExprUnit:
+    case eTreeExprBool:
+    case eTreeExprDigit:
+    case eTreeExprString:
+        break;
+
+    case eTreeExprLoad:
+        check_expr_recursion(check, tree->load);
+        break;
+
+    case eTreeExprCall: {
+        check_expr_recursion(check, tree->callee);
+        size_t len = vector_len(tree->args);
+        for (size_t i = 0; i < len; ++i)
+        {
+            const tree_t *arg = vector_get(tree->args, i);
+            check_expr_recursion(check, arg);
+        }
+        break;
+    }
+
+    case eTreeExprBinary:
+        check_expr_recursion(check, tree->lhs);
+        check_expr_recursion(check, tree->rhs);
+        break;
+
+    case eTreeExprUnary:
+        check_expr_recursion(check, tree->operand);
+        break;
+
+    case eTreeExprCompare:
+        check_expr_recursion(check, tree->lhs);
+        check_expr_recursion(check, tree->rhs);
+        break;
+
+    case eTreeDeclGlobal:
+        check_global_recursion(check, tree);
+        break;
+    default: NEVER("invalid node kind %s (check-tree-recursion)", tree_to_string(tree));
+    }
+}
+
+static void check_global_recursion(check_t *check, const tree_t *global)
+{
+    if (set_contains_ptr(check->checkedExprs, global))
+    {
+        return;
+    }
+
+    size_t idx = vector_find(check->exprStack, global);
+    if (idx == SIZE_MAX)
+    {
+        if (global->global != NULL)
+        {
+            vector_push(&check->exprStack, (tree_t*)global);
+            check_expr_recursion(check, global->global);
+            vector_drop(check->exprStack);
+        }
+    }
+    else
+    {
+        message_t *id = report(check->reports, eFatal, tree_get_node(global),
+            "evaluation of `%s` may be infinite",
+            tree_get_name(global)
+        );
+        size_t len = vector_len(check->exprStack);
+        for (size_t i = 0; i < len; i++)
+        {
+            const tree_t *decl = vector_get(check->exprStack, i);
+            report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
+        }
+    }
+
+    set_add_ptr(check->checkedExprs, global);
+}
+
+///
+/// recursive struct checking
+///
+
+static void check_struct_recursion(check_t *check, const tree_t *type);
+
+static void check_struct_type_recursion(check_t *check, const tree_t *type)
+{
+    CTASSERT(type != NULL);
+
+    switch (type->kind)
+    {
+    case eTreeTypeBool:
+    case eTreeTypeDigit:
+    case eTreeTypeString:
+    case eTreeTypeUnit:
+    case eTreeTypeEmpty:
+    case eTreeTypePointer:
+        break;
+
+    case eTreeTypeStruct:
+        check_struct_recursion(check, type);
+        break;
+
+    default: NEVER("invalid type kind %s (check-type-size)", tree_to_string(type));
+    }
+}
+
+static void check_struct_recursion(check_t *check, const tree_t *type)
+{
+    if (set_contains_ptr(check->checkedTypes, type))
+    {
+        return;
+    }
+
+    size_t idx = vector_find(check->typeStack, type);
+    if (idx == SIZE_MAX)
+    {
+        vector_push(&check->typeStack, (tree_t*)type);
+        size_t len = vector_len(type->fields);
+        for (size_t i = 0; i < len; i++)
+        {
+            const tree_t *field = vector_get(type->fields, i);
+            check_struct_type_recursion(check, field->type);
+        }
+        vector_drop(check->typeStack);
+    }
+    else
+    {
+        message_t *id = report(check->reports, eFatal, tree_get_node(type),
+            "size of type `%s` may be infinite",
+            tree_get_name(type)
+        );
+        size_t len = vector_len(check->typeStack);
+        for (size_t i = 0; i < len; i++)
+        {
+            const tree_t *decl = vector_get(check->typeStack, i);
+            report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
+        }
+    }
+
+    set_add_ptr(check->checkedTypes, type);
+}
+
+///
+/// recursive pointer checking
+///
+
+static void check_type_recursion(check_t *check, const tree_t *type);
+
+static void check_inner_type_recursion(check_t *check, const tree_t *type)
+{
+    CTASSERT(type != NULL);
+
+    switch (type->kind)
+    {
+    case eTreeTypeBool:
+    case eTreeTypeDigit:
+    case eTreeTypeString:
+    case eTreeTypeUnit:
+    case eTreeTypeEmpty:
+    case eTreeTypeStruct:
+        break;
+
+    case eTreeTypePointer:
+        check_type_recursion(check, type->pointer);
+        break;
+
+    default: NEVER("invalid type kind `%s` (check-type-size)", tree_to_string(type));
+    }
+}
+
+static void check_type_recursion(check_t *check, const tree_t *type)
+{
+    if (set_contains_ptr(check->checkedTypes, type))
+    {
+        return;
+    }
+
+    size_t idx = vector_find(check->typeStack, type);
+    if (idx == SIZE_MAX)
+    {
+        vector_push(&check->typeStack, (tree_t*)type);
+        check_inner_type_recursion(check, type);
+        vector_drop(check->typeStack);
+    }
+    else
+    {
+        message_t *id = report(check->reports, eFatal, tree_get_node(type),
+            "type `%s` contains an impossible type",
+            tree_get_name(type)
+        );
+        size_t len = vector_len(check->typeStack);
+        for (size_t i = 0; i < len; i++)
+        {
+            const tree_t *decl = vector_get(check->typeStack, i);
+            report_append(id, tree_get_node(decl), "call to `%s`", tree_get_name(decl));
+        }
+    }
+
+    set_add_ptr(check->checkedTypes, type);
+}
+
+static void check_any_type_recursion(check_t *check, const tree_t *type)
+{
+    switch (type->kind)
+    {
+    case eTreeTypeStruct: check_struct_recursion(check, type); break;
+
+    default: check_type_recursion(check, type); break;
+    }
+}
+
+static void check_module_valid(check_t *check, const tree_t *mod)
+{
+    CTASSERT(check != NULL);
+    CTASSERT(tree_is(mod, eTreeDeclModule));
+
+    logverbose("check %s", tree_get_name(mod));
+
+    vector_t *modules = map_values(tree_module_tag(mod, eSema2Modules));
+    size_t totalModules = vector_len(modules);
+    for (size_t i = 0; i < totalModules; i++)
+    {
+        const tree_t *child = vector_get(modules, i);
+        check_module_valid(check, child);
+    }
+
+    vector_t *globals = map_values(tree_module_tag(mod, eSema2Values));
+    size_t totalGlobals = vector_len(globals);
+    for (size_t i = 0; i < totalGlobals; i++)
+    {
+        const tree_t *global = vector_get(globals, i);
+        CTASSERT(tree_is(global, eTreeDeclGlobal));
+        check_simple(check, global);
+
+        check_global_attribs(check, global);
+        check_global_recursion(check, global);
+    }
+
+    vector_t *functions = map_values(tree_module_tag(mod, eSema2Procs));
+    size_t totalFunctions = vector_len(functions);
+    for (size_t i = 0; i < totalFunctions; i++)
+    {
+        const tree_t *function = vector_get(functions, i);
+        CTASSERT(tree_is(function, eTreeDeclFunction));
+        check_simple(check, function);
+
+        check_func_attribs(check, function);
+    }
+
+    vector_t *types = map_values(tree_module_tag(mod, eSema2Types));
+    size_t totalTypes = vector_len(types);
+    for (size_t i = 0; i < totalTypes; i++)
+    {
+        const tree_t *type = vector_get(types, i);
+        // check_ident(check, type); TODO: check these properly
+
+        // nothing else can be recursive (TODO: for now)
+        check_any_type_recursion(check, type);
+    }
+}
+
+void check_tree(reports_t *reports, map_t *mods)
+{
+    check_t check = {
+        .reports = reports,
+
+        .exprStack = vector_new(64),
+        .typeStack = vector_new(64),
+
+        .checkedExprs = set_new(64),
+        .checkedTypes = set_new(64)
+    };
+
+    map_iter_t iter = map_iter(mods);
+    while (map_has_next(&iter))
+    {
+        map_entry_t entry = map_next(&iter);
+        tree_t *mod = entry.value;
+
+        // TODO: required checks
+        // 0. no nodes are of the wrong type
+        // 1. no identifiers are invalid
+        // 1. only one 1 entry point of each type is present
+        // 2. no types can have infinite size
+        // 3. no global types may have circlic dependencies
+        // 4. make sure all return statements match the return type of a global or function
+        // 5. make sure all operands to nodes are the correct type
+
+        check_module_valid(&check, mod);
+
+        //tree_check(lifetime_get_reports(lifetime), ctx->root);
+    }
+}

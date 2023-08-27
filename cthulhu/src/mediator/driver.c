@@ -135,8 +135,7 @@ tree_t *lifetime_sema_new(lifetime_t *lifetime, const char *name, size_t len, co
 
     reports_t *reports = lifetime_get_reports(lifetime);
     cookie_t *cookie = lifetime_get_cookie(lifetime);
-    node_t *node = node_builtin();
-    tree_t *root = tree_module_root(reports, cookie, node, name, len, sizes);
+    tree_t *root = tree_module_root(reports, cookie, node_builtin(), name, len, sizes);
 
     return root;
 }

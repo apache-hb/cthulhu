@@ -10,7 +10,10 @@
 
 #include "report/report.h"
 
-static tree_t *tree_module_new(const node_t *node, const char *name, tree_t *parent, cookie_t *cookie, reports_t *reports, size_t decls, const size_t *sizes)
+static tree_t *tree_module_new(const node_t *node, const char *name,
+                               tree_t *parent, cookie_t *cookie,
+                               reports_t *reports, map_t *extra,
+                               size_t decls, const size_t *sizes)
 {
     CTASSERTF(decls >= eSema2Total, "module cannot be constructed with less than %zu tags (%zu given)", eSema2Total, decls);
     CTASSERT(reports != NULL);
@@ -19,6 +22,7 @@ static tree_t *tree_module_new(const node_t *node, const char *name, tree_t *par
     self->parent = parent;
     self->cookie = cookie;
     self->reports = reports;
+    self->extra = extra;
     self->tags = vector_of(decls);
 
     for (size_t i = 0; i < decls; i++)
@@ -32,14 +36,20 @@ static tree_t *tree_module_new(const node_t *node, const char *name, tree_t *par
 
 tree_t *tree_module_root(reports_t *reports, cookie_t *cookie, const node_t *node, const char *name, size_t decls, const size_t *sizes)
 {
-    return tree_module_new(node, name, NULL, cookie, reports, decls, sizes);
+    return tree_module_new(
+        node, name,
+        /* parent = */ NULL,
+        /* cookie = */ cookie,
+        /* reports = */ reports,
+        /* extra = */ map_optimal(64),
+        decls, sizes);
 }
 
 tree_t *tree_module(tree_t *parent, const node_t *node, const char *name, size_t decls, const size_t *sizes)
 {
     CTASSERT(parent != NULL);
 
-    return tree_module_new(node, name, parent, parent->cookie, parent->reports, decls, sizes);
+    return tree_module_new(node, name, parent, parent->cookie, parent->reports, parent->extra, decls, sizes);
 }
 
 void *tree_module_get(tree_t *self, size_t tag, const char *name)
@@ -77,7 +87,7 @@ void *tree_module_set(tree_t *self, size_t tag, const char *name, void *value)
 
 map_t *tree_module_tag(const tree_t *self, size_t tag)
 {
-    CTASSERT(self != NULL);
+    CTASSERT(tree_is(self, eTreeDeclModule));
 
     return vector_get(self->tags, tag);
 }
@@ -87,4 +97,18 @@ cookie_t *tree_get_cookie(tree_t *sema)
     CTASSERT(tree_is(sema, eTreeDeclModule));
 
     return sema->cookie;
+}
+
+void *tree_get_extra(tree_t *sema, const void *key)
+{
+    CTASSERT(tree_is(sema, eTreeDeclModule));
+
+    return map_get_ptr(sema->extra, key);
+}
+
+void tree_set_extra(tree_t *sema, const void *key, void *data)
+{
+    CTASSERT(tree_is(sema, eTreeDeclModule));
+
+    map_set_ptr(sema->extra, key, data);
 }

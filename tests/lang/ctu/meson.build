@@ -59,6 +59,14 @@ tests = {
     #         #'nested-break'
     #     ]
     # },
+    'logic.return': {
+        'pass': [
+            'bool-return'
+        ],
+        'fail': [
+            'missing-return'
+        ]
+    },
     'programs': {
         'pass': [
             'alias-var'

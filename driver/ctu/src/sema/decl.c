@@ -48,6 +48,7 @@ static void ctu_resolve_function(cookie_t *cookie, tree_t *sema, tree_t *self, v
     ctu_t *decl = user;
     CTASSERTF(decl->kind == eCtuDeclFunction, "decl %s is not a function", decl->name);
 
+    ctu_set_current_fn(sema, self);
     tree_t *body = ctu_sema_stmt(sema, self, decl->body);
     tree_close_function(self, body);
 }

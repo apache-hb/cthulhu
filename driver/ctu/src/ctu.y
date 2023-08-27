@@ -59,6 +59,10 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     UNION "`union`"
     TYPE "`type`"
 
+    RETURN "`return`"
+    IF "`if`"
+    ELSE "`else`"
+
     NOINIT "`noinit`"
 
     AS "`as`"
@@ -134,7 +138,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     primary expr
     orExpr andExpr eqExpr cmpExpr xorExpr bitExpr shiftExpr addExpr mulExpr unaryExpr postExpr
     maybeExpr
-    stmt stmts localDecl
+    stmt stmts localDecl returnStmt
 
 %type<ident>
     importAlias ident
@@ -191,7 +195,7 @@ decl: globalDecl { $$ = $1; }
 functionDecl: exported DEF IDENT COLON type functionBody { $$ = ctu_decl_function(x, @$, $1, $3, $5, $6); }
     ;
 
-functionBody: ASSIGN expr SEMI { $$ = $2; }
+functionBody: ASSIGN expr SEMI { $$ = ctu_stmt_return(x, @$, $2); }
     | stmts { $$ = $1; }
     ;
 
@@ -239,6 +243,10 @@ stmtList: %empty { $$ = vector_of(0); }
     | stmtList stmt { vector_push(&$1, $2); $$ = $1; }
     ;
 
+returnStmt: RETURN expr SEMI { $$ = ctu_stmt_return(x, @$, $2); }
+    | RETURN SEMI { $$ = ctu_stmt_return(x, @$, NULL); }
+    ;
+
 stmts: LBRACE stmtList RBRACE { $$ = ctu_stmt_list(x, @$, $2); }
     ;
 
@@ -248,6 +256,7 @@ localDecl: mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_stmt_local(x, @
 
 stmt: expr SEMI { $$ = $1; }
     | stmts { $$ = $1; }
+    | returnStmt { $$ = $1; }
     | localDecl { $$ = $1; }
     ;
 

@@ -23,50 +23,22 @@ typedef struct ssa_type_t ssa_type_t;
 typedef struct ssa_value_t ssa_value_t;
 
 typedef enum ssa_kind_t {
-    eTypeEmpty,
-    eTypeUnit,
-    eTypeBool,
-    eTypeDigit,
-    eTypeString,
-    eTypeClosure,
+#define SSA_KIND(ID, NAME) ID,
+#include "cthulhu/ssa/ssa.inc"
 
     eTypeTotal
 } ssa_kind_t;
 
 typedef enum ssa_opkind_t {
-    eOperandEmpty,
-    eOperandImm,
-
-    eOperandBlock,
-    eOperandGlobal,
-
-    eOperandFunction,
-    eOperandLocal,
-    eOperandParam,
-    eOperandReg,
+#define SSA_OPKIND(ID, NAME) ID,
+#include "cthulhu/ssa/ssa.inc"
 
     eOperandTotal
 } ssa_opkind_t;
 
 typedef enum ssa_opcode_t {
-    eOpStore,
-    eOpLoad,
-    eOpAddress,
-
-    eOpUnary,
-    eOpBinary,
-    eOpCompare,
-
-    eOpCast,
-    eOpCall,
-
-    eOpIndex, // get the address of an element in an array
-    eOpMember, // get the address of a field in a struct
-
-    /* control flow */
-    eOpReturn,
-    eOpBranch,
-    eOpJump,
+#define SSA_OPCODE(ID, NAME) ID,
+#include "cthulhu/ssa/ssa.inc"
 
     eOpTotal
 } ssa_opcode_t;
@@ -295,3 +267,11 @@ void ssa_opt(reports_t *reports, ssa_result_t mod);
 
 ssa_type_t *ssa_type_bool(const char *name, quals_t quals);
 ssa_type_t *ssa_type_digit(const char *name, quals_t quals, sign_t sign, digit_t digit);
+
+///
+/// names
+///
+
+const char *ssa_type_name(ssa_kind_t kind);
+const char *ssa_opkind_name(ssa_opkind_t kind);
+const char *ssa_opcode_name(ssa_opcode_t opcode);

@@ -22,22 +22,22 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
     }
 }
 
-static const char *get_c89_quals(quals_t quals)
+static const char *get_quals(quals_t quals, bool emitConst)
 {
     // const is the default
-    if (quals == eQualDefault) { return "const "; }
+    if (quals == eQualDefault) { return emitConst ? "const " : ""; }
 
     vector_t *vec = vector_new(3);
     if (quals & eQualAtomic) { vector_push(&vec, "_Atomic"); }
     if (quals & eQualVolatile) { vector_push(&vec, "volatile"); }
-    if (quals & ~eQualMutable) { vector_push(&vec, "const"); }
+    if (emitConst && (quals & ~eQualMutable)) { vector_push(&vec, "const"); }
 
     return str_join(" ", vec);
 }
 
 static const char *format_c89_closure(c89_emit_t *emit, const char *quals, ssa_type_closure_t type, const char *name)
 {
-    const char *result = c89_format_type(emit, type.result, NULL);
+    const char *result = c89_format_type(emit, type.result, NULL, true);
     const char *params = c89_format_params(emit, type.params, type.variadic);
 
     return (name == NULL)
@@ -45,10 +45,11 @@ static const char *format_c89_closure(c89_emit_t *emit, const char *quals, ssa_t
         : format("%s (*%s%s)(%s)", result, quals, name, params);
 }
 
-const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name)
+const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emitConst)
 {
     CTASSERT(type != NULL);
-    const char *quals = get_c89_quals(type->quals);
+
+    const char *quals = get_quals(type->quals, emitConst);
 
     switch (type->kind)
     {
@@ -80,7 +81,7 @@ const char *c89_format_params(c89_emit_t *emit, typevec_t *params, bool variadic
     for (size_t i = 0; i < len; i++)
     {
         const ssa_param_t *param = typevec_offset(params, i);
-        const char *it = c89_format_type(emit, param->type, param->name);
+        const char *it = c89_format_type(emit, param->type, param->name, true);
         vector_set(args, i, (char*)it);
     }
 

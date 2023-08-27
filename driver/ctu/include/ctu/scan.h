@@ -8,7 +8,6 @@
 
 typedef struct ctu_digit_t {
     mpz_t value;
-    char *suffix;
 } ctu_digit_t;
 
 typedef struct ctu_string_t {

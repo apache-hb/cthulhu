@@ -1,6 +1,7 @@
 #include "ctu/sema/sema.h"
 
 #include "cthulhu/tree/query.h"
+#include "cthulhu/tree/sema.h"
 
 #include "cthulhu/mediator/driver.h"
 
@@ -11,6 +12,7 @@
 #include "std/vector.h"
 
 #include "base/panic.h"
+#include "base/util.h"
 
 ///
 /// decls
@@ -48,6 +50,25 @@ void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl)
     {
         tree_module_set(sema, tag, name, decl);
     }
+}
+
+///
+/// extra data
+///
+
+static const char *kCurrentFn = "ctu:current-fn";
+
+void ctu_set_current_fn(tree_t *sema, tree_t *decl)
+{
+    tree_set_extra(sema, kCurrentFn, decl);
+}
+
+tree_t *ctu_get_current_fn(tree_t *sema)
+{
+    tree_t *decl = tree_get_extra(sema, kCurrentFn);
+    CTASSERT(decl != NULL);
+
+    return decl;
 }
 
 ///

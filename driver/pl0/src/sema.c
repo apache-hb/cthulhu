@@ -563,6 +563,7 @@ void pl0_compile_module(context_t *context)
     if (root->entry != NULL)
     {
         tree_t *body = sema_stmt(mod, root->entry);
+        vector_push(&body->stmts, tree_stmt_return(root->node, tree_expr_unit(root->node, kVoidType)));
 
         // this is the entry point, we only support cli entry points in pl/0 for now
         tree_t *signature = tree_type_closure(root->node, tree_get_name(mod), kVoidType, vector_of(0), eArityFixed);

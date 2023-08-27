@@ -19,21 +19,38 @@ typedef enum ctu_tag_t {
     eCtuTagTotal
 } ctu_tag_t;
 
-// getting decls
+///
+/// getting decls
+///
 
 tree_t *ctu_get_namespace(tree_t *sema, const char *name);
 tree_t *ctu_get_type(tree_t *sema, const char *name);
 tree_t *ctu_get_decl(tree_t *sema, const char *name);
 
-// adding decls
+///
+/// adding decls
+///
 
 void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl);
 
-// runtime module
+///
+/// current function
+///
+
+void ctu_set_current_fn(tree_t *sema, tree_t *decl);
+tree_t *ctu_get_current_fn(tree_t *sema);
+
+///
+/// builtin types
+///
 
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign);
 tree_t *ctu_get_bool_type(void);
 tree_t *ctu_get_str_type(void);
+
+///
+/// runtime module
+///
 
 vector_t *ctu_rt_path(void);
 tree_t *ctu_rt_mod(lifetime_t *lifetime);

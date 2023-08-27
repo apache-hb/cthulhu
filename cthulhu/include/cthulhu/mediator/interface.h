@@ -96,13 +96,6 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage);
 void lifetime_resolve(lifetime_t *lifetime);
 
 /**
- * @brief check the lifetime object for errors, and validate it for malformed data
- *
- * @param lifetime the lifetime object
- */
-void lifetime_check(lifetime_t *lifetime);
-
-/**
  * @brief get all compiled modules from a lifetime object
  *
  * @param lifetime the lifetime object

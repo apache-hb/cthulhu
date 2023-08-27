@@ -76,6 +76,10 @@ WS [ \t\r\v\n\f]
 "union" { return UNION; }
 "type" { return TYPE; }
 
+"return" { return RETURN; }
+"if" { return IF; }
+"else" { return ELSE; }
+
 "noinit" { return NOINIT; }
 
 "as" { return AS; }
@@ -97,17 +101,17 @@ WS [ \t\r\v\n\f]
     return IDENT;
 }
 
-"0b"[01]+{SUFFIX} {
+"0b"[01]+ {
     yylval->digit = ctu_parse_digit(yytext + 2, 2);
     return INTEGER;
 }
 
-"0x"[0-9a-fA-F]+{SUFFIX} {
+"0x"[0-9a-fA-F]+ {
     yylval->digit = ctu_parse_digit(yytext + 2, 16);
     return INTEGER;
 }
 
-[0-9]+{SUFFIX} {
+[0-9]+ {
     yylval->digit = ctu_parse_digit(yytext, 10);
     return INTEGER;
 }

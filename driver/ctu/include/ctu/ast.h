@@ -24,6 +24,7 @@ typedef enum ctu_kind_t {
     /* statements */
     eCtuStmtList,
     eCtuStmtLocal,
+    eCtuStmtReturn,
 
     /* types */
     eCtuTypeName,
@@ -123,6 +124,9 @@ typedef struct ctu_t {
         /* eCtuStmtList */
         vector_t *stmts;
 
+        /* eCtuStmtReturn */
+        ctu_t *result;
+
         /* eCtuTypeName */
         vector_t *typeName;
 
@@ -151,6 +155,7 @@ ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name);
 
 ctu_t *ctu_stmt_list(scan_t *scan, where_t where, vector_t *stmts);
 ctu_t *ctu_stmt_local(scan_t *scan, where_t where, bool mutable, char *name, ctu_t *type, ctu_t *value);
+ctu_t *ctu_stmt_return(scan_t *scan, where_t where, ctu_t *value);
 
 ///
 /// expressions

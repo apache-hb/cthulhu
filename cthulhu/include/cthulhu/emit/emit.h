@@ -2,6 +2,8 @@
 
 typedef struct ssa_module_t ssa_module_t;
 typedef struct reports_t reports_t;
+
+typedef struct io_t io_t;
 typedef struct fs_t fs_t;
 
 typedef struct vector_t vector_t;
@@ -22,6 +24,8 @@ typedef struct emit_options_t {
 ///
 /// ssa api
 ///
+
+typedef struct ssa_symbol_t ssa_symbol_t;
 
 typedef struct ssa_emit_options_t {
     emit_options_t opts;

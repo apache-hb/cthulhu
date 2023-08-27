@@ -10,7 +10,7 @@
 ctu_digit_t ctu_parse_digit(const char *str, size_t base)
 {
     ctu_digit_t result = {
-        .suffix = ctu_strdup("")
+        .value = 0
     };
 
     mpz_init_set_str(result.value, str, (int)base);

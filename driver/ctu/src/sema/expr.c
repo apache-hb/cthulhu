@@ -181,7 +181,7 @@ static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     return tree_stmt_block(stmt->node, vector_of(0)); // TODO: good enough
 }
 
-static tree_t *ctu_sema_stmts(tree_t *sema, tree_t *decl, const ctu_t *stmt)
+static tree_t *sema_stmts(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 {
     size_t len = vector_len(stmt->stmts);
     vector_t *stmts = vector_of(len);
@@ -203,6 +203,15 @@ static tree_t *ctu_sema_stmts(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     return tree_stmt_block(stmt->node, stmts);
 }
 
+static tree_t *sema_return(tree_t *sema, tree_t *decl, const ctu_t *stmt)
+{
+    tree_t *fn = ctu_get_current_fn(sema);
+    const tree_t *type = tree_get_type(fn);
+
+    tree_t *value = stmt->result == NULL ? NULL : ctu_sema_rvalue(sema, stmt->result, (tree_t*)type->result); // TODO: evil cast
+    return tree_stmt_return(stmt->node, value);
+}
+
 tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 {
     CTASSERT(decl != NULL);
@@ -210,10 +219,9 @@ tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 
     switch (stmt->kind)
     {
-    case eCtuStmtLocal:
-        return sema_local(sema, decl, stmt);
-    case eCtuStmtList:
-        return ctu_sema_stmts(sema, decl, stmt);
+    case eCtuStmtLocal: return sema_local(sema, decl, stmt);
+    case eCtuStmtList: return sema_stmts(sema, decl, stmt);
+    case eCtuStmtReturn: return sema_return(sema, decl, stmt);
 
     default:
         NEVER("invalid stmt kind %d", stmt->kind);

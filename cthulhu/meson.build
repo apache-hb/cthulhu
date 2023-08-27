@@ -91,3 +91,20 @@ util = declare_dependency(
     include_directories : 'include',
     dependencies : [ base ]
 )
+
+src = [
+    'src/check/common.c',
+    'src/check/tree.c'
+]
+
+libcheck = library('check', src,
+    include_directories : 'include',
+    c_args : args,
+    dependencies : [ std, tree, ssa ]
+)
+
+check = declare_dependency(
+    link_with : libcheck,
+    include_directories : 'include',
+    dependencies : [ base ]
+)

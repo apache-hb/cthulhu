@@ -52,6 +52,13 @@ ctu_t *ctu_stmt_local(scan_t *scan, where_t where, bool mutable, char *name, ctu
     return ast;
 }
 
+ctu_t *ctu_stmt_return(scan_t *scan, where_t where, ctu_t *value)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuStmtReturn);
+    ast->result = value;
+    return ast;
+}
+
 /* exprs */
 
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value)

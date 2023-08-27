@@ -1,5 +1,9 @@
 #include "cthulhu/mediator/interface.h"
+#include "cthulhu/mediator/check.h"
+
 #include "support/langs.h"
+
+#include "cthulhu/check/check.h"
 
 #include "cthulhu/ssa/ssa.h"
 #include "cthulhu/emit/emit.h"
@@ -114,10 +118,10 @@ int main(int argc, const char **argv)
     lifetime_resolve(lifetime);
     CHECK_REPORTS(reports, "resolving symbols");
 
-    lifetime_check(lifetime);
-    CHECK_REPORTS(reports, "validations failed");
-
     map_t *modmap = lifetime_get_modules(lifetime);
+
+    check_tree(reports, modmap);
+    CHECK_REPORTS(reports, "validations failed");
 
     ssa_result_t ssa = ssa_compile(modmap);
     CHECK_REPORTS(reports, "generating ssa");
