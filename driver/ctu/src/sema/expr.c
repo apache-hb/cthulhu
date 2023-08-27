@@ -34,7 +34,7 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path)
     tree_t *decl = ctu_get_decl(ns, name);
     if (decl == NULL)
     {
-        report(sema->reports, eFatal, NULL, "decl `%s` not found", name);
+        report(sema->reports, eFatal, node, "decl `%s` not found", name);
         return tree_error(node, "decl not found");
     }
 
@@ -74,12 +74,21 @@ static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
     return tree_expr_digit(expr->node, type, expr->intValue);
 }
 
+static tree_t *sema_string(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+{
+    const tree_t *type = implicitType ? implicitType : ctu_get_str_type(); // TODO: calculate proper type to use
+
+    tree_t *verify = verify_expr_type(sema, eTreeTypeString, type, "string literal", expr->node);
+    if (verify != NULL) { return verify; }
+
+    return tree_expr_string(expr->node, type, expr->text, expr->length);
+}
+
 static tree_t *sema_name(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
     tree_t *decl = sema_decl_name(sema, expr->node, expr->path);
     if (tree_is(decl, eTreeError))
     {
-        report(sema->reports, eFatal, expr->node, "name `%s` not found", expr->name);
         return tree_error(expr->node, "name not found");
     }
 
@@ -149,6 +158,8 @@ tree_t *ctu_sema_rvalue(tree_t *sema, const ctu_t *expr, tree_t *implicitType)
     {
     case eCtuExprBool: return sema_bool(sema, expr, inner);
     case eCtuExprInt: return sema_int(sema, expr, inner);
+    case eCtuExprString: return sema_string(sema, expr, inner);
+
     case eCtuExprName: return tree_expr_load(expr->node, sema_name(sema, expr, implicitType));
 
     case eCtuExprCompare: return sema_compare(sema, expr);
@@ -172,6 +183,7 @@ static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 
     tree_t *self = tree_decl_local(decl->node, stmt->name, actualType);
     tree_add_local(decl, self);
+    ctu_add_decl(sema, eCtuTagValues, stmt->name, self);
 
     if (value != NULL)
     {

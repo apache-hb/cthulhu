@@ -19,8 +19,7 @@ typedef uint_fast64_t column_t; ///< column number
 /**
  * @brief a location inside a scanner
  */
-typedef struct
-{
+typedef struct {
     line_t firstLine; ///< the first line of the location
     line_t lastLine;  ///< the last line of the location
 
@@ -33,9 +32,11 @@ typedef struct
  */
 typedef struct node_t node_t;
 
-NODISCARD CONSTFN scan_t *get_node_scanner(const node_t *node);
+NODISCARD CONSTFN
+scan_t *get_node_scanner(const node_t *node);
 
-NODISCARD CONSTFN where_t get_node_location(const node_t *node);
+NODISCARD CONSTFN
+where_t get_node_location(const node_t *node);
 
 /**
  * @brief create a new node in a given file at a given location
@@ -44,12 +45,16 @@ NODISCARD CONSTFN where_t get_node_location(const node_t *node);
  * @param where the location of this node
  * @return the created node
  */
-NODISCARD CONSTFN node_t *node_new(scan_t *scan, where_t where);
+NODISCARD CONSTFN
+node_t *node_new(scan_t *scan, where_t where);
 
-NODISCARD CONSTFN node_t *node_builtin(void);
+NODISCARD CONSTFN
+node_t *node_builtin(void);
 
-NODISCARD CONSTFN node_t *node_invalid(void);
+NODISCARD CONSTFN
+node_t *node_invalid(void);
 
-NODISCARD CONSTFN bool node_is_valid(const node_t *node);
+NODISCARD CONSTFN
+bool node_is_valid(const node_t *node);
 
 /** @} */

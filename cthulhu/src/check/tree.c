@@ -2,6 +2,8 @@
 
 #include "cthulhu/mediator/driver.h"
 
+#include "cthulhu/util/util.h"
+
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
@@ -139,6 +141,16 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
     }
 }
 
+static void check_func_return_equal(check_t *check, const tree_t *returnType, const tree_t *realType)
+{
+    if (util_types_equal(returnType, realType)) { return; }
+
+    report(check->reports, eFatal, tree_get_node(realType),
+        "return type `%s` does not match function return type `%s`",
+        tree_to_string(realType),
+        tree_to_string(returnType));
+}
+
 static void check_func_body(check_t *check, const tree_t *returnType, const tree_t *stmt)
 {
     switch (stmt->kind)
@@ -153,14 +165,43 @@ static void check_func_body(check_t *check, const tree_t *returnType, const tree
     case eTreeStmtLoop:
     case eTreeStmtBranch:
     case eTreeStmtAssign:
+        break;
 
     case eTreeStmtReturn:
+        check_func_return_equal(check, returnType, tree_get_type(stmt->value));
+        break;
 
     case eTreeExprCall:
         break; // TODO: check
 
     default:
         NEVER("invalid statement kind %s (check-func-body)", tree_to_string(stmt));
+    }
+}
+
+static bool will_always_return(const tree_t *stmt)
+{
+    switch (stmt->kind)
+    {
+    case eTreeStmtReturn:
+        return true;
+    case eTreeStmtBranch:
+        return will_always_return(stmt->then) && will_always_return(stmt->other);
+    case eTreeStmtLoop:
+        return will_always_return(stmt->then);
+
+    case eTreeStmtBlock:
+        for (size_t i = 0; i < vector_len(stmt->stmts); i++)
+        {
+            if (will_always_return(vector_get(stmt->stmts, i)))
+            {
+                return true;
+            }
+        }
+        return false;
+
+    default:
+        return false;
     }
 }
 
@@ -172,6 +213,14 @@ static void check_func_return(check_t *check, const tree_t *fn)
     const tree_t *returnType = fnType->result;
 
     check_func_body(check, returnType, fn->body);
+
+    if (!will_always_return(fn->body))
+    {
+        report(check->reports, eFatal, tree_get_node(fn),
+            "function `%s` may not return a value",
+            tree_get_name(fn)
+        );
+    }
 }
 
 static void check_global_recursion(check_t *check, const tree_t *global);

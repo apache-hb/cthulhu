@@ -1,3 +1,5 @@
 def local: int {
     const i: int = noinit;
+
+    return i;
 }
