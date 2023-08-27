@@ -139,6 +139,41 @@ static void check_func_attribs(check_t *check, const tree_t *fn)
     }
 }
 
+static void check_func_body(check_t *check, const tree_t *returnType, const tree_t *stmt)
+{
+    switch (stmt->kind)
+    {
+    case eTreeStmtBlock:
+        for (size_t i = 0; i < vector_len(stmt->stmts); i++)
+        {
+            check_func_body(check, returnType, vector_get(stmt->stmts, i));
+        }
+        break;
+
+    case eTreeStmtLoop:
+    case eTreeStmtBranch:
+    case eTreeStmtAssign:
+
+    case eTreeStmtReturn:
+
+    case eTreeExprCall:
+        break; // TODO: check
+
+    default:
+        NEVER("invalid statement kind %s (check-func-body)", tree_to_string(stmt));
+    }
+}
+
+static void check_func_return(check_t *check, const tree_t *fn)
+{
+    if (fn->body == NULL) { return; }
+
+    const tree_t *fnType = tree_get_type(fn);
+    const tree_t *returnType = fnType->result;
+
+    check_func_body(check, returnType, fn->body);
+}
+
 static void check_global_recursion(check_t *check, const tree_t *global);
 
 static void check_expr_recursion(check_t *check, const tree_t *tree)
@@ -391,6 +426,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
         check_simple(check, function);
 
         check_func_attribs(check, function);
+        check_func_return(check, function);
     }
 
     vector_t *types = map_values(tree_module_tag(mod, eSema2Types));
