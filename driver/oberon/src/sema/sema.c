@@ -37,24 +37,20 @@ void obr_add_decl(tree_t *sema, obr_tags_t tag, const char *name, tree_t *decl)
 /// runtime mod
 ///
 
-static const util_digit_t kBaseDigits[] = {
-    { eDigitInt, eSignSigned, "INTEGER" }
-};
+static tree_t *gTypeInteger = NULL;
+static tree_t *gTypeBoolean = NULL;
 
-static const util_config_t kBaseConfig = {
-    .langName = "oberon",
-    .unitName = "VOID",
-    .boolName = "BOOLEAN",
-    .stringName = "STRING",
+tree_t *obr_get_digit_type(digit_t digit, sign_t sign)
+{
+    CTASSERT(gTypeInteger != NULL);
+    return gTypeInteger;
+}
 
-    .digits = kBaseDigits,
-    .totalDigits = sizeof(kBaseDigits) / sizeof(util_digit_t),
-};
-
-static util_types_t gBaseTypes;
-
-tree_t *obr_get_digit_type(digit_t digit, sign_t sign) { return util_get_digit(gBaseTypes, digit, sign); }
-tree_t *obr_get_bool_type(void) { return util_get_bool(gBaseTypes); }
+tree_t *obr_get_bool_type(void)
+{
+    CTASSERT(gTypeBoolean != NULL);
+    return gTypeBoolean;
+}
 
 tree_t *obr_rt_mod(lifetime_t *lifetime)
 {
@@ -65,8 +61,12 @@ tree_t *obr_rt_mod(lifetime_t *lifetime)
         [eObrTagModules] = 32,
     };
 
+    gTypeInteger = tree_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned);
+    gTypeBoolean = tree_type_bool(node_builtin(), "BOOLEAN");
+
     tree_t *rt = lifetime_sema_new(lifetime, "oberon", eObrTagTotal, tags);
-    gBaseTypes = util_base_create(kBaseConfig, rt);
+    obr_add_decl(rt, eObrTagTypes, "INTEGER", gTypeInteger);
+    obr_add_decl(rt, eObrTagTypes, "BOOLEAN", gTypeBoolean);
 
     return rt;
 }

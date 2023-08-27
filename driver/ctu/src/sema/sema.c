@@ -75,44 +75,38 @@ tree_t *ctu_get_current_fn(tree_t *sema)
 /// runtime
 ///
 
-static const util_digit_t kBaseDigits[] = {
-    { eDigitChar, eSignSigned, "char" },
-    { eDigitChar, eSignUnsigned, "uchar" },
+static tree_t *kIntTypes[eDigitTotal * eSignTotal] = { NULL };
+static tree_t *kBoolType = NULL;
+static tree_t *kStrType = NULL;
 
-    { eDigitShort, eSignSigned, "short" },
-    { eDigitShort, eSignUnsigned, "ushort" },
+static tree_t *make_int_type(const char *name, digit_t digit, sign_t sign)
+{
+    return (kIntTypes[digit * eSignTotal + sign] = tree_type_digit(node_builtin(), name, digit, sign));
+}
 
-    { eDigitInt, eSignSigned, "int" },
-    { eDigitInt, eSignUnsigned, "uint" },
+static tree_t *make_bool_type(const char *name)
+{
+    return (kBoolType = tree_type_bool(node_builtin(), name));
+}
 
-    { eDigitLong, eSignSigned, "long" },
-    { eDigitLong, eSignUnsigned, "ulong" },
-};
-
-static const util_config_t kBaseConfig = {
-    .langName = "cthulhu",
-    .boolName = "bool",
-    .stringName = "str",
-
-    .digits = kBaseDigits,
-    .totalDigits = sizeof(kBaseDigits) / sizeof(util_digit_t)
-};
-
-static util_types_t gBaseTypes;
+static tree_t *make_str_type(const char *name)
+{
+    return (kStrType = tree_type_string(node_builtin(), name));
+}
 
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
 {
-    return util_get_digit(gBaseTypes, digit, sign);
+    return kIntTypes[digit * eSignTotal + sign];
 }
 
 tree_t *ctu_get_bool_type(void)
 {
-    return util_get_bool(gBaseTypes);
+    return kBoolType;
 }
 
 tree_t *ctu_get_str_type(void)
 {
-    return util_get_string(gBaseTypes);
+    return kStrType;
 }
 
 tree_t *ctu_rt_mod(lifetime_t *lifetime)
@@ -121,7 +115,7 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
 
     size_t sizes[eCtuTagTotal] = {
         [eCtuTagValues] = 1,
-        [eCtuTagTypes] = 16,
+        [eCtuTagTypes] = 1,
         [eCtuTagFunctions] = 1,
         [eCtuTagModules] = 1,
         [eCtuTagImports] = 1,
@@ -131,7 +125,17 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
 
     tree_t *root = lifetime_sema_new(lifetime, "runtime", eCtuTagTotal, sizes);
 
-    gBaseTypes = util_base_create(kBaseConfig, root);
+    ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
+    ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
+
+    ctu_add_decl(root, eCtuTagTypes, "char", make_int_type("char", eDigitChar, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uchar", make_int_type("uchar", eDigitChar, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "uint", make_int_type("uint", eDigitInt, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "long", make_int_type("long", eDigitLong, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "ulong", make_int_type("ulong", eDigitLong, eSignUnsigned));
 
     return root;
 }
