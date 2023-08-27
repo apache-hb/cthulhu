@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "cthulhu/tree/query.h"
+
 #include "base/memory.h"
 #include "base/panic.h"
 
@@ -97,11 +99,11 @@ tree_t *tree_type_pointer(const node_t *node, const char *name, tree_t *pointer)
     return self;
 }
 
-tree_t *tree_qualify(const node_t *node, const tree_t *type, quals_t quals)
+tree_t *tree_type_qualify(const node_t *node, const tree_t *type, quals_t quals)
 {
     CTASSERT(type != NULL);
 
-    tree_t *self = tree_new(eTreeQualify, node, type);
+    tree_t *self = tree_new(eTreeTypeQualify, node, type);
     self->quals = quals;
     self->qualify = type;
     return self;

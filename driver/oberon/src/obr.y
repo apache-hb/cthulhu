@@ -31,6 +31,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     char *ident;
     mpz_t number;
+    bool boolean;
 }
 
 %type<vector>
@@ -40,20 +41,29 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     valueSeq valueDecl valueDeclSeq
     constSeq constDeclSeq
     typeSeq typeDeclSeq
+    fieldList fieldDecl
+
+    optParams params
+    paramList paramDecl
 
 %type<ast>
     importBody module
-    type
+    type forward
 
     constDecl typeDecl
     constExpr expr
     relationExpr addExpr mulExpr unaryExpr simpleExpr
+
+    optReceiver receiver
 
 %type<symbol>
     identDef
 
 %type<ident>
     end
+
+%type<boolean>
+    mut
 
 %token<ident>
     IDENT "identifier"
@@ -171,6 +181,37 @@ declSeq: decl { $$ = $1; }
 decl: valueDeclSeq { $$ = $1; }
     | constDeclSeq { $$ = $1; }
     | typeDeclSeq { $$ = $1; }
+    | forward { $$ = vector_init($1); }
+    ;
+
+/* procedures */
+
+forward: PROCEDURE CARET optReceiver identDef optParams { $$ = obr_decl_procedure(x, @$, $4, $3, $5); }
+    ;
+
+optReceiver: %empty { $$ = NULL; }
+    | receiver { $$ = $1; }
+    ;
+
+receiver: LPAREN mut IDENT COLON IDENT RPAREN { $$ = obr_receiver(x, @$, $2, $3, $5); }
+    ;
+
+optParams: %empty { $$ = vector_of(0); }
+    | params { $$ = $1; }
+    ;
+
+params: LPAREN paramList RPAREN { $$ = $2; }
+    ;
+
+paramList: paramDecl { $$ = vector_init($1); }
+    | paramList SEMI paramDecl { vector_append(&$1, $3); $$ = $1; }
+    ;
+
+paramDecl: mut identList COLON type { $$ = obr_expand_params($2, $4, $1); }
+    ;
+
+mut: %empty { $$ = false; }
+    | VAR { $$ = true; }
     ;
 
 /* consts */
@@ -213,6 +254,16 @@ type: IDENT { $$ = obr_type_name(x, @$, $1); }
     | IDENT DOT IDENT { $$ = obr_type_qual(x, @$, $1, $3); }
     | POINTER TO type { $$ = obr_type_pointer(x, @$, $3); }
     | ARRAY OF type { $$ = obr_type_array(x, @$, $3); }
+    | RECORD fieldList END { $$ = obr_type_record(x, @$, $2); }
+    ;
+
+/* record fields */
+
+fieldList: fieldDecl { $$ = $1; }
+    | fieldList SEMI fieldDecl { vector_append(&$1, $3); $$ = $1; }
+    ;
+
+fieldDecl: identList COLON type { $$ = obr_expand_fields($1, $3); }
     ;
 
 /* exprs */
@@ -273,3 +324,54 @@ end: END { $$ = NULL; }
     ;
 
 %%
+
+/** https://en.wikipedia.org/wiki/Oberon-2#Syntax
+Module        = MODULE ident ";" [ImportList] DeclSeq [BEGIN StatementSeq] END ident ".".
+ImportList    = IMPORT [ident ":="] ident {"," [ident ":="] ident} ";".
+DeclSeq       = { CONST {ConstDecl ";" } | TYPE {TypeDecl ";"} | VAR {VarDecl ";"}} {ProcDecl ";" | ForwardDecl ";"}.
+ConstDecl     = IdentDef "=" ConstExpr.
+TypeDecl      = IdentDef "=" Type.
+VarDecl       = IdentList ":" Type.
+ProcDecl      = PROCEDURE [Receiver] IdentDef [FormalPars] ";" DeclSeq [BEGIN StatementSeq] END ident.
+ForwardDecl   = PROCEDURE "^" [Receiver] IdentDef [FormalPars].
+FormalPars    = "(" [FPSection {";" FPSection}] ")" [":" Qualident].
+FPSection     = [VAR] ident {"," ident} ":" Type.
+Receiver      = "(" [VAR] ident ":" ident ")".
+Type          = Qualident
+              | ARRAY [ConstExpr {"," ConstExpr}] OF Type
+              | RECORD ["("Qualident")"] FieldList {";" FieldList} END
+              | POINTER TO Type
+              | PROCEDURE [FormalPars].
+FieldList     = [IdentList ":" Type].
+StatementSeq  = Statement {";" Statement}.
+Statement     = [ Designator ":=" Expr
+              | Designator ["(" [ExprList] ")"]
+              | IF Expr THEN StatementSeq {ELSIF Expr THEN StatementSeq} [ELSE StatementSeq] END
+              | CASE Expr OF Case {"|" Case} [ELSE StatementSeq] END
+              | WHILE Expr DO StatementSeq END
+              | REPEAT StatementSeq UNTIL Expr
+              | FOR ident ":=" Expr TO Expr [BY ConstExpr] DO StatementSeq END
+              | LOOP StatementSeq END
+              | WITH Guard DO StatementSeq {"|" Guard DO StatementSeq} [ELSE StatementSeq] END
+              | EXIT
+              | RETURN [Expr]
+      ].
+Case          = [CaseLabels {"," CaseLabels} ":" StatementSeq].
+CaseLabels    = ConstExpr [".." ConstExpr].
+Guard         = Qualident ":" Qualident.
+ConstExpr     = Expr.
+Expr          = SimpleExpr [Relation SimpleExpr].
+SimpleExpr    = ["+" | "-"] Term {AddOp Term}.
+Term          = Factor {MulOp Factor}.
+Factor        = Designator ["(" [ExprList] ")"] | number | character | string | NIL | Set | "(" Expr ")" | "~" Factor.
+Set           = "{" [Element {"," Element}] "}".
+Element       = Expr [".." Expr].
+Relation      = "=" | "#" | "<" | "<=" | ">" | ">=" | IN | IS.
+AddOp         = "+" | "-" | OR.
+MulOp         = "*" | "/" | DIV | MOD | "&".
+Designator    = Qualident {"." ident | "[" ExprList "]" | "^" | "(" Qualident ")"}.
+ExprList      = Expr {"," Expr}.
+IdentList     = IdentDef {"," IdentDef}.
+Qualident     = [ident "."] ident.
+IdentDef      = ident ["*" | "-"].
+*/

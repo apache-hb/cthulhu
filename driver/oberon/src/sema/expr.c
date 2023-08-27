@@ -56,7 +56,7 @@ tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, tree_t *implicitType)
 
 tree_t *obr_default_value(const node_t *node, const tree_t *type)
 {
-    while (tree_is(type, eTreeQualify)) { type = tree_get_type(type); }
+    while (tree_is(type, eTreeTypeQualify)) { type = tree_get_type(type); }
 
     switch (tree_get_kind(type))
     {

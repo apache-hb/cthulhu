@@ -107,7 +107,7 @@ bool tree_is(const tree_t *self, tree_kind_t kind)
 
 bool tree_has_quals(const tree_t *self, quals_t quals)
 {
-    if (tree_is(self, eTreeQualify))
+    if (tree_is(self, eTreeTypeQualify))
     {
         return self->quals & quals;
     }

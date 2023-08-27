@@ -1,12 +1,15 @@
 #include "base/util.h"
 
 #include "base/memory.h"
+#include "base/panic.h"
 
 #include <string.h>
 
 USE_DECL
 void *ctu_memdup(const void *ptr, size_t size)
 {
+    CTASSERT(ptr != NULL);
+
     void *out = ctu_malloc(size);
     memcpy(out, ptr, size);
     return out;
@@ -15,6 +18,8 @@ void *ctu_memdup(const void *ptr, size_t size)
 USE_DECL
 char *ctu_strdup(const char *str)
 {
+    CTASSERT(str != NULL);
+
     size_t len = strlen(str) + 1;
     char *out = ctu_malloc(len);
     memcpy(out, str, len);
@@ -24,6 +29,8 @@ char *ctu_strdup(const char *str)
 USE_DECL
 char *ctu_strndup(const char *str, size_t len)
 {
+    CTASSERT(str != NULL);
+
     char *out = ctu_malloc(len + 1);
     memcpy(out, str, len);
     out[len] = '\0';

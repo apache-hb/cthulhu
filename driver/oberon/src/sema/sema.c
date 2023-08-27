@@ -2,6 +2,8 @@
 
 #include "cthulhu/mediator/driver.h"
 
+#include "cthulhu/tree/sema.h"
+
 #include "cthulhu/util/util.h"
 
 #include "report/report-ext.h"
@@ -34,9 +36,31 @@ void obr_add_decl(tree_t *sema, obr_tags_t tag, const char *name, tree_t *decl)
 }
 
 ///
+/// extra
+///
+
+static const char *kCurrentName = "obr:current-name";
+
+const char *obr_current_name(tree_t *sema)
+{
+    const char *name = tree_get_extra(sema, kCurrentName);
+    CTASSERT(name != NULL);
+
+    return name;
+}
+
+void obr_set_current_name(tree_t *sema, const char *name)
+{
+    CTASSERT(name != NULL);
+
+    tree_set_extra(sema, kCurrentName, (char*)name);
+}
+
+///
 /// runtime mod
 ///
 
+static tree_t *gTypeChar = NULL;
 static tree_t *gTypeInteger = NULL;
 static tree_t *gTypeBoolean = NULL;
 
@@ -61,10 +85,12 @@ tree_t *obr_rt_mod(lifetime_t *lifetime)
         [eObrTagModules] = 32,
     };
 
+    gTypeChar = tree_type_digit(node_builtin(), "CHAR", eDigitChar, eSignSigned);
     gTypeInteger = tree_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned);
     gTypeBoolean = tree_type_bool(node_builtin(), "BOOLEAN");
 
     tree_t *rt = lifetime_sema_new(lifetime, "oberon", eObrTagTotal, tags);
+    obr_add_decl(rt, eObrTagTypes, "CHAR", gTypeChar);
     obr_add_decl(rt, eObrTagTypes, "INTEGER", gTypeInteger);
     obr_add_decl(rt, eObrTagTypes, "BOOLEAN", gTypeBoolean);
 

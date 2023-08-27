@@ -33,11 +33,14 @@ typedef struct obr_symbol_t {
 ///
 
 typedef enum obr_kind_t {
+    /* types */
     eObrTypeName,
     eObrTypeQual,
     eObrTypePointer,
     eObrTypeArray,
+    eObrTypeRecord,
 
+    /* exprs */
     eObrExprDigit,
     eObrExprUnary,
     eObrExprBinary,
@@ -45,11 +48,18 @@ typedef enum obr_kind_t {
     eObrExprIs,
     eObrExprIn,
 
+    /* decls */
     eObrDeclVar,
     eObrDeclConst,
     eObrDeclType,
     eObrDeclProcedure,
 
+    /* other */
+    eObrField,
+    eObrParam,
+    eObrReceiver,
+
+    /* modules */
     eObrModule,
     eObrImport
 } obr_kind_t;
@@ -82,6 +92,9 @@ typedef struct obr_t {
         /* eObrTypeArray */
         obr_t *array;
 
+        /* eObrTypeRecord */
+        vector_t *fields;
+
         /* eObrExprDigit */
         mpz_t digit;
 
@@ -96,11 +109,20 @@ typedef struct obr_t {
                     vector_t *decls;
                 };
 
-                /* eObrDeclVar|eObrDeclType */
-                obr_t *type;
+                /* eObrDeclVar|eObrDeclType|eObrReceiver|eObrParam */
+                struct {
+                    bool mut;
+                    obr_t *type;
+                };
 
                 /* eObrDeclConst */
                 obr_t *value;
+
+                /* eObrDeclProcedure */
+                struct {
+                    obr_t *receiver;
+                    vector_t *params;
+                };
 
                 /* eObrImport|eObrTypeQual */
                 char *symbol;
@@ -119,7 +141,7 @@ obr_t *obr_import(scan_t *scan, where_t where, char *name, char *symbol);
 obr_t *obr_decl_type(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type);
 obr_t *obr_decl_var(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type);
 obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *value);
-obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, char *end);
+obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *receiver, vector_t *params);
 
 /* exprs */
 
@@ -138,9 +160,18 @@ obr_t *obr_type_name(scan_t *scan, where_t where, char *symbol);
 obr_t *obr_type_qual(scan_t *scan, where_t where, char *name, char *symbol);
 obr_t *obr_type_pointer(scan_t *scan, where_t where, obr_t *type);
 obr_t *obr_type_array(scan_t *scan, where_t where, obr_t *type);
+obr_t *obr_type_record(scan_t *scan, where_t where, vector_t *fields);
+
+/* extras */
+
+obr_t *obr_field(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type);
+obr_t *obr_param(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type, bool mut);
+obr_t *obr_receiver(scan_t *scan, where_t where, bool mut, char *name, char *type);
 
 /* partial symbols */
 
 obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility_t visibility);
 
 vector_t *obr_expand_vars(vector_t *symbols, obr_t *type);
+vector_t *obr_expand_fields(vector_t *symbols, obr_t *type);
+vector_t *obr_expand_params(vector_t *symbols, obr_t *type, bool mut);

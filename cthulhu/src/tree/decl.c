@@ -138,6 +138,15 @@ void tree_set_attrib(tree_t *self, const attribs_t *attrib)
     self->attrib = attrib;
 }
 
+tree_t *tree_alias(const tree_t *tree, const char *name)
+{
+    CTASSERTF(tree != NULL && name != NULL, "(tree=%p, name=%p)", tree, name);
+
+    tree_t *copy = ctu_memdup(tree, sizeof(tree_t));
+    copy->name = name;
+    return copy;
+}
+
 ///
 /// structs
 ///

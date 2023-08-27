@@ -140,7 +140,7 @@ void pl0_init(driver_t *handle)
     lifetime_t *lifetime = handle_get_lifetime(handle);
 
     kConstType = tree_type_digit(node, "integer", eDigitInt, eSignSigned);
-    kIntType = tree_qualify(node, kConstType, eQualMutable);
+    kIntType = tree_type_qualify(node, kConstType, eQualMutable);
     kBoolType = tree_type_bool(node, "boolean");
     kStringType = tree_type_string(node, "string");
     kVoidType = tree_type_unit(node, "void");

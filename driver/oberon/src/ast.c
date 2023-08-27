@@ -39,6 +39,11 @@ static obr_t *obr_decl(scan_t *scan, where_t where, obr_kind_t kind, char *name,
     return self;
 }
 
+static obr_t *obr_decl_from_symbol(scan_t *scan, where_t where, obr_kind_t kind, const obr_symbol_t *symbol)
+{
+    return obr_decl(scan, where, kind, symbol->name, symbol->visibility);
+}
+
 obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *imports, vector_t *decls)
 {
     obr_t *self = obr_decl(scan, where, eObrModule, name, eObrVisPublic);
@@ -61,31 +66,30 @@ obr_t *obr_import(scan_t *scan, where_t where, char *name, char *symbol)
 
 obr_t *obr_decl_type(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type)
 {
-    obr_t *self = obr_decl(scan, where, eObrDeclType, symbol->name, symbol->visibility);
+    obr_t *self = obr_decl_from_symbol(scan, where, eObrDeclType, symbol);
     self->type = type;
     return self;
 }
 
 obr_t *obr_decl_var(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type)
 {
-    obr_t *self = obr_decl(scan, where, eObrDeclVar, symbol->name, symbol->visibility);
+    obr_t *self = obr_decl_from_symbol(scan, where, eObrDeclVar, symbol);
     self->type = type;
     return self;
 }
 
 obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *value)
 {
-    obr_t *self = obr_decl(scan, where, eObrDeclConst, symbol->name, symbol->visibility);
+    obr_t *self = obr_decl_from_symbol(scan, where, eObrDeclConst, symbol);
     self->value = value;
     return self;
 }
 
-obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, char *end)
+obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *receiver, vector_t *params)
 {
-    obr_t *self = obr_decl(scan, where, eObrDeclProcedure, symbol->name, symbol->visibility);
-
-    ensure_block_names_match(scan, self->node, "PROCEDURE", symbol->name, end);
-
+    obr_t *self = obr_decl_from_symbol(scan, where, eObrDeclProcedure, symbol);
+    self->receiver = receiver;
+    self->params = params;
     return self;
 }
 
@@ -170,6 +174,38 @@ obr_t *obr_type_array(scan_t *scan, where_t where, obr_t *type)
     return self;
 }
 
+obr_t *obr_type_record(scan_t *scan, where_t where, vector_t *fields)
+{
+    obr_t *self = obr_new(scan, where, eObrTypeRecord);
+    self->fields = fields;
+    return self;
+}
+
+/* extra */
+
+obr_t *obr_field(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type)
+{
+    obr_t *self = obr_decl_from_symbol(scan, where, eObrField, symbol);
+    self->type = type;
+    return self;
+}
+
+obr_t *obr_param(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type, bool mut)
+{
+    obr_t *self = obr_decl_from_symbol(scan, where, eObrParam, symbol);
+    self->mut = mut;
+    self->type = type;
+    return self;
+}
+
+obr_t *obr_receiver(scan_t *scan, where_t where, bool mut, char *name, char *type)
+{
+    obr_t *self = obr_decl(scan, where, eObrReceiver, name, eObrVisPrivate);
+    self->mut = mut;
+    self->type = obr_type_name(scan, where, type);
+    return self;
+}
+
 /* symbols */
 
 obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility_t visibility)
@@ -191,6 +227,32 @@ vector_t *obr_expand_vars(vector_t *symbols, obr_t *type)
         obr_symbol_t *symbol = vector_get(symbols, i);
         obr_t *decl = obr_decl_var(symbol->scan, symbol->where, symbol, type);
         vector_set(result, i, decl);
+    }
+    return result;
+}
+
+vector_t *obr_expand_fields(vector_t *symbols, obr_t *type)
+{
+    size_t len = vector_len(symbols);
+    vector_t *result = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        obr_symbol_t *symbol = vector_get(symbols, i);
+        obr_t *field = obr_field(symbol->scan, symbol->where, symbol, type);
+        vector_set(result, i, field);
+    }
+    return result;
+}
+
+vector_t *obr_expand_params(vector_t *symbols, obr_t *type, bool mut)
+{
+    size_t len = vector_len(symbols);
+    vector_t *result = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        obr_symbol_t *symbol = vector_get(symbols, i);
+        obr_t *field = obr_param(symbol->scan, symbol->where, symbol, type, mut);
+        vector_set(result, i, field);
     }
     return result;
 }

@@ -3,7 +3,6 @@
 #   define TREE_KIND(ID, NAME)
 #endif
 
-TREE_KIND(eTreeType, "unresolved-type") ///< unresolved type
 TREE_KIND(eTreeTypeEmpty, "type-empty") ///< a type that can never be created
 TREE_KIND(eTreeTypeUnit, "type-unit") ///< a type with a single value
 TREE_KIND(eTreeTypeBool, "type-bool") ///< a type with two values
@@ -11,6 +10,7 @@ TREE_KIND(eTreeTypeDigit, "type-digit")
 TREE_KIND(eTreeTypeString, "type-string")
 TREE_KIND(eTreeTypeClosure, "type-closure") ///< a function pointer type (no captures)
 TREE_KIND(eTreeTypePointer, "type-pointer")
+TREE_KIND(eTreeTypeQualify, "type-qualify") ///< a qualified type
 
 TREE_KIND(eTreeTypeStruct, "type-struct")
 
@@ -40,8 +40,8 @@ TREE_KIND(eTreeDeclField, "decl-field")
 TREE_KIND(eTreeDeclFunction, "decl-function")
 TREE_KIND(eTreeDeclModule, "decl-module")
 
-TREE_KIND(eTreeError, "error")
-TREE_KIND(eTreeQualify, "qualify")
+TREE_KIND(eTreeType, "unresolved-type") ///< unresolved type
+TREE_KIND(eTreeError, "error") ///< an error of some sort
 
 #undef TREE_KIND
 

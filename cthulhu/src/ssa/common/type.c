@@ -101,7 +101,7 @@ static ssa_type_t *ssa_type_inner(const tree_t *type, quals_t quals)
             /* params = */ collect_params(type->params),
             /* variadic = */ type->arity == eArityVariable
         );
-    case eTreeQualify: return ssa_type_inner(type->qualify, type->quals | quals);
+    case eTreeTypeQualify: return ssa_type_inner(type->qualify, type->quals | quals);
 
     default:
         NEVER("unexpected type kind: %s", tree_to_string(type));

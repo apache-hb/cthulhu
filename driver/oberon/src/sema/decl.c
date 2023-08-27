@@ -41,21 +41,29 @@ static void set_attribs(tree_t *sema, tree_t *decl, obr_visibility_t vis)
     tree_set_attrib(decl, BOX(attrib));
 }
 
-static void resolve_const(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+static obr_t *begin_resolve(tree_t *sema, void *user, obr_kind_t kind)
 {
     obr_t *decl = user;
-    CTASSERTF(decl->kind == eObrDeclConst, "decl %s is not a const", decl->name);
+    CTASSERTF(decl->kind == kind, "decl %s is not a %d", decl->name, kind);
+
+    obr_set_current_name(sema, decl->name);
+
+    return decl;
+}
+
+static void resolve_const(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+{
+    obr_t *decl = begin_resolve(sema, user, eObrDeclConst);
 
     tree_t *expr = obr_sema_rvalue(sema, decl->value, NULL);
-    self->type = tree_qualify(self->node, tree_get_type(expr), eQualDefault); ///< TODO: oh no what are you doing?
+    self->type = tree_type_qualify(self->node, tree_get_type(expr), eQualDefault); ///< TODO: oh no what are you doing?
 
     tree_close_global(self, expr);
 }
 
 static void resolve_var(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
-    obr_t *decl = user;
-    CTASSERTF(decl->kind == eObrDeclVar, "decl %s is not a var", decl->name);
+    begin_resolve(sema, user, eObrDeclVar);
 
     tree_t *value = obr_default_value(self->node, tree_get_type(self));
 
@@ -64,12 +72,12 @@ static void resolve_var(cookie_t *cookie, tree_t *sema, tree_t *self, void *user
 
 static void resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
-    obr_t *decl = user;
-    CTASSERTF(decl->kind == eObrDeclType, "decl %s is not a type", decl->name);
+    obr_t *decl = begin_resolve(sema, user, eObrDeclType);
 
     tree_t *type = obr_sema_type(sema, decl->type);
+    tree_t *alias = tree_alias(tree_resolve(cookie, type), decl->name);
 
-    tree_close_decl(self, tree_resolve(cookie, type));
+    tree_close_decl(self, alias);
 }
 
 static tree_t *forward_const(tree_t *sema, obr_t *decl)
@@ -92,7 +100,7 @@ static tree_t *forward_var(tree_t *sema, obr_t *decl)
     };
 
     tree_t *type = obr_sema_type(sema, decl->type);
-    tree_t *mut = tree_qualify(decl->node, type, eQualMutable);
+    tree_t *mut = tree_type_qualify(decl->node, type, eQualMutable);
     return tree_open_global(decl->node, decl->name, mut, resolve);
 }
 

@@ -238,11 +238,7 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
 
 tree_t *tree_type_pointer(const node_t *node, const char *name, tree_t *pointer);
 
-///
-/// generic nodes
-///
-
-tree_t *tree_qualify(const node_t *node, const tree_t *type, quals_t quals);
+tree_t *tree_type_qualify(const node_t *node, const tree_t *type, quals_t quals);
 
 ///
 /// tree expr interface
@@ -332,6 +328,8 @@ tree_t *tree_decl_local(const node_t *node, const char *name, const tree_t *type
 
 void tree_add_local(tree_t *self, tree_t *decl);
 void tree_set_attrib(tree_t *self, const attribs_t *attrib);
+
+tree_t *tree_alias(const tree_t *tree, const char *name);
 
 ///
 /// tree sema interface

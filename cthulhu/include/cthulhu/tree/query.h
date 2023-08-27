@@ -14,7 +14,6 @@ const char *tree_get_name(const tree_t *self);
 tree_kind_t tree_get_kind(const tree_t *self);
 const tree_t *tree_get_type(const tree_t *self);
 const attribs_t *tree_get_attrib(const tree_t *self);
-const tree_t *tree_follow_type(const tree_t *self);
 
 bool tree_is(const tree_t *self, tree_kind_t kind);
 
