@@ -44,12 +44,16 @@ NODISCARD CONSTFN where_t get_node_location(const node_t *node);
  * @param where the location of this node
  * @return the created node
  */
-NODISCARD CONSTFN node_t *node_new(scan_t *scan, where_t where);
+NODISCARD CONSTFN
+node_t *node_new(scan_t *scan, where_t where);
 
-NODISCARD CONSTFN node_t *node_builtin(void);
+NODISCARD CONSTFN
+node_t *node_builtin(void);
 
-NODISCARD CONSTFN node_t *node_invalid(void);
+NODISCARD CONSTFN
+node_t *node_invalid(void);
 
-NODISCARD CONSTFN bool node_is_valid(const node_t *node);
+NODISCARD CONSTFN
+bool node_is_valid(const node_t *node);
 
 /** @} */
