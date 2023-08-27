@@ -24,7 +24,8 @@ tests = {
         'pass': [
             'alias',
             'builtins',
-            'nested'
+            'nested',
+            'records'
         ],
         'fail': [
             'invalid-type',

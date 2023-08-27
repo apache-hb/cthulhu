@@ -15,8 +15,8 @@ typedef struct ctu_string_t {
     size_t length;
 } ctu_string_t;
 
-ctu_digit_t ctu_parse_digit(const char *str, size_t base);
+ctu_digit_t ctu_parse_digit(scan_t *scan, const char *str, size_t base);
 
-ctu_string_t ctu_parse_string(reports_t *reports, const char *str, size_t length);
+ctu_string_t ctu_parse_string(scan_t *scan, const char *str, size_t length);
 
 #define CTULTYPE where_t

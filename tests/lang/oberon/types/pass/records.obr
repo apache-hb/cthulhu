@@ -1,0 +1,10 @@
+MODULE Trees;
+
+TYPE
+    Tree* = POINTER TO Node;
+    Node* = RECORD
+        name-: POINTER TO ARRAY OF CHAR;
+        left, right: Tree
+    END;
+
+END Trees.

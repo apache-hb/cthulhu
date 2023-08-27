@@ -7,8 +7,10 @@
 
 #include "scan/node.h"
 
-ctu_digit_t ctu_parse_digit(const char *str, size_t base)
+ctu_digit_t ctu_parse_digit(scan_t *scan, const char *str, size_t base)
 {
+    CTU_UNUSED(scan);
+
     ctu_digit_t result = {
         .value = 0
     };
@@ -18,9 +20,9 @@ ctu_digit_t ctu_parse_digit(const char *str, size_t base)
     return result;
 }
 
-ctu_string_t ctu_parse_string(reports_t *reports, const char *str, size_t length)
+ctu_string_t ctu_parse_string(scan_t *scan, const char *str, size_t length)
 {
-    CTU_UNUSED(reports);
+    CTU_UNUSED(scan);
 
     ctu_string_t result = {
         .text = ctu_strdup(str),

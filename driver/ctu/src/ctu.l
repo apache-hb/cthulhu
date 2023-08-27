@@ -102,22 +102,22 @@ WS [ \t\r\v\n\f]
 }
 
 "0b"[01]+ {
-    yylval->digit = ctu_parse_digit(yytext + 2, 2);
+    yylval->digit = ctu_parse_digit(yyextra, yytext + 2, 2);
     return INTEGER;
 }
 
 "0x"[0-9a-fA-F]+ {
-    yylval->digit = ctu_parse_digit(yytext + 2, 16);
+    yylval->digit = ctu_parse_digit(yyextra, yytext + 2, 16);
     return INTEGER;
 }
 
 [0-9]+ {
-    yylval->digit = ctu_parse_digit(yytext, 10);
+    yylval->digit = ctu_parse_digit(yyextra, yytext, 10);
     return INTEGER;
 }
 
 \"([^"\\\n]|{ESCAPES})*\" {
-	yylval->string = ctu_parse_string(scan_reports(yyextra), yytext + 1, yyleng - 2);
+	yylval->string = ctu_parse_string(yyextra, yytext + 1, yyleng - 2);
     return STRING;
 }
 

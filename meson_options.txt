@@ -1,6 +1,6 @@
 option('languages', type : 'array',
     description : 'select which languages to compile',
-    choices : [ 'ctu', 'pl0', 'oberon', 'jvm', 'cc', 'lox', 'example' ],
+    choices : [ 'ctu', 'pl0', 'oberon', 'jvm', 'cc', 'example' ],
     value : [ 'ctu', 'pl0', 'oberon', 'example' ]
 )
 
