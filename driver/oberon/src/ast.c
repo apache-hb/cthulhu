@@ -44,6 +44,11 @@ static obr_t *obr_decl_from_symbol(scan_t *scan, where_t where, obr_kind_t kind,
     return obr_decl(scan, where, kind, symbol->name, symbol->visibility);
 }
 
+static obr_t *obr_decl_symbol_location(const obr_symbol_t *symbol, obr_kind_t kind)
+{
+    return obr_decl(symbol->scan, symbol->where, kind, symbol->name, symbol->visibility);
+}
+
 obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *imports, vector_t *decls)
 {
     obr_t *self = obr_decl(scan, where, eObrModule, name, eObrVisPublic);
@@ -71,9 +76,9 @@ obr_t *obr_decl_type(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *t
     return self;
 }
 
-obr_t *obr_decl_var(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type)
+obr_t *obr_decl_var(obr_symbol_t *symbol, obr_t *type)
 {
-    obr_t *self = obr_decl_from_symbol(scan, where, eObrDeclVar, symbol);
+    obr_t *self = obr_decl_symbol_location(symbol, eObrDeclVar);
     self->type = type;
     return self;
 }
@@ -85,11 +90,25 @@ obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *
     return self;
 }
 
-obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *receiver, vector_t *params)
+obr_t *obr_decl_procedure(
+    scan_t *scan, where_t where, obr_symbol_t *symbol,
+    obr_t *receiver, vector_t *params, obr_t *result,
+    vector_t *locals, vector_t *body, char *end
+)
 {
     obr_t *self = obr_decl_from_symbol(scan, where, eObrDeclProcedure, symbol);
+
+    // only check if this is a procedure, not a forward decl
+    if (body != NULL)
+    {
+        ensure_block_names_match(scan, self->node, "PROCEDURE", symbol->name, end);
+    }
+
     self->receiver = receiver;
     self->params = params;
+    self->result = result;
+    self->locals = locals;
+    self->body = body;
     return self;
 }
 
@@ -144,6 +163,23 @@ obr_t *obr_expr_digit(scan_t *scan, where_t where, const mpz_t digit)
     return self;
 }
 
+/* stmts */
+
+obr_t *obr_stmt_return(scan_t *scan, where_t where, obr_t *expr)
+{
+    obr_t *self = obr_new(scan, where, eObrStmtReturn);
+    self->expr = expr;
+    return self;
+}
+
+obr_t *obr_stmt_while(scan_t *scan, where_t where, obr_t *cond, vector_t *then)
+{
+    obr_t *self = obr_new(scan, where, eObrStmtWhile);
+    self->cond = cond;
+    self->then = then;
+    return self;
+}
+
 /* types */
 
 obr_t *obr_type_name(scan_t *scan, where_t where, char *name)
@@ -183,16 +219,16 @@ obr_t *obr_type_record(scan_t *scan, where_t where, vector_t *fields)
 
 /* extra */
 
-obr_t *obr_field(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type)
+obr_t *obr_field(obr_symbol_t *symbol, obr_t *type)
 {
-    obr_t *self = obr_decl_from_symbol(scan, where, eObrField, symbol);
+    obr_t *self = obr_decl_symbol_location(symbol, eObrField);
     self->type = type;
     return self;
 }
 
-obr_t *obr_param(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type, bool mut)
+obr_t *obr_param(obr_symbol_t *symbol, obr_t *type, bool mut)
 {
-    obr_t *self = obr_decl_from_symbol(scan, where, eObrParam, symbol);
+    obr_t *self = obr_decl_symbol_location(symbol, eObrParam);
     self->mut = mut;
     self->type = type;
     return self;
@@ -218,41 +254,30 @@ obr_symbol_t *obr_symbol(scan_t *scan, where_t where, char *name, obr_visibility
     return self;
 }
 
+#define EXPAND_INNER(fn, ...) \
+    do {\
+        size_t len = vector_len(symbols); \
+        vector_t *result = vector_of(len); \
+        for (size_t i = 0; i < len; i++) \
+        {   \
+            obr_symbol_t *symbol = vector_get(symbols, i); \
+            obr_t *decl = fn(symbol, __VA_ARGS__); \
+            vector_set(result, i, decl); \
+        } \
+        return result; \
+    } while (0)
+
 vector_t *obr_expand_vars(vector_t *symbols, obr_t *type)
 {
-    size_t len = vector_len(symbols);
-    vector_t *result = vector_of(len);
-    for (size_t i = 0; i < len; i++)
-    {
-        obr_symbol_t *symbol = vector_get(symbols, i);
-        obr_t *decl = obr_decl_var(symbol->scan, symbol->where, symbol, type);
-        vector_set(result, i, decl);
-    }
-    return result;
+    EXPAND_INNER(obr_decl_var, type);
 }
 
 vector_t *obr_expand_fields(vector_t *symbols, obr_t *type)
 {
-    size_t len = vector_len(symbols);
-    vector_t *result = vector_of(len);
-    for (size_t i = 0; i < len; i++)
-    {
-        obr_symbol_t *symbol = vector_get(symbols, i);
-        obr_t *field = obr_field(symbol->scan, symbol->where, symbol, type);
-        vector_set(result, i, field);
-    }
-    return result;
+    EXPAND_INNER(obr_field, type);
 }
 
 vector_t *obr_expand_params(vector_t *symbols, obr_t *type, bool mut)
 {
-    size_t len = vector_len(symbols);
-    vector_t *result = vector_of(len);
-    for (size_t i = 0; i < len; i++)
-    {
-        obr_symbol_t *symbol = vector_get(symbols, i);
-        obr_t *field = obr_param(symbol->scan, symbol->where, symbol, type, mut);
-        vector_set(result, i, field);
-    }
-    return result;
+    EXPAND_INNER(obr_param, type, mut);
 }

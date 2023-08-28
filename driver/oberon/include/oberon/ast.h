@@ -39,6 +39,7 @@ typedef enum obr_kind_t {
     eObrTypePointer,
     eObrTypeArray,
     eObrTypeRecord,
+    eObrTypeSignature,
 
     /* exprs */
     eObrExprDigit,
@@ -47,6 +48,10 @@ typedef enum obr_kind_t {
     eObrExprCompare,
     eObrExprIs,
     eObrExprIn,
+
+    /* stmts */
+    eObrStmtReturn,
+    eObrStmtWhile,
 
     /* decls */
     eObrDeclVar,
@@ -69,10 +74,16 @@ typedef struct obr_t {
     node_t *node;
 
     union {
-        /* eObrExprUnary */
+        /* eObrExprUnary|eObrStmtReturn */
         struct {
             unary_t unary;
             obr_t *expr;
+        };
+
+        /* eObrStmtWhile */
+        struct {
+            obr_t *cond;
+            vector_t *then;
         };
 
         /* eObrExprBinary|eObrExprCompare|eObrExprIn|eObrExprIs */
@@ -118,10 +129,14 @@ typedef struct obr_t {
                 /* eObrDeclConst */
                 obr_t *value;
 
-                /* eObrDeclProcedure */
+                /* eObrDeclProcedure|eObrTypeSignature */
                 struct {
                     obr_t *receiver;
                     vector_t *params;
+                    obr_t *result;
+
+                    vector_t *locals;
+                    vector_t *body;
                 };
 
                 /* eObrImport|eObrTypeQual */
@@ -139,9 +154,14 @@ obr_t *obr_import(scan_t *scan, where_t where, char *name, char *symbol);
 /* decls */
 
 obr_t *obr_decl_type(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type);
-obr_t *obr_decl_var(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type);
+obr_t *obr_decl_var(obr_symbol_t *symbol, obr_t *type);
 obr_t *obr_decl_const(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *value);
-obr_t *obr_decl_procedure(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *receiver, vector_t *params);
+
+obr_t *obr_decl_procedure(
+    scan_t *scan, where_t where, obr_symbol_t *symbol,
+    obr_t *receiver, vector_t *params, obr_t *result,
+    vector_t *locals, vector_t *body, char *end
+);
 
 /* exprs */
 
@@ -154,6 +174,11 @@ obr_t *obr_expr_unary(scan_t *scan, where_t where, unary_t op, obr_t *expr);
 
 obr_t *obr_expr_digit(scan_t *scan, where_t where, const mpz_t digit);
 
+/* stmts */
+
+obr_t *obr_stmt_return(scan_t *scan, where_t where, obr_t *expr);
+obr_t *obr_stmt_while(scan_t *scan, where_t where, obr_t *cond, vector_t *then);
+
 /* types */
 
 obr_t *obr_type_name(scan_t *scan, where_t where, char *symbol);
@@ -164,8 +189,8 @@ obr_t *obr_type_record(scan_t *scan, where_t where, vector_t *fields);
 
 /* extras */
 
-obr_t *obr_field(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type);
-obr_t *obr_param(scan_t *scan, where_t where, obr_symbol_t *symbol, obr_t *type, bool mut);
+obr_t *obr_field(obr_symbol_t *symbol, obr_t *type);
+obr_t *obr_param(obr_symbol_t *symbol, obr_t *type, bool mut);
 obr_t *obr_receiver(scan_t *scan, where_t where, bool mut, char *name, char *type);
 
 /* partial symbols */

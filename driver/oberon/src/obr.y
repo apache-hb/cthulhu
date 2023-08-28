@@ -45,16 +45,19 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     optParams params
     paramList paramDecl
+    stmtSeq
 
 %type<ast>
     importBody module
     type forward
 
-    constDecl typeDecl
-    constExpr expr
+    stmt qualified
+
+    constDecl typeDecl procDecl
+    constExpr expr optExpr
     relationExpr addExpr mulExpr unaryExpr simpleExpr
 
-    optReceiver receiver
+    optReceiver receiver returnType
 
 %type<symbol>
     identDef
@@ -181,12 +184,20 @@ declSeq: decl { $$ = $1; }
 decl: valueDeclSeq { $$ = $1; }
     | constDeclSeq { $$ = $1; }
     | typeDeclSeq { $$ = $1; }
-    | forward { $$ = vector_init($1); }
+    | forward SEMI { $$ = vector_init($1); }
+    | procDecl SEMI { $$ = vector_init($1); }
     ;
 
 /* procedures */
 
-forward: PROCEDURE CARET optReceiver identDef optParams { $$ = obr_decl_procedure(x, @$, $4, $3, $5); }
+procDecl: PROCEDURE optReceiver identDef optParams returnType SEMI declSeq START stmtSeq end { $$ = obr_decl_procedure(x, @$, $3, $2, $4, $5, $7, $9, $10); }
+    ;
+
+forward: PROCEDURE CARET optReceiver identDef optParams returnType { $$ = obr_decl_procedure(x, @$, $4, $3, $5, $6, NULL, NULL, NULL); }
+    ;
+
+returnType: %empty { $$ = NULL; }
+    | COLON type { $$ = $2; }
     ;
 
 optReceiver: %empty { $$ = NULL; }
@@ -251,10 +262,13 @@ typeDecl: identDef EQUAL type SEMI { $$ = obr_decl_type(x, @$, $1, $3); }
     ;
 
 type: IDENT { $$ = obr_type_name(x, @$, $1); }
-    | IDENT DOT IDENT { $$ = obr_type_qual(x, @$, $1, $3); }
+    | qualified { $$ = $1; }
     | POINTER TO type { $$ = obr_type_pointer(x, @$, $3); }
     | ARRAY OF type { $$ = obr_type_array(x, @$, $3); }
     | RECORD fieldList END { $$ = obr_type_record(x, @$, $2); }
+    ;
+
+qualified: IDENT DOT IDENT { $$ = obr_type_qual(x, @$, $1, $3); }
     ;
 
 /* record fields */
@@ -266,7 +280,21 @@ fieldList: fieldDecl { $$ = $1; }
 fieldDecl: identList COLON type { $$ = obr_expand_fields($1, $3); }
     ;
 
+/* statements */
+
+stmtSeq: stmt { $$ = vector_init($1); }
+    | stmtSeq SEMI stmt { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+stmt: RETURN optExpr { $$ = obr_stmt_return(x, @$, $2); }
+    | WHILE expr DO stmtSeq END { $$ = obr_stmt_while(x, @$, $2, $4); }
+    ;
+
 /* exprs */
+
+optExpr: %empty { $$ = NULL; }
+    | expr { $$ = $1; }
+    ;
 
 constExpr: expr { $$ = $1; }
     ;
