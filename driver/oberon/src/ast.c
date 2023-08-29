@@ -114,6 +114,21 @@ obr_t *obr_decl_procedure(
 
 /* exprs */
 
+obr_t *obr_expr_name(scan_t *scan, where_t where, char *name)
+{
+    obr_t *self = obr_new(scan, where, eObrExprName);
+    self->object = name;
+    return self;
+}
+
+obr_t *obr_expr_field(scan_t *scan, where_t where, obr_t *expr, char *field)
+{
+    obr_t *self = obr_new(scan, where, eObrExprField);
+    self->expr = expr;
+    self->field = field;
+    return self;
+}
+
 obr_t *obr_expr_is(scan_t *scan, where_t where, obr_t *lhs, obr_t *rhs)
 {
     obr_t *self = obr_new(scan, where, eObrExprIs);
@@ -177,6 +192,14 @@ obr_t *obr_stmt_while(scan_t *scan, where_t where, obr_t *cond, vector_t *then)
     obr_t *self = obr_new(scan, where, eObrStmtWhile);
     self->cond = cond;
     self->then = then;
+    return self;
+}
+
+obr_t *obr_stmt_assign(scan_t *scan, where_t where, obr_t *dst, obr_t *src)
+{
+    obr_t *self = obr_new(scan, where, eObrStmtAssign);
+    self->dst = dst;
+    self->src = src;
     return self;
 }
 

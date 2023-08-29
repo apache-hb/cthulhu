@@ -216,6 +216,8 @@ static void check_func_return(check_t *check, const tree_t *fn)
 
     if (!will_always_return(fn->body))
     {
+        if (tree_is(returnType, eTreeTypeUnit)) { return; }
+
         report(check->reports, eFatal, tree_get_node(fn),
             "function `%s` may not return a value",
             tree_get_name(fn)

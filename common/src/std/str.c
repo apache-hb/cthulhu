@@ -28,6 +28,8 @@ char *format(const char *fmt, ...)
 USE_DECL
 char *formatv(const char *fmt, va_list args)
 {
+    CTASSERT(fmt != NULL);
+
     /* make a copy of the args for the second format */
     va_list again;
     va_copy(again, args);
@@ -212,7 +214,7 @@ static const char kEscapeChars[] = {
     '\n', '\t', '\f', '\r', '\v', '\\', '\0', '\'', '\"',
 };
 
-static bool is_escape_char(char c) 
+static bool is_escape_char(char c)
 {
     for (size_t i = 0; i < sizeof(kEscapeChars); i++)
     {
@@ -254,7 +256,7 @@ static size_t normstr(char *out, char c)
         return 1;
     }
 
-    switch (c) 
+    switch (c)
     {
     case '\\':
         out[0] = '\\';

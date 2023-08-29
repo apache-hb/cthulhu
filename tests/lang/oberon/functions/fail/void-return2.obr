@@ -1,0 +1,8 @@
+MODULE Test;
+    PROCEDURE DoubleValue(x: INTEGER);
+        VAR tmp: INTEGER;
+    BEGIN
+        tmp := x * 2;
+        RETURN tmp
+    END DoubleValue;
+END Test.

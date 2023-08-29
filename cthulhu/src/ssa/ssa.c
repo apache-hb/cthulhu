@@ -460,7 +460,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     case eTreeStmtLoop:
         return compile_loop(ssa, tree);
 
-    default: NEVER("unhandled tree kind %d", tree->kind);
+    default: NEVER("unhandled tree %s", tree_to_string(tree));
     }
 }
 
@@ -601,7 +601,10 @@ ssa_result_t ssa_compile(map_t *mods)
         }
         else
         {
-            CTASSERT(symbol->linkage == eLinkImport);
+            CTASSERTF(symbol->linkage == eLinkImport,
+                "function `%s` has no implementation, but is not an imported symbol (linkage=%s)",
+                symbol->name, link_name(symbol->linkage)
+            );
         }
     }
 

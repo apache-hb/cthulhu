@@ -2,6 +2,10 @@
 
 #include "base/panic.h"
 
+///
+/// rvalues
+///
+
 static tree_t *sema_digit(tree_t *sema, obr_t *expr, tree_t *implicitType)
 {
     // TODO: get correct digit size
@@ -35,6 +39,17 @@ static tree_t *sema_compare(tree_t *sema, obr_t *expr, tree_t *implicitType)
     return tree_expr_compare(expr->node, obr_get_bool_type(), expr->compare, lhs, rhs);
 }
 
+static tree_t *sema_name(tree_t *sema, obr_t *expr)
+{
+    tree_t *var = obr_get_symbol(sema, eObrTagValues, expr->object);
+    if (var != NULL) { return var; }
+
+    tree_t *fn = obr_get_symbol(sema, eObrTagProcs, expr->object);
+    if (fn != NULL) { return fn; }
+
+    return tree_raise(expr->node, sema->reports, "unknown name `%s`", expr->object);
+}
+
 tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, tree_t *implicitType)
 {
     tree_t *type = implicitType != NULL ? tree_resolve(tree_get_cookie(sema), implicitType) : NULL;
@@ -45,7 +60,21 @@ tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, tree_t *implicitType)
     case eObrExprUnary: return sema_unary(sema, expr, type);
     case eObrExprBinary: return sema_binary(sema, expr, type);
     case eObrExprCompare: return sema_compare(sema, expr, type);
+    case eObrExprName: return tree_expr_load(expr->node, sema_name(sema, expr)); // TODO: this feels wrong for functions
 
+    default: NEVER("unknown expr kind %d", expr->kind);
+    }
+}
+
+///
+/// lvalues
+///
+
+tree_t *obr_sema_lvalue(tree_t *sema, obr_t *expr)
+{
+    switch (expr->kind)
+    {
+    case eObrExprName: return sema_name(sema, expr);
     default: NEVER("unknown expr kind %d", expr->kind);
     }
 }
@@ -72,4 +101,49 @@ tree_t *obr_default_value(const node_t *node, const tree_t *type)
     default:
         NEVER("obr-default-value unknown type kind %d", tree_get_kind(type));
     }
+}
+
+///
+/// statements
+///
+
+static tree_t *sema_assign(tree_t *sema, obr_t *stmt)
+{
+    tree_t *dst = obr_sema_lvalue(sema, stmt->dst);
+    tree_t *src = obr_sema_rvalue(sema, stmt->src, (tree_t*)tree_get_type(dst)); // TODO: a little evil cast
+
+    return tree_stmt_assign(stmt->node, dst, src);
+}
+
+static tree_t *sema_return(tree_t *sema, obr_t *stmt)
+{
+    // TODO: get implicit return type
+    tree_t *value = stmt->expr == NULL
+        ? tree_expr_unit(stmt->node, obr_get_void_type())
+        : obr_sema_rvalue(sema, stmt->expr, NULL);
+    return tree_stmt_return(stmt->node, value);
+}
+
+static tree_t *sema_stmt(tree_t *sema, obr_t *stmt)
+{
+    switch (stmt->kind)
+    {
+    case eObrStmtAssign: return sema_assign(sema, stmt);
+    case eObrStmtReturn: return sema_return(sema, stmt);
+    default: NEVER("unknown stmt kind %d", stmt->kind);
+    }
+}
+
+tree_t *obr_sema_stmts(tree_t *sema, const node_t *node, const char *name, vector_t *stmts)
+{
+    size_t len = vector_len(stmts);
+    vector_t *result = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        obr_t *stmt = vector_get(stmts, i);
+        tree_t *tree = sema_stmt(sema, stmt);
+        vector_set(result, i, tree);
+    }
+
+    return tree_stmt_block(node, result);
 }

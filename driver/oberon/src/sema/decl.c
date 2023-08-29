@@ -46,7 +46,7 @@ static obr_t *begin_resolve(tree_t *sema, void *user, obr_kind_t kind)
     obr_t *decl = user;
     CTASSERTF(decl->kind == kind, "decl %s is not a %d", decl->name, kind);
 
-    obr_set_current_name(sema, decl->name);
+    obr_set_current_decl(sema, decl);
 
     return decl;
 }
@@ -78,6 +78,41 @@ static void resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void *use
     tree_t *alias = tree_alias(tree_resolve(cookie, type), decl->name);
 
     tree_close_decl(self, alias);
+}
+
+static void resolve_proc(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+{
+    obr_t *decl = begin_resolve(sema, user, eObrDeclProcedure); // TODO
+
+    size_t locals = vector_len(decl->locals);
+    size_t params = vector_len(decl->params);
+    const size_t sizes[eObrTagTotal] = {
+        [eObrTagValues] = locals + params,
+        [eObrTagTypes] = 0,
+        [eObrTagProcs] = 0,
+        [eObrTagModules] = 0
+    };
+
+    tree_t *ctx = tree_module(sema, decl->node, decl->name, eObrTagTotal, sizes);
+
+    for (size_t i = 0; i < locals; i++)
+    {
+        obr_t *local = vector_get(decl->locals, i);
+        tree_t *decl = tree_decl_local(local->node, local->name, obr_sema_type(sema, local->type));
+        tree_add_local(self, decl);
+        obr_add_decl(ctx, eObrTagValues, local->name, decl);
+    }
+
+    for (size_t i = 0; i < params; i++)
+    {
+        obr_t *param = vector_get(decl->params, i);
+        tree_t *decl = tree_decl_param(param->node, param->name, obr_sema_type(sema, param->type));
+        obr_add_decl(ctx, eObrTagValues, param->name, decl); // TODO: wonky
+    }
+
+    tree_t *body = obr_sema_stmts(ctx, decl->node, decl->name, decl->body);
+
+    tree_close_function(self, body);
 }
 
 static tree_t *forward_const(tree_t *sema, obr_t *decl)
@@ -115,6 +150,32 @@ static tree_t *forward_type(tree_t *sema, obr_t *decl)
     return tree_open_decl(decl->node, decl->name, resolve);
 }
 
+static tree_t *forward_proc(tree_t *sema, obr_t *decl)
+{
+    tree_resolve_info_t resolve = {
+        .sema = sema,
+        .user = decl,
+        .fnResolve = resolve_proc
+    };
+
+    tree_t *result = decl->result == NULL ? obr_get_void_type() : obr_sema_type(sema, decl->result);
+    size_t len = vector_len(decl->params);
+    vector_t *params = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        obr_t *param = vector_get(decl->params, i);
+        CTASSERTF(param->kind == eObrParam, "param %s is not a param (type=%d)", param->name, param->kind);
+
+        tree_t *type = obr_sema_type(sema, param->type);
+        vector_set(params, i, tree_decl_param(param->node, param->name, type));
+    }
+
+    tree_t *signature = tree_type_closure(decl->node, decl->name, result, params, eArityFixed);
+    // TODO: we ignore the receiver for now
+
+    return tree_open_function(decl->node, decl->name, signature, resolve);
+}
+
 static obr_forward_t forward_inner(tree_t *sema, obr_t *decl)
 {
     switch (decl->kind)
@@ -139,6 +200,14 @@ static obr_forward_t forward_inner(tree_t *sema, obr_t *decl)
         obr_forward_t fwd = {
             .tag = eObrTagTypes,
             .decl = forward_type(sema, decl)
+        };
+        return fwd;
+    }
+
+    case eObrDeclProcedure: {
+        obr_forward_t fwd = {
+            .tag = eObrTagProcs,
+            .decl = forward_proc(sema, decl)
         };
         return fwd;
     }

@@ -43,6 +43,11 @@ typedef enum obr_kind_t {
 
     /* exprs */
     eObrExprDigit,
+    eObrExprString,
+
+    eObrExprName,
+    eObrExprField,
+
     eObrExprUnary,
     eObrExprBinary,
     eObrExprCompare,
@@ -52,6 +57,7 @@ typedef enum obr_kind_t {
     /* stmts */
     eObrStmtReturn,
     eObrStmtWhile,
+    eObrStmtAssign,
 
     /* decls */
     eObrDeclVar,
@@ -74,9 +80,16 @@ typedef struct obr_t {
     node_t *node;
 
     union {
-        /* eObrExprUnary|eObrStmtReturn */
         struct {
-            unary_t unary;
+            union {
+                /* eObrExprField */
+                char *field;
+
+                /* eObrExprUnary */
+                unary_t unary;
+            };
+
+            /* eObrStmtReturn */
             obr_t *expr;
         };
 
@@ -97,6 +110,12 @@ typedef struct obr_t {
             obr_t *rhs;
         };
 
+        /* eObrStmtAssign */
+        struct {
+            obr_t *dst;
+            obr_t *src;
+        };
+
         /* eObrTypePointer */
         obr_t *pointer;
 
@@ -108,6 +127,9 @@ typedef struct obr_t {
 
         /* eObrExprDigit */
         mpz_t digit;
+
+        /* eObrExprName */
+        char *object;
 
         struct {
             char *name;
@@ -165,6 +187,9 @@ obr_t *obr_decl_procedure(
 
 /* exprs */
 
+obr_t *obr_expr_name(scan_t *scan, where_t where, char *name);
+obr_t *obr_expr_field(scan_t *scan, where_t where, obr_t *expr, char *field);
+
 obr_t *obr_expr_is(scan_t *scan, where_t where, obr_t *lhs, obr_t *rhs);
 obr_t *obr_expr_in(scan_t *scan, where_t where, obr_t *lhs, obr_t *rhs);
 
@@ -173,11 +198,13 @@ obr_t *obr_expr_binary(scan_t *scan, where_t where, binary_t op, obr_t *lhs, obr
 obr_t *obr_expr_unary(scan_t *scan, where_t where, unary_t op, obr_t *expr);
 
 obr_t *obr_expr_digit(scan_t *scan, where_t where, const mpz_t digit);
+obr_t *obr_expr_string(scan_t *scan, where_t where, char *text, size_t length);
 
 /* stmts */
 
 obr_t *obr_stmt_return(scan_t *scan, where_t where, obr_t *expr);
 obr_t *obr_stmt_while(scan_t *scan, where_t where, obr_t *cond, vector_t *then);
+obr_t *obr_stmt_assign(scan_t *scan, where_t where, obr_t *dst, obr_t *src);
 
 /* types */
 

@@ -1,5 +1,5 @@
 src = [
-    'src/tree/h2.c',
+    'src/tree/tree.c',
     'src/tree/ops.c',
     'src/tree/sema.c',
     'src/tree/decl.c',

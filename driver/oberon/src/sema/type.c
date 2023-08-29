@@ -10,8 +10,7 @@ static tree_t *sema_type_name(tree_t *sema, obr_t *type)
     tree_t *it = obr_get_type(sema, type->name);
     if (it == NULL)
     {
-        report(sema->reports, eFatal, type->node, "type '%s' not found", type->name);
-        return tree_error(type->node, "unresolved type");
+        return tree_raise(type->node, sema->reports, "type '%s' not found", type->name);
     }
 
     return it;
@@ -22,8 +21,7 @@ static tree_t *sema_type_qual(tree_t *sema, obr_t *type)
     tree_t *mod = obr_get_module(sema, type->name);
     if (mod == NULL)
     {
-        report(sema->reports, eFatal, type->node, "module '%s' not found", type->name);
-        return tree_error(type->node, "unresolved module");
+        return tree_raise(type->node, sema->reports, "module '%s' not found", type->name);
     }
 
     // TODO: dedup with above
@@ -31,8 +29,7 @@ static tree_t *sema_type_qual(tree_t *sema, obr_t *type)
     tree_t *it = obr_get_type(mod, type->symbol);
     if (it == NULL)
     {
-        report(sema->reports, eFatal, type->node, "type '%s' not found in module '%s'", type->symbol, type->name);
-        return tree_error(type->node, "unresolved type");
+        return tree_raise(type->node, sema->reports, "type '%s' not found in module '%s'", type->symbol, type->name);
     }
 
     return it;
@@ -52,22 +49,22 @@ static tree_t *sema_type_array(tree_t *sema, obr_t *type)
 
 static tree_t *sema_type_record(tree_t *sema, obr_t *type)
 {
-    const char *save = obr_current_name(sema);
+    obr_t *save = obr_current_decl(sema);
 
     size_t len = vector_len(type->fields);
     vector_t *result = vector_of(len);
     for (size_t i = 0; i < len; i++)
     {
         obr_t *field = vector_get(type->fields, i);
-        obr_set_current_name(sema, field->name);
+        obr_set_current_decl(sema, field);
 
         tree_t *it = obr_sema_type(sema, field->type);
         vector_set(result, i, it);
     }
 
-    obr_set_current_name(sema, save);
+    obr_set_current_decl(sema, save);
 
-    return tree_decl_struct(type->node, save, result);
+    return tree_decl_struct(type->node, obr_current_name(sema), result);
 }
 
 tree_t *obr_sema_type(tree_t *sema, obr_t *type)

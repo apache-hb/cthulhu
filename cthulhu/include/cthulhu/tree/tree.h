@@ -181,7 +181,8 @@ typedef struct tree_t {
 /// tree error handling
 ///
 
-tree_t *tree_error(const node_t *node, const char *message);
+tree_t *tree_error(const node_t *node, const char *message, ...);
+tree_t *tree_raise(const node_t *node, reports_t *reports, const char *message, ...);
 
 ///
 /// tree type interface

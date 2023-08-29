@@ -2,6 +2,10 @@
 
 #include "cthulhu/tree/query.h"
 
+#include "report/report.h"
+
+#include "std/str.h"
+
 #include "base/memory.h"
 #include "base/panic.h"
 
@@ -34,14 +38,31 @@ tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, cons
     return self;
 }
 
-tree_t *tree_error(const node_t *node, const char *message)
+static tree_t *error_format(const node_t *node, const char *message, va_list args)
 {
-    CTASSERT(message != NULL);
-
     tree_t *self = tree_new(eTreeError, node, NULL);
-
     self->type = self;
-    self->message = message;
+    self->message = formatv(message, args);
+    return self;
+}
+
+tree_t *tree_error(const node_t *node, const char *message, ...)
+{
+    va_list args;
+    va_start(args, message);
+    tree_t *self = error_format(node, message, args);
+    va_end(args);
+    return self;
+}
+
+tree_t *tree_raise(const node_t *node, reports_t *reports, const char *message, ...)
+{
+    va_list args;
+    va_start(args, message);
+    tree_t *self = error_format(node, message, args);
+    va_end(args);
+
+    report(reports, eFatal, node, "%s", self->message);
 
     return self;
 }

@@ -1,0 +1,6 @@
+MODULE Test;
+    PROCEDURE DoubleValue(x: INTEGER): INTEGER;
+    BEGIN
+        RETURN x = 2
+    END DoubleValue;
+END Test.

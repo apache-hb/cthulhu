@@ -51,11 +51,12 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     importBody module
     type forward
 
-    stmt qualified
+    stmt
 
     constDecl typeDecl procDecl
     constExpr expr optExpr
     relationExpr addExpr mulExpr unaryExpr simpleExpr
+    designator
 
     optReceiver receiver returnType
 
@@ -214,7 +215,7 @@ optParams: %empty { $$ = vector_of(0); }
 params: LPAREN paramList RPAREN { $$ = $2; }
     ;
 
-paramList: paramDecl { $$ = vector_init($1); }
+paramList: paramDecl { $$ = $1; }
     | paramList SEMI paramDecl { vector_append(&$1, $3); $$ = $1; }
     ;
 
@@ -262,13 +263,10 @@ typeDecl: identDef EQUAL type SEMI { $$ = obr_decl_type(x, @$, $1, $3); }
     ;
 
 type: IDENT { $$ = obr_type_name(x, @$, $1); }
-    | qualified { $$ = $1; }
+    | IDENT DOT IDENT { $$ = obr_type_qual(x, @$, $1, $3); } /* TODO: this is probably wrong */
     | POINTER TO type { $$ = obr_type_pointer(x, @$, $3); }
     | ARRAY OF type { $$ = obr_type_array(x, @$, $3); }
     | RECORD fieldList END { $$ = obr_type_record(x, @$, $2); }
-    ;
-
-qualified: IDENT DOT IDENT { $$ = obr_type_qual(x, @$, $1, $3); }
     ;
 
 /* record fields */
@@ -288,9 +286,14 @@ stmtSeq: stmt { $$ = vector_init($1); }
 
 stmt: RETURN optExpr { $$ = obr_stmt_return(x, @$, $2); }
     | WHILE expr DO stmtSeq END { $$ = obr_stmt_while(x, @$, $2, $4); }
+    | designator ASSIGN expr { $$ = obr_stmt_assign(x, @$, $1, $3); }
     ;
 
 /* exprs */
+
+designator: IDENT { $$ = obr_expr_name(x, @$, $1); }
+    | designator DOT IDENT { $$ = obr_expr_field(x, @$, $1, $3); }
+    ;
 
 optExpr: %empty { $$ = NULL; }
     | expr { $$ = $1; }
@@ -332,6 +335,7 @@ unaryExpr: simpleExpr { $$ = $1; }
     ;
 
 simpleExpr: NUMBER { $$ = obr_expr_digit(x, @$, $1); }
+    | designator { $$ = $1; } /* TODO: this precedence is wrong */
     | LPAREN expr RPAREN { $$ = $2; }
     | TILDE simpleExpr { $$ = obr_expr_unary(x, @$, eUnaryFlip, $2); }
     ;

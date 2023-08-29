@@ -85,8 +85,10 @@ tree_kind_t tree_get_kind(const tree_t *self)
 const tree_t *tree_get_type(const tree_t *self)
 {
     CTASSERT(self != NULL); // dont give me null
-    CTASSERTF(self->type != NULL, "missing type on %s", tree_to_string(self)); // type hasnt been set yet
 
+    if (tree_is(self, eTreeError)) { return self; }
+
+    CTASSERTF(self->type != NULL, "missing type on %s", tree_to_string(self)); // type hasnt been set yet
     return self->type;
 }
 

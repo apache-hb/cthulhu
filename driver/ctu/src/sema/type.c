@@ -25,8 +25,7 @@ static tree_t *sema_type_name(tree_t *sema, const ctu_t *type)
         ns = ctu_get_namespace(ns, segment);
         if (ns == NULL)
         {
-            report(sema->reports, eFatal, type->node, "namespace `%s` not found", segment);
-            return tree_error(type->node, "namespace not found");
+            return tree_raise(type->node, sema->reports, "namespace `%s` not found", segment);
         }
     }
 
@@ -34,8 +33,7 @@ static tree_t *sema_type_name(tree_t *sema, const ctu_t *type)
     tree_t *decl = ctu_get_type(ns, name);
     if (decl == NULL)
     {
-        report(sema->reports, eFatal, type->node, "type `%s` not found", name);
-        return tree_error(type->node, "type not found");
+        return tree_raise(type->node, sema->reports, "type `%s` not found", name);
     }
 
     return decl;

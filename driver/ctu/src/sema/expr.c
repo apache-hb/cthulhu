@@ -25,8 +25,7 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path)
         ns = ctu_get_namespace(ns, segment);
         if (ns == NULL)
         {
-            report(sema->reports, eFatal, NULL, "namespace `%s` not found", segment);
-            return tree_error(node, "namespace not found");
+            return tree_raise(node, sema->reports, "namespace `%s` not found", segment);
         }
     }
 
@@ -34,8 +33,7 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path)
     tree_t *decl = ctu_get_decl(ns, name);
     if (decl == NULL)
     {
-        report(sema->reports, eFatal, node, "decl `%s` not found", name);
-        return tree_error(node, "decl not found");
+        return tree_raise(node, sema->reports, "decl `%s` not found", name);
     }
 
     return decl;
@@ -50,8 +48,7 @@ static tree_t *verify_expr_type(tree_t *sema, tree_kind_t kind, const tree_t *ty
     if (type == NULL) { return NULL; }
     if (ctu_type_is(type, kind)) { return NULL; }
 
-    report(sema->reports, eFatal, node, "%ss are not implicitly convertable to `%s`", exprKind, ctu_type_string(type));
-    return tree_error(node, "invalid implicit type conversion");
+    return tree_raise(node, sema->reports, "%ss are not implicitly convertable to `%s`", exprKind, ctu_type_string(type));
 }
 
 static tree_t *sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)

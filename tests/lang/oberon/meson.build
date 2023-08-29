@@ -20,6 +20,18 @@ tests = {
 
         ]
     },
+    'functions': {
+        'pass': [
+            'no-return',
+            'return-val',
+            'return-void'
+        ],
+        'fail': [
+            'return-type',
+            'void-return',
+            'void-return2'
+        ]
+    },
     'types': {
         'pass': [
             'alias',

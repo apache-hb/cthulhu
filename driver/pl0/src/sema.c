@@ -179,7 +179,7 @@ static tree_t *sema_ident(tree_t *sema, pl0_t *node)
     if (var == NULL)
     {
         report_pl0_unresolved(sema->reports, node->node, node->ident);
-        return tree_error(node->node, "unresolved identifier");
+        return tree_error(node->node, "unresolved identifier `%s`", node->ident);
     }
 
     cookie_t *cookie = tree_get_cookie(sema);
@@ -212,8 +212,7 @@ static tree_t *sema_expr(tree_t *sema, pl0_t *node)
     case ePl0Unary:
         return sema_unary(sema, node);
     default:
-        report(sema->reports, eInternal, node->node, "sema-expr: %d", node->type);
-        return tree_error(node->node, "sema-expr");
+        return tree_raise(node->node, sema->reports, "sema-expr: %d", node->type);
     }
 }
 
@@ -318,8 +317,7 @@ static tree_t *sema_stmt(tree_t *sema, pl0_t *node)
     case ePl0Print:
         return sema_print(sema, node);
     default:
-        report(sema->reports, eInternal, node->node, "sema-stmt: %d", node->type);
-        return tree_error(node->node, "sema-stmt");
+        return tree_raise(node->node, sema->reports, "sema-stmt: %d", node->type);
     }
 }
 
@@ -367,13 +365,9 @@ static tree_t *sema_compare(tree_t *sema, pl0_t *node)
 {
     switch (node->type)
     {
-    case ePl0Odd:
-        return sema_odd(sema, node);
-    case ePl0Compare:
-        return sema_comp(sema, node);
-    default:
-        report(sema->reports, eInternal, node->node, "sema-compare: %d", node->type);
-        return tree_error(node->node, "sema-compare");
+    case ePl0Odd: return sema_odd(sema, node);
+    case ePl0Compare: return sema_comp(sema, node);
+    default: return tree_raise(node->node, sema->reports, "sema-compare: %d", node->type);
     }
 }
 

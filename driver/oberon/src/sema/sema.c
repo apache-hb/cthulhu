@@ -22,7 +22,13 @@ tree_t *obr_get_module(tree_t *sema, const char *name)
     return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
-void obr_add_decl(tree_t *sema, obr_tags_t tag, const char *name, tree_t *decl)
+tree_t *obr_get_symbol(tree_t *sema, obr_tag_t tag, const char *name)
+{
+    const size_t tags[] = { tag };
+    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+}
+
+void obr_add_decl(tree_t *sema, obr_tag_t tag, const char *name, tree_t *decl)
 {
     const tree_t *old = tree_module_get(sema, tag, name);
     if (old != NULL)
@@ -39,27 +45,32 @@ void obr_add_decl(tree_t *sema, obr_tags_t tag, const char *name, tree_t *decl)
 /// extra
 ///
 
-static const char *kCurrentName = "obr:current-name";
+static const char *kCurrentDecl = "obr:current-decl";
+
+obr_t *obr_current_decl(tree_t *sema)
+{
+    obr_t *decl = tree_get_extra(sema, kCurrentDecl);
+    CTASSERT(decl != NULL);
+
+    return decl;
+}
+
+void obr_set_current_decl(tree_t *sema, obr_t *decl)
+{
+    tree_set_extra(sema, kCurrentDecl, decl);
+}
 
 const char *obr_current_name(tree_t *sema)
 {
-    const char *name = tree_get_extra(sema, kCurrentName);
-    CTASSERT(name != NULL);
-
-    return name;
-}
-
-void obr_set_current_name(tree_t *sema, const char *name)
-{
-    CTASSERT(name != NULL);
-
-    tree_set_extra(sema, kCurrentName, (char*)name);
+    obr_t *decl = obr_current_decl(sema);
+    return decl->name;
 }
 
 ///
 /// runtime mod
 ///
 
+static tree_t *gTypeVoid = NULL;
 static tree_t *gTypeChar = NULL;
 static tree_t *gTypeInteger = NULL;
 static tree_t *gTypeBoolean = NULL;
@@ -76,6 +87,12 @@ tree_t *obr_get_bool_type(void)
     return gTypeBoolean;
 }
 
+tree_t *obr_get_void_type(void)
+{
+    CTASSERT(gTypeVoid != NULL);
+    return gTypeVoid;
+}
+
 tree_t *obr_rt_mod(lifetime_t *lifetime)
 {
     size_t tags[eObrTagTotal] = {
@@ -85,11 +102,13 @@ tree_t *obr_rt_mod(lifetime_t *lifetime)
         [eObrTagModules] = 32,
     };
 
+    gTypeVoid = tree_type_unit(node_builtin(), "VOID");
     gTypeChar = tree_type_digit(node_builtin(), "CHAR", eDigitChar, eSignSigned);
     gTypeInteger = tree_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned);
     gTypeBoolean = tree_type_bool(node_builtin(), "BOOLEAN");
 
     tree_t *rt = lifetime_sema_new(lifetime, "oberon", eObrTagTotal, tags);
+    obr_add_decl(rt, eObrTagTypes, "VOID", gTypeVoid);
     obr_add_decl(rt, eObrTagTypes, "CHAR", gTypeChar);
     obr_add_decl(rt, eObrTagTypes, "INTEGER", gTypeInteger);
     obr_add_decl(rt, eObrTagTypes, "BOOLEAN", gTypeBoolean);
