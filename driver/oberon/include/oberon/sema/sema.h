@@ -31,13 +31,6 @@ tree_t *obr_get_digit_type(digit_t digit, sign_t sign);
 tree_t *obr_get_bool_type(void);
 tree_t *obr_get_void_type(void);
 
-/// extra
-
-obr_t *obr_current_decl(tree_t *sema);
-void obr_set_current_decl(tree_t *sema, obr_t *decl);
-
-const char *obr_current_name(tree_t *sema);
-
 /// runtime module
 
 tree_t *obr_rt_mod(lifetime_t *lifetime);

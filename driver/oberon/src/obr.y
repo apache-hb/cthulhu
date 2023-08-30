@@ -32,6 +32,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     char *ident;
     mpz_t number;
     bool boolean;
+    obr_string_t string;
 }
 
 %type<vector>
@@ -46,6 +47,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
     optParams params
     paramList paramDecl
     stmtSeq
+    exprList optExprList
 
 %type<ast>
     importBody module
@@ -55,25 +57,17 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     constDecl typeDecl procDecl
     constExpr expr optExpr
-    relationExpr addExpr mulExpr unaryExpr simpleExpr
-    designator
+    designator factor term simpleExpr simpleExprInner qualified
 
     optReceiver receiver returnType
 
-%type<symbol>
-    identDef
+%type<symbol> identDef
+%type<ident> end
+%type<boolean> mut
 
-%type<ident>
-    end
-
-%type<boolean>
-    mut
-
-%token<ident>
-    IDENT "identifier"
-
-%token<number>
-    NUMBER "number"
+%token<ident> IDENT "identifier"
+%token<number> NUMBER "numeric literal"
+%token<string> STRING "string literal"
 
 %token
     PLUS "+"
@@ -191,10 +185,14 @@ decl: valueDeclSeq { $$ = $1; }
 
 /* procedures */
 
-procDecl: PROCEDURE optReceiver identDef optParams returnType SEMI declSeq START stmtSeq end { $$ = obr_decl_procedure(x, @$, $3, $2, $4, $5, $7, $9, $10); }
+procDecl: PROCEDURE optReceiver identDef optParams returnType SEMI declSeq START stmtSeq end { $$ = obr_decl_procedure(x, @$, $3,
+                                                                                                                       $2, $4, $5,
+                                                                                                                       $7, $9, $10); }
     ;
 
-forward: PROCEDURE CARET optReceiver identDef optParams returnType { $$ = obr_decl_procedure(x, @$, $4, $3, $5, $6, NULL, NULL, NULL); }
+forward: PROCEDURE CARET optReceiver identDef optParams returnType { $$ = obr_decl_procedure(x, @$, $4,
+                                                                                             $3, $5, $6,
+                                                                                             NULL, NULL, NULL); }
     ;
 
 returnType: %empty { $$ = NULL; }
@@ -262,11 +260,14 @@ typeSeq: typeDecl { $$ = vector_init($1); }
 typeDecl: identDef EQUAL type SEMI { $$ = obr_decl_type(x, @$, $1, $3); }
     ;
 
-type: IDENT { $$ = obr_type_name(x, @$, $1); }
-    | IDENT DOT IDENT { $$ = obr_type_qual(x, @$, $1, $3); } /* TODO: this is probably wrong */
+type: qualified { $$ = $1; }
     | POINTER TO type { $$ = obr_type_pointer(x, @$, $3); }
     | ARRAY OF type { $$ = obr_type_array(x, @$, $3); }
     | RECORD fieldList END { $$ = obr_type_record(x, @$, $2); }
+    ;
+
+qualified: IDENT { $$ = obr_type_name(x, @$, $1); }
+    | IDENT DOT IDENT { $$ = obr_type_qual(x, @$, $1, $3); }
     ;
 
 /* record fields */
@@ -287,60 +288,70 @@ stmtSeq: stmt { $$ = vector_init($1); }
 stmt: RETURN optExpr { $$ = obr_stmt_return(x, @$, $2); }
     | WHILE expr DO stmtSeq END { $$ = obr_stmt_while(x, @$, $2, $4); }
     | designator ASSIGN expr { $$ = obr_stmt_assign(x, @$, $1, $3); }
+    | designator LPAREN optExprList RPAREN { $$ = obr_expr_call(x, @$, $1, $3); }
     ;
 
 /* exprs */
 
-designator: IDENT { $$ = obr_expr_name(x, @$, $1); }
+designator: IDENT { $$ = obr_expr_name(x, @$, $1); } /* this deviates from the original grammar to prevent ambiguity */
     | designator DOT IDENT { $$ = obr_expr_field(x, @$, $1, $3); }
+    //| designator LPAREN qualified RPAREN { $$ = obr_expr_cast(x, @$, $1, $3); } /* TODO: oberons cast syntax is great i just love it */
+    ;
+
+factor: designator { $$ = $1; }
+    | designator LPAREN optExprList RPAREN { $$ = obr_expr_call(x, @$, $1, $3); }
+    | NUMBER { $$ = obr_expr_digit(x, @$, $1); }
+    | STRING { $$ = obr_expr_string(x, @$, $1.text, $1.length); }
+    | LPAREN expr RPAREN { $$ = $2; }
+    ;
+
+term: factor { $$ = $1; }
+    | term STAR factor { $$ = obr_expr_binary(x, @$, eBinaryMul, $1, $3); }
+    | term DIVIDE factor { $$ = obr_expr_binary(x, @$, eBinaryDiv, $1, $3); } /* TODO: whats the difference between `/` and DIV? */
+    | term DIV factor { $$ = obr_expr_binary(x, @$, eBinaryDiv, $1, $3); }
+    | term MOD factor { $$ = obr_expr_binary(x, @$, eBinaryRem, $1, $3); }
+    | term AND factor { $$ = obr_expr_binary(x, @$, eBinaryBitAnd, $1, $3); }
+    ;
+
+simpleExpr: simpleExprInner { $$ = $1; }
+    | PLUS simpleExprInner { $$ = obr_expr_unary(x, @$, eUnaryAbs, $2); }
+    | MINUS simpleExprInner { $$ = obr_expr_unary(x, @$, eUnaryNeg, $2); }
+    ;
+
+/* extract the inner simple expr to simplify the grammar */
+simpleExprInner: term { $$ = $1; }
+    | simpleExprInner PLUS term { $$ = obr_expr_binary(x, @$, eBinaryAdd, $1, $3); }
+    | simpleExprInner MINUS term { $$ = obr_expr_binary(x, @$, eBinarySub, $1, $3); }
+    | simpleExprInner OR term { $$ = obr_expr_binary(x, @$, eBinaryBitOr, $1, $3); }
+    ;
+
+expr: simpleExpr { $$= $1; }
+    | simpleExpr EQUAL simpleExpr { $$ = obr_expr_compare(x, @$, eCompareEq, $1, $3); }
+    | simpleExpr NEQUAL simpleExpr { $$ = obr_expr_compare(x, @$, eCompareNeq, $1, $3); }
+    | simpleExpr LT simpleExpr { $$ = obr_expr_compare(x, @$, eCompareLt, $1, $3); }
+    | simpleExpr GT simpleExpr { $$ = obr_expr_compare(x, @$, eCompareGt, $1, $3); }
+    | simpleExpr LTE simpleExpr { $$ = obr_expr_compare(x, @$, eCompareLte, $1, $3); }
+    | simpleExpr GTE simpleExpr { $$ = obr_expr_compare(x, @$, eCompareGte, $1, $3); }
+    | simpleExpr IN simpleExpr { $$ = obr_expr_in(x, @$, $1, $3); }
+    | simpleExpr IS simpleExpr { $$ = obr_expr_is(x, @$, $1, $3); }
+    ;
+
+constExpr: expr { $$ = $1; }
     ;
 
 optExpr: %empty { $$ = NULL; }
     | expr { $$ = $1; }
     ;
 
-constExpr: expr { $$ = $1; }
-    ;
-
-expr: relationExpr { $$ = $1; }
-    ;
-
-relationExpr: addExpr { $$ = $1; }
-    | addExpr LT addExpr { $$ = obr_expr_compare(x, @$, eCompareLt, $1, $3); }
-    | addExpr GT addExpr { $$ = obr_expr_compare(x, @$, eCompareGt, $1, $3); }
-    | addExpr LTE addExpr { $$ = obr_expr_compare(x, @$, eCompareLte, $1, $3); }
-    | addExpr GTE addExpr { $$ = obr_expr_compare(x, @$, eCompareGte, $1, $3); }
-    | addExpr EQUAL addExpr { $$ = obr_expr_compare(x, @$, eCompareEq, $1, $3); }
-    | addExpr NEQUAL addExpr { $$ = obr_expr_compare(x, @$, eCompareNeq, $1, $3); }
-    | addExpr IN addExpr { $$ = obr_expr_in(x, @$, $1, $3); }
-    | addExpr IS addExpr { $$ = obr_expr_is(x, @$, $1, $3); }
-    ;
-
-addExpr: mulExpr { $$ = $1; }
-    | addExpr PLUS mulExpr { $$ = obr_expr_binary(x, @$, eBinaryAdd, $1, $3); }
-    | addExpr MINUS mulExpr { $$ = obr_expr_binary(x, @$, eBinarySub, $1, $3); }
-    | addExpr OR mulExpr { $$ = obr_expr_binary(x, @$, eBinaryBitOr, $1, $3); }
-    ;
-
-mulExpr: unaryExpr { $$ = $1; }
-    | mulExpr STAR unaryExpr { $$ = obr_expr_binary(x, @$, eBinaryMul, $1, $3); }
-    | mulExpr DIVIDE unaryExpr { $$ = obr_expr_binary(x, @$, eBinaryDiv, $1, $3); }
-    | mulExpr MOD unaryExpr { $$ = obr_expr_binary(x, @$, eBinaryRem, $1, $3); }
-    | mulExpr AND unaryExpr { $$ = obr_expr_binary(x, @$, eBinaryBitAnd, $1, $3); }
-    ;
-
-unaryExpr: simpleExpr { $$ = $1; }
-    | PLUS simpleExpr { $$ = obr_expr_unary(x, @$, eUnaryAbs, $2); }
-    | MINUS simpleExpr { $$ = obr_expr_unary(x, @$, eUnaryNeg, $2); }
-    ;
-
-simpleExpr: NUMBER { $$ = obr_expr_digit(x, @$, $1); }
-    | designator { $$ = $1; } /* TODO: this precedence is wrong */
-    | LPAREN expr RPAREN { $$ = $2; }
-    | TILDE simpleExpr { $$ = obr_expr_unary(x, @$, eUnaryFlip, $2); }
-    ;
-
 /* extra */
+
+optExprList: %empty { $$ = vector_of(0); }
+    | exprList { $$ = $1; }
+    ;
+
+exprList: expr { $$ = vector_init($1); }
+    | exprList COMMA expr { vector_push(&$1, $3); $$ = $1; }
+    ;
 
 identList: identDef { $$ = vector_init($1); }
     | identList COMMA identDef { vector_push(&$1, $3); $$ = $1; }

@@ -15,9 +15,6 @@ static void obr_parse(driver_t *handle, scan_t *scan)
 {
     lifetime_t *lifetime = handle_get_lifetime(handle);
 
-    obr_scan_t extra = { .reports = lifetime_get_reports(lifetime) };
-    scan_set(scan, &extra);
-
     vector_t *modules = compile_scanner(scan, &kCallbacks);
     if (modules == NULL) { return; }
 

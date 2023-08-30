@@ -10,14 +10,14 @@
 
 static void ensure_block_names_match(scan_t *scan, const node_t *node, const char *type, const char *name, const char *end)
 {
-    CTASSERTF(type != NULL && name != NULL && end != NULL, "(type=%s, name=%s, end=%s)", type, name, end);
-    obr_scan_t *data = scan_get(scan);
+    CTASSERTF(type != NULL && name != NULL, "(type=%s, name=%s)", type, name);
+    reports_t *reports = scan_reports(scan);
 
     if (end == NULL) { return; }
 
     if (!str_equal(name, end))
     {
-        message_t *id = report(data->reports, eWarn, node, "mismatching %s block BEGIN and END names", type);
+        message_t *id = report(reports, eWarn, node, "mismatching %s block BEGIN and END names", type);
         report_note(id, "BEGIN name `%s` does not match END name `%s`", name, end);
     }
 }
@@ -130,6 +130,22 @@ obr_t *obr_expr_field(scan_t *scan, where_t where, obr_t *expr, char *field)
     return self;
 }
 
+obr_t *obr_expr_cast(scan_t *scan, where_t where, obr_t *expr, obr_t *cast)
+{
+    obr_t *self = obr_new(scan, where, eObrExprCast);
+    self->expr = expr;
+    self->cast = cast;
+    return self;
+}
+
+obr_t *obr_expr_call(scan_t *scan, where_t where, obr_t *expr, vector_t *args)
+{
+    obr_t *self = obr_new(scan, where, eObrExprCall);
+    self->expr = expr;
+    self->args = args;
+    return self;
+}
+
 obr_t *obr_expr_is(scan_t *scan, where_t where, obr_t *lhs, obr_t *rhs)
 {
     obr_t *self = obr_new(scan, where, eObrExprIs);
@@ -176,6 +192,14 @@ obr_t *obr_expr_digit(scan_t *scan, where_t where, const mpz_t digit)
 {
     obr_t *self = obr_new(scan, where, eObrExprDigit);
     mpz_init_set(self->digit, digit);
+    return self;
+}
+
+obr_t *obr_expr_string(scan_t *scan, where_t where, char *text, size_t length)
+{
+    obr_t *self = obr_new(scan, where, eObrExprString);
+    self->text = text;
+    self->length = length;
     return self;
 }
 

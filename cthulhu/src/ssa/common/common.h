@@ -12,6 +12,7 @@ ssa_type_t *ssa_type_empty(const char *name, quals_t quals);
 ssa_type_t *ssa_type_unit(const char *name, quals_t quals);
 ssa_type_t *ssa_type_string(const char *name, quals_t quals); // TODO: encoding
 ssa_type_t *ssa_type_closure(const char *name, quals_t quals, ssa_type_t *result, typevec_t *params, bool variadic);
+ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointer);
 
 ssa_type_t *ssa_type_from(const tree_t *type);
 

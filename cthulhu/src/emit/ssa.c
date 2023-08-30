@@ -29,22 +29,32 @@ static char *digit_to_string(ssa_type_digit_t digit)
     return format("digit(%s.%s)", sign_name(digit.sign), digit_name(digit.digit));
 }
 
-static char *closure_to_string(ssa_type_closure_t closure)
+static char *params_to_string(typevec_t *params)
 {
-    size_t len = typevec_len(closure.params);
+    size_t len = typevec_len(params);
     vector_t *vec = vector_of(len);
     for (size_t i = 0; i < len; i++)
     {
-        const ssa_param_t *param = typevec_offset(closure.params, i);
+        const ssa_param_t *param = typevec_offset(params, i);
         const char *ty = type_to_string(param->type);
         vector_set(vec, i, format("%s: %s", param->name, ty));
     }
 
-    const char *result = type_to_string(closure.result);
+    return str_join(", ", vec);
+}
 
-    char *params = str_join(", ", vec);
+static char *closure_to_string(ssa_type_closure_t closure)
+{
+    const char *result = type_to_string(closure.result);
+    char *params = params_to_string(closure.params);
 
     return format("closure(result: %s, params: [%s], variadic: %s)", result, params, closure.variadic ? "true" : "false");
+}
+
+static char *pointer_to_string(ssa_type_pointer_t pointer)
+{
+    const char *pointee = type_to_string(pointer.pointer);
+    return format("pointer(%s)", pointee);
 }
 
 static const char *type_to_string(const ssa_type_t *type)
@@ -57,16 +67,29 @@ static const char *type_to_string(const ssa_type_t *type)
     case eTypeString: return "string";
     case eTypeDigit: return digit_to_string(type->digit);
     case eTypeClosure: return closure_to_string(type->closure);
+    case eTypePointer: return pointer_to_string(type->pointer);
     default: NEVER("unknown type kind %d", type->kind);
     }
 }
 
+static vector_t *join_attribs(const ssa_symbol_t *symbol)
+{
+    vector_t *attribs = vector_new(2);
+
+    if (symbol->linkName != NULL)
+    {
+        vector_push(&attribs, format("extern = `%s`", symbol->linkName));
+    }
+
+    vector_push(&attribs, format("linkage = %s", link_name(symbol->linkage)));
+    vector_push(&attribs, format("visibility = %s", vis_name(symbol->visibility)));
+
+    return attribs;
+}
+
 static void emit_ssa_attribs(io_t *io, const ssa_symbol_t *symbol)
 {
-    write_string(io, "\t[extern = %s, linkage = %s]\n",
-        symbol->linkName == NULL ? "null" : symbol->linkName,
-        link_name(symbol->linkage)
-    );
+    write_string(io, "\t[%s]\n", str_join(", ", join_attribs(symbol)));
 }
 
 static const char *value_to_string(const ssa_value_t *value)
@@ -251,12 +274,12 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
         const ssa_symbol_t *global = vector_get(mod->globals, i);
         emit_symbol_deps(io, global, emit->deps);
 
-        write_string(io, "%s global %s: %s\n", vis_name(global->visibility), global->name, type_to_string(global->type));
+        write_string(io, "global %s: %s\n", global->name, type_to_string(global->type));
         emit_ssa_attribs(io, global);
 
         emit_ssa_blocks(emit, io, global->blocks);
 
-        if (i != len - 1) { write_string(io, "\n"); }
+        if (len >= i) { write_string(io, "\n"); }
     }
 
     size_t fns = vector_len(mod->functions);
@@ -265,12 +288,23 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
         const ssa_symbol_t *fn = vector_get(mod->functions, i);
         emit_symbol_deps(io, fn, emit->deps);
 
-        write_string(io, "%s fn %s: %s\n", vis_name(fn->visibility), fn->name, type_to_string(fn->type));
+        const ssa_type_t *type = fn->type;
+        CTASSERTF(type->kind == eTypeClosure, "fn %s is not a closure", fn->name);
+        ssa_type_closure_t closure = type->closure;
+
+        write_string(io, "fn %s(%s) -> %s [variadic: %s]\n",
+            fn->name,
+            params_to_string(closure.params), type_to_string(closure.result),
+            closure.variadic ? "true" : "false"
+        );
         emit_ssa_attribs(io, fn);
 
-        emit_ssa_blocks(emit, io, fn->blocks);
+        if (fn->linkage != eLinkImport)
+        {
+            emit_ssa_blocks(emit, io, fn->blocks);
+        }
 
-        if (i != fns - 1) { write_string(io, "\n"); }
+        if (len >= i) { write_string(io, "\n"); }
     }
 }
 

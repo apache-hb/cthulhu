@@ -77,6 +77,10 @@ typedef struct ssa_type_closure_t {
     bool variadic;
 } ssa_type_closure_t;
 
+typedef struct ssa_type_pointer_t {
+    const ssa_type_t *pointer;
+} ssa_type_pointer_t;
+
 typedef struct ssa_type_t {
     ssa_kind_t kind;
     quals_t quals;
@@ -85,6 +89,7 @@ typedef struct ssa_type_t {
     union {
         ssa_type_digit_t digit;
         ssa_type_closure_t closure;
+        ssa_type_pointer_t pointer;
     };
 } ssa_type_t;
 

@@ -35,39 +35,33 @@ static tree_t *sema_type_qual(tree_t *sema, obr_t *type)
     return it;
 }
 
-static tree_t *sema_type_pointer(tree_t *sema, obr_t *type)
+static tree_t *sema_type_pointer(tree_t *sema, obr_t *type, const char *name)
 {
-    tree_t *it = obr_sema_type(sema, type->pointer);
-    return tree_type_pointer(type->node, obr_current_name(sema), it);
+    tree_t *it = obr_sema_type(sema, type->pointer, name);
+    return tree_type_pointer(type->node, name, it);
 }
 
-static tree_t *sema_type_array(tree_t *sema, obr_t *type)
+static tree_t *sema_type_array(tree_t *sema, obr_t *type, const char *name)
 {
-    tree_t *it = obr_sema_type(sema, type->array);
-    return tree_type_pointer(type->node, obr_current_name(sema), it); // TODO: maybe arrays are not pointers
+    tree_t *it = obr_sema_type(sema, type->array, name); // TODO: will the name clash matter?
+    return tree_type_pointer(type->node, name, it); // TODO: maybe arrays are not pointers
 }
 
-static tree_t *sema_type_record(tree_t *sema, obr_t *type)
+static tree_t *sema_type_record(tree_t *sema, obr_t *type, const char *name)
 {
-    obr_t *save = obr_current_decl(sema);
-
     size_t len = vector_len(type->fields);
     vector_t *result = vector_of(len);
     for (size_t i = 0; i < len; i++)
     {
         obr_t *field = vector_get(type->fields, i);
-        obr_set_current_decl(sema, field);
-
-        tree_t *it = obr_sema_type(sema, field->type);
+        tree_t *it = obr_sema_type(sema, field->type, field->name);
         vector_set(result, i, it);
     }
 
-    obr_set_current_decl(sema, save);
-
-    return tree_decl_struct(type->node, obr_current_name(sema), result);
+    return tree_decl_struct(type->node, name, result);
 }
 
-tree_t *obr_sema_type(tree_t *sema, obr_t *type)
+tree_t *obr_sema_type(tree_t *sema, obr_t *type, const char *name)
 {
     CTASSERT(type != NULL);
 
@@ -75,9 +69,9 @@ tree_t *obr_sema_type(tree_t *sema, obr_t *type)
     {
     case eObrTypeName: return sema_type_name(sema, type);
     case eObrTypeQual: return sema_type_qual(sema, type);
-    case eObrTypePointer: return sema_type_pointer(sema, type);
-    case eObrTypeArray: return sema_type_array(sema, type);
-    case eObrTypeRecord: return sema_type_record(sema, type);
+    case eObrTypePointer: return sema_type_pointer(sema, type, name);
+    case eObrTypeArray: return sema_type_array(sema, type, name);
+    case eObrTypeRecord: return sema_type_record(sema, type, name);
 
     default: NEVER("unknown type kind %d", type->kind);
     }

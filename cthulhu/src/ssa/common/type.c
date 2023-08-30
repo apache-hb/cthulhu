@@ -59,6 +59,14 @@ ssa_type_t *ssa_type_closure(const char *name, quals_t quals, ssa_type_t *result
     return closure;
 }
 
+ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointer)
+{
+    ssa_type_pointer_t it = { .pointer = pointer };
+    ssa_type_t *type = ssa_type_new(eTypePointer, name, quals);
+    type->pointer = it;
+    return type;
+}
+
 static typevec_t *collect_params(const tree_t *type)
 {
     vector_t *vec = tree_fn_get_params(type);
@@ -104,6 +112,7 @@ static ssa_type_t *ssa_type_inner(const tree_t *type, quals_t quals)
             /* variadic = */ tree_fn_get_arity(type) == eArityVariable
         );
     case eTreeTypeQualify: return ssa_type_inner(type->qualify, type->quals | quals);
+    case eTreeTypePointer: return ssa_type_pointer(tree_get_name(type), quals, ssa_type_from(type->pointer));
 
     default: NEVER("unexpected type kind: %s", tree_to_string(type));
     }

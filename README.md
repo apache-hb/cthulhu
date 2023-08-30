@@ -43,7 +43,7 @@ ninja -C build test # build and run tests
   * `cpp` - C preprocessor (TODO)
   * `example` - example frontend
 
-* `interface`
+* `interface` - user facing components used to interact with drivers and the collection
   * `cli` - command line user interface
   * `gui` - graphical user interface (TODO)
 
@@ -59,10 +59,12 @@ ninja -C build test # build and run tests
 
 * `cthulhu` - compiler framework library
   * `include/cthulhu` - public interface
-    * `emit` - tree writing
+    * `emit` - ssa emitter
     * `tree` - common typed ast
     * `util` - common utilities
-    * `ssa` - ssa emitter
+    * `mediator` - code required to orchestrate communication between languages, the framework, and frontends
+    * `check` - validates state for various structures
+    * `ssa` - tree to ssa transforms, as well as optimizations
 
 * `subprojects` - 3rd & 1st party dependencies
   * `cjson` - json serialization + deserialization library

@@ -211,15 +211,9 @@ static void c89_proto_function(c89_emit_t *emit, const ssa_module_t *mod, const 
 
     const char *link = format_c89_link(func->linkage);
 
-    if (func->visibility == eVisiblePublic)
-    {
-        CTASSERT(func->linkage != eLinkModule);
-        write_string(hdr->io, "%s%s(%s);\n", link, result, params);
-    }
-    else
-    {
-        write_string(src->io, "%s%s(%s);\n", link, result, params);
-    }
+    io_t *dst = func->visibility == eVisiblePublic ? hdr->io : src->io;
+    write_string(dst, "%s%s(%s);\n", link, result, params);
+
 }
 
 static void proto_symbols(c89_emit_t *emit, const ssa_module_t *mod, vector_t *vec, void (*fn)(c89_emit_t*, const ssa_module_t*, const ssa_symbol_t*))

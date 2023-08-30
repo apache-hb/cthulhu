@@ -1,7 +1,21 @@
 #include "oberon/scan.h"
 
-#include "base/macros.h"
 #include "report/report.h"
+
+#include "base/macros.h"
+#include "base/util.h"
+
+obr_string_t obr_parse_string(scan_t *scan, const char *str, size_t length)
+{
+    CTU_UNUSED(scan);
+
+    obr_string_t result = {
+        .text = ctu_strdup(str),
+        .length = length
+    };
+
+    return result;
+}
 
 void obrerror(where_t *where, void *state, scan_t *scan, const char *msg)
 {

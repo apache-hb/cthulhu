@@ -15,9 +15,12 @@
 
 %x COMMENT
 
+ESCAPES (\\(['"\?\\abfnrtv]|[0-7]{1,3}|x[a-fA-F0-9]+))
+WS [ \t\r\v\n\f]
+
 %%
 
-[ \r\n\t] ;
+{WS} ;
 "(*" { BEGIN(COMMENT); }
 <COMMENT>"*)" { BEGIN(INITIAL); }
 <COMMENT>\n ;
@@ -97,6 +100,11 @@
 [0-9]+ {
     mpz_init_set_str(yylval->number, yytext, 10);
     return NUMBER;
+}
+
+\"([^"\\\n]|{ESCAPES})*\" {
+	yylval->string = obr_parse_string(yyextra, yytext + 1, yyleng - 2);
+    return STRING;
 }
 
 . { report_unknown_character(scan_reports(yyextra), node_new(yyextra, *yylloc), yytext); }

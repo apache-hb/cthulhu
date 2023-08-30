@@ -42,31 +42,6 @@ void obr_add_decl(tree_t *sema, obr_tag_t tag, const char *name, tree_t *decl)
 }
 
 ///
-/// extra
-///
-
-static const char *kCurrentDecl = "obr:current-decl";
-
-obr_t *obr_current_decl(tree_t *sema)
-{
-    obr_t *decl = tree_get_extra(sema, kCurrentDecl);
-    CTASSERT(decl != NULL);
-
-    return decl;
-}
-
-void obr_set_current_decl(tree_t *sema, obr_t *decl)
-{
-    tree_set_extra(sema, kCurrentDecl, decl);
-}
-
-const char *obr_current_name(tree_t *sema)
-{
-    obr_t *decl = obr_current_decl(sema);
-    return decl->name;
-}
-
-///
 /// runtime mod
 ///
 

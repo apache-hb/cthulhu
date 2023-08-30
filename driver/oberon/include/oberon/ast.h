@@ -47,12 +47,14 @@ typedef enum obr_kind_t {
 
     eObrExprName,
     eObrExprField,
+    eObrExprCall,
 
     eObrExprUnary,
     eObrExprBinary,
     eObrExprCompare,
     eObrExprIs,
     eObrExprIn,
+    eObrExprCast,
 
     /* stmts */
     eObrStmtReturn,
@@ -87,6 +89,12 @@ typedef struct obr_t {
 
                 /* eObrExprUnary */
                 unary_t unary;
+
+                /* eObrExprCast */
+                obr_t *cast;
+
+                /* eObrExprCall */
+                vector_t *args;
             };
 
             /* eObrStmtReturn */
@@ -130,6 +138,12 @@ typedef struct obr_t {
 
         /* eObrExprName */
         char *object;
+
+        /* eObrExprString */
+        struct {
+            char *text;
+            size_t length;
+        };
 
         struct {
             char *name;
@@ -190,6 +204,9 @@ obr_t *obr_decl_procedure(
 obr_t *obr_expr_name(scan_t *scan, where_t where, char *name);
 obr_t *obr_expr_field(scan_t *scan, where_t where, obr_t *expr, char *field);
 
+obr_t *obr_expr_call(scan_t *scan, where_t where, obr_t *expr, vector_t *args);
+
+obr_t *obr_expr_cast(scan_t *scan, where_t where, obr_t *expr, obr_t *cast);
 obr_t *obr_expr_is(scan_t *scan, where_t where, obr_t *lhs, obr_t *rhs);
 obr_t *obr_expr_in(scan_t *scan, where_t where, obr_t *lhs, obr_t *rhs);
 
