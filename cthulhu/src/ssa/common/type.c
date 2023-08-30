@@ -59,14 +59,16 @@ ssa_type_t *ssa_type_closure(const char *name, quals_t quals, ssa_type_t *result
     return closure;
 }
 
-static typevec_t *collect_params(vector_t *vector)
+static typevec_t *collect_params(const tree_t *type)
 {
-    size_t len = vector_len(vector);
+    vector_t *vec = tree_fn_get_params(type);
+
+    size_t len = vector_len(vec);
     typevec_t *result = typevec_of(sizeof(ssa_param_t), len);
 
     for (size_t i = 0; i < len; i++)
     {
-        const tree_t *param = vector_get(vector, i);
+        const tree_t *param = vector_get(vec, i);
         CTASSERTF(tree_is(param, eTreeDeclParam), "expected param, got %s", tree_to_string(param));
 
         const char *name = tree_get_name(param);
@@ -97,14 +99,13 @@ static ssa_type_t *ssa_type_inner(const tree_t *type, quals_t quals)
         return ssa_type_closure(
             /* name = */ tree_get_name(type),
             /* quals = */ quals,
-            /* result = */ ssa_type_from(type->result),
-            /* params = */ collect_params(type->params),
-            /* variadic = */ type->arity == eArityVariable
+            /* result = */ ssa_type_from(tree_fn_get_return(type)),
+            /* params = */ collect_params(type),
+            /* variadic = */ tree_fn_get_arity(type) == eArityVariable
         );
     case eTreeTypeQualify: return ssa_type_inner(type->qualify, type->quals | quals);
 
-    default:
-        NEVER("unexpected type kind: %s", tree_to_string(type));
+    default: NEVER("unexpected type kind: %s", tree_to_string(type));
     }
 }
 

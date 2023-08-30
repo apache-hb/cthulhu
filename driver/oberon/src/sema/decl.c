@@ -84,10 +84,12 @@ static void resolve_proc(cookie_t *cookie, tree_t *sema, tree_t *self, void *use
 {
     obr_t *decl = begin_resolve(sema, user, eObrDeclProcedure); // TODO
 
+    vector_t *params = tree_fn_get_params(self);
+    size_t nParams = vector_len(params);
+
     size_t locals = vector_len(decl->locals);
-    size_t params = vector_len(decl->params);
     const size_t sizes[eObrTagTotal] = {
-        [eObrTagValues] = locals + params,
+        [eObrTagValues] = locals + nParams,
         [eObrTagTypes] = 0,
         [eObrTagProcs] = 0,
         [eObrTagModules] = 0
@@ -103,11 +105,10 @@ static void resolve_proc(cookie_t *cookie, tree_t *sema, tree_t *self, void *use
         obr_add_decl(ctx, eObrTagValues, local->name, decl);
     }
 
-    for (size_t i = 0; i < params; i++)
+    for (size_t i = 0; i < nParams; i++)
     {
-        obr_t *param = vector_get(decl->params, i);
-        tree_t *decl = tree_decl_param(param->node, param->name, obr_sema_type(sema, param->type));
-        obr_add_decl(ctx, eObrTagValues, param->name, decl); // TODO: wonky
+        tree_t *param = vector_get(params, i);
+        obr_add_decl(ctx, eObrTagValues, param->name, param);
     }
 
     tree_t *body = obr_sema_stmts(ctx, decl->node, decl->name, decl->body);

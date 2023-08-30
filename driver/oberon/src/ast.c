@@ -10,6 +10,7 @@
 
 static void ensure_block_names_match(scan_t *scan, const node_t *node, const char *type, const char *name, const char *end)
 {
+    CTASSERTF(type != NULL && name != NULL && end != NULL, "(type=%s, name=%s, end=%s)", type, name, end);
     obr_scan_t *data = scan_get(scan);
 
     if (end == NULL) { return; }

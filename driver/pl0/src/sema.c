@@ -149,7 +149,7 @@ void pl0_init(driver_t *handle)
     vector_set(params, 0, tree_decl_param(node, "fmt", kStringType));
 
     tree_t *signature = tree_type_closure(node, "print", kVoidType, params, eArityVariable);
-    kPrint = tree_decl_function(node, "print", signature, vector_of(0), NULL);
+    kPrint = tree_decl_function(node, "print", signature, params, vector_of(0), NULL);
     tree_set_attrib(kPrint, &kPrintAttrib);
 
     tree_t *runtime = make_runtime_mod(lifetime);
@@ -561,7 +561,7 @@ void pl0_compile_module(context_t *context)
 
         // this is the entry point, we only support cli entry points in pl/0 for now
         tree_t *signature = tree_type_closure(root->node, tree_get_name(mod), kVoidType, vector_of(0), eArityFixed);
-        tree_t *tree = tree_decl_function(root->node, tree_get_name(mod), signature, vector_of(0), body);
+        tree_t *tree = tree_decl_function(root->node, tree_get_name(mod), signature, vector_of(0), vector_of(0), body);
         tree_set_attrib(tree, &kEntryAttrib);
 
         set_decl(mod, ePl0TagProcs, tree_get_name(mod), tree); // TODO: this is a hack

@@ -1,5 +1,6 @@
 #include "cthulhu/tree/query.h"
 
+#include "std/vector.h"
 #include "std/str.h"
 
 #include "base/panic.h"
@@ -121,4 +122,37 @@ bool tree_has_vis(const tree_t *self, visibility_t visibility)
 {
     const attribs_t *attrib = tree_get_attrib(self);
     return attrib->visibility == visibility;
+}
+
+const tree_t *tree_fn_get_return(const tree_t *self)
+{
+    switch (tree_get_kind(self))
+    {
+    case eTreeTypeClosure: return self->result;
+    case eTreeDeclFunction: return self->type->result;
+
+    default: NEVER("invalid function kind %s", tree_to_string(self));
+    }
+}
+
+vector_t *tree_fn_get_params(const tree_t *self)
+{
+    switch (tree_get_kind(self))
+    {
+    case eTreeTypeClosure: return self->params;
+    case eTreeDeclFunction: return self->type->params;
+
+    default: NEVER("invalid function kind %s", tree_to_string(self));
+    }
+}
+
+arity_t tree_fn_get_arity(const tree_t *self)
+{
+    switch (tree_get_kind(self))
+    {
+    case eTreeTypeClosure: return self->arity;
+    case eTreeDeclFunction: return self->type->arity;
+
+    default: NEVER("invalid function kind %s", tree_to_string(self));
+    }
 }

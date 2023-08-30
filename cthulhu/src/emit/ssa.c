@@ -109,6 +109,10 @@ static const char *operand_to_string(ssa_emit_t *emit, ssa_operand_t operand)
         size_t index = operand.local;
         return format("local(%zu)", index);
     }
+    case eOperandParam: {
+        size_t index = operand.param;
+        return format("param(%zu)", index);
+    }
     default: NEVER("unknown operand kind %d", operand.kind);
     }
 }

@@ -253,6 +253,10 @@ static const ssa_type_t *get_operand_type(c89_emit_t *emit, ssa_operand_t operan
         const ssa_local_t *local = typevec_offset(emit->current->locals, operand.local);
         return local->type;
     }
+    case eOperandParam: {
+        const ssa_local_t *param = typevec_offset(emit->current->params, operand.param);
+        return param->type;
+    }
     case eOperandGlobal: {
         const ssa_symbol_t *global = operand.global;
         return global->type;
@@ -316,6 +320,19 @@ static const char *c89_format_local(c89_emit_t *emit, size_t local)
     return it->name;
 }
 
+static const char *c89_format_param(c89_emit_t *emit, size_t param)
+{
+    typevec_t *params = emit->current->params;
+    if (param >= typevec_len(params))
+    {
+        report(emit->emit.reports, eFatal, NULL, "param(%zu) > params(%zu)", param, typevec_len(params));
+        return format("param[error(%zu > %zu)]", param, typevec_len(params));
+    }
+
+    const ssa_local_t *it = typevec_offset(params, param);
+    return format("(&%s)", it->name);
+}
+
 static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
 {
     switch (operand.kind)
@@ -338,6 +355,9 @@ static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
 
     case eOperandLocal:
         return c89_format_local(emit, operand.local);
+
+    case eOperandParam:
+        return c89_format_param(emit, operand.param);
 
     default: NEVER("unknown operand kind %d", operand.kind);
     }

@@ -65,7 +65,10 @@ tree_t *tree_open_global(const node_t *node, const char *name, const tree_t *typ
 
 tree_t *tree_open_function(const node_t *node, const char *name, const tree_t *signature, tree_resolve_info_t resolve)
 {
+    CTASSERTF(tree_is(signature, eTreeTypeClosure), "signature %s is not a closure", tree_to_string(signature));
+
     tree_t *self = decl_open(node, name, signature, eTreeDeclFunction, BOX(resolve));
+    self->params = signature->params;
     self->locals = vector_new(4);
     return self;
 }
@@ -79,9 +82,16 @@ void tree_close_global(tree_t *self, tree_t *value)
 void tree_close_function(tree_t *self, tree_t *body)
 {
     CTASSERTF(tree_is(self, eTreeDeclFunction), "decl %s is not a function", tree_get_name(self));
+    CTASSERTF(tree_is(self->type, eTreeTypeClosure), "decl %s type is not closure, but %s", tree_get_name(self), tree_to_string(self->type));
 
     decl_close(self, eTreeDeclFunction);
     self->body = body;
+
+    CTASSERTF(vector_len(self->params) == vector_len(self->type->params),
+        "decl %s has %zu params, expected %zu parameter(s)",
+        tree_get_name(self), vector_len(self->params),
+        vector_len(self->type->params), (self->type->arity == eArityFixed) ? "" : " or more"
+    );
 }
 
 tree_t *tree_decl_param(const node_t *node, const char *name, const tree_t *type)
@@ -118,17 +128,30 @@ tree_t *tree_decl_global(const node_t *node, const char *name, const tree_t *typ
     return self;
 }
 
-tree_t *tree_decl_function(const node_t *node, const char *name, const tree_t *signature, vector_t *locals, tree_t *body)
+tree_t *tree_decl_function(
+    const node_t *node, const char *name, const tree_t *signature,
+    vector_t *params, vector_t *locals, tree_t *body
+)
 {
     tree_t *self = decl_open(node, name, signature, eTreeDeclFunction, NULL);
+    self->params = params;
     self->locals = locals;
     tree_close_function(self, body);
     return self;
 }
 
+void tree_add_param(tree_t *self, tree_t *decl)
+{
+    CTASSERTF(tree_is(self, eTreeDeclFunction), "cannot add params to a declaration %s", tree_to_string(self));
+    CTASSERTF(tree_is(decl, eTreeDeclParam), "cannot add a non-param %s to a function as a param", tree_to_string(decl));
+
+    vector_push(&self->params, decl);
+}
+
 void tree_add_local(tree_t *self, tree_t *decl)
 {
     CTASSERTF(tree_is(self, eTreeDeclFunction), "cannot add locals to a declaration %s", tree_to_string(self));
+    CTASSERTF(tree_is(decl, eTreeDeclLocal), "cannot add a non-local %s to a function as a local", tree_to_string(decl));
 
     vector_push(&self->locals, decl);
 }

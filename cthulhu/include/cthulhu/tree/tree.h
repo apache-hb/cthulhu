@@ -142,22 +142,27 @@ typedef struct tree_t {
                     sign_t sign;
                 };
 
-                /* eTreeTypeClosure */
-                struct {
-                    const tree_t *result;
-                    vector_t *params;
-                    arity_t arity;
-                };
-
                 /* eTreeTypeStruct */
                 struct {
                     vector_t *fields;
                 };
 
-                /* eTreeDeclFunction */
                 struct {
-                    vector_t *locals;
-                    tree_t *body;
+                    vector_t *params;
+
+                    union {
+                        /* eTreeDeclFunction */
+                        struct {
+                            vector_t *locals;
+                            tree_t *body;
+                        };
+
+                        /* eTreeTypeClosure */
+                        struct {
+                            const tree_t *result;
+                            arity_t arity;
+                        };
+                    };
                 };
 
                 /* eTreeDeclGlobal */
@@ -310,8 +315,16 @@ tree_t *tree_decl_global(const node_t *node, const char *name, const tree_t *typ
 tree_t *tree_open_global(const node_t *node, const char *name, const tree_t *type, tree_resolve_info_t resolve);
 void tree_close_global(tree_t *self, tree_t *value);
 
-tree_t *tree_decl_function(const node_t *node, const char *name, const tree_t *signature, vector_t *locals, tree_t *body);
-tree_t *tree_open_function(const node_t *node, const char *name, const tree_t *signature, tree_resolve_info_t resolve);
+tree_t *tree_decl_function(
+    const node_t *node, const char *name, const tree_t *signature,
+    vector_t *params, vector_t *locals, tree_t *body
+);
+
+tree_t *tree_open_function(
+    const node_t *node, const char *name,
+    const tree_t *signature, tree_resolve_info_t resolve
+);
+
 void tree_close_function(tree_t *self, tree_t *body);
 
 tree_t *tree_decl_struct(const node_t *node, const char *name, vector_t *fields);
@@ -328,6 +341,7 @@ tree_t *tree_decl_local(const node_t *node, const char *name, const tree_t *type
 ///
 
 void tree_add_local(tree_t *self, tree_t *decl);
+void tree_add_param(tree_t *self, tree_t *decl);
 void tree_set_attrib(tree_t *self, const attribs_t *attrib);
 
 tree_t *tree_alias(const tree_t *tree, const char *name);

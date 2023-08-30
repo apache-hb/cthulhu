@@ -19,3 +19,11 @@ bool tree_is(const tree_t *self, tree_kind_t kind);
 
 bool tree_has_quals(const tree_t *self, quals_t quals);
 bool tree_has_vis(const tree_t *self, visibility_t visibility);
+
+///
+/// closure + function queries
+///
+
+const tree_t *tree_fn_get_return(const tree_t *self);
+vector_t *tree_fn_get_params(const tree_t *self);
+arity_t tree_fn_get_arity(const tree_t *self);

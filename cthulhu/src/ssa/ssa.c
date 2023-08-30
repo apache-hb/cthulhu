@@ -56,6 +56,7 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree)
     symbol->linkName = attrib->mangle;
 
     symbol->locals = NULL;
+    symbol->params = NULL;
 
     symbol->name = name;
     symbol->type = type;
@@ -72,9 +73,9 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
     CTASSERTF(tree_is(tree, eTreeDeclFunction), "expected function, got %s", tree_to_string(tree));
     ssa_symbol_t *self = symbol_create(ssa, tree);
 
-    size_t len = vector_len(tree->locals);
-    self->locals = typevec_of(sizeof(ssa_local_t), len);
-    for (size_t i = 0; i < len; i++)
+    size_t locals = vector_len(tree->locals);
+    self->locals = typevec_of(sizeof(ssa_local_t), locals);
+    for (size_t i = 0; i < locals; i++)
     {
         const tree_t *local = vector_get(tree->locals, i);
         ssa_type_t *ty = ssa_type_from(tree_get_type(local));
@@ -87,6 +88,23 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
 
         typevec_set(self->locals, i, &it);
         map_set_ptr(ssa->locals, local, (void*)(uintptr_t)i);
+    }
+
+    size_t params = vector_len(tree->params);
+    self->params = typevec_of(sizeof(ssa_param_t), params);
+    for (size_t i = 0; i < params; i++)
+    {
+        const tree_t *param = vector_get(tree->params, i);
+        ssa_type_t *ty = ssa_type_from(tree_get_type(param));
+        const char *name = tree_get_name(param);
+
+        ssa_param_t it = {
+            .name = name,
+            .type = ty,
+        };
+
+        typevec_set(self->params, i, &it);
+        map_set_ptr(ssa->locals, param, (void*)(uintptr_t)i);
     }
 
     return self;
@@ -386,12 +404,25 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeDeclLocal: {
-        size_t idx = (uintptr_t)map_get_ptr(ssa->locals, tree);
+        size_t idx = (uintptr_t)map_get_default_ptr(ssa->locals, tree, (void*)UINTPTR_MAX);
+        CTASSERTF(idx != UINTPTR_MAX, "local `%s` not found", tree_get_name(tree));
+
         ssa_operand_t local = {
             .kind = eOperandLocal,
             .local = idx
         };
         return local;
+    }
+
+    case eTreeDeclParam: {
+        size_t idx = (uintptr_t)map_get_default_ptr(ssa->locals, tree, (void*)UINTPTR_MAX);
+        CTASSERTF(idx != UINTPTR_MAX, "param `%s` not found", tree_get_name(tree));
+
+        ssa_operand_t param = {
+            .kind = eOperandParam,
+            .param = idx
+        };
+        return param;
     }
 
     case eTreeStmtReturn: {
