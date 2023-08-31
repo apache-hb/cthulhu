@@ -289,6 +289,23 @@ static const char *c89_name_vreg_by_operand(c89_emit_t *emit, const ssa_step_t *
     return c89_name_vreg(emit, step, type);
 }
 
+static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value);
+
+static const char *c89_format_array(c89_emit_t *emit, vector_t *data)
+{
+    size_t len = vector_len(data);
+    vector_t *result = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_value_t *value = vector_get(data, i);
+        const char *it = c89_format_value(emit, value);
+        vector_set(result, i, (char*)it);
+    }
+
+    char *joined = str_join(", ", result);
+    return format("{ %s }", joined);
+}
+
 static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
 {
     const ssa_type_t *type = value->type;
@@ -297,6 +314,7 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
     case eTypeBool: return value->boolValue ? "true" : "false";
     case eTypeDigit: return mpz_get_str(NULL, 10, value->digitValue);
     case eTypeString: return format("\"%s\"", str_normalizen(value->stringValue, value->stringLength));
+    case eTypeArray: return c89_format_array(emit, value->data);
     default: NEVER("unknown type kind %d", type->kind);
     }
 }

@@ -46,7 +46,7 @@ void obrerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
     optParams params
     paramList paramDecl
-    stmtSeq
+    stmtSeq optInit
     exprList optExprList
 
 %type<ast>
@@ -153,7 +153,11 @@ moduleList: module { $$ = vector_init($1); }
     | moduleList module { vector_push(&$1, $2); $$ = $1; }
     ;
 
-module: MODULE IDENT SEMI importList declSeq end DOT { $$ = obr_module(x, @$, $2, $6, $4, $5); }
+module: MODULE IDENT SEMI importList declSeq optInit end DOT { $$ = obr_module(x, @$, $2, $7, $4, $5, $6); }
+    ;
+
+optInit: %empty { $$ = NULL; }
+    | START stmtSeq { $$ = $2; }
     ;
 
 /* imports */

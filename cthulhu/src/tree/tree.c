@@ -120,11 +120,22 @@ tree_t *tree_type_pointer(const node_t *node, const char *name, tree_t *pointer)
     return self;
 }
 
+tree_t *tree_type_array(const node_t *node, const char *name, tree_t *array, size_t length)
+{
+    CTASSERT(array != NULL);
+    CTASSERT(length > 0);
+
+    tree_t *self = tree_decl(eTreeTypeArray, node, NULL, name);
+    self->array = array;
+    self->length = length;
+    return self;
+}
+
 tree_t *tree_type_qualify(const node_t *node, const tree_t *type, quals_t quals)
 {
     CTASSERT(type != NULL);
 
-    tree_t *self = tree_new(eTreeTypeQualify, node, type);
+    tree_t *self = tree_decl(eTreeTypeQualify, node, type, tree_get_name(type));
     self->quals = quals;
     self->qualify = type;
     return self;
@@ -212,6 +223,16 @@ tree_t *tree_expr_compare(const node_t *node, const tree_t *type, compare_t comp
     self->compare = compare;
     self->lhs = lhs;
     self->rhs = rhs;
+    return self;
+}
+
+tree_t *tree_expr_field(const node_t *node, tree_t *object, tree_t *field)
+{
+    CTASSERTF(tree_is(object, eTreeTypeStruct), "object must be an aggregate, found %s", tree_to_string(object));
+
+    tree_t *self = tree_new(eTreeExprField, node, tree_get_type(field));
+    self->object = object;
+    self->field = field;
     return self;
 }
 

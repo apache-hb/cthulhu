@@ -1,3 +1,5 @@
+#include "common.h"
+
 #include "cthulhu/tree/query.h"
 
 #include "std/vector.h"
@@ -18,6 +20,7 @@ static bool has_name(tree_kind_t kind)
     case eTreeTypeString:
     case eTreeTypeClosure:
     case eTreeTypePointer:
+    case eTreeTypeArray:
 
     case eTreeTypeStruct:
 
@@ -124,6 +127,10 @@ bool tree_has_vis(const tree_t *self, visibility_t visibility)
     return attrib->visibility == visibility;
 }
 
+///
+/// fns
+///
+
 const tree_t *tree_fn_get_return(const tree_t *self)
 {
     switch (tree_get_kind(self))
@@ -155,4 +162,30 @@ arity_t tree_fn_get_arity(const tree_t *self)
 
     default: NEVER("invalid function kind %s", tree_to_string(self));
     }
+}
+
+///
+/// tys
+///
+
+static tree_t *find_field(vector_t *fields, const char *name)
+{
+    size_t len = vector_len(fields);
+    for (size_t i = 0; i < len; i++)
+    {
+        tree_t *field = vector_get(fields, i);
+        if (str_equal(tree_get_name(field), name))
+        {
+            return field;
+        }
+    }
+
+    return NULL;
+}
+
+tree_t *tree_ty_get_field(const tree_t *self, const char *name)
+{
+    TREE_EXPECT(self, eTreeTypeStruct);
+
+    return find_field(self->fields, name);
 }

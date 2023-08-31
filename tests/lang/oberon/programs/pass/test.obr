@@ -1,0 +1,17 @@
+MODULE common;
+    PROCEDURE^ puts*(fmt: ARRAY OF CHAR): INTEGER;
+    PROCEDURE^ putd*(n: INTEGER): INTEGER;
+END common.
+
+MODULE entry;
+    IMPORT io := common;
+
+    VAR x, y, z: INTEGER;
+
+BEGIN
+    x := 1;
+    y := 2;
+    z := x + y;
+    io.putd(z);
+    io.puts("\n")
+END entry.

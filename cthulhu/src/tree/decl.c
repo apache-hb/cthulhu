@@ -81,8 +81,8 @@ void tree_close_global(tree_t *self, tree_t *value)
 
 void tree_close_function(tree_t *self, tree_t *body)
 {
-    CTASSERTF(tree_is(self, eTreeDeclFunction), "decl %s is not a function", tree_get_name(self));
-    CTASSERTF(tree_is(self->type, eTreeTypeClosure), "decl %s type is not closure, but %s", tree_get_name(self), tree_to_string(self->type));
+    TREE_EXPECT(self, eTreeDeclFunction);
+    TREE_EXPECT(tree_get_type(self), eTreeTypeClosure);
 
     decl_close(self, eTreeDeclFunction);
     self->body = body;
@@ -190,8 +190,6 @@ tree_t *tree_open_struct(const node_t *node, const char *name, tree_resolve_info
 
 void tree_close_struct(tree_t *self, vector_t *fields)
 {
-    CTASSERTF(tree_is(self, eTreeTypeStruct), "decl %s is not a struct", tree_get_name(self));
-
     decl_close(self, eTreeTypeStruct);
     self->fields = fields;
 }

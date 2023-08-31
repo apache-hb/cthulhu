@@ -13,6 +13,13 @@ static tree_t *sema_digit(tree_t *sema, obr_t *expr, tree_t *implicitType)
     return tree_expr_digit(expr->node, type, expr->digit);
 }
 
+static tree_t *sema_string(tree_t *sema, obr_t *expr, tree_t *implicitType)
+{
+    // TODO: check implicit type
+    tree_t *type = implicitType != NULL ? implicitType : obr_get_string_type(expr->length + 1);
+    return tree_expr_string(expr->node, type, expr->text, expr->length + 1);
+}
+
 static tree_t *sema_unary(tree_t *sema, obr_t *expr, tree_t *implicitType)
 {
     tree_t *operand = obr_sema_rvalue(sema, expr->expr, implicitType);
@@ -47,12 +54,15 @@ static tree_t *sema_name(tree_t *sema, obr_t *expr)
     tree_t *fn = obr_get_symbol(sema, eObrTagProcs, expr->object);
     if (fn != NULL) { return fn; }
 
+    tree_t *mod = obr_get_namespace(sema, expr->object);
+    if (mod != NULL) { return mod; }
+
     return tree_raise(expr->node, sema->reports, "unknown name `%s`", expr->object);
 }
 
 static tree_t *sema_call(tree_t *sema, obr_t *expr)
 {
-    tree_t *callee = obr_sema_rvalue(sema, expr->expr, NULL);
+    tree_t *callee = obr_sema_lvalue(sema, expr->expr);
     if (tree_is(callee, eTreeError)) { return callee; }
 
     vector_t *params = tree_fn_get_params(callee);
@@ -63,7 +73,7 @@ static tree_t *sema_call(tree_t *sema, obr_t *expr)
     {
         obr_t *it = vector_get(expr->args, i);
         tree_t *expected = vector_get(params, i);
-        tree_t *arg = obr_sema_rvalue(sema, it, expected);
+        tree_t *arg = obr_sema_rvalue(sema, it, (tree_t*)tree_get_type(expected)); // funky
         vector_set(args, i, arg);
     }
 
@@ -72,10 +82,28 @@ static tree_t *sema_call(tree_t *sema, obr_t *expr)
 
 static tree_t *sema_field(tree_t *sema, obr_t *expr)
 {
-    tree_t *record = obr_sema_rvalue(sema, expr->expr, NULL);
-    if (tree_is(record, eTreeError)) { return record; }
+    tree_t *decl = obr_sema_lvalue(sema, expr->expr);
+    switch(tree_get_kind(decl))
+    {
+    case eTreeDeclModule: return sema_name(decl, expr);
+    case eTreeError: return decl;
+    default: break;
+    }
 
-    NEVER("TODO: sema field");
+    const tree_t *type = tree_get_type(decl);
+    tree_t *resolved = tree_resolve(tree_get_cookie(sema), (tree_t*)type);
+    if (!tree_is(resolved, eTreeTypeStruct))
+    {
+        return tree_raise(expr->node, sema->reports, "cannot access field of non-struct type %s", tree_to_string(decl));
+    }
+
+    tree_t *field = tree_ty_get_field(resolved, expr->object);
+    if (field == NULL)
+    {
+        return tree_raise(expr->node, sema->reports, "struct %s has no field %s", tree_to_string(decl), expr->object);
+    }
+
+    return tree_expr_field(expr->node, decl, field);
 }
 
 tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, tree_t *implicitType)
@@ -85,11 +113,13 @@ tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, tree_t *implicitType)
     switch (expr->kind)
     {
     case eObrExprDigit: return sema_digit(sema, expr, type);
+    case eObrExprString: return sema_string(sema, expr, type);
     case eObrExprUnary: return sema_unary(sema, expr, type);
     case eObrExprBinary: return sema_binary(sema, expr, type);
     case eObrExprCompare: return sema_compare(sema, expr, type);
     case eObrExprName: return tree_expr_load(expr->node, sema_name(sema, expr)); // TODO: this feels wrong for functions
-    case eObrExprField: return sema_field(sema, expr);
+    case eObrExprField: return tree_expr_load(expr->node, sema_field(sema, expr)); // TODO: may also be wrong for functions
+    case eObrExprCall: return sema_call(sema, expr);
 
     default: NEVER("unknown expr kind %d", expr->kind);
     }
@@ -104,6 +134,7 @@ tree_t *obr_sema_lvalue(tree_t *sema, obr_t *expr)
     switch (expr->kind)
     {
     case eObrExprName: return sema_name(sema, expr);
+    case eObrExprField: return sema_field(sema, expr);
     default: NEVER("unknown expr kind %d", expr->kind);
     }
 }

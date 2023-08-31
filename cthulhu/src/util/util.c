@@ -4,6 +4,8 @@
 
 #include "base/panic.h"
 
+#include <stdlib.h>
+
 void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char *name)
 {
     for (size_t i = 0; i < len; i++)
@@ -43,4 +45,9 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
     default:
         return false;
     }
+}
+
+bool util_length_bounded(size_t length)
+{
+    return length != SIZE_MAX;
 }

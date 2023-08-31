@@ -44,7 +44,7 @@ static tree_t *sema_type_pointer(tree_t *sema, obr_t *type, const char *name)
 static tree_t *sema_type_array(tree_t *sema, obr_t *type, const char *name)
 {
     tree_t *it = obr_sema_type(sema, type->array, name); // TODO: will the name clash matter?
-    return tree_type_pointer(type->node, name, it); // TODO: maybe arrays are not pointers
+    return tree_type_array(type->node, name, it, SIZE_MAX);
 }
 
 static tree_t *sema_type_record(tree_t *sema, obr_t *type, const char *name)

@@ -27,3 +27,9 @@ bool tree_has_vis(const tree_t *self, visibility_t visibility);
 const tree_t *tree_fn_get_return(const tree_t *self);
 vector_t *tree_fn_get_params(const tree_t *self);
 arity_t tree_fn_get_arity(const tree_t *self);
+
+///
+/// type queries
+///
+
+tree_t *tree_ty_get_field(const tree_t *self, const char *name);

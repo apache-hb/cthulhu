@@ -37,7 +37,7 @@ const char *set_add(IN_NOTNULL set_t *set, IN_NOTNULL const char *key);
 
 /**
  * @brief add a pointer to a set
- * 
+ *
  * @param set the set to add to
  * @param key the key to add
  * @return a pointer to the deduplicated key
@@ -51,23 +51,23 @@ const void *set_add_ptr(IN_NOTNULL set_t *set, const void *key);
  * @param key the key to check
  * @return true if the set contains the key
  */
-NODISCARD CONSTFN 
+NODISCARD CONSTFN
 bool set_contains(IN_NOTNULL set_t *set, IN_STRING const char *key);
 
 /**
  * @brief check if a set contains a ptr key
- * 
+ *
  * @param set the set to check
  * @param key the key to check
  * @return true if the set contains the key
  * @return false if the set does not contain the key
  */
-NODISCARD CONSTFN 
+NODISCARD CONSTFN
 bool set_contains_ptr(IN_NOTNULL set_t *set, const void *key);
 
 /**
  * @brief check if a set is empty
- * 
+ *
  * @param set the set to check
  * @return true if the set is empty
  * @return false if the set is not empty
@@ -77,7 +77,7 @@ bool set_empty(IN_NOTNULL set_t *set);
 
 /**
  * @brief reset a set to empty
- * 
+ *
  * @param set the set to reset
  */
 void set_reset(IN_NOTNULL set_t *set);
@@ -93,7 +93,7 @@ typedef struct set_iter_t
 
 /**
  * @brief begin iterating over a set
- * 
+ *
  * @param set the set to iterate over
  * @return a set iterator
  */
@@ -102,17 +102,17 @@ set_iter_t set_iter(IN_NOTNULL set_t *set);
 
 /**
  * @brief get the next item in a set iterator
- * 
+ *
  * @note always call @ref set_has_next before calling this function
  * @param iter the iterator to get the next item from
  * @return the next item
  */
-NODISCARD 
+NODISCARD
 const void *set_next(IN_NOTNULL set_iter_t *iter);
 
 /**
  * @brief check if a set iterator has a next item
- * 
+ *
  * @param iter the iterator to check
  * @return true if the iterator has a next item
  * @return false if the iterator does not have a next item

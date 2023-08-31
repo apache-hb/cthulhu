@@ -9,6 +9,7 @@ typedef struct reports_t reports_t;
 typedef struct vector_t vector_t;
 typedef struct typevec_t typevec_t;
 typedef struct map_t map_t;
+typedef struct set_t set_t;
 
 typedef struct tree_t tree_t;
 
@@ -81,6 +82,11 @@ typedef struct ssa_type_pointer_t {
     const ssa_type_t *pointer;
 } ssa_type_pointer_t;
 
+typedef struct ssa_type_array_t {
+    const ssa_type_t *element;
+    size_t length;
+} ssa_type_array_t;
+
 typedef struct ssa_type_t {
     ssa_kind_t kind;
     quals_t quals;
@@ -90,6 +96,7 @@ typedef struct ssa_type_t {
         ssa_type_digit_t digit;
         ssa_type_closure_t closure;
         ssa_type_pointer_t pointer;
+        ssa_type_array_t array;
     };
 } ssa_type_t;
 
@@ -101,10 +108,14 @@ typedef struct ssa_value_t {
         mpz_t digitValue;
         bool boolValue;
 
+        /* eTypeString */
         struct {
             const char *stringValue;
             size_t stringLength;
         };
+
+        /* eTypeArray */
+        vector_t *data;
     };
 } ssa_value_t;
 
@@ -233,6 +244,7 @@ typedef struct ssa_symbol_t {
 
     typevec_t *locals; ///< typevec_t<ssa_type_t>
     typevec_t *params; ///< typevec_t<ssa_type_t>
+    set_t *strings; ///< set_t<const char *> all strings referenced by this symbol
 
     ssa_block_t *entry; ///< entry block
 
@@ -241,10 +253,10 @@ typedef struct ssa_symbol_t {
 
 typedef struct ssa_module_t {
     const char *name;
-    vector_t *path; // vector<string>
+    vector_t *path; ///< vector<string> the path to this module
 
-    vector_t *globals; // vector<ssa_symbol>
-    vector_t *functions; // vector<ssa_symbol>
+    vector_t *globals; ///< vector<ssa_symbol> all globals declared/imported/exported by this module
+    vector_t *functions; ///< vector<ssa_symbol> all functions declared/imported/exported by this module
 } ssa_module_t;
 
 typedef struct ssa_result_t {

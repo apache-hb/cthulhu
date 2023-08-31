@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include "cthulhu/util/util.h"
+
 #include "std/map.h"
 #include "std/str.h"
 #include "std/vector.h"
@@ -51,10 +53,15 @@ static char *closure_to_string(ssa_type_closure_t closure)
     return format("closure(result: %s, params: [%s], variadic: %s)", result, params, closure.variadic ? "true" : "false");
 }
 
-static char *pointer_to_string(ssa_type_pointer_t pointer)
+static char *array_to_string(ssa_type_array_t array)
 {
-    const char *pointee = type_to_string(pointer.pointer);
-    return format("pointer(%s)", pointee);
+    const char *pointee = type_to_string(array.element);
+    if (util_length_bounded(array.length))
+    {
+        return format("array(%s of %zu)", pointee, array.length);
+    }
+
+    return format("array(%s)", pointee);
 }
 
 static const char *type_to_string(const ssa_type_t *type)
@@ -67,7 +74,7 @@ static const char *type_to_string(const ssa_type_t *type)
     case eTypeString: return "string";
     case eTypeDigit: return digit_to_string(type->digit);
     case eTypeClosure: return closure_to_string(type->closure);
-    case eTypePointer: return pointer_to_string(type->pointer);
+    case eTypeArray: return array_to_string(type->array);
     default: NEVER("unknown type kind %d", type->kind);
     }
 }
@@ -104,6 +111,7 @@ static const char *value_to_string(const ssa_value_t *value)
     case eTypeUnit: return "unit";
     case eTypeEmpty: return "empty";
     case eTypeString: return format("\"%s\"", str_normalizen(value->stringValue, value->stringLength));
+    case eTypeArray: return format("array[%zu]", vector_len(value->data));
 
     default: NEVER("unknown type kind %d", type->kind);
     }

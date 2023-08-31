@@ -8,17 +8,11 @@ tests = {
             'multi-single',
             'multi-multi'
         ],
-        'fail': [
-
-        ]
+        'fail': [ ]
     },
     'warns': {
-        'pass': [
-            'mod'
-        ],
-        'fail': [
-
-        ]
+        'pass': [ 'mod' ],
+        'fail': [ ]
     },
     'functions': {
         'pass': [
@@ -44,6 +38,10 @@ tests = {
             'recursive-pointer',
             'recursive'
         ]
+    },
+    'programs': {
+        'pass': [ 'test' ],
+        'fail': [ ]
     }
 }
 

@@ -1,5 +1,7 @@
 #include "c89.h"
 
+#include "cthulhu/util/util.h"
+
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -45,13 +47,21 @@ static const char *format_c89_closure(c89_emit_t *emit, const char *quals, ssa_t
         : format("%s (*%s%s)(%s)", result, quals, name, params);
 }
 
-static const char *format_c89_pointer(c89_emit_t *emit, const char *quals, ssa_type_pointer_t type, const char *name)
+static const char *format_c89_array(c89_emit_t *emit, const char *quals, ssa_type_array_t type, const char *name)
 {
-    const char *result = c89_format_type(emit, type.pointer, NULL, true);
+    const char *result = c89_format_type(emit, type.element, NULL, true);
 
+    if (util_length_bounded(type.length))
+    {
+        return (name == NULL)
+            ? format("%s[%zu]", result, type.length)
+            : format("%s %s[%zu]", result, name, type.length);
+    }
+
+    // unbounded arrays are represented as pointers for now
     return (name == NULL)
-        ? format("%s *%s", result, quals)
-        : format("%s *%s%s", result, quals, name);
+        ? format("%s *", result)
+        : format("%s *%s", result, name);
 }
 
 const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emitConst)
@@ -73,7 +83,7 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
     }
 
     case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
-    case eTypePointer: return format_c89_pointer(emit, quals, type->pointer, name);
+    case eTypeArray: return format_c89_array(emit, quals, type->array, name);
 
     default: NEVER("unknown type %d", type->kind);
     }

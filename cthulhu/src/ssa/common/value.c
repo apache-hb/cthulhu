@@ -2,6 +2,8 @@
 
 #include "cthulhu/tree/tree.h"
 
+#include "std/vector.h"
+
 #include "base/panic.h"
 #include "base/memory.h"
 
@@ -37,11 +39,36 @@ ssa_value_t *ssa_value_digit(const ssa_type_t *type, const mpz_t value)
     return self;
 }
 
-ssa_value_t *ssa_value_string(const ssa_type_t *type, const char *value, size_t length)
+static ssa_value_t *ssa_value_char(const ssa_type_t *type, char c)
 {
     ssa_value_t *self = ssa_value_new(type, true);
-    self->stringValue = value;
-    self->stringLength = length;
+    mpz_init_set_si(self->digitValue, c);
+    return self;
+}
+
+ssa_value_t *ssa_value_string(const ssa_type_t *type, const char *value, size_t length)
+{
+    ssa_type_array_t array = type->array;
+    ssa_value_t *self = ssa_value_new(type, true);
+    if (type->kind == eTypeString)
+    {
+        self->stringValue = value;
+        self->stringLength = length;
+    }
+    else
+    {
+        CTASSERTF(type->kind == eTypeArray, "invalid type for string literal: %s:%d", type->name, type->kind);
+        vector_t *elems = vector_of(length);
+        for (size_t i = 0; i < length; i++)
+        {
+            char c = value[i];
+            ssa_value_t *value = ssa_value_char(array.element, c);
+            vector_set(elems, i, value);
+        }
+
+        self->data = elems;
+    }
+
     return self;
 }
 

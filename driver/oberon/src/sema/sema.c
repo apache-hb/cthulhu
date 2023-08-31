@@ -28,6 +28,12 @@ tree_t *obr_get_symbol(tree_t *sema, obr_tag_t tag, const char *name)
     return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
 }
 
+tree_t *obr_get_namespace(tree_t *sema, const char *name)
+{
+    const size_t tags[] = { eObrTagModules, eObrTagImports };
+    return util_select_decl(sema, tags, sizeof(tags) / sizeof(size_t), name);
+}
+
 void obr_add_decl(tree_t *sema, obr_tag_t tag, const char *name, tree_t *decl)
 {
     const tree_t *old = tree_module_get(sema, tag, name);
@@ -66,6 +72,12 @@ tree_t *obr_get_void_type(void)
 {
     CTASSERT(gTypeVoid != NULL);
     return gTypeVoid;
+}
+
+tree_t *obr_get_string_type(size_t length)
+{
+    CTASSERT(gTypeChar != NULL);
+    return tree_type_array(node_builtin(), "STRING", gTypeChar, length); /// TODO: use `ARRAY[0..$length] OF CHAR`
 }
 
 tree_t *obr_rt_mod(lifetime_t *lifetime)

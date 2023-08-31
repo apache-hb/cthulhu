@@ -70,12 +70,6 @@ typedef struct tree_t {
             size_t stringLength;
         };
 
-        /* eTreeQualify */
-        struct {
-            quals_t quals;
-            const tree_t *qualify;
-        };
-
         /* eTreeExprLoad */
         tree_t *load;
 
@@ -124,6 +118,12 @@ typedef struct tree_t {
             tree_t *other;
         };
 
+        /* eTreeExprField */
+        struct {
+            tree_t *object;
+            tree_t *field;
+        };
+
         /* any declaration */
         struct {
             const char *name; ///< the name of the declaration
@@ -131,10 +131,20 @@ typedef struct tree_t {
             const tree_resolve_info_t *resolve; ///< the resolve configuration of the declaration, NULL if resolved
 
             union {
-                /* eTreeTypePointer */
+                /* eTreeQualify */
                 struct {
-                    tree_t *pointer;
+                    quals_t quals;
+                    const tree_t *qualify;
                 };
+
+                /* eTreeTypeArray */
+                struct {
+                    tree_t *array;
+                    size_t length;
+                };
+
+                /* eTreeTypePointer */
+                tree_t *pointer;
 
                 /* eTreeTypeDigit */
                 struct {
@@ -244,6 +254,8 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
 
 tree_t *tree_type_pointer(const node_t *node, const char *name, tree_t *pointer);
 
+tree_t *tree_type_array(const node_t *node, const char *name, tree_t *array, size_t length);
+
 tree_t *tree_type_qualify(const node_t *node, const tree_t *type, quals_t quals);
 
 ///
@@ -270,6 +282,8 @@ tree_t *tree_expr_load(const node_t *node, tree_t *expr);
 tree_t *tree_expr_unary(const node_t *node, unary_t unary, tree_t *expr);
 tree_t *tree_expr_binary(const node_t *node, const tree_t *type, binary_t binary, tree_t *lhs, tree_t *rhs);
 tree_t *tree_expr_compare(const node_t *node, const tree_t *type, compare_t compare, tree_t *lhs, tree_t *rhs);
+
+tree_t *tree_expr_field(const node_t *node, tree_t *object, tree_t *field);
 
 tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vector_t *args);
 

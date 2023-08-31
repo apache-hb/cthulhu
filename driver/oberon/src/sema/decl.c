@@ -231,3 +231,31 @@ obr_forward_t obr_forward_decl(tree_t *sema, obr_t *decl)
     set_attribs(sema, fwd.decl, decl->visibility, remap_linkage(decl->visibility));
     return fwd;
 }
+
+static void obr_resolve_init(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
+{
+    obr_t *mod = begin_resolve(sema, user, eObrModule);
+
+    tree_t *body = obr_sema_stmts(sema, mod->node, mod->name, mod->init);
+    tree_close_function(self, body);
+}
+
+static const attribs_t kEntryPoint = {
+    .link = eLinkEntryCli
+};
+
+tree_t *obr_add_init(tree_t *sema, obr_t *mod)
+{
+    if (mod->init == NULL) { return NULL; }
+
+    tree_resolve_info_t resolve = {
+        .sema = sema,
+        .user = mod,
+        .fnResolve = obr_resolve_init
+    };
+
+    tree_t *signature = tree_type_closure(mod->node, mod->name, obr_get_void_type(), vector_of(0), eArityFixed);
+    tree_t *init = tree_open_function(mod->node, mod->name, signature, resolve);
+    tree_set_attrib(init, &kEntryPoint);
+    return init;
+}

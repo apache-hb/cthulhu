@@ -9,7 +9,10 @@ TREE_KIND(eTreeTypeBool, "type-bool") ///< a type with two values
 TREE_KIND(eTreeTypeDigit, "type-digit")
 TREE_KIND(eTreeTypeString, "type-string")
 TREE_KIND(eTreeTypeClosure, "type-closure") ///< a function pointer type (no captures)
+
 TREE_KIND(eTreeTypePointer, "type-pointer")
+TREE_KIND(eTreeTypeArray, "type-array")
+
 TREE_KIND(eTreeTypeQualify, "type-qualify") ///< a qualified type
 
 TREE_KIND(eTreeTypeStruct, "type-struct")
@@ -24,6 +27,8 @@ TREE_KIND(eTreeExprLoad, "expr-load")
 TREE_KIND(eTreeExprUnary, "expr-unary")
 TREE_KIND(eTreeExprBinary, "expr-binary")
 TREE_KIND(eTreeExprCompare, "expr-compare")
+
+TREE_KIND(eTreeExprField, "expr-field")
 
 TREE_KIND(eTreeExprCall, "expr-call")
 

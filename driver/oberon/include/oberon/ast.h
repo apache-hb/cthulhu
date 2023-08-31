@@ -154,6 +154,7 @@ typedef struct obr_t {
                 struct {
                     vector_t *imports;
                     vector_t *decls;
+                    vector_t *init;
                 };
 
                 /* eObrDeclVar|eObrDeclType|eObrReceiver|eObrParam */
@@ -184,7 +185,10 @@ typedef struct obr_t {
 
 /* modules */
 
-obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *imports, vector_t *decls);
+obr_t *obr_module(
+    scan_t *scan, where_t where, char *name, char *end,
+    vector_t *imports, vector_t *decls, vector_t *init
+);
 obr_t *obr_import(scan_t *scan, where_t where, char *name, char *symbol);
 
 /* decls */

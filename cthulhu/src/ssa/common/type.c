@@ -61,10 +61,25 @@ ssa_type_t *ssa_type_closure(const char *name, quals_t quals, ssa_type_t *result
 
 ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointer)
 {
-    ssa_type_pointer_t it = { .pointer = pointer };
-    ssa_type_t *type = ssa_type_new(eTypePointer, name, quals);
-    type->pointer = it;
-    return type;
+    ssa_type_pointer_t it = {
+        .pointer = pointer
+    };
+
+    ssa_type_t *ptr = ssa_type_new(eTypePointer, name, quals);
+    ptr->pointer = it;
+    return ptr;
+}
+
+ssa_type_t *ssa_type_array(const char *name, quals_t quals, ssa_type_t *element, size_t length)
+{
+    ssa_type_array_t it = {
+        .element = element,
+        .length = length
+    };
+
+    ssa_type_t *array = ssa_type_new(eTypeArray, name, quals);
+    array->array = it;
+    return array;
 }
 
 static typevec_t *collect_params(const tree_t *type)
@@ -113,6 +128,7 @@ static ssa_type_t *ssa_type_inner(const tree_t *type, quals_t quals)
         );
     case eTreeTypeQualify: return ssa_type_inner(type->qualify, type->quals | quals);
     case eTreeTypePointer: return ssa_type_pointer(tree_get_name(type), quals, ssa_type_from(type->pointer));
+    case eTreeTypeArray: return ssa_type_array(tree_get_name(type), quals, ssa_type_from(type->array), type->length);
 
     default: NEVER("unexpected type kind: %s", tree_to_string(type));
     }

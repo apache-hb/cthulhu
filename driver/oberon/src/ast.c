@@ -50,11 +50,15 @@ static obr_t *obr_decl_symbol_location(const obr_symbol_t *symbol, obr_kind_t ki
     return obr_decl(symbol->scan, symbol->where, kind, symbol->name, symbol->visibility);
 }
 
-obr_t *obr_module(scan_t *scan, where_t where, char *name, char *end, vector_t *imports, vector_t *decls)
+obr_t *obr_module(
+    scan_t *scan, where_t where, char *name, char *end,
+    vector_t *imports, vector_t *decls, vector_t *init
+)
 {
     obr_t *self = obr_decl(scan, where, eObrModule, name, eObrVisPublic);
     self->imports = imports;
     self->decls = decls;
+    self->init = init;
 
     ensure_block_names_match(scan, self->node, "MODULE", name, end);
 

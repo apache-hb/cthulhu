@@ -28,6 +28,7 @@ typedef struct ssa_compile_t {
 
     ssa_block_t *currentBlock;
     ssa_symbol_t *currentSymbol;
+    ssa_module_t *currentModule;
 
     vector_t *path;
 } ssa_compile_t;
@@ -57,6 +58,7 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree)
 
     symbol->locals = NULL;
     symbol->params = NULL;
+    symbol->strings = NULL;
 
     symbol->name = name;
     symbol->type = type;
@@ -107,6 +109,8 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
         map_set_ptr(ssa->locals, param, (void*)(uintptr_t)i);
     }
 
+    self->strings = set_new(32);
+
     return self;
 }
 
@@ -124,32 +128,9 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
     return mod;
 }
 
-static bool is_control_flow(ssa_step_t step)
-{
-    switch (step.opcode)
-    {
-    case eOpBranch:
-    case eOpJump:
-    case eOpReturn:
-        return true;
-    default:
-        return false;
-    }
-}
-
 static ssa_operand_t bb_add_step(ssa_block_t *bb, ssa_step_t step)
 {
     size_t index = typevec_len(bb->steps);
-
-    // really make sure that control flow is last
-#if ENABLE_DEBUG
-    if (index > 0)
-    {
-        ssa_step_t last;
-        typevec_get(bb->steps, index - 1, &last);
-        CTASSERT(!is_control_flow(last));
-    }
-#endif
 
     typevec_push(bb->steps, &step);
 
@@ -322,8 +303,16 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
     case eTreeExprDigit:
     case eTreeExprBool:
-    case eTreeExprUnit:
+    case eTreeExprUnit: {
+        ssa_operand_t operand = {
+            .kind = eOperandImm,
+            .value = ssa_value_from(tree)
+        };
+        return operand;
+    }
+
     case eTreeExprString: {
+        set_add(ssa->currentSymbol->strings, tree->stringValue);
         ssa_operand_t operand = {
             .kind = eOperandImm,
             .value = ssa_value_from(tree)

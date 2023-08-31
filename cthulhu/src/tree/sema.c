@@ -47,7 +47,7 @@ tree_t *tree_module_root(reports_t *reports, cookie_t *cookie, const node_t *nod
 
 tree_t *tree_module(tree_t *parent, const node_t *node, const char *name, size_t decls, const size_t *sizes)
 {
-    CTASSERT(parent != NULL);
+    TREE_EXPECT(parent, eTreeDeclModule);
 
     return tree_module_new(node, name, parent, parent->cookie, parent->reports, parent->extra, decls, sizes);
 }
@@ -87,28 +87,28 @@ void *tree_module_set(tree_t *self, size_t tag, const char *name, void *value)
 
 map_t *tree_module_tag(const tree_t *self, size_t tag)
 {
-    CTASSERT(tree_is(self, eTreeDeclModule));
+    TREE_EXPECT(self, eTreeDeclModule);
 
     return vector_get(self->tags, tag);
 }
 
-cookie_t *tree_get_cookie(tree_t *sema)
+cookie_t *tree_get_cookie(tree_t *self)
 {
-    CTASSERT(tree_is(sema, eTreeDeclModule));
+    TREE_EXPECT(self, eTreeDeclModule);
 
-    return sema->cookie;
+    return self->cookie;
 }
 
-void *tree_get_extra(tree_t *sema, const void *key)
+void *tree_get_extra(tree_t *self, const void *key)
 {
-    CTASSERT(tree_is(sema, eTreeDeclModule));
+    TREE_EXPECT(self, eTreeDeclModule);
 
-    return map_get_ptr(sema->extra, key);
+    return map_get_ptr(self->extra, key);
 }
 
-void tree_set_extra(tree_t *sema, const void *key, void *data)
+void tree_set_extra(tree_t *self, const void *key, void *data)
 {
-    CTASSERT(tree_is(sema, eTreeDeclModule));
+    TREE_EXPECT(self, eTreeDeclModule);
 
-    map_set_ptr(sema->extra, key, data);
+    map_set_ptr(self->extra, key, data);
 }
