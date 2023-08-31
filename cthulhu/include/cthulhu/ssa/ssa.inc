@@ -23,6 +23,7 @@ SSA_OPKIND(eOperandUnit, "unit")
 SSA_OPKIND(eOperandBlock, "block")
 SSA_OPKIND(eOperandParam, "param")
 SSA_OPKIND(eOperandReg, "reg")
+SSA_OPKIND(eOperandConst, "const")
 SSA_OPKIND(eOperandImm, "imm")
 
 SSA_OPKIND(eOperandLocal, "local")

@@ -123,18 +123,31 @@ typedef struct ssa_operand_t {
     ssa_opkind_t kind;
 
     union {
+        /* eOperandBlock */
         const ssa_block_t *bb;
+
+        /* eOperandReg */
         struct {
             const ssa_block_t *vregContext;
             size_t vregIndex;
         };
 
+        /* eOperandLocal */
         size_t local;
+
+        /* eOperandParam */
         size_t param;
 
+        /* eOperandConst */
+        size_t constant;
+
+        /* eOperandGlobal */
         const ssa_symbol_t *global;
+
+        /* eOperandFunction */
         const ssa_symbol_t *function;
 
+        /* eOperandImm */
         const ssa_value_t *value;
     };
 } ssa_operand_t;
@@ -244,7 +257,7 @@ typedef struct ssa_symbol_t {
 
     typevec_t *locals; ///< typevec_t<ssa_type_t>
     typevec_t *params; ///< typevec_t<ssa_type_t>
-    set_t *strings; ///< set_t<const char *> all strings referenced by this symbol
+    vector_t *consts; ///< set_t<ssa_value_t> all constants used by this symbol
 
     ssa_block_t *entry; ///< entry block
 

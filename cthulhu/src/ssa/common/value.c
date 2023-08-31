@@ -7,6 +7,8 @@
 #include "base/panic.h"
 #include "base/memory.h"
 
+#define EXPECT_TYPE(TY, KIND) CTASSERTF(TY->kind == KIND, "expected %s, got %s", ssa_type_name(KIND), ssa_type_name(TY->kind))
+
 ssa_value_t *ssa_value_new(const ssa_type_t *type, bool init)
 {
     ssa_value_t *self = ctu_malloc(sizeof(ssa_value_t));
@@ -17,16 +19,19 @@ ssa_value_t *ssa_value_new(const ssa_type_t *type, bool init)
 
 ssa_value_t *ssa_value_empty(const ssa_type_t *type)
 {
+    EXPECT_TYPE(type, eTypeEmpty);
     return ssa_value_new(type, true);
 }
 
 ssa_value_t *ssa_value_unit(const ssa_type_t *type)
 {
+    EXPECT_TYPE(type, eTypeUnit);
     return ssa_value_new(type, true);
 }
 
 ssa_value_t *ssa_value_bool(const ssa_type_t *type, bool value)
 {
+    EXPECT_TYPE(type, eTypeBool);
     ssa_value_t *self = ssa_value_new(type, true);
     self->boolValue = value;
     return self;
@@ -34,6 +39,7 @@ ssa_value_t *ssa_value_bool(const ssa_type_t *type, bool value)
 
 ssa_value_t *ssa_value_digit(const ssa_type_t *type, const mpz_t value)
 {
+    EXPECT_TYPE(type, eTypeDigit);
     ssa_value_t *self = ssa_value_new(type, true);
     mpz_init_set(self->digitValue, value);
     return self;
@@ -41,6 +47,7 @@ ssa_value_t *ssa_value_digit(const ssa_type_t *type, const mpz_t value)
 
 static ssa_value_t *ssa_value_char(const ssa_type_t *type, char c)
 {
+    EXPECT_TYPE(type, eTypeDigit);
     ssa_value_t *self = ssa_value_new(type, true);
     mpz_init_set_si(self->digitValue, c);
     return self;
@@ -48,6 +55,7 @@ static ssa_value_t *ssa_value_char(const ssa_type_t *type, char c)
 
 ssa_value_t *ssa_value_string(const ssa_type_t *type, const char *value, size_t length)
 {
+    EXPECT_TYPE(type, eTypeString);
     ssa_type_array_t array = type->array;
     ssa_value_t *self = ssa_value_new(type, true);
     if (type->kind == eTypeString)

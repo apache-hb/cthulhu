@@ -371,6 +371,9 @@ static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
     case eOperandParam:
         return c89_format_param(emit, operand.param);
 
+    case eOperandConst:
+        return format("const%zu", operand.constant);
+
     default: NEVER("unknown operand kind %d", operand.kind);
     }
 }
@@ -542,6 +545,18 @@ static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
     }
 }
 
+static void write_consts(c89_emit_t *emit, io_t *io, vector_t *consts)
+{
+    size_t len = vector_len(consts);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_value_t *value = vector_get(consts, i);
+        const char *ty = format_symbol(emit, value->type, format("const%zu", i));
+        const char *it = c89_format_value(emit, value);
+        write_string(io, "\t%s = %s;\n", ty, it);
+    }
+}
+
 void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *func)
 {
     c89_source_t *src = map_get_ptr(emit->srcmap, mod);
@@ -558,6 +573,7 @@ void c89_define_function(c89_emit_t *emit, const ssa_module_t *mod, const ssa_sy
     if (func->linkage != eLinkImport)
     {
         write_string(src->io, "%s%s(%s) {\n", link, result, params);
+        write_consts(emit, src->io, func->consts);
         write_locals(emit, src->io, func->locals);
         write_string(src->io, "\tgoto bb%s;\n", get_block_name(&emit->emit, func->entry));
         size_t len = vector_len(func->blocks);
@@ -603,6 +619,7 @@ c89_emit_result_t emit_c89(const c89_emit_options_t *options)
         .hdrmap = map_optimal(len),
 
         .stepmap = map_optimal(64),
+        .strmap = map_optimal(64),
 
         .fs = opts.fs,
         .deps = opts.deps,

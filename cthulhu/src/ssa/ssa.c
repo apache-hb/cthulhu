@@ -12,6 +12,8 @@
 #include "base/memory.h"
 #include "base/panic.h"
 
+#include <string.h>
+
 typedef struct ssa_compile_t {
     /// result data
 
@@ -58,7 +60,7 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree)
 
     symbol->locals = NULL;
     symbol->params = NULL;
-    symbol->strings = NULL;
+    symbol->consts = NULL;
 
     symbol->name = name;
     symbol->type = type;
@@ -109,7 +111,7 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
         map_set_ptr(ssa->locals, param, (void*)(uintptr_t)i);
     }
 
-    self->strings = set_new(32);
+    self->consts = vector_new(4);
 
     return self;
 }
@@ -126,6 +128,20 @@ static ssa_module_t *module_create(ssa_compile_t *ssa, const char *name)
     mod->functions = vector_new(32);
 
     return mod;
+}
+
+static ssa_operand_t add_const(ssa_compile_t *ssa, ssa_value_t *value)
+{
+    ssa_symbol_t *symbol = ssa->currentSymbol;
+    size_t index = vector_len(ssa->currentSymbol->consts);
+    vector_push(&symbol->consts, value);
+
+    ssa_operand_t operand = {
+        .kind = eOperandConst,
+        .constant = index
+    };
+
+    return operand;
 }
 
 static ssa_operand_t bb_add_step(ssa_block_t *bb, ssa_step_t step)
@@ -301,6 +317,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         };
         return operand;
     }
+
     case eTreeExprDigit:
     case eTreeExprBool:
     case eTreeExprUnit: {
@@ -312,13 +329,9 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
     }
 
     case eTreeExprString: {
-        set_add(ssa->currentSymbol->strings, tree->stringValue);
-        ssa_operand_t operand = {
-            .kind = eOperandImm,
-            .value = ssa_value_from(tree)
-        };
-        return operand;
+        return add_const(ssa, ssa_value_from(tree));
     }
+
     case eTreeExprUnary: {
         ssa_operand_t expr = compile_tree(ssa, tree->operand);
         ssa_step_t step = {
