@@ -1,6 +1,8 @@
 #include "ctu/sema/expr.h"
 #include "ctu/sema/type.h"
 
+#include "cthulhu/util/util.h"
+
 #include "cthulhu/tree/query.h"
 
 #include "ctu/ast.h"
@@ -71,14 +73,10 @@ static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
     return tree_expr_digit(expr->node, type, expr->intValue);
 }
 
-static tree_t *sema_string(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_string(tree_t *sema, const ctu_t *expr)
 {
-    const tree_t *type = implicitType ? implicitType : ctu_get_str_type(); // TODO: calculate proper type to use
-
-    tree_t *verify = verify_expr_type(sema, eTreeTypeString, type, "string literal", expr->node);
-    if (verify != NULL) { return verify; }
-
-    return tree_expr_string(expr->node, type, expr->text, expr->length);
+    const tree_t *type = ctu_get_str_type(expr->length + 1);
+    return tree_expr_string(expr->node, type, expr->text, expr->length + 1);
 }
 
 static tree_t *sema_name(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
@@ -155,7 +153,7 @@ tree_t *ctu_sema_rvalue(tree_t *sema, const ctu_t *expr, tree_t *implicitType)
     {
     case eCtuExprBool: return sema_bool(sema, expr, inner);
     case eCtuExprInt: return sema_int(sema, expr, inner);
-    case eCtuExprString: return sema_string(sema, expr, inner);
+    case eCtuExprString: return sema_string(sema, expr);
 
     case eCtuExprName: return tree_expr_load(expr->node, sema_name(sema, expr, implicitType));
 
@@ -217,7 +215,7 @@ static tree_t *sema_return(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     tree_t *fn = ctu_get_current_fn(sema);
     const tree_t *type = tree_get_type(fn);
 
-    tree_t *value = stmt->result == NULL ? NULL : ctu_sema_rvalue(sema, stmt->result, (tree_t*)type->result); // TODO: evil cast
+    tree_t *value = stmt->result == NULL ? NULL : util_type_cast(type->result, ctu_sema_rvalue(sema, stmt->result, (tree_t*)type->result)); // TODO: evil cast
     return tree_stmt_return(stmt->node, value);
 }
 

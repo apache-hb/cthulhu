@@ -76,7 +76,6 @@ tree_t *obr_get_void_type(void)
 
 tree_t *obr_get_string_type(size_t length)
 {
-    CTASSERT(gTypeChar != NULL);
     return tree_type_array(node_builtin(), "STRING", gTypeChar, length); /// TODO: use `ARRAY[0..$length] OF CHAR`
 }
 

@@ -73,6 +73,9 @@ typedef struct tree_t {
         /* eTreeExprLoad */
         tree_t *load;
 
+        /* eTreeExprCast */
+        tree_t *cast;
+
         /* eTreeExprUnary */
         struct {
             unary_t unary;
@@ -139,7 +142,7 @@ typedef struct tree_t {
 
                 /* eTreeTypeArray */
                 struct {
-                    tree_t *array;
+                    const tree_t *array;
                     size_t length;
                 };
 
@@ -241,20 +244,11 @@ tree_t *tree_type_bool(const node_t *node, const char *name);
  */
 tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign);
 
-/**
- * @brief create a string type
- *
- * @param node where this type was defined
- * @param name the name of the type
- * @return a string type
- */
-tree_t *tree_type_string(const node_t *node, const char *name);
-
 tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, vector_t *params, arity_t arity);
 
 tree_t *tree_type_pointer(const node_t *node, const char *name, tree_t *pointer);
 
-tree_t *tree_type_array(const node_t *node, const char *name, tree_t *array, size_t length);
+tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *array, size_t length);
 
 tree_t *tree_type_qualify(const node_t *node, const tree_t *type, quals_t quals);
 
@@ -278,6 +272,7 @@ tree_t *tree_expr_digit(const node_t *node, const tree_t *type, const mpz_t valu
  */
 tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *value, size_t length);
 
+tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr);
 tree_t *tree_expr_load(const node_t *node, tree_t *expr);
 tree_t *tree_expr_unary(const node_t *node, unary_t unary, tree_t *expr);
 tree_t *tree_expr_binary(const node_t *node, const tree_t *type, binary_t binary, tree_t *lhs, tree_t *rhs);

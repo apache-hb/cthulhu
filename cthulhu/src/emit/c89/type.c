@@ -57,11 +57,12 @@ static const char *format_c89_array(c89_emit_t *emit, const char *quals, ssa_typ
             ? format("%s[%zu]", result, type.length)
             : format("%s %s[%zu]", result, name, type.length);
     }
-
-    // unbounded arrays are represented as pointers for now
-    return (name == NULL)
-        ? format("%s *", result)
-        : format("%s *%s", result, name);
+    else
+    {
+        return (name == NULL)
+            ? format("%s[]", result)
+            : format("%s %s[]", result, name);
+    }
 }
 
 const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emitConst)
@@ -74,7 +75,6 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
     {
     case eTypeEmpty: NEVER("cannot emit this type %d", type->kind);
     case eTypeUnit: return (name != NULL) ? format("void %s", name) : "void";
-    case eTypeString: return (name != NULL) ? format("const char *%s", name) : "const char *";
 
     case eTypeBool: return (name != NULL) ? format("%sbool %s", quals, name) : format("%sbool", quals);
     case eTypeDigit: {

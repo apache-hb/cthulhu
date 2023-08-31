@@ -29,6 +29,7 @@ ssa_value_t *ssa_value_empty(const ssa_type_t *type);
 ssa_value_t *ssa_value_unit(const ssa_type_t *type);
 ssa_value_t *ssa_value_bool(const ssa_type_t *type, bool value);
 ssa_value_t *ssa_value_digit(const ssa_type_t *type, const mpz_t value);
+ssa_value_t *ssa_value_char(const ssa_type_t *type, char value);
 ssa_value_t *ssa_value_string(const ssa_type_t *type, const char *value, size_t length);
 
 ssa_value_t *ssa_value_from(const tree_t *expr);

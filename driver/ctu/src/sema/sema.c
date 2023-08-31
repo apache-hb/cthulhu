@@ -91,7 +91,7 @@ static tree_t *make_bool_type(const char *name)
 
 static tree_t *make_str_type(const char *name)
 {
-    return (kStrType = tree_type_string(node_builtin(), name));
+    return (kStrType = tree_type_array(node_builtin(), name, ctu_get_int_type(eDigitChar, eSignSigned), SIZE_MAX));
 }
 
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
@@ -104,9 +104,9 @@ tree_t *ctu_get_bool_type(void)
     return kBoolType;
 }
 
-tree_t *ctu_get_str_type(void)
+tree_t *ctu_get_str_type(size_t length)
 {
-    return kStrType;
+    return tree_type_array(node_builtin(), "str", ctu_get_int_type(eDigitChar, eSignSigned), length);
 }
 
 tree_t *ctu_rt_mod(lifetime_t *lifetime)
@@ -125,17 +125,20 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
 
     tree_t *root = lifetime_sema_new(lifetime, "runtime", eCtuTagTotal, sizes);
 
-    ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
-    ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
-
     ctu_add_decl(root, eCtuTagTypes, "char", make_int_type("char", eDigitChar, eSignSigned));
     ctu_add_decl(root, eCtuTagTypes, "uchar", make_int_type("uchar", eDigitChar, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "short", make_int_type("short", eDigitShort, eSignSigned));
+    ctu_add_decl(root, eCtuTagTypes, "ushort", make_int_type("ushort", eDigitShort, eSignUnsigned));
 
     ctu_add_decl(root, eCtuTagTypes, "int", make_int_type("int", eDigitInt, eSignSigned));
     ctu_add_decl(root, eCtuTagTypes, "uint", make_int_type("uint", eDigitInt, eSignUnsigned));
 
     ctu_add_decl(root, eCtuTagTypes, "long", make_int_type("long", eDigitLong, eSignSigned));
     ctu_add_decl(root, eCtuTagTypes, "ulong", make_int_type("ulong", eDigitLong, eSignUnsigned));
+
+    ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
+    ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
 
     return root;
 }

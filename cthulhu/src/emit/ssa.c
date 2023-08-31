@@ -71,7 +71,6 @@ static const char *type_to_string(const ssa_type_t *type)
     case eTypeEmpty: return "empty";
     case eTypeUnit: return "unit";
     case eTypeBool: return "bool";
-    case eTypeString: return "string";
     case eTypeDigit: return digit_to_string(type->digit);
     case eTypeClosure: return closure_to_string(type->closure);
     case eTypeArray: return array_to_string(type->array);
@@ -110,7 +109,6 @@ static const char *value_to_string(const ssa_value_t *value)
     case eTypeBool: return value->boolValue ? "true" : "false";
     case eTypeUnit: return "unit";
     case eTypeEmpty: return "empty";
-    case eTypeString: return format("\"%s\"", str_normalizen(value->stringValue, value->stringLength));
     case eTypeArray: return format("array[%zu]", vector_len(value->data));
 
     default: NEVER("unknown type kind %d", type->kind);
@@ -178,6 +176,13 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 operand_to_string(emit, binary.rhs)
             );
             break;
+        case eOpCast:
+            ssa_cast_t cast = step->cast;
+            write_string(io, "\t%%%s = cast %s %s\n",
+                get_step_name(&emit->emit, step),
+                type_to_string(cast.type),
+                operand_to_string(emit, cast.operand)
+            );
         case eOpLoad:
             ssa_load_t load = step->load;
             write_string(io, "\t%%%s = load %s\n",

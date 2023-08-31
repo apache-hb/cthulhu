@@ -148,7 +148,8 @@ static void check_func_return_equal(check_t *check, const tree_t *returnType, co
     report(check->reports, eFatal, tree_get_node(realType),
         "return type `%s` does not match function return type `%s`",
         tree_to_string(realType),
-        tree_to_string(returnType));
+        tree_to_string(returnType)
+    );
 }
 
 static void check_func_body(check_t *check, const tree_t *returnType, const tree_t *stmt)
@@ -322,7 +323,6 @@ static void check_struct_type_recursion(check_t *check, const tree_t *type)
     {
     case eTreeTypeBool:
     case eTreeTypeDigit:
-    case eTreeTypeString:
     case eTreeTypeUnit:
     case eTreeTypeEmpty:
     case eTreeTypePointer:
@@ -386,10 +386,13 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
     {
     case eTreeTypeBool:
     case eTreeTypeDigit:
-    case eTreeTypeString:
     case eTreeTypeUnit:
     case eTreeTypeEmpty:
     case eTreeTypeStruct:
+        break;
+
+    case eTreeTypeArray:
+        check_type_recursion(check, type->array);
         break;
 
     case eTreeTypePointer:

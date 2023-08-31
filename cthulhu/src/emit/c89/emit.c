@@ -255,6 +255,10 @@ static const ssa_type_t *get_operand_type(c89_emit_t *emit, ssa_operand_t operan
         const ssa_symbol_t *global = operand.global;
         return global->type;
     }
+    case eOperandConst: {
+        const ssa_value_t *value = vector_get(emit->current->consts, operand.constant);
+        return value->type;
+    }
     case eOperandFunction: {
         const ssa_symbol_t *func = operand.function;
         return func->type;
@@ -313,7 +317,6 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
     {
     case eTypeBool: return value->boolValue ? "true" : "false";
     case eTypeDigit: return mpz_get_str(NULL, 10, value->digitValue);
-    case eTypeString: return format("\"%s\"", str_normalizen(value->stringValue, value->stringLength));
     case eTypeArray: return c89_format_array(emit, value->data);
     default: NEVER("unknown type kind %d", type->kind);
     }
@@ -408,6 +411,14 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
             ssa_store_t store = step->store;
             write_string(io, "\t%s[0] = %s;\n", c89_format_operand(emit, store.dst), c89_format_operand(emit, store.src));
             break;
+        }
+        case eOpCast: {
+            ssa_cast_t cast = step->cast;
+            write_string(io, "\t%s = (%s)(%s);\n",
+                c89_name_vreg(emit, step, cast.type),
+                format_symbol(emit, cast.type, NULL),
+                c89_format_operand(emit, cast.operand)
+            );
         }
         case eOpLoad: {
             ssa_load_t load = step->load;

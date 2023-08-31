@@ -25,7 +25,7 @@ ctu_string_t ctu_parse_string(scan_t *scan, const char *str, size_t length)
     CTU_UNUSED(scan);
 
     ctu_string_t result = {
-        .text = ctu_strdup(str),
+        .text = ctu_strndup(str, length),
         .length = length
     };
 

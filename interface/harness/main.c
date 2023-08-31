@@ -181,7 +181,7 @@ int main(int argc, const char **argv)
     CTASSERTF(os_error(create) == 0, "failed to create dir `%s` %s", libDir, os_decode(os_error(create)));
 
     int status = system(format("cl /nologo /c %s /I%s\\include /Fo%s\\", str_join(" ", sources), runDir, libDir));
-    if (status == -1)
+    if (status != 0)
     {
         report(reports, eFatal, NULL, "compilation failed %d", errno);
     }

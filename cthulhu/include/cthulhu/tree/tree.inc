@@ -7,7 +7,6 @@ TREE_KIND(eTreeTypeEmpty, "type-empty") ///< a type that can never be created
 TREE_KIND(eTreeTypeUnit, "type-unit") ///< a type with a single value
 TREE_KIND(eTreeTypeBool, "type-bool") ///< a type with two values
 TREE_KIND(eTreeTypeDigit, "type-digit")
-TREE_KIND(eTreeTypeString, "type-string")
 TREE_KIND(eTreeTypeClosure, "type-closure") ///< a function pointer type (no captures)
 
 TREE_KIND(eTreeTypePointer, "type-pointer")
@@ -23,6 +22,7 @@ TREE_KIND(eTreeExprBool, "expr-bool")
 TREE_KIND(eTreeExprDigit, "expr-digit")
 TREE_KIND(eTreeExprString, "expr-string")
 
+TREE_KIND(eTreeExprCast, "expr-cast")
 TREE_KIND(eTreeExprLoad, "expr-load")
 TREE_KIND(eTreeExprUnary, "expr-unary")
 TREE_KIND(eTreeExprBinary, "expr-binary")

@@ -332,6 +332,18 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         return add_const(ssa, ssa_value_from(tree));
     }
 
+    case eTreeExprCast: {
+        ssa_operand_t expr = compile_tree(ssa, tree->cast);
+        ssa_step_t step = {
+            .opcode = eOpCast,
+            .cast = {
+                .operand = expr,
+                .type = ssa_type_from(tree_get_type(tree))
+            }
+        };
+        return add_step(ssa, step);
+    }
+
     case eTreeExprUnary: {
         ssa_operand_t expr = compile_tree(ssa, tree->operand);
         ssa_step_t step = {

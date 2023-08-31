@@ -41,11 +41,6 @@ ssa_type_t *ssa_type_digit(const char *name, quals_t quals, sign_t sign, digit_t
     return type;
 }
 
-ssa_type_t *ssa_type_string(const char *name, quals_t quals)
-{
-    return ssa_type_new(eTypeString, name, quals);
-}
-
 ssa_type_t *ssa_type_closure(const char *name, quals_t quals, ssa_type_t *result, typevec_t *params, bool variadic)
 {
     ssa_type_closure_t it = {
@@ -117,7 +112,6 @@ static ssa_type_t *ssa_type_inner(const tree_t *type, quals_t quals)
     case eTreeTypeUnit: return ssa_type_unit(tree_get_name(type), quals);
     case eTreeTypeBool: return ssa_type_bool(tree_get_name(type), quals);
     case eTreeTypeDigit: return ssa_type_digit(tree_get_name(type), quals, type->sign, type->digit);
-    case eTreeTypeString: return ssa_type_string(tree_get_name(type), quals);
     case eTreeTypeClosure:
         return ssa_type_closure(
             /* name = */ tree_get_name(type),

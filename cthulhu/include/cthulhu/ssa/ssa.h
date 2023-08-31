@@ -108,12 +108,6 @@ typedef struct ssa_value_t {
         mpz_t digitValue;
         bool boolValue;
 
-        /* eTypeString */
-        struct {
-            const char *stringValue;
-            size_t stringLength;
-        };
-
         /* eTypeArray */
         vector_t *data;
     };

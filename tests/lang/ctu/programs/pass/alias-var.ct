@@ -7,5 +7,5 @@ export def getComputerName: str {
     // when compiling this expression, this causes the typechecker to flip out
     const kNameLength = MAX_COMPUTERNAME_LENGTH + 1;
 
-    return "";
+    return "aaa";
 }

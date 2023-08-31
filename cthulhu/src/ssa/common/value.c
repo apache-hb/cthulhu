@@ -45,38 +45,27 @@ ssa_value_t *ssa_value_digit(const ssa_type_t *type, const mpz_t value)
     return self;
 }
 
-static ssa_value_t *ssa_value_char(const ssa_type_t *type, char c)
+ssa_value_t *ssa_value_char(const ssa_type_t *type, char value)
 {
     EXPECT_TYPE(type, eTypeDigit);
     ssa_value_t *self = ssa_value_new(type, true);
-    mpz_init_set_si(self->digitValue, c);
+    mpz_init_set_ui(self->digitValue, value);
     return self;
 }
 
-ssa_value_t *ssa_value_string(const ssa_type_t *type, const char *value, size_t length)
+ssa_value_t *ssa_value_string(const ssa_type_t *type, const char *text, size_t length)
 {
-    EXPECT_TYPE(type, eTypeString);
+    EXPECT_TYPE(type, eTypeArray);
     ssa_type_array_t array = type->array;
+    EXPECT_TYPE(array.element, eTypeDigit);
+
     ssa_value_t *self = ssa_value_new(type, true);
-    if (type->kind == eTypeString)
+    self->data = vector_of(length);
+    for (size_t i = 0; i < length; i++)
     {
-        self->stringValue = value;
-        self->stringLength = length;
+        ssa_value_t *value = ssa_value_char(array.element, text[i]);
+        vector_set(self->data, i, value);
     }
-    else
-    {
-        CTASSERTF(type->kind == eTypeArray, "invalid type for string literal: %s:%d", type->name, type->kind);
-        vector_t *elems = vector_of(length);
-        for (size_t i = 0; i < length; i++)
-        {
-            char c = value[i];
-            ssa_value_t *value = ssa_value_char(array.element, c);
-            vector_set(elems, i, value);
-        }
-
-        self->data = elems;
-    }
-
     return self;
 }
 

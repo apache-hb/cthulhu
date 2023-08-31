@@ -17,9 +17,12 @@
 
 static const tree_t *kStringType = NULL;
 static const tree_t *kConstType = NULL;
+static const tree_t *kCharType = NULL;
 static const tree_t *kIntType = NULL;
 static const tree_t *kBoolType = NULL;
 static const tree_t *kVoidType = NULL;
+
+static const tree_t *kFormatString = NULL;
 
 static tree_t *kPrint = NULL;
 
@@ -134,6 +137,11 @@ static vector_t *make_runtime_path(void)
     return path;
 }
 
+static tree_t *get_string_type(size_t length)
+{
+    return tree_type_array(node_builtin(), "string", kCharType, length);
+}
+
 void pl0_init(driver_t *handle)
 {
     node_t *node = node_builtin();
@@ -141,9 +149,12 @@ void pl0_init(driver_t *handle)
 
     kConstType = tree_type_digit(node, "integer", eDigitInt, eSignSigned);
     kIntType = tree_type_qualify(node, kConstType, eQualMutable);
+    kCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned);
     kBoolType = tree_type_bool(node, "boolean");
-    kStringType = tree_type_string(node, "string");
     kVoidType = tree_type_unit(node, "void");
+
+    kStringType = get_string_type(SIZE_MAX);
+    kFormatString = tree_expr_string(node, get_string_type(4), "%d\n", 4);
 
     vector_t *params = vector_of(1);
     vector_set(params, 0, tree_decl_param(node, "fmt", kStringType));
@@ -291,10 +302,8 @@ static tree_t *sema_print(tree_t *sema, pl0_t *node)
 {
     tree_t *expr = sema_expr(sema, node->print);
 
-    tree_t *fmt = tree_expr_string(node->node, kStringType, "%d\n", 2);
-
     vector_t *args = vector_of(2);
-    vector_set(args, 0, fmt);
+    vector_set(args, 0, (tree_t*)kFormatString);
     vector_set(args, 1, expr);
 
     return tree_expr_call(node->node, kPrint, args);

@@ -94,11 +94,6 @@ tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sig
     return self;
 }
 
-tree_t *tree_type_string(const node_t *node, const char *name)
-{
-    return tree_decl(eTreeTypeString, node, NULL, name);
-}
-
 tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, vector_t *params, arity_t arity)
 {
     CTASSERT(result != NULL);
@@ -120,7 +115,7 @@ tree_t *tree_type_pointer(const node_t *node, const char *name, tree_t *pointer)
     return self;
 }
 
-tree_t *tree_type_array(const node_t *node, const char *name, tree_t *array, size_t length)
+tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *array, size_t length)
 {
     CTASSERT(array != NULL);
     CTASSERT(length > 0);
@@ -182,6 +177,15 @@ tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *val
 ///
 /// expressions
 ///
+
+tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr)
+{
+    CTASSERT(expr != NULL);
+
+    tree_t *self = tree_new(eTreeExprCast, node, type);
+    self->cast = expr;
+    return self;
+}
 
 tree_t *tree_expr_load(const node_t *node, tree_t *expr)
 {
