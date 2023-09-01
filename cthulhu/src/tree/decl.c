@@ -13,7 +13,7 @@
 
 static tree_t *decl_open(const node_t *node, const char *name, const tree_t *type, tree_kind_t expected, const tree_resolve_info_t *resolve)
 {
-    tree_t *self = tree_decl(expected, node, type, name);
+    tree_t *self = tree_decl(expected, node, type, name, eQualUnknown);
 
     if (resolve != NULL)
     {
@@ -34,12 +34,13 @@ static void decl_close(tree_t *decl, tree_kind_t kind)
     decl->resolve = NULL;
 }
 
-tree_t *tree_resolve(cookie_t *cookie, tree_t *decl)
+tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl)
 {
-    if (tree_is(decl, eTreeError)) { return decl; }
+    tree_t *inner = (tree_t*)decl;
+    if (tree_is(decl, eTreeError)) { return inner; }
 
     const tree_resolve_info_t *res = decl->resolve;
-    if (res == NULL) { return decl; }
+    if (res == NULL) { return inner; }
 
     size_t index = vector_find(cookie->stack, decl);
     if (index != SIZE_MAX)
@@ -49,13 +50,13 @@ tree_t *tree_resolve(cookie_t *cookie, tree_t *decl)
         return tree_error(decl->node, "cyclic dependency");
     }
 
-    vector_push(&cookie->stack, decl);
+    vector_push(&cookie->stack, inner);
 
-    res->fnResolve(cookie, res->sema, decl, res->user);
+    res->fnResolve(cookie, res->sema, inner, res->user);
 
     vector_drop(cookie->stack);
 
-    return decl;
+    return inner;
 }
 
 tree_t *tree_open_global(const node_t *node, const char *name, const tree_t *type, tree_resolve_info_t resolve)
@@ -96,17 +97,17 @@ void tree_close_function(tree_t *self, tree_t *body)
 
 tree_t *tree_decl_param(const node_t *node, const char *name, const tree_t *type)
 {
-    return tree_decl(eTreeDeclParam, node, type, name);
+    return tree_decl(eTreeDeclParam, node, type, name, eQualUnknown);
 }
 
 tree_t *tree_decl_field(const node_t *node, const char *name, const tree_t *type)
 {
-    return tree_decl(eTreeDeclField, node, type, name);
+    return tree_decl(eTreeDeclField, node, type, name, eQualUnknown);
 }
 
 tree_t *tree_decl_local(const node_t *node, const char *name, const tree_t *type)
 {
-    return tree_decl(eTreeDeclLocal, node, type, name);
+    return tree_decl(eTreeDeclLocal, node, type, name, eQualUnknown);
 }
 
 tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve)
@@ -119,13 +120,6 @@ void tree_close_decl(tree_t *self, const tree_t *other)
     CTASSERT(other != NULL);
 
     *self = *other;
-}
-
-tree_t *tree_decl_global(const node_t *node, const char *name, const tree_t *type, tree_t *value)
-{
-    tree_t *self = decl_open(node, name, type, eTreeDeclGlobal, NULL);
-    tree_close_global(self, value);
-    return self;
 }
 
 tree_t *tree_decl_function(

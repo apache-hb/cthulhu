@@ -77,6 +77,18 @@ ssa_type_t *ssa_type_array(const char *name, quals_t quals, ssa_type_t *element,
     return array;
 }
 
+ssa_type_t *ssa_type_storage(const char *name, quals_t quals, ssa_type_t *storage, size_t size)
+{
+    ssa_type_storage_t it = {
+        .type = storage,
+        .size = size
+    };
+
+    ssa_type_t *stor = ssa_type_new(eTypeStorage, name, quals);
+    stor->storage = it;
+    return stor;
+}
+
 static typevec_t *collect_params(const tree_t *type)
 {
     vector_t *vec = tree_fn_get_params(type);
@@ -103,26 +115,29 @@ static typevec_t *collect_params(const tree_t *type)
     return result;
 }
 
-static ssa_type_t *ssa_type_inner(const tree_t *type, quals_t quals)
+static ssa_type_t *ssa_type_inner(const tree_t *type)
 {
     tree_kind_t kind = tree_get_kind(type);
+    const char *name = tree_get_name(type);
+    quals_t quals = tree_ty_get_quals(type);
+
     switch (kind)
     {
-    case eTreeTypeEmpty: return ssa_type_empty(tree_get_name(type), quals);
-    case eTreeTypeUnit: return ssa_type_unit(tree_get_name(type), quals);
-    case eTreeTypeBool: return ssa_type_bool(tree_get_name(type), quals);
-    case eTreeTypeDigit: return ssa_type_digit(tree_get_name(type), quals, type->sign, type->digit);
+    case eTreeTypeEmpty: return ssa_type_empty(name, quals);
+    case eTreeTypeUnit: return ssa_type_unit(name, quals);
+    case eTreeTypeBool: return ssa_type_bool(name, quals);
+    case eTreeTypeDigit: return ssa_type_digit(name, quals, type->sign, type->digit);
     case eTreeTypeClosure:
         return ssa_type_closure(
-            /* name = */ tree_get_name(type),
+            /* name = */ name,
             /* quals = */ quals,
             /* result = */ ssa_type_from(tree_fn_get_return(type)),
             /* params = */ collect_params(type),
             /* variadic = */ tree_fn_get_arity(type) == eArityVariable
         );
-    case eTreeTypeQualify: return ssa_type_inner(type->qualify, type->quals | quals);
-    case eTreeTypePointer: return ssa_type_pointer(tree_get_name(type), quals, ssa_type_from(type->pointer));
-    case eTreeTypeArray: return ssa_type_array(tree_get_name(type), quals, ssa_type_from(type->array), type->length);
+    case eTreeTypePointer: return ssa_type_pointer(name, quals, ssa_type_from(type->pointer));
+    case eTreeTypeArray: return ssa_type_array(name, quals, ssa_type_from(type->array), type->length);
+    case eTreeTypeStorage: return ssa_type_storage(name, quals, ssa_type_from(tree_get_type(type)), type->size);
 
     default: NEVER("unexpected type kind: %s", tree_to_string(type));
     }
@@ -130,5 +145,5 @@ static ssa_type_t *ssa_type_inner(const tree_t *type, quals_t quals)
 
 ssa_type_t *ssa_type_from(const tree_t *type)
 {
-    return ssa_type_inner(type, eQualDefault);
+    return ssa_type_inner(type);
 }

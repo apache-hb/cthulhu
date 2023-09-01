@@ -4,6 +4,8 @@
 
 #include "cthulhu/tree/query.h"
 
+#include "cthulhu/util/util.h"
+
 #include "std/vector.h"
 #include "std/str.h"
 
@@ -29,6 +31,31 @@ static const attribs_t kAttribExport = {
 /// decl resolution
 ///
 
+static tree_t *get_global_storage(const tree_t *type, const tree_t *expr)
+{
+
+    if (expr != NULL)
+    {
+        const tree_t *exprType = tree_get_type(expr);
+
+        const node_t *node = tree_get_node(exprType);
+        const char *name = tree_get_name(exprType);
+
+        if (tree_is(exprType, eTreeTypeArray))
+        {
+            return tree_type_storage(node, name, exprType->array, exprType->length, eQualConst);
+        }
+
+        return tree_type_storage(node, name, exprType, 1, eQualConst);
+    }
+    else
+    {
+        const node_t *node = tree_get_node(type);
+        const char *name = tree_get_name(type);
+        return tree_type_storage(node, name, type, 1, eQualConst);
+    }
+}
+
 static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
     ctu_t *decl = user;
@@ -39,7 +66,8 @@ static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, voi
 
     CTASSERT(expr != NULL || type != NULL);
 
-    self->type = type == NULL ? tree_get_type(expr) : type;
+    self->type = get_global_storage(type, expr);
+
     tree_close_global(self, expr);
 }
 
@@ -59,7 +87,7 @@ static void ctu_resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void 
     CTASSERTF(decl->kind == eCtuDeclTypeAlias, "decl %s is not a type alias", decl->name);
     CTASSERTF(decl->type != NULL, "decl %s has no type", decl->name);
 
-    tree_t *temp = tree_resolve(tree_get_cookie(sema), ctu_sema_type(sema, decl->typeAlias)); // TODO: doesnt support newtypes, also feels icky
+    const tree_t *temp = tree_resolve(tree_get_cookie(sema), ctu_sema_type(sema, decl->typeAlias)); // TODO: doesnt support newtypes, also feels icky
     tree_close_decl(self, temp);
 }
 

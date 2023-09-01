@@ -67,6 +67,10 @@ tests = {
             'missing-return'
         ]
     },
+    'globals': {
+        'pass': [ 'global-string' ],
+        'fail': []
+    },
     'programs': {
         'pass': [
             'alias-var'

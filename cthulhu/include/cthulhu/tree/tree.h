@@ -132,19 +132,16 @@ typedef struct tree_t {
             const char *name; ///< the name of the declaration
             const attribs_t *attrib; ///< the attributes of the declaration
             const tree_resolve_info_t *resolve; ///< the resolve configuration of the declaration, NULL if resolved
+            quals_t quals;
 
             union {
-                /* eTreeQualify */
-                struct {
-                    quals_t quals;
-                    const tree_t *qualify;
-                };
-
                 /* eTreeTypeArray */
                 struct {
                     const tree_t *array;
                     size_t length;
                 };
+
+                size_t size; ///< the size of the storage
 
                 /* eTreeTypePointer */
                 tree_t *pointer;
@@ -156,9 +153,7 @@ typedef struct tree_t {
                 };
 
                 /* eTreeTypeStruct */
-                struct {
-                    vector_t *fields;
-                };
+                vector_t *fields;
 
                 struct {
                     vector_t *params;
@@ -244,13 +239,52 @@ tree_t *tree_type_bool(const node_t *node, const char *name);
  */
 tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign);
 
+/**
+ * @brief create a function pointer type
+ *
+ * @param node where this type was defined
+ * @param name the name of the type
+ * @param result return type of the function
+ * @param params the parameters of the function
+ * @param arity does this function have variadic arguments
+ * @return tree_t* the function pointer type
+ */
 tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, vector_t *params, arity_t arity);
 
+/**
+ * @brief create a pointer type
+ *
+ * @param node where this type was defined
+ * @param name the name of the type
+ * @param pointer the type that this pointer points to
+ * @return tree_t* the pointer type
+ */
 tree_t *tree_type_pointer(const node_t *node, const char *name, tree_t *pointer);
 
+/**
+ * @brief create an array reference type
+ *
+ * @param node where this type was defined
+ * @param name the name of the type
+ * @param array the type of the array
+ * @param length the upper bound of the array, use @ref SIZE_MAX for an unbounded array
+ * @return tree_t* the array reference type
+ */
 tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *array, size_t length);
 
-tree_t *tree_type_qualify(const node_t *node, const tree_t *type, quals_t quals);
+/**
+ * @brief create a storage type
+ *
+ * @param node where this type was defined
+ * @param name the name of the type
+ * @param type the type of the storage
+ * @param size the length of the storage, elements will be stored in contiguous memory. @note must be >0
+ *
+ * @note expressions may not have this type, this is only for declarations
+ *
+ * @return tree_t* the storage type
+ */
+tree_t *tree_type_storage(const node_t *node, const char *name, const tree_t *type, size_t size, quals_t quals);
 
 ///
 /// tree expr interface
@@ -315,12 +349,11 @@ tree_t *tree_stmt_branch(const node_t *node, tree_t *cond, tree_t *then, tree_t 
 ///
 
 // delay the resolve of a declaration
-tree_t *tree_resolve(cookie_t *cookie, tree_t *decl);
+tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl);
 
 tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve);
 void tree_close_decl(tree_t *self, const tree_t *kind);
 
-tree_t *tree_decl_global(const node_t *node, const char *name, const tree_t *type, tree_t *value);
 tree_t *tree_open_global(const node_t *node, const char *name, const tree_t *type, tree_resolve_info_t resolve);
 void tree_close_global(tree_t *self, tree_t *value);
 
@@ -344,6 +377,7 @@ tree_t *tree_decl_param(const node_t *node, const char *name, const tree_t *type
 tree_t *tree_decl_field(const node_t *node, const char *name, const tree_t *type);
 tree_t *tree_decl_local(const node_t *node, const char *name, const tree_t *type);
 
+tree_t *tree_decl_storage(const node_t *node, const char *name, const tree_t *type, tree_t *value);
 
 ///
 /// various helpers

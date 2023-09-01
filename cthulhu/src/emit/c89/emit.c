@@ -172,24 +172,29 @@ static const char *format_local(c89_emit_t *emit, const ssa_type_t *type, const 
     return c89_format_type(emit, type, name, false);
 }
 
-static void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *global)
+static void write_global(io_t *io, const ssa_symbol_t *global)
 {
-    c89_source_t *src = map_get_ptr(emit->srcmap, mod);
-    c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
-
-    const char *it = format_symbol(emit, global->type, mangle_symbol_name(global));
-
+    const char *it = format_symbol(NULL, global->type, mangle_symbol_name(global));
     const char *link = format_c89_link(global->linkage);
 
+    write_string(io, "%s%s", link, it);
+}
+
+static void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *global)
+{
     if (global->visibility == eVisiblePublic)
     {
         CTASSERT(global->linkage != eLinkModule); // TODO: move this check into the checker
 
-        write_string(hdr->io, "%s%s[1];\n", link, it);
+        c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
+        write_global(hdr->io, global);
+        write_string(hdr->io, ";\n");
     }
     else
     {
-        write_string(src->io, "%s%s[1];\n", link, it);
+        c89_source_t *src = map_get_ptr(emit->srcmap, mod);
+        write_global(src->io, global);
+        write_string(src->io, ";\n");
     }
 }
 
@@ -293,6 +298,33 @@ static const char *c89_name_vreg_by_operand(c89_emit_t *emit, const ssa_step_t *
     return c89_name_vreg(emit, step, type);
 }
 
+static const ssa_type_t *get_reg_type(const ssa_type_t *type)
+{
+    switch (type->kind)
+    {
+    case eTypeStorage: {
+        ssa_type_storage_t storage = type->storage;
+        return storage.type;
+    }
+    case eTypePointer: {
+        ssa_type_pointer_t pointer = type->pointer;
+        return pointer.pointer;
+    }
+    case eTypeArray: {
+        ssa_type_array_t array = type->array;
+        return ssa_type_pointer(type->name, type->quals, array.element);
+    }
+
+    default: NEVER("expected storage or pointer type, got %s (on %s)", ssa_type_name(type->kind), type->name);
+    }
+}
+
+static const char *c89_name_load_vreg_by_operand(c89_emit_t *emit, const ssa_step_t *step, ssa_operand_t operand)
+{
+    const ssa_type_t *type = get_operand_type(emit, operand);
+    return c89_name_vreg(emit, step, get_reg_type(type));
+}
+
 static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value);
 
 static const char *c89_format_array(c89_emit_t *emit, vector_t *data)
@@ -345,7 +377,7 @@ static const char *c89_format_param(c89_emit_t *emit, size_t param)
     }
 
     const ssa_local_t *it = typevec_offset(params, param);
-    return format("(&%s)", it->name);
+    return it->name;
 }
 
 static const char *c89_format_operand(c89_emit_t *emit, ssa_operand_t operand)
@@ -409,7 +441,10 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         {
         case eOpStore: {
             ssa_store_t store = step->store;
-            write_string(io, "\t%s[0] = %s;\n", c89_format_operand(emit, store.dst), c89_format_operand(emit, store.src));
+            write_string(io, "\t%s[0] = %s;\n",
+                c89_format_operand(emit, store.dst),
+                c89_format_operand(emit, store.src)
+            );
             break;
         }
         case eOpCast: {
@@ -423,7 +458,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         case eOpLoad: {
             ssa_load_t load = step->load;
             write_string(io, "\t%s = %s[0];\n",
-                c89_name_vreg_by_operand(emit, step, load.src),
+                c89_name_load_vreg_by_operand(emit, step, load.src),
                 c89_format_operand(emit, load.src)
             );
             break;
@@ -450,7 +485,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         case eOpCompare: {
             ssa_compare_t cmp = step->compare;
             write_string(io, "\t%s = (%s %s %s);\n",
-                c89_name_vreg(emit, step, ssa_type_bool("bool", eQualDefault)),
+                c89_name_vreg(emit, step, ssa_type_bool("bool", eQualConst)),
                 c89_format_operand(emit, cmp.lhs),
                 compare_symbol(cmp.compare),
                 c89_format_operand(emit, cmp.rhs)
@@ -522,25 +557,35 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
 
 /// defines
 
+static void write_init(c89_emit_t *emit, io_t *io, const ssa_value_t *value)
+{
+    const ssa_type_t *type = value->type;
+    const char *init = c89_format_value(emit, value);
+
+    if (type->kind == eTypeArray)
+    {
+        write_string(io, " = %s", init);
+    }
+    else
+    {
+        write_string(io, " = { %s }", init);
+    }
+}
+
 void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symbol_t *symbol)
 {
     c89_source_t *src = map_get_ptr(emit->srcmap, mod);
 
-    const char *it = format_symbol(emit, symbol->type, mangle_symbol_name(symbol));
-    const char *link = format_c89_link(symbol->linkage);
-
     if (symbol->linkage != eLinkImport)
     {
         const ssa_value_t *value = symbol->value;
+        write_global(src->io, symbol);
         if (value->init)
         {
-            const char *valStr = c89_format_value(emit, value);
-            write_string(src->io, "%s%s[1] = { %s };\n", link, it, valStr);
+            write_init(emit, src->io, value);
         }
-        else
-        {
-            write_string(src->io, "%s%s[1];\n", link, it); // TODO: is this needed
-        }
+
+        write_string(src->io, ";\n");
     }
 }
 
@@ -550,7 +595,7 @@ static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
     for (size_t i = 0; i < len; i++)
     {
         const ssa_local_t *local = typevec_offset(locals, i);
-        write_string(io, "\t%s[1];\n",
+        write_string(io, "\t%s;\n",
             format_local(emit, local->type, local->name)
         );
     }
@@ -564,7 +609,7 @@ static void write_consts(c89_emit_t *emit, io_t *io, vector_t *consts)
         const ssa_value_t *value = vector_get(consts, i);
         const char *ty = format_symbol(emit, value->type, format("const%zu", i));
         const char *it = c89_format_value(emit, value);
-        write_string(io, "\t%s = %s;\n", ty, it);
+        write_string(io, "\tstatic %s = %s;\n", ty, it);
     }
 }
 

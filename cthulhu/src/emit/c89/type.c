@@ -27,12 +27,11 @@ static const char *get_c89_digit(ssa_type_digit_t ty)
 static const char *get_quals(quals_t quals, bool emitConst)
 {
     // const is the default
-    if (quals == eQualDefault) { return emitConst ? "const " : ""; }
+    if (quals & eQualConst) { return emitConst ? "const " : ""; }
 
     vector_t *vec = vector_new(3);
     if (quals & eQualAtomic) { vector_push(&vec, "_Atomic"); }
     if (quals & eQualVolatile) { vector_push(&vec, "volatile"); }
-    if (emitConst && (quals & ~eQualMutable)) { vector_push(&vec, "const"); }
 
     return str_join(" ", vec);
 }
@@ -47,22 +46,31 @@ static const char *format_c89_closure(c89_emit_t *emit, const char *quals, ssa_t
         : format("%s (*%s%s)(%s)", result, quals, name, params);
 }
 
+static const char *format_c89_pointer(c89_emit_t *emit, const char *quals, ssa_type_pointer_t pointer, const char *name)
+{
+    const char *result = c89_format_type(emit, pointer.pointer, NULL, true);
+
+    return (name == NULL)
+        ? format("%s *%s", result, quals)
+        : format("%s *%s%s", result, quals, name);
+}
+
 static const char *format_c89_array(c89_emit_t *emit, const char *quals, ssa_type_array_t type, const char *name)
 {
     const char *result = c89_format_type(emit, type.element, NULL, true);
 
-    if (util_length_bounded(type.length))
-    {
-        return (name == NULL)
-            ? format("%s[%zu]", result, type.length)
-            : format("%s %s[%zu]", result, name, type.length);
-    }
-    else
-    {
-        return (name == NULL)
-            ? format("%s[]", result)
-            : format("%s %s[]", result, name);
-    }
+    return (name == NULL)
+        ? format("%s[]", result)
+        : format("%s %s[]", result, name);
+}
+
+static const char *format_c89_storage(c89_emit_t *emit, const char *quals, ssa_type_storage_t type, const char *name)
+{
+    const char *result = c89_format_type(emit, type.type, NULL, true);
+
+    return (name == NULL)
+        ? format("%s%s[%zu]", quals, result, type.size)
+        : format("%s%s %s[%zu]", quals, result, name, type.size);
 }
 
 const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emitConst)
@@ -83,7 +91,10 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
     }
 
     case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
+    case eTypePointer: return format_c89_pointer(emit, quals, type->pointer, name);
     case eTypeArray: return format_c89_array(emit, quals, type->array, name);
+
+    case eTypeStorage: return format_c89_storage(emit, quals, type->storage, name);
 
     default: NEVER("unknown type %d", type->kind);
     }

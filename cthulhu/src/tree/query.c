@@ -20,6 +20,7 @@ static bool has_name(tree_kind_t kind)
     case eTreeTypeClosure:
     case eTreeTypePointer:
     case eTreeTypeArray:
+    case eTreeTypeStorage:
 
     case eTreeTypeStruct:
 
@@ -73,6 +74,8 @@ const node_t *tree_get_node(const tree_t *self)
 const char *tree_get_name(const tree_t *self)
 {
     CTASSERT(self != NULL);
+    if (tree_is(self, eTreeError)) { return self->message; }
+
     CTASSERTF(has_name(self->kind), "kind %s has no name", tree_kind_to_string(self->kind));
 
     return self->name;
@@ -87,8 +90,6 @@ tree_kind_t tree_get_kind(const tree_t *self)
 
 const tree_t *tree_get_type(const tree_t *self)
 {
-    CTASSERT(self != NULL); // dont give me null
-
     if (tree_is(self, eTreeError)) { return self; }
 
     CTASSERTF(self->type != NULL, "missing type on %s", tree_to_string(self)); // type hasnt been set yet
@@ -108,16 +109,6 @@ bool tree_is(const tree_t *self, tree_kind_t kind)
     CTASSERT(self != NULL);
 
     return self->kind == kind;
-}
-
-bool tree_has_quals(const tree_t *self, quals_t quals)
-{
-    if (tree_is(self, eTreeTypeQualify))
-    {
-        return self->quals & quals;
-    }
-
-    return false;
 }
 
 bool tree_has_vis(const tree_t *self, visibility_t visibility)
@@ -187,4 +178,49 @@ tree_t *tree_ty_get_field(const tree_t *self, const char *name)
     TREE_EXPECT(self, eTreeTypeStruct);
 
     return find_field(self->fields, name);
+}
+
+bool tree_ty_is_address(const tree_t *type)
+{
+    switch (tree_get_kind(type))
+    {
+    case eTreeTypePointer:
+    case eTreeTypeArray:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+static quals_t get_quals(const tree_t *self)
+{
+    switch (tree_get_kind(self))
+    {
+    case eTreeTypeStorage:
+        CTASSERTF(self->quals != eQualUnknown, "storage type %s has unknown quals", tree_to_string(self));
+        return self->quals;
+
+    default:
+        return self->quals;
+    }
+}
+
+quals_t tree_ty_get_quals(const tree_t *self)
+{
+    quals_t quals = get_quals(self);
+    // make sure we dont have both eQualConst and eQualMutable bits set
+    CTASSERTF((quals & (eQualConst | eQualMutable)) != (eQualConst | eQualMutable), "type %s has both const and mutable quals", tree_to_string(self));
+
+    return quals;
+}
+
+const tree_t *tree_ty_load_type(const tree_t *self)
+{
+    switch (tree_get_kind(self))
+    {
+    case eTreeTypeStorage: return tree_get_type(self);
+    case eTreeTypePointer: return self->pointer;
+    default: return self;
+    }
 }

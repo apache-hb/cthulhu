@@ -1,4 +1,5 @@
 #include "oberon/sema/expr.h"
+#include "oberon/sema/type.h"
 
 #include "base/panic.h"
 
@@ -60,6 +61,17 @@ static tree_t *sema_name(tree_t *sema, obr_t *expr)
     return tree_raise(expr->node, sema->reports, "unknown name `%s`", expr->object);
 }
 
+static tree_t *sema_name_rvalue(tree_t *sema, obr_t *expr)
+{
+    tree_t *name = sema_name(sema, expr);
+    if (!tree_is(name, eTreeDeclParam))
+    {
+        return tree_expr_load(expr->node, name);
+    }
+
+    return name;
+}
+
 static tree_t *sema_call(tree_t *sema, obr_t *expr)
 {
     tree_t *callee = obr_sema_lvalue(sema, expr->expr);
@@ -90,8 +102,7 @@ static tree_t *sema_field(tree_t *sema, obr_t *expr)
     default: break;
     }
 
-    const tree_t *type = tree_get_type(decl);
-    tree_t *resolved = tree_resolve(tree_get_cookie(sema), (tree_t*)type);
+    const tree_t *resolved = tree_resolve(tree_get_cookie(sema), tree_get_type(decl));
     if (!tree_is(resolved, eTreeTypeStruct))
     {
         return tree_raise(expr->node, sema->reports, "cannot access field of non-struct type %s", tree_to_string(decl));
@@ -108,7 +119,7 @@ static tree_t *sema_field(tree_t *sema, obr_t *expr)
 
 tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, tree_t *implicitType)
 {
-    tree_t *type = implicitType != NULL ? tree_resolve(tree_get_cookie(sema), implicitType) : NULL;
+    tree_t *type = implicitType != NULL ? (tree_t*)tree_ty_load_type(tree_resolve(tree_get_cookie(sema), implicitType)) : NULL;
 
     switch (expr->kind)
     {
@@ -117,7 +128,7 @@ tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, tree_t *implicitType)
     case eObrExprUnary: return sema_unary(sema, expr, type);
     case eObrExprBinary: return sema_binary(sema, expr, type);
     case eObrExprCompare: return sema_compare(sema, expr, type);
-    case eObrExprName: return tree_expr_load(expr->node, sema_name(sema, expr)); // TODO: this feels wrong for functions
+    case eObrExprName: return sema_name_rvalue(sema, expr); // TODO: this feels wrong for functions
     case eObrExprField: return tree_expr_load(expr->node, sema_field(sema, expr)); // TODO: may also be wrong for functions
     case eObrExprCall: return sema_call(sema, expr);
 
@@ -145,8 +156,6 @@ tree_t *obr_sema_lvalue(tree_t *sema, obr_t *expr)
 
 tree_t *obr_default_value(const node_t *node, const tree_t *type)
 {
-    while (tree_is(type, eTreeTypeQualify)) { type = tree_get_type(type); }
-
     switch (tree_get_kind(type))
     {
     case eTreeTypeBool: return tree_expr_bool(node, type, false);
@@ -158,8 +167,9 @@ tree_t *obr_default_value(const node_t *node, const tree_t *type)
         return tree_expr_digit(node, type, zero);
     }
 
-    default:
-        NEVER("obr-default-value unknown type kind %d", tree_get_kind(type));
+    case eTreeTypeStorage: return obr_default_value(node, tree_get_type(type));
+
+    default: NEVER("obr-default-value unknown type kind %s", tree_to_string(type));
     }
 }
 

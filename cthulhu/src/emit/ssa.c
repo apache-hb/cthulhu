@@ -64,6 +64,11 @@ static char *array_to_string(ssa_type_array_t array)
     return format("array(%s)", pointee);
 }
 
+static char *storage_to_string(ssa_type_storage_t storage)
+{
+    return format("storage(%s[%zu])", type_to_string(storage.type), storage.size);
+}
+
 static const char *type_to_string(const ssa_type_t *type)
 {
     switch (type->kind)
@@ -74,6 +79,7 @@ static const char *type_to_string(const ssa_type_t *type)
     case eTypeDigit: return digit_to_string(type->digit);
     case eTypeClosure: return closure_to_string(type->closure);
     case eTypeArray: return array_to_string(type->array);
+    case eTypeStorage: return storage_to_string(type->storage);
     default: NEVER("unknown type kind %d", type->kind);
     }
 }
@@ -98,6 +104,24 @@ static void emit_ssa_attribs(io_t *io, const ssa_symbol_t *symbol)
     write_string(io, "\t[%s]\n", str_join(", ", join_attribs(symbol)));
 }
 
+static const char *value_to_string(const ssa_value_t *value);
+
+static const char *array_value_to_string(const ssa_value_t *value)
+{
+    size_t len = vector_len(value->data);
+    vector_t *parts = vector_new(16);
+    for (size_t i = 0; i < MIN(len, 16); i++)
+    {
+        const ssa_value_t *elem = vector_get(value->data, i);
+        const char *it = value_to_string(elem);
+        vector_push(&parts, (char*)it);
+    }
+
+    if (len > 16) { vector_push(&parts, "..."); }
+
+    return format("[%s]", str_join(", ", parts));
+}
+
 static const char *value_to_string(const ssa_value_t *value)
 {
     if (!value->init) { return "noinit"; }
@@ -109,7 +133,7 @@ static const char *value_to_string(const ssa_value_t *value)
     case eTypeBool: return value->boolValue ? "true" : "false";
     case eTypeUnit: return "unit";
     case eTypeEmpty: return "empty";
-    case eTypeArray: return format("array[%zu]", vector_len(value->data));
+    case eTypeArray: return array_value_to_string(value);
 
     default: NEVER("unknown type kind %d", type->kind);
     }
@@ -252,6 +276,16 @@ static void emit_ssa_blocks(ssa_emit_t *emit, io_t *io, vector_t *bbs)
     }
 }
 
+static void emit_ssa_consts(ssa_emit_t *emit, io_t *io, vector_t *consts)
+{
+    size_t len = vector_len(consts);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_value_t *value = vector_get(consts, i);
+        write_string(io, "\tconst[%zu] %s = %s\n", i, type_to_string(value->type), value_to_string(value));
+    }
+}
+
 static void emit_symbol_deps(io_t *io, const ssa_symbol_t *symbol, map_t *deps)
 {
     set_t *all = map_get_ptr(deps, symbol);
@@ -318,6 +352,7 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
 
         if (fn->linkage != eLinkImport)
         {
+            emit_ssa_consts(emit, io, fn->consts);
             emit_ssa_blocks(emit, io, fn->blocks);
         }
 

@@ -57,26 +57,3 @@ tree_t *ctu_sema_type(tree_t *sema, const ctu_t *type)
     default: NEVER("invalid type kind %d", type->kind);
     }
 }
-
-///
-/// query type
-///
-
-bool ctu_type_is(const tree_t *type, tree_kind_t kind)
-{
-    while (tree_is(type, eTreeTypeQualify))
-    {
-        type = type->qualify;
-    }
-
-    return tree_is(type, kind);
-}
-
-///
-/// format type
-///
-
-const char *ctu_type_string(const tree_t *type)
-{
-    return tree_to_string(type); // TODO: make this match cthulhu type signatures
-}

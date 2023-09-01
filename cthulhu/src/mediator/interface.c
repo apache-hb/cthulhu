@@ -20,7 +20,6 @@
 
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
-#include "cthulhu/tree/check.h"
 
 static cookie_t *cookie_new(reports_t *reports)
 {

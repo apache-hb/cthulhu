@@ -17,7 +17,6 @@ const attribs_t *tree_get_attrib(const tree_t *self);
 
 bool tree_is(const tree_t *self, tree_kind_t kind);
 
-bool tree_has_quals(const tree_t *self, quals_t quals);
 bool tree_has_vis(const tree_t *self, visibility_t visibility);
 
 ///
@@ -33,3 +32,14 @@ arity_t tree_fn_get_arity(const tree_t *self);
 ///
 
 tree_t *tree_ty_get_field(const tree_t *self, const char *name);
+bool tree_ty_is_address(const tree_t *type);
+quals_t tree_ty_get_quals(const tree_t *self);
+
+/**
+ * @brief get the type of a type after it has been loaded
+ *
+ * @note storage -> type, *type -> type, etc.
+ * @param self the type to load
+ * @return const tree_t* the loaded type
+ */
+const tree_t *tree_ty_load_type(const tree_t *self);

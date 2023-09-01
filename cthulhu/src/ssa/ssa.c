@@ -60,7 +60,7 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree)
 
     symbol->locals = NULL;
     symbol->params = NULL;
-    symbol->consts = NULL;
+    symbol->consts = vector_new(4);
 
     symbol->name = name;
     symbol->type = type;
@@ -110,8 +110,6 @@ static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
         typevec_set(self->params, i, &it);
         map_set_ptr(ssa->locals, param, (void*)(uintptr_t)i);
     }
-
-    self->consts = vector_new(4);
 
     return self;
 }

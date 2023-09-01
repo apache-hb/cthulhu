@@ -54,7 +54,8 @@ static void resolve_const(cookie_t *cookie, tree_t *sema, tree_t *self, void *us
     obr_t *decl = begin_resolve(sema, user, eObrDeclConst);
 
     tree_t *expr = obr_sema_rvalue(sema, decl->value, NULL);
-    self->type = tree_type_qualify(self->node, tree_get_type(expr), eQualDefault); ///< TODO: oh no what are you doing?
+    const tree_t *inner = tree_get_type(expr);
+    self->type = tree_type_storage(self->node, tree_get_name(inner), inner, 1, eQualConst);
 
     tree_close_global(self, expr);
 }
@@ -99,7 +100,8 @@ static void resolve_proc(cookie_t *cookie, tree_t *sema, tree_t *self, void *use
     {
         obr_t *local = vector_get(decl->locals, i);
         tree_t *type = obr_sema_type(sema, local->type, local->name);
-        tree_t *decl = tree_decl_local(local->node, local->name, type);
+        tree_t *store = tree_type_storage(local->node, tree_get_name(type), type, 1, eQualMutable);
+        tree_t *decl = tree_decl_local(local->node, local->name, store);
         tree_add_local(self, decl);
         obr_add_decl(ctx, eObrTagValues, local->name, decl);
     }
@@ -123,7 +125,9 @@ static tree_t *forward_const(tree_t *sema, obr_t *decl)
         .fnResolve = resolve_const
     };
 
-    return tree_open_global(decl->node, decl->name, NULL, resolve);
+    tree_t *type = obr_sema_type(sema, decl->type, decl->name);
+    tree_t *storage = tree_type_storage(decl->node, tree_get_name(type), type, 1, eQualConst);
+    return tree_open_global(decl->node, decl->name, storage, resolve);
 }
 
 static tree_t *forward_var(tree_t *sema, obr_t *decl)
@@ -135,8 +139,8 @@ static tree_t *forward_var(tree_t *sema, obr_t *decl)
     };
 
     tree_t *type = obr_sema_type(sema, decl->type, decl->name);
-    tree_t *mut = tree_type_qualify(decl->node, type, eQualMutable);
-    return tree_open_global(decl->node, decl->name, mut, resolve);
+    tree_t *storage = tree_type_storage(decl->node, tree_get_name(type), type, 1, eQualMutable);
+    return tree_open_global(decl->node, decl->name, storage, resolve);
 }
 
 static tree_t *forward_type(tree_t *sema, obr_t *decl)

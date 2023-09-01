@@ -3,18 +3,26 @@
 #   define TREE_KIND(ID, NAME)
 #endif
 
+///
+/// types
+///
+
 TREE_KIND(eTreeTypeEmpty, "type-empty") ///< a type that can never be created
 TREE_KIND(eTreeTypeUnit, "type-unit") ///< a type with a single value
 TREE_KIND(eTreeTypeBool, "type-bool") ///< a type with two values
 TREE_KIND(eTreeTypeDigit, "type-digit")
 TREE_KIND(eTreeTypeClosure, "type-closure") ///< a function pointer type (no captures)
 
-TREE_KIND(eTreeTypePointer, "type-pointer")
-TREE_KIND(eTreeTypeArray, "type-array")
-
-TREE_KIND(eTreeTypeQualify, "type-qualify") ///< a qualified type
+TREE_KIND(eTreeTypeStorage, "type-storage") ///< memory storage
+TREE_KIND(eTreeTypePointer, "type-pointer") ///< a reference to storage
+TREE_KIND(eTreeTypeArray, "type-array") ///< a reference to storage with an upper bound
 
 TREE_KIND(eTreeTypeStruct, "type-struct")
+
+///
+/// expressions
+/// these yield a value
+///
 
 TREE_KIND(eTreeExprEmpty, "expr-empty") ///< an uninitialized value of a type
 TREE_KIND(eTreeExprUnit, "expr-unit")
@@ -28,15 +36,24 @@ TREE_KIND(eTreeExprUnary, "expr-unary")
 TREE_KIND(eTreeExprBinary, "expr-binary")
 TREE_KIND(eTreeExprCompare, "expr-compare")
 
-TREE_KIND(eTreeExprField, "expr-field")
+TREE_KIND(eTreeExprField, "expr-field") ///< get a reference to a field
 
 TREE_KIND(eTreeExprCall, "expr-call")
+
+///
+/// statements
+/// these cannot yield a value
+///
 
 TREE_KIND(eTreeStmtBlock, "stmt-block")
 TREE_KIND(eTreeStmtReturn, "stmt-return")
 TREE_KIND(eTreeStmtAssign, "stmt-assign")
 TREE_KIND(eTreeStmtLoop, "stmt-loop")
 TREE_KIND(eTreeStmtBranch, "stmt-branch")
+
+///
+/// declarations
+///
 
 TREE_KIND(eTreeDeclGlobal, "decl-global")
 TREE_KIND(eTreeDeclLocal, "decl-local")

@@ -24,8 +24,6 @@ static tree_t *sema_type_qual(tree_t *sema, obr_t *type)
         return tree_raise(type->node, sema->reports, "module '%s' not found", type->name);
     }
 
-    // TODO: dedup with above
-
     tree_t *it = obr_get_type(mod, type->symbol);
     if (it == NULL)
     {
@@ -75,4 +73,14 @@ tree_t *obr_sema_type(tree_t *sema, obr_t *type, const char *name)
 
     default: NEVER("unknown type kind %d", type->kind);
     }
+}
+
+
+///
+/// query
+///
+
+const tree_t *obr_rvalue_type(const tree_t *self)
+{
+    return tree_ty_load_type(tree_get_type(self));
 }

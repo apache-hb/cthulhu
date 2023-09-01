@@ -18,7 +18,7 @@ static tree_t *tree_module_new(const node_t *node, const char *name,
     CTASSERTF(decls >= eSema2Total, "module cannot be constructed with less than %zu tags (%zu given)", eSema2Total, decls);
     CTASSERT(reports != NULL);
 
-    tree_t *self = tree_decl(eTreeDeclModule, node, NULL, name);
+    tree_t *self = tree_decl(eTreeDeclModule, node, NULL, name, eQualUnknown);
     self->parent = parent;
     self->cookie = cookie;
     self->reports = reports;

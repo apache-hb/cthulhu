@@ -9,6 +9,7 @@ SSA_KIND(eTypeDigit, "digit")
 SSA_KIND(eTypeClosure, "closure")
 SSA_KIND(eTypeArray, "array")
 SSA_KIND(eTypePointer, "pointer")
+SSA_KIND(eTypeStorage, "storage")
 
 #undef SSA_KIND
 

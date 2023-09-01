@@ -25,7 +25,7 @@ tree_t *tree_new(tree_kind_t kind, const node_t *node, const tree_t *type)
     return self;
 }
 
-tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, const char *name)
+tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, const char *name, quals_t quals)
 {
     CTASSERT(name != NULL);
 
@@ -34,6 +34,7 @@ tree_t *tree_decl(tree_kind_t kind, const node_t *node, const tree_t *type, cons
     self->name = name;
     self->attrib = &kDefaultAttrib;
     self->resolve = NULL;
+    self->quals = quals;
 
     return self;
 }
@@ -73,22 +74,22 @@ tree_t *tree_raise(const node_t *node, reports_t *reports, const char *message, 
 
 tree_t *tree_type_empty(const node_t *node, const char *name)
 {
-    return tree_decl(eTreeTypeUnit, node, NULL, name);
+    return tree_decl(eTreeTypeUnit, node, NULL, name, eQualUnknown);
 }
 
 tree_t *tree_type_unit(const node_t *node, const char *name)
 {
-    return tree_decl(eTreeTypeUnit, node, NULL, name);
+    return tree_decl(eTreeTypeUnit, node, NULL, name, eQualUnknown);
 }
 
 tree_t *tree_type_bool(const node_t *node, const char *name)
 {
-    return tree_decl(eTreeTypeBool, node, NULL, name);
+    return tree_decl(eTreeTypeBool, node, NULL, name, eQualUnknown);
 }
 
 tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign)
 {
-    tree_t *self = tree_decl(eTreeTypeDigit, node, NULL, name);
+    tree_t *self = tree_decl(eTreeTypeDigit, node, NULL, name, eQualUnknown);
     self->digit = digit;
     self->sign = sign;
     return self;
@@ -99,7 +100,7 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
     CTASSERT(result != NULL);
     CTASSERT(params != NULL);
 
-    tree_t *self = tree_decl(eTreeTypeClosure, node, NULL, name);
+    tree_t *self = tree_decl(eTreeTypeClosure, node, NULL, name, eQualUnknown);
     self->result = result;
     self->params = params;
     self->arity = arity;
@@ -110,7 +111,7 @@ tree_t *tree_type_pointer(const node_t *node, const char *name, tree_t *pointer)
 {
     CTASSERT(pointer != NULL);
 
-    tree_t *self = tree_decl(eTreeTypePointer, node, NULL, name);
+    tree_t *self = tree_decl(eTreeTypePointer, node, NULL, name, eQualUnknown);
     self->pointer = pointer;
     return self;
 }
@@ -120,19 +121,19 @@ tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *arra
     CTASSERT(array != NULL);
     CTASSERT(length > 0);
 
-    tree_t *self = tree_decl(eTreeTypeArray, node, NULL, name);
+    tree_t *self = tree_decl(eTreeTypeArray, node, NULL, name, eQualUnknown);
     self->array = array;
     self->length = length;
     return self;
 }
 
-tree_t *tree_type_qualify(const node_t *node, const tree_t *type, quals_t quals)
+tree_t *tree_type_storage(const node_t *node, const char *name, const tree_t *type, size_t size, quals_t quals)
 {
     CTASSERT(type != NULL);
+    CTASSERT(size > 0);
 
-    tree_t *self = tree_decl(eTreeTypeQualify, node, type, tree_get_name(type));
-    self->quals = quals;
-    self->qualify = type;
+    tree_t *self = tree_decl(eTreeTypeStorage, node, type, name, quals);
+    self->size = size;
     return self;
 }
 
@@ -152,6 +153,8 @@ tree_t *tree_expr_unit(const node_t *node, const tree_t *type)
 
 tree_t *tree_expr_bool(const node_t *node, const tree_t *type, bool value)
 {
+    TREE_EXPECT(type, eTreeTypeBool);
+
     tree_t *self = tree_new(eTreeExprBool, node, type);
     self->boolValue = value;
     return self;
@@ -159,6 +162,8 @@ tree_t *tree_expr_bool(const node_t *node, const tree_t *type, bool value)
 
 tree_t *tree_expr_digit(const node_t *node, const tree_t *type, const mpz_t value)
 {
+    TREE_EXPECT(type, eTreeTypeDigit);
+
     tree_t *self = tree_new(eTreeExprDigit, node, type);
     mpz_init_set(self->digitValue, value);
     return self;
@@ -178,6 +183,12 @@ tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *val
 /// expressions
 ///
 
+/// must be either storage or a pointer
+#define TREE_EXPECT_LOAD(TYPE) CTASSERTF(tree_is(TYPE, eTreeTypeStorage) || tree_is(TYPE, eTreeTypePointer) || tree_is(TYPE, eTreeError), "expected storage or pointer, found %s", tree_to_string(TYPE))
+
+/// must not be storage
+#define TREE_EXPECT_REG(TYPE) CTASSERTF(!tree_is(TYPE, eTreeTypeStorage) || tree_is(TYPE, eTreeError), "expected register, found %s", tree_to_string(TYPE))
+
 tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr)
 {
     CTASSERT(expr != NULL);
@@ -189,18 +200,18 @@ tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr)
 
 tree_t *tree_expr_load(const node_t *node, tree_t *expr)
 {
-    CTASSERT(expr != NULL);
+    TREE_EXPECT_LOAD(tree_get_type(expr));
 
-    tree_t *self = tree_new(eTreeExprLoad, node, expr->type);
+    tree_t *self = tree_new(eTreeExprLoad, node, tree_ty_load_type(tree_get_type(expr)));
     self->load = expr;
     return self;
 }
 
 tree_t *tree_expr_unary(const node_t *node, unary_t unary, tree_t *expr)
 {
-    CTASSERT(expr != NULL);
+    TREE_EXPECT_REG(tree_get_type(expr));
 
-    tree_t *self = tree_new(eTreeExprUnary, node, expr->type);
+    tree_t *self = tree_new(eTreeExprUnary, node, tree_get_type(expr));
     self->unary = unary;
     self->operand = expr;
     return self;
@@ -208,8 +219,9 @@ tree_t *tree_expr_unary(const node_t *node, unary_t unary, tree_t *expr)
 
 tree_t *tree_expr_binary(const node_t *node, const tree_t *type, binary_t binary, tree_t *lhs, tree_t *rhs)
 {
-    CTASSERT(lhs != NULL);
-    CTASSERT(rhs != NULL);
+    TREE_EXPECT_REG(type);
+    TREE_EXPECT_REG(tree_get_type(lhs));
+    TREE_EXPECT_REG(tree_get_type(rhs));
 
     tree_t *self = tree_new(eTreeExprBinary, node, type);
     self->binary = binary;

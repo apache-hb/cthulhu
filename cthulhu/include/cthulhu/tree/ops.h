@@ -2,10 +2,12 @@
 
 
 typedef enum quals_t {
-    eQualDefault = (0 << 0),
-    eQualMutable = (1 << 0),
-    eQualVolatile = (1 << 1),
-    eQualAtomic = (1 << 2),
+    eQualUnknown = (0 << 0), ///< defer to the inner type for the qualifiers
+
+    eQualConst = (1 << 0),
+    eQualMutable = (1 << 1),
+    eQualVolatile = (1 << 2),
+    eQualAtomic = (1 << 3),
 } quals_t;
 
 /**

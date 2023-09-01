@@ -16,11 +16,13 @@
 #include "cthulhu/tree/query.h"
 
 static const tree_t *kStringType = NULL;
-static const tree_t *kConstType = NULL;
-static const tree_t *kCharType = NULL;
 static const tree_t *kIntType = NULL;
+static const tree_t *kCharType = NULL;
 static const tree_t *kBoolType = NULL;
 static const tree_t *kVoidType = NULL;
+
+static const tree_t *kMutableStorage = NULL;
+static const tree_t *kConstStorage = NULL;
 
 static const tree_t *kFormatString = NULL;
 
@@ -147,11 +149,13 @@ void pl0_init(driver_t *handle)
     node_t *node = node_builtin();
     lifetime_t *lifetime = handle_get_lifetime(handle);
 
-    kConstType = tree_type_digit(node, "integer", eDigitInt, eSignSigned);
-    kIntType = tree_type_qualify(node, kConstType, eQualMutable);
+    kIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned);
     kCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned);
     kBoolType = tree_type_bool(node, "boolean");
     kVoidType = tree_type_unit(node, "void");
+
+    kMutableStorage = tree_type_storage(node, "integer", kIntType, 1, eQualMutable);
+    kConstStorage = tree_type_storage(node, "integer", kIntType, 1, eQualConst);
 
     kStringType = get_string_type(SIZE_MAX);
     kFormatString = tree_expr_string(node, get_string_type(4), "%d\n", 4);
@@ -181,7 +185,7 @@ static tree_t *sema_stmt(tree_t *sema, pl0_t *node);
 
 static tree_t *sema_digit(pl0_t *node)
 {
-    return tree_expr_digit(node->node, kConstType, node->digit);
+    return tree_expr_digit(node->node, kIntType, node->digit);
 }
 
 static tree_t *sema_ident(tree_t *sema, pl0_t *node)
@@ -193,15 +197,14 @@ static tree_t *sema_ident(tree_t *sema, pl0_t *node)
         return tree_error(node->node, "unresolved identifier `%s`", node->ident);
     }
 
-    cookie_t *cookie = tree_get_cookie(sema);
-    return tree_expr_load(node->node, tree_resolve(cookie, var));
+    return tree_expr_load(node->node, var);
 }
 
 static tree_t *sema_binary(tree_t *sema, pl0_t *node)
 {
     tree_t *lhs = sema_expr(sema, node->lhs);
     tree_t *rhs = sema_expr(sema, node->rhs);
-    return tree_expr_binary(node->node, kConstType, node->binary, lhs, rhs);
+    return tree_expr_binary(node->node, kIntType, node->binary, lhs, rhs);
 }
 
 static tree_t *sema_unary(tree_t *sema, pl0_t *node)
@@ -281,8 +284,9 @@ static tree_t *sema_assign(tree_t *sema, pl0_t *node)
     }
 
     const tree_t *dstType = tree_get_type(dst);
+    quals_t quals = tree_ty_get_quals(dstType);
 
-    if (!tree_has_quals(dstType, eQualMutable))
+    if (quals & eQualConst)
     {
         report(sema->reports, eFatal, node->node, "cannot assign to constant value");
     }
@@ -313,18 +317,12 @@ static tree_t *sema_stmt(tree_t *sema, pl0_t *node)
 {
     switch (node->type)
     {
-    case ePl0Stmts:
-        return sema_stmts(sema, node);
-    case ePl0Call:
-        return sema_call(sema, node);
-    case ePl0Branch:
-        return sema_branch(sema, node);
-    case ePl0Loop:
-        return sema_loop(sema, node);
-    case ePl0Assign:
-        return sema_assign(sema, node);
-    case ePl0Print:
-        return sema_print(sema, node);
+    case ePl0Stmts: return sema_stmts(sema, node);
+    case ePl0Call: return sema_call(sema, node);
+    case ePl0Branch: return sema_branch(sema, node);
+    case ePl0Loop: return sema_loop(sema, node);
+    case ePl0Assign: return sema_assign(sema, node);
+    case ePl0Print: return sema_print(sema, node);
     default:
         return tree_raise(node->node, sema->reports, "sema-stmt: %d", node->type);
     }
@@ -337,7 +335,7 @@ static tree_t *sema_global(tree_t *sema, pl0_t *node)
     {
         mpz_t zero;
         mpz_init_set_ui(zero, 0);
-        return tree_expr_digit(node->node, kConstType, zero);
+        return tree_expr_digit(node->node, kIntType, zero);
     }
     else
     {
@@ -354,9 +352,9 @@ static tree_t *sema_odd(tree_t *sema, pl0_t *node)
     mpz_init_set_ui(one, 1);
 
     tree_t *val = sema_expr(sema, node->operand);
-    tree_t *twoValue = tree_expr_digit(node->node, kConstType, two);
-    tree_t *oneValue = tree_expr_digit(node->node, kConstType, one);
-    tree_t *rem = tree_expr_binary(node->node, kConstType, eBinaryRem, val, twoValue);
+    tree_t *twoValue = tree_expr_digit(node->node, kIntType, two);
+    tree_t *oneValue = tree_expr_digit(node->node, kIntType, one);
+    tree_t *rem = tree_expr_binary(node->node, kIntType, eBinaryRem, val, twoValue);
     tree_t *eq = tree_expr_compare(node->node, kBoolType, eCompareEq, rem, oneValue);
 
     return eq;
@@ -390,7 +388,7 @@ static void sema_proc(tree_t *sema, tree_t *tree, pl0_t *node)
     for (size_t i = 0; i < nlocals; i++)
     {
         pl0_t *local = vector_get(node->locals, i);
-        tree_t *it = tree_decl_local(local->node, local->name, kIntType);
+        tree_t *it = tree_decl_local(local->node, local->name, kMutableStorage);
         set_var(nest, ePl0TagValues, local->name, it);
         tree_add_local(tree, it);
     }
@@ -483,7 +481,7 @@ void pl0_forward_decls(context_t *context)
             .fnResolve = resolve_global
         };
 
-        tree_t *tree = tree_open_global(it->node, it->name, kConstType, resolve);
+        tree_t *tree = tree_open_global(it->node, it->name, kConstStorage, resolve);
         tree_set_attrib(tree, &kExportAttrib);
 
         set_var(sema, ePl0TagValues, it->name, tree);
@@ -499,7 +497,7 @@ void pl0_forward_decls(context_t *context)
             .fnResolve = resolve_global
         };
 
-        tree_t *tree = tree_open_global(it->node, it->name, kIntType, resolve);
+        tree_t *tree = tree_open_global(it->node, it->name, kMutableStorage, resolve);
         tree_set_attrib(tree, &kExportAttrib);
 
         set_var(sema, ePl0TagValues, it->name, tree);
