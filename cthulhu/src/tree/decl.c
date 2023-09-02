@@ -59,6 +59,14 @@ tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl)
     return inner;
 }
 
+
+tree_t *tree_decl_global(const node_t *node, const char *name, const tree_t *type, tree_t *value)
+{
+    tree_t *self = decl_open(node, name, type, eTreeDeclGlobal, NULL);
+    tree_close_global(self, value);
+    return self;
+}
+
 tree_t *tree_open_global(const node_t *node, const char *name, const tree_t *type, tree_resolve_info_t resolve)
 {
     return decl_open(node, name, type, eTreeDeclGlobal, BOX(resolve));

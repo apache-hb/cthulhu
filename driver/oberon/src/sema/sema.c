@@ -48,6 +48,25 @@ void obr_add_decl(tree_t *sema, obr_tag_t tag, const char *name, tree_t *decl)
 }
 
 ///
+/// extras
+///
+
+static const char *kCurrentSymbol = "obr:current-symbol";
+
+tree_t *obr_current_symbol(tree_t *sema)
+{
+    tree_t *current = tree_get_extra(sema, kCurrentSymbol);
+    CTASSERT(current != NULL);
+    return current;
+}
+
+void obr_set_current_symbol(tree_t *sema, tree_t *symbol)
+{
+    tree_set_extra(sema, kCurrentSymbol, symbol);
+}
+
+
+///
 /// runtime mod
 ///
 
@@ -60,6 +79,12 @@ tree_t *obr_get_digit_type(digit_t digit, sign_t sign)
 {
     CTASSERT(gTypeInteger != NULL);
     return gTypeInteger;
+}
+
+tree_t *obr_get_char_type(void)
+{
+    CTASSERT(gTypeChar != NULL);
+    return gTypeChar;
 }
 
 tree_t *obr_get_bool_type(void)
@@ -76,7 +101,7 @@ tree_t *obr_get_void_type(void)
 
 tree_t *obr_get_string_type(size_t length)
 {
-    return tree_type_array(node_builtin(), "STRING", gTypeChar, length); /// TODO: use `ARRAY[0..$length] OF CHAR`
+    return tree_type_array(node_builtin(), "STRING", gTypeChar, length);
 }
 
 tree_t *obr_rt_mod(lifetime_t *lifetime)
@@ -89,9 +114,9 @@ tree_t *obr_rt_mod(lifetime_t *lifetime)
     };
 
     gTypeVoid = tree_type_unit(node_builtin(), "VOID");
-    gTypeChar = tree_type_digit(node_builtin(), "CHAR", eDigitChar, eSignSigned);
-    gTypeInteger = tree_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned);
-    gTypeBoolean = tree_type_bool(node_builtin(), "BOOLEAN");
+    gTypeChar = tree_type_digit(node_builtin(), "CHAR", eDigitChar, eSignSigned, eQualUnknown);
+    gTypeInteger = tree_type_digit(node_builtin(), "INTEGER", eDigitInt, eSignSigned, eQualUnknown);
+    gTypeBoolean = tree_type_bool(node_builtin(), "BOOLEAN", eQualUnknown);
 
     tree_t *rt = lifetime_sema_new(lifetime, "oberon", eObrTagTotal, tags);
     obr_add_decl(rt, eObrTagTypes, "VOID", gTypeVoid);

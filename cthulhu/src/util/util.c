@@ -1,6 +1,7 @@
 #include "cthulhu/util/util.h"
 
 #include "cthulhu/tree/query.h"
+#include "cthulhu/tree/sema.h"
 
 #include "std/str.h"
 
@@ -19,6 +20,21 @@ void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char 
     }
 
     return NULL;
+}
+
+static const char *kCurrentModule = "util:current-module";
+
+tree_t *util_current_module(tree_t *sema)
+{
+    tree_t *current = tree_get_extra(sema, kCurrentModule);
+    CTASSERT(current != NULL);
+    return current;
+}
+
+void util_set_current_module(tree_t *sema, tree_t *module)
+{
+    CTASSERTF(module != NULL, "(module=%p)", module);
+    tree_set_extra(sema, kCurrentModule, module);
 }
 
 bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
@@ -53,6 +69,61 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
     }
 }
 
+static bool can_cast_length(size_t dst, size_t src)
+{
+    if (!util_length_bounded(dst)) { return true; }
+    if (!util_length_bounded(src)) { return true; }
+
+    return dst < src;
+}
+
+static tree_t *cast_check_length(const tree_t *dst, tree_t *expr, size_t dstlen, size_t srclen)
+{
+    if (!can_cast_length(dstlen, srclen))
+    {
+        return tree_error(tree_get_node(expr),
+                          "creating an array with a length greater than its backing memory is unwise. (%s < %s)",
+                          util_length_name(srclen),
+                          util_length_name(dstlen));
+    }
+
+    return tree_expr_cast(tree_get_node(expr), dst, expr);
+}
+
+static tree_t *cast_to_array(const tree_t *dst, tree_t *expr)
+{
+    CTASSERTF(tree_is(dst, eTreeTypeArray), "(dst=%s)", tree_to_string(dst));
+
+    const tree_t *src = tree_get_type(expr);
+
+    switch (tree_get_kind(src))
+    {
+    case eTreeTypeArray:
+        if (!util_types_equal(dst->array, src->array))
+        {
+            return tree_error(tree_get_node(expr),
+                                "cannot cast unrelated array types `%s` to `%s`",
+                                tree_to_string(src), tree_to_string(dst));
+        }
+
+        return cast_check_length(dst, expr, dst->length, src->length);
+
+    case eTreeTypeStorage:
+        if (!util_types_equal(dst->array, tree_get_type(src)))
+        {
+            return tree_error(tree_get_node(expr),
+                                "cannot cast unrelated array types `%s` to `%s`",
+                                tree_to_string(src), tree_to_string(dst));
+        }
+
+        return cast_check_length(dst, expr, dst->length, src->size);
+
+    default: return tree_error(tree_get_node(expr),
+                                "cannot cast `%s` to `%s`",
+                                tree_to_string(src), tree_to_string(dst));
+    }
+}
+
 tree_t *util_type_cast(const tree_t *dst, tree_t *expr)
 {
     CTASSERTF(dst != NULL && expr != NULL, "(dst=%p, expr=%p)", dst, expr);
@@ -61,35 +132,10 @@ tree_t *util_type_cast(const tree_t *dst, tree_t *expr)
 
     if (util_types_equal(dst, src)) { return expr; }
 
-    tree_kind_t dstKind = tree_get_kind(dst);
-    tree_kind_t srcKind = tree_get_kind(src);
-
-    switch (dstKind)
+    switch (tree_get_kind(dst))
     {
     case eTreeTypeArray:
-        if (srcKind != eTreeTypeArray)
-        {
-            return tree_error(tree_get_node(expr),
-                              "cannot cast `%s` to `%s`",
-                              tree_to_string(src), tree_to_string(dst));
-        }
-
-        if (!util_types_equal(dst->array, src->array))
-        {
-            return tree_error(tree_get_node(expr),
-                              "cannot unrelated array types `%s` to `%s`",
-                              tree_to_string(src), tree_to_string(dst));
-        }
-
-        if (dst->length < src->length)
-        {
-            return tree_error(tree_get_node(expr),
-                              "cannot truncate array length from %s to %s",
-                              util_length_name(src->length),
-                              util_length_name(dst->length));
-        }
-
-        return tree_expr_cast(tree_get_node(expr), dst, expr);
+        return cast_to_array(dst, expr);
 
     default:
         return tree_error(tree_get_node(expr),

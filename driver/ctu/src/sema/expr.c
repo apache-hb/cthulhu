@@ -9,6 +9,7 @@
 
 #include "report/report.h"
 
+#include "std/str.h"
 #include "std/vector.h"
 
 #include "base/panic.h"
@@ -75,8 +76,25 @@ static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
 
 static tree_t *sema_string(tree_t *sema, const ctu_t *expr)
 {
+    const node_t *node = tree_get_node(sema);
+
+    // generate a unique name for the string
+    // TODO: its not really unique
+    const tree_t *currentSymbol = ctu_current_symbol(sema);
+    char *name = format("%s$str", tree_get_name(currentSymbol));
+
+    // create the string and put it into a global value
     const tree_t *type = ctu_get_str_type(expr->length + 1);
-    return tree_expr_string(expr->node, type, expr->text, expr->length + 1);
+    tree_t *storage = tree_type_storage(node, name, ctu_get_int_type(eDigitChar, eSignSigned), expr->length + 1, eQualConst);
+    tree_t *init = tree_expr_string(node, type, expr->text, expr->length + 1);
+    tree_t *global = tree_decl_global(node, name, storage, init);
+
+    // add the global to the current module
+    tree_t *currentModule = util_current_module(sema);
+    ctu_add_decl(currentModule, eCtuTagValues, name, global);
+
+    // job done
+    return global;
 }
 
 static tree_t *sema_name(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
@@ -213,7 +231,7 @@ static tree_t *sema_stmts(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 
 static tree_t *sema_return(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 {
-    tree_t *fn = ctu_get_current_fn(sema);
+    tree_t *fn = ctu_current_symbol(sema);
     const tree_t *type = tree_get_type(fn);
 
     tree_t *value = stmt->result == NULL ? NULL : util_type_cast(type->result, ctu_sema_rvalue(sema, stmt->result, (tree_t*)type->result)); // TODO: evil cast

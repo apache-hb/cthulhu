@@ -56,16 +56,16 @@ void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl)
 /// extra data
 ///
 
-static const char *kCurrentFn = "ctu:current-fn";
+static const char *kCurrentSymbol = "ctu:current-symbol";
 
-void ctu_set_current_fn(tree_t *sema, tree_t *decl)
+void ctu_set_current_symbol(tree_t *sema, tree_t *decl)
 {
-    tree_set_extra(sema, kCurrentFn, decl);
+    tree_set_extra(sema, kCurrentSymbol, decl);
 }
 
-tree_t *ctu_get_current_fn(tree_t *sema)
+tree_t *ctu_current_symbol(tree_t *sema)
 {
-    tree_t *decl = tree_get_extra(sema, kCurrentFn);
+    tree_t *decl = tree_get_extra(sema, kCurrentSymbol);
     CTASSERT(decl != NULL);
 
     return decl;
@@ -79,14 +79,16 @@ static tree_t *kIntTypes[eDigitTotal * eSignTotal] = { NULL };
 static tree_t *kBoolType = NULL;
 static tree_t *kStrType = NULL;
 
+#define DIGIT_TYPE(DIGIT, SIGN) kIntTypes[DIGIT * eSignTotal + SIGN]
+
 static tree_t *make_int_type(const char *name, digit_t digit, sign_t sign)
 {
-    return (kIntTypes[digit * eSignTotal + sign] = tree_type_digit(node_builtin(), name, digit, sign));
+    return (DIGIT_TYPE(digit, sign) = tree_type_digit(node_builtin(), name, digit, sign, eQualUnknown));
 }
 
 static tree_t *make_bool_type(const char *name)
 {
-    return (kBoolType = tree_type_bool(node_builtin(), name));
+    return (kBoolType = tree_type_bool(node_builtin(), name, eQualUnknown));
 }
 
 static tree_t *make_str_type(const char *name)
@@ -96,7 +98,7 @@ static tree_t *make_str_type(const char *name)
 
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
 {
-    return kIntTypes[digit * eSignTotal + sign];
+    return DIGIT_TYPE(digit, sign);
 }
 
 tree_t *ctu_get_bool_type(void)

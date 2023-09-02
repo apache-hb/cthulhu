@@ -2,6 +2,8 @@
 #include "oberon/sema/type.h"
 #include "oberon/sema/expr.h"
 
+#include "cthulhu/util/util.h"
+
 #include "report/report.h"
 
 #include "base/util.h"
@@ -41,17 +43,20 @@ static void set_attribs(tree_t *sema, tree_t *decl, obr_visibility_t vis, tree_l
     tree_set_attrib(decl, BOX(attrib));
 }
 
-static obr_t *begin_resolve(tree_t *sema, void *user, obr_kind_t kind)
+static obr_t *begin_resolve(tree_t *sema, tree_t *self, void *user, obr_kind_t kind)
 {
     obr_t *decl = user;
     CTASSERTF(decl->kind == kind, "decl %s is not a %d", decl->name, kind);
+
+    util_set_current_module(sema, sema);
+    obr_set_current_symbol(sema, self);
 
     return decl;
 }
 
 static void resolve_const(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
-    obr_t *decl = begin_resolve(sema, user, eObrDeclConst);
+    obr_t *decl = begin_resolve(sema, self, user, eObrDeclConst);
 
     tree_t *expr = obr_sema_rvalue(sema, decl->value, NULL);
     const tree_t *inner = tree_get_type(expr);
@@ -62,7 +67,7 @@ static void resolve_const(cookie_t *cookie, tree_t *sema, tree_t *self, void *us
 
 static void resolve_var(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
-    begin_resolve(sema, user, eObrDeclVar);
+    begin_resolve(sema, self, user, eObrDeclVar);
 
     tree_t *value = obr_default_value(self->node, tree_get_type(self));
 
@@ -71,7 +76,7 @@ static void resolve_var(cookie_t *cookie, tree_t *sema, tree_t *self, void *user
 
 static void resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
-    obr_t *decl = begin_resolve(sema, user, eObrDeclType);
+    obr_t *decl = begin_resolve(sema, self, user, eObrDeclType);
 
     tree_t *type = obr_sema_type(sema, decl->type, decl->name);
     tree_t *alias = tree_alias(tree_resolve(cookie, type), decl->name);
@@ -81,7 +86,7 @@ static void resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void *use
 
 static void resolve_proc(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
-    obr_t *decl = begin_resolve(sema, user, eObrDeclProcedure); // TODO
+    obr_t *decl = begin_resolve(sema, self, user, eObrDeclProcedure);
 
     vector_t *params = tree_fn_get_params(self);
     size_t nParams = vector_len(params);
@@ -238,7 +243,7 @@ obr_forward_t obr_forward_decl(tree_t *sema, obr_t *decl)
 
 static void obr_resolve_init(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
-    obr_t *mod = begin_resolve(sema, user, eObrModule);
+    obr_t *mod = begin_resolve(sema, self, user, eObrModule);
 
     tree_t *body = obr_sema_stmts(sema, mod->node, mod->name, mod->init);
     tree_close_function(self, body);

@@ -144,7 +144,7 @@ typedef struct tree_t {
                 size_t size; ///< the size of the storage
 
                 /* eTreeTypePointer */
-                tree_t *pointer;
+                const tree_t *pointer;
 
                 /* eTreeTypeDigit */
                 struct {
@@ -226,7 +226,7 @@ tree_t *tree_type_unit(const node_t *node, const char *name);
  * @param name the name of the type
  * @return a bool type
  */
-tree_t *tree_type_bool(const node_t *node, const char *name);
+tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals);
 
 /**
  * @brief create a digit type
@@ -237,7 +237,7 @@ tree_t *tree_type_bool(const node_t *node, const char *name);
  * @param sign the sign of the digit
  * @return a digit type
  */
-tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign);
+tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign, quals_t quals);
 
 /**
  * @brief create a function pointer type
@@ -259,7 +259,7 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
  * @param pointer the type that this pointer points to
  * @return tree_t* the pointer type
  */
-tree_t *tree_type_pointer(const node_t *node, const char *name, tree_t *pointer);
+tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *pointer);
 
 /**
  * @brief create an array reference type
@@ -354,6 +354,7 @@ tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl);
 tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve);
 void tree_close_decl(tree_t *self, const tree_t *kind);
 
+tree_t *tree_decl_global(const node_t *node, const char *name, const tree_t *type, tree_t *value);
 tree_t *tree_open_global(const node_t *node, const char *name, const tree_t *type, tree_resolve_info_t resolve);
 void tree_close_global(tree_t *self, tree_t *value);
 

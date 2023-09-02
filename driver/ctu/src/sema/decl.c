@@ -31,9 +31,19 @@ static const attribs_t kAttribExport = {
 /// decl resolution
 ///
 
-static tree_t *get_global_storage(const tree_t *type, const tree_t *expr)
+static ctu_t *begin_resolve(tree_t *sema, tree_t *self, void *user, ctu_kind_t kind)
 {
+    ctu_t *decl = user;
+    CTASSERTF(decl->kind == kind, "decl %s is not a %d", decl->name, kind);
 
+    util_set_current_module(sema, sema);
+    ctu_set_current_symbol(sema, self);
+
+    return decl;
+}
+
+static const tree_t *get_global_storage(const tree_t *type, const tree_t *expr)
+{
     if (expr != NULL)
     {
         const tree_t *exprType = tree_get_type(expr);
@@ -41,12 +51,15 @@ static tree_t *get_global_storage(const tree_t *type, const tree_t *expr)
         const node_t *node = tree_get_node(exprType);
         const char *name = tree_get_name(exprType);
 
-        if (tree_is(exprType, eTreeTypeArray))
+        switch (tree_get_kind(exprType))
         {
+        case eTreeTypeArray:
             return tree_type_storage(node, name, exprType->array, exprType->length, eQualConst);
+        case eTreeTypeStorage:
+            return exprType;
+        default:
+            return tree_type_storage(node, name, exprType, 1, eQualConst);
         }
-
-        return tree_type_storage(node, name, exprType, 1, eQualConst);
     }
     else
     {
@@ -58,8 +71,7 @@ static tree_t *get_global_storage(const tree_t *type, const tree_t *expr)
 
 static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
-    ctu_t *decl = user;
-    CTASSERTF(decl->kind == eCtuDeclGlobal, "decl %s is not a global", decl->name);
+    ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclGlobal);
 
     tree_t *type = decl->type == NULL ? NULL : ctu_sema_type(sema, decl->type);
     tree_t *expr = decl->value == NULL ? NULL : ctu_sema_rvalue(sema, decl->value, type);
@@ -73,18 +85,15 @@ static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, voi
 
 static void ctu_resolve_function(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
-    ctu_t *decl = user;
-    CTASSERTF(decl->kind == eCtuDeclFunction, "decl %s is not a function", decl->name);
+    ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclFunction);
 
-    ctu_set_current_fn(sema, self);
     tree_t *body = ctu_sema_stmt(sema, self, decl->body);
     tree_close_function(self, body);
 }
 
 static void ctu_resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
-    ctu_t *decl = user;
-    CTASSERTF(decl->kind == eCtuDeclTypeAlias, "decl %s is not a type alias", decl->name);
+    ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclTypeAlias);
     CTASSERTF(decl->type != NULL, "decl %s has no type", decl->name);
 
     const tree_t *temp = tree_resolve(tree_get_cookie(sema), ctu_sema_type(sema, decl->typeAlias)); // TODO: doesnt support newtypes, also feels icky
@@ -93,8 +102,7 @@ static void ctu_resolve_type(cookie_t *cookie, tree_t *sema, tree_t *self, void 
 
 static void ctu_resolve_struct(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
-    ctu_t *decl = user;
-    CTASSERTF(decl->kind == eCtuDeclStruct, "decl %s is not a struct", decl->name);
+    ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclStruct);
 
     size_t len = vector_len(decl->fields);
     vector_t *items = vector_of(len);

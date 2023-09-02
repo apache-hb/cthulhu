@@ -37,8 +37,8 @@ void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl);
 /// current function
 ///
 
-void ctu_set_current_fn(tree_t *sema, tree_t *decl);
-tree_t *ctu_get_current_fn(tree_t *sema);
+void ctu_set_current_symbol(tree_t *sema, tree_t *decl);
+tree_t *ctu_current_symbol(tree_t *sema);
 
 ///
 /// builtin types

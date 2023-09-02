@@ -15,18 +15,16 @@
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
-static const tree_t *kStringType = NULL;
 static const tree_t *kIntType = NULL;
 static const tree_t *kCharType = NULL;
 static const tree_t *kBoolType = NULL;
 static const tree_t *kVoidType = NULL;
 
-static const tree_t *kMutableStorage = NULL;
-static const tree_t *kConstStorage = NULL;
-
-static const tree_t *kFormatString = NULL;
+static const tree_t *kIntMutStorage = NULL;
+static const tree_t *kIntConstStorage = NULL;
 
 static tree_t *kPrint = NULL;
+static tree_t *kPrintString = NULL;
 
 static const attribs_t kPrintAttrib = {
     .link = eLinkImport,
@@ -128,6 +126,7 @@ static tree_t *make_runtime_mod(lifetime_t *lifetime)
 
     tree_t *mod = lifetime_sema_new(lifetime, "runtime", ePl0TagTotal, decls);
     set_proc(mod, ePl0TagProcs, "print", kPrint);
+    set_decl(mod, ePl0TagValues, "$fmt", kPrintString);
     return mod;
 }
 
@@ -149,19 +148,24 @@ void pl0_init(driver_t *handle)
     node_t *node = node_builtin();
     lifetime_t *lifetime = handle_get_lifetime(handle);
 
-    kIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned);
-    kCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned);
-    kBoolType = tree_type_bool(node, "boolean");
+    kIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned, eQualUnknown);
+    kCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned, eQualUnknown);
+    kBoolType = tree_type_bool(node, "boolean", eQualConst);
     kVoidType = tree_type_unit(node, "void");
 
-    kMutableStorage = tree_type_storage(node, "integer", kIntType, 1, eQualMutable);
-    kConstStorage = tree_type_storage(node, "integer", kIntType, 1, eQualConst);
+    kIntMutStorage = tree_type_storage(node, "integer", kIntType, 1, eQualMutable);
+    kIntConstStorage = tree_type_storage(node, "integer", kIntType, 1, eQualConst);
 
-    kStringType = get_string_type(SIZE_MAX);
-    kFormatString = tree_expr_string(node, get_string_type(4), "%d\n", 4);
+    kPrintString = tree_decl_global(node, "$fmt",
+                                    tree_type_storage(node, "string", kCharType, 4, eQualConst),
+                                    tree_expr_string(node, get_string_type(4), "%d\n", 4));
+
+    tree_set_attrib(kPrintString, &kExportAttrib);
+
+    tree_t *stringType = tree_type_pointer(node, "string", tree_type_digit(node, "$", eDigitChar, eSignSigned, eQualConst));
 
     vector_t *params = vector_of(1);
-    vector_set(params, 0, tree_decl_param(node, "fmt", kStringType));
+    vector_set(params, 0, tree_decl_param(node, "fmt", stringType));
 
     tree_t *signature = tree_type_closure(node, "print", kVoidType, params, eArityVariable);
     kPrint = tree_decl_function(node, "print", signature, params, vector_of(0), NULL);
@@ -307,7 +311,7 @@ static tree_t *sema_print(tree_t *sema, pl0_t *node)
     tree_t *expr = sema_expr(sema, node->print);
 
     vector_t *args = vector_of(2);
-    vector_set(args, 0, (tree_t*)kFormatString);
+    vector_set(args, 0, kPrintString);
     vector_set(args, 1, expr);
 
     return tree_expr_call(node->node, kPrint, args);
@@ -388,7 +392,7 @@ static void sema_proc(tree_t *sema, tree_t *tree, pl0_t *node)
     for (size_t i = 0; i < nlocals; i++)
     {
         pl0_t *local = vector_get(node->locals, i);
-        tree_t *it = tree_decl_local(local->node, local->name, kMutableStorage);
+        tree_t *it = tree_decl_local(local->node, local->name, kIntMutStorage);
         set_var(nest, ePl0TagValues, local->name, it);
         tree_add_local(tree, it);
     }
@@ -481,7 +485,7 @@ void pl0_forward_decls(context_t *context)
             .fnResolve = resolve_global
         };
 
-        tree_t *tree = tree_open_global(it->node, it->name, kConstStorage, resolve);
+        tree_t *tree = tree_open_global(it->node, it->name, kIntConstStorage, resolve);
         tree_set_attrib(tree, &kExportAttrib);
 
         set_var(sema, ePl0TagValues, it->name, tree);
@@ -497,7 +501,7 @@ void pl0_forward_decls(context_t *context)
             .fnResolve = resolve_global
         };
 
-        tree_t *tree = tree_open_global(it->node, it->name, kMutableStorage, resolve);
+        tree_t *tree = tree_open_global(it->node, it->name, kIntMutStorage, resolve);
         tree_set_attrib(tree, &kExportAttrib);
 
         set_var(sema, ePl0TagValues, it->name, tree);

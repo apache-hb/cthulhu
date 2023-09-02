@@ -82,14 +82,14 @@ tree_t *tree_type_unit(const node_t *node, const char *name)
     return tree_decl(eTreeTypeUnit, node, NULL, name, eQualUnknown);
 }
 
-tree_t *tree_type_bool(const node_t *node, const char *name)
+tree_t *tree_type_bool(const node_t *node, const char *name, quals_t quals)
 {
-    return tree_decl(eTreeTypeBool, node, NULL, name, eQualUnknown);
+    return tree_decl(eTreeTypeBool, node, NULL, name, quals);
 }
 
-tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign)
+tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sign_t sign, quals_t quals)
 {
-    tree_t *self = tree_decl(eTreeTypeDigit, node, NULL, name, eQualUnknown);
+    tree_t *self = tree_decl(eTreeTypeDigit, node, NULL, name, quals);
     self->digit = digit;
     self->sign = sign;
     return self;
@@ -107,7 +107,7 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
     return self;
 }
 
-tree_t *tree_type_pointer(const node_t *node, const char *name, tree_t *pointer)
+tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *pointer)
 {
     CTASSERT(pointer != NULL);
 
@@ -131,6 +131,9 @@ tree_t *tree_type_storage(const node_t *node, const char *name, const tree_t *ty
 {
     CTASSERT(type != NULL);
     CTASSERT(size > 0);
+    CTASSERT(quals != eQualUnknown);
+
+    CTASSERTF(!tree_is(type, eTreeTypeStorage), "storage cannot be nested, found %s", tree_to_string(type));
 
     tree_t *self = tree_decl(eTreeTypeStorage, node, type, name, quals);
     self->size = size;

@@ -60,8 +60,8 @@ static const char *format_c89_array(c89_emit_t *emit, const char *quals, ssa_typ
     const char *result = c89_format_type(emit, type.element, NULL, true);
 
     return (name == NULL)
-        ? format("%s[]", result)
-        : format("%s %s[]", result, name);
+        ? format("%s%s[]", quals, result)
+        : format("%s%s %s[]", quals, result, name);
 }
 
 static const char *format_c89_storage(c89_emit_t *emit, const char *quals, ssa_type_storage_t type, const char *name)

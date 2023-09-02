@@ -1,48 +1,71 @@
 #include "oberon/sema/expr.h"
 #include "oberon/sema/type.h"
 
+#include "cthulhu/util/util.h"
+
+#include "std/str.h"
+
 #include "base/panic.h"
 
 ///
 /// rvalues
 ///
 
-static tree_t *sema_digit(tree_t *sema, obr_t *expr, tree_t *implicitType)
+static tree_t *sema_digit(tree_t *sema, obr_t *expr, const tree_t *implicitType)
 {
     // TODO: get correct digit size
-    tree_t *type = implicitType != NULL ? implicitType : obr_get_digit_type(eDigitInt, eSignSigned);
+    const tree_t *type = implicitType != NULL ? implicitType : obr_get_digit_type(eDigitInt, eSignSigned);
     return tree_expr_digit(expr->node, type, expr->digit);
 }
 
-static tree_t *sema_string(tree_t *sema, obr_t *expr, tree_t *implicitType)
+static tree_t *sema_string(tree_t *sema, obr_t *expr)
 {
-    // TODO: check implicit type
-    tree_t *type = implicitType != NULL ? implicitType : obr_get_string_type(expr->length + 1);
-    return tree_expr_string(expr->node, type, expr->text, expr->length + 1);
+    const node_t *node = tree_get_node(sema);
+
+    // generate a unique name for the string
+    // TODO: its not really unique
+    const tree_t *currentSymbol = obr_current_symbol(sema);
+    char *name = format("%s$str", tree_get_name(currentSymbol));
+
+    // create the string and put it into a global value
+    const tree_t *type = obr_get_string_type(expr->length + 1);
+    tree_t *storage = tree_type_storage(node, name, obr_get_char_type(), expr->length + 1, eQualConst);
+    tree_t *init = tree_expr_string(node, type, expr->text, expr->length + 1);
+    tree_t *global = tree_decl_global(node, name, storage, init);
+
+    // add the global to the current module
+    tree_t *currentModule = util_current_module(sema);
+    obr_add_decl(currentModule, eObrTagValues, name, global);
+
+    // job done
+    return global;
 }
 
-static tree_t *sema_unary(tree_t *sema, obr_t *expr, tree_t *implicitType)
+static tree_t *sema_unary(tree_t *sema, obr_t *expr, const tree_t *implicitType)
 {
     tree_t *operand = obr_sema_rvalue(sema, expr->expr, implicitType);
     return tree_expr_unary(expr->node, expr->unary, operand);
 }
 
-static tree_t *sema_binary(tree_t *sema, obr_t *expr, tree_t *implicitType)
+static tree_t *sema_binary(tree_t *sema, obr_t *expr, const tree_t *implicitType)
 {
     // TODO: get common type
-    tree_t *type = implicitType != NULL ? implicitType : obr_get_digit_type(eDigitInt, eSignSigned);
+    const tree_t *type = implicitType == NULL
+        ? obr_get_digit_type(eDigitInt, eSignSigned)
+        : implicitType;
+
     tree_t *lhs = obr_sema_rvalue(sema, expr->lhs, implicitType);
     tree_t *rhs = obr_sema_rvalue(sema, expr->rhs, implicitType);
 
     return tree_expr_binary(expr->node, type, expr->binary, lhs, rhs);
 }
 
-static tree_t *sema_compare(tree_t *sema, obr_t *expr, tree_t *implicitType)
+static tree_t *sema_compare(tree_t *sema, obr_t *expr)
 {
     // TODO: check types are comparable
 
-    tree_t *lhs = obr_sema_rvalue(sema, expr->lhs, implicitType);
-    tree_t *rhs = obr_sema_rvalue(sema, expr->rhs, implicitType);
+    tree_t *lhs = obr_sema_rvalue(sema, expr->lhs, NULL);
+    tree_t *rhs = obr_sema_rvalue(sema, expr->rhs, NULL);
 
     return tree_expr_compare(expr->node, obr_get_bool_type(), expr->compare, lhs, rhs);
 }
@@ -117,17 +140,17 @@ static tree_t *sema_field(tree_t *sema, obr_t *expr)
     return tree_expr_field(expr->node, decl, field);
 }
 
-tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, tree_t *implicitType)
+tree_t *obr_sema_rvalue(tree_t *sema, obr_t *expr, const tree_t *implicitType)
 {
-    tree_t *type = implicitType != NULL ? (tree_t*)tree_ty_load_type(tree_resolve(tree_get_cookie(sema), implicitType)) : NULL;
+    const tree_t *type = implicitType != NULL ? tree_ty_load_type(tree_resolve(tree_get_cookie(sema), implicitType)) : NULL;
 
     switch (expr->kind)
     {
     case eObrExprDigit: return sema_digit(sema, expr, type);
-    case eObrExprString: return sema_string(sema, expr, type);
+    case eObrExprString: return sema_string(sema, expr);
     case eObrExprUnary: return sema_unary(sema, expr, type);
     case eObrExprBinary: return sema_binary(sema, expr, type);
-    case eObrExprCompare: return sema_compare(sema, expr, type);
+    case eObrExprCompare: return sema_compare(sema, expr);
     case eObrExprName: return sema_name_rvalue(sema, expr); // TODO: this feels wrong for functions
     case eObrExprField: return tree_expr_load(expr->node, sema_field(sema, expr)); // TODO: may also be wrong for functions
     case eObrExprCall: return sema_call(sema, expr);

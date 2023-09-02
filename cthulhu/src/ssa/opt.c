@@ -62,6 +62,11 @@ static const ssa_value_t *ssa_opt_operand(ssa_scope_t *vm, ssa_operand_t operand
     case eOperandImm: return operand.value;
     case eOperandReg: return map_get_ptr(vm->stepValues, get_step_indexed(operand.vregContext, operand.vregIndex));
     case eOperandConst: return vector_get(vm->symbol->consts, operand.constant);
+    case eOperandGlobal: {
+        const ssa_symbol_t *global = operand.global;
+        ssa_opt_global(vm->vm, (void*)global); // TODO: find a nice way to follow const
+        return global->value;
+    }
 
     default: NEVER("unhandled operand kind %d (inside %s)", operand.kind, vm->symbol->name);
     }

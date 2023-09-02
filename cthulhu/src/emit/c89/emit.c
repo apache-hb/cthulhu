@@ -260,10 +260,6 @@ static const ssa_type_t *get_operand_type(c89_emit_t *emit, ssa_operand_t operan
         const ssa_symbol_t *global = operand.global;
         return global->type;
     }
-    case eOperandConst: {
-        const ssa_value_t *value = vector_get(emit->current->consts, operand.constant);
-        return value->type;
-    }
     case eOperandFunction: {
         const ssa_symbol_t *func = operand.function;
         return func->type;

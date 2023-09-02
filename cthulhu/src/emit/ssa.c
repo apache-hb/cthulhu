@@ -64,6 +64,12 @@ static char *array_to_string(ssa_type_array_t array)
     return format("array(%s)", pointee);
 }
 
+static char *pointer_to_string(ssa_type_pointer_t pointer)
+{
+    const char *pointee = type_to_string(pointer.pointer);
+    return format("ptr(%s)", pointee);
+}
+
 static char *storage_to_string(ssa_type_storage_t storage)
 {
     return format("storage(%s[%zu])", type_to_string(storage.type), storage.size);
@@ -79,6 +85,7 @@ static const char *type_to_string(const ssa_type_t *type)
     case eTypeDigit: return digit_to_string(type->digit);
     case eTypeClosure: return closure_to_string(type->closure);
     case eTypeArray: return array_to_string(type->array);
+    case eTypePointer: return pointer_to_string(type->pointer);
     case eTypeStorage: return storage_to_string(type->storage);
     default: NEVER("unknown type kind %d", type->kind);
     }
