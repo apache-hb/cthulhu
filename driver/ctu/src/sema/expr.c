@@ -77,11 +77,12 @@ static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
 static tree_t *sema_string(tree_t *sema, const ctu_t *expr)
 {
     const node_t *node = tree_get_node(sema);
+    where_t where = get_node_location(node);
 
     // generate a unique name for the string
     // TODO: its not really unique
     const tree_t *currentSymbol = ctu_current_symbol(sema);
-    char *name = format("%s$str", tree_get_name(currentSymbol));
+    char *name = format("%s$s$%llu$%llu", tree_get_name(currentSymbol), where.firstLine, where.firstColumn);
 
     // create the string and put it into a global value
     const tree_t *type = ctu_get_str_type(expr->length + 1);
@@ -234,7 +235,7 @@ static tree_t *sema_return(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     tree_t *fn = ctu_current_symbol(sema);
     const tree_t *type = tree_get_type(fn);
 
-    tree_t *value = stmt->result == NULL ? NULL : util_type_cast(type->result, ctu_sema_rvalue(sema, stmt->result, (tree_t*)type->result)); // TODO: evil cast
+    tree_t *value = stmt->result == NULL ? NULL : util_type_cast(type->result, ctu_sema_rvalue(sema, stmt->result, type->result));
     return tree_stmt_return(stmt->node, value);
 }
 

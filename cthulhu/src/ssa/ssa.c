@@ -2,6 +2,8 @@
 
 #include "cthulhu/tree/query.h"
 
+#include "report/report.h"
+
 #include "std/str.h"
 #include "std/map.h"
 #include "std/set.h"
@@ -353,6 +355,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         };
         return add_step(ssa, step);
     }
+
     case eTreeExprBinary: {
         ssa_operand_t lhs = compile_tree(ssa, tree->lhs);
         ssa_operand_t rhs = compile_tree(ssa, tree->rhs);
@@ -366,6 +369,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         };
         return add_step(ssa, step);
     }
+
     case eTreeDeclGlobal: {
         ssa_symbol_t *symbol = map_get_ptr(ssa->globals, tree);
         CTASSERT(symbol != NULL);
@@ -379,6 +383,7 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
 
         return operand;
     }
+
     case eTreeExprLoad: {
         ssa_operand_t operand = compile_tree(ssa, tree->load);
         ssa_step_t step = {

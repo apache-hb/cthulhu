@@ -391,12 +391,9 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
     case eTreeTypeStruct:
         break;
 
-    case eTreeTypeArray:
-        check_type_recursion(check, type->array);
-        break;
-
     case eTreeTypePointer:
-        check_type_recursion(check, type->pointer);
+    case eTreeTypeStorage:
+        check_type_recursion(check, type->ptr);
         break;
 
     default: NEVER("invalid type kind `%s` (check-type-size)", tree_to_string(type));
@@ -447,7 +444,7 @@ static void check_any_type_recursion(check_t *check, const tree_t *type)
 static void check_module_valid(check_t *check, const tree_t *mod)
 {
     CTASSERT(check != NULL);
-    CTASSERT(tree_is(mod, eTreeDeclModule));
+    CTASSERTF(tree_is(mod, eTreeDeclModule), "invalid module `%s`", tree_to_string(mod));
 
     logverbose("check %s", tree_get_name(mod));
 
@@ -464,7 +461,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
     for (size_t i = 0; i < totalGlobals; i++)
     {
         const tree_t *global = vector_get(globals, i);
-        CTASSERT(tree_is(global, eTreeDeclGlobal));
+        CTASSERTF(tree_is(global, eTreeDeclGlobal), "invalid global `%s`", tree_to_string(global));
         check_simple(check, global);
 
         check_global_attribs(check, global);
@@ -476,7 +473,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
     for (size_t i = 0; i < totalFunctions; i++)
     {
         const tree_t *function = vector_get(functions, i);
-        CTASSERT(tree_is(function, eTreeDeclFunction));
+        CTASSERTF(tree_is(function, eTreeDeclFunction), "invalid function `%s`", tree_to_string(function));
         check_simple(check, function);
 
         check_func_attribs(check, function);

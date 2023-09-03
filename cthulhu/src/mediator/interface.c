@@ -238,7 +238,7 @@ void lifetime_run_stage(lifetime_t *lifetime, compile_stage_t stage)
         CTASSERT(ctx != NULL);
 
         const language_t *lang = ctx->lang;
-        compile_pass_t fnPass = lang->fnCompilePass[stage];
+        driver_pass_t fnPass = lang->fnCompilePass[stage];
 
         if (!context_requires_compiling(ctx) || fnPass == NULL)
         {

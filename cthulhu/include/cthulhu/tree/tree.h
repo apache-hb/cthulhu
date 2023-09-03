@@ -135,16 +135,11 @@ typedef struct tree_t {
             quals_t quals;
 
             union {
-                /* eTreeTypeArray */
+                /* eTreeTypePointer|eTreeTypeStorage */
                 struct {
-                    const tree_t *array;
+                    const tree_t *ptr;
                     size_t length;
                 };
-
-                size_t size; ///< the size of the storage
-
-                /* eTreeTypePointer */
-                const tree_t *pointer;
 
                 /* eTreeTypeDigit */
                 struct {
@@ -259,18 +254,7 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
  * @param pointer the type that this pointer points to
  * @return tree_t* the pointer type
  */
-tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *pointer);
-
-/**
- * @brief create an array reference type
- *
- * @param node where this type was defined
- * @param name the name of the type
- * @param array the type of the array
- * @param length the upper bound of the array, use @ref SIZE_MAX for an unbounded array
- * @return tree_t* the array reference type
- */
-tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *array, size_t length);
+tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *pointer, size_t length);
 
 /**
  * @brief create a storage type
@@ -278,13 +262,13 @@ tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *arra
  * @param node where this type was defined
  * @param name the name of the type
  * @param type the type of the storage
- * @param size the length of the storage, elements will be stored in contiguous memory. @note must be >0
+ * @param length the length of the storage, elements will be stored in contiguous memory. @note must be >0
  *
  * @note expressions may not have this type, this is only for declarations
  *
  * @return tree_t* the storage type
  */
-tree_t *tree_type_storage(const node_t *node, const char *name, const tree_t *type, size_t size, quals_t quals);
+tree_t *tree_type_storage(const node_t *node, const char *name, const tree_t *type, size_t length, quals_t quals);
 
 ///
 /// tree expr interface

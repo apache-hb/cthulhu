@@ -26,25 +26,25 @@ tests = {
     #         'invalid-suffix'
     #     ]
     # },
-    # 'funcs': {
-    #     'fail': [
-    #         'ret-invalid',
-    #         'dup-arg'
-    #     ],
-    #     'pass': [
-    #         'decl-arg',
-    #         'empty-body',
-    #         'empty',
-    #         'int-return',
-    #         'many-args',
-    #         'return-int',
-    #         'type-return',
-    #         'use-arg',
-    #         'infinite-loop',
-    #         'loop-else',
-    #         'pass-ptr'
-    #     ]
-    # },
+    'funcs': {
+        'fail': [
+            'ret-invalid',
+            'dup-arg'
+        ],
+        'pass': [
+            'decl-arg',
+            'empty-body',
+            'empty',
+            'int-return',
+            'many-args',
+            'return-int',
+            'type-return',
+            'use-arg',
+            'infinite-loop',
+            'loop-else',
+            'pass-ptr'
+        ]
+    },
     # 'logic.loops': {
     #     'fail': [
     #         'loop-nonbool-expr',

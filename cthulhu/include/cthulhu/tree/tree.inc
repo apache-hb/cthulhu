@@ -15,7 +15,6 @@ TREE_KIND(eTreeTypeClosure, "type-closure") ///< a function pointer type (no cap
 
 TREE_KIND(eTreeTypeStorage, "type-storage") ///< memory storage
 TREE_KIND(eTreeTypePointer, "type-pointer") ///< a reference to storage
-TREE_KIND(eTreeTypeArray, "type-array") ///< a reference to storage with an upper bound
 
 TREE_KIND(eTreeTypeStruct, "type-struct")
 

@@ -94,6 +94,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     AND "`&&`"
     OR "`||`"
 
+    COMMA "`,`"
     ASSIGN "`=`"
     SEMI "`;`"
     COLON "`:`"
@@ -111,6 +112,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     decls declList
     structFields
     stmtList
+    fnParams fnParamList
 
 /**
  * order of operations, tightest first
@@ -139,6 +141,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     orExpr andExpr eqExpr cmpExpr xorExpr bitExpr shiftExpr addExpr mulExpr unaryExpr postExpr
     maybeExpr
     stmt stmts localDecl returnStmt
+    fnParam fnResult
 
 %type<ident>
     importAlias ident
@@ -192,11 +195,27 @@ decl: globalDecl { $$ = $1; }
 
 /* functions */
 
-functionDecl: exported DEF IDENT COLON type functionBody { $$ = ctu_decl_function(x, @$, $1, $3, $5, $6); }
+functionDecl: exported DEF IDENT fnParams fnResult functionBody { $$ = ctu_decl_function(x, @$, $1, $3, $4, $5, $6); }
+    ;
+
+fnResult: %empty { $$ = NULL; }
+    | COLON type { $$ = $2; }
+    ;
+
+fnParams: %empty { $$ = vector_of(0); }
+    | LPAREN fnParamList RPAREN { $$ = $2; }
+    ;
+
+fnParamList: fnParam { $$ = vector_init($1); }
+    | fnParamList COMMA fnParam { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+fnParam: IDENT COLON type { $$ = ctu_param(x, @$, $1, $3); }
     ;
 
 functionBody: ASSIGN expr SEMI { $$ = ctu_stmt_return(x, @$, $2); }
     | stmts { $$ = $1; }
+    | SEMI { $$ = NULL; }
     ;
 
 /* globals */

@@ -5,33 +5,37 @@
 typedef struct mediator_t mediator_t;
 typedef struct lifetime_t lifetime_t;
 typedef struct driver_t driver_t;
+typedef struct plugin_t plugin_t;
 typedef struct context_t context_t;
 
+typedef struct vector_t vector_t;
 typedef struct ap_t ap_t;
 typedef struct tree_t tree_t;
 typedef struct cookie_t cookie_t;
 typedef struct scan_t scan_t;
 typedef struct reports_t reports_t;
 
+///
+/// drivers
+///
+
 typedef void (*config_t)(lifetime_t *, ap_t *);
 
-typedef void (*create_t)(driver_t *);
-typedef void (*destroy_t)(driver_t *);
+typedef void (*driver_create_t)(driver_t *);
+typedef void (*driver_destroy_t)(driver_t *);
 
 typedef void (*parse_t)(driver_t *, scan_t *);
 
-typedef enum compile_stage_t
-{
+typedef enum compile_stage_t {
 #define STAGE(ID, STR) ID,
 #include "cthulhu/mediator/mediator.inc"
 
     eStageTotal
 } compile_stage_t;
 
-typedef void (*compile_pass_t)(context_t *);
+typedef void (*driver_pass_t)(context_t *);
 
-typedef struct language_t
-{
+typedef struct language_t {
     const char *id; ///< unique identifier for the language
     const char *name; ///< human readable name for the language
 
@@ -41,13 +45,17 @@ typedef struct language_t
 
     config_t fnConfig;
 
-    create_t fnCreate; ///< called at startup
-    destroy_t fnDestroy; ///< called at shutdown
+    driver_create_t fnCreate; ///< called at startup
+    driver_destroy_t fnDestroy; ///< called at shutdown
 
     parse_t fnParse; ///< parse a file into an ast
 
-    compile_pass_t fnCompilePass[eStageTotal]; ///< compile a single pass
+    driver_pass_t fnCompilePass[eStageTotal]; ///< compile a single pass
 } language_t;
+
+///
+/// helpers
+///
 
 reports_t *lifetime_get_reports(lifetime_t *lifetime);
 

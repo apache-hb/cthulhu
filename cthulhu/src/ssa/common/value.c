@@ -55,15 +55,16 @@ ssa_value_t *ssa_value_char(const ssa_type_t *type, char value)
 
 ssa_value_t *ssa_value_string(const ssa_type_t *type, const char *text, size_t length)
 {
-    EXPECT_TYPE(type, eTypeArray);
-    ssa_type_array_t array = type->array;
-    EXPECT_TYPE(array.element, eTypeDigit);
+    EXPECT_TYPE(type, eTypePointer);
+    ssa_type_pointer_t ptr = type->pointer;
+    EXPECT_TYPE(ptr.pointer, eTypeDigit);
+    CTASSERTF(ptr.length != 0 && ptr.length != SIZE_MAX, "invalid string length: %zu", ptr.length);
 
     ssa_value_t *self = ssa_value_new(type, true);
     self->data = vector_of(length);
     for (size_t i = 0; i < length; i++)
     {
-        ssa_value_t *value = ssa_value_char(array.element, text[i]);
+        ssa_value_t *value = ssa_value_char(ptr.pointer, text[i]);
         vector_set(self->data, i, value);
     }
     return self;

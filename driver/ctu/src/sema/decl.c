@@ -53,8 +53,8 @@ static const tree_t *get_global_storage(const tree_t *type, const tree_t *expr)
 
         switch (tree_get_kind(exprType))
         {
-        case eTreeTypeArray:
-            return tree_type_storage(node, name, exprType->array, exprType->length, eQualConst);
+        case eTreeTypePointer:
+            return tree_type_storage(node, name, exprType->ptr, exprType->length, eQualConst);
         case eTreeTypeStorage:
             return exprType;
         default:
@@ -87,7 +87,20 @@ static void ctu_resolve_function(cookie_t *cookie, tree_t *sema, tree_t *self, v
 {
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclFunction);
 
-    tree_t *body = ctu_sema_stmt(sema, self, decl->body);
+    size_t len = vector_len(self->params);
+    const size_t sizes[eCtuTagTotal] = {
+        [eCtuTagValues] = len
+    };
+
+    tree_t *ctx = tree_module(sema, decl->node, decl->name, eCtuTagTotal, sizes);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        tree_t *param = vector_get(self->params, i);
+        ctu_add_decl(ctx, eCtuTagValues, param->name, param);
+    }
+
+    tree_t *body = decl->body == NULL ? NULL : ctu_sema_stmt(ctx, self, decl->body);
     tree_close_function(self, body);
 }
 
@@ -152,8 +165,18 @@ static tree_t *ctu_forward_function(tree_t *sema, ctu_t *decl)
         .fnResolve = ctu_resolve_function
     };
 
-    tree_t *returnType = ctu_sema_type(sema, decl->returnType);
-    tree_t *signature = tree_type_closure(decl->node, decl->name, returnType, vector_of(0), eArityFixed);
+    size_t len = vector_len(decl->params);
+    vector_t *params = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        ctu_t *param = vector_get(decl->params, i);
+        tree_t *type = ctu_sema_type(sema, param->paramType);
+        tree_t *it = tree_decl_param(param->node, param->name, type);
+        vector_set(params, i, it);
+    }
+
+    tree_t *returnType = decl->returnType == NULL ? ctu_get_void_type() : ctu_sema_type(sema, decl->returnType);
+    tree_t *signature = tree_type_closure(decl->node, decl->name, returnType, params, eArityFixed);
 
     return tree_open_function(decl->node, decl->name, signature, resolve);
 }

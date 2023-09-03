@@ -80,12 +80,8 @@ typedef struct ssa_type_closure_t {
 
 typedef struct ssa_type_pointer_t {
     const ssa_type_t *pointer;
-} ssa_type_pointer_t;
-
-typedef struct ssa_type_array_t {
-    ssa_type_t *element;
     size_t length;
-} ssa_type_array_t;
+} ssa_type_pointer_t;
 
 typedef struct ssa_type_storage_t {
     const ssa_type_t *type;
@@ -101,7 +97,6 @@ typedef struct ssa_type_t {
         ssa_type_digit_t digit;
         ssa_type_closure_t closure;
         ssa_type_pointer_t pointer;
-        ssa_type_array_t array;
         ssa_type_storage_t storage;
     };
 } ssa_type_t;
@@ -297,7 +292,7 @@ void ssa_opt(reports_t *reports, ssa_result_t mod);
 
 ssa_type_t *ssa_type_bool(const char *name, quals_t quals);
 ssa_type_t *ssa_type_digit(const char *name, quals_t quals, sign_t sign, digit_t digit);
-ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointer);
+ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointer, size_t length);
 
 ///
 /// names

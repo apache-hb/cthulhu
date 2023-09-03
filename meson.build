@@ -52,7 +52,7 @@ configure_file(
 
 versiondir = include_directories('.')
 
-gmp = dependency('gmp', 
+gmp = dependency('gmp',
     not_found_message : 'no system gmp found, falling back to mini-gmp',
     fallback : [ 'mini-gmp', 'gmp' ]
 )
@@ -111,7 +111,7 @@ if cc.get_id() == 'msvc'
         '/analyze:max_paths', '4096'
     ]
 else
-    analyze_args += [ 
+    analyze_args += [
         '-Wanalyzer-double-fclose',
         '-Wanalyzer-double-free',
         '-Wanalyzer-free-of-non-heap',
@@ -128,21 +128,21 @@ endif
 flex = find_program('flex', 'win_flex', version : '>=2.6')
 bison = find_program('bison', 'win_bison', version : host == 'windows' ? '>=2.6' : '>=3.5')
 
-lex = generator(flex, 
+lex = generator(flex,
     output : [ '@BASENAME@-flex.c', '@BASENAME@-flex.h' ],
     arguments : lexargs + [
-        '--outfile=@OUTPUT0@', 
-        '--header-file=@OUTPUT1@', 
+        '--outfile=@OUTPUT0@',
+        '--header-file=@OUTPUT1@',
         '@INPUT@'
     ]
 )
 
 parse = generator(bison,
     output : [ '@BASENAME@-bison.c', '@BASENAME@-bison.h' ],
-    arguments : parseargs + [ 
+    arguments : parseargs + [
         '-d', '@INPUT@', '-v',
-        '--output=@OUTPUT0@', 
-        '--defines=@OUTPUT1@' 
+        '--output=@OUTPUT0@',
+        '--defines=@OUTPUT1@'
     ]
 )
 
@@ -193,7 +193,7 @@ if afl.found()
     foreach lang, interface : fuzzers
         input = here/'tests/lang'/lang/'fuzzing-input'
         cmd = [ afl, '-i', input, '-o', 'fuzz-out-' + lang, '-m', 'none', '-d', '--', interface.full_path(), '@@']
-        run_target('fuzz-' + lang, 
+        run_target('fuzz-' + lang,
             command : cmd,
             depends : interface,
             env : { 'AFL_CRASH_EXITCODE': '99' }

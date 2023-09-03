@@ -190,7 +190,7 @@ tree_t *obr_default_value(const node_t *node, const tree_t *type)
         return tree_expr_digit(node, type, zero);
     }
 
-    case eTreeTypeStorage: return obr_default_value(node, tree_get_type(type));
+    case eTreeTypeStorage: return obr_default_value(node, type->ptr);
 
     default: NEVER("obr-default-value unknown type kind %s", tree_to_string(type));
     }

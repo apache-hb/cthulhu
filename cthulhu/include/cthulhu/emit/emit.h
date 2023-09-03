@@ -25,8 +25,6 @@ typedef struct emit_options_t {
 /// ssa api
 ///
 
-typedef struct ssa_symbol_t ssa_symbol_t;
-
 typedef struct ssa_emit_options_t {
     emit_options_t opts;
 } ssa_emit_options_t;

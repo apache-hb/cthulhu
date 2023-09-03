@@ -41,6 +41,7 @@ typedef enum ctu_kind_t {
 
     /* intermediates */
     eCtuField,
+    eCtuParam,
 
     /* modules */
     eCtuImport,
@@ -69,6 +70,7 @@ typedef struct ctu_t {
 
                 /* eCtuDeclFunction */
                 struct {
+                    vector_t *params;
                     ctu_t *returnType;
                     ctu_t *body;
                 };
@@ -84,6 +86,9 @@ typedef struct ctu_t {
 
                 /* eCtuField */
                 ctu_t *fieldType;
+
+                /* eCtuParam */
+                ctu_t *paramType;
             };
         };
 
@@ -183,7 +188,7 @@ ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer);
 ///
 
 ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mutable, char *name, ctu_t *type, ctu_t *value);
-ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, ctu_t *returnType, ctu_t *body);
+ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, vector_t *params, ctu_t *returnType, ctu_t *body);
 
 ///
 /// type declarations
@@ -199,3 +204,4 @@ ctu_t *ctu_decl_struct(scan_t *scan, where_t where, bool exported, char *name, v
 ///
 
 ctu_t *ctu_field(scan_t *scan, where_t where, char *name, ctu_t *type);
+ctu_t *ctu_param(scan_t *scan, where_t where, char *name, ctu_t *type);

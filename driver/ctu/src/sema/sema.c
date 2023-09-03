@@ -75,11 +75,14 @@ tree_t *ctu_current_symbol(tree_t *sema)
 /// runtime
 ///
 
-static tree_t *kIntTypes[eDigitTotal * eSignTotal] = { NULL };
-static tree_t *kBoolType = NULL;
-static tree_t *kStrType = NULL;
+static tree_t *gIntTypes[eDigitTotal * eSignTotal] = { NULL };
+static tree_t *gBoolType = NULL;
+static tree_t *gVoidType = NULL;
+static tree_t *gStringType = NULL;
 
-#define DIGIT_TYPE(DIGIT, SIGN) kIntTypes[DIGIT * eSignTotal + SIGN]
+static tree_t *gStringChar = NULL;
+
+#define DIGIT_TYPE(DIGIT, SIGN) gIntTypes[DIGIT * eSignTotal + SIGN]
 
 static tree_t *make_int_type(const char *name, digit_t digit, sign_t sign)
 {
@@ -88,12 +91,17 @@ static tree_t *make_int_type(const char *name, digit_t digit, sign_t sign)
 
 static tree_t *make_bool_type(const char *name)
 {
-    return (kBoolType = tree_type_bool(node_builtin(), name, eQualUnknown));
+    return (gBoolType = tree_type_bool(node_builtin(), name, eQualUnknown));
 }
 
 static tree_t *make_str_type(const char *name)
 {
-    return (kStrType = tree_type_array(node_builtin(), name, ctu_get_int_type(eDigitChar, eSignSigned), SIZE_MAX));
+    return (gStringType = ctu_get_str_type(SIZE_MAX));
+}
+
+static tree_t *make_void_type(const char *name)
+{
+    return (gVoidType = tree_type_unit(node_builtin(), name));
 }
 
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
@@ -103,12 +111,17 @@ tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
 
 tree_t *ctu_get_bool_type(void)
 {
-    return kBoolType;
+    return gBoolType;
+}
+
+tree_t *ctu_get_void_type(void)
+{
+    return gVoidType;
 }
 
 tree_t *ctu_get_str_type(size_t length)
 {
-    return tree_type_array(node_builtin(), "str", ctu_get_int_type(eDigitChar, eSignSigned), length);
+    return tree_type_pointer(node_builtin(), "str", gStringChar, length);
 }
 
 tree_t *ctu_rt_mod(lifetime_t *lifetime)
@@ -124,6 +137,8 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
         [eCtuTagAttribs] = 1,
         [eCtuTagSuffixes] = 1,
     };
+
+    gStringChar = tree_type_digit(node_builtin(), "letter", eDigitChar, eSignSigned, eQualConst);
 
     tree_t *root = lifetime_sema_new(lifetime, "runtime", eCtuTagTotal, sizes);
 
@@ -141,6 +156,7 @@ tree_t *ctu_rt_mod(lifetime_t *lifetime)
 
     ctu_add_decl(root, eCtuTagTypes, "bool", make_bool_type("bool"));
     ctu_add_decl(root, eCtuTagTypes, "str", make_str_type("str"));
+    ctu_add_decl(root, eCtuTagTypes, "void", make_void_type("void"));
 
     return root;
 }

@@ -140,7 +140,7 @@ static vector_t *make_runtime_path(void)
 
 static tree_t *get_string_type(size_t length)
 {
-    return tree_type_array(node_builtin(), "string", kCharType, length);
+    return tree_type_pointer(node_builtin(), "string", kCharType, length);
 }
 
 void pl0_init(driver_t *handle)
@@ -162,7 +162,7 @@ void pl0_init(driver_t *handle)
 
     tree_set_attrib(kPrintString, &kExportAttrib);
 
-    tree_t *stringType = tree_type_pointer(node, "string", tree_type_digit(node, "$", eDigitChar, eSignSigned, eQualConst));
+    tree_t *stringType = tree_type_pointer(node, "string", tree_type_digit(node, "$", eDigitChar, eSignSigned, eQualConst), SIZE_MAX);
 
     vector_t *params = vector_of(1);
     vector_set(params, 0, tree_decl_param(node, "fmt", stringType));

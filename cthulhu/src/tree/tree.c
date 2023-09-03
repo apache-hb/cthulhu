@@ -107,22 +107,12 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
     return self;
 }
 
-tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *pointer)
+tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *pointer, size_t length)
 {
     CTASSERT(pointer != NULL);
 
     tree_t *self = tree_decl(eTreeTypePointer, node, NULL, name, eQualUnknown);
-    self->pointer = pointer;
-    return self;
-}
-
-tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *array, size_t length)
-{
-    CTASSERT(array != NULL);
-    CTASSERT(length > 0);
-
-    tree_t *self = tree_decl(eTreeTypeArray, node, NULL, name, eQualUnknown);
-    self->array = array;
+    self->ptr = pointer;
     self->length = length;
     return self;
 }
@@ -135,8 +125,9 @@ tree_t *tree_type_storage(const node_t *node, const char *name, const tree_t *ty
 
     CTASSERTF(!tree_is(type, eTreeTypeStorage), "storage cannot be nested, found %s", tree_to_string(type));
 
-    tree_t *self = tree_decl(eTreeTypeStorage, node, type, name, quals);
-    self->size = size;
+    tree_t *self = tree_decl(eTreeTypeStorage, node, NULL, name, quals);
+    self->ptr = type;
+    self->length = size;
     return self;
 }
 

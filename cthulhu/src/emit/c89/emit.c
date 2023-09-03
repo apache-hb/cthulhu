@@ -306,10 +306,6 @@ static const ssa_type_t *get_reg_type(const ssa_type_t *type)
         ssa_type_pointer_t pointer = type->pointer;
         return pointer.pointer;
     }
-    case eTypeArray: {
-        ssa_type_array_t array = type->array;
-        return ssa_type_pointer(type->name, type->quals, array.element);
-    }
 
     default: NEVER("expected storage or pointer type, got %s (on %s)", ssa_type_name(type->kind), type->name);
     }
@@ -323,7 +319,7 @@ static const char *c89_name_load_vreg_by_operand(c89_emit_t *emit, const ssa_ste
 
 static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value);
 
-static const char *c89_format_array(c89_emit_t *emit, vector_t *data)
+static const char *c89_format_pointer(c89_emit_t *emit, vector_t *data)
 {
     size_t len = vector_len(data);
     vector_t *result = vector_of(len);
@@ -345,7 +341,7 @@ static const char *c89_format_value(c89_emit_t *emit, const ssa_value_t* value)
     {
     case eTypeBool: return value->boolValue ? "true" : "false";
     case eTypeDigit: return mpz_get_str(NULL, 10, value->digitValue);
-    case eTypeArray: return c89_format_array(emit, value->data);
+    case eTypePointer: return c89_format_pointer(emit, value->data);
     default: NEVER("unknown type kind %d", type->kind);
     }
 }
@@ -437,7 +433,7 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         {
         case eOpStore: {
             ssa_store_t store = step->store;
-            write_string(io, "\t%s[0] = %s;\n",
+            write_string(io, "\t*(%s) = %s;\n",
                 c89_format_operand(emit, store.dst),
                 c89_format_operand(emit, store.src)
             );
@@ -450,10 +446,11 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 format_symbol(emit, cast.type, NULL),
                 c89_format_operand(emit, cast.operand)
             );
+            break;
         }
         case eOpLoad: {
             ssa_load_t load = step->load;
-            write_string(io, "\t%s = %s[0];\n",
+            write_string(io, "\t%s = *(%s);\n",
                 c89_name_load_vreg_by_operand(emit, step, load.src),
                 c89_format_operand(emit, load.src)
             );
@@ -558,13 +555,13 @@ static void write_init(c89_emit_t *emit, io_t *io, const ssa_value_t *value)
     const ssa_type_t *type = value->type;
     const char *init = c89_format_value(emit, value);
 
-    if (type->kind == eTypeArray)
+    if (type->kind == eTypePointer)
     {
         write_string(io, " = %s", init);
     }
     else
     {
-        write_string(io, " = { %s }", init);
+       write_string(io, " = { %s }", init);
     }
 }
 

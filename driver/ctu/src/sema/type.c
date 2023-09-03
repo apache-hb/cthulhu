@@ -42,7 +42,7 @@ static tree_t *sema_type_name(tree_t *sema, const ctu_t *type)
 static tree_t *ctu_sema_type_pointer(tree_t *sema, const ctu_t *type)
 {
     tree_t *pointee = ctu_sema_type(sema, type->pointer);
-    return tree_type_pointer(type->node, format("*%s", tree_get_name(pointee)), pointee);
+    return tree_type_pointer(type->node, format("*%s", tree_get_name(pointee)), pointee, 1);
 }
 
 tree_t *ctu_sema_type(tree_t *sema, const ctu_t *type)

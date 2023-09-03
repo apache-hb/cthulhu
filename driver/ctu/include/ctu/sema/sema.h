@@ -46,6 +46,7 @@ tree_t *ctu_current_symbol(tree_t *sema);
 
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign);
 tree_t *ctu_get_bool_type(void);
+tree_t *ctu_get_void_type(void);
 tree_t *ctu_get_str_type(size_t length);
 
 ///

@@ -53,21 +53,15 @@ static char *closure_to_string(ssa_type_closure_t closure)
     return format("closure(result: %s, params: [%s], variadic: %s)", result, params, closure.variadic ? "true" : "false");
 }
 
-static char *array_to_string(ssa_type_array_t array)
-{
-    const char *pointee = type_to_string(array.element);
-    if (util_length_bounded(array.length))
-    {
-        return format("array(%s of %zu)", pointee, array.length);
-    }
-
-    return format("array(%s)", pointee);
-}
-
 static char *pointer_to_string(ssa_type_pointer_t pointer)
 {
     const char *pointee = type_to_string(pointer.pointer);
-    return format("ptr(%s)", pointee);
+    switch (pointer.length)
+    {
+    case 0: return format("ptr(%s)", pointee);
+    case SIZE_MAX: return format("unbounded-ptr(%s)", pointee);
+    default: return format("ptr(%s of %zu)", pointee, pointer.length);
+    }
 }
 
 static char *storage_to_string(ssa_type_storage_t storage)
@@ -84,7 +78,6 @@ static const char *type_to_string(const ssa_type_t *type)
     case eTypeBool: return "bool";
     case eTypeDigit: return digit_to_string(type->digit);
     case eTypeClosure: return closure_to_string(type->closure);
-    case eTypeArray: return array_to_string(type->array);
     case eTypePointer: return pointer_to_string(type->pointer);
     case eTypeStorage: return storage_to_string(type->storage);
     default: NEVER("unknown type kind %d", type->kind);
@@ -113,7 +106,7 @@ static void emit_ssa_attribs(io_t *io, const ssa_symbol_t *symbol)
 
 static const char *value_to_string(const ssa_value_t *value);
 
-static const char *array_value_to_string(const ssa_value_t *value)
+static const char *pointer_value_to_string(const ssa_value_t *value)
 {
     size_t len = vector_len(value->data);
     vector_t *parts = vector_new(16);
@@ -140,7 +133,7 @@ static const char *value_to_string(const ssa_value_t *value)
     case eTypeBool: return value->boolValue ? "true" : "false";
     case eTypeUnit: return "unit";
     case eTypeEmpty: return "empty";
-    case eTypeArray: return array_value_to_string(value);
+    case eTypePointer: return pointer_value_to_string(value);
 
     default: NEVER("unknown type kind %d", type->kind);
     }
@@ -214,6 +207,7 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 type_to_string(cast.type),
                 operand_to_string(emit, cast.operand)
             );
+            break;
         case eOpLoad:
             ssa_load_t load = step->load;
             write_string(io, "\t%%%s = load %s\n",
@@ -335,6 +329,7 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
         write_string(io, "global %s: %s\n", global->name, type_to_string(global->type));
         emit_ssa_attribs(io, global);
 
+        emit_ssa_consts(emit, io, global->consts);
         emit_ssa_blocks(emit, io, global->blocks);
 
         if (len >= i) { write_string(io, "\n"); }

@@ -101,7 +101,7 @@ tree_t *obr_get_void_type(void)
 
 tree_t *obr_get_string_type(size_t length)
 {
-    return tree_type_array(node_builtin(), "STRING", gTypeChar, length);
+    return tree_type_pointer(node_builtin(), "STRING", gTypeChar, length);
 }
 
 tree_t *obr_rt_mod(lifetime_t *lifetime)

@@ -144,9 +144,10 @@ ctu_t *ctu_decl_global(scan_t *scan, where_t where, bool exported, bool mut, cha
     return ast;
 }
 
-ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, ctu_t *returnType, ctu_t *body)
+ctu_t *ctu_decl_function(scan_t *scan, where_t where, bool exported, char *name, vector_t *params, ctu_t *returnType, ctu_t *body)
 {
     ctu_t *ast = ctu_decl(scan, where, eCtuDeclFunction, name, exported);
+    ast->params = params;
     ast->returnType = returnType;
     ast->body = body;
     return ast;
@@ -174,5 +175,13 @@ ctu_t *ctu_field(scan_t *scan, where_t where, char *name, ctu_t *type)
     ctu_t *ast = ctu_new(scan, where, eCtuField);
     ast->name = name;
     ast->fieldType = type;
+    return ast;
+}
+
+ctu_t *ctu_param(scan_t *scan, where_t where, char *name, ctu_t *type)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuParam);
+    ast->name = name;
+    ast->paramType = type;
     return ast;
 }

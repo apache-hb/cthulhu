@@ -54,10 +54,14 @@ WS [ \t\r\v\n\f]
 "^" { return BITXOR; }
 
 "!" { return NOT; }
+"," { return COMMA; }
 
 ";" { return SEMI; }
 ":" { return COLON; }
 "::" { return COLON2; }
+
+"(" { return LPAREN; }
+")" { return RPAREN; }
 
 "{" { return LBRACE; }
 "}" { return RBRACE; }

@@ -19,7 +19,6 @@ static bool has_name(tree_kind_t kind)
     case eTreeTypeDigit:
     case eTreeTypeClosure:
     case eTreeTypePointer:
-    case eTreeTypeArray:
     case eTreeTypeStorage:
 
     case eTreeTypeStruct:
@@ -185,7 +184,7 @@ bool tree_ty_is_address(const tree_t *type)
     switch (tree_get_kind(type))
     {
     case eTreeTypePointer:
-    case eTreeTypeArray:
+    case eTreeTypeStorage:
         return true;
 
     default:
@@ -219,8 +218,11 @@ const tree_t *tree_ty_load_type(const tree_t *self)
 {
     switch (tree_get_kind(self))
     {
-    case eTreeTypeStorage: return tree_get_type(self);
-    case eTreeTypePointer: return self->pointer;
-    default: return self;
+    case eTreeTypeStorage:
+    case eTreeTypePointer:
+        return self->ptr;
+
+    default:
+        return self;
     }
 }

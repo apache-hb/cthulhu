@@ -55,15 +55,6 @@ static const char *format_c89_pointer(c89_emit_t *emit, const char *quals, ssa_t
         : format("%s *%s%s", result, quals, name);
 }
 
-static const char *format_c89_array(c89_emit_t *emit, const char *quals, ssa_type_array_t type, const char *name)
-{
-    const char *result = c89_format_type(emit, type.element, NULL, true);
-
-    return (name == NULL)
-        ? format("%s%s[]", quals, result)
-        : format("%s%s %s[]", quals, result, name);
-}
-
 static const char *format_c89_storage(c89_emit_t *emit, const char *quals, ssa_type_storage_t type, const char *name)
 {
     const char *result = c89_format_type(emit, type.type, NULL, true);
@@ -92,7 +83,6 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
 
     case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
     case eTypePointer: return format_c89_pointer(emit, quals, type->pointer, name);
-    case eTypeArray: return format_c89_array(emit, quals, type->array, name);
 
     case eTypeStorage: return format_c89_storage(emit, quals, type->storage, name);
 

@@ -54,27 +54,16 @@ ssa_type_t *ssa_type_closure(const char *name, quals_t quals, ssa_type_t *result
     return closure;
 }
 
-ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointer)
+ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointer, size_t length)
 {
     ssa_type_pointer_t it = {
-        .pointer = pointer
+        .pointer = pointer,
+        .length = length
     };
 
     ssa_type_t *ptr = ssa_type_new(eTypePointer, name, quals);
     ptr->pointer = it;
     return ptr;
-}
-
-ssa_type_t *ssa_type_array(const char *name, quals_t quals, ssa_type_t *element, size_t length)
-{
-    ssa_type_array_t it = {
-        .element = element,
-        .length = length
-    };
-
-    ssa_type_t *array = ssa_type_new(eTypeArray, name, quals);
-    array->array = it;
-    return array;
 }
 
 ssa_type_t *ssa_type_storage(const char *name, quals_t quals, ssa_type_t *storage, size_t size)
@@ -135,9 +124,8 @@ static ssa_type_t *ssa_type_inner(const tree_t *type)
             /* params = */ collect_params(type),
             /* variadic = */ tree_fn_get_arity(type) == eArityVariable
         );
-    case eTreeTypePointer: return ssa_type_pointer(name, quals, ssa_type_from(type->pointer));
-    case eTreeTypeArray: return ssa_type_array(name, quals, ssa_type_from(type->array), type->length);
-    case eTreeTypeStorage: return ssa_type_storage(name, quals, ssa_type_from(tree_get_type(type)), type->size);
+    case eTreeTypePointer: return ssa_type_pointer(name, quals, ssa_type_from(type->ptr), type->length);
+    case eTreeTypeStorage: return ssa_type_storage(name, quals, ssa_type_from(type->ptr), type->length);
 
     default: NEVER("unexpected type kind: %s", tree_to_string(type));
     }
