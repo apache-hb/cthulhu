@@ -73,9 +73,17 @@ ssa_type_t *ssa_type_storage(const char *name, quals_t quals, ssa_type_t *storag
         .size = size
     };
 
-    ssa_type_t *stor = ssa_type_new(eTypeStorage, name, quals);
-    stor->storage = it;
-    return stor;
+    ssa_type_t *type = ssa_type_new(eTypeStorage, name, quals);
+    type->storage = it;
+    return type;
+}
+
+ssa_type_t *ssa_type_struct(const char *name, quals_t quals, typevec_t *fields)
+{
+    ssa_type_record_t it = { .fields = fields };
+    ssa_type_t *type = ssa_type_new(eTypeRecord, name, quals);
+    type->record = it;
+    return type;
 }
 
 static typevec_t *collect_params(const tree_t *type)
@@ -104,7 +112,30 @@ static typevec_t *collect_params(const tree_t *type)
     return result;
 }
 
-static ssa_type_t *ssa_type_inner(const tree_t *type)
+static typevec_t *collect_fields(const tree_t *type)
+{
+    size_t len = vector_len(type->fields);
+    typevec_t *result = typevec_of(sizeof(ssa_field_t), len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const tree_t *field = vector_get(type->fields, i);
+        CTASSERTF(tree_is(field, eTreeDeclField), "expected field, got %s", tree_to_string(field));
+
+        const char *name = tree_get_name(field);
+        const tree_t *type = tree_get_type(field);
+
+        ssa_field_t entry = {
+            .name = name,
+            .type = ssa_type_from(type)
+        };
+
+        typevec_set(result, i, &entry);
+    }
+
+    return result;
+}
+
+ssa_type_t *ssa_type_from(const tree_t *type)
 {
     tree_kind_t kind = tree_get_kind(type);
     const char *name = tree_get_name(type);
@@ -127,11 +158,8 @@ static ssa_type_t *ssa_type_inner(const tree_t *type)
     case eTreeTypePointer: return ssa_type_pointer(name, quals, ssa_type_from(type->ptr), type->length);
     case eTreeTypeStorage: return ssa_type_storage(name, quals, ssa_type_from(type->ptr), type->length);
 
+    case eTreeTypeStruct: return ssa_type_struct(name, quals, collect_fields(type));
+
     default: NEVER("unexpected type kind: %s", tree_to_string(type));
     }
-}
-
-ssa_type_t *ssa_type_from(const tree_t *type)
-{
-    return ssa_type_inner(type);
 }

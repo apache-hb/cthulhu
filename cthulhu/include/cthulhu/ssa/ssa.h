@@ -83,6 +83,10 @@ typedef struct ssa_type_pointer_t {
     size_t length;
 } ssa_type_pointer_t;
 
+typedef struct ssa_type_record_t {
+    typevec_t *fields; // typevec_t<ssa_field_t>
+} ssa_type_record_t;
+
 typedef struct ssa_type_storage_t {
     const ssa_type_t *type;
     size_t size;
@@ -97,6 +101,7 @@ typedef struct ssa_type_t {
         ssa_type_digit_t digit;
         ssa_type_closure_t closure;
         ssa_type_pointer_t pointer;
+        ssa_type_record_t record;
         ssa_type_storage_t storage;
     };
 } ssa_type_t;
@@ -263,8 +268,9 @@ typedef struct ssa_module_t {
     const char *name;
     vector_t *path; ///< vector<string> the path to this module
 
-    vector_t *globals; ///< vector<ssa_symbol> all globals declared/imported/exported by this module
-    vector_t *functions; ///< vector<ssa_symbol> all functions declared/imported/exported by this module
+    vector_t *types; ///< vector<ssa_type_t> all types used by this module
+    vector_t *globals; ///< vector<ssa_symbol_t> all globals declared/imported/exported by this module
+    vector_t *functions; ///< vector<ssa_symbol_t> all functions declared/imported/exported by this module
 } ssa_module_t;
 
 typedef struct ssa_result_t {

@@ -27,6 +27,16 @@ static const attribs_t kAttribExport = {
     .visibility = eVisiblePublic
 };
 
+static const attribs_t kAttribForward = {
+    .link = eLinkImport,
+    .visibility = eVisiblePublic
+};
+
+static const attribs_t kAttribImport = {
+    .link = eLinkImport,
+    .visibility = eVisiblePrivate
+};
+
 ///
 /// decl resolution
 ///
@@ -239,8 +249,7 @@ static ctu_forward_t forward_decl_inner(tree_t *sema, ctu_t *decl)
         };
         return fwd;
     }
-    default:
-        NEVER("invalid decl kind %d", decl->kind);
+    default: NEVER("invalid decl kind %d", decl->kind);
     }
 }
 
@@ -248,7 +257,14 @@ ctu_forward_t ctu_forward_decl(tree_t *sema, ctu_t *decl)
 {
     ctu_forward_t fwd = forward_decl_inner(sema, decl);
 
-    tree_set_attrib(fwd.decl, decl->exported ? &kAttribExport : &kAttribPrivate);
+    if (decl->kind == eCtuDeclFunction && decl->body == NULL)
+    {
+        tree_set_attrib(fwd.decl, decl->exported ? &kAttribForward : &kAttribImport);
+    }
+    else
+    {
+        tree_set_attrib(fwd.decl, decl->exported ? &kAttribExport : &kAttribPrivate);
+    }
 
     return fwd;
 }

@@ -59,6 +59,23 @@ ctu_t *ctu_stmt_return(scan_t *scan, where_t where, ctu_t *value)
     return ast;
 }
 
+ctu_t *ctu_stmt_while(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *other)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuStmtWhile);
+    ast->cond = cond;
+    ast->then = then;
+    ast->other = other;
+    return ast;
+}
+
+ctu_t *ctu_stmt_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuStmtAssign);
+    ast->dst = dst;
+    ast->src = src;
+    return ast;
+}
+
 /* exprs */
 
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value)
@@ -87,6 +104,20 @@ ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprName);
     ast->path = path;
+    return ast;
+}
+
+ctu_t *ctu_expr_ref(scan_t *scan, where_t where, ctu_t *expr)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprRef);
+    ast->expr = expr;
+    return ast;
+}
+
+ctu_t *ctu_expr_deref(scan_t *scan, where_t where, ctu_t *expr)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprDeref);
+    ast->expr = expr;
     return ast;
 }
 

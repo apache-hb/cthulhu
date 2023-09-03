@@ -21,10 +21,15 @@ typedef enum ctu_kind_t {
     eCtuExprBinary,
     eCtuExprUnary,
 
+    eCtuExprRef,
+    eCtuExprDeref,
+
     /* statements */
     eCtuStmtList,
     eCtuStmtLocal,
     eCtuStmtReturn,
+    eCtuStmtWhile,
+    eCtuStmtAssign,
 
     /* types */
     eCtuTypeName,
@@ -132,6 +137,19 @@ typedef struct ctu_t {
         /* eCtuStmtReturn */
         ctu_t *result;
 
+        /* eCtuStmtWhile */
+        struct {
+            ctu_t *cond;
+            ctu_t *then;
+            ctu_t *other;
+        };
+
+        /* eCtuStmtAssign */
+        struct {
+            ctu_t *dst;
+            ctu_t *src;
+        };
+
         /* eCtuTypeName */
         vector_t *typeName;
 
@@ -161,6 +179,8 @@ ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name);
 ctu_t *ctu_stmt_list(scan_t *scan, where_t where, vector_t *stmts);
 ctu_t *ctu_stmt_local(scan_t *scan, where_t where, bool mutable, char *name, ctu_t *type, ctu_t *value);
 ctu_t *ctu_stmt_return(scan_t *scan, where_t where, ctu_t *value);
+ctu_t *ctu_stmt_while(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *other);
+ctu_t *ctu_stmt_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src);
 
 ///
 /// expressions
@@ -171,6 +191,8 @@ ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value);
 ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length);
 
 ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path);
+ctu_t *ctu_expr_ref(scan_t *scan, where_t where, ctu_t *expr);
+ctu_t *ctu_expr_deref(scan_t *scan, where_t where, ctu_t *expr);
 
 ctu_t *ctu_expr_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *expr);
 ctu_t *ctu_expr_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs);

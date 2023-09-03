@@ -8,6 +8,7 @@ SSA_KIND(eTypeBool, "bool")
 SSA_KIND(eTypeDigit, "digit")
 SSA_KIND(eTypeClosure, "closure")
 SSA_KIND(eTypePointer, "pointer")
+SSA_KIND(eTypeRecord, "record")
 SSA_KIND(eTypeStorage, "storage")
 
 #undef SSA_KIND

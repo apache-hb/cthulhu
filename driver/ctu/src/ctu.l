@@ -60,6 +60,9 @@ WS [ \t\r\v\n\f]
 ":" { return COLON; }
 "::" { return COLON2; }
 
+"[" { return LSQUARE; }
+"]" { return RSQUARE; }
+
 "(" { return LPAREN; }
 ")" { return RPAREN; }
 
@@ -81,6 +84,7 @@ WS [ \t\r\v\n\f]
 "type" { return TYPE; }
 
 "return" { return RETURN; }
+"while" { return WHILE; }
 "if" { return IF; }
 "else" { return ELSE; }
 

@@ -26,6 +26,7 @@ static bool has_name(tree_kind_t kind)
     case eTreeDeclGlobal:
     case eTreeDeclLocal:
     case eTreeDeclParam:
+    case eTreeDeclField:
     case eTreeDeclFunction:
     case eTreeDeclModule:
         return true;

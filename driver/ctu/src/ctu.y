@@ -60,6 +60,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     TYPE "`type`"
 
     RETURN "`return`"
+    WHILE "`while`"
     IF "`if`"
     ELSE "`else`"
 
@@ -99,6 +100,9 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     SEMI "`;`"
     COLON "`:`"
     COLON2 "`::`"
+
+    LSQUARE "`[`"
+    RSQUARE "`]`"
 
     LPAREN "`(`"
     RPAREN "`)`"
@@ -140,7 +144,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     primary expr
     orExpr andExpr eqExpr cmpExpr xorExpr bitExpr shiftExpr addExpr mulExpr unaryExpr postExpr
     maybeExpr
-    stmt stmts localDecl returnStmt
+    stmt stmts localDecl returnStmt whileStmt assignExpr
     fnParam fnResult
 
 %type<ident>
@@ -254,12 +258,17 @@ structField: ident COLON type SEMI { $$ = ctu_field(x, @$, $1, $3); }
 
 type: path { $$ = ctu_type_name(x, @$, $1); }
     | STAR type { $$ = ctu_type_pointer(x, @$, $2); }
+    | LSQUARE STAR RSQUARE type { $$ = ctu_type_pointer(x, @$, $4); /* TODO: implement indexable pointers */ }
     ;
 
 /* statements */
 
 stmtList: %empty { $$ = vector_of(0); }
     | stmtList stmt { vector_push(&$1, $2); $$ = $1; }
+    ;
+
+whileStmt: WHILE expr stmts { $$ = ctu_stmt_while(x, @$, $2, $3, NULL); }
+    | WHILE expr stmts ELSE stmts { $$ = ctu_stmt_while(x, @$, $2, $3, $5); }
     ;
 
 returnStmt: RETURN expr SEMI { $$ = ctu_stmt_return(x, @$, $2); }
@@ -273,10 +282,15 @@ localDecl: mut IDENT COLON type ASSIGN maybeExpr SEMI { $$ = ctu_stmt_local(x, @
     | mut IDENT ASSIGN expr SEMI { $$ = ctu_stmt_local(x, @$, $1, $2, NULL, $4); }
     ;
 
+assignExpr: expr ASSIGN expr SEMI { $$ = ctu_stmt_assign(x, @$, $1, $3); }
+    ;
+
 stmt: expr SEMI { $$ = $1; }
     | stmts { $$ = $1; }
     | returnStmt { $$ = $1; }
     | localDecl { $$ = $1; }
+    | whileStmt { $$ = $1; }
+    | assignExpr { $$ = $1; }
     ;
 
 /* expressions */
@@ -299,6 +313,8 @@ unaryExpr: postExpr { $$ = $1; }
     | MINUS unaryExpr { $$ = ctu_expr_unary(x, @$, eUnaryNeg, $2); }
     | PLUS unaryExpr { $$ = ctu_expr_unary(x, @$, eUnaryAbs, $2); }
     | NOT unaryExpr { $$ = ctu_expr_unary(x, @$, eUnaryNot, $2); }
+    | STAR unaryExpr { $$ = ctu_expr_deref(x, @$, $2); }
+    | BITAND unaryExpr { $$ = ctu_expr_ref(x, @$, $2); }
     ;
 
 mulExpr: unaryExpr { $$ = $1; }

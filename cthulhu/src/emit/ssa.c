@@ -69,6 +69,20 @@ static char *storage_to_string(ssa_type_storage_t storage)
     return format("storage(%s[%zu])", type_to_string(storage.type), storage.size);
 }
 
+static char *record_to_string(ssa_type_record_t record)
+{
+    size_t len = typevec_len(record.fields);
+    vector_t *fields = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_field_t *field = typevec_offset(record.fields, i);
+        const char *ty = type_to_string(field->type);
+        vector_set(fields, i, format("%s: %s", field->name, ty));
+    }
+
+    return format("record(fields: [%s])", str_join(", ", fields));
+}
+
 static const char *type_to_string(const ssa_type_t *type)
 {
     switch (type->kind)
@@ -80,6 +94,7 @@ static const char *type_to_string(const ssa_type_t *type)
     case eTypeClosure: return closure_to_string(type->closure);
     case eTypePointer: return pointer_to_string(type->pointer);
     case eTypeStorage: return storage_to_string(type->storage);
+    case eTypeRecord: return record_to_string(type->record);
     default: NEVER("unknown type kind %d", type->kind);
     }
 }

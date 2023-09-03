@@ -239,6 +239,16 @@ static tree_t *sema_return(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     return tree_stmt_return(stmt->node, value);
 }
 
+static tree_t *sema_while(tree_t *sema, tree_t *decl, const ctu_t *stmt)
+{
+    tree_t *cond = ctu_sema_rvalue(sema, stmt->cond, ctu_get_bool_type());
+    tree_t *then = ctu_sema_stmt(sema, decl, stmt->then);
+
+    NEVER("TODO: implement while");
+
+    return NULL;
+}
+
 tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 {
     CTASSERT(decl != NULL);
@@ -249,6 +259,7 @@ tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     case eCtuStmtLocal: return sema_local(sema, decl, stmt);
     case eCtuStmtList: return sema_stmts(sema, decl, stmt);
     case eCtuStmtReturn: return sema_return(sema, decl, stmt);
+    case eCtuStmtWhile: return sema_while(sema, decl, stmt);
 
     default:
         NEVER("invalid stmt kind %d", stmt->kind);
