@@ -1,17 +1,18 @@
 #include "common.h"
 
+#include "report/report.h"
+
 #include "std/str.h"
 #include "std/map.h"
 #include "std/vector.h"
+#include "std/typed/vector.h"
 
 #include "io/fs.h"
 
-#include "std/typed/vector.h"
+#include "base/panic.h"
 
 #include <stdarg.h>
 #include <string.h>
-
-#include "report/report.h"
 
 static bool check_root_mod(vector_t *path, const char *id)
 {
@@ -100,4 +101,76 @@ void write_string(io_t *io, const char *fmt, ...)
     va_end(args);
 
     io_write(io, msg, strlen(msg));
+}
+
+static char *digit_to_string(ssa_type_digit_t digit)
+{
+    return format("digit(%s.%s)", sign_name(digit.sign), digit_name(digit.digit));
+}
+
+static char *params_to_string(typevec_t *params)
+{
+    size_t len = typevec_len(params);
+    vector_t *vec = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_param_t *param = typevec_offset(params, i);
+        const char *ty = type_to_string(param->type);
+        vector_set(vec, i, format("%s: %s", param->name, ty));
+    }
+
+    return str_join(", ", vec);
+}
+static char *closure_to_string(ssa_type_closure_t closure)
+{
+    const char *result = type_to_string(closure.result);
+    char *params = params_to_string(closure.params);
+
+    return format("closure(result: %s, params: [%s], variadic: %s)", result, params, closure.variadic ? "true" : "false");
+}
+
+static char *pointer_to_string(ssa_type_pointer_t pointer)
+{
+    const char *pointee = type_to_string(pointer.pointer);
+    switch (pointer.length)
+    {
+    case 0: return format("ptr(%s)", pointee);
+    case SIZE_MAX: return format("unbounded-ptr(%s)", pointee);
+    default: return format("ptr(%s of %zu)", pointee, pointer.length);
+    }
+}
+
+static char *storage_to_string(ssa_type_storage_t storage)
+{
+    return format("storage(%s[%zu])", type_to_string(storage.type), storage.size);
+}
+
+static char *record_to_string(ssa_type_record_t record)
+{
+    size_t len = typevec_len(record.fields);
+    vector_t *fields = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_field_t *field = typevec_offset(record.fields, i);
+        const char *ty = type_to_string(field->type);
+        vector_set(fields, i, format("%s: %s", field->name, ty));
+    }
+
+    return format("record(fields: [%s])", str_join(", ", fields));
+}
+
+const char *type_to_string(const ssa_type_t *type)
+{
+    switch (type->kind)
+    {
+    case eTypeEmpty: return "empty";
+    case eTypeUnit: return "unit";
+    case eTypeBool: return "bool";
+    case eTypeDigit: return digit_to_string(type->digit);
+    case eTypeClosure: return closure_to_string(type->closure);
+    case eTypePointer: return pointer_to_string(type->pointer);
+    case eTypeStorage: return storage_to_string(type->storage);
+    case eTypeRecord: return record_to_string(type->record);
+    default: NEVER("unknown type kind %d", type->kind);
+    }
 }

@@ -117,6 +117,15 @@ tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *po
     return self;
 }
 
+tree_t *tree_type_reference(const node_t *node, const char *name, const tree_t *reference)
+{
+    CTASSERT(reference != NULL);
+
+    tree_t *self = tree_decl(eTreeTypeReference, node, NULL, name, eQualUnknown);
+    self->ptr = reference;
+    return self;
+}
+
 tree_t *tree_type_storage(const node_t *node, const char *name, const tree_t *type, size_t size, quals_t quals)
 {
     CTASSERT(type != NULL);
@@ -178,7 +187,7 @@ tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *val
 ///
 
 /// must be either storage or a pointer
-#define TREE_EXPECT_LOAD(TYPE) CTASSERTF(tree_is(TYPE, eTreeTypeStorage) || tree_is(TYPE, eTreeTypePointer) || tree_is(TYPE, eTreeError), "expected storage or pointer, found %s", tree_to_string(TYPE))
+#define TREE_EXPECT_ADDRESS(TYPE) CTASSERTF(tree_is(TYPE, eTreeTypeStorage) || tree_is(TYPE, eTreeTypePointer) || tree_is(TYPE, eTreeTypeReference) || tree_is(TYPE, eTreeError), "expected storage or pointer, found %s", tree_to_string(TYPE))
 
 /// must not be storage
 #define TREE_EXPECT_REG(TYPE) CTASSERTF(!tree_is(TYPE, eTreeTypeStorage) || tree_is(TYPE, eTreeError), "expected register, found %s", tree_to_string(TYPE))
@@ -195,10 +204,30 @@ tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr)
 tree_t *tree_expr_load(const node_t *node, tree_t *expr)
 {
     const tree_t *type = tree_get_type(expr);
-    TREE_EXPECT_LOAD(type);
+    TREE_EXPECT_ADDRESS(type);
 
     tree_t *self = tree_new(eTreeExprLoad, node, tree_ty_load_type(type));
     self->load = expr;
+    return self;
+}
+
+tree_t *tree_expr_ref(const node_t *node, tree_t *expr)
+{
+    const tree_t *type = tree_get_type(expr);
+    TREE_EXPECT_REG(type);
+
+    tree_t *inner = tree_type_reference(node, tree_get_name(type), tree_ty_load_type(type));
+    tree_t *self = tree_new(eTreeExprReference, node, inner);
+    self->expr = expr;
+    return self;
+}
+
+tree_t *tree_expr_address(const node_t *node, tree_t *expr)
+{
+    const tree_t *type = tree_get_type(expr);
+    tree_t *inner = tree_type_pointer(node, tree_get_name(type), type, 1);
+    tree_t *self = tree_new(eTreeExprAddress, node, inner);
+    self->expr = expr;
     return self;
 }
 
@@ -282,11 +311,10 @@ tree_t *tree_stmt_return(const node_t *node, const tree_t *value)
 
 tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src)
 {
-    CTASSERT(dst != NULL);
-    CTASSERT(src != NULL);
-
     const tree_t *dstType = tree_get_type(dst);
-    CTASSERTF(tree_is(dstType, eTreeTypeStorage), "destination must be storage, found %s", tree_to_string(dstType));
+    TREE_EXPECT_ADDRESS(dstType);
+
+    CTASSERT(src != NULL);
 
     tree_t *self = tree_new(eTreeStmtAssign, node, NULL);
     self->dst = dst;

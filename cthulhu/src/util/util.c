@@ -59,6 +59,7 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
         return (lhs->digit == rhs->digit) && (lhs->sign == rhs->sign);
 
     case eTreeTypeStorage:
+    case eTreeTypeReference:
     case eTreeTypePointer:
         return util_types_equal(lhs->ptr, rhs->ptr);
 
@@ -122,6 +123,49 @@ static tree_t *cast_to_pointer(const tree_t *dst, tree_t *expr)
     }
 }
 
+static tree_t *cast_to_digit(const tree_t *dst, tree_t *expr)
+{
+    CTASSERTF(tree_is(dst, eTreeTypeDigit), "(dst=%s)", tree_to_string(dst));
+
+    const tree_t *src = tree_get_type(expr);
+
+    switch (tree_get_kind(src))
+    {
+    case eTreeTypeDigit:
+        if (dst->digit < src->digit)
+        {
+            return tree_error(tree_get_node(expr),
+                                "cannot cast `%s` to `%s`, may truncate",
+                                tree_to_string(src), tree_to_string(dst));
+        }
+
+        return expr;
+
+    default:
+        return tree_error(tree_get_node(expr),
+                          "cannot cast `%s` to `%s`",
+                          tree_to_string(src), tree_to_string(dst));
+    }
+}
+
+static tree_t *cast_to_bool(const tree_t *dst, tree_t *expr)
+{
+    CTASSERTF(tree_is(dst, eTreeTypeBool), "(dst=%s)", tree_to_string(dst));
+
+    const tree_t *src = tree_get_type(expr);
+
+    switch (tree_get_kind(src))
+    {
+    case eTreeTypeBool:
+        return expr;
+
+    default:
+        return tree_error(tree_get_node(expr),
+                          "cannot cast `%s` to `%s`",
+                          tree_to_string(src), tree_to_string(dst));
+    }
+}
+
 tree_t *util_type_cast(const tree_t *dst, tree_t *expr)
 {
     CTASSERTF(dst != NULL && expr != NULL, "(dst=%p, expr=%p)", dst, expr);
@@ -134,6 +178,15 @@ tree_t *util_type_cast(const tree_t *dst, tree_t *expr)
     {
     case eTreeTypePointer:
         return cast_to_pointer(dst, expr);
+
+    case eTreeTypeReference:
+        return util_type_cast(dst->ptr, expr);
+
+    case eTreeTypeDigit:
+        return cast_to_digit(dst, expr);
+
+    case eTreeTypeBool:
+        return cast_to_bool(dst, expr);
 
     default:
         return tree_error(tree_get_node(expr),

@@ -422,6 +422,23 @@ static bool operand_cant_return(ssa_operand_t operand)
     return operand.kind == eOperandEmpty;
 }
 
+static void c89_write_address(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
+{
+    ssa_addr_t addr = step->addr;
+    ssa_operand_t symbol = addr.symbol;
+    const ssa_type_t *type = get_operand_type(emit, symbol);
+
+    const ssa_type_t *ptr = ssa_type_pointer(type->name, eQualUnknown, (ssa_type_t*)type, 0);
+    const char *stepName = c89_name_vreg(emit, step, ptr);
+    logverbose("type: `%s` `%s`", type->name, stepName);
+
+    write_string(io, "\t%s = &(%s); // %s\n",
+        stepName,
+        c89_format_operand(emit, addr.symbol),
+        type_to_string(ptr)
+    );
+}
+
 static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
 {
     size_t len = typevec_len(bb->steps);
@@ -456,6 +473,10 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
             );
             break;
         }
+        case eOpAddress:
+            c89_write_address(emit, io, step);
+            break;
+
         case eOpUnary: {
             ssa_unary_t unary = step->unary;
             write_string(io, "\t%s = (%s %s);\n",

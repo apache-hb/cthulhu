@@ -24,13 +24,6 @@ typedef struct ssa_emit_t {
     map_t *deps;
 } ssa_emit_t;
 
-static const char *type_to_string(const ssa_type_t *type);
-
-static char *digit_to_string(ssa_type_digit_t digit)
-{
-    return format("digit(%s.%s)", sign_name(digit.sign), digit_name(digit.digit));
-}
-
 static char *params_to_string(typevec_t *params)
 {
     size_t len = typevec_len(params);
@@ -43,60 +36,6 @@ static char *params_to_string(typevec_t *params)
     }
 
     return str_join(", ", vec);
-}
-
-static char *closure_to_string(ssa_type_closure_t closure)
-{
-    const char *result = type_to_string(closure.result);
-    char *params = params_to_string(closure.params);
-
-    return format("closure(result: %s, params: [%s], variadic: %s)", result, params, closure.variadic ? "true" : "false");
-}
-
-static char *pointer_to_string(ssa_type_pointer_t pointer)
-{
-    const char *pointee = type_to_string(pointer.pointer);
-    switch (pointer.length)
-    {
-    case 0: return format("ptr(%s)", pointee);
-    case SIZE_MAX: return format("unbounded-ptr(%s)", pointee);
-    default: return format("ptr(%s of %zu)", pointee, pointer.length);
-    }
-}
-
-static char *storage_to_string(ssa_type_storage_t storage)
-{
-    return format("storage(%s[%zu])", type_to_string(storage.type), storage.size);
-}
-
-static char *record_to_string(ssa_type_record_t record)
-{
-    size_t len = typevec_len(record.fields);
-    vector_t *fields = vector_of(len);
-    for (size_t i = 0; i < len; i++)
-    {
-        const ssa_field_t *field = typevec_offset(record.fields, i);
-        const char *ty = type_to_string(field->type);
-        vector_set(fields, i, format("%s: %s", field->name, ty));
-    }
-
-    return format("record(fields: [%s])", str_join(", ", fields));
-}
-
-static const char *type_to_string(const ssa_type_t *type)
-{
-    switch (type->kind)
-    {
-    case eTypeEmpty: return "empty";
-    case eTypeUnit: return "unit";
-    case eTypeBool: return "bool";
-    case eTypeDigit: return digit_to_string(type->digit);
-    case eTypeClosure: return closure_to_string(type->closure);
-    case eTypePointer: return pointer_to_string(type->pointer);
-    case eTypeStorage: return storage_to_string(type->storage);
-    case eTypeRecord: return record_to_string(type->record);
-    default: NEVER("unknown type kind %d", type->kind);
-    }
 }
 
 static vector_t *join_attribs(const ssa_symbol_t *symbol)
@@ -228,6 +167,13 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
             write_string(io, "\t%%%s = load %s\n",
                 get_step_name(&emit->emit, step),
                 operand_to_string(emit, load.src)
+            );
+            break;
+        case eOpAddress:
+            ssa_addr_t addr = step->addr;
+            write_string(io, "\t%%%s = addr %s\n",
+                get_step_name(&emit->emit, step),
+                operand_to_string(emit, addr.symbol)
             );
             break;
         case eOpReturn:

@@ -395,6 +395,18 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         return add_step(ssa, step);
     }
 
+    case eTreeExprReference:
+    case eTreeExprAddress: {
+        ssa_operand_t operand = compile_tree(ssa, tree->expr);
+        ssa_step_t step = {
+            .opcode = eOpAddress,
+            .addr = {
+                .symbol = operand
+            }
+        };
+        return add_step(ssa, step);
+    }
+
     case eTreeStmtBlock: {
         size_t len = vector_len(tree->stmts);
         for (size_t i = 0; i < len; i++)

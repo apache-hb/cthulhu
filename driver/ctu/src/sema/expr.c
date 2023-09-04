@@ -46,32 +46,27 @@ static tree_t *sema_decl_name(tree_t *sema, const node_t *node, vector_t *path)
 /// inner logic
 ///
 
-static tree_t *verify_expr_type(tree_t *sema, tree_kind_t kind, const tree_t *type, const char *exprKind, const node_t *node)
+static tree_t *verify_expr_type(tree_t *sema, tree_kind_t kind, const tree_t *type, const char *exprKind, tree_t *expr)
 {
-    if (type == NULL) { return NULL; }
-    if (tree_is(type, kind)) { return NULL; }
+    if (type == NULL) { return expr; }
 
-    return tree_raise(node, sema->reports, "%ss are not implicitly convertable to `%s`", exprKind, tree_to_string(type));
+    return util_type_cast(type, expr);
 }
 
 static tree_t *sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
     const tree_t *type = implicitType ? implicitType : ctu_get_bool_type();
+    tree_t *it = tree_expr_bool(expr->node, type, expr->boolValue);
 
-    tree_t *verify = verify_expr_type(sema, eTreeTypeBool, type, "boolean literal", expr->node);
-    if (verify != NULL) { return verify; }
-
-    return tree_expr_bool(expr->node, type, expr->boolValue);
+    return verify_expr_type(sema, eTreeTypeBool, type, "boolean literal", it);
 }
 
 static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
     const tree_t *type = implicitType ? implicitType : ctu_get_int_type(eDigitInt, eSignSigned); // TODO: calculate proper type to use
+    tree_t *it = tree_expr_digit(expr->node, type, expr->intValue);
 
-    tree_t *verify = verify_expr_type(sema, eTreeTypeDigit, type, "integer literal", expr->node);
-    if (verify != NULL) { return verify; }
-
-    return tree_expr_digit(expr->node, type, expr->intValue);
+    return verify_expr_type(sema, eTreeTypeDigit, type, "integer literal", it);
 }
 
 static tree_t *sema_string(tree_t *sema, const ctu_t *expr)
@@ -175,12 +170,28 @@ static tree_t *sema_call(tree_t *sema, const ctu_t *expr)
     return tree_expr_call(expr->node, callee, result);
 }
 
-static tree_t *sema_deref(tree_t *sema, const ctu_t *expr)
+static tree_t *sema_deref_lvalue(tree_t *sema, const ctu_t *expr)
+{
+    tree_t *inner = ctu_sema_rvalue(sema, expr->expr, NULL);
+    if (tree_is(inner, eTreeError)) { return inner; }
+
+    return tree_expr_ref(expr->node, inner);
+}
+
+static tree_t *sema_deref_rvalue(tree_t *sema, const ctu_t *expr)
 {
     tree_t *inner = ctu_sema_rvalue(sema, expr->expr, NULL);
     if (tree_is(inner, eTreeError)) { return inner; }
 
     return tree_expr_load(expr->node, inner);
+}
+
+static tree_t *sema_ref(tree_t *sema, const ctu_t *expr)
+{
+    tree_t *inner = ctu_sema_lvalue(sema, expr->expr, NULL);
+    if (tree_is(inner, eTreeError)) { return inner; }
+
+    return tree_expr_address(expr->node, inner);
 }
 
 tree_t *ctu_sema_lvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
@@ -190,7 +201,7 @@ tree_t *ctu_sema_lvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
     switch (expr->kind)
     {
     case eCtuExprName: return sema_name(sema, expr);
-    case eCtuExprDeref: return sema_deref(sema, expr);
+    case eCtuExprDeref: return sema_deref_lvalue(sema, expr);
 
     default: NEVER("invalid lvalue-expr kind %d", expr->kind);
     }
@@ -210,6 +221,9 @@ tree_t *ctu_sema_rvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
 
     case eCtuExprName: return sema_load(sema, expr);
     case eCtuExprCall: return sema_call(sema, expr);
+
+    case eCtuExprRef: return sema_ref(sema, expr);
+    case eCtuExprDeref: return sema_deref_rvalue(sema, expr);
 
     case eCtuExprCompare: return sema_compare(sema, expr);
     case eCtuExprBinary: return sema_binary(sema, expr, inner);
@@ -286,7 +300,9 @@ static tree_t *sema_while(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 static tree_t *sema_assign(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 {
     tree_t *dst = ctu_sema_lvalue(sema, stmt->dst, NULL);
-    tree_t *src = ctu_sema_rvalue(sema, stmt->src, tree_get_type(dst));
+    const tree_t *ty = tree_get_type(dst);
+
+    tree_t *src = ctu_sema_rvalue(sema, stmt->src, tree_ty_load_type(ty));
 
     return tree_stmt_assign(stmt->node, dst, src);
 }

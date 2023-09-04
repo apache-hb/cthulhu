@@ -4,4 +4,6 @@ def main(argc: int, argv: [*]str): int {
     } else {
 
     }
+
+    return 0;
 }

@@ -73,6 +73,9 @@ typedef struct tree_t {
         /* eTreeExprLoad */
         tree_t *load;
 
+        /* eTreeExprRef */
+        tree_t *expr;
+
         /* eTreeExprCast */
         tree_t *cast;
 
@@ -257,6 +260,16 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
 tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *pointer, size_t length);
 
 /**
+ * @brief create a reference type
+ *
+ * @param node the location of the reference
+ * @param name the name of the type
+ * @param reference the type that this reference references
+ * @return tree_t* the reference type
+ */
+tree_t *tree_type_reference(const node_t *node, const char *name, const tree_t *reference);
+
+/**
  * @brief create a storage type
  *
  * @param node where this type was defined
@@ -291,7 +304,34 @@ tree_t *tree_expr_digit(const node_t *node, const tree_t *type, const mpz_t valu
 tree_t *tree_expr_string(const node_t *node, const tree_t *type, const char *value, size_t length);
 
 tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr);
+
+/**
+ * @brief load a value from a pointer or storage
+ *
+ * @param node the location of the load
+ * @param expr the pointer or storage to load from
+ * @return tree_t* the loaded value
+ */
 tree_t *tree_expr_load(const node_t *node, tree_t *expr);
+
+/**
+ * @brief create a reference to an object
+ *
+ * @param node the location of the reference
+ * @param expr the object to reference
+ * @return tree_t*
+ */
+tree_t *tree_expr_ref(const node_t *node, tree_t *expr);
+
+/**
+ * @brief create a reference to an object
+ *
+ * @param node the location of the reference
+ * @param expr the object to reference
+ * @return tree_t* the reference
+ */
+tree_t *tree_expr_address(const node_t *node, tree_t *expr);
+
 tree_t *tree_expr_unary(const node_t *node, unary_t unary, tree_t *expr);
 tree_t *tree_expr_binary(const node_t *node, const tree_t *type, binary_t binary, tree_t *lhs, tree_t *rhs);
 tree_t *tree_expr_compare(const node_t *node, const tree_t *type, compare_t compare, tree_t *lhs, tree_t *rhs);

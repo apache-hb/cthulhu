@@ -111,6 +111,14 @@ static void ctu_resolve_function(cookie_t *cookie, tree_t *sema, tree_t *self, v
     }
 
     tree_t *body = decl->body == NULL ? NULL : ctu_sema_stmt(ctx, self, decl->body);
+    if (body != NULL)
+    {
+        const tree_t *ty = tree_fn_get_return(self);
+        if (util_types_equal(ty, ctu_get_void_type()))
+        {
+            vector_push(&body->stmts, tree_stmt_return(self->node, tree_expr_unit(self->node, ty)));
+        }
+    }
     tree_close_function(self, body);
 }
 

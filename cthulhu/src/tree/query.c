@@ -19,6 +19,7 @@ static bool has_name(tree_kind_t kind)
     case eTreeTypeDigit:
     case eTreeTypeClosure:
     case eTreeTypePointer:
+    case eTreeTypeReference:
     case eTreeTypeStorage:
 
     case eTreeTypeStruct:
@@ -221,6 +222,7 @@ const tree_t *tree_ty_load_type(const tree_t *self)
     {
     case eTreeTypeStorage:
     case eTreeTypePointer:
+    case eTreeTypeReference:
         return self->ptr;
 
     default:

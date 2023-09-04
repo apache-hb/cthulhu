@@ -14,7 +14,8 @@ TREE_KIND(eTreeTypeDigit, "type-digit")
 TREE_KIND(eTreeTypeClosure, "type-closure") ///< a function pointer type (no captures)
 
 TREE_KIND(eTreeTypeStorage, "type-storage") ///< memory storage
-TREE_KIND(eTreeTypePointer, "type-pointer") ///< a reference to storage
+TREE_KIND(eTreeTypeReference, "type-reference") ///< a reference to an object
+TREE_KIND(eTreeTypePointer, "type-pointer") ///< a pointer to an object
 
 TREE_KIND(eTreeTypeStruct, "type-struct")
 
@@ -31,6 +32,8 @@ TREE_KIND(eTreeExprString, "expr-string")
 
 TREE_KIND(eTreeExprCast, "expr-cast")
 TREE_KIND(eTreeExprLoad, "expr-load")
+TREE_KIND(eTreeExprReference, "expr-reference")
+TREE_KIND(eTreeExprAddress, "expr-address")
 TREE_KIND(eTreeExprUnary, "expr-unary")
 TREE_KIND(eTreeExprBinary, "expr-binary")
 TREE_KIND(eTreeExprCompare, "expr-compare")
