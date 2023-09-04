@@ -52,33 +52,6 @@ static ctu_t *begin_resolve(tree_t *sema, tree_t *self, void *user, ctu_kind_t k
     return decl;
 }
 
-static const tree_t *get_global_storage(const tree_t *type, const tree_t *expr)
-{
-    if (expr != NULL)
-    {
-        const tree_t *exprType = tree_get_type(expr);
-
-        const node_t *node = tree_get_node(exprType);
-        const char *name = tree_get_name(exprType);
-
-        switch (tree_get_kind(exprType))
-        {
-        case eTreeTypePointer:
-            return tree_type_storage(node, name, exprType->ptr, exprType->length, eQualConst);
-        case eTreeTypeStorage:
-            return exprType;
-        default:
-            return tree_type_storage(node, name, exprType, 1, eQualConst);
-        }
-    }
-    else
-    {
-        const node_t *node = tree_get_node(type);
-        const char *name = tree_get_name(type);
-        return tree_type_storage(node, name, type, 1, eQualConst);
-    }
-}
-
 static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, void *user)
 {
     ctu_t *decl = begin_resolve(sema, self, user, eCtuDeclGlobal);
@@ -87,8 +60,6 @@ static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, voi
     tree_t *expr = decl->value == NULL ? NULL : ctu_sema_rvalue(sema, decl->value, type);
 
     CTASSERT(expr != NULL || type != NULL);
-
-    self->type = get_global_storage(type, expr);
 
     tree_close_global(self, expr);
 }
@@ -161,14 +132,22 @@ static tree_t *ctu_forward_global(tree_t *sema, ctu_t *decl)
     CTASSERTF(decl->kind == eCtuDeclGlobal, "decl %s is not a global", decl->name);
     CTASSERTF(decl->type != NULL || decl->value != NULL, "decl %s has no type and no init expr", decl->name);
 
+    tree_t *type = decl->type == NULL ? NULL : ctu_sema_type(sema, decl->type);
+
     tree_resolve_info_t resolve = {
         .sema = sema,
         .user = decl,
         .fnResolve = ctu_resolve_global
     };
 
-    tree_t *type = decl->type == NULL ? NULL : ctu_sema_type(sema, decl->type);
+    tree_storage_t storage = {
+        .storage = type,
+        .size = 1,
+        .quals = decl->mut ? eQualMutable : eQualConst
+    };
+
     tree_t *global = tree_open_global(decl->node, decl->name, type, resolve);
+    tree_set_storage(global, storage);
 
     return global;
 }

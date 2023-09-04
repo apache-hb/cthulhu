@@ -11,6 +11,12 @@
 
 #include <stdint.h>
 
+static const tree_storage_t kEmptyStorage = {
+    .storage = NULL,
+    .size = SIZE_MAX,
+    .quals = eQualUnknown
+};
+
 static tree_t *decl_open(const node_t *node, const char *name, const tree_t *type, tree_kind_t expected, const tree_resolve_info_t *resolve)
 {
     tree_t *self = tree_decl(expected, node, type, name, eQualUnknown);
@@ -59,17 +65,30 @@ tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl)
     return inner;
 }
 
+void tree_set_storage(tree_t *self, tree_storage_t storage)
+{
+    CTASSERT(self != NULL);
 
-tree_t *tree_decl_global(const node_t *node, const char *name, const tree_t *type, tree_t *value)
+    self->storage = storage.storage;
+    self->size = storage.size;
+    self->quals = storage.quals;
+}
+
+tree_t *tree_decl_global(
+    const node_t *node, const char *name,
+    tree_storage_t storage, const tree_t *type, tree_t *value)
 {
     tree_t *self = decl_open(node, name, type, eTreeDeclGlobal, NULL);
+    tree_set_storage(self, storage);
     tree_close_global(self, value);
     return self;
 }
 
 tree_t *tree_open_global(const node_t *node, const char *name, const tree_t *type, tree_resolve_info_t resolve)
 {
-    return decl_open(node, name, type, eTreeDeclGlobal, BOX(resolve));
+    tree_t *self = decl_open(node, name, type, eTreeDeclGlobal, BOX(resolve));
+    tree_set_storage(self, kEmptyStorage);
+    return self;
 }
 
 tree_t *tree_open_function(const node_t *node, const char *name, const tree_t *signature, tree_resolve_info_t resolve)
@@ -85,7 +104,7 @@ tree_t *tree_open_function(const node_t *node, const char *name, const tree_t *s
 void tree_close_global(tree_t *self, tree_t *value)
 {
     decl_close(self, eTreeDeclGlobal);
-    self->global = value;
+    self->initial = value;
 }
 
 void tree_close_function(tree_t *self, tree_t *body)
@@ -113,9 +132,11 @@ tree_t *tree_decl_field(const node_t *node, const char *name, const tree_t *type
     return tree_decl(eTreeDeclField, node, type, name, eQualUnknown);
 }
 
-tree_t *tree_decl_local(const node_t *node, const char *name, const tree_t *type)
+tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t storage, const tree_t *type)
 {
-    return tree_decl(eTreeDeclLocal, node, type, name, eQualUnknown);
+    tree_t *self = tree_decl(eTreeDeclLocal, node, type, name, eQualUnknown);
+    tree_set_storage(self, storage);
+    return self;
 }
 
 tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve)
@@ -160,6 +181,8 @@ void tree_add_local(tree_t *self, tree_t *decl)
 
 void tree_set_attrib(tree_t *self, const attribs_t *attrib)
 {
+    CTASSERT(self != NULL);
+
     self->attrib = attrib;
 }
 

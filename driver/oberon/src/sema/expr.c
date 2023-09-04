@@ -21,24 +21,8 @@ static tree_t *sema_digit(tree_t *sema, obr_t *expr, const tree_t *implicitType)
 static tree_t *sema_string(tree_t *sema, obr_t *expr)
 {
     const node_t *node = tree_get_node(sema);
-
-    // generate a unique name for the string
-    // TODO: its not really unique
-    const tree_t *currentSymbol = obr_current_symbol(sema);
-    char *name = format("%s$str", tree_get_name(currentSymbol));
-
-    // create the string and put it into a global value
     const tree_t *type = obr_get_string_type(expr->length + 1);
-    tree_t *storage = tree_type_storage(node, name, obr_get_char_type(), expr->length + 1, eQualConst);
-    tree_t *init = tree_expr_string(node, type, expr->text, expr->length + 1);
-    tree_t *global = tree_decl_global(node, name, storage, init);
-
-    // add the global to the current module
-    tree_t *currentModule = util_current_module(sema);
-    obr_add_decl(currentModule, eObrTagValues, name, global);
-
-    // job done
-    return global;
+    return tree_expr_string(node, type, expr->text, expr->length + 1);;
 }
 
 static tree_t *sema_unary(tree_t *sema, obr_t *expr, const tree_t *implicitType)
@@ -190,7 +174,7 @@ tree_t *obr_default_value(const node_t *node, const tree_t *type)
         return tree_expr_digit(node, type, zero);
     }
 
-    case eTreeTypeStorage: return obr_default_value(node, type->ptr);
+    case eTreeTypeReference: return obr_default_value(node, tree_ty_load_type(type));
 
     default: NEVER("obr-default-value unknown type kind %s", tree_to_string(type));
     }

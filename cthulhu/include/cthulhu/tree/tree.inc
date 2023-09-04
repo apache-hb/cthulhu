@@ -13,7 +13,6 @@ TREE_KIND(eTreeTypeBool, "type-bool") ///< a type with two values
 TREE_KIND(eTreeTypeDigit, "type-digit")
 TREE_KIND(eTreeTypeClosure, "type-closure") ///< a function pointer type (no captures)
 
-TREE_KIND(eTreeTypeStorage, "type-storage") ///< memory storage
 TREE_KIND(eTreeTypeReference, "type-reference") ///< a reference to an object
 TREE_KIND(eTreeTypePointer, "type-pointer") ///< a pointer to an object
 
@@ -63,6 +62,7 @@ TREE_KIND(eTreeDeclParam, "decl-param")
 TREE_KIND(eTreeDeclField, "decl-field")
 TREE_KIND(eTreeDeclFunction, "decl-function")
 TREE_KIND(eTreeDeclModule, "decl-module")
+TREE_KIND(eTreeDeclStorage, "decl-storage")
 
 TREE_KIND(eTreeType, "unresolved-type") ///< unresolved type
 TREE_KIND(eTreeError, "error") ///< an error of some sort

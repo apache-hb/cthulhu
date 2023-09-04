@@ -66,18 +66,6 @@ ssa_type_t *ssa_type_pointer(const char *name, quals_t quals, ssa_type_t *pointe
     return ptr;
 }
 
-ssa_type_t *ssa_type_storage(const char *name, quals_t quals, ssa_type_t *storage, size_t size)
-{
-    ssa_type_storage_t it = {
-        .type = storage,
-        .size = size
-    };
-
-    ssa_type_t *type = ssa_type_new(eTypeStorage, name, quals);
-    type->storage = it;
-    return type;
-}
-
 ssa_type_t *ssa_type_struct(const char *name, quals_t quals, typevec_t *fields)
 {
     ssa_type_record_t it = { .fields = fields };
@@ -155,8 +143,12 @@ ssa_type_t *ssa_type_from(const tree_t *type)
             /* params = */ collect_params(type),
             /* variadic = */ tree_fn_get_arity(type) == eArityVariable
         );
-    case eTreeTypePointer: return ssa_type_pointer(name, quals, ssa_type_from(type->ptr), type->length);
-    case eTreeTypeStorage: return ssa_type_storage(name, quals, ssa_type_from(type->ptr), type->length);
+
+    case eTreeTypeReference:
+        return ssa_type_pointer(name, quals, ssa_type_from(type->ptr), 1);
+
+    case eTreeTypePointer:
+        return ssa_type_pointer(name, quals, ssa_type_from(type->ptr), type->length);
 
     case eTreeTypeStruct: return ssa_type_struct(name, quals, collect_fields(type));
 

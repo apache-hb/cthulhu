@@ -49,7 +49,7 @@ static void check_global_attribs(check_t *check, const tree_t *global)
     switch (attribs->link)
     {
     case eLinkImport:
-        if (global->global != NULL)
+        if (global->initial != NULL)
         {
             message_t *id = report(check->reports, eWarn, tree_get_node(global),
                 "global `%s` is marked as imported but has an implementation",
@@ -285,10 +285,10 @@ static void check_global_recursion(check_t *check, const tree_t *global)
     size_t idx = vector_find(check->exprStack, global);
     if (idx == SIZE_MAX)
     {
-        if (global->global != NULL)
+        if (global->initial != NULL)
         {
             vector_push(&check->exprStack, (tree_t*)global);
-            check_expr_recursion(check, global->global);
+            check_expr_recursion(check, global->initial);
             vector_drop(check->exprStack);
         }
     }
@@ -392,7 +392,7 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
         break;
 
     case eTreeTypePointer:
-    case eTreeTypeStorage:
+    case eTreeTypeReference:
         check_type_recursion(check, type->ptr);
         break;
 

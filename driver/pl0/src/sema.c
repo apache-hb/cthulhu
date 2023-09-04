@@ -15,16 +15,15 @@
 #include "cthulhu/tree/tree.h"
 #include "cthulhu/tree/query.h"
 
-static const tree_t *kIntType = NULL;
-static const tree_t *kCharType = NULL;
-static const tree_t *kBoolType = NULL;
-static const tree_t *kVoidType = NULL;
+static const tree_t *gIntType = NULL;
+static const tree_t *gCharType = NULL;
+static const tree_t *gBoolType = NULL;
+static const tree_t *gVoidType = NULL;
 
-static const tree_t *kIntMutStorage = NULL;
-static const tree_t *kIntConstStorage = NULL;
+static const tree_t *gIntRef = NULL;
 
-static tree_t *kPrint = NULL;
-static tree_t *kPrintString = NULL;
+static tree_t *gPrint = NULL;
+static tree_t *gPrintString = NULL;
 
 static const attribs_t kPrintAttrib = {
     .link = eLinkImport,
@@ -125,8 +124,8 @@ static tree_t *make_runtime_mod(lifetime_t *lifetime)
     };
 
     tree_t *mod = lifetime_sema_new(lifetime, "runtime", ePl0TagTotal, decls);
-    set_proc(mod, ePl0TagProcs, "print", kPrint);
-    set_decl(mod, ePl0TagValues, "$fmt", kPrintString);
+    set_proc(mod, ePl0TagProcs, "print", gPrint);
+    set_decl(mod, ePl0TagValues, "$fmt", gPrintString);
     return mod;
 }
 
@@ -138,9 +137,32 @@ static vector_t *make_runtime_path(void)
     return path;
 }
 
-static tree_t *get_string_type(size_t length)
+static tree_t *get_string_type(size_t size)
 {
-    return tree_type_pointer(node_builtin(), "string", kCharType, length);
+    node_t *node = node_builtin();
+    return tree_type_pointer(node, "string", tree_type_digit(node, "$", eDigitChar, eSignSigned, eQualConst), size);
+}
+
+static tree_storage_t get_const_storage(void)
+{
+    tree_storage_t storage = {
+        .storage = gIntType,
+        .size = 1,
+        .quals = eQualConst
+    };
+
+    return storage;
+}
+
+static tree_storage_t get_mutable_storage(void)
+{
+    tree_storage_t storage = {
+        .storage = gIntType,
+        .size = 1,
+        .quals = eQualMutable
+    };
+
+    return storage;
 }
 
 void pl0_init(driver_t *handle)
@@ -148,28 +170,30 @@ void pl0_init(driver_t *handle)
     node_t *node = node_builtin();
     lifetime_t *lifetime = handle_get_lifetime(handle);
 
-    kIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned, eQualUnknown);
-    kCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned, eQualUnknown);
-    kBoolType = tree_type_bool(node, "boolean", eQualConst);
-    kVoidType = tree_type_unit(node, "void");
+    gIntType = tree_type_digit(node, "integer", eDigitInt, eSignSigned, eQualUnknown);
+    gCharType = tree_type_digit(node, "char", eDigitChar, eSignSigned, eQualUnknown);
+    gBoolType = tree_type_bool(node, "boolean", eQualConst);
+    gVoidType = tree_type_unit(node, "void");
 
-    kIntMutStorage = tree_type_storage(node, "integer", kIntType, 1, eQualMutable);
-    kIntConstStorage = tree_type_storage(node, "integer", kIntType, 1, eQualConst);
+    gIntRef = tree_type_reference(node, "ref", gIntType);
 
-    kPrintString = tree_decl_global(node, "$fmt",
-                                    tree_type_storage(node, "string", kCharType, 4, eQualConst),
-                                    tree_expr_string(node, get_string_type(4), "%d\n", 4));
-
-    tree_set_attrib(kPrintString, &kExportAttrib);
-
-    tree_t *stringType = tree_type_pointer(node, "string", tree_type_digit(node, "$", eDigitChar, eSignSigned, eQualConst), SIZE_MAX);
+    tree_t *stringType = get_string_type(4);
 
     vector_t *params = vector_of(1);
     vector_set(params, 0, tree_decl_param(node, "fmt", stringType));
 
-    tree_t *signature = tree_type_closure(node, "print", kVoidType, params, eArityVariable);
-    kPrint = tree_decl_function(node, "print", signature, params, vector_of(0), NULL);
-    tree_set_attrib(kPrint, &kPrintAttrib);
+    const tree_storage_t storage = {
+        .storage = gCharType,
+        .size = 4,
+        .quals = eQualConst
+    };
+
+    gPrintString = tree_decl_global(node, "$fmt", storage, stringType, tree_expr_string(node, stringType, "%d\n", 4));
+    tree_set_attrib(gPrintString, &kExportAttrib);
+
+    tree_t *signature = tree_type_closure(node, "print", gVoidType, params, eArityVariable);
+    gPrint = tree_decl_function(node, "print", signature, params, vector_of(0), NULL);
+    tree_set_attrib(gPrint, &kPrintAttrib);
 
     tree_t *runtime = make_runtime_mod(lifetime);
     vector_t *path = make_runtime_path();
@@ -183,13 +207,17 @@ static void report_pl0_unresolved(reports_t *reports, const node_t *node, const 
     report(reports, eFatal, node, "unresolved reference to `%s`", name);
 }
 
+///
+/// sema
+///
+
 static tree_t *sema_expr(tree_t *sema, pl0_t *node);
 static tree_t *sema_compare(tree_t *sema, pl0_t *node);
 static tree_t *sema_stmt(tree_t *sema, pl0_t *node);
 
 static tree_t *sema_digit(pl0_t *node)
 {
-    return tree_expr_digit(node->node, kIntType, node->digit);
+    return tree_expr_digit(node->node, gIntType, node->digit);
 }
 
 static tree_t *sema_ident(tree_t *sema, pl0_t *node)
@@ -201,14 +229,14 @@ static tree_t *sema_ident(tree_t *sema, pl0_t *node)
         return tree_error(node->node, "unresolved identifier `%s`", node->ident);
     }
 
-    return tree_expr_load(node->node, var);
+    return tree_resolve(tree_get_cookie(sema), var);
 }
 
 static tree_t *sema_binary(tree_t *sema, pl0_t *node)
 {
     tree_t *lhs = sema_expr(sema, node->lhs);
     tree_t *rhs = sema_expr(sema, node->rhs);
-    return tree_expr_binary(node->node, kIntType, node->binary, lhs, rhs);
+    return tree_expr_binary(node->node, gIntType, node->binary, lhs, rhs);
 }
 
 static tree_t *sema_unary(tree_t *sema, pl0_t *node)
@@ -224,7 +252,7 @@ static tree_t *sema_expr(tree_t *sema, pl0_t *node)
     case ePl0Digit:
         return sema_digit(node);
     case ePl0Ident:
-        return sema_ident(sema, node);
+        return tree_expr_load(node->node, sema_ident(sema, node));
     case ePl0Binary:
         return sema_binary(sema, node);
     case ePl0Unary:
@@ -311,10 +339,10 @@ static tree_t *sema_print(tree_t *sema, pl0_t *node)
     tree_t *expr = sema_expr(sema, node->print);
 
     vector_t *args = vector_of(2);
-    vector_set(args, 0, kPrintString);
+    vector_set(args, 0, gPrintString);
     vector_set(args, 1, expr);
 
-    return tree_expr_call(node->node, kPrint, args);
+    return tree_expr_call(node->node, gPrint, args);
 }
 
 static tree_t *sema_stmt(tree_t *sema, pl0_t *node)
@@ -339,7 +367,7 @@ static tree_t *sema_global(tree_t *sema, pl0_t *node)
     {
         mpz_t zero;
         mpz_init_set_ui(zero, 0);
-        return tree_expr_digit(node->node, kIntType, zero);
+        return tree_expr_digit(node->node, gIntType, zero);
     }
     else
     {
@@ -356,10 +384,10 @@ static tree_t *sema_odd(tree_t *sema, pl0_t *node)
     mpz_init_set_ui(one, 1);
 
     tree_t *val = sema_expr(sema, node->operand);
-    tree_t *twoValue = tree_expr_digit(node->node, kIntType, two);
-    tree_t *oneValue = tree_expr_digit(node->node, kIntType, one);
-    tree_t *rem = tree_expr_binary(node->node, kIntType, eBinaryRem, val, twoValue);
-    tree_t *eq = tree_expr_compare(node->node, kBoolType, eCompareEq, rem, oneValue);
+    tree_t *twoValue = tree_expr_digit(node->node, gIntType, two);
+    tree_t *oneValue = tree_expr_digit(node->node, gIntType, one);
+    tree_t *rem = tree_expr_binary(node->node, gIntType, eBinaryRem, val, twoValue);
+    tree_t *eq = tree_expr_compare(node->node, gBoolType, eCompareEq, rem, oneValue);
 
     return eq;
 }
@@ -369,7 +397,7 @@ static tree_t *sema_comp(tree_t *sema, pl0_t *node)
     tree_t *lhs = sema_expr(sema, node->lhs);
     tree_t *rhs = sema_expr(sema, node->rhs);
 
-    return tree_expr_compare(node->node, kBoolType, node->compare, lhs, rhs);
+    return tree_expr_compare(node->node, gBoolType, node->compare, lhs, rhs);
 }
 
 static tree_t *sema_compare(tree_t *sema, pl0_t *node)
@@ -392,12 +420,12 @@ static void sema_proc(tree_t *sema, tree_t *tree, pl0_t *node)
     for (size_t i = 0; i < nlocals; i++)
     {
         pl0_t *local = vector_get(node->locals, i);
-        tree_t *it = tree_decl_local(local->node, local->name, kIntMutStorage);
+        tree_t *it = tree_decl_local(local->node, local->name, get_mutable_storage(), gIntRef);
         set_var(nest, ePl0TagValues, local->name, it);
         tree_add_local(tree, it);
     }
 
-    tree_t *ret = tree_stmt_return(node->node, tree_expr_unit(node->node, kVoidType));
+    tree_t *ret = tree_stmt_return(node->node, tree_expr_unit(node->node, gVoidType));
 
     tree_t *inner = sema_vector(nest, node->node, node->body);
 
@@ -485,7 +513,8 @@ void pl0_forward_decls(context_t *context)
             .fnResolve = resolve_global
         };
 
-        tree_t *tree = tree_open_global(it->node, it->name, kIntConstStorage, resolve);
+        tree_t *tree = tree_open_global(it->node, it->name, gIntRef, resolve);
+        tree_set_storage(tree, get_const_storage());
         tree_set_attrib(tree, &kExportAttrib);
 
         set_var(sema, ePl0TagValues, it->name, tree);
@@ -501,7 +530,8 @@ void pl0_forward_decls(context_t *context)
             .fnResolve = resolve_global
         };
 
-        tree_t *tree = tree_open_global(it->node, it->name, kIntMutStorage, resolve);
+        tree_t *tree = tree_open_global(it->node, it->name, gIntRef, resolve);
+        tree_set_storage(tree, get_mutable_storage());
         tree_set_attrib(tree, &kExportAttrib);
 
         set_var(sema, ePl0TagValues, it->name, tree);
@@ -511,7 +541,7 @@ void pl0_forward_decls(context_t *context)
     {
         pl0_t *it = vector_get(root->procs, i);
 
-        tree_t *signature = tree_type_closure(it->node, it->name, kVoidType, vector_of(0), eArityFixed);
+        tree_t *signature = tree_type_closure(it->node, it->name, gVoidType, vector_of(0), eArityFixed);
         tree_resolve_info_t resolve = {
             .sema = sema,
             .user = it,
@@ -568,10 +598,10 @@ void pl0_compile_module(context_t *context)
     if (root->entry != NULL)
     {
         tree_t *body = sema_stmt(mod, root->entry);
-        vector_push(&body->stmts, tree_stmt_return(root->node, tree_expr_unit(root->node, kVoidType)));
+        vector_push(&body->stmts, tree_stmt_return(root->node, tree_expr_unit(root->node, gVoidType)));
 
         // this is the entry point, we only support cli entry points in pl/0 for now
-        tree_t *signature = tree_type_closure(root->node, tree_get_name(mod), kVoidType, vector_of(0), eArityFixed);
+        tree_t *signature = tree_type_closure(root->node, tree_get_name(mod), gVoidType, vector_of(0), eArityFixed);
         tree_t *tree = tree_decl_function(root->node, tree_get_name(mod), signature, vector_of(0), vector_of(0), body);
         tree_set_attrib(tree, &kEntryAttrib);
 

@@ -48,12 +48,20 @@ typedef enum ssa_opcode_t {
 /// intermediate types
 ///
 
+typedef struct ssa_storage_t {
+    const ssa_type_t *type;
+    size_t size;
+    quals_t quals;
+} ssa_storage_t;
+
 typedef struct ssa_param_t {
     const char *name;
     const ssa_type_t *type;
 } ssa_param_t;
 
 typedef struct ssa_local_t {
+    ssa_storage_t storage;
+
     const char *name;
     const ssa_type_t *type;
 } ssa_local_t;
@@ -87,11 +95,6 @@ typedef struct ssa_type_record_t {
     typevec_t *fields; // typevec_t<ssa_field_t>
 } ssa_type_record_t;
 
-typedef struct ssa_type_storage_t {
-    const ssa_type_t *type;
-    size_t size;
-} ssa_type_storage_t;
-
 typedef struct ssa_type_t {
     ssa_kind_t kind;
     quals_t quals;
@@ -102,7 +105,6 @@ typedef struct ssa_type_t {
         ssa_type_closure_t closure;
         ssa_type_pointer_t pointer;
         ssa_type_record_t record;
-        ssa_type_storage_t storage;
     };
 } ssa_type_t;
 
@@ -252,7 +254,9 @@ typedef struct ssa_symbol_t {
     const char *linkName; ///< external name
 
     const char *name; ///< internal name
-    const ssa_type_t *type; ///< the type of this symbol, must be a closure for functions
+    const ssa_type_t *type; ///< the public facing type of this symbol
+    ssa_storage_t storage; ///< the backing storage for this symbol
+
     const ssa_value_t *value; ///< the value of this symbol, must always be set for globals
 
     typevec_t *locals; ///< typevec_t<ssa_type_t>

@@ -20,6 +20,14 @@ bool tree_is(const tree_t *self, tree_kind_t kind);
 bool tree_has_vis(const tree_t *self, visibility_t visibility);
 
 ///
+/// storage decl queries
+///
+
+quals_t tree_get_storage_quals(const tree_t *self);
+const tree_t *tree_get_storage_type(const tree_t *self);
+size_t tree_get_storage_size(const tree_t *self);
+
+///
 /// closure + function queries
 ///
 
@@ -38,8 +46,8 @@ quals_t tree_ty_get_quals(const tree_t *self);
 /**
  * @brief get the type of a type after it has been loaded
  *
- * @note storage -> type, *type -> type, etc.
- * @param self the type to load
+ * @note pointer -> type, reference -> type, etc.
+ * @param self the type to load from
  * @return const tree_t* the loaded type
  */
 const tree_t *tree_ty_load_type(const tree_t *self);

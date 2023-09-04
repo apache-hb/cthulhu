@@ -7,6 +7,8 @@
 
 #include "base/panic.h"
 
+#include <stdint.h>
+
 static bool has_name(tree_kind_t kind)
 {
     switch (kind)
@@ -20,7 +22,6 @@ static bool has_name(tree_kind_t kind)
     case eTreeTypeClosure:
     case eTreeTypePointer:
     case eTreeTypeReference:
-    case eTreeTypeStorage:
 
     case eTreeTypeStruct:
 
@@ -119,6 +120,38 @@ bool tree_has_vis(const tree_t *self, visibility_t visibility)
 }
 
 ///
+/// quals
+///
+
+#define EXPECT_STORAGE_DECL(SELF) CTASSERTF(tree_is(SELF, eTreeDeclGlobal) || tree_is(SELF, eTreeDeclLocal), "only globals and locals can have storage, got %s", tree_to_string(SELF))
+
+quals_t tree_get_storage_quals(const tree_t *self)
+{
+    EXPECT_STORAGE_DECL(self);
+
+    quals_t quals = self->quals;
+    CTASSERTF((quals & (eQualConst | eQualMutable)) != (eQualConst | eQualMutable), "global %s has both const and mutable quals", tree_to_string(self));
+    CTASSERTF(quals != eQualUnknown, "global %s has unknown quals", tree_to_string(self));
+    return quals;
+}
+
+const tree_t *tree_get_storage_type(const tree_t *self)
+{
+    EXPECT_STORAGE_DECL(self);
+
+    CTASSERTF(self->storage != NULL, "global %s has no storage type", tree_to_string(self));
+    return self->storage;
+}
+
+size_t tree_get_storage_size(const tree_t *self)
+{
+    EXPECT_STORAGE_DECL(self);
+
+    CTASSERTF(self->size != SIZE_MAX, "global %s has no storage length", tree_to_string(self));
+    return self->size;
+}
+
+///
 /// fns
 ///
 
@@ -186,7 +219,7 @@ bool tree_ty_is_address(const tree_t *type)
     switch (tree_get_kind(type))
     {
     case eTreeTypePointer:
-    case eTreeTypeStorage:
+    case eTreeTypeReference:
         return true;
 
     default:
@@ -196,20 +229,14 @@ bool tree_ty_is_address(const tree_t *type)
 
 static quals_t get_quals(const tree_t *self)
 {
-    switch (tree_get_kind(self))
-    {
-    case eTreeTypeStorage:
-        CTASSERTF(self->quals != eQualUnknown, "storage type %s has unknown quals", tree_to_string(self));
-        return self->quals;
-
-    default:
-        return self->quals;
-    }
+    CTASSERT(self != NULL);
+    return self->quals;
 }
 
 quals_t tree_ty_get_quals(const tree_t *self)
 {
     quals_t quals = get_quals(self);
+
     // make sure we dont have both eQualConst and eQualMutable bits set
     CTASSERTF((quals & (eQualConst | eQualMutable)) != (eQualConst | eQualMutable), "type %s has both const and mutable quals", tree_to_string(self));
 
@@ -220,7 +247,6 @@ const tree_t *tree_ty_load_type(const tree_t *self)
 {
     switch (tree_get_kind(self))
     {
-    case eTreeTypeStorage:
     case eTreeTypePointer:
     case eTreeTypeReference:
         return self->ptr;

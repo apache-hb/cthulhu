@@ -72,25 +72,8 @@ static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
 static tree_t *sema_string(tree_t *sema, const ctu_t *expr)
 {
     const node_t *node = tree_get_node(sema);
-    where_t where = get_node_location(node);
-
-    // generate a unique name for the string
-    // TODO: its not really unique
-    const tree_t *currentSymbol = ctu_current_symbol(sema);
-    char *name = format("%s$s$%llu$%llu", tree_get_name(currentSymbol), where.firstLine, where.firstColumn);
-
-    // create the string and put it into a global value
     const tree_t *type = ctu_get_str_type(expr->length + 1);
-    tree_t *storage = tree_type_storage(node, name, ctu_get_int_type(eDigitChar, eSignSigned), expr->length + 1, eQualConst);
-    tree_t *init = tree_expr_string(node, type, expr->text, expr->length + 1);
-    tree_t *global = tree_decl_global(node, name, storage, init);
-
-    // add the global to the current module
-    tree_t *currentModule = util_current_module(sema);
-    ctu_add_decl(currentModule, eCtuTagValues, name, global);
-
-    // job done
-    return global;
+    return tree_expr_string(node, type, expr->text, expr->length + 1);;
 }
 
 static tree_t *sema_name(tree_t *sema, const ctu_t *expr)
@@ -244,8 +227,13 @@ static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
         ? tree_resolve(tree_get_cookie(sema), type)
         : tree_get_type(value);
 
-    tree_t *store = tree_type_storage(stmt->node, stmt->name, actualType, 1, stmt->mut ? eQualMutable : eQualConst);
-    tree_t *self = tree_decl_local(decl->node, stmt->name, store);
+    tree_t *ref = tree_type_reference(stmt->node, stmt->name, actualType);
+    tree_storage_t storage = {
+        .storage = actualType,
+        .size = 1,
+        .quals = stmt->mut ? eQualMutable : eQualConst
+    };
+    tree_t *self = tree_decl_local(decl->node, stmt->name, storage, ref);
     tree_add_local(decl, self);
     ctu_add_decl(sema, eCtuTagValues, stmt->name, self);
 

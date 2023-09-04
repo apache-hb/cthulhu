@@ -49,16 +49,17 @@ static void add_dep(ssa_compile_t *ssa, const ssa_symbol_t *symbol, const ssa_sy
     set_add_ptr(set, dep);
 }
 
-static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree)
+static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree, ssa_storage_t storage)
 {
     const char *name = tree_get_name(tree);
-    ssa_type_t *type = ssa_type_from(tree_get_type(tree));
+    const ssa_type_t *type = ssa_type_from(tree_get_type(tree));
     const attribs_t *attrib = tree_get_attrib(tree);
 
     ssa_symbol_t *symbol = ctu_malloc(sizeof(ssa_symbol_t));
     symbol->linkage = attrib->link;
     symbol->visibility = attrib->visibility;
     symbol->linkName = attrib->mangle;
+    symbol->storage = storage;
 
     symbol->locals = NULL;
     symbol->params = NULL;
@@ -74,22 +75,36 @@ static ssa_symbol_t *symbol_create(ssa_compile_t *ssa, const tree_t *tree)
     return symbol;
 }
 
+static ssa_storage_t create_storage_type(const tree_t *decl)
+{
+    ssa_storage_t storage = {
+        .type = ssa_type_from(tree_get_storage_type(decl)),
+        .size = tree_get_storage_size(decl),
+        .quals = tree_get_storage_quals(decl)
+    };
+
+    return storage;
+}
+
 static ssa_symbol_t *function_create(ssa_compile_t *ssa, const tree_t *tree)
 {
     CTASSERTF(tree_is(tree, eTreeDeclFunction), "expected function, got %s", tree_to_string(tree));
-    ssa_symbol_t *self = symbol_create(ssa, tree);
+    ssa_storage_t storage = { .type = NULL, .size = 0, .quals = eQualUnknown };
+    ssa_symbol_t *self = symbol_create(ssa, tree, storage);
 
     size_t locals = vector_len(tree->locals);
     self->locals = typevec_of(sizeof(ssa_local_t), locals);
     for (size_t i = 0; i < locals; i++)
     {
         const tree_t *local = vector_get(tree->locals, i);
-        ssa_type_t *ty = ssa_type_from(tree_get_type(local));
+        ssa_storage_t storage = create_storage_type(local);
+        const ssa_type_t *type = ssa_type_from(tree_get_type(local));
         const char *name = tree_get_name(local);
 
         ssa_local_t it = {
+            .storage = storage,
             .name = name,
-            .type = ty,
+            .type = type,
         };
 
         typevec_set(self->locals, i, &it);
@@ -534,7 +549,7 @@ static void add_module_globals(ssa_compile_t *ssa, ssa_module_t *mod, map_t *glo
         const tree_t *tree = entry.value;
         CTASSERTF(tree_is(tree, eTreeDeclGlobal), "expected global, got %s", tree_to_string(tree));
 
-        ssa_symbol_t *global = symbol_create(ssa, tree);
+        ssa_symbol_t *global = symbol_create(ssa, tree, create_storage_type(tree));
 
         vector_push(&mod->globals, global);
         map_set_ptr(ssa->globals, tree, global);
@@ -618,9 +633,9 @@ ssa_result_t ssa_compile(map_t *mods)
 
         begin_compile(&ssa, global);
 
-        if (tree->global != NULL)
+        if (tree->initial != NULL)
         {
-            ssa_operand_t value = compile_tree(&ssa, tree->global);
+            ssa_operand_t value = compile_tree(&ssa, tree->initial);
             ssa_step_t ret = {
                 .opcode = eOpReturn,
                 .ret = {

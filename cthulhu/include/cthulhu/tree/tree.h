@@ -52,6 +52,12 @@ typedef struct tree_resolve_info_t {
     resolve_t fnResolve;
 } tree_resolve_info_t;
 
+typedef struct tree_storage_t {
+    const tree_t *storage;
+    size_t size;
+    quals_t quals;
+} tree_storage_t;
+
 typedef struct tree_t {
     tree_kind_t kind;
     const node_t *node;
@@ -138,7 +144,7 @@ typedef struct tree_t {
             quals_t quals;
 
             union {
-                /* eTreeTypePointer|eTreeTypeStorage */
+                /* eTreeTypePointer|eTreeTypeReference */
                 struct {
                     const tree_t *ptr;
                     size_t length;
@@ -171,8 +177,13 @@ typedef struct tree_t {
                     };
                 };
 
-                /* eTreeDeclGlobal */
-                tree_t *global;
+                /* eTreeDeclGlobal|eTreeDeclLocal */
+                struct {
+                    const tree_t *storage;
+                    size_t size;
+
+                    tree_t *initial;
+                };
 
                 /* eTreeDeclModule */
                 struct {
@@ -269,20 +280,6 @@ tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *po
  */
 tree_t *tree_type_reference(const node_t *node, const char *name, const tree_t *reference);
 
-/**
- * @brief create a storage type
- *
- * @param node where this type was defined
- * @param name the name of the type
- * @param type the type of the storage
- * @param length the length of the storage, elements will be stored in contiguous memory. @note must be >0
- *
- * @note expressions may not have this type, this is only for declarations
- *
- * @return tree_t* the storage type
- */
-tree_t *tree_type_storage(const node_t *node, const char *name, const tree_t *type, size_t length, quals_t quals);
-
 ///
 /// tree expr interface
 ///
@@ -374,13 +371,26 @@ tree_t *tree_stmt_branch(const node_t *node, tree_t *cond, tree_t *then, tree_t 
 
 // delay the resolve of a declaration
 tree_t *tree_resolve(cookie_t *cookie, const tree_t *decl);
+void tree_set_storage(tree_t *self, tree_storage_t storage);
 
 tree_t *tree_open_decl(const node_t *node, const char *name, tree_resolve_info_t resolve);
 void tree_close_decl(tree_t *self, const tree_t *kind);
 
-tree_t *tree_decl_global(const node_t *node, const char *name, const tree_t *type, tree_t *value);
-tree_t *tree_open_global(const node_t *node, const char *name, const tree_t *type, tree_resolve_info_t resolve);
+tree_t *tree_decl_global(
+    const node_t *node, const char *name,
+    tree_storage_t storage, const tree_t *type, tree_t *initial
+);
+
+tree_t *tree_open_global(
+    const node_t *node, const char *name,
+    const tree_t *type, tree_resolve_info_t resolve
+);
+
 void tree_close_global(tree_t *self, tree_t *value);
+
+///
+/// function decls
+///
 
 tree_t *tree_decl_function(
     const node_t *node, const char *name, const tree_t *signature,
@@ -394,15 +404,21 @@ tree_t *tree_open_function(
 
 void tree_close_function(tree_t *self, tree_t *body);
 
+///
+/// struct decls
+///
+
 tree_t *tree_decl_struct(const node_t *node, const char *name, vector_t *fields);
 tree_t *tree_open_struct(const node_t *node, const char *name, tree_resolve_info_t resolve);
 void tree_close_struct(tree_t *self, vector_t *fields);
 
+///
+/// other decls
+///
+
 tree_t *tree_decl_param(const node_t *node, const char *name, const tree_t *type);
 tree_t *tree_decl_field(const node_t *node, const char *name, const tree_t *type);
-tree_t *tree_decl_local(const node_t *node, const char *name, const tree_t *type);
-
-tree_t *tree_decl_storage(const node_t *node, const char *name, const tree_t *type, tree_t *value);
+tree_t *tree_decl_local(const node_t *node, const char *name, tree_storage_t storage, const tree_t *type);
 
 ///
 /// various helpers

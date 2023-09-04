@@ -55,15 +55,6 @@ static const char *format_c89_pointer(c89_emit_t *emit, const char *quals, ssa_t
         : format("%s *%s%s", result, quals, name);
 }
 
-static const char *format_c89_storage(c89_emit_t *emit, const char *quals, ssa_type_storage_t type, const char *name)
-{
-    const char *result = c89_format_type(emit, type.type, NULL, true);
-
-    return (name == NULL)
-        ? format("%s%s[%zu]", quals, result, type.size)
-        : format("%s%s %s[%zu]", quals, result, name, type.size);
-}
-
 const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char *name, bool emitConst)
 {
     CTASSERT(type != NULL);
@@ -83,8 +74,6 @@ const char *c89_format_type(c89_emit_t *emit, const ssa_type_t *type, const char
 
     case eTypeClosure: return format_c89_closure(emit, quals, type->closure, name);
     case eTypePointer: return format_c89_pointer(emit, quals, type->pointer, name);
-
-    case eTypeStorage: return format_c89_storage(emit, quals, type->storage, name);
 
     default: NEVER("unknown type %d", type->kind);
     }

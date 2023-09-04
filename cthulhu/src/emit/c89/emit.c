@@ -164,6 +164,7 @@ static bool is_entry_point(tree_link_t link)
 
 static const char *format_symbol(c89_emit_t *emit, const ssa_type_t *type, const char *name)
 {
+    NEVER("storage unimplmeneted");
     return c89_format_type(emit, type, name, true);
 }
 
@@ -298,10 +299,6 @@ static const ssa_type_t *get_reg_type(const ssa_type_t *type)
 {
     switch (type->kind)
     {
-    case eTypeStorage: {
-        ssa_type_storage_t storage = type->storage;
-        return storage.type;
-    }
     case eTypePointer: {
         ssa_type_pointer_t pointer = type->pointer;
         return pointer.pointer;

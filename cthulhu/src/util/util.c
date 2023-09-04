@@ -58,7 +58,6 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs)
     case eTreeTypeDigit:
         return (lhs->digit == rhs->digit) && (lhs->sign == rhs->sign);
 
-    case eTreeTypeStorage:
     case eTreeTypeReference:
     case eTreeTypePointer:
         return util_types_equal(lhs->ptr, rhs->ptr);
@@ -97,16 +96,6 @@ static tree_t *cast_to_pointer(const tree_t *dst, tree_t *expr)
 
     switch (tree_get_kind(src))
     {
-    case eTreeTypeStorage:
-        if (!util_types_equal(dst->ptr, src->ptr))
-        {
-            return tree_error(tree_get_node(expr),
-                                "cannot cast unrelated array types `%s` to `%s`",
-                                tree_to_string(src), tree_to_string(dst));
-        }
-
-        return cast_check_length(dst, expr, dst->length, src->length);
-
     case eTreeTypePointer:
         if (!util_types_equal(dst->ptr, src->ptr))
         {
