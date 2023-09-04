@@ -61,6 +61,16 @@ static void ctu_resolve_global(cookie_t *cookie, tree_t *sema, tree_t *self, voi
 
     CTASSERT(expr != NULL || type != NULL);
 
+    const tree_t *realType = expr == NULL ? type : tree_get_type(expr);
+
+    // TODO: handle arrays
+    tree_storage_t storage = {
+        .storage = realType,
+        .size = 1,
+        .quals = decl->mut ? eQualMutable : eQualConst
+    };
+    self->type = tree_type_reference(self->node, self->name, realType);
+    tree_set_storage(self, storage);
     tree_close_global(self, expr);
 }
 

@@ -164,7 +164,6 @@ static bool is_entry_point(tree_link_t link)
 
 static const char *format_symbol(c89_emit_t *emit, const ssa_type_t *type, const char *name)
 {
-    NEVER("storage unimplmeneted");
     return c89_format_type(emit, type, name, true);
 }
 
@@ -173,9 +172,9 @@ static const char *format_local(c89_emit_t *emit, const ssa_type_t *type, const 
     return c89_format_type(emit, type, name, false);
 }
 
-static void write_global(io_t *io, const ssa_symbol_t *global)
+static void write_global(c89_emit_t *emit, io_t *io, const ssa_symbol_t *global)
 {
-    const char *it = format_symbol(NULL, global->type, mangle_symbol_name(global));
+    const char *it = c89_format_storage(emit, global->storage, mangle_symbol_name(global));
     const char *link = format_c89_link(global->linkage);
 
     write_string(io, "%s%s", link, it);
@@ -188,13 +187,13 @@ static void c89_proto_global(c89_emit_t *emit, const ssa_module_t *mod, const ss
         CTASSERT(global->linkage != eLinkModule); // TODO: move this check into the checker
 
         c89_source_t *hdr = map_get_ptr(emit->hdrmap, mod);
-        write_global(hdr->io, global);
+        write_global(emit, hdr->io, global);
         write_string(hdr->io, ";\n");
     }
     else
     {
         c89_source_t *src = map_get_ptr(emit->srcmap, mod);
-        write_global(src->io, global);
+        write_global(emit, src->io, global);
         write_string(src->io, ";\n");
     }
 }
@@ -254,7 +253,7 @@ static const ssa_type_t *get_operand_type(c89_emit_t *emit, ssa_operand_t operan
         return local->type;
     }
     case eOperandParam: {
-        const ssa_local_t *param = typevec_offset(emit->current->params, operand.param);
+        const ssa_param_t *param = typevec_offset(emit->current->params, operand.param);
         return param->type;
     }
     case eOperandGlobal: {
@@ -365,7 +364,7 @@ static const char *c89_format_param(c89_emit_t *emit, size_t param)
         return format("param[error(%zu > %zu)]", param, typevec_len(params));
     }
 
-    const ssa_local_t *it = typevec_offset(params, param);
+    const ssa_param_t *it = typevec_offset(params, param);
     return it->name;
 }
 
@@ -590,7 +589,7 @@ void c89_define_global(c89_emit_t *emit, const ssa_module_t *mod, const ssa_symb
     if (symbol->linkage != eLinkImport)
     {
         const ssa_value_t *value = symbol->value;
-        write_global(src->io, symbol);
+        write_global(emit, src->io, symbol);
         if (value->init)
         {
             write_init(emit, src->io, value);

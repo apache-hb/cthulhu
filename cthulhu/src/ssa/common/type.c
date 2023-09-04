@@ -144,11 +144,8 @@ ssa_type_t *ssa_type_from(const tree_t *type)
             /* variadic = */ tree_fn_get_arity(type) == eArityVariable
         );
 
-    case eTreeTypeReference:
-        return ssa_type_pointer(name, quals, ssa_type_from(type->ptr), 1);
-
-    case eTreeTypePointer:
-        return ssa_type_pointer(name, quals, ssa_type_from(type->ptr), type->length);
+    case eTreeTypeReference: return ssa_type_pointer(name, quals, ssa_type_from(type->ptr), 1);
+    case eTreeTypePointer: return ssa_type_pointer(name, quals, ssa_type_from(type->ptr), type->length);
 
     case eTreeTypeStruct: return ssa_type_struct(name, quals, collect_fields(type));
 

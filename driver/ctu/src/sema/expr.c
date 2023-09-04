@@ -56,6 +56,8 @@ static tree_t *verify_expr_type(tree_t *sema, tree_kind_t kind, const tree_t *ty
 static tree_t *sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
     const tree_t *type = implicitType ? implicitType : ctu_get_bool_type();
+    if (!tree_is(type, eTreeTypeBool)) { return tree_raise(expr->node, sema->reports, "invalid type `%s` for boolean literal", tree_to_string(type)); }
+
     tree_t *it = tree_expr_bool(expr->node, type, expr->boolValue);
 
     return verify_expr_type(sema, eTreeTypeBool, type, "boolean literal", it);
@@ -64,6 +66,8 @@ static tree_t *sema_bool(tree_t *sema, const ctu_t *expr, const tree_t *implicit
 static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
     const tree_t *type = implicitType ? implicitType : ctu_get_int_type(eDigitInt, eSignSigned); // TODO: calculate proper type to use
+    if (!tree_is(type, eTreeTypeDigit)) { return tree_raise(expr->node, sema->reports, "invalid type `%s` for integer literal", tree_to_string(type)); }
+
     tree_t *it = tree_expr_digit(expr->node, type, expr->intValue);
 
     return verify_expr_type(sema, eTreeTypeDigit, type, "integer literal", it);
