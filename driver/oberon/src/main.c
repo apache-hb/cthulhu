@@ -35,7 +35,7 @@ static void obr_config(lifetime_t *lifetime, ap_t *ap)
 
 static void obr_destroy(driver_t *handle) { CTU_UNUSED(handle); }
 
-static const char *kLangNames[] = { "m", "mod", "obr", NULL };
+static const char *kLangNames[] = { "m", "mod", "obr", "oberon", NULL };
 
 const language_t kOberonModule = {
     .id = "obr",

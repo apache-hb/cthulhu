@@ -1,0 +1,19 @@
+Checks: 'concurrency,readability-identifier-naming'
+CheckOptions:
+  - { key: readability-identifier-naming.VariableCase, value: camelBack }
+  - { key: readability-identifier-naming.ParameterCase, value: camelBack }
+  - { key: readability-identifier-naming.MemberCase, value: camelBack }
+  - { key: readability-identifier-naming.UnionCase, value: lower_case }
+  - { key: readability-identifier-naming.UnionSuffix, value: _t }
+  - { key: readability-identifier-naming.StructCase, value: lower_case }
+  - { key: readability-identifier-naming.StructSuffix, value: _t }
+  - { key: readability-identifier-naming.EnumCase, value: lower_case }
+  - { key: readability-identifier-naming.EnumSuffix, value: _t }
+  - { key: readability-identifier-naming.EnumConstantCase, value: CamelCase }
+  - { key: readability-identifier-naming.EnumConstantPrefix, value: e }
+  - { key: readability-identifier-naming.TypedefCase, value: lower_case }
+  - { key: readability-identifier-naming.TypedefSuffix, value: _t }
+  - { key: readability-identifier-naming.GlobalConstantCase, value: CamelCase }
+  - { key: readability-identifier-naming.GlobalConstantPrefix, value: k }
+  - { key: readability-identifier-naming.GlobalVariableCase, value: CamelCase }
+  - { key: readability-identifier-naming.GlobalVariablePrefix, value: g }

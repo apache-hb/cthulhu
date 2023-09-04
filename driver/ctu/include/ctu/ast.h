@@ -20,6 +20,7 @@ typedef enum ctu_kind_t {
     eCtuExprCompare,
     eCtuExprBinary,
     eCtuExprUnary,
+    eCtuExprCall,
 
     eCtuExprRef,
     eCtuExprDeref,
@@ -47,6 +48,7 @@ typedef enum ctu_kind_t {
     /* intermediates */
     eCtuField,
     eCtuParam,
+    eCtuAttrib,
 
     /* modules */
     eCtuImport,
@@ -61,6 +63,7 @@ typedef struct ctu_t {
         struct {
             char *name;
             bool exported;
+            vector_t *attribs;
 
             union {
                 /* eCtuImport */
@@ -131,6 +134,12 @@ typedef struct ctu_t {
             ctu_t *expr;
         };
 
+        /* eCtuExprCall */
+        struct {
+            ctu_t *callee;
+            vector_t *args;
+        };
+
         /* eCtuStmtList */
         vector_t *stmts;
 
@@ -156,6 +165,12 @@ typedef struct ctu_t {
         /* eCtuTypePointer */
         ctu_t *pointer;
 
+        /* eCtuAttrib */
+        struct {
+            vector_t *attribPath;
+            vector_t *attribArgs;
+        };
+
         /* eCtuModule */
         struct {
             vector_t *modspec;
@@ -171,6 +186,12 @@ typedef struct ctu_t {
 
 ctu_t *ctu_module(scan_t *scan, where_t where, vector_t *modspec, vector_t *imports, vector_t *decls);
 ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name);
+
+///
+/// decorators
+///
+
+void add_attrib(scan_t *scan, where_t where, vector_t *path, vector_t *args);
 
 ///
 /// statements
@@ -190,6 +211,7 @@ ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value);
 ctu_t *ctu_expr_bool(scan_t *scan, where_t where, bool value);
 ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length);
 
+ctu_t *ctu_expr_call(scan_t *scan, where_t where, ctu_t *callee, vector_t *args);
 ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_expr_ref(scan_t *scan, where_t where, ctu_t *expr);
 ctu_t *ctu_expr_deref(scan_t *scan, where_t where, ctu_t *expr);

@@ -1,6 +1,15 @@
 #include "ctu/ast.h"
+#include "ctu/scan.h"
 
 #include "base/memory.h"
+
+static vector_t *acquire_attribs(scan_t *scan)
+{
+    ctu_scan_t *info = scan_get(scan);
+    vector_t *result = info->attribs;
+    info->attribs = vector_of(0);
+    return result;
+}
 
 static ctu_t *ctu_new(scan_t *scan, where_t where, ctu_kind_t kind)
 {
@@ -15,6 +24,7 @@ static ctu_t *ctu_decl(scan_t *scan, where_t where, ctu_kind_t kind, char *name,
     ctu_t *self = ctu_new(scan, where, kind);
     self->name = name;
     self->exported = exported;
+    self->attribs = acquire_attribs(scan);
     return self;
 }
 
@@ -32,6 +42,18 @@ ctu_t *ctu_import(scan_t *scan, where_t where, vector_t *path, char *name)
     ctu_t *ast = ctu_decl(scan, where, eCtuImport, name, false);
     ast->importPath = path;
     return ast;
+}
+
+/* attribs */
+
+void add_attrib(scan_t *scan, where_t where, vector_t *path, vector_t *args)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuAttrib);
+    ast->attribPath = path;
+    ast->attribArgs = args;
+
+    ctu_scan_t *info = scan_get(scan);
+    vector_push(&info->attribs, ast);
 }
 
 /* stmts */
@@ -97,6 +119,14 @@ ctu_t *ctu_expr_string(scan_t *scan, where_t where, char *text, size_t length)
     ctu_t *ast = ctu_new(scan, where, eCtuExprString);
     ast->text = text;
     ast->length = length;
+    return ast;
+}
+
+ctu_t *ctu_expr_call(scan_t *scan, where_t where, ctu_t *callee, vector_t *args)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprCall);
+    ast->callee = callee;
+    ast->args = args;
     return ast;
 }
 

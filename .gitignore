@@ -29,6 +29,7 @@
 # dont ignore config files
 !Doxyfile.in
 !.clangd
+!.clang-tidy
 !.clang-format
 !.github/workflows/*.yml
 !*.xml

@@ -1,7 +1,7 @@
 InlayHints:
   Enabled: Yes
   ParameterNames: Yes
-  
+
 Hover:
   ShowAKA: No
 
@@ -13,9 +13,6 @@ Diagnostics:
       readability-identifier-naming.VariableCase: camelBack
       readability-identifier-naming.ParameterCase: camelBack
       readability-identifier-naming.MemberCase: camelBack
-
-      readability-identifier-naming.StaticConstantCase: CamelCase
-      readability-identifier-naming.StaticConstantPrefix: k
 
       readability-identifier-naming.UnionCase: lower_case
       readability-identifier-naming.UnionSuffix: _t
@@ -31,3 +28,9 @@ Diagnostics:
 
       readability-identifier-naming.TypedefCase: lower_case
       readability-identifier-naming.TypedefSuffix: _t
+
+      readability-identifier-naming.GlobalConstantCase: CamelCase
+      readability-identifier-naming.GlobalConstantPrefix: k
+
+      readability-identifier-naming.GlobalVariableCase: CamelCase
+      readability-identifier-naming.GlobalVariablePrefix: g

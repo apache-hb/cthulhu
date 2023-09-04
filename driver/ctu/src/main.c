@@ -4,10 +4,11 @@
 
 #include "scan/compile.h"
 
-#include "base/macros.h"
-
 #include "std/vector.h"
 #include "std/str.h"
+
+#include "base/macros.h"
+#include "base/util.h"
 
 #include "ctu-bison.h"
 #include "ctu-flex.h"
@@ -33,6 +34,9 @@ static void ctu_parse_file(driver_t *runtime, scan_t *scan)
 {
     lifetime_t *lifetime = handle_get_lifetime(runtime);
 
+    ctu_scan_t info = { .attribs = vector_new(0) };
+    scan_set(scan, BOX(info));
+
     ctu_t *ast = compile_scanner(scan, &kCallbacks);
     if (ast == NULL) { return; }
 
@@ -46,7 +50,7 @@ static void ctu_parse_file(driver_t *runtime, scan_t *scan)
     add_context(lifetime, path, ctx);
 }
 
-static const char *kLangNames[] = { "ct", "ctu", NULL };
+static const char *kLangNames[] = { "ct", "ctu", "cthulhu", NULL };
 
 const language_t kCtuModule = {
     .id = "ctu",

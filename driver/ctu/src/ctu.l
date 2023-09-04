@@ -93,6 +93,7 @@ WS [ \t\r\v\n\f]
 "as" { return AS; }
 
 "$" { return DISCARD; }
+"@" { return AT; }
 
 "true" {
     yylval->boolean = true;

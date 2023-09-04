@@ -69,6 +69,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     AS "`as`"
 
     DISCARD "`$`"
+    AT "`@`"
 
     PLUS "`+`"
     MINUS "`-`"
@@ -117,6 +118,8 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     structFields
     stmtList
     fnParams fnParamList
+    attribArgs
+    exprList optExprList
 
 /**
  * order of operations, tightest first
@@ -138,7 +141,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
 
 %type<ast>
     import
-    decl globalDecl functionDecl structDecl structField typeAliasDecl
+    decl innerDecl globalDecl functionDecl structDecl structField typeAliasDecl
     functionBody
     type
     primary expr
@@ -181,6 +184,31 @@ importAlias: %empty { $$ = NULL; }
     | AS IDENT { $$ = $2; }
     ;
 
+/* decorators */
+
+attribs: %empty | attribs attrib
+    ;
+
+attrib: AT attribBody
+    ;
+
+attribBody: singleAttrib
+    | LBRACE attribList RBRACE
+    ;
+
+attribList: singleAttrib
+    | attribList singleAttrib
+    ;
+
+singleAttrib: path { add_attrib(x, @$, $1, vector_of(0)); }
+    | path LPAREN RPAREN { add_attrib(x, @$, $1, vector_of(0)); }
+    | path LPAREN attribArgs RPAREN { add_attrib(x, @$, $1, $3); }
+    ;
+
+attribArgs: expr { $$ = vector_init($1); }
+    | attribArgs COMMA expr { vector_push(&$1, $3); $$ = $1; }
+    ;
+
 /* toplevel decls */
 
 decls: %empty { $$ = vector_of(0); }
@@ -191,7 +219,10 @@ declList: decl { $$ = vector_init($1); }
     | declList decl { vector_push(&$1, $2); $$ = $1; }
     ;
 
-decl: globalDecl { $$ = $1; }
+decl: attribs innerDecl { $$ = $2; }
+    ;
+
+innerDecl: globalDecl { $$ = $1; }
     | functionDecl { $$ = $1; }
     | structDecl { $$ = $1; }
     | typeAliasDecl { $$ = $1; }
@@ -299,6 +330,14 @@ maybeExpr: NOINIT { $$ = NULL; }
     | expr { $$ = $1; }
     ;
 
+optExprList: %empty { $$ = vector_of(0); }
+    | exprList { $$ = $1; }
+    ;
+
+exprList: expr { $$ = vector_init($1); }
+    | exprList COMMA expr { vector_push(&$1, $3); $$ = $1; }
+    ;
+
 primary: LPAREN expr RPAREN { $$ = $2; }
     | INTEGER { $$ = ctu_expr_int(x, @$, $1.value); }
     | BOOLEAN { $$ = ctu_expr_bool(x, @$, $1); }
@@ -307,6 +346,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
     ;
 
 postExpr: primary { $$ = $1; }
+    | postExpr LPAREN optExprList RPAREN { $$ = ctu_expr_call(x, @$, $1, $3); }
     ;
 
 unaryExpr: postExpr { $$ = $1; }

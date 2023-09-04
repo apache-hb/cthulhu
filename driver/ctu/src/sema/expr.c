@@ -98,7 +98,7 @@ static tree_t *sema_string(tree_t *sema, const ctu_t *expr)
     return global;
 }
 
-static tree_t *sema_name(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+static tree_t *sema_name(tree_t *sema, const ctu_t *expr)
 {
     tree_t *decl = sema_decl_name(sema, expr->node, expr->path);
     if (tree_is(decl, eTreeError))
@@ -107,6 +107,14 @@ static tree_t *sema_name(tree_t *sema, const ctu_t *expr, const tree_t *implicit
     }
 
     return tree_resolve(tree_get_cookie(sema), decl);
+}
+
+static tree_t *sema_load(tree_t *sema, const ctu_t *expr)
+{
+    tree_t *name = sema_name(sema, expr);
+    if (tree_is(name, eTreeDeclParam) || tree_is(name, eTreeDeclFunction)) { return name; } // TODO: feels bad
+
+    return tree_expr_load(expr->node, name);
 }
 
 static tree_t *sema_compare(tree_t *sema, const ctu_t *expr)
@@ -150,13 +158,39 @@ static tree_t *sema_unary(tree_t *sema, const ctu_t *expr, const tree_t *implici
     return tree_expr_unary(expr->node, expr->unary, inner);
 }
 
+static tree_t *sema_call(tree_t *sema, const ctu_t *expr)
+{
+    tree_t *callee = ctu_sema_lvalue(sema, expr->callee, NULL);
+    if (tree_is(callee, eTreeError)) { return callee; }
+
+    size_t len = vector_len(expr->args);
+    vector_t *result = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        ctu_t *it = vector_get(expr->args, i);
+        tree_t *arg = ctu_sema_rvalue(sema, it, NULL);
+        vector_set(result, i, arg);
+    }
+
+    return tree_expr_call(expr->node, callee, result);
+}
+
+static tree_t *sema_deref(tree_t *sema, const ctu_t *expr)
+{
+    tree_t *inner = ctu_sema_rvalue(sema, expr->expr, NULL);
+    if (tree_is(inner, eTreeError)) { return inner; }
+
+    return tree_expr_load(expr->node, inner);
+}
+
 tree_t *ctu_sema_lvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
     CTASSERT(expr != NULL);
 
     switch (expr->kind)
     {
-    case eCtuExprName: return sema_name(sema, expr, implicitType);
+    case eCtuExprName: return sema_name(sema, expr);
+    case eCtuExprDeref: return sema_deref(sema, expr);
 
     default: NEVER("invalid lvalue-expr kind %d", expr->kind);
     }
@@ -174,7 +208,8 @@ tree_t *ctu_sema_rvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
     case eCtuExprInt: return sema_int(sema, expr, inner);
     case eCtuExprString: return sema_string(sema, expr);
 
-    case eCtuExprName: return tree_expr_load(expr->node, sema_name(sema, expr, implicitType));
+    case eCtuExprName: return sema_load(sema, expr);
+    case eCtuExprCall: return sema_call(sema, expr);
 
     case eCtuExprCompare: return sema_compare(sema, expr);
     case eCtuExprBinary: return sema_binary(sema, expr, inner);
@@ -243,10 +278,17 @@ static tree_t *sema_while(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 {
     tree_t *cond = ctu_sema_rvalue(sema, stmt->cond, ctu_get_bool_type());
     tree_t *then = ctu_sema_stmt(sema, decl, stmt->then);
+    tree_t *other = stmt->other == NULL ? NULL : ctu_sema_stmt(sema, decl, stmt->other);
 
-    NEVER("TODO: implement while");
+    return tree_stmt_loop(stmt->node, cond, then, other);
+}
 
-    return NULL;
+static tree_t *sema_assign(tree_t *sema, tree_t *decl, const ctu_t *stmt)
+{
+    tree_t *dst = ctu_sema_lvalue(sema, stmt->dst, NULL);
+    tree_t *src = ctu_sema_rvalue(sema, stmt->src, tree_get_type(dst));
+
+    return tree_stmt_assign(stmt->node, dst, src);
 }
 
 tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
@@ -260,6 +302,13 @@ tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     case eCtuStmtList: return sema_stmts(sema, decl, stmt);
     case eCtuStmtReturn: return sema_return(sema, decl, stmt);
     case eCtuStmtWhile: return sema_while(sema, decl, stmt);
+    case eCtuStmtAssign: return sema_assign(sema, decl, stmt);
+
+    case eCtuExprCompare:
+    case eCtuExprBinary:
+    case eCtuExprUnary:
+    case eCtuExprCall:
+        return ctu_sema_rvalue(sema, stmt, NULL);
 
     default:
         NEVER("invalid stmt kind %d", stmt->kind);

@@ -194,9 +194,10 @@ tree_t *tree_expr_cast(const node_t *node, const tree_t *type, tree_t *expr)
 
 tree_t *tree_expr_load(const node_t *node, tree_t *expr)
 {
-    TREE_EXPECT_LOAD(tree_get_type(expr));
+    const tree_t *type = tree_get_type(expr);
+    TREE_EXPECT_LOAD(type);
 
-    tree_t *self = tree_new(eTreeExprLoad, node, tree_ty_load_type(tree_get_type(expr)));
+    tree_t *self = tree_new(eTreeExprLoad, node, tree_ty_load_type(type));
     self->load = expr;
     return self;
 }
@@ -272,7 +273,9 @@ tree_t *tree_stmt_block(const node_t *node, vector_t *stmts)
 
 tree_t *tree_stmt_return(const node_t *node, const tree_t *value)
 {
-    tree_t *self = tree_new(eTreeStmtReturn, node, value->type);
+    CTASSERT(value != NULL);
+
+    tree_t *self = tree_new(eTreeStmtReturn, node, NULL);
     self->value = value;
     return self;
 }
@@ -282,7 +285,10 @@ tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src)
     CTASSERT(dst != NULL);
     CTASSERT(src != NULL);
 
-    tree_t *self = tree_new(eTreeStmtAssign, node, dst->type);
+    const tree_t *dstType = tree_get_type(dst);
+    CTASSERTF(tree_is(dstType, eTreeTypeStorage), "destination must be storage, found %s", tree_to_string(dstType));
+
+    tree_t *self = tree_new(eTreeStmtAssign, node, NULL);
     self->dst = dst;
     self->src = src;
     return self;
