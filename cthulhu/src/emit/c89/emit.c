@@ -167,11 +167,6 @@ static const char *format_symbol(c89_emit_t *emit, const ssa_type_t *type, const
     return c89_format_type(emit, type, name, true);
 }
 
-static const char *format_local(c89_emit_t *emit, const ssa_type_t *type, const char *name)
-{
-    return c89_format_type(emit, type, name, false);
-}
-
 static void write_global(c89_emit_t *emit, io_t *io, const ssa_symbol_t *global)
 {
     const char *it = c89_format_storage(emit, global->storage, mangle_symbol_name(global));
@@ -606,7 +601,7 @@ static void write_locals(c89_emit_t *emit, io_t *io, typevec_t *locals)
     {
         const ssa_local_t *local = typevec_offset(locals, i);
         write_string(io, "\t%s;\n",
-            format_local(emit, local->type, local->name)
+            c89_format_storage(emit, local->storage, local->name)
         );
     }
 }

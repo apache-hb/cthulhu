@@ -77,7 +77,7 @@ static tree_t *sema_string(tree_t *sema, const ctu_t *expr)
 {
     const node_t *node = tree_get_node(sema);
     const tree_t *type = ctu_get_str_type(expr->length + 1);
-    return tree_expr_string(node, type, expr->text, expr->length + 1);;
+    return tree_expr_string(node, type, expr->text, expr->length + 1);
 }
 
 static tree_t *sema_name(tree_t *sema, const ctu_t *expr)
@@ -234,7 +234,7 @@ static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     tree_t *ref = tree_type_reference(stmt->node, stmt->name, actualType);
     tree_storage_t storage = {
         .storage = actualType,
-        .size = 1,
+        .size = ctu_resolve_storage_size(actualType),
         .quals = stmt->mut ? eQualMutable : eQualConst
     };
     tree_t *self = tree_decl_local(decl->node, stmt->name, storage, ref);
@@ -320,5 +320,14 @@ tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 
     default:
         NEVER("invalid stmt kind %d", stmt->kind);
+    }
+}
+
+size_t ctu_resolve_storage_size(const tree_t *type)
+{
+    switch (tree_get_kind(type))
+    {
+    case eTreeTypePointer: return type->length;
+    default: return 1;
     }
 }
