@@ -20,9 +20,7 @@ static tree_t *sema_digit(tree_t *sema, obr_t *expr, const tree_t *implicitType)
 
 static tree_t *sema_string(tree_t *sema, obr_t *expr)
 {
-    const node_t *node = tree_get_node(sema);
-    const tree_t *type = obr_get_string_type(expr->length + 1);
-    return tree_expr_string(node, type, expr->text, expr->length + 1);
+    return util_create_string(sema, obr_get_char_type(), expr->text, expr->length);
 }
 
 static tree_t *sema_unary(tree_t *sema, obr_t *expr, const tree_t *implicitType)

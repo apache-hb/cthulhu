@@ -75,9 +75,7 @@ static tree_t *sema_int(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
 
 static tree_t *sema_string(tree_t *sema, const ctu_t *expr)
 {
-    const node_t *node = tree_get_node(sema);
-    const tree_t *type = ctu_get_str_type(expr->length + 1);
-    return tree_expr_string(node, type, expr->text, expr->length + 1);
+    return util_create_string(sema, ctu_get_char_type(), expr->text, expr->length);
 }
 
 static tree_t *sema_name(tree_t *sema, const ctu_t *expr)
@@ -231,6 +229,11 @@ static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
         ? tree_resolve(tree_get_cookie(sema), type)
         : tree_get_type(value);
 
+    if (tree_is(actualType, eTreeTypeUnit))
+    {
+        report(sema->reports, eFatal, stmt->node, "cannot declare a variable of type `unit`");
+    }
+
     tree_t *ref = tree_type_reference(stmt->node, stmt->name, actualType);
     tree_storage_t storage = {
         .storage = actualType,
@@ -273,7 +276,7 @@ static tree_t *sema_stmts(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 
 static tree_t *sema_return(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 {
-    tree_t *fn = ctu_current_symbol(sema);
+    tree_t *fn = util_current_symbol(sema);
     const tree_t *type = tree_get_type(fn);
 
     tree_t *value = stmt->result == NULL ? NULL : util_type_cast(type->result, ctu_sema_rvalue(sema, stmt->result, type->result));

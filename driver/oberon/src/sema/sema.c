@@ -48,25 +48,6 @@ void obr_add_decl(tree_t *sema, obr_tag_t tag, const char *name, tree_t *decl)
 }
 
 ///
-/// extras
-///
-
-static const char *kCurrentSymbol = "obr:current-symbol";
-
-tree_t *obr_current_symbol(tree_t *sema)
-{
-    tree_t *current = tree_get_extra(sema, kCurrentSymbol);
-    CTASSERT(current != NULL);
-    return current;
-}
-
-void obr_set_current_symbol(tree_t *sema, tree_t *symbol)
-{
-    tree_set_extra(sema, kCurrentSymbol, symbol);
-}
-
-
-///
 /// runtime mod
 ///
 

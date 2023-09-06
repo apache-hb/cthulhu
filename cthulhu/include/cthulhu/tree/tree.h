@@ -179,8 +179,7 @@ typedef struct tree_t {
 
                 /* eTreeDeclGlobal|eTreeDeclLocal */
                 struct {
-                    const tree_t *storage;
-                    size_t size;
+                    tree_storage_t storage;
 
                     tree_t *initial;
                 };

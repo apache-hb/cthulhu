@@ -256,7 +256,7 @@ tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vector_t *args)
     CTASSERT(callee != NULL);
     CTASSERT(args != NULL);
 
-    tree_t *self = tree_new(eTreeExprCall, node, callee->result);
+    tree_t *self = tree_new(eTreeExprCall, node, tree_fn_get_return(callee));
     self->callee = callee;
     self->args = args;
     return self;

@@ -53,25 +53,6 @@ void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl)
 }
 
 ///
-/// extra data
-///
-
-static const char *kCurrentSymbol = "ctu:current-symbol";
-
-void ctu_set_current_symbol(tree_t *sema, tree_t *decl)
-{
-    tree_set_extra(sema, kCurrentSymbol, decl);
-}
-
-tree_t *ctu_current_symbol(tree_t *sema)
-{
-    tree_t *decl = tree_get_extra(sema, kCurrentSymbol);
-    CTASSERT(decl != NULL);
-
-    return decl;
-}
-
-///
 /// runtime
 ///
 
@@ -109,15 +90,9 @@ tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
     return DIGIT_TYPE(digit, sign);
 }
 
-tree_t *ctu_get_bool_type(void)
-{
-    return gBoolType;
-}
-
-tree_t *ctu_get_void_type(void)
-{
-    return gVoidType;
-}
+tree_t *ctu_get_char_type(void) { return gStringChar; }
+tree_t *ctu_get_bool_type(void) { return gBoolType; }
+tree_t *ctu_get_void_type(void) { return gVoidType; }
 
 tree_t *ctu_get_str_type(size_t length)
 {

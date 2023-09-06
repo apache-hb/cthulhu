@@ -17,6 +17,9 @@ void *util_select_decl(tree_t *sema, const size_t *tags, size_t len, const char 
 tree_t *util_current_module(tree_t *sema);
 void util_set_current_module(tree_t *sema, tree_t *module);
 
+tree_t *util_current_symbol(tree_t *sema);
+void util_set_current_symbol(tree_t *sema, tree_t *symbol);
+
 ///
 /// type helpers
 ///
@@ -31,6 +34,12 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs);
  * @return tree_t* the casted expression or @a tree_error if the cast could not be done
  */
 tree_t *util_type_cast(const tree_t *dst, tree_t *expr);
+
+///
+/// string helpers
+///
+
+tree_t *util_create_string(tree_t *sema, tree_t *letter, const char *text, size_t length);
 
 ///
 /// length helpers

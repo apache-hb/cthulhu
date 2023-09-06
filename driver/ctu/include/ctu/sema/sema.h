@@ -34,17 +34,11 @@ tree_t *ctu_get_decl(tree_t *sema, const char *name);
 void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl);
 
 ///
-/// current function
-///
-
-void ctu_set_current_symbol(tree_t *sema, tree_t *decl);
-tree_t *ctu_current_symbol(tree_t *sema);
-
-///
 /// builtin types
 ///
 
 tree_t *ctu_get_int_type(digit_t digit, sign_t sign);
+tree_t *ctu_get_char_type(void);
 tree_t *ctu_get_bool_type(void);
 tree_t *ctu_get_void_type(void);
 tree_t *ctu_get_str_type(size_t length);

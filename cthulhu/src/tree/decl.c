@@ -69,9 +69,7 @@ void tree_set_storage(tree_t *self, tree_storage_t storage)
 {
     CTASSERT(self != NULL);
 
-    self->storage = storage.storage;
-    self->size = storage.size;
-    self->quals = storage.quals;
+    self->storage = storage;
 }
 
 tree_t *tree_decl_global(

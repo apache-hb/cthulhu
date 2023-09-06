@@ -25,11 +25,6 @@ tree_t *obr_get_type(tree_t *sema, const char *name);
 tree_t *obr_get_module(tree_t *sema, const char *name);
 tree_t *obr_get_namespace(tree_t *sema, const char *name);
 
-/// extra
-
-tree_t *obr_current_symbol(tree_t *sema);
-void obr_set_current_symbol(tree_t *sema, tree_t *symbol);
-
 /// add decls
 
 void obr_add_decl(tree_t *sema, obr_tag_t tag, const char *name, tree_t *decl);

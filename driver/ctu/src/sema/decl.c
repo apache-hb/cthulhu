@@ -47,7 +47,7 @@ static ctu_t *begin_resolve(tree_t *sema, tree_t *self, void *user, ctu_kind_t k
     CTASSERTF(decl->kind == kind, "decl %s is not a %d", decl->name, kind);
 
     util_set_current_module(sema, sema);
-    ctu_set_current_symbol(sema, self);
+    util_set_current_symbol(sema, self);
 
     return decl;
 }
@@ -94,7 +94,7 @@ static void ctu_resolve_function(cookie_t *cookie, tree_t *sema, tree_t *self, v
     }
 
     tree_t *body = decl->body == NULL ? NULL : ctu_sema_stmt(ctx, self, decl->body);
-    if (body != NULL)
+    if (body != NULL && tree_is(body, eTreeStmtBlock))
     {
         const tree_t *ty = tree_fn_get_return(self);
         if (util_types_equal(ty, ctu_get_void_type()))

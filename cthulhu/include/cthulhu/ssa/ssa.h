@@ -66,6 +66,11 @@ typedef struct ssa_local_t {
     const ssa_type_t *type;
 } ssa_local_t;
 
+typedef struct ssa_const_t {
+    ssa_storage_t storage;
+    const ssa_value_t *value;
+} ssa_const_t;
+
 typedef struct ssa_field_t {
     const char *name;
     const ssa_type_t *type;

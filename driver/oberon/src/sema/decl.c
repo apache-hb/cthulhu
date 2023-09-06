@@ -49,7 +49,7 @@ static obr_t *begin_resolve(tree_t *sema, tree_t *self, void *user, obr_kind_t k
     CTASSERTF(decl->kind == kind, "decl %s is not a %d", decl->name, kind);
 
     util_set_current_module(sema, sema);
-    obr_set_current_symbol(sema, self);
+    util_set_current_symbol(sema, self);
 
     return decl;
 }
