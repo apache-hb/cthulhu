@@ -4,6 +4,7 @@
 
 #include "report/report.h"
 
+#include "std/vector.h"
 #include "std/str.h"
 
 #include "base/memory.h"
@@ -72,6 +73,29 @@ tree_t *tree_raise(const node_t *node, reports_t *reports, const char *message, 
 /// types
 ///
 
+static bool is_type(tree_kind_t kind)
+{
+    switch (kind)
+    {
+    case eTreeType:
+    case eTreeTypeEmpty:
+    case eTreeTypeUnit:
+    case eTreeTypeBool:
+    case eTreeTypeDigit:
+    case eTreeTypeClosure:
+    case eTreeTypePointer:
+    case eTreeTypeReference:
+    case eTreeError:
+    case eTreeTypeStruct:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+#define EXPECT_TYPE(TYPE) CTASSERTF(is_type(tree_get_kind(TYPE)), "expected type, found %s", tree_to_string(TYPE))
+
 tree_t *tree_type_empty(const node_t *node, const char *name)
 {
     return tree_decl(eTreeTypeUnit, node, NULL, name, eQualUnknown);
@@ -97,8 +121,15 @@ tree_t *tree_type_digit(const node_t *node, const char *name, digit_t digit, sig
 
 tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *result, vector_t *params, arity_t arity)
 {
-    CTASSERT(result != NULL);
+    EXPECT_TYPE(result);
     CTASSERT(params != NULL);
+
+    size_t len = vector_len(params);
+    for (size_t i = 0; i < len; i++)
+    {
+        const tree_t *param = vector_get(params, i);
+        TREE_EXPECT(param, eTreeDeclParam);
+    }
 
     tree_t *self = tree_decl(eTreeTypeClosure, node, NULL, name, eQualUnknown);
     self->result = result;
@@ -109,7 +140,7 @@ tree_t *tree_type_closure(const node_t *node, const char *name, const tree_t *re
 
 tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *pointer, size_t length)
 {
-    CTASSERT(pointer != NULL);
+    EXPECT_TYPE(pointer);
 
     tree_t *self = tree_decl(eTreeTypePointer, node, NULL, name, eQualUnknown);
     self->ptr = pointer;
@@ -119,7 +150,7 @@ tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *po
 
 tree_t *tree_type_reference(const node_t *node, const char *name, const tree_t *reference)
 {
-    CTASSERT(reference != NULL);
+    EXPECT_TYPE(reference);
 
     tree_t *self = tree_decl(eTreeTypeReference, node, NULL, name, eQualUnknown);
     self->ptr = reference;
@@ -318,17 +349,5 @@ tree_t *tree_stmt_branch(const node_t *node, tree_t *cond, tree_t *then, tree_t 
     self->cond = cond;
     self->then = then;
     self->other = other;
-    return self;
-}
-
-tree_t *tree_decl_storage(
-    const node_t *node, const char *name,
-    const tree_t *type, size_t length, quals_t quals)
-{
-    CTASSERT(type != NULL);
-
-    tree_t *self = tree_decl(eTreeDeclStorage, node, type, name, eQualUnknown);
-    self->length = length;
-    self->quals = quals;
     return self;
 }

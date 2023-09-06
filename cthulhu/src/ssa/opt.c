@@ -112,6 +112,36 @@ static bool check_init(ssa_scope_t *vm, const ssa_value_t *value)
     return true;
 }
 
+static const ssa_value_t *ssa_opt_unary(ssa_scope_t *vm, ssa_unary_t step)
+{
+    unary_t unary = step.unary;
+    const ssa_value_t *operand = ssa_opt_operand(vm, step.operand);
+
+    CTASSERTF(value_is(operand, eTypeDigit), "operand of unary %s is not a digit (inside %s)", unary_name(unary), vm->symbol->name);
+
+    if (!check_init(vm, operand)) { return operand; }
+
+    mpz_t result;
+    mpz_init(result);
+
+    switch (unary)
+    {
+    case eUnaryNeg:
+        mpz_neg(result, operand->digitValue);
+        break;
+    case eUnaryAbs:
+        mpz_abs(result, operand->digitValue);
+        break;
+    case eUnaryFlip:
+        mpz_com(result, operand->digitValue);
+        break;
+
+    default: NEVER("unhandled unary %s (inside %s)", unary_name(unary), vm->symbol->name);
+    }
+
+    return ssa_value_digit(operand->type, result);
+}
+
 static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
 {
     binary_t binary = step.binary;
@@ -145,6 +175,17 @@ static const ssa_value_t *ssa_opt_binary(ssa_scope_t *vm, ssa_binary_t step)
         mpz_mod(result, lhs->digitValue, rhs->digitValue);
         break;
 
+    /* TODO: do these produce correct values? */
+    case eBinaryShl:
+        mpz_mul_2exp(result, lhs->digitValue, mpz_get_ui(rhs->digitValue));
+        break;
+    case eBinaryShr:
+        mpz_fdiv_q_2exp(result, lhs->digitValue, mpz_get_ui(rhs->digitValue));
+        break;
+    case eBinaryXor:
+        mpz_xor(result, lhs->digitValue, rhs->digitValue);
+        break;
+
     default: NEVER("unhandled binary %s (inside %s)", binary_name(binary), vm->symbol->name);
     }
 
@@ -159,6 +200,7 @@ static const ssa_value_t *ssa_opt_step(ssa_scope_t *vm, const ssa_step_t *step)
     case eOpLoad: return ssa_opt_load(vm, step->load);
     case eOpReturn: return ssa_opt_return(vm, step->ret);
 
+    case eOpUnary: return ssa_opt_unary(vm, step->unary);
     case eOpBinary: return ssa_opt_binary(vm, step->binary);
 
     default: NEVER("unhandled opcode %d (inside %s)", step->opcode, vm->symbol->name);

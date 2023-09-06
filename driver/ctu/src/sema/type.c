@@ -45,6 +45,28 @@ static tree_t *ctu_sema_type_pointer(tree_t *sema, const ctu_t *type)
     return tree_type_pointer(type->node, format("*%s", tree_get_name(pointee)), pointee, 1);
 }
 
+static tree_t *sema_type_function(tree_t *sema, const ctu_t *type)
+{
+    tree_t *returnType = ctu_sema_type(sema, type->returnType);
+
+    size_t len = vector_len(type->params);
+    vector_t *params = vector_of(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ctu_t *param = vector_get(type->params, i);
+        tree_t *ty = ctu_sema_type(sema, param);
+        if (tree_is(ty, eTreeTypeUnit))
+        {
+            report(sema->reports, eFatal, param->node, "void type is not allowed in function parameters");
+        }
+
+        tree_t *it = tree_decl_param(param->node, "", ty);
+        vector_set(params, i, it);
+    }
+
+    return tree_type_closure(type->node, "", returnType, params, eArityFixed);
+}
+
 tree_t *ctu_sema_type(tree_t *sema, const ctu_t *type)
 {
     CTASSERT(type != NULL);
@@ -53,6 +75,7 @@ tree_t *ctu_sema_type(tree_t *sema, const ctu_t *type)
     {
     case eCtuTypePointer: return ctu_sema_type_pointer(sema, type);
     case eCtuTypeName: return sema_type_name(sema, type);
+    case eCtuTypeFunction: return sema_type_function(sema, type);
 
     default: NEVER("invalid type kind %d", type->kind);
     }

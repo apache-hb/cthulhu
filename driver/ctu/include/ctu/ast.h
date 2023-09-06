@@ -21,6 +21,7 @@ typedef enum ctu_kind_t {
     eCtuExprBinary,
     eCtuExprUnary,
     eCtuExprCall,
+    eCtuExprIndex,
 
     eCtuExprRef,
     eCtuExprDeref,
@@ -31,10 +32,14 @@ typedef enum ctu_kind_t {
     eCtuStmtReturn,
     eCtuStmtWhile,
     eCtuStmtAssign,
+    eCtuStmtBreak,
+    eCtuStmtContinue,
 
     /* types */
     eCtuTypeName,
     eCtuTypePointer,
+    eCtuTypeFunction,
+    eCtuTypeArray,
 
     /* real decls */
     eCtuDeclGlobal,
@@ -76,7 +81,7 @@ typedef struct ctu_t {
                     bool mut;
                 };
 
-                /* eCtuDeclFunction */
+                /* eCtuDeclFunction|eCtuTypeFunction */
                 struct {
                     vector_t *params;
                     ctu_t *returnType;
@@ -128,9 +133,15 @@ typedef struct ctu_t {
             ctu_t *rhs;
         };
 
-        /* eCtuExprUnary */
         struct {
-            unary_t unary;
+            union {
+                /* eCtuExprIndex */
+                ctu_t *index;
+
+                /* eCtuExprUnary */
+                unary_t unary;
+            };
+
             ctu_t *expr;
         };
 
@@ -164,6 +175,12 @@ typedef struct ctu_t {
 
         /* eCtuTypePointer */
         ctu_t *pointer;
+
+        /* eCtuTypeArray */
+        struct {
+            ctu_t *arrayType;
+            ctu_t *arrayLength;
+        };
 
         /* eCtuAttrib */
         struct {
@@ -202,6 +219,8 @@ ctu_t *ctu_stmt_local(scan_t *scan, where_t where, bool mutable, char *name, ctu
 ctu_t *ctu_stmt_return(scan_t *scan, where_t where, ctu_t *value);
 ctu_t *ctu_stmt_while(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *other);
 ctu_t *ctu_stmt_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src);
+ctu_t *ctu_stmt_break(scan_t *scan, where_t where);
+ctu_t *ctu_stmt_continue(scan_t *scan, where_t where);
 
 ///
 /// expressions
@@ -215,6 +234,7 @@ ctu_t *ctu_expr_call(scan_t *scan, where_t where, ctu_t *callee, vector_t *args)
 ctu_t *ctu_expr_name(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_expr_ref(scan_t *scan, where_t where, ctu_t *expr);
 ctu_t *ctu_expr_deref(scan_t *scan, where_t where, ctu_t *expr);
+ctu_t *ctu_expr_index(scan_t *scan, where_t where, ctu_t *expr, ctu_t *index);
 
 ctu_t *ctu_expr_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *expr);
 ctu_t *ctu_expr_binary(scan_t *scan, where_t where, binary_t binary, ctu_t *lhs, ctu_t *rhs);
@@ -226,6 +246,8 @@ ctu_t *ctu_expr_compare(scan_t *scan, where_t where, compare_t compare, ctu_t *l
 
 ctu_t *ctu_type_name(scan_t *scan, where_t where, vector_t *path);
 ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer);
+ctu_t *ctu_type_array(scan_t *scan, where_t where, ctu_t *array, ctu_t *length);
+ctu_t *ctu_type_function(scan_t *scan, where_t where, vector_t *params, ctu_t *returnType);
 
 ///
 /// real declarations

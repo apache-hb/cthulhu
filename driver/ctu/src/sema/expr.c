@@ -318,6 +318,10 @@ tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     case eCtuExprCompare:
     case eCtuExprBinary:
     case eCtuExprUnary:
+    case eCtuExprName:
+        report(sema->reports, eWarn, stmt->node, "expression statement may have no effect");
+        /* fallthrough */
+
     case eCtuExprCall:
         return ctu_sema_rvalue(sema, stmt, NULL);
 

@@ -41,7 +41,6 @@ tree_t *ctu_get_int_type(digit_t digit, sign_t sign);
 tree_t *ctu_get_char_type(void);
 tree_t *ctu_get_bool_type(void);
 tree_t *ctu_get_void_type(void);
-tree_t *ctu_get_str_type(size_t length);
 
 ///
 /// runtime module

@@ -98,6 +98,16 @@ ctu_t *ctu_stmt_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src)
     return ast;
 }
 
+ctu_t *ctu_stmt_break(scan_t *scan, where_t where)
+{
+    return ctu_new(scan, where, eCtuStmtBreak);
+}
+
+ctu_t *ctu_stmt_continue(scan_t *scan, where_t where)
+{
+    return ctu_new(scan, where, eCtuStmtContinue);
+}
+
 /* exprs */
 
 ctu_t *ctu_expr_int(scan_t *scan, where_t where, mpz_t value)
@@ -151,6 +161,14 @@ ctu_t *ctu_expr_deref(scan_t *scan, where_t where, ctu_t *expr)
     return ast;
 }
 
+ctu_t *ctu_expr_index(scan_t *scan, where_t where, ctu_t *expr, ctu_t *index)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuExprIndex);
+    ast->expr = expr;
+    ast->index = index;
+    return ast;
+}
+
 ctu_t *ctu_expr_unary(scan_t *scan, where_t where, unary_t unary, ctu_t *expr)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuExprUnary);
@@ -191,6 +209,22 @@ ctu_t *ctu_type_pointer(scan_t *scan, where_t where, ctu_t *pointer)
 {
     ctu_t *ast = ctu_new(scan, where, eCtuTypePointer);
     ast->pointer = pointer;
+    return ast;
+}
+
+ctu_t *ctu_type_array(scan_t *scan, where_t where, ctu_t *array, ctu_t *length)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuTypeArray);
+    ast->arrayType = array;
+    ast->arrayLength = length;
+    return ast;
+}
+
+ctu_t *ctu_type_function(scan_t *scan, where_t where, vector_t *params, ctu_t *returnType)
+{
+    ctu_t *ast = ctu_new(scan, where, eCtuTypeFunction);
+    ast->params = params;
+    ast->returnType = returnType;
     return ast;
 }
 

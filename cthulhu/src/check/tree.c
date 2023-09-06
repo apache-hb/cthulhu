@@ -391,6 +391,17 @@ static void check_inner_type_recursion(check_t *check, const tree_t *type)
     case eTreeTypeStruct:
         break;
 
+    case eTreeTypeClosure:
+        check_type_recursion(check, tree_fn_get_return(type));
+        vector_t *params = tree_fn_get_params(type);
+        size_t len = vector_len(params);
+        for (size_t i = 0; i < len; i++)
+        {
+            const tree_t *param = vector_get(params, i);
+            check_type_recursion(check, param->type);
+        }
+        break;
+
     case eTreeTypePointer:
     case eTreeTypeReference:
         check_type_recursion(check, type->ptr);

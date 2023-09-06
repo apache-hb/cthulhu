@@ -28,6 +28,8 @@ WS [ \t\r\v\n\f]
 <COMMENT>\n ;
 <COMMENT>. ;
 
+"->" { return ARROW; }
+
 "+" { return PLUS; }
 "-" { return MINUS; }
 "*" { return STAR; }
@@ -87,6 +89,9 @@ WS [ \t\r\v\n\f]
 "while" { return WHILE; }
 "if" { return IF; }
 "else" { return ELSE; }
+
+"break" { return BREAK; }
+"continue" { return CONTINUE; }
 
 "noinit" { return NOINIT; }
 

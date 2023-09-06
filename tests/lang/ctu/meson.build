@@ -16,16 +16,16 @@ tests = {
     #         'multiple-entry'
     #     ]
     # },
-    # 'digits': {
-    #     'pass': [
-    #         'no-suffix',
-    #         'suffix-zoo',
-    #         'complex-init'
-    #     ],
-    #     'fail': [
-    #         'invalid-suffix'
-    #     ]
-    # },
+    'digits': {
+        'pass': [
+            'no-suffix',
+            #'suffix-zoo',
+            'complex-init'
+        ],
+        'fail': [
+            'invalid-suffix'
+        ]
+    },
     'funcs': {
         'fail': [
             'ret-invalid',
@@ -45,20 +45,20 @@ tests = {
             'pass-ptr'
         ]
     },
-    # 'logic.loops': {
-    #     'fail': [
-    #         'loop-nonbool-expr',
-    #         #'invalid-break-label',
-    #         #'incorrect-break-label'
-    #     ],
-    #     'pass': [
-    #         'loop',
-    #         'for',
-    #         'break'
-    #         #'break-label',
-    #         #'nested-break'
-    #     ]
-    # },
+    'logic.loops': {
+        'fail': [
+            'loop-nonbool-expr',
+            #'invalid-break-label',
+            #'incorrect-break-label'
+        ],
+        'pass': [
+            'loop',
+            'for',
+            'break'
+            #'break-label',
+            #'nested-break'
+        ]
+    },
     'logic.return': {
         'pass': [
             'bool-return'
@@ -88,7 +88,7 @@ tests = {
         ],
         'pass': [
             'chained-aliases',
-            #'index-alias',
+            'index-alias',
             'multiple-aliases',
             'single-alias'
         ]
@@ -121,17 +121,17 @@ tests = {
     #         'single-element'
     #     ]
     # },
-    # 'types.closure': {
-    #     'fail': [
-    #         'void-param'
-    #     ],
-    #     'pass': [
-    #         'no-params',
-    #         'one-param',
-    #         'many-params',
-    #         'return-closure'
-    #     ]
-    # },
+    'types.closure': {
+        'fail': [
+            'void-param'
+        ],
+        'pass': [
+            'no-params',
+            'one-param',
+            'many-params',
+            'return-closure'
+        ]
+    },
     # 'types.variant': {
     #     'fail': [
     #         'duplicate-name',
@@ -185,7 +185,7 @@ crashes = {
     '0': false,
     '1': false,
     '2': false,
-    #'3': true,
+    '3': true,
     '5': false,
     '6': false,
     #'7': true,

@@ -77,7 +77,7 @@ static tree_t *make_bool_type(const char *name)
 
 static tree_t *make_str_type(const char *name)
 {
-    return (gStringType = ctu_get_str_type(SIZE_MAX));
+    return (gStringType = tree_type_pointer(node_builtin(), "str", gStringChar, SIZE_MAX));
 }
 
 static tree_t *make_void_type(const char *name)
@@ -93,11 +93,6 @@ tree_t *ctu_get_int_type(digit_t digit, sign_t sign)
 tree_t *ctu_get_char_type(void) { return gStringChar; }
 tree_t *ctu_get_bool_type(void) { return gBoolType; }
 tree_t *ctu_get_void_type(void) { return gVoidType; }
-
-tree_t *ctu_get_str_type(size_t length)
-{
-    return tree_type_pointer(node_builtin(), "str", gStringChar, length);
-}
 
 tree_t *ctu_rt_mod(lifetime_t *lifetime)
 {

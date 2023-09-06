@@ -62,7 +62,6 @@ TREE_KIND(eTreeDeclParam, "decl-param")
 TREE_KIND(eTreeDeclField, "decl-field")
 TREE_KIND(eTreeDeclFunction, "decl-function")
 TREE_KIND(eTreeDeclModule, "decl-module")
-TREE_KIND(eTreeDeclStorage, "decl-storage")
 
 TREE_KIND(eTreeType, "unresolved-type") ///< unresolved type
 TREE_KIND(eTreeError, "error") ///< an error of some sort

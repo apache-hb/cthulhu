@@ -35,7 +35,6 @@ tree_t *obr_get_digit_type(digit_t digit, sign_t sign);
 tree_t *obr_get_char_type(void);
 tree_t *obr_get_bool_type(void);
 tree_t *obr_get_void_type(void);
-tree_t *obr_get_string_type(size_t length);
 
 /// runtime module
 

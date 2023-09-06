@@ -64,12 +64,16 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     IF "`if`"
     ELSE "`else`"
 
+    BREAK "`break`"
+    CONTINUE "`continue`"
+
     NOINIT "`noinit`"
 
     AS "`as`"
 
     DISCARD "`$`"
     AT "`@`"
+    ARROW "`->`"
 
     PLUS "`+`"
     MINUS "`-`"
@@ -120,6 +124,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     fnParams fnParamList
     attribArgs
     exprList optExprList
+    typeList optTypeList
 
 /**
  * order of operations, tightest first
@@ -290,6 +295,16 @@ structField: ident COLON type SEMI { $$ = ctu_field(x, @$, $1, $3); }
 type: path { $$ = ctu_type_name(x, @$, $1); }
     | STAR type { $$ = ctu_type_pointer(x, @$, $2); }
     | LSQUARE STAR RSQUARE type { $$ = ctu_type_pointer(x, @$, $4); /* TODO: implement indexable pointers */ }
+    | DEF LPAREN optTypeList RPAREN ARROW type { $$ = ctu_type_function(x, @$, $3, $6); }
+    | LSQUARE expr RSQUARE type { $$ = ctu_type_array(x, @$, $2, $4); }
+    ;
+
+typeList: type { $$ = vector_init($1); }
+    | typeList COMMA type { vector_push(&$1, $3); $$ = $1; }
+    ;
+
+optTypeList: %empty { $$ = vector_of(0); }
+    | typeList { $$ = $1; }
     ;
 
 /* statements */
@@ -322,6 +337,8 @@ stmt: expr SEMI { $$ = $1; }
     | localDecl { $$ = $1; }
     | whileStmt { $$ = $1; }
     | assignExpr { $$ = $1; }
+    | BREAK SEMI { $$ = ctu_stmt_break(x, @$); }
+    | CONTINUE SEMI { $$ = ctu_stmt_continue(x, @$); }
     ;
 
 /* expressions */
@@ -347,6 +364,7 @@ primary: LPAREN expr RPAREN { $$ = $2; }
 
 postExpr: primary { $$ = $1; }
     | postExpr LPAREN optExprList RPAREN { $$ = ctu_expr_call(x, @$, $1, $3); }
+    | postExpr LSQUARE expr RSQUARE { $$ = ctu_expr_index(x, @$, $1, $3); }
     ;
 
 unaryExpr: postExpr { $$ = $1; }
