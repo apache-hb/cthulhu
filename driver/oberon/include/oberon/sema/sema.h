@@ -7,10 +7,10 @@
 typedef struct lifetime_t lifetime_t;
 
 typedef enum obr_tag_t {
-    eObrTagValues = eSema2Values,
-    eObrTagTypes = eSema2Types,
-    eObrTagProcs = eSema2Procs,
-    eObrTagModules = eSema2Modules,
+    eObrTagValues = eSemaValues,
+    eObrTagTypes = eSemaTypes,
+    eObrTagProcs = eSemaProcs,
+    eObrTagModules = eSemaModules,
 
     eObrTagImports,
 

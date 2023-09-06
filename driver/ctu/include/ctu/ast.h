@@ -170,6 +170,9 @@ typedef struct ctu_t {
             ctu_t *src;
         };
 
+        /* eCtuStmtBreak|eCtuStmtContinue */
+        char *label;
+
         /* eCtuTypeName */
         vector_t *typeName;
 
@@ -219,8 +222,8 @@ ctu_t *ctu_stmt_local(scan_t *scan, where_t where, bool mutable, char *name, ctu
 ctu_t *ctu_stmt_return(scan_t *scan, where_t where, ctu_t *value);
 ctu_t *ctu_stmt_while(scan_t *scan, where_t where, ctu_t *cond, ctu_t *then, ctu_t *other);
 ctu_t *ctu_stmt_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src);
-ctu_t *ctu_stmt_break(scan_t *scan, where_t where);
-ctu_t *ctu_stmt_continue(scan_t *scan, where_t where);
+ctu_t *ctu_stmt_break(scan_t *scan, where_t where, char *label);
+ctu_t *ctu_stmt_continue(scan_t *scan, where_t where, char *label);
 
 ///
 /// expressions

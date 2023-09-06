@@ -285,9 +285,14 @@ static tree_t *sema_return(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 
 static tree_t *sema_while(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 {
+    tree_t *save = ctu_current_loop(sema);
+    ctu_set_current_loop(sema, decl);
+
     tree_t *cond = ctu_sema_rvalue(sema, stmt->cond, ctu_get_bool_type());
     tree_t *then = ctu_sema_stmt(sema, decl, stmt->then);
     tree_t *other = stmt->other == NULL ? NULL : ctu_sema_stmt(sema, decl, stmt->other);
+
+    ctu_set_current_loop(sema, save);
 
     return tree_stmt_loop(stmt->node, cond, then, other);
 }
@@ -302,6 +307,40 @@ static tree_t *sema_assign(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     return tree_stmt_assign(stmt->node, dst, src);
 }
 
+static tree_t *get_current_loop(tree_t *sema, const ctu_t *stmt)
+{
+    if (stmt->label == NULL)
+    {
+        tree_t *loop = ctu_current_loop(sema);
+        if (loop != NULL)
+        {
+            return loop;
+        }
+
+        return tree_raise(stmt->node, sema->reports, "loop control statement not within a loop");
+    }
+
+    tree_t *decl = ctu_get_decl(sema, stmt->label);
+    if (decl != NULL)
+    {
+        return decl;
+    }
+
+    return tree_raise(stmt->node, sema->reports, "label `%s` not found", stmt->label);
+}
+
+static tree_t *sema_break(tree_t *sema, const ctu_t *stmt)
+{
+    tree_t *loop = get_current_loop(sema, stmt);
+    return tree_stmt_jump(stmt->node, loop, eJumpBreak);
+}
+
+static tree_t *sema_continue(tree_t *sema, const ctu_t *stmt)
+{
+    tree_t *loop = get_current_loop(sema, stmt);
+    return tree_stmt_jump(stmt->node, loop, eJumpContinue);
+}
+
 tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
 {
     CTASSERT(decl != NULL);
@@ -314,6 +353,9 @@ tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt)
     case eCtuStmtReturn: return sema_return(sema, decl, stmt);
     case eCtuStmtWhile: return sema_while(sema, decl, stmt);
     case eCtuStmtAssign: return sema_assign(sema, decl, stmt);
+
+    case eCtuStmtBreak: return sema_break(sema, stmt);
+    case eCtuStmtContinue: return sema_continue(sema, stmt);
 
     case eCtuExprCompare:
     case eCtuExprBinary:

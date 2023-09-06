@@ -459,7 +459,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
 
     logverbose("check %s", tree_get_name(mod));
 
-    vector_t *modules = map_values(tree_module_tag(mod, eSema2Modules));
+    vector_t *modules = map_values(tree_module_tag(mod, eSemaModules));
     size_t totalModules = vector_len(modules);
     for (size_t i = 0; i < totalModules; i++)
     {
@@ -467,7 +467,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
         check_module_valid(check, child);
     }
 
-    vector_t *globals = map_values(tree_module_tag(mod, eSema2Values));
+    vector_t *globals = map_values(tree_module_tag(mod, eSemaValues));
     size_t totalGlobals = vector_len(globals);
     for (size_t i = 0; i < totalGlobals; i++)
     {
@@ -479,7 +479,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
         check_global_recursion(check, global);
     }
 
-    vector_t *functions = map_values(tree_module_tag(mod, eSema2Procs));
+    vector_t *functions = map_values(tree_module_tag(mod, eSemaProcs));
     size_t totalFunctions = vector_len(functions);
     for (size_t i = 0; i < totalFunctions; i++)
     {
@@ -491,7 +491,7 @@ static void check_module_valid(check_t *check, const tree_t *mod)
         check_func_return(check, function);
     }
 
-    vector_t *types = map_values(tree_module_tag(mod, eSema2Types));
+    vector_t *types = map_values(tree_module_tag(mod, eSemaTypes));
     size_t totalTypes = vector_len(types);
     for (size_t i = 0; i < totalTypes; i++)
     {

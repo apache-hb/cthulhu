@@ -64,6 +64,12 @@ typedef enum tree_link_t {
     eLinkTotal
 } tree_link_t;
 
+typedef enum tree_jump_t {
+#define TREE_JUMP(ID, STR) ID,
+#include "tree.inc"
+    eJumpTotal
+} tree_jump_t;
+
 typedef enum visibility_t {
 #define TREE_VISIBILITY(ID, STR) ID,
 #include "tree.inc"

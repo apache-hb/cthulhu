@@ -17,12 +17,12 @@ typedef struct cookie_t cookie_t;
 typedef void (*resolve_t)(cookie_t *cookie, tree_t *sema, tree_t *self, void *user);
 
 typedef enum sema_tags_t {
-    eSema2Values,
-    eSema2Types,
-    eSema2Procs,
-    eSema2Modules,
+    eSemaValues,
+    eSemaTypes,
+    eSemaProcs,
+    eSemaModules,
 
-    eSema2Total
+    eSemaTotal
 } sema_tags_t;
 
 typedef struct attribs_t {
@@ -134,6 +134,12 @@ typedef struct tree_t {
         struct {
             tree_t *object;
             tree_t *field;
+        };
+
+        /* eTreeStmtJump */
+        struct {
+            tree_t *label;
+            tree_jump_t jump;
         };
 
         /* any declaration */
@@ -363,6 +369,7 @@ tree_t *tree_stmt_return(const node_t *node, const tree_t *value);
 tree_t *tree_stmt_assign(const node_t *node, tree_t *dst, tree_t *src);
 tree_t *tree_stmt_loop(const node_t *node, tree_t *cond, tree_t *body, tree_t *other);
 tree_t *tree_stmt_branch(const node_t *node, tree_t *cond, tree_t *then, tree_t *other);
+tree_t *tree_stmt_jump(const node_t *node, tree_t *label, tree_jump_t jump);
 
 ///
 /// tree decl interface

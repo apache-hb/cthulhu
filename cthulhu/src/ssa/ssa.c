@@ -576,13 +576,13 @@ static void compile_module(ssa_compile_t *ssa, const tree_t *tree)
     const char *id = tree_get_name(tree);
     ssa_module_t *mod = module_create(ssa, id);
 
-    add_module_globals(ssa, mod, tree_module_tag(tree, eSema2Values));
-    add_module_functions(ssa, mod, tree_module_tag(tree, eSema2Procs));
+    add_module_globals(ssa, mod, tree_module_tag(tree, eSemaValues));
+    add_module_functions(ssa, mod, tree_module_tag(tree, eSemaProcs));
 
     vector_push(&ssa->modules, mod);
     vector_push(&ssa->path, (char*)id);
 
-    map_t *children = tree_module_tag(tree, eSema2Modules);
+    map_t *children = tree_module_tag(tree, eSemaModules);
     map_iter_t iter = map_iter(children);
     while (map_has_next(&iter))
     {

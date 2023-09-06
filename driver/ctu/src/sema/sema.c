@@ -53,6 +53,22 @@ void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl)
 }
 
 ///
+/// extras
+///
+
+static const char *kCurrentLoop = "ctu:current-loop";
+
+tree_t *ctu_current_loop(tree_t *sema)
+{
+    return tree_get_extra(sema, kCurrentLoop);
+}
+
+void ctu_set_current_loop(tree_t *sema, tree_t *loop)
+{
+    tree_set_extra(sema, kCurrentLoop, loop);
+}
+
+///
 /// runtime
 ///
 

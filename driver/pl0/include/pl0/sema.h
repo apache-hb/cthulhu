@@ -5,10 +5,10 @@
 #include "cthulhu/tree/tree.h"
 
 typedef enum pl0_tag_t {
-    ePl0TagValues = eSema2Values,
-    ePl0TagTypes = eSema2Types,
-    ePl0TagProcs = eSema2Procs,
-    ePl0TagModules = eSema2Modules,
+    ePl0TagValues = eSemaValues,
+    ePl0TagTypes = eSemaTypes,
+    ePl0TagProcs = eSemaProcs,
+    ePl0TagModules = eSemaModules,
 
     ePl0TagImportedValues,
     ePl0TagImportedProcs,

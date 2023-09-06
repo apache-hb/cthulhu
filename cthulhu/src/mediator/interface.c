@@ -196,11 +196,11 @@ static void resolve_decls(tree_t *mod)
 {
     CTASSERT(mod != NULL);
 
-    resolve_tag(mod, eSema2Values);
-    resolve_tag(mod, eSema2Types);
-    resolve_tag(mod, eSema2Procs);
+    resolve_tag(mod, eSemaValues);
+    resolve_tag(mod, eSemaTypes);
+    resolve_tag(mod, eSemaProcs);
 
-    map_iter_t iter = map_iter(tree_module_tag(mod, eSema2Modules));
+    map_iter_t iter = map_iter(tree_module_tag(mod, eSemaModules));
     while (map_has_next(&iter))
     {
         map_entry_t entry = map_next(&iter);

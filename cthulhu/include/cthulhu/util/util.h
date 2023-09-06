@@ -2,6 +2,8 @@
 
 #include <stdbool.h>
 
+#include <gmp.h>
+
 typedef struct tree_t tree_t;
 
 ///
@@ -34,6 +36,12 @@ bool util_types_equal(const tree_t *lhs, const tree_t *rhs);
  * @return tree_t* the casted expression or @a tree_error if the cast could not be done
  */
 tree_t *util_type_cast(const tree_t *dst, tree_t *expr);
+
+///
+/// eval
+///
+
+bool util_eval_digit(mpz_t value, const tree_t *expr);
 
 ///
 /// string helpers

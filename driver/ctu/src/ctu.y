@@ -156,7 +156,7 @@ void ctuerror(where_t *where, void *state, scan_t *scan, const char *msg);
     fnParam fnResult
 
 %type<ident>
-    importAlias ident
+    importAlias ident optIdent
 
 %type<boolean>
     exported mut
@@ -337,8 +337,8 @@ stmt: expr SEMI { $$ = $1; }
     | localDecl { $$ = $1; }
     | whileStmt { $$ = $1; }
     | assignExpr { $$ = $1; }
-    | BREAK SEMI { $$ = ctu_stmt_break(x, @$); }
-    | CONTINUE SEMI { $$ = ctu_stmt_continue(x, @$); }
+    | BREAK optIdent SEMI { $$ = ctu_stmt_break(x, @$, $2); }
+    | CONTINUE optIdent SEMI { $$ = ctu_stmt_continue(x, @$, $2); }
     ;
 
 /* expressions */
@@ -424,6 +424,10 @@ expr: orExpr { $$ = $1; }
     ;
 
 /* basic */
+
+optIdent: %empty { $$ = NULL; }
+    | IDENT { $$ = $1; }
+    ;
 
 ident: IDENT { $$ = $1; }
     | DISCARD { $$ = NULL; }

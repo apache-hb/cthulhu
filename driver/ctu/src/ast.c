@@ -98,14 +98,18 @@ ctu_t *ctu_stmt_assign(scan_t *scan, where_t where, ctu_t *dst, ctu_t *src)
     return ast;
 }
 
-ctu_t *ctu_stmt_break(scan_t *scan, where_t where)
+ctu_t *ctu_stmt_break(scan_t *scan, where_t where, char *label)
 {
-    return ctu_new(scan, where, eCtuStmtBreak);
+    ctu_t *ast = ctu_new(scan, where, eCtuStmtBreak);
+    ast->label = label;
+    return ast;
 }
 
-ctu_t *ctu_stmt_continue(scan_t *scan, where_t where)
+ctu_t *ctu_stmt_continue(scan_t *scan, where_t where, char *label)
 {
-    return ctu_new(scan, where, eCtuStmtContinue);
+    ctu_t *ast = ctu_new(scan, where, eCtuStmtContinue);
+    ast->label = label;
+    return ast;
 }
 
 /* exprs */

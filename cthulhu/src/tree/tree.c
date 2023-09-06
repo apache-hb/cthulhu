@@ -351,3 +351,13 @@ tree_t *tree_stmt_branch(const node_t *node, tree_t *cond, tree_t *then, tree_t 
     self->other = other;
     return self;
 }
+
+tree_t *tree_stmt_jump(const node_t *node, tree_t *label, tree_jump_t jump)
+{
+    CTASSERT(label != NULL);
+
+    tree_t *self = tree_new(eTreeStmtJump, node, NULL);
+    self->label = label;
+    self->jump = jump;
+    return self;
+}

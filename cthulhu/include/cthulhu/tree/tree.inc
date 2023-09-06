@@ -51,6 +51,7 @@ TREE_KIND(eTreeStmtReturn, "stmt-return")
 TREE_KIND(eTreeStmtAssign, "stmt-assign")
 TREE_KIND(eTreeStmtLoop, "stmt-loop")
 TREE_KIND(eTreeStmtBranch, "stmt-branch")
+TREE_KIND(eTreeStmtJump, "stmt-jump") ///< loop related jumps
 
 ///
 /// declarations
@@ -214,3 +215,12 @@ TREE_ARITY(eArityFixed, "fixed") // fixed number of arguments
 TREE_ARITY(eArityVariable, "variable") // variable number of arguments, same as C varargs
 
 #undef TREE_ARITY
+
+#ifndef TREE_JUMP
+#   define TREE_JUMP(ID, NAME)
+#endif
+
+TREE_JUMP(eJumpBreak, "break")
+TREE_JUMP(eJumpContinue, "continue")
+
+#undef TREE_JUMP

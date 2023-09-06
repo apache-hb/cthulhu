@@ -201,6 +201,20 @@ tree_t *util_type_cast(const tree_t *dst, tree_t *expr)
     }
 }
 
+bool util_eval_digit(mpz_t value, const tree_t *expr)
+{
+    CTASSERT(expr != NULL);
+    switch (tree_get_kind(expr))
+    {
+    case eTreeExprDigit:
+        mpz_set(value, expr->digitValue);
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 tree_t *util_create_string(tree_t *sema, tree_t *letter, const char *text, size_t length)
 {
     // get basic info
@@ -222,7 +236,7 @@ tree_t *util_create_string(tree_t *sema, tree_t *letter, const char *text, size_
     tree_t *str = tree_expr_string(node, type, text, length + 1);
     tree_t *decl = tree_decl_global(node, id, storage, type, str);
 
-    tree_module_set(mod, eSema2Values, id, decl);
+    tree_module_set(mod, eSemaValues, id, decl);
 
     return decl;
 }

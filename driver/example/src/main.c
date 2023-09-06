@@ -20,14 +20,14 @@ static tree_t *example_lang_module(lifetime_t *lifetime)
     cookie_t *cookie = lifetime_get_cookie(lifetime);
 
     node_t *node = node_builtin();
-    size_t sizes[eSema2Total] = {
-        [eSema2Values] = 1,
-        [eSema2Types] = 1,
-        [eSema2Procs] = 1,
-        [eSema2Modules] = 1
+    size_t sizes[eSemaTotal] = {
+        [eSemaValues] = 1,
+        [eSemaTypes] = 1,
+        [eSemaProcs] = 1,
+        [eSemaModules] = 1
     };
 
-    return tree_module_root(reports, cookie, node, "runtime", eSema2Total, sizes);
+    return tree_module_root(reports, cookie, node, "runtime", eSemaTotal, sizes);
 }
 
 static void ex_config(lifetime_t *lifetime, ap_t *ap)

@@ -7,14 +7,15 @@
 typedef struct lifetime_t lifetime_t;
 
 typedef enum ctu_tag_t {
-    eCtuTagValues = eSema2Values,
-    eCtuTagTypes = eSema2Types,
-    eCtuTagFunctions = eSema2Procs,
-    eCtuTagModules = eSema2Modules,
+    eCtuTagValues = eSemaValues,
+    eCtuTagTypes = eSemaTypes,
+    eCtuTagFunctions = eSemaProcs,
+    eCtuTagModules = eSemaModules,
 
     eCtuTagImports,
     eCtuTagAttribs,
     eCtuTagSuffixes,
+    eCtuTagLabels,
 
     eCtuTagTotal
 } ctu_tag_t;
@@ -32,6 +33,13 @@ tree_t *ctu_get_decl(tree_t *sema, const char *name);
 ///
 
 void ctu_add_decl(tree_t *sema, ctu_tag_t tag, const char *name, tree_t *decl);
+
+///
+/// extras
+///
+
+tree_t *ctu_current_loop(tree_t *sema);
+void ctu_set_current_loop(tree_t *sema, tree_t *loop);
 
 ///
 /// builtin types
