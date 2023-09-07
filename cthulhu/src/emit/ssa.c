@@ -169,6 +169,14 @@ static void emit_ssa_block(ssa_emit_t *emit, io_t *io, const ssa_block_t *bb)
                 operand_to_string(emit, load.src)
             );
             break;
+        case eOpOffset:
+            ssa_offset_t offset = step->offset;
+            write_string(io, "\t%%%s = offset %s %s\n",
+                get_step_name(&emit->emit, step),
+                operand_to_string(emit, offset.array),
+                operand_to_string(emit, offset.offset)
+            );
+            break;
         case eOpAddress:
             ssa_addr_t addr = step->addr;
             write_string(io, "\t%%%s = addr %s\n",
@@ -248,6 +256,24 @@ static void emit_ssa_consts(ssa_emit_t *emit, io_t *io, vector_t *consts)
     }
 }
 
+static const char *storage_to_string(ssa_storage_t storage)
+{
+    const char *ty = type_to_string(storage.type);
+    const char *quals = quals_name(storage.quals);
+
+    return format("{type = %s, quals = %s, size = %zu}", ty, quals, storage.size);
+}
+
+static void emit_ssa_locals(ssa_emit_t *emit, io_t *io, typevec_t *locals)
+{
+    size_t len = typevec_len(locals);
+    for (size_t i = 0; i < len; i++)
+    {
+        const ssa_local_t *local = typevec_offset(locals, i);
+        write_string(io, "\tlocal[%zu] %s %s\n", i, type_to_string(local->type), storage_to_string(local->storage));
+    }
+}
+
 static void emit_symbol_deps(io_t *io, const ssa_symbol_t *symbol, map_t *deps)
 {
     set_t *all = map_get_ptr(deps, symbol);
@@ -316,6 +342,7 @@ static void emit_ssa_module(ssa_emit_t *emit, const ssa_module_t *mod)
         if (fn->linkage != eLinkImport)
         {
             emit_ssa_consts(emit, io, fn->consts);
+            emit_ssa_locals(emit, io, fn->locals);
             emit_ssa_blocks(emit, io, fn->blocks);
         }
 

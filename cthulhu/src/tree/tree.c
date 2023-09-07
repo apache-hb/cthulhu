@@ -282,6 +282,17 @@ tree_t *tree_expr_field(const node_t *node, tree_t *object, tree_t *field)
     return self;
 }
 
+tree_t *tree_expr_offset(const node_t *node, const tree_t *type, tree_t *object, tree_t *offset)
+{
+    CTASSERT(object != NULL);
+    CTASSERT(offset != NULL);
+
+    tree_t *self = tree_new(eTreeExprOffset, node, type);
+    self->object = object;
+    self->offset = offset;
+    return self;
+}
+
 tree_t *tree_expr_call(const node_t *node, const tree_t *callee, vector_t *args)
 {
     CTASSERT(callee != NULL);

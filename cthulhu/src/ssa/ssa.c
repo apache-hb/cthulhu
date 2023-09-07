@@ -359,6 +359,20 @@ static ssa_operand_t compile_tree(ssa_compile_t *ssa, const tree_t *tree)
         return add_step(ssa, step);
     }
 
+    case eTreeExprOffset: {
+        ssa_operand_t expr = compile_tree(ssa, tree->expr);
+        ssa_operand_t offset = compile_tree(ssa, tree->offset);
+
+        ssa_step_t step = {
+            .opcode = eOpOffset,
+            .offset = {
+                .array = expr,
+                .offset = offset
+            }
+        };
+        return add_step(ssa, step);
+    }
+
     case eTreeExprUnary: {
         ssa_operand_t expr = compile_tree(ssa, tree->operand);
         ssa_step_t step = {

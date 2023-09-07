@@ -199,10 +199,10 @@ typedef struct ssa_call_t {
     typevec_t *args;
 } ssa_call_t;
 
-typedef struct ssa_index_t {
+typedef struct ssa_offset_t {
     ssa_operand_t array;
-    ssa_operand_t index;
-} ssa_index_t;
+    ssa_operand_t offset;
+} ssa_offset_t;
 
 typedef struct ssa_member_t {
     ssa_operand_t object;
@@ -238,7 +238,7 @@ typedef struct ssa_step_t {
         ssa_cast_t cast;
         ssa_call_t call;
 
-        ssa_index_t index;
+        ssa_offset_t offset;
         ssa_member_t member;
 
         ssa_return_t ret;

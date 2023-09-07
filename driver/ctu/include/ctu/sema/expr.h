@@ -8,3 +8,5 @@ tree_t *ctu_sema_lvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
 tree_t *ctu_sema_stmt(tree_t *sema, tree_t *decl, const ctu_t *stmt);
 
 size_t ctu_resolve_storage_size(const tree_t *type);
+const tree_t *ctu_resolve_storage_type(const tree_t *type);
+const tree_t *ctu_resolve_decl_type(const tree_t *type);

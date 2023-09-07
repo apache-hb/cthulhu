@@ -46,7 +46,7 @@ SSA_OPCODE(eOpCompare, "compare")
 SSA_OPCODE(eOpCast, "cast")
 SSA_OPCODE(eOpCall, "call")
 
-SSA_OPCODE(eOpIndex, "index") ///< get the address of an element in an array
+SSA_OPCODE(eOpOffset, "offset") ///< get the address of an element in an array
 SSA_OPCODE(eOpMember, "member") ///< get the address of a member in a struct
 
 SSA_OPCODE(eOpReturn, "return")

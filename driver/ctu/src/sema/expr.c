@@ -179,6 +179,46 @@ static tree_t *sema_ref(tree_t *sema, const ctu_t *expr)
     return tree_expr_address(expr->node, inner);
 }
 
+static const tree_t *get_ptr_type(const tree_t *ty)
+{
+    if (tree_is(ty, eTreeTypeReference))
+    {
+        return ty->ptr;
+    }
+
+    return ty;
+}
+
+static tree_t *sema_index_rvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
+{
+    tree_t *index = ctu_sema_rvalue(sema, expr->index, ctu_get_int_type(eDigitSize, eSignUnsigned));
+    tree_t *object = ctu_sema_lvalue(sema, expr->expr, NULL);
+
+    const tree_t *ty = get_ptr_type(tree_get_type(object));
+    if (!tree_is(ty, eTreeTypePointer))
+    {
+        report(sema->reports, eFatal, expr->node, "cannot index non-pointer type `%s` inside rvalue", tree_to_string(ty));
+    }
+
+    tree_t *offset = tree_expr_offset(expr->node, tree_get_type(object), object, index);
+    return tree_expr_load(expr->node, offset);
+}
+
+static tree_t *sema_index_lvalue(tree_t *sema, const ctu_t *expr)
+{
+    tree_t *index = ctu_sema_rvalue(sema, expr->index, ctu_get_int_type(eDigitSize, eSignUnsigned));
+    tree_t *object = ctu_sema_lvalue(sema, expr->expr, NULL);
+
+    const tree_t *ty = get_ptr_type(tree_get_type(object));
+    if (!tree_is(ty, eTreeTypePointer))
+    {
+        return tree_raise(expr->node, sema->reports, "cannot index non-pointer type `%s` inside lvalue", tree_to_string(ty));
+    }
+
+    tree_t *ref = tree_type_reference(expr->node, "", ty->ptr);
+    return tree_expr_offset(expr->node, ref, object, index);
+}
+
 tree_t *ctu_sema_lvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
     CTASSERT(expr != NULL);
@@ -187,6 +227,7 @@ tree_t *ctu_sema_lvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
     {
     case eCtuExprName: return sema_name(sema, expr);
     case eCtuExprDeref: return sema_deref_lvalue(sema, expr);
+    case eCtuExprIndex: return sema_index_lvalue(sema, expr);
 
     default: NEVER("invalid lvalue-expr kind %d", expr->kind);
     }
@@ -209,6 +250,7 @@ tree_t *ctu_sema_rvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitT
 
     case eCtuExprRef: return sema_ref(sema, expr);
     case eCtuExprDeref: return sema_deref_rvalue(sema, expr);
+    case eCtuExprIndex: return sema_index_rvalue(sema, expr, inner);
 
     case eCtuExprCompare: return sema_compare(sema, expr);
     case eCtuExprBinary: return sema_binary(sema, expr, inner);
@@ -234,9 +276,10 @@ static tree_t *sema_local(tree_t *sema, tree_t *decl, const ctu_t *stmt)
         report(sema->reports, eFatal, stmt->node, "cannot declare a variable of type `unit`");
     }
 
-    tree_t *ref = tree_type_reference(stmt->node, stmt->name, actualType);
+    const tree_t *inner = ctu_resolve_storage_type(actualType);
+    const tree_t *ref = ctu_resolve_decl_type(actualType);
     tree_storage_t storage = {
-        .storage = actualType,
+        .storage = inner,
         .size = ctu_resolve_storage_size(actualType),
         .quals = stmt->mut ? eQualMutable : eQualConst
     };
@@ -378,5 +421,27 @@ size_t ctu_resolve_storage_size(const tree_t *type)
     {
     case eTreeTypePointer: return type->length;
     default: return 1;
+    }
+}
+
+const tree_t *ctu_resolve_storage_type(const tree_t *type)
+{
+    switch (tree_get_kind(type))
+    {
+    case eTreeTypePointer: return type->ptr;
+    case eTreeTypeReference: NEVER("cannot resolve storage type of reference");
+
+    default: return type;
+    }
+}
+
+const tree_t *ctu_resolve_decl_type(const tree_t *type)
+{
+    switch (tree_get_kind(type))
+    {
+    case eTreeTypePointer: return type;
+    case eTreeTypeReference: NEVER("cannot resolve decl type of reference");
+
+    default: return tree_type_reference(tree_get_node(type), tree_get_name(type), type);
     }
 }

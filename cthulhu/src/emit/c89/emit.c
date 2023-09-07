@@ -430,6 +430,16 @@ static void c89_write_address(c89_emit_t *emit, io_t *io, const ssa_step_t *step
     );
 }
 
+static void c89_write_offset(c89_emit_t *emit, io_t *io, const ssa_step_t *step)
+{
+    ssa_offset_t offset = step->offset;
+    write_string(io, "\t%s = &%s[%s];\n",
+        c89_name_vreg_by_operand(emit, step, offset.array),
+        c89_format_operand(emit, offset.array),
+        c89_format_operand(emit, offset.offset)
+    );
+}
+
 static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
 {
     size_t len = typevec_len(bb->steps);
@@ -466,6 +476,9 @@ static void c89_write_block(c89_emit_t *emit, io_t *io, const ssa_block_t *bb)
         }
         case eOpAddress:
             c89_write_address(emit, io, step);
+            break;
+        case eOpOffset:
+            c89_write_offset(emit, io, step);
             break;
 
         case eOpUnary: {

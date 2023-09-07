@@ -38,6 +38,7 @@ TREE_KIND(eTreeExprBinary, "expr-binary")
 TREE_KIND(eTreeExprCompare, "expr-compare")
 
 TREE_KIND(eTreeExprField, "expr-field") ///< get a reference to a field
+TREE_KIND(eTreeExprOffset, "expr-offset")
 
 TREE_KIND(eTreeExprCall, "expr-call")
 

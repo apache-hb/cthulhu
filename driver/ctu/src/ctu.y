@@ -296,7 +296,7 @@ type: path { $$ = ctu_type_name(x, @$, $1); }
     | STAR type { $$ = ctu_type_pointer(x, @$, $2); }
     | LSQUARE STAR RSQUARE type { $$ = ctu_type_pointer(x, @$, $4); /* TODO: implement indexable pointers */ }
     | DEF LPAREN optTypeList RPAREN ARROW type { $$ = ctu_type_function(x, @$, $3, $6); }
-    | LSQUARE expr RSQUARE type { $$ = ctu_type_array(x, @$, $2, $4); }
+    | LSQUARE expr RSQUARE type { $$ = ctu_type_array(x, @$, $4, $2); }
     ;
 
 typeList: type { $$ = vector_init($1); }
