@@ -85,6 +85,7 @@ static bool is_type(tree_kind_t kind)
     case eTreeTypeClosure:
     case eTreeTypePointer:
     case eTreeTypeReference:
+    case eTreeTypeArray:
     case eTreeError:
     case eTreeTypeStruct:
         return true;
@@ -144,6 +145,16 @@ tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *po
 
     tree_t *self = tree_decl(eTreeTypePointer, node, NULL, name, eQualUnknown);
     self->ptr = pointer;
+    self->length = length;
+    return self;
+}
+
+tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *array, size_t length)
+{
+    EXPECT_TYPE(array);
+
+    tree_t *self = tree_decl(eTreeTypeArray, node, NULL, name, eQualUnknown);
+    self->ptr = array;
     self->length = length;
     return self;
 }
@@ -366,6 +377,7 @@ tree_t *tree_stmt_branch(const node_t *node, tree_t *cond, tree_t *then, tree_t 
 tree_t *tree_stmt_jump(const node_t *node, tree_t *label, tree_jump_t jump)
 {
     CTASSERT(label != NULL);
+    CTASSERTF(tree_is(label, eTreeStmtLoop), "label must be a loop, found %s", tree_to_string(label));
 
     tree_t *self = tree_new(eTreeStmtJump, node, NULL);
     self->label = label;

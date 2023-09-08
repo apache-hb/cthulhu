@@ -15,6 +15,7 @@ TREE_KIND(eTreeTypeClosure, "type-closure") ///< a function pointer type (no cap
 
 TREE_KIND(eTreeTypeReference, "type-reference") ///< a reference to an object
 TREE_KIND(eTreeTypePointer, "type-pointer") ///< a pointer to an object
+TREE_KIND(eTreeTypeArray, "type-array") ///< an array of objects
 
 TREE_KIND(eTreeTypeStruct, "type-struct")
 

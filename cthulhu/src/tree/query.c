@@ -21,6 +21,7 @@ static bool has_name(tree_kind_t kind)
     case eTreeTypeDigit:
     case eTreeTypeClosure:
     case eTreeTypePointer:
+    case eTreeTypeArray:
     case eTreeTypeReference:
 
     case eTreeTypeStruct:

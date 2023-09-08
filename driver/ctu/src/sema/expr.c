@@ -189,13 +189,26 @@ static const tree_t *get_ptr_type(const tree_t *ty)
     return ty;
 }
 
+static bool can_index_type(const tree_t *ty)
+{
+    switch (tree_get_kind(ty))
+    {
+    case eTreeTypePointer:
+    case eTreeTypeArray:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 static tree_t *sema_index_rvalue(tree_t *sema, const ctu_t *expr, const tree_t *implicitType)
 {
     tree_t *index = ctu_sema_rvalue(sema, expr->index, ctu_get_int_type(eDigitSize, eSignUnsigned));
     tree_t *object = ctu_sema_lvalue(sema, expr->expr, NULL);
 
     const tree_t *ty = get_ptr_type(tree_get_type(object));
-    if (!tree_is(ty, eTreeTypePointer))
+    if (!can_index_type(ty))
     {
         report(sema->reports, eFatal, expr->node, "cannot index non-pointer type `%s` inside rvalue", tree_to_string(ty));
     }
@@ -210,7 +223,7 @@ static tree_t *sema_index_lvalue(tree_t *sema, const ctu_t *expr)
     tree_t *object = ctu_sema_lvalue(sema, expr->expr, NULL);
 
     const tree_t *ty = get_ptr_type(tree_get_type(object));
-    if (!tree_is(ty, eTreeTypePointer))
+    if (!can_index_type(ty))
     {
         return tree_raise(expr->node, sema->reports, "cannot index non-pointer type `%s` inside lvalue", tree_to_string(ty));
     }
@@ -419,7 +432,9 @@ size_t ctu_resolve_storage_size(const tree_t *type)
 {
     switch (tree_get_kind(type))
     {
-    case eTreeTypePointer: return type->length;
+    case eTreeTypeArray:
+        CTASSERTF(type->length != SIZE_MAX, "type %s has no length", tree_to_string(type));
+        return ctu_resolve_storage_size(type->ptr) * type->length;
     default: return 1;
     }
 }
@@ -428,6 +443,7 @@ const tree_t *ctu_resolve_storage_type(const tree_t *type)
 {
     switch (tree_get_kind(type))
     {
+    case eTreeTypeArray: return ctu_resolve_storage_type(type->ptr);
     case eTreeTypePointer: return type->ptr;
     case eTreeTypeReference: NEVER("cannot resolve storage type of reference");
 

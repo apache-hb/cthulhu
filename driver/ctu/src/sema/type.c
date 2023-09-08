@@ -84,8 +84,7 @@ static tree_t *sema_type_array(tree_t *sema, const ctu_t *type)
 
     size_t v = mpz_get_ui(value);
 
-    // TODO: should we have a proper array type
-    return tree_type_pointer(type->node, "", inner, v);
+    return tree_type_array(type->node, "", inner, v);
 }
 
 tree_t *ctu_sema_type(tree_t *sema, const ctu_t *type)

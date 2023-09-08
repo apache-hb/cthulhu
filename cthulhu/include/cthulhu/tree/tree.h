@@ -290,6 +290,8 @@ tree_t *tree_type_pointer(const node_t *node, const char *name, const tree_t *po
  */
 tree_t *tree_type_reference(const node_t *node, const char *name, const tree_t *reference);
 
+tree_t *tree_type_array(const node_t *node, const char *name, const tree_t *array, size_t length);
+
 ///
 /// tree expr interface
 ///
